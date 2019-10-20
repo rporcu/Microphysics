@@ -1,8 +1,8 @@
 add_library(mfixcore)
 
-# 
+#
 # Path where to store module files
-# 
+#
 set( MFIX_Fortran_MOD_PATH ${CMAKE_CURRENT_BINARY_DIR}/mod_files
    CACHE INTERNAL "Fortran modules location")
 
@@ -19,9 +19,9 @@ target_include_directories( mfixcore
 
 #
 # Add sources and header from current dir and all sub dirs
-# 
+#
 
-# Uncategorized 
+# Uncategorized
 target_include_directories(mfixcore
    PUBLIC
    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>)
@@ -35,8 +35,9 @@ target_sources(mfixcore
    compute_diveu.cpp
    mfix_calc_particle_beta.cpp
    mfix_drag.cpp
-   mfix_evolve.cpp 
-   mfix.cpp 
+   mfix_diffuse_eps.cpp
+   mfix_evolve.cpp
+   mfix.cpp
    #  main.cpp <---- DO NOT ADD THIS HERE
    mfix_F.H
    mfix.H
@@ -79,9 +80,9 @@ add_subdirectory(usr)
 # Embedded boundary functions
 add_subdirectory(eb)
 
-# 
+#
 # Link to imported AMReX
-# 
+#
 target_link_libraries( mfixcore PUBLIC AMReX::amrex )
 
 
@@ -95,7 +96,7 @@ if (ENABLE_CUDA)
       CUDA_SEPARABLE_COMPILATION ON      # This adds -dc
       CUDA_RESOLVE_DEVICE_SYMBOLS OFF
       )
-   
+
    get_target_property(MFIX_CUDA_SOURCES mfixcore SOURCES)
    list(FILTER MFIX_CUDA_SOURCES INCLUDE REGEX "\\.cpp")
    set_source_files_properties(${MFIX_CUDA_SOURCES} PROPERTIES LANGUAGE CUDA)
@@ -106,14 +107,14 @@ if (ENABLE_CUDA)
 endif ()
 
 #
-# Set the default flags 
-# 
+# Set the default flags
+#
 if ( NOT CMAKE_Fortran_FLAGS )
    target_link_libraries(mfixcore PUBLIC AMReX::Flags_Fortran)
 endif ()
 
 if ( NOT CMAKE_CXX_FLAGS )
-   target_link_libraries(mfixcore PUBLIC AMReX::Flags_CXX)  
+   target_link_libraries(mfixcore PUBLIC AMReX::Flags_CXX)
 endif ()
 
 if (ENABLE_FPE)

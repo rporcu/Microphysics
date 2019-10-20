@@ -43,26 +43,6 @@ CalcVolumeFraction(const Vector<std::unique_ptr<MultiFab>> & mf_to_be_filled,
                   bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo,bc_khi,
                   bc_list, fortran_volume_comp,nghost);
 
-    for (int lev = 0; lev < nlev; lev++)
-    {
-        // Now define this mf = (1 - particle_vol)
-        mf_to_be_filled[lev]->mult(-1.0,mf_to_be_filled[lev]->nGrow());
-        mf_to_be_filled[lev]->plus( 1.0,mf_to_be_filled[lev]->nGrow());
-
-        // We set ep_g to 1 rather than 0 in covered cells so that when we divide by ep_g
-        //    following the projection we don't have to protect against divide by 0.
-        EB_set_covered(*mf_to_be_filled[lev],1.0);
-
-        // Impose a lower bound on volume fraction
-        CapSolidsVolFrac(*mf_to_be_filled[lev]);
-    }
-
-    // HACK -- we really should average down (ep_g * volfrac) not ep_g.
-    for (int lev = nlev - 1; lev > 0; lev --)
-    {
-        amrex::EB_average_down(* mf_to_be_filled[lev], * mf_to_be_filled[lev - 1],
-                               0, 1, m_gdb->refRatio(lev - 1));
-    }
 }
 
 void MFIXParticleContainer::CapSolidsVolFrac(amrex::MultiFab& mf_to_be_filled)

@@ -229,6 +229,8 @@ public:
                                  Vector< std::unique_ptr<MultiFab> >& vel,
                                  int extrap_dir_bcs) const;
 
+    void mfix_set_eps_bcs (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps) const;
+
     void mfix_set_scalar_bcs (Real time,
                               Vector< std::unique_ptr<MultiFab> >& ro_g,
                               Vector< std::unique_ptr<MultiFab> >& trac,
@@ -240,6 +242,12 @@ public:
                           FArrayBox& vel_fab,
                           const Box& domain,
                           const int* extrap_dir_bcs) const;
+
+    void set_eps_bcs(const int lev,
+                     FArrayBox& eps_fab,
+                     const Box& domain,
+                     const int* extrap_dir_bcs) const;
+
 
     void set_scalar_bcs(Real time,
                         const int lev,
@@ -535,6 +543,8 @@ private:
     void mfix_diffuse_velocity       (Real time, Real dt);
     void mfix_diffuse_velocity_tensor(Real time, Real dt);
 
+    void mfix_diffuse_eps (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps);
+
     void mfix_compute_diveu(Real time);
 
     void mfix_print_max_vel(int lev);
@@ -629,9 +639,11 @@ private:
 
     // RHS for diffusive tensor solve
     Vector< std::unique_ptr<MultiFab> > diff_rhs;
+    Vector< std::unique_ptr<MultiFab> > diff_rhs0;
 
     // Solution for diffusion solves
     Vector< std::unique_ptr<MultiFab> > diff_phi;
+    Vector< std::unique_ptr<MultiFab> > diff_phi0;
 
     // MAC velocities
     Vector< std::unique_ptr<MultiFab> > u_mac;

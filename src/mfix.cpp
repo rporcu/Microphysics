@@ -233,6 +233,31 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
        pc->CalcVolumeFraction(ep_g, particle_ebfactory,
                               bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi,
                               bc_list, nghost);
+
+       // At this point, we have the particle volume on the fluid grid (ep_s).
+       // We will diffuse it first, then convert it to ep_g.
+       mfix_diffuse_eps (ep_g);
+
+       for (int lev = 0; lev < nlev; lev++)
+         {
+           // Now define this mf = (1 - particle_vol)
+           ep_g[lev]->mult(-1.0,ep_g[lev]->nGrow());
+           ep_g[lev]->plus( 1.0,ep_g[lev]->nGrow());
+
+           // We set ep_g to 1 rather than 0 in covered cells so that when we divide by ep_g
+           //    following the projection we don't have to protect against divide by 0.
+           EB_set_covered(*ep_g[lev],1.0);
+
+           // Impose a lower bound on volume fraction
+           pc->CapSolidsVolFrac(*ep_g[lev]);
+         }
+
+       // HACK -- we really should average down (ep_g * volfrac) not ep_g.
+       for (int lev = nlev - 1; lev > 0; lev --)
+         {
+           amrex::EB_average_down(* ep_g[lev], * ep_g[lev - 1],
+                                  0, 1, m_gdb->refRatio(lev - 1));
+         }
     }
     else
     {
