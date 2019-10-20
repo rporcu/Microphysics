@@ -10,21 +10,8 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     Real sum_vol;
     if (solve_dem && solve_fluid)
     {
-      std::string dbgfile {"dbg"};
-      int dbg = 0;
-      WritePlotFile( dbgfile, dbg, dt, time );
-
       Real start_coupling = ParallelDescriptor::second();
       mfix_calc_volume_fraction(sum_vol);
-
-
-
-      dbg += 1;
-      WritePlotFile( dbgfile, dbg, dt, time );
-
-
-      exit(0);
-
 
       if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
         {

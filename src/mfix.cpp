@@ -249,7 +249,7 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
            EB_set_covered(*ep_g[lev],1.0);
 
            // Impose a lower bound on volume fraction
-           pc->CapSolidsVolFrac(*ep_g[lev]);
+           // pc->CapSolidsVolFrac(*ep_g[lev]);
          }
 
        // HACK -- we really should average down (ep_g * volfrac) not ep_g.
