@@ -512,11 +512,6 @@ private:
                                       Vector< std::unique_ptr<MultiFab> >& trac,
                                       Real time);
 
-    void mfix_redistribute ( int lev,
-                             MultiFab& conv_tmp_in,
-                             MultiFab& conv_out,
-                             int conv_comp, int ncomp);
-
     void mfix_compute_divtau(Vector< std::unique_ptr<MultiFab> >& divtau,
                              Vector< std::unique_ptr<MultiFab> >& vel,
                              Real time);

@@ -87,13 +87,12 @@ mfix::mfix_compute_divtau ( Vector< std::unique_ptr<MultiFab> >& divtau,
 
     solver.apply(GetVecOfPtrs(divtau_aux), GetVecOfPtrs(vel));
 
-
     //
     // Apply redistribution and divide by ro_g*ep_g
     //
     for (int lev = 0; lev < nlev; lev++)
     {
-        mfix_redistribute(lev, *divtau_aux[lev], *divtau[lev], 0, 3);
+        amrex::single_level_weighted_redistribute(lev, *divtau_aux[lev], *divtau[lev], *ep_g[lev], 0, 3, geom);
 
         // Divide by (ro_g ep_g)
         for (int n = 0; n < 3; n++)

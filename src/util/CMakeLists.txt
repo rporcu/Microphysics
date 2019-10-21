@@ -13,5 +13,4 @@ target_sources( mfixcore
    mfix_set_scalar_bcs.cpp
    MFIX_MFHelpers.H
    MFIX_MFHelpers.cpp
-   mfix_redistribute.cpp
    )
