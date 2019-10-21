@@ -127,8 +127,14 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
     const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
 
 #ifdef AMREX_USE_CUDA
-    Gpu::DeviceScalar<Real> sum_gpu(sum);
-    Real* psum = sum_gpu.dataPtr();
+    bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
+
+    if(notInLaunchRegionStatus == true)
+      Gpu::setLaunchRegion(true);
+
+    {
+      Gpu::DeviceScalar<Real> sum_gpu(sum);
+      Real* psum = sum_gpu.dataPtr();
 #endif
 
 #ifdef _OPENMP
@@ -165,7 +171,11 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
     }
 
 #ifdef AMREX_USE_CUDA
-    sum = sum_gpu.dataValue();
+      sum = sum_gpu.dataValue();
+    }
+
+    if(notInLaunchRegionStatus == true)
+      Gpu::setLaunchRegion(notInLaunchRegionStatus);
 #endif
 
     if (!local)

@@ -834,18 +834,7 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
      // Just for reference, we compute the volume inside the EB walls (as if there were no particles)
      ep_g[0]->setVal(1.0);
 
-#ifdef AMREX_USE_CUDA
-     bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
-
-     if(notInLaunchRegionStatus)
-       Gpu::setLaunchRegion(true);
-#endif
-
      sum_vol_orig = volWgtSum(0,*ep_g[0],0);
-
-#ifdef AMREX_USE_CUDA
-     Gpu::setLaunchRegion(notInLaunchRegionStatus);
-#endif
 
      Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
 
@@ -874,18 +863,7 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
      } else {
 
         //Calculation of sum_vol_orig for a restarting point  
-#ifdef AMREX_USE_CUDA
-     bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
-
-     if(notInLaunchRegionStatus)
-       Gpu::setLaunchRegion(true);
-#endif
-
         sum_vol_orig = volWgtSum(0,*ep_g[0],0);
-
-#ifdef AMREX_USE_CUDA
-     Gpu::setLaunchRegion(notInLaunchRegionStatus);
-#endif
 
         Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
      }
