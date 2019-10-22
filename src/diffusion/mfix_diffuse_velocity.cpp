@@ -1,4 +1,4 @@
-#include <mfix_diff_F.H>
+#include <diffusion_F.H>
 #include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
@@ -13,12 +13,14 @@
 // Implicit tensor solve
 //
 void
-mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
+mfix::mfix_diffuse_velocity_tensor (      Vector<std::unique_ptr<MultiFab>>& vel_in,
+                                    const Vector<std::unique_ptr<MultiFab>>& ro_ep_in,
+                                    Real time, Real dt)
 {
    BL_PROFILE("mfix::mfix_diffuse_velocity_tensor");
 
    // Swap ghost cells and apply BCs to velocity
-   mfix_set_velocity_bcs (time, vel_g, 0);
+   mfix_set_velocity_bcs (time, vel_in, 0);
 
    // The boundary conditions need only be set once -- we do this at level 0
    int bc_lo[3], bc_hi[3];
@@ -70,11 +72,10 @@ mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
        ebtensorop.setEBShearViscosity(lev, (*mu_g[lev]));
 
        // This sets the spatially varying A coefficients
-       MultiFab a_coeff( ro_g[lev]->boxArray(), ro_g[lev]->DistributionMap(), 1, ro_g[lev]->nGrow(),
+       MultiFab a_coeff( ro_ep_in[lev]->boxArray(), ro_ep_in[lev]->DistributionMap(), 1, ro_ep_in[lev]->nGrow(),
                          MFInfo(), *ebfactory[lev]);
 
-       MultiFab::Copy    ( a_coeff, *ro_g[lev], 0, 0, 1, ro_g[lev]->nGrow() );
-       MultiFab::Multiply( a_coeff, *ep_g[lev], 0, 0, 1, ep_g[lev]->nGrow() );
+       MultiFab::Copy    ( a_coeff, *ro_ep_in[lev], 0, 0, 1, ro_ep_in[lev]->nGrow() );
  
        ebtensorop.setACoeffs ( lev, a_coeff );
    }
@@ -104,20 +105,17 @@ mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
    // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
    for (int lev = 0; lev < nlev; lev++)
    {
-       MultiFab::Copy((*diff_rhs[lev]),(*vel_g[lev]), 0, 0, AMREX_SPACEDIM, 0);
-       MultiFab::Copy((*diff_phi[lev]),(*vel_g[lev]), 0, 0, AMREX_SPACEDIM, diff_phi[lev]->nGrow());
+       MultiFab::Copy((*diff_rhs[lev]),(*vel_in[lev]), 0, 0, AMREX_SPACEDIM, 0);
+       MultiFab::Copy((*diff_phi[lev]),(*vel_in[lev]), 0, 0, AMREX_SPACEDIM, diff_phi[lev]->nGrow());
 
        EB_set_covered(*diff_phi[lev], 0, diff_phi[lev]->nComp(), diff_phi[lev]->nGrow(), covered_val);
        diff_phi[lev] -> FillBoundary (geom[lev].periodicity());
 
        ebtensorop.setLevelBC ( lev, GetVecOfConstPtrs(diff_phi)[lev] );
 
-      // Define RHS = (ro_g) * (ep_g) * (vel_g)
+      // Define RHS = (ro_g) * (ep_g) * (vel_in)
       for (int i = 0; i < 3; i++)
-      {
-         MultiFab::Multiply((*diff_rhs[lev]), (*ro_g[lev]), 0, i, 1, 0);
-         MultiFab::Multiply((*diff_rhs[lev]), (*ep_g[lev]), 0, i, 1, 0);
-      }
+         MultiFab::Multiply((*diff_rhs[lev]), (*ro_ep_in[lev]), 0, i, 1, 0);
    }
 
    // This ensures that ghost cells of sol are correctly filled when returned from the solver
@@ -133,12 +131,12 @@ mfix::mfix_diffuse_velocity_tensor (amrex::Real time, amrex::Real dt)
    for (int lev = 0; lev < nlev; lev++)
    {
        diff_phi[lev]->FillBoundary (geom[lev].periodicity());
-       MultiFab::Copy( *vel_g[lev], *diff_phi[lev], 0, 0, AMREX_SPACEDIM, 1);
+       MultiFab::Copy( *vel_in[lev], *diff_phi[lev], 0, 0, AMREX_SPACEDIM, 1);
    }
 
    amrex::Print() << "After diffusing all velocity components " << std::endl;
    mfix_print_max_vel(0);
 
    // Swap ghost cells and apply BCs to velocity
-   mfix_set_velocity_bcs (time, vel_g, 0);
+   mfix_set_velocity_bcs (time, vel_in, 0);
 }

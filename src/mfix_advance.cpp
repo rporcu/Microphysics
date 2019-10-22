@@ -315,10 +315,15 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     int explicit_diffusion_pred = 1;
 
     if (explicit_diffusion_pred == 1)
-       mfix_compute_divtau( divtau_old, vel_go, time);
-    else
+    {
+        int extrap_dir_bcs = 0;
+        mfix_set_velocity_bcs (time, vel_go, extrap_dir_bcs);
+        diffusion_op->ComputeDivTau(divtau_old, vel_go, ro_g, ep_g, mu_g);
+
+    } else {
        for (int lev = 0; lev < nlev; lev++)
           divtau_old[lev]->setVal(0.);
+    }
 
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -358,8 +363,17 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
         mfix_add_drag_implicit (dt);
 
     // If doing implicit diffusion, solve here for u^*
+    // Note we multiply ep_g by ro_g so that we pass in a single array holding (ro_g * ep_g)
     if (explicit_diffusion_pred == 0)
-        mfix_diffuse_velocity_tensor(new_time,dt);
+    {
+        for (int lev = 0; lev < nlev; lev++)
+            MultiFab::Multiply(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
+
+        mfix_diffuse_velocity_tensor(vel_g,ep_g,new_time,dt);
+
+        for (int lev = 0; lev < nlev; lev++)
+            MultiFab::Divide(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
+    }
 
     // Project velocity field -- depdt=0 for now
     Vector< std::unique_ptr< MultiFab > > depdt(nlev);
@@ -481,10 +495,20 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     if (solve_dem)
         mfix_add_drag_implicit(dt);
 
+    // 
     // Solve for u^star s.t. u^star = u_go + dt/2 (R_u^* + R_u^n) + dt/2 (Lu)^n + dt/2 (Lu)^star
-    mfix_diffuse_velocity_tensor(new_time,.5*dt);
+    // 
+    for (int lev = 0; lev < nlev; lev++)
+        MultiFab::Multiply(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
 
+    mfix_diffuse_velocity_tensor(vel_g,ep_g,new_time,.5*dt);
+
+    for (int lev = 0; lev < nlev; lev++)
+        MultiFab::Divide(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
+
+    // 
     // Apply projection -- depdt=0 for now
+    // 
     Vector< std::unique_ptr< MultiFab > > depdt(nlev);
     for (int lev(0); lev < nlev; ++lev )
         depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1);

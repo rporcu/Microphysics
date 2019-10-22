@@ -622,6 +622,12 @@ void
 mfix::PostInit(Real& dt, Real time, int restart_flag, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
+
+    diffusion_op.reset(new DiffusionOp(this, &ebfactory,
+                                       bc_ilo, bc_ihi,
+                                       bc_jlo, bc_jhi,
+                                       bc_klo, bc_khi, nghost));
+
     if (solve_dem)
     {
         // Auto generated particles may be out of the domain. This call will

@@ -31,6 +31,7 @@
 #include <AMReX_MLNodeLaplacian.H>
 #include <mfix_eb_if.H>
 #include <MFIX_BcList.H>
+#include <DiffusionOp.H>
 
 class NodalProjection;
 
@@ -304,6 +305,12 @@ public:
     Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
     Real volEpsWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
 
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Convection
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////////
+
     void set_MAC_velocity_bcs ( int lev,
                                 Vector< std::unique_ptr<MultiFab> >& u,
                                 Vector< std::unique_ptr<MultiFab> >& v,
@@ -360,11 +367,23 @@ public:
                                 const amrex::iMultiFab* cc_mask,
                                 Box& domain, const EBCellFlagFab& flags);
 
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Diffusion
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////////
+
+    std::unique_ptr<DiffusionOp> diffusion_op;
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Nodal Projection
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////////
 
     // Nodal projection
     friend class NodalProjection;
     std::unique_ptr<NodalProjection> nodal_projector;
-
 
 protected:
 
@@ -512,10 +531,6 @@ private:
                                       Vector< std::unique_ptr<MultiFab> >& trac,
                                       Real time);
 
-    void mfix_compute_divtau(Vector< std::unique_ptr<MultiFab> >& divtau,
-                             Vector< std::unique_ptr<MultiFab> >& vel,
-                             Real time);
-
     int steady_state_reached(Real dt, int iter);
 
     void mfix_apply_predictor(Vector< std::unique_ptr<MultiFab> >& conv_u_old,
@@ -527,8 +542,9 @@ private:
                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
                               Real time, Real dt, bool proj_2);
 
-    void mfix_diffuse_velocity       (Real time, Real dt);
-    void mfix_diffuse_velocity_tensor(Real time, Real dt);
+    void mfix_diffuse_velocity_tensor (      Vector<std::unique_ptr<MultiFab>>& vel_in,
+                                       const Vector<std::unique_ptr<MultiFab>>& ro_ep_in,
+                                       Real time, Real dt);
 
     void mfix_compute_diveu(Real time);
 
@@ -697,12 +713,11 @@ private:
 
     // Max coarsening level
     int  mac_mg_max_coarsening_level = 100;
-    // ***************************************************************
 
     // ***************************************************************
     // Diffusion solve
     // ***************************************************************
-
+ 
     // Verbosity
     int  diff_mg_verbose = 0;
     int  diff_mg_cg_verbose = 0;
@@ -716,6 +731,7 @@ private:
 
     // Max coarsening level
     int  diff_mg_max_coarsening_level = 100;
+
     // ***************************************************************
 
     // Tolerance to check for steady state --
