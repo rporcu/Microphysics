@@ -34,8 +34,6 @@ public:
 
 private:
 
-    bool m_ok = false;
-
     // Verbosity
     int  m_mg_verbose = 0;
     int  m_mg_cg_verbose = 0;
@@ -50,15 +48,17 @@ private:
     // Max coarsening level
     int  m_mg_max_coarsening_level = 100;
 
-    // Boundary conditions
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  m_bc_lo;
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  m_bc_hi;
-
     // We need ebfactory, amrcore and some functions defined in mfix.
     // Thus we make this class a friend of mfix' and use its methods.
     // In the future we will decouple those method from mfix and just pass
     // amrcore and ebfactory to the constructor
     const mfix* m_mfix;
+
+    // Boundary conditions
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  m_bc_lo;
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  m_bc_hi;
+
+    bool m_ok = false;
 
     // Cell-centered data
     Vector< std::unique_ptr< amrex::MultiFab > >  m_fluxes;
