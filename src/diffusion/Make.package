@@ -1,5 +1,3 @@
-CEXE_sources += mfix_diffuse_velocity.cpp
-
 CEXE_sources += DiffusionOp.cpp
 CEXE_headers += DiffusionOp.H
 

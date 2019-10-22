@@ -187,21 +187,7 @@ void DiffusionOp::solve(      Vector<std::unique_ptr<MultiFab>>& vel_in,
         phi[lev]->FillBoundary(amrcore->Geom(lev).periodicity());
         matrix.setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
 
-#if 0
-        // This sets the coefficient on the wall and defines the wall as a Dirichlet bc
-        if(cyl_speed > 0.0 && dir == 0)
-        {
-            matrix.setEBDirichlet(lev, *vel_eb[lev], *eta_in[lev]);
-        }
-        else if(cyl_speed > 0.0 && dir == 1)
-        {
-            matrix.setEBDirichlet(lev, *veb[lev], *eta_in[lev]);
-        }
-        else
-        {
-            matrix.setEBHomogDirichlet(lev, *eta_in[lev]);
-        }
-#endif
+        // matrix.setEBHomogDirichlet(lev, *eta_in[lev]);
     }
 
     MLMG solver(matrix);
@@ -270,9 +256,6 @@ void DiffusionOp::ComputeDivTau(Vector<std::unique_ptr<MultiFab>>& divtau_out,
                                           MFInfo(), *(*ebfactory)[lev]));
        divtau_aux[lev]->setVal(0.0);
     }
-
-    // The boundary conditions need only be set once -- we do this at level 0
-    // int bc_lo[3], bc_hi[3];
  
     // Whole domain
     Box domain(geom[0].Domain());

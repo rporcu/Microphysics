@@ -186,18 +186,17 @@ mfix::mfix_project_velocity ()
 
     mfix_apply_nodal_projection( depdt, time, dummy_dt, proj_2 );
 
-   // We initialize p_g and gp back to zero (p0_g may still be still non-zero)
-   for (int lev = 0; lev < nlev; lev++)
-   {
-      p_g[lev]->setVal(0.0);
-       gp[lev]->setVal(0.0);
-   }
+    // We initialize p_g and gp back to zero (p0_g may still be still non-zero)
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       p_g[lev]->setVal(0.0);
+        gp[lev]->setVal(0.0);
+    }
 }
 
 void
 mfix::mfix_initial_iterations (Real dt, Real stop_time)
 {
-
     Real time = 0.0;
     int nstep = 0;
 
@@ -316,8 +315,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
 
     if (explicit_diffusion_pred == 1)
     {
-        int extrap_dir_bcs = 0;
-        mfix_set_velocity_bcs (time, vel_go, extrap_dir_bcs);
+        mfix_set_velocity_bcs (time, vel_go, 0);
         diffusion_op->ComputeDivTau(divtau_old, vel_go, ro_g, ep_g, mu_g);
 
     } else {
@@ -366,10 +364,13 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     // Note we multiply ep_g by ro_g so that we pass in a single array holding (ro_g * ep_g)
     if (explicit_diffusion_pred == 0)
     {
+        mfix_set_scalar_bcs   (time, ro_g, trac, ep_g, mu_g);
+
         for (int lev = 0; lev < nlev; lev++)
             MultiFab::Multiply(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
 
-        mfix_diffuse_velocity_tensor(vel_g,ep_g,new_time,dt);
+        mfix_set_velocity_bcs (new_time, vel_g, 0);
+        diffusion_op->solve(vel_g, ep_g, mu_g, dt);
 
         for (int lev = 0; lev < nlev; lev++)
             MultiFab::Divide(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
@@ -495,13 +496,16 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     if (solve_dem)
         mfix_add_drag_implicit(dt);
 
+    mfix_set_scalar_bcs   (time, ro_g, trac, ep_g, mu_g);
+
     // 
     // Solve for u^star s.t. u^star = u_go + dt/2 (R_u^* + R_u^n) + dt/2 (Lu)^n + dt/2 (Lu)^star
     // 
     for (int lev = 0; lev < nlev; lev++)
         MultiFab::Multiply(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
 
-    mfix_diffuse_velocity_tensor(vel_g,ep_g,new_time,.5*dt);
+    mfix_set_velocity_bcs (new_time, vel_g, 0);
+    diffusion_op->solve(vel_g, ep_g, mu_g, 0.5*dt);
 
     for (int lev = 0; lev < nlev; lev++)
         MultiFab::Divide(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
@@ -819,7 +823,6 @@ mfix::mfix_apply_nodal_projection ( Vector< std::unique_ptr<MultiFab> >& a_depdt
             // Convert momenta back to velocities
             for (int n(0); n < 3; n++)
                 MultiFab::Divide(*vel_g[lev], *ro_g[lev], 0, n, 1, vel_g[lev]->nGrow() );
-
         }
 
         // Print level infos
