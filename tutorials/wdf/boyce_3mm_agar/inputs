@@ -11,8 +11,8 @@ mfix.stop_time = 4.0
 
 mfix.drag_type = "WenYu"
 
-mfix.max_dt = 1.0d-3 
-mfix.min_dt = 1.0d-8
+mfix.dt_max = 1.0e-3 
+mfix.dt_min = 1.0e-8
 mfix.cfl    = 0.5
 
 mfix.particle_init_type = "AsciiFile"
