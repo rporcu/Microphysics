@@ -19,8 +19,22 @@ macro (setup_test _test _suffix _env _input_file )
         # Copy file to binary dir
         file( COPY ${CMAKE_CURRENT_SOURCE_DIR}/${_test} DESTINATION ${CMAKE_BINARY_DIR}/tests/ )
 
-        # Setup for building a test
-        FILE(GLOB _udf  ${_src_dir}/*.f90 ${_src_dir}/*.cpp)
+        # Find UDFs if any is present
+        file( GLOB _udf  ${_src_dir}/*.f90 ${_src_dir}/*.cpp )
+
+        #
+        # Search if UDFs contain the usr_drag.cpp file
+        # If not, add to UDFs the one provided by mfix
+        #
+        if (_udf)
+            set(_tmp ${_udf})
+            list(FILTER _tmp INCLUDE REGEX "u+s+r+\\_+d+r+a+g")
+            if (NOT _tmp)
+                 set(_udf ${USR_DRAG_SRC})
+            endif()
+        else ()
+            set(_udf ${USR_DRAG_SRC})
+        endif ()
 
         set(_test_exe mfix_${_test})
 
@@ -42,7 +56,6 @@ macro (setup_test _test _suffix _env _input_file )
 
             # Create test dir in build path if needed
             # Update test files if needed
-
             add_custom_command(TARGET ${_test_exe} PRE_BUILD
                 COMMAND mkdir -p ${_test_dir}
                 COMMAND cp -R ${CMAKE_CURRENT_SOURCE_DIR}/${_test}/* .
