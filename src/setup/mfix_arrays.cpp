@@ -359,11 +359,11 @@ mfix::RegridArrays (int lev)
     vort[lev] = std::move(vort_new);
     vort[lev]->setVal(0.);
 
-    // Particle/fluid drag
+    // Particle/fluid drag -- note it is important to copy from previous step in order to use in dt calculation
     std::unique_ptr<MultiFab> drag_new(new MultiFab(grids[lev],dmap[lev],
                                        drag[lev]->nComp(),drag[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
+    drag_new->copy(*drag[lev],0,0,drag[lev]->nComp(),drag[lev]->nGrow(),drag[lev]->nGrow());
     drag[lev] = std::move(drag_new);
-    drag[lev]->setVal(0.);
 
     // Array to store the rhs for tensor diffusion solve
     std::unique_ptr<MultiFab> diff_rhs_new(new  MultiFab(grids[lev], dmap[lev],
@@ -603,7 +603,7 @@ bool mfix::mfix_update_ebfactory (int a_lev)
 
    if ( ebfactory[a_lev].get() == nullptr )
    {
-      Print() << "Updating ebfactory" << std::endl;
+      Print() << "Updating ebfactory from nullptr" << std::endl;
 
       ebfactory[a_lev].reset(
           new EBFArrayBoxFactory(* eb_levels[a_lev], geom[a_lev], ba, dm,
@@ -615,13 +615,12 @@ bool mfix::mfix_update_ebfactory (int a_lev)
    }
    else
    {
-
       const DistributionMapping&  eb_dm = ebfactory[a_lev]->DistributionMap();
       const BoxArray&             eb_ba = ebfactory[a_lev]->boxArray();
 
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
-          Print() << "Updating ebfactory" << std::endl;
+          Print() << "Updating ebfactory from existing" << std::endl;
 
           ebfactory[a_lev].reset(
               new EBFArrayBoxFactory(* eb_levels[a_lev], geom[a_lev], ba, dm,
