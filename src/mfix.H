@@ -71,7 +71,8 @@ public:
 
     void InitLevelData(Real time);
 
-    void mfix_setup_nodal_solver();
+    void mfix_init_solvers();
+    void mfix_setup_solvers();
 
     void PostInit(Real& dt, Real time, int restart_flag, Real stop_time);
 
