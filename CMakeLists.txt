@@ -70,7 +70,9 @@ add_executable (${MFIX_EXENAME} ${MAIN} ${USR_OVERRIDES} ${USR_DRAG_SRC})
 target_link_libraries ( ${MFIX_EXENAME} ${MFIX_LIBNAME} )
 
 if ( ENABLE_CUDA)
-   set_source_files_properties(${MAIN} PROPERTIES LANGUAGE CUDA )
+    set_source_files_properties(${MAIN} ${USR_DRAG_SRC}
+        PROPERTIES LANGUAGE CUDA
+        )
    set_target_properties( ${MFIX_EXENAME}
       PROPERTIES
       CUDA_SEPARABLE_COMPILATION ON  # This add -dc flag
