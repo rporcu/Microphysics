@@ -1,3 +1,106 @@
+#
+# Define a general build target to build all tests
+#
+set (BUILD_TEST build_tests)
+add_custom_target(${BUILD_TEST})
+
+#
+# Define a macro to setup a test
+#
+macro (setup_test _test _suffix _env _input_file )
+
+    string(REPLACE "/" "_" _test_name ${_test} )
+
+    if (NOT TEST ${_test_name}_${_suffix})
+
+        set(_test_dir  ${CMAKE_BINARY_DIR}/tests/${_test})
+        set(_src_dir   ${PROJECT_SOURCE_DIR}/tests/${_test})
+
+        # Copy file to binary dir
+        file( COPY ${CMAKE_CURRENT_SOURCE_DIR}/${_test} DESTINATION ${CMAKE_BINARY_DIR}/tests/ )
+
+        # Find UDFs if any is present
+        file( GLOB _udf  ${_src_dir}/*.f90 ${_src_dir}/*.cpp )
+
+        #
+        # Search if UDFs contain the usr_drag.cpp file
+        # If not, add to UDFs the one provided by mfix
+        #
+        if (_udf)
+            set(_tmp ${_udf})
+            list(FILTER _tmp INCLUDE REGEX "u+s+r+\\_+d+r+a+g")
+            if (NOT _tmp)
+                 set(_udf ${USR_DRAG_SRC})
+            endif()
+        else ()
+            set(_udf ${USR_DRAG_SRC})
+        endif ()
+
+        set(_test_exe mfix_${_test})
+
+        # Create target if needed
+        if (NOT TARGET ${_test_exe})
+            add_executable(${_test_exe} EXCLUDE_FROM_ALL ${MAIN} ${_udf})
+
+            target_include_directories(${_test_exe} PUBLIC ${_test_dir} ${CMAKE_Fortran_MODULE_DIRECTORY})
+
+            set_target_properties( ${_test_exe}
+                PROPERTIES
+                Fortran_MODULE_DIRECTORY ${_test_dir}
+                RUNTIME_OUTPUT_DIRECTORY ${_test_dir} )
+
+            # Special treatment for CUDA
+            if (ENABLE_CUDA)
+                get_target_property(_src_cpp ${_test_exe} SOURCES)
+                list(FILTER _src_cpp INCLUDE REGEX "\.cpp")
+                set_source_files_properties(${_src_cpp} PROPERTIES LANGUAGE CUDA )
+                set_target_properties( ${_test_exe}
+                    PROPERTIES
+                    CUDA_SEPARABLE_COMPILATION ON  # This add -dc flag
+                    )
+            endif ()
+
+            target_link_libraries( ${_test_exe} ${MFIX_LIBNAME} )
+
+            # Accumulate the build for each test into target "build_tests"
+            add_dependencies( ${BUILD_TEST} ${_test_exe} )
+
+            # Create test dir in build path if needed
+            # Update test files if needed
+            add_custom_command(TARGET ${_test_exe} PRE_BUILD
+                COMMAND mkdir -p ${_test_dir}
+                COMMAND cp -R ${CMAKE_CURRENT_SOURCE_DIR}/${_test}/* .
+                WORKING_DIRECTORY ${_test_dir}
+                COMMENT "Copying files to test run directory")
+        endif ()
+
+        # Setup for running the a single test
+        set(_test_run run_${_test_name}_${_suffix})
+
+        add_custom_target(${_test_run} DEPENDS ${_test_exe}
+            COMMAND ${CMAKE_COMMAND} -E env ${_env}
+            ${_test_dir}/runtests.sh ${_test_dir}/${_test_exe} ${MFIX_TOOLS_EXE} ${_input_file}
+            WORKING_DIRECTORY  ${_test_dir}
+            )
+
+        # Make sure that fcompare and fextract are always built before a test is run
+        add_dependencies ( ${_test_run} ${MFIX_F90_TOOLS} )
+
+        add_test(NAME ${_test_name}_${_suffix}
+            COMMAND make  ${_test_run}
+            WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
+
+    endif ()
+
+endmacro()
+
+
+
+############################################################
+#                                                          #
+#                      SGS TESTS                           #
+#                                                          #
+############################################################
 set( SGS_TESTS
    FLD01-x FLD01-y FLD01-z
    FLD02-x FLD02-y FLD02-z
@@ -11,62 +114,23 @@ set( SGS_TESTS
    DEM07
    )
 
-set (BUILD_TEST build_tests)
-add_custom_target(${BUILD_TEST})
 
 foreach( THIS_TEST ${SGS_TESTS})
 
-   STRING(REPLACE "/" "_" TEST_NAME ${THIS_TEST} )
-
-   set(TEST_DIR ${CMAKE_BINARY_DIR}/tests/${THIS_TEST})
-   set(SOURCE_DIR ${PROJECT_SOURCE_DIR}/tests/${THIS_TEST})
-
-   # Copy file to binary dir
-   FILE( COPY ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST} DESTINATION ${CMAKE_BINARY_DIR}/tests/ )
-
-   # Setup for building a test
-   FILE(GLOB USR_OVERRIDES ${SOURCE_DIR}/*.f90 ${SOURCE_DIR}/*.cpp)
-
-   set(TEST_EXE mfix_${TEST_NAME})
-
-   add_executable(${TEST_EXE} EXCLUDE_FROM_ALL ${MAIN} ${USR_OVERRIDES})
-
-   target_include_directories(${TEST_EXE} PUBLIC ${TEST_DIR} ${CMAKE_Fortran_MODULE_DIRECTORY})
-
-   set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
-      RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
-
-   target_link_libraries(${TEST_EXE} ${MFIX_LIBNAME} ${MFIX_EXTRA_LINK_LINE} )
-
-   # Accumulate the build for each test into target "build_tests"
-   add_dependencies ( ${BUILD_TEST} ${TEST_EXE} )
-
-   # Create test dir in build path if needed
-   # Update test files if needed
-
-   add_custom_command(TARGET ${TEST_EXE} PRE_BUILD
-     COMMAND mkdir -p ${TEST_DIR}
-     COMMAND cp -R ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST}/* .
-     WORKING_DIRECTORY ${TEST_DIR}
-     COMMENT "Copying files to test run directory")
-
-   # Setup for running the a single test
-   set(TEST_RUN run_${TEST_NAME}_SGS)
-   add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-      COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=0 ENABLE_OMP=0 OMP_NUM_THREADS=1
-      ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} inputs_single
-      WORKING_DIRECTORY  ${TEST_DIR} )
-
-   # Make sure that fcompare and fextract are always built before a test is run
-   add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
-
-   add_test(NAME ${TEST_NAME}_SGS
-      COMMAND make  ${TEST_RUN}
-      WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
+    setup_test(
+        ${THIS_TEST}
+        "SGS"
+        "ENABLE_MPI=0;ENABLE_OMP=0;OMP_NUM_THREADS=1"
+        "inputs_single")
 
 endforeach( THIS_TEST ${SGS_TESTS} )
 
 
+############################################################
+#                                                          #
+#                      MGS & MGP TESTS                     #
+#                                                          #
+############################################################
 set( MGS_TESTS
    FLD01-x FLD01-y FLD01-z
    FLD02-x FLD02-y FLD02-z
@@ -78,49 +142,28 @@ set( MGS_TESTS
 
 foreach( THIS_TEST ${MGS_TESTS})
 
-   STRING(REPLACE "/" "_" TEST_NAME ${THIS_TEST} )
+    setup_test(
+        ${THIS_TEST}
+        "MGS"
+        "ENABLE_MPI=0;ENABLE_OMP=0;OMP_NUM_THREADS=1"
+        "inputs_multiple")
 
-   set(TEST_DIR ${CMAKE_BINARY_DIR}/tests/${THIS_TEST})
-   set(SOURCE_DIR ${PROJECT_SOURCE_DIR}/tests/${THIS_TEST})
-
-   # Copy file to binary dir
-   FILE( COPY ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST} DESTINATION ${CMAKE_BINARY_DIR}/tests/ )
-
-   # Setup for building a test
-   FILE(GLOB USR_OVERRIDES ${SOURCE_DIR}/*.f90 ${SOURCE_DIR}/*.cpp)
-
-   set(TEST_EXE mfix_${TEST_NAME})
-
-
-   target_include_directories(${TEST_EXE} PUBLIC ${TEST_DIR} ${CMAKE_Fortran_MODULE_DIRECTORY})
-
-   set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
-      RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
-
-   target_link_libraries(${TEST_EXE} ${MFIX_LIBNAME} ${MFIX_EXTRA_LINK_LINE} )
-
-   # Accumulate the build for each test into target "build_tests"
-   add_dependencies ( ${BUILD_TEST} ${TEST_EXE} )
-
-
-   # Setup for running the a single test
-   set(TEST_RUN run_${TEST_NAME}_MGS)
-   add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-      COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=0 ENABLE_OMP=0 OMP_NUM_THREADS=1
-      ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} inputs_multiple
-      WORKING_DIRECTORY  ${TEST_DIR} )
-
-   # Make sure that fcompare and fextract are always built before a test is run
-   add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
-
-   add_test(NAME ${TEST_NAME}_MGS
-      COMMAND make  ${TEST_RUN}
-      WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
+    if (ENABLE_MPI)
+        setup_test(
+            ${THIS_TEST}
+            "MGP"
+            "ENABLE_MPI=1;ENABLE_OMP=0;OMP_NUM_THREADS=1"
+            "inputs_multiple")
+    endif ()
 
 endforeach( THIS_TEST ${MGS_TESTS} )
 
 
-
+############################################################
+#                                                          #
+#                      TGS & TGSO TESTS                    #
+#                                                          #
+############################################################
 set( TGS_TESTS
    FLD01-x FLD01-y FLD01-z
    FLD02-x FLD02-y FLD02-z
@@ -133,197 +176,46 @@ set( TGS_TESTS
 
 foreach( THIS_TEST ${TGS_TESTS})
 
-   STRING(REPLACE "/" "_" TEST_NAME ${THIS_TEST} )
+    setup_test(
+        ${THIS_TEST}
+        "TGS"
+        "ENABLE_MPI=0;ENABLE_OMP=0;OMP_NUM_THREADS=1"
+        "inputs_tiled")
 
-   set(TEST_DIR ${CMAKE_BINARY_DIR}/tests/${THIS_TEST})
-   set(SOURCE_DIR ${PROJECT_SOURCE_DIR}/tests/${THIS_TEST})
-
-   # Copy file to binary dir
-   FILE( COPY ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST} DESTINATION ${CMAKE_BINARY_DIR}/tests/ )
-
-   # Setup for building a test
-   FILE(GLOB USR_OVERRIDES ${SOURCE_DIR}/*.f90 ${SOURCE_DIR}/*.cpp)
-
-   set(TEST_EXE mfix_${TEST_NAME})
-
-
-   target_include_directories(${TEST_EXE} PUBLIC ${TEST_DIR} ${CMAKE_Fortran_MODULE_DIRECTORY})
-
-   set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
-      RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
-
-   target_link_libraries(${TEST_EXE} ${MFIX_LIBNAME} ${MFIX_EXTRA_LINK_LINE} )
-
-   # Accumulate the build for each test into target "build_tests"
-   add_dependencies ( ${BUILD_TEST} ${TEST_EXE} )
-
-   # Setup for running the a single test
-   set(TEST_RUN run_${TEST_NAME}_TGS)
-   add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-      COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=0 ENABLE_OMP=0 OMP_NUM_THREADS=1
-      ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} inputs_tiled
-      WORKING_DIRECTORY  ${TEST_DIR} )
-
-   # Make sure that fcompare and fextract are always built before a test is run
-   add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
-
-   add_test(NAME ${TEST_NAME}_TGS
-      COMMAND make  ${TEST_RUN}
-      WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
+    if (ENABLE_OMP)
+        setup_test(
+            ${THIS_TEST}
+            "TGSO"
+            "ENABLE_MPI=0;ENABLE_OMP=1;OMP_NUM_THREADS=4"
+            "inputs_tiled")
+    endif ()
 
 endforeach( THIS_TEST ${TGS_TESTS} )
 
 
-if ( ENABLE_OMP )
-
-   foreach( THIS_TEST ${TGS_TESTS})
-
-      STRING(REPLACE "/" "_" TEST_NAME ${THIS_TEST} )
-
-      set(TEST_DIR ${CMAKE_BINARY_DIR}/tests/${THIS_TEST})
-      set(SOURCE_DIR ${PROJECT_SOURCE_DIR}/tests/${THIS_TEST})
-
-      # Copy file to binary dir
-      FILE( COPY ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST} DESTINATION ${CMAKE_BINARY_DIR}/tests/ )
-
-      # Setup for building a test
-      FILE(GLOB USR_OVERRIDES ${SOURCE_DIR}/*.f90 ${SOURCE_DIR}/*.cpp)
-
-      set(TEST_EXE mfix_${TEST_NAME})
-
-
-      target_include_directories(${TEST_EXE} PUBLIC ${TEST_DIR} ${CMAKE_Fortran_MODULE_DIRECTORY})
-
-      set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
-   RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
-
-      target_link_libraries(${TEST_EXE} ${MFIX_LIBNAME} ${MFIX_EXTRA_LINK_LINE} )
-
-      # Accumulate the build for each test into target "build_tests"
-      add_dependencies ( ${BUILD_TEST} ${TEST_EXE} )
-
-      # Setup for running the a single test
-      set(TEST_RUN run_${TEST_NAME}_TGSO)
-      add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-   COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=0 ENABLE_OMP=1 OMP_NUM_THREADS=4
-         ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} inputs_tiled
-         WORKING_DIRECTORY  ${TEST_DIR} )
-
-      # Make sure that fcompare and fextract are always built before a test is run
-      add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
-
-      add_test(NAME ${TEST_NAME}_TGSO
-   COMMAND make  ${TEST_RUN}
-   WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
-
-   endforeach( THIS_TEST ${TGS_TESTS} )
-
-endif ()
-
-
-set( TGM_TESTS
-   FLD01-x FLD01-y FLD01-z
-   FLD02-x FLD02-y FLD02-z
-   FLD03-x FLD03-y FLD03-z
-   FLD04-x FLD04-y FLD04-z
-   DEM06-x DEM06-y DEM06-z
-   )
-
+############################################################
+#                                                          #
+#                      TGM TESTS                           #
+#                                                          #
+############################################################
 if ( ENABLE_OMP AND ENABLE_MPI )
-   foreach( THIS_TEST ${TGM_TESTS})
 
-      STRING(REPLACE "/" "_" TEST_NAME ${THIS_TEST} )
+    set( TGM_TESTS
+        FLD01-x FLD01-y FLD01-z
+        FLD02-x FLD02-y FLD02-z
+        FLD03-x FLD03-y FLD03-z
+        FLD04-x FLD04-y FLD04-z
+        DEM06-x DEM06-y DEM06-z
+        )
 
-      set(TEST_DIR ${CMAKE_BINARY_DIR}/tests/${THIS_TEST})
-      set(SOURCE_DIR ${PROJECT_SOURCE_DIR}/tests/${THIS_TEST})
+    foreach( THIS_TEST ${TGM_TESTS})
 
-      # Copy file to binary dir
-      FILE( COPY ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST} DESTINATION ${CMAKE_BINARY_DIR}/tests/ )
+        setup_test(
+            ${THIS_TEST}
+            "TGPO"
+            "ENABLE_MPI=1;ENABLE_OMP=1;OMP_NUM_THREADS=2"
+            "inputs_multiple_tiled")
 
-      # Setup for building a test
-      FILE(GLOB USR_OVERRIDES ${SOURCE_DIR}/*.f90 ${SOURCE_DIR}/*.cpp)
+    endforeach( )
 
-      set(TEST_EXE mfix_${TEST_NAME})
-
-
-      target_include_directories(${TEST_EXE} PUBLIC ${TEST_DIR} ${CMAKE_Fortran_MODULE_DIRECTORY})
-
-      set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
-   RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
-
-      target_link_libraries(${TEST_EXE} ${MFIX_LIBNAME} ${MFIX_EXTRA_LINK_LINE} )
-
-      # Accumulate the build for each test into target "build_tests"
-      add_dependencies ( ${BUILD_TEST} ${TEST_EXE} )
-
-      # Setup for running the a single test
-      set(TEST_RUN run_${TEST_NAME}_TGPO)
-      add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-   COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=1 ENABLE_OMP=1 OMP_NUM_THREADS=2
-         ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} inputs_multiple_tiled
-         WORKING_DIRECTORY  ${TEST_DIR} )
-
-      # Make sure that fcompare and fextract are always built before a test is run
-      add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
-
-      add_test(NAME ${TEST_NAME}_TGPO
-   COMMAND make  ${TEST_RUN}
-   WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
-
-   endforeach( THIS_TEST ${TGM_TESTS} )
 endif()
-
-
-
-if ( ENABLE_MPI )
-   set( MGP_TESTS
-      FLD01-x FLD01-y FLD01-z
-      FLD02-x FLD02-y FLD02-z
-      FLD03-x FLD03-y FLD03-z
-      FLD04-x FLD04-y FLD04-z
-      DEM06-x DEM06-y DEM06-z
-      DEM07
-      )
-
-
-   foreach( THIS_TEST ${MGP_TESTS})
-
-      STRING(REPLACE "/" "_" TEST_NAME ${THIS_TEST} )
-
-      set(TEST_DIR ${CMAKE_BINARY_DIR}/tests/${THIS_TEST})
-      set(SOURCE_DIR ${PROJECT_SOURCE_DIR}/tests/${THIS_TEST})
-
-      # Copy file to binary dir
-      FILE( COPY ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST} DESTINATION ${CMAKE_BINARY_DIR}/tests/ )
-
-      # Setup for building a test
-      FILE(GLOB USR_OVERRIDES ${SOURCE_DIR}/*.f90 ${SOURCE_DIR}/*.cpp)
-
-      set(TEST_EXE mfix_${TEST_NAME})
-
-      target_include_directories(${TEST_EXE} PUBLIC ${TEST_DIR} ${CMAKE_Fortran_MODULE_DIRECTORY})
-
-      set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
-   RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
-
-      target_link_libraries(${TEST_EXE} ${MFIX_LIBNAME} ${MFIX_EXTRA_LINK_LINE} )
-
-      # Accumulate the build for each test into target "build_tests"
-      add_dependencies ( ${BUILD_TEST} ${TEST_EXE} )
-
-      # Setup for running the a single test
-      set(TEST_RUN run_${TEST_NAME}_MGP)
-      add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-   COMMAND ${CMAKE_COMMAND} -E env ENABLE_MPI=1 ENABLE_OMP=0 OMP_NUM_THREADS=1
-         ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${MFIX_TOOLS_EXE} inputs_multiple
-         WORKING_DIRECTORY  ${TEST_DIR} )
-
-      # Make sure that fcompare and fextract are always built before a test is run
-      add_dependencies ( ${TEST_RUN} ${MFIX_F90_TOOLS} )
-
-      add_test(NAME ${TEST_NAME}_MGP
-   COMMAND make  ${TEST_RUN}
-   WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
-
-   endforeach( THIS_TEST ${MGP_TESTS} )
-endif ()
