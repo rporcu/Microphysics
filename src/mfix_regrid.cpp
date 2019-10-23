@@ -1,4 +1,5 @@
 #include <mfix.H>
+#include <diffusion_F.H>
 
 void
 mfix::Regrid ()
@@ -200,6 +201,13 @@ mfix::Regrid ()
 
     if (solve_fluid)
        mfix_setup_nodal_solver();
+
+    if (solve_fluid)
+    {
+        amrex::Print() << "CALLING FROM REGRID " << std::endl;
+        diffusion_op.reset(new DiffusionOp(this, &ebfactory, diff_lobc, diff_hibc, nghost));
+        // diffusion_op->setup(this,&ebfactory);
+    }
 
     BL_PROFILE_REGION_STOP("mfix::Regrid()");
 }

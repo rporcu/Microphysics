@@ -5,7 +5,6 @@
 #include <AMReX_Vector.H>
 
 #include <DiffusionOp.H>
-#include <diffusion_F.H>
 
 using namespace amrex;
 
@@ -20,40 +19,42 @@ extern const amrex::IntVect e_z;
 //
 DiffusionOp::DiffusionOp(AmrCore* _amrcore,
                          Vector<std::unique_ptr<EBFArrayBoxFactory>>* _ebfactory,
-                         Vector<std::unique_ptr<IArrayBox>>& bc_ilo,
-                         Vector<std::unique_ptr<IArrayBox>>& bc_ihi,
-                         Vector<std::unique_ptr<IArrayBox>>& bc_jlo,
-                         Vector<std::unique_ptr<IArrayBox>>& bc_jhi,
-                         Vector<std::unique_ptr<IArrayBox>>& bc_klo,
-                         Vector<std::unique_ptr<IArrayBox>>& bc_khi,
+                         std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_bc_lo,
+                         std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_bc_hi,
                          int _nghost)
+{
+    if(verbose > 0)
+        amrex::Print() << "Constructing DiffusionOp class" << std::endl;
+
+    nghost = _nghost;
+
+    m_bc_lo = a_bc_lo;
+    m_bc_hi = a_bc_hi;
+
+    // Get inputs from ParmParse
+    readParameters();
+
+    // Actually do the setup work here
+    setup(_amrcore, _ebfactory);
+}
+
+void DiffusionOp::setup(AmrCore* _amrcore,
+                        Vector<std::unique_ptr<EBFArrayBoxFactory>>* _ebfactory)
 {
     // Get inputs from ParmParse
     readParameters();
 
-    if(verbose > 0)
-    {
-        amrex::Print() << "Constructing DiffusionOp class" << std::endl;
-    }
-
-    // Set AmrCore and ebfactory based on input, fetch some data needed in constructor
+    // The ebfactory changes when we regrid so we must pass it in here.
     amrcore = _amrcore;
+
+    // The ebfactory changes when we regrid so we must pass it in here.
     ebfactory = _ebfactory;
-    nghost = _nghost;
-    Vector<Geometry> geom = amrcore->Geom();
-    Vector<BoxArray> grids = amrcore->boxArray();
-    Vector<DistributionMapping> dmap = amrcore->DistributionMap();
-    int max_level = amrcore->maxLevel();
 
-    // Whole domain
-    Box domain(geom[0].Domain());
+    geom  = amrcore->Geom();
+    grids = amrcore->boxArray();
+    dmap  = amrcore->DistributionMap();
 
-    // The boundary conditions need only be set at level 0
-    set_diff_bc(bc_lo, bc_hi,
-                domain.loVect(), domain.hiVect(), &nghost,
-                bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
-                bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
-                bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
+    max_level = amrcore->maxLevel();
 
     // Resize and reset data
     b.resize(max_level + 1);
@@ -93,8 +94,7 @@ DiffusionOp::DiffusionOp(AmrCore* _amrcore,
     matrix.setMaxOrder(2);
 
     // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
-    matrix.setDomainBC({(LinOpBCType) bc_lo[0], (LinOpBCType) bc_lo[1], (LinOpBCType) bc_lo[2]},
-		       {(LinOpBCType) bc_hi[0], (LinOpBCType) bc_hi[1], (LinOpBCType) bc_hi[2]});
+    matrix.setDomainBC(m_bc_lo, m_bc_hi);
 }
 
 DiffusionOp::~DiffusionOp()
@@ -115,15 +115,6 @@ void DiffusionOp::readParameters()
     pp.query("mg_rtol", mg_rtol);
     pp.query("mg_atol", mg_atol);
     pp.query("bottom_solver_type", bottom_solver_type);
-}
-
-void DiffusionOp::updateInternals(AmrCore* amrcore_in,
-                                  Vector<std::unique_ptr<EBFArrayBoxFactory>>* ebfactory_in)
-{
-    // This must be implemented when we want dynamic meshing
-    //
-    amrex::Print() << "ERROR: DiffusionOp::updateInternals() not yet implemented" << std::endl;
-    amrex::Abort();
 }
 
 //
@@ -151,7 +142,7 @@ void DiffusionOp::solve(      Vector<std::unique_ptr<MultiFab>>& vel_in,
     // Set alpha and beta
     matrix.setScalars(1.0, dt);
 
-    for(int lev = 0; lev <= amrcore->finestLevel(); lev++)
+    for(int lev = 0; lev <= max_level; lev++)
     {
         // Compute the spatially varying b coefficients (on faces) to equal the apparent viscosity
         average_cellcenter_to_face(GetArrOfPtrs(b[lev]), *eta_in[lev], amrcore->Geom(lev));
@@ -169,7 +160,7 @@ void DiffusionOp::solve(      Vector<std::unique_ptr<MultiFab>>& vel_in,
         amrex::Print() << "Diffusing velocity components all together..." << std::endl; 
     }
 
-    for(int lev = 0; lev <= amrcore->finestLevel(); lev++)
+    for(int lev = 0; lev <= max_level; lev++)
     {
         // Set the right hand side to equal rho
         MultiFab::Copy((*rhs[lev]),(*vel_in[lev]), 0, 0, AMREX_SPACEDIM, 0);
@@ -180,7 +171,7 @@ void DiffusionOp::solve(      Vector<std::unique_ptr<MultiFab>>& vel_in,
         //      u_old + dt ( - u grad u + div ( eta (grad u)^T ) / rho - grad p / rho + gravity )
         //
         for (int i = 0; i < 3; i++)
-           MultiFab::Multiply((*rhs[lev]), (*ro_in[lev]), 0, i, 1, rhs[lev]->nGrow());
+           MultiFab::Multiply((*rhs[lev]), (*ro_in[lev]), 0, i, 1, 0);
 
         // By this point we must have filled the Dirichlet values of phi stored in ghost cells
         MultiFab::Copy(*phi[lev],*vel_in[lev], 0, 0, AMREX_SPACEDIM, 1);
@@ -198,7 +189,7 @@ void DiffusionOp::solve(      Vector<std::unique_ptr<MultiFab>>& vel_in,
 
     solver.solve(GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol);
 
-    for(int lev = 0; lev <= amrcore->finestLevel(); lev++)
+    for(int lev = 0; lev <= max_level; lev++)
     {
         phi[lev]->FillBoundary(amrcore->Geom(lev).periodicity());
         MultiFab::Copy(*vel_in[lev], *phi[lev], 0, 0, AMREX_SPACEDIM, 1);

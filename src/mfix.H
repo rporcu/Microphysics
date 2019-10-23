@@ -55,9 +55,13 @@ public:
     // Face-based coefficients b in MAC projection and implicit diffusion solve
     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > bcoeff;
 
-    // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
+    // LinOpBCType Definitions from amrex/Src/Boundary/AMReX_LO_BCTYPES.H -- for projections
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  ppe_lobc;
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  ppe_hibc;
+
+    // LinOpBCType Definitions from amrex/Src/Boundary/AMReX_LO_BCTYPES.H -- for diffusive solves
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_lobc;
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_hibc;
 
     void InitParams(int solve_fluid, int solve_dem, int call_udf );
 

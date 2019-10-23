@@ -24,6 +24,6 @@ target_sources( mfixcore
    set_ppe_bcs.f90
    mfix_init.cpp
    mfix_arrays.cpp
-   mfix_setup_nodal_solver.cpp
+   mfix_setup_solvers.cpp
    mfix_proj_F.H
    )
