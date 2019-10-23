@@ -49,10 +49,21 @@ macro (setup_test _test _suffix _env _input_file )
                 Fortran_MODULE_DIRECTORY ${_test_dir}
                 RUNTIME_OUTPUT_DIRECTORY ${_test_dir} )
 
-            target_link_libraries(${_test_exe} ${MFIX_LIBNAME} )
+            # Special treatment for CUDA
+            if (ENABLE_CUDA)
+                get_target_property(_src_cpp ${_test_exe} SOURCES)
+                list(FILTER _src_cpp INCLUDE REGEX "\.cpp")
+                set_source_files_properties(${_src_cpp} PROPERTIES LANGUAGE CUDA )
+                set_target_properties( ${_test_exe}
+                    PROPERTIES
+                    CUDA_SEPARABLE_COMPILATION ON  # This add -dc flag
+                    )
+            endif ()
+
+            target_link_libraries( ${_test_exe} ${MFIX_LIBNAME} )
 
             # Accumulate the build for each test into target "build_tests"
-            add_dependencies ( ${BUILD_TEST} ${_test_exe} )
+            add_dependencies( ${BUILD_TEST} ${_test_exe} )
 
             # Create test dir in build path if needed
             # Update test files if needed
