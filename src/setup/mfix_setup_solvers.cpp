@@ -80,6 +80,5 @@ mfix::mfix_setup_solvers ()
     diff_lobc = {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]};
     diff_hibc = {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]};
 
-    diffusion_op.reset(new DiffusionOp(this, &ebfactory, diff_lobc, diff_hibc, nghost));
-    // diffusion_op->setup(this, &ebfactory);
+    diffusion_op->setup(this, &ebfactory);
 }

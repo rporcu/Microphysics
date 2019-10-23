@@ -38,13 +38,10 @@ DiffusionOp::DiffusionOp(AmrCore* _amrcore,
     setup(_amrcore, _ebfactory);
 }
 
-void DiffusionOp::setup(AmrCore* _amrcore,
+void DiffusionOp::setup(AmrCore* _amrcore, 
                         Vector<std::unique_ptr<EBFArrayBoxFactory>>* _ebfactory)
 {
-    // Get inputs from ParmParse
-    readParameters();
-
-    // The ebfactory changes when we regrid so we must pass it in here.
+    // The amrcore boxArray and DistributionMap change when we regrid so we must pass the new object in here.
     amrcore = _amrcore;
 
     // The ebfactory changes when we regrid so we must pass it in here.
@@ -86,15 +83,15 @@ void DiffusionOp::setup(AmrCore* _amrcore,
     // Define the matrix.
     LPInfo info;
     info.setMaxCoarseningLevel(mg_max_coarsening_level);
-    matrix.define(geom, grids, dmap, info, GetVecOfConstPtrs(*ebfactory));
+    matrix.reset(new MLEBTensorOp(geom, grids, dmap, info, GetVecOfConstPtrs(*ebfactory)));
 
     // It is essential that we set MaxOrder to 2 if we want to use the standard
     // phi(i)-phi(i-1) approximation for the gradient at Dirichlet boundaries.
     // The solver's default order is 3 and this uses three points for the gradient.
-    matrix.setMaxOrder(2);
+    matrix->setMaxOrder(2);
 
     // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
-    matrix.setDomainBC(m_bc_lo, m_bc_hi);
+    matrix->setDomainBC(m_bc_lo, m_bc_hi);
 }
 
 DiffusionOp::~DiffusionOp()
@@ -140,25 +137,23 @@ void DiffusionOp::solve(      Vector<std::unique_ptr<MultiFab>>& vel_in,
     //      b: eta
 
     // Set alpha and beta
-    matrix.setScalars(1.0, dt);
+    matrix->setScalars(1.0, dt);
 
     for(int lev = 0; lev <= max_level; lev++)
     {
         // Compute the spatially varying b coefficients (on faces) to equal the apparent viscosity
-        average_cellcenter_to_face(GetArrOfPtrs(b[lev]), *eta_in[lev], amrcore->Geom(lev));
+        average_cellcenter_to_face(GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev]);
         for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
-            b[lev][dir]->FillBoundary(amrcore->Geom(lev).periodicity());
+            b[lev][dir]->FillBoundary(geom[lev].periodicity());
         
         // This sets the coefficients
-        matrix.setACoeffs(lev, (*ro_in[lev]));
-        matrix.setShearViscosity  (lev, GetArrOfConstPtrs(b[lev]));
-        matrix.setEBShearViscosity(lev, (*eta_in[lev]));
+        matrix->setACoeffs(lev, (*ro_in[lev]));
+        matrix->setShearViscosity  (lev, GetArrOfConstPtrs(b[lev]));
+        matrix->setEBShearViscosity(lev, (*eta_in[lev]));
     }
 
     if(verbose > 0)
-    {
         amrex::Print() << "Diffusing velocity components all together..." << std::endl; 
-    }
 
     for(int lev = 0; lev <= max_level; lev++)
     {
@@ -175,13 +170,13 @@ void DiffusionOp::solve(      Vector<std::unique_ptr<MultiFab>>& vel_in,
 
         // By this point we must have filled the Dirichlet values of phi stored in ghost cells
         MultiFab::Copy(*phi[lev],*vel_in[lev], 0, 0, AMREX_SPACEDIM, 1);
-        phi[lev]->FillBoundary(amrcore->Geom(lev).periodicity());
-        matrix.setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
+        phi[lev]->FillBoundary(geom[lev].periodicity());
+        matrix->setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
 
-        // matrix.setEBHomogDirichlet(lev, *eta_in[lev]);
+        // matrix->setEBHomogDirichlet(lev, *eta_in[lev]);
     }
 
-    MLMG solver(matrix);
+    MLMG solver(*matrix);
     setSolverSettings(solver);
 
     // This ensures that ghost cells of sol are correctly filled when returned from the solver
@@ -191,7 +186,7 @@ void DiffusionOp::solve(      Vector<std::unique_ptr<MultiFab>>& vel_in,
 
     for(int lev = 0; lev <= max_level; lev++)
     {
-        phi[lev]->FillBoundary(amrcore->Geom(lev).periodicity());
+        phi[lev]->FillBoundary(geom[lev].periodicity());
         MultiFab::Copy(*vel_in[lev], *phi[lev], 0, 0, AMREX_SPACEDIM, 1);
     }
 
@@ -235,11 +230,6 @@ void DiffusionOp::ComputeDivTau(Vector<std::unique_ptr<MultiFab>>& divtau_out,
 {
     BL_PROFILE("DiffusionOp::ComputeDivTau");
 
-    Vector<Geometry> geom = amrcore->Geom();
-    Vector<BoxArray> grids = amrcore->boxArray();
-    Vector<DistributionMapping> dmap = amrcore->DistributionMap();
-    int max_level = amrcore->maxLevel();
-
     Vector<std::unique_ptr<MultiFab> > divtau_aux(max_level+1);
     for(int lev = 0; lev <= max_level; lev++)
     {
@@ -252,7 +242,7 @@ void DiffusionOp::ComputeDivTau(Vector<std::unique_ptr<MultiFab>>& divtau_out,
     Box domain(geom[0].Domain());
  
     // We want to return div (mu grad)) phi
-    matrix.setScalars(0.0, -1.0);
+    matrix->setScalars(0.0, -1.0);
  
     // Compute the coefficients
     for (int lev = 0; lev <= max_level; lev++)
@@ -260,14 +250,14 @@ void DiffusionOp::ComputeDivTau(Vector<std::unique_ptr<MultiFab>>& divtau_out,
         average_cellcenter_to_face( GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev] );
  
         for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
-             b[lev][dir]->FillBoundary(amrcore->Geom(lev).periodicity());
+             b[lev][dir]->FillBoundary(geom[lev].periodicity());
  
-        matrix.setShearViscosity  ( lev, GetArrOfConstPtrs(b[lev]));
-        matrix.setEBShearViscosity( lev, (*eta_in[lev]));
-        matrix.setLevelBC         ( lev, GetVecOfConstPtrs(vel_in)[lev] );
+        matrix->setShearViscosity  ( lev, GetArrOfConstPtrs(b[lev]));
+        matrix->setEBShearViscosity( lev, (*eta_in[lev]));
+        matrix->setLevelBC         ( lev, GetVecOfConstPtrs(vel_in)[lev] );
     }
  
-    MLMG solver(matrix);
+    MLMG solver(*matrix);
  
     solver.apply(GetVecOfPtrs(divtau_aux), GetVecOfPtrs(vel_in));
  

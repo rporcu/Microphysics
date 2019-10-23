@@ -245,7 +245,7 @@ mfix::RegridArrays (int lev)
     if (ooo_debug) amrex::Print() << "RegridArrays" << std::endl;
     bool need_regrid = mfix_update_ebfactory(lev);
 
-    // exit this function is ebfactory has not been updated because that means
+    // exit this function if ebfactory has not been updated because that means
     // that dm and ba haven't changed
     if (!need_regrid)
         return;

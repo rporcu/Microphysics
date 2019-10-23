@@ -55,7 +55,6 @@ public:
                        const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ep_in,
                        const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& eta_in);
 
-
 private:
 
     // AmrCore data 
@@ -79,7 +78,7 @@ private:
     //
     // ( alpha a - beta div ( b grad ) ) phi = rhs
     //
-    amrex::MLEBTensorOp matrix;
+    std::unique_ptr<amrex::MLEBTensorOp> matrix;
 
     amrex::Vector<amrex::Array<std::unique_ptr<amrex::MultiFab>, AMREX_SPACEDIM>> b;
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> phi;
