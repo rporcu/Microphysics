@@ -1,2 +1,2 @@
-CEXE_headers   += MFIX_NodalProjection.H
-CEXE_sources   += MFIX_NodalProjection.cpp
+CEXE_headers   += NodalProjection.H
+CEXE_sources   += NodalProjection.cpp

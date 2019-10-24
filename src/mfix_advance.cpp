@@ -13,7 +13,7 @@
 #include <AMReX_BLassert.H>
 
 #include <MFIX_MFHelpers.H>
-#include <MFIX_NodalProjection.H>
+#include <NodalProjection.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>

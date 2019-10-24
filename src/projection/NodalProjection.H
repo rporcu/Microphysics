@@ -1,5 +1,5 @@
-#ifndef MFIX_NODAL_PROJECTION_H
-#define MFIX_NODAL_PROJECTION_H
+#ifndef NODAL_PROJECTION_H
+#define NODAL_PROJECTION_H
 
 #include <AMReX.H>
 #include <mfix.H>

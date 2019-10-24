@@ -1,4 +1,4 @@
-#include <MFIX_NodalProjection.H>
+#include <NodalProjection.H>
 #include <AMReX.H>
 #include <mfix.H>
 #include <AMReX_EBMultiFabUtil.H>

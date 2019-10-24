@@ -427,7 +427,7 @@ protected:
 
     BcList bc_list;
 
-    // "mutable" keyword is just a temporary fix to allow MFIX_NodalProjection to
+    // "mutable" keyword is just a temporary fix to allow NodalProjection to
     // work as intended. This won't be needed when the BC will be given their own
     // class
     mutable amrex::Cuda::ManagedVector<amrex::Real> m_bc_u_g;
