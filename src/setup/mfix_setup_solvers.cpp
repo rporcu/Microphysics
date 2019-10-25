@@ -2,7 +2,7 @@
 #include <diffusion_F.H>
 #include <mfix.H>
 
-#include <NodalProjector.H>
+#include <AMReX_NodalProjector.H>
 #include <DiffusionOp.H>
 
 void

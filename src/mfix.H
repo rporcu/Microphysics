@@ -33,7 +33,7 @@
 #include <MFIX_BcList.H>
 #include <DiffusionOp.H>
 
-#include <NodalProjector.H>
+#include <AMReX_NodalProjector.H>
 
 enum DragType
 {
