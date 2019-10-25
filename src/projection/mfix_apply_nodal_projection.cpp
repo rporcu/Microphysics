@@ -131,7 +131,7 @@ mfix::mfix_apply_nodal_projection ( Vector< std::unique_ptr<MultiFab> >& a_depdt
         {
             // p := p + phi
             MultiFab::Saxpy(*p_g[lev], qdt, *phi[lev], 0, 0, 1, phi[lev]->nGrow());
-            MultiFab::Saxpy(*gp[lev],  qdt, *gradphi[lev], 0, 0, 1, gradphi[lev]->nGrow());
+            MultiFab::Saxpy(*gp[lev],  qdt, *gradphi[lev], 0, 0, 3, gradphi[lev]->nGrow());
         }
     }
 
