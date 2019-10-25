@@ -33,7 +33,7 @@
 #include <MFIX_BcList.H>
 #include <DiffusionOp.H>
 
-class NodalProjection;
+#include <NodalProjector.H>
 
 enum DragType
 {
@@ -385,10 +385,7 @@ public:
     // Nodal Projection
     //
     //////////////////////////////////////////////////////////////////////////////////////////////
-
-    // Nodal projection
-    friend class NodalProjection;
-    std::unique_ptr<NodalProjection> nodal_projector;
+    std::unique_ptr<NodalProjector> nodal_projector;
 
 protected:
 
@@ -722,7 +719,7 @@ private:
     // ***************************************************************
     // Diffusion solve
     // ***************************************************************
- 
+
     // Verbosity
     int  diff_mg_verbose = 0;
     int  diff_mg_cg_verbose = 0;

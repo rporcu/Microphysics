@@ -13,7 +13,7 @@
 #include <AMReX_BLassert.H>
 
 #include <MFIX_MFHelpers.H>
-#include <NodalProjection.H>
+#include <NodalProjector.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -498,9 +498,9 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
 
     mfix_set_scalar_bcs   (time, ro_g, trac, ep_g, mu_g);
 
-    // 
+    //
     // Solve for u^star s.t. u^star = u_go + dt/2 (R_u^* + R_u^n) + dt/2 (Lu)^n + dt/2 (Lu)^star
-    // 
+    //
     for (int lev = 0; lev < nlev; lev++)
         MultiFab::Multiply(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
 
@@ -510,9 +510,9 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     for (int lev = 0; lev < nlev; lev++)
         MultiFab::Divide(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
 
-    // 
+    //
     // Apply projection -- depdt=0 for now
-    // 
+    //
     Vector< std::unique_ptr< MultiFab > > depdt(nlev);
     for (int lev(0); lev < nlev; ++lev )
         depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1);
@@ -834,38 +834,128 @@ mfix::mfix_apply_nodal_projection ( Vector< std::unique_ptr<MultiFab> >& a_depdt
                        << ep_g[lev]->max(0) << std::endl;
     }
 
-    // Perform projection
-    nodal_projector -> project( vel_g, ep_g, ro_g, a_depdt, a_time, a_dt );
+    // Set velocities BC before projection
+    mfix_set_velocity_bcs(a_time, vel_g, 0);
 
-    // Get phi and fluxes and rhs
-    // The latter is needed for plotting purposes only
+    //
+    // Compute epu
+    //
+    Vector< std::unique_ptr<MultiFab> > epu(nlev);
+
+    for (int lev(0); lev < nlev; ++lev)
+    {
+        // We only need one ghost cell here -- so no need to make it bigger
+        int nghost(1);
+        epu[lev].reset(new MultiFab( grids[lev], dmap[lev], 3, 1 , MFInfo(),
+                                     *ebfactory[lev] ) );
+
+        epu[lev] -> setVal(1.e200);
+
+        MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow() );
+
+        for (int n(0); n < 3; n++)
+            MultiFab::Multiply( *epu[lev], *ep_g[lev], 0, n, 1, epu[lev]->nGrow() );
+
+        epu[lev] -> FillBoundary( geom[lev].periodicity() );
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+        // Extrapolate Dirichlet values to ghost cells -- but do it differently in that
+        //  no-slip walls are treated exactly like slip walls --
+        // Note that this routine is essential to impose the correct inflow bc's on
+        //  the product ep  * vel
+        for (MFIter mfi((*epu[lev]), TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        {
+            // Why are we using this instead of simply multiplying vel and ep with their BCs in place
+            // already?
+            set_vec_bcs(lev, (*epu[lev])[mfi], geom[lev].Domain() );
+        }
+
+        epu[lev] -> FillBoundary( geom[lev].periodicity() );
+
+        // We set these to zero because if the values in the covered cells are undefined,
+        //   even though they are multiplied by zero in the divu computation, we can still get NaNs
+        EB_set_covered(*epu[lev], 0, epu[lev]->nComp(), 1, 0.0);
+    }
+
+    //
+    // Compute RHS
+    //
+    nodal_projector -> computeRHS(diveu, epu, a_depdt);
+
+    // Perform projection on
+    nodal_projector -> project2( vel_g, ep_g, ro_g, diveu );
+
+    // Get phi and fluxes
     Vector< const amrex::MultiFab* >  phi(nlev);
     Vector< const amrex::MultiFab* >  gradphi(nlev);
-    Vector< const amrex::MultiFab* >  rhs(nlev);
 
     phi     = nodal_projector -> getPhi();
     gradphi = nodal_projector -> getGradPhi();
-    rhs     = nodal_projector -> getRHS();
 
-    //
+    // Compute diveu to print it out
+    nodal_projector -> computeRHS(diveu, epu, a_depdt);
+
+    // Since I did not pass dt, I have to normalize here
+    Real qdt(1.0/a_dt);
     for (int lev(0); lev < nlev; ++lev)
     {
-        // Copy RHS into diveu so we can plot its value
-        MultiFab::Copy(*diveu[lev], *rhs[lev], 0, 0, 1, diveu[lev]->nGrow());
-
         if (proj_2)
         {
             // p := phi
             MultiFab::Copy(*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
             MultiFab::Copy( *gp[lev], *gradphi[lev], 0, 0, 3, gradphi[lev]->nGrow());
+            p_g[lev] -> mult(qdt);
+            gp[lev]  -> mult(qdt);
         }
         else
         {
             // p := p + phi
-            MultiFab::Add(*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
-            MultiFab::Add( *gp[lev], *gradphi[lev], 0, 0, 3, gradphi[lev]->nGrow());
+            MultiFab::Saxpy(*p_g[lev], qdt, *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+            MultiFab::Saxpy(*gp[lev],  qdt, *gradphi[lev], 0, 0, 1, gradphi[lev]->nGrow());
         }
     }
+
+
+    //
+    // This part is just to plot diveu
+    //
+    mfix_set_velocity_bcs(a_time, vel_g, 0);
+
+    for (int lev(0); lev < nlev; ++lev)
+    {
+        epu[lev] -> setVal(1.e200);
+
+        MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow() );
+
+        for (int n(0); n < 3; n++)
+            MultiFab::Multiply( *epu[lev], *ep_g[lev], 0, n, 1, epu[lev]->nGrow() );
+
+        epu[lev] -> FillBoundary( geom[lev].periodicity() );
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+        // Extrapolate Dirichlet values to ghost cells -- but do it differently in that
+        //  no-slip walls are treated exactly like slip walls --
+        // Note that this routine is essential to impose the correct inflow bc's on
+        //  the product ep  * vel
+        for (MFIter mfi((*epu[lev]), TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        {
+            // Why are we using this instead of simply multiplying vel and ep with their BCs in place
+            // already?
+            set_vec_bcs(lev, (*epu[lev])[mfi], geom[lev].Domain() );
+        }
+
+        epu[lev] -> FillBoundary( geom[lev].periodicity() );
+
+        // We set these to zero because if the values in the covered cells are undefined,
+        //   even though they are multiplied by zero in the divu computation, we can still get NaNs
+        EB_set_covered(*epu[lev], 0, epu[lev]->nComp(), 1, 0.0);
+    }
+
+    nodal_projector -> computeRHS(diveu, epu, a_depdt);
 
     for (int lev = nlev-1; lev > 0; lev--)
     {
