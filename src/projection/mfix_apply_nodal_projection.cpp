@@ -100,10 +100,11 @@ mfix::mfix_apply_nodal_projection ( Vector< std::unique_ptr<MultiFab> >& a_depdt
     //
     // Compute RHS
     //
-    nodal_projector -> computeRHS(diveu, epu, a_depdt);
+    nodal_projector -> computeRHS(GetVecOfPtrs(diveu), GetVecOfPtrs(epu), GetVecOfPtrs(a_depdt));
 
     // Perform projection on
-    nodal_projector -> project2( vel_g, ep_g, ro_g, diveu );
+    nodal_projector -> project2( GetVecOfPtrs(vel_g), GetVecOfConstPtrs(ep_g),
+                                 GetVecOfConstPtrs(ro_g), GetVecOfConstPtrs(diveu) );
 
     // Get phi and fluxes
     Vector< const amrex::MultiFab* >  phi(nlev);
@@ -113,7 +114,7 @@ mfix::mfix_apply_nodal_projection ( Vector< std::unique_ptr<MultiFab> >& a_depdt
     gradphi = nodal_projector -> getGradPhi();
 
     // Compute diveu to print it out
-    nodal_projector -> computeRHS(diveu, epu, a_depdt);
+    nodal_projector -> computeRHS(GetVecOfPtrs(diveu), GetVecOfPtrs(epu), GetVecOfPtrs(a_depdt));
 
     // Since I did not pass dt, I have to normalize here
     Real qdt(1.0/a_dt);
@@ -173,7 +174,7 @@ mfix::mfix_apply_nodal_projection ( Vector< std::unique_ptr<MultiFab> >& a_depdt
         EB_set_covered(*epu[lev], 0, epu[lev]->nComp(), 1, 0.0);
     }
 
-    nodal_projector -> computeRHS(diveu, epu, a_depdt);
+    nodal_projector -> computeRHS(GetVecOfPtrs(diveu), GetVecOfPtrs(epu), GetVecOfPtrs(a_depdt));
 
     for (int lev = nlev-1; lev > 0; lev--)
     {
