@@ -6,8 +6,6 @@ CEXE_headers += mfix_des_K.H
 CEXE_headers += mfix_drag_K.H
 
 CEXE_sources += MFIXParticleContainer.cpp MFIX_DEM_Parms.cpp
-CEXE_sources += MFIX_PC_CalcDragOnFluid.cpp
-CEXE_sources += MFIX_PC_CalcVolumeFraction.cpp
 CEXE_sources += MFIX_PC_Init.cpp 
 CEXE_sources += MFIX_PC_RemoveOutOfRange.cpp 
 CEXE_sources += MFIX_PC_Replicate.cpp 

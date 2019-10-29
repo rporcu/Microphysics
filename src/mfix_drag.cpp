@@ -13,9 +13,14 @@ void mfix::mfix_calc_drag_fluid(Real time)
   for (int lev = 0; lev < nlev; lev++)
     drag[lev] ->setVal(0.0L);
 
-  pc -> CalcDragOnFluid(drag, particle_ebfactory,
-                        bc_ilo,bc_ihi,bc_jlo,bc_jhi,bc_klo,bc_khi,
-                        nghost);
+  int fortran_beta_comp = 15;
+  int fortran_vel_comp  =  9;
+
+  pc -> TrilinearDepositionFluidDragForce(drag, particle_ebfactory,
+                                          bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo, bc_khi,
+                                          fortran_beta_comp, fortran_vel_comp, nghost);
+
+  mfix_diffuse_drag(drag);
 
   // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
   for (int lev = 0; lev < nlev; lev++)
@@ -161,7 +166,7 @@ mfix::mfix_calc_drag_particle(Real time)
                 pbeta * ( velfp[2] - particle.rdata(realData::velz) ) -
                 (gradp[2] + gp0_z) * particle.rdata(realData::volume);
             });
-            
+
             Gpu::synchronize();
           }
           else // FAB not all regular
@@ -215,7 +220,7 @@ mfix::mfix_calc_drag_particle(Real time)
                 {
                   trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
                   trilinear_interp(particle, &gradp[0],  gp_array, plo, dxi);
-                } 
+                }
                 // At least one of the cells in the stencil is covered
                 else
                 {
@@ -245,7 +250,7 @@ mfix::mfix_calc_drag_particle(Real time)
                   if (anrm[0] < 0)
                   {
                     ii = iloc - 1;
-                  } 
+                  }
                   else
                   {
                     ii = iloc + 1;

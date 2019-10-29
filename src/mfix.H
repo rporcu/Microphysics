@@ -544,6 +544,7 @@ private:
     void mfix_diffuse_velocity_tensor(Real time, Real dt);
 
     void mfix_diffuse_eps (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps);
+    void mfix_diffuse_drag (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_drag);
 
     void mfix_compute_diveu(Real time);
 
@@ -639,11 +640,13 @@ private:
 
     // RHS for diffusive tensor solve
     Vector< std::unique_ptr<MultiFab> > diff_rhs;
-    Vector< std::unique_ptr<MultiFab> > diff_rhs0;
+    Vector< std::unique_ptr<MultiFab> > diff_rhs1;
+    Vector< std::unique_ptr<MultiFab> > diff_rhs4;
 
     // Solution for diffusion solves
     Vector< std::unique_ptr<MultiFab> > diff_phi;
-    Vector< std::unique_ptr<MultiFab> > diff_phi0;
+    Vector< std::unique_ptr<MultiFab> > diff_phi1;
+    Vector< std::unique_ptr<MultiFab> > diff_phi4;
 
     // MAC velocities
     Vector< std::unique_ptr<MultiFab> > u_mac;

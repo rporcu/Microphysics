@@ -7,6 +7,9 @@
 #include "AMReX_Particles.H"
 #include "AMReX_NeighborParticles.H"
 
+#include <AMReX_EBSupport.H>
+#include <AMReX_EBMultiFabUtil.H>
+
 #include "mfix_des_F.H"
 #include "MFIX_DEM_Parms.H"
 #include <MFIX_BcList.H>
@@ -143,78 +146,44 @@ public:
     ///
     void writeAllAtLevel(int lev = 0);
 
-    ///
-    /// Calculate gas volume fraction using a PIC deposition of particle volume
-    ///
-    void CalcVolumeFraction(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & mf,
-                            const amrex::Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > & ebfactory,
-                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
-                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
-                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
-                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
-                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
-                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
-                            const BcList & bc_list,
-                            int nghost);
-
-    void CapSolidsVolFrac(amrex::MultiFab& eps);
 
     ///
     /// Do the actual PIC deposition for CalcVolumeFraction
     ///
-    void PICDeposition(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & mf,
-                       const amrex::Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > & ebfactory,
-                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
-                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
-                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
-                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
-                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
-                       const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
-                       const BcList & bc_list,
-                       int fortran_particle_comp,
-                       int nghost);
+  void TrilinearDepositionParticleVolume(int lev, const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & mf,
+                                         const amrex::Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > & ebfactory,
+                                         int fortran_particle_comp
+                                         );
 
-    ///
-    /// Calculate particle-induced drag on the fluid
-    ///
-    void CalcDragOnFluid(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & drag_mf,
-                         const amrex::Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > & ebfactory,
-                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
-                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
-                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
-                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
-                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
-                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
-                         int nghost);
 
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
     ///
-    void PICMultiDeposition(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & drag_mf,
-                            const amrex::Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > & ebfactory,
-                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
-                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
-                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
-                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
-                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
-                            const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
-                            int fortran_beta_comp,
-                            int fortran_vel_comp,
-                            int nghost);
+  void TrilinearDepositionFluidDragForce(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & drag_mf,
+                                         const amrex::Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > & ebfactory,
+                                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
+                                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
+                                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
+                                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
+                                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
+                                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
+                                         int fortran_beta_comp,
+                                         int fortran_vel_comp,
+                                         int nghost);
 
     //
     // Postprocessing utilities to compute spatially-averaged particle velocities
     //
-    void ComputeAverageVelocities(const int lev,
-                                  const amrex::Real time,
-                                  const std::string& basename,
-                                  const amrex::Vector<amrex::Real>& avg_vel_p,
-                                  const amrex::Vector<amrex::Real>& avg_region_x_w,
-                                  const amrex::Vector<amrex::Real>& avg_region_x_e,
-                                  const amrex::Vector<amrex::Real>& avg_region_y_s,
-                                  const amrex::Vector<amrex::Real>& avg_region_y_n,
-                                  const amrex::Vector<amrex::Real>& avg_region_z_b,
-                                  const amrex::Vector<amrex::Real>& avg_region_z_t );
+  void ComputeAverageVelocities(const int lev,
+                                const amrex::Real time,
+                                const std::string& basename,
+                                const amrex::Vector<amrex::Real>& avg_vel_p,
+                                const amrex::Vector<amrex::Real>& avg_region_x_w,
+                                const amrex::Vector<amrex::Real>& avg_region_x_e,
+                                const amrex::Vector<amrex::Real>& avg_region_y_s,
+                                const amrex::Vector<amrex::Real>& avg_region_y_n,
+                                const amrex::Vector<amrex::Real>& avg_region_z_b,
+                                const amrex::Vector<amrex::Real>& avg_region_z_t );
 
 private:
     int nlev;

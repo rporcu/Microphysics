@@ -25,11 +25,13 @@ mfix::ResizeArrays ()
 
     // RHS arrays for cell-centered solves
     diff_rhs.resize(nlevs_max);
-    diff_rhs0.resize(nlevs_max);
+    diff_rhs1.resize(nlevs_max);
+    diff_rhs4.resize(nlevs_max);
 
     // Solution array for diffusion solves
     diff_phi.resize(nlevs_max);
-    diff_phi0.resize(nlevs_max);
+    diff_phi1.resize(nlevs_max);
+    diff_phi4.resize(nlevs_max);
 
     // MAC velocities at faces
     u_mac.resize(nlevs_max);
@@ -167,16 +169,21 @@ mfix::AllocateArrays (int lev)
     diff_rhs[lev].reset(new MultiFab(grids[lev],dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
     diff_rhs[lev] -> setVal(0.);
 
-    // Array to store the rhs for diffusion solves -- no ghost cells needed
-    diff_rhs0[lev].reset(new MultiFab(grids[lev],dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]));
-    diff_rhs0[lev] -> setVal(0.);
+    diff_rhs1[lev].reset(new MultiFab(grids[lev],dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]));
+    diff_rhs1[lev] -> setVal(0.);
+
+    diff_rhs4[lev].reset(new MultiFab(grids[lev],dmap[lev], 4, 0, MFInfo(), *ebfactory[lev]));
+    diff_rhs4[lev] -> setVal(0.);
 
     // Array to store the solution for diffusion solves -- only 1 ghost cell needed
     diff_phi[lev].reset(new MultiFab(grids[lev],dmap[lev], 3, 1, MFInfo(), *ebfactory[lev]));
     diff_phi[lev] -> setVal(0.);
 
-    diff_phi0[lev].reset(new MultiFab(grids[lev],dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]));
-    diff_phi0[lev] -> setVal(0.);
+    diff_phi1[lev].reset(new MultiFab(grids[lev],dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]));
+    diff_phi1[lev] -> setVal(0.);
+
+    diff_phi4[lev].reset(new MultiFab(grids[lev],dmap[lev], 4, 1, MFInfo(), *ebfactory[lev]));
+    diff_phi4[lev] -> setVal(0.);
 
     // Array to store the rhs for MAC projection
     mac_rhs[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
@@ -381,10 +388,18 @@ mfix::RegridArrays (int lev)
     diff_rhs[lev] -> setVal(0.);
 
     // Array to store the rhs for tensor diffusion solve
-    std::unique_ptr<MultiFab> diff_rhs0_new(new  MultiFab(grids[lev], dmap[lev], 1, diff_rhs0[lev]->nComp(),
-                                                         MFInfo(), *ebfactory[lev]));
-    diff_rhs0[lev] = std::move(diff_rhs0_new);
-    diff_rhs0[lev] -> setVal(0.);
+    std::unique_ptr<MultiFab> diff_rhs1_new(new  MultiFab(grids[lev], dmap[lev],
+                                                          diff_rhs1[lev]->nComp(), diff_rhs1[lev]->nGrow(),
+                                                          MFInfo(), *ebfactory[lev]));
+    diff_rhs1[lev] = std::move(diff_rhs1_new);
+    diff_rhs1[lev] -> setVal(0.);
+
+    // // Array to store the rhs for tensor diffusion solve
+    std::unique_ptr<MultiFab> diff_rhs4_new(new  MultiFab(grids[lev], dmap[lev],
+                                                          diff_rhs4[lev]->nComp(), diff_rhs4[lev]->nGrow(),
+                                                          MFInfo(), *ebfactory[lev]));
+    diff_rhs4[lev] = std::move(diff_rhs4_new);
+    diff_rhs4[lev] -> setVal(0.);
 
     // Arrays to store the solution for diffusion solves
     std::unique_ptr<MultiFab> diff_phi_new(new  MultiFab(grids[lev], dmap[lev],
@@ -393,19 +408,27 @@ mfix::RegridArrays (int lev)
     diff_phi[lev] -> setVal(0.);
 
     // Arrays to store the solution for diffusion solves
-    std::unique_ptr<MultiFab> diff_phi0_new(new  MultiFab(grids[lev], dmap[lev], 1, diff_phi0[lev]->nComp(),
-                                                         MFInfo(), *ebfactory[lev]));
-    diff_phi0[lev] = std::move(diff_phi0_new);
-    diff_phi0[lev] -> setVal(0.);
+    std::unique_ptr<MultiFab> diff_phi1_new(new  MultiFab(grids[lev], dmap[lev],
+                                                          diff_phi1[lev]->nComp(), diff_phi1[lev]->nGrow(),
+                                                          MFInfo(), *ebfactory[lev]));
+    diff_phi1[lev] = std::move(diff_phi1_new);
+    diff_phi1[lev] -> setVal(0.);
+
+    // Arrays to store the solution for diffusion solves
+    std::unique_ptr<MultiFab> diff_phi4_new(new  MultiFab(grids[lev], dmap[lev],
+                                                          diff_phi4[lev]->nComp(), diff_phi4[lev]->nGrow(),
+                                                          MFInfo(), *ebfactory[lev]));
+    diff_phi4[lev] = std::move(diff_phi4_new);
+    diff_phi4[lev] -> setVal(0.);
 
     // Array to store the rhs for cell-centered solves
-    std::unique_ptr<MultiFab> mac_rhs_new(new  MultiFab(grids[lev], dmap[lev], 
+    std::unique_ptr<MultiFab> mac_rhs_new(new  MultiFab(grids[lev], dmap[lev],
                                           mac_rhs[lev]->nComp(),mac_rhs[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
     mac_rhs[lev] = std::move(mac_rhs_new);
     mac_rhs[lev] -> setVal(0.);
 
     // Arrays to store the solution for the MAC projection
-    std::unique_ptr<MultiFab> mac_phi_new(new  MultiFab(grids[lev], dmap[lev], 
+    std::unique_ptr<MultiFab> mac_phi_new(new  MultiFab(grids[lev], dmap[lev],
                                           mac_phi[lev]->nComp(),mac_phi[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
     mac_phi[lev] = std::move(mac_phi_new);
     mac_phi[lev] -> setVal(0.);

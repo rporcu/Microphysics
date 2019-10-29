@@ -1,0 +1,2 @@
+CEXE_sources += mfix_diffuse_eps.cpp
+CEXE_sources += mfix_diffuse_drag.cpp

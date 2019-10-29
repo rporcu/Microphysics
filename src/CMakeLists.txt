@@ -34,8 +34,8 @@ target_sources(mfixcore
    mfix_advance.cpp
    compute_diveu.cpp
    mfix_calc_particle_beta.cpp
+   mfix_calc_volume_fraction.cpp
    mfix_drag.cpp
-   mfix_diffuse_eps.cpp
    mfix_evolve.cpp
    mfix.cpp
    #  main.cpp <---- DO NOT ADD THIS HERE
@@ -53,6 +53,7 @@ add_subdirectory(io)
 add_subdirectory(convection)
 
 # DES
+add_subdirectory(deposition)
 add_subdirectory(des_fluid)
 add_subdirectory(src_des)
 

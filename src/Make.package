@@ -3,6 +3,7 @@ CEXE_sources += compute_diveu.cpp
 CEXE_sources += compute_dt.cpp
 CEXE_sources += mfix_advance.cpp
 CEXE_sources += mfix_calc_particle_beta.cpp
+CEXE_sources += mfix_calc_volume_fraction.cpp
 CEXE_sources += mfix_drag.cpp
 CEXE_sources += mfix_evolve.cpp
 CEXE_sources += mfix.cpp

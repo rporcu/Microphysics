@@ -108,15 +108,15 @@ mfix::mfix_diffuse_eps (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_ep
    // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
    for (int lev = 0; lev < nlev; lev++)
    {
-       MultiFab::Copy((*diff_phi0[lev]),(*mf_eps[lev]), 0, 0, 1, diff_phi0[lev]->nGrow());
+       MultiFab::Copy((*diff_phi1[lev]),(*mf_eps[lev]), 0, 0, 1, diff_phi1[lev]->nGrow());
 
-       EB_set_covered(*diff_phi0[lev], 0, diff_phi0[lev]->nComp(), diff_phi0[lev]->nGrow(), covered_val);
-       diff_phi0[lev] -> FillBoundary (geom[lev].periodicity());
+       EB_set_covered(*diff_phi1[lev], 0, diff_phi1[lev]->nComp(), diff_phi1[lev]->nGrow(), covered_val);
+       diff_phi1[lev] -> FillBoundary (geom[lev].periodicity());
 
-       ebscalarop.setLevelBC ( lev, GetVecOfConstPtrs(diff_phi0)[lev] );
+       ebscalarop.setLevelBC ( lev, GetVecOfConstPtrs(diff_phi1)[lev] );
 
       // Define RHS = eps
-       MultiFab::Copy((*diff_rhs0[lev]),(*mf_eps[lev]), 0, 0, 1, 0);
+       MultiFab::Copy((*diff_rhs1[lev]),(*mf_eps[lev]), 0, 0, 1, 0);
    }
 
    // This ensures that ghost cells of sol are correctly filled when returned from the solver
@@ -127,12 +127,12 @@ mfix::mfix_diffuse_eps (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_ep
    //
    //  (1.0 - div dot nu grad) eps = RHS
    //
-   solver.solve ( GetVecOfPtrs(diff_phi0), GetVecOfConstPtrs(diff_rhs0), diff_mg_rtol, diff_mg_atol );
+   solver.solve ( GetVecOfPtrs(diff_phi1), GetVecOfConstPtrs(diff_rhs1), diff_mg_rtol, diff_mg_atol );
 
    for (int lev = 0; lev < nlev; lev++)
    {
-       diff_phi0[lev]->FillBoundary (geom[lev].periodicity());
-       MultiFab::Copy( *mf_eps[lev], *diff_phi0[lev], 0, 0, 1, 1);
+       diff_phi1[lev]->FillBoundary (geom[lev].periodicity());
+       MultiFab::Copy( *mf_eps[lev], *diff_phi1[lev], 0, 0, 1, 1);
    }
 
    amrex::Print() << "After diffusing volume fraction " << std::endl;
