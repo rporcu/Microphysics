@@ -314,6 +314,8 @@ public:
 
     template <typename F>
     void mfix_calc_particle_beta(F DragFunc, Real time);
+    void mfix_calc_volume_fraction(Real & sum_vol);
+    void mfix_deposition_bcs_scalar(int lev, amrex::MultiFab & filled_mf);
 
     Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
     Real volEpsWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
@@ -395,6 +397,7 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////////
     std::unique_ptr<NodalProjector> nodal_projector;
 
+
 protected:
 
     //! Tagging cells for refinement
@@ -474,7 +477,6 @@ protected:
     void GetDataScalar (int lev, Real time, Vector<MultiFab *> & data, int icomp,
                         Vector<Real> & datatime);
 
-    void mfix_calc_volume_fraction(Real & sum_vol);
     void mfix_calc_particle_beta(Real time);
     void mfix_calc_drag_fluid(Real time);
 

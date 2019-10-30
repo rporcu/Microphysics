@@ -162,17 +162,13 @@ public:
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
     ///
-  void TrilinearDepositionFluidDragForce(const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & drag_mf,
-                                         const amrex::Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > & ebfactory,
-                                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ilo,
-                                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_ihi,
-                                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jlo,
-                                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_jhi,
-                                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_klo,
-                                         const amrex::Vector< std::unique_ptr<amrex::IArrayBox> >& bc_khi,
+  void TrilinearDepositionFluidDragForce(int lev,
+                                         amrex::MultiFab& drag_mf,
+                                         const amrex::MultiFab * volfrac,
+                                         const amrex::FabArray<amrex::EBCellFlagFab>* flags,
                                          int fortran_beta_comp,
-                                         int fortran_vel_comp,
-                                         int nghost);
+                                         int fortran_vel_comp
+                                         );
 
     //
     // Postprocessing utilities to compute spatially-averaged particle velocities

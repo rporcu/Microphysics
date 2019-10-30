@@ -2,30 +2,172 @@
 #include <mfix.H>
 #include <mfix_des_K.H>
 #include <mfix_drag_K.H>
+#include "mfix_util_F.H"
 
-void mfix::mfix_calc_drag_fluid(Real time)
+#include <AMReX_BC_TYPES.H>
+#include <AMReX_Box.H>
+#include <AMReX_FillPatchUtil.H>
+
+void
+mfix::mfix_calc_drag_fluid(Real time)
 {
+
+  const Real strttime = ParallelDescriptor::second();
+
   mfix_calc_particle_beta(time);
 
   // ******************************************************************************
   // Now use the beta of individual particles to create the drag terms on the fluid
   // ******************************************************************************
   for (int lev = 0; lev < nlev; lev++)
+
     drag[lev] ->setVal(0.0L);
 
   int fortran_beta_comp = 15;
   int fortran_vel_comp  =  9;
 
-  pc -> TrilinearDepositionFluidDragForce(drag, particle_ebfactory,
-                                          bc_ilo, bc_ihi, bc_jlo, bc_jhi, bc_klo, bc_khi,
-                                          fortran_beta_comp, fortran_vel_comp, nghost);
 
+  if (nlev > 2)
+    amrex::Abort("For right now MFIXParticleContainer::TrilinearDepositionFluidDragForce can only handle up to 2 levels");
+
+  MultiFab*  drag_ptr[nlev];
+
+  for (int lev = 0; lev < nlev; lev++) {
+
+    bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
+                         (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
+
+    if (lev == 0 && OnSameGrids) {
+
+      // If we are already working with the internal mf defined on the
+      // particle_box_array, then we just work with this.
+      drag_ptr[lev] = drag[lev].get();
+
+    } else if (lev == 0 && !OnSameGrids) {
+
+      // If beta_mf is not defined on the particle_box_array, then we need
+      // to make a temporary here and copy into beta_mf at the end.
+      drag_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                   pc->ParticleDistributionMap(lev),
+                                   drag[lev]->nComp(),
+                                   drag[lev]->nGrow());
+
+    } else {
+      // If lev > 0 we make a temporary at the coarse resolution
+      BoxArray ba_crse(amrex::coarsen(pc->ParticleBoxArray(lev),this->m_gdb->refRatio(0)));
+      drag_ptr[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev),drag[lev]->nComp(),1);
+    }
+
+    // We must have ghost cells for each FAB so that a particle in one grid can spread
+    // its effect to an adjacent grid by first putting the value into ghost cells of its
+    // own grid.  The mf->sumBoundary call then adds the value from one grid's ghost cell
+    // to another grid's valid region.
+    if (drag_ptr[lev]->nGrow() < 1)
+      amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
+
+    drag_ptr[lev]->setVal(0.0,0,4,drag_ptr[lev]->nGrow());
+  }
+
+
+  const Geometry& gm  = Geom(0);
+  const FabArray<EBCellFlagFab>* flags;
+  const MultiFab* volfrac;
+
+  for (int lev = 0; lev < nlev; lev++) {
+
+    // Use level 0 to define the EB factory
+    if (lev == 0) {
+      flags   = &(ebfactory[lev]->getMultiEBCellFlagFab());
+      volfrac = &(ebfactory[lev]->getVolFrac());
+
+    } else {
+
+      Vector<int> ngrow = {1,1,1};
+      std::unique_ptr<EBFArrayBoxFactory> crse_factory;
+
+      crse_factory = makeEBFabFactory(gm, drag_ptr[lev]->boxArray(),
+                                      drag_ptr[lev]->DistributionMap(),
+                                      ngrow, EBSupport::volume);
+
+      flags   = &(crse_factory->getMultiEBCellFlagFab());
+      volfrac = &(crse_factory->getVolFrac());
+    }
+
+
+
+    pc -> TrilinearDepositionFluidDragForce(lev, *drag_ptr[lev], volfrac, flags,
+                                            fortran_beta_comp, fortran_vel_comp);
+  }
+
+
+  int  src_nghost = 1;
+  int dest_nghost = 0;
+  for (int lev = 1; lev < nlev; lev++) {
+    drag_ptr[0]->copy(*drag_ptr[lev],0,0,drag_ptr[0]->nComp(),src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
+  }
+
+  drag_ptr[0]->SumBoundary(gm.periodicity());
+
+  if (nlev > 1) {
+
+    IntVect ref_ratio(this->m_gdb->refRatio(0));
+
+    // Now interpolate from the coarse grid to define the fine grid ep-g
+    Interpolater* mapper = &cell_cons_interp;
+    int lo_bc[] = {BCType::foextrap, BCType::foextrap, BCType::foextrap};
+    int hi_bc[] = {BCType::foextrap, BCType::foextrap, BCType::foextrap};
+    Vector<BCRec> bcs(1, BCRec(lo_bc, hi_bc));
+
+    BndryFuncArray bfunc(phifill);
+
+    Real time = 0.0;
+    for (int lev = 1; lev < nlev; lev++) {
+
+      PhysBCFunct<BndryFuncArray> cphysbc(Geom(lev-1), bcs, bfunc);
+      PhysBCFunct<BndryFuncArray> fphysbc(Geom(lev  ), bcs, bfunc);
+      drag[lev]->setVal(0.0);
+      amrex::InterpFromCoarseLevel(*drag[lev], time, *drag_ptr[lev-1],
+                                   0, 0, 1, Geom(lev-1), Geom(lev),
+                                   cphysbc, 0, fphysbc, 0,
+                                   ref_ratio, mapper,
+                                   bcs, 0);
+    }
+  }
+
+  // If mf_to_be_filled is not defined on the particle_box_array, then we need
+  // to copy here from drag_ptr into mf_to_be_filled. I believe that we don't
+  // need any information in ghost cells so we don't copy those.
+
+  if (drag_ptr[0] != drag[0].get()) {
+    drag[0]->copy(*drag_ptr[0],0,0,drag[0]->nComp());
+  }
+
+  for (int lev = 0; lev < nlev; lev++) {
+    if (drag_ptr[lev] != drag[lev].get())
+      delete drag_ptr[lev];
+  }
+
+  if (m_verbose > 1) {
+    Real stoptime = ParallelDescriptor::second() - strttime;
+
+    ParallelDescriptor::ReduceRealMax(stoptime,ParallelDescriptor::IOProcessorNumber());
+
+    amrex::Print() << "MFIXParticleContainer::TrilinearDepositionFluidDragForce time: " << stoptime << '\n';
+  }
+
+#if 0
   mfix_diffuse_drag(drag);
+#endif
 
   // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
   for (int lev = 0; lev < nlev; lev++)
     drag[lev] -> FillBoundary(geom[lev].periodicity());
 }
+
+
+
+
+
 
 void
 mfix::mfix_calc_drag_particle(Real time)

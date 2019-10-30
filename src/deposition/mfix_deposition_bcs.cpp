@@ -1,0 +1,125 @@
+#include <mfix_F.H>
+#include <mfix_eb_F.H>
+#include <mfix.H>
+#include "mfix_util_F.H"
+#include <param_mod_F.H>
+#include <bc_mod_F.H>
+
+#include <AMReX_BC_TYPES.H>
+#include <AMReX_Box.H>
+#include <AMReX_FillPatchUtil.H>
+
+
+void mfix::mfix_deposition_bcs_scalar(int lev, amrex::MultiFab & filled_mf)
+{
+  BL_PROFILE("mfix::mfix_deposition_bcs_scalar()");
+
+  Box domain(Geom(lev).Domain());
+
+  const int minf = bc_list.get_minf();
+  const int pinf = bc_list.get_pinf();
+
+  for (MFIter mfi(filled_mf); mfi.isValid(); ++mfi) {
+
+    const Box& sbx = filled_mf[mfi].box();
+
+    // Extract the lower and upper boundaries of Box sbx and Domain
+    const IntVect sbx_lo(sbx.loVect()), sbx_hi(sbx.hiVect());
+    const amrex::Dim3& dom_lo = amrex::lbound(domain);
+    const amrex::Dim3& dom_hi = amrex::ubound(domain);
+
+    // Create a 2D Box collapsing sbx on x-direction
+    IntVect sbx_yz_hi(sbx.hiVect());
+    sbx_yz_hi[0] = sbx_lo[0];
+    const Box sbx_yz(sbx_lo, sbx_yz_hi);
+
+    // Create a 2D Box collapsing sbx on y-direction
+    IntVect sbx_xz_hi(sbx.hiVect());
+    sbx_xz_hi[1] = sbx_lo[1];
+    const Box sbx_xz(sbx_lo, sbx_xz_hi);
+
+    // Create a 2D Box collapsing sbx on z-direction
+    IntVect sbx_xy_hi(sbx.hiVect());
+    sbx_xy_hi[2] = sbx_lo[2];
+    const Box sbx_xy(sbx_lo, sbx_xy_hi);
+
+    Array4<int> const& bc_ilo_type = bc_ilo[lev]->array();
+    Array4<int> const& bc_ihi_type = bc_ihi[lev]->array();
+    Array4<int> const& bc_jlo_type = bc_jlo[lev]->array();
+    Array4<int> const& bc_jhi_type = bc_jhi[lev]->array();
+    Array4<int> const& bc_klo_type = bc_klo[lev]->array();
+    Array4<int> const& bc_khi_type = bc_khi[lev]->array();
+
+    Array4<Real> const& vol = filled_mf.array(mfi);
+
+    if(sbx_lo[0] < dom_lo.x) {
+      const int ilo = dom_lo.x;
+      AMREX_FOR_3D(sbx_yz, i, j, k, {
+          if(bc_ilo_type(dom_lo.x-1,j,k,0) == pinf or
+             bc_ilo_type(dom_lo.x-1,j,k,0) == minf) {
+            vol(ilo,j,k) += vol(ilo-1,j,k);
+            vol(ilo-1,j,k) = 0;
+          }
+        });
+    }
+
+    if(sbx_hi[0] > dom_hi.x) {
+      const int ihi = dom_hi.x;
+      AMREX_FOR_3D(sbx_yz, i, j, k, {
+          if(bc_ihi_type(dom_hi.x+1,j,k,0) == pinf or
+             bc_ihi_type(dom_hi.x+1,j,k,0) == minf) {
+            vol(ihi,j,k) += vol(ihi+1,j,k);
+            vol(ihi+1,j,k) = 0;
+          }
+        });
+    }
+
+    if(sbx_lo[1] < dom_lo.y) {
+      const int jlo = dom_lo.y;
+      AMREX_FOR_3D(sbx_xz, i, j, k, {
+          if(bc_jlo_type(i,dom_lo.y-1,k,0) == pinf or
+             bc_jlo_type(i,dom_lo.y-1,k,0) == minf) {
+            vol(i,jlo,k) += vol(i,jlo-1,k);
+            vol(i,jlo-1,k) = 0;
+          }
+        });
+    }
+
+    if(sbx_hi[1] > dom_hi.y)
+      {
+        const int jhi = dom_hi.y;
+        AMREX_FOR_3D(sbx_xz, i, j, k, {
+            if(bc_jhi_type(i,dom_hi.y+1,k,0) == pinf or
+               bc_jhi_type(i,dom_hi.y+1,k,0) == minf) {
+              vol(i,jhi,k) += vol(i,jhi+1,k);
+              vol(i,jhi+1,k) = 0;
+            }
+          });
+      }
+
+    if(sbx_lo[2] < dom_lo.z) {
+      const int klo = dom_lo.z;
+      AMREX_FOR_3D(sbx_xy, i, j, k, {
+          if(bc_klo_type(i,j,dom_lo.z-1,0) == pinf or
+             bc_klo_type(i,j,dom_lo.z-1,0) == minf) {
+            vol(i,j,klo) += vol(i,j,klo-1);
+            vol(i,j,klo-1) = 0;
+          }
+        });
+    }
+
+    if(sbx_hi[2] > dom_hi.z) {
+      const int khi = dom_hi.z;
+      AMREX_FOR_3D(sbx_xy, i, j, k, {
+          if(bc_khi_type(i,j,dom_hi.z+1,0) == pinf or
+             bc_khi_type(i,j,dom_hi.z+1,0) == minf) {
+            vol(i,j,khi) += vol(i,j,khi+1);
+            vol(i,j,khi+1) = 0;
+          }
+        });
+    }
+
+    // NOTE: here we do not need host-device synchronization since it is
+    // already included in the MFIter destructor
+  }
+}
