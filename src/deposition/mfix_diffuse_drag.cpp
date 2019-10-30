@@ -1,4 +1,4 @@
-#include <mfix_diff_F.H>
+#include <diffusion_F.H>
 #include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
