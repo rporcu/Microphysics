@@ -7,6 +7,7 @@
 #include "AMReX_Particles.H"
 #include "AMReX_NeighborParticles.H"
 
+#include <AMReX_FabArray.H>
 #include <AMReX_EBSupport.H>
 #include <AMReX_EBMultiFabUtil.H>
 
@@ -150,10 +151,12 @@ public:
     ///
     /// Do the actual PIC deposition for CalcVolumeFraction
     ///
-  void TrilinearDepositionParticleVolume(int lev, const amrex::Vector< std::unique_ptr<amrex::MultiFab> > & mf,
-                                         const amrex::Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > & ebfactory,
-                                         int fortran_particle_comp
-                                         );
+  void TrilinearDepositionScalar(int lev,
+                                 amrex::MultiFab& mf,
+                                 const amrex::MultiFab * volfrac,
+                                 const amrex::FabArray<amrex::EBCellFlagFab>* flags,
+                                 int fortran_particle_comp
+                                 );
 
 
     ///

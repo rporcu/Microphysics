@@ -26,6 +26,7 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
       int fortran_volume_comp = 5;
 
       MultiFab* mf_pointer[nlev];
+      // Vector< std::unique_ptr<amrex::MultiFab>> mf_pointer(nlev);
 
       int ncomp = 1;
 
@@ -67,17 +68,32 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
         mf_pointer[lev]->setVal(0.0,0,1,mf_pointer[lev]->nGrow());
       }
 
-
       const Geometry& gm  = Geom(0);
-      using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
-
+      const FabArray<EBCellFlagFab>* flags;
+      const MultiFab* volfrac;
 
       for (int lev = 0; lev < nlev; lev++) {
 
+        // Use level 0 to define the EB factory
+        if (lev == 0) {
+          flags   = &(ebfactory[lev]->getMultiEBCellFlagFab());
+          volfrac = &(ebfactory[lev]->getVolFrac());
+
+        } else {
+
+          Vector<int> ngrow = {1,1,1};
+          std::unique_ptr<EBFArrayBoxFactory> crse_factory;
+
+          crse_factory = makeEBFabFactory(gm, mf_pointer[lev]->boxArray(),
+                                          mf_pointer[lev]->DistributionMap(),
+                                          ngrow, EBSupport::volume);
+
+          flags   = &(crse_factory->getMultiEBCellFlagFab());
+          volfrac = &(crse_factory->getVolFrac());
+        }
 
         // This call deposits the particle volume onto the grid in a PIC-like manner
-        // pc->TrilinearDepositionParticleVolume(ep_g, particle_ebfactory,
-        //                                       bc_list, fortran_volume_comp, nghost);
+        pc->TrilinearDepositionScalar(lev, *mf_pointer[lev], volfrac, flags, fortran_volume_comp);
 
 
         // Move any field deposited outside the domain back into the domain
