@@ -68,14 +68,15 @@ mfix::mfix_calc_drag_fluid(Real time)
     drag_ptr[lev]->setVal(0.0,0,4,drag_ptr[lev]->nGrow());
   }
 
-
   const Geometry& gm  = Geom(0);
   const FabArray<EBCellFlagFab>* flags;
   const MultiFab* volfrac;
 
   for (int lev = 0; lev < nlev; lev++) {
 
-    // Use level 0 to define the EB factory
+    // Use level 0 to define the EB factory. If we are not on level 0
+    // then create a copy of the coarse factory to use.
+
     if (lev == 0) {
       flags   = &(ebfactory[lev]->getMultiEBCellFlagFab());
       volfrac = &(ebfactory[lev]->getVolFrac());
@@ -94,9 +95,17 @@ mfix::mfix_calc_drag_fluid(Real time)
     }
 
 
+    if (m_deposition_scheme == DepositionScheme::trilinear) {
 
-    pc -> TrilinearDepositionFluidDragForce(lev, *drag_ptr[lev], volfrac, flags,
-                                            fortran_beta_comp, fortran_vel_comp);
+      pc -> TrilinearDepositionFluidDragForce(lev, *drag_ptr[lev], volfrac, flags,
+                                              fortran_beta_comp, fortran_vel_comp);
+
+    } else {
+
+      amrex::Abort("Don't know this deposition_scheme!");
+
+    }
+
   }
 
 

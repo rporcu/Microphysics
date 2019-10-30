@@ -44,6 +44,13 @@ enum DragType
     UserDrag
 };
 
+enum DepositionScheme {
+   trilinear,
+   square_dpvm,
+   true_dpvm,
+   centroid
+};
+
 class mfix
     : public AmrCore
 {
@@ -309,6 +316,8 @@ public:
                                 amrex::Real* pPg, amrex::Real* pVel);
 
     static DragType m_drag_type;
+
+    static DepositionScheme m_deposition_scheme;
 
     static amrex::Real tcoll_ratio; // input parameter defaulted to 50 used in file src_des/init_collision.f90
 

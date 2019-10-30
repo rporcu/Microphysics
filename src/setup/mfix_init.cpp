@@ -230,6 +230,32 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
       {
         amrex::Abort("Don't know this drag_type!");
       }
+
+      std::string deposition_scheme = "trilinear";
+      pp.query("deposition_scheme", deposition_scheme);
+
+      if (deposition_scheme == "trilinear") {
+
+        m_deposition_scheme = DepositionScheme::trilinear;
+
+      } else if (deposition_scheme == "square-dpvm") {
+
+        m_deposition_scheme = DepositionScheme::square_dpvm;
+
+      } else if (deposition_scheme == "true-dpvm") {
+
+        m_deposition_scheme = DepositionScheme::true_dpvm;
+
+      } else if (deposition_scheme == "centroid") {
+
+        m_deposition_scheme = DepositionScheme::centroid;
+
+      } else {
+
+        amrex::Abort("Don't know this deposition_scheme!");
+
+      }
+
     }
 
     {
@@ -801,7 +827,7 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
           } else {
 
             init_fluid(sbx, bx, domain,
-                       (*ep_g[lev])[mfi], (*ro_g[lev])[mfi], 
+                       (*ep_g[lev])[mfi], (*ro_g[lev])[mfi],
                        (*trac[lev])[mfi], (*p_g[lev])[mfi],
                        (*vel_g[lev])[mfi], (*mu_g[lev])[mfi],
                        dx, dy, dz, xlen, ylen, zlen, test_tracer_conservation);
@@ -864,7 +890,7 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 
      } else {
 
-        //Calculation of sum_vol_orig for a restarting point  
+        //Calculation of sum_vol_orig for a restarting point
         sum_vol_orig = volWgtSum(0,*ep_g[0],0);
 
         Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
@@ -940,7 +966,7 @@ mfix::mfix_set_p0()
      // because we will use it in computing dt separately on every rank
      set_gp0(domain.loVect(), domain.hiVect(),
              gp0,
-             &dx, &dy, &dz, &xlen, &ylen, &zlen, 
+             &dx, &dy, &dz, &xlen, &ylen, &zlen,
              bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
              bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
              bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),

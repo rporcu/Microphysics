@@ -91,18 +91,22 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
         volfrac = &(crse_factory->getVolFrac());
       }
 
-      // This call deposits the particle volume onto the grid in a PIC-like manner
-      pc->TrilinearDepositionScalar(lev, *mf_pointer[lev], volfrac, flags, fortran_volume_comp);
+      if (m_deposition_scheme == DepositionScheme::trilinear) {
+
+        pc->TrilinearDepositionScalar(lev, *mf_pointer[lev], volfrac, flags, fortran_volume_comp);
+
+      } else {
+
+        amrex::Abort("Don't know this deposition_scheme!");
+
+      }
 
     }
-
-
 
     // Move any field deposited outside the domain back into the domain
     // when BC is pressure inlet and mass inflow.
     for (int lev = 0; lev < nlev; lev++)
       mfix_deposition_bcs_scalar(lev, *mf_pointer[lev]);
-
 
 
     int  src_nghost = 1;
