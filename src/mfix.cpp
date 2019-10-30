@@ -7,8 +7,6 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 
-#include <MFIX_NodalProjection.H>
-
 std::string mfix::particle_init_type   = "AsciiFile";
 std::string mfix::load_balance_type    = "FixedSize";
 std::string mfix::knapsack_weight_type = "RunTimeCosts";

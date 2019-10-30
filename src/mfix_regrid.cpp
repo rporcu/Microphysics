@@ -1,4 +1,5 @@
 #include <mfix.H>
+#include <diffusion_F.H>
 
 void
 mfix::Regrid ()
@@ -198,8 +199,9 @@ mfix::Regrid ()
             RegridLevelSetArray(i_lev);
         }
 
+    // This call resets both the nodal and the diffusion solvers
     if (solve_fluid)
-       mfix_setup_nodal_solver();
+       mfix_setup_solvers();
 
     BL_PROFILE_REGION_STOP("mfix::Regrid()");
 }

@@ -222,7 +222,7 @@ int main (int argc, char* argv[])
     }
 
     if (solve_fluid)
-       my_mfix.mfix_setup_nodal_solver();
+       my_mfix.mfix_init_solvers();
 
     // This checks if we want to regrid using the KDTree or KnapSack approach
     amrex::Print() << "Regridding at step " << nstep << std::endl;

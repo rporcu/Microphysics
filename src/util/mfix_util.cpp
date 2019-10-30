@@ -1,19 +1,6 @@
 #include <mfix.H>
 #include <mfix_util_F.H>
 
-void setFabVal (amrex::FArrayBox& fab,
-                amrex::Real val,
-                amrex::Box bx,
-                int comp,
-                int num_comp)
-{
-  const auto& fab_array = fab.array();
-
-  AMREX_FOR_4D(bx, num_comp, i, j, k, n, { fab_array(i,j,k,n+comp) = val; });
-
-  Gpu::synchronize();
-}
-
 void
 mfix::check_for_nans (int lev)
 {
@@ -107,7 +94,7 @@ mfix::mfix_compute_vort ()
           }
           else
           {
-            setFabVal((*vort[lev])[mfi], 0.0, bx, 0, 1);
+            (*vort[lev])[mfi].setVal<RunOn::Gpu>(0.0, bx, 0, 1);
           }
 
           // NOTE: here we do not need host-device synchronization since it is
@@ -127,8 +114,14 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
     const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
 
 #ifdef AMREX_USE_CUDA
-    Gpu::DeviceScalar<Real> sum_gpu(sum);
-    Real* psum = sum_gpu.dataPtr();
+    bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
+
+    if(notInLaunchRegionStatus == true)
+      Gpu::setLaunchRegion(true);
+
+    {
+      Gpu::DeviceScalar<Real> sum_gpu(sum);
+      Real* psum = sum_gpu.dataPtr();
 #endif
 
 #ifdef _OPENMP
@@ -165,7 +158,11 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
     }
 
 #ifdef AMREX_USE_CUDA
-    sum = sum_gpu.dataValue();
+      sum = sum_gpu.dataValue();
+    }
+
+    if(notInLaunchRegionStatus == true)
+      Gpu::setLaunchRegion(notInLaunchRegionStatus);
 #endif
 
     if (!local)

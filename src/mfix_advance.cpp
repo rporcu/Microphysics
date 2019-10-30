@@ -13,7 +13,6 @@
 #include <AMReX_BLassert.H>
 
 #include <MFIX_MFHelpers.H>
-#include <MFIX_NodalProjection.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -76,18 +75,7 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
     do
     {
-#ifdef AMREX_USE_CUDA
-     bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
-
-     if(notInLaunchRegionStatus)
-       Gpu::setLaunchRegion(true);
-#endif
-
         mfix_compute_dt(nstep, time, stop_time, dt);
-
-#ifdef AMREX_USE_CUDA
-        Gpu::setLaunchRegion(notInLaunchRegionStatus);
-#endif
 
         // Set new and old time to correctly use in fillpatching
         for (int lev = 0; lev < nlev; lev++)
@@ -165,18 +153,7 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
     if (test_tracer_conservation)
     {
-#ifdef AMREX_USE_CUDA
-      bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
-
-      if(notInLaunchRegionStatus)
-        Gpu::setLaunchRegion(true);
-#endif
-
        amrex::Print() << "Sum tracer volume wgt = " << volWgtSum(0,*trac[0],0) << " " << volEpsWgtSum(0,*trac[0],0) << std::endl;
-
-#ifdef AMREX_USE_CUDA
-       Gpu::setLaunchRegion(notInLaunchRegionStatus);
-#endif
     }
 
 #ifdef AMREX_MEM_PROFILING
@@ -208,33 +185,21 @@ mfix::mfix_project_velocity ()
 
     mfix_apply_nodal_projection( depdt, time, dummy_dt, proj_2 );
 
-   // We initialize p_g and gp back to zero (p0_g may still be still non-zero)
-   for (int lev = 0; lev < nlev; lev++)
-   {
-      p_g[lev]->setVal(0.0);
-       gp[lev]->setVal(0.0);
-   }
+    // We initialize p_g and gp back to zero (p0_g may still be still non-zero)
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       p_g[lev]->setVal(0.0);
+        gp[lev]->setVal(0.0);
+    }
 }
 
 void
 mfix::mfix_initial_iterations (Real dt, Real stop_time)
 {
-
     Real time = 0.0;
     int nstep = 0;
 
-#ifdef AMREX_USE_CUDA
-     bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
-
-     if(notInLaunchRegionStatus)
-       Gpu::setLaunchRegion(true);
-#endif
-
     mfix_compute_dt(nstep,time,stop_time,dt);
-
-#ifdef AMREX_USE_CUDA
-    Gpu::setLaunchRegion(notInLaunchRegionStatus);
-#endif
 
     amrex::Print() << "Doing initial pressure iterations with dt = " << dt << std::endl;
 
@@ -348,10 +313,14 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     int explicit_diffusion_pred = 1;
 
     if (explicit_diffusion_pred == 1)
-       mfix_compute_divtau( divtau_old, vel_go, time);
-    else
+    {
+        mfix_set_velocity_bcs (time, vel_go, 0);
+        diffusion_op->ComputeDivTau(divtau_old, vel_go, ro_g, ep_g, mu_g);
+
+    } else {
        for (int lev = 0; lev < nlev; lev++)
           divtau_old[lev]->setVal(0.);
+    }
 
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -384,26 +353,27 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     }
 
     // Add source terms
-#ifdef AMREX_USE_CUDA
-     bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
-
-     if(notInLaunchRegionStatus)
-       Gpu::setLaunchRegion(true);
-#endif
-
     mfix_add_gravity_and_gp(dt);
-
-#ifdef AMREX_USE_CUDA
-    Gpu::setLaunchRegion(notInLaunchRegionStatus);
-#endif
 
     // Add the drag term implicitly
     if (solve_dem)
         mfix_add_drag_implicit (dt);
 
     // If doing implicit diffusion, solve here for u^*
+    // Note we multiply ep_g by ro_g so that we pass in a single array holding (ro_g * ep_g)
     if (explicit_diffusion_pred == 0)
-        mfix_diffuse_velocity_tensor(new_time,dt);
+    {
+        mfix_set_scalar_bcs   (time, ro_g, trac, ep_g, mu_g);
+
+        for (int lev = 0; lev < nlev; lev++)
+            MultiFab::Multiply(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
+
+        mfix_set_velocity_bcs (new_time, vel_g, 0);
+        diffusion_op->solve(vel_g, ep_g, mu_g, dt);
+
+        for (int lev = 0; lev < nlev; lev++)
+            MultiFab::Divide(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
+    }
 
     // Project velocity field -- depdt=0 for now
     Vector< std::unique_ptr< MultiFab > > depdt(nlev);
@@ -519,27 +489,29 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
         MultiFab::Saxpy (*vel_g[lev], dt/2.0, *divtau_old[lev], 0, 0, 3, 0);
 
     // Add source terms
-#ifdef AMREX_USE_CUDA
-     bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
-
-     if(notInLaunchRegionStatus)
-       Gpu::setLaunchRegion(true);
-#endif
-
     mfix_add_gravity_and_gp(dt);
-
-#ifdef AMREX_USE_CUDA
-    Gpu::setLaunchRegion(notInLaunchRegionStatus);
-#endif
 
     // Add the drag term implicitly
     if (solve_dem)
         mfix_add_drag_implicit(dt);
 
-    // Solve for u^star s.t. u^star = u_go + dt/2 (R_u^* + R_u^n) + dt/2 (Lu)^n + dt/2 (Lu)^star
-    mfix_diffuse_velocity_tensor(new_time,.5*dt);
+    mfix_set_scalar_bcs   (time, ro_g, trac, ep_g, mu_g);
 
+    //
+    // Solve for u^star s.t. u^star = u_go + dt/2 (R_u^* + R_u^n) + dt/2 (Lu)^n + dt/2 (Lu)^star
+    //
+    for (int lev = 0; lev < nlev; lev++)
+        MultiFab::Multiply(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
+
+    mfix_set_velocity_bcs (new_time, vel_g, 0);
+    diffusion_op->solve(vel_g, ep_g, mu_g, 0.5*dt);
+
+    for (int lev = 0; lev < nlev; lev++)
+        MultiFab::Divide(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
+
+    //
     // Apply projection -- depdt=0 for now
+    //
     Vector< std::unique_ptr< MultiFab > > depdt(nlev);
     for (int lev(0); lev < nlev; ++lev )
         depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1);
@@ -552,6 +524,15 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
 void
 mfix::mfix_add_gravity_and_gp (Real dt)
 {
+#ifdef AMREX_USE_CUDA
+    bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
+
+    if(notInLaunchRegionStatus)
+      Gpu::setLaunchRegion(true);
+
+    {
+#endif
+
     BL_PROFILE("mfix::mfix_add_gravity_and_gp");
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -583,6 +564,13 @@ mfix::mfix_add_gravity_and_gp (Real dt)
          // already included in the MFIter destructor
        }
     }
+
+#ifdef AMREX_USE_CUDA
+    }
+
+    if(notInLaunchRegionStatus == true)
+      Gpu::setLaunchRegion(notInLaunchRegionStatus);
+#endif
 }
 
 //
@@ -809,89 +797,3 @@ mfix::steady_state_reached (Real dt, int iter)
     };
 }
 
-
-
-void
-mfix::mfix_apply_nodal_projection ( Vector< std::unique_ptr<MultiFab> >& a_depdt,
-                                    amrex::Real a_time,
-                                    amrex::Real a_dt,
-                                    bool proj_2 )
-{
-    BL_PROFILE("mfix::mfix_apply_nodal_projection");
-
-    for (int lev(0); lev < nlev; ++lev)
-    {
-
-        // Here we add (dt * (1/rho gradp)) to ustar
-        if (proj_2)
-        {
-            // Convert velocities to momenta
-            for (int n(0); n < 3; ++n)
-                MultiFab::Multiply(*vel_g[lev], *ro_g[lev] , 0, n, 1, vel_g[lev]->nGrow() );
-
-            MultiFab::Saxpy(*vel_g[lev], a_dt, *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
-
-            // Convert momenta back to velocities
-            for (int n(0); n < 3; n++)
-                MultiFab::Divide(*vel_g[lev], *ro_g[lev], 0, n, 1, vel_g[lev]->nGrow() );
-
-        }
-
-        // Print level infos
-        amrex::Print() << "AT LEVEL " << lev << " BEFORE PROJECTION: \n";
-        mfix_print_max_vel(lev);
-        mfix_print_max_gp(lev);
-        amrex::Print() << "Min and Max of ep_g "
-                       << ep_g[lev]->min(0) << " "
-                       << ep_g[lev]->max(0) << std::endl;
-    }
-
-    // Perform projection
-    nodal_projector -> project( vel_g, ep_g, ro_g, a_depdt, a_time, a_dt );
-
-    // Get phi and fluxes and rhs
-    // The latter is needed for plotting purposes only
-    Vector< const amrex::MultiFab* >  phi(nlev);
-    Vector< const amrex::MultiFab* >  gradphi(nlev);
-    Vector< const amrex::MultiFab* >  rhs(nlev);
-
-    phi     = nodal_projector -> getPhi();
-    gradphi = nodal_projector -> getGradPhi();
-    rhs     = nodal_projector -> getRHS();
-
-    //
-    for (int lev(0); lev < nlev; ++lev)
-    {
-        // Copy RHS into diveu so we can plot its value
-        MultiFab::Copy(*diveu[lev], *rhs[lev], 0, 0, 1, diveu[lev]->nGrow());
-
-        if (proj_2)
-        {
-            // p := phi
-            MultiFab::Copy(*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
-            MultiFab::Copy( *gp[lev], *gradphi[lev], 0, 0, 3, gradphi[lev]->nGrow());
-        }
-        else
-        {
-            // p := p + phi
-            MultiFab::Add(*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
-            MultiFab::Add( *gp[lev], *gradphi[lev], 0, 0, 3, gradphi[lev]->nGrow());
-        }
-    }
-
-    for (int lev = nlev-1; lev > 0; lev--)
-    {
-        avgDown(lev-1, *vel_g[lev], *vel_g[lev-1]);
-        avgDown(lev-1, *   gp[lev],    *gp[lev-1]);
-    }
-
-    // Swap ghost cells and apply BCs to velocity
-    mfix_set_velocity_bcs(a_time, vel_g, 0);
-
-    // Print level info after projection
-    for (int lev(0); lev < nlev; lev++)
-    {
-        amrex::Print() << "AT LEVEL " << lev << " AFTER PROJECTION: \n";
-        mfix_print_max_vel(lev);
-    }
-}

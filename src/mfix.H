@@ -31,8 +31,9 @@
 #include <AMReX_MLNodeLaplacian.H>
 #include <mfix_eb_if.H>
 #include <MFIX_BcList.H>
+#include <DiffusionOp.H>
 
-class NodalProjection;
+#include <AMReX_NodalProjector.H>
 
 enum DragType
 {
@@ -54,9 +55,13 @@ public:
     // Face-based coefficients b in MAC projection and implicit diffusion solve
     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > bcoeff;
 
-    // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
+    // LinOpBCType Definitions from amrex/Src/Boundary/AMReX_LO_BCTYPES.H -- for projections
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  ppe_lobc;
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  ppe_hibc;
+
+    // LinOpBCType Definitions from amrex/Src/Boundary/AMReX_LO_BCTYPES.H -- for diffusive solves
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_lobc;
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_hibc;
 
     void InitParams(int solve_fluid, int solve_dem, int call_udf );
 
@@ -66,7 +71,8 @@ public:
 
     void InitLevelData(Real time);
 
-    void mfix_setup_nodal_solver();
+    void mfix_init_solvers();
+    void mfix_setup_solvers();
 
     void PostInit(Real& dt, Real time, int restart_flag, Real stop_time);
 
@@ -312,6 +318,12 @@ public:
     Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
     Real volEpsWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
 
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Convection
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////////
+
     void set_MAC_velocity_bcs ( int lev,
                                 Vector< std::unique_ptr<MultiFab> >& u,
                                 Vector< std::unique_ptr<MultiFab> >& v,
@@ -368,11 +380,20 @@ public:
                                 const amrex::iMultiFab* cc_mask,
                                 Box& domain, const EBCellFlagFab& flags);
 
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Diffusion
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Nodal projection
-    friend class NodalProjection;
-    std::unique_ptr<NodalProjection> nodal_projector;
+    std::unique_ptr<DiffusionOp> diffusion_op;
 
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Nodal Projection
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    std::unique_ptr<NodalProjector> nodal_projector;
 
 protected:
 
@@ -411,7 +432,7 @@ protected:
 
     BcList bc_list;
 
-    // "mutable" keyword is just a temporary fix to allow MFIX_NodalProjection to
+    // "mutable" keyword is just a temporary fix to allow NodalProjection to
     // work as intended. This won't be needed when the BC will be given their own
     // class
     mutable amrex::Cuda::ManagedVector<amrex::Real> m_bc_u_g;
@@ -520,15 +541,6 @@ private:
                                       Vector< std::unique_ptr<MultiFab> >& trac,
                                       Real time);
 
-    void mfix_redistribute ( int lev,
-                             MultiFab& conv_tmp_in,
-                             MultiFab& conv_out,
-                             int conv_comp, int ncomp);
-
-    void mfix_compute_divtau(Vector< std::unique_ptr<MultiFab> >& divtau,
-                             Vector< std::unique_ptr<MultiFab> >& vel,
-                             Real time);
-
     int steady_state_reached(Real dt, int iter);
 
     void mfix_apply_predictor(Vector< std::unique_ptr<MultiFab> >& conv_u_old,
@@ -540,8 +552,9 @@ private:
                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
                               Real time, Real dt, bool proj_2);
 
-    void mfix_diffuse_velocity       (Real time, Real dt);
-    void mfix_diffuse_velocity_tensor(Real time, Real dt);
+    void mfix_diffuse_velocity_tensor (      Vector<std::unique_ptr<MultiFab>>& vel_in,
+                                       const Vector<std::unique_ptr<MultiFab>>& ro_ep_in,
+                                       Real time, Real dt);
 
     void mfix_diffuse_eps (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps);
     void mfix_diffuse_drag (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_drag);
@@ -717,7 +730,6 @@ private:
 
     // Max coarsening level
     int  mac_mg_max_coarsening_level = 100;
-    // ***************************************************************
 
     // ***************************************************************
     // Diffusion solve
@@ -736,6 +748,7 @@ private:
 
     // Max coarsening level
     int  diff_mg_max_coarsening_level = 100;
+
     // ***************************************************************
 
     // Tolerance to check for steady state --

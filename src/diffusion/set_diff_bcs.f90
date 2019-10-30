@@ -2,7 +2,7 @@
    ! Set the boundary condition for diffusion solve
    !
    ! MLMG expects the BC type to be the uniform on each domain wall.
-   ! Since mfix allows for BC patches on each wall, we first check that
+   ! Since here we allow for BC patches on each wall, we first check that
    ! the user-provided BCs are uniform, and then return a single BC type for
    ! each domain wall.
    !
@@ -45,19 +45,18 @@
       else
 
          ! X at domlo(1)
-         bc_face = get_bc_face(bct_ilo,ng)
+         bc_face = get_bc_face(bct_ilo, ng)
          if ( (bc_face == pinf_) .or. (bc_face == pout_) ) then
             bc_lo(1) = amrex_lo_neumann
          end if
 
          ! X at domhi(1)
-         bc_face = get_bc_face(bct_ihi,ng)
+         bc_face = get_bc_face(bct_ihi, ng)
          if ( (bc_face == pinf_) .or. (bc_face == pout_) ) then
             bc_hi(1) = amrex_lo_neumann
          end if
 
       end if
-
 
       !
       ! BC -- Y direction
@@ -68,13 +67,13 @@
       else
 
          ! Y at domlo(2)
-         bc_face = get_bc_face(bct_jlo,ng)
+         bc_face = get_bc_face(bct_jlo, ng)
          if ( (bc_face == pinf_) .or. (bc_face == pout_) ) then
             bc_lo(2) = amrex_lo_neumann
          end if
 
          ! Y at domhi(2)
-         bc_face = get_bc_face(bct_jhi,ng)
+         bc_face = get_bc_face(bct_jhi, ng)
          if ( (bc_face == pinf_) .or. (bc_face == pout_) ) then
             bc_hi(2) = amrex_lo_neumann
          end if
@@ -90,13 +89,13 @@
       else
 
          ! Z at domlo(3)
-         bc_face = get_bc_face(bct_klo,ng)
+         bc_face = get_bc_face(bct_klo, ng)
          if ( (bc_face == pinf_) .or. (bc_face == pout_) ) then
             bc_lo(3) = amrex_lo_neumann
          end if
 
          ! Z at domhi(3)
-         bc_face = get_bc_face(bct_khi,ng)
+         bc_face = get_bc_face(bct_khi, ng)
          if ( (bc_face == pinf_) .or. (bc_face == pout_) ) then
             bc_hi(3) = amrex_lo_neumann
          end if
@@ -109,7 +108,7 @@
       ! Test whether the BC type is the same everywhere on
       ! the face. If BC is uniform on face, it returns its value
       !
-      function get_bc_face (bct_array,nghost) result (bc_face)
+      function get_bc_face (bct_array, nghost) result (bc_face)
          integer(c_int), intent(in   ) :: bct_array(:,:,:)
          integer(c_int), intent(in   ) :: nghost
          integer                       :: bc_face
@@ -129,5 +128,5 @@
 
       end function get_bc_face
 
-    end subroutine set_diff_bc
+   end subroutine set_diff_bc
 

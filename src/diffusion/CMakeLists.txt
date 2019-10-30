@@ -4,8 +4,8 @@ target_include_directories(mfixcore
 
 target_sources( mfixcore
    PRIVATE
-   mfix_compute_divtau.cpp
-   mfix_diffuse_velocity.cpp
-   mfix_diff_F.H
+   DiffusionOp.cpp
+   DiffusionOp.H
+   diffusion_F.H
    set_diff_bcs.f90
    )

@@ -132,7 +132,7 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
                             u_mac, v_mac, w_mac);
 
         EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev], already_on_centroids);
-        mfix_redistribute(lev, conv_tmp, *conv_u_in[lev], conv_comp, num_comp);
+        single_level_weighted_redistribute(lev, conv_tmp, *conv_u_in[lev], *ep_g[lev], conv_comp, num_comp, geom);
 
         // **************************************************
         // Compute div (ep_g rho u) -- the update for density
@@ -144,7 +144,7 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
                                 xslopes_s, yslopes_s, zslopes_s, slopes_comp,
                                 u_mac, v_mac, w_mac);
             EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev], already_on_centroids);
-            mfix_redistribute(lev, conv_tmp, *conv_s_in[lev], conv_comp, num_comp);
+            single_level_weighted_redistribute(lev, conv_tmp, *conv_s_in[lev], *ep_g[lev], conv_comp, num_comp, geom);
         }
 
         // **********************************************************
@@ -157,7 +157,7 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
                                 xslopes_s, yslopes_s, zslopes_s, slopes_comp,
                                 u_mac, v_mac, w_mac);
             EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev], already_on_centroids);
-            mfix_redistribute(lev, conv_tmp, *conv_s_in[lev], conv_comp, num_comp);
+            single_level_weighted_redistribute(lev, conv_tmp, *conv_s_in[lev], *ep_g[lev], conv_comp, num_comp, geom);
         }
 
         if (advect_tracer)

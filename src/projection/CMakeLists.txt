@@ -5,6 +5,5 @@ target_include_directories(mfixcore
 
 target_sources( mfixcore
     PRIVATE
-    MFIX_NodalProjection.H
-    MFIX_NodalProjection.cpp
+    mfix_apply_nodal_projection.cpp
     )
