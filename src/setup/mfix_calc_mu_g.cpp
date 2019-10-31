@@ -19,6 +19,4 @@ void calc_mu_g(const Box& bx,
     mu_val = mu_g0;
 
   AMREX_FOR_3D(bx, i, j, k, {mu_g(i,j,k) = mu_val;});
-
-  Gpu::synchronize();
 }

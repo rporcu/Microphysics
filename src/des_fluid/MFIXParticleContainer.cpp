@@ -549,10 +549,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
              * Move particles based on collision forces and torques             *
              *******************************************************************/
 
-            GpuArray<Real, 3> grav;
-            grav[0] = gravity[0];
-            grav[1] = gravity[1];
-            grav[2] = gravity[2];
+            GpuArray<Real,3> grav = {gravity[0], gravity[1], gravity[2]};
 
             const auto p_lo = Geom(lev).ProbLoArray();
             const auto p_hi = Geom(lev).ProbHiArray();
