@@ -12,7 +12,7 @@ mfix.drag_type = "UserDrag"
 #! Fluid solver
 #!-----------------------------------------------------------//
 
-amr.blocking_factor = 5
+amr.blocking_factor = 1
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
