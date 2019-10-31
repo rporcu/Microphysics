@@ -522,6 +522,4 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
     } else
        fz(i,j,k,n) = my_huge;
   });
-
-  Gpu::synchronize();
 }
