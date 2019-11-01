@@ -104,3 +104,210 @@ struct TrilinearDeposition
   }
 
 };
+
+
+struct TrueDPVMDeposition
+{
+  AMREX_GPU_HOST_DEVICE AMREX_INLINE
+  void operator() (amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
+                   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
+                   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
+                   amrex::Array4<amrex::Real const> const& vfrac,
+                   const MFIXParticleContainer::ParticleType& p,
+                   int& i, int& j, int& k, amrex::Real weights[2][2][2])
+  {
+
+    amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
+    amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
+    amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
+
+    i = std::floor(x);
+    j = std::floor(y);
+    k = std::floor(z);
+
+    amrex::Real wx[2];
+    amrex::Real wy[2];
+    amrex::Real wz[2];
+
+    amrex::Real hh;
+    amrex::Real rp = p.rdata(realData::radius);
+
+    // This gives us the i,j,k of the cell containing the centriod
+    // of the particle.
+    const int ip = std::floor(x-0.5);
+    const int jp = std::floor(y-0.5);
+    const int kp = std::floor(z-0.5);
+
+    amrex::Real ratio;
+    amrex::Real overlap[3];
+
+    if ( i == ip ) {
+
+      // particle sits on low side of i index
+      overlap[0] = amrex::max(0.0, (i*dx[0]) - p.pos(0) + rp);
+
+      wx[0] = (overlap[0] == 0.0) ? 0.0 : fface(overlap[0], rp);
+      wx[1] = 1.0 - wx[0];
+
+    } else {
+
+      // particle sits on high side of i-1 index
+      overlap[0] = amrex::max(0.0, p.pos(0) + rp - (i*dx[0]));
+
+      wx[1] = (overlap[0] == 0.0) ? 0.0 : fface(overlap[0], rp);
+      wx[0] = 1.0 - wx[1];
+
+    }
+
+    if ( j == jp ) {
+
+      // particle sits on low side of j index
+      overlap[1] = amrex::max(0.0, (j*dx[1]) - p.pos(1) + rp);
+
+      wy[0] = (overlap[1] == 0.0) ? 0.0 : fface(overlap[1], rp);
+      wy[1] = 1.0 - wy[0];
+
+    } else {
+
+      // particle sits on high side of j-1 index
+      overlap[1] = amrex::max(0.0, p.pos(1) + rp - (j*dx[1]));
+
+      wy[1] = (overlap[1] == 0.0) ? 0.0 : fface(overlap[1], rp);
+      wy[0] = 1.0 - wy[1];
+
+    }
+
+
+    if ( k == kp ) {
+
+      // particle sits on low side of k index
+      overlap[2] = amrex::max(0.0, (k*dx[2]) - p.pos(2) + rp);
+
+      wz[0] = (overlap[2] == 0.0) ? 0.0 : fface(overlap[2], rp);
+      wz[1] = 1.0 - wz[0];
+
+    } else {
+
+      // particle sits on high side of k-1 index
+      overlap[2] = amrex::max(0.0, p.pos(2) + rp - (k*dx[2]));
+
+      wz[1] = (overlap[2] == 0.0) ? 0.0 : fface(overlap[2], rp);
+      wz[0] = 1.0 - wz[1];
+
+    }
+
+
+    int cuts = 0;
+    for ( int ii=0; ii<=2; ++ii) {
+      if( overlap[ii] != 0. ) cuts += 1;
+    }
+
+
+    const int i0 = i-ip;
+    const int i1 = std::abs(1-i0);
+    const int j0 = j-jp;
+    const int j1 = std::abs(1-j0);
+    const int k0 = k-kp;
+    const int k1 = std::abs(1-k0);
+
+
+    // if ( cuts == 0 || cuts == 1 ) we don't need to do anything as the
+    // calculation of the initial 'weights' makes that all work out.
+
+    if ( cuts == 2 ) {
+
+      // This has two sub-cases that have to be addressed. The first is when
+      // we only intersect the two faces and need to deposit into three cells;
+      // the second is when we intersect the corner and need to deposit
+      // into four cells.
+
+      if ( overlap[0] == 0.0 ) {
+
+        weights[i0][0][0] = 0.0;
+        weights[i0][0][1] = 0.0;
+        weights[i0][1][0] = 0.0;
+        weights[i0][1][1] = 0.0;
+
+        amrex::Real ahat = 1.0 - overlap[1] / rp;
+        amrex::Real bhat = 1.0 - overlap[2] / rp;
+
+        weights[i1][j0][k0] =  fedge(ahat, bhat);
+        weights[i1][j1][k0] =  wy[j0] - weights[i1][j0][k0];
+        weights[i1][j0][k1] =  wz[k0] - weights[i1][j0][k0];
+        weights[i1][j1][k1] =  1.0 - weights[i1][j0][k0] - weights[i1][j0][k1] - weights[i1][j1][k0];
+
+      } else if ( overlap[1] == 0.0 ) {
+
+        weights[0][j0][0] = 0.0;
+        weights[0][j0][1] = 0.0;
+        weights[1][j0][0] = 0.0;
+        weights[1][j0][1] = 0.0;
+
+        amrex::Real ahat = 1.0 - overlap[0] / rp;
+        amrex::Real bhat = 1.0 - overlap[2] / rp;
+
+        weights[i0][j1][k0] =  fedge(ahat, bhat);
+        weights[i1][j1][k0] =  wx[i0] - weights[i0][j1][k0];
+        weights[i0][j1][k1] =  wz[k0] - weights[i0][j1][k0];
+        weights[i1][j1][k1] =  1.0   - weights[i0][j1][k0] - weights[i1][j1][k0] - weights[i0][j1][k1];
+
+      } else {
+
+        weights[0][0][k0] = 0.0;
+        weights[0][1][k0] = 0.0;
+        weights[1][0][k0] = 0.0;
+        weights[1][1][k0] = 0.0;
+
+        amrex::Real ahat = 1.0 - overlap[0] / rp;
+        amrex::Real bhat = 1.0 - overlap[1] / rp;
+
+        weights[i0][j0][k1] =  fedge(ahat, bhat);
+        weights[i1][j0][k1] =  wx[i0] - weights[i0][j0][k1];
+        weights[i0][j1][k1] =  wy[j0] - weights[i0][j0][k1];
+        weights[i1][j1][k1] =  1.0   - weights[i0][j0][k1] - weights[i1][j0][k1] - weights[i0][j1][k1];
+
+      }
+
+    } else if ( cuts == 3 ) {
+
+      amrex::Real ahat = 1.0 - overlap[0] / rp;
+      amrex::Real bhat = 1.0 - overlap[1] / rp;
+      amrex::Real chat = 1.0 - overlap[2] / rp;
+
+      amrex::Real edge12 = fedge(ahat, bhat);
+      amrex::Real edge13 = fedge(ahat, chat);
+      amrex::Real edge23 = fedge(bhat, chat);
+
+      amrex::Real corner = fcorner(ahat, bhat, chat, edge12);
+
+      // corner
+      weights[i0][j0][k0] =  corner;
+
+      // face overlaps
+      weights[i0][j1][k1] =  wx[i0] - (edge12 + edge13) + corner;
+      weights[i1][j0][k1] =  wy[j0] - (edge12 + edge23) + corner;
+      weights[i1][j1][k0] =  wz[k0] - (edge13 + edge23) + corner;
+
+      // edge overlaps
+      weights[i0][j0][k1] =  edge12 - corner;
+      weights[i0][j1][k0] =  edge13 - corner;
+      weights[i1][j0][k0] =  edge23 - corner;
+
+      // centroid
+      weights[i1][j1][k1] =  1.0 - (wx[i0] + wy[j0] + wz[k0] -
+                                    edge12 - edge13 - edge23 + corner);
+
+    } else {
+
+      weights[0][0][0] = wx[0] * wy[0] * wz[0];
+      weights[0][0][1] = wx[0] * wy[0] * wz[1];
+      weights[0][1][0] = wx[0] * wy[1] * wz[0];
+      weights[0][1][1] = wx[0] * wy[1] * wz[1];
+      weights[1][0][0] = wx[1] * wy[0] * wz[0];
+      weights[1][0][1] = wx[1] * wy[0] * wz[1];
+      weights[1][1][0] = wx[1] * wy[1] * wz[0];
+      weights[1][1][1] = wx[1] * wy[1] * wz[1];
+
+    }
+  }
+};
