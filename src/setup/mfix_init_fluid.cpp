@@ -53,8 +53,6 @@ void init_fluid(const Box& sbx,
       AMREX_FOR_3D(sbx, i, j, k, {ro_g(i,j,k) = ro_g0;});
       AMREX_FOR_3D(sbx, i, j, k, {trac(i,j,k) = trac_0;});
 
-      Gpu::synchronize();
-
       if (test_tracer_conservation)
          init_periodic_tracer(bx, domain, vel_g_fab, trac_fab, dx, dy, dz);
 
@@ -119,8 +117,6 @@ void init_helix(const Box& bx,
       amrex::Abort("Error: wrong plane number");
       break;
   }
-
-  Gpu::synchronize();
 }
 
 void init_periodic_vortices(const Box& bx,
@@ -182,8 +178,6 @@ void init_periodic_vortices(const Box& bx,
       amrex::Abort("Error: wrong plane number");
       break;
   }
-
-  Gpu::synchronize();
 }
 
 
@@ -275,8 +269,6 @@ void init_periodic_tracer(const Box& bx,
         amrex::Abort("Error: wrong direction number");
         break;
     }
-
-    Gpu::synchronize();
 }
 
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -400,7 +392,4 @@ void set_ic(const Box& sbx,
       }
     }
   }
-
-  Gpu::synchronize();
-
 }

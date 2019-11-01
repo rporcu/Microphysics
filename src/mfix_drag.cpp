@@ -278,9 +278,7 @@ mfix::mfix_calc_drag_particle(Real time)
 
           const auto& flags_array = flags.array();
 
-          const amrex::Real gp0_x = gp0[0];
-          const amrex::Real gp0_y = gp0[1];
-          const amrex::Real gp0_z = gp0[2];
+          const amrex::GpuArray<const amrex::Real,3> gp0_dev = {gp0[0], gp0[1], gp0[2]};
 
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
@@ -299,18 +297,17 @@ mfix::mfix_calc_drag_particle(Real time)
               // Particle drag calculation
               particle.rdata(realData::dragx) =
                 pbeta * ( velfp[0] - particle.rdata(realData::velx) ) -
-                (gradp[0] + gp0_x) * particle.rdata(realData::volume);
+                (gradp[0] + gp0_dev[0]) * particle.rdata(realData::volume);
 
               particle.rdata(realData::dragy) =
                 pbeta * ( velfp[1] - particle.rdata(realData::vely) ) -
-                (gradp[1] + gp0_y) * particle.rdata(realData::volume);
+                (gradp[1] + gp0_dev[1]) * particle.rdata(realData::volume);
 
               particle.rdata(realData::dragz) =
                 pbeta * ( velfp[2] - particle.rdata(realData::velz) ) -
-                (gradp[2] + gp0_z) * particle.rdata(realData::volume);
+                (gradp[2] + gp0_dev[2]) * particle.rdata(realData::volume);
             });
 
-            Gpu::synchronize();
           }
           else // FAB not all regular
           {
@@ -460,24 +457,25 @@ mfix::mfix_calc_drag_particle(Real time)
 
                 particle.rdata(realData::dragx) =
                   pbeta * ( velfp[0] - particle.rdata(realData::velx) ) -
-                  (gradp[0] + gp0_x) * particle.rdata(realData::volume);
+                  (gradp[0] + gp0_dev[0]) * particle.rdata(realData::volume);
 
                 particle.rdata(realData::dragy) =
                   pbeta * ( velfp[1] - particle.rdata(realData::vely) ) -
-                  (gradp[1] + gp0_y) * particle.rdata(realData::volume);
+                  (gradp[1] + gp0_dev[1]) * particle.rdata(realData::volume);
 
                 particle.rdata(realData::dragz) =
                   pbeta * ( velfp[2] - particle.rdata(realData::velz) ) -
-                  (gradp[2] + gp0_z) * particle.rdata(realData::volume);
+                  (gradp[2] + gp0_dev[2]) * particle.rdata(realData::volume);
 
               } // Not covered
             }); // particle loop
-
-            Gpu::synchronize();
           } // if box not all regular
         } // FAB not covered
       } // pti
     } // omp region
+
+    Gpu::synchronize();
+
   } // lev
 
   // Reset velocity Dirichlet bc's to face values

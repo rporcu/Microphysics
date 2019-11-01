@@ -26,8 +26,11 @@ mfix::mfix_init_solvers ()
     ppe_lobc = {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]};
     ppe_hibc = {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]};
 
+    LPInfo info;
+    info.setMaxCoarseningLevel(100);
+
     nodal_projector.reset(new NodalProjector(geom, grids, dmap, ppe_lobc, ppe_hibc,
-                                             GetVecOfConstPtrs(ebfactory)));
+                                             GetVecOfConstPtrs(ebfactory), info) );
 
     //
     // Now the diffusion solver
@@ -66,8 +69,11 @@ mfix::mfix_setup_solvers ()
     ppe_lobc = {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]};
     ppe_hibc = {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]};
 
+    LPInfo info;
+    info.setMaxCoarseningLevel(100);
+
     nodal_projector.reset(new NodalProjector(geom, grids, dmap, ppe_lobc, ppe_hibc,
-                                             GetVecOfConstPtrs(ebfactory)));
+                                             GetVecOfConstPtrs(ebfactory), info) );
 
 
     //

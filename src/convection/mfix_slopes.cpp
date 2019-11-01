@@ -80,8 +80,6 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                    zslope          = (du_zr*du_zl > 0.0) ? zslope : 0.0;
                    zs_fab(i,j,k,slopes_comp+n) = (du_zc       > 0.0) ? zslope : -zslope;
                });
-               
-               Gpu::synchronize();
            }
            else
            {
@@ -131,8 +129,6 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                        zs_fab(i,j,k,slopes_comp+n) = (du_zc       > 0.0) ? zslope : -zslope;
                    }
                });
-               
-               Gpu::synchronize();
            } // end of cut cell region
 
            const int minf = bc_list.get_minf();
@@ -212,8 +208,6 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                }
            });
            
-           Gpu::synchronize();
-
         } // not covered
     } // MFIter
 

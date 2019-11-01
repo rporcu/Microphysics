@@ -188,8 +188,5 @@ mfix::set_MAC_velocity_bcs ( int lev,
         if (bct == minf) ep_w(i,j,k) = p_bc_w_g[bcv] * p_bc_e_g[bcv];
       });
     }
-
-    // NOTE: here we do not need host-device synchronization since it is already
-    // included in the MFIter destructor
   }
 }
