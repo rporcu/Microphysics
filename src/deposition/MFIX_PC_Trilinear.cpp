@@ -14,16 +14,17 @@ ScalarDeposition(int lev,
                  const amrex::MultiFab * volfrac,
                  const amrex::FabArray<EBCellFlagFab>* flags)
 {
-  // if (m_deposition_scheme == DepositionScheme::trilinear) {
+
+  if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
 
     ScalarDeposition(TrilinearDeposition(), lev,
                      mf_to_be_filled, volfrac, flags);
 
-  // } else {
+  } else {
 
-  //   amrex::Abort("Don't know this deposition_scheme!");
+    amrex::Abort("Don't know this deposition_scheme!");
 
-  // }
+  }
 
 
 }
@@ -109,16 +110,17 @@ FluidDragForceDeposition(int lev,
                          const amrex::MultiFab * volfrac,
                          const amrex::FabArray<EBCellFlagFab>* flags)
 {
-  // if (m_deposition_scheme == DepositionScheme::trilinear) {
 
-  FluidDragForceDeposition(TrilinearDeposition(), lev,
-                           drag_mf, volfrac, flags);
+  if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
 
-  // } else {
+    FluidDragForceDeposition(TrilinearDeposition(), lev,
+                             drag_mf, volfrac, flags);
 
-  //   amrex::Abort("Don't know this deposition_scheme!");
+  } else {
 
-  // }
+    amrex::Abort("Don't know this deposition_scheme!");
+
+  }
 
 }
 
