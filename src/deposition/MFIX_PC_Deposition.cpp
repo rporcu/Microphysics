@@ -17,8 +17,23 @@ ScalarDeposition(int lev,
 
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
 
-    ScalarDeposition(TrilinearDeposition(), lev,
-                     mf_to_be_filled, volfrac, flags);
+    ScalarDeposition(TrilinearDeposition(),
+                     lev, mf_to_be_filled, volfrac, flags);
+
+  } else if (mfix::m_deposition_scheme == DepositionScheme::square_dpvm) {
+
+    ScalarDeposition(TrilinearDPVMSquareDeposition(),
+                     lev, mf_to_be_filled, volfrac, flags);
+
+  } else if (mfix::m_deposition_scheme == DepositionScheme::true_dpvm) {
+
+    ScalarDeposition(TrueDPVMDeposition(),
+                     lev, mf_to_be_filled, volfrac, flags);
+
+  } else if (mfix::m_deposition_scheme == DepositionScheme::centroid) {
+
+    ScalarDeposition(CentroidDeposition(),
+                     lev, mf_to_be_filled, volfrac, flags);
 
   } else {
 
@@ -113,8 +128,23 @@ FluidDragForceDeposition(int lev,
 
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
 
-    FluidDragForceDeposition(TrilinearDeposition(), lev,
-                             drag_mf, volfrac, flags);
+    FluidDragForceDeposition(TrilinearDeposition(),
+                             lev, drag_mf, volfrac, flags);
+
+  } else if (mfix::m_deposition_scheme == DepositionScheme::square_dpvm) {
+
+    FluidDragForceDeposition(TrilinearDPVMSquareDeposition(),
+                             lev, drag_mf, volfrac, flags);
+
+  } else if (mfix::m_deposition_scheme == DepositionScheme::true_dpvm) {
+
+    FluidDragForceDeposition(TrueDPVMDeposition(),
+                             lev, drag_mf, volfrac, flags);
+
+  } else if (mfix::m_deposition_scheme == DepositionScheme::centroid) {
+
+    FluidDragForceDeposition(CentroidDeposition(),
+                             lev, drag_mf, volfrac, flags);
 
   } else {
 

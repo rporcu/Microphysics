@@ -238,7 +238,7 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
         m_deposition_scheme = DepositionScheme::trilinear;
 
-      } else if (deposition_scheme == "square-dpvm") {
+      } else if (deposition_scheme == "trilinear-dpvm-square") {
 
         m_deposition_scheme = DepositionScheme::square_dpvm;
 
@@ -255,6 +255,12 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         amrex::Abort("Don't know this deposition_scheme!");
 
       }
+
+      m_deposition_scale_factor = 1.0;
+      pp.query("deposition_scale_factor", m_deposition_scale_factor);
+
+      m_deposition_diffusion_coeff= -1.0;
+      pp.query("deposition_diffusion_coeff", m_deposition_diffusion_coeff);
 
     }
 

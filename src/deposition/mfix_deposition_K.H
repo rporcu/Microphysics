@@ -1,4 +1,5 @@
 #include "MFIXParticleContainer.H"
+#include <mfix.H>
 
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
@@ -106,6 +107,108 @@ struct TrilinearDeposition
 };
 
 
+struct TrilinearDPVMSquareDeposition
+{
+  AMREX_GPU_HOST_DEVICE AMREX_INLINE
+  void operator() (amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
+                   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
+                   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
+                   amrex::Array4<amrex::Real const> const& vfrac,
+                   const MFIXParticleContainer::ParticleType& p,
+                   int& i, int& j, int& k, amrex::Real weights[2][2][2])
+  {
+
+    amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
+    amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
+    amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
+
+    i = std::floor(x);
+    j = std::floor(y);
+    k = std::floor(z);
+
+    amrex::Real wx[2];
+    amrex::Real wy[2];
+    amrex::Real wz[2];
+
+    amrex::Real rp  = amrex::max(dx[0], p.rdata(realData::radius) *
+                                 mfix::m_deposition_scale_factor);
+
+    amrex::Real i4rp3 = 1./(4.*rp*rp*rp);
+
+    amrex::Real hh;
+
+    if ( i == std::floor(x-0.5) ) {
+      hh = (i*dx[0]) - p.pos(0) + rp;
+
+      wx[0] = ( hh < 0.0 ) ? 0.0 :
+        (hh*hh*(3.*rp - hh)) * i4rp3;
+
+      wx[1] = 1.0 - wx[0];
+
+    } else {
+      hh = p.pos(0) + rp - (i*dx[0]);
+
+      wx[1] = ( hh < 0.0 ) ? 0.0 :
+        (hh*hh*(3.*rp - hh)) * i4rp3;
+
+      wx[0] = 1.0 - wx[1];
+    }
+
+    if ( j == std::floor(y-0.5) ) {
+      hh = (j*dx[1]) - p.pos(1) + rp;
+
+      wy[0] = ( hh < 0.0 ) ? 0.0 :
+        (hh*hh*(3.*rp - hh)) * i4rp3;
+
+      wy[1] = 1.0 - wy[0];
+
+    } else {
+      hh = p.pos(1) + rp - (j*dx[1]);
+
+      wy[1] = ( hh < 0.0 ) ? 0.0 :
+        (hh*hh*(3.*rp - hh)) * i4rp3;
+
+      wy[0] = 1.0 - wy[1];
+    }
+
+
+    if ( k == std::floor(z-0.5) ) {
+      hh = (k*dx[2]) - p.pos(2) + rp;
+
+      wz[0] = ( hh < 0.0 ) ? 0.0 :
+        (hh*hh*(3.*rp - hh)) * i4rp3;
+
+      wz[1] = 1.0 - wz[0];
+
+    } else {
+      hh = p.pos(2) + rp - (k*dx[2]);
+
+      wz[1] = ( hh < 0.0 ) ? 0.0 :
+        (hh*hh*(3.*rp - hh)) * i4rp3;
+
+      wz[0] = 1.0 - wz[1];
+    }
+
+
+    amrex::Real total_weight = 0.0;
+
+    for (int ii = 0; ii <= 1; ++ii)
+      for (int jj = 0; jj <= 1; ++jj)
+        for (int kk = 0; kk <= 1; ++kk){
+          weights[ii][jj][kk] = wx[ii]*wy[jj]*wz[kk];
+          total_weight += weights[ii][jj][kk] * vfrac(i-1+ii,j-1+jj,k-1+kk);
+        }
+
+    for (int ii = 0; ii <= 1; ++ii)
+      for (int jj = 0; jj <= 1; ++jj)
+        for (int kk = 0; kk <= 1; ++kk)
+          weights[ii][jj][kk] /= total_weight;
+
+  }
+
+};
+
+
 struct TrueDPVMDeposition
 {
   AMREX_GPU_HOST_DEVICE AMREX_INLINE
@@ -129,8 +232,8 @@ struct TrueDPVMDeposition
     amrex::Real wy[2];
     amrex::Real wz[2];
 
-    amrex::Real hh;
-    amrex::Real rp = p.rdata(realData::radius);
+    amrex::Real rp  = amrex::max(dx[0], p.rdata(realData::radius) *
+                                 mfix::m_deposition_scale_factor);
 
     // This gives us the i,j,k of the cell containing the centriod
     // of the particle.
@@ -138,7 +241,6 @@ struct TrueDPVMDeposition
     const int jp = std::floor(y-0.5);
     const int kp = std::floor(z-0.5);
 
-    amrex::Real ratio;
     amrex::Real overlap[3];
 
     if ( i == ip ) {
@@ -309,5 +411,58 @@ struct TrueDPVMDeposition
       weights[1][1][1] = wx[1] * wy[1] * wz[1];
 
     }
+  }
+};
+
+
+struct CentroidDeposition
+{
+  AMREX_GPU_HOST_DEVICE AMREX_INLINE
+  void operator() (amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
+                   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
+                   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
+                   amrex::Array4<amrex::Real const> const& vfrac,
+                   const MFIXParticleContainer::ParticleType& p,
+                   int& i, int& j, int& k, amrex::Real weights[2][2][2])
+  {
+
+    amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
+    amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
+    amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
+
+    i = std::floor(x);
+    j = std::floor(y);
+    k = std::floor(z);
+
+    amrex::Real wx[2];
+    amrex::Real wy[2];
+    amrex::Real wz[2];
+
+    // This gives us the i,j,k of the cell containing the centriod
+    // of the particle.
+    const int ip = std::floor(x-0.5);
+    const int jp = std::floor(y-0.5);
+    const int kp = std::floor(z-0.5);
+
+    // particle sits on low side of i index otherwise in i-1
+    wx[0] = ( i == ip ) ? 0.0 : 1.0;
+    wx[1] = 1.0 - wx[0];
+
+    // particle sits on low side of j index otherwise in j-1
+    wy[0] = ( j == jp ) ? 0.0 : 1.0;
+    wy[1] = 1.0 - wy[0];
+
+    // particle sits on low side of k index otherwise in k-1
+    wz[0] = ( k == kp ) ? 0.0 : 1.0;
+    wz[1] = 1.0 - wz[0];
+
+    // Note that we are not scaling for covered cells. In theory, a particle
+    // centroid should never end of in a covered cell.
+
+    for (int ii = 0; ii <= 1; ++ii)
+      for (int jj = 0; jj <= 1; ++jj)
+        for (int kk = 0; kk <= 1; ++kk)
+          weights[ii][jj][kk] = wx[ii]*wy[jj]*wz[kk];
+
   }
 };

@@ -319,6 +319,9 @@ public:
 
     static DepositionScheme m_deposition_scheme;
 
+    static amrex::Real m_deposition_diffusion_coeff;
+    static amrex::Real m_deposition_scale_factor;
+
     static amrex::Real tcoll_ratio; // input parameter defaulted to 50 used in file src_des/init_collision.f90
 
     template <typename F>
@@ -567,8 +570,8 @@ private:
                                        const Vector<std::unique_ptr<MultiFab>>& ro_ep_in,
                                        Real time, Real dt);
 
-    void mfix_diffuse_eps (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps);
-    void mfix_diffuse_drag (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_drag);
+    void mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps, amrex::Real);
+    void mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_drag, amrex::Real);
 
     void mfix_compute_diveu(Real time);
 

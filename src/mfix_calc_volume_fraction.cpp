@@ -8,9 +8,7 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_FillPatchUtil.H>
-
-#include <mfix_deposition_K.H>
-
+#include <MFIXParticleContainer.H>
 
 void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 {
@@ -156,13 +154,10 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
       amrex::Print() << "MFIXParticleContainer::PICDeposition time: " << stoptime << '\n';
     }
 
-
-#if 0
     // At this point, we have the particle volume on the fluid grid (ep_s).
     // We will diffuse it first, then convert it to ep_g.
-    mfix_diffuse_eps (ep_g);
-#endif
-
+    if(mfix::m_deposition_diffusion_coeff > 0.)
+      mfix_diffuse_scalar (ep_g, mfix::m_deposition_diffusion_coeff);
 
     // for (MFIter mfi(ep_g); mfi.isValid(); ++mfi) {
     //   const Box& sbx = ep_g[mfi].box(); // UNUSED_VARIABLE

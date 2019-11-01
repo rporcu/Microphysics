@@ -13,7 +13,8 @@
 // Implicit tensor solve
 //
 void
-mfix::mfix_diffuse_drag (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_drag)
+mfix::mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_to_diffuse,
+                          amrex::Real dcoeff)
 {
    BL_PROFILE("mfix::mfix_diffuse_drag");
 
@@ -56,8 +57,6 @@ mfix::mfix_diffuse_drag (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_d
 
    // Solving (1.0 * a_coeff - dt * div (mu grad)) phi = rhs
    ebtensorop.setScalars(1.0, 1.0);
-
-   amrex::Real dcoeff = 1.e-5;
 
    // Compute the coefficients
    for (int lev = 0; lev < nlev; lev++)
@@ -111,7 +110,7 @@ mfix::mfix_diffuse_drag (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_d
    // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
    for (int lev = 0; lev < nlev; lev++)
    {
-       MultiFab::Copy((*diff_phi4[lev]),(*mf_drag[lev]), 0, 0, 4, diff_phi4[lev]->nGrow());
+       MultiFab::Copy((*diff_phi4[lev]),(*mf_to_diffuse[lev]), 0, 0, 4, diff_phi4[lev]->nGrow());
 
        EB_set_covered(*diff_phi4[lev], 0, diff_phi4[lev]->nComp(), diff_phi4[lev]->nGrow(), covered_val);
        diff_phi4[lev] -> FillBoundary (geom[lev].periodicity());
@@ -119,7 +118,7 @@ mfix::mfix_diffuse_drag (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_d
        ebtensorop.setLevelBC ( lev, GetVecOfConstPtrs(diff_phi4)[lev] );
 
       // Define RHS = drag force
-       MultiFab::Copy((*diff_rhs4[lev]),(*mf_drag[lev]), 0, 0, 4, 0);
+       MultiFab::Copy((*diff_rhs4[lev]),(*mf_to_diffuse[lev]), 0, 0, 4, 0);
    }
 
    // This ensures that ghost cells of sol are correctly filled when returned from the solver
@@ -135,7 +134,7 @@ mfix::mfix_diffuse_drag (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_d
    for (int lev = 0; lev < nlev; lev++)
    {
        diff_phi4[lev]->FillBoundary (geom[lev].periodicity());
-       MultiFab::Copy( *mf_drag[lev], *diff_phi4[lev], 0, 0, 4, 1);
+       MultiFab::Copy( *mf_to_diffuse[lev], *diff_phi4[lev], 0, 0, 4, 1);
    }
 
    amrex::Print() << "After diffusing all drag components " << std::endl;

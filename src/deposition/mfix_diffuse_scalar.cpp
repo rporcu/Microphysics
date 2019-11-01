@@ -10,12 +10,13 @@
 #include <AMReX_MLEBTensorOp.H>
 
 //
-// Implicit tensor solve
+// Implicit scalar solve
 //
 void
-mfix::mfix_diffuse_eps (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_eps)
+mfix::mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_to_diffuse,
+                           amrex::Real dcoeff)
 {
-   BL_PROFILE("mfix::mfix_diffuse_eps");
+   BL_PROFILE("mfix::mfix_diffuse_scalar");
 
    // The boundary conditions need only be set once -- we do this at level 0
    int bc_lo[3], bc_hi[3];
@@ -23,7 +24,7 @@ mfix::mfix_diffuse_eps (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_ep
    // Whole domain
    Box domain(geom[0].Domain());
 
-   mfix_set_eps_bcs(mf_eps);
+   mfix_set_eps_bcs(mf_to_diffuse);
 
    // Set BCs for Poisson's solver
    set_diff_bc (bc_lo, bc_hi,
@@ -55,8 +56,6 @@ mfix::mfix_diffuse_eps (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_ep
 
    // Solving (1.0 * a_coeff - dt * div (mu grad)) phi = rhs
    ebscalarop.setScalars(1.0, 1.0);
-
-   amrex::Real dcoeff = 1.e-5;
 
    // Compute the coefficients
    for (int lev = 0; lev < nlev; lev++)
@@ -108,7 +107,7 @@ mfix::mfix_diffuse_eps (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_ep
    // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
    for (int lev = 0; lev < nlev; lev++)
    {
-       MultiFab::Copy((*diff_phi1[lev]),(*mf_eps[lev]), 0, 0, 1, diff_phi1[lev]->nGrow());
+       MultiFab::Copy((*diff_phi1[lev]),(*mf_to_diffuse[lev]), 0, 0, 1, diff_phi1[lev]->nGrow());
 
        EB_set_covered(*diff_phi1[lev], 0, diff_phi1[lev]->nComp(), diff_phi1[lev]->nGrow(), covered_val);
        diff_phi1[lev] -> FillBoundary (geom[lev].periodicity());
@@ -116,7 +115,7 @@ mfix::mfix_diffuse_eps (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_ep
        ebscalarop.setLevelBC ( lev, GetVecOfConstPtrs(diff_phi1)[lev] );
 
       // Define RHS = eps
-       MultiFab::Copy((*diff_rhs1[lev]),(*mf_eps[lev]), 0, 0, 1, 0);
+       MultiFab::Copy((*diff_rhs1[lev]),(*mf_to_diffuse[lev]), 0, 0, 1, 0);
    }
 
    // This ensures that ghost cells of sol are correctly filled when returned from the solver
@@ -132,7 +131,7 @@ mfix::mfix_diffuse_eps (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_ep
    for (int lev = 0; lev < nlev; lev++)
    {
        diff_phi1[lev]->FillBoundary (geom[lev].periodicity());
-       MultiFab::Copy( *mf_eps[lev], *diff_phi1[lev], 0, 0, 1, 1);
+       MultiFab::Copy( *mf_to_diffuse[lev], *diff_phi1[lev], 0, 0, 1, 1);
    }
 
    amrex::Print() << "After diffusing volume fraction " << std::endl;

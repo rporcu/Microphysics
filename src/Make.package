@@ -8,6 +8,6 @@ CEXE_sources += mfix_drag.cpp
 CEXE_sources += mfix_evolve.cpp
 CEXE_sources += mfix.cpp
 CEXE_sources += mfix_regrid.cpp
-CEXE_headers += mfix.H 
+CEXE_headers += mfix.H
 
-FEXE_headers += mfix_F.H 
+FEXE_headers += mfix_F.H

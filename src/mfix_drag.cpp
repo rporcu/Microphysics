@@ -156,9 +156,10 @@ mfix::mfix_calc_drag_fluid(Real time)
     amrex::Print() << "MFIXParticleContainer::TrilinearDepositionFluidDragForce time: " << stoptime << '\n';
   }
 
-#if 0
-  mfix_diffuse_drag(drag);
-#endif
+  // Apply mean field diffusion to drag force
+  if(mfix::m_deposition_diffusion_coeff > 0.)
+    mfix_diffuse_array(drag, mfix::m_deposition_diffusion_coeff);
+
 
   // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
   for (int lev = 0; lev < nlev; lev++)

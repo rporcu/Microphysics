@@ -15,6 +15,8 @@ int              mfix::knapsack_nmax        = 128;
 DragType         mfix::m_drag_type          = DragType::Invalid;
 DepositionScheme mfix::m_deposition_scheme;
 amrex::Real      mfix::tcoll_ratio          = 50.;
+amrex::Real      mfix::m_deposition_diffusion_coeff = -1.0;
+amrex::Real      mfix::m_deposition_scale_factor = 1.0;
 
 // Define unit vectors for easily convert indices
 amrex::IntVect mfix::e_x(1,0,0);
