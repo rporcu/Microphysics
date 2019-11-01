@@ -394,6 +394,4 @@ mfix::set_scalar_bcs(Real time,
        });
     }
   }
-
-  Gpu::synchronize();
 }

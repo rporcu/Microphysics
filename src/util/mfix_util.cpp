@@ -96,9 +96,6 @@ mfix::mfix_compute_vort ()
           {
             (*vort[lev])[mfi].setVal<RunOn::Gpu>(0.0, bx, 0, 1);
           }
-
-          // NOTE: here we do not need host-device synchronization since it is
-          // aready included in the MFIter destructor
        }
     }
 }
@@ -152,9 +149,6 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
           sum += dm;
 #endif
         });
-
-        // NOTE: here we do not need host-device synchronization since it is
-        // already included in the MFIter destructor
     }
 
 #ifdef AMREX_USE_CUDA
@@ -215,9 +209,6 @@ mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local)
           sum += dm;
 #endif
         });
-
-        // NOTE: here we do not need host-device synchronization since it is
-        // already included in the MFIter destructor
     }
 
 #ifdef AMREX_USE_CUDA

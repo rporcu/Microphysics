@@ -559,9 +559,6 @@ mfix::mfix_add_gravity_and_gp (Real dt)
              vel_fab(i,j,k,1) += dt * ( grav_loc[1]-(gp_fab(i,j,k,1)+gp0_loc[1])*inv_dens );
              vel_fab(i,j,k,2) += dt * ( grav_loc[2]-(gp_fab(i,j,k,2)+gp0_loc[2])*inv_dens );
          });
-
-         // NOTE: here we do not need host-device synchronization since it is
-         // already included in the MFIter destructor
        }
     }
 
@@ -616,9 +613,6 @@ mfix::mfix_add_drag_explicit (Real dt)
           vel_fab(i,j,k,1) += drag_1;
           vel_fab(i,j,k,2) += drag_2;
       });
-
-      // NOTE: here we do not need host-device synchronization since it is
-      // already included in the MFIter destructor
     }
   }
 }
@@ -663,9 +657,6 @@ mfix::mfix_add_drag_implicit (Real dt)
           vel_fab(i,j,k,1) = (vel_fab(i,j,k,1) + drag_fab(i,j,k,1) * orop) * denom;
           vel_fab(i,j,k,2) = (vel_fab(i,j,k,2) + drag_fab(i,j,k,2) * orop) * denom;
       });
-
-      // NOTE: here we do not need host-device synchronization since it is
-      // already included in the MFIter destructor
     }
   }
 }

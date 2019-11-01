@@ -73,7 +73,6 @@ mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
             const auto&  flags_fab = flags.array();
 
             const GpuArray<Real, 3> gp0_dev = {gp0[0], gp0[1], gp0[2]};
-
             const GpuArray<Real, 3> gravity_dev = {gravity[0], gravity[1], gravity[2]};
 
             // Compute CFL on a per cell basis
@@ -113,8 +112,6 @@ mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
                     }
                 });
             }
-            // NOTE: here we do not need host-device synchronization since it is
-            // already provided by the MFIter destructor
         }
     }
 

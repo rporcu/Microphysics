@@ -384,9 +384,6 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
              }
            });
          }
-
-         // NOTE: here we do not need host-device synchronization since it is
-         // already included in the MFIter destructor
        }
     }
 
