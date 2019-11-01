@@ -4,8 +4,9 @@ target_include_directories(mfixcore
 
 target_sources( mfixcore
    PRIVATE
+   mfix_deposition_K.H
+   mfix_deposition_bcs.cpp
    mfix_diffuse_eps.cpp
    mfix_diffuse_drag.cpp
-   mfix_deposition_bcs.cpp
    MFIX_PC_Trilinear.cpp
    )

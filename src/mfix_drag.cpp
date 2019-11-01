@@ -95,16 +95,8 @@ mfix::mfix_calc_drag_fluid(Real time)
     }
 
 
-    if (m_deposition_scheme == DepositionScheme::trilinear) {
+    pc -> FluidDragForceDeposition(lev, *drag_ptr[lev], volfrac, flags);
 
-      pc -> TrilinearDepositionFluidDragForce(lev, *drag_ptr[lev], volfrac, flags,
-                                              fortran_beta_comp, fortran_vel_comp);
-
-    } else {
-
-      amrex::Abort("Don't know this deposition_scheme!");
-
-    }
 
   }
 

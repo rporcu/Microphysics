@@ -147,28 +147,36 @@ public:
     ///
     void writeAllAtLevel(int lev = 0);
 
+    void ScalarDeposition(int lev, amrex::MultiFab& mf,
+                          const amrex::MultiFab * volfrac,
+                          const amrex::FabArray<amrex::EBCellFlagFab>* flags
+                          );
 
     ///
     /// Do the actual PIC deposition for CalcVolumeFraction
     ///
-  void TrilinearDepositionScalar(int lev,
-                                 amrex::MultiFab& mf,
-                                 const amrex::MultiFab * volfrac,
-                                 const amrex::FabArray<amrex::EBCellFlagFab>* flags,
-                                 int fortran_particle_comp
-                                 );
+    template <typename FB>
+    void ScalarDeposition(FB WeightFunc, int lev, amrex::MultiFab& mf,
+                          const amrex::MultiFab * volfrac,
+                          const amrex::FabArray<amrex::EBCellFlagFab>* flags
+                          );
 
 
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
     ///
-  void TrilinearDepositionFluidDragForce(int lev,
-                                         amrex::MultiFab& drag_mf,
-                                         const amrex::MultiFab * volfrac,
-                                         const amrex::FabArray<amrex::EBCellFlagFab>* flags,
-                                         int fortran_beta_comp,
-                                         int fortran_vel_comp
-                                         );
+    void FluidDragForceDeposition(int lev,
+                                  amrex::MultiFab& drag_mf,
+                                  const amrex::MultiFab * volfrac,
+                                  const amrex::FabArray<amrex::EBCellFlagFab>* flags
+                                  );
+    template <typename F>
+    void FluidDragForceDeposition(F WeightFunc,
+                                  int lev,
+                                  amrex::MultiFab& drag_mf,
+                                  const amrex::MultiFab * volfrac,
+                                  const amrex::FabArray<amrex::EBCellFlagFab>* flags
+                                  );
 
     //
     // Postprocessing utilities to compute spatially-averaged particle velocities

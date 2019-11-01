@@ -9,6 +9,8 @@
 #include <AMReX_Box.H>
 #include <AMReX_FillPatchUtil.H>
 
+#include <mfix_deposition_K.H>
+
 
 void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 {
@@ -91,15 +93,9 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
         volfrac = &(crse_factory->getVolFrac());
       }
 
-      if (m_deposition_scheme == DepositionScheme::trilinear) {
 
-        pc->TrilinearDepositionScalar(lev, *mf_pointer[lev], volfrac, flags, fortran_volume_comp);
+      pc->ScalarDeposition(lev, *mf_pointer[lev], volfrac, flags);
 
-      } else {
-
-        amrex::Abort("Don't know this deposition_scheme!");
-
-      }
 
     }
 

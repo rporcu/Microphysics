@@ -2,23 +2,50 @@
 #include "AMReX_Particles.H"
 #include <MFIXParticleContainer.H>
 
+#include <mfix_deposition_K.H>
+#include <mfix.H>
+
 using namespace amrex;
 using namespace std;
 
 void MFIXParticleContainer::
-TrilinearDepositionScalar(int lev,
-                          amrex::MultiFab & mf_to_be_filled,
-                          const amrex::MultiFab * volfrac,
-                          const amrex::FabArray<EBCellFlagFab>* flags,
-                          int fortran_particle_comp )
+ScalarDeposition(int lev,
+                 amrex::MultiFab & mf_to_be_filled,
+                 const amrex::MultiFab * volfrac,
+                 const amrex::FabArray<EBCellFlagFab>* flags)
 {
-  BL_PROFILE("MFIXParticleContainer::TrilinearDepositionScalar()");
+  // if (m_deposition_scheme == DepositionScheme::trilinear) {
+
+    ScalarDeposition(TrilinearDeposition(), lev,
+                     mf_to_be_filled, volfrac, flags);
+
+  // } else {
+
+  //   amrex::Abort("Don't know this deposition_scheme!");
+
+  // }
+
+
+}
+
+
+template <typename F>
+void MFIXParticleContainer::
+ScalarDeposition(F WeightFunc, int lev,
+                 amrex::MultiFab & mf_to_be_filled,
+                 const amrex::MultiFab * volfrac,
+                 const amrex::FabArray<EBCellFlagFab>* flags)
+{
+  BL_PROFILE("MFIXParticleContainer::ScalarDeposition()");
 
   // We always use the coarse dx
   const Geometry& gm  = Geom(0);
   const auto      plo = gm.ProbLoArray();
   const auto      dx  = gm.CellSizeArray();
   const auto      dxi = gm.InvCellSizeArray();
+
+  const auto      reg_cell_vol = dx[0]*dx[1]*dx[2];
+
 
   using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
 
@@ -46,45 +73,13 @@ TrilinearDepositionScalar(int lev,
 
             const ParticleType& p = pstruct[ip];
 
-            amrex::Real reg_cell_vol = dx[0]*dx[1]*dx[2];
-
-            amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
-            amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
-            amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
-
-            int i = std::floor(x);
-            int j = std::floor(y);
-            int k = std::floor(z);
-
-            amrex::Real wx_hi = x - i;
-            amrex::Real wy_hi = y - j;
-            amrex::Real wz_hi = z - k;
-
-            amrex::Real wx_lo = 1.0 - wx_hi;
-            amrex::Real wy_lo = 1.0 - wy_hi;
-            amrex::Real wz_lo = 1.0 - wz_hi;
+            int i;
+            int j;
+            int k;
 
             amrex::Real weights[2][2][2];
 
-            weights[0][0][0] = wx_lo * wy_lo * wz_lo;
-            weights[0][0][1] = wx_lo * wy_lo * wz_hi;
-            weights[0][1][0] = wx_lo * wy_hi * wz_lo;
-            weights[0][1][1] = wx_lo * wy_hi * wz_hi;
-            weights[1][0][0] = wx_hi * wy_lo * wz_lo;
-            weights[1][0][1] = wx_hi * wy_lo * wz_hi;
-            weights[1][1][0] = wx_hi * wy_hi * wz_lo;
-            weights[1][1][1] = wx_hi * wy_hi * wz_hi;
-
-            amrex::Real total_weight = 0.0;
-            for (int ii = 0; ii <= 1; ++ii)
-                for (int jj = 0; jj <= 1; ++jj)
-                    for (int kk = 0; kk <= 1; ++kk)
-                        total_weight += weights[ii][jj][kk] * vfrac(i-1+ii,j-1+jj,k-1+kk);
-
-            for (int ii = 0; ii <= 1; ++ii)
-                for (int jj = 0; jj <= 1; ++jj)
-                    for (int kk = 0; kk <= 1; ++kk)
-                        weights[ii][jj][kk] /= total_weight;
+            WeightFunc(plo, dx, dxi, vfrac, p, i, j, k, weights);
 
             amrex::Real pvol = p.rdata(realData::volume) / reg_cell_vol;
 
@@ -107,14 +102,36 @@ TrilinearDepositionScalar(int lev,
 }
 
 
+
 void MFIXParticleContainer::
-TrilinearDepositionFluidDragForce(int lev,
-                                  amrex::MultiFab & drag_mf,
-                                  const amrex::MultiFab * volfrac,
-                                  const amrex::FabArray<EBCellFlagFab>* flags,
-                                  int fortran_beta_comp, int fortran_vel_comp)
+FluidDragForceDeposition(int lev,
+                         amrex::MultiFab & drag_mf,
+                         const amrex::MultiFab * volfrac,
+                         const amrex::FabArray<EBCellFlagFab>* flags)
 {
-  BL_PROFILE("MFIXParticleContainer::TrilinearDepositionFluidDragForce()");
+  // if (m_deposition_scheme == DepositionScheme::trilinear) {
+
+  FluidDragForceDeposition(TrilinearDeposition(), lev,
+                           drag_mf, volfrac, flags);
+
+  // } else {
+
+  //   amrex::Abort("Don't know this deposition_scheme!");
+
+  // }
+
+}
+
+
+
+template <typename F>
+void MFIXParticleContainer::
+FluidDragForceDeposition(F WeightFunc, int lev,
+                         amrex::MultiFab & drag_mf,
+                         const amrex::MultiFab * volfrac,
+                         const amrex::FabArray<EBCellFlagFab>* flags)
+{
+  BL_PROFILE("MFIXParticleContainer::FluidDragForceDeposition()");
 
   // We always use the coarse dx
   const Geometry& gm          = Geom(0);
@@ -122,8 +139,9 @@ TrilinearDepositionFluidDragForce(int lev,
   const auto      dx          = gm.CellSizeArray();
   const auto      dxi         = gm.InvCellSizeArray();
 
-  using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
+  const auto      reg_cell_vol = dx[0]*dx[1]*dx[2];
 
+  using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -150,45 +168,13 @@ TrilinearDepositionFluidDragForce(int lev,
 
             const ParticleType& p = pstruct[ip];
 
-            amrex::Real reg_cell_vol = dx[0]*dx[1]*dx[2];
-
-            amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
-            amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
-            amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
-
-            int i = std::floor(x);
-            int j = std::floor(y);
-            int k = std::floor(z);
-
-            amrex::Real wx_hi = x - i;
-            amrex::Real wy_hi = y - j;
-            amrex::Real wz_hi = z - k;
-
-            amrex::Real wx_lo = 1.0 - wx_hi;
-            amrex::Real wy_lo = 1.0 - wy_hi;
-            amrex::Real wz_lo = 1.0 - wz_hi;
+            int i;
+            int j;
+            int k;
 
             amrex::Real weights[2][2][2];
 
-            weights[0][0][0] = wx_lo * wy_lo * wz_lo;
-            weights[0][0][1] = wx_lo * wy_lo * wz_hi;
-            weights[0][1][0] = wx_lo * wy_hi * wz_lo;
-            weights[0][1][1] = wx_lo * wy_hi * wz_hi;
-            weights[1][0][0] = wx_hi * wy_lo * wz_lo;
-            weights[1][0][1] = wx_hi * wy_lo * wz_hi;
-            weights[1][1][0] = wx_hi * wy_hi * wz_lo;
-            weights[1][1][1] = wx_hi * wy_hi * wz_hi;
-
-            amrex::Real total_weight = 0.0;
-            for (int ii = 0; ii <= 1; ++ii)
-              for (int jj = 0; jj <= 1; ++jj)
-                for (int kk = 0; kk <= 1; ++kk)
-                  total_weight += weights[ii][jj][kk] * vfrac(i-1+ii,j-1+jj,k-1+kk);
-
-            for (int ii = 0; ii <= 1; ++ii)
-              for (int jj = 0; jj <= 1; ++jj)
-                for (int kk = 0; kk <= 1; ++kk)
-                  weights[ii][jj][kk] /= total_weight;
+            WeightFunc(plo, dx, dxi, vfrac, p, i, j, k, weights);
 
             amrex::Real pbeta = p.rdata(realData::dragx) / reg_cell_vol;
             amrex::Real pvx   = p.rdata(realData::velx) * pbeta;
