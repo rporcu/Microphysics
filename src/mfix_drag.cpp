@@ -78,8 +78,8 @@ mfix::mfix_calc_drag_fluid(Real time)
     // then create a copy of the coarse factory to use.
 
     if (lev == 0) {
-      flags   = &(ebfactory[lev]->getMultiEBCellFlagFab());
-      volfrac = &(ebfactory[lev]->getVolFrac());
+      flags   = &(particle_ebfactory[lev]->getMultiEBCellFlagFab());
+      volfrac = &(particle_ebfactory[lev]->getVolFrac());
 
     } else {
 

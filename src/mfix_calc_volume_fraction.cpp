@@ -29,7 +29,6 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 
     MultiFab* mf_pointer[nlev];
 
-
     if (nlev > 2)
       amrex::Abort("For right now mfix::mfix_calc_volume_fraction can only handle up to 2 levels");
 
@@ -77,8 +76,9 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 
       // Use level 0 to define the EB factory
       if (lev == 0) {
-        flags   = &(ebfactory[lev]->getMultiEBCellFlagFab());
-        volfrac = &(ebfactory[lev]->getVolFrac());
+
+        flags   = &(particle_ebfactory[lev]->getMultiEBCellFlagFab());
+        volfrac = &(particle_ebfactory[lev]->getVolFrac());
 
       } else {
 
@@ -93,22 +93,21 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
         volfrac = &(crse_factory->getVolFrac());
       }
 
-
       pc->ScalarDeposition(lev, *mf_pointer[lev], volfrac, flags);
 
-
     }
+
 
     // Move any field deposited outside the domain back into the domain
     // when BC is pressure inlet and mass inflow.
     for (int lev = 0; lev < nlev; lev++)
       mfix_deposition_bcs_scalar(lev, *mf_pointer[lev]);
 
-
     int  src_nghost = 1;
     int dest_nghost = 0;
     for (int lev = 1; lev < nlev; lev++)
-      mf_pointer[0]->copy(*mf_pointer[lev],0,0,ep_g[lev]->nComp(),src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
+      mf_pointer[0]->copy(*mf_pointer[lev],0,0,ep_g[lev]->nComp(),
+                          src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
 
     mf_pointer[0]->SumBoundary(gm.periodicity());
 
