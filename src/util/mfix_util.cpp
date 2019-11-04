@@ -58,6 +58,8 @@ mfix::mfix_compute_vort ()
     {
        Box domain(geom[lev].Domain());
 
+      vort[lev]->setVal(0.0);
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -91,10 +93,6 @@ mfix::mfix_compute_vort ()
                                            (uz-wx)*(uz-wx) +
                                            (vx-uy)*(vx-uy));
             });
-          }
-          else
-          {
-            (*vort[lev])[mfi].setVal<RunOn::Gpu>(0.0, bx, 0, 1);
           }
        }
     }
