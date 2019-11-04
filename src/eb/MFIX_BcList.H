@@ -21,10 +21,11 @@ class BcList {
 
     int get_undefined() const {return und_;};
     int get_ig() const {return ig_;};
-    int get_pinf() const {return pinf_;};
-    int get_pout() const {return pout_;};
-    int get_minf() const {return minf_;};
-    int get_nsw() const {return nsw_;};
+
+    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_pinf() const {return pinf_;};
+    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_pout() const {return pout_;};
+    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_minf() const {return minf_;};
+    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_nsw() const {return nsw_;};
 
   private:
     const int und_;
