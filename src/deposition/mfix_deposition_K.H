@@ -65,7 +65,8 @@ struct TrilinearDeposition
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
                    amrex::Array4<amrex::Real const> const& vfrac,
                    const MFIXParticleContainer::ParticleType& p,
-                   int& i, int& j, int& k, amrex::Real weights[2][2][2])
+                   int& i, int& j, int& k, amrex::Real weights[2][2][2],
+                   const amrex::Real) const
   {
 
     amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
@@ -115,7 +116,8 @@ struct TrilinearDPVMSquareDeposition
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
                    amrex::Array4<amrex::Real const> const& vfrac,
                    const MFIXParticleContainer::ParticleType& p,
-                   int& i, int& j, int& k, amrex::Real weights[2][2][2])
+                   int& i, int& j, int& k, amrex::Real weights[2][2][2],
+                   const amrex::Real deposition_scale_factor) const
   {
 
     amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
@@ -131,7 +133,7 @@ struct TrilinearDPVMSquareDeposition
     amrex::Real wz[2];
 
     amrex::Real rp  = amrex::max(dx[0], p.rdata(realData::radius) *
-                                 mfix::m_deposition_scale_factor);
+                                 deposition_scale_factor);
 
     amrex::Real i4rp3 = 1./(4.*rp*rp*rp);
 
@@ -217,7 +219,8 @@ struct TrueDPVMDeposition
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
                    amrex::Array4<amrex::Real const> const& vfrac,
                    const MFIXParticleContainer::ParticleType& p,
-                   int& i, int& j, int& k, amrex::Real weights[2][2][2])
+                   int& i, int& j, int& k, amrex::Real weights[2][2][2],
+                   const amrex::Real deposition_scale_factor) const
   {
 
     amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
@@ -233,7 +236,7 @@ struct TrueDPVMDeposition
     amrex::Real wz[2];
 
     amrex::Real rp  = amrex::max(dx[0], p.rdata(realData::radius) *
-                                 mfix::m_deposition_scale_factor);
+                                 deposition_scale_factor);
 
     // This gives us the i,j,k of the cell containing the centriod
     // of the particle.
@@ -423,7 +426,8 @@ struct CentroidDeposition
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
                    amrex::Array4<amrex::Real const> const& vfrac,
                    const MFIXParticleContainer::ParticleType& p,
-                   int& i, int& j, int& k, amrex::Real weights[2][2][2])
+                   int& i, int& j, int& k, amrex::Real weights[2][2][2],
+                   const amrex::Real) const
   {
 
     amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
