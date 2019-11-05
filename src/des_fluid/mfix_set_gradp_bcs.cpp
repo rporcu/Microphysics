@@ -11,7 +11,7 @@ mfix::set_gradp_bcs (const Box& bx,
   // Extract the lower and upper boundaries of Domain
   const IntVect dom_lo(domain.loVect()), dom_hi(domain.hiVect());
 
-  Array4<Real> const& gp = gp_fab.array();
+  Array4<Real> const& gp_arr = gp_fab.array();
   const IntVect gp_lo(gp_fab.loVect()), gp_hi(gp_fab.hiVect());
 
   Array4<int> const& bct_ilo = bc_ilo[lev]->array();
@@ -63,15 +63,15 @@ mfix::set_gradp_bcs (const Box& bx,
 
       if((bct == pinf) or (bct == pout))
       {
-        gp(i,j,k,0) = gp(i+1,j,k,0);
-        gp(i,j,k,1) = gp(i+1,j,k,1);
-        gp(i,j,k,2) = gp(i+1,j,k,2);
+        gp_arr(i,j,k,0) = gp_arr(i+1,j,k,0);
+        gp_arr(i,j,k,1) = gp_arr(i+1,j,k,1);
+        gp_arr(i,j,k,2) = gp_arr(i+1,j,k,2);
       }
       else if(bct == minf)
       {
-        gp(i,j,k,0) = gp(i+1,j,k,0);
-        gp(i,j,k,1) = 0;
-        gp(i,j,k,2) = 0;
+        gp_arr(i,j,k,0) = gp_arr(i+1,j,k,0);
+        gp_arr(i,j,k,1) = 0;
+        gp_arr(i,j,k,2) = 0;
       }
     });
   }
@@ -84,15 +84,15 @@ mfix::set_gradp_bcs (const Box& bx,
 
       if((bct == pinf) or (bct == pout))
       {
-        gp(i,j,k,0) = gp(i-1,j,k,0);
-        gp(i,j,k,1) = gp(i-1,j,k,1);
-        gp(i,j,k,2) = gp(i-1,j,k,2);
+        gp_arr(i,j,k,0) = gp_arr(i-1,j,k,0);
+        gp_arr(i,j,k,1) = gp_arr(i-1,j,k,1);
+        gp_arr(i,j,k,2) = gp_arr(i-1,j,k,2);
       }
       else if(bct == minf)
       {
-        gp(i,j,k,0) = gp(i-1,j,k,0);
-        gp(i,j,k,1) = 0;
-        gp(i,j,k,2) = 0;
+        gp_arr(i,j,k,0) = gp_arr(i-1,j,k,0);
+        gp_arr(i,j,k,1) = 0;
+        gp_arr(i,j,k,2) = 0;
       }
     });
   }
@@ -105,15 +105,15 @@ mfix::set_gradp_bcs (const Box& bx,
 
       if((bct == pinf) or (bct == pout))
       {
-        gp(i,j,k,0) = gp(i,j+1,k,0);
-        gp(i,j,k,1) = gp(i,j+1,k,1);
-        gp(i,j,k,2) = gp(i,j+1,k,2);
+        gp_arr(i,j,k,0) = gp_arr(i,j+1,k,0);
+        gp_arr(i,j,k,1) = gp_arr(i,j+1,k,1);
+        gp_arr(i,j,k,2) = gp_arr(i,j+1,k,2);
       }
       else if(bct == minf)
       {
-        gp(i,j,k,0) = 0;
-        gp(i,j,k,1) = gp(i,j+1,k,1);
-        gp(i,j,k,2) = 0;
+        gp_arr(i,j,k,0) = 0;
+        gp_arr(i,j,k,1) = gp_arr(i,j+1,k,1);
+        gp_arr(i,j,k,2) = 0;
       }
     });
   }
@@ -126,15 +126,15 @@ mfix::set_gradp_bcs (const Box& bx,
 
       if((bct == pinf) or (bct == pout))
       {
-        gp(i,j,k,0) = gp(i,j-1,k,0);
-        gp(i,j,k,1) = gp(i,j-1,k,1);
-        gp(i,j,k,2) = gp(i,j-1,k,2);
+        gp_arr(i,j,k,0) = gp_arr(i,j-1,k,0);
+        gp_arr(i,j,k,1) = gp_arr(i,j-1,k,1);
+        gp_arr(i,j,k,2) = gp_arr(i,j-1,k,2);
       }
       else if(bct == minf)
       {
-        gp(i,j,k,0) = 0;
-        gp(i,j,k,1) = gp(i,j-1,k,1);
-        gp(i,j,k,2) = 0;
+        gp_arr(i,j,k,0) = 0;
+        gp_arr(i,j,k,1) = gp_arr(i,j-1,k,1);
+        gp_arr(i,j,k,2) = 0;
       }
     });
   }
@@ -147,15 +147,15 @@ mfix::set_gradp_bcs (const Box& bx,
 
       if((bct == pinf) or (bct == pout))
       {
-        gp(i,j,k,0) = gp(i,j,k+1,0);
-        gp(i,j,k,1) = gp(i,j,k+1,1);
-        gp(i,j,k,2) = gp(i,j,k+1,2);
+        gp_arr(i,j,k,0) = gp_arr(i,j,k+1,0);
+        gp_arr(i,j,k,1) = gp_arr(i,j,k+1,1);
+        gp_arr(i,j,k,2) = gp_arr(i,j,k+1,2);
       }
       else if(bct == minf)
       {
-        gp(i,j,k,0) = 0;
-        gp(i,j,k,1) = 0;
-        gp(i,j,k,2) = gp(i,j,k+1,2);
+        gp_arr(i,j,k,0) = 0;
+        gp_arr(i,j,k,1) = 0;
+        gp_arr(i,j,k,2) = gp_arr(i,j,k+1,2);
       }
     });
   }
@@ -168,15 +168,15 @@ mfix::set_gradp_bcs (const Box& bx,
 
       if((bct == pinf) or (bct == pout))
       {
-        gp(i,j,k,0) = gp(i,j,k-1,0);
-        gp(i,j,k,1) = gp(i,j,k-1,1);
-        gp(i,j,k,2) = gp(i,j,k-1,2);
+        gp_arr(i,j,k,0) = gp_arr(i,j,k-1,0);
+        gp_arr(i,j,k,1) = gp_arr(i,j,k-1,1);
+        gp_arr(i,j,k,2) = gp_arr(i,j,k-1,2);
       }
       else if(bct == minf)
       {
-        gp(i,j,k,0) = 0;
-        gp(i,j,k,1) = 0;
-        gp(i,j,k,2) = gp(i,j,k-1,2);
+        gp_arr(i,j,k,0) = 0;
+        gp_arr(i,j,k,1) = 0;
+        gp_arr(i,j,k,2) = gp_arr(i,j,k-1,2);
       }
     });
   }

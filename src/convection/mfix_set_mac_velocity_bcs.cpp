@@ -118,8 +118,6 @@ mfix::set_MAC_velocity_bcs ( int lev,
 
     mfix_usr1_cpp(time);
 
-    const int pinf = bc_list.get_pinf();
-    const int pout = bc_list.get_pout();
     const int minf = bc_list.get_minf();
 
     amrex::Real* p_bc_u_g = m_bc_u_g.data();

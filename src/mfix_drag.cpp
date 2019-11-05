@@ -23,10 +23,6 @@ mfix::mfix_calc_drag_fluid(Real time)
 
     drag[lev] ->setVal(0.0L);
 
-  int fortran_beta_comp = 15;
-  int fortran_vel_comp  =  9;
-
-
   if (nlev > 2)
     amrex::Abort("For right now MFIXParticleContainer::TrilinearDepositionFluidDragForce can only handle up to 2 levels");
 
@@ -111,7 +107,7 @@ mfix::mfix_calc_drag_fluid(Real time)
 
   if (nlev > 1) {
 
-    IntVect ref_ratio(this->m_gdb->refRatio(0));
+    // IntVect ref_ratio(this->m_gdb->refRatio(0));
 
     // Now interpolate from the coarse grid to define the fine grid ep-g
     Interpolater* mapper = &cell_cons_interp;
@@ -121,7 +117,6 @@ mfix::mfix_calc_drag_fluid(Real time)
 
     BndryFuncArray bfunc(phifill);
 
-    Real time = 0.0;
     for (int lev = 1; lev < nlev; lev++) {
 
       PhysBCFunct<BndryFuncArray> cphysbc(Geom(lev-1), bcs, bfunc);
@@ -130,7 +125,7 @@ mfix::mfix_calc_drag_fluid(Real time)
       amrex::InterpFromCoarseLevel(*drag[lev], time, *drag_ptr[lev-1],
                                    0, 0, 1, Geom(lev-1), Geom(lev),
                                    cphysbc, 0, fphysbc, 0,
-                                   ref_ratio, mapper,
+                                   ref_ratio[0], mapper,
                                    bcs, 0);
     }
   }

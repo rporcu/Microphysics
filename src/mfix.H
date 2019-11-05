@@ -104,16 +104,7 @@ public:
 
     void ComputeAverageFluidVars ( const int lev,
                                    const amrex::Real time,
-                                   const std::string&  basename,
-                                   const amrex::Vector<amrex::Real>& avg_p_g,
-                                   const amrex::Vector<amrex::Real>& avg_ep_g,
-                                   const amrex::Vector<amrex::Real>& avg_vel_g,
-                                   const amrex::Vector<amrex::Real>& avg_region_x_w,
-                                   const amrex::Vector<amrex::Real>& avg_region_x_e,
-                                   const amrex::Vector<amrex::Real>& avg_region_y_s,
-                                   const amrex::Vector<amrex::Real>& avg_region_y_n,
-                                   const amrex::Vector<amrex::Real>& avg_region_z_b,
-                                   const amrex::Vector<amrex::Real>& avg_region_z_t ) const;
+                                   const std::string&  basename ) const;
 
     void Regrid ();
 
@@ -359,40 +350,42 @@ public:
                              Vector< std::unique_ptr<MultiFab> >& ep_w_mac);
 
     void mfix_compute_ugradu(const int lev, Box& bx,
-                             Vector< std::unique_ptr<MultiFab> >& a_fx,
-                             Vector< std::unique_ptr<MultiFab> >& a_fy,
-                             Vector< std::unique_ptr<MultiFab> >& a_fz,
-                             Vector< std::unique_ptr<MultiFab> >& state,
+                             FArrayBox& a_fx,
+                             FArrayBox& a_fy,
+                             FArrayBox& a_fz,
+                             const FArrayBox& state,
                              const int state_comp, const int n_comp,
-                             Vector< std::unique_ptr<MultiFab> >& xslopes,
-                             Vector< std::unique_ptr<MultiFab> >& yslopes,
-                             Vector< std::unique_ptr<MultiFab> >& zslopes,
+                             const FArrayBox& xslopes,
+                             const FArrayBox& yslopes,
+                             const FArrayBox& zslopes,
                              const int slopes_comp,
-                             Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                             Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                             MFIter* mfi, Box& domain);
+                             const FArrayBox& ep_u_mac,
+                             const FArrayBox& ep_v_mac,
+                             const FArrayBox& ep_w_mac);
 
     void mfix_compute_ugradu_eb(const int lev, Box& bx,
-                                Vector< std::unique_ptr<MultiFab> >& a_fx,
-                                Vector< std::unique_ptr<MultiFab> >& a_fy,
-                                Vector< std::unique_ptr<MultiFab> >& a_fz,
-                                Vector< std::unique_ptr<MultiFab> >& state,
+                                FArrayBox& a_fx,
+                                FArrayBox& a_fy,
+                                FArrayBox& a_fz,
+                                const FArrayBox& state,
                                 const int state_comp, const int n_comp,
-                                Vector< std::unique_ptr<MultiFab> >& xslopes,
-                                Vector< std::unique_ptr<MultiFab> >& yslopes,
-                                Vector< std::unique_ptr<MultiFab> >& zslopes,
+                                const FArrayBox& xslopes,
+                                const FArrayBox& yslopes,
+                                const FArrayBox& zslopes,
                                 const int slopes_comp,
-                                Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                                Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                                Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                                MFIter* mfi,
-                                Array< const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
-                                Array< const MultiCutFab*,AMREX_SPACEDIM>& facecent,
-                                const amrex::MultiFab* volfrac,
-                                const amrex::MultiCutFab* bndrycent,
-                                const amrex::iMultiFab* cc_mask,
-                                Box& domain, const EBCellFlagFab& flags);
+                                const FArrayBox& ep_u_mac,
+                                const FArrayBox& ep_v_mac,
+                                const FArrayBox& ep_w_mac,
+                                const FArrayBox& ax,
+                                const FArrayBox& ay,
+                                const FArrayBox& az,
+                                const FArrayBox& fc_x,
+                                const FArrayBox& fc_y,
+                                const FArrayBox& fc_z,
+                                const FArrayBox& volfrac,
+                                const FArrayBox& bndrycent,
+                                const IArrayBox& cc_mask,
+                                const EBCellFlagFab& flags);
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     //

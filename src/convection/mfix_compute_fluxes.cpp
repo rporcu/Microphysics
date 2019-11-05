@@ -62,7 +62,6 @@ mfix::mfix_compute_fluxes(int lev,
                           Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                           Vector< std::unique_ptr<MultiFab> >& ep_w_mac)
 {
-        Box domain(geom[lev].Domain());
 
         // Get EB geometric info
         Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
@@ -112,7 +111,7 @@ mfix::mfix_compute_fluxes(int lev,
             Box bx = mfi.tilebox ();
 
             // this is to check efficiently if this tile contains any eb stuff
-            const EBFArrayBox&  state_fab = static_cast<EBFArrayBox const&>((*state_in[lev])[mfi]);
+            const EBFArrayBox& state_fab = static_cast<EBFArrayBox const&>((*state_in[lev])[mfi]);
             const EBCellFlagFab&  flags = state_fab.getEBCellFlagFab();
 
             if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
@@ -129,16 +128,20 @@ mfix::mfix_compute_fluxes(int lev,
                 // No cut cells in tile + nghost-cell witdh halo -> use non-eb routine
                 if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
                 {
-                    mfix_compute_ugradu(lev, bx, a_fx, a_fy, a_fz, state_in, state_comp, ncomp,
-                                        xslopes_in, yslopes_in, zslopes_in, slopes_comp,
-                                        ep_u_mac, ep_v_mac, ep_w_mac, &mfi, domain);
+                    mfix_compute_ugradu(lev, bx, (*a_fx[lev])[mfi], (*a_fy[lev])[mfi], (*a_fz[lev])[mfi], 
+                                        (*state_in[lev])[mfi], state_comp, ncomp,
+                                        (*xslopes_in[lev])[mfi], (*yslopes_in[lev])[mfi], (*zslopes_in[lev])[mfi], slopes_comp,
+                                        (*ep_u_mac[lev])[mfi], (*ep_v_mac[lev])[mfi], (*ep_w_mac[lev])[mfi]);
                 }
                 else
                 {
-                    mfix_compute_ugradu_eb(lev, bx, a_fx, a_fy, a_fz, state_in, state_comp, ncomp,
-                                           xslopes_in, yslopes_in, zslopes_in, slopes_comp,
-                                           ep_u_mac, ep_v_mac, ep_w_mac, &mfi, areafrac, facecent,
-                                           volfrac, bndrycent, &cc_mask, domain, flags);
+                    mfix_compute_ugradu_eb(lev, bx, (*a_fx[lev])[mfi], (*a_fy[lev])[mfi], (*a_fz[lev])[mfi], 
+                                           (*state_in[lev])[mfi], state_comp, ncomp,
+                                           (*xslopes_in[lev])[mfi], (*yslopes_in[lev])[mfi], (*zslopes_in[lev])[mfi], slopes_comp,
+                                           (*ep_u_mac[lev])[mfi], (*ep_v_mac[lev])[mfi], (*ep_w_mac[lev])[mfi],
+                                           (*areafrac[0])[mfi], (*areafrac[1])[mfi], (*areafrac[2])[mfi], 
+                                           (*facecent[0])[mfi], (*facecent[1])[mfi], (*facecent[2])[mfi], 
+                                           (*volfrac)[mfi], (*bndrycent)[mfi], cc_mask[mfi], flags);
                 }
             }
         } // MFIter
@@ -146,36 +149,35 @@ mfix::mfix_compute_fluxes(int lev,
 
 void
 mfix::mfix_compute_ugradu( const int lev, Box& bx,
-                           Vector< std::unique_ptr<MultiFab> >& a_fx,
-                           Vector< std::unique_ptr<MultiFab> >& a_fy,
-                           Vector< std::unique_ptr<MultiFab> >& a_fz,
-                           Vector< std::unique_ptr<MultiFab> >& state_in,
+                           FArrayBox& a_fx, FArrayBox& a_fy, FArrayBox& a_fz,
+                           const FArrayBox& state_in, 
                            const int state_comp, const int ncomp,
-                           Vector< std::unique_ptr<MultiFab> >& xslopes_in,
-                           Vector< std::unique_ptr<MultiFab> >& yslopes_in,
-                           Vector< std::unique_ptr<MultiFab> >& zslopes_in,
+                           const FArrayBox& xslopes_in, 
+                           const FArrayBox& yslopes_in, 
+                           const FArrayBox& zslopes_in, 
                            const int slopes_comp,
-                           Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                           Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                           Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                           MFIter* mfi, Box& domain)
+                           const FArrayBox& ep_u_mac, 
+                           const FArrayBox& ep_v_mac, 
+                           const FArrayBox& ep_w_mac) 
 {
+  Box domain(geom[lev].Domain());
+
   const amrex::Dim3 dom_low = amrex::lbound(domain);
   const amrex::Dim3 dom_high = amrex::ubound(domain);
 
-  Array4<Real> const& state     = state_in[lev]->array(*mfi);
+  Array4<const Real> const& state = state_in.array();
 
-  Array4<Real> const& u = ep_u_mac[lev]->array(*mfi);
-  Array4<Real> const& v = ep_v_mac[lev]->array(*mfi);
-  Array4<Real> const& w = ep_w_mac[lev]->array(*mfi);
+  Array4<Real> const& fx = a_fx.array();
+  Array4<Real> const& fy = a_fy.array();
+  Array4<Real> const& fz = a_fz.array();
 
-  Array4<Real> const& fx = a_fx[lev]->array(*mfi);
-  Array4<Real> const& fy = a_fy[lev]->array(*mfi);
-  Array4<Real> const& fz = a_fz[lev]->array(*mfi);
+  Array4<const Real> const& x_slopes = xslopes_in.array();
+  Array4<const Real> const& y_slopes = yslopes_in.array();
+  Array4<const Real> const& z_slopes = zslopes_in.array();
 
-  Array4<Real> const& x_slopes = xslopes_in[lev]->array(*mfi);
-  Array4<Real> const& y_slopes = yslopes_in[lev]->array(*mfi);
-  Array4<Real> const& z_slopes = zslopes_in[lev]->array(*mfi);
+  Array4<const Real> const& u = ep_u_mac.array();
+  Array4<const Real> const& v = ep_v_mac.array();
+  Array4<const Real> const& w = ep_w_mac.array();
 
   Array4<int> const& bct_ilo = bc_ilo[lev]->array();
   Array4<int> const& bct_ihi = bc_ihi[lev]->array();
@@ -283,53 +285,57 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
   });
 }
 
-
 //
 // Compute the three components of the convection term when we have embedded
 // boundaries
 //
 void
 mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
-                             Vector< std::unique_ptr<MultiFab> >& a_fx,
-                             Vector< std::unique_ptr<MultiFab> >& a_fy,
-                             Vector< std::unique_ptr<MultiFab> >& a_fz,
-                             Vector< std::unique_ptr<MultiFab> >& state_in,
+                             FArrayBox& a_fx, 
+                             FArrayBox& a_fy, 
+                             FArrayBox& a_fz, 
+                             const FArrayBox& state_in, 
                              const int state_comp, const int ncomp,
-                             Vector< std::unique_ptr<MultiFab> >& xslopes_in,
-                             Vector< std::unique_ptr<MultiFab> >& yslopes_in,
-                             Vector< std::unique_ptr<MultiFab> >& zslopes_in,
+                             const FArrayBox& xslopes_in, 
+                             const FArrayBox& yslopes_in, 
+                             const FArrayBox& zslopes_in, 
                              const int slopes_comp,
-                             Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                             Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                             MFIter* mfi,
-                             Array<const MultiCutFab*,AMREX_SPACEDIM>& areafrac,
-                             Array<const MultiCutFab*,AMREX_SPACEDIM>& facecent,
-                             const MultiFab* volfrac,
-                             const MultiCutFab* bndrycent,
-                             const iMultiFab* cc_mask,
-                             Box& domain, const EBCellFlagFab& flags)
+                             const FArrayBox& ep_u_mac, 
+                             const FArrayBox& ep_v_mac, 
+                             const FArrayBox& ep_w_mac, 
+                             const FArrayBox& afrac_x_fab, 
+                             const FArrayBox& afrac_y_fab, 
+                             const FArrayBox& afrac_z_fab, 
+                             const FArrayBox& face_centroid_x, 
+                             const FArrayBox& face_centroid_y, 
+                             const FArrayBox& face_centroid_z, 
+                             const FArrayBox& volfrac, 
+                             const FArrayBox& bndry_centroid, 
+                             const IArrayBox& cc_mask, 
+                             const EBCellFlagFab& flags)
 {
+  Box domain(geom[lev].Domain());
+
   const amrex::Dim3 dom_low = amrex::lbound(domain);
   const amrex::Dim3 dom_high = amrex::ubound(domain);
 
-  Array4<Real> const& state     = state_in[lev]->array(*mfi);
+  Array4<Real> const& fx = a_fx.array();
+  Array4<Real> const& fy = a_fy.array();
+  Array4<Real> const& fz = a_fz.array();
 
-  Array4<const Real> const& areafrac_x = areafrac[0]->array(*mfi);
-  Array4<const Real> const& areafrac_y = areafrac[1]->array(*mfi);
-  Array4<const Real> const& areafrac_z = areafrac[2]->array(*mfi);
+  Array4<const Real> const& state = state_in.array();
 
-  Array4<Real> const& u = ep_u_mac[lev]->array(*mfi);
-  Array4<Real> const& v = ep_v_mac[lev]->array(*mfi);
-  Array4<Real> const& w = ep_w_mac[lev]->array(*mfi);
+  Array4<const Real> const& areafrac_x = afrac_x_fab.array();
+  Array4<const Real> const& areafrac_y = afrac_y_fab.array();
+  Array4<const Real> const& areafrac_z = afrac_z_fab.array();
 
-  Array4<Real> const& fx = a_fx[lev]->array(*mfi);
-  Array4<Real> const& fy = a_fy[lev]->array(*mfi);
-  Array4<Real> const& fz = a_fz[lev]->array(*mfi);
+  Array4<const Real> const& u = ep_u_mac.array();
+  Array4<const Real> const& v = ep_v_mac.array();
+  Array4<const Real> const& w = ep_w_mac.array();
 
-  Array4<Real> const& x_slopes = xslopes_in[lev]->array(*mfi);
-  Array4<Real> const& y_slopes = yslopes_in[lev]->array(*mfi);
-  Array4<Real> const& z_slopes = zslopes_in[lev]->array(*mfi);
+  Array4<const Real> const& x_slopes = xslopes_in.array();
+  Array4<const Real> const& y_slopes = yslopes_in.array();
+  Array4<const Real> const& z_slopes = zslopes_in.array();
 
   Array4<int> const& bc_ilo_type = bc_ilo[lev]->array();
   Array4<int> const& bc_ihi_type = bc_ihi[lev]->array();
@@ -350,16 +356,22 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
   FArrayBox s_on_y_face(vbx_grown, ncomp);
   FArrayBox s_on_z_face(wbx_grown, ncomp);
 
+  // These lines ensure that the temporary Fabs above aren't destroyed
+  //   before we're done with them when running with GPUs
+  Elixir eli_x = s_on_x_face.elixir();
+  Elixir eli_y = s_on_y_face.elixir();
+  Elixir eli_z = s_on_z_face.elixir();
+
   Array4<Real> const& sx = s_on_x_face.array();
   Array4<Real> const& sy = s_on_y_face.array();
   Array4<Real> const& sz = s_on_z_face.array();
 
   // Face centroids
-  const auto& fcx_fab = facecent[0]->array(*mfi);
-  const auto& fcy_fab = facecent[1]->array(*mfi);
-  const auto& fcz_fab = facecent[2]->array(*mfi);
+  const auto& fcx_fab = face_centroid_x.array();
+  const auto& fcy_fab = face_centroid_x.array();
+  const auto& fcz_fab = face_centroid_x.array();
 
-  const auto& ccm_fab = cc_mask->const_array(*mfi);
+  const auto& ccm_fab = cc_mask.const_array();
 
   const GpuArray<int, 3> bc_types =
     {bc_list.get_minf(), bc_list.get_pinf(), bc_list.get_pout()};

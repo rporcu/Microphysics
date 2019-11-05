@@ -198,7 +198,6 @@ void init_periodic_tracer(const Box& bx,
     int dir(0);
     const amrex::Real A(1.0);
 
-    int N(0);         // N points in periodic direction
     amrex::Real L(0); // domain size
     amrex::Real C(0); // sin coefficient
 

@@ -120,20 +120,14 @@ mfix::set_eps_bcs(const int lev,
   const Box bx_xy_lo_3D(eps_lo, bx_xy_lo_hi_3D);
   const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, eps_hi);
 
-
   const int minf = bc_list.get_minf();
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
-
-  const amrex::Real* p_bc_u_g = m_bc_u_g.data();
-  const amrex::Real* p_bc_v_g = m_bc_v_g.data();
-  const amrex::Real* p_bc_w_g = m_bc_w_g.data();
 
   if (nlft > 0)
   {
     AMREX_FOR_3D(bx_yz_lo_3D, i, j, k,
     {
-      const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
@@ -156,7 +150,6 @@ mfix::set_eps_bcs(const int lev,
   {
     AMREX_FOR_3D(bx_yz_hi_3D, i, j, k,
     {
-      const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
@@ -179,7 +172,6 @@ mfix::set_eps_bcs(const int lev,
   {
     AMREX_FOR_3D(bx_xz_lo_3D, i, j, k,
     {
-      const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
@@ -203,7 +195,6 @@ mfix::set_eps_bcs(const int lev,
   {
     AMREX_FOR_3D(bx_xz_hi_3D, i, j, k,
     {
-      const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
@@ -227,7 +218,6 @@ mfix::set_eps_bcs(const int lev,
   {
     AMREX_FOR_3D(bx_xy_lo_3D, i, j, k,
     {
-      const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
@@ -251,7 +241,6 @@ mfix::set_eps_bcs(const int lev,
   {
     AMREX_FOR_3D(bx_xy_hi_3D, i, j, k,
     {
-      const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
       if((bct == pinf) or (bct == pout) or (bct == minf))

@@ -23,8 +23,6 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain
 
-    int fortran_volume_comp = 5;
-
     MultiFab* mf_pointer[nlev];
 
     if (nlev > 2)
@@ -111,7 +109,7 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 
     if (nlev > 1)
     {
-        IntVect ref_ratio(this->m_gdb->refRatio(0));
+        // IntVect ref_ratio(this->m_gdb->refRatio(0));
 
         // Now interpolate from the coarse grid to define the fine grid ep-g
         Interpolater* mapper = &cell_cons_interp;
@@ -130,7 +128,7 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
             amrex::InterpFromCoarseLevel(*ep_g[lev], time, *mf_pointer[lev-1],
                                          0, 0, 1, Geom(lev-1), Geom(lev),
                                          cphysbc, 0, fphysbc, 0,
-                                         ref_ratio, mapper,
+                                         ref_ratio[0], mapper,
                                          bcs, 0);
         }
     }

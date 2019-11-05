@@ -146,13 +146,7 @@ mfix::WriteAverageRegions ( std::string& avg_file, int nstep, Real time ) const
       if (solve_fluid) {
         ComputeAverageFluidVars( lev,
                                  time,
-                                 avg_file,
-                                 avg_p_g,
-                                 avg_ep_g,
-                                 avg_vel_g,
-                                 avg_region_x_w, avg_region_x_e,
-                                 avg_region_y_s, avg_region_y_n,
-                                 avg_region_z_b, avg_region_z_t );
+                                 avg_file);
       }
 
       //  Compute Eulerian velocities in selected regions
@@ -171,17 +165,8 @@ mfix::WriteAverageRegions ( std::string& avg_file, int nstep, Real time ) const
 
 
 void
-mfix::ComputeAverageFluidVars ( const int lev,
-                   const amrex::Real time, const std::string&  basename,
-                   const amrex::Vector<Real>& avg_p_g,
-                   const amrex::Vector<Real>& avg_ep_g,
-                   const amrex::Vector<Real>& avg_vel_g,
-                   const amrex::Vector<Real>& avg_region_x_w,
-                   const amrex::Vector<Real>& avg_region_x_e,
-                   const amrex::Vector<Real>& avg_region_y_s,
-                   const amrex::Vector<Real>& avg_region_y_n,
-                   const amrex::Vector<Real>& avg_region_z_b,
-                   const amrex::Vector<Real>& avg_region_z_t ) const
+mfix::ComputeAverageFluidVars ( const int lev, const Real time,
+                                const std::string&  basename) const
 {
 
   int nregions = avg_region_x_w.size();
