@@ -62,11 +62,11 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
                     {
                         ParticleType& p = pti.GetArrayOfStructs()[ip];
 
-                        int ic = floor( ( p.pos(0) - plo[0] ) / dx[0] );
-                        int jc = floor( ( p.pos(1) - plo[1] ) / dx[1] );
-                        int kc = floor( ( p.pos(2) - plo[2] ) / dx[2] );
+                        int icell = floor( ( p.pos(0) - plo[0] ) / dx[0] );
+                        int jcell = floor( ( p.pos(1) - plo[1] ) / dx[1] );
+                        int kcell = floor( ( p.pos(2) - plo[2] ) / dx[2] );
 
-                        if (flag_fab(ic,jc,kc).isCovered())
+                        if (flag_fab(icell,jcell,kcell).isCovered())
                         {
                             p.id() = -1;
                         }
