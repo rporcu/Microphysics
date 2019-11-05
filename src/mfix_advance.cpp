@@ -71,6 +71,10 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
        conv_u_old[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
        conv_s_old[lev].reset(new MultiFab(grids[lev], dmap[lev], 2, 0, MFInfo(), *ebfactory[lev]));
        divtau_old[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
+
+       conv_u_old[lev]->setVal(0.0);
+       conv_s_old[lev]->setVal(0.0);
+       divtau_old[lev]->setVal(0.0);
     }
 
     do
@@ -164,6 +168,8 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
         }
 #endif
 
+    Gpu::synchronize();
+
     BL_PROFILE_REGION_STOP("mfix::EvolveFluid");
 }
 
@@ -191,6 +197,8 @@ mfix::mfix_project_velocity ()
        p_g[lev]->setVal(0.0);
         gp[lev]->setVal(0.0);
     }
+
+    Gpu::synchronize();
 }
 
 void
@@ -228,6 +236,10 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
        conv_u[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
        conv_s[lev].reset(new MultiFab(grids[lev], dmap[lev], 2             , 0, MFInfo(), *ebfactory[lev]));
        divtau[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
+
+       conv_u[lev]->setVal(0.0);
+       conv_s[lev]->setVal(0.0);
+       divtau[lev]->setVal(0.0);
     }
 
    for (int iter = 0; iter < initial_iterations; ++iter)
@@ -255,6 +267,8 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
        mfix_set_velocity_bcs (time, vel_g, 0);
        mfix_set_scalar_bcs   (time, ro_g, trac, ep_g, mu_g);
    }
+
+   Gpu::synchronize();
 }
 
 //
@@ -441,6 +455,10 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
        conv_u[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
        conv_s[lev].reset(new MultiFab(grids[lev], dmap[lev], 2             , 0, MFInfo(), *ebfactory[lev]));
        divtau[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
+
+       conv_u[lev]->setVal(0.0);
+       conv_s[lev]->setVal(0.0);
+       divtau[lev]->setVal(0.0);
     }
 
     // Compute the explicit advective term R_u^*
@@ -519,6 +537,8 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     mfix_apply_nodal_projection( depdt, new_time, dt, proj_2 );
 
     mfix_set_velocity_bcs (new_time, vel_g, 0);
+
+    Gpu::synchronize();
 }
 
 void
@@ -764,6 +784,8 @@ mfix::steady_state_reached (Real dt, int iter)
        amrex::Print() << "||v-vo||/||vo|| , dv/dt  = " << tmp2 <<" , "<< delta_v/dt << "\n";
        amrex::Print() << "||w-wo||/||wo|| , dw/dt  = " << tmp3 <<" , "<< delta_w/dt << "\n";
        amrex::Print() << "||p-po||/||po|| , dp/dt  = " << tmp4 <<" , "<< delta_p/dt << "\n";
+
+       Gpu::synchronize();
     }
 
     int reached = 1;

@@ -119,7 +119,5 @@ void mfix::mfix_deposition_bcs_scalar(int lev, amrex::MultiFab & filled_mf)
         });
     }
 
-    // NOTE: here we do not need host-device synchronization since it is
-    // already included in the MFIter destructor
   }
 }

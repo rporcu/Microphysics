@@ -118,6 +118,8 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
       }
    }
 
+   Gpu::synchronize();
+
    //
    // If we want to set max_coarsening_level we have to send it in to the constructor
    //
@@ -203,4 +205,6 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
       ep_v_mac[lev]->FillBoundary(geom[lev].periodicity());
       ep_w_mac[lev]->FillBoundary(geom[lev].periodicity());
    }
+
+   Gpu::synchronize();
 }
