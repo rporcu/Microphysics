@@ -368,8 +368,8 @@ mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
 
   // Face centroids
   const auto& fcx_fab = face_centroid_x.array();
-  const auto& fcy_fab = face_centroid_x.array();
-  const auto& fcz_fab = face_centroid_x.array();
+  const auto& fcy_fab = face_centroid_y.array();
+  const auto& fcz_fab = face_centroid_z.array();
 
   const auto& ccm_fab = cc_mask.const_array();
 
