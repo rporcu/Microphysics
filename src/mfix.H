@@ -680,9 +680,6 @@ private:
     Vector< std::unique_ptr<MultiFab> > v_mac;
     Vector< std::unique_ptr<MultiFab> > w_mac;
 
-    //
-    Vector< std::unique_ptr<MultiFab> > fp;
-
     // Pressure increment
     Vector< std::unique_ptr<MultiFab> > phi_nd;
 
