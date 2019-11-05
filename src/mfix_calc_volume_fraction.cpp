@@ -142,6 +142,8 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
     if (mf_pointer[0] != ep_g[0].get())
       ep_g[0]->copy(*mf_pointer[0],0,0,ep_g[0]->nComp());
 
+    Gpu::synchronize();
+
     for (int lev = 0; lev < nlev; lev++)
        if (mf_pointer[lev] != ep_g[lev].get())
           delete mf_pointer[lev];
@@ -207,16 +209,7 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
     //    does not depend on whether a particle is in a full or cut cell.
     int lev = 0; int comp = 0;
 
-#ifdef AMREX_USE_CUDA
-    bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
-
-    if(notInLaunchRegionStatus)
-      Gpu::setLaunchRegion(true);
-#endif
-
     sum_vol = volWgtSum(lev,*ep_g[lev],comp);
 
-#ifdef AMREX_USE_CUDA
-    Gpu::setLaunchRegion(notInLaunchRegionStatus);
-#endif
+    Gpu::synchronize();
 }

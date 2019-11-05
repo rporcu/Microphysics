@@ -54,6 +54,8 @@ void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
     FArrayBox dest_fab(dest);
 
     mfix_for_fillpatching->set_velocity_bcs (time, lev, dest_fab, domain, &extrap_dir_bcs);
+
+    Gpu::synchronize();
 }
 
 // This interface must match the definition of the interface for
@@ -90,6 +92,8 @@ void ScalarFillBox (Box const& bx, Array4<amrex::Real> const& dest,
     FArrayBox dest_fab(dest);
 
     mfix_for_fillpatching->set_scalar_bcs (time, lev, dest_fab, dcomp, domain);
+
+    Gpu::synchronize();
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
@@ -110,6 +114,8 @@ mfix::FillPatchVel (int lev, Real time, MultiFab& mf, int icomp, int ncomp, cons
         PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev], bcs, bfunc);
         amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, icomp, ncomp,
                                     geom[lev], physbc, 0);
+
+        Gpu::synchronize();
     }
     else
     {
@@ -129,6 +135,7 @@ mfix::FillPatchVel (int lev, Real time, MultiFab& mf, int icomp, int ncomp, cons
                                   cphysbc, 0, fphysbc, 0,
                                   refRatio(lev-1), mapper, bcs, 0);
 
+        Gpu::synchronize();
     }
 }
 
@@ -155,6 +162,8 @@ mfix::FillPatchScalar (int lev, Real time, MultiFab& mf, int icomp, int ncomp, c
         PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev], bcs, bfunc);
         amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, 0, ncomp, 
                                     geom[lev], physbc, 0);
+
+        Gpu::synchronize();
     }
     else
     {
@@ -174,6 +183,7 @@ mfix::FillPatchScalar (int lev, Real time, MultiFab& mf, int icomp, int ncomp, c
                                   cphysbc, 0, fphysbc, 0,
                                   refRatio(lev-1), mapper, bcs, 0);
 
+        Gpu::synchronize();
     }
 }
 
