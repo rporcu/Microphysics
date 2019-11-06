@@ -1,11 +1,6 @@
 #include <mfix.H>
 #include <param_mod_F.H>
 
-#include <AMReX_REAL.H>
-#include <AMReX_BLFort.H>
-#include <AMReX_SPACE.H>
-#include <AMReX_Array.H>
-
 namespace ugradu_aux {
 
 //
@@ -105,6 +100,11 @@ mfix::mfix_compute_fluxes(int lev,
            }
         }
 
+        // We do this here to avoid any confusion about the FAB setVal.
+        a_fx[lev]->setVal(covered_val);
+        a_fy[lev]->setVal(covered_val);
+        a_fz[lev]->setVal(covered_val);
+
         for (MFIter mfi(*state_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             // Tilebox
@@ -114,16 +114,7 @@ mfix::mfix_compute_fluxes(int lev,
             const EBFArrayBox& state_fab = static_cast<EBFArrayBox const&>((*state_in[lev])[mfi]);
             const EBCellFlagFab&  flags = state_fab.getEBCellFlagFab();
 
-            if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
-            {
-                 const Box ubx = amrex::surroundingNodes(bx,0);
-                 const Box vbx = amrex::surroundingNodes(bx,1);
-                 const Box wbx = amrex::surroundingNodes(bx,2);
-                 a_fx[lev]->setVal(covered_val, ubx, 0, ncomp);
-                 a_fy[lev]->setVal(covered_val, vbx, 0, ncomp);
-                 a_fz[lev]->setVal(covered_val, wbx, 0, ncomp);
-            }
-            else
+            if (flags.getType(amrex::grow(bx,0)) != FabType::covered )
             {
                 // No cut cells in tile + nghost-cell witdh halo -> use non-eb routine
                 if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
