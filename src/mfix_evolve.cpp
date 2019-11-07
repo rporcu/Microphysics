@@ -85,6 +85,8 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                 ls_data, & ls_valid, levelset__refinement,
                                 particle_cost[ilev].get(), knapsack_weight_type,
                                 nsubsteps);
+
+            Gpu::synchronize();
         }
         else
         {
@@ -106,6 +108,8 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                     ls_data, & ls_valid, 1,
                                     particle_cost[lev].get(), knapsack_weight_type,
                                     nsubsteps);
+
+                Gpu::synchronize();
             }
         }
     }

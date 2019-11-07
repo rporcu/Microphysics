@@ -229,8 +229,8 @@ mfix::mfix_calc_drag_particle(Real time)
     }
     else
     {
-      BoxArray            pba = pc->ParticleBoxArray(lev);
-      DistributionMapping pdm = pc->ParticleDistributionMap(lev);
+      const BoxArray&            pba = pc->ParticleBoxArray(lev);
+      const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
       int ng = gp_tmp.nGrow();
       gp_pba.reset(new MultiFab(pba,pdm,gp_tmp.nComp(),ng));
