@@ -65,9 +65,9 @@ mfix.write_eb_surface = true  # Needed to output eb-surfaces
 #!-----------------------------------------------------------//
 mfix.geometry = "hopper"
 
-hopper.orifice_radius = 0.00025
-hopper.funnel_radius  = 0.00050
-hopper.funnel_height  = 0.00100
+hopper.orifice_radius = 0.000249
+hopper.funnel_radius  = 0.000499
+hopper.funnel_height  = 0.000999
 
 hopper.direction = 0
 hopper.center    =  0.0000  0.0005  0.0005
