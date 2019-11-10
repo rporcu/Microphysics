@@ -55,7 +55,7 @@ void DiffusionOp::setup(AmrCore* _amrcore,
     grids = amrcore->boxArray();
     dmap  = amrcore->DistributionMap();
 
-    max_level = amrcore->maxLevel();
+    int max_level = amrcore->maxLevel();
 
     // Resize and reset data
     b.resize(max_level + 1);
@@ -143,6 +143,8 @@ void DiffusionOp::diffuse_velocity(      Vector<std::unique_ptr<MultiFab>>& vel_
 {
     BL_PROFILE("DiffusionOp::diffuse_velocity");
 
+    int finest_level = amrcore->finestLevel();
+
     // Update the coefficients of the matrix going into the solve based on the current state of the
     // simulation. Recall that the relevant matrix is
     //
@@ -158,7 +160,7 @@ void DiffusionOp::diffuse_velocity(      Vector<std::unique_ptr<MultiFab>>& vel_
     // Set alpha and beta
     vel_matrix->setScalars(1.0, dt);
 
-    for(int lev = 0; lev <= max_level; lev++)
+    for(int lev = 0; lev <= finest_level; lev++)
     {
         // Compute the spatially varying b coefficients (on faces) to equal the apparent viscosity
         average_cellcenter_to_face(GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev]);
@@ -174,7 +176,7 @@ void DiffusionOp::diffuse_velocity(      Vector<std::unique_ptr<MultiFab>>& vel_
     if(verbose > 0)
         amrex::Print() << "Diffusing velocity components all together..." << std::endl; 
 
-    for(int lev = 0; lev <= max_level; lev++)
+    for(int lev = 0; lev <= finest_level; lev++)
     {
         // Set the right hand side to equal rho
         MultiFab::Copy((*rhs[lev]),(*vel_in[lev]), 0, 0, AMREX_SPACEDIM, 0);
@@ -203,7 +205,7 @@ void DiffusionOp::diffuse_velocity(      Vector<std::unique_ptr<MultiFab>>& vel_
 
     solver.solve(GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol);
 
-    for(int lev = 0; lev <= max_level; lev++)
+    for(int lev = 0; lev <= finest_level; lev++)
     {
         phi[lev]->FillBoundary(geom[lev].periodicity());
         MultiFab::Copy(*vel_in[lev], *phi[lev], 0, 0, AMREX_SPACEDIM, 1);
@@ -222,6 +224,8 @@ void DiffusionOp::diffuse_scalar(      Vector<std::unique_ptr<MultiFab>>& scal_i
 {
     BL_PROFILE("DiffusionOp::diffuse_scalar");
 
+    int finest_level = amrcore->finestLevel();
+
     // Update the coefficients of the matrix going into the solve based on the current state of the
     // simulation. Recall that the relevant matrix is
     //
@@ -239,7 +243,7 @@ void DiffusionOp::diffuse_scalar(      Vector<std::unique_ptr<MultiFab>>& scal_i
 
     int ntrac = scal_in[0]->nComp();
 
-    for(int lev = 0; lev <= max_level; lev++)
+    for(int lev = 0; lev <= finest_level; lev++)
     {
         for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
            for(int n = 0; n < ntrac; n++)
@@ -256,7 +260,7 @@ void DiffusionOp::diffuse_scalar(      Vector<std::unique_ptr<MultiFab>>& scal_i
     if(verbose > 0)
         amrex::Print() << "Diffusing tracers one at a time ..." << std::endl; 
 
-    for(int lev = 0; lev <= max_level; lev++)
+    for(int lev = 0; lev <= finest_level; lev++)
     {
         // Zero these out just to have a clean start because they have 3 components
         //      (due to re-use with velocity solve)
@@ -285,7 +289,7 @@ void DiffusionOp::diffuse_scalar(      Vector<std::unique_ptr<MultiFab>>& scal_i
 
     solver.solve(GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol);
 
-    for(int lev = 0; lev <= max_level; lev++)
+    for(int lev = 0; lev <= finest_level; lev++)
     {
         phi[lev]->FillBoundary(geom[lev].periodicity());
         MultiFab::Copy(*scal_in[lev], *phi[lev], 0, 0, ntrac, 1);
@@ -328,8 +332,10 @@ void DiffusionOp::ComputeDivTau(Vector<std::unique_ptr<MultiFab>>& divtau_out,
 {
     BL_PROFILE("DiffusionOp::ComputeDivTau");
 
-    Vector<std::unique_ptr<MultiFab> > divtau_aux(max_level+1);
-    for(int lev = 0; lev <= max_level; lev++)
+    int finest_level = amrcore->finestLevel();
+
+    Vector<std::unique_ptr<MultiFab> > divtau_aux(finest_level+1);
+    for(int lev = 0; lev <= finest_level; lev++)
     {
        divtau_aux[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, nghost,
                                           MFInfo(), *(*ebfactory)[lev]));
@@ -343,7 +349,7 @@ void DiffusionOp::ComputeDivTau(Vector<std::unique_ptr<MultiFab>>& divtau_out,
     vel_matrix->setScalars(0.0, -1.0);
  
     // Compute the coefficients
-    for (int lev = 0; lev <= max_level; lev++)
+    for (int lev = 0; lev <= finest_level; lev++)
     {
         average_cellcenter_to_face( GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev] );
  
@@ -359,7 +365,7 @@ void DiffusionOp::ComputeDivTau(Vector<std::unique_ptr<MultiFab>>& divtau_out,
  
     solver.apply(GetVecOfPtrs(divtau_aux), GetVecOfPtrs(vel_in));
  
-    for(int lev = 0; lev <= max_level; lev++)
+    for(int lev = 0; lev <= finest_level; lev++)
     {
        amrex::single_level_weighted_redistribute( lev, *divtau_aux[lev], *divtau_out[lev], *ep_in[lev], 0, AMREX_SPACEDIM, geom);
  
@@ -380,10 +386,12 @@ void DiffusionOp::ComputeLapS(      Vector<std::unique_ptr<MultiFab>>& laps_out,
 {
     BL_PROFILE("DiffusionOp::ComputeLapS");
 
+    int finest_level = amrcore->finestLevel();
+
     int ntrac = scal_in[0]->nComp();
 
-    Vector<std::unique_ptr<MultiFab> > laps_aux(max_level+1);
-    for(int lev = 0; lev <= max_level; lev++)
+    Vector<std::unique_ptr<MultiFab> > laps_aux(finest_level+1);
+    for(int lev = 0; lev <= finest_level; lev++)
     {
        laps_aux[lev].reset(new MultiFab(grids[lev], dmap[lev], ntrac, nghost,
                                           MFInfo(), *(*ebfactory)[lev]));
@@ -397,7 +405,7 @@ void DiffusionOp::ComputeLapS(      Vector<std::unique_ptr<MultiFab>>& laps_out,
     scal_matrix->setScalars(0.0, -1.0);
  
     // Compute the coefficients
-    for (int lev = 0; lev <= max_level; lev++)
+    for (int lev = 0; lev <= finest_level; lev++)
     {
         for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
            for(int n = 0; n < ntrac; n++)
@@ -411,7 +419,7 @@ void DiffusionOp::ComputeLapS(      Vector<std::unique_ptr<MultiFab>>& laps_out,
  
     solver.apply(GetVecOfPtrs(laps_aux), GetVecOfPtrs(scal_in));
  
-    for(int lev = 0; lev <= max_level; lev++)
+    for(int lev = 0; lev <= finest_level; lev++)
     {
        amrex::single_level_redistribute( lev, *laps_aux[lev], *laps_out[lev], 0, ntrac, geom);
  

@@ -902,9 +902,6 @@ private:
     //! EB factory that lives on the particle grids
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
 
-    // Max level at which to solve the fluid equations
-    int amr_max_level = 0;
-
     bool mfix_update_ebfactory (int a_lev);
 
 };
