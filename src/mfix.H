@@ -67,8 +67,10 @@ public:
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  ppe_hibc;
 
     // LinOpBCType Definitions from amrex/Src/Boundary/AMReX_LO_BCTYPES.H -- for diffusive solves
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_lobc;
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_hibc;
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_vel_lobc;
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_vel_hibc;
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_scal_lobc;
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_scal_hibc;
 
     void InitParams(int solve_fluid, int solve_dem, int call_udf );
 
@@ -438,6 +440,9 @@ protected:
     static Real gp0[3];
     static Real gravity[3];
 
+    // Scalar diffusive coefficient
+    Vector<Real> mu_s;
+
     BcList bc_list;
 
     // "mutable" keyword is just a temporary fix to allow NodalProjection to
@@ -553,15 +558,13 @@ private:
     void mfix_apply_predictor(Vector< std::unique_ptr<MultiFab> >& conv_u_old,
                               Vector< std::unique_ptr<MultiFab> >& conv_s_old,
                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
+                              Vector< std::unique_ptr<MultiFab> >&   laps_old,
                               Real time, Real dt, bool proj_2);
     void mfix_apply_corrector(Vector< std::unique_ptr<MultiFab> >& conv_u_old,
                               Vector< std::unique_ptr<MultiFab> >& conv_s_old,
                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
+                              Vector< std::unique_ptr<MultiFab> >&   laps_old,
                               Real time, Real dt, bool proj_2);
-
-    void mfix_diffuse_velocity_tensor (      Vector<std::unique_ptr<MultiFab>>& vel_in,
-                                       const Vector<std::unique_ptr<MultiFab>>& ro_ep_in,
-                                       Real time, Real dt);
 
     void mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps, amrex::Real);
     void mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_drag, amrex::Real);
@@ -578,6 +581,7 @@ private:
     void mfix_set_bc_type(int lev);
 
     static int nlev;
+    static int ntrac;
 
     // Particle container
     std::unique_ptr<MFIXParticleContainer> pc;

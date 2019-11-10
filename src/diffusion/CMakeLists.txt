@@ -7,5 +7,6 @@ target_sources( mfixcore
    DiffusionOp.cpp
    DiffusionOp.H
    diffusion_F.H
-   set_diff_bcs.f90
+   set_vel_diff_bcs.f90
+   set_scal_diff_bcs.f90
    )

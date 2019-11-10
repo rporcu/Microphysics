@@ -23,7 +23,8 @@ amrex::IntVect mfix::e_x(1,0,0);
 amrex::IntVect mfix::e_y(0,1,0);
 amrex::IntVect mfix::e_z(0,0,1);
 
-int mfix::nlev = 1;
+int mfix::nlev  = 1;
+int mfix::ntrac = 1;
 
 EBSupport mfix::m_eb_support_level = EBSupport::full;
 

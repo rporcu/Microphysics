@@ -91,6 +91,20 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         pp.query( "advect_tracer" , advect_tracer );
         pp.query( "test_tracer_conservation" , test_tracer_conservation );
 
+        pp.query("ntrac", ntrac);
+
+        if (ntrac < 1)
+            amrex::Abort("We currently require at least one tracer");
+
+        // Scalar diffusion coefficients
+        mu_s.resize(ntrac);
+        for (int i = 0; i < ntrac; i++) mu_s[i] = 0.;
+        pp.queryarr("mu_s", mu_s, 0, ntrac );
+
+        amrex::Print() << "Scalar diffusion coefficients " << std::endl;
+        for (int i = 0; i < ntrac; i++)
+           amrex::Print() << "Tracer" << i << ":" << mu_s[i] << std::endl;
+
         if (test_tracer_conservation && !advect_tracer)
            amrex::Abort("No point in testing tracer conservation with advect_tracer = false");
 
