@@ -77,40 +77,9 @@ mfix::mfix_compute_fluxes(int lev,
         const int physical_boundaries_value = 0;
         const int interior_value = 1;
 
-        cc_mask.BuildMask(geom[lev].Domain(),
-                          geom[lev].periodicity(),
-                          covered_value,
-                          notcovered_value,
-                          physical_boundaries_value,
-                          interior_value);
-
-//#ifdef _OPENMP
-//#pragma omp parallel if (Gpu::notInLaunchRegion())
-//#endif
-//       {
-//           std::vector< std::pair<int,Box> > isects;
-//           const std::vector<IntVect>& pshifts = geom[lev].periodicity().shiftIntVect();
-//           const BoxArray& ba = cc_mask.boxArray();
-//
-//           for (MFIter mfi(cc_mask); mfi.isValid(); ++mfi)
-//           {
-//               Array4<int> const& fab = cc_mask.array(mfi);
-//
-//               const Box& bx = mfi.fabbox();
-//               for (const auto& iv : pshifts)
-//               {
-//                   ba.intersections(bx+iv, isects);
-//                   for (const auto& is : isects)
-//                   {
-//                       const Box& b = is.second-iv;
-//                       AMREX_FOR_3D ( b, i, j, k,
-//                       {
-//                           fab(i,j,k) = 1;
-//                       });
-//                   }
-//               }
-//           }
-//        }
+        cc_mask.BuildMask(geom[lev].Domain(), geom[lev].periodicity(),
+                          covered_value, notcovered_value,
+                          physical_boundaries_value, interior_value);
 
         // We do this here to avoid any confusion about the FAB setVal.
         a_fx[lev]->setVal(covered_val);
