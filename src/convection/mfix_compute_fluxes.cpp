@@ -75,7 +75,7 @@ mfix::mfix_compute_fluxes(int lev,
         const int covered_value = 1;
         const int notcovered_value = 0;
         const int physical_boundaries_value = 0;
-        const int interior_value = 0;
+        const int interior_value = 1;
 
         cc_mask.BuildMask(geom[lev].Domain(),
                           geom[lev].periodicity(),
