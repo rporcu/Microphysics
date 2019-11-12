@@ -448,12 +448,12 @@ protected:
     // "mutable" keyword is just a temporary fix to allow NodalProjection to
     // work as intended. This won't be needed when the BC will be given their own
     // class
-    mutable amrex::Cuda::ManagedVector<amrex::Real> m_bc_u_g;
-    mutable amrex::Cuda::ManagedVector<amrex::Real> m_bc_v_g;
-    mutable amrex::Cuda::ManagedVector<amrex::Real> m_bc_w_g;
-    mutable amrex::Cuda::ManagedVector<amrex::Real> m_bc_t_g;
-    mutable amrex::Cuda::ManagedVector<amrex::Real> m_bc_ep_g;
-    mutable amrex::Cuda::ManagedVector<amrex::Real> m_bc_p_g;
+    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_u_g;
+    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_v_g;
+    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_w_g;
+    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_t_g;
+    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_ep_g;
+    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_p_g;
 
     //! The particles see an inflow face as a solid wall; thus instead of
     //! creating a separate EBfactory for particles, we simply modify the
