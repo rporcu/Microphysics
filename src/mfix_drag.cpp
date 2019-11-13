@@ -7,6 +7,7 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_FillPatchUtil.H>
+#include <MFIX_MFHelpers.H>
 
 void
 mfix::mfix_calc_drag_fluid(Real time)
@@ -68,7 +69,11 @@ mfix::mfix_calc_drag_fluid(Real time)
   const FabArray<EBCellFlagFab>* flags;
   const MultiFab* volfrac;
 
+  Vector< std::unique_ptr< MultiFab > > tmp_eps(nlev);
+
   for (int lev = 0; lev < nlev; lev++) {
+
+    tmp_eps[lev] = MFHelpers::createFrom(*drag_ptr[lev], 0.0);
 
     // Use level 0 to define the EB factory. If we are not on level 0
     // then create a copy of the coarse factory to use.
@@ -91,19 +96,43 @@ mfix::mfix_calc_drag_fluid(Real time)
     }
 
 
-    pc -> FluidDragForceDeposition(lev, *drag_ptr[lev], volfrac, flags);
+    pc -> FluidDragForceDeposition(lev, *tmp_eps[lev], *drag_ptr[lev], volfrac, flags);
 
-  
+
   }
+
+
+  // Move any volume deposited outside the domain back into the domain
+  // when BC is either a pressure inlet or mass inflow.
+  // for (int lev = 0; lev < nlev; lev++)
+  //   mfix_deposition_bcs_scalar(lev, *drag_ptr[lev]);
+
+
+  // Sum grid boundaries then clear the ghost cell values.
+  drag_ptr[0]->SumBoundary(gm.periodicity());
+  drag_ptr[0]->setBndry(0.0);
+
+
+  // Move excessive solids volume from small cells to neighboring cells. A copy
+  // of the deposition field is made so that when an average is calc
+  for (int lev(0); lev < nlev; ++lev ){
+
+    mfix_redistribute_deposition (lev, *tmp_eps[lev], *drag_ptr[lev], volfrac, flags,
+                                  mfix::m_max_solids_volume_fraction);
+  }
+
+
+  // Sum the boundaries again to recapture any solids moved across
+  // grid boundaries during the redistribute
+  drag_ptr[0]->SumBoundary(gm.periodicity());
 
 
   int  src_nghost = 1;
   int dest_nghost = 0;
   for (int lev = 1; lev < nlev; lev++) {
-    drag_ptr[0]->copy(*drag_ptr[lev],0,0,drag_ptr[0]->nComp(),src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
+    drag_ptr[0]->copy(*drag_ptr[lev],0,0,drag_ptr[0]->nComp(),
+                      src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
   }
-
-  drag_ptr[0]->SumBoundary(gm.periodicity());
 
   if (nlev > 1) {
 

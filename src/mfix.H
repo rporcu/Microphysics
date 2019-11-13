@@ -312,6 +312,8 @@ public:
 
     static amrex::Real m_deposition_diffusion_coeff;
     static amrex::Real m_deposition_scale_factor;
+    static amrex::Real m_max_solids_volume_fraction;
+
 
     static amrex::Real tcoll_ratio; // input parameter defaulted to 50 used in file src_des/init_collision.f90
 
@@ -565,6 +567,13 @@ private:
 
     void mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps, amrex::Real);
     void mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_drag, amrex::Real);
+
+    void mfix_redistribute_deposition (int lev,
+                                       amrex::MultiFab & mf_eps,
+                                       amrex::MultiFab & mf_to_redistribute,
+                                       const amrex::MultiFab * volfrac,
+                                       const amrex::FabArray<EBCellFlagFab>* flags,
+                                       amrex::Real max_eps);
 
     void mfix_compute_diveu(Real time);
 

@@ -166,6 +166,7 @@ public:
     /// Do the actual PIC deposition for CalcDragOnFluid
     ///
     void FluidDragForceDeposition(int lev,
+                                  amrex::MultiFab & mf_tmp_eps,
                                   amrex::MultiFab& drag_mf,
                                   const amrex::MultiFab * volfrac,
                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags
@@ -173,6 +174,7 @@ public:
     template <typename F>
     void FluidDragForceDeposition(F WeightFunc,
                                   int lev,
+                                  amrex::MultiFab & mf_tmp_eps,
                                   amrex::MultiFab& drag_mf,
                                   const amrex::MultiFab * volfrac,
                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags

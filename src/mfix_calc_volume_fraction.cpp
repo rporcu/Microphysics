@@ -9,6 +9,7 @@
 #include <AMReX_Box.H>
 #include <AMReX_FillPatchUtil.H>
 #include <MFIXParticleContainer.H>
+#include <MFIX_MFHelpers.H>
 
 void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 {
@@ -89,15 +90,38 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
         volfrac = &(crse_factory->getVolFrac());
       }
 
+      // Deposit particle volume to the grid
       pc->ScalarDeposition(lev, *mf_pointer[lev], volfrac, flags);
 
     }
 
 
-    // Move any field deposited outside the domain back into the domain
-    // when BC is pressure inlet and mass inflow.
+    // Move any volume deposited outside the domain back into the domain
+    // when BC is either a pressure inlet or mass inflow.
     for (int lev = 0; lev < nlev; lev++)
       mfix_deposition_bcs_scalar(lev, *mf_pointer[lev]);
+
+
+    // Sum grid boundaries then clear the ghost cell values.
+    mf_pointer[0]->SumBoundary(gm.periodicity());
+    mf_pointer[0]->setBndry(0.0);
+
+
+    // Move excessive solids volume from small cells to neighboring cells. A copy
+    // of the deposition field is made so that when an average is calc
+    Vector< std::unique_ptr< MultiFab > > eps_tmp(nlev);
+    for (int lev(0); lev < nlev; ++lev ){
+      eps_tmp[lev] = MFHelpers::createFrom(*mf_pointer[lev]);
+
+      mfix_redistribute_deposition (lev, *eps_tmp[lev], *mf_pointer[lev], volfrac, flags,
+                                    mfix::m_max_solids_volume_fraction);
+    }
+
+
+    // Sum the boundaries again to recapture any solids moved across
+    // grid boundaries during the redistribute
+    mf_pointer[0]->SumBoundary(gm.periodicity());
+
 
     int  src_nghost = 1;
     int dest_nghost = 0;
@@ -105,7 +129,6 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
       mf_pointer[0]->copy(*mf_pointer[lev],0,0,ep_g[lev]->nComp(),
                           src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
 
-    mf_pointer[0]->SumBoundary(gm.periodicity());
 
     if (nlev > 1)
     {
@@ -158,21 +181,6 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
     // We will diffuse it first, then convert it to ep_g.
     if(mfix::m_deposition_diffusion_coeff > 0.)
       mfix_diffuse_scalar (ep_g, mfix::m_deposition_diffusion_coeff);
-
-    // for (MFIter mfi(ep_g); mfi.isValid(); ++mfi) {
-    //   const Box& sbx = ep_g[mfi].box(); // UNUSED_VARIABLE
-
-    //   const Real max_pack = 0.42;
-    //   const Real max_pack = 0.21; // UNUSED_VARIABLE
-
-    //   Array4<Real> const& ep_g = ep_g.array(mfi); // UNUSED_VARIABLE
-
-    //   // These lines are commented because this code represents a functionality which
-    //   // may be added in future developments
-    //   AMREX_FOR_3D(sbx, i, j, k, {
-    //       ep_g(i,j,k) = std::max(max_pack, ep_g(i,j,k));
-    //     });
-    // }
 
 
     for (int lev = 0; lev < nlev; lev++) {

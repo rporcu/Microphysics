@@ -150,6 +150,15 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
           keep_looping = 0;
         }
 
+
+        for (int lev(0); lev < nlev; ++lev )
+          amrex::Print() << "  max(abs(u/v/w))  = MMMMM "  << time << "   "
+                         << vel_g[lev]->norm0(0,0,false,true) << "  "
+                         << vel_g[lev]->norm0(1,0,false,true) << "  "
+                         << vel_g[lev]->norm0(2,0,false,true) << std::endl;
+
+
+
         // Update interations count
         ++iter;
     }
@@ -809,4 +818,3 @@ mfix::steady_state_reached (Real dt, int iter)
        return reached;
     };
 }
-
