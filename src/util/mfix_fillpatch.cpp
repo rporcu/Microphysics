@@ -52,10 +52,9 @@ void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
     Real time = time_in;
 
     FArrayBox dest_fab(dest);
+    Elixir eli_dest_fab = dest_fab.elixir();
 
     mfix_for_fillpatching->set_velocity_bcs (time, lev, dest_fab, domain, &extrap_dir_bcs);
-
-    Gpu::synchronize();
 }
 
 // This interface must match the definition of the interface for
@@ -90,10 +89,9 @@ void ScalarFillBox (Box const& bx, Array4<amrex::Real> const& dest,
     Real time = time_in;
 
     FArrayBox dest_fab(dest);
+    Elixir eli_dest_fab = dest_fab.elixir();
 
     mfix_for_fillpatching->set_scalar_bcs (time, lev, dest_fab, dcomp, domain);
-
-    Gpu::synchronize();
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells

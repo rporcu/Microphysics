@@ -196,6 +196,7 @@ mfix::Regrid ()
             if (solve_dem)
                 RegridLevelSetArray(base_lev);
 
+            Gpu::synchronize();
         }
     }
 

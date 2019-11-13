@@ -67,8 +67,10 @@ public:
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  ppe_hibc;
 
     // LinOpBCType Definitions from amrex/Src/Boundary/AMReX_LO_BCTYPES.H -- for diffusive solves
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_lobc;
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_hibc;
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_vel_lobc;
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_vel_hibc;
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_scal_lobc;
+    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_scal_hibc;
 
     void InitParams(int solve_fluid, int solve_dem, int call_udf );
 
@@ -351,43 +353,43 @@ public:
                              Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                              Vector< std::unique_ptr<MultiFab> >& ep_w_mac);
 
-    void mfix_compute_ugradu(const int lev, Box& bx,
-                             FArrayBox& a_fx,
-                             FArrayBox& a_fy,
-                             FArrayBox& a_fz,
-                             const FArrayBox& state,
-                             const int state_comp, const int n_comp,
-                             const FArrayBox& xslopes,
-                             const FArrayBox& yslopes,
-                             const FArrayBox& zslopes,
-                             const int slopes_comp,
-                             const FArrayBox& ep_u_mac,
-                             const FArrayBox& ep_v_mac,
-                             const FArrayBox& ep_w_mac);
+    void mfix_compute_fluxes_on_box(const int lev, Box& bx,
+                                    FArrayBox& a_fx,
+                                    FArrayBox& a_fy,
+                                    FArrayBox& a_fz,
+                                    const FArrayBox& state,
+                                    const int state_comp, const int n_comp,
+                                    const FArrayBox& xslopes,
+                                    const FArrayBox& yslopes,
+                                    const FArrayBox& zslopes,
+                                    const int slopes_comp,
+                                    const FArrayBox& ep_u_mac,
+                                    const FArrayBox& ep_v_mac,
+                                    const FArrayBox& ep_w_mac);
 
-    void mfix_compute_ugradu_eb(const int lev, Box& bx,
-                                FArrayBox& a_fx,
-                                FArrayBox& a_fy,
-                                FArrayBox& a_fz,
-                                const FArrayBox& state,
-                                const int state_comp, const int n_comp,
-                                const FArrayBox& xslopes,
-                                const FArrayBox& yslopes,
-                                const FArrayBox& zslopes,
-                                const int slopes_comp,
-                                const FArrayBox& ep_u_mac,
-                                const FArrayBox& ep_v_mac,
-                                const FArrayBox& ep_w_mac,
-                                const FArrayBox& ax,
-                                const FArrayBox& ay,
-                                const FArrayBox& az,
-                                const FArrayBox& fc_x,
-                                const FArrayBox& fc_y,
-                                const FArrayBox& fc_z,
-                                const FArrayBox& volfrac,
-                                const FArrayBox& bndrycent,
-                                const IArrayBox& cc_mask,
-                                const EBCellFlagFab& flags);
+    void mfix_compute_eb_fluxes_on_box(const int lev, Box& bx,
+                                       FArrayBox& a_fx,
+                                       FArrayBox& a_fy,
+                                       FArrayBox& a_fz,
+                                       const FArrayBox& state,
+                                       const int state_comp, const int n_comp,
+                                       const FArrayBox& xslopes,
+                                       const FArrayBox& yslopes,
+                                       const FArrayBox& zslopes,
+                                       const int slopes_comp,
+                                       const FArrayBox& ep_u_mac,
+                                       const FArrayBox& ep_v_mac,
+                                       const FArrayBox& ep_w_mac,
+                                       const FArrayBox& ax,
+                                       const FArrayBox& ay,
+                                       const FArrayBox& az,
+                                       const FArrayBox& fc_x,
+                                       const FArrayBox& fc_y,
+                                       const FArrayBox& fc_z,
+                                       const FArrayBox& volfrac,
+                                       const FArrayBox& bndrycent,
+                                       const IArrayBox& cc_mask,
+                                       const EBCellFlagFab& flags);
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -440,17 +442,20 @@ protected:
     static Real gp0[3];
     static Real gravity[3];
 
+    // Scalar diffusive coefficient
+    Vector<Real> mu_s;
+
     BcList bc_list;
 
     // "mutable" keyword is just a temporary fix to allow NodalProjection to
     // work as intended. This won't be needed when the BC will be given their own
     // class
-    mutable amrex::Cuda::ManagedVector<amrex::Real> m_bc_u_g;
-    mutable amrex::Cuda::ManagedVector<amrex::Real> m_bc_v_g;
-    mutable amrex::Cuda::ManagedVector<amrex::Real> m_bc_w_g;
-    mutable amrex::Cuda::ManagedVector<amrex::Real> m_bc_t_g;
-    mutable amrex::Cuda::ManagedVector<amrex::Real> m_bc_ep_g;
-    mutable amrex::Cuda::ManagedVector<amrex::Real> m_bc_p_g;
+    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_u_g;
+    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_v_g;
+    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_w_g;
+    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_t_g;
+    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_ep_g;
+    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_p_g;
 
     //! The particles see an inflow face as a solid wall; thus instead of
     //! creating a separate EBfactory for particles, we simply modify the
@@ -555,15 +560,13 @@ private:
     void mfix_apply_predictor(Vector< std::unique_ptr<MultiFab> >& conv_u_old,
                               Vector< std::unique_ptr<MultiFab> >& conv_s_old,
                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
+                              Vector< std::unique_ptr<MultiFab> >&   laps_old,
                               Real time, Real dt, bool proj_2);
     void mfix_apply_corrector(Vector< std::unique_ptr<MultiFab> >& conv_u_old,
                               Vector< std::unique_ptr<MultiFab> >& conv_s_old,
                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
+                              Vector< std::unique_ptr<MultiFab> >&   laps_old,
                               Real time, Real dt, bool proj_2);
-
-    void mfix_diffuse_velocity_tensor (      Vector<std::unique_ptr<MultiFab>>& vel_in,
-                                       const Vector<std::unique_ptr<MultiFab>>& ro_ep_in,
-                                       Real time, Real dt);
 
     void mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps, amrex::Real);
     void mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_drag, amrex::Real);
@@ -587,6 +590,7 @@ private:
     void mfix_set_bc_type(int lev);
 
     static int nlev;
+    static int ntrac;
 
     // Particle container
     std::unique_ptr<MFIXParticleContainer> pc;
@@ -906,9 +910,6 @@ private:
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;
     //! EB factory that lives on the particle grids
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
-
-    // Max level at which to solve the fluid equations
-    int amr_max_level = 0;
 
     bool mfix_update_ebfactory (int a_lev);
 

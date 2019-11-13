@@ -1,5 +1,4 @@
 #include <mfix.H>
-#include <mfix_util_F.H>
 
 void
 mfix::mfix_predict_vels_on_faces ( int lev, Real time,
@@ -18,32 +17,14 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
 
     iMultiFab cc_mask(grids[lev], dmap[lev], 1, 1);
 
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-       {
-           std::vector< std::pair<int,Box> > isects;
-           const std::vector<IntVect>& pshifts = geom[lev].periodicity().shiftIntVect();
-           const BoxArray& ba = cc_mask.boxArray();
-           for (MFIter mfi(cc_mask); mfi.isValid(); ++mfi)
-           {
-               Array4<int> const& fab = cc_mask.array(mfi);
+    const int covered_value = 1;
+    const int notcovered_value = 0;
+    const int physical_boundaries_value = 0;
+    const int interior_value = 1;
 
-               const Box& bx = mfi.fabbox();
-               for (const auto& iv : pshifts)
-               {
-                   ba.intersections(bx+iv, isects);
-                   for (const auto& is : isects)
-                   {
-                       const Box& b = is.second-iv;
-                       AMREX_FOR_3D ( b, i, j, k,
-                       {
-                           fab(i,j,k) = 1;
-                       });
-                   }
-               }
-           }
-       }
+    cc_mask.BuildMask(geom[lev].Domain(), geom[lev].periodicity(),
+                      covered_value, notcovered_value,
+                      physical_boundaries_value, interior_value);
 
        // Get EB geometric info
        Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
@@ -109,7 +90,6 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
 
        for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
        {
-
           // Tilebox
           const Box  bx = mfi.tilebox();
 
@@ -126,9 +106,21 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
 
           if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
           {
-            (*ep_u_mac[lev])[mfi].setVal<RunOn::Gpu>(1.2345e300, ubx, 0, 1);
-            (*ep_v_mac[lev])[mfi].setVal<RunOn::Gpu>(1.2345e300, vbx, 0, 1);
-            (*ep_w_mac[lev])[mfi].setVal<RunOn::Gpu>(1.2345e300, wbx, 0, 1);
+            Real val = 1.2345e300;
+            const auto& umac_array = (*ep_u_mac[lev])[mfi].array();
+            const auto& vmac_array = (*ep_v_mac[lev])[mfi].array();
+            const auto& wmac_array = (*ep_w_mac[lev])[mfi].array();
+
+            AMREX_FOR_3D(ubx, i, j, k, { umac_array(i,j,k) = val; });
+            AMREX_FOR_3D(vbx, i, j, k, { vmac_array(i,j,k) = val; });
+            AMREX_FOR_3D(wbx, i, j, k, { wmac_array(i,j,k) = val; });
+
+            Gpu::synchronize();
+
+//          We use the above until the FAB setVal works again with CUDA
+//          (*ep_u_mac[lev])[mfi].setVal<RunOn::Gpu>(1.2345e300, ubx, 0, 1);
+//          (*ep_v_mac[lev])[mfi].setVal<RunOn::Gpu>(1.2345e300, vbx, 0, 1);
+//          (*ep_w_mac[lev])[mfi].setVal<RunOn::Gpu>(1.2345e300, wbx, 0, 1);
           }
   
           // No cut cells in this FAB

@@ -81,9 +81,9 @@ ScalarDeposition(F WeightFunc, int lev,
 
       if ((*flags)[pti].getType(bx) != FabType::covered ) {
 
-        auto volarr = fab.array();
-        auto flagsarr = (*flags)[pti].array();
-        auto vfrac = (*volfrac)[pti].array();
+        const auto& volarr = fab.array();
+        const auto& flagsarr = (*flags)[pti].array();
+        const auto& vfrac = (*volfrac)[pti].array();
 
         const amrex::Real deposition_scale_factor =
           mfix::m_deposition_scale_factor;
@@ -116,9 +116,8 @@ ScalarDeposition(F WeightFunc, int lev,
               }
             }
           });
-
-        Gpu::synchronize();
       }
+      Gpu::synchronize();
     }
   }
 }
@@ -201,10 +200,10 @@ FluidDragForceDeposition(F WeightFunc, int lev,
 
       if ((*flags)[pti].getType(box) != FabType::covered ) {
 
-        auto drag_arr = drag_fab.array();
-        auto   volarr =  eps_fab.array();
-        auto flagsarr = (*flags)[pti].array();
-        auto    vfrac = (*volfrac)[pti].array();
+        const auto& drag_arr = drag_fab.array();
+        const auto&   volarr =  eps_fab.array();
+        const auto& flagsarr = (*flags)[pti].array();
+        const auto&    vfrac = (*volfrac)[pti].array();
 
         const amrex::Real deposition_scale_factor =
           mfix::m_deposition_scale_factor;
@@ -247,10 +246,8 @@ FluidDragForceDeposition(F WeightFunc, int lev,
               }
             }
           });
-
-        Gpu::synchronize();
-
       }
+      Gpu::synchronize();
     }
   }
 }

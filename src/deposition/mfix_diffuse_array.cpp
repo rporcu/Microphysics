@@ -28,12 +28,12 @@ mfix::mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_
    Box domain(geom[0].Domain());
 
    // Set BCs for Poisson's solver
-   set_diff_bc (bc_lo, bc_hi,
-                domain.loVect(), domain.hiVect(),
-                &nghost,
-                bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
-                bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
-                bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
+   set_vel_diff_bc (bc_lo, bc_hi,
+                    domain.loVect(), domain.hiVect(),
+                    &nghost,
+                    bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
+                    bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
+                    bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
 
    //
    // First define the operator "ebtensorop"

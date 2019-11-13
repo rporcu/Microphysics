@@ -1,11 +1,6 @@
 #include <mfix.H>
 #include <param_mod_F.H>
 
-#include <AMReX_REAL.H>
-#include <AMReX_BLFort.H>
-#include <AMReX_SPACE.H>
-#include <AMReX_Array.H>
-
 namespace ugradu_aux {
 
 //
@@ -77,33 +72,19 @@ mfix::mfix_compute_fluxes(int lev,
         // Create cc_mask
         iMultiFab cc_mask(grids[lev], dmap[lev], 1, 1);
 
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-       {
-           std::vector< std::pair<int,Box> > isects;
-           const std::vector<IntVect>& pshifts = geom[lev].periodicity().shiftIntVect();
-           const BoxArray& ba = cc_mask.boxArray();
+        const int covered_value = 1;
+        const int notcovered_value = 0;
+        const int physical_boundaries_value = 0;
+        const int interior_value = 1;
 
-           for (MFIter mfi(cc_mask); mfi.isValid(); ++mfi)
-           {
-               Array4<int> const& fab = cc_mask.array(mfi);
+        cc_mask.BuildMask(geom[lev].Domain(), geom[lev].periodicity(),
+                          covered_value, notcovered_value,
+                          physical_boundaries_value, interior_value);
 
-               const Box& bx = mfi.fabbox();
-               for (const auto& iv : pshifts)
-               {
-                   ba.intersections(bx+iv, isects);
-                   for (const auto& is : isects)
-                   {
-                       const Box& b = is.second-iv;
-                       AMREX_FOR_3D ( b, i, j, k,
-                       {
-                           fab(i,j,k) = 1;
-                       });
-                   }
-               }
-           }
-        }
+        // We do this here to avoid any confusion about the FAB setVal.
+        a_fx[lev]->setVal(covered_val);
+        a_fy[lev]->setVal(covered_val);
+        a_fz[lev]->setVal(covered_val);
 
         for (MFIter mfi(*state_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
@@ -114,51 +95,46 @@ mfix::mfix_compute_fluxes(int lev,
             const EBFArrayBox& state_fab = static_cast<EBFArrayBox const&>((*state_in[lev])[mfi]);
             const EBCellFlagFab&  flags = state_fab.getEBCellFlagFab();
 
-            if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
-            {
-                 const Box ubx = amrex::surroundingNodes(bx,0);
-                 const Box vbx = amrex::surroundingNodes(bx,1);
-                 const Box wbx = amrex::surroundingNodes(bx,2);
-                 a_fx[lev]->setVal(covered_val, ubx, 0, ncomp);
-                 a_fy[lev]->setVal(covered_val, vbx, 0, ncomp);
-                 a_fz[lev]->setVal(covered_val, wbx, 0, ncomp);
-            }
-            else
+            if (flags.getType(amrex::grow(bx,0)) != FabType::covered )
             {
                 // No cut cells in tile + nghost-cell witdh halo -> use non-eb routine
                 if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
                 {
-                    mfix_compute_ugradu(lev, bx, (*a_fx[lev])[mfi], (*a_fy[lev])[mfi], (*a_fz[lev])[mfi], 
-                                        (*state_in[lev])[mfi], state_comp, ncomp,
-                                        (*xslopes_in[lev])[mfi], (*yslopes_in[lev])[mfi], (*zslopes_in[lev])[mfi], slopes_comp,
-                                        (*ep_u_mac[lev])[mfi], (*ep_v_mac[lev])[mfi], (*ep_w_mac[lev])[mfi]);
+                    mfix_compute_fluxes_on_box(
+                          lev, bx, (*a_fx[lev])[mfi], (*a_fy[lev])[mfi], (*a_fz[lev])[mfi], 
+                          (*state_in[lev])[mfi], state_comp, ncomp,
+                          (*xslopes_in[lev])[mfi], (*yslopes_in[lev])[mfi], (*zslopes_in[lev])[mfi], slopes_comp,
+                          (*ep_u_mac[lev])[mfi], (*ep_v_mac[lev])[mfi], (*ep_w_mac[lev])[mfi]);
                 }
                 else
                 {
-                    mfix_compute_ugradu_eb(lev, bx, (*a_fx[lev])[mfi], (*a_fy[lev])[mfi], (*a_fz[lev])[mfi], 
-                                           (*state_in[lev])[mfi], state_comp, ncomp,
-                                           (*xslopes_in[lev])[mfi], (*yslopes_in[lev])[mfi], (*zslopes_in[lev])[mfi], slopes_comp,
-                                           (*ep_u_mac[lev])[mfi], (*ep_v_mac[lev])[mfi], (*ep_w_mac[lev])[mfi],
-                                           (*areafrac[0])[mfi], (*areafrac[1])[mfi], (*areafrac[2])[mfi], 
-                                           (*facecent[0])[mfi], (*facecent[1])[mfi], (*facecent[2])[mfi], 
-                                           (*volfrac)[mfi], (*bndrycent)[mfi], cc_mask[mfi], flags);
+                    mfix_compute_eb_fluxes_on_box(
+                          lev, bx, (*a_fx[lev])[mfi], (*a_fy[lev])[mfi], (*a_fz[lev])[mfi], 
+                          (*state_in[lev])[mfi], state_comp, ncomp,
+                          (*xslopes_in[lev])[mfi], (*yslopes_in[lev])[mfi], (*zslopes_in[lev])[mfi], slopes_comp,
+                          (*ep_u_mac[lev])[mfi], (*ep_v_mac[lev])[mfi], (*ep_w_mac[lev])[mfi],
+                          (*areafrac[0])[mfi], (*areafrac[1])[mfi], (*areafrac[2])[mfi], 
+                          (*facecent[0])[mfi], (*facecent[1])[mfi], (*facecent[2])[mfi], 
+                          (*volfrac)[mfi], (*bndrycent)[mfi], cc_mask[mfi], flags);
                 }
             }
         } // MFIter
 }
 
 void
-mfix::mfix_compute_ugradu( const int lev, Box& bx,
-                           FArrayBox& a_fx, FArrayBox& a_fy, FArrayBox& a_fz,
-                           const FArrayBox& state_in, 
-                           const int state_comp, const int ncomp,
-                           const FArrayBox& xslopes_in, 
-                           const FArrayBox& yslopes_in, 
-                           const FArrayBox& zslopes_in, 
-                           const int slopes_comp,
-                           const FArrayBox& ep_u_mac, 
-                           const FArrayBox& ep_v_mac, 
-                           const FArrayBox& ep_w_mac) 
+mfix::mfix_compute_fluxes_on_box(const int lev, Box& bx,
+                                 FArrayBox& a_fx,
+                                 FArrayBox& a_fy,
+                                 FArrayBox& a_fz,
+                                 const FArrayBox& state_in,
+                                 const int state_comp, const int ncomp,
+                                 const FArrayBox& xslopes_in,
+                                 const FArrayBox& yslopes_in,
+                                 const FArrayBox& zslopes_in,
+                                 const int slopes_comp,
+                                 const FArrayBox& ep_u_mac,
+                                 const FArrayBox& ep_v_mac,
+                                 const FArrayBox& ep_w_mac)
 {
   Box domain(geom[lev].Domain());
 
@@ -290,29 +266,29 @@ mfix::mfix_compute_ugradu( const int lev, Box& bx,
 // boundaries
 //
 void
-mfix::mfix_compute_ugradu_eb(const int lev, Box& bx,
-                             FArrayBox& a_fx, 
-                             FArrayBox& a_fy, 
-                             FArrayBox& a_fz, 
-                             const FArrayBox& state_in, 
-                             const int state_comp, const int ncomp,
-                             const FArrayBox& xslopes_in, 
-                             const FArrayBox& yslopes_in, 
-                             const FArrayBox& zslopes_in, 
-                             const int slopes_comp,
-                             const FArrayBox& ep_u_mac, 
-                             const FArrayBox& ep_v_mac, 
-                             const FArrayBox& ep_w_mac, 
-                             const FArrayBox& afrac_x_fab, 
-                             const FArrayBox& afrac_y_fab, 
-                             const FArrayBox& afrac_z_fab, 
-                             const FArrayBox& face_centroid_x, 
-                             const FArrayBox& face_centroid_y, 
-                             const FArrayBox& face_centroid_z, 
-                             const FArrayBox& volfrac, 
-                             const FArrayBox& bndry_centroid, 
-                             const IArrayBox& cc_mask, 
-                             const EBCellFlagFab& flags)
+mfix::mfix_compute_eb_fluxes_on_box(const int lev, Box& bx,
+                                    FArrayBox& a_fx, 
+                                    FArrayBox& a_fy, 
+                                    FArrayBox& a_fz, 
+                                    const FArrayBox& state_in, 
+                                    const int state_comp, const int ncomp,
+                                    const FArrayBox& xslopes_in, 
+                                    const FArrayBox& yslopes_in, 
+                                    const FArrayBox& zslopes_in, 
+                                    const int slopes_comp,
+                                    const FArrayBox& ep_u_mac, 
+                                    const FArrayBox& ep_v_mac, 
+                                    const FArrayBox& ep_w_mac, 
+                                    const FArrayBox& afrac_x_fab, 
+                                    const FArrayBox& afrac_y_fab, 
+                                    const FArrayBox& afrac_z_fab, 
+                                    const FArrayBox& face_centroid_x, 
+                                    const FArrayBox& face_centroid_y, 
+                                    const FArrayBox& face_centroid_z, 
+                                    const FArrayBox& volfrac, 
+                                    const FArrayBox& bndry_centroid, 
+                                    const IArrayBox& cc_mask, 
+                                    const EBCellFlagFab& flags)
 {
   Box domain(geom[lev].Domain());
 

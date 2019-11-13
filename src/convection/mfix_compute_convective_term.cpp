@@ -1,6 +1,5 @@
 #include <mfix.H>
 #include <param_mod_F.H>
-#include <mfix_util_F.H>
 
 #include <AMReX_REAL.H>
 #include <AMReX_BLFort.H>

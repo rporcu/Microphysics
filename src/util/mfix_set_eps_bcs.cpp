@@ -258,6 +258,4 @@ mfix::set_eps_bcs(const int lev,
       });
     }
   }
-
-  Gpu::synchronize();
 }

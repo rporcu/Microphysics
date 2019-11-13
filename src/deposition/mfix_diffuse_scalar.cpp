@@ -27,12 +27,12 @@ mfix::mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> > & mf
    mfix_set_eps_bcs(mf_to_diffuse);
 
    // Set BCs for Poisson's solver
-   set_diff_bc (bc_lo, bc_hi,
-                domain.loVect(), domain.hiVect(),
-                &nghost,
-                bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
-                bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
-                bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
+   set_scal_diff_bc (bc_lo, bc_hi,
+                     domain.loVect(), domain.hiVect(),
+                     &nghost,
+                     bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
+                     bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
+                     bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
 
    //
    // First define the operator "ebscalarop"

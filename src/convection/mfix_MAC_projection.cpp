@@ -1,13 +1,4 @@
-#include <AMReX_REAL.H>
-#include <AMReX_BLFort.H>
-#include <AMReX_SPACE.H>
-
-#include <mfix_proj_F.H>
-#include <mfix_F.H>
 #include <mfix.H>
-
-#include <AMReX_EBFArrayBox.H>
-#include <AMReX_MultiFabUtil.H>
 #include <AMReX_MacProjector.H>
 
 using namespace amrex;
@@ -15,27 +6,15 @@ using namespace amrex;
 //
 // Computes the following decomposition:
 //
-//    u + c*grad(phi)/ro = u*  with  div(ep*u) = 0
-//
-// Inputs:
-//
-//   lev    = the AMR level
-//   u,v,w  = the MAC velocity field to be projected
-//   ep     = the cell-centered volume fraction
-//   ro     = the cell-centered density
-//
-// Outputs:
-//
-//  phi     = the projection auxiliary function
-//  u,v,w   = the PROJECTED MAC velocity field
+//    u* = u + c*grad(phi)/ro with  div(ep u) = 0
 //
 // Notes:
 //
 //  phi is computed by solving
 //
-//       div(ep*grad(phi)/ro) = div(ep * u*)
+//       div(ep*grad(phi)/ro) = div(ep u*)
 //
-//  WARNING: this method returns the MAC velocity with up-to-date BCs in place
+//  This method returns the MAC velocity with up-to-date BCs in place
 //
 void
 mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,

@@ -61,20 +61,24 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
     Vector<std::unique_ptr<MultiFab> > conv_u_old;
     Vector<std::unique_ptr<MultiFab> > conv_s_old;
     Vector<std::unique_ptr<MultiFab> > divtau_old;
+    Vector<std::unique_ptr<MultiFab> >   laps_old;
 
     conv_u_old.resize(nlev);
     conv_s_old.resize(nlev);
     divtau_old.resize(nlev);
+      laps_old.resize(nlev);
 
     for (int lev = 0; lev < nlev; lev++)
     {
        conv_u_old[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
-       conv_s_old[lev].reset(new MultiFab(grids[lev], dmap[lev], 2, 0, MFInfo(), *ebfactory[lev]));
+       conv_s_old[lev].reset(new MultiFab(grids[lev], dmap[lev],              2, 0, MFInfo(), *ebfactory[lev]));
        divtau_old[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
+         laps_old[lev].reset(new MultiFab(grids[lev], dmap[lev],          ntrac, 0, MFInfo(), *ebfactory[lev]));
 
        conv_u_old[lev]->setVal(0.0);
        conv_s_old[lev]->setVal(0.0);
        divtau_old[lev]->setVal(0.0);
+         laps_old[lev]->setVal(0.0);
     }
 
     do
@@ -125,7 +129,7 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
         // Predictor step
         bool proj_2_pred = true;
-        mfix_apply_predictor ( conv_u_old, conv_s_old, divtau_old, time, dt, proj_2_pred );
+        mfix_apply_predictor ( conv_u_old, conv_s_old, divtau_old, laps_old, time, dt, proj_2_pred );
 
         // Calculate drag coefficient
         if (solve_dem)
@@ -139,7 +143,7 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
         bool proj_2_corr = true;
         // Corrector step
         if (!steady_state)
-           mfix_apply_corrector ( conv_u_old, conv_s_old, divtau_old, time, dt, proj_2_corr );
+           mfix_apply_corrector ( conv_u_old, conv_s_old, divtau_old, laps_old, time, dt, proj_2_corr );
 
         //
         // Check whether to exit the loop or not
@@ -235,20 +239,24 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     Vector<std::unique_ptr<MultiFab> > conv_u;
     Vector<std::unique_ptr<MultiFab> > conv_s;
     Vector<std::unique_ptr<MultiFab> > divtau;
+    Vector<std::unique_ptr<MultiFab> >   laps;
 
     conv_u.resize(nlev);
     conv_s.resize(nlev);
     divtau.resize(nlev);
+      laps.resize(nlev);
 
     for (int lev = 0; lev < nlev; lev++)
     {
        conv_u[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
        conv_s[lev].reset(new MultiFab(grids[lev], dmap[lev], 2             , 0, MFInfo(), *ebfactory[lev]));
        divtau[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
+         laps[lev].reset(new MultiFab(grids[lev], dmap[lev],          ntrac, 0, MFInfo(), *ebfactory[lev]));
 
        conv_u[lev]->setVal(0.0);
        conv_s[lev]->setVal(0.0);
        divtau[lev]->setVal(0.0);
+         laps[lev]->setVal(0.0);
     }
 
    for (int iter = 0; iter < initial_iterations; ++iter)
@@ -258,7 +266,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
        bool proj_2 = false;
 
-       mfix_apply_predictor (conv_u, conv_s, divtau, time, dt, proj_2);
+       mfix_apply_predictor (conv_u, conv_s, divtau, laps, time, dt, proj_2);
 
        // Reset any quantities which might have been updated
        for (int lev = 0; lev < nlev; lev++)
@@ -316,6 +324,7 @@ void
 mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
                             Vector< std::unique_ptr<MultiFab> >& conv_s_old,
                             Vector< std::unique_ptr<MultiFab> >& divtau_old,
+                            Vector< std::unique_ptr<MultiFab> >&   laps_old,
                             Real time, Real dt, bool proj_2)
 {
     // We use the new-time value for things computed on the "*" state
@@ -340,9 +349,15 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
         mfix_set_velocity_bcs (time, vel_go, 0);
         diffusion_op->ComputeDivTau(divtau_old, vel_go, ro_g, ep_g, mu_g);
 
+        // mfix_set_tracer_bcs (time, trac_o);
+        diffusion_op->ComputeLapS(laps_old, trac_o, ro_g, ep_g, mu_s);
+
     } else {
        for (int lev = 0; lev < nlev; lev++)
+       {
           divtau_old[lev]->setVal(0.);
+            laps_old[lev]->setVal(0.);
+       }
     }
 
     for (int lev = 0; lev < nlev; lev++)
@@ -392,7 +407,10 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
             MultiFab::Multiply(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
 
         mfix_set_velocity_bcs (new_time, vel_g, 0);
-        diffusion_op->solve(vel_g, ep_g, mu_g, dt);
+        diffusion_op->diffuse_velocity(vel_g, ep_g, mu_g, dt);
+
+        // mfix_set_tracer_bcs (new_time, trac, 0);
+        diffusion_op->diffuse_scalar(trac, ep_g, mu_s, dt);
 
         for (int lev = 0; lev < nlev; lev++)
             MultiFab::Divide(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
@@ -406,6 +424,8 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     mfix_apply_nodal_projection( depdt, new_time, dt, proj_2 );
 
     mfix_set_velocity_bcs (new_time, vel_g, 0);
+
+    Gpu::synchronize();
 }
 
 //
@@ -443,6 +463,7 @@ void
 mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
                             Vector< std::unique_ptr<MultiFab> >& conv_s_old,
                             Vector< std::unique_ptr<MultiFab> >& divtau_old,
+                            Vector< std::unique_ptr<MultiFab> >&   laps_old,
                             Real time, Real dt, bool proj_2)
 {
     BL_PROFILE("mfix::mfix_apply_corrector");
@@ -526,12 +547,16 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
 
     //
     // Solve for u^star s.t. u^star = u_go + dt/2 (R_u^* + R_u^n) + dt/2 (Lu)^n + dt/2 (Lu)^star
+    // Note we multiply ep_g by ro_g so that we pass in a single array holding (ro_g * ep_g)
     //
     for (int lev = 0; lev < nlev; lev++)
         MultiFab::Multiply(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
 
     mfix_set_velocity_bcs (new_time, vel_g, 0);
-    diffusion_op->solve(vel_g, ep_g, mu_g, 0.5*dt);
+    diffusion_op->diffuse_velocity(vel_g, ep_g, mu_g, 0.5*dt);
+
+    // mfix_set_tracer_bcs (new_time, trac, 0);
+    diffusion_op->diffuse_scalar(trac, ep_g, mu_s, dt);
 
     for (int lev = 0; lev < nlev; lev++)
         MultiFab::Divide(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
