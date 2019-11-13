@@ -8,6 +8,6 @@ target_sources( mfixcore
    mfix_deposition_bcs.cpp
    mfix_diffuse_array.cpp
    mfix_diffuse_scalar.cpp
-   mfix_redistribute_solids_volume.cpp
    MFIX_PC_Deposition.cpp
+   mfix_redistribute_deposition.cpp
    )
