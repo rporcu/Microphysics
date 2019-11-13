@@ -324,6 +324,13 @@ public:
     void mfix_calc_volume_fraction(Real & sum_vol);
     void mfix_deposition_bcs_scalar(int lev, amrex::MultiFab & filled_mf);
 
+    void mfix_redistribute_deposition (int lev,
+                                       amrex::MultiFab & mf_eps,
+                                       amrex::MultiFab & mf_to_redistribute,
+                                       const amrex::MultiFab * volfrac,
+                                       const amrex::FabArray<EBCellFlagFab>* flags,
+                                       amrex::Real max_eps);
+
     Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
     Real volEpsWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
 
@@ -570,13 +577,6 @@ private:
 
     void mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps, amrex::Real);
     void mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_drag, amrex::Real);
-
-    void mfix_redistribute_deposition (int lev,
-                                       amrex::MultiFab & mf_eps,
-                                       amrex::MultiFab & mf_to_redistribute,
-                                       const amrex::MultiFab * volfrac,
-                                       const amrex::FabArray<EBCellFlagFab>* flags,
-                                       amrex::Real max_eps);
 
     void mfix_compute_diveu(Real time);
 

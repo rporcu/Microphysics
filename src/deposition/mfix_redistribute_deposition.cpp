@@ -51,17 +51,21 @@ mfix::mfix_redistribute_deposition (int lev,
 
        Array4<Real> const&      ep_s = mf_eps.array(mfi);
 
+       const int cyclic_x = geom[0].isPeriodic(0);
+       const int cyclic_y = geom[0].isPeriodic(1);
+       const int cyclic_z = geom[0].isPeriodic(2);
+
        // Array "mask" is used to restrict were we redistribute the overflow.
-       // -- Skip ghost cells when the BCs are not periodic
-       // -- Skip cells we are going to redistribute (ep_s > max_eps)
-       AMREX_HOST_DEVICE_FOR_3D(grow_bx1, i, j, k, {
-           if(((not geom[0].isPeriodic(0)) and (i < dom_low.x or i > dom_high.x)) or
-              ((not geom[0].isPeriodic(1)) and (j < dom_low.y or j > dom_high.y)) or
-              ((not geom[0].isPeriodic(2)) and (k < dom_low.z or k > dom_high.z)) or
+       // -- Mask ghost cells when the BCs are not periodic
+       // -- Mask cells we are going to redistribute (ep_s > max_eps)
+       AMREX_FOR_3D(grow_bx1, i, j, k, {
+           if(((not cyclic_x) and (i < dom_low.x or i > dom_high.x)) or
+              ((not cyclic_y) and (j < dom_low.y or j > dom_high.y)) or
+              ((not cyclic_z) and (k < dom_low.z or k > dom_high.z)) or
               (flags(i,j,k).isSingleValued() and  (ep_s(i,j,k) > max_eps)))
-             mask(i,j,k) = 0;
+             mask(i,j,k) = 0.0;
            else
-             mask(i,j,k) = 1;
+             mask(i,j,k) = 1.0;
          });
 
 
@@ -96,30 +100,11 @@ mfix::mfix_redistribute_deposition (int lev,
                // that we are moving into the packed cell's neighborhood.
                amrex::Real overflow = mf_redist(i,j,k,n) * scale * vfrac(i,j,k) / sum_vfrac;
 
-
-
-               //----------------------------------------------------------------------------->>>
-               // const std::string& myfile = "epg";
-
-               // amrex::PrintToFile(myfile, Print::AllProcs) << std::endl <<
-               //   "Over packed: " << i << "  " << j << "  " << k << "  " <<
-               //   ep_s(i,j,k) << " --> " << mf_redist(i,j,k,n) - scale*mf_redist(i,j,k,n)<< std::endl;
-               //-----------------------------------------------------------------------------<<<
-
-
-
                for(int ii(-1); ii <= 1; ii++)
                  for(int jj(-1); jj <= 1; jj++)
                    for(int kk(-1); kk <= 1; kk++)
                      if((ii != 0 or jj != 0 or kk != 0) and
                         (flags(i,j,k).isConnected({ii,jj,kk}) == 1)) {
-
-
-                       // amrex::PrintToFile(myfile, Print::AllProcs) <<  "   " <<
-                       //   "Redistribute: " << i+ii << "  " << j+jj << "  " << k+kk << "  " <<
-                       //   mf_redist(i+ii,j+jj,k+kk,n) << "  --> " <<
-                       //   mf_redist(i+ii,j+jj,k+kk,n) + mask(i+ii,j+jj,k+kk)*overflow << std::endl;
-
 
                        amrex::Gpu::Atomic::Add(&mf_redist(i+ii,j+jj,k+kk,n),
                                                mask(i+ii,j+jj,k+kk)*overflow);
