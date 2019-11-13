@@ -241,7 +241,9 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                   int jj;
                   int kk;
 
-                  if (anrm[0] < 0)
+                  Real small_number = 1.0e-15;
+
+                  if (anrm[0] < small_number)
                   {
                     ii = iloc - 1;
                   }
@@ -251,7 +253,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                     gx = -gx;
                   }
                   
-                  if (anrm[1] < 0)
+                  if (anrm[1] < small_number)
                   {
                     jj = jloc - 1;
                   }
@@ -261,7 +263,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                     gy = -gy;
                   }
                   
-                  if (anrm[2] < 0)
+                  if (anrm[2] < small_number)
                   {
                     kk = kloc - 1;
                   }
