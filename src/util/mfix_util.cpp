@@ -80,7 +80,7 @@ mfix::mfix_compute_vort ()
 
           if (flags.getType(amrex::grow(bx,0)) == FabType::regular )
           {
-            AMREX_FOR_3D(bx, i, j, k,
+            amrex::ParallelFor(bx, [odx,ody,odz,velocity_g,vorticity] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               Real uy = .5*ody*(velocity_g(i,j+1,k,0) - velocity_g(i,j-1,k,0));
               Real uz = .5*odz*(velocity_g(i,j,k+1,0) - velocity_g(i,j,k-1,0));
@@ -129,13 +129,13 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
         const unsigned int fab_numPts = fab.numPts();
         Array4<const Real> const& rho = fab.array();
 
-        const Box& box  = mfi.tilebox();
+        const Box& bx  = mfi.tilebox();
 
         Array4<const Real> const& vol = volfrac->array(mfi);
 
         const unsigned int offset = comp * fab_numPts;
 
-        AMREX_FOR_3D(box, i, j, k,
+        AMREX_FOR_3D(bx, i, j, k,
         {
           Real dm(0);
 

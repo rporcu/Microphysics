@@ -75,7 +75,8 @@ void init_helix(const Box& bx,
   switch (plane)
   {
     case 1:  // around x-axis
-      AMREX_FOR_3D(bx, i, j, k,
+      amrex::ParallelFor(bx,[fac,dy,dz,velocity]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         Real y = (Real(j) + .5) * dy - .0016;
         Real z = (Real(k) + .5) * dz - .0016;
@@ -88,7 +89,8 @@ void init_helix(const Box& bx,
       break;
 
     case 2:  // around y-axis
-      AMREX_FOR_3D(bx, i, j, k,
+      amrex::ParallelFor(bx,[fac,dx,dz,velocity]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         Real x = (Real(i) + .5) * dx - .0016;
         Real z = (Real(k) + .5) * dz - .0016;
@@ -101,7 +103,8 @@ void init_helix(const Box& bx,
       break;
 
     case 3:  // around z-axis
-      AMREX_FOR_3D(bx, i, j, k,
+      amrex::ParallelFor(bx,[fac,dx,dy,velocity]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         Real x = (Real(i) + .5) * dx;
         Real y = (Real(j) + .5) * dy;
@@ -126,8 +129,7 @@ void init_periodic_vortices(const Box& bx,
                             const Real dy,
                             const Real dz)
 {
-//  const amrex::Real twopi = 8. * std::atan(1);
-  const amrex::Real twopi = 2 * M_PI;
+  const amrex::Real twopi = 2. * M_PI;
 
   Array4<Real> const& velocity = vel_g_fab.array();
 
@@ -137,7 +139,8 @@ void init_periodic_vortices(const Box& bx,
   {
     case 1:  // x-y plane
       // x-direction
-      AMREX_FOR_3D(bx, i, j, k,
+      amrex::ParallelFor(bx,[twopi,dx,dy,velocity]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         Real x = (Real(i) + .5) * dx;
         Real y = (Real(j) + .5) * dy;
@@ -150,7 +153,8 @@ void init_periodic_vortices(const Box& bx,
 
     case 2:  // x-z plane
       // x-direction
-      AMREX_FOR_3D(bx, i, j, k,
+      amrex::ParallelFor(bx,[twopi,dx,dz,velocity]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         Real x = (Real(i) + .5) * dx;
         Real z = (Real(k) + .5) * dz;
@@ -163,7 +167,8 @@ void init_periodic_vortices(const Box& bx,
 
     case 3:  // y-z plane
       // x-direction
-      AMREX_FOR_3D(bx, i, j, k,
+      amrex::ParallelFor(bx,[twopi,dy,dz,velocity]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         Real y = (Real(j) + .5) * dy;
         Real z = (Real(k) + .5) * dz;
@@ -171,8 +176,7 @@ void init_periodic_vortices(const Box& bx,
         velocity(i,j,k,0) = 0.;
         velocity(i,j,k,1) = std::tanh(30*(.25 - std::abs(z-.5)));
         velocity(i,j,k,2) = .05 * std::sin(twopi*y);
-      });
-      break;
+      }); break;
 
     default:
       amrex::Abort("Error: wrong plane number");
@@ -189,8 +193,7 @@ void init_periodic_tracer(const Box& bx,
                           const Real dy,
                           const Real dz)
 {
-//  const amrex::Real twopi = 8. * std::atan(1);
-    const amrex::Real twopi(2 * M_PI);
+    const amrex::Real twopi(2. * M_PI);
 
     Array4<Real> const& trac = trac_fab.array();
     Array4<Real> const&  vel = vel_g_fab.array();
@@ -211,11 +214,11 @@ void init_periodic_tracer(const Box& bx,
 
         L = Real(domain.bigEnd(0)+1) * dx;
         C = twopi / L;
-        AMREX_FOR_3D(bx, i, j, k,
+        amrex::ParallelFor(bx,[A,L,C,dx,dy,dz,trac,vel]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
 
             Real x = (Real(i) + .5) * dx - .00037;
-
             Real y = (Real(j) + .5) * dy - .00073;
             Real z = (Real(k) + .5) * dz - .00123;
 
@@ -230,7 +233,8 @@ void init_periodic_tracer(const Box& bx,
 
         L = Real(domain.bigEnd(1)+1) * dy;
         C = twopi / L;
-        AMREX_FOR_3D(bx, i, j, k,
+        amrex::ParallelFor(bx,[A,L,C,dx,dy,dz,trac,vel]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
 
             Real y = (Real(j) + .5) * dy - .00037;
@@ -250,7 +254,8 @@ void init_periodic_tracer(const Box& bx,
 
         L = Real(domain.bigEnd(2)+1) * dz;
         C = twopi / L;
-        AMREX_FOR_3D(bx, i, j, k,
+        amrex::ParallelFor(bx,[A,L,C,dx,dy,dz,trac,vel]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
             Real z = (Real(k) + .5) * dz - .00037;
 

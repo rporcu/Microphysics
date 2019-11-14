@@ -57,7 +57,8 @@ mfix::set_gradp_bcs (const Box& bx,
 
   if(gp_lo[0] <= dom_lo[0])
   {
-    AMREX_FOR_3D(bx_yz_lo, i, j, k,
+    amrex::ParallelFor(bx_yz_lo,[bct_ilo,dom_lo,pinf,pout,minf,gp_arr]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
@@ -78,7 +79,8 @@ mfix::set_gradp_bcs (const Box& bx,
 
   if(gp_hi[0] >= dom_hi[0]+1)
   {
-    AMREX_FOR_3D(bx_yz_hi, i, j, k,
+    amrex::ParallelFor(bx_yz_hi,[bct_ihi,dom_hi,pinf,pout,minf,gp_arr]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
@@ -99,7 +101,8 @@ mfix::set_gradp_bcs (const Box& bx,
 
   if(gp_lo[1] <= dom_lo[1])
   {
-    AMREX_FOR_3D(bx_xz_lo, i, j, k,
+    amrex::ParallelFor(bx_xz_lo,[bct_jlo,dom_lo,pinf,pout,minf,gp_arr]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
@@ -120,7 +123,8 @@ mfix::set_gradp_bcs (const Box& bx,
 
   if(gp_hi[1] >= dom_hi[1]+1)
   {
-    AMREX_FOR_3D(bx_xz_hi, i, j, k,
+    amrex::ParallelFor(bx_xz_hi,[bct_jhi,dom_hi,pinf,pout,minf,gp_arr]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
@@ -141,7 +145,8 @@ mfix::set_gradp_bcs (const Box& bx,
 
   if(gp_lo[2] <= dom_lo[2])
   {
-    AMREX_FOR_3D(bx_xy_lo, i, j, k,
+    amrex::ParallelFor(bx_xy_lo,[bct_klo,dom_lo,pinf,pout,minf,gp_arr]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
@@ -162,7 +167,8 @@ mfix::set_gradp_bcs (const Box& bx,
 
   if(gp_hi[2] >= dom_hi[2]+1)
   {
-    AMREX_FOR_3D(bx_xy_hi, i, j, k,
+    amrex::ParallelFor(bx_xy_hi,[bct_khi,dom_hi,pinf,pout,minf,gp_arr]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
