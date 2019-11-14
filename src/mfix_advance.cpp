@@ -598,7 +598,8 @@ mfix::mfix_add_gravity_and_gp (Real dt)
          const GpuArray<Real,3> grav_loc = {gravity[0], gravity[1], gravity[2]};
          const GpuArray<Real,3>  gp0_loc = {gp0[0], gp0[1], gp0[2]};
 
-         AMREX_FOR_3D(bx, i, j, k,
+         amrex::ParallelFor(bx,[dt,vel_fab,grav_loc,gp_fab,gp0_loc,den_fab]
+           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
              Real inv_dens = 1.0 / den_fab(i,j,k);
              vel_fab(i,j,k,0) += dt * ( grav_loc[0]-(gp_fab(i,j,k,0)+gp0_loc[0])*inv_dens );
@@ -647,7 +648,8 @@ mfix::mfix_add_drag_explicit (Real dt)
       const auto&   ro_fab =  ro_g[lev]->array(mfi);
       const auto&   ep_fab =  ep_g[lev]->array(mfi);
 
-      AMREX_FOR_3D(bx, i, j, k,
+      amrex::ParallelFor(bx,[dt,vel_fab,drag_fab,ro_fab,ep_fab]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
           Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
 
@@ -694,7 +696,8 @@ mfix::mfix_add_drag_implicit (Real dt)
       const auto&   ro_fab =  ro_g[lev]->array(mfi);
       const auto&   ep_fab =  ep_g[lev]->array(mfi);
 
-      AMREX_FOR_3D(bx, i, j, k,
+      amrex::ParallelFor(bx,[dt,vel_fab,drag_fab,ro_fab,ep_fab]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
           Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
           Real denom = 1.0 / (1.0 + drag_fab(i,j,k,3) * orop);
