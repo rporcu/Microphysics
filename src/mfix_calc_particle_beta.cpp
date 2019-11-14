@@ -56,6 +56,9 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
     std::unique_ptr<MultiFab>  mu_g_pba;
     std::unique_ptr<MultiFab> vel_g_pba;
 
+    Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
+    areafrac  =   ebfactory[lev] -> getAreaFrac();
+
     if (OnSameGrids)
     {
       ep_ptr    =  ep_g[lev].get();
@@ -172,6 +175,11 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
             const MultiFab & phi  = *level_sets[lev];
             const auto& phi_array = phi.array(pti);
 
+            // Face-centered areas
+            const auto& apx_fab = areafrac[0]->array(pti);
+            const auto& apy_fab = areafrac[1]->array(pti);
+            const auto& apz_fab = areafrac[2]->array(pti);
+
             AMREX_FOR_1D( np, ip,
             {
               MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
@@ -216,21 +224,6 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                 }
                 else
                 {
-                  Real anrm[3];
-
-                  // Compute distance of the particle from the wall.  (This is
-                  // the same function we call when computing the particle-wall
-                  // collisions)
-                  int ls_refinement = 1;
-                  //Real dist = interp_level_set(particle, ls_refinement,
-                  //phi_array, plo, dxi); // UNUSED_VARIABLE
-
-                  // Compute the normal to the wall in this cell -- it doesn't
-                  // matter whether we compute it "at the particle location" or
-                  // "at the centroid location" because it interpolates from the
-                  // same values of phi.
-                  level_set_normal(particle, ls_refinement, &anrm[0], phi_array, plo, dxi);
-
                   // Particle position must be in [-.5:.5] is relative to cell
                   // center and scaled by dx
                   Real gx = particle.pos(0)*dxi[0] - (iloc + 0.5);
@@ -241,9 +234,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                   int jj;
                   int kk;
 
-                  Real small_number = 1.0e-15;
-
-                  if (anrm[0] < small_number)
+                  if (apx_fab(iloc, jloc, kloc) > 0)
                   {
                     ii = iloc - 1;
                   }
@@ -253,7 +244,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                     gx = -gx;
                   }
                   
-                  if (anrm[1] < small_number)
+                  if (apy_fab(iloc, jloc, kloc) > 0)
                   {
                     jj = jloc - 1;
                   }
@@ -263,7 +254,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                     gy = -gy;
                   }
                   
-                  if (anrm[2] < small_number)
+                  if (apz_fab(iloc, jloc, kloc) > 0)
                   {
                     kk = kloc - 1;
                   }
