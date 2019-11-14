@@ -750,7 +750,7 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
         auto& particles = pti.GetArrayOfStructs();
         int np = pti.numParticles();
         Gpu::HostVector<ParticleType> host_particles(np);
-        Gpu::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
+        Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
 
         for (const auto& p: host_particles)
         {
@@ -825,7 +825,7 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
               int np = pti.numParticles();
 
               Gpu::HostVector<ParticleType> host_particles(np);
-              Gpu::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
+              Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
 
               int index = 0;
               for (const auto& p: host_particles)
@@ -891,7 +891,7 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&min_dp)[10], Real (&min_ro
             auto& particles = pti.GetArrayOfStructs();
 
             Gpu::HostVector<ParticleType> host_particles(pti.numParticles());
-            Gpu::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
+            Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
 
             for (const auto& p: host_particles){
                 if ( phse==p.idata(intData::phase) )
@@ -954,7 +954,7 @@ void MFIXParticleContainer::UpdateMaxVelocity ()
            auto & particles = pti.GetArrayOfStructs();
            int np = pti.numParticles();
            Gpu::HostVector<ParticleType> host_particles(np);
-           Gpu::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
+           Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
 
            for(const auto & particle : host_particles)
            {

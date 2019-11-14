@@ -225,7 +225,7 @@ mfix::set_p0(const Box& bx,
     const amrex::Real dpodx = delp_x / xlen;
     pj -= dpodx * dx * (bx_hi[0] - dom_hi[0] + nghost + 2 + offset);
 
-    AMREX_FOR_3D(sbx, i, j, k,
+    amrex::ParallelFor(sbx, [pj,dpodx,dx,sbx_hi,array4_p0_g,P_ref,P_scale] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const amrex::Real local_pj = pj + dpodx*dx * (sbx_hi[0] - i + 1);
       array4_p0_g(i,j,k) = scale_pressure_cpp(local_pj, P_ref, P_scale);

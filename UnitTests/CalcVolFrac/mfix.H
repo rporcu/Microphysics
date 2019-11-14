@@ -345,11 +345,11 @@ protected:
 
      const BcList bc_list;
 
-     amrex::Cuda::ManagedVector<amrex::Real> m_bc_u_g;
-     amrex::Cuda::ManagedVector<amrex::Real> m_bc_v_g;
-     amrex::Cuda::ManagedVector<amrex::Real> m_bc_w_g;
-     amrex::Cuda::ManagedVector<amrex::Real> m_bc_t_g;
-     amrex::Cuda::ManagedVector<amrex::Real> m_bc_ep_g;
+     amrex::Gpu::ManagedVector<amrex::Real> m_bc_u_g;
+     amrex::Gpu::ManagedVector<amrex::Real> m_bc_v_g;
+     amrex::Gpu::ManagedVector<amrex::Real> m_bc_w_g;
+     amrex::Gpu::ManagedVector<amrex::Real> m_bc_t_g;
+     amrex::Gpu::ManagedVector<amrex::Real> m_bc_ep_g;
 
      //! The particles see an inflow face as a solid wall; thus instead of
      //! creating a separate EBfactory for particles, we simply modify the
