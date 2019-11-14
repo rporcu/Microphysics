@@ -133,183 +133,237 @@ mfix::set_velocity_bcs(Real time,
 
   if (nlft > 0)
   {
-    AMREX_FOR_4D(bx_yz_lo_3D, 3, i, j, k, n,
+    amrex::ParallelFor(bx_yz_lo_3D,
+      [bct_ilo,dom_lo,pinf,pout,minf,p_bc_u_g,vel] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
       if((bct == pinf) or (bct == pout))
-        vel(i,j,k,n) = vel(dom_lo[0],j,k,n);
+      {
+         vel(i,j,k,0) = vel(dom_lo[0],j,k,0);
+         vel(i,j,k,1) = vel(dom_lo[0],j,k,1);
+         vel(i,j,k,2) = vel(dom_lo[0],j,k,2);
+      }
       else if(bct == minf)
       {
-        if(n == 0)
-          vel(i,j,k,n) = p_bc_u_g[bcv];
-        else
-          vel(i,j,k,n) = 0;
+         vel(i,j,k,0) = p_bc_u_g[bcv];
+         vel(i,j,k,1) = 0;
+         vel(i,j,k,2) = 0;
       }
     });
 
     if(*extrap_dir_bcs > 0)
     {
-      AMREX_FOR_4D(bx_yz_lo_2D, 3, i, j, k, n,
+      amrex::ParallelFor(bx_yz_lo_2D,
+        [bct_ilo,dom_lo,minf,vel] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
         if(bct == minf)
-          vel(i,j,k,n) = 2*vel(i,j,k,n) - vel(i+1,j,k,n);
+        {
+           vel(i,j,k,0) = 2*vel(i,j,k,0) - vel(i+1,j,k,0);
+           vel(i,j,k,1) = 2*vel(i,j,k,1) - vel(i+1,j,k,1);
+           vel(i,j,k,2) = 2*vel(i,j,k,2) - vel(i+1,j,k,2);
+        }
       });
     }
   }
 
   if (nrgt > 0)
   {
-    AMREX_FOR_4D(bx_yz_hi_3D, 3, i, j, k, n,
+    amrex::ParallelFor(bx_yz_hi_3D,
+      [bct_ihi,dom_hi,pinf,pout,minf,p_bc_u_g,vel] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
       if((bct == pinf) or (bct == pout))
-        vel(i,j,k,n) = vel(dom_hi[0],j,k,n);
+      {
+         vel(i,j,k,0) = vel(dom_hi[0],j,k,0);
+         vel(i,j,k,1) = vel(dom_hi[0],j,k,1);
+         vel(i,j,k,2) = vel(dom_hi[0],j,k,2);
+      }
       else if(bct == minf)
       {
-        if(n == 0)
-          vel(i,j,k,n) = p_bc_u_g[bcv];
-        else
-          vel(i,j,k,n) = 0;
+         vel(i,j,k,0) = p_bc_u_g[bcv];
+         vel(i,j,k,1) = 0;
+         vel(i,j,k,2) = 0;
       }
     });
 
     if(*extrap_dir_bcs > 0)
     {
-      AMREX_FOR_4D(bx_yz_hi_2D, 3, i, j, k, n,
+      amrex::ParallelFor(bx_yz_hi_2D,
+        [bct_ihi,dom_hi,minf,vel] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
         if(bct == minf)
-          vel(i,j,k,n) = 2*vel(i,j,k,n) - vel(i-1,j,k,n);
+        {
+           vel(i,j,k,0) = 2*vel(i,j,k,0) - vel(i-1,j,k,0);
+           vel(i,j,k,1) = 2*vel(i,j,k,1) - vel(i-1,j,k,1);
+           vel(i,j,k,2) = 2*vel(i,j,k,2) - vel(i-1,j,k,2);
+        }
       });
     }
   }
 
   if (nbot > 0)
   {
-    AMREX_FOR_4D(bx_xz_lo_3D, 3, i, j, k, n,
+    amrex::ParallelFor(bx_xz_lo_3D,
+      [bct_jlo,dom_lo,pinf,pout,minf,p_bc_v_g,vel] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
       if((bct == pinf) or (bct == pout))
-        vel(i,j,k,n) = vel(i,dom_lo[1],k,n);
+      {
+         vel(i,j,k,0) = vel(i,dom_lo[1],k,0);
+         vel(i,j,k,1) = vel(i,dom_lo[1],k,1);
+         vel(i,j,k,2) = vel(i,dom_lo[1],k,2);
+      }
       else if(bct == minf)
       {
-        if(n == 1)
-          vel(i,j,k,n) = p_bc_v_g[bcv];
-        else
-          vel(i,j,k,n) = 0;
+         vel(i,j,k,0) = 0;
+         vel(i,j,k,1) = p_bc_v_g[bcv];
+         vel(i,j,k,2) = 0;
       }
     });
 
     if(*extrap_dir_bcs > 0)
     {
 
-      AMREX_FOR_4D(bx_xz_lo_2D, 3, i, j, k, n,
+      amrex::ParallelFor(bx_xz_lo_2D,
+        [bct_jlo,dom_lo,minf,vel] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
         if(bct == minf)
-          vel(i,j,k,n) = 2*vel(i,j,k,n) - vel(i,j+1,k,n);
+        {
+           vel(i,j,k,0) = 2*vel(i,j,k,0) - vel(i,j+1,k,0);
+           vel(i,j,k,1) = 2*vel(i,j,k,1) - vel(i,j+1,k,1);
+           vel(i,j,k,2) = 2*vel(i,j,k,2) - vel(i,j+1,k,2);
+        }
       });
     }
   }
 
   if (ntop > 0)
   {
-    AMREX_FOR_4D(bx_xz_hi_3D, 3, i, j, k, n,
+    amrex::ParallelFor(bx_xz_hi_3D,
+      [bct_jhi,dom_hi,pinf,pout,minf,p_bc_v_g,vel] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
       if((bct == pinf) or (bct == pout))
-        vel(i,j,k,n) = vel(i,dom_hi[1],k,n);
+      {
+         vel(i,j,k,0) = vel(i,dom_hi[1],k,0);
+         vel(i,j,k,1) = vel(i,dom_hi[1],k,1);
+         vel(i,j,k,2) = vel(i,dom_hi[1],k,2);
+      }
       else if(bct == minf)
       {
-        if(n == 1)
-          vel(i,j,k,n) = p_bc_v_g[bcv];
-        else
-          vel(i,j,k,n) = 0;
+         vel(i,j,k,0) = 0;
+         vel(i,j,k,1) = p_bc_v_g[bcv];
+         vel(i,j,k,2) = 0;
       }
     });
 
     if(*extrap_dir_bcs > 0)
     {
 
-      AMREX_FOR_4D(bx_xz_hi_2D, 3, i, j, k, n,
+      amrex::ParallelFor(bx_xz_hi_2D,
+        [bct_jhi,dom_hi,minf,vel] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
         if(bct == minf)
-          vel(i,j,k,n) = 2*vel(i,j,k,n) - vel(i,j-1,k,n);
+        {
+           vel(i,j,k,0) = 2*vel(i,j,k,0) - vel(i,j-1,k,0);
+           vel(i,j,k,1) = 2*vel(i,j,k,1) - vel(i,j-1,k,1);
+           vel(i,j,k,2) = 2*vel(i,j,k,2) - vel(i,j-1,k,2);
+        }
       });
     }
   }
 
   if (ndwn > 0)
   {
-    AMREX_FOR_4D(bx_xy_lo_3D, 3, i, j, k, n,
+    amrex::ParallelFor(bx_xy_lo_3D,
+      [bct_klo,dom_lo,pinf,pout,minf,p_bc_w_g,vel] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
       if((bct == pinf) or (bct == pout))
-        vel(i,j,k,n) = vel(i,j,dom_lo[2],n);
+      {
+         vel(i,j,k,0) = vel(i,j,dom_lo[2],0);
+         vel(i,j,k,1) = vel(i,j,dom_lo[2],1);
+         vel(i,j,k,2) = vel(i,j,dom_lo[2],2);
+      }
       else if(bct == minf)
       {
-        if(n == 2)
-          vel(i,j,k,n) = p_bc_w_g[bcv];
-        else
-          vel(i,j,k,n) = 0;
+          vel(i,j,k,0) = 0;
+          vel(i,j,k,1) = 0;
+          vel(i,j,k,2) = p_bc_w_g[bcv];
       }
     });
 
     if(*extrap_dir_bcs > 0)
     {
 
-      AMREX_FOR_4D(bx_xy_lo_2D, 3, i, j, k, n,
+      amrex::ParallelFor(bx_xy_lo_2D,
+        [bct_klo,dom_lo,minf,vel] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
         if(bct == minf)
-          vel(i,j,k,n) = 2*vel(i,j,k,n) - vel(i,j,k+1,n);
+        {
+           vel(i,j,k,0) = 2*vel(i,j,k,0) - vel(i,j,k+1,0);
+           vel(i,j,k,1) = 2*vel(i,j,k,1) - vel(i,j,k+1,1);
+           vel(i,j,k,2) = 2*vel(i,j,k,2) - vel(i,j,k+1,2);
+        }
       });
     }
   }
 
   if (nup > 0)
   {
-    AMREX_FOR_4D(bx_xy_hi_3D, 3, i, j, k, n,
+    amrex::ParallelFor(bx_xy_hi_3D,
+      [bct_khi,dom_hi,pinf,pout,minf,p_bc_w_g,vel] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
       if((bct == pinf) or (bct == pout))
-        vel(i,j,k,n) = vel(i,j,dom_hi[2],n);
+      {
+         vel(i,j,k,0) = vel(i,j,dom_hi[2],0);
+         vel(i,j,k,1) = vel(i,j,dom_hi[2],1);
+         vel(i,j,k,2) = vel(i,j,dom_hi[2],2);
+      }
       else if(bct == minf)
       {
-        if(n == 2)
-          vel(i,j,k,n) = p_bc_w_g[bcv];
-        else
-          vel(i,j,k,n) = 0;
+          vel(i,j,k,0) = 0;
+          vel(i,j,k,1) = 0;
+          vel(i,j,k,2) = p_bc_w_g[bcv];
       }
     });
 
     if(*extrap_dir_bcs > 0)
     {
-      AMREX_FOR_4D(bx_xy_hi_2D, 3, i, j, k, n,
+      amrex::ParallelFor(bx_xy_hi_2D,
+        [bct_khi,dom_hi,minf,vel] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
         if(bct == minf)
-          vel(i,j,k,n) = 2*vel(i,j,k,n) - vel(i,j,k-1,n);
+        {
+           vel(i,j,k,0) = 2*vel(i,j,k,0) - vel(i,j,k-1,0);
+           vel(i,j,k,1) = 2*vel(i,j,k,1) - vel(i,j,k-1,1);
+           vel(i,j,k,2) = 2*vel(i,j,k,2) - vel(i,j,k-1,2);
+        }
       });
     }
   }
@@ -380,62 +434,71 @@ mfix::set_vec_bcs(const int lev,
 
   if (nlft > 0)
   {
-    AMREX_FOR_4D(bx_yz_lo_3D, 3, i, j, k, n,
+    amrex::ParallelFor(bx_yz_lo_3D,
+      [bct_ilo,dom_lo,pinf,pout,minf,p_bc_u_g,p_bc_v_g,p_bc_w_g,p_bc_ep_g,vec]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
       if((bct == pinf) or (bct == pout))
-        vec(i,j,k,n) = vec(dom_lo[0],j,k,n);
+      {
+         vec(i,j,k,0) = vec(dom_lo[0],j,k,0);
+         vec(i,j,k,1) = vec(dom_lo[0],j,k,1);
+         vec(i,j,k,2) = vec(dom_lo[0],j,k,2);
+      }
       else if(bct == minf)
       {
-        if(n == 0)
-          vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
-        if(n == 1)
-          vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
-        if(n == 2)
-          vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
+         vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
+         vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
+         vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
       }
     });
   }
 
   if (nrgt > 0)
   {
-    AMREX_FOR_4D(bx_yz_hi_3D, 3, i, j, k, n,
+    amrex::ParallelFor(bx_yz_hi_3D,
+      [bct_ihi,dom_hi,pinf,pout,minf,p_bc_u_g,p_bc_v_g,p_bc_w_g,p_bc_ep_g,vec]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
       if((bct == pinf) or (bct == pout))
-        vec(i,j,k,n) = vec(dom_hi[0],j,k,n);
+      {
+         vec(i,j,k,0) = vec(dom_hi[0],j,k,0);
+         vec(i,j,k,1) = vec(dom_hi[0],j,k,1);
+         vec(i,j,k,2) = vec(dom_hi[0],j,k,2);
+      }
       else if(bct == minf)
       {
-        if(n == 0)
-          vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
-        if(n == 1)
-          vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
-        if(n == 2)
-          vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
+         vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
+         vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
+         vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
       }
     });
   }
 
   if (nbot > 0)
   {
-    AMREX_FOR_4D(bx_xz_lo_3D, 3, i, j, k, n,
+    amrex::ParallelFor(bx_xz_lo_3D,
+      [bct_jlo,dom_lo,pinf,pout,minf,p_bc_u_g,p_bc_v_g,p_bc_w_g,p_bc_ep_g,vec]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
       if((bct == pinf) or (bct == pout))
-        vec(i,j,k,n) = vec(i,dom_lo[1],k,n);
+      {
+        vec(i,j,k,0) = vec(i,dom_lo[1],k,0);
+        vec(i,j,k,1) = vec(i,dom_lo[1],k,1);
+        vec(i,j,k,2) = vec(i,dom_lo[1],k,2);
+      }
       else if(bct == minf)
       {
-        if(n == 0)
           vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
-        if(n == 1)
           vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
-        if(n == 2)
           vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
       }
     });
@@ -443,63 +506,72 @@ mfix::set_vec_bcs(const int lev,
 
   if (ntop > 0)
   {
-    AMREX_FOR_4D(bx_xz_hi_3D, 3, i, j, k, n,
+    amrex::ParallelFor(bx_xz_hi_3D,
+      [bct_jhi,dom_hi,pinf,pout,minf,p_bc_u_g,p_bc_v_g,p_bc_w_g,p_bc_ep_g,vec]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
       if((bct == pinf) or (bct == pout))
-        vec(i,j,k,n) = vec(i,dom_hi[1],k,n);
+      {
+         vec(i,j,k,0) = vec(i,dom_hi[1],k,0);
+         vec(i,j,k,1) = vec(i,dom_hi[1],k,1);
+         vec(i,j,k,2) = vec(i,dom_hi[1],k,2);
+      }
       else if(bct == minf)
       {
-        if(n == 0)
-          vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
-        if(n == 1)
-          vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
-        if(n == 2)
-          vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
+         vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
+         vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
+         vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
       }
     });
   }
 
   if (ndwn > 0)
   {
-    AMREX_FOR_4D(bx_xy_lo_3D, 3, i, j, k, n,
+    amrex::ParallelFor(bx_xy_lo_3D,
+      [bct_klo,dom_lo,pinf,pout,minf,p_bc_u_g,p_bc_v_g,p_bc_w_g,p_bc_ep_g,vec]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
       if((bct == pinf) or (bct == pout))
-        vec(i,j,k,n) = vec(i,j,dom_lo[2],n);
+      {
+         vec(i,j,k,0) = vec(i,j,dom_lo[2],0);
+         vec(i,j,k,1) = vec(i,j,dom_lo[2],1);
+         vec(i,j,k,2) = vec(i,j,dom_lo[2],2);
+      }
       else if(bct == minf)
       {
-        if(n == 0)
-          vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
-        if(n == 1)
-          vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
-        if(n == 2)
-          vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
+         vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
+         vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
+         vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
       }
     });
   }
 
   if (nup > 0)
   {
-    AMREX_FOR_4D(bx_xy_hi_3D, 3, i, j, k, n,
+    amrex::ParallelFor(bx_xy_hi_3D,
+      [bct_khi,dom_hi,pinf,pout,minf,p_bc_u_g,p_bc_v_g,p_bc_w_g,p_bc_ep_g,vec]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
       if((bct == pinf) or (bct == pout))
-        vec(i,j,k,n) = vec(i,j,dom_hi[2],n);
+      {
+         vec(i,j,k,0) = vec(i,j,dom_hi[2],0);
+         vec(i,j,k,1) = vec(i,j,dom_hi[2],1);
+         vec(i,j,k,2) = vec(i,j,dom_hi[2],2);
+      }
       else if(bct == minf)
       {
-        if(n == 0)
-          vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
-        if(n == 1)
-          vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
-        if(n == 2)
-          vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
+         vec(i,j,k,0) = p_bc_ep_g[bcv] * p_bc_u_g[bcv];
+         vec(i,j,k,1) = p_bc_ep_g[bcv] * p_bc_v_g[bcv];
+         vec(i,j,k,2) = p_bc_ep_g[bcv] * p_bc_w_g[bcv];
       }
     });
   }

@@ -65,7 +65,8 @@ mfix::set_ls_inflow(const int lev,
 
   if (nlft > 0)
   {
-    AMREX_FOR_3D(sbx, i, j, k,
+    amrex::ParallelFor(sbx,
+      [bct_ilo,dom_lo,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_ilo(dom_lo[0]-1,j/nref,k/nref,0);
@@ -98,7 +99,8 @@ mfix::set_ls_inflow(const int lev,
 
   if (nrgt > 0)
   {
-    AMREX_FOR_3D(sbx, i, j, k,
+    amrex::ParallelFor(sbx,
+      [bct_ihi,dom_hi,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_ihi(dom_hi[0]+1,j/nref,k/nref,0);
@@ -131,7 +133,8 @@ mfix::set_ls_inflow(const int lev,
   
   if (nbot > 0)
   {
-    AMREX_FOR_3D(sbx, i, j, k,
+    amrex::ParallelFor(sbx,
+      [bct_jlo,dom_lo,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_jlo(i/nref,dom_lo[1]-1,k/nref,0);
@@ -164,7 +167,8 @@ mfix::set_ls_inflow(const int lev,
   
   if (ntop > 0)
   {
-    AMREX_FOR_3D(sbx, i, j, k,
+    amrex::ParallelFor(sbx,
+      [bct_jhi,dom_hi,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_jhi(i/nref,dom_hi[1]+1,k/nref,0);
@@ -197,7 +201,8 @@ mfix::set_ls_inflow(const int lev,
 
   if (ndwn > 0)
   {
-    AMREX_FOR_3D(sbx, i, j, k,
+    amrex::ParallelFor(sbx,
+      [bct_klo,dom_lo,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_klo(i/nref,j/nref,dom_lo[2]-1,0);
@@ -230,7 +235,8 @@ mfix::set_ls_inflow(const int lev,
 
   if (nup > 0)
   {
-    AMREX_FOR_3D(sbx, i, j, k,
+    amrex::ParallelFor(sbx,
+      [bct_khi,dom_hi,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_khi(i/nref,j/nref,dom_hi[2]+1,0);
