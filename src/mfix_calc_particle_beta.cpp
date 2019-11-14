@@ -216,21 +216,6 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                 }
                 else
                 {
-                  Real anrm[3];
-
-                  // Compute distance of the particle from the wall.  (This is
-                  // the same function we call when computing the particle-wall
-                  // collisions)
-                  int ls_refinement = 1;
-                  //Real dist = interp_level_set(particle, ls_refinement,
-                  //phi_array, plo, dxi); // UNUSED_VARIABLE
-
-                  // Compute the normal to the wall in this cell -- it doesn't
-                  // matter whether we compute it "at the particle location" or
-                  // "at the centroid location" because it interpolates from the
-                  // same values of phi.
-                  level_set_normal(particle, ls_refinement, &anrm[0], phi_array, plo, dxi);
-
                   // Particle position must be in [-.5:.5] is relative to cell
                   // center and scaled by dx
                   Real gx = particle.pos(0)*dxi[0] - (iloc + 0.5);
@@ -241,9 +226,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                   int jj;
                   int kk;
 
-                  Real small_number = 1.0e-15;
-
-                  if (anrm[0] < small_number)
+                  if (not flags_array(iloc-1, jloc, kloc).isCovered())
                   {
                     ii = iloc - 1;
                   }
@@ -253,7 +236,8 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                     gx = -gx;
                   }
                   
-                  if (anrm[1] < small_number)
+                  if (not flags_array(iloc, jloc-1, kloc).isCovered() and
+                      not flags_array(ii  , jloc-1, kloc).isCovered())
                   {
                     jj = jloc - 1;
                   }
@@ -263,7 +247,10 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                     gy = -gy;
                   }
                   
-                  if (anrm[2] < small_number)
+                  if (not flags_array(iloc, jloc, kloc-1).isCovered() and
+                      not flags_array(ii  , jloc, kloc-1).isCovered() and
+                      not flags_array(iloc, jj  , kloc-1).isCovered() and
+                      not flags_array(ii  , jj  , kloc-1).isCovered())
                   {
                     kk = kloc - 1;
                   }
