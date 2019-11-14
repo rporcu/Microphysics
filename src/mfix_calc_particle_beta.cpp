@@ -236,7 +236,8 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                     gx = -gx;
                   }
                   
-                  if (not flags_array(ii, jloc-1, kloc).isCovered())
+                  if (not flags_array(iloc, jloc-1, kloc).isCovered() and
+                      not flags_array(ii  , jloc-1, kloc).isCovered())
                   {
                     jj = jloc - 1;
                   }
@@ -246,7 +247,10 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                     gy = -gy;
                   }
                   
-                  if (not flags_array(ii, jj, kloc-1).isCovered())
+                  if (not flags_array(iloc, jloc, kloc-1).isCovered() and
+                      not flags_array(ii  , jloc, kloc-1).isCovered() and
+                      not flags_array(iloc, jj  , kloc-1).isCovered() and
+                      not flags_array(ii  , jj  , kloc-1).isCovered())
                   {
                     kk = kloc - 1;
                   }
