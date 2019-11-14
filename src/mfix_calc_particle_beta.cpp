@@ -56,9 +56,6 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
     std::unique_ptr<MultiFab>  mu_g_pba;
     std::unique_ptr<MultiFab> vel_g_pba;
 
-    Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
-    areafrac  =   ebfactory[lev] -> getAreaFrac();
-
     if (OnSameGrids)
     {
       ep_ptr    =  ep_g[lev].get();
@@ -175,11 +172,6 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
             const MultiFab & phi  = *level_sets[lev];
             const auto& phi_array = phi.array(pti);
 
-            // Face-centered areas
-            const auto& apx_fab = areafrac[0]->array(pti);
-            const auto& apy_fab = areafrac[1]->array(pti);
-            const auto& apz_fab = areafrac[2]->array(pti);
-
             AMREX_FOR_1D( np, ip,
             {
               MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
@@ -234,7 +226,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                   int jj;
                   int kk;
 
-                  if (apx_fab(iloc, jloc, kloc) > 0)
+                  if (not flags_array(iloc-1, jloc, kloc).isCovered())
                   {
                     ii = iloc - 1;
                   }
@@ -244,7 +236,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                     gx = -gx;
                   }
                   
-                  if (apy_fab(iloc, jloc, kloc) > 0)
+                  if (not flags_array(ii, jloc-1, kloc).isCovered())
                   {
                     jj = jloc - 1;
                   }
@@ -254,7 +246,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                     gy = -gy;
                   }
                   
-                  if (apz_fab(iloc, jloc, kloc) > 0)
+                  if (not flags_array(ii, jj, kloc-1).isCovered())
                   {
                     kk = kloc - 1;
                   }
