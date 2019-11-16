@@ -53,7 +53,9 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
            if (flags.getType(amrex::grow(bx,1)) == FabType::regular )
            {
 
-               AMREX_FOR_4D(bx, ncomp, i, j, k, n,
+             amrex::ParallelFor(bx, ncomp,
+               [state_fab,xs_fab,ys_fab,zs_fab,slopes_comp]
+               AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                {
                    // X direction
                    Real du_xl = 2.0*(state_fab(i  ,j,k,n) - state_fab(i-1,j,k,n));
@@ -87,7 +89,9 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
            {
                const auto& flag_fab =         flags.array();
 
-               AMREX_FOR_4D(bx, ncomp, i, j, k, n,
+             amrex::ParallelFor(bx, ncomp,
+               [state_fab,xs_fab,ys_fab,zs_fab,slopes_comp,flag_fab]
+               AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                {
                    if (flag_fab(i,j,k).isCovered())
                    {
@@ -144,8 +148,11 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
            const auto&  klo_ifab  = bc_klo[lev]->array();
            const auto&  khi_ifab  = bc_khi[lev]->array();
 
-           AMREX_FOR_4D(bx, ncomp, i, j, k, n,
-           {
+           amrex::ParallelFor(bx, ncomp,
+             [domain,flag_fab,ilo_ifab,ihi_ifab,jlo_ifab,jhi_ifab,klo_ifab,khi_ifab,state_fab,
+              xs_fab,ys_fab,zs_fab,minf,slopes_comp]
+             AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+             {
                if ( (i == domain.smallEnd(0)) && !flag_fab(i,j,k).isCovered() && ilo_ifab(i-1,j,k,0) == minf)
                {
                    Real du_xl = 2.0*(state_fab(i  ,j,k,n) - state_fab(i-1,j,k,n));
