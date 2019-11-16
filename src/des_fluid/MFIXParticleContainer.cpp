@@ -293,8 +293,10 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 const auto plo = geom.ProbLoArray();
                 const auto phiarr = ls_phi->array(pti);
 
-                AMREX_FOR_1D ( nrp, i,
-                {
+                amrex::ParallelFor(nrp,
+                  [pstruct,ls_refinement,phiarr,plo,dxi,subdt,ntot,fc_ptr,tow_ptr]
+                  AMREX_GPU_DEVICE (int i) noexcept
+                  {
                     ParticleType& p = pstruct[i];
                     Real rp = p.rdata(realData::radius);
 
@@ -386,7 +388,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         tow_ptr[i + ntot  ] += ls_value*tow_force[1];
                         tow_ptr[i + 2*ntot] += ls_value*tow_force[2];
                     }
-                });
+                  });
 
                 Gpu::synchronize();
 
@@ -422,104 +424,105 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             Real eps = std::numeric_limits<Real>::epsilon();
 #endif
             // now we loop over the neighbor list and compute the forces
-            AMREX_FOR_1D ( nrp, i,
-            {
-                ParticleType& p1 = pstruct[i];
+            amrex::ParallelFor(nrp, [pstruct,small_number]
+              AMREX_GPU_DEVICE (int i) noexcept
+              {
+                  ParticleType& p1 = pstruct[i];
 
-                for (const auto& p2 : nbor_data.getNeighbors(i))
-                {
-                    Real dx = p2.pos(0) - p1.pos(0);
-                    Real dy = p2.pos(1) - p1.pos(1);
-                    Real dz = p2.pos(2) - p1.pos(2);
+                  for (const auto& p2 : nbor_data.getNeighbors(i))
+                  {
+                      Real dx = p2.pos(0) - p1.pos(0);
+                      Real dy = p2.pos(1) - p1.pos(1);
+                      Real dz = p2.pos(2) - p1.pos(2);
 
-                    Real r2 = dx*dx + dy*dy + dz*dz;
-                    Real r_lm = p1.rdata(realData::radius) + p2.rdata(realData::radius);
+                      Real r2 = dx*dx + dy*dy + dz*dz;
+                      Real r_lm = p1.rdata(realData::radius) + p2.rdata(realData::radius);
 
-                    if ( r2 <= (r_lm - small_number)*(r_lm - small_number) and (p1.id() != p2.id()))
-                    {
-                        if (debug_level > 0)
-                           Gpu::Atomic::Add(pncoll, 1);
+                      if ( r2 <= (r_lm - small_number)*(r_lm - small_number) and (p1.id() != p2.id()))
+                      {
+                          if (debug_level > 0)
+                             Gpu::Atomic::Add(pncoll, 1);
 
-                        Real dist_mag     = sqrt(r2);
+                          Real dist_mag     = sqrt(r2);
 
-                        AMREX_ASSERT(dist_mag >= eps);
+                          AMREX_ASSERT(dist_mag >= eps);
 
-                        Real dist_mag_inv = 1.e0/dist_mag;
+                          Real dist_mag_inv = 1.e0/dist_mag;
 
-                        Real normal[3];
-                        normal[0] = dx * dist_mag_inv;
-                        normal[1] = dy * dist_mag_inv;
-                        normal[2] = dz * dist_mag_inv;
+                          Real normal[3];
+                          normal[0] = dx * dist_mag_inv;
+                          normal[1] = dy * dist_mag_inv;
+                          normal[2] = dz * dist_mag_inv;
 
-                        Real overlap_n = r_lm - dist_mag;
-                        Real vrel_trans_norm;
-                        Real vrel_t[3];
+                          Real overlap_n = r_lm - dist_mag;
+                          Real vrel_trans_norm;
+                          Real vrel_t[3];
 
-                        cfrelvel(p1, p2, vrel_trans_norm, vrel_t, normal, dist_mag);
+                          cfrelvel(p1, p2, vrel_trans_norm, vrel_t, normal, dist_mag);
 
-                        int phase1 = p1.idata(intData::phase);
-                        int phase2 = p2.idata(intData::phase);
+                          int phase1 = p1.idata(intData::phase);
+                          int phase2 = p2.idata(intData::phase);
 
-                        Real kn_des = DEMParams::kn;
-                        Real etan_des = DEMParams::etan[phase1-1][phase2-1];
+                          Real kn_des = DEMParams::kn;
+                          Real etan_des = DEMParams::etan[phase1-1][phase2-1];
 
-                        // NOTE - we don't use the tangential components right now,
-                        // but we might in the future
-                        // Real kt_des = DEMParams::kt;
-                        // Real etat_des = DEMParams::etat[phase1-1][phase2-1];
+                          // NOTE - we don't use the tangential components right now,
+                          // but we might in the future
+                          // Real kt_des = DEMParams::kt;
+                          // Real etat_des = DEMParams::etat[phase1-1][phase2-1];
 
-                        Real fn[3];
-                        Real ft[3];
-                        Real overlap_t[3];
-                        Real mag_overlap_t;
+                          Real fn[3];
+                          Real ft[3];
+                          Real overlap_t[3];
+                          Real mag_overlap_t;
 
-                        // calculate the normal contact force
-                        fn[0] = -(kn_des*overlap_n*normal[0] + etan_des*vrel_trans_norm*normal[0]);
-                        fn[1] = -(kn_des*overlap_n*normal[1] + etan_des*vrel_trans_norm*normal[1]);
-                        fn[2] = -(kn_des*overlap_n*normal[2] + etan_des*vrel_trans_norm*normal[2]);
+                          // calculate the normal contact force
+                          fn[0] = -(kn_des*overlap_n*normal[0] + etan_des*vrel_trans_norm*normal[0]);
+                          fn[1] = -(kn_des*overlap_n*normal[1] + etan_des*vrel_trans_norm*normal[1]);
+                          fn[2] = -(kn_des*overlap_n*normal[2] + etan_des*vrel_trans_norm*normal[2]);
 
-                        // calculate the tangential overlap
-                        overlap_t[0] = subdt*vrel_t[0];
-                        overlap_t[1] = subdt*vrel_t[1];
-                        overlap_t[2] = subdt*vrel_t[2];
-                        mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
+                          // calculate the tangential overlap
+                          overlap_t[0] = subdt*vrel_t[0];
+                          overlap_t[1] = subdt*vrel_t[1];
+                          overlap_t[2] = subdt*vrel_t[2];
+                          mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
 
-                        if (mag_overlap_t > 0.0) {
-                            Real fnmd = DEMParams::mew * sqrt(dot_product(fn, fn));
-                            Real tangent[3];
-                            tangent[0] = overlap_t[0]/mag_overlap_t;
-                            tangent[1] = overlap_t[1]/mag_overlap_t;
-                            tangent[2] = overlap_t[2]/mag_overlap_t;
-                            ft[0] = -fnmd * tangent[0];
-                            ft[1] = -fnmd * tangent[1];
-                            ft[2] = -fnmd * tangent[2];
-                        } else {
-                            ft[0] = 0.0;
-                            ft[1] = 0.0;
-                            ft[2] = 0.0;
-                        }
+                          if (mag_overlap_t > 0.0) {
+                              Real fnmd = DEMParams::mew * sqrt(dot_product(fn, fn));
+                              Real tangent[3];
+                              tangent[0] = overlap_t[0]/mag_overlap_t;
+                              tangent[1] = overlap_t[1]/mag_overlap_t;
+                              tangent[2] = overlap_t[2]/mag_overlap_t;
+                              ft[0] = -fnmd * tangent[0];
+                              ft[1] = -fnmd * tangent[1];
+                              ft[2] = -fnmd * tangent[2];
+                          } else {
+                              ft[0] = 0.0;
+                              ft[1] = 0.0;
+                              ft[2] = 0.0;
+                          }
 
-                        // each particle updates its force (no need for atomics)
-                        fc_ptr[i         ] += fn[0] + ft[0];
-                        fc_ptr[i + ntot  ] += fn[1] + ft[1];
-                        fc_ptr[i + 2*ntot] += fn[2] + ft[2];
+                          // each particle updates its force (no need for atomics)
+                          fc_ptr[i         ] += fn[0] + ft[0];
+                          fc_ptr[i + ntot  ] += fn[1] + ft[1];
+                          fc_ptr[i + 2*ntot] += fn[2] + ft[2];
 
-                        Real r1 = p1.rdata(realData::radius);
-                        Real r2 = p2.rdata(realData::radius);
+                          Real r1 = p1.rdata(realData::radius);
+                          Real r2 = p2.rdata(realData::radius);
 
-                        Real dist_cl = 0.5 * (dist_mag + (r1*r1 - r2*r2) * dist_mag_inv);
-                        dist_cl = dist_mag - dist_cl;
+                          Real dist_cl = 0.5 * (dist_mag + (r1*r1 - r2*r2) * dist_mag_inv);
+                          dist_cl = dist_mag - dist_cl;
 
-                        Real tow_force[3];
+                          Real tow_force[3];
 
-                        cross_product(normal, ft, tow_force);
+                          cross_product(normal, ft, tow_force);
 
-                        tow_ptr[i         ] += dist_cl*tow_force[0];
-                        tow_ptr[i + ntot  ] += dist_cl*tow_force[1];
-                        tow_ptr[i + 2*ntot] += dist_cl*tow_force[2];
-                        }
-                    }
-            });
+                          tow_ptr[i         ] += dist_cl*tow_force[0];
+                          tow_ptr[i + ntot  ] += dist_cl*tow_force[1];
+                          tow_ptr[i + 2*ntot] += dist_cl*tow_force[2];
+                          }
+                      }
+              });
 #else
             calc_particle_collisions ( particles                          , &nrp,
                                        neighbors[lev][index].dataPtr()    , &size_ng,
@@ -561,8 +564,11 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             int z_lo_bc = domain_bc[4];
             int z_hi_bc = domain_bc[5];
 
-            AMREX_FOR_1D ( nrp, i,
-            {
+            amrex::ParallelFor(nrp,
+              [pstruct,subdt,fc_ptr,ntot,grav,tow_ptr,eps,p_hi,p_lo,
+               x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc]
+              AMREX_GPU_DEVICE (int i) noexcept
+              {
                 ParticleType& p = pstruct[i];
 
                 p.rdata(realData::velx) += subdt * (
@@ -610,7 +616,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                    p.pos(2) = p_hi[2] - eps;
                    p.rdata(realData::velz) = -p.rdata(realData::velz);
                 }
-            });
+              });
 
             Gpu::synchronize();
 
