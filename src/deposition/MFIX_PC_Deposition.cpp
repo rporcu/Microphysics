@@ -88,8 +88,11 @@ ScalarDeposition(F WeightFunc, int lev,
         const amrex::Real deposition_scale_factor =
           mfix::m_deposition_scale_factor;
 
-        AMREX_FOR_1D ( nrp, ip, {
-
+        amrex::ParallelFor(nrp,
+          [pstruct,plo,dx,dxi,vfrac,deposition_scale_factor,volarr,
+           reg_cell_vol,WeightFunc,flagsarr]
+          AMREX_GPU_DEVICE (int ip) noexcept
+          {
             const ParticleType& p = pstruct[ip];
 
             int i;
@@ -202,8 +205,11 @@ FluidDragForceDeposition(F WeightFunc, int lev,
         const amrex::Real deposition_scale_factor =
           mfix::m_deposition_scale_factor;
 
-        AMREX_FOR_1D ( nrp, ip, {
-
+        amrex::ParallelFor(nrp,
+          [pstruct,plo,dx,dxi,vfrac,deposition_scale_factor,
+           reg_cell_vol,WeightFunc,flagsarr,drag_arr]
+          AMREX_GPU_DEVICE (int ip) noexcept
+          {
             const ParticleType& p = pstruct[ip];
 
             int i;

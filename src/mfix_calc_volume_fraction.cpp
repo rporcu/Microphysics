@@ -169,9 +169,11 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 
     //   // These lines are commented because this code represents a functionality which
     //   // may be added in future developments
-    //   AMREX_FOR_3D(sbx, i, j, k, {
-    //       ep_g(i,j,k) = std::max(max_pack, ep_g(i,j,k));
-    //     });
+
+    //   amrex::ParallelFor(sbx, [ep_g,max_pack]
+    //     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    //     // FIX THE RACE CONDITION (use AtomicMax)
+    //     { ep_g(i,j,k) = std::max(max_pack, ep_g(i,j,k)); });
     // }
 
 
