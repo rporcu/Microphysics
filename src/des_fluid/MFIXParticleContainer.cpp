@@ -424,7 +424,9 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             Real eps = std::numeric_limits<Real>::epsilon();
 #endif
             // now we loop over the neighbor list and compute the forces
-            amrex::ParallelFor(nrp, [pstruct,small_number]
+            amrex::ParallelFor(nrp,
+                [pstruct,fc_ptr,tow_ptr,nbor_data,pncoll,
+                 subdt,ntot,small_number]
               AMREX_GPU_DEVICE (int i) noexcept
               {
                   ParticleType& p1 = pstruct[i];
