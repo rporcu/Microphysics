@@ -420,11 +420,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             Gpu::DeviceScalar<int> ncoll_gpu(ncoll);
             int* pncoll = ncoll_gpu.dataPtr();
 
-#if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
-            Real eps = std::numeric_limits<Real>::epsilon();
-#endif
             // now we loop over the neighbor list and compute the forces
-            amrex::ParallelFor(nrp, [pstruct,small_number]
+            amrex::ParallelFor(nrp,
+                [pstruct,fc_ptr,tow_ptr,nbor_data,pncoll,
+#if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
+                 eps,
+#endif
+                 subdt,ntot,small_number]
               AMREX_GPU_DEVICE (int i) noexcept
               {
                   ParticleType& p1 = pstruct[i];
