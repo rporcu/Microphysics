@@ -367,30 +367,17 @@ mfix::mfix_calc_drag_particle(Real time)
                   // At least one of the cells in the stencil is covered
                   else
                   {
-                    Real anrm[3];
-
-                    // Compute distance of the particle from the wall.
-                    // (This is the same function we call when computing the
-                    // particle-wall collisions)
-                    int ls_refinement = 1;
-                    //Real dist = interp_level_set(particle, ls_refinement,
-                    //phi_array, plo, dxi); // UNUSED_VARIABLE
-
-                    // Compute the normal to the wall in this cell -- it doesn't
-                    // matter whether we compute it "at the particle location" or
-                    // "at the centroid location" because it interpolates from the
-                    // same values of phi.
-                    level_set_normal(particle, ls_refinement, &anrm[0], phi_array, plo, dxi);
-
                     // Particle position must be in [-.5:.5] is relative to cell
                     // center and scaled by dx
                     Real gx = particle.pos(0)*dxi[0] - (iloc + 0.5);
                     Real gy = particle.pos(1)*dxi[1] - (jloc + 0.5);
                     Real gz = particle.pos(2)*dxi[2] - (kloc + 0.5);
 
-                    int ii(0); int jj(0); int kk(0);
+                    int ii(0);
+                    int jj(0);
+                    int kk(0);
 
-                    if (anrm[0] < 0)
+                    if (not flags_array(iloc-1, jloc, kloc).isCovered())
                     {
                       ii = iloc - 1;
                     }
@@ -400,7 +387,8 @@ mfix::mfix_calc_drag_particle(Real time)
                       gx = -gx;
                     }
 
-                    if (anrm[1] < 0)
+                    if (not flags_array(iloc, jloc-1, kloc).isCovered() and
+                        not flags_array(ii  , jloc-1, kloc).isCovered())
                     {
                       jj = jloc - 1;
                     }
@@ -410,7 +398,10 @@ mfix::mfix_calc_drag_particle(Real time)
                       gy = -gy;
                     }
 
-                    if (anrm[2] < 0)
+                    if (not flags_array(iloc, jloc, kloc-1).isCovered() and
+                        not flags_array(ii  , jloc, kloc-1).isCovered() and
+                        not flags_array(iloc, jj  , kloc-1).isCovered() and
+                        not flags_array(ii  , jj  , kloc-1).isCovered())
                     {
                       kk = kloc - 1;
                     }
