@@ -9,4 +9,5 @@ target_sources( mfixcore
    mfix_diffuse_array.cpp
    mfix_diffuse_scalar.cpp
    MFIX_PC_Deposition.cpp
+   mfix_redistribute_deposition.cpp
    )

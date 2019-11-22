@@ -63,7 +63,7 @@ struct TrilinearDeposition
   void operator() (amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
-                   amrex::Array4<amrex::Real const> const& vfrac,
+                   amrex::Array4<const EBCellFlag> const& flags,
                    const MFIXParticleContainer::ParticleType& p,
                    int& i, int& j, int& k, amrex::Real weights[2][2][2],
                    const amrex::Real) const
@@ -94,8 +94,13 @@ struct TrilinearDeposition
     for (int ii = 0; ii <= 1; ++ii)
       for (int jj = 0; jj <= 1; ++jj)
         for (int kk = 0; kk <= 1; ++kk){
-          weights[ii][jj][kk] = wx[ii]*wy[jj]*wz[kk];
-          total_weight += weights[ii][jj][kk] * vfrac(i-1+ii,j-1+jj,k-1+kk);
+          if( !flags(i-1+ii,j-1+jj,k-1+kk).isCovered() ) {
+            weights[ii][jj][kk] = wx[ii]*wy[jj]*wz[kk];
+            total_weight += weights[ii][jj][kk];
+
+          } else {
+            weights[ii][jj][kk] = 0.0;
+          }
         }
 
     for (int ii = 0; ii <= 1; ++ii)
@@ -114,7 +119,7 @@ struct TrilinearDPVMSquareDeposition
   void operator() (amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
-                   amrex::Array4<amrex::Real const> const& vfrac,
+                   amrex::Array4<const EBCellFlag> const& flags,
                    const MFIXParticleContainer::ParticleType& p,
                    int& i, int& j, int& k, amrex::Real weights[2][2][2],
                    const amrex::Real deposition_scale_factor) const
@@ -197,14 +202,20 @@ struct TrilinearDPVMSquareDeposition
     for (int ii = 0; ii <= 1; ++ii)
       for (int jj = 0; jj <= 1; ++jj)
         for (int kk = 0; kk <= 1; ++kk){
-          weights[ii][jj][kk] = wx[ii]*wy[jj]*wz[kk];
-          total_weight += weights[ii][jj][kk] * vfrac(i-1+ii,j-1+jj,k-1+kk);
+          if( !flags(i-1+ii,j-1+jj,k-1+kk).isCovered() ) {
+            weights[ii][jj][kk] = wx[ii]*wy[jj]*wz[kk];
+            total_weight += weights[ii][jj][kk];
+
+          } else {
+            weights[ii][jj][kk] = 0.0;
+          }
         }
 
     for (int ii = 0; ii <= 1; ++ii)
       for (int jj = 0; jj <= 1; ++jj)
         for (int kk = 0; kk <= 1; ++kk)
           weights[ii][jj][kk] /= total_weight;
+
 
   }
 
@@ -217,7 +228,7 @@ struct TrueDPVMDeposition
   void operator() (amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
-                   amrex::Array4<amrex::Real const> const& vfrac,
+                   amrex::Array4<const EBCellFlag> const& flags,
                    const MFIXParticleContainer::ParticleType& p,
                    int& i, int& j, int& k, amrex::Real weights[2][2][2],
                    const amrex::Real deposition_scale_factor) const
@@ -424,10 +435,10 @@ struct CentroidDeposition
   void operator() (amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
-                   amrex::Array4<amrex::Real const> const& vfrac,
+                   amrex::Array4<const EBCellFlag> const& flags,
                    const MFIXParticleContainer::ParticleType& p,
                    int& i, int& j, int& k, amrex::Real weights[2][2][2],
-                   const amrex::Real) const
+                   const amrex::Real deposition_scale_factor) const
   {
 
     amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;

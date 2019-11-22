@@ -154,6 +154,7 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
           keep_looping = 0;
         }
 
+
         // Update interations count
         ++iter;
     }
@@ -837,4 +838,3 @@ mfix::steady_state_reached (Real dt, int iter)
        return reached;
     };
 }
-

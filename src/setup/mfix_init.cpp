@@ -270,6 +270,9 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
       }
 
+      m_max_solids_volume_fraction = 0.60;
+      pp.query("max_solids_volume_fraction", m_max_solids_volume_fraction);
+
       m_deposition_scale_factor = 1.0;
       pp.query("deposition_scale_factor", m_deposition_scale_factor);
 

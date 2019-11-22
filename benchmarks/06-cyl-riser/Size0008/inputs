@@ -73,7 +73,6 @@ mfix.write_eb_surface = true  # Needed to output eb-surfaces
 mfix.geometry = "cylinder"
 
 cylinder.internal_flow = true
-cylinder.closed_bottom = false
 
 cylinder.radius = 0.00099
 cylinder.height = -1.0

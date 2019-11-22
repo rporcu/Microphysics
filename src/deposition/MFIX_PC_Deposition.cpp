@@ -101,20 +101,22 @@ ScalarDeposition(F WeightFunc, int lev,
 
             amrex::Real weights[2][2][2];
 
-            WeightFunc(plo, dx, dxi, vfrac, p, i, j, k, weights,
+            WeightFunc(plo, dx, dxi, flagsarr, p, i, j, k, weights,
                 deposition_scale_factor);
 
             amrex::Real pvol = p.rdata(realData::volume) / reg_cell_vol;
 
             for (int ii = -1; ii <= 0; ++ii) {
-                for (int jj = -1; jj <= 0; ++jj) {
-                    for (int kk = -1; kk <= 0; ++kk) {
-                        if (flagsarr(i+ii,j+jj,k+kk).isCovered())
-                            continue;
-                        amrex::Gpu::Atomic::Add(&volarr(i+ii,j+jj,k+kk),
-                                                weights[ii+1][jj+1][kk+1]*pvol);
-                    }
+              for (int jj = -1; jj <= 0; ++jj) {
+                for (int kk = -1; kk <= 0; ++kk) {
+                  if (flagsarr(i+ii,j+jj,k+kk).isCovered())
+                    continue;
+
+                  amrex::Real weight_vol = weights[ii+1][jj+1][kk+1] / vfrac(i+ii,j+jj,k+kk);
+
+                  amrex::Gpu::Atomic::Add(&volarr(i+ii,j+jj,k+kk), weight_vol*pvol);
                 }
+              }
             }
           });
       }
@@ -127,6 +129,7 @@ ScalarDeposition(F WeightFunc, int lev,
 
 void MFIXParticleContainer::
 FluidDragForceDeposition(int lev,
+                         amrex::MultiFab & mf_tmp_eps,
                          amrex::MultiFab & drag_mf,
                          const amrex::MultiFab * volfrac,
                          const amrex::FabArray<EBCellFlagFab>* flags)
@@ -135,22 +138,22 @@ FluidDragForceDeposition(int lev,
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
 
     FluidDragForceDeposition(TrilinearDeposition(),
-                             lev, drag_mf, volfrac, flags);
+                             lev, mf_tmp_eps, drag_mf, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::square_dpvm) {
 
     FluidDragForceDeposition(TrilinearDPVMSquareDeposition(),
-                             lev, drag_mf, volfrac, flags);
+                             lev, mf_tmp_eps, drag_mf, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::true_dpvm) {
 
     FluidDragForceDeposition(TrueDPVMDeposition(),
-                             lev, drag_mf, volfrac, flags);
+                             lev, mf_tmp_eps, drag_mf, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::centroid) {
 
     FluidDragForceDeposition(CentroidDeposition(),
-                             lev, drag_mf, volfrac, flags);
+                             lev, mf_tmp_eps, drag_mf, volfrac, flags);
 
   } else {
 
@@ -165,6 +168,7 @@ FluidDragForceDeposition(int lev,
 template <typename F>
 void MFIXParticleContainer::
 FluidDragForceDeposition(F WeightFunc, int lev,
+                         amrex::MultiFab & mf_tmp_eps,
                          amrex::MultiFab & drag_mf,
                          const amrex::MultiFab * volfrac,
                          const amrex::FabArray<EBCellFlagFab>* flags)
@@ -192,6 +196,7 @@ FluidDragForceDeposition(F WeightFunc, int lev,
       const ParticleType* pstruct = particles().dataPtr();
       const long nrp = pti.numParticles();
 
+      FArrayBox& eps_fab  = mf_tmp_eps[pti];
       FArrayBox& drag_fab = drag_mf[pti];
 
       const Box& box = pti.tilebox(); // I need a box without ghosts
@@ -199,14 +204,15 @@ FluidDragForceDeposition(F WeightFunc, int lev,
       if ((*flags)[pti].getType(box) != FabType::covered ) {
 
         const auto& drag_arr = drag_fab.array();
+        const auto&   volarr =  eps_fab.array();
         const auto& flagsarr = (*flags)[pti].array();
-        const auto& vfrac = (*volfrac)[pti].array();
+        const auto&    vfrac = (*volfrac)[pti].array();
 
         const amrex::Real deposition_scale_factor =
           mfix::m_deposition_scale_factor;
 
         amrex::ParallelFor(nrp,
-          [pstruct,plo,dx,dxi,vfrac,deposition_scale_factor,
+          [pstruct,plo,dx,dxi,vfrac,volarr,deposition_scale_factor,
            reg_cell_vol,WeightFunc,flagsarr,drag_arr]
           AMREX_GPU_DEVICE (int ip) noexcept
           {
@@ -218,8 +224,10 @@ FluidDragForceDeposition(F WeightFunc, int lev,
 
             amrex::Real weights[2][2][2];
 
-            WeightFunc(plo, dx, dxi, vfrac, p, i, j, k, weights,
-                deposition_scale_factor);
+            WeightFunc(plo, dx, dxi, flagsarr, p, i, j, k, weights,
+                       deposition_scale_factor);
+
+            amrex::Real pvol = p.rdata(realData::volume) / reg_cell_vol;
 
             amrex::Real pbeta = p.rdata(realData::dragx) / reg_cell_vol;
             amrex::Real pvx   = p.rdata(realData::velx) * pbeta;
@@ -232,7 +240,9 @@ FluidDragForceDeposition(F WeightFunc, int lev,
                   if (flagsarr(i+ii,j+jj,k+kk).isCovered())
                     continue;
 
-                  amrex::Real weight_vol = weights[ii+1][jj+1][kk+1];
+                  amrex::Real weight_vol = weights[ii+1][jj+1][kk+1] / vfrac(i+ii,j+jj,k+kk);
+
+                  amrex::Gpu::Atomic::Add(&volarr(i+ii,j+jj,k+kk), weight_vol*pvol);
 
                   amrex::Gpu::Atomic::Add(&drag_arr(i+ii,j+jj,k+kk,0),weight_vol*pvx);
                   amrex::Gpu::Atomic::Add(&drag_arr(i+ii,j+jj,k+kk,1),weight_vol*pvy);

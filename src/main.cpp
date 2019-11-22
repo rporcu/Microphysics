@@ -280,6 +280,11 @@ int main (int argc, char* argv[])
                      ( (stop_time >= 0.) && (time >  stop_time) ) ||
                      ( (stop_time <= 0.) && (max_step <= 0) ) );
 
+    amrex::Print() << " " << std::endl;
+    bool unused_inputs = ParmParse::QueryUnusedInputs();
+    if (unused_inputs) 
+       amrex::Print() << "We should think about aborting here..." << std::endl;
+
     { // Start profiling solve here
 
         BL_PROFILE("mfix_solve");

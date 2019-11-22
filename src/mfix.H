@@ -314,6 +314,8 @@ public:
 
     static amrex::Real m_deposition_diffusion_coeff;
     static amrex::Real m_deposition_scale_factor;
+    static amrex::Real m_max_solids_volume_fraction;
+
 
     static amrex::Real tcoll_ratio; // input parameter defaulted to 50 used in file src_des/init_collision.f90
 
@@ -321,6 +323,13 @@ public:
     void mfix_calc_particle_beta(F DragFunc, Real time);
     void mfix_calc_volume_fraction(Real & sum_vol);
     void mfix_deposition_bcs_scalar(int lev, amrex::MultiFab & filled_mf);
+
+    void mfix_redistribute_deposition (int lev,
+                                       amrex::MultiFab & mf_eps,
+                                       amrex::MultiFab & mf_to_redistribute,
+                                       const amrex::MultiFab * volfrac,
+                                       const amrex::FabArray<EBCellFlagFab>* flags,
+                                       amrex::Real max_eps);
 
     Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
     Real volEpsWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);

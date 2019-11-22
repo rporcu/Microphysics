@@ -4,3 +4,4 @@ CEXE_sources += mfix_diffuse_array.cpp
 CEXE_sources += mfix_diffuse_scalar.cpp
 CEXE_sources += mfix_deposition_bcs.cpp
 CEXE_sources += MFIX_PC_Deposition.cpp
+CEXE_sources += mfix_redistribute_deposition.cpp
