@@ -78,10 +78,16 @@ mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
             // Compute CFL on a per cell basis
             if (flags.getType(bx) != FabType::covered)
             {
-                AMREX_FOR_3D(bx, i, j, k,                                    
-                {
-                    if (!flags_fab(i,j,k).isCovered()) {
-                        
+              amrex::ParallelFor(bx,[ro,ep,gp0_dev,gradp,drag_fab,gravity_dev,vel,odx,ody,odz,flags_fab,mu,
+#ifdef AMREX_USE_CUDA
+                  cfl_max_ptr]
+#else
+                  &cfl_max]
+#endif
+                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                  {
+                    if (!flags_fab(i,j,k).isCovered())
+                    {  
                         Real acc[3];
                         Real qro  = 1.0/ro(i,j,k);
                         Real qep  = 1.0/ep(i,j,k);
@@ -110,7 +116,7 @@ mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
                         cfl_max = std::max(cfl_max, cfl_max_cell);
 #endif
                     }
-                });
+                  });
             }
         }
     }

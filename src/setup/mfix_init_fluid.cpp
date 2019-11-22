@@ -50,8 +50,13 @@ void init_fluid(const Box& sbx,
       const Real ro_g0  = get_ro_g0();
       const Real trac_0 = get_trac0();
 
-      AMREX_FOR_3D(sbx, i, j, k, {ro_g(i,j,k) = ro_g0;});
-      AMREX_FOR_3D(sbx, i, j, k, {trac(i,j,k) = trac_0;});
+      amrex::ParallelFor(sbx, [ro_g, ro_g0]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
+          { ro_g(i,j,k) = ro_g0; });
+
+      amrex::ParallelFor(sbx, [trac, trac_0]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
+          { trac(i,j,k) = trac_0; });
 
       if (test_tracer_conservation)
          init_periodic_tracer(bx, domain, vel_g_fab, trac_fab, dx, dy, dz);
@@ -336,20 +341,27 @@ void set_ic(const Box& sbx,
       {
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
-        AMREX_FOR_3D(box1, i, j, k, {velocity(i,j,k,0) = ugx;});
+
+        amrex::ParallelFor(box1, [velocity, ugx]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            { velocity(i,j,k,0) = ugx; });
 
         if(slo[0] < domlo[0] and domlo[0] == istart)
         {
           const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
           const Box box2(low2, hi2);
-          AMREX_FOR_3D(box2, i, j, k, {velocity(i,j,k,0) = ugx;});
+          amrex::ParallelFor(box2, [velocity, ugx]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+              { velocity(i,j,k,0) = ugx; });
         }
 
         if(shi[0] > domhi[0] and domhi[0] == iend)
         {
           const IntVect low3(iend+1, jstart, kstart), hi3(shi[0], jend, kend);
           const Box box3(low3, hi3);
-          AMREX_FOR_3D(box3, i, j, k, {velocity(i,j,k,0) = ugx;});
+          amrex::ParallelFor(box3, [velocity, ugx]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+              { velocity(i,j,k,0) = ugx; });
         }
       }
 
@@ -357,20 +369,27 @@ void set_ic(const Box& sbx,
       {
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
-        AMREX_FOR_3D(box1, i, j, k, {velocity(i,j,k,1) = vgx;});
+
+        amrex::ParallelFor(box1, [velocity, vgx]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            { velocity(i,j,k,1) = vgx; });
 
         if (slo[1] < domlo[1] and domlo[1] == jstart)
         {
           const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
           const Box box2(low2, hi2);
-          AMREX_FOR_3D(box2, i, j, k, {velocity(i,j,k,1) = vgx;});
+          amrex::ParallelFor(box2, [velocity, vgx]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+              { velocity(i,j,k,1) = vgx; });
         }
 
         if (shi[1] > domhi[1] and domhi[1] == jend)
         {
           const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
           const Box box3(low3, hi3);
-          AMREX_FOR_3D(box3, i, j, k, {velocity(i,j,k,1) = vgx;});
+          amrex::ParallelFor(box3, [velocity, vgx]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+              { velocity(i,j,k,1) = vgx; });
         }
       }
 
@@ -378,20 +397,26 @@ void set_ic(const Box& sbx,
       {
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
-        AMREX_FOR_3D(box1, i, j, k, {velocity(i,j,k,2) = wgx;});
+        amrex::ParallelFor(box1, [velocity, wgx]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            { velocity(i,j,k,2) = wgx; });
 
         if (slo[2] < domlo[2] and domlo[2] == kstart)
         {
           const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
           const Box box2(low2, hi2);
-          AMREX_FOR_3D(box2, i, j, k, {velocity(i,j,k,2) = wgx;});
+          amrex::ParallelFor(box2, [velocity, wgx]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+              { velocity(i,j,k,2) = wgx; });
         }
 
         if (shi[2] > domhi[2] and domhi[2] == kend)
         {
           const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
           const Box box3(low3, hi3);
-          AMREX_FOR_3D(box3, i, j, k, {velocity(i,j,k,2) = wgx;});
+          amrex::ParallelFor(box3, [velocity, wgx]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+              { velocity(i,j,k,2) = wgx; });
         }
       }
     }

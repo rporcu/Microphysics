@@ -182,7 +182,6 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
     if(mfix::m_deposition_diffusion_coeff > 0.)
       mfix_diffuse_scalar (ep_g, mfix::m_deposition_diffusion_coeff);
 
-
     for (int lev = 0; lev < nlev; lev++) {
       // Now define this mf = (1 - particle_vol)
       ep_g[lev]->mult(-1.0,ep_g[lev]->nGrow());

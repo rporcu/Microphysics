@@ -111,9 +111,17 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
             const auto& vmac_array = (*ep_v_mac[lev])[mfi].array();
             const auto& wmac_array = (*ep_w_mac[lev])[mfi].array();
 
-            AMREX_FOR_3D(ubx, i, j, k, { umac_array(i,j,k) = val; });
-            AMREX_FOR_3D(vbx, i, j, k, { vmac_array(i,j,k) = val; });
-            AMREX_FOR_3D(wbx, i, j, k, { wmac_array(i,j,k) = val; });
+            amrex::ParallelFor(ubx, [umac_array,val]
+                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                { umac_array(i,j,k) = val; });
+
+            amrex::ParallelFor(vbx, [vmac_array,val]
+                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                { vmac_array(i,j,k) = val; });
+
+            amrex::ParallelFor(wbx, [wmac_array,val]
+                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                { wmac_array(i,j,k) = val; });
 
             Gpu::synchronize();
 

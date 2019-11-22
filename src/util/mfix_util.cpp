@@ -80,7 +80,8 @@ mfix::mfix_compute_vort ()
 
           if (flags.getType(amrex::grow(bx,0)) == FabType::regular )
           {
-            amrex::ParallelFor(bx, [odx,ody,odz,velocity_g,vorticity] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            amrex::ParallelFor(bx, [odx,ody,odz,velocity_g,vorticity]
+                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               Real uy = .5*ody*(velocity_g(i,j+1,k,0) - velocity_g(i,j-1,k,0));
               Real uz = .5*odz*(velocity_g(i,j,k+1,0) - velocity_g(i,j,k-1,0));
@@ -103,58 +104,36 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 {
     BL_PROFILE("mfix::volWgtSum()");
 
-    Real        sum     = 0.0;
-    //const Real* dx      = geom[lev].CellSize(); // UNUSED_VARIABLE
-
     const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
 
 #ifdef AMREX_USE_CUDA
-    bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
+    bool switch_GPU_launch(false);
 
-    if(notInLaunchRegionStatus == true)
+    if(Gpu::notInLaunchRegion())
+    {
+      switch_GPU_launch = true;
       Gpu::setLaunchRegion(true);
-
-    {
-      Gpu::DeviceScalar<Real> sum_gpu(sum);
-      Real* psum = sum_gpu.dataPtr();
+    }
 #endif
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:sum) if (Gpu::notInLaunchRegion())
-#endif
-    for (MFIter mfi(mf,TilingIfNotGPU()); mfi.isValid(); ++mfi)
-    {
-        const FArrayBox& fab = mf[mfi];
-
-        const unsigned int fab_numPts = fab.numPts();
-        Array4<const Real> const& rho = fab.array();
-
-        const Box& bx  = mfi.tilebox();
-
-        Array4<const Real> const& vol = volfrac->array(mfi);
-
-        const unsigned int offset = comp * fab_numPts;
-
-        AMREX_FOR_3D(bx, i, j, k,
+    Real sum = amrex::ReduceSum(mf, *volfrac, 0,
+        [comp] AMREX_GPU_HOST_DEVICE (Box const & bx,
+                                      FArrayBox const & rho_fab,
+                                      FArrayBox const & volfrac_fab)
         {
-          Real dm(0);
+          Real dm = 0.0;
+          const auto rho = rho_fab.const_array();
+          const auto vfrc = volfrac_fab.const_array();
 
-          dm = rho(i+offset,j,k) * vol(i,j,k);
-
-#ifdef AMREX_USE_CUDA
-          Gpu::Atomic::Add(psum,dm);
-#else
-          sum += dm;
-#endif
-        });
-    }
+          amrex::Loop(bx, [rho,vfrc,comp,&dm] (int i, int j, int k) noexcept
+              { dm += rho(i,j,k,comp) * vfrc(i,j,k); });
+          
+          return dm;
+        });   
 
 #ifdef AMREX_USE_CUDA
-      sum = sum_gpu.dataValue();
-    }
-
-    if(notInLaunchRegionStatus == true)
-      Gpu::setLaunchRegion(notInLaunchRegionStatus);
+    if(switch_GPU_launch)
+      Gpu::setLaunchRegion(false);
 #endif
 
     if (!local)
@@ -168,49 +147,38 @@ mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 {
     BL_PROFILE("mfix::volEpsWgtSum()");
 
-    Real        sum     = 0.0;
-    //const Real* dx      = geom[lev].CellSize(); // UNUSED_VARIABLE
-
     const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
 
 #ifdef AMREX_USE_CUDA
-    Gpu::DeviceScalar<Real> sum_gpu(sum);
-    Real* psum = sum_gpu.dataPtr();
-#endif
+    bool switch_GPU_launch(false);
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:sum) if (Gpu::notInLaunchRegion())
-#endif
-    for (MFIter mfi(mf,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+    if(Gpu::notInLaunchRegion())
     {
-        const FArrayBox& fab = mf[mfi];
-
-        const unsigned int fab_numPts = fab.numPts();
-        Array4<const Real> const& rho = fab.array();
-
-        const Box& box  = mfi.tilebox();
-
-        Array4<const Real> const& vol = volfrac->array(mfi);
-        Array4<const Real> const&  ep = ep_g[lev]->array(mfi);
-
-        const unsigned int offset = comp * fab_numPts;
-
-        AMREX_FOR_3D(box, i, j, k,
-        {
-          Real dm(0);
-
-          dm = rho(i+offset,j,k) * vol(i,j,k) * ep(i,j,k);
-
-#ifdef AMREX_USE_CUDA
-          Gpu::Atomic::Add(psum,dm);
-#else
-          sum += dm;
-#endif
-        });
+      switch_GPU_launch = true;
+      Gpu::setLaunchRegion(true);
     }
+#endif
+
+    Real sum = amrex::ReduceSum(mf, *volfrac, *(ep_g[lev]), 0,
+        [comp] AMREX_GPU_HOST_DEVICE (Box const & bx,
+                                      FArrayBox const & rho_fab,
+                                      FArrayBox const & volfrac_fab,
+                                      FArrayBox const & ep_g_fab)
+        {
+          Real dm = 0.0;
+          const auto rho = rho_fab.const_array();
+          const auto vfrc = volfrac_fab.const_array();
+          const auto ep = ep_g_fab.const_array();
+
+          amrex::Loop(bx, [rho,vfrc,ep,comp,&dm] (int i, int j, int k) noexcept
+              { dm += rho(i,j,k,comp) * vfrc(i,j,k) * ep(i,j,k); });
+          
+          return dm;
+        });   
 
 #ifdef AMREX_USE_CUDA
-    sum = sum_gpu.dataValue();
+    if(switch_GPU_launch)
+      Gpu::setLaunchRegion(false);
 #endif
 
     if (!local)

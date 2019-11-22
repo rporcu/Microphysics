@@ -18,5 +18,7 @@ void calc_mu_g(const Box& bx,
   else
     mu_val = mu_g0;
 
-  AMREX_FOR_3D(bx, i, j, k, {mu_g(i,j,k) = mu_val;});
+  amrex::ParallelFor(bx, [mu_g,mu_val]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {mu_g(i,j,k) = mu_val;});
 }
