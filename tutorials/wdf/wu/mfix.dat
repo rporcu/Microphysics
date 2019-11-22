@@ -1,0 +1,69 @@
+########################################################################
+#                                                                      #
+# Author: J. Musser, wdf Mehrdad Shahnam                Date: 11-2019  #
+#                                                                      #
+# Description: Wu's bed (big Mehrdad's bed) for ordered L-R bubbling   #
+#                                                                      #
+# Reference: K. Wu, et al., Pattern formation in pulsed gas-solid      #
+#            fluidized beds - the role of granular solid mechanics     # 
+#            Chem. Eng. J., 329, 4--14 (2017).                         # 
+#                                                                      #
+########################################################################
+
+  RUN_NAME = 'R'
+  DESCRIPTION = 'Wu - periodic Bubbling'
+
+#_______________________________________________________________________
+# RUN CONTROL SECTION
+
+  CALL_USR = .T.
+  FULL_LOG = .T.
+
+  GRAVITY(1) = -9.80665
+  GRAVITY(2) =  0.00
+  GRAVITY(3) =  0.00
+
+#_______________________________________________________________________
+# MATERIAL SECTION
+
+! Gas Section
+!---------------------------------------------------------------------//
+  RO_g0 = 1.2      ! (kg/m3)
+  MU_g0 = 1.8d-5   ! (Pa.sec)
+
+! Particle Section
+!---------------------------------------------------------------------//
+
+  PARTICLE_TYPES=1
+
+! Restitution coefficient.
+  DES_EN_INPUT = 0.970       ! particle-particle
+  DES_EN_WALL_INPUT = 0.97   ! particle-wall
+
+! Friction coefficient.
+  MEW =   0.35               ! particle-particle
+  MEW_W = 0.10               ! particle-wall
+
+! Normal collision spring constant. (N/m)
+  KN =    210.0              ! particle-particle
+  KN_W =  210.0              ! particle-wall
+
+#_______________________________________________________________________
+# INITIAL CONDITIONS SECTION
+
+! Full domain coverage w/ random particles
+  IC_X_w(1) =   0.000  ! (m)
+  IC_X_e(1) =   0.090  ! (m)
+  IC_Y_s(1) =   0.000  ! (m)
+  IC_Y_n(1) =   0.450  ! (m)
+  IC_Z_b(1) =   0.000  ! (m)
+  IC_Z_t(1) =   0.010  ! (m)
+
+  IC_EP_g(1) =  1.0d0  ! (m)
+
+  IC_U_g(1) =   0.000  ! (m)
+  IC_V_g(1) =   0.000  ! (m)
+  IC_W_g(1) =   0.000  ! (m)
+
+
+
