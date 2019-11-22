@@ -38,22 +38,11 @@ amr.max_grid_size_x =  8
 amr.max_grid_size_y =  8
 amr.max_grid_size_z =  8
 
-
-# Particles (not with KDTree)
-#particles.max_grid_size_x =   1024
-#particles.max_grid_size_y =   1024
-#particles.max_grid_size_z =   1024
-
-
 #! Tiles
 #!-----------------------------------------------------------//
 
 # Fluid: Maximum tile size within each grid
 fabarray.mfiter_tile_size = 1024 1024 1024
-
-# Particles: Maximum particle title size
-particles.tile_size = 1024 1024 1024
-
 
 #! EB settings
 #!-----------------------------------------------------------//
