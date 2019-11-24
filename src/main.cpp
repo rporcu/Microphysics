@@ -106,8 +106,11 @@ int main (int argc, char* argv[])
     }
 
     // Issue an error if AMR input file is not given
-    if ( argc < 2 )
-       amrex::Abort("AMReX input file missing");
+    if ( argc < 2 ) {
+       std::cerr << "AMReX input file missing" << std::endl << std::endl;
+       std::cerr << "Usage:  " << argv[0] << " inputs [--describe]" << std::endl;
+       return -1;
+    }
 
     // AMReX will now read the inputs file and the command line arguments, but the
     //        command line arguments are in mfix-format so it will just ignore them.
