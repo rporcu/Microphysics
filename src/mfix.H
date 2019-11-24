@@ -91,7 +91,7 @@ public:
                              int nstep = 0, Real dt = 0.0, Real time = 0.0)  const;
 
     void WritePlotFile(std::string & plot_file_name,
-                       int nstep = 0, Real dt = 0.0, Real time = 0.0) const;
+                       int nstep = 0, Real time = 0.0) const;
 
     //! Save variables that don't change to plot file. The idea is that they can
     //! be saved _once_ per simulations and not repeatedly every Nth time step.

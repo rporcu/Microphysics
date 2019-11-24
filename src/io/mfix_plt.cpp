@@ -130,13 +130,13 @@ mfix::InitIOPltData ()
 
 }
 
-void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time ) const
+void mfix::WritePlotFile (std::string& plot_file, int nstep, Real time ) const
 {
     BL_PROFILE("mfix::WritePlotFile()");
 
     const std::string& plotfilename = amrex::Concatenate(plot_file,nstep);
 
-    amrex::Print() << "  Writing plotfile " << plotfilename << std::endl;
+    amrex::Print() << "  Writing plotfile " << plotfilename <<  " at time " << time << std::endl;
 
 
     if (pltVarCount > 0) {

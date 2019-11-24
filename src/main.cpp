@@ -30,6 +30,7 @@ std::string check_file {"chk"};
 
 int   plot_int = -1;
 int   last_plt = -1;
+Real  plot_per = -1.0;
 std::string plot_file {"plt"};
 std::string static_plt_file {"plt_ls"};
 
@@ -59,6 +60,10 @@ void ReadParameters ()
 
      pp.query("plot_file", plot_file);
      pp.query("plot_int", plot_int);
+     pp.query("plot_per", plot_per);
+
+     if ( plot_int > 0 && plot_per > 0)
+       amrex::Abort("Must choose either plot_int or plot_per, not both");
 
      pp.query("plotfile_on_restart", plotfile_on_restart);
 
@@ -89,6 +94,72 @@ void ReadParameters ()
      pp.query("write_eb_surface", write_eb_surface);
      pp.query("write_ls", write_ls);
   }
+}
+
+void writeNow (int nstep, Real time, Real dt, bool solve_fluid, mfix& my_mfix)
+{
+    int plot_test = 0;
+    if (plot_per > 0.0)
+    {
+
+        // Check to see if we've crossed a plot_per interval by comparing
+        // the number of intervals that have elapsed for both the current
+        // time and the time at the beginning of this timestep.
+
+        int num_per_old = (time-dt) / plot_per;
+        int num_per_new = (time   ) / plot_per;
+
+        // Before using these, however, we must test for the case where we're
+        // within machine epsilon of the next interval. In that case, increment
+        // the counter, because we have indeed reached the next plot_per interval
+        // at this point.
+
+        const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * std::abs(time);
+        const Real next_plot_time = (num_per_old + 1) * plot_per;
+
+        if ((num_per_new == num_per_old) && std::abs(time - next_plot_time) <= eps)
+        {
+            num_per_new += 1;
+        }
+
+        // Similarly, we have to account for the case where the old time is within
+        // machine epsilon of the beginning of this interval, so that we don't double
+        // count that time threshold -- we already plotted at that time on the last timestep.
+
+        if ((num_per_new != num_per_old) && std::abs((time - dt) - next_plot_time) <= eps)
+            num_per_old += 1;
+
+        if (num_per_old != num_per_new)
+            plot_test = 1;
+    }
+
+    if ( (plot_test == 1) || ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) ) )
+    {
+        if (solve_fluid)
+           my_mfix.mfix_compute_vort();
+        my_mfix.WritePlotFile( plot_file, nstep, time );
+        last_plt = nstep;
+    }
+
+
+    if ( ( check_int > 0) && ( nstep %  check_int == 0 ) )
+    {
+        my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
+        last_chk = nstep;
+    }
+
+    if ( ( par_ascii_int > 0) && ( nstep %  par_ascii_int == 0 ) )
+    {
+        my_mfix.WriteParticleAscii( par_ascii_file, nstep );
+        last_par_ascii = nstep;
+    }
+
+
+    if ( ( avg_int > 0) && ( nstep %  avg_int == 0 ) )
+      {
+        my_mfix.WriteAverageRegions( avg_file, nstep, time );
+        last_avg = nstep;
+      }
 }
 
 int main (int argc, char* argv[])
@@ -246,12 +317,12 @@ int main (int argc, char* argv[])
     Real prev_dt = dt;
 
     // We automatically write checkpoint and plotfiles with the initial data
-    //    if plot_int > 0
-    if ( (restart_file.empty() || plotfile_on_restart) && plot_int > 0 )
+    //    if ( plot_int > 0 || plot_per > 0)
+    if ( (restart_file.empty() || plotfile_on_restart) && (plot_int > 0 || plot_per > 0) )
     {
        if (solve_fluid)
           my_mfix.mfix_compute_vort();
-       my_mfix.WritePlotFile( plot_file, nstep, dt, time );
+       my_mfix.WritePlotFile( plot_file, nstep, time );
     }
 
     // We automatically write checkpoint files with the initial data
@@ -316,33 +387,7 @@ int main (int argc, char* argv[])
                     time += prev_dt;
                     nstep++;
 
-                    if ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) )
-                    {
-                        if (solve_fluid)
-                           my_mfix.mfix_compute_vort();
-                        my_mfix.WritePlotFile( plot_file, nstep, dt, time );
-                        last_plt = nstep;
-                    }
-
-                    if ( ( check_int > 0) && ( nstep %  check_int == 0 ) )
-                    {
-                        my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
-                        last_chk = nstep;
-                    }
-
-                    if ( ( par_ascii_int > 0) && ( nstep %  par_ascii_int == 0 ) )
-                    {
-                        my_mfix.WriteParticleAscii( par_ascii_file, nstep );
-                        last_par_ascii = nstep;
-                    }
-
-
-                    if ( ( avg_int > 0) && ( nstep %  avg_int == 0 ) )
-                      {
-                        my_mfix.WriteAverageRegions( avg_file, nstep, time );
-                        last_avg = nstep;
-                      }
-
+                    writeNow(nstep,time,prev_dt,solve_fluid,my_mfix);
                 }
 
                 // Mechanism to terminate MFIX normally.
@@ -361,7 +406,7 @@ int main (int argc, char* argv[])
     if ( check_int > 0 && nstep != last_chk)
         my_mfix.WriteCheckPointFile( check_file    , nstep, dt, time );
     if ( plot_int > 0  && nstep != last_plt)
-        my_mfix.WritePlotFile      ( plot_file     , nstep, dt, time );
+        my_mfix.WritePlotFile      ( plot_file     , nstep, time );
     if ( par_ascii_int > 0  && nstep != last_par_ascii)
         my_mfix.WriteParticleAscii ( par_ascii_file, nstep );
 
