@@ -39,8 +39,8 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
    if (m_verbose)
       Print() << " >> Before projection\n" ;
 
-    // Set bc's on scalars to be sure ro_face and ep_face see correct bcs
-    mfix_set_scalar_bcs(time,ro_in,trac,ep_in,mu_g);
+    // Set bc's on density and ep_g so ro_face and ep_face will have correct values
+    mfix_set_density_bcs(time,ro_in);
 
    // ro_face and ep_face are temporary, no need to keep it outside this routine
    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ro_face;

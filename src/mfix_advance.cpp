@@ -47,7 +47,8 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
     // Fill ghost nodes and reimpose boundary conditions
     mfix_set_velocity_bcs (time, vel_g, 0);
-    mfix_set_scalar_bcs   (time, ro_g, trac, ep_g, mu_g);
+    mfix_set_density_bcs  (time, ro_g);
+    mfix_set_scalar_bcs   (time, trac, mu_g);
 
     //
     // Start loop: if we are not seeking a steady state solution,
@@ -218,7 +219,8 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     // Fill ghost nodes and reimpose boundary conditions
     mfix_set_velocity_bcs (time, vel_g, 0);
-    mfix_set_scalar_bcs   (time, ro_g, trac, ep_g, mu_g);
+    mfix_set_density_bcs  (time, ro_g);
+    mfix_set_scalar_bcs   (time, trac, mu_g);
 
     // Copy vel_g into vel_go
     for (int lev = 0; lev < nlev; lev++)
@@ -274,7 +276,8 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
        // Reset the boundary values (necessary if they are time-dependent)
        mfix_set_velocity_bcs (time, vel_g, 0);
-       mfix_set_scalar_bcs   (time, ro_g, trac, ep_g, mu_g);
+       mfix_set_density_bcs  (time, ro_g);
+       mfix_set_scalar_bcs   (time, trac, mu_g);
    }
 
    Gpu::synchronize();
@@ -393,7 +396,8 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     // Note we multiply ep_g by ro_g so that we pass in a single array holding (ro_g * ep_g)
     if (explicit_diffusion_pred == 0)
     {
-        mfix_set_scalar_bcs   (time, ro_g, trac, ep_g, mu_g);
+        mfix_set_density_bcs  (time, ro_g);
+        mfix_set_scalar_bcs   (time, trac, mu_g);
 
         for (int lev = 0; lev < nlev; lev++)
             MultiFab::Multiply(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
@@ -535,14 +539,15 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     if (solve_dem)
         mfix_add_drag_implicit(dt);
 
-    mfix_set_scalar_bcs   (time, ro_g, trac, ep_g, mu_g);
-
     //
     // Solve for u^star s.t. u^star = u_go + dt/2 (R_u^* + R_u^n) + dt/2 (Lu)^n + dt/2 (Lu)^star
     // Note we multiply ep_g by ro_g so that we pass in a single array holding (ro_g * ep_g)
     //
     for (int lev = 0; lev < nlev; lev++)
         MultiFab::Multiply(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
+
+    mfix_set_density_bcs  (time, ro_g);
+    mfix_set_scalar_bcs   (time, trac, mu_g);
 
     mfix_set_velocity_bcs (new_time, vel_g, 0);
     diffusion_op->diffuse_velocity(vel_g, ep_g, mu_g, 0.5*dt);

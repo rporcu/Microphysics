@@ -235,13 +235,14 @@ public:
                                  Vector< std::unique_ptr<MultiFab> >& vel,
                                  int extrap_dir_bcs) const;
 
-    void mfix_set_eps_bcs (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps) const;
+    void mfix_set_eps_bcs     (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps) const;
 
-    void mfix_set_scalar_bcs (Real time,
-                              Vector< std::unique_ptr<MultiFab> >& ro_g,
-                              Vector< std::unique_ptr<MultiFab> >& trac,
-                              Vector< std::unique_ptr<MultiFab> >& ep_g,
-                              Vector< std::unique_ptr<MultiFab> >& mu_g);
+    void mfix_set_density_bcs (Real time,
+                               Vector< std::unique_ptr<MultiFab> >& ro_g);
+
+    void mfix_set_scalar_bcs  (Real time,
+                               Vector< std::unique_ptr<MultiFab> >& trac,
+                               Vector< std::unique_ptr<MultiFab> >& mu_g);
 
     void set_velocity_bcs(Real time,
                           const int lev,
@@ -254,6 +255,10 @@ public:
                      const Box& domain,
                      const int* extrap_dir_bcs) const;
 
+    void set_density_bcs(Real time,
+                         const int lev,
+                         FArrayBox& scal_fab,
+                         const Box& domain);
 
     void set_scalar_bcs(Real time,
                         const int lev,

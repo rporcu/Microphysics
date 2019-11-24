@@ -11,9 +11,7 @@ using namespace amrex;
 //
 void
 mfix::mfix_set_scalar_bcs (Real time,
-                           Vector< std::unique_ptr<MultiFab> > & ro_g_in,
                            Vector< std::unique_ptr<MultiFab> > & trac_in,
-                           Vector< std::unique_ptr<MultiFab> > & ep_g_in,
                            Vector< std::unique_ptr<MultiFab> > & mu_g_in)
 {
   BL_PROFILE("mfix::mfix_set_scalar_bcs()");
@@ -27,23 +25,17 @@ mfix::mfix_set_scalar_bcs (Real time,
 #endif
      for (MFIter mfi(*ep_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
      {
-        set_scalar_bcs(time, lev, (*ro_g_in[lev])[mfi], 0, domain);
-        set_scalar_bcs(time, lev, (*ep_g_in[lev])[mfi], 2, domain);
         set_scalar_bcs(time, lev, (*mu_g_in[lev])[mfi], 3, domain);
 
         if (advect_tracer)
            set_scalar_bcs(time, lev, (*trac_in[lev])[mfi], 1, domain);
      }
 
-     ro_g_in[lev] -> FillBoundary (geom[lev].periodicity());
-     ep_g_in[lev] -> FillBoundary (geom[lev].periodicity());
      mu_g_in[lev] -> FillBoundary (geom[lev].periodicity());
 
      if (advect_tracer)
         trac_in[lev] -> FillBoundary (geom[lev].periodicity());
 
-     EB_set_covered(*ro_g_in[lev], 0, ro_g_in[lev]->nComp(), ro_g_in[lev]->nGrow(), covered_val);
-     EB_set_covered(*ep_g_in[lev], 0, ep_g_in[lev]->nComp(), ep_g_in[lev]->nGrow(), covered_val);
      EB_set_covered(*mu_g_in[lev], 0, mu_g_in[lev]->nComp(), mu_g_in[lev]->nGrow(), covered_val);
 
      if (advect_tracer)
@@ -73,12 +65,8 @@ mfix::set_scalar_bcs(Real time,
 
   Real bc0;
 
-  if (comp == 0) {
-     bc0 = get_ro_g0();
-  } else if (comp == 1) {
+  if (comp == 1) {
      bc0 = get_trac0();
-  } else if (comp == 2) {
-    // We don't have a default value for ep_g
   } else if (comp == 3) {
      bc0 = get_mu_g0();
   }
