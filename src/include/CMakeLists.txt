@@ -10,7 +10,6 @@ target_sources( mfixcore
    geometry.inc
    initial_conditions.inc
    physical_params.inc
-   point_sources.inc
    run_control.inc
    species.inc
    species_indices.inc

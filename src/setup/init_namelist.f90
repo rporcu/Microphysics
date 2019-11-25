@@ -38,10 +38,6 @@ MODULE INIT_NAMELIST_MODULE
       use run, only: full_log, nlog
       use output, only: usr_dt
       use output, only: usr_x_w, usr_x_e, usr_y_n, usr_y_s, usr_z_b, usr_z_t
-      use ps, only: dim_ps
-      use ps, only: ps_massflow_g
-      use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
-      use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t,  ps_x_w
       use run, only: call_usr, description
       use run, only: run_name
       use scales, only: p_ref, p_scale
@@ -547,82 +543,6 @@ MODULE INIT_NAMELIST_MODULE
 
 
 
-!#####################################################################!
-!                     Point Source Mass Inlets                        !
-!#####################################################################!
-
-!<keyword category="Point Source" required="false">
-!  <description>X coordinate of the west face or edge.</description>
-!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-      PS_X_W(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>X coordinate of the east face or edge.</description>
-!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-      PS_X_E(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>Y coordinate of the south face or edge.</description>
-!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-      PS_Y_S(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>Y coordinate of the north face or edge.</description>
-!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-      PS_Y_N(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>Z coordinate of the bottom face or edge.</description>
-!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-      PS_Z_B(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>Z coordinate of the top face or edge.</description>
-!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-      PS_Z_T(:) = UNDEFINED
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>X-component of incoming gas velocity.</description>
-!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-      PS_U_G(:) = ZERO
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>Y-component of incoming gas velocity.</description>
-!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-      PS_V_G(:) = ZERO
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>Z-component of incoming gas velocity.</description>
-!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-      PS_W_G(:) = ZERO
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>Gas mass flow rate through the point source.</description>
-!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-      PS_MASSFLOW_G(:) = ZERO
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>Temperature of incoming gas.</description>
-!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-      PS_T_G(:) = 293.15d0
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>Gas phase incoming species n mass fraction.</description>
-!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
-!  <arg index="2" id="Species" min="1" max="DIM_N_G"/>
-      PS_X_G(:,:) = UNDEFINED
-!</keyword>
 
 
 

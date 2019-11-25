@@ -26,8 +26,6 @@ extern "C"
 
     void write_usr0();
 
-    void set_ps(amrex::Real* dx, amrex::Real* dy, amrex::Real* dz, int* err, int* is_ioproc);
-
     void set_delp_dir(int* delp_dir);
 
     void mfix_get_data(
@@ -44,8 +42,6 @@ extern "C"
     void check_boundary_conditions(amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
              amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
              const int* domlo, const int* domhi);
-
-    void check_point_sources(amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
 
     void check_bc_flow();
 

@@ -34,9 +34,6 @@ MODULE read_namelist_module
       use run, only: full_log, nlog
       use output, only: usr_x_w, usr_x_e, usr_y_n, usr_y_s, usr_z_b, usr_z_t
       use output, only: usr_dt
-      use ps, only: ps_massflow_g
-      use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
-      use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_w
       use run, only: call_usr, description
       use run, only: run_name
       use scales, only: p_ref, p_scale
@@ -175,7 +172,6 @@ MODULE read_namelist_module
       include 'geometry.inc'
       include 'gas_phase.inc'
       include 'initial_conditions.inc'
-      include 'point_sources.inc'
       include 'usr_hooks.inc'
       include 'desnamelist.inc'
 
@@ -221,12 +217,6 @@ MODULE read_namelist_module
       STRING=''; STRING = '&INITIAL_CONDITIONS '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
       READ(STRING, NML=INITIAL_CONDITIONS, IOSTAT=IOS)
-      IF(IOS == 0)  RETURN
-
-! Point source keywords
-      STRING=''; STRING = '&POINT_SOURCES '//&
-         trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=POINT_SOURCES, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
 

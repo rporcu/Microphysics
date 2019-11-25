@@ -409,18 +409,6 @@ void mfix::Init( Real time)
        write_usr0();
     }
 
-    // Set point sources.
-    {
-        int err_ps = 0;
-        int is_ioproc = 0;
-        if ( ParallelDescriptor::IOProcessor() )
-            is_ioproc = 1;
-
-        set_ps(&dx,&dy,&dz,&err_ps,&is_ioproc);
-
-        if (err_ps == 1)
-            amrex::Abort("Bad data in set_ps");
-    }
 
     for (int lev = 0; lev < nlev; lev++)
         mfix_set_bc_type(lev);
@@ -567,7 +555,6 @@ void mfix::check_data ()
     if ( ParallelDescriptor::IOProcessor() )
     {
 //     check_boundary_conditions(&dx,&dy,&dz,&xlen,&ylen,&zlen,domain.loVect(),domain.hiVect());
-       check_point_sources(&dx,&dy,&dz);
        check_bc_flow();
     }
 }
