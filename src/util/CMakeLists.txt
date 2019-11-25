@@ -10,7 +10,7 @@ target_sources( mfixcore
    mfix_fillpatch.cpp
    interpolation_m.f90
    mfix_set_velocity_bcs.cpp
-   mfix_set_eps_bcs.cpp
+   mfix_set_epg_bcs.cpp
    mfix_set_density_bcs.cpp
    mfix_set_scalar_bcs.cpp
    MFIX_MFHelpers.H

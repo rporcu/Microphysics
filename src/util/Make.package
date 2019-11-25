@@ -13,4 +13,4 @@ F90EXE_headers += mfix_util_F.H
 CEXE_headers +=   MFIX_MFHelpers.H
 CEXE_sources +=   MFIX_MFHelpers.cpp
 
-CEXE_sources += mfix_set_eps_bcs.cpp
+CEXE_sources += mfix_set_epg_bcs.cpp

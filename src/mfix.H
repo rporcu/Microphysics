@@ -235,7 +235,7 @@ public:
                                  Vector< std::unique_ptr<MultiFab> >& vel,
                                  int extrap_dir_bcs) const;
 
-    void mfix_set_eps_bcs     (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps) const;
+    void mfix_set_epg_bcs     (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps) const;
 
     void mfix_set_density_bcs (Real time,
                                Vector< std::unique_ptr<MultiFab> >& ro_g);
@@ -250,7 +250,7 @@ public:
                           const Box& domain,
                           const int* extrap_dir_bcs) const;
 
-    void set_eps_bcs(const int lev,
+    void set_epg_bcs(const int lev,
                      FArrayBox& eps_fab,
                      const Box& domain,
                      const int* extrap_dir_bcs) const;

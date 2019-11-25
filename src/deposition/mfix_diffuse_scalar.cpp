@@ -24,7 +24,7 @@ mfix::mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> > & mf
    // Whole domain
    Box domain(geom[0].Domain());
 
-   mfix_set_eps_bcs(mf_to_diffuse);
+   mfix_set_epg_bcs(mf_to_diffuse);
 
    // Set BCs for Poisson's solver
    set_scal_diff_bc (bc_lo, bc_hi,
