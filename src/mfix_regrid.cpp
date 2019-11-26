@@ -85,8 +85,6 @@ mfix::Regrid ()
 
                     fluid_cost[lev].reset(new MultiFab(grids[lev], new_fluid_dm, 1, 0));
                     fluid_cost[lev]->setVal(0.0);
-
-                    Gpu::synchronize();
                 }
             }
 
@@ -117,8 +115,6 @@ mfix::Regrid ()
                 //  and regrids all the multifabs that depend on it
                 if (solve_dem)
                     RegridLevelSetArray(lev);
-
-                Gpu::synchronize();
             }
 
         }
@@ -149,8 +145,6 @@ mfix::Regrid ()
                                                             * particle_cost[base_lev], true);
 
                 costs.plus(particle_cost_loc, 0, 1, 0);
-
-                Gpu::synchronize();
             }
             if (solve_fluid) {
                 // costs.plus(* fluid_cost[base_lev], 0, 1, 0);
@@ -161,8 +155,6 @@ mfix::Regrid ()
                                                          * fluid_cost[base_lev], true);
 
                 costs.plus(fluid_cost_loc, 0, 1, 0);
-
-                Gpu::synchronize();
             }
 
             DistributionMapping newdm = DistributionMapping::makeKnapSack(costs,knapsack_nmax);
@@ -195,8 +187,6 @@ mfix::Regrid ()
             // all the multifab that depend on it
             if (solve_dem)
                 RegridLevelSetArray(base_lev);
-
-            Gpu::synchronize();
         }
     }
 
