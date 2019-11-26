@@ -40,30 +40,6 @@ mfix::set_bc0(const Box& sbx,
   const int ntop = std::max(0,sbx_hi[1]-dom_hi[1]);
   const int nup  = std::max(0,sbx_hi[2]-dom_hi[2]);
 
-  // Create InVects for following 3D Boxes
-  IntVect bx_yz_lo_hi_3D(sbx_hi), bx_xz_lo_hi_3D(sbx_hi), bx_xy_lo_hi_3D(sbx_hi);
-  IntVect bx_yz_hi_lo_3D(sbx_lo), bx_xz_hi_lo_3D(sbx_lo), bx_xy_hi_lo_3D(sbx_lo);
-
-  // Fix lo and hi limits
-  bx_yz_lo_hi_3D[0] = dom_lo[0]-1;
-  bx_yz_hi_lo_3D[0] = dom_hi[0]+1;
-
-  bx_xz_lo_hi_3D[1] = dom_lo[1]-1;
-  bx_xz_hi_lo_3D[1] = dom_hi[1]+1;
-
-  bx_xy_lo_hi_3D[2] = dom_lo[2]-1;
-  bx_xy_hi_lo_3D[2] = dom_hi[2]+1;
-
-  // Create 3D boxes for CUDA loops
-  const Box bx_yz_lo_3D(sbx_lo, bx_yz_lo_hi_3D);
-  const Box bx_yz_hi_3D(bx_yz_hi_lo_3D, sbx_hi);
-
-  const Box bx_xz_lo_3D(sbx_lo, bx_xz_lo_hi_3D);
-  const Box bx_xz_hi_3D(bx_xz_hi_lo_3D, sbx_hi);
-
-  const Box bx_xy_lo_3D(sbx_lo, bx_xy_lo_hi_3D);
-  const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, sbx_hi);
-
   const Real undefined = get_undefined();
 
   const int minf = bc_list.get_minf();
@@ -75,6 +51,13 @@ mfix::set_bc0(const Box& sbx,
 
   if (nlft > 0)
   {
+    IntVect bx_yz_lo_hi_3D(sbx_hi);
+  
+    // Fix lo and hi limits
+    bx_yz_lo_hi_3D[0] = dom_lo[0]-1;
+
+    const Box bx_yz_lo_3D(sbx_lo, bx_yz_lo_hi_3D);
+
     amrex::ParallelFor(bx_yz_lo_3D,
         [a_bc_ilo,dom_lo,pinf,pout,minf,ro_g0,trac_0,mu_g0,undefined,
          p_bc_t_g,p_bc_ep_g,a_ep_g,a_ro_g,a_trac,a_mu_g]
@@ -104,6 +87,13 @@ mfix::set_bc0(const Box& sbx,
   
   if (nrgt > 0)
   {
+    IntVect bx_yz_hi_lo_3D(sbx_lo);
+
+    // Fix lo and hi limits
+    bx_yz_hi_lo_3D[0] = dom_hi[0]+1;
+
+    const Box bx_yz_hi_3D(bx_yz_hi_lo_3D, sbx_hi);
+    
     amrex::ParallelFor(bx_yz_hi_3D,
         [a_bc_ihi,dom_hi,pinf,pout,minf,ro_g0,trac_0,mu_g0,undefined,
          p_bc_t_g,p_bc_ep_g,a_ep_g,a_ro_g,a_trac,a_mu_g]
@@ -133,6 +123,13 @@ mfix::set_bc0(const Box& sbx,
 
   if (nbot > 0)
   {
+    IntVect bx_xz_lo_hi_3D(sbx_hi);
+  
+    // Fix lo and hi limits
+    bx_xz_lo_hi_3D[1] = dom_lo[1]-1;
+
+    const Box bx_xz_lo_3D(sbx_lo, bx_xz_lo_hi_3D);
+
     amrex::ParallelFor(bx_xz_lo_3D,
         [a_bc_jlo,dom_lo,pinf,pout,minf,ro_g0,trac_0,mu_g0,undefined,
          p_bc_t_g,p_bc_ep_g,a_ep_g,a_ro_g,a_trac,a_mu_g]
@@ -162,6 +159,13 @@ mfix::set_bc0(const Box& sbx,
 
   if (ntop > 0)
   {
+    IntVect bx_xz_hi_lo_3D(sbx_lo);
+  
+    // Fix lo and hi limits
+    bx_xz_hi_lo_3D[1] = dom_hi[1]+1;
+
+    const Box bx_xz_hi_3D(bx_xz_hi_lo_3D, sbx_hi);
+
     amrex::ParallelFor(bx_xz_hi_3D,
         [a_bc_jhi,dom_hi,pinf,pout,minf,ro_g0,trac_0,mu_g0,undefined,
          p_bc_t_g,p_bc_ep_g,a_ep_g,a_ro_g,a_trac,a_mu_g]
@@ -191,6 +195,13 @@ mfix::set_bc0(const Box& sbx,
 
   if (ndwn > 0)
   {
+    IntVect bx_xy_lo_hi_3D(sbx_hi);
+  
+    // Fix lo and hi limits
+    bx_xy_lo_hi_3D[2] = dom_lo[2]-1;
+
+    const Box bx_xy_lo_3D(sbx_lo, bx_xy_lo_hi_3D);
+    
     amrex::ParallelFor(bx_xy_lo_3D,
         [a_bc_klo,dom_lo,pinf,pout,minf,ro_g0,trac_0,mu_g0,undefined,
          p_bc_t_g,p_bc_ep_g,a_ep_g,a_ro_g,a_trac,a_mu_g]
@@ -220,6 +231,13 @@ mfix::set_bc0(const Box& sbx,
 
   if (nup > 0)
   {
+    IntVect bx_xy_hi_lo_3D(sbx_lo);
+
+    // Fix lo and hi limits
+    bx_xy_hi_lo_3D[2] = dom_hi[2]+1;
+
+    const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, sbx_hi);
+    
     amrex::ParallelFor(bx_xy_hi_3D,
         [a_bc_khi,dom_hi,pinf,pout,minf,ro_g0,trac_0,mu_g0,undefined,
          p_bc_t_g,p_bc_ep_g,a_ep_g,a_ro_g,a_trac,a_mu_g]
