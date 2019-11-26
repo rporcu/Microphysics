@@ -76,8 +76,6 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
         //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
         //    on face CENTROIDS
         mfix_predict_vels_on_faces(lev, time, vel_in, u_mac, v_mac, w_mac, ep_g);
-
-        Gpu::synchronize();
     }
 
     // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
@@ -170,7 +168,5 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
         // Return the negative
         conv_u_in[lev] -> mult(-1.0);
         conv_s_in[lev] -> mult(-1.0);
-
-        Gpu::synchronize();
     } // lev
 }

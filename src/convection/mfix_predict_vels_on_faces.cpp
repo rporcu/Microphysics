@@ -123,8 +123,6 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                 AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 { wmac_array(i,j,k) = val; });
 
-            Gpu::synchronize();
-
 //          We use the above until the FAB setVal works again with CUDA
 //          (*ep_u_mac[lev])[mfi].setVal<RunOn::Gpu>(1.2345e300, ubx, 0, 1);
 //          (*ep_v_mac[lev])[mfi].setVal<RunOn::Gpu>(1.2345e300, vbx, 0, 1);

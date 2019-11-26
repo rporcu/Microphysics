@@ -327,8 +327,5 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
         } // if entire FAB not covered
       } // pti
     } // GPU region
-
-    Gpu::synchronize();
-
   } // lev
 }

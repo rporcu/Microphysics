@@ -167,8 +167,6 @@ mfix::mfix_calc_drag_fluid(Real time)
     drag[0]->copy(*drag_ptr[0],0,0,drag[0]->nComp());
   }
 
-  Gpu::synchronize();
-
   for (int lev = 0; lev < nlev; lev++) {
     if (drag_ptr[lev] != drag[lev].get())
       delete drag_ptr[lev];
@@ -190,8 +188,6 @@ mfix::mfix_calc_drag_fluid(Real time)
   // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
   for (int lev = 0; lev < nlev; lev++)
     drag[lev] -> FillBoundary(geom[lev].periodicity());
-
-  Gpu::synchronize();
 }
 
 
@@ -496,9 +492,6 @@ mfix::mfix_calc_drag_particle(Real time)
         } // FAB not covered
       } // pti
     } // omp region
-
-    Gpu::synchronize();
-
   } // lev
 
   // Reset velocity Dirichlet bc's to face values

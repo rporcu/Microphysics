@@ -120,7 +120,6 @@ ScalarDeposition(F WeightFunc, int lev,
             }
           });
       }
-      Gpu::synchronize();
     }
   }
 }
@@ -253,7 +252,6 @@ FluidDragForceDeposition(F WeightFunc, int lev,
             }
           });
       }
-      Gpu::synchronize();
     }
   }
 }
