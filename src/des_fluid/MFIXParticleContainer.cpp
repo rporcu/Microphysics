@@ -390,8 +390,6 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                     }
                   });
 
-                Gpu::synchronize();
-
                 // Debugging: copy data from the fc (all forces) vector to
                 // the wfor (wall forces) vector.
                 if (debug_level > 0) {

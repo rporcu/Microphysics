@@ -60,7 +60,6 @@ mfix::mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> > & mf
    // Compute the coefficients
    for (int lev = 0; lev < nlev; lev++)
    {
-
        MultiFab dcoeff_mf( mu_g[lev]->boxArray(), mu_g[lev]->DistributionMap(), 1, mu_g[lev]->nGrow(),
                          MFInfo(), *ebfactory[lev]);
 
@@ -81,8 +80,6 @@ mfix::mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> > & mf
        a_coeff.setVal(1.0);
 
        ebscalarop.setACoeffs ( lev, a_coeff );
-
-       Gpu::synchronize();
    }
 
    amrex::Print() << "Diffusing solids volume fraction " << std::endl;

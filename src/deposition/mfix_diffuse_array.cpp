@@ -83,8 +83,6 @@ mfix::mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_
        a_coeff.setVal(1.0);
 
        ebtensorop.setACoeffs ( lev, a_coeff );
-
-       Gpu::synchronize();
    }
 
    amrex::Print() << "Diffusing all velocity components together " << std::endl;

@@ -112,8 +112,6 @@ mfix::FillPatchVel (int lev, Real time, MultiFab& mf, int icomp, int ncomp, cons
         PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev], bcs, bfunc);
         amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, icomp, ncomp,
                                     geom[lev], physbc, 0);
-
-        Gpu::synchronize();
     }
     else
     {
@@ -132,8 +130,6 @@ mfix::FillPatchVel (int lev, Real time, MultiFab& mf, int icomp, int ncomp, cons
                                   0, icomp, ncomp, geom[lev-1], geom[lev],
                                   cphysbc, 0, fphysbc, 0,
                                   refRatio(lev-1), mapper, bcs, 0);
-
-        Gpu::synchronize();
     }
 }
 
@@ -160,8 +156,6 @@ mfix::FillPatchScalar (int lev, Real time, MultiFab& mf, int icomp, int ncomp, c
         PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev], bcs, bfunc);
         amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, 0, ncomp, 
                                     geom[lev], physbc, 0);
-
-        Gpu::synchronize();
     }
     else
     {
@@ -180,8 +174,6 @@ mfix::FillPatchScalar (int lev, Real time, MultiFab& mf, int icomp, int ncomp, c
                                   0, 0, ncomp, geom[lev-1], geom[lev],
                                   cphysbc, 0, fphysbc, 0,
                                   refRatio(lev-1), mapper, bcs, 0);
-
-        Gpu::synchronize();
     }
 }
 
