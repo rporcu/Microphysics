@@ -14,7 +14,8 @@ target_sources( mfixcore
    discretelement_mod.f90
    discretelement_mod_F.H
    init_collision.f90
-   particle_generator.f90
+   particle_generator.H
+   particle_generator.cpp
    particle_mod.f90
    des_drag_K.H
    )
