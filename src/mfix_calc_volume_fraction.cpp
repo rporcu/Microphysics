@@ -11,16 +11,15 @@
 #include <MFIXParticleContainer.H>
 #include <MFIX_MFHelpers.H>
 
-void mfix::mfix_calc_volume_fraction(Real& sum_vol)
+void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 {
   BL_PROFILE("mfix::mfix_calc_volume_fraction()");
 
   // Start the timers ...
   const Real strttime = ParallelDescriptor::second();
 
-
-  if (solve_dem) {
-
+  if (solve_dem)
+  {
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain
 
@@ -31,16 +30,16 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 
     for (int lev = 0; lev < nlev; lev++) {
 
-      bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
+      bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) and
                            (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
-      if (lev == 0 && OnSameGrids) {
+      if (lev == 0 and OnSameGrids) {
 
         // If we are already working with the internal mf defined on the
         // particle_box_array, then we just work with this.
         mf_pointer[lev] = ep_g[lev].get();
 
-      } else if (lev == 0 && !OnSameGrids)  {
+      } else if (lev == 0 and (not OnSameGrids))  {
         // If ep_g is not defined on the particle_box_array, then we need
         // to make a temporary here and copy into ep_g at the end.
         mf_pointer[lev] = new MultiFab(pc->ParticleBoxArray(lev),
@@ -92,20 +91,16 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
 
       // Deposit particle volume to the grid
       pc->ScalarDeposition(lev, *mf_pointer[lev], volfrac, flags);
-
     }
-
 
     // Move any volume deposited outside the domain back into the domain
     // when BC is either a pressure inlet or mass inflow.
     for (int lev = 0; lev < nlev; lev++)
       mfix_deposition_bcs_scalar(lev, *mf_pointer[lev]);
 
-
     // Sum grid boundaries then clear the ghost cell values.
     mf_pointer[0]->SumBoundary(gm.periodicity());
     mf_pointer[0]->setBndry(0.0);
-
 
     // Move excessive solids volume from small cells to neighboring cells. A copy
     // of the deposition field is made so that when an average is calc
@@ -113,8 +108,8 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
     for (int lev(0); lev < nlev; ++lev ){
       eps_tmp[lev] = MFHelpers::createFrom(*mf_pointer[lev]);
 
-      mfix_redistribute_deposition (lev, *eps_tmp[lev], *mf_pointer[lev], volfrac, flags,
-                                    mfix::m_max_solids_volume_fraction);
+      mfix_redistribute_deposition(lev, *eps_tmp[lev], *mf_pointer[lev], volfrac, flags,
+                                   mfix::m_max_solids_volume_fraction);
     }
 
 
@@ -128,7 +123,6 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
     for (int lev = 1; lev < nlev; lev++)
       mf_pointer[0]->copy(*mf_pointer[lev],0,0,ep_g[lev]->nComp(),
                           src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
-
 
     if (nlev > 1)
     {
@@ -151,8 +145,7 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
             amrex::InterpFromCoarseLevel(*ep_g[lev], time, *mf_pointer[lev-1],
                                          0, 0, 1, Geom(lev-1), Geom(lev),
                                          cphysbc, 0, fphysbc, 0,
-                                         ref_ratio[0], mapper,
-                                         bcs, 0);
+                                         ref_ratio[0], mapper, bcs, 0);
         }
     }
 
@@ -178,7 +171,7 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
     // At this point, we have the particle volume on the fluid grid (ep_s).
     // We will diffuse it first, then convert it to ep_g.
     if(mfix::m_deposition_diffusion_coeff > 0.)
-      mfix_diffuse_scalar (ep_g, mfix::m_deposition_diffusion_coeff);
+      mfix_diffuse_scalar(ep_g, mfix::m_deposition_diffusion_coeff);
 
     for (int lev = 0; lev < nlev; lev++) {
       // Now define this mf = (1 - particle_vol)
@@ -188,31 +181,29 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
       // We set ep_g to 1 rather than 0 in covered cells so that when we divide by ep_g
       //    following the projection we don't have to protect against divide by 0.
       EB_set_covered(*ep_g[lev],1.0);
-
     }
 
     // HACK -- we really should average down (ep_g * volfrac) not ep_g.
-    for (int lev = nlev - 1; lev > 0; lev --) {
-      amrex::EB_average_down(* ep_g[lev], * ep_g[lev - 1],
-                             0, 1, m_gdb->refRatio(lev - 1));
+    for (int lev = nlev - 1; lev > 0; lev--) {
+      amrex::EB_average_down(*ep_g[lev], *ep_g[lev-1], 0, 1, m_gdb->refRatio(lev-1));
     }
-    } else {
-      for (int lev = 0; lev < nlev; lev++)
-        ep_g[lev]->setVal(1.);
-    }
-
-    // This sets the values outside walls or periodic boundaries
+  } else {
     for (int lev = 0; lev < nlev; lev++)
-      ep_g[lev]->FillBoundary(geom[lev].periodicity());
+      ep_g[lev]->setVal(1.);
+  }
 
-    mfix_set_epg_bcs(ep_g);
+  // This sets the values outside walls or periodic boundaries
+  for (int lev = 0; lev < nlev; lev++)
+    ep_g[lev]->FillBoundary(geom[lev].periodicity());
 
-    // Sum up all the values of ep_g[lev], weighted by each cell's EB volfrac
-    // Note ep_g = 1 - particle_volume / this_cell_volume where
-    //    this_cell_volume = (volfrac * dx * dy * dz)
-    // When we define the sum we add up (ep_g * volfrac) so that the total sum
-    //    does not depend on whether a particle is in a full or cut cell.
-    int lev = 0; int comp = 0;
+  mfix_set_epg_bcs(ep_g);
 
-    sum_vol = volWgtSum(lev,*ep_g[lev],comp);
+  // Sum up all the values of ep_g[lev], weighted by each cell's EB volfrac
+  // Note ep_g = 1 - particle_volume / this_cell_volume where
+  //    this_cell_volume = (volfrac * dx * dy * dz)
+  // When we define the sum we add up (ep_g * volfrac) so that the total sum
+  //    does not depend on whether a particle is in a full or cut cell.
+  int lev = 0; int comp = 0;
+
+  sum_vol = volWgtSum(lev,*ep_g[lev],comp);
 }

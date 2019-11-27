@@ -109,7 +109,7 @@ mfix::mfix ()
 }
 
 void
-mfix::mfix_usr1_cpp(Real time) const
+mfix::mfix_usr1_cpp (Real time) const
 {
   mfix_usr1(&time);
 
@@ -128,7 +128,7 @@ mfix::mfix_usr1_cpp(Real time) const
 }
 
 void
-mfix::usr3()
+mfix::usr3 ()
 {
     if (solve_fluid)
     {
@@ -150,7 +150,7 @@ mfix::usr3()
 }
 
 void
-mfix::mfix_set_bc_type(int lev)
+mfix::mfix_set_bc_type (int lev)
 {
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
@@ -176,11 +176,11 @@ mfix::mfix_set_bc_type(int lev)
     }
 }
 
-void mfix::mfix_set_bc_mod(const int* pID, const int* pType,
-                           const amrex::Real* pLo, const amrex::Real* pHi,
-                           amrex::Real* pLoc,
-                           amrex::Real* pPg,
-                           amrex::Real* pVel)
+void mfix::mfix_set_bc_mod (const int* pID, const int* pType,
+                            const amrex::Real* pLo, const amrex::Real* pHi,
+                            amrex::Real* pLoc,
+                            amrex::Real* pPg,
+                            amrex::Real* pVel)
 {
   const int dim_bc = get_dim_bc();
 
@@ -200,10 +200,10 @@ void mfix::mfix_set_bc_mod(const int* pID, const int* pType,
   }
 }
 
-void mfix::mfix_set_bc_mod_add_mi(const int* pPlane,
-                                  amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
-                                  amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
-                                  amrex::Real* pPg, amrex::Real* pVel)
+void mfix::mfix_set_bc_mod_add_mi (const int* pPlane,
+                                   amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
+                                   amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
+                                   amrex::Real* pPg, amrex::Real* pVel)
 {
   const int dim_bc = get_dim_bc();
 
@@ -216,9 +216,7 @@ void mfix::mfix_set_bc_mod_add_mi(const int* pPlane,
     m_bc_w_g[i] = get_bc_w_g(i);
 
     m_bc_t_g[i] = get_bc_t_g(i);
-
     m_bc_ep_g[i] = get_bc_ep_g(i);
-
     m_bc_p_g[i] = get_bc_p_g(i);
   }
 }

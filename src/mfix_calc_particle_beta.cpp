@@ -3,7 +3,7 @@
 #include <mfix_drag_K.H>
 #include <des_drag_K.H>
 
-void mfix::mfix_calc_particle_beta(Real time)
+void mfix::mfix_calc_particle_beta (Real time)
 {
   if (m_drag_type == DragType::WenYu)
   {
@@ -13,7 +13,6 @@ void mfix::mfix_calc_particle_beta(Real time)
   {
     mfix_calc_particle_beta(ComputeDragGidaspow(), time);
   }
-
   else if (m_drag_type == DragType::BVK2)
   {
     mfix_calc_particle_beta(ComputeDragBVK2(), time);
@@ -29,7 +28,7 @@ void mfix::mfix_calc_particle_beta(Real time)
 }
 
 template <typename F>
-void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
+void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 {
   BL_PROFILE("mfix::mfix_calc_particle_beta()");
 
@@ -42,7 +41,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
 
   for (int lev = 0; lev < nlev; lev++)
   {
-    bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
+    bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) and
                          (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
     MultiFab* ep_ptr;
@@ -58,10 +57,10 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
 
     if (OnSameGrids)
     {
-      ep_ptr    =  ep_g[lev].get();
-      ro_ptr    =  ro_g[lev].get();
-      mu_ptr    =  mu_g[lev].get();
-      vel_ptr   = vel_g[lev].get();
+      ep_ptr  =  ep_g[lev].get();
+      ro_ptr  =  ro_g[lev].get();
+      mu_ptr  =  mu_g[lev].get();
+      vel_ptr = vel_g[lev].get();
     }
     else
     {
@@ -78,19 +77,19 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
       mu_g_pba.reset(new MultiFab(pba,pdm,mu_g[lev]->nComp(),0));
       mu_g_pba->copy(*mu_g[lev],0,0,1,0,0);
 
-      EBFArrayBoxFactory ebfactory_loc( * eb_levels[lev], geom[lev], pba, pdm,
-                                        {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                         m_eb_full_grow_cells}, EBSupport::basic);
+      EBFArrayBoxFactory ebfactory_loc(* eb_levels[lev], geom[lev], pba, pdm,
+                                       {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                                       EBSupport::basic);
 
       int ng = vel_g[lev]->nGrow();
       vel_g_pba.reset(new MultiFab(pba,pdm,vel_g[lev]->nComp(),ng, MFInfo(), ebfactory_loc));
       vel_g_pba->copy(*vel_g[lev],0,0,vel_g[lev]->nComp(),ng,ng);
       vel_g_pba->FillBoundary(geom[lev].periodicity());
 
-      ep_ptr    =  ep_g_pba.get();
-      ro_ptr    =  ro_g_pba.get();
-      mu_ptr    =  mu_g_pba.get();
-      vel_ptr   = vel_g_pba.get();
+      ep_ptr  =  ep_g_pba.get();
+      ro_ptr  =  ro_g_pba.get();
+      mu_ptr  =  mu_g_pba.get();
+      vel_ptr = vel_g_pba.get();
     }
 
 #ifdef _OPENMP
@@ -105,7 +104,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
         auto& particles = pti.GetArrayOfStructs();
         const int np = particles.size();
 
-        Box bx = pti.tilebox ();
+        Box bx = pti.tilebox();
 
         // This is to check efficiently if this tile contains any eb stuff
         const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_ptr)[pti]);
@@ -124,8 +123,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
             amrex::ParallelFor(np,
-              [particles_ptr,vel_array,ep_array,ro_array,mu_array,
-               DragFunc,plo,dxi]
+              [particles_ptr,vel_array,ep_array,ro_array,mu_array,DragFunc,plo,dxi]
               AMREX_GPU_DEVICE (int ip) noexcept
               {
                 MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
@@ -176,8 +174,7 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
             const auto& phi_array = phi.array(pti);
 
             amrex::ParallelFor(np,
-              [particles_ptr,vel_array,ro_array,mu_array,ep_array,flags_array,
-               DragFunc,plo,dxi]
+              [particles_ptr,vel_array,ro_array,mu_array,ep_array,flags_array,DragFunc,plo,dxi]
               AMREX_GPU_DEVICE (int ip) noexcept
               {
                 MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
@@ -208,13 +205,13 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                   // Cut or regular cell and none of the cells in the stencil is
                   // covered (Note we can't assume regular cell has no covered
                   // cells in the stencil because of the diagonal case)
-                  if (!flags_array(i-1,j-1,k-1).isCovered() &&
-                      !flags_array(i  ,j-1,k-1).isCovered() &&
-                      !flags_array(i-1,j  ,k-1).isCovered() &&
-                      !flags_array(i  ,j  ,k-1).isCovered() &&
-                      !flags_array(i-1,j-1,k  ).isCovered() &&
-                      !flags_array(i  ,j-1,k  ).isCovered() &&
-                      !flags_array(i-1,j  ,k  ).isCovered() &&
+                  if (!flags_array(i-1,j-1,k-1).isCovered() and
+                      !flags_array(i  ,j-1,k-1).isCovered() and
+                      !flags_array(i-1,j  ,k-1).isCovered() and
+                      !flags_array(i  ,j  ,k-1).isCovered() and
+                      !flags_array(i-1,j-1,k  ).isCovered() and
+                      !flags_array(i  ,j-1,k  ).isCovered() and
+                      !flags_array(i-1,j  ,k  ).isCovered() and
                       !flags_array(i  ,j  ,k  ).isCovered()) 
                   {
                     trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
@@ -318,7 +315,8 @@ void mfix::mfix_calc_particle_beta(F DragFunc, Real time)
                   Real phis = 1.0 - ep;
               
                   Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
-                         velfp[0], velfp[1], velfp[2], iloc, jloc, kloc, p_id); 
+                                           velfp[0], velfp[1], velfp[2],
+                                           iloc, jloc, kloc, p_id); 
                   particle.rdata(realData::dragx) = beta;
 
                 } // Not covered

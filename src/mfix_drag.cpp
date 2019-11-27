@@ -10,9 +10,8 @@
 #include <MFIX_MFHelpers.H>
 
 void
-mfix::mfix_calc_drag_fluid(Real time)
+mfix::mfix_calc_drag_fluid (Real time)
 {
-
   const Real strttime = ParallelDescriptor::second();
 
   mfix_calc_particle_beta(time);
@@ -27,20 +26,20 @@ mfix::mfix_calc_drag_fluid(Real time)
   if (nlev > 2)
     amrex::Abort("For right now MFIXParticleContainer::TrilinearDepositionFluidDragForce can only handle up to 2 levels");
 
-  MultiFab*  drag_ptr[nlev];
+  MultiFab* drag_ptr[nlev];
 
   for (int lev = 0; lev < nlev; lev++) {
 
     bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                          (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
-    if (lev == 0 && OnSameGrids) {
+    if (lev == 0 and OnSameGrids) {
 
       // If we are already working with the internal mf defined on the
       // particle_box_array, then we just work with this.
       drag_ptr[lev] = drag[lev].get();
 
-    } else if (lev == 0 && !OnSameGrids) {
+    } else if (lev == 0 and (not OnSameGrids)) {
 
       // If beta_mf is not defined on the particle_box_array, then we need
       // to make a temporary here and copy into beta_mf at the end.
@@ -62,10 +61,10 @@ mfix::mfix_calc_drag_fluid(Real time)
     if (drag_ptr[lev]->nGrow() < 1)
       amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
 
-    drag_ptr[lev]->setVal(0.0,0,4,drag_ptr[lev]->nGrow());
+    drag_ptr[lev]->setVal(0.0, 0, 4, drag_ptr[lev]->nGrow());
   }
 
-  const Geometry& gm  = Geom(0);
+  const Geometry& gm = Geom(0);
   const FabArray<EBCellFlagFab>* flags;
   const MultiFab* volfrac;
 
@@ -96,36 +95,30 @@ mfix::mfix_calc_drag_fluid(Real time)
     }
 
 
-    pc -> FluidDragForceDeposition(lev, *tmp_eps[lev], *drag_ptr[lev], volfrac, flags);
-
-
+    pc->FluidDragForceDeposition(lev, *tmp_eps[lev], *drag_ptr[lev], volfrac, flags);
   }
-
 
   // Move any volume deposited outside the domain back into the domain
   // when BC is either a pressure inlet or mass inflow.
   // for (int lev = 0; lev < nlev; lev++)
   //   mfix_deposition_bcs_scalar(lev, *drag_ptr[lev]);
 
-
   // Sum grid boundaries then clear the ghost cell values.
   drag_ptr[0]->SumBoundary(gm.periodicity());
   drag_ptr[0]->setBndry(0.0);
-
 
   // Move excessive solids volume from small cells to neighboring cells. A copy
   // of the deposition field is made so that when an average is calc
   for (int lev(0); lev < nlev; ++lev ){
 
-    mfix_redistribute_deposition (lev, *tmp_eps[lev], *drag_ptr[lev], volfrac, flags,
-                                  mfix::m_max_solids_volume_fraction);
+    mfix_redistribute_deposition(lev, *tmp_eps[lev], *drag_ptr[lev], volfrac, flags,
+                                 mfix::m_max_solids_volume_fraction);
   }
 
 
   // Sum the boundaries again to recapture any solids moved across
   // grid boundaries during the redistribute
   drag_ptr[0]->SumBoundary(gm.periodicity());
-
 
   int  src_nghost = 1;
   int dest_nghost = 0;
@@ -140,8 +133,8 @@ mfix::mfix_calc_drag_fluid(Real time)
 
     // Now interpolate from the coarse grid to define the fine grid ep-g
     Interpolater* mapper = &cell_cons_interp;
-    int lo_bc[] = {BCType::foextrap, BCType::foextrap, BCType::foextrap};
-    int hi_bc[] = {BCType::foextrap, BCType::foextrap, BCType::foextrap};
+    int lo_bc[3] = {BCType::foextrap, BCType::foextrap, BCType::foextrap};
+    int hi_bc[3] = {BCType::foextrap, BCType::foextrap, BCType::foextrap};
     Vector<BCRec> bcs(1, BCRec(lo_bc, hi_bc));
 
     BndryFuncArray bfunc(phifill);
@@ -190,13 +183,8 @@ mfix::mfix_calc_drag_fluid(Real time)
     drag[lev] -> FillBoundary(geom[lev].periodicity());
 }
 
-
-
-
-
-
 void
-mfix::mfix_calc_drag_particle(Real time)
+mfix::mfix_calc_drag_particle (Real time)
 {
   BL_PROFILE("mfix::mfix_calc_drag_particle()");
 
@@ -206,7 +194,7 @@ mfix::mfix_calc_drag_particle(Real time)
 
   for (int lev = 0; lev < nlev; lev++)
   {
-    Box      domain(geom[lev].Domain());
+    Box domain(geom[lev].Domain());
     MultiFab gp_tmp;
 
     gp_tmp.define(grids[lev],dmap[lev],3,1,MFInfo(),*ebfactory[lev]);
@@ -219,6 +207,7 @@ mfix::mfix_calc_drag_particle(Real time)
     //         because the set_gradp_bcs call hopefully sets the ghost cells exterior
     //         to the domain from ghost cells interior to the domain
     //
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -262,9 +251,9 @@ mfix::mfix_calc_drag_particle(Real time)
       gp_pba->copy(gp_tmp,0,0,gp_tmp.nComp(),ng,ng);
       gp_pba->FillBoundary(geom[lev].periodicity());
 
-      EBFArrayBoxFactory ebfactory_loc( * eb_levels[lev], geom[lev], pba, pdm,
-                                        {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                         m_eb_full_grow_cells}, EBSupport::basic);
+      EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
+                                       {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                                       EBSupport::basic);
 
       ng = vel_g[lev]->nGrow();
       vel_pba.reset(new MultiFab(pba,pdm,vel_g[lev]->nComp(),ng,MFInfo(), ebfactory_loc));
@@ -280,7 +269,6 @@ mfix::mfix_calc_drag_particle(Real time)
 #endif
     {
       const auto dxi = geom[lev].InvCellSizeArray();
-      //const auto dx  = geom[lev].CellSizeArray(); // SET_BUT_NOT_USED
       const auto plo = geom[lev].ProbLoArray();
 
       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)

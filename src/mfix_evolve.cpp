@@ -2,13 +2,13 @@
 
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
-mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
+mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 {
     BL_PROFILE_REGION_START("mfix::Evolve");
 
     Real coupling_timing;
     Real sum_vol;
-    if (solve_dem && solve_fluid)
+    if (solve_dem and solve_fluid)
     {
       Real start_coupling = ParallelDescriptor::second();
       mfix_calc_volume_fraction(sum_vol);
@@ -41,14 +41,12 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     // This returns the drag force on the particle
     Real new_time = time+dt;
-    if (solve_dem && solve_fluid){
+    if (solve_dem and solve_fluid){
       Real start_coupling = ParallelDescriptor::second();
       mfix_calc_drag_particle(new_time);
       coupling_timing += ParallelDescriptor::second() - start_coupling + drag_timing;
       ParallelDescriptor::ReduceRealMax(coupling_timing, ParallelDescriptor::IOProcessorNumber());
     }
-
-
 
     /****************************************************************************
      *                                                                          *
@@ -58,7 +56,7 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     Real start_particles = ParallelDescriptor::second();
 
-    BL_PROFILE_VAR("PARTICLES SOLVE",particlesSolve);
+    BL_PROFILE_VAR("PARTICLES SOLVE", particlesSolve);
 
     amrex::Gpu::setLaunchRegion(true);
     int nsubsteps;
@@ -72,7 +70,7 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
             // everything else lives on level 0
             int ilev = 0;
 
-            const MultiFab * ls_data = level_sets[1].get();
+            const MultiFab* ls_data = level_sets[1].get();
             iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                ls_data->nComp(), ls_data->nGrow());
 
@@ -93,7 +91,7 @@ mfix::Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
             for (int lev = 0; lev < nlev; lev ++ )
             {
-                const MultiFab * ls_data = level_sets[lev].get();
+                const MultiFab* ls_data = level_sets[lev].get();
                 iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                    ls_data->nComp(), ls_data->nGrow());
 

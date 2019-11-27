@@ -18,11 +18,11 @@ mfix::Regrid ()
 
        // This creates a new BA and new DM, re-defines the particle BA and DM to be these new ones,
        //      and calls Redistribute.  This doesn't touch the fluid grids.
-       pc -> BalanceParticleLoad_KDTree ();
+       pc->BalanceParticleLoad_KDTree();
 
        if (!dual_grid)
        {
-           SetBoxArray       (base_lev, pc->ParticleBoxArray(base_lev));
+           SetBoxArray(base_lev, pc->ParticleBoxArray(base_lev));
            SetDistributionMap(base_lev, pc->ParticleDistributionMap(base_lev));
 
            // Since we have already allocated the fluid data we need to
@@ -44,11 +44,9 @@ mfix::Regrid ()
        // the multifab that depend on it
        if (solve_dem)
            RegridLevelSetArray(base_lev);
-
     }
     else if (load_balance_type == "KnapSack" || load_balance_type == "SFC") // Knapsack and SFC
     {
-
         amrex::Print() << "Load balancing using " << load_balance_type << std::endl;
 
         if (solve_dem)
@@ -175,7 +173,6 @@ mfix::Regrid ()
                particle_cost[base_lev].reset(new MultiFab(grids[base_lev], newdm, 1, 0));
                particle_cost[base_lev]->setVal(0.0);
             }
-
 
             if (solve_dem){
                 pc->Regrid(dmap[base_lev], grids[base_lev], base_lev);

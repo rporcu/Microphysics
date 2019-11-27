@@ -72,56 +72,56 @@ public:
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_scal_lobc;
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_scal_hibc;
 
-    void InitParams(int solve_fluid, int solve_dem, int call_udf );
+    void InitParams (int solve_fluid, int solve_dem, int call_udf );
 
-    bool IsSteadyState() { return (steady_state > 0); }
+    bool IsSteadyState () { return (steady_state > 0); }
 
-    void Init(Real time);
+    void Init (Real time);
 
-    void InitLevelData(Real time);
+    void InitLevelData (Real time);
 
-    void mfix_init_solvers();
-    void mfix_setup_solvers();
+    void mfix_init_solvers ();
+    void mfix_setup_solvers ();
 
-    void PostInit(Real& dt, Real time, int restart_flag, Real stop_time);
+    void PostInit (Real& dt, Real time, int restart_flag, Real stop_time);
 
-    void ResizeArrays();
+    void ResizeArrays ();
 
-    void WriteCheckPointFile(std::string & check_file_name,
-                             int nstep = 0, Real dt = 0.0, Real time = 0.0)  const;
+    void WriteCheckPointFile (std::string & check_file_name,
+                              int nstep = 0, Real dt = 0.0, Real time = 0.0)  const;
 
-    void WritePlotFile(std::string & plot_file_name,
-                       int nstep = 0, Real time = 0.0) const;
+    void WritePlotFile (std::string & plot_file_name,
+                        int nstep = 0, Real time = 0.0) const;
 
     //! Save variables that don't change to plot file. The idea is that they can
     //! be saved _once_ per simulations and not repeatedly every Nth time step.
-    void WriteStaticPlotFile(const std::string & plot_file_name) const;
+    void WriteStaticPlotFile (const std::string & plot_file_name) const;
 
-    void Restart(std::string & restart_chkfile, int * nstep, Real * dt, Real * time,
-                 IntVect & Nrep);
+    void Restart (std::string& restart_chkfile, int* nstep, Real* dt,
+                  Real* time, IntVect& Nrep);
 
-    void WriteParticleAscii(std::string & par_ascii_file_name, int nstep = 0) const;
+    void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
 
-    void WriteAverageRegions ( std::string& avg_file, int nstep, Real time = 0.0 ) const;
+    void WriteAverageRegions (std::string& avg_file, int nstep, Real time = 0.) const;
 
-    void ComputeAverageFluidVars ( const int lev,
-                                   const amrex::Real time,
-                                   const std::string&  basename ) const;
+    void ComputeAverageFluidVars (const int lev,
+                                  const amrex::Real time,
+                                  const std::string& basename) const;
 
     void Regrid ();
 
-    void Evolve(int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time);
+    void Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time);
 
-    void mfix_usr1_cpp(Real time) const;
+    void mfix_usr1_cpp (Real time) const;
 
-    void usr3();
+    void usr3 ();
 
-    void output(int estatus, int finish, int nstep, Real dt, Real time)
-        {
-            pc->output( estatus, finish, nstep, dt, time);
-        };
+    void output (int estatus, int finish, int nstep, Real dt, Real time)
+      {
+        pc->output(estatus, finish, nstep, dt, time);
+      };
 
-    void make_mg_bc(int mg_bc[]);
+    void make_mg_bc (int mg_bc[]);
 
     void make_eb_geometry ();
     void make_eb_factories ();
@@ -129,15 +129,11 @@ public:
     void intersect_ls_walls ();
 
     template<class F> void build_particle_eb_levels (EB2::GeometryShop<F> gshop)
-        {
-            if(solve_dem)
-            {
-                for (int lev = 0; lev < nlev; lev ++)
-                    particle_eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop,
-                                                                      lev, geom, 100, 0);
-            }
-        }
-
+      {
+        if(solve_dem)
+          for (int lev = 0; lev < nlev; lev ++)
+            particle_eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom, 100, 0);
+      }
 
     //! Construct EB levels from Geometry shop. This builds each EB level and
     //! saves a pointer to each level into `eb_levels`.
@@ -172,39 +168,38 @@ public:
             }
         }
 
-    const Geometry get_geom_ref(int lev){ return geom[lev]; }
+    const Geometry get_geom_ref (int lev) { return geom[lev]; }
 
-    void get_input_bcs();
+    void get_input_bcs ();
 
-    void set_input_bcs(const std::string bcID, const int index,
-                       const int cyclic, const Real domloc);
+    void set_input_bcs (const std::string bcID, const int index,
+                        const int cyclic, const Real domloc);
 
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls(bool & has_walls);
+    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls (bool & has_walls);
 
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls(bool & has_real_walls);
+    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls (bool & has_real_walls);
 
-    std::unique_ptr<
-        EB2::TranslationIF<EB2::PolynomialIF>
-        > get_poly(int max_order, std::string field_prefix);
+    std::unique_ptr<EB2::TranslationIF<EB2::PolynomialIF>> 
+      get_poly (int max_order, std::string field_prefix);
 
     std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
-    make_wall(int dir, // direction (long edge) of wall
-              Real position, Real height, Real width );
+      make_wall (int dir, // direction (long edge) of wall
+                 Real position, Real height, Real width);
 
-    void WriteMyEBSurface();
+    void WriteMyEBSurface ();
 
-    void InitIOChkData();
-    void InitIOPltData();
+    void InitIOChkData ();
+    void InitIOPltData ();
 
-    static std::string get_load_balance_type();
+    static std::string get_load_balance_type ();
 
     // flag enabling level-set restart (i.e. prevent make_eb_* from rebuilding
     // the level-set data).
     bool levelset__restart = false;
 
-    void mfix_compute_vort();
+    void mfix_compute_vort ();
 
-    void mfix_compute_dt(int nstep, Real time, Real stop_time, Real & dt);
+    void mfix_compute_dt (int nstep, Real time, Real stop_time, Real & dt);
 
     ///
     /// Parameters describing the level-set grid:
@@ -217,101 +212,101 @@ public:
 
     bool contains_ebs = false;
 
-    void mfix_add_drag_explicit(Real dt);
-    void mfix_add_drag_implicit(Real dt);
+    void mfix_add_drag_explicit (Real dt);
+    void mfix_add_drag_implicit (Real dt);
 
-    void mfix_calc_drag_particle(Real time);
+    void mfix_calc_drag_particle (Real time);
 
-    void mfix_add_gravity_and_gp(Real dt);
+    void mfix_add_gravity_and_gp (Real dt);
 
-    void mfix_predict_vels_on_faces ( int lev, Real time,
-                                      Vector< std::unique_ptr<MultiFab> >& vel,
-                                      Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                                      Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                                      Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                                      Vector< std::unique_ptr<MultiFab> >& ep_g);
+    void mfix_predict_vels_on_faces (int lev, Real time,
+                                     Vector< std::unique_ptr<MultiFab> >& vel,
+                                     Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                                     Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                                     Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
+                                     Vector< std::unique_ptr<MultiFab> >& ep_g);
 
-    void mfix_set_velocity_bcs ( Real time,
-                                 Vector< std::unique_ptr<MultiFab> >& vel,
-                                 int extrap_dir_bcs) const;
+    void mfix_set_velocity_bcs (Real time,
+                                Vector< std::unique_ptr<MultiFab> >& vel,
+                                int extrap_dir_bcs) const;
 
-    void mfix_set_epg_bcs     (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps) const;
+    void mfix_set_epg_bcs (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps) const;
 
     void mfix_set_density_bcs (Real time,
                                Vector< std::unique_ptr<MultiFab> >& ro_g);
 
-    void mfix_set_scalar_bcs  (Real time,
-                               Vector< std::unique_ptr<MultiFab> >& trac,
-                               Vector< std::unique_ptr<MultiFab> >& mu_g);
+    void mfix_set_scalar_bcs (Real time,
+                              Vector< std::unique_ptr<MultiFab> >& trac,
+                              Vector< std::unique_ptr<MultiFab> >& mu_g);
 
-    void set_velocity_bcs(Real time,
+    void set_velocity_bcs (Real time,
+                           const int lev,
+                           FArrayBox& vel_fab,
+                           const Box& domain,
+                           const int* extrap_dir_bcs) const;
+
+    void set_epg_bcs (const int lev,
+                      FArrayBox& eps_fab,
+                      const Box& domain,
+                      const int* extrap_dir_bcs) const;
+
+    void set_density_bcs (Real time,
                           const int lev,
-                          FArrayBox& vel_fab,
-                          const Box& domain,
-                          const int* extrap_dir_bcs) const;
+                          FArrayBox& scal_fab,
+                          const Box& domain);
 
-    void set_epg_bcs(const int lev,
-                     FArrayBox& eps_fab,
-                     const Box& domain,
-                     const int* extrap_dir_bcs) const;
-
-    void set_density_bcs(Real time,
+    void set_scalar_bcs (Real time,
                          const int lev,
                          FArrayBox& scal_fab,
+                         const int comp,
                          const Box& domain);
 
-    void set_scalar_bcs(Real time,
+    void set_vec_bcs (const int lev,
+                      FArrayBox& vec_fab,
+                      const Box& domain) const;
+
+    void set_gradp_bcs (const Box& bx,
                         const int lev,
-                        FArrayBox& scal_fab,
-                        const int comp,
-                        const Box& domain);
+                        FArrayBox& gp_fab,
+                        Box& domain);
 
-    void set_vec_bcs(const int lev,
-                     FArrayBox& vec_fab,
-                     const Box& domain) const;
+    void set_ls_inflow (const int lev,
+                        FArrayBox& ls_phi_fab,
+                        const Box& domain,
+                        const int* levelset_nghost,
+                        const int& nref,
+                        const Real* dx);
 
-    void set_gradp_bcs(const Box& bx,
-                       const int lev,
-                       FArrayBox& gp_fab,
-                       Box& domain);
+    void mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
+                              Vector<std::unique_ptr<MultiFab>>& xslopes_in,
+                              Vector<std::unique_ptr<MultiFab>>& yslopes_in,
+                              Vector<std::unique_ptr<MultiFab>>& zslopes_in,
+                              int slopes_comp);
 
-    void set_ls_inflow(const int lev,
-                       FArrayBox& ls_phi_fab,
-                       const Box& domain,
-                       const int* levelset_nghost,
-                       const int& nref,
-                       const Real* dx);
+    void set_bc0 (const Box& sbx,
+                  MFIter* mfi,
+                  const int lev,
+                  const Box& domain);
 
-    void mfix_compute_slopes(int lev, Real time, MultiFab& Sborder,
-                             Vector<std::unique_ptr<MultiFab>>& xslopes_in,
-                             Vector<std::unique_ptr<MultiFab>>& yslopes_in,
-                             Vector<std::unique_ptr<MultiFab>>& zslopes_in,
-                             int slopes_comp);
-
-    void set_bc0(const Box& sbx,
+    void set_p0 (const Box& bx,
                  MFIter* mfi,
                  const int lev,
-                 const Box& domain);
+                 const Box& domain,
+                 const Real xlen,
+                 const Real ylen,
+                 const Real zlen,
+                 const int delp_dir_in);
 
-    void set_p0(const Box& bx,
-                MFIter* mfi,
-                const int lev,
-                const Box& domain,
-                const Real xlen,
-                const Real ylen,
-                const Real zlen,
-                const int delp_dir_in);
+    void mfix_set_bc_mod (const int* pID, const int* pType,
+                          const amrex::Real* pLo, const amrex::Real* pHi,
+                          amrex::Real* pLoc,
+                          amrex::Real* pPg,
+                          amrex::Real* pVel);
 
-    void mfix_set_bc_mod(const int* pID, const int* pType,
-                         const amrex::Real* pLo, const amrex::Real* pHi,
-                         amrex::Real* pLoc,
-                         amrex::Real* pPg,
-                         amrex::Real* pVel);
-
-    void mfix_set_bc_mod_add_mi(const int* pPlane,
-                                amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
-                                amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
-                                amrex::Real* pPg, amrex::Real* pVel);
+    void mfix_set_bc_mod_add_mi (const int* pPlane,
+                                 amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
+                                 amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
+                                 amrex::Real* pPg, amrex::Real* pVel);
 
     static DragType m_drag_type;
 
@@ -325,9 +320,10 @@ public:
     static amrex::Real tcoll_ratio; // input parameter defaulted to 50 used in file src_des/init_collision.f90
 
     template <typename F>
-    void mfix_calc_particle_beta(F DragFunc, Real time);
-    void mfix_calc_volume_fraction(Real & sum_vol);
-    void mfix_deposition_bcs_scalar(int lev, amrex::MultiFab & filled_mf);
+    void mfix_calc_particle_beta (F DragFunc, Real time);
+
+    void mfix_calc_volume_fraction (Real & sum_vol);
+    void mfix_deposition_bcs_scalar (int lev, amrex::MultiFab & filled_mf);
 
     void mfix_redistribute_deposition (int lev,
                                        amrex::MultiFab & mf_eps,
@@ -339,95 +335,95 @@ public:
     Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
     Real volEpsWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
 
-    //////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     //
     // Convection
     //
-    //////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
 
-    void set_MAC_velocity_bcs ( int lev,
-                                Vector< std::unique_ptr<MultiFab> >& u,
-                                Vector< std::unique_ptr<MultiFab> >& v,
-                                Vector< std::unique_ptr<MultiFab> >& w,
-                                Real time);
+    void set_MAC_velocity_bcs (int lev,
+                               Vector< std::unique_ptr<MultiFab> >& u,
+                               Vector< std::unique_ptr<MultiFab> >& v,
+                               Vector< std::unique_ptr<MultiFab> >& w,
+                               Real time);
 
-    void mfix_compute_fluxes(const int lev,
-                             Vector< std::unique_ptr<MultiFab> >& a_fx,
-                             Vector< std::unique_ptr<MultiFab> >& a_fy,
-                             Vector< std::unique_ptr<MultiFab> >& a_fz,
-                             Vector< std::unique_ptr<MultiFab> >& state,
-                             const int state_comp, const int n_comp,
-                             Vector< std::unique_ptr<MultiFab> >& xslopes,
-                             Vector< std::unique_ptr<MultiFab> >& yslopes,
-                             Vector< std::unique_ptr<MultiFab> >& zslopes,
-                             const int slopes_comp,
-                             Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                             Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac);
+    void mfix_compute_fluxes (const int lev,
+                              Vector< std::unique_ptr<MultiFab> >& a_fx,
+                              Vector< std::unique_ptr<MultiFab> >& a_fy,
+                              Vector< std::unique_ptr<MultiFab> >& a_fz,
+                              Vector< std::unique_ptr<MultiFab> >& state,
+                              const int state_comp, const int n_comp,
+                              Vector< std::unique_ptr<MultiFab> >& xslopes,
+                              Vector< std::unique_ptr<MultiFab> >& yslopes,
+                              Vector< std::unique_ptr<MultiFab> >& zslopes,
+                              const int slopes_comp,
+                              Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                              Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                              Vector< std::unique_ptr<MultiFab> >& ep_w_mac);
 
-    void mfix_compute_fluxes_on_box(const int lev, Box& bx,
-                                    FArrayBox& a_fx,
-                                    FArrayBox& a_fy,
-                                    FArrayBox& a_fz,
-                                    const FArrayBox& state,
-                                    const int state_comp, const int n_comp,
-                                    const FArrayBox& xslopes,
-                                    const FArrayBox& yslopes,
-                                    const FArrayBox& zslopes,
-                                    const int slopes_comp,
-                                    const FArrayBox& ep_u_mac,
-                                    const FArrayBox& ep_v_mac,
-                                    const FArrayBox& ep_w_mac);
+    void mfix_compute_fluxes_on_box (const int lev, Box& bx,
+                                     FArrayBox& a_fx,
+                                     FArrayBox& a_fy,
+                                     FArrayBox& a_fz,
+                                     const FArrayBox& state,
+                                     const int state_comp, const int n_comp,
+                                     const FArrayBox& xslopes,
+                                     const FArrayBox& yslopes,
+                                     const FArrayBox& zslopes,
+                                     const int slopes_comp,
+                                     const FArrayBox& ep_u_mac,
+                                     const FArrayBox& ep_v_mac,
+                                     const FArrayBox& ep_w_mac);
 
-    void mfix_compute_eb_fluxes_on_box(const int lev, Box& bx,
-                                       FArrayBox& a_fx,
-                                       FArrayBox& a_fy,
-                                       FArrayBox& a_fz,
-                                       const FArrayBox& state,
-                                       const int state_comp, const int n_comp,
-                                       const FArrayBox& xslopes,
-                                       const FArrayBox& yslopes,
-                                       const FArrayBox& zslopes,
-                                       const int slopes_comp,
-                                       const FArrayBox& ep_u_mac,
-                                       const FArrayBox& ep_v_mac,
-                                       const FArrayBox& ep_w_mac,
-                                       const FArrayBox& ax,
-                                       const FArrayBox& ay,
-                                       const FArrayBox& az,
-                                       const FArrayBox& fc_x,
-                                       const FArrayBox& fc_y,
-                                       const FArrayBox& fc_z,
-                                       const FArrayBox& volfrac,
-                                       const FArrayBox& bndrycent,
-                                       const IArrayBox& cc_mask,
-                                       const EBCellFlagFab& flags);
+    void mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
+                                        FArrayBox& a_fx,
+                                        FArrayBox& a_fy,
+                                        FArrayBox& a_fz,
+                                        const FArrayBox& state,
+                                        const int state_comp, const int n_comp,
+                                        const FArrayBox& xslopes,
+                                        const FArrayBox& yslopes,
+                                        const FArrayBox& zslopes,
+                                        const int slopes_comp,
+                                        const FArrayBox& ep_u_mac,
+                                        const FArrayBox& ep_v_mac,
+                                        const FArrayBox& ep_w_mac,
+                                        const FArrayBox& ax,
+                                        const FArrayBox& ay,
+                                        const FArrayBox& az,
+                                        const FArrayBox& fc_x,
+                                        const FArrayBox& fc_y,
+                                        const FArrayBox& fc_z,
+                                        const FArrayBox& volfrac,
+                                        const FArrayBox& bndrycent,
+                                        const IArrayBox& cc_mask,
+                                        const EBCellFlagFab& flags);
 
-    //////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     //
     // Diffusion
     //
-    //////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
 
     std::unique_ptr<DiffusionOp> diffusion_op;
 
-    //////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     //
     // Nodal Projection
     //
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    std::unique_ptr<NodalProjector> nodal_projector;
+    ////////////////////////////////////////////////////////////////////////////
 
+    std::unique_ptr<NodalProjector> nodal_projector;
 
 protected:
 
     //! Tagging cells for refinement
-    virtual void ErrorEst(int lev, TagBoxArray & tags, Real time, int ngrow) override;
+    virtual void ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow) override;
 
     //! Make a new level using provided BoxArray and DistributionMapping and
     //! fill with interpolated coarse level data. Called by AmrCore::regrid.
-    virtual void MakeNewLevelFromCoarse(int lev, Real time, const BoxArray & ba,
-                                        const DistributionMapping & dm) override
+    virtual void MakeNewLevelFromCoarse (int lev, Real time, const BoxArray & ba,
+                                         const DistributionMapping & dm) override
         {
             amrex::Abort("MakeNewLevelFromCoarse: To be implemented");
         }
@@ -435,21 +431,21 @@ protected:
     //! Remake an existing level using provided BoxArray and
     //! DistributionMapping and fill with existing fine and coarse data. Called
     //! by AmrCore::regrid.
-    virtual void RemakeLevel(int lev, Real time, const BoxArray & ba,
-                             const DistributionMapping & dm) override
+    virtual void RemakeLevel (int lev, Real time, const BoxArray & ba,
+                              const DistributionMapping & dm) override
         {
             amrex::Abort("RemakeLevel: To be implemented");
         }
 
     //! Delete level data.  Called by AmrCore::regrid.
-    virtual void ClearLevel(int lev) override
+    virtual void ClearLevel (int lev) override
         {
             amrex::Abort("ClearLevel: To be implemented");
         }
 
-    void mfix_init_fluid(int is_restarting, Real dt, Real stop_time);
-    void mfix_set_bc0();
-    void mfix_set_p0();
+    void mfix_init_fluid (int is_restarting, Real dt, Real stop_time);
+    void mfix_set_bc0 ();
+    void mfix_set_p0 ();
 
     static Real gp0[3];
     static Real gravity[3];
@@ -472,37 +468,36 @@ protected:
     //! The particles see an inflow face as a solid wall; thus instead of
     //! creating a separate EBfactory for particles, we simply modify the
     //! level-set near inflow to see it as a wall
-    void mfix_set_ls_near_inflow();
+    void mfix_set_ls_near_inflow ();
 
-    void mfix_project_velocity   ();
-    void mfix_initial_iterations ( Real dt, Real stop_time );
+    void mfix_project_velocity ();
+    void mfix_initial_iterations (Real dt, Real stop_time);
 
-    void mfix_apply_nodal_projection ( Vector< std::unique_ptr< amrex::MultiFab > >& a_depdt,
-                                       amrex::Real a_time,
-                                       amrex::Real a_dt,
-                                       bool proj_2 );
+    void mfix_apply_nodal_projection (Vector< std::unique_ptr< amrex::MultiFab > >& a_depdt,
+                                      amrex::Real a_time,
+                                      amrex::Real a_dt,
+                                      bool proj_2 );
 
+    void apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                               Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                               Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
+                               Vector< std::unique_ptr<MultiFab> >& ep,
+                               Vector< std::unique_ptr<MultiFab> >& ro,
+                               Real time);
 
-    void apply_MAC_projection ( Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                                Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                                Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                                Vector< std::unique_ptr<MultiFab> >& ep,
-                                Vector< std::unique_ptr<MultiFab> >& ro,
-                                Real time);
+    void FillPatchVel (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
+                       const Vector<BCRec> & bcr);
+    void GetDataVel (int lev, Real time, Vector<MultiFab *> & data,
+                     Vector<Real> & datatime);
 
-    void FillPatchVel    (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
+    void FillPatchScalar (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
                           const Vector<BCRec> & bcr);
-    void GetDataVel      (int lev, Real time, Vector<MultiFab *> & data,
-                          Vector<Real> & datatime);
-
-    void FillPatchScalar(int lev, Real time, MultiFab & mf, int icomp, int ncomp,
-                         const Vector<BCRec> & bcr);
 
     void GetDataScalar (int lev, Real time, Vector<MultiFab *> & data, int icomp,
                         Vector<Real> & datatime);
 
-    void mfix_calc_particle_beta(Real time);
-    void mfix_calc_drag_fluid(Real time);
+    void mfix_calc_particle_beta (Real time);
+    void mfix_calc_drag_fluid (Real time);
 
     void AllocateArrays (int lev);
 
@@ -513,86 +508,87 @@ protected:
     void avgDown (int crse_lev, const MultiFab & S_fine, MultiFab & S_crse);
 
 private:
+    void make_eb_general ();
+    void make_eb_box ();
+    void make_eb_cylinder ();
+    void make_eb_hopper ();
+    void make_eb_cyclone ();
+    void make_eb_air_reactor ();
+    void make_eb_proto_clr ();
+    void make_eb_hourglass ();
+    void make_eb_clr ();
+    void make_eb_clr_riser ();
+    void make_eb_regular ();
 
-    void make_eb_general();
-    void make_eb_box();
-    void make_eb_cylinder();
-    void make_eb_hopper();
-    void make_eb_cyclone();
-    void make_eb_air_reactor();
-    void make_eb_proto_clr();
-    void make_eb_hourglass();
-    void make_eb_clr();
-    void make_eb_clr_riser();
-    void make_eb_regular();
+    void MakeBCArrays ();
 
-    void MakeBCArrays();
+    void check_data ();
 
-    void check_data();
+    void MakeNewLevelFromScratch (int lev, Real time, const BoxArray & new_grids,
+                                  const DistributionMapping & new_dmap) override;
 
-    void MakeNewLevelFromScratch(int lev, Real time, const BoxArray & new_grids,
-                                 const DistributionMapping & new_dmap) override;
+    void ReMakeNewLevelFromScratch (int lev, const BoxArray & new_grids,
+                                    const DistributionMapping & new_dmap);
 
-    void ReMakeNewLevelFromScratch(int lev, const BoxArray & new_grids,
-                                   const DistributionMapping & new_dmap);
+    void WriteCheckHeader (const std::string & name, int nstep, Real dt, Real time) const;
 
-    void WriteCheckHeader(const std::string & name, int nstep, Real dt, Real time) const;
+    void WriteJobInfo (const std::string & dir ) const;
 
-    void WriteJobInfo(const std::string & dir ) const;
+    static void GotoNextLine (std::istream & is);
 
-    static void GotoNextLine(std::istream & is);
-
-    void EvolveFluid(int nstep, Real & dt, Real & time, Real stop_time, Real drag_timing);
+    void EvolveFluid (int nstep, Real & dt, Real & time, Real stop_time, Real drag_timing);
 
     // Projection-related methods
-    void mfix_solve_poisson_equation( Vector< std::unique_ptr<MultiFab> >& phi,
+    void mfix_solve_poisson_equation (Vector< std::unique_ptr<MultiFab> >& phi,
                                       Vector< std::unique_ptr<MultiFab> >& rhs,
                                       Vector< std::unique_ptr<MultiFab> >& b,
                                       Vector< std::unique_ptr<MultiFab> >& fluxes);
 
     // Solve implicit diffusion
-    void solve_diffusion_equation(Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-                                  Vector< std::unique_ptr<MultiFab> >& phi,
-                                  Vector< std::unique_ptr<MultiFab> >& rhs,
-                                  int bc_lo[], int bc_hi[],
-                                  Real dt);
+    void solve_diffusion_equation (Vector< Vector< std::unique_ptr<MultiFab> > >& b,
+                                   Vector< std::unique_ptr<MultiFab> >& phi,
+                                   Vector< std::unique_ptr<MultiFab> >& rhs,
+                                   int bc_lo[], int bc_hi[],
+                                   Real dt);
 
-    void check_for_nans(int lev);
+    void check_for_nans (int lev);
 
-    void mfix_compute_convective_term(Vector< std::unique_ptr<MultiFab> >& conv_u,
-                                      Vector< std::unique_ptr<MultiFab> >& conv_s,
-                                      Vector< std::unique_ptr<MultiFab> >& vel,
-                                      Vector< std::unique_ptr<MultiFab> >& ep_g,
-                                      Vector< std::unique_ptr<MultiFab> >& ro_g,
-                                      Vector< std::unique_ptr<MultiFab> >& trac,
-                                      Real time);
+    void mfix_compute_convective_term (Vector< std::unique_ptr<MultiFab> >& conv_u,
+                                       Vector< std::unique_ptr<MultiFab> >& conv_s,
+                                       Vector< std::unique_ptr<MultiFab> >& vel,
+                                       Vector< std::unique_ptr<MultiFab> >& ep_g,
+                                       Vector< std::unique_ptr<MultiFab> >& ro_g,
+                                       Vector< std::unique_ptr<MultiFab> >& trac,
+                                       Real time);
 
-    int steady_state_reached(Real dt, int iter);
+    int steady_state_reached (Real dt, int iter);
 
-    void mfix_apply_predictor(Vector< std::unique_ptr<MultiFab> >& conv_u_old,
-                              Vector< std::unique_ptr<MultiFab> >& conv_s_old,
-                              Vector< std::unique_ptr<MultiFab> >& divtau_old,
-                              Vector< std::unique_ptr<MultiFab> >&   laps_old,
-                              Real time, Real dt, bool proj_2);
-    void mfix_apply_corrector(Vector< std::unique_ptr<MultiFab> >& conv_u_old,
-                              Vector< std::unique_ptr<MultiFab> >& conv_s_old,
-                              Vector< std::unique_ptr<MultiFab> >& divtau_old,
-                              Vector< std::unique_ptr<MultiFab> >&   laps_old,
-                              Real time, Real dt, bool proj_2);
+    void mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
+                               Vector< std::unique_ptr<MultiFab> >& conv_s_old,
+                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
+                               Vector< std::unique_ptr<MultiFab> >&   laps_old,
+                               Real time, Real dt, bool proj_2);
+
+    void mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
+                               Vector< std::unique_ptr<MultiFab> >& conv_s_old,
+                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
+                               Vector< std::unique_ptr<MultiFab> >&   laps_old,
+                               Real time, Real dt, bool proj_2);
 
     void mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps, amrex::Real);
+
     void mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_drag, amrex::Real);
 
-    void mfix_compute_diveu(Real time);
+    void mfix_compute_diveu (Real time);
 
-    void mfix_print_max_vel(int lev);
+    void mfix_print_max_vel (int lev);
     void mfix_print_max_gp (int lev);
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
-    BoxArray MakeBaseGrids() const;
-    void ChopGrids(const Box& domain, BoxArray& ba, int target_size) const;
+    BoxArray MakeBaseGrids () const;
+    void ChopGrids (const Box& domain, BoxArray& ba, int target_size) const;
 
-    void mfix_set_bc_type(int lev);
+    void mfix_set_bc_type (int lev);
 
     static int nlev;
     static int ntrac;
@@ -621,15 +617,15 @@ private:
     Vector< std::unique_ptr<iMultiFab> > flag;
 
     // Void fraction
-    Vector< std::unique_ptr<MultiFab> > ep_g ;
+    Vector< std::unique_ptr<MultiFab> > ep_g;
     Vector< std::unique_ptr<MultiFab> > ep_go;
 
     // Gas pressure fraction
-    Vector< std::unique_ptr<MultiFab> > p_g ;
+    Vector< std::unique_ptr<MultiFab> > p_g;
     Vector< std::unique_ptr<MultiFab> > p_go;
 
     // Gas density
-    Vector< std::unique_ptr<MultiFab> > ro_g ;
+    Vector< std::unique_ptr<MultiFab> > ro_g;
     Vector< std::unique_ptr<MultiFab> > ro_go;
 
     // Tracer in gas
@@ -637,17 +633,17 @@ private:
     Vector< std::unique_ptr<MultiFab> > trac_o;
 
     // Gas velocity
-    Vector< std::unique_ptr<MultiFab> > vel_g ;
+    Vector< std::unique_ptr<MultiFab> > vel_g;
     Vector< std::unique_ptr<MultiFab> > vel_go;
 
     // Base state pressure
     Vector< std::unique_ptr<MultiFab> > p0_g;
 
     // Pressure gradients
-    Vector< std::unique_ptr<MultiFab> > gp ;
+    Vector< std::unique_ptr<MultiFab> > gp;
 
     // Molecular viscosity
-    Vector< std::unique_ptr<MultiFab> > mu_g ;
+    Vector< std::unique_ptr<MultiFab> > mu_g;
 
     // Cell-based
     Vector< std::unique_ptr<MultiFab> > vort;
@@ -716,8 +712,8 @@ private:
     // ***************************************************************
 
     // Verbosity
-    int  nodal_mg_verbose = 0;
-    int  nodal_mg_cg_verbose = 0;
+    int nodal_mg_verbose = 0;
+    int nodal_mg_cg_verbose = 0;
 
     // Control MLMG behavior
     int  nodal_mg_maxiter = 100;
@@ -740,8 +736,8 @@ private:
     // ***************************************************************
 
     // Verbosity
-    int  mac_mg_verbose = 0;
-    int  mac_mg_cg_verbose = 0;
+    int mac_mg_verbose = 0;
+    int mac_mg_cg_verbose = 0;
 
     // Control MLMG behavior
     int  mac_mg_maxiter = 200;
@@ -758,8 +754,8 @@ private:
     // ***************************************************************
 
     // Verbosity
-    int  diff_mg_verbose = 0;
-    int  diff_mg_cg_verbose = 0;
+    int diff_mg_verbose = 0;
+    int diff_mg_cg_verbose = 0;
 
     // Control MLMG behavior
     int  diff_mg_maxiter = 100;
@@ -779,7 +775,7 @@ private:
 
     // Maximum number of iterations to steady state --
     //    this default may be over-written in the inputs file
-    int  steady_state_maxiter = 100000000;
+    int steady_state_maxiter = 100000000;
 
     int call_udf;
     bool dual_grid = false;
@@ -817,7 +813,6 @@ private:
     //
     // Options to control the computing of particle eulerian velocities
     //
-
     amrex::Vector<Real> avg_p_g  ;
     amrex::Vector<Real> avg_ep_g ;
     amrex::Vector<Real> avg_vel_g;
@@ -898,7 +893,6 @@ private:
     Vector<BCRec> bcs_s; // For scalars
     Vector<BCRec> bcs_f; // For generic first-order extrapolation
 
-
     /***************************************************************************
      *                                                                         *
      * EB Data (including level-set data)                                      *
@@ -917,10 +911,9 @@ private:
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
 
     bool mfix_update_ebfactory (int a_lev);
-
 };
 
-inline std::string mfix::get_load_balance_type()
+inline std::string mfix::get_load_balance_type ()
 {
     return load_balance_type;
 }

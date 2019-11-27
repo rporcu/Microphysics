@@ -7,7 +7,7 @@
 using namespace std;
 
 void
-mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
+mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
 {
     // dt is always computed even when fixed_dt is set, 
     // so we can issue a warning if the value of fixed dt does not satisfy the CFL condition.
@@ -68,9 +68,9 @@ mfix::mfix_compute_dt(int nstep, Real time, Real stop_time, Real& dt)
             
             Box bx(mfi.tilebox());
 
-            const auto&  vel_fab   = static_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
-            const auto&  flags     = vel_fab.getEBCellFlagFab();
-            const auto&  flags_fab = flags.array();
+            const auto& vel_fab   = static_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
+            const auto& flags     = vel_fab.getEBCellFlagFab();
+            const auto& flags_fab = flags.array();
 
             const GpuArray<Real, 3> gp0_dev = {gp0[0], gp0[1], gp0[2]};
             const GpuArray<Real, 3> gravity_dev = {gravity[0], gravity[1], gravity[2]};

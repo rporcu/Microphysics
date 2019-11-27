@@ -11,9 +11,9 @@
 #include <mfix.H>
 #include <mfix_F.H>
 
-int   max_step    = -1;
-int   regrid_int  = -1;
-Real stop_time    = -1.0;
+int  max_step   = -1;
+int  regrid_int = -1;
+Real stop_time  = -1.0;
 
 bool write_eb_surface = false;
 bool write_ls         = false;
@@ -24,13 +24,13 @@ int repl_x = 1;
 int repl_y = 1;
 int repl_z = 1;
 
-int  check_int = -1;
-int  last_chk  = -1;
+int check_int = -1;
+int last_chk  = -1;
 std::string check_file {"chk"};
 
-int   plot_int = -1;
-int   last_plt = -1;
-Real  plot_per = -1.0;
+int  plot_int = -1;
+int  last_plt = -1;
+Real plot_per = -1.0;
 std::string plot_file {"plt"};
 std::string static_plt_file {"plt_ls"};
 
@@ -41,12 +41,12 @@ int last_par_ascii  = -1;
 std::string par_ascii_file {"par"};
 
 int avg_int = -1;
-int last_avg  = -1;
+int last_avg = -1;
 std::string avg_file {"avg_region"};
 
 std::string mfix_dat {"mfix.dat"};
 
-void set_ptr_to_mfix(mfix& my_mfix);
+void set_ptr_to_mfix (mfix& my_mfix);
 
 void writeBuildInfo ();
 
@@ -233,7 +233,7 @@ int main (int argc, char* argv[])
     //     mfix_get_data -> get_data -> read_namelist
     //                                        |
     //      (loads `mfix.dat`) ---------------+
-    mfix_get_data( &solve_fluid, &solve_dem, &call_udf, &name_len, cmfix_dat);
+    mfix_get_data(&solve_fluid, &solve_dem, &call_udf, &name_len, cmfix_dat);
 
     // Default constructor. Note inheritance: mfix : AmrCore : AmrMesh
     //                                                             |
@@ -325,14 +325,14 @@ int main (int argc, char* argv[])
     {
        if (solve_fluid)
           my_mfix.mfix_compute_vort();
-       my_mfix.WritePlotFile( plot_file, nstep, time );
+       my_mfix.WritePlotFile(plot_file, nstep, time);
     }
 
     // We automatically write checkpoint files with the initial data
     //    if check_int > 0
     if ( restart_file.empty() && check_int > 0 )
     {
-       my_mfix.WriteCheckPointFile( check_file, nstep, dt, time );
+       my_mfix.WriteCheckPointFile(check_file, nstep, dt, time);
        last_chk = nstep;
     }
 
@@ -340,13 +340,13 @@ int main (int argc, char* argv[])
     //    if par_ascii_int > 0
     if ( par_ascii_int > 0 )
     {
-       my_mfix.WriteParticleAscii( par_ascii_file, nstep );
+       my_mfix.WriteParticleAscii(par_ascii_file, nstep);
        last_par_ascii = nstep;
     }
 
     if ( avg_int > 0 )
       {
-        my_mfix.WriteAverageRegions( avg_file, nstep, time );
+        my_mfix.WriteAverageRegions(avg_file, nstep, time);
         last_avg = nstep;
       }
 
@@ -378,7 +378,7 @@ int main (int argc, char* argv[])
                    my_mfix.Regrid();
                 }
 
-                my_mfix.Evolve(nstep,dt,prev_dt,time,stop_time);
+                my_mfix.Evolve(nstep, dt, prev_dt, time, stop_time);
 
                 Real end_step = ParallelDescriptor::second() - strt_step;
                 ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
@@ -390,7 +390,7 @@ int main (int argc, char* argv[])
                     time += prev_dt;
                     nstep++;
 
-                    writeNow(nstep,time,prev_dt,solve_fluid,my_mfix);
+                    writeNow(nstep, time, prev_dt, solve_fluid, my_mfix);
                 }
 
                 // Mechanism to terminate MFIX normally.
@@ -407,11 +407,11 @@ int main (int argc, char* argv[])
 
     // Dump plotfile at the final time
     if ( check_int > 0 && nstep != last_chk)
-        my_mfix.WriteCheckPointFile( check_file    , nstep, dt, time );
+        my_mfix.WriteCheckPointFile(check_file, nstep, dt, time);
     if ( plot_int > 0  && nstep != last_plt)
-        my_mfix.WritePlotFile      ( plot_file     , nstep, time );
+        my_mfix.WritePlotFile(plot_file, nstep, time);
     if ( par_ascii_int > 0  && nstep != last_par_ascii)
-        my_mfix.WriteParticleAscii ( par_ascii_file, nstep );
+        my_mfix.WriteParticleAscii(par_ascii_file, nstep);
 
     my_mfix.usr3();
 
