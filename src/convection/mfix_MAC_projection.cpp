@@ -182,6 +182,4 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
       ep_v_mac[lev]->FillBoundary(geom[lev].periodicity());
       ep_w_mac[lev]->FillBoundary(geom[lev].periodicity());
    }
-
-   Gpu::synchronize();
 }

@@ -174,8 +174,6 @@ mfix::EvolveFluid( int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
         }
 #endif
 
-    Gpu::synchronize();
-
     BL_PROFILE_REGION_STOP("mfix::EvolveFluid");
 }
 
@@ -203,8 +201,6 @@ mfix::mfix_project_velocity ()
        p_g[lev]->setVal(0.0);
         gp[lev]->setVal(0.0);
     }
-
-    Gpu::synchronize();
 }
 
 void
@@ -279,8 +275,6 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
        mfix_set_density_bcs  (time, ro_g);
        mfix_set_scalar_bcs   (time, trac, mu_g);
    }
-
-   Gpu::synchronize();
 }
 
 //
@@ -420,8 +414,6 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     mfix_apply_nodal_projection( depdt, new_time, dt, proj_2 );
 
     mfix_set_velocity_bcs (new_time, vel_g, 0);
-
-    Gpu::synchronize();
 }
 
 //
@@ -568,8 +560,6 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     mfix_apply_nodal_projection( depdt, new_time, dt, proj_2 );
 
     mfix_set_velocity_bcs (new_time, vel_g, 0);
-
-    Gpu::synchronize();
 }
 
 void
@@ -818,8 +808,6 @@ mfix::steady_state_reached (Real dt, int iter)
        amrex::Print() << "||v-vo||/||vo|| , dv/dt  = " << tmp2 <<" , "<< delta_v/dt << "\n";
        amrex::Print() << "||w-wo||/||wo|| , dw/dt  = " << tmp3 <<" , "<< delta_w/dt << "\n";
        amrex::Print() << "||p-po||/||po|| , dp/dt  = " << tmp4 <<" , "<< delta_p/dt << "\n";
-
-       Gpu::synchronize();
     }
 
     int reached = 1;

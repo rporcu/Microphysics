@@ -163,8 +163,6 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
     if (mf_pointer[0] != ep_g[0].get())
       ep_g[0]->copy(*mf_pointer[0],0,0,ep_g[0]->nComp());
 
-    Gpu::synchronize();
-
     for (int lev = 0; lev < nlev; lev++)
        if (mf_pointer[lev] != ep_g[lev].get())
           delete mf_pointer[lev];
@@ -217,6 +215,4 @@ void mfix::mfix_calc_volume_fraction(Real& sum_vol)
     int lev = 0; int comp = 0;
 
     sum_vol = volWgtSum(lev,*ep_g[lev],comp);
-
-    Gpu::synchronize();
 }

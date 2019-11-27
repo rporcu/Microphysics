@@ -97,8 +97,6 @@ mfix::mfix_apply_nodal_projection ( Vector< std::unique_ptr<MultiFab> >& a_depdt
         EB_set_covered(*epu[lev], 0, epu[lev]->nComp(), 1, 0.0);
     }
 
-    Gpu::synchronize();
-
     //
     // Compute RHS
     //
@@ -193,6 +191,4 @@ mfix::mfix_apply_nodal_projection ( Vector< std::unique_ptr<MultiFab> >& a_depdt
         amrex::Print() << "AT LEVEL " << lev << " AFTER PROJECTION: \n";
         mfix_print_max_vel(lev);
     }
-
-    Gpu::synchronize();
 }
