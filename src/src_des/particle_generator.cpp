@@ -881,13 +881,13 @@ ParticlesGenerator::grow_pdata(const int gsize)
   {
     const int size = std::max<int>(r_gsize, 1024*nr);
 
-//    m_rdata.resize(size, 0);
+    m_rdata.resize(size, 0);
   }
   else if(r_gsize >= m_rdata.size())
   {
     const int size = std::max<int>(2*m_rdata.size(), r_gsize);
 
-//    m_rdata.resize(size, 0);
+    m_rdata.resize(size, 0);
   }
 
   // Increase integer data
@@ -895,13 +895,13 @@ ParticlesGenerator::grow_pdata(const int gsize)
   {
     const int size = std::max<int>(i_gsize, 1024*ni);
 
-//    m_idata.resize(size, 0);
+    m_idata.resize(size, 0);
   }
   else if(i_gsize >= m_idata.size())
   {
     const int size = std::max<int>(2*m_idata.size(), i_gsize);
 
-//    m_idata.resize(size, 0);
+    m_idata.resize(size, 0);
   }
 
   return;
