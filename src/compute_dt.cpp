@@ -78,7 +78,8 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
             // Compute CFL on a per cell basis
             if (flags.getType(bx) != FabType::covered)
             {
-              amrex::ParallelFor(bx,[ro,ep,gp0_dev,gradp,drag_fab,gravity_dev,vel,odx,ody,odz,flags_fab,mu,
+              amrex::ParallelFor(bx,
+                  [ro,ep,gp0_dev,gradp,drag_fab,gravity_dev,vel,odx,ody,odz,flags_fab,mu,
 #ifdef AMREX_USE_CUDA
                   cfl_max_ptr]
 #else

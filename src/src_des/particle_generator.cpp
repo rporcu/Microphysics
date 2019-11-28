@@ -15,9 +15,6 @@
 #include <cmath>
 #include <iterator>
 
-#define sqrt3 std::sqrt(3.0)
-#define sqrt6o3x2 2.0*std::sqrt(6.0)/3.0
-
 namespace generator_aux {
 
 struct ParticleType {
@@ -51,23 +48,22 @@ struct ParticleType {
 using namespace amrex;
 using namespace generator_aux;
 
-ParticlesGenerator::ParticlesGenerator()
+ParticlesGenerator::ParticlesGenerator ()
   : m_rdata(0)
   , m_idata(0)
 {}
 
-ParticlesGenerator::~ParticlesGenerator()
+ParticlesGenerator::~ParticlesGenerator ()
 {}
 
 void
-ParticlesGenerator::generate(int& pc,
-                             const IntVect& lo,
-                             const IntVect& hi,
-                             const amrex::Real dx,
-                             const amrex::Real dy,
-                             const amrex::Real dz)
+ParticlesGenerator::generate (int& pc,
+                              const IntVect& lo,
+                              const IntVect& hi,
+                              const amrex::Real dx,
+                              const amrex::Real dy,
+                              const amrex::Real dz)
 {
-
   const int init_pc(pc);
 
   const amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
@@ -76,15 +72,16 @@ ParticlesGenerator::generate(int& pc,
   int icv(1);
   int type(1);
 
-
   // Get the IC index
   int icv0(1);
-  for(; icv0 <= get_dim_ic(); icv0++) {
 
-    if(ic_defined_cpp(icv0) and std::abs(get_ic_ep_g(icv0)-1.0) > tolerance) {
-
+  for(; icv0 <= get_dim_ic(); icv0++)
+  {
+    if(ic_defined_cpp(icv0) and std::abs(get_ic_ep_g(icv0)-1.0) > tolerance)
+    {
       // Get the solids type index
       int type0(1);
+
       for(; type0 <= get_particle_types(); type0++)
         if(get_ic_ep_s(icv0,type0) > tolerance)
           break;
@@ -107,21 +104,20 @@ ParticlesGenerator::generate(int& pc,
       else if(ic_pack_type_str.compare("EIGHTPER") == 0)
         eight_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz);
       else
-        {
-          amrex::Print() << "Unknown particle generator fill type" << std::endl;
-          exit(1000);
-        }
+      {
+        amrex::Print() << "Unknown particle generator fill type" << std::endl;
+        exit(1000);
+      }
 
       // HACK -- the original code assumed that only one IC region would have
       // particles. This saves the IC region and and type to use later.
-      if(np0 > 0){
-
+      if(np0 > 0)
+      {
         type = type0;
         icv  = icv0;
         np  += np0;
         break;
       }
-
     }
   }
 
@@ -154,7 +150,8 @@ ParticlesGenerator::generate(int& pc,
   {
     const amrex::Real ic_dp_mean = get_ic_dp_mean(icv, type);
 
-    AMREX_FOR_1D(np, p, { p_dp[p] = ic_dp_mean; });
+    amrex::ParallelFor(np, [p_dp,ic_dp_mean]
+      AMREX_GPU_DEVICE (int p) noexcept { p_dp[p] = ic_dp_mean; });
   }
 
   char ic_ro_s_dist[16];
@@ -175,7 +172,8 @@ ParticlesGenerator::generate(int& pc,
   {
     const amrex::Real ic_ro_s_mean = get_ic_ro_s_mean(icv, type);
 
-    AMREX_FOR_1D(np, p, { p_ro_s[p] = ic_ro_s_mean; });
+    amrex::ParallelFor(np, [p_ro_s,ic_ro_s_mean]
+      AMREX_GPU_DEVICE (int p) noexcept { p_ro_s[p] = ic_ro_s_mean; });
   }
 
   pc = init_pc;
@@ -187,25 +185,30 @@ ParticlesGenerator::generate(int& pc,
   amrex::Real* p_rdata = m_rdata.data();
   int* p_idata = m_idata.data();
 
-  AMREX_FOR_1D(np, p,
+  const int local_nr = this->nr;
+  const int local_ni = this->ni;
+
+  amrex::ParallelFor(np,
+    [p_rdata,p_idata,p_dp,p_ro_s,pc,ic_u_s,ic_v_s,ic_w_s,type,local_nr,local_ni]
+    AMREX_GPU_DEVICE (int p) noexcept
   {
     // amrex::Real pvol = (M_PI/6.0) * (dp[p]*dp[p]*dp[p]); // UNUSED_VARIABLE
 
     const int local_pc = pc + p;
 
     //< Radius................. 4
-    p_rdata[local_pc*nr + 3] = 0.5 * p_dp[p];
+    p_rdata[local_pc*local_nr + 3] = 0.5 * p_dp[p];
 
     //< Density................ 5
-    p_rdata[local_pc*nr + 4] = p_ro_s[p];
+    p_rdata[local_pc*local_nr + 4] = p_ro_s[p];
 
     //< Linear velocity........ 6,7,8
-    p_rdata[local_pc*nr + 5] = ic_u_s;
-    p_rdata[local_pc*nr + 6] = ic_v_s;
-    p_rdata[local_pc*nr + 7] = ic_w_s;
+    p_rdata[local_pc*local_nr + 5] = ic_u_s;
+    p_rdata[local_pc*local_nr + 6] = ic_v_s;
+    p_rdata[local_pc*local_nr + 7] = ic_w_s;
 
     //< Type................... 1
-    p_idata[local_pc*ni + 0] = type;
+    p_idata[local_pc*local_ni + 0] = type;
   });
 
   pc += np;
@@ -224,21 +227,24 @@ ParticlesGenerator::generate(int& pc,
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 void
-ParticlesGenerator::hex_close_pack(const int icv,
-                                   const int type,
-                                   const IntVect& lo,
-                                   const IntVect& hi,
-                                   int& np,
-                                   int& pc,
-                                   const amrex::Real dx,
-                                   const amrex::Real dy,
-                                   const amrex::Real dz)
+ParticlesGenerator::hex_close_pack (const int icv,
+                                    const int type,
+                                    const IntVect& lo,
+                                    const IntVect& hi,
+                                    int& np,
+                                    int& pc,
+                                    const amrex::Real dx,
+                                    const amrex::Real dy,
+                                    const amrex::Real dz)
 {
   // indices
   int i_w, i_e, j_s, j_n, k_b, k_t;
 
   amrex::Real ic_dlo[3], ic_dhi[3];
   amrex::Real max_dp, max_rp;
+
+  const Real sqrt3 = std::sqrt(3.0);
+  const Real sqrt6o3x2 = 2.0*std::sqrt(6.0)/3.0;
 
   int seed;
   IntVect max_seed, seed_lo, seed_hi, delta_bx;
@@ -302,19 +308,23 @@ ParticlesGenerator::hex_close_pack(const int icv,
 
   amrex::Real* p_rdata = m_rdata.data();
 
-  AMREX_FOR_3D(bx, i, j, k,
-  {
-    const int local_i = i - seed_lo[0];
-    const int local_j = j - seed_lo[1];
-    const int local_k = k - seed_lo[2];
+  const int local_nr = this->nr;
 
-    const int local_pc =
-      pc + (local_j + local_k*delta_bx[1] + local_i*delta_bx[1]*delta_bx[2]);
+  amrex::ParallelFor(bx,
+    [p_rdata,seed_lo,delta_bx,max_rp,i_w,j_s,k_b,local_nr,pc,sqrt6o3x2,sqrt3,dx,dy,dz]
+    AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      const int local_i = i - seed_lo[0];
+      const int local_j = j - seed_lo[1];
+      const int local_k = k - seed_lo[2];
 
-    p_rdata[local_pc*nr + 0] = i_w*dx + max_rp*(1. + i*sqrt6o3x2);
-    p_rdata[local_pc*nr + 1] = j_s*dy + max_rp*(1. + 2.*j + ((i+k)%2));
-    p_rdata[local_pc*nr + 2] = k_b*dz + max_rp*(1. + sqrt3*(k+((i%2)/3.)));
-  });
+      const int local_pc =
+        pc + (local_j + local_k*delta_bx[1] + local_i*delta_bx[1]*delta_bx[2]);
+
+      p_rdata[local_pc*local_nr + 0] = i_w*dx + max_rp*(1. + i*sqrt6o3x2);
+      p_rdata[local_pc*local_nr + 1] = j_s*dy + max_rp*(1. + 2.*j + ((i+k)%2));
+      p_rdata[local_pc*local_nr + 2] = k_b*dz + max_rp*(1. + sqrt3*(k+((i%2)/3.)));
+    });
 
   pc += np;
 
@@ -330,15 +340,15 @@ ParticlesGenerator::hex_close_pack(const int icv,
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 void
-ParticlesGenerator::one_per_fill(const int icv,
-                                 const int type,
-                                 const IntVect& lo,
-                                 const IntVect& hi,
-                                 int& np,
-                                 int& pc,
-                                 const amrex::Real dx,
-                                 const amrex::Real dy,
-                                 const amrex::Real dz)
+ParticlesGenerator::one_per_fill (const int icv,
+                                  const int type,
+                                  const IntVect& lo,
+                                  const IntVect& hi,
+                                  int& np,
+                                  int& pc,
+                                  const amrex::Real dx,
+                                  const amrex::Real dy,
+                                  const amrex::Real dz)
 {
   // indices
   int i_w, i_e, j_s, j_n, k_b, k_t;
@@ -369,19 +379,22 @@ ParticlesGenerator::one_per_fill(const int icv,
 
   amrex::Real* p_rdata = m_rdata.data();
 
-  AMREX_FOR_3D(bx, i, j, k,
-  {
-    const int local_i = i - seed_lo[0];
-    const int local_j = j - seed_lo[1];
-    const int local_k = k - seed_lo[2];
+  const int local_nr = this->nr;
 
-    const int local_pc =
-      pc + (local_i + local_k*delta_bx[0] + local_j*delta_bx[0]*delta_bx[2]);
+  amrex::ParallelFor(bx, [p_rdata,seed_lo,delta_bx,local_nr,dx,dy,dz,pc]
+    AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      const int local_i = i - seed_lo[0];
+      const int local_j = j - seed_lo[1];
+      const int local_k = k - seed_lo[2];
 
-    p_rdata[local_pc*nr + 0] = (i + 0.5) * dx;
-    p_rdata[local_pc*nr + 1] = (j + 0.5) * dy;
-    p_rdata[local_pc*nr + 2] = (k + 0.5) * dz;
-  });
+      const int local_pc =
+        pc + (local_i + local_k*delta_bx[0] + local_j*delta_bx[0]*delta_bx[2]);
+
+      p_rdata[local_pc*local_nr + 0] = (i + 0.5) * dx;
+      p_rdata[local_pc*local_nr + 1] = (j + 0.5) * dy;
+      p_rdata[local_pc*local_nr + 2] = (k + 0.5) * dz;
+    });
 
   pc += np;
 
@@ -397,15 +410,15 @@ ParticlesGenerator::one_per_fill(const int icv,
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 void
-ParticlesGenerator::eight_per_fill(const int icv,
-                                   const int type,
-                                   const IntVect& lo,
-                                   const IntVect& hi,
-                                   int& np,
-                                   int& pc,
-                                   const amrex::Real dx,
-                                   const amrex::Real dy,
-                                   const amrex::Real dz)
+ParticlesGenerator::eight_per_fill (const int icv,
+                                    const int type,
+                                    const IntVect& lo,
+                                    const IntVect& hi,
+                                    int& np,
+                                    int& pc,
+                                    const amrex::Real dx,
+                                    const amrex::Real dy,
+                                    const amrex::Real dz)
 {
   // indices
   amrex::IntVect seed_lo, seed_hi, delta_bx;
@@ -429,19 +442,22 @@ ParticlesGenerator::eight_per_fill(const int icv,
 
   amrex::Real* p_rdata = m_rdata.data();
 
-  AMREX_FOR_3D(bx, i, j, k,
-  {
-    const int local_i = i - seed_lo[0];
-    const int local_j = j - seed_lo[1];
-    const int local_k = k - seed_lo[2];
+  const int local_nr = this->nr;
 
-    const int local_pc =
-      pc + (local_i + local_k*delta_bx[0] + local_j*delta_bx[0]*delta_bx[2]);
+  amrex::ParallelFor(bx, [p_rdata,seed_lo,delta_bx,pc,dx,dy,dz,local_nr]
+    AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      const int local_i = i - seed_lo[0];
+      const int local_j = j - seed_lo[1];
+      const int local_k = k - seed_lo[2];
 
-    p_rdata[local_pc*nr + 0] = (i + 0.5)*dx/2.;
-    p_rdata[local_pc*nr + 1] = (j + 0.5)*dy/2.;
-    p_rdata[local_pc*nr + 2] = (k + 0.5)*dz/2.;
-  });
+      const int local_pc =
+        pc + (local_i + local_k*delta_bx[0] + local_j*delta_bx[0]*delta_bx[2]);
+
+      p_rdata[local_pc*local_nr + 0] = (i + 0.5)*dx/2.;
+      p_rdata[local_pc*local_nr + 1] = (j + 0.5)*dy/2.;
+      p_rdata[local_pc*local_nr + 2] = (k + 0.5)*dz/2.;
+    });
 
   pc += np;
 
@@ -457,16 +473,16 @@ ParticlesGenerator::eight_per_fill(const int icv,
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 void
-ParticlesGenerator::random_fill(const int icv,
-                                const int type,
-                                const IntVect& lo,
-                                const IntVect& hi,
-                                int& np,
-                                int& pc,
-                                const amrex::Real dx,
-                                const amrex::Real dy,
-                                const amrex::Real dz,
-                                const bool fix_seed)
+ParticlesGenerator::random_fill (const int icv,
+                                 const int type,
+                                 const IntVect& lo,
+                                 const IntVect& hi,
+                                 int& np,
+                                 int& pc,
+                                 const amrex::Real dx,
+                                 const amrex::Real dy,
+                                 const amrex::Real dz,
+                                 const bool fix_seed)
 {
     // indices
   int i_w, i_e, j_s, j_n, k_b, k_t;
@@ -657,8 +673,7 @@ ParticlesGenerator::random_fill(const int icv,
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 void
-ParticlesGenerator::generate_prop(const int nrp,
-                                  void* particles)
+ParticlesGenerator::generate_prop (const int nrp, void* particles)
 {
   generator_aux::ParticleType* parts =
     static_cast<generator_aux::ParticleType*>(particles);
@@ -666,18 +681,22 @@ ParticlesGenerator::generate_prop(const int nrp,
   amrex::Real* p_rdata = m_rdata.data();
   int* p_idata = m_idata.data();
 
-  AMREX_FOR_1D(nrp, p,
+  const int local_nr = this->nr;
+  const int local_ni = this->ni;
+
+  amrex::ParallelFor(nrp, [parts,p_rdata,p_idata,local_nr,local_ni]
+    AMREX_GPU_DEVICE (int p) noexcept
   {
-    parts[p].pos[0] = p_rdata[p*nr + 0];
-    parts[p].pos[1] = p_rdata[p*nr + 1];
-    parts[p].pos[2] = p_rdata[p*nr + 2];
+    parts[p].pos[0] = p_rdata[p*local_nr + 0];
+    parts[p].pos[1] = p_rdata[p*local_nr + 1];
+    parts[p].pos[2] = p_rdata[p*local_nr + 2];
 
-    amrex::Real rad = p_rdata[p*nr + 3];
-    amrex::Real rho = p_rdata[p*nr + 4];
+    amrex::Real rad = p_rdata[p*local_nr + 3];
+    amrex::Real rho = p_rdata[p*local_nr + 4];
 
-    parts[p].vel[0] = p_rdata[p*nr + 5];
-    parts[p].vel[1] = p_rdata[p*nr + 6];
-    parts[p].vel[2] = p_rdata[p*nr + 7];
+    parts[p].vel[0] = p_rdata[p*local_nr + 5];
+    parts[p].vel[1] = p_rdata[p*local_nr + 6];
+    parts[p].vel[2] = p_rdata[p*local_nr + 7];
 
     amrex::Real vol  = (4.0/3.0)*M_PI*rad*rad*rad;
     amrex::Real mass = vol * rho;
@@ -698,9 +717,11 @@ ParticlesGenerator::generate_prop(const int nrp,
     parts[p].drag[1]  = 0.0;
     parts[p].drag[2]  = 0.0;
 
-    parts[p].phase = p_idata[p*ni + 0];
+    parts[p].phase = p_idata[p*local_ni + 0];
     parts[p].state = 1;
   });
+
+  Gpu::synchronize();
 
   m_rdata.clear();
   m_idata.clear();
@@ -714,11 +735,11 @@ ParticlesGenerator::generate_prop(const int nrp,
 //                                                                     !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 void
-ParticlesGenerator::nor_rno(amrex::Gpu::ManagedVector<amrex::Real>& dp,
-                            const amrex::Real mean,
-                            const amrex::Real sigma,
-                            const amrex::Real dp_min,
-                            const amrex::Real dp_max)
+ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
+                             const amrex::Real mean,
+                             const amrex::Real sigma,
+                             const amrex::Real dp_min,
+                             const amrex::Real dp_max)
 {
   // Local variables
   //-----------------------------------------------
@@ -742,49 +763,56 @@ ParticlesGenerator::nor_rno(amrex::Gpu::ManagedVector<amrex::Real>& dp,
   int* p_fails = fails_gpu.dataPtr();
 #endif
 
-  AMREX_FOR_1D(nsize_half, i,
-  {
-    amrex::Real x(0);
-    amrex::Real y(0);
-
-    amrex::Real dp1 = dp_min - 1;
-    amrex::Real dp2 = dp_min - 1;
-
-    int iterations(0);
-
-    while(not(dp1 >= dp_min and dp1 <= dp_max and dp2 >= dp_min and dp2 <= dp_max) and
-          iterations < maxfails)
-    {
-      amrex::Real w(1.1);
-      while(w > 1 or std::abs(w-1) < tolerance)
-      {
-        x = 2*amrex::Random() - 1;
-        y = 2*amrex::Random() - 1;
-        w = x*x + y*y;
-      }
-
-      w = std::sqrt((-2.0 * std::log(w)) / w);
-
-      amrex::Real dp1 = x * w * sigma + mean;
-      amrex::Real dp2 = y * w * sigma + mean;
-
-      p_dp[2*i] = dp1;
-
-      if((2*i+1) < nsize)
-        p_dp[2*i+1] = dp2;
-
-      iterations++;
-    }
-    
-    if(not(iterations < maxfails))
-    {
+  amrex::ParallelFor(nsize_half,
+    [p_dp,dp_min,dp_max,maxfails,tolerance,sigma,mean,nsize,
 #ifdef AMREX_USE_CUDA
-      Gpu::Atomic::Add(p_fails, 1);
+     p_fails]
 #else
-      fails++;
+     &fails]
 #endif
-    }
-  });
+    AMREX_GPU_DEVICE (int i) noexcept
+    {
+      amrex::Real x(0);
+      amrex::Real y(0);
+
+      amrex::Real dp1 = dp_min - 1;
+      amrex::Real dp2 = dp_min - 1;
+
+      int iterations(0);
+
+      while(not(dp1 >= dp_min and dp1 <= dp_max and dp2 >= dp_min and dp2 <= dp_max) and
+            iterations < maxfails)
+      {
+        amrex::Real w(1.1);
+        while(w > 1 or std::abs(w-1) < tolerance)
+        {
+          x = 2*amrex::Random() - 1;
+          y = 2*amrex::Random() - 1;
+          w = x*x + y*y;
+        }
+
+        w = std::sqrt((-2.0 * std::log(w)) / w);
+
+        amrex::Real dp1 = x * w * sigma + mean;
+        amrex::Real dp2 = y * w * sigma + mean;
+
+        p_dp[2*i] = dp1;
+
+        if((2*i+1) < nsize)
+          p_dp[2*i+1] = dp2;
+
+        iterations++;
+      }
+      
+      if(not(iterations < maxfails))
+      {
+#ifdef AMREX_USE_CUDA
+        Gpu::Atomic::Add(p_fails, 1);
+#else
+        fails++;
+#endif
+      }
+    });
 
   Gpu::synchronize();
 
@@ -847,9 +875,9 @@ ParticlesGenerator::nor_rno(amrex::Gpu::ManagedVector<amrex::Real>& dp,
 //                                                                     !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 void
-ParticlesGenerator::uni_rno(amrex::Gpu::ManagedVector<amrex::Real>& dp,
-                            const amrex::Real dp_min,
-                            const amrex::Real dp_max)
+ParticlesGenerator::uni_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
+                             const amrex::Real dp_min,
+                             const amrex::Real dp_max)
 {
   amrex::Real lscale = dp_max - dp_min;
 
@@ -857,10 +885,8 @@ ParticlesGenerator::uni_rno(amrex::Gpu::ManagedVector<amrex::Real>& dp,
 
   amrex::Real* p_dp = dp.data();
 
-  AMREX_FOR_1D(nsize, lc,
-  {
-    p_dp[lc] = dp_min + lscale*amrex::Random();
-  });
+  amrex::ParallelFor(nsize, [p_dp,dp_min,lscale]
+    AMREX_GPU_DEVICE (int lc) noexcept { p_dp[lc] = dp_min + lscale*amrex::Random(); });
 
   return;
 }
@@ -871,7 +897,7 @@ ParticlesGenerator::uni_rno(amrex::Gpu::ManagedVector<amrex::Real>& dp,
 //                                                                     !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 void
-ParticlesGenerator::grow_pdata(const int gsize)
+ParticlesGenerator::grow_pdata (const int gsize)
 {
   const int r_gsize = gsize*nr;
   const int i_gsize = gsize*ni;
@@ -913,8 +939,7 @@ ParticlesGenerator::grow_pdata(const int gsize)
 //                                                                     !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 void
-ParticlesGenerator::write(const int nrp,
-                          void* particles) const
+ParticlesGenerator::write (const int nrp, void* particles) const
 {
   const generator_aux::ParticleType* parts =
     static_cast<const generator_aux::ParticleType*>(particles);

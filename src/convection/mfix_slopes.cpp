@@ -36,23 +36,22 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
     for (MFIter mfi(Sborder,TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
        // Tilebox
-       Box bx = mfi.tilebox ();
+       Box bx = mfi.tilebox();
 
        // This is to check efficiently if this tile contains any eb stuff
-       const EBFArrayBox&  Sborder_fab = static_cast<EBFArrayBox const&>(Sborder[mfi]);
-       const EBCellFlagFab&  flags = Sborder_fab.getEBCellFlagFab();
+       const EBFArrayBox& Sborder_fab = static_cast<EBFArrayBox const&>(Sborder[mfi]);
+       const EBCellFlagFab& flags = Sborder_fab.getEBCellFlagFab();
 
-       if (flags.getType(amrex::grow(bx,0)) != FabType::covered )
+       if (flags.getType(amrex::grow(bx,0)) != FabType::covered)
        {
-           const auto& state_fab =      Sborder.array(mfi);
-           const auto&  xs_fab = xslopes_in[lev]->array(mfi);
-           const auto&  ys_fab = yslopes_in[lev]->array(mfi);
-           const auto&  zs_fab = zslopes_in[lev]->array(mfi);
+           const auto& state_fab = Sborder.array(mfi);
+           const auto& xs_fab = xslopes_in[lev]->array(mfi);
+           const auto& ys_fab = yslopes_in[lev]->array(mfi);
+           const auto& zs_fab = zslopes_in[lev]->array(mfi);
 
            // No cut cells in tile + 1-cell witdh halo -> use non-eb routine
-           if (flags.getType(amrex::grow(bx,1)) == FabType::regular )
+           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
            {
-
              amrex::ParallelFor(bx, ncomp,
                [state_fab,xs_fab,ys_fab,zs_fab,slopes_comp]
                AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
@@ -62,32 +61,32 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                    Real du_xr = 2.0*(state_fab(i+1,j,k,n) - state_fab(i  ,j,k,n));
                    Real du_xc = 0.5*(state_fab(i+1,j,k,n) - state_fab(i-1,j,k,n));
 
-                   Real xslope = amrex::min(std::abs(du_xl),std::abs(du_xc),std::abs(du_xr));
-                   xslope          = (du_xr*du_xl > 0.0) ? xslope : 0.0;
-                   xs_fab(i,j,k,slopes_comp+n) = (du_xc       > 0.0) ? xslope : -xslope;
+                   Real xslope = amrex::min(std::abs(du_xl), std::abs(du_xc), std::abs(du_xr));
+                   xslope = (du_xr*du_xl > 0.0) ? xslope : 0.0;
+                   xs_fab(i,j,k,slopes_comp+n) = (du_xc > 0.0) ? xslope : -xslope;
 
                    // Y direction
                    Real du_yl = 2.0*(state_fab(i,j  ,k,n) - state_fab(i,j-1,k,n));
                    Real du_yr = 2.0*(state_fab(i,j+1,k,n) - state_fab(i,j  ,k,n));
                    Real du_yc = 0.5*(state_fab(i,j+1,k,n) - state_fab(i,j-1,k,n));
 
-                   Real yslope = amrex::min(std::abs(du_yl),std::abs(du_yc),std::abs(du_yr));
-                   yslope          = (du_yr*du_yl > 0.0) ? yslope : 0.0;
-                   ys_fab(i,j,k,slopes_comp+n) = (du_yc       > 0.0) ? yslope : -yslope;
+                   Real yslope = amrex::min(std::abs(du_yl), std::abs(du_yc), std::abs(du_yr));
+                   yslope = (du_yr*du_yl > 0.0) ? yslope : 0.0;
+                   ys_fab(i,j,k,slopes_comp+n) = (du_yc > 0.0) ? yslope : -yslope;
 
                    // Z direction
                    Real du_zl = 2.0*(state_fab(i,j,k  ,n) - state_fab(i,j,k-1,n));
                    Real du_zr = 2.0*(state_fab(i,j,k+1,n) - state_fab(i,j,k  ,n));
                    Real du_zc = 0.5*(state_fab(i,j,k+1,n) - state_fab(i,j,k-1,n));
 
-                   Real zslope = amrex::min(std::abs(du_zl),std::abs(du_zc),std::abs(du_zr));
-                   zslope          = (du_zr*du_zl > 0.0) ? zslope : 0.0;
-                   zs_fab(i,j,k,slopes_comp+n) = (du_zc       > 0.0) ? zslope : -zslope;
+                   Real zslope = amrex::min(std::abs(du_zl), std::abs(du_zc), std::abs(du_zr));
+                   zslope = (du_zr*du_zl > 0.0) ? zslope : 0.0;
+                   zs_fab(i,j,k,slopes_comp+n) = (du_zc > 0.0) ? zslope : -zslope;
                });
            }
            else
            {
-               const auto& flag_fab =         flags.array();
+               const auto& flag_fab = flags.array();
 
              amrex::ParallelFor(bx, ncomp,
                [state_fab,xs_fab,ys_fab,zs_fab,slopes_comp,flag_fab]
@@ -103,50 +102,50 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                    {
                        // X direction
                        Real du_xl = (flag_fab(i-1,j,k).isCovered()) ? 0.0 :
-                           2.0*(state_fab(i  ,j,k,n) - state_fab(i-1,j,k,n));
+                           2.0*(state_fab(i,j,k,n) - state_fab(i-1,j,k,n));
                        Real du_xr = (flag_fab(i+1,j,k).isCovered()) ? 0.0 :
-                           2.0*(state_fab(i+1,j,k,n) - state_fab(i  ,j,k,n));
+                           2.0*(state_fab(i+1,j,k,n) - state_fab(i,j,k,n));
                        Real du_xc = 0.5*(state_fab(i+1,j,k,n) - state_fab(i-1,j,k,n));
 
-                       Real xslope = amrex::min(std::abs(du_xl),std::abs(du_xc),std::abs(du_xr));
-                       xslope          = (du_xr*du_xl > 0.0) ? xslope : 0.0;
-                       xs_fab(i,j,k,slopes_comp+n) = (du_xc       > 0.0) ? xslope : -xslope;
+                       Real xslope = amrex::min(std::abs(du_xl), std::abs(du_xc), std::abs(du_xr));
+                       xslope = (du_xr*du_xl > 0.0) ? xslope : 0.0;
+                       xs_fab(i,j,k,slopes_comp+n) = (du_xc > 0.0) ? xslope : -xslope;
 
                        // Y direction
                        Real du_yl = (flag_fab(i,j-1,k).isCovered()) ? 0.0 :
-                           2.0*(state_fab(i,j  ,k,n) - state_fab(i,j-1,k,n));
+                           2.0*(state_fab(i,j,k,n) - state_fab(i,j-1,k,n));
                        Real du_yr = (flag_fab(i,j+1,k).isCovered()) ? 0.0 :
-                           2.0*(state_fab(i,j+1,k,n) - state_fab(i,j  ,k,n));
+                           2.0*(state_fab(i,j+1,k,n) - state_fab(i,j,k,n));
                        Real du_yc = 0.5*(state_fab(i,j+1,k,n) - state_fab(i,j-1,k,n));
 
-                       Real yslope = amrex::min(std::abs(du_yl),std::abs(du_yc),std::abs(du_yr));
-                       yslope          = (du_yr*du_yl > 0.0) ? yslope : 0.0;
-                       ys_fab(i,j,k,slopes_comp+n) = (du_yc       > 0.0) ? yslope : -yslope;
+                       Real yslope = amrex::min(std::abs(du_yl), std::abs(du_yc), std::abs(du_yr));
+                       yslope = (du_yr*du_yl > 0.0) ? yslope : 0.0;
+                       ys_fab(i,j,k,slopes_comp+n) = (du_yc > 0.0) ? yslope : -yslope;
 
                        // Z direction
                        Real du_zl = (flag_fab(i,j,k-1).isCovered()) ? 0.0 :
-                           2.0*(state_fab(i,j,k  ,n) - state_fab(i,j,k-1,n));
+                           2.0*(state_fab(i,j,k,n) - state_fab(i,j,k-1,n));
                        Real du_zr = (flag_fab(i,j,k+1).isCovered()) ? 0.0 :
-                           2.0*(state_fab(i,j,k+1,n) - state_fab(i,j,k  ,n));
+                           2.0*(state_fab(i,j,k+1,n) - state_fab(i,j,k,n));
                        Real du_zc = 0.5*(state_fab(i,j,k+1,n) - state_fab(i,j,k-1,n));
 
-                       Real zslope = amrex::min(std::abs(du_zl),std::abs(du_zc),std::abs(du_zr));
-                       zslope          = (du_zr*du_zl > 0.0) ? zslope : 0.0;
-                       zs_fab(i,j,k,slopes_comp+n) = (du_zc       > 0.0) ? zslope : -zslope;
+                       Real zslope = amrex::min(std::abs(du_zl), std::abs(du_zc), std::abs(du_zr));
+                       zslope = (du_zr*du_zl > 0.0) ? zslope : 0.0;
+                       zs_fab(i,j,k,slopes_comp+n) = (du_zc > 0.0) ? zslope : -zslope;
                    }
                });
            } // end of cut cell region
 
            const int minf = bc_list.get_minf();
 
-           const auto& flag_fab =         flags.array();
+           const auto& flag_fab = flags.array();
 
-           const auto&  ilo_ifab  = bc_ilo[lev]->array();
-           const auto&  ihi_ifab  = bc_ihi[lev]->array();
-           const auto&  jlo_ifab  = bc_jlo[lev]->array();
-           const auto&  jhi_ifab  = bc_jhi[lev]->array();
-           const auto&  klo_ifab  = bc_klo[lev]->array();
-           const auto&  khi_ifab  = bc_khi[lev]->array();
+           const auto& ilo_ifab = bc_ilo[lev]->array();
+           const auto& ihi_ifab = bc_ihi[lev]->array();
+           const auto& jlo_ifab = bc_jlo[lev]->array();
+           const auto& jhi_ifab = bc_jhi[lev]->array();
+           const auto& klo_ifab = bc_klo[lev]->array();
+           const auto& khi_ifab = bc_khi[lev]->array();
 
            amrex::ParallelFor(bx, ncomp,
              [domain,flag_fab,ilo_ifab,ihi_ifab,jlo_ifab,jhi_ifab,klo_ifab,khi_ifab,state_fab,
@@ -220,7 +219,7 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
         } // not covered
     } // MFIter
 
-    xslopes_in[lev] -> FillBoundary(geom[lev].periodicity());
-    yslopes_in[lev] -> FillBoundary(geom[lev].periodicity());
-    zslopes_in[lev] -> FillBoundary(geom[lev].periodicity());
+    xslopes_in[lev]->FillBoundary(geom[lev].periodicity());
+    yslopes_in[lev]->FillBoundary(geom[lev].periodicity());
+    zslopes_in[lev]->FillBoundary(geom[lev].periodicity());
 }

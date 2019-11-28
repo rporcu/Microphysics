@@ -63,18 +63,18 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
       ro_face[lev][2].reset(new MultiFab(ep_w_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
 
       // Define ep and rho on faces
-      average_cellcenter_to_face( GetArrOfPtrs(ep_face[lev]), *ep_in[lev], geom[lev] );
-      average_cellcenter_to_face( GetArrOfPtrs(ro_face[lev]), *ro_in[lev], geom[lev] );
+      average_cellcenter_to_face(GetArrOfPtrs(ep_face[lev]), *ep_in[lev], geom[lev]);
+      average_cellcenter_to_face(GetArrOfPtrs(ro_face[lev]), *ro_in[lev], geom[lev]);
 
       // Compute ep_face into bcoeff
-      MultiFab::Copy( *bcoeff[lev][0], *(ep_face[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Copy( *bcoeff[lev][1], *(ep_face[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Copy( *bcoeff[lev][2], *(ep_face[lev][2]), 0, 0, 1, 0 );
+      MultiFab::Copy(*bcoeff[lev][0], *(ep_face[lev][0]), 0, 0, 1, 0);
+      MultiFab::Copy(*bcoeff[lev][1], *(ep_face[lev][1]), 0, 0, 1, 0);
+      MultiFab::Copy(*bcoeff[lev][2], *(ep_face[lev][2]), 0, 0, 1, 0);
 
       // Compute beta coefficients for div(beta*grad(phi)) = RHS:  beta = ep / ro
-      MultiFab::Divide( *bcoeff[lev][0], *(ro_face[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Divide( *bcoeff[lev][1], *(ro_face[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Divide( *bcoeff[lev][2], *(ro_face[lev][2]), 0, 0, 1, 0 );
+      MultiFab::Divide(*bcoeff[lev][0], *(ro_face[lev][0]), 0, 0, 1, 0);
+      MultiFab::Divide(*bcoeff[lev][1], *(ro_face[lev][1]), 0, 0, 1, 0);
+      MultiFab::Divide(*bcoeff[lev][2], *(ro_face[lev][2]), 0, 0, 1, 0);
 
       // Store (ep * u) in temporaries
       (vel[lev])[0] = ep_u_mac[lev].get();
@@ -106,13 +106,14 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
    //
    // Perform MAC projection
    //
-   MacProjector macproj( vel, GetVecOfArrOfPtrsConst(bcoeff), geom, lp_info);
+   MacProjector macproj(vel, GetVecOfArrOfPtrsConst(bcoeff), geom, lp_info);
 
-   macproj.setDomainBC  ( ppe_lobc, ppe_hibc );
-   macproj.setVerbose   ( mac_mg_verbose);
-   macproj.setCGVerbose ( mac_mg_cg_verbose);
-   macproj.setMaxIter   ( mac_mg_maxiter);
-   macproj.setCGMaxIter ( mac_mg_cg_maxiter);
+   macproj.setDomainBC(ppe_lobc, ppe_hibc);
+   macproj.setVerbose(mac_mg_verbose);
+   macproj.setCGVerbose(mac_mg_cg_verbose);
+   macproj.setMaxIter(mac_mg_maxiter);
+   macproj.setCGMaxIter(mac_mg_cg_maxiter);
+
    // The default bottom solver is BiCG
    // Other options include:
    ///   Hypre IJ AMG solver
@@ -161,9 +162,9 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
    {
       if (m_verbose)
       {
-         vel[lev][0]->FillBoundary( geom[lev].periodicity() );
-         vel[lev][1]->FillBoundary( geom[lev].periodicity() );
-         vel[lev][2]->FillBoundary( geom[lev].periodicity() );
+         vel[lev][0]->FillBoundary(geom[lev].periodicity());
+         vel[lev][1]->FillBoundary(geom[lev].periodicity());
+         vel[lev][2]->FillBoundary(geom[lev].periodicity());
 
          bool already_on_centroid = true;
          EB_computeDivergence(*mac_rhs[lev],
@@ -176,7 +177,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
       }
 
       // Set bcs on (ep * u_mac)
-      set_MAC_velocity_bcs( lev, ep_u_mac, ep_v_mac, ep_w_mac, time );
+      set_MAC_velocity_bcs(lev, ep_u_mac, ep_v_mac, ep_w_mac, time);
 
       ep_u_mac[lev]->FillBoundary(geom[lev].periodicity());
       ep_v_mac[lev]->FillBoundary(geom[lev].periodicity());

@@ -8,9 +8,7 @@ namespace ugradu_aux {
 //
 AMREX_GPU_HOST_DEVICE
 Real
-upwind(const Real velocity_minus,
-       const Real velocity_plus,
-       const Real u_edge)
+upwind (const Real velocity_minus, const Real velocity_plus, const Real u_edge)
 {
   // Small value to protect against tiny velocities used in upwinding
   const Real small_velocity(1.e-10);
@@ -23,15 +21,12 @@ upwind(const Real velocity_minus,
 
 AMREX_GPU_HOST_DEVICE
 bool
-is_equal_to_any(const int bc,
-                const int* bc_types,
-                const int size)
+is_equal_to_any (const int bc, const int* bc_types, const int size)
 {
   for(int i(0); i < size; ++i)
-  {
     if(bc == bc_types[i])
       return true;
-  }
+
   return false;
 }
 
@@ -43,21 +38,20 @@ using namespace ugradu_aux;
 // Compute the three components of the convection term
 //
 void
-mfix::mfix_compute_fluxes(int lev,
-                          Vector< std::unique_ptr<MultiFab> >& a_fx,
-                          Vector< std::unique_ptr<MultiFab> >& a_fy,
-                          Vector< std::unique_ptr<MultiFab> >& a_fz,
-                          Vector< std::unique_ptr<MultiFab> >& state_in,
-                          const int state_comp, const int ncomp,
-                          Vector< std::unique_ptr<MultiFab> >& xslopes_in,
-                          Vector< std::unique_ptr<MultiFab> >& yslopes_in,
-                          Vector< std::unique_ptr<MultiFab> >& zslopes_in,
-                          const int slopes_comp,
-                          Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                          Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                          Vector< std::unique_ptr<MultiFab> >& ep_w_mac)
+mfix::mfix_compute_fluxes (int lev,
+                           Vector< std::unique_ptr<MultiFab> >& a_fx,
+                           Vector< std::unique_ptr<MultiFab> >& a_fy,
+                           Vector< std::unique_ptr<MultiFab> >& a_fz,
+                           Vector< std::unique_ptr<MultiFab> >& state_in,
+                           const int state_comp, const int ncomp,
+                           Vector< std::unique_ptr<MultiFab> >& xslopes_in,
+                           Vector< std::unique_ptr<MultiFab> >& yslopes_in,
+                           Vector< std::unique_ptr<MultiFab> >& zslopes_in,
+                           const int slopes_comp,
+                           Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                           Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                           Vector< std::unique_ptr<MultiFab> >& ep_w_mac)
 {
-
         // Get EB geometric info
         Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
         Array< const MultiCutFab*,AMREX_SPACEDIM> facecent;
@@ -122,19 +116,19 @@ mfix::mfix_compute_fluxes(int lev,
 }
 
 void
-mfix::mfix_compute_fluxes_on_box(const int lev, Box& bx,
-                                 FArrayBox& a_fx,
-                                 FArrayBox& a_fy,
-                                 FArrayBox& a_fz,
-                                 const FArrayBox& state_in,
-                                 const int state_comp, const int ncomp,
-                                 const FArrayBox& xslopes_in,
-                                 const FArrayBox& yslopes_in,
-                                 const FArrayBox& zslopes_in,
-                                 const int slopes_comp,
-                                 const FArrayBox& ep_u_mac,
-                                 const FArrayBox& ep_v_mac,
-                                 const FArrayBox& ep_w_mac)
+mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
+                                  FArrayBox& a_fx,
+                                  FArrayBox& a_fy,
+                                  FArrayBox& a_fz,
+                                  const FArrayBox& state_in,
+                                  const int state_comp, const int ncomp,
+                                  const FArrayBox& xslopes_in,
+                                  const FArrayBox& yslopes_in,
+                                  const FArrayBox& zslopes_in,
+                                  const int slopes_comp,
+                                  const FArrayBox& ep_u_mac,
+                                  const FArrayBox& ep_v_mac,
+                                  const FArrayBox& ep_w_mac)
 {
   Box domain(geom[lev].Domain());
 
@@ -162,9 +156,9 @@ mfix::mfix_compute_fluxes_on_box(const int lev, Box& bx,
   Array4<int> const& bct_klo = bc_klo[lev]->array();
   Array4<int> const& bct_khi = bc_khi[lev]->array();
 
-  const Box ubx       = amrex::surroundingNodes(bx,0);
-  const Box vbx       = amrex::surroundingNodes(bx,1);
-  const Box wbx       = amrex::surroundingNodes(bx,2);
+  const Box ubx = amrex::surroundingNodes(bx,0);
+  const Box vbx = amrex::surroundingNodes(bx,1);
+  const Box wbx = amrex::surroundingNodes(bx,2);
 
   // Vectorize the boundary conditions list in order to use it in lambda
   // functions
@@ -235,13 +229,13 @@ mfix::mfix_compute_fluxes_on_box(const int lev, Box& bx,
     fy(i,j,k,n) = v(i,j,k) * state_s;
   });
 
-  amrex::ParallelFor(wbx,ncomp,
+  amrex::ParallelFor(wbx, ncomp,
     [slopes_comp,state_comp,dom_low,dom_high,bct_klo,bct_khi,bc_types,state,z_slopes,w,fz]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
     Real state_b(0)  ;
-    // Real state_t(0); DECLARED_BUT_NEVER_REFERENCED
     Real state_mns(0); Real state_pls(0);
+    
     //
     // Bottom face
     //
@@ -261,7 +255,7 @@ mfix::mfix_compute_fluxes_on_box(const int lev, Box& bx,
       state_pls = state(i,j,k  ,state_comp+n) - .5*z_slopes(i,j,k  ,slopes_comp+n);
       state_mns = state(i,j,k-1,state_comp+n) + .5*z_slopes(i,j,k-1,slopes_comp+n);
 
-      state_b = upwind( state_mns, state_pls, w(i,j,k) );
+      state_b = upwind(state_mns, state_pls, w(i,j,k));
     }
     fz(i,j,k,n) = w(i,j,k) * state_b;
   });
@@ -272,29 +266,29 @@ mfix::mfix_compute_fluxes_on_box(const int lev, Box& bx,
 // boundaries
 //
 void
-mfix::mfix_compute_eb_fluxes_on_box(const int lev, Box& bx,
-                                    FArrayBox& a_fx, 
-                                    FArrayBox& a_fy, 
-                                    FArrayBox& a_fz, 
-                                    const FArrayBox& state_in, 
-                                    const int state_comp, const int ncomp,
-                                    const FArrayBox& xslopes_in, 
-                                    const FArrayBox& yslopes_in, 
-                                    const FArrayBox& zslopes_in, 
-                                    const int slopes_comp,
-                                    const FArrayBox& ep_u_mac, 
-                                    const FArrayBox& ep_v_mac, 
-                                    const FArrayBox& ep_w_mac, 
-                                    const FArrayBox& afrac_x_fab, 
-                                    const FArrayBox& afrac_y_fab, 
-                                    const FArrayBox& afrac_z_fab, 
-                                    const FArrayBox& face_centroid_x, 
-                                    const FArrayBox& face_centroid_y, 
-                                    const FArrayBox& face_centroid_z, 
-                                    const FArrayBox& volfrac, 
-                                    const FArrayBox& bndry_centroid, 
-                                    const IArrayBox& cc_mask, 
-                                    const EBCellFlagFab& flags)
+mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
+                                     FArrayBox& a_fx, 
+                                     FArrayBox& a_fy, 
+                                     FArrayBox& a_fz, 
+                                     const FArrayBox& state_in, 
+                                     const int state_comp, const int ncomp,
+                                     const FArrayBox& xslopes_in, 
+                                     const FArrayBox& yslopes_in, 
+                                     const FArrayBox& zslopes_in, 
+                                     const int slopes_comp,
+                                     const FArrayBox& ep_u_mac, 
+                                     const FArrayBox& ep_v_mac, 
+                                     const FArrayBox& ep_w_mac, 
+                                     const FArrayBox& afrac_x_fab, 
+                                     const FArrayBox& afrac_y_fab, 
+                                     const FArrayBox& afrac_z_fab, 
+                                     const FArrayBox& face_centroid_x, 
+                                     const FArrayBox& face_centroid_y, 
+                                     const FArrayBox& face_centroid_z, 
+                                     const FArrayBox& volfrac, 
+                                     const FArrayBox& bndry_centroid, 
+                                     const IArrayBox& cc_mask, 
+                                     const EBCellFlagFab& flags)
 {
   Box domain(geom[lev].Domain());
 
@@ -326,9 +320,9 @@ mfix::mfix_compute_eb_fluxes_on_box(const int lev, Box& bx,
   Array4<int> const& bct_klo = bc_klo[lev]->array();
   Array4<int> const& bct_khi = bc_khi[lev]->array();
 
-  const Box ubx       = amrex::surroundingNodes(bx,0);
-  const Box vbx       = amrex::surroundingNodes(bx,1);
-  const Box wbx       = amrex::surroundingNodes(bx,2);
+  const Box ubx = amrex::surroundingNodes(bx,0);
+  const Box vbx = amrex::surroundingNodes(bx,1);
+  const Box wbx = amrex::surroundingNodes(bx,2);
 
   const Box ubx_grown = amrex::surroundingNodes(amrex::grow(bx,1),0);
   const Box vbx_grown = amrex::surroundingNodes(amrex::grow(bx,1),1);
@@ -359,6 +353,7 @@ mfix::mfix_compute_eb_fluxes_on_box(const int lev, Box& bx,
     {bc_list.get_minf(), bc_list.get_pinf(), bc_list.get_pout()};
 
   const Real my_huge = get_my_huge();
+
   //
   // First compute the convective fluxes at the face center
   // Do this on ALL faces on the tile, i.e. INCLUDE as many ghost faces as
@@ -398,7 +393,7 @@ mfix::mfix_compute_eb_fluxes_on_box(const int lev, Box& bx,
     }
   });
 
-  amrex::ParallelFor(ubx,ncomp, [my_huge,fcx_fab,ccm_fab,areafrac_x,sx,u,fx]
+  amrex::ParallelFor(ubx, ncomp, [my_huge,fcx_fab,ccm_fab,areafrac_x,sx,u,fx]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
     if( areafrac_x(i,j,k) > 0 ) {
@@ -421,7 +416,7 @@ mfix::mfix_compute_eb_fluxes_on_box(const int lev, Box& bx,
   //
   // ===================== Y =====================
   //
-  amrex::ParallelFor(vbx_grown,ncomp,
+  amrex::ParallelFor(vbx_grown, ncomp,
     [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_jlo,bct_jhi,bc_types,areafrac_y,y_slopes,state,v,sy]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
@@ -469,7 +464,6 @@ mfix::mfix_compute_eb_fluxes_on_box(const int lev, Box& bx,
        fy(i,j,k,n) = v(i,j,k) * s_on_y_centroid;
     } else
        fy(i,j,k,n) = my_huge;
-
   });
 
   //

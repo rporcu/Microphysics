@@ -1,12 +1,12 @@
 #include <mfix.H>
 
 void
-mfix::mfix_predict_vels_on_faces ( int lev, Real time,
-                                   Vector< std::unique_ptr<MultiFab> >& vel_in,
-                                   Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                                   Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                                   Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                                   Vector< std::unique_ptr<MultiFab> >& ep_in)
+mfix::mfix_predict_vels_on_faces (int lev, Real time,
+                                  Vector< std::unique_ptr<MultiFab> >& vel_in,
+                                  Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                                  Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                                  Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
+                                  Vector< std::unique_ptr<MultiFab> >& ep_in)
 
 {
     BL_PROFILE("mfix::mfix_predict_vels_on_faces");
@@ -30,8 +30,8 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
        Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
        Array< const MultiCutFab*,AMREX_SPACEDIM> facecent;
 
-       areafrac  =   ebfactory[lev] -> getAreaFrac();
-       facecent  =   ebfactory[lev] -> getFaceCent();
+       areafrac = ebfactory[lev]->getAreaFrac();
+       facecent = ebfactory[lev]->getFaceCent();
 
        Real small_vel = 1.e-10;
        Real  huge_vel = 1.e100;
@@ -41,9 +41,9 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
        // We will need ep on face centers to interpolate to face centroids below
        // ****************************************************************************
 
-       ep_face[0].reset(new MultiFab(ep_u_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]));
-       ep_face[1].reset(new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]));
-       ep_face[2].reset(new MultiFab(ep_w_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]));
+       ep_face[0].reset(new MultiFab(ep_u_mac[lev]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]));
+       ep_face[1].reset(new MultiFab(ep_v_mac[lev]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]));
+       ep_face[2].reset(new MultiFab(ep_w_mac[lev]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]));
 
        // This is to make sure ep_face is defined everywhere
        ep_face[0]->setVal(covered_val);
@@ -51,7 +51,7 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
        ep_face[2]->setVal(covered_val);
 
        ep_in[lev]->FillBoundary(geom[lev].periodicity());
-       average_cellcenter_to_face( GetArrOfPtrs(ep_face), *ep_in[lev], geom[lev] );
+       average_cellcenter_to_face(GetArrOfPtrs(ep_face), *ep_in[lev], geom[lev]);
 
        ep_face[0]->FillBoundary();
        ep_face[1]->FillBoundary();
@@ -91,7 +91,7 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
        for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
        {
           // Tilebox
-          const Box  bx = mfi.tilebox();
+          const Box bx = mfi.tilebox();
 
           const Box ubx = mfi.tilebox(e_x);
           const Box vbx = mfi.tilebox(e_y);
@@ -159,7 +159,8 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
              const auto& epy_fab = (ep_face[1])->array(mfi);
              const auto& epz_fab = (ep_face[2])->array(mfi);
 
-             amrex::ParallelFor(ubx,[small_vel,ccvel_fab,epx_fab,xslopes_fab,upls_fab,umns_fab,umac_fab]
+             amrex::ParallelFor(ubx,
+               [small_vel,ccvel_fab,epx_fab,xslopes_fab,upls_fab,umns_fab,umac_fab]
                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
              {
                  // X-faces
@@ -177,7 +178,8 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                  }
              });
 
-             amrex::ParallelFor(vbx,[small_vel,ccvel_fab,epy_fab,yslopes_fab,vpls_fab,vmns_fab,vmac_fab]
+             amrex::ParallelFor(vbx,
+               [small_vel,ccvel_fab,epy_fab,yslopes_fab,vpls_fab,vmns_fab,vmac_fab]
                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
              {
                  // Y-faces
@@ -195,7 +197,8 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                  }
              });
 
-             amrex::ParallelFor(wbx,[small_vel,ccvel_fab,epz_fab,zslopes_fab,wpls_fab,wmns_fab,wmac_fab]
+             amrex::ParallelFor(wbx,
+               [small_vel,ccvel_fab,epz_fab,zslopes_fab,wpls_fab,wmns_fab,wmac_fab]
                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
              {
                  // Z-faces
@@ -238,7 +241,8 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
              const auto& apz_fab = areafrac[2]->array(mfi);
 
              // This FAB has cut cells
-             amrex::ParallelFor(ubx_grown, [apx_fab,upls_fab,umns_fab,ccvel_fab,xslopes_fab]
+             amrex::ParallelFor(ubx_grown,
+               [apx_fab,upls_fab,umns_fab,ccvel_fab,xslopes_fab]
                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
              {
                  // X-faces
@@ -249,7 +253,8 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                  }
              });
 
-             amrex::ParallelFor(vbx_grown, [apy_fab,vpls_fab,vmns_fab,ccvel_fab,yslopes_fab]
+             amrex::ParallelFor(vbx_grown,
+               [apy_fab,vpls_fab,vmns_fab,ccvel_fab,yslopes_fab]
                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
              {
                  // Y-faces
@@ -260,7 +265,8 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                  }
              });
 
-             amrex::ParallelFor(wbx_grown, [apz_fab,wpls_fab,wmns_fab,ccvel_fab,zslopes_fab]
+             amrex::ParallelFor(wbx_grown,
+               [apz_fab,wpls_fab,wmns_fab,ccvel_fab,zslopes_fab]
                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
              {
                  // Z-faces
@@ -299,10 +305,10 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
       
           // Check efficiently if this tile contains any eb stuff
 
-          const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_in[lev])[mfi]);
-          const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
+          const EBFArrayBox& vel_fab = static_cast<EBFArrayBox const&>((*vel_in[lev])[mfi]);
+          const EBCellFlagFab& flags = vel_fab.getEBCellFlagFab();
 
-          if ( !(flags.getType(amrex::grow(bx,0)) == FabType::covered ||
+          if ( !(flags.getType(amrex::grow(bx,0)) == FabType::covered or
                  flags.getType(amrex::grow(bx,1)) == FabType::regular ) )
           {
              // Face-centered velocity components
@@ -335,7 +341,8 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
 
              const auto& ccm_fab = cc_mask.const_array(mfi);
 
-             amrex::ParallelFor(ubx,[small_vel,huge_vel,apx_fab,epx_fab,ccm_fab,fcx_fab,upls_fab,umns_fab,umac_fab]
+             amrex::ParallelFor(ubx,
+               [small_vel,huge_vel,apx_fab,epx_fab,ccm_fab,fcx_fab,upls_fab,umns_fab,umac_fab]
                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
              {
                 if (apx_fab(i,j,k) == 0.0)
@@ -347,37 +354,37 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                     int jj = j + static_cast<int>(std::copysign(1.0, fcx_fab(i,j,k,0)));
                     int kk = k + static_cast<int>(std::copysign(1.0, fcx_fab(i,j,k,1)));
 
-                    Real fracy = (ccm_fab(i-1,jj,k) || ccm_fab(i,jj,k)) ? std::abs(fcx_fab(i,j,k,0)) : 0.0;
-                    Real fracz = (ccm_fab(i-1,j,kk) || ccm_fab(i,j,kk)) ? std::abs(fcx_fab(i,j,k,1)) : 0.0;
+                    Real fracy = (ccm_fab(i-1,jj,k) or ccm_fab(i,jj,k)) ? std::abs(fcx_fab(i,j,k,0)) : 0.0;
+                    Real fracz = (ccm_fab(i-1,j,kk) or ccm_fab(i,j,kk)) ? std::abs(fcx_fab(i,j,k,1)) : 0.0;
 
-                    Real upls_on_centroid = (1.0-fracy)*(1.0-fracz)*upls_fab(i, j,k )+
-                                                 fracy *(1.0-fracz)*upls_fab(i,jj,k )+
-                                                 fracz *(1.0-fracy)*upls_fab(i, j,kk)+
+                    Real upls_on_centroid = (1.0-fracy)*(1.0-fracz)*upls_fab(i, j,k ) +
+                                                 fracy *(1.0-fracz)*upls_fab(i,jj,k ) +
+                                                 fracz *(1.0-fracy)*upls_fab(i, j,kk) +
                                                  fracy *     fracz *upls_fab(i,jj,kk);
-                    Real umns_on_centroid = (1.0-fracy)*(1.0-fracz)*umns_fab(i, j,k )+
-                                                 fracy *(1.0-fracz)*umns_fab(i,jj,k )+
-                                                 fracz *(1.0-fracy)*umns_fab(i, j,kk)+
+                    Real umns_on_centroid = (1.0-fracy)*(1.0-fracz)*umns_fab(i, j,k ) +
+                                                 fracy *(1.0-fracz)*umns_fab(i,jj,k ) +
+                                                 fracz *(1.0-fracy)*umns_fab(i, j,kk) +
                                                  fracy *     fracz *umns_fab(i,jj,kk);
 
-                    Real   ep_on_centroid = (1.0-fracy)*(1.0-fracz)*epx_fab(i, j,k )+
-                                                 fracy *(1.0-fracz)*epx_fab(i,jj,k )+
-                                                 fracz *(1.0-fracy)*epx_fab(i, j,kk)+
+                    Real   ep_on_centroid = (1.0-fracy)*(1.0-fracz)*epx_fab(i, j,k ) +
+                                                 fracy *(1.0-fracz)*epx_fab(i,jj,k ) +
+                                                 fracz *(1.0-fracy)*epx_fab(i, j,kk) +
                                                  fracy *     fracz *epx_fab(i,jj,kk);
 
-                    if ( umns_on_centroid < 0.0 && upls_on_centroid > 0.0 ) {
+                    if ( umns_on_centroid < 0.0 and upls_on_centroid > 0.0 ) {
                        umac_fab(i,j,k) = 0.0;
                     } else {
                        Real avg = 0.5 * ( upls_on_centroid + umns_on_centroid );
-                       if ( std::abs(avg) <  small_vel) { umac_fab(i,j,k) = 0.0;
-                       } else if (avg >= 0)             { umac_fab(i,j,k) = umns_on_centroid;
-                       } else                           { umac_fab(i,j,k) = upls_on_centroid;
+                       if ( std::abs(avg) < small_vel) { umac_fab(i,j,k) = 0.0;
+                       } else if (avg >= 0)            { umac_fab(i,j,k) = umns_on_centroid;
+                       } else                          { umac_fab(i,j,k) = upls_on_centroid;
                        }
                        umac_fab(i,j,k) *= ep_on_centroid;
                     }
 
                  } else {
 
-                    if ( umns_fab(i,j,k) < 0.0 && upls_fab(i,j,k) > 0.0 ) {
+                    if ( umns_fab(i,j,k) < 0.0 and upls_fab(i,j,k) > 0.0 ) {
                        umac_fab(i,j,k) = 0.0;
                     } else {
                        Real avg = 0.5 * ( upls_fab(i,j,k) + umns_fab(i,j,k) );
@@ -391,7 +398,8 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
 
              });
 
-             amrex::ParallelFor(vbx,[small_vel,huge_vel,apy_fab,epy_fab,ccm_fab,fcy_fab,vpls_fab,vmns_fab,vmac_fab]
+             amrex::ParallelFor(vbx,
+               [small_vel,huge_vel,apy_fab,epy_fab,ccm_fab,fcy_fab,vpls_fab,vmns_fab,vmac_fab]
                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
              {
                 if (apy_fab(i,j,k) == 0.0) {
@@ -399,53 +407,53 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                     vmac_fab(i,j,k) = huge_vel;
 
                 } else if (apy_fab(i,j,k) < 1.0) {
-
                     int ii = i + static_cast<int>(std::copysign(1.0,fcy_fab(i,j,k,0)));
                     int kk = k + static_cast<int>(std::copysign(1.0,fcy_fab(i,j,k,1)));
 
-                    Real fracx = (ccm_fab(ii,j-1,k ) || ccm_fab(ii,j,k)) ? std::abs(fcy_fab(i,j,k,0)) : 0.0;
-                    Real fracz = (ccm_fab( i,j-1,kk) || ccm_fab(i,j,kk)) ? std::abs(fcy_fab(i,j,k,1)) : 0.0;
+                    Real fracx = (ccm_fab(ii,j-1,k ) or ccm_fab(ii,j,k)) ? std::abs(fcy_fab(i,j,k,0)) : 0.0;
+                    Real fracz = (ccm_fab( i,j-1,kk) or ccm_fab(i,j,kk)) ? std::abs(fcy_fab(i,j,k,1)) : 0.0;
 
-                    Real vpls_on_centroid = (1.0-fracx)*(1.0-fracz)*vpls_fab(i ,j,k )+
-                                                 fracx *(1.0-fracz)*vpls_fab(ii,j,k )+
-                                                 fracz *(1.0-fracx)*vpls_fab(i ,j,kk)+
+                    Real vpls_on_centroid = (1.0-fracx)*(1.0-fracz)*vpls_fab(i ,j,k ) +
+                                                 fracx *(1.0-fracz)*vpls_fab(ii,j,k ) +
+                                                 fracz *(1.0-fracx)*vpls_fab(i ,j,kk) +
                                                  fracx *     fracz *vpls_fab(ii,j,kk);
-                    Real vmns_on_centroid = (1.0-fracx)*(1.0-fracz)*vmns_fab(i ,j,k )+
-                                                 fracx *(1.0-fracz)*vmns_fab(ii,j,k )+
-                                                 fracz *(1.0-fracx)*vmns_fab(i ,j,kk)+
+                    Real vmns_on_centroid = (1.0-fracx)*(1.0-fracz)*vmns_fab(i ,j,k ) +
+                                                 fracx *(1.0-fracz)*vmns_fab(ii,j,k ) +
+                                                 fracz *(1.0-fracx)*vmns_fab(i ,j,kk) +
                                                  fracx *     fracz *vmns_fab(ii,j,kk);
-                    Real   ep_on_centroid = (1.0-fracx)*(1.0-fracz)* epy_fab(i ,j,k )+
-                                                 fracx *(1.0-fracz)* epy_fab(ii,j,k )+
-                                                 fracz *(1.0-fracx)* epy_fab(i ,j,kk)+
+                    Real   ep_on_centroid = (1.0-fracx)*(1.0-fracz)* epy_fab(i ,j,k ) +
+                                                 fracx *(1.0-fracz)* epy_fab(ii,j,k ) +
+                                                 fracz *(1.0-fracx)* epy_fab(i ,j,kk) +
                                                  fracx *     fracz * epy_fab(ii,j,kk);
 
-                    if ( vmns_on_centroid < 0.0 && vpls_on_centroid > 0.0 ) {
+                    if ( vmns_on_centroid < 0.0 and vpls_on_centroid > 0.0 ) {
                        vmac_fab(i,j,k) = 0.0;
                     } else {
                        Real avg = 0.5 * ( vpls_on_centroid + vmns_on_centroid );
-                       if ( std::abs(avg) <  small_vel) { vmac_fab(i,j,k) = 0.0;
-                       } else if (avg >= 0)             { vmac_fab(i,j,k) = vmns_on_centroid;
-                       } else                           { vmac_fab(i,j,k) = vpls_on_centroid;
+                       if ( std::abs(avg) < small_vel) { vmac_fab(i,j,k) = 0.0;
+                       } else if (avg >= 0)            { vmac_fab(i,j,k) = vmns_on_centroid;
+                       } else                          { vmac_fab(i,j,k) = vpls_on_centroid;
                        }
                        vmac_fab(i,j,k) *= ep_on_centroid;
                     }
 
                  } else {
 
-                    if ( vmns_fab(i,j,k) < 0.0 && vpls_fab(i,j,k) > 0.0 ) {
+                    if ( vmns_fab(i,j,k) < 0.0 and vpls_fab(i,j,k) > 0.0 ) {
                        vmac_fab(i,j,k) = 0.0;
                     } else {
                        Real avg = 0.5 * ( vpls_fab(i,j,k) + vmns_fab(i,j,k) );
-                       if ( std::abs(avg) <  small_vel) { vmac_fab(i,j,k) = 0.0;
-                       } else if (avg >= 0)             { vmac_fab(i,j,k) = vmns_fab(i,j,k);
-                       } else                           { vmac_fab(i,j,k) = vpls_fab(i,j,k);
+                       if ( std::abs(avg) < small_vel) { vmac_fab(i,j,k) = 0.0;
+                       } else if (avg >= 0)            { vmac_fab(i,j,k) = vmns_fab(i,j,k);
+                       } else                          { vmac_fab(i,j,k) = vpls_fab(i,j,k);
                        }
                        vmac_fab(i,j,k) *= epy_fab(i,j,k);
                     }
                  }
              });
 
-             amrex::ParallelFor(wbx,[small_vel,huge_vel,apz_fab,epz_fab,ccm_fab,fcz_fab,wpls_fab,wmns_fab,wmac_fab]
+             amrex::ParallelFor(wbx,
+               [small_vel,huge_vel,apz_fab,epz_fab,ccm_fab,fcz_fab,wpls_fab,wmns_fab,wmac_fab]
                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
              {
                 if (apz_fab(i,j,k) == 0.0)
@@ -457,42 +465,42 @@ mfix::mfix_predict_vels_on_faces ( int lev, Real time,
                     int ii = i + static_cast<int>(std::copysign(1.0,fcz_fab(i,j,k,0)));
                     int jj = j + static_cast<int>(std::copysign(1.0,fcz_fab(i,j,k,1)));
 
-                    Real fracx = (ccm_fab(ii,j,k-1) || ccm_fab(ii,j,k)) ? std::abs(fcz_fab(i,j,k,0)) : 0.0;
-                    Real fracy = (ccm_fab(i,jj,k-1) || ccm_fab(i,jj,k)) ? std::abs(fcz_fab(i,j,k,1)) : 0.0;
+                    Real fracx = (ccm_fab(ii,j,k-1) or ccm_fab(ii,j,k)) ? std::abs(fcz_fab(i,j,k,0)) : 0.0;
+                    Real fracy = (ccm_fab(i,jj,k-1) or ccm_fab(i,jj,k)) ? std::abs(fcz_fab(i,j,k,1)) : 0.0;
 
-                    Real wpls_on_centroid = (1.0-fracx)*(1.0-fracy)*wpls_fab(i ,j ,k)+
-                                                 fracx *(1.0-fracy)*wpls_fab(ii,j ,k)+
-                                                 fracy *(1.0-fracx)*wpls_fab(i ,jj,k)+
+                    Real wpls_on_centroid = (1.0-fracx)*(1.0-fracy)*wpls_fab(i ,j ,k) +
+                                                 fracx *(1.0-fracy)*wpls_fab(ii,j ,k) +
+                                                 fracy *(1.0-fracx)*wpls_fab(i ,jj,k) +
                                                  fracx *     fracy *wpls_fab(ii,jj,k);
-                    Real wmns_on_centroid = (1.0-fracx)*(1.0-fracy)*wmns_fab(i ,j ,k)+
-                                                 fracx *(1.0-fracy)*wmns_fab(ii,j ,k)+
-                                                 fracy *(1.0-fracx)*wmns_fab(i ,jj,k)+
+                    Real wmns_on_centroid = (1.0-fracx)*(1.0-fracy)*wmns_fab(i ,j ,k) +
+                                                 fracx *(1.0-fracy)*wmns_fab(ii,j ,k) +
+                                                 fracy *(1.0-fracx)*wmns_fab(i ,jj,k) +
                                                  fracx *     fracy *wmns_fab(ii,jj,k);
-                    Real   ep_on_centroid = (1.0-fracx)*(1.0-fracy)* epz_fab(i ,j ,k)+
-                                                 fracx *(1.0-fracy)* epz_fab(ii,j ,k)+
-                                                 fracy *(1.0-fracx)* epz_fab(i ,jj,k)+
+                    Real   ep_on_centroid = (1.0-fracx)*(1.0-fracy)* epz_fab(i ,j ,k) +
+                                                 fracx *(1.0-fracy)* epz_fab(ii,j ,k) +
+                                                 fracy *(1.0-fracx)* epz_fab(i ,jj,k) +
                                                  fracx *     fracy * epz_fab(ii,jj,k);
 
-                    if ( wmns_on_centroid < 0.0 && wpls_on_centroid > 0.0 ) {
+                    if ( wmns_on_centroid < 0.0 and wpls_on_centroid > 0.0 ) {
                        wmac_fab(i,j,k) = 0.0;
                     } else {
                        Real avg = 0.5 * ( wpls_on_centroid + wmns_on_centroid );
-                       if ( std::abs(avg) <  small_vel) { wmac_fab(i,j,k) = 0.0;
-                       } else if (avg >= 0)             { wmac_fab(i,j,k) = wmns_on_centroid;
-                       } else                           { wmac_fab(i,j,k) = wpls_on_centroid;
+                       if ( std::abs(avg) < small_vel) { wmac_fab(i,j,k) = 0.0;
+                       } else if (avg >= 0)            { wmac_fab(i,j,k) = wmns_on_centroid;
+                       } else                          { wmac_fab(i,j,k) = wpls_on_centroid;
                        }
                        wmac_fab(i,j,k) *= ep_on_centroid;
                     }
 
                  } else {
 
-                    if ( wmns_fab(i,j,k) < 0.0 && wpls_fab(i,j,k) > 0.0 ) {
+                    if ( wmns_fab(i,j,k) < 0.0 and wpls_fab(i,j,k) > 0.0 ) {
                        wmac_fab(i,j,k) = 0.0;
                     } else {
                        Real avg = 0.5 * ( wpls_fab(i,j,k) + wmns_fab(i,j,k) );
-                       if ( std::abs(avg) <  small_vel) { wmac_fab(i,j,k) = 0.0;
-                       } else if (avg >= 0)             { wmac_fab(i,j,k) = wmns_fab(i,j,k);
-                       } else                           { wmac_fab(i,j,k) = wpls_fab(i,j,k);
+                       if ( std::abs(avg) < small_vel) { wmac_fab(i,j,k) = 0.0;
+                       } else if (avg >= 0)            { wmac_fab(i,j,k) = wmns_fab(i,j,k);
+                       } else                          { wmac_fab(i,j,k) = wpls_fab(i,j,k);
                        }
                        wmac_fab(i,j,k) *= epz_fab(i,j,k);
                     }

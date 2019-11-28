@@ -4,7 +4,6 @@
 #include <AMReX_REAL.H>
 #include <AMReX_Vector.H>
 #include <AMReX_IntVect.H>
-#include <AMReX_Gpu.H>
 #include <AMReX_GpuContainers.H>
 
 class ParticlesGenerator {
@@ -19,37 +18,55 @@ class ParticlesGenerator {
 
   public:
     // Constructor
-    explicit ParticlesGenerator();
+    explicit ParticlesGenerator ();
 
     // Destructor
-    ~ParticlesGenerator();
+    ~ParticlesGenerator ();
 
     // Particle generator
-    void generate(int& pc,
-                  const amrex::IntVect& lo,
-                  const amrex::IntVect& hi,
-                  const amrex::Real dx,
-                  const amrex::Real dy,
-                  const amrex::Real dz);
+    void generate (int& pc,
+                   const amrex::IntVect& lo,
+                   const amrex::IntVect& hi,
+                   const amrex::Real dx,
+                   const amrex::Real dy,
+                   const amrex::Real dz);
 
-    void generate_prop(const int nrp,
-                       void* particles);
+    void generate_prop (const int nrp, void* particles);
 
     // Write particles data
-    void write(const int nrp,
-               void* particles) const;
+    void write (const int nrp, void* particles) const;
 
-    void hex_close_pack(const int icv,
-                        const int type,
-                        const amrex::IntVect& lo,
-                        const amrex::IntVect& hi,
-                        int& np,
-                        int& pc,
-                        const amrex::Real dx,
-                        const amrex::Real dy,
-                        const amrex::Real dz);
+    void hex_close_pack (const int icv,
+                         const int type,
+                         const amrex::IntVect& lo,
+                         const amrex::IntVect& hi,
+                         int& np,
+                         int& pc,
+                         const amrex::Real dx,
+                         const amrex::Real dy,
+                         const amrex::Real dz);
 
-    void one_per_fill(const int icv,
+    void one_per_fill (const int icv,
+                       const int type,
+                       const amrex::IntVect& lo,
+                       const amrex::IntVect& hi,
+                       int& np,
+                       int& pc,
+                       const amrex::Real dx,
+                       const amrex::Real dy,
+                       const amrex::Real dz);
+
+    void eight_per_fill (const int icv,
+                         const int type,
+                         const amrex::IntVect& lo,
+                         const amrex::IntVect& hi,
+                         int& np,
+                         int& pc,
+                         const amrex::Real dx,
+                         const amrex::Real dy,
+                         const amrex::Real dz);
+
+    void random_fill (const int icv,
                       const int type,
                       const amrex::IntVect& lo,
                       const amrex::IntVect& hi,
@@ -57,40 +74,20 @@ class ParticlesGenerator {
                       int& pc,
                       const amrex::Real dx,
                       const amrex::Real dy,
-                      const amrex::Real dz);
+                      const amrex::Real dz,
+                      const bool fix_seed);
 
-    void eight_per_fill(const int icv,
-                        const int type,
-                        const amrex::IntVect& lo,
-                        const amrex::IntVect& hi,
-                        int& np,
-                        int& pc,
-                        const amrex::Real dx,
-                        const amrex::Real dy,
-                        const amrex::Real dz);
+    void nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
+                  const amrex::Real mean,
+                  const amrex::Real sigma,
+                  const amrex::Real dp_min,
+                  const amrex::Real dp_max);
 
-    void random_fill(const int icv,
-                     const int type,
-                     const amrex::IntVect& lo,
-                     const amrex::IntVect& hi,
-                     int& np,
-                     int& pc,
-                     const amrex::Real dx,
-                     const amrex::Real dy,
-                     const amrex::Real dz,
-                     const bool fix_seed);
+    void uni_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
+                  const amrex::Real dp_min,
+                  const amrex::Real dp_max);
 
-    void nor_rno(amrex::Gpu::ManagedVector<amrex::Real>& dp,
-                 const amrex::Real mean,
-                 const amrex::Real sigma,
-                 const amrex::Real dp_min,
-                 const amrex::Real dp_max);
-
-    void uni_rno(amrex::Gpu::ManagedVector<amrex::Real>& dp,
-                 const amrex::Real dp_min,
-                 const amrex::Real dp_max);
-
-    void grow_pdata(const int gsize);
+    void grow_pdata (const int gsize);
 
   private:
     amrex::Gpu::ManagedVector<amrex::Real> m_rdata;

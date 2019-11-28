@@ -6,17 +6,17 @@
 // Set the BCs for face-centroid-based velocity components only
 // 
 void
-mfix::set_MAC_velocity_bcs ( int lev,
-                             Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                             Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                             amrex::Real time)
+mfix::set_MAC_velocity_bcs (int lev,
+                            Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
+                            Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
+                            Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
+                            amrex::Real time)
 {
   BL_PROFILE("MacProjection::set_MAC_velocity_bcs()");
 
-  ep_u_mac[lev] -> FillBoundary( geom[lev].periodicity() );
-  ep_v_mac[lev] -> FillBoundary( geom[lev].periodicity() );
-  ep_w_mac[lev] -> FillBoundary( geom[lev].periodicity() );
+  ep_u_mac[lev]->FillBoundary(geom[lev].periodicity());
+  ep_v_mac[lev]->FillBoundary(geom[lev].periodicity());
+  ep_w_mac[lev]->FillBoundary(geom[lev].periodicity());
     
   Box domain(geom[lev].Domain()); 
 
@@ -44,15 +44,6 @@ mfix::set_MAC_velocity_bcs ( int lev,
     Array4<Real> const& ep_v = ep_v_mac[lev]->array(mfi);
     Array4<Real> const& ep_w = ep_w_mac[lev]->array(mfi);
 
-    IntVect u_lo((*ep_u_mac[lev])[mfi].loVect());
-    IntVect u_hi((*ep_u_mac[lev])[mfi].hiVect());
-
-    IntVect v_lo((*ep_v_mac[lev])[mfi].loVect());
-    IntVect v_hi((*ep_w_mac[lev])[mfi].hiVect());
-
-    IntVect w_lo((*ep_v_mac[lev])[mfi].loVect());
-    IntVect w_hi((*ep_w_mac[lev])[mfi].hiVect());
-
     Array4<int> const& bct_ilo = bc_ilo[lev]->array();
     Array4<int> const& bct_ihi = bc_ihi[lev]->array();
     Array4<int> const& bct_jlo = bc_jlo[lev]->array();
@@ -68,54 +59,6 @@ mfix::set_MAC_velocity_bcs ( int lev,
     const int ntop = std::max(0, vbx_hi[1]-dom_hi[1]);
     const int nup  = std::max(0, wbx_hi[2]-dom_hi[2]);
 
-    // Create InVects for following Boxes
-    IntVect ulo_bx_yz_lo(ubx_lo);
-    IntVect ulo_bx_yz_hi(ubx_hi);
-    IntVect uhi_bx_yz_lo(ubx_lo);
-    IntVect uhi_bx_yz_hi(ubx_hi);
-
-    IntVect vlo_bx_xz_lo(vbx_lo);
-    IntVect vlo_bx_xz_hi(vbx_hi);
-    IntVect vhi_bx_xz_lo(vbx_lo);
-    IntVect vhi_bx_xz_hi(vbx_hi);
-
-    IntVect wlo_bx_xy_lo(wbx_lo);
-    IntVect wlo_bx_xy_hi(wbx_hi);
-    IntVect whi_bx_xy_lo(wbx_lo);
-    IntVect whi_bx_xy_hi(wbx_hi);
-
-    // Fix lo and hi limits
-    // Box 'yz'
-    ulo_bx_yz_lo[0] = dom_lo[0];
-    ulo_bx_yz_hi[0] = dom_lo[0];
-
-    uhi_bx_yz_lo[0] = dom_hi[0]+1;
-    uhi_bx_yz_hi[0] = dom_hi[0]+1;
-
-    // Box 'xz'
-    vlo_bx_xz_lo[1] = dom_lo[1];
-    vlo_bx_xz_hi[1] = dom_lo[1];
-
-    vhi_bx_xz_lo[1] = dom_hi[1]+1;
-    vhi_bx_xz_hi[1] = dom_hi[1]+1;
-
-    // Box 'xy'
-    wlo_bx_xy_lo[2] = dom_lo[2];
-    wlo_bx_xy_hi[2] = dom_lo[2];
-
-    whi_bx_xy_lo[2] = dom_hi[2]+1;
-    whi_bx_xy_hi[2] = dom_hi[2]+1;
-
-    // Create 2D boxes for CUDA loops
-    const Box ulo_bx_yz(ulo_bx_yz_lo, ulo_bx_yz_hi);
-    const Box uhi_bx_yz(uhi_bx_yz_lo, uhi_bx_yz_hi);
-
-    const Box vlo_bx_xz(vlo_bx_xz_lo, vlo_bx_xz_hi);
-    const Box vhi_bx_xz(vhi_bx_xz_lo, vhi_bx_xz_hi);
-
-    const Box wlo_bx_xy(wlo_bx_xy_lo, wlo_bx_xy_hi);
-    const Box whi_bx_xy(whi_bx_xy_lo, whi_bx_xy_hi);
-
     mfix_usr1_cpp(time);
 
     const int minf = bc_list.get_minf();
@@ -129,8 +72,19 @@ mfix::set_MAC_velocity_bcs ( int lev,
 
     if (nlft > 0)
     {
+      // Create InVects for following Box
+      IntVect ulo_bx_yz_lo(ubx_lo);
+      IntVect ulo_bx_yz_hi(ubx_hi);
+
+      // Fix lo and hi limits
+      ulo_bx_yz_lo[0] = dom_lo[0];
+      ulo_bx_yz_hi[0] = dom_lo[0];
+
+      const Box ulo_bx_yz(ulo_bx_yz_lo, ulo_bx_yz_hi);
+
       amrex::ParallelFor(ulo_bx_yz,
-        [bct_ilo,dom_lo,minf,p_bc_u_g,p_bc_e_g,ep_u] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        [bct_ilo,dom_lo,minf,p_bc_u_g,p_bc_e_g,ep_u]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
         const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
@@ -140,8 +94,19 @@ mfix::set_MAC_velocity_bcs ( int lev,
 
     if (nrgt > 0)
     {
+      // Create InVects for following Box
+      IntVect uhi_bx_yz_lo(ubx_lo);
+      IntVect uhi_bx_yz_hi(ubx_hi);
+
+      // Fix lo and hi limits
+      uhi_bx_yz_lo[0] = dom_hi[0]+1;
+      uhi_bx_yz_hi[0] = dom_hi[0]+1;
+
+      const Box uhi_bx_yz(uhi_bx_yz_lo, uhi_bx_yz_hi);
+
       amrex::ParallelFor(uhi_bx_yz,
-        [bct_ihi,dom_hi,minf,p_bc_u_g,p_bc_e_g,ep_u] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        [bct_ihi,dom_hi,minf,p_bc_u_g,p_bc_e_g,ep_u]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
         const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
@@ -151,8 +116,19 @@ mfix::set_MAC_velocity_bcs ( int lev,
 
     if (nbot > 0)
     {
+      // Create InVects for following Box
+      IntVect vlo_bx_xz_lo(vbx_lo);
+      IntVect vlo_bx_xz_hi(vbx_hi);
+
+      // Fix lo and hi limits
+      vlo_bx_xz_lo[1] = dom_lo[1];
+      vlo_bx_xz_hi[1] = dom_lo[1];
+
+      const Box vlo_bx_xz(vlo_bx_xz_lo, vlo_bx_xz_hi);
+
       amrex::ParallelFor(vlo_bx_xz,
-        [bct_jlo,dom_lo,minf,p_bc_v_g,p_bc_e_g,ep_v] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        [bct_jlo,dom_lo,minf,p_bc_v_g,p_bc_e_g,ep_v]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
         const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
@@ -162,8 +138,19 @@ mfix::set_MAC_velocity_bcs ( int lev,
 
     if (ntop > 0)
     {
+      // Create InVects for following Box
+      IntVect vhi_bx_xz_lo(vbx_lo);
+      IntVect vhi_bx_xz_hi(vbx_hi);
+
+      // Fix lo and hi limits
+      vhi_bx_xz_lo[1] = dom_hi[1]+1;
+      vhi_bx_xz_hi[1] = dom_hi[1]+1;
+
+      const Box vhi_bx_xz(vhi_bx_xz_lo, vhi_bx_xz_hi);
+
       amrex::ParallelFor(vhi_bx_xz,
-        [bct_jhi,dom_hi,minf,p_bc_v_g,p_bc_e_g,ep_v] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        [bct_jhi,dom_hi,minf,p_bc_v_g,p_bc_e_g,ep_v]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
         const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
@@ -173,8 +160,19 @@ mfix::set_MAC_velocity_bcs ( int lev,
 
     if (ndwn > 0)
     {
+      // Create InVects for following Boxes
+      IntVect wlo_bx_xy_lo(wbx_lo);
+      IntVect wlo_bx_xy_hi(wbx_hi);
+
+      // Fix lo and hi limits
+      wlo_bx_xy_lo[2] = dom_lo[2];
+      wlo_bx_xy_hi[2] = dom_lo[2];
+
+      const Box wlo_bx_xy(wlo_bx_xy_lo, wlo_bx_xy_hi);
+
       amrex::ParallelFor(wlo_bx_xy,
-        [bct_klo,dom_lo,minf,p_bc_w_g,p_bc_e_g,ep_w] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        [bct_klo,dom_lo,minf,p_bc_w_g,p_bc_e_g,ep_w]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
         const int bct = bct_klo(i,j,dom_lo[2]-1,0);
@@ -184,8 +182,19 @@ mfix::set_MAC_velocity_bcs ( int lev,
 
     if (nup > 0)
     {
+      // Create InVects for following Boxes
+      IntVect whi_bx_xy_lo(wbx_lo);
+      IntVect whi_bx_xy_hi(wbx_hi);
+
+      // Fix lo and hi limits
+      whi_bx_xy_lo[2] = dom_hi[2]+1;
+      whi_bx_xy_hi[2] = dom_hi[2]+1;
+
+      const Box whi_bx_xy(whi_bx_xy_lo, whi_bx_xy_hi);
+
       amrex::ParallelFor(whi_bx_xy,
-        [bct_khi,dom_hi,minf,p_bc_w_g,p_bc_e_g,ep_w] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        [bct_khi,dom_hi,minf,p_bc_w_g,p_bc_e_g,ep_w]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
         const int bct = bct_khi(i,j,dom_hi[2]+1,0);

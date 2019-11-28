@@ -10,7 +10,7 @@
 // Compute the three components of the convection term
 //
 void
-mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_in,
+mfix::mfix_compute_convective_term (Vector< std::unique_ptr<MultiFab> >& conv_u_in,
                                     Vector< std::unique_ptr<MultiFab> >& conv_s_in,
                                     Vector< std::unique_ptr<MultiFab> >& vel_in,
                                     Vector< std::unique_ptr<MultiFab> >& ep_g_in,
@@ -41,20 +41,20 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
         FillPatchVel(lev, time, Sborder_u, 0, Sborder_u.nComp(), bcs_u);
 
         // Copy each FAB back from Sborder_u into the vel array, complete with filled ghost cells
-        MultiFab::Copy (*vel_in[lev], Sborder_u, 0, 0, vel_in[lev]->nComp(), vel_in[lev]->nGrow());
+        MultiFab::Copy(*vel_in[lev], Sborder_u, 0, 0, vel_in[lev]->nComp(), vel_in[lev]->nGrow());
 
         MultiFab Sborder_s(grids[lev], dmap[lev], 1, nghost, MFInfo(), *ebfactory[lev]);
 
         // We FillPatch density even if not advecting it because we need it in the projections
         state_comp =  0; num_comp = 1;
         FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
-        MultiFab::Copy (*ro_g_in[lev], Sborder_s, 0, 0, num_comp, ro_g_in[lev]->nGrow());
+        MultiFab::Copy(*ro_g_in[lev], Sborder_s, 0, 0, num_comp, ro_g_in[lev]->nGrow());
 
         if (advect_tracer)
         {
            state_comp =  1; num_comp = 1;
            FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
-           MultiFab::Copy (*trac_in[lev], Sborder_s, 0, 0, num_comp, trac_in[lev]->nGrow());
+           MultiFab::Copy(*trac_in[lev], Sborder_s, 0, 0, num_comp, trac_in[lev]->nGrow());
         }
 
         // We make these with ncomp = 3 so they can hold all three velocity components at once;
@@ -81,7 +81,7 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
     // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
     //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
     //    on face CENTROIDS
-    apply_MAC_projection (u_mac, v_mac, w_mac, ep_g_in, ro_g_in, time);
+    apply_MAC_projection(u_mac, v_mac, w_mac, ep_g_in, ro_g_in, time);
 
     bool already_on_centroids = true;
 
@@ -166,7 +166,7 @@ mfix::mfix_compute_convective_term( Vector< std::unique_ptr<MultiFab> >& conv_u_
         }
 
         // Return the negative
-        conv_u_in[lev] -> mult(-1.0);
-        conv_s_in[lev] -> mult(-1.0);
+        conv_u_in[lev]->mult(-1.0);
+        conv_s_in[lev]->mult(-1.0);
     } // lev
 }
