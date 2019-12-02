@@ -34,11 +34,11 @@ mfix::mfix_set_velocity_bcs (Real time,
 }
 
 void
-mfix::set_velocity_bcs(Real time,
-                       const int lev,
-                       FArrayBox& vel_fab,
-                       const Box& domain,
-                       const int* extrap_dir_bcs) const
+mfix::set_velocity_bcs (Real time,
+                        const int lev,
+                        FArrayBox& vel_fab,
+                        const Box& domain,
+                        const int* extrap_dir_bcs) const
 {
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
@@ -371,9 +371,9 @@ mfix::set_velocity_bcs(Real time,
 
 
 void
-mfix::set_vec_bcs(const int lev,
-                  FArrayBox& vec_fab,
-                  const Box& domain) const
+mfix::set_vec_bcs (const int lev,
+                   FArrayBox& vec_fab,
+                   const Box& domain) const
 {
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());

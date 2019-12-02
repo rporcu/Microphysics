@@ -11,7 +11,7 @@ extern "C"
 {
 #endif
 
-void get_gravity(amrex::Real* grav);
+void get_gravity (amrex::Real* grav);
 
 #ifdef __cplusplus
 }

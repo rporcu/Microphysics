@@ -25,7 +25,10 @@
 using namespace amrex;
 using namespace std;
 
-void MFIXParticleContainer::Replicate(IntVect& Nrep, Geometry& geom, DistributionMapping& dmap, BoxArray& ba)
+void MFIXParticleContainer::Replicate (IntVect& Nrep,
+                                       Geometry& geom,
+                                       DistributionMapping& dmap,
+                                       BoxArray& ba)
 {
     int lev = 0;
 

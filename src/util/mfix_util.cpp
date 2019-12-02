@@ -26,7 +26,7 @@ mfix::check_for_nans (int lev)
 // Print the maximum values of the velocity components
 //
 void
-mfix::mfix_print_max_vel(int lev)
+mfix::mfix_print_max_vel (int lev)
 {
     amrex::Print() << "   max(abs(u/v/w/p))  = "
                    << vel_g[lev]->norm0(0,0,false,true) << "  "

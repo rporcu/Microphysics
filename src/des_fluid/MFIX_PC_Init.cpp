@@ -25,7 +25,7 @@
 using namespace amrex;
 using namespace std;
 
-void MFIXParticleContainer::InitParticlesAscii(const std::string& file)
+void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
 {
 
   // only read the file on the IO proc
@@ -54,8 +54,8 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file)
     auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
 
     ParticleType p;
-    int        pstate, pphase;
-    Real       pradius, pdensity, pvolume, pomoi, pmass, pomega;
+    int  pstate, pphase;
+    Real pradius, pdensity, pvolume, pomoi, pmass, pomega;
 
     pstate = 1;
 
@@ -77,7 +77,7 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file)
       p.cpu() = ParallelDescriptor::MyProc();
 
       // Compute other particle properties
-      set_particle_properties( pstate, pradius, pdensity, pvolume, pmass, pomoi, pomega);
+      set_particle_properties(pstate, pradius, pdensity, pvolume, pmass, pomoi, pomega);
 
       // Set other particle properties
       p.idata(intData::phase)     = pphase;
@@ -92,9 +92,9 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file)
       p.rdata(realData::omegaz)   = pomega;
 
       // Initialize these for I/O purposes
-      p.rdata(realData::dragx)    = 0.0;
-      p.rdata(realData::dragy)    = 0.0;
-      p.rdata(realData::dragz)    = 0.0;
+      p.rdata(realData::dragx) = 0.0;
+      p.rdata(realData::dragy) = 0.0;
+      p.rdata(realData::dragz) = 0.0;
 
       // Add everything to the data structure
       particle_tile.push_back(p);
@@ -106,7 +106,7 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file)
   Redistribute();
 }
 
-void MFIXParticleContainer::InitParticlesAuto()
+void MFIXParticleContainer::InitParticlesAuto ()
 {
   int lev = 0;
 

@@ -1,7 +1,7 @@
 #include <mfix.H>
 #include <AMReX_WriteEBSurface.H>
 
-void mfix::WriteMyEBSurface()
+void mfix::WriteMyEBSurface ()
 {
   if (Geom(0).isAllPeriodic()) return;
 

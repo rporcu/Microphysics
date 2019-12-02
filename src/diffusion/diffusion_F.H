@@ -1,3 +1,6 @@
+#ifndef _MFIX_DIFFUSION_F_H_
+#define _MFIX_DIFFUSION_F_H_
+
 #include <AMReX_REAL.H>
 
 #include <AMReX_BLFort.H>
@@ -13,21 +16,23 @@ typedef double amrex_particle_real;
 extern "C"
 {
 #endif
-  void set_vel_diff_bc (
-          int* bc_lo, int* bc_hi,
-          const int* domlo, const int* domhi,
-          const int* ng,
-          const int* bct_ilo, const int* bct_ihi,
-          const int* bct_jlo, const int* bct_jhi,
-          const int* bct_klo, const int* bct_khi);
 
-  void set_scal_diff_bc (
-          int* bc_lo, int* bc_hi,
-          const int* domlo, const int* domhi,
-          const int* ng,
-          const int* bct_ilo, const int* bct_ihi,
-          const int* bct_jlo, const int* bct_jhi,
-          const int* bct_klo, const int* bct_khi);
+  void set_vel_diff_bc (int* bc_lo, int* bc_hi,
+                        const int* domlo, const int* domhi,
+                        const int* ng,
+                        const int* bct_ilo, const int* bct_ihi,
+                        const int* bct_jlo, const int* bct_jhi,
+                        const int* bct_klo, const int* bct_khi);
+
+  void set_scal_diff_bc (int* bc_lo, int* bc_hi,
+                         const int* domlo, const int* domhi,
+                         const int* ng,
+                         const int* bct_ilo, const int* bct_ihi,
+                         const int* bct_jlo, const int* bct_jhi,
+                         const int* bct_klo, const int* bct_khi);
+
 #ifdef __cplusplus
 }
+#endif
+
 #endif

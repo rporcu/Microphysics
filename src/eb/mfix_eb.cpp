@@ -450,6 +450,4 @@ void mfix::intersect_ls_walls ()
             LSFactory::intersect_data(*level_sets[lev], valid, wall_if, valid, geom[lev]);
         }
     }
-
-
 }
