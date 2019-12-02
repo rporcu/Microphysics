@@ -58,10 +58,7 @@ mfix::mfix_redistribute_deposition (int lev,
        // Array "mask" is used to restrict were we redistribute the overflow.
        // -- Mask ghost cells when the BCs are not periodic
        // -- Mask cells we are going to redistribute (ep_s > max_eps)
-       amrex::ParallelFor(grow_bx1,
-         [mask,flags,ep_s,cyclic_x,cyclic_y,cyclic_z,dom_low,dom_high,max_eps]
-         AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
-         {
+       AMREX_FOR_3D(grow_bx1, i, j, k, {
            if(((not cyclic_x) and (i < dom_low.x or i > dom_high.x)) or
               ((not cyclic_y) and (j < dom_low.y or j > dom_high.y)) or
               ((not cyclic_z) and (k < dom_low.z or k > dom_high.z)) or
@@ -74,10 +71,7 @@ mfix::mfix_redistribute_deposition (int lev,
 
        Array4<Real> const& mf_redist = mf_to_redistribute.array(mfi);
 
-       amrex::ParallelFor(bx, ncomp,
-         [flags,ep_s,mf_redist,mask,vfrac,max_eps]
-         AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-         {
+       AMREX_FOR_4D(bx, ncomp, i, j, k, n, {
 
            if(flags(i,j,k).isSingleValued()){
 

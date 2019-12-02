@@ -139,7 +139,7 @@ public:
     UnionCIF & operator= (const UnionCIF & rhs) = default;
     UnionCIF & operator= (UnionCIF && rhs)      = default;
 
-    bool is_active () const {return true;}
+    bool is_active() const {return true;}
 
     Real operator() (const RealArray & p) const {
 
@@ -187,7 +187,7 @@ public:
     IntersectionCIF & operator= (const IntersectionCIF & rhs) = default;
     IntersectionCIF & operator= (IntersectionCIF && rhs)      = default;
 
-    bool is_active () const {return true;}
+    bool is_active() const {return true;}
 
     Real operator() (const RealArray & p) const {
 

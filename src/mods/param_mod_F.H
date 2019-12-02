@@ -11,19 +11,19 @@ extern "C"
 {
 #endif
 
-int get_dim_ic ();
+int get_dim_ic();
 
-int get_dim_m ();
+int get_dim_m();
 
-int get_dim_bc ();
+int get_dim_bc();
 
-amrex::Real get_my_huge ();
+amrex::Real get_my_huge();
 
-int is_defined_db_cpp (const amrex::Real& x);
+int is_defined_db_cpp(const amrex::Real& x);
 
-int is_undefined_db_cpp (const amrex::Real& x);
+int is_undefined_db_cpp(const amrex::Real& x);
 
-amrex::Real get_undefined ();
+amrex::Real get_undefined();
 
 #ifdef __cplusplus
 }

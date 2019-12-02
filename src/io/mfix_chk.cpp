@@ -34,10 +34,7 @@ mfix::InitIOChkData ()
 
 
 void
-mfix::WriteCheckHeader (const std::string& name,
-                        int nstep,
-                        Real dt,
-                        Real time) const
+mfix::WriteCheckHeader(const std::string& name, int nstep, Real dt, Real time) const
 {
    bool is_checkpoint = 1;
 
@@ -92,10 +89,7 @@ mfix::WriteCheckHeader (const std::string& name,
 }
 
 void
-mfix::WriteCheckPointFile (std::string& check_file,
-                           int nstep,
-                           Real dt,
-                           Real time) const
+mfix::WriteCheckPointFile(std::string& check_file, int nstep, Real dt, Real time ) const
 {
     BL_PROFILE("mfix::WriteCheckPointFile()");
 

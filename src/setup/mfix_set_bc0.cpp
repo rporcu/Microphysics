@@ -1,6 +1,6 @@
 #include <mfix.H>
 #include <bc_mod_F.H>
-#include <eos_mod.H>
+#include <eos_mod.hpp>
 #include <fld_constants_mod_F.H>
 #include <param_mod_F.H>
 

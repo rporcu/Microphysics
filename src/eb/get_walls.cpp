@@ -12,8 +12,7 @@
 
 
 std::unique_ptr<UnionListIF<EB2::PlaneIF>>
-mfix::get_walls (bool & has_walls)
-{
+mfix::get_walls(bool & has_walls) {
     // Extracts all walls from the mfix.dat
 
     has_walls = false;  // will be set to true if there are any walls
@@ -49,8 +48,7 @@ mfix::get_walls (bool & has_walls)
 
 
 std::unique_ptr<UnionListIF<EB2::PlaneIF>>
-mfix::get_real_walls (bool & has_real_walls)
-{
+mfix::get_real_walls(bool & has_real_walls) {
     // Extracts all walls from the mfix.dat
 
     has_real_walls = false;  // will be set to true if there are any walls
@@ -80,8 +78,8 @@ mfix::get_real_walls (bool & has_real_walls)
 }
 
 void
-mfix::get_input_bcs ()
-{
+mfix::get_input_bcs(){
+
   // Extracts all walls from the inputs file
   int cyclic;
 
@@ -100,9 +98,9 @@ mfix::get_input_bcs ()
 }
 
 void
-mfix::set_input_bcs (const std::string bcID, const int index,
-                     const int cyclic, const Real domloc)
-{
+mfix::set_input_bcs(const std::string bcID, const int index,
+                    const int cyclic, const Real domloc) {
+
   const int und_  = bc_list.get_undefined();
   const int ig_   = bc_list.get_ig();
   const int pinf_ = bc_list.get_pinf();
@@ -257,4 +255,7 @@ mfix::set_input_bcs (const std::string bcID, const int index,
                       &pressure, &velocity);
     }
   }
+
+
+
 }

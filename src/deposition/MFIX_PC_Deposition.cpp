@@ -9,10 +9,10 @@ using namespace amrex;
 using namespace std;
 
 void MFIXParticleContainer::
-ScalarDeposition (int lev,
-                  amrex::MultiFab & mf_to_be_filled,
-                  const amrex::MultiFab * volfrac,
-                  const amrex::FabArray<EBCellFlagFab>* flags)
+ScalarDeposition(int lev,
+                 amrex::MultiFab & mf_to_be_filled,
+                 const amrex::MultiFab * volfrac,
+                 const amrex::FabArray<EBCellFlagFab>* flags)
 {
 
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
@@ -47,10 +47,10 @@ ScalarDeposition (int lev,
 
 template <typename F>
 void MFIXParticleContainer::
-ScalarDeposition (F WeightFunc, int lev,
-                  amrex::MultiFab & mf_to_be_filled,
-                  const amrex::MultiFab * volfrac,
-                  const amrex::FabArray<EBCellFlagFab>* flags)
+ScalarDeposition(F WeightFunc, int lev,
+                 amrex::MultiFab & mf_to_be_filled,
+                 const amrex::MultiFab * volfrac,
+                 const amrex::FabArray<EBCellFlagFab>* flags)
 {
   BL_PROFILE("MFIXParticleContainer::ScalarDeposition()");
 
@@ -127,11 +127,11 @@ ScalarDeposition (F WeightFunc, int lev,
 
 
 void MFIXParticleContainer::
-FluidDragForceDeposition (int lev,
-                          amrex::MultiFab & mf_tmp_eps,
-                          amrex::MultiFab & drag_mf,
-                          const amrex::MultiFab * volfrac,
-                          const amrex::FabArray<EBCellFlagFab>* flags)
+FluidDragForceDeposition(int lev,
+                         amrex::MultiFab & mf_tmp_eps,
+                         amrex::MultiFab & drag_mf,
+                         const amrex::MultiFab * volfrac,
+                         const amrex::FabArray<EBCellFlagFab>* flags)
 {
 
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
@@ -166,19 +166,19 @@ FluidDragForceDeposition (int lev,
 
 template <typename F>
 void MFIXParticleContainer::
-FluidDragForceDeposition (F WeightFunc, int lev,
-                          amrex::MultiFab & mf_tmp_eps,
-                          amrex::MultiFab & drag_mf,
-                          const amrex::MultiFab * volfrac,
-                          const amrex::FabArray<EBCellFlagFab>* flags)
+FluidDragForceDeposition(F WeightFunc, int lev,
+                         amrex::MultiFab & mf_tmp_eps,
+                         amrex::MultiFab & drag_mf,
+                         const amrex::MultiFab * volfrac,
+                         const amrex::FabArray<EBCellFlagFab>* flags)
 {
   BL_PROFILE("MFIXParticleContainer::FluidDragForceDeposition()");
 
   // We always use the coarse dx
-  const Geometry& gm  = Geom(0);
-  const auto      plo = gm.ProbLoArray();
-  const auto      dx  = gm.CellSizeArray();
-  const auto      dxi = gm.InvCellSizeArray();
+  const Geometry& gm          = Geom(0);
+  const auto      plo         = gm.ProbLoArray();
+  const auto      dx          = gm.CellSizeArray();
+  const auto      dxi         = gm.InvCellSizeArray();
 
   const auto      reg_cell_vol = dx[0]*dx[1]*dx[2];
 
@@ -203,7 +203,7 @@ FluidDragForceDeposition (F WeightFunc, int lev,
       if ((*flags)[pti].getType(box) != FabType::covered ) {
 
         const auto& drag_arr = drag_fab.array();
-        const auto&   volarr = eps_fab.array();
+        const auto&   volarr =  eps_fab.array();
         const auto& flagsarr = (*flags)[pti].array();
         const auto&    vfrac = (*volfrac)[pti].array();
 

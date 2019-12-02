@@ -26,17 +26,17 @@ mfix::mfix_set_density_bcs (Real time,
         set_density_bcs(time, lev, (*ro_g_in[lev])[mfi], domain);
      }
 
-     ro_g_in[lev]->FillBoundary(geom[lev].periodicity());
+     ro_g_in[lev] -> FillBoundary (geom[lev].periodicity());
 
      EB_set_covered(*ro_g_in[lev], 0, ro_g_in[lev]->nComp(), ro_g_in[lev]->nGrow(), covered_val);
   }
 }
 
 void 
-mfix::set_density_bcs (Real time,
-                       const int lev,
-                       FArrayBox& scal_fab,
-                       const Box& domain)
+mfix::set_density_bcs(Real time,
+                      const int lev,
+                      FArrayBox& scal_fab,
+                      const Box& domain)
 
 {
   IntVect dom_lo(domain.loVect());
@@ -64,6 +64,64 @@ mfix::set_density_bcs (Real time,
   const int ntop = std::max(0, scal_hi[1]-dom_hi[1]);
   const int nup  = std::max(0, scal_hi[2]-dom_hi[2]);
 
+  // Create InVects for following 2D Boxes
+  IntVect bx_yz_lo_lo_2D(scal_lo), bx_yz_lo_hi_2D(scal_hi);
+  IntVect bx_yz_hi_lo_2D(scal_lo), bx_yz_hi_hi_2D(scal_hi);
+  IntVect bx_xz_lo_lo_2D(scal_lo), bx_xz_lo_hi_2D(scal_hi);
+  IntVect bx_xz_hi_lo_2D(scal_lo), bx_xz_hi_hi_2D(scal_hi);
+  IntVect bx_xy_lo_lo_2D(scal_lo), bx_xy_lo_hi_2D(scal_hi);
+  IntVect bx_xy_hi_lo_2D(scal_lo), bx_xy_hi_hi_2D(scal_hi);
+
+  // Fix lo and hi limits
+  bx_yz_lo_lo_2D[0] = dom_lo[0]-1;
+  bx_yz_lo_hi_2D[0] = dom_lo[0]-1;
+  bx_yz_hi_lo_2D[0] = dom_hi[0]+1;
+  bx_yz_hi_hi_2D[0] = dom_hi[0]+1;
+
+  bx_xz_lo_lo_2D[1] = dom_lo[1]-1;
+  bx_xz_lo_hi_2D[1] = dom_lo[1]-1;
+  bx_xz_hi_lo_2D[1] = dom_hi[1]+1;
+  bx_xz_hi_hi_2D[1] = dom_hi[1]+1;
+
+  bx_xy_lo_lo_2D[2] = dom_lo[2]-1;
+  bx_xy_lo_hi_2D[2] = dom_lo[2]-1;
+  bx_xy_hi_lo_2D[2] = dom_hi[2]+1;
+  bx_xy_hi_hi_2D[2] = dom_hi[2]+1;
+
+  // Create 2D boxes for CUDA loops
+  const Box bx_yz_lo_2D(bx_yz_lo_lo_2D, bx_yz_lo_hi_2D);
+  const Box bx_yz_hi_2D(bx_yz_hi_lo_2D, bx_yz_hi_hi_2D);
+
+  const Box bx_xz_lo_2D(bx_xz_lo_lo_2D, bx_xz_lo_hi_2D);
+  const Box bx_xz_hi_2D(bx_xz_hi_lo_2D, bx_xz_hi_hi_2D);
+
+  const Box bx_xy_lo_2D(bx_xy_lo_lo_2D, bx_xy_lo_hi_2D);
+  const Box bx_xy_hi_2D(bx_xy_hi_lo_2D, bx_xy_hi_hi_2D);
+
+  // Create InVects for following 3D Boxes
+  IntVect bx_yz_lo_hi_3D(scal_hi), bx_xz_lo_hi_3D(scal_hi), bx_xy_lo_hi_3D(scal_hi);
+  IntVect bx_yz_hi_lo_3D(scal_lo), bx_xz_hi_lo_3D(scal_lo), bx_xy_hi_lo_3D(scal_lo);
+
+  // Fix lo and hi limits
+  bx_yz_lo_hi_3D[0] = dom_lo[0]-1;
+  bx_yz_hi_lo_3D[0] = dom_hi[0]+1;
+
+  bx_xz_lo_hi_3D[1] = dom_lo[1]-1;
+  bx_xz_hi_lo_3D[1] = dom_hi[1]+1;
+
+  bx_xy_lo_hi_3D[2] = dom_lo[2]-1;
+  bx_xy_hi_lo_3D[2] = dom_hi[2]+1;
+
+  // Create 3D boxes for CUDA loops
+  const Box bx_yz_lo_3D(scal_lo, bx_yz_lo_hi_3D);
+  const Box bx_yz_hi_3D(bx_yz_hi_lo_3D, scal_hi);
+
+  const Box bx_xz_lo_3D(scal_lo, bx_xz_lo_hi_3D);
+  const Box bx_xz_hi_3D(bx_xz_hi_lo_3D, scal_hi);
+
+  const Box bx_xy_lo_3D(scal_lo, bx_xy_lo_hi_3D);
+  const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, scal_hi);
+
   const Real undefined = get_undefined();
 
   const int minf = bc_list.get_minf();
@@ -75,12 +133,7 @@ mfix::set_density_bcs (Real time,
 
   if (nlft > 0)
   {
-    IntVect bx_yz_lo_hi_3D(scal_hi);
-    bx_yz_lo_hi_3D[0] = dom_lo[0]-1;
-    const Box bx_yz_lo_3D(scal_lo, bx_yz_lo_hi_3D);
-
     int ilo = dom_lo[0];
-
     amrex::ParallelFor(bx_yz_lo_3D,
       [bct_ilo,ilo,bc0,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -96,12 +149,7 @@ mfix::set_density_bcs (Real time,
 
   if (nrgt > 0)
   {
-    IntVect bx_yz_hi_lo_3D(scal_lo);
-    bx_yz_hi_lo_3D[0] = dom_hi[0]+1;
-    const Box bx_yz_hi_3D(bx_yz_hi_lo_3D, scal_hi);
-
     int ihi = dom_hi[0];
-
     amrex::ParallelFor(bx_yz_hi_3D,
       [bct_ihi,ihi,bc0,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -117,12 +165,7 @@ mfix::set_density_bcs (Real time,
 
   if (nbot > 0)
   {
-    IntVect bx_xz_lo_hi_3D(scal_hi);
-    bx_xz_lo_hi_3D[1] = dom_lo[1]-1;
-    const Box bx_xz_lo_3D(scal_lo, bx_xz_lo_hi_3D);
-
     int jlo = dom_lo[1];
-
     amrex::ParallelFor(bx_xz_lo_3D,
       [bct_jlo,jlo,bc0,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -138,12 +181,7 @@ mfix::set_density_bcs (Real time,
 
   if (ntop > 0)
   {
-    IntVect bx_xz_hi_lo_3D(scal_lo);
-    bx_xz_hi_lo_3D[1] = dom_hi[1]+1;
-    const Box bx_xz_hi_3D(bx_xz_hi_lo_3D, scal_hi);
-
     int jhi = dom_hi[1];
-
     amrex::ParallelFor(bx_xz_hi_3D,
       [bct_jhi,jhi,dom_hi,bc0,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -159,12 +197,7 @@ mfix::set_density_bcs (Real time,
 
   if (ndwn > 0)
   {
-    IntVect bx_xy_lo_hi_3D(scal_hi);
-    bx_xy_lo_hi_3D[2] = dom_lo[2]-1;
-    const Box bx_xy_lo_3D(scal_lo, bx_xy_lo_hi_3D);
-
     int klo = dom_lo[2];
-
     amrex::ParallelFor(bx_xy_lo_3D,
       [bct_klo,klo,dom_lo,bc0,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -180,12 +213,7 @@ mfix::set_density_bcs (Real time,
 
   if (nup > 0)
   {
-    IntVect bx_xy_hi_lo_3D(scal_lo);
-    bx_xy_hi_lo_3D[2] = dom_hi[2]+1;
-    const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, scal_hi);
-
     int khi = dom_hi[2];
-
     amrex::ParallelFor(bx_xy_hi_3D, 
       [bct_khi,khi,dom_hi,bc0,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept

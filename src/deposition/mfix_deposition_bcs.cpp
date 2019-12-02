@@ -9,7 +9,8 @@
 #include <AMReX_Box.H>
 #include <AMReX_FillPatchUtil.H>
 
-void mfix::mfix_deposition_bcs_scalar (int lev, amrex::MultiFab& filled_mf)
+
+void mfix::mfix_deposition_bcs_scalar(int lev, amrex::MultiFab & filled_mf)
 {
   BL_PROFILE("mfix::mfix_deposition_bcs_scalar()");
 

@@ -19,10 +19,10 @@
 #endif
 
 void
-mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
-                                   amrex::Real a_time,
-                                   amrex::Real a_dt,
-                                   bool proj_2 )
+mfix::mfix_apply_nodal_projection ( Vector< std::unique_ptr<MultiFab> >& a_depdt,
+                                    amrex::Real a_time,
+                                    amrex::Real a_dt,
+                                    bool proj_2 )
 {
     BL_PROFILE("mfix::mfix_apply_nodal_projection");
 
@@ -64,17 +64,17 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
     {
         // We only need one ghost cell here -- so no need to make it bigger
         int nghost(1);
-        epu[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 1 , MFInfo(),
-                                    *ebfactory[lev]));
+        epu[lev].reset(new MultiFab( grids[lev], dmap[lev], 3, 1 , MFInfo(),
+                                     *ebfactory[lev] ) );
 
         epu[lev] -> setVal(1.e200);
 
-        MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow());
+        MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow() );
 
         for (int n(0); n < 3; n++)
-            MultiFab::Multiply(*epu[lev], *ep_g[lev], 0, n, 1, epu[lev]->nGrow());
+            MultiFab::Multiply( *epu[lev], *ep_g[lev], 0, n, 1, epu[lev]->nGrow() );
 
-        epu[lev]->FillBoundary(geom[lev].periodicity());
+        epu[lev] -> FillBoundary( geom[lev].periodicity() );
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -87,10 +87,10 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
         {
             // Why are we using this instead of simply multiplying vel and ep with their BCs in place
             // already?
-            set_vec_bcs(lev, (*epu[lev])[mfi], geom[lev].Domain());
+            set_vec_bcs(lev, (*epu[lev])[mfi], geom[lev].Domain() );
         }
 
-        epu[lev]->FillBoundary(geom[lev].periodicity());
+        epu[lev] -> FillBoundary( geom[lev].periodicity() );
 
         // We set these to zero because if the values in the covered cells are undefined,
         //   even though they are multiplied by zero in the divu computation, we can still get NaNs
@@ -100,21 +100,21 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
     //
     // Compute RHS
     //
-    nodal_projector->computeRHS(GetVecOfPtrs(diveu), GetVecOfPtrs(epu), GetVecOfPtrs(a_depdt));
+    nodal_projector -> computeRHS(GetVecOfPtrs(diveu), GetVecOfPtrs(epu), GetVecOfPtrs(a_depdt));
 
     // Perform projection on
-    nodal_projector->project2(GetVecOfPtrs(vel_g), GetVecOfConstPtrs(ep_g),
-                              GetVecOfConstPtrs(ro_g), GetVecOfConstPtrs(diveu));
+    nodal_projector -> project2( GetVecOfPtrs(vel_g), GetVecOfConstPtrs(ep_g),
+                                 GetVecOfConstPtrs(ro_g), GetVecOfConstPtrs(diveu) );
 
     // Get phi and fluxes
-    Vector< const amrex::MultiFab* > phi(nlev);
-    Vector< const amrex::MultiFab* > gradphi(nlev);
+    Vector< const amrex::MultiFab* >  phi(nlev);
+    Vector< const amrex::MultiFab* >  gradphi(nlev);
 
-    phi     = nodal_projector->getPhi();
-    gradphi = nodal_projector->getGradPhi();
+    phi     = nodal_projector -> getPhi();
+    gradphi = nodal_projector -> getGradPhi();
 
     // Compute diveu to print it out
-    nodal_projector->computeRHS(GetVecOfPtrs(diveu), GetVecOfPtrs(epu), GetVecOfPtrs(a_depdt));
+    nodal_projector -> computeRHS(GetVecOfPtrs(diveu), GetVecOfPtrs(epu), GetVecOfPtrs(a_depdt));
 
     // Since I did not pass dt, I have to normalize here
     Real qdt(1.0/a_dt);
@@ -125,8 +125,8 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
             // p := phi
             MultiFab::Copy(*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
             MultiFab::Copy( *gp[lev], *gradphi[lev], 0, 0, 3, gradphi[lev]->nGrow());
-            p_g[lev]->mult(qdt);
-            gp[lev]->mult(qdt);
+            p_g[lev] -> mult(qdt);
+            gp[lev]  -> mult(qdt);
         }
         else
         {
@@ -144,14 +144,14 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
 
     for (int lev(0); lev < nlev; ++lev)
     {
-        epu[lev]->setVal(1.e200);
+        epu[lev] -> setVal(1.e200);
 
         MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow() );
 
         for (int n(0); n < 3; n++)
-            MultiFab::Multiply(*epu[lev], *ep_g[lev], 0, n, 1, epu[lev]->nGrow());
+            MultiFab::Multiply( *epu[lev], *ep_g[lev], 0, n, 1, epu[lev]->nGrow() );
 
-        epu[lev]->FillBoundary(geom[lev].periodicity());
+        epu[lev] -> FillBoundary( geom[lev].periodicity() );
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -167,19 +167,19 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
             set_vec_bcs(lev, (*epu[lev])[mfi], geom[lev].Domain() );
         }
 
-        epu[lev]->FillBoundary(geom[lev].periodicity());
+        epu[lev] -> FillBoundary( geom[lev].periodicity() );
 
         // We set these to zero because if the values in the covered cells are undefined,
         //   even though they are multiplied by zero in the divu computation, we can still get NaNs
         EB_set_covered(*epu[lev], 0, epu[lev]->nComp(), 1, 0.0);
     }
 
-    nodal_projector->computeRHS(GetVecOfPtrs(diveu), GetVecOfPtrs(epu), GetVecOfPtrs(a_depdt));
+    nodal_projector -> computeRHS(GetVecOfPtrs(diveu), GetVecOfPtrs(epu), GetVecOfPtrs(a_depdt));
 
     for (int lev = nlev-1; lev > 0; lev--)
     {
         avgDown(lev-1, *vel_g[lev], *vel_g[lev-1]);
-        avgDown(lev-1, *gp[lev],    *gp[lev-1]);
+        avgDown(lev-1, *   gp[lev],    *gp[lev-1]);
     }
 
     // Swap ghost cells and apply BCs to velocity

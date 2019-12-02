@@ -17,13 +17,13 @@ extern const amrex::IntVect e_z;
 // Constructor:
 // We set up everything which doesn't change between timesteps here
 //
-DiffusionOp::DiffusionOp (AmrCore* _amrcore,
-                          Vector<std::unique_ptr<EBFArrayBoxFactory>>* _ebfactory,
-                          std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_velbc_lo,
-                          std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_velbc_hi,
-                          std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_scalbc_lo,
-                          std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_scalbc_hi,
-                          int _nghost)
+DiffusionOp::DiffusionOp(AmrCore* _amrcore,
+                         Vector<std::unique_ptr<EBFArrayBoxFactory>>* _ebfactory,
+                         std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_velbc_lo,
+                         std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_velbc_hi,
+                         std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_scalbc_lo,
+                         std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_scalbc_hi,
+                         int _nghost)
 {
     if(verbose > 0)
         amrex::Print() << "Constructing DiffusionOp class" << std::endl;
@@ -42,11 +42,10 @@ DiffusionOp::DiffusionOp (AmrCore* _amrcore,
     setup(_amrcore, _ebfactory);
 }
 
-void DiffusionOp::setup (AmrCore* _amrcore, 
-                         Vector<std::unique_ptr<EBFArrayBoxFactory>>* _ebfactory)
+void DiffusionOp::setup(AmrCore* _amrcore, 
+                        Vector<std::unique_ptr<EBFArrayBoxFactory>>* _ebfactory)
 {
-    // The amrcore boxArray and DistributionMap change when we regrid so we must
-    // pass the new object in here.
+    // The amrcore boxArray and DistributionMap change when we regrid so we must pass the new object in here.
     amrcore = _amrcore;
 
     // The ebfactory changes when we regrid so we must pass it in here.
@@ -114,10 +113,11 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     scal_matrix->setDomainBC(m_scalbc_lo, m_scalbc_hi);
 }
 
-DiffusionOp::~DiffusionOp ()
-{}
+DiffusionOp::~DiffusionOp()
+{
+}
 
-void DiffusionOp::readParameters ()
+void DiffusionOp::readParameters()
 {
     ParmParse pp("diffusion");
 
@@ -136,17 +136,17 @@ void DiffusionOp::readParameters ()
 //
 // Implicit tensor solve for velocity diffusion
 //
-void DiffusionOp::diffuse_velocity (Vector<std::unique_ptr<MultiFab>>& vel_in,
-                                    const Vector<std::unique_ptr<MultiFab>>& ep_ro_in,
-                                    const Vector<std::unique_ptr<MultiFab>>& eta_in,
-                                    Real dt)
+void DiffusionOp::diffuse_velocity(      Vector<std::unique_ptr<MultiFab>>& vel_in,
+                                   const Vector<std::unique_ptr<MultiFab>>& ep_ro_in,
+                                   const Vector<std::unique_ptr<MultiFab>>& eta_in,
+                                   Real dt)
 {
     BL_PROFILE("DiffusionOp::diffuse_velocity");
 
     int finest_level = amrcore->finestLevel();
 
-    // Update the coefficients of the matrix going into the solve based on the
-    // current state of the simulation. Recall that the relevant matrix is
+    // Update the coefficients of the matrix going into the solve based on the current state of the
+    // simulation. Recall that the relevant matrix is
     //
     //      alpha a - beta div ( b grad )   <--->   rho - dt div ( eta grad )
     //
@@ -162,8 +162,7 @@ void DiffusionOp::diffuse_velocity (Vector<std::unique_ptr<MultiFab>>& vel_in,
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
-        // Compute the spatially varying b coefficients (on faces) to equal the
-        // apparent viscosity
+        // Compute the spatially varying b coefficients (on faces) to equal the apparent viscosity
         average_cellcenter_to_face(GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev]);
         for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
             b[lev][dir]->FillBoundary(geom[lev].periodicity());
@@ -219,9 +218,9 @@ void DiffusionOp::diffuse_velocity (Vector<std::unique_ptr<MultiFab>>& vel_in,
 //
 // Implicit solve for scalar diffusion
 //
-void DiffusionOp::diffuse_scalar (Vector<std::unique_ptr<MultiFab>>& scal_in,
-                                  const Vector<std::unique_ptr<MultiFab>>& ep_ro_in,
-                                  const Vector<Real> mu_s, Real dt)
+void DiffusionOp::diffuse_scalar(      Vector<std::unique_ptr<MultiFab>>& scal_in,
+                                 const Vector<std::unique_ptr<MultiFab>>& ep_ro_in,
+                                 const Vector<Real> mu_s, Real dt)
 {
     BL_PROFILE("DiffusionOp::diffuse_scalar");
 
@@ -301,7 +300,7 @@ void DiffusionOp::diffuse_scalar (Vector<std::unique_ptr<MultiFab>>& scal_in,
 // Set the user-supplied settings for the MLMG solver
 // (this must be done every time step, since MLMG is created after updating matrix
 //
-void DiffusionOp::setSolverSettings (MLMG& solver)
+void DiffusionOp::setSolverSettings(MLMG& solver)
 {
     // The default bottom solver is BiCG
     if(bottom_solver_type == "smoother")
@@ -314,23 +313,22 @@ void DiffusionOp::setSolverSettings (MLMG& solver)
     }
         // Maximum iterations for MultiGrid / ConjugateGradients
         solver.setMaxIter(mg_max_iter);
-        solver.setMaxFmgIter(mg_max_fmg_iter);
-        solver.setCGMaxIter(mg_cg_maxiter);
+	solver.setMaxFmgIter(mg_max_fmg_iter);
+	solver.setCGMaxIter(mg_cg_maxiter);
 
         // Verbosity for MultiGrid / ConjugateGradients
-        solver.setVerbose(mg_verbose);
-        solver.setCGVerbose(mg_cg_verbose);
+	solver.setVerbose(mg_verbose);
+	solver.setCGVerbose(mg_cg_verbose);
 
-        // This ensures that ghost cells of phi are correctly filled when
-        // returned from the solver
-        solver.setFinalFillBC(true);
+	// This ensures that ghost cells of phi are correctly filled when returned from the solver
+	solver.setFinalFillBC(true);
 }
 
-void DiffusionOp::ComputeDivTau (Vector<std::unique_ptr<MultiFab>>& divtau_out,
-                                 const Vector<std::unique_ptr<MultiFab>>& vel_in,
-                                 const Vector<std::unique_ptr<MultiFab>>& ro_in,
-                                 const Vector<std::unique_ptr<MultiFab>>& ep_in,
-                                 const Vector<std::unique_ptr<MultiFab>>& eta_in)
+void DiffusionOp::ComputeDivTau(Vector<std::unique_ptr<MultiFab>>& divtau_out,
+                                const Vector<std::unique_ptr<MultiFab>>& vel_in,
+                                const Vector<std::unique_ptr<MultiFab>>& ro_in,
+                                const Vector<std::unique_ptr<MultiFab>>& ep_in,
+                                const Vector<std::unique_ptr<MultiFab>>& eta_in)
 {
     BL_PROFILE("DiffusionOp::ComputeDivTau");
 
@@ -369,13 +367,7 @@ void DiffusionOp::ComputeDivTau (Vector<std::unique_ptr<MultiFab>>& divtau_out,
  
     for(int lev = 0; lev <= finest_level; lev++)
     {
-       amrex::single_level_weighted_redistribute(lev,
-                                                 *divtau_aux[lev],
-                                                 *divtau_out[lev],
-                                                 *ep_in[lev],
-                                                 0,
-                                                 AMREX_SPACEDIM,
-                                                 geom);
+       amrex::single_level_weighted_redistribute( lev, *divtau_aux[lev], *divtau_out[lev], *ep_in[lev], 0, AMREX_SPACEDIM, geom);
  
        // Divide by density
        for (int n = 0; n < 3; n++)
@@ -386,11 +378,11 @@ void DiffusionOp::ComputeDivTau (Vector<std::unique_ptr<MultiFab>>& divtau_out,
     }
 }
 
-void DiffusionOp::ComputeLapS (Vector<std::unique_ptr<MultiFab>>& laps_out,
-                               const Vector<std::unique_ptr<MultiFab>>& scal_in,
-                               const Vector<std::unique_ptr<MultiFab>>& ro_in,
-                               const Vector<std::unique_ptr<MultiFab>>& ep_in,
-                               const Vector<Real> mu_s) 
+void DiffusionOp::ComputeLapS(      Vector<std::unique_ptr<MultiFab>>& laps_out,
+                              const Vector<std::unique_ptr<MultiFab>>& scal_in,
+                              const Vector<std::unique_ptr<MultiFab>>& ro_in,
+                              const Vector<std::unique_ptr<MultiFab>>& ep_in,
+                              const Vector<Real> mu_s) 
 {
     BL_PROFILE("DiffusionOp::ComputeLapS");
 
@@ -419,8 +411,8 @@ void DiffusionOp::ComputeLapS (Vector<std::unique_ptr<MultiFab>>& laps_out,
            for(int n = 0; n < ntrac; n++)
              b[lev][dir]->setVal(mu_s[n],n,1);
  
-        scal_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]));
-        scal_matrix->setLevelBC(lev, GetVecOfConstPtrs(scal_in)[lev]);
+        scal_matrix->setBCoeffs  ( lev, GetArrOfConstPtrs(b[lev]));
+        scal_matrix->setLevelBC  ( lev, GetVecOfConstPtrs(scal_in)[lev] );
     }
  
     MLMG solver(*scal_matrix);
@@ -429,10 +421,10 @@ void DiffusionOp::ComputeLapS (Vector<std::unique_ptr<MultiFab>>& laps_out,
  
     for(int lev = 0; lev <= finest_level; lev++)
     {
-       amrex::single_level_redistribute(lev, *laps_aux[lev], *laps_out[lev], 0, ntrac, geom);
+       amrex::single_level_redistribute( lev, *laps_aux[lev], *laps_out[lev], 0, ntrac, geom);
  
        // Divide by density
        for(int n = 0; n < ntrac; n++)
-          MultiFab::Divide(*laps_out[lev], *ro_in[lev], 0, n, 1, 0);
+          MultiFab::Divide( *laps_out[lev], *ro_in[lev], 0, n, 1, 0 );
     }
 }

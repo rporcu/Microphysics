@@ -10,7 +10,7 @@ namespace
 
 // This interface must match the definition of the interface for
 //    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
-void set_ptr_to_mfix (mfix& mfix_for_fillpatching_in)
+void set_ptr_to_mfix(mfix& mfix_for_fillpatching_in)
 {
    mfix_for_fillpatching = &mfix_for_fillpatching_in;
 }
@@ -18,14 +18,10 @@ void set_ptr_to_mfix (mfix& mfix_for_fillpatching_in)
 // This interface must match the definition of the interface for
 //    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
 inline
-void VelFillBox (Box const& bx,
-                 Array4<amrex::Real> const& dest,
-                 const int dcomp,
-                 const int numcomp,
-                 GeometryData const& geom,
-                 const Real time_in,
-                 const BCRec* bcr,
-                 const int bcomp,
+void VelFillBox (Box const& bx, Array4<amrex::Real> const& dest,
+                 const int dcomp, const int numcomp,
+                 GeometryData const& geom, const Real time_in,
+                 const BCRec* bcr, const int bcomp,
                  const int orig_comp)
 {
     if (dcomp != 0)
@@ -58,20 +54,16 @@ void VelFillBox (Box const& bx,
     FArrayBox dest_fab(dest);
     Elixir eli_dest_fab = dest_fab.elixir();
 
-    mfix_for_fillpatching->set_velocity_bcs(time, lev, dest_fab, domain, &extrap_dir_bcs);
+    mfix_for_fillpatching->set_velocity_bcs (time, lev, dest_fab, domain, &extrap_dir_bcs);
 }
 
 // This interface must match the definition of the interface for
 //    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
 inline
-void ScalarFillBox (Box const& bx,
-                    Array4<amrex::Real> const& dest,
-                    const int dcomp,
-                    const int numcomp,
-                    GeometryData const& geom,
-                    const Real time_in,
-                    const BCRec* bcr,
-                    const int bcomp,
+void ScalarFillBox (Box const& bx, Array4<amrex::Real> const& dest,
+                    const int dcomp, const int numcomp,
+                    GeometryData const& geom, const Real time_in,
+                    const BCRec* bcr, const int bcomp,
                     const int orig_comp)
 {
     if (dcomp != 0)
@@ -99,18 +91,13 @@ void ScalarFillBox (Box const& bx,
     FArrayBox dest_fab(dest);
     Elixir eli_dest_fab = dest_fab.elixir();
 
-    mfix_for_fillpatching->set_scalar_bcs(time, lev, dest_fab, dcomp, domain);
+    mfix_for_fillpatching->set_scalar_bcs (time, lev, dest_fab, dcomp, domain);
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
 // works for single level and 2-level cases (fill fine grid ghost by interpolating from coarse)
 void
-mfix::FillPatchVel (int lev,
-                    Real time,
-                    MultiFab& mf,
-                    int icomp,
-                    int ncomp,
-                    const Vector<BCRec>& bcs)
+mfix::FillPatchVel (int lev, Real time, MultiFab& mf, int icomp, int ncomp, const Vector<BCRec>& bcs)
 {
     // Hack so that ghost cells are not undefined
     mf.setVal(covered_val);
@@ -150,12 +137,7 @@ mfix::FillPatchVel (int lev,
 // works for single level and 2-level cases (fill fine grid ghost by interpolating from coarse)
 // NOTE: icomp here refers to whether we are filling 0: density, 1: tracer, 2: ep_g, 3: mu_g
 void
-mfix::FillPatchScalar (int lev,
-                       Real time,
-                       MultiFab& mf,
-                       int icomp,
-                       int ncomp,
-                       const Vector<BCRec>& bcs)
+mfix::FillPatchScalar (int lev, Real time, MultiFab& mf, int icomp, int ncomp, const Vector<BCRec>& bcs)
 {
     // Hack so that ghost cells are not undefined
     mf.setVal(covered_val);
@@ -197,10 +179,7 @@ mfix::FillPatchScalar (int lev,
 
 // Utility to copy in data from phi_old and/or phi_new into another multifab
 void
-mfix::GetDataVel (int lev,
-                  Real time,
-                  Vector<MultiFab*>& data,
-                  Vector<Real>& datatime)
+mfix::GetDataVel (int lev, Real time, Vector<MultiFab*>& data, Vector<Real>& datatime)
 {
     data.clear();
     datatime.clear();
@@ -228,11 +207,7 @@ mfix::GetDataVel (int lev,
 
 // Utility to copy in data from phi_old and/or phi_new into another multifab
 void
-mfix::GetDataScalar (int lev,
-                     Real time,
-                     Vector<MultiFab*>& data,
-                     int icomp,
-                     Vector<Real>& datatime)
+mfix::GetDataScalar (int lev, Real time, Vector<MultiFab*>& data, int icomp, Vector<Real>& datatime)
 {
     data.clear();
     datatime.clear();
@@ -280,3 +255,4 @@ mfix::GetDataScalar (int lev,
         datatime.push_back(t_new[lev]);
     }
 }
+

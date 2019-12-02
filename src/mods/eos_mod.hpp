@@ -26,6 +26,6 @@
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
 AMREX_GPU_HOST_DEVICE
-amrex::Real sutherland (const amrex::Real& tg);
+amrex::Real sutherland(const amrex::Real& tg);
 
 #endif

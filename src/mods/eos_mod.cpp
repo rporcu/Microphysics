@@ -1,7 +1,7 @@
-#include <eos_mod.H>
+#include <eos_mod.hpp>
 
 AMREX_GPU_HOST_DEVICE
-amrex::Real sutherland (const amrex::Real& tg)
+amrex::Real sutherland(const amrex::Real& tg)
 {
    // Dummy arguments
    //---------------------------------------------------------------------//

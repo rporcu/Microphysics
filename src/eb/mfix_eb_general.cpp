@@ -16,7 +16,7 @@
 
 using namespace std;
 
-void mfix::make_eb_general () {
+void mfix::make_eb_general() {
 
     ParmParse pp("mfix");
 
@@ -289,8 +289,8 @@ void mfix::make_eb_general () {
 
 
 std::unique_ptr<EB2::TranslationIF<EB2::PolynomialIF>>
-mfix::get_poly (int max_order, std::string field_prefix)
-{
+mfix::get_poly(int max_order, std::string field_prefix) {
+
     /****************************************************************************
      * Read polynomial data from inputs database                                *
      *      => Generate Vector<EB2::PolyTerm> used                              *
@@ -361,7 +361,7 @@ mfix::get_poly (int max_order, std::string field_prefix)
 
 
 std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
-mfix::make_wall (int dir, // direction (long edge) of wall
+mfix::make_wall( int dir, // direction (long edge) of wall
                  Real position, Real height, Real width )
 {
     RealArray normal, center;

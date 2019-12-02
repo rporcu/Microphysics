@@ -1,6 +1,6 @@
 #include <mfix_calc_mu_g.hpp>
 #include <fld_constants_mod_F.H>
-#include <eos_mod.H>
+#include <eos_mod.hpp>
 #include <param_mod_F.H>
 
 void calc_mu_g(const Box& bx,

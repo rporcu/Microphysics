@@ -18,7 +18,7 @@
  * the particles see it as a solid boundary.                                    *
  *                                                                              *
  *******************************************************************************/
-void mfix::make_eb_cylinder ()
+void mfix::make_eb_cylinder()
 {
     ParmParse pp("cylinder");
 

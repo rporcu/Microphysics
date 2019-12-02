@@ -17,8 +17,7 @@ amrex::Real dot_product (const amrex::Real* a, const amrex::Real* b)
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 void cfrelvel (const MFIXParticleContainer::ParticleType& p1, 
                const MFIXParticleContainer::ParticleType& p2,
-               amrex::Real& vrn, amrex::Real* vslip,
-               const amrex::Real* normal, 
+               amrex::Real& vrn, amrex::Real* vslip, const amrex::Real* normal, 
                const amrex::Real dist_mag)
 {
     // translational relative velocity
@@ -57,8 +56,7 @@ void cfrelvel (const MFIXParticleContainer::ParticleType& p1,
 }
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-amrex::Real interp_level_set (MFIXParticleContainer::ParticleType const& p,
-                              const int n_refine,
+amrex::Real interp_level_set (MFIXParticleContainer::ParticleType const& p, const int n_refine,
                               amrex::Array4<amrex::Real const> const& phi,
                               amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
                               amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi)
@@ -98,8 +96,7 @@ amrex::Real interp_level_set (MFIXParticleContainer::ParticleType const& p,
 }
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void level_set_normal (MFIXParticleContainer::ParticleType const& p,
-                       const int n_refine,
+void level_set_normal (MFIXParticleContainer::ParticleType const& p, const int n_refine,
                        amrex::Real* normal,
                        amrex::Array4<amrex::Real const> const& phi,
                        amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
