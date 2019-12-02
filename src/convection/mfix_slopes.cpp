@@ -52,6 +52,119 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
            // No cut cells in tile + 1-cell witdh halo -> use non-eb routine
            if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
            {
+#ifdef AMREX_USE_CUDA
+#define BLOCK_SIZE 4
+             dim3 threadsPerBlock(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+             dim3 numBlocks(std::ceil(bx.length()[0]/float(threadsPerBlock.x)),
+                            std::ceil(bx.length()[1]/float(threadsPerBlock.y)),
+                            std::ceil(bx.length()[2]/float(threadsPerBlock.z)));
+
+             const unsigned shared_mem_size = sizeof(amrex::Real) * 3 * (
+               (threadsPerBlock.x+2)*(threadsPerBlock.y)*(threadsPerBlock.z) +
+               (threadsPerBlock.x)*(threadsPerBlock.y+2)*(threadsPerBlock.z) +
+               (threadsPerBlock.x)*(threadsPerBlock.y)*(threadsPerBlock.z+2));
+
+             IntVect bx_lo(bx.loVect());
+             IntVect bx_hi(bx.hiVect());
+
+             amrex::launch_global<<<numBlocks, threadsPerBlock, shared_mem_size,
+               Gpu::gpuStream()>>>(
+                 [state_fab,xs_fab,ys_fab,zs_fab,slopes_comp,bx_lo,bx_hi]
+                 AMREX_GPU_DEVICE() noexcept
+               {
+                 int i = threadIdx.x;
+                 int j = threadIdx.y;
+                 int k = threadIdx.z;
+
+                 int stride_i = blockIdx.x*blockDim.x + bx_lo[0];
+                 int stride_j = blockIdx.y*blockDim.y + bx_lo[1];
+                 int stride_k = blockIdx.z*blockDim.z + bx_lo[2];
+
+                 int global_i = i + stride_i;
+                 int global_j = j + stride_j;
+                 int global_k = k + stride_k;
+
+                 int local_limit_i = std::min(BLOCK_SIZE, bx_hi[0]-stride_i+1) + 1;
+                 int local_limit_j = std::min(BLOCK_SIZE, bx_hi[1]-stride_j+1) + 1;
+                 int local_limit_k = std::min(BLOCK_SIZE, bx_hi[2]-stride_k+1) + 1;
+
+                 int global_limit_i = std::min(stride_i+BLOCK_SIZE, bx_hi[0]+1);
+                 int global_limit_j = std::min(stride_j+BLOCK_SIZE, bx_hi[1]+1);
+                 int global_limit_k = std::min(stride_k+BLOCK_SIZE, bx_hi[2]+1);
+
+                 __shared__ Real state_fab_i[BLOCK_SIZE+2][BLOCK_SIZE][BLOCK_SIZE][3];
+                 __shared__ Real state_fab_j[BLOCK_SIZE][BLOCK_SIZE+2][BLOCK_SIZE][3];
+                 __shared__ Real state_fab_k[BLOCK_SIZE][BLOCK_SIZE][BLOCK_SIZE+2][3];
+
+                 if((global_i <= bx_hi[0]) and (global_j <= bx_hi[1]) and (global_k <= bx_hi[2]))
+                 {
+                   i++; j++; k++;
+
+                   int local_list_i[3] = {0, i, local_limit_i};
+                   int local_list_j[3] = {0, j, local_limit_j};
+                   int local_list_k[3] = {0, k, local_limit_k};
+
+                   int global_list_i[3] = {stride_i-1, global_i, global_limit_i};
+                   int global_list_j[3] = {stride_j-1, global_j, global_limit_j};
+                   int global_list_k[3] = {stride_k-1, global_k, global_limit_k};
+
+                   for(unsigned int ii(0); ii < 3; ii++) {
+                     int t_i = local_list_i[ii];
+                     int g_i = global_list_i[ii];
+
+                     for(unsigned int n(0); n < 3; n++)
+                       state_fab_i[t_i][j][k][n] = state_fab(g_i,global_j,global_k,n);
+                   }
+                   
+                   for(unsigned int jj(0); jj < 3; jj++) {
+                     int t_j = local_list_j[jj];
+                     int g_j = global_list_j[jj];
+
+                     for(unsigned int n(0); n < 3; n++)
+                       state_fab_j[i][t_j][k][n] = state_fab(global_i,g_j,global_k,n);
+                   }
+                   
+                   for(unsigned int kk(0); kk < 3; kk++) {
+                     int t_k = local_list_k[kk];
+                     int g_k = global_list_k[kk];
+
+                     for(unsigned int n(0); n < 3; n++)
+                       state_fab_k[i][j][t_k][n] = state_fab(global_i,global_j,g_k,n);
+                   }
+
+                   __syncthreads();
+
+                   for(unsigned int n(0); n < 3; n++) {
+                     // X direction
+                     Real du_xl = 2.0*(state_fab_i[i  ][j][k][n]- state_fab_i[i-1][j][k][n]);
+                     Real du_xr = 2.0*(state_fab_i[i+1][j][k][n]- state_fab_i[i  ][j][k][n]);
+                     Real du_xc = 0.5*(state_fab_i[i+1][j][k][n]- state_fab_i[i-1][j][k][n]);
+
+                     Real xslope = amrex::min(std::abs(du_xl), std::abs(du_xc), std::abs(du_xr));
+                     xslope = (du_xr*du_xl > 0.0) ? xslope : 0.0;
+                     xs_fab(global_i,global_j,global_k,slopes_comp+n) = (du_xc > 0.0) ? xslope : -xslope;
+
+                     // Y direction
+                     Real du_yl = 2.0*(state_fab_j[i][j  ][k][n] - state_fab_j[i][j-1][k][n]);
+                     Real du_yr = 2.0*(state_fab_j[i][j+1][k][n] - state_fab_j[i][j  ][k][n]);
+                     Real du_yc = 0.5*(state_fab_j[i][j+1][k][n] - state_fab_j[i][j-1][k][n]);
+
+                     Real yslope = amrex::min(std::abs(du_yl), std::abs(du_yc), std::abs(du_yr));
+                     yslope = (du_yr*du_yl > 0.0) ? yslope : 0.0;
+                     ys_fab(global_i,global_j,global_k,slopes_comp+n) = (du_yc > 0.0) ? yslope : -yslope;
+
+                     // Z direction
+                     Real du_zl = 2.0*(state_fab_k[i][j][k  ][n] - state_fab_k[i][j][k-1][n]);
+                     Real du_zr = 2.0*(state_fab_k[i][j][k+1][n] - state_fab_k[i][j][k  ][n]);
+                     Real du_zc = 0.5*(state_fab_k[i][j][k+1][n] - state_fab_k[i][j][k-1][n]);
+
+                     Real zslope = amrex::min(std::abs(du_zl), std::abs(du_zc), std::abs(du_zr));
+                     zslope = (du_zr*du_zl > 0.0) ? zslope : 0.0;
+                     zs_fab(global_i,global_j,global_k,slopes_comp+n) = (du_zc > 0.0) ? zslope : -zslope;
+                   }
+                 }
+               });
+#else
              amrex::ParallelFor(bx, ncomp,
                [state_fab,xs_fab,ys_fab,zs_fab,slopes_comp]
                AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
@@ -83,6 +196,7 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                    zslope = (du_zr*du_zl > 0.0) ? zslope : 0.0;
                    zs_fab(i,j,k,slopes_comp+n) = (du_zc > 0.0) ? zslope : -zslope;
                });
+#endif
            }
            else
            {
