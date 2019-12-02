@@ -17,7 +17,7 @@
  * Function to create a simple rectangular box with EB walls.                   *
  *                                                                              *
  *******************************************************************************/
-void mfix::make_eb_box()
+void mfix::make_eb_box ()
 {
     ParmParse pp("box");
 

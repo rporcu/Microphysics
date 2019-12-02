@@ -24,7 +24,7 @@
  *                                                                              *
  *******************************************************************************/
 void
-mfix::make_eb_proto_clr()
+mfix::make_eb_proto_clr ()
 {
     ParmParse pp("airreactor");
 

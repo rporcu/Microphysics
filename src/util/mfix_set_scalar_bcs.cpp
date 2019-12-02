@@ -1,6 +1,6 @@
 #include <mfix.H>
 #include <bc_mod_F.H>
-#include <eos_mod.hpp>
+#include <eos_mod.H>
 #include <fld_constants_mod_F.H>
 #include <param_mod_F.H>
 
@@ -44,11 +44,11 @@ mfix::mfix_set_scalar_bcs (Real time,
 }
 
 void 
-mfix::set_scalar_bcs(Real time,
-                     const int lev,
-                     FArrayBox& scal_fab,
-                     int comp,
-                     const Box& domain)
+mfix::set_scalar_bcs (Real time,
+                      const int lev,
+                      FArrayBox& scal_fab,
+                      int comp,
+                      const Box& domain)
 
 {
   IntVect dom_lo(domain.loVect());

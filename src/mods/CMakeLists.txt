@@ -9,7 +9,7 @@ target_sources( mfixcore
    constant_mod.f90
    constant_mod_F.H
    eos_mod.f90
-   eos_mod.hpp
+   eos_mod.H
    eos_mod.cpp
    fld_constants_mod.f90
    fld_constants_mod_F.H

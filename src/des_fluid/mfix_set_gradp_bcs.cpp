@@ -21,43 +21,18 @@ mfix::set_gradp_bcs (const Box& bx,
   Array4<int> const& bct_klo = bc_klo[lev]->array();
   Array4<int> const& bct_khi = bc_khi[lev]->array();
 
-  // Create 2D low and hi Boxes
-  IntVect bx_lo_yz_lo(gp_lo), bx_lo_yz_hi(gp_hi);
-  IntVect bx_hi_yz_lo(gp_lo), bx_hi_yz_hi(gp_hi);
-  bx_lo_yz_lo[0] = dom_lo[0]-1;
-  bx_lo_yz_hi[0] = dom_lo[0]-1;
-  bx_hi_yz_lo[0] = dom_hi[0]+1;
-  bx_hi_yz_hi[0] = dom_hi[0]+1;
-  const Box bx_yz_lo(bx_lo_yz_lo, bx_lo_yz_hi);
-  const Box bx_yz_hi(bx_hi_yz_lo, bx_hi_yz_hi);
-
-  // Create 2D low and hi Boxes
-  IntVect bx_lo_xz_lo(gp_lo), bx_lo_xz_hi(gp_hi);
-  IntVect bx_hi_xz_lo(gp_lo), bx_hi_xz_hi(gp_hi);
-  bx_lo_xz_lo[1] = dom_lo[1]-1;
-  bx_lo_xz_hi[1] = dom_lo[1]-1;
-  bx_hi_xz_lo[1] = dom_hi[1]+1;
-  bx_hi_xz_hi[1] = dom_hi[1]+1;
-  const Box bx_xz_lo(bx_lo_xz_lo, bx_lo_xz_hi);
-  const Box bx_xz_hi(bx_hi_xz_lo, bx_hi_xz_hi);
-
-  // Create 2D low and hi Boxes
-  IntVect bx_lo_xy_lo(gp_lo), bx_lo_xy_hi(gp_hi);
-  IntVect bx_hi_xy_lo(gp_lo), bx_hi_xy_hi(gp_hi);
-  bx_lo_xy_lo[2] = dom_lo[2]-1;
-  bx_lo_xy_hi[2] = dom_lo[2]-1;
-  bx_hi_xy_lo[2] = dom_hi[2]+1;
-  bx_hi_xy_hi[2] = dom_hi[2]+1;
-  const Box bx_xy_lo(bx_lo_xy_lo, bx_lo_xy_hi);
-  const Box bx_xy_hi(bx_hi_xy_lo, bx_hi_xy_hi);
-
   const int minf = bc_list.get_minf();
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
 
   if(gp_lo[0] <= dom_lo[0])
   {
-    amrex::ParallelFor(bx_yz_lo,[bct_ilo,dom_lo,pinf,pout,minf,gp_arr]
+    IntVect bx_lo_yz_lo(gp_lo), bx_lo_yz_hi(gp_hi);
+    bx_lo_yz_lo[0] = dom_lo[0]-1;
+    bx_lo_yz_hi[0] = dom_lo[0]-1;
+    const Box bx_yz_lo(bx_lo_yz_lo, bx_lo_yz_hi);
+
+    amrex::ParallelFor(bx_yz_lo, [bct_ilo,dom_lo,pinf,pout,minf,gp_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
@@ -79,7 +54,12 @@ mfix::set_gradp_bcs (const Box& bx,
 
   if(gp_hi[0] >= dom_hi[0]+1)
   {
-    amrex::ParallelFor(bx_yz_hi,[bct_ihi,dom_hi,pinf,pout,minf,gp_arr]
+    IntVect bx_hi_yz_lo(gp_lo), bx_hi_yz_hi(gp_hi);
+    bx_hi_yz_lo[0] = dom_hi[0]+1;
+    bx_hi_yz_hi[0] = dom_hi[0]+1;
+    const Box bx_yz_hi(bx_hi_yz_lo, bx_hi_yz_hi);
+
+    amrex::ParallelFor(bx_yz_hi, [bct_ihi,dom_hi,pinf,pout,minf,gp_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
@@ -101,7 +81,12 @@ mfix::set_gradp_bcs (const Box& bx,
 
   if(gp_lo[1] <= dom_lo[1])
   {
-    amrex::ParallelFor(bx_xz_lo,[bct_jlo,dom_lo,pinf,pout,minf,gp_arr]
+    IntVect bx_lo_xz_lo(gp_lo), bx_lo_xz_hi(gp_hi);
+    bx_lo_xz_lo[1] = dom_lo[1]-1;
+    bx_lo_xz_hi[1] = dom_lo[1]-1;
+    const Box bx_xz_lo(bx_lo_xz_lo, bx_lo_xz_hi);
+
+    amrex::ParallelFor(bx_xz_lo, [bct_jlo,dom_lo,pinf,pout,minf,gp_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
@@ -123,7 +108,12 @@ mfix::set_gradp_bcs (const Box& bx,
 
   if(gp_hi[1] >= dom_hi[1]+1)
   {
-    amrex::ParallelFor(bx_xz_hi,[bct_jhi,dom_hi,pinf,pout,minf,gp_arr]
+    IntVect bx_hi_xz_lo(gp_lo), bx_hi_xz_hi(gp_hi);
+    bx_hi_xz_lo[1] = dom_hi[1]+1;
+    bx_hi_xz_hi[1] = dom_hi[1]+1;
+    const Box bx_xz_hi(bx_hi_xz_lo, bx_hi_xz_hi);
+
+    amrex::ParallelFor(bx_xz_hi, [bct_jhi,dom_hi,pinf,pout,minf,gp_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
@@ -145,7 +135,12 @@ mfix::set_gradp_bcs (const Box& bx,
 
   if(gp_lo[2] <= dom_lo[2])
   {
-    amrex::ParallelFor(bx_xy_lo,[bct_klo,dom_lo,pinf,pout,minf,gp_arr]
+    IntVect bx_lo_xy_lo(gp_lo), bx_lo_xy_hi(gp_hi);
+    bx_lo_xy_lo[2] = dom_lo[2]-1;
+    bx_lo_xy_hi[2] = dom_lo[2]-1;
+    const Box bx_xy_lo(bx_lo_xy_lo, bx_lo_xy_hi);
+
+    amrex::ParallelFor(bx_xy_lo, [bct_klo,dom_lo,pinf,pout,minf,gp_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
@@ -167,7 +162,12 @@ mfix::set_gradp_bcs (const Box& bx,
 
   if(gp_hi[2] >= dom_hi[2]+1)
   {
-    amrex::ParallelFor(bx_xy_hi,[bct_khi,dom_hi,pinf,pout,minf,gp_arr]
+    IntVect bx_hi_xy_lo(gp_lo), bx_hi_xy_hi(gp_hi);
+    bx_hi_xy_lo[2] = dom_hi[2]+1;
+    bx_hi_xy_hi[2] = dom_hi[2]+1;
+    const Box bx_xy_hi(bx_hi_xy_lo, bx_hi_xy_hi);
+
+    amrex::ParallelFor(bx_xy_hi, [bct_khi,dom_hi,pinf,pout,minf,gp_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);

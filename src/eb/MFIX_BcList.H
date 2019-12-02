@@ -5,12 +5,12 @@
 //
 class BcList {
   public:
-    BcList(const int undefined = 0,
-           const int ig = 9,
-           const int pinf = 10,
-           const int pout = 11,
-           const int minf = 20,
-           const int nsw = 100)
+    BcList (const int undefined = 0,
+            const int ig = 9,
+            const int pinf = 10,
+            const int pout = 11,
+            const int minf = 20,
+            const int nsw = 100)
       : und_(undefined)
       , ig_(ig)
       , pinf_(pinf)
@@ -19,13 +19,13 @@ class BcList {
       , nsw_(nsw)
     {}
 
-    int get_undefined() const {return und_;};
-    int get_ig() const {return ig_;};
+    int get_undefined () const {return und_;};
+    int get_ig () const {return ig_;};
 
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_pinf() const {return pinf_;};
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_pout() const {return pout_;};
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_minf() const {return minf_;};
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_nsw() const {return nsw_;};
+    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_pinf () const {return pinf_;};
+    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_pout () const {return pout_;};
+    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_minf () const {return minf_;};
+    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_nsw () const {return nsw_;};
 
   private:
     const int und_;

@@ -34,10 +34,10 @@ mfix::mfix_set_epg_bcs (const amrex::Vector< std::unique_ptr<MultiFab> > & epg_i
 }
 
 void
-mfix::set_epg_bcs(const int lev,
-                  FArrayBox& epg_fab,
-                  const Box& domain,
-                  const int* extrap_dir_bcs) const
+mfix::set_epg_bcs (const int lev,
+                   FArrayBox& epg_fab,
+                   const Box& domain,
+                   const int* extrap_dir_bcs) const
 {
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());

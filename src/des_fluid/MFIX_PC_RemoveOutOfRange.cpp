@@ -21,8 +21,10 @@
 using namespace amrex;
 using namespace std;
 
-void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory * ebfactory,
-                                             const MultiFab * ls_phi, int ls_refinement)
+void MFIXParticleContainer::RemoveOutOfRange (int lev,
+                                              const EBFArrayBoxFactory * ebfactory,
+                                              const MultiFab * ls_phi,
+                                              int ls_refinement)
 {
     // Only call the routine for wall collisions if we actually have walls
     if (ebfactory != NULL) {
@@ -30,7 +32,8 @@ void MFIXParticleContainer::RemoveOutOfRange(int lev, const EBFArrayBoxFactory *
         const Real * dx  = Geom(lev).CellSize();
         const Real * plo = Geom(lev).ProbLo();
 
-        // This holds the mesh spacing of the level set, which may be finer than the local mesh spacing
+        // This holds the mesh spacing of the level set, which may be finer than
+        // the local mesh spacing
         Real dx_ls[3];
         for (int i = 0; i < 3; i++)
            dx_ls[i] = dx[i] / ls_refinement;

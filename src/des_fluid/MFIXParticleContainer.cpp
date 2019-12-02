@@ -61,11 +61,10 @@ void MFIXParticleContainer::AllocData ()
 {
     reserveData();
     resizeData();
-
 }
 
-void MFIXParticleContainer::PrintParticleCounts() {
-
+void MFIXParticleContainer::PrintParticleCounts () 
+{
   const int lev = 0;
   amrex::AllPrintToFile("load_balance") << "Particles on each box: \n";
   long local_count = 0;
@@ -78,7 +77,7 @@ void MFIXParticleContainer::PrintParticleCounts() {
   amrex::AllPrintToFile("load_balance") << "Total for this process: " << local_count << std::endl << std::endl;
 }
 
-void MFIXParticleContainer:: printParticles()
+void MFIXParticleContainer::printParticles ()
 {
     const int lev = 0;
     const auto& plevel = GetParticles(lev);
@@ -115,19 +114,25 @@ void MFIXParticleContainer::ReadStaticParameters ()
         initialized = true;
 }
 
-void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real time,
-                                            EBFArrayBoxFactory * ebfactory,
-                                            const MultiFab * ls_phi, const iMultiFab * ls_valid,
-                                            const int ls_refinement,
-                                            MultiFab * cost, std::string & knapsack_weight_type,
-                                            int &nsubsteps)
+void MFIXParticleContainer::EvolveParticles (int lev,
+                                             int nstep,
+                                             Real dt,
+                                             Real time,
+                                             EBFArrayBoxFactory* ebfactory,
+                                             const MultiFab* ls_phi,
+                                             const iMultiFab* ls_valid,
+                                             const int ls_refinement,
+                                             MultiFab* cost,
+                                             std::string& knapsack_weight_type,
+                                             int& nsubsteps)
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
     Real eps = std::numeric_limits<Real>::epsilon();
 
-    amrex::Print() << "Evolving particles on level: " << lev << " ... with fluid dt " << dt << std::endl;
+    amrex::Print() << "Evolving particles on level: " << lev 
+                   << " ... with fluid dt " << dt << std::endl;
 
     /****************************************************************************
      * DEBUG flag toggles:                                                      *
@@ -154,8 +159,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
      * Init substeps                                                            *
      ***************************************************************************/
 
-    Real  subdt;
-    des_init_time_loop( &time, &dt, &nsubsteps, &subdt );
+    Real subdt;
+    des_init_time_loop(&time, &dt, &nsubsteps, &subdt);
 
     /****************************************************************************
      * Get particle EB geometric info
@@ -349,9 +354,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         Real mag_overlap_t;
 
                         // calculate the normal contact force
-                        fn[0] = -(kn_des_w*overlap_n*normal[0] + etan_des_w*vreltrans_norm*normal[0]);
-                        fn[1] = -(kn_des_w*overlap_n*normal[1] + etan_des_w*vreltrans_norm*normal[1]);
-                        fn[2] = -(kn_des_w*overlap_n*normal[2] + etan_des_w*vreltrans_norm*normal[2]);
+                        fn[0] = -(kn_des_w*overlap_n*normal[0]
+                                + etan_des_w*vreltrans_norm*normal[0]);
+                        fn[1] = -(kn_des_w*overlap_n*normal[1]
+                                + etan_des_w*vreltrans_norm*normal[1]);
+                        fn[2] = -(kn_des_w*overlap_n*normal[2]
+                                + etan_des_w*vreltrans_norm*normal[2]);
 
                         // calculate the tangential displacement
                         overlap_t[0] = subdt*vrel_t[0];
@@ -477,9 +485,12 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                           Real mag_overlap_t;
 
                           // calculate the normal contact force
-                          fn[0] = -(kn_des*overlap_n*normal[0] + etan_des*vrel_trans_norm*normal[0]);
-                          fn[1] = -(kn_des*overlap_n*normal[1] + etan_des*vrel_trans_norm*normal[1]);
-                          fn[2] = -(kn_des*overlap_n*normal[2] + etan_des*vrel_trans_norm*normal[2]);
+                          fn[0] = -(kn_des*overlap_n*normal[0]
+                                  + etan_des*vrel_trans_norm*normal[0]);
+                          fn[1] = -(kn_des*overlap_n*normal[1]
+                                  + etan_des*vrel_trans_norm*normal[1]);
+                          fn[2] = -(kn_des*overlap_n*normal[2]
+                                  + etan_des*vrel_trans_norm*normal[2]);
 
                           // calculate the tangential overlap
                           overlap_t[0] = subdt*vrel_t[0];
@@ -524,11 +535,16 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                       }
               });
 #else
-            calc_particle_collisions ( particles                          , &nrp,
-                                       neighbors[lev][index].dataPtr()    , &size_ng,
-                                       neighbor_list[lev][index].dataPtr(), &size_nl,
-                                       tow[index].dataPtr(), fc[index].dataPtr(),
-                                       &subdt, &ncoll);
+            calc_particle_collisions(particles,
+                                     &nrp,
+                                     neighbors[lev][index].dataPtr(),
+                                     &size_ng,
+                                     neighbor_list[lev][index].dataPtr(),
+                                     &size_nl,
+                                     tow[index].dataPtr(),
+                                     fc[index].dataPtr(),
+                                     &subdt,
+                                     &ncoll);
 #endif
 
             // Debugging: copy data from the fc (all forces) vector to the wfor
@@ -572,15 +588,24 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                 ParticleType& p = pstruct[i];
 
                 p.rdata(realData::velx) += subdt * (
-                    (p.rdata(realData::dragx) + fc_ptr[i       ]) /  p.rdata(realData::mass) + grav[0]);
+                    (p.rdata(realData::dragx) + fc_ptr[i]) /
+                     p.rdata(realData::mass)  + grav[0]
+                );
                 p.rdata(realData::vely) += subdt * (
-                    (p.rdata(realData::dragy) + fc_ptr[i + ntot]) /  p.rdata(realData::mass) + grav[1]);
+                    (p.rdata(realData::dragy) + fc_ptr[i+ntot]) /
+                     p.rdata(realData::mass)  + grav[1]
+                );
                 p.rdata(realData::velz) += subdt * (
-                    (p.rdata(realData::dragz) + fc_ptr[i+2*ntot]) /  p.rdata(realData::mass) + grav[2]);
+                    (p.rdata(realData::dragz) + fc_ptr[i+2*ntot]) /
+                     p.rdata(realData::mass)  + grav[2]
+                );
 
-                p.rdata(realData::omegax) += subdt * p.rdata(realData::oneOverI) * tow_ptr[i       ];
-                p.rdata(realData::omegay) += subdt * p.rdata(realData::oneOverI) * tow_ptr[i+  ntot];
-                p.rdata(realData::omegaz) += subdt * p.rdata(realData::oneOverI) * tow_ptr[i+2*ntot];
+                p.rdata(realData::omegax) +=
+                  subdt * p.rdata(realData::oneOverI) * tow_ptr[i];
+                p.rdata(realData::omegay) +=
+                  subdt * p.rdata(realData::oneOverI) * tow_ptr[i+ntot];
+                p.rdata(realData::omegaz) +=
+                  subdt * p.rdata(realData::oneOverI) * tow_ptr[i+2*ntot];
 
                 p.pos(0) += subdt * p.rdata(realData::velx);
                 p.pos(1) += subdt * p.rdata(realData::vely);
@@ -708,7 +733,8 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
      ***************************************************************************/
     if (debug_level > 0) {
         ParallelDescriptor::ReduceIntSum(ncoll_total, ParallelDescriptor::IOProcessorNumber());
-        amrex::Print() << "Number of collisions: " << ncoll_total << " in " << nsubsteps << " substeps " << std::endl;
+        amrex::Print() << "Number of collisions: " << ncoll_total << " in "
+                       << nsubsteps << " substeps " << std::endl;
     }
 
 #ifdef _OPENMP
@@ -719,7 +745,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
         const int nrp   = NumberOfParticles(pti);
         void* particles = pti.GetArrayOfStructs().data();
 
-        call_usr3_des( &nrp, particles );
+        call_usr3_des(&nrp, particles);
     }
 
     if (debug_level > 0) {
@@ -748,7 +774,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
     BL_PROFILE_REGION_STOP("mfix_dem::EvolveParticles()");
 }
 
-void MFIXParticleContainer::writeAllAtLevel(int lev)
+void MFIXParticleContainer::writeAllAtLevel (int lev)
 {
     // Not threaded because its print to terminal
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
@@ -776,7 +802,7 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
     BL_ASSERT(!filename.empty());
 
     int lev = 0;
-    long nparticles = NumberOfParticlesAtLevel (lev);
+    long nparticles = NumberOfParticlesAtLevel(lev);
 
     if (ParallelDescriptor::IOProcessor())
     {
@@ -785,7 +811,7 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
         //
         std::ofstream File;
 
-        File.open(filename.c_str(), std::ios::out|std::ios::trunc);
+        File.open(filename.c_str(), std::ios::out | std::ios::trunc);
 
         if (!File.good())
             amrex::FileOpenFailed(filename);
@@ -866,9 +892,9 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
     }
 }
 
-void MFIXParticleContainer::GetParticleAvgProp(Real (&min_dp)[10], Real (&min_ro)[10],
-                                               Real (&max_dp)[10], Real (&max_ro)[10],
-                                               Real (&avg_dp)[10], Real (&avg_ro)[10])
+void MFIXParticleContainer::GetParticleAvgProp (Real (&min_dp)[10], Real (&min_ro)[10],
+                                                Real (&max_dp)[10], Real (&max_ro)[10],
+                                                Real (&avg_dp)[10], Real (&avg_ro)[10])
 {
    // The number of phases was previously hard set at 10, however lowering
    //  this number would make this code faster.
@@ -973,7 +999,7 @@ void MFIXParticleContainer::UpdateMaxVelocity ()
     loc_maxvel = RealVect(max_vel_x, max_vel_y, max_vel_z);
 }
 
-void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> pfor,
+void MFIXParticleContainer::UpdateMaxForces (std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> pfor,
                                              std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> wfor)
 {
     Real max_pfor_x = loc_maxpfor[0], max_pfor_y = loc_maxpfor[1], max_pfor_z = loc_maxpfor[2];
@@ -1025,7 +1051,7 @@ void MFIXParticleContainer::UpdateMaxForces( std::map<PairIndex, Gpu::ManagedDev
     loc_maxwfor = RealVect(max_wfor_x, max_wfor_y, max_wfor_z);
 }
 
-RealVect MFIXParticleContainer::GetMaxVelocity()
+RealVect MFIXParticleContainer::GetMaxVelocity ()
 {
     Real max_vel_x = loc_maxvel[0], max_vel_y = loc_maxvel[1], max_vel_z = loc_maxvel[2];
 
@@ -1037,14 +1063,14 @@ RealVect MFIXParticleContainer::GetMaxVelocity()
     return max_vel;
 };
 
-Vector<RealVect> MFIXParticleContainer::GetMaxForces()
+Vector<RealVect> MFIXParticleContainer::GetMaxForces ()
 {
     Real max_pfor_x = loc_maxpfor[0], max_pfor_y = loc_maxpfor[1], max_pfor_z = loc_maxpfor[2];
     Real max_wfor_x = loc_maxwfor[0], max_wfor_y = loc_maxwfor[1], max_wfor_z = loc_maxwfor[2];
 
 
-    ParallelDescriptor::ReduceRealMax({ max_pfor_x, max_pfor_y, max_pfor_z,
-                                        max_wfor_x, max_wfor_y, max_wfor_z      },
+    ParallelDescriptor::ReduceRealMax({max_pfor_x, max_pfor_y, max_pfor_z,
+                                       max_wfor_x, max_wfor_y, max_wfor_z},
                                       ParallelDescriptor::IOProcessorNumber());
 
     Vector<RealVect> max_forces(2);
@@ -1055,7 +1081,7 @@ Vector<RealVect> MFIXParticleContainer::GetMaxForces()
 }
 
 void
-MFIXParticleContainer::BalanceParticleLoad_KDTree()
+MFIXParticleContainer::BalanceParticleLoad_KDTree ()
 {
   int lev = 0;
   bool verbose = true;
@@ -1087,7 +1113,11 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
 
   BoxArray new_ba;
   Real cell_weight = 0.;
-  loadBalanceKD::balance<MFIXParticleContainer>(*this, new_ba, ParallelDescriptor::NProcs(), cell_weight, box_costs);
+  loadBalanceKD::balance<MFIXParticleContainer>(*this,
+                                                new_ba,
+                                                ParallelDescriptor::NProcs(),
+                                                cell_weight,
+                                                box_costs);
 
   // Create a new DM to go with the new BA
   DistributionMapping new_dm = DistributionMapping::makeKnapSack(box_costs);
@@ -1112,16 +1142,16 @@ MFIXParticleContainer::BalanceParticleLoad_KDTree()
 }
 
 void MFIXParticleContainer::
-ComputeAverageVelocities ( const int lev,
-                           const amrex::Real time,
-                           const string&  basename,
-                           const amrex::Vector<Real>& avg_vel_p,
-                           const amrex::Vector<Real>& avg_region_x_w,
-                           const amrex::Vector<Real>& avg_region_x_e,
-                           const amrex::Vector<Real>& avg_region_y_s,
-                           const amrex::Vector<Real>& avg_region_y_n,
-                           const amrex::Vector<Real>& avg_region_z_b,
-                           const amrex::Vector<Real>& avg_region_z_t )
+ComputeAverageVelocities (const int lev,
+                          const amrex::Real time,
+                          const string&  basename,
+                          const amrex::Vector<Real>& avg_vel_p,
+                          const amrex::Vector<Real>& avg_region_x_w,
+                          const amrex::Vector<Real>& avg_region_x_e,
+                          const amrex::Vector<Real>& avg_region_y_s,
+                          const amrex::Vector<Real>& avg_region_y_n,
+                          const amrex::Vector<Real>& avg_region_z_b,
+                          const amrex::Vector<Real>& avg_region_z_t )
 {
 
   // Count number of calls -- Used to determin when to create file from scratch
@@ -1142,14 +1172,14 @@ ComputeAverageVelocities ( const int lev,
             ( avg_region_z_b.size() != nregions ) ||
             ( avg_region_z_t.size() != nregions )  )
         {
-          amrex::Print () << "ComputeAverageVelocities: some regions are not properly defined: skipping.";
+          amrex::Print() << "ComputeAverageVelocities: some regions are not properly defined: skipping.";
           return;
         }
 
-      vector<long> region_np (nregions, 0);
-      vector<Real> region_velx (nregions, 0.0);
-      vector<Real> region_vely (nregions, 0.0);
-      vector<Real> region_velz (nregions, 0.0);
+      vector<long> region_np(nregions, 0);
+      vector<Real> region_velx(nregions, 0.0);
+      vector<Real> region_vely(nregions, 0.0);
+      vector<Real> region_velz(nregions, 0.0);
 
       for ( int nr = 0; nr < nregions; ++nr )
         {
@@ -1160,28 +1190,28 @@ ComputeAverageVelocities ( const int lev,
           if( avg_vel_p[nr] == 0) continue;
 
           // Create Real box for this region
-          RealBox avg_region ( {avg_region_x_w[nr], avg_region_y_s[nr], avg_region_z_b[nr]},
-                               {avg_region_x_e[nr], avg_region_y_n[nr], avg_region_z_t[nr]} );
+          RealBox avg_region({avg_region_x_w[nr], avg_region_y_s[nr], avg_region_z_b[nr]},
+                             {avg_region_x_e[nr], avg_region_y_n[nr], avg_region_z_t[nr]});
 
           // Jump to next iteration if this averaging region is not valid
-          if ( !avg_region.ok () )
+          if ( !avg_region.ok() )
             {
               amrex::Print() << "ComputeAverageVelocities: region "<< nr <<" is invalid: skipping\n";
               continue;
             }
 
-          long sum_np     = 0;    // Number of particle in avg region
-          Real sum_velx   = 0.;
-          Real sum_vely   = 0.;
-          Real sum_velz   = 0.;
+          long sum_np   = 0;    // Number of particle in avg region
+          Real sum_velx = 0.;
+          Real sum_vely = 0.;
+          Real sum_velz = 0.;
 
 #ifdef _OPENMP
 #pragma omp parallel reduction(+:sum_np,sum_velx,sum_vely,sum_velz) if (Gpu::notInLaunchRegion())
 #endif
           for ( MFIXParIter pti(*this, lev); pti.isValid(); ++ pti)
             {
-              Box bx       = pti.tilebox ();
-              RealBox tile_region ( bx, Geom(lev).CellSize (), Geom(lev).ProbLo() );
+              Box bx = pti.tilebox();
+              RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
 
               if ( tile_region.intersects ( avg_region ) )
                 {
@@ -1190,39 +1220,34 @@ ComputeAverageVelocities ( const int lev,
 
                   for (int p = 0; p < np; ++p )
                     {
-                      if ( avg_region.contains ( &(particles[p].m_rdata.pos[0]) ) )
+                      if ( avg_region.contains(&(particles[p].m_rdata.pos[0])))
                         {
                           sum_np++;
                           sum_velx += particles[p].rdata(realData::velx);
                           sum_vely += particles[p].rdata(realData::vely);
                           sum_velz += particles[p].rdata(realData::velz);
                         }
-
                     }
-
                 }
-
             }
 
-          region_np[nr]    = sum_np;
-          region_velx[nr]  = sum_velx;
-          region_vely[nr]  = sum_vely;
-          region_velz[nr]  = sum_velz;
+          region_np[nr]   = sum_np;
+          region_velx[nr] = sum_velx;
+          region_vely[nr] = sum_vely;
+          region_velz[nr] = sum_velz;
         }
 
       // Compute parallel reductions
-      ParallelDescriptor::ReduceLongSum ( region_np.data(),   nregions );
-      ParallelDescriptor::ReduceRealSum ( region_velx.data(), nregions );
-      ParallelDescriptor::ReduceRealSum ( region_vely.data(), nregions );
-      ParallelDescriptor::ReduceRealSum ( region_velz.data(), nregions );
+      ParallelDescriptor::ReduceLongSum(region_np.data(),   nregions);
+      ParallelDescriptor::ReduceRealSum(region_velx.data(), nregions);
+      ParallelDescriptor::ReduceRealSum(region_vely.data(), nregions);
+      ParallelDescriptor::ReduceRealSum(region_velz.data(), nregions);
 
       // Only the IO processor takes care of the output
       if (ParallelDescriptor::IOProcessor())
         {
-
           for ( int nr = 0; nr < nregions; ++nr )
             {
-
               // Skip this region.
               if( avg_vel_p[nr] == 0 ) continue;
 
@@ -1278,13 +1303,16 @@ ComputeAverageVelocities ( const int lev,
               ofs.close();
             }
         }
-
     }
-
 }
 
-void MFIXParticleContainer::set_particle_properties(int pstate, Real pradius, Real pdensity,
-                                                    Real& pvol, Real& pmass, Real& omoi, Real& omega)
+void MFIXParticleContainer::set_particle_properties (int pstate,
+                                                     Real pradius,
+                                                     Real pdensity,
+                                                     Real& pvol,
+                                                     Real& pmass,
+                                                     Real& omoi,
+                                                     Real& omega)
 {
     pvol  = (4.0/3.0)*M_PI*(pradius*pradius*pradius);
     pmass = pvol * pdensity;
