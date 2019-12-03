@@ -219,7 +219,6 @@ int main (int argc, char* argv[])
 
     int solve_fluid;
     int solve_dem;
-    int call_udf;
     Real time=0.0L;
     int nstep = 0;  // Current time step
 
@@ -233,7 +232,7 @@ int main (int argc, char* argv[])
     //     mfix_get_data -> get_data -> read_namelist
     //                                        |
     //      (loads `mfix.dat`) ---------------+
-    mfix_get_data(&solve_fluid, &solve_dem, &call_udf, &name_len, cmfix_dat);
+    mfix_get_data(&solve_fluid, &solve_dem, &name_len, cmfix_dat);
 
     // Default constructor. Note inheritance: mfix : AmrCore : AmrMesh
     //                                                             |
@@ -249,7 +248,7 @@ int main (int argc, char* argv[])
     set_ptr_to_mfix(my_mfix);
 
     // Initialize internals from ParamParse database
-    my_mfix.InitParams(solve_fluid, solve_dem, call_udf);
+    my_mfix.InitParams(solve_fluid, solve_dem);
 
     // Initialize memory for data-array internals
     my_mfix.ResizeArrays();

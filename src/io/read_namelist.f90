@@ -31,11 +31,8 @@ MODULE read_namelist_module
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use ic, only: ic_dp_dist, ic_dp_mean, ic_dp_std, ic_dp_min, ic_dp_max
       use ic, only: ic_ro_s_dist, ic_ro_s_mean, ic_ro_s_std, ic_ro_s_min, ic_ro_s_max
-      use run, only: full_log, nlog
       use output, only: usr_x_w, usr_x_e, usr_y_n, usr_y_s, usr_z_b, usr_z_t
       use output, only: usr_dt
-      use run, only: call_usr, description
-      use run, only: run_name
       use scales, only: p_ref, p_scale
       use usr
       use utilities, only: blank_line, line_too_big, seek_comment
@@ -167,7 +164,6 @@ MODULE read_namelist_module
 
 ! External namelist files:
 !---------------------------------------------------------------------//
-      include 'run_control.inc'
       include 'physical_params.inc'
       include 'geometry.inc'
       include 'gas_phase.inc'
@@ -187,12 +183,6 @@ MODULE read_namelist_module
 ! Write the current line to a scratch file
 ! and read the scratch file in NAMELIST format
       IF(.NOT.READ_FLAG) RETURN
-
-! Run control keywords
-      STRING=''; STRING = '&RUN_CONTROL '//&
-           trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=RUN_CONTROL,  IOSTAT=IOS)
-      IF(IOS == 0)  RETURN
 
 ! Physical parameter keywords
       STRING=''; STRING = '&PHYSICAL_PARAM '//&

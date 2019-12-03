@@ -5,19 +5,19 @@
 # Description: Wu's bed (big Mehrdad's bed) for ordered L-R bubbling   #
 #                                                                      #
 # Reference: K. Wu, et al., Pattern formation in pulsed gas-solid      #
-#            fluidized beds - the role of granular solid mechanics     # 
-#            Chem. Eng. J., 329, 4--14 (2017).                         # 
+#            fluidized beds - the role of granular solid mechanics     #
+#            Chem. Eng. J., 329, 4--14 (2017).                         #
 #                                                                      #
 ########################################################################
 
-  RUN_NAME = 'R'
-  DESCRIPTION = 'Wu - periodic Bubbling'
+
+
 
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  CALL_USR = .T.
-  FULL_LOG = .T.
+
+
 
   GRAVITY(1) = -9.80665
   GRAVITY(2) =  0.00
@@ -64,6 +64,3 @@
   IC_U_g(1) =   0.000  ! (m)
   IC_V_g(1) =   0.000  ! (m)
   IC_W_g(1) =   0.000  ! (m)
-
-
-

@@ -16,7 +16,7 @@
 #include <diffusion_F.H>
 
 void
-mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
+mfix::InitParams(int solve_fluid_in, int solve_dem_in)
 {
     if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
     // set n_error_buf (used in AmrMesh) to default (can overwrite later)
@@ -78,6 +78,12 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
         }
 
         pp.query("ooo_debug", ooo_debug);
+
+        // Flag to envoke UDFs
+        bool call_usr_bool = false;
+        pp.query("call_usr", call_usr_bool);
+        call_udf = call_usr_bool ? 1 : 0; // Set global flag
+
 
         // The default type is "AsciiFile" but we can over-write that in the inputs file
         //  with "Random"
@@ -197,7 +203,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
 
     solve_fluid  = solve_fluid_in;
     solve_dem    = solve_dem_in;
-    call_udf     = call_udf_in;
 
     if (solve_dem)
     {

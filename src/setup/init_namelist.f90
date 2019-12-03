@@ -35,11 +35,9 @@ MODULE INIT_NAMELIST_MODULE
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_t_g, ic_t_s, ic_x_w
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
-      use run, only: full_log, nlog
       use output, only: usr_dt
       use output, only: usr_x_w, usr_x_e, usr_y_n, usr_y_s, usr_z_b, usr_z_t
-      use run, only: call_usr, description
-      use run, only: run_name
+
       use scales, only: p_ref, p_scale
       use usr
       use utilities, only: blank_line, line_too_big, seek_comment
@@ -52,23 +50,6 @@ MODULE INIT_NAMELIST_MODULE
 
       implicit none
 
-!#####################################################################!
-!                             Run Control                             !
-!#####################################################################!
-
-!<keyword category="Run Control" required="true">
-!  <description> Name used to create output files. The name should
-!    generate legal file names after appending extensions.
-!    Ex: Given the input, RUN_NAME = "bub01", MFIX will generate
-!    the output files: BUB01.LOG, BUB01.OUT, BUB01.RES, etc.
-!  </description>
-      RUN_NAME = UNDEFINED_C
-!</keyword>
-
-!<keyword category="Run Control" required="false">
-!  <description>Problem description. Limited to 60 characters.</description>
-      DESCRIPTION = UNDEFINED_C
-!</keyword>
 
 !#####################################################################!
 !                           Physical Parameters                       !
@@ -543,39 +524,10 @@ MODULE INIT_NAMELIST_MODULE
 
 
 
-
-
-
-!#####################################################################!
-!                          Output Control                             !
-!#####################################################################!
-
-!<keyword category="Output Control" required="false">
-!  <description>Number of time steps between .LOG file updates.</description>
-      NLOG = 25
-!</keyword>
-
-!<keyword category="Output Control" required="false">
-!  <description> Display the residuals on the screen and provide
-!    messages about convergence on the screen and in the .LOG file.
-!  </description>
-      FULL_LOG = .FALSE.
-!</keyword>
-
-
 !#####################################################################!
 !                           UDF  Control                              !
 !#####################################################################!
 
-!<keyword category="UDF Control" required="false">
-!  <description>
-!    Flag to enable user-defined subroutines: USR0, USR1, USR2, USR3,
-!    USR0_DES, USR1_DES, USR2_DES, USR3_DES
-!  </description>
-!  <valid value=".TRUE." note="Call user-defined subroutines."/>
-!  <valid value=".FALSE." note="Do NOT call user-defined subroutines."/>
-      CALL_USR = .FALSE.
-!</keyword>
 
 !<keyword category="UDF Control" required="false">
 !  <description>

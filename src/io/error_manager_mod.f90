@@ -52,7 +52,6 @@
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-      use run, only: RUN_NAME
 ! Undefined character string.
       use param, only: UNDEFINED_C
 
@@ -60,16 +59,8 @@
 
 ! Local Variables:
 !---------------------------------------------------------------------//
-! Log file name.
-      CHARACTER(len=255) :: LOGFILE
-      CHARACTER(len=255) :: FILE_NAME
-! First non-blank character in run_name.
-      integer :: NB
-! Integer error flag
-      integer :: IER(0:0)
 
 ! Initizilae the error flags.
-      IER = 0
       IER_EM = 0
 ! Initialize the call tree depth.
       CALL_DEPTH = 0
@@ -78,40 +69,7 @@
 ! Clear the caller routine information.
       CALLERS = ''
 
-! Verify the length of user-provided name.
-      LOGFILE = ''
-      NB = INDEX(RUN_NAME,' ')
-! RUN_NAME length too short.
-      IF(RUN_NAME == UNDEFINED_C .OR. NB <= 1) THEN
-         WRITE (*, 1000) 'short'
-         stop 20001
-! RUN_NAME length too long.
-      ELSEIF(NB + 10 > LEN(LOGFILE)) THEN
-         write (*, 1000) 'long'
-         stop 20002
-! RUN_NAME legnth just right.
-      ELSE
-! Specify the .LOG file name based on MPI Rank extension.
-         WRITE(LOGFILE,"(A)") RUN_NAME(1:(NB-1))
-      ENDIF
-
-! Verify that the .LOG file was successfully opened. Otherwise, flag the
-! error and abort.
-      ! CALL GLOBAL_ALL_SUM(IER)
-      IF(sum(IER) /= 0) THEN
-         WRITE(*,1001) trim(FILE_NAME)
-        stop 20003
-      ENDIF
-
       RETURN
-
- 1000 FORMAT(2/,1X,70('*')/' From: INIT_ERROR_MANAGER',/               &
-        ' Error 1000: RUN_NAME too ',A,'.',/&
-        'Please correct the input deck.',/1x,70('*'),2/)
-
- 1001 FORMAT(2/,1X,70('*')/' From: INIT_ERROR_MANAGER',/               &
-         ' Error 1001: Failed to open log file: ',A,/' Aborting run.'/,&
-         1x,70('*'),2/)
 
       END SUBROUTINE INIT_ERROR_MANAGER
 

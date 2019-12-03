@@ -13,16 +13,16 @@
 #                                                                      #
 ########################################################################
 
-  RUN_NAME = 'DEM05'
-  DESCRIPTION = 'DEM05: Oblique particle collision'
+
+
 
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  CALL_USR = .T.
 
-  FULL_LOG = .T.  ! display residuals on screen
-  NLOG = 5000     ! time steps between updates to (.LOG) file
+
+
+
 
   GRAVITY(1:3) = 3*0.0
 

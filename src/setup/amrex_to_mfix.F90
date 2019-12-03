@@ -12,20 +12,20 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_get_data( fluid, dem, call_udf, namelen, mfix_datC) &
+  subroutine mfix_get_data( fluid, dem, namelen, mfix_datC) &
     bind(C, name="mfix_get_data")
 
     use fld_const, only: ro_g0
     use get_data_module, only: get_data
     use param, only: is_undefined
-    use run, only: dem_solids, call_usr
+    use run, only: dem_solids
 
     use iso_c_binding, only: C_CHAR, c_null_char
 
     implicit none
 
     integer(c_int), intent(out) :: fluid
-    integer(c_int), intent(out) :: dem, call_udf
+    integer(c_int), intent(out) :: dem
 
     integer(c_int), intent(in   ) :: namelen
     character(kind=c_char, len=1), dimension (namelen), intent (in) :: mfix_datC
@@ -49,7 +49,6 @@ contains
     fluid =  merge(1,0,abs(ro_g0) > tiny(0.0d0))
 
     dem      =  merge(1,0,dem_solids)
-    call_udf =  merge(1,0,call_usr)
 
   end subroutine mfix_get_data
 

@@ -7,14 +7,14 @@
 #                                                                      #
 ########################################################################
 
-  RUN_NAME = 'B05'
-  DESCRIPTION = 'Fluidized bed'
+
+
 
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  CALL_USR = .T.
-  FULL_LOG = .T.
+
+
 
   GRAVITY(1) =  9.81
   GRAVITY(2) =  0.00
@@ -89,5 +89,3 @@
   ic_ro_s_mean(2,1) =  855.0d0    ! (kg/m^3)
 
 !!  ic_pack_type(2) =  "PSEUDO_RANDOM"
-
-

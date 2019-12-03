@@ -13,5 +13,4 @@ target_sources( mfixcore
    check_initial_conditions.f90
    check_inputs.f90
    check_particle_properties.f90
-   check_run_control.f90
    )

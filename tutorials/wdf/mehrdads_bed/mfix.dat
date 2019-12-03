@@ -12,14 +12,14 @@
 #                                                                      #
 ########################################################################
 
-  RUN_NAME = 'R'
-  DESCRIPTION = 'Mehrdads bed'
+
+
 
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  CALL_USR = .T.
-  FULL_LOG = .T.
+
+
 
   GRAVITY(1) = -9.80665
   GRAVITY(2) =  0.00
@@ -81,5 +81,3 @@
 !  ic_ro_s_mean(1,1) =  2500.0d0    ! (kg/m^3)
 !
 !  ic_pack_type(1) =  "PSEUDO_RANDOM"
-
-

@@ -72,7 +72,7 @@ public:
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_scal_lobc;
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_scal_hibc;
 
-    void InitParams (int solve_fluid, int solve_dem, int call_udf );
+    void InitParams (int solve_fluid, int solve_dem );
 
     bool IsSteadyState () { return (steady_state > 0); }
 
@@ -778,6 +778,7 @@ private:
     int steady_state_maxiter = 100000000;
 
     int call_udf;
+
     bool dual_grid = false;
 
     // If true then print the name of the routine we are in

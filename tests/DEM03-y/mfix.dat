@@ -13,16 +13,16 @@
 #                                                                      #
 ########################################################################
 
-  RUN_NAME = 'DEM03'
-  DESCRIPTION = 'DEM03: Two stacked, compressed particles'
+
+
 
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  CALL_USR = .T.
 
-  FULL_LOG = .F.  ! display residuals on screen
-  NLOG = 250      ! time steps between updates to (.LOG) file
+
+
+
 
   GRAVITY(1) =  0.d0
   GRAVITY(2) = -9.80665d0

@@ -29,7 +29,7 @@ extern "C"
     void set_delp_dir (int* delp_dir);
 
     void mfix_get_data (int* fluid, int* dem,
-                        int* call_udf, int* name_len, const char *cmfix_dat);
+                        int* name_len, const char *cmfix_dat);
 
     void check_inputs ();
 

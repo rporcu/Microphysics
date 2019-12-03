@@ -9,7 +9,7 @@ subroutine check_inputs() bind(C, name="check_inputs")
   use amrex_fort_module, only : rt => amrex_real
 
   use error_manager, only: init_error_manager
-  use check_run_control_module, only: check_run_control
+
   use check_gas_prop_module, only: check_gas_properties
   use check_particle_prop_module, only: check_particle_properties
 
@@ -18,7 +18,7 @@ subroutine check_inputs() bind(C, name="check_inputs")
   ! can be opened.
   call init_error_manager
 
-  call check_run_control()
+
 
   call check_gas_properties
   call check_particle_properties

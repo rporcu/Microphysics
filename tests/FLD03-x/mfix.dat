@@ -10,8 +10,8 @@
 # is from inflow cell to outflow cell which adds one cell width.       #
 ########################################################################
 
-  RUN_NAME = 'FLD03'
-  DESCRIPTION = 'Channel Flow'
+
+
 
   GRAVITY(1:3) = 3*0.0
 
