@@ -213,6 +213,8 @@ ParticlesGenerator::generate (int& pc,
 
   pc += np;
 
+  amrex::Gpu::synchronize();
+
   return;
 }
 
@@ -240,13 +242,12 @@ ParticlesGenerator::hex_close_pack (const int icv,
   // indices
   int i_w, i_e, j_s, j_n, k_b, k_t;
 
-  amrex::Real ic_dlo[3], ic_dhi[3];
+  amrex::RealVect ic_dlo, ic_dhi;
   amrex::Real max_dp, max_rp;
 
   const Real sqrt3 = std::sqrt(3.0);
   const Real sqrt6o3x2 = 2.0*std::sqrt(6.0)/3.0;
 
-  int seed;
   IntVect max_seed, seed_lo, seed_hi, delta_bx;
 
   calc_cell_ic(dx, dy, dz, get_ic_x_w(icv), get_ic_y_s(icv), get_ic_z_b(icv),
@@ -277,12 +278,13 @@ ParticlesGenerator::hex_close_pack (const int icv,
 
   // Particle count is based on mean particle size
   const amrex::Real mean = get_ic_dp_mean(icv,type);
-  seed = int(ic_vol * get_ic_ep_s(icv,type) / ((M_PI/6.0)*mean*mean*mean));
+  const int seed =
+    static_cast<const int>(ic_vol * get_ic_ep_s(icv,type) / ((M_PI/6.0)*mean*mean*mean));
 
   // Total to seed over the whole IC region
-  max_seed[1] = int((get_ic_y_n(icv) - get_ic_y_s(icv) - max_dp) / max_dp);
-  max_seed[2] = int((get_ic_z_t(icv) - get_ic_z_b(icv) - max_dp) / (sqrt3*max_rp));
-  max_seed[0] = int(seed / (max_seed[1]*max_seed[2]));
+  max_seed[1] = static_cast<int>((get_ic_y_n(icv) - get_ic_y_s(icv) - max_dp) / max_dp);
+  max_seed[2] = static_cast<int>((get_ic_z_t(icv) - get_ic_z_b(icv) - max_dp) / (sqrt3*max_rp));
+  max_seed[0] = static_cast<int>(seed / (max_seed[1]*max_seed[2]));
 
   // local grid seed loop hi/lo
   seed_lo[0] = std::round((ic_dlo[0] - i_w*dx) / ((sqrt6o3x2) * max_rp));
@@ -490,8 +492,7 @@ ParticlesGenerator::random_fill (const int icv,
   const int maxfails = 1000;
   int fails(0);
 
-  Gpu::ManagedVector<amrex::Real> ic_dlo(3,0), ic_dhi(3,0), ic_len(3,0);
-
+  amrex::RealVect ic_dlo, ic_dhi, ic_len;
   amrex::Real max_dp, max_rp;
   
   calc_cell_ic(dx, dy, dz, get_ic_x_w(icv), get_ic_y_s(icv), get_ic_z_b(icv),
@@ -520,30 +521,27 @@ ParticlesGenerator::random_fill (const int icv,
 
   // Particle count is based on mean particle size
   const amrex::Real mean = get_ic_dp_mean(icv,type);
-  int seed = int(ic_vol * get_ic_ep_s(icv,type) / ((M_PI/6.0)*mean*mean*mean));
-
-  ic_len[0] = ic_dhi[0] - ic_dlo[0];
-  ic_len[1] = ic_dhi[1] - ic_dlo[1];
-  ic_len[2] = ic_dhi[2] - ic_dlo[2];
-
-  np = 0;
-
-  const amrex::Real mindist = (1.01*max_dp)*(1.01*max_dp);
-
-  const amrex::Real Oodx[3] = {1/dx, 1/dy, 1/dz};
-
-  int nb(8), overlaps(0);
+  const int seed =
+    static_cast<const int>(ic_vol * get_ic_ep_s(icv,type) / ((M_PI/6.0)*mean*mean*mean));
 
   max_rp = 0.5 * max_dp;
 
-  ic_len[0] -= max_dp;
-  ic_len[1] -= max_dp;
-  ic_len[2] -= max_dp;
-  
+  ic_len[0] = ic_dhi[0] - ic_dlo[0] - max_dp;
+  ic_len[1] = ic_dhi[1] - ic_dlo[1] - max_dp;
+  ic_len[2] = ic_dhi[2] - ic_dlo[2] - max_dp;
+
   ic_dlo[0] += max_rp;
   ic_dlo[1] += max_rp;
   ic_dlo[2] += max_rp;
   
+  np = 0;
+
+  const amrex::Real mindist = (1.01*max_dp)*(1.01*max_dp);
+
+  const RealVect Oodx = {1/dx, 1/dy, 1/dz};
+
+  int nb(8), overlaps(0);
+
   IntVect delta_bx;
   delta_bx[0] = hi[0] - lo[0] + 1;
   delta_bx[1] = hi[1] - lo[1] + 1;
@@ -557,7 +555,7 @@ ParticlesGenerator::random_fill (const int icv,
     bool stop = false;
 
     do {
-      amrex::Real pos[3];
+      RealVect pos;
       pos[0] = ic_dlo[0] + ic_len[0]*get_random();
       pos[1] = ic_dlo[1] + ic_len[1]*get_random();
       pos[2] = ic_dlo[2] + ic_len[2]*get_random();
@@ -580,32 +578,28 @@ ParticlesGenerator::random_fill (const int icv,
       seed_hi[1] = std::min(hi[1], idx[1]+1);
       seed_hi[2] = std::min(hi[2], idx[2]+1);
 
-      for(int k = seed_lo[2]; k <= seed_hi[2]; ++k)
-      {
-        for(int j = seed_lo[1]; j <= seed_hi[1]; ++j)
-        {
-          for(int i = seed_lo[0]; i <= seed_hi[0]; ++i)
-          {
+      for(int k = seed_lo[2]; k <= seed_hi[2]; ++k) {
+        for(int j = seed_lo[1]; j <= seed_hi[1]; ++j) {
+          for(int i = seed_lo[0]; i <= seed_hi[0]; ++i) {
             const int local_i = i - lo[0];
             const int local_j = j - lo[1];
             const int local_k = k - lo[2];
 
             const int upper_limit =
-              pinc[local_i + local_j*delta_bx[0] +
-                   local_k*delta_bx[0]*delta_bx[1]];
+              pinc[local_i + local_j*delta_bx[0] + local_k*delta_bx[0]*delta_bx[1]];
 
-            for(int l = 0; l < upper_limit; l++)
+            for(int p = 0; p < upper_limit; p++)
             {
               const int local_pc =
                 pbin[local_i + local_j*delta_bx[0] +
                      local_k*delta_bx[0]*delta_bx[1] +
-                     l*delta_bx[0]*delta_bx[1]*delta_bx[2]];
+                     p*delta_bx[0]*delta_bx[1]*delta_bx[2]];
 
-              amrex::Real x = m_rdata[local_pc*nr + 0] - pos[0];
-              amrex::Real y = m_rdata[local_pc*nr + 1] - pos[1];
-              amrex::Real z = m_rdata[local_pc*nr + 2] - pos[2];
+              const Real dx = m_rdata[local_pc*nr + 0] - pos[0];
+              const Real dy = m_rdata[local_pc*nr + 1] - pos[1];
+              const Real dz = m_rdata[local_pc*nr + 2] - pos[2];
 
-              const amrex::Real dist = x*x + y*y + z*z;
+              const amrex::Real dist = dx*dx + dy*dy + dz*dz;
 
               if(dist < mindist)
                 overlaps++;
@@ -655,9 +649,6 @@ ParticlesGenerator::random_fill (const int icv,
         fails++;
       }
     } while(not stop);
-
-  //  if((mod(np, seed/10) == 0 .and. np < seed*0.95) .or. np==seed) &
-  //       write(*,"(2x,'Seeded: ',I9,3x,'(',f5.0,'%)')") np,100*dble(np)/seed
   }
 
   return;
