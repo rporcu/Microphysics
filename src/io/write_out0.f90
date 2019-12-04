@@ -12,7 +12,6 @@
       use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int
 
-      use constant, only: gravity
       use discretelement, only: kn, kt, kn_w, kt_w
       use discretelement, only: des_etan, des_etat, des_etat_wall, des_etan_wall
       use fld_const, only: mw_avg, mu_g0, ro_g0
@@ -21,7 +20,6 @@
       use param, only: half, undefined, zero, is_defined
       use constant, only: mmax
       use run, only: dem_solids
-      use scales, only: p_scale, p_ref
 
       use ic, only: write_out_ic
       use bc, only: write_out_bc
@@ -63,11 +61,7 @@
       write (unit_out, 1140) 'Y', ' '
       write (unit_out, 1140) 'Z', ' '
 
-!  Physical and numerical parameters
 !
-      write (unit_out, 1150)
-      write (unit_out, 1157) P_REF, P_SCALE, GRAVITY(2)
-
 ! Geometry and Discretization.
          write (unit_out, 1200)
 
@@ -174,11 +168,6 @@
  1135 FORMAT(7X,'Start-time (TIME) = ',G12.5,/7X)
 ! 1136 FORMAT(7X,'* Steady state simulation.') ! LABEL_SET_BUT_NOT_USED
  1140 FORMAT(/7X,'* Gas momentum equation-',A,' is',A,'solved.')
-!
- 1150 FORMAT(//,3X,'2. PHYSICAL AND NUMERICAL PARAMETERS',/)
- 1157 FORMAT(7X,'Reference pressure (P_ref) = ',G12.5,/7X,&
-         'Pressure scale-factor (P_scale) = ',G12.5,/7X,&
-         'Gravitational acceleration (GRAVITY) = ',G12.5)
 !
  1200 FORMAT(//,3X,'3. GEOMETRY AND DISCRETIZATION',/)
 

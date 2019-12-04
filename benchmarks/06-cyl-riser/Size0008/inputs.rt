@@ -12,6 +12,8 @@ mfix.max_step = 100
 
 mfix.particle_init_type = "Auto"
 
+mfix.gravity = -9.81  0.0  0.0
+
 amr.blocking_factor = 2
 
 mac.mg_verbose          = 1

@@ -22,6 +22,9 @@ mac.mg_cg_verbose       = 1
 #!diff.mg_verbose    = 1
 
 mfix.particle_init_type = "AsciiFile"
+
+mfix.gravity =  -9.81  0.0  0.0
+
 mfix.drag_type = "Gidaspow"
 
 #_______________________________________________________________________

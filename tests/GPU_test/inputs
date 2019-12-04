@@ -9,6 +9,8 @@ mfix.fixed_dt        = 1.0e-4
 
 mfix.cfl = 0.5
 
+mfix.gravity = -9.81   0.0   0.0
+
 mfix.drag_type = "BVK2"
 
 mfix.max_step = 5

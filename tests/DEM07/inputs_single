@@ -7,6 +7,7 @@ mfix.stop_time = 0.0025
 
 mfix.fixed_dt = 5.e-5
 
+mfix.gravity =  0.0   0.0   0.0
 mfix.drag_type = "BVK2"
 
 #! Fluid solver

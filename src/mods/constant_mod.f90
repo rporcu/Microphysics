@@ -17,9 +17,6 @@
       Use param, only: dim_m
 !---------------------------------------------------------------------//
 
-! Gravitational acceleration
-      real(rt) :: gravity(3)
-
 ! Universal gas constant; (Pa.m3/kmol.K)
       real(rt), parameter :: gas_const = 8314.56D0
 
@@ -27,13 +24,5 @@
 !-----------------------------------------------------------------------
 ! Number of solids phases
       integer :: mmax = 0
-      
-      contains
-
-      subroutine get_gravity (grav_out) bind(C)
-          use amrex_fort_module, only: rt => amrex_real
-          real(rt), intent(out)  :: grav_out(3)
-          grav_out(:) = gravity(:)
-      end subroutine get_gravity
 
       END MODULE constant

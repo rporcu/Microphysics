@@ -7,6 +7,7 @@ mfix.stop_time = 0.35
 
 mfix.fixed_dt = 1.e-3
 
+mfix.gravity = 0.0  -9.80665  0.0
 mfix.drag_type = "UserDrag"
 
 #! Fluid solver

@@ -20,6 +20,8 @@ mfix.max_step  = 10
 
 amr.plt_regtest = 1
 
+mfix.gravity =  -9.81  0.0  0.0
+
 mfix.particle_init_type = "Auto"
 
 mfix.verbose            = 1

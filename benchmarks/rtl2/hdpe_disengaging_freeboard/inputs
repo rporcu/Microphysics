@@ -13,6 +13,9 @@ mfix.dt_max = 0.0005
 mfix.stop_time = 5.0
 
 mfix.particle_init_type = "Auto"
+
+mfix.gravity = -9.81  0.0  0.0
+
 mfix.drag_type = "Gidaspow"
 
 amr.blocking_factor = 2

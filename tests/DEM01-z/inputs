@@ -2,6 +2,7 @@ amrex.fpe_trap_invalid = 1
 mfix.stop_time = 0.5
 
 mfix.fixed_dt = 5.e-3
+mfix.gravity = 0.0  0.0 -9.80665
 
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 4 4 4

@@ -2,6 +2,7 @@ mfix.stop_time = 0.02
 amrex.fpe_trap_invalid = 1
 
 mfix.fixed_dt = 4.e-4
+mfix.gravity = 0.0  0.0 -9.80665
 
 particles.removeOutOfRange = 0
 

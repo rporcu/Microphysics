@@ -62,7 +62,7 @@ extern "C"
                       const int* ng);
 
     void set_gp0 (const int* domlo , const int* domhi,
-                  amrex::Real* gp0,
+                  amrex::Real* gp0, amrex::Real* gravity,
                   amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
                   amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
                   const int* bc_ilo, const int* bc_ihi,

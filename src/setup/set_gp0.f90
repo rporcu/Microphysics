@@ -5,7 +5,7 @@
 !           is acting in the negative y-direction.                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine set_gp0(domlo, domhi, gp0, &
+subroutine set_gp0(domlo, domhi, gp0, gravity, &
                    dx, dy, dz, xlength, ylength, zlength, &
                    bct_ilo, bct_ihi, bct_jlo, bct_jhi, &
                    bct_klo, bct_khi, ng, delp_dir_in) &
@@ -14,10 +14,8 @@ subroutine set_gp0(domlo, domhi, gp0, &
    use bc       , only: delp_x, delp_y, delp_z
    use bc       , only: dim_bc, bc_type, bc_p_g, bc_defined
    use bc       , only: pinf_, pout_, minf_
-   use constant , only: gravity
    use fld_const, only: ro_g0
    use ic       , only: ic_p_g, ic_defined
-   use scales   , only: scale_pressure
 
    use amrex_fort_module, only : ar => amrex_real
    use iso_c_binding , only: c_int
@@ -30,6 +28,7 @@ subroutine set_gp0(domlo, domhi, gp0, &
    integer, intent(in) :: domlo(3), domhi(3)
 
    real(ar), intent(inout) :: gp0(3)
+   real(ar), intent(in   ) :: gravity(3)
 
    real(ar), intent(in) :: dx, dy, dz
    real(ar), intent(in) :: xlength, ylength, zlength
@@ -70,10 +69,10 @@ subroutine set_gp0(domlo, domhi, gp0, &
       delp_dir = 0
 
       bcv_lo = bct_ilo(domlo(2),domlo(3),2)
-      p_lo   = scale_pressure(bc_p_g(bcv_lo))
+      p_lo   = bc_p_g(bcv_lo)
 
       bcv_hi = bct_ihi(domlo(2),domlo(3),2)
-      p_hi   = scale_pressure(bc_p_g(bcv_hi))
+      p_hi   = bc_p_g(bcv_hi)
 
       delp_x = p_lo - p_hi
 
@@ -83,10 +82,10 @@ subroutine set_gp0(domlo, domhi, gp0, &
       delp_dir = 0
 
       bcv_lo = bct_ilo(domlo(2),domlo(3),2)
-      p_lo   = scale_pressure(bc_p_g(bcv_lo))
+      p_lo   = bc_p_g(bcv_lo)
 
       bcv_hi = bct_ihi(domlo(2),domlo(3),2)
-      p_hi   = scale_pressure(bc_p_g(bcv_hi))
+      p_hi   = bc_p_g(bcv_hi)
 
       delp_x = p_lo - p_hi
 
@@ -96,10 +95,10 @@ subroutine set_gp0(domlo, domhi, gp0, &
       delp_dir = 1
 
       bcv_lo = bct_jlo(domlo(1),domlo(3),2)
-      p_lo   = scale_pressure(bc_p_g(bcv_lo))
+      p_lo   = bc_p_g(bcv_lo)
 
       bcv_hi = bct_jhi(domlo(1),domlo(3),2)
-      p_hi   = scale_pressure(bc_p_g(bcv_hi))
+      p_hi   = bc_p_g(bcv_hi)
 
       delp_y = p_lo - p_hi
 
@@ -109,10 +108,10 @@ subroutine set_gp0(domlo, domhi, gp0, &
       delp_dir = 1
 
       bcv_lo = bct_jlo(domlo(1),domlo(3),2)
-      p_lo   = scale_pressure(bc_p_g(bcv_lo))
+      p_lo   = bc_p_g(bcv_lo)
 
       bcv_hi = bct_jhi(domlo(1),domlo(3),2)
-      p_hi   = scale_pressure(bc_p_g(bcv_hi))
+      p_hi   = bc_p_g(bcv_hi)
 
       delp_y = p_lo - p_hi
 
@@ -122,10 +121,10 @@ subroutine set_gp0(domlo, domhi, gp0, &
       delp_dir = 2
 
       bcv_lo = bct_klo(domlo(1),domlo(2),2)
-      p_lo   = scale_pressure(bc_p_g(bcv_lo))
+      p_lo   = bc_p_g(bcv_lo)
 
       bcv_hi = bct_khi(domlo(1),domlo(2),2)
-      p_hi   = scale_pressure(bc_p_g(bcv_hi))
+      p_hi   = bc_p_g(bcv_hi)
 
       delp_z = p_lo - p_hi
 
@@ -136,10 +135,10 @@ subroutine set_gp0(domlo, domhi, gp0, &
       delp_dir = 2
 
       bcv_lo = bct_klo(domlo(1),domlo(2),2)
-      p_lo   = scale_pressure(bc_p_g(bcv_lo))
+      p_lo   = bc_p_g(bcv_lo)
 
       bcv_hi = bct_khi(domlo(1),domlo(2),2)
-      p_hi   = scale_pressure(bc_p_g(bcv_hi))
+      p_hi   = bc_p_g(bcv_hi)
 
       delp_z = p_lo - p_hi
 

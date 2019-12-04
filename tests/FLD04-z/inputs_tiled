@@ -5,6 +5,8 @@ mfix.advect_density           = true
 mfix.advect_tracer            = true
 mfix.test_tracer_conservation = true
 
+mfix.gravity =  0.0  0.0  -9.81
+
 #_______________________________________________________________________
 # Debugging settings
 

@@ -9,6 +9,8 @@ amrex.fpe_trap_invalid = 1
 #mfix.max_step = 100
 mfix.stop_time = 4.0
 
+mfix.gravity =  -9.81  0.0  0.0
+
 mfix.drag_type = "WenYu"
 
 mfix.dt_max = 1.0e-3 

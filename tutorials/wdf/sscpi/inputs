@@ -22,6 +22,9 @@ mfix.mg_verbose  = 1
 
 mfix.particle_init_type = "AsciiFile"
 particles.removeOutOfRange = 0
+
+mfix.gravity =  -9.81  0.0  0.0
+
 mfix.drag_type = "Gidaspow"
 
 #_______________________________________________________________________

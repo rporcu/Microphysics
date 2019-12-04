@@ -7,7 +7,6 @@ target_sources( mfixcore
    bc_mod.f90
    bc_mod_F.H
    constant_mod.f90
-   constant_mod_F.H
    eos_mod.f90
    eos_mod.H
    eos_mod.cpp
@@ -16,9 +15,6 @@ target_sources( mfixcore
    ic_mod.f90
    ic_mod_F.H
    utilities_mod.f90
-   scales_mod.f90
-   scales_mod_F.H
-   scales_mod_F.cpp
    output_mod.f90
    param_mod.f90
    param_mod_F.H
