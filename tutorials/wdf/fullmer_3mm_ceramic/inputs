@@ -9,6 +9,8 @@ amrex.fpe_trap_invalid = 1
 #mfix.max_step = 10
 mfix.stop_time = 16.0
 
+mfix.gravity =  -9.81  0.0  0.0
+
 mfix.dt_max = 1.0e-3
 mfix.dt_min = 1.0e-8
 mfix.cfl    = 0.5

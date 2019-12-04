@@ -10,6 +10,8 @@ mfix.steady_state     = 1
 mfix.steady_state_tol = 1.0e-5
 mfix.steady_state_maxiter =500
 
+mfix.gravity =  0.0   0.0   0.0
+
 amr.blocking_factor = 4
 
 mac.mg_rtol = 1.e-13

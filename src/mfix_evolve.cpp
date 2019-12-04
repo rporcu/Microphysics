@@ -79,10 +79,12 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
             ls_valid.FillBoundary(geom[ilev].periodicity());
 
             if (!test_tracer_conservation)
-            pc->EvolveParticles(ilev, nstep, dt, time, particle_ebfactory[ilev].get(),
-                                ls_data, & ls_valid, levelset__refinement,
-                                particle_cost[ilev].get(), knapsack_weight_type,
-                                nsubsteps);
+              pc->EvolveParticles(ilev, nstep, dt, time,
+                                  mfix::gravity,
+                                  particle_ebfactory[ilev].get(),
+                                  ls_data, & ls_valid, levelset__refinement,
+                                  particle_cost[ilev].get(), knapsack_weight_type,
+                                  nsubsteps);
         }
         else
         {
@@ -100,7 +102,9 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                 ls_valid.FillBoundary(geom[lev].periodicity());
 
                 if (!test_tracer_conservation)
-                pc->EvolveParticles(lev, nstep, dt, time, particle_ebfactory[lev].get(),
+                pc->EvolveParticles(lev, nstep, dt, time,
+                                    mfix::gravity,
+                                    particle_ebfactory[lev].get(),
                                     ls_data, & ls_valid, 1,
                                     particle_cost[lev].get(), knapsack_weight_type,
                                     nsubsteps);

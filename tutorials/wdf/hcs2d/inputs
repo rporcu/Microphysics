@@ -11,6 +11,8 @@ mfix.tcoll_ratio = 20.
 
 mfix.particle_init_type = "AsciiFile"
 
+mfix.gravity =   0.0  0.0  0.0
+
 mfix.drag_type = "BVK2"
 
 # Number of grid cells in each direction at the coarsest level

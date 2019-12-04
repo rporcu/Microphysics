@@ -1,5 +1,7 @@
 mfix.stop_time = 0.0025
 
+mfix.gravity =  0.0  0.0  0.0
+
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 512 512 512 
 

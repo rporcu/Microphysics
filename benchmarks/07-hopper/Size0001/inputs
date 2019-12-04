@@ -12,6 +12,8 @@ mfix.stop_time = 0.20
 
 mfix.particle_init_type = "Auto"
 
+mfix.gravity = -9.81  0.0  0.0
+
 amr.blocking_factor = 1
 
 #_______________________________________________________________________

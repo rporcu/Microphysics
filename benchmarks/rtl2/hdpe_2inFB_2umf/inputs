@@ -14,6 +14,8 @@ mfix.tcoll_ratio = 20.
 
 mfix.particle_init_type = "Auto"
 
+mfix.gravity = -9.81  0.0  0.0
+
 mfix.drag_type = "WenYu"
 
 amr.blocking_factor = 2

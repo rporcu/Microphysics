@@ -7,6 +7,8 @@ mfix.stop_time = 0.0025
 
 mfix.fixed_dt=1
 
+mfix.gravity = 0.0   -9.81   0.0
+
 mfix.drag_type = "WenYu"
 
 #! Fluid solver

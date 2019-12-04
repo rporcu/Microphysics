@@ -17,7 +17,6 @@ MODULE read_namelist_module
       SUBROUTINE READ_NAMELIST(mfix_dat)
 
       use bc
-      use constant, only: gravity
       use deprecated_or_unknown_module, only: deprecated_or_unknown
       use discretelement, only: des_en_input, des_en_wall_input, particle_types
       use discretelement, only: des_etat_fac, des_etat_w_fac
@@ -33,7 +32,6 @@ MODULE read_namelist_module
       use ic, only: ic_ro_s_dist, ic_ro_s_mean, ic_ro_s_std, ic_ro_s_min, ic_ro_s_max
       use output, only: usr_x_w, usr_x_e, usr_y_n, usr_y_s, usr_z_b, usr_z_t
       use output, only: usr_dt
-      use scales, only: p_ref, p_scale
       use usr
       use utilities, only: blank_line, line_too_big, seek_comment
       use utilities, only: make_upper_case, replace_tab
@@ -164,7 +162,6 @@ MODULE read_namelist_module
 
 ! External namelist files:
 !---------------------------------------------------------------------//
-      include 'physical_params.inc'
       include 'geometry.inc'
       include 'gas_phase.inc'
       include 'initial_conditions.inc'
@@ -183,12 +180,6 @@ MODULE read_namelist_module
 ! Write the current line to a scratch file
 ! and read the scratch file in NAMELIST format
       IF(.NOT.READ_FLAG) RETURN
-
-! Physical parameter keywords
-      STRING=''; STRING = '&PHYSICAL_PARAM '//&
-           trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=PHYSICAL_PARAM, IOSTAT=IOS)
-      IF(IOS == 0)  RETURN
 
 ! Geometry and discretization keywords
       STRING=''; STRING = '&GEOMETRY '//&

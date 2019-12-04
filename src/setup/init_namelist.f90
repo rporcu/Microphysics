@@ -25,7 +25,6 @@ MODULE INIT_NAMELIST_MODULE
 
       use bc
       use ic
-      use constant, only: gravity
       use deprecated_or_unknown_module, only: deprecated_or_unknown
       use des_init_namelist_module, only: des_init_namelist
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
@@ -38,7 +37,6 @@ MODULE INIT_NAMELIST_MODULE
       use output, only: usr_dt
       use output, only: usr_x_w, usr_x_e, usr_y_n, usr_y_s, usr_z_b, usr_z_t
 
-      use scales, only: p_ref, p_scale
       use usr
       use utilities, only: blank_line, line_too_big, seek_comment
       use utilities, only: make_upper_case, replace_tab
@@ -51,27 +49,6 @@ MODULE INIT_NAMELIST_MODULE
       implicit none
 
 
-!#####################################################################!
-!                           Physical Parameters                       !
-!#####################################################################!
-
-
-!<keyword category="Physical Parameters" required="false">
-!  <description>Reference pressure. [0.0]</description>
-      P_REF = ZERO
-!</keyword>
-
-!<keyword category="Physical Parameters" required="false">
-!  <description>Scale factor for pressure. [1.0]</description>
-      P_SCALE = ONE
-!</keyword>
-
-!<keyword category="Physical Parameters" required="false">
-!  <description>Gravity vector. [0.0, 9.80, 0.0] m/s^2 </description>
-      gravity(1) =  0.00000d0
-      gravity(2) = -9.80665d0
-      gravity(3) =  0.00000d0
-!</keyword>
 
 !#####################################################################!
 !                      Geometry and Discretization                    !

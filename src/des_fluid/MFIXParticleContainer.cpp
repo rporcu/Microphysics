@@ -21,13 +21,10 @@
 #include "mfix_util_F.H"
 #include "mfix_des_K.H"
 #include "bc_mod_F.H"
-#include "constant_mod_F.H"
 #include "MFIX_DEM_Parms.H"
 
 using namespace amrex;
 using namespace std;
-
-Real MFIXParticleContainer::gravity[3] {0.0};
 
 int  MFIXParticleContainer::domain_bc[6] {0};
 
@@ -108,8 +105,6 @@ void MFIXParticleContainer::ReadStaticParameters ()
 {
     static bool initialized = false;
 
-    get_gravity(gravity);
-
     if (!initialized)
         initialized = true;
 }
@@ -118,6 +113,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                                              int nstep,
                                              Real dt,
                                              Real time,
+                                             Real gravity[3],
                                              EBFArrayBoxFactory* ebfactory,
                                              const MultiFab* ls_phi,
                                              const iMultiFab* ls_valid,

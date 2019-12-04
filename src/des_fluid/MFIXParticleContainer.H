@@ -107,6 +107,7 @@ public:
                           int nstep,
                           amrex::Real dt,
                           amrex::Real time,
+                          amrex::Real gravity[3],
                           amrex::EBFArrayBoxFactory * ebfactory,
                           const amrex::MultiFab * ls_phi,
                           const amrex::iMultiFab * ls_valid,
@@ -194,7 +195,6 @@ public:
 private:
     int nlev;
 
-    static amrex::Real gravity[3];
     static int domain_bc[6];
 
     ///

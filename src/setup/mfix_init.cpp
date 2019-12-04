@@ -4,7 +4,6 @@
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
 #include <bc_mod_F.H>
-#include <constant_mod_F.H>
 #include <mfix_init_fluid.hpp>
 
 #include <AMReX_EBAmrUtil.H>
@@ -83,6 +82,11 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in)
         bool call_usr_bool = false;
         pp.query("call_usr", call_usr_bool);
         call_udf = call_usr_bool ? 1 : 0; // Set global flag
+
+        Array<Real,3>  gravity_in{ 0.0, 0.0, 0.0};
+        pp.get("gravity", gravity_in);
+        for (int dir = 0; dir < 3; dir++)
+          gravity[dir] = gravity_in[dir];
 
 
         // The default type is "AsciiFile" but we can over-write that in the inputs file
@@ -305,7 +309,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in)
 
     }
 
-    get_gravity(gravity);
 }
 
 
@@ -984,7 +987,7 @@ mfix::mfix_set_p0()
      // We put this outside the MFIter loop because we need gp0 even on ranks with no boxes
      // because we will use it in computing dt separately on every rank
      set_gp0(domain.loVect(), domain.hiVect(),
-             gp0,
+             gp0, gravity,
              &dx, &dy, &dz, &xlen, &ylen, &zlen,
              bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
              bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),

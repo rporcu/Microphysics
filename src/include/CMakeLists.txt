@@ -9,7 +9,6 @@ target_sources( mfixcore
    gas_phase.inc
    geometry.inc
    initial_conditions.inc
-   physical_params.inc
    species.inc
    species_indices.inc
    usr_hooks.inc
