@@ -258,7 +258,7 @@ ParticlesGenerator::hex_close_pack (const int icv,
   // Particle count is based on mean particle size
   const amrex::Real mean = get_ic_dp_mean(icv,type);
   const int seed =
-    static_cast<const int>(ic_vol * get_ic_ep_s(icv,type) / ((M_PI/6.0)*mean*mean*mean));
+    static_cast<int>(ic_vol * get_ic_ep_s(icv,type) / ((M_PI/6.0)*mean*mean*mean));
 
   // Total to seed over the whole IC region
   max_seed[1] = static_cast<int>((get_ic_y_n(icv) - get_ic_y_s(icv) - max_dp) / max_dp);
@@ -501,7 +501,7 @@ ParticlesGenerator::random_fill (const int icv,
   // Particle count is based on mean particle size
   const amrex::Real mean = get_ic_dp_mean(icv,type);
   const int seed =
-    static_cast<const int>(ic_vol * get_ic_ep_s(icv,type) / ((M_PI/6.0)*mean*mean*mean));
+    static_cast<int>(ic_vol * get_ic_ep_s(icv,type) / ((M_PI/6.0)*mean*mean*mean));
 
   max_rp = 0.5 * max_dp;
 
