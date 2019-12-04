@@ -5,8 +5,10 @@
 #include <AMReX_Vector.H>
 #include <AMReX_IntVect.H>
 #include <AMReX_GpuContainers.H>
+#include <MFIXParticleContainer.H>
 
 class ParticlesGenerator {
+
   //< Position............... 1,2,3
   //< Radius................. 4
   //< Density................ 5
@@ -17,6 +19,9 @@ class ParticlesGenerator {
   static constexpr int ni = 1;
 
   public:
+    using ParticleType = MFIXParticleContainer::ParticleType;
+    using ParticleTileType = MFIXParticleContainer::ParticleTileType;
+
     // Constructor
     explicit ParticlesGenerator ();
 
@@ -31,10 +36,10 @@ class ParticlesGenerator {
                    const amrex::Real dy,
                    const amrex::Real dz);
 
-    void generate_prop (const int nrp, void* particles);
+    void generate_prop (const int nrp, ParticleTileType& particles);
 
     // Write particles data
-    void write (const int nrp, void* particles) const;
+    void write (const int nrp, ParticleTileType& particles) const;
 
     void hex_close_pack (const int icv,
                          const int type,
