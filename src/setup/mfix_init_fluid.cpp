@@ -5,6 +5,8 @@
 #include <param_mod_F.H>
 #include <calc_cell_F.H>
 
+#include <MFIX_FLUID_Parms.H>
+
 using namespace amrex;
 
 // Forward declarations
@@ -37,6 +39,10 @@ void init_fluid(const Box& sbx,
                 const Real zlength,
                 bool test_tracer_conservation)
 {
+
+
+      FLUIDParams::Initialize();
+
       // Set user specified initial conditions (IC)
       set_ic(sbx, domain, dx, dy, dz, vel_g_fab);
 
@@ -47,7 +53,7 @@ void init_fluid(const Box& sbx,
       Array4<Real> const& ro_g = ro_g_fab.array();
       Array4<Real> const& trac = trac_fab.array();
 
-      const Real ro_g0  = get_ro_g0();
+      const Real ro_g0  = FLUIDParams::ro_g0;
       const Real trac_0 = get_trac0();
 
       amrex::ParallelFor(sbx, [ro_g, ro_g0]
