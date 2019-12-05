@@ -78,3 +78,15 @@ amr.par_ascii_int  = 10
 amr.par_ascii_file = DEM06_par
 
 amr.plt_regtest = 1
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = 1
+
+fluid.density_model      = constant
+fluid.constant_density   = 1.2
+
+fluid.viscosity_model    = constant
+fluid.constant_viscosity = 1.8e-5

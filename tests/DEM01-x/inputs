@@ -34,3 +34,5 @@ amr.par_ascii_int  = 1
 amr.par_ascii_file = DEM01_par
 
 amr.plt_regtest = 1
+
+fluid.solve = 0
