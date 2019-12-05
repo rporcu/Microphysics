@@ -41,3 +41,4 @@ box.Hi = 0.0015   0.0015  0.0015
 box.offset = 1.0e-15
 
 mfix.drag_type = "BVK2"
+mfix.gravity   =  0.0  -9.80665  0.0

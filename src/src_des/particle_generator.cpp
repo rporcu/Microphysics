@@ -15,26 +15,6 @@
 #include <cmath>
 #include <iterator>
 
-namespace generator_aux {
-
-struct ParticleType {
-  amrex::Real pos[3];   // < Position -- components 1,2,3
-  amrex::Real radius;   // < Radius   -- component  4
-  amrex::Real volume;   // < Volume   -- component  5
-  amrex::Real mass;     // < Mass     -- component  6
-  amrex::Real density;  // < Density  -- component  7
-  amrex::Real omoi;     // < One over momentum of inertia -- component 8
-  amrex::Real vel[3];   // < Linear velocity              -- components 9,10,11
-  amrex::Real omega[3]; // < Angular velocity             -- components 12,13,14
-  amrex::Real drag[3];  // < Drag                         -- components 15,16,17
-  int id;
-  int cpu;
-  int phase;
-  int state;
-};
-
-} // end namespace generator_aux
-
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 //                                                                      !
 //  SUBROUTINE: GENERATE_PARTICLE_CONFIG                                !
@@ -46,7 +26,6 @@ struct ParticleType {
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
 using namespace amrex;
-using namespace generator_aux;
 
 ParticlesGenerator::ParticlesGenerator ()
   : m_rdata(0)
@@ -279,7 +258,7 @@ ParticlesGenerator::hex_close_pack (const int icv,
   // Particle count is based on mean particle size
   const amrex::Real mean = get_ic_dp_mean(icv,type);
   const int seed =
-    static_cast<const int>(ic_vol * get_ic_ep_s(icv,type) / ((M_PI/6.0)*mean*mean*mean));
+    static_cast<int>(ic_vol * get_ic_ep_s(icv,type) / ((M_PI/6.0)*mean*mean*mean));
 
   // Total to seed over the whole IC region
   max_seed[1] = static_cast<int>((get_ic_y_n(icv) - get_ic_y_s(icv) - max_dp) / max_dp);
@@ -522,7 +501,7 @@ ParticlesGenerator::random_fill (const int icv,
   // Particle count is based on mean particle size
   const amrex::Real mean = get_ic_dp_mean(icv,type);
   const int seed =
-    static_cast<const int>(ic_vol * get_ic_ep_s(icv,type) / ((M_PI/6.0)*mean*mean*mean));
+    static_cast<int>(ic_vol * get_ic_ep_s(icv,type) / ((M_PI/6.0)*mean*mean*mean));
 
   max_rp = 0.5 * max_dp;
 
@@ -664,10 +643,10 @@ ParticlesGenerator::random_fill (const int icv,
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 void
-ParticlesGenerator::generate_prop (const int nrp, void* particles)
+ParticlesGenerator::generate_prop (const int nrp, ParticleTileType& particles)
 {
-  generator_aux::ParticleType* parts =
-    static_cast<generator_aux::ParticleType*>(particles);
+  auto& aos = particles.GetArrayOfStructs();
+  ParticleType* pstruct = aos().dataPtr();
 
   amrex::Real* p_rdata = m_rdata.data();
   int* p_idata = m_idata.data();
@@ -675,41 +654,43 @@ ParticlesGenerator::generate_prop (const int nrp, void* particles)
   const int local_nr = this->nr;
   const int local_ni = this->ni;
 
-  amrex::ParallelFor(nrp, [parts,p_rdata,p_idata,local_nr,local_ni]
+  amrex::ParallelFor(nrp, [pstruct,p_rdata,p_idata,local_nr,local_ni]
     AMREX_GPU_DEVICE (int p) noexcept
   {
-    parts[p].pos[0] = p_rdata[p*local_nr + 0];
-    parts[p].pos[1] = p_rdata[p*local_nr + 1];
-    parts[p].pos[2] = p_rdata[p*local_nr + 2];
+    ParticleType& part = pstruct[p];
+
+    part.pos(0) = p_rdata[p*local_nr + 0];
+    part.pos(1) = p_rdata[p*local_nr + 1];
+    part.pos(2) = p_rdata[p*local_nr + 2];
 
     amrex::Real rad = p_rdata[p*local_nr + 3];
     amrex::Real rho = p_rdata[p*local_nr + 4];
 
-    parts[p].vel[0] = p_rdata[p*local_nr + 5];
-    parts[p].vel[1] = p_rdata[p*local_nr + 6];
-    parts[p].vel[2] = p_rdata[p*local_nr + 7];
+    part.rdata(realData::velx) = p_rdata[p*local_nr + 5];
+    part.rdata(realData::vely) = p_rdata[p*local_nr + 6];
+    part.rdata(realData::velz) = p_rdata[p*local_nr + 7];
 
     amrex::Real vol  = (4.0/3.0)*M_PI*rad*rad*rad;
     amrex::Real mass = vol * rho;
     amrex::Real omoi = 2.5/(mass * rad*rad);
 
-    parts[p].radius  = rad;
-    parts[p].density = rho;
+    part.rdata(realData::radius) = rad;
+    part.rdata(realData::density) = rho;
 
-    parts[p].volume  = vol;
-    parts[p].mass    = mass;
-    parts[p].omoi    = omoi;
+    part.rdata(realData::volume) = vol;
+    part.rdata(realData::mass) = mass;
+    part.rdata(realData::oneOverI) = omoi;
 
-    parts[p].omega[0] = 0.0;
-    parts[p].omega[1] = 0.0;
-    parts[p].omega[2] = 0.0;
+    part.rdata(realData::omegax) = 0.0;
+    part.rdata(realData::omegay) = 0.0;
+    part.rdata(realData::omegaz) = 0.0;
 
-    parts[p].drag[0]  = 0.0;
-    parts[p].drag[1]  = 0.0;
-    parts[p].drag[2]  = 0.0;
+    part.rdata(realData::dragx) = 0.0;
+    part.rdata(realData::dragy) = 0.0;
+    part.rdata(realData::dragz) = 0.0;
 
-    parts[p].phase = p_idata[p*local_ni + 0];
-    parts[p].state = 1;
+    part.idata(intData::phase) = p_idata[p*local_ni + 0];
+    part.idata(intData::state) = 1;
   });
 
   Gpu::synchronize();
@@ -930,10 +911,10 @@ ParticlesGenerator::grow_pdata (const int gsize)
 //                                                                     !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 void
-ParticlesGenerator::write (const int nrp, void* particles) const
+ParticlesGenerator::write (const int nrp, ParticleTileType& particles) const
 {
-  const generator_aux::ParticleType* parts =
-    static_cast<const generator_aux::ParticleType*>(particles);
+  auto& aos = particles.GetArrayOfStructs();
+  ParticleType* pstruct = aos().dataPtr();
 
   std::ofstream output_file;
   output_file.open("test.vtp");
@@ -958,9 +939,11 @@ ParticlesGenerator::write (const int nrp, void* particles) const
 
   for(int lc1 = 0; lc1 < nrp; ++lc1)
   {
+    ParticleType& part = pstruct[lc1];
+
     output_file << "               "
                 << std::scientific << std::setw(13) << std::setprecision(6)
-                << std::setfill(' ') << amrex::Real(parts[lc1].radius) << std::endl;
+                << std::setfill(' ') << amrex::Real(part.rdata(realData::radius)) << std::endl;
   }
 
   output_file << "            " << "</DataArray>" << std::endl;
@@ -971,9 +954,11 @@ ParticlesGenerator::write (const int nrp, void* particles) const
 
   for(int lc1 = 0; lc1 < nrp; ++lc1)
   {
+    ParticleType& part = pstruct[lc1];
+
     output_file << "               "
                 << std::scientific << std::setw(13) << std::setprecision(6)
-                << amrex::Real(parts[lc1].density) << std::endl;
+                << amrex::Real(part.rdata(realData::density)) << std::endl;
   }
 
   output_file << "            " << "</DataArray>" << std::endl;
@@ -988,11 +973,13 @@ ParticlesGenerator::write (const int nrp, void* particles) const
 
   for(int lc1 = 0; lc1 < nrp; lc1++)
   {
+    ParticleType& part = pstruct[lc1];
+
     output_file << "               "
                 << std::scientific << std::setw(13) << std::setprecision(6)
-                << amrex::Real(parts[lc1].pos[0]) << "    "
-                << amrex::Real(parts[lc1].pos[1]) << "    "
-                << amrex::Real(parts[lc1].pos[2]) << std::endl;
+                << amrex::Real(part.pos(0)) << "    "
+                << amrex::Real(part.pos(1)) << "    "
+                << amrex::Real(part.pos(2)) << std::endl;
   }
 
   output_file << "            " << "</DataArray>" << std::endl;

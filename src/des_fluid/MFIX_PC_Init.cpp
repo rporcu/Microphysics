@@ -21,6 +21,7 @@
 #include "mfix_util_F.H"
 #include "mfix_des_K.H"
 #include "MFIX_DEM_Parms.H"
+#include <particle_generator.H>
 
 using namespace amrex;
 using namespace std;
@@ -116,6 +117,8 @@ void MFIXParticleContainer::InitParticlesAuto ()
 
   int total_np = 0;
 
+  ParticlesGenerator particles_generator;
+
   // This uses the particle tile size. Note that the default is to tile so if we
   //      remove the true and don't explicitly add false it will still tile
   for (MFIter mfi = MakeMFIter(lev,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
@@ -131,14 +134,14 @@ void MFIXParticleContainer::InitParticlesAuto ()
       const IntVect lo(tilebx.loVect());
       const IntVect hi(tilebx.hiVect());
 
-      m_particles_generator.generate(pcount, lo, hi, dx, dy, dz);
+      particles_generator.generate(pcount, lo, hi, dx, dy, dz);
 
       const int grid_id = mfi.index();
       const int tile_id = mfi.LocalTileIndex();
 
       // Now that we know pcount, go ahead and create a particle container for this
       // grid and add the particles to it
-      auto&  particles = GetParticles(lev)[std::make_pair(grid_id,tile_id)];
+      ParticleTileType& particles = GetParticles(lev)[std::make_pair(grid_id,tile_id)];
 
       ParticleType p_new;
       for (int i = 0; i < pcount; i++) {
@@ -154,10 +157,8 @@ void MFIXParticleContainer::InitParticlesAuto ()
       total_np += np;
 
       // Now define the rest of the particle data and store it directly in the particles
-      // std::cout << pcount << " particles " << " in grid " << grid_id << std::endl;
-
       if (pcount > 0)
-         m_particles_generator.generate_prop(np, particles.GetArrayOfStructs().data());
+        particles_generator.generate_prop(np, particles);
   }
 
   ParallelDescriptor::ReduceIntSum(total_np,ParallelDescriptor::IOProcessorNumber());

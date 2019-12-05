@@ -29,3 +29,4 @@ geometry.prob_lo     = 0.      0.    0.      # lo corner of physical domain
 geometry.prob_hi     = 0.0064  0.01  0.0064  # hi corner of physical domain
 
 mfix.drag_type = "BVK2"
+mfix.gravity   =  0.0  -9.80665  0.0
