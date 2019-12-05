@@ -14,7 +14,6 @@
 
       use discretelement, only: kn, kt, kn_w, kt_w
       use discretelement, only: des_etan, des_etat, des_etat_wall, des_etan_wall
-      use fld_const, only: mw_avg, mu_g0, ro_g0
 
       use param, only: dim_ic, dim_bc
       use param, only: half, undefined, zero, is_defined
@@ -55,45 +54,9 @@
 !
       write (unit_out, 1100)
 
-      write (unit_out, 1135) time
-
-      write (unit_out, 1140) 'X', ' '
-      write (unit_out, 1140) 'Y', ' '
-      write (unit_out, 1140) 'Z', ' '
-
-!
-! Geometry and Discretization.
-         write (unit_out, 1200)
-
-         write (unit_out, 1210)
-         legend(1) = '  I'
-         legend(2) = ' DX'
-         legend(3) = 'X_E'
-         CALL write_table (legend, DX, 0.0d0, 1, domhi(1)+1)
-         write (unit_out, 1212) (domhi(1)-domlo(1)+1)
-         write (unit_out, 1213) xlength
-         write (unit_out, 1220)
-         legend(1) = '  J'
-         legend(2) = ' DY'
-         legend(3) = 'Y_N'
-         CALL write_table (legend, DY, ZERO, 1, domhi(2)+1)
-         write (unit_out, 1221) (domhi(2)-domlo(2)+1)
-         write (unit_out, 1222) ylength
-         write (unit_out, 1230)
-         legend(1) = '  K'
-         legend(2) = ' DZ'
-         legend(3) = 'Z_T'
-         CALL write_table (legend, DZ, ZERO, 1, domhi(3)+1)
-         write (unit_out, 1231) (domhi(3)-domlo(3)+1)
-         write (unit_out, 1232) zlength
-
 !
 !  Gas Section
 !
-      write (unit_out, 1300)
-      IF (IS_DEFINED(RO_G0)) write (unit_out, 1305) RO_G0
-      IF (IS_DEFINED(MU_G0)) write (unit_out, 1310) MU_G0
-      IF (IS_DEFINED(MW_AVG)) write (unit_out, 1320) MW_AVG
 !
 !  Particle Section
 
@@ -182,14 +145,6 @@
  1231 FORMAT(7X,'Number of cells in Z, or theta, direction (KMAX) = ',I4)
  1232 FORMAT(7X,'Reactor length in Z, or theta, direction (ZLENGTH) =',G12.5)
 !
- 1300 FORMAT(//,3X,'4. GAS PHASE',/)
- 1305 FORMAT(7X,'Gas density (RO_g0) = ',G12.5,&
-         '  (A constant value is used everywhere)')
- 1310 FORMAT(7X,'Viscosity (MU_g0) = ',G12.5,&
-         '  (A constant value is used everywhere)')
- 1320 FORMAT(7X,'Average molecular weight (MW_avg) = ',G12.5,&
-         '  (A constant value is used everywhere)')
-
     contains
 
 

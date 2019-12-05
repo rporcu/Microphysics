@@ -275,7 +275,6 @@ contains
 
      use calc_cell_module, only: calc_cell_ic
      use param, only: zero, is_defined
-     use fld_const, only: ro_g0
 
      integer,        intent(in) :: unit_out
      real(rt)  , intent(in) :: dx, dy, dz
@@ -320,22 +319,6 @@ contains
          9X,'J index of cell at north  (IC_J_n) ',24('.'),1x,I4,/,&
          9X,'K index of cell at bottom (IC_K_b) ',24('.'),1x,I4,/,&
          9X,'K index of cell at top    (IC_K_t) ',24('.'),1x,I4)
-
-            if(ro_g0 > zero) then
-               write(unit_out, "(' ')")
-               write (unit_out, 1640) ic_ep_g(icv)
-               write(unit_out, "(' ')")
-               if(is_defined(ic_p_g(icv))) &
-                 write (unit_out, 1641) ic_p_g(icv)
-               write (unit_out, 1650) ic_u_g(icv)
-               write (unit_out, 1651) ic_v_g(icv)
-               write (unit_out, 1652) ic_w_g(icv)
-            endif
-1640  format(9X,'Gas phase volume fraction (IC_EP_g) ....... ',g12.5)
-1641  format(9X,'Gas pressure (IC_P_g) ..................... ',g12.5)
-1650  format(9X,'X-component of gas velocity (IC_U_g) ...... ',g12.5)
-1651  format(9X,'Y-component of gas velocity (IC_V_g) ...... ',g12.5)
-1652  format(9X,'Z-component of gas velocity (IC_W_g) ...... ',g12.5)
 
             do m = 1, dim_m
                if(ic_ep_s(icv,m) > zero) then

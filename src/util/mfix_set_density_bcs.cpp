@@ -1,7 +1,9 @@
 #include <mfix.H>
 #include <bc_mod_F.H>
-#include <fld_constants_mod_F.H>
+
 #include <param_mod_F.H>
+
+#include <MFIX_FLUID_Parms.H>
 
 using namespace amrex;
 
@@ -51,7 +53,7 @@ mfix::set_density_bcs (Real time,
 
   Array4<Real> const& scal_arr = scal_fab.array();
 
-  Real bc0 = get_ro_g0();
+  Real bc0 = FLUID::ro_g0;
 
   IntVect scal_lo(scal_fab.loVect());
   IntVect scal_hi(scal_fab.hiVect());

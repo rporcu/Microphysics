@@ -6,7 +6,6 @@ target_include_directories(mfixcore
 target_sources( mfixcore
    PRIVATE
    desnamelist.inc
-   gas_phase.inc
    geometry.inc
    initial_conditions.inc
    species.inc

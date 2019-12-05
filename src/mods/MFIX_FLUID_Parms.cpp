@@ -8,13 +8,13 @@
 namespace FLUID
 {
 
-  bool solve;
+  int solve;
 
   // Specified constant gas density
   amrex::Real ro_g0;
 
   // Specified constant tracer value
-  amrex::Real trac_0;
+  amrex::Real trac_0 = 0.0;
 
   // Specified constant gas viscosity
   amrex::Real mu_g0;
@@ -27,12 +27,42 @@ namespace FLUID
 
     amrex::ParmParse pp("fluid");
 
-    pp.get("solve",   solve );
+    pp.get("solve", solve);
 
     if( solve ) {
 
-      pp.get("density",   ro_g0 );
-      pp.get("viscosity", mu_g0 );
+      // Get density inputs ------------------------------------//
+      std::string density_model;
+      pp.get("density_model", density_model );
+
+      if (density_model == "constant") {
+
+        DENSITYMODEL DensityModel = ConstantDensity;
+        pp.get("constant_density",   ro_g0 );
+
+      } else {
+
+        amrex::Abort("Unknown fluid density model!");
+
+      }
+
+
+      // Get viscosity inputs ----------------------------------//
+      std::string viscosity_model;
+      pp.get("viscosity_model", viscosity_model );
+
+      if (density_model == "constant") {
+
+        VISCOSITYMODEL ViscosityModel = ConstantViscosity;
+        pp.get("constant_viscosity", mu_g0 );
+
+
+      } else {
+
+        amrex::Abort("Unknown fluid viscosity model!");
+
+      }
+
       pp.query("trac0",  trac_0 );
       pp.query("mw_avg", mw_avg );
 

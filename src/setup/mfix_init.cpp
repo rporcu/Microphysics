@@ -992,7 +992,7 @@ mfix::mfix_set_p0()
      // We put this outside the MFIter loop because we need gp0 even on ranks with no boxes
      // because we will use it in computing dt separately on every rank
      set_gp0(domain.loVect(), domain.hiVect(),
-             gp0, gravity,
+             gp0, &FLUID::ro_g0, gravity,
              &dx, &dy, &dz, &xlen, &ylen, &zlen,
              bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
              bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),

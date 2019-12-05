@@ -6,8 +6,12 @@
 namespace FLUID
 {
 
+  enum DENSITYMODEL {ConstantDensity, IdealGas};
+
+  enum VISCOSITYMODEL {ConstantViscosity, Sutherland};
+
   // Flag to solve fluid equations
-  extern bool solve;
+  extern int solve;
 
   // Specified constant gas density
   extern amrex::Real ro_g0;

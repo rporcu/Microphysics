@@ -1,8 +1,10 @@
 #include <mfix.H>
 #include <bc_mod_F.H>
 #include <eos_mod.H>
-#include <fld_constants_mod_F.H>
+
 #include <param_mod_F.H>
+
+#include <MFIX_FLUID_Parms.H>
 
 void 
 mfix::set_bc0(const Box& sbx,
@@ -10,9 +12,9 @@ mfix::set_bc0(const Box& sbx,
               const int lev,
               const Box& domain)
 {
-  const Real ro_g0(get_ro_g0());
-  const Real mu_g0(get_mu_g0());
-  const Real trac_0(get_trac0());
+  const Real ro_g0  = FLUID::ro_g0;
+  const Real mu_g0  = FLUID::mu_g0;
+  const Real trac_0 = FLUID::trac_0;
 
   Array4<Real> const& a_ep_g = ep_g[lev]->array(*mfi);
   Array4<Real> const& a_ro_g = ro_g[lev]->array(*mfi);

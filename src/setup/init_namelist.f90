@@ -28,9 +28,6 @@ MODULE INIT_NAMELIST_MODULE
       use deprecated_or_unknown_module, only: deprecated_or_unknown
       use des_init_namelist_module, only: des_init_namelist
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
-      use fld_const, only: mu_g0, mw_avg
-      use fld_const, only: ro_g0
-      use fld_const, only: ro_g0, mu_g0, mw_avg
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_t_g, ic_t_s, ic_x_w
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
@@ -77,40 +74,6 @@ MODULE INIT_NAMELIST_MODULE
 !  </description>
       delp_z = zero
 !</keyword>
-
-
-!#####################################################################!
-!                               Gas Phase                             !
-!#####################################################################!
-
-!<keyword category="Gas Phase" required="false">
-!  <description>
-!    Specified constant gas density [g/cm^3 in CGS]. An equation of
-!    state -the ideal gas law by default- is used to calculate the gas
-!    density if this parameter is undefined. The value may be set to
-!    zero to make the drag zero and to simulate granular flow in a
-!    vacuum. For this case, users may turn off solving for gas momentum
-!    equations to accelerate convergence.
-!  </description>
-      RO_G0 = UNDEFINED
-!</keyword>
-
-!<keyword category="Gas Phase" required="false">
-!  <description>
-!    Specified constant gas viscosity [g/(cm.s) in CGS].
-!  </description>
-      MU_G0 = UNDEFINED
-!</keyword>
-
-!<keyword category="Gas Phase" required="false">
-!  <description>
-!    Average molecular weight of gas [(g/mol) in CGS]. Used in
-!    calculating the gas density for non-reacting flows when the gas
-!    composition is not defined.
-!  </description>
-      MW_AVG = UNDEFINED
-!</keyword>
-
 
 
 !#####################################################################!

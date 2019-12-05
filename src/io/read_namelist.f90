@@ -23,8 +23,6 @@ MODULE read_namelist_module
       use discretelement, only: kn, kn_w, kt_fac, kt_w_fac, mew, mew_w, des_etat_w_fac
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ival
 
-      use fld_const, only: mu_g0, mw_avg
-      use fld_const, only: ro_g0
       use ic, only: ic_ep_g, ic_ep_s, ic_pack_type, ic_p_g, ic_x_w
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
@@ -163,7 +161,6 @@ MODULE read_namelist_module
 ! External namelist files:
 !---------------------------------------------------------------------//
       include 'geometry.inc'
-      include 'gas_phase.inc'
       include 'initial_conditions.inc'
       include 'usr_hooks.inc'
       include 'desnamelist.inc'
@@ -185,13 +182,6 @@ MODULE read_namelist_module
       STRING=''; STRING = '&GEOMETRY '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
       READ(STRING, NML=GEOMETRY, IOSTAT=IOS)
-      IF(IOS == 0)  RETURN
-
-
-! Gas phase keywords
-      STRING=''; STRING = '&GAS_PHASE '//&
-         trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=GAS_PHASE, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
 ! Initial condtion keywords

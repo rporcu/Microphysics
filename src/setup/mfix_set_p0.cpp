@@ -4,7 +4,9 @@
 #include <climits>
 #include <param_mod_F.H>
 #include <mfix_des_F.H>
-#include <fld_constants_mod_F.H>
+
+
+#include <MFIX_FLUID_Parms.H>
 
 #include <string>
 
@@ -337,7 +339,7 @@ void goto_60(const Box& sbx,
   // balances the weight of the bed, if the initial pressure-field is not
   // specified
 
-  const Real ro_g0 = get_ro_g0();
+  const Real ro_g0 = FLUID::ro_g0;
 
   if(std::abs(gravity[0]) > tolerance)
   {

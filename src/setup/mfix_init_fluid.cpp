@@ -1,5 +1,5 @@
 #include <mfix_init_fluid.hpp>
-#include <fld_constants_mod_F.H>
+
 #include <mfix_calc_mu_g.hpp>
 #include <ic_mod_F.H>
 #include <param_mod_F.H>
@@ -51,7 +51,7 @@ void init_fluid(const Box& sbx,
       Array4<Real> const& trac = trac_fab.array();
 
       const Real ro_g0  = FLUID::ro_g0;
-      const Real trac_0 = get_trac0();
+      const Real trac_0 = FLUID::trac_0;
 
       amrex::ParallelFor(sbx, [ro_g, ro_g0]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept 

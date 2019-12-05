@@ -9,7 +9,6 @@ target_sources( mfixcore
    check_bc_outflow.f90
    check_boundary_conditions.f90
    check_collision_model.f90
-   check_gas_properties.f90
    check_initial_conditions.f90
    check_inputs.f90
    check_particle_properties.f90

@@ -1,8 +1,9 @@
 #include <mfix.H>
 #include <bc_mod_F.H>
 #include <eos_mod.H>
-#include <fld_constants_mod_F.H>
+
 #include <param_mod_F.H>
+#include <MFIX_FLUID_Parms.H>
 
 using namespace amrex;
 
@@ -66,9 +67,9 @@ mfix::set_scalar_bcs (Real time,
   Real bc0;
 
   if (comp == 1) {
-     bc0 = get_trac0();
+    bc0 = FLUID::trac_0;
   } else if (comp == 3) {
-     bc0 = get_mu_g0();
+    bc0 = FLUID::mu_g0;
   }
 
   IntVect scal_lo(scal_fab.loVect());
