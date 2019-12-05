@@ -65,3 +65,15 @@ amr.check_int = -1
 amr.par_ascii_int = -1
 
 amr.plt_regtest = 1
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = 1
+
+fluid.density_model      = constant
+fluid.constant_density   = 1.0
+
+fluid.viscosity_model    = constant
+fluid.constant_viscosity = 1.0e-3
