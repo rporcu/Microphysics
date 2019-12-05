@@ -42,4 +42,6 @@ box.offset = 1.0e-15
 
 mfix.drag_type = "BVK2"
 
+mfix.gravity   =  0.0  -9.80665  0.0
+
 mfix.input_deck = "mfix.no_fluid.dat"
