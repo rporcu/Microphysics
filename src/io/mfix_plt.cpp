@@ -5,6 +5,7 @@
 
 #include <mfix.H>
 #include <mfix_F.H>
+#include <MFIX_FLUID_Parms.H>
 
 namespace
 {
@@ -21,8 +22,7 @@ mfix::InitIOPltData ()
   pltVarCount = 0;
 
   ParmParse pp("amr");
-
-  if (solve_fluid)
+  if (FLUID::solve)
     {
 
       pp.query("plt_vel_g",   plt_vel_g  );

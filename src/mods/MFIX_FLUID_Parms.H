@@ -3,8 +3,11 @@
 
 #include <AMReX_REAL.H>
 
-namespace FLUIDParams
+namespace FLUID
 {
+
+  // Flag to solve fluid equations
+  extern bool solve;
 
   // Specified constant gas density
   extern amrex::Real ro_g0;

@@ -7,6 +7,8 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 
+#include <MFIX_FLUID_Parms.H>
+
 std::string      mfix::particle_init_type   = "AsciiFile";
 std::string      mfix::load_balance_type    = "FixedSize";
 std::string      mfix::knapsack_weight_type = "RunTimeCosts";
@@ -130,7 +132,7 @@ mfix::mfix_usr1_cpp (Real time) const
 void
 mfix::usr3 ()
 {
-    if (solve_fluid)
+    if (FLUID::solve)
     {
        for (int lev = 0; lev < nlev; lev++)
        {

@@ -42,3 +42,11 @@ box.offset = 1.0e-15
 
 mfix.drag_type = "BVK2"
 mfix.gravity   =  0.0  -9.80665  0.0
+
+fluid.solve = 1
+
+fluid.density_model      = constant
+fluid.constant_density   = 1.0
+
+fluid.viscosity_model    = constant
+fluid.constant_viscosity = 2.0e-5

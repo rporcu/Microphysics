@@ -72,7 +72,7 @@ public:
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_scal_lobc;
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_scal_hibc;
 
-    void InitParams (int solve_fluid, int solve_dem );
+    void InitParams (int solve_dem );
 
     bool IsSteadyState () { return (steady_state > 0); }
 
@@ -696,7 +696,6 @@ private:
 
     int steady_state = 0;
 
-    int solve_fluid;
     int solve_dem;
 
     bool advect_density = false;

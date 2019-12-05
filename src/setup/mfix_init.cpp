@@ -13,11 +13,17 @@
 
 #include <MFIX_DEM_Parms.H>
 #include <diffusion_F.H>
+#include <MFIX_FLUID_Parms.H>
 
 void
-mfix::InitParams(int solve_fluid_in, int solve_dem_in)
+mfix::InitParams(int solve_dem_in)
 {
     if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
+
+
+    FLUID::Initialize();
+
+
     // set n_error_buf (used in AmrMesh) to default (can overwrite later)
     for (int i = 0; i < n_error_buf.size(); i++)
         n_error_buf[i] = {8,8,8};
@@ -205,7 +211,6 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in)
         pp_diff.query( "bottom_solver_type", diff_bottom_solver_type );
     }
 
-    solve_fluid  = solve_fluid_in;
     solve_dem    = solve_dem_in;
 
     if (solve_dem)
@@ -220,13 +225,13 @@ mfix::InitParams(int solve_fluid_in, int solve_dem_in)
         pp.query("removeOutOfRange", removeOutOfRange );
     }
 
-    if (solve_dem && !solve_fluid)
+    if (solve_dem && !FLUID::solve)
     {
         if (fixed_dt <= 0.0)
             amrex::Abort("If running particle-only must specify a positive fixed_dt in the inputs file");
     }
 
-    if (solve_dem && solve_fluid)
+    if (solve_dem && FLUID::solve)
     {
       ParmParse pp("mfix");
 
@@ -572,7 +577,7 @@ void mfix::InitLevelData(Real time)
 {
     if (ooo_debug) amrex::Print() << "InitLevelData" << std::endl;
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
-    if (solve_fluid)
+    if (FLUID::solve)
        for (int lev = 0; lev < nlev; lev++)
           AllocateArrays(lev);
 
@@ -650,7 +655,7 @@ void mfix::InitLevelData(Real time)
       amrex::Print() << "Time spent in initializing particles " << end_init_part << std::endl;
     }
 
-    if (solve_fluid)
+    if (FLUID::solve)
     {
        if (load_balance_type == "KnapSack" || load_balance_type == "SFC")
        {
@@ -758,11 +763,11 @@ mfix::PostInit(Real& dt, Real time, int restart_flag, Real stop_time)
 
         DEMParams::Initialize();
 
-        if (!solve_fluid)
+        if (!FLUID::solve)
             dt = fixed_dt;
     }
 
-    if (solve_fluid)
+    if (FLUID::solve)
         mfix_init_fluid(restart_flag,dt,stop_time);
 
     // Call user-defined subroutine to set constants, check data, etc.

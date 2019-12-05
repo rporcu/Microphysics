@@ -1,4 +1,5 @@
 #include <mfix.H>
+#include <MFIX_FLUID_Parms.H>
 
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
@@ -8,7 +9,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     Real coupling_timing;
     Real sum_vol;
-    if (solve_dem and solve_fluid)
+    if (solve_dem and FLUID::solve)
     {
       Real start_coupling = ParallelDescriptor::second();
       mfix_calc_volume_fraction(sum_vol);
@@ -27,7 +28,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     BL_PROFILE_VAR("FLUID SOLVE",fluidSolve);
     for (int lev = 0; lev < nlev; lev++)
     {
-       if (solve_fluid)
+       if (FLUID::solve)
        {
          EvolveFluid(nstep,dt,time,stop_time, drag_timing);
           prev_dt = dt;
@@ -41,7 +42,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     // This returns the drag force on the particle
     Real new_time = time+dt;
-    if (solve_dem and solve_fluid){
+    if (solve_dem and FLUID::solve){
       Real start_coupling = ParallelDescriptor::second();
       mfix_calc_drag_particle(new_time);
       coupling_timing += ParallelDescriptor::second() - start_coupling + drag_timing;
@@ -119,9 +120,9 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     ParallelDescriptor::ReduceRealMax(end_particles, ParallelDescriptor::IOProcessorNumber());
 
     if (ParallelDescriptor::IOProcessor()) {
-      if(solve_fluid) std::cout << "   Time per fluid step      " << end_fluid << std::endl;
+      if(FLUID::solve) std::cout << "   Time per fluid step      " << end_fluid << std::endl;
       if(solve_dem  ) std::cout << "   Time per " << nsubsteps << " particle steps " << end_particles << std::endl;
-      if (solve_dem && solve_fluid) std::cout << "   Coupling time per step   " << coupling_timing << std::endl;
+      if (solve_dem && FLUID::solve) std::cout << "   Coupling time per step   " << coupling_timing << std::endl;
     }
 
     BL_PROFILE_REGION_STOP("mfix::Evolve");

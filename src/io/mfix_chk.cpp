@@ -9,6 +9,7 @@
 
 #include <mfix.H>
 #include <mfix_F.H>
+#include <MFIX_FLUID_Parms.H>
 
 namespace
 {
@@ -111,8 +112,7 @@ mfix::WriteCheckPointFile (std::string& check_file,
     WriteCheckHeader(checkpointname, nstep, dt, time);
 
     WriteJobInfo(checkpointname);
-
-    if (solve_fluid)
+    if (FLUID::solve)
     {
        for (int lev = 0; lev < nlevels; ++lev) {
 

@@ -1,6 +1,5 @@
 mfix.stop_time = 0.0025
 
-mfix.gravity =  0.0  0.0  0.0
 
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 32 32 32
@@ -32,3 +31,13 @@ geometry.prob_lo     = 0.      0.     0.      # lo corner of physical domain
 geometry.prob_hi     = 0.0064  0.0064 0.0064  # hi corner of physical domain
 
 mfix.drag_type = "BVK2"
+
+mfix.gravity =  0.0  0.0  0.0
+
+fluid.solve = 1
+
+fluid.density_model      = constant
+fluid.constant_density   = 1.0
+
+fluid.viscosity_model    = constant
+fluid.constant_viscosity = 2.0e-5

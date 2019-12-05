@@ -30,3 +30,11 @@ geometry.prob_hi     = 0.0032  0.01  0.0032  # hi corner of physical domain
 
 mfix.drag_type = "BVK2"
 mfix.gravity   =  0.0  -9.80665  0.0
+
+fluid.solve = 1
+
+fluid.density_model      = constant
+fluid.constant_density   = 1.0
+
+fluid.viscosity_model    = constant
+fluid.constant_viscosity = 2.0e-5

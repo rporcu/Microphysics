@@ -12,10 +12,9 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_get_data( fluid, dem, namelen, mfix_datC) &
+  subroutine mfix_get_data( dem, namelen, mfix_datC) &
     bind(C, name="mfix_get_data")
 
-    use fld_const, only: ro_g0
     use get_data_module, only: get_data
     use param, only: is_undefined
     use run, only: dem_solids
@@ -24,7 +23,6 @@ contains
 
     implicit none
 
-    integer(c_int), intent(out) :: fluid
     integer(c_int), intent(out) :: dem
 
     integer(c_int), intent(in   ) :: namelen
@@ -44,9 +42,6 @@ contains
     ! write(*,*) "Full file name: >"//trim(mfix_dat)//"<"
 
     call get_data(mfix_dat)
-
-    ! We evolve the fluid if ro_go > 0
-    fluid =  merge(1,0,abs(ro_g0) > tiny(0.0d0))
 
     dem      =  merge(1,0,dem_solids)
 

@@ -1,5 +1,6 @@
 #include <mfix.H>
 #include <diffusion_F.H>
+#include <MFIX_FLUID_Parms.H>
 
 void
 mfix::Regrid ()
@@ -13,7 +14,7 @@ mfix::Regrid ()
     {
         if (solve_dem)
            AMREX_ALWAYS_ASSERT(particle_cost[0] == nullptr);
-        if (solve_fluid)
+        if (FLUID::solve)
            AMREX_ALWAYS_ASSERT(fluid_cost[0]    == nullptr);
 
        // This creates a new BA and new DM, re-defines the particle BA and DM to be these new ones,
@@ -30,11 +31,11 @@ mfix::Regrid ()
            // one if the grids and/or dmap have changed.  Note that the
            // SetBoxArray and SetDistributionMap calls above have re-defined
            // grids and dmap to be the new ones.
-           if (solve_fluid)
+           if (FLUID::solve)
                RegridArrays(base_lev);
        }
 
-       if (solve_fluid)
+       if (FLUID::solve)
        {
            mfix_set_p0();
            mfix_set_bc0();
@@ -51,14 +52,14 @@ mfix::Regrid ()
 
         if (solve_dem)
            AMREX_ALWAYS_ASSERT(particle_cost[0] != nullptr);
-        if (solve_fluid)
+        if (FLUID::solve)
            AMREX_ALWAYS_ASSERT(fluid_cost[0]    != nullptr);
 
         if (ParallelDescriptor::NProcs() == 1) return;
 
         if (dual_grid)  //  Beginning of dual grid regridding
         {
-            AMREX_ALWAYS_ASSERT(solve_fluid);
+            AMREX_ALWAYS_ASSERT(FLUID::solve);
 
             if (load_balance_fluid > 0)
             {
@@ -144,7 +145,7 @@ mfix::Regrid ()
 
                 costs.plus(particle_cost_loc, 0, 1, 0);
             }
-            if (solve_fluid) {
+            if (FLUID::solve) {
                 // costs.plus(* fluid_cost[base_lev], 0, 1, 0);
 
                 // MultiFab fluid_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
@@ -159,10 +160,10 @@ mfix::Regrid ()
 
             SetDistributionMap(base_lev, newdm);
 
-            if (solve_fluid)
+            if (FLUID::solve)
                 RegridArrays(base_lev);
 
-            if (solve_fluid)
+            if (FLUID::solve)
             {
                fluid_cost[base_lev].reset(new MultiFab(grids[base_lev], newdm, 1, 0));
                fluid_cost[base_lev]->setVal(0.0);
@@ -178,7 +179,7 @@ mfix::Regrid ()
                 pc->Regrid(dmap[base_lev], grids[base_lev], base_lev);
             }
 
-            if (solve_fluid) mfix_set_bc0();
+            if (FLUID::solve) mfix_set_bc0();
 
             // This calls re-creates a proper particles_ebfactory and regrids
             // all the multifab that depend on it
@@ -196,7 +197,7 @@ mfix::Regrid ()
         }
 
     // This call resets both the nodal and the diffusion solvers
-    if (solve_fluid)
+    if (FLUID::solve)
        mfix_setup_solvers();
 
     BL_PROFILE_REGION_STOP("mfix::Regrid()");

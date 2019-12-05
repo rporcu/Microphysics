@@ -10,6 +10,7 @@
 
 #include <mfix.H>
 #include <mfix_F.H>
+#include <MFIX_FLUID_Parms.H>
 
 int  max_step   = -1;
 int  regrid_int = -1;
@@ -96,7 +97,7 @@ void ReadParameters ()
   }
 }
 
-void writeNow (int nstep, Real time, Real dt, bool solve_fluid, mfix& my_mfix)
+void writeNow (int nstep, Real time, Real dt, mfix& my_mfix)
 {
     int plot_test = 0;
     if (plot_per > 0.0)
@@ -135,7 +136,7 @@ void writeNow (int nstep, Real time, Real dt, bool solve_fluid, mfix& my_mfix)
 
     if ( (plot_test == 1) || ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) ) )
     {
-        if (solve_fluid)
+      if (FLUID::solve)
            my_mfix.mfix_compute_vort();
         my_mfix.WritePlotFile( plot_file, nstep, time );
         last_plt = nstep;
@@ -217,7 +218,6 @@ int main (int argc, char* argv[])
 
     ReadParameters();
 
-    int solve_fluid;
     int solve_dem;
     Real time=0.0L;
     int nstep = 0;  // Current time step
@@ -232,7 +232,7 @@ int main (int argc, char* argv[])
     //     mfix_get_data -> get_data -> read_namelist
     //                                        |
     //      (loads `mfix.dat`) ---------------+
-    mfix_get_data(&solve_fluid, &solve_dem, &name_len, cmfix_dat);
+    mfix_get_data(&solve_dem, &name_len, cmfix_dat);
 
     // Default constructor. Note inheritance: mfix : AmrCore : AmrMesh
     //                                                             |
@@ -248,7 +248,7 @@ int main (int argc, char* argv[])
     set_ptr_to_mfix(my_mfix);
 
     // Initialize internals from ParamParse database
-    my_mfix.InitParams(solve_fluid, solve_dem);
+    my_mfix.InitParams(solve_dem);
 
     // Initialize memory for data-array internals
     my_mfix.ResizeArrays();
@@ -294,7 +294,7 @@ int main (int argc, char* argv[])
         my_mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
     }
 
-    if (solve_fluid)
+    if (FLUID::solve)
        my_mfix.mfix_init_solvers();
 
     // This checks if we want to regrid using the KDTree or KnapSack approach
@@ -315,14 +315,14 @@ int main (int argc, char* argv[])
     int finish  = 0;
 
     // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
-    // only if solve_fluid = T
+    // only if FLUID::solve = T
     Real prev_dt = dt;
 
     // We automatically write checkpoint and plotfiles with the initial data
     //    if ( plot_int > 0 || plot_per > 0)
     if ( (restart_file.empty() || plotfile_on_restart) && (plot_int > 0 || plot_per > 0) )
     {
-       if (solve_fluid)
+      if (FLUID::solve)
           my_mfix.mfix_compute_vort();
        my_mfix.WritePlotFile(plot_file, nstep, time);
     }
@@ -389,7 +389,7 @@ int main (int argc, char* argv[])
                     time += prev_dt;
                     nstep++;
 
-                    writeNow(nstep, time, prev_dt, solve_fluid, my_mfix);
+                    writeNow(nstep, time, prev_dt, my_mfix);
                 }
 
                 // Mechanism to terminate MFIX normally.

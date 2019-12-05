@@ -9,6 +9,7 @@
 
 #include <mfix.H>
 #include <mfix_F.H>
+#include <MFIX_FLUID_Parms.H>
 
 namespace
 {
@@ -167,8 +168,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             make_eb_geometry();
             make_eb_factories();
 
-            // Allocate the fluid data, NOTE: this depends on the ebfactories.
-            if (solve_fluid) AllocateArrays(lev);
+            if (FLUID::solve) AllocateArrays(lev);
         }
     }
 
@@ -177,8 +177,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     /***************************************************************************
      * Load fluid data                                                         *
      ***************************************************************************/
-
-    if (solve_fluid)
+    if (FLUID::solve)
     {
        // Load the field data
        for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
@@ -346,8 +345,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
            fill_eb_levelsets();
         }
     }
-
-    if (solve_fluid)
+    if (FLUID::solve)
     {
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
@@ -376,8 +374,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                particle_cost[lev]->setVal(0.0);
             }
         }
-
-        if (solve_fluid)
+        if (FLUID::solve)
         {
             for (int lev = 0; lev <= finestLevel(); lev++)
             {

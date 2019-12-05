@@ -12,6 +12,7 @@
 #include <AMReX_EB_LSCore.H>
 #include <AMReX_EB_levelset.H>
 #include <mfix.H>
+#include <MFIX_FLUID_Parms.H>
 #include <mfix_eb_F.H>
 
 using namespace std;
@@ -130,7 +131,7 @@ void mfix::make_eb_general () {
                     amrex::Print() << "Done making the particle eb levels." << std::endl;
                 }
 
-                if (solve_fluid) {
+                if (FLUID::solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -164,7 +165,7 @@ void mfix::make_eb_general () {
                     amrex::Print() << "Done making the particle eb levels." << std::endl;
                 }
 
-                if (solve_fluid) {
+                if (FLUID::solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -222,7 +223,7 @@ void mfix::make_eb_general () {
                     amrex::Print() << "Done making the particle eb levels." << std::endl;
                 }
 
-                if (solve_fluid) {
+                if (FLUID::solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -250,7 +251,7 @@ void mfix::make_eb_general () {
 
                 }
 
-                if (solve_fluid) {
+                if (FLUID::solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls

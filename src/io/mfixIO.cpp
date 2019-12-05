@@ -8,6 +8,7 @@
 
 #include <mfix.H>
 #include <mfix_F.H>
+#include <MFIX_FLUID_Parms.H>
 
 using namespace std;
 
@@ -142,8 +143,7 @@ mfix::WriteAverageRegions ( std::string& avg_file, int nstep, Real time ) const
 
   for (int lev = 0; lev < nlev; lev++)
     {
-
-      if (solve_fluid) {
+      if (FLUID::solve) {
         ComputeAverageFluidVars( lev,
                                  time,
                                  avg_file);
