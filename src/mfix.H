@@ -294,8 +294,7 @@ public:
                  const Box& domain,
                  const Real xlen,
                  const Real ylen,
-                 const Real zlen,
-                 const int delp_dir_in);
+                 const Real zlen);
 
     void mfix_set_bc_mod (const int* pID, const int* pType,
                           const amrex::Real* pLo, const amrex::Real* pHi,

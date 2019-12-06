@@ -26,8 +26,6 @@ extern "C"
 
     void write_usr0 ();
 
-    void set_delp_dir (int* delp_dir);
-
     void mfix_get_data (int* dem,
                         int* name_len, const char *cmfix_dat);
 

@@ -10,10 +10,11 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_EBFabFactory.H>
+#include <diffusion_F.H>
 
 #include <MFIX_DEM_Parms.H>
-#include <diffusion_F.H>
 #include <MFIX_FLUID_Parms.H>
+#include <MFIX_BC_Parms.H>
 
 void
 mfix::InitParams(int solve_dem_in)
@@ -21,6 +22,7 @@ mfix::InitParams(int solve_dem_in)
     if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
 
 
+    BC::Initialize();
     FLUID::Initialize();
 
 
@@ -964,15 +966,12 @@ mfix::mfix_set_p0()
   Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
   Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
 
-  int delp_dir;
-  set_delp_dir(&delp_dir);
-
   IntVect press_per = IntVect(geom[0].isPeriodic(0),geom[0].isPeriodic(1),geom[0].isPeriodic(2));
 
   // Here we set a separate periodicity flag for p0_g because when we use
   // pressure drop (delp) boundary conditions we fill all variables *except* p0
   // periodically
-  if (delp_dir > -1) press_per[delp_dir] = 0;
+  if (BC::delp_dir > -1) press_per[BC::delp_dir] = 0;
   p0_periodicity = Periodicity(press_per);
 
   // Initialize gp0 to 0
@@ -997,7 +996,7 @@ mfix::mfix_set_p0()
              bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
              bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
              bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-             &nghost, &delp_dir);
+             &nghost, &BC::delp_dir);
 
      // We deliberately don't tile this loop since we will be looping
      //    over bc's on faces and it makes more sense to do this one grid at a time
@@ -1005,7 +1004,7 @@ mfix::mfix_set_p0()
      {
        const Box& bx = mfi.validbox();
 
-       set_p0(bx, &mfi, lev, domain, xlen, ylen, zlen, delp_dir);
+       set_p0(bx, &mfi, lev, domain, xlen, ylen, zlen);
      }
 
      p0_g[lev]->FillBoundary(p0_periodicity);

@@ -12,8 +12,10 @@ F90EXE_headers += ic_mod_F.H
 F90EXE_headers += param_mod_F.H
  
 CEXE_headers += MFIX_FLUID_Parms.H
-
+CEXE_headers += MFIX_BC_Parms.H
 CEXE_headers += eos_mod.H
+
 CEXE_sources += eos_mod.cpp
 CEXE_sources += param_mod_F.cpp
 CEXE_sources += MFIX_FLUID_Parms.cpp
+CEXE_sources += MFIX_BC_Parms.cpp

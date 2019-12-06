@@ -5,7 +5,6 @@ f90EXE_sources += get_data.f90
 f90EXE_sources += init_namelist.f90
 
 f90EXE_sources += set_bc_type.f90 
-f90EXE_sources += set_delp_dir.f90
 f90EXE_sources += set_gp0.f90 
 f90EXE_sources += set_ppe_bcs.f90 
 

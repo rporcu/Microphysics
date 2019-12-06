@@ -7,6 +7,7 @@
 
 
 #include <MFIX_FLUID_Parms.H>
+#include <MFIX_BC_Parms.H>
 
 #include <string>
 
@@ -50,8 +51,7 @@ mfix::set_p0(const Box& bx,
              const Box& domain,
              const Real xlen,
              const Real ylen,
-             const Real zlen,
-             const int delp_dir_in)
+             const Real zlen)
 {
   Real dx = geom[lev].CellSize(0);
   Real dy = geom[lev].CellSize(1);
@@ -87,7 +87,7 @@ mfix::set_p0(const Box& bx,
   const int ntop = std::max(0, sbx_hi[1]-dom_hi[1]);
   const int nup  = std::max(0, sbx_hi[2]-dom_hi[2]);
 
-  int delp_dir(delp_dir_in);
+  int delp_dir_loc(BC::delp_dir);
 
   Real pj(0);
 
@@ -105,7 +105,7 @@ mfix::set_p0(const Box& bx,
      ((bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],0) == bc_list.get_pinf()) and
      (bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],0) == bc_list.get_pout())))
   {
-    delp_dir = 0;
+    delp_dir_loc = 0;
 
     const int bcv_lo = bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],1);
     const Real p_lo  = m_bc_p_g[bcv_lo];
@@ -124,7 +124,7 @@ mfix::set_p0(const Box& bx,
           ((bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],0) == bc_list.get_pinf()) and
           (bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],0) == bc_list.get_pout())))
   {
-    delp_dir = 1;
+    delp_dir_loc = 1;
 
     const int bcv_lo = bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],1);
     const Real p_lo  = m_bc_p_g[bcv_lo];
@@ -143,7 +143,7 @@ mfix::set_p0(const Box& bx,
           ((bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,0) == bc_list.get_pinf()) and
           (bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,0) == bc_list.get_pout())))
   {
-    delp_dir = 2;
+    delp_dir_loc = 2;
 
     const int bcv_lo = bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,1);
     const Real p_lo  = m_bc_p_g[bcv_lo];
@@ -166,7 +166,7 @@ mfix::set_p0(const Box& bx,
   {
     if(ic_defined_cpp(icv))
     {
-      if((delp_dir >= 0) and (delp_dir == delp_dir_in))
+      if((delp_dir_loc >= 0) and (delp_dir_loc == BC::delp_dir))
       {
         if (not is_defined_db_cpp(get_ic_p_g(icv)))
         {
@@ -175,7 +175,7 @@ mfix::set_p0(const Box& bx,
         }
         pj = get_ic_p_g(icv);
       }
-      else if((delp_dir >= 0) and (delp_dir != delp_dir_in))
+      else if((delp_dir_loc >= 0) and (delp_dir_loc != BC::delp_dir))
       {
         if(is_defined_db_cpp(get_ic_p_g(icv)))
         {
@@ -215,7 +215,7 @@ mfix::set_p0(const Box& bx,
   //  This hack allows to set the IC pressure  at L-dx/2 orboth
   //  nodalandCC pressure -> reference value orpressure, AKA IC_P_G,
   //  is set at the last cell center location.
-  if(delp_dir != delp_dir_in)
+  if(delp_dir_loc != BC::delp_dir)
     offset = -1.;
 
   if(std::abs(delp_x) > tolerance)

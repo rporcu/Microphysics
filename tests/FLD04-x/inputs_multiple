@@ -144,3 +144,7 @@ fluid.constant_density   = 1.0
 
 fluid.viscosity_model    = constant
 fluid.constant_viscosity = 2.0e-2
+
+
+bc.delp     = 1000.
+bc.delp_dir =    0
