@@ -4,8 +4,6 @@ target_include_directories( mfixcore
 
 target_sources( mfixcore
    PRIVATE 
-   random_nb_mod.f90
-   random_nb_mod_F.H
    calc_particle_collisions.f90
    calc_wall_collisions.f90
    cfrelvel.f90

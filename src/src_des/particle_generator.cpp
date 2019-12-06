@@ -4,16 +4,13 @@
 #include <ic_mod_F.H>
 #include <discretelement_mod_F.H>
 #include <calc_cell_F.H>
-#include <random_nb_mod_F.H>
 
 #include <limits>
 #include <string>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include <sstream>
 #include <cmath>
-#include <iterator>
 
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 //                                                                      !
@@ -469,7 +466,6 @@ ParticlesGenerator::random_fill (const int icv,
   int i_w, i_e, j_s, j_n, k_b, k_t;
 
   const int maxfails = 1000;
-  int fails(0);
 
   amrex::RealVect ic_dlo, ic_dhi, ic_len;
   amrex::Real max_dp, max_rp;
@@ -513,13 +509,11 @@ ParticlesGenerator::random_fill (const int icv,
   ic_dlo[1] += max_rp;
   ic_dlo[2] += max_rp;
   
-  np = 0;
-
   const amrex::Real mindist = (1.01*max_dp)*(1.01*max_dp);
 
   const RealVect Oodx = {1/dx, 1/dy, 1/dz};
 
-  int nb(8), overlaps(0);
+  int nb(8);
 
   IntVect delta_bx;
   delta_bx[0] = hi[0] - lo[0] + 1;
@@ -529,15 +523,31 @@ ParticlesGenerator::random_fill (const int icv,
   amrex::Vector<int> pinc(delta_bx[0]*delta_bx[1]*delta_bx[2], 0);
   amrex::Vector<int> pbin(delta_bx[0]*delta_bx[1]*delta_bx[2]*nb, 0);
 
-  while(np < seed and fails < maxfails)
+  IntVect max_fitting_parts;
+  max_fitting_parts[0] = static_cast<int>(std::ceil(ic_len[0]/max_dp));
+  max_fitting_parts[1] = static_cast<int>(std::ceil(ic_len[1]/max_dp));
+  max_fitting_parts[2] = static_cast<int>(std::ceil(ic_len[2]/max_dp));
+  
+  const int max_np = max_fitting_parts[0]*max_fitting_parts[1]*max_fitting_parts[2];
+  grow_pdata(max_np);
+
+  amrex::InitRandom(seed);
+
+  amrex::Real* p_rdata = m_rdata.data();
+
+  np = 0;
+  int iterations(0);
+
+  while(iterations < seed)
   {
     bool stop = false;
+    int fails(0);
 
-    do {
+    while(fails < maxfails and (not stop)) {
       RealVect pos;
-      pos[0] = ic_dlo[0] + ic_len[0]*get_random();
-      pos[1] = ic_dlo[1] + ic_len[1]*get_random();
-      pos[2] = ic_dlo[2] + ic_len[2]*get_random();
+      pos[0] = ic_dlo[0] + ic_len[0]*amrex::Random();
+      pos[1] = ic_dlo[1] + ic_len[1]*amrex::Random();
+      pos[2] = ic_dlo[2] + ic_len[2]*amrex::Random();
 
       // Grid containing the new particle
       IntVect idx;
@@ -546,7 +556,7 @@ ParticlesGenerator::random_fill (const int icv,
       idx[2] = std::floor(pos[2]*Oodx[2]);
 
       // Local grid search for collisions.
-      overlaps = 0;
+      int overlaps = 0;
 
       IntVect seed_lo, seed_hi;
       seed_lo[0] = std::max(lo[0], idx[0]-1);
@@ -574,9 +584,9 @@ ParticlesGenerator::random_fill (const int icv,
                      local_k*delta_bx[0]*delta_bx[1] +
                      p*delta_bx[0]*delta_bx[1]*delta_bx[2]];
 
-              const Real dx = m_rdata[local_pc*nr + 0] - pos[0];
-              const Real dy = m_rdata[local_pc*nr + 1] - pos[1];
-              const Real dz = m_rdata[local_pc*nr + 2] - pos[2];
+              const Real dx = p_rdata[local_pc*nr + 0] - pos[0];
+              const Real dy = p_rdata[local_pc*nr + 1] - pos[1];
+              const Real dz = p_rdata[local_pc*nr + 2] - pos[2];
 
               const amrex::Real dist = dx*dx + dy*dy + dz*dz;
 
@@ -589,17 +599,9 @@ ParticlesGenerator::random_fill (const int icv,
 
       if(overlaps == 0)
       {
-        np++; // local to call
-        pc++; // local to grid
-
-        grow_pdata(pc);
-
-        const int np_idx = np-1;
-        const int pc_idx = pc-1;
-
-        m_rdata[pc_idx*nr + 0] = pos[0];
-        m_rdata[pc_idx*nr + 1] = pos[1];
-        m_rdata[pc_idx*nr + 2] = pos[2];
+        p_rdata[np*nr + 0] = pos[0];
+        p_rdata[np*nr + 1] = pos[1];
+        p_rdata[np*nr + 2] = pos[2];
 
         const int local_idx_x = idx[0] - lo[0];
         const int local_idx_y = idx[1] - lo[1];
@@ -610,7 +612,7 @@ ParticlesGenerator::random_fill (const int icv,
           local_idx_z*delta_bx[0]*delta_bx[1];
 
         const int pinc_value = pinc[local_idx];
-        pbin[local_idx + pinc_value*delta_bx[0]*delta_bx[1]*delta_bx[2]] = np_idx;
+        pbin[local_idx + pinc_value*delta_bx[0]*delta_bx[1]*delta_bx[2]] = np;
 
         pinc[local_idx] = pinc_value + 1;
 
@@ -620,15 +622,20 @@ ParticlesGenerator::random_fill (const int icv,
           pbin.resize(delta_bx[0]*delta_bx[1]*delta_bx[2]*nb, 0);
         }
 
-        fails = 0;
+        np++;
+
         stop = true;
       }
       else
       {
         fails++;
       }
-    } while(not stop);
+    }
+
+    iterations++;
   }
+
+  pc += np;
 
   return;
 }
