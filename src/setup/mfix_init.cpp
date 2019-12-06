@@ -90,7 +90,7 @@ mfix::InitParams(int solve_dem_in)
         call_udf = call_usr_bool ? 1 : 0; // Set global flag
 
         Array<Real,3>  gravity_in{ 0.0, 0.0, 0.0};
-        pp.query("gravity", gravity_in);
+        pp.get("gravity", gravity_in);
         for (int dir = 0; dir < 3; dir++)
           gravity[dir] = gravity_in[dir];
 
