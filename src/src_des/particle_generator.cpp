@@ -4,13 +4,16 @@
 #include <ic_mod_F.H>
 #include <discretelement_mod_F.H>
 #include <calc_cell_F.H>
+#include <random_nb_mod_F.H>
 
 #include <limits>
 #include <string>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <sstream>
 #include <cmath>
+#include <iterator>
 
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 //                                                                      !
@@ -526,17 +529,15 @@ ParticlesGenerator::random_fill (const int icv,
   amrex::Vector<int> pinc(delta_bx[0]*delta_bx[1]*delta_bx[2], 0);
   amrex::Vector<int> pbin(delta_bx[0]*delta_bx[1]*delta_bx[2]*nb, 0);
 
-  amrex::InitRandom (seed, ParallelDescriptor::NProcs());
-
   while(np < seed and fails < maxfails)
   {
     bool stop = false;
 
     do {
       RealVect pos;
-      pos[0] = ic_dlo[0] + ic_len[0]*amrex::Random();
-      pos[1] = ic_dlo[1] + ic_len[1]*amrex::Random();
-      pos[2] = ic_dlo[2] + ic_len[2]*amrex::Random();
+      pos[0] = ic_dlo[0] + ic_len[0]*get_random();
+      pos[1] = ic_dlo[1] + ic_len[1]*get_random();
+      pos[2] = ic_dlo[2] + ic_len[2]*get_random();
 
       // Grid containing the new particle
       IntVect idx;
