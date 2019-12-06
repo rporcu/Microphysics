@@ -5,7 +5,7 @@
 
 #include <mfix_des_F.H>
 
-namespace DEMParams
+namespace DEM
 {
     AMREX_GPU_DEVICE_MANAGED COLLISIONMODEL CollisionModel = LSD;
     AMREX_GPU_DEVICE_MANAGED int NPHASE;

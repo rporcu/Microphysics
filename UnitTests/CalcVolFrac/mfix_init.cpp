@@ -701,7 +701,7 @@ mfix::PostInit(Real& dt, Real time, int nstep, int restart_flag, Real stop_time)
                        avg_dp, avg_ro,
                        tcoll_ratio);
 
-        DEMParams::Initialize();
+        DEM::Initialize();
 
         if (!solve_fluid)
             dt = fixed_dt;

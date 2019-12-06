@@ -4,7 +4,7 @@
 #include <AMReX_REAL.H>
 #include <AMReX_GpuQualifiers.H>
 
-namespace DEMParams
+namespace DEM
 {
     constexpr int NMAX = 10;
     extern AMREX_GPU_DEVICE_MANAGED int NPHASE;

@@ -33,19 +33,19 @@ struct ComputeDragWenYu
                             amrex::Real fvelx, amrex::Real fvely, amrex::Real fvelz,
                             int i, int j, int k, int pid) const
     {
-        amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROPg/Mug : DEMParams::large_number;
+        amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROPg/Mug : DEM::large_number;
 	
         amrex::Real C_d;
         if (RE <= 1000.0)
         {
-            C_d = (24.0/(RE+DEMParams::small_number)) * (1.0 + 0.15*std::pow(RE, 0.687));
+            C_d = (24.0/(RE+DEM::small_number)) * (1.0 + 0.15*std::pow(RE, 0.687));
         }
         else
         {
             C_d = 0.44;
         }
         
-        if (RE < DEMParams::eps) return 0.0;
+        if (RE < DEM::eps) return 0.0;
         return 0.75 * C_d * vrel * ROPg * std::pow(EPg, -2.65) / DPM;
     }
 };
@@ -85,7 +85,7 @@ struct ComputeDragGidaspow
     {
 	amrex::Real ROg = ROPg / EPg;
 
-        amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROPg/Mug : DEMParams::large_number;
+        amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROPg/Mug : DEM::large_number;
 		
 	// Dense phase - EPg <= 0.8
 	amrex::Real Ergun = 150.0*(1.0 - EPg)*Mug / (EPg*DPM*DPM) + 1.75*ROg*vrel/DPM;
@@ -94,7 +94,7 @@ struct ComputeDragGidaspow
 	amrex::Real C_d;
 	if (RE <= 1000.0)
 	{
-		C_d = (24.0/(RE+DEMParams::small_number)) * (1.0 + 0.15*std::pow(RE, 0.687));
+		C_d = (24.0/(RE+DEM::small_number)) * (1.0 + 0.15*std::pow(RE, 0.687));
 	}
 	else
 	{
@@ -106,7 +106,7 @@ struct ComputeDragGidaspow
 	amrex::Real PHI_gs = std::atan(150.0*1.75*(EPg - 0.8))/M_PI + 0.5;
 
 	// blend the models
-	if (RE < DEMParams::eps) return 0.0;
+	if (RE < DEM::eps) return 0.0;
 	return (1.0 - PHI_gs)*Ergun + PHI_gs*WenYu;
     }
 };
@@ -157,9 +157,9 @@ struct ComputeDragBVK2
 							amrex::Real fvelx, amrex::Real fvely, amrex::Real fvelz,
 							int i, int j, int k, int pid) const
     {
-        amrex::Real RE = (Mug > 0.0) ? DPA*vrel*ROPg/Mug : DEMParams::large_number;
+        amrex::Real RE = (Mug > 0.0) ? DPA*vrel*ROPg/Mug : DEM::large_number;
     
-        if (RE > DEMParams::eps)
+        if (RE > DEM::eps)
         {
 	    amrex::Real oEPgfour = 1.0/EPg/EPg/EPg/EPg;
 
