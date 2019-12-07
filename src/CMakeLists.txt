@@ -29,14 +29,14 @@ target_include_directories(mfixcore
 # IMPORTANT: DO NOT ADD main.cpp HERE!
 target_sources(mfixcore
    PRIVATE
-   compute_dt.cpp
-   mfix_regrid.cpp
+   mfix_compute_dt.cpp
    mfix_advance.cpp
-   compute_diveu.cpp
+   mfix_compute_diveu.cpp
    mfix_calc_particle_beta.cpp
    mfix_calc_volume_fraction.cpp
    mfix_drag.cpp
    mfix_evolve.cpp
+   mfix_regrid.cpp
    mfix.cpp
    #  main.cpp <---- DO NOT ADD THIS HERE
    mfix_F.H

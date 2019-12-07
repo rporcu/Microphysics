@@ -26,9 +26,16 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
 {
     BL_PROFILE("mfix::mfix_apply_nodal_projection");
 
+    bool proj_for_small_dt      = false;
+
+    // If we have dropped the dt substantially for whatever reason, use a different form of the approximate
+    // projection that projects (U^*-U^n + dt Gp) rather than (U^* + dt Gp)
+
+    if (a_time > 0 && a_dt < 0.1 * prev_dt)
+       proj_for_small_dt      = true;
+
     for (int lev(0); lev < nlev; ++lev)
     {
-
         // Here we add (dt * (1/rho gradp)) to ustar
         if (proj_2)
         {
@@ -44,7 +51,11 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
         }
 
         // Print level infos
-        amrex::Print() << "AT LEVEL " << lev << " BEFORE PROJECTION: \n";
+        if (proj_for_small_dt)
+           amrex::Print() << "Before projection (with small dt modification):" << std::endl;
+        else
+           amrex::Print() << "Before projection:" << std::endl;
+
         mfix_print_max_vel(lev);
         mfix_print_max_gp(lev);
         amrex::Print() << "Min and Max of ep_g "
@@ -54,6 +65,15 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
 
     // Set velocities BC before projection
     mfix_set_velocity_bcs(a_time, vel_g, 0);
+
+    // Define "vel" to be U^* - U^n rather than U^*
+    if (proj_for_small_dt)
+    {
+       mfix_set_velocity_bcs(a_time, vel_go, 0);
+
+       for(int lev = 0; lev <= finest_level; lev++)
+          MultiFab::Saxpy(*vel_g[lev], -1.0, *vel_go[lev], 0, 0, AMREX_SPACEDIM, vel_g[lev]->nGrow());
+    }
 
     //
     // Compute epu
@@ -105,6 +125,13 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
     // Perform projection on
     nodal_projector->project2(GetVecOfPtrs(vel_g), GetVecOfConstPtrs(ep_g),
                               GetVecOfConstPtrs(ro_g), GetVecOfConstPtrs(diveu));
+
+    // Define "vel" to be U^{n+1} rather than (U^{n+1}-U^n)
+    if (proj_for_small_dt)
+    {
+       for(int lev = 0; lev <= finest_level; lev++)
+          MultiFab::Saxpy(*vel_g[lev], 1.0, *vel_go[lev], 0, 0, AMREX_SPACEDIM, vel_g[lev]->nGrow());
+    }
 
     // Get phi and fluxes
     Vector< const amrex::MultiFab* > phi(nlev);
@@ -188,7 +215,11 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
     // Print level info after projection
     for (int lev(0); lev < nlev; lev++)
     {
-        amrex::Print() << "AT LEVEL " << lev << " AFTER PROJECTION: \n";
+        if (proj_for_small_dt)
+           amrex::Print() << "After  projection (with small dt modification):" << std::endl;
+        else
+           amrex::Print() << "After  projection:" << std::endl;
+
         mfix_print_max_vel(lev);
     }
 }

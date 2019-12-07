@@ -298,6 +298,15 @@ mfix::InitParams(int solve_dem_in)
     {
       ParmParse amr_pp("amr");
 
+      amr_pp.query("plot_int", plot_int);
+      amr_pp.query("plot_per_exact", plot_per_exact);
+      amr_pp.query("plot_per_approx", plot_per_approx);
+
+      if ( (plot_int       > 0 && plot_per_exact  > 0) ||
+          (plot_int       > 0 && plot_per_approx > 0) ||
+          (plot_per_exact > 0 && plot_per_approx > 0) )
+        amrex::Abort("Must choose only one of plot_int or plot_per_exact or plot_per_approx");
+ 
       amr_pp.queryarr("avg_p_g",   avg_p_g);
       amr_pp.queryarr("avg_ep_g",  avg_ep_g);
       amr_pp.queryarr("avg_vel_g", avg_vel_g);
