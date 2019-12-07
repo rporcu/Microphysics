@@ -13,3 +13,6 @@ CEXE_headers += eos_mod.H
 CEXE_sources += eos_mod.cpp
 F90EXE_headers += param_mod_F.H
 CEXE_sources += param_mod_F.cpp
+
+CEXE_sources += MFIX_FLUID_Parms.cpp
+CEXE_headers += MFIX_FLUID_Parms.H
