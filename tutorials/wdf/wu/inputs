@@ -12,14 +12,14 @@ mfix.dt_max = 1.0e-4
 mfix.cfl = 0.5
 mfix.tcoll_ratio = 20.
 
-##mfix.mg_cg_maxiter = 1000
-##mac.mg_cg_maxiter  = 1000
+##nodal_proj.bottom_maxiter = 1000
+##mac_proj.bottom_maxiter  = 1000
 
-#!mfix.mg_verbose         = 1
-#!mfix.mg_cg_verbose      = 1
-mac.mg_verbose          = 1
-mac.mg_cg_verbose       = 1
-#!diff.mg_verbose    = 1
+#!nodal_proj.verbose         = 1
+#!nodal_proj.bottom_verbose      = 1
+mac_proj.verbose          = 1
+mac_proj.bottom_verbose       = 1
+#!diffusion.verbose    = 1
 
 mfix.particle_init_type = "AsciiFile"
 

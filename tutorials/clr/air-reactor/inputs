@@ -6,12 +6,12 @@ amrex.fpe_trap_invalid = 1
 #----------------------------------------------------------------------
 
 # MAC solver
-mac.mg_verbose     = 0
-mac.mg_cg_verbose  = 0
+mac_proj.verbose     = 0
+mac_proj.bottom_verbose  = 0
 
 # Nodal solver
-mfix.mg_verbose    = 1
-mfix.mg_cg_verbose = 0
+nodal_proj.verbose    = 1
+nodal_proj.bottom_verbose = 0
 
 #----------------------------------------------------------------------
 # Particle initialization
