@@ -91,7 +91,7 @@ public:
                               int nstep = 0, Real dt = 0.0, Real time = 0.0)  const;
 
     void WritePlotFile (std::string & plot_file_name,
-                        int nstep = 0, Real time = 0.0) const;
+                        int nstep = 0, Real time = 0.0);
 
     //! Save variables that don't change to plot file. The idea is that they can
     //! be saved _once_ per simulations and not repeatedly every Nth time step.
@@ -190,6 +190,15 @@ public:
 
     void InitIOChkData ();
     void InitIOPltData ();
+
+    // If > 0, dump plotfiles every "plot_int" steps
+    static int plot_int;
+
+    // If > 0, dump plotfiles at as close as possible to the designated period *without* changing dt
+    static Real plot_per_approx;
+
+    // If > 0, dump plotfiles at exactcly the designated period by changing dt
+    static Real plot_per_exact;
 
     static std::string get_load_balance_type ();
 
@@ -795,6 +804,8 @@ private:
     Real dt_min  = 0.0;           // Min dt allowed
     Real dt_max  = 1.e14;         // Max dt allowed
 
+    Real prev_dt = 0.0;           // dt used in previous timestep
+
     int particle_max_grid_size_x = -1;
     int particle_max_grid_size_y = -1;
     int particle_max_grid_size_z = -1;
@@ -824,6 +835,9 @@ private:
     amrex::Vector<Real> avg_region_y_n;
     amrex::Vector<Real> avg_region_z_b;
     amrex::Vector<Real> avg_region_z_t;
+
+    // Last step at which we wrote a plotfile
+    int last_plt = -1;
 
     // Flags for saving fluid data in plot files
     int plt_vel_g   = 1;

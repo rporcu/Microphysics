@@ -130,8 +130,15 @@ mfix::InitIOPltData ()
 
 }
 
-void mfix::WritePlotFile (std::string& plot_file, int nstep, Real time ) const
+void 
+mfix::WritePlotFile (std::string& plot_file, int nstep, Real time ) 
 {
+    // If we've already written this plotfile, don't do it again!
+    if (nstep == last_plt) return;
+
+    // Now set last_plt to nstep ...
+    last_plt = nstep;
+
     BL_PROFILE("mfix::WritePlotFile()");
 
     const std::string& plotfilename = amrex::Concatenate(plot_file,nstep);

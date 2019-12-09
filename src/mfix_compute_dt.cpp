@@ -15,6 +15,9 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
     Real dt_new;
     Real old_dt = dt;
 
+    // Store the dt we've just used in the previous time step as prev_dt
+    prev_dt = dt;
+
     /* 
        Compute new dt by using the formula derived in
        "A Boundary Condition Capturing Method for Multiphase Incompressible Flow"
@@ -143,12 +146,20 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
     if ( nstep > 1 && cfl_max <= eps ) dt_new = 0.5 * old_dt;
 
     // Don't let the timestep grow by more than 1% per step.
-    if (nstep > 1) dt_new = std::min( dt_new, 1.01*old_dt );
+    //       unless the previous time step was unduly shrunk to match plot_per_exact
+    if ( nstep > 1 && !(plot_per_exact > 0 && last_plt == nstep && nstep > 0) ) 
+        dt_new = amrex::min( dt_new, 1.01*old_dt );
 
     // Don't overshoot the final time if not running to steady state
     if (steady_state == 0 && stop_time > 0.) 
+       if (time+dt_new > stop_time) 
+           dt_new = stop_time - time;
+
+    // Don't overshoot specified plot times
+    if(plot_per_exact > 0.0 &&
+            (trunc((time + dt_new + eps) / plot_per_exact) > trunc((time + eps) / plot_per_exact)))
     {
-       if (time+dt_new > stop_time) dt_new = stop_time - time;
+        dt_new = trunc((time + dt_new) / plot_per_exact) * plot_per_exact - time;
     }
 
     // dt_new is the step calculated with a cfl contraint; dt is the value set by fixed_dt
