@@ -91,9 +91,9 @@ mfix::set_p0(const Box& bx,
 
   Real pj(0);
 
-  Real delp_x = get_delp_x();
-  Real delp_y = get_delp_y();
-  Real delp_z = get_delp_z();
+  Real delp_x = BC::delp[0];
+  Real delp_y = BC::delp[1];
+  Real delp_z = BC::delp[2];
 
   // ---------------------------------------------------------------->>>
   //     If the bc's are pressure inflow/outflow then be sure to capture that in p0andgp0
@@ -114,7 +114,7 @@ mfix::set_p0(const Box& bx,
     const Real p_hi  = m_bc_p_g[bcv_hi];
 
     delp_x = p_lo - p_hi;
-    set_delp_x(delp_x);
+    BC::delp[0] = delp_x;
 
     pj = p_hi;
   }
@@ -133,7 +133,7 @@ mfix::set_p0(const Box& bx,
     const Real p_hi  = m_bc_p_g[bcv_hi];
 
     delp_y = p_lo - p_hi;
-    set_delp_y(delp_y);
+    BC::delp[1] = delp_y;
 
     pj = p_hi;
   }
@@ -152,7 +152,7 @@ mfix::set_p0(const Box& bx,
     const Real p_hi  = m_bc_p_g[bcv_hi];
 
     delp_z = p_lo - p_hi;
-    set_delp_z(delp_z);
+    BC::delp[2] = delp_z;
 
     pj = p_hi;
   }

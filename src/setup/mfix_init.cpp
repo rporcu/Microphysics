@@ -1005,7 +1005,7 @@ mfix::mfix_set_p0()
              bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
              bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
              bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-             &nghost, &BC::delp_dir);
+             &nghost, &BC::delp_dir, BC::delp);
 
      // We deliberately don't tile this loop since we will be looping
      //    over bc's on faces and it makes more sense to do this one grid at a time

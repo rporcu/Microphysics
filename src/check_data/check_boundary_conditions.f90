@@ -34,8 +34,6 @@ module check_boundary_conditions_module
       use bc, only: BC_DEFINED
 ! Use specified BC type
       use bc, only: BC_TYPE
-! Solids volume fraction at BC
-      use bc, only: BC_EP_s
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -72,11 +70,6 @@ module check_boundary_conditions_module
       do bcv = 1, dim_bc
 
          if (bc_defined(bcv)) then
-
-! Determine which solids phases are present.
-            do i = 1, dim_m
-               skip(i) = equal(bc_ep_s(bcv,i), zero)
-            enddo
 
             select case (trim(bc_type(bcv)))
 
@@ -118,12 +111,8 @@ module check_boundary_conditions_module
       subroutine check_bc_range(BCV)
 
       ! Gas phase BC variables
-      use bc, only: BC_EP_g, BC_X_g, BC_P_g
+      use bc, only: BC_EP_g, BC_P_g
       use bc, only: BC_U_g, BC_V_g, BC_W_g
-
-      ! Solids phase BC variables.
-      use bc, only: BC_EP_s, BC_X_s
-      use bc, only: BC_U_s, BC_V_s, BC_W_s
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -174,41 +163,6 @@ module check_boundary_conditions_module
          call flush_err_msg(abort=.true.)
       endif
 
-      DO N = 1, DIM_N_G
-         IF(IS_DEFINED(BC_X_G(BCV,N))) THEN
-            WRITE(ERR_MSG,1100) trim(iVar('BC_X_g',BCV,N))
-            call FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-      ENDDO
-
-! Check solids phase variables.
-      do m = 1, dim_m
-         if(.not.equal(bc_ep_s(bcv,m),zero)) then
-            write(err_msg,1100) trim(ivar('BC_EP_s',BCV,M))
-            call flush_err_msg(abort=.true.)
-         endif
-         if(.not.equal(bc_u_s(bcv,m),zero)) then
-            write(err_msg,1100) trim(ivar('BC_U_s',BCV,M))
-            call flush_err_msg(abort=.true.)
-         endif
-         if(.not.equal(bc_v_s(bcv,m),zero)) then
-            write(err_msg,1100) trim(ivar('BC_V_s',BCV,M))
-            call flush_err_msg(abort=.true.)
-         endif
-
-         if(.not.equal(bc_w_s(bcv,m),zero)) then
-            write(err_msg,1100) trim(ivar('BC_W_s',BCV,M))
-            call flush_err_msg(abort=.true.)
-         endif
-
-         do n = 1, dim_n_s
-            if(is_defined(bc_x_s(bcv,m,n))) then
-               write(err_msg,1100) trim(ivar('BC_X_s',bcv,m,n))
-               call flush_err_msg(abort=.true.)
-            endif
-         enddo
-
-      ENDDO
 
       call finl_err_msg
 

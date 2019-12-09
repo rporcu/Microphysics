@@ -8,10 +8,9 @@
 subroutine set_gp0(domlo, domhi, gp0, ro_g0, gravity, &
                    dx, dy, dz, xlength, ylength, zlength, &
                    bct_ilo, bct_ihi, bct_jlo, bct_jhi, &
-                   bct_klo, bct_khi, ng, delp_dir_in) &
+                   bct_klo, bct_khi, ng, delp_dir_in, delp) &
                    bind(C, name="set_gp0")
 
-   use bc       , only: delp_x, delp_y, delp_z
    use bc       , only: dim_bc, bc_type, bc_p_g, bc_defined
    use bc       , only: pinf_, pout_, minf_
    use ic       , only: ic_p_g, ic_defined
@@ -30,9 +29,10 @@ subroutine set_gp0(domlo, domhi, gp0, ro_g0, gravity, &
    real(ar), intent(in   ) :: ro_g0
    real(ar), intent(in   ) :: gravity(3)
 
-   real(ar), intent(in) :: dx, dy, dz
-   real(ar), intent(in) :: xlength, ylength, zlength
-   integer , intent(in) :: delp_dir_in
+   real(ar), intent(in   ) :: dx, dy, dz
+   real(ar), intent(in   ) :: xlength, ylength, zlength
+   integer , intent(in   ) :: delp_dir_in
+   real(ar), intent(inout) :: delp(3)
 
    integer(c_int), intent(in   ) :: ng, &
     bct_ilo(domlo(2)-ng:domhi(2)+ng,domlo(3)-ng:domhi(3)+ng,2), &
@@ -74,7 +74,7 @@ subroutine set_gp0(domlo, domhi, gp0, ro_g0, gravity, &
       bcv_hi = bct_ihi(domlo(2),domlo(3),2)
       p_hi   = bc_p_g(bcv_hi)
 
-      delp_x = p_lo - p_hi
+      delp(1) = p_lo - p_hi
 
    else if ( bct_ihi(domlo(2),domlo(3),1) .eq. pinf_  .and. &
              bct_ilo(domlo(2),domlo(3),1) .eq. pout_) then
@@ -87,7 +87,7 @@ subroutine set_gp0(domlo, domhi, gp0, ro_g0, gravity, &
       bcv_hi = bct_ihi(domlo(2),domlo(3),2)
       p_hi   = bc_p_g(bcv_hi)
 
-      delp_x = p_lo - p_hi
+      delp(1) = p_lo - p_hi
 
    else if ( bct_jlo(domlo(1),domlo(3),1) .eq. pinf_  .and. &
              bct_jhi(domlo(1),domlo(3),1) .eq. pout_) then
@@ -100,7 +100,7 @@ subroutine set_gp0(domlo, domhi, gp0, ro_g0, gravity, &
       bcv_hi = bct_jhi(domlo(1),domlo(3),2)
       p_hi   = bc_p_g(bcv_hi)
 
-      delp_y = p_lo - p_hi
+      delp(2) = p_lo - p_hi
 
    else if ( bct_jhi(domlo(1),domlo(3),1) .eq. pinf_  .and. &
              bct_jlo(domlo(1),domlo(3),1) .eq. pout_) then
@@ -113,7 +113,7 @@ subroutine set_gp0(domlo, domhi, gp0, ro_g0, gravity, &
       bcv_hi = bct_jhi(domlo(1),domlo(3),2)
       p_hi   = bc_p_g(bcv_hi)
 
-      delp_y = p_lo - p_hi
+      delp(2) = p_lo - p_hi
 
    else if ( bct_klo(domlo(1),domlo(2),1) .eq. pinf_  .and. &
              bct_khi(domlo(1),domlo(2),1) .eq. pout_) then
@@ -126,7 +126,7 @@ subroutine set_gp0(domlo, domhi, gp0, ro_g0, gravity, &
       bcv_hi = bct_khi(domlo(1),domlo(2),2)
       p_hi   = bc_p_g(bcv_hi)
 
-      delp_z = p_lo - p_hi
+      delp(3) = p_lo - p_hi
 
 
    else if ( bct_khi(domlo(1),domlo(2),1) .eq. pinf_  .and. &
@@ -140,7 +140,7 @@ subroutine set_gp0(domlo, domhi, gp0, ro_g0, gravity, &
       bcv_hi = bct_khi(domlo(1),domlo(2),2)
       p_hi   = bc_p_g(bcv_hi)
 
-      delp_z = p_lo - p_hi
+      delp(3) = p_lo - p_hi
 
    end if
 
@@ -179,14 +179,14 @@ subroutine set_gp0(domlo, domhi, gp0, ro_g0, gravity, &
    !  is set at the last cell center location.
    if (delp_dir .ne. delp_dir_in) offset = -1.0_ar
 
-   if (abs(delp_x) > epsilon(zero)) &
-      gp0(1) = -delp_x/xlength
+   if (abs(delp(1)) > epsilon(zero)) &
+      gp0(1) = -delp(1)/xlength
 
-   if (abs(delp_y) > epsilon(zero)) &
-      gp0(2) = -delp_y/ylength
+   if (abs(delp(2)) > epsilon(zero)) &
+      gp0(2) = -delp(2)/ylength
 
-   if (abs(delp_z) > epsilon(zero)) &
-      gp0(3) = -delp_z/zlength
+   if (abs(delp(3)) > epsilon(zero)) &
+      gp0(3) = -delp(3)/zlength
 
    goto 100   ! pressure in all initial condition region cells was defined
 

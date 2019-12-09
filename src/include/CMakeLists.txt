@@ -6,9 +6,6 @@ target_include_directories(mfixcore
 target_sources( mfixcore
    PRIVATE
    desnamelist.inc
-   geometry.inc
    initial_conditions.inc
-   species.inc
-   species_indices.inc
    usr_hooks.inc
    )

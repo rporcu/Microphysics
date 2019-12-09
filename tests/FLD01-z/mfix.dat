@@ -26,11 +26,3 @@
   IC_U_g(1) =   0.0     ! (m/sec)
   IC_V_g(1) =   0.0     ! (m/sec)
   IC_W_g(1) =  12.5     ! (m/sec)
-
-#_______________________________________________________________________
-# BOUNDARY CONDITIONS SECTION
-
-! The top and bottom boundaries are set at cyclic with a specified
-! pressure drop (delP_Z).
-!---------------------------------------------------------------------//
-  DELP_Z = 12.0

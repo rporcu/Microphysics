@@ -26,11 +26,3 @@
   IC_U_g(1) =  12.5     ! (m/sec)
   IC_V_g(1) =   0.0     ! (m/sec)
   IC_W_g(1) =   0.0     ! (m/sec)
-
-#_______________________________________________________________________
-# BOUNDARY CONDITIONS SECTION
-
-! The east and west boundaries are set at cyclic with a specified
-! pressure drop (delP_X).
-!---------------------------------------------------------------------//
-  DELP_X = 12.0

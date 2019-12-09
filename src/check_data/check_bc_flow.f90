@@ -5,7 +5,6 @@ module check_bc_flow_module
 
    use bc, only: bc_plane
    use bc, only: bc_u_g, bc_v_g, bc_w_g
-   use bc, only: bc_u_s, bc_v_s, bc_w_s
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -91,72 +90,36 @@ contains
           write(err_msg,1300) trim(ivar('BC_U_g',bcv)), '<'
           call flush_err_msg(abort=.true.)
        endif
-       do m = 1, dim_m
-          if(check(m) .and. bc_u_s(bcv,m) > zero) then
-             write(err_msg, 1300) trim(ivar('BC_U_s',bcv,m)), '<'
-             call flush_err_msg(abort=.true.)
-          endif
-       enddo
 
     case('E')
        if(bc_u_g(bcv) < zero) then
           write(err_msg,1300) trim(ivar('BC_U_g',bcv)), '>'
           call flush_err_msg
        endif
-       do m = 1, dim_m
-          if(check(m) .and. bc_u_s(bcv,m) < zero) then
-             write(err_msg, 1300) trim(ivar('BC_U_s',bcv,m)), '>'
-             call flush_err_msg(abort=.true.)
-          endif
-       enddo
 
     case('S')
        if(bc_v_g(bcv) > zero) then
           write(err_msg,1300) trim(ivar('BC_V_g',bcv)), '<'
           call flush_err_msg
        endif
-       do m = 1, dim_m
-          if(check(m) .and. bc_v_s(bcv,m) > zero) then
-             write(err_msg, 1300) trim(ivar('BC_V_s',bcv,m)), '<'
-             call flush_err_msg(abort=.true.)
-          endif
-       enddo
 
     case('N')
        if(bc_v_g(bcv) < zero) then
           write(err_msg,1300) trim(ivar('BC_V_g',bcv)), '>'
           call flush_err_msg
        endif
-       do m = 1, dim_m
-          if(check(m) .and. bc_v_s(bcv,m) < zero) then
-             write(err_msg, 1300) trim(ivar('BC_V_s',bcv,m)), '>'
-             call flush_err_msg(abort=.true.)
-          endif
-       enddo
 
     case('B')
        if(bc_w_g(bcv) > zero) then
           write(err_msg,1300) trim(ivar('BC_W_g',bcv)), '<'
           call flush_err_msg
        endif
-       do m = 1, dim_m
-          if(check(m) .and. bc_w_s(bcv,m) > zero) then
-             write(err_msg, 1300) trim(ivar('BC_W_s',bcv,m)), '<'
-             call flush_err_msg(abort=.true.)
-          endif
-       enddo
 
     case('T')
        if(bc_w_g(bcv) < zero) then
           write(err_msg,1300) trim(ivar('BC_W_g',bcv)), '>'
           call flush_err_msg
        endif
-       do m = 1, dim_m
-          if(check(m) .and. bc_w_s(bcv,m) < zero) then
-             write(err_msg, 1300) trim(ivar('BC_W_s',bcv,m)), '>'
-             call flush_err_msg(abort=.true.)
-          endif
-       enddo
 
     end select
 
@@ -195,72 +158,36 @@ contains
           write(err_msg,1300) trim(ivar('BC_U_g',bcv)), '>'
           call flush_err_msg
        endif
-       do m = 1, dim_m
-          if(check(m) .and. bc_u_s(bcv,m) < zero) then
-             write(err_msg, 1300) trim(ivar('BC_U_s',bcv,m)), '>'
-             call flush_err_msg(abort=.true.)
-          endif
-       enddo
 
     case('E')
        if(bc_u_g(bcv) > zero) then
           write(err_msg,1300) trim(ivar('BC_U_g',bcv)), '<'
           call flush_err_msg
        endif
-       do m = 1, dim_m
-          if(check(m) .and. bc_u_s(bcv,m) > zero) then
-             write(err_msg, 1300) trim(ivar('BC_U_s',bcv,m)), '<'
-             call flush_err_msg(abort=.true.)
-          endif
-       enddo
 
     case('S')
        if(bc_v_g(bcv) < zero) then
           write(err_msg,1300) trim(ivar('BC_V_g',bcv)), '>'
           call flush_err_msg
        endif
-       do m = 1, dim_m
-          if(check(m) .and. bc_v_s(bcv,m) < zero) then
-             write(err_msg, 1300) trim(ivar('BC_V_s',bcv,m)), '>'
-             call flush_err_msg(abort=.true.)
-          endif
-       enddo
 
     case('N')
        if(bc_v_g(bcv) > zero) then
           write(err_msg,1300) trim(ivar('BC_V_g',bcv)), '<'
           call flush_err_msg
        endif
-       do m = 1, dim_m
-          if(check(m) .and. bc_v_s(bcv,m) > zero) then
-             write(err_msg, 1300) trim(ivar('BC_V_s',bcv,m)), '<'
-             call flush_err_msg(abort=.true.)
-          endif
-       enddo
 
     case('B')
        if(bc_w_g(bcv) < zero) then
           write(err_msg,1300) trim(ivar('BC_W_g',bcv)), '>'
           call flush_err_msg
        endif
-       do m = 1, dim_m
-          if(check(m) .and. bc_w_s(bcv,m) < zero) then
-             write(err_msg, 1300) trim(ivar('BC_W_s',bcv,m)), '>'
-             call flush_err_msg(abort=.true.)
-          endif
-       enddo
 
     case('T')
        if(bc_w_g(bcv) > zero) then
           write(err_msg,1300) trim(ivar('BC_W_g',bcv)), '<'
           call flush_err_msg
        endif
-       do m = 1, dim_m
-          if(check(m) .and. bc_w_s(bcv,m) > zero) then
-             write(err_msg, 1300) trim(ivar('BC_W_s',bcv,m)), '<'
-             call flush_err_msg(abort=.true.)
-          endif
-       enddo
 
     end select
 

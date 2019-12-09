@@ -11,7 +11,7 @@ namespace BC
   // Flag to solve fluid equations
   extern int delp_dir;
 
-  extern amrex::Real delp;
+  extern amrex::Real delp[3];
 
   void Initialize ();
 

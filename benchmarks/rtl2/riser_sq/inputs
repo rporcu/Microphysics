@@ -137,3 +137,15 @@ amr.check_file     ="chk"
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="chk00100"
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = 1
+
+fluid.density_model      = constant
+fluid.constant_density   = 1.0
+
+fluid.viscosity_model    = constant
+fluid.constant_viscosity = 2.0e-5

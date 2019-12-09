@@ -160,7 +160,6 @@ MODULE read_namelist_module
 
 ! External namelist files:
 !---------------------------------------------------------------------//
-      include 'geometry.inc'
       include 'initial_conditions.inc'
       include 'usr_hooks.inc'
       include 'desnamelist.inc'
@@ -177,12 +176,6 @@ MODULE read_namelist_module
 ! Write the current line to a scratch file
 ! and read the scratch file in NAMELIST format
       IF(.NOT.READ_FLAG) RETURN
-
-! Geometry and discretization keywords
-      STRING=''; STRING = '&GEOMETRY '//&
-         trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=GEOMETRY, IOSTAT=IOS)
-      IF(IOS == 0)  RETURN
 
 ! Initial condtion keywords
       STRING=''; STRING = '&INITIAL_CONDITIONS '//&

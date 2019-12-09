@@ -66,7 +66,7 @@ extern "C"
                   const int* bc_ilo, const int* bc_ihi,
                   const int* bc_jlo, const int* bc_jhi,
                   const int* bc_klo, const int* bc_khi,
-                  const int* ng, int* delp_dir);
+                  const int* ng, int* delp_dir, amrex::Real* delp);
 
     void mfix_cap_eps (const int* slo, const int* shi, amrex::Real* ep_g);
 

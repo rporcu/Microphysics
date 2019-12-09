@@ -15,13 +15,12 @@
       use discretelement, only: kn, kt, kn_w, kt_w
       use discretelement, only: des_etan, des_etat, des_etat_wall, des_etan_wall
 
-      use param, only: dim_ic, dim_bc
+      use param, only: dim_ic
       use param, only: half, undefined, zero, is_defined
       use constant, only: mmax
       use run, only: dem_solids
 
       use ic, only: write_out_ic
-      use bc, only: write_out_bc
 
       implicit none
 
@@ -103,11 +102,6 @@
 
 
       call write_out_ic(unit_out, dx, dy, dz)
-
-      call write_out_bc(unit_out, dx, dy, dz, &
-         xlength, ylength, zlength, domlo, domhi)
-
-
 
       RETURN
  1000 FORMAT(17X,'MM      MM  FFFFFFFFFF    IIIIII    XX      XX',/17X,&
