@@ -531,7 +531,7 @@ ParticlesGenerator::random_fill (const int icv,
   const int max_np = max_fitting_parts[0]*max_fitting_parts[1]*max_fitting_parts[2];
   grow_pdata(max_np);
 
-  // amrex::InitRandom(seed);
+  amrex::ResetRandomSeed(ParallelDescriptor::MyProc()+1);
 
   amrex::Real* p_rdata = m_rdata.data();
 
