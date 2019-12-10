@@ -31,7 +31,7 @@ contains
   subroutine check_collision_model_lsd
 
     use constant,       only: MMAX
-    use discretelement, only: kn, kn_w, kt_fac, kt_w_fac, &
+    use discretelement, only:  kt_fac, kt_w_fac, &
          & des_en_input, des_en_wall_input, &
          & des_etat_fac, des_etat_w_fac
 
@@ -40,29 +40,7 @@ contains
     ! Initialize the error manager.
     call init_err_msg("CHECK_SOLIDS_DEM_COLL_LSD")
 
-    ! Check for particle-particle normal spring constants.
-    if(is_undefined(kn)) then
-       write(err_msg, 1000) 'KN'
-       call flush_err_msg(abort=.true.)
-    endif
 
-    ! Check for particle-wall normal spring constants.
-    if(is_undefined(kn_w)) then
-       write(err_msg, 1000) 'KN_W'
-       call flush_err_msg(abort=.true.)
-    endif
-
-    ! Check for particle-particle tangential spring constant factors.
-    if(kt_fac > one .or. kt_fac < zero) then
-       write(err_msg,1001) 'KT_FAC', trim(ival(kt_fac))
-       call flush_err_msg(abort=.true.)
-    endif
-
-    ! Check for particle-wall tangential spring constant factors.
-    if(kt_w_fac > one .or. kt_w_fac < zero) then
-       write(err_msg,1001) 'KT_W_FAC', trim(ival(kt_w_fac))
-       call flush_err_msg(abort=.true.)
-    endif
 
     ! Check for particle-particle tangential damping coefficients
     if(des_etat_fac > one .or. des_etat_fac < zero) then

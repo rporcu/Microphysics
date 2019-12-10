@@ -18,13 +18,13 @@ extern "C"
 
     void get_collision_model (int* coll_model_flag);
 
-    void get_lsd_collision_coefficients (int* nphase,
-                                         amrex::Real* kt, amrex::Real* kt_w,
-                                         amrex::Real* kn, amrex::Real* kn_w,
+    void set_lsd_collision_coefficients (int* nphase,
                                          amrex::Real* mew, amrex::Real* mew_w,
-                                         amrex::Real* etan, amrex::Real* etan_w,
-                                         amrex::Real* etat, amrex::Real* etat_w,
-                                         amrex::Real* neighborhood);
+                                         amrex::Real* kn, amrex::Real* kn_w,
+                                         amrex::Real* kt, amrex::Real* kt_w,
+                                         amrex::Real* en, amrex::Real* en_w,
+                                         amrex::Real* kt_fac, amrex::Real* kt_fac_w,
+                                         amrex::Real* eta_fac, amrex::Real* eta_w_fac);
 
     void des_drag_gp (const int* p_id,
                       const amrex::Real* particle_vel,

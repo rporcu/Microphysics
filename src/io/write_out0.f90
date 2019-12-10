@@ -18,7 +18,6 @@
       use param, only: dim_ic
       use param, only: half, undefined, zero, is_defined
       use constant, only: mmax
-      use run, only: dem_solids
 
       use ic, only: write_out_ic
 
@@ -47,62 +46,6 @@
 !
       write(unit_out,1000)
 !
-!  Echo input data
-!
-!  Run control section
-!
-      write (unit_out, 1100)
-
-!
-!  Gas Section
-!
-!
-!  Particle Section
-
-      write (unit_out, 1400)
-      write (unit_out, 1401) MMAX_TOT
-
-
- 1400 FORMAT(//,3X,'5. SOLIDS PHASE',/)
- 1401 FORMAT(7X,'Number of particulate phases (MMAX) = ',I2)
-
-      IF(MMAX_TOT > 0) THEN
-
-         IF(DEM_SOLIDS) THEN
-
- 1450 FORMAT(/7X,'Use ',A,' collsion model.',2/10X,&
-         'Spring Coefficients:',T37,'Normal',7x,'Tangential')
-
-            write(unit_out,1450) 'Linear spring-dashpot'
-            write(unit_out,1455) 'Particle-particle', KN, KT
-            write(unit_out,1455) 'Particle-wall', KN_W, KT_W
-
-            write(unit_out,1451)
- 1451 FORMAT(/10X,'Damping Coefficients:',T37,'Normal',7x,'Tangential')
-
-            do M = 1, MMAX
-               do N = M, MMAX
-                  IF(M==N) THEN
-                     write(unit_out,1456)M,N,DES_ETAN(M,N),DES_ETAT(M,N)
-                  ELSE
-                     write(unit_out,1457)N,DES_ETAN(M,N),DES_ETAT(M,N)
-                  ENDIF
-               ENDdo
-               write(unit_out,1458) DES_ETAN_WALL(M),DES_ETAT_WALL(M)
-            ENDdo
-
- 1455 FORMAT(12X,A,T35,g12.5,3x,g12.5)
- 1456 FORMAT(12X,'Phase',I2,'-Phase',I2,' = ',T35,g12.5,3x,g12.5)
- 1457 FORMAT(19X,'-Phase',I2,' = ',T35,g12.5,3x,g12.5)
- 1458 FORMAT(19X,'-Wall',3x,' = ',T35,g12.5,3x,g12.5)
-
-         ENDIF
-
-      ENDIF
-
-
-      call write_out_ic(unit_out, dx, dy, dz)
-
       RETURN
  1000 FORMAT(17X,'MM      MM  FFFFFFFFFF    IIIIII    XX      XX',/17X,&
          'MM      MM  FFFFFFFFFF    IIIIII    XX      XX',/17X,&
@@ -120,24 +63,6 @@
          'MM      MM  FF            IIIIII    XX      XX',2/20X,&
          'Multiphase Flow with Interphase eXchanges')
 
- 1100 FORMAT(//,3X,'1. RUN CONTROL',/)
-
- 1135 FORMAT(7X,'Start-time (TIME) = ',G12.5,/7X)
-! 1136 FORMAT(7X,'* Steady state simulation.') ! LABEL_SET_BUT_NOT_USED
- 1140 FORMAT(/7X,'* Gas momentum equation-',A,' is',A,'solved.')
-!
- 1200 FORMAT(//,3X,'3. GEOMETRY AND DISCRETIZATION',/)
-
- 1210 FORMAT(7X,'X-direction cell sizes (DX) and East face locations:')
- ! 1211 FORMAT(7X,'Minimum value of X, or R (XMIN) =',G12.5)
- 1212 FORMAT(7X,'Number of cells in X, or R, direction (IMAX) = ',I4)
- 1213 FORMAT(7X,'Reactor length in X, or R, direction (XLENGTH) =',G12.5//)
- 1220 FORMAT(7X,'Y-direction cell sizes (DY) and North face locations:')
- 1221 FORMAT(7X,'Number of cells in Y direction (JMAX) = ',I4)
- 1222 FORMAT(7X,'Reactor length in Y direction (YLENGTH) =',G12.5//)
- 1230 FORMAT(7X,'Z-direction cell sizes (DZ) and Top face locations:')
- 1231 FORMAT(7X,'Number of cells in Z, or theta, direction (KMAX) = ',I4)
- 1232 FORMAT(7X,'Reactor length in Z, or theta, direction (ZLENGTH) =',G12.5)
 !
     contains
 

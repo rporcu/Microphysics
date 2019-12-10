@@ -108,3 +108,37 @@ amr.check_file     = "chk"
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="chk150000"
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = 1
+
+fluid.density_model      = constant
+fluid.constant_density   = 1.18
+
+fluid.viscosity_model    = constant
+fluid.constant_viscosity = 1.8e-5
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = 1
+
+
+dem.friction_coeff_pp     =     0.35
+dem.friction_coeff_pw     =     0.35
+
+dem.spring_const_pp       =    10.0
+dem.spring_const_pw       =    10.0
+
+dem.restitution_coeff_pp  =     0.92
+dem.restitution_coeff_pw  =     0.84
+
+dem.spring_tang_fac_pp    =     0.285714285
+dem.spring_tang_fac_pw    =     0.285714285
+
+dem.damping_tang_fac_pp   =     0.5
+dem.damping_tang_fac_pw   =     0.5

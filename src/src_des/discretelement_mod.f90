@@ -20,8 +20,6 @@
       implicit none
 !-----------------------------------------------
 
-      integer :: particle_types = 0
-
 ! Total number of particles in simulation: read from input or generated
 !      integer :: PARTICLES
 
@@ -73,17 +71,6 @@
 !-----------------------------------------------------------------<<<
 
       CONTAINS
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-!                                                                     !
-!  Function: GET PARTICLES_TYPES                                      !
-!                                                                     !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-      integer(c_int) function get_particle_types() bind(C)
-        get_particle_types = particle_types
-        return
-      end function get_particle_types
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 !                                                                     !

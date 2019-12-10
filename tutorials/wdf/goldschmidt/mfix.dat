@@ -13,9 +13,6 @@
 ! Particle Section
 !---------------------------------------------------------------------//
 
-!test  PARTICLE_TYPES=0
-  PARTICLE_TYPES=1
-
 ! Friction coefficient.
   MEW =   0.10               ! particle-particle
   MEW_W = 0.09               ! particle-wall

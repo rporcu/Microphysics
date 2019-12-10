@@ -14,33 +14,6 @@
 ########################################################################
 
 
-! PARTICLE SECTION
-!---------------------------------------------------------------------//
-
-  PARTICLE_TYPES = 2
-
-! Friction coefficients. (1)
-  MEW =   0.0                  ! particle-particle
-  MEW_W = 0.0                  ! particle-wall
-
-! Normal collision spring constant (N/m)
-  KN =    1.0d3                ! inter-particle
-  KN_W =  1.0d3                ! particle-wall
-
-! Tangential spring factor: KT/KN (1)
-  KT_FAC   = 1.0d0             ! inter-particle
-  KT_W_FAC = 1.0d0             ! particle-wall
-
-! Tangential damping coefficient factor: ETAT/ETAN (1)
-  DES_ETAT_FAC = 1.0           ! inter-particle
-  DES_ETAT_W_FAC = 1.0         ! particle-wall
-
-! Restitution coefficient. (1)
-  DES_EN_INPUT(1:2) = 1.0   1.0    ! particle-particle
-  DES_EN_INPUT(3)   =       1.0
-  DES_EN_WALL_INPUT = 1.0   1.0    ! particle-wall
-
-
 #_______________________________________________________________________
 # INITIAL CONDITIONS SECTION
 

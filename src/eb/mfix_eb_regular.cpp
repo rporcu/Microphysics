@@ -7,7 +7,6 @@
 #include <AMReX_EB_utils.H>
 #include <AMReX_EB_levelset.H>
 
-
 #include <mfix.H>
 #include <mfix_eb_F.H>
 
@@ -34,7 +33,7 @@ mfix::make_eb_regular ()
     // If filling level-set: this is used to store the implicit function (due to
     // any walls defined in mfix.dat). It is filled while after EB2::Build.
     // NOTE: this pointer is undefined if and of:
-    //     * ! solve_dem
+    //     * ! DEM::solve
     //     * levelset__restart
     //     * ! has_walls
     // are true

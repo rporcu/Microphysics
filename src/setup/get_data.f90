@@ -15,11 +15,6 @@ contains
     use init_namelist_module, only: init_namelist
     use read_namelist_module, only: read_namelist
 
-    use run, only: dem_solids
-
-    use constant, only: mmax
-    use discretelement, only: particle_types
-
 !    use fld_const, only: ro_g0 ! UNUSED_VARIABLE
 
     use param, only: is_undefined, is_defined
@@ -33,10 +28,6 @@ contains
 
     ! Read in the namelist variables from the ascii input file.
     call read_namelist(mfix_dat)
-
-    dem_solids = (particle_types > 0)
-
-    mmax = particle_types
 
   end subroutine get_data
 

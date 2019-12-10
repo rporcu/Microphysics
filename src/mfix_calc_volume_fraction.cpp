@@ -11,6 +11,8 @@
 #include <MFIXParticleContainer.H>
 #include <MFIX_MFHelpers.H>
 
+#include <MFIX_DEM_Parms.H>
+
 void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 {
   BL_PROFILE("mfix::mfix_calc_volume_fraction()");
@@ -18,7 +20,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   // Start the timers ...
   const Real strttime = ParallelDescriptor::second();
 
-  if (solve_dem)
+  if (DEM::solve)
   {
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain

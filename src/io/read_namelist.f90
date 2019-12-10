@@ -18,9 +18,6 @@ MODULE read_namelist_module
 
       use bc
       use deprecated_or_unknown_module, only: deprecated_or_unknown
-      use discretelement, only: des_en_input, des_en_wall_input, particle_types
-      use discretelement, only: des_etat_fac, des_etat_w_fac
-      use discretelement, only: kn, kn_w, kt_fac, kt_w_fac, mew, mew_w, des_etat_w_fac
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ival
 
       use ic, only: ic_ep_g, ic_ep_s, ic_pack_type, ic_p_g, ic_x_w
@@ -162,7 +159,6 @@ MODULE read_namelist_module
 !---------------------------------------------------------------------//
       include 'initial_conditions.inc'
       include 'usr_hooks.inc'
-      include 'desnamelist.inc'
 
       ERROR = .FALSE.
 
@@ -189,12 +185,6 @@ MODULE read_namelist_module
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
       READ(STRING, NML=USER_HOOKS, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
-
-! Discrete Element model input parameters.
-       STRING=''; STRING = '&DES_INPUT_DATA '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-       READ(STRING, NML=DES_INPUT_DATA, IOSTAT=IOS)
-       IF(IOS == 0)  RETURN
 
        ERROR = .TRUE.
 

@@ -6,6 +6,7 @@
 #include <mfix.H>
 #include <mfix_F.H>
 #include <MFIX_FLUID_Parms.H>
+#include <MFIX_DEM_Parms.H>
 
 namespace
 {
@@ -68,7 +69,7 @@ mfix::InitIOPltData ()
       if( plt_volfrac == 1) pltVarCount += 1;
     }
 
-  if(solve_dem)
+  if(DEM::solve)
     {
 
       int plt_ccse_regtest = 0;
@@ -328,7 +329,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 
     WriteJobInfo(plotfilename);
 
-    if ( solve_dem )
+    if ( DEM::solve )
     {
         Vector<std::string> real_comp_names;
         Vector<std::string>  int_comp_names;

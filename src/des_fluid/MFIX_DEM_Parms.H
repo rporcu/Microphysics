@@ -15,6 +15,8 @@ namespace DEM
 
     extern AMREX_GPU_DEVICE_MANAGED COLLISIONMODEL CollisionModel;
 
+    extern int solve;
+
     // tangential component of spring constant
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real kt;
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real kt_w;
@@ -40,10 +42,12 @@ namespace DEM
 
     // coefficients of restitution, normal and tangential
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real en_input[NMAX+NMAX*(NMAX-1)/2];
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real et_input[NMAX+NMAX*(NMAX-1)/2];
-
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real en_w_input[NMAX];
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real et_w_input[NMAX];
+
+
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real eta_fac;
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real eta_w_fac;
+
 
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real small_number;
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real large_number;

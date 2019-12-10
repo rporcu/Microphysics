@@ -47,3 +47,9 @@ mfix.gravity   =  0.0  -9.80665  0.0
 mfix.input_deck = "mfix.no_fluid.dat"
 
 fluid.solve = 0
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = 0

@@ -10,6 +10,9 @@
 
 #include <mfix.H>
 #include <mfix_F.H>
+
+#include <MFIX_BC_Parms.H>
+#include <MFIX_DEM_Parms.H>
 #include <MFIX_FLUID_Parms.H>
 
 int  max_step   = -1;
@@ -87,6 +90,12 @@ void ReadParameters ()
      pp.query("write_eb_surface", write_eb_surface);
      pp.query("write_ls", write_ls);
   }
+
+  BC::Initialize();
+
+  FLUID::Initialize();
+  DEM::Initialize();
+
 }
 
 void writeNow (int nstep, Real time, Real dt, mfix& mfix)
@@ -204,16 +213,15 @@ int main (int argc, char* argv[])
 
        // If-statement avoids passing the name of the mfix input file if it is
        // specified on the command line or any AMReX command.
-       if ( (strstr(argv[i], "input_file") == NULL) && (strstr(argv[i], "amr") == NULL)
-                                                    && (strstr(argv[i], "mfix") == NULL) )
-         mfix_add_argument(argv[i], &nlen);
+       // if ( (strstr(argv[i], "input_file") == NULL) && (strstr(argv[i], "amr") == NULL)
+       //                                              && (strstr(argv[i], "mfix") == NULL) )
+       // mfix_add_argument(argv[i], &nlen);
     }
 
     Real strt_time = ParallelDescriptor::second();
 
     ReadParameters();
 
-    int solve_dem;
     Real time=0.0L;
     int nstep = 0;  // Current time step
 
@@ -227,7 +235,7 @@ int main (int argc, char* argv[])
     //     mfix_get_data -> get_data -> read_namelist
     //                                        |
     //      (loads `mfix.dat`) ---------------+
-    mfix_get_data(&solve_dem, &name_len, cmfix_dat);
+    mfix_get_data(&name_len, cmfix_dat);
 
     // Default constructor. Note inheritance: mfix : AmrCore : AmrMesh
     //                                                             |
@@ -243,7 +251,7 @@ int main (int argc, char* argv[])
     set_ptr_to_mfix(mfix);
 
     // Initialize internals from ParamParse database
-    mfix.InitParams(solve_dem);
+    mfix.InitParams();
 
     // Initialize memory for data-array internals
     mfix.ResizeArrays();
@@ -262,7 +270,7 @@ int main (int argc, char* argv[])
     if(write_eb_surface)
       mfix.WriteMyEBSurface();
 
-    if (solve_dem)
+    if (DEM::solve)
     {
         // Fill level-sets on each level
         mfix.fill_eb_levelsets();
@@ -296,7 +304,7 @@ int main (int argc, char* argv[])
     amrex::Print() << "Regridding at step " << nstep << std::endl;
     mfix.Regrid();
 
-    if (solve_dem && write_ls)
+    if (DEM::solve && write_ls)
         mfix.WriteStaticPlotFile(static_plt_file);
 
     mfix.PostInit(dt, time, restart_flag, stop_time);

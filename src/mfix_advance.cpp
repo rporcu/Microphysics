@@ -13,6 +13,7 @@
 #include <AMReX_BLassert.H>
 
 #include <MFIX_MFHelpers.H>
+#include <MFIX_DEM_Parms.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -122,7 +123,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
         Real new_time = time+dt;
 
         // Calculate drag coefficient
-        if (solve_dem) {
+        if (DEM::solve) {
           Real start_drag = ParallelDescriptor::second();
           mfix_calc_drag_fluid(time);
           coupling_timing += ParallelDescriptor::second() - start_drag;
@@ -133,7 +134,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
         mfix_apply_predictor(conv_u_old, conv_s_old, divtau_old, laps_old, time, dt, proj_2_pred);
 
         // Calculate drag coefficient
-        if (solve_dem)
+        if (DEM::solve)
         {
           Real start_drag = ParallelDescriptor::second();
           amrex::Print() << "\nRecalculating drag ..." << std::endl;
@@ -223,7 +224,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     for (int lev = 0; lev < nlev; lev++)
        MultiFab::Copy(*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(), vel_go[lev]->nGrow());
 
-    if (solve_dem)
+    if (DEM::solve)
        mfix_calc_drag_fluid(time);
 
     // Create temporary multifabs to hold conv and divtau
@@ -384,7 +385,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     mfix_add_gravity_and_gp(dt);
 
     // Add the drag term implicitly
-    if (solve_dem)
+    if (DEM::solve)
         mfix_add_drag_implicit(dt);
 
     // If doing implicit diffusion, solve here for u^*
@@ -529,7 +530,7 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     mfix_add_gravity_and_gp(dt);
 
     // Add the drag term implicitly
-    if (solve_dem)
+    if (DEM::solve)
         mfix_add_drag_implicit(dt);
 
     //

@@ -83,3 +83,8 @@ fluid.constant_viscosity = 1.0e-3
 
 bc.delp     =   12.
 bc.delp_dir =    2
+
+#_______________________________________________________________________
+# DEM model settings
+
+dem.solve = 0

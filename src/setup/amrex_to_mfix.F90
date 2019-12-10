@@ -12,18 +12,15 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_get_data( dem, namelen, mfix_datC) &
+  subroutine mfix_get_data(namelen, mfix_datC) &
     bind(C, name="mfix_get_data")
 
     use get_data_module, only: get_data
     use param, only: is_undefined
-    use run, only: dem_solids
 
     use iso_c_binding, only: C_CHAR, c_null_char
 
     implicit none
-
-    integer(c_int), intent(out) :: dem
 
     integer(c_int), intent(in   ) :: namelen
     character(kind=c_char, len=1), dimension (namelen), intent (in) :: mfix_datC
@@ -43,7 +40,6 @@ contains
 
     call get_data(mfix_dat)
 
-    dem      =  merge(1,0,dem_solids)
 
   end subroutine mfix_get_data
 

@@ -32,6 +32,7 @@
 #include <mfix_eb_if.H>
 #include <MFIX_BcList.H>
 #include <DiffusionOp.H>
+#include <MFIX_DEM_Parms.H>
 
 #include <AMReX_NodalProjector.H>
 
@@ -72,7 +73,7 @@ public:
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_scal_lobc;
     std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_scal_hibc;
 
-    void InitParams (int solve_dem );
+    void InitParams ( );
 
     bool IsSteadyState () { return (steady_state > 0); }
 
@@ -130,7 +131,7 @@ public:
 
     template<class F> void build_particle_eb_levels (EB2::GeometryShop<F> gshop)
       {
-        if(solve_dem)
+        if(DEM::solve)
           for (int lev = 0; lev < nlev; lev ++)
             particle_eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom, 100, 0);
       }
@@ -703,8 +704,6 @@ private:
     Vector<std::unique_ptr<MultiFab> > fluid_cost;
 
     int steady_state = 0;
-
-    int solve_dem;
 
     bool advect_density = false;
     bool advect_tracer  = false;

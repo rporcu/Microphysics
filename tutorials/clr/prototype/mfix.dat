@@ -9,7 +9,6 @@
 
 ! PARTICLE SECTION
 !---------------------------------------------------------------------//
-  PARTICLE_TYPES = 1
 
 ! Friction coefficient. (1)
   MEW =   0.25                 ! particle-particle

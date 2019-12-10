@@ -13,37 +13,6 @@
 ########################################################################
 
 
-! Particle Section
-!---------------------------------------------------------------------//
-
-  PARTICLE_TYPES = 1
-
-! Normal collision spring constant (N/m)
-  KN =    1.0d4                ! inter-particle
-  KN_W =  1.0d4                ! particle-wall
-
-! Tangential spring factor: KT/KN (1)
-  KT_FAC   = 1.0d0             ! inter-particle
-  KT_W_FAC = 1.0d0             ! particle-wall
-
-! Restitution coefficient. (1)
-  DES_EN_INPUT =      1.0      ! particle-particle
-  DES_EN_WALL_INPUT = 1.0      ! particle-wall
-
-! Tangential damping coefficient factor: ETAT/ETAN (1)
-  DES_ETAT_FAC =   1.0         ! inter-particle
-  DES_ETAT_W_FAC = 1.0         ! particle-wall
-
-!......................................................................!
-! The following keywords are required inputs for the simulation. They  !
-! are not specified here because they are passed as run time arguments.!
-!                                                                      !
-! Friction coefficient. (1)                                            !
-! MEW =   xxxxx                ! particle-particle                     !
-! MEW_W = xxxxx                ! particle-wall                         !
-!......................................................................!
-
-
 #_______________________________________________________________________
 # INITIAL CONDITIONS SECTION
 

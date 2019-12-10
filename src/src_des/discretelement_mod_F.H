@@ -11,8 +11,6 @@ extern "C"
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
 
-int get_particle_types();
-
 #ifdef __cplusplus
 }
 #endif

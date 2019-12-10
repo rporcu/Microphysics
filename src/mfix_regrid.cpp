@@ -1,6 +1,7 @@
 #include <mfix.H>
 #include <diffusion_F.H>
 #include <MFIX_FLUID_Parms.H>
+#include <MFIX_DEM_Parms.H>
 
 void
 mfix::Regrid ()
@@ -12,7 +13,7 @@ mfix::Regrid ()
 
     if (load_balance_type == "KDTree")  // KDTree load balancing type
     {
-        if (solve_dem)
+        if (DEM::solve)
            AMREX_ALWAYS_ASSERT(particle_cost[0] == nullptr);
         if (FLUID::solve)
            AMREX_ALWAYS_ASSERT(fluid_cost[0]    == nullptr);
@@ -43,14 +44,14 @@ mfix::Regrid ()
 
        // This calls re-creates a proper particle_ebfactories and regrids all
        // the multifab that depend on it
-       if (solve_dem)
+       if (DEM::solve)
            RegridLevelSetArray(base_lev);
     }
     else if (load_balance_type == "KnapSack" || load_balance_type == "SFC") // Knapsack and SFC
     {
         amrex::Print() << "Load balancing using " << load_balance_type << std::endl;
 
-        if (solve_dem)
+        if (DEM::solve)
            AMREX_ALWAYS_ASSERT(particle_cost[0] != nullptr);
         if (FLUID::solve)
            AMREX_ALWAYS_ASSERT(fluid_cost[0]    != nullptr);
@@ -112,7 +113,7 @@ mfix::Regrid ()
 
                 // This calls re-creates a proper particle_ebfactories
                 //  and regrids all the multifabs that depend on it
-                if (solve_dem)
+                if (DEM::solve)
                     RegridLevelSetArray(lev);
             }
 
@@ -130,12 +131,12 @@ mfix::Regrid ()
             Print() << "grids = " << grids[base_lev] << std::endl;
             Print() << "costs ba = " << costs.boxArray() << std::endl;
 
-            if(solve_dem)
+            if(DEM::solve)
               Print() << "particle_cost ba = " << particle_cost[base_lev]->boxArray() << std::endl;
 
             //Print() << "fluid cost ba = " << fluid_cost[base_lev]->boxArray() << std::endl;
 
-            if (solve_dem) {
+            if (DEM::solve) {
                 // costs.plus(* particle_cost[base_lev], 0, 1, 0);
 
                 // MultiFab particle_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
@@ -169,13 +170,13 @@ mfix::Regrid ()
                fluid_cost[base_lev]->setVal(0.0);
             }
 
-            if (solve_dem)
+            if (DEM::solve)
             {
                particle_cost[base_lev].reset(new MultiFab(grids[base_lev], newdm, 1, 0));
                particle_cost[base_lev]->setVal(0.0);
             }
 
-            if (solve_dem){
+            if (DEM::solve){
                 pc->Regrid(dmap[base_lev], grids[base_lev], base_lev);
             }
 
@@ -183,12 +184,12 @@ mfix::Regrid ()
 
             // This calls re-creates a proper particles_ebfactory and regrids
             // all the multifab that depend on it
-            if (solve_dem)
+            if (DEM::solve)
                 RegridLevelSetArray(base_lev);
         }
     }
 
-    if (solve_dem)
+    if (DEM::solve)
         for (int i_lev = base_lev; i_lev < nlev; i_lev++)
         {
             // This calls re-creates a proper particle_ebfactories and regrids

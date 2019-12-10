@@ -28,7 +28,6 @@ contains
       bind(C, name="check_initial_conditions")
 
     use ic,                    only: ic_defined
-    use run,                   only: dem_solids
     use param,                 only: dim_ic
 
     integer(c_int), intent(in) :: domlo(3),domhi(3)
@@ -55,7 +54,7 @@ contains
     enddo
 
     ! Check the initial conditions for the DEM model as well
-    if(dem_solids) call check_ic_common_discrete
+    ! call check_ic_common_discrete
 
  end subroutine check_initial_conditions
 

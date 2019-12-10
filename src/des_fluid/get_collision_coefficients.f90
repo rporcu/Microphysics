@@ -1,47 +1,61 @@
-subroutine get_lsd_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out, kn_w_out, &
-     mew_out, mew_w_out, etan_out, etan_w_out, etat_out, &
-     etat_w_out, neighborhood ) &
-     bind(C, name="get_lsd_collision_coefficients")
+subroutine set_lsd_collision_coefficients ( nphase_in,                 &
+     &                                      mew_in,      mew_w_in,     &
+     &                                      kn_in,       kn_w_in,      &
+     &                                      kt_in,       kt_w_in,      &
+     &                                      en_in,       en_w_in,      &
+     &                                      kt_fac_in,   kt_w_fac_in,  &
+     &                                      eta_fac_in,  eta_w_fac_in) &
+     &                                      bind(C, name="set_lsd_collision_coefficients")
 
    use amrex_fort_module, only: rt => amrex_real
    use iso_c_binding,     only: c_int
-   use param,             only: dim_m
-   use constant,          only: mmax
-   use discretelement,    only: kn, kn_w, kt, kt_w, mew, mew_w, &
-        &                       des_etan, des_etan_wall, des_etat, des_etat_wall, &
-        &                       dp_max
+
+   use param,             only: dim_m  ! Maximal number of particle types
+   use constant,          only: mmax   ! Actual number of particle types
+
+   use discretelement,    only: mew,          mew_w          ! Friction coeffs
+   use discretelement,    only: kn,           kn_w           ! Spring constants (normal)
+   use discretelement,    only: kt,           kt_w           ! Spring constants (tangential)
+   use discretelement,    only: des_en_input, des_en_wall_input ! Restitution coeffs
+   use discretelement,    only: kt_fac,       kt_w_fac          ! tan/norm spring factor
+   use discretelement,    only: des_etat_fac, des_etat_w_fac    ! tan/norm damping factor
 
 
    implicit none
 
-   real(rt),       intent(inout) :: kt_out, kt_w_out, kn_out, kn_w_out, mew_out, mew_w_out
-   real(rt),       intent(inout) :: etan_out(dim_m, dim_m), etan_w_out(dim_m), &
-        &                           etat_out(dim_m, dim_m), etat_w_out(dim_m), &
-        &                           neighborhood
 
-   integer(c_int), intent(inout) :: nphase_out
+   integer, parameter :: dim_lm = dim_m+dim_m*(dim_m-1)/2;
 
-   integer :: i, j
+   integer(c_int), intent(in   ) :: nphase_in
 
-   nphase_out = mmax
-   kt_out = kt
-   kt_w_out = kt_w
-   kn_out = kn
-   kn_w_out = kn_w
-   mew_out = mew
-   mew_w_out = mew_w
+   real(rt),       intent(in   ) :: mew_in,        mew_w_in
+   real(rt),       intent(in   ) :: kn_in,         kn_w_in
+   real(rt),       intent(in   ) :: kt_in,         kt_w_in
+   real(rt),       intent(in   ) :: en_in(dim_lm), en_w_in(dim_m)
+   real(rt),       intent(in   ) :: kt_fac_in,     kt_w_fac_in
+   real(rt),       intent(in   ) :: eta_fac_in,    eta_w_fac_in
 
-   ! convert from Fortran to C ordering here
-   do i = 1, dim_m
-      do j = 1, dim_m
-         etan_out(i, j) = des_etan(j, i)
-         etat_out(i, j) = des_etat(j, i)
-      end do
-   end do
+   ! Copy inputs into fortran module variables. This is a temporary
+   ! work around until we completely use c++.
 
-   etan_w_out = des_etan_wall
-   etat_w_out = des_etat_wall
+   mmax = nphase_in
 
-   neighborhood = (3.0d0*maxval(dp_max(1:mmax)/2.0d0))**2
+   mew   = mew_in
+   mew_w = mew_w_in
 
-end subroutine get_lsd_collision_coefficients
+   kn   = kn_in
+   kn_w = kn_w_in
+
+   kt   = kt_in
+   kt_w = kt_w_in
+
+   des_en_input(:dim_lm)     = en_in(:dim_lm)
+   des_en_wall_input(:dim_m) = en_w_in(:dim_m)
+
+   kt_fac   = kt_fac_in
+   kt_w_fac = kt_w_fac_in
+
+   des_etat_fac   = eta_fac_in
+   des_etat_w_fac = eta_w_fac_in
+
+end subroutine set_lsd_collision_coefficients

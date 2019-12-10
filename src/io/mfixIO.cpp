@@ -9,6 +9,7 @@
 #include <mfix.H>
 #include <mfix_F.H>
 #include <MFIX_FLUID_Parms.H>
+#include <MFIX_DEM_Parms.H>
 
 using namespace std;
 
@@ -128,7 +129,7 @@ mfix::WriteParticleAscii ( std::string& par_ascii_file, int nstep ) const
 {
     BL_PROFILE("mfix::WriteParticleASCII()");
 
-    if(solve_dem) {
+    if(DEM::solve) {
 
         const std::string& par_filename = amrex::Concatenate(par_ascii_file,nstep);
         pc -> WriteAsciiFile(par_filename);
@@ -150,7 +151,7 @@ mfix::WriteAverageRegions ( std::string& avg_file, int nstep, Real time ) const
       }
 
       //  Compute Eulerian velocities in selected regions
-      if(solve_dem) {
+      if(DEM::solve) {
         pc -> ComputeAverageVelocities ( lev,
                                          time,
                                          avg_file,

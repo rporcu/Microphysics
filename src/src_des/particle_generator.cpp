@@ -12,6 +12,8 @@
 #include <fstream>
 #include <cmath>
 
+#include <MFIX_DEM_Parms.H>
+
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 //                                                                      !
 //  SUBROUTINE: GENERATE_PARTICLE_CONFIG                                !
@@ -58,7 +60,7 @@ ParticlesGenerator::generate (int& pc,
       // Get the solids type index
       int type0(1);
 
-      for(; type0 <= get_particle_types(); type0++)
+      for(; type0 <= DEM::solve; type0++)
         if(get_ic_ep_s(icv0,type0) > tolerance)
           break;
 

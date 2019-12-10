@@ -14,37 +14,6 @@
 ########################################################################
 
 
-! SOLIDS SECTION
-!---------------------------------------------------------------------//
-
-  PARTICLE_TYPES = 2
-
-! Friction coefficients (1)
-  MEW      = 0.092           ! particle-particle
-  MEW_W    = 0.092           ! Particle-wall
-
-!......................................................................!
-! The following keywords are required inputs for the simulation. They  !
-! are not specified here because they are passed as run time arguments.!
-!                                                                      !
-!                                                                      !
-! --- Linear spring-dashpot collision parameters --------------------- !
-!                                                                      !
-! Normal collision spring constant. (N/m)                              !
-! KN =   1.72d7                   ! particle-particle                  !
-! KN_W = 1.72d7                   ! particle-wall                      !
-!                                                                      !
-! Tangential collision spring constant ratio [KT/KN]. (1)              !
-! KT_FAC =   @(1.48/1.72)         ! particle-particle                  !
-! KT_W_FAC = @(1.48:1.72)         ! particle-wall                      !
-!                                                                      !
-! Restitution coefficient. (1)                                         !
-! DES_EN_INPUT(1:3) =      3*1.0  ! particle-particle: 1-1, 1-2, 2-2   !
-! DES_EN_WALL_INPUT(1:2) = 2*1.0  ! particle-wall: 1-W, 2-W            !
-!                                                                      !
-!......................................................................!
-
-
 #_______________________________________________________________________
 # INITIAL CONDITIONS SECTION
 

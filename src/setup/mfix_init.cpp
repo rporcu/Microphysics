@@ -12,18 +12,14 @@
 #include <AMReX_EBFabFactory.H>
 #include <diffusion_F.H>
 
+#include <MFIX_BC_Parms.H>
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_FLUID_Parms.H>
-#include <MFIX_BC_Parms.H>
 
 void
-mfix::InitParams(int solve_dem_in)
+mfix::InitParams()
 {
     if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
-
-
-    BC::Initialize();
-    FLUID::Initialize();
 
 
     // set n_error_buf (used in AmrMesh) to default (can overwrite later)
@@ -213,9 +209,8 @@ mfix::InitParams(int solve_dem_in)
         pp_diff.query( "bottom_solver_type", diff_bottom_solver_type );
     }
 
-    solve_dem    = solve_dem_in;
 
-    if (solve_dem)
+    if (DEM::solve)
     {
         ParmParse pp("particles");
 
@@ -227,13 +222,13 @@ mfix::InitParams(int solve_dem_in)
         pp.query("removeOutOfRange", removeOutOfRange );
     }
 
-    if (solve_dem && !FLUID::solve)
+    if (DEM::solve && !FLUID::solve)
     {
         if (fixed_dt <= 0.0)
             amrex::Abort("If running particle-only must specify a positive fixed_dt in the inputs file");
     }
 
-    if (solve_dem && FLUID::solve)
+    if (DEM::solve && FLUID::solve)
     {
       ParmParse pp("mfix");
 
@@ -391,7 +386,7 @@ void mfix::Init( Real time)
      *                                                                          *
      ***************************************************************************/
 
-    if (solve_dem)
+    if (DEM::solve)
         pc = std::unique_ptr<MFIXParticleContainer>(new MFIXParticleContainer(this));
 
 
@@ -593,7 +588,7 @@ void mfix::InitLevelData(Real time)
           AllocateArrays(lev);
 
     // Allocate the particle data
-    if (solve_dem)
+    if (DEM::solve)
     {
       Real strt_init_part = ParallelDescriptor::second();
 
@@ -684,7 +679,7 @@ mfix::PostInit(Real& dt, Real time, int restart_flag, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
 
-    if (solve_dem)
+    if (DEM::solve)
     {
         // Auto generated particles may be out of the domain. This call will
         // remove them. Note that this has to occur after the EB geometry is
@@ -753,7 +748,7 @@ mfix::PostInit(Real& dt, Real time, int restart_flag, Real stop_time)
 
                 // This calls re-creates a proper particle_ebfactories
                 //  and regrids all the multifabs that depend on it
-                if (solve_dem)
+                if (DEM::solve)
                     RegridLevelSetArray(lev);
 
             }
@@ -770,9 +765,11 @@ mfix::PostInit(Real& dt, Real time, int restart_flag, Real stop_time)
         init_collision(min_dp, min_ro,
                        max_dp, max_ro,
                        avg_dp, avg_ro,
-                       tcoll_ratio);
+                       tcoll_ratio,
+                       &DEM::etan[0][0], &DEM::etan_w[0],
+                       &DEM::etat[0][0], &DEM::etat_w[0],
+                       &DEM::neighborhood);
 
-        DEM::Initialize();
 
         if (!FLUID::solve)
             dt = fixed_dt;

@@ -167,3 +167,9 @@ fluid.constant_density   = 1.2
 
 fluid.viscosity_model    = constant
 fluid.constant_viscosity = 1.8e-5
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = 1

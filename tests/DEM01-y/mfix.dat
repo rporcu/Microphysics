@@ -16,30 +16,6 @@
 ########################################################################
 
 
-! PARTICLE SECTION
-!---------------------------------------------------------------------//
-
-  PARTICLE_TYPES = 1
-
-! Friction coefficients. (1)
-  MEW =   0.0                  ! particle-particle
-  MEW_W = 0.0                  ! particle-wall
-
-
-!......................................................................!
-! The following keywords are required inputs for the simulation. They  !
-! are not specified here because they are passed as run time arguments.!
-!                                                                      !
-! Normal collision spring constant. (N/m)                              !
-! KN =   xxxxx                 ! particle-particle                     !
-! KN_W = xxxxx                 ! particle-wall                         !
-!                                                                      !
-! Restitution coefficient. (1)                                         !
-! DES_EN_INPUT =      xxxxx    ! particle-particle                     !
-! DES_EN_WALL_INPUT = xxxxx    ! particle-wall                         !
-!......................................................................!
-
-
 #_______________________________________________________________________
 # INITIAL CONDITIONS SECTION
 

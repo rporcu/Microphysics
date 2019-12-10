@@ -7,7 +7,6 @@ target_sources( mfixcore
    calc_particle_collisions.f90
    calc_wall_collisions.f90
    cfrelvel.f90
-   des_init_namelist.f90
    des_time_march.f90
    discretelement_mod.f90
    discretelement_mod_F.H

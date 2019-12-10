@@ -14,8 +14,6 @@
 ! Particle Section
 !---------------------------------------------------------------------//
 
-  PARTICLE_TYPES=1
-
 ! Restitution coefficient.
   DES_EN_INPUT = 0.970       ! particle-particle
   DES_EN_WALL_INPUT = 0.97   ! particle-wall

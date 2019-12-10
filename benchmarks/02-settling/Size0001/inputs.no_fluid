@@ -47,3 +47,24 @@ mfix.gravity   =  0.0  -9.80665  0.0
 mfix.input_deck = "mfix.no_fluid.dat"
 
 fluid.solve = 0
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = 1
+
+dem.friction_coeff_pp     =     0.0
+dem.friction_coeff_pw     =     0.0
+
+dem.spring_const_pp       =    10.0
+dem.spring_const_pw       =    10.0
+
+dem.restitution_coeff_pp  =     0.8
+dem.restitution_coeff_pw  =     1.0
+
+dem.spring_tang_fac_pp    =     0.285714285
+dem.spring_tang_fac_pw    =     0.285714285
+
+dem.damping_tang_fac_pp   =     0.5
+dem.damping_tang_fac_pw   =     0.5

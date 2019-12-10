@@ -8,43 +8,6 @@
 ########################################################################
 
 
-
-
-#_______________________________________________________________________
-# RUN CONTROL SECTION
-
-
-
-
-
-
-
-
-#_______________________________________________________________________
-# MATERIAL SECTION
-
-! Gas Section
-!---------------------------------------------------------------------//
-  RO_g0 = 1.2      ! (kg/m3)
-  MU_g0 = 1.8d-5   ! (Pa.sec)
-
-! Particle Section
-!---------------------------------------------------------------------//
-
-  PARTICLE_TYPES=1
-
-! Friction coefficient. (1)
-  MEW =   0.30               ! particle-particle
-  MEW_W = 0.30               ! particle-wall
-
-! Normal collision spring constant. (N/m)
-  KN =   147.3               ! particle-particle
-  KN_W = 147.3               ! particle-wall
-
-! Restitution coefficient. (1)
-  DES_EN_INPUT = 0.7         ! particle-particle
-  DES_EN_WALL_INPUT = 0.7    ! particle-wall
-
 #_______________________________________________________________________
 # INITIAL CONDITIONS SECTION
 

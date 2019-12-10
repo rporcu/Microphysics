@@ -4,18 +4,28 @@
 !  Purpose: DES - allocating DES arrays                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine init_collision(min_dp_in, min_ro_in, &
-     &                    max_dp_in, max_ro_in, &
-     &                    avg_dp_in, avg_ro_in, &
-     &                    tcoll_ratio)    &
+subroutine init_collision(min_dp_in, min_ro_in,  &
+     &                    max_dp_in, max_ro_in,  &
+     &                    avg_dp_in, avg_ro_in,  &
+     &                    tcoll_ratio,           &
+     &                    etan_out,  etan_w_out, &
+     &                    etat_out, etat_w_out, &
+     &                    neighborhood ) &
      bind(C, name="init_collision")
 
   use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding,     only: c_int
-  use param,             only: zero, dim_m
+
+  use param,             only: dim_m
+  use param,             only: zero
+
   use constant,          only: mmax
+
   use discretelement,    only: dp_max, dp_min, dp_avg
   use discretelement,    only: ro_max, ro_min, ro_avg
+
+  use discretelement,    only: des_etan, des_etan_wall
+  use discretelement,    only: des_etat, des_etat_wall
 
   implicit none
 
@@ -24,9 +34,15 @@ subroutine init_collision(min_dp_in, min_ro_in, &
   real(rt), intent(in) :: avg_dp_in(dim_m), avg_ro_in(dim_m)
   real(rt), intent(in) :: tcoll_ratio
 
+  real(rt), intent(inout) :: etan_out(dim_m, dim_m), etan_w_out(dim_m)
+  real(rt), intent(inout) :: etat_out(dim_m, dim_m), etat_w_out(dim_m)
+  real(rt), intent(inout) :: neighborhood
+
   real(rt)             :: d_p0(dim_m),   ro_s0(dim_m)
 
-  integer :: ptype
+  integer :: ptype, i, j
+
+  if(mmax == 0) return
 
   ! Work around for cases that have no particles.
   do ptype = 1, mmax
@@ -48,6 +64,19 @@ subroutine init_collision(min_dp_in, min_ro_in, &
   enddo
 
   call init_collision_lsd
+
+  ! convert from Fortran to C ordering here
+  do i = 1, dim_m
+     do j = 1, dim_m
+        etan_out(i, j) = des_etan(j, i)
+        etat_out(i, j) = des_etat(j, i)
+     end do
+  end do
+
+  etan_w_out = des_etan_wall
+  etat_w_out = des_etat_wall
+
+  neighborhood = (3.0d0*maxval(dp_max(1:mmax)/2.0d0))**2
 
 contains
 
@@ -77,12 +106,6 @@ contains
   real(rt) :: en
 
   tcoll = 1.0d0
-
-  ! Calculate the particle-particle tangential spring factor.
-  kt = kt_fac*kn
-
-  ! Calculate the particle-wall tangential spring factor.
-  kt_w = kt_w_fac*kn_w
 
   lc = 0
   do m = 1, mmax
@@ -116,7 +139,6 @@ contains
         tcoll_tmp = M_PI/sqrt(kn/mass_eff -                          &
              ((des_etan(m,l)/mass_eff)**2)/4.d0)
         tcoll = min(tcoll_tmp, tcoll)
-
      end do
 
      ! Particle-Wall Collision Parameters

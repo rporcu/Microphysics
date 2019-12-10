@@ -1,5 +1,6 @@
 #include <mfix.H>
 #include <MFIX_FLUID_Parms.H>
+#include <MFIX_DEM_Parms.H>
 
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
@@ -9,7 +10,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     Real coupling_timing;
     Real sum_vol;
-    if (solve_dem and FLUID::solve)
+    if (DEM::solve and FLUID::solve)
     {
       Real start_coupling = ParallelDescriptor::second();
       mfix_calc_volume_fraction(sum_vol);
@@ -42,7 +43,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     // This returns the drag force on the particle
     Real new_time = time+dt;
-    if (solve_dem and FLUID::solve){
+    if (DEM::solve and FLUID::solve){
       Real start_coupling = ParallelDescriptor::second();
       mfix_calc_drag_particle(new_time);
       coupling_timing += ParallelDescriptor::second() - start_coupling + drag_timing;
@@ -62,7 +63,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     amrex::Gpu::setLaunchRegion(true);
     int nsubsteps;
 
-    if (solve_dem)
+    if (DEM::solve)
     {
         if (nlev == 1)
         {
@@ -121,8 +122,8 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     if (ParallelDescriptor::IOProcessor()) {
       if(FLUID::solve) std::cout << "   Time per fluid step      " << end_fluid << std::endl;
-      if(solve_dem  ) std::cout << "   Time per " << nsubsteps << " particle steps " << end_particles << std::endl;
-      if (solve_dem && FLUID::solve) std::cout << "   Coupling time per step   " << coupling_timing << std::endl;
+      if(DEM::solve  ) std::cout << "   Time per " << nsubsteps << " particle steps " << end_particles << std::endl;
+      if(DEM::solve && FLUID::solve) std::cout << "   Coupling time per step   " << coupling_timing << std::endl;
     }
 
     BL_PROFILE_REGION_STOP("mfix::Evolve");

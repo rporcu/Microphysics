@@ -25,7 +25,6 @@ MODULE INIT_NAMELIST_MODULE
 
       use ic
       use deprecated_or_unknown_module, only: deprecated_or_unknown
-      use des_init_namelist_module, only: des_init_namelist
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_t_g, ic_t_s, ic_x_w
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
@@ -238,8 +237,6 @@ MODULE INIT_NAMELIST_MODULE
 !</keyword>
 
 
-
-      call des_init_namelist
 
       end subroutine init_namelist
 end module init_namelist_module

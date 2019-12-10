@@ -5,7 +5,6 @@ target_include_directories(mfixcore
 
 target_sources( mfixcore
    PRIVATE
-   desnamelist.inc
    initial_conditions.inc
    usr_hooks.inc
    )

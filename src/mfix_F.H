@@ -26,8 +26,7 @@ extern "C"
 
     void write_usr0 ();
 
-    void mfix_get_data (int* dem,
-                        int* name_len, const char *cmfix_dat);
+    void mfix_get_data (int* name_len, const char *cmfix_dat);
 
     void check_inputs ();
 
@@ -81,7 +80,10 @@ extern "C"
     void init_collision (amrex::Real *min_dp, amrex::Real *min_roi,
                          amrex::Real *max_dp, amrex::Real *max_roi,
                          amrex::Real *sum_dp, amrex::Real *sum_roi,
-                         const amrex::Real& tcoll_ratio);
+                         const amrex::Real& tcoll_ratio,
+                         amrex::Real* etan, amrex::Real* etan_w,
+                         amrex::Real* etat, amrex::Real* etat_w,
+                         amrex::Real* neighborhood);
 
     void fill_bc0 (amrex::Real* s, const int* slo, const int* shi,
                    const int* bc_ilo, const int* bc_ihi,

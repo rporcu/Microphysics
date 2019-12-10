@@ -36,13 +36,4 @@
 ! (updated by des_init_time_loop)
       real(rt) :: des_dt
 
-! Flags for various solids phase models.
-      logical :: TFM_SOLIDS
-      logical :: DEM_SOLIDS
-      logical :: PIC_SOLIDS
-! The number of the various solids phases.
-      integer :: TFM_COUNT = 0
-      integer :: DEM_COUNT = 0
-      integer :: PIC_COUNT = 0
-
       END MODULE RUN

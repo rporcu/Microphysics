@@ -1,7 +1,6 @@
 f90EXE_sources += calc_particle_collisions.f90
 f90EXE_sources += calc_wall_collisions.f90
 f90EXE_sources += cfrelvel.f90
-f90EXE_sources += des_init_namelist.f90
 f90EXE_sources += des_time_march.f90
 f90EXE_sources += discretelement_mod.f90
 f90EXE_sources += init_collision.f90
