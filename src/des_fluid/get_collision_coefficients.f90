@@ -1,7 +1,9 @@
-subroutine get_lsd_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out, kn_w_out, &
-     mew_out, mew_w_out, etan_out, etan_w_out, etat_out, &
-     etat_w_out, neighborhood ) &
-     bind(C, name="get_lsd_collision_coefficients")
+subroutine get_lsd_collision_coefficients (nphase_out, kt_out, kt_w_out, &
+                                           kn_out, kn_w_out, mew_out, mew_w_out, &
+                                           etan_out, etan_w_out, etat_out, &
+                                           etat_w_out, neighborhood ) &
+   
+   bind(C, name="get_lsd_collision_coefficients")
 
    use amrex_fort_module, only: rt => amrex_real
    use iso_c_binding,     only: c_int
@@ -14,10 +16,10 @@ subroutine get_lsd_collision_coefficients ( nphase_out, kt_out, kt_w_out, kn_out
 
    implicit none
 
-   real(rt),       intent(inout) :: kt_out, kt_w_out, kn_out, kn_w_out, mew_out, mew_w_out
-   real(rt),       intent(inout) :: etan_out(dim_m, dim_m), etan_w_out(dim_m), &
-        &                           etat_out(dim_m, dim_m), etat_w_out(dim_m), &
-        &                           neighborhood
+   real(rt), intent(inout) :: kt_out, kt_w_out, kn_out, kn_w_out, mew_out, mew_w_out
+   real(rt), intent(inout) :: etan_out(dim_m, dim_m), etan_w_out(dim_m), &
+                              etat_out(dim_m, dim_m), etat_w_out(dim_m), &
+                              neighborhood
 
    integer(c_int), intent(inout) :: nphase_out
 

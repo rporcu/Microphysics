@@ -5,7 +5,7 @@ module wall_collisions
     implicit none
 contains
 
-  subroutine ls_has_walls(has_wall, phi, phlo, phhi, tol) bind(c, name="ls_has_walls")
+  subroutine ls_has_walls (has_wall, phi, phlo, phhi, tol) bind(c, name="ls_has_walls")
 
     integer,  intent(  out) :: has_wall
     integer,  intent(in   ) :: phlo(3), phhi(3)

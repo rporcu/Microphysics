@@ -15,7 +15,7 @@ module parse_line_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
-      subroutine PARSE_LINE(LINE, LMAX, READ_FLAG)
+      subroutine PARSE_LINE (LINE, LMAX, READ_FLAG)
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -81,7 +81,7 @@ module parse_line_module
 !  Purpose: Complete arithmetic operations and expand the line         C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine PARSE_ARITH(LINE, LMAX)
+      subroutine PARSE_ARITH (LINE, LMAX)
 
       use amrex_fort_module, only : rt => amrex_real
       use iso_c_binding , only: c_int

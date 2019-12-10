@@ -35,12 +35,12 @@ mfix::mfix_init_solvers ()
     //
     // Set vel bcs (bc_lo, bc_hi)
     //
-    set_vel_diff_bc( bc_lo, bc_hi,
-                     domain.loVect(), domain.hiVect(),
-                     &nghost,
-                     bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
-                     bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
-                     bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
+    set_vel_diff_bc(bc_lo, bc_hi,
+                    domain.loVect(), domain.hiVect(),
+                    &nghost,
+                    bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
+                    bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
+                    bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
 
     diff_vel_lobc = {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]};
     diff_vel_hibc = {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]};
@@ -48,12 +48,12 @@ mfix::mfix_init_solvers ()
     //
     // Set scalar bcs (bc_lo, bc_hi)
     //
-    set_vel_diff_bc( bc_lo, bc_hi,
-                     domain.loVect(), domain.hiVect(),
-                     &nghost,
-                     bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
-                     bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
-                     bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
+    set_vel_diff_bc(bc_lo, bc_hi,
+                    domain.loVect(), domain.hiVect(),
+                    &nghost,
+                    bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
+                    bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
+                    bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
 
     diff_scal_lobc = {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]};
     diff_scal_hibc = {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]};

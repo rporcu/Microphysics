@@ -25,7 +25,7 @@ MODULE DES_INIT_NAMELIST_MODULE
 !</keyword>                                                               C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE DES_INIT_NAMELIST
+      SUBROUTINE DES_INIT_NAMELIST ()
 
       use discretelement, only: kn, kn_w
       use discretelement, only: kt_fac, kt_w_fac

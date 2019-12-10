@@ -80,7 +80,7 @@
 !                                                                     !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-      integer(c_int) function get_particle_types() bind(C)
+      integer(c_int) function get_particle_types () bind(C)
         get_particle_types = particle_types
         return
       end function get_particle_types
@@ -91,7 +91,7 @@
 !  Purpose: Calculate the cross product of two 3D vectors.            !
 !                                                                     !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      FUNCTION DES_CROSSPRDCT(XX,YY)
+      FUNCTION DES_CROSSPRDCT (XX,YY)
 
       implicit none
 

@@ -4,16 +4,16 @@
 !  Purpose: Write user-defined output                                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine collect_fluid(lo, hi, domlo, domhi,                    &
-     &                   ep_g,    slo, shi,                       &
-     &                   p_g,     plo, phi,                       &
-     &                   vel_g,   vlo, vhi,                       &
-     &                   vratio,  rlo, rhi,                       &
-     &                   usr_x_w, usr_x_e,                        &
-     &                   usr_y_s, usr_y_n,                        &
-     &                   usr_z_b, usr_z_t, dx,                    &
-     &                   sum_ep_g, sum_p_g,  sum_vol,             &
-     &                   sum_velx, sum_vely, sum_velz)            &
+subroutine collect_fluid (lo, hi, domlo, domhi,                    &
+     &                    ep_g,    slo, shi,                       &
+     &                    p_g,     plo, phi,                       &
+     &                    vel_g,   vlo, vhi,                       &
+     &                    vratio,  rlo, rhi,                       &
+     &                    usr_x_w, usr_x_e,                        &
+     &                    usr_y_s, usr_y_n,                        &
+     &                    usr_z_b, usr_z_t, dx,                    &
+     &                    sum_ep_g, sum_p_g,  sum_vol,             &
+     &                    sum_velx, sum_vely, sum_velz)            &
      & bind(C, name="mfix_collect_fluid")
 
   use amrex_fort_module, only : rt => amrex_real

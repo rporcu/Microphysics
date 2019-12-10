@@ -8,10 +8,10 @@ target_sources( mfixcore
    amrex_to_mfix.F90
    calc_cell.f90
    calc_cell_F.H
-   mfix_calc_mu_g.hpp
+   mfix_calc_mu_g.H
    mfix_calc_mu_g.cpp
    get_data.f90
-   mfix_init_fluid.hpp
+   mfix_init_fluid.H
    mfix_init_fluid.cpp
    init_namelist.f90
    mfix_set_bc0.cpp

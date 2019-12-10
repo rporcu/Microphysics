@@ -14,7 +14,7 @@ MODULE read_namelist_module
 !     Purpose: Read in the NAMELIST variables                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE READ_NAMELIST(mfix_dat)
+      SUBROUTINE READ_NAMELIST (mfix_dat)
 
       use bc
       use deprecated_or_unknown_module, only: deprecated_or_unknown
@@ -152,7 +152,7 @@ MODULE read_namelist_module
 ! Purpose: Process LINE_STRING for MFIX keyword data.                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_KEYWORD(ERROR)
+      SUBROUTINE SET_KEYWORD (ERROR)
 
       IMPLICIT NONE
 
@@ -204,7 +204,7 @@ MODULE read_namelist_module
 END SUBROUTINE READ_NAMELIST
 
 
-subroutine add_argument(fname, nlen) &
+subroutine add_argument (fname, nlen) &
    bind(c,name='mfix_add_argument')
 
    use iso_c_binding, only: c_int, c_float, c_char

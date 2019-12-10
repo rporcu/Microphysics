@@ -27,7 +27,7 @@ module particle_mod
 
 contains
 
-   subroutine print_particles( particles )
+   subroutine print_particles (particles)
       type(particle_t), intent(in) :: particles(:)
       integer                      :: p
 

@@ -7,10 +7,10 @@
 #include <MFIX_FLUID_Parms.H>
 
 void 
-mfix::set_bc0(const Box& sbx,
-              MFIter* mfi,
-              const int lev,
-              const Box& domain)
+mfix::set_bc0 (const Box& sbx,
+               MFIter* mfi,
+               const int lev,
+               const Box& domain)
 {
   const Real ro_g0  = FLUID::ro_g0;
   const Real mu_g0  = FLUID::mu_g0;

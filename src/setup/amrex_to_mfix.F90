@@ -12,7 +12,7 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_get_data( dem, namelen, mfix_datC) &
+  subroutine mfix_get_data (dem, namelen, mfix_datC) &
     bind(C, name="mfix_get_data")
 
     use get_data_module, only: get_data
@@ -51,7 +51,7 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_usr0() &
+  subroutine mfix_usr0 () &
        bind(C, name="mfix_usr0")
 
     call usr0
@@ -62,7 +62,7 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_usr1(time) &
+  subroutine mfix_usr1 (time) &
        bind(C, name="mfix_usr1")
     real(rt), intent(in   ) :: time
      
@@ -74,7 +74,7 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_usr2() &
+  subroutine mfix_usr2 () &
        bind(C, name="mfix_usr2")
      
     call usr2
@@ -85,7 +85,7 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_finl_err_msg() &
+  subroutine mfix_finl_err_msg () &
        bind(C, name="mfix_finl_err_msg")
 
     use error_manager, only: finl_err_msg
@@ -99,8 +99,8 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_usr3(vel_g, ulo, uhi, &
-     p_g, slo, shi, dx, dy, dz) bind(C, name="mfix_usr3")
+  subroutine mfix_usr3 (vel_g, ulo, uhi, &
+                        p_g, slo, shi, dx, dy, dz) bind(C, name="mfix_usr3")
 
     integer(c_int), intent(in   ) :: ulo(3),uhi(3)
     integer(c_int), intent(in   ) :: slo(3),shi(3)

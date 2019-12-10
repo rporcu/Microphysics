@@ -9,6 +9,6 @@
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
 
-void calc_mu_g(const Box& bx, FArrayBox& mu_g_fab);
+void calc_mu_g (const Box& bx, FArrayBox& mu_g_fab);
 
 #endif

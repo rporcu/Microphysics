@@ -12,7 +12,7 @@ MODULE REMOVE_COMMENT_MODULE
 !                     OUT > LINE ::  "MW_g( 3 ) =  32.0         "      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE REMOVE_COMMENT(LINE, LSTART, MAXCOL)
+      SUBROUTINE REMOVE_COMMENT (LINE, LSTART, MAXCOL)
 
       IMPLICIT NONE
 
@@ -50,7 +50,7 @@ MODULE REMOVE_COMMENT_MODULE
 !                     OUT > LINE :: "MW_g(3)   = 32.0"                 !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE REMOVE_PAR_BLANKS(LINE)
+      SUBROUTINE REMOVE_PAR_BLANKS (LINE)
 
       IMPLICIT NONE
 

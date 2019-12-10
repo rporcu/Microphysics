@@ -19,7 +19,7 @@ MODULE WRITE_ERROR_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
-      SUBROUTINE WRITE_ERROR(NAME, LINE, LMAX)
+      SUBROUTINE WRITE_ERROR (NAME, LINE, LMAX)
 
 
       IMPLICIT NONE

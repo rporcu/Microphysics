@@ -80,7 +80,7 @@
 ! Purpose: Initialize the error manager for the local routine. This    !
 ! call is needed to set the caller routines name for error messages.   !
 !......................................................................!
-      SUBROUTINE INIT_ERR_MSG(CALLER)
+      SUBROUTINE INIT_ERR_MSG (CALLER)
 
 ! Rank ID of process
 
@@ -201,8 +201,7 @@
 !``````````````````````````````````````````````````````````````````````!
 !                                                                      !
 !......................................................................!
-      SUBROUTINE FLUSH_ERR_MSG(DEBUG, HEADER, FOOTER, ABORT, LOG, &
-         CALL_TREE)
+      SUBROUTINE FLUSH_ERR_MSG (DEBUG, HEADER, FOOTER, ABORT, LOG, CALL_TREE)
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
@@ -358,7 +357,7 @@
 !``````````````````````````````````````````````````````````````````````!
 !                                                                      !
 !......................................................................!
-      SUBROUTINE SHOW_CALL_TREE(HEADER, FOOTER)
+      SUBROUTINE SHOW_CALL_TREE (HEADER, FOOTER)
 
 
 ! Dummy Arguments:
@@ -414,7 +413,7 @@
 !``````````````````````````````````````````````````````````````````````!
 !                                                                      !
 !......................................................................!
-      CHARACTER(len=32) FUNCTION iVar(VAR, i1, i2, i3)
+      CHARACTER(len=32) FUNCTION iVar (VAR, i1, i2, i3)
 
       CHARACTER(len=*), intent(in) :: VAR
 
@@ -451,7 +450,7 @@
 !``````````````````````````````````````````````````````````````````````!
 !                                                                      !
 !......................................................................!
-      CHARACTER(len=32) FUNCTION iVal_int(VAL)
+      CHARACTER(len=32) FUNCTION iVal_int (VAL)
       integer, intent(in) :: VAL
 
       CHARACTER(len=32) :: iASc
@@ -465,7 +464,7 @@
 !``````````````````````````````````````````````````````````````````````!
 !                                                                      !
 !......................................................................!
-      CHARACTER(len=32) FUNCTION iVal_dbl(VAL)
+      CHARACTER(len=32) FUNCTION iVal_dbl (VAL)
 
       real(rt), intent(in) :: VAL
 
@@ -485,7 +484,7 @@
 !``````````````````````````````````````````````````````````````````````!
 !                                                                      !
 !......................................................................!
-      CHARACTER(len=32) FUNCTION iVal_log(VAL)
+      CHARACTER(len=32) FUNCTION iVal_log (VAL)
       logical, intent(in) :: VAL
 
       IF(VAL) THEN
