@@ -716,17 +716,21 @@ private:
     // ***************************************************************
     // Nodal solve
     // ***************************************************************
-
+     
+    // Verbosity and MLMG parameters are now ParmParse with "nodal_proj" in the inputs file
+    // Examples: nodal_proj.verbose = 1
+    //           nodal_proj.bottom_verbose = 1 
+    //           nodal_proj.maxiter
+    //           nodal_proj.bottom_maxiter
+    //           nodal_proj.bottom_rtol 
+    //           nodal_proj.bottom_atol 
+    //           nodal_proj.bottom_solver 
+    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_NodalProjector.cpp"   
     // Verbosity
-    int nodal_mg_verbose = 0;
-    int nodal_mg_cg_verbose = 0;
 
     // Control MLMG behavior
-    int  nodal_mg_maxiter = 100;
-    int  nodal_mg_cg_maxiter = 100;
     Real nodal_mg_rtol = 1.0e-11;
     Real nodal_mg_atol = 1.0e-14;
-    std::string nodal_bottom_solver_type;
 
     // Max coarsening level
     int  nodal_mg_max_coarsening_level = 100;
@@ -740,17 +744,19 @@ private:
     // ***************************************************************
     // MAC solve
     // ***************************************************************
-
-    // Verbosity
-    int mac_mg_verbose = 0;
-    int mac_mg_cg_verbose = 0;
+    // Verbosity and MLMG parameters are now ParmParse with "mac_proj" in the inputs file
+    // Examples: mac_proj.verbose = 1
+    //           mac_proj.bottom_verbose = 1 
+    //           mac_proj.maxiter
+    //           mac_proj.bottom_maxiter
+    //           mac_proj.bottom_rtol 
+    //           mac_proj.bottom_atol 
+    //           mac_proj.bottom_solver 
+    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp" 
 
     // Control MLMG behavior
-    int  mac_mg_maxiter = 200;
-    int  mac_mg_cg_maxiter = 200;
     Real mac_mg_rtol = 1.0e-11;
     Real mac_mg_atol = 1.0e-14;
-    std::string mac_bottom_solver_type;
 
     // Max coarsening level
     int  mac_mg_max_coarsening_level = 100;

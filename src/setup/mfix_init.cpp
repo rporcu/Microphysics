@@ -37,22 +37,20 @@ mfix::InitParams()
         pp.query("dt_min", dt_min );
         pp.query("dt_max", dt_max );
 
-        // Options to control verbosity level
-        pp.query("verbose", m_verbose);
-
+        // Verbosity and MLMG parameters are now ParmParse with "nodal_proj" in the inputs file
+        // Examples: nodal_proj.verbose = 1
+        //           nodal_proj.bottom_verbose = 1 
+        //           nodal_proj.maxiter
+        //           nodal_proj.bottom_maxiter
+        //           nodal_proj.bottom_rtol 
+        //           nodal_proj.bottom_atol 
+        //           nodal_proj.bottom_solver 
+        // More info at "amrex/Src/LinearSolvers/Projections/AMReX_NodalProjector.cpp" 
+        ParmParse pp_nodal("nodal_proj");
         // Options to control MLMG behavior
-        pp.query( "mg_verbose"             , nodal_mg_verbose );
-        pp.query( "mg_cg_verbose"          , nodal_mg_cg_verbose );
-        pp.query( "mg_maxiter"             , nodal_mg_maxiter );
-        pp.query( "mg_cg_maxiter"          , nodal_mg_cg_maxiter );
-        pp.query( "mg_rtol"                , nodal_mg_rtol );
-        pp.query( "mg_atol"                , nodal_mg_atol );
-        pp.query( "mg_max_coarsening_level", nodal_mg_max_coarsening_level );
-
-        // Default bottom solver here is bicgcg, but alternatives are
-        // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
-        nodal_bottom_solver_type = "bicgcg";
-        pp.query( "bottom_solver_type",  nodal_bottom_solver_type );
+        pp_nodal.query( "mg_rtol"                , nodal_mg_rtol );
+        pp_nodal.query( "mg_atol"                , nodal_mg_atol );
+        pp_nodal.query( "mg_max_coarsening_level", nodal_mg_max_coarsening_level );
 
         // Is this a steady-state calculation
         steady_state = 0;
@@ -134,19 +132,20 @@ mfix::InitParams()
         // The default value for the rescaling ratio of the collision time is 50
         pp.query("tcoll_ratio", tcoll_ratio);
 
-        ParmParse pp_mac("mac");
-        pp_mac.query( "mg_verbose"   , mac_mg_verbose );
-        pp_mac.query( "mg_cg_verbose", mac_mg_cg_verbose );
+        // Verbosity and MLMG parameters are now ParmParse with "mac_proj" in the inputs file
+        // Examples: mac_proj.verbose = 1
+        //           mac_proj.bottom_verbose = 1 
+        //           mac_proj.maxiter
+        //           mac_proj.bottom_maxiter
+        //           mac_proj.bottom_rtol 
+        //           mac_proj.bottom_atol 
+        //           mac_proj.bottom_solver 
+        // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp"
+
+        ParmParse pp_mac("mac_proj");
         pp_mac.query( "mg_rtol"      , mac_mg_rtol );
         pp_mac.query( "mg_atol"      , mac_mg_atol );
-        pp_mac.query( "mg_maxiter"   , mac_mg_maxiter );
-        pp_mac.query( "mg_cg_maxiter", mac_mg_cg_maxiter );
         pp_mac.query( "mg_max_coarsening_level", mac_mg_max_coarsening_level );
-
-        // Default bottom solver here is bicgcg, but alternatives are
-        // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
-        mac_bottom_solver_type = "bicgcg";
-        pp_mac.query( "bottom_solver_type", mac_bottom_solver_type );
 
         AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
                             load_balance_type == "KDTree"    ||

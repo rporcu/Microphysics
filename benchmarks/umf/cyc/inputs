@@ -19,13 +19,13 @@ mfix.gravity = -9.81  0.0  0.0
 
 mfix.drag_type = "WenYu"
 
-mac.mg_verbose          = 0
-#mac.mg_rtol             = 1.e-6
-#mac.bottom_solver_type  = "smoother"
+mac_proj.verbose = 0
+#mac_proj.mg_rtol = 1.e-6
+#mac_proj.bottom_solver = "smoother"
 
-mfix.mg_verbose         = 0
-#mfix.mg_rtol            = 1.e-6
-#mfix.bottom_solver_type = "smoother"
+nodal_proj.verbose = 0
+#nodal_proj.mg_rtol = 1.e-6
+#mfix.bottom_solver = "smoother"
 
 
 #_______________________________________________________________________

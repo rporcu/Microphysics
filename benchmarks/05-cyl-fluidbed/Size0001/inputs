@@ -16,8 +16,8 @@ mfix.gravity = -9.81  0.0  0.0
 
 mfix.drag_type = "BVK2"
 
-mac.mg_verbose   = 0
-mfix.mg_verbose  = 1
+mac_proj.verbose = 0
+nodal_proj.verbose = 1
 
 amr.blocking_factor = 1
 

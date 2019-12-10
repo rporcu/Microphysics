@@ -13,16 +13,16 @@ mfix.max_step   = 10
 #----------------------------------------------------------------------
 
 # Nodal solver
-mfix.mg_verbose    = 2
-mfix.mg_cg_verbose = 0
-mfix.mg_cg_maxiter = 1000
-mfix.mg_rtol       = 1.e-8
+nodal_proj.verbose    = 2
+nodal_proj.bottom_verbose = 0
+nodal_proj.bottom_maxiter = 1000
+nodal_proj.mg_rtol       = 1.e-8
 
 # MAC solver
-mac.mg_verbose     = 2
-mac.mg_cg_verbose  = 0
-mac.mg_cg_maxiter  = 1000
-mac.mg_rtol        = 1.e-8
+mac_proj.verbose     = 2
+mac_proj.bottom_verbose  = 0
+mac_proj.bottom_maxiter  = 1000
+mac_proj.mg_rtol        = 1.e-8
 
 #----------------------------------------------------------------------
 # Particle initialization

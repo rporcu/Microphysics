@@ -27,7 +27,7 @@ mfix::mfix_init_solvers ()
     ppe_hibc = {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]};
 
     LPInfo info;
-    info.setMaxCoarseningLevel(100);
+    info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
 
     nodal_projector.reset(new NodalProjector(geom, grids, dmap, ppe_lobc, ppe_hibc,
                                              GetVecOfConstPtrs(ebfactory), info) );
@@ -84,7 +84,7 @@ mfix::mfix_setup_solvers ()
     ppe_hibc = {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]};
 
     LPInfo info;
-    info.setMaxCoarseningLevel(100);
+    info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
 
     nodal_projector.reset(new NodalProjector(geom, grids, dmap, ppe_lobc, ppe_hibc,
                                              GetVecOfConstPtrs(ebfactory), info) );
