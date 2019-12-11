@@ -46,6 +46,10 @@ mfix.gravity   =  0.0  -9.80665  0.0
 
 mfix.input_deck = "mfix.no_fluid.dat"
 
+
+#_______________________________________________________________________
+# Fluid model settings
+#
 fluid.solve = 0
 
 

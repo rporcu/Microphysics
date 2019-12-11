@@ -30,6 +30,10 @@ mfix.drag_type = "BVK2"
 
 mfix.gravity =  0.0  0.0  0.0
 
+
+#_______________________________________________________________________
+# Fluid model settings
+#
 fluid.solve = 1
 
 fluid.density_model      = constant
