@@ -53,8 +53,8 @@ fluid.solve = 0
 #
 dem.solve = 1
 
-dem.friction_coeff_pp     =     0.2
-dem.friction_coeff_pw     =     0.2
+dem.friction_coeff_pp     =     0.6
+dem.friction_coeff_pw     =     0.6
 
 dem.spring_const_pp       = 10000.0
 dem.spring_const_pw       = 10000.0

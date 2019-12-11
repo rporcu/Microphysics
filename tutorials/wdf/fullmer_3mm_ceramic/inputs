@@ -173,3 +173,18 @@ fluid.constant_viscosity = 1.8e-5
 # DEM model settings
 #
 dem.solve = 1
+
+dem.friction_coeff_pp     =     0.217
+dem.friction_coeff_pw     =     0.217
+
+dem.spring_const_pp       =  5099.0
+dem.spring_const_pw       =  5099.0
+
+dem.restitution_coeff_pp  =     0.916
+dem.restitution_coeff_pw  =     0.916
+
+dem.spring_tang_fac_pp    =     0.285714285
+dem.spring_tang_fac_pw    =     0.285714285
+
+dem.damping_tang_fac_pp   =     0.5
+dem.damping_tang_fac_pw   =     0.5

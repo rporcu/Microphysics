@@ -50,11 +50,11 @@ dem.solve = 1
 dem.friction_coeff_pp     =     0.0
 dem.friction_coeff_pw     =     0.0
                               
-dem.spring_const_pp       = 10000.0
-dem.spring_const_pw       = 10000.0
+dem.spring_const_pp       = 50000.0
+dem.spring_const_pw       = 50000.0
                               
-dem.restitution_coeff_pp  =     0.9
-dem.restitution_coeff_pw  =     0.9
+dem.restitution_coeff_pp  =     0.8
+dem.restitution_coeff_pw  =     0.8
                               
 dem.spring_tang_fac_pp    =     0.285714285
 dem.spring_tang_fac_pw    =     0.285714285

@@ -13,21 +13,6 @@
 ########################################################################
 
 
-! Particle Section
-!---------------------------------------------------------------------//
-
-! Restitution coefficient.
-  DES_EN_INPUT = 0.970       ! particle-particle
-  DES_EN_WALL_INPUT = 0.955  ! particle-wall
-
-! Friction coefficient.
-  MEW =   0.273              ! particle-particle
-  MEW_W = 0.250              ! particle-wall
-
-! Normal collision spring constant. (N/m)
-  KN =    41.3               ! particle-particle
-  KN_W =  41.3               ! particle-wall
-
 #_______________________________________________________________________
 # INITIAL CONDITIONS SECTION
 
