@@ -25,8 +25,6 @@ MODULE read_namelist_module
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use ic, only: ic_dp_dist, ic_dp_mean, ic_dp_std, ic_dp_min, ic_dp_max
       use ic, only: ic_ro_s_dist, ic_ro_s_mean, ic_ro_s_std, ic_ro_s_min, ic_ro_s_max
-      use output, only: usr_x_w, usr_x_e, usr_y_n, usr_y_s, usr_z_b, usr_z_t
-      use output, only: usr_dt
       use usr
       use utilities, only: blank_line, line_too_big, seek_comment
       use utilities, only: make_upper_case, replace_tab
@@ -158,7 +156,6 @@ MODULE read_namelist_module
 ! External namelist files:
 !---------------------------------------------------------------------//
       include 'initial_conditions.inc'
-      include 'usr_hooks.inc'
 
       ERROR = .FALSE.
 
@@ -179,12 +176,6 @@ MODULE read_namelist_module
       READ(STRING, NML=INITIAL_CONDITIONS, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
-
-! User hook keywords
-      STRING=''; STRING = '&USER_HOOKS '//&
-         trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=USER_HOOKS, IOSTAT=IOS)
-      IF(IOS == 0)  RETURN
 
        ERROR = .TRUE.
 

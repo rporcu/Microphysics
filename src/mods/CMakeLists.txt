@@ -13,7 +13,6 @@ target_sources( mfixcore
    ic_mod.f90
    ic_mod_F.H
    utilities_mod.f90
-   output_mod.f90
    param_mod.f90
    param_mod_F.H
    param_mod_F.cpp
