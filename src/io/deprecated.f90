@@ -17,7 +17,7 @@ module DEPRECATED_OR_UNKNOWN_MODULE
 !     reports if the keyword was deprecated or incorrect.              !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine DEPRECATED_OR_UNKNOWN(LINE_NO, INPUT)
+      subroutine DEPRECATED_OR_UNKNOWN (LINE_NO, INPUT)
 
 
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ival
@@ -87,7 +87,7 @@ module DEPRECATED_OR_UNKNOWN_MODULE
 !     Purpose: Write the error message for deprecated keywords.        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE UNKNOWN_KEYWORD(LINE_NO, INPUT)
+      SUBROUTINE UNKNOWN_KEYWORD (LINE_NO, INPUT)
 
       integer, INTENT(IN) :: LINE_NO
       CHARACTER(len=*), INTENT(IN) :: INPUT

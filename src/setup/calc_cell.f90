@@ -18,7 +18,7 @@ contains
 !     intersects                                                       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   pure integer function calc_cell(location, dx)
+   pure integer function calc_cell (location, dx)
 
       use param, only : half
 
@@ -41,8 +41,8 @@ contains
 !  Purpose: calculate the i, j or k cell index for IC regions.         !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_cell_ic(dx, dy, dz, x_w, y_s, z_b, x_e, y_n, z_t, &
-     i_w, i_e, j_s, j_n, k_b, k_t) bind(C)
+   subroutine calc_cell_ic (dx, dy, dz, x_w, y_s, z_b, x_e, y_n, z_t, &
+                            i_w, i_e, j_s, j_n, k_b, k_t) bind(C)
 
      use param, only: equal
 
@@ -70,9 +70,9 @@ contains
 !  Purpose: calculate the i, j or k cell index for wall BCs.           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_cell_bc_wall(domlo, domhi, xlength, ylength, &
-      zlength, dx, dy, dz, x_w, y_s, z_b, x_e, y_n, z_t, &
-      i_w, i_e, j_s, j_n, k_b, k_t)
+   subroutine calc_cell_bc_wall (domlo, domhi, xlength, ylength, &
+                                 zlength, dx, dy, dz, x_w, y_s, z_b, x_e, y_n, z_t, &
+                                 i_w, i_e, j_s, j_n, k_b, k_t)
 
       use param, only: zero, equal
 
@@ -129,9 +129,9 @@ contains
 !  Purpose: calculate the i, j or k cell index for wall BCs.           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_cell_bc_flow(xlength, ylength, zlength, &
-      dx, dy, dz, x_w, y_s, z_b, x_e, y_n, z_t, &
-      i_w, i_e, j_s, j_n, k_b, k_t)
+   subroutine calc_cell_bc_flow (xlength, ylength, zlength, &
+                                 dx, dy, dz, x_w, y_s, z_b, x_e, y_n, z_t, &
+                                 i_w, i_e, j_s, j_n, k_b, k_t)
 
       use param, only: equal
 

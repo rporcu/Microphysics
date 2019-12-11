@@ -13,21 +13,9 @@
 
 namespace set_p0_aux {
 
-void goto_60(const Box& sbx, const Box& domain, const BcList& bc_list,
-             Array4<Real> const& p0_g, Real* m_bc_p_g, Real& pj,
-             const Real* gravity, const Real dx, const Real dy, const Real dz,
-             Array4<const int> const& bct_ilo,
-             Array4<const int> const& bct_ihi,
-             Array4<const int> const& bct_jlo,
-             Array4<const int> const& bct_jhi,
-             Array4<const int> const& bct_klo,
-             Array4<const int> const& bct_khi,
-             const int nlft, const int nrgt, const int nbot,
-             const int ntop, const int ndwn, const int nup,
-             const int nghost);
-
-void goto_100(const Box& sbx, const Box& domain, const BcList& bc_list,
-              Array4<Real> const& p0_g, Real* m_bc_p_g,
+void goto_60 (const Box& sbx, const Box& domain, const BcList& bc_list,
+              Array4<Real> const& p0_g, Real* m_bc_p_g, Real& pj,
+              const Real* gravity, const Real dx, const Real dy, const Real dz,
               Array4<const int> const& bct_ilo,
               Array4<const int> const& bct_ihi,
               Array4<const int> const& bct_jlo,
@@ -38,6 +26,18 @@ void goto_100(const Box& sbx, const Box& domain, const BcList& bc_list,
               const int ntop, const int ndwn, const int nup,
               const int nghost);
 
+void goto_100 (const Box& sbx, const Box& domain, const BcList& bc_list,
+               Array4<Real> const& p0_g, Real* m_bc_p_g,
+               Array4<const int> const& bct_ilo,
+               Array4<const int> const& bct_ihi,
+               Array4<const int> const& bct_jlo,
+               Array4<const int> const& bct_jhi,
+               Array4<const int> const& bct_klo,
+               Array4<const int> const& bct_khi,
+               const int nlft, const int nrgt, const int nbot,
+               const int ntop, const int ndwn, const int nup,
+               const int nghost);
+
 } // end namespace set_p0_aux
 
 
@@ -45,13 +45,13 @@ using namespace set_p0_aux;
 
 
 void
-mfix::set_p0(const Box& bx,
-             MFIter* mfi,
-             const int lev,
-             const Box& domain,
-             const Real xlen,
-             const Real ylen,
-             const Real zlen)
+mfix::set_p0 (const Box& bx,
+              MFIter* mfi,
+              const int lev,
+              const Box& domain,
+              const Real xlen,
+              const Real ylen,
+              const Real zlen)
 {
   Real dx = geom[lev].CellSize(0);
   Real dy = geom[lev].CellSize(1);
@@ -271,29 +271,29 @@ mfix::set_p0(const Box& bx,
 
 namespace set_p0_aux {
 
-void goto_60(const Box& sbx,
-             const Box& domain,
-             const BcList& bc_list,
-             Array4<Real> const& p0_g,
-             Real* m_bc_p_g,
-             Real& pj,
-             const Real* gravity,
-             const Real dx,
-             const Real dy,
-             const Real dz,
-             Array4<const int> const& bct_ilo,
-             Array4<const int> const& bct_ihi,
-             Array4<const int> const& bct_jlo,
-             Array4<const int> const& bct_jhi,
-             Array4<const int> const& bct_klo,
-             Array4<const int> const& bct_khi,
-             const int nlft,
-             const int nrgt,
-             const int nbot,
-             const int ntop,
-             const int ndwn,
-             const int nup,
-             const int nghost)
+void goto_60 (const Box& sbx,
+              const Box& domain,
+              const BcList& bc_list,
+              Array4<Real> const& p0_g,
+              Real* m_bc_p_g,
+              Real& pj,
+              const Real* gravity,
+              const Real dx,
+              const Real dy,
+              const Real dz,
+              Array4<const int> const& bct_ilo,
+              Array4<const int> const& bct_ihi,
+              Array4<const int> const& bct_jlo,
+              Array4<const int> const& bct_jhi,
+              Array4<const int> const& bct_klo,
+              Array4<const int> const& bct_khi,
+              const int nlft,
+              const int nrgt,
+              const int nbot,
+              const int ntop,
+              const int ndwn,
+              const int nup,
+              const int nghost)
 {
   const Real tolerance = std::numeric_limits<Real>::epsilon();
 
@@ -470,24 +470,24 @@ void goto_60(const Box& sbx,
   return;
 }
 
-void goto_100(const Box& sbx,
-              const Box& domain,
-              const BcList& bc_list,
-              Array4<Real> const& p0_g,
-              Real* m_bc_p_g,
-              Array4<const int> const& bct_ilo,
-              Array4<const int> const& bct_ihi,
-              Array4<const int> const& bct_jlo,
-              Array4<const int> const& bct_jhi,
-              Array4<const int> const& bct_klo,
-              Array4<const int> const& bct_khi,
-              const int nlft,
-              const int nrgt,
-              const int nbot,
-              const int ntop,
-              const int ndwn,
-              const int nup,
-              const int nghost)
+void goto_100 (const Box& sbx,
+               const Box& domain,
+               const BcList& bc_list,
+               Array4<Real> const& p0_g,
+               Real* m_bc_p_g,
+               Array4<const int> const& bct_ilo,
+               Array4<const int> const& bct_ihi,
+               Array4<const int> const& bct_jlo,
+               Array4<const int> const& bct_jhi,
+               Array4<const int> const& bct_klo,
+               Array4<const int> const& bct_khi,
+               const int nlft,
+               const int nrgt,
+               const int nbot,
+               const int ntop,
+               const int ndwn,
+               const int nup,
+               const int nghost)
 {
   const IntVect sbx_lo(sbx.loVect());
   const IntVect sbx_hi(sbx.hiVect());

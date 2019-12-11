@@ -1,6 +1,6 @@
-#include <mfix_init_fluid.hpp>
+#include <mfix_init_fluid.H>
 
-#include <mfix_calc_mu_g.hpp>
+#include <mfix_calc_mu_g.H>
 #include <ic_mod_F.H>
 #include <param_mod_F.H>
 #include <calc_cell_F.H>
@@ -9,11 +9,12 @@
 using namespace amrex;
 
 // Forward declarations
-void set_ic(const Box& sbx, const Box& domain, const Real dx, const Real dy,
-    const Real dz, FArrayBox& vel_g_fab);
+void set_ic (const Box& sbx, const Box& domain,
+             const Real dx, const Real dy, const Real dz,
+             FArrayBox& vel_g_fab);
 
-void init_helix(const Box& bx, const Box& domain, FArrayBox& vel_g_fab,
-    const Real dx, const Real dy, const Real dz);
+void init_helix (const Box& bx, const Box& domain, FArrayBox& vel_g_fab,
+                 const Real dx, const Real dy, const Real dz);
 
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 //                                                                      !
@@ -21,25 +22,23 @@ void init_helix(const Box& bx, const Box& domain, FArrayBox& vel_g_fab,
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
-void init_fluid(const Box& sbx,
-                const Box& bx,
-                const Box& domain,
-                const FArrayBox& ep_g_fab,
-                      FArrayBox& ro_g_fab,
-                      FArrayBox& trac_fab,
-                const FArrayBox& p_g,
-                      FArrayBox& vel_g_fab,
-                      FArrayBox& mu_g_fab,
-                const Real dx,
-                const Real dy,
-                const Real dz,
-                const Real xlength,
-                const Real ylength,
-                const Real zlength,
-                bool test_tracer_conservation)
+void init_fluid (const Box& sbx,
+                 const Box& bx,
+                 const Box& domain,
+                 const FArrayBox& ep_g_fab,
+                 FArrayBox& ro_g_fab,
+                 FArrayBox& trac_fab,
+                 const FArrayBox& p_g,
+                 FArrayBox& vel_g_fab,
+                 FArrayBox& mu_g_fab,
+                 const Real dx,
+                 const Real dy,
+                 const Real dz,
+                 const Real xlength,
+                 const Real ylength,
+                 const Real zlength,
+                 bool test_tracer_conservation)
 {
-
-
       // Set user specified initial conditions (IC)
       set_ic(sbx, domain, dx, dy, dz, vel_g_fab);
 
@@ -67,12 +66,12 @@ void init_fluid(const Box& sbx,
       calc_mu_g(bx, mu_g_fab);
 }
 
-void init_helix(const Box& bx,
-                const Box& domain,
-                FArrayBox& vel_g_fab,
-                const Real dx,
-                const Real dy,
-                const Real dz)
+void init_helix (const Box& bx,
+                 const Box& domain,
+                 FArrayBox& vel_g_fab,
+                 const Real dx,
+                 const Real dy,
+                 const Real dz)
 {
   Array4<Real> const& velocity = vel_g_fab.array();
 
@@ -130,12 +129,12 @@ void init_helix(const Box& bx,
   }
 }
 
-void init_periodic_vortices(const Box& bx,
-                            const Box& domain,
-                            FArrayBox& vel_g_fab,
-                            const Real dx,
-                            const Real dy,
-                            const Real dz)
+void init_periodic_vortices (const Box& bx,
+                             const Box& domain,
+                             FArrayBox& vel_g_fab,
+                             const Real dx,
+                             const Real dy,
+                             const Real dz)
 {
   const amrex::Real twopi = 2. * M_PI;
 
@@ -193,13 +192,13 @@ void init_periodic_vortices(const Box& bx,
 }
 
 
-void init_periodic_tracer(const Box& bx,
-                          const Box& domain,
-                          FArrayBox& vel_g_fab,
-                          FArrayBox& trac_fab,
-                          const Real dx,
-                          const Real dy,
-                          const Real dz)
+void init_periodic_tracer (const Box& bx,
+                           const Box& domain,
+                           FArrayBox& vel_g_fab,
+                           FArrayBox& trac_fab,
+                           const Real dx,
+                           const Real dy,
+                           const Real dz)
 {
     const amrex::Real twopi(2. * M_PI);
 
@@ -288,8 +287,8 @@ void init_periodic_tracer(const Box& bx,
 //  Subroutine: init_fluid_restart                                      !
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-void init_fluid_restart(const Box& bx,
-                        FArrayBox& mu_g_fab)
+void init_fluid_restart (const Box& bx,
+                         FArrayBox& mu_g_fab)
 {
   calc_mu_g(bx, mu_g_fab);
 }
@@ -301,12 +300,12 @@ void init_fluid_restart(const Box& bx,
 //!  Purpose: This module sets all the initial conditions.               !
 //!                                                                      !
 //!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-void set_ic(const Box& sbx,
-            const Box& domain,
-            const Real dx,
-            const Real dy,
-            const Real dz,
-            FArrayBox& vel_g_fab)
+void set_ic (const Box& sbx,
+             const Box& domain,
+             const Real dx,
+             const Real dy,
+             const Real dz,
+             FArrayBox& vel_g_fab)
 {
   const IntVect slo(sbx.loVect());
   const IntVect shi(sbx.hiVect());

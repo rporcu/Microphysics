@@ -28,7 +28,7 @@ contains
    !    horizontal pipe", Powder technology, 71, 239-250, 1992
    !
    !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   subroutine cfrelvel(particle_1, particle_2, VRN, VSLIP, NORM, dist_cc)
+   subroutine cfrelvel (particle_1, particle_2, VRN, VSLIP, NORM, dist_cc)
  
 
       !-----------------------------------------------

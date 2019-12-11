@@ -39,7 +39,7 @@ contains
    !
    ! Check whether interpolation stencil around x_i is valid
    !
-   function interp_stencil_is_valid ( x_i, x_0, dx, flags, flo, fhi ) result(res)
+   function interp_stencil_is_valid (x_i, x_0, dx, flags, flo, fhi) result(res)
 
       use amrex_ebcellflag_module, only: is_covered_cell
 

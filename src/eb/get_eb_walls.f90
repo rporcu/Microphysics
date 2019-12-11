@@ -5,7 +5,7 @@
 !  Author: J. Musser                                  Date: 05-FEB-17  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine mfix_get_walls(bcv, exists, normal, center, po_noParOut) &
+subroutine mfix_get_walls (bcv, exists, normal, center, po_noParOut) &
      bind(c,name='mfix_get_walls')
 
   use amrex_fort_module, only : rt => amrex_real
@@ -60,7 +60,7 @@ subroutine mfix_get_walls(bcv, exists, normal, center, po_noParOut) &
 
 end subroutine mfix_get_walls
 
-subroutine mfix_get_real_walls(bcv, exists, normal, center) &
+subroutine mfix_get_real_walls (bcv, exists, normal, center) &
      bind(c,name='mfix_get_real_walls')
 
   use amrex_fort_module, only : rt => amrex_real

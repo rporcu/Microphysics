@@ -568,10 +568,12 @@ void
 mfix::mfix_add_gravity_and_gp (Real dt)
 {
 #ifdef AMREX_USE_CUDA
-    bool notInLaunchRegionStatus = Gpu::notInLaunchRegion();
+    bool switchGpuLaunchRegion = false;
 
-    if(notInLaunchRegionStatus)
+    if(Gpu::notInLaunchRegion()) { 
+      switchGpuLaunchRegion = true;
       Gpu::setLaunchRegion(true);
+    }
 
     {
 #endif
@@ -609,8 +611,8 @@ mfix::mfix_add_gravity_and_gp (Real dt)
 #ifdef AMREX_USE_CUDA
     }
 
-    if(notInLaunchRegionStatus == true)
-      Gpu::setLaunchRegion(notInLaunchRegionStatus);
+    if(switchGpuLaunchRegion)
+      Gpu::setLaunchRegion(false);
 #endif
 }
 

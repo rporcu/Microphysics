@@ -65,7 +65,7 @@ contains
 ! Purpose: Getters for the boundary conditions values                  !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  integer(c_int) function get_bc_defined(pID) bind(C)
+  integer(c_int) function get_bc_defined (pID) bind(C)
     integer(c_int), intent(in) :: pID
     if(bc_defined(pID)) then
       get_bc_defined = 1
@@ -75,7 +75,7 @@ contains
     return
   end function get_bc_defined
 
-  subroutine get_bc_type(pID, c_string) bind(C)
+  subroutine get_bc_type (pID, c_string) bind(C)
     integer(c_int), intent(in) :: pID
     character(len=1, kind=c_char), intent(inout) :: c_string(16)
     integer :: N,I
@@ -86,53 +86,53 @@ contains
     c_string(N+1) = c_null_char
   end subroutine get_bc_type
 
-  real(rt) function get_bc_u_g(pID) bind(C)
+  real(rt) function get_bc_u_g (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_bc_u_g = bc_u_g(pID)
     return
   end function get_bc_u_g
 
-  real(rt) function get_bc_v_g(pID) bind(C)
+  real(rt) function get_bc_v_g (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_bc_v_g = bc_v_g(pID)
     return
   end function get_bc_v_g
 
-  real(rt) function get_bc_w_g(pID) bind(C)
+  real(rt) function get_bc_w_g (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_bc_w_g = bc_w_g(pID)
     return
   end function get_bc_w_g
 
-  real(rt) function get_bc_t_g(pID) bind(C)
+  real(rt) function get_bc_t_g (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_bc_t_g = bc_t_g(pID)
     return
   end function get_bc_t_g
 
-  real(rt) function get_bc_ep_g(pID) bind(C)
+  real(rt) function get_bc_ep_g (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_bc_ep_g = bc_ep_g(pID)
     return
   end function get_bc_ep_g
 
-  real(rt) function get_bc_p_g(pID) bind(C)
+  real(rt) function get_bc_p_g (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_bc_p_g = bc_p_g(pID)
     return
   end function get_bc_p_g
 
-  integer(c_int) function get_minf() bind(C)
+  integer(c_int) function get_minf () bind(C)
     get_minf = minf_
     return
   end function get_minf
 
-  integer(c_int) function get_pinf() bind(C)
+  integer(c_int) function get_pinf () bind(C)
     get_pinf = pinf_
     return
   end function get_pinf
 
-  integer(c_int) function get_pout() bind(C)
+  integer(c_int) function get_pout () bind(C)
     get_pout = pout_
     return
   end function get_pout
@@ -160,7 +160,7 @@ contains
 !                                                                      !
 ! Purpose: Function to set cyclic flags.                               !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  subroutine set_cyclic(cyc_x, cyc_y, cyc_z) &
+  subroutine set_cyclic (cyc_x, cyc_y, cyc_z) &
     bind(C, name="mfix_set_cyclic")
 
     integer, intent(in) :: cyc_x, cyc_y, cyc_z

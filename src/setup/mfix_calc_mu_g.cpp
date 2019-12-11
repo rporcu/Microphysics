@@ -1,10 +1,10 @@
-#include <mfix_calc_mu_g.hpp>
+#include <mfix_calc_mu_g.H>
 #include <eos_mod.H>
 #include <param_mod_F.H>
 #include <MFIX_FLUID_Parms.H>
 
-void calc_mu_g(const Box& bx,
-               FArrayBox& mu_g_fab)
+void calc_mu_g (const Box& bx,
+                FArrayBox& mu_g_fab)
 {
   Real mu_val;
 

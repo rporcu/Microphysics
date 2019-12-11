@@ -57,25 +57,25 @@ contains
 ! Purpose: Getters for the initial conditions values                   !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  real(rt) function get_ic_p_g(pID) bind(C)
+  real(rt) function get_ic_p_g (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_ic_p_g = ic_p_g(pID)
     return
   end function get_ic_p_g
 
-  real(rt) function get_ic_ep_g(pID) bind(C)
+  real(rt) function get_ic_ep_g (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_ic_ep_g = ic_ep_g(pID)
     return
   end function get_ic_ep_g
 
-  real(rt) function get_ic_ep_s(pID, solid_type) bind(C)
+  real(rt) function get_ic_ep_s (pID, solid_type) bind(C)
     integer(c_int), intent(in) :: pID, solid_type
     get_ic_ep_s = ic_ep_s(pID, solid_type)
     return
   end function get_ic_ep_s
 
-  subroutine get_ic_pack_type(pID, c_string) bind(C)
+  subroutine get_ic_pack_type (pID, c_string) bind(C)
     integer(c_int), intent(in) :: pID
     character(len=1, kind=c_char), intent(inout) :: c_string(16)
     integer :: N,I
@@ -86,7 +86,7 @@ contains
     c_string(N+1) = c_null_char
   end subroutine get_ic_pack_type
 
-  subroutine get_ic_dp_dist(pID, solid_type, c_string) bind(C)
+  subroutine get_ic_dp_dist (pID, solid_type, c_string) bind(C)
     integer(c_int), intent(in) :: pID, solid_type
     character(len=1, kind=c_char), intent(inout) :: c_string(16)
     integer :: N,I
@@ -97,31 +97,31 @@ contains
     c_string(N+1) = c_null_char
   end subroutine get_ic_dp_dist
 
-  real(rt) function get_ic_dp_mean(pID, solid_type) bind(C)
+  real(rt) function get_ic_dp_mean (pID, solid_type) bind(C)
     integer(c_int), intent(in) :: pID, solid_type
     get_ic_dp_mean = ic_dp_mean(pID, solid_type)
     return
   end function get_ic_dp_mean
 
-  real(rt) function get_ic_dp_std(pID, solid_type) bind(C)
+  real(rt) function get_ic_dp_std (pID, solid_type) bind(C)
     integer(c_int), intent(in) :: pID, solid_type
     get_ic_dp_std = ic_dp_std(pID, solid_type)
     return
   end function get_ic_dp_std
 
-  real(rt) function get_ic_dp_min(pID, solid_type) bind(C)
+  real(rt) function get_ic_dp_min (pID, solid_type) bind(C)
     integer(c_int), intent(in) :: pID, solid_type
     get_ic_dp_min = ic_dp_min(pID, solid_type)
     return
   end function get_ic_dp_min
 
-  real(rt) function get_ic_dp_max(pID, solid_type) bind(C)
+  real(rt) function get_ic_dp_max (pID, solid_type) bind(C)
     integer(c_int), intent(in) :: pID, solid_type
     get_ic_dp_max = ic_dp_max(pID, solid_type)
     return
   end function get_ic_dp_max
 
-  subroutine get_ic_ro_s_dist(pID, solid_type, c_string) bind(C)
+  subroutine get_ic_ro_s_dist (pID, solid_type, c_string) bind(C)
     integer(c_int), intent(in) :: pID, solid_type
     character(len=1, kind=c_char), intent(inout) :: c_string(16)
     integer :: N,I
@@ -132,25 +132,25 @@ contains
     c_string(N+1) = c_null_char
   end subroutine get_ic_ro_s_dist
 
-  real(rt) function get_ic_ro_s_mean(pID, solid_type) bind(C)
+  real(rt) function get_ic_ro_s_mean (pID, solid_type) bind(C)
     integer(c_int), intent(in) :: pID, solid_type
     get_ic_ro_s_mean = ic_ro_s_mean(pID, solid_type)
     return
   end function get_ic_ro_s_mean
 
-  real(rt) function get_ic_ro_s_std(pID, solid_type) bind(C)
+  real(rt) function get_ic_ro_s_std (pID, solid_type) bind(C)
     integer(c_int), intent(in) :: pID, solid_type
     get_ic_ro_s_std = ic_ro_s_std(pID, solid_type)
     return
   end function get_ic_ro_s_std
 
-  real(rt) function get_ic_ro_s_min(pID, solid_type) bind(C)
+  real(rt) function get_ic_ro_s_min (pID, solid_type) bind(C)
     integer(c_int), intent(in) :: pID, solid_type
     get_ic_ro_s_min = ic_ro_s_min(pID, solid_type)
     return
   end function get_ic_ro_s_min
 
-  real(rt) function get_ic_ro_s_max(pID, solid_type) bind(C)
+  real(rt) function get_ic_ro_s_max (pID, solid_type) bind(C)
     integer(c_int), intent(in) :: pID, solid_type
     get_ic_ro_s_max = ic_ro_s_max(pID, solid_type)
     return
@@ -163,73 +163,73 @@ contains
 ! Purpose: Getters for the initial conditions values                   !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  real(rt) function get_ic_u_g(pID) bind(C)
+  real(rt) function get_ic_u_g (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_ic_u_g = ic_u_g(pID)
     return
   end function get_ic_u_g
 
-  real(rt) function get_ic_v_g(pID) bind(C)
+  real(rt) function get_ic_v_g (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_ic_v_g = ic_v_g(pID)
     return
   end function get_ic_v_g
 
-  real(rt) function get_ic_w_g(pID) bind(C)
+  real(rt) function get_ic_w_g (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_ic_w_g = ic_w_g(pID)
     return
   end function get_ic_w_g
 
-  real(rt) function get_ic_x_w(pID) bind(C)
+  real(rt) function get_ic_x_w (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_ic_x_w = ic_x_w(pID)
     return
   end function get_ic_x_w
 
-  real(rt) function get_ic_y_s(pID) bind(C)
+  real(rt) function get_ic_y_s (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_ic_y_s = ic_y_s(pID)
     return
   end function get_ic_y_s
 
-  real(rt) function get_ic_z_b(pID) bind(C)
+  real(rt) function get_ic_z_b (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_ic_z_b = ic_z_b(pID)
     return
   end function get_ic_z_b
 
-  real(rt) function get_ic_x_e(pID) bind(C)
+  real(rt) function get_ic_x_e (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_ic_x_e = ic_x_e(pID)
     return
   end function get_ic_x_e
 
-  real(rt) function get_ic_y_n(pID) bind(C)
+  real(rt) function get_ic_y_n (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_ic_y_n = ic_y_n(pID)
     return
   end function get_ic_y_n
 
-  real(rt) function get_ic_z_t(pID) bind(C)
+  real(rt) function get_ic_z_t (pID) bind(C)
     integer(c_int), intent(in) :: pID
     get_ic_z_t = ic_z_t(pID)
     return
   end function get_ic_z_t
 
-  real(rt) function get_ic_u_s(pID, solid_type) bind(C)
+  real(rt) function get_ic_u_s (pID, solid_type) bind(C)
     integer(c_int), intent(in) :: pID, solid_type
     get_ic_u_s = ic_u_s(pID, solid_type)
     return
   end function get_ic_u_s
 
-  real(rt) function get_ic_v_s(pID, solid_type) bind(C)
+  real(rt) function get_ic_v_s (pID, solid_type) bind(C)
     integer(c_int), intent(in) :: pID, solid_type
     get_ic_v_s = ic_v_s(pID, solid_type)
     return
   end function get_ic_v_s
 
-  real(rt) function get_ic_w_s(pID, solid_type) bind(C)
+  real(rt) function get_ic_w_s (pID, solid_type) bind(C)
     integer(c_int), intent(in) :: pID, solid_type
     get_ic_w_s = ic_w_s(pID, solid_type)
     return
@@ -242,7 +242,7 @@ contains
 ! Purpose: Return if a IC region has been defined based on coordinates !
 ! defined in the input deck.                                           !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  logical function ic_defined(icv)
+  logical function ic_defined (icv)
     use param, only: is_defined
     integer, intent(in) :: icv
 
@@ -252,7 +252,7 @@ contains
          is_defined(ic_z_b(icv)) .or. is_defined(ic_z_t(icv))
    end function ic_defined
 
-  integer(c_int) function ic_defined_cpp(icv) bind(C)
+  integer(c_int) function ic_defined_cpp (icv) bind(C)
     use param, only: is_defined
     integer(c_int), intent(in) :: icv
 
@@ -271,7 +271,7 @@ contains
 !  Purpose: Echo user input for IC regions.                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine write_out_ic(unit_out, dx, dy, dz)
+   subroutine write_out_ic (unit_out, dx, dy, dz)
 
      use calc_cell_module, only: calc_cell_ic
      use param, only: zero, is_defined

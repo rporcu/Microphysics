@@ -12,12 +12,12 @@ module set_bc_type_module
 !  Author: J. Musser                                  Date: 05-FEB-17  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-   subroutine set_bc_type(bc_ilo_type, bc_ihi_type, &
-                          bc_jlo_type, bc_jhi_type, &
-                          bc_klo_type, bc_khi_type, &
-                          domlo, domhi, dx, dy, dz, &
-                          xlength, ylength, zlength,&
-                          ng) &
+   subroutine set_bc_type (bc_ilo_type, bc_ihi_type, &
+                           bc_jlo_type, bc_jhi_type, &
+                           bc_klo_type, bc_khi_type, &
+                           domlo, domhi, dx, dy, dz, &
+                           xlength, ylength, zlength,&
+                           ng) &
                bind(c,name='set_bc_type')
 
       use bc, only: bc_defined, bc_type, bc_plane
@@ -165,7 +165,7 @@ module set_bc_type_module
 !  Author: J. Musser                                  Date: 05-FEB-17  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-subroutine set_bc_mod(pID, pType, pLo, pHi, pLoc, pPg, pVel) &
+subroutine set_bc_mod (pID, pType, pLo, pHi, pLoc, pPg, pVel) &
      bind(c,name='set_bc_mod')
 
   use bc, only: bc_defined
@@ -308,7 +308,7 @@ end subroutine set_bc_mod
 !  Author: J. Musser                                  Date: 05-FEB-17  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-subroutine set_bc_mod_add_mi(pPlane, xLo, yLo, zLo, xHi, yHi, zHi, pPg, pVel) &
+subroutine set_bc_mod_add_mi (pPlane, xLo, yLo, zLo, xHi, yHi, zHi, pPg, pVel) &
      bind(c,name='set_bc_mod_add_mi')
 
   use bc, only: bc_defined

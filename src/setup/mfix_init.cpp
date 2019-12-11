@@ -4,7 +4,7 @@
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
 #include <bc_mod_F.H>
-#include <mfix_init_fluid.hpp>
+#include <mfix_init_fluid.H>
 
 #include <AMReX_EBAmrUtil.H>
 #include <AMReX_BC_TYPES.H>
@@ -17,7 +17,7 @@
 #include <MFIX_FLUID_Parms.H>
 
 void
-mfix::InitParams()
+mfix::InitParams ()
 {
     if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
 
@@ -324,7 +324,8 @@ mfix::InitParams()
 
 //! Tag using each EB level's volfrac. This requires that the `eb_levels` have
 //! already been build.
-void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow){
+void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow)
+{
     if (ooo_debug) amrex::Print() << "ErrorEst" << std::endl;
     //___________________________________________________________________________
     // Tag all cells with volfrac \in (0, 1)
@@ -335,7 +336,7 @@ void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow){
 }
 
 
-void mfix::Init( Real time)
+void mfix::Init (Real time)
 {
     if (ooo_debug) amrex::Print() << "Init" << std::endl;
     InitIOChkData();
@@ -508,7 +509,8 @@ void mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 
 
 void mfix::MakeNewLevelFromScratch (int lev, Real time,
-                                    const BoxArray& new_grids, const DistributionMapping& new_dmap)
+                                    const BoxArray& new_grids,
+                                    const DistributionMapping& new_dmap)
 {
     if (ooo_debug) amrex::Print() << "MakeNewLevelFromScratch" << std::endl;
     if (m_verbose > 0)
@@ -543,7 +545,8 @@ void mfix::MakeNewLevelFromScratch (int lev, Real time,
 
 
 void mfix::ReMakeNewLevelFromScratch (int lev,
-                                 const BoxArray & new_grids, const DistributionMapping & new_dmap)
+                                      const BoxArray & new_grids,
+                                      const DistributionMapping & new_dmap)
 {
     if (ooo_debug) amrex::Print() << "ReMakeNewLevelFromScratch" << std::endl;
     SetBoxArray(lev, new_grids);
@@ -578,7 +581,7 @@ void mfix::check_data ()
 }
 
 
-void mfix::InitLevelData(Real time)
+void mfix::InitLevelData (Real time)
 {
     if (ooo_debug) amrex::Print() << "InitLevelData" << std::endl;
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
@@ -628,7 +631,7 @@ void mfix::InitLevelData(Real time)
                                                          dragx,dragy,dragz,phase,state};
 
         pc->InitNRandomPerCell(n_per_cell, pdata);
-        pc->WriteAsciiFileForInit ("random_particles");
+        pc->WriteAsciiFileForInit("random_particles");
         exit(0);
 
       } else if (particle_init_type == "Auto") {
@@ -674,7 +677,7 @@ void mfix::InitLevelData(Real time)
 }
 
 void
-mfix::PostInit(Real& dt, Real time, int restart_flag, Real stop_time)
+mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
 
@@ -824,7 +827,7 @@ mfix::MakeBCArrays ()
 }
 
 void
-mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
+mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "mfix_init_fluid" << std::endl;
 
@@ -932,7 +935,7 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
 }
 
 void
-mfix::mfix_set_bc0()
+mfix::mfix_set_bc0 ()
 {
     if (ooo_debug) amrex::Print() << "mfix_set_bc0" << std::endl;
     for (int lev = 0; lev < nlev; lev++)
@@ -959,12 +962,12 @@ mfix::mfix_set_bc0()
    int extrap_dir_bcs = 0;
    mfix_set_velocity_bcs(time,vel_g,extrap_dir_bcs);
 
-  for (int lev = 0; lev < nlev; lev++)
+   for (int lev = 0; lev < nlev; lev++)
      vel_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
-mfix::mfix_set_p0()
+mfix::mfix_set_p0 ()
 {
   if (ooo_debug) amrex::Print() << "mfix_set_p0" << std::endl;
   Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
@@ -1016,7 +1019,7 @@ mfix::mfix_set_p0()
    }
 }
 
-void mfix::mfix_set_ls_near_inflow()
+void mfix::mfix_set_ls_near_inflow ()
 {
     if (ooo_debug) amrex::Print() << "mfix_ls_near_inflow" << std::endl;
     // This function is a bit Wonky... TODO: figure out why we need + nghost
@@ -1055,13 +1058,13 @@ void mfix::mfix_set_ls_near_inflow()
         int n = levelset__refinement;
         {
             Box domain(geom[lev].Domain());
-            const Real * dx   = geom[lev].CellSize();
-            MultiFab * ls_phi = level_sets[lev_ref].get();
+            const Real* dx   = geom[lev].CellSize();
+            MultiFab* ls_phi = level_sets[lev_ref].get();
 
             // Don't tile this
-            for (MFIter mfi(* ls_phi); mfi.isValid(); ++mfi)
+            for (MFIter mfi(*ls_phi); mfi.isValid(); ++mfi)
             {
-                FArrayBox & ls_fab = (* ls_phi)[mfi];
+                FArrayBox& ls_fab = (*ls_phi)[mfi];
 
                 set_ls_inflow( lev, ls_fab, domain, &levelset_nghost, n, dx);
             }
@@ -1072,15 +1075,15 @@ void mfix::mfix_set_ls_near_inflow()
         n = 1;
         {
             Box domain(geom[lev].Domain());
-            const Real * dx   = geom[lev].CellSize();
-            MultiFab * ls_phi = level_sets[lev].get();
+            const Real* dx   = geom[lev].CellSize();
+            MultiFab* ls_phi = level_sets[lev].get();
 
             // Don't tile this
-            for (MFIter mfi(* ls_phi); mfi.isValid(); ++mfi)
+            for (MFIter mfi(*ls_phi); mfi.isValid(); ++mfi)
             {
-                FArrayBox & ls_fab = (* ls_phi)[mfi];
+                FArrayBox& ls_fab = (* ls_phi)[mfi];
 
-                set_ls_inflow( lev, ls_fab, domain, &levelset_nghost, n, dx);
+                set_ls_inflow(lev, ls_fab, domain, &levelset_nghost, n, dx);
             }
         }
     }

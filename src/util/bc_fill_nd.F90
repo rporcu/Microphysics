@@ -9,7 +9,7 @@ module bc_fill_module
 
 contains
 
-  subroutine phifill(phi,phi_lo,phi_hi,domlo,domhi,delta,xlo,time,bc) &
+  subroutine phifill (phi,phi_lo,phi_hi,domlo,domhi,delta,xlo,time,bc) &
        bind(C, name="phifill")
 
     use amrex_fort_module, only : bl_spacedim, amrex_real

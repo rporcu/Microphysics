@@ -5,11 +5,11 @@
 !           is acting in the negative y-direction.                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine set_gp0(domlo, domhi, gp0, ro_g0, gravity, &
-                   dx, dy, dz, xlength, ylength, zlength, &
-                   bct_ilo, bct_ihi, bct_jlo, bct_jhi, &
-                   bct_klo, bct_khi, ng, delp_dir_in, delp) &
-                   bind(C, name="set_gp0")
+subroutine set_gp0 (domlo, domhi, gp0, ro_g0, gravity, &
+                    dx, dy, dz, xlength, ylength, zlength, &
+                    bct_ilo, bct_ihi, bct_jlo, bct_jhi, &
+                    bct_klo, bct_khi, ng, delp_dir_in, delp) &
+                    bind(C, name="set_gp0")
 
    use bc       , only: dim_bc, bc_type, bc_p_g, bc_defined
    use bc       , only: pinf_, pout_, minf_

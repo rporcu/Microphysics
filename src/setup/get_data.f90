@@ -10,7 +10,7 @@ contains
 !  Purpose: read and verify input data, open files                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine get_data(mfix_dat)
+  subroutine get_data (mfix_dat)
 
     use init_namelist_module, only: init_namelist
     use read_namelist_module, only: read_namelist

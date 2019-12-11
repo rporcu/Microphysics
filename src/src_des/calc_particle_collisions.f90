@@ -1,4 +1,5 @@
-   subroutine calc_particle_collisions( rparticles, nrp, gparticles, ngp, nbor_list, size_nl, tow, fc, dtsolid, ncoll ) &
+   subroutine calc_particle_collisions (rparticles, nrp, gparticles, ngp, &
+                                        nbor_list, size_nl, tow, fc, dtsolid, ncoll) &
       bind(C, name="calc_particle_collisions")
 
       use amrex_fort_module, only : rt => amrex_real
@@ -191,7 +192,7 @@
       !  purpose: print overlap warning messages.                            !
       !                                                                      !
       !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine print_excess_overlap
+      subroutine print_excess_overlap ()
 
          if(overlap_n > flag_overlap*radiusll .or.                  &
               overlap_n > flag_overlap*radiusii) then

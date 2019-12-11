@@ -4,9 +4,9 @@ namespace set_ls_inflow_aux {
 
 AMREX_GPU_HOST_DEVICE
 bool
-is_equal_to_any(const int bc,
-                const int* bc_types,
-                const int size)
+is_equal_to_any (const int bc,
+                 const int* bc_types,
+                 const int size)
 {
   for(int i(0); i < size; ++i)
   {
@@ -21,12 +21,12 @@ is_equal_to_any(const int bc,
 using namespace set_ls_inflow_aux;
 
 void 
-mfix::set_ls_inflow(const int lev,
-                    FArrayBox& ls_phi_fab,
-                    const Box& domain,
-                    const int* ng,
-                    const int& nref,
-                    const Real* dx)
+mfix::set_ls_inflow (const int lev,
+                     FArrayBox& ls_phi_fab,
+                     const Box& domain,
+                     const int* ng,
+                     const int& nref,
+                     const Real* dx)
 {
   const Real offset(1.e-8);
 

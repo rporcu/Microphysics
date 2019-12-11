@@ -11,17 +11,17 @@ module des_time_march_module
    ! warning at compile time
    interface
 
-      subroutine usr0_des()
+      subroutine usr0_des ()
       end subroutine usr0_des
 
-      subroutine usr1_des()
+      subroutine usr1_des ()
       end subroutine usr1_des
 
    end interface
 
 contains
 
-   subroutine des_init_time_loop ( tstart, dt, nsubsteps, subdt) &
+   subroutine des_init_time_loop (tstart, dt, nsubsteps, subdt) &
         bind(C, name="des_init_time_loop")
 
       use discretelement,  only: dtsolid
@@ -47,7 +47,7 @@ contains
 
    end subroutine des_init_time_loop
 
-   subroutine call_usr2_des( np, particles ) &
+   subroutine call_usr2_des (np, particles) &
         bind(c, name="call_usr2_des")
 
       use particle_mod,   only: particle_t
@@ -59,7 +59,7 @@ contains
 
    end subroutine call_usr2_des
 
-   subroutine call_usr3_des( np, particles ) &
+   subroutine call_usr3_des (np, particles) &
         bind(c, name="call_usr3_des")
 
       use particle_mod,   only: particle_t

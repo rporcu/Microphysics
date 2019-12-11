@@ -23,7 +23,6 @@ subroutine set_lsd_collision_coefficients ( nphase_in,                 &
 
    implicit none
 
-
    integer, parameter :: dim_lm = dim_m+dim_m*(dim_m-1)/2;
 
    integer(c_int), intent(in   ) :: nphase_in

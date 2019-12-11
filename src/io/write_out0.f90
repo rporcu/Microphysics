@@ -6,7 +6,7 @@
 !  Purpose: Echo user input.                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine write_out0(time, dx, dy, dz, xlength, ylength, zlength, domlo, domhi) &
+      subroutine write_out0 (time, dx, dy, dz, xlength, ylength, zlength, domlo, domhi) &
          bind(C, name="write_out0")
 
       use amrex_fort_module, only : rt => amrex_real
@@ -73,7 +73,7 @@
 !  Purpose: To write a table of DX, DY, DZ, and cell wall locations    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine write_table(legend, SCALAR, DIST_MIN, LSTART, LEND)
+      subroutine write_table (legend, SCALAR, DIST_MIN, LSTART, LEND)
 
 !-----------------------------------------------
 !   M o d u l e s

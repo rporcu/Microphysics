@@ -78,7 +78,7 @@
 !  Purpose: Calculate the cross product of two 3D vectors.            !
 !                                                                     !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      FUNCTION DES_CROSSPRDCT(XX,YY)
+      FUNCTION DES_CROSSPRDCT (XX,YY)
 
       implicit none
 

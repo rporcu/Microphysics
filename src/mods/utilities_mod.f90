@@ -14,7 +14,7 @@ CONTAINS
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
-      logical FUNCTION mfix_isnan(x)
+      logical FUNCTION mfix_isnan (x)
 
 !-----------------------------------------------
 ! Dummy arguments
@@ -195,7 +195,7 @@ CONTAINS
 !  Purpose: change lowercase characters to uppercase in input line     C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE MAKE_UPPER_CASE(LINE_STRING, MAXCOL)
+      SUBROUTINE MAKE_UPPER_CASE (LINE_STRING, MAXCOL)
 
       IMPLICIT NONE
 
@@ -239,7 +239,7 @@ CONTAINS
 !  Purpose: replace tab characters with space                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE REPLACE_TAB(LINE_STRING, MAXCOL)
+      SUBROUTINE REPLACE_TAB (LINE_STRING, MAXCOL)
 
       IMPLICIT NONE
 

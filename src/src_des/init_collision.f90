@@ -4,13 +4,13 @@
 !  Purpose: DES - allocating DES arrays                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine init_collision(min_dp_in, min_ro_in,  &
-     &                    max_dp_in, max_ro_in,  &
-     &                    avg_dp_in, avg_ro_in,  &
-     &                    tcoll_ratio,           &
-     &                    etan_out,  etan_w_out, &
-     &                    etat_out, etat_w_out, &
-     &                    neighborhood ) &
+subroutine init_collision (min_dp_in, min_ro_in,  &
+     &                     max_dp_in, max_ro_in,  &
+     &                     avg_dp_in, avg_ro_in,  &
+     &                     tcoll_ratio,           &
+     &                     etan_out,  etan_w_out, &
+     &                     etat_out, etat_w_out, &
+     &                     neighborhood ) &
      bind(C, name="init_collision")
 
   use amrex_fort_module, only : rt => amrex_real
@@ -100,7 +100,7 @@ contains
       & des_en_input, des_en_wall_input, &
       & des_etat_fac, des_etat_w_fac, dtsolid
 
-  integer      :: m, l, lc
+  integer  :: m, l, lc
   real(rt) :: tcoll, tcoll_tmp
   real(rt) :: mass_m, mass_l, mass_eff
   real(rt) :: en

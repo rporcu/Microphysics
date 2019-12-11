@@ -107,11 +107,11 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
     const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
 
 #ifdef AMREX_USE_CUDA
-    bool switch_GPU_launch(false);
+    bool switchGpuLaunchRegion = false;
 
     if(Gpu::notInLaunchRegion())
     {
-      switch_GPU_launch = true;
+      switchGpuLaunchRegion = true;
       Gpu::setLaunchRegion(true);
     }
 #endif
@@ -132,7 +132,7 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
         });   
 
 #ifdef AMREX_USE_CUDA
-    if(switch_GPU_launch)
+    if(switchGpuLaunchRegion)
       Gpu::setLaunchRegion(false);
 #endif
 
@@ -150,11 +150,11 @@ mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local)
     const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
 
 #ifdef AMREX_USE_CUDA
-    bool switch_GPU_launch(false);
+    bool switchGpuLaunchRegion = false;
 
     if(Gpu::notInLaunchRegion())
     {
-      switch_GPU_launch = true;
+      switchGpuLaunchRegion = true;
       Gpu::setLaunchRegion(true);
     }
 #endif
@@ -177,7 +177,7 @@ mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local)
         });   
 
 #ifdef AMREX_USE_CUDA
-    if(switch_GPU_launch)
+    if(switchGpuLaunchRegion)
       Gpu::setLaunchRegion(false);
 #endif
 

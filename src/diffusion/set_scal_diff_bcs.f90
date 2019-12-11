@@ -6,8 +6,8 @@
    ! the user-provided BCs are uniform, and then return a single BC type for
    ! each domain wall.
    !
-   subroutine set_scal_diff_bc ( bc_lo, bc_hi, domlo, domhi, ng, bct_ilo, bct_ihi, &
-        & bct_jlo, bct_jhi, bct_klo, bct_khi)  bind(C)
+   subroutine set_scal_diff_bc (bc_lo, bc_hi, domlo, domhi, ng, bct_ilo, bct_ihi, &
+                              & bct_jlo, bct_jhi, bct_klo, bct_khi)  bind(C)
 
       use amrex_lo_bctypes_module
       use bc

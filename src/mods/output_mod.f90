@@ -23,7 +23,7 @@ contains
   !......................................................................!
   !                                                                      !
   !......................................................................!
-  integer function newUnit(punit)
+  integer function newUnit (punit)
 
     integer, intent(in   ), optional :: punit
 
