@@ -337,7 +337,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
 
     if (explicit_diffusion_pred == 1)
     {
-        mfix_set_velocity_bcs(time, vel_go, 0);
+        //mfix_set_velocity_bcs(time, vel_go, 0);
         diffusion_op->ComputeDivTau(divtau_old, vel_go, ro_g, ep_g, mu_g);
 
         // mfix_set_tracer_bcs (time, trac_o);
