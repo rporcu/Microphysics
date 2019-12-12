@@ -540,10 +540,10 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     for (int lev = 0; lev < nlev; lev++)
         MultiFab::Multiply(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
 
-    mfix_set_density_bcs(time, ro_g);
-    mfix_set_scalar_bcs(time, trac, mu_g);
+    //mfix_set_density_bcs(time, ro_g);
+    //mfix_set_scalar_bcs(time, trac, mu_g);
 
-    mfix_set_velocity_bcs(new_time, vel_g, 0);
+    //mfix_set_velocity_bcs(new_time, vel_g, 0);
     diffusion_op->diffuse_velocity(vel_g, ep_g, mu_g, 0.5*dt);
 
     // mfix_set_tracer_bcs (new_time, trac, 0);
