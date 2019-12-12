@@ -415,7 +415,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
 
     mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
 
-    mfix_set_velocity_bcs(new_time, vel_g, 0);
+    //mfix_set_velocity_bcs(new_time, vel_g, 0);
 }
 
 //
