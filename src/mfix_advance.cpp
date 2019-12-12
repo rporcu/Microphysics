@@ -2,16 +2,7 @@
 #include <mfix_F.H>
 #include <mfix.H>
 
-#include <AMReX_REAL.H>
-#include <AMReX_BLFort.H>
-#include <AMReX_SPACE.H>
-#include <AMReX_BC_TYPES.H>
-#include <AMReX_Box.H>
 #include <AMReX_VisMF.H>
-#include <AMReX_MultiFab.H>
-#include <AMReX_Array.H>
-#include <AMReX_BLassert.H>
-
 #include <MFIX_MFHelpers.H>
 #include <MFIX_DEM_Parms.H>
 

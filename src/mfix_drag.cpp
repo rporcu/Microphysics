@@ -1,4 +1,3 @@
-#include <mfix_F.H>
 #include <mfix.H>
 #include <mfix_des_K.H>
 #include <mfix_drag_K.H>
