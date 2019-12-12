@@ -110,7 +110,6 @@ public:
                           amrex::Real gravity[3],
                           amrex::EBFArrayBoxFactory * ebfactory,
                           const amrex::MultiFab * ls_phi,
-                          const amrex::iMultiFab * ls_valid,
                           const int ls_refinement,
                           amrex::MultiFab * cost,
                           std::string & knapsack_weight_type,

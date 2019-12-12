@@ -596,6 +596,7 @@ mfix::RegridLevelSetArray (int a_lev)
            int ng = level_sets[a_lev]->nGrow();
            const Periodicity& period = geom[a_lev].periodicity();
            new_level_set->define(nd_ba, dm, nc, ng);
+           new_level_set->setVal(0.0);
            new_level_set->copy(*level_sets[a_lev], 0, 0, nc, 0, ng, period);
        }
 
@@ -623,10 +624,12 @@ mfix::RegridLevelSetArray (int a_lev)
                int ng = level_sets[a_lev+1]->nGrow();
                const Periodicity& period = geom[a_lev].periodicity();
                new_level_set->define(ref_nd_ba, dm, nc, ng);
+               new_level_set->setVal(0.0);
                new_level_set->copy(*level_sets[a_lev+1], 0, 0, nc, 0, ng, period);
            }
 
            level_sets[a_lev+1] = std::move(new_level_set);
+
        }
    }
 }

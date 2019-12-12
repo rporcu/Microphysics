@@ -73,18 +73,12 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
             int ilev = 0;
 
             const MultiFab* ls_data = level_sets[1].get();
-            iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
-                               ls_data->nComp(), ls_data->nGrow());
-
-            // Consider all values as valid
-            ls_valid.setVal(1);
-            ls_valid.FillBoundary(geom[ilev].periodicity());
 
             if (!test_tracer_conservation)
               pc->EvolveParticles(ilev, nstep, dt, time,
                                   mfix::gravity,
                                   particle_ebfactory[ilev].get(),
-                                  ls_data, & ls_valid, levelset__refinement,
+                                  ls_data, levelset__refinement,
                                   particle_cost[ilev].get(), knapsack_weight_type,
                                   nsubsteps);
         }
@@ -96,18 +90,12 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
             for (int lev = 0; lev < nlev; lev ++ )
             {
                 const MultiFab* ls_data = level_sets[lev].get();
-                iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
-                                   ls_data->nComp(), ls_data->nGrow());
-
-                // Consider all values as valid
-                ls_valid.setVal(1);
-                ls_valid.FillBoundary(geom[lev].periodicity());
 
                 if (!test_tracer_conservation)
                 pc->EvolveParticles(lev, nstep, dt, time,
                                     mfix::gravity,
                                     particle_ebfactory[lev].get(),
-                                    ls_data, & ls_valid, 1,
+                                    ls_data, 1,
                                     particle_cost[lev].get(), knapsack_weight_type,
                                     nsubsteps);
             }
