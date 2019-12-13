@@ -414,17 +414,6 @@ void mfix::Init (Real time)
 
     mfix_set_cyclic(&cyc_x, &cyc_y, &cyc_z);
 
-    // Since these involving writing to output files we only do these on the IOProcessor
-    if ( ParallelDescriptor::IOProcessor() )
-    {
-       // Write the initial part of the standard output file
-       write_out0(&time, &dx, &dy, &dz, &xlen, &ylen, &zlen,
-                  domain.loVect(), domain.hiVect());
-
-       // Write the initial part of the special output file(s)
-       write_usr0();
-    }
-
 
     for (int lev = 0; lev < nlev; lev++)
         mfix_set_bc_type(lev);

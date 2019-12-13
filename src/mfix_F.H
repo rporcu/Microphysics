@@ -17,15 +17,6 @@ extern "C"
 {
 #endif
 
-    void mfix_add_argument (char* fname, int* nlen);
-
-    void write_out0 (amrex::Real* time,
-                     amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-                     amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-                     const int* domlo, const int* domhi);
-
-    void write_usr0 ();
-
     void mfix_get_data (int* name_len, const char *cmfix_dat);
 
     void check_inputs ();

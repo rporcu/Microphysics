@@ -13,6 +13,4 @@ target_sources( mfixcore
    usr3.f90
    usr3_des.f90
    usr_mod.f90
-   write_usr0.f90
-   write_usr1.f90
    )
