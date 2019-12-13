@@ -1,12 +1,7 @@
-#include <mfix_F.H>
-#include <mfix_eb_F.H>
 #include <mfix.H>
 #include "mfix_util_F.H"
-#include <param_mod_F.H>
 #include <bc_mod_F.H>
 
-#include <AMReX_BC_TYPES.H>
-#include <AMReX_Box.H>
 #include <AMReX_FillPatchUtil.H>
 #include <MFIXParticleContainer.H>
 #include <MFIX_MFHelpers.H>

@@ -2,16 +2,7 @@
 #include <mfix_F.H>
 #include <mfix.H>
 
-#include <AMReX_REAL.H>
-#include <AMReX_BLFort.H>
-#include <AMReX_SPACE.H>
-#include <AMReX_BC_TYPES.H>
-#include <AMReX_Box.H>
 #include <AMReX_VisMF.H>
-#include <AMReX_MultiFab.H>
-#include <AMReX_Array.H>
-#include <AMReX_BLassert.H>
-
 #include <MFIX_MFHelpers.H>
 #include <MFIX_DEM_Parms.H>
 
@@ -47,9 +38,9 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
     }
 
     // Fill ghost nodes and reimpose boundary conditions
-    mfix_set_velocity_bcs(time, vel_g, 0);
+    //mfix_set_velocity_bcs(time, vel_g, 0);
     mfix_set_density_bcs(time, ro_g);
-    mfix_set_scalar_bcs(time, trac, mu_g);
+    //mfix_set_scalar_bcs(time, trac, mu_g);
 
     //
     // Start loop: if we are not seeking a steady state solution,
@@ -337,7 +328,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
 
     if (explicit_diffusion_pred == 1)
     {
-        mfix_set_velocity_bcs(time, vel_go, 0);
+        //mfix_set_velocity_bcs(time, vel_go, 0);
         diffusion_op->ComputeDivTau(divtau_old, vel_go, ro_g, ep_g, mu_g);
 
         // mfix_set_tracer_bcs (time, trac_o);
@@ -415,7 +406,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
 
     mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
 
-    mfix_set_velocity_bcs(new_time, vel_g, 0);
+    //mfix_set_velocity_bcs(new_time, vel_g, 0);
 }
 
 //
@@ -540,10 +531,10 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     for (int lev = 0; lev < nlev; lev++)
         MultiFab::Multiply(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
 
-    mfix_set_density_bcs(time, ro_g);
-    mfix_set_scalar_bcs(time, trac, mu_g);
+    //mfix_set_density_bcs(time, ro_g);
+    //mfix_set_scalar_bcs(time, trac, mu_g);
 
-    mfix_set_velocity_bcs(new_time, vel_g, 0);
+    //mfix_set_velocity_bcs(new_time, vel_g, 0);
     diffusion_op->diffuse_velocity(vel_g, ep_g, mu_g, 0.5*dt);
 
     // mfix_set_tracer_bcs (new_time, trac, 0);
@@ -561,7 +552,7 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
 
     mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
 
-    mfix_set_velocity_bcs(new_time, vel_g, 0);
+    //mfix_set_velocity_bcs(new_time, vel_g, 0);
 }
 
 void

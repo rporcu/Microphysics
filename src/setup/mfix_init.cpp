@@ -7,9 +7,6 @@
 #include <mfix_init_fluid.H>
 
 #include <AMReX_EBAmrUtil.H>
-#include <AMReX_BC_TYPES.H>
-#include <AMReX_Box.H>
-#include <AMReX_EBFabFactory.H>
 #include <diffusion_F.H>
 
 #include <MFIX_BC_Parms.H>
