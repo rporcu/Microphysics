@@ -39,7 +39,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
     // Fill ghost nodes and reimpose boundary conditions
     //mfix_set_velocity_bcs(time, vel_g, 0);
-    //mfix_set_density_bcs(time, ro_g);
+    mfix_set_density_bcs(time, ro_g);
     //mfix_set_scalar_bcs(time, trac, mu_g);
 
     //
