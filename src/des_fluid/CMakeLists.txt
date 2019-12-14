@@ -16,5 +16,8 @@ target_sources( mfixcore
    MFIX_PC_Init.cpp
    MFIX_PC_RemoveOutOfRange.cpp
    MFIX_PC_Replicate.cpp
+   mfix_calc_particle_beta.cpp
+   mfix_calc_volume_fraction.cpp
+   mfix_drag.cpp
    )
 

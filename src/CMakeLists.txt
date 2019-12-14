@@ -29,13 +29,7 @@ target_include_directories(mfixcore
 # IMPORTANT: DO NOT ADD main.cpp HERE!
 target_sources(mfixcore
    PRIVATE
-   mfix_compute_dt.cpp
-   mfix_advance.cpp
    mfix_compute_diveu.cpp
-   mfix_calc_particle_beta.cpp
-   mfix_calc_volume_fraction.cpp
-   mfix_drag.cpp
-   mfix_evolve.cpp
    mfix_regrid.cpp
    mfix.cpp
    #  main.cpp <---- DO NOT ADD THIS HERE
@@ -80,6 +74,9 @@ add_subdirectory(usr)
 
 # Embedded boundary functions
 add_subdirectory(eb)
+
+# Time evolution functions
+add_subdirectory(time_flow)
 
 #
 # Link to imported AMReX
