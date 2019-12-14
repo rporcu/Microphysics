@@ -39,7 +39,9 @@ class ParticlesGenerator {
     void generate_prop (const int nrp, ParticleTileType& particles);
 
     // Write particles data
-    void write (const int nrp, ParticleTileType& particles) const;
+    void write (const int nrp,
+                const ParticleTileType& particles,
+                const int nstep = 0) const;
 
     void hex_close_pack (const int icv,
                          const int type,

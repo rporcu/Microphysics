@@ -10,6 +10,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <sstream>
 #include <cmath>
 
 #include <MFIX_DEM_Parms.H>
@@ -920,13 +921,21 @@ ParticlesGenerator::grow_pdata (const int gsize)
 //                                                                     !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 void
-ParticlesGenerator::write (const int nrp, ParticleTileType& particles) const
+ParticlesGenerator::write (const int nrp,
+                           const ParticleTileType& particles,
+                           const int nstep) const
 {
-  auto& aos = particles.GetArrayOfStructs();
-  ParticleType* pstruct = aos().dataPtr();
+  const auto& aos = particles.GetArrayOfStructs();
+  const ParticleType* pstruct = aos().dataPtr();
+
+  std::ostringstream nstep_stream;
+  nstep_stream << nstep;
+
+  std::string nstep_string(nstep_stream.str());
+  std::string filename = "test-" + nstep_string + ".vtp";
 
   std::ofstream output_file;
-  output_file.open("test.vtp");
+  output_file.open(filename.c_str());
 
   // Write the necessary header information for a PolyData file type
   output_file << "<?xml version=\"1.0\"?>" << std::endl;
@@ -948,7 +957,7 @@ ParticlesGenerator::write (const int nrp, ParticleTileType& particles) const
 
   for(int lc1 = 0; lc1 < nrp; ++lc1)
   {
-    ParticleType& part = pstruct[lc1];
+    const ParticleType& part = pstruct[lc1];
 
     output_file << "               "
                 << std::scientific << std::setw(13) << std::setprecision(6)
@@ -963,7 +972,7 @@ ParticlesGenerator::write (const int nrp, ParticleTileType& particles) const
 
   for(int lc1 = 0; lc1 < nrp; ++lc1)
   {
-    ParticleType& part = pstruct[lc1];
+    const ParticleType& part = pstruct[lc1];
 
     output_file << "               "
                 << std::scientific << std::setw(13) << std::setprecision(6)
@@ -982,7 +991,7 @@ ParticlesGenerator::write (const int nrp, ParticleTileType& particles) const
 
   for(int lc1 = 0; lc1 < nrp; lc1++)
   {
-    ParticleType& part = pstruct[lc1];
+    const ParticleType& part = pstruct[lc1];
 
     output_file << "               "
                 << std::scientific << std::setw(13) << std::setprecision(6)
