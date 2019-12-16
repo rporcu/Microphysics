@@ -54,16 +54,6 @@ extern "C"
                                   amrex::Real* omoi,
                                   amrex::Real* omega);
 
-    void mfix_particle_write (const int* nrp, void* particles);
-
-    void mfix_particle_generator (int* pcount,
-                                  const int* domlo, const int* domhi,
-                                  amrex::Real* dx,
-                                  amrex::Real* dy,
-                                  amrex::Real* dz);
-
-    void mfix_particle_generator_prop (const int* nrp, void* particles);
-
     void particle_get_position (void* particles,
                                 const int* nrp,
                                 amrex::Real* x,
