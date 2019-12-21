@@ -21,11 +21,6 @@ amrex::Real      mfix::m_deposition_diffusion_coeff = -1.0;
 amrex::Real      mfix::m_deposition_scale_factor = 1.0;
 amrex::Real      mfix::m_max_solids_volume_fraction = 0.64356;
 
-// Define unit vectors for easily convert indices
-amrex::IntVect mfix::e_x(1,0,0);
-amrex::IntVect mfix::e_y(0,1,0);
-amrex::IntVect mfix::e_z(0,0,1);
-
 int mfix::nlev  = 1;
 int mfix::ntrac = 1;
 
