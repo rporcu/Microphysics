@@ -1,0 +1,187 @@
+#_______________________________________________________________________
+# Solver settings
+
+amrex.fpe_trap_invalid = 1
+
+#! Fluid solver
+#!-----------------------------------------------------------//
+
+
+mfix.stop_time = 25.0
+#mfix.max_step = 0
+mfix.dt_min = 5.0e-9
+mfix.dt_max = 5.0e-4
+mfix.cfl = 0.5
+mfix.tcoll_ratio = 20.
+
+mfix.gravity = -9.81  0.0  0.0
+
+mfix.particle_init_type = "Auto"
+
+mfix.drag_type = "WenYu"
+
+amr.blocking_factor = 2
+
+nodal_proj.maxiter = 2000
+nodal_proj.bottom_maxiter = 2000
+nodal_proj.verbose         = 1
+nodal_proj.bottom_verbose  = 0
+
+mac_proj.maxiter = 2000
+mac_proj.bottom_maxiter = 2000
+mac_proj.verbose          = 1
+mac_proj.bottom_verbose       = 0
+
+diffusion.maxiter = 2000
+diffusion.bottom_maxiter = 2000
+diffusion.verbose         = 0
+diffusion.bottom_verbose      = 0
+
+#_______________________________________________________________________
+# Geometry / grids / tiles
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 0
+
+geometry.coord_sys   = 0                       # 0: Cartesian
+geometry.is_periodic = 0       0       0       # Is periodic in each direction?
+geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
+geometry.prob_hi     = 0.512   0.064   0.064  # hi corner of physical domain
+
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell =  256   32   32
+
+#! Grids
+#!-----------------------------------------------------------//
+# Maximum allowable size of each fluid subdomain in the problem domain;
+
+# Fluid
+amr.max_grid_size_x = 32
+amr.max_grid_size_y = 32
+amr.max_grid_size_z = 32
+
+# Particles (not with KDTree)
+particles.max_grid_size_x =   16
+particles.max_grid_size_y =   32
+particles.max_grid_size_z =   32
+
+#! Tiles
+#!-----------------------------------------------------------//
+
+# Fluid: Maximum tile size within each grid
+fabarray.mfiter_tile_size = 1024 1024 1024
+
+# Particles: Maximum particle title size
+particles.tile_size = 1024 1024 1024
+
+
+#! EB settings
+#!-----------------------------------------------------------//
+
+# Level-set refinement and padding
+mfix.levelset__refinement    = 4 # levelset resolution
+mfix.write_eb_surface = false  # Needed to output eb-surfaces
+
+#! EB geometry
+#!-----------------------------------------------------------//
+mfix.geometry = "cylinder"
+
+cylinder.internal_flow = true
+
+cylinder.radius = 0.03175
+cylinder.height = -1.0
+
+cylinder.direction = 0
+cylinder.center    =  0.256   0.032   0.032 
+
+#! BCs 
+#!-----------------------------------------------------------//
+xlo.type = "mi"
+xlo.velocity = 0.0
+
+xhi.type = "po"
+xhi.pressure = 0.0
+mfix.po_no_par_out = 1
+
+#_______________________________________________________________________
+# Particle load balancing
+
+#mfix.load_balance_type = "FixedSize"
+mfix.load_balance_type = "KnapSack"
+
+amr.dual_grid          = 1
+amr.regrid_int         = 500
+
+#! KnapSack settings
+#!-----------------------------------------------------------//
+#default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
+#this option is only relevant if load_balance_type = KnapSack
+
+mfix.knapsack_weight_type = "NumParticles"
+#mfix.knapsack_weight_type = "RunTimeCosts"
+
+#______________________________________________________________________
+# user data processing
+amr.avg_int = 10
+amr.avg_file = "uio"
+
+amr.avg_vel_p =        1       0        0
+amr.avg_p_g   =        0       1        1
+amr.avg_ep_g  =        0       0        0
+amr.avg_vel_g =        0       0        0
+
+amr.avg_region_x_w =   0.000   0.0001   0.0021
+amr.avg_region_x_e =   0.512   0.0001   0.0021
+amr.avg_region_y_s =   0.000   0.000    0.000
+amr.avg_region_y_n =   0.064   0.064    0.064 
+amr.avg_region_z_b =   0.000   0.000    0.000
+amr.avg_region_z_t =   0.064   0.064    0.064 
+
+#_______________________________________________________________________
+# IO / Checkpointing
+
+amr.par_ascii_int  = 10000
+amr.par_ascii_file ="vis"
+
+amr.plot_int       = 10000
+amr.plot_file      ="plt"
+
+amr.check_int      = 1000
+amr.check_file     ="chk"
+
+#! Restart from checkpoint
+#!-----------------------------------------------------------//
+#amr.restart   ="chk00100"
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = 1
+
+fluid.density_model      = constant
+fluid.constant_density   = 1.2
+
+fluid.viscosity_model    = constant
+fluid.constant_viscosity = 1.8e-5
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = 1
+
+dem.friction_coeff_pp     =     0.30
+dem.friction_coeff_pw     =     0.30
+
+dem.spring_const_pp       =   147.3
+dem.spring_const_pw       =   147.3
+
+dem.restitution_coeff_pp  =     0.70
+dem.restitution_coeff_pw  =     0.70
+
+dem.spring_tang_fac_pp    =     0.285714285
+dem.spring_tang_fac_pw    =     0.285714285
+
+dem.damping_tang_fac_pp   =     0.5
+dem.damping_tang_fac_pw   =     0.5
+
