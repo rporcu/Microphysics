@@ -13,6 +13,7 @@
 #include <sstream>
 #include <cmath>
 
+#include <MFIX_IC_Parms.H>
 #include <MFIX_DEM_Parms.H>
 
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -48,39 +49,36 @@ ParticlesGenerator::generate (int& pc,
   const amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
 
   int np(0);
-  int icv(1);
-  int type(1);
+  int icv(0);
+  int type(0);
 
   // Get the IC index
-  int icv0(1);
+  int icv0(0);
 
-  for(; icv0 <= get_dim_ic(); icv0++)
+  for(; icv0 < IC::ic.size(); icv0++)
   {
-    if(ic_defined_cpp(icv0) and std::abs(get_ic_ep_g(icv0)-1.0) > tolerance)
+    if( std::abs(IC::ic[icv0].fluid.volfrac -1.0) > tolerance)
     {
       // Get the solids type index
-      int type0(1);
+      int type0(0);
 
-      for(; type0 <= DEM::solve; type0++)
-        if(get_ic_ep_s(icv0,type0) > tolerance)
+      for(; type0 <= IC::ic[icv0].solids.size(); type0++)
+        if(IC::ic[icv0].solids[type0].volfrac > tolerance)
           break;
 
-      char ic_pack_type[16];
-      get_ic_pack_type(icv0, ic_pack_type);
-
-      std::string ic_pack_type_str(ic_pack_type);
+      std::string ic_pack_type_str = IC::ic[icv0].packing;
 
       int np0(0);
 
-      if(ic_pack_type_str.compare("HCP") == 0)
+      if(ic_pack_type_str.compare("hcp") == 0)
         hex_close_pack(icv0, type0, lo, hi, np0, pc, dx, dy, dz);
-      else if(ic_pack_type_str.compare("RANDOM") == 0)
+      else if(ic_pack_type_str.compare("random") == 0)
         random_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, false);
-      else if(ic_pack_type_str.compare("PSEUDO_RANDOM") == 0)
+      else if(ic_pack_type_str.compare("pseudo_random") == 0)
         random_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, true);
-      else if(ic_pack_type_str.compare("ONEPER") == 0)
+      else if(ic_pack_type_str.compare("oneper") == 0)
         one_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz);
-      else if(ic_pack_type_str.compare("EIGHTPER") == 0)
+      else if(ic_pack_type_str.compare("eightper") == 0)
         eight_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz);
       else
       {
@@ -110,46 +108,43 @@ ParticlesGenerator::generate (int& pc,
   amrex::Real* p_dp = dp.data();
   amrex::Real* p_ro_s = ro_s.data();
 
+  DEM::DEM_t solid;
+  solid = IC::ic[icv].solids[type];
+
   // Setup particle diameters
-  char ic_dp_dist[16];
-  get_ic_dp_dist(icv, type, ic_dp_dist);
+  std::string ic_dp_dist_str = solid.diameter.distribution;
 
-  std::string ic_dp_dist_str(ic_dp_dist);
-
-  if(ic_dp_dist_str.compare("NORMAL") == 0)
+  if(ic_dp_dist_str.compare("normal") == 0)
   {
-    nor_rno(dp, get_ic_dp_mean(icv,type), get_ic_dp_std(icv,type),
-            get_ic_dp_min(icv,type), get_ic_dp_max(icv,type));
+    nor_rno(dp, solid.diameter.mean, solid.diameter.std,
+            solid.diameter.min, solid.diameter.max);
   }
-  else if(ic_dp_dist_str.compare("UNIFORM") == 0)
+  else if(ic_dp_dist_str.compare("uniform") == 0)
   {
-    uni_rno(dp, get_ic_dp_min(icv,type), get_ic_dp_max(icv,type));
+    uni_rno(dp, solid.diameter.min,  solid.diameter.max);
   }
   else
   {
-    const amrex::Real ic_dp_mean = get_ic_dp_mean(icv, type);
+    const amrex::Real ic_dp_mean = solid.diameter.mean;
 
     amrex::ParallelFor(np, [p_dp,ic_dp_mean]
       AMREX_GPU_DEVICE (int p) noexcept { p_dp[p] = ic_dp_mean; });
   }
 
-  char ic_ro_s_dist[16];
-  get_ic_ro_s_dist(icv, type, ic_ro_s_dist);
+  std::string ic_ro_s_dist_str = solid.density.distribution;
 
-  std::string ic_ro_s_dist_str(ic_ro_s_dist);
-
-  if(ic_ro_s_dist_str.compare("NORMAL") == 0)
+  if(ic_ro_s_dist_str.compare("normal") == 0)
   {
-    nor_rno(ro_s, get_ic_ro_s_mean(icv,type), get_ic_ro_s_std(icv,type),
-            get_ic_ro_s_min(icv,type), get_ic_ro_s_max(icv,type));
+    nor_rno(ro_s, solid.density.mean, solid.density.std,
+            solid.density.min, solid.density.max);
   }
-  else if(ic_ro_s_dist_str.compare("UNIFORM") == 0)
+  else if(ic_ro_s_dist_str.compare("uniform") == 0)
   {
-    uni_rno(ro_s, get_ic_ro_s_min(icv,type), get_ic_ro_s_max(icv,type));
+    uni_rno(ro_s, solid.density.min, solid.density.max);
   }
   else
   {
-    const amrex::Real ic_ro_s_mean = get_ic_ro_s_mean(icv, type);
+    const amrex::Real ic_ro_s_mean = solid.density.mean;
 
     amrex::ParallelFor(np, [p_ro_s,ic_ro_s_mean]
       AMREX_GPU_DEVICE (int p) noexcept { p_ro_s[p] = ic_ro_s_mean; });
@@ -157,9 +152,9 @@ ParticlesGenerator::generate (int& pc,
 
   pc = init_pc;
 
-  const amrex::Real ic_u_s = get_ic_u_s(icv, type);
-  const amrex::Real ic_v_s = get_ic_v_s(icv, type);
-  const amrex::Real ic_w_s = get_ic_w_s(icv, type);
+  const amrex::Real ic_u_s = solid.velocity[0];
+  const amrex::Real ic_v_s = solid.velocity[1];
+  const amrex::Real ic_w_s = solid.velocity[2];
 
   amrex::Real* p_rdata = m_rdata.data();
   int* p_idata = m_idata.data();
@@ -229,9 +224,19 @@ ParticlesGenerator::hex_close_pack (const int icv,
 
   IntVect max_seed, seed_lo, seed_hi, delta_bx;
 
-  calc_cell_ic(dx, dy, dz, get_ic_x_w(icv), get_ic_y_s(icv), get_ic_z_b(icv),
-               get_ic_x_e(icv), get_ic_y_n(icv), get_ic_z_t(icv),
+  calc_cell_ic(dx, dy, dz,
+               IC::ic[icv].region->lo(),
+               IC::ic[icv].region->hi(),
                i_w, i_e, j_s, j_n, k_b, k_t);
+
+
+  const Real x_w(IC::ic[icv].region->lo(0));
+  const Real y_s(IC::ic[icv].region->lo(1));
+  const Real z_b(IC::ic[icv].region->lo(2));
+  const Real x_e(IC::ic[icv].region->hi(0));
+  const Real y_n(IC::ic[icv].region->hi(1));
+  const Real z_t(IC::ic[icv].region->hi(2));
+
 
   // Start/end of IC domain bounds
   ic_dlo[0] = (std::max(lo[0], i_w)) * dx;
@@ -243,26 +248,25 @@ ParticlesGenerator::hex_close_pack (const int icv,
   ic_dhi[2] = (std::min(hi[2], k_t)+1) * dz;
 
   // physical volume of IC region
-  const amrex::Real ic_vol = (get_ic_x_e(icv) - get_ic_x_w(icv)) *
-                             (get_ic_y_n(icv) - get_ic_y_s(icv)) *
-                             (get_ic_z_t(icv) - get_ic_z_b(icv));
+  const amrex::Real ic_vol = IC::ic[icv].region->volume();
+
+  const amrex::Real mean = IC::ic[icv].solids[type].diameter.mean;
 
   // Spacing is based on maximum particle size
-  if(is_defined_db_cpp(get_ic_dp_max(icv,type)))
-    max_dp = get_ic_dp_max(icv,type);
+  if(IC::ic[icv].solids[type].diameter.max > 0.0)
+    max_dp = IC::ic[icv].solids[type].diameter.max;
   else
-    max_dp = get_ic_dp_mean(icv,type);
+    max_dp = mean;
 
   max_rp = 0.5 * max_dp;
 
   // Particle count is based on mean particle size
-  const amrex::Real mean = get_ic_dp_mean(icv,type);
   const int seed =
-    static_cast<int>(ic_vol * get_ic_ep_s(icv,type) / ((M_PI/6.0)*mean*mean*mean));
+    static_cast<int>(ic_vol * IC::ic[icv].solids[type].volfrac / ((M_PI/6.0)*mean*mean*mean));
 
   // Total to seed over the whole IC region
-  max_seed[1] = static_cast<int>((get_ic_y_n(icv) - get_ic_y_s(icv) - max_dp) / max_dp);
-  max_seed[2] = static_cast<int>((get_ic_z_t(icv) - get_ic_z_b(icv) - max_dp) / (sqrt3*max_rp));
+  max_seed[1] = static_cast<int>((y_n - y_s - max_dp) / max_dp);
+  max_seed[2] = static_cast<int>((z_t - z_b - max_dp) / (sqrt3*max_rp));
   max_seed[0] = static_cast<int>(seed / (max_seed[1]*max_seed[2]));
 
   // local grid seed loop hi/lo
@@ -336,18 +340,26 @@ ParticlesGenerator::one_per_fill (const int icv,
 
   amrex::IntVect seed_lo, seed_hi, delta_bx;
 
-  calc_cell_ic(dx, dy, dz, get_ic_x_w(icv), get_ic_y_s(icv), get_ic_z_b(icv),
-               get_ic_x_e(icv), get_ic_y_n(icv), get_ic_z_t(icv),
+  calc_cell_ic(dx, dy, dz,
+               IC::ic[icv].region->lo(),
+               IC::ic[icv].region->hi(),
                i_w, i_e, j_s, j_n, k_b, k_t);
 
-  // local grid seed loop hi/lo
-  seed_lo[0] = std::max<int>(lo[0], std::ceil(get_ic_x_w(icv)/dx - .5));
-  seed_lo[1] = std::max<int>(lo[1], std::ceil(get_ic_y_s(icv)/dy - .5));
-  seed_lo[2] = std::max<int>(lo[2], std::ceil(get_ic_z_b(icv)/dz - .5));
+  const Real x_w(IC::ic[icv].region->lo(0));
+  const Real y_s(IC::ic[icv].region->lo(1));
+  const Real z_b(IC::ic[icv].region->lo(2));
+  const Real x_e(IC::ic[icv].region->hi(0));
+  const Real y_n(IC::ic[icv].region->hi(1));
+  const Real z_t(IC::ic[icv].region->hi(2));
 
-  seed_hi[0] = std::min<int>(hi[0], std::floor(get_ic_x_e(icv)/dx - .5));
-  seed_hi[1] = std::min<int>(hi[1], std::floor(get_ic_y_n(icv)/dy - .5));
-  seed_hi[2] = std::min<int>(hi[2], std::floor(get_ic_z_t(icv)/dz - .5));
+  // local grid seed loop hi/lo
+  seed_lo[0] = std::max<int>(lo[0], std::ceil(x_w/dx - .5));
+  seed_lo[1] = std::max<int>(lo[1], std::ceil(y_s/dy - .5));
+  seed_lo[2] = std::max<int>(lo[2], std::ceil(z_b/dz - .5));
+
+  seed_hi[0] = std::min<int>(hi[0], std::floor(x_e/dx - .5));
+  seed_hi[1] = std::min<int>(hi[1], std::floor(y_n/dy - .5));
+  seed_hi[2] = std::min<int>(hi[2], std::floor(z_t/dz - .5));
 
   const Box bx(seed_lo, seed_hi);
 
@@ -404,13 +416,20 @@ ParticlesGenerator::eight_per_fill (const int icv,
   // indices
   amrex::IntVect seed_lo, seed_hi, delta_bx;
 
-  seed_lo[0] = std::max<int>(2*lo[0], std::ceil(get_ic_x_w(icv)*(2/dx) - .5));
-  seed_lo[1] = std::max<int>(2*lo[1], std::ceil(get_ic_y_s(icv)*(2/dy) - .5));
-  seed_lo[2] = std::max<int>(2*lo[2], std::ceil(get_ic_z_b(icv)*(2/dz) - .5));
+  const Real x_w(IC::ic[icv].region->lo(0));
+  const Real y_s(IC::ic[icv].region->lo(1));
+  const Real z_b(IC::ic[icv].region->lo(2));
+  const Real x_e(IC::ic[icv].region->hi(0));
+  const Real y_n(IC::ic[icv].region->hi(1));
+  const Real z_t(IC::ic[icv].region->hi(2));
 
-  seed_hi[0] = std::min<int>(2*hi[0]+1, std::floor(get_ic_x_e(icv)*(2/dx) - .5));
-  seed_hi[1] = std::min<int>(2*hi[1]+1, std::floor(get_ic_y_n(icv)*(2/dy) - .5));
-  seed_hi[2] = std::min<int>(2*hi[2]+1, std::floor(get_ic_z_t(icv)*(2/dz) - .5));
+  seed_lo[0] = std::max<int>(2*lo[0], std::ceil(x_w*(2/dx) - .5));
+  seed_lo[1] = std::max<int>(2*lo[1], std::ceil(y_s*(2/dy) - .5));
+  seed_lo[2] = std::max<int>(2*lo[2], std::ceil(z_b*(2/dz) - .5));
+
+  seed_hi[0] = std::min<int>(2*hi[0]+1, std::floor(x_e*(2/dx) - .5));
+  seed_hi[1] = std::min<int>(2*hi[1]+1, std::floor(y_n*(2/dy) - .5));
+  seed_hi[2] = std::min<int>(2*hi[2]+1, std::floor(z_t*(2/dz) - .5));
 
   const Box bx(seed_lo, seed_hi);
 
@@ -473,9 +492,17 @@ ParticlesGenerator::random_fill (const int icv,
   amrex::RealVect ic_dlo, ic_dhi, ic_len;
   amrex::Real max_dp, max_rp;
   
-  calc_cell_ic(dx, dy, dz, get_ic_x_w(icv), get_ic_y_s(icv), get_ic_z_b(icv),
-               get_ic_x_e(icv), get_ic_y_n(icv), get_ic_z_t(icv),
+  calc_cell_ic(dx, dy, dz,
+               IC::ic[icv].region->lo(),
+               IC::ic[icv].region->hi(),
                i_w, i_e, j_s, j_n, k_b, k_t);
+
+  const Real x_w(IC::ic[icv].region->lo(0));
+  const Real y_s(IC::ic[icv].region->lo(1));
+  const Real z_b(IC::ic[icv].region->lo(2));
+  const Real x_e(IC::ic[icv].region->hi(0));
+  const Real y_n(IC::ic[icv].region->hi(1));
+  const Real z_t(IC::ic[icv].region->hi(2));
 
   // Start/end of IC domain bounds
   ic_dlo[0] = (std::max(lo[0], i_w)) * dx;
@@ -491,16 +518,17 @@ ParticlesGenerator::random_fill (const int icv,
                              (ic_dhi[1] - ic_dlo[1]) *
                              (ic_dhi[2] - ic_dlo[2]);
 
+  const amrex::Real mean = IC::ic[icv].solids[type].diameter.mean;
+
   // Spacing is based on maximum particle size
-  if(is_defined_db_cpp(get_ic_dp_max(icv,type)))
-     max_dp = get_ic_dp_max(icv,type);
+  if(IC::ic[icv].solids[type].diameter.max > 0.)
+    max_dp = IC::ic[icv].solids[type].diameter.max;
   else
-     max_dp = get_ic_dp_mean(icv,type);
+    max_dp = IC::ic[icv].solids[type].diameter.mean;
 
   // Particle count is based on mean particle size
-  const amrex::Real mean = get_ic_dp_mean(icv,type);
   const int seed =
-    static_cast<int>(ic_vol * get_ic_ep_s(icv,type) / ((M_PI/6.0)*mean*mean*mean));
+    static_cast<int>(ic_vol * IC::ic[icv].solids[type].volfrac / ((M_PI/6.0)*mean*mean*mean));
 
   max_rp = 0.5 * max_dp;
 

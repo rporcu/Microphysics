@@ -35,13 +35,11 @@ else
 fi
 
 rm -rf POST_* const_plt* chk* plt* ${RUN_NAME}* &> /dev/null
-time -p ${MPIRUN} ${MFIX} ${INPUTS} \
-   "mfix.input_deck=mfix.dat.no_particles" | tee ${RUN_NAME}.STD
+time -p ${MPIRUN} ${MFIX} ${INPUTS} | tee ${RUN_NAME}.STD
 grep "Sum tracer volume" ${RUN_NAME}.STD | sed 's/.* //' &> POST-NO-PARTICLES.dat
 
 rm -rf POST_* const_plt* chk* plt* ${RUN_NAME}* &> /dev/null
-time -p ${MPIRUN} ${MFIX} ${INPUTS}.particles \
-   "mfix.input_deck=mfix.dat.particles" | tee ${RUN_NAME}.STD
+time -p ${MPIRUN} ${MFIX} ${INPUTS}.particles | tee ${RUN_NAME}.STD
 grep "Sum tracer volume" ${RUN_NAME}.STD | sed 's/.* //' &> POST-PARTICLES.dat
 
 post_dats=POST*.dat

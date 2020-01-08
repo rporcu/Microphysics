@@ -31,8 +31,8 @@ for DES_MEW in 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0; do
     cleanup
 
     time -p ${MFIX} inputs \
-       "dem.friction_coeff_pp=${DES_MEW}" \
-       "dem.friction_coeff_pw=${DES_MEW}"
+       "dem.friction_coeff.pp=${DES_MEW}" \
+       "dem.friction_coeff.pw=${DES_MEW}"
 
     write_data POST_VEL.dat ${DES_MEW}  9 14
 

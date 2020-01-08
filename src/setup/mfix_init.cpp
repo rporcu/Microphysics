@@ -956,9 +956,6 @@ void
 mfix::mfix_set_p0 ()
 {
   if (ooo_debug) amrex::Print() << "mfix_set_p0" << std::endl;
-  Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
-  Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
-  Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
 
   IntVect press_per = IntVect(geom[0].isPeriodic(0),geom[0].isPeriodic(1),geom[0].isPeriodic(2));
 
@@ -984,13 +981,8 @@ mfix::mfix_set_p0 ()
 
      // We put this outside the MFIter loop because we need gp0 even on ranks with no boxes
      // because we will use it in computing dt separately on every rank
-     set_gp0(domain.loVect(), domain.hiVect(),
-             gp0, &FLUID::ro_g0, gravity,
-             &dx, &dy, &dz, &xlen, &ylen, &zlen,
-             bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-             bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-             bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-             &nghost, &BC::delp_dir, BC::delp);
+     set_gp0(lev, domain);
+
 
      // We deliberately don't tile this loop since we will be looping
      //    over bc's on faces and it makes more sense to do this one grid at a time
@@ -998,7 +990,7 @@ mfix::mfix_set_p0 ()
      {
        const Box& bx = mfi.validbox();
 
-       set_p0(bx, &mfi, lev, domain, xlen, ylen, zlen);
+       set_p0 (bx, &mfi, lev, domain );
      }
 
      p0_g[lev]->FillBoundary(p0_periodicity);

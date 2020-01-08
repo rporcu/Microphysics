@@ -301,10 +301,10 @@ public:
     void set_p0 (const Box& bx,
                  MFIter* mfi,
                  const int lev,
-                 const Box& domain,
-                 const Real xlen,
-                 const Real ylen,
-                 const Real zlen);
+                 const Box& domain);
+
+    void set_gp0 (const int lev,
+                  const Box& domain);
 
     void mfix_set_bc_mod (const int* pID, const int* pType,
                           const amrex::Real* pLo, const amrex::Real* pHi,
@@ -455,6 +455,7 @@ protected:
     void mfix_init_fluid (int is_restarting, Real dt, Real stop_time);
     void mfix_set_bc0 ();
     void mfix_set_p0 ();
+    void mfix_set_gp0 ();
 
     static Real gp0[3];
     static Real gravity[3];

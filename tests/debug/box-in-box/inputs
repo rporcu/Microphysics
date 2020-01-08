@@ -94,16 +94,16 @@ mfix.write_eb_surface = true  # Needed to output eb-surfaces
 #_______________________________________________________________________
 # Fluid model settings
 #
-fluid.solve = 1
+fluid.solve = fluid
 
-fluid.density_model      = constant
-fluid.constant_density   = 1.0
+fluid.density            = constant
+fluid.density.constant   = 1.0
 
-fluid.viscosity_model    = constant
-fluid.constant_viscosity = 2.0e-5
+fluid.viscosity          = constant
+fluid.viscosity.constant = 2.0e-5
 
 
 #_______________________________________________________________________
 # DEM model settings
 
-dem.solve = 1
+dem.solve = solid0

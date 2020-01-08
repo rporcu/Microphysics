@@ -137,13 +137,13 @@ mfix.drag_type = "BVK2"
 #_______________________________________________________________________
 # Fluid model settings
 #
-fluid.solve = 1
+fluid.solve = fluid
 
-fluid.density_model      = constant
-fluid.constant_density   = 1.0
+fluid.density            = constant
+fluid.density.constant   = 1.0
 
-fluid.viscosity_model    = constant
-fluid.constant_viscosity = 2.0e-2
+fluid.viscosity          = constant
+fluid.viscosity.constant = 2.0e-2
 
 
 bc.delp     = 1000.
@@ -152,4 +152,27 @@ bc.delp_dir =    2
 #_______________________________________________________________________
 # DEM model settings
 
-dem.solve = 0
+dem.solve = None
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = full-domain
+
+regions.full-domain.lo = 0.000  0.000  0.000
+regions.full-domain.hi = 4.000  4.000  1.000
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = full-domain
+
+
+# Backgound IC covering the full domain with gas.
+#---------------------------------------------------------------------//
+ic.full-domain.fluid.volfrac   =  1.0
+ic.full-domain.fluid.pressure  = 0.0
+ic.full-domain.fluid.velocity  = 0.0  0.0  0.0

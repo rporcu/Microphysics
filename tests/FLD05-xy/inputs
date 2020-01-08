@@ -37,15 +37,15 @@ amr.plt_regtest = 1
 #_______________________________________________________________________
 # Fluid model settings
 #
-fluid.solve = 1
+fluid.solve = fluid
 
-fluid.density_model      = constant
-fluid.constant_density   = 1.0
+fluid.density            = constant
+fluid.density.constant   = 1.0
 
-fluid.viscosity_model    = constant
-fluid.constant_viscosity = 0.0
+fluid.viscosity          = constant
+fluid.viscosity.constant = 0.0
 
 #_______________________________________________________________________
 # DEM model settings
 
-dem.solve = 0
+dem.solve = None

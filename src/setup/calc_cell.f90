@@ -41,7 +41,7 @@ contains
 !  Purpose: calculate the i, j or k cell index for IC regions.         !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_cell_ic (dx, dy, dz, x_w, y_s, z_b, x_e, y_n, z_t, &
+   subroutine calc_cell_ic (dx, dy, dz, ic_lo, ic_hi, &
                             i_w, i_e, j_s, j_n, k_b, k_t) bind(C)
 
      use param, only: equal
@@ -49,18 +49,19 @@ contains
      implicit none
 
      real(rt), intent(in) :: dx, dy, dz
-     real(rt), intent(in) :: x_w, y_s, z_b, x_e, y_n, z_t
+     real(rt), intent(in) :: ic_lo(3)
+     real(rt), intent(in) :: ic_hi(3)
 
      integer(c_int), intent(out) :: i_w, j_s, k_b, i_e, j_n, k_t
 
-     i_w = calc_cell(x_w, dx) + 1
-     i_e = calc_cell(x_e, dx)
+     i_w = calc_cell(ic_lo(1), dx) + 1
+     i_e = calc_cell(ic_hi(1), dx)
 
-     j_s = calc_cell(y_s, dy) + 1
-     j_n = calc_cell(y_n, dy)
+     j_s = calc_cell(ic_lo(2), dy) + 1
+     j_n = calc_cell(ic_hi(2), dy)
 
-     k_b = calc_cell(z_b, dz) + 1
-     k_t = calc_cell(z_t, dz)
+     k_b = calc_cell(ic_lo(3), dz) + 1
+     k_t = calc_cell(ic_hi(3), dz)
 
    end subroutine calc_cell_ic
 

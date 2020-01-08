@@ -51,93 +51,180 @@ namespace DEM
     amrex::Real eta_fac_pp = 0.5;
     amrex::Real eta_fac_pw = 0.5;
 
+    // Names of the solids used to build input regions.
+    amrex::Vector<std::string> names;
+
+
     void Initialize ()
     {
 
       amrex::ParmParse pp("dem");
 
-      pp.get("solve", solve);
+      pp.queryarr("solve", names);
 
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(solve >= 0, "dem.solve must be >= 0");
-      NPHASE = solve;
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(names.size() >= 1,
+           "DEM solver not specified: Input dem.solve is undefined!");
 
-      if( solve )
-        {
+      solve = 1;
+      for(int lc=0; lc < names.size(); ++lc){
+        if (names[0] == "None" ||
+            names[0] == "none" ||
+            names[0] == "NONE" ||
+            names[0] == "0" ) solve = 0;
+      }
 
-         // Read MEW
-         pp.get("friction_coeff_pp", mew);
-         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= mew && mew <= 1.0,
-              "Invalid value: dem.friction_coeff_pp must be in [0.0, 1.0]");
-
-         // Read MEW_W
-         pp.get("friction_coeff_pw", mew_w);
-         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= mew_w && mew_w <= 1.0,
-              "Invalid value: dem.friction_coeff_pw must be in [0.0, 1.0]");
-
-         // Read KN
-         pp.get("spring_const_pp", kn);
-         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(kn > 0.0,
-              "Invalid value: dem.spring_const_pp must be > 0.0");
-
-         // Read KN_w
-         pp.get("spring_const_pw", kn_w);
-         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(kn_w > 0.0,
-              "Invalid value: dem.spring_const_pw must be > 0.0");
+      // You can't name a solids "None" or "0" -- you just can't
+      if( solve == 0 && names.size() > 1 ){
+        amrex::Abort("Invalid input: One or more DEM solids defined"
+                     "but, the solver is diabled!");
+      }
 
 
-         // Read DES_EN_INPUT
-         amrex::Vector<amrex::Real> rest_coeff_pp_in;
-         pp.queryarr("restitution_coeff_pp", rest_coeff_pp_in);
 
-         // We know that we should have an upper-triangular matrix worth
-         // of entries. (1-1, 1-2, 2-2, ...) for NPHASEs
-         int req_coeffs = NPHASE+NPHASE*(NPHASE-1)/2;
-         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(rest_coeff_pp_in.size() == req_coeffs,
-              "Invalid number of entries: dem.restitution_coeff_pp");
 
-         // Copy into the gloabl array that has a fixed size
-         for (int idx=0; idx < req_coeffs; idx++){
-           en_input[idx] = rest_coeff_pp_in[idx];
-           amrex::Print() << "EN STUFF " << idx << "  " << en_input[idx] << "  " << rest_coeff_pp_in[idx] << "\n";
-         }
+      //TODO: Add check to prevent using the same name twice.
 
-         // Read DES_EN_WALL_INPUT
-         amrex::Vector<amrex::Real> rest_coeff_pw_in;
-         pp.queryarr("restitution_coeff_pw", rest_coeff_pw_in);
 
-         // We know that we should have an entry for each NPHASE
-         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(rest_coeff_pw_in.size() == NPHASE,
-              "Invalid number of entries: dem.restitution_coeff_pw");
+      if( solve ) {
 
-         // Copy into the gloabl array that has a fixed size
-         for (int idx=0; idx < NPHASE; idx++)
-           en_w_input[idx] = rest_coeff_pw_in[idx];
+        // Store the total number of solids
+        NPHASE = names.size();
 
+        // Read MEW
+        pp.get("friction_coeff.pp", mew);
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= mew && mew <= 1.0,
+             "Invalid value: dem.friction_coeff.pp must be in [0.0, 1.0]");
+
+        // Read MEW_W
+        pp.get("friction_coeff.pw", mew_w);
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= mew_w && mew_w <= 1.0,
+             "Invalid value: dem.friction_coeff.pw must be in [0.0, 1.0]");
+
+        // Read KN
+        pp.get("spring_const.pp", kn);
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(kn > 0.0,
+             "Invalid value: dem.spring_const.pp must be > 0.0");
+
+        // Read KN_w
+        pp.get("spring_const.pw", kn_w);
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(kn_w > 0.0,
+             "Invalid value: dem.spring_const.pw must be > 0.0");
 
          // Read KT_FAC
-        pp.get("spring_tang_fac_pp", kt_fac);
+        pp.get("spring_tang_fac.pp", kt_fac);
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= kt_fac && kt_fac <= 1.0,
-             "Invalid value: dem.spring_tang_fac_pp must be in [0.0, 1.0]");
+             "Invalid value: dem.spring_tang_fac.pp must be in [0.0, 1.0]");
 
         //Read KT_W_FAC
-        pp.get("spring_tang_fac_pw", kt_w_fac);
+        pp.get("spring_tang_fac.pw", kt_w_fac);
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= kt_w_fac && kt_w_fac <= 1.0,
-             "Invalid value: dem.spring_tang_fac_pw must be in [0.0, 1.0]");
+             "Invalid value: dem.spring_tang_fac.pw must be in [0.0, 1.0]");
 
         // Read DES_ETA_FAC
-        pp.get("damping_tang_fac_pp", eta_fac);
+        pp.get("damping_tang_fac.pp", eta_fac);
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= eta_fac && eta_fac <= 1.0,
-             "Invalid value: dem.damping_tang_fac_pp must be in [0.0, 1.0]");
+             "Invalid value: dem.damping_tang_fac.pp must be in [0.0, 1.0]");
 
         // Read DES_ETA_W_FAC
-        pp.get("damping_tang_fac_pw", eta_w_fac);
+        pp.get("damping_tang_fac.pw", eta_w_fac);
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= eta_w_fac && eta_w_fac <= 1.0,
-             "Invalid value: dem.damping_tang_fac_pw must be in [0.0, 1.0]");
+             "Invalid value: dem.damping_tang_fac.pw must be in [0.0, 1.0]");
 
 
         // Calculate the tangential spring stiffness
         kt   = kt_fac   * kn;
         kt_w = kt_w_fac * kn_w;
+
+
+        // We know that we should have an upper-triangular matrix worth
+        // of entries. (1-1, 1-2, 2-2, ...) for NPHASEs
+        int req_coeffs = NPHASE+NPHASE*(NPHASE-1)/2;
+
+
+        // Read restitution coefficients. These can be given two different ways:
+        //    dem.restitution_coeff.solid1.solid2 = coeff
+        //    dem.restitution_coeff.solid2.solid1 = coeff
+        //
+        // We want to make sure that at least one is given. If both are given
+        // then they must be equal.  The values get stroed in en_input
+
+
+        {
+          int lc_pp = 0;
+          int lc_pw = 0;
+
+          amrex::ParmParse ppRC("dem.restitution_coeff");
+          for (int idx0=0; idx0 < NPHASE; idx0++){
+            for (int idx1=idx0; idx1 < NPHASE; idx1++){
+
+              std::string pp01 = DEM::names[idx0]+"."+DEM::names[idx1];
+              amrex::Real coeff01 = -1.0;
+              ppRC.query(pp01.c_str(), coeff01);
+
+              std::string pp10 = DEM::names[idx1]+"."+DEM::names[idx0];
+              amrex::Real coeff10 = -1.0;
+              ppRC.query(pp10.c_str(), coeff10);
+
+              // Set the temp variable to something we can check against.
+              amrex::Real rest_coeff(-1.0);
+
+              // Take either one if they are the same. Otherwise, take
+              // the "other one" if we see that one isn't set.
+              if( coeff01 == coeff10 ){
+                rest_coeff = coeff01;
+
+              } else if ( coeff01 == -1.0 ) {
+                rest_coeff = coeff10;
+
+              } else if ( coeff10 == -1.0 ) {
+                rest_coeff = coeff01;
+
+              }
+              // There is no need for an 'else' here. This is covered
+              // by initializating the variable to an invalid value.
+
+              AMREX_ALWAYS_ASSERT_WITH_MESSAGE(rest_coeff >= 0.0 && rest_coeff <= 1.0,
+                   "Invalid restitution coefficient.");
+
+              en_input[lc_pp] = rest_coeff;
+              lc_pp += 1;
+
+            }
+
+            std::string pp01 = DEM::names[idx0]+".wall";
+            amrex::Real coeff01 = -1.0;
+            ppRC.query(pp01.c_str(), coeff01);
+
+            std::string pp10 = "wall."+DEM::names[idx0];
+            amrex::Real coeff10 = -1.0;
+            ppRC.query(pp10.c_str(), coeff10);
+
+            // Set the temp variable to something we can check against.
+            amrex::Real rest_coeff(-1.0);
+
+            // Take either one if they are the same. Otherwise, take
+            // the "other one" if we see that one isn't set.
+            if( coeff01 == coeff10 ){
+              rest_coeff = coeff01;
+
+            } else if ( coeff01 == -1.0 ) {
+              rest_coeff = coeff10;
+
+            } else if ( coeff10 == -1.0 ) {
+              rest_coeff = coeff01;
+
+            }
+            // There is no need for an 'else' here. This is covered
+            // by initializating the variable to an invalid value.
+
+            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(rest_coeff >= 0.0 && rest_coeff <= 1.0,
+                 "Invalid restitution coefficient.");
+
+            en_w_input[lc_pw] = rest_coeff;
+            lc_pw += 1;
+
+          }
+        }
 
 
         set_lsd_collision_coefficients(&NPHASE,

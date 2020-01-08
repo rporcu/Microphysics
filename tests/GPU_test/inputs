@@ -135,25 +135,25 @@ amr.plt_regtest = 1
 #_______________________________________________________________________
 # Fluid model settings
 #
-fluid.solve = 0
+fluid.solve = None
 
 
 #_______________________________________________________________________
 # DEM model settings
 #
-dem.solve = 1
+dem.solve = solid0
 
-dem.friction_coeff_pp     =     0.0
-dem.friction_coeff_pw     =     0.0
+dem.friction_coeff.pp     =     0.0
+dem.friction_coeff.pw     =     0.0
                               
-dem.spring_const_pp       =    10.0
-dem.spring_const_pw       =    10.0
+dem.spring_const.pp       =    10.0
+dem.spring_const.pw       =    10.0
                               
-dem.restitution_coeff_pp  =     0.8
-dem.restitution_coeff_pw  =     1.0
+dem.restitution_coeff.solid0.solid0  =     0.8
+dem.restitution_coeff.solid0.wall  =     1.0
                               
-dem.spring_tang_fac_pp    =     0.285714285
-dem.spring_tang_fac_pw    =     0.285714285
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
                               
-dem.damping_tang_fac_pp   =     0.5
-dem.damping_tang_fac_pw   =     0.5
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5

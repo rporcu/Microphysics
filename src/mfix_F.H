@@ -17,8 +17,6 @@ extern "C"
 {
 #endif
 
-    void mfix_get_data (int* name_len, const char *cmfix_dat);
-
     void check_inputs ();
 
     void mfix_set_cyclic (int* cyc_x, int* cyc_y, int* cyc_z);
@@ -48,15 +46,6 @@ extern "C"
                       amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
                       amrex::Real* xlen, amrex::Real* ylen, amrex::Real* zlen,
                       const int* ng);
-
-    void set_gp0 (const int* domlo , const int* domhi,
-                  amrex::Real* gp0, amrex::Real* ro_g0, amrex::Real* gravity,
-                  amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-                  amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-                  const int* bc_ilo, const int* bc_ihi,
-                  const int* bc_jlo, const int* bc_jhi,
-                  const int* bc_klo, const int* bc_khi,
-                  const int* ng, int* delp_dir, amrex::Real* delp);
 
     void mfix_cap_eps (const int* slo, const int* shi, amrex::Real* ep_g);
 

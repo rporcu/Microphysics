@@ -3,6 +3,7 @@
 
 #include <AMReX_REAL.H>
 #include <AMReX_GpuQualifiers.H>
+#include <AMReX_Vector.H>
 
 namespace DEM
 {
@@ -54,6 +55,33 @@ namespace DEM
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real eps;
 
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real neighborhood;
+
+    extern amrex::Vector<std::string> names;
+
+    struct INPUT_DIST_t {
+      std::string distribution;
+      amrex::Real mean; // Mean value of distriubtion (or contant value)
+      amrex::Real std;  // Standard deivation
+      amrex::Real min;  // Mininum value of distribution
+      amrex::Real max;  // Max value of distribution
+
+      INPUT_DIST_t() :
+        mean(-1.0),
+        std(-1.0),
+        min(-1.0),
+        max(-1.0) { }
+
+    };
+
+    struct DEM_t {
+
+      amrex::Real volfrac;
+      amrex::Real temperature;
+      amrex::Vector<amrex::Real> velocity;
+
+      INPUT_DIST_t diameter;
+      INPUT_DIST_t density;
+    };
 
     void Initialize ();
 

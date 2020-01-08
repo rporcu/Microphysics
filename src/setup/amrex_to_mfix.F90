@@ -8,40 +8,6 @@ module amrex_to_mfix_module
 
 contains
 
-!**************************************************************************!
-!                                                                          !
-!                                                                          !
-!**************************************************************************!
-  subroutine mfix_get_data (namelen, mfix_datC) &
-    bind(C, name="mfix_get_data")
-
-    use get_data_module, only: get_data
-    use param, only: is_undefined
-
-    use iso_c_binding, only: C_CHAR, c_null_char
-
-    implicit none
-
-    integer(c_int), intent(in   ) :: namelen
-    character(kind=c_char, len=1), dimension (namelen), intent (in) :: mfix_datC
-
-    character(len=namelen) :: mfix_dat
-    integer :: lc
-
-    mfix_dat = " "
-    do lc=1,namelen
-       if( mfix_datC(lc) == c_null_char) then
-          exit
-       else
-          mfix_dat(lc:lc) = mfix_datC(lc)
-       endif
-    enddo
-    ! write(*,*) "Full file name: >"//trim(mfix_dat)//"<"
-
-    call get_data(mfix_dat)
-
-
-  end subroutine mfix_get_data
 
 !**************************************************************************!
 !                                                                          !

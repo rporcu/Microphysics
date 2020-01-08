@@ -25,6 +25,25 @@ namespace FLUID
   // Average molecular weight of gas
   extern amrex::Real mw_avg;
 
+  // Name to later reference when building input regions
+  extern std::string name;
+
+  struct FLUID_t {
+
+    amrex::Real volfrac;
+    amrex::Real temperature;
+    amrex::Real pressure;
+    amrex::Vector<amrex::Real> velocity;
+
+    amrex::Real pressure_defined; // Flag to check if pressure is defined
+
+    FLUID_t() :
+      volfrac(-1.0),
+      pressure(-1.0),
+      temperature(0.0) { }
+
+  };
+
   void Initialize ();
 
 }

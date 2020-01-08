@@ -22,23 +22,45 @@ namespace FLUID
   // Average molecular weight of gas
   amrex::Real mw_avg;
 
+  // Name to later reference when building inputs for IC/BC regions
+  std::string name;
+
+
   void Initialize ()
   {
 
     amrex::ParmParse pp("fluid");
 
-    pp.get("solve", solve);
+    std::vector<std::string> fluid_name;
+    pp.queryarr("solve", fluid_name);
+
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid_name.size() == 1,
+       "Fluid solver not specified. fluid.sove = ? ");
+
+    // Disable the fluid solver if the fluid is defined as "None"
+    if (fluid_name[0] == "None" ||
+        fluid_name[0] == "none" ||
+        fluid_name[0] == "NONE" ||
+        fluid_name[0] == "0" ) {
+      solve = 0;
+    } else {
+      solve = 1;
+      name = fluid_name[0];
+    }
+
 
     if( solve ) {
 
+      amrex::ParmParse ppFluid(name.c_str());
+
       // Get density inputs ------------------------------------//
       std::string density_model;
-      pp.get("density_model", density_model );
+      ppFluid.get("density", density_model );
 
       if (density_model == "constant") {
 
         DENSITYMODEL DensityModel = ConstantDensity;
-        pp.get("constant_density",   ro_g0 );
+        ppFluid.get("density.constant",   ro_g0 );
 
       } else {
 
@@ -49,12 +71,12 @@ namespace FLUID
 
       // Get viscosity inputs ----------------------------------//
       std::string viscosity_model;
-      pp.get("viscosity_model", viscosity_model );
+      ppFluid.get("viscosity", viscosity_model );
 
       if (density_model == "constant") {
 
         VISCOSITYMODEL ViscosityModel = ConstantViscosity;
-        pp.get("constant_viscosity", mu_g0 );
+        ppFluid.get("viscosity.constant", mu_g0 );
 
 
       } else {

@@ -8,6 +8,7 @@
 
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_BC_Parms.H>
+#include <MFIX_IC_Parms.H>
 
 #include <string>
 
@@ -48,14 +49,15 @@ void
 mfix::set_p0 (const Box& bx,
               MFIter* mfi,
               const int lev,
-              const Box& domain,
-              const Real xlen,
-              const Real ylen,
-              const Real zlen)
+              const Box& domain)
 {
   Real dx = geom[lev].CellSize(0);
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
+
+  Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
+  Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
+  Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
 
   const Real tolerance = std::numeric_limits<Real>::epsilon();
   Real offset(-0.5);
@@ -162,22 +164,22 @@ mfix::set_p0 (const Box& bx,
   pj = 0;
 
   //  Make sure that ic_p_g is set if using delp pressure conditions
-  for(int icv(1); icv <= get_dim_ic(); ++icv)
+  for(int icv(0); icv < IC::ic.size(); ++icv)
   {
     if(ic_defined_cpp(icv))
     {
       if((delp_dir_loc >= 0) and (delp_dir_loc == BC::delp_dir))
       {
-        if (not is_defined_db_cpp(get_ic_p_g(icv)))
+        if (not IC::ic[icv].fluid.pressure_defined)
         {
           std::cout << "MUST DEFINE ic_p_g if using the DELP pressure condition" << std::endl;
           exit(0);
         }
-        pj = get_ic_p_g(icv);
+        pj = IC::ic[icv].fluid.pressure;
       }
       else if((delp_dir_loc >= 0) and (delp_dir_loc != BC::delp_dir))
       {
-        if(is_defined_db_cpp(get_ic_p_g(icv)))
+        if( IC::ic[icv].fluid.pressure_defined)
         {
           std::cout << "MUST not define ic_p_g if setting p_inflowandp_outflow" << std::endl;
           exit(0);
@@ -188,7 +190,7 @@ mfix::set_p0 (const Box& bx,
         const amrex::Real gravity_square_module =
           gravity[0]*gravity[0] + gravity[1]*gravity[1] + gravity[2]*gravity[2];
 
-        if(is_undefined_db_cpp(get_ic_p_g(icv)) or gravity_square_module > tolerance)
+        if( not IC::ic[icv].fluid.pressure or gravity_square_module > tolerance)
         {
           goto_60(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), pj,
               gravity, dx, dy, dz, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo,
@@ -196,7 +198,7 @@ mfix::set_p0 (const Box& bx,
           return;
         }
 
-        const Real ic_p_g = get_ic_p_g(icv);
+        const Real ic_p_g = IC::ic[icv].fluid.pressure;
 
         amrex::ParallelFor(sbx, [array4_p0_g,ic_p_g]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
