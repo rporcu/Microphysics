@@ -191,3 +191,27 @@ dem.spring_tang_fac.pw    =     0.285714285
 
 dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = full-domain
+
+regions.fluid-only.lo = 0.5000  0.0000  0.0000
+regions.fluid-only.hi = 0.3840  0.1920  0.1920
+
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = full-domain
+
+
+# Backgound IC covering the full domain with gas.
+#---------------------------------------------------------------------//
+ic.fluid-only.fluid.volfrac   = 1.0
+
+ic.fluid-only.fluid.velocity  = 1.6  0.0  0.0

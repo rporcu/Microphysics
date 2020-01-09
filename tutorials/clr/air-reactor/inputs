@@ -165,11 +165,11 @@ regions.full-domain.hi = 3.7584  0.2784  0.2784
 regions.riser.lo       = 0.0000  0.0000  0.0000
 regions.riser.hi       = 0.1000  0.2784  0.2784
 
-regions.inflow.lo      = 0.0000  0.0000  0.0000
-regions.inflow.hi      = 0.0000  0.2784  0.2784
+#regions.inflow.lo      = 0.0000  0.0000  0.0000
+#regions.inflow.hi      = 0.0000  0.2784  0.2784
 
-regions.outflow.lo     = 0.0000  0.0000  0.2784
-regions.outflow.hi     = 3.7584  0.2784  0.2784
+#regions.outflow.lo     = 0.0000  0.0000  0.2784
+#regions.outflow.hi     = 3.7584  0.2784  0.2784
 
 
 #_______________________________________________________________________
@@ -178,7 +178,7 @@ regions.outflow.hi     = 3.7584  0.2784  0.2784
 
 ic.regions = full-domain  riser
 
-ic.particle_init_type = Auto
+mfix.particle_init_type = Auto
 
 
 # Backgound IC covering the full domain with gas.
@@ -207,14 +207,19 @@ ic.riser.hdpe.density.constant = 860.0
 #_______________________________________________________________________
 # Boundary Conditions
 #
-
-bc.regions = inflow  outflow
+# --- suggested change:
+#
+#bc.regions = inflow  outflow
 
 
 #! EB geometry
 #!-----------------------------------------------------------//
 
-bc.geometry = "air-reactor"
+mfix.geometry = "air-reactor"
+
+# --- suggested change:
+#
+#bc.geometry = "air-reactor"
 
 airreactor.radius0 = 0.0762    # reactor radius
 airreactor.height0 = 0.7720    # reactor height
@@ -229,13 +234,25 @@ airreactor.outlet  = 3.6322    # outlet height from bottom
 
 #! Mass inflow
 #!-----------------------------------------------------------//
-bc.inflow.type = mi
 
-bc.inflow.fluid.volfrac =  1.0
-bc.inflow.fluid.velocity = 0.01  0.00  0.00
+xlo.type = mi
+xlo.velocity = 0.01
+
+# --- suggested change:
+#
+#bc.inflow.type = mi
+#
+#bc.inflow.fluid.volfrac =  1.0
+#bc.inflow.fluid.velocity = 0.01  0.00  0.00
 
 
 #! Pressure outflow
 #!-----------------------------------------------------------//
-bc.outflow.type = po
-bc.outflow.fluid.pressure = 101325.0
+
+zhi.type = po
+zhi.pressure = 101325.0
+
+# --- suggested change:
+#
+#bc.outflow.type = po
+#bc.outflow.fluid.pressure = 101325.0

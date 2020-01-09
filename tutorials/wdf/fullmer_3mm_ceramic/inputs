@@ -188,3 +188,53 @@ dem.spring_tang_fac.pw    =     0.285714285
 
 dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = fluid-only  bed
+
+regions.fluid-only.lo = 0.00000  0.00000  0.00000
+regions.fluid-only.hi = 0.65664  0.32832  0.16416
+
+regions.bed.lo = 0.00000  0.00000  0.00000
+regions.bed.hi = 0.44200  0.32832  0.16416
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = fluid-only  bed
+
+
+# Backgound IC covering the full domain with gas.
+#---------------------------------------------------------------------//
+ic.fluid-only.fluid.volfrac   = 1.0
+
+ic.fluid-only.fluid.pressure  = 0.0
+
+ic.fluid-only.fluid.velocity  = 0.0  0.0  0.0
+
+
+# Define the initial bed of solids
+#---------------------------------------------------------------------//
+ic.bed.fluid.volfrac   =  0.5
+
+ic.bed.fluid.pressure  = 0.0
+
+ic.bed.fluid.velocity  =  0.0  0.0  0.0
+
+ic.bed.solids  = solid0
+ic.bed.packing = pseudo_random
+
+ic.bed.solid0.volfrac  =  0.5
+
+ic.bed.solid0.velocity =  0.00  0.00  0.00
+
+ic.bed.solid0.diameter = constant
+ic.bed.solid0.density  = constant
+
+ic.bed.solid0.diameter.constant =  3.113e-3
+ic.bed.solid0.density.constant  = 2615.0

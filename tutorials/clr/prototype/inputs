@@ -176,3 +176,134 @@ dem.spring_tang_fac.pw    =     0.285714285
 
 dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = full-domain  riser  fuel-reactor  loop-seal  air-reactor  cyclone
+
+regions.full-domain.lo  = 0.0000  0.0000  0.0000
+regions.full-domain.hi  = 3.8400  0.3200  0.9600
+
+regions.riser.lo        = 0.0000  0.0000  0.0000
+regions.riser.hi        = 0.6400  0.3200  0.9600
+
+regions.fuel-reactor.lo = 0.6400  0.0000  0.6400
+regions.fuel-reactor.hi = 0.9600  0.3200  0.9600
+
+regions.loop-seal.lo    = 2.2400  0.0000  0.6400
+regions.loop-seal.hi    = 2.5600  0.3200  0.9600
+
+regions.air-reactor.lo  = 0.6400  0.0000  0.0000
+regions.air-reactor.hi  = 3.8400  0.3200  0.3200
+
+regions.cyclone.lo      = 3.2000  0.0000  0.3200
+regions.cyclone.hi      = 3.8400  0.3200  0.9600
+
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = full-domain  riser  fuel-reactor  loop-seal  air-reactor  cyclone
+
+mfix.particle_init_type = Auto
+
+
+# Backgound IC covering the full domain with gas.
+#---------------------------------------------------------------------//
+ic.full-domain.fluid.volfrac  = 1.0
+
+ic.full-domain.fluid.velocity = 0.0  0.0  0.0
+
+
+# riser section (above air reactor)
+#---------------------------------------------------------------------//
+ic.riser.fluid.volfrac  = 0.2
+ic.riser.fluid.velocity = 0.0  0.0  0.0
+
+ic.riser.solids = solid0
+ic.riser.packing = hcp
+
+ic.riser.solid0.volfrac  = 0.8
+ic.riser.solid0.velocity = 0.0  0.0  0.0
+
+ic.riser.solid0.diameter = constant
+ic.riser.solid0.diameter.constant = 1250.0e-6
+
+ic.riser.solid0.density =  constant
+ic.riser.solid0.density.constant  = 1000.0
+
+
+# fuel reactor
+#---------------------------------------------------------------------//
+ic.fuel-reactor.fluid.volfrac  = 0.4
+ic.fuel-reactor.fluid.velocity = 0.0  0.0  0.0
+
+ic.fuel-reactor.solids = solid0
+ic.fuel-reactor.packing = hcp
+
+ic.fuel-reactor.solid0.volfrac  = 0.6
+ic.fuel-reactor.solid0.velocity = 0.0  0.0  0.0
+
+ic.fuel-reactor.solid0.diameter = constant
+ic.fuel-reactor.solid0.diameter.constant = 1250.0e-6
+
+ic.fuel-reactor.solid0.density =  constant
+ic.fuel-reactor.solid0.density.constant  = 1000.0
+
+
+#  loop-seal
+#---------------------------------------------------------------------//
+ic.loop-seal.fluid.volfrac  = 0.4
+ic.loop-seal.fluid.velocity = 0.0  0.0  0.0
+
+ic.loop-seal.solids = solid0
+ic.loop-seal.packing = hcp
+
+ic.loop-seal.solid0.volfrac  = 0.6
+ic.loop-seal.solid0.velocity = 0.0  0.0  0.0
+
+ic.loop-seal.solid0.diameter = constant
+ic.loop-seal.solid0.diameter.constant = 1250.0e-6
+
+ic.loop-seal.solid0.density =  constant
+ic.loop-seal.solid0.density.constant  = 1000.0
+
+
+#  air-reactor
+#---------------------------------------------------------------------//
+ic.air-reactor.fluid.volfrac  = 0.99
+ic.air-reactor.fluid.velocity = 0.0  0.0  0.0
+
+ic.air-reactor.solids = solid0
+ic.air-reactor.packing = oneper
+
+ic.air-reactor.solid0.volfrac  = 0.01
+ic.air-reactor.solid0.velocity = 0.0  0.0  0.0
+
+ic.air-reactor.solid0.diameter = constant
+ic.air-reactor.solid0.diameter.constant = 1250.0e-6
+
+ic.air-reactor.solid0.density =  constant
+ic.air-reactor.solid0.density.constant  = 1000.0
+
+
+#  cyclone
+#---------------------------------------------------------------------//
+ic.cyclone.fluid.volfrac  = 0.99
+ic.cyclone.fluid.velocity = 0.0  0.0  0.0
+
+ic.cyclone.solids = solid0
+ic.cyclone.packing = oneper
+
+ic.cyclone.solid0.volfrac  = 0.01
+ic.cyclone.solid0.velocity = 0.0  0.0  0.0
+
+ic.cyclone.solid0.diameter = constant
+ic.cyclone.solid0.diameter.constant = 1250.0e-6
+
+ic.cyclone.solid0.density =  constant
+ic.cyclone.solid0.density.constant  = 1000.0
