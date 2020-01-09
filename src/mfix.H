@@ -606,11 +606,6 @@ private:
     // Particle container
     std::unique_ptr<MFIXParticleContainer> pc;
 
-    // Unit vectors in Cartesian space
-    static IntVect e_x;
-    static IntVect e_y;
-    static IntVect e_z;
-
     // Debug counter used for tracking number of level-set MultiFabs used in
     // intersection/union
     int ct_ls_mf;

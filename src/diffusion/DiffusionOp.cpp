@@ -8,11 +8,6 @@
 
 using namespace amrex;
 
-// Define unit vectors to easily convert indices
-extern const amrex::IntVect e_x;
-extern const amrex::IntVect e_y;
-extern const amrex::IntVect e_z;
-
 //
 // Constructor:
 // We set up everything which doesn't change between timesteps here
@@ -121,16 +116,16 @@ void DiffusionOp::readParameters ()
 {
     ParmParse pp("diffusion");
 
-    pp.query("verbose", verbose);
-    pp.query("mg_verbose", mg_verbose);
-    pp.query("mg_cg_verbose", mg_cg_verbose);
-    pp.query("mg_max_iter", mg_max_iter);
-    pp.query("mg_cg_maxiter", mg_cg_maxiter);
+    pp.query("verbose_solver", verbose);
+    pp.query("verbose", mg_verbose);
+    pp.query("bottom_verbose", mg_cg_verbose);
+    pp.query("maxiter", mg_max_iter);
+    pp.query("bottom_maxiter", mg_cg_maxiter);
     pp.query("mg_max_fmg_iter", mg_max_fmg_iter);
     pp.query("mg_max_coarsening_level", mg_max_coarsening_level);
-    pp.query("mg_rtol", mg_rtol);
-    pp.query("mg_atol", mg_atol);
-    pp.query("bottom_solver_type", bottom_solver_type);
+    pp.query("rtol", mg_rtol);
+    pp.query("atol", mg_atol);
+    pp.query("bottom_solver", bottom_solver_type);
 }
 
 //

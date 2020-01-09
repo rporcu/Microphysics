@@ -101,10 +101,10 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                    else
                    {
                        // X direction
-                       Real du_xl = (flag_fab(i-1,j,k).isCovered()) ? 0.0 :
-                           2.0*(state_fab(i,j,k,n) - state_fab(i-1,j,k,n));
-                       Real du_xr = (flag_fab(i+1,j,k).isCovered()) ? 0.0 :
-                           2.0*(state_fab(i+1,j,k,n) - state_fab(i,j,k,n));
+                       Real du_xl = (flag_fab(i,j,k).isConnected(-1,0,0)) ?
+                           2.0*(state_fab(i  ,j,k,n) - state_fab(i-1,j,k,n)) : 0.0;
+                       Real du_xr = (flag_fab(i,j,k).isConnected( 1,0,0)) ?
+                           2.0*(state_fab(i+1,j,k,n) - state_fab(i  ,j,k,n)) : 0.0;
                        Real du_xc = 0.5*(state_fab(i+1,j,k,n) - state_fab(i-1,j,k,n));
 
                        Real xslope = amrex::min(std::abs(du_xl), std::abs(du_xc), std::abs(du_xr));
@@ -112,10 +112,10 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                        xs_fab(i,j,k,slopes_comp+n) = (du_xc > 0.0) ? xslope : -xslope;
 
                        // Y direction
-                       Real du_yl = (flag_fab(i,j-1,k).isCovered()) ? 0.0 :
-                           2.0*(state_fab(i,j,k,n) - state_fab(i,j-1,k,n));
-                       Real du_yr = (flag_fab(i,j+1,k).isCovered()) ? 0.0 :
-                           2.0*(state_fab(i,j+1,k,n) - state_fab(i,j,k,n));
+                       Real du_yl = (flag_fab(i,j,k).isConnected(0,-1,0)) ?
+                           2.0*(state_fab(i,j  ,k,n) - state_fab(i,j-1,k,n)) : 0.0;
+                       Real du_yr = (flag_fab(i,j,k).isConnected(0, 1,0)) ?
+                           2.0*(state_fab(i,j+1,k,n) - state_fab(i,j  ,k,n)) : 0.0;
                        Real du_yc = 0.5*(state_fab(i,j+1,k,n) - state_fab(i,j-1,k,n));
 
                        Real yslope = amrex::min(std::abs(du_yl), std::abs(du_yc), std::abs(du_yr));
@@ -123,10 +123,10 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                        ys_fab(i,j,k,slopes_comp+n) = (du_yc > 0.0) ? yslope : -yslope;
 
                        // Z direction
-                       Real du_zl = (flag_fab(i,j,k-1).isCovered()) ? 0.0 :
-                           2.0*(state_fab(i,j,k,n) - state_fab(i,j,k-1,n));
-                       Real du_zr = (flag_fab(i,j,k+1).isCovered()) ? 0.0 :
-                           2.0*(state_fab(i,j,k+1,n) - state_fab(i,j,k,n));
+                       Real du_zl = (flag_fab(i,j,k).isConnected(0,0,-1)) ?
+                           2.0*(state_fab(i,j,k  ,n) - state_fab(i,j,k-1,n)) : 0.0;
+                       Real du_zr = (flag_fab(i,j,k).isConnected(0,0, 1)) ?
+                           2.0*(state_fab(i,j,k+1,n) - state_fab(i,j,k  ,n)) : 0.0;
                        Real du_zc = 0.5*(state_fab(i,j,k+1,n) - state_fab(i,j,k-1,n));
 
                        Real zslope = amrex::min(std::abs(du_zl), std::abs(du_zc), std::abs(du_zr));
