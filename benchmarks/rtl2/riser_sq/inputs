@@ -88,6 +88,9 @@ zlo.type = "nsw"
 zhi.location = 0.002
 zhi.type = "nsw"
 
+bc.delp     =    2.
+bc.delp_dir =    0
+
 #_______________________________________________________________________
 # Particle load balancing
 
