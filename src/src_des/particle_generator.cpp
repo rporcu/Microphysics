@@ -1,7 +1,6 @@
 #include <particle_generator.H>
 #include <AMReX_AmrParGDB.H>
 #include <param_mod_F.H>
-#include <ic_mod_F.H>
 #include <discretelement_mod_F.H>
 #include <calc_cell_F.H>
 

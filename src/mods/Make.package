@@ -1,13 +1,11 @@
 f90EXE_sources += bc_mod.f90
 f90EXE_sources += eos_mod.f90            
-f90EXE_sources += ic_mod.f90    
 f90EXE_sources += constant_mod.f90  
 f90EXE_sources += param_mod.f90   
 f90EXE_sources += run_mod.f90  
 f90EXE_sources += utilities_mod.f90
 
 F90EXE_headers += bc_mod_F.H
-F90EXE_headers += ic_mod_F.H
 F90EXE_headers += param_mod_F.H
  
 CEXE_headers += MFIX_FLUID_Parms.H

@@ -1,6 +1,5 @@
 #include <mfix.H>
 #include <bc_mod_F.H>
-#include <ic_mod_F.H>
 #include <climits>
 #include <param_mod_F.H>
 #include <mfix_des_F.H>

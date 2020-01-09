@@ -1,7 +1,6 @@
 #include <mfix_init_fluid.H>
 
 #include <mfix_calc_mu_g.H>
-#include <ic_mod_F.H>
 #include <param_mod_F.H>
 #include <calc_cell_F.H>
 #include <MFIX_FLUID_Parms.H>

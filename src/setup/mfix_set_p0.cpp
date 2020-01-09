@@ -1,6 +1,5 @@
 #include <mfix.H>
 #include <bc_mod_F.H>
-#include <ic_mod_F.H>
 #include <climits>
 #include <param_mod_F.H>
 #include <mfix_des_F.H>
@@ -166,44 +165,41 @@ mfix::set_p0 (const Box& bx,
   //  Make sure that ic_p_g is set if using delp pressure conditions
   for(int icv(0); icv < IC::ic.size(); ++icv)
   {
-    if(ic_defined_cpp(icv))
+    if((delp_dir_loc >= 0) and (delp_dir_loc == BC::delp_dir))
     {
-      if((delp_dir_loc >= 0) and (delp_dir_loc == BC::delp_dir))
+      if (not IC::ic[icv].fluid.pressure_defined)
       {
-        if (not IC::ic[icv].fluid.pressure_defined)
-        {
-          std::cout << "MUST DEFINE ic_p_g if using the DELP pressure condition" << std::endl;
-          exit(0);
-        }
-        pj = IC::ic[icv].fluid.pressure;
+        std::cout << "MUST DEFINE ic_p_g if using the DELP pressure condition" << std::endl;
+        exit(0);
       }
-      else if((delp_dir_loc >= 0) and (delp_dir_loc != BC::delp_dir))
+      pj = IC::ic[icv].fluid.pressure;
+    }
+    else if((delp_dir_loc >= 0) and (delp_dir_loc != BC::delp_dir))
+    {
+      if( IC::ic[icv].fluid.pressure_defined)
       {
-        if( IC::ic[icv].fluid.pressure_defined)
-        {
-          std::cout << "MUST not define ic_p_g if setting p_inflowandp_outflow" << std::endl;
-          exit(0);
-        }
+        std::cout << "MUST not define ic_p_g if setting p_inflowandp_outflow" << std::endl;
+        exit(0);
       }
-      else
+    }
+    else
+    {
+      const amrex::Real gravity_square_module =
+        gravity[0]*gravity[0] + gravity[1]*gravity[1] + gravity[2]*gravity[2];
+
+      if( not IC::ic[icv].fluid.pressure or gravity_square_module > tolerance)
       {
-        const amrex::Real gravity_square_module =
-          gravity[0]*gravity[0] + gravity[1]*gravity[1] + gravity[2]*gravity[2];
-
-        if( not IC::ic[icv].fluid.pressure or gravity_square_module > tolerance)
-        {
-          goto_60(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), pj,
-              gravity, dx, dy, dz, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo,
-              bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup, nghost);
-          return;
-        }
-
-        const Real ic_p_g = IC::ic[icv].fluid.pressure;
-
-        amrex::ParallelFor(sbx, [array4_p0_g,ic_p_g]
-            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            { array4_p0_g(i,j,k) = ic_p_g; });
+        goto_60(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), pj,
+            gravity, dx, dy, dz, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo,
+            bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup, nghost);
+        return;
       }
+
+      const Real ic_p_g = IC::ic[icv].fluid.pressure;
+
+      amrex::ParallelFor(sbx, [array4_p0_g,ic_p_g]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          { array4_p0_g(i,j,k) = ic_p_g; });
     }
   }
   

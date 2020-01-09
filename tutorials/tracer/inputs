@@ -196,12 +196,16 @@ ic.regions = fluid-only  bed
 #---------------------------------------------------------------------//
 ic.fluid-only.fluid.volfrac   = 1.0
 
+ic.fluid-only.fluid.pressure  = 0.0
+
 ic.fluid-only.fluid.velocity  = 0.0  0.0  0.0
 
 
 # Define the initial bed of solids
 #---------------------------------------------------------------------//
 ic.bed.fluid.volfrac   =  0.75
+
+ic.bed.fluid.pressure  = 0.0
 
 ic.bed.fluid.velocity  =  0.0  0.0  0.0
 
@@ -215,5 +219,5 @@ ic.bed.solid0.velocity =  0.00  0.00  0.00
 ic.bed.solid0.diameter = constant
 ic.bed.solid0.density  = constant
 
-ic.bed.solid0.diameter.constant =  100.0e-6
+ic.bed.solid0.diameter.constant =  100.0e-3
 ic.bed.solid0.density.constant  = 1000.0
