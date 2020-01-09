@@ -186,6 +186,8 @@ ic.regions = full-domain
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   =  0.983
 
+ic.full-domain.fluid.pressure  =  0.0
+
 ic.full-domain.fluid.velocity  =  0.00  0.00  0.00
 
 ic.full-domain.solids  = solid0
