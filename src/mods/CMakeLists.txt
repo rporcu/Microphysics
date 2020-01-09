@@ -17,6 +17,8 @@ target_sources( mfixcore
    run_mod.f90
    MFIX_FLUID_Parms.cpp
    MFIX_FLUID_Parms.H
+   MFIX_DEM_Parms.cpp
+   MFIX_DEM_Parms.H
    MFIX_IC_Parms.cpp
    MFIX_IC_Parms.H
    MFIX_BC_Parms.cpp

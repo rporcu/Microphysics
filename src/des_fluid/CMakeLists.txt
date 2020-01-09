@@ -11,8 +11,6 @@ target_sources( mfixcore
    mfix_drag_K.H
    MFIXParticleContainer.cpp
    MFIXParticleContainer.H
-   MFIX_DEM_Parms.cpp
-   MFIX_DEM_Parms.H
    MFIX_PC_Init.cpp
    MFIX_PC_RemoveOutOfRange.cpp
    MFIX_PC_Replicate.cpp
