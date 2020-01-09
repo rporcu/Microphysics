@@ -168,3 +168,42 @@ dem.spring_tang_fac.pw    =     0.285714285
 
 dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = full-domain
+
+regions.full-domain.lo = 0.0000  0.0000  0.0000
+regions.full-domain.hi = 0.0080  0.0020  0.0020
+
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = full-domain
+
+
+# Define the initial solids
+#---------------------------------------------------------------------//
+ic.full-domain.fluid.volfrac   =  0.983
+
+ic.full-domain.fluid.pressure  =  0.0
+
+ic.full-domain.fluid.velocity  =  0.0  0.00  0.00
+
+ic.full-domain.solids  = solid0
+ic.full-domain.packing = pseudo_random
+
+ic.full-domain.solid0.volfrac  =  0.017
+
+ic.full-domain.solid0.velocity =  0.00  0.00  0.00
+
+ic.full-domain.solid0.diameter = constant
+ic.full-domain.solid0.density  = constant
+
+ic.full-domain.solid0.diameter.constant =  100.0e-6
+ic.full-domain.solid0.density.constant  = 1000.0

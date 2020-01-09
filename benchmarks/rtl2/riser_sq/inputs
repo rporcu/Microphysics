@@ -165,6 +165,45 @@ dem.spring_const.pw       =    10.0
 dem.restitution_coeff.solid0.solid0  =     0.8
 dem.restitution_coeff.solid0.wall    =     1.0
 
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = full-domain
+
+regions.full-domain.lo = 0.0000  0.0000  0.0000
+regions.full-domain.hi = 0.0080  0.0020  0.0020
+
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = full-domain
+
+
+# Define the initial solids
+#---------------------------------------------------------------------//
+ic.full-domain.fluid.volfrac   =  0.9833
+
+ic.full-domain.fluid.pressure  =  0.0
+
+ic.full-domain.fluid.velocity  =  0.0  0.00  0.00
+
+ic.full-domain.solids  = solid0
+ic.full-domain.packing = pseudo_random
+
+ic.full-domain.solid0.volfrac  =  0.0167
+
+ic.full-domain.solid0.velocity =  0.00  0.00  0.00
+
+ic.full-domain.solid0.diameter = constant
+ic.full-domain.solid0.density  = constant
+
+ic.full-domain.solid0.diameter.constant =  100.0e-6
+ic.full-domain.solid0.density.constant  = 1000.0
+
 dem.spring_tang_fac.pp    =     0.285714285
 dem.spring_tang_fac.pw    =     0.285714285
 
