@@ -1,6 +1,14 @@
 #include <eos_mod.H>
 
 AMREX_GPU_HOST_DEVICE
+amrex::Real idealgas (const amrex::Real& mw, const amrex::Real& pg, const amrex::Real& tg)
+{
+  return (pg*mw)/(8314.56*tg);
+}
+
+
+
+AMREX_GPU_HOST_DEVICE
 amrex::Real sutherland (const amrex::Real& tg)
 {
    // Dummy arguments

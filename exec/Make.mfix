@@ -16,7 +16,6 @@ Bdirs 	+= src/projection
 Bdirs 	+= src/setup
 Bdirs 	+= src/util
 Bdirs   += src/deposition
-Bdirs 	+= src/check_data
 Bdirs 	+= src/mods
 Bdirs 	+= src/src_des
 Bdirs 	+= src/eb

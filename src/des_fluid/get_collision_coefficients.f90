@@ -1,5 +1,4 @@
-subroutine set_lsd_collision_coefficients ( nphase_in,                 &
-     &                                      mew_in,      mew_w_in,     &
+subroutine set_lsd_collision_coefficients ( mew_in,      mew_w_in,     &
      &                                      kn_in,       kn_w_in,      &
      &                                      kt_in,       kt_w_in,      &
      &                                      en_in,       en_w_in,      &
@@ -11,7 +10,6 @@ subroutine set_lsd_collision_coefficients ( nphase_in,                 &
    use iso_c_binding,     only: c_int
 
    use param,             only: dim_m  ! Maximal number of particle types
-   use constant,          only: mmax   ! Actual number of particle types
 
    use discretelement,    only: mew,          mew_w          ! Friction coeffs
    use discretelement,    only: kn,           kn_w           ! Spring constants (normal)
@@ -25,8 +23,6 @@ subroutine set_lsd_collision_coefficients ( nphase_in,                 &
 
    integer, parameter :: dim_lm = dim_m+dim_m*(dim_m-1)/2;
 
-   integer(c_int), intent(in   ) :: nphase_in
-
    real(rt),       intent(in   ) :: mew_in,        mew_w_in
    real(rt),       intent(in   ) :: kn_in,         kn_w_in
    real(rt),       intent(in   ) :: kt_in,         kt_w_in
@@ -36,8 +32,6 @@ subroutine set_lsd_collision_coefficients ( nphase_in,                 &
 
    ! Copy inputs into fortran module variables. This is a temporary
    ! work around until we completely use c++.
-
-   mmax = nphase_in
 
    mew   = mew_in
    mew_w = mew_w_in

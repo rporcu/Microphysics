@@ -1,0 +1,10 @@
+build
+build-debug
+build-gpu
+compile_commands.json
+Dockerfile
+exec
+.git
+subprojects
+tools
+UnitTests

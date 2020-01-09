@@ -63,9 +63,6 @@ add_subdirectory(setup)
 # Utility functions
 add_subdirectory(util)
 
-# Setup check functions
-add_subdirectory(check_data)
-
 # Global module files
 add_subdirectory(mods)
 

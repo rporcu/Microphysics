@@ -8,7 +8,6 @@
       use cfrelvel_module, only: cfrelvel
       use discretelement , only: des_crossprdct
       use discretelement , only: des_etan, des_etat, kn, kt, mew
-      use error_manager  , only: init_err_msg, flush_err_msg, err_msg, ival
       use param          , only: small_number
 
       implicit none
@@ -117,7 +116,6 @@
 
             ! calcuate the normal overlap
             overlap_n = r_lm-dist_mag
-            if (report_excess_overlap) call print_excess_overlap
 
             ! calculate the components of translational relative velocity for a
             ! contacting particle pair and the tangent to the plane of contact
@@ -182,31 +180,5 @@
          index = index + nneighbors
 
       end do
-
-   contains
-
-      !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      !                                                                      !
-      !  subroutine: print_excess_overlap                                    !
-      !                                                                      !
-      !  purpose: print overlap warning messages.                            !
-      !                                                                      !
-      !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine print_excess_overlap ()
-
-         if(overlap_n > flag_overlap*radiusll .or.                  &
-              overlap_n > flag_overlap*radiusii) then
-
-            write(err_msg,1000) trim(ival(ll)), trim(ival(ii)),     &
-                 radiusll, radiusii, overlap_n
-
-            call flush_err_msg(header=.false., footer=.false.)
-         endif
-
-1000     format('warning: excessive overplay detected between ',          &
-              'particles ',a,' and ',/a,'.',/             &
-              'radii:  ',g11.4,' and ',g11.4,4x,'overlap: ',g11.4)
-
-      end subroutine print_excess_overlap
 
    end subroutine calc_particle_collisions

@@ -233,9 +233,6 @@ int main (int argc, char* argv[])
 
     mfix.get_input_bcs();
 
-    if ( ParallelDescriptor::IOProcessor() )
-      check_inputs();
-
     // Set global static pointer to mfix object. Used by fill-patch utility
     set_ptr_to_mfix(mfix);
 

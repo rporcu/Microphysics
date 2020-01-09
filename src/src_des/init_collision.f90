@@ -4,7 +4,8 @@
 !  Purpose: DES - allocating DES arrays                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine init_collision (min_dp_in, min_ro_in,  &
+subroutine init_collision (mmax,                  &
+     &                     min_dp_in, min_ro_in,  &
      &                     max_dp_in, max_ro_in,  &
      &                     avg_dp_in, avg_ro_in,  &
      &                     tcoll_ratio,           &
@@ -19,8 +20,6 @@ subroutine init_collision (min_dp_in, min_ro_in,  &
   use param,             only: dim_m
   use param,             only: zero
 
-  use constant,          only: mmax
-
   use discretelement,    only: dp_max, dp_min, dp_avg
   use discretelement,    only: ro_max, ro_min, ro_avg
 
@@ -28,6 +27,8 @@ subroutine init_collision (min_dp_in, min_ro_in,  &
   use discretelement,    only: des_etat, des_etat_wall
 
   implicit none
+
+  integer(c_int), intent(in) :: mmax
 
   real(rt), intent(in) :: min_dp_in(dim_m), min_ro_in(dim_m)
   real(rt), intent(in) :: max_dp_in(dim_m), max_ro_in(dim_m)
@@ -63,7 +64,7 @@ subroutine init_collision (min_dp_in, min_ro_in,  &
 
   enddo
 
-  call init_collision_lsd
+  call init_collision_lsd(mmax)
 
   ! convert from Fortran to C ordering here
   do i = 1, dim_m
@@ -91,14 +92,15 @@ contains
 !      65-149 (pages 94-95)                                            !
 !   - Silbert et al., Physical Review E, 2001, 64, 051302 1-14 (page 5)!
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine init_collision_lsd
+  subroutine init_collision_lsd(mmax)
 
-  use constant,       only: mmax
   use amrex_constants_module, only: M_PI
   use discretelement, only: kn, kn_w, kt, kt_w, kt_fac, kt_w_fac, &
       & des_etan, des_etan_wall, des_etat, des_etat_wall,        &
       & des_en_input, des_en_wall_input, &
       & des_etat_fac, des_etat_w_fac, dtsolid
+
+  integer, intent(in   ) :: mmax
 
   integer  :: m, l, lc
   real(rt) :: tcoll, tcoll_tmp

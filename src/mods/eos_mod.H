@@ -8,6 +8,12 @@
 
 #include <cmath>
 
+
+AMREX_GPU_HOST_DEVICE
+amrex::Real idealgas (const amrex::Real& mw,
+                      const amrex::Real& pg,
+                      const amrex::Real& tg);
+
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 //                                                                      !
 //  Function: sutherland                                                !

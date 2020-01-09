@@ -227,8 +227,7 @@ namespace DEM
         }
 
 
-        set_lsd_collision_coefficients(&NPHASE,
-                                       &mew,         &mew_w,
+        set_lsd_collision_coefficients(&mew,         &mew_w,
                                        &kn,          &kn_w,
                                        &kt,          &kt_w,
                                        &en_input[0], &en_w_input[0],

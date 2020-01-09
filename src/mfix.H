@@ -532,8 +532,6 @@ private:
 
     void MakeBCArrays ();
 
-    void check_data ();
-
     void MakeNewLevelFromScratch (int lev, Real time, const BoxArray & new_grids,
                                   const DistributionMapping & new_dmap) override;
 

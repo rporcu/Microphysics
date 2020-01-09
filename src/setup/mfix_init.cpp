@@ -510,23 +510,9 @@ void mfix::MakeNewLevelFromScratch (int lev, Real time,
     amrex::Print() << "SETTING NEW GRIDS IN MAKE NEW LEVEL " << new_grids << std::endl;
     amrex::Print() << "SETTING NEW DMAP IN MAKE NEW LEVEL " << new_dmap << std::endl;
 
-    if (lev == 0)
-    {
-        // This is being done by mfix::make_eb_geometry, otherwise it would be
-        // here
-        MakeBCArrays();
-        check_data();
-
-        Real dx = geom[lev].CellSize(0);
-        Real dy = geom[lev].CellSize(1);
-        Real dz = geom[lev].CellSize(2);
-
-        // This is separate from check_data because it is only called on
-        // initialization, not on restart
-        Box domain(geom[0].Domain());
-        if ( ParallelDescriptor::IOProcessor() )
-            check_initial_conditions(&dx,&dy,&dz,domain.loVect(),domain.hiVect());
-    }
+    // This is being done by mfix::make_eb_geometry,
+    // otherwise it would be done here
+    if (lev == 0) MakeBCArrays();
 }
 
 
@@ -538,33 +524,12 @@ void mfix::ReMakeNewLevelFromScratch (int lev,
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
 
-    if (lev == 0)
-    {
-       MakeBCArrays();
-       check_data();
-    }
+    if (lev == 0) MakeBCArrays();
 
     // We need to re-fill these arrays for the larger domain (after replication).
     mfix_set_bc_type(lev);
 }
 
-
-void mfix::check_data ()
-{
-    if (ooo_debug) amrex::Print() << "check_data" << std::endl;
-    Real dx = geom[0].CellSize(0);
-    Real dy = geom[0].CellSize(1);
-    Real dz = geom[0].CellSize(2);
-
-    Box domain(geom[0].Domain());
-
-    // Only call this check on one processor since it has a bunch of print statements
-    if ( ParallelDescriptor::IOProcessor() )
-    {
-//     check_boundary_conditions(&dx,&dy,&dz,&xlen,&ylen,&zlen,domain.loVect(),domain.hiVect());
-       check_bc_flow();
-    }
-}
 
 
 void mfix::InitLevelData (Real time)
@@ -750,7 +715,8 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
                                 max_dp, max_ro,
                                 avg_dp, avg_ro );
 
-        init_collision(min_dp, min_ro,
+        init_collision(&DEM::NPHASE,
+                       min_dp, min_ro,
                        max_dp, max_ro,
                        avg_dp, avg_ro,
                        tcoll_ratio,

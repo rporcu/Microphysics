@@ -22,7 +22,6 @@ void mfix::make_eb_geometry ()
      ***************************************************************************/
 
     MakeBCArrays();
-    check_data();
 
     int cyc_x=0, cyc_y=0, cyc_z=0;
 

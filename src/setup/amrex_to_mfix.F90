@@ -43,19 +43,6 @@ contains
 
   end subroutine mfix_usr2
 
-!**************************************************************************!
-!                                                                          !
-!                                                                          !
-!**************************************************************************!
-  subroutine mfix_finl_err_msg () &
-       bind(C, name="mfix_finl_err_msg")
-
-    use error_manager, only: finl_err_msg
-
-    call finl_err_msg
-
-  end subroutine mfix_finl_err_msg
-
 
 !**************************************************************************!
 !                                                                          !

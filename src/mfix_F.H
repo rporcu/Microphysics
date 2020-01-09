@@ -17,18 +17,11 @@ extern "C"
 {
 #endif
 
-    void check_inputs ();
-
     void mfix_set_cyclic (int* cyc_x, int* cyc_y, int* cyc_z);
 
     void check_initial_conditions (amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
                                    const int* domlo, const int* domhi);
 
-    void check_boundary_conditions (amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-                                    amrex::Real* xlength, amrex::Real* ylength, amrex::Real* zlength,
-                                    const int* domlo, const int* domhi);
-
-    void check_bc_flow ();
 
     void set_bc_mod (const int* pID, const int* pType,
                      const amrex::Real* pLo, const amrex::Real* pHi,
@@ -57,7 +50,8 @@ extern "C"
                              const int* domlo , const int* domhi,
                              const int* ng);
 
-    void init_collision (amrex::Real *min_dp, amrex::Real *min_roi,
+    void init_collision (const int* mmax,
+                         amrex::Real *min_dp, amrex::Real *min_roi,
                          amrex::Real *max_dp, amrex::Real *max_roi,
                          amrex::Real *sum_dp, amrex::Real *sum_roi,
                          const amrex::Real& tcoll_ratio,
@@ -81,8 +75,6 @@ extern "C"
     void mfix_usr3 (amrex::Real* vel_g, const int* ulo, const int* uhi,
                     amrex::Real* p_g,   const int* slo, const int* shi,
                     amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);
-
-    void mfix_finl_err_msg ();
 
     void mfix_collect_fluid (const int* lo, const int* hi,
                              const int* domlo , const int* domhi,

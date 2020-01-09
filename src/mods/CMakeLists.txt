@@ -6,8 +6,6 @@ target_sources( mfixcore
    PRIVATE
    bc_mod.f90
    bc_mod_F.H
-   constant_mod.f90
-   eos_mod.f90
    eos_mod.H
    eos_mod.cpp
    utilities_mod.f90
