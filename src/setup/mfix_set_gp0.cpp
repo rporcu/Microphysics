@@ -99,7 +99,7 @@ mfix::set_gp0 (const int lev,
   // ---------------------------------------------------------------->>>
 
   //  Make sure that ic_p_g is set if using delp pressure conditions
-  for(int icv(1); icv < IC::ic.size(); ++icv)
+  for(int icv(0); icv < IC::ic.size(); ++icv)
   {
 
     if((delp_dir_loc >= 0) and (delp_dir_loc == BC::delp_dir)) {
