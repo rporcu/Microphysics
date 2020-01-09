@@ -181,7 +181,7 @@ ParticlesGenerator::generate (int& pc,
     p_rdata[local_pc*local_nr + 7] = ic_w_s;
 
     //< Type................... 1
-    p_idata[local_pc*local_ni + 0] = type;
+    p_idata[local_pc*local_ni + 0] = type+1;
   });
 
   pc += np;
