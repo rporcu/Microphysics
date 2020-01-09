@@ -102,3 +102,34 @@ fluid.density.constant   = 1.0
 
 fluid.viscosity          = constant
 fluid.viscosity.constant = 1.0e-3
+
+
+#_______________________________________________________________________
+# DEM model settings
+
+dem.solve = None
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = full-domain
+
+regions.full-domain.lo = 0.000  0.000  0.000
+regions.full-domain.hi = 3.200  3.200  0.800
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = full-domain
+
+
+# Backgound IC covering the full domain with gas.
+#---------------------------------------------------------------------//
+ic.full-domain.fluid.volfrac   =  1.0
+
+ic.full-domain.fluid.pressure  = 0.0
+
+ic.full-domain.fluid.velocity  = 1.0  0.0  0.0
