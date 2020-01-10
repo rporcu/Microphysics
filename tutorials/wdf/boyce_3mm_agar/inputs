@@ -81,34 +81,6 @@ mfix.levelset__eb_pad        = 2 # EB extends into neighboring grids
 
 mfix.write_eb_surface = false  # Needed to output eb-surfaces
 
-#! EB geometry
-#!-----------------------------------------------------------//
-mfix.geometry = "cylinder"
-
-cylinder.internal_flow = true
-cylinder.bottom_offset = 1.0e-8
-
-cylinder.radius = 0.095
-cylinder.height = -1.0
-
-cylinder.direction = 0
-cylinder.center    =  0.192   0.096   0.096
-
-#! BCs 
-#!-----------------------------------------------------------//
-xlo.location = 0.0
-xlo.type = "mi"
-xlo.velocity = 0.8  0.0
-
-xlo.ylo = 0.090
-xlo.yhi = 0.102
-xlo.zlo = 0.090
-xlo.zhi = 0.102
-
-xhi.location = 0.384
-xhi.type = "po"
-xhi.pressure = 0.0
-
 #_______________________________________________________________________
 # Particle load balancing
 
@@ -197,11 +169,19 @@ dem.damping_tang_fac.pw   =     0.5
 # Regions for defining ICs and BCs
 #
 
-mfix.regions = full-domain
+mfix.regions = full-domain  inlet  jet  outlet
 
-regions.full-domain.lo = 0.5000  0.0000  0.0000
-regions.full-domain.hi = 0.3840  0.1920  0.1920
+regions.full-domain.lo = 0.500  0.000  0.000
+regions.full-domain.hi = 0.384  0.192  0.192
 
+regions.inlet.lo       = 0.000  0.000  0.000
+regions.inlet.hi       = 0.000  0.192  0.192
+
+regions.jet.lo         = 0.000  0.090  0.090
+regions.jet.hi         = 0.000  0.102  0.102
+
+regions.outlet.lo      = 0.384  0.000  0.000
+regions.outlet.hi      = 0.384  0.192  0.192
 
 #_______________________________________________________________________
 # Initial Conditions
@@ -211,7 +191,76 @@ ic.regions = full-domain
 
 
 # Backgound IC covering the full domain with gas.
-#---------------------------------------------------------------------//
+#-------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
 
 ic.full-domain.fluid.velocity  = 1.6  0.0  0.0
+
+
+#_______________________________________________________________________
+# EB geometry
+#
+mfix.geometry = "cylinder"
+
+cylinder.internal_flow = true
+cylinder.bottom_offset = 1.0e-8
+
+cylinder.radius = 0.095
+cylinder.height = -1.0
+
+cylinder.direction = 0
+cylinder.center    =  0.192   0.096   0.096
+
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+
+# Background flow
+# ------------------------------------------------------------//
+bc.regions = inlet  jet  outlet
+
+bc.inlet = "mi"
+
+bc.inlet.fluid.volfrac = 1.0
+
+bc.inlet.fluid.velocity = 0.8  0.0  0.0
+
+
+# Central jet
+# ------------------------------------------------------------//
+bc.jet = "mi"
+
+bc.jet.fluid.volfrac = 1.0
+
+bc.jet.fluid.velocity = 0.1  0.0  0.0
+
+
+# Pressure outflow
+# ------------------------------------------------------------//
+bc.outlet = "po"
+
+bc.outlet.fluid.pressure = 0.0
+
+
+
+
+
+// This is how we are currently specifying the inputs
+// for the mass inflows and pressure outflow. This
+// is to be changed to match the above.
+
+xlo.location = 0.0
+xlo.type = "mi"
+xlo.velocity = 0.8  0.0
+
+xlo.ylo = 0.090
+xlo.yhi = 0.102
+xlo.zlo = 0.090
+xlo.zhi = 0.102
+
+xhi.location = 0.384
+xhi.type = "po"
+xhi.pressure = 0.0
+~                                                                                                              
+~                       
