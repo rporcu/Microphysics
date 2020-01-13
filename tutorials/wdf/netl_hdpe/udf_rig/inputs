@@ -230,6 +230,6 @@ ic.bed.hdpe.velocity =  0.00  0.00  0.00
 ic.bed.hdpe.diameter = constant
 ic.bed.hdpe.density  = constant
 
-ic.bed.hdpe.diameter.constant = 870.0e-3
+ic.bed.hdpe.diameter.constant = 870.0e-6
 ic.bed.hdpe.density.constant  = 855.0
 
