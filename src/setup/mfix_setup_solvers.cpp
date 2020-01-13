@@ -14,25 +14,6 @@ mfix::mfix_init_solvers ()
     Box domain(geom[0].Domain());
 
     //
-    // First the nodal projection
-    //
-    set_ppe_bcs(bc_lo, bc_hi,
-                domain.loVect(), domain.hiVect(),
-                &nghost,
-                bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
-                bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
-                bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
-
-    ppe_lobc = {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]};
-    ppe_hibc = {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]};
-
-    LPInfo info;
-    info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
-
-    nodal_projector.reset(new NodalProjector(geom, grids, dmap, ppe_lobc, ppe_hibc,
-                                             GetVecOfConstPtrs(ebfactory), info) );
-
-    //
     // Set vel bcs (bc_lo, bc_hi)
     //
     set_vel_diff_bc(bc_lo, bc_hi,
@@ -71,28 +52,7 @@ mfix::mfix_setup_solvers ()
     Box domain(geom[0].Domain());
 
     //
-    // First the nodal projection
-    //
-    set_ppe_bcs(bc_lo, bc_hi,
-                domain.loVect(), domain.hiVect(),
-                &nghost,
-                bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
-                bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
-                bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
-
-    ppe_lobc = {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]};
-    ppe_hibc = {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]};
-
-    LPInfo info;
-    info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
-
-    nodal_projector.reset(new NodalProjector(geom, grids, dmap, ppe_lobc, ppe_hibc,
-                                             GetVecOfConstPtrs(ebfactory), info) );
-
-
-    //
     // Now the diffusion solver
     //
-
     diffusion_op->setup(this, &ebfactory);
 }
