@@ -2,6 +2,10 @@
 #include <AMReX_Arena.H>
 #include <AMReX_Print.H>
 
+#include <AMReX_IntVect.H>
+#include <AMReX_RealVect.H>
+#include <AMReX_Geometry.H>
+
 #include <AMReX_ParmParse.H>
 
 #include <MFIX_BC_Parms.H>
@@ -16,10 +20,53 @@ namespace BC
   // Specified constant gas density
   amrex::Real delp[3];
 
+  // EB planes for level-set creation
+  amrex::Vector<amrex::EB2::PlaneIF> flow_planes;
+  amrex::Vector<amrex::EB2::PlaneIF> wall_planes;
+
+  std::array<amrex::LinOpBCType,3> ppe_lobc;
+  std::array<amrex::LinOpBCType,3> ppe_hibc;
+
+  std::array<amrex::LinOpBCType,3> diff_vel_lobc;
+  std::array<amrex::LinOpBCType,3> diff_vel_hibc;
+
+  std::array<amrex::LinOpBCType,3> diff_scal_lobc;
+  std::array<amrex::LinOpBCType,3> diff_scal_hibc;
+
+  // Data structure storing individual BC information
   amrex::Vector<BC_t> bc;
 
-  void Initialize ()
+
+  void Initialize (amrex::Geometry& geom)
   {
+
+    // Default all sides of the domain to Neumann
+    for (int dir=0; dir < 3; dir ++ ){
+      if( geom.isPeriodic(dir)){
+
+        ppe_lobc[dir] = amrex::LinOpBCType::Periodic;
+        ppe_hibc[dir] = amrex::LinOpBCType::Periodic;
+
+        diff_vel_lobc[dir] = amrex::LinOpBCType::Periodic;
+        diff_vel_hibc[dir] = amrex::LinOpBCType::Periodic;
+
+        diff_scal_lobc[dir] = amrex::LinOpBCType::Periodic;
+        diff_scal_hibc[dir] = amrex::LinOpBCType::Periodic;
+
+      } else {
+
+        ppe_lobc[dir] = amrex::LinOpBCType::Neumann;
+        ppe_hibc[dir] = amrex::LinOpBCType::Neumann;
+
+        diff_vel_lobc[dir] = amrex::LinOpBCType::Dirichlet;
+        diff_vel_hibc[dir] = amrex::LinOpBCType::Dirichlet;
+
+        diff_scal_lobc[dir] = amrex::LinOpBCType::Dirichlet;
+        diff_scal_hibc[dir] = amrex::LinOpBCType::Dirichlet;
+
+      }
+    }
+
 
     // Initialize the periodic pressure drop to zero in all directions
     for (int dir=0; dir < 3; dir ++ )
@@ -40,6 +87,13 @@ namespace BC
 
     }
 
+    const amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
+
+    // Flag to see if particles 'see' a wall at pressure outflows
+    int po_noParOut = 0; // default behavior for PO's -- letting particles exit the domain
+    pp.query("po_no_par_out", po_noParOut);
+
+    // Get the list of region names used to define BCs
     std::vector<std::string> regions;
     pp.queryarr("regions", regions);
 
@@ -58,8 +112,77 @@ namespace BC
       // Get the BC type (MI/PI/PO...)
       pp.get(regions[bcv].c_str(),new_bc.type);
 
-      // Get fluid data.
+      const auto plo = geom.ProbLoArray();
+      const auto phi = geom.ProbHiArray();
 
+      amrex::RealArray normal = {0.0, 0.0, 0.0};
+      amrex::RealArray point;
+      point[0] = new_bc.region->lo(0) + 0.5*(new_bc.region->hi(0)+new_bc.region->lo(0));
+      point[1] = new_bc.region->lo(1) + 0.5*(new_bc.region->hi(1)+new_bc.region->lo(1));
+      point[2] = new_bc.region->lo(2) + 0.5*(new_bc.region->hi(2)+new_bc.region->lo(2));
+
+      int sum_same_loc(0);
+      for (int dir(0); dir<3; ++dir){
+        int same_loc = std::abs(new_bc.region->lo(dir) - new_bc.region->hi(dir)) < tolerance ? 1 : 0;
+
+        if (same_loc ){
+
+          if ( std::abs(new_bc.region->lo(dir) - plo[dir] ) < tolerance ){
+
+            point[dir] = plo[dir]+1.0e-15;
+            normal[dir] =  1.0;
+
+            if( new_bc.type == "pi" || new_bc.type == "po"){
+              ppe_lobc[dir] = amrex::LinOpBCType::Dirichlet;
+              diff_vel_lobc[dir] = amrex::LinOpBCType::Neumann;
+              diff_scal_lobc[dir] = amrex::LinOpBCType::Neumann;
+            }
+
+
+          } else if ( std::abs( new_bc.region->hi(dir) - phi[dir] ) < tolerance ){
+
+            point[dir] = phi[dir]-1.0e-15;
+            normal[dir] = -1.0;
+
+            if( new_bc.type == "pi" || new_bc.type == "po"){
+              ppe_hibc[dir] = amrex::LinOpBCType::Dirichlet;
+              diff_vel_hibc[dir] = amrex::LinOpBCType::Neumann;
+              diff_scal_hibc[dir] = amrex::LinOpBCType::Neumann;
+            }
+
+          } else {
+            //Error
+          }
+        }
+
+        sum_same_loc += same_loc;
+      }
+
+      amrex::Print() << std::endl;
+      amrex::Print() << " Point: " << point[0] << "  " << point[1] << "  " << point[2] << std::endl;
+      amrex::Print() << "Normal: " << normal[0] << "  " << normal[1] << "  " << normal[2] << std::endl;
+
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE( sum_same_loc == 1, "Invalid bc region!");
+
+      // flow_planes are used to create 'walls' in the level-set so that
+      // particles don't fall out inflows (or outflows if desired).
+      if( new_bc.type == "mi") {
+        BC::flow_planes.emplace_back(point, normal, false);
+
+      } else if( new_bc.type == "pi") {
+        BC::flow_planes.emplace_back(point, normal, false);
+
+      } else if( new_bc.type == "po" && !po_noParOut) {
+        BC::flow_planes.emplace_back(point, normal, false);
+
+      } else if (new_bc.type == "nsw") {
+        BC::wall_planes.emplace_back(point, normal, false);
+
+      }
+
+
+
+      // Get fluid data.
       if(FLUID::solve) {
 
         std::string field = "bc."+regions[bcv]+"."+FLUID::name;
@@ -209,8 +332,6 @@ namespace BC
       }
 
     }  // END loop over BCs to print output
-
-    exit(0);
 
   }// END Initialize
 

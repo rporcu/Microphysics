@@ -1,5 +1,6 @@
 #include <mfix.H>
 #include <AMReX_MacProjector.H>
+#include <MFIX_BC_Parms.H>
 
 using namespace amrex;
 
@@ -108,7 +109,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
    //
    MacProjector macproj(vel, GetVecOfArrOfPtrsConst(bcoeff), geom, lp_info);
 
-   macproj.setDomainBC(ppe_lobc, ppe_hibc);
+   macproj.setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
 
    if (steady_state)
    {

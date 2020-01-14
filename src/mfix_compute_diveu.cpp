@@ -1,6 +1,7 @@
 #include <mfix_F.H>
 #include <mfix_proj_F.H>
 #include <mfix.H>
+#include <MFIX_BC_Parms.H>
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_VisMF.H>
@@ -73,13 +74,7 @@ mfix::mfix_compute_diveu (Real time)
   int bc_lo[3], bc_hi[3];
   Box domain(geom[0].Domain());
 
-  set_ppe_bcs(bc_lo, bc_hi, domain.loVect(), domain.hiVect(), &nghost,
-              bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
-              bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
-              bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
-
-  matrix.setDomainBC({(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
-                     {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]});
+  matrix.setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
 
   matrix.compDivergence(GetVecOfPtrs(diveu), GetVecOfPtrs(epu));
 

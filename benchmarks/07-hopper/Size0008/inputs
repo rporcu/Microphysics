@@ -63,24 +63,6 @@ mfix.levelset__refinement    = 1 # levelset resolution
 
 mfix.write_eb_surface = true  # Needed to output eb-surfaces
 
-#! EB geometry
-#!-----------------------------------------------------------//
-mfix.geometry = "hopper"
-
-hopper.orifice_radius = 0.00049
-hopper.funnel_radius  = 0.00099
-hopper.funnel_height  = 0.00199
-
-hopper.direction = 0
-hopper.center    =  0.0000  0.0010  0.0010
-
-xlo.type = "po"
-xlo.velocity = 0.0
-xlo.pressure = 0.0
-
-xhi.type = "po"
-xhi.pressure = 0.0
-
 #_______________________________________________________________________
 # Particle load balancing
 
@@ -155,13 +137,19 @@ dem.damping_tang_fac.pw   =     0.5
 # Regions for defining ICs and BCs
 #
 
-mfix.regions = full-domain  bed
+mfix.regions = full-domain  bed  out-bottom  out-top
 
 regions.full-domain.lo = 0.0000  0.0000  0.0000
 regions.full-domain.hi = 0.0080  0.0020  0.0020
 
-regions.bed.lo = 0.0030  0.0000  0.0000
-regions.bed.hi = 0.0070  0.0020  0.0020
+regions.bed.lo         = 0.0030  0.0000  0.0000
+regions.bed.hi         = 0.0070  0.0020  0.0020
+
+regions.out-bottom.lo  = 0.0000  0.0000  0.0000
+regions.out-bottom.hi  = 0.0000  0.0020  0.0020
+
+regions.out-top.lo     = 0.0080  0.0000  0.0000
+regions.out-top.hi     = 0.0080  0.0020  0.0020
 
 #_______________________________________________________________________
 # Initial Conditions
@@ -195,3 +183,51 @@ ic.bed.solid0.density  = constant
 
 ic.bed.solid0.diameter.constant =  100.0e-6
 ic.bed.solid0.density.constant  = 1000.0
+
+
+#! EB geometry
+#!-----------------------------------------------------------//
+mfix.geometry = "hopper"
+
+hopper.orifice_radius = 0.00049
+hopper.funnel_radius  = 0.00099
+hopper.funnel_height  = 0.00199
+
+hopper.direction = 0
+hopper.center    =  0.0000  0.0010  0.0010
+
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+
+bc.regions = out-bottom  out-top
+
+
+# Outflow at the bottom
+#------------------------------------------------------------//
+bc.out-bottom = po
+
+bc.out-bottom.fluid.pressure =  0.0
+
+
+# Outflow at the top
+#------------------------------------------------------------//
+bc.out-top = po
+
+bc.out-top.fluid.pressure =  0.0
+
+
+
+
+#! OLD BC settings   TO BE REMOVED
+#!-----------------------------------------------------------//
+
+
+
+xlo.type = "po"
+xlo.velocity = 0.0
+xlo.pressure = 0.0
+
+xhi.type = "po"
+xhi.pressure = 0.0

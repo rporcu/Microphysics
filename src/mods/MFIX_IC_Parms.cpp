@@ -118,8 +118,8 @@ namespace IC
     for (int icv(0); icv<ic.size(); icv++){
 
 
-      amrex::Print() << std::endl << "Summarizing IC regions:" << std::endl;
-      amrex::Print() << " IC: " << icv << std::endl <<
+      amrex::Print() << std::endl << "Summarizing IC regions:\n" << std::endl;
+      amrex::Print() << " IC: " << icv << std::endl << std::endl <<
         "      lo: " << ic[icv].region->lo(0) << "  "
                      << ic[icv].region->lo(1) << "  "
                      << ic[icv].region->lo(2) << std::endl <<
@@ -141,7 +141,7 @@ namespace IC
       }
 
 
-      if(DEM::solve){
+      if(DEM::solve && ic[icv].solids.size()>0){
 
         amrex::Print() << "       Solids packing: " << ic[icv].packing << std::endl;
 

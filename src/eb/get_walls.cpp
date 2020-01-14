@@ -10,74 +10,33 @@
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
 
+#include <MFIX_BC_Parms.H>
 
 std::unique_ptr<UnionListIF<EB2::PlaneIF>>
 mfix::get_walls (bool & has_walls)
 {
-    // Extracts all walls from the mfix.dat
+  // Extracts all walls from the mfix.dat
 
-    has_walls = false;  // will be set to true if there are any walls
+  has_walls = (BC::flow_planes.size() > 0);  // will be set to true if there are any walls
 
-    int po_noParOut = 0; // default behavior for PO's -- letting particles exit the domain
-    ParmParse pp("mfix");
-    pp.query("po_no_par_out", po_noParOut); // control keyword for PO's to let or not 
-                                            // particles exit the domain
-
-    // Walls can be defined per phase => Itterarte over all phases and check
-    // each for walls in the mfix.dat
-    Vector<EB2::PlaneIF> planes;
-    for (int i = 1; i <= 6; i++) {
-        int exists;
-        RealVect normal, center;
-        mfix_get_walls(& i, & exists, & normal, & center, & po_noParOut);
-        if(exists) {
-            has_walls = true;
-            amrex::Print() << "Normal " << normal << std::endl;
-            amrex::Print() << "Center " << center << std::endl;
-
-            RealArray p = {center[0], center[1], center[2]};
-            RealArray n = {normal[0], normal[1], normal[2]};
-
-            planes.emplace_back(p, n, false);
-        }
-    }
-
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> ret =
-        std::unique_ptr<UnionListIF<EB2::PlaneIF>>(new UnionListIF<EB2::PlaneIF>(planes));
-    return ret;
+  std::unique_ptr<UnionListIF<EB2::PlaneIF>> ret =
+          std::unique_ptr<UnionListIF<EB2::PlaneIF>>(new UnionListIF<EB2::PlaneIF>(BC::flow_planes));
+  return ret;
 }
 
 
 std::unique_ptr<UnionListIF<EB2::PlaneIF>>
 mfix::get_real_walls (bool & has_real_walls)
 {
-    // Extracts all walls from the mfix.dat
+  // Extracts all walls from the mfix.dat
 
-    has_real_walls = false;  // will be set to true if there are any walls
+  has_real_walls = (BC::wall_planes.size() > 0);  // will be set to true if there are any walls
 
-    // Walls can be defined per phase => Itterarte over all phases and check
-    // each for walls in the mfix.dat
-    Vector<EB2::PlaneIF> planes;
-    for (int i = 1; i <= 6; i++) {
-        int exists;
-        RealVect normal, center;
-        mfix_get_real_walls(& i, & exists, & normal, & center);
-        if(exists) {
-            has_real_walls = true;
-            amrex::Print() << "Normal " << normal << std::endl;
-            amrex::Print() << "Center " << center << std::endl;
-
-            RealArray p = {center[0], center[1], center[2]};
-            RealArray n = {normal[0], normal[1], normal[2]};
-
-            planes.emplace_back(p, n, false);
-        }
-    }
-
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> ret =
-        std::unique_ptr<UnionListIF<EB2::PlaneIF>>(new UnionListIF<EB2::PlaneIF>(planes));
-    return ret;
+  std::unique_ptr<UnionListIF<EB2::PlaneIF>> ret =
+    std::unique_ptr<UnionListIF<EB2::PlaneIF>>(new UnionListIF<EB2::PlaneIF>(BC::wall_planes));
+  return ret;
 }
+
 
 void
 mfix::get_input_bcs ()

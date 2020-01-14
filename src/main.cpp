@@ -11,9 +11,6 @@
 #include <mfix.H>
 #include <mfix_F.H>
 
-#include <MFIX_REGIONS_Parms.H>
-#include <MFIX_BC_Parms.H>
-#include <MFIX_IC_Parms.H>
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_FLUID_Parms.H>
 
@@ -92,17 +89,6 @@ void ReadParameters ()
      pp.query("write_eb_surface", write_eb_surface);
      pp.query("write_ls", write_ls);
   }
-
-  // Read and process fluid and DEM particle model options.
-  FLUID::Initialize();
-  DEM::Initialize();
-
-  // Read in regions, initial and boundary conditions. Note that
-  // regions need to be processed frist as they define the
-  // physical extents of ICs and BCs.
-  REGIONS::Initialize();
-  IC::Initialize();
-  BC::Initialize();
 
 }
 
@@ -216,22 +202,17 @@ int main (int argc, char* argv[])
 
     Real strt_time = ParallelDescriptor::second();
 
-    ReadParameters();
-
     Real time=0.0L;
     int nstep = 0;  // Current time step
 
     Real dt = -1.;
-
-    const char *cmfix_dat = mfix_dat.c_str();
-    int name_len=mfix_dat.length();
 
     // Default constructor. Note inheritance: mfix : AmrCore : AmrMesh
     //                                                             |
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix mfix;
 
-    mfix.get_input_bcs();
+    ReadParameters();
 
     // Set global static pointer to mfix object. Used by fill-patch utility
     set_ptr_to_mfix(mfix);

@@ -84,18 +84,6 @@ mfix.levelset__refinement    = 4 # levelset resolution
 
 mfix.write_eb_surface = false  # Needed to output eb-surfaces
 
-#! EB geometry
-#!-----------------------------------------------------------//
-
-mfix.geometry = "cylinder"
-
-cylinder.internal_flow = true
-
-cylinder.radius = 0.49
-cylinder.height = -1.0
-
-cylinder.direction = 0
-cylinder.center    =  0.5  1.5   1.5
 
 #_______________________________________________________________________
 # Particle load balancing
@@ -221,3 +209,17 @@ ic.bed.solid0.density  = constant
 
 ic.bed.solid0.diameter.constant =  100.0e-3
 ic.bed.solid0.density.constant  = 1000.0
+
+
+#! EB geometry
+#!-----------------------------------------------------------//
+
+mfix.geometry = "cylinder"
+
+cylinder.internal_flow = true
+
+cylinder.radius = 0.49
+cylinder.height = -1.0
+
+cylinder.direction = 0
+cylinder.center    =  0.5  1.5   1.5

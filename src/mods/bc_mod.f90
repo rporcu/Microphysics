@@ -42,10 +42,6 @@ module bc
   real(rt) :: BC_T_g   (dim_bc)        = 293.15d0
 
 
-  ! External shaking (shaking amplitude vector sets direction of shaking)
-  real(rt), dimension(3) :: BC_shaker_A ! shaking amplitude
-  real(rt)               :: BC_shaker_F ! shaking frequency
-
   ! Character variable to determine the flow plane of a flow cell
   character :: BC_Plane(dim_bc)
 

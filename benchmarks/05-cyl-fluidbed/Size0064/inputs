@@ -65,25 +65,6 @@ mfix.levelset__refinement    = 4 # levelset resolution
 
 #mfix.write_eb_surface = true  # Needed to output eb-surfaces
 
-#! EB geometry
-#!-----------------------------------------------------------//
-mfix.geometry = "cylinder"
-
-cylinder.internal_flow = true
-
-cylinder.radius  = 0.0018
-cylinder.height  = -1.
-
-cylinder.direction = 0
-cylinder.center    =  0.008   0.002   0.002
-
-xlo.type = "mi"
-xlo.velocity = 0.015
-
-xhi.type = "po"
-xhi.pressure = 0.0
-
-
 #_______________________________________________________________________
 # Particle load balancing
 
@@ -156,13 +137,19 @@ dem.damping_tang_fac.pw   =     0.5
 # Regions for defining ICs and BCs
 #
 
-mfix.regions = full-domain  bed
+mfix.regions = full-domain  bed  inflow  outflow
 
 regions.full-domain.lo = 0.0000  0.0000  0.0000
 regions.full-domain.hi = 0.0160  0.0040  0.0040
 
-regions.bed.lo = 0.0000  0.0000  0.0000
-regions.bed.hi = 0.0128  0.0040  0.0040
+regions.bed.lo         = 0.0000  0.0000  0.0000
+regions.bed.hi         = 0.0128  0.0040  0.0040
+
+regions.inflow.lo      = 0.0000  0.0000  0.0000
+regions.inflow.hi      = 0.0000  0.0040  0.0040
+                        
+regions.outflow.lo     = 0.0160  0.0000  0.0000
+regions.outflow.hi     = 0.0160  0.0040  0.0040
 
 #_______________________________________________________________________
 # Initial Conditions
@@ -196,3 +183,51 @@ ic.bed.solid0.density  = constant
 
 ic.bed.solid0.diameter.constant =  100.0e-6
 ic.bed.solid0.density.constant  = 1000.0
+
+
+#! EB geometry
+#!-----------------------------------------------------------//
+mfix.geometry = "cylinder"
+
+cylinder.internal_flow = true
+
+cylinder.radius  = 0.0018
+cylinder.height  = -1.
+
+cylinder.direction = 0
+cylinder.center    =  0.008   0.002   0.002
+
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+
+bc.regions = inflow  outflow
+
+
+# Mass inflow
+#------------------------------------------------------------//
+bc.inflow = mi
+
+bc.inflow.fluid.volfrac  =  1.0
+
+bc.inflow.fluid.velocity =  0.015  0.0  0.0
+
+
+# Pressure outflow
+#------------------------------------------------------------//
+bc.outflow = po
+
+bc.outflow.pressure =  0.0
+
+
+
+#! OLD BC settings   TO BE REMOVED
+#!-----------------------------------------------------------//
+
+
+xlo.type = "mi"
+xlo.velocity = 0.015
+
+xhi.type = "po"
+xhi.pressure = 0.0

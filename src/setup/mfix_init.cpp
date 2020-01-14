@@ -9,7 +9,9 @@
 #include <AMReX_EBAmrUtil.H>
 #include <diffusion_F.H>
 
+#include <MFIX_REGIONS_Parms.H>
 #include <MFIX_BC_Parms.H>
+#include <MFIX_IC_Parms.H>
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_FLUID_Parms.H>
 
@@ -18,6 +20,18 @@ mfix::InitParams ()
 {
     if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
 
+    // Read and process fluid and DEM particle model options.
+    FLUID::Initialize();
+    DEM::Initialize();
+
+    // Read in regions, initial and boundary conditions. Note that
+    // regions need to be processed frist as they define the
+    // physical extents of ICs and BCs.
+    REGIONS::Initialize();
+    IC::Initialize();
+    BC::Initialize(geom[0]);
+
+    get_input_bcs();
 
     // set n_error_buf (used in AmrMesh) to default (can overwrite later)
     for (int i = 0; i < n_error_buf.size(); i++)
