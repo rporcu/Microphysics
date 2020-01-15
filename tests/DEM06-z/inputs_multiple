@@ -56,16 +56,6 @@ fabarray.mfiter_tile_size = 1024 1024 1024
 particles.tile_size = 1024 1024 1024
 
 
-#! EB settings
-#!-----------------------------------------------------------//
-
-zlo.type = "mi"
-zlo.velocity =  0.4
-
-zhi.type = "po"
-zhi.pressure = 0.0
-
-
 #_______________________________________________________________________
 # IO / Checkpointing
 
@@ -118,10 +108,16 @@ dem.damping_tang_fac.pw   =     0.5
 # Regions for defining ICs and BCs
 #
 
-mfix.regions = full-domain
+mfix.regions = full-domain  inflow  outflow
 
 regions.full-domain.lo = 0.00  0.00  0.00
 regions.full-domain.hi = 0.01  0.01  0.10
+
+regions.inflow.lo      = 0.00  0.00  0.00
+regions.inflow.hi      = 0.01  0.01  0.00
+
+regions.outflow.lo     = 0.00  0.00  0.10
+regions.outflow.hi     = 0.01  0.01  0.10
 
 
 #_______________________________________________________________________
@@ -135,3 +131,29 @@ ic.regions = full-domain
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
 ic.full-domain.fluid.velocity  = 0.0  0.0  0.4
+
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+
+bc.regions = inflow  outflow
+
+
+bc.inflow = mi
+bc.inflow.fluid.velocity =  0.0  0.0  0.4
+
+
+bc.outflow = po
+bc.outflow.fluid.pressure = 0.0
+
+
+
+#! OLD BC settings   TO BE REMOVED
+#!-----------------------------------------------------------//
+
+zlo.type = "mi"
+zlo.velocity =  0.4
+
+zhi.type = "po"
+zhi.pressure = 0.0

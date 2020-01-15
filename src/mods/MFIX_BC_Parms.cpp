@@ -117,52 +117,73 @@ namespace BC
 
       amrex::RealArray normal = {0.0, 0.0, 0.0};
       amrex::RealArray point;
-      point[0] = new_bc.region->lo(0) + 0.5*(new_bc.region->hi(0)+new_bc.region->lo(0));
-      point[1] = new_bc.region->lo(1) + 0.5*(new_bc.region->hi(1)+new_bc.region->lo(1));
-      point[2] = new_bc.region->lo(2) + 0.5*(new_bc.region->hi(2)+new_bc.region->lo(2));
+      point[0] = new_bc.region->lo(0) + 0.5*(new_bc.region->hi(0)-new_bc.region->lo(0));
+      point[1] = new_bc.region->lo(1) + 0.5*(new_bc.region->hi(1)-new_bc.region->lo(1));
+      point[2] = new_bc.region->lo(2) + 0.5*(new_bc.region->hi(2)-new_bc.region->lo(2));
 
-      int sum_same_loc(0);
-      for (int dir(0); dir<3; ++dir){
-        int same_loc = std::abs(new_bc.region->lo(dir) - new_bc.region->hi(dir)) < tolerance ? 1 : 0;
+      std::string field_bcRegion = "bc."+regions[bcv];
+      amrex::ParmParse ppRegion(field_bcRegion.c_str());
 
-        if (same_loc ){
 
-          if ( std::abs(new_bc.region->lo(dir) - plo[dir] ) < tolerance ){
+      if(new_bc.type == "nsw" ){
 
-            point[dir] = plo[dir]+1.0e-15;
-            normal[dir] =  1.0;
+        // Walls need a normal because they might not be on a domain extent.
 
-            if( new_bc.type == "pi" || new_bc.type == "po"){
-              ppe_lobc[dir] = amrex::LinOpBCType::Dirichlet;
-              diff_vel_lobc[dir] = amrex::LinOpBCType::Neumann;
-              diff_scal_lobc[dir] = amrex::LinOpBCType::Neumann;
+        amrex::Vector<amrex::Real> normal_in(3);
+        ppRegion.getarr("normal", normal_in, 0, 3);
+
+        normal={normal_in[0], normal_in[1], normal_in[2]};
+
+      } else {
+
+        // This covers mass inflows (mi), pressure inflows (pi), and
+        // pressure outflows (po). These all must align with a domain
+        // extent.
+
+        int sum_same_loc(0);
+        for (int dir(0); dir<3; ++dir){
+          int same_loc = std::abs(new_bc.region->lo(dir) - new_bc.region->hi(dir)) < tolerance ? 1 : 0;
+
+          if (same_loc ){
+
+            if ( std::abs(new_bc.region->lo(dir) - plo[dir] ) < tolerance ){
+
+              point[dir] = plo[dir]+1.0e-15;
+              normal[dir] =  1.0;
+
+              if( new_bc.type == "pi" || new_bc.type == "po"){
+                ppe_lobc[dir] = amrex::LinOpBCType::Dirichlet;
+                diff_vel_lobc[dir] = amrex::LinOpBCType::Neumann;
+                diff_scal_lobc[dir] = amrex::LinOpBCType::Neumann;
+              }
+
+
+            } else if ( std::abs( new_bc.region->hi(dir) - phi[dir] ) < tolerance ){
+
+              point[dir] = phi[dir]-1.0e-15;
+              normal[dir] = -1.0;
+
+              if( new_bc.type == "pi" || new_bc.type == "po"){
+                ppe_hibc[dir] = amrex::LinOpBCType::Dirichlet;
+                diff_vel_hibc[dir] = amrex::LinOpBCType::Neumann;
+                diff_scal_hibc[dir] = amrex::LinOpBCType::Neumann;
+              }
+
+            } else {
+              //Error
             }
-
-
-          } else if ( std::abs( new_bc.region->hi(dir) - phi[dir] ) < tolerance ){
-
-            point[dir] = phi[dir]-1.0e-15;
-            normal[dir] = -1.0;
-
-            if( new_bc.type == "pi" || new_bc.type == "po"){
-              ppe_hibc[dir] = amrex::LinOpBCType::Dirichlet;
-              diff_vel_hibc[dir] = amrex::LinOpBCType::Neumann;
-              diff_scal_hibc[dir] = amrex::LinOpBCType::Neumann;
-            }
-
-          } else {
-            //Error
           }
+
+          sum_same_loc += same_loc;
         }
 
-        sum_same_loc += same_loc;
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE( sum_same_loc == 1, "Invalid bc region!");
+
       }
 
       amrex::Print() << std::endl;
       amrex::Print() << " Point: " << point[0] << "  " << point[1] << "  " << point[2] << std::endl;
       amrex::Print() << "Normal: " << normal[0] << "  " << normal[1] << "  " << normal[2] << std::endl;
-
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE( sum_same_loc == 1, "Invalid bc region!");
 
       // flow_planes are used to create 'walls' in the level-set so that
       // particles don't fall out inflows (or outflows if desired).
@@ -177,6 +198,7 @@ namespace BC
 
       } else if (new_bc.type == "nsw") {
         BC::wall_planes.emplace_back(point, normal, false);
+        amrex::Print() << "adding wall" << std::endl;
 
       }
 
@@ -202,9 +224,7 @@ namespace BC
         // Get the list of solids used in defining the BC region
         std::vector<std::string> solids_types;
         {
-          std::string field = "bc."+regions[bcv];
-          amrex::ParmParse ppSolid(field.c_str());
-          ppSolid.queryarr("solids", solids_types);
+          ppRegion.queryarr("solids", solids_types);
         }
 
         for(int lcs(0); lcs < solids_types.size(); ++ lcs){

@@ -42,19 +42,6 @@ amr.max_grid_size_z =  4
 fabarray.mfiter_tile_size = 1024 1024 1024
 
 
-#! EB settings
-#!-----------------------------------------------------------//
-
-xlo.type = "pi"
-xlo.pressure = 12.0
-
-xhi.type = "po"
-xhi.pressure =  0.0
-
-ylo.type = "nsw"
-yhi.type = "nsw"
-
-
 #_______________________________________________________________________
 # IO / Checkpointing
 
@@ -88,10 +75,22 @@ dem.solve = None
 # Regions for defining ICs and BCs
 #
 
-mfix.regions = full-domain
+mfix.regions = full-domain  inflow  outflow  wall1  wall2
 
 regions.full-domain.lo = 0.000  0.000  0.000
 regions.full-domain.hi = 0.010  0.010  0.005
+
+regions.inflow.lo      = 0.000  0.000  0.000
+regions.inflow.hi      = 0.000  0.010  0.010
+
+regions.outflow.lo     = 0.100  0.000  0.000
+regions.outflow.hi     = 0.100  0.010  0.010
+
+regions.wall1.lo       = 0.000  0.000  0.000
+regions.wall1.hi       = 0.100  0.000  0.010
+
+regions.wall2.lo       = 0.000  0.010  0.000
+regions.wall2.hi       = 0.100  0.010  0.010
 
 
 #_______________________________________________________________________
@@ -106,3 +105,37 @@ ic.regions = full-domain
 ic.full-domain.fluid.volfrac   =  1.0
 
 ic.full-domain.fluid.velocity  = 12.5  0.0  0.0
+
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+
+bc.regions = inflow  outflow  wall1  wall2
+
+bc.inflow = pi
+bc.inflow.fluid.pressure  = 12.0
+
+bc.outflow = po
+bc.outflow.fluid.pressure =  0.0
+
+bc.wall1 = nsw
+bc.wall1.normal = 0.0  1.0  0.0
+
+bc.wall2 = nsw
+bc.wall2.normal = 0.0 -1.0  0.0
+
+
+
+
+#! OLD BC settings   TO BE REMOVED
+#!-----------------------------------------------------------//
+
+xlo.type = "pi"
+xlo.pressure = 12.0
+
+xhi.type = "po"
+xhi.pressure =  0.0
+
+ylo.type = "nsw"
+yhi.type = "nsw"

@@ -41,19 +41,6 @@ amr.max_grid_size_z =  1024
 fabarray.mfiter_tile_size = 4 4 4
 
 
-#! EB settings
-#!-----------------------------------------------------------//
-
-zlo.type = "pi"
-zlo.pressure = 12.0
-
-zhi.type = "po"
-zhi.pressure =  0.0
-
-xlo.type = "nsw"
-xhi.type = "nsw"
-
-
 #_______________________________________________________________________
 # IO / Checkpointing
 
@@ -77,6 +64,7 @@ fluid.density.constant   = 1.0
 fluid.viscosity          = constant
 fluid.viscosity.constant = 1.0e-3
 
+
 #_______________________________________________________________________
 # DEM model settings
 
@@ -87,10 +75,22 @@ dem.solve = None
 # Regions for defining ICs and BCs
 #
 
-mfix.regions = full-domain
+mfix.regions = full-domain  inflow  outflow  wall1  wall2
 
 regions.full-domain.lo = 0.000  0.000  0.000
 regions.full-domain.hi = 0.010  0.005  0.010
+
+regions.inflow.lo      = 0.000  0.000  0.000
+regions.inflow.hi      = 0.010  0.005  0.000
+
+regions.outflow.lo     = 0.000  0.000  0.010
+regions.outflow.hi     = 0.010  0.005  0.010
+
+regions.wall1.lo       = 0.000  0.000  0.000
+regions.wall1.hi       = 0.000  0.005  0.010
+
+regions.wall2.lo       = 0.010  0.000  0.000
+regions.wall2.hi       = 0.010  0.005  0.010
 
 
 #_______________________________________________________________________
@@ -105,3 +105,37 @@ ic.regions = full-domain
 ic.full-domain.fluid.volfrac   =  1.0
 
 ic.full-domain.fluid.velocity  = 0.0  0.0  12.5
+
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+
+bc.regions = inflow  outflow  wall1  wall2
+
+bc.inflow = pi
+bc.inflow.fluid.pressure  = 12.0
+
+bc.outflow = po
+bc.outflow.fluid.pressure =  0.0
+
+bc.wall1 = nsw
+bc.wall1.normal =  1.0  0.0  0.0
+
+bc.wall2 = nsw
+bc.wall2.normal = -1.0  0.0  0.0
+
+
+
+
+#! OLD BC settings   TO BE REMOVED
+#!-----------------------------------------------------------//
+
+zlo.type = "pi"
+zlo.pressure = 12.0
+
+zhi.type = "po"
+zhi.pressure =  0.0
+
+xlo.type = "nsw"
+xhi.type = "nsw"
