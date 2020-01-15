@@ -118,13 +118,45 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
     }
 
     //
-    // Compute RHS
+    // Create sigma
     //
-    nodal_projector->computeRHS(GetVecOfPtrs(diveu), GetVecOfPtrs(epu), GetVecOfPtrs(a_depdt));
+    Vector<MultiFab> sigma(nlev);
 
-    // Perform projection on
-    nodal_projector->project2(GetVecOfPtrs(vel_g), GetVecOfConstPtrs(ep_g),
-                              GetVecOfConstPtrs(ro_g), GetVecOfConstPtrs(diveu));
+    for (int lev = 0; lev < nlev; ++lev )
+        {
+            sigma[lev].define(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+            MultiFab::Copy(sigma[lev], *ep_g[lev], 0, 0, 1, 0);
+            MultiFab::Divide(sigma[lev], *ro_g[lev], 0, 0, 1, 0);
+        }
+
+    //
+    // Setup the nodal projector
+    //
+    int bc_lo[3], bc_hi[3];
+    Box domain(geom[0].Domain());
+
+    set_ppe_bcs(bc_lo, bc_hi,
+                domain.loVect(), domain.hiVect(),
+                &nghost,
+                bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
+                bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
+                bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
+
+    ppe_lobc = {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]};
+    ppe_hibc = {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]};
+
+    LPInfo info;
+    info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
+
+    nodal_projector.reset(new NodalProjector(GetVecOfPtrs(vel_g),GetVecOfConstPtrs(sigma), geom, info));
+    nodal_projector->setDomainBC(ppe_lobc, ppe_hibc);
+    nodal_projector->setAlpha(GetVecOfConstPtrs(ep_g));
+
+    nodal_projector->computeRHS(GetVecOfPtrs(diveu), GetVecOfPtrs(epu), GetVecOfPtrs(a_depdt));
+    nodal_projector->setCustomRHS(GetVecOfConstPtrs(diveu));
+
+    nodal_projector->project();
+
 
     // Define "vel" to be U^{n+1} rather than (U^{n+1}-U^n)
     if (proj_for_small_dt)

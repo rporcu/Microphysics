@@ -1,6 +1,8 @@
 #include <mfix.H>
-#include <AMReX_MacProjector.H>
 #include <MFIX_BC_Parms.H>
+#include <mfix_proj_F.H>
+
+#include <AMReX_MacProjector.H>
 
 using namespace amrex;
 

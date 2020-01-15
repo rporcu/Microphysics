@@ -15,16 +15,6 @@ mfix::mfix_init_solvers ()
     Box domain(geom[0].Domain());
 
     //
-    // First the nodal projection
-    //
-
-    LPInfo info;
-    info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
-
-    nodal_projector.reset(new NodalProjector(geom, grids, dmap,
-                                             BC::ppe_lobc, BC::ppe_hibc,
-                                             GetVecOfConstPtrs(ebfactory), info) );
-
 
     diffusion_op.reset(new DiffusionOp(this, &ebfactory,
                                        BC::diff_vel_lobc,  BC::diff_vel_hibc,
@@ -40,19 +30,7 @@ mfix::mfix_setup_solvers ()
     Box domain(geom[0].Domain());
 
     //
-    // First the nodal projection
-    //
-
-    LPInfo info;
-    info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
-
-    nodal_projector.reset(new NodalProjector(geom, grids, dmap,
-                                             BC::ppe_lobc, BC::ppe_hibc,
-                                             GetVecOfConstPtrs(ebfactory), info) );
-
-    //
     // Now the diffusion solver
     //
-
     diffusion_op->setup(this, &ebfactory);
 }
