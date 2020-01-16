@@ -267,8 +267,11 @@ mfix::mfix_calc_drag_particle (Real time)
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
     {
-      const auto dxi = geom[lev].InvCellSizeArray();
-      const auto plo = geom[lev].ProbLoArray();
+      const auto dxi_array = geom[lev].InvCellSizeArray();
+      const auto plo_array = geom[lev].ProbLoArray();
+
+      const amrex::RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
+      const amrex::RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
 
       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
       {
@@ -303,8 +306,8 @@ mfix::mfix_calc_drag_particle (Real time)
 
                 MFIXParticleContainer::ParticleType& particle = pstruct[ip];
 
-                trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
-                trilinear_interp(particle, &gradp[0],  gp_array, plo, dxi);
+                trilinear_interp(particle.pos(), &velfp[0], vel_array, plo, dxi);
+                trilinear_interp(particle.pos(), &gradp[0],  gp_array, plo, dxi);
 
                 Real pbeta = particle.rdata(realData::dragx);
 
@@ -373,8 +376,8 @@ mfix::mfix_calc_drag_particle (Real time)
                       not flags_array(i-1,j  ,k  ).isCovered() and
                       not flags_array(i  ,j  ,k  ).isCovered())
                   {
-                    trilinear_interp(particle, &velfp[0], vel_array, plo, dxi);
-                    trilinear_interp(particle, &gradp[0],  gp_array, plo, dxi);
+                    trilinear_interp(particle.pos(), &velfp[0], vel_array, plo, dxi);
+                    trilinear_interp(particle.pos(), &gradp[0],  gp_array, plo, dxi);
                   }
                   // At least one of the cells in the stencil is covered
                   else

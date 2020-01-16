@@ -8,7 +8,6 @@ target_sources( mfixcore
    MFIX_FilCC.cpp
    mfix_util.cpp
    mfix_fillpatch.cpp
-   interpolation_m.f90
    mfix_set_velocity_bcs.cpp
    mfix_set_epg_bcs.cpp
    mfix_set_density_bcs.cpp

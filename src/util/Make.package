@@ -1,5 +1,3 @@
-f90EXE_sources += interpolation_m.f90
-
 CEXE_sources += mfix_set_velocity_bcs.cpp
 CEXE_sources += mfix_set_density_bcs.cpp
 CEXE_sources += mfix_set_scalar_bcs.cpp
