@@ -1,4 +1,3 @@
-#include <diffusion_F.H>
 #include <mfix.H>
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
@@ -9,6 +8,7 @@
 #include <AMReX_MLTensorOp.H>
 #include <AMReX_MLEBTensorOp.H>
 
+#include <MFIX_BC_Parms.H>
 //
 // Implicit tensor solve
 //
@@ -18,20 +18,6 @@ mfix::mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_
 {
    BL_PROFILE("mfix::mfix_diffuse_drag");
 
-   // Swap ghost cells and apply BCs to velocity
-   // mfix_set_drag_bcs (drag);
-
-   // The boundary conditions need only be set once -- we do this at level 0
-   int bc_lo[3], bc_hi[3];
-
-   // Whole domain
-   Box domain(geom[0].Domain());
-
-   // Set BCs for Poisson's solver
-   set_vel_diff_bc(bc_lo, bc_hi, domain.loVect(), domain.hiVect(), &nghost,
-                   bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
-                   bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
-                   bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
 
    //
    // First define the operator "ebtensorop"
@@ -50,8 +36,8 @@ mfix::mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_
    ebtensorop.setMaxOrder(2);
 
    // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
-   ebtensorop.setDomainBC({(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]},
-                          {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]});
+   ebtensorop.setDomainBC(BC::diff_vel_lobc,
+                          BC::diff_vel_hibc);
 
    // Solving (1.0 * a_coeff - dt * div (mu grad)) phi = rhs
    ebtensorop.setScalars(1.0, 1.0);

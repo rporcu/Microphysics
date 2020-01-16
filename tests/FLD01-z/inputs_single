@@ -125,11 +125,3 @@ bc.wall1.normal =  1.0  0.0  0.0
 
 bc.wall2 = nsw
 bc.wall2.normal = -1.0  0.0  0.0
-
-
-
-#! OLD BC settings   TO BE REMOVED
-#!-----------------------------------------------------------//
-
-xlo.type = "nsw"
-xhi.type = "nsw"

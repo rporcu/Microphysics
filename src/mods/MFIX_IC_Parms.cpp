@@ -113,7 +113,7 @@ namespace IC
     }
 
 
-
+#if 0
     //Dump out what we read for debugging!
     for (int icv(0); icv<ic.size(); icv++){
 
@@ -175,9 +175,6 @@ namespace IC
             amrex::Print() << "                  max: " << ic[icv].solids[lcs].density.max  << std::endl;
           }
 
-
-
-
           amrex::Print() << std::endl;
 
         }
@@ -185,5 +182,6 @@ namespace IC
       }
 
     }
+#endif
   }
 }

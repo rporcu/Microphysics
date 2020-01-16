@@ -1,6 +1,5 @@
-
 #include <mfix.H>
-#include <bc_mod_F.H>
+
 
 //
 // Set the BCs for face-centroid-based velocity components only

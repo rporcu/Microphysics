@@ -23,14 +23,6 @@ void mfix::make_eb_geometry ()
 
     MakeBCArrays();
 
-    int cyc_x=0, cyc_y=0, cyc_z=0;
-
-    if (geom[0].isPeriodic(0)) cyc_x = 1;
-    if (geom[0].isPeriodic(1)) cyc_y = 1;
-    if (geom[0].isPeriodic(2)) cyc_z = 1;
-
-    mfix_set_cyclic(&cyc_x, &cyc_y, &cyc_z);
-
     for (int lev = 0; lev < nlev; lev++)
         mfix_set_bc_type(lev);
 

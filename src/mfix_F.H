@@ -17,28 +17,6 @@ extern "C"
 {
 #endif
 
-    void mfix_set_cyclic (int* cyc_x, int* cyc_y, int* cyc_z);
-
-    void check_initial_conditions (amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-                                   const int* domlo, const int* domhi);
-
-
-    void set_bc_mod (const int* pID, const int* pType,
-                     const amrex::Real* pLo, const amrex::Real* pHi,
-                     amrex::Real* pLoc, amrex::Real* pPg, amrex::Real* pVel);
-
-    void set_bc_mod_add_mi (const int* pPlane,
-                            amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
-                            amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
-                            amrex::Real* pPg, amrex::Real* pVel);
-
-    void set_bc_type (const int* bc_ilo, const int* bc_ihi,
-                      const int* bc_jlo, const int* bc_jhi,
-                      const int* bc_klo, const int* bc_khi,
-                      const int* domlo , const int* domhi,
-                      amrex::Real* dx, amrex::Real* dy, amrex::Real* dz,
-                      amrex::Real* xlen, amrex::Real* ylen, amrex::Real* zlen,
-                      const int* ng);
 
     void mfix_cap_eps (const int* slo, const int* shi, amrex::Real* ep_g);
 

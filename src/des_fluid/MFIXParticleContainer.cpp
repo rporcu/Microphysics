@@ -20,8 +20,9 @@
 #include "mfix_eb_F.H"
 #include "mfix_util_F.H"
 #include "mfix_des_K.H"
-#include "bc_mod_F.H"
+
 #include "MFIX_DEM_Parms.H"
+#include <MFIX_BC_Parms.H>
 
 using namespace amrex;
 using namespace std;
@@ -50,8 +51,6 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     setIntCommComp(3, false);
 
     nlev = amr_core->maxLevel() + 1;
-
-    get_domain_bc(domain_bc);
 }
 
 void MFIXParticleContainer::AllocData ()
@@ -568,12 +567,12 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             const auto p_lo = Geom(lev).ProbLoArray();
             const auto p_hi = Geom(lev).ProbHiArray();
 
-            int x_lo_bc = domain_bc[0];
-            int x_hi_bc = domain_bc[1];
-            int y_lo_bc = domain_bc[2];
-            int y_hi_bc = domain_bc[3];
-            int z_lo_bc = domain_bc[4];
-            int z_hi_bc = domain_bc[5];
+            int x_lo_bc = BC::domain_bc[0];
+            int x_hi_bc = BC::domain_bc[1];
+            int y_lo_bc = BC::domain_bc[2];
+            int y_hi_bc = BC::domain_bc[3];
+            int z_lo_bc = BC::domain_bc[4];
+            int z_hi_bc = BC::domain_bc[5];
 
             amrex::ParallelFor(nrp,
               [pstruct,subdt,fc_ptr,ntot,grav,tow_ptr,eps,p_hi,p_lo,

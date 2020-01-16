@@ -14,12 +14,10 @@ target_sources( mfixcore
    mfix_init_fluid.cpp
    mfix_set_bc0.cpp
    mfix_set_ls_inflow.cpp
-   set_bc_type.f90
    mfix_set_p0.cpp
    mfix_set_gp0.cpp
-   set_ppe_bcs.f90
    mfix_init.cpp
    mfix_arrays.cpp
    mfix_setup_solvers.cpp
-   mfix_proj_F.H
+   mfix_set_bc_type.cpp
    )

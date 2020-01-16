@@ -83,14 +83,14 @@ regions.full-domain.hi = 0.010  0.010  0.005
 regions.inflow.lo      = 0.000  0.000  0.000
 regions.inflow.hi      = 0.000  0.010  0.005
 
-regions.outflow.lo     = 0.100  0.000  0.000
-regions.outflow.hi     = 0.100  0.010  0.005
+regions.outflow.lo     = 0.010  0.000  0.000
+regions.outflow.hi     = 0.010  0.010  0.005
 
 regions.wall1.lo       = 0.000  0.000  0.000
-regions.wall1.hi       = 0.100  0.000  0.005
+regions.wall1.hi       = 0.010  0.000  0.005
 
 regions.wall2.lo       = 0.000  0.010  0.000
-regions.wall2.hi       = 0.100  0.010  0.005
+regions.wall2.hi       = 0.010  0.010  0.005
 
 
 #_______________________________________________________________________
@@ -124,18 +124,3 @@ bc.wall1.normal = 0.0  1.0  0.0
 
 bc.wall2 = nsw
 bc.wall2.normal = 0.0 -1.0  0.0
-
-
-
-
-#! OLD BC settings   TO BE REMOVED
-#!-----------------------------------------------------------//
-
-xlo.type = "pi"
-xlo.pressure = 12.0
-
-xhi.type = "po"
-xhi.pressure =  0.0
-
-ylo.type = "nsw"
-yhi.type = "nsw"

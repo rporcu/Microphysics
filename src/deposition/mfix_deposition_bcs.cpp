@@ -3,7 +3,6 @@
 #include <mfix.H>
 #include "mfix_util_F.H"
 #include <param_mod_F.H>
-#include <bc_mod_F.H>
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
@@ -68,12 +67,12 @@ void mfix::mfix_deposition_bcs_scalar (int lev, amrex::MultiFab& filled_mf)
 
     if(sbx_hi[0] > dom_hi.x) {
       const int ihi = dom_hi.x;
-      
+
       amrex::ParallelFor(sbx_yz, [bc_ihi_type,pinf,minf,dom_hi,vol,ihi]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           if(bc_ihi_type(dom_hi.x+1,j,k,0) == pinf or
-             bc_ihi_type(dom_hi.x+1,j,k,0) == minf) 
+             bc_ihi_type(dom_hi.x+1,j,k,0) == minf)
           {
             vol(ihi,j,k) += vol(ihi+1,j,k);
             vol(ihi+1,j,k) = 0;

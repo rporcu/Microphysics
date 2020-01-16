@@ -16,7 +16,6 @@ target_sources( mfixcore
    mfix_eb_if.H
    mfix_eb_proto_clr.cpp
    get_walls.cpp
-   get_eb_walls.f90
    writeEBsurface.cpp
    MFIX_BcList.H
    )

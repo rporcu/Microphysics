@@ -3,11 +3,10 @@
 #include <mfix.H>
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
-#include <bc_mod_F.H>
+
 #include <mfix_init_fluid.H>
 
 #include <AMReX_EBAmrUtil.H>
-#include <diffusion_F.H>
 
 #include <MFIX_REGIONS_Parms.H>
 #include <MFIX_BC_Parms.H>
@@ -30,8 +29,6 @@ mfix::InitParams ()
     REGIONS::Initialize();
     IC::Initialize();
     BC::Initialize(geom[0]);
-
-    get_input_bcs();
 
     // set n_error_buf (used in AmrMesh) to default (can overwrite later)
     for (int i = 0; i < n_error_buf.size(); i++)
@@ -419,15 +416,6 @@ void mfix::Init (Real time)
     Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
 
     Box domain(geom[0].Domain());
-
-
-    int cyc_x=0, cyc_y=0, cyc_z=0;
-    if (geom[0].isPeriodic(0)) cyc_x = 1;
-    if (geom[0].isPeriodic(1)) cyc_y = 1;
-    if (geom[0].isPeriodic(2)) cyc_z = 1;
-
-    mfix_set_cyclic(&cyc_x, &cyc_y, &cyc_z);
-
 
     for (int lev = 0; lev < nlev; lev++)
         mfix_set_bc_type(lev);

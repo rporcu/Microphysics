@@ -1,6 +1,5 @@
 #include <mfix.H>
 #include <MFIX_BC_Parms.H>
-#include <mfix_proj_F.H>
 
 #include <AMReX_MacProjector.H>
 

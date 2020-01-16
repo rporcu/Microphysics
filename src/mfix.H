@@ -63,16 +63,6 @@ public:
     // Face-based coefficients b in MAC projection and implicit diffusion solve
     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > bcoeff;
 
-    // LinOpBCType Definitions from amrex/Src/Boundary/AMReX_LO_BCTYPES.H -- for projections
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  ppe_lobc;
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  ppe_hibc;
-
-    // LinOpBCType Definitions from amrex/Src/Boundary/AMReX_LO_BCTYPES.H -- for diffusive solves
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_vel_lobc;
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_vel_hibc;
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_scal_lobc;
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM>  diff_scal_hibc;
-
     void InitParams ( );
 
     bool IsSteadyState () { return (steady_state > 0); }
@@ -171,10 +161,6 @@ public:
 
     const Geometry get_geom_ref (int lev) { return geom[lev]; }
 
-    void get_input_bcs ();
-
-    void set_input_bcs (const std::string bcID, const int index,
-                        const int cyclic, const Real domloc);
 
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls (bool & has_walls);
 
@@ -305,17 +291,6 @@ public:
 
     void set_gp0 (const int lev,
                   const Box& domain);
-
-    void mfix_set_bc_mod (const int* pID, const int* pType,
-                          const amrex::Real* pLo, const amrex::Real* pHi,
-                          amrex::Real* pLoc,
-                          amrex::Real* pPg,
-                          amrex::Real* pVel);
-
-    void mfix_set_bc_mod_add_mi (const int* pPlane,
-                                 amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
-                                 amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
-                                 amrex::Real* pPg, amrex::Real* pVel);
 
     static DragType m_drag_type;
 

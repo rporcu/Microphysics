@@ -10,19 +10,25 @@
 
 #include <MFIX_BC_Parms.H>
 #include <MFIX_REGIONS_Parms.H>
+#include <MFIX_BcList.H>
 
 namespace BC
 {
 
   // Direction of pressure drop (0:x, 1:y, 2:z)
   int delp_dir = -1;
-
-  // Specified constant gas density
   amrex::Real delp[3];
+
+  int domain_bc[6];
 
   // EB planes for level-set creation
   amrex::Vector<amrex::EB2::PlaneIF> flow_planes;
   amrex::Vector<amrex::EB2::PlaneIF> wall_planes;
+
+  // Lists of BCs applied to the domain extent
+  amrex::Vector<int> bc_xlo, bc_xhi;
+  amrex::Vector<int> bc_ylo, bc_yhi;
+  amrex::Vector<int> bc_zlo, bc_zhi;
 
   std::array<amrex::LinOpBCType,3> ppe_lobc;
   std::array<amrex::LinOpBCType,3> ppe_hibc;
@@ -33,12 +39,33 @@ namespace BC
   std::array<amrex::LinOpBCType,3> diff_scal_lobc;
   std::array<amrex::LinOpBCType,3> diff_scal_hibc;
 
+
   // Data structure storing individual BC information
   amrex::Vector<BC_t> bc;
 
 
   void Initialize (amrex::Geometry& geom)
   {
+
+    BcList bc_mask;
+
+    // Integer ids for BCs
+    const int pout_ = bc_mask.get_pout();
+    const int pinf_ = bc_mask.get_pinf();
+    const int minf_ = bc_mask.get_minf();
+    const int nsw_  = bc_mask.get_nsw();
+
+    // Set flag to keep particles from leaving unless periodic.
+    for (int dir(0); dir<3; ++dir) {
+      if ( geom.isPeriodic(dir)) {
+        domain_bc[2*dir  ] = 0;
+        domain_bc[2*dir+1] = 0;
+      } else {
+        domain_bc[2*dir  ] = 1;
+        domain_bc[2*dir+1] = 1;
+      }
+    }
+
 
     // Default all sides of the domain to Neumann
     for (int dir=0; dir < 3; dir ++ ){
@@ -104,13 +131,28 @@ namespace BC
 
       BC_t new_bc;
 
+
       // Set the region for the initial condition.
       new_bc.region = REGIONS::getRegion(regions[bcv]);
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE( new_bc.region != NULL, "Invalid bc region!");
 
 
-      // Get the BC type (MI/PI/PO...)
-      pp.get(regions[bcv].c_str(),new_bc.type);
+      // Get the BC type (MI/PI/PO/NSW)
+      std::string bc_type;
+      pp.get(regions[bcv].c_str(),bc_type);
+
+      // Convert the input string into the integers
+      if( bc_type == "mi") {
+        new_bc.type = minf_;
+      } else if( bc_type == "pi") {
+        new_bc.type = pinf_;
+      } else if( bc_type == "po") {
+        new_bc.type = pout_;
+      } else if (bc_type == "nsw") {
+        new_bc.type = nsw_;
+      } else {
+        amrex::Abort("Unknown BC type inputs file. Fix it.");
+      }
 
       const auto plo = geom.ProbLoArray();
       const auto phi = geom.ProbHiArray();
@@ -124,8 +166,9 @@ namespace BC
       std::string field_bcRegion = "bc."+regions[bcv];
       amrex::ParmParse ppRegion(field_bcRegion.c_str());
 
+      int dir_int = -1;
 
-      if(new_bc.type == "nsw" ){
+      if(new_bc.type == nsw_ ){
 
         // Walls need a normal because they might not be on a domain extent.
 
@@ -142,6 +185,7 @@ namespace BC
 
         int sum_same_loc(0);
         for (int dir(0); dir<3; ++dir){
+
           int same_loc = std::abs(new_bc.region->lo(dir) - new_bc.region->hi(dir)) < tolerance ? 1 : 0;
 
           if (same_loc ){
@@ -151,7 +195,9 @@ namespace BC
               point[dir] = plo[dir]+1.0e-15;
               normal[dir] =  1.0;
 
-              if( new_bc.type == "pi" || new_bc.type == "po"){
+              dir_int = 2*dir;
+
+              if( new_bc.type == pinf_ || new_bc.type == pout_){
                 ppe_lobc[dir] = amrex::LinOpBCType::Dirichlet;
                 diff_vel_lobc[dir] = amrex::LinOpBCType::Neumann;
                 diff_scal_lobc[dir] = amrex::LinOpBCType::Neumann;
@@ -163,14 +209,19 @@ namespace BC
               point[dir] = phi[dir]-1.0e-15;
               normal[dir] = -1.0;
 
-              if( new_bc.type == "pi" || new_bc.type == "po"){
+              dir_int = 2*dir+1;
+
+              if( new_bc.type == pinf_ || new_bc.type == pout_){
                 ppe_hibc[dir] = amrex::LinOpBCType::Dirichlet;
                 diff_vel_hibc[dir] = amrex::LinOpBCType::Neumann;
                 diff_scal_hibc[dir] = amrex::LinOpBCType::Neumann;
               }
 
             } else {
-              //Error
+              amrex::Print() << "Flow BCs must be located on domain extents!" << std::endl;
+              amrex::Print() << "BC Name: " << regions[bcv] <<  std::endl;
+              amrex::Print() << "  Invalid direction: " << dir << std::endl;
+              amrex::Abort("Fix the inputs file!");
             }
           }
 
@@ -181,27 +232,44 @@ namespace BC
 
       }
 
-      amrex::Print() << std::endl;
-      amrex::Print() << " Point: " << point[0] << "  " << point[1] << "  " << point[2] << std::endl;
-      amrex::Print() << "Normal: " << normal[0] << "  " << normal[1] << "  " << normal[2] << std::endl;
+
+      // Store the BC ID for quick look-up when setting BC types
+      if( dir_int == 0) {
+        bc_xlo.push_back(bcv);
+      } else if( dir_int == 1) {
+        bc_xhi.push_back(bcv);
+      } else if( dir_int == 2){
+        bc_ylo.push_back(bcv);
+      } else if( dir_int == 3){
+        bc_yhi.push_back(bcv);
+      } else if( dir_int == 4){
+        bc_zlo.push_back(bcv);
+      } else if( dir_int == 5){
+        bc_zhi.push_back(bcv);
+      }
+
+
+      // Enforce the boundary for pressure outflows if specified.
+      if( !po_noParOut && (new_bc.type == pinf_ || new_bc.type == pout_) ){
+        domain_bc[dir_int ] = 0;
+      }
+
 
       // flow_planes are used to create 'walls' in the level-set so that
       // particles don't fall out inflows (or outflows if desired).
-      if( new_bc.type == "mi") {
+      if( new_bc.type == minf_) {
         BC::flow_planes.emplace_back(point, normal, false);
 
-      } else if( new_bc.type == "pi") {
+      } else if( new_bc.type == pinf_ ) {
         BC::flow_planes.emplace_back(point, normal, false);
 
-      } else if( new_bc.type == "po" && !po_noParOut) {
+      } else if( new_bc.type == pout_ && !po_noParOut) {
         BC::flow_planes.emplace_back(point, normal, false);
 
-      } else if (new_bc.type == "nsw") {
+      } else if (new_bc.type == nsw_) {
         BC::wall_planes.emplace_back(point, normal, false);
-        amrex::Print() << "adding wall" << std::endl;
 
       }
-
 
 
       // Get fluid data.
@@ -210,13 +278,24 @@ namespace BC
         std::string field = "bc."+regions[bcv]+"."+FLUID::name;
         amrex::ParmParse ppFluid(field.c_str());
 
-        ppFluid.query("volfrac", new_bc.fluid.volfrac);
-        volfrac_total += new_bc.fluid.volfrac;
+        // Mass inflows need fluid velocity and volume fraction.
+        if( new_bc.type == minf_) {
+          ppFluid.get("volfrac", new_bc.fluid.volfrac);
+          volfrac_total += new_bc.fluid.volfrac;
+          ppFluid.getarr("velocity", new_bc.fluid.velocity, 0, 3);
+        }
 
-        ppFluid.queryarr("velocity", new_bc.fluid.velocity, 0, 3);
+        // Read in fluid pressure
+        new_bc.fluid.pressure_defined =
+          ppFluid.query("pressure", new_bc.fluid.pressure);
+        if(( new_bc.type == pinf_ || new_bc.type == pout_) &&
+           !new_bc.fluid.pressure_defined) {
+          amrex::Print() << "Pressure BCs must have pressure defined!" << std::endl;
+          amrex::Abort("Fix the inputs file!");
+        }
+
         ppFluid.query("temperature", new_bc.fluid.temperature);
 
-        new_bc.fluid.pressure_defined = ppFluid.query("pressure", new_bc.fluid.pressure);
       }
 
       if(DEM::solve) {
@@ -281,13 +360,13 @@ namespace BC
 
     }
 
-
+#if 0
     //Dump out what we read for debugging!
     for (int bcv(0); bcv<bc.size(); bcv++){
 
 
       amrex::Print() << std::endl << "Summarizing BC regions:\n" << std::endl;
-      amrex::Print() << " BC: " << bcv << "    Type: " << bc[bcv].type << std::endl << std::endl <<
+      amrex::Print() << " BC: " << bcv << "    Type: " << bc[bcv].type << "\n\n" <<
         "      lo: " << bc[bcv].region->lo(0) << "  "
                      << bc[bcv].region->lo(1) << "  "
                      << bc[bcv].region->lo(2) << std::endl <<
@@ -352,7 +431,7 @@ namespace BC
       }
 
     }  // END loop over BCs to print output
-
+#endif
   }// END Initialize
 
 }

@@ -138,22 +138,10 @@ ic.full-domain.fluid.velocity  = 0.0  0.4  0.0
 
 bc.regions = inflow  outflow
 
-
 bc.inflow = mi
+bc.inflow.fluid.volfrac  =  1.0
 bc.inflow.fluid.velocity =  0.0  0.4  0.0
-
 
 bc.outflow = po
 bc.outflow.fluid.pressure = 0.0
-
-
-
-#! OLD BC settings   TO BE REMOVED
-#!-----------------------------------------------------------//
-
-ylo.type = "mi"
-ylo.velocity =  0.4
-
-yhi.type = "po"
-yhi.pressure = 0.0
 

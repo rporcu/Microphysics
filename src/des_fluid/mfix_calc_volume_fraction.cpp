@@ -1,6 +1,5 @@
 #include <mfix.H>
 #include "mfix_util_F.H"
-#include <bc_mod_F.H>
 
 #include <AMReX_FillPatchUtil.H>
 #include <MFIXParticleContainer.H>

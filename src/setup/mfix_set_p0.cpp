@@ -1,5 +1,5 @@
 #include <mfix.H>
-#include <bc_mod_F.H>
+
 #include <climits>
 #include <param_mod_F.H>
 #include <mfix_des_F.H>
@@ -304,20 +304,12 @@ void goto_60 (const Box& sbx,
   // Search oran outflow boundary condition where pressure is specified
   pj = get_undefined();
 
-  for(int icv(1); icv <= get_dim_bc(); ++icv)
+  const int pout_ = bc_list.get_pout();
+
+  for(int bcv(0); bcv < BC::bc.size(); ++bcv)
   {
-    if(get_bc_defined(icv))
-    {
-      char bc_type[16];
-      get_bc_type(icv, bc_type);
-
-      std::string bc_type_str(bc_type);
-
-      if(bc_type_str.compare("P_OUTFLOW") == 0 or bc_type_str.compare("PO") == 0)
-      {
-        pj = m_bc_p_g[icv];  
-      }
-    }
+    if (BC::bc[bcv].type == pout_)
+      pj = BC::bc[bcv].fluid.pressure;
   }
 
   // Either a PO was not specified or PO was specified but not the

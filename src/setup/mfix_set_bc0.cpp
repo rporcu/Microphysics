@@ -1,7 +1,5 @@
 #include <mfix.H>
-#include <bc_mod_F.H>
 #include <eos_mod.H>
-
 #include <param_mod_F.H>
 
 #include <MFIX_FLUID_Parms.H>

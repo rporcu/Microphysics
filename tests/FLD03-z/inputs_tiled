@@ -124,18 +124,3 @@ bc.wall1.normal =  1.0  0.0  0.0
 
 bc.wall2 = nsw
 bc.wall2.normal = -1.0  0.0  0.0
-
-
-
-
-#! OLD BC settings   TO BE REMOVED
-#!-----------------------------------------------------------//
-
-zlo.type = "pi"
-zlo.pressure = 12.0
-
-zhi.type = "po"
-zhi.pressure =  0.0
-
-xlo.type = "nsw"
-xhi.type = "nsw"

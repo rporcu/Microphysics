@@ -46,6 +46,7 @@ namespace REGIONS
 
     }
 
+#if 0
 
     if( REGIONS::names.size() > 0 ) {
       amrex::Print() << std::endl << "Found regions!"  << std::endl;
@@ -64,6 +65,7 @@ namespace REGIONS
     } else {
       amrex::Print() << std::endl << "No regions found :(" << std::endl;
     }
+#endif
 
   } // End Initialize
 

@@ -4,8 +4,6 @@ target_include_directories(mfixcore
 
 target_sources( mfixcore
    PRIVATE
-   bc_mod.f90
-   bc_mod_F.H
    eos_mod.H
    eos_mod.cpp
    utilities_mod.f90

@@ -132,6 +132,7 @@ ic.full-domain.fluid.velocity  = 0.0  10.0  0.0
 bc.regions = inflow  outflow  wall1  wall2  wall3  wall4
 
 bc.inflow = mi
+bc.inflow.fluid.volfrac  = 1.0
 bc.inflow.fluid.velocity = 0.0  10.0  0.0
 
 bc.outflow = po
@@ -148,28 +149,3 @@ bc.wall3.normal =  0.0  0.0  1.0
 
 bc.wall4 = nsw
 bc.wall4.normal =  0.0  0.0 -1.0
-
-
-
-
-
-#! OLD BC settings   TO BE REMOVED
-#!-----------------------------------------------------------//
-
-ylo.type = "mi"
-ylo.velocity =     10.0
-
-yhi.type = "po"
-yhi.pressure = 101325.0
-
-xlo.type = "nsw"
-xlo.location = 0.005
-
-xhi.type = "nsw"
-xhi.location = 0.015
-
-zlo.type = "nsw"
-zlo.location = 0.005
-
-zhi.type = "nsw"
-zhi.location = 0.015

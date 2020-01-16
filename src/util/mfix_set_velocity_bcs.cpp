@@ -1,5 +1,4 @@
 #include <mfix.H>
-#include <bc_mod_F.H>
 
 //
 //  These subroutines set the BCs for the velocity components only.

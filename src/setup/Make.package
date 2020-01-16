@@ -1,9 +1,6 @@
 F90EXE_sources += amrex_to_mfix.F90
 f90EXE_sources += calc_cell.f90
 
-f90EXE_sources += set_bc_type.f90 
-f90EXE_sources += set_ppe_bcs.f90 
-
 CEXE_sources += mfix_set_bc0.cpp
 CEXE_sources += mfix_set_ls_inflow.cpp
 CEXE_sources += mfix_set_p0.cpp 
@@ -15,6 +12,6 @@ CEXE_sources += mfix_calc_mu_g.cpp
 CEXE_sources += mfix_arrays.cpp
 CEXE_sources += mfix_init.cpp
 CEXE_sources += mfix_setup_solvers.cpp
+CEXE_sources += mfix_set_bc_type.cpp
 
-F90EXE_headers += mfix_proj_F.H
 F90EXE_headers += calc_cell_F.H

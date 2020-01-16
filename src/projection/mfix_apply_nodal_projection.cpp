@@ -1,6 +1,6 @@
-#include <mfix_proj_F.H>
 #include <mfix_F.H>
 #include <mfix.H>
+#include <MFIX_BC_Parms.H>
 
 #include <AMReX_REAL.H>
 #include <AMReX_BLFort.H>
@@ -132,24 +132,13 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
     //
     // Setup the nodal projector
     //
-    int bc_lo[3], bc_hi[3];
     Box domain(geom[0].Domain());
-
-    set_ppe_bcs(bc_lo, bc_hi,
-                domain.loVect(), domain.hiVect(),
-                &nghost,
-                bc_ilo[0]->dataPtr(), bc_ihi[0]->dataPtr(),
-                bc_jlo[0]->dataPtr(), bc_jhi[0]->dataPtr(),
-                bc_klo[0]->dataPtr(), bc_khi[0]->dataPtr());
-
-    ppe_lobc = {(LinOpBCType)bc_lo[0], (LinOpBCType)bc_lo[1], (LinOpBCType)bc_lo[2]};
-    ppe_hibc = {(LinOpBCType)bc_hi[0], (LinOpBCType)bc_hi[1], (LinOpBCType)bc_hi[2]};
 
     LPInfo info;
     info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
 
     nodal_projector.reset(new NodalProjector(GetVecOfPtrs(vel_g),GetVecOfConstPtrs(sigma), geom, info));
-    nodal_projector->setDomainBC(ppe_lobc, ppe_hibc);
+    nodal_projector->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
     nodal_projector->setAlpha(GetVecOfConstPtrs(ep_g));
 
     nodal_projector->computeRHS(GetVecOfPtrs(diveu), GetVecOfPtrs(epu), GetVecOfPtrs(a_depdt));

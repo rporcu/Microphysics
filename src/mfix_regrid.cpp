@@ -1,5 +1,4 @@
 #include <mfix.H>
-#include <diffusion_F.H>
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_DEM_Parms.H>
 

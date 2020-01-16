@@ -140,19 +140,9 @@ bc.regions = inflow  outflow
 
 
 bc.inflow = mi
+bc.inflow.fluid.volfrac  =  1.0
 bc.inflow.fluid.velocity =  0.4  0.0  0.0
 
 
 bc.outflow = po
 bc.outflow.fluid.pressure = 0.0
-
-
-
-#! OLD BC settings   TO BE REMOVED
-#!-----------------------------------------------------------//
-
-xlo.type = "mi"
-xlo.velocity =  0.4
-
-xhi.type = "po"
-xhi.pressure = 0.0

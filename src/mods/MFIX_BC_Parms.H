@@ -19,7 +19,8 @@ namespace BC
 
   struct BC_t {
 
-    std::string type;
+    // BC type (mi, pi, po, nsw)
+    int type;
 
     const amrex::RealBox* region;
 
@@ -29,9 +30,17 @@ namespace BC
 
   };
 
+  // Lists of BCs applied to the domain extent
+  extern amrex::Vector<int> bc_xlo, bc_xhi;
+  extern amrex::Vector<int> bc_ylo, bc_yhi;
+  extern amrex::Vector<int> bc_zlo, bc_zhi;
+
   // Flag to solve fluid equations
   extern int delp_dir;
   extern amrex::Real delp[3];
+
+  // Flags for DEM domain extent reinforcement.
+  extern int domain_bc[6];
 
   // Vectors storing EB planes for level-set creation
   extern amrex::Vector<amrex::EB2::PlaneIF> flow_planes;

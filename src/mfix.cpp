@@ -2,7 +2,7 @@
 #include <mfix_eb_F.H>
 #include <mfix.H>
 #include <param_mod_F.H>
-#include <bc_mod_F.H>
+
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
@@ -116,16 +116,16 @@ mfix::mfix_usr1_cpp (Real time) const
 
   const int dim_bc = get_dim_bc();
 
-  for(unsigned i(1); i <= dim_bc; ++i)
-  {
-    m_bc_u_g[i] = get_bc_u_g(i);
-    m_bc_v_g[i] = get_bc_v_g(i);
-    m_bc_w_g[i] = get_bc_w_g(i);
+  // for(unsigned i(1); i <= dim_bc; ++i)
+  // {
+  //   m_bc_u_g[i] = get_bc_u_g(i);
+  //   m_bc_v_g[i] = get_bc_v_g(i);
+  //   m_bc_w_g[i] = get_bc_w_g(i);
 
-    m_bc_t_g[i] = get_bc_t_g(i);
+  //   m_bc_t_g[i] = get_bc_t_g(i);
 
-    m_bc_ep_g[i] = get_bc_ep_g(i);
-  }
+  //   m_bc_ep_g[i] = get_bc_ep_g(i);
+  // }
 }
 
 void
@@ -150,77 +150,6 @@ mfix::usr3 ()
     }
 }
 
-void
-mfix::mfix_set_bc_type (int lev)
-{
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
-    Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
-    Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
-    Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
-    Box domain(geom[lev].Domain());
-
-    const int dim_bc = get_dim_bc();
-
-    set_bc_type(bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-                bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-                bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-                domain.loVect(),domain.hiVect(),
-                &dx, &dy, &dz, &xlen, &ylen, &zlen, &nghost);
-
-    for(unsigned i(1); i <= dim_bc; ++i)
-    {
-      m_bc_u_g[i] = get_bc_u_g(i);
-      m_bc_v_g[i] = get_bc_v_g(i);
-      m_bc_w_g[i] = get_bc_w_g(i);
-    }
-}
-
-void mfix::mfix_set_bc_mod (const int* pID, const int* pType,
-                            const amrex::Real* pLo, const amrex::Real* pHi,
-                            amrex::Real* pLoc,
-                            amrex::Real* pPg,
-                            amrex::Real* pVel)
-{
-  const int dim_bc = get_dim_bc();
-
-  set_bc_mod(pID, pType, pLo, pHi, pLoc, pPg, pVel);
-
-  for(unsigned i(1); i <= dim_bc; ++i)
-  {
-    m_bc_u_g[i] = get_bc_u_g(i);
-    m_bc_v_g[i] = get_bc_v_g(i);
-    m_bc_w_g[i] = get_bc_w_g(i);
-
-    m_bc_t_g[i] = get_bc_t_g(i);
-
-    m_bc_ep_g[i] = get_bc_ep_g(i);
-
-    m_bc_p_g[i] = get_bc_p_g(i);
-  }
-}
-
-void mfix::mfix_set_bc_mod_add_mi (const int* pPlane,
-                                   amrex::Real* xLo, amrex::Real* yLo, amrex::Real* zLo,
-                                   amrex::Real* xHi, amrex::Real* yHi, amrex::Real* zHi,
-                                   amrex::Real* pPg, amrex::Real* pVel)
-{
-  const int dim_bc = get_dim_bc();
-
-  set_bc_mod_add_mi(pPlane, xLo, yLo, zLo, xHi, yHi, zHi, pPg, pVel);
-
-  for(unsigned i(1); i <= dim_bc; ++i)
-  {
-    m_bc_u_g[i] = get_bc_u_g(i);
-    m_bc_v_g[i] = get_bc_v_g(i);
-    m_bc_w_g[i] = get_bc_w_g(i);
-
-    m_bc_t_g[i] = get_bc_t_g(i);
-    m_bc_ep_g[i] = get_bc_ep_g(i);
-    m_bc_p_g[i] = get_bc_p_g(i);
-  }
-}
 
 void
 mfix::avgDown (int crse_lev, const MultiFab& S_fine, MultiFab& S_crse)

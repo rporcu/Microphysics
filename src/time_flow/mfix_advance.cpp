@@ -1,4 +1,3 @@
-#include <mfix_proj_F.H>
 #include <mfix_F.H>
 #include <mfix.H>
 
