@@ -30,8 +30,6 @@ module set_bc_type_module
 
       use param, only: dim_bc
       use param, only: equal, half
-      use calc_cell_module, only: calc_cell_bc_flow
-      use calc_cell_module, only: calc_cell_bc_wall
 
       implicit none
 

@@ -6,8 +6,8 @@ target_include_directories(mfixcore
 target_sources( mfixcore
    PRIVATE 
    amrex_to_mfix.F90
-   calc_cell.f90
-   calc_cell_F.H
+   MFIX_calc_cell.H
+   MFIX_calc_cell.cpp
    mfix_calc_mu_g.H
    mfix_calc_mu_g.cpp
    mfix_init_fluid.H
