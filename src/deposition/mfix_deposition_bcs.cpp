@@ -1,7 +1,6 @@
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
 #include <mfix.H>
-#include "mfix_util_F.H"
 #include <param_mod_F.H>
 #include <bc_mod_F.H>
 

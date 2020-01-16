@@ -1,5 +1,4 @@
 #include <mfix.H>
-#include <mfix_util_F.H>
 
 void
 mfix::check_for_nans (int lev)

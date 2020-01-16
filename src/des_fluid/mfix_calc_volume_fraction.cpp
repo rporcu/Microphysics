@@ -1,5 +1,5 @@
 #include <mfix.H>
-#include "mfix_util_F.H"
+#include <MFIX_FilCC.H>
 #include <bc_mod_F.H>
 
 #include <AMReX_FillPatchUtil.H>
@@ -131,7 +131,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
         int hi_bc[] = {BCType::foextrap, BCType::foextrap, BCType::foextrap};
         Vector<BCRec> bcs(1, BCRec(lo_bc, hi_bc));
 
-        BndryFuncArray bfunc(phifill);
+        BndryFuncArray bfunc(mfix_aux::filcc);
 
         Real time = 0.0;
         for (int lev = 1; lev < nlev; lev++)

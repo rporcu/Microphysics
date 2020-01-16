@@ -1,7 +1,7 @@
 #include <mfix.H>
 #include <mfix_des_K.H>
 #include <mfix_drag_K.H>
-#include "mfix_util_F.H"
+#include <MFIX_FilCC.H>
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
@@ -136,7 +136,7 @@ mfix::mfix_calc_drag_fluid (Real time)
     int hi_bc[3] = {BCType::foextrap, BCType::foextrap, BCType::foextrap};
     Vector<BCRec> bcs(1, BCRec(lo_bc, hi_bc));
 
-    BndryFuncArray bfunc(phifill);
+    BndryFuncArray bfunc(mfix_aux::filcc);
 
     for (int lev = 1; lev < nlev; lev++) {
 

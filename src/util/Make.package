@@ -1,4 +1,3 @@
-F90EXE_sources += bc_fill_nd.F90
 f90EXE_sources += interpolation_m.f90
 
 CEXE_sources += mfix_set_velocity_bcs.cpp
@@ -8,8 +7,8 @@ CEXE_sources += mfix_set_scalar_bcs.cpp
 CEXE_sources += mfix_fillpatch.cpp
 CEXE_sources += mfix_util.cpp
 
-F90EXE_headers += mfix_util_F.H
-
+CEXE_headers +=   MFIX_FilCC.H
+CEXE_sources +=   MFIX_FilCC.cpp
 CEXE_headers +=   MFIX_MFHelpers.H
 CEXE_sources +=   MFIX_MFHelpers.cpp
 
