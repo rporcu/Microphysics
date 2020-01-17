@@ -33,20 +33,9 @@ geometry.is_periodic = 0        0       0        # Is periodic in each direction
 geometry.prob_lo     = 0.       0.      0.       # lo corner of physical domain
 geometry.prob_hi     = 0.0015   0.0015  0.0015   # hi corner of physical domain
 
-mfix.geometry = box
-
-box.Lo = 0.0      0.0     0.0
-box.Hi = 0.0015   0.0015  0.0015
-
-box.offset = 1.0e-15
-
 mfix.drag_type = "BVK2"
 
 mfix.gravity   =  0.0  -9.80665  0.0
-
-mfix.input_deck = "mfix.no_fluid.dat"
-
-
 
 #_______________________________________________________________________
 # Fluid model settings
@@ -73,3 +62,14 @@ dem.spring_tang_fac.pw    =     0.285714285
 
 dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
+
+
+#_______________________________________________________________________
+# EB geometry
+#
+mfix.geometry = box
+
+box.Lo = 0.0      0.0     0.0
+box.Hi = 0.0015   0.0015  0.0015
+
+box.offset = 1.0e-15

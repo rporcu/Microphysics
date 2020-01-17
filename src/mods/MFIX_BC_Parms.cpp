@@ -291,6 +291,7 @@ namespace BC
         if(( new_bc.type == pinf_ || new_bc.type == pout_) &&
            !new_bc.fluid.pressure_defined) {
           amrex::Print() << "Pressure BCs must have pressure defined!" << std::endl;
+          amrex::Print() << "BC region: " << regions[bcv] << std::endl;
           amrex::Abort("Fix the inputs file!");
         }
 

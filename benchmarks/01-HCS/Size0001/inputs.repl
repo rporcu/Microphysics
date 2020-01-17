@@ -73,7 +73,6 @@ dem.damping_tang_fac.pw   =     0.5
 #_______________________________________________________________________
 # Regions for defining ICs and BCs
 #
-
 mfix.regions = full-domain
 
 regions.full-domain.lo  = 0.0000  0.0000  0.0000
@@ -83,12 +82,7 @@ regions.full-domain.hi  = 0.0064  0.0064  0.0064
 #_______________________________________________________________________
 # Initial Conditions
 #
-
 ic.regions = full-domain
 
-
-# Backgound IC covering the full domain with gas.
-#---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   =  1.0
-
 ic.full-domain.fluid.velocity  = 0.0  0.0  0.0

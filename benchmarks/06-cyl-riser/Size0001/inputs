@@ -142,45 +142,8 @@ dem.damping_tang_fac.pw   =     0.5
 
 
 #_______________________________________________________________________
-# Regions for defining ICs and BCs
+# EB geometry
 #
-
-mfix.regions = full-domain
-
-regions.full-domain.lo = 0.0000  0.0000  0.0000
-regions.full-domain.hi = 0.0040  0.0010  0.0010
-
-#_______________________________________________________________________
-# Initial Conditions
-#
-
-ic.regions = full-domain
-
-# Define the initial bed of solids
-#---------------------------------------------------------------------//
-ic.full-domain.fluid.volfrac   =  0.983
-
-ic.full-domain.fluid.pressure  =  0.0
-
-ic.full-domain.fluid.velocity  =  0.00  0.00  0.00
-
-ic.full-domain.solids  = solid0
-ic.full-domain.packing = random
-
-ic.full-domain.solid0.volfrac  =  0.017
-
-ic.full-domain.solid0.velocity =  0.00  0.00  0.00
-
-ic.full-domain.solid0.diameter = constant
-ic.full-domain.solid0.density  = constant
-
-ic.full-domain.solid0.diameter.constant =  100.0e-6
-ic.full-domain.solid0.density.constant  = 1000.0
-
-
-#! EB geometry
-#!-----------------------------------------------------------//
-
 mfix.geometry = "cylinder"
 
 cylinder.internal_flow = true
@@ -193,8 +156,38 @@ cylinder.center    =  0.0020  0.0005   0.0005
 
 
 #_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+mfix.regions = full-domain
+
+regions.full-domain.lo = 0.0000  0.0000  0.0000
+regions.full-domain.hi = 0.0040  0.0010  0.0010
+
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+ic.regions = full-domain
+
+ic.full-domain.fluid.volfrac   =  0.983
+ic.full-domain.fluid.pressure  =  0.0
+ic.full-domain.fluid.velocity  =  0.00  0.00  0.00
+
+ic.full-domain.solids  = solid0
+ic.full-domain.packing = random
+
+ic.full-domain.solid0.volfrac  =  0.017
+ic.full-domain.solid0.velocity =  0.00  0.00  0.00
+
+ic.full-domain.solid0.diameter = constant
+ic.full-domain.solid0.density  = constant
+
+ic.full-domain.solid0.diameter.constant =  100.0e-6
+ic.full-domain.solid0.density.constant  = 1000.0
+
+
+#_______________________________________________________________________
 # Boundary Conditions
 #
-
-bc.delp     =    2.
 bc.delp_dir =    0
+bc.delp     =    2.
