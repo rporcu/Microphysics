@@ -4,11 +4,10 @@ target_include_directories(mfixcore
 
 target_sources( mfixcore
    PRIVATE
-   bc_fill_nd.F90
-   mfix_util_F.H
+   MFIX_FilCC.H
+   MFIX_FilCC.cpp
    mfix_util.cpp
    mfix_fillpatch.cpp
-   interpolation_m.f90
    mfix_set_velocity_bcs.cpp
    mfix_set_epg_bcs.cpp
    mfix_set_density_bcs.cpp

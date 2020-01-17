@@ -16,7 +16,6 @@
 #include "mfix_F.H"
 #include "mfix_des_F.H"
 #include "mfix_eb_F.H"
-#include "mfix_util_F.H"
 
 using namespace amrex;
 using namespace std;

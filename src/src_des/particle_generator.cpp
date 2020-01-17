@@ -2,7 +2,7 @@
 #include <AMReX_AmrParGDB.H>
 #include <param_mod_F.H>
 #include <discretelement_mod_F.H>
-#include <calc_cell_F.H>
+#include <MFIX_calc_cell.H>
 
 #include <limits>
 #include <string>

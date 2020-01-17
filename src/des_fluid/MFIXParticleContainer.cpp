@@ -18,7 +18,6 @@
 #include "mfix_F.H"
 #include "mfix_des_F.H"
 #include "mfix_eb_F.H"
-#include "mfix_util_F.H"
 #include "mfix_des_K.H"
 
 #include "MFIX_DEM_Parms.H"

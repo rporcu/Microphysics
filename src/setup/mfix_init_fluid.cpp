@@ -2,7 +2,7 @@
 
 #include <mfix_calc_mu_g.H>
 #include <param_mod_F.H>
-#include <calc_cell_F.H>
+#include <MFIX_calc_cell.H>
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_IC_Parms.H>
 
