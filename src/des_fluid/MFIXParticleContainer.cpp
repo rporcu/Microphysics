@@ -362,7 +362,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                         mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
 
                         if (mag_overlap_t > 0.0) {
-                            Real fnmd = DEM::mew * sqrt(dot_product(fn, fn));
+                            Real fnmd = DEM::mew_w * sqrt(dot_product(fn, fn));
                             Real tangent[3];
                             tangent[0] = overlap_t[0]/mag_overlap_t;
                             tangent[1] = overlap_t[1]/mag_overlap_t;
