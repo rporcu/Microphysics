@@ -319,6 +319,8 @@ public:
     Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
     Real volEpsWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
 
+    void mfix_set_bc_type (int lev);
+
     ////////////////////////////////////////////////////////////////////////////
     //
     // Convection
@@ -570,8 +572,6 @@ private:
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
     void ChopGrids (const Box& domain, BoxArray& ba, int target_size) const;
-
-    void mfix_set_bc_type (int lev);
 
     static int nlev;
     static int ntrac;
