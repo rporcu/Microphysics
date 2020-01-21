@@ -236,3 +236,8 @@ bc.top-wall    = nsw
 bc.front-wall  = nsw
 bc.back-wall   = nsw
 
+bc.bottom-wall.normal =  0.0  1.0  0.0
+bc.top-wall.normal    =  0.0 -1.0  0.0
+bc.front-wall.normal  =  0.0  0.0  1.0
+bc.back-wall.normal   =  0.0  0.0 -1.0
+
