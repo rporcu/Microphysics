@@ -64,41 +64,17 @@ particles.tile_size = 1024 1024 1024
 
 #! EB settings
 #!-----------------------------------------------------------//
+mfix.levelset__refinement = 4      # levelset resolution
+mfix.write_eb_surface     = false  # Needed to output eb-surfaces
 
-# Level-set refinement 
-mfix.levelset__refinement    = 4 # levelset resolution
-
-mfix.write_eb_surface = false  # Needed to output eb-surfaces
-
-#! EB geometry
-#!-----------------------------------------------------------//
-
-
-#! BCs 
-#!-----------------------------------------------------------//
-ylo.location = 0.
-ylo.type = "nsw"
-
-yhi.location = 0.002
-yhi.type = "nsw"
-
-zlo.location = 0.
-zlo.type = "nsw"
-
-zhi.location = 0.002
-zhi.type = "nsw"
-
-bc.delp     =    2.
-bc.delp_dir =    0
 
 #_______________________________________________________________________
 # Particle load balancing
-
 #mfix.load_balance_type = "FixedSize"
-mfix.load_balance_type = "KnapSack"
+#mfix.load_balance_type = "KnapSack"
 
 amr.dual_grid          = 0
-amr.regrid_int         = 25
+amr.regrid_int         = -1
 
 #! KnapSack settings
 #!-----------------------------------------------------------//
@@ -168,16 +144,36 @@ dem.spring_const.pw       =    10.0
 dem.restitution_coeff.solid0.solid0  =     0.8
 dem.restitution_coeff.solid0.wall    =     1.0
 
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+#! EB geometry
+#!-----------------------------------------------------------//
+
 
 #_______________________________________________________________________
 # Regions for defining ICs and BCs
 #
 
-mfix.regions = full-domain
+mfix.regions = full-domain  bottom-wall  top-wall  front-wall  back-wall
 
 regions.full-domain.lo = 0.0000  0.0000  0.0000
 regions.full-domain.hi = 0.0080  0.0020  0.0020
 
+regions.bottom-wall.lo = 0.0000  0.0000  0.0000
+regions.bottom-wall.hi = 0.0080  0.0000  0.0020
+
+regions.top-wall.lo    = 0.0000  0.0020  0.0000
+regions.top-wall.hi    = 0.0080  0.0020  0.0020
+
+regions.front-wall.lo  = 0.0000  0.0000  0.0000
+regions.front-wall.hi  = 0.0080  0.0020  0.0000
+
+regions.back-wall.lo   = 0.0000  0.0000  0.0020
+regions.back-wall.hi   = 0.0080  0.0020  0.0020
 
 #_______________________________________________________________________
 # Initial Conditions
@@ -185,9 +181,6 @@ regions.full-domain.hi = 0.0080  0.0020  0.0020
 
 ic.regions = full-domain
 
-
-# Define the initial solids
-#---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   =  0.9833
 
 ic.full-domain.fluid.pressure  =  0.0
@@ -207,8 +200,17 @@ ic.full-domain.solid0.density  = constant
 ic.full-domain.solid0.diameter.constant =  100.0e-6
 ic.full-domain.solid0.density.constant  = 1000.0
 
-dem.spring_tang_fac.pp    =     0.285714285
-dem.spring_tang_fac.pw    =     0.285714285
 
-dem.damping_tang_fac.pp   =     0.5
-dem.damping_tang_fac.pw   =     0.5
+#_______________________________________________________________________
+# Boundary Conditions
+#
+bc.regions     = bottom-wall  top-wall  front-wall  back-wall
+
+bc.bottom-wall = nsw
+bc.top-wall    = nsw
+bc.front-wall  = nsw
+bc.back-wall   = nsw
+
+bc.delp_dir    = 0
+bc.delp        = 2.
+

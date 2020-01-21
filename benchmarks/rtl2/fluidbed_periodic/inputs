@@ -63,41 +63,18 @@ fabarray.mfiter_tile_size = 1024 1024 1024
 # Particles: Maximum particle title size
 particles.tile_size = 1024 1024 1024
 
-
 #! EB settings
 #!-----------------------------------------------------------//
-
-# Level-set refinement and padding
-mfix.levelset__refinement    = 4 # levelset resolution
-mfix.levelset__pad           = 4 # levelset ghost cells
-
-# EB refinement and padding
-# => only needed when using multiple grids
-mfix.levelset__eb_pad        = 2 # EB extends into neighboring grids
-
-mfix.write_eb_surface = false  # Needed to output eb-surfaces
-
-#! EB geometry
-#!-----------------------------------------------------------//
-
-#! BCs 
-#!-----------------------------------------------------------//
-xlo.location = 0.0
-xlo.type = "mi"
-xlo.velocity = 0.015
-
-xhi.location = 0.008
-xhi.type = "po"
-xhi.pressure = 0.0
+mfix.levelset__refinement = 4      # levelset resolution
+mfix.write_eb_surface     = false  # Needed to output eb-surfaces
 
 #_______________________________________________________________________
 # Particle load balancing
-
 #mfix.load_balance_type = "FixedSize"
-mfix.load_balance_type = "KnapSack"
+#mfix.load_balance_type = "KnapSack"
 
 amr.dual_grid          = 0
-amr.regrid_int         = 25
+amr.regrid_int         = -1
 
 #! KnapSack settings
 #!-----------------------------------------------------------//
@@ -173,12 +150,14 @@ dem.spring_tang_fac.pw    =     0.285714285
 dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
 
+#! EB geometry
+#!-----------------------------------------------------------//
+
 
 #_______________________________________________________________________
 # Regions for defining ICs and BCs
 #
-
-mfix.regions = full-domain  bed
+mfix.regions = full-domain  bed  inflow  outflow
 
 regions.full-domain.lo = 0.0000  0.0000  0.0000
 regions.full-domain.hi = 0.0080  0.0020  0.0020
@@ -186,6 +165,11 @@ regions.full-domain.hi = 0.0080  0.0020  0.0020
 regions.bed.lo = 0.0000  0.0000  0.0000
 regions.bed.hi = 0.0056  0.0020  0.0020
 
+regions.inflow.lo       = 0.0000  0.0000  0.0000
+regions.inflow.hi       = 0.0000  0.0020  0.0020
+
+regions.outflow.lo      = 0.0080  0.0000  0.0000
+regions.outflow.hi      = 0.0080  0.0020  0.0020
 
 #_______________________________________________________________________
 # Initial Conditions
@@ -219,3 +203,16 @@ ic.bed.solid0.density  = constant
 
 ic.bed.solid0.diameter.constant =  100.0e-6
 ic.bed.solid0.density.constant  = 1000.0
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+bc.regions = inflow  outflow
+
+bc.inflow = mi
+bc.inflow.fluid.volfrac  =  1.0
+bc.inflow.fluid.velocity =  0.015  0.0  0.0
+
+bc.outflow = po
+bc.outflow.fluid.pressure =  0.0
+
