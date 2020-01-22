@@ -248,9 +248,8 @@ namespace BC
         bc_zhi.push_back(bcv);
       }
 
-
       // Enforce the boundary for pressure outflows if specified.
-      if( !po_noParOut && (new_bc.type == pinf_ || new_bc.type == pout_) ){
+      if( new_bc.type == pout_ && po_noParOut == 0 ){
         domain_bc[dir_int ] = 0;
       }
 
@@ -263,7 +262,7 @@ namespace BC
       } else if( new_bc.type == pinf_ ) {
         BC::flow_planes.emplace_back(point, normal, false);
 
-      } else if( new_bc.type == pout_ && !po_noParOut) {
+      } else if( new_bc.type == pout_ && po_noParOut == 1) {
         BC::flow_planes.emplace_back(point, normal, false);
 
       } else if (new_bc.type == nsw_) {
