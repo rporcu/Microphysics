@@ -323,11 +323,13 @@ int main (int argc, char* argv[])
                      ( (stop_time >= 0.) && (time >  stop_time) ) ||
                      ( (stop_time <= 0.) && (max_step <= 0) ) );
 
-    amrex::Print() << " " << std::endl;
-    bool unused_inputs = ParmParse::QueryUnusedInputs();
-    if (unused_inputs)
-       amrex::Print() << "We should think about aborting here..." << std::endl;
-
+    if (restart_file.empty())
+    {
+        amrex::Print() << " " << std::endl;
+        bool unused_inputs = ParmParse::QueryUnusedInputs();
+        if (unused_inputs)
+           amrex::Print() << "We should think about aborting here..." << std::endl;
+    }
     { // Start profiling solve here
 
         BL_PROFILE("mfix_solve");
@@ -392,6 +394,11 @@ int main (int argc, char* argv[])
         std::cout << "Time spent in main      " << end_time << std::endl;
         std::cout << "Time spent in main-init " << end_time-end_init << std::endl;
     }
+
+    amrex::Print() << " " << std::endl;
+    bool unused_inputs = ParmParse::QueryUnusedInputs();
+    if (unused_inputs)
+       amrex::Print() << "We should think about aborting here..." << std::endl;
 
     BL_PROFILE_REGION_STOP("mfix::main()");
     BL_PROFILE_VAR_STOP(pmain);
