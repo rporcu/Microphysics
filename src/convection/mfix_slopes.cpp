@@ -30,9 +30,6 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
     yslopes_in[lev]->setVal(1.2345e300, slopes_comp, ncomp, 0);
     zslopes_in[lev]->setVal(1.2345e300, slopes_comp, ncomp, 0);
 
-    const amrex::MultiCutFab* cell_centroid;
-    cell_centroid = &(ebfactory[lev] -> getCentroid());
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -89,12 +86,10 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
            }
            else
            {
-
                const auto& flag_fab = flags.array();
-               const auto& cent_fab = cell_centroid->array(mfi);
 
-               amrex::ParallelFor(bx, ncomp,
-               [state_fab,xs_fab,ys_fab,zs_fab,slopes_comp,flag_fab,cent_fab]
+             amrex::ParallelFor(bx, ncomp,
+               [state_fab,xs_fab,ys_fab,zs_fab,slopes_comp,flag_fab]
                AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                {
                    if (flag_fab(i,j,k).isCovered())
@@ -105,63 +100,38 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                    }
                    else
                    {
-
-                     if(flag_fab(i  ,j,k).isSingleValued() or
-                       (flag_fab(i-1,j,k).isSingleValued() or not flag_fab(i,j,k).isConnected(-1,0,0)) or
-                       (flag_fab(i+1,j,k).isSingleValued() or not flag_fab(i,j,k).isConnected( 1,0,0))) {
-
-                       xs_fab(i,j,k,slopes_comp+n) = 0.0;
-
-
-                     } else {
-
                        // X direction
-                       Real du_xl = 2.0*(state_fab(i  ,j,k,n) - state_fab(i-1,j,k,n));
-                       Real du_xr = 2.0*(state_fab(i+1,j,k,n) - state_fab(i  ,j,k,n));
+                       Real du_xl = (flag_fab(i,j,k).isConnected(-1,0,0)) ?
+                           2.0*(state_fab(i  ,j,k,n) - state_fab(i-1,j,k,n)) : 0.0;
+                       Real du_xr = (flag_fab(i,j,k).isConnected( 1,0,0)) ?
+                           2.0*(state_fab(i+1,j,k,n) - state_fab(i  ,j,k,n)) : 0.0;
                        Real du_xc = 0.5*(state_fab(i+1,j,k,n) - state_fab(i-1,j,k,n));
 
                        Real xslope = amrex::min(std::abs(du_xl), std::abs(du_xc), std::abs(du_xr));
                        xslope = (du_xr*du_xl > 0.0) ? xslope : 0.0;
                        xs_fab(i,j,k,slopes_comp+n) = (du_xc > 0.0) ? xslope : -xslope;
 
-                     }
-
-                     if(flag_fab(i,j  ,k).isSingleValued() or
-                       (flag_fab(i,j-1,k).isSingleValued() or not flag_fab(i,j,k).isConnected(0,-1,0)) or
-                       (flag_fab(i,j+1,k).isSingleValued() or not flag_fab(i,j,k).isConnected(0, 1,0))) {
-
-                       ys_fab(i,j,k,slopes_comp+n) = 0.0;
-
-                     } else {
-
                        // Y direction
-                       Real du_yl = 2.0*(state_fab(i,j  ,k,n) - state_fab(i,j-1,k,n));
-                       Real du_yr = 2.0*(state_fab(i,j+1,k,n) - state_fab(i,j  ,k,n));
+                       Real du_yl = (flag_fab(i,j,k).isConnected(0,-1,0)) ?
+                           2.0*(state_fab(i,j  ,k,n) - state_fab(i,j-1,k,n)) : 0.0;
+                       Real du_yr = (flag_fab(i,j,k).isConnected(0, 1,0)) ?
+                           2.0*(state_fab(i,j+1,k,n) - state_fab(i,j  ,k,n)) : 0.0;
                        Real du_yc = 0.5*(state_fab(i,j+1,k,n) - state_fab(i,j-1,k,n));
 
                        Real yslope = amrex::min(std::abs(du_yl), std::abs(du_yc), std::abs(du_yr));
                        yslope = (du_yr*du_yl > 0.0) ? yslope : 0.0;
                        ys_fab(i,j,k,slopes_comp+n) = (du_yc > 0.0) ? yslope : -yslope;
-                     }
-
-                     if(flag_fab(i,j,k  ).isSingleValued() or
-                       (flag_fab(i,j,k-1).isSingleValued() or not flag_fab(i,j,k).isConnected(0,0,-1)) or
-                       (flag_fab(i,j,k+1).isSingleValued() or not flag_fab(i,j,k).isConnected(0,0, 1))) {
-
-                       zs_fab(i,j,k,slopes_comp+n) = 0.0;
-
-                     } else {
 
                        // Z direction
-                       Real du_zl = 2.0*(state_fab(i,j,k  ,n) - state_fab(i,j,k-1,n));
-                       Real du_zr = 2.0*(state_fab(i,j,k+1,n) - state_fab(i,j,k  ,n));
+                       Real du_zl = (flag_fab(i,j,k).isConnected(0,0,-1)) ?
+                           2.0*(state_fab(i,j,k  ,n) - state_fab(i,j,k-1,n)) : 0.0;
+                       Real du_zr = (flag_fab(i,j,k).isConnected(0,0, 1)) ?
+                           2.0*(state_fab(i,j,k+1,n) - state_fab(i,j,k  ,n)) : 0.0;
                        Real du_zc = 0.5*(state_fab(i,j,k+1,n) - state_fab(i,j,k-1,n));
 
                        Real zslope = amrex::min(std::abs(du_zl), std::abs(du_zc), std::abs(du_zr));
                        zslope = (du_zr*du_zl > 0.0) ? zslope : 0.0;
                        zs_fab(i,j,k,slopes_comp+n) = (du_zc > 0.0) ? zslope : -zslope;
-
-                     }
                    }
                });
            } // end of cut cell region
