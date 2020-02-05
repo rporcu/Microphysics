@@ -6,13 +6,13 @@
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-mfix.cfl = 0.5
+mfix.cfl = 0.2
 
 mfix.max_step = 100
 
 mfix.gravity = 0.0  0.0  0.0
 
-mac_proj.verbose = 0
+mac_proj.verbose   = 0
 nodal_proj.verbose = 0
 
 amr.blocking_factor = 8
@@ -23,13 +23,13 @@ amr.blocking_factor = 8
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
 amr.max_level = 0
 
-geometry.coord_sys    = 0                       # 0: Cartesian
+geometry.coord_sys    =   0                   # 0: Cartesian
 geometry.is_periodic  =   0     1      1      # Periodicity x y z (0/1)
 geometry.prob_lo      =  -0.04 -0.04  -0.005  # Lo corner coordinates
 geometry.prob_hi      =   0.04  0.04   0.005  # Hi corner coordinates
 
 # Number of grid cells in each direction at the coarsest level
-amr.n_cell =  128  16  16
+amr.n_cell =  128  128  16
 
 
 #! Grids
@@ -62,7 +62,7 @@ particles.tile_size = 1024 1024 1024
 fluid.solve = fluid
 
 fluid.density            = constant
-fluid.density.constant   = 0.2
+fluid.density.constant   = 1.0
 
 fluid.viscosity          = constant
 fluid.viscosity.constant = 0.0
@@ -75,12 +75,12 @@ dem.solve = None
 
 #_______________________________________________________________________
 # EB geometry
-#
+
 mfix.geometry = "cylinder"
 
 cylinder.internal_flow = false
 
-cylinder.radius = 0.004
+cylinder.radius =  0.004
 cylinder.height = -1.0
 
 cylinder.direction = 2
@@ -107,9 +107,8 @@ regions.outflow.hi     =  0.04   0.04   0.005
 #
 ic.regions = full-domain
 
-ic.full-domain.fluid.volfrac   =  1.0
-ic.full-domain.fluid.pressure  =  0.0
-ic.full-domain.fluid.velocity  =  0.0  0.0  0.0
+ic.full-domain.fluid.volfrac   = 1.0
+ic.full-domain.fluid.velocity  = 0.0  0.0  0.0
 
 
 #_______________________________________________________________________
