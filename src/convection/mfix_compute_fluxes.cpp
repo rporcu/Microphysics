@@ -370,7 +370,7 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
   //
   // ===================== X =====================
   //
-  amrex::ParallelFor(ubx_grown,ncomp,
+  amrex::ParallelFor(ubx,ncomp,
     [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_ilo,bct_ihi,bc_types,areafrac_x,fcx_fab,ccc_fab,
      x_slopes,y_slopes,z_slopes,state,u,sx,fx]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
@@ -424,35 +424,13 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
     } else {
         sx(i,j,k,n) = my_huge;
     }
-    fx(i,j,k,n) = u(i,j,k) * sx(i,j,k);
+    fx(i,j,k,n) = u(i,j,k) * sx(i,j,k,n);
   });
-
-#if 0
-  amrex::ParallelFor(ubx, ncomp, [my_huge,fcx_fab,ccm_fab,areafrac_x,sx,u,fx]
-    AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-  {
-    if( areafrac_x(i,j,k) > 0 ) {
-       int jj = j + static_cast<int>(std::copysign(1.0, fcx_fab(i,j,k,0)));
-       int kk = k + static_cast<int>(std::copysign(1.0, fcx_fab(i,j,k,1)));
-
-       Real fracy = (ccm_fab(i-1,jj,k) || ccm_fab(i,jj,k)) ? std::abs(fcx_fab(i,j,k,0)) : 0.0;
-       Real fracz = (ccm_fab(i-1,j,kk) || ccm_fab(i,j,kk)) ? std::abs(fcx_fab(i,j,k,1)) : 0.0;
-
-       Real s_on_x_centroid = (1.0-fracy)*(1.0-fracz)*sx(i, j,k ,n)+
-                                   fracy *(1.0-fracz)*sx(i,jj,k ,n)+
-                                   fracz *(1.0-fracy)*sx(i, j,kk,n)+
-                                   fracy *     fracz *sx(i,jj,kk,n);
-
-       fx(i,j,k,n) = u(i,j,k) * s_on_x_centroid;
-    } else
-       fx(i,j,k,n) = my_huge;
-  });
-#endif
 
   //
   // ===================== Y =====================
   //
-  amrex::ParallelFor(vbx_grown, ncomp,
+  amrex::ParallelFor(vbx, ncomp,
     [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_jlo,bct_jhi,bc_types,areafrac_y,fcy_fab,ccc_fab,
      x_slopes,y_slopes,z_slopes,state,v,sy,fy]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
@@ -506,34 +484,13 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
     else {
         sy(i,j,k,n) = my_huge;
     }
-    fy(i,j,k,n) = v(i,j,k) * sy(i,j,k);
+    fy(i,j,k,n) = v(i,j,k) * sy(i,j,k,n);
   });
-
-#if 0
-  amrex::ParallelFor(vbx,ncomp, [my_huge,fcy_fab,ccm_fab,areafrac_y,sy,v,fy]
-    AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-  {
-    if ( areafrac_y(i,j,k) > 0 ) {
-       int ii = i + static_cast<int>(std::copysign(1.0,fcy_fab(i,j,k,0)));
-       int kk = k + static_cast<int>(std::copysign(1.0,fcy_fab(i,j,k,1)));
-
-       Real fracx = (ccm_fab(ii,j-1,k) || ccm_fab(ii,j,k)) ? std::abs(fcy_fab(i,j,k,0)) : 0.0;
-       Real fracz = (ccm_fab(i,j-1,kk) || ccm_fab(i,j,kk)) ? std::abs(fcy_fab(i,j,k,1)) : 0.0;
-
-       Real s_on_y_centroid = (1.0-fracx)*(1.0-fracz)*sy(i ,j,k ,n)+
-                                   fracx *(1.0-fracz)*sy(ii,j,k ,n)+
-                                   fracz *(1.0-fracx)*sy(i ,j,kk,n)+
-                                   fracx *     fracz *sy(ii,j,kk,n);
-       fy(i,j,k,n) = v(i,j,k) * s_on_y_centroid;
-    } else
-       fy(i,j,k,n) = my_huge;
-  });
-#endif
 
   //
   // ===================== Z =====================
   //
-  amrex::ParallelFor(wbx_grown,ncomp,
+  amrex::ParallelFor(wbx,ncomp,
     [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_klo,bct_khi,bc_types,areafrac_z,fcz_fab,ccc_fab,
      x_slopes,y_slopes,z_slopes,state,w,sz,fz]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
@@ -588,28 +545,6 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
     else {
         sz(i,j,k,n) = my_huge;
     }
-    fz(i,j,k,n) = w(i,j,k) * sz(i,j,k);
+    fz(i,j,k,n) = w(i,j,k) * sz(i,j,k,n);
   });
-
-#if 0
-  amrex::ParallelFor(wbx,ncomp, [my_huge,fcz_fab,ccm_fab,areafrac_z,sz,w,fz]
-    AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-  {
-    if( areafrac_z(i,j,k) > 0 ) {
-       int ii = i + static_cast<int>(std::copysign(1.0,fcz_fab(i,j,k,0)));
-       int jj = j + static_cast<int>(std::copysign(1.0,fcz_fab(i,j,k,1)));
-
-       Real fracx = (ccm_fab(ii,j,k-1) || ccm_fab(ii,j,k)) ? std::abs(fcz_fab(i,j,k,0)) : 0.0;
-       Real fracy = (ccm_fab(i,jj,k-1) || ccm_fab(i,jj,k)) ? std::abs(fcz_fab(i,j,k,1)) : 0.0;
-
-       Real s_on_z_centroid = (1.0-fracx)*(1.0-fracy)*sz(i ,j ,k,n)+
-                                   fracx *(1.0-fracy)*sz(ii,j ,k,n)+
-                                   fracy *(1.0-fracx)*sz(i ,jj,k,n)+
-                                   fracx *     fracy *sz(ii,jj,k,n);
-
-       fz(i,j,k,n) = w(i,j,k) * s_on_z_centroid;
-    } else
-       fz(i,j,k,n) = my_huge;
-  });
-#endif
 }
