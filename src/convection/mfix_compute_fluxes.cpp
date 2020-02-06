@@ -58,10 +58,13 @@ mfix::mfix_compute_fluxes (int lev,
         const amrex::MultiFab*                    volfrac;
         const amrex::MultiCutFab*                 bndrycent;
 
+
         areafrac  =   ebfactory[lev] -> getAreaFrac();
         facecent  =   ebfactory[lev] -> getFaceCent();
         volfrac   = &(ebfactory[lev] -> getVolFrac());
         bndrycent = &(ebfactory[lev] -> getBndryCent());
+
+        const auto& cellcent = ebfactory[lev]->getCentroid();
 
         // Create cc_mask
         iMultiFab cc_mask(grids[lev], dmap[lev], 1, 1);
@@ -109,7 +112,7 @@ mfix::mfix_compute_fluxes (int lev,
                           (*ep_u_mac[lev])[mfi], (*ep_v_mac[lev])[mfi], (*ep_w_mac[lev])[mfi],
                           (*areafrac[0])[mfi], (*areafrac[1])[mfi], (*areafrac[2])[mfi], 
                           (*facecent[0])[mfi], (*facecent[1])[mfi], (*facecent[2])[mfi], 
-                          (*volfrac)[mfi], (*bndrycent)[mfi], cc_mask[mfi], flags);
+                          cellcent[mfi], (*volfrac)[mfi], (*bndrycent)[mfi], cc_mask[mfi], flags);
                 }
             }
         } // MFIter
@@ -285,6 +288,7 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
                                      const FArrayBox& face_centroid_x, 
                                      const FArrayBox& face_centroid_y, 
                                      const FArrayBox& face_centroid_z, 
+                                     const FArrayBox& cell_centroid, 
                                      const FArrayBox& volfrac, 
                                      const FArrayBox& bndry_centroid, 
                                      const IArrayBox& cc_mask, 
@@ -347,6 +351,9 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
   const auto& fcy_fab = face_centroid_y.array();
   const auto& fcz_fab = face_centroid_z.array();
 
+  // Cell centroid
+  const auto& ccc_fab = cell_centroid.array();
+
   const auto& ccm_fab = cc_mask.const_array();
 
   const GpuArray<int, 3> bc_types =
@@ -364,35 +371,63 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
   // ===================== X =====================
   //
   amrex::ParallelFor(ubx_grown,ncomp,
-    [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_ilo,bct_ihi,bc_types,areafrac_x,x_slopes,state,u,sx]
+    [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_ilo,bct_ihi,bc_types,areafrac_x,fcx_fab,ccc_fab,
+     x_slopes,y_slopes,z_slopes,state,u,sx,fx]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
     Real upls(0); Real umns(0);
 
     if( areafrac_x(i,j,k) > 0 ) {
       if( i <= dom_low.x and
-       ugradu_aux::is_equal_to_any(bct_ilo(dom_low.x-1,j,k,0),
-                                   bc_types.data(), bc_types.size()))
-      {
-        sx(i,j,k,n) = state(dom_low.x-1,j,k,state_comp+n);
+           ugradu_aux::is_equal_to_any(bct_ilo(dom_low.x-1,j,k,0),
+                                       bc_types.data(), bc_types.size()))
+        {
+         sx(i,j,k,n) = state(dom_low.x-1,j,k,state_comp+n);
       }
       else if( i >= dom_high.x+1 and
-       ugradu_aux::is_equal_to_any(bct_ihi(dom_high.x+1,j,k,0),
-                                   bc_types.data(), bc_types.size()))
+           ugradu_aux::is_equal_to_any(bct_ihi(dom_high.x+1,j,k,0),
+                                       bc_types.data(), bc_types.size()))
       {
-        sx(i,j,k,n) = state(dom_high.x+1,j,k,state_comp+n);
+         sx(i,j,k,n) = state(dom_high.x+1,j,k,state_comp+n);
       }
-      else {
-        upls = state(i  ,j,k,state_comp+n) - .5*x_slopes(i  ,j,k,slopes_comp+n);
-        umns = state(i-1,j,k,state_comp+n) + .5*x_slopes(i-1,j,k,slopes_comp+n);
+      else 
+      {
+         Real yf = fcx_fab(i,j,k,0); // local (y,z) of centroid of x-face we are extrapolating to
+         Real zf = fcx_fab(i,j,k,1);
+
+         Real xc = ccc_fab(i,j,k,0); // centroid of cell (i,j,k)
+         Real yc = ccc_fab(i,j,k,1);
+         Real zc = ccc_fab(i,j,k,2);
+
+         Real delta_x = 0.5 + xc;
+         Real delta_y = yf  - yc;
+         Real delta_z = zf  - zc;
+
+         upls = state(i  ,j,k,state_comp+n) - delta_x * x_slopes(i,j,k,slopes_comp+n) 
+                                            + delta_y * y_slopes(i,j,k,slopes_comp+n) 
+                                            + delta_z * z_slopes(i,j,k,slopes_comp+n);
+
+              xc = ccc_fab(i-1,j,k,0); // centroid of cell (i,j,k)
+              yc = ccc_fab(i-1,j,k,1);
+              zc = ccc_fab(i-1,j,k,2);
+
+              delta_x = 0.5 - xc;
+              delta_y = yf  - yc;
+              delta_z = zf  - zc;
+
+         umns = state(i-1,j,k,state_comp+n) + delta_x * x_slopes(i-1,j,k,slopes_comp+n) 
+                                            + delta_y * y_slopes(i-1,j,k,slopes_comp+n) 
+                                            + delta_z * z_slopes(i-1,j,k,slopes_comp+n);
 
         sx(i,j,k,n) = upwind( umns, upls, u(i,j,k) );
       }
     } else {
         sx(i,j,k,n) = my_huge;
     }
+    fx(i,j,k,n) = u(i,j,k) * sx(i,j,k);
   });
 
+#if 0
   amrex::ParallelFor(ubx, ncomp, [my_huge,fcx_fab,ccm_fab,areafrac_x,sx,u,fx]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
@@ -412,12 +447,14 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
     } else
        fx(i,j,k,n) = my_huge;
   });
+#endif
 
   //
   // ===================== Y =====================
   //
   amrex::ParallelFor(vbx_grown, ncomp,
-    [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_jlo,bct_jhi,bc_types,areafrac_y,y_slopes,state,v,sy]
+    [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_jlo,bct_jhi,bc_types,areafrac_y,fcy_fab,ccc_fab,
+     x_slopes,y_slopes,z_slopes,state,v,sy,fy]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
     Real vpls(0); Real vmns(0);
@@ -435,9 +472,33 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
       {
         sy(i,j,k,n) = state(i,dom_high.y+1,k,state_comp+n);
       }
-      else {
-        vpls = state(i,j  ,k,state_comp+n) - .5*y_slopes(i,j  ,k,slopes_comp+n);
-        vmns = state(i,j-1,k,state_comp+n) + .5*y_slopes(i,j-1,k,slopes_comp+n);
+      else 
+      {
+         Real xf = fcy_fab(i,j,k,0); // local (x,z) of centroid of y-face we are extrapolating to
+         Real zf = fcy_fab(i,j,k,1);
+
+         Real xc = ccc_fab(i,j,k,0); // centroid of cell (i,j,k)
+         Real yc = ccc_fab(i,j,k,1);
+         Real zc = ccc_fab(i,j,k,2);
+
+         Real delta_x = xf  - xc;
+         Real delta_y = 0.5 + yc;
+         Real delta_z = zf  - zc;
+         vpls = state(i,j  ,k,state_comp+n) - delta_y * y_slopes(i,j,k,slopes_comp+n) 
+                                            + delta_x * x_slopes(i,j,k,slopes_comp+n) 
+                                            + delta_z * z_slopes(i,j,k,slopes_comp+n);
+
+              xc = ccc_fab(i,j-1,k,0); // centroid of cell (i,j-1,k)
+              yc = ccc_fab(i,j-1,k,1);
+              zc = ccc_fab(i,j-1,k,2);
+
+              delta_x = xf  - xc;
+              delta_y = 0.5 - yc;
+              delta_z = zf  - zc;
+
+         vmns = state(i,j-1,k,state_comp+n) + delta_y * y_slopes(i,j-1,k,slopes_comp+n) 
+                                            + delta_x * x_slopes(i,j-1,k,slopes_comp+n) 
+                                            + delta_z * z_slopes(i,j-1,k,slopes_comp+n);
 
         sy(i,j,k,n) = upwind( vmns, vpls, v(i,j,k) );
       }
@@ -445,8 +506,10 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
     else {
         sy(i,j,k,n) = my_huge;
     }
+    fy(i,j,k,n) = v(i,j,k) * sy(i,j,k);
   });
 
+#if 0
   amrex::ParallelFor(vbx,ncomp, [my_huge,fcy_fab,ccm_fab,areafrac_y,sy,v,fy]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
@@ -465,12 +528,14 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
     } else
        fy(i,j,k,n) = my_huge;
   });
+#endif
 
   //
   // ===================== Z =====================
   //
   amrex::ParallelFor(wbx_grown,ncomp,
-    [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_klo,bct_khi,bc_types,areafrac_z,z_slopes,state,w,sz]
+    [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_klo,bct_khi,bc_types,areafrac_z,fcz_fab,ccc_fab,
+     x_slopes,y_slopes,z_slopes,state,w,sz,fz]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
     Real wpls(0); Real wmns(0);
@@ -488,9 +553,34 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
       {
         sz(i,j,k,n) = state(i,j,dom_high.z+1,state_comp+n);
       }
-      else {
-        wpls = state(i,j,k  ,state_comp+n) - .5*z_slopes(i,j,k  ,slopes_comp+n);
-        wmns = state(i,j,k-1,state_comp+n) + .5*z_slopes(i,j,k-1,slopes_comp+n);
+      else 
+      {
+         Real xf = fcz_fab(i,j,k,0); // local (x,y) of centroid of z-face we are extrapolating to
+         Real yf = fcz_fab(i,j,k,1);
+
+         Real xc = ccc_fab(i,j,k,0); // centroid of cell (i,j,k)
+         Real yc = ccc_fab(i,j,k,1);
+         Real zc = ccc_fab(i,j,k,2);
+
+         Real delta_x = xf  - xc;
+         Real delta_y = yf  - yc;
+         Real delta_z = 0.5 + zc;
+
+         wpls = state(i,j,k  ,state_comp+n) - delta_z * z_slopes(i,j,k,slopes_comp+n) 
+                                            + delta_x * x_slopes(i,j,k,slopes_comp+n) 
+                                            + delta_y * y_slopes(i,j,k,slopes_comp+n);
+
+              xc = ccc_fab(i,j,k-1,0); // centroid of cell (i,j,k-1)
+              yc = ccc_fab(i,j,k-1,1);
+              zc = ccc_fab(i,j,k-1,2);
+
+              delta_x = xf  - xc;
+              delta_y = yf  - yc;
+              delta_z = 0.5 - zc;
+
+         wmns = state(i,j,k-1,state_comp+n) + delta_z * z_slopes(i,j,k-1,slopes_comp+n) 
+                                            + delta_x * x_slopes(i,j,k-1,slopes_comp+n) 
+                                            + delta_y * y_slopes(i,j,k-1,slopes_comp+n);
 
         sz(i,j,k,n) = upwind( wmns, wpls, w(i,j,k) );
       }
@@ -498,8 +588,10 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
     else {
         sz(i,j,k,n) = my_huge;
     }
+    fz(i,j,k,n) = w(i,j,k) * sz(i,j,k);
   });
 
+#if 0
   amrex::ParallelFor(wbx,ncomp, [my_huge,fcz_fab,ccm_fab,areafrac_z,sz,w,fz]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
@@ -519,4 +611,5 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
     } else
        fz(i,j,k,n) = my_huge;
   });
+#endif
 }

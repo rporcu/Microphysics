@@ -380,6 +380,7 @@ public:
                                         const FArrayBox& fc_x,
                                         const FArrayBox& fc_y,
                                         const FArrayBox& fc_z,
+                                        const FArrayBox& cell_centroid,
                                         const FArrayBox& volfrac,
                                         const FArrayBox& bndrycent,
                                         const IArrayBox& cc_mask,
@@ -582,6 +583,39 @@ private:
     // Debug counter used for tracking number of level-set MultiFabs used in
     // intersection/union
     int ct_ls_mf;
+
+    struct LevelData {
+        LevelData () = default;
+        LevelData (amrex::BoxArray const& ba,
+                   amrex::DistributionMapping const& dm,
+                   amrex::FabFactory<amrex::FArrayBox> const& fact,
+                   int ntrac, int ng_state,
+                   bool use_godunov, bool implicit_diffusion, bool advect_tracer);
+        // cell-centered multifabs
+        amrex::MultiFab velocity;
+        amrex::MultiFab velocity_o;
+        amrex::MultiFab density;
+        amrex::MultiFab density_o;
+        amrex::MultiFab tracer;
+        amrex::MultiFab tracer_o;
+        amrex::MultiFab gp; // pressure gradient
+        // nodal multifabs
+        amrex::MultiFab p;
+        //
+        amrex::MultiFab conv_velocity;
+        amrex::MultiFab conv_velocity_o;
+        amrex::MultiFab conv_density;
+        amrex::MultiFab conv_density_o;
+        amrex::MultiFab conv_tracer;
+        amrex::MultiFab conv_tracer_o;
+        //
+        amrex::MultiFab divtau;
+        amrex::MultiFab divtau_o;
+        amrex::MultiFab laps;
+        amrex::MultiFab laps_o;
+    };
+
+    amrex::Vector<std::unique_ptr<LevelData> > m_leveldata;
 
     // Boundary conditions types
     Vector< std::unique_ptr<IArrayBox> > bc_ilo;
