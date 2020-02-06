@@ -215,7 +215,7 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
              // Cell centroids
              const auto& ccc_fab = cellcent.array(mfi);
 
-             // Cell-based slopes
+		     // Cell-based slopes
              const auto& xslopes_fab = (xslopes_u[lev])->array(mfi);
              const auto& yslopes_fab = (yslopes_u[lev])->array(mfi);
              const auto& zslopes_fab = (zslopes_u[lev])->array(mfi);
@@ -257,6 +257,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
                     Real delta_y = yf  - yc;
                     Real delta_z = zf  - zc;
 
+                    Real cc_umax = std::max(ccvel_fab(i,j,k,0), ccvel_fab(i-1,j,k,0));
+                    Real cc_umin = std::min(ccvel_fab(i,j,k,0), ccvel_fab(i-1,j,k,0));
+
                     if (std::abs(delta_x) > 1.0) amrex::Print() << "HI:BOGUS DX IN X-EXTRAP " << delta_x << " " << i << " " << j << " " << k << std::endl;
                     if (std::abs(delta_y) > 0.5) amrex::Print() << "HI:BOGUS DY IN X-EXTRAP " << delta_y << " " << i << " " << j << " " << k << std::endl;
                     if (std::abs(delta_z) > 0.5) amrex::Print() << "HI:BOGUS DZ IN X-EXTRAP " << delta_z << " " << i << " " << j << " " << k << std::endl;
@@ -264,6 +267,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
                     upls_fab(i,j,k) = ccvel_fab(i  ,j,k,0) - delta_x * xslopes_fab(i,j,k,0) 
                                                            + delta_y * yslopes_fab(i,j,k,0) 
                                                            + delta_z * zslopes_fab(i,j,k,0);
+
+                    upls_fab(i,j,k) = std::min(upls_fab(i,j,k), cc_umax);
+                    upls_fab(i,j,k) = std::max(upls_fab(i,j,k), cc_umin);
 
                          xc = ccc_fab(i-1,j,k,0); // centroid of cell (i-1,j,k)
                          yc = ccc_fab(i-1,j,k,1);
@@ -280,6 +286,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
                     umns_fab(i,j,k) = ccvel_fab(i-1,j,k,0) + delta_x * xslopes_fab(i-1,j,k,0) 
                                                            + delta_y * yslopes_fab(i-1,j,k,0) 
                                                            + delta_z * zslopes_fab(i-1,j,k,0);
+
+                    umns_fab(i,j,k) = std::min(umns_fab(i,j,k), cc_umax);
+                    umns_fab(i,j,k) = std::max(umns_fab(i,j,k), cc_umin);
 
                     if ( umns_fab(i,j,k) < 0.0 && upls_fab(i,j,k) > 0.0 ) {
                        umac_fab(i,j,k) = 0.0;
@@ -312,6 +321,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
                     Real delta_y = 0.5 + yc;
                     Real delta_z = zf  - zc;
 
+                    Real cc_umax = std::max(ccvel_fab(i,j,k,1), ccvel_fab(i,j-1,k,1));
+                    Real cc_umin = std::min(ccvel_fab(i,j,k,1), ccvel_fab(i,j-1,k,1));
+
                     if (std::abs(delta_x) > 0.5) amrex::Print() << "HI:BOGUS DX IN X-EXTRAP " << delta_x << std::endl;
                     if (std::abs(delta_y) > 1.0) amrex::Print() << "HI:BOGUS DY IN X-EXTRAP " << delta_y << std::endl;
                     if (std::abs(delta_z) > 0.5) amrex::Print() << "HI:BOGUS DZ IN X-EXTRAP " << delta_z << std::endl;
@@ -319,6 +331,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
                     vpls_fab(i,j,k) = ccvel_fab(i,j  ,k,1) - delta_y * yslopes_fab(i,j,k,1) 
                                                            + delta_x * xslopes_fab(i,j,k,1) 
                                                            + delta_z * zslopes_fab(i,j,k,1);
+
+                    vpls_fab(i,j,k) = std::min(vpls_fab(i,j,k), cc_umax);
+                    vpls_fab(i,j,k) = std::max(vpls_fab(i,j,k), cc_umin);
 
                          xc = ccc_fab(i,j-1,k,0); // centroid of cell (i,j-1,k)
                          yc = ccc_fab(i,j-1,k,1);
@@ -335,6 +350,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
                     vmns_fab(i,j,k) = ccvel_fab(i,j-1,k,1) + delta_y * yslopes_fab(i,j-1,k,1) 
                                                            + delta_x * xslopes_fab(i,j-1,k,1) 
                                                            + delta_z * zslopes_fab(i,j-1,k,1);
+
+                    vmns_fab(i,j,k) = std::min(vmns_fab(i,j,k), cc_umax);
+                    vmns_fab(i,j,k) = std::max(vmns_fab(i,j,k), cc_umin);
 
                     if ( vmns_fab(i,j,k) < 0.0 && vpls_fab(i,j,k) > 0.0 ) {
                        vmac_fab(i,j,k) = 0.0;
@@ -367,6 +385,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
                     Real delta_y = yf  - yc;
                     Real delta_z = 0.5 + zc;
 
+                    Real cc_umax = std::max(ccvel_fab(i,j,k,2), ccvel_fab(i,j,k-1,2));
+                    Real cc_umin = std::min(ccvel_fab(i,j,k,2), ccvel_fab(i,j,k-1,2));
+
                     if (std::abs(delta_x) > 0.5) amrex::Print() << "HI:BOGUS DX IN X-EXTRAP " << delta_x << std::endl;
                     if (std::abs(delta_y) > 0.5) amrex::Print() << "HI:BOGUS DY IN X-EXTRAP " << delta_y << std::endl;
                     if (std::abs(delta_z) > 1.0) amrex::Print() << "HI:BOGUS DZ IN X-EXTRAP " << delta_z << std::endl;
@@ -374,6 +395,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
                     wpls_fab(i,j,k) = ccvel_fab(i,j,k  ,2) - delta_z * zslopes_fab(i,j,k,2) 
                                                            + delta_x * xslopes_fab(i,j,k,2) 
                                                            + delta_y * yslopes_fab(i,j,k,2);
+
+                    wpls_fab(i,j,k) = std::min(wpls_fab(i,j,k), cc_umax);
+                    wpls_fab(i,j,k) = std::max(wpls_fab(i,j,k), cc_umin);
 
                          xc = ccc_fab(i,j,k-1,0); // centroid of cell (i,j,k-1)
                          yc = ccc_fab(i,j,k-1,1);
@@ -387,9 +411,11 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
                                                            + delta_x * xslopes_fab(i,j,k-1,2) 
                                                            + delta_y * yslopes_fab(i,j,k-1,2);
 
+                    wmns_fab(i,j,k) = std::min(wmns_fab(i,j,k), cc_umax);
+                    wmns_fab(i,j,k) = std::max(wmns_fab(i,j,k), cc_umin);
+
                     if (std::abs(delta_x) > 0.5) amrex::Print() << "LO:BOGUS DX IN X-EXTRAP " << delta_x << std::endl;
                     if (std::abs(delta_y) > 0.5) amrex::Print() << "LO:BOGUS DY IN X-EXTRAP " << delta_y << std::endl;
-                    if (std::abs(delta_z) > 1.0) amrex::Print() << "LO:BOGUS DZ IN X-EXTRAP " << delta_z << std::endl;
 
                     if ( wmns_fab(i,j,k) < 0.0 && wpls_fab(i,j,k) > 0.0 ) {
                        wmac_fab(i,j,k) = 0.0;

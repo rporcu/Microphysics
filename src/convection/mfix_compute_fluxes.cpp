@@ -403,9 +403,14 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
          Real delta_y = yf  - yc;
          Real delta_z = zf  - zc;
 
+         Real cc_umax = std::max(state(i,j,k,state_comp+n), state(i-1,j,k,state_comp+n));
+         Real cc_umin = std::min(state(i,j,k,state_comp+n), state(i-1,j,k,state_comp+n));
+
          upls = state(i  ,j,k,state_comp+n) - delta_x * x_slopes(i,j,k,slopes_comp+n) 
                                             + delta_y * y_slopes(i,j,k,slopes_comp+n) 
                                             + delta_z * z_slopes(i,j,k,slopes_comp+n);
+
+         upls = std::max( std::min(upls, cc_umax), cc_umin );
 
               xc = ccc_fab(i-1,j,k,0); // centroid of cell (i,j,k)
               yc = ccc_fab(i-1,j,k,1);
@@ -419,7 +424,9 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
                                             + delta_y * y_slopes(i-1,j,k,slopes_comp+n) 
                                             + delta_z * z_slopes(i-1,j,k,slopes_comp+n);
 
-        sx(i,j,k,n) = upwind( umns, upls, u(i,j,k) );
+         umns = std::max( std::min(umns, cc_umax), cc_umin );
+
+         sx(i,j,k,n) = upwind( umns, upls, u(i,j,k) );
       }
     } else {
         sx(i,j,k,n) = my_huge;
@@ -462,9 +469,14 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
          Real delta_x = xf  - xc;
          Real delta_y = 0.5 + yc;
          Real delta_z = zf  - zc;
+
+         Real cc_umax = std::max(state(i,j,k,state_comp+n), state(i,j-1,k,state_comp+n));
+         Real cc_umin = std::min(state(i,j,k,state_comp+n), state(i,j-1,k,state_comp+n));
+
          vpls = state(i,j  ,k,state_comp+n) - delta_y * y_slopes(i,j,k,slopes_comp+n) 
                                             + delta_x * x_slopes(i,j,k,slopes_comp+n) 
                                             + delta_z * z_slopes(i,j,k,slopes_comp+n);
+         vpls = std::max( std::min(vpls, cc_umax), cc_umin );
 
               xc = ccc_fab(i,j-1,k,0); // centroid of cell (i,j-1,k)
               yc = ccc_fab(i,j-1,k,1);
@@ -478,7 +490,9 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
                                             + delta_x * x_slopes(i,j-1,k,slopes_comp+n) 
                                             + delta_z * z_slopes(i,j-1,k,slopes_comp+n);
 
-        sy(i,j,k,n) = upwind( vmns, vpls, v(i,j,k) );
+         vmns = std::max( std::min(vmns, cc_umax), cc_umin );
+
+         sy(i,j,k,n) = upwind( vmns, vpls, v(i,j,k) );
       }
     }
     else {
@@ -523,9 +537,14 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
          Real delta_y = yf  - yc;
          Real delta_z = 0.5 + zc;
 
+         Real cc_umax = std::max(state(i,j,k,state_comp+n), state(i,j,k-1,state_comp+n));
+         Real cc_umin = std::min(state(i,j,k,state_comp+n), state(i,j,k-1,state_comp+n));
+
          wpls = state(i,j,k  ,state_comp+n) - delta_z * z_slopes(i,j,k,slopes_comp+n) 
                                             + delta_x * x_slopes(i,j,k,slopes_comp+n) 
                                             + delta_y * y_slopes(i,j,k,slopes_comp+n);
+
+         wpls = std::max( std::min(wpls, cc_umax), cc_umin );
 
               xc = ccc_fab(i,j,k-1,0); // centroid of cell (i,j,k-1)
               yc = ccc_fab(i,j,k-1,1);
@@ -538,8 +557,9 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
          wmns = state(i,j,k-1,state_comp+n) + delta_z * z_slopes(i,j,k-1,slopes_comp+n) 
                                             + delta_x * x_slopes(i,j,k-1,slopes_comp+n) 
                                             + delta_y * y_slopes(i,j,k-1,slopes_comp+n);
+         wmns = std::max( std::min(wmns, cc_umax), cc_umin );
 
-        sz(i,j,k,n) = upwind( wmns, wpls, w(i,j,k) );
+         sz(i,j,k,n) = upwind( wmns, wpls, w(i,j,k) );
       }
     }
     else {
