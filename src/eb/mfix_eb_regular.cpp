@@ -34,7 +34,7 @@ mfix::make_eb_regular ()
     // any walls defined in mfix.dat). It is filled while after EB2::Build.
     // NOTE: this pointer is undefined if and of:
     //     * ! DEM::solve
-    //     * levelset__restart
+    //     * levelset_restart
     //     * ! has_walls
     // are true
     std::unique_ptr<MultiFab> mf_impfunc;

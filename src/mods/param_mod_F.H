@@ -1,5 +1,5 @@
-#ifndef __PARAM_MOD_F_H_
-#define __PARAM_MOD_F_H_
+#ifndef _PARAM_MOD_F_H_
+#define _PARAM_MOD_F_H_
 
 #include <AMReX_REAL.H>
 

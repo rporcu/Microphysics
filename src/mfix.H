@@ -150,7 +150,7 @@ public:
             if (nlev == 1)
             {
                 Box dom_ls = geom[0].Domain();
-                dom_ls.refine(levelset__refinement);
+                dom_ls.refine(levelset_refinement);
                 Geometry geom_ls(dom_ls);
                 Vector<Geometry> vgeom{geom_ls};
                 // NOTE: lev here is index in vgeom
@@ -191,7 +191,7 @@ public:
 
     // flag enabling level-set restart (i.e. prevent make_eb_* from rebuilding
     // the level-set data).
-    bool levelset__restart = false;
+    bool levelset_restart = false;
 
     void mfix_compute_vort ();
 
@@ -200,10 +200,10 @@ public:
     ///
     /// Parameters describing the level-set grid:
     ///
-    int levelset__refinement = 1;    // refinement (wrt particle grid) of the level-set's grid
-    int levelset__eb_refinement = 1; // refinement of the EB facets used to generate the level-set
-    int levelset__pad = 2;           // padding of the level-set grid
-    int levelset__eb_pad = 2;        // padding of the EBIS used to generate the level-set (useful for
+    int levelset_refinement = 1;    // refinement (wrt particle grid) of the level-set's grid
+    int levelset_eb_refinement = 1; // refinement of the EB facets used to generate the level-set
+    int levelset_pad = 2;           // padding of the level-set grid
+    int levelset_eb_pad = 2;        // padding of the EBIS used to generate the level-set (useful for
                                      // ensuring that neighbor grids are considered when filling LS)
 
     bool contains_ebs = false;

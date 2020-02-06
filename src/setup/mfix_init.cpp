@@ -38,12 +38,12 @@ mfix::InitParams ()
     ParmParse pp("mfix");
 
     // Options to control time stepping
-    pp.query("cfl", cfl );
+    pp.query("cfl", cfl);
 
     fixed_dt = -1.;
-    pp.query("fixed_dt", fixed_dt );
-    pp.query("dt_min", dt_min );
-    pp.query("dt_max", dt_max );
+    pp.query("fixed_dt", fixed_dt);
+    pp.query("dt_min", dt_min);
+    pp.query("dt_max", dt_max);
 
     // Verbosity and MLMG parameters are now ParmParse with "nodal_proj" in the
     // inputs file
@@ -187,20 +187,20 @@ mfix::InitParams ()
     //   -> pad:        how many (refined) grid points _outside_ the
     //                  problem domain the grid extends (avoids edge cases
     //                  in physical domain)
-    pp.query("levelset__refinement", levelset__refinement);
+    pp.query("levelset__refinement", levelset_refinement);
 
     // Not needed here... the role of refining EB is filled with AMR level-set
-    levelset__eb_refinement = 1;
+    levelset_eb_refinement = 1;
     // Make sure that a coarsened level-set has a level-set pad of _at least_ 2;
-    levelset__pad = 2*levelset__refinement;
+    levelset_pad = 2*levelset_refinement;
     // Ensure that velocity_reconstruction has enough level-set to work off:
     // (2 => EB lives on the same grid resolution as fluid)
-    levelset__eb_pad = std::max(2, levelset__pad);
+    levelset_eb_pad = std::max(2, levelset_pad);
 
     amrex::Print() << "Auto-generating level-set parameters:" << std::endl
-                   << "eb_refinement = " << levelset__eb_refinement << std::endl
-                   << "levelset_pad  = " << levelset__pad << std::endl
-                   << "eb_pad        = " << levelset__eb_pad << std::endl;
+                   << "eb_refinement = " << levelset_eb_refinement << std::endl
+                   << "levelset_pad  = " << levelset_pad << std::endl
+                   << "eb_pad        = " << levelset_eb_pad << std::endl;
   }
 
   {
@@ -281,13 +281,13 @@ mfix::InitParams ()
       amrex::Abort("Don't know this deposition_scheme!");
     }
 
-    m_max_solids_volume_fraction = 0.60;
+    m_max_solids_volume_fraction = 0.6;
     pp.query("max_solids_volume_fraction", m_max_solids_volume_fraction);
 
-    m_deposition_scale_factor = 1.0;
+    m_deposition_scale_factor = 1.;
     pp.query("deposition_scale_factor", m_deposition_scale_factor);
 
-    m_deposition_diffusion_coeff= -1.0;
+    m_deposition_diffusion_coeff = -1.;
     pp.query("deposition_diffusion_coeff", m_deposition_diffusion_coeff);
   }
 
@@ -646,7 +646,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
                                ls_data->nComp(), ls_data->nGrow());
 
             pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
-                                 ls_data, levelset__refinement);
+                                 ls_data, levelset_refinement);
           }
           else if (!restart_flag && particle_ebfactory[finest_level])
           {
@@ -960,7 +960,7 @@ void mfix::mfix_set_ls_near_inflow ()
     if (ooo_debug) amrex::Print() << "mfix_ls_near_inflow" << std::endl;
     // This function is a bit Wonky... TODO: figure out why we need + nghost
     // (it's late at the moment, so I can't figure it it out right now...)
-    const int levelset_nghost = levelset__eb_pad + nghost;
+    const int levelset_nghost = levelset_eb_pad + nghost;
 
     if (nlev > 1)
     {
@@ -991,7 +991,7 @@ void mfix::mfix_set_ls_near_inflow ()
         int lev_ref = 1;
 
         // ... but that the level set may be at a finer resolution.
-        int n = levelset__refinement;
+        int n = levelset_refinement;
         {
             Box domain(geom[lev].Domain());
             const Real* dx   = geom[lev].CellSize();

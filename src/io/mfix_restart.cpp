@@ -31,7 +31,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
         // Since a replication has taken place, the level-set function needs to
         // be re-computed:
-        levelset__restart = false;
+        levelset_restart = false;
 
         amrex::Print() << "ATTN: Due to replication, level-set will be re-calculated."
                        << std::endl;
@@ -297,7 +297,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     ****************************************************************************/
     if (DEM::solve)
     {
-        if (levelset__restart) {
+        if (levelset_restart) {
            // Load level-set Multifab
            std::stringstream ls_data_path;
            ls_data_path << restart_file << "/ls_raw";
@@ -306,10 +306,10 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
            VisMF::Read(ls_mf, ls_data_path.str());
 
            // Load LSFactory parameters: => in case the user has changed the inputs
-           int levelset_params[4] = { levelset__refinement,
-                                      levelset__pad,
-                                      levelset__eb_refinement,
-                                      levelset__eb_pad         };
+           int levelset_params[4] = { levelset_refinement,
+                                      levelset_pad,
+                                      levelset_eb_refinement,
+                                      levelset_eb_pad         };
 
            std::ifstream param_file;
            std::stringstream param_file_name;
@@ -327,17 +327,17 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
    
            // Inform the user if the checkpoint parameters do not match those in the
            // inputs file. The checkpoint inputs overwrite the inputs file.
-           if(ls_ref != levelset__refinement)
-               amrex::Print() << "     * Overwrote levelset__refinement = " << levelset__refinement
+           if(ls_ref != levelset_refinement)
+               amrex::Print() << "     * Overwrote levelset_refinement = " << levelset_refinement
                               << " -> " << ls_ref << std::endl;
-           if   (ls_pad != levelset__pad)
-               amrex::Print() << "     * Overwrote levelset__pad = " << levelset__pad
+           if   (ls_pad != levelset_pad)
+               amrex::Print() << "     * Overwrote levelset_pad = " << levelset_pad
                               << " -> " << ls_pad << std::endl;
-           if(eb_ref != levelset__eb_refinement)
-               amrex::Print() << "     * Overwrote levelset__eb_refinement = " << levelset__eb_refinement
+           if(eb_ref != levelset_eb_refinement)
+               amrex::Print() << "     * Overwrote levelset_eb_refinement = " << levelset_eb_refinement
                               << " -> " << eb_ref << std::endl;
-           if(eb_pad != levelset__eb_pad)
-               amrex::Print() << "     * Overwrote levelset__eb_pad = " << levelset__eb_pad
+           if(eb_pad != levelset_eb_pad)
+               amrex::Print() << "     * Overwrote levelset_eb_pad = " << levelset_eb_pad
                               << " -> " << eb_pad << std::endl;
 
            // TODO: load level-set data from checkpoint file

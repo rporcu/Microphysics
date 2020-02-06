@@ -1,5 +1,5 @@
-#ifndef __MFIX_CALC_MU_G_HPP_
-#define __MFIX_CALC_MU_G_HPP_
+#ifndef _MFIX_CALC_MU_G_HPP_
+#define _MFIX_CALC_MU_G_HPP_
 
 #include <mfix_F.H>
 #include <mfix.H>
