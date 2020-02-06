@@ -78,7 +78,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
               pc->EvolveParticles(ilev, nstep, dt, time,
                                   mfix::gravity,
                                   particle_ebfactory[ilev].get(),
-                                  ls_data, levelset__refinement,
+                                  ls_data, levelset_refinement,
                                   particle_cost[ilev].get(), knapsack_weight_type,
                                   nsubsteps);
         }

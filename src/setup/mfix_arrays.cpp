@@ -610,7 +610,7 @@ mfix::RegridLevelSetArray (int a_lev)
            Print() << "Also regridding refined level-set" << std::endl;
 
            BoxArray ref_nd_ba = amrex::convert(ba, IntVect::TheNodeVector());
-           ref_nd_ba.refine(levelset__refinement);
+           ref_nd_ba.refine(levelset_refinement);
 
            std::unique_ptr<MultiFab> new_level_set(new MultiFab);
 

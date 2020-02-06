@@ -6,6 +6,7 @@
 *~
 
 tmp.*
+*.swp
 
 *.OUT
 *.RES
@@ -30,6 +31,8 @@ TAGS
 
 # IDE Lint
 build/
+build-*/
+build_*/
 .build/
 .vscode/
 
