@@ -17,316 +17,306 @@
 void
 mfix::InitParams ()
 {
-    if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
+  if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
 
-    // Read and process fluid and DEM particle model options.
-    FLUID::Initialize();
-    DEM::Initialize();
+  // Read and process fluid and DEM particle model options.
+  FLUID::Initialize();
+  DEM::Initialize();
 
-    // Read in regions, initial and boundary conditions. Note that
-    // regions need to be processed frist as they define the
-    // physical extents of ICs and BCs.
-    REGIONS::Initialize();
-    IC::Initialize();
-    BC::Initialize(geom[0]);
+  // Read in regions, initial and boundary conditions. Note that
+  // regions need to be processed frist as they define the
+  // physical extents of ICs and BCs.
+  REGIONS::Initialize();
+  IC::Initialize();
+  BC::Initialize(geom[0]);
 
-    // set n_error_buf (used in AmrMesh) to default (can overwrite later)
-    for (int i = 0; i < n_error_buf.size(); i++)
-        n_error_buf[i] = {8,8,8};
+  // set n_error_buf (used in AmrMesh) to default (can overwrite later)
+  for (int i = 0; i < n_error_buf.size(); i++)
+    n_error_buf[i] = {8,8,8};
 
-    {
-        ParmParse pp("mfix");
+  {
+    ParmParse pp("mfix");
 
-        // Options to control time stepping
-        pp.query("cfl", cfl );
+    // Options to control time stepping
+    pp.query("cfl", cfl );
 
-        fixed_dt = -1.;
-        pp.query("fixed_dt", fixed_dt );
-        pp.query("dt_min", dt_min );
-        pp.query("dt_max", dt_max );
+    fixed_dt = -1.;
+    pp.query("fixed_dt", fixed_dt );
+    pp.query("dt_min", dt_min );
+    pp.query("dt_max", dt_max );
 
-        // Verbosity and MLMG parameters are now ParmParse with "nodal_proj" in the inputs file
-        // Examples: nodal_proj.verbose = 1
-        //           nodal_proj.bottom_verbose = 1 
-        //           nodal_proj.maxiter
-        //           nodal_proj.bottom_maxiter
-        //           nodal_proj.bottom_rtol 
-        //           nodal_proj.bottom_atol 
-        //           nodal_proj.bottom_solver 
-        // More info at "amrex/Src/LinearSolvers/Projections/AMReX_NodalProjector.cpp" 
-        ParmParse pp_nodal("nodal_proj");
-        // Options to control MLMG behavior
-        pp_nodal.query( "mg_rtol"                , nodal_mg_rtol );
-        pp_nodal.query( "mg_atol"                , nodal_mg_atol );
-        pp_nodal.query( "mg_max_coarsening_level", nodal_mg_max_coarsening_level );
+    // Verbosity and MLMG parameters are now ParmParse with "nodal_proj" in the
+    // inputs file
+    // Examples: nodal_proj.verbose = 1
+    //           nodal_proj.bottom_verbose = 1 
+    //           nodal_proj.maxiter
+    //           nodal_proj.bottom_maxiter
+    //           nodal_proj.bottom_rtol 
+    //           nodal_proj.bottom_atol 
+    //           nodal_proj.bottom_solver 
+    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_NodalProjector.cpp" 
+    ParmParse pp_nodal("nodal_proj");
+    // Options to control MLMG behavior
+    pp_nodal.query("mg_rtol", nodal_mg_rtol);
+    pp_nodal.query("mg_atol", nodal_mg_atol);
+    pp_nodal.query("mg_max_coarsening_level", nodal_mg_max_coarsening_level);
 
-        // Is this a steady-state calculation
-        steady_state = 0;
-        pp.query( "steady_state", steady_state );
+    // Is this a steady-state calculation
+    steady_state = 0;
+    pp.query("steady_state", steady_state);
 
-        // Tolerance to check for steady state
-        steady_state_tol = -1.;
-        pp.query( "steady_state_tol", steady_state_tol );
+    // Tolerance to check for steady state
+    steady_state_tol = -1.;
+    pp.query("steady_state_tol", steady_state_tol);
 
-        // Maximum number of iterations allowed to reach steady state
-        pp.query( "steady_state_maxiter", steady_state_maxiter );
+    // Maximum number of iterations allowed to reach steady state
+    pp.query("steady_state_maxiter", steady_state_maxiter);
 
-        if (steady_state > 0)
-        {
-           if (steady_state_tol < 0)
-              amrex::Abort("Must set steady_state_tol if running to steady state!");
+    if (steady_state > 0) {
+      if (steady_state_tol < 0)
+        amrex::Abort("Must set steady_state_tol if running to steady state!");
 
-              amrex::Print() << "Running to steady state with maxiter = "
-                             << steady_state_maxiter << " and tolerance "
-                             << steady_state_tol << std::endl;
-
-        } else {
-
-           if (steady_state_tol > 0)
-              amrex::Abort("steady_state_tol set but not steady_state!");
-        }
-
-        pp.query("ooo_debug", ooo_debug);
-
-        // Flag to envoke UDFs
-        bool call_usr_bool = false;
-        pp.query("call_usr", call_usr_bool);
-        call_udf = call_usr_bool ? 1 : 0; // Set global flag
-
-        Array<Real,3>  gravity_in{ 0.0, 0.0, 0.0};
-        pp.get("gravity", gravity_in);
-        for (int dir = 0; dir < 3; dir++)
-          gravity[dir] = gravity_in[dir];
-
-
-        // The default type is "AsciiFile" but we can over-write that in the inputs file
-        //  with "Random"
-        pp.query("particle_init_type", particle_init_type);
-
-        // Options to control initial projections (mostly we use these for debugging)
-        pp.query("initial_iterations", initial_iterations);
-        pp.query("do_initial_proj"   , do_initial_proj);
-
-        pp.query( "advect_density", advect_density );
-        pp.query( "advect_tracer" , advect_tracer );
-        pp.query( "test_tracer_conservation" , test_tracer_conservation );
-
-        pp.query("ntrac", ntrac);
-
-        if (ntrac < 1)
-            amrex::Abort("We currently require at least one tracer");
-
-        // Scalar diffusion coefficients
-        mu_s.resize(ntrac);
-        for (int i = 0; i < ntrac; i++) mu_s[i] = 0.;
-        pp.queryarr("mu_s", mu_s, 0, ntrac );
-
-        amrex::Print() << "Scalar diffusion coefficients " << std::endl;
-        for (int i = 0; i < ntrac; i++)
-           amrex::Print() << "Tracer" << i << ":" << mu_s[i] << std::endl;
-
-        if (test_tracer_conservation && !advect_tracer)
-           amrex::Abort("No point in testing tracer conservation with advect_tracer = false");
-
-        if (advect_tracer && !advect_density)
-           amrex::Abort("Cant advect tracer without advecting density");
-
-        // The default type is "FixedSize" but we can over-write that in the inputs file
-        //  with "KDTree" or "KnapSack"
-        pp.query("load_balance_type", load_balance_type);
-        pp.query("knapsack_weight_type", knapsack_weight_type);
-        pp.query("load_balance_fluid", load_balance_fluid);
-
-        // The default value for the rescaling ratio of the collision time is 50
-        pp.query("tcoll_ratio", tcoll_ratio);
-
-        // Verbosity and MLMG parameters are now ParmParse with "mac_proj" in the inputs file
-        // Examples: mac_proj.verbose = 1
-        //           mac_proj.bottom_verbose = 1 
-        //           mac_proj.maxiter
-        //           mac_proj.bottom_maxiter
-        //           mac_proj.bottom_rtol 
-        //           mac_proj.bottom_atol 
-        //           mac_proj.bottom_solver 
-        // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp"
-
-        ParmParse pp_mac("mac_proj");
-        pp_mac.query( "mg_rtol"      , mac_mg_rtol );
-        pp_mac.query( "mg_atol"      , mac_mg_atol );
-        pp_mac.query( "mg_max_coarsening_level", mac_mg_max_coarsening_level );
-
-        AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
-                            load_balance_type == "KDTree"    ||
-                            load_balance_type == "KnapSack"  ||
-                            load_balance_type == "SFC"       );
-
-        AMREX_ALWAYS_ASSERT(knapsack_weight_type == "RunTimeCosts" ||
-                            knapsack_weight_type == "NumParticles"  );
-
-        // We ensure that we always use the dual grid formulation when using KDTree, and
-        //           that we  never use the dual grid formulation otherwise
-        if (load_balance_type == "KDTree") {
-           dual_grid = true;
-        } else {
-          ParmParse amr_pp("amr");
-          amr_pp.query("dual_grid", dual_grid);
-        }
-
-        if (load_balance_type == "KnapSack")
-            pp.query("knapsack_nmax", knapsack_nmax);
-
-        // Parameters used be the level-set algorithm. Refer to LSFactory (or
-        // mfix.H) for more details:
-        //   -> refinement: how well resolved (fine) the (level-set/EB-facet)
-        //                  grid needs to be (note: a fine level-set grid means
-        //                  that distances and normals are computed accurately)
-        //   -> pad:        how many (refined) grid points _outside_ the
-        //                  problem domain the grid extends (avoids edge cases
-        //                  in physical domain)
-        pp.query("levelset__refinement", levelset__refinement);
-
-        // Not needed here... the role of refining EB is filled with AMR level-set
-        levelset__eb_refinement = 1;
-        // Make sure that a coarsened level-set has a level-set pad of _at least_ 2;
-        levelset__pad = 2*levelset__refinement;
-        // Ensure that velocity_reconstruction has enough level-set to work off:
-        // (2 => EB lives on the same grid resolution as fluid)
-        levelset__eb_pad = std::max(2, levelset__pad);
-
-        amrex::Print() << "Auto-generating level-set parameters:" << std::endl
-                       << "eb_refinement = " << levelset__eb_refinement << std::endl
-                       << "levelset_pad  = " << levelset__pad << std::endl
-                       << "eb_pad        = " << levelset__eb_pad << std::endl;
-
+        amrex::Print() << "Running to steady state with maxiter = "
+                       << steady_state_maxiter << " and tolerance "
+                       << steady_state_tol << std::endl;
     }
+    else if (steady_state_tol > 0)
+      amrex::Abort("steady_state_tol set but not steady_state!");
 
-    {
-        ParmParse pp_diff("diff");
-        pp_diff.query( "mg_verbose"   , diff_mg_verbose );
-        pp_diff.query( "mg_cg_verbose", diff_mg_cg_verbose );
-        pp_diff.query( "mg_rtol"      , diff_mg_rtol );
-        pp_diff.query( "mg_atol"      , diff_mg_atol );
-        pp_diff.query( "mg_maxiter"   , diff_mg_maxiter );
-        pp_diff.query( "mg_cg_maxiter", diff_mg_cg_maxiter );
-        pp_diff.query( "mg_max_coarsening_level", diff_mg_max_coarsening_level );
+    // Flag to set verbosity
+    m_verbose = 0;
+    pp.query("verbose", m_verbose);
 
-        // Default bottom solver here is bicgcg, but alternatives are
-        // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
-        diff_bottom_solver_type = "bicgcg";
-        pp_diff.query( "bottom_solver_type", diff_bottom_solver_type );
+    pp.query("ooo_debug", ooo_debug);
+
+    // Flag to envoke UDFs
+    bool call_usr_bool = false;
+    pp.query("call_usr", call_usr_bool);
+    call_udf = call_usr_bool ? 1 : 0; // Set global flag
+
+    Array<Real,3> gravity_in{0.0, 0.0, 0.0};
+    pp.get("gravity", gravity_in);
+    for (int dir = 0; dir < 3; dir++)
+      gravity[dir] = gravity_in[dir];
+
+    // The default type is "AsciiFile" but we can over-write that in the inputs
+    // file with "Random"
+    pp.query("particle_init_type", particle_init_type);
+
+    // Options to control initial projections (mostly we use these for
+    // debugging)
+    pp.query("initial_iterations", initial_iterations);
+    pp.query("do_initial_proj", do_initial_proj);
+
+    pp.query("advect_density", advect_density);
+    pp.query("advect_tracer" , advect_tracer);
+    pp.query("test_tracer_conservation", test_tracer_conservation);
+
+    pp.query("ntrac", ntrac);
+
+    if (ntrac < 1)
+      amrex::Abort("We currently require at least one tracer");
+
+    // Scalar diffusion coefficients
+    mu_s.resize(ntrac);
+    for (int i = 0; i < ntrac; i++) mu_s[i] = 0.;
+    pp.queryarr("mu_s", mu_s, 0, ntrac);
+
+    amrex::Print() << "Scalar diffusion coefficients " << std::endl;
+    for (int i = 0; i < ntrac; i++)
+      amrex::Print() << "Tracer" << i << ":" << mu_s[i] << std::endl;
+
+    if (test_tracer_conservation && !advect_tracer)
+      amrex::Abort("No point in testing tracer conservation with advect_tracer"
+          " = false");
+
+    if (advect_tracer && !advect_density)
+      amrex::Abort("Cant advect tracer without advecting density");
+
+    // The default type is "FixedSize" but we can over-write that in the inputs
+    // file with "KDTree" or "KnapSack"
+    pp.query("load_balance_type", load_balance_type);
+    pp.query("knapsack_weight_type", knapsack_weight_type);
+    pp.query("load_balance_fluid", load_balance_fluid);
+
+    // The default value for the rescaling ratio of the collision time is 50
+    pp.query("tcoll_ratio", tcoll_ratio);
+
+    // Verbosity and MLMG parameters are now ParmParse with "mac_proj" in the
+    // inputs file
+    // Examples: mac_proj.verbose = 1
+    //           mac_proj.bottom_verbose = 1 
+    //           mac_proj.maxiter
+    //           mac_proj.bottom_maxiter
+    //           mac_proj.bottom_rtol 
+    //           mac_proj.bottom_atol 
+    //           mac_proj.bottom_solver 
+    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp"
+
+    ParmParse pp_mac("mac_proj");
+    pp_mac.query("mg_rtol", mac_mg_rtol);
+    pp_mac.query("mg_atol", mac_mg_atol);
+    pp_mac.query("mg_max_coarsening_level", mac_mg_max_coarsening_level);
+
+    AMREX_ALWAYS_ASSERT(load_balance_type.compare("FixedSize") == 0 or
+                        load_balance_type.compare("KDTree") == 0    or
+                        load_balance_type.compare("KnapSack") == 0  or
+                        load_balance_type.compare("SFC") == 0);
+
+    AMREX_ALWAYS_ASSERT(knapsack_weight_type.compare("RunTimeCosts") == 0 or
+                        knapsack_weight_type.compare("NumParticles") == 0);
+
+    // We ensure that we always use the dual grid formulation when using KDTree, and
+    //           that we  never use the dual grid formulation otherwise
+    if (load_balance_type.compare("KDTree") == 0) {
+      dual_grid = true;
     }
-
-
-    if (DEM::solve)
-    {
-        ParmParse pp("particles");
-
-        pp.query("max_grid_size_x", particle_max_grid_size_x);
-        pp.query("max_grid_size_y", particle_max_grid_size_y);
-        pp.query("max_grid_size_z", particle_max_grid_size_z);
-
-        // Keep particles that are initially touching the wall. Used by DEM tests.
-        pp.query("removeOutOfRange", removeOutOfRange );
-    }
-
-    if (DEM::solve && !FLUID::solve)
-    {
-        if (fixed_dt <= 0.0)
-            amrex::Abort("If running particle-only must specify a positive fixed_dt in the inputs file");
-    }
-
-    if (DEM::solve && FLUID::solve)
-    {
-      ParmParse pp("mfix");
-
-      std::string drag_type = "None";
-      pp.query("drag_type", drag_type);
-
-      if (drag_type == "WenYu")
-      {
-        m_drag_type = DragType::WenYu;
-      }
-      else if (drag_type == "Gidaspow")
-      {
-        m_drag_type = DragType::Gidaspow;
-      }
-      else if (drag_type == "BVK2")
-      {
-        m_drag_type = DragType::BVK2;
-      }
-      else if (drag_type == "UserDrag")
-      {
-        m_drag_type = DragType::UserDrag;
-      }
-      else
-      {
-        amrex::Abort("Don't know this drag_type!");
-      }
-
-      std::string deposition_scheme = "trilinear";
-      pp.query("deposition_scheme", deposition_scheme);
-
-      if (deposition_scheme == "trilinear") {
-
-        m_deposition_scheme = DepositionScheme::trilinear;
-
-      } else if (deposition_scheme == "trilinear-dpvm-square") {
-
-        m_deposition_scheme = DepositionScheme::square_dpvm;
-
-      } else if (deposition_scheme == "true-dpvm") {
-
-        m_deposition_scheme = DepositionScheme::true_dpvm;
-
-      } else if (deposition_scheme == "centroid") {
-
-        m_deposition_scheme = DepositionScheme::centroid;
-
-      } else {
-
-        amrex::Abort("Don't know this deposition_scheme!");
-
-      }
-
-      m_max_solids_volume_fraction = 0.60;
-      pp.query("max_solids_volume_fraction", m_max_solids_volume_fraction);
-
-      m_deposition_scale_factor = 1.0;
-      pp.query("deposition_scale_factor", m_deposition_scale_factor);
-
-      m_deposition_diffusion_coeff= -1.0;
-      pp.query("deposition_diffusion_coeff", m_deposition_diffusion_coeff);
-
-    }
-
-    {
+    else {
       ParmParse amr_pp("amr");
-
-      amr_pp.query("plot_int", plot_int);
-      amr_pp.query("plot_per_exact", plot_per_exact);
-      amr_pp.query("plot_per_approx", plot_per_approx);
-
-      if ( (plot_int       > 0 && plot_per_exact  > 0) ||
-          (plot_int       > 0 && plot_per_approx > 0) ||
-          (plot_per_exact > 0 && plot_per_approx > 0) )
-        amrex::Abort("Must choose only one of plot_int or plot_per_exact or plot_per_approx");
- 
-      amr_pp.queryarr("avg_p_g",   avg_p_g);
-      amr_pp.queryarr("avg_ep_g",  avg_ep_g);
-      amr_pp.queryarr("avg_vel_g", avg_vel_g);
-
-      amr_pp.queryarr("avg_vel_p", avg_vel_p);
-
-      // Regions geometry
-      amr_pp.queryarr("avg_region_x_e", avg_region_x_e );
-      amr_pp.queryarr("avg_region_x_w", avg_region_x_w );
-      amr_pp.queryarr("avg_region_y_n", avg_region_y_n );
-      amr_pp.queryarr("avg_region_y_s", avg_region_y_s );
-      amr_pp.queryarr("avg_region_z_t", avg_region_z_t );
-      amr_pp.queryarr("avg_region_z_b", avg_region_z_b );
-
+      amr_pp.query("dual_grid", dual_grid);
     }
 
+    if (load_balance_type.compare("KnapSack") == 0)
+      pp.query("knapsack_nmax", knapsack_nmax);
+
+    // Parameters used be the level-set algorithm. Refer to LSFactory (or
+    // mfix.H) for more details:
+    //   -> refinement: how well resolved (fine) the (level-set/EB-facet)
+    //                  grid needs to be (note: a fine level-set grid means
+    //                  that distances and normals are computed accurately)
+    //   -> pad:        how many (refined) grid points _outside_ the
+    //                  problem domain the grid extends (avoids edge cases
+    //                  in physical domain)
+    pp.query("levelset__refinement", levelset__refinement);
+
+    // Not needed here... the role of refining EB is filled with AMR level-set
+    levelset__eb_refinement = 1;
+    // Make sure that a coarsened level-set has a level-set pad of _at least_ 2;
+    levelset__pad = 2*levelset__refinement;
+    // Ensure that velocity_reconstruction has enough level-set to work off:
+    // (2 => EB lives on the same grid resolution as fluid)
+    levelset__eb_pad = std::max(2, levelset__pad);
+
+    amrex::Print() << "Auto-generating level-set parameters:" << std::endl
+                   << "eb_refinement = " << levelset__eb_refinement << std::endl
+                   << "levelset_pad  = " << levelset__pad << std::endl
+                   << "eb_pad        = " << levelset__eb_pad << std::endl;
+  }
+
+  {
+    ParmParse pp_diff("diff");
+    pp_diff.query("mg_verbose", diff_mg_verbose);
+    pp_diff.query("mg_cg_verbose", diff_mg_cg_verbose);
+    pp_diff.query("mg_rtol", diff_mg_rtol);
+    pp_diff.query("mg_atol", diff_mg_atol);
+    pp_diff.query("mg_maxiter", diff_mg_maxiter);
+    pp_diff.query("mg_cg_maxiter", diff_mg_cg_maxiter);
+    pp_diff.query("mg_max_coarsening_level", diff_mg_max_coarsening_level);
+
+    // Default bottom solver here is bicgcg, but alternatives are
+    // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
+    diff_bottom_solver_type = "bicgcg";
+    pp_diff.query("bottom_solver_type", diff_bottom_solver_type);
+  }
+
+
+  if (DEM::solve)
+  {
+    ParmParse pp("particles");
+
+    pp.query("max_grid_size_x", particle_max_grid_size_x);
+    pp.query("max_grid_size_y", particle_max_grid_size_y);
+    pp.query("max_grid_size_z", particle_max_grid_size_z);
+
+    // Keep particles that are initially touching the wall. Used by DEM tests.
+    pp.query("removeOutOfRange", removeOutOfRange);
+  }
+
+  if (DEM::solve and (not FLUID::solve))
+  {
+    if (fixed_dt <= 0.0)
+      amrex::Abort("If running particle-only must specify a positive fixed_dt"
+          " in the inputs file");
+  }
+
+  if (DEM::solve and FLUID::solve)
+  {
+    ParmParse pp("mfix");
+
+    std::string drag_type = "None";
+    pp.query("drag_type", drag_type);
+
+    if (drag_type.compare("WenYu") == 0) {
+      m_drag_type = DragType::WenYu;
+    }
+    else if (drag_type.compare("Gidaspow") == 0) {
+      m_drag_type = DragType::Gidaspow;
+    }
+    else if (drag_type.compare("BVK2") == 0) {
+      m_drag_type = DragType::BVK2;
+    }
+    else if (drag_type.compare("UserDrag") == 0) {
+      m_drag_type = DragType::UserDrag;
+    }
+    else {
+      amrex::Abort("Don't know this drag_type!");
+    }
+
+    std::string deposition_scheme = "trilinear";
+    pp.query("deposition_scheme", deposition_scheme);
+
+    if (deposition_scheme.compare("trilinear") == 0) {
+      m_deposition_scheme = DepositionScheme::trilinear;
+    }
+    else if (deposition_scheme.compare("trilinear-dpvm-square") == 0) {
+      m_deposition_scheme = DepositionScheme::square_dpvm;
+    }
+    else if (deposition_scheme.compare("true-dpvm") == 0) {
+      m_deposition_scheme = DepositionScheme::true_dpvm;
+    }
+    else if (deposition_scheme.compare("centroid") == 0) {
+      m_deposition_scheme = DepositionScheme::centroid;
+    }
+    else {
+      amrex::Abort("Don't know this deposition_scheme!");
+    }
+
+    m_max_solids_volume_fraction = 0.60;
+    pp.query("max_solids_volume_fraction", m_max_solids_volume_fraction);
+
+    m_deposition_scale_factor = 1.0;
+    pp.query("deposition_scale_factor", m_deposition_scale_factor);
+
+    m_deposition_diffusion_coeff= -1.0;
+    pp.query("deposition_diffusion_coeff", m_deposition_diffusion_coeff);
+  }
+
+  {
+    ParmParse amr_pp("amr");
+
+    amr_pp.query("plot_int", plot_int);
+    amr_pp.query("plot_per_exact", plot_per_exact);
+    amr_pp.query("plot_per_approx", plot_per_approx);
+
+    if ((plot_int       > 0 and plot_per_exact  > 0) or
+        (plot_int       > 0 and plot_per_approx > 0) or
+        (plot_per_exact > 0 and plot_per_approx > 0) )
+      amrex::Abort("Must choose only one of plot_int or plot_per_exact or plot_per_approx");
+
+    amr_pp.queryarr("avg_p_g", avg_p_g);
+    amr_pp.queryarr("avg_ep_g", avg_ep_g);
+    amr_pp.queryarr("avg_vel_g", avg_vel_g);
+
+    amr_pp.queryarr("avg_vel_p", avg_vel_p);
+
+    // Regions geometry
+    amr_pp.queryarr("avg_region_x_e", avg_region_x_e);
+    amr_pp.queryarr("avg_region_x_w", avg_region_x_w);
+    amr_pp.queryarr("avg_region_y_n", avg_region_y_n);
+    amr_pp.queryarr("avg_region_y_s", avg_region_y_s);
+    amr_pp.queryarr("avg_region_z_t", avg_region_z_t);
+    amr_pp.queryarr("avg_region_z_b", avg_region_z_b);
+  }
 }
 
 

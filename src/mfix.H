@@ -63,7 +63,7 @@ public:
     // Face-based coefficients b in MAC projection and implicit diffusion solve
     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > bcoeff;
 
-    void InitParams ( );
+    void InitParams ();
 
     bool IsSteadyState () { return (steady_state > 0); }
 
