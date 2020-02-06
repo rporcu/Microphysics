@@ -5,24 +5,19 @@
 
 void mfix::mfix_calc_particle_beta (Real time)
 {
-  if (m_drag_type == DragType::WenYu)
-  {
+  if (m_drag_type == DragType::WenYu) {
     mfix_calc_particle_beta(ComputeDragWenYu(), time);
   }
-  else if (m_drag_type == DragType::Gidaspow)
-  {
+  else if (m_drag_type == DragType::Gidaspow) {
     mfix_calc_particle_beta(ComputeDragGidaspow(), time);
   }
-  else if (m_drag_type == DragType::BVK2)
-  {
+  else if (m_drag_type == DragType::BVK2) {
     mfix_calc_particle_beta(ComputeDragBVK2(), time);
   }
-  else if (m_drag_type == DragType::UserDrag)
-  {
+  else if (m_drag_type == DragType::UserDrag) {
     mfix_calc_particle_beta(ComputeDragUser(), time);
   }
-    else
-  {
+    else {
     amrex::Abort("Invalid Drag Type.");
   }
 }
@@ -30,6 +25,8 @@ void mfix::mfix_calc_particle_beta (Real time)
 template <typename F>
 void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 {
+  using MFIXParIter = MFIXParticleContainer::MFIXParIter;
+
   BL_PROFILE("mfix::mfix_calc_particle_beta()");
 
   // This is just a sanity check to make sure we're not using covered values

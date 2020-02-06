@@ -27,11 +27,11 @@
 #include <AMReX_NodalProjector.H>
 #include <AMReX_PhysBCFunct.H>
 
+#include <DiffusionOp.H>
 #include <MFIXParticleContainer.H>
+#include <MFIX_BcList.H>
 #include <mfix_des_F.H>
 #include <mfix_eb_if.H>
-#include <MFIX_BcList.H>
-#include <DiffusionOp.H>
 #include <MFIX_DEM_Parms.H>
 
 
@@ -424,8 +424,8 @@ class mfix : public AmrCore
 
     void mfix_set_gp0 ();
 
-    static Real gp0[3];
-    static Real gravity[3];
+    static RealVect gp0;
+    static RealVect gravity;
 
     // Scalar diffusive coefficient
     Vector<Real> mu_s;

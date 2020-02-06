@@ -3,17 +3,16 @@
 
 #include <AMReX.H>
 #include <AMReX_AmrParGDB.H>
-#include <AMReX_IArrayBox.H>
-#include "AMReX_Particles.H"
-#include "AMReX_NeighborParticles.H"
-
-#include <AMReX_FabArray.H>
 #include <AMReX_EBSupport.H>
 #include <AMReX_EBMultiFabUtil.H>
+#include <AMReX_FabArray.H>
+#include <AMReX_IArrayBox.H>
+#include <AMReX_Particles.H>
+#include <AMReX_NeighborParticles.H>
 
-#include "mfix_des_F.H"
-#include "MFIX_DEM_Parms.H"
 #include <MFIX_BcList.H>
+#include <mfix_des_F.H>
+#include <MFIX_DEM_Parms.H>
 
 struct realData
 {
@@ -53,31 +52,18 @@ struct MFIXCheckPair
   template <class P>
   AMREX_GPU_DEVICE AMREX_INLINE
   bool operator() (const P& p1, const P& p2) const
-  {
-    return AMREX_D_TERM( (p1.pos(0) - p2.pos(0))*(p1.pos(0) - p2.pos(0)),
-                        +(p1.pos(1) - p2.pos(1))*(p1.pos(1) - p2.pos(1)),
-                        +(p1.pos(2) - p2.pos(2))*(p1.pos(2) - p2.pos(2)))
-             <= DEM::neighborhood;
-  }
-};
-
-class MFIXParIter
-    : public amrex::ParIter<realData::count,intData::count,0,0>
-{
-public:
-    using amrex::ParIter<realData::count,intData::count,0,0>::ParIter;
+  { return (p1.pos() - p2.pos()).radSquared() <= DEM::neighborhood; }
 };
 
 class MFIXParticleContainer final
     : public amrex::NeighborParticleContainer<realData::count,intData::count>
 {
-public:
-    using MyConstParIter = amrex::ParConstIter<realData::count,intData::count,0,0>;
+  public:
+    using MFIXParIter = amrex::ParIter<realData::count,intData::count,0,0>;
 
     // Get number of particles
-    int NumberOfParticles (MFIXParIter& pti){
-        return pti.GetArrayOfStructs().size();
-    }
+    int NumberOfParticles (MFIXParIter& pti)
+    { return pti.GetArrayOfStructs().size(); }
 
     MFIXParticleContainer (amrex::AmrCore* amr_core);
 
@@ -86,7 +72,9 @@ public:
     void InitData ();
 
     void InitParticlesAscii (const std::string& file);
+
     void InitParticlesAuto ();
+
     void RemoveOutOfRange (int lev,
                            const amrex::EBFArrayBoxFactory * ebfactory,
                            const amrex::MultiFab * ls_phi,
@@ -107,7 +95,7 @@ public:
                           int nstep,
                           amrex::Real dt,
                           amrex::Real time,
-                          amrex::Real gravity[3],
+                          amrex::RealVect& gravity,
                           amrex::EBFArrayBoxFactory * ebfactory,
                           const amrex::MultiFab * ls_phi,
                           const int ls_refinement,
@@ -122,10 +110,12 @@ public:
     //amrex::Real GetMaxRadius(int lev);
 
     void UpdateMaxVelocity ();
+
     void UpdateMaxForces (std::map<PairIndex, amrex::Gpu::ManagedDeviceVector<amrex::Real>> pfor,
                           std::map<PairIndex, amrex::Gpu::ManagedDeviceVector<amrex::Real>> wfor);
 
     amrex::RealVect GetMaxVelocity ();
+
     amrex::Vector<amrex::RealVect> GetMaxForces ();
 
     void BalanceParticleLoad_KDTree ();
@@ -147,34 +137,36 @@ public:
     ///
     void writeAllAtLevel (int lev = 0);
 
-    void ScalarDeposition (int lev, amrex::MultiFab& mf,
-                           const amrex::MultiFab * volfrac,
+    void ScalarDeposition (int lev,
+                           amrex::MultiFab& mf,
+                           const amrex::MultiFab* volfrac,
                            const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
     ///
     /// Do the actual PIC deposition for CalcVolumeFraction
     ///
     template <typename FB>
-    void ScalarDeposition (FB WeightFunc, int lev, amrex::MultiFab& mf,
-                           const amrex::MultiFab * volfrac,
+    void ScalarDeposition (FB WeightFunc,
+                           int lev,
+                           amrex::MultiFab& mf,
+                           const amrex::MultiFab* volfrac,
                            const amrex::FabArray<amrex::EBCellFlagFab>* flags);
-
 
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
     ///
     void FluidDragForceDeposition (int lev,
-                                   amrex::MultiFab & mf_tmp_eps,
+                                   amrex::MultiFab& mf_tmp_eps,
                                    amrex::MultiFab& drag_mf,
-                                   const amrex::MultiFab * volfrac,
+                                   const amrex::MultiFab* volfrac,
                                    const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
     template <typename F>
     void FluidDragForceDeposition (F WeightFunc,
                                    int lev,
-                                   amrex::MultiFab & mf_tmp_eps,
+                                   amrex::MultiFab& mf_tmp_eps,
                                    amrex::MultiFab& drag_mf,
-                                   const amrex::MultiFab * volfrac,
+                                   const amrex::MultiFab* volfrac,
                                    const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
     //
@@ -191,22 +183,10 @@ public:
                                    const amrex::Vector<amrex::Real>& avg_region_z_b,
                                    const amrex::Vector<amrex::Real>& avg_region_z_t);
 
-private:
+  private:
     int nlev;
 
     static int domain_bc[6];
-
-    ///
-    /// We add a particle to the neighbor list if it's center is within 3 particle radii
-    ///
-    inline virtual bool check_pair (const ParticleType& p1,
-                                    const ParticleType& p2) final
-    {
-        return AMREX_D_TERM( (p1.pos(0) - p2.pos(0))*(p1.pos(0) - p2.pos(0)),
-                            +(p1.pos(1) - p2.pos(1))*(p1.pos(1) - p2.pos(1)),
-                            +(p1.pos(2) - p2.pos(2))*(p1.pos(2) - p2.pos(2)))
-                 <= 9.0*p1.rdata(0)*p1.rdata(0);
-    }
 
     static void ReadStaticParameters ();
 
@@ -216,12 +196,6 @@ private:
     amrex::RealVect loc_maxvel;
     amrex::RealVect loc_maxpfor;
     amrex::RealVect loc_maxwfor;
-
-    void time_advance (MFIXParIter& pti,
-                       int ntot,
-                       amrex::Real subdt,
-                       amrex::Gpu::ManagedDeviceVector<amrex::Real>& tow,
-                       amrex::Gpu::ManagedDeviceVector<amrex::Real>& fc);
 
     void set_particle_properties (int pstate,
                                   amrex::Real pradius,
