@@ -117,8 +117,8 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                            if( flag_fab(i,j,k).isConnected(ii,jj,0)){
 
                              // Not multplying by dx to be consistent with how the
-                             // slope is stored. Also not including the global shit
-                             // to wrt plo or i,j,k. We only need relative distance.
+                             // slope is stored. Also not including the global shift
+                             // wrt plo or i,j,k. We only need relative distance.
 
                              A[lc][0] = ii + ccent_fab(i+ii,j+jj,k,0) - ccent_fab(i,j,k,0);
                              A[lc][1] = jj + ccent_fab(i+ii,j+jj,k,1) - ccent_fab(i,j,k,1);
