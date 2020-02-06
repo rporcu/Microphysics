@@ -6,7 +6,8 @@
 
 #! Fluid solver
 #!-----------------------------------------------------------//
-mfix.cfl = 0.2
+#mfix.cfl = 0.2
+mfix.fixed_dt = 3.0e-6
 
 mfix.max_step = 100
 
@@ -55,6 +56,23 @@ fabarray.mfiter_tile_size = 1024 1024 1024
 # Particles: Maximum particle title size
 particles.tile_size = 1024 1024 1024
 
+#_______________________________________________________________________
+# IO / Checkpointing
+
+amr.par_ascii_int  = -1
+amr.par_ascii_file ="vis"
+
+amr.plot_int       = 25
+amr.plot_file      ="plt"
+
+amr.check_int      = -1
+amr.check_file     ="chk"
+
+amr.plt_volfrac = 1
+
+#! Restart from checkpoint
+#!-----------------------------------------------------------//
+#amr.restart   ="chk00100"
 
 #_______________________________________________________________________
 # Fluid model settings
