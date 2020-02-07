@@ -105,55 +105,81 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                    else
                    {
 
-                     amrex::Real A[8][2];
-                     amrex::Real du[8];
+                     amrex::Real A[27][3];
+                     amrex::Real du[27];
 
                      {
                        int lc=0;
-                       for(int jj(-1); jj<=1; jj++){
-                         for(int ii(-1); ii<=1; ii++){
-                           if ( ii == 0 and jj==0 ) continue;
+                       for(int kk(-1); kk<=1; kk++){
+                         for(int jj(-1); jj<=1; jj++){
+                           for(int ii(-1); ii<=1; ii++){
+                             if ( ii == 0 and jj==0 and kk==0) continue;
 
-                           if( flag_fab(i,j,k).isConnected(ii,jj,0)){
+                             if( flag_fab(i,j,k).isConnected(ii,jj,kk)){
 
                              // Not multplying by dx to be consistent with how the
                              // slope is stored. Also not including the global shift
                              // wrt plo or i,j,k. We only need relative distance.
 
-                             A[lc][0] = ii + ccent_fab(i+ii,j+jj,k,0) - ccent_fab(i,j,k,0);
-                             A[lc][1] = jj + ccent_fab(i+ii,j+jj,k,1) - ccent_fab(i,j,k,1);
+                               A[lc][0] = ii + ccent_fab(i+ii,j+jj,k+kk,0) - ccent_fab(i,j,k,0);
+                               A[lc][1] = jj + ccent_fab(i+ii,j+jj,k+kk,1) - ccent_fab(i,j,k,1);
+                               A[lc][2] = kk + ccent_fab(i+ii,j+jj,k+kk,2) - ccent_fab(i,j,k,2);
 
-                             du[lc] = state_fab(i+ii,j+jj,k,n) - state_fab(i,j,k,n);
+                               du[lc] = state_fab(i+ii,j+jj,k+kk,n) - state_fab(i,j,k,n);
 
-                           } else {
+                             } else {
 
-                             A[lc][0] = 0.0;
-                             A[lc][1] = 0.0;
+                               A[lc][0] = 0.0;
+                               A[lc][1] = 0.0;
+                               A[lc][2] = 0.0;
 
-                             du[lc] = 0.0;
+                               du[lc] = 0.0;
+                             }
+
+                             lc++;
                            }
-
-                           lc++;
                          }
                        }
                      }
 
-                     amrex::Real a11(0.0), a12(0.0), a22(0.0);
-                     amrex::Real  b1(0.0),  b2(0.0);
+                     amrex::Real AtA[3][3];
+                     amrex::Real Atb[3];
 
-                     for(int lc(0); lc<8; ++lc){
-                       a11 += A[lc][0]* A[lc][0];
-                       a12 += A[lc][0]* A[lc][1];
-                       a22 += A[lc][1]* A[lc][1];
-                       b1  += A[lc][0]*du[lc];
-                       b2  += A[lc][1]*du[lc];
+                     for(int jj(0); jj<3; ++jj){
+                       for(int ii(0); ii<3; ++ii){
+                         AtA[ii][jj] = 0.0;
+                       }
+                       Atb[jj] = 0.0;
                      }
 
-                     amrex::Real det = 1.0/(a11*a22 - a12*a12);
 
-                     // Slope at centroid of (i,j,k)
-                     amrex::Real dudx = (a22*b1 - a12*b2) * det;
-                     amrex::Real dudy = (a11*b2 - a12*b1) * det;
+                     {
+
+                       for(int lc(0); lc<27; ++lc){
+                         AtA[0][0] += A[lc][0]* A[lc][0];
+                         AtA[0][1] += A[lc][0]* A[lc][1];
+                         AtA[0][2] += A[lc][0]* A[lc][2];
+                         AtA[1][1] += A[lc][1]* A[lc][1];
+                         AtA[1][2] += A[lc][1]* A[lc][2];
+                         AtA[2][2] += A[lc][2]* A[lc][2];
+
+                         Atb[0] += A[lc][0]*du[lc];
+                         Atb[1] += A[lc][1]*du[lc];
+                         Atb[2] += A[lc][2]*du[lc];
+                       }
+                     }
+
+                     // Fill in symmetric
+                     AtA[1][0] = AtA[0][1];
+                     AtA[2][0] = AtA[0][2];
+                     AtA[2][1] = AtA[1][2];
+
+
+                     amrex::Real detAtA =
+                       AtA[0][0]*(AtA[1][1]*AtA[2][2] - AtA[1][2]*AtA[1][2]) -
+                       AtA[0][1]*(AtA[1][0]*AtA[2][2] - AtA[1][2]*AtA[2][0]) +
+                       AtA[0][2]*(AtA[1][0]*AtA[2][1] - AtA[1][1]*AtA[2][0]);
+
 
 
                      // X direction
@@ -161,7 +187,13 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                         (flag_fab(i-1,j,k).isSingleValued() or not flag_fab(i,j,k).isConnected(-1,0,0)) or
                         (flag_fab(i+1,j,k).isSingleValued() or not flag_fab(i,j,k).isConnected( 1,0,0))) {
 
-                       xs_fab(i,j,k,slopes_comp+n) = dudx;
+                       amrex::Real detAtA_x =
+                         Atb[0]   *(AtA[1][1]*AtA[2][2] - AtA[1][2]*AtA[1][2]) -
+                         AtA[0][1]*(Atb[1] *  AtA[2][2] - AtA[1][2]*Atb[2]   ) +
+                         AtA[0][2]*(Atb[1] *  AtA[2][1] - AtA[1][1]*Atb[2]   );
+
+                       // Slope at centroid of (i,j,k)
+                       xs_fab(i,j,k,slopes_comp+n) = detAtA_x / detAtA;
 
                      } else {
 
@@ -181,7 +213,13 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                        (flag_fab(i,j-1,k).isSingleValued() or not flag_fab(i,j,k).isConnected(0,-1,0)) or
                        (flag_fab(i,j+1,k).isSingleValued() or not flag_fab(i,j,k).isConnected(0, 1,0))) {
 
-                       ys_fab(i,j,k,slopes_comp+n) = dudy;
+                       amrex::Real detAtA_y =
+                         AtA[0][0]*(Atb[1]  * AtA[2][2] - AtA[1][2]*Atb[2]   ) -
+                         Atb[0] *  (AtA[1][0]*AtA[2][2] - AtA[1][2]*AtA[2][0]) +
+                         AtA[0][2]*(AtA[1][0]*Atb[2]    - Atb[1]   *AtA[2][0]);
+
+                       // Slope at centroid of (i,j,k)
+                       ys_fab(i,j,k,slopes_comp+n) = detAtA_y / detAtA;
 
                      } else {
 
@@ -200,7 +238,12 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                        (flag_fab(i,j,k-1).isSingleValued() or not flag_fab(i,j,k).isConnected(0,0,-1)) or
                        (flag_fab(i,j,k+1).isSingleValued() or not flag_fab(i,j,k).isConnected(0,0, 1))) {
 
-                       zs_fab(i,j,k,slopes_comp+n) = 0.0;
+                       amrex::Real detAtA_z =
+                         AtA[0][0]*(AtA[1][1]*Atb[2]    - Atb[1]   *AtA[1][2]) -
+                         AtA[0][1]*(AtA[1][0]*Atb[2]    - Atb[1]   *AtA[2][0]) +
+                         Atb[0]   *(AtA[1][0]*AtA[2][1] - AtA[1][1]*AtA[2][0]);
+
+                       zs_fab(i,j,k,slopes_comp+n) = detAtA_z / detAtA;
 
                      } else {
 
