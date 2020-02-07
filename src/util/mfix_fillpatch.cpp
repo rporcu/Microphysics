@@ -110,38 +110,47 @@ mfix::FillPatchVel (int lev,
                     int ncomp,
                     const Vector<BCRec>& bcs)
 {
-    // Hack so that ghost cells are not undefined
-    mf.setVal(covered_val);
+  // Hack so that ghost cells are not undefined
+  mf.setVal(covered_val);
 
-    if (lev == 0)
-    {
-        Vector<MultiFab*> smf;
-        Vector<Real> stime;
-        GetDataVel(0, time, smf, stime);
+  if (lev == 0)
+  {
+    Vector<MultiFab*> smf;
 
-        CpuBndryFuncFab bfunc(VelFillBox);
-        PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev], bcs, bfunc);
-        amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, icomp, ncomp,
-                                    geom[lev], physbc, 0);
-    }
-    else
-    {
-        Vector<MultiFab*> cmf, fmf;
-        Vector<Real> ctime, ftime;
-        GetDataVel(lev-1, time, cmf, ctime);
-        GetDataVel(lev  , time, fmf, ftime);
+    Vector<Real> stime;
 
-        CpuBndryFuncFab bfunc(VelFillBox);
-        PhysBCFunct<CpuBndryFuncFab> cphysbc(geom[lev-1],bcs,bfunc);
-        PhysBCFunct<CpuBndryFuncFab> fphysbc(geom[lev  ],bcs,bfunc);
+    GetDataVel(0, time, smf, stime);
 
-        Interpolater* mapper = &cell_cons_interp;
+    CpuBndryFuncFab bfunc(VelFillBox);
 
-        amrex::FillPatchTwoLevels(mf, time, cmf, ctime, fmf, ftime,
-                                  0, icomp, ncomp, geom[lev-1], geom[lev],
-                                  cphysbc, 0, fphysbc, 0,
-                                  refRatio(lev-1), mapper, bcs, 0);
-    }
+    PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev], bcs, bfunc);
+
+    amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, icomp, ncomp,
+                                geom[lev], physbc, 0);
+  }
+  else
+  {
+    Vector<MultiFab*> cmf, fmf;
+
+    Vector<Real> ctime, ftime;
+
+    GetDataVel(lev-1, time, cmf, ctime);
+
+    GetDataVel(lev  , time, fmf, ftime);
+
+    CpuBndryFuncFab bfunc(VelFillBox);
+
+    PhysBCFunct<CpuBndryFuncFab> cphysbc(geom[lev-1],bcs,bfunc);
+
+    PhysBCFunct<CpuBndryFuncFab> fphysbc(geom[lev  ],bcs,bfunc);
+
+    Interpolater* mapper = &cell_cons_interp;
+
+    amrex::FillPatchTwoLevels(mf, time, cmf, ctime, fmf, ftime,
+                              0, icomp, ncomp, geom[lev-1], geom[lev],
+                              cphysbc, 0, fphysbc, 0,
+                              refRatio(lev-1), mapper, bcs, 0);
+  }
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
