@@ -1,4 +1,4 @@
-image: mwm126/mfix-exa:latest
+image: mwm126/mfix-exa:cuda
 
 before_script:
   - mkdir -p ccache
@@ -24,16 +24,6 @@ variables:
 ###### Test jobs #####
 
 .test_job: &test_template
-  script:
-    - git submodule update --init
-    - cmake -S .
-            -B build
-            -DENABLE_MPI=$ENABLE_MPI
-            -DENABLE_OMP=$ENABLE_OMP
-    - make -C build mfix -j2 VERBOSE=1
-    - cd build
-    - make build_tests -j2
-    - $CTEST_CMD
   tags:
     - mfix-exa
   artifacts:
@@ -44,35 +34,87 @@ variables:
       - build/Testing/
   retry: 2
 
-single-grid-serial:
+.cpu_test: &cpu_template
+  script:
+    - git submodule update --init
+    - cmake -S .
+            -B build
+            -DENABLE_MPI=$ENABLE_MPI
+            -DENABLE_OMP=$ENABLE_OMP
+    - make -C build mfix -j2 VERBOSE=1
+    - cd build
+    - make build_tests -j2
+    - $CTEST_CMD
+  <<: *test_template
+
+.gpu_test: &gpu_template
+  script:
+    - git submodule update --init
+    - cmake -S .
+            -B build
+            -DENABLE_MPI=$ENABLE_MPI
+            -DENABLE_CUDA=1
+            -DENABLE_OMP=$ENABLE_OMP
+    - make -C build mfix -j2 VERBOSE=1
+    - cd build
+    - make build_tests -j2
+    - $CTEST_CMD
+  <<: *test_template
+
+
+#  CPU tests
+
+single-grid-serial-cpu:
   variables:
     CTEST_CMD: "srun ctest -R SGS"
-  <<: *test_template
+  <<: *cpu_template
 
-multiple-grid-serial:
+multiple-grid-serial-cpu:
   variables:
     CTEST_CMD: "srun ctest -R MGS"
-  <<: *test_template
+  <<: *cpu_template
 
-tiled-grid-serial:
+tiled-grid-serial-cpu:
   variables:
     CTEST_CMD: "srun ctest -R TGS"
-  <<: *test_template
+  <<: *cpu_template
 
-
-multiple-grid-parallel:
+multiple-grid-parallel-cpu:
   variables:
-    CC: "mpicc"
-    CXX: "mpic++"
-    ENABLE_MPI: "1"
-    FC: "mpifort"
-    # CTEST_CMD: "sbatch -W ${CI_PROJECT_DIR}/.slurm-mgp"  # For Joule
-    CTEST_CMD: "srun ctest -R MGP"  # For AWS
-  <<: *test_template
+    CTEST_CMD: "srun ctest -R MGP"
+  <<: *cpu_template
 
-
-tiled-grid-parallel-openmp:
+tiled-grid-parallel-openmp-cpu:
   variables:
     ENABLE_OMP: "1"
     CTEST_CMD: "srun ctest -R TGP"
-  <<: *test_template
+  <<: *cpu_template
+
+
+#  GPU tests
+
+.single-grid-serial-gpu:
+  variables:
+    CTEST_CMD: "srun ctest -R SGS"
+  <<: *gpu_template
+
+.multiple-grid-serial-gpu:
+  variables:
+    CTEST_CMD: "srun ctest -R MGS"
+  <<: *gpu_template
+
+.tiled-grid-serial-gpu:
+  variables:
+    CTEST_CMD: "srun ctest -R TGS"
+  <<: *gpu_template
+
+.multiple-grid-parallel-gpu:
+  variables:
+    CTEST_CMD: "srun ctest -R MGP"
+  <<: *gpu_template
+
+.tiled-grid-parallel-openmp-gpu:
+  variables:
+    ENABLE_OMP: "1"
+    CTEST_CMD: "srun ctest -R TGP"
+  <<: *gpu_template
