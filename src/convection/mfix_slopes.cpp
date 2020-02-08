@@ -113,13 +113,12 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                        for(int kk(-1); kk<=1; kk++){
                          for(int jj(-1); jj<=1; jj++){
                            for(int ii(-1); ii<=1; ii++){
-                             if ( ii == 0 and jj==0 and kk==0) continue;
+                             if( flag_fab(i,j,k).isConnected(ii,jj,kk) and
+                                 (ii!=0 and jj!=0 and kk!=0)) {
 
-                             if( flag_fab(i,j,k).isConnected(ii,jj,kk)){
-
-                             // Not multplying by dx to be consistent with how the
-                             // slope is stored. Also not including the global shift
-                             // wrt plo or i,j,k. We only need relative distance.
+                               // Not multplying by dx to be consistent with how the
+                               // slope is stored. Also not including the global shift
+                               // wrt plo or i,j,k. We only need relative distance.
 
                                A[lc][0] = ii + ccent_fab(i+ii,j+jj,k+kk,0) - ccent_fab(i,j,k,0);
                                A[lc][1] = jj + ccent_fab(i+ii,j+jj,k+kk,1) - ccent_fab(i,j,k,1);
@@ -183,7 +182,7 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
 
 
                      // X direction
-                     if(flag_fab(i  ,j,k).isSingleValued() or
+                     if( flag_fab(i  ,j,k).isSingleValued() or
                         (flag_fab(i-1,j,k).isSingleValued() or not flag_fab(i,j,k).isConnected(-1,0,0)) or
                         (flag_fab(i+1,j,k).isSingleValued() or not flag_fab(i,j,k).isConnected( 1,0,0))) {
 
