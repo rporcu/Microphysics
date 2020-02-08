@@ -26,6 +26,8 @@ mfix::mfix_compute_diveu (Real time)
 
   for (int lev = 0; lev < nlev; lev++)
     {
+      MultiFab& ep_g = m_leveldata[lev]->ep_g;
+
       // We only need one ghost cell here -- so no need to make it bigger
       epu[lev].reset(new MultiFab(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(),
                                   vel_g[lev]->nComp(), 1 , MFInfo(), *ebfactory[lev]));
@@ -37,7 +39,7 @@ mfix::mfix_compute_diveu (Real time)
       MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow());
 
       for (int n = 0; n < 3; n++)
-        MultiFab::Multiply(*epu[lev], *ep_g[lev], 0, n, 1, epu[lev]->nGrow());
+        MultiFab::Multiply(*epu[lev], ep_g, 0, n, 1, epu[lev]->nGrow());
 
 
       epu[lev]->FillBoundary(geom[lev].periodicity());

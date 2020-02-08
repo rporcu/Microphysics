@@ -54,6 +54,9 @@ add_subdirectory(src_des)
 # Diffusion
 add_subdirectory(diffusion)
 
+# LevelData
+add_subdirectory(level_data)
+
 # Projection
 add_subdirectory(projection)
 

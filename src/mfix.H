@@ -33,6 +33,7 @@
 #include <mfix_des_F.H>
 #include <mfix_eb_if.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_LevelData.H>
 
 
 // Drag type enumeration
@@ -232,13 +233,13 @@ class mfix : public AmrCore
                                      Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                                      Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                                      Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                                     Vector< std::unique_ptr<MultiFab> >& ep_g);
+                                     MultiFab& ep_g);
 
     void mfix_set_velocity_bcs (Real time,
                                 Vector< std::unique_ptr<MultiFab> >& vel,
                                 int extrap_dir_bcs) const;
 
-    void mfix_set_epg_bcs (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps) const;
+    void mfix_set_epg_bcs (const amrex::Vector< std::unique_ptr<LevelData> >& leveldata) const;
 
     void mfix_set_density_bcs (Real time,
                                Vector< std::unique_ptr<MultiFab> >& ro_g);
@@ -588,12 +589,12 @@ class mfix : public AmrCore
 
     void check_for_nans (int lev);
 
-    void mfix_compute_convective_term (Vector< std::unique_ptr<MultiFab> >& conv_u,
-                                       Vector< std::unique_ptr<MultiFab> >& conv_s,
-                                       Vector< std::unique_ptr<MultiFab> >& vel,
-                                       Vector< std::unique_ptr<MultiFab> >& ep_g,
-                                       Vector< std::unique_ptr<MultiFab> >& ro_g,
-                                       Vector< std::unique_ptr<MultiFab> >& trac,
+    void mfix_compute_convective_term (Vector< std::unique_ptr<MultiFab> >& conv_u_in,
+                                       Vector< std::unique_ptr<MultiFab> >& conv_s_in,
+                                       Vector< std::unique_ptr<MultiFab> >& vel_in,
+                                       Vector< std::unique_ptr<MultiFab> >& ep_g_in,
+                                       Vector< std::unique_ptr<MultiFab> >& ro_g_in,
+                                       Vector< std::unique_ptr<MultiFab> >& trac_in,
                                        Real time);
 
     int steady_state_reached (Real dt, int iter);
@@ -616,6 +617,9 @@ class mfix : public AmrCore
 
     void mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps,
                               amrex::Real);
+
+    void mfix_diffuse_ep_g (const amrex::Vector< std::unique_ptr<LevelData> >& leveldata,
+                            amrex::Real);
 
     void mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_drag,
                              amrex::Real);
@@ -651,45 +655,28 @@ class mfix : public AmrCore
     Vector< std::unique_ptr<IArrayBox> > bc_klo;
     Vector< std::unique_ptr<IArrayBox> > bc_khi;
 
-    struct LevelData {
-      // Default Constructor
-      LevelData () = default;
-      // Constructor
-      LevelData (amrex::BoxArray const& ba,
-                 amrex::DistributionMapping const& dm,
-                 amrex::FabFactory<amrex::FArrayBox> const& fact,
-                 int ntrac,
-                 int ng_state,
-                 bool implicit_diffusion,
-                 bool advect_tracer);
-
-      // Cell-centered MultiFabs
-      // Gas velocity
-      amrex::MultiFab vel_g;
-      amrex::MultiFab vel_go;
-      // Void fraction
-      amrex::MultiFab ep_g;
-      amrex::MultiFab ep_go;
-      // Gas density
-      amrex::MultiFab ro_g;
-      amrex::MultiFab ro_go;
-      // Tracer in gas
-      amrex::MultiFab trac;
-      amrex::MultiFab trac_o;
-      // Pressure gradients
-      amrex::MultiFab gp;
-      // Molecular viscosity
-      amrex::MultiFab mu_g;
-
-      // Nodal MultiFabs
-      // Gas pressure fraction
-      amrex::MultiFab p_g;
-      amrex::MultiFab p_go;
-      // Base state pressure
-      amrex::MultiFab p0_g;
-    };
-
     amrex::Vector<std::unique_ptr<LevelData>> m_leveldata;
+
+    // Gas velocity
+    Vector< std::unique_ptr<MultiFab> > vel_g;
+    Vector< std::unique_ptr<MultiFab> > vel_go;
+    // Gas density
+    Vector< std::unique_ptr<MultiFab> > ro_g;
+    Vector< std::unique_ptr<MultiFab> > ro_go;
+    // Tracer in gas
+    Vector< std::unique_ptr<MultiFab> > trac;
+    Vector< std::unique_ptr<MultiFab> > trac_o;
+    // Pressure gradients
+    Vector< std::unique_ptr<MultiFab> > gp;
+    // Molecular viscosity
+    Vector< std::unique_ptr<MultiFab> > mu_g;
+
+    // Nodal MultiFabs
+    // Gas pressure fraction
+    Vector< std::unique_ptr<MultiFab> > p_g;
+    Vector< std::unique_ptr<MultiFab> > p_go;
+    // Base state pressure
+    Vector< std::unique_ptr<MultiFab> > p0_g;
 
     // Boundary conditions flags
     Vector< std::unique_ptr<iMultiFab> > flag;

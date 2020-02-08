@@ -241,49 +241,56 @@ mfix::GetDataScalar (int lev,
                      int icomp,
                      Vector<Real>& datatime)
 {
-    data.clear();
-    datatime.clear();
+  data.clear();
+  datatime.clear();
 
-    const Real teps = (t_new[lev] - t_old[lev]) * 1.e-3;
+  const Real teps = (t_new[lev] - t_old[lev]) * 1.e-3;
 
-    if (icomp == 3) 
-       data.push_back(mu_g[lev].get());
+  if (icomp == 3) 
+    data.push_back(mu_g[lev].get());
 
-    if (time > t_new[lev] - teps && time < t_new[lev] + teps)
-    {
-        if (icomp == 0) {
-           data.push_back(ro_g[lev].get());
-        } else if (icomp == 1) {
-           data.push_back(trac[lev].get());
-        } else if (icomp == 2) {
-           data.push_back(ep_g[lev].get());
-        }
-        datatime.push_back(t_new[lev]);
+  if (time > t_new[lev] - teps && time < t_new[lev] + teps)
+  {
+    if (icomp == 0) {
+      data.push_back(ro_g[lev].get());
     }
-    else if (time > t_old[lev] - teps && time < t_old[lev] + teps)
-    {
-        if (icomp == 0) {
-           data.push_back(ro_go[lev].get());
-        } else if (icomp == 1) {
-           data.push_back(trac_o[lev].get());
-        } else if (icomp == 2) {
-           data.push_back(ep_go[lev].get());
-        }
-        datatime.push_back(t_old[lev]);
+    else if (icomp == 1) {
+      data.push_back(trac[lev].get());
     }
-    else
-    {
-        if (icomp == 0) {
-           data.push_back(ro_go[lev].get());
-           data.push_back( ro_g[lev].get());
-        } else if (icomp == 1) {
-           data.push_back(trac_o[lev].get());
-           data.push_back( trac[lev].get());
-        } else if (icomp == 2) {
-           data.push_back(ep_go[lev].get());
-           data.push_back( ep_g[lev].get());
-        }
-        datatime.push_back(t_old[lev]);
-        datatime.push_back(t_new[lev]);
+    else if (icomp == 2) {
+      data.push_back(&(m_leveldata[lev]->ep_g));
     }
+    datatime.push_back(t_new[lev]);
+  }
+  else if (time > t_old[lev] - teps && time < t_old[lev] + teps)
+  {
+    if (icomp == 0) {
+      data.push_back(ro_go[lev].get());
+    }
+    else if (icomp == 1) {
+      data.push_back(trac_o[lev].get());
+    }
+    else if (icomp == 2) {
+      data.push_back(&(m_leveldata[lev]->ep_go));
+    }
+    datatime.push_back(t_old[lev]);
+  }
+  else
+  {
+    if (icomp == 0) {
+       data.push_back(ro_go[lev].get());
+       data.push_back( ro_g[lev].get());
+    }
+    else if (icomp == 1) {
+       data.push_back(trac_o[lev].get());
+       data.push_back( trac[lev].get());
+    }
+    else if (icomp == 2) {
+       data.push_back(&(m_leveldata[lev]->ep_go));
+       data.push_back(&(m_leveldata[lev]->ep_g));
+    }
+
+    datatime.push_back(t_old[lev]);
+    datatime.push_back(t_new[lev]);
+  }
 }
