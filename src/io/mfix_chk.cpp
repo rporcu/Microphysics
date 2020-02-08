@@ -158,10 +158,10 @@ mfix::WriteCheckPointFile (std::string& check_file,
         VisMF::Write( * level_sets[1], raw_ls_name.str() );
 
         // Also save the parameters necessary to re-build the LSFactory
-        int levelset_params[] = { levelset__refinement,
-                                  levelset__pad,
-                                  levelset__eb_refinement,
-                                  levelset__eb_pad         };
+        int levelset_params[] = { levelset_refinement,
+                                  levelset_pad,
+                                  levelset_eb_refinement,
+                                  levelset_eb_pad         };
 
         std::ofstream param_file;
         std::stringstream param_file_name;

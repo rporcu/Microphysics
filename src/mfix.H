@@ -10,62 +10,48 @@
 #endif
 
 #include <AMReX_AmrCore.H>
-#include <AMReX_iMultiFab.H>
 #include <AMReX_BLProfiler.H>
-#include <AMReX_PhysBCFunct.H>
-
-#include <AMReX_EBMultiFabUtil.H>
-#include <AMReX_EBFabFactory.H>
-#include <AMReX_EBFArrayBox.H>
 #include <AMReX_EB2.H>
+#include <AMReX_EB2_IF_Intersection.H>
 #include <AMReX_EB2_IF_Plane.H>
 #include <AMReX_EB2_IF_Polynomial.H>
 #include <AMReX_EB2_IF_Translation.H>
-#include <AMReX_EB2_IF_Intersection.H>
+#include <AMReX_EBMultiFabUtil.H>
+#include <AMReX_EBFabFactory.H>
+#include <AMReX_EBFArrayBox.H>
 #include <AMReX_EB_levelset.H>
 #include <AMReX_EB_LSCore.H>
-
-#include <MFIXParticleContainer.H>
-#include <mfix_des_F.H>
+#include <AMReX_iMultiFab.H>
 #include <AMReX_MLMG.H>
 #include <AMReX_MLNodeLaplacian.H>
-#include <mfix_eb_if.H>
-#include <MFIX_BcList.H>
+#include <AMReX_NodalProjector.H>
+#include <AMReX_PhysBCFunct.H>
+
 #include <DiffusionOp.H>
+#include <MFIXParticleContainer.H>
+#include <MFIX_BcList.H>
+#include <mfix_des_F.H>
+#include <mfix_eb_if.H>
 #include <MFIX_DEM_Parms.H>
 
-#include <AMReX_NodalProjector.H>
 
-enum DragType
+enum DragType {Invalid=-1, WenYu, Gidaspow, BVK2, UserDrag};
+
+enum DepositionScheme {trilinear, square_dpvm, true_dpvm, centroid};
+
+class mfix : public AmrCore
 {
-    Invalid=-1,
-    WenYu,
-    Gidaspow,
-    BVK2,
-    UserDrag
-};
-
-enum DepositionScheme {
-   trilinear,
-   square_dpvm,
-   true_dpvm,
-   centroid
-};
-
-class mfix
-    : public AmrCore
-{
-public:
-
+  public:
     mfix ();
     ~mfix ();
 
     // Face-based coefficients b in MAC projection and implicit diffusion solve
     Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > bcoeff;
 
-    void InitParams ( );
+    void InitParams ();
 
-    bool IsSteadyState () { return (steady_state > 0); }
+    bool IsSteadyState ()
+    { return (steady_state > 0); }
 
     void Init (Real time);
 
@@ -108,9 +94,7 @@ public:
     void usr3 ();
 
     void output (int estatus, int finish, int nstep, Real dt, Real time)
-      {
-        pc->output(estatus, finish, nstep, dt, time);
-      };
+    { pc->output(estatus, finish, nstep, dt, time); };
 
     void make_mg_bc (int mg_bc[]);
 
@@ -119,48 +103,47 @@ public:
     void fill_eb_levelsets ();
     void intersect_ls_walls ();
 
-    template<class F> void build_particle_eb_levels (EB2::GeometryShop<F> gshop)
-      {
-        if(DEM::solve)
-          for (int lev = 0; lev < nlev; lev ++)
-            particle_eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom, 100, 0);
-      }
+    template<class F>
+    void build_particle_eb_levels (EB2::GeometryShop<F> gshop)
+    {
+      if(DEM::solve)
+        for (int lev = 0; lev < nlev; lev ++)
+          particle_eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom, 100, 0);
+    }
 
     //! Construct EB levels from Geometry shop. This builds each EB level and
     //! saves a pointer to each level into `eb_levels`.
     template<class F> void build_eb_levels (EB2::GeometryShop<F> gshop)
-        {
+    {
+      /************************************************************************
+       *                                                                      *
+       * Build EB levels                                                      *
+       *                                                                      *
+       ***********************************************************************/
+      for (int lev = 0; lev < nlev; lev ++)
+      {
+        // NOTE: the last two parameters are the max coarsening level and
+        // the required coarsening level. They are also used by the Poisson
+        // solver, => changing these will result in slight changes of the
+        // fluid solve.
+        eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom, 100, 0);
+        particle_eb_levels[lev] = eb_levels[lev];
+      }
 
-            /************************************************************************
-             *                                                                      *
-             * Build EB levels                                                      *
-             *                                                                      *
-             ***********************************************************************/
+      if (nlev == 1)
+      {
+        Box dom_ls = geom[0].Domain();
+        dom_ls.refine(levelset_refinement);
+        Geometry geom_ls(dom_ls);
+        Vector<Geometry> vgeom{geom_ls};
+        // NOTE: lev here is index in vgeom
+        eb_levels[1] = LSCore<F>::BuildEBLevel(gshop, 0, vgeom, 100, 0);
+        particle_eb_levels[1] = eb_levels[1];
+      }
+    }
 
-            for (int lev = 0; lev < nlev; lev ++)
-            {
-                // NOTE: the last two parameters are the max coarsening level and
-                // the required coarsening level. They are also used by the Poisson
-                // solver, => changing these will result in slight changes of the
-                // fluid solve.
-                eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom, 100, 0);
-                particle_eb_levels[lev] = eb_levels[lev];
-            }
-
-            if (nlev == 1)
-            {
-                Box dom_ls = geom[0].Domain();
-                dom_ls.refine(levelset__refinement);
-                Geometry geom_ls(dom_ls);
-                Vector<Geometry> vgeom{geom_ls};
-                // NOTE: lev here is index in vgeom
-                eb_levels[1] = LSCore<F>::BuildEBLevel(gshop, 0, vgeom, 100, 0);
-                particle_eb_levels[1] = eb_levels[1];
-            }
-        }
-
-    const Geometry get_geom_ref (int lev) { return geom[lev]; }
-
+    const Geometry get_geom_ref (int lev)
+    { return geom[lev]; }
 
     std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls (bool & has_walls);
 
@@ -181,7 +164,8 @@ public:
     // If > 0, dump plotfiles every "plot_int" steps
     static int plot_int;
 
-    // If > 0, dump plotfiles at as close as possible to the designated period *without* changing dt
+    // If > 0, dump plotfiles at as close as possible to the designated period
+    // *without* changing dt
     static Real plot_per_approx;
 
     // If > 0, dump plotfiles at exactcly the designated period by changing dt
@@ -191,7 +175,7 @@ public:
 
     // flag enabling level-set restart (i.e. prevent make_eb_* from rebuilding
     // the level-set data).
-    bool levelset__restart = false;
+    bool levelset_restart = false;
 
     void mfix_compute_vort ();
 
@@ -200,27 +184,31 @@ public:
     ///
     /// Parameters describing the level-set grid:
     ///
-    int levelset__refinement = 1;    // refinement (wrt particle grid) of the level-set's grid
-    int levelset__eb_refinement = 1; // refinement of the EB facets used to generate the level-set
-    int levelset__pad = 2;           // padding of the level-set grid
-    int levelset__eb_pad = 2;        // padding of the EBIS used to generate the level-set (useful for
-                                     // ensuring that neighbor grids are considered when filling LS)
+    int levelset_refinement = 1;    // refinement (wrt particle grid) of the level-set's grid
+    int levelset_eb_refinement = 1; // refinement of the EB facets used to generate the level-set
+    int levelset_pad = 2;           // padding of the level-set grid
+    int levelset_eb_pad = 2;        // padding of the EBIS used to generate the level-set (useful for
+                                    // ensuring that neighbor grids are considered when filling LS)
 
     bool contains_ebs = false;
 
     void mfix_add_drag_explicit (Real dt);
+
     void mfix_add_drag_implicit (Real dt);
 
     void mfix_calc_drag_particle (Real time);
 
     void mfix_add_gravity_and_gp (Real dt);
 
-    void mfix_predict_vels_on_faces (int lev, Real time,
+    void mfix_predict_vels_on_faces (int lev,
+                                     Real time,
                                      Vector< std::unique_ptr<MultiFab> >& vel,
                                      Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                                      Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                                      Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
                                      Vector< std::unique_ptr<MultiFab> >& ep_g);
+
+    void mfix_correct_small_cells (Vector< std::unique_ptr<MultiFab> >& vel_in);
 
     void mfix_set_velocity_bcs (Real time,
                                 Vector< std::unique_ptr<MultiFab> >& vel,
@@ -300,13 +288,14 @@ public:
     static amrex::Real m_deposition_scale_factor;
     static amrex::Real m_max_solids_volume_fraction;
 
-
-    static amrex::Real tcoll_ratio; // input parameter defaulted to 50 used in file src_des/init_collision.f90
+    // input parameter defaulted to 50 used in file src_des/init_collision.f90
+    static amrex::Real tcoll_ratio; 
 
     template <typename F>
     void mfix_calc_particle_beta (F DragFunc, Real time);
 
     void mfix_calc_volume_fraction (Real & sum_vol);
+
     void mfix_deposition_bcs_scalar (int lev, amrex::MultiFab & filled_mf);
 
     void mfix_redistribute_deposition (int lev,
@@ -317,6 +306,7 @@ public:
                                        amrex::Real max_eps);
 
     Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
+
     Real volEpsWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
 
     void mfix_set_bc_type (int lev);
@@ -402,41 +392,43 @@ public:
 
     std::unique_ptr<NodalProjector> nodal_projector;
 
-protected:
-
+  protected:
     //! Tagging cells for refinement
-    virtual void ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow) override;
+    virtual void ErrorEst (int lev,
+                           TagBoxArray & tags,
+                           Real time,
+                           int ngrow) override;
 
     //! Make a new level using provided BoxArray and DistributionMapping and
     //! fill with interpolated coarse level data. Called by AmrCore::regrid.
-    virtual void MakeNewLevelFromCoarse (int lev, Real time, const BoxArray & ba,
+    virtual void MakeNewLevelFromCoarse (int lev, Real time,
+                                         const BoxArray & ba,
                                          const DistributionMapping & dm) override
-        {
-            amrex::Abort("MakeNewLevelFromCoarse: To be implemented");
-        }
+    { amrex::Abort("MakeNewLevelFromCoarse: To be implemented"); }
 
     //! Remake an existing level using provided BoxArray and
     //! DistributionMapping and fill with existing fine and coarse data. Called
     //! by AmrCore::regrid.
-    virtual void RemakeLevel (int lev, Real time, const BoxArray & ba,
+    virtual void RemakeLevel (int lev,
+                              Real time,
+                              const BoxArray & ba,
                               const DistributionMapping & dm) override
-        {
-            amrex::Abort("RemakeLevel: To be implemented");
-        }
+    { amrex::Abort("RemakeLevel: To be implemented"); }
 
     //! Delete level data.  Called by AmrCore::regrid.
     virtual void ClearLevel (int lev) override
-        {
-            amrex::Abort("ClearLevel: To be implemented");
-        }
+    { amrex::Abort("ClearLevel: To be implemented"); }
 
     void mfix_init_fluid (int is_restarting, Real dt, Real stop_time);
+
     void mfix_set_bc0 ();
+
     void mfix_set_p0 ();
+
     void mfix_set_gp0 ();
 
-    static Real gp0[3];
-    static Real gravity[3];
+    static RealVect gp0;
+    static RealVect gravity;
 
     // Scalar diffusive coefficient
     Vector<Real> mu_s;
@@ -475,6 +467,7 @@ protected:
 
     void FillPatchVel (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
                        const Vector<BCRec> & bcr);
+
     void GetDataVel (int lev, Real time, Vector<MultiFab *> & data,
                      Vector<Real> & datatime);
 
@@ -485,6 +478,7 @@ protected:
                         Vector<Real> & datatime);
 
     void mfix_calc_particle_beta (Real time);
+
     void mfix_calc_drag_fluid (Real time);
 
     void AllocateArrays (int lev);
@@ -495,7 +489,7 @@ protected:
 
     void avgDown (int crse_lev, const MultiFab & S_fine, MultiFab & S_crse);
 
-private:
+  private:
     void make_eb_general ();
     void make_eb_box ();
     void make_eb_cylinder ();
@@ -568,10 +562,12 @@ private:
     void mfix_compute_diveu (Real time);
 
     void mfix_print_max_vel (int lev);
+
     void mfix_print_max_gp (int lev);
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
+
     void ChopGrids (const Box& domain, BoxArray& ba, int target_size) const;
 
     static int nlev;
@@ -720,7 +716,8 @@ private:
     // Nodal solve
     // ***************************************************************
      
-    // Verbosity and MLMG parameters are now ParmParse with "nodal_proj" in the inputs file
+    // Verbosity and MLMG parameters are now ParmParse with "nodal_proj" in the
+    // inputs file
     // Examples: nodal_proj.verbose = 1
     //           nodal_proj.bottom_verbose = 1 
     //           nodal_proj.maxiter
@@ -747,7 +744,8 @@ private:
     // ***************************************************************
     // MAC solve
     // ***************************************************************
-    // Verbosity and MLMG parameters are now ParmParse with "mac_proj" in the inputs file
+    // Verbosity and MLMG parameters are now ParmParse with "mac_proj" in the
+    // inputs file
     // Examples: mac_proj.verbose = 1
     //           mac_proj.bottom_verbose = 1 
     //           mac_proj.maxiter
@@ -762,7 +760,7 @@ private:
     Real mac_mg_atol = 1.0e-14;
 
     // Max coarsening level
-    int  mac_mg_max_coarsening_level = 100;
+    int mac_mg_max_coarsening_level = 100;
 
     // ***************************************************************
     // Diffusion solve
@@ -935,8 +933,6 @@ private:
 };
 
 inline std::string mfix::get_load_balance_type ()
-{
-    return load_balance_type;
-}
+{ return load_balance_type; }
 
 #endif

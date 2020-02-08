@@ -143,8 +143,8 @@ void mfix::make_eb_factories () {
         // necessary for multi-level mfix.
         particle_ebfactory[lev].reset(
             new EBFArrayBoxFactory(* particle_eb_levels[lev], geom[lev], grids[lev], dmap[lev],
-                                   {levelset__eb_pad + 2, levelset__eb_pad + 2,
-                                    levelset__eb_pad + 2}, m_eb_support_level)
+                                   {levelset_eb_pad + 2, levelset_eb_pad + 2,
+                                    levelset_eb_pad + 2}, m_eb_support_level)
             );
     }
 }
@@ -170,8 +170,8 @@ void mfix::fill_eb_levelsets ()
         const DistributionMapping & part_dm = pc->ParticleDistributionMap(0);
         const BoxArray &            part_ba = pc->ParticleBoxArray(0);
 
-        LSFactory lsf(0, levelset__refinement, levelset__eb_refinement,
-                      levelset__pad, levelset__eb_pad, part_ba, geom[0], part_dm );
+        LSFactory lsf(0, levelset_refinement, levelset_eb_refinement,
+                      levelset_pad, levelset_eb_pad, part_ba, geom[0], part_dm );
 
 
         //___________________________________________________________________________
@@ -309,16 +309,16 @@ void mfix::fill_eb_levelsets ()
         // Multi-level level-set: build finer level using coarse level set
 
         EBFArrayBoxFactory eb_factory(* eb_levels[0], geom[0], part_ba, part_dm,
-                                      {levelset__eb_pad + 2, levelset__eb_pad + 2,
-                                       levelset__eb_pad + 2}, EBSupport::full);
+                                      {levelset_eb_pad + 2, levelset_eb_pad + 2,
+                                       levelset_eb_pad + 2}, EBSupport::full);
 
         // NOTE: reference BoxArray is not nodal
         BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
         level_sets[0].reset(new MultiFab);
-        level_sets[0]->define(ba, part_dm, 1, levelset__pad);
-        iMultiFab valid(ba, part_dm, 1, levelset__pad);
+        level_sets[0]->define(ba, part_dm, 1, levelset_pad);
+        iMultiFab valid(ba, part_dm, 1, levelset_pad);
 
-        MultiFab impfunc(ba, part_dm, 1, levelset__pad);
+        MultiFab impfunc(ba, part_dm, 1, levelset_pad);
         eb_levels[0]->fillLevelSet(impfunc, geom[0]);
         impfunc.FillBoundary(geom[0].periodicity());
 
@@ -335,7 +335,7 @@ void mfix::fill_eb_levelsets ()
             // NOTE: reference BoxArray is not nodal
             BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
             level_sets[lev].reset(new MultiFab);
-            iMultiFab valid(ba, part_dm, 1, levelset__pad);
+            iMultiFab valid(ba, part_dm, 1, levelset_pad);
 
             // Fills level-set[lev] with coarse data
             LSCoreBase::MakeNewLevelFromCoarse( * level_sets[lev], * level_sets[lev-1],
@@ -343,16 +343,16 @@ void mfix::fill_eb_levelsets ()
                                                bcs_ls, refRatio(lev-1));
 
             EBFArrayBoxFactory eb_factory(* eb_levels[lev], geom[lev], part_ba, part_dm,
-                                          {levelset__eb_pad + 2, levelset__eb_pad + 2,
-                                           levelset__eb_pad + 2}, EBSupport::full);
+                                          {levelset_eb_pad + 2, levelset_eb_pad + 2,
+                                           levelset_eb_pad + 2}, EBSupport::full);
 
-            MultiFab impfunc(ba, part_dm, 1, levelset__pad);
+            MultiFab impfunc(ba, part_dm, 1, levelset_pad);
             eb_levels[lev]->fillLevelSet(impfunc, geom[lev]);
             impfunc.FillBoundary(geom[lev].periodicity());
 
             IntVect ebt_size{AMREX_D_DECL(32, 32, 32)}; // Fudge factors...
             LSCoreBase::FillLevelSet(* level_sets[lev], * level_sets[lev], eb_factory, impfunc,
-                                     ebt_size, levelset__eb_pad, geom[lev]);
+                                     ebt_size, levelset_eb_pad, geom[lev]);
         }
     }
 
@@ -407,7 +407,7 @@ void mfix::intersect_ls_walls ()
 
             // Set up refined geometry
             Box dom = geom[0].Domain();
-            dom.refine(levelset__refinement);
+            dom.refine(levelset_refinement);
             Geometry geom_lev(dom);
 
             GShopLSFactory<UnionListIF<EB2::PlaneIF>> gshop_lsf(gshop, geom_lev, ba, dm, ng);
@@ -437,7 +437,7 @@ void mfix::intersect_ls_walls ()
             GShopLSFactory<UnionListIF<EB2::PlaneIF>> gshop_lsf(gshop, geom[lev], ba, dm, ng);
             std::unique_ptr<MultiFab> impfunc = gshop_lsf.fill_impfunc();
 
-            LSFactory::fill_data(wall_if, valid, *impfunc, levelset__eb_pad, geom[lev]);
+            LSFactory::fill_data(wall_if, valid, *impfunc, levelset_eb_pad, geom[lev]);
             LSFactory::intersect_data(*level_sets[lev], valid, wall_if, valid, geom[lev]);
         }
     }

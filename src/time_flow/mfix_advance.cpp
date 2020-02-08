@@ -404,6 +404,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
         depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1);
 
     mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
+    mfix_correct_small_cells (vel_g);
 
     //mfix_set_velocity_bcs(new_time, vel_g, 0);
 }
@@ -550,6 +551,7 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
         depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1);
 
     mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
+    mfix_correct_small_cells (vel_g);
 
     //mfix_set_velocity_bcs(new_time, vel_g, 0);
 }
@@ -584,16 +586,17 @@ mfix::mfix_add_gravity_and_gp (Real dt)
          const auto&  gp_fab =    gp[lev]->array(mfi);
          const auto& den_fab =  ro_g[lev]->array(mfi);
 
-         const GpuArray<Real,3> grav_loc = {gravity[0], gravity[1], gravity[2]};
-         const GpuArray<Real,3>  gp0_loc = {gp0[0], gp0[1], gp0[2]};
+         // we need this until we remove static attribute from mfix::gravity
+         const RealVect gp0_dev(gp0);
+         const RealVect gravity_dev(gravity);
 
-         amrex::ParallelFor(bx, [dt,vel_fab,grav_loc,gp_fab,gp0_loc,den_fab]
+         amrex::ParallelFor(bx, [dt,vel_fab,gravity_dev,gp_fab,gp0_dev,den_fab]
            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
              Real inv_dens = 1.0 / den_fab(i,j,k);
-             vel_fab(i,j,k,0) += dt * ( grav_loc[0]-(gp_fab(i,j,k,0)+gp0_loc[0])*inv_dens );
-             vel_fab(i,j,k,1) += dt * ( grav_loc[1]-(gp_fab(i,j,k,1)+gp0_loc[1])*inv_dens );
-             vel_fab(i,j,k,2) += dt * ( grav_loc[2]-(gp_fab(i,j,k,2)+gp0_loc[2])*inv_dens );
+             vel_fab(i,j,k,0) += dt * (gravity_dev[0]-(gp_fab(i,j,k,0)+gp0_dev[0])*inv_dens);
+             vel_fab(i,j,k,1) += dt * (gravity_dev[1]-(gp_fab(i,j,k,1)+gp0_dev[1])*inv_dens);
+             vel_fab(i,j,k,2) += dt * (gravity_dev[2]-(gp_fab(i,j,k,2)+gp0_dev[2])*inv_dens);
          });
        }
     }

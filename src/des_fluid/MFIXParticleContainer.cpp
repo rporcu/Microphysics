@@ -111,7 +111,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                                              int nstep,
                                              Real dt,
                                              Real time,
-                                             Real gravity[3],
+                                             RealVect& gravity,
                                              EBFArrayBoxFactory* ebfactory,
                                              const MultiFab* ls_phi,
                                              const int ls_refinement,
@@ -561,8 +561,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
              * Move particles based on collision forces and torques             *
              *******************************************************************/
 
-            GpuArray<Real,3> grav = {gravity[0], gravity[1], gravity[2]};
-
             const auto p_lo = Geom(lev).ProbLoArray();
             const auto p_hi = Geom(lev).ProbHiArray();
 
@@ -574,7 +572,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             int z_hi_bc = BC::domain_bc[5];
 
             amrex::ParallelFor(nrp,
-              [pstruct,subdt,fc_ptr,ntot,grav,tow_ptr,eps,p_hi,p_lo,
+              [pstruct,subdt,fc_ptr,ntot,gravity,tow_ptr,eps,p_hi,p_lo,
                x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc]
               AMREX_GPU_DEVICE (int i) noexcept
               {
@@ -582,15 +580,15 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                 p.rdata(realData::velx) += subdt * (
                     (p.rdata(realData::dragx) + fc_ptr[i]) /
-                     p.rdata(realData::mass)  + grav[0]
+                     p.rdata(realData::mass)  + gravity[0]
                 );
                 p.rdata(realData::vely) += subdt * (
                     (p.rdata(realData::dragy) + fc_ptr[i+ntot]) /
-                     p.rdata(realData::mass)  + grav[1]
+                     p.rdata(realData::mass)  + gravity[1]
                 );
                 p.rdata(realData::velz) += subdt * (
                     (p.rdata(realData::dragz) + fc_ptr[i+2*ntot]) /
-                     p.rdata(realData::mass)  + grav[2]
+                     p.rdata(realData::mass)  + gravity[2]
                 );
 
                 p.rdata(realData::omegax) +=

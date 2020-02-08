@@ -5,68 +5,56 @@
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
 
-#ifdef BL_SINGLE_PRECISION_PARTICLES
-typedef float amrex_particle_real;
-#else
-typedef double amrex_particle_real;
-#endif
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    void get_collision_model (int* coll_model_flag);
+void set_lsd_collision_coefficients (amrex::Real* mew,
+                                     amrex::Real* mew_w,
+                                     amrex::Real* kn,
+                                     amrex::Real* kn_w,
+                                     amrex::Real* kt,
+                                     amrex::Real* kt_w,
+                                     amrex::Real* en,
+                                     amrex::Real* en_w,
+                                     amrex::Real* kt_fac,
+                                     amrex::Real* kt_fac_w,
+                                     amrex::Real* eta_fac,
+                                     amrex::Real* eta_w_fac);
 
-    void set_lsd_collision_coefficients (amrex::Real* mew, amrex::Real* mew_w,
-                                         amrex::Real* kn, amrex::Real* kn_w,
-                                         amrex::Real* kt, amrex::Real* kt_w,
-                                         amrex::Real* en, amrex::Real* en_w,
-                                         amrex::Real* kt_fac, amrex::Real* kt_fac_w,
-                                         amrex::Real* eta_fac, amrex::Real* eta_w_fac);
+void calc_particle_collisions (void* rparticles, const int* nrp,
+                               void* gparticles, const int* ngp,
+                               const int* nbor_list, const int* size_nl,
+                               amrex::Real* tow,
+                               amrex::Real* fc,
+                               amrex::Real* subdt,
+                               int* ncoll);
 
-    void des_drag_gp (const int* p_id,
-                      const amrex::Real* particle_vel,
-                      const amrex::Real* fluid_vel,
-                      const amrex::Real* ep_g,
-                      const amrex::Real* ro,
-                      const amrex::Real* mu,
-                      const amrex::Real* f_gp,
-                      const int* i, const int* j, const int* k,
-                      const amrex::Real* rad,
-                      const amrex::Real* vol,
-                      const amrex::Real* ro_s);
+void set_particle_properties (const int* pstate,
+                              amrex::Real* pradius,
+                              amrex::Real* pdensity,
+                              amrex::Real* pvol,
+                              amrex::Real* pmass,
+                              amrex::Real* omoi,
+                              amrex::Real* omega);
 
-    void calc_particle_collisions (void* rparticles, const int* nrp,
-                                   void* gparticles, const int* ngp,
-                                   const int* nbor_list, const int* size_nl,
-                                   amrex::Real* tow,
-                                   amrex::Real* fc,
-                                   amrex::Real* subdt,
-                                   int* ncoll);
+void particle_get_position (void* particles,
+                            const int* nrp,
+                            amrex::Real* x,
+                            amrex::Real* y,
+                            amrex::Real* z);
 
-    void set_particle_properties (const int* pstate,
-                                  amrex::Real* pradius,
-                                  amrex::Real* pdensity,
-                                  amrex::Real* pvol,
-                                  amrex::Real* pmass,
-                                  amrex::Real* omoi,
-                                  amrex::Real* omega);
+void des_init_time_loop (const  amrex::Real* tstart,
+                         const amrex::Real* dt,
+                         int* nsubsteps,
+                         amrex::Real* subdt);
 
-    void particle_get_position (void* particles,
-                                const int* nrp,
-                                amrex::Real* x,
-                                amrex::Real* y,
-                                amrex::Real* z);
+void call_usr3_des (const int* np,
+                    void* particles);
 
-    void des_init_time_loop (const  amrex::Real* tstart,
-                             const amrex::Real* dt,
-                             int* nsubsteps,
-                             amrex::Real* subdt);
-
-    void call_usr3_des (const int* np, void* particles);
-
-    void call_usr2_des (const int* np, void* particles);
+void call_usr2_des (const int* np,
+                    void* particles);
 
 #ifdef __cplusplus
 }

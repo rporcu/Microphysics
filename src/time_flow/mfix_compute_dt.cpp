@@ -76,8 +76,9 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
             const auto& flags     = vel_fab.getEBCellFlagFab();
             const auto& flags_fab = flags.array();
 
-            const GpuArray<Real, 3> gp0_dev = {gp0[0], gp0[1], gp0[2]};
-            const GpuArray<Real, 3> gravity_dev = {gravity[0], gravity[1], gravity[2]};
+            // ew need this until we remove static attribute from mfix::gp0
+            const RealVect gp0_dev(gp0);
+            const RealVect gravity_dev(gravity);
 
             // Compute CFL on a per cell basis
             if (flags.getType(bx) != FabType::covered)

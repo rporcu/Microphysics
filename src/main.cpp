@@ -252,11 +252,11 @@ int main (int argc, char* argv[])
     else
     {
         restart_flag = 1;
-        // NOTE: mfix::levelset__restart == true loading level-set from a
+        // NOTE: mfix::levelset_restart == true loading level-set from a
         // checkpoint file. However, if this is a replicating restart,
-        // mfix::levelset__restart is set to false again (so that the level-sets
+        // mfix::levelset_restart is set to false again (so that the level-sets
         // are recomputed for the replicated system).
-        mfix.levelset__restart = true;
+        mfix.levelset_restart = true;
 
         // NOTE: during replication 1) this also re-builds ebfactories and
         // level-set 2) this can change the grids

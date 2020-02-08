@@ -9,7 +9,6 @@ target_sources( mfixcore
    cfrelvel.f90
    des_time_march.f90
    discretelement_mod.f90
-   discretelement_mod_F.H
    init_collision.f90
    particle_generator.H
    particle_generator.cpp
