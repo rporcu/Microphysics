@@ -55,7 +55,7 @@ mfix::mfix_correct_small_cells (Vector< std::unique_ptr<MultiFab> >& vel_in)
                [vfrac_fab,apx_fab,apy_fab,apz_fab,ccvel_fab,umac_fab,vmac_fab,wmac_fab]
                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
              {
-                 if (vfrac_fab(i,j,k) < 1.e-4)
+                 if (vfrac_fab(i,j,k) > 0.0 && vfrac_fab(i,j,k) < 1.e-4)
                  {
                     Real u_avg = (apx_fab(i,j,k) * umac_fab(i,j,k) + apx_fab(i+1,j,k) * umac_fab(i+1,j,k)) / (apx_fab(i,j,k) + apx_fab(i+1,j,k));
                     Real v_avg = (apy_fab(i,j,k) * vmac_fab(i,j,k) + apy_fab(i,j+1,k) * vmac_fab(i,j+1,k)) / (apy_fab(i,j,k) + apy_fab(i,j+1,k));
