@@ -98,10 +98,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
           Box vbx = mfi.nodaltilebox(1);
           Box wbx = mfi.nodaltilebox(2);
 
-          Box ubx_grown = mfi.growntilebox(IntVect::TheDimensionVector(0));
-          Box vbx_grown = mfi.growntilebox(IntVect::TheDimensionVector(1));
-          Box wbx_grown = mfi.growntilebox(IntVect::TheDimensionVector(2));
-
           const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_in[lev])[mfi]);
           const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
 
