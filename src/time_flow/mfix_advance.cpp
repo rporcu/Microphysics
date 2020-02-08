@@ -404,6 +404,7 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
         depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1);
 
     mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
+    mfix_correct_small_cells (vel_g);
 
     //mfix_set_velocity_bcs(new_time, vel_g, 0);
 }
@@ -550,6 +551,7 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
         depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1);
 
     mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
+    mfix_correct_small_cells (vel_g);
 
     //mfix_set_velocity_bcs(new_time, vel_g, 0);
 }

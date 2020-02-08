@@ -208,6 +208,8 @@ class mfix : public AmrCore
                                      Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
                                      Vector< std::unique_ptr<MultiFab> >& ep_g);
 
+    void mfix_correct_small_cells (Vector< std::unique_ptr<MultiFab> >& vel_in);
+
     void mfix_set_velocity_bcs (Real time,
                                 Vector< std::unique_ptr<MultiFab> >& vel,
                                 int extrap_dir_bcs) const;
