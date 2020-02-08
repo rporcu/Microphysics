@@ -23,7 +23,9 @@ mfix::mfix_calc_drag_fluid (Real time)
     drag[lev] ->setVal(0.0L);
 
   if (nlev > 2)
-    amrex::Abort("For right now MFIXParticleContainer::TrilinearDepositionFluidDragForce can only handle up to 2 levels");
+    amrex::Abort("For right now"
+        " MFIXParticleContainer::TrilinearDepositionFluidDragForce can only"
+        " handle up to 2 levels");
 
   MultiFab* drag_ptr[nlev];
 
@@ -185,6 +187,8 @@ mfix::mfix_calc_drag_fluid (Real time)
 void
 mfix::mfix_calc_drag_particle (Real time)
 {
+  using MFIXParIter = MFIXParticleContainer::MFIXParIter;
+
   BL_PROFILE("mfix::mfix_calc_drag_particle()");
 
   // Extrapolate velocity Dirichlet bc's to ghost cells
@@ -293,7 +297,8 @@ mfix::mfix_calc_drag_particle (Real time)
 
           const auto& flags_array = flags.array();
 
-          const amrex::GpuArray<const amrex::Real,3> gp0_dev = {gp0[0], gp0[1], gp0[2]};
+          // We need this until we remove static attribute from mfix::gp0;
+          const RealVect gp0_dev(gp0);
 
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
