@@ -114,7 +114,7 @@ mfix::mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
                          for(int jj(-1); jj<=1; jj++){
                            for(int ii(-1); ii<=1; ii++){
                              if( flag_fab(i,j,k).isConnected(ii,jj,kk) and
-                                 (ii!=0 and jj!=0 and kk!=0)) {
+                                 not (ii==0 and jj==0 and kk==0)) {
 
                                // Not multplying by dx to be consistent with how the
                                // slope is stored. Also not including the global shift
