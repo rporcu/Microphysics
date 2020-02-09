@@ -14,7 +14,7 @@ variables:
   AMREX_HOME: "${CI_PROJECT_DIR}/amrex_install"
   CC: "gcc"
   CXX: "g++"
-  ENABLE_MPI: "0"
+  ENABLE_MPI: "1"
   ENABLE_OMP: "0"
   FC: "gfortran"
   GIT_DEPTH: 1
@@ -86,6 +86,7 @@ multiple-grid-parallel-cpu:
 
 tiled-grid-parallel-openmp-cpu:
   variables:
+    ENABLE_MPI: "0"
     ENABLE_OMP: "1"
     CTEST_CMD: "srun ctest -R TGP"
   <<: *cpu_template
@@ -115,6 +116,7 @@ tiled-grid-parallel-openmp-cpu:
 
 .tiled-grid-parallel-openmp-gpu:
   variables:
+    ENABLE_MPI: "0"
     ENABLE_OMP: "1"
     CTEST_CMD: "srun ctest -R TGP"
   <<: *gpu_template
