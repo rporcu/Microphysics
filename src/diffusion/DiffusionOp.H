@@ -7,8 +7,6 @@
 #include <AMReX_MLEBABecLap.H>
 #include <AMReX_MLEBTensorOp.H>
 
-#include <MFIX_LevelData.H>
-
 //
 // Solver for the implicit part of the diffusion equation: 
 //
@@ -60,12 +58,6 @@ public:
                          const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ep_ro, 
                          const amrex::Vector<amrex::Real> mu_s, 
                          amrex::Real dt);
-
-    // ep_g diffusion
-    void diffuse_ep_g (amrex::Vector<std::unique_ptr<LevelData>>& leveldata,
-                       const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ep_ro_in,
-                       const amrex::Vector<amrex::Real> mu_s,
-                       amrex::Real dt);
 
     // Explicit tensor viscous term
     void ComputeDivTau (amrex::Vector<std::unique_ptr<amrex::MultiFab>>& divtau_out,

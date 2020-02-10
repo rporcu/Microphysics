@@ -29,12 +29,10 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
   BL_PROFILE("mfix::mfix_calc_particle_beta()");
 
-  MultiFab& ep_g0 = m_leveldata[0]->ep_g;
-
   // This is just a sanity check to make sure we're not using covered values
   // We can remove these lines once we're confident in the algoirthm 
   EB_set_covered(*vel_g[0], 0, 3, 1, covered_val);
-  EB_set_covered(ep_g0, 0, 1, 1, covered_val);
+  EB_set_covered(*ep_g[0] , 0, 1, 1, covered_val);
   EB_set_covered(*mu_g[0] , 0, 1, 1, covered_val);
   EB_set_covered(*ro_g[0] , 0, 1, 1, covered_val);
 
@@ -54,11 +52,9 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
     std::unique_ptr<MultiFab>  mu_g_pba;
     std::unique_ptr<MultiFab> vel_g_pba;
 
-    MultiFab& ep_g = m_leveldata[lev]->ep_g;
-
     if (OnSameGrids)
     {
-      ep_ptr  =  &ep_g;
+      ep_ptr  =  ep_g[lev].get();
       ro_ptr  =  ro_g[lev].get();
       mu_ptr  =  mu_g[lev].get();
       vel_ptr = vel_g[lev].get();
@@ -69,8 +65,8 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
       const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
       // Temporary arrays  -- copies with no ghost cells 
-      ep_g_pba.reset(new MultiFab(pba,pdm,ep_g.nComp(),0));
-      ep_g_pba->copy(ep_g,0,0,1,0,0);
+      ep_g_pba.reset(new MultiFab(pba,pdm,ep_g[lev]->nComp(),0));
+      ep_g_pba->copy(*ep_g[lev],0,0,1,0,0);
 
       ro_g_pba.reset(new MultiFab(pba,pdm,ro_g[lev]->nComp(),0));
       ro_g_pba->copy(*ro_g[lev],0,0,1,0,0);
@@ -78,10 +74,8 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
       mu_g_pba.reset(new MultiFab(pba,pdm,mu_g[lev]->nComp(),0));
       mu_g_pba->copy(*mu_g[lev],0,0,1,0,0);
 
-      EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
-                                       {m_eb_basic_grow_cells,
-                                        m_eb_volume_grow_cells,
-                                        m_eb_full_grow_cells},
+      EBFArrayBoxFactory ebfactory_loc(* eb_levels[lev], geom[lev], pba, pdm,
+                                       {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                                        EBSupport::basic);
 
       int ng = vel_g[lev]->nGrow();

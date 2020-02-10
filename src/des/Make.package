@@ -1,10 +1,12 @@
-f90EXE_sources += get_collision_coefficients.f90
-
 F90EXE_headers += mfix_des_F.H
 
 CEXE_headers += mfix_des_K.H
 CEXE_headers += mfix_drag_K.H
 CEXE_headers += MFIXParticleContainer.H
+
+CEXE_headers += particle_generator.H
+CEXE_sources += particle_generator.cpp
+CEXE_headers += des_drag_K.H
 
 CEXE_sources += MFIXParticleContainer.cpp
 CEXE_sources += MFIX_PC_Init.cpp 
@@ -14,3 +16,12 @@ CEXE_sources += mfix_set_gradp_bcs.cpp
 CEXE_sources += mfix_calc_particle_beta.cpp
 CEXE_sources += mfix_calc_volume_fraction.cpp
 CEXE_sources += mfix_drag.cpp
+
+f90EXE_sources += get_collision_coefficients.f90
+f90EXE_sources += calc_particle_collisions.f90
+f90EXE_sources += calc_wall_collisions.f90
+f90EXE_sources += cfrelvel.f90
+f90EXE_sources += des_time_march.f90
+f90EXE_sources += discretelement_mod.f90
+f90EXE_sources += init_collision.f90
+f90EXE_sources += particle_mod.f90

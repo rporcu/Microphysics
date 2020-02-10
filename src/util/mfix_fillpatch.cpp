@@ -110,47 +110,38 @@ mfix::FillPatchVel (int lev,
                     int ncomp,
                     const Vector<BCRec>& bcs)
 {
-  // Hack so that ghost cells are not undefined
-  mf.setVal(covered_val);
+    // Hack so that ghost cells are not undefined
+    mf.setVal(covered_val);
 
-  if (lev == 0)
-  {
-    Vector<MultiFab*> smf;
+    if (lev == 0)
+    {
+        Vector<MultiFab*> smf;
+        Vector<Real> stime;
+        GetDataVel(0, time, smf, stime);
 
-    Vector<Real> stime;
+        CpuBndryFuncFab bfunc(VelFillBox);
+        PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev], bcs, bfunc);
+        amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, icomp, ncomp,
+                                    geom[lev], physbc, 0);
+    }
+    else
+    {
+        Vector<MultiFab*> cmf, fmf;
+        Vector<Real> ctime, ftime;
+        GetDataVel(lev-1, time, cmf, ctime);
+        GetDataVel(lev  , time, fmf, ftime);
 
-    GetDataVel(0, time, smf, stime);
+        CpuBndryFuncFab bfunc(VelFillBox);
+        PhysBCFunct<CpuBndryFuncFab> cphysbc(geom[lev-1],bcs,bfunc);
+        PhysBCFunct<CpuBndryFuncFab> fphysbc(geom[lev  ],bcs,bfunc);
 
-    CpuBndryFuncFab bfunc(VelFillBox);
+        Interpolater* mapper = &cell_cons_interp;
 
-    PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev], bcs, bfunc);
-
-    amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, icomp, ncomp,
-                                geom[lev], physbc, 0);
-  }
-  else
-  {
-    Vector<MultiFab*> cmf, fmf;
-
-    Vector<Real> ctime, ftime;
-
-    GetDataVel(lev-1, time, cmf, ctime);
-
-    GetDataVel(lev  , time, fmf, ftime);
-
-    CpuBndryFuncFab bfunc(VelFillBox);
-
-    PhysBCFunct<CpuBndryFuncFab> cphysbc(geom[lev-1],bcs,bfunc);
-
-    PhysBCFunct<CpuBndryFuncFab> fphysbc(geom[lev  ],bcs,bfunc);
-
-    Interpolater* mapper = &cell_cons_interp;
-
-    amrex::FillPatchTwoLevels(mf, time, cmf, ctime, fmf, ftime,
-                              0, icomp, ncomp, geom[lev-1], geom[lev],
-                              cphysbc, 0, fphysbc, 0,
-                              refRatio(lev-1), mapper, bcs, 0);
-  }
+        amrex::FillPatchTwoLevels(mf, time, cmf, ctime, fmf, ftime,
+                                  0, icomp, ncomp, geom[lev-1], geom[lev],
+                                  cphysbc, 0, fphysbc, 0,
+                                  refRatio(lev-1), mapper, bcs, 0);
+    }
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
@@ -241,56 +232,49 @@ mfix::GetDataScalar (int lev,
                      int icomp,
                      Vector<Real>& datatime)
 {
-  data.clear();
-  datatime.clear();
+    data.clear();
+    datatime.clear();
 
-  const Real teps = (t_new[lev] - t_old[lev]) * 1.e-3;
+    const Real teps = (t_new[lev] - t_old[lev]) * 1.e-3;
 
-  if (icomp == 3) 
-    data.push_back(mu_g[lev].get());
+    if (icomp == 3) 
+       data.push_back(mu_g[lev].get());
 
-  if (time > t_new[lev] - teps && time < t_new[lev] + teps)
-  {
-    if (icomp == 0) {
-      data.push_back(ro_g[lev].get());
+    if (time > t_new[lev] - teps && time < t_new[lev] + teps)
+    {
+        if (icomp == 0) {
+           data.push_back(ro_g[lev].get());
+        } else if (icomp == 1) {
+           data.push_back(trac[lev].get());
+        } else if (icomp == 2) {
+           data.push_back(ep_g[lev].get());
+        }
+        datatime.push_back(t_new[lev]);
     }
-    else if (icomp == 1) {
-      data.push_back(trac[lev].get());
+    else if (time > t_old[lev] - teps && time < t_old[lev] + teps)
+    {
+        if (icomp == 0) {
+           data.push_back(ro_go[lev].get());
+        } else if (icomp == 1) {
+           data.push_back(trac_o[lev].get());
+        } else if (icomp == 2) {
+           data.push_back(ep_go[lev].get());
+        }
+        datatime.push_back(t_old[lev]);
     }
-    else if (icomp == 2) {
-      data.push_back(&(m_leveldata[lev]->ep_g));
+    else
+    {
+        if (icomp == 0) {
+           data.push_back(ro_go[lev].get());
+           data.push_back( ro_g[lev].get());
+        } else if (icomp == 1) {
+           data.push_back(trac_o[lev].get());
+           data.push_back( trac[lev].get());
+        } else if (icomp == 2) {
+           data.push_back(ep_go[lev].get());
+           data.push_back( ep_g[lev].get());
+        }
+        datatime.push_back(t_old[lev]);
+        datatime.push_back(t_new[lev]);
     }
-    datatime.push_back(t_new[lev]);
-  }
-  else if (time > t_old[lev] - teps && time < t_old[lev] + teps)
-  {
-    if (icomp == 0) {
-      data.push_back(ro_go[lev].get());
-    }
-    else if (icomp == 1) {
-      data.push_back(trac_o[lev].get());
-    }
-    else if (icomp == 2) {
-      data.push_back(&(m_leveldata[lev]->ep_go));
-    }
-    datatime.push_back(t_old[lev]);
-  }
-  else
-  {
-    if (icomp == 0) {
-       data.push_back(ro_go[lev].get());
-       data.push_back( ro_g[lev].get());
-    }
-    else if (icomp == 1) {
-       data.push_back(trac_o[lev].get());
-       data.push_back( trac[lev].get());
-    }
-    else if (icomp == 2) {
-       data.push_back(&(m_leveldata[lev]->ep_go));
-       data.push_back(&(m_leveldata[lev]->ep_g));
-    }
-
-    datatime.push_back(t_old[lev]);
-    datatime.push_back(t_new[lev]);
-  }
 }

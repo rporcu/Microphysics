@@ -12,190 +12,187 @@
 void
 mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupling_timing)
 {
-  BL_PROFILE_REGION_START("mfix::EvolveFluid");
-  BL_PROFILE("mfix::EvolveFluid");
+    BL_PROFILE_REGION_START("mfix::EvolveFluid");
+    BL_PROFILE("mfix::EvolveFluid");
 
 #ifdef AMREX_MEM_PROFILING
-  {
-    std::ostringstream ss;
-    ss << "EvolveFluid Start";
-    MemProfiler::report(ss.str());
-  }
+        {
+            std::ostringstream ss;
+            ss << "EvolveFluid Start";
+            MemProfiler::report(ss.str());
+        }
 #endif
 
-  amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
+    amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
 
-  // Extrapolate boundary values for ro_g, tracer, ep_g and mu_g
-  // The subsequent call to mfix_set_scalar_bcs will only overwrite
-  // ep_g ghost values for PINF and POUT
-  for (int lev = 0; lev < nlev; lev++)
-  {
-    ro_g[lev]->FillBoundary(geom[lev].periodicity());
-    trac[lev]->FillBoundary(geom[lev].periodicity());
-    (m_leveldata[lev]->ep_g).FillBoundary(geom[lev].periodicity());
-    mu_g[lev]->FillBoundary(geom[lev].periodicity());
-  }
-
-  // Fill ghost nodes and reimpose boundary conditions
-  //mfix_set_velocity_bcs(time, vel_g, 0);
-  mfix_set_density_bcs(time, ro_g);
-  //mfix_set_scalar_bcs(time, trac, mu_g);
-
-  //
-  // Start loop: if we are not seeking a steady state solution,
-  // the loop will execute only once
-  //
-  int keep_looping = 1;
-  int iter = 1;
-
-  // Create temporary multifabs to hold the old-time conv and divtau
-  //    so we don't have to re-compute them in the corrector
-  Vector<std::unique_ptr<MultiFab> > conv_u_old;
-  Vector<std::unique_ptr<MultiFab> > conv_s_old;
-  Vector<std::unique_ptr<MultiFab> > divtau_old;
-  Vector<std::unique_ptr<MultiFab> >   laps_old;
-
-  conv_u_old.resize(nlev);
-  conv_s_old.resize(nlev);
-  divtau_old.resize(nlev);
-    laps_old.resize(nlev);
-
-  for (int lev = 0; lev < nlev; lev++)
-  {
-    conv_u_old[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
-    conv_s_old[lev].reset(new MultiFab(grids[lev], dmap[lev], 2, 0, MFInfo(), *ebfactory[lev]));
-    divtau_old[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
-    laps_old[lev].reset(new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]));
-
-    conv_u_old[lev]->setVal(0.0);
-    conv_s_old[lev]->setVal(0.0);
-    divtau_old[lev]->setVal(0.0);
-    laps_old[lev]->setVal(0.0);
-  }
-
-  do
-  {
-    mfix_compute_dt(nstep, time, stop_time, dt);
-
-    // Set new and old time to correctly use in fillpatching
+    // Extrapolate boundary values for ro_g, tracer, ep_g and mu_g
+    // The subsequent call to mfix_set_scalar_bcs will only overwrite
+    // ep_g ghost values for PINF and POUT
     for (int lev = 0; lev < nlev; lev++)
     {
-      t_old[lev] = time;
-      t_new[lev] = time+dt;
+        ro_g[lev]->FillBoundary(geom[lev].periodicity());
+        trac[lev]->FillBoundary(geom[lev].periodicity());
+        ep_g[lev]->FillBoundary(geom[lev].periodicity());
+        mu_g[lev]->FillBoundary(geom[lev].periodicity());
     }
 
-    if (steady_state)
-    {
-      amrex::Print() << "\n   Iteration " << iter << " with dt = " << dt << "\n" << std::endl;
-    }
-    else {
-      amrex::Print() << "\n   Step " << nstep+1 << ": from old_time " \
-                     << time << " to new time " << time+dt
-                     << " with dt = " << dt << "\n" << std::endl;
-    }
+    // Fill ghost nodes and reimpose boundary conditions
+    //mfix_set_velocity_bcs(time, vel_g, 0);
+    mfix_set_density_bcs(time, ro_g);
+    //mfix_set_scalar_bcs(time, trac, mu_g);
+
+    //
+    // Start loop: if we are not seeking a steady state solution,
+    // the loop will execute only once
+    //
+    int keep_looping = 1;
+    int iter = 1;
+
+    // Create temporary multifabs to hold the old-time conv and divtau
+    //    so we don't have to re-compute them in the corrector
+    Vector<std::unique_ptr<MultiFab> > conv_u_old;
+    Vector<std::unique_ptr<MultiFab> > conv_s_old;
+    Vector<std::unique_ptr<MultiFab> > divtau_old;
+    Vector<std::unique_ptr<MultiFab> >   laps_old;
+
+    conv_u_old.resize(nlev);
+    conv_s_old.resize(nlev);
+    divtau_old.resize(nlev);
+      laps_old.resize(nlev);
 
     for (int lev = 0; lev < nlev; lev++)
     {
-      MultiFab& ep_g = m_leveldata[lev]->ep_g;
-      MultiFab& ep_go = m_leveldata[lev]->ep_go;
+       conv_u_old[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
+       conv_s_old[lev].reset(new MultiFab(grids[lev], dmap[lev],              2, 0, MFInfo(), *ebfactory[lev]));
+       divtau_old[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
+         laps_old[lev].reset(new MultiFab(grids[lev], dmap[lev],          ntrac, 0, MFInfo(), *ebfactory[lev]));
 
-      // Back up field variables to old
-      MultiFab::Copy( ep_go,  ep_g,  0, 0, ep_g.nComp(), ep_go.nGrow());
-      MultiFab::Copy(  *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
-      MultiFab::Copy( *ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
-      MultiFab::Copy(*trac_o[lev],  *trac[lev],  0, 0,  trac[lev]->nComp(), trac_o[lev]->nGrow());
-      MultiFab::Copy(*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(),  vel_go[lev]->nGrow());
-
-      // User hooks
-      for (MFIter mfi(ep_g, TilingIfNotGPU()); mfi.isValid(); ++mfi)
-        mfix_usr2();
+       conv_u_old[lev]->setVal(0.0);
+       conv_s_old[lev]->setVal(0.0);
+       divtau_old[lev]->setVal(0.0);
+         laps_old[lev]->setVal(0.0);
     }
 
-    //
-    // Time integration step
-    //
-    Real new_time = time+dt;
-
-    // Calculate drag coefficient
-    if (DEM::solve) {
-      Real start_drag = ParallelDescriptor::second();
-      mfix_calc_drag_fluid(time);
-      coupling_timing += ParallelDescriptor::second() - start_drag;
-    }
-
-    // Predictor step
-    bool proj_2_pred = true;
-    mfix_apply_predictor(conv_u_old, conv_s_old, divtau_old, laps_old, time, dt, proj_2_pred);
-
-    // Calculate drag coefficient
-    if (DEM::solve)
+    do
     {
-      Real start_drag = ParallelDescriptor::second();
-      amrex::Print() << "\nRecalculating drag ..." << std::endl;
-      mfix_calc_drag_fluid(new_time);
-      coupling_timing += ParallelDescriptor::second() - start_drag;
+        mfix_compute_dt(nstep, time, stop_time, dt);
+
+        // Set new and old time to correctly use in fillpatching
+        for (int lev = 0; lev < nlev; lev++)
+        {
+            t_old[lev] = time;
+            t_new[lev] = time+dt;
+        }
+
+        if (steady_state)
+        {
+           amrex::Print() << "\n   Iteration " << iter << " with dt = " << dt << "\n" << std::endl;
+        } else {
+           amrex::Print() << "\n   Step " << nstep+1 << ": from old_time " \
+                          << time << " to new time " << time+dt
+                          << " with dt = " << dt << "\n" << std::endl;
+        }
+
+        for (int lev = 0; lev < nlev; lev++)
+        {
+           // Back up field variables to old
+          MultiFab::Copy( *ep_go[lev],  *ep_g[lev],  0, 0,  ep_g[lev]->nComp(),  ep_go[lev]->nGrow());
+          MultiFab::Copy(  *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
+          MultiFab::Copy( *ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
+          MultiFab::Copy(*trac_o[lev],  *trac[lev],  0, 0,  trac[lev]->nComp(), trac_o[lev]->nGrow());
+          MultiFab::Copy(*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(),  vel_go[lev]->nGrow());
+
+           // User hooks
+           for (MFIter mfi(*ep_g[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
+              mfix_usr2();
+        }
+
+        //
+        // Time integration step
+        //
+        Real new_time = time+dt;
+
+        // Calculate drag coefficient
+        if (DEM::solve) {
+          Real start_drag = ParallelDescriptor::second();
+          mfix_calc_drag_fluid(time);
+          coupling_timing += ParallelDescriptor::second() - start_drag;
+        }
+
+        // Predictor step
+        bool proj_2_pred = true;
+        mfix_apply_predictor(conv_u_old, conv_s_old, divtau_old, laps_old, time, dt, proj_2_pred);
+
+        // Calculate drag coefficient
+        if (DEM::solve)
+        {
+          Real start_drag = ParallelDescriptor::second();
+          amrex::Print() << "\nRecalculating drag ..." << std::endl;
+          mfix_calc_drag_fluid(new_time);
+          coupling_timing += ParallelDescriptor::second() - start_drag;
+        }
+
+        bool proj_2_corr = true;
+        // Corrector step
+        if (!steady_state)
+           mfix_apply_corrector(conv_u_old, conv_s_old, divtau_old, laps_old, time, dt, proj_2_corr);
+
+        //
+        // Check whether to exit the loop or not
+        //
+        if (steady_state) {
+          keep_looping = !steady_state_reached ( dt, iter);
+        } else {
+          keep_looping = 0;
+        }
+
+
+        // Update interations count
+        ++iter;
     }
+    while ( keep_looping );
 
-    bool proj_2_corr = true;
-    // Corrector step
-    if (!steady_state)
-      mfix_apply_corrector(conv_u_old, conv_s_old, divtau_old, laps_old, time, dt, proj_2_corr);
-
-    //
-    // Check whether to exit the loop or not
-    //
-    if (steady_state) {
-      keep_looping = !steady_state_reached ( dt, iter);
+    if (test_tracer_conservation)
+    {
+       amrex::Print() << "Sum tracer volume wgt = " << volWgtSum(0,*trac[0],0)
+                      << " " << volEpsWgtSum(0,*trac[0],0) << std::endl;
     }
-    else {
-      keep_looping = 0;
-    }
-
-    // Update interations count
-    ++iter;
-  } while (keep_looping);
-
-  if (test_tracer_conservation)
-  {
-    amrex::Print() << "Sum tracer volume wgt = " << volWgtSum(0,*trac[0],0)
-                   << " " << volEpsWgtSum(0,*trac[0],0) << std::endl;
-  }
 
 #ifdef AMREX_MEM_PROFILING
-  {
-    std::ostringstream ss;
-    ss << "EvolveFluid Stop";
-    MemProfiler::report(ss.str());
-  }
+        {
+            std::ostringstream ss;
+            ss << "EvolveFluid Stop";
+            MemProfiler::report(ss.str());
+        }
 #endif
 
-  BL_PROFILE_REGION_STOP("mfix::EvolveFluid");
+    BL_PROFILE_REGION_STOP("mfix::EvolveFluid");
 }
 
 void
 mfix::mfix_project_velocity ()
 {
-  // Project velocity field to make sure initial velocity is divergence-free
-  Real dummy_dt = 1.0;
+    // Project velocity field to make sure initial velocity is divergence-free
+    Real dummy_dt = 1.0;
 
-  amrex::Print() << "Initial projection:\n";
+    amrex::Print() << "Initial projection:\n";
 
-  bool proj_2 = true;
-  Real time = 0.0;
+    bool proj_2 = true;
+    Real time = 0.0;
 
-  // Apply projection -- depdt=0 for now
-  Vector< std::unique_ptr< MultiFab > > depdt(nlev);
-  for (int lev(0); lev < nlev; ++lev )
-    depdt[lev] = MFHelpers::createFrom(m_leveldata[lev]->ep_g, 0., 1);
+    // Apply projection -- depdt=0 for now
+    Vector< std::unique_ptr< MultiFab > > depdt(nlev);
+    for (int lev(0); lev < nlev; ++lev )
+        depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1);
 
-  mfix_apply_nodal_projection(depdt, time, dummy_dt, proj_2);
+    mfix_apply_nodal_projection(depdt, time, dummy_dt, proj_2);
 
-  // We initialize p_g and gp back to zero (p0_g may still be still non-zero)
-  for (int lev = 0; lev < nlev; lev++)
-  {
-    p_g[lev]->setVal(0.0);
-     gp[lev]->setVal(0.0);
-  }
+    // We initialize p_g and gp back to zero (p0_g may still be still non-zero)
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       p_g[lev]->setVal(0.0);
+        gp[lev]->setVal(0.0);
+    }
 }
 
 void
@@ -308,116 +305,107 @@ void
 mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
                             Vector< std::unique_ptr<MultiFab> >& conv_s_old,
                             Vector< std::unique_ptr<MultiFab> >& divtau_old,
-                            Vector< std::unique_ptr<MultiFab> >& laps_old,
+                            Vector< std::unique_ptr<MultiFab> >&   laps_old,
                             Real time, Real dt, bool proj_2)
 {
-  // We use the new-time value for things computed on the "*" state
-  Real new_time = time + dt;
+    // We use the new-time value for things computed on the "*" state
+    Real new_time = time + dt;
 
-  Vector< std::unique_ptr<MultiFab> > ep_g(nlev);
-  for(int lev(0); lev < nlev; ++lev) {
-    ep_g[lev].reset(&(m_leveldata[lev]->ep_g));
-  }
+    // Compute the explicit advective term R_u^n
+    mfix_compute_convective_term(conv_u_old, conv_s_old, vel_go, ep_g, ro_go, trac_o ,time);
 
-  // Compute the explicit advective term R_u^n
-  mfix_compute_convective_term(conv_u_old, conv_s_old, vel_go, ep_g, ro_go, trac_o, time);
+    // FOR NOW WE STILL DIVIDE BY EP_G BUT WE DON'T WANT TO KEEP DOING THIS!
+    for (int lev = 0; lev < nlev; lev++)
+       for (int i = 0; i < 3; i++)
+          MultiFab::Divide(*conv_u_old[lev],*ep_g[lev],0,i,1,0);
 
-  // FOR NOW WE STILL DIVIDE BY EP_G BUT WE DON'T WANT TO KEEP DOING THIS!
-  for (int lev = 0; lev < nlev; lev++)
-    for (int i = 0; i < 3; i++)
-      MultiFab::Divide(*conv_u_old[lev], m_leveldata[lev]->ep_g, 0, i, 1, 0);
+    for (int lev = 0; lev < nlev; lev++)
+       for (int i = 0; i < 2; i++)
+          MultiFab::Divide(*conv_s_old[lev],*ep_g[lev],0,i,1,0);
 
-  for (int lev = 0; lev < nlev; lev++)
-    for (int i = 0; i < 2; i++)
-      MultiFab::Divide(*conv_s_old[lev], m_leveldata[lev]->ep_g, 0, i, 1, 0);
+    int explicit_diffusion_pred = 1;
 
-  int explicit_diffusion_pred = 1;
+    if (explicit_diffusion_pred == 1)
+    {
+        //mfix_set_velocity_bcs(time, vel_go, 0);
+        diffusion_op->ComputeDivTau(divtau_old, vel_go, ro_g, ep_g, mu_g);
 
-  if (explicit_diffusion_pred == 1)
-  {
-    //mfix_set_velocity_bcs(time, vel_go, 0);
-    diffusion_op->ComputeDivTau(divtau_old, vel_go, ro_g, ep_g, mu_g);
+        // mfix_set_tracer_bcs (time, trac_o);
+        diffusion_op->ComputeLapS(laps_old, trac_o, ro_g, ep_g, mu_s);
 
-    // mfix_set_tracer_bcs (time, trac_o);
-    diffusion_op->ComputeLapS(laps_old, trac_o, ro_g, ep_g, mu_s);
-  }
-  else {
+    } else {
+       for (int lev = 0; lev < nlev; lev++)
+       {
+          divtau_old[lev]->setVal(0.);
+            laps_old[lev]->setVal(0.);
+       }
+    }
+
     for (int lev = 0; lev < nlev; lev++)
     {
-      divtau_old[lev]->setVal(0.);
-        laps_old[lev]->setVal(0.);
+        EB_set_covered(*divtau_old[lev], 0, divtau_old[lev]->nComp(), divtau_old[lev]->nGrow(), 0.0);
+
+        // First add the convective term
+        MultiFab::Saxpy(*vel_g[lev], dt, *conv_u_old[lev], 0, 0, 3, 0);
+
+        // Make sure to do this multiply before we update density!
+        if (advect_tracer)
+        {
+           int conv_comp = 1;
+           MultiFab::Multiply(*trac[lev],*ro_go[lev],0,0,1,0);
+           MultiFab::Saxpy(*trac[lev], dt, *conv_s_old[lev], conv_comp, 0, 1, 0);
+        }
+
+        if (advect_density)
+        {
+           int conv_comp = 0;
+           MultiFab::Saxpy(*ro_g[lev], dt, *conv_s_old[lev], conv_comp, 0, 1, 0);
+        }
+
+        // Make sure to do this divide after we update density!
+        if (advect_tracer)
+           MultiFab::Divide(*trac[lev],*ro_g[lev],0,0,1,0);
+
+        // Add the explicit diffusion terms
+        if (explicit_diffusion_pred == 1)
+           MultiFab::Saxpy(*vel_g[lev], dt, *divtau_old[lev], 0, 0, 3, 0);
     }
-  }
 
-  for (int lev = 0; lev < nlev; lev++)
-  {
-    EB_set_covered(*divtau_old[lev], 0, divtau_old[lev]->nComp(), divtau_old[lev]->nGrow(), 0.0);
+    // Add source terms
+    mfix_add_gravity_and_gp(dt);
 
-    // First add the convective term
-    MultiFab::Saxpy(*vel_g[lev], dt, *conv_u_old[lev], 0, 0, 3, 0);
+    // Add the drag term implicitly
+    if (DEM::solve)
+        mfix_add_drag_implicit(dt);
 
-    // Make sure to do this multiply before we update density!
-    if (advect_tracer)
+    // If doing implicit diffusion, solve here for u^*
+    // Note we multiply ep_g by ro_g so that we pass in a single array holding (ro_g * ep_g)
+    if (explicit_diffusion_pred == 0)
     {
-      int conv_comp = 1;
-      MultiFab::Multiply(*trac[lev],*ro_go[lev],0,0,1,0);
-      MultiFab::Saxpy(*trac[lev], dt, *conv_s_old[lev], conv_comp, 0, 1, 0);
+        mfix_set_density_bcs(time, ro_g);
+        mfix_set_scalar_bcs(time, trac, mu_g);
+
+        for (int lev = 0; lev < nlev; lev++)
+            MultiFab::Multiply(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
+
+        mfix_set_velocity_bcs(new_time, vel_g, 0);
+        diffusion_op->diffuse_velocity(vel_g, ep_g, mu_g, dt);
+
+        // mfix_set_tracer_bcs (new_time, trac, 0);
+        diffusion_op->diffuse_scalar(trac, ep_g, mu_s, dt);
+
+        for (int lev = 0; lev < nlev; lev++)
+            MultiFab::Divide(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
     }
 
-    if (advect_density)
-    {
-      int conv_comp = 0;
-      MultiFab::Saxpy(*ro_g[lev], dt, *conv_s_old[lev], conv_comp, 0, 1, 0);
-    }
+    // Project velocity field -- depdt=0 for now
+    Vector< std::unique_ptr< MultiFab > > depdt(nlev);
+    for (int lev(0); lev < nlev; ++lev )
+        depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1);
 
-    // Make sure to do this divide after we update density!
-    if (advect_tracer)
-      MultiFab::Divide(*trac[lev],*ro_g[lev],0,0,1,0);
+    mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
 
-    // Add the explicit diffusion terms
-    if (explicit_diffusion_pred == 1)
-      MultiFab::Saxpy(*vel_g[lev], dt, *divtau_old[lev], 0, 0, 3, 0);
-  }
-
-  // Add source terms
-  mfix_add_gravity_and_gp(dt);
-
-  // Add the drag term implicitly
-  if (DEM::solve)
-    mfix_add_drag_implicit(dt);
-
-  // If doing implicit diffusion, solve here for u^*
-  // Note we multiply ep_g by ro_g so that we pass in a single array holding (ro_g * ep_g)
-  if (explicit_diffusion_pred == 0)
-  {
-    mfix_set_density_bcs(time, ro_g);
-    mfix_set_scalar_bcs(time, trac, mu_g);
-
-    for (int lev = 0; lev < nlev; lev++) {
-      MultiFab& ep_g = m_leveldata[lev]->ep_g;
-      MultiFab::Multiply(ep_g, *ro_g[lev], 0, 0, 1, ep_g.nGrow());
-    }
-
-    mfix_set_velocity_bcs(new_time, vel_g, 0);
-    diffusion_op->diffuse_velocity(vel_g, ep_g, mu_g, dt);
-
-    // mfix_set_tracer_bcs (new_time, trac, 0);
-    diffusion_op->diffuse_scalar(trac, ep_g, mu_s, dt);
-
-    for (int lev = 0; lev < nlev; lev++) {
-      MultiFab& ep_g = m_leveldata[lev]->ep_g;
-      MultiFab::Divide(ep_g, *ro_g[lev], 0, 0, 1, ep_g.nGrow());
-    }
-  }
-
-  // Project velocity field -- depdt=0 for now
-  Vector< std::unique_ptr< MultiFab > > depdt(nlev);
-  for (int lev(0); lev < nlev; ++lev )
-    depdt[lev] = MFHelpers::createFrom(m_leveldata[lev]->ep_g, 0., 1);
-
-  mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
-
-  //mfix_set_velocity_bcs(new_time, vel_g, 0);
+    //mfix_set_velocity_bcs(new_time, vel_g, 0);
 }
 
 //
@@ -458,137 +446,117 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
                             Vector< std::unique_ptr<MultiFab> >&   laps_old,
                             Real time, Real dt, bool proj_2)
 {
-  BL_PROFILE("mfix::mfix_apply_corrector");
+    BL_PROFILE("mfix::mfix_apply_corrector");
 
-  // We use the new-time value for things computed on the "*" state
-  Real new_time = time + dt;
+    // We use the new-time value for things computed on the "*" state
+    Real new_time = time + dt;
 
-  // Create temporary multifabs to hold the new-time conv and divtau
-  Vector<std::unique_ptr<MultiFab> > conv_u;
-  Vector<std::unique_ptr<MultiFab> > conv_s;
-  Vector<std::unique_ptr<MultiFab> > divtau;
+    // Create temporary multifabs to hold the new-time conv and divtau
+    Vector<std::unique_ptr<MultiFab> > conv_u;
+    Vector<std::unique_ptr<MultiFab> > conv_s;
+    Vector<std::unique_ptr<MultiFab> > divtau;
 
-  conv_u.resize(nlev);
-  conv_s.resize(nlev);
-  divtau.resize(nlev);
+    conv_u.resize(nlev);
+    conv_s.resize(nlev);
+    divtau.resize(nlev);
 
-  for (int lev = 0; lev < nlev; lev++)
-  {
-    conv_u[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
-    conv_s[lev].reset(new MultiFab(grids[lev], dmap[lev], 2, 0, MFInfo(), *ebfactory[lev]));
-    divtau[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
-
-    conv_u[lev]->setVal(0.0);
-    conv_s[lev]->setVal(0.0);
-    divtau[lev]->setVal(0.0);
-  }
-
-  Vector< std::unique_ptr<MultiFab> > ep_g(nlev);
-  for(int lev(0); lev < nlev; ++lev) {
-    ep_g[lev].reset(&(m_leveldata[lev]->ep_g));
-  }
-
-  // Compute the explicit advective term R_u^*
-  mfix_compute_convective_term(conv_u, conv_s, vel_g, ep_g, ro_g, trac, new_time);
-
-  // FOR NOW WE STILL DIVIDE BY EP_G BUT WE DON'T WANT TO KEEP DOING THIS!
-  for (int lev = 0; lev < nlev; lev++)
-    for (int i = 0; i < 3; i++)
-      MultiFab::Divide(*conv_u[lev], m_leveldata[lev]->ep_g, 0, i, 1, 0);
-
-  for (int lev = 0; lev < nlev; lev++)
-  {
-    for (int i = 0; i < 2; i++)
-      MultiFab::Divide(*conv_s[lev], m_leveldata[lev]->ep_g, 0, i, 1, 0);
-
-    // Make sure to do this multiply before we update density!
-    if (advect_tracer)
+    for (int lev = 0; lev < nlev; lev++)
     {
-      int conv_comp = 1;
-      MultiFab::Multiply(*trac_o[lev], *ro_go[lev], 0, 0, 1, 0);
+       conv_u[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
+       conv_s[lev].reset(new MultiFab(grids[lev], dmap[lev], 2             , 0, MFInfo(), *ebfactory[lev]));
+       divtau[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
 
-      // Add the convective terms so trac = trac_o + dt/2 (R_s^* + R_s^n)
-      MultiFab::LinComb(*trac[lev], 1.0, *trac_o[lev], 0, dt/2.0, *conv_s[lev], conv_comp, 0, 1, 0);
-      MultiFab::Saxpy(*trac[lev], dt/2.0, *conv_s_old[lev], conv_comp, 0, 1, 0);
+       conv_u[lev]->setVal(0.0);
+       conv_s[lev]->setVal(0.0);
+       divtau[lev]->setVal(0.0);
     }
 
-    if (advect_density)
+    // Compute the explicit advective term R_u^*
+    mfix_compute_convective_term(conv_u, conv_s, vel_g, ep_g, ro_g, trac, new_time);
+
+    // FOR NOW WE STILL DIVIDE BY EP_G BUT WE DON'T WANT TO KEEP DOING THIS!
+    for (int lev = 0; lev < nlev; lev++)
+       for (int i = 0; i < 3; i++)
+          MultiFab::Divide(*conv_u[lev],*ep_g[lev],0,i,1,0);
+
+    for (int lev = 0; lev < nlev; lev++)
     {
-      int conv_comp = 0;
-      // Add the convective terms so trac = trac_o + dt/2 (R_s^* + R_s^n)
-      MultiFab::LinComb(*ro_g[lev], 1.0, *ro_go[lev], 0, dt/2.0, *conv_s[lev], conv_comp, 0, 1, 0);
-      MultiFab::Saxpy(*ro_g[lev], dt/2.0, *conv_s_old[lev], conv_comp, 0, 1, 0);
+        for (int i = 0; i < 2; i++)
+          MultiFab::Divide(*conv_s[lev],*ep_g[lev],0,i,1,0);
+
+        // Make sure to do this multiply before we update density!
+        if (advect_tracer)
+        {
+          int conv_comp = 1;
+          MultiFab::Multiply(*trac_o[lev],*ro_go[lev],0,0,1,0);
+
+          // Add the convective terms so trac = trac_o + dt/2 (R_s^* + R_s^n)
+          MultiFab::LinComb(*trac[lev], 1.0, *trac_o[lev], 0, dt/2.0, *conv_s[lev], conv_comp, 0, 1, 0);
+          MultiFab::Saxpy(*trac[lev], dt/2.0, *conv_s_old[lev], conv_comp, 0, 1, 0);
+        }
+
+        if (advect_density)
+        {
+           int conv_comp = 0;
+           // Add the convective terms so trac = trac_o + dt/2 (R_s^* + R_s^n)
+           MultiFab::LinComb(*ro_g[lev], 1.0, *ro_go[lev], 0, dt/2.0, *conv_s[lev], conv_comp, 0, 1, 0);
+           MultiFab::Saxpy(*ro_g[lev], dt/2.0, *conv_s_old[lev], conv_comp, 0, 1, 0);
+        }
+
+        // Make sure to do this divide after we update density!
+        if (advect_tracer)
+           MultiFab::Divide(*trac[lev],*ro_g[lev],0,0,1,0);
+
+        // Add the convective terms so u_g = u_go + dt/2 (R_u^* + R_u^n)
+        MultiFab::LinComb(*vel_g[lev], 1.0, *vel_go[lev], 0, dt/2.0, *conv_u[lev], 0, 0, 3, 0);
+        MultiFab::Saxpy(*vel_g[lev], dt/2.0, *conv_u_old[lev], 0, 0, 3, 0);
     }
 
-    // Make sure to do this divide after we update density!
-    if (advect_tracer)
-      MultiFab::Divide(*trac[lev], *ro_g[lev], 0, 0, 1, 0);
+    // Add the explicit diffusion term so u_g = u_go + dt/2 (R_u^* + R_u^n) + dt/2 (Lu)^n
+    for (int lev = 0; lev < nlev; lev++)
+        MultiFab::Saxpy(*vel_g[lev], dt/2.0, *divtau_old[lev], 0, 0, 3, 0);
 
-    // Add the convective terms so u_g = u_go + dt/2 (R_u^* + R_u^n)
-    MultiFab::LinComb(*vel_g[lev], 1.0, *vel_go[lev], 0, dt/2.0, *conv_u[lev], 0, 0, 3, 0);
-    MultiFab::Saxpy(*vel_g[lev], dt/2.0, *conv_u_old[lev], 0, 0, 3, 0);
-  }
+    // Add source terms
+    mfix_add_gravity_and_gp(dt);
 
-  // Add the explicit diffusion term so u_g = u_go + dt/2 (R_u^* + R_u^n) + dt/2 (Lu)^n
-  for (int lev = 0; lev < nlev; lev++)
-    MultiFab::Saxpy(*vel_g[lev], dt/2.0, *divtau_old[lev], 0, 0, 3, 0);
+    // Add the drag term implicitly
+    if (DEM::solve)
+        mfix_add_drag_implicit(dt);
 
-  // Add source terms
-  mfix_add_gravity_and_gp(dt);
+    //
+    // Solve for u^star s.t. u^star = u_go + dt/2 (R_u^* + R_u^n) + dt/2 (Lu)^n + dt/2 (Lu)^star
+    // Note we multiply ep_g by ro_g so that we pass in a single array holding (ro_g * ep_g)
+    //
+    for (int lev = 0; lev < nlev; lev++)
+        MultiFab::Multiply(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
 
-  // Add the drag term implicitly
-  if (DEM::solve)
-    mfix_add_drag_implicit(dt);
+    //mfix_set_density_bcs(time, ro_g);
+    //mfix_set_scalar_bcs(time, trac, mu_g);
 
-  //
-  // Solve for u^star s.t. u^star = u_go + dt/2 (R_u^* + R_u^n) + dt/2 (Lu)^n + dt/2 (Lu)^star
-  // Note we multiply ep_g by ro_g so that we pass in a single array holding (ro_g * ep_g)
-  //
-  for (int lev = 0; lev < nlev; lev++) {
-    MultiFab& ep_g = m_leveldata[lev]->ep_g;
-    MultiFab::Multiply(ep_g, *ro_g[lev], 0, 0, 1, ep_g.nGrow());
-  }
+    //mfix_set_velocity_bcs(new_time, vel_g, 0);
+    diffusion_op->diffuse_velocity(vel_g, ep_g, mu_g, 0.5*dt);
 
-  //mfix_set_density_bcs(time, ro_g);
-  //mfix_set_scalar_bcs(time, trac, mu_g);
+    // mfix_set_tracer_bcs (new_time, trac, 0);
+    diffusion_op->diffuse_scalar(trac, ep_g, mu_s, dt);
 
-  //mfix_set_velocity_bcs(new_time, vel_g, 0);
-  diffusion_op->diffuse_velocity(vel_g, ep_g, mu_g, 0.5*dt);
+    for (int lev = 0; lev < nlev; lev++)
+        MultiFab::Divide(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
 
-  // mfix_set_tracer_bcs (new_time, trac, 0);
-  diffusion_op->diffuse_scalar(trac, ep_g, mu_s, dt);
+    //
+    // Apply projection -- depdt=0 for now
+    //
+    Vector< std::unique_ptr< MultiFab > > depdt(nlev);
+    for (int lev(0); lev < nlev; ++lev )
+        depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1);
 
-  for (int lev = 0; lev < nlev; lev++) {
-    MultiFab& ep_g = m_leveldata[lev]->ep_g;
-    MultiFab::Divide(ep_g, *ro_g[lev], 0, 0, 1, ep_g.nGrow());
-  }
+    mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
 
-  //
-  // Apply projection -- depdt=0 for now
-  //
-  Vector< std::unique_ptr< MultiFab > > depdt(nlev);
-  for (int lev(0); lev < nlev; ++lev )
-    depdt[lev] = MFHelpers::createFrom(m_leveldata[lev]->ep_g, 0., 1);
-
-  mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
-
-  //mfix_set_velocity_bcs(new_time, vel_g, 0);
+    //mfix_set_velocity_bcs(new_time, vel_g, 0);
 }
 
 void
 mfix::mfix_add_gravity_and_gp (Real dt)
 {
-#ifdef AMREX_USE_CUDA
-    bool switchGpuLaunchRegion = false;
-
-    if(Gpu::notInLaunchRegion()) { 
-      switchGpuLaunchRegion = true;
-      Gpu::setLaunchRegion(true);
-    }
-
-    {
-#endif
-
     BL_PROFILE("mfix::mfix_add_gravity_and_gp");
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -619,13 +587,6 @@ mfix::mfix_add_gravity_and_gp (Real dt)
          });
        }
     }
-
-#ifdef AMREX_USE_CUDA
-    }
-
-    if(switchGpuLaunchRegion)
-      Gpu::setLaunchRegion(false);
-#endif
 }
 
 //
@@ -655,9 +616,9 @@ mfix::mfix_add_drag_explicit (Real dt)
       Box bx = mfi.tilebox();
 
       const auto&  vel_fab = vel_g[lev]->array(mfi);
-      const auto& drag_fab = drag[lev]->array(mfi);
-      const auto&   ro_fab = ro_g[lev]->array(mfi);
-      const auto&   ep_fab = (m_leveldata[lev]->ep_g).array(mfi);
+      const auto& drag_fab =  drag[lev]->array(mfi);
+      const auto&   ro_fab =  ro_g[lev]->array(mfi);
+      const auto&   ep_fab =  ep_g[lev]->array(mfi);
 
       amrex::ParallelFor(bx,[dt,vel_fab,drag_fab,ro_fab,ep_fab]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -705,7 +666,7 @@ mfix::mfix_add_drag_implicit (Real dt)
       const auto&  vel_fab = vel_g[lev]->array(mfi);
       const auto& drag_fab =  drag[lev]->array(mfi);
       const auto&   ro_fab =  ro_g[lev]->array(mfi);
-      const auto&   ep_fab = (m_leveldata[lev]->ep_g).array(mfi);
+      const auto&   ep_fab =  ep_g[lev]->array(mfi);
 
       amrex::ParallelFor(bx,[dt,vel_fab,drag_fab,ro_fab,ep_fab]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept

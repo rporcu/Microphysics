@@ -6,7 +6,8 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
                                   Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                                   Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                                   Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                                  MultiFab& ep_in)
+                                  Vector< std::unique_ptr<MultiFab> >& ep_in)
+
 {
     BL_PROFILE("mfix::mfix_predict_vels_on_faces");
 
@@ -49,8 +50,8 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
        ep_face[1]->setVal(covered_val);
        ep_face[2]->setVal(covered_val);
 
-       ep_in.FillBoundary(geom[lev].periodicity());
-       average_cellcenter_to_face(GetArrOfPtrs(ep_face), ep_in, geom[lev]);
+       ep_in[lev]->FillBoundary(geom[lev].periodicity());
+       average_cellcenter_to_face(GetArrOfPtrs(ep_face), *ep_in[lev], geom[lev]);
 
        ep_face[0]->FillBoundary();
        ep_face[1]->FillBoundary();

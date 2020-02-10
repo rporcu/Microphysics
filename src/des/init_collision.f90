@@ -95,8 +95,8 @@ contains
   subroutine init_collision_lsd(mmax)
 
   use amrex_constants_module, only: M_PI
-  use discretelement, only: kn, kn_w, &
-      & des_etan, des_etan_wall, des_etat, des_etat_wall, &
+  use discretelement, only: kn, kn_w, kt, kt_w, kt_fac, kt_w_fac, &
+      & des_etan, des_etan_wall, des_etat, des_etat_wall,        &
       & des_en_input, des_en_wall_input, &
       & des_etat_fac, des_etat_w_fac, dtsolid
 

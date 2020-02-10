@@ -486,31 +486,25 @@ void mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 }
 
 
-void mfix::MakeNewLevelFromScratch (int lev,
-                                    Real time,
+void mfix::MakeNewLevelFromScratch (int lev, Real time,
                                     const BoxArray& new_grids,
                                     const DistributionMapping& new_dmap)
 {
-  if (ooo_debug)
-    amrex::Print() << "MakeNewLevelFromScratch" << std::endl;
+    if (ooo_debug) amrex::Print() << "MakeNewLevelFromScratch" << std::endl;
+    if (m_verbose > 0)
+    {
+        std::cout << "MAKING NEW LEVEL " << lev << std::endl;
+        std::cout << "WITH BOX ARRAY   " << new_grids << std::endl;
+    }
 
-  if (m_verbose > 0)
-  {
-    std::cout << "MAKING NEW LEVEL " << lev << std::endl;
-    std::cout << "WITH BOX ARRAY   " << new_grids << std::endl;
-  }
+    SetBoxArray(lev, new_grids);
+    SetDistributionMap(lev, new_dmap);
+    amrex::Print() << "SETTING NEW GRIDS IN MAKE NEW LEVEL " << new_grids << std::endl;
+    amrex::Print() << "SETTING NEW DMAP IN MAKE NEW LEVEL " << new_dmap << std::endl;
 
-  SetBoxArray(lev, new_grids);
-  SetDistributionMap(lev, new_dmap);
-  amrex::Print() << "SETTING NEW GRIDS IN MAKE NEW LEVEL " << new_grids << std::endl;
-  amrex::Print() << "SETTING NEW DMAP IN MAKE NEW LEVEL " << new_dmap << std::endl;
-
-  m_leveldata[lev].reset(new LevelData(grids[lev], dmap[lev], *ebfactory[lev], nghost));
-
-  // This is being done by mfix::make_eb_geometry,
-  // otherwise it would be done here
-  if (lev == 0)
-    MakeBCArrays();
+    // This is being done by mfix::make_eb_geometry,
+    // otherwise it would be done here
+    if (lev == 0) MakeBCArrays();
 }
 
 
@@ -779,49 +773,50 @@ mfix::MakeBCArrays ()
 void
 mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 {
-  if (ooo_debug) amrex::Print() << "mfix_init_fluid" << std::endl;
+    if (ooo_debug) amrex::Print() << "mfix_init_fluid" << std::endl;
 
-  Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
-  Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
-  Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
+    Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
+    Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
+    Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
 
-  // Here we set bc values for p and u,v,w before the IC's are set
-  mfix_set_bc0();
+    // Here we set bc values for p and u,v,w before the IC's are set
+    mfix_set_bc0();
 
-  for (int lev = 0; lev < nlev; lev++)
-  {
-    Box domain(geom[lev].Domain());
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       Box domain(geom[lev].Domain());
 
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
+       Real dx = geom[lev].CellSize(0);
+       Real dy = geom[lev].CellSize(1);
+       Real dz = geom[lev].CellSize(2);
 
-    MultiFab& ep_g = m_leveldata[lev]->ep_g;
+       // We deliberately don't tile this loop since we will be looping
+       //    over bc's on faces and it makes more sense to do this one grid at a time
+       for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi) {
 
-    // We deliberately don't tile this loop since we will be looping over bc's
-    // on faces and it makes more sense to do this one grid at a time
-    for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi) {
-      const Box& bx = mfi.validbox();
-      const Box& sbx = ep_g[mfi].box();
+          const Box& bx = mfi.validbox();
+          const Box& sbx = (*ep_g[lev])[mfi].box();
 
-      if (is_restarting) {
-        init_fluid_restart(bx, (*mu_g[lev])[mfi]);
+        if ( is_restarting ) {
+
+            init_fluid_restart(bx, (*mu_g[lev])[mfi]);
+
+          } else {
+
+            init_fluid(sbx, bx, domain,
+                       (*ep_g[lev])[mfi], (*ro_g[lev])[mfi],
+                       (*trac[lev])[mfi], (*p_g[lev])[mfi],
+                       (*vel_g[lev])[mfi], (*mu_g[lev])[mfi],
+                       dx, dy, dz, xlen, ylen, zlen, test_tracer_conservation);
+          }
        }
-      else {
-        init_fluid(sbx, bx, domain,
-                   ep_g[mfi], (*ro_g[lev])[mfi],
-                   (*trac[lev])[mfi], (*p_g[lev])[mfi],
-                   (*vel_g[lev])[mfi], (*mu_g[lev])[mfi],
-                   dx, dy, dz, xlen, ylen, zlen, test_tracer_conservation);
-      }
+
+       // Make sure to fill the "old state" before we start ...
+       MultiFab::Copy(  *ro_go[lev], *ro_g[lev], 0, 0, 1, 0);
+       MultiFab::Copy( *trac_o[lev], *trac[lev], 0, 0, 1, 0);
     }
 
-    // Make sure to fill the "old state" before we start ...
-    MultiFab::Copy(  *ro_go[lev], *ro_g[lev], 0, 0, 1, 0);
-    MultiFab::Copy( *trac_o[lev], *trac[lev], 0, 0, 1, 0);
-  }
-
-  mfix_set_p0();
+    mfix_set_p0();
 
   // Here we re-set the bc values for p and u,v,w just in case init_fluid
   //      over-wrote some of the bc values with ic values
@@ -829,108 +824,105 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
   for (int lev = 0; lev < nlev; lev++)
   {
-    (m_leveldata[lev]->ep_g).FillBoundary(geom[lev].periodicity());
-    ro_g[lev]->FillBoundary(geom[lev].periodicity());
-    mu_g[lev]->FillBoundary(geom[lev].periodicity());
+     ep_g[lev]->FillBoundary(geom[lev].periodicity());
+     ro_g[lev]->FillBoundary(geom[lev].periodicity());
+     mu_g[lev]->FillBoundary(geom[lev].periodicity());
 
     if (advect_tracer)
-      trac[lev]->FillBoundary(geom[lev].periodicity());
+       trac[lev]->FillBoundary(geom[lev].periodicity());
 
-    vel_g[lev]->FillBoundary(geom[lev].periodicity());
+     vel_g[lev]->FillBoundary(geom[lev].periodicity());
   }
 
   if (is_restarting == 0)
   {
-    // Just for reference, we compute the volume inside the EB walls (as if there were no particles)
-    (m_leveldata[0]->ep_g).setVal(1.);
+     // Just for reference, we compute the volume inside the EB walls (as if there were no particles)
+     ep_g[0]->setVal(1.0);
 
-    sum_vol_orig = volWgtSum(0, m_leveldata[0]->ep_g, 0);
+     sum_vol_orig = volWgtSum(0,*ep_g[0],0);
 
-    Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
+     Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
 
-    Real domain_vol = sum_vol_orig;
+     Real domain_vol = sum_vol_orig;
 
-    // Now initialize the volume fraction ep_g before the first projection
-    mfix_calc_volume_fraction(sum_vol_orig);
-    Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+     // Now initialize the volume fraction ep_g before the first projection
+     mfix_calc_volume_fraction(sum_vol_orig);
+     Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
 
-    Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
+     Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
 
-    // This sets bcs for ep_g and mu_g
-    Real time = 0.0;
+     // This sets bcs for ep_g and mu_g
+     Real time = 0.0;
 
-    mfix_set_density_bcs(time,ro_g);
-    mfix_set_density_bcs(time,ro_go);
+     mfix_set_density_bcs(time,ro_g);
+     mfix_set_density_bcs(time,ro_go);
 
-    mfix_set_scalar_bcs(time,trac  ,mu_g);
-    mfix_set_scalar_bcs(time,trac_o,mu_g);
+     mfix_set_scalar_bcs(time,trac  ,mu_g);
+     mfix_set_scalar_bcs(time,trac_o,mu_g);
 
-    // Project the initial velocity field
-    if (do_initial_proj)
-      mfix_project_velocity();
+     // Project the initial velocity field
+     if (do_initial_proj)
+        mfix_project_velocity();
 
-    // Iterate to compute the initial pressure
-    if (initial_iterations > 0)
-      mfix_initial_iterations(dt,stop_time);
-  }
-  else {
-    //Calculation of sum_vol_orig for a restarting point
-    sum_vol_orig = volWgtSum(0, m_leveldata[0]->ep_g, 0);
+     // Iterate to compute the initial pressure
+     if (initial_iterations > 0)
 
-    Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
-  }
+        mfix_initial_iterations(dt,stop_time);
+
+     } else {
+
+        mfix_set_epg_bcs(ep_g);
+
+        //Calculation of sum_vol_orig for a restarting point
+        sum_vol_orig = volWgtSum(0,*ep_g[0],0);
+
+        Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+     }
 }
 
 void
 mfix::mfix_set_bc0 ()
 {
-  if (ooo_debug) amrex::Print() << "mfix_set_bc0" << std::endl;
-
-  for (int lev = 0; lev < nlev; lev++)
-  {
-    Box domain(geom[lev].Domain());
-
-    MultiFab& ep_g = m_leveldata[lev]->ep_g;
-
-    // Don't tile this -- at least for now
-    for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
+    if (ooo_debug) amrex::Print() << "mfix_set_bc0" << std::endl;
+    for (int lev = 0; lev < nlev; lev++)
     {
-      const Box& sbx = ep_g[mfi].box();
-      set_bc0(sbx, &mfi, lev, domain);
-    }
 
-    ep_g.FillBoundary(geom[lev].periodicity());
-    ro_g[lev]->FillBoundary(geom[lev].periodicity());
+     Box domain(geom[lev].Domain());
 
-    if (advect_tracer)
-      trac[lev]->FillBoundary(geom[lev].periodicity());
-  }
+     // Don't tile this -- at least for now
+     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+     {
+       const Box& sbx = (*ep_g[lev])[mfi].box();
 
-  // Put velocity Dirichlet bc's on faces
-  Real time = 0.0;
-  int extrap_dir_bcs = 0;
-  mfix_set_velocity_bcs(time,vel_g,extrap_dir_bcs);
+       set_bc0(sbx, &mfi, lev, domain);
+     }
 
-  for (int lev = 0; lev < nlev; lev++)
-    vel_g[lev]->FillBoundary(geom[lev].periodicity());
+     ep_g[lev]->FillBoundary(geom[lev].periodicity());
+     ro_g[lev]->FillBoundary(geom[lev].periodicity());
+     if (advect_tracer)
+        trac[lev]->FillBoundary(geom[lev].periodicity());
+   }
+
+   // Put velocity Dirichlet bc's on faces
+   Real time = 0.0;
+   int extrap_dir_bcs = 0;
+   mfix_set_velocity_bcs(time,vel_g,extrap_dir_bcs);
+
+   for (int lev = 0; lev < nlev; lev++)
+     vel_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
 mfix::mfix_set_p0 ()
 {
-  if (ooo_debug)
-    amrex::Print() << "mfix_set_p0" << std::endl;
+  if (ooo_debug) amrex::Print() << "mfix_set_p0" << std::endl;
 
-  IntVect press_per = IntVect(geom[0].isPeriodic(0),
-                              geom[0].isPeriodic(1),
-                              geom[0].isPeriodic(2));
+  IntVect press_per = IntVect(geom[0].isPeriodic(0),geom[0].isPeriodic(1),geom[0].isPeriodic(2));
 
   // Here we set a separate periodicity flag for p0_g because when we use
   // pressure drop (delp) boundary conditions we fill all variables *except* p0
   // periodically
-  if (BC::delp_dir > -1)
-    press_per[BC::delp_dir] = 0;
-
+  if (BC::delp_dir > -1) press_per[BC::delp_dir] = 0;
   p0_periodicity = Periodicity(press_per);
 
   // Initialize gp0 to 0
@@ -940,28 +932,29 @@ mfix::mfix_set_p0 ()
 
   for (int lev = 0; lev < nlev; lev++)
   {
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
 
-    Box domain(geom[lev].Domain());
+     Real dx = geom[lev].CellSize(0);
+     Real dy = geom[lev].CellSize(1);
+     Real dz = geom[lev].CellSize(2);
 
-    MultiFab& ep_g = m_leveldata[lev]->ep_g;
+     Box domain(geom[lev].Domain());
 
-    // We put this outside the MFIter loop because we need gp0 even on ranks with no boxes
-    // because we will use it in computing dt separately on every rank
-    set_gp0(lev, domain);
+     // We put this outside the MFIter loop because we need gp0 even on ranks with no boxes
+     // because we will use it in computing dt separately on every rank
+     set_gp0(lev, domain);
 
-    // We deliberately don't tile this loop since we will be looping
-    //    over bc's on faces and it makes more sense to do this one grid at a time
-    for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
-    {
-      const Box& bx = mfi.validbox();
-      set_p0 (bx, &mfi, lev, domain);
-    }
 
-    p0_g[lev]->FillBoundary(p0_periodicity);
-  }
+     // We deliberately don't tile this loop since we will be looping
+     //    over bc's on faces and it makes more sense to do this one grid at a time
+     for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
+     {
+       const Box& bx = mfi.validbox();
+
+       set_p0 (bx, &mfi, lev, domain );
+     }
+
+     p0_g[lev]->FillBoundary(p0_periodicity);
+   }
 }
 
 void mfix::mfix_set_ls_near_inflow ()

@@ -19,28 +19,28 @@ mfix::mfix_set_scalar_bcs (Real time,
 
   for (int lev = 0; lev < nlev; lev++)
   {
-    Box domain(geom[lev].Domain());
+     Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(m_leveldata[lev]->ep_g, TilingIfNotGPU()); mfi.isValid(); ++mfi)
-    {
-      set_scalar_bcs(time, lev, (*mu_g_in[lev])[mfi], 3, domain);
+     for (MFIter mfi(*ep_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+     {
+        set_scalar_bcs(time, lev, (*mu_g_in[lev])[mfi], 3, domain);
 
-      if (advect_tracer)
-        set_scalar_bcs(time, lev, (*trac_in[lev])[mfi], 1, domain);
-    }
+        if (advect_tracer)
+           set_scalar_bcs(time, lev, (*trac_in[lev])[mfi], 1, domain);
+     }
 
-    mu_g_in[lev]->FillBoundary(geom[lev].periodicity());
+     mu_g_in[lev] -> FillBoundary (geom[lev].periodicity());
 
-    if (advect_tracer)
-      trac_in[lev]->FillBoundary(geom[lev].periodicity());
+     if (advect_tracer)
+        trac_in[lev] -> FillBoundary (geom[lev].periodicity());
 
-    EB_set_covered(*mu_g_in[lev], 0, mu_g_in[lev]->nComp(), mu_g_in[lev]->nGrow(), covered_val);
+     EB_set_covered(*mu_g_in[lev], 0, mu_g_in[lev]->nComp(), mu_g_in[lev]->nGrow(), covered_val);
 
-    if (advect_tracer)
-      EB_set_covered(*trac_in[lev], 0, trac_in[lev]->nComp(), trac_in[lev]->nGrow(), covered_val);
+     if (advect_tracer)
+        EB_set_covered(*trac_in[lev], 0, trac_in[lev]->nComp(), trac_in[lev]->nGrow(), covered_val);
   }
 }
 

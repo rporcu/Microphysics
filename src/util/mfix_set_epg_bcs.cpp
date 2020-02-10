@@ -1,42 +1,34 @@
 #include <mfix.H>
-#include <MFIX_LevelData.H>
 
 //
 //  These subroutines set the BCs for ep_g only
 //
 
-using namespace amrex;
-using namespace std;
-
 void
-mfix::mfix_set_epg_bcs (const Vector< unique_ptr<LevelData> >& leveldata) const
+mfix::mfix_set_epg_bcs (const amrex::Vector< std::unique_ptr<MultiFab> > & epg_in) const
 {
   BL_PROFILE("mfix::mfix_set_epg_bcs()");
 
   for (int lev = 0; lev < nlev; lev++)
   {
-    MultiFab& ep_g = leveldata[lev]->ep_g;
+     // Set all values outside the domain to covered_val just to avoid use of undefined
+     epg_in[lev]->setDomainBndry(covered_val,geom[lev]);
 
-    // Set all values outside the domain to covered_val just to avoid use of
-    // undefined
-    ep_g.setDomainBndry(covered_val,geom[lev]);
+     epg_in[lev] -> FillBoundary (geom[lev].periodicity());
+     Box domain(geom[lev].Domain());
 
-    ep_g.FillBoundary(geom[lev].periodicity());
-    Box domain(geom[lev].Domain());
-
-    const int extrap_dir_bcs(1);
+     const int extrap_dir_bcs(1);
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(ep_g, TilingIfNotGPU()); mfi.isValid(); ++mfi)
-      set_epg_bcs(lev, ep_g[mfi], domain, &extrap_dir_bcs);
+     for (MFIter mfi(*epg_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+       set_epg_bcs(lev, (*epg_in[lev])[mfi], domain, &extrap_dir_bcs);
 
-    EB_set_covered(ep_g, 0, ep_g.nComp(), ep_g.nGrow(), covered_val);
+     EB_set_covered(*epg_in[lev], 0, epg_in[lev]->nComp(), epg_in[lev]->nGrow(), covered_val);
 
-    // Do this after as well as before to pick up terms that got updated in the
-    // call above
-    ep_g.FillBoundary(geom[lev].periodicity());
+     // Do this after as well as before to pick up terms that got updated in the call above
+     epg_in[lev] -> FillBoundary (geom[lev].periodicity());
   }
 }
 

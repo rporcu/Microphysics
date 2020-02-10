@@ -17,19 +17,19 @@ mfix::mfix_set_density_bcs (Real time,
 
   for (int lev = 0; lev < nlev; lev++)
   {
-    Box domain(geom[lev].Domain());
+     Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(m_leveldata[lev]->ep_g, TilingIfNotGPU()); mfi.isValid(); ++mfi)
-    {
-      set_density_bcs(time, lev, (*ro_g_in[lev])[mfi], domain);
-    }
+     for (MFIter mfi(*ep_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+     {
+        set_density_bcs(time, lev, (*ro_g_in[lev])[mfi], domain);
+     }
 
-    ro_g_in[lev]->FillBoundary(geom[lev].periodicity());
+     ro_g_in[lev]->FillBoundary(geom[lev].periodicity());
 
-    EB_set_covered(*ro_g_in[lev], 0, ro_g_in[lev]->nComp(), ro_g_in[lev]->nGrow(), covered_val);
+     EB_set_covered(*ro_g_in[lev], 0, ro_g_in[lev]->nComp(), ro_g_in[lev]->nGrow(), covered_val);
   }
 }
 

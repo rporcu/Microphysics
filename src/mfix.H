@@ -33,22 +33,16 @@
 #include <mfix_des_F.H>
 #include <mfix_eb_if.H>
 #include <MFIX_DEM_Parms.H>
-#include <MFIX_LevelData.H>
 
 
-// Drag type enumeration
 enum DragType {Invalid=-1, WenYu, Gidaspow, BVK2, UserDrag};
 
-// Deposition scheme enumeration
 enum DepositionScheme {trilinear, square_dpvm, true_dpvm, centroid};
 
 class mfix : public AmrCore
 {
   public:
-    // Constructor
     mfix ();
-
-    // Destructor
     ~mfix ();
 
     // Face-based coefficients b in MAC projection and implicit diffusion solve
@@ -64,41 +58,28 @@ class mfix : public AmrCore
     void InitLevelData (Real time);
 
     void mfix_init_solvers ();
-
     void mfix_setup_solvers ();
 
-    void PostInit (Real& dt,
-                   Real time,
-                   int restart_flag,
-                   Real stop_time);
+    void PostInit (Real& dt, Real time, int restart_flag, Real stop_time);
 
     void ResizeArrays ();
 
-    void WriteCheckPointFile (std::string& check_file_name,
-                              int nstep = 0,
-                              Real dt = 0.0,
-                              Real time = 0.0)  const;
+    void WriteCheckPointFile (std::string & check_file_name,
+                              int nstep = 0, Real dt = 0.0, Real time = 0.0)  const;
 
-    void WritePlotFile (std::string& plot_file_name,
-                        int nstep = 0,
-                        Real time = 0.0);
+    void WritePlotFile (std::string & plot_file_name,
+                        int nstep = 0, Real time = 0.0);
 
     //! Save variables that don't change to plot file. The idea is that they can
     //! be saved _once_ per simulations and not repeatedly every Nth time step.
-    void WriteStaticPlotFile (const std::string& plot_file_name) const;
+    void WriteStaticPlotFile (const std::string & plot_file_name) const;
 
-    void Restart (std::string& restart_chkfile,
-                  int* nstep,
-                  Real* dt,
-                  Real* time,
-                  IntVect& Nrep);
+    void Restart (std::string& restart_chkfile, int* nstep, Real* dt,
+                  Real* time, IntVect& Nrep);
 
-    void WriteParticleAscii (std::string& par_ascii_file_name,
-                             int nstep = 0) const;
+    void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
 
-    void WriteAverageRegions (std::string& avg_file,
-                              int nstep,
-                              Real time = 0.) const;
+    void WriteAverageRegions (std::string& avg_file, int nstep, Real time = 0.) const;
 
     void ComputeAverageFluidVars (const int lev,
                                   const amrex::Real time,
@@ -106,11 +87,7 @@ class mfix : public AmrCore
 
     void Regrid ();
 
-    void Evolve (int nstep,
-                 Real& dt,
-                 Real& prev_dt,
-                 Real time,
-                 Real stop_time);
+    void Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time);
 
     void mfix_usr1_cpp (Real time) const;
 
@@ -122,11 +99,8 @@ class mfix : public AmrCore
     void make_mg_bc (int mg_bc[]);
 
     void make_eb_geometry ();
-
     void make_eb_factories ();
-
     void fill_eb_levelsets ();
-
     void intersect_ls_walls ();
 
     template<class F>
@@ -185,7 +159,6 @@ class mfix : public AmrCore
     void WriteMyEBSurface ();
 
     void InitIOChkData ();
-
     void InitIOPltData ();
 
     // If > 0, dump plotfiles every "plot_int" steps
@@ -233,13 +206,13 @@ class mfix : public AmrCore
                                      Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                                      Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                                      Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                                     MultiFab& ep_g);
+                                     Vector< std::unique_ptr<MultiFab> >& ep_g);
 
     void mfix_set_velocity_bcs (Real time,
                                 Vector< std::unique_ptr<MultiFab> >& vel,
                                 int extrap_dir_bcs) const;
 
-    void mfix_set_epg_bcs (const amrex::Vector< std::unique_ptr<LevelData> >& leveldata) const;
+    void mfix_set_epg_bcs (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps) const;
 
     void mfix_set_density_bcs (Real time,
                                Vector< std::unique_ptr<MultiFab> >& ro_g);
@@ -362,14 +335,12 @@ class mfix : public AmrCore
                               Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                               Vector< std::unique_ptr<MultiFab> >& ep_w_mac);
 
-    void mfix_compute_fluxes_on_box (const int lev,
-                                     Box& bx,
+    void mfix_compute_fluxes_on_box (const int lev, Box& bx,
                                      FArrayBox& a_fx,
                                      FArrayBox& a_fy,
                                      FArrayBox& a_fz,
                                      const FArrayBox& state,
-                                     const int state_comp,
-                                     const int n_comp,
+                                     const int state_comp, const int n_comp,
                                      const FArrayBox& xslopes,
                                      const FArrayBox& yslopes,
                                      const FArrayBox& zslopes,
@@ -378,14 +349,12 @@ class mfix : public AmrCore
                                      const FArrayBox& ep_v_mac,
                                      const FArrayBox& ep_w_mac);
 
-    void mfix_compute_eb_fluxes_on_box (const int lev,
-                                        Box& bx,
+    void mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
                                         FArrayBox& a_fx,
                                         FArrayBox& a_fy,
                                         FArrayBox& a_fz,
                                         const FArrayBox& state,
-                                        const int state_comp,
-                                        const int n_comp,
+                                        const int state_comp, const int n_comp,
                                         const FArrayBox& xslopes,
                                         const FArrayBox& yslopes,
                                         const FArrayBox& zslopes,
@@ -429,10 +398,9 @@ class mfix : public AmrCore
 
     //! Make a new level using provided BoxArray and DistributionMapping and
     //! fill with interpolated coarse level data. Called by AmrCore::regrid.
-    virtual void MakeNewLevelFromCoarse (int lev,
-                                         Real time,
-                                         const BoxArray& ba,
-                                         const DistributionMapping& dm) override
+    virtual void MakeNewLevelFromCoarse (int lev, Real time,
+                                         const BoxArray & ba,
+                                         const DistributionMapping & dm) override
     { amrex::Abort("MakeNewLevelFromCoarse: To be implemented"); }
 
     //! Remake an existing level using provided BoxArray and
@@ -440,8 +408,8 @@ class mfix : public AmrCore
     //! by AmrCore::regrid.
     virtual void RemakeLevel (int lev,
                               Real time,
-                              const BoxArray& ba,
-                              const DistributionMapping& dm) override
+                              const BoxArray & ba,
+                              const DistributionMapping & dm) override
     { amrex::Abort("RemakeLevel: To be implemented"); }
 
     //! Delete level data.  Called by AmrCore::regrid.
@@ -480,7 +448,6 @@ class mfix : public AmrCore
     void mfix_set_ls_near_inflow ();
 
     void mfix_project_velocity ();
-
     void mfix_initial_iterations (Real dt, Real stop_time);
 
     void mfix_apply_nodal_projection (Vector< std::unique_ptr< amrex::MultiFab > >& a_depdt,
@@ -495,30 +462,17 @@ class mfix : public AmrCore
                                Vector< std::unique_ptr<MultiFab> >& ro,
                                Real time);
 
-    void FillPatchVel (int lev,
-                       Real time,
-                       MultiFab& mf,
-                       int icomp,
-                       int ncomp,
-                       const Vector<BCRec>& bcr);
+    void FillPatchVel (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
+                       const Vector<BCRec> & bcr);
 
-    void GetDataVel (int lev,
-                     Real time,
-                     Vector<MultiFab*>& data,
-                     Vector<Real>& datatime);
+    void GetDataVel (int lev, Real time, Vector<MultiFab *> & data,
+                     Vector<Real> & datatime);
 
-    void FillPatchScalar (int lev,
-                          Real time,
-                          MultiFab& mf,
-                          int icomp,
-                          int ncomp,
+    void FillPatchScalar (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
                           const Vector<BCRec> & bcr);
 
-    void GetDataScalar (int lev,
-                        Real time,
-                        Vector<MultiFab*>& data,
-                        int icomp,
-                        Vector<Real>& datatime);
+    void GetDataScalar (int lev, Real time, Vector<MultiFab *> & data, int icomp,
+                        Vector<Real> & datatime);
 
     void mfix_calc_particle_beta (Real time);
 
@@ -530,9 +484,7 @@ class mfix : public AmrCore
 
     void RegridLevelSetArray (int a_lev);
 
-    void avgDown (int crse_lev,
-                  const MultiFab& S_fine,
-                  MultiFab& S_crse);
+    void avgDown (int crse_lev, const MultiFab & S_fine, MultiFab & S_crse);
 
   private:
     void make_eb_general ();
@@ -549,29 +501,19 @@ class mfix : public AmrCore
 
     void MakeBCArrays ();
 
-    void MakeNewLevelFromScratch (int lev,
-                                  Real time,
-                                  const BoxArray& new_grids,
-                                  const DistributionMapping& new_dmap) override;
+    void MakeNewLevelFromScratch (int lev, Real time, const BoxArray & new_grids,
+                                  const DistributionMapping & new_dmap) override;
 
-    void ReMakeNewLevelFromScratch (int lev,
-                                    const BoxArray& new_grids,
-                                    const DistributionMapping& new_dmap);
+    void ReMakeNewLevelFromScratch (int lev, const BoxArray & new_grids,
+                                    const DistributionMapping & new_dmap);
 
-    void WriteCheckHeader (const std::string& name,
-                           int nstep,
-                           Real dt,
-                           Real time) const;
+    void WriteCheckHeader (const std::string & name, int nstep, Real dt, Real time) const;
 
-    void WriteJobInfo (const std::string& dir) const;
+    void WriteJobInfo (const std::string & dir ) const;
 
-    static void GotoNextLine (std::istream& is);
+    static void GotoNextLine (std::istream & is);
 
-    void EvolveFluid (int nstep,
-                      Real& dt,
-                      Real& time,
-                      Real stop_time,
-                      Real drag_timing);
+    void EvolveFluid (int nstep, Real & dt, Real & time, Real stop_time, Real drag_timing);
 
     // Projection-related methods
     void mfix_solve_poisson_equation (Vector< std::unique_ptr<MultiFab> >& phi,
@@ -583,18 +525,17 @@ class mfix : public AmrCore
     void solve_diffusion_equation (Vector< Vector< std::unique_ptr<MultiFab> > >& b,
                                    Vector< std::unique_ptr<MultiFab> >& phi,
                                    Vector< std::unique_ptr<MultiFab> >& rhs,
-                                   int bc_lo[],
-                                   int bc_hi[],
+                                   int bc_lo[], int bc_hi[],
                                    Real dt);
 
     void check_for_nans (int lev);
 
-    void mfix_compute_convective_term (Vector< std::unique_ptr<MultiFab> >& conv_u_in,
-                                       Vector< std::unique_ptr<MultiFab> >& conv_s_in,
-                                       Vector< std::unique_ptr<MultiFab> >& vel_in,
-                                       Vector< std::unique_ptr<MultiFab> >& ep_g_in,
-                                       Vector< std::unique_ptr<MultiFab> >& ro_g_in,
-                                       Vector< std::unique_ptr<MultiFab> >& trac_in,
+    void mfix_compute_convective_term (Vector< std::unique_ptr<MultiFab> >& conv_u,
+                                       Vector< std::unique_ptr<MultiFab> >& conv_s,
+                                       Vector< std::unique_ptr<MultiFab> >& vel,
+                                       Vector< std::unique_ptr<MultiFab> >& ep_g,
+                                       Vector< std::unique_ptr<MultiFab> >& ro_g,
+                                       Vector< std::unique_ptr<MultiFab> >& trac,
                                        Real time);
 
     int steady_state_reached (Real dt, int iter);
@@ -603,26 +544,17 @@ class mfix : public AmrCore
                                Vector< std::unique_ptr<MultiFab> >& conv_s_old,
                                Vector< std::unique_ptr<MultiFab> >& divtau_old,
                                Vector< std::unique_ptr<MultiFab> >&   laps_old,
-                               Real time,
-                               Real dt,
-                               bool proj_2);
+                               Real time, Real dt, bool proj_2);
 
     void mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
                                Vector< std::unique_ptr<MultiFab> >& conv_s_old,
                                Vector< std::unique_ptr<MultiFab> >& divtau_old,
                                Vector< std::unique_ptr<MultiFab> >&   laps_old,
-                               Real time,
-                               Real dt,
-                               bool proj_2);
+                               Real time, Real dt, bool proj_2);
 
-    void mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps,
-                              amrex::Real);
+    void mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps, amrex::Real);
 
-    void mfix_diffuse_ep_g (const amrex::Vector< std::unique_ptr<LevelData> >& leveldata,
-                            amrex::Real);
-
-    void mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_drag,
-                             amrex::Real);
+    void mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_drag, amrex::Real);
 
     void mfix_compute_diveu (Real time);
 
@@ -633,9 +565,7 @@ class mfix : public AmrCore
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
 
-    void ChopGrids (const Box& domain,
-                    BoxArray& ba,
-                    int target_size) const;
+    void ChopGrids (const Box& domain, BoxArray& ba, int target_size) const;
 
     static int nlev;
     static int ntrac;
@@ -655,31 +585,37 @@ class mfix : public AmrCore
     Vector< std::unique_ptr<IArrayBox> > bc_klo;
     Vector< std::unique_ptr<IArrayBox> > bc_khi;
 
-    amrex::Vector<std::unique_ptr<LevelData>> m_leveldata;
+    // Boundary conditions flags
+    Vector< std::unique_ptr<iMultiFab> > flag;
+
+    // Void fraction
+    Vector< std::unique_ptr<MultiFab> > ep_g;
+    Vector< std::unique_ptr<MultiFab> > ep_go;
+
+    // Gas pressure fraction
+    Vector< std::unique_ptr<MultiFab> > p_g;
+    Vector< std::unique_ptr<MultiFab> > p_go;
+
+    // Gas density
+    Vector< std::unique_ptr<MultiFab> > ro_g;
+    Vector< std::unique_ptr<MultiFab> > ro_go;
+
+    // Tracer in gas
+    Vector< std::unique_ptr<MultiFab> > trac;
+    Vector< std::unique_ptr<MultiFab> > trac_o;
 
     // Gas velocity
     Vector< std::unique_ptr<MultiFab> > vel_g;
     Vector< std::unique_ptr<MultiFab> > vel_go;
-    // Gas density
-    Vector< std::unique_ptr<MultiFab> > ro_g;
-    Vector< std::unique_ptr<MultiFab> > ro_go;
-    // Tracer in gas
-    Vector< std::unique_ptr<MultiFab> > trac;
-    Vector< std::unique_ptr<MultiFab> > trac_o;
-    // Pressure gradients
-    Vector< std::unique_ptr<MultiFab> > gp;
-    // Molecular viscosity
-    Vector< std::unique_ptr<MultiFab> > mu_g;
 
-    // Nodal MultiFabs
-    // Gas pressure fraction
-    Vector< std::unique_ptr<MultiFab> > p_g;
-    Vector< std::unique_ptr<MultiFab> > p_go;
     // Base state pressure
     Vector< std::unique_ptr<MultiFab> > p0_g;
 
-    // Boundary conditions flags
-    Vector< std::unique_ptr<iMultiFab> > flag;
+    // Pressure gradients
+    Vector< std::unique_ptr<MultiFab> > gp;
+
+    // Molecular viscosity
+    Vector< std::unique_ptr<MultiFab> > mu_g;
 
     // Cell-based
     Vector< std::unique_ptr<MultiFab> > vort;
@@ -761,7 +697,7 @@ class mfix : public AmrCore
     Real nodal_mg_atol = 1.0e-14;
 
     // Max coarsening level
-    int nodal_mg_max_coarsening_level = 100;
+    int  nodal_mg_max_coarsening_level = 100;
 
     // Linear operator
     std::unique_ptr<MLNodeLaplacian> nodal_matrix;
@@ -835,10 +771,10 @@ class mfix : public AmrCore
     // Options to control time stepping
     Real cfl = 0.5;
     Real fixed_dt;
-    Real dt_min = 0.;    // Min dt allowed
-    Real dt_max = 1.e14; // Max dt allowed
+    Real dt_min  = 0.0;           // Min dt allowed
+    Real dt_max  = 1.e14;         // Max dt allowed
 
-    Real prev_dt = 0.; // dt used in previous timestep
+    Real prev_dt = 0.0;           // dt used in previous timestep
 
     int particle_max_grid_size_x = -1;
     int particle_max_grid_size_y = -1;
@@ -948,14 +884,12 @@ class mfix : public AmrCore
 
     //! EB levels representing fluid boundary conditions
     Vector<const EB2::Level *> eb_levels;
-
     //! EB levels representing particle boundary conditions (same as
     //! `mfix::eb_levels` but might include additional walls at MI BCs).
     Vector<const EB2::Level *> particle_eb_levels;
 
     //! EB factory that lives on the fluid grids
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;
-
     //! EB factory that lives on the particle grids
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
 
