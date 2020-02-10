@@ -14,7 +14,7 @@ variables:
   AMREX_HOME: "${CI_PROJECT_DIR}/amrex_install"
   CC: "gcc"
   CXX: "g++"
-  ENABLE_MPI: "0"
+  ENABLE_MPI: "1"
   ENABLE_OMP: "0"
   FC: "gfortran"
   GIT_DEPTH: 1
@@ -41,9 +41,8 @@ variables:
             -B build
             -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
-    - make -C build mfix -j2 VERBOSE=1
+    - cmake --build build --target build_tests -j2 --verbose
     - cd build
-    - make build_tests -j2
     - $CTEST_CMD
   <<: *test_template
 
@@ -52,12 +51,11 @@ variables:
     - git submodule update --init
     - cmake -S .
             -B build
-            -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_CUDA=1
+            -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
-    - make -C build mfix -j2 VERBOSE=1
+    - cmake --build build --target build_tests -j2 --verbose
     - cd build
-    - make build_tests -j2
     - $CTEST_CMD
   <<: *test_template
 
@@ -86,6 +84,7 @@ multiple-grid-parallel-cpu:
 
 tiled-grid-parallel-openmp-cpu:
   variables:
+    ENABLE_MPI: "0"
     ENABLE_OMP: "1"
     CTEST_CMD: "srun ctest -R TGP"
   <<: *cpu_template
@@ -115,6 +114,7 @@ tiled-grid-parallel-openmp-cpu:
 
 .tiled-grid-parallel-openmp-gpu:
   variables:
+    ENABLE_MPI: "0"
     ENABLE_OMP: "1"
     CTEST_CMD: "srun ctest -R TGP"
   <<: *gpu_template
