@@ -41,9 +41,8 @@ variables:
             -B build
             -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
-    - make -C build mfix -j2 VERBOSE=1
+    - cmake --build build --target build_tests -j2 --verbose
     - cd build
-    - make build_tests -j2
     - $CTEST_CMD
   <<: *test_template
 
@@ -52,12 +51,11 @@ variables:
     - git submodule update --init
     - cmake -S .
             -B build
-            -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_CUDA=1
+            -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
-    - make -C build mfix -j2 VERBOSE=1
+    - cmake --build build --target build_tests -j2 --verbose
     - cd build
-    - make build_tests -j2
     - $CTEST_CMD
   <<: *test_template
 

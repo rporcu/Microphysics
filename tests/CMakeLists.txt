@@ -87,8 +87,8 @@ macro (setup_test _test _suffix _env _input_file )
         add_dependencies ( ${_test_run} ${MFIX_F90_TOOLS} )
 
         add_test(NAME ${_test_name}_${_suffix}
-            COMMAND make  ${_test_run}
-            WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
+            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${_test_run}
+            WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
     endif ()
 
