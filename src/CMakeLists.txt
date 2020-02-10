@@ -48,8 +48,7 @@ add_subdirectory(convection)
 
 # DES
 add_subdirectory(deposition)
-add_subdirectory(des_fluid)
-add_subdirectory(src_des)
+add_subdirectory(des)
 
 # Diffusion
 add_subdirectory(diffusion)

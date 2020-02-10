@@ -8,14 +8,13 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
 #These are the directories in mfix/src_cc
 Bdirs 	:= UnitTests/CalcVolFrac
-Bdirs 	+= src/des_fluid
+Bdirs 	+= src/des
 Bdirs 	+= src/io
 Bdirs 	+= src/setup
 Bdirs 	+= src/util
 
 Bdirs 	+= src/check_data
 Bdirs 	+= src/mods
-Bdirs 	+= src/src_des
 Bdirs 	+= src/eb
 Bdirs 	+= src/usr
 
