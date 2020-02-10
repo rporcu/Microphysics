@@ -8,7 +8,7 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
 #These are the directories in mfix/src_cc
 Bdirs 	:= src
-Bdirs 	+= src/des_fluid
+Bdirs 	+= src/des
 Bdirs 	+= src/io
 Bdirs 	+= src/convection
 Bdirs 	+= src/diffusion
@@ -17,7 +17,6 @@ Bdirs 	+= src/setup
 Bdirs 	+= src/util
 Bdirs   += src/deposition
 Bdirs 	+= src/mods
-Bdirs 	+= src/src_des
 Bdirs 	+= src/eb
 Bdirs 	+= src/usr
 Bdirs 	+= src/time_flow
