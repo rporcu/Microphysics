@@ -105,16 +105,6 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 
     const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
 
-#ifdef AMREX_USE_CUDA
-    bool switchGpuLaunchRegion = false;
-
-    if(Gpu::notInLaunchRegion())
-    {
-      switchGpuLaunchRegion = true;
-      Gpu::setLaunchRegion(true);
-    }
-#endif
-
     Real sum = amrex::ReduceSum(mf, *volfrac, 0,
         [comp] AMREX_GPU_HOST_DEVICE (Box const & bx,
                                       FArrayBox const & rho_fab,
@@ -130,11 +120,6 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
           return dm;
         });   
 
-#ifdef AMREX_USE_CUDA
-    if(switchGpuLaunchRegion)
-      Gpu::setLaunchRegion(false);
-#endif
-
     if (!local)
         ParallelDescriptor::ReduceRealSum(sum);
 
@@ -147,16 +132,6 @@ mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local)
     BL_PROFILE("mfix::volEpsWgtSum()");
 
     const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
-
-#ifdef AMREX_USE_CUDA
-    bool switchGpuLaunchRegion = false;
-
-    if(Gpu::notInLaunchRegion())
-    {
-      switchGpuLaunchRegion = true;
-      Gpu::setLaunchRegion(true);
-    }
-#endif
 
     Real sum = amrex::ReduceSum(mf, *volfrac, *(ep_g[lev]), 0,
         [comp] AMREX_GPU_HOST_DEVICE (Box const & bx,
@@ -174,11 +149,6 @@ mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local)
           
           return dm;
         });   
-
-#ifdef AMREX_USE_CUDA
-    if(switchGpuLaunchRegion)
-      Gpu::setLaunchRegion(false);
-#endif
 
     if (!local)
         ParallelDescriptor::ReduceRealSum(sum);

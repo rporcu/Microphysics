@@ -60,7 +60,6 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     BL_PROFILE_VAR("PARTICLES SOLVE", particlesSolve);
 
-    amrex::Gpu::setLaunchRegion(true);
     int nsubsteps;
 
     if (DEM::solve)
@@ -102,7 +101,6 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
         }
     }
 
-    amrex::Gpu::setLaunchRegion(false);
     BL_PROFILE_VAR_STOP(particlesSolve);
 
     Real end_particles = ParallelDescriptor::second() - start_particles;
