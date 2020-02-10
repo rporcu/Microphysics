@@ -557,17 +557,6 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
 void
 mfix::mfix_add_gravity_and_gp (Real dt)
 {
-#ifdef AMREX_USE_CUDA
-    bool switchGpuLaunchRegion = false;
-
-    if(Gpu::notInLaunchRegion()) { 
-      switchGpuLaunchRegion = true;
-      Gpu::setLaunchRegion(true);
-    }
-
-    {
-#endif
-
     BL_PROFILE("mfix::mfix_add_gravity_and_gp");
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -598,13 +587,6 @@ mfix::mfix_add_gravity_and_gp (Real dt)
          });
        }
     }
-
-#ifdef AMREX_USE_CUDA
-    }
-
-    if(switchGpuLaunchRegion)
-      Gpu::setLaunchRegion(false);
-#endif
 }
 
 //

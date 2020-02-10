@@ -38,13 +38,6 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
     Real cfl_max(0.0);
 
 #ifdef AMREX_USE_CUDA
-    bool switchGpuLaunchRegion = false;
-
-    if(Gpu::notInLaunchRegion()) {
-      switchGpuLaunchRegion = true;
-      Gpu::setLaunchRegion(true);
-    }
-
     {
       Gpu::DeviceScalar<Real> cfl_max_gpu(cfl_max);
       Real *cfl_max_ptr = cfl_max_gpu.dataPtr();
@@ -130,9 +123,6 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
 #ifdef AMREX_USE_CUDA
       cfl_max = cfl_max_gpu.dataValue();
     }
-
-    if(switchGpuLaunchRegion)
-      Gpu::setLaunchRegion(false);
 #endif
    
     // Do global max operation
