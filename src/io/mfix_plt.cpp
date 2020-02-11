@@ -227,7 +227,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 
         // Fluid volume fraction
         if( plt_ep_g    == 1) {
-          MultiFab::Copy(*mf[lev], (*ep_g[lev]), 0, lc, 1, 0);
+          MultiFab::Copy(*mf[lev], m_leveldata[lev]->ep_g, 0, lc, 1, 0);
           lc += 1;
         }
 

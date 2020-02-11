@@ -7,6 +7,8 @@
 #include <AMReX_MLEBABecLap.H>
 #include <AMReX_MLEBTensorOp.H>
 
+#include <MFIX_LevelData.H>
+
 //
 // Solver for the implicit part of the diffusion equation: 
 //

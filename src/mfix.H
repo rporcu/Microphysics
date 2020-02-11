@@ -223,7 +223,7 @@ class mfix : public AmrCore
                                 Vector< std::unique_ptr<MultiFab> >& vel,
                                 int extrap_dir_bcs) const;
 
-    void mfix_set_epg_bcs (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps) const;
+    void mfix_set_epg_bcs (const amrex::Vector< std::unique_ptr<LevelData> >& leveldata) const;
 
     void mfix_set_density_bcs (Real time,
                                Vector< std::unique_ptr<MultiFab> >& ro_g);
@@ -566,6 +566,9 @@ class mfix : public AmrCore
 
     void mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps, amrex::Real);
 
+    void mfix_diffuse_ep_g (const amrex::Vector< std::unique_ptr<LevelData> >& leveldata,
+                            amrex::Real);
+
     void mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_drag, amrex::Real);
 
     void mfix_compute_diveu (Real time);
@@ -601,9 +604,6 @@ class mfix : public AmrCore
 
     // Boundary conditions flags
     Vector< std::unique_ptr<iMultiFab> > flag;
-
-    // Void fraction
-    Vector< std::unique_ptr<MultiFab> > ep_g;
 
     // Gas pressure fraction
     Vector< std::unique_ptr<MultiFab> > p_g;

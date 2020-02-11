@@ -8,8 +8,6 @@ mfix::ResizeArrays ()
 
     m_leveldata.resize(nlevs_max);
 
-    ep_g.resize(nlevs_max);
-
     p_g.resize(nlevs_max);
     p_go.resize(nlevs_max);
 
@@ -106,9 +104,9 @@ mfix::AllocateArrays (int lev)
     // ********************************************************************************
 
     // Void fraction
-    ep_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+    (m_leveldata[lev]->ep_g).define(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
     (m_leveldata[lev]->ep_go).define(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
-    ep_g[lev]->setVal(1.0);
+    (m_leveldata[lev]->ep_g).setVal(1.);
     (m_leveldata[lev]->ep_go).setVal(1.);
 
     // Gas density
@@ -276,11 +274,12 @@ mfix::RegridArrays (int lev)
     //
 
     // Void fraction
-    std::unique_ptr<MultiFab> ep_g_new(new MultiFab(grids[lev],dmap[lev],
-                                       ep_g[lev]->nComp(),ep_g[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    ep_g_new->setVal(1.0);
-    ep_g_new->copy(*ep_g[lev],0,0,ep_g[lev]->nComp(),ep_g[lev]->nGrow(),ep_g[lev]->nGrow());
-    ep_g[lev] = std::move(ep_g_new);
+    MultiFab& ep_g = m_leveldata[lev]->ep_g;
+    MultiFab ep_g_new;
+    ep_g_new.define(grids[lev], dmap[lev], ep_g.nComp(), ep_g.nGrow(), MFInfo(), *ebfactory[lev]);
+    ep_g_new.setVal(1.);
+    ep_g_new.copy(ep_g, 0, 0, ep_g.nComp(), ep_g.nGrow(), ep_g.nGrow());
+    MultiFab::Swap(ep_g, ep_g_new, 0, 0, ep_g.nComp(), ep_g.nGrow());
 
     // Old void fraction
     MultiFab& ep_go = m_leveldata[lev]->ep_go;

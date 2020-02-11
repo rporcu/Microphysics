@@ -792,12 +792,14 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        Real dy = geom[lev].CellSize(1);
        Real dz = geom[lev].CellSize(2);
 
+       MultiFab& ep_g = m_leveldata[lev]->ep_g;
+
        // We deliberately don't tile this loop since we will be looping
        //    over bc's on faces and it makes more sense to do this one grid at a time
-       for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi) {
+       for (MFIter mfi(ep_g,false); mfi.isValid(); ++mfi) {
 
           const Box& bx = mfi.validbox();
-          const Box& sbx = (*ep_g[lev])[mfi].box();
+          const Box& sbx = ep_g[mfi].box();
 
         if ( is_restarting ) {
 
@@ -806,7 +808,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
           } else {
 
             init_fluid(sbx, bx, domain,
-                       (*ep_g[lev])[mfi], (*ro_g[lev])[mfi],
+                       ep_g[mfi], (*ro_g[lev])[mfi],
                        (*trac[lev])[mfi], (*p_g[lev])[mfi],
                        (*vel_g[lev])[mfi], (*mu_g[lev])[mfi],
                        dx, dy, dz, xlen, ylen, zlen, test_tracer_conservation);
@@ -826,7 +828,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
   for (int lev = 0; lev < nlev; lev++)
   {
-     ep_g[lev]->FillBoundary(geom[lev].periodicity());
+     (m_leveldata[lev]->ep_g).FillBoundary(geom[lev].periodicity());
      ro_g[lev]->FillBoundary(geom[lev].periodicity());
      mu_g[lev]->FillBoundary(geom[lev].periodicity());
 
@@ -839,9 +841,9 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
   if (is_restarting == 0)
   {
      // Just for reference, we compute the volume inside the EB walls (as if there were no particles)
-     ep_g[0]->setVal(1.0);
+     (m_leveldata[0]->ep_g).setVal(1.);
 
-     sum_vol_orig = volWgtSum(0,*ep_g[0],0);
+     sum_vol_orig = volWgtSum(0, m_leveldata[0]->ep_g, 0);
 
      Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
 
@@ -873,10 +875,10 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
      } else {
 
-        mfix_set_epg_bcs(ep_g);
+        mfix_set_epg_bcs(m_leveldata);
 
         //Calculation of sum_vol_orig for a restarting point
-        sum_vol_orig = volWgtSum(0,*ep_g[0],0);
+        sum_vol_orig = volWgtSum(0, m_leveldata[0]->ep_g, 0);
 
         Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
      }
@@ -891,15 +893,17 @@ mfix::mfix_set_bc0 ()
 
      Box domain(geom[lev].Domain());
 
+     MultiFab& ep_g = m_leveldata[lev]->ep_g;
+
      // Don't tile this -- at least for now
-     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+     for (MFIter mfi(ep_g); mfi.isValid(); ++mfi)
      {
-       const Box& sbx = (*ep_g[lev])[mfi].box();
+       const Box& sbx = ep_g[mfi].box();
 
        set_bc0(sbx, &mfi, lev, domain);
      }
 
-     ep_g[lev]->FillBoundary(geom[lev].periodicity());
+     ep_g.FillBoundary(geom[lev].periodicity());
      ro_g[lev]->FillBoundary(geom[lev].periodicity());
      if (advect_tracer)
         trac[lev]->FillBoundary(geom[lev].periodicity());
@@ -948,7 +952,7 @@ mfix::mfix_set_p0 ()
 
      // We deliberately don't tile this loop since we will be looping
      //    over bc's on faces and it makes more sense to do this one grid at a time
-     for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
+     for (MFIter mfi(m_leveldata[lev]->ep_g,false); mfi.isValid(); ++mfi)
      {
        const Box& bx = mfi.validbox();
 

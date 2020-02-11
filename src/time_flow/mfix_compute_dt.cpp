@@ -56,12 +56,12 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
 #endif
         for (MFIter mfi(*vel_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
-            const auto& vel       =   vel_g[lev] -> array(mfi);
-            const auto& ep        =    ep_g[lev] -> array(mfi);
-            const auto& ro        =    ro_g[lev] -> array(mfi);
-            const auto& mu        =    mu_g[lev] -> array(mfi);
-            const auto& gradp     =      gp[lev] -> array(mfi);
-            const auto& drag_fab  =    drag[lev] -> array(mfi);
+            const auto& vel      = vel_g[lev]->array(mfi);
+            const auto& ep       = (m_leveldata[lev]->ep_g).array(mfi);
+            const auto& ro       = ro_g[lev]->array(mfi);
+            const auto& mu       = mu_g[lev]->array(mfi);
+            const auto& gradp    = gp[lev]->array(mfi);
+            const auto& drag_fab = drag[lev]->array(mfi);
             
             Box bx(mfi.tilebox());
 

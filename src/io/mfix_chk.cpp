@@ -31,6 +31,12 @@ mfix::InitIOChkData ()
     vecVarsName = {"u_g", "v_g", "w_g", "gpx", "gpy", "gpz"};
 
     chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "level_sets"};
+
+    Vector< std::unique_ptr<MultiFab> > ep_g(nlev);
+    for(int lev(0); lev < nlev; ++lev) {
+      ep_g[lev].reset(&(m_leveldata[lev]->ep_g));
+    }
+
     chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &ep_g,  &mu_g,  &level_sets};
 }
 
