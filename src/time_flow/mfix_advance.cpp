@@ -95,8 +95,9 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
         for (int lev = 0; lev < nlev; lev++)
         {
-           // Back up field variables to old
-          MultiFab::Copy( *ep_go[lev],  *ep_g[lev],  0, 0,  ep_g[lev]->nComp(),  ep_go[lev]->nGrow());
+          // Back up field variables to old
+          MultiFab& ep_go = m_leveldata[lev]->ep_go;
+          MultiFab::Copy( ep_go,  *ep_g[lev],  0, 0,  ep_go.nComp(),  ep_go.nGrow());
           MultiFab::Copy(  *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
           MultiFab::Copy( *ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
           MultiFab::Copy(*trac_o[lev],  *trac[lev],  0, 0,  trac[lev]->nComp(), trac_o[lev]->nGrow());

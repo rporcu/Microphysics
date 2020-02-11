@@ -33,16 +33,22 @@
 #include <mfix_des_F.H>
 #include <mfix_eb_if.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_LevelData.H>
 
 
+// Drag type enumeration
 enum DragType {Invalid=-1, WenYu, Gidaspow, BVK2, UserDrag};
 
+// Deposition scheme enumeration
 enum DepositionScheme {trilinear, square_dpvm, true_dpvm, centroid};
 
 class mfix : public AmrCore
 {
   public:
+    // Constructor
     mfix ();
+
+    // Destructor
     ~mfix ();
 
     // Face-based coefficients b in MAC projection and implicit diffusion solve
@@ -58,6 +64,7 @@ class mfix : public AmrCore
     void InitLevelData (Real time);
 
     void mfix_init_solvers ();
+
     void mfix_setup_solvers ();
 
     void PostInit (Real& dt, Real time, int restart_flag, Real stop_time);
@@ -99,8 +106,11 @@ class mfix : public AmrCore
     void make_mg_bc (int mg_bc[]);
 
     void make_eb_geometry ();
+
     void make_eb_factories ();
+
     void fill_eb_levelsets ();
+
     void intersect_ls_walls ();
 
     template<class F>
@@ -159,6 +169,7 @@ class mfix : public AmrCore
     void WriteMyEBSurface ();
 
     void InitIOChkData ();
+
     void InitIOPltData ();
 
     // If > 0, dump plotfiles every "plot_int" steps
@@ -448,6 +459,7 @@ class mfix : public AmrCore
     void mfix_set_ls_near_inflow ();
 
     void mfix_project_velocity ();
+
     void mfix_initial_iterations (Real dt, Real stop_time);
 
     void mfix_apply_nodal_projection (Vector< std::unique_ptr< amrex::MultiFab > >& a_depdt,
@@ -585,12 +597,13 @@ class mfix : public AmrCore
     Vector< std::unique_ptr<IArrayBox> > bc_klo;
     Vector< std::unique_ptr<IArrayBox> > bc_khi;
 
+    amrex::Vector<std::unique_ptr<LevelData>> m_leveldata;
+
     // Boundary conditions flags
     Vector< std::unique_ptr<iMultiFab> > flag;
 
     // Void fraction
     Vector< std::unique_ptr<MultiFab> > ep_g;
-    Vector< std::unique_ptr<MultiFab> > ep_go;
 
     // Gas pressure fraction
     Vector< std::unique_ptr<MultiFab> > p_g;
@@ -697,7 +710,7 @@ class mfix : public AmrCore
     Real nodal_mg_atol = 1.0e-14;
 
     // Max coarsening level
-    int  nodal_mg_max_coarsening_level = 100;
+    int nodal_mg_max_coarsening_level = 100;
 
     // Linear operator
     std::unique_ptr<MLNodeLaplacian> nodal_matrix;
@@ -771,10 +784,10 @@ class mfix : public AmrCore
     // Options to control time stepping
     Real cfl = 0.5;
     Real fixed_dt;
-    Real dt_min  = 0.0;           // Min dt allowed
-    Real dt_max  = 1.e14;         // Max dt allowed
+    Real dt_min = 0.;    // Min dt allowed
+    Real dt_max = 1.e14; // Max dt allowed
 
-    Real prev_dt = 0.0;           // dt used in previous timestep
+    Real prev_dt = 0.; // dt used in previous timestep
 
     int particle_max_grid_size_x = -1;
     int particle_max_grid_size_y = -1;
@@ -884,12 +897,14 @@ class mfix : public AmrCore
 
     //! EB levels representing fluid boundary conditions
     Vector<const EB2::Level *> eb_levels;
+
     //! EB levels representing particle boundary conditions (same as
     //! `mfix::eb_levels` but might include additional walls at MI BCs).
     Vector<const EB2::Level *> particle_eb_levels;
 
     //! EB factory that lives on the fluid grids
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;
+
     //! EB factory that lives on the particle grids
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
 

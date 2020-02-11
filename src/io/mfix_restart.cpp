@@ -351,7 +351,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
              ep_g[lev]->FillBoundary(geom[lev].periodicity());
-            ep_go[lev]->FillBoundary(geom[lev].periodicity());
+          (m_leveldata[lev]->ep_go).FillBoundary(geom[lev].periodicity());
 
              ro_g[lev]->FillBoundary(geom[lev].periodicity());
             ro_go[lev]->FillBoundary(geom[lev].periodicity());
