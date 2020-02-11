@@ -502,6 +502,8 @@ void mfix::MakeNewLevelFromScratch (int lev, Real time,
     amrex::Print() << "SETTING NEW GRIDS IN MAKE NEW LEVEL " << new_grids << std::endl;
     amrex::Print() << "SETTING NEW DMAP IN MAKE NEW LEVEL " << new_dmap << std::endl;
 
+    m_leveldata[lev].reset(new LevelData());
+
     // This is being done by mfix::make_eb_geometry,
     // otherwise it would be done here
     if (lev == 0) MakeBCArrays();
