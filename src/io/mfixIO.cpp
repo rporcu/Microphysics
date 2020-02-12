@@ -246,36 +246,36 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
 #endif
 
       // Not tiling this loop.
-      for (MFIter mfi(ep_g,false); mfi.isValid(); ++mfi)
+      for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
+      {
+
+        const Box& bx  = mfi.validbox();
+
+        // this is to check efficiently if this grid contains any eb stuff
+        const EBFArrayBox&  epg_fab = static_cast<EBFArrayBox const&>(ep_g[mfi]);
+        const EBCellFlagFab&  flags = epg_fab.getEBCellFlagFab();
+
+        RealBox box_region ( bx, Geom(lev).CellSize (), Geom(lev).ProbLo() );
+
+        if (flags.getType(bx) != FabType::covered)
         {
+          if ( box_region.intersects ( avg_region ) )
+          {
 
-          const Box& bx  = mfi.validbox();
-
-          // this is to check efficiently if this grid contains any eb stuff
-          const EBFArrayBox&  epg_fab = static_cast<EBFArrayBox const&>(ep_g[mfi]);
-          const EBCellFlagFab&  flags = epg_fab.getEBCellFlagFab();
-
-          RealBox box_region ( bx, Geom(lev).CellSize (), Geom(lev).ProbLo() );
-
-          if (flags.getType(bx) != FabType::covered)
-            {
-              if ( box_region.intersects ( avg_region ) )
-                {
-
-                  mfix_collect_fluid(BL_TO_FORTRAN_BOX(bx),
-                                     BL_TO_FORTRAN_BOX(domain),
-                                     BL_TO_FORTRAN_ANYD(         ep_g[mfi]),
-                                     BL_TO_FORTRAN_ANYD((     *pg_cc)[mfi]),
-                                     BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                                     BL_TO_FORTRAN_ANYD((   *volfrac)[mfi]),
-                                     &avg_region_x_w[nr], &avg_region_x_e[nr],
-                                     &avg_region_y_s[nr], &avg_region_y_n[nr],
-                                     &avg_region_z_b[nr], &avg_region_z_t[nr], dx,
-                                     &sum_ep_g, &sum_p_g,  &sum_vol,
-                                     &sum_velx, &sum_vely, &sum_velz);
-                }
-            }
+            mfix_collect_fluid(BL_TO_FORTRAN_BOX(bx),
+                               BL_TO_FORTRAN_BOX(domain),
+                               BL_TO_FORTRAN_ANYD(         ep_g[mfi]),
+                               BL_TO_FORTRAN_ANYD((     *pg_cc)[mfi]),
+                               BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+                               BL_TO_FORTRAN_ANYD((   *volfrac)[mfi]),
+                               &avg_region_x_w[nr], &avg_region_x_e[nr],
+                               &avg_region_y_s[nr], &avg_region_y_n[nr],
+                               &avg_region_z_b[nr], &avg_region_z_t[nr], dx,
+                               &sum_ep_g, &sum_p_g,  &sum_vol,
+                               &sum_velx, &sum_vely, &sum_velz);
+          }
         }
+      }
 
       regions_data[var_count*nr + 0] = sum_vol;
       regions_data[var_count*nr + 1] = sum_velx;

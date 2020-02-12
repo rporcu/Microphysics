@@ -29,7 +29,7 @@ mfix::mfix_set_epg_bcs (const Vector< unique_ptr<LevelData> >& leveldata) const
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(ep_g, TilingIfNotGPU()); mfi.isValid(); ++mfi)
+    for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
       set_epg_bcs(lev, ep_g[mfi], domain, &extrap_dir_bcs);
 
     EB_set_covered(ep_g, 0, ep_g.nComp(), ep_g.nGrow(), covered_val);

@@ -103,7 +103,7 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
         //  no-slip walls are treated exactly like slip walls --
         // Note that this routine is essential to impose the correct inflow bc's on
         //  the product ep  * vel
-        for (MFIter mfi((*epu[lev]), TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        for (MFIter mfi(*epu[lev], false); mfi.isValid(); ++mfi)
         {
             // Why are we using this instead of simply multiplying vel and ep with their BCs in place
             // already?
@@ -218,7 +218,7 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
         //  no-slip walls are treated exactly like slip walls --
         // Note that this routine is essential to impose the correct inflow bc's on
         //  the product ep  * vel
-        for (MFIter mfi((*epu[lev]), TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        for (MFIter mfi(*epu[lev], false); mfi.isValid(); ++mfi)
         {
             // Why are we using this instead of simply multiplying vel and ep with their BCs in place
             // already?
