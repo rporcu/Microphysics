@@ -140,7 +140,7 @@ mfix::usr3 ()
           Real dz = geom[lev].CellSize(2);
 
           // We deliberately don't tile this loop
-          for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
+          for (MFIter mfi(*p_g[lev], false); mfi.isValid(); ++mfi)
           {
              mfix_usr3(BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
                        BL_TO_FORTRAN_ANYD((  *p_g[lev])[mfi]),

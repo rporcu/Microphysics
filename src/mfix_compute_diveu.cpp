@@ -49,10 +49,10 @@ mfix::mfix_compute_diveu (Real time)
       //  no-slip walls are treated exactly like slip walls --
       // Note that this routine is essential to impose the correct inflow bc's on
       //  the product ep_g * vel_g
-      for (MFIter mfi((*epu[lev]), TilingIfNotGPU()); mfi.isValid(); ++mfi)
-        {
-          set_vec_bcs(lev, (*epu[lev])[mfi], domain);
-        }
+      for (MFIter mfi(*epu[lev], false); mfi.isValid(); ++mfi)
+      {
+        set_vec_bcs(lev, (*epu[lev])[mfi], domain);
+      }
 
       epu[lev]->FillBoundary(geom[lev].periodicity());
 

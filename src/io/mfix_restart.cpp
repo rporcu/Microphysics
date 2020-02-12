@@ -211,7 +211,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                mf_gp.copyTo(single_fab_gp);
 
               // Copy and replicate mf into velocity
-              for (MFIter mfi(*vel_g[lev]); mfi.isValid(); ++mfi)
+              for (MFIter mfi(*vel_g[lev], false); mfi.isValid(); ++mfi)
               {
                 int ib = mfi.index();
                 (*vel_g[lev])[ib].copy(single_fab_vel,single_fab_vel.box(),0,mfi.validbox(),0,3);
@@ -256,7 +256,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
              mf.copyTo(single_fab);
 
               // Copy and replicate mf into chkscalarVars
-              for (MFIter mfi( *(*chkscalarVars[i])[lev] ); mfi.isValid(); ++mfi) {
+              for (MFIter mfi(*(*chkscalarVars[i])[lev], false); mfi.isValid(); ++mfi) {
                   int ib = mfi.index();
                   (*(*chkscalarVars[i])[lev])[ib].copy(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
               }

@@ -103,7 +103,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
           MultiFab::Copy(*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(),  vel_go[lev]->nGrow());
 
            // User hooks
-           for (MFIter mfi(*ep_g[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
+           for (MFIter mfi(*ep_g[lev], false); mfi.isValid(); ++mfi)
               mfix_usr2();
         }
 

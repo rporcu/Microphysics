@@ -16,7 +16,7 @@ void mfix::mfix_deposition_bcs_scalar (int lev, amrex::MultiFab& filled_mf)
   const int minf = bc_list.get_minf();
   const int pinf = bc_list.get_pinf();
 
-  for (MFIter mfi(filled_mf); mfi.isValid(); ++mfi) {
+  for (MFIter mfi(filled_mf, false); mfi.isValid(); ++mfi) {
 
     const Box& sbx = filled_mf[mfi].box();
 
