@@ -792,7 +792,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        Real dy = geom[lev].CellSize(1);
        Real dz = geom[lev].CellSize(2);
 
-       MultiFab& ep_g = m_leveldata[lev]->ep_g;
+       MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
 
        // We deliberately don't tile this loop since we will be looping
        //    over bc's on faces and it makes more sense to do this one grid at a time
@@ -828,7 +828,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
     for (int lev = 0; lev < nlev; lev++)
     {
-       (m_leveldata[lev]->ep_g).FillBoundary(geom[lev].periodicity());
+       (m_leveldata[lev]->ep_g)->FillBoundary(geom[lev].periodicity());
        ro_g[lev]->FillBoundary(geom[lev].periodicity());
        mu_g[lev]->FillBoundary(geom[lev].periodicity());
 
@@ -841,9 +841,9 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
     if (is_restarting == 0)
     {
        // Just for reference, we compute the volume inside the EB walls (as if there were no particles)
-       (m_leveldata[0]->ep_g).setVal(1.);
+       (m_leveldata[0]->ep_g)->setVal(1.);
 
-       sum_vol_orig = volWgtSum(0, m_leveldata[0]->ep_g, 0);
+       sum_vol_orig = volWgtSum(0, *(m_leveldata[0]->ep_g), 0);
 
        Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
 
@@ -878,7 +878,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
         mfix_set_epg_bcs(m_leveldata);
 
         //Calculation of sum_vol_orig for a restarting point
-        sum_vol_orig = volWgtSum(0, m_leveldata[0]->ep_g, 0);
+        sum_vol_orig = volWgtSum(0, *(m_leveldata[0]->ep_g), 0);
 
        Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
     }
@@ -893,7 +893,7 @@ mfix::mfix_set_bc0 ()
 
      Box domain(geom[lev].Domain());
 
-     MultiFab& ep_g = m_leveldata[lev]->ep_g;
+     MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
 
      // Don't tile this -- at least for now
      for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
@@ -903,7 +903,7 @@ mfix::mfix_set_bc0 ()
        set_bc0(sbx, &mfi, lev, domain);
      }
 
-     ep_g.FillBoundary(geom[lev].periodicity());
+     (m_leveldata[lev]->ep_g)->FillBoundary(geom[lev].periodicity());
      ro_g[lev]->FillBoundary(geom[lev].periodicity());
      if (advect_tracer)
         trac[lev]->FillBoundary(geom[lev].periodicity());
@@ -952,7 +952,7 @@ mfix::mfix_set_p0 ()
 
      // We deliberately don't tile this loop since we will be looping
      //    over bc's on faces and it makes more sense to do this one grid at a time
-     for (MFIter mfi(m_leveldata[lev]->ep_g, false); mfi.isValid(); ++mfi)
+     for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi)
      {
        const Box& bx = mfi.validbox();
 

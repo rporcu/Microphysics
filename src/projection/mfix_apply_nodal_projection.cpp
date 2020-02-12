@@ -59,8 +59,8 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
         mfix_print_max_vel(lev);
         mfix_print_max_gp(lev);
         amrex::Print() << "Min and Max of ep_g "
-                       << (m_leveldata[lev]->ep_g).min(0) << " "
-                       << (m_leveldata[lev]->ep_g).max(0) << std::endl;
+                       << (m_leveldata[lev]->ep_g)->min(0) << " "
+                       << (m_leveldata[lev]->ep_g)->max(0) << std::endl;
   }
 
     // Set velocities BC before projection
@@ -92,7 +92,7 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
         MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow());
 
         for (int n(0); n < 3; n++)
-          MultiFab::Multiply(*epu[lev], m_leveldata[lev]->ep_g, 0, n, 1, epu[lev]->nGrow());
+          MultiFab::Multiply(*epu[lev], *(m_leveldata[lev]->ep_g), 0, n, 1, epu[lev]->nGrow());
 
         epu[lev]->FillBoundary(geom[lev].periodicity());
 
@@ -125,7 +125,7 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
     for (int lev = 0; lev < nlev; ++lev )
         {
             sigma[lev].define(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-            MultiFab::Copy(sigma[lev], m_leveldata[lev]->ep_g, 0, 0, 1, 0);
+            MultiFab::Copy(sigma[lev], *(m_leveldata[lev]->ep_g), 0, 0, 1, 0);
             MultiFab::Divide(sigma[lev], *ro_g[lev], 0, 0, 1, 0);
         }
 
@@ -140,10 +140,9 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
     Vector<std::unique_ptr<MultiFab>> ep_g_vec(nlev);
     for (int lev = 0; lev < nlev; ++lev)
     {
-      MultiFab& ep_g = m_leveldata[lev]->ep_g;
+      MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
       ep_g_vec[lev].reset(new MultiFab(ep_g.boxArray(), ep_g.DistributionMap(),
-                                       ep_g.nComp(), ep_g.nGrow(), MFInfo(),
-                                       ep_g.Factory()));
+                                       ep_g.nComp(), ep_g.nGrow(), MFInfo(), ep_g.Factory()));
       MultiFab::Copy(*ep_g_vec[lev], ep_g, 0, 0, ep_g.nComp(), ep_g.nGrow());
     }
 
@@ -207,7 +206,7 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
         MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow() );
 
         for (int n(0); n < 3; n++)
-            MultiFab::Multiply(*epu[lev], m_leveldata[lev]->ep_g, 0, n, 1, epu[lev]->nGrow());
+            MultiFab::Multiply(*epu[lev], *(m_leveldata[lev]->ep_g), 0, n, 1, epu[lev]->nGrow());
 
         epu[lev]->FillBoundary(geom[lev].periodicity());
 

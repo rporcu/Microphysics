@@ -104,10 +104,12 @@ mfix::AllocateArrays (int lev)
     // ********************************************************************************
 
     // Void fraction
-    (m_leveldata[lev]->ep_g).define(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
-    (m_leveldata[lev]->ep_go).define(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
-    (m_leveldata[lev]->ep_g).setVal(1.);
-    (m_leveldata[lev]->ep_go).setVal(1.);
+    (m_leveldata[lev]->ep_g).reset(new MultiFab(grids[lev], dmap[lev], 1, nghost, 
+                                                MFInfo(), *ebfactory[lev]));
+    (m_leveldata[lev]->ep_go).reset(new MultiFab(grids[lev], dmap[lev], 1, nghost,
+					         MFInfo(), *ebfactory[lev]));
+    (m_leveldata[lev]->ep_g)->setVal(1.);
+    (m_leveldata[lev]->ep_go)->setVal(1.);
 
     // Gas density
     ro_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
@@ -274,20 +276,20 @@ mfix::RegridArrays (int lev)
     //
 
     // Void fraction
-    MultiFab& ep_g = m_leveldata[lev]->ep_g;
-    MultiFab ep_g_new;
-    ep_g_new.define(grids[lev], dmap[lev], ep_g.nComp(), ep_g.nGrow(), MFInfo(), *ebfactory[lev]);
-    ep_g_new.setVal(1.);
-    ep_g_new.copy(ep_g, 0, 0, ep_g.nComp(), ep_g.nGrow(), ep_g.nGrow());
-    MultiFab::Swap(ep_g, ep_g_new, 0, 0, ep_g.nComp(), ep_g.nGrow());
+    MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
+    std::unique_ptr<MultiFab> ep_g_new(new MultiFab(grids[lev], dmap[lev], ep_g.nComp(), ep_g.nGrow(),
+						    MFInfo(), *ebfactory[lev]));
+    ep_g_new->setVal(1.);
+    ep_g_new->copy(ep_g, 0, 0, ep_g.nComp(), ep_g.nGrow(), ep_g.nGrow());
+    m_leveldata[lev]->ep_g = std::move(ep_g_new);
 
     // Old void fraction
-    MultiFab& ep_go = m_leveldata[lev]->ep_go;
-    MultiFab ep_go_new;
-    ep_go_new.define(grids[lev], dmap[lev], ep_go.nComp(), ep_go.nGrow(), MFInfo(), *ebfactory[lev]);
-    ep_go_new.setVal(1.0);
-    ep_go_new.copy(ep_go, 0, 0, ep_go.nComp(), ep_go.nGrow(), ep_go.nGrow());
-    MultiFab::Swap(ep_go, ep_go_new, 0, 0, ep_go.nComp(), ep_go.nGrow());
+    MultiFab& ep_go = *(m_leveldata[lev]->ep_go);
+    std::unique_ptr<MultiFab> ep_go_new(new MultiFab(grids[lev], dmap[lev], ep_go.nComp(), ep_go.nGrow(),
+						    MFInfo(), *ebfactory[lev]));
+    ep_go_new->setVal(1.);
+    ep_go_new->copy(ep_go, 0, 0, ep_go.nComp(), ep_go.nGrow(), ep_go.nGrow());
+    m_leveldata[lev]->ep_go = std::move(ep_go_new);
 
     // Gas density
     std::unique_ptr<MultiFab> ro_g_new(new MultiFab(grids[lev],dmap[lev],

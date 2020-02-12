@@ -15,13 +15,11 @@ mfix::mfix_set_epg_bcs (const Vector< unique_ptr<LevelData> >& leveldata) const
 
   for (int lev = 0; lev < nlev; lev++)
   {
-    MultiFab& ep_g = leveldata[lev]->ep_g;
-
     // Set all values outside the domain to covered_val just to avoid use of
     // undefined
-    ep_g.setDomainBndry(covered_val,geom[lev]);
+    (leveldata[lev]->ep_g)->setDomainBndry(covered_val,geom[lev]);
 
-    ep_g.FillBoundary(geom[lev].periodicity());
+    (leveldata[lev]->ep_g)->FillBoundary(geom[lev].periodicity());
     Box domain(geom[lev].Domain());
 
     const int extrap_dir_bcs(1);
@@ -29,14 +27,15 @@ mfix::mfix_set_epg_bcs (const Vector< unique_ptr<LevelData> >& leveldata) const
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
-      set_epg_bcs(lev, ep_g[mfi], domain, &extrap_dir_bcs);
+    for (MFIter mfi(*(leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi)
+      set_epg_bcs(lev, (*(leveldata[lev]->ep_g))[mfi], domain, &extrap_dir_bcs);
 
-    EB_set_covered(ep_g, 0, ep_g.nComp(), ep_g.nGrow(), covered_val);
+    EB_set_covered(*(leveldata[lev]->ep_g), 0, (leveldata[lev]->ep_g)->nComp(),
+		   (leveldata[lev]->ep_g)->nGrow(), covered_val);
 
     // Do this after as well as before to pick up terms that got updated in the
     // call above
-    ep_g.FillBoundary(geom[lev].periodicity());
+    (leveldata[lev]->ep_g)->FillBoundary(geom[lev].periodicity());
   }
 }
 

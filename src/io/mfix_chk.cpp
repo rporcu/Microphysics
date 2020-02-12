@@ -34,7 +34,7 @@ mfix::InitIOChkData ()
 
     Vector< std::unique_ptr<MultiFab> > ep_g(nlev);
     for(int lev(0); lev < nlev; ++lev) {
-      ep_g[lev].reset(&(m_leveldata[lev]->ep_g));
+      ep_g[lev].reset((m_leveldata[lev]->ep_g).get());
     }
 
     chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &ep_g,  &mu_g,  &level_sets};

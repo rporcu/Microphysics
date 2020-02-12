@@ -14,8 +14,8 @@ class LevelData
 
     // Cell-centered MultiFabs
     // Void fraction
-    amrex::MultiFab ep_g;
-    amrex::MultiFab ep_go;
+    std::unique_ptr<amrex::MultiFab> ep_g;
+    std::unique_ptr<amrex::MultiFab> ep_go;
 };
 
 #endif

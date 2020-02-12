@@ -202,7 +202,7 @@ mfix::mfix_diffuse_ep_g (const amrex::Vector< std::unique_ptr<LevelData> > & lev
 
   // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
   for (int lev = 0; lev < nlev; lev++) {
-    MultiFab::Copy((*diff_phi1[lev]), leveldata[lev]->ep_g, 0, 0, 1, diff_phi1[lev]->nGrow());
+    MultiFab::Copy(*diff_phi1[lev], *(leveldata[lev]->ep_g), 0, 0, 1, diff_phi1[lev]->nGrow());
 
     EB_set_covered(*diff_phi1[lev], 0, diff_phi1[lev]->nComp(),
         diff_phi1[lev]->nGrow(), covered_val);
@@ -212,7 +212,7 @@ mfix::mfix_diffuse_ep_g (const amrex::Vector< std::unique_ptr<LevelData> > & lev
     ebscalarop.setLevelBC(lev, GetVecOfConstPtrs(diff_phi1)[lev]);
 
     // Define RHS = eps
-    MultiFab::Copy((*diff_rhs1[lev]), leveldata[lev]->ep_g, 0, 0, 1, 0);
+    MultiFab::Copy(*diff_rhs1[lev], *(leveldata[lev]->ep_g), 0, 0, 1, 0);
   }
 
   // This ensures that ghost cells of sol are correctly filled when returned from the solver
@@ -229,7 +229,7 @@ mfix::mfix_diffuse_ep_g (const amrex::Vector< std::unique_ptr<LevelData> > & lev
   for (int lev = 0; lev < nlev; lev++)
   {
     diff_phi1[lev]->FillBoundary(geom[lev].periodicity());
-    MultiFab::Copy(leveldata[lev]->ep_g, *diff_phi1[lev], 0, 0, 1, 1);
+    MultiFab::Copy(*(leveldata[lev]->ep_g), *diff_phi1[lev], 0, 0, 1, 1);
   }
 
   amrex::Print() << "After diffusing volume fraction " << std::endl;

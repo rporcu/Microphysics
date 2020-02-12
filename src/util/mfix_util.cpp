@@ -133,7 +133,7 @@ mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 
     const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
 
-    Real sum = amrex::ReduceSum(mf, *volfrac, m_leveldata[lev]->ep_g, 0,
+    Real sum = amrex::ReduceSum(mf, *volfrac, *(m_leveldata[lev]->ep_g), 0,
         [comp] AMREX_GPU_HOST_DEVICE (Box const & bx,
                                       FArrayBox const & rho_fab,
                                       FArrayBox const & volfrac_fab,
