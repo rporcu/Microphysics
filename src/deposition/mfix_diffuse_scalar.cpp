@@ -9,15 +9,17 @@
 #include <AMReX_MLEBTensorOp.H>
 
 #include <MFIX_BC_Parms.H>
+
+using namespace amrex;
+
 //
 // Implicit scalar solve
 //
 void
-mfix::mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_to_diffuse,
-                           amrex::Real dcoeff)
+mfix::mfix_diffuse_scalar (const Vector< MultiFab* > & mf_to_diffuse,
+                           Real dcoeff)
 {
    BL_PROFILE("mfix::mfix_diffuse_scalar");
-
 
    //
    // First define the operator "ebscalarop"
@@ -26,7 +28,7 @@ mfix::mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> > & mf
    //
    LPInfo info;
    info.setMaxCoarseningLevel(diff_mg_max_coarsening_level);
-   MLEBABecLap ebscalarop(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
+   MLEBABecLap ebscalarop(geom, grids, dmap, info, GetVecOfConstPtrs(ebfactory));
 
    // It is essential that we set MaxOrder of the solver to 2
    // if we want to use the standard sol(i)-sol(i-1) approximation

@@ -24,7 +24,7 @@
 
 class DiffusionOp
 {
-public: 
+  public: 
     // Constructor, with initialisation
     DiffusionOp (amrex::AmrCore* _amrcore, 
                  amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>* _ebfactory,
@@ -49,13 +49,13 @@ public:
 
     // Tensor viscous solve
     void diffuse_velocity (amrex::Vector<std::unique_ptr<amrex::MultiFab>>& vel, 
-                           const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ep_ro, 
+                           const amrex::Vector< amrex::MultiFab* >& ep_ro, 
                            const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& eta, 
                            amrex::Real dt);
 
     // Scalar diffusion
     void diffuse_scalar (amrex::Vector<std::unique_ptr<amrex::MultiFab>>& scal,
-                         const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ep_ro, 
+                         const amrex::Vector< amrex::MultiFab* >& ep_ro, 
                          const amrex::Vector<amrex::Real> mu_s, 
                          amrex::Real dt);
 
@@ -63,18 +63,17 @@ public:
     void ComputeDivTau (amrex::Vector<std::unique_ptr<amrex::MultiFab>>& divtau_out,
                         const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& vel_in,
                         const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ro_in,
-                        const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ep_in,
+                        const amrex::Vector< amrex::MultiFab* >& ep_in,
                         const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& eta_in);
 
     // Explicit tensor viscous term
     void ComputeLapS (amrex::Vector<std::unique_ptr<amrex::MultiFab>>& laps_out,
                       const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& scal_in,
                       const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ro_in,
-                      const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ep_in,
+                      const amrex::Vector< amrex::MultiFab* >& ep_in,
                       const amrex::Vector<amrex::Real> mu_s);
 
-private:
-
+  private:
     // AmrCore data 
     amrex::AmrCore* amrcore;
     amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>* ebfactory;

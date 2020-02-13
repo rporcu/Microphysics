@@ -306,7 +306,9 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
                             Vector< std::unique_ptr<MultiFab> >& conv_s_old,
                             Vector< std::unique_ptr<MultiFab> >& divtau_old,
                             Vector< std::unique_ptr<MultiFab> >&   laps_old,
-                            Real time, Real dt, bool proj_2)
+                            Real time,
+                            Real dt,
+                            bool proj_2)
 {
     // We use the new-time value for things computed on the "*" state
     Real new_time = time + dt;

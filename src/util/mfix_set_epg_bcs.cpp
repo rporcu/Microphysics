@@ -4,8 +4,10 @@
 //  These subroutines set the BCs for ep_g only
 //
 
+using namespace amrex;
+
 void
-mfix::mfix_set_epg_bcs (const amrex::Vector< std::unique_ptr<MultiFab> > & epg_in) const
+mfix::mfix_set_epg_bcs (const Vector< MultiFab* > & epg_in) const
 {
   BL_PROFILE("mfix::mfix_set_epg_bcs()");
 

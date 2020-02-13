@@ -105,10 +105,10 @@ mfix::AllocateArrays (int lev)
     // ********************************************************************************
 
     // Void fraction
-    ep_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
-    ep_go[lev] = new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
-    ep_g[lev]->setVal(1.0);
-    ep_go[lev]->setVal(1.0);
+    ep_g[lev] = new MultiFab(grids[lev], dmap[lev], 1, nghost, MFInfo(), *ebfactory[lev]);
+    ep_go[lev] = new MultiFab(grids[lev], dmap[lev], 1, nghost, MFInfo(), *ebfactory[lev]);
+    ep_g[lev]->setVal(1.);
+    ep_go[lev]->setVal(1.);
 
     // Gas density
     ro_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
@@ -275,16 +275,17 @@ mfix::RegridArrays (int lev)
     //
 
     // Void fraction
-    std::unique_ptr<MultiFab> ep_g_new(new MultiFab(grids[lev],dmap[lev],
-                                       ep_g[lev]->nComp(),ep_g[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    ep_g_new->setVal(1.0);
-    ep_g_new->copy(*ep_g[lev],0,0,ep_g[lev]->nComp(),ep_g[lev]->nGrow(),ep_g[lev]->nGrow());
-    ep_g[lev] = std::move(ep_g_new);
+    MultiFab* ep_g_new = new MultiFab(grids[lev],dmap[lev], ep_g[lev]->nComp(),
+                                      ep_g[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    ep_g_new->setVal(1.);
+    ep_g_new->copy(*ep_g[lev], 0, 0, ep_g[lev]->nComp(), ep_g[lev]->nGrow(), ep_g[lev]->nGrow());
+    std::swap(ep_g[lev], ep_g_new);
+    delete ep_g_new;
 
     // Old void fraction
     MultiFab* ep_go_new = new MultiFab(grids[lev],dmap[lev], ep_go[lev]->nComp(),
-                                       ep_go[lev]->nGrow(), MFInfo(),*ebfactory[lev]);
-    ep_go_new->setVal(1.0);
+                                       ep_go[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    ep_go_new->setVal(1.);
     ep_go_new->copy(*ep_go[lev], 0, 0, ep_go[lev]->nComp(), ep_go[lev]->nGrow(), ep_go[lev]->nGrow());
     std::swap(ep_go[lev], ep_go_new);
     delete ep_go_new;

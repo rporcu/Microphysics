@@ -214,13 +214,13 @@ class mfix : public AmrCore
                                      Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                                      Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                                      Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                                     Vector< std::unique_ptr<MultiFab> >& ep_g);
+                                     Vector< MultiFab* >& ep_g);
 
     void mfix_set_velocity_bcs (Real time,
                                 Vector< std::unique_ptr<MultiFab> >& vel,
                                 int extrap_dir_bcs) const;
 
-    void mfix_set_epg_bcs (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps) const;
+    void mfix_set_epg_bcs (const amrex::Vector< MultiFab* >& mf_eps) const;
 
     void mfix_set_density_bcs (Real time,
                                Vector< std::unique_ptr<MultiFab> >& ro_g);
@@ -467,7 +467,7 @@ class mfix : public AmrCore
     void apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                                Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                                Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                               Vector< std::unique_ptr<MultiFab> >& ep,
+                               Vector< MultiFab* >& ep,
                                Vector< std::unique_ptr<MultiFab> >& ro,
                                Real time);
 
@@ -542,7 +542,7 @@ class mfix : public AmrCore
     void mfix_compute_convective_term (Vector< std::unique_ptr<MultiFab> >& conv_u,
                                        Vector< std::unique_ptr<MultiFab> >& conv_s,
                                        Vector< std::unique_ptr<MultiFab> >& vel,
-                                       Vector< std::unique_ptr<MultiFab> >& ep_g,
+                                       Vector< MultiFab* >& ep_g,
                                        Vector< std::unique_ptr<MultiFab> >& ro_g,
                                        Vector< std::unique_ptr<MultiFab> >& trac,
                                        Real time);
@@ -561,7 +561,7 @@ class mfix : public AmrCore
                                Vector< std::unique_ptr<MultiFab> >&   laps_old,
                                Real time, Real dt, bool proj_2);
 
-    void mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps, amrex::Real);
+    void mfix_diffuse_scalar (const amrex::Vector< MultiFab* >& mf_eps, amrex::Real);
 
     void mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_drag, amrex::Real);
 
@@ -598,7 +598,7 @@ class mfix : public AmrCore
     Vector< std::unique_ptr<iMultiFab> > flag;
 
     // Void fraction
-    Vector< std::unique_ptr<MultiFab> > ep_g;
+    Vector< MultiFab* > ep_g;
     Vector< MultiFab* > ep_go;
 
     // Gas pressure fraction

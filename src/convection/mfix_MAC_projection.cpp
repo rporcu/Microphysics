@@ -22,7 +22,7 @@ void
 mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                             Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                            Vector< std::unique_ptr<MultiFab> >& ep_in,
+                            Vector< MultiFab* >& ep_in,
                             Vector< std::unique_ptr<MultiFab> >& ro_in,
                             Real time)
 {

@@ -132,7 +132,7 @@ void DiffusionOp::readParameters ()
 // Implicit tensor solve for velocity diffusion
 //
 void DiffusionOp::diffuse_velocity (Vector<std::unique_ptr<MultiFab>>& vel_in,
-                                    const Vector<std::unique_ptr<MultiFab>>& ep_ro_in,
+                                    const Vector< MultiFab* >& ep_ro_in,
                                     const Vector<std::unique_ptr<MultiFab>>& eta_in,
                                     Real dt)
 {
@@ -215,7 +215,7 @@ void DiffusionOp::diffuse_velocity (Vector<std::unique_ptr<MultiFab>>& vel_in,
 // Implicit solve for scalar diffusion
 //
 void DiffusionOp::diffuse_scalar (Vector<std::unique_ptr<MultiFab>>& scal_in,
-                                  const Vector<std::unique_ptr<MultiFab>>& ep_ro_in,
+                                  const Vector< MultiFab* >& ep_ro_in,
                                   const Vector<Real> mu_s, Real dt)
 {
     BL_PROFILE("DiffusionOp::diffuse_scalar");
@@ -324,7 +324,7 @@ void DiffusionOp::setSolverSettings (MLMG& solver)
 void DiffusionOp::ComputeDivTau (Vector<std::unique_ptr<MultiFab>>& divtau_out,
                                  const Vector<std::unique_ptr<MultiFab>>& vel_in,
                                  const Vector<std::unique_ptr<MultiFab>>& ro_in,
-                                 const Vector<std::unique_ptr<MultiFab>>& ep_in,
+                                 const Vector< MultiFab* >& ep_in,
                                  const Vector<std::unique_ptr<MultiFab>>& eta_in)
 {
     BL_PROFILE("DiffusionOp::ComputeDivTau");
@@ -384,7 +384,7 @@ void DiffusionOp::ComputeDivTau (Vector<std::unique_ptr<MultiFab>>& divtau_out,
 void DiffusionOp::ComputeLapS (Vector<std::unique_ptr<MultiFab>>& laps_out,
                                const Vector<std::unique_ptr<MultiFab>>& scal_in,
                                const Vector<std::unique_ptr<MultiFab>>& ro_in,
-                               const Vector<std::unique_ptr<MultiFab>>& ep_in,
+                               const Vector< MultiFab* >& ep_in,
                                const Vector<Real> mu_s) 
 {
     BL_PROFILE("DiffusionOp::ComputeLapS");

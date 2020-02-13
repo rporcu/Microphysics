@@ -33,7 +33,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 
         // If we are already working with the internal mf defined on the
         // particle_box_array, then we just work with this.
-        mf_pointer[lev] = ep_g[lev].get();
+        mf_pointer[lev] = ep_g[lev];
 
       } else if (lev == 0 and (not OnSameGrids))  {
         // If ep_g is not defined on the particle_box_array, then we need
@@ -149,11 +149,11 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
     // to copy here from mf_pointer into ep_g. I believe that we don't
     // need any information in ghost cells so we don't copy those.
 
-    if (mf_pointer[0] != ep_g[0].get())
+    if (mf_pointer[0] != ep_g[0])
       ep_g[0]->copy(*mf_pointer[0],0,0,ep_g[0]->nComp());
 
     for (int lev = 0; lev < nlev; lev++)
-       if (mf_pointer[lev] != ep_g[lev].get())
+       if (mf_pointer[lev] != ep_g[lev])
           delete mf_pointer[lev];
 
     if (m_verbose > 1) {
