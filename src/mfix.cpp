@@ -38,6 +38,7 @@ mfix::~mfix ()
 {
   for (int lev(0); lev < nlev; ++lev)
   {
+    delete level_sets[lev];
     delete ep_g[lev];
     delete ep_go[lev];
     delete p_g[lev];
