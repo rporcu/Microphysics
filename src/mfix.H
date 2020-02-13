@@ -42,7 +42,10 @@ enum DepositionScheme {trilinear, square_dpvm, true_dpvm, centroid};
 class mfix : public AmrCore
 {
   public:
+    // Constructor
     mfix ();
+
+    // Destructor
     ~mfix ();
 
     // Face-based coefficients b in MAC projection and implicit diffusion solve
@@ -58,6 +61,7 @@ class mfix : public AmrCore
     void InitLevelData (Real time);
 
     void mfix_init_solvers ();
+
     void mfix_setup_solvers ();
 
     void PostInit (Real& dt, Real time, int restart_flag, Real stop_time);
@@ -99,8 +103,11 @@ class mfix : public AmrCore
     void make_mg_bc (int mg_bc[]);
 
     void make_eb_geometry ();
+
     void make_eb_factories ();
+
     void fill_eb_levelsets ();
+
     void intersect_ls_walls ();
 
     template<class F>
@@ -159,6 +166,7 @@ class mfix : public AmrCore
     void WriteMyEBSurface ();
 
     void InitIOChkData ();
+
     void InitIOPltData ();
 
     // If > 0, dump plotfiles every "plot_int" steps
@@ -448,6 +456,7 @@ class mfix : public AmrCore
     void mfix_set_ls_near_inflow ();
 
     void mfix_project_velocity ();
+
     void mfix_initial_iterations (Real dt, Real stop_time);
 
     void mfix_apply_nodal_projection (Vector< std::unique_ptr< amrex::MultiFab > >& a_depdt,
@@ -793,8 +802,8 @@ class mfix : public AmrCore
     //
     // Options to control the computing of particle eulerian velocities
     //
-    amrex::Vector<Real> avg_p_g  ;
-    amrex::Vector<Real> avg_ep_g ;
+    amrex::Vector<Real> avg_p_g;
+    amrex::Vector<Real> avg_ep_g;
     amrex::Vector<Real> avg_vel_g;
 
     amrex::Vector<Real> avg_vel_p;
@@ -884,12 +893,14 @@ class mfix : public AmrCore
 
     //! EB levels representing fluid boundary conditions
     Vector<const EB2::Level *> eb_levels;
+
     //! EB levels representing particle boundary conditions (same as
     //! `mfix::eb_levels` but might include additional walls at MI BCs).
     Vector<const EB2::Level *> particle_eb_levels;
 
     //! EB factory that lives on the fluid grids
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;
+
     //! EB factory that lives on the particle grids
     Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
 

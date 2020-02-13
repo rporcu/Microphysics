@@ -33,8 +33,16 @@ EBSupport mfix::m_eb_support_level = EBSupport::full;
 RealVect mfix::gravity {0.};
 RealVect mfix::gp0     {0.};
 
-mfix::~mfix () {};
+// Destructor
+mfix::~mfix ()
+{
+  for (int lev(0); lev < nlev; ++lev)
+  {
+    delete ep_go[lev];
+  }
+};
 
+// Constructor
 mfix::mfix ()
   : m_bc_u_g(get_dim_bc()+1, 0)
   , m_bc_v_g(get_dim_bc()+1, 0)
