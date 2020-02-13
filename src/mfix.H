@@ -867,7 +867,7 @@ class mfix : public AmrCore
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
     Vector< std::string > vecVarsName;
 
-    Vector< const Vector< std::unique_ptr<MultiFab> >* > chkscalarVars;
+    Vector< const Vector< MultiFab* >* > chkscalarVars;
     Vector< std::string > chkscaVarsName;
 
     /***************************************************************************
