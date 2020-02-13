@@ -590,7 +590,7 @@ class mfix : public AmrCore
 
     // Void fraction
     Vector< std::unique_ptr<MultiFab> > ep_g;
-    Vector< std::unique_ptr<MultiFab> > ep_go;
+    Vector< MultiFab* > ep_go;
 
     // Gas pressure fraction
     Vector< std::unique_ptr<MultiFab> > p_g;

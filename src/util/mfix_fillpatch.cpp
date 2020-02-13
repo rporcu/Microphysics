@@ -258,7 +258,7 @@ mfix::GetDataScalar (int lev,
         } else if (icomp == 1) {
            data.push_back(trac_o[lev].get());
         } else if (icomp == 2) {
-           data.push_back(ep_go[lev].get());
+           data.push_back(ep_go[lev]);
         }
         datatime.push_back(t_old[lev]);
     }
@@ -271,7 +271,7 @@ mfix::GetDataScalar (int lev,
            data.push_back(trac_o[lev].get());
            data.push_back( trac[lev].get());
         } else if (icomp == 2) {
-           data.push_back(ep_go[lev].get());
+           data.push_back(ep_go[lev]);
            data.push_back( ep_g[lev].get());
         }
         datatime.push_back(t_old[lev]);
