@@ -44,7 +44,6 @@ mfix::~mfix ()
     delete bc_jhi[lev];
     delete bc_klo[lev];
     delete bc_khi[lev];
-    delete flag[lev];
     delete ep_g[lev];
     delete ep_go[lev];
     delete p_g[lev];
