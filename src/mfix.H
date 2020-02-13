@@ -49,7 +49,7 @@ class mfix : public AmrCore
     ~mfix ();
 
     // Face-based coefficients b in MAC projection and implicit diffusion solve
-    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > bcoeff;
+    Vector< Array< std::unique_ptr<MultiFab>,3> > bcoeff;
 
     void InitParams ();
 
@@ -152,14 +152,14 @@ class mfix : public AmrCore
     const Geometry get_geom_ref (int lev)
     { return geom[lev]; }
 
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls (bool & has_walls);
+    std::shared_ptr<UnionListIF<EB2::PlaneIF>> get_walls (bool & has_walls);
 
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls (bool & has_real_walls);
+    std::shared_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls (bool & has_real_walls);
 
-    std::unique_ptr<EB2::TranslationIF<EB2::PolynomialIF>> 
+    std::shared_ptr<EB2::TranslationIF<EB2::PolynomialIF>> 
       get_poly (int max_order, std::string field_prefix);
 
-    std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
+    std::shared_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
       make_wall (int dir, // direction (long edge) of wall
                  Real position, Real height, Real width);
 
@@ -330,9 +330,9 @@ class mfix : public AmrCore
                                Real time);
 
     void mfix_compute_fluxes (const int lev,
-                              Vector< std::unique_ptr<MultiFab> >& a_fx,
-                              Vector< std::unique_ptr<MultiFab> >& a_fy,
-                              Vector< std::unique_ptr<MultiFab> >& a_fz,
+                              Vector< MultiFab* >& a_fx,
+                              Vector< MultiFab* >& a_fy,
+                              Vector< MultiFab* >& a_fz,
                               Vector< MultiFab* >& state,
                               const int state_comp,
                               const int n_comp,
@@ -390,7 +390,7 @@ class mfix : public AmrCore
     //
     ////////////////////////////////////////////////////////////////////////////
 
-    std::unique_ptr<DiffusionOp> diffusion_op;
+    std::shared_ptr<DiffusionOp> diffusion_op;
 
     ////////////////////////////////////////////////////////////////////////////
     //
@@ -398,7 +398,7 @@ class mfix : public AmrCore
     //
     ////////////////////////////////////////////////////////////////////////////
 
-    std::unique_ptr<NodalProjector> nodal_projector;
+    std::shared_ptr<NodalProjector> nodal_projector;
 
   protected:
     //! Tagging cells for refinement
@@ -462,7 +462,7 @@ class mfix : public AmrCore
 
     void mfix_initial_iterations (Real dt, Real stop_time);
 
-    void mfix_apply_nodal_projection (Vector< std::unique_ptr< amrex::MultiFab > >& a_depdt,
+    void mfix_apply_nodal_projection (Vector< amrex::MultiFab* >& a_depdt,
                                       amrex::Real a_time,
                                       amrex::Real a_dt,
                                       bool proj_2 );
@@ -672,11 +672,11 @@ class mfix : public AmrCore
     Vector< MultiFab* > w_mac;
 
     // Pressure increment
-    Vector< std::unique_ptr<MultiFab> > phi_nd;
+    Vector< MultiFab* > phi_nd;
 
     // used if load_balance_type == "KnapSack"
-    Vector<std::unique_ptr<MultiFab> > particle_cost;
-    Vector<std::unique_ptr<MultiFab> > fluid_cost;
+    Vector< MultiFab* > particle_cost;
+    Vector< MultiFab* > fluid_cost;
 
     int steady_state = 0;
 

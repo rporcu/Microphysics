@@ -595,8 +595,8 @@ void mfix::InitLevelData (Real time)
       {
           for (int lev = 0; lev < nlev; lev++)
           {
-             particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
-                                                   pc->ParticleDistributionMap(lev), 1, 0));
+             particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                               pc->ParticleDistributionMap(lev), 1, 0);
              particle_cost[lev]->setVal(0.0);
           }
       }
@@ -612,7 +612,7 @@ void mfix::InitLevelData (Real time)
        {
           for (int lev = 0; lev < nlev; lev++)
           {
-             fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+             fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
              fluid_cost[lev]->setVal(0.0);
           }
        }
@@ -687,8 +687,8 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
                 DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
                 pc->Regrid(particle_dm, particle_ba);
 
-                particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
-                                                      pc->ParticleDistributionMap(lev), 1, 0));
+                particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                                  pc->ParticleDistributionMap(lev), 1, 0);
                 particle_cost[lev]->setVal(0.0);
 
                 // This calls re-creates a proper particle_ebfactories

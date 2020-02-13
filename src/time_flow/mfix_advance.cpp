@@ -181,11 +181,14 @@ mfix::mfix_project_velocity ()
     Real time = 0.0;
 
     // Apply projection -- depdt=0 for now
-    Vector< std::unique_ptr< MultiFab > > depdt(nlev);
-    for (int lev(0); lev < nlev; ++lev )
-        depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1);
+    Vector< MultiFab* > depdt(nlev);
+    for (int lev(0); lev < nlev; ++lev)
+      depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1).release();
 
     mfix_apply_nodal_projection(depdt, time, dummy_dt, proj_2);
+
+    for (int lev(0); lev < nlev; ++lev)
+      delete depdt[lev];
 
     // We initialize p_g and gp back to zero (p0_g may still be still non-zero)
     for (int lev = 0; lev < nlev; lev++)
@@ -401,11 +404,14 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     }
 
     // Project velocity field -- depdt=0 for now
-    Vector< std::unique_ptr< MultiFab > > depdt(nlev);
-    for (int lev(0); lev < nlev; ++lev )
-        depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1);
+    Vector< MultiFab* > depdt(nlev);
+    for (int lev(0); lev < nlev; ++lev)
+      depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1).release();
 
     mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
+
+    for (int lev(0); lev < nlev; ++lev)
+      delete depdt[lev];
 
     //mfix_set_velocity_bcs(new_time, vel_g, 0);
 }
@@ -547,11 +553,14 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     //
     // Apply projection -- depdt=0 for now
     //
-    Vector< std::unique_ptr< MultiFab > > depdt(nlev);
-    for (int lev(0); lev < nlev; ++lev )
-        depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1);
+    Vector< MultiFab* > depdt(nlev);
+    for (int lev(0); lev < nlev; ++lev)
+        depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1).release();
 
     mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
+
+    for (int lev(0); lev < nlev; ++lev)
+      delete depdt[lev];
 
     //mfix_set_velocity_bcs(new_time, vel_g, 0);
 }

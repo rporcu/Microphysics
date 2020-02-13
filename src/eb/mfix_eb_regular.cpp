@@ -42,7 +42,7 @@ mfix::make_eb_regular ()
     // if (FLUID::solve)
     {
         bool has_walls = false;
-        std::unique_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls = get_real_walls(has_walls);
+        std::shared_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls = get_real_walls(has_walls);
 
         if (has_walls)
         {

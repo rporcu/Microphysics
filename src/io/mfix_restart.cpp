@@ -370,8 +370,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         {
             for (int lev = 0; lev <= finestLevel(); lev++)
             {
-               particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
-                                                     pc->ParticleDistributionMap(lev), 1, 0));
+               particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                                 pc->ParticleDistributionMap(lev), 1, 0);
                particle_cost[lev]->setVal(0.0);
             }
         }
@@ -379,7 +379,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         {
             for (int lev = 0; lev <= finestLevel(); lev++)
             {
-               fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+               fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
                fluid_cost[lev]->setVal(0.0);
             }
         }

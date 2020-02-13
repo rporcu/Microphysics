@@ -39,9 +39,9 @@ using namespace ugradu_aux;
 //
 void
 mfix::mfix_compute_fluxes (int lev,
-                           Vector< std::unique_ptr<MultiFab> >& a_fx,
-                           Vector< std::unique_ptr<MultiFab> >& a_fy,
-                           Vector< std::unique_ptr<MultiFab> >& a_fz,
+                           Vector< MultiFab* >& a_fx,
+                           Vector< MultiFab* >& a_fy,
+                           Vector< MultiFab* >& a_fz,
                            Vector< MultiFab* >& state_in,
                            const int state_comp, const int ncomp,
                            Vector< MultiFab* >& xslopes_in,
@@ -53,15 +53,15 @@ mfix::mfix_compute_fluxes (int lev,
                            Vector< MultiFab* >& ep_w_mac)
 {
         // Get EB geometric info
-        Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
-        Array< const MultiCutFab*,AMREX_SPACEDIM> facecent;
-        const amrex::MultiFab*                    volfrac;
-        const amrex::MultiCutFab*                 bndrycent;
+        Array< const MultiCutFab*,3> areafrac;
+        Array< const MultiCutFab*,3> facecent;
+        const amrex::MultiFab*    volfrac;
+        const amrex::MultiCutFab* bndrycent;
 
-        areafrac  =   ebfactory[lev] -> getAreaFrac();
-        facecent  =   ebfactory[lev] -> getFaceCent();
-        volfrac   = &(ebfactory[lev] -> getVolFrac());
-        bndrycent = &(ebfactory[lev] -> getBndryCent());
+        areafrac  =   ebfactory[lev]->getAreaFrac();
+        facecent  =   ebfactory[lev]->getFaceCent();
+        volfrac   = &(ebfactory[lev]->getVolFrac());
+        bndrycent = &(ebfactory[lev]->getBndryCent());
 
         // Create cc_mask
         iMultiFab cc_mask(grids[lev], dmap[lev], 1, 1);

@@ -363,7 +363,7 @@ void mfix::intersect_ls_walls ()
 {
 
     bool has_walls = false;
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_walls);
+    std::shared_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_walls);
     auto gshop = EB2::makeShop(* walls);
 
     if (has_walls == false)

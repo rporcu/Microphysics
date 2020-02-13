@@ -133,7 +133,7 @@ mfix::AllocateArrays (int lev)
     p_go[lev] = new MultiFab(nd_grids,dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
     p_go[lev]->setVal(0.);
 
-    phi_nd[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0, MFInfo(), *ebfactory[lev]));
+    phi_nd[lev] = new MultiFab(nd_grids,dmap[lev],1,0, MFInfo(), *ebfactory[lev]);
     phi_nd[lev]->setVal(0.);
 
     diveu[lev] = new MultiFab(nd_grids,dmap[lev],1,0, MFInfo(), *ebfactory[lev]);
@@ -352,10 +352,11 @@ mfix::RegridArrays (int lev)
     std::swap(diveu[lev], diveu_new);
     delete diveu_new;
 
-    std::unique_ptr<MultiFab> phi_new(new MultiFab(nd_grids,dmap[lev],
-                                      phi_nd[lev]->nComp(),phi_nd[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    phi_nd[lev] = std::move(phi_new);
-    phi_nd[lev]->setVal(0.);
+    MultiFab* phi_new = new MultiFab(nd_grids, dmap[lev], phi_nd[lev]->nComp(),
+                                     phi_nd[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    phi_new->setVal(0);
+    std::swap(phi_nd[lev], phi_new);
+    delete phi_new;
 
     // Molecular viscosity
     MultiFab* mu_g_new = new MultiFab(grids[lev], dmap[lev], mu_g[lev]->nComp(),

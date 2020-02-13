@@ -113,7 +113,16 @@ mfix::~mfix ()
     delete u_mac[lev];
     delete v_mac[lev];
     delete w_mac[lev];
+    
+    // Pressure increment
+    delete phi_nd[lev];
   }
+
+  for(int lev(0); lev < particle_cost.size(); lev++)
+    delete particle_cost[lev];
+  
+  for(int lev(0); lev < fluid_cost.size(); lev++)
+    delete fluid_cost[lev];
 };
 
 // Constructor
