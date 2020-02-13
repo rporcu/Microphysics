@@ -23,7 +23,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                             Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                             Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
                             Vector< MultiFab* >& ep_in,
-                            Vector< std::unique_ptr<MultiFab> >& ro_in,
+                            Vector< MultiFab* >& ro_in,
                             Real time)
 {
    BL_PROFILE("mfix::apply_MAC_projection()");
@@ -42,11 +42,11 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
       Print() << " >> Before projection\n" ;
 
     // Set bc's on density and ep_g so ro_face and ep_face will have correct values
-    mfix_set_density_bcs(time,ro_in);
+    mfix_set_density_bcs(time, ro_in);
 
    // ro_face and ep_face are temporary, no need to keep it outside this routine
-   Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ro_face;
-   Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
+   Vector< Array< std::unique_ptr<MultiFab>,3> > ro_face;
+   Vector< Array< std::unique_ptr<MultiFab>,3> > ep_face;
 
    ep_face.resize(finest_level+1);
    ro_face.resize(finest_level+1);

@@ -171,8 +171,7 @@ void mfix::fill_eb_levelsets ()
         const BoxArray &            part_ba = pc->ParticleBoxArray(0);
 
         LSFactory lsf(0, levelset_refinement, levelset_eb_refinement,
-                      levelset_pad, levelset_eb_pad, part_ba, geom[0], part_dm );
-
+                      levelset_pad, levelset_eb_pad, part_ba, geom[0], part_dm);
 
         //___________________________________________________________________________
         // NOTE: Boxes are different (since we're not refining, we need to treat
@@ -273,11 +272,11 @@ void mfix::fill_eb_levelsets ()
 
                 GShopLSFactory<decltype(if_box)> gshop_lsfactory(gshop, lsf);
                 std::unique_ptr<MultiFab> mf_impfunc_box = gshop_lsfactory.fill_impfunc();
-                lsf.Intersect(* mf_impfunc_box);
+                lsf.Intersect(*mf_impfunc_box);
             }
 
-            level_sets[1] = lsf.copy_data(part_dm);
-            level_sets[0] = lsf.coarsen_data();
+            level_sets[1] = lsf.copy_data(part_dm).release();
+            level_sets[0] = lsf.coarsen_data().release();
 
             return;
         }
@@ -296,8 +295,8 @@ void mfix::fill_eb_levelsets ()
             lsf.Fill( * ebfactory[0], impfunc);
         }
 
-        level_sets[1] = lsf.copy_data(part_dm);
-        level_sets[0] = lsf.coarsen_data();
+        level_sets[1] = lsf.copy_data(part_dm).release();
+        level_sets[0] = lsf.coarsen_data().release();
     }
     else
     {
@@ -314,7 +313,7 @@ void mfix::fill_eb_levelsets ()
 
         // NOTE: reference BoxArray is not nodal
         BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
-        level_sets[0].reset(new MultiFab);
+        level_sets[0] = new MultiFab();
         level_sets[0]->define(ba, part_dm, 1, levelset_pad);
         iMultiFab valid(ba, part_dm, 1, levelset_pad);
 
@@ -323,18 +322,17 @@ void mfix::fill_eb_levelsets ()
         impfunc.FillBoundary(geom[0].periodicity());
 
 
-        LSFactory::fill_data(* level_sets[0], valid, * particle_ebfactory[0], impfunc,
+        LSFactory::fill_data(*level_sets[0], valid, *particle_ebfactory[0], impfunc,
                              32, 1, 1, geom[0], geom[0]);
 
         for (int lev = 1; lev < nlev; lev++)
         {
-
             const DistributionMapping & part_dm = pc->ParticleDistributionMap(lev);
             const BoxArray &            part_ba = pc->ParticleBoxArray(lev);
 
             // NOTE: reference BoxArray is not nodal
             BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
-            level_sets[lev].reset(new MultiFab);
+            level_sets[lev] = new MultiFab();
             iMultiFab valid(ba, part_dm, 1, levelset_pad);
 
             // Fills level-set[lev] with coarse data

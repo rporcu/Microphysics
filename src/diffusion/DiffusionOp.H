@@ -48,30 +48,30 @@ class DiffusionOp
     void setSolverSettings (amrex::MLMG& solver);
 
     // Tensor viscous solve
-    void diffuse_velocity (amrex::Vector<std::unique_ptr<amrex::MultiFab>>& vel, 
+    void diffuse_velocity (amrex::Vector< amrex::MultiFab* >& vel, 
                            const amrex::Vector< amrex::MultiFab* >& ep_ro, 
-                           const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& eta, 
+                           const amrex::Vector< amrex::MultiFab* >& eta, 
                            amrex::Real dt);
 
     // Scalar diffusion
-    void diffuse_scalar (amrex::Vector<std::unique_ptr<amrex::MultiFab>>& scal,
+    void diffuse_scalar (amrex::Vector< amrex::MultiFab* >& scal,
                          const amrex::Vector< amrex::MultiFab* >& ep_ro, 
                          const amrex::Vector<amrex::Real> mu_s, 
                          amrex::Real dt);
 
     // Explicit tensor viscous term
     void ComputeDivTau (amrex::Vector<std::unique_ptr<amrex::MultiFab>>& divtau_out,
-                        const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& vel_in,
-                        const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ro_in,
+                        const amrex::Vector< amrex::MultiFab* >& vel_in,
+                        const amrex::Vector< amrex::MultiFab* >& ro_in,
                         const amrex::Vector< amrex::MultiFab* >& ep_in,
-                        const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& eta_in);
+                        const amrex::Vector< amrex::MultiFab* >& eta_in);
 
     // Explicit tensor viscous term
     void ComputeLapS (amrex::Vector<std::unique_ptr<amrex::MultiFab>>& laps_out,
-                      const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& scal_in,
-                      const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ro_in,
+                      const amrex::Vector< amrex::MultiFab* >& scal_in,
+                      const amrex::Vector< amrex::MultiFab* >& ro_in,
                       const amrex::Vector< amrex::MultiFab* >& ep_in,
-                      const amrex::Vector<amrex::Real> mu_s);
+                      const amrex::Vector< amrex::Real > mu_s);
 
   private:
     // AmrCore data 

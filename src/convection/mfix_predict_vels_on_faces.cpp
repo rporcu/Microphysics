@@ -2,7 +2,7 @@
 
 void
 mfix::mfix_predict_vels_on_faces (int lev, Real time,
-                                  Vector< std::unique_ptr<MultiFab> >& vel_in,
+                                  Vector< MultiFab* >& vel_in,
                                   Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                                   Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
                                   Vector< std::unique_ptr<MultiFab> >& ep_w_mac,

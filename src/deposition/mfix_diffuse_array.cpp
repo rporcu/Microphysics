@@ -9,15 +9,17 @@
 #include <AMReX_MLEBTensorOp.H>
 
 #include <MFIX_BC_Parms.H>
+
+using namespace amrex;
+
 //
 // Implicit tensor solve
 //
 void
-mfix::mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_to_diffuse,
-                          amrex::Real dcoeff)
+mfix::mfix_diffuse_array (const Vector< MultiFab* > & mf_to_diffuse,
+                          Real dcoeff)
 {
    BL_PROFILE("mfix::mfix_diffuse_drag");
-
 
    //
    // First define the operator "ebtensorop"

@@ -38,7 +38,21 @@ mfix::~mfix ()
 {
   for (int lev(0); lev < nlev; ++lev)
   {
+    delete ep_g[lev];
     delete ep_go[lev];
+    delete p_g[lev];
+    delete p_go[lev];
+    delete ro_g[lev];
+    delete ro_go[lev];
+    delete trac[lev];
+    delete trac_o[lev];
+    delete vel_g[lev];
+    delete vel_go[lev];
+    delete p0_g[lev];
+    delete gp[lev];
+    delete mu_g[lev];
+    delete vort[lev];
+    delete drag[lev];
   }
 };
 

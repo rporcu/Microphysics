@@ -641,7 +641,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 
             Print() << "Clean up auto-generated particles.\n" << std::endl;
 
-            const MultiFab * ls_data = level_sets[1].get();
+            const MultiFab * ls_data = level_sets[1];
             iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                ls_data->nComp(), ls_data->nGrow());
 
@@ -657,7 +657,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 
             for (int ilev = 0; ilev < nlev; ilev ++)
             {
-              const MultiFab * ls_data = level_sets[ilev].get();
+              const MultiFab * ls_data = level_sets[ilev];
               iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                  ls_data->nComp(), ls_data->nGrow());
 
@@ -974,7 +974,7 @@ void mfix::mfix_set_ls_near_inflow ()
         {
             Box domain(geom[lev].Domain());
 
-            MultiFab* ls_phi = level_sets[lev].get();
+            MultiFab* ls_phi = level_sets[lev];
             const Real* dx   = geom[lev].CellSize();
 
             // Don't tile this
@@ -997,7 +997,7 @@ void mfix::mfix_set_ls_near_inflow ()
         {
             Box domain(geom[lev].Domain());
             const Real* dx   = geom[lev].CellSize();
-            MultiFab* ls_phi = level_sets[lev_ref].get();
+            MultiFab* ls_phi = level_sets[lev_ref];
 
             // Don't tile this
             for (MFIter mfi(*ls_phi, false); mfi.isValid(); ++mfi)
@@ -1014,7 +1014,7 @@ void mfix::mfix_set_ls_near_inflow ()
         {
             Box domain(geom[lev].Domain());
             const Real* dx   = geom[lev].CellSize();
-            MultiFab* ls_phi = level_sets[lev].get();
+            MultiFab* ls_phi = level_sets[lev];
 
             // Don't tile this
             for (MFIter mfi(*ls_phi, false); mfi.isValid(); ++mfi)

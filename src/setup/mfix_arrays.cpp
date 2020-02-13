@@ -111,26 +111,26 @@ mfix::AllocateArrays (int lev)
     ep_go[lev]->setVal(1.);
 
     // Gas density
-    ro_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
-    ro_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+    ro_g[lev] = new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
+    ro_go[lev] = new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
     ro_g[lev]->setVal(0.);
     ro_go[lev]->setVal(0.);
 
     // Tracer in gas
-    trac[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
-    trac_o[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+    trac[lev] = new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
+    trac_o[lev] = new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
     trac[lev]->setVal(0.);
     trac_o[lev]->setVal(0.);
 
     const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
 
-    p0_g[lev].reset(new MultiFab(nd_grids,dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+    p0_g[lev] = new MultiFab(nd_grids,dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
     p0_g[lev]->setVal(0.);
 
-    p_g[lev].reset(new MultiFab(nd_grids,dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+    p_g[lev] = new MultiFab(nd_grids,dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
     p_g[lev]->setVal(0.);
 
-    p_go[lev].reset(new MultiFab(nd_grids,dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+    p_go[lev] = new MultiFab(nd_grids,dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
     p_go[lev]->setVal(0.);
 
     phi_nd[lev].reset(new MultiFab(nd_grids,dmap[lev],1,0, MFInfo(), *ebfactory[lev]));
@@ -140,29 +140,29 @@ mfix::AllocateArrays (int lev)
     diveu[lev]->setVal(0.);
 
     // Presssure gradients
-    gp[lev].reset(new MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]));
+    gp[lev] = new MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]);
     gp[lev]->setVal(0.);
 
     // Molecular viscosity
-    mu_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+    mu_g[lev] = new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
     mu_g[lev]->setVal(0.);
 
     // Current velocity
-    vel_g[lev].reset(new MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]));
+    vel_g[lev] = new MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]);
     vel_g[lev]->setVal(0.);
 
     // Old velocity
-    vel_go[lev].reset(new  MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]));
+    vel_go[lev] = new  MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]);
     vel_go[lev]->setVal(0.);
 
     // Vorticity
-    vort[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
+    vort[lev] = new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
     vort[lev]->setVal(0.);
 
     // This is the deposition of the drag force onto the grid
     // 0,1,2 is (drag coefficient * particle velocity)
     // 4 is drag coefficient
-    drag[lev].reset(new  MultiFab(grids[lev],dmap[lev],4,nghost, MFInfo(), *ebfactory[lev]));
+    drag[lev] = new  MultiFab(grids[lev],dmap[lev],4,nghost, MFInfo(), *ebfactory[lev]);
     drag[lev]->setVal(0.);
 
     // Array to store the rhs for diffusion solves -- no ghost cells needed
@@ -291,51 +291,59 @@ mfix::RegridArrays (int lev)
     delete ep_go_new;
 
     // Gas density
-    std::unique_ptr<MultiFab> ro_g_new(new MultiFab(grids[lev],dmap[lev],
-                                       ro_g[lev]->nComp(),ro_g[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    ro_g_new->setVal(0.0);
-    ro_g_new->copy(*ro_g[lev],0,0,ro_g[lev]->nComp(),ro_g[lev]->nGrow(),ro_g[lev]->nGrow());
-    ro_g[lev] = std::move(ro_g_new);
+    MultiFab* ro_g_new = new MultiFab(grids[lev],dmap[lev], ro_g[lev]->nComp(),
+                                       ro_g[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    ro_g_new->setVal(0.);
+    ro_g_new->copy(*ro_g[lev], 0, 0, ro_g[lev]->nComp(), ro_g[lev]->nGrow(), ro_g[lev]->nGrow());
+    std::swap(ro_g[lev], ro_g_new);
+    delete ro_g_new;
 
     // Old gas density
-    std::unique_ptr<MultiFab> ro_go_new(new MultiFab(grids[lev],dmap[lev],
-                                        ro_go[lev]->nComp(),ro_go[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    ro_go_new->setVal(0.0);
-    ro_go_new->copy(*ro_go[lev],0,0,ro_go[lev]->nComp(),ro_go[lev]->nGrow(),ro_go[lev]->nGrow());
-    ro_go[lev] = std::move(ro_go_new);
+    MultiFab* ro_go_new = new MultiFab(grids[lev],dmap[lev], ro_go[lev]->nComp(),
+                                       ro_go[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    ro_go_new->setVal(0.);
+    ro_go_new->copy(*ro_go[lev], 0, 0, ro_go[lev]->nComp(), ro_go[lev]->nGrow(), ro_go[lev]->nGrow());
+    std::swap(ro_go[lev], ro_go_new);
+    delete ro_go_new;
 
     // Tracer in gas
-    std::unique_ptr<MultiFab> trac_new(new MultiFab(grids[lev],dmap[lev],
-                                       trac[lev]->nComp(),trac[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    trac_new->setVal(0.0);
-    trac_new->copy(*trac[lev],0,0,trac[lev]->nComp(),trac[lev]->nGrow(),trac[lev]->nGrow());
-    trac[lev] = std::move(trac_new);
+    MultiFab* trac_new = new MultiFab(grids[lev],dmap[lev], trac[lev]->nComp(),
+                                       trac[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    trac_new->setVal(0.);
+    trac_new->copy(*trac[lev], 0, 0, trac[lev]->nComp(), trac[lev]->nGrow(), trac[lev]->nGrow());
+    std::swap(trac[lev], trac_new);
+    delete trac_new;
 
     // Old tracer in gas
-    std::unique_ptr<MultiFab> trac_o_new(new MultiFab(grids[lev],dmap[lev],
-                                         trac_o[lev]->nComp(),trac_o[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    trac_o_new->setVal(0.0);
-    trac_o_new->copy(*trac_o[lev],0,0,trac_o[lev]->nComp(),trac_o[lev]->nGrow(),trac_o[lev]->nGrow());
-    trac_o[lev] = std::move(trac_o_new);
+    MultiFab* trac_o_new = new MultiFab(grids[lev],dmap[lev], trac_o[lev]->nComp(),
+                                       trac_o[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    trac_o_new->setVal(0.);
+    trac_o_new->copy(*trac_o[lev], 0, 0, trac_o[lev]->nComp(), trac_o[lev]->nGrow(), trac_o[lev]->nGrow());
+    std::swap(trac_o[lev], trac_o_new);
+    delete trac_o_new;
 
     const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
 
-    std::unique_ptr<MultiFab> p_g_new(new MultiFab(nd_grids,dmap[lev],
-                                      p_g[lev]->nComp(),p_g[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    p_g_new->setVal(0.0);
-    p_g_new->copy(*p_g[lev],0,0,p_g[lev]->nComp(),p_g[lev]->nGrow(),p_g[lev]->nGrow());
-    p_g[lev] = std::move(p_g_new);
+    MultiFab* p_g_new = new MultiFab(grids[lev],dmap[lev], p_g[lev]->nComp(),
+                                       p_g[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    p_g_new->setVal(0.);
+    p_g_new->copy(*p_g[lev], 0, 0, p_g[lev]->nComp(), p_g[lev]->nGrow(), p_g[lev]->nGrow());
+    std::swap(p_g[lev], p_g_new);
+    delete p_g_new;
 
-    std::unique_ptr<MultiFab> p_go_new(new MultiFab(nd_grids,dmap[lev],
-                                       p_go[lev]->nComp(),p_go[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    p_go_new->copy(*p_go[lev],0,0,p_go[lev]->nComp(),p_go[lev]->nGrow(),p_go[lev]->nGrow());
-    p_go[lev] = std::move(p_go_new);
+    MultiFab* p_go_new = new MultiFab(grids[lev],dmap[lev], p_go[lev]->nComp(),
+                                       p_go[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    p_go_new->setVal(0.);
+    p_go_new->copy(*p_go[lev], 0, 0, p_go[lev]->nComp(), p_go[lev]->nGrow(), p_go[lev]->nGrow());
+    std::swap(p_go[lev], p_go_new);
+    delete p_go_new;
 
-    std::unique_ptr<MultiFab> p0_g_new(new MultiFab(nd_grids,dmap[lev],
-                                       p0_g[lev]->nComp(),p0_g[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    p0_g_new->setVal(0.0);
-    p0_g_new->copy(*p0_g[lev],0,0,p0_g[lev]->nComp(),p0_g[lev]->nGrow(),p0_g[lev]->nGrow());
-    p0_g[lev] = std::move(p0_g_new);
+    MultiFab* p0_g_new = new MultiFab(grids[lev],dmap[lev], p0_g[lev]->nComp(),
+                                       p0_g[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    p0_g_new->setVal(0.);
+    p0_g_new->copy(*p0_g[lev], 0, 0, p0_g[lev]->nComp(), p0_g[lev]->nGrow(), p0_g[lev]->nGrow());
+    std::swap(p0_g[lev], p0_g_new);
+    delete p0_g_new;
 
     std::unique_ptr<MultiFab> diveu_new(new MultiFab(nd_grids,dmap[lev],
                                         diveu[lev]->nComp(),diveu[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
@@ -348,40 +356,52 @@ mfix::RegridArrays (int lev)
     phi_nd[lev]->setVal(0.);
 
     // Molecular viscosity
-    std::unique_ptr<MultiFab> mu_g_new(new MultiFab(grids[lev],dmap[lev],
-                                       mu_g[lev]->nComp(),mu_g[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    mu_g_new->copy(*mu_g[lev],0,0,mu_g[lev]->nComp(),mu_g[lev]->nGrow(),mu_g[lev]->nGrow());
-    mu_g[lev] = std::move(mu_g_new);
+    MultiFab* mu_g_new = new MultiFab(grids[lev],dmap[lev], mu_g[lev]->nComp(),
+                                       mu_g[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    mu_g_new->setVal(0.);
+    mu_g_new->copy(*mu_g[lev], 0, 0, mu_g[lev]->nComp(), mu_g[lev]->nGrow(), mu_g[lev]->nGrow());
+    std::swap(mu_g[lev], mu_g_new);
+    delete mu_g_new;
 
     // Gas velocity
-    std::unique_ptr<MultiFab> vel_g_new(new MultiFab(grids[lev],dmap[lev],
-                                        vel_g[lev]->nComp(),vel_g[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    vel_g_new->copy(*vel_g[lev],0,0,vel_g[lev]->nComp(),vel_g[lev]->nGrow(),vel_g[lev]->nGrow());
-    vel_g[lev] = std::move(vel_g_new);
+    MultiFab* vel_g_new = new MultiFab(grids[lev],dmap[lev], vel_g[lev]->nComp(),
+                                       vel_g[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    vel_g_new->setVal(0.);
+    vel_g_new->copy(*vel_g[lev], 0, 0, vel_g[lev]->nComp(), vel_g[lev]->nGrow(), vel_g[lev]->nGrow());
+    std::swap(vel_g[lev], vel_g_new);
+    delete vel_g_new;
 
     // Old gas velocity
-    std::unique_ptr<MultiFab> vel_go_new(new MultiFab(grids[lev],dmap[lev],
-                                         vel_go[lev]->nComp(),vel_go[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    vel_go_new->copy(*vel_go[lev],0,0,vel_go[lev]->nComp(),vel_go[lev]->nGrow(),vel_go[lev]->nGrow());
-    vel_go[lev] = std::move(vel_go_new);
+    MultiFab* vel_go_new = new MultiFab(grids[lev],dmap[lev], vel_go[lev]->nComp(),
+                                       vel_go[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    vel_go_new->setVal(0.);
+    vel_go_new->copy(*vel_go[lev], 0, 0, vel_go[lev]->nComp(), vel_go[lev]->nGrow(), vel_go[lev]->nGrow());
+    std::swap(vel_go[lev], vel_go_new);
+    delete vel_go_new;
 
     // Pressure gradients
-    std::unique_ptr<MultiFab> gp_new(new MultiFab(grids[lev],dmap[lev],
-                                     gp[lev]->nComp(),gp[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    gp_new->copy(*gp[lev],0,0,gp[lev]->nComp(),gp[lev]->nGrow(),gp[lev]->nGrow());
-    gp[lev] = std::move(gp_new);
+    MultiFab* gp_new = new MultiFab(grids[lev],dmap[lev], gp[lev]->nComp(),
+                                       gp[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    gp_new->setVal(0.);
+    gp_new->copy(*gp[lev], 0, 0, gp[lev]->nComp(), gp[lev]->nGrow(), gp[lev]->nGrow());
+    std::swap(gp[lev], gp_new);
+    delete gp_new;
 
     // Vorticity
-    std::unique_ptr<MultiFab> vort_new(new MultiFab(grids[lev],dmap[lev],
-                                       vort[lev]->nComp(),vort[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    vort[lev] = std::move(vort_new);
-    vort[lev]->setVal(0.);
+    MultiFab* vort_new = new MultiFab(grids[lev],dmap[lev], vort[lev]->nComp(),
+                                       vort[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    vort_new->setVal(0.);
+    vort_new->copy(*vort[lev], 0, 0, vort[lev]->nComp(), vort[lev]->nGrow(), vort[lev]->nGrow());
+    std::swap(vort[lev], vort_new);
+    delete vort_new;
 
     // Particle/fluid drag -- note it is important to copy from previous step in order to use in dt calculation
-    std::unique_ptr<MultiFab> drag_new(new MultiFab(grids[lev],dmap[lev],
-                                       drag[lev]->nComp(),drag[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    drag_new->copy(*drag[lev],0,0,drag[lev]->nComp(),drag[lev]->nGrow(),drag[lev]->nGrow());
-    drag[lev] = std::move(drag_new);
+    MultiFab* drag_new = new MultiFab(grids[lev],dmap[lev], drag[lev]->nComp(),
+                                       drag[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    drag_new->setVal(0.);
+    drag_new->copy(*drag[lev], 0, 0, drag[lev]->nComp(), drag[lev]->nGrow(), drag[lev]->nGrow());
+    std::swap(drag[lev], drag_new);
+    delete drag_new;
 
     // Array to store the rhs for tensor diffusion solve
     std::unique_ptr<MultiFab> diff_rhs_new(new  MultiFab(grids[lev], dmap[lev],
@@ -586,11 +606,11 @@ mfix::RegridLevelSetArray (int a_lev)
 
        const BoxArray nd_ba = amrex::convert(ba, IntVect::TheNodeVector());
 
-       std::unique_ptr<MultiFab> new_level_set(new MultiFab);
+       MultiFab* new_level_set = new MultiFab();
 
        if (level_sets[a_lev]->boxArray() == nd_ba)
        {
-           MFUtil::regrid(* new_level_set, nd_ba, dm, * level_sets[a_lev], true);
+           MFUtil::regrid(*new_level_set, nd_ba, dm, *level_sets[a_lev], true);
        }
        else
        {
@@ -598,11 +618,12 @@ mfix::RegridLevelSetArray (int a_lev)
            int ng = level_sets[a_lev]->nGrow();
            const Periodicity& period = geom[a_lev].periodicity();
            new_level_set->define(nd_ba, dm, nc, ng);
-           new_level_set->setVal(0.0);
+           new_level_set->setVal(0.);
            new_level_set->copy(*level_sets[a_lev], 0, 0, nc, 0, ng, period);
        }
 
-       level_sets[a_lev] = std::move(new_level_set);
+       std::swap(level_sets[a_lev], new_level_set);
+       delete new_level_set;
 
        //________________________________________________________________________
        // If we're operating in single-level mode, the level-set has a second
@@ -614,11 +635,11 @@ mfix::RegridLevelSetArray (int a_lev)
            BoxArray ref_nd_ba = amrex::convert(ba, IntVect::TheNodeVector());
            ref_nd_ba.refine(levelset_refinement);
 
-           std::unique_ptr<MultiFab> new_level_set(new MultiFab);
+           MultiFab* new_level_set = new MultiFab();
 
            if (level_sets[a_lev+1]->boxArray() == ref_nd_ba)
            {
-               MFUtil::regrid(* new_level_set, ref_nd_ba, dm, * level_sets[a_lev+1], true);
+               MFUtil::regrid(*new_level_set, ref_nd_ba, dm, *level_sets[a_lev+1], true);
            }
            else
            {
@@ -630,8 +651,8 @@ mfix::RegridLevelSetArray (int a_lev)
                new_level_set->copy(*level_sets[a_lev+1], 0, 0, nc, 0, ng, period);
            }
 
-           level_sets[a_lev+1] = std::move(new_level_set);
-
+           std::swap(level_sets[a_lev+1], new_level_set);
+           delete new_level_set;
        }
    }
 }
