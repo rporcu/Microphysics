@@ -66,6 +66,7 @@ mfix::~mfix ()
     delete xslopes_s[lev];
     delete yslopes_s[lev];
     delete zslopes_s[lev];
+    delete diveu[lev];
   }
 };
 

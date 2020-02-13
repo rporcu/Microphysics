@@ -19,9 +19,9 @@ using namespace amrex;
 //  This method returns the MAC velocity with up-to-date BCs in place
 //
 void
-mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                            Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                            Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
+mfix::apply_MAC_projection (Vector< MultiFab* >& ep_u_mac,
+                            Vector< MultiFab* >& ep_v_mac,
+                            Vector< MultiFab* >& ep_w_mac,
                             Vector< MultiFab* >& ep_in,
                             Vector< MultiFab* >& ro_in,
                             Real time)
@@ -35,7 +35,7 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
    // update_internals();
 
    // Setup for solve
-   Vector<Array<MultiFab*,AMREX_SPACEDIM> > vel;
+   Vector<Array<MultiFab*,3> > vel;
    vel.resize(finest_level+1);
 
    if (m_verbose)
@@ -79,9 +79,9 @@ mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
       MultiFab::Divide(*bcoeff[lev][2], *(ro_face[lev][2]), 0, 0, 1, 0);
 
       // Store (ep * u) in temporaries
-      (vel[lev])[0] = ep_u_mac[lev].get();
-      (vel[lev])[1] = ep_v_mac[lev].get();
-      (vel[lev])[2] = ep_w_mac[lev].get();
+      (vel[lev])[0] = ep_u_mac[lev];
+      (vel[lev])[1] = ep_v_mac[lev];
+      (vel[lev])[2] = ep_w_mac[lev];
 
       for (int i=0; i<AMREX_SPACEDIM; ++i)
          (vel[lev])[i]->FillBoundary( geom[lev].periodicity() );

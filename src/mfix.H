@@ -211,9 +211,9 @@ class mfix : public AmrCore
     void mfix_predict_vels_on_faces (int lev,
                                      Real time,
                                      Vector< MultiFab* >& vel,
-                                     Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                                     Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                                     Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
+                                     Vector< MultiFab* >& ep_u_mac,
+                                     Vector< MultiFab* >& ep_v_mac,
+                                     Vector< MultiFab* >& ep_w_mac,
                                      Vector< MultiFab* >& ep_g);
 
     void mfix_set_velocity_bcs (Real time,
@@ -324,9 +324,9 @@ class mfix : public AmrCore
     ////////////////////////////////////////////////////////////////////////////
 
     void set_MAC_velocity_bcs (int lev,
-                               Vector< std::unique_ptr<MultiFab> >& u,
-                               Vector< std::unique_ptr<MultiFab> >& v,
-                               Vector< std::unique_ptr<MultiFab> >& w,
+                               Vector< MultiFab* >& u,
+                               Vector< MultiFab* >& v,
+                               Vector< MultiFab* >& w,
                                Real time);
 
     void mfix_compute_fluxes (const int lev,
@@ -340,9 +340,9 @@ class mfix : public AmrCore
                               Vector< MultiFab* >& yslopes,
                               Vector< MultiFab* >& zslopes,
                               const int slopes_comp,
-                              Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                              Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                              Vector< std::unique_ptr<MultiFab> >& ep_w_mac);
+                              Vector< MultiFab* >& ep_u_mac,
+                              Vector< MultiFab* >& ep_v_mac,
+                              Vector< MultiFab* >& ep_w_mac);
 
     void mfix_compute_fluxes_on_box (const int lev, Box& bx,
                                      FArrayBox& a_fx,
@@ -467,9 +467,9 @@ class mfix : public AmrCore
                                       amrex::Real a_dt,
                                       bool proj_2 );
 
-    void apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                               Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                               Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
+    void apply_MAC_projection (Vector< MultiFab* >& ep_u_mac,
+                               Vector< MultiFab* >& ep_v_mac,
+                               Vector< MultiFab* >& ep_w_mac,
                                Vector< MultiFab* >& ep,
                                Vector< MultiFab* >& ro,
                                Real time);
@@ -648,7 +648,7 @@ class mfix : public AmrCore
     Vector< MultiFab* > zslopes_s;
 
     // div (ep_g * u)
-    Vector< std::unique_ptr<MultiFab> > diveu;
+    Vector< MultiFab* > diveu;
 
     // RHS for MAC solve
     Vector< std::unique_ptr<MultiFab> > mac_rhs;
@@ -667,9 +667,9 @@ class mfix : public AmrCore
     Vector< std::unique_ptr<MultiFab> > diff_phi4;
 
     // MAC velocities
-    Vector< std::unique_ptr<MultiFab> > u_mac;
-    Vector< std::unique_ptr<MultiFab> > v_mac;
-    Vector< std::unique_ptr<MultiFab> > w_mac;
+    Vector< MultiFab* > u_mac;
+    Vector< MultiFab* > v_mac;
+    Vector< MultiFab* > w_mac;
 
     // Pressure increment
     Vector< std::unique_ptr<MultiFab> > phi_nd;

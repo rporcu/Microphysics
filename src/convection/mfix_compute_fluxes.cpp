@@ -48,9 +48,9 @@ mfix::mfix_compute_fluxes (int lev,
                            Vector< MultiFab* >& yslopes_in,
                            Vector< MultiFab* >& zslopes_in,
                            const int slopes_comp,
-                           Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                           Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                           Vector< std::unique_ptr<MultiFab> >& ep_w_mac)
+                           Vector< MultiFab* >& ep_u_mac,
+                           Vector< MultiFab* >& ep_v_mac,
+                           Vector< MultiFab* >& ep_w_mac)
 {
         // Get EB geometric info
         Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
