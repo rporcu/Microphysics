@@ -761,12 +761,12 @@ mfix::MakeBCArrays ()
        Box box_khi = amrex::adjCellHi(domainz,2,1);
 
        // Note that each of these is a single IArrayBox so every process has a copy of them
-       bc_ilo[lev].reset(new IArrayBox(box_ilo,2));
-       bc_ihi[lev].reset(new IArrayBox(box_ihi,2));
-       bc_jlo[lev].reset(new IArrayBox(box_jlo,2));
-       bc_jhi[lev].reset(new IArrayBox(box_jhi,2));
-       bc_klo[lev].reset(new IArrayBox(box_klo,2));
-       bc_khi[lev].reset(new IArrayBox(box_khi,2));
+       bc_ilo[lev] = new IArrayBox(box_ilo,2);
+       bc_ihi[lev] = new IArrayBox(box_ihi,2);
+       bc_jlo[lev] = new IArrayBox(box_jlo,2);
+       bc_jhi[lev] = new IArrayBox(box_jhi,2);
+       bc_klo[lev] = new IArrayBox(box_klo,2);
+       bc_khi[lev] = new IArrayBox(box_khi,2);
    }
 }
 

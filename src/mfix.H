@@ -590,15 +590,15 @@ class mfix : public AmrCore
     int ct_ls_mf;
 
     // Boundary conditions types
-    Vector< std::unique_ptr<IArrayBox> > bc_ilo;
-    Vector< std::unique_ptr<IArrayBox> > bc_ihi;
-    Vector< std::unique_ptr<IArrayBox> > bc_jlo;
-    Vector< std::unique_ptr<IArrayBox> > bc_jhi;
-    Vector< std::unique_ptr<IArrayBox> > bc_klo;
-    Vector< std::unique_ptr<IArrayBox> > bc_khi;
+    Vector< IArrayBox* > bc_ilo;
+    Vector< IArrayBox* > bc_ihi;
+    Vector< IArrayBox* > bc_jlo;
+    Vector< IArrayBox* > bc_jhi;
+    Vector< IArrayBox* > bc_klo;
+    Vector< IArrayBox* > bc_khi;
 
     // Boundary conditions flags
-    Vector< std::unique_ptr<iMultiFab> > flag;
+    Vector< iMultiFab* > flag;
 
     // Void fraction
     Vector< MultiFab* > ep_g;
