@@ -116,7 +116,7 @@ mfix::apply_MAC_projection (Vector< MultiFab* >& ep_u_mac,
    {
        // Solve using mac_phi as an initial guess -- note that mac_phi is
        //       stored from iteration to iteration
-       macproj.project(GetVecOfPtrs(mac_phi), mac_mg_rtol,mac_mg_atol,MLMG::Location::FaceCentroid);
+       macproj.project(mac_phi, mac_mg_rtol, mac_mg_atol, MLMG::Location::FaceCentroid);
    }
    else
    {

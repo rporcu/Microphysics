@@ -651,20 +651,20 @@ class mfix : public AmrCore
     Vector< MultiFab* > diveu;
 
     // RHS for MAC solve
-    Vector< std::unique_ptr<MultiFab> > mac_rhs;
+    Vector< MultiFab* > mac_rhs;
 
     // Solution for MAC projection
-    Vector< std::unique_ptr<MultiFab> > mac_phi;
+    Vector< MultiFab* > mac_phi;
 
     // RHS for diffusive tensor solve
-    Vector< std::unique_ptr<MultiFab> > diff_rhs;
-    Vector< std::unique_ptr<MultiFab> > diff_rhs1;
-    Vector< std::unique_ptr<MultiFab> > diff_rhs4;
+    Vector< MultiFab* > diff_rhs;
+    Vector< MultiFab* > diff_rhs1;
+    Vector< MultiFab* > diff_rhs4;
 
     // Solution for diffusion solves
-    Vector< std::unique_ptr<MultiFab> > diff_phi;
-    Vector< std::unique_ptr<MultiFab> > diff_phi1;
-    Vector< std::unique_ptr<MultiFab> > diff_phi4;
+    Vector< MultiFab* > diff_phi;
+    Vector< MultiFab* > diff_phi1;
+    Vector< MultiFab* > diff_phi4;
 
     // MAC velocities
     Vector< MultiFab* > u_mac;

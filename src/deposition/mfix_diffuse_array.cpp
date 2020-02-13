@@ -115,7 +115,7 @@ mfix::mfix_diffuse_array (const Vector< MultiFab* > & mf_to_diffuse,
    //
    //  (1.0 - div dot nu grad) drag = RHS
    //
-   solver.solve(GetVecOfPtrs(diff_phi4), GetVecOfConstPtrs(diff_rhs4), diff_mg_rtol, diff_mg_atol);
+   solver.solve(diff_phi4, GetVecOfConstPtrs(diff_rhs4), diff_mg_rtol, diff_mg_atol);
 
    for (int lev = 0; lev < nlev; lev++)
    {

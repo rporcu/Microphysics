@@ -112,8 +112,7 @@ mfix::mfix_diffuse_scalar (const Vector< MultiFab* > & mf_to_diffuse,
    //
    //  (1.0 - div dot nu grad) eps = RHS
    //
-   solver.solve(GetVecOfPtrs(diff_phi1), GetVecOfConstPtrs(diff_rhs1),
-                diff_mg_rtol, diff_mg_atol );
+   solver.solve(diff_phi1, GetVecOfConstPtrs(diff_rhs1), diff_mg_rtol, diff_mg_atol);
 
    for (int lev = 0; lev < nlev; lev++)
    {

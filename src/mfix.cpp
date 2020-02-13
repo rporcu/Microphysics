@@ -38,35 +38,81 @@ mfix::~mfix ()
 {
   for (int lev(0); lev < nlev; ++lev)
   {
+    // Boundary conditions types
     delete bc_ilo[lev];
     delete bc_ihi[lev];
     delete bc_jlo[lev];
     delete bc_jhi[lev];
     delete bc_klo[lev];
     delete bc_khi[lev];
+
+    // Void fraction
     delete ep_g[lev];
     delete ep_go[lev];
+
+    // Gas pressure fraction
     delete p_g[lev];
     delete p_go[lev];
+
+    // Gas density
     delete ro_g[lev];
     delete ro_go[lev];
+
+    // Tracer in gas
     delete trac[lev];
     delete trac_o[lev];
+
+    // Gas velocity
     delete vel_g[lev];
     delete vel_go[lev];
+
+    // Base state pressure
     delete p0_g[lev];
+
+    // Pressure gradients
     delete gp[lev];
+
+    // Molecular viscosity
     delete mu_g[lev];
+
+    // Cell-based
     delete vort[lev];
     delete drag[lev];
+
+    // Level-Set Data
     delete level_sets[lev];
+
+    // These are multi-component multifabs
     delete xslopes_u[lev];
     delete yslopes_u[lev];
     delete zslopes_u[lev];
     delete xslopes_s[lev];
     delete yslopes_s[lev];
     delete zslopes_s[lev];
+
+    // div (ep_g * u)
     delete diveu[lev];
+
+    // RHS for MAC solve
+    delete mac_rhs[lev];
+
+    // Solution for MAC projection
+    delete mac_phi[lev];
+
+    // RHS for diffusive tensor solve
+    delete diff_rhs[lev];
+    delete diff_rhs1[lev];
+    delete diff_rhs4[lev];
+
+    // Solution for diffusion solves
+    delete diff_phi[lev];
+    delete diff_phi1[lev];
+    delete diff_phi4[lev];
+
+    // MAC velocities
+    delete u_mac[lev];
+    delete v_mac[lev];
+    delete w_mac[lev];
   }
 };
 
