@@ -39,6 +39,12 @@ mfix::~mfix ()
   for (int lev(0); lev < nlev; ++lev)
   {
     delete level_sets[lev];
+    delete xslopes_u[lev];
+    delete yslopes_u[lev];
+    delete zslopes_u[lev];
+    delete xslopes_s[lev];
+    delete yslopes_s[lev];
+    delete zslopes_s[lev];
     delete ep_g[lev];
     delete ep_go[lev];
     delete p_g[lev];

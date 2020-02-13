@@ -268,9 +268,9 @@ class mfix : public AmrCore
                         const Real* dx);
 
     void mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
-                              Vector<std::unique_ptr<MultiFab>>& xslopes_in,
-                              Vector<std::unique_ptr<MultiFab>>& yslopes_in,
-                              Vector<std::unique_ptr<MultiFab>>& zslopes_in,
+                              Vector< MultiFab* >& xslopes_in,
+                              Vector< MultiFab* >& yslopes_in,
+                              Vector< MultiFab* >& zslopes_in,
                               int slopes_comp);
 
     void set_bc0 (const Box& sbx,
@@ -336,9 +336,9 @@ class mfix : public AmrCore
                               Vector< MultiFab* >& state,
                               const int state_comp,
                               const int n_comp,
-                              Vector< std::unique_ptr<MultiFab> >& xslopes,
-                              Vector< std::unique_ptr<MultiFab> >& yslopes,
-                              Vector< std::unique_ptr<MultiFab> >& zslopes,
+                              Vector< MultiFab* >& xslopes,
+                              Vector< MultiFab* >& yslopes,
+                              Vector< MultiFab* >& zslopes,
                               const int slopes_comp,
                               Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
                               Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
@@ -640,12 +640,12 @@ class mfix : public AmrCore
     Vector< MultiFab* > level_sets;
 
     // These are multi-component multifabs
-    Vector< std::unique_ptr<MultiFab> > xslopes_u;
-    Vector< std::unique_ptr<MultiFab> > yslopes_u;
-    Vector< std::unique_ptr<MultiFab> > zslopes_u;
-    Vector< std::unique_ptr<MultiFab> > xslopes_s;
-    Vector< std::unique_ptr<MultiFab> > yslopes_s;
-    Vector< std::unique_ptr<MultiFab> > zslopes_s;
+    Vector< MultiFab* > xslopes_u;
+    Vector< MultiFab* > yslopes_u;
+    Vector< MultiFab* > zslopes_u;
+    Vector< MultiFab* > xslopes_s;
+    Vector< MultiFab* > yslopes_s;
+    Vector< MultiFab* > zslopes_s;
 
     // div (ep_g * u)
     Vector< std::unique_ptr<MultiFab> > diveu;

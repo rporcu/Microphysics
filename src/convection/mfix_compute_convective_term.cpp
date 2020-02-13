@@ -85,11 +85,10 @@ mfix::mfix_compute_convective_term (Vector< std::unique_ptr<MultiFab> >& conv_u_
 
     bool already_on_centroids = true;
 
-    Array<MultiFab*,AMREX_SPACEDIM> fluxes;
+    Array<MultiFab*,3> fluxes;
 
     for (int lev=0; lev < nlev; ++lev)
     {
-
         fluxes[0] = fx[lev].get();
         fluxes[1] = fy[lev].get();
         fluxes[2] = fz[lev].get();

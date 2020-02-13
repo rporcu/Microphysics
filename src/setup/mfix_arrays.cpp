@@ -167,49 +167,49 @@ mfix::AllocateArrays (int lev)
 
     // Array to store the rhs for diffusion solves -- no ghost cells needed
     diff_rhs[lev].reset(new MultiFab(grids[lev],dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]));
-    diff_rhs[lev] -> setVal(0.);
+    diff_rhs[lev]->setVal(0.);
 
     diff_rhs1[lev].reset(new MultiFab(grids[lev],dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]));
-    diff_rhs1[lev] -> setVal(0.);
+    diff_rhs1[lev]->setVal(0.);
 
     diff_rhs4[lev].reset(new MultiFab(grids[lev],dmap[lev], 4, 0, MFInfo(), *ebfactory[lev]));
-    diff_rhs4[lev] -> setVal(0.);
+    diff_rhs4[lev]->setVal(0.);
 
     // Array to store the solution for diffusion solves -- only 1 ghost cell needed
     diff_phi[lev].reset(new MultiFab(grids[lev],dmap[lev], 3, 1, MFInfo(), *ebfactory[lev]));
-    diff_phi[lev] -> setVal(0.);
+    diff_phi[lev]->setVal(0.);
 
     diff_phi1[lev].reset(new MultiFab(grids[lev],dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]));
-    diff_phi1[lev] -> setVal(0.);
+    diff_phi1[lev]->setVal(0.);
 
     diff_phi4[lev].reset(new MultiFab(grids[lev],dmap[lev], 4, 1, MFInfo(), *ebfactory[lev]));
-    diff_phi4[lev] -> setVal(0.);
+    diff_phi4[lev]->setVal(0.);
 
     // Array to store the rhs for MAC projection
     mac_rhs[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
-    mac_rhs[lev] -> setVal(0.);
+    mac_rhs[lev]->setVal(0.);
 
     // Array to store the solution for MAC projections
     mac_phi[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]));
-    mac_phi[lev] -> setVal(0.);
+    mac_phi[lev]->setVal(0.);
 
     // Slopes in x-direction
-    xslopes_u[lev].reset(new  MultiFab(grids[lev],dmap[lev], AMREX_SPACEDIM, nghost, MFInfo(), *ebfactory[lev]));
-    xslopes_u[lev] -> setVal(0.);
-    xslopes_s[lev].reset(new  MultiFab(grids[lev],dmap[lev], 2, nghost, MFInfo(), *ebfactory[lev]));
-    xslopes_s[lev] -> setVal(0.);
+    xslopes_u[lev] = new MultiFab(grids[lev],dmap[lev], 3, nghost, MFInfo(), *ebfactory[lev]);
+    xslopes_u[lev]->setVal(0.);
+    xslopes_s[lev] = new MultiFab(grids[lev],dmap[lev], 2, nghost, MFInfo(), *ebfactory[lev]);
+    xslopes_s[lev]->setVal(0.);
 
     // Slopes in y-direction
-    yslopes_u[lev].reset(new  MultiFab(grids[lev],dmap[lev], AMREX_SPACEDIM, nghost, MFInfo(), *ebfactory[lev]));
-    yslopes_u[lev] -> setVal(0.);
-    yslopes_s[lev].reset(new  MultiFab(grids[lev],dmap[lev], 2, nghost, MFInfo(), *ebfactory[lev]));
-    yslopes_s[lev] -> setVal(0.);
+    yslopes_u[lev] = new MultiFab(grids[lev],dmap[lev], 3, nghost, MFInfo(), *ebfactory[lev]);
+    yslopes_u[lev]->setVal(0.);
+    yslopes_s[lev] = new MultiFab(grids[lev],dmap[lev], 2, nghost, MFInfo(), *ebfactory[lev]);
+    yslopes_s[lev]->setVal(0.);
 
     // Slopes in z-direction
-    zslopes_u[lev].reset(new  MultiFab(grids[lev],dmap[lev], AMREX_SPACEDIM, nghost, MFInfo(), *ebfactory[lev]));
-    zslopes_u[lev] -> setVal(0.);
-    zslopes_s[lev].reset(new  MultiFab(grids[lev],dmap[lev], 2, nghost, MFInfo(), *ebfactory[lev]));
-    zslopes_s[lev] -> setVal(0.);
+    zslopes_u[lev] = new MultiFab(grids[lev],dmap[lev], 3, nghost, MFInfo(), *ebfactory[lev]);
+    zslopes_u[lev]->setVal(0.);
+    zslopes_s[lev] = new MultiFab(grids[lev],dmap[lev], 2, nghost, MFInfo(), *ebfactory[lev]);
+    zslopes_s[lev]->setVal(0.);
 
     // ********************************************************************************
     // X-face-based arrays
@@ -456,36 +456,55 @@ mfix::RegridArrays (int lev)
     mac_phi[lev] -> setVal(0.);
 
     // Slopes in x-direction
-    std::unique_ptr<MultiFab> xslopes_u_new(new  MultiFab(grids[lev], dmap[lev],
-                                            xslopes_u[lev]->nComp(),xslopes_u[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    xslopes_u[lev] = std::move(xslopes_u_new);
-    xslopes_u[lev] -> setVal(0.);
+    MultiFab* xslopes_u_new = new MultiFab(grids[lev], dmap[lev],
+                                           xslopes_u[lev]->nComp(),
+                                           xslopes_u[lev]->nGrow(),
+                                           MFInfo(), *ebfactory[lev]);
+    xslopes_u_new->setVal(0.);
+    std::swap(xslopes_u[lev], xslopes_u_new);
+    delete xslopes_u_new;
 
-    std::unique_ptr<MultiFab> xslopes_s_new(new  MultiFab(grids[lev], dmap[lev],
-                                            xslopes_s[lev]->nComp(),xslopes_s[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    xslopes_s[lev] = std::move(xslopes_s_new);
+    MultiFab* xslopes_s_new = new MultiFab(grids[lev], dmap[lev],
+                                           xslopes_s[lev]->nComp(),
+                                           xslopes_s[lev]->nGrow(),
+                                           MFInfo(), *ebfactory[lev]);
+    xslopes_s_new->setVal(0.);
+    std::swap(xslopes_s[lev], xslopes_s_new);
+    delete xslopes_s_new;
 
     // Slopes in y-direction
-    std::unique_ptr<MultiFab> yslopes_u_new(new  MultiFab(grids[lev], dmap[lev],
-                                            yslopes_u[lev]->nComp(),yslopes_u[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    yslopes_u[lev] = std::move(yslopes_u_new);
-    yslopes_u[lev] -> setVal(0.);
+    MultiFab* yslopes_u_new = new MultiFab(grids[lev], dmap[lev],
+                                           yslopes_u[lev]->nComp(),
+                                           yslopes_u[lev]->nGrow(),
+                                           MFInfo(), *ebfactory[lev]);
+    yslopes_u_new->setVal(0.);
+    std::swap(yslopes_u[lev], yslopes_u_new);
+    delete yslopes_u_new;
 
-    std::unique_ptr<MultiFab> yslopes_s_new(new  MultiFab(grids[lev], dmap[lev],
-                                            yslopes_s[lev]->nComp(),yslopes_s[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    yslopes_s[lev] = std::move(yslopes_s_new);
-    yslopes_s[lev] -> setVal(0.);
+    MultiFab* yslopes_s_new = new MultiFab(grids[lev], dmap[lev],
+                                           yslopes_s[lev]->nComp(),
+                                           yslopes_s[lev]->nGrow(),
+                                           MFInfo(), *ebfactory[lev]);
+    yslopes_s_new->setVal(0.);
+    std::swap(yslopes_s[lev], yslopes_s_new);
+    delete yslopes_s_new;
 
     // Slopes in z-direction
-    std::unique_ptr<MultiFab> zslopes_u_new(new  MultiFab(grids[lev], dmap[lev],
-                                            zslopes_u[lev]->nComp(),zslopes_u[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    zslopes_u[lev] = std::move(zslopes_u_new);
-    zslopes_u[lev] -> setVal(0.);
+    MultiFab* zslopes_u_new = new MultiFab(grids[lev], dmap[lev],
+                                           zslopes_u[lev]->nComp(),
+                                           zslopes_u[lev]->nGrow(),
+                                           MFInfo(), *ebfactory[lev]);
+    zslopes_u_new->setVal(0.);
+    std::swap(zslopes_u[lev], zslopes_u_new);
+    delete zslopes_u_new;
 
-    std::unique_ptr<MultiFab> zslopes_s_new(new  MultiFab(grids[lev], dmap[lev],
-                                            zslopes_s[lev]->nComp(),zslopes_s[lev]->nGrow(),MFInfo(),*ebfactory[lev]));
-    zslopes_s[lev] = std::move(zslopes_s_new);
-    zslopes_s[lev] -> setVal(0.);
+    MultiFab* zslopes_s_new = new MultiFab(grids[lev], dmap[lev],
+                                           zslopes_s[lev]->nComp(),
+                                           zslopes_s[lev]->nGrow(),
+                                           MFInfo(), *ebfactory[lev]);
+    zslopes_s_new->setVal(0.);
+    std::swap(zslopes_s[lev], zslopes_s_new);
+    delete zslopes_s_new;
 
    /****************************************************************************
     * x-face-based arrays                                                        *
