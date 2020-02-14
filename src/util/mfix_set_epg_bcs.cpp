@@ -9,7 +9,7 @@ using namespace amrex;
 using namespace std;
 
 void
-mfix::mfix_set_epg_bcs (const Vector< unique_ptr<LevelData> >& leveldata) const
+mfix::mfix_set_epg_bcs (const Vector< shared_ptr<LevelData> > & leveldata) const
 {
   BL_PROFILE("mfix::mfix_set_epg_bcs()");
 
@@ -31,7 +31,7 @@ mfix::mfix_set_epg_bcs (const Vector< unique_ptr<LevelData> >& leveldata) const
       set_epg_bcs(lev, (*(leveldata[lev]->ep_g))[mfi], domain, &extrap_dir_bcs);
 
     EB_set_covered(*(leveldata[lev]->ep_g), 0, (leveldata[lev]->ep_g)->nComp(),
-		   (leveldata[lev]->ep_g)->nGrow(), covered_val);
+      (leveldata[lev]->ep_g)->nGrow(), covered_val);
 
     // Do this after as well as before to pick up terms that got updated in the
     // call above

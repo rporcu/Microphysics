@@ -18,15 +18,17 @@
 #include <AMReX_MemProfiler.H>
 #endif
 
+using namespace amrex;
+
 void
-mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
-                                   amrex::Real a_time,
-                                   amrex::Real a_dt,
+mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
+                                   Real a_time,
+                                   Real a_dt,
                                    bool proj_2 )
 {
     BL_PROFILE("mfix::mfix_apply_nodal_projection");
 
-    bool proj_for_small_dt      = false;
+    bool proj_for_small_dt = false;
 
     // If we have dropped the dt substantially for whatever reason, use a different form of the approximate
     // projection that projects (U^*-U^n + dt Gp) rather than (U^* + dt Gp)
@@ -78,16 +80,15 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
     //
     // Compute epu
     //
-    Vector< std::unique_ptr<MultiFab> > epu(nlev);
+    Vector< MultiFab* > epu(nlev);
 
     for (int lev(0); lev < nlev; ++lev)
     {
         // We only need one ghost cell here -- so no need to make it bigger
         int nghost(1);
-        epu[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 1 , MFInfo(),
-                                    *ebfactory[lev]));
+        epu[lev] = new MultiFab(grids[lev], dmap[lev], 3, 1 , MFInfo(), *ebfactory[lev]);
 
-        epu[lev] -> setVal(1.e200);
+        epu[lev]->setVal(1.e200);
 
         MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow());
 
@@ -123,11 +124,11 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
     Vector<MultiFab> sigma(nlev);
 
     for (int lev = 0; lev < nlev; ++lev )
-        {
-            sigma[lev].define(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-            MultiFab::Copy(sigma[lev], *(m_leveldata[lev]->ep_g), 0, 0, 1, 0);
-            MultiFab::Divide(sigma[lev], *ro_g[lev], 0, 0, 1, 0);
-        }
+    {
+        sigma[lev].define(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+        MultiFab::Copy(sigma[lev], *(m_leveldata[lev]->ep_g), 0, 0, 1, 0);
+        MultiFab::Divide(sigma[lev], *ro_g[lev], 0, 0, 1, 0);
+    }
 
     //
     // Setup the nodal projector
@@ -146,11 +147,11 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
       MultiFab::Copy(*ep_g_vec[lev], ep_g, 0, 0, ep_g.nComp(), ep_g.nGrow());
     }
 
-    nodal_projector.reset(new NodalProjector(GetVecOfPtrs(vel_g),GetVecOfConstPtrs(sigma), geom, info));
+    nodal_projector.reset(new NodalProjector(vel_g, GetVecOfConstPtrs(sigma), geom, info));
     nodal_projector->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
     nodal_projector->setAlpha(GetVecOfConstPtrs(ep_g_vec));
 
-    nodal_projector->computeRHS(GetVecOfPtrs(diveu), GetVecOfPtrs(epu), GetVecOfPtrs(a_depdt));
+    nodal_projector->computeRHS(diveu, epu, a_depdt);
     nodal_projector->setCustomRHS(GetVecOfConstPtrs(diveu));
 
     nodal_projector->project();
@@ -171,7 +172,7 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
     gradphi = nodal_projector->getGradPhi();
 
     // Compute diveu to print it out
-    nodal_projector->computeRHS(GetVecOfPtrs(diveu), GetVecOfPtrs(epu), GetVecOfPtrs(a_depdt));
+    nodal_projector->computeRHS(diveu, epu, a_depdt);
 
     // Since I did not pass dt, I have to normalize here
     Real qdt(1.0/a_dt);
@@ -203,7 +204,7 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
     {
         epu[lev]->setVal(1.e200);
 
-        MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow() );
+        MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow());
 
         for (int n(0); n < 3; n++)
             MultiFab::Multiply(*epu[lev], *(m_leveldata[lev]->ep_g), 0, n, 1, epu[lev]->nGrow());
@@ -231,7 +232,7 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
         EB_set_covered(*epu[lev], 0, epu[lev]->nComp(), 1, 0.0);
     }
 
-    nodal_projector->computeRHS(GetVecOfPtrs(diveu), GetVecOfPtrs(epu), GetVecOfPtrs(a_depdt));
+    nodal_projector->computeRHS(diveu, epu, a_depdt);
 
     for (int lev = nlev-1; lev > 0; lev--)
     {
@@ -252,4 +253,7 @@ mfix::mfix_apply_nodal_projection (Vector< std::unique_ptr<MultiFab> >& a_depdt,
 
         mfix_print_max_vel(lev);
     }
+
+    for (int lev(0); lev < nlev; lev++)
+      delete epu[lev];
 }

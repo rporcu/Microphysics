@@ -82,7 +82,7 @@ mfix::Regrid ()
 
                     RegridArrays(lev);
 
-                    fluid_cost[lev].reset(new MultiFab(grids[lev], new_fluid_dm, 1, 0));
+                    fluid_cost[lev] = new MultiFab(grids[lev], new_fluid_dm, 1, 0);
                     fluid_cost[lev]->setVal(0.0);
                 }
             }
@@ -106,8 +106,8 @@ mfix::Regrid ()
 
                 pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev), lev);
 
-                particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
-                                                      new_particle_dm, 1, 0));
+                particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                                  new_particle_dm, 1, 0);
                 particle_cost[lev]->setVal(0.0);
 
                 // This calls re-creates a proper particle_ebfactories
@@ -165,13 +165,13 @@ mfix::Regrid ()
 
             if (FLUID::solve)
             {
-               fluid_cost[base_lev].reset(new MultiFab(grids[base_lev], newdm, 1, 0));
+               fluid_cost[base_lev] = new MultiFab(grids[base_lev], newdm, 1, 0);
                fluid_cost[base_lev]->setVal(0.0);
             }
 
             if (DEM::solve)
             {
-               particle_cost[base_lev].reset(new MultiFab(grids[base_lev], newdm, 1, 0));
+               particle_cost[base_lev] = new MultiFab(grids[base_lev], newdm, 1, 0);
                particle_cost[base_lev]->setVal(0.0);
             }
 

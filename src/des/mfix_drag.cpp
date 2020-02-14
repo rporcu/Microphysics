@@ -38,7 +38,7 @@ mfix::mfix_calc_drag_fluid (Real time)
 
       // If we are already working with the internal mf defined on the
       // particle_box_array, then we just work with this.
-      drag_ptr[lev] = drag[lev].get();
+      drag_ptr[lev] = drag[lev];
 
     } else if (lev == 0 and (not OnSameGrids)) {
 
@@ -157,12 +157,12 @@ mfix::mfix_calc_drag_fluid (Real time)
   // to copy here from drag_ptr into mf_to_be_filled. I believe that we don't
   // need any information in ghost cells so we don't copy those.
 
-  if (drag_ptr[0] != drag[0].get()) {
+  if (drag_ptr[0] != drag[0]) {
     drag[0]->copy(*drag_ptr[0],0,0,drag[0]->nComp());
   }
 
   for (int lev = 0; lev < nlev; lev++) {
-    if (drag_ptr[lev] != drag[lev].get())
+    if (drag_ptr[lev] != drag[lev])
       delete drag_ptr[lev];
   }
 
@@ -242,7 +242,7 @@ mfix::mfix_calc_drag_particle (Real time)
     if (OnSameGrids)
     {
       gp_ptr  = &gp_tmp;
-      vel_ptr = vel_g[lev].get();
+      vel_ptr = vel_g[lev];
     }
     else
     {

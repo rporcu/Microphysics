@@ -10,20 +10,20 @@
 // Compute the three components of the convection term
 //
 void
-mfix::mfix_compute_convective_term (Vector< std::unique_ptr<MultiFab> >& conv_u_in,
-                                    Vector< std::unique_ptr<MultiFab> >& conv_s_in,
-                                    Vector< std::unique_ptr<MultiFab> >& vel_in,
-                                    Vector< std::unique_ptr<MultiFab> >& ep_g_in,
-                                    Vector< std::unique_ptr<MultiFab> >& ro_g_in,
-                                    Vector< std::unique_ptr<MultiFab> >& trac_in,
+mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
+                                    Vector< MultiFab* >& conv_s_in,
+                                    Vector< MultiFab* >& vel_in,
+                                    Vector< MultiFab* >& ep_g_in,
+                                    Vector< MultiFab* >& ro_g_in,
+                                    Vector< MultiFab* >& trac_in,
                                     Real time)
 {
     BL_PROFILE("mfix::mfix_compute_convective_term");
 
     // Temporaries to store fluxes
-    Vector< std::unique_ptr<MultiFab> > fx;
-    Vector< std::unique_ptr<MultiFab> > fy;
-    Vector< std::unique_ptr<MultiFab> > fz;
+    Vector< MultiFab* > fx;
+    Vector< MultiFab* > fy;
+    Vector< MultiFab* > fz;
 
     fx.resize(nlev);
     fy.resize(nlev);
@@ -59,9 +59,9 @@ mfix::mfix_compute_convective_term (Vector< std::unique_ptr<MultiFab> >& conv_u_
 
         // We make these with ncomp = 3 so they can hold all three velocity components at once;
         //    note we can also use them to just hold the single density or tracer comp
-        fx[lev].reset(new MultiFab(u_mac[lev]->boxArray(),dmap[lev],3,2,MFInfo(),*ebfactory[lev]));
-        fy[lev].reset(new MultiFab(v_mac[lev]->boxArray(),dmap[lev],3,2,MFInfo(),*ebfactory[lev]));
-        fz[lev].reset(new MultiFab(w_mac[lev]->boxArray(),dmap[lev],3,2,MFInfo(),*ebfactory[lev]));
+        fx[lev] = new MultiFab(u_mac[lev]->boxArray(),dmap[lev],3,2,MFInfo(),*ebfactory[lev]);
+        fy[lev] = new MultiFab(v_mac[lev]->boxArray(),dmap[lev],3,2,MFInfo(),*ebfactory[lev]);
+        fz[lev] = new MultiFab(w_mac[lev]->boxArray(),dmap[lev],3,2,MFInfo(),*ebfactory[lev]);
 
         // We need this to avoid FPE
         u_mac[lev]->setVal(covered_val);
@@ -85,14 +85,13 @@ mfix::mfix_compute_convective_term (Vector< std::unique_ptr<MultiFab> >& conv_u_
 
     bool already_on_centroids = true;
 
-    Array<MultiFab*,AMREX_SPACEDIM> fluxes;
+    Array<MultiFab*,3> fluxes;
 
     for (int lev=0; lev < nlev; ++lev)
     {
-
-        fluxes[0] = fx[lev].get();
-        fluxes[1] = fy[lev].get();
-        fluxes[2] = fz[lev].get();
+        fluxes[0] = fx[lev];
+        fluxes[1] = fy[lev];
+        fluxes[2] = fz[lev];
 
         // We make this with ncomp = 3 so it can hold all three velocity components at once;
         //    note we can also use it to just hold the single density or tracer comp
@@ -169,4 +168,10 @@ mfix::mfix_compute_convective_term (Vector< std::unique_ptr<MultiFab> >& conv_u_
         conv_u_in[lev]->mult(-1.0);
         conv_s_in[lev]->mult(-1.0);
     } // lev
+
+    for (int lev(0); lev < nlev; ++lev) {
+      delete fx[lev];
+      delete fy[lev];
+      delete fz[lev];
+    }
 }

@@ -10,13 +10,14 @@
 #include <MFIX_BC_Parms.H>
 #include <MFIX_LevelData.H>
 
+using namespace amrex;
 
 //
 // Implicit scalar solve
 //
 void
-mfix::mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_to_diffuse,
-                           amrex::Real dcoeff)
+mfix::mfix_diffuse_scalar (const Vector< MultiFab* > & mf_to_diffuse,
+                           Real dcoeff)
 {
    BL_PROFILE("mfix::mfix_diffuse_scalar");
 
@@ -27,7 +28,7 @@ mfix::mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> > & mf
    //
    LPInfo info;
    info.setMaxCoarseningLevel(diff_mg_max_coarsening_level);
-   MLEBABecLap ebscalarop(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
+   MLEBABecLap ebscalarop(geom, grids, dmap, info, ebfactory);
 
    // It is essential that we set MaxOrder of the solver to 2
    // if we want to use the standard sol(i)-sol(i-1) approximation
@@ -111,8 +112,7 @@ mfix::mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> > & mf
    //
    //  (1.0 - div dot nu grad) eps = RHS
    //
-   solver.solve(GetVecOfPtrs(diff_phi1), GetVecOfConstPtrs(diff_rhs1),
-                diff_mg_rtol, diff_mg_atol );
+   solver.solve(diff_phi1, GetVecOfConstPtrs(diff_rhs1), diff_mg_rtol, diff_mg_atol);
 
    for (int lev = 0; lev < nlev; lev++)
    {
@@ -128,7 +128,7 @@ mfix::mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> > & mf
 // Implicit scalar solve
 //
 void
-mfix::mfix_diffuse_ep_g (const amrex::Vector< std::unique_ptr<LevelData> > & leveldata,
+mfix::mfix_diffuse_ep_g (const amrex::Vector< std::shared_ptr<LevelData> > & leveldata,
                          amrex::Real dcoeff)
 {
   BL_PROFILE("mfix::mfix_diffuse_scalar");
@@ -140,7 +140,7 @@ mfix::mfix_diffuse_ep_g (const amrex::Vector< std::unique_ptr<LevelData> > & lev
   //
   LPInfo info;
   info.setMaxCoarseningLevel(diff_mg_max_coarsening_level);
-  MLEBABecLap ebscalarop(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
+  MLEBABecLap ebscalarop(geom, grids, dmap, info, ebfactory);
 
   // It is essential that we set MaxOrder of the solver to 2
   // if we want to use the standard sol(i)-sol(i-1) approximation
@@ -223,8 +223,7 @@ mfix::mfix_diffuse_ep_g (const amrex::Vector< std::unique_ptr<LevelData> > & lev
   //
   //  (1.0 - div dot nu grad) eps = RHS
   //
-  solver.solve(GetVecOfPtrs(diff_phi1), GetVecOfConstPtrs(diff_rhs1),
-               diff_mg_rtol, diff_mg_atol );
+  solver.solve(diff_phi1, GetVecOfConstPtrs(diff_rhs1), diff_mg_rtol, diff_mg_atol);
 
   for (int lev = 0; lev < nlev; lev++)
   {

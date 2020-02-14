@@ -371,7 +371,7 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
      ***************************************************************************/
 
     Vector<std::string> static_names = {"level_sets", "volfrac"};
-    Vector< const Vector<std::unique_ptr<MultiFab>> * > static_vars = {& level_sets};
+    Vector< const Vector< MultiFab* > * > static_vars = {& level_sets};
 
     const int ngrow = 0;
     const int ncomp = static_names.size();

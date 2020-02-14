@@ -597,8 +597,8 @@ void mfix::InitLevelData (Real time)
       {
           for (int lev = 0; lev < nlev; lev++)
           {
-             particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
-                                                   pc->ParticleDistributionMap(lev), 1, 0));
+             particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                               pc->ParticleDistributionMap(lev), 1, 0);
              particle_cost[lev]->setVal(0.0);
           }
       }
@@ -614,7 +614,7 @@ void mfix::InitLevelData (Real time)
        {
           for (int lev = 0; lev < nlev; lev++)
           {
-             fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+             fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
              fluid_cost[lev]->setVal(0.0);
           }
        }
@@ -643,11 +643,11 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 
             Print() << "Clean up auto-generated particles.\n" << std::endl;
 
-            const MultiFab * ls_data = level_sets[1].get();
+            const MultiFab * ls_data = level_sets[1];
             iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                ls_data->nComp(), ls_data->nGrow());
 
-            pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
+            pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level],
                                  ls_data, levelset_refinement);
           }
           else if (!restart_flag && particle_ebfactory[finest_level])
@@ -659,11 +659,11 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 
             for (int ilev = 0; ilev < nlev; ilev ++)
             {
-              const MultiFab * ls_data = level_sets[ilev].get();
+              const MultiFab * ls_data = level_sets[ilev];
               iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                  ls_data->nComp(), ls_data->nGrow());
 
-              pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(),
+              pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev],
                                    ls_data, 1);
             }
           }
@@ -689,8 +689,8 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
                 DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
                 pc->Regrid(particle_dm, particle_ba);
 
-                particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
-                                                      pc->ParticleDistributionMap(lev), 1, 0));
+                particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                                  pc->ParticleDistributionMap(lev), 1, 0);
                 particle_cost[lev]->setVal(0.0);
 
                 // This calls re-creates a proper particle_ebfactories
@@ -763,12 +763,12 @@ mfix::MakeBCArrays ()
        Box box_khi = amrex::adjCellHi(domainz,2,1);
 
        // Note that each of these is a single IArrayBox so every process has a copy of them
-       bc_ilo[lev].reset(new IArrayBox(box_ilo,2));
-       bc_ihi[lev].reset(new IArrayBox(box_ihi,2));
-       bc_jlo[lev].reset(new IArrayBox(box_jlo,2));
-       bc_jhi[lev].reset(new IArrayBox(box_jhi,2));
-       bc_klo[lev].reset(new IArrayBox(box_klo,2));
-       bc_khi[lev].reset(new IArrayBox(box_khi,2));
+       bc_ilo[lev] = new IArrayBox(box_ilo,2);
+       bc_ihi[lev] = new IArrayBox(box_ihi,2);
+       bc_jlo[lev] = new IArrayBox(box_jlo,2);
+       bc_jhi[lev] = new IArrayBox(box_jhi,2);
+       bc_klo[lev] = new IArrayBox(box_klo,2);
+       bc_khi[lev] = new IArrayBox(box_khi,2);
    }
 }
 
@@ -980,7 +980,7 @@ void mfix::mfix_set_ls_near_inflow ()
         {
             Box domain(geom[lev].Domain());
 
-            MultiFab* ls_phi = level_sets[lev].get();
+            MultiFab* ls_phi = level_sets[lev];
             const Real* dx   = geom[lev].CellSize();
 
             // Don't tile this
@@ -1003,7 +1003,7 @@ void mfix::mfix_set_ls_near_inflow ()
         {
             Box domain(geom[lev].Domain());
             const Real* dx   = geom[lev].CellSize();
-            MultiFab* ls_phi = level_sets[lev_ref].get();
+            MultiFab* ls_phi = level_sets[lev_ref];
 
             // Don't tile this
             for (MFIter mfi(*ls_phi, false); mfi.isValid(); ++mfi)
@@ -1020,7 +1020,7 @@ void mfix::mfix_set_ls_near_inflow ()
         {
             Box domain(geom[lev].Domain());
             const Real* dx   = geom[lev].CellSize();
-            MultiFab* ls_phi = level_sets[lev].get();
+            MultiFab* ls_phi = level_sets[lev];
 
             // Don't tile this
             for (MFIter mfi(*ls_phi, false); mfi.isValid(); ++mfi)
