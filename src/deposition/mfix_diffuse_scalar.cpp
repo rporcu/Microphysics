@@ -28,7 +28,7 @@ mfix::mfix_diffuse_scalar (const Vector< MultiFab* > & mf_to_diffuse,
    //
    LPInfo info;
    info.setMaxCoarseningLevel(diff_mg_max_coarsening_level);
-   MLEBABecLap ebscalarop(geom, grids, dmap, info, GetVecOfConstPtrs(ebfactory));
+   MLEBABecLap ebscalarop(geom, grids, dmap, info, ebfactory);
 
    // It is essential that we set MaxOrder of the solver to 2
    // if we want to use the standard sol(i)-sol(i-1) approximation

@@ -27,7 +27,7 @@ class DiffusionOp
   public: 
     // Constructor, with initialisation
     DiffusionOp (amrex::AmrCore* _amrcore, 
-                 amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>* _ebfactory,
+                 amrex::Vector< const amrex::EBFArrayBoxFactory* >* _ebfactory,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_velbc_lo,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_velbc_hi,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_scalbc_lo,
@@ -39,7 +39,7 @@ class DiffusionOp
 
     // Actually do the setup work here
     void setup (amrex::AmrCore* _amrcore, 
-                amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>* _ebfactory);
+                amrex::Vector< const amrex::EBFArrayBoxFactory* >* _ebfactory);
 
     // Read input from ParmParse (solver settings)
     void readParameters ();
@@ -76,7 +76,7 @@ class DiffusionOp
   private:
     // AmrCore data 
     amrex::AmrCore* amrcore;
-    amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>* ebfactory;
+    amrex::Vector< const amrex::EBFArrayBoxFactory* >* ebfactory;
 
     amrex::Vector<amrex::Geometry> geom;
     amrex::Vector<amrex::BoxArray> grids;          
@@ -85,10 +85,10 @@ class DiffusionOp
     int nghost = 0; 
 
     // Boundary conditions
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM> m_velbc_lo;
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM> m_velbc_hi;
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM> m_scalbc_lo;
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM> m_scalbc_hi;
+    std::array<amrex::LinOpBCType,3> m_velbc_lo;
+    std::array<amrex::LinOpBCType,3> m_velbc_hi;
+    std::array<amrex::LinOpBCType,3> m_scalbc_lo;
+    std::array<amrex::LinOpBCType,3> m_scalbc_hi;
 
     // Internal data used in the matrix solve
     //

@@ -645,7 +645,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
             iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                ls_data->nComp(), ls_data->nGrow());
 
-            pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
+            pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level],
                                  ls_data, levelset_refinement);
           }
           else if (!restart_flag && particle_ebfactory[finest_level])
@@ -661,7 +661,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
               iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                  ls_data->nComp(), ls_data->nGrow());
 
-              pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(),
+              pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev],
                                    ls_data, 1);
             }
           }

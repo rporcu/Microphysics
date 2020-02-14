@@ -596,15 +596,14 @@ mfix::RegridLevelSetArray (int a_lev)
 
    int changed = false;
 
-   if ( particle_ebfactory[a_lev].get() == nullptr )
+   if ( particle_ebfactory[a_lev] == nullptr )
    {
       amrex::Print() << "Updating particle ebfactory 1" << std::endl;
 
-      particle_ebfactory[a_lev].reset(
-          new EBFArrayBoxFactory(* particle_eb_levels[a_lev], geom[a_lev], ba, dm,
-                                 {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                  m_eb_full_grow_cells}, m_eb_support_level)
-          );
+      particle_ebfactory[a_lev] =
+        new EBFArrayBoxFactory(*particle_eb_levels[a_lev], geom[a_lev], ba, dm,
+                               {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                m_eb_full_grow_cells}, m_eb_support_level);
 
       changed = true;
 
@@ -618,11 +617,10 @@ mfix::RegridLevelSetArray (int a_lev)
 
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
-          particle_ebfactory[a_lev].reset(
-              new EBFArrayBoxFactory( * particle_eb_levels[a_lev], geom[a_lev], ba, dm,
-                                      {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                       m_eb_full_grow_cells}, m_eb_support_level)
-              );
+          particle_ebfactory[a_lev] =
+              new EBFArrayBoxFactory(*particle_eb_levels[a_lev], geom[a_lev], ba, dm,
+                                     {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
+                                      m_eb_full_grow_cells}, m_eb_support_level);
 
          changed = true;
       }
@@ -700,15 +698,14 @@ bool mfix::mfix_update_ebfactory (int a_lev)
 
    bool is_updated = false;
 
-   if ( ebfactory[a_lev].get() == nullptr )
+   if ( ebfactory[a_lev] == nullptr )
    {
       Print() << "Updating ebfactory from nullptr" << std::endl;
 
-      ebfactory[a_lev].reset(
-          new EBFArrayBoxFactory(* eb_levels[a_lev], geom[a_lev], ba, dm,
+      ebfactory[a_lev] =
+          new EBFArrayBoxFactory(*eb_levels[a_lev], geom[a_lev], ba, dm,
                                  {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                  m_eb_full_grow_cells}, m_eb_support_level)
-          );
+                                  m_eb_full_grow_cells}, m_eb_support_level);
 
       is_updated = true;
    }
@@ -721,11 +718,10 @@ bool mfix::mfix_update_ebfactory (int a_lev)
       {
           Print() << "Updating ebfactory from existing" << std::endl;
 
-          ebfactory[a_lev].reset(
-              new EBFArrayBoxFactory(* eb_levels[a_lev], geom[a_lev], ba, dm,
+          ebfactory[a_lev] =
+              new EBFArrayBoxFactory(*eb_levels[a_lev], geom[a_lev], ba, dm,
                                      {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                      m_eb_full_grow_cells}, m_eb_support_level)
-              );
+                                      m_eb_full_grow_cells}, m_eb_support_level);
 
           is_updated = true;
       }

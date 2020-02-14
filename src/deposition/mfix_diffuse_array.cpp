@@ -28,7 +28,7 @@ mfix::mfix_diffuse_array (const Vector< MultiFab* > & mf_to_diffuse,
    //
    LPInfo info;
    info.setMaxCoarseningLevel(diff_mg_max_coarsening_level);
-   MLEBTensorOp ebtensorop(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
+   MLEBTensorOp ebtensorop(geom, grids, dmap, info, ebfactory);
 
    // It is essential that we set MaxOrder of the solver to 2
    // if we want to use the standard sol(i)-sol(i-1) approximation

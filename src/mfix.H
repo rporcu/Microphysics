@@ -570,7 +570,7 @@ class mfix : public AmrCore
     static int ntrac;
 
     // Particle container
-    std::unique_ptr<MFIXParticleContainer> pc;
+    std::shared_ptr<MFIXParticleContainer> pc;
 
     // Debug counter used for tracking number of level-set MultiFabs used in
     // intersection/union
@@ -699,10 +699,10 @@ class mfix : public AmrCore
     int  nodal_mg_max_coarsening_level = 100;
 
     // Linear operator
-    std::unique_ptr<MLNodeLaplacian> nodal_matrix;
+    std::shared_ptr<MLNodeLaplacian> nodal_matrix;
 
     // Solver
-    std::unique_ptr<MLMG> nodal_solver;
+    std::shared_ptr<MLMG> nodal_solver;
 
     // ***************************************************************
     // MAC solve
@@ -882,17 +882,17 @@ class mfix : public AmrCore
      **************************************************************************/
 
     //! EB levels representing fluid boundary conditions
-    Vector<const EB2::Level *> eb_levels;
+    Vector<const EB2::Level*> eb_levels;
 
     //! EB levels representing particle boundary conditions (same as
     //! `mfix::eb_levels` but might include additional walls at MI BCs).
-    Vector<const EB2::Level *> particle_eb_levels;
+    Vector<const EB2::Level*> particle_eb_levels;
 
     //! EB factory that lives on the fluid grids
-    Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;
+    Vector<const EBFArrayBoxFactory*> ebfactory;
 
     //! EB factory that lives on the particle grids
-    Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
+    Vector<EBFArrayBoxFactory*> particle_ebfactory;
 
     bool mfix_update_ebfactory (int a_lev);
 };

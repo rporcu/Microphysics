@@ -133,19 +133,17 @@ void mfix::make_eb_factories () {
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        ebfactory[lev].reset(
-            new EBFArrayBoxFactory(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+        ebfactory[lev] =
+            new EBFArrayBoxFactory(*eb_levels[lev], geom[lev], grids[lev], dmap[lev],
                                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                    m_eb_full_grow_cells}, m_eb_support_level)
-            );
+                                    m_eb_full_grow_cells}, m_eb_support_level);
 
         // Grow EB factory by +2 in order to avoid edge cases. This is not
         // necessary for multi-level mfix.
-        particle_ebfactory[lev].reset(
-            new EBFArrayBoxFactory(* particle_eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+        particle_ebfactory[lev] =
+            new EBFArrayBoxFactory(*particle_eb_levels[lev], geom[lev], grids[lev], dmap[lev],
                                    {levelset_eb_pad + 2, levelset_eb_pad + 2,
-                                    levelset_eb_pad + 2}, m_eb_support_level)
-            );
+                                    levelset_eb_pad + 2}, m_eb_support_level);
     }
 }
 

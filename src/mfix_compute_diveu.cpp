@@ -65,7 +65,7 @@ mfix::mfix_compute_diveu (Real time)
   //        (del dot b sigma grad)) phi
   //
   LPInfo info;
-  MLNodeLaplacian matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
+  MLNodeLaplacian matrix(geom, grids, dmap, info, ebfactory);
 
   // Set domain BCs for Poisson's solver
   // The domain BCs refer to level 0 only
