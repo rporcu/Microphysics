@@ -322,7 +322,7 @@ void DiffusionOp::setSolverSettings (MLMG& solver)
         solver.setFinalFillBC(true);
 }
 
-void DiffusionOp::ComputeDivTau (Vector<std::unique_ptr<MultiFab>>& divtau_out,
+void DiffusionOp::ComputeDivTau (Vector< MultiFab* >& divtau_out,
                                  const Vector< MultiFab* >& vel_in,
                                  const Vector< MultiFab* >& ro_in,
                                  const Vector< MultiFab* >& ep_in,
@@ -382,7 +382,7 @@ void DiffusionOp::ComputeDivTau (Vector<std::unique_ptr<MultiFab>>& divtau_out,
     }
 }
 
-void DiffusionOp::ComputeLapS (Vector<std::unique_ptr<MultiFab>>& laps_out,
+void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
                                const Vector< MultiFab* >& scal_in,
                                const Vector< MultiFab* >& ro_in,
                                const Vector< MultiFab* >& ep_in,

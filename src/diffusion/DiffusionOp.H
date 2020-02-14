@@ -60,14 +60,14 @@ class DiffusionOp
                          amrex::Real dt);
 
     // Explicit tensor viscous term
-    void ComputeDivTau (amrex::Vector<std::unique_ptr<amrex::MultiFab>>& divtau_out,
+    void ComputeDivTau (amrex::Vector< amrex::MultiFab* >& divtau_out,
                         const amrex::Vector< amrex::MultiFab* >& vel_in,
                         const amrex::Vector< amrex::MultiFab* >& ro_in,
                         const amrex::Vector< amrex::MultiFab* >& ep_in,
                         const amrex::Vector< amrex::MultiFab* >& eta_in);
 
     // Explicit tensor viscous term
-    void ComputeLapS (amrex::Vector<std::unique_ptr<amrex::MultiFab>>& laps_out,
+    void ComputeLapS (amrex::Vector< amrex::MultiFab* >& laps_out,
                       const amrex::Vector< amrex::MultiFab* >& scal_in,
                       const amrex::Vector< amrex::MultiFab* >& ro_in,
                       const amrex::Vector< amrex::MultiFab* >& ep_in,

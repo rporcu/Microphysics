@@ -527,23 +527,10 @@ class mfix : public AmrCore
 
     void EvolveFluid (int nstep, Real & dt, Real & time, Real stop_time, Real drag_timing);
 
-    // Projection-related methods
-    void mfix_solve_poisson_equation (Vector< std::unique_ptr<MultiFab> >& phi,
-                                      Vector< std::unique_ptr<MultiFab> >& rhs,
-                                      Vector< std::unique_ptr<MultiFab> >& b,
-                                      Vector< std::unique_ptr<MultiFab> >& fluxes);
-
-    // Solve implicit diffusion
-    void solve_diffusion_equation (Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-                                   Vector< std::unique_ptr<MultiFab> >& phi,
-                                   Vector< std::unique_ptr<MultiFab> >& rhs,
-                                   int bc_lo[], int bc_hi[],
-                                   Real dt);
-
     void check_for_nans (int lev);
 
-    void mfix_compute_convective_term (Vector< std::unique_ptr<MultiFab> >& conv_u,
-                                       Vector< std::unique_ptr<MultiFab> >& conv_s,
+    void mfix_compute_convective_term (Vector< MultiFab* >& conv_u,
+                                       Vector< MultiFab* >& conv_s,
                                        Vector< MultiFab* >& vel,
                                        Vector< MultiFab* >& ep_g,
                                        Vector< MultiFab* >& ro_g,
@@ -552,16 +539,16 @@ class mfix : public AmrCore
 
     int steady_state_reached (Real dt, int iter);
 
-    void mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
-                               Vector< std::unique_ptr<MultiFab> >& conv_s_old,
-                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
-                               Vector< std::unique_ptr<MultiFab> >&   laps_old,
+    void mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
+                               Vector< MultiFab* >& conv_s_old,
+                               Vector< MultiFab* >& divtau_old,
+                               Vector< MultiFab* >&   laps_old,
                                Real time, Real dt, bool proj_2);
 
-    void mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
-                               Vector< std::unique_ptr<MultiFab> >& conv_s_old,
-                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
-                               Vector< std::unique_ptr<MultiFab> >&   laps_old,
+    void mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
+                               Vector< MultiFab* >& conv_s_old,
+                               Vector< MultiFab* >& divtau_old,
+                               Vector< MultiFab* >&   laps_old,
                                Real time, Real dt, bool proj_2);
 
     void mfix_diffuse_scalar (const amrex::Vector< MultiFab* >& mf_eps, amrex::Real);

@@ -10,8 +10,8 @@
 // Compute the three components of the convection term
 //
 void
-mfix::mfix_compute_convective_term (Vector< std::unique_ptr<MultiFab> >& conv_u_in,
-                                    Vector< std::unique_ptr<MultiFab> >& conv_s_in,
+mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
+                                    Vector< MultiFab* >& conv_s_in,
                                     Vector< MultiFab* >& vel_in,
                                     Vector< MultiFab* >& ep_g_in,
                                     Vector< MultiFab* >& ro_g_in,

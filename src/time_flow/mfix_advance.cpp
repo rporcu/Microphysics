@@ -50,10 +50,10 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
     // Create temporary multifabs to hold the old-time conv and divtau
     //    so we don't have to re-compute them in the corrector
-    Vector<std::unique_ptr<MultiFab> > conv_u_old;
-    Vector<std::unique_ptr<MultiFab> > conv_s_old;
-    Vector<std::unique_ptr<MultiFab> > divtau_old;
-    Vector<std::unique_ptr<MultiFab> >   laps_old;
+    Vector< MultiFab* > conv_u_old;
+    Vector< MultiFab* > conv_s_old;
+    Vector< MultiFab* > divtau_old;
+    Vector< MultiFab* >   laps_old;
 
     conv_u_old.resize(nlev);
     conv_s_old.resize(nlev);
@@ -62,10 +62,10 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
     for (int lev = 0; lev < nlev; lev++)
     {
-       conv_u_old[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
-       conv_s_old[lev].reset(new MultiFab(grids[lev], dmap[lev],              2, 0, MFInfo(), *ebfactory[lev]));
-       divtau_old[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
-         laps_old[lev].reset(new MultiFab(grids[lev], dmap[lev],          ntrac, 0, MFInfo(), *ebfactory[lev]));
+       conv_u_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+       conv_s_old[lev] = new MultiFab(grids[lev], dmap[lev], 2, 0, MFInfo(), *ebfactory[lev]);
+       divtau_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+         laps_old[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
 
        conv_u_old[lev]->setVal(0.0);
        conv_s_old[lev]->setVal(0.0);
@@ -166,6 +166,14 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
         }
 #endif
 
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       delete conv_u_old[lev];
+       delete conv_s_old[lev];
+       delete divtau_old[lev];
+       delete   laps_old[lev];
+    }
+
     BL_PROFILE_REGION_STOP("mfix::EvolveFluid");
 }
 
@@ -221,10 +229,10 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
        mfix_calc_drag_fluid(time);
 
     // Create temporary multifabs to hold conv and divtau
-    Vector<std::unique_ptr<MultiFab> > conv_u;
-    Vector<std::unique_ptr<MultiFab> > conv_s;
-    Vector<std::unique_ptr<MultiFab> > divtau;
-    Vector<std::unique_ptr<MultiFab> >   laps;
+    Vector< MultiFab* > conv_u;
+    Vector< MultiFab* > conv_s;
+    Vector< MultiFab* > divtau;
+    Vector< MultiFab* >   laps;
 
     conv_u.resize(nlev);
     conv_s.resize(nlev);
@@ -233,10 +241,10 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     for (int lev = 0; lev < nlev; lev++)
     {
-       conv_u[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
-       conv_s[lev].reset(new MultiFab(grids[lev], dmap[lev], 2             , 0, MFInfo(), *ebfactory[lev]));
-       divtau[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
-         laps[lev].reset(new MultiFab(grids[lev], dmap[lev],          ntrac, 0, MFInfo(), *ebfactory[lev]));
+       conv_u[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+       conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 2, 0, MFInfo(), *ebfactory[lev]);
+       divtau[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+         laps[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
 
        conv_u[lev]->setVal(0.0);
        conv_s[lev]->setVal(0.0);
@@ -270,6 +278,14 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
        mfix_set_density_bcs(time, ro_g);
        mfix_set_scalar_bcs(time, trac, mu_g);
    }
+    
+   for (int lev = 0; lev < nlev; lev++)
+    {
+       delete conv_u[lev];
+       delete conv_s[lev];
+       delete divtau[lev];
+       delete   laps[lev];
+    }
 }
 
 //
@@ -305,10 +321,10 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 //     p_g = phi
 //
 void
-mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
-                            Vector< std::unique_ptr<MultiFab> >& conv_s_old,
-                            Vector< std::unique_ptr<MultiFab> >& divtau_old,
-                            Vector< std::unique_ptr<MultiFab> >&   laps_old,
+mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
+                            Vector< MultiFab* >& conv_s_old,
+                            Vector< MultiFab* >& divtau_old,
+                            Vector< MultiFab* >&   laps_old,
                             Real time,
                             Real dt,
                             bool proj_2)
@@ -448,10 +464,10 @@ mfix::mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
 //     p_g = phi
 //
 void
-mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
-                            Vector< std::unique_ptr<MultiFab> >& conv_s_old,
-                            Vector< std::unique_ptr<MultiFab> >& divtau_old,
-                            Vector< std::unique_ptr<MultiFab> >&   laps_old,
+mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
+                            Vector< MultiFab* >& conv_s_old,
+                            Vector< MultiFab* >& divtau_old,
+                            Vector< MultiFab* >&   laps_old,
                             Real time, Real dt, bool proj_2)
 {
     BL_PROFILE("mfix::mfix_apply_corrector");
@@ -460,9 +476,9 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
     Real new_time = time + dt;
 
     // Create temporary multifabs to hold the new-time conv and divtau
-    Vector<std::unique_ptr<MultiFab> > conv_u;
-    Vector<std::unique_ptr<MultiFab> > conv_s;
-    Vector<std::unique_ptr<MultiFab> > divtau;
+    Vector< MultiFab* > conv_u;
+    Vector< MultiFab* > conv_s;
+    Vector< MultiFab* > divtau;
 
     conv_u.resize(nlev);
     conv_s.resize(nlev);
@@ -470,9 +486,9 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
 
     for (int lev = 0; lev < nlev; lev++)
     {
-       conv_u[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
-       conv_s[lev].reset(new MultiFab(grids[lev], dmap[lev], 2             , 0, MFInfo(), *ebfactory[lev]));
-       divtau[lev].reset(new MultiFab(grids[lev], dmap[lev], AMREX_SPACEDIM, 0, MFInfo(), *ebfactory[lev]));
+       conv_u[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+       conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 2, 0, MFInfo(), *ebfactory[lev]);
+       divtau[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
 
        conv_u[lev]->setVal(0.0);
        conv_s[lev]->setVal(0.0);
@@ -563,6 +579,13 @@ mfix::mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
       delete depdt[lev];
 
     //mfix_set_velocity_bcs(new_time, vel_g, 0);
+    
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       delete conv_u[lev];
+       delete conv_s[lev];
+       delete divtau[lev];
+    }
 }
 
 void
