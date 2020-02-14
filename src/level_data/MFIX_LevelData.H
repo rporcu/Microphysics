@@ -10,7 +10,7 @@ class LevelData
 {
   public:
     // Default Constructor
-    LevelData () = default;
+    LevelData ();
 
     // Cell-centered MultiFabs
     // Void fraction

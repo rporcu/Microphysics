@@ -7,7 +7,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
                                   Vector< MultiFab* >& ep_v_mac,
                                   Vector< MultiFab* >& ep_w_mac,
                                   Vector< MultiFab* >& ep_in)
-
 {
     BL_PROFILE("mfix::mfix_predict_vels_on_faces");
 

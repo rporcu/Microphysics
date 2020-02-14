@@ -16,11 +16,11 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
     BL_PROFILE("mfix::EvolveFluid");
 
 #ifdef AMREX_MEM_PROFILING
-        {
-            std::ostringstream ss;
-            ss << "EvolveFluid Start";
-            MemProfiler::report(ss.str());
-        }
+    {
+        std::ostringstream ss;
+        ss << "EvolveFluid Start";
+        MemProfiler::report(ss.str());
+    }
 #endif
 
     amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
@@ -97,7 +97,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
         {
           // Back up field variables to old
           MultiFab::Copy(*(m_leveldata[lev]->ep_go), *(m_leveldata[lev]->ep_g), 0, 0,
-			 (m_leveldata[lev]->ep_g)->nComp(), (m_leveldata[lev]->ep_go)->nGrow());
+          (m_leveldata[lev]->ep_g)->nComp(), (m_leveldata[lev]->ep_go)->nGrow());
           MultiFab::Copy(  *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
           MultiFab::Copy( *ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
           MultiFab::Copy(*trac_o[lev],  *trac[lev],  0, 0,  trac[lev]->nComp(), trac_o[lev]->nGrow());

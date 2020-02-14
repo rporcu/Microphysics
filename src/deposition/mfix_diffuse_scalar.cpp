@@ -197,7 +197,7 @@ mfix::mfix_diffuse_ep_g (const amrex::Vector< std::shared_ptr<LevelData> > & lev
     solver.setBottomSolver(MLMG::BottomSolver::smoother);
   }
   else if (diff_bottom_solver_type == "hypre") {
-     solver.setBottomSolver(MLMG::BottomSolver::hypre);
+    solver.setBottomSolver(MLMG::BottomSolver::hypre);
   }
 
   // By this point we must have filled the Dirichlet values of sol stored in the ghost cells
