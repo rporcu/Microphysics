@@ -164,10 +164,14 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
       amrex::Print() << "MFIXParticleContainer::PICDeposition time: " << stoptime << '\n';
     }
 
+    Vector< MultiFab* > ep_g(nlev);
+    for (int lev(0); lev < nlev; ++lev)
+      ep_g[lev] = m_leveldata[lev]->ep_g;
+
     // At this point, we have the particle volume on the fluid grid (ep_s).
     // We will diffuse it first, then convert it to ep_g.
     if(mfix::m_deposition_diffusion_coeff > 0.)
-      mfix_diffuse_ep_g(m_leveldata, mfix::m_deposition_diffusion_coeff);
+      mfix_diffuse_scalar(ep_g, mfix::m_deposition_diffusion_coeff);
 
     for (int lev = 0; lev < nlev; lev++) {
       // Now define this mf = (1 - particle_vol)
@@ -192,7 +196,11 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   for (int lev = 0; lev < nlev; lev++)
     (m_leveldata[lev]->ep_g)->FillBoundary(geom[lev].periodicity());
 
-  mfix_set_epg_bcs(m_leveldata);
+  Vector< MultiFab* > ep_g(nlev);
+  for (int lev(0); lev < nlev; ++lev)
+    ep_g[lev] = m_leveldata[lev]->ep_g;
+
+  mfix_set_epg_bcs(ep_g);
 
   // Sum up all the values of ep_g[lev], weighted by each cell's EB volfrac
   // Note ep_g = 1 - particle_volume / this_cell_volume where

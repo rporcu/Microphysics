@@ -223,7 +223,7 @@ class mfix : public AmrCore
                                 Vector< MultiFab* >& vel,
                                 int extrap_dir_bcs) const;
 
-    void mfix_set_epg_bcs (const amrex::Vector< std::shared_ptr<LevelData> >& leveldata) const;
+    void mfix_set_epg_bcs (const Vector< MultiFab* >& ep_g) const;
 
     void mfix_set_density_bcs (Real time,
                                Vector< MultiFab* >& ro_g);
@@ -555,9 +555,6 @@ class mfix : public AmrCore
                                Real time, Real dt, bool proj_2);
 
     void mfix_diffuse_scalar (const amrex::Vector< MultiFab* >& mf_eps, amrex::Real);
-
-    void mfix_diffuse_ep_g (const amrex::Vector< std::shared_ptr<LevelData> >& leveldata,
-                            amrex::Real);
 
     void mfix_diffuse_array (const amrex::Vector< MultiFab* >& mf_drag, amrex::Real);
 

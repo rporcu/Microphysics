@@ -3,6 +3,6 @@
 using namespace amrex;
 
 LevelData::LevelData ()
-  : ep_g(new MultiFab())
-  , ep_go(new MultiFab())
+  : ep_g(nullptr)
+  , ep_go(nullptr)
 {}

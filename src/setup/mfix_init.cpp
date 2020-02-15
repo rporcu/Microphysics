@@ -875,7 +875,11 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
     } else {
 
-        mfix_set_epg_bcs(m_leveldata);
+      Vector< MultiFab* > ep_g(nlev);
+      for (int lev(0); lev < nlev; ++lev)
+        ep_g[lev] = m_leveldata[lev]->ep_g;
+
+        mfix_set_epg_bcs(ep_g);
 
         //Calculation of sum_vol_orig for a restarting point
         sum_vol_orig = volWgtSum(0, *(m_leveldata[0]->ep_g), 0);
