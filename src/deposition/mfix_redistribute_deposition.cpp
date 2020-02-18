@@ -26,7 +26,7 @@ mfix::mfix_redistribute_deposition (int lev,
      // We don't want to do this for ghost cells
      const Box& bx = mfi.tilebox();
 
-     int ncomp = mf_to_redistribute.nComp();
+     const int ncomp = mf_to_redistribute.nComp();
 
      // We are only interested in redistributing excessive particle volume
      // from small cells.
@@ -70,12 +70,11 @@ mfix::mfix_redistribute_deposition (int lev,
              mask(i,j,k) = 1.0;
          });
 
-
        Array4<Real> const& mf_redist = mf_to_redistribute.array(mfi);
 
-       amrex::ParallelFor(bx, ncomp,
-         [flags,ep_s,mf_redist,mask,vfrac,max_eps]
-         AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+       amrex::ParallelFor(bx,
+         [flags,ep_s,mf_redist,mask,vfrac,max_eps,ncomp]
+         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
 
            if(flags(i,j,k).isSingleValued()){
@@ -101,27 +100,35 @@ mfix::mfix_redistribute_deposition (int lev,
                // Fraction of material we want to redistribute
                amrex::Real scale = amrex::max(0.0, ep_s(i,j,k) - avg_eps) / ep_s(i,j,k);
 
-               // This is the amount of the multifab we are redistributing
-               // that we are moving into the packed cell's neighborhood.
-               amrex::Real overflow = mf_redist(i,j,k,n) * scale * vfrac(i,j,k) / sum_vfrac;
+               for(int n(0); n < ncomp; n++) {
 
-               for(int ii(-1); ii <= 1; ii++)
-                 for(int jj(-1); jj <= 1; jj++)
-                   for(int kk(-1); kk <= 1; kk++)
-                     if((ii != 0 or jj != 0 or kk != 0) and
-                        (flags(i,j,k).isConnected({ii,jj,kk}) == 1)) {
+                 // This is the amount of the multifab we are redistributing
+                 // that we are moving into the packed cell's neighborhood.
+                 amrex::Real overflow = mf_redist(i,j,k,n) * scale * vfrac(i,j,k) / sum_vfrac;
 
-                       amrex::Gpu::Atomic::Add(&mf_redist(i+ii,j+jj,k+kk,n),
-                                               mask(i+ii,j+jj,k+kk)*overflow);
+                 for(int kk(-1); kk <= 1; kk++) {
+                   for(int jj(-1); jj <= 1; jj++) {
+                     for(int ii(-1); ii <= 1; ii++) {
+                       if((ii != 0 or jj != 0 or kk != 0) and
+                          (flags(i,j,k).isConnected({ii,jj,kk}))) {
+
+                         amrex::Gpu::Atomic::Add(&mf_redist(i+ii,j+jj,k+kk,n),
+                                                 mask(i+ii,j+jj,k+kk)*overflow);
+                       }
                      }
+                   }
+                 }
 
-               // Account for the change in material in the source cell
-               amrex::Real delta = -scale*mf_redist(i,j,k,n);
-               amrex::Gpu::Atomic::Add(&mf_redist(i,j,k,n), delta);
+                 // Account for the change in material in the source cell
+                 amrex::Real delta = -scale*mf_redist(i,j,k,n);
+                 amrex::Gpu::Atomic::Add(&mf_redist(i,j,k,n), delta);
+               }
 
              }
            }
          });
+
+       amrex::Gpu::synchronize();
      }
 
    }
