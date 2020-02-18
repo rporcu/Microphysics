@@ -6,7 +6,7 @@ mfix::ResizeArrays ()
 {
     int nlevs_max = maxLevel() + 1;
 
-    m_leveldata.resize(nlevs_max);
+    m_leveldata.resize(nlevs_max, nullptr);
 
     p_g.resize(nlevs_max);
     p_go.resize(nlevs_max);

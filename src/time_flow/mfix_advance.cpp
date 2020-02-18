@@ -333,8 +333,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // We use the new-time value for things computed on the "*" state
     Real new_time = time + dt;
 
-    Vector< MultiFab* > ep_g(nlev);
-    for(int lev(0); lev < nlev; ++lev) {
+    Vector< MultiFab* > ep_g(m_leveldata.size());
+    for(int lev(0); lev < m_leveldata.size(); ++lev) {
       ep_g[lev] = m_leveldata[lev]->ep_g;
     }
 
@@ -501,8 +501,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
        divtau[lev]->setVal(0.0);
     }
 
-    Vector< MultiFab* > ep_g(nlev);
-    for(int lev(0); lev < nlev; ++lev) {
+    Vector< MultiFab* > ep_g(m_leveldata.size());
+    for(int lev(0); lev < m_leveldata.size(); ++lev) {
       ep_g[lev] = m_leveldata[lev]->ep_g;
     }
 

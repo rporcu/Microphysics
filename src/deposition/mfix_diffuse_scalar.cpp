@@ -1,14 +1,14 @@
-// For multigrid
-#include <AMReX_Box.H>
+#include <mfix.H>
 #include <AMReX_BC_TYPES.H>
-#include <AMReX_MLEBTensorOp.H>
-#include <AMReX_MLMG.H>
-#include <AMReX_MLTensorOp.H>
+#include <AMReX_Box.H>
 #include <AMReX_VisMF.H>
 
-#include <mfix.H>
+// For multigrid
+#include <AMReX_MLMG.H>
+#include <AMReX_MLTensorOp.H>
+#include <AMReX_MLEBTensorOp.H>
+
 #include <MFIX_BC_Parms.H>
-#include <MFIX_LevelData.H>
 
 using namespace amrex;
 
@@ -121,4 +121,5 @@ mfix::mfix_diffuse_scalar (const Vector< MultiFab* > & mf_to_diffuse,
    }
 
    amrex::Print() << "After diffusing volume fraction " << std::endl;
+
 }

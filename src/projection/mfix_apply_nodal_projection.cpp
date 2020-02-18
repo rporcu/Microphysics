@@ -138,8 +138,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     LPInfo info;
     info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
 
-    Vector<std::unique_ptr<MultiFab>> ep_g_vec(nlev);
-    for (int lev = 0; lev < nlev; ++lev)
+    Vector<std::unique_ptr<MultiFab>> ep_g_vec(m_leveldata.size());
+    for (int lev = 0; lev < m_leveldata.size(); ++lev)
     {
       MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
       ep_g_vec[lev].reset(new MultiFab(ep_g.boxArray(), ep_g.DistributionMap(),

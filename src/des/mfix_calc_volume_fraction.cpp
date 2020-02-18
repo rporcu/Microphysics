@@ -164,8 +164,8 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
       amrex::Print() << "MFIXParticleContainer::PICDeposition time: " << stoptime << '\n';
     }
 
-    Vector< MultiFab* > ep_g(nlev);
-    for (int lev(0); lev < nlev; ++lev)
+    Vector< MultiFab* > ep_g(m_leveldata.size());
+    for (int lev(0); lev < m_leveldata.size(); ++lev)
       ep_g[lev] = m_leveldata[lev]->ep_g;
 
     // At this point, we have the particle volume on the fluid grid (ep_s).
@@ -196,8 +196,8 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   for (int lev = 0; lev < nlev; lev++)
     (m_leveldata[lev]->ep_g)->FillBoundary(geom[lev].periodicity());
 
-  Vector< MultiFab* > ep_g(nlev);
-  for (int lev(0); lev < nlev; ++lev)
+  Vector< MultiFab* > ep_g(m_leveldata.size());
+  for (int lev(0); lev < m_leveldata.size(); ++lev)
     ep_g[lev] = m_leveldata[lev]->ep_g;
 
   mfix_set_epg_bcs(ep_g);
