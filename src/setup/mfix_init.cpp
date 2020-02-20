@@ -792,14 +792,12 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        Real dy = geom[lev].CellSize(1);
        Real dz = geom[lev].CellSize(2);
 
-       MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
-
        // We deliberately don't tile this loop since we will be looping
        //    over bc's on faces and it makes more sense to do this one grid at a time
-       for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
+       for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi)
        {
           const Box& bx = mfi.validbox();
-          const Box& sbx = ep_g[mfi].box();
+          const Box& sbx = *(m_leveldata[lev]->ep_g)[mfi].box();
 
           if ( is_restarting ) {
 
@@ -808,7 +806,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
           } else {
 
             init_fluid(sbx, bx, domain,
-                       ep_g[mfi], (*ro_g[lev])[mfi],
+                       *(m_leveldata[lev]->ep_g)[mfi], (*ro_g[lev])[mfi],
                        (*trac[lev])[mfi], (*p_g[lev])[mfi],
                        (*vel_g[lev])[mfi], (*mu_g[lev])[mfi],
                        dx, dy, dz, xlen, ylen, zlen, test_tracer_conservation);
@@ -875,16 +873,16 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
     } else {
 
-      Vector< MultiFab* > ep_g(nlev);
-      for (int lev(0); lev < nlev; ++lev)
+      Vector< MultiFab* > ep_g(nlev, nullptr);
+      for (int lev(0); lev < m_leveldata.size() and m_leveldata[lev] != nullptr; ++lev)
         ep_g[lev] = m_leveldata[lev]->ep_g;
 
-        mfix_set_epg_bcs(ep_g);
+      mfix_set_epg_bcs(ep_g);
 
-        //Calculation of sum_vol_orig for a restarting point
-        sum_vol_orig = volWgtSum(0, *(m_leveldata[0]->ep_g), 0);
+      //Calculation of sum_vol_orig for a restarting point
+      sum_vol_orig = volWgtSum(0, *(m_leveldata[0]->ep_g), 0);
 
-       Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
     }
 }
 
@@ -897,12 +895,10 @@ mfix::mfix_set_bc0 ()
 
      Box domain(geom[lev].Domain());
 
-     MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
-
      // Don't tile this -- at least for now
-     for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
+     for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi)
      {
-       const Box& sbx = ep_g[mfi].box();
+       const Box& sbx = *(m_leveldata[lev]->ep_g)[mfi].box();
 
        set_bc0(sbx, &mfi, lev, domain);
      }

@@ -201,9 +201,12 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
   const amrex::MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
 
   // New multiFab to hold the cell center pressure.
-  MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
-  std::unique_ptr<MultiFab> pg_cc(new MultiFab(ep_g.boxArray(), ep_g.DistributionMap(), ep_g.nComp(),
-                                               ep_g.nGrow(), MFInfo(), *ebfactory[lev]));
+  std::unique_ptr<MultiFab> pg_cc(new MultiFab((m_leveldata[lev]->ep_g)->boxArray(),
+                                               (m_leveldata[lev]->ep_g)->DistributionMap(),
+                                               (m_leveldata[lev]->ep_g)->nComp(),
+                                               (m_leveldata[lev]->ep_g)->nGrow(),
+                                               MFInfo(),
+                                               *ebfactory[lev]));
 
   // Create a temporary nodal pressure multifab to sum in p_g and p0_g
   MultiFab pg_nd(p_g[lev]->boxArray(), dmap[lev], 1, 0);
@@ -253,7 +256,7 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
         const EBFArrayBox&  epg_fab = static_cast<EBFArrayBox const&>(ep_g[mfi]);
         const EBCellFlagFab&  flags = epg_fab.getEBCellFlagFab();
 
-        RealBox box_region ( bx, Geom(lev).CellSize (), Geom(lev).ProbLo() );
+        RealBox box_region (bx, Geom(lev).CellSize (), Geom(lev).ProbLo());
 
         if (flags.getType(bx) != FabType::covered)
         {
