@@ -69,11 +69,11 @@ mfix::mfix_calc_drag_fluid (Real time)
   const FabArray<EBCellFlagFab>* flags;
   const MultiFab* volfrac;
 
-  Vector< std::unique_ptr< MultiFab > > tmp_eps(nlev);
+  Vector< MultiFab* > tmp_eps(nlev);
 
   for (int lev = 0; lev < nlev; lev++) {
 
-    tmp_eps[lev] = MFHelpers::createFrom(*drag_ptr[lev], 0.0);
+    tmp_eps[lev] = (MFHelpers::createFrom(*drag_ptr[lev], 0.0)).release();
 
     // Use level 0 to define the EB factory. If we are not on level 0
     // then create a copy of the coarse factory to use.
@@ -110,12 +110,14 @@ mfix::mfix_calc_drag_fluid (Real time)
 
   // Move excessive solids volume from small cells to neighboring cells. A copy
   // of the deposition field is made so that when an average is calc
-  for (int lev(0); lev < nlev; ++lev ){
-
+  for (int lev(0); lev < nlev; ++lev )
+  {
     mfix_redistribute_deposition(lev, *tmp_eps[lev], *drag_ptr[lev], volfrac, flags,
                                  mfix::m_max_solids_volume_fraction);
   }
 
+  for (int lev(0); lev < nlev; ++lev)
+    delete tmp_eps[lev];
 
   // Sum the boundaries again to recapture any solids moved across
   // grid boundaries during the redistribute
