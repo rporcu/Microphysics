@@ -96,8 +96,12 @@ if (ENABLE_CUDA)
    set_source_files_properties(${MFIX_CUDA_SOURCES} PROPERTIES LANGUAGE CUDA)
    unset(MFIX_CUDA_SOURCES)
 
-   # Manually added linking to Curand for Random numbers generation on GPU
-   target_link_libraries(mfixcore PUBLIC curand)
+   #
+   # Add manually curand
+   # CMake >= 3.17 provides the module FindCUDAToolkit to do this natively.
+   #
+   find_library(CURAND curand PATHS ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
+   target_link_libraries(amrex PUBLIC ${CURAND})
 endif ()
 
 #
