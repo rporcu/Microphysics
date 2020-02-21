@@ -85,14 +85,16 @@ mfix::mfix_calc_drag_fluid (Real time)
     } else {
 
       Vector<int> ngrow = {1,1,1};
-      std::unique_ptr<EBFArrayBoxFactory> crse_factory;
+      EBFArrayBoxFactory* crse_factory;
 
-      crse_factory = makeEBFabFactory(gm, drag_ptr[lev]->boxArray(),
+      crse_factory = (makeEBFabFactory(gm, drag_ptr[lev]->boxArray(),
                                       drag_ptr[lev]->DistributionMap(),
-                                      ngrow, EBSupport::volume);
+                                      ngrow, EBSupport::volume)).release();
 
       flags   = &(crse_factory->getMultiEBCellFlagFab());
       volfrac = &(crse_factory->getVolFrac());
+
+      delete crse_factory;
     }
 
 
@@ -232,10 +234,6 @@ mfix::mfix_calc_drag_particle (Real time)
     MultiFab*  gp_ptr;
     MultiFab* vel_ptr;
 
-    // Temporararies for dual grid case
-    std::unique_ptr<MultiFab>   gp_pba;
-    std::unique_ptr<MultiFab>  vel_pba;
-
     // This is just a sanity check to make sure we're not using covered values
     // We can remove these lines once we're confident in the algoirthm
     EB_set_covered(*vel_g[0], 0, 3, 1, covered_val);
@@ -252,21 +250,19 @@ mfix::mfix_calc_drag_particle (Real time)
       const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
       int ng = gp_tmp.nGrow();
-      gp_pba.reset(new MultiFab(pba,pdm,gp_tmp.nComp(),ng));
-      gp_pba->copy(gp_tmp,0,0,gp_tmp.nComp(),ng,ng);
-      gp_pba->FillBoundary(geom[lev].periodicity());
+      gp_ptr = new MultiFab(pba, pdm, gp_tmp.nComp(), ng);
+      gp_ptr->copy(gp_tmp, 0, 0, gp_tmp.nComp(), ng, ng);
+      gp_ptr->FillBoundary(geom[lev].periodicity());
 
       EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
                                        {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                                        EBSupport::basic);
 
       ng = vel_g[lev]->nGrow();
-      vel_pba.reset(new MultiFab(pba,pdm,vel_g[lev]->nComp(),ng,MFInfo(), ebfactory_loc));
-      vel_pba->copy(*vel_g[lev],0,0,vel_g[lev]->nComp(),ng,ng);
-      vel_pba->FillBoundary(geom[lev].periodicity());
 
-      gp_ptr  = gp_pba.get();
-      vel_ptr = vel_pba.get();
+      vel_ptr = new MultiFab(pba, pdm, vel_g[lev]->nComp(), ng, MFInfo(), ebfactory_loc);
+      vel_ptr->copy(*vel_g[lev], 0, 0, vel_g[lev]->nComp(), ng, ng);
+      vel_ptr->FillBoundary(geom[lev].periodicity());
     }
 
 #ifdef _OPENMP
@@ -489,10 +485,14 @@ mfix::mfix_calc_drag_particle (Real time)
         } // FAB not covered
       } // pti
     } // omp region
+
+    if (not OnSameGrids) {
+      delete gp_ptr;
+      delete vel_ptr;
+    }
   } // lev
 
   // Reset velocity Dirichlet bc's to face values
   extrap_dir_bcs = 0;
   mfix_set_velocity_bcs(time, vel_g, extrap_dir_bcs);
-
 }
