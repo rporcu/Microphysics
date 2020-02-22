@@ -49,7 +49,7 @@ class mfix : public AmrCore
     ~mfix ();
 
     // Face-based coefficients b in MAC projection and implicit diffusion solve
-    Vector< Array< std::unique_ptr<MultiFab>,3> > bcoeff;
+    Vector< Array<MultiFab*,3> > bcoeff;
 
     void InitParams ();
 

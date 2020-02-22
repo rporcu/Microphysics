@@ -37,7 +37,8 @@ mfix::make_eb_regular ()
     //     * levelset_restart
     //     * ! has_walls
     // are true
-    std::unique_ptr<MultiFab> mf_impfunc;
+    
+    //MultiFab* mf_impfunc;
 
     // if (FLUID::solve)
     {
@@ -46,7 +47,7 @@ mfix::make_eb_regular ()
 
         if (has_walls)
         {
-            auto gshop = EB2::makeShop(* impfunc_walls);
+            auto gshop = EB2::makeShop(*impfunc_walls);
 
             build_eb_levels(gshop);
 

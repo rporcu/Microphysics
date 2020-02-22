@@ -106,7 +106,11 @@ mfix::apply_MAC_projection (Vector< MultiFab* >& ep_u_mac,
   //
   // Perform MAC projection
   //
-  MacProjector macproj(vel, GetVecOfArrOfPtrsConst(bcoeff), geom, lp_info);
+  Vector< Array <MultiFab const*, 3>> const_bcoeff;
+  const_bcoeff.reserve(bcoeff.size());
+  for (const auto& x : bcoeff) const_bcoeff.push_back(GetArrOfConstPtrs(x));
+
+  MacProjector macproj(vel, const_bcoeff, geom, lp_info);
 
   macproj.setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
 
