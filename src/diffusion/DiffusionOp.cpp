@@ -332,11 +332,11 @@ void DiffusionOp::ComputeDivTau (Vector< MultiFab* >& divtau_out,
 
     int finest_level = amrcore->finestLevel();
 
-    Vector<std::unique_ptr<MultiFab> > divtau_aux(finest_level+1);
+    Vector< MultiFab* > divtau_aux(finest_level+1);
     for(int lev = 0; lev <= finest_level; lev++)
     {
-       divtau_aux[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, nghost,
-                                          MFInfo(), *(*ebfactory)[lev]));
+       divtau_aux[lev] = new MultiFab(grids[lev], dmap[lev], 3, nghost,
+                                      MFInfo(), *(*ebfactory)[lev]);
        divtau_aux[lev]->setVal(0.0);
     }
  
@@ -361,7 +361,7 @@ void DiffusionOp::ComputeDivTau (Vector< MultiFab* >& divtau_out,
  
     MLMG solver(*vel_matrix);
  
-    solver.apply(GetVecOfPtrs(divtau_aux), vel_in);
+    solver.apply(divtau_aux, vel_in);
  
     for(int lev = 0; lev <= finest_level; lev++)
     {
@@ -380,6 +380,9 @@ void DiffusionOp::ComputeDivTau (Vector< MultiFab* >& divtau_out,
            MultiFab::Divide( *divtau_out[lev], *ep_in[lev], 0, n, 1, 0 );
        }
     }
+
+    for(int lev = 0; lev <= finest_level; lev++)
+       delete divtau_aux[lev];
 }
 
 void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
@@ -394,11 +397,11 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
 
     int ntrac = scal_in[0]->nComp();
 
-    Vector<std::unique_ptr<MultiFab> > laps_aux(finest_level+1);
+    Vector< MultiFab* > laps_aux(finest_level+1);
     for(int lev = 0; lev <= finest_level; lev++)
     {
-       laps_aux[lev].reset(new MultiFab(grids[lev], dmap[lev], ntrac, nghost,
-                                          MFInfo(), *(*ebfactory)[lev]));
+       laps_aux[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, nghost,
+                                    MFInfo(), *(*ebfactory)[lev]);
        laps_aux[lev]->setVal(0.0);
     }
  
@@ -411,7 +414,7 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
     // Compute the coefficients
     for (int lev = 0; lev <= finest_level; lev++)
     {
-        for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
+        for(int dir = 0; dir < 3; dir++)
            for(int n = 0; n < ntrac; n++)
              b[lev][dir]->setVal(mu_s[n],n,1);
  
@@ -421,7 +424,7 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
  
     MLMG solver(*scal_matrix);
  
-    solver.apply(GetVecOfPtrs(laps_aux), scal_in);
+    solver.apply(laps_aux, scal_in);
  
     for(int lev = 0; lev <= finest_level; lev++)
     {
@@ -431,4 +434,7 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
        for(int n = 0; n < ntrac; n++)
           MultiFab::Divide(*laps_out[lev], *ro_in[lev], 0, n, 1, 0);
     }
+    
+    for(int lev = 0; lev <= finest_level; lev++)
+       delete laps_aux[lev];
 }

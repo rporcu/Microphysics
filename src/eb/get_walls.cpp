@@ -34,7 +34,7 @@ mfix::get_real_walls (bool & has_real_walls)
 
   has_real_walls = (BC::wall_planes.size() > 0);  // will be set to true if there are any walls
 
-  unique_ptr<UnionListIF<EB2::PlaneIF>> ret =
-    unique_ptr<UnionListIF<EB2::PlaneIF>>(new UnionListIF<EB2::PlaneIF>(BC::wall_planes));
+  shared_ptr<UnionListIF<EB2::PlaneIF>> ret =
+    shared_ptr<UnionListIF<EB2::PlaneIF>>(new UnionListIF<EB2::PlaneIF>(BC::wall_planes));
   return ret;
 }

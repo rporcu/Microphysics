@@ -52,7 +52,7 @@ mfix::mfix_diffuse_scalar (const Vector< MultiFab* > & mf_to_diffuse,
 
        dcoeff_mf.setVal(dcoeff);
 
-       average_cellcenter_to_face(GetArrOfPtrs(bcoeff[lev]), dcoeff_mf, geom[lev]);
+       average_cellcenter_to_face(bcoeff[lev], dcoeff_mf, geom[lev]);
 
        bcoeff[lev][0]->FillBoundary(geom[lev].periodicity());
        bcoeff[lev][1]->FillBoundary(geom[lev].periodicity());

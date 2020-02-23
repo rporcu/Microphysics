@@ -223,7 +223,7 @@ mfix::AllocateArrays (int lev)
     x_edge_ba.surroundingNodes(0);
 
     // x-face-based coefficient for MAC and diffusive solves
-    bcoeff[lev][0].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+    bcoeff[lev][0] = new MultiFab(x_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]);
     bcoeff[lev][0]->setVal(0.);
 
     // U velocity at x-faces (MAC)
@@ -235,7 +235,7 @@ mfix::AllocateArrays (int lev)
     y_edge_ba.surroundingNodes(1);
 
     // y-face-based coefficient for MAC and diffusive solves
-    bcoeff[lev][1].reset(new MultiFab(y_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+    bcoeff[lev][1] = new MultiFab(y_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]);
     bcoeff[lev][1]->setVal(0.);
 
     // V velocity at y-faces (MAC)
@@ -247,7 +247,7 @@ mfix::AllocateArrays (int lev)
     z_edge_ba.surroundingNodes(2);
 
     // z-face-based coefficient for MAC and diffusive solves
-    bcoeff[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]));
+    bcoeff[lev][2] = new MultiFab(z_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]);
     bcoeff[lev][2]->setVal(0.);
 
     // W velocity at z-faces (MAC)
@@ -524,10 +524,11 @@ mfix::RegridArrays (int lev)
     x_ba = x_ba.surroundingNodes(0);
 
     // MAC/diffusion coefficient on x-faces
-    std::unique_ptr<MultiFab> bcx_mac_new(new MultiFab(x_ba,dmap[lev],
-                                          bcoeff[lev][0]->nComp(),bcoeff[lev][0]->nGrow(),MFInfo(),*ebfactory[lev]));
-    bcoeff[lev][0] = std::move(bcx_mac_new);
-    bcoeff[lev][0]->setVal(0);
+    MultiFab* bcx_mac_new = new MultiFab(x_ba, dmap[lev], bcoeff[lev][0]->nComp(),
+                                         bcoeff[lev][0]->nGrow(), MFInfo(), *ebfactory[lev]);
+    bcx_mac_new->setVal(0);
+    std::swap(bcoeff[lev][0], bcx_mac_new);
+    delete bcx_mac_new;
 
     // x component of MAC velocity
     MultiFab* u_mac_new = new MultiFab(x_ba, dmap[lev], u_mac[lev]->nComp(),
@@ -544,10 +545,11 @@ mfix::RegridArrays (int lev)
     y_ba = y_ba.surroundingNodes(1);
 
     // MAC/diffusion coefficient on y-faces
-    std::unique_ptr<MultiFab> bcy_mac_new(new MultiFab(y_ba,dmap[lev],
-                                          bcoeff[lev][1]->nComp(),bcoeff[lev][1]->nGrow(),MFInfo(),*ebfactory[lev]));
-    bcoeff[lev][1] = std::move(bcy_mac_new);
-    bcoeff[lev][1] -> setVal(0.0);
+    MultiFab* bcy_mac_new = new MultiFab(y_ba, dmap[lev], bcoeff[lev][1]->nComp(),
+                                         bcoeff[lev][1]->nGrow(), MFInfo(), *ebfactory[lev]);
+    bcy_mac_new->setVal(0);
+    std::swap(bcoeff[lev][1], bcy_mac_new);
+    delete bcy_mac_new;
 
     // y component of MAC velocity
     MultiFab* v_mac_new = new MultiFab(y_ba, dmap[lev], v_mac[lev]->nComp(),
@@ -564,10 +566,11 @@ mfix::RegridArrays (int lev)
     z_ba = z_ba.surroundingNodes(2);
 
     // MAC/diffusion coefficient on z-faces
-    std::unique_ptr<MultiFab> bcz_mac_new(new MultiFab(z_ba,dmap[lev],
-                                          bcoeff[lev][2]->nComp(),bcoeff[lev][2]->nGrow(),MFInfo(),*ebfactory[lev]));
-    bcoeff[lev][2] = std::move(bcz_mac_new);
-    bcoeff[lev][2] -> setVal(0.0);
+    MultiFab* bcz_mac_new = new MultiFab(z_ba, dmap[lev], bcoeff[lev][2]->nComp(),
+                                         bcoeff[lev][2]->nGrow(), MFInfo(), *ebfactory[lev]);
+    bcz_mac_new->setVal(0);
+    std::swap(bcoeff[lev][2], bcz_mac_new);
+    delete bcz_mac_new;
 
     // z component of MAC velocity
     MultiFab* w_mac_new = new MultiFab(z_ba, dmap[lev], w_mac[lev]->nComp(),

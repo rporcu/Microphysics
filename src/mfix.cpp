@@ -38,6 +38,11 @@ mfix::~mfix ()
 {
   for (int lev(0); lev < nlev; ++lev)
   {
+    // Face-based coefficients b in MAC projection and implicit diffusion solve
+    delete bcoeff[lev][0];
+    delete bcoeff[lev][1];
+    delete bcoeff[lev][2];
+
     // Boundary conditions types
     delete bc_ilo[lev];
     delete bc_ihi[lev];
