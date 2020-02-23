@@ -385,8 +385,7 @@ void mfix::Init (Real time)
      ***************************************************************************/
 
     if (DEM::solve)
-        pc = std::unique_ptr<MFIXParticleContainer>(new MFIXParticleContainer(this));
-
+      pc = new MFIXParticleContainer(this);
 
     /****************************************************************************
      *                                                                          *
