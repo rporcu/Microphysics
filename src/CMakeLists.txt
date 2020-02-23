@@ -101,7 +101,7 @@ if (ENABLE_CUDA)
    # CMake >= 3.17 provides the module FindCUDAToolkit to do this natively.
    #
    find_library(CURAND curand PATHS ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
-   target_link_libraries(amrex PUBLIC ${CURAND})
+   target_link_libraries(mfixcore PUBLIC ${CURAND})
 endif ()
 
 #
