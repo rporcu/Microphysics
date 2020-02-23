@@ -61,7 +61,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
 
     for(int lev = 0; lev <= max_level; lev++)
     {
-        for(int dir = 0; dir < 3; dir++)
+        for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
         {
             BoxArray edge_ba = grids[lev];
             edge_ba.surroundingNodes(dir);
@@ -111,7 +111,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
 
 DiffusionOp::~DiffusionOp ()
 {
-  int max_level = amrcore->maxLevel();
+  int max_level = b.size();
 
   for(int lev = 0; lev <= max_level; lev++)
   {
