@@ -65,19 +65,19 @@ void DiffusionOp::setup (AmrCore* _amrcore,
         {
             BoxArray edge_ba = grids[lev];
             edge_ba.surroundingNodes(dir);
-            b[lev][dir] = new MultiFab(edge_ba, dmap[lev], 1, nghost,
-                                       MFInfo(), *(*ebfactory)[lev]);
+            b[lev][dir].reset(new MultiFab(edge_ba, dmap[lev], 1, nghost,
+                                           MFInfo(), *(*ebfactory)[lev]));
         }
-        phi[lev] = new MultiFab(grids[lev], dmap[lev], 3, 1,
-                                MFInfo(), *(*ebfactory)[lev]);
+        phi[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 1,
+                                    MFInfo(), *(*ebfactory)[lev]));
 
         // No ghost cells needed for rhs
-        rhs[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0,
-                                MFInfo(), *(*ebfactory)[lev]);
+        rhs[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0,
+                                    MFInfo(), *(*ebfactory)[lev]));
 
-        vel_eb[lev] = new MultiFab(grids[lev], dmap[lev], 3, nghost,
-                                   MFInfo(), *(*ebfactory)[lev]);
-        vel_eb[lev]->setVal(0);
+        vel_eb[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, nghost,
+                                       MFInfo(), *(*ebfactory)[lev]));
+        vel_eb[lev]->setVal(0.0);
     }
 
     //
@@ -85,7 +85,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     //
     LPInfo info;
     info.setMaxCoarseningLevel(mg_max_coarsening_level);
-    vel_matrix = new MLEBTensorOp(geom, grids, dmap, info, *ebfactory);
+    vel_matrix.reset(new MLEBTensorOp(geom, grids, dmap, info, *ebfactory));
 
     // It is essential that we set MaxOrder to 2 if we want to use the standard
     // phi(i)-phi(i-1) approximation for the gradient at Dirichlet boundaries.
@@ -98,7 +98,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     //
     // Define the matrix for the scalar diffusion solve.
     //
-    scal_matrix = new MLEBABecLap(geom, grids, dmap, info, *ebfactory);
+    scal_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, *ebfactory));
 
      // It is essential that we set MaxOrder to 2 if we want to use the standard
     // phi(i)-phi(i-1) approximation for the gradient at Dirichlet boundaries.
@@ -110,26 +110,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
 }
 
 DiffusionOp::~DiffusionOp ()
-{
-  int max_level = b.size();
-
-  for(int lev = 0; lev <= max_level; lev++)
-  {
-    delete b[lev][0];
-    delete b[lev][1];
-    delete b[lev][2];
-
-    delete phi[lev];
-
-    delete rhs[lev];
-
-    delete vel_eb[lev];
-  }
-
-  delete vel_matrix;
-
-  delete scal_matrix;
-}
+{}
 
 void DiffusionOp::readParameters ()
 {
@@ -178,8 +159,8 @@ void DiffusionOp::diffuse_velocity (Vector< MultiFab* >& vel_in,
     {
         // Compute the spatially varying b coefficients (on faces) to equal the
         // apparent viscosity
-        average_cellcenter_to_face(b[lev], *eta_in[lev], geom[lev]);
-        for(int dir = 0; dir < 3; dir++)
+        average_cellcenter_to_face(GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev]);
+        for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
             b[lev][dir]->FillBoundary(geom[lev].periodicity());
         
         // This sets the coefficients
@@ -218,7 +199,7 @@ void DiffusionOp::diffuse_velocity (Vector< MultiFab* >& vel_in,
     // This ensures that ghost cells of sol are correctly filled when returned from the solver
     solver.setFinalFillBC(true);
 
-    solver.solve(phi, GetVecOfConstPtrs(rhs), mg_rtol, mg_atol);
+    solver.solve(GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol);
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
@@ -280,8 +261,8 @@ void DiffusionOp::diffuse_scalar (Vector< MultiFab* >& scal_in,
     {
         // Zero these out just to have a clean start because they have 3 components
         //      (due to re-use with velocity solve)
-        phi[lev]->setVal(0);
-        rhs[lev]->setVal(0);
+        phi[lev]->setVal(0.0);
+        rhs[lev]->setVal(0.0);
 
         // Set the right hand side to equal rhs
         MultiFab::Copy((*rhs[lev]),(*scal_in[lev]), 0, 0, ntrac, 0);
@@ -303,7 +284,7 @@ void DiffusionOp::diffuse_scalar (Vector< MultiFab* >& scal_in,
     // This ensures that ghost cells of sol are correctly filled when returned from the solver
     solver.setFinalFillBC(true);
 
-    solver.solve(phi, GetVecOfConstPtrs(rhs), mg_rtol, mg_atol);
+    solver.solve(GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol);
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
@@ -368,7 +349,7 @@ void DiffusionOp::ComputeDivTau (Vector< MultiFab* >& divtau_out,
     // Compute the coefficients
     for (int lev = 0; lev <= finest_level; lev++)
     {
-        average_cellcenter_to_face(b[lev], *eta_in[lev], geom[lev] );
+        average_cellcenter_to_face( GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev] );
  
         for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
              b[lev][dir]->FillBoundary(geom[lev].periodicity());

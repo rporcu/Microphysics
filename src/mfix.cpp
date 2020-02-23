@@ -36,11 +36,6 @@ RealVect mfix::gp0     {0.};
 // Destructor
 mfix::~mfix ()
 {
-  if(DEM::solve) {
-    // delete ParticleContainer allocated memory
-    delete pc;
-  }
-
   for (int lev(0); lev < nlev; ++lev)
   {
     // Face-based coefficients b in MAC projection and implicit diffusion solve

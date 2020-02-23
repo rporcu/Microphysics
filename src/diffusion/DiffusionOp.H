@@ -96,19 +96,19 @@ class DiffusionOp
     //
     // ( alpha a - beta div ( b grad ) ) phi = rhs
     //
-    amrex::MLEBTensorOp* vel_matrix;
+    std::unique_ptr<amrex::MLEBTensorOp> vel_matrix;
 
-    amrex::Vector<amrex::Array<amrex::MultiFab*,3>> b;
-    amrex::Vector<amrex::MultiFab*> phi;
-    amrex::Vector<amrex::MultiFab*> rhs;
-    amrex::Vector<amrex::MultiFab*> vel_eb;
+    amrex::Vector<amrex::Array<std::unique_ptr<amrex::MultiFab>, AMREX_SPACEDIM>> b;
+    amrex::Vector<std::unique_ptr<amrex::MultiFab>> phi;
+    amrex::Vector<std::unique_ptr<amrex::MultiFab>> rhs;
+    amrex::Vector<std::unique_ptr<amrex::MultiFab>> vel_eb;
 
     //
     // MultiLevel EmbeddedBoundary cell-centered Laplacian:
     //
     // ( alpha a - beta div ( b grad ) ) phi = rhs
     //
-    amrex::MLEBABecLap* scal_matrix;
+    std::unique_ptr<amrex::MLEBABecLap> scal_matrix;
 
     // DiffusionOp verbosity
     int verbose = 0;

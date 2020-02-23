@@ -570,7 +570,7 @@ class mfix : public AmrCore
     static int ntrac;
 
     // Particle container
-    MFIXParticleContainer* pc;
+    std::shared_ptr<MFIXParticleContainer> pc;
 
     // Debug counter used for tracking number of level-set MultiFabs used in
     // intersection/union
@@ -854,7 +854,7 @@ class mfix : public AmrCore
      **************************************************************************/
 
     // Variables to simplify checkpoint IO
-    Vector< const Vector< MultiFab* >* > vectorVars;
+    Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
     Vector< std::string > vecVarsName;
 
     Vector< const Vector< MultiFab* >* > chkscalarVars;
