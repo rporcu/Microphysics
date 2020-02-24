@@ -855,10 +855,10 @@ class mfix : public AmrCore
      **************************************************************************/
 
     // Variables to simplify checkpoint IO
-    Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
+    Vector< Vector< MultiFab* > > vectorVars;
     Vector< std::string > vecVarsName;
 
-    Vector< const Vector< MultiFab* >* > chkscalarVars;
+    Vector< Vector< MultiFab* > > chkscalarVars;
     Vector< std::string > chkscaVarsName;
 
     /***************************************************************************

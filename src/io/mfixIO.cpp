@@ -200,13 +200,12 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
 
   const amrex::MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
 
+  MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
+
   // New multiFab to hold the cell center pressure.
-  std::unique_ptr<MultiFab> pg_cc(new MultiFab((m_leveldata[lev]->ep_g)->boxArray(),
-                                               (m_leveldata[lev]->ep_g)->DistributionMap(),
-                                               (m_leveldata[lev]->ep_g)->nComp(),
-                                               (m_leveldata[lev]->ep_g)->nGrow(),
-                                               MFInfo(),
-                                               *ebfactory[lev]));
+  std::unique_ptr<MultiFab> pg_cc(new MultiFab(ep_g.boxArray(), ep_g.DistributionMap(),
+                                               ep_g.nComp(), ep_g.nGrow(),
+                                               MFInfo(), *ebfactory[lev]));
 
   // Create a temporary nodal pressure multifab to sum in p_g and p0_g
   MultiFab pg_nd(p_g[lev]->boxArray(), dmap[lev], 1, 0);
@@ -247,9 +246,8 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
 #endif
 
       // Not tiling this loop.
-      for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi)
+      for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
       {
-        MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
 
         const Box& bx  = mfi.validbox();
 
@@ -266,7 +264,7 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
 
             mfix_collect_fluid(BL_TO_FORTRAN_BOX(bx),
                                BL_TO_FORTRAN_BOX(domain),
-                               BL_TO_FORTRAN_ANYD((*(m_leveldata[lev]->ep_g))[mfi]),
+                               BL_TO_FORTRAN_ANYD(ep_g[mfi]),
                                BL_TO_FORTRAN_ANYD((*pg_cc)[mfi]),
                                BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
                                BL_TO_FORTRAN_ANYD((*volfrac)[mfi]),

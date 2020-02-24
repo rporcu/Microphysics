@@ -139,7 +139,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
 
     Vector< MultiFab* > ep_g(nlev, nullptr);
-    for (int lev = 0; lev < m_leveldata.size() and m_leveldata[lev] != nullptr; ++lev)
+    for (int lev = 0; lev < nlev; ++lev)
     {
       ep_g[lev] = new MultiFab((m_leveldata[lev]->ep_g)->boxArray(),
                                (m_leveldata[lev]->ep_g)->DistributionMap(),
@@ -157,10 +157,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     nodal_projector->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
     nodal_projector->setAlpha(GetVecOfConstPtrs(ep_g));
 
-    for (int lev = 0; lev < m_leveldata.size() and m_leveldata[lev] != nullptr; ++lev)
-    {
+    for (int lev = 0; lev < nlev; ++lev)
       delete ep_g[lev];
-    }
 
     nodal_projector->computeRHS(diveu, epu, a_depdt);
     nodal_projector->setCustomRHS(GetVecOfConstPtrs(diveu));

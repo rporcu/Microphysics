@@ -25,7 +25,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
       amrex::Abort("For right now mfix::mfix_calc_volume_fraction can only handle up to 2 levels");
 
     Vector< MultiFab* > ep_g(nlev, nullptr);
-    for (int lev(0); lev < m_leveldata.size() and m_leveldata[lev] != nullptr; ++lev)
+    for (int lev(0); lev < nlev; ++lev)
       ep_g[lev] = m_leveldata[lev]->ep_g;
 
     for (int lev = 0; lev < nlev; lev++) {
@@ -37,7 +37,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 
         // If we are already working with the internal mf defined on the
         // particle_box_array, then we just work with this.
-        mf_pointer[lev] = (m_leveldata[lev]->ep_g);
+        mf_pointer[lev] = m_leveldata[lev]->ep_g;
 
       } else if (lev == 0 and (not OnSameGrids))  {
         // If ep_g is not defined on the particle_box_array, then we need
@@ -200,8 +200,6 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   for (int lev = 0; lev < nlev; lev++)
     (m_leveldata[lev]->ep_g)->FillBoundary(geom[lev].periodicity());
 
-  Vector< MultiFab* > ep_g;
-  // TODO
   mfix_set_epg_bcs(ep_g);
 
   // Sum up all the values of ep_g[lev], weighted by each cell's EB volfrac

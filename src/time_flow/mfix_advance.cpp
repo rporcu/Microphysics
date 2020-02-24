@@ -95,16 +95,18 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
         for (int lev = 0; lev < nlev; lev++)
         {
+          MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
+          MultiFab& ep_go = *(m_leveldata[lev]->ep_go);
+
           // Back up field variables to old
-          MultiFab::Copy(*(m_leveldata[lev]->ep_go), *(m_leveldata[lev]->ep_g), 0, 0,
-          (m_leveldata[lev]->ep_g)->nComp(), (m_leveldata[lev]->ep_go)->nGrow());
+          MultiFab::Copy(ep_go, ep_g, 0, 0, ep_g.nComp(), ep_go.nGrow());
           MultiFab::Copy(  *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
           MultiFab::Copy( *ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
           MultiFab::Copy(*trac_o[lev],  *trac[lev],  0, 0,  trac[lev]->nComp(), trac_o[lev]->nGrow());
           MultiFab::Copy(*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(),  vel_go[lev]->nGrow());
 
            // User hooks
-           for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi)
+           for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
               mfix_usr2();
         }
 
@@ -334,7 +336,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     Real new_time = time + dt;
 
     Vector< MultiFab* > ep_g(nlev, nullptr);
-    for(int lev(0); lev < m_leveldata.size() and m_leveldata[lev] != nullptr; ++lev) {
+    for(int lev(0); lev < nlev; ++lev) {
       ep_g[lev] = m_leveldata[lev]->ep_g;
     }
 
@@ -502,7 +504,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     }
 
     Vector< MultiFab* > ep_g(nlev, nullptr);
-    for(int lev(0); lev < m_leveldata.size() and m_leveldata[lev] != nullptr; ++lev) {
+    for(int lev(0); lev < nlev; ++lev) {
       ep_g[lev] = m_leveldata[lev]->ep_g;
     }
 

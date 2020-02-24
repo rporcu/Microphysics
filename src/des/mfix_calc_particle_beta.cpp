@@ -48,7 +48,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
     if (OnSameGrids)
     {
-      ep_ptr  =  (m_leveldata[lev]->ep_g);
+      ep_ptr  =  m_leveldata[lev]->ep_g;
       ro_ptr  =  ro_g[lev];
       mu_ptr  =  mu_g[lev];
       vel_ptr = vel_g[lev];

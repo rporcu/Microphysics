@@ -242,7 +242,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
               amrex::Print() << "  - loading scalar data: " << chkscaVarsName[i] << std::endl;
 
              // Copy from the mf we used to read in to the mf we will use going forward
-             (*chkscalarVars[i])[lev]->copy(mf, 0, 0, 1, 0, 0);
+             chkscalarVars[i][lev]->copy(mf, 0, 0, 1, 0, 0);
 
 
           } else {
@@ -256,9 +256,9 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
              mf.copyTo(single_fab);
 
               // Copy and replicate mf into chkscalarVars
-              for (MFIter mfi(*(*chkscalarVars[i])[lev], false); mfi.isValid(); ++mfi) {
+              for (MFIter mfi(*(chkscalarVars[i][lev]), false); mfi.isValid(); ++mfi) {
                   int ib = mfi.index();
-                  (*(*chkscalarVars[i])[lev])[ib].copy(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
+                  (*(chkscalarVars[i][lev])[ib].copy(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
               }
           }
         }
