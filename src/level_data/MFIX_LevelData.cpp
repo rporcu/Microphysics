@@ -3,7 +3,7 @@
 using namespace amrex;
 
 LevelData::LevelData ()
-  , ep_go(nullptr)
+  : ep_go(nullptr)
 {}
 
 LevelData::~LevelData ()

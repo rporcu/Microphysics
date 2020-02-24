@@ -861,7 +861,7 @@ class mfix : public AmrCore
     Vector< Vector< MultiFab* > > vectorVars;
     Vector< std::string > vecVarsName;
 
-    Vector< Vector< MultiFab* > > chkscalarVars;
+    Vector< Vector< MultiFab* >* > chkscalarVars;
     Vector< std::string > chkscaVarsName;
 
     /***************************************************************************

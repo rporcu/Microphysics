@@ -7,7 +7,7 @@ mfix::ResizeArrays ()
     int nlevs_max = maxLevel() + 1;
 
     ep_g.resize(nlevs_max);
-    m_leveldata.resize(nlevs_max, LevelData());
+    m_leveldata.resize(nlevs_max);
 
     p_g.resize(nlevs_max);
     p_go.resize(nlevs_max);
@@ -284,12 +284,12 @@ mfix::RegridArrays (int lev)
     delete ep_g_new;
 
     // Old void fraction
-    MultiFab& ep_go = *(m_leveldata[lev]->ep_g);
-    MultiFab* ep_go_new = new MultiFab(grids[lev], dmap[lev], ep_g.nComp(),
+    MultiFab& ep_go = *(m_leveldata[lev]->ep_go);
+    MultiFab* ep_go_new = new MultiFab(grids[lev], dmap[lev], ep_go.nComp(),
                                       ep_go.nGrow(), MFInfo(), *ebfactory[lev]);
     ep_go_new->setVal(1);
-    ep_go_new->copy(ep_g, 0, 0, ep_g.nComp(), ep_g.nGrow(), ep_g.nGrow());
-    std::swap((m_leveldata[lev]->ep_go), ep_g_new);
+    ep_go_new->copy(ep_go, 0, 0, ep_go.nComp(), ep_go.nGrow(), ep_go.nGrow());
+    std::swap((m_leveldata[lev]->ep_go), ep_go_new);
     delete ep_go_new;
 
     // Gas density

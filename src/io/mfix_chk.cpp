@@ -31,7 +31,7 @@ mfix::InitIOChkData ()
     vecVarsName = {"u_g", "v_g", "w_g", "gpx", "gpy", "gpz"};
 
     chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "level_sets"};
-    chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &ep_g,  &mu_g,  &level_sets};
+    chkscalarVars  = {&ep_g, &p_g, &ro_g, &ep_g, &mu_g, &level_sets};
 }
 
 
