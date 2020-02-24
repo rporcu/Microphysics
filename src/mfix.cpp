@@ -51,6 +51,9 @@ mfix::~mfix ()
     delete bc_klo[lev];
     delete bc_khi[lev];
 
+    // Void fraction
+    delete ep_g[lev];
+
     // Gas pressure fraction
     delete p_g[lev];
     delete p_go[lev];

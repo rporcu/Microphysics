@@ -24,10 +24,6 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
     if (nlev > 2)
       amrex::Abort("For right now mfix::mfix_calc_volume_fraction can only handle up to 2 levels");
 
-    Vector< MultiFab* > ep_g(nlev, nullptr);
-    for (int lev(0); lev < nlev; ++lev)
-      ep_g[lev] = m_leveldata[lev]->ep_g;
-
     for (int lev = 0; lev < nlev; lev++) {
 
       bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) and
@@ -37,21 +33,21 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 
         // If we are already working with the internal mf defined on the
         // particle_box_array, then we just work with this.
-        mf_pointer[lev] = m_leveldata[lev]->ep_g;
+        mf_pointer[lev] = ep_g[lev];
 
       } else if (lev == 0 and (not OnSameGrids))  {
         // If ep_g is not defined on the particle_box_array, then we need
         // to make a temporary here and copy into ep_g at the end.
         mf_pointer[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                        pc->ParticleDistributionMap(lev),
-                                       (m_leveldata[lev]->ep_g)->nComp(),
-                                       (m_leveldata[lev]->ep_g)->nGrow());
+                                       ep_g[lev]->nComp(),
+                                       ep_g[lev]->nGrow());
 
       } else {
         // If lev > 0 we make a temporary at the coarse resolution
         BoxArray ba_crse(amrex::coarsen(pc->ParticleBoxArray(lev),this->m_gdb->refRatio(0)));
         mf_pointer[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev),
-                                       (m_leveldata[lev]->ep_g)->nComp(), 1);
+                                       ep_g[lev]->nComp(), 1);
       }
 
       // We must have ghost cells for each FAB so that a particle in one grid can spread
@@ -125,8 +121,8 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
     int  src_nghost = 1;
     int dest_nghost = 0;
     for (int lev = 1; lev < nlev; lev++)
-      mf_pointer[0]->copy(*mf_pointer[lev], 0, 0, (m_leveldata[lev]->ep_g)->nComp(),
-                          src_nghost, dest_nghost, gm.periodicity(), FabArrayBase::ADD);
+      mf_pointer[0]->copy(*mf_pointer[lev],0,0,ep_g[lev]->nComp(),
+                          src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
 
     if (nlev > 1)
     {
@@ -145,8 +141,8 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
         {
             PhysBCFunct<BndryFuncArray> cphysbc(Geom(lev-1), bcs, bfunc);
             PhysBCFunct<BndryFuncArray> fphysbc(Geom(lev  ), bcs, bfunc);
-            (m_leveldata[lev]->ep_g)->setVal(0.);
-            amrex::InterpFromCoarseLevel(*(m_leveldata[lev]->ep_g), time, *mf_pointer[lev-1],
+            ep_g[lev]->setVal(0.0);
+            amrex::InterpFromCoarseLevel(*ep_g[lev], time, *mf_pointer[lev-1],
                                          0, 0, 1, Geom(lev-1), Geom(lev),
                                          cphysbc, 0, fphysbc, 0,
                                          ref_ratio[0], mapper, bcs, 0);
@@ -157,11 +153,11 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
     // to copy here from mf_pointer into ep_g. I believe that we don't
     // need any information in ghost cells so we don't copy those.
 
-    if (mf_pointer[0] != (m_leveldata[0]->ep_g))
-      (m_leveldata[0]->ep_g)->copy(*mf_pointer[0], 0, 0, (m_leveldata[0]->ep_g)->nComp());
+    if (mf_pointer[0] != ep_g[0])
+      ep_g[0]->copy(*mf_pointer[0],0,0,ep_g[0]->nComp());
 
     for (int lev = 0; lev < nlev; lev++)
-       if (mf_pointer[lev] != (m_leveldata[lev]->ep_g))
+       if (mf_pointer[lev] != ep_g[lev])
           delete mf_pointer[lev];
 
     if (m_verbose > 1) {
@@ -179,26 +175,26 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 
     for (int lev = 0; lev < nlev; lev++) {
       // Now define this mf = (1 - particle_vol)
-      (m_leveldata[lev]->ep_g)->mult(-1.0,(m_leveldata[lev]->ep_g)->nGrow());
-      (m_leveldata[lev]->ep_g)->plus( 1.0,(m_leveldata[lev]->ep_g)->nGrow());
+      ep_g[lev]->mult(-1.0,ep_g[lev]->nGrow());
+      ep_g[lev]->plus( 1.0,ep_g[lev]->nGrow());
 
       // We set ep_g to 1 rather than 0 in covered cells so that when we divide by ep_g
       //    following the projection we don't have to protect against divide by 0.
-      EB_set_covered(*(m_leveldata[lev]->ep_g), 1.0);
+      EB_set_covered(*ep_g[lev],1.0);
     }
 
     // HACK -- we really should average down (ep_g * volfrac) not ep_g.
     for (int lev = nlev - 1; lev > 0; lev--) {
-      amrex::EB_average_down(*(m_leveldata[lev]->ep_g), *(m_leveldata[lev-1]->ep_g), 0, 1, m_gdb->refRatio(lev-1));
+      amrex::EB_average_down(*ep_g[lev], *ep_g[lev-1], 0, 1, m_gdb->refRatio(lev-1));
     }
   } else {
     for (int lev = 0; lev < nlev; lev++)
-      (m_leveldata[lev]->ep_g)->setVal(1.);
+      ep_g[lev]->setVal(1.);
   }
 
   // This sets the values outside walls or periodic boundaries
   for (int lev = 0; lev < nlev; lev++)
-    (m_leveldata[lev]->ep_g)->FillBoundary(geom[lev].periodicity());
+    ep_g[lev]->FillBoundary(geom[lev].periodicity());
 
   mfix_set_epg_bcs(ep_g);
 
@@ -207,7 +203,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   //    this_cell_volume = (volfrac * dx * dy * dz)
   // When we define the sum we add up (ep_g * volfrac) so that the total sum
   //    does not depend on whether a particle is in a full or cut cell.
-  int lev = 0;
-  int comp = 0;
-  sum_vol = volWgtSum(lev, *(m_leveldata[lev]->ep_g), comp);
+  int lev = 0; int comp = 0;
+
+  sum_vol = volWgtSum(lev,*ep_g[lev],comp);
 }

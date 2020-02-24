@@ -37,7 +37,7 @@ mfix::mfix_compute_diveu (Real time)
       MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow());
 
       for (int n = 0; n < 3; n++)
-        MultiFab::Multiply(*epu[lev], *(m_leveldata[lev]->ep_g), 0, n, 1, epu[lev]->nGrow());
+        MultiFab::Multiply(*epu[lev], *ep_g[lev], 0, n, 1, epu[lev]->nGrow());
 
       epu[lev]->FillBoundary(geom[lev].periodicity());
 

@@ -32,7 +32,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
     {
         ro_g[lev]->FillBoundary(geom[lev].periodicity());
         trac[lev]->FillBoundary(geom[lev].periodicity());
-        (m_leveldata[lev]->ep_g)->FillBoundary(geom[lev].periodicity());
+        ep_g[lev]->FillBoundary(geom[lev].periodicity());
         mu_g[lev]->FillBoundary(geom[lev].periodicity());
     }
 
@@ -106,7 +106,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
           MultiFab::Copy(*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(),  vel_go[lev]->nGrow());
 
            // User hooks
-           for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
+           for (MFIter mfi(*ep_g[lev], false); mfi.isValid(); ++mfi)
               mfix_usr2();
         }
 
@@ -194,7 +194,7 @@ mfix::mfix_project_velocity ()
     // Apply projection -- depdt=0 for now
     Vector< MultiFab* > depdt(nlev);
     for (int lev(0); lev < nlev; ++lev)
-      depdt[lev] = MFHelpers::createFrom(*(m_leveldata[lev]->ep_g), 0.0, 1).release();
+      depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1).release();
 
     mfix_apply_nodal_projection(depdt, time, dummy_dt, proj_2);
 
@@ -334,11 +334,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 {
     // We use the new-time value for things computed on the "*" state
     Real new_time = time + dt;
-
-    Vector< MultiFab* > ep_g(nlev, nullptr);
-    for(int lev(0); lev < nlev; ++lev) {
-      ep_g[lev] = m_leveldata[lev]->ep_g;
-    }
 
     // Compute the explicit advective term R_u^n
     mfix_compute_convective_term(conv_u_old, conv_s_old, vel_go, ep_g, ro_go, trac_o ,time);
@@ -503,11 +498,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
        divtau[lev]->setVal(0.0);
     }
 
-    Vector< MultiFab* > ep_g(nlev, nullptr);
-    for(int lev(0); lev < nlev; ++lev) {
-      ep_g[lev] = m_leveldata[lev]->ep_g;
-    }
-
     // Compute the explicit advective term R_u^*
     mfix_compute_convective_term(conv_u, conv_s, vel_g, ep_g, ro_g, trac, new_time);
 
@@ -663,9 +653,9 @@ mfix::mfix_add_drag_explicit (Real dt)
       Box bx = mfi.tilebox();
 
       const auto&  vel_fab = vel_g[lev]->array(mfi);
-      const auto& drag_fab = drag[lev]->array(mfi);
-      const auto&   ro_fab = ro_g[lev]->array(mfi);
-      const auto&   ep_fab = (m_leveldata[lev]->ep_g)->array(mfi);
+      const auto& drag_fab =  drag[lev]->array(mfi);
+      const auto&   ro_fab =  ro_g[lev]->array(mfi);
+      const auto&   ep_fab =  ep_g[lev]->array(mfi);
 
       amrex::ParallelFor(bx,[dt,vel_fab,drag_fab,ro_fab,ep_fab]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -711,9 +701,9 @@ mfix::mfix_add_drag_implicit (Real dt)
       Box bx = mfi.tilebox();
 
       const auto&  vel_fab = vel_g[lev]->array(mfi);
-      const auto& drag_fab = drag[lev]->array(mfi);
-      const auto&   ro_fab = ro_g[lev]->array(mfi);
-      const auto&   ep_fab = (m_leveldata[lev]->ep_g)->array(mfi);
+      const auto& drag_fab =  drag[lev]->array(mfi);
+      const auto&   ro_fab =  ro_g[lev]->array(mfi);
+      const auto&   ep_fab =  ep_g[lev]->array(mfi);
 
       amrex::ParallelFor(bx,[dt,vel_fab,drag_fab,ro_fab,ep_fab]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept

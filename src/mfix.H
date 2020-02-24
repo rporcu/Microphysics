@@ -592,6 +592,9 @@ class mfix : public AmrCore
     // Boundary conditions flags
     Vector< iMultiFab* > flag;
 
+    // Void fraction
+    Vector< MultiFab* > ep_g;
+
     // Gas pressure fraction
     Vector< MultiFab* > p_g;
     Vector< MultiFab* > p_go;

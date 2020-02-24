@@ -32,7 +32,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
   // This is just a sanity check to make sure we're not using covered values
   // We can remove these lines once we're confident in the algoirthm 
   EB_set_covered(*vel_g[0], 0, 3, 1, covered_val);
-  EB_set_covered(*(m_leveldata[0]->ep_g), 0, 1, 1, covered_val);
+  EB_set_covered(*ep_g[0] , 0, 1, 1, covered_val);
   EB_set_covered(*mu_g[0] , 0, 1, 1, covered_val);
   EB_set_covered(*ro_g[0] , 0, 1, 1, covered_val);
 
@@ -48,7 +48,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
     if (OnSameGrids)
     {
-      ep_ptr  =  m_leveldata[lev]->ep_g;
+      ep_ptr  =  ep_g[lev];
       ro_ptr  =  ro_g[lev];
       mu_ptr  =  mu_g[lev];
       vel_ptr = vel_g[lev];
@@ -58,11 +58,9 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
       const BoxArray&            pba = pc->ParticleBoxArray(lev);
       const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
-      MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
-
       // Temporary arrays  -- copies with no ghost cells 
-      ep_ptr = new MultiFab(pba, pdm, ep_g.nComp(), 0);
-      ep_ptr->copy(ep_g, 0, 0, 1, 0, 0);
+      ep_ptr = new MultiFab(pba, pdm, ep_g[lev]->nComp(), 0);
+      ep_ptr->copy(*ep_g[lev], 0, 0, 1, 0, 0);
 
       ro_ptr = new MultiFab(pba, pdm, ro_g[lev]->nComp(), 0);
       ro_ptr->copy(*ro_g[lev], 0, 0, 1, 0, 0);
