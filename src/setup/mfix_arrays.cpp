@@ -8,6 +8,8 @@ mfix::ResizeArrays ()
 
     ep_g.resize(nlevs_max);
     m_leveldata.resize(nlevs_max);
+    for (int lev(0); lev < nlevs_max; ++lev)
+      m_leveldata[lev].reset(new LevelData());
 
     p_g.resize(nlevs_max);
     p_go.resize(nlevs_max);
