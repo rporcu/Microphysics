@@ -146,7 +146,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
                                (m_leveldata[lev]->ep_g)->nComp(),
                                (m_leveldata[lev]->ep_g)->nGrow(),
                                MFInfo(),
-                               (m_leveldata[lev]->ep_g)->Factory()));
+                               (m_leveldata[lev]->ep_g)->Factory());
 
       MultiFab::Copy(*ep_g[lev], *(m_leveldata[lev]->ep_g), 0, 0,
                      (m_leveldata[lev]->ep_g)->nComp(),

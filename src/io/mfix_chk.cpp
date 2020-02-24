@@ -33,10 +33,8 @@ mfix::InitIOChkData ()
     chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "level_sets"};
 
     Vector< MultiFab* > ep_g(nlev, nullptr);
+    // TODO
     chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &ep_g,  &mu_g,  &level_sets};
-
-    for(int lev(0); lev < m_leveldata.size() and m_leveldata[lev] != nullptr; ++lev)
-      (*chkscalarVars[0])[lev] = m_leveldata[lev]->ep_g;
 }
 
 

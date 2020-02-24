@@ -249,6 +249,7 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
       // Not tiling this loop.
       for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi)
       {
+        MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
 
         const Box& bx  = mfi.validbox();
 

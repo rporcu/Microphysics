@@ -797,7 +797,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi)
        {
           const Box& bx = mfi.validbox();
-          const Box& sbx = *(m_leveldata[lev]->ep_g)[mfi].box();
+          const Box& sbx = (*(m_leveldata[lev]->ep_g))[mfi].box();
 
           if ( is_restarting ) {
 
@@ -806,7 +806,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
           } else {
 
             init_fluid(sbx, bx, domain,
-                       *(m_leveldata[lev]->ep_g)[mfi], (*ro_g[lev])[mfi],
+                       (*(m_leveldata[lev]->ep_g))[mfi], (*ro_g[lev])[mfi],
                        (*trac[lev])[mfi], (*p_g[lev])[mfi],
                        (*vel_g[lev])[mfi], (*mu_g[lev])[mfi],
                        dx, dy, dz, xlen, ylen, zlen, test_tracer_conservation);
@@ -898,7 +898,7 @@ mfix::mfix_set_bc0 ()
      // Don't tile this -- at least for now
      for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi)
      {
-       const Box& sbx = *(m_leveldata[lev]->ep_g)[mfi].box();
+       const Box& sbx = (*(m_leveldata[lev]->ep_g))[mfi].box();
 
        set_bc0(sbx, &mfi, lev, domain);
      }

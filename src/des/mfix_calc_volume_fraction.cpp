@@ -200,6 +200,8 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   for (int lev = 0; lev < nlev; lev++)
     (m_leveldata[lev]->ep_g)->FillBoundary(geom[lev].periodicity());
 
+  Vector< MultiFab* > ep_g;
+  // TODO
   mfix_set_epg_bcs(ep_g);
 
   // Sum up all the values of ep_g[lev], weighted by each cell's EB volfrac

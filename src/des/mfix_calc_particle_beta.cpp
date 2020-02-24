@@ -58,9 +58,11 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
       const BoxArray&            pba = pc->ParticleBoxArray(lev);
       const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
+      MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
+
       // Temporary arrays  -- copies with no ghost cells 
-      ep_ptr = new MultiFab(pba, pdm, ep_g[lev]->nComp(), 0);
-      ep_ptr->copy(*ep_g[lev], 0, 0, 1, 0, 0);
+      ep_ptr = new MultiFab(pba, pdm, ep_g.nComp(), 0);
+      ep_ptr->copy(ep_g, 0, 0, 1, 0, 0);
 
       ro_ptr = new MultiFab(pba, pdm, ro_g[lev]->nComp(), 0);
       ro_ptr->copy(*ro_g[lev], 0, 0, 1, 0, 0);
