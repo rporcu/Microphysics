@@ -31,7 +31,16 @@ mfix::InitIOChkData ()
     vecVarsName = {"u_g", "v_g", "w_g", "gpx", "gpy", "gpz"};
 
     chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "level_sets"};
-    chkscalarVars  = {&ep_g, &p_g, &ro_g, &ep_g, &mu_g, &level_sets};
+
+    const int local_nlev = m_leveldata.size();
+    Vector< MultiFab* > empty(local_nlev, nullptr);
+
+    chkscalarVars = {empty, p_g, ro_g, empty, mu_g, level_sets};
+
+    for (int lev(0); lev < local_nlev; ++lev) {
+      chkscalarVars[0][lev] = m_leveldata[lev]->ep_g;
+      chkscalarVars[3][lev] = m_leveldata[lev]->ep_g;
+    }
 }
 
 
@@ -130,7 +139,7 @@ mfix::WriteCheckPointFile (std::string& check_file,
           // Write scalar variables
           for (int i = 0; i < chkscalarVars.size(); i++ ) {
               if ( DEM::solve || (chkscaVarsName[i] != "level_sets"))
-                 VisMF::Write( *((*chkscalarVars[i])[lev]),
+                 VisMF::Write( *(chkscalarVars[i][lev]),
                    amrex::MultiFabFileFullPrefix(lev, checkpointname,
                          level_prefix, chkscaVarsName[i]));
           }

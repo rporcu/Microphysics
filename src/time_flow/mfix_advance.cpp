@@ -17,9 +17,9 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
 #ifdef AMREX_MEM_PROFILING
     {
-        std::ostringstream ss;
-        ss << "EvolveFluid Start";
-        MemProfiler::report(ss.str());
+      std::ostringstream ss;
+      ss << "EvolveFluid Start";
+      MemProfiler::report(ss.str());
     }
 #endif
 
@@ -30,10 +30,10 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
     // ep_g ghost values for PINF and POUT
     for (int lev = 0; lev < nlev; lev++)
     {
-        ro_g[lev]->FillBoundary(geom[lev].periodicity());
-        trac[lev]->FillBoundary(geom[lev].periodicity());
-        ep_g[lev]->FillBoundary(geom[lev].periodicity());
-        mu_g[lev]->FillBoundary(geom[lev].periodicity());
+      ro_g[lev]->FillBoundary(geom[lev].periodicity());
+      trac[lev]->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
+      mu_g[lev]->FillBoundary(geom[lev].periodicity());
     }
 
     // Fill ghost nodes and reimpose boundary conditions
@@ -95,18 +95,19 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
         for (int lev = 0; lev < nlev; lev++)
         {
+          MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
           MultiFab& ep_go = *(m_leveldata[lev]->ep_go);
 
           // Back up field variables to old
-          MultiFab::Copy(ep_go, *ep_g[lev], 0, 0, ep_g[lev]->nComp(), ep_go.nGrow());
+          MultiFab::Copy(ep_go, ep_g, 0, 0, ep_g.nComp(), ep_go.nGrow());
           MultiFab::Copy(  *p_go[lev],   *p_g[lev],  0, 0,   p_g[lev]->nComp(),   p_go[lev]->nGrow());
           MultiFab::Copy( *ro_go[lev],  *ro_g[lev],  0, 0,  ro_g[lev]->nComp(),  ro_go[lev]->nGrow());
           MultiFab::Copy(*trac_o[lev],  *trac[lev],  0, 0,  trac[lev]->nComp(), trac_o[lev]->nGrow());
           MultiFab::Copy(*vel_go[lev], *vel_g[lev], 0, 0, vel_g[lev]->nComp(),  vel_go[lev]->nGrow());
 
-           // User hooks
-           for (MFIter mfi(*ep_g[lev], false); mfi.isValid(); ++mfi)
-              mfix_usr2();
+          // User hooks
+          for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
+             mfix_usr2();
         }
 
         //
@@ -193,7 +194,7 @@ mfix::mfix_project_velocity ()
     // Apply projection -- depdt=0 for now
     Vector< MultiFab* > depdt(nlev);
     for (int lev(0); lev < nlev; ++lev)
-      depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1).release();
+      depdt[lev] = MFHelpers::createFrom(*(m_leveldata[lev]->ep_g), 0.0, 1).release();
 
     mfix_apply_nodal_projection(depdt, time, dummy_dt, proj_2);
 
@@ -334,17 +335,21 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // We use the new-time value for things computed on the "*" state
     Real new_time = time + dt;
 
+    Vector< MultiFab* > ep_g(nlev, nullptr);
+    for (int lev(0); lev < nlev; lev++)
+      ep_g[lev] = m_leveldata[lev]->ep_g;
+
     // Compute the explicit advective term R_u^n
     mfix_compute_convective_term(conv_u_old, conv_s_old, vel_go, ep_g, ro_go, trac_o ,time);
 
     // FOR NOW WE STILL DIVIDE BY EP_G BUT WE DON'T WANT TO KEEP DOING THIS!
     for (int lev = 0; lev < nlev; lev++)
        for (int i = 0; i < 3; i++)
-          MultiFab::Divide(*conv_u_old[lev],*ep_g[lev],0,i,1,0);
+          MultiFab::Divide(*conv_u_old[lev], *(m_leveldata[lev]->ep_g), 0, i, 1, 0);
 
     for (int lev = 0; lev < nlev; lev++)
        for (int i = 0; i < 2; i++)
-          MultiFab::Divide(*conv_s_old[lev],*ep_g[lev],0,i,1,0);
+          MultiFab::Divide(*conv_s_old[lev], *(m_leveldata[lev]->ep_g), 0, i, 1, 0);
 
     int explicit_diffusion_pred = 1;
 
@@ -497,18 +502,22 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
        divtau[lev]->setVal(0.0);
     }
 
+    Vector< MultiFab* > ep_g(nlev, nullptr);
+    for (int lev(0); lev < nlev; lev++)
+      ep_g[lev] = m_leveldata[lev]->ep_g;
+
     // Compute the explicit advective term R_u^*
     mfix_compute_convective_term(conv_u, conv_s, vel_g, ep_g, ro_g, trac, new_time);
 
     // FOR NOW WE STILL DIVIDE BY EP_G BUT WE DON'T WANT TO KEEP DOING THIS!
     for (int lev = 0; lev < nlev; lev++)
        for (int i = 0; i < 3; i++)
-          MultiFab::Divide(*conv_u[lev],*ep_g[lev],0,i,1,0);
+          MultiFab::Divide(*conv_u[lev], *(m_leveldata[lev]->ep_g), 0, i, 1, 0);
 
     for (int lev = 0; lev < nlev; lev++)
     {
         for (int i = 0; i < 2; i++)
-          MultiFab::Divide(*conv_s[lev],*ep_g[lev],0,i,1,0);
+          MultiFab::Divide(*conv_s[lev], *(m_leveldata[lev]->ep_g), 0, i, 1, 0);
 
         // Make sure to do this multiply before we update density!
         if (advect_tracer)
@@ -654,7 +663,7 @@ mfix::mfix_add_drag_explicit (Real dt)
       const auto&  vel_fab = vel_g[lev]->array(mfi);
       const auto& drag_fab =  drag[lev]->array(mfi);
       const auto&   ro_fab =  ro_g[lev]->array(mfi);
-      const auto&   ep_fab =  ep_g[lev]->array(mfi);
+      const auto&   ep_fab =  m_leveldata[lev]->ep_g->array(mfi);
 
       amrex::ParallelFor(bx,[dt,vel_fab,drag_fab,ro_fab,ep_fab]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -702,7 +711,7 @@ mfix::mfix_add_drag_implicit (Real dt)
       const auto&  vel_fab = vel_g[lev]->array(mfi);
       const auto& drag_fab =  drag[lev]->array(mfi);
       const auto&   ro_fab =  ro_g[lev]->array(mfi);
-      const auto&   ep_fab =  ep_g[lev]->array(mfi);
+      const auto&   ep_fab = m_leveldata[lev]->ep_g->array(mfi);
 
       amrex::ParallelFor(bx,[dt,vel_fab,drag_fab,ro_fab,ep_fab]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept

@@ -61,8 +61,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
         mfix_print_max_vel(lev);
         mfix_print_max_gp(lev);
         amrex::Print() << "Min and Max of ep_g "
-                       << ep_g[lev]->min(0) << " "
-                       << ep_g[lev]->max(0) << std::endl;
+                       << m_leveldata[lev]->ep_g->min(0) << " "
+                       << m_leveldata[lev]->ep_g->max(0) << std::endl;
     }
 
     // Set velocities BC before projection
@@ -93,7 +93,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
         MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow());
 
         for (int n(0); n < 3; n++)
-            MultiFab::Multiply(*epu[lev], *ep_g[lev], 0, n, 1, epu[lev]->nGrow());
+            MultiFab::Multiply(*epu[lev], *(m_leveldata[lev]->ep_g), 0, n, 1, epu[lev]->nGrow());
 
         epu[lev]->FillBoundary(geom[lev].periodicity());
 
@@ -126,7 +126,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     for (int lev = 0; lev < nlev; ++lev )
     {
         sigma[lev].define(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-        MultiFab::Copy(sigma[lev], *ep_g[lev], 0, 0, 1, 0);
+        MultiFab::Copy(sigma[lev], *(m_leveldata[lev]->ep_g), 0, 0, 1, 0);
         MultiFab::Divide(sigma[lev], *ro_g[lev], 0, 0, 1, 0);
     }
 
@@ -134,6 +134,10 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     // Setup the nodal projector
     //
     Box domain(geom[0].Domain());
+
+    Vector< MultiFab* > ep_g(nlev, nullptr);
+    for (int lev(0); lev < nlev; ++lev)
+      ep_g[lev] = m_leveldata[lev]->ep_g;
 
     LPInfo info;
     info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);

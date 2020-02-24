@@ -181,15 +181,16 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
   //
   // Check the regions are defined correctly
   //
-  if (  ( avg_region_x_e.size() != nregions ) ||
-        ( avg_region_y_s.size() != nregions ) ||
-        ( avg_region_y_n.size() != nregions ) ||
-        ( avg_region_z_b.size() != nregions ) ||
-        ( avg_region_z_t.size() != nregions )  )
-    {
-      amrex::Print () << "ComputeAverageVelocities: some regions are not properly defined: skipping.";
-      return;
-    }
+  if ( ( avg_region_x_e.size() != nregions ) or
+       ( avg_region_y_s.size() != nregions ) or
+       ( avg_region_y_n.size() != nregions ) or
+       ( avg_region_z_b.size() != nregions ) or
+       ( avg_region_z_t.size() != nregions )  )
+  {
+    amrex::Print() << "ComputeAverageVelocities: some regions are not properly"
+      " defined: skipping.";
+    return;
+  }
 
   const int var_count = 6;
 
@@ -200,10 +201,12 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
 
   const amrex::MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
 
+  MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
+
   // New multiFab to hold the cell center pressure.
   std::unique_ptr<MultiFab> pg_cc(new MultiFab(
-             ep_g[lev]->boxArray(), ep_g[lev]->DistributionMap(),
-             ep_g[lev]->nComp(),    ep_g[lev]->nGrow(), MFInfo(), *ebfactory[lev]));
+             ep_g.boxArray(), ep_g.DistributionMap(),
+             ep_g.nComp(),    ep_g.nGrow(), MFInfo(), *ebfactory[lev]));
 
   // Create a temporary nodal pressure multifab to sum in p_g and p0_g
   MultiFab pg_nd(p_g[lev]->boxArray(), dmap[lev], 1, 0);
@@ -216,73 +219,75 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
 
 
   for ( int nr = 0; nr < nregions; ++nr )
+  {
+
+    // Create Real box for this region
+    RealBox avg_region ( {avg_region_x_w[nr], avg_region_y_s[nr], avg_region_z_b[nr]},
+                         {avg_region_x_e[nr], avg_region_y_n[nr], avg_region_z_t[nr]} );
+
+    // Jump to next iteration if this averaging region is not valid
+    if ( !avg_region.ok () )
     {
+      amrex::Print() << "ComputeAverageVelocities: region "<< nr << 
+        " is invalid: skipping\n";
+      continue;
+    }
 
-      // Create Real box for this region
-      RealBox avg_region ( {avg_region_x_w[nr], avg_region_y_s[nr], avg_region_z_b[nr]},
-                           {avg_region_x_e[nr], avg_region_y_n[nr], avg_region_z_t[nr]} );
-
-      // Jump to next iteration if this averaging region is not valid
-      if ( !avg_region.ok () )
-        {
-          amrex::Print() << "ComputeAverageVelocities: region "<< nr <<" is invalid: skipping\n";
-          continue;
-        }
-
-      Real sum_vol    = 0.;
-      Real sum_velx   = 0.;
-      Real sum_vely   = 0.;
-      Real sum_velz   = 0.;
-      Real sum_p_g    = 0.;
-      Real sum_ep_g   = 0.;
+    Real sum_vol    = 0.;
+    Real sum_velx   = 0.;
+    Real sum_vely   = 0.;
+    Real sum_velz   = 0.;
+    Real sum_p_g    = 0.;
+    Real sum_ep_g   = 0.;
 
 #if(0)
-      amrex::Print() << "\n\n  Collecting field averages for region " << nr << "\n";
-      if( size_p_g   > nr ) if( avg_p_g[nr]   == 1 ) amrex::Print() << "  > Gas pressure.......(p_g)\n";
-      if( size_ep_g  > nr ) if( avg_ep_g[nr]  == 1 ) amrex::Print() << "  > Volume fraction....(ep_g)\n";
-      if( size_vel_g > nr ) if( avg_vel_g[nr] == 1 ) amrex::Print() << "  > Gas velocity.......(m/s)\n";
+    amrex::Print() << "\n\n  Collecting field averages for region " << nr << "\n";
+    if( size_p_g   > nr ) if( avg_p_g[nr]   == 1 ) amrex::Print() << "  > Gas pressure.......(p_g)\n";
+    if( size_ep_g  > nr ) if( avg_ep_g[nr]  == 1 ) amrex::Print() << "  > Volume fraction....(ep_g)\n";
+    if( size_vel_g > nr ) if( avg_vel_g[nr] == 1 ) amrex::Print() << "  > Gas velocity.......(m/s)\n";
 #endif
 
-      // Not tiling this loop.
-      for (MFIter mfi(*ep_g[lev], false); mfi.isValid(); ++mfi)
+    // Not tiling this loop.
+    for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
+    {
+
+      const Box& bx  = mfi.validbox();
+
+      // this is to check efficiently if this grid contains any eb stuff
+      const EBFArrayBox&  epg_fab = static_cast<EBFArrayBox const&>(ep_g[mfi]);
+      const EBCellFlagFab&  flags = epg_fab.getEBCellFlagFab();
+
+      RealBox box_region ( bx, Geom(lev).CellSize (), Geom(lev).ProbLo() );
+
+      if (flags.getType(bx) != FabType::covered)
+      {
+        if ( box_region.intersects ( avg_region ) )
         {
 
-          const Box& bx  = mfi.validbox();
-
-          // this is to check efficiently if this grid contains any eb stuff
-          const EBFArrayBox&  epg_fab = static_cast<EBFArrayBox const&>((*ep_g[lev])[mfi]);
-          const EBCellFlagFab&  flags = epg_fab.getEBCellFlagFab();
-
-          RealBox box_region ( bx, Geom(lev).CellSize (), Geom(lev).ProbLo() );
-
-          if (flags.getType(bx) != FabType::covered)
-            {
-              if ( box_region.intersects ( avg_region ) )
-                {
-
-                  mfix_collect_fluid(BL_TO_FORTRAN_BOX(bx),
-                                     BL_TO_FORTRAN_BOX(domain),
-                                     BL_TO_FORTRAN_ANYD(( *ep_g[lev])[mfi]),
-                                     BL_TO_FORTRAN_ANYD((     *pg_cc)[mfi]),
-                                     BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                                     BL_TO_FORTRAN_ANYD((   *volfrac)[mfi]),
-                                     &avg_region_x_w[nr], &avg_region_x_e[nr],
-                                     &avg_region_y_s[nr], &avg_region_y_n[nr],
-                                     &avg_region_z_b[nr], &avg_region_z_t[nr], dx,
-                                     &sum_ep_g, &sum_p_g,  &sum_vol,
-                                     &sum_velx, &sum_vely, &sum_velz);
-                }
-            }
+          // TODO: convert this in cpp
+          mfix_collect_fluid(BL_TO_FORTRAN_BOX(bx),
+                             BL_TO_FORTRAN_BOX(domain),
+                             BL_TO_FORTRAN_ANYD(         ep_g[mfi]),
+                             BL_TO_FORTRAN_ANYD((     *pg_cc)[mfi]),
+                             BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+                             BL_TO_FORTRAN_ANYD((   *volfrac)[mfi]),
+                             &avg_region_x_w[nr], &avg_region_x_e[nr],
+                             &avg_region_y_s[nr], &avg_region_y_n[nr],
+                             &avg_region_z_b[nr], &avg_region_z_t[nr], dx,
+                             &sum_ep_g, &sum_p_g,  &sum_vol,
+                             &sum_velx, &sum_vely, &sum_velz);
         }
-
-      regions_data[var_count*nr + 0] = sum_vol;
-      regions_data[var_count*nr + 1] = sum_velx;
-      regions_data[var_count*nr + 2] = sum_vely;
-      regions_data[var_count*nr + 3] = sum_velz;
-      regions_data[var_count*nr + 4] = sum_p_g;
-      regions_data[var_count*nr + 5] = sum_ep_g;
-
+      }
     }
+
+    regions_data[var_count*nr + 0] = sum_vol;
+    regions_data[var_count*nr + 1] = sum_velx;
+    regions_data[var_count*nr + 2] = sum_vely;
+    regions_data[var_count*nr + 3] = sum_velz;
+    regions_data[var_count*nr + 4] = sum_p_g;
+    regions_data[var_count*nr + 5] = sum_ep_g;
+
+  }
 
   // Compute parallel reductions
   ParallelDescriptor::ReduceRealSum ( regions_data.data(),  var_count*nregions );
