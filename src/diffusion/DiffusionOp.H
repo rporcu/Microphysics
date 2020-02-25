@@ -59,6 +59,9 @@ class DiffusionOp
                          const amrex::Vector<amrex::Real> mu_s, 
                          amrex::Real dt);
 
+    void diffuse_drag (amrex::Vector< amrex::MultiFab* >& drag,
+                       amrex::Real doceff);
+
     void diffuse_volfrac (amrex::Vector< amrex::MultiFab* >& scal,
                           amrex::Real doceff);
 

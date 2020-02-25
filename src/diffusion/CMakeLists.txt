@@ -6,6 +6,7 @@ target_sources( mfixcore
    PRIVATE
    DiffusionOp.cpp
    DiffusionOp.H
+   mfix_diffuse_drag.cpp
    mfix_diffuse_velocity.cpp
    mfix_diffuse_scalar.cpp
    mfix_diffuse_volfrac.cpp

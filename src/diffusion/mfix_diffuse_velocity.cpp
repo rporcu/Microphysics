@@ -83,5 +83,5 @@ void DiffusionOp::diffuse_velocity (Vector< MultiFab* >& vel_in,
     }
 
     if(verbose > 0)
-        amrex::Print() << " done!" << std::endl;
+        amrex::Print() << " Done diffusing all velocity components" << std::endl;
 }
