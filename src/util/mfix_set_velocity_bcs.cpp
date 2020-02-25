@@ -6,7 +6,7 @@
 
 void
 mfix::mfix_set_velocity_bcs (Real time,
-                             Vector< std::unique_ptr<MultiFab> > & vel_in,
+                             Vector< MultiFab* > & vel_in,
                              int extrap_dir_bcs) const
 {
   BL_PROFILE("mfix::mfix_set_velocity_bcs()");
@@ -22,7 +22,7 @@ mfix::mfix_set_velocity_bcs (Real time,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-     for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+     for (MFIter mfi(*vel_in[lev], false); mfi.isValid(); ++mfi)
         set_velocity_bcs(time, lev, (*vel_in[lev])[mfi], domain, &extrap_dir_bcs);
 
      EB_set_covered(*vel_in[lev], 0, vel_in[lev]->nComp(), vel_in[lev]->nGrow(), covered_val);

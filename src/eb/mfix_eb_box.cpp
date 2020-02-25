@@ -136,9 +136,7 @@ void mfix::make_eb_box ()
           auto my_xob = EB2::makeComplement(my_box);
 
           bool has_real_walls = false;
-          std::unique_ptr<UnionListIF<EB2::PlaneIF>> my_walls;
-
-          my_walls = get_real_walls(has_real_walls);
+          std::shared_ptr<UnionListIF<EB2::PlaneIF>> my_walls = get_real_walls(has_real_walls);
 
           AMREX_ALWAYS_ASSERT_WITH_MESSAGE(has_real_walls,
              "Must have real walls for box geometry with external flow.");

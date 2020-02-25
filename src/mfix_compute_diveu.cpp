@@ -21,14 +21,14 @@ mfix::mfix_compute_diveu (Real time)
 {
   // Note that the solver imposes the boundary conditions with the right scalings so we don't
   //      fill any ghost cells here.
-  Vector<std::unique_ptr<MultiFab> > epu;
+  Vector< MultiFab* > epu;
   epu.resize(nlev);
 
   for (int lev = 0; lev < nlev; lev++)
     {
       // We only need one ghost cell here -- so no need to make it bigger
-      epu[lev].reset(new MultiFab(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(),
-                                  vel_g[lev]->nComp(), 1 , MFInfo(), *ebfactory[lev]));
+      epu[lev] = new MultiFab(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(),
+                              vel_g[lev]->nComp(), 1 , MFInfo(), *ebfactory[lev]);
 
       epu[lev]->setVal(1.e200);
 
@@ -39,7 +39,6 @@ mfix::mfix_compute_diveu (Real time)
       for (int n = 0; n < 3; n++)
         MultiFab::Multiply(*epu[lev], *ep_g[lev], 0, n, 1, epu[lev]->nGrow());
 
-
       epu[lev]->FillBoundary(geom[lev].periodicity());
 
 #ifdef _OPENMP
@@ -49,10 +48,10 @@ mfix::mfix_compute_diveu (Real time)
       //  no-slip walls are treated exactly like slip walls --
       // Note that this routine is essential to impose the correct inflow bc's on
       //  the product ep_g * vel_g
-      for (MFIter mfi((*epu[lev]), TilingIfNotGPU()); mfi.isValid(); ++mfi)
-        {
-          set_vec_bcs(lev, (*epu[lev])[mfi], domain);
-        }
+      for (MFIter mfi(*epu[lev], false); mfi.isValid(); ++mfi)
+      {
+        set_vec_bcs(lev, (*epu[lev])[mfi], domain);
+      }
 
       epu[lev]->FillBoundary(geom[lev].periodicity());
 
@@ -65,8 +64,8 @@ mfix::mfix_compute_diveu (Real time)
   //
   //        (del dot b sigma grad)) phi
   //
-  LPInfo          info;
-  MLNodeLaplacian matrix(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
+  LPInfo info;
+  MLNodeLaplacian matrix(geom, grids, dmap, info, ebfactory);
 
   // Set domain BCs for Poisson's solver
   // The domain BCs refer to level 0 only
@@ -75,7 +74,10 @@ mfix::mfix_compute_diveu (Real time)
 
   matrix.setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
 
-  matrix.compDivergence(GetVecOfPtrs(diveu), GetVecOfPtrs(epu));
+  matrix.compDivergence(diveu, epu);
+
+  for(int lev(0); lev < nlev; lev++)
+    delete epu[lev];
 
   // Restore velocities to carry Dirichlet values on faces
   int extrap_dir_bcs = 0;

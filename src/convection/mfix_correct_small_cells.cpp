@@ -1,7 +1,7 @@
 #include <mfix.H>
 
 void
-mfix::mfix_correct_small_cells (Vector< std::unique_ptr<MultiFab> >& vel_in)
+mfix::mfix_correct_small_cells (Vector< MultiFab*>& vel_in)
 
 {
     BL_PROFILE("mfix::mfix_correct_small_cells");

@@ -9,15 +9,17 @@
 #include <AMReX_MLEBTensorOp.H>
 
 #include <MFIX_BC_Parms.H>
+
+using namespace amrex;
+
 //
 // Implicit tensor solve
 //
 void
-mfix::mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_to_diffuse,
-                          amrex::Real dcoeff)
+mfix::mfix_diffuse_array (const Vector< MultiFab* > & mf_to_diffuse,
+                          Real dcoeff)
 {
    BL_PROFILE("mfix::mfix_diffuse_drag");
-
 
    //
    // First define the operator "ebtensorop"
@@ -26,7 +28,7 @@ mfix::mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_
    //
    LPInfo info;
    info.setMaxCoarseningLevel(diff_mg_max_coarsening_level);
-   MLEBTensorOp ebtensorop(geom, grids, dmap, info, amrex::GetVecOfConstPtrs(ebfactory));
+   MLEBTensorOp ebtensorop(geom, grids, dmap, info, ebfactory);
 
    // It is essential that we set MaxOrder of the solver to 2
    // if we want to use the standard sol(i)-sol(i-1) approximation
@@ -51,7 +53,7 @@ mfix::mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_
 
      dcoeff_mf.setVal(dcoeff);
 
-     average_cellcenter_to_face(GetArrOfPtrs(bcoeff[lev]), dcoeff_mf, geom[lev]);
+     average_cellcenter_to_face(bcoeff[lev], dcoeff_mf, geom[lev]);
 
      bcoeff[lev][0]->FillBoundary(geom[lev].periodicity());
      bcoeff[lev][1]->FillBoundary(geom[lev].periodicity());
@@ -113,7 +115,7 @@ mfix::mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> > & mf_
    //
    //  (1.0 - div dot nu grad) drag = RHS
    //
-   solver.solve(GetVecOfPtrs(diff_phi4), GetVecOfConstPtrs(diff_rhs4), diff_mg_rtol, diff_mg_atol);
+   solver.solve(diff_phi4, GetVecOfConstPtrs(diff_rhs4), diff_mg_rtol, diff_mg_atol);
 
    for (int lev = 0; lev < nlev; lev++)
    {

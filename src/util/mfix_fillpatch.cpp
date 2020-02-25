@@ -207,18 +207,18 @@ mfix::GetDataVel (int lev,
 
     if (time > t_new[lev] - teps && time < t_new[lev] + teps)
     {
-        data.push_back(vel_g[lev].get());
+        data.push_back(vel_g[lev]);
         datatime.push_back(t_new[lev]);
     }
     else if (time > t_old[lev] - teps && time < t_old[lev] + teps)
     {
-        data.push_back(vel_go[lev].get());
+        data.push_back(vel_go[lev]);
         datatime.push_back(t_old[lev]);
     }
     else
     {
-        data.push_back(vel_go[lev].get());
-        data.push_back(vel_g[lev].get());
+        data.push_back(vel_go[lev]);
+        data.push_back(vel_g[lev]);
         datatime.push_back(t_old[lev]);
         datatime.push_back(t_new[lev]);
     }
@@ -238,41 +238,41 @@ mfix::GetDataScalar (int lev,
     const Real teps = (t_new[lev] - t_old[lev]) * 1.e-3;
 
     if (icomp == 3) 
-       data.push_back(mu_g[lev].get());
+       data.push_back(mu_g[lev]);
 
     if (time > t_new[lev] - teps && time < t_new[lev] + teps)
     {
         if (icomp == 0) {
-           data.push_back(ro_g[lev].get());
+           data.push_back(ro_g[lev]);
         } else if (icomp == 1) {
-           data.push_back(trac[lev].get());
+           data.push_back(trac[lev]);
         } else if (icomp == 2) {
-           data.push_back(ep_g[lev].get());
+           data.push_back(ep_g[lev]);
         }
         datatime.push_back(t_new[lev]);
     }
     else if (time > t_old[lev] - teps && time < t_old[lev] + teps)
     {
         if (icomp == 0) {
-           data.push_back(ro_go[lev].get());
+           data.push_back(ro_go[lev]);
         } else if (icomp == 1) {
-           data.push_back(trac_o[lev].get());
+           data.push_back(trac_o[lev]);
         } else if (icomp == 2) {
-           data.push_back(ep_go[lev].get());
+           data.push_back(ep_go[lev]);
         }
         datatime.push_back(t_old[lev]);
     }
     else
     {
         if (icomp == 0) {
-           data.push_back(ro_go[lev].get());
-           data.push_back( ro_g[lev].get());
+           data.push_back(ro_go[lev]);
+           data.push_back( ro_g[lev]);
         } else if (icomp == 1) {
-           data.push_back(trac_o[lev].get());
-           data.push_back( trac[lev].get());
+           data.push_back(trac_o[lev]);
+           data.push_back( trac[lev]);
         } else if (icomp == 2) {
-           data.push_back(ep_go[lev].get());
-           data.push_back( ep_g[lev].get());
+           data.push_back(ep_go[lev]);
+           data.push_back(ep_g[lev]);
         }
         datatime.push_back(t_old[lev]);
         datatime.push_back(t_new[lev]);

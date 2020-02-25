@@ -33,7 +33,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 
         // If we are already working with the internal mf defined on the
         // particle_box_array, then we just work with this.
-        mf_pointer[lev] = ep_g[lev].get();
+        mf_pointer[lev] = ep_g[lev];
 
       } else if (lev == 0 and (not OnSameGrids))  {
         // If ep_g is not defined on the particle_box_array, then we need
@@ -75,14 +75,16 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
       } else {
 
         Vector<int> ngrow = {1,1,1};
-        std::unique_ptr<EBFArrayBoxFactory> crse_factory;
+        EBFArrayBoxFactory* crse_factory;
 
-        crse_factory = makeEBFabFactory(gm, mf_pointer[lev]->boxArray(),
+        crse_factory = (makeEBFabFactory(gm, mf_pointer[lev]->boxArray(),
                                         mf_pointer[lev]->DistributionMap(),
-                                        ngrow, EBSupport::volume);
+                                        ngrow, EBSupport::volume)).release();
 
         flags   = &(crse_factory->getMultiEBCellFlagFab());
         volfrac = &(crse_factory->getVolFrac());
+
+        delete crse_factory;
       }
 
       // Deposit particle volume to the grid
@@ -100,14 +102,16 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 
     // Move excessive solids volume from small cells to neighboring cells. A copy
     // of the deposition field is made so that when an average is calc
-    Vector< std::unique_ptr< MultiFab > > eps_tmp(nlev);
+    Vector< MultiFab* > eps_tmp(nlev);
     for (int lev(0); lev < nlev; ++lev ){
-      eps_tmp[lev] = MFHelpers::createFrom(*mf_pointer[lev]);
+      eps_tmp[lev] = (MFHelpers::createFrom(*mf_pointer[lev])).release();
 
       mfix_redistribute_deposition(lev, *eps_tmp[lev], *mf_pointer[lev], volfrac, flags,
                                    mfix::m_max_solids_volume_fraction);
     }
 
+    for (int lev(0); lev < nlev; ++lev)
+      delete eps_tmp[lev];
 
     // Sum the boundaries again to recapture any solids moved across
     // grid boundaries during the redistribute
@@ -149,11 +153,11 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
     // to copy here from mf_pointer into ep_g. I believe that we don't
     // need any information in ghost cells so we don't copy those.
 
-    if (mf_pointer[0] != ep_g[0].get())
+    if (mf_pointer[0] != ep_g[0])
       ep_g[0]->copy(*mf_pointer[0],0,0,ep_g[0]->nComp());
 
     for (int lev = 0; lev < nlev; lev++)
-       if (mf_pointer[lev] != ep_g[lev].get())
+       if (mf_pointer[lev] != ep_g[lev])
           delete mf_pointer[lev];
 
     if (m_verbose > 1) {

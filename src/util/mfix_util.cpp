@@ -3,22 +3,22 @@
 void
 mfix::check_for_nans (int lev)
 {
-    bool ug_has_nans = vel_g[lev] -> contains_nan (0);
-    bool vg_has_nans = vel_g[lev] -> contains_nan (1);
-    bool wg_has_nans = vel_g[lev] -> contains_nan (2);
-    bool pg_has_nans =   p_g[lev] -> contains_nan (0);
+  bool ug_has_nans = vel_g[lev]->contains_nan (0);
+  bool vg_has_nans = vel_g[lev]->contains_nan (1);
+  bool wg_has_nans = vel_g[lev]->contains_nan (2);
+  bool pg_has_nans =   p_g[lev]->contains_nan (0);
 
-    if (ug_has_nans)
-  amrex::Print() << "WARNING: u_g contains NaNs!!!";
+  if (ug_has_nans)
+    amrex::Print() << "WARNING: u_g contains NaNs!!!";
 
-    if (vg_has_nans)
-  amrex::Print() << "WARNING: v_g contains NaNs!!!";
+  if (vg_has_nans)
+    amrex::Print() << "WARNING: v_g contains NaNs!!!";
 
-    if (wg_has_nans)
-  amrex::Print() << "WARNING: w_g contains NaNs!!!";
+  if (wg_has_nans)
+    amrex::Print() << "WARNING: w_g contains NaNs!!!";
 
-    if (pg_has_nans)
-  amrex::Print() << "WARNING: p_g contains NaNs!!!";
+  if (pg_has_nans)
+    amrex::Print() << "WARNING: p_g contains NaNs!!!";
 }
 
 //

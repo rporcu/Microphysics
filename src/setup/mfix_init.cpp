@@ -595,8 +595,8 @@ void mfix::InitLevelData (Real time)
       {
           for (int lev = 0; lev < nlev; lev++)
           {
-             particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
-                                                   pc->ParticleDistributionMap(lev), 1, 0));
+             particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                               pc->ParticleDistributionMap(lev), 1, 0);
              particle_cost[lev]->setVal(0.0);
           }
       }
@@ -612,7 +612,7 @@ void mfix::InitLevelData (Real time)
        {
           for (int lev = 0; lev < nlev; lev++)
           {
-             fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+             fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
              fluid_cost[lev]->setVal(0.0);
           }
        }
@@ -641,11 +641,11 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 
             Print() << "Clean up auto-generated particles.\n" << std::endl;
 
-            const MultiFab * ls_data = level_sets[1].get();
+            const MultiFab * ls_data = level_sets[1];
             iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                ls_data->nComp(), ls_data->nGrow());
 
-            pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
+            pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level],
                                  ls_data, levelset_refinement);
           }
           else if (!restart_flag && particle_ebfactory[finest_level])
@@ -657,11 +657,11 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 
             for (int ilev = 0; ilev < nlev; ilev ++)
             {
-              const MultiFab * ls_data = level_sets[ilev].get();
+              const MultiFab * ls_data = level_sets[ilev];
               iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                  ls_data->nComp(), ls_data->nGrow());
 
-              pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(),
+              pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev],
                                    ls_data, 1);
             }
           }
@@ -687,8 +687,8 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
                 DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
                 pc->Regrid(particle_dm, particle_ba);
 
-                particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
-                                                      pc->ParticleDistributionMap(lev), 1, 0));
+                particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                                  pc->ParticleDistributionMap(lev), 1, 0);
                 particle_cost[lev]->setVal(0.0);
 
                 // This calls re-creates a proper particle_ebfactories
@@ -761,12 +761,12 @@ mfix::MakeBCArrays ()
        Box box_khi = amrex::adjCellHi(domainz,2,1);
 
        // Note that each of these is a single IArrayBox so every process has a copy of them
-       bc_ilo[lev].reset(new IArrayBox(box_ilo,2));
-       bc_ihi[lev].reset(new IArrayBox(box_ihi,2));
-       bc_jlo[lev].reset(new IArrayBox(box_jlo,2));
-       bc_jhi[lev].reset(new IArrayBox(box_jhi,2));
-       bc_klo[lev].reset(new IArrayBox(box_klo,2));
-       bc_khi[lev].reset(new IArrayBox(box_khi,2));
+       bc_ilo[lev] = new IArrayBox(box_ilo,2);
+       bc_ihi[lev] = new IArrayBox(box_ihi,2);
+       bc_jlo[lev] = new IArrayBox(box_jlo,2);
+       bc_jhi[lev] = new IArrayBox(box_jhi,2);
+       bc_klo[lev] = new IArrayBox(box_klo,2);
+       bc_khi[lev] = new IArrayBox(box_khi,2);
    }
 }
 
@@ -792,12 +792,12 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
        // We deliberately don't tile this loop since we will be looping
        //    over bc's on faces and it makes more sense to do this one grid at a time
-       for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi) {
+       for (MFIter mfi(*ep_g[lev], false); mfi.isValid(); ++mfi) {
 
           const Box& bx = mfi.validbox();
           const Box& sbx = (*ep_g[lev])[mfi].box();
 
-        if ( is_restarting ) {
+          if ( is_restarting ) {
 
             init_fluid_restart(bx, (*mu_g[lev])[mfi]);
 
@@ -818,66 +818,66 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
     mfix_set_p0();
 
-  // Here we re-set the bc values for p and u,v,w just in case init_fluid
-  //      over-wrote some of the bc values with ic values
-  mfix_set_bc0();
+    // Here we re-set the bc values for p and u,v,w just in case init_fluid
+    //      over-wrote some of the bc values with ic values
+    mfix_set_bc0();
 
-  for (int lev = 0; lev < nlev; lev++)
-  {
-     ep_g[lev]->FillBoundary(geom[lev].periodicity());
-     ro_g[lev]->FillBoundary(geom[lev].periodicity());
-     mu_g[lev]->FillBoundary(geom[lev].periodicity());
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       ep_g[lev]->FillBoundary(geom[lev].periodicity());
+       ro_g[lev]->FillBoundary(geom[lev].periodicity());
+       mu_g[lev]->FillBoundary(geom[lev].periodicity());
 
-    if (advect_tracer)
-       trac[lev]->FillBoundary(geom[lev].periodicity());
+      if (advect_tracer)
+         trac[lev]->FillBoundary(geom[lev].periodicity());
 
-     vel_g[lev]->FillBoundary(geom[lev].periodicity());
-  }
+       vel_g[lev]->FillBoundary(geom[lev].periodicity());
+    }
 
-  if (is_restarting == 0)
-  {
-     // Just for reference, we compute the volume inside the EB walls (as if there were no particles)
-     ep_g[0]->setVal(1.0);
+    if (is_restarting == 0)
+    {
+       // Just for reference, we compute the volume inside the EB walls (as if there were no particles)
+       ep_g[0]->setVal(1.0);
 
-     sum_vol_orig = volWgtSum(0,*ep_g[0],0);
+       sum_vol_orig = volWgtSum(0,*ep_g[0],0);
 
-     Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
+       Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
 
-     Real domain_vol = sum_vol_orig;
+       Real domain_vol = sum_vol_orig;
 
-     // Now initialize the volume fraction ep_g before the first projection
-     mfix_calc_volume_fraction(sum_vol_orig);
-     Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+       // Now initialize the volume fraction ep_g before the first projection
+       mfix_calc_volume_fraction(sum_vol_orig);
+       Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
 
-     Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
+       Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
 
-     // This sets bcs for ep_g and mu_g
-     Real time = 0.0;
+       // This sets bcs for ep_g and mu_g
+       Real time = 0.0;
 
-     mfix_set_density_bcs(time,ro_g);
-     mfix_set_density_bcs(time,ro_go);
+       mfix_set_density_bcs(time,ro_g);
+       mfix_set_density_bcs(time,ro_go);
 
-     mfix_set_scalar_bcs(time,trac  ,mu_g);
-     mfix_set_scalar_bcs(time,trac_o,mu_g);
+       mfix_set_scalar_bcs(time,trac  ,mu_g);
+       mfix_set_scalar_bcs(time,trac_o,mu_g);
 
-     // Project the initial velocity field
-     if (do_initial_proj)
-        mfix_project_velocity();
+       // Project the initial velocity field
+       if (do_initial_proj)
+          mfix_project_velocity();
 
-     // Iterate to compute the initial pressure
-     if (initial_iterations > 0)
+       // Iterate to compute the initial pressure
+       if (initial_iterations > 0)
 
-        mfix_initial_iterations(dt,stop_time);
+          mfix_initial_iterations(dt,stop_time);
 
-     } else {
+    } else {
 
-        mfix_set_epg_bcs(ep_g);
+       mfix_set_epg_bcs(ep_g);
 
-        //Calculation of sum_vol_orig for a restarting point
-        sum_vol_orig = volWgtSum(0,*ep_g[0],0);
+       //Calculation of sum_vol_orig for a restarting point
+       sum_vol_orig = volWgtSum(0,*ep_g[0],0);
 
-        Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
-     }
+       Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+    }
 }
 
 void
@@ -890,7 +890,7 @@ mfix::mfix_set_bc0 ()
      Box domain(geom[lev].Domain());
 
      // Don't tile this -- at least for now
-     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+     for (MFIter mfi(*ep_g[lev], false); mfi.isValid(); ++mfi)
      {
        const Box& sbx = (*ep_g[lev])[mfi].box();
 
@@ -946,7 +946,7 @@ mfix::mfix_set_p0 ()
 
      // We deliberately don't tile this loop since we will be looping
      //    over bc's on faces and it makes more sense to do this one grid at a time
-     for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
+     for (MFIter mfi(*ep_g[lev], false); mfi.isValid(); ++mfi)
      {
        const Box& bx = mfi.validbox();
 
@@ -974,11 +974,11 @@ void mfix::mfix_set_ls_near_inflow ()
         {
             Box domain(geom[lev].Domain());
 
-            MultiFab* ls_phi = level_sets[lev].get();
+            MultiFab* ls_phi = level_sets[lev];
             const Real* dx   = geom[lev].CellSize();
 
             // Don't tile this
-            for (MFIter mfi(*ls_phi); mfi.isValid(); ++mfi)
+            for (MFIter mfi(*ls_phi, false); mfi.isValid(); ++mfi)
             {
                 FArrayBox & ls_fab = (* ls_phi)[mfi];
 
@@ -997,10 +997,10 @@ void mfix::mfix_set_ls_near_inflow ()
         {
             Box domain(geom[lev].Domain());
             const Real* dx   = geom[lev].CellSize();
-            MultiFab* ls_phi = level_sets[lev_ref].get();
+            MultiFab* ls_phi = level_sets[lev_ref];
 
             // Don't tile this
-            for (MFIter mfi(*ls_phi); mfi.isValid(); ++mfi)
+            for (MFIter mfi(*ls_phi, false); mfi.isValid(); ++mfi)
             {
                 FArrayBox& ls_fab = (*ls_phi)[mfi];
 
@@ -1014,10 +1014,10 @@ void mfix::mfix_set_ls_near_inflow ()
         {
             Box domain(geom[lev].Domain());
             const Real* dx   = geom[lev].CellSize();
-            MultiFab* ls_phi = level_sets[lev].get();
+            MultiFab* ls_phi = level_sets[lev];
 
             // Don't tile this
-            for (MFIter mfi(*ls_phi); mfi.isValid(); ++mfi)
+            for (MFIter mfi(*ls_phi, false); mfi.isValid(); ++mfi)
             {
                 FArrayBox& ls_fab = (* ls_phi)[mfi];
 

@@ -244,7 +244,7 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
 #endif
 
       // Not tiling this loop.
-      for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
+      for (MFIter mfi(*ep_g[lev], false); mfi.isValid(); ++mfi)
         {
 
           const Box& bx  = mfi.validbox();

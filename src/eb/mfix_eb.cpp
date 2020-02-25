@@ -133,19 +133,17 @@ void mfix::make_eb_factories () {
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        ebfactory[lev].reset(
-            new EBFArrayBoxFactory(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+        ebfactory[lev] =
+            new EBFArrayBoxFactory(*eb_levels[lev], geom[lev], grids[lev], dmap[lev],
                                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                    m_eb_full_grow_cells}, m_eb_support_level)
-            );
+                                    m_eb_full_grow_cells}, m_eb_support_level);
 
         // Grow EB factory by +2 in order to avoid edge cases. This is not
         // necessary for multi-level mfix.
-        particle_ebfactory[lev].reset(
-            new EBFArrayBoxFactory(* particle_eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+        particle_ebfactory[lev] =
+            new EBFArrayBoxFactory(*particle_eb_levels[lev], geom[lev], grids[lev], dmap[lev],
                                    {levelset_eb_pad + 2, levelset_eb_pad + 2,
-                                    levelset_eb_pad + 2}, m_eb_support_level)
-            );
+                                    levelset_eb_pad + 2}, m_eb_support_level);
     }
 }
 
@@ -171,8 +169,7 @@ void mfix::fill_eb_levelsets ()
         const BoxArray &            part_ba = pc->ParticleBoxArray(0);
 
         LSFactory lsf(0, levelset_refinement, levelset_eb_refinement,
-                      levelset_pad, levelset_eb_pad, part_ba, geom[0], part_dm );
-
+                      levelset_pad, levelset_eb_pad, part_ba, geom[0], part_dm);
 
         //___________________________________________________________________________
         // NOTE: Boxes are different (since we're not refining, we need to treat
@@ -273,11 +270,11 @@ void mfix::fill_eb_levelsets ()
 
                 GShopLSFactory<decltype(if_box)> gshop_lsfactory(gshop, lsf);
                 std::unique_ptr<MultiFab> mf_impfunc_box = gshop_lsfactory.fill_impfunc();
-                lsf.Intersect(* mf_impfunc_box);
+                lsf.Intersect(*mf_impfunc_box);
             }
 
-            level_sets[1] = lsf.copy_data(part_dm);
-            level_sets[0] = lsf.coarsen_data();
+            level_sets[1] = lsf.copy_data(part_dm).release();
+            level_sets[0] = lsf.coarsen_data().release();
 
             return;
         }
@@ -296,8 +293,8 @@ void mfix::fill_eb_levelsets ()
             lsf.Fill( * ebfactory[0], impfunc);
         }
 
-        level_sets[1] = lsf.copy_data(part_dm);
-        level_sets[0] = lsf.coarsen_data();
+        level_sets[1] = lsf.copy_data(part_dm).release();
+        level_sets[0] = lsf.coarsen_data().release();
     }
     else
     {
@@ -314,7 +311,7 @@ void mfix::fill_eb_levelsets ()
 
         // NOTE: reference BoxArray is not nodal
         BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
-        level_sets[0].reset(new MultiFab);
+        level_sets[0] = new MultiFab();
         level_sets[0]->define(ba, part_dm, 1, levelset_pad);
         iMultiFab valid(ba, part_dm, 1, levelset_pad);
 
@@ -323,18 +320,17 @@ void mfix::fill_eb_levelsets ()
         impfunc.FillBoundary(geom[0].periodicity());
 
 
-        LSFactory::fill_data(* level_sets[0], valid, * particle_ebfactory[0], impfunc,
+        LSFactory::fill_data(*level_sets[0], valid, *particle_ebfactory[0], impfunc,
                              32, 1, 1, geom[0], geom[0]);
 
         for (int lev = 1; lev < nlev; lev++)
         {
-
             const DistributionMapping & part_dm = pc->ParticleDistributionMap(lev);
             const BoxArray &            part_ba = pc->ParticleBoxArray(lev);
 
             // NOTE: reference BoxArray is not nodal
             BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
-            level_sets[lev].reset(new MultiFab);
+            level_sets[lev] = new MultiFab();
             iMultiFab valid(ba, part_dm, 1, levelset_pad);
 
             // Fills level-set[lev] with coarse data
@@ -365,7 +361,7 @@ void mfix::intersect_ls_walls ()
 {
 
     bool has_walls = false;
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_walls);
+    std::shared_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_walls);
     auto gshop = EB2::makeShop(* walls);
 
     if (has_walls == false)

@@ -42,11 +42,14 @@ enum DepositionScheme {trilinear, square_dpvm, true_dpvm, centroid};
 class mfix : public AmrCore
 {
   public:
+    // Constructor
     mfix ();
+
+    // Destructor
     ~mfix ();
 
     // Face-based coefficients b in MAC projection and implicit diffusion solve
-    Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > bcoeff;
+    Vector< Array<MultiFab*,3> > bcoeff;
 
     void InitParams ();
 
@@ -58,6 +61,7 @@ class mfix : public AmrCore
     void InitLevelData (Real time);
 
     void mfix_init_solvers ();
+
     void mfix_setup_solvers ();
 
     void PostInit (Real& dt, Real time, int restart_flag, Real stop_time);
@@ -99,8 +103,11 @@ class mfix : public AmrCore
     void make_mg_bc (int mg_bc[]);
 
     void make_eb_geometry ();
+
     void make_eb_factories ();
+
     void fill_eb_levelsets ();
+
     void intersect_ls_walls ();
 
     template<class F>
@@ -145,20 +152,21 @@ class mfix : public AmrCore
     const Geometry get_geom_ref (int lev)
     { return geom[lev]; }
 
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_walls (bool & has_walls);
+    std::shared_ptr<UnionListIF<EB2::PlaneIF>> get_walls (bool & has_walls);
 
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls (bool & has_real_walls);
+    std::shared_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls (bool & has_real_walls);
 
-    std::unique_ptr<EB2::TranslationIF<EB2::PolynomialIF>> 
+    std::shared_ptr<EB2::TranslationIF<EB2::PolynomialIF>> 
       get_poly (int max_order, std::string field_prefix);
 
-    std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
+    std::shared_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
       make_wall (int dir, // direction (long edge) of wall
                  Real position, Real height, Real width);
 
     void WriteMyEBSurface ();
 
     void InitIOChkData ();
+
     void InitIOPltData ();
 
     // If > 0, dump plotfiles every "plot_int" steps
@@ -202,26 +210,26 @@ class mfix : public AmrCore
 
     void mfix_predict_vels_on_faces (int lev,
                                      Real time,
-                                     Vector< std::unique_ptr<MultiFab> >& vel,
-                                     Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                                     Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                                     Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                                     Vector< std::unique_ptr<MultiFab> >& ep_g);
+                                     Vector< MultiFab* >& vel,
+                                     Vector< MultiFab* >& ep_u_mac,
+                                     Vector< MultiFab* >& ep_v_mac,
+                                     Vector< MultiFab* >& ep_w_mac,
+                                     Vector< MultiFab* >& ep_g);
 
-    void mfix_correct_small_cells (Vector< std::unique_ptr<MultiFab> >& vel_in);
+    void mfix_correct_small_cells (Vector< MultiFab*>& vel_in);
 
     void mfix_set_velocity_bcs (Real time,
-                                Vector< std::unique_ptr<MultiFab> >& vel,
+                                Vector< MultiFab* >& vel,
                                 int extrap_dir_bcs) const;
 
-    void mfix_set_epg_bcs (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps) const;
+    void mfix_set_epg_bcs (const amrex::Vector< MultiFab* >& mf_eps) const;
 
     void mfix_set_density_bcs (Real time,
-                               Vector< std::unique_ptr<MultiFab> >& ro_g);
+                               Vector< MultiFab* >& ro_g);
 
     void mfix_set_scalar_bcs (Real time,
-                              Vector< std::unique_ptr<MultiFab> >& trac,
-                              Vector< std::unique_ptr<MultiFab> >& mu_g);
+                              Vector< MultiFab* >& trac,
+                              Vector< MultiFab* >& mu_g);
 
     void set_velocity_bcs (Real time,
                            const int lev,
@@ -262,9 +270,9 @@ class mfix : public AmrCore
                         const Real* dx);
 
     void mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
-                              Vector<std::unique_ptr<MultiFab>>& xslopes_in,
-                              Vector<std::unique_ptr<MultiFab>>& yslopes_in,
-                              Vector<std::unique_ptr<MultiFab>>& zslopes_in,
+                              Vector< MultiFab* >& xslopes_in,
+                              Vector< MultiFab* >& yslopes_in,
+                              Vector< MultiFab* >& zslopes_in,
                               int slopes_comp);
 
     void set_bc0 (const Box& sbx,
@@ -318,31 +326,33 @@ class mfix : public AmrCore
     ////////////////////////////////////////////////////////////////////////////
 
     void set_MAC_velocity_bcs (int lev,
-                               Vector< std::unique_ptr<MultiFab> >& u,
-                               Vector< std::unique_ptr<MultiFab> >& v,
-                               Vector< std::unique_ptr<MultiFab> >& w,
+                               Vector< MultiFab* >& u,
+                               Vector< MultiFab* >& v,
+                               Vector< MultiFab* >& w,
                                Real time);
 
     void mfix_compute_fluxes (const int lev,
-                              Vector< std::unique_ptr<MultiFab> >& a_fx,
-                              Vector< std::unique_ptr<MultiFab> >& a_fy,
-                              Vector< std::unique_ptr<MultiFab> >& a_fz,
-                              Vector< std::unique_ptr<MultiFab> >& state,
-                              const int state_comp, const int n_comp,
-                              Vector< std::unique_ptr<MultiFab> >& xslopes,
-                              Vector< std::unique_ptr<MultiFab> >& yslopes,
-                              Vector< std::unique_ptr<MultiFab> >& zslopes,
+                              Vector< MultiFab* >& a_fx,
+                              Vector< MultiFab* >& a_fy,
+                              Vector< MultiFab* >& a_fz,
+                              Vector< MultiFab* >& state,
+                              const int state_comp,
+                              const int n_comp,
+                              Vector< MultiFab* >& xslopes,
+                              Vector< MultiFab* >& yslopes,
+                              Vector< MultiFab* >& zslopes,
                               const int slopes_comp,
-                              Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                              Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                              Vector< std::unique_ptr<MultiFab> >& ep_w_mac);
+                              Vector< MultiFab* >& ep_u_mac,
+                              Vector< MultiFab* >& ep_v_mac,
+                              Vector< MultiFab* >& ep_w_mac);
 
     void mfix_compute_fluxes_on_box (const int lev, Box& bx,
                                      FArrayBox& a_fx,
                                      FArrayBox& a_fy,
                                      FArrayBox& a_fz,
                                      const FArrayBox& state,
-                                     const int state_comp, const int n_comp,
+                                     const int state_comp,
+                                     const int n_comp,
                                      const FArrayBox& xslopes,
                                      const FArrayBox& yslopes,
                                      const FArrayBox& zslopes,
@@ -356,7 +366,8 @@ class mfix : public AmrCore
                                         FArrayBox& a_fy,
                                         FArrayBox& a_fz,
                                         const FArrayBox& state,
-                                        const int state_comp, const int n_comp,
+                                        const int state_comp,
+                                        const int n_comp,
                                         const FArrayBox& xslopes,
                                         const FArrayBox& yslopes,
                                         const FArrayBox& zslopes,
@@ -382,7 +393,7 @@ class mfix : public AmrCore
     //
     ////////////////////////////////////////////////////////////////////////////
 
-    std::unique_ptr<DiffusionOp> diffusion_op;
+    std::shared_ptr<DiffusionOp> diffusion_op;
 
     ////////////////////////////////////////////////////////////////////////////
     //
@@ -390,7 +401,7 @@ class mfix : public AmrCore
     //
     ////////////////////////////////////////////////////////////////////////////
 
-    std::unique_ptr<NodalProjector> nodal_projector;
+    std::shared_ptr<NodalProjector> nodal_projector;
 
   protected:
     //! Tagging cells for refinement
@@ -451,18 +462,19 @@ class mfix : public AmrCore
     void mfix_set_ls_near_inflow ();
 
     void mfix_project_velocity ();
+
     void mfix_initial_iterations (Real dt, Real stop_time);
 
-    void mfix_apply_nodal_projection (Vector< std::unique_ptr< amrex::MultiFab > >& a_depdt,
+    void mfix_apply_nodal_projection (Vector< amrex::MultiFab* >& a_depdt,
                                       amrex::Real a_time,
                                       amrex::Real a_dt,
                                       bool proj_2 );
 
-    void apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& ep_u_mac,
-                               Vector< std::unique_ptr<MultiFab> >& ep_v_mac,
-                               Vector< std::unique_ptr<MultiFab> >& ep_w_mac,
-                               Vector< std::unique_ptr<MultiFab> >& ep,
-                               Vector< std::unique_ptr<MultiFab> >& ro,
+    void apply_MAC_projection (Vector< MultiFab* >& ep_u_mac,
+                               Vector< MultiFab* >& ep_v_mac,
+                               Vector< MultiFab* >& ep_w_mac,
+                               Vector< MultiFab* >& ep,
+                               Vector< MultiFab* >& ro,
                                Real time);
 
     void FillPatchVel (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
@@ -518,46 +530,33 @@ class mfix : public AmrCore
 
     void EvolveFluid (int nstep, Real & dt, Real & time, Real stop_time, Real drag_timing);
 
-    // Projection-related methods
-    void mfix_solve_poisson_equation (Vector< std::unique_ptr<MultiFab> >& phi,
-                                      Vector< std::unique_ptr<MultiFab> >& rhs,
-                                      Vector< std::unique_ptr<MultiFab> >& b,
-                                      Vector< std::unique_ptr<MultiFab> >& fluxes);
-
-    // Solve implicit diffusion
-    void solve_diffusion_equation (Vector< Vector< std::unique_ptr<MultiFab> > >& b,
-                                   Vector< std::unique_ptr<MultiFab> >& phi,
-                                   Vector< std::unique_ptr<MultiFab> >& rhs,
-                                   int bc_lo[], int bc_hi[],
-                                   Real dt);
-
     void check_for_nans (int lev);
 
-    void mfix_compute_convective_term (Vector< std::unique_ptr<MultiFab> >& conv_u,
-                                       Vector< std::unique_ptr<MultiFab> >& conv_s,
-                                       Vector< std::unique_ptr<MultiFab> >& vel,
-                                       Vector< std::unique_ptr<MultiFab> >& ep_g,
-                                       Vector< std::unique_ptr<MultiFab> >& ro_g,
-                                       Vector< std::unique_ptr<MultiFab> >& trac,
+    void mfix_compute_convective_term (Vector< MultiFab* >& conv_u,
+                                       Vector< MultiFab* >& conv_s,
+                                       Vector< MultiFab* >& vel,
+                                       Vector< MultiFab* >& ep_g,
+                                       Vector< MultiFab* >& ro_g,
+                                       Vector< MultiFab* >& trac,
                                        Real time);
 
     int steady_state_reached (Real dt, int iter);
 
-    void mfix_apply_predictor (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
-                               Vector< std::unique_ptr<MultiFab> >& conv_s_old,
-                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
-                               Vector< std::unique_ptr<MultiFab> >&   laps_old,
+    void mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
+                               Vector< MultiFab* >& conv_s_old,
+                               Vector< MultiFab* >& divtau_old,
+                               Vector< MultiFab* >&   laps_old,
                                Real time, Real dt, bool proj_2);
 
-    void mfix_apply_corrector (Vector< std::unique_ptr<MultiFab> >& conv_u_old,
-                               Vector< std::unique_ptr<MultiFab> >& conv_s_old,
-                               Vector< std::unique_ptr<MultiFab> >& divtau_old,
-                               Vector< std::unique_ptr<MultiFab> >&   laps_old,
+    void mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
+                               Vector< MultiFab* >& conv_s_old,
+                               Vector< MultiFab* >& divtau_old,
+                               Vector< MultiFab* >&   laps_old,
                                Real time, Real dt, bool proj_2);
 
-    void mfix_diffuse_scalar (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_eps, amrex::Real);
+    void mfix_diffuse_scalar (const amrex::Vector< MultiFab* >& mf_eps, amrex::Real);
 
-    void mfix_diffuse_array (const amrex::Vector< std::unique_ptr<MultiFab> >& mf_drag, amrex::Real);
+    void mfix_diffuse_array (const amrex::Vector< MultiFab* >& mf_drag, amrex::Real);
 
     void mfix_compute_diveu (Real time);
 
@@ -574,7 +573,7 @@ class mfix : public AmrCore
     static int ntrac;
 
     // Particle container
-    std::unique_ptr<MFIXParticleContainer> pc;
+    std::shared_ptr<MFIXParticleContainer> pc;
 
     // Debug counter used for tracking number of level-set MultiFabs used in
     // intersection/union
@@ -614,93 +613,93 @@ class mfix : public AmrCore
     amrex::Vector<std::unique_ptr<LevelData> > m_leveldata;
 
     // Boundary conditions types
-    Vector< std::unique_ptr<IArrayBox> > bc_ilo;
-    Vector< std::unique_ptr<IArrayBox> > bc_ihi;
-    Vector< std::unique_ptr<IArrayBox> > bc_jlo;
-    Vector< std::unique_ptr<IArrayBox> > bc_jhi;
-    Vector< std::unique_ptr<IArrayBox> > bc_klo;
-    Vector< std::unique_ptr<IArrayBox> > bc_khi;
+    Vector< IArrayBox* > bc_ilo;
+    Vector< IArrayBox* > bc_ihi;
+    Vector< IArrayBox* > bc_jlo;
+    Vector< IArrayBox* > bc_jhi;
+    Vector< IArrayBox* > bc_klo;
+    Vector< IArrayBox* > bc_khi;
 
     // Boundary conditions flags
-    Vector< std::unique_ptr<iMultiFab> > flag;
+    Vector< iMultiFab* > flag;
 
     // Void fraction
-    Vector< std::unique_ptr<MultiFab> > ep_g;
-    Vector< std::unique_ptr<MultiFab> > ep_go;
+    Vector< MultiFab* > ep_g;
+    Vector< MultiFab* > ep_go;
 
     // Gas pressure fraction
-    Vector< std::unique_ptr<MultiFab> > p_g;
-    Vector< std::unique_ptr<MultiFab> > p_go;
+    Vector< MultiFab* > p_g;
+    Vector< MultiFab* > p_go;
 
     // Gas density
-    Vector< std::unique_ptr<MultiFab> > ro_g;
-    Vector< std::unique_ptr<MultiFab> > ro_go;
+    Vector< MultiFab* > ro_g;
+    Vector< MultiFab* > ro_go;
 
     // Tracer in gas
-    Vector< std::unique_ptr<MultiFab> > trac;
-    Vector< std::unique_ptr<MultiFab> > trac_o;
+    Vector< MultiFab* > trac;
+    Vector< MultiFab* > trac_o;
 
     // Gas velocity
-    Vector< std::unique_ptr<MultiFab> > vel_g;
-    Vector< std::unique_ptr<MultiFab> > vel_go;
+    Vector< MultiFab* > vel_g;
+    Vector< MultiFab* > vel_go;
 
     // Base state pressure
-    Vector< std::unique_ptr<MultiFab> > p0_g;
+    Vector< MultiFab* > p0_g;
 
     // Pressure gradients
-    Vector< std::unique_ptr<MultiFab> > gp;
+    Vector< MultiFab* > gp;
 
     // Molecular viscosity
-    Vector< std::unique_ptr<MultiFab> > mu_g;
+    Vector< MultiFab* > mu_g;
 
     // Cell-based
-    Vector< std::unique_ptr<MultiFab> > vort;
+    Vector< MultiFab* > vort;
 
-    Vector< std::unique_ptr<MultiFab> > drag;
+    Vector< MultiFab* > drag;
 
     // Level-Set Data => used for particle-wall collisions and fluid
     // reconstruction in particle drag calculation. NOTE: this has at least 2
     // levels: 0) fluid reconstruction, 1..N) particle-wall (refined) collisions
-    Vector< std::unique_ptr<MultiFab> > level_sets;
+    Vector< MultiFab* > level_sets;
 
     // These are multi-component multifabs
-    Vector< std::unique_ptr<MultiFab> > xslopes_u;
-    Vector< std::unique_ptr<MultiFab> > yslopes_u;
-    Vector< std::unique_ptr<MultiFab> > zslopes_u;
-    Vector< std::unique_ptr<MultiFab> > xslopes_s;
-    Vector< std::unique_ptr<MultiFab> > yslopes_s;
-    Vector< std::unique_ptr<MultiFab> > zslopes_s;
+    Vector< MultiFab* > xslopes_u;
+    Vector< MultiFab* > yslopes_u;
+    Vector< MultiFab* > zslopes_u;
+    Vector< MultiFab* > xslopes_s;
+    Vector< MultiFab* > yslopes_s;
+    Vector< MultiFab* > zslopes_s;
 
     // div (ep_g * u)
-    Vector< std::unique_ptr<MultiFab> > diveu;
+    Vector< MultiFab* > diveu;
 
     // RHS for MAC solve
-    Vector< std::unique_ptr<MultiFab> > mac_rhs;
+    Vector< MultiFab* > mac_rhs;
 
     // Solution for MAC projection
-    Vector< std::unique_ptr<MultiFab> > mac_phi;
+    Vector< MultiFab* > mac_phi;
 
     // RHS for diffusive tensor solve
-    Vector< std::unique_ptr<MultiFab> > diff_rhs;
-    Vector< std::unique_ptr<MultiFab> > diff_rhs1;
-    Vector< std::unique_ptr<MultiFab> > diff_rhs4;
+    Vector< MultiFab* > diff_rhs;
+    Vector< MultiFab* > diff_rhs1;
+    Vector< MultiFab* > diff_rhs4;
 
     // Solution for diffusion solves
-    Vector< std::unique_ptr<MultiFab> > diff_phi;
-    Vector< std::unique_ptr<MultiFab> > diff_phi1;
-    Vector< std::unique_ptr<MultiFab> > diff_phi4;
+    Vector< MultiFab* > diff_phi;
+    Vector< MultiFab* > diff_phi1;
+    Vector< MultiFab* > diff_phi4;
 
     // MAC velocities
-    Vector< std::unique_ptr<MultiFab> > u_mac;
-    Vector< std::unique_ptr<MultiFab> > v_mac;
-    Vector< std::unique_ptr<MultiFab> > w_mac;
+    Vector< MultiFab* > u_mac;
+    Vector< MultiFab* > v_mac;
+    Vector< MultiFab* > w_mac;
 
     // Pressure increment
-    Vector< std::unique_ptr<MultiFab> > phi_nd;
+    Vector< MultiFab* > phi_nd;
 
     // used if load_balance_type == "KnapSack"
-    Vector<std::unique_ptr<MultiFab> > particle_cost;
-    Vector<std::unique_ptr<MultiFab> > fluid_cost;
+    Vector< MultiFab* > particle_cost;
+    Vector< MultiFab* > fluid_cost;
 
     int steady_state = 0;
 
@@ -736,10 +735,10 @@ class mfix : public AmrCore
     int  nodal_mg_max_coarsening_level = 100;
 
     // Linear operator
-    std::unique_ptr<MLNodeLaplacian> nodal_matrix;
+    std::shared_ptr<MLNodeLaplacian> nodal_matrix;
 
     // Solver
-    std::unique_ptr<MLMG> nodal_solver;
+    std::shared_ptr<MLMG> nodal_solver;
 
     // ***************************************************************
     // MAC solve
@@ -829,8 +828,8 @@ class mfix : public AmrCore
     //
     // Options to control the computing of particle eulerian velocities
     //
-    amrex::Vector<Real> avg_p_g  ;
-    amrex::Vector<Real> avg_ep_g ;
+    amrex::Vector<Real> avg_p_g;
+    amrex::Vector<Real> avg_ep_g;
     amrex::Vector<Real> avg_vel_g;
 
     amrex::Vector<Real> avg_vel_p;
@@ -894,7 +893,7 @@ class mfix : public AmrCore
     Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
     Vector< std::string > vecVarsName;
 
-    Vector< const Vector< std::unique_ptr<MultiFab> >* > chkscalarVars;
+    Vector< const Vector< MultiFab* >* > chkscalarVars;
     Vector< std::string > chkscaVarsName;
 
     /***************************************************************************
@@ -919,15 +918,17 @@ class mfix : public AmrCore
      **************************************************************************/
 
     //! EB levels representing fluid boundary conditions
-    Vector<const EB2::Level *> eb_levels;
+    Vector<const EB2::Level*> eb_levels;
+
     //! EB levels representing particle boundary conditions (same as
     //! `mfix::eb_levels` but might include additional walls at MI BCs).
-    Vector<const EB2::Level *> particle_eb_levels;
+    Vector<const EB2::Level*> particle_eb_levels;
 
     //! EB factory that lives on the fluid grids
-    Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > ebfactory;
+    Vector<const EBFArrayBoxFactory*> ebfactory;
+
     //! EB factory that lives on the particle grids
-    Vector< std::unique_ptr<amrex::EBFArrayBoxFactory> > particle_ebfactory;
+    Vector<EBFArrayBoxFactory*> particle_ebfactory;
 
     bool mfix_update_ebfactory (int a_lev);
 };

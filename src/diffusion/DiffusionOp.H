@@ -24,10 +24,10 @@
 
 class DiffusionOp
 {
-public: 
+  public: 
     // Constructor, with initialisation
     DiffusionOp (amrex::AmrCore* _amrcore, 
-                 amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>* _ebfactory,
+                 amrex::Vector< const amrex::EBFArrayBoxFactory* >* _ebfactory,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_velbc_lo,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_velbc_hi,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_scalbc_lo,
@@ -39,7 +39,7 @@ public:
 
     // Actually do the setup work here
     void setup (amrex::AmrCore* _amrcore, 
-                amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>* _ebfactory);
+                amrex::Vector< const amrex::EBFArrayBoxFactory* >* _ebfactory);
 
     // Read input from ParmParse (solver settings)
     void readParameters ();
@@ -48,36 +48,35 @@ public:
     void setSolverSettings (amrex::MLMG& solver);
 
     // Tensor viscous solve
-    void diffuse_velocity (amrex::Vector<std::unique_ptr<amrex::MultiFab>>& vel, 
-                           const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ep_ro, 
-                           const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& eta, 
+    void diffuse_velocity (amrex::Vector< amrex::MultiFab* >& vel, 
+                           const amrex::Vector< amrex::MultiFab* >& ep_ro, 
+                           const amrex::Vector< amrex::MultiFab* >& eta, 
                            amrex::Real dt);
 
     // Scalar diffusion
-    void diffuse_scalar (amrex::Vector<std::unique_ptr<amrex::MultiFab>>& scal,
-                         const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ep_ro, 
+    void diffuse_scalar (amrex::Vector< amrex::MultiFab* >& scal,
+                         const amrex::Vector< amrex::MultiFab* >& ep_ro, 
                          const amrex::Vector<amrex::Real> mu_s, 
                          amrex::Real dt);
 
     // Explicit tensor viscous term
-    void ComputeDivTau (amrex::Vector<std::unique_ptr<amrex::MultiFab>>& divtau_out,
-                        const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& vel_in,
-                        const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ro_in,
-                        const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ep_in,
-                        const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& eta_in);
+    void ComputeDivTau (amrex::Vector< amrex::MultiFab* >& divtau_out,
+                        const amrex::Vector< amrex::MultiFab* >& vel_in,
+                        const amrex::Vector< amrex::MultiFab* >& ro_in,
+                        const amrex::Vector< amrex::MultiFab* >& ep_in,
+                        const amrex::Vector< amrex::MultiFab* >& eta_in);
 
     // Explicit tensor viscous term
-    void ComputeLapS (amrex::Vector<std::unique_ptr<amrex::MultiFab>>& laps_out,
-                      const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& scal_in,
-                      const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ro_in,
-                      const amrex::Vector<std::unique_ptr<amrex::MultiFab>>& ep_in,
-                      const amrex::Vector<amrex::Real> mu_s);
+    void ComputeLapS (amrex::Vector< amrex::MultiFab* >& laps_out,
+                      const amrex::Vector< amrex::MultiFab* >& scal_in,
+                      const amrex::Vector< amrex::MultiFab* >& ro_in,
+                      const amrex::Vector< amrex::MultiFab* >& ep_in,
+                      const amrex::Vector< amrex::Real > mu_s);
 
-private:
-
+  private:
     // AmrCore data 
     amrex::AmrCore* amrcore;
-    amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>* ebfactory;
+    amrex::Vector< const amrex::EBFArrayBoxFactory* >* ebfactory;
 
     amrex::Vector<amrex::Geometry> geom;
     amrex::Vector<amrex::BoxArray> grids;          
@@ -86,10 +85,10 @@ private:
     int nghost = 0; 
 
     // Boundary conditions
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM> m_velbc_lo;
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM> m_velbc_hi;
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM> m_scalbc_lo;
-    std::array<amrex::LinOpBCType,AMREX_SPACEDIM> m_scalbc_hi;
+    std::array<amrex::LinOpBCType,3> m_velbc_lo;
+    std::array<amrex::LinOpBCType,3> m_velbc_hi;
+    std::array<amrex::LinOpBCType,3> m_scalbc_lo;
+    std::array<amrex::LinOpBCType,3> m_scalbc_hi;
 
     // Internal data used in the matrix solve
     //

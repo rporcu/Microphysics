@@ -12,8 +12,8 @@ using namespace amrex;
 //
 void
 mfix::mfix_set_scalar_bcs (Real time,
-                           Vector< std::unique_ptr<MultiFab> > & trac_in,
-                           Vector< std::unique_ptr<MultiFab> > & mu_g_in)
+                           Vector< MultiFab* > & trac_in,
+                           Vector< MultiFab* > & mu_g_in)
 {
   BL_PROFILE("mfix::mfix_set_scalar_bcs()");
 
@@ -24,7 +24,7 @@ mfix::mfix_set_scalar_bcs (Real time,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-     for (MFIter mfi(*ep_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+     for (MFIter mfi(*ep_g[lev], false); mfi.isValid(); ++mfi)
      {
         set_scalar_bcs(time, lev, (*mu_g_in[lev])[mfi], 3, domain);
 
