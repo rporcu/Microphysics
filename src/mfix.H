@@ -758,24 +758,6 @@ class mfix : public AmrCore
     int mac_mg_max_coarsening_level = 100;
 
     // ***************************************************************
-    // Diffusion solve
-    // ***************************************************************
-
-    // Verbosity
-    int diff_mg_verbose = 0;
-    int diff_mg_cg_verbose = 0;
-
-    // Control MLMG behavior
-    int  diff_mg_maxiter = 100;
-    int  diff_mg_cg_maxiter = 100;
-    Real diff_mg_rtol = 1.0e-11;
-    Real diff_mg_atol = 1.0e-14;
-    std::string diff_bottom_solver_type;
-
-    // Max coarsening level
-    int  diff_mg_max_coarsening_level = 100;
-
-    // ***************************************************************
 
     // Tolerance to check for steady state --
     //    this must be specified in the inputs file
