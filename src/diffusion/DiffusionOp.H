@@ -59,6 +59,9 @@ class DiffusionOp
                          const amrex::Vector<amrex::Real> mu_s, 
                          amrex::Real dt);
 
+    void diffuse_volfrac (amrex::Vector< amrex::MultiFab* >& scal,
+                          amrex::Real doceff);
+
     // Explicit tensor viscous term
     void ComputeDivTau (amrex::Vector< amrex::MultiFab* >& divtau_out,
                         const amrex::Vector< amrex::MultiFab* >& vel_in,
@@ -116,7 +119,7 @@ class DiffusionOp
     // Options to control MLMG behavior
     int mg_verbose = 0;
     int mg_cg_verbose = 0;
-    int mg_max_iter = 100;
+    int mg_maxiter = 100;
     int mg_cg_maxiter = 100;
     int mg_max_fmg_iter = 0;
     int mg_max_coarsening_level = 100;
