@@ -592,22 +592,6 @@ class mfix : public AmrCore
     // Boundary conditions flags
     Vector< iMultiFab* > flag;
 
-    // Gas pressure fraction
-    Vector< MultiFab* > p_g;
-    Vector< MultiFab* > p_go;
-
-    // Gas density
-    Vector< MultiFab* > ro_g;
-    Vector< MultiFab* > ro_go;
-
-    // Tracer in gas
-    Vector< MultiFab* > trac;
-    Vector< MultiFab* > trac_o;
-
-    // Gas velocity
-    Vector< MultiFab* > vel_g;
-    Vector< MultiFab* > vel_go;
-
     // Base state pressure
     Vector< MultiFab* > p0_g;
 

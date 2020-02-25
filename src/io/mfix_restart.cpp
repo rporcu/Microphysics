@@ -192,9 +192,9 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
           if (Nrep == IntVect::TheUnitVector())
           {
-              // Simply copy mf_vel into vel_g, mf_gp into gp
-              vel_g[lev] -> copy(mf_vel, 0, 0, 3, 0, 0);
-                 gp[lev] -> copy(mf_gp , 0, 0, 3, 0, 0);
+            // Simply copy mf_vel into vel_g, mf_gp into gp
+            m_leveldata[lev]->vel_g->copy(mf_vel, 0, 0, 3, 0, 0);
+            gp[lev]->copy(mf_gp, 0, 0, 3, 0, 0);
 
           } else {
 
@@ -211,10 +211,10 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                mf_gp.copyTo(single_fab_gp);
 
               // Copy and replicate mf into velocity
-              for (MFIter mfi(*vel_g[lev], false); mfi.isValid(); ++mfi)
+              for (MFIter mfi(*m_leveldata[lev]->vel_g, false); mfi.isValid(); ++mfi)
               {
                 int ib = mfi.index();
-                (*vel_g[lev])[ib].copy(single_fab_vel,single_fab_vel.box(),0,mfi.validbox(),0,3);
+                (*m_leveldata[lev]->vel_g)[ib].copy(single_fab_vel,single_fab_vel.box(),0,mfi.validbox(),0,3);
                 (   *gp[lev])[ib].copy(single_fab_gp , single_fab_gp.box(),0,mfi.validbox(),0,3);
               }
           }
@@ -350,17 +350,17 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     {
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
-          (m_leveldata[lev]->ep_g)->FillBoundary(geom[lev].periodicity());
-          (m_leveldata[lev]->ep_go)->FillBoundary(geom[lev].periodicity());
+          m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
+          m_leveldata[lev]->ep_go->FillBoundary(geom[lev].periodicity());
 
-             ro_g[lev]->FillBoundary(geom[lev].periodicity());
-            ro_go[lev]->FillBoundary(geom[lev].periodicity());
+          m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
+          m_leveldata[lev]->ro_go->FillBoundary(geom[lev].periodicity());
 
-              mu_g[lev]->FillBoundary(geom[lev].periodicity());
+          mu_g[lev]->FillBoundary(geom[lev].periodicity());
      
-            // Fill the bc's just in case
-             vel_g[lev]->FillBoundary(geom[lev].periodicity());
-            vel_go[lev]->FillBoundary(geom[lev].periodicity());
+          // Fill the bc's just in case
+          m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
+          m_leveldata[lev]->vel_go->FillBoundary(geom[lev].periodicity());
         }
     }
 

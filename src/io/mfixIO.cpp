@@ -209,9 +209,9 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
              ep_g.nComp(),    ep_g.nGrow(), MFInfo(), *ebfactory[lev]));
 
   // Create a temporary nodal pressure multifab to sum in p_g and p0_g
-  MultiFab pg_nd(p_g[lev]->boxArray(), dmap[lev], 1, 0);
+  MultiFab pg_nd(m_leveldata[lev]->p_g->boxArray(), dmap[lev], 1, 0);
   pg_nd.setVal(0.);
-  MultiFab::Copy(pg_nd, (* p_g[lev]), 0, 0, 1, 0);
+  MultiFab::Copy(pg_nd, (*m_leveldata[lev]->p_g), 0, 0, 1, 0);
   MultiFab::Add (pg_nd, (*p0_g[lev]), 0, 0, 1, 0);
 
   // Create a cell-center version of the combined pressure
@@ -269,7 +269,7 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
                              BL_TO_FORTRAN_BOX(domain),
                              BL_TO_FORTRAN_ANYD(         ep_g[mfi]),
                              BL_TO_FORTRAN_ANYD((     *pg_cc)[mfi]),
-                             BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
+                             BL_TO_FORTRAN_ANYD((*m_leveldata[lev]->vel_g)[mfi]),
                              BL_TO_FORTRAN_ANYD((   *volfrac)[mfi]),
                              &avg_region_x_w[nr], &avg_region_x_e[nr],
                              &avg_region_y_s[nr], &avg_region_y_n[nr],

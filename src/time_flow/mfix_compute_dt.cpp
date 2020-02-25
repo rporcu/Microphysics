@@ -54,18 +54,20 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
 #ifdef _OPENMP
 #pragma omp parallel reduction(max:cfl_max) if (Gpu::notInLaunchRegion())
 #endif
-        for (MFIter mfi(*vel_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
-            const auto& vel       =   vel_g[lev]->array(mfi);
+            const auto& vel       = m_leveldata[lev]->vel_g->array(mfi);
             const auto& ep        = m_leveldata[lev]->ep_g->array(mfi);
-            const auto& ro        =    ro_g[lev]->array(mfi);
+            const auto& ro        = m_leveldata[lev]->ro_g->array(mfi);
             const auto& mu        =    mu_g[lev]->array(mfi);
             const auto& gradp     =      gp[lev]->array(mfi);
             const auto& drag_fab  =    drag[lev]->array(mfi);
             
             Box bx(mfi.tilebox());
 
-            const auto& vel_fab   = static_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
+            const auto& vel_fab   =
+              static_cast<EBFArrayBox const&>((*m_leveldata[lev]->vel_g)[mfi]);
+
             const auto& flags     = vel_fab.getEBCellFlagFab();
             const auto& flags_fab = flags.array();
 

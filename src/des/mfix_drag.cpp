@@ -197,6 +197,11 @@ mfix::mfix_calc_drag_particle (Real time)
 
   // Extrapolate velocity Dirichlet bc's to ghost cells
   int extrap_dir_bcs = 1;
+
+  Vector< MultiFab* > vel_g(nlev, nullptr);
+  for (int lev; lev < nlev; lev++)
+    vel_g[lev] = m_leveldata[lev]->vel_g;
+
   mfix_set_velocity_bcs(time, vel_g, extrap_dir_bcs);
 
   for (int lev = 0; lev < nlev; lev++)

@@ -63,8 +63,9 @@ mfix::mfix_diffuse_array (const Vector< MultiFab* > & mf_to_diffuse,
      ebtensorop.setEBShearViscosity(lev, dcoeff_mf);
 
      // This sets the spatially varying A coefficients
-     MultiFab a_coeff(ro_g[lev]->boxArray(), ro_g[lev]->DistributionMap(), 1,
-                      ro_g[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+     MultiFab a_coeff(m_leveldata[lev]->ro_g->boxArray(),
+                      m_leveldata[lev]->ro_g->DistributionMap(), 1,
+                      m_leveldata[lev]->ro_g->nGrow(), MFInfo(), *ebfactory[lev]);
 
      a_coeff.setVal(1.0);
 

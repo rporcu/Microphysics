@@ -31,10 +31,10 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
   // This is just a sanity check to make sure we're not using covered values
   // We can remove these lines once we're confident in the algoirthm 
-  EB_set_covered(*vel_g[0], 0, 3, 1, covered_val);
-  EB_set_covered(*(m_leveldata[0]->ep_g) , 0, 1, 1, covered_val);
+  EB_set_covered(*m_leveldata[0]->vel_g, 0, 3, 1, covered_val);
+  EB_set_covered(*m_leveldata[0]->ep_g, 0, 1, 1, covered_val);
   EB_set_covered(*mu_g[0] , 0, 1, 1, covered_val);
-  EB_set_covered(*ro_g[0] , 0, 1, 1, covered_val);
+  EB_set_covered(*m_leveldata[0]->ro_g, 0, 1, 1, covered_val);
 
   for (int lev = 0; lev < nlev; lev++)
   {
@@ -48,10 +48,10 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
     if (OnSameGrids)
     {
-      ep_ptr  =  m_leveldata[lev]->ep_g;
-      ro_ptr  =  ro_g[lev];
-      mu_ptr  =  mu_g[lev];
-      vel_ptr = vel_g[lev];
+      ep_ptr  = m_leveldata[lev]->ep_g;
+      ro_ptr  = m_leveldata[lev]->ro_g;
+      mu_ptr  = mu_g[lev];
+      vel_ptr = m_leveldata[lev]->vel_g;
     }
     else
     {
@@ -60,10 +60,10 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
       // Temporary arrays  -- copies with no ghost cells 
       ep_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->ep_g->nComp(), 0);
-      ep_ptr->copy(*(m_leveldata[lev]->ep_g), 0, 0, 1, 0, 0);
+      ep_ptr->copy(*m_leveldata[lev]->ep_g, 0, 0, 1, 0, 0);
 
-      ro_ptr = new MultiFab(pba, pdm, ro_g[lev]->nComp(), 0);
-      ro_ptr->copy(*ro_g[lev], 0, 0, 1, 0, 0);
+      ro_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->ro_g->nComp(), 0);
+      ro_ptr->copy(*m_leveldata[lev]->ro_g, 0, 0, 1, 0, 0);
 
       mu_ptr = new MultiFab(pba, pdm, mu_g[lev]->nComp(), 0);
       mu_ptr->copy(*mu_g[lev], 0, 0, 1, 0, 0);
@@ -72,9 +72,11 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                                        {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                                        EBSupport::basic);
 
-      int ng = vel_g[lev]->nGrow();
-      vel_ptr = new MultiFab(pba, pdm, vel_g[lev]->nComp(), ng, MFInfo(), ebfactory_loc);
-      vel_ptr->copy(*vel_g[lev], 0, 0, vel_g[lev]->nComp(), ng, ng);
+      int ng = m_leveldata[lev]->vel_g->nGrow();
+      vel_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->vel_g->nComp(), ng,
+                             MFInfo(), ebfactory_loc);
+      vel_ptr->copy(*m_leveldata[lev]->vel_g, 0, 0,
+                    m_leveldata[lev]->vel_g->nComp(), ng, ng);
       vel_ptr->FillBoundary(geom[lev].periodicity());
     }
 

@@ -36,8 +36,8 @@ mfix::InitIOChkData ()
 
     for (int lev(0); lev < nlev; ++lev) {
       chkscalarVars[0][lev] = &(m_leveldata[lev]->ep_g);
-      chkscalarVars[1][lev] = &p_g[lev];
-      chkscalarVars[2][lev] = &ro_g[lev];
+      chkscalarVars[1][lev] = &(m_leveldata[lev]->p_g);
+      chkscalarVars[2][lev] = &(m_leveldata[lev]->ro_g);
       chkscalarVars[3][lev] = &(m_leveldata[lev]->ep_g);
       chkscalarVars[4][lev] = &mu_g[lev];
       chkscalarVars[5][lev] = &level_sets[lev];
@@ -128,7 +128,7 @@ mfix::WriteCheckPointFile (std::string& check_file,
        for (int lev = 0; lev < nlevels; ++lev) {
 
           // This writes all three velocity components
-          VisMF::Write( (*vel_g[lev]),
+          VisMF::Write( (*m_leveldata[lev]->vel_g),
             amrex::MultiFabFileFullPrefix(lev, checkpointname,
                   level_prefix, vecVarsName[0]));
 

@@ -806,16 +806,19 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
           } else {
 
             init_fluid(sbx, bx, domain,
-                       ep_g[mfi], (*ro_g[lev])[mfi],
-                       (*trac[lev])[mfi], (*p_g[lev])[mfi],
-                       (*vel_g[lev])[mfi], (*mu_g[lev])[mfi],
+                       (*m_leveldata[lev]->ep_g)[mfi],
+                       (*m_leveldata[lev]->ro_g)[mfi],
+                       (*m_leveldata[lev]->trac)[mfi],
+                       (*m_leveldata[lev]->p_g)[mfi],
+                       (*m_leveldata[lev]->vel_g)[mfi],
+                       (*mu_g[lev])[mfi],
                        dx, dy, dz, xlen, ylen, zlen, test_tracer_conservation);
           }
        }
 
        // Make sure to fill the "old state" before we start ...
-       MultiFab::Copy(  *ro_go[lev], *ro_g[lev], 0, 0, 1, 0);
-       MultiFab::Copy( *trac_o[lev], *trac[lev], 0, 0, 1, 0);
+       MultiFab::Copy(*m_leveldata[lev]->ro_go, *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
+       MultiFab::Copy(*m_leveldata[lev]->trac_o, *m_leveldata[lev]->trac, 0, 0, 1, 0);
     }
 
     mfix_set_p0();
@@ -826,14 +829,14 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
     for (int lev = 0; lev < nlev; lev++)
     {
-       m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
-       ro_g[lev]->FillBoundary(geom[lev].periodicity());
-       mu_g[lev]->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
+      mu_g[lev]->FillBoundary(geom[lev].periodicity());
 
       if (advect_tracer)
-         trac[lev]->FillBoundary(geom[lev].periodicity());
+        m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
 
-       vel_g[lev]->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
     }
 
     if (is_restarting == 0)
@@ -856,11 +859,27 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        // This sets bcs for ep_g and mu_g
        Real time = 0.0;
 
-       mfix_set_density_bcs(time,ro_g);
-       mfix_set_density_bcs(time,ro_go);
+       Vector< MultiFab* > ro_g(nlev, nullptr);
+       for (int lev(0); lev < nlev; ++lev)
+         ro_g[lev] = m_leveldata[lev]->ro_g;
 
-       mfix_set_scalar_bcs(time,trac  ,mu_g);
-       mfix_set_scalar_bcs(time,trac_o,mu_g);
+       Vector< MultiFab* > ro_go(nlev, nullptr);
+       for (int lev(0); lev < nlev; ++lev)
+         ro_go[lev] = m_leveldata[lev]->ro_go;
+
+       mfix_set_density_bcs(time, ro_g);
+       mfix_set_density_bcs(time, ro_go);
+
+       Vector< MultiFab* > trac(nlev, nullptr);
+       for (int lev(0); lev < nlev; ++lev)
+         trac[lev] = m_leveldata[lev]->trac;
+
+       Vector< MultiFab* > trac_o(nlev, nullptr);
+       for (int lev(0); lev < nlev; ++lev)
+         trac_o[lev] = m_leveldata[lev]->trac_o;
+
+       mfix_set_scalar_bcs(time, trac, mu_g);
+       mfix_set_scalar_bcs(time, trac_o, mu_g);
 
        // Project the initial velocity field
        if (do_initial_proj)
@@ -906,18 +925,23 @@ mfix::mfix_set_bc0 ()
      }
 
      ep_g.FillBoundary(geom[lev].periodicity());
-     ro_g[lev]->FillBoundary(geom[lev].periodicity());
+     m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
      if (advect_tracer)
-        trac[lev]->FillBoundary(geom[lev].periodicity());
+       m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
    }
 
    // Put velocity Dirichlet bc's on faces
    Real time = 0.0;
    int extrap_dir_bcs = 0;
-   mfix_set_velocity_bcs(time,vel_g,extrap_dir_bcs);
+
+   Vector< MultiFab* > vel_g(nlev, nullptr);
+   for (int lev(0); lev < nlev; ++lev)
+     vel_g[lev] = m_leveldata[lev]->vel_g;
+
+   mfix_set_velocity_bcs(time, vel_g, extrap_dir_bcs);
 
    for (int lev = 0; lev < nlev; lev++)
-     vel_g[lev]->FillBoundary(geom[lev].periodicity());
+     m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
 }
 
 void

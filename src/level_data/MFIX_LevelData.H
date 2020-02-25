@@ -19,6 +19,23 @@ class LevelData
     // Void fraction
     amrex::MultiFab* ep_g;
     amrex::MultiFab* ep_go;
+    
+    // Gas pressure fraction
+    amrex::MultiFab* p_g;
+    amrex::MultiFab* p_go;
+
+    // Gas density
+    amrex::MultiFab* ro_g;
+    amrex::MultiFab* ro_go;
+
+    // Tracer in gas
+    amrex::MultiFab* trac;
+    amrex::MultiFab* trac_o;
+
+    // Gas velocity
+    amrex::MultiFab* vel_g;
+    amrex::MultiFab* vel_go;
+
 };
 
 #endif
