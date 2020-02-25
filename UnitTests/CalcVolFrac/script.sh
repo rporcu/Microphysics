@@ -22,14 +22,14 @@ mkdir $rundir
 cp $0 $rundir
 cp inputs $rundir
 cp mfix.dat $rundir
-cd $rundir
+cd $rundir || exit
 
 # 1. Run normally
 echo "##################################################################"
 echo "RUN ONLY MPI"
 echo
 ${JSRUN} ${EXE} inputs
-echo 
+echo
 echo "##################################################################"
 echo "RUN WITH CUDA"
 ${JSRUN} --smpiargs="-gpu" ${CUDA_EXE} inputs

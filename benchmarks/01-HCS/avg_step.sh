@@ -1,4 +1,6 @@
-#/bin/bash -l
+#!/bin/bash -l
+
+set -euxo pipefail
 
 FILE=$1
 
