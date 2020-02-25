@@ -35,8 +35,6 @@ void DiffusionOp::diffuse_velocity (Vector< MultiFab* >& vel_in,
         // Compute the spatially varying b coefficients (on faces) to equal the
         // apparent viscosity
         average_cellcenter_to_face(GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev]);
-        for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
-            b[lev][dir]->FillBoundary(geom[lev].periodicity());
         
         // This sets the coefficients
         vel_matrix->setACoeffs(lev, (*ep_ro_in[lev]));

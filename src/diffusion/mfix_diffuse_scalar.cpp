@@ -37,9 +37,6 @@ void DiffusionOp::diffuse_scalar (Vector< MultiFab* >& scal_in,
            for(int n = 0; n < ntrac; n++)
              b[lev][dir]->setVal(mu_s[n],n,1);
 
-        for(int dir = 0; dir < 3; dir++)
-            b[lev][dir]->FillBoundary(geom[lev].periodicity());
-
         // This sets the coefficients
         scal_matrix->setACoeffs (lev, (*ep_ro_in[lev]));
         scal_matrix->setBCoeffs (lev, GetArrOfConstPtrs(b[lev]));

@@ -35,9 +35,6 @@ void DiffusionOp::diffuse_volfrac (Vector< MultiFab* >& scal_in,
            for(int n = 0; n < ntrac; n++)
              b[lev][dir]->setVal(dcoeff,1);
 
-        for(int dir = 0; dir < 3; dir++)
-            b[lev][dir]->FillBoundary(geom[lev].periodicity());
-
         // This sets the coefficients
         scal_matrix->setACoeffs (lev, 1.0);
         scal_matrix->setBCoeffs (lev, GetArrOfConstPtrs(b[lev]));
