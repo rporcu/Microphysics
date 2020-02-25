@@ -554,10 +554,6 @@ class mfix : public AmrCore
                                Vector< MultiFab* >&   laps_old,
                                Real time, Real dt, bool proj_2);
 
-    void mfix_diffuse_scalar (const amrex::Vector< MultiFab* >& mf_eps, amrex::Real);
-
-    void mfix_diffuse_array (const amrex::Vector< MultiFab* >& mf_drag, amrex::Real);
-
     void mfix_compute_diveu (Real time);
 
     void mfix_print_max_vel (int lev);
