@@ -145,6 +145,8 @@ mfix::Regrid ()
             if (DEM::solve)
                 RegridLevelSetArray(base_lev);
         }
+    } else {
+        amrex::Abort("load_balance_type must be KnapSack or SFC");
     }
 
     if (DEM::solve)

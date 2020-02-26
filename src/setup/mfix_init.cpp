@@ -133,7 +133,7 @@ mfix::InitParams ()
     if (advect_tracer && !advect_density)
       amrex::Abort("Cant advect tracer without advecting density");
 
-    // The default type is "KnapSack"
+    // The default type is "KnapSack"; alternative is "SFC"
     pp.query("load_balance_type", load_balance_type);
     pp.query("knapsack_weight_type", knapsack_weight_type);
     pp.query("load_balance_fluid", load_balance_fluid);
@@ -395,12 +395,9 @@ BoxArray mfix::MakeBaseGrids () const
     // We only call ChopGrids if dividing up the grid using max_grid_size didn't
     //    create enough grids to have at least one grid per processor.
     // This option is controlled by "refine_grid_layout" which defaults to true.
-
     if ( refine_grid_layout &&
-         ba.size() < ParallelDescriptor::NProcs() &&
-         (load_balance_type == "KnapSack" || load_balance_type == "SFC") ) {
-        ChopGrids(geom[0].Domain(), ba, ParallelDescriptor::NProcs());
-    }
+         ba.size() < ParallelDescriptor::NProcs() ) 
+           ChopGrids(geom[0].Domain(), ba, ParallelDescriptor::NProcs());
 
     if (ba == grids[0]) {
         ba = grids[0];  // to avoid dupliates
@@ -563,31 +560,29 @@ void mfix::InitLevelData (Real time)
 
       pc->Redistribute();
 
-      // used in load balancing
-      if (load_balance_type == "KnapSack" || load_balance_type == "SFC")
-      {
-          for (int lev = 0; lev < nlev; lev++)
-          {
-             particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                               pc->ParticleDistributionMap(lev), 1, 0);
-             particle_cost[lev]->setVal(0.0);
-          }
-      }
-
       Real end_init_part = ParallelDescriptor::second() - strt_init_part;
       ParallelDescriptor::ReduceRealMax(end_init_part, ParallelDescriptor::IOProcessorNumber());
       amrex::Print() << "Time spent in initializing particles " << end_init_part << std::endl;
     }
 
+    // Used in load balancing
+    if (DEM::solve)
+    {
+      for (int lev = 0; lev < nlev; lev++)
+      {
+         particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                           pc->ParticleDistributionMap(lev), 1, 0);
+         particle_cost[lev]->setVal(0.0);
+      }
+    }
+
+    // Used in load balancing
     if (FLUID::solve)
     {
-       if (load_balance_type == "KnapSack" || load_balance_type == "SFC")
+       for (int lev = 0; lev < nlev; lev++)
        {
-          for (int lev = 0; lev < nlev; lev++)
-          {
-             fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
-             fluid_cost[lev]->setVal(0.0);
-          }
+          fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
+          fluid_cost[lev]->setVal(0.0);
        }
     }
 }
@@ -641,19 +636,19 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 
         }
 
-        for (int lev = 0; lev < nlev; lev++)
+        // We need to do this *after* restart (hence putting this here not
+        // in Init) because we may want to change the particle_max_grid_size on restart.
+        if ( dual_grid && particle_max_grid_size_x > 0
+                       && particle_max_grid_size_y > 0
+                       && particle_max_grid_size_z > 0)
         {
-            // We need to do this *after* restart (hence putting this here not
-            // in Init) because we may want to change the particle_max_grid_size on restart.
-            if ( (load_balance_type == "KnapSack" || load_balance_type == "SFC") &&
-                 dual_grid && particle_max_grid_size_x > 0
-                           && particle_max_grid_size_y > 0
-                           && particle_max_grid_size_z > 0)
+            IntVect particle_max_grid_size(particle_max_grid_size_x,
+                                           particle_max_grid_size_y,
+                                           particle_max_grid_size_z);
+
+            for (int lev = 0; lev < nlev; lev++)
             {
                 BoxArray particle_ba(geom[lev].Domain());
-                IntVect particle_max_grid_size(particle_max_grid_size_x,
-                                               particle_max_grid_size_y,
-                                               particle_max_grid_size_z);
                 particle_ba.maxSize(particle_max_grid_size);
                 DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
                 pc->Regrid(particle_dm, particle_ba);
