@@ -219,6 +219,8 @@ class mfix : public AmrCore
                                      Vector< MultiFab* >& ep_w_mac,
                                      Vector< MultiFab* >& ep_g);
 
+    void mfix_correct_small_cells (Vector< MultiFab*>& vel_in);
+
     void mfix_set_velocity_bcs (Real time,
                                 Vector< MultiFab* >& vel,
                                 int extrap_dir_bcs) const;
@@ -382,6 +384,7 @@ class mfix : public AmrCore
                                         const FArrayBox& fc_x,
                                         const FArrayBox& fc_y,
                                         const FArrayBox& fc_z,
+                                        const FArrayBox& cell_centroid,
                                         const FArrayBox& volfrac,
                                         const FArrayBox& bndrycent,
                                         const IArrayBox& cc_mask,
@@ -554,10 +557,6 @@ class mfix : public AmrCore
                                Vector< MultiFab* >&   laps_old,
                                Real time, Real dt, bool proj_2);
 
-    void mfix_diffuse_scalar (const amrex::Vector< MultiFab* >& mf_eps, amrex::Real);
-
-    void mfix_diffuse_array (const amrex::Vector< MultiFab* >& mf_drag, amrex::Real);
-
     void mfix_compute_diveu (Real time);
 
     void mfix_print_max_vel (int lev);
@@ -695,24 +694,6 @@ class mfix : public AmrCore
 
     // Max coarsening level
     int mac_mg_max_coarsening_level = 100;
-
-    // ***************************************************************
-    // Diffusion solve
-    // ***************************************************************
-
-    // Verbosity
-    int diff_mg_verbose = 0;
-    int diff_mg_cg_verbose = 0;
-
-    // Control MLMG behavior
-    int  diff_mg_maxiter = 100;
-    int  diff_mg_cg_maxiter = 100;
-    Real diff_mg_rtol = 1.0e-11;
-    Real diff_mg_atol = 1.0e-14;
-    std::string diff_bottom_solver_type;
-
-    // Max coarsening level
-    int  diff_mg_max_coarsening_level = 100;
 
     // ***************************************************************
 

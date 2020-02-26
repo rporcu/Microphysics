@@ -118,3 +118,12 @@ tiled-grid-parallel-openmp-cpu:
     ENABLE_OMP: "1"
     CTEST_CMD: "srun ctest -R TGP"
   <<: *gpu_template
+
+shellcheck:
+  script:
+    - wget https://storage.googleapis.com/shellcheck/shellcheck-stable.linux.x86_64.tar.xz
+    - tar xf shellcheck-stable.linux.x86_64.tar.xz
+    - find . -name "*.sh" -not -path "./subprojects/*" | xargs shellcheck-stable/shellcheck -e SC2086,SC2125,SC2046,SC2129,SC2044
+  tags:
+    - mfix-exa
+  allow_failure: true

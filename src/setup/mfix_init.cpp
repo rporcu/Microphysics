@@ -203,23 +203,6 @@ mfix::InitParams ()
                    << "eb_pad        = " << levelset_eb_pad << std::endl;
   }
 
-  {
-    ParmParse pp_diff("diff");
-    pp_diff.query("mg_verbose", diff_mg_verbose);
-    pp_diff.query("mg_cg_verbose", diff_mg_cg_verbose);
-    pp_diff.query("mg_rtol", diff_mg_rtol);
-    pp_diff.query("mg_atol", diff_mg_atol);
-    pp_diff.query("mg_maxiter", diff_mg_maxiter);
-    pp_diff.query("mg_cg_maxiter", diff_mg_cg_maxiter);
-    pp_diff.query("mg_max_coarsening_level", diff_mg_max_coarsening_level);
-
-    // Default bottom solver here is bicgcg, but alternatives are
-    // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
-    diff_bottom_solver_type = "bicgcg";
-    pp_diff.query("bottom_solver_type", diff_bottom_solver_type);
-  }
-
-
   if (DEM::solve)
   {
     ParmParse pp("particles");

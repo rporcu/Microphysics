@@ -532,6 +532,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1).release();
 
     mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
+    mfix_correct_small_cells (vel_g);
 
     for (int lev(0); lev < nlev; ++lev)
       delete depdt[lev];
@@ -716,6 +717,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0, 1).release();
 
     mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
+    mfix_correct_small_cells (vel_g);
 
     for (int lev(0); lev < nlev; ++lev)
       delete depdt[lev];

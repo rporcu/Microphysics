@@ -119,7 +119,7 @@ void DiffusionOp::readParameters ()
     pp.query("verbose_solver", verbose);
     pp.query("verbose", mg_verbose);
     pp.query("bottom_verbose", mg_cg_verbose);
-    pp.query("maxiter", mg_max_iter);
+    pp.query("maxiter", mg_maxiter);
     pp.query("bottom_maxiter", mg_cg_maxiter);
     pp.query("mg_max_fmg_iter", mg_max_fmg_iter);
     pp.query("mg_max_coarsening_level", mg_max_coarsening_level);
@@ -128,170 +128,6 @@ void DiffusionOp::readParameters ()
     pp.query("bottom_solver", bottom_solver_type);
 }
 
-//
-// Implicit tensor solve for velocity diffusion
-//
-void DiffusionOp::diffuse_velocity (Vector< MultiFab* >& vel_in,
-                                    const Vector< MultiFab* >& ep_ro_in,
-                                    const Vector< MultiFab* >& eta_in,
-                                    Real dt)
-{
-    BL_PROFILE("DiffusionOp::diffuse_velocity");
-
-    int finest_level = amrcore->finestLevel();
-
-    // Update the coefficients of the matrix going into the solve based on the
-    // current state of the simulation. Recall that the relevant matrix is
-    //
-    //      alpha a - beta div ( b grad )   <--->   rho - dt div ( eta grad )
-    //
-    // So the constants and variable coefficients are:
-    //
-    //      alpha: 1
-    //      beta: dt
-    //      a: ro
-    //      b: eta
-
-    // Set alpha and beta
-    vel_matrix->setScalars(1.0, dt);
-
-    for(int lev = 0; lev <= finest_level; lev++)
-    {
-        // Compute the spatially varying b coefficients (on faces) to equal the
-        // apparent viscosity
-        average_cellcenter_to_face(GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev]);
-        for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
-            b[lev][dir]->FillBoundary(geom[lev].periodicity());
-        
-        // This sets the coefficients
-        vel_matrix->setACoeffs(lev, (*ep_ro_in[lev]));
-        vel_matrix->setShearViscosity  (lev, GetArrOfConstPtrs(b[lev]));
-        vel_matrix->setEBShearViscosity(lev, (*eta_in[lev]));
-    }
-
-    if(verbose > 0)
-        amrex::Print() << "Diffusing velocity components all together..." << std::endl; 
-
-    for(int lev = 0; lev <= finest_level; lev++)
-    {
-        // Set the right hand side to equal rho
-        MultiFab::Copy((*rhs[lev]),(*vel_in[lev]), 0, 0, 3, 0);
-
-        // Multiply rhs by rho to get momentum
-        // Note that vel holds the updated velocity:
-        //
-        //      u_old + dt ( - u grad u + div ( eta (grad u)^T ) / rho - grad p / rho + gravity )
-        //
-        for (int i = 0; i < 3; i++)
-           MultiFab::Multiply((*rhs[lev]), (*ep_ro_in[lev]), 0, i, 1, 0);
-
-        // By this point we must have filled the Dirichlet values of phi stored in ghost cells
-        MultiFab::Copy(*phi[lev],*vel_in[lev], 0, 0, 3, 1);
-        phi[lev]->FillBoundary(geom[lev].periodicity());
-        vel_matrix->setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
-
-        // matrix->setEBHomogDirichlet(lev, *eta_in[lev]);
-    }
-
-    MLMG solver(*vel_matrix);
-    setSolverSettings(solver);
-
-    // This ensures that ghost cells of sol are correctly filled when returned from the solver
-    solver.setFinalFillBC(true);
-
-    solver.solve(GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol);
-
-    for(int lev = 0; lev <= finest_level; lev++)
-    {
-        phi[lev]->FillBoundary(geom[lev].periodicity());
-        MultiFab::Copy(*vel_in[lev], *phi[lev], 0, 0, AMREX_SPACEDIM, 1);
-    }
-
-    if(verbose > 0)
-        amrex::Print() << " done!" << std::endl;
-}
-
-//
-// Implicit solve for scalar diffusion
-//
-void DiffusionOp::diffuse_scalar (Vector< MultiFab* >& scal_in,
-                                  const Vector< MultiFab* >& ep_ro_in,
-                                  const Vector< Real > mu_s,
-                                  Real dt)
-{
-    BL_PROFILE("DiffusionOp::diffuse_scalar");
-
-    int finest_level = amrcore->finestLevel();
-
-    // Update the coefficients of the matrix going into the solve based on the current state of the
-    // simulation. Recall that the relevant matrix is
-    //
-    //      alpha a - beta div ( b grad )   <--->   rho - dt div ( mu_s grad )
-    //
-    // So the constants and variable coefficients are:
-    //
-    //      alpha: 1
-    //      beta: dt
-    //      a: ro
-    //      b: eta
-
-    // Set alpha and beta
-    scal_matrix->setScalars(1.0, dt);
-
-    int ntrac = scal_in[0]->nComp();
-
-    for(int lev = 0; lev <= finest_level; lev++)
-    {
-        for(int dir = 0; dir < 3; dir++)
-           for(int n = 0; n < ntrac; n++)
-             b[lev][dir]->setVal(mu_s[n],n,1);
-
-        for(int dir = 0; dir < 3; dir++)
-            b[lev][dir]->FillBoundary(geom[lev].periodicity());
-
-        // This sets the coefficients
-        scal_matrix->setACoeffs (lev, (*ep_ro_in[lev]));
-        scal_matrix->setBCoeffs (lev, GetArrOfConstPtrs(b[lev]));
-    }
-
-    if(verbose > 0)
-        amrex::Print() << "Diffusing tracers one at a time ..." << std::endl; 
-
-    for(int lev = 0; lev <= finest_level; lev++)
-    {
-        // Zero these out just to have a clean start because they have 3 components
-        //      (due to re-use with velocity solve)
-        phi[lev]->setVal(0.0);
-        rhs[lev]->setVal(0.0);
-
-        // Set the right hand side to equal rhs
-        MultiFab::Copy((*rhs[lev]),(*scal_in[lev]), 0, 0, ntrac, 0);
-
-        // Multiply rhs by rho  -- we are solving
-        //
-        //      rho s_star = rho s_old + dt ( - div (rho u s) + rho div (mu (grad s)) )
-        //
-        for(int n = 0; n < ntrac; n++)
-           MultiFab::Multiply((*rhs[lev]), (*ep_ro_in[lev]), 0, n, 1, 0);
-
-        MultiFab::Copy(*phi[lev],*scal_in[lev], 0, 0, ntrac, 1);
-        scal_matrix->setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
-    }
-
-    MLMG solver(*scal_matrix);
-    setSolverSettings(solver);
-
-    // This ensures that ghost cells of sol are correctly filled when returned from the solver
-    solver.setFinalFillBC(true);
-
-    solver.solve(GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol);
-
-    for(int lev = 0; lev <= finest_level; lev++)
-    {
-        phi[lev]->FillBoundary(geom[lev].periodicity());
-        MultiFab::Copy(*scal_in[lev], *phi[lev], 0, 0, ntrac, 1);
-    }
-}
 
 //
 // Set the user-supplied settings for the MLMG solver
@@ -309,7 +145,7 @@ void DiffusionOp::setSolverSettings (MLMG& solver)
         solver.setBottomSolver(MLMG::BottomSolver::hypre);
     }
         // Maximum iterations for MultiGrid / ConjugateGradients
-        solver.setMaxIter(mg_max_iter);
+        solver.setMaxIter(mg_maxiter);
         solver.setMaxFmgIter(mg_max_fmg_iter);
         solver.setCGMaxIter(mg_cg_maxiter);
 
