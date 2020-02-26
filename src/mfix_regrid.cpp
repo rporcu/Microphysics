@@ -10,43 +10,7 @@ mfix::Regrid ()
 
     int base_lev = 0;
 
-    if (load_balance_type == "KDTree")  // KDTree load balancing type
-    {
-        if (DEM::solve)
-           AMREX_ALWAYS_ASSERT(particle_cost[0] == nullptr);
-        if (FLUID::solve)
-           AMREX_ALWAYS_ASSERT(fluid_cost[0]    == nullptr);
-
-       // This creates a new BA and new DM, re-defines the particle BA and DM to be these new ones,
-       //      and calls Redistribute.  This doesn't touch the fluid grids.
-       pc->BalanceParticleLoad_KDTree();
-
-       if (!dual_grid)
-       {
-           SetBoxArray(base_lev, pc->ParticleBoxArray(base_lev));
-           SetDistributionMap(base_lev, pc->ParticleDistributionMap(base_lev));
-
-           // Since we have already allocated the fluid data we need to
-           // re-define those arrays and copy from the old BoxArray to the new
-           // one if the grids and/or dmap have changed.  Note that the
-           // SetBoxArray and SetDistributionMap calls above have re-defined
-           // grids and dmap to be the new ones.
-           if (FLUID::solve)
-               RegridArrays(base_lev);
-       }
-
-       if (FLUID::solve)
-       {
-           mfix_set_p0();
-           mfix_set_bc0();
-       }
-
-       // This calls re-creates a proper particle_ebfactories and regrids all
-       // the multifab that depend on it
-       if (DEM::solve)
-           RegridLevelSetArray(base_lev);
-    }
-    else if (load_balance_type == "KnapSack" || load_balance_type == "SFC") // Knapsack and SFC
+    if (load_balance_type == "KnapSack" || load_balance_type == "SFC") // Knapsack and SFC
     {
         amrex::Print() << "Load balancing using " << load_balance_type << std::endl;
 
@@ -119,11 +83,6 @@ mfix::Regrid ()
         }
         else  // Single-grid regridding
         {
-
-            //NOTE: why are particle costs defined on fluid grids here? Or am I
-            //not supposed to care because the grids are the same? (this might
-            //break if there are more particle grid levels).
-
             MultiFab costs(grids[base_lev], dmap[base_lev], 1, 0);
             costs.setVal(0.0);
 
@@ -186,6 +145,8 @@ mfix::Regrid ()
             if (DEM::solve)
                 RegridLevelSetArray(base_lev);
         }
+    } else {
+        amrex::Abort("load_balance_type must be KnapSack or SFC");
     }
 
     if (DEM::solve)

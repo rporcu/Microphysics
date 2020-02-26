@@ -118,8 +118,6 @@ class MFIXParticleContainer final
 
     amrex::Vector<amrex::RealVect> GetMaxForces ();
 
-    void BalanceParticleLoad_KDTree ();
-
     ///
     /// Write out all particles in the format of the particle_input.dat files so we
     ///       can initialize a run with them
