@@ -49,6 +49,17 @@ class LevelData
     amrex::MultiFab* vort;
 
     amrex::MultiFab* drag;
+    
+    // These are multi-component multifabs
+    amrex::MultiFab* xslopes_u;
+    amrex::MultiFab* yslopes_u;
+    amrex::MultiFab* zslopes_u;
+    amrex::MultiFab* xslopes_s;
+    amrex::MultiFab* yslopes_s;
+    amrex::MultiFab* zslopes_s;
+
+    // div (ep_g * u)
+    amrex::MultiFab* diveu;
 };
 
 #endif

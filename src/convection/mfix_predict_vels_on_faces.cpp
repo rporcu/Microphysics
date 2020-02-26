@@ -81,6 +81,19 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
     // First compute the slopes
     // ****************************************************************************
     int slopes_comp = 0;
+
+    Vector< MultiFab* > xslopes_u(m_leveldata.size(), nullptr);
+    for (int lev(0); lev < m_leveldata.size(); ++lev)
+      xslopes_u[lev] = m_leveldata[lev]->xslopes_u;
+
+    Vector< MultiFab* > yslopes_u(m_leveldata.size(), nullptr);
+    for (int lev(0); lev < m_leveldata.size(); ++lev)
+      yslopes_u[lev] = m_leveldata[lev]->yslopes_u;
+
+    Vector< MultiFab* > zslopes_u(m_leveldata.size(), nullptr);
+    for (int lev(0); lev < m_leveldata.size(); ++lev)
+      zslopes_u[lev] = m_leveldata[lev]->zslopes_u;
+
     mfix_compute_slopes(lev, time, *vel_in[lev], xslopes_u, yslopes_u, zslopes_u, slopes_comp);
 
     // ****************************************************************************

@@ -21,8 +21,7 @@ mfix::mfix_compute_diveu (Real time)
 {
   // Note that the solver imposes the boundary conditions with the right scalings so we don't
   //      fill any ghost cells here.
-  Vector< MultiFab* > epu;
-  epu.resize(nlev);
+  Vector< MultiFab* > epu(nlev, nullptr);
 
   for (int lev = 0; lev < nlev; lev++)
     {
@@ -73,6 +72,10 @@ mfix::mfix_compute_diveu (Real time)
   Box domain(geom[0].Domain());
 
   matrix.setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
+
+  Vector< MultiFab* > diveu(m_leveldata.size(), nullptr);
+  for (int lev(0); lev < m_leveldata.size(); ++lev)
+    diveu[lev] = m_leveldata[lev]->diveu;
 
   matrix.compDivergence(diveu, epu);
 

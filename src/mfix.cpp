@@ -54,17 +54,6 @@ mfix::~mfix ()
     // Level-Set Data
     delete level_sets[lev];
 
-    // These are multi-component multifabs
-    delete xslopes_u[lev];
-    delete yslopes_u[lev];
-    delete zslopes_u[lev];
-    delete xslopes_s[lev];
-    delete yslopes_s[lev];
-    delete zslopes_s[lev];
-
-    // div (ep_g * u)
-    delete diveu[lev];
-
     // RHS for MAC solve
     delete mac_rhs[lev];
 

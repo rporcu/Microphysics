@@ -596,17 +596,6 @@ class mfix : public AmrCore
     // levels: 0) fluid reconstruction, 1..N) particle-wall (refined) collisions
     Vector< MultiFab* > level_sets;
 
-    // These are multi-component multifabs
-    Vector< MultiFab* > xslopes_u;
-    Vector< MultiFab* > yslopes_u;
-    Vector< MultiFab* > zslopes_u;
-    Vector< MultiFab* > xslopes_s;
-    Vector< MultiFab* > yslopes_s;
-    Vector< MultiFab* > zslopes_s;
-
-    // div (ep_g * u)
-    Vector< MultiFab* > diveu;
-
     // RHS for MAC solve
     Vector< MultiFab* > mac_rhs;
 

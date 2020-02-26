@@ -162,6 +162,10 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     nodal_projector->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
     nodal_projector->setAlpha(GetVecOfConstPtrs(ep_g));
 
+    Vector< MultiFab* > diveu(m_leveldata.size(), nullptr);
+    for (int lev(0); lev < m_leveldata.size(); ++lev)
+      diveu[lev] = m_leveldata[lev]->diveu;
+
     nodal_projector->computeRHS(diveu, epu, a_depdt);
     nodal_projector->setCustomRHS(GetVecOfConstPtrs(diveu));
 

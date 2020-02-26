@@ -18,6 +18,13 @@ LevelData::LevelData ()
   , mu_g(nullptr)
   , vort(nullptr)
   , drag(nullptr)
+  , xslopes_u(nullptr)
+  , yslopes_u(nullptr)
+  , zslopes_u(nullptr)
+  , xslopes_s(nullptr)
+  , yslopes_s(nullptr)
+  , zslopes_s(nullptr)
+  , diveu(nullptr)
 {}
 
 LevelData::~LevelData ()
@@ -37,4 +44,11 @@ LevelData::~LevelData ()
   delete mu_g;
   delete vort;
   delete drag;
+  delete xslopes_u;
+  delete yslopes_u;
+  delete zslopes_u;
+  delete xslopes_s;
+  delete yslopes_s;
+  delete zslopes_s;
+  delete diveu;
 }

@@ -102,8 +102,20 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         if (advect_tracer)
         {
             // Convert tracer to (rho * tracer) so we can use conservative update
-            MultiFab::Multiply(*trac_in[lev],*ro_g_in[lev],0,0,1,trac_in[lev]->nGrow());
+            MultiFab::Multiply(*trac_in[lev], *ro_g_in[lev], 0, 0, 1, trac_in[lev]->nGrow());
         }
+
+        Vector< MultiFab* > xslopes_s(m_leveldata.size(), nullptr);
+        for (int lev(0); lev < m_leveldata.size(); ++lev)
+          xslopes_s[lev] = m_leveldata[lev]->xslopes_s;
+
+        Vector< MultiFab* > yslopes_s(m_leveldata.size(), nullptr);
+        for (int lev(0); lev < m_leveldata.size(); ++lev)
+          yslopes_s[lev] = m_leveldata[lev]->yslopes_s;
+
+        Vector< MultiFab* > zslopes_s(m_leveldata.size(), nullptr);
+        for (int lev(0); lev < m_leveldata.size(); ++lev)
+          zslopes_s[lev] = m_leveldata[lev]->zslopes_s;
 
         // Compute slopes of density and tracer
         if (advect_density)
@@ -125,6 +137,19 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         // Compute div (ep_g u u) -- the update for velocity
         // **************************************************
         conv_comp = 0; state_comp = 0; num_comp = 3; slopes_comp = 0;
+
+        Vector< MultiFab* > xslopes_u(m_leveldata.size(), nullptr);
+        for (int lev(0); lev < m_leveldata.size(); ++lev)
+          xslopes_u[lev] = m_leveldata[lev]->xslopes_u;
+
+        Vector< MultiFab* > yslopes_u(m_leveldata.size(), nullptr);
+        for (int lev(0); lev < m_leveldata.size(); ++lev)
+          yslopes_u[lev] = m_leveldata[lev]->yslopes_u;
+
+        Vector< MultiFab* > zslopes_u(m_leveldata.size(), nullptr);
+        for (int lev(0); lev < m_leveldata.size(); ++lev)
+          zslopes_u[lev] = m_leveldata[lev]->zslopes_u;
+
         mfix_compute_fluxes(lev, fx, fy, fz, vel_in, state_comp, num_comp,
                             xslopes_u, yslopes_u, zslopes_u, slopes_comp,
                             u_mac, v_mac, w_mac);

@@ -267,7 +267,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 
         // div(ep_g.u)
         if( plt_diveu   == 1) {
-          amrex::average_node_to_cellcenter(*mf[lev], lc, (*diveu[lev]), 0, 1);
+          amrex::average_node_to_cellcenter(*mf[lev], lc, *m_leveldata[lev]->diveu, 0, 1);
           lc += 1;
         }
 
