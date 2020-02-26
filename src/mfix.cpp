@@ -10,7 +10,7 @@
 #include <MFIX_FLUID_Parms.H>
 
 std::string      mfix::particle_init_type   = "AsciiFile";
-std::string      mfix::load_balance_type    = "FixedSize";
+std::string      mfix::load_balance_type    = "KnapSack";
 std::string      mfix::knapsack_weight_type = "RunTimeCosts";
 int              mfix::load_balance_fluid   = 1;
 int              mfix::knapsack_nmax        = 128;

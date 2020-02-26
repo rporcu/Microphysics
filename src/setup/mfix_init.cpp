@@ -133,8 +133,7 @@ mfix::InitParams ()
     if (advect_tracer && !advect_density)
       amrex::Abort("Cant advect tracer without advecting density");
 
-    // The default type is "FixedSize" but we can over-write that in the inputs
-    // file with "KDTree" or "KnapSack"
+    // The default type is "KnapSack"
     pp.query("load_balance_type", load_balance_type);
     pp.query("knapsack_weight_type", knapsack_weight_type);
     pp.query("load_balance_fluid", load_balance_fluid);
@@ -158,23 +157,14 @@ mfix::InitParams ()
     pp_mac.query("mg_atol", mac_mg_atol);
     pp_mac.query("mg_max_coarsening_level", mac_mg_max_coarsening_level);
 
-    AMREX_ALWAYS_ASSERT(load_balance_type.compare("FixedSize") == 0 or
-                        load_balance_type.compare("KDTree") == 0    or
-                        load_balance_type.compare("KnapSack") == 0  or
+    AMREX_ALWAYS_ASSERT(load_balance_type.compare("KnapSack") == 0  or
                         load_balance_type.compare("SFC") == 0);
 
     AMREX_ALWAYS_ASSERT(knapsack_weight_type.compare("RunTimeCosts") == 0 or
                         knapsack_weight_type.compare("NumParticles") == 0);
 
-    // We ensure that we always use the dual grid formulation when using KDTree, and
-    //           that we  never use the dual grid formulation otherwise
-    if (load_balance_type.compare("KDTree") == 0) {
-      dual_grid = true;
-    }
-    else {
-      ParmParse amr_pp("amr");
-      amr_pp.query("dual_grid", dual_grid);
-    }
+    ParmParse amr_pp("amr");
+    amr_pp.query("dual_grid", dual_grid);
 
     if (load_balance_type.compare("KnapSack") == 0)
       pp.query("knapsack_nmax", knapsack_nmax);
@@ -408,7 +398,7 @@ BoxArray mfix::MakeBaseGrids () const
 
     if ( refine_grid_layout &&
          ba.size() < ParallelDescriptor::NProcs() &&
-         (load_balance_type == "FixedSize" || load_balance_type == "KnapSack" || load_balance_type == "SFC") ) {
+         (load_balance_type == "KnapSack" || load_balance_type == "SFC") ) {
         ChopGrids(geom[0].Domain(), ba, ParallelDescriptor::NProcs());
     }
 
@@ -651,12 +641,10 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 
         }
 
-
         for (int lev = 0; lev < nlev; lev++)
         {
             // We need to do this *after* restart (hence putting this here not
-            // in Init) because we may want to move from KDTree to Knapsack, or
-            // change the particle_max_grid_size on restart.
+            // in Init) because we may want to change the particle_max_grid_size on restart.
             if ( (load_balance_type == "KnapSack" || load_balance_type == "SFC") &&
                  dual_grid && particle_max_grid_size_x > 0
                            && particle_max_grid_size_y > 0

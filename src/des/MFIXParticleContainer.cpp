@@ -1071,67 +1071,6 @@ Vector<RealVect> MFIXParticleContainer::GetMaxForces ()
     return max_forces;
 }
 
-void
-MFIXParticleContainer::BalanceParticleLoad_KDTree ()
-{
-  int lev = 0;
-  bool verbose = true;
-  BoxArray old_ba = ParticleBoxArray(lev);
-
-  if (NumberOfParticlesAtLevel(lev) == 0)
-  {
-     amrex::Print() << "No particles so can't use KDTree approach " << std::endl;
-     return;
-  }
-
-  if (verbose)
-  {
-     Vector<long> num_part;
-     num_part = NumberOfParticlesInGrid(0);
-     long min_number = num_part[0];
-     long max_number = num_part[0];
-     for (int i = 0; i < old_ba.size(); i++)
-     {
-        max_number = std::max(max_number, num_part[i]);
-        min_number = std::min(min_number, num_part[i]);
-     }
-     amrex::Print() << "Before KDTree: BA had " << old_ba.size() << " GRIDS " << std::endl;
-     amrex::Print() << "Before KDTree: MIN/MAX NUMBER OF PARTICLES PER GRID  " <<
-                        min_number << " " << max_number << std::endl;
-  }
-
-  Vector<Real> box_costs;
-
-  BoxArray new_ba;
-  Real cell_weight = 0.;
-  loadBalanceKD::balance<MFIXParticleContainer>(*this,
-                                                new_ba,
-                                                ParallelDescriptor::NProcs(),
-                                                cell_weight,
-                                                box_costs);
-
-  // Create a new DM to go with the new BA
-  DistributionMapping new_dm = DistributionMapping::makeKnapSack(box_costs);
-
-  Regrid(new_dm, new_ba);
-
-  if (verbose)
-  {
-     Vector<long> num_part;
-     num_part = NumberOfParticlesInGrid(0);
-     long min_number = num_part[0];
-     long max_number = num_part[0];
-     for (int i = 0; i < new_ba.size(); i++)
-     {
-        max_number = std::max(max_number, num_part[i]);
-        min_number = std::min(min_number, num_part[i]);
-     }
-     amrex::Print() << "After  KDTree: BA had " << new_ba.size() << " GRIDS " << std::endl;
-     amrex::Print() << "After  KDTree: MIN/MAX NUMBER OF PARTICLES PER GRID  " <<
-                        min_number << " " << max_number << std::endl;
-  }
-}
-
 void MFIXParticleContainer::
 ComputeAverageVelocities (const int lev,
                           const amrex::Real time,
