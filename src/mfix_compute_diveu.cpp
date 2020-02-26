@@ -26,18 +26,19 @@ mfix::mfix_compute_diveu (Real time)
 
   for (int lev = 0; lev < nlev; lev++)
     {
+      MultiFab& vel_g = *(m_leveldata[lev]->vel_g);
       // We only need one ghost cell here -- so no need to make it bigger
-      epu[lev] = new MultiFab(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(),
-                              vel_g[lev]->nComp(), 1 , MFInfo(), *ebfactory[lev]);
+      epu[lev] = new MultiFab(vel_g.boxArray(), vel_g.DistributionMap(),
+                              vel_g.nComp(), 1 , MFInfo(), *ebfactory[lev]);
 
       epu[lev]->setVal(1.e200);
 
       Box domain(geom[lev].Domain());
 
-      MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow());
+      MultiFab::Copy(*epu[lev], vel_g, 0, 0, 3, epu[lev]->nGrow());
 
       for (int n = 0; n < 3; n++)
-        MultiFab::Multiply(*epu[lev], *ep_g[lev], 0, n, 1, epu[lev]->nGrow());
+        MultiFab::Multiply(*epu[lev], *(m_leveldata[lev]->ep_g), 0, n, 1, epu[lev]->nGrow());
 
       epu[lev]->FillBoundary(geom[lev].periodicity());
 
@@ -69,7 +70,6 @@ mfix::mfix_compute_diveu (Real time)
 
   // Set domain BCs for Poisson's solver
   // The domain BCs refer to level 0 only
-  int bc_lo[3], bc_hi[3];
   Box domain(geom[0].Domain());
 
   matrix.setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
@@ -78,6 +78,10 @@ mfix::mfix_compute_diveu (Real time)
 
   for(int lev(0); lev < nlev; lev++)
     delete epu[lev];
+
+  Vector< MultiFab* > vel_g(nlev, nullptr);
+  for(int lev(0); lev < nlev; ++lev)
+    vel_g[lev] = m_leveldata[lev]->vel_g;
 
   // Restore velocities to carry Dirichlet values on faces
   int extrap_dir_bcs = 0;

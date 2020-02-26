@@ -14,10 +14,10 @@ mfix::set_bc0 (const Box& sbx,
   const Real mu_g0  = FLUID::mu_g0;
   const Real trac_0 = FLUID::trac_0;
 
-  Array4<Real> const& a_ep_g = ep_g[lev]->array(*mfi);
-  Array4<Real> const& a_ro_g = ro_g[lev]->array(*mfi);
-  Array4<Real> const& a_trac = trac[lev]->array(*mfi);
-  Array4<Real> const& a_mu_g = mu_g[lev]->array(*mfi);
+  Array4<Real> const& a_ep_g = m_leveldata[lev]->ep_g->array(*mfi);
+  Array4<Real> const& a_ro_g = m_leveldata[lev]->ro_g->array(*mfi);
+  Array4<Real> const& a_trac = m_leveldata[lev]->trac->array(*mfi);
+  Array4<Real> const& a_mu_g = m_leveldata[lev]->mu_g->array(*mfi);
 
   const IntVect sbx_lo(sbx.loVect());
   const IntVect sbx_hi(sbx.hiVect());

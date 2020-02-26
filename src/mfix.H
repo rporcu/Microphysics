@@ -33,10 +33,13 @@
 #include <mfix_des_F.H>
 #include <mfix_eb_if.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_LevelData.H>
 
 
+// Drag type enumeration
 enum DragType {Invalid=-1, WenYu, Gidaspow, BVK2, UserDrag};
 
+// Deposition scheme enumeration
 enum DepositionScheme {trilinear, square_dpvm, true_dpvm, centroid};
 
 class mfix : public AmrCore
@@ -222,7 +225,7 @@ class mfix : public AmrCore
                                 Vector< MultiFab* >& vel,
                                 int extrap_dir_bcs) const;
 
-    void mfix_set_epg_bcs (const amrex::Vector< MultiFab* >& mf_eps) const;
+    void mfix_set_epg_bcs (const Vector< MultiFab* >& ep_g) const;
 
     void mfix_set_density_bcs (Real time,
                                Vector< MultiFab* >& ro_g);
@@ -575,39 +578,6 @@ class mfix : public AmrCore
     // intersection/union
     int ct_ls_mf;
 
-    struct LevelData {
-        LevelData () = default;
-        LevelData (amrex::BoxArray const& ba,
-                   amrex::DistributionMapping const& dm,
-                   amrex::FabFactory<amrex::FArrayBox> const& fact,
-                   int ntrac, int ng_state,
-                   bool use_godunov, bool implicit_diffusion, bool advect_tracer);
-        // cell-centered multifabs
-        amrex::MultiFab velocity;
-        amrex::MultiFab velocity_o;
-        amrex::MultiFab density;
-        amrex::MultiFab density_o;
-        amrex::MultiFab tracer;
-        amrex::MultiFab tracer_o;
-        amrex::MultiFab gp; // pressure gradient
-        // nodal multifabs
-        amrex::MultiFab p;
-        //
-        amrex::MultiFab conv_velocity;
-        amrex::MultiFab conv_velocity_o;
-        amrex::MultiFab conv_density;
-        amrex::MultiFab conv_density_o;
-        amrex::MultiFab conv_tracer;
-        amrex::MultiFab conv_tracer_o;
-        //
-        amrex::MultiFab divtau;
-        amrex::MultiFab divtau_o;
-        amrex::MultiFab laps;
-        amrex::MultiFab laps_o;
-    };
-
-    amrex::Vector<std::unique_ptr<LevelData> > m_leveldata;
-
     // Boundary conditions types
     Vector< IArrayBox* > bc_ilo;
     Vector< IArrayBox* > bc_ihi;
@@ -616,42 +586,10 @@ class mfix : public AmrCore
     Vector< IArrayBox* > bc_klo;
     Vector< IArrayBox* > bc_khi;
 
+    amrex::Vector< std::shared_ptr<LevelData> > m_leveldata;
+
     // Boundary conditions flags
     Vector< iMultiFab* > flag;
-
-    // Void fraction
-    Vector< MultiFab* > ep_g;
-    Vector< MultiFab* > ep_go;
-
-    // Gas pressure fraction
-    Vector< MultiFab* > p_g;
-    Vector< MultiFab* > p_go;
-
-    // Gas density
-    Vector< MultiFab* > ro_g;
-    Vector< MultiFab* > ro_go;
-
-    // Tracer in gas
-    Vector< MultiFab* > trac;
-    Vector< MultiFab* > trac_o;
-
-    // Gas velocity
-    Vector< MultiFab* > vel_g;
-    Vector< MultiFab* > vel_go;
-
-    // Base state pressure
-    Vector< MultiFab* > p0_g;
-
-    // Pressure gradients
-    Vector< MultiFab* > gp;
-
-    // Molecular viscosity
-    Vector< MultiFab* > mu_g;
-
-    // Cell-based
-    Vector< MultiFab* > vort;
-
-    Vector< MultiFab* > drag;
 
     // Level-Set Data => used for particle-wall collisions and fluid
     // reconstruction in particle drag calculation. NOTE: this has at least 2
@@ -728,7 +666,7 @@ class mfix : public AmrCore
     Real nodal_mg_atol = 1.0e-14;
 
     // Max coarsening level
-    int  nodal_mg_max_coarsening_level = 100;
+    int nodal_mg_max_coarsening_level = 100;
 
     // Linear operator
     std::shared_ptr<MLNodeLaplacian> nodal_matrix;
@@ -784,10 +722,10 @@ class mfix : public AmrCore
     // Options to control time stepping
     Real cfl = 0.5;
     Real fixed_dt;
-    Real dt_min  = 0.0;           // Min dt allowed
-    Real dt_max  = 1.e14;         // Max dt allowed
+    Real dt_min = 0.;    // Min dt allowed
+    Real dt_max = 1.e14; // Max dt allowed
 
-    Real prev_dt = 0.0;           // dt used in previous timestep
+    Real prev_dt = 0.; // dt used in previous timestep
 
     int particle_max_grid_size_x = -1;
     int particle_max_grid_size_y = -1;
@@ -868,10 +806,10 @@ class mfix : public AmrCore
      **************************************************************************/
 
     // Variables to simplify checkpoint IO
-    Vector< const Vector< std::unique_ptr<MultiFab> >* > vectorVars;
+    Vector< Vector< MultiFab** > > vectorVars;
     Vector< std::string > vecVarsName;
 
-    Vector< const Vector< MultiFab* >* > chkscalarVars;
+    Vector< Vector< MultiFab** > > chkscalarVars;
     Vector< std::string > chkscaVarsName;
 
     /***************************************************************************

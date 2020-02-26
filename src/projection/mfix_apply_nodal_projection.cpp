@@ -43,13 +43,19 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
         {
             // Convert velocities to momenta
             for (int n(0); n < 3; ++n)
-                MultiFab::Multiply(*vel_g[lev], *ro_g[lev] , 0, n, 1, vel_g[lev]->nGrow() );
+                MultiFab::Multiply(*m_leveldata[lev]->vel_g,
+                                   *m_leveldata[lev]->ro_g,
+                                   0, n, 1, m_leveldata[lev]->vel_g->nGrow());
 
-            MultiFab::Saxpy(*vel_g[lev], a_dt, *gp[lev], 0, 0, 3, vel_g[lev]->nGrow());
+            MultiFab::Saxpy(*m_leveldata[lev]->vel_g, a_dt,
+                            *m_leveldata[lev]->gp, 0, 0, 3,
+                            m_leveldata[lev]->vel_g->nGrow());
 
             // Convert momenta back to velocities
             for (int n(0); n < 3; n++)
-                MultiFab::Divide(*vel_g[lev], *ro_g[lev], 0, n, 1, vel_g[lev]->nGrow() );
+                MultiFab::Divide(*m_leveldata[lev]->vel_g,
+                                 *m_leveldata[lev]->ro_g, 0, n, 1,
+                                 m_leveldata[lev]->vel_g->nGrow());
         }
 
         // Print level infos
@@ -61,9 +67,17 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
         mfix_print_max_vel(lev);
         mfix_print_max_gp(lev);
         amrex::Print() << "Min and Max of ep_g "
-                       << ep_g[lev]->min(0) << " "
-                       << ep_g[lev]->max(0) << std::endl;
+                       << m_leveldata[lev]->ep_g->min(0) << " "
+                       << m_leveldata[lev]->ep_g->max(0) << std::endl;
     }
+
+    Vector< MultiFab* > vel_g(nlev, nullptr);
+    for (int lev(0); lev < nlev; ++lev)
+      vel_g[lev] = m_leveldata[lev]->vel_g;
+
+    Vector< MultiFab* > vel_go(nlev, nullptr);
+    for (int lev(0); lev < nlev; ++lev)
+      vel_go[lev] = m_leveldata[lev]->vel_go;
 
     // Set velocities BC before projection
     mfix_set_velocity_bcs(a_time, vel_g, 0);
@@ -93,7 +107,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
         MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow());
 
         for (int n(0); n < 3; n++)
-            MultiFab::Multiply(*epu[lev], *ep_g[lev], 0, n, 1, epu[lev]->nGrow());
+            MultiFab::Multiply(*epu[lev], *(m_leveldata[lev]->ep_g), 0, n, 1, epu[lev]->nGrow());
 
         epu[lev]->FillBoundary(geom[lev].periodicity());
 
@@ -126,14 +140,18 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     for (int lev = 0; lev < nlev; ++lev )
     {
         sigma[lev].define(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-        MultiFab::Copy(sigma[lev], *ep_g[lev], 0, 0, 1, 0);
-        MultiFab::Divide(sigma[lev], *ro_g[lev], 0, 0, 1, 0);
+        MultiFab::Copy(sigma[lev], *m_leveldata[lev]->ep_g, 0, 0, 1, 0);
+        MultiFab::Divide(sigma[lev], *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
     }
 
     //
     // Setup the nodal projector
     //
     Box domain(geom[0].Domain());
+
+    Vector< MultiFab* > ep_g(nlev, nullptr);
+    for (int lev(0); lev < nlev; ++lev)
+      ep_g[lev] = m_leveldata[lev]->ep_g;
 
     LPInfo info;
     info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
@@ -172,16 +190,20 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
         if (proj_2)
         {
             // p := phi
-            MultiFab::Copy(*p_g[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
-            MultiFab::Copy( *gp[lev], *gradphi[lev], 0, 0, 3, gradphi[lev]->nGrow());
-            p_g[lev]->mult(qdt);
-            gp[lev]->mult(qdt);
+            MultiFab::Copy(*m_leveldata[lev]->p_g, *phi[lev], 0, 0, 1,
+                           phi[lev]->nGrow());
+            MultiFab::Copy(*m_leveldata[lev]->gp, *gradphi[lev], 0, 0, 3,
+                           gradphi[lev]->nGrow());
+            m_leveldata[lev]->p_g->mult(qdt);
+            m_leveldata[lev]->gp->mult(qdt);
         }
         else
         {
             // p := p + phi
-            MultiFab::Saxpy(*p_g[lev], qdt, *phi[lev], 0, 0, 1, phi[lev]->nGrow());
-            MultiFab::Saxpy(*gp[lev],  qdt, *gradphi[lev], 0, 0, 3, gradphi[lev]->nGrow());
+            MultiFab::Saxpy(*m_leveldata[lev]->p_g, qdt, *phi[lev], 0, 0, 1,
+                            phi[lev]->nGrow());
+            MultiFab::Saxpy(*m_leveldata[lev]->gp, qdt, *gradphi[lev], 0, 0, 3,
+                            gradphi[lev]->nGrow());
         }
     }
 
@@ -227,8 +249,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
 
     for (int lev = nlev-1; lev > 0; lev--)
     {
-        avgDown(lev-1, *vel_g[lev], *vel_g[lev-1]);
-        avgDown(lev-1, *gp[lev],    *gp[lev-1]);
+        avgDown(lev-1, *m_leveldata[lev]->vel_g, *m_leveldata[lev-1]->vel_g);
+        avgDown(lev-1, *m_leveldata[lev]->gp, *m_leveldata[lev-1]->gp);
     }
 
     // Swap ghost cells and apply BCs to velocity

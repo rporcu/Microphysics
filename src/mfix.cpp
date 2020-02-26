@@ -51,39 +51,6 @@ mfix::~mfix ()
     delete bc_klo[lev];
     delete bc_khi[lev];
 
-    // Void fraction
-    delete ep_g[lev];
-    delete ep_go[lev];
-
-    // Gas pressure fraction
-    delete p_g[lev];
-    delete p_go[lev];
-
-    // Gas density
-    delete ro_g[lev];
-    delete ro_go[lev];
-
-    // Tracer in gas
-    delete trac[lev];
-    delete trac_o[lev];
-
-    // Gas velocity
-    delete vel_g[lev];
-    delete vel_go[lev];
-
-    // Base state pressure
-    delete p0_g[lev];
-
-    // Pressure gradients
-    delete gp[lev];
-
-    // Molecular viscosity
-    delete mu_g[lev];
-
-    // Cell-based
-    delete vort[lev];
-    delete drag[lev];
-
     // Level-Set Data
     delete level_sets[lev];
 
@@ -244,10 +211,10 @@ mfix::usr3 ()
           Real dz = geom[lev].CellSize(2);
 
           // We deliberately don't tile this loop
-          for (MFIter mfi(*p_g[lev], false); mfi.isValid(); ++mfi)
+          for (MFIter mfi(*(m_leveldata[lev]->p_g), false); mfi.isValid(); ++mfi)
           {
-             mfix_usr3(BL_TO_FORTRAN_ANYD((*vel_g[lev])[mfi]),
-                       BL_TO_FORTRAN_ANYD((  *p_g[lev])[mfi]),
+             mfix_usr3(BL_TO_FORTRAN_ANYD((*m_leveldata[lev]->vel_g)[mfi]),
+                       BL_TO_FORTRAN_ANYD((*m_leveldata[lev]->p_g)[mfi]),
                        &dx, &dy, &dz);
           }
        }

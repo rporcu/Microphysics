@@ -3,10 +3,10 @@
 void
 mfix::check_for_nans (int lev)
 {
-  bool ug_has_nans = vel_g[lev]->contains_nan (0);
-  bool vg_has_nans = vel_g[lev]->contains_nan (1);
-  bool wg_has_nans = vel_g[lev]->contains_nan (2);
-  bool pg_has_nans =   p_g[lev]->contains_nan (0);
+  bool ug_has_nans = m_leveldata[lev]->vel_g->contains_nan(0);
+  bool vg_has_nans = m_leveldata[lev]->vel_g->contains_nan(1);
+  bool wg_has_nans = m_leveldata[lev]->vel_g->contains_nan(2);
+  bool pg_has_nans = m_leveldata[lev]->p_g->contains_nan(0);
 
   if (ug_has_nans)
     amrex::Print() << "WARNING: u_g contains NaNs!!!";
@@ -28,10 +28,10 @@ void
 mfix::mfix_print_max_vel (int lev)
 {
     amrex::Print() << "   max(abs(u/v/w/p))  = "
-                   << vel_g[lev]->norm0(0,0,false,true) << "  "
-                   << vel_g[lev]->norm0(1,0,false,true) << "  "
-                   << vel_g[lev]->norm0(2,0,false,true) << "  "
-                   <<   p_g[lev]->norm0(0,0,false,true) << std::endl;
+                   << m_leveldata[lev]->vel_g->norm0(0,0,false,true) << "  "
+                   << m_leveldata[lev]->vel_g->norm0(1,0,false,true) << "  "
+                   << m_leveldata[lev]->vel_g->norm0(2,0,false,true) << "  "
+                   << m_leveldata[lev]->p_g->norm0(0,0,false,true) << std::endl;
 }
 
 
@@ -42,9 +42,9 @@ void
 mfix::mfix_print_max_gp (int lev)
 {
     amrex::Print() << "   max(abs(gpx/gpy/gpz))  = "
-                   << gp[lev]->norm0(0,0,false,true) << "  "
-                   << gp[lev]->norm0(1,0,false,true) << "  "
-                   << gp[lev]->norm0(2,0,false,true) <<  std::endl;
+                   << m_leveldata[lev]->gp->norm0(0,0,false,true) << "  "
+                   << m_leveldata[lev]->gp->norm0(1,0,false,true) << "  "
+                   << m_leveldata[lev]->gp->norm0(2,0,false,true) <<  std::endl;
 }
 
 
@@ -55,29 +55,31 @@ mfix::mfix_compute_vort ()
 
     for (int lev = 0; lev < nlev; lev++)
     {
-       Box domain(geom[lev].Domain());
+      Box domain(geom[lev].Domain());
 
-      vort[lev]->setVal(0.0);
+      m_leveldata[lev]->vort->setVal(0.0);
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-       for (MFIter mfi(*vel_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+       for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
        {
           // Tilebox
           Box bx = mfi.tilebox ();
           const Real* dx = geom[lev].CellSize();
 
-          Array4<Real> const& vorticity = vort[lev]->array(mfi);
-          Array4<Real> const& velocity_g = vel_g[lev]->array(mfi);
+          Array4<Real> const& vorticity = m_leveldata[lev]->vort->array(mfi);
+          Array4<Real> const& velocity_g = m_leveldata[lev]->vel_g->array(mfi);
 
           const Real odx(1./dx[0]), ody(1./dx[1]), odz(1./dx[2]);
 
           // This is to check efficiently if this tile contains any eb stuff
-          const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_g[lev])[mfi]);
-          const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
+          const EBFArrayBox& vel_fab =
+            static_cast<EBFArrayBox const&>((*m_leveldata[lev]->vel_g)[mfi]);
 
-          if (flags.getType(amrex::grow(bx,0)) == FabType::regular )
+          const EBCellFlagFab& flags = vel_fab.getEBCellFlagFab();
+
+          if (flags.getType(amrex::grow(bx,0)) == FabType::regular)
           {
             amrex::ParallelFor(bx, [odx,ody,odz,velocity_g,vorticity]
                 AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -133,7 +135,7 @@ mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 
     const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
 
-    Real sum = amrex::ReduceSum(mf, *volfrac, *(ep_g[lev]), 0,
+    Real sum = amrex::ReduceSum(mf, *volfrac, *(m_leveldata[lev]->ep_g), 0,
         [comp] AMREX_GPU_HOST_DEVICE (Box const & bx,
                                       FArrayBox const & rho_fab,
                                       FArrayBox const & volfrac_fab,

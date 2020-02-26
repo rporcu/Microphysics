@@ -31,7 +31,17 @@ mfix::InitIOChkData ()
     vecVarsName = {"u_g", "v_g", "w_g", "gpx", "gpy", "gpz"};
 
     chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "level_sets"};
-    chkscalarVars  = {&ep_g,  &p_g,  &ro_g,  &ep_g,  &mu_g,  &level_sets};
+
+    chkscalarVars.resize(6, Vector< MultiFab**>(nlev));
+
+    for (int lev(0); lev < nlev; ++lev) {
+      chkscalarVars[0][lev] = &(m_leveldata[lev]->ep_g);
+      chkscalarVars[1][lev] = &(m_leveldata[lev]->p_g);
+      chkscalarVars[2][lev] = &(m_leveldata[lev]->ro_g);
+      chkscalarVars[3][lev] = &(m_leveldata[lev]->ep_g);
+      chkscalarVars[4][lev] = &(m_leveldata[lev]->mu_g);
+      chkscalarVars[5][lev] = &level_sets[lev];
+    }
 }
 
 
@@ -118,19 +128,19 @@ mfix::WriteCheckPointFile (std::string& check_file,
        for (int lev = 0; lev < nlevels; ++lev) {
 
           // This writes all three velocity components
-          VisMF::Write( (*vel_g[lev]),
+          VisMF::Write( (*m_leveldata[lev]->vel_g),
             amrex::MultiFabFileFullPrefix(lev, checkpointname,
                   level_prefix, vecVarsName[0]));
 
           // This writes all three pressure gradient components
-          VisMF::Write( (*gp[lev]),
+          VisMF::Write( (*m_leveldata[lev]->gp),
             amrex::MultiFabFileFullPrefix(lev, checkpointname,
                   level_prefix, vecVarsName[3]));
 
           // Write scalar variables
           for (int i = 0; i < chkscalarVars.size(); i++ ) {
               if ( DEM::solve || (chkscaVarsName[i] != "level_sets"))
-                 VisMF::Write( *((*chkscalarVars[i])[lev]),
+                 VisMF::Write( **(chkscalarVars[i][lev]),
                    amrex::MultiFabFileFullPrefix(lev, checkpointname,
                          level_prefix, chkscaVarsName[i]));
           }

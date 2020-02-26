@@ -61,10 +61,10 @@ mfix::set_p0 (const Box& bx,
   const Real tolerance = std::numeric_limits<Real>::epsilon();
   Real offset(-0.5);
 
-  Array4<double> const& array4_p0_g = p0_g[lev]->array(*mfi);
+  Array4<double> const& array4_p0_g = m_leveldata[lev]->p0_g->array(*mfi);
 
-  const IntVect sbx_lo((*p0_g[lev])[*mfi].loVect());
-  const IntVect sbx_hi((*p0_g[lev])[*mfi].hiVect());
+  const IntVect sbx_lo((*m_leveldata[lev]->p0_g)[*mfi].loVect());
+  const IntVect sbx_hi((*m_leveldata[lev]->p0_g)[*mfi].hiVect());
   const Box sbx(sbx_lo, sbx_hi);
 
   const IntVect dom_lo(domain.loVect());

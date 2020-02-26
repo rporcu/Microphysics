@@ -22,7 +22,7 @@ mfix::mfix_set_density_bcs (Real time,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-     for (MFIter mfi(*ep_g[lev], false); mfi.isValid(); ++mfi)
+     for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi)
      {
         set_density_bcs(time, lev, (*ro_g_in[lev])[mfi], domain);
      }
