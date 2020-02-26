@@ -79,8 +79,8 @@ mfix::mfix_compute_diveu (Real time)
   for(int lev(0); lev < nlev; lev++)
     delete epu[lev];
 
-  Vector< MultiFab* > vel_g(nlev, nullptr);
-  for(int lev(0); lev < nlev; ++lev)
+  Vector< MultiFab* > vel_g(m_leveldata.size(), nullptr);
+  for(int lev(0); lev < m_leveldata.size(); ++lev)
     vel_g[lev] = m_leveldata[lev]->vel_g;
 
   // Restore velocities to carry Dirichlet values on faces

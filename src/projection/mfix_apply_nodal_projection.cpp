@@ -71,12 +71,12 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
                        << m_leveldata[lev]->ep_g->max(0) << std::endl;
     }
 
-    Vector< MultiFab* > vel_g(nlev, nullptr);
-    for (int lev(0); lev < nlev; ++lev)
+    Vector< MultiFab* > vel_g(m_leveldata.size(), nullptr);
+    for (int lev(0); lev < m_leveldata.size(); ++lev)
       vel_g[lev] = m_leveldata[lev]->vel_g;
 
-    Vector< MultiFab* > vel_go(nlev, nullptr);
-    for (int lev(0); lev < nlev; ++lev)
+    Vector< MultiFab* > vel_go(m_leveldata.size(), nullptr);
+    for (int lev(0); lev < m_leveldata.size(); ++lev)
       vel_go[lev] = m_leveldata[lev]->vel_go;
 
     // Set velocities BC before projection
@@ -149,8 +149,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     //
     Box domain(geom[0].Domain());
 
-    Vector< MultiFab* > ep_g(nlev, nullptr);
-    for (int lev(0); lev < nlev; ++lev)
+    Vector< MultiFab* > ep_g(m_leveldata.size(), nullptr);
+    for (int lev(0); lev < m_leveldata.size(); ++lev)
       ep_g[lev] = m_leveldata[lev]->ep_g;
 
     LPInfo info;

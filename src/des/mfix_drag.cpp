@@ -180,8 +180,8 @@ mfix::mfix_calc_drag_fluid (Real time)
 
   if(mfix::m_deposition_diffusion_coeff > 0.) {
     // Apply mean field diffusion to drag force
-    Vector< MultiFab* > drag(nlev, nullptr);
-    for (int lev(0); lev < nlev; ++lev)
+    Vector< MultiFab* > drag(m_leveldata.size(), nullptr);
+    for (int lev(0); lev < m_leveldata.size(); ++lev)
       drag[lev] = m_leveldata[lev]->drag;
 
     diffusion_op->diffuse_drag(drag, mfix::m_deposition_diffusion_coeff);
@@ -202,8 +202,8 @@ mfix::mfix_calc_drag_particle (Real time)
   // Extrapolate velocity Dirichlet bc's to ghost cells
   int extrap_dir_bcs = 1;
 
-  Vector< MultiFab* > vel_g(nlev, nullptr);
-  for (int lev; lev < nlev; lev++)
+  Vector< MultiFab* > vel_g(m_leveldata.size(), nullptr);
+  for (int lev; lev < m_leveldata.size(); lev++)
     vel_g[lev] = m_leveldata[lev]->vel_g;
 
   mfix_set_velocity_bcs(time, vel_g, extrap_dir_bcs);

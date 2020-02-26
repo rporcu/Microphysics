@@ -842,27 +842,27 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        // This sets bcs for ep_g and mu_g
        Real time = 0.0;
 
-       Vector< MultiFab* > ro_g(nlev, nullptr);
-       for (int lev(0); lev < nlev; ++lev)
+       Vector< MultiFab* > ro_g(m_leveldata.size(), nullptr);
+       for (int lev(0); lev < m_leveldata.size(); ++lev)
          ro_g[lev] = m_leveldata[lev]->ro_g;
 
-       Vector< MultiFab* > ro_go(nlev, nullptr);
-       for (int lev(0); lev < nlev; ++lev)
+       Vector< MultiFab* > ro_go(m_leveldata.size(), nullptr);
+       for (int lev(0); lev < m_leveldata.size(); ++lev)
          ro_go[lev] = m_leveldata[lev]->ro_go;
 
        mfix_set_density_bcs(time, ro_g);
        mfix_set_density_bcs(time, ro_go);
 
-       Vector< MultiFab* > trac(nlev, nullptr);
-       for (int lev(0); lev < nlev; ++lev)
+       Vector< MultiFab* > trac(m_leveldata.size(), nullptr);
+       for (int lev(0); lev < m_leveldata.size(); ++lev)
          trac[lev] = m_leveldata[lev]->trac;
 
-       Vector< MultiFab* > trac_o(nlev, nullptr);
-       for (int lev(0); lev < nlev; ++lev)
+       Vector< MultiFab* > trac_o(m_leveldata.size(), nullptr);
+       for (int lev(0); lev < m_leveldata.size(); ++lev)
          trac_o[lev] = m_leveldata[lev]->trac_o;
 
-       Vector< MultiFab* > mu_g(nlev, nullptr);
-       for (int lev(0); lev < nlev; ++lev)
+       Vector< MultiFab* > mu_g(m_leveldata.size(), nullptr);
+       for (int lev(0); lev < m_leveldata.size(); ++lev)
          mu_g[lev] = m_leveldata[lev]->mu_g;
 
        mfix_set_scalar_bcs(time, trac, mu_g);
@@ -879,8 +879,8 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
     } else {
 
-      Vector< MultiFab* > ep_g(nlev, nullptr);
-      for (int lev(0); lev < nlev; ++lev)
+      Vector< MultiFab* > ep_g(m_leveldata.size(), nullptr);
+      for (int lev(0); lev < m_leveldata.size(); ++lev)
         ep_g[lev] = m_leveldata[lev]->ep_g;
 
        mfix_set_epg_bcs(ep_g);
@@ -921,8 +921,8 @@ mfix::mfix_set_bc0 ()
    Real time = 0.0;
    int extrap_dir_bcs = 0;
 
-   Vector< MultiFab* > vel_g(nlev, nullptr);
-   for (int lev(0); lev < nlev; ++lev)
+   Vector< MultiFab* > vel_g(m_leveldata.size(), nullptr);
+   for (int lev(0); lev < m_leveldata.size(); ++lev)
      vel_g[lev] = m_leveldata[lev]->vel_g;
 
    mfix_set_velocity_bcs(time, vel_g, extrap_dir_bcs);

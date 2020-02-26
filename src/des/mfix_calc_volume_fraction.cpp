@@ -15,8 +15,8 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   // Start the timers ...
   const Real strttime = ParallelDescriptor::second();
 
-  Vector< MultiFab* > ep_g(nlev, nullptr);
-  for (int lev(0); lev < nlev; ++lev)
+  Vector< MultiFab* > ep_g(m_leveldata.size(), nullptr);
+  for (int lev(0); lev < m_leveldata.size(); ++lev)
     ep_g[lev] = m_leveldata[lev]->ep_g;
 
   if (DEM::solve)
