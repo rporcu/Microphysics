@@ -88,7 +88,9 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
        mfix_set_velocity_bcs(a_time, vel_go, 0);
 
        for(int lev = 0; lev <= finest_level; lev++)
-          MultiFab::Saxpy(*vel_g[lev], -1.0, *vel_go[lev], 0, 0, AMREX_SPACEDIM, vel_g[lev]->nGrow());
+          MultiFab::Saxpy(*m_leveldata[lev]->vel_g, -1.0,
+                          *m_leveldata[lev]->vel_go, 0, 0, 3,
+                          m_leveldata[lev]->vel_g->nGrow());
     }
 
     //
@@ -104,7 +106,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
 
         epu[lev]->setVal(1.e200);
 
-        MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow());
+        MultiFab::Copy(*epu[lev], *m_leveldata[lev]->vel_g, 0, 0, 3, epu[lev]->nGrow());
 
         for (int n(0); n < 3; n++)
             MultiFab::Multiply(*epu[lev], *(m_leveldata[lev]->ep_g), 0, n, 1, epu[lev]->nGrow());
@@ -170,7 +172,9 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     if (proj_for_small_dt)
     {
        for(int lev = 0; lev <= finest_level; lev++)
-          MultiFab::Saxpy(*vel_g[lev], 1.0, *vel_go[lev], 0, 0, AMREX_SPACEDIM, vel_g[lev]->nGrow());
+          MultiFab::Saxpy(*m_leveldata[lev]->vel_g, 1.0,
+                          *m_leveldata[lev]->vel_go, 0, 0, 3,
+                          m_leveldata[lev]->vel_g->nGrow());
     }
 
     // Get phi and fluxes
@@ -217,10 +221,10 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     {
         epu[lev]->setVal(1.e200);
 
-        MultiFab::Copy(*epu[lev], *vel_g[lev], 0, 0, 3, epu[lev]->nGrow());
+        MultiFab::Copy(*epu[lev], *m_leveldata[lev]->vel_g, 0, 0, 3, epu[lev]->nGrow());
 
         for (int n(0); n < 3; n++)
-            MultiFab::Multiply(*epu[lev], *ep_g[lev], 0, n, 1, epu[lev]->nGrow());
+            MultiFab::Multiply(*epu[lev], *m_leveldata[lev]->ep_g, 0, n, 1, epu[lev]->nGrow());
 
         epu[lev]->FillBoundary(geom[lev].periodicity());
 

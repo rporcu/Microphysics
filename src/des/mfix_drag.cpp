@@ -245,13 +245,13 @@ mfix::mfix_calc_drag_particle (Real time)
 
     // This is just a sanity check to make sure we're not using covered values
     // We can remove these lines once we're confident in the algoirthm
-    EB_set_covered(*vel_g[0], 0, 3, 1, covered_val);
+    EB_set_covered(*m_leveldata[0]->vel_g, 0, 3, 1, covered_val);
     EB_set_covered( gp_tmp  , 0, 3, 1, covered_val);
 
     if (OnSameGrids)
     {
       gp_ptr  = &gp_tmp;
-      vel_ptr = vel_g[lev];
+      vel_ptr = m_leveldata[lev]->vel_g;
     }
     else
     {
@@ -267,10 +267,10 @@ mfix::mfix_calc_drag_particle (Real time)
                                        {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                                        EBSupport::basic);
 
-      ng = vel_g[lev]->nGrow();
+      ng = m_leveldata[lev]->vel_g->nGrow();
 
-      vel_ptr = new MultiFab(pba, pdm, vel_g[lev]->nComp(), ng, MFInfo(), ebfactory_loc);
-      vel_ptr->copy(*vel_g[lev], 0, 0, vel_g[lev]->nComp(), ng, ng);
+      vel_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->vel_g->nComp(), ng, MFInfo(), ebfactory_loc);
+      vel_ptr->copy(*m_leveldata[lev]->vel_g, 0, 0, m_leveldata[lev]->vel_g->nComp(), ng, ng);
       vel_ptr->FillBoundary(geom[lev].periodicity());
     }
 

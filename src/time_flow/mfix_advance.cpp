@@ -523,13 +523,13 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         diffusion_op->diffuse_scalar(trac, ep_g, mu_s, dt);
 
         for (int lev = 0; lev < nlev; lev++)
-            MultiFab::Divide(*ep_g[lev],*ro_g[lev],0,0,1,ep_g[lev]->nGrow());
+            MultiFab::Divide(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g, 0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
     }
 
     // Project velocity field -- depdt=0 for now
     Vector< MultiFab* > depdt(nlev);
     for (int lev(0); lev < nlev; ++lev)
-      depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0.0, 1).release();
+      depdt[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
 
     mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
 
@@ -719,7 +719,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     //
     Vector< MultiFab* > depdt(nlev);
     for (int lev(0); lev < nlev; ++lev)
-        depdt[lev] = MFHelpers::createFrom(*ep_g[lev], 0, 1).release();
+        depdt[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0, 1).release();
 
     mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
     mfix_correct_small_cells (vel_g);
@@ -902,7 +902,8 @@ mfix::steady_state_reached (Real dt, int iter)
        // Use temporaries to store the difference
        // between current and previous solution
        //
-       MultiFab temp_vel(vel_g[lev]->boxArray(), vel_g[lev]->DistributionMap(),3,0);
+       MultiFab temp_vel(m_leveldata[lev]->vel_g->boxArray(),
+                         m_leveldata[lev]->vel_g->DistributionMap(), 3, 0);
        MultiFab::LinComb(temp_vel, 1.0, *m_leveldata[lev]->vel_g, 0, -1.0,
                          *m_leveldata[lev]->vel_go, 0, 0, 3, 0);
 
