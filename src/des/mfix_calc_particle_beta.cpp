@@ -33,7 +33,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
   // We can remove these lines once we're confident in the algoirthm 
   EB_set_covered(*m_leveldata[0]->vel_g, 0, 3, 1, covered_val);
   EB_set_covered(*m_leveldata[0]->ep_g, 0, 1, 1, covered_val);
-  EB_set_covered(*mu_g[0] , 0, 1, 1, covered_val);
+  EB_set_covered(*m_leveldata[0]->mu_g, 0, 1, 1, covered_val);
   EB_set_covered(*m_leveldata[0]->ro_g, 0, 1, 1, covered_val);
 
   for (int lev = 0; lev < nlev; lev++)
@@ -50,7 +50,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
     {
       ep_ptr  = m_leveldata[lev]->ep_g;
       ro_ptr  = m_leveldata[lev]->ro_g;
-      mu_ptr  = mu_g[lev];
+      mu_ptr  = m_leveldata[lev]->mu_g;
       vel_ptr = m_leveldata[lev]->vel_g;
     }
     else
@@ -65,8 +65,8 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
       ro_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->ro_g->nComp(), 0);
       ro_ptr->copy(*m_leveldata[lev]->ro_g, 0, 0, 1, 0, 0);
 
-      mu_ptr = new MultiFab(pba, pdm, mu_g[lev]->nComp(), 0);
-      mu_ptr->copy(*mu_g[lev], 0, 0, 1, 0, 0);
+      mu_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->mu_g->nComp(), 0);
+      mu_ptr->copy(*m_leveldata[lev]->mu_g, 0, 0, 1, 0, 0);
 
       EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
                                        {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},

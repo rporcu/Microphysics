@@ -59,9 +59,9 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
             const auto& vel       = m_leveldata[lev]->vel_g->array(mfi);
             const auto& ep        = m_leveldata[lev]->ep_g->array(mfi);
             const auto& ro        = m_leveldata[lev]->ro_g->array(mfi);
-            const auto& mu        =    mu_g[lev]->array(mfi);
-            const auto& gradp     =      gp[lev]->array(mfi);
-            const auto& drag_fab  =    drag[lev]->array(mfi);
+            const auto& mu        = m_leveldata[lev]->mu_g->array(mfi);
+            const auto& gradp     = m_leveldata[lev]->gp->array(mfi);
+            const auto& drag_fab  = m_leveldata[lev]->drag->array(mfi);
             
             Box bx(mfi.tilebox());
 

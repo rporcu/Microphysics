@@ -10,8 +10,6 @@ mfix::ResizeArrays ()
     for (int lev(0); lev < nlevs_max; ++lev)
       m_leveldata[lev].reset(new LevelData());
 
-    p0_g.resize(nlevs_max);
-
     phi_nd.resize(nlevs_max);
     diveu.resize(nlevs_max);
 
@@ -35,16 +33,6 @@ mfix::ResizeArrays ()
 
     // Solution array for MAC projection
     mac_phi.resize(nlevs_max);
-
-    // Pressure gradients
-    gp.resize(nlevs_max);
-
-    drag.resize(nlevs_max);
-
-    mu_g.resize(nlevs_max);
-
-    // Vorticity
-    vort.resize(nlevs_max);
 
     xslopes_u.resize(nlevs_max);
     yslopes_u.resize(nlevs_max);
@@ -118,8 +106,9 @@ mfix::AllocateArrays (int lev)
 
     const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
 
-    p0_g[lev] = new MultiFab(nd_grids,dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
-    p0_g[lev]->setVal(0.);
+    m_leveldata[lev]->p0_g = new MultiFab(nd_grids, dmap[lev], 1, nghost,
+                                          MFInfo(), *ebfactory[lev]);
+    m_leveldata[lev]->p0_g->setVal(0.);
 
     m_leveldata[lev]->p_g = new MultiFab(nd_grids, dmap[lev], 1, nghost,
                                          MFInfo(), *ebfactory[lev]);
@@ -136,12 +125,14 @@ mfix::AllocateArrays (int lev)
     diveu[lev]->setVal(0.);
 
     // Presssure gradients
-    gp[lev] = new MultiFab(grids[lev],dmap[lev],3,nghost, MFInfo(), *ebfactory[lev]);
-    gp[lev]->setVal(0.);
+    m_leveldata[lev]->gp = new MultiFab(grids[lev], dmap[lev], 3, nghost,
+                                        MFInfo(), *ebfactory[lev]);
+    m_leveldata[lev]->gp->setVal(0.);
 
     // Molecular viscosity
-    mu_g[lev] = new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
-    mu_g[lev]->setVal(0.);
+    m_leveldata[lev]->mu_g = new MultiFab(grids[lev], dmap[lev], 1, nghost,
+                                          MFInfo(), *ebfactory[lev]);
+    m_leveldata[lev]->mu_g->setVal(0.);
 
     // Current velocity
     m_leveldata[lev]->vel_g = new MultiFab(grids[lev], dmap[lev], 3, nghost,
@@ -154,14 +145,16 @@ mfix::AllocateArrays (int lev)
     m_leveldata[lev]->vel_go->setVal(0.);
 
     // Vorticity
-    vort[lev] = new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
-    vort[lev]->setVal(0.);
+    m_leveldata[lev]->vort = new MultiFab(grids[lev], dmap[lev], 1, nghost,
+                                          MFInfo(), *ebfactory[lev]);
+    m_leveldata[lev]->vort->setVal(0.);
 
     // This is the deposition of the drag force onto the grid
     // 0,1,2 is (drag coefficient * particle velocity)
     // 4 is drag coefficient
-    drag[lev] = new  MultiFab(grids[lev],dmap[lev],4,nghost, MFInfo(), *ebfactory[lev]);
-    drag[lev]->setVal(0.);
+    m_leveldata[lev]->drag = new MultiFab(grids[lev], dmap[lev], 4, nghost,
+                                          MFInfo(), *ebfactory[lev]);
+    m_leveldata[lev]->drag->setVal(0.);
 
     // Array to store the rhs for diffusion solves -- no ghost cells needed
     diff_rhs[lev] = new MultiFab(grids[lev],dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
@@ -356,11 +349,16 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->p_go, p_go_new);
     delete p_go_new;
 
-    MultiFab* p0_g_new = new MultiFab(nd_grids, dmap[lev], p0_g[lev]->nComp(),
-                                       p0_g[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    MultiFab* p0_g_new = new MultiFab(nd_grids, dmap[lev],
+                                      m_leveldata[lev]->p0_g->nComp(),
+                                      m_leveldata[lev]->p0_g->nGrow(),
+                                      MFInfo(), *ebfactory[lev]);
     p0_g_new->setVal(0);
-    p0_g_new->copy(*p0_g[lev], 0, 0, p0_g[lev]->nComp(), p0_g[lev]->nGrow(), p0_g[lev]->nGrow());
-    std::swap(p0_g[lev], p0_g_new);
+    p0_g_new->copy(*m_leveldata[lev]->p0_g, 0, 0,
+                   m_leveldata[lev]->p0_g->nComp(),
+                   m_leveldata[lev]->p0_g->nGrow(),
+                   m_leveldata[lev]->p0_g->nGrow());
+    std::swap(m_leveldata[lev]->p0_g, p0_g_new);
     delete p0_g_new;
 
     MultiFab* diveu_new = new MultiFab(nd_grids, dmap[lev], diveu[lev]->nComp(),
@@ -377,11 +375,14 @@ mfix::RegridArrays (int lev)
     delete phi_new;
 
     // Molecular viscosity
-    MultiFab* mu_g_new = new MultiFab(grids[lev], dmap[lev], mu_g[lev]->nComp(),
-                                       mu_g[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    MultiFab* mu_g_new = new MultiFab(grids[lev], dmap[lev],
+                                      m_leveldata[lev]->mu_g->nComp(),
+                                      m_leveldata[lev]->mu_g->nGrow(),
+                                      MFInfo(), *ebfactory[lev]);
     mu_g_new->setVal(0);
-    mu_g_new->copy(*mu_g[lev], 0, 0, mu_g[lev]->nComp(), mu_g[lev]->nGrow(), mu_g[lev]->nGrow());
-    std::swap(mu_g[lev], mu_g_new);
+    mu_g_new->copy(*m_leveldata[lev]->mu_g, 0, 0, m_leveldata[lev]->mu_g->nComp(),
+                   m_leveldata[lev]->mu_g->nGrow(), m_leveldata[lev]->mu_g->nGrow());
+    std::swap(m_leveldata[lev]->mu_g, mu_g_new);
     delete mu_g_new;
 
     // Gas velocity
@@ -407,27 +408,36 @@ mfix::RegridArrays (int lev)
     delete vel_go_new;
 
     // Pressure gradients
-    MultiFab* gp_new = new MultiFab(grids[lev], dmap[lev], gp[lev]->nComp(),
-                                       gp[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    MultiFab* gp_new = new MultiFab(grids[lev], dmap[lev],
+                                    m_leveldata[lev]->gp->nComp(),
+                                    m_leveldata[lev]->gp->nGrow(),
+                                    MFInfo(), *ebfactory[lev]);
     gp_new->setVal(0);
-    gp_new->copy(*gp[lev], 0, 0, gp[lev]->nComp(), gp[lev]->nGrow(), gp[lev]->nGrow());
-    std::swap(gp[lev], gp_new);
+    gp_new->copy(*m_leveldata[lev]->gp, 0, 0, m_leveldata[lev]->gp->nComp(),
+                 m_leveldata[lev]->gp->nGrow(), m_leveldata[lev]->gp->nGrow());
+    std::swap(m_leveldata[lev]->gp, gp_new);
     delete gp_new;
 
     // Vorticity
-    MultiFab* vort_new = new MultiFab(grids[lev], dmap[lev], vort[lev]->nComp(),
-                                       vort[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    MultiFab* vort_new = new MultiFab(grids[lev], dmap[lev],
+                                      m_leveldata[lev]->vort->nComp(),
+                                      m_leveldata[lev]->vort->nGrow(),
+                                      MFInfo(), *ebfactory[lev]);
     vort_new->setVal(0);
-    vort_new->copy(*vort[lev], 0, 0, vort[lev]->nComp(), vort[lev]->nGrow(), vort[lev]->nGrow());
-    std::swap(vort[lev], vort_new);
+    vort_new->copy(*m_leveldata[lev]->vort, 0, 0, m_leveldata[lev]->vort->nComp(),
+                   m_leveldata[lev]->vort->nGrow(), m_leveldata[lev]->vort->nGrow());
+    std::swap(m_leveldata[lev]->vort, vort_new);
     delete vort_new;
 
     // Particle/fluid drag -- note it is important to copy from previous step in order to use in dt calculation
-    MultiFab* drag_new = new MultiFab(grids[lev], dmap[lev], drag[lev]->nComp(),
-                                       drag[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    MultiFab* drag_new = new MultiFab(grids[lev], dmap[lev],
+                                      m_leveldata[lev]->drag->nComp(),
+                                      m_leveldata[lev]->drag->nGrow(),
+                                      MFInfo(), *ebfactory[lev]);
     drag_new->setVal(0.);
-    drag_new->copy(*drag[lev], 0, 0, drag[lev]->nComp(), drag[lev]->nGrow(), drag[lev]->nGrow());
-    std::swap(drag[lev], drag_new);
+    drag_new->copy(*m_leveldata[lev]->drag, 0, 0, m_leveldata[lev]->drag->nComp(),
+                   m_leveldata[lev]->drag->nGrow(), m_leveldata[lev]->drag->nGrow());
+    std::swap(m_leveldata[lev]->drag, drag_new);
     delete drag_new;
 
     // Array to store the rhs for tensor diffusion solve

@@ -42,9 +42,9 @@ void
 mfix::mfix_print_max_gp (int lev)
 {
     amrex::Print() << "   max(abs(gpx/gpy/gpz))  = "
-                   << gp[lev]->norm0(0,0,false,true) << "  "
-                   << gp[lev]->norm0(1,0,false,true) << "  "
-                   << gp[lev]->norm0(2,0,false,true) <<  std::endl;
+                   << m_leveldata[lev]->gp->norm0(0,0,false,true) << "  "
+                   << m_leveldata[lev]->gp->norm0(1,0,false,true) << "  "
+                   << m_leveldata[lev]->gp->norm0(2,0,false,true) <<  std::endl;
 }
 
 
@@ -55,9 +55,9 @@ mfix::mfix_compute_vort ()
 
     for (int lev = 0; lev < nlev; lev++)
     {
-       Box domain(geom[lev].Domain());
+      Box domain(geom[lev].Domain());
 
-      vort[lev]->setVal(0.0);
+      m_leveldata[lev]->vort->setVal(0.0);
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -68,7 +68,7 @@ mfix::mfix_compute_vort ()
           Box bx = mfi.tilebox ();
           const Real* dx = geom[lev].CellSize();
 
-          Array4<Real> const& vorticity = vort[lev]->array(mfi);
+          Array4<Real> const& vorticity = m_leveldata[lev]->vort->array(mfi);
           Array4<Real> const& velocity_g = m_leveldata[lev]->vel_g->array(mfi);
 
           const Real odx(1./dx[0]), ody(1./dx[1]), odz(1./dx[2]);

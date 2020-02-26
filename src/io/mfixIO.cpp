@@ -212,7 +212,7 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
   MultiFab pg_nd(m_leveldata[lev]->p_g->boxArray(), dmap[lev], 1, 0);
   pg_nd.setVal(0.);
   MultiFab::Copy(pg_nd, (*m_leveldata[lev]->p_g), 0, 0, 1, 0);
-  MultiFab::Add (pg_nd, (*p0_g[lev]), 0, 0, 1, 0);
+  MultiFab::Add (pg_nd, (*m_leveldata[lev]->p0_g), 0, 0, 1, 0);
 
   // Create a cell-center version of the combined pressure
   amrex::average_node_to_cellcenter(*pg_cc, 0, pg_nd, 0, 1);

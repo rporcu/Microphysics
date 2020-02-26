@@ -36,6 +36,19 @@ class LevelData
     amrex::MultiFab* vel_g;
     amrex::MultiFab* vel_go;
 
+    // Base state pressure
+    amrex::MultiFab* p0_g;
+
+    // Pressure gradients
+    amrex::MultiFab* gp;
+
+    // Molecular viscosity
+    amrex::MultiFab* mu_g;
+
+    // Cell-based
+    amrex::MultiFab* vort;
+
+    amrex::MultiFab* drag;
 };
 
 #endif

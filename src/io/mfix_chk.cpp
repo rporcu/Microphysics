@@ -39,7 +39,7 @@ mfix::InitIOChkData ()
       chkscalarVars[1][lev] = &(m_leveldata[lev]->p_g);
       chkscalarVars[2][lev] = &(m_leveldata[lev]->ro_g);
       chkscalarVars[3][lev] = &(m_leveldata[lev]->ep_g);
-      chkscalarVars[4][lev] = &mu_g[lev];
+      chkscalarVars[4][lev] = &(m_leveldata[lev]->mu_g);
       chkscalarVars[5][lev] = &level_sets[lev];
     }
 }
@@ -133,7 +133,7 @@ mfix::WriteCheckPointFile (std::string& check_file,
                   level_prefix, vecVarsName[0]));
 
           // This writes all three pressure gradient components
-          VisMF::Write( (*gp[lev]),
+          VisMF::Write( (*m_leveldata[lev]->gp),
             amrex::MultiFabFileFullPrefix(lev, checkpointname,
                   level_prefix, vecVarsName[3]));
 

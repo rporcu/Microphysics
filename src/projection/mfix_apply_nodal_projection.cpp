@@ -47,7 +47,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
                                    *m_leveldata[lev]->ro_g,
                                    0, n, 1, m_leveldata[lev]->vel_g->nGrow());
 
-            MultiFab::Saxpy(*m_leveldata[lev]->vel_g, a_dt, *gp[lev], 0, 0, 3,
+            MultiFab::Saxpy(*m_leveldata[lev]->vel_g, a_dt,
+                            *m_leveldata[lev]->gp, 0, 0, 3,
                             m_leveldata[lev]->vel_g->nGrow());
 
             // Convert momenta back to velocities
@@ -191,16 +192,18 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
             // p := phi
             MultiFab::Copy(*m_leveldata[lev]->p_g, *phi[lev], 0, 0, 1,
                            phi[lev]->nGrow());
-            MultiFab::Copy(*gp[lev], *gradphi[lev], 0, 0, 3, gradphi[lev]->nGrow());
+            MultiFab::Copy(*m_leveldata[lev]->gp, *gradphi[lev], 0, 0, 3,
+                           gradphi[lev]->nGrow());
             m_leveldata[lev]->p_g->mult(qdt);
-            gp[lev]->mult(qdt);
+            m_leveldata[lev]->gp->mult(qdt);
         }
         else
         {
             // p := p + phi
             MultiFab::Saxpy(*m_leveldata[lev]->p_g, qdt, *phi[lev], 0, 0, 1,
                             phi[lev]->nGrow());
-            MultiFab::Saxpy(*gp[lev], qdt, *gradphi[lev], 0, 0, 3, gradphi[lev]->nGrow());
+            MultiFab::Saxpy(*m_leveldata[lev]->gp, qdt, *gradphi[lev], 0, 0, 3,
+                            gradphi[lev]->nGrow());
         }
     }
 
@@ -246,8 +249,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
 
     for (int lev = nlev-1; lev > 0; lev--)
     {
-        avgDown(lev-1, *vel_g[lev], *vel_g[lev-1]);
-        avgDown(lev-1, *gp[lev],    *gp[lev-1]);
+        avgDown(lev-1, *m_leveldata[lev]->vel_g, *m_leveldata[lev-1]->vel_g);
+        avgDown(lev-1, *m_leveldata[lev]->gp, *m_leveldata[lev-1]->gp);
     }
 
     // Swap ghost cells and apply BCs to velocity

@@ -33,7 +33,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
       m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
-      mu_g[lev]->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
     }
 
     // Fill ghost nodes and reimpose boundary conditions
@@ -224,7 +224,7 @@ mfix::mfix_project_velocity ()
     for (int lev = 0; lev < nlev; lev++)
     {
       m_leveldata[lev]->p_g->setVal(0);
-      gp[lev]->setVal(0);
+      m_leveldata[lev]->gp->setVal(0);
     }
 }
 
@@ -249,6 +249,10 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   Vector< MultiFab* > trac(nlev, nullptr);
   for (int lev(0); lev < nlev; ++lev)
     trac[lev] = m_leveldata[lev]->trac;
+
+  Vector< MultiFab* > mu_g(nlev, nullptr);
+  for (int lev(0); lev < nlev; ++lev)
+    mu_g[lev] = m_leveldata[lev]->mu_g;
 
   // Fill ghost nodes and reimpose boundary conditions
   mfix_set_velocity_bcs(time, vel_g, 0);
@@ -422,6 +426,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       for (int lev(0); lev < nlev; ++lev)
         ro_g[lev] = m_leveldata[lev]->ro_g;
 
+      Vector< MultiFab* > mu_g(nlev, nullptr);
+      for (int lev(0); lev < nlev; ++lev)
+        mu_g[lev] = m_leveldata[lev]->mu_g;
+
         //mfix_set_velocity_bcs(time, vel_go, 0);
         diffusion_op->ComputeDivTau(divtau_old, vel_go, ro_g, ep_g, mu_g);
 
@@ -495,6 +503,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       Vector< MultiFab* > trac(nlev, nullptr);
       for (int lev(0); lev < nlev; ++lev)
         trac[lev] = m_leveldata[lev]->trac;
+
+      Vector< MultiFab* > mu_g(nlev, nullptr);
+      for (int lev(0); lev < nlev; ++lev)
+        mu_g[lev] = m_leveldata[lev]->mu_g;
 
         mfix_set_density_bcs(time, ro_g);
         mfix_set_scalar_bcs(time, trac, mu_g);
@@ -605,6 +617,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     Vector< MultiFab* > vel_g(nlev, nullptr);
     for (int lev(0); lev < nlev; lev++)
       vel_g[lev] = m_leveldata[lev]->vel_g;
+
+    Vector< MultiFab* > mu_g(nlev, nullptr);
+    for (int lev(0); lev < nlev; lev++)
+      mu_g[lev] = m_leveldata[lev]->mu_g;
 
     // Compute the explicit advective term R_u^*
     mfix_compute_convective_term(conv_u, conv_s, vel_g, ep_g, ro_g, trac, new_time);
@@ -730,7 +746,7 @@ mfix::mfix_add_gravity_and_gp (Real dt)
          Box bx = mfi.tilebox ();
 
          const auto& vel_fab = m_leveldata[lev]->vel_g->array(mfi);
-         const auto&  gp_fab = gp[lev]->array(mfi);
+         const auto&  gp_fab = m_leveldata[lev]->gp->array(mfi);
          const auto& den_fab = m_leveldata[lev]->ro_g->array(mfi);
 
          // we need this until we remove static attribute from mfix::gravity
@@ -776,7 +792,7 @@ mfix::mfix_add_drag_explicit (Real dt)
       Box bx = mfi.tilebox();
 
       const auto&  vel_fab = m_leveldata[lev]->vel_g->array(mfi);
-      const auto& drag_fab = drag[lev]->array(mfi);
+      const auto& drag_fab = m_leveldata[lev]->drag->array(mfi);
       const auto&   ro_fab = m_leveldata[lev]->ro_g->array(mfi);
       const auto&   ep_fab = m_leveldata[lev]->ep_g->array(mfi);
 
@@ -824,7 +840,7 @@ mfix::mfix_add_drag_implicit (Real dt)
       Box bx = mfi.tilebox();
 
       const auto&  vel_fab = m_leveldata[lev]->vel_g->array(mfi);
-      const auto& drag_fab = drag[lev]->array(mfi);
+      const auto& drag_fab = m_leveldata[lev]->drag->array(mfi);
       const auto&   ro_fab = m_leveldata[lev]->ro_g->array(mfi);
       const auto&   ep_fab = m_leveldata[lev]->ep_g->array(mfi);
 

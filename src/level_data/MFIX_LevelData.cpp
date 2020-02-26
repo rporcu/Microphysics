@@ -13,6 +13,11 @@ LevelData::LevelData ()
   , trac_o(nullptr)
   , vel_g(nullptr)
   , vel_go(nullptr)
+  , p0_g(nullptr)
+  , gp(nullptr)
+  , mu_g(nullptr)
+  , vort(nullptr)
+  , drag(nullptr)
 {}
 
 LevelData::~LevelData ()
@@ -27,4 +32,9 @@ LevelData::~LevelData ()
   delete trac_o;
   delete vel_g;
   delete vel_go;
+  delete p0_g;
+  delete gp;
+  delete mu_g;
+  delete vort;
+  delete drag;
 }

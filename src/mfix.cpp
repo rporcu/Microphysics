@@ -51,19 +51,6 @@ mfix::~mfix ()
     delete bc_klo[lev];
     delete bc_khi[lev];
 
-    // Base state pressure
-    delete p0_g[lev];
-
-    // Pressure gradients
-    delete gp[lev];
-
-    // Molecular viscosity
-    delete mu_g[lev];
-
-    // Cell-based
-    delete vort[lev];
-    delete drag[lev];
-
     // Level-Set Data
     delete level_sets[lev];
 

@@ -194,7 +194,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           {
             // Simply copy mf_vel into vel_g, mf_gp into gp
             m_leveldata[lev]->vel_g->copy(mf_vel, 0, 0, 3, 0, 0);
-            gp[lev]->copy(mf_gp, 0, 0, 3, 0, 0);
+            m_leveldata[lev]->gp->copy(mf_gp, 0, 0, 3, 0, 0);
 
           } else {
 
@@ -215,7 +215,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
               {
                 int ib = mfi.index();
                 (*m_leveldata[lev]->vel_g)[ib].copy(single_fab_vel,single_fab_vel.box(),0,mfi.validbox(),0,3);
-                (   *gp[lev])[ib].copy(single_fab_gp , single_fab_gp.box(),0,mfi.validbox(),0,3);
+                (*m_leveldata[lev]->gp)[ib].copy(single_fab_gp , single_fab_gp.box(),0,mfi.validbox(),0,3);
               }
           }
 
@@ -356,7 +356,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->ro_go->FillBoundary(geom[lev].periodicity());
 
-          mu_g[lev]->FillBoundary(geom[lev].periodicity());
+          m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
      
           // Fill the bc's just in case
           m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());

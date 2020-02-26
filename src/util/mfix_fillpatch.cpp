@@ -238,7 +238,7 @@ mfix::GetDataScalar (int lev,
     const Real teps = (t_new[lev] - t_old[lev]) * 1.e-3;
 
     if (icomp == 3) 
-       data.push_back(mu_g[lev]);
+       data.push_back(m_leveldata[lev]->mu_g);
 
     if (time > t_new[lev] - teps && time < t_new[lev] + teps)
     {

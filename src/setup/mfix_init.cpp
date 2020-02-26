@@ -801,7 +801,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
           if ( is_restarting ) {
 
-            init_fluid_restart(bx, (*mu_g[lev])[mfi]);
+            init_fluid_restart(bx, (*m_leveldata[lev]->mu_g)[mfi]);
 
           } else {
 
@@ -811,7 +811,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
                        (*m_leveldata[lev]->trac)[mfi],
                        (*m_leveldata[lev]->p_g)[mfi],
                        (*m_leveldata[lev]->vel_g)[mfi],
-                       (*mu_g[lev])[mfi],
+                       (*m_leveldata[lev]->mu_g)[mfi],
                        dx, dy, dz, xlen, ylen, zlen, test_tracer_conservation);
           }
        }
@@ -831,7 +831,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
     {
       m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
-      mu_g[lev]->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
 
       if (advect_tracer)
         m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
@@ -877,6 +877,10 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        Vector< MultiFab* > trac_o(nlev, nullptr);
        for (int lev(0); lev < nlev; ++lev)
          trac_o[lev] = m_leveldata[lev]->trac_o;
+
+       Vector< MultiFab* > mu_g(nlev, nullptr);
+       for (int lev(0); lev < nlev; ++lev)
+         mu_g[lev] = m_leveldata[lev]->mu_g;
 
        mfix_set_scalar_bcs(time, trac, mu_g);
        mfix_set_scalar_bcs(time, trac_o, mu_g);
@@ -985,7 +989,7 @@ mfix::mfix_set_p0 ()
        set_p0 (bx, &mfi, lev, domain );
      }
 
-     p0_g[lev]->FillBoundary(p0_periodicity);
+     m_leveldata[lev]->p0_g->FillBoundary(p0_periodicity);
    }
 }
 

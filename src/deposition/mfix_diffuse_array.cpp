@@ -48,8 +48,10 @@ mfix::mfix_diffuse_array (const Vector< MultiFab* > & mf_to_diffuse,
    for (int lev = 0; lev < nlev; lev++)
    {
 
-     MultiFab dcoeff_mf(mu_g[lev]->boxArray(), mu_g[lev]->DistributionMap(), 1,
-                        mu_g[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+     MultiFab dcoeff_mf(m_leveldata[lev]->mu_g->boxArray(),
+                        m_leveldata[lev]->mu_g->DistributionMap(), 1,
+                        m_leveldata[lev]->mu_g->nGrow(),
+                        MFInfo(), *ebfactory[lev]);
 
      dcoeff_mf.setVal(dcoeff);
 

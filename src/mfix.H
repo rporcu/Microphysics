@@ -592,20 +592,6 @@ class mfix : public AmrCore
     // Boundary conditions flags
     Vector< iMultiFab* > flag;
 
-    // Base state pressure
-    Vector< MultiFab* > p0_g;
-
-    // Pressure gradients
-    Vector< MultiFab* > gp;
-
-    // Molecular viscosity
-    Vector< MultiFab* > mu_g;
-
-    // Cell-based
-    Vector< MultiFab* > vort;
-
-    Vector< MultiFab* > drag;
-
     // Level-Set Data => used for particle-wall collisions and fluid
     // reconstruction in particle drag calculation. NOTE: this has at least 2
     // levels: 0) fluid reconstruction, 1..N) particle-wall (refined) collisions

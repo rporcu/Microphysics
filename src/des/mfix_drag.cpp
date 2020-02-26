@@ -19,8 +19,7 @@ mfix::mfix_calc_drag_fluid (Real time)
   // Now use the beta of individual particles to create the drag terms on the fluid
   // ******************************************************************************
   for (int lev = 0; lev < nlev; lev++)
-
-    drag[lev] ->setVal(0.0L);
+    m_leveldata[lev]->drag->setVal(0);
 
   if (nlev > 2)
     amrex::Abort("For right now"
@@ -38,7 +37,7 @@ mfix::mfix_calc_drag_fluid (Real time)
 
       // If we are already working with the internal mf defined on the
       // particle_box_array, then we just work with this.
-      drag_ptr[lev] = drag[lev];
+      drag_ptr[lev] = m_leveldata[lev]->drag;
 
     } else if (lev == 0 and (not OnSameGrids)) {
 
@@ -46,13 +45,14 @@ mfix::mfix_calc_drag_fluid (Real time)
       // to make a temporary here and copy into beta_mf at the end.
       drag_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                    pc->ParticleDistributionMap(lev),
-                                   drag[lev]->nComp(),
-                                   drag[lev]->nGrow());
+                                   m_leveldata[lev]->drag->nComp(),
+                                   m_leveldata[lev]->drag->nGrow());
 
     } else {
       // If lev > 0 we make a temporary at the coarse resolution
       BoxArray ba_crse(amrex::coarsen(pc->ParticleBoxArray(lev),this->m_gdb->refRatio(0)));
-      drag_ptr[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev),drag[lev]->nComp(),1);
+      drag_ptr[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev),
+                                   m_leveldata[lev]->drag->nComp(), 1);
     }
 
     // We must have ghost cells for each FAB so that a particle in one grid can spread
@@ -148,8 +148,8 @@ mfix::mfix_calc_drag_fluid (Real time)
 
       PhysBCFunct<BndryFuncArray> cphysbc(Geom(lev-1), bcs, bfunc);
       PhysBCFunct<BndryFuncArray> fphysbc(Geom(lev  ), bcs, bfunc);
-      drag[lev]->setVal(0.0);
-      amrex::InterpFromCoarseLevel(*drag[lev], time, *drag_ptr[lev-1],
+      m_leveldata[lev]->drag->setVal(0);
+      amrex::InterpFromCoarseLevel(*m_leveldata[lev]->drag, time, *drag_ptr[lev-1],
                                    0, 0, 1, Geom(lev-1), Geom(lev),
                                    cphysbc, 0, fphysbc, 0,
                                    ref_ratio[0], mapper,
@@ -161,12 +161,12 @@ mfix::mfix_calc_drag_fluid (Real time)
   // to copy here from drag_ptr into mf_to_be_filled. I believe that we don't
   // need any information in ghost cells so we don't copy those.
 
-  if (drag_ptr[0] != drag[0]) {
-    drag[0]->copy(*drag_ptr[0],0,0,drag[0]->nComp());
+  if (drag_ptr[0] != m_leveldata[0]->drag) {
+    m_leveldata[0]->drag->copy(*drag_ptr[0], 0, 0, m_leveldata[0]->drag->nComp());
   }
 
   for (int lev = 0; lev < nlev; lev++) {
-    if (drag_ptr[lev] != drag[lev])
+    if (drag_ptr[lev] != m_leveldata[lev]->drag)
       delete drag_ptr[lev];
   }
 
@@ -179,13 +179,17 @@ mfix::mfix_calc_drag_fluid (Real time)
   }
 
   // Apply mean field diffusion to drag force
-  if(mfix::m_deposition_diffusion_coeff > 0.)
-    mfix_diffuse_array(drag, mfix::m_deposition_diffusion_coeff);
+  if(mfix::m_deposition_diffusion_coeff > 0.) {
+    Vector< MultiFab* > drag(nlev, nullptr);
+    for (int lev(0); lev < nlev; ++lev)
+      drag[lev] = m_leveldata[lev]->drag;
 
+    mfix_diffuse_array(drag, mfix::m_deposition_diffusion_coeff);
+  }
 
   // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
   for (int lev = 0; lev < nlev; lev++)
-    drag[lev] -> FillBoundary(geom[lev].periodicity());
+    m_leveldata[lev]->drag->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -211,7 +215,7 @@ mfix::mfix_calc_drag_particle (Real time)
 
     gp_tmp.define(grids[lev],dmap[lev],3,1,MFInfo(),*ebfactory[lev]);
 
-    MultiFab::Copy(gp_tmp, *gp[lev], 0, 0, 3, 1);
+    MultiFab::Copy(gp_tmp, *m_leveldata[lev]->gp, 0, 0, 3, 1);
     gp_tmp.FillBoundary(geom[lev].periodicity());
 
     //

@@ -219,15 +219,15 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 
         // Pressure gradient
         if( plt_gradp_g == 1) {
-          MultiFab::Copy(*mf[lev], (*gp[lev]), 0, lc  , 1, 0);
-          MultiFab::Copy(*mf[lev], (*gp[lev]), 1, lc+1, 1, 0);
-          MultiFab::Copy(*mf[lev], (*gp[lev]), 2, lc+2, 1, 0);
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->gp, 0, lc  , 1, 0);
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->gp, 1, lc+1, 1, 0);
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->gp, 2, lc+2, 1, 0);
           lc += 3;
         }
 
         // Fluid volume fraction
         if( plt_ep_g    == 1) {
-          MultiFab::Copy(*mf[lev], *(m_leveldata[lev]->ep_g), 0, lc, 1, 0);
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->ep_g, 0, lc, 1, 0);
           lc += 1;
         }
 
@@ -235,8 +235,8 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         if( plt_p_g    == 1) {
           MultiFab p_nd(m_leveldata[lev]->p_g->boxArray(), dmap[lev], 1, 0);
           p_nd.setVal(0.);
-          MultiFab::Copy(p_nd, (*m_leveldata[lev]->p_g), 0, 0, 1, 0);
-          MultiFab::Add (p_nd, (*p0_g[lev]), 0, 0, 1, 0);
+          MultiFab::Copy(p_nd, *m_leveldata[lev]->p_g, 0, 0, 1, 0);
+          MultiFab::Add (p_nd, *m_leveldata[lev]->p0_g, 0, 0, 1, 0);
           amrex::average_node_to_cellcenter(*mf[lev], lc, p_nd, 0, 1);
           lc += 1;
         }
@@ -255,13 +255,13 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 
         // Fluid viscosity
         if( plt_mu_g    == 1) {
-          MultiFab::Copy(*mf[lev], (*mu_g[lev]), 0, lc, 1, 0);
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->mu_g, 0, lc, 1, 0);
           lc += 1;
         }
 
         // vorticity
         if( plt_vort   == 1) {
-          MultiFab::Copy(*mf[lev], (*vort[lev]), 0, lc, 1, 0);
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->vort, 0, lc, 1, 0);
           lc += 1;
         }
 
