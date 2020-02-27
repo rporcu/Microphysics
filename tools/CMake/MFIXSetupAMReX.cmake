@@ -112,10 +112,4 @@ else ()
 
    add_subdirectory(${AMREX_SRC_DIR})
 
-   get_directory_property(amrex_targets DIRECTORY ${AMREX_SRC_DIR}/Src BUILDSYSTEM_TARGETS)
-
-   foreach (_target IN LISTS amrex_targets )
-      add_library(AMReX::${_target} ALIAS ${_target})
-   endforeach ()
-
 endif ()
