@@ -46,10 +46,10 @@ amr.max_level = 0
 geometry.coord_sys   = 0                       # 0: Cartesian
 geometry.is_periodic = 1       0       0       # Is periodic in each direction?
 geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
-geometry.prob_hi     = 1.8048  0.3008  0.3008  # hi corner of physical domain
+geometry.prob_hi     = 5.4144  0.3008  0.3008  # hi corner of physical domain
 
 # Number of grid cells in each direction at the coarsest level
-amr.n_cell =  768  128  128
+amr.n_cell =  2304  128  128
 
 #! Grids
 #!-----------------------------------------------------------//
@@ -61,9 +61,9 @@ amr.max_grid_size_y = 64
 amr.max_grid_size_z = 64
 
 # Particles (not with KDTree)
-particles.max_grid_size_x =   64
-particles.max_grid_size_y =   64
-particles.max_grid_size_z =   64
+#particles.max_grid_size_x =   64
+#particles.max_grid_size_y =   64
+#particles.max_grid_size_z =   64
 
 #! Tiles
 #!-----------------------------------------------------------//
@@ -86,17 +86,17 @@ mfix.write_eb_surface = false  # Needed to output eb-surfaces
 # Particle load balancing
 
 #mfix.load_balance_type = "FixedSize"
-mfix.load_balance_type = "KnapSack"
+#mfix.load_balance_type = "KnapSack"
 
-amr.dual_grid          = 1
-amr.regrid_int         = 500
+amr.dual_grid          = 0
+amr.regrid_int         = -1
 
 #! KnapSack settings
 #!-----------------------------------------------------------//
 #default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
 #this option is only relevant if load_balance_type = KnapSack
 
-mfix.knapsack_weight_type = "NumParticles"
+#mfix.knapsack_weight_type = "NumParticles"
 #mfix.knapsack_weight_type = "RunTimeCosts"
 
 #______________________________________________________________________
@@ -174,7 +174,7 @@ cylinder.radius = 0.15
 cylinder.height = -1.0
 
 cylinder.direction = 0
-cylinder.center    =  0.9024   0.1504   0.1504
+cylinder.center    =  2.7072   0.1504   0.1504
 
 #_______________________________________________________________________
 # Regions for defining ICs and BCs
@@ -183,7 +183,7 @@ cylinder.center    =  0.9024   0.1504   0.1504
 mfix.regions = bkgic
 
 regions.bkgic.lo  = 0.0000  0.0000  0.0000
-regions.bkgic.hi  = 1.8048  0.3008  0.3008
+regions.bkgic.hi  = 5.4144  0.3008  0.3008
 
 #_______________________________________________________________________
 # Initial Conditions
@@ -218,5 +218,5 @@ ic.bkgic.hdpe.density.constant  = 900.0
 
 #periodic pressure drop in streamwise dir 
 bc.delp_dir =    0
-bc.delp     =   200.
+bc.delp     =   800.
 
