@@ -572,7 +572,7 @@ class mfix : public AmrCore
     static int ntrac;
 
     // Particle container
-    std::shared_ptr<MFIXParticleContainer> pc;
+    MFIXParticleContainer* pc;
 
     // Debug counter used for tracking number of level-set MultiFabs used in
     // intersection/union
