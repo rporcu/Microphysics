@@ -25,6 +25,12 @@ LevelData::LevelData ()
   , yslopes_s(nullptr)
   , zslopes_s(nullptr)
   , diveu(nullptr)
+  , mac_phi(nullptr)
+  , u_mac(nullptr)
+  , v_mac(nullptr)
+  , w_mac(nullptr)
+  , particle_cost(nullptr)
+  , fluid_cost(nullptr)
 {}
 
 LevelData::~LevelData ()
@@ -51,4 +57,10 @@ LevelData::~LevelData ()
   delete yslopes_s;
   delete zslopes_s;
   delete diveu;
+  delete mac_phi;
+  delete u_mac;
+  delete v_mac;
+  delete w_mac;
+  delete particle_cost;
+  delete fluid_cost;
 }

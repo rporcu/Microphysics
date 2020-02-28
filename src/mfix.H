@@ -599,31 +599,6 @@ class mfix : public AmrCore
     // RHS for MAC solve
     Vector< MultiFab* > mac_rhs;
 
-    // Solution for MAC projection
-    Vector< MultiFab* > mac_phi;
-
-    // RHS for diffusive tensor solve
-    Vector< MultiFab* > diff_rhs;
-    Vector< MultiFab* > diff_rhs1;
-    Vector< MultiFab* > diff_rhs4;
-
-    // Solution for diffusion solves
-    Vector< MultiFab* > diff_phi;
-    Vector< MultiFab* > diff_phi1;
-    Vector< MultiFab* > diff_phi4;
-
-    // MAC velocities
-    Vector< MultiFab* > u_mac;
-    Vector< MultiFab* > v_mac;
-    Vector< MultiFab* > w_mac;
-
-    // Pressure increment
-    Vector< MultiFab* > phi_nd;
-
-    // used if load_balance_type == "KnapSack"
-    Vector< MultiFab* > particle_cost;
-    Vector< MultiFab* > fluid_cost;
-
     int steady_state = 0;
 
     bool advect_density = false;

@@ -570,20 +570,26 @@ void mfix::InitLevelData (Real time)
     {
       for (int lev = 0; lev < nlev; lev++)
       {
-         particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                           pc->ParticleDistributionMap(lev), 1, 0);
-         particle_cost[lev]->setVal(0.0);
+        if (m_leveldata[lev]->particle_cost != nullptr)
+          delete m_leveldata[lev]->particle_cost;
+
+        m_leveldata[lev]->particle_cost = new MultiFab(pc->ParticleBoxArray(lev),
+                                                       pc->ParticleDistributionMap(lev), 1, 0);
+        m_leveldata[lev]->particle_cost->setVal(0.0);
       }
     }
 
     // Used in load balancing
     if (FLUID::solve)
     {
-       for (int lev = 0; lev < nlev; lev++)
-       {
-          fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
-          fluid_cost[lev]->setVal(0.0);
-       }
+      for (int lev = 0; lev < nlev; lev++)
+      {
+        if (m_leveldata[lev]->fluid_cost != nullptr)
+          delete m_leveldata[lev]->fluid_cost;
+
+        m_leveldata[lev]->fluid_cost = new MultiFab(grids[lev], dmap[lev], 1, 0);
+        m_leveldata[lev]->fluid_cost->setVal(0.0);
+      }
     }
 }
 
@@ -642,36 +648,39 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
                        && particle_max_grid_size_y > 0
                        && particle_max_grid_size_z > 0)
         {
-            IntVect particle_max_grid_size(particle_max_grid_size_x,
-                                           particle_max_grid_size_y,
-                                           particle_max_grid_size_z);
+          IntVect particle_max_grid_size(particle_max_grid_size_x,
+                                         particle_max_grid_size_y,
+                                         particle_max_grid_size_z);
 
-            for (int lev = 0; lev < nlev; lev++)
-            {
-                BoxArray particle_ba(geom[lev].Domain());
-                particle_ba.maxSize(particle_max_grid_size);
-                DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
-                pc->Regrid(particle_dm, particle_ba);
+          for (int lev = 0; lev < nlev; lev++)
+          {
+            BoxArray particle_ba(geom[lev].Domain());
+            particle_ba.maxSize(particle_max_grid_size);
+            DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
+            pc->Regrid(particle_dm, particle_ba);
 
-                particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                                  pc->ParticleDistributionMap(lev), 1, 0);
-                particle_cost[lev]->setVal(0.0);
+            if (m_leveldata[lev]->particle_cost != nullptr)
+              delete m_leveldata[lev]->particle_cost;
 
-                // This calls re-creates a proper particle_ebfactories
-                //  and regrids all the multifabs that depend on it
-                if (DEM::solve)
-                    RegridLevelSetArray(lev);
+            m_leveldata[lev]->particle_cost = new MultiFab(pc->ParticleBoxArray(lev),
+                                                           pc->ParticleDistributionMap(lev), 1, 0);
+            m_leveldata[lev]->particle_cost->setVal(0.0);
 
-            }
+            // This calls re-creates a proper particle_ebfactories
+            //  and regrids all the multifabs that depend on it
+            if (DEM::solve)
+                RegridLevelSetArray(lev);
+
+          }
         }
 
         Real min_dp[10], min_ro[10];
         Real max_dp[10], max_ro[10];
         Real avg_dp[10], avg_ro[10];
 
-        pc->GetParticleAvgProp( min_dp, min_ro,
-                                max_dp, max_ro,
-                                avg_dp, avg_ro );
+        pc->GetParticleAvgProp(min_dp, min_ro,
+                               max_dp, max_ro,
+                               avg_dp, avg_ro);
 
         init_collision(&DEM::NPHASE,
                        min_dp, min_ro,

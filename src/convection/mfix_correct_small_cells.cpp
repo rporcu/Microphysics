@@ -22,9 +22,9 @@ mfix::mfix_correct_small_cells (Vector< MultiFab*>& vel_in)
           const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
 
           // Face-centered velocity components
-          const auto& umac_fab = (u_mac[lev])->array(mfi);
-          const auto& vmac_fab = (v_mac[lev])->array(mfi);
-          const auto& wmac_fab = (w_mac[lev])->array(mfi);
+          const auto& umac_fab = m_leveldata[lev]->u_mac->array(mfi);
+          const auto& vmac_fab = m_leveldata[lev]->v_mac->array(mfi);
+          const auto& wmac_fab = m_leveldata[lev]->w_mac->array(mfi);
 
           if (flags.getType(amrex::grow(bx,0)) == FabType::covered )
           {

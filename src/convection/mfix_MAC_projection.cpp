@@ -118,12 +118,16 @@ mfix::apply_MAC_projection (Vector< MultiFab* >& ep_u_mac,
   {
     // Solve using mac_phi as an initial guess -- note that mac_phi is
     //       stored from iteration to iteration
+    Vector< MultiFab* > mac_phi(m_leveldata.size(), nullptr);
+    for (int lev(0); lev < m_leveldata.size(); ++lev)
+      mac_phi[lev] = m_leveldata[lev]->mac_phi;
+
     macproj.project(mac_phi, mac_mg_rtol, mac_mg_atol, MLMG::Location::FaceCentroid);
   }
   else
   {
     // Solve with initial guess of zero
-    macproj.project(mac_mg_rtol,mac_mg_atol,MLMG::Location::FaceCentroid);
+    macproj.project(mac_mg_rtol, mac_mg_atol, MLMG::Location::FaceCentroid);
   }
 
   // Get MAC velocities at face CENTER by dividing solution by ep at faces

@@ -59,14 +59,17 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
 
         // We make these with ncomp = 3 so they can hold all three velocity components at once;
         //    note we can also use them to just hold the single density or tracer comp
-        fx[lev] = new MultiFab(u_mac[lev]->boxArray(),dmap[lev],3,2,MFInfo(),*ebfactory[lev]);
-        fy[lev] = new MultiFab(v_mac[lev]->boxArray(),dmap[lev],3,2,MFInfo(),*ebfactory[lev]);
-        fz[lev] = new MultiFab(w_mac[lev]->boxArray(),dmap[lev],3,2,MFInfo(),*ebfactory[lev]);
+        fx[lev] = new MultiFab(m_leveldata[lev]->u_mac->boxArray(), dmap[lev], 3, 2,
+                               MFInfo(), *ebfactory[lev]);
+        fy[lev] = new MultiFab(m_leveldata[lev]->v_mac->boxArray(), dmap[lev], 3, 2,
+                               MFInfo(), *ebfactory[lev]);
+        fz[lev] = new MultiFab(m_leveldata[lev]->w_mac->boxArray(), dmap[lev], 3, 2,
+                               MFInfo(), *ebfactory[lev]);
 
         // We need this to avoid FPE
-        u_mac[lev]->setVal(covered_val);
-        v_mac[lev]->setVal(covered_val);
-        w_mac[lev]->setVal(covered_val);
+        m_leveldata[lev]->u_mac->setVal(covered_val);
+        m_leveldata[lev]->v_mac->setVal(covered_val);
+        m_leveldata[lev]->w_mac->setVal(covered_val);
 
         fx[lev]->setVal(covered_val);
         fy[lev]->setVal(covered_val);
@@ -75,12 +78,36 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         // Predict normal velocity to faces -- note that the {u_mac, v_mac, w_mac}
         //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
         //    on face CENTROIDS
+        Vector< MultiFab* > u_mac(m_leveldata.size(), nullptr);
+        for (int lev(0); lev < m_leveldata.size(); lev++)
+          u_mac[lev] = m_leveldata[lev]->u_mac;
+
+        Vector< MultiFab* > v_mac(m_leveldata.size(), nullptr);
+        for (int lev(0); lev < m_leveldata.size(); lev++)
+          v_mac[lev] = m_leveldata[lev]->v_mac;
+
+        Vector< MultiFab* > w_mac(m_leveldata.size(), nullptr);
+        for (int lev(0); lev < m_leveldata.size(); lev++)
+          w_mac[lev] = m_leveldata[lev]->w_mac;
+
         mfix_predict_vels_on_faces(lev, time, vel_in, u_mac, v_mac, w_mac, ep_g_in);
     }
 
     // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
     //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
     //    on face CENTROIDS
+    Vector< MultiFab* > u_mac(m_leveldata.size(), nullptr);
+    for (int lev(0); lev < m_leveldata.size(); lev++)
+      u_mac[lev] = m_leveldata[lev]->u_mac;
+
+    Vector< MultiFab* > v_mac(m_leveldata.size(), nullptr);
+    for (int lev(0); lev < m_leveldata.size(); lev++)
+      v_mac[lev] = m_leveldata[lev]->v_mac;
+
+    Vector< MultiFab* > w_mac(m_leveldata.size(), nullptr);
+    for (int lev(0); lev < m_leveldata.size(); lev++)
+      w_mac[lev] = m_leveldata[lev]->w_mac;
+
     apply_MAC_projection(u_mac, v_mac, w_mac, ep_g_in, ro_g_in, time);
 
     bool already_on_centroids = true;

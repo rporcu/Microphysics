@@ -56,34 +56,7 @@ mfix::~mfix ()
 
     // RHS for MAC solve
     delete mac_rhs[lev];
-
-    // Solution for MAC projection
-    delete mac_phi[lev];
-
-    // RHS for diffusive tensor solve
-    delete diff_rhs[lev];
-    delete diff_rhs1[lev];
-    delete diff_rhs4[lev];
-
-    // Solution for diffusion solves
-    delete diff_phi[lev];
-    delete diff_phi1[lev];
-    delete diff_phi4[lev];
-
-    // MAC velocities
-    delete u_mac[lev];
-    delete v_mac[lev];
-    delete w_mac[lev];
-    
-    // Pressure increment
-    delete phi_nd[lev];
   }
-
-  for (int lev(0); lev < particle_cost.size(); lev++)
-    delete particle_cost[lev];
-  
-  for (int lev(0); lev < fluid_cost.size(); lev++)
-    delete fluid_cost[lev];
 
   //! EB factory that lives on the fluid grids
   for (int lev(0); lev < ebfactory.size(); lev++)

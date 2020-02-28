@@ -10,33 +10,10 @@ mfix::ResizeArrays ()
     for (int lev(0); lev < nlevs_max; ++lev)
       m_leveldata[lev].reset(new LevelData());
 
-    phi_nd.resize(nlevs_max);
-
-    // RHS arrays for cell-centered solves
-    diff_rhs.resize(nlevs_max);
-    diff_rhs1.resize(nlevs_max);
-    diff_rhs4.resize(nlevs_max);
-
-    // Solution array for diffusion solves
-    diff_phi.resize(nlevs_max);
-    diff_phi1.resize(nlevs_max);
-    diff_phi4.resize(nlevs_max);
-
-    // MAC velocities at faces
-    u_mac.resize(nlevs_max);
-    v_mac.resize(nlevs_max);
-    w_mac.resize(nlevs_max);
-
     // RHS array for MAC projection
     mac_rhs.resize(nlevs_max);
 
-    // Solution array for MAC projection
-    mac_phi.resize(nlevs_max);
-
     bcoeff.resize(nlevs_max);
-
-    // Fuid cost (load balancing)
-    fluid_cost.resize(nlevs_max);
 
     // Fluid grid EB factory
     ebfactory.resize(nlevs_max);
@@ -48,9 +25,6 @@ mfix::ResizeArrays ()
      *       least two levels                                                   *
      *                                                                          *
      ***************************************************************************/
-
-    // Particle costs (load balancing)
-    particle_cost.resize(nlevs_max);
 
     // Particle grid EB factory
     particle_ebfactory.resize(nlevs_max);
@@ -109,10 +83,6 @@ mfix::AllocateArrays (int lev)
                                           MFInfo(), *ebfactory[lev]);
     m_leveldata[lev]->p_go->setVal(0.);
 
-    phi_nd[lev] = new MultiFab(nd_grids, dmap[lev], 1, 0,
-                               MFInfo(), *ebfactory[lev]);
-    phi_nd[lev]->setVal(0.);
-
     m_leveldata[lev]->diveu = new MultiFab(nd_grids, dmap[lev], 1, 0,
                                            MFInfo(), *ebfactory[lev]);
     m_leveldata[lev]->diveu->setVal(0);
@@ -149,33 +119,14 @@ mfix::AllocateArrays (int lev)
                                           MFInfo(), *ebfactory[lev]);
     m_leveldata[lev]->drag->setVal(0.);
 
-    // Array to store the rhs for diffusion solves -- no ghost cells needed
-    diff_rhs[lev] = new MultiFab(grids[lev],dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-    diff_rhs[lev]->setVal(0.);
-
-    diff_rhs1[lev] = new MultiFab(grids[lev],dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-    diff_rhs1[lev]->setVal(0.);
-
-    diff_rhs4[lev] = new MultiFab(grids[lev],dmap[lev], 4, 0, MFInfo(), *ebfactory[lev]);
-    diff_rhs4[lev]->setVal(0.);
-
-    // Array to store the solution for diffusion solves -- only 1 ghost cell needed
-    diff_phi[lev] = new MultiFab(grids[lev],dmap[lev], 3, 1, MFInfo(), *ebfactory[lev]);
-    diff_phi[lev]->setVal(0.);
-
-    diff_phi1[lev] = new MultiFab(grids[lev],dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-    diff_phi1[lev]->setVal(0.);
-
-    diff_phi4[lev] = new MultiFab(grids[lev],dmap[lev], 4, 1, MFInfo(), *ebfactory[lev]);
-    diff_phi4[lev]->setVal(0.);
-
     // Array to store the rhs for MAC projection
     mac_rhs[lev] = new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
     mac_rhs[lev]->setVal(0.);
 
     // Array to store the solution for MAC projections
-    mac_phi[lev] = new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
-    mac_phi[lev]->setVal(0.);
+    m_leveldata[lev]->mac_phi = new MultiFab(grids[lev],dmap[lev],1,nghost,
+                                             MFInfo(), *ebfactory[lev]);
+    m_leveldata[lev]->mac_phi->setVal(0.);
 
     // Slopes in x-direction
     m_leveldata[lev]->xslopes_u = new MultiFab(grids[lev], dmap[lev], 3, nghost,
@@ -219,8 +170,8 @@ mfix::AllocateArrays (int lev)
     bcoeff[lev][0]->setVal(0.);
 
     // U velocity at x-faces (MAC)
-    u_mac[lev] = new MultiFab(x_edge_ba,dmap[lev],1,2,MFInfo(),*ebfactory[lev]);
-    u_mac[lev]->setVal(covered_val); // Covered val as initial value
+    m_leveldata[lev]->u_mac = new MultiFab(x_edge_ba,dmap[lev],1,2,MFInfo(),*ebfactory[lev]);
+    m_leveldata[lev]->u_mac->setVal(covered_val); // Covered val as initial value
 
     // Create a BoxArray on y-faces.
     BoxArray y_edge_ba = grids[lev];
@@ -231,8 +182,8 @@ mfix::AllocateArrays (int lev)
     bcoeff[lev][1]->setVal(0.);
 
     // V velocity at y-faces (MAC)
-    v_mac[lev] = new MultiFab(y_edge_ba,dmap[lev],1,2,MFInfo(),*ebfactory[lev]);
-    v_mac[lev]->setVal(covered_val);
+    m_leveldata[lev]->v_mac = new MultiFab(y_edge_ba,dmap[lev],1,2,MFInfo(),*ebfactory[lev]);
+    m_leveldata[lev]->v_mac->setVal(covered_val);
 
     // Create a BoxArray on z-faces.
     BoxArray z_edge_ba = grids[lev];
@@ -243,8 +194,8 @@ mfix::AllocateArrays (int lev)
     bcoeff[lev][2]->setVal(0.);
 
     // W velocity at z-faces (MAC)
-    w_mac[lev] = new MultiFab(z_edge_ba,dmap[lev],1,2,MFInfo(),*ebfactory[lev]);
-    w_mac[lev]->setVal(covered_val);
+    m_leveldata[lev]->w_mac = new MultiFab(z_edge_ba,dmap[lev],1,2,MFInfo(),*ebfactory[lev]);
+    m_leveldata[lev]->w_mac->setVal(covered_val);
 
 }
 
@@ -370,12 +321,6 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->diveu, diveu_new);
     delete diveu_new;
 
-    MultiFab* phi_new = new MultiFab(nd_grids, dmap[lev], phi_nd[lev]->nComp(),
-                                     phi_nd[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
-    phi_new->setVal(0);
-    std::swap(phi_nd[lev], phi_new);
-    delete phi_new;
-
     // Molecular viscosity
     MultiFab* mu_g_new = new MultiFab(grids[lev], dmap[lev],
                                       m_leveldata[lev]->mu_g->nComp(),
@@ -442,48 +387,6 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->drag, drag_new);
     delete drag_new;
 
-    // Array to store the rhs for tensor diffusion solve
-    MultiFab* diff_rhs_new = new MultiFab(grids[lev], dmap[lev], diff_rhs[lev]->nComp(),
-                                          diff_rhs[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
-    diff_rhs_new->setVal(0);
-    std::swap(diff_rhs[lev], diff_rhs_new);
-    delete diff_rhs_new;
-
-    // Array to store the rhs for tensor diffusion solve
-    MultiFab* diff_rhs1_new = new MultiFab(grids[lev], dmap[lev], diff_rhs1[lev]->nComp(),
-                                          diff_rhs1[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
-    diff_rhs1_new->setVal(0);
-    std::swap(diff_rhs1[lev], diff_rhs1_new);
-    delete diff_rhs1_new;
-
-    // // Array to store the rhs for tensor diffusion solve
-    MultiFab* diff_rhs4_new = new MultiFab(grids[lev], dmap[lev], diff_rhs4[lev]->nComp(),
-                                          diff_rhs4[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
-    diff_rhs4_new->setVal(0);
-    std::swap(diff_rhs4[lev], diff_rhs4_new);
-    delete diff_rhs4_new;
-
-    // Arrays to store the solution for diffusion solves
-    MultiFab* diff_phi_new = new MultiFab(grids[lev], dmap[lev], diff_phi[lev]->nComp(),
-                                          diff_phi[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
-    diff_phi_new->setVal(0);
-    std::swap(diff_phi[lev], diff_phi_new);
-    delete diff_phi_new;
-
-    // Arrays to store the solution for diffusion solves
-    MultiFab* diff_phi1_new = new MultiFab(grids[lev], dmap[lev], diff_phi1[lev]->nComp(),
-                                          diff_phi1[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
-    diff_phi1_new->setVal(0);
-    std::swap(diff_phi1[lev], diff_phi1_new);
-    delete diff_phi1_new;
-
-    // Arrays to store the solution for diffusion solves
-    MultiFab* diff_phi4_new = new MultiFab(grids[lev], dmap[lev], diff_phi4[lev]->nComp(),
-                                          diff_phi4[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
-    diff_phi4_new->setVal(0);
-    std::swap(diff_phi4[lev], diff_phi4_new);
-    delete diff_phi4_new;
-
     // Array to store the rhs for cell-centered solves
     MultiFab* mac_rhs_new = new MultiFab(grids[lev], dmap[lev], mac_rhs[lev]->nComp(),
                                           mac_rhs[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
@@ -492,10 +395,12 @@ mfix::RegridArrays (int lev)
     delete mac_rhs_new;
 
     // Arrays to store the solution for the MAC projection
-    MultiFab* mac_phi_new = new MultiFab(grids[lev], dmap[lev], mac_phi[lev]->nComp(),
-                                          mac_phi[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    MultiFab* mac_phi_new = new MultiFab(grids[lev], dmap[lev],
+                                         m_leveldata[lev]->mac_phi->nComp(),
+                                         m_leveldata[lev]->mac_phi->nGrow(),
+                                         MFInfo(), *ebfactory[lev]);
     mac_phi_new->setVal(0);
-    std::swap(mac_phi[lev], mac_phi_new);
+    std::swap(m_leveldata[lev]->mac_phi, mac_phi_new);
     delete mac_phi_new;
 
     // Slopes in x-direction
@@ -564,10 +469,12 @@ mfix::RegridArrays (int lev)
     delete bcx_mac_new;
 
     // x component of MAC velocity
-    MultiFab* u_mac_new = new MultiFab(x_ba, dmap[lev], u_mac[lev]->nComp(),
-                                       u_mac[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    MultiFab* u_mac_new = new MultiFab(x_ba, dmap[lev],
+                                       m_leveldata[lev]->u_mac->nComp(),
+                                       m_leveldata[lev]->u_mac->nGrow(),
+                                       MFInfo(), *ebfactory[lev]);
     u_mac_new->setVal(0);
-    std::swap(u_mac[lev], u_mac_new);
+    std::swap(m_leveldata[lev]->u_mac, u_mac_new);
     delete u_mac_new;
 
    /****************************************************************************
@@ -585,10 +492,12 @@ mfix::RegridArrays (int lev)
     delete bcy_mac_new;
 
     // y component of MAC velocity
-    MultiFab* v_mac_new = new MultiFab(y_ba, dmap[lev], v_mac[lev]->nComp(),
-                                       v_mac[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    MultiFab* v_mac_new = new MultiFab(y_ba, dmap[lev],
+                                       m_leveldata[lev]->v_mac->nComp(),
+                                       m_leveldata[lev]->v_mac->nGrow(),
+                                       MFInfo(), *ebfactory[lev]);
     v_mac_new->setVal(0);
-    std::swap(v_mac[lev], v_mac_new);
+    std::swap(m_leveldata[lev]->v_mac, v_mac_new);
     delete v_mac_new;
 
    /****************************************************************************
@@ -606,10 +515,12 @@ mfix::RegridArrays (int lev)
     delete bcz_mac_new;
 
     // z component of MAC velocity
-    MultiFab* w_mac_new = new MultiFab(z_ba, dmap[lev], w_mac[lev]->nComp(),
-                                       w_mac[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    MultiFab* w_mac_new = new MultiFab(z_ba, dmap[lev],
+                                       m_leveldata[lev]->w_mac->nComp(),
+                                       m_leveldata[lev]->w_mac->nGrow(),
+                                       MFInfo(), *ebfactory[lev]);
     w_mac_new->setVal(0);
-    std::swap(w_mac[lev], w_mac_new);
+    std::swap(m_leveldata[lev]->w_mac, w_mac_new);
     delete w_mac_new;
 }
 

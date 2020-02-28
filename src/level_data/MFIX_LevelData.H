@@ -60,6 +60,19 @@ class LevelData
 
     // div (ep_g * u)
     amrex::MultiFab* diveu;
+    
+    // Solution for MAC projection
+    amrex::MultiFab* mac_phi;
+
+    // MAC velocities
+    amrex::MultiFab* u_mac;
+    amrex::MultiFab* v_mac;
+    amrex::MultiFab* w_mac;
+
+    // used if load_balance_type == "KnapSack"
+    amrex::MultiFab* particle_cost;
+    amrex::MultiFab* fluid_cost;
+
 };
 
 #endif
