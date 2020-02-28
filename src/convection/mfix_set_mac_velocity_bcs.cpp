@@ -22,7 +22,7 @@ mfix::set_MAC_velocity_bcs (int lev,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-  for (MFIter mfi((*mac_rhs[lev]), false); mfi.isValid(); ++mfi)
+  for (MFIter mfi((*m_leveldata[lev]->mac_rhs), false); mfi.isValid(); ++mfi)
   {
     const Box& ubx = (*ep_u_mac[lev])[mfi].box();
     IntVect ubx_lo(ubx.loVect());

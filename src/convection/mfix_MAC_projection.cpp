@@ -89,11 +89,11 @@ mfix::apply_MAC_projection (Vector< MultiFab* >& ep_u_mac,
     if (m_verbose)
     {
       bool already_on_centroid = true;
-      EB_computeDivergence(*mac_rhs[lev], GetArrOfConstPtrs(vel[lev]),
+      EB_computeDivergence(*m_leveldata[lev]->mac_rhs, GetArrOfConstPtrs(vel[lev]),
           geom[lev], already_on_centroid);
 
       Print() << "  * On level "<< lev << " max(abs(diveu)) = "
-              << mac_rhs[lev]->norm0(0,0,false,true) << "\n";
+              << m_leveldata[lev]->mac_rhs->norm0(0,0,false,true) << "\n";
     }
   }
 
@@ -143,11 +143,11 @@ mfix::apply_MAC_projection (Vector< MultiFab* >& ep_u_mac,
       vel[lev][2]->FillBoundary(geom[lev].periodicity());
 
       bool already_on_centroid = true;
-      EB_computeDivergence(*mac_rhs[lev], GetArrOfConstPtrs(vel[lev]),
+      EB_computeDivergence(*m_leveldata[lev]->mac_rhs, GetArrOfConstPtrs(vel[lev]),
                            geom[lev], already_on_centroid);
 
       Print() << "  * On level "<< lev << " max(abs(diveu)) = "
-              << mac_rhs[lev]->norm0(0,0,false,true) << "\n";
+              << m_leveldata[lev]->mac_rhs->norm0(0,0,false,true) << "\n";
     }
 
     // Set bcs on (ep * u_mac)

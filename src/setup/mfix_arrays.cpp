@@ -10,9 +10,6 @@ mfix::ResizeArrays ()
     for (int lev(0); lev < nlevs_max; ++lev)
       m_leveldata[lev].reset(new LevelData());
 
-    // RHS array for MAC projection
-    mac_rhs.resize(nlevs_max);
-
     bcoeff.resize(nlevs_max);
 
     // Fluid grid EB factory
@@ -120,8 +117,9 @@ mfix::AllocateArrays (int lev)
     m_leveldata[lev]->drag->setVal(0.);
 
     // Array to store the rhs for MAC projection
-    mac_rhs[lev] = new MultiFab(grids[lev],dmap[lev],1,nghost, MFInfo(), *ebfactory[lev]);
-    mac_rhs[lev]->setVal(0.);
+    m_leveldata[lev]->mac_rhs = new MultiFab(grids[lev], dmap[lev], 1, nghost,
+                                             MFInfo(), *ebfactory[lev]);
+    m_leveldata[lev]->mac_rhs->setVal(0.);
 
     // Array to store the solution for MAC projections
     m_leveldata[lev]->mac_phi = new MultiFab(grids[lev],dmap[lev],1,nghost,
@@ -388,10 +386,12 @@ mfix::RegridArrays (int lev)
     delete drag_new;
 
     // Array to store the rhs for cell-centered solves
-    MultiFab* mac_rhs_new = new MultiFab(grids[lev], dmap[lev], mac_rhs[lev]->nComp(),
-                                          mac_rhs[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    MultiFab* mac_rhs_new = new MultiFab(grids[lev], dmap[lev],
+                                         m_leveldata[lev]->mac_rhs->nComp(),
+                                         m_leveldata[lev]->mac_rhs->nGrow(),
+                                         MFInfo(), *ebfactory[lev]);
     mac_rhs_new->setVal(0);
-    std::swap(mac_rhs[lev], mac_rhs_new);
+    std::swap(m_leveldata[lev]->mac_rhs, mac_rhs_new);
     delete mac_rhs_new;
 
     // Arrays to store the solution for the MAC projection

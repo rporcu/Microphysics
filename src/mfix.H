@@ -596,9 +596,6 @@ class mfix : public AmrCore
     // levels: 0) fluid reconstruction, 1..N) particle-wall (refined) collisions
     Vector< MultiFab* > level_sets;
 
-    // RHS for MAC solve
-    Vector< MultiFab* > mac_rhs;
-
     int steady_state = 0;
 
     bool advect_density = false;

@@ -26,6 +26,7 @@ LevelData::LevelData ()
   , zslopes_s(nullptr)
   , diveu(nullptr)
   , mac_phi(nullptr)
+  , mac_rhs(nullptr)
   , u_mac(nullptr)
   , v_mac(nullptr)
   , w_mac(nullptr)
@@ -58,6 +59,7 @@ LevelData::~LevelData ()
   delete zslopes_s;
   delete diveu;
   delete mac_phi;
+  delete mac_rhs;
   delete u_mac;
   delete v_mac;
   delete w_mac;

@@ -53,9 +53,6 @@ mfix::~mfix ()
 
     // Level-Set Data
     delete level_sets[lev];
-
-    // RHS for MAC solve
-    delete mac_rhs[lev];
   }
 
   //! EB factory that lives on the fluid grids
