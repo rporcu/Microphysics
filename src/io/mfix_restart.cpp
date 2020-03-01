@@ -219,6 +219,9 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
               }
           }
 
+          (*m_leveldata[lev]->vel_g).FillBoundary(geom[lev].periodicity());
+          (*m_leveldata[lev]->gp   ).FillBoundary(geom[lev].periodicity());
+
        // Read scalar variables
        for (int i = 0; i < chkscalarVars.size(); i++ )
        {
@@ -261,6 +264,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                   (**(chkscalarVars[i][lev]))[ib].copy(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
               }
           }
+          (**(chkscalarVars[i][lev])).FillBoundary(geom[lev].periodicity());
         }
        }
        amrex::Print() << "  Finished reading fluid data" << std::endl;
