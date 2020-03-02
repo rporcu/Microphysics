@@ -367,6 +367,8 @@ int main (int argc, char* argv[])
                      ( (stop_time >= 0.) && (time+0.1*dt >= stop_time) ) ||
                      ( max_step >= 0 && nstep >= max_step ) );
                 if ( do_not_evolve ) finish = 1;
+
+                Arena::PrintUsage();
             }
         }
     }
