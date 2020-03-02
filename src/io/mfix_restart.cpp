@@ -361,6 +361,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           // Fill the bc's just in case
           m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->vel_go->FillBoundary(geom[lev].periodicity());
+
+          m_leveldata[lev]->gp->FillBoundary(geom[lev].periodicity());
         }
     }
 

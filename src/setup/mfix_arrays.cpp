@@ -213,15 +213,18 @@ mfix::RegridArrays (int lev)
     // ********************************************************************************
     //
     // Note: after calling copy() using dst_ngrow, we do not need to call FillBoundary().
+    //       However, we want to be sure to only use valid regions of the src, so we use 
+    //       src_ngrow = 0 and dst_ngrow = all
     //
     //
+    int src_ngrow = 0;
 
     // Void fraction
     MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
     MultiFab* ep_g_new = new MultiFab(grids[lev], dmap[lev], ep_g.nComp(),
                                       ep_g.nGrow(), MFInfo(), *ebfactory[lev]);
-    ep_g_new->setVal(1);
-    ep_g_new->copy(ep_g, 0, 0, ep_g.nComp(), ep_g.nGrow(), ep_g.nGrow());
+    ep_g_new->setVal(1.);
+    ep_g_new->ParallelCopy(ep_g, 0, 0, ep_g.nComp(), src_ngrow,  ep_g.nGrow(), geom[lev].periodicity());
     std::swap((m_leveldata[lev]->ep_g), ep_g_new);
     delete ep_g_new;
 
@@ -230,7 +233,7 @@ mfix::RegridArrays (int lev)
     MultiFab* ep_go_new = new MultiFab(grids[lev], dmap[lev], ep_go.nComp(),
                                       ep_go.nGrow(), MFInfo(), *ebfactory[lev]);
     ep_go_new->setVal(1);
-    ep_go_new->copy(ep_go, 0, 0, ep_go.nComp(), ep_go.nGrow(), ep_go.nGrow());
+    ep_go_new->ParallelCopy(ep_go, 0, 0, ep_go.nComp(), src_ngrow, ep_go.nGrow(), geom[lev].periodicity());
     std::swap((m_leveldata[lev]->ep_go), ep_go_new);
     delete ep_go_new;
 
@@ -240,8 +243,8 @@ mfix::RegridArrays (int lev)
                                       m_leveldata[lev]->ro_g->nGrow(),
                                       MFInfo(), *ebfactory[lev]);
     ro_g_new->setVal(0);
-    ro_g_new->copy(*m_leveldata[lev]->ro_g, 0, 0, m_leveldata[lev]->ro_g->nComp(),
-                   m_leveldata[lev]->ro_g->nGrow(), m_leveldata[lev]->ro_g->nGrow());
+    ro_g_new->ParallelCopy(*m_leveldata[lev]->ro_g, 0, 0, m_leveldata[lev]->ro_g->nComp(),
+                   src_ngrow, m_leveldata[lev]->ro_g->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->ro_g, ro_g_new);
     delete ro_g_new;
 
@@ -251,8 +254,8 @@ mfix::RegridArrays (int lev)
                                        m_leveldata[lev]->ro_go->nGrow(),
                                        MFInfo(), *ebfactory[lev]);
     ro_go_new->setVal(0);
-    ro_go_new->copy(*m_leveldata[lev]->ro_go, 0, 0, m_leveldata[lev]->ro_go->nComp(),
-                    m_leveldata[lev]->ro_go->nGrow(), m_leveldata[lev]->ro_go->nGrow());
+    ro_go_new->ParallelCopy(*m_leveldata[lev]->ro_go, 0, 0, m_leveldata[lev]->ro_go->nComp(),
+                    src_ngrow, m_leveldata[lev]->ro_go->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->ro_go, ro_go_new);
     delete ro_go_new;
 
@@ -262,8 +265,8 @@ mfix::RegridArrays (int lev)
                                       m_leveldata[lev]->trac->nGrow(),
                                       MFInfo(), *ebfactory[lev]);
     trac_new->setVal(0);
-    trac_new->copy(*m_leveldata[lev]->trac, 0, 0, m_leveldata[lev]->trac->nComp(),
-                   m_leveldata[lev]->trac->nGrow(), m_leveldata[lev]->trac->nGrow());
+    trac_new->ParallelCopy(*m_leveldata[lev]->trac, 0, 0, m_leveldata[lev]->trac->nComp(),
+                   src_ngrow, m_leveldata[lev]->trac->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->trac, trac_new);
     delete trac_new;
 
@@ -273,8 +276,8 @@ mfix::RegridArrays (int lev)
                                         m_leveldata[lev]->trac_o->nGrow(),
                                         MFInfo(), *ebfactory[lev]);
     trac_o_new->setVal(0);
-    trac_o_new->copy(*m_leveldata[lev]->trac_o, 0, 0, m_leveldata[lev]->trac_o->nComp(),
-                     m_leveldata[lev]->trac_o->nGrow(), m_leveldata[lev]->trac_o->nGrow());
+    trac_o_new->ParallelCopy(*m_leveldata[lev]->trac_o, 0, 0, m_leveldata[lev]->trac_o->nComp(),
+                     src_ngrow, m_leveldata[lev]->trac_o->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->trac_o, trac_o_new);
     delete trac_o_new;
 
@@ -285,8 +288,8 @@ mfix::RegridArrays (int lev)
                                      m_leveldata[lev]->p_g->nGrow(),
                                      MFInfo(), *ebfactory[lev]);
     p_g_new->setVal(0);
-    p_g_new->copy(*m_leveldata[lev]->p_g, 0, 0, m_leveldata[lev]->p_g->nComp(),
-                  m_leveldata[lev]->p_g->nGrow(), m_leveldata[lev]->p_g->nGrow());
+    p_g_new->ParallelCopy(*m_leveldata[lev]->p_g, 0, 0, m_leveldata[lev]->p_g->nComp(),
+                  src_ngrow, m_leveldata[lev]->p_g->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->p_g, p_g_new);
     delete p_g_new;
 
@@ -295,8 +298,8 @@ mfix::RegridArrays (int lev)
                                       m_leveldata[lev]->p_go->nGrow(),
                                       MFInfo(), *ebfactory[lev]);
     p_go_new->setVal(0);
-    p_go_new->copy(*m_leveldata[lev]->p_go, 0, 0, m_leveldata[lev]->p_go->nComp(),
-                   m_leveldata[lev]->p_go->nGrow(), m_leveldata[lev]->p_go->nGrow());
+    p_go_new->ParallelCopy(*m_leveldata[lev]->p_go, 0, 0, m_leveldata[lev]->p_go->nComp(),
+                   src_ngrow, m_leveldata[lev]->p_go->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->p_go, p_go_new);
     delete p_go_new;
 
@@ -305,17 +308,16 @@ mfix::RegridArrays (int lev)
                                       m_leveldata[lev]->p0_g->nGrow(),
                                       MFInfo(), *ebfactory[lev]);
     p0_g_new->setVal(0);
-    p0_g_new->copy(*m_leveldata[lev]->p0_g, 0, 0,
-                   m_leveldata[lev]->p0_g->nComp(),
-                   m_leveldata[lev]->p0_g->nGrow(),
-                   m_leveldata[lev]->p0_g->nGrow());
+    p0_g_new->ParallelCopy(*m_leveldata[lev]->p0_g, 0, 0, m_leveldata[lev]->p0_g->nComp(),
+                   src_ngrow, m_leveldata[lev]->p0_g->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->p0_g, p0_g_new);
     delete p0_g_new;
 
     MultiFab* diveu_new = new MultiFab(nd_grids, dmap[lev], m_leveldata[lev]->diveu->nComp(),
                                        m_leveldata[lev]->diveu->nGrow(), MFInfo(), *ebfactory[lev]);
     diveu_new->setVal(0);
-    diveu_new->copy(*m_leveldata[lev]->diveu, 0, 0, m_leveldata[lev]->diveu->nComp(), m_leveldata[lev]->diveu->nGrow(), m_leveldata[lev]->diveu->nGrow());
+    diveu_new->ParallelCopy(*m_leveldata[lev]->diveu, 0, 0, m_leveldata[lev]->diveu->nComp(), 
+                    src_ngrow, m_leveldata[lev]->diveu->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->diveu, diveu_new);
     delete diveu_new;
 
@@ -325,8 +327,8 @@ mfix::RegridArrays (int lev)
                                       m_leveldata[lev]->mu_g->nGrow(),
                                       MFInfo(), *ebfactory[lev]);
     mu_g_new->setVal(0);
-    mu_g_new->copy(*m_leveldata[lev]->mu_g, 0, 0, m_leveldata[lev]->mu_g->nComp(),
-                   m_leveldata[lev]->mu_g->nGrow(), m_leveldata[lev]->mu_g->nGrow());
+    mu_g_new->ParallelCopy(*m_leveldata[lev]->mu_g, 0, 0, m_leveldata[lev]->mu_g->nComp(),
+                   src_ngrow, m_leveldata[lev]->mu_g->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->mu_g, mu_g_new);
     delete mu_g_new;
 
@@ -336,8 +338,8 @@ mfix::RegridArrays (int lev)
                                        m_leveldata[lev]->vel_g->nGrow(),
                                        MFInfo(), *ebfactory[lev]);
     vel_g_new->setVal(0);
-    vel_g_new->copy(*m_leveldata[lev]->vel_g, 0, 0, m_leveldata[lev]->vel_g->nComp(),
-                    m_leveldata[lev]->vel_g->nGrow(), m_leveldata[lev]->vel_g->nGrow());
+    vel_g_new->ParallelCopy(*m_leveldata[lev]->vel_g, 0, 0, m_leveldata[lev]->vel_g->nComp(),
+                    src_ngrow, m_leveldata[lev]->vel_g->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->vel_g, vel_g_new);
     delete vel_g_new;
 
@@ -347,8 +349,8 @@ mfix::RegridArrays (int lev)
                                         m_leveldata[lev]->vel_go->nGrow(),
                                         MFInfo(), *ebfactory[lev]);
     vel_go_new->setVal(0);
-    vel_go_new->copy(*m_leveldata[lev]->vel_go, 0, 0, m_leveldata[lev]->vel_go->nComp(),
-                     m_leveldata[lev]->vel_go->nGrow(), m_leveldata[lev]->vel_go->nGrow());
+    vel_go_new->ParallelCopy(*m_leveldata[lev]->vel_go, 0, 0, m_leveldata[lev]->vel_go->nComp(),
+                     src_ngrow, m_leveldata[lev]->vel_go->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->vel_go, vel_go_new);
     delete vel_go_new;
 
@@ -358,8 +360,8 @@ mfix::RegridArrays (int lev)
                                     m_leveldata[lev]->gp->nGrow(),
                                     MFInfo(), *ebfactory[lev]);
     gp_new->setVal(0);
-    gp_new->copy(*m_leveldata[lev]->gp, 0, 0, m_leveldata[lev]->gp->nComp(),
-                 m_leveldata[lev]->gp->nGrow(), m_leveldata[lev]->gp->nGrow());
+    gp_new->ParallelCopy(*m_leveldata[lev]->gp, 0, 0, m_leveldata[lev]->gp->nComp(),
+                 src_ngrow, m_leveldata[lev]->gp->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->gp, gp_new);
     delete gp_new;
 
@@ -369,8 +371,8 @@ mfix::RegridArrays (int lev)
                                       m_leveldata[lev]->vort->nGrow(),
                                       MFInfo(), *ebfactory[lev]);
     vort_new->setVal(0);
-    vort_new->copy(*m_leveldata[lev]->vort, 0, 0, m_leveldata[lev]->vort->nComp(),
-                   m_leveldata[lev]->vort->nGrow(), m_leveldata[lev]->vort->nGrow());
+    vort_new->ParallelCopy(*m_leveldata[lev]->vort, 0, 0, m_leveldata[lev]->vort->nComp(),
+                   src_ngrow, m_leveldata[lev]->vort->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->vort, vort_new);
     delete vort_new;
 
@@ -380,8 +382,8 @@ mfix::RegridArrays (int lev)
                                       m_leveldata[lev]->drag->nGrow(),
                                       MFInfo(), *ebfactory[lev]);
     drag_new->setVal(0.);
-    drag_new->copy(*m_leveldata[lev]->drag, 0, 0, m_leveldata[lev]->drag->nComp(),
-                   m_leveldata[lev]->drag->nGrow(), m_leveldata[lev]->drag->nGrow());
+    drag_new->ParallelCopy(*m_leveldata[lev]->drag, 0, 0, m_leveldata[lev]->drag->nComp(),
+                   src_ngrow, m_leveldata[lev]->drag->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->drag, drag_new);
     delete drag_new;
 
