@@ -368,7 +368,9 @@ int main (int argc, char* argv[])
                      ( max_step >= 0 && nstep >= max_step ) );
                 if ( do_not_evolve ) finish = 1;
 
+                amrex::Print() << "Roberto PrintUsage START" << std::endl;
                 Arena::PrintUsage();
+                amrex::Print() << "Roberto PrintUsage END" << std::endl;
             }
         }
     }
