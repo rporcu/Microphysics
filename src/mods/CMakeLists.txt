@@ -4,25 +4,21 @@ target_include_directories(mfixcore
 
 target_sources( mfixcore
    PRIVATE
-   bc_mod.f90
-   bc_mod_F.H
-   constant_mod.f90
-   constant_mod_F.H
-   eos_mod.f90
-   eos_mod.hpp
+   eos_mod.H
    eos_mod.cpp
-   fld_constants_mod.f90
-   fld_constants_mod_F.H
-   ps_mod.f90
-   ic_mod.f90
-   ic_mod_F.H
    utilities_mod.f90
-   scales_mod.f90
-   scales_mod_F.H
-   scales_mod_F.cpp
-   output_mod.f90
    param_mod.f90
    param_mod_F.H
    param_mod_F.cpp
    run_mod.f90
+   MFIX_FLUID_Parms.cpp
+   MFIX_FLUID_Parms.H
+   MFIX_DEM_Parms.cpp
+   MFIX_DEM_Parms.H
+   MFIX_IC_Parms.cpp
+   MFIX_IC_Parms.H
+   MFIX_BC_Parms.cpp
+   MFIX_BC_Parms.H
+   MFIX_REGIONS_Parms.cpp
+   MFIX_REGIONS_Parms.H
    )

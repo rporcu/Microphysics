@@ -25,7 +25,7 @@
  *                                                                              *
  *******************************************************************************/
 void
-mfix::make_eb_air_reactor()
+mfix::make_eb_air_reactor ()
 {
     ParmParse pp("airreactor");
 
@@ -131,13 +131,11 @@ mfix::make_eb_air_reactor()
     center = {outlet_height, offset, 0.0};
     auto outlet2 = EB2::translate(outlet1, center);
 
-
     /****************************************************************************
      * Attached the outflow pipe to the air-reactor's riser                     *
      ***************************************************************************/
 
     auto airreactor = EB2::makeIntersection(airreactor2, outlet2);
-
 
     /****************************************************************************
      *                                                                          *
@@ -149,8 +147,6 @@ mfix::make_eb_air_reactor()
     auto gshop_cyc = EB2::makeShop(airreactor);
 
     build_eb_levels(gshop_cyc);
-
-
 
     Print() << "Done making the fluid eb levels ..." << std::endl;
 }

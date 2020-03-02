@@ -9,6 +9,8 @@ mfix.fixed_dt        = 1.0e-4
 
 mfix.cfl = 0.5
 
+mfix.gravity = -9.81   0.0   0.0
+
 mfix.drag_type = "BVK2"
 
 mfix.max_step = 5
@@ -79,7 +81,6 @@ mfix.write_eb_surface = false  # Needed to output eb-surfaces
 mfix.geometry = "cylinder"
 
 cylinder.internal_flow = true
-cylinder.closed_bottom = true
 cylinder.bottom_offset = 1.0e-8
 
 cylinder.radius = 0.0054
@@ -129,3 +130,77 @@ xhi.type = "po"
 xhi.pressure = 0.0
 
 amr.plt_regtest = 1
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = None
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = solid0
+
+dem.friction_coeff.pp     =     0.0
+dem.friction_coeff.pw     =     0.0
+                              
+dem.spring_const.pp       =    10.0
+dem.spring_const.pw       =    10.0
+                              
+dem.restitution_coeff.solid0.solid0  =     0.8
+dem.restitution_coeff.solid0.wall  =     1.0
+                              
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+                              
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = full-domain  bed
+
+regions.full-domain.lo = 0.000  0.000  0.000
+regions.full-domain.hi = 0.048  0.012  0.012
+
+regions.bed.lo = 0.0036  0.000  0.000
+regions.bed.hi = 0.0384  0.012  0.012
+
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = full-domain  bed
+
+
+# Backgound IC covering the full domain with gas.
+#---------------------------------------------------------------------//
+ic.full-domain.fluid.volfrac   =  1.0
+
+ic.full-domain.fluid.velocity  = 0.015  0.0  0.0
+
+
+# Define the initial bed of solids
+#---------------------------------------------------------------------//
+ic.bed.fluid.volfrac   =  0.725
+
+ic.bed.fluid.velocity  =  0.015  0.00  0.00
+
+ic.bed.solids  = solid0
+ic.bed.packing = random
+
+ic.bed.solid0.volfrac  =  0.275
+
+ic.bed.solid0.velocity =  0.00  0.00  0.00
+
+ic.bed.solid0.diameter = constant
+ic.bed.solid0.density  = constant
+
+ic.bed.solid0.diameter.constant =  100.0e-6
+ic.bed.solid0.density.constant  = 1000.0

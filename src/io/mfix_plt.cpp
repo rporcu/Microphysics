@@ -1,11 +1,12 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_VisMF.H>    // amrex::VisMF::Write(MultiFab)
 #include <AMReX_VectorIO.H> // amrex::[read,write]IntData(array_of_ints)
-#include <AMReX_EBMultiFabUtil.H>
 #include <AMReX_ParmParse.H>
 
 #include <mfix.H>
 #include <mfix_F.H>
+#include <MFIX_FLUID_Parms.H>
+#include <MFIX_DEM_Parms.H>
 
 namespace
 {
@@ -22,14 +23,14 @@ mfix::InitIOPltData ()
   pltVarCount = 0;
 
   ParmParse pp("amr");
-
-  if (solve_fluid)
+  if (FLUID::solve)
     {
 
       pp.query("plt_vel_g",   plt_vel_g  );
       pp.query("plt_ep_g",    plt_ep_g   );
       pp.query("plt_p_g",     plt_p_g    );
       pp.query("plt_ro_g",    plt_ro_g   );
+      pp.query("plt_trac",    plt_trac   );
       pp.query("plt_mu_g",    plt_mu_g   );
       pp.query("plt_diveu",   plt_diveu  );
       pp.query("plt_vort",    plt_vort   );
@@ -42,11 +43,12 @@ mfix::InitIOPltData ()
       int plt_ccse_regtest = 0;
       pp.query("plt_regtest", plt_ccse_regtest);
 
-      if(plt_ccse_regtest != 0) {
+      if (plt_ccse_regtest != 0) {
         plt_vel_g   = 1;
         plt_ep_g    = 1;
         plt_p_g     = 1;
         plt_ro_g    = 1;
+        plt_trac    = 1;
         plt_mu_g    = 1;
         plt_vort    = 1;
         plt_diveu   = 1;
@@ -60,13 +62,14 @@ mfix::InitIOPltData ()
       if( plt_ep_g    == 1) pltVarCount += 1;
       if( plt_p_g     == 1) pltVarCount += 1;
       if( plt_ro_g    == 1) pltVarCount += 1;
+      if( plt_trac    == 1) pltVarCount += 1;
       if( plt_mu_g    == 1) pltVarCount += 1;
       if( plt_vort    == 1) pltVarCount += 1;
       if( plt_diveu   == 1) pltVarCount += 1;
       if( plt_volfrac == 1) pltVarCount += 1;
     }
 
-  if(solve_dem)
+  if(DEM::solve)
     {
 
       int plt_ccse_regtest = 0;
@@ -74,7 +77,7 @@ mfix::InitIOPltData ()
 
       // All flags are true by default so we only need to turn off the
       // variables we don't want if not doing CCSE regression tests.
-      if(plt_ccse_regtest == 0) {
+      if (plt_ccse_regtest == 0) {
 
         int input_value = 0;
         pp.query("plt_radius",   input_value );
@@ -114,7 +117,6 @@ mfix::InitIOPltData ()
         write_real_comp[12] = input_value;
         write_real_comp[13] = input_value;
 
-
         input_value = 0;
         pp.query("plt_phase",   input_value );
         write_int_comp[0] = input_value;
@@ -129,13 +131,20 @@ mfix::InitIOPltData ()
 
 }
 
-void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time ) const
+void 
+mfix::WritePlotFile (std::string& plot_file, int nstep, Real time ) 
 {
+    // If we've already written this plotfile, don't do it again!
+    if (nstep == last_plt) return;
+
+    // Now set last_plt to nstep ...
+    last_plt = nstep;
+
     BL_PROFILE("mfix::WritePlotFile()");
 
     const std::string& plotfilename = amrex::Concatenate(plot_file,nstep);
 
-    amrex::Print() << "  Writing plotfile " << plotfilename << std::endl;
+    amrex::Print() << "  Writing plotfile " << plotfilename <<  " at time " << time << std::endl;
 
 
     if (pltVarCount > 0) {
@@ -171,6 +180,10 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
       if( plt_ro_g    == 1)
         pltFldNames.push_back("ro_g");
 
+      // Tracer in fluid
+      if( plt_trac    == 1)
+        pltFldNames.push_back("trac");
+
       // Fluid viscosity
       if( plt_mu_g    == 1)
         pltFldNames.push_back("mu_g");
@@ -198,57 +211,63 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
 
         // Velocity components
         if( plt_vel_g   == 1) {
-          MultiFab::Copy(*mf[lev], (*vel_g[lev]), 0, lc  , 1, 0);
-          MultiFab::Copy(*mf[lev], (*vel_g[lev]), 1, lc+1, 1, 0);
-          MultiFab::Copy(*mf[lev], (*vel_g[lev]), 2, lc+2, 1, 0);
+          MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->vel_g), 0, lc  , 1, 0);
+          MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->vel_g), 1, lc+1, 1, 0);
+          MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->vel_g), 2, lc+2, 1, 0);
           lc += 3;
         }
 
         // Pressure gradient
         if( plt_gradp_g == 1) {
-          MultiFab::Copy(*mf[lev], (*gp[lev]), 0, lc  , 1, 0);
-          MultiFab::Copy(*mf[lev], (*gp[lev]), 1, lc+1, 1, 0);
-          MultiFab::Copy(*mf[lev], (*gp[lev]), 2, lc+2, 1, 0);
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->gp, 0, lc  , 1, 0);
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->gp, 1, lc+1, 1, 0);
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->gp, 2, lc+2, 1, 0);
           lc += 3;
         }
 
         // Fluid volume fraction
         if( plt_ep_g    == 1) {
-          MultiFab::Copy(*mf[lev], (*ep_g[lev]), 0, lc, 1, 0);
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->ep_g, 0, lc, 1, 0);
           lc += 1;
         }
 
         // Fluid pressure
         if( plt_p_g    == 1) {
-          MultiFab p_nd(p_g[lev]->boxArray(),dmap[lev],1,0);
+          MultiFab p_nd(m_leveldata[lev]->p_g->boxArray(), dmap[lev], 1, 0);
           p_nd.setVal(0.);
-          MultiFab::Copy(p_nd, (* p_g[lev]), 0, 0, 1, 0);
-          MultiFab::Add (p_nd, (*p0_g[lev]), 0, 0, 1, 0);
+          MultiFab::Copy(p_nd, *m_leveldata[lev]->p_g, 0, 0, 1, 0);
+          MultiFab::Add (p_nd, *m_leveldata[lev]->p0_g, 0, 0, 1, 0);
           amrex::average_node_to_cellcenter(*mf[lev], lc, p_nd, 0, 1);
           lc += 1;
         }
 
         // Fluid density
         if( plt_ro_g    == 1) {
-          MultiFab::Copy(*mf[lev], (*ro_g[lev]), 0, lc, 1, 0);
+          MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->ro_g), 0, lc, 1, 0);
+          lc += 1;
+        }
+
+        // Fluid density
+        if( plt_trac    == 1) {
+          MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->trac), 0, lc, 1, 0);
           lc += 1;
         }
 
         // Fluid viscosity
         if( plt_mu_g    == 1) {
-          MultiFab::Copy(*mf[lev], (*mu_g[lev]), 0, lc, 1, 0);
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->mu_g, 0, lc, 1, 0);
           lc += 1;
         }
 
         // vorticity
         if( plt_vort   == 1) {
-          MultiFab::Copy(*mf[lev], (*vort[lev]), 0, lc, 1, 0);
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->vort, 0, lc, 1, 0);
           lc += 1;
         }
 
         // div(ep_g.u)
         if( plt_diveu   == 1) {
-          amrex::average_node_to_cellcenter(*mf[lev], lc, (*diveu[lev]), 0, 1);
+          amrex::average_node_to_cellcenter(*mf[lev], lc, *m_leveldata[lev]->diveu, 0, 1);
           lc += 1;
         }
 
@@ -310,7 +329,7 @@ void mfix::WritePlotFile (std::string& plot_file, int nstep, Real dt, Real time 
 
     WriteJobInfo(plotfilename);
 
-    if ( solve_dem )
+    if ( DEM::solve )
     {
         Vector<std::string> real_comp_names;
         Vector<std::string>  int_comp_names;
@@ -352,7 +371,7 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
      ***************************************************************************/
 
     Vector<std::string> static_names = {"level_sets", "volfrac"};
-    Vector< const Vector<std::unique_ptr<MultiFab>> * > static_vars = {& level_sets};
+    Vector< const Vector< MultiFab* > * > static_vars = {& level_sets};
 
     const int ngrow = 0;
     const int ncomp = static_names.size();

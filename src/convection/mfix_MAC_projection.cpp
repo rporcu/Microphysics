@@ -1,262 +1,160 @@
-#include <AMReX_REAL.H>
-#include <AMReX_BLFort.H>
-#include <AMReX_SPACE.H>
-
-#include <mfix_proj_F.H>
-#include <mfix_F.H>
 #include <mfix.H>
+#include <MFIX_BC_Parms.H>
 
-#include <AMReX_EBFArrayBox.H>
-#include <AMReX_EBMultiFabUtil.H>
-#include <AMReX_MultiFabUtil.H>
 #include <AMReX_MacProjector.H>
 
 using namespace amrex;
 
 //
 // Computes the following decomposition:
-// 
-//    u + c*grad(phi)/ro = u*  with  div(ep*u) = 0
 //
-// Inputs:
-// 
-//   lev    = the AMR level
-//   u,v,w  = the MAC velocity field to be projected
-//   ep     = the cell-centered volume fraction
-//   ro     = the cell-centered density
-//
-// Outputs:
-//
-//  phi     = the projection auxiliary function
-//  u,v,w   = the PROJECTED MAC velocity field 
+//    u* = u + c*grad(phi)/ro with  div(ep u) = 0
 //
 // Notes:
 //
 //  phi is computed by solving
 //
-//       div(ep*grad(phi)/ro) = div(ep * u*)
+//       div(ep*grad(phi)/ro) = div(ep u*)
 //
-//  WARNING: this method returns the MAC velocity with up-to-date BCs in place
-// 
-void 
-mfix::apply_MAC_projection (Vector< std::unique_ptr<MultiFab> >& u, 
-                            Vector< std::unique_ptr<MultiFab> >& v,
-                            Vector< std::unique_ptr<MultiFab> >& w,
-                            Vector< std::unique_ptr<MultiFab> >& ep,
-                            const Vector< std::unique_ptr<MultiFab> >& ro,
-                            Real time, int steady_state)
-{
-   BL_PROFILE("mfix::apply_MAC_projection()");
-
-   if (m_verbose)
-      Print() << "MAC Projection:\n";
-
-   // Check that everything is consistent with amrcore
-   // update_internals();
-
-   // Setup for solve
-   Vector<Array<MultiFab*,AMREX_SPACEDIM> > vel;
-   vel.resize(finest_level+1);
-
-   if (m_verbose)
-      Print() << " >> Before projection\n" ; 
-
-   // ep_face and ro_face are now temporaries, no need to keep them outside this routine
-   Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ep_face;
-   Vector< Array< std::unique_ptr<MultiFab>, AMREX_SPACEDIM> > ro_face;
-
-   ep_face.resize(finest_level+1);
-   ro_face.resize(finest_level+1);
-   
-   for ( int lev=0; lev <= finest_level; ++lev )
-   {
-      BoxArray x_edge_ba = grids[lev];
-      x_edge_ba.surroundingNodes(0);
-      BoxArray y_edge_ba = grids[lev];
-      y_edge_ba.surroundingNodes(1);
-      BoxArray z_edge_ba = grids[lev];
-      z_edge_ba.surroundingNodes(2);
-
-      ep_face[lev][0].reset(new MultiFab(x_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-      ep_face[lev][1].reset(new MultiFab(y_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-      ep_face[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-
-      ro_face[lev][0].reset(new MultiFab(x_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-      ro_face[lev][1].reset(new MultiFab(y_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-      ro_face[lev][2].reset(new MultiFab(z_edge_ba,dmap[lev],1,0,MFInfo(),*ebfactory[lev]));
-
-      // Compute ep at faces
-      ep[lev]->FillBoundary(geom[lev].periodicity());
-     
-      average_cellcenter_to_face( GetArrOfPtrs(ep_face[lev]), *ep[lev], geom[lev] );
-      average_cellcenter_to_face( GetArrOfPtrs(ro_face[lev]), *ro[lev], geom[lev] );
-
-      MultiFab::Copy( *bcoeff_cc[lev][0], *(ep_face[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Copy( *bcoeff_cc[lev][1], *(ep_face[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Copy( *bcoeff_cc[lev][2], *(ep_face[lev][2]), 0, 0, 1, 0 );
-
-      // Set velocity bcs -- before we multiply by ep
-      set_MC_velocity_bcs( lev, u, v, w, time );
-
-      // Compute ep*u at faces and store it in u, v, w
-      MultiFab::Multiply( *u[lev], *(ep_face[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Multiply( *v[lev], *(ep_face[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Multiply( *w[lev], *(ep_face[lev][2]), 0, 0, 1, 0 );
-
-      // Compute beta coefficients for div(beta*grad(phi)) = RHS:  beta = ep / ro
-      MultiFab::Divide( *bcoeff_cc[lev][0], *(ro_face[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Divide( *bcoeff_cc[lev][1], *(ro_face[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Divide( *bcoeff_cc[lev][2], *(ro_face[lev][2]), 0, 0, 1, 0 );
-
-      // Store in temporaries
-      (vel[lev])[0] = u[lev].get();
-      (vel[lev])[1] = v[lev].get();
-      (vel[lev])[2] = w[lev].get();
-
-      for (int i=0; i<AMREX_SPACEDIM; ++i)
-         (vel[lev])[i]->FillBoundary( geom[lev].periodicity() );
-      
-      if (m_verbose)
-      {
-         EB_computeDivergence(*mac_rhs[lev],
-                              GetArrOfConstPtrs(vel[lev]),
-                              geom[lev]);
-
-         Print() << "  * On level "<< lev
-                 << " max(abs(diveu)) = " << mfix_norm0(mac_rhs,lev,0) << "\n";
-      }  
-   }
-
-   //
-   // If we want to set max_coarsening_level we have to send it in to the constructor
-   //
-   LPInfo lp_info;
-   lp_info.setMaxCoarseningLevel(mac_mg_max_coarsening_level);
-
-   //
-   // Perform MAC projection
-   //
-   MacProjector macproj( vel, GetVecOfArrOfPtrsConst(bcoeff_cc), geom, lp_info);
-
-   macproj.setDomainBC  ( ppe_lobc, ppe_hibc );
-   macproj.setVerbose   ( mac_mg_verbose);
-   macproj.setCGVerbose ( mac_mg_cg_verbose);
-   macproj.setMaxIter   ( mac_mg_maxiter);
-   macproj.setCGMaxIter ( mac_mg_cg_maxiter);   
-   // The default bottom solver is BiCG
-   // Other options include:
-   ///   Hypre IJ AMG solver
-   //    macproj.getMLMG().setBottomSolver(MLMG::BottomSolver::hypre);
-   ///   regular smoothing
-   //    macproj.getMLMG().setBottomSolver(MLMG::BottomSolver::smoother);
-
-   if (mac_bottom_solver_type == "smoother")
-   {
-      macproj.setBottomSolver(MLMG::BottomSolver::smoother);
-   }
-   else if (mac_bottom_solver_type == "cg")
-   {
-      macproj.setBottomSolver(MLMG::BottomSolver::cg);
-   }
-   else if (mac_bottom_solver_type == "bicgcg")
-   {
-      macproj.setBottomSolver(MLMG::BottomSolver::bicgcg);
-   }
-   else if (mac_bottom_solver_type == "cgbicg")
-   {
-      macproj.setBottomSolver(MLMG::BottomSolver::cgbicg);
-   }
-   else if (mac_bottom_solver_type == "hypre")
-   {
-      macproj.setBottomSolver(MLMG::BottomSolver::hypre);
-   }
-
-   if (steady_state)
-   {
-       // Solve using mac_phi as an initial guess -- note that mac_phi is
-       //       stored from iteration to iteration
-       macproj.project(GetVecOfPtrs(mac_phi), mac_mg_rtol,mac_mg_atol);
-   } 
-   else 
-   {
-       // Solve with initial guess of zero
-       macproj.project(mac_mg_rtol,mac_mg_atol);
-   }
-
-   // Get MAC velocities at face CENTER by dividing solution by ep at faces
-   if (m_verbose)
-      Print() << " >> After projection\n" ; 
-   
-   for ( int lev=0; lev <= finest_level ; ++lev )
-   {   
-      if (m_verbose)
-      {
-         vel[lev][0]->FillBoundary( geom[lev].periodicity() );
-         vel[lev][1]->FillBoundary( geom[lev].periodicity() );
-         vel[lev][2]->FillBoundary( geom[lev].periodicity() );
-         
-         EB_computeDivergence(*mac_rhs[lev],
-                              GetArrOfConstPtrs(vel[lev]),
-                              geom[lev]);
-
-         Print() << "  * On level "<< lev
-                 << " max(abs(diveu)) = " << mfix_norm0(mac_rhs,lev,0) << "\n";
-      } 
-
-      // Now convert (eps u, eps v, eps w) back to u,v,w
-      MultiFab::Divide( *u[lev], *(ep_face[lev][0]), 0, 0, 1, 0 );
-      MultiFab::Divide( *v[lev], *(ep_face[lev][1]), 0, 0, 1, 0 );
-      MultiFab::Divide( *w[lev], *(ep_face[lev][2]), 0, 0, 1, 0 ); 
-
-      // Set velocity bcs
-      set_MC_velocity_bcs( lev, u, v, w, time );
-   }
-}
-
-
-
+//  This method returns the MAC velocity with up-to-date BCs in place
 //
-// Set the BCs for velocity only
-// 
 void
-mfix::set_MC_velocity_bcs ( int lev,
-                             Vector< std::unique_ptr<MultiFab> >& u,
-                             Vector< std::unique_ptr<MultiFab> >& v,
-                             Vector< std::unique_ptr<MultiFab> >& w,
-                             amrex::Real time)
+mfix::apply_MAC_projection (Vector< MultiFab* >& ep_u_mac,
+                            Vector< MultiFab* >& ep_v_mac,
+                            Vector< MultiFab* >& ep_w_mac,
+                            Vector< MultiFab* >& ep_in,
+                            Vector< MultiFab* >& ro_in,
+                            Real time)
 {
-   BL_PROFILE("MacProjection::set_MAC_velocity_bcs()");
+  BL_PROFILE("mfix::apply_MAC_projection()");
 
-   u[lev] -> FillBoundary( geom[lev].periodicity() );
-   v[lev] -> FillBoundary( geom[lev].periodicity() );
-   w[lev] -> FillBoundary( geom[lev].periodicity() );
-     
-   Box domain(geom[lev].Domain()); 
+  if (m_verbose)
+    Print() << "MAC Projection:\n";
 
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-   for (MFIter mfi((*mac_rhs[lev]), false); mfi.isValid(); ++mfi)
-   {
-      const Box& bx = (*mac_rhs[lev])[mfi].box();
+  // Check that everything is consistent with amrcore
+  // update_internals();
 
-      set_mac_velocity_bcs(&time, bx, &mfi, lev, u, v, w, domain);
-   }
+  // Setup for solve
+  Vector< Array<MultiFab*,3> > vel;
+  vel.resize(finest_level+1);
+
+  if (m_verbose)
+    Print() << " >> Before projection\n" ;
+
+  // Set bc's on density and ep_g so ro_face and ep_face will have correct values
+  mfix_set_density_bcs(time, ro_in);
+
+  // ro_face and ep_face are temporary, no need to keep it outside this routine
+  Vector< Array<MultiFab*,3> > ro_face;
+  Vector< Array<MultiFab*,3> > ep_face;
+
+  ep_face.resize(finest_level+1);
+  ro_face.resize(finest_level+1);
+
+  for ( int lev=0; lev <= finest_level; ++lev )
+  {
+    ep_in[lev]->FillBoundary(geom[lev].periodicity());
+    ro_in[lev]->FillBoundary(geom[lev].periodicity());
+
+    ep_face[lev][0] = new MultiFab(ep_u_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]);
+    ep_face[lev][1] = new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]);
+    ep_face[lev][2] = new MultiFab(ep_w_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]);
+
+    ro_face[lev][0] = new MultiFab(ep_u_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]);
+    ro_face[lev][1] = new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]);
+    ro_face[lev][2] = new MultiFab(ep_w_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]);
+
+    // Define ep and rho on faces
+    average_cellcenter_to_face(ep_face[lev], *ep_in[lev], geom[lev]);
+    average_cellcenter_to_face(ro_face[lev], *ro_in[lev], geom[lev]);
+
+    // Compute ep_face into bcoeff
+    MultiFab::Copy(*bcoeff[lev][0], *(ep_face[lev][0]), 0, 0, 1, 0);
+    MultiFab::Copy(*bcoeff[lev][1], *(ep_face[lev][1]), 0, 0, 1, 0);
+    MultiFab::Copy(*bcoeff[lev][2], *(ep_face[lev][2]), 0, 0, 1, 0);
+
+    // Compute beta coefficients for div(beta*grad(phi)) = RHS:  beta = ep / ro
+    MultiFab::Divide(*bcoeff[lev][0], *(ro_face[lev][0]), 0, 0, 1, 0);
+    MultiFab::Divide(*bcoeff[lev][1], *(ro_face[lev][1]), 0, 0, 1, 0);
+    MultiFab::Divide(*bcoeff[lev][2], *(ro_face[lev][2]), 0, 0, 1, 0);
+
+    // Store (ep * u) in temporaries
+    (vel[lev])[0] = ep_u_mac[lev];
+    (vel[lev])[1] = ep_v_mac[lev];
+    (vel[lev])[2] = ep_w_mac[lev];
+
+    for (int i=0; i < 3; ++i)
+      (vel[lev])[i]->FillBoundary(geom[lev].periodicity());
+
+    if (m_verbose)
+    {
+      bool already_on_centroid = true;
+      EB_computeDivergence(*m_leveldata[lev]->mac_rhs, GetArrOfConstPtrs(vel[lev]),
+          geom[lev], already_on_centroid);
+
+      Print() << "  * On level "<< lev << " max(abs(diveu)) = "
+              << m_leveldata[lev]->mac_rhs->norm0(0,0,false,true) << "\n";
+    }
+  }
+
+  //
+  // If we want to set max_coarsening_level we have to send it in to the constructor
+  //
+  LPInfo lp_info;
+  lp_info.setMaxCoarseningLevel(mac_mg_max_coarsening_level);
+
+  //
+  // Perform MAC projection
+  //
+  Vector< Array <MultiFab const*, 3>> const_bcoeff;
+  const_bcoeff.reserve(bcoeff.size());
+  for (const auto& x : bcoeff) const_bcoeff.push_back(GetArrOfConstPtrs(x));
+
+  MacProjector macproj(vel, const_bcoeff, geom, lp_info);
+
+  macproj.setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
+
+  if (steady_state)
+  {
+    // Solve using mac_phi as an initial guess -- note that mac_phi is
+    //       stored from iteration to iteration
+    Vector< MultiFab* > mac_phi(m_leveldata.size(), nullptr);
+    for (int lev(0); lev < m_leveldata.size(); ++lev)
+      mac_phi[lev] = m_leveldata[lev]->mac_phi;
+
+    macproj.project(mac_phi, mac_mg_rtol, mac_mg_atol, MLMG::Location::FaceCentroid);
+  }
+  else
+  {
+    // Solve with initial guess of zero
+    macproj.project(mac_mg_rtol, mac_mg_atol, MLMG::Location::FaceCentroid);
+  }
+
+  // Get MAC velocities at face CENTER by dividing solution by ep at faces
+  if (m_verbose)
+    Print() << " >> After projection\n" ;
+
+  for ( int lev=0; lev <= finest_level ; ++lev )
+  {
+    if (m_verbose)
+    {
+      vel[lev][0]->FillBoundary(geom[lev].periodicity());
+      vel[lev][1]->FillBoundary(geom[lev].periodicity());
+      vel[lev][2]->FillBoundary(geom[lev].periodicity());
+
+      bool already_on_centroid = true;
+      EB_computeDivergence(*m_leveldata[lev]->mac_rhs, GetArrOfConstPtrs(vel[lev]),
+                           geom[lev], already_on_centroid);
+
+      Print() << "  * On level "<< lev << " max(abs(diveu)) = "
+              << m_leveldata[lev]->mac_rhs->norm0(0,0,false,true) << "\n";
+    }
+
+    // Set bcs on (ep * u_mac)
+    set_MAC_velocity_bcs(lev, ep_u_mac, ep_v_mac, ep_w_mac, time);
+
+    ep_u_mac[lev]->FillBoundary(geom[lev].periodicity());
+    ep_v_mac[lev]->FillBoundary(geom[lev].periodicity());
+    ep_w_mac[lev]->FillBoundary(geom[lev].periodicity());
+  }
 }
-
-#if 0
-//
-// Norm 0 for EB Multifab
-//
-Real
-MacProjection::norm0 (const Vector<std::unique_ptr<MultiFab>>& mf, int lev)
-{
-   MultiFab mf_tmp( mf[lev]->boxArray(), mf[lev]->DistributionMap(), mf[lev]->nComp(),
-                    0,  MFInfo(), *(*m_ebfactory)[lev]);
-  
-   MultiFab::Copy( mf_tmp, *mf[lev], 0, 0, 1, 0 );
-   EB_set_covered( mf_tmp, 0.0 );
-  
-   return mf_tmp.norm0(0);
-}
-#endif

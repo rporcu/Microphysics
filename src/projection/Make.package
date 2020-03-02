@@ -1,1 +1,1 @@
-CEXE_sources   += mfix_projection.cpp
+CEXE_sources += mfix_apply_nodal_projection.cpp

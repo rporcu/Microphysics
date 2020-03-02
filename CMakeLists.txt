@@ -31,6 +31,22 @@ if(CCACHE_FOUND)
   set( CMAKE_CXX_COMPILER_LAUNCHER ccache )
 endif()
 
+# We want to offer the user some core options, i.e. MPI, OpenMP, CUDA, HYPRE
+# and floating-point exceptions, which require related AMReX components to
+# be enabled in the installation.
+# In STANDALONE mode, find_package will make sure these options are available
+# IN SUPERBUILD mode, These options will supersede AMReX options with the same name
+option( ENABLE_OMP    "Enable OpenMP" NO )
+option( ENABLE_MPI    "Enable MPI"   YES )
+option( ENABLE_HYPRE  "Enable HYPRE"  NO )
+option( ENABLE_CUDA   "Enable CUDA"   NO )
+option( ENABLE_FPE    "Enable Floating Point Exceptions checks" NO )
+
+if (ENABLE_CUDA)
+    enable_language(CUDA)
+endif ()
+
+
 # Setup AMReX
 include(MFIXSetupAMReX)
 
@@ -50,6 +66,15 @@ set( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 #
 add_subdirectory(src)
 
+#
+# We need to treat separately usr_drag.cpp to avoid duplication
+# of symbols when building the tests
+# If we do not do this and include usr_drag.cpp in mfixcore library,
+# CUDA compilation of the tests will fail
+#
+set(USR_DRAG_SRC  "${CMAKE_CURRENT_SOURCE_DIR}/src/usr/usr_drag.cpp"
+    CACHE INTERNAL "User drag routine")
+
 # Print out config summary
 print_mfix_configuration_summary (${MFIX_LIBNAME})
 
@@ -57,11 +82,13 @@ print_mfix_configuration_summary (${MFIX_LIBNAME})
 file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90 ${CMAKE_CURRENT_BINARY_DIR}/*.cpp)
 
 
-add_executable (${MFIX_EXENAME} ${MAIN} ${USR_OVERRIDES} )
+add_executable (${MFIX_EXENAME} ${MAIN} ${USR_OVERRIDES} ${USR_DRAG_SRC})
 target_link_libraries ( ${MFIX_EXENAME} ${MFIX_LIBNAME} )
 
 if ( ENABLE_CUDA)
-   set_source_files_properties(${MAIN} PROPERTIES LANGUAGE CUDA )
+    set_source_files_properties(${MAIN} ${USR_DRAG_SRC}
+        PROPERTIES LANGUAGE CUDA
+        )
    set_target_properties( ${MFIX_EXENAME}
       PROPERTIES
       CUDA_SEPARABLE_COMPILATION ON  # This add -dc flag

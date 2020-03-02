@@ -4,9 +4,9 @@ namespace set_ls_inflow_aux {
 
 AMREX_GPU_HOST_DEVICE
 bool
-is_equal_to_any(const int bc,
-                const int* bc_types,
-                const int size)
+is_equal_to_any (const int bc,
+                 const int* bc_types,
+                 const int size)
 {
   for(int i(0); i < size; ++i)
   {
@@ -21,12 +21,12 @@ is_equal_to_any(const int bc,
 using namespace set_ls_inflow_aux;
 
 void 
-mfix::set_ls_inflow(const int lev,
-                    FArrayBox& ls_phi_fab,
-                    const Box& domain,
-                    const int* ng,
-                    const int& nref,
-                    const Real* dx)
+mfix::set_ls_inflow (const int lev,
+                     FArrayBox& ls_phi_fab,
+                     const Box& domain,
+                     const int* ng,
+                     const int& nref,
+                     const Real* dx)
 {
   const Real offset(1.e-8);
 
@@ -50,7 +50,7 @@ mfix::set_ls_inflow(const int lev,
   //  the boundary condition routines,
   //  the domain boundaries (domlo,domhi), and dx,
   //     then we make sure to adjust by nref
-  const amrex::GpuArray<const Real, AMREX_SPACEDIM> dx_fine = 
+  const amrex::GpuArray<const Real, 3> dx_fine = 
     {dx[0]/Real(nref), dx[1]/Real(nref), dx[2]/Real(nref)};
 
   const int nlft = amrex::max(0, nref*dom_lo[0]-sbx_lo[0]);
@@ -65,7 +65,8 @@ mfix::set_ls_inflow(const int lev,
 
   if (nlft > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    amrex::ParallelFor(sbx,
+      [bct_ilo,dom_lo,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_ilo(dom_lo[0]-1,j/nref,k/nref,0);
@@ -96,13 +97,10 @@ mfix::set_ls_inflow(const int lev,
     });
   }
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   if (nrgt > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    amrex::ParallelFor(sbx,
+      [bct_ihi,dom_hi,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_ihi(dom_hi[0]+1,j/nref,k/nref,0);
@@ -133,13 +131,10 @@ mfix::set_ls_inflow(const int lev,
     });
   }
   
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   if (nbot > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    amrex::ParallelFor(sbx,
+      [bct_jlo,dom_lo,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_jlo(i/nref,dom_lo[1]-1,k/nref,0);
@@ -170,13 +165,10 @@ mfix::set_ls_inflow(const int lev,
     });
   }
   
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   if (ntop > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    amrex::ParallelFor(sbx,
+      [bct_jhi,dom_hi,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_jhi(i/nref,dom_hi[1]+1,k/nref,0);
@@ -207,13 +199,10 @@ mfix::set_ls_inflow(const int lev,
     });
   }
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   if (ndwn > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    amrex::ParallelFor(sbx,
+      [bct_klo,dom_lo,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_klo(i/nref,j/nref,dom_lo[2]-1,0);
@@ -243,14 +232,11 @@ mfix::set_ls_inflow(const int lev,
       }
     });
   }
-  
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
 
   if (nup > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(sbx, i, j, k,
+    amrex::ParallelFor(sbx,
+      [bct_khi,dom_hi,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_khi(i/nref,j/nref,dom_hi[2]+1,0);
@@ -280,8 +266,4 @@ mfix::set_ls_inflow(const int lev,
       }
     });
   }
-
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
 }

@@ -22,40 +22,18 @@
 
 !---------------------------------------------------------------------//
 
-
-! Main filename to be used for output files  Name must
-! still be legal after extensions are added to it.
-      CHARACTER(LEN=60) :: RUN_NAME
-
 ! Brief description of the problem.
-      CHARACTER(LEN=60) :: DESCRIPTION
+
 
 ! Start-time of des-loop
 ! (updated by des_init_time_loop)
       real(rt) :: des_tstart
 
-! Discretization scheme for different equations
-      integer :: DISCRETIZE(DIM_EQS)
-
 ! If .TRUE. call user-defined subroutines
-      logical :: CALL_USR
+
 
 ! Current time step (super-step)
 ! (updated by des_init_time_loop)
       real(rt) :: des_dt
-
-  integer :: nlog
-  ! Flag to display messages and residuals on the screen
-  logical :: full_log
-
-
-! Flags for various solids phase models.
-      logical :: TFM_SOLIDS
-      logical :: DEM_SOLIDS
-      logical :: PIC_SOLIDS
-! The number of the various solids phases.
-      integer :: TFM_COUNT = 0
-      integer :: DEM_COUNT = 0
-      integer :: PIC_COUNT = 0
 
       END MODULE RUN

@@ -1,5 +1,3 @@
-f90EXE_sources += get_eb_walls.f90
-
 CEXE_sources += mfix_eb.cpp
 CEXE_sources += writeEBsurface.cpp
 CEXE_sources += mfix_eb_air_reactor.cpp

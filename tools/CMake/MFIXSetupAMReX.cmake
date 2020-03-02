@@ -20,15 +20,6 @@ if (AMReX_FOUND)
    # MUST be present in the installation.
    set(AMREX_REQUIRED_COMPONENTS 3D DP DPARTICLES AMRDATA EB LSOLVERS)
 
-   # We want to offer the user some core options, i.e. MPI, OpenMP, CUDA, HYPRE
-   # and floating-point exceptions, which too require related AMReX components to
-   # be enabled in the installation.
-   option( ENABLE_OMP    "Enable OpenMP" NO )
-   option( ENABLE_MPI    "Enable MPI"   YES )
-   option( ENABLE_HYPRE  "Enable HYPRE"  NO )
-   option( ENABLE_CUDA   "Enable CUDA"   NO )
-   option( ENABLE_FPE    "Enable Floating Point Exceptions checks" NO )
-
    if (ENABLE_MPI)
       list(APPEND AMREX_REQUIRED_COMPONENTS MPI)
    endif ()
@@ -111,11 +102,5 @@ else ()
    endif ()
 
    add_subdirectory(${AMREX_SRC_DIR})
-
-   get_directory_property(amrex_targets DIRECTORY ${AMREX_SRC_DIR}/Src BUILDSYSTEM_TARGETS)
-
-   foreach (_target IN LISTS amrex_targets )
-      add_library(AMReX::${_target} ALIAS ${_target})
-   endforeach ()
 
 endif ()

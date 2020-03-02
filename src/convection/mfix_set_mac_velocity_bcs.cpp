@@ -1,369 +1,204 @@
-// 
-//  This subroutine sets the BCs for velocity components only.
-//  
-//  Author: Michele Rosso
-// 
-//  Date: December 20, 2017
-// 
-
 #include <mfix.H>
-#include <bc_mod_F.H>
 
+
+//
+// Set the BCs for face-centroid-based velocity components only
+// 
 void
-mfix::set_mac_velocity_bcs(Real* time,
-                           const Box& bx,
-                           MFIter* mfi,
-                           const int lev,
-                           Vector< std::unique_ptr<MultiFab> >& u,
-                           Vector< std::unique_ptr<MultiFab> >& v,
-                           Vector< std::unique_ptr<MultiFab> >& w,
-                           Box& domain)
+mfix::set_MAC_velocity_bcs (int lev,
+                            Vector< MultiFab* >& ep_u_mac,
+                            Vector< MultiFab* >& ep_v_mac,
+                            Vector< MultiFab* >& ep_w_mac,
+                            amrex::Real time)
 {
-  IntVect bx_lo(bx.loVect());
-  IntVect bx_hi(bx.hiVect());
+  BL_PROFILE("MacProjection::set_MAC_velocity_bcs()");
 
-  IntVect dom_lo(domain.loVect());
-  IntVect dom_hi(domain.hiVect());
+  ep_u_mac[lev]->FillBoundary(geom[lev].periodicity());
+  ep_v_mac[lev]->FillBoundary(geom[lev].periodicity());
+  ep_w_mac[lev]->FillBoundary(geom[lev].periodicity());
+    
+  Box domain(geom[lev].Domain()); 
 
-  Array4<Real> const& u_g = u[lev]->array(*mfi);
-  Array4<Real> const& v_g = v[lev]->array(*mfi);
-  Array4<Real> const& w_g = w[lev]->array(*mfi);
-
-  IntVect u_lo((*u[lev])[*mfi].loVect());
-  IntVect u_hi((*u[lev])[*mfi].hiVect());
-
-  IntVect v_lo((*v[lev])[*mfi].loVect());
-  IntVect v_hi((*v[lev])[*mfi].hiVect());
-
-  IntVect w_lo((*w[lev])[*mfi].loVect());
-  IntVect w_hi((*w[lev])[*mfi].hiVect());
-
-  Array4<int> const& bct_ilo = bc_ilo[lev]->array();
-  Array4<int> const& bct_ihi = bc_ihi[lev]->array();
-  Array4<int> const& bct_jlo = bc_jlo[lev]->array();
-  Array4<int> const& bct_jhi = bc_jhi[lev]->array();
-  Array4<int> const& bct_klo = bc_klo[lev]->array();
-  Array4<int> const& bct_khi = bc_khi[lev]->array();
-
-  const int nlft = std::max(0, dom_lo[0]-bx_lo[0]);
-  const int nbot = std::max(0, dom_lo[1]-bx_lo[1]);
-  const int ndwn = std::max(0, dom_lo[2]-bx_lo[2]);
-
-  const int nrgt = std::max(0, bx_hi[0]-dom_hi[0]);
-  const int ntop = std::max(0, bx_hi[1]-dom_hi[1]);
-  const int nup  = std::max(0, bx_hi[2]-dom_hi[2]);
-
-  // Create InVects for following Boxes
-  IntVect ulo_bx_yz_lo(bx_lo), vlo_bx_yz_lo(bx_lo), wlo_bx_yz_lo(bx_lo);
-  IntVect ulo_bx_yz_hi(bx_hi), vlo_bx_yz_hi(bx_hi), wlo_bx_yz_hi(bx_hi);
-  IntVect uhi_bx_yz_lo(bx_lo), vhi_bx_yz_lo(bx_lo), whi_bx_yz_lo(bx_lo);
-  IntVect uhi_bx_yz_hi(bx_hi), vhi_bx_yz_hi(bx_hi), whi_bx_yz_hi(bx_hi);
-
-  IntVect ulo_bx_xz_lo(bx_lo), vlo_bx_xz_lo(bx_lo), wlo_bx_xz_lo(bx_lo);
-  IntVect ulo_bx_xz_hi(bx_hi), vlo_bx_xz_hi(bx_hi), wlo_bx_xz_hi(bx_hi);
-  IntVect uhi_bx_xz_lo(bx_lo), vhi_bx_xz_lo(bx_lo), whi_bx_xz_lo(bx_lo);
-  IntVect uhi_bx_xz_hi(bx_hi), vhi_bx_xz_hi(bx_hi), whi_bx_xz_hi(bx_hi);
-
-  IntVect ulo_bx_xy_lo(bx_lo), vlo_bx_xy_lo(bx_lo), wlo_bx_xy_lo(bx_lo);
-  IntVect ulo_bx_xy_hi(bx_hi), vlo_bx_xy_hi(bx_hi), wlo_bx_xy_hi(bx_hi);
-  IntVect uhi_bx_xy_lo(bx_lo), vhi_bx_xy_lo(bx_lo), whi_bx_xy_lo(bx_lo);
-  IntVect uhi_bx_xy_hi(bx_hi), vhi_bx_xy_hi(bx_hi), whi_bx_xy_hi(bx_hi);
-
-  // Fix lo and hi limits
-  // Box 'yz'
-  ulo_bx_yz_lo[0] = u_lo[0];
-  vlo_bx_yz_lo[0] = v_lo[0];
-  wlo_bx_yz_lo[0] = w_lo[0];
-  ulo_bx_yz_hi[0] = dom_lo[0];
-  vlo_bx_yz_hi[0] = dom_lo[0]-1;
-  wlo_bx_yz_hi[0] = dom_lo[0]-1;
-
-  uhi_bx_yz_lo[0] = dom_hi[0]+1;
-  vhi_bx_yz_lo[0] = dom_hi[0]+1;
-  whi_bx_yz_lo[0] = dom_hi[0]+1;
-  uhi_bx_yz_hi[0] = u_hi[0];
-  vhi_bx_yz_hi[0] = v_hi[0];
-  whi_bx_yz_hi[0] = w_hi[0];
-
-  // Box 'xz'
-  ulo_bx_xz_lo[1] = u_lo[1];
-  vlo_bx_xz_lo[1] = v_lo[1];
-  wlo_bx_xz_lo[1] = w_lo[1];
-  ulo_bx_xz_hi[1] = dom_lo[1]-1;
-  vlo_bx_xz_hi[1] = dom_lo[1];
-  wlo_bx_xz_hi[1] = dom_lo[1]-1;
-
-  uhi_bx_xz_lo[1] = dom_hi[1]+1;
-  vhi_bx_xz_lo[1] = dom_hi[1]+1;
-  whi_bx_xz_lo[1] = dom_hi[1]+1;
-  uhi_bx_xz_hi[1] = u_hi[1];
-  vhi_bx_xz_hi[1] = v_hi[1];
-  whi_bx_xz_hi[1] = w_hi[1];
-
-  // Box 'xy'
-  ulo_bx_xy_lo[2] = u_lo[2];
-  vlo_bx_xy_lo[2] = v_lo[2];
-  wlo_bx_xy_lo[2] = w_lo[2];
-  ulo_bx_xy_hi[2] = dom_lo[2]-1;
-  vlo_bx_xy_hi[2] = dom_lo[2]-1;
-  wlo_bx_xy_hi[2] = dom_lo[2];
-
-  uhi_bx_xy_lo[2] = dom_hi[2]+1;
-  vhi_bx_xy_lo[2] = dom_hi[2]+1;
-  whi_bx_xy_lo[2] = dom_hi[2]+1;
-  uhi_bx_xy_hi[2] = u_hi[2];
-  vhi_bx_xy_hi[2] = v_hi[2];
-  whi_bx_xy_hi[2] = w_hi[2];
-
-  // Create 2D boxes for CUDA loops
-  const Box ulo_bx_yz(ulo_bx_yz_lo, ulo_bx_yz_hi);
-  const Box vlo_bx_yz(vlo_bx_yz_lo, vlo_bx_yz_hi);
-  const Box wlo_bx_yz(wlo_bx_yz_lo, wlo_bx_yz_hi);
-
-  const Box uhi_bx_yz(uhi_bx_yz_lo, uhi_bx_yz_hi);
-  const Box vhi_bx_yz(vhi_bx_yz_lo, vhi_bx_yz_hi);
-  const Box whi_bx_yz(whi_bx_yz_lo, whi_bx_yz_hi);
-
-  const Box ulo_bx_xz(ulo_bx_xz_lo, ulo_bx_xz_hi);
-  const Box vlo_bx_xz(vlo_bx_xz_lo, vlo_bx_xz_hi);
-  const Box wlo_bx_xz(wlo_bx_xz_lo, wlo_bx_xz_hi);
-
-  const Box uhi_bx_xz(uhi_bx_xz_lo, uhi_bx_xz_hi);
-  const Box vhi_bx_xz(vhi_bx_xz_lo, vhi_bx_xz_hi);
-  const Box whi_bx_xz(whi_bx_xz_lo, whi_bx_xz_hi);
-
-  const Box ulo_bx_xy(ulo_bx_xy_lo, ulo_bx_xy_hi);
-  const Box vlo_bx_xy(vlo_bx_xy_lo, vlo_bx_xy_hi);
-  const Box wlo_bx_xy(wlo_bx_xy_lo, wlo_bx_xy_hi);
-
-  const Box uhi_bx_xy(uhi_bx_xy_lo, uhi_bx_xy_hi);
-  const Box vhi_bx_xy(vhi_bx_xy_lo, vhi_bx_xy_hi);
-  const Box whi_bx_xy(whi_bx_xy_lo, whi_bx_xy_hi);
-
-  mfix_usr1_cpp(time);
-
-  const int pinf = bc_list.get_pinf();
-  const int pout = bc_list.get_pout();
-  const int minf = bc_list.get_minf();
-
-  amrex::Real* p_bc_u_g = m_bc_u_g.data();
-  amrex::Real* p_bc_v_g = m_bc_v_g.data();
-  amrex::Real* p_bc_w_g = m_bc_w_g.data();
-
-  if (nlft > 0)
-  {
-    AMREX_HOST_DEVICE_FOR_3D(ulo_bx_yz, i, j, k,
-    {
-      const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
-      const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
-
-      if(((bct == pinf) or (bct == pout)) and (i != dom_lo[0]))
-        u_g(i,j,k) = u_g(dom_lo[0],j,k);
-      else if(bct == minf)
-        u_g(i,j,k) = p_bc_u_g[bcv];
-    });
-
-    AMREX_HOST_DEVICE_FOR_3D(vlo_bx_yz, i, j, k,
-    {
-      const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
-
-      if((bct == pinf) or (bct == pout))
-        v_g(i,j,k) = v_g(dom_lo[0],j,k);
-      else if(bct == minf)
-        v_g(i,j,k) = 0;
-    });
-
-    AMREX_HOST_DEVICE_FOR_3D(wlo_bx_yz, i, j, k,
-    {
-      const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
-
-      if((bct == pinf) or (bct == pout))
-        w_g(i,j,k) = w_g(dom_lo[0],j,k);
-      else if(bct == minf)
-        w_g(i,j,k) = 0;
-    });
-  }
-
-  if (nrgt > 0)
-  {
-    AMREX_HOST_DEVICE_FOR_3D(uhi_bx_yz, i, j, k,
-    {
-      const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
-      const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
-
-      if(((bct == pinf) or (bct == pout)) and (i != dom_hi[0]+1))
-        u_g(i,j,k) = u_g(dom_hi[0]+1,j,k);
-      else if(bct == minf)
-        u_g(i,j,k) = p_bc_u_g[bcv];
-    });
-
-    AMREX_HOST_DEVICE_FOR_3D(vhi_bx_yz, i, j, k,
-    {
-      const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
-
-      if((bct == pinf) or (bct == pout))
-        v_g(i,j,k) = v_g(dom_hi[0],j,k);
-      else if(bct == minf)
-        v_g(i,j,k) = 0;
-    });
-
-    AMREX_HOST_DEVICE_FOR_3D(whi_bx_yz, i, j, k,
-    {
-      const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
-
-      if((bct == pinf) or (bct == pout))
-        w_g(i,j,k) = w_g(dom_hi[0],j,k);
-      else if(bct == minf)
-        w_g(i,j,k) = 0;
-    });
-  }
-
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-
-  if (nbot > 0)
+  for (MFIter mfi((*m_leveldata[lev]->mac_rhs), false); mfi.isValid(); ++mfi)
   {
-    AMREX_HOST_DEVICE_FOR_3D(ulo_bx_xz, i, j, k,
+    const Box& ubx = (*ep_u_mac[lev])[mfi].box();
+    IntVect ubx_lo(ubx.loVect());
+    IntVect ubx_hi(ubx.hiVect());
+
+    const Box& vbx = (*ep_v_mac[lev])[mfi].box();
+    IntVect vbx_lo(vbx.loVect());
+    IntVect vbx_hi(vbx.hiVect());
+
+    const Box& wbx = (*ep_w_mac[lev])[mfi].box();
+    IntVect wbx_lo(wbx.loVect());
+    IntVect wbx_hi(wbx.hiVect());
+
+    IntVect dom_lo(domain.loVect());
+    IntVect dom_hi(domain.hiVect());
+
+    Array4<Real> const& ep_u = ep_u_mac[lev]->array(mfi);
+    Array4<Real> const& ep_v = ep_v_mac[lev]->array(mfi);
+    Array4<Real> const& ep_w = ep_w_mac[lev]->array(mfi);
+
+    Array4<int> const& bct_ilo = bc_ilo[lev]->array();
+    Array4<int> const& bct_ihi = bc_ihi[lev]->array();
+    Array4<int> const& bct_jlo = bc_jlo[lev]->array();
+    Array4<int> const& bct_jhi = bc_jhi[lev]->array();
+    Array4<int> const& bct_klo = bc_klo[lev]->array();
+    Array4<int> const& bct_khi = bc_khi[lev]->array();
+
+    const int nlft = std::max(0, dom_lo[0]-ubx_lo[0]);
+    const int nbot = std::max(0, dom_lo[1]-vbx_lo[1]);
+    const int ndwn = std::max(0, dom_lo[2]-wbx_lo[2]);
+
+    const int nrgt = std::max(0, ubx_hi[0]-dom_hi[0]);
+    const int ntop = std::max(0, vbx_hi[1]-dom_hi[1]);
+    const int nup  = std::max(0, wbx_hi[2]-dom_hi[2]);
+
+    mfix_usr1_cpp(time);
+
+    const int minf = bc_list.get_minf();
+
+    amrex::Real* p_bc_u_g = m_bc_u_g.data();
+    amrex::Real* p_bc_v_g = m_bc_v_g.data();
+    amrex::Real* p_bc_w_g = m_bc_w_g.data();
+    amrex::Real* p_bc_e_g = m_bc_ep_g.data();
+
+    // NOTE - we only call this for MAC velocities which are only defined on normal faces
+
+    if (nlft > 0)
     {
-      const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
+      // Create InVects for following Box
+      IntVect ulo_bx_yz_lo(ubx_lo);
+      IntVect ulo_bx_yz_hi(ubx_hi);
 
-      if((bct == pinf) or (bct == pout))
-        u_g(i,j,k) = u_g(i,dom_lo[1],k);
-      else if(bct == minf)
-        u_g(i,j,k) = 0;
-    });
+      // Fix lo and hi limits
+      ulo_bx_yz_lo[0] = dom_lo[0];
+      ulo_bx_yz_hi[0] = dom_lo[0];
 
-    AMREX_HOST_DEVICE_FOR_3D(vlo_bx_xz, i, j, k,
+      const Box ulo_bx_yz(ulo_bx_yz_lo, ulo_bx_yz_hi);
+
+      amrex::ParallelFor(ulo_bx_yz,
+        [bct_ilo,dom_lo,minf,p_bc_u_g,p_bc_e_g,ep_u]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
+        const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
+        if(bct == minf) ep_u(i,j,k) = p_bc_u_g[bcv] * p_bc_e_g[bcv];
+      });
+    }
+
+    if (nrgt > 0)
     {
-      const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
-      const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
+      // Create InVects for following Box
+      IntVect uhi_bx_yz_lo(ubx_lo);
+      IntVect uhi_bx_yz_hi(ubx_hi);
 
-      if(((bct == pinf) or (bct == pout)) and (j != dom_lo[1]))
-        v_g(i,j,k) = v_g(i,dom_lo[1],k);
-      else if(bct == minf)
-        v_g(i,j,k) = p_bc_v_g[bcv];
-    });
+      // Fix lo and hi limits
+      uhi_bx_yz_lo[0] = dom_hi[0]+1;
+      uhi_bx_yz_hi[0] = dom_hi[0]+1;
 
-    AMREX_HOST_DEVICE_FOR_3D(wlo_bx_xz, i, j, k,
+      const Box uhi_bx_yz(uhi_bx_yz_lo, uhi_bx_yz_hi);
+
+      amrex::ParallelFor(uhi_bx_yz,
+        [bct_ihi,dom_hi,minf,p_bc_u_g,p_bc_e_g,ep_u]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
+        const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
+        if (bct == minf) ep_u(i,j,k) = p_bc_u_g[bcv] * p_bc_e_g[bcv];
+      });
+    }
+
+    if (nbot > 0)
     {
-      const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
+      // Create InVects for following Box
+      IntVect vlo_bx_xz_lo(vbx_lo);
+      IntVect vlo_bx_xz_hi(vbx_hi);
 
-      if((bct == pinf) or (bct == pout))
-        w_g(i,j,k) = w_g(i,dom_lo[1],k);
-      else if(bct == minf)
-        w_g(i,j,k) = 0;
-    });
+      // Fix lo and hi limits
+      vlo_bx_xz_lo[1] = dom_lo[1];
+      vlo_bx_xz_hi[1] = dom_lo[1];
+
+      const Box vlo_bx_xz(vlo_bx_xz_lo, vlo_bx_xz_hi);
+
+      amrex::ParallelFor(vlo_bx_xz,
+        [bct_jlo,dom_lo,minf,p_bc_v_g,p_bc_e_g,ep_v]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
+        const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
+        if (bct == minf) ep_v(i,j,k) = p_bc_v_g[bcv] * p_bc_e_g[bcv];
+      });
+    }
+
+    if (ntop > 0)
+    {
+      // Create InVects for following Box
+      IntVect vhi_bx_xz_lo(vbx_lo);
+      IntVect vhi_bx_xz_hi(vbx_hi);
+
+      // Fix lo and hi limits
+      vhi_bx_xz_lo[1] = dom_hi[1]+1;
+      vhi_bx_xz_hi[1] = dom_hi[1]+1;
+
+      const Box vhi_bx_xz(vhi_bx_xz_lo, vhi_bx_xz_hi);
+
+      amrex::ParallelFor(vhi_bx_xz,
+        [bct_jhi,dom_hi,minf,p_bc_v_g,p_bc_e_g,ep_v]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
+        const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
+        if (bct == minf) ep_v(i,j,k) = p_bc_v_g[bcv] * p_bc_e_g[bcv];
+      });
+    }
+
+    if (ndwn > 0)
+    {
+      // Create InVects for following Boxes
+      IntVect wlo_bx_xy_lo(wbx_lo);
+      IntVect wlo_bx_xy_hi(wbx_hi);
+
+      // Fix lo and hi limits
+      wlo_bx_xy_lo[2] = dom_lo[2];
+      wlo_bx_xy_hi[2] = dom_lo[2];
+
+      const Box wlo_bx_xy(wlo_bx_xy_lo, wlo_bx_xy_hi);
+
+      amrex::ParallelFor(wlo_bx_xy,
+        [bct_klo,dom_lo,minf,p_bc_w_g,p_bc_e_g,ep_w]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
+        const int bct = bct_klo(i,j,dom_lo[2]-1,0);
+        if (bct == minf) ep_w(i,j,k) = p_bc_w_g[bcv] * p_bc_e_g[bcv];
+      });
+    }
+
+    if (nup > 0)
+    {
+      // Create InVects for following Boxes
+      IntVect whi_bx_xy_lo(wbx_lo);
+      IntVect whi_bx_xy_hi(wbx_hi);
+
+      // Fix lo and hi limits
+      whi_bx_xy_lo[2] = dom_hi[2]+1;
+      whi_bx_xy_hi[2] = dom_hi[2]+1;
+
+      const Box whi_bx_xy(whi_bx_xy_lo, whi_bx_xy_hi);
+
+      amrex::ParallelFor(whi_bx_xy,
+        [bct_khi,dom_hi,minf,p_bc_w_g,p_bc_e_g,ep_w]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
+        const int bct = bct_khi(i,j,dom_hi[2]+1,0);
+        if (bct == minf) ep_w(i,j,k) = p_bc_w_g[bcv] * p_bc_e_g[bcv];
+      });
+    }
   }
-
-  if (ntop > 0)
-  {
-    AMREX_HOST_DEVICE_FOR_3D(uhi_bx_xz, i, j, k,
-    {
-      const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
-
-      if((bct == pinf) or (bct == pout))
-        u_g(i,j,k) = u_g(i,dom_hi[1],k);
-      else if(bct == minf)
-        u_g(i,j,k) = 0;
-    });
-
-    AMREX_HOST_DEVICE_FOR_3D(vhi_bx_xz, i, j, k,
-    {
-      const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
-      const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
-
-      if(((bct == pinf) or (bct == pout)) and (j != dom_hi[1]+1))
-        v_g(i,j,k) = v_g(i,dom_hi[1]+1,k);
-      else if(bct == minf)
-        v_g(i,j,k) = p_bc_v_g[bcv];
-    });
-
-    AMREX_HOST_DEVICE_FOR_3D(whi_bx_xz, i, j, k,
-    {
-      const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
-
-      if((bct == pinf) or (bct == pout))
-        w_g(i,j,k) = w_g(i,dom_hi[1],k);
-      else if(bct == minf)
-        w_g(i,j,k) = 0;
-    });
-  }
-
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
-  if (ndwn > 0)
-  {
-    AMREX_HOST_DEVICE_FOR_3D(ulo_bx_xy, i, j, k,
-    {
-      const int bct = bct_klo(i,j,dom_lo[2]-1,0);
-
-      if((bct == pinf) or (bct == pout))
-        u_g(i,j,k) = u_g(i,j,dom_lo[2]);
-      else if(bct == minf)
-        u_g(i,j,k) = 0;
-    });
-
-    AMREX_HOST_DEVICE_FOR_3D(vlo_bx_xy, i, j, k,
-    {
-      const int bct = bct_klo(i,j,dom_lo[2]-1,0);
-
-      if((bct == pinf) or (bct == pout))
-        v_g(i,j,k) = v_g(i,j,dom_lo[2]);
-      else if(bct == minf)
-        v_g(i,j,k) = 0;
-    });
-
-    AMREX_HOST_DEVICE_FOR_3D(wlo_bx_xy, i, j, k,
-    {
-      const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
-      const int bct = bct_klo(i,j,dom_lo[2]-1,0);
-
-      if(((bct == pinf) or (bct == pout)) and (k != dom_lo[2]))
-        w_g(i,j,k) = w_g(i,j,dom_lo[2]);
-      else if(bct == minf)
-        w_g(i,j,k) = p_bc_w_g[bcv];
-    });
-  }
-
-  if (nup > 0)
-  {
-    AMREX_HOST_DEVICE_FOR_3D(uhi_bx_xy, i, j, k,
-    {
-      const int bct = bct_khi(i,j,dom_hi[2]+1,0);
-
-      if((bct == pinf) or (bct == pout))
-        u_g(i,j,k) = u_g(i,j,dom_hi[2]);
-      else if(bct == minf)
-        u_g(i,j,k) = 0;
-    });
-
-    AMREX_HOST_DEVICE_FOR_3D(vhi_bx_xy, i, j, k,
-    {
-      const int bct = bct_khi(i,j,dom_hi[2]+1,0);
-
-      if((bct == pinf) or (bct == pout))
-        v_g(i,j,k) = v_g(i,j,dom_hi[2]);
-      else if(bct == minf)
-        v_g(i,j,k) = 0;
-    });
-
-    AMREX_HOST_DEVICE_FOR_3D(whi_bx_xy, i, j, k,
-    {
-      const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
-      const int bct = bct_khi(i,j,dom_hi[2]+1,0);
-
-      if(((bct == pinf) or (bct == pout)) and (k != dom_hi[2]+1))
-        w_g(i,j,k) = w_g(i,j,dom_hi[2]+1);
-      else if(bct == minf)
-        w_g(i,j,k) = p_bc_w_g[bcv];
-    });
-  }
-
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
 }

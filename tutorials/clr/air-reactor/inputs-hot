@@ -1,0 +1,419 @@
+
+amrex.fpe_trap_invalid = 1
+
+#----------------------------------------------------------------------
+# Solver settings
+#----------------------------------------------------------------------
+
+# MAC solver
+mac_proj.verbose     = 0
+mac_proj.bottom_verbose  = 0
+
+# Nodal solver
+nodal_proj.verbose    = 1
+nodal_proj.bottom_verbose = 0
+
+#mfix.stop_time = 0.20
+
+amr.blocking_factor = 8
+
+#_______________________________________________________________________
+# Geometry / grids / tiles
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 0
+
+# Geometry
+geometry.coord_sys   = 0                       # 0: Cartesian
+geometry.is_periodic = 0       0       0       # Is periodic in each direction?
+geometry.prob_lo     = 0.0000  0.0000  0.0000  # lo corner of physical domain
+geometry.prob_hi     = 3.7584  0.2784  0.2784  # hi corner of physical domain
+
+# Number of grid cells in each direction at the coarsest level
+#amr.n_cell =  1728 128 128
+amr.n_cell =  432 32 32
+
+#! Grids
+#!-----------------------------------------------------------//
+# Maximum allowable size of each fluid subdomain in the problem domain;
+
+# Fluid
+amr.max_grid_size_x = 32
+amr.max_grid_size_y = 32
+amr.max_grid_size_z = 32
+
+# Particles (not with KDTree)
+#particles.max_grid_size_x =   64
+#particles.max_grid_size_y =   64
+#particles.max_grid_size_z =   64
+
+#! Tiles
+#!-----------------------------------------------------------//
+
+# Fluid: Maximum tile size within each grid
+fabarray.mfiter_tile_size = 1024 1024 1024
+
+# Particles: Maximum particle title size
+particles.tile_size = 1024 1024 1024
+
+
+#_______________________________________________________________________
+# Particle load balancing
+
+mfix.load_balance_type = "FixedSize"
+#mfix.load_balance_type = "KnapSack"
+
+amr.dual_grid          =  0
+amr.regrid_int         = -1
+
+#! KnapSack settings
+#!-----------------------------------------------------------//
+#default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
+#this option is only relevant if load_balance_type = KnapSack
+
+#mfix.knapsack_weight_type = "NumParticles"
+#mfix.knapsack_weight_type = "RunTimeCosts"
+
+#_______________________________________________________________________
+# IO / Checkpointing
+
+mfix.write_eb_surface = false  # Needed to output eb-surfaces
+mfix.write_ls         = false  # Needed to output level set
+
+amr.par_ascii_int  = -1
+amr.par_ascii_file ="vis"
+
+amr.plot_int       = 10
+amr.plot_file      ="plt"
+
+amr.check_int      = -1
+amr.check_file     ="chk"
+
+
+#! Restart from checkpoint
+#!-----------------------------------------------------------//
+#amr.restart   ="chk00100"
+
+
+#----------------------------------------------------------------------
+# Model specification    
+#----------------------------------------------------------------------
+
+mfix.fixed_dt = 0
+mfix.cfl      = 0.5
+
+mfix.dt_min   = 1.e-7
+mfix.dt_max   = 5.e-5
+
+mfix.gravity =  -9.81  0.0  0.0
+
+mfix.drag_type = "WenYu"
+
+# Level-set refinement and padding
+mfix.levelset__refinement = 2 # levelset resolution
+
+
+#_______________________________________________________________________
+# Species settings
+#
+materials.solve = 7
+
+species.materials = CH4  H2  CO  H2O  CO2  O2  N2  FE2O3  FEO  inert
+
+
+CH4.molecular_weight = 16.0424600
+
+CH4.NASA9.Tranges = 2
+CH4.NASA9.Tlow =   200.0  1000.0
+CH4.NASA9.Thigh = 1000.0  6000.0
+
+CH4.NASA9.coeff = -1.766850998e+05  2.786181020e+03 -1.202577850e+01  3.917619290e-02 -3.619054430e-05
+                   2.026853043e-08 -4.976705490e-12                  -2.331314360e+04  8.904322750e+01
+                   3.730042760e+06 -1.383501485e+04  2.049107091e+01 -1.961974759e-03  4.727313040e-07
+                  -3.728814690e-11  1.623737207e-15                   7.532066910e+04 -1.219124889e+02
+
+
+H2.molecular_weight = 2.01588
+H2.NASA9.Tranges = 3
+H2.NASA9.Tlow =   200.0  1000.0   6000.0
+H2.NASA9.Thigh = 1000.0  6000.0  20000.0
+
+H2.NASA9.coeff = 4.078323210e+04 -8.009186040e+02  8.214702010e+00 -1.269714457e-02  1.753605076e-05
+                -1.202860270e-08  3.368093490e-12                   2.682484665e+03 -3.043788844e+01
+                 5.608128010e+05 -8.371504740e+02  2.975364532e+00  1.252249124e-03 -3.740716190e-07
+                 5.936625200e-11 -3.606994100e-15                   5.339824410e+03 -2.202774769e+00
+                 4.966884120e+08 -3.147547149e+05  7.984121880e+01 -8.414789210e-03  4.753248350e-07
+                -1.371873492e-11  1.605461756e-16                   2.488433516e+06 -6.695728110e+02
+
+
+CO.molecular_weight = 28.0101000
+CO.NASA9.Tranges = 3
+CO.NASA9.Tlow =   200.0  1000.0   6000.0
+CO.NASA9.Thigh = 1000.0  6000.0  20000.0
+
+CO.NASA9.coeff =  1.489045326e+04 -2.922285939e+02  5.724527170e+00 -8.176235030e-03   1.456903469e-05
+                 -1.087746302e-08  3.027941827e-12                  -1.303131878e+04  -7.859241350e+00
+                  4.619197250e+05 -1.944704863e+03  5.916714180e+00 -5.664282830e-04   1.398814540e-07
+                 -1.787680361e-11  9.620935570e-16                  -2.466261084e+03  -1.387413108e+01
+                  8.868662960e+08 -7.500377840e+05  2.495474979e+02 -3.956351100e-02   3.297772080e-06
+                 -1.318409933e-10  1.998937948e-15                   5.701421130e+06  -2.060704786e+03
+
+
+CO.molecular_weight = 44.0095000
+
+CO.NASA9.Tranges = 3
+CO.NASA9.Tlow =   200.0  1000.0   6000.0
+CO.NASA9.Thigh = 1000.0  6000.0  20000.0
+
+CO.NASA9.coeff =  4.943650540e+04 -6.264116010e+02  5.301725240e+00  2.503813816e-03 -2.127308728e-07
+                 -7.689988780e-10  2.849677801e-13                  -4.528198460e+04 -7.048279440e+00
+                  1.176962419e+05 -1.788791477e+03  8.291523190e+00 -9.223156780e-05  4.863676880e-09
+                 -1.891053312e-12  6.330036590e-16                  -3.908350590e+04 -2.652669281e+01
+                 -1.544423287e+09  1.016847056e+06 -2.561405230e+02  3.369401080e-02 -2.181184337e-06
+                  6.991420840e-11 -8.842351500e-16                  -8.043214510e+06  2.254177493e+03
+
+
+H2O.molecular_weight = 18.0152800
+
+H2O.NASA9.Tranges = 2
+H2O.NASA9.Tlow =   200.0  1000.0
+H2O.NASA9.Thigh = 1000.0  6000.0
+
+H2O.NASA9.coeff = -3.947960830D+04  5.755731020D+02  9.317826530D-01  7.222712860D-03 -7.342557370D-06
+                   4.955043490D-09 -1.336933246D-12                  -3.303974310D+04  1.724205775D+01
+                   1.034972096D+06 -2.412698562D+03  4.646110780D+00  2.291998307D-03 -6.836830480D-07
+                   9.426468930D-11 -4.822380530D-15                  -1.384286509D+04 -7.978148510D+00
+
+
+O2.molecular_weight = 31.9988000
+
+O2.NASA9.Tranges = 3
+O2.NASA9.Tlow =   200.0  1000.0   6000.0
+O2.NASA9.Thigh = 1000.0  6000.0  20000.0
+
+O2.NASA9.coeff = -3.425563420D+04  4.847000970D+02  1.119010961D+00  4.293889240D-03 -6.836300520D-07
+                 -2.023372700D-09  1.039040018D-12                  -3.391454870D+03  1.849699470D+01
+                 -1.037939022D+06  2.344830282D+03  1.819732036D+00  1.267847582D-03 -2.188067988D-07
+                  2.053719572D-11 -8.193467050D-16                  -1.689010929D+04  1.738716506D+01
+                  4.975294300D+08 -2.866106874D+05  6.690352250D+01 -6.169959020D-03  3.016396027D-07
+                 -7.421416600D-12  7.278175770D-17                   2.293554027D+06 -5.530621610D+02
+
+
+N2.molecular_weight = 28.0134000
+
+N2.NASA9.Tranges = 3
+N2.NASA9.Tlow =   200.0  1000.0   6000.0
+N2.NASA9.Thigh = 1000.0  6000.0  20000.0
+
+N2.NASA9.coeff =  2.210371497D+04 -3.818461820D+02  6.082738360D+00 -8.530914410D-03  1.384646189D-05
+                 -9.625793620D-09  2.519705809D-12                   7.108460860D+02 -1.076003744D+01
+                  5.877124060D+05 -2.239249073D+03  6.066949220D+00 -6.139685500D-04  1.491806679D-07
+                 -1.923105485D-11  1.061954386D-15                   1.283210415D+04 -1.586640027D+01
+                  8.310139160D+08 -6.420733540D+05  2.020264635D+02 -3.065092046D-02  2.486903333D-06
+                 -9.705954110D-11  1.437538881D-15                   4.938707040D+06 -1.672099740D+03
+
+
+FE2O3.density = 4701.0
+FE2O3.molecular_weight = 159.68820
+
+FE2O3.NASA9.Tranges = 2
+FE2O3.NASA9.Tlow =   200.0  1000.0
+FE2O3.NASA9.Thigh = 1000.0  6000.0
+
+FE2O3.NASA9.coeff =  2.210371497D+04 -3.818461820D+02  6.082738360D+00 -8.530914410D-03  1.384646189D-05
+                    -9.625793620D-09  2.519705809D-12                   7.108460860D+02 -1.076003744D+01
+                     5.877124060D+05 -2.239249073D+03  6.066949220D+00 -6.139685500D-04  1.491806679D-07
+                    -1.923105485D-11  1.061954386D-15                   1.283210415D+04 -1.586640027D+01
+
+
+FEO.density = 4701.0
+FEO.molecular_weight = 71.84440
+
+FEO.NASA9.Tranges = 2
+FEO.NASA9.Tlow =   200.0  1000.0
+FEO.NASA9.Thigh = 1000.0  6000.0
+
+FEO.NASA9.coeff =  2.210371497D+04 -3.818461820D+02  6.082738360D+00 -8.530914410D-03  1.384646189D-05
+                  -9.625793620D-09  2.519705809D-12                   7.108460860D+02 -1.076003744D+01
+                   5.877124060D+05 -2.239249073D+03  6.066949220D+00 -6.139685500D-04  1.491806679D-07
+                  -1.923105485D-11  1.061954386D-15                   1.283210415D+04 -1.586640027D+01
+
+
+inert.density = 4701.0
+inert.molecular_weight = 159.68820
+
+inert.NASA9.Tranges = 2
+inert.NASA9.Tlow =   200.0  1000.0
+inert.NASA9.Thigh = 1000.0  6000.0
+
+inert.NASA9.coeff =  2.210371497D+04 -3.818461820D+02  6.082738360D+00 -8.530914410D-03  1.384646189D-05
+                    -9.625793620D-09  2.519705809D-12                   7.108460860D+02 -1.076003744D+01
+                     5.877124060D+05 -2.239249073D+03  6.066949220D+00 -6.139685500D-04  1.491806679D-07
+                    -1.923105485D-11  1.061954386D-15                   1.283210415D+04 -1.586640027D+01
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+
+fluid.species = CH4  H2  CO  H2O  CO2  O2  N2
+
+fluid.density = IdealGas
+
+fluid.viscosity. = Sutherland
+fluid.viscosity.Sutherland.Tref =  273.15
+fluid.viscosity.Sutherland.const = 110.0
+
+fluid.specific_heat = mixture
+
+fluid.conductivity = constant
+fluid.conductivity.constant = 399.4
+
+fluid.diffusivity = constant
+fluid.diffusivity.constant = 0.105e-4
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = solid0
+
+dem.solids = carrier
+
+carrier.species = FE2O3  FEO  inert
+
+carrier.density = mixture
+
+carrier.specific_heat = mixture
+
+carrier.conductivity = constant
+carrier.conductivity.constant = 0.1
+
+
+dem.friction_coeff.pp     =     0.25
+dem.friction_coeff.pw     =     0.15
+
+dem.spring_const.pp       =   100.0
+dem.spring_const.pw       =   100.0
+
+dem.spring_tang_fac.pp    =     0.2857
+dem.spring_tang_fac.pw    =     0.2857
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+dem.restitution_coeff.carrier.carrier =  0.85
+dem.restitution_coeff.carrier.wall =  0.85
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = full-domain  riser  inflow  outflow
+
+regions.full-domain.lo = 0.0000  0.0000  0.0000
+regions.full-domain.hi = 3.7584  0.2784  0.2784
+
+regions.riser.lo       = 0.0000  0.0000  0.0000
+regions.riser.hi       = 0.1000  0.2784  0.2784
+
+regions.inflow.lo      = 0.0000  0.0000  0.0000
+regions.inflow.hi      = 0.0000  0.2784  0.2784
+
+regions.outflow.lo     = 0.0000  0.0000  0.2784
+regions.outflow.hi     = 3.7584  0.2784  0.2784
+
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = full-domain  riser
+
+ic.particle_init_type = Auto
+
+
+# Backgound IC covering the full domain with gas.
+#---------------------------------------------------------------------//
+
+ic.full-domain.fluid.volfrac =    1.00
+
+ic.full-domain.temperature =    293.15
+ic.full-domain.massfrac.N2 =      1.00
+
+ic.full-domain.fluid.velocity  = 0.0  0.0  0.0
+
+
+# Initial bed in air reactor section
+#---------------------------------------------------------------------//
+
+ic.riser.fluid.volfrac  =   0.999
+
+ic.fiser.temperature =    293.15
+ic.riser.massfrac.N2 =      1.00
+
+ic.riser.fluid.velocity = 0.0  0.0  0.0
+
+
+ic.riser.solids = carrier
+
+ic.riser.carrier.diameter = constant
+ic.riser.carrier.diameter.constant = 870.0e-6
+
+ic.riser.carrier.volfrac  =       0.001
+
+ic.riser.carrier.temperature    = 293.15
+
+ic.riser.carrier.massfrac.FE2O3 =   0.768
+ic.riser.carrier.massfrac.FEO   =   0.032
+ic.riser.carrier.massfrac.inert =   0.200
+
+ic.riser.carrier.velocity = 0.0  0.0  0.0
+
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+
+bc.regions = inflow  outflow
+
+
+#! EB geometry
+#!-----------------------------------------------------------//
+
+bc.geometry = "air-reactor"
+
+airreactor.radius0 = 0.0762    # reactor radius
+airreactor.height0 = 0.7720    # reactor height
+
+airreactor.c2c     = 0.0762    # cylinder-to-cylinder height
+
+airreactor.radius1 = 0.03175   # riser radius
+airreactor.height1 = 3.7084    # total riser height
+
+airreactor.outlet  = 3.6322    # outlet height from bottom
+
+
+#! Mass inflow
+#!-----------------------------------------------------------//
+bc.inflow.type = mi
+
+bc.inflow.fluid.volfrac =  1.0
+
+bc.inflow.fluid.temperature =  1093.0
+
+bc.inflow.fluid.massfrac.H2O =  0.0016
+bc.inflow.fluid.massfrac.O2 =   0.0732
+bc.inflow.fluid.massfrac.N2 =   0.9252
+
+bc.inflow.fluid.velocity = 4.00  0.00  0.00
+
+
+#! Pressure outflow
+#!-----------------------------------------------------------//
+bc.outflow.type = po
+
+bc.outflow.fluid.pressure = 159000.0

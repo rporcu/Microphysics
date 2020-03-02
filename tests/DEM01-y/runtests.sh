@@ -34,8 +34,8 @@ for DES_ETA in 0.9 0.8 0.7 0.6; do
     cleanup
 
     time -p ${MFIX} inputs \
-         DES_EN_INPUT=${DES_ETA} DES_EN_WALL_INPUT=${DES_ETA} \
-         KN=${DES_KN} KN_W=${DES_KN}
+       "dem.spring_const.pp=${DES_KN}        dem.spring_const.pw=${DES_KN}" \
+       "dem.restitution_coeff.solid0.solid0=${DES_ETA}  dem.restitution_coeff.solid0.wall=${DES_ETA}"
 
     write_data "POST_POS.dat" ${DES_KN} ${DES_ETA}  2
     write_data "POST_VEL.dat" ${DES_KN} ${DES_ETA} 10
@@ -48,8 +48,8 @@ for DES_KN in 25000 50000 100000; do
         cleanup
 
         time -p ${MFIX} inputs \
-             DES_EN_INPUT=${DES_ETA} DES_EN_WALL_INPUT=${DES_ETA} \
-             KN=${DES_KN} KN_W=${DES_KN}
+           "dem.spring_const.pp=${DES_KN}        dem.spring_const.pw=${DES_KN}" \
+           "dem.restitution_coeff.solid0.solid0=${DES_ETA}  dem.restitution_coeff.solid0.wall=${DES_ETA}"
 
         write_data "POST_POS.dat" ${DES_KN} ${DES_ETA}  2
         write_data "POST_VEL.dat" ${DES_KN} ${DES_ETA} 10

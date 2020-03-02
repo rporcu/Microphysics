@@ -1,205 +1,181 @@
 #include <mfix.H>
+#include <MFIX_FLUID_Parms.H>
+#include <MFIX_DEM_Parms.H>
 
 void
 mfix::Regrid ()
 {
-    if (ooo_debug) amrex::Print() << "Regrid" << std::endl;
-    BL_PROFILE_REGION_START("mfix::Regrid()");
+  if (ooo_debug) amrex::Print() << "Regrid" << std::endl;
+  BL_PROFILE_REGION_START("mfix::Regrid()");
 
-    int base_lev = 0;
+  int base_lev = 0;
 
-    if (load_balance_type == "KDTree")  // KDTree load balancing type
+  if (load_balance_type == "KnapSack" || load_balance_type == "SFC") // Knapsack and SFC
+  {
+    amrex::Print() << "Load balancing using " << load_balance_type << std::endl;
+
+    if (DEM::solve)
+       AMREX_ALWAYS_ASSERT(m_leveldata[0]->particle_cost != nullptr);
+    if (FLUID::solve)
+       AMREX_ALWAYS_ASSERT(m_leveldata[0]->fluid_cost != nullptr);
+
+    if (ParallelDescriptor::NProcs() == 1) return;
+
+    if (dual_grid)  //  Beginning of dual grid regridding
     {
-        if (solve_dem)
-           AMREX_ALWAYS_ASSERT(particle_cost[0] == nullptr);
-        if (solve_fluid)
-           AMREX_ALWAYS_ASSERT(fluid_cost[0]    == nullptr);
+      AMREX_ALWAYS_ASSERT(FLUID::solve);
 
-       // This creates a new BA and new DM, re-defines the particle BA and DM to be these new ones,
-       //      and calls Redistribute.  This doesn't touch the fluid grids.
-       pc -> BalanceParticleLoad_KDTree ();
+      if (load_balance_fluid > 0)
+      {
+        for (int lev = base_lev; lev <= finestLevel(); ++lev)
+        {
+          DistributionMapping new_fluid_dm;
 
-       if (!dual_grid)
-       {
-           SetBoxArray       (base_lev, pc->ParticleBoxArray(base_lev));
-           SetDistributionMap(base_lev, pc->ParticleDistributionMap(base_lev));
+          if ( load_balance_type == "KnapSack" )
+          {
+            new_fluid_dm = DistributionMapping::makeKnapSack(*m_leveldata[lev]->fluid_cost,
+                                                             knapsack_nmax);
+          }
+          else
+          {
+            new_fluid_dm = DistributionMapping::makeSFC(*m_leveldata[lev]->fluid_cost, false);
+          }
 
-           // Since we have already allocated the fluid data we need to
-           // re-define those arrays and copy from the old BoxArray to the new
-           // one if the grids and/or dmap have changed.  Note that the
-           // SetBoxArray and SetDistributionMap calls above have re-defined
-           // grids and dmap to be the new ones.
-           if (solve_fluid)
-               RegridArrays(base_lev);
-       }
+          SetDistributionMap(lev, new_fluid_dm);
 
-       if (solve_fluid)
-       {
-           mfix_set_p0();
-           mfix_set_bc0();
-       }
+          RegridArrays(lev);
 
-       // This calls re-creates a proper particle_ebfactories and regrids all
-       // the multifab that depend on it
-       if (solve_dem)
-           RegridLevelSetArray(base_lev);
+          if (m_leveldata[lev]->fluid_cost != nullptr)
+            delete m_leveldata[lev]->fluid_cost;
+
+          m_leveldata[lev]->fluid_cost = new MultiFab(grids[lev], new_fluid_dm, 1, 0);
+          m_leveldata[lev]->fluid_cost->setVal(0.0);
+        }
+      }
+
+      mfix_set_p0();
+      mfix_set_bc0();
+
+      for (int lev = base_lev; lev <= finestLevel(); ++lev)
+      {
+        DistributionMapping new_particle_dm;
+
+        if ( load_balance_type == "KnapSack" )
+        {
+          new_particle_dm = DistributionMapping::makeKnapSack(*m_leveldata[lev]->particle_cost,
+                                                              knapsack_nmax);
+        }
+        else
+        {
+          new_particle_dm = DistributionMapping::makeSFC(*m_leveldata[lev]->particle_cost,
+                                                         false);
+        }
+
+        pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev), lev);
+
+        if (m_leveldata[lev]->particle_cost != nullptr)
+          delete m_leveldata[lev]->particle_cost;
+
+        m_leveldata[lev]->particle_cost = new MultiFab(pc->ParticleBoxArray(lev),
+                                                       new_particle_dm, 1, 0);
+        m_leveldata[lev]->particle_cost->setVal(0.0);
+
+        // This calls re-creates a proper particle_ebfactories
+        //  and regrids all the multifabs that depend on it
+        if (DEM::solve)
+          RegridLevelSetArray(lev);
+      }
 
     }
-    else if (load_balance_type == "KnapSack" || load_balance_type == "SFC") // Knapsack and SFC
+    else  // Single-grid regridding
     {
+      MultiFab costs(grids[base_lev], dmap[base_lev], 1, 0);
+      costs.setVal(0.0);
 
-        amrex::Print() << "Load balancing using " << load_balance_type << std::endl;
+      Print() << "grids = " << grids[base_lev] << std::endl;
+      Print() << "costs ba = " << costs.boxArray() << std::endl;
 
-        if (solve_dem)
-           AMREX_ALWAYS_ASSERT(particle_cost[0] != nullptr);
-        if (solve_fluid)
-           AMREX_ALWAYS_ASSERT(fluid_cost[0]    != nullptr);
+      if(DEM::solve)
+        Print() << "particle_cost ba = " 
+                << m_leveldata[base_lev]->particle_cost->boxArray()
+                << std::endl;
 
-        if (ParallelDescriptor::NProcs() == 1) return;
+      //Print() << "fluid cost ba = " << fluid_cost[base_lev]->boxArray() << std::endl;
 
-        if (dual_grid)  //  Beginning of dual grid regridding
-        {
-            AMREX_ALWAYS_ASSERT(solve_fluid);
+      if (DEM::solve) {
+        // costs.plus(* particle_cost[base_lev], 0, 1, 0);
 
-            if (load_balance_fluid > 0)
-            {
-                for (int lev = base_lev; lev <= finestLevel(); ++lev)
-                {
+        // MultiFab particle_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
+        // particle_cost_loc.copy(* particle_cost[base_lev], 0, 0, 1);
+        MultiFab particle_cost_loc = MFUtil::regrid(grids[base_lev], dmap[base_lev],
+                                                    *m_leveldata[base_lev]->particle_cost,
+                                                    true);
 
-                    DistributionMapping new_fluid_dm;
+        costs.plus(particle_cost_loc, 0, 1, 0);
+      }
+      if (FLUID::solve) {
+        // costs.plus(* fluid_cost[base_lev], 0, 1, 0);
 
-                    if ( load_balance_type == "KnapSack" )
-                    {
-                        new_fluid_dm = DistributionMapping::makeKnapSack(*fluid_cost[lev],
-                                                                         knapsack_nmax);
-                    }
-                    else
-                    {
-                        new_fluid_dm = DistributionMapping::makeSFC(*fluid_cost[lev],false);
-                    }
+        // MultiFab fluid_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
+        // fluid_cost_loc.copy(* fluid_cost[base_lev], 0, 0, 1);
+        MultiFab fluid_cost_loc = MFUtil::regrid(grids[base_lev], dmap[base_lev],
+                                                 *m_leveldata[base_lev]->fluid_cost,
+                                                 true);
 
-                    SetDistributionMap(lev, new_fluid_dm);
+        costs.plus(fluid_cost_loc, 0, 1, 0);
+      }
 
-                    RegridArrays(lev);
+      DistributionMapping newdm = DistributionMapping::makeKnapSack(costs,knapsack_nmax);
 
-                    fluid_cost[lev].reset(new MultiFab(grids[lev], new_fluid_dm, 1, 0));
-                    fluid_cost[lev]->setVal(0.0);
-                }
-            }
+      SetDistributionMap(base_lev, newdm);
 
-            mfix_set_p0();
-            mfix_set_bc0();
+      if (FLUID::solve)
+        RegridArrays(base_lev);
 
-            for (int lev = base_lev; lev <= finestLevel(); ++lev)
-            {
-                DistributionMapping new_particle_dm;
+      if (FLUID::solve)
+      {
+        if (m_leveldata[base_lev]->fluid_cost != nullptr)
+          delete m_leveldata[base_lev]->fluid_cost;
 
-                if ( load_balance_type == "KnapSack" )
-                {
-                    new_particle_dm = DistributionMapping::makeKnapSack(*particle_cost[lev],
-                                                                        knapsack_nmax);
-                }
-                else
-                {
-                    new_particle_dm = DistributionMapping::makeSFC(*particle_cost[lev],false);
-                }
+        m_leveldata[base_lev]->fluid_cost = new MultiFab(grids[base_lev], newdm, 1, 0);
+        m_leveldata[base_lev]->fluid_cost->setVal(0.0);
+      }
 
-                pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev), lev);
+      if (DEM::solve)
+      {
+        if (m_leveldata[base_lev]->particle_cost != nullptr)
+          delete m_leveldata[base_lev]->particle_cost;
 
-                particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
-                                                      new_particle_dm, 1, 0));
-                particle_cost[lev]->setVal(0.0);
+        m_leveldata[base_lev]->particle_cost = new MultiFab(grids[base_lev], newdm, 1, 0);
+        m_leveldata[base_lev]->particle_cost->setVal(0.0);
+      }
 
-                // This calls re-creates a proper particle_ebfactories
-                //  and regrids all the multifabs that depend on it
-                if (solve_dem)
-                    RegridLevelSetArray(lev);
-            }
+      if (DEM::solve){
+        pc->Regrid(dmap[base_lev], grids[base_lev], base_lev);
+      }
 
-        }
-        else  // Single-grid regridding
-        {
+      if (FLUID::solve) mfix_set_bc0();
 
-            //NOTE: why are particle costs defined on fluid grids here? Or am I
-            //not supposed to care because the grids are the same? (this might
-            //break if there are more particle grid levels).
+      // This calls re-creates a proper particles_ebfactory and regrids
+      // all the multifab that depend on it
+      if (DEM::solve)
+        RegridLevelSetArray(base_lev);
+      }
+  } else {
+      amrex::Abort("load_balance_type must be KnapSack or SFC");
+  }
 
-            MultiFab costs(grids[base_lev], dmap[base_lev], 1, 0);
-            costs.setVal(0.0);
-
-            Print() << "grids = " << grids[base_lev] << std::endl;
-            Print() << "costs ba = " << costs.boxArray() << std::endl;
-
-            if(solve_dem)
-              Print() << "particle_cost ba = " << particle_cost[base_lev]->boxArray() << std::endl;
-
-            //Print() << "fluid cost ba = " << fluid_cost[base_lev]->boxArray() << std::endl;
-
-            if (solve_dem) {
-                // costs.plus(* particle_cost[base_lev], 0, 1, 0);
-
-                // MultiFab particle_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
-                // particle_cost_loc.copy(* particle_cost[base_lev], 0, 0, 1);
-                MultiFab particle_cost_loc = MFUtil::regrid(grids[base_lev], dmap[base_lev],
-                                                            * particle_cost[base_lev], true);
-
-                costs.plus(particle_cost_loc, 0, 1, 0);
-            }
-            if (solve_fluid) {
-                // costs.plus(* fluid_cost[base_lev], 0, 1, 0);
-
-                // MultiFab fluid_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
-                // fluid_cost_loc.copy(* fluid_cost[base_lev], 0, 0, 1);
-                MultiFab fluid_cost_loc = MFUtil::regrid(grids[base_lev], dmap[base_lev],
-                                                         * fluid_cost[base_lev], true);
-
-                costs.plus(fluid_cost_loc, 0, 1, 0);
-            }
-
-            DistributionMapping newdm = DistributionMapping::makeKnapSack(costs,knapsack_nmax);
-
-            SetDistributionMap(base_lev, newdm);
-
-            if (solve_fluid)
-                RegridArrays(base_lev);
-
-            if (solve_fluid)
-            {
-               fluid_cost[base_lev].reset(new MultiFab(grids[base_lev], newdm, 1, 0));
-               fluid_cost[base_lev]->setVal(0.0);
-            }
-
-            if (solve_dem)
-            {
-               particle_cost[base_lev].reset(new MultiFab(grids[base_lev], newdm, 1, 0));
-               particle_cost[base_lev]->setVal(0.0);
-            }
-
-
-            if (solve_dem){
-                pc->Regrid(dmap[base_lev], grids[base_lev], base_lev);
-            }
-
-            if (solve_fluid) mfix_set_bc0();
-
-            // This calls re-creates a proper particles_ebfactory and regrids
-            // all the multifab that depend on it
-            if (solve_dem)
-                RegridLevelSetArray(base_lev);
-
-        }
+  if (DEM::solve)
+    for (int i_lev = base_lev; i_lev < nlev; i_lev++)
+    {
+      // This calls re-creates a proper particle_ebfactories and regrids
+      //  all the multifab that depend on it
+      RegridLevelSetArray(i_lev);
     }
 
-    if (solve_dem)
-        for (int i_lev = base_lev; i_lev < nlev; i_lev++)
-        {
-            // This calls re-creates a proper particle_ebfactories and regrids
-            //  all the multifab that depend on it
-            RegridLevelSetArray(i_lev);
-        }
+  // This call resets both the nodal and the diffusion solvers
+  if (FLUID::solve)
+    mfix_setup_solvers();
 
-    if (solve_fluid)
-       mfix_setup_nodal_solver();
-
-    BL_PROFILE_REGION_STOP("mfix::Regrid()");
+  BL_PROFILE_REGION_STOP("mfix::Regrid()");
 }

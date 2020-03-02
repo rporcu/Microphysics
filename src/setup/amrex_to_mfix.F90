@@ -8,56 +8,12 @@ module amrex_to_mfix_module
 
 contains
 
-!**************************************************************************!
-!                                                                          !
-!                                                                          !
-!**************************************************************************!
-  subroutine mfix_get_data( fluid, dem, call_udf, namelen, mfix_datC) &
-    bind(C, name="mfix_get_data")
-
-    use fld_const, only: ro_g0
-    use get_data_module, only: get_data
-    use param, only: is_undefined
-    use run, only: dem_solids, call_usr
-
-    use iso_c_binding, only: C_CHAR, c_null_char
-
-    implicit none
-
-    integer(c_int), intent(out) :: fluid
-    integer(c_int), intent(out) :: dem, call_udf
-
-    integer(c_int), intent(in   ) :: namelen
-    character(kind=c_char, len=1), dimension (namelen), intent (in) :: mfix_datC
-
-    character(len=namelen) :: mfix_dat
-    integer :: lc
-
-    mfix_dat = " "
-    do lc=1,namelen
-       if( mfix_datC(lc) == c_null_char) then
-          exit
-       else
-          mfix_dat(lc:lc) = mfix_datC(lc)
-       endif
-    enddo
-    ! write(*,*) "Full file name: >"//trim(mfix_dat)//"<"
-
-    call get_data(mfix_dat)
-
-    ! We evolve the fluid if ro_go > 0
-    fluid =  merge(1,0,abs(ro_g0) > tiny(0.0d0))
-
-    dem      =  merge(1,0,dem_solids)
-    call_udf =  merge(1,0,call_usr)
-
-  end subroutine mfix_get_data
 
 !**************************************************************************!
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_usr0() &
+  subroutine mfix_usr0 () &
        bind(C, name="mfix_usr0")
 
     call usr0
@@ -68,7 +24,7 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_usr1(time) &
+  subroutine mfix_usr1 (time) &
        bind(C, name="mfix_usr1")
     real(rt), intent(in   ) :: time
      
@@ -80,33 +36,20 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_usr2() &
+  subroutine mfix_usr2 () &
        bind(C, name="mfix_usr2")
      
     call usr2
 
   end subroutine mfix_usr2
 
-!**************************************************************************!
-!                                                                          !
-!                                                                          !
-!**************************************************************************!
-  subroutine mfix_finl_err_msg() &
-       bind(C, name="mfix_finl_err_msg")
-
-    use error_manager, only: finl_err_msg
-
-    call finl_err_msg
-
-  end subroutine mfix_finl_err_msg
-
 
 !**************************************************************************!
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_usr3(vel_g, ulo, uhi, &
-     p_g, slo, shi, dx, dy, dz) bind(C, name="mfix_usr3")
+  subroutine mfix_usr3 (vel_g, ulo, uhi, &
+                        p_g, slo, shi, dx, dy, dz) bind(C, name="mfix_usr3")
 
     integer(c_int), intent(in   ) :: ulo(3),uhi(3)
     integer(c_int), intent(in   ) :: slo(3),shi(3)

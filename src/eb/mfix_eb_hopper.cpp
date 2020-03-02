@@ -22,8 +22,9 @@
  * (representing the hopper wall and outlet funnel) around a central axis.      *
  *                                                                              *
  *******************************************************************************/
+
 void
-mfix::make_eb_hopper()
+mfix::make_eb_hopper ()
 {
     ParmParse pp("hopper");
 

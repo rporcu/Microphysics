@@ -3,253 +3,300 @@
 #include <mfix.H>
 #include <mfix_F.H>
 #include <mfix_eb_F.H>
-#include <bc_mod_F.H>
-#include <constant_mod_F.H>
-#include <mfix_init_fluid.hpp>
+
+#include <mfix_init_fluid.H>
 
 #include <AMReX_EBAmrUtil.H>
-#include <AMReX_BC_TYPES.H>
-#include <AMReX_Box.H>
-#include <AMReX_EBFabFactory.H>
 
+#include <MFIX_REGIONS_Parms.H>
+#include <MFIX_BC_Parms.H>
+#include <MFIX_IC_Parms.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_FLUID_Parms.H>
 
 void
-mfix::InitParams(int solve_fluid_in, int solve_dem_in, int call_udf_in)
+mfix::InitParams ()
 {
-    if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
-    // set n_error_buf (used in AmrMesh) to default (can overwrite later)
-    for (int i = 0; i < n_error_buf.size(); i++)
-        n_error_buf[i] = {8,8,8};
+  if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
 
-    {
-        ParmParse pp("mfix");
+  // Read and process fluid and DEM particle model options.
+  FLUID::Initialize();
+  DEM::Initialize();
 
-        // Options to control time stepping
-        pp.query("cfl", cfl );
+  // Read in regions, initial and boundary conditions. Note that
+  // regions need to be processed frist as they define the
+  // physical extents of ICs and BCs.
+  REGIONS::Initialize();
+  IC::Initialize();
+  BC::Initialize(geom[0]);
 
-        fixed_dt = -1.;
-        pp.query("fixed_dt", fixed_dt );
-        pp.query("dt_min", dt_min );
-        pp.query("dt_max", dt_max );
+  // set n_error_buf (used in AmrMesh) to default (can overwrite later)
+  for (int i = 0; i < n_error_buf.size(); i++)
+    n_error_buf[i] = {8,8,8};
 
-        // Options to control verbosity level
-        pp.query("verbose", m_verbose);
+  {
+    ParmParse pp("mfix");
 
-        // Options to control MLMG behavior
-        pp.query( "mg_verbose"             , nodal_mg_verbose );
-        pp.query( "mg_cg_verbose"          , nodal_mg_cg_verbose );
-        pp.query( "mg_maxiter"             , nodal_mg_maxiter );
-        pp.query( "mg_cg_maxiter"          , nodal_mg_cg_maxiter );
-        pp.query( "mg_rtol"                , nodal_mg_rtol );
-        pp.query( "mg_atol"                , nodal_mg_atol );
-        pp.query( "mg_max_coarsening_level", nodal_mg_max_coarsening_level );
+    // Options to control time stepping
+    pp.query("cfl", cfl);
 
-        // Default bottom solver here is bicgcg, but alternatives are
-        // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
-        nodal_bottom_solver_type = "bicgcg";
-        pp.query( "bottom_solver_type",  nodal_bottom_solver_type );
+    fixed_dt = -1.;
+    pp.query("fixed_dt", fixed_dt);
+    pp.query("dt_min", dt_min);
+    pp.query("dt_max", dt_max);
 
-        // Is this a steady-state calculation
-        steady_state = 0;
-        pp.query( "steady_state", steady_state );
+    // Verbosity and MLMG parameters are now ParmParse with "nodal_proj" in the
+    // inputs file
+    // Examples: nodal_proj.verbose = 1
+    //           nodal_proj.bottom_verbose = 1 
+    //           nodal_proj.maxiter
+    //           nodal_proj.bottom_maxiter
+    //           nodal_proj.bottom_rtol 
+    //           nodal_proj.bottom_atol 
+    //           nodal_proj.bottom_solver 
+    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_NodalProjector.cpp" 
+    ParmParse pp_nodal("nodal_proj");
+    // Options to control MLMG behavior
+    pp_nodal.query("mg_rtol", nodal_mg_rtol);
+    pp_nodal.query("mg_atol", nodal_mg_atol);
+    pp_nodal.query("mg_max_coarsening_level", nodal_mg_max_coarsening_level);
 
-        // Tolerance to check for steady state
-        steady_state_tol = -1.;
-        pp.query( "steady_state_tol", steady_state_tol );
+    // Is this a steady-state calculation
+    steady_state = 0;
+    pp.query("steady_state", steady_state);
 
-        // Maximum number of iterations allowed to reach steady state
-        pp.query( "steady_state_maxiter", steady_state_maxiter );
+    // Tolerance to check for steady state
+    steady_state_tol = -1.;
+    pp.query("steady_state_tol", steady_state_tol);
 
-        if (steady_state > 0)
-        {
-           if (steady_state_tol < 0)
-              amrex::Abort("Must set steady_state_tol if running to steady state!");
+    // Maximum number of iterations allowed to reach steady state
+    pp.query("steady_state_maxiter", steady_state_maxiter);
 
-              amrex::Print() << "Running to steady state with maxiter = "
-                             << steady_state_maxiter << " and tolerance "
-                             << steady_state_tol << std::endl;
+    if (steady_state > 0) {
+      if (steady_state_tol < 0)
+        amrex::Abort("Must set steady_state_tol if running to steady state!");
 
-        } else {
+        amrex::Print() << "Running to steady state with maxiter = "
+                       << steady_state_maxiter << " and tolerance "
+                       << steady_state_tol << std::endl;
+    }
+    else if (steady_state_tol > 0)
+      amrex::Abort("steady_state_tol set but not steady_state!");
 
-           if (steady_state_tol > 0)
-              amrex::Abort("steady_state_tol set but not steady_state!");
-        }
+    // Flag to set verbosity
+    m_verbose = 0;
+    pp.query("verbose", m_verbose);
 
-        pp.query("ooo_debug", ooo_debug);
+    pp.query("ooo_debug", ooo_debug);
 
-        // The default type is "AsciiFile" but we can over-write that in the inputs file
-        //  with "Random"
-        pp.query("particle_init_type", particle_init_type);
+    // Flag to envoke UDFs
+    bool call_usr_bool = false;
+    pp.query("call_usr", call_usr_bool);
+    call_udf = call_usr_bool ? 1 : 0; // Set global flag
 
-        // Options to control initial projections (mostly we use these for debugging)
-        pp.query("initial_iterations", initial_iterations);
-        pp.query("do_initial_proj"   , do_initial_proj);
+    Array<Real,3> gravity_in{0.0, 0.0, 0.0};
+    pp.get("gravity", gravity_in);
+    for (int dir = 0; dir < 3; dir++)
+      gravity[dir] = gravity_in[dir];
 
-        pp.query( "advect_density", advect_density );
-        pp.query( "advect_tracer" , advect_tracer );
+    // The default type is "AsciiFile" but we can over-write that in the inputs
+    // file with "Random"
+    pp.query("particle_init_type", particle_init_type);
 
-        // The default type is "FixedSize" but we can over-write that in the inputs file
-        //  with "KDTree" or "KnapSack"
-        pp.query("load_balance_type", load_balance_type);
-        pp.query("knapsack_weight_type", knapsack_weight_type);
-        pp.query("load_balance_fluid", load_balance_fluid);
+    // Options to control initial projections (mostly we use these for
+    // debugging)
+    pp.query("initial_iterations", initial_iterations);
+    pp.query("do_initial_proj", do_initial_proj);
 
-        // The default value for the rescaling ratio of the collision time is 50
-        pp.query("tcoll_ratio", tcoll_ratio);
+    pp.query("advect_density", advect_density);
+    pp.query("advect_tracer" , advect_tracer);
+    pp.query("test_tracer_conservation", test_tracer_conservation);
 
-        ParmParse pp_mac("mac");
-        pp_mac.query( "mg_verbose"   , mac_mg_verbose );
-        pp_mac.query( "mg_cg_verbose", mac_mg_cg_verbose );
-        pp_mac.query( "mg_rtol"      , mac_mg_rtol );
-        pp_mac.query( "mg_atol"      , mac_mg_atol );
-        pp_mac.query( "mg_maxiter"   , mac_mg_maxiter );
-        pp_mac.query( "mg_cg_maxiter", mac_mg_cg_maxiter );
-        pp_mac.query( "mg_max_coarsening_level", mac_mg_max_coarsening_level );
+    pp.query("ntrac", ntrac);
 
-        // Default bottom solver here is bicgcg, but alternatives are
-        // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
-        mac_bottom_solver_type = "bicgcg";
-        pp_mac.query( "bottom_solver_type", mac_bottom_solver_type );
+    if (ntrac < 1)
+      amrex::Abort("We currently require at least one tracer");
 
-        AMREX_ALWAYS_ASSERT(load_balance_type == "FixedSize" ||
-                            load_balance_type == "KDTree"    ||
-                            load_balance_type == "KnapSack"  ||
-                            load_balance_type == "SFC"       );
+    // Scalar diffusion coefficients
+    mu_s.resize(ntrac);
+    for (int i = 0; i < ntrac; i++) mu_s[i] = 0.;
+    pp.queryarr("mu_s", mu_s, 0, ntrac);
 
-        AMREX_ALWAYS_ASSERT(knapsack_weight_type == "RunTimeCosts" ||
-                            knapsack_weight_type == "NumParticles"  );
+    amrex::Print() << "Scalar diffusion coefficients " << std::endl;
+    for (int i = 0; i < ntrac; i++)
+      amrex::Print() << "Tracer" << i << ":" << mu_s[i] << std::endl;
 
-        // We ensure that we always use the dual grid formulation when using KDTree, and
-        //           that we  never use the dual grid formulation otherwise
-        if (load_balance_type == "KDTree") {
-           dual_grid = true;
-        } else {
-          ParmParse amr_pp("amr");
-          amr_pp.query("dual_grid", dual_grid);
-        }
+    if (test_tracer_conservation && !advect_tracer)
+      amrex::Abort("No point in testing tracer conservation with advect_tracer"
+          " = false");
 
-        if (load_balance_type == "KnapSack")
-            pp.query("knapsack_nmax", knapsack_nmax);
+    if (advect_tracer && !advect_density)
+      amrex::Abort("Cant advect tracer without advecting density");
 
-        // Parameters used be the level-set algorithm. Refer to LSFactory (or
-        // mfix.H) for more details:
-        //   -> refinement: how well resolved (fine) the (level-set/EB-facet)
-        //                  grid needs to be (note: a fine level-set grid means
-        //                  that distances and normals are computed accurately)
-        //   -> pad:        how many (refined) grid points _outside_ the
-        //                  problem domain the grid extends (avoids edge cases
-        //                  in physical domain)
-        pp.query("levelset__refinement", levelset__refinement);
+    // The default type is "KnapSack"; alternative is "SFC"
+    pp.query("load_balance_type", load_balance_type);
+    pp.query("knapsack_weight_type", knapsack_weight_type);
+    pp.query("load_balance_fluid", load_balance_fluid);
 
-        // Not needed here... the role of refining EB is filled with AMR level-set
-        levelset__eb_refinement = 1;
-        // Make sure that a coarsened level-set has a level-set pad of _at least_ 2;
-        levelset__pad = 2*levelset__refinement;
-        // Ensure that velocity_reconstruction has enough level-set to work off:
-        // (2 => EB lives on the same grid resolution as fluid)
-        levelset__eb_pad = std::max(2, levelset__pad);
+    // The default value for the rescaling ratio of the collision time is 50
+    pp.query("tcoll_ratio", tcoll_ratio);
 
-        amrex::Print() << "Auto-generating level-set parameters:" << std::endl
-                       << "eb_refinement = " << levelset__eb_refinement << std::endl
-                       << "levelset_pad  = " << levelset__pad << std::endl
-                       << "eb_pad        = " << levelset__eb_pad << std::endl;
+    // Verbosity and MLMG parameters are now ParmParse with "mac_proj" in the
+    // inputs file
+    // Examples: mac_proj.verbose = 1
+    //           mac_proj.bottom_verbose = 1 
+    //           mac_proj.maxiter
+    //           mac_proj.bottom_maxiter
+    //           mac_proj.bottom_rtol 
+    //           mac_proj.bottom_atol 
+    //           mac_proj.bottom_solver 
+    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp"
 
+    ParmParse pp_mac("mac_proj");
+    pp_mac.query("mg_rtol", mac_mg_rtol);
+    pp_mac.query("mg_atol", mac_mg_atol);
+    pp_mac.query("mg_max_coarsening_level", mac_mg_max_coarsening_level);
+
+    AMREX_ALWAYS_ASSERT(load_balance_type.compare("KnapSack") == 0  or
+                        load_balance_type.compare("SFC") == 0);
+
+    AMREX_ALWAYS_ASSERT(knapsack_weight_type.compare("RunTimeCosts") == 0 or
+                        knapsack_weight_type.compare("NumParticles") == 0);
+
+    ParmParse amr_pp("amr");
+    amr_pp.query("dual_grid", dual_grid);
+
+    if (load_balance_type.compare("KnapSack") == 0)
+      pp.query("knapsack_nmax", knapsack_nmax);
+
+    // Parameters used be the level-set algorithm. Refer to LSFactory (or
+    // mfix.H) for more details:
+    //   -> refinement: how well resolved (fine) the (level-set/EB-facet)
+    //                  grid needs to be (note: a fine level-set grid means
+    //                  that distances and normals are computed accurately)
+    //   -> pad:        how many (refined) grid points _outside_ the
+    //                  problem domain the grid extends (avoids edge cases
+    //                  in physical domain)
+    pp.query("levelset__refinement", levelset_refinement);
+
+    // Not needed here... the role of refining EB is filled with AMR level-set
+    levelset_eb_refinement = 1;
+    // Make sure that a coarsened level-set has a level-set pad of _at least_ 2;
+    levelset_pad = 2*levelset_refinement;
+    // Ensure that velocity_reconstruction has enough level-set to work off:
+    // (2 => EB lives on the same grid resolution as fluid)
+    levelset_eb_pad = std::max(2, levelset_pad);
+
+    amrex::Print() << "Auto-generating level-set parameters:" << std::endl
+                   << "eb_refinement = " << levelset_eb_refinement << std::endl
+                   << "levelset_pad  = " << levelset_pad << std::endl
+                   << "eb_pad        = " << levelset_eb_pad << std::endl;
+  }
+
+  if (DEM::solve)
+  {
+    ParmParse pp("particles");
+
+    pp.query("max_grid_size_x", particle_max_grid_size_x);
+    pp.query("max_grid_size_y", particle_max_grid_size_y);
+    pp.query("max_grid_size_z", particle_max_grid_size_z);
+
+    // Keep particles that are initially touching the wall. Used by DEM tests.
+    pp.query("removeOutOfRange", removeOutOfRange);
+  }
+
+  if (DEM::solve and (not FLUID::solve))
+  {
+    if (fixed_dt <= 0.0)
+      amrex::Abort("If running particle-only must specify a positive fixed_dt"
+          " in the inputs file");
+  }
+
+  if (DEM::solve and FLUID::solve)
+  {
+    ParmParse pp("mfix");
+
+    std::string drag_type = "None";
+    pp.query("drag_type", drag_type);
+
+    if (drag_type.compare("WenYu") == 0) {
+      m_drag_type = DragType::WenYu;
+    }
+    else if (drag_type.compare("Gidaspow") == 0) {
+      m_drag_type = DragType::Gidaspow;
+    }
+    else if (drag_type.compare("BVK2") == 0) {
+      m_drag_type = DragType::BVK2;
+    }
+    else if (drag_type.compare("UserDrag") == 0) {
+      m_drag_type = DragType::UserDrag;
+    }
+    else {
+      amrex::Abort("Don't know this drag_type!");
     }
 
-    {
-        ParmParse pp_diff("diff");
-        pp_diff.query( "mg_verbose"   , diff_mg_verbose );
-        pp_diff.query( "mg_cg_verbose", diff_mg_cg_verbose );
-        pp_diff.query( "mg_rtol"      , diff_mg_rtol );
-        pp_diff.query( "mg_atol"      , diff_mg_atol );
-        pp_diff.query( "mg_maxiter"   , diff_mg_maxiter );
-        pp_diff.query( "mg_cg_maxiter", diff_mg_cg_maxiter );
-        pp_diff.query( "mg_max_coarsening_level", diff_mg_max_coarsening_level );
+    std::string deposition_scheme = "trilinear";
+    pp.query("deposition_scheme", deposition_scheme);
 
-        // Default bottom solver here is bicgcg, but alternatives are
-        // "smoother", "hypre", "cg", "cgbicg" or "bicgstab"
-        diff_bottom_solver_type = "bicgcg";
-        pp_diff.query( "bottom_solver_type", diff_bottom_solver_type );
+    if (deposition_scheme.compare("trilinear") == 0) {
+      m_deposition_scheme = DepositionScheme::trilinear;
+    }
+    else if (deposition_scheme.compare("trilinear-dpvm-square") == 0) {
+      m_deposition_scheme = DepositionScheme::square_dpvm;
+    }
+    else if (deposition_scheme.compare("true-dpvm") == 0) {
+      m_deposition_scheme = DepositionScheme::true_dpvm;
+    }
+    else if (deposition_scheme.compare("centroid") == 0) {
+      m_deposition_scheme = DepositionScheme::centroid;
+    }
+    else {
+      amrex::Abort("Don't know this deposition_scheme!");
     }
 
-    solve_fluid  = solve_fluid_in;
-    solve_dem    = solve_dem_in;
-    call_udf     = call_udf_in;
+    m_max_solids_volume_fraction = 0.6;
+    pp.query("max_solids_volume_fraction", m_max_solids_volume_fraction);
 
-    if (solve_dem)
-    {
-        ParmParse pp("particles");
+    m_deposition_scale_factor = 1.;
+    pp.query("deposition_scale_factor", m_deposition_scale_factor);
 
-        pp.query("max_grid_size_x", particle_max_grid_size_x);
-        pp.query("max_grid_size_y", particle_max_grid_size_y);
-        pp.query("max_grid_size_z", particle_max_grid_size_z);
+    m_deposition_diffusion_coeff = -1.;
+    pp.query("deposition_diffusion_coeff", m_deposition_diffusion_coeff);
+  }
 
-        // Keep particles that are initially touching the wall. Used by DEM tests.
-        pp.query("removeOutOfRange", removeOutOfRange );
-    }
+  {
+    ParmParse amr_pp("amr");
 
-    if (solve_dem && !solve_fluid)
-    {
-        if (fixed_dt <= 0.0)
-            amrex::Abort("If running particle-only must specify a positive fixed_dt in the inputs file");
-    }
+    amr_pp.query("plot_int", plot_int);
+    amr_pp.query("plot_per_exact", plot_per_exact);
+    amr_pp.query("plot_per_approx", plot_per_approx);
 
-    if (solve_dem && solve_fluid)
-    {
-      ParmParse pp("mfix");
+    if ((plot_int       > 0 and plot_per_exact  > 0) or
+        (plot_int       > 0 and plot_per_approx > 0) or
+        (plot_per_exact > 0 and plot_per_approx > 0) )
+      amrex::Abort("Must choose only one of plot_int or plot_per_exact or plot_per_approx");
 
-      std::string drag_type = "None";
-      pp.query("drag_type", drag_type);
+    amr_pp.queryarr("avg_p_g", avg_p_g);
+    amr_pp.queryarr("avg_ep_g", avg_ep_g);
+    amr_pp.queryarr("avg_vel_g", avg_vel_g);
 
-      if (drag_type == "WenYu")
-      {
-        m_drag_type = DragType::WenYu;
-      }
-      else if (drag_type == "Gidaspow")
-      {
-        m_drag_type = DragType::Gidaspow;
-      }
-      else if (drag_type == "BVK2")
-      {
-        m_drag_type = DragType::BVK2;
-      }
-      else if (drag_type == "UserDrag")
-      {
-        m_drag_type = DragType::UserDrag;
-      }
-      else
-      {
-        amrex::Abort("Don't know this drag_type!");
-      }
-    }
+    amr_pp.queryarr("avg_vel_p", avg_vel_p);
 
-    {
-      ParmParse amr_pp("amr");
-
-      amr_pp.queryarr("avg_p_g",   avg_p_g);
-      amr_pp.queryarr("avg_ep_g",  avg_ep_g);
-      amr_pp.queryarr("avg_vel_g", avg_vel_g);
-
-      amr_pp.queryarr("avg_vel_p", avg_vel_p);
-
-      // Regions geometry
-      amr_pp.queryarr("avg_region_x_e", avg_region_x_e );
-      amr_pp.queryarr("avg_region_x_w", avg_region_x_w );
-      amr_pp.queryarr("avg_region_y_n", avg_region_y_n );
-      amr_pp.queryarr("avg_region_y_s", avg_region_y_s );
-      amr_pp.queryarr("avg_region_z_t", avg_region_z_t );
-      amr_pp.queryarr("avg_region_z_b", avg_region_z_b );
-
-    }
-
-    get_gravity(gravity);
+    // Regions geometry
+    amr_pp.queryarr("avg_region_x_e", avg_region_x_e);
+    amr_pp.queryarr("avg_region_x_w", avg_region_x_w);
+    amr_pp.queryarr("avg_region_y_n", avg_region_y_n);
+    amr_pp.queryarr("avg_region_y_s", avg_region_y_s);
+    amr_pp.queryarr("avg_region_z_t", avg_region_z_t);
+    amr_pp.queryarr("avg_region_z_b", avg_region_z_b);
+  }
 }
 
 
 //! Tag using each EB level's volfrac. This requires that the `eb_levels` have
 //! already been build.
-void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow){
+void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow)
+{
     if (ooo_debug) amrex::Print() << "ErrorEst" << std::endl;
     //___________________________________________________________________________
     // Tag all cells with volfrac \in (0, 1)
@@ -260,7 +307,7 @@ void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow){
 }
 
 
-void mfix::Init( Real time)
+void mfix::Init (Real time)
 {
     if (ooo_debug) amrex::Print() << "Init" << std::endl;
     InitIOChkData();
@@ -310,7 +357,7 @@ void mfix::Init( Real time)
      *                                                                          *
      ***************************************************************************/
 
-    if (solve_dem)
+    if (DEM::solve)
         pc = std::unique_ptr<MFIXParticleContainer>(new MFIXParticleContainer(this));
 
 
@@ -333,38 +380,6 @@ void mfix::Init( Real time)
 
     Box domain(geom[0].Domain());
 
-
-    int cyc_x=0, cyc_y=0, cyc_z=0;
-    if (geom[0].isPeriodic(0)) cyc_x = 1;
-    if (geom[0].isPeriodic(1)) cyc_y = 1;
-    if (geom[0].isPeriodic(2)) cyc_z = 1;
-
-    mfix_set_cyclic(&cyc_x, &cyc_y, &cyc_z);
-
-    // Since these involving writing to output files we only do these on the IOProcessor
-    if ( ParallelDescriptor::IOProcessor() )
-    {
-       // Write the initial part of the standard output file
-       write_out0(&time, &dx, &dy, &dz, &xlen, &ylen, &zlen,
-                  domain.loVect(), domain.hiVect());
-
-       // Write the initial part of the special output file(s)
-       write_usr0();
-    }
-
-    // Set point sources.
-    {
-        int err_ps = 0;
-        int is_ioproc = 0;
-        if ( ParallelDescriptor::IOProcessor() )
-            is_ioproc = 1;
-
-        set_ps(&dx,&dy,&dz,&err_ps,&is_ioproc);
-
-        if (err_ps == 1)
-            amrex::Abort("Bad data in set_ps");
-    }
-
     for (int lev = 0; lev < nlev; lev++)
         mfix_set_bc_type(lev);
 }
@@ -380,12 +395,9 @@ BoxArray mfix::MakeBaseGrids () const
     // We only call ChopGrids if dividing up the grid using max_grid_size didn't
     //    create enough grids to have at least one grid per processor.
     // This option is controlled by "refine_grid_layout" which defaults to true.
-
     if ( refine_grid_layout &&
-         ba.size() < ParallelDescriptor::NProcs() &&
-         (load_balance_type == "FixedSize" || load_balance_type == "KnapSack" || load_balance_type == "SFC") ) {
-        ChopGrids(geom[0].Domain(), ba, ParallelDescriptor::NProcs());
-    }
+         ba.size() < ParallelDescriptor::NProcs() ) 
+           ChopGrids(geom[0].Domain(), ba, ParallelDescriptor::NProcs());
 
     if (ba == grids[0]) {
         ba = grids[0];  // to avoid dupliates
@@ -445,7 +457,8 @@ void mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 
 
 void mfix::MakeNewLevelFromScratch (int lev, Real time,
-                                    const BoxArray& new_grids, const DistributionMapping& new_dmap)
+                                    const BoxArray& new_grids,
+                                    const DistributionMapping& new_dmap)
 {
     if (ooo_debug) amrex::Print() << "MakeNewLevelFromScratch" << std::endl;
     if (m_verbose > 0)
@@ -459,73 +472,38 @@ void mfix::MakeNewLevelFromScratch (int lev, Real time,
     amrex::Print() << "SETTING NEW GRIDS IN MAKE NEW LEVEL " << new_grids << std::endl;
     amrex::Print() << "SETTING NEW DMAP IN MAKE NEW LEVEL " << new_dmap << std::endl;
 
-    if (lev == 0)
-    {
-        // This is being done by mfix::make_eb_geometry, otherwise it would be
-        // here
-        MakeBCArrays();
-        check_data();
-
-        Real dx = geom[lev].CellSize(0);
-        Real dy = geom[lev].CellSize(1);
-        Real dz = geom[lev].CellSize(2);
-
-        // This is separate from check_data because it is only called on
-        // initialization, not on restart
-        Box domain(geom[0].Domain());
-        if ( ParallelDescriptor::IOProcessor() )
-            check_initial_conditions(&dx,&dy,&dz,domain.loVect(),domain.hiVect());
-    }
+    // This is being done by mfix::make_eb_geometry,
+    // otherwise it would be done here
+    if (lev == 0) MakeBCArrays();
 }
 
 
 void mfix::ReMakeNewLevelFromScratch (int lev,
-                                 const BoxArray & new_grids, const DistributionMapping & new_dmap)
+                                      const BoxArray & new_grids,
+                                      const DistributionMapping & new_dmap)
 {
     if (ooo_debug) amrex::Print() << "ReMakeNewLevelFromScratch" << std::endl;
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
 
-    if (lev == 0)
-    {
-       MakeBCArrays();
-       check_data();
-    }
+    if (lev == 0) MakeBCArrays();
 
     // We need to re-fill these arrays for the larger domain (after replication).
     mfix_set_bc_type(lev);
 }
 
 
-void mfix::check_data ()
-{
-    if (ooo_debug) amrex::Print() << "check_data" << std::endl;
-    Real dx = geom[0].CellSize(0);
-    Real dy = geom[0].CellSize(1);
-    Real dz = geom[0].CellSize(2);
 
-    Box domain(geom[0].Domain());
-
-    // Only call this check on one processor since it has a bunch of print statements
-    if ( ParallelDescriptor::IOProcessor() )
-    {
-//     check_boundary_conditions(&dx,&dy,&dz,&xlen,&ylen,&zlen,domain.loVect(),domain.hiVect());
-       check_point_sources(&dx,&dy,&dz);
-       check_bc_flow();
-    }
-}
-
-
-void mfix::InitLevelData(Real time)
+void mfix::InitLevelData (Real time)
 {
     if (ooo_debug) amrex::Print() << "InitLevelData" << std::endl;
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
-    if (solve_fluid)
+    if (FLUID::solve)
        for (int lev = 0; lev < nlev; lev++)
           AllocateArrays(lev);
 
     // Allocate the particle data
-    if (solve_dem)
+    if (DEM::solve)
     {
       Real strt_init_part = ParallelDescriptor::second();
 
@@ -566,7 +544,7 @@ void mfix::InitLevelData(Real time)
                                                          dragx,dragy,dragz,phase,state};
 
         pc->InitNRandomPerCell(n_per_cell, pdata);
-        pc->WriteAsciiFileForInit ("random_particles");
+        pc->WriteAsciiFileForInit("random_particles");
         exit(0);
 
       } else if (particle_init_type == "Auto") {
@@ -582,40 +560,45 @@ void mfix::InitLevelData(Real time)
 
       pc->Redistribute();
 
-      // used in load balancing
-      if (load_balance_type == "KnapSack" || load_balance_type == "SFC")
-      {
-          for (int lev = 0; lev < nlev; lev++)
-          {
-             particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
-                                                   pc->ParticleDistributionMap(lev), 1, 0));
-             particle_cost[lev]->setVal(0.0);
-          }
-      }
-
       Real end_init_part = ParallelDescriptor::second() - strt_init_part;
       ParallelDescriptor::ReduceRealMax(end_init_part, ParallelDescriptor::IOProcessorNumber());
       amrex::Print() << "Time spent in initializing particles " << end_init_part << std::endl;
     }
 
-    if (solve_fluid)
+    // Used in load balancing
+    if (DEM::solve)
     {
-       if (load_balance_type == "KnapSack" || load_balance_type == "SFC")
-       {
-          for (int lev = 0; lev < nlev; lev++)
-          {
-             fluid_cost[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
-             fluid_cost[lev]->setVal(0.0);
-          }
-       }
+      for (int lev = 0; lev < nlev; lev++)
+      {
+        if (m_leveldata[lev]->particle_cost != nullptr)
+          delete m_leveldata[lev]->particle_cost;
+
+        m_leveldata[lev]->particle_cost = new MultiFab(pc->ParticleBoxArray(lev),
+                                                       pc->ParticleDistributionMap(lev), 1, 0);
+        m_leveldata[lev]->particle_cost->setVal(0.0);
+      }
+    }
+
+    // Used in load balancing
+    if (FLUID::solve)
+    {
+      for (int lev = 0; lev < nlev; lev++)
+      {
+        if (m_leveldata[lev]->fluid_cost != nullptr)
+          delete m_leveldata[lev]->fluid_cost;
+
+        m_leveldata[lev]->fluid_cost = new MultiFab(grids[lev], dmap[lev], 1, 0);
+        m_leveldata[lev]->fluid_cost->setVal(0.0);
+      }
     }
 }
 
 void
-mfix::PostInit(Real& dt, Real time, int restart_flag, Real stop_time)
+mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
-    if (solve_dem)
+
+    if (DEM::solve)
     {
         // Auto generated particles may be out of the domain. This call will
         // remove them. Note that this has to occur after the EB geometry is
@@ -632,12 +615,12 @@ mfix::PostInit(Real& dt, Real time, int restart_flag, Real stop_time)
 
             Print() << "Clean up auto-generated particles.\n" << std::endl;
 
-            const MultiFab * ls_data = level_sets[1].get();
+            const MultiFab * ls_data = level_sets[1];
             iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                ls_data->nComp(), ls_data->nGrow());
 
-            pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
-                                 ls_data, levelset__refinement);
+            pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level],
+                                 ls_data, levelset_refinement);
           }
           else if (!restart_flag && particle_ebfactory[finest_level])
           {
@@ -648,68 +631,72 @@ mfix::PostInit(Real& dt, Real time, int restart_flag, Real stop_time)
 
             for (int ilev = 0; ilev < nlev; ilev ++)
             {
-              const MultiFab * ls_data = level_sets[ilev].get();
+              const MultiFab * ls_data = level_sets[ilev];
               iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                  ls_data->nComp(), ls_data->nGrow());
 
-              pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(),
+              pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev],
                                    ls_data, 1);
             }
           }
 
         }
 
-
-        for (int lev = 0; lev < nlev; lev++)
+        // We need to do this *after* restart (hence putting this here not
+        // in Init) because we may want to change the particle_max_grid_size on restart.
+        if ( dual_grid && particle_max_grid_size_x > 0
+                       && particle_max_grid_size_y > 0
+                       && particle_max_grid_size_z > 0)
         {
-            // We need to do this *after* restart (hence putting this here not
-            // in Init) because we may want to move from KDTree to Knapsack, or
-            // change the particle_max_grid_size on restart.
-            if ( (load_balance_type == "KnapSack" || load_balance_type == "SFC") &&
-                 dual_grid && particle_max_grid_size_x > 0
-                           && particle_max_grid_size_y > 0
-                           && particle_max_grid_size_z > 0)
-            {
-                BoxArray particle_ba(geom[lev].Domain());
-                IntVect particle_max_grid_size(particle_max_grid_size_x,
-                                               particle_max_grid_size_y,
-                                               particle_max_grid_size_z);
-                particle_ba.maxSize(particle_max_grid_size);
-                DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
-                pc->Regrid(particle_dm, particle_ba);
+          IntVect particle_max_grid_size(particle_max_grid_size_x,
+                                         particle_max_grid_size_y,
+                                         particle_max_grid_size_z);
 
-                particle_cost[lev].reset(new MultiFab(pc->ParticleBoxArray(lev),
-                                                      pc->ParticleDistributionMap(lev), 1, 0));
-                particle_cost[lev]->setVal(0.0);
+          for (int lev = 0; lev < nlev; lev++)
+          {
+            BoxArray particle_ba(geom[lev].Domain());
+            particle_ba.maxSize(particle_max_grid_size);
+            DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
+            pc->Regrid(particle_dm, particle_ba);
 
-                // This calls re-creates a proper particle_ebfactories
-                //  and regrids all the multifabs that depend on it
-                if (solve_dem)
-                    RegridLevelSetArray(lev);
+            if (m_leveldata[lev]->particle_cost != nullptr)
+              delete m_leveldata[lev]->particle_cost;
 
-            }
+            m_leveldata[lev]->particle_cost = new MultiFab(pc->ParticleBoxArray(lev),
+                                                           pc->ParticleDistributionMap(lev), 1, 0);
+            m_leveldata[lev]->particle_cost->setVal(0.0);
+
+            // This calls re-creates a proper particle_ebfactories
+            //  and regrids all the multifabs that depend on it
+            if (DEM::solve)
+                RegridLevelSetArray(lev);
+
+          }
         }
 
         Real min_dp[10], min_ro[10];
         Real max_dp[10], max_ro[10];
         Real avg_dp[10], avg_ro[10];
 
-        pc->GetParticleAvgProp( min_dp, min_ro,
-                                max_dp, max_ro,
-                                avg_dp, avg_ro );
+        pc->GetParticleAvgProp(min_dp, min_ro,
+                               max_dp, max_ro,
+                               avg_dp, avg_ro);
 
-        init_collision(min_dp, min_ro,
+        init_collision(&DEM::NPHASE,
+                       min_dp, min_ro,
                        max_dp, max_ro,
                        avg_dp, avg_ro,
-                       tcoll_ratio);
+                       tcoll_ratio,
+                       &DEM::etan[0][0], &DEM::etan_w[0],
+                       &DEM::etat[0][0], &DEM::etat_w[0],
+                       &DEM::neighborhood);
 
-        DEMParams::Initialize();
 
-        if (!solve_fluid)
+        if (!FLUID::solve)
             dt = fixed_dt;
     }
 
-    if (solve_fluid)
+    if (FLUID::solve)
         mfix_init_fluid(restart_flag,dt,stop_time);
 
     // Call user-defined subroutine to set constants, check data, etc.
@@ -749,17 +736,17 @@ mfix::MakeBCArrays ()
        Box box_khi = amrex::adjCellHi(domainz,2,1);
 
        // Note that each of these is a single IArrayBox so every process has a copy of them
-       bc_ilo[lev].reset(new IArrayBox(box_ilo,2));
-       bc_ihi[lev].reset(new IArrayBox(box_ihi,2));
-       bc_jlo[lev].reset(new IArrayBox(box_jlo,2));
-       bc_jhi[lev].reset(new IArrayBox(box_jhi,2));
-       bc_klo[lev].reset(new IArrayBox(box_klo,2));
-       bc_khi[lev].reset(new IArrayBox(box_khi,2));
+       bc_ilo[lev] = new IArrayBox(box_ilo,2);
+       bc_ihi[lev] = new IArrayBox(box_ihi,2);
+       bc_jlo[lev] = new IArrayBox(box_jlo,2);
+       bc_jhi[lev] = new IArrayBox(box_jhi,2);
+       bc_klo[lev] = new IArrayBox(box_klo,2);
+       bc_khi[lev] = new IArrayBox(box_khi,2);
    }
 }
 
 void
-mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
+mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "mfix_init_fluid" << std::endl;
 
@@ -774,86 +761,131 @@ mfix::mfix_init_fluid( int is_restarting, Real dt, Real stop_time)
     {
        Box domain(geom[lev].Domain());
 
+       MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
+
        Real dx = geom[lev].CellSize(0);
        Real dy = geom[lev].CellSize(1);
        Real dz = geom[lev].CellSize(2);
 
        // We deliberately don't tile this loop since we will be looping
        //    over bc's on faces and it makes more sense to do this one grid at a time
-       for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi) {
+       for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi) {
 
           const Box& bx = mfi.validbox();
-          const Box& sbx = (*ep_g[lev])[mfi].box();
+          const Box& sbx = ep_g[mfi].box();
 
-        if ( is_restarting ) {
+          if ( is_restarting ) {
 
-            init_fluid_restart(bx, (*mu_g[lev])[mfi]);
+            init_fluid_restart(bx, (*m_leveldata[lev]->mu_g)[mfi]);
 
           } else {
 
             init_fluid(sbx, bx, domain,
-                       (*ep_g[lev])[mfi], (*ro_g[lev])[mfi], 
-                       (*trac[lev])[mfi], (*p_g[lev])[mfi],
-                       (*vel_g[lev])[mfi], (*mu_g[lev])[mfi],
-                       dx, dy, dz, xlen, ylen, zlen);
+                       (*m_leveldata[lev]->ep_g)[mfi],
+                       (*m_leveldata[lev]->ro_g)[mfi],
+                       (*m_leveldata[lev]->trac)[mfi],
+                       (*m_leveldata[lev]->p_g)[mfi],
+                       (*m_leveldata[lev]->vel_g)[mfi],
+                       (*m_leveldata[lev]->mu_g)[mfi],
+                       dx, dy, dz, xlen, ylen, zlen, test_tracer_conservation);
           }
        }
+
+       // Make sure to fill the "old state" before we start ...
+       MultiFab::Copy(*m_leveldata[lev]->ro_go, *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
+       MultiFab::Copy(*m_leveldata[lev]->trac_o, *m_leveldata[lev]->trac, 0, 0, 1, 0);
     }
 
     mfix_set_p0();
 
-  // Here we re-set the bc values for p and u,v,w just in case init_fluid
-  //      over-wrote some of the bc values with ic values
-  mfix_set_bc0();
+    // Here we re-set the bc values for p and u,v,w just in case init_fluid
+    //      over-wrote some of the bc values with ic values
+    mfix_set_bc0();
 
-  for (int lev = 0; lev < nlev; lev++)
-  {
-     ep_g[lev]->FillBoundary(geom[lev].periodicity());
-     ro_g[lev]->FillBoundary(geom[lev].periodicity());
-     trac[lev]->FillBoundary(geom[lev].periodicity());
-     mu_g[lev]->FillBoundary(geom[lev].periodicity());
+    for (int lev = 0; lev < nlev; lev++)
+    {
+      m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
 
-     vel_g[lev]->FillBoundary(geom[lev].periodicity());
-  }
+      if (advect_tracer)
+        m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
 
-  if (is_restarting == 0)
-  {
-     // Just for reference, we compute the volume inside the EB walls (as if there were no particles)
-     ep_g[0]->setVal(1.0);
-     sum_vol_orig = volWgtSum(0,*ep_g[0],0);
-     Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
+      m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
+    }
 
-     Real domain_vol = sum_vol_orig;
+    if (is_restarting == 0)
+    {
+       // Just for reference, we compute the volume inside the EB walls (as if there were no particles)
+       m_leveldata[0]->ep_g->setVal(1.0);
 
-     // Now initialize the volume fraction ep_g before the first projection
-     mfix_calc_volume_fraction(sum_vol_orig);
-     Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+       sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
 
-     Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
+       Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
 
-     // This sets bcs for ep_g and mu_g
-     Real time = 0.0;
-     mfix_set_scalar_bcs(time,ro_g,trac,ep_g,mu_g);
+       Real domain_vol = sum_vol_orig;
 
-     // Project the initial velocity field
-     if (do_initial_proj)
-        mfix_project_velocity();
+       // Now initialize the volume fraction ep_g before the first projection
+       mfix_calc_volume_fraction(sum_vol_orig);
+       Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
 
-     // Iterate to compute the initial pressure
-     if (initial_iterations > 0)
+       Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
 
-        mfix_initial_iterations(dt,stop_time);
+       // This sets bcs for ep_g and mu_g
+       Real time = 0.0;
 
-     } else {
+       Vector< MultiFab* > ro_g(m_leveldata.size(), nullptr);
+       for (int lev(0); lev < m_leveldata.size(); ++lev)
+         ro_g[lev] = m_leveldata[lev]->ro_g;
 
-        //Calculation of sum_vol_orig for a restarting point  
-        sum_vol_orig = volWgtSum(0,*ep_g[0],0);
-        Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
-     }
+       Vector< MultiFab* > ro_go(m_leveldata.size(), nullptr);
+       for (int lev(0); lev < m_leveldata.size(); ++lev)
+         ro_go[lev] = m_leveldata[lev]->ro_go;
+
+       mfix_set_density_bcs(time, ro_g);
+       mfix_set_density_bcs(time, ro_go);
+
+       Vector< MultiFab* > trac(m_leveldata.size(), nullptr);
+       for (int lev(0); lev < m_leveldata.size(); ++lev)
+         trac[lev] = m_leveldata[lev]->trac;
+
+       Vector< MultiFab* > trac_o(m_leveldata.size(), nullptr);
+       for (int lev(0); lev < m_leveldata.size(); ++lev)
+         trac_o[lev] = m_leveldata[lev]->trac_o;
+
+       Vector< MultiFab* > mu_g(m_leveldata.size(), nullptr);
+       for (int lev(0); lev < m_leveldata.size(); ++lev)
+         mu_g[lev] = m_leveldata[lev]->mu_g;
+
+       mfix_set_scalar_bcs(time, trac, mu_g);
+       mfix_set_scalar_bcs(time, trac_o, mu_g);
+
+       // Project the initial velocity field
+       if (do_initial_proj)
+          mfix_project_velocity();
+
+       // Iterate to compute the initial pressure
+       if (initial_iterations > 0)
+
+          mfix_initial_iterations(dt,stop_time);
+
+    } else {
+
+      Vector< MultiFab* > ep_g(m_leveldata.size(), nullptr);
+      for (int lev(0); lev < m_leveldata.size(); ++lev)
+        ep_g[lev] = m_leveldata[lev]->ep_g;
+
+       mfix_set_epg_bcs(ep_g);
+
+       //Calculation of sum_vol_orig for a restarting point
+       sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
+
+       Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+    }
 }
 
 void
-mfix::mfix_set_bc0()
+mfix::mfix_set_bc0 ()
 {
     if (ooo_debug) amrex::Print() << "mfix_set_bc0" << std::endl;
     for (int lev = 0; lev < nlev; lev++)
@@ -861,45 +893,47 @@ mfix::mfix_set_bc0()
 
      Box domain(geom[lev].Domain());
 
+     MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
+
      // Don't tile this -- at least for now
-     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+     for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
      {
-       const Box& sbx = (*ep_g[lev])[mfi].box();
+       const Box& sbx = ep_g[mfi].box();
 
        set_bc0(sbx, &mfi, lev, domain);
      }
 
-     ep_g[lev]->FillBoundary(geom[lev].periodicity());
-     ro_g[lev]->FillBoundary(geom[lev].periodicity());
-     trac[lev]->FillBoundary(geom[lev].periodicity());
+     ep_g.FillBoundary(geom[lev].periodicity());
+     m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
+     if (advect_tracer)
+       m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
    }
 
    // Put velocity Dirichlet bc's on faces
    Real time = 0.0;
    int extrap_dir_bcs = 0;
-   mfix_set_velocity_bcs(time,vel_g,extrap_dir_bcs);
 
-  for (int lev = 0; lev < nlev; lev++)
-     vel_g[lev]->FillBoundary(geom[lev].periodicity());
+   Vector< MultiFab* > vel_g(m_leveldata.size(), nullptr);
+   for (int lev(0); lev < m_leveldata.size(); ++lev)
+     vel_g[lev] = m_leveldata[lev]->vel_g;
+
+   mfix_set_velocity_bcs(time, vel_g, extrap_dir_bcs);
+
+   for (int lev = 0; lev < nlev; lev++)
+     m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
 }
 
 void
-mfix::mfix_set_p0()
+mfix::mfix_set_p0 ()
 {
   if (ooo_debug) amrex::Print() << "mfix_set_p0" << std::endl;
-  Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
-  Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
-  Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
-
-  int delp_dir;
-  set_delp_dir(&delp_dir);
 
   IntVect press_per = IntVect(geom[0].isPeriodic(0),geom[0].isPeriodic(1),geom[0].isPeriodic(2));
 
   // Here we set a separate periodicity flag for p0_g because when we use
   // pressure drop (delp) boundary conditions we fill all variables *except* p0
   // periodically
-  if (delp_dir > -1) press_per[delp_dir] = 0;
+  if (BC::delp_dir > -1) press_per[BC::delp_dir] = 0;
   p0_periodicity = Periodicity(press_per);
 
   // Initialize gp0 to 0
@@ -918,33 +952,28 @@ mfix::mfix_set_p0()
 
      // We put this outside the MFIter loop because we need gp0 even on ranks with no boxes
      // because we will use it in computing dt separately on every rank
-     set_gp0(domain.loVect(), domain.hiVect(),
-             gp0,
-             &dx, &dy, &dz, &xlen, &ylen, &zlen, 
-             bc_ilo[lev]->dataPtr(), bc_ihi[lev]->dataPtr(),
-             bc_jlo[lev]->dataPtr(), bc_jhi[lev]->dataPtr(),
-             bc_klo[lev]->dataPtr(), bc_khi[lev]->dataPtr(),
-             &nghost, &delp_dir);
+     set_gp0(lev, domain);
+
 
      // We deliberately don't tile this loop since we will be looping
      //    over bc's on faces and it makes more sense to do this one grid at a time
-     for (MFIter mfi(*ep_g[lev],false); mfi.isValid(); ++mfi)
+     for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi)
      {
        const Box& bx = mfi.validbox();
 
-       set_p0(bx, &mfi, lev, domain, xlen, ylen, zlen, delp_dir);
+       set_p0 (bx, &mfi, lev, domain );
      }
 
-     p0_g[lev]->FillBoundary(p0_periodicity);
+     m_leveldata[lev]->p0_g->FillBoundary(p0_periodicity);
    }
 }
 
-void mfix::mfix_set_ls_near_inflow()
+void mfix::mfix_set_ls_near_inflow ()
 {
     if (ooo_debug) amrex::Print() << "mfix_ls_near_inflow" << std::endl;
     // This function is a bit Wonky... TODO: figure out why we need + nghost
     // (it's late at the moment, so I can't figure it it out right now...)
-    const int levelset_nghost = levelset__eb_pad + nghost;
+    const int levelset_nghost = levelset_eb_pad + nghost;
 
     if (nlev > 1)
     {
@@ -956,11 +985,11 @@ void mfix::mfix_set_ls_near_inflow()
         {
             Box domain(geom[lev].Domain());
 
-            MultiFab* ls_phi = level_sets[lev].get();
+            MultiFab* ls_phi = level_sets[lev];
             const Real* dx   = geom[lev].CellSize();
 
             // Don't tile this
-            for (MFIter mfi(*ls_phi); mfi.isValid(); ++mfi)
+            for (MFIter mfi(*ls_phi, false); mfi.isValid(); ++mfi)
             {
                 FArrayBox & ls_fab = (* ls_phi)[mfi];
 
@@ -975,16 +1004,16 @@ void mfix::mfix_set_ls_near_inflow()
         int lev_ref = 1;
 
         // ... but that the level set may be at a finer resolution.
-        int n = levelset__refinement;
+        int n = levelset_refinement;
         {
             Box domain(geom[lev].Domain());
-            const Real * dx   = geom[lev].CellSize();
-            MultiFab * ls_phi = level_sets[lev_ref].get();
+            const Real* dx   = geom[lev].CellSize();
+            MultiFab* ls_phi = level_sets[lev_ref];
 
             // Don't tile this
-            for (MFIter mfi(* ls_phi); mfi.isValid(); ++mfi)
+            for (MFIter mfi(*ls_phi, false); mfi.isValid(); ++mfi)
             {
-                FArrayBox & ls_fab = (* ls_phi)[mfi];
+                FArrayBox& ls_fab = (*ls_phi)[mfi];
 
                 set_ls_inflow( lev, ls_fab, domain, &levelset_nghost, n, dx);
             }
@@ -995,15 +1024,15 @@ void mfix::mfix_set_ls_near_inflow()
         n = 1;
         {
             Box domain(geom[lev].Domain());
-            const Real * dx   = geom[lev].CellSize();
-            MultiFab * ls_phi = level_sets[lev].get();
+            const Real* dx   = geom[lev].CellSize();
+            MultiFab* ls_phi = level_sets[lev];
 
             // Don't tile this
-            for (MFIter mfi(* ls_phi); mfi.isValid(); ++mfi)
+            for (MFIter mfi(*ls_phi, false); mfi.isValid(); ++mfi)
             {
-                FArrayBox & ls_fab = (* ls_phi)[mfi];
+                FArrayBox& ls_fab = (* ls_phi)[mfi];
 
-                set_ls_inflow( lev, ls_fab, domain, &levelset_nghost, n, dx);
+                set_ls_inflow(lev, ls_fab, domain, &levelset_nghost, n, dx);
             }
         }
     }

@@ -31,8 +31,8 @@ fi
 
 rm -rf ${RUN_NAME}* const_plt* POST_* &> /dev/null
 
-time -p ${MPIRUN} ${MFIX} "${INPUTS}" "mfix.stop_time=0.150"
-time -p ${MPIRUN} ${MFIX} "${INPUTS}" "amr.restart=DEM06_chk00150"
+time -p ${MPIRUN} ${MFIX} "${INPUTS}" "amr.check_input=0" "mfix.stop_time=0.150"
+time -p ${MPIRUN} ${MFIX} "${INPUTS}" "amr.check_input=0" "amr.restart=DEM06_chk00150"
 
 ${FJOIN_PAR} -f DEM06_par --end 350 --var  2 --format 4 --dt 0.001 &> POST_POS.NEW
 ${FJOIN_PAR} -f DEM06_par --end 350 --var 10 --format 4 --dt 0.001 &> POST_VEL.NEW

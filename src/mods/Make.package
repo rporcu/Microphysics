@@ -1,22 +1,20 @@
-f90EXE_sources += bc_mod.f90
-f90EXE_sources += eos_mod.f90            
-f90EXE_sources += ic_mod.f90    
-f90EXE_sources += output_mod.f90  
-f90EXE_sources += ps_mod.f90   
-f90EXE_sources += scales_mod.f90
-f90EXE_sources += constant_mod.f90  
-f90EXE_sources += fld_constants_mod.f90  
 f90EXE_sources += param_mod.f90   
 f90EXE_sources += run_mod.f90  
 f90EXE_sources += utilities_mod.f90
 
-F90EXE_headers += bc_mod_F.H
-F90EXE_headers += ic_mod_F.H
-f90EXE_headers += scales_mod_F.H
-CEXE_sources += scales_mod_F.cpp
-F90EXE_headers += constant_mod_F.H  
-CEXE_headers += eos_mod.hpp
-CEXE_sources += eos_mod.cpp
-F90EXE_headers += fld_constants_mod_F.H
 F90EXE_headers += param_mod_F.H
+ 
+CEXE_headers += eos_mod.H
+CEXE_headers += MFIX_REGIONS_Parms.H
+CEXE_headers += MFIX_IC_Parms.H
+CEXE_headers += MFIX_BC_Parms.H
+CEXE_headers += MFIX_FLUID_Parms.H
+CEXE_headers += MFIX_DEM_Parms.H
+
+CEXE_sources += eos_mod.cpp
 CEXE_sources += param_mod_F.cpp
+CEXE_sources += MFIX_REGIONS_Parms.cpp
+CEXE_sources += MFIX_IC_Parms.cpp
+CEXE_sources += MFIX_BC_Parms.cpp
+CEXE_sources += MFIX_FLUID_Parms.cpp
+CEXE_sources += MFIX_DEM_Parms.cpp

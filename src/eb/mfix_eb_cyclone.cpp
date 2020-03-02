@@ -25,7 +25,7 @@
  *                                                                              *
  *******************************************************************************/
 void
-mfix::make_eb_cyclone()
+mfix::make_eb_cyclone ()
 {
     ParmParse pp("hopper");
 
@@ -91,9 +91,10 @@ mfix::make_eb_cyclone()
     EB2::CylinderIF id(radius, height, direction, center, inside);
 
 
-    auto my_cyclone = EB2::makeIntersection(id,
-                                            EB2::makeUnion(od,
-                                                           EB2::makeIntersection(inlet,main_body)));
+    auto my_cyclone = 
+      EB2::makeIntersection(id,
+                            EB2::makeUnion(od,
+                                           EB2::makeIntersection(inlet,main_body)));
 
 
     // Create a plane to block the bottom for fluid.

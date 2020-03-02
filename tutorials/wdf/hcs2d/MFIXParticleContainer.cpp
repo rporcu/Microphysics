@@ -332,13 +332,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
 
                         int phase = p.idata(intData::phase);
 
-                        Real kn_des_w   = DEMParams::kn_w;
-                        Real etan_des_w = DEMParams::etan_w[phase-1];
+                        Real kn_des_w   = DEM::kn_w;
+                        Real etan_des_w = DEM::etan_w[phase-1];
 
                         // NOTE - we don't use the tangential components right now,
                         // but we might in the future
-                        // Real kt_des_w = DEMParams::kt_w;
-                        // Real etat_des_w = DEMParams::etat_w[phase-1];
+                        // Real kt_des_w = DEM::kt_w;
+                        // Real etat_des_w = DEM::etat_w[phase-1];
 
                         Real fn[3];
                         Real ft[3];
@@ -358,7 +358,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
 
                         if (mag_overlap_t > 0.0) {
-                            Real fnmd = DEMParams::mew * sqrt(dot_product(fn, fn));
+                            Real fnmd = DEM::mew * sqrt(dot_product(fn, fn));
                             Real tangent[3];
                             tangent[0] = overlap_t[0]/mag_overlap_t;
                             tangent[1] = overlap_t[1]/mag_overlap_t;
@@ -452,13 +452,13 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         int phase1 = p1.idata(intData::phase);
                         int phase2 = p2.idata(intData::phase);
 
-                        Real kn_des = DEMParams::kn;
-                        Real etan_des = DEMParams::etan[phase1-1][phase2-1];
+                        Real kn_des = DEM::kn;
+                        Real etan_des = DEM::etan[phase1-1][phase2-1];
 
                         // NOTE - we don't use the tangential components right now,
                         // but we might in the future
-                        // Real kt_des = DEMParams::kt;
-                        // Real etat_des = DEMParams::etat[phase1-1][phase2-1];
+                        // Real kt_des = DEM::kt;
+                        // Real etat_des = DEM::etat[phase1-1][phase2-1];
 
                         Real fn[3];
                         Real ft[3];
@@ -477,7 +477,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
                         mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
 
                         if (mag_overlap_t > 0.0) {
-                            Real fnmd = DEMParams::mew * sqrt(dot_product(fn, fn));
+                            Real fnmd = DEM::mew * sqrt(dot_product(fn, fn));
                             Real tangent[3];
                             tangent[0] = overlap_t[0]/mag_overlap_t;
                             tangent[1] = overlap_t[1]/mag_overlap_t;
@@ -1426,7 +1426,7 @@ void MFIXParticleContainer::writeAllAtLevel(int lev)
         auto& particles = pti.GetArrayOfStructs();
         int np = pti.numParticles();
         Gpu::HostVector<ParticleType> host_particles(np);
-        Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
+        Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
 
         for (const auto& p: host_particles)
         {
@@ -1501,7 +1501,7 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
               int np = pti.numParticles();
 
               Gpu::HostVector<ParticleType> host_particles(np);
-              Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
+              Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
 
               int index = 0;
               for (const auto& p: host_particles)
@@ -1567,7 +1567,7 @@ void MFIXParticleContainer::GetParticleAvgProp(Real (&min_dp)[10], Real (&min_ro
             auto& particles = pti.GetArrayOfStructs();
 
             Gpu::HostVector<ParticleType> host_particles(pti.numParticles());
-            Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
+            Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
 
             for (const auto& p: host_particles){
                 if ( phse==p.idata(intData::phase) )
@@ -1630,7 +1630,7 @@ void MFIXParticleContainer::UpdateMaxVelocity ()
            auto & particles = pti.GetArrayOfStructs();
            int np = pti.numParticles();
            Gpu::HostVector<ParticleType> host_particles(np);
-           Cuda::thrust_copy(particles.begin(), particles.end(), host_particles.begin());
+           Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
 
            for(const auto & particle : host_particles)
            {

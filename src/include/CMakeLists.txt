@@ -5,14 +5,5 @@ target_include_directories(mfixcore
 
 target_sources( mfixcore
    PRIVATE
-   desnamelist.inc
-   gas_phase.inc
-   geometry.inc
    initial_conditions.inc
-   physical_params.inc
-   point_sources.inc
-   run_control.inc
-   species.inc
-   species_indices.inc
-   usr_hooks.inc
    )

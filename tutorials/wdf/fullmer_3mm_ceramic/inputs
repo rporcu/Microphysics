@@ -9,8 +9,10 @@ amrex.fpe_trap_invalid = 1
 #mfix.max_step = 10
 mfix.stop_time = 16.0
 
-mfix.max_dt = 1.0d-3
-mfix.min_dt = 1.0d-8
+mfix.gravity =  -9.81  0.0  0.0
+
+mfix.dt_max = 1.0e-3
+mfix.dt_min = 1.0e-8
 mfix.cfl    = 0.5
 
 mfix.particle_init_type = "Auto"
@@ -19,12 +21,12 @@ mfix.drag_type = "WenYu"
 
 amr.blocking_factor = 2
 
-mac.mg_verbose          = 1
+mac_proj.verbose = 1
 
-diff.mg_verbose    = 0
+diffusion.verbose = 0
 
-mfix.mg_verbose         = 1
-mfix.mg_cg_verbose      = 0
+nodal_proj.verbose         = 1
+nodal_proj.bottom_verbose  = 0
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -153,3 +155,86 @@ amr.check_file     ="chk"
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="chk00100"
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+fluid.density            = constant
+fluid.density.constant   = 1.2
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 1.8e-5
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = solid0
+
+dem.friction_coeff.pp     =     0.217
+dem.friction_coeff.pw     =     0.217
+
+dem.spring_const.pp       =  5099.0
+dem.spring_const.pw       =  5099.0
+
+dem.restitution_coeff.solid0.solid0  =     0.916
+dem.restitution_coeff.solid0.wall    =     0.916
+
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = fluid-only  bed
+
+regions.fluid-only.lo = 0.00000  0.00000  0.00000
+regions.fluid-only.hi = 0.65664  0.32832  0.16416
+
+regions.bed.lo = 0.00000  0.00000  0.00000
+regions.bed.hi = 0.44200  0.32832  0.16416
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = fluid-only  bed
+
+
+# Backgound IC covering the full domain with gas.
+#---------------------------------------------------------------------//
+ic.fluid-only.fluid.volfrac   = 1.0
+
+ic.fluid-only.fluid.pressure  = 0.0
+
+ic.fluid-only.fluid.velocity  = 0.0  0.0  0.0
+
+
+# Define the initial bed of solids
+#---------------------------------------------------------------------//
+ic.bed.fluid.volfrac   =  0.5
+
+ic.bed.fluid.pressure  = 0.0
+
+ic.bed.fluid.velocity  =  0.0  0.0  0.0
+
+ic.bed.solids  = solid0
+ic.bed.packing = pseudo_random
+
+ic.bed.solid0.volfrac  =  0.5
+
+ic.bed.solid0.velocity =  0.00  0.00  0.00
+
+ic.bed.solid0.diameter = constant
+ic.bed.solid0.density  = constant
+
+ic.bed.solid0.diameter.constant =  3.113e-3
+ic.bed.solid0.density.constant  = 2615.0

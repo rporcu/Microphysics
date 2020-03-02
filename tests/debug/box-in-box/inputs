@@ -7,12 +7,14 @@ mfix.stop_time = 0.0025
 
 mfix.fixed_dt=1
 
+mfix.gravity = 0.0   -9.81   0.0
+
 mfix.drag_type = "WenYu"
 
 #! Fluid solver
 #!-----------------------------------------------------------//
 
-amr.blocking_factor = 5
+amr.blocking_factor = 1
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -87,3 +89,45 @@ amr.par_ascii_int  = -1
 amr.par_ascii_file = DEM07_par
 
 mfix.write_eb_surface = true  # Needed to output eb-surfaces
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+fluid.density            = constant
+fluid.density.constant   = 1.0
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 2.0e-5
+
+
+#_______________________________________________________________________
+# DEM model settings
+
+dem.solve = solid0
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = full-domain
+
+regions.full-domain.lo = 0.000  0.000  0.000
+regions.full-domain.hi = 0.004  0.004  0.004
+
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = full-domain
+
+
+# Backgound IC covering the full domain with gas.
+#---------------------------------------------------------------------//
+ic.full-domain.fluid.volfrac   =  1.0
+
+ic.full-domain.fluid.velocity  = 0.0  0.0  0.0

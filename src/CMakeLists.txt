@@ -1,8 +1,8 @@
 add_library(mfixcore)
 
-# 
+#
 # Path where to store module files
-# 
+#
 set( MFIX_Fortran_MOD_PATH ${CMAKE_CURRENT_BINARY_DIR}/mod_files
    CACHE INTERNAL "Fortran modules location")
 
@@ -19,9 +19,9 @@ target_include_directories( mfixcore
 
 #
 # Add sources and header from current dir and all sub dirs
-# 
+#
 
-# Uncategorized 
+# Uncategorized
 target_include_directories(mfixcore
    PUBLIC
    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>)
@@ -29,14 +29,9 @@ target_include_directories(mfixcore
 # IMPORTANT: DO NOT ADD main.cpp HERE!
 target_sources(mfixcore
    PRIVATE
-   compute_dt.cpp
+   mfix_compute_diveu.cpp
    mfix_regrid.cpp
-   mfix_advance.cpp
-   compute_diveu.cpp
-   mfix_calc_particle_beta.cpp
-   mfix_drag.cpp
-   mfix_evolve.cpp 
-   mfix.cpp 
+   mfix.cpp
    #  main.cpp <---- DO NOT ADD THIS HERE
    mfix_F.H
    mfix.H
@@ -52,11 +47,14 @@ add_subdirectory(io)
 add_subdirectory(convection)
 
 # DES
-add_subdirectory(des_fluid)
-add_subdirectory(src_des)
+add_subdirectory(deposition)
+add_subdirectory(des)
 
 # Diffusion
 add_subdirectory(diffusion)
+
+# LevelData
+add_subdirectory(level_data)
 
 # Projection
 add_subdirectory(projection)
@@ -67,9 +65,6 @@ add_subdirectory(setup)
 # Utility functions
 add_subdirectory(util)
 
-# Setup check functions
-add_subdirectory(check_data)
-
 # Global module files
 add_subdirectory(mods)
 
@@ -79,9 +74,12 @@ add_subdirectory(usr)
 # Embedded boundary functions
 add_subdirectory(eb)
 
-# 
+# Time evolution functions
+add_subdirectory(time_flow)
+
+#
 # Link to imported AMReX
-# 
+#
 target_link_libraries( mfixcore PUBLIC AMReX::amrex )
 
 
@@ -95,25 +93,29 @@ if (ENABLE_CUDA)
       CUDA_SEPARABLE_COMPILATION ON      # This adds -dc
       CUDA_RESOLVE_DEVICE_SYMBOLS OFF
       )
-   
+
    get_target_property(MFIX_CUDA_SOURCES mfixcore SOURCES)
    list(FILTER MFIX_CUDA_SOURCES INCLUDE REGEX "\\.cpp")
    set_source_files_properties(${MFIX_CUDA_SOURCES} PROPERTIES LANGUAGE CUDA)
    unset(MFIX_CUDA_SOURCES)
 
-   # Manually added linking to Curand for Random numbers generation on GPU
-   target_link_libraries(mfixcore PUBLIC curand)
+   #
+   # Add manually curand
+   # CMake >= 3.17 provides the module FindCUDAToolkit to do this natively.
+   #
+   find_library(CURAND curand PATHS ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
+   target_link_libraries(mfixcore PUBLIC ${CURAND})
 endif ()
 
 #
-# Set the default flags 
-# 
+# Set the default flags
+#
 if ( NOT CMAKE_Fortran_FLAGS )
    target_link_libraries(mfixcore PUBLIC AMReX::Flags_Fortran)
 endif ()
 
 if ( NOT CMAKE_CXX_FLAGS )
-   target_link_libraries(mfixcore PUBLIC AMReX::Flags_CXX)  
+   target_link_libraries(mfixcore PUBLIC AMReX::Flags_CXX)
 endif ()
 
 if (ENABLE_FPE)

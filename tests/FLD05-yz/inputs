@@ -1,5 +1,6 @@
 # Time stepping
 mfix.stop_time = 1.0
+mfix.gravity =  0.0  0.0   0.0
 
 mfix.fixed_dt = 0.5
 
@@ -32,3 +33,20 @@ geometry.prob_lo     = 0.    0.    0.       # lo corner of physical domain
 geometry.prob_hi     = 1.    1.    1.     # hi corner of physical domain
 
 amr.plt_regtest = 1
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+fluid.density            = constant
+fluid.density.constant   = 1.0
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 0.0
+
+#_______________________________________________________________________
+# DEM model settings
+
+dem.solve = None

@@ -66,37 +66,37 @@ module param
 ! Purpose: Getters for params values                                   !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      integer(c_int) function get_dim_ic() bind(C)
+      integer(c_int) function get_dim_ic () bind(C)
         get_dim_ic = dim_ic
         return
       end function get_dim_ic
 
-      integer(c_int) function get_dim_m() bind(C)
+      integer(c_int) function get_dim_m () bind(C)
         get_dim_m = dim_m
         return
       end function get_dim_m
 
-      integer(c_int) function get_dim_bc() bind(C)
+      integer(c_int) function get_dim_bc () bind(C)
         get_dim_bc = dim_bc
         return
       end function get_dim_bc
 
-      real(rt) function get_my_huge() bind(C)
+      real(rt) function get_my_huge () bind(C)
         get_my_huge = my_huge
         return
       end function get_my_huge
 
-      real(rt) function get_undefined() bind(C)
+      real(rt) function get_undefined () bind(C)
         get_undefined = undefined
         return
       end function get_undefined
 
-      pure logical function is_defined_db(x)
+      pure logical function is_defined_db (x)
          real(rt), intent(in) :: x
          is_defined_db = .not.equal(x, undefined)
       end function is_defined_db
 
-      integer(c_int) function is_defined_db_cpp(x)  bind(C)
+      integer(c_int) function is_defined_db_cpp (x)  bind(C)
          real(rt), intent(in) :: x
          if(.not.equal(x, undefined)) then
            is_defined_db_cpp = 1
@@ -105,17 +105,17 @@ module param
          endif
       end function is_defined_db_cpp
 
-      pure logical function is_defined_i(x)
+      pure logical function is_defined_i (x)
          integer, intent(in) :: x
          is_defined_i = (x /= undefined_i)
       end function is_defined_i
 
-      pure logical function is_undefined_db(x)
+      pure logical function is_undefined_db (x)
          real(rt), intent(in) :: x
          is_undefined_db = equal(x, undefined)
       end function is_undefined_db
 
-      integer(c_int) function is_undefined_db_cpp(x) bind(C)
+      integer(c_int) function is_undefined_db_cpp (x) bind(C)
          real(rt), intent(in) :: x
          if(equal(x, undefined)) then
            is_undefined_db_cpp = 1
@@ -124,12 +124,12 @@ module param
          endif
       end function is_undefined_db_cpp
 
-      pure logical function is_undefined_i(x)
+      pure logical function is_undefined_i (x)
          integer, intent(in) :: x
          is_undefined_i = (x == undefined_i)
       end function is_undefined_i
 
-      pure logical function equal(x, y)
+      pure logical function equal (x, y)
          real(rt), intent(in) :: x, y
          equal = (abs(x-y) < epsilon(x))
       end function equal

@@ -1,27 +1,16 @@
 F90EXE_sources += amrex_to_mfix.F90
-f90EXE_sources += calc_cell.f90
-f90EXE_sources += get_data.f90
-
-f90EXE_sources += init_namelist.f90
-
-f90EXE_sources += set_bc_type.f90 
-f90EXE_sources += set_delp_dir.f90
-f90EXE_sources += set_gp0.f90 
-f90EXE_sources += set_ps.f90 
-f90EXE_sources += set_ppe_bcs.f90 
 
 CEXE_sources += mfix_set_bc0.cpp
 CEXE_sources += mfix_set_ls_inflow.cpp
 CEXE_sources += mfix_set_p0.cpp 
-CEXE_headers += mfix_init_fluid.hpp 
+CEXE_sources += mfix_set_gp0.cpp 
+CEXE_headers += mfix_init_fluid.H
 CEXE_sources += mfix_init_fluid.cpp 
-CEXE_headers += mfix_calc_mu_g.hpp
+CEXE_headers += mfix_calc_mu_g.H
 CEXE_sources += mfix_calc_mu_g.cpp
 CEXE_sources += mfix_arrays.cpp
 CEXE_sources += mfix_init.cpp
-CEXE_sources += mfix_setup_nodal_solver.cpp
-
-CEXE_sources += mfix_setup_nodal_solver.cpp
-
-F90EXE_headers += mfix_proj_F.H
-F90EXE_headers += calc_cell_F.H
+CEXE_sources += mfix_setup_solvers.cpp
+CEXE_sources += mfix_set_bc_type.cpp
+CEXE_sources += MFIX_calc_cell.cpp
+CEXE_headers += MFIX_calc_cell.H

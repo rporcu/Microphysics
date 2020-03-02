@@ -11,6 +11,8 @@ mfix.tcoll_ratio = 20.
 
 mfix.particle_init_type = "AsciiFile"
 
+mfix.gravity =   0.0  0.0  0.0
+
 mfix.drag_type = "BVK2"
 
 # Number of grid cells in each direction at the coarsest level
@@ -75,3 +77,59 @@ amr.check_int      = 5000
 amr.check_file     ="chk"
 
 
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+fluid.density            = constant
+fluid.density.constant   = 1.0
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 2.0e-5
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = solid0
+
+dem.friction_coeff.pp     =     0.0
+dem.friction_coeff.pw     =     0.0
+
+dem.spring_const.pp       =    24.56
+dem.spring_const.pw       =     1.00
+
+dem.restitution_coeff.solid0.solid0  =     0.8
+dem.restitution_coeff.solid0.wall    =     1.0
+
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = fluid-only
+
+regions.fluid-only.lo = 0.0000  0.0000  0.0000
+regions.fluid-only.hi = 0.2560  0.2560  0.0080
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = fluid-only
+
+
+# Backgound IC covering the full domain with gas.
+#---------------------------------------------------------------------//
+ic.fluid-only.fluid.volfrac   = 1.0
+
+ic.fluid-only.fluid.velocity  = 0.0  0.0  0.0

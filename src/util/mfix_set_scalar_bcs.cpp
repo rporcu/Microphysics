@@ -1,9 +1,9 @@
-#include <AMReX_EBMultiFabUtil.H>
 #include <mfix.H>
-#include <bc_mod_F.H>
-#include <eos_mod.hpp>
-#include <fld_constants_mod_F.H>
+
+#include <eos_mod.H>
+
 #include <param_mod_F.H>
+#include <MFIX_FLUID_Parms.H>
 
 using namespace amrex;
 
@@ -12,10 +12,8 @@ using namespace amrex;
 //
 void
 mfix::mfix_set_scalar_bcs (Real time,
-                           Vector< std::unique_ptr<MultiFab> > & ro_g_in,
-                           Vector< std::unique_ptr<MultiFab> > & trac_in,
-                           Vector< std::unique_ptr<MultiFab> > & ep_g_in,
-                           Vector< std::unique_ptr<MultiFab> > & mu_g_in)
+                           Vector< MultiFab* > & trac_in,
+                           Vector< MultiFab* > & mu_g_in)
 {
   BL_PROFILE("mfix::mfix_set_scalar_bcs()");
 
@@ -26,32 +24,32 @@ mfix::mfix_set_scalar_bcs (Real time,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-     for (MFIter mfi(*ep_g[lev], true); mfi.isValid(); ++mfi)
+     for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi)
      {
-        set_scalar_bcs(&time, lev, (*ro_g[lev])[mfi], 0, domain);
-        set_scalar_bcs(&time, lev, (*trac[lev])[mfi], 1, domain);
-        set_scalar_bcs(&time, lev, (*ep_g[lev])[mfi], 2, domain);
-        set_scalar_bcs(&time, lev, (*mu_g[lev])[mfi], 3, domain);
+        set_scalar_bcs(time, lev, (*mu_g_in[lev])[mfi], 3, domain);
+
+        if (advect_tracer)
+           set_scalar_bcs(time, lev, (*trac_in[lev])[mfi], 1, domain);
      }
 
-     ro_g_in[lev] -> FillBoundary (geom[lev].periodicity());
-     ep_g_in[lev] -> FillBoundary (geom[lev].periodicity());
-     trac_in[lev] -> FillBoundary (geom[lev].periodicity());
      mu_g_in[lev] -> FillBoundary (geom[lev].periodicity());
 
-     EB_set_covered(*ro_g_in[lev], 0, ep_g[lev]->nComp(), ep_g[lev]->nGrow(), covered_val);
-     EB_set_covered(*trac_in[lev], 0, ep_g[lev]->nComp(), ep_g[lev]->nGrow(), covered_val);
-     EB_set_covered(*ep_g_in[lev], 0, ep_g[lev]->nComp(), ep_g[lev]->nGrow(), covered_val);
-     EB_set_covered(*mu_g_in[lev], 0, mu_g[lev]->nComp(), mu_g[lev]->nGrow(), covered_val);
+     if (advect_tracer)
+        trac_in[lev] -> FillBoundary (geom[lev].periodicity());
+
+     EB_set_covered(*mu_g_in[lev], 0, mu_g_in[lev]->nComp(), mu_g_in[lev]->nGrow(), covered_val);
+
+     if (advect_tracer)
+        EB_set_covered(*trac_in[lev], 0, trac_in[lev]->nComp(), trac_in[lev]->nGrow(), covered_val);
   }
 }
 
 void 
-mfix::set_scalar_bcs(Real* time,
-                     const int lev,
-                     FArrayBox& scal_fab,
-                     int comp,
-                     const Box& domain)
+mfix::set_scalar_bcs (Real time,
+                      const int lev,
+                      FArrayBox& scal_fab,
+                      int comp,
+                      const Box& domain)
 
 {
   IntVect dom_lo(domain.loVect());
@@ -68,14 +66,10 @@ mfix::set_scalar_bcs(Real* time,
 
   Real bc0;
 
-  if (comp == 0) {
-     bc0 = get_ro_g0();
-  } else if (comp == 1) {
-     bc0 = get_trac0();
-  } else if (comp == 2) {
-    // We don't have a default value for ep_g
+  if (comp == 1) {
+    bc0 = FLUID::trac_0;
   } else if (comp == 3) {
-     bc0 = get_mu_g0();
+    bc0 = FLUID::mu_g0;
   }
 
   IntVect scal_lo(scal_fab.loVect());
@@ -158,7 +152,9 @@ mfix::set_scalar_bcs(Real* time,
 
   if (nlft > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_yz_lo_3D, i, j, k,
+    amrex::ParallelFor(bx_yz_lo_3D,
+      [bct_ilo,dom_lo,bc0,comp,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       Real bc_scal(bc0);
       int my_comp(comp);
@@ -184,7 +180,9 @@ mfix::set_scalar_bcs(Real* time,
 
     if (comp == 2)
     {
-       AMREX_HOST_DEVICE_FOR_3D(bx_yz_lo_2D, i, j, k,
+      amrex::ParallelFor(bx_yz_lo_2D,
+        [bct_ilo,dom_lo,minf,p_bc_ep_g,scal_arr] 
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
        {
          const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
          const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
@@ -197,7 +195,9 @@ mfix::set_scalar_bcs(Real* time,
 
   if (nrgt > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_yz_hi_3D, i, j, k,
+    amrex::ParallelFor(bx_yz_hi_3D,
+      [bct_ihi,dom_hi,bc0,comp,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       Real bc_scal(bc0);
       int my_comp(comp);
@@ -223,7 +223,9 @@ mfix::set_scalar_bcs(Real* time,
 
     if (comp == 2)
     {
-       AMREX_HOST_DEVICE_FOR_3D(bx_yz_hi_2D, i, j, k,
+       amrex::ParallelFor(bx_yz_hi_2D,
+         [bct_ihi,dom_hi,minf,p_bc_ep_g,scal_arr] 
+         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
        {
          const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
          const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
@@ -234,13 +236,11 @@ mfix::set_scalar_bcs(Real* time,
      }
   }
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   if (nbot > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_xz_lo_3D, i, j, k,
+    amrex::ParallelFor(bx_xz_lo_3D,
+      [bct_jlo,dom_lo,bc0,comp,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       Real bc_scal(bc0);
       int my_comp(comp);
@@ -266,7 +266,9 @@ mfix::set_scalar_bcs(Real* time,
 
     if (comp == 2)
     {
-       AMREX_HOST_DEVICE_FOR_3D(bx_xz_lo_2D, i, j, k,
+       amrex::ParallelFor(bx_xz_lo_2D,
+         [bct_jlo,dom_lo,minf,p_bc_ep_g,scal_arr] 
+         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
        {
          const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
          const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
@@ -279,7 +281,9 @@ mfix::set_scalar_bcs(Real* time,
 
   if (ntop > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_xz_hi_3D, i, j, k,
+    amrex::ParallelFor(bx_xz_hi_3D,
+      [bct_jhi,dom_hi,bc0,comp,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       Real bc_scal(bc0);
       int my_comp(comp);
@@ -305,7 +309,9 @@ mfix::set_scalar_bcs(Real* time,
 
     if (comp == 2)
     {
-       AMREX_HOST_DEVICE_FOR_3D(bx_xz_hi_2D, i, j, k,
+       amrex::ParallelFor(bx_xz_hi_2D,
+         [bct_jhi,dom_hi,minf,p_bc_ep_g,scal_arr] 
+         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
        {
          const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
          const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
@@ -316,13 +322,11 @@ mfix::set_scalar_bcs(Real* time,
      }
   }
 
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
-
   if (ndwn > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_xy_lo_3D, i, j, k,
+    amrex::ParallelFor(bx_xy_lo_3D,
+      [bct_klo,dom_lo,bc0,comp,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       Real bc_scal(bc0);
       int my_comp(comp);
@@ -348,7 +352,9 @@ mfix::set_scalar_bcs(Real* time,
 
     if (comp == 2)
     {
-       AMREX_HOST_DEVICE_FOR_3D(bx_xy_lo_2D, i, j, k,
+       amrex::ParallelFor(bx_xy_lo_2D,
+         [bct_klo,dom_lo,minf,p_bc_ep_g,scal_arr] 
+         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
        {
          const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
          const int bct = bct_klo(i,j,dom_lo[2]-1,0);
@@ -361,7 +367,9 @@ mfix::set_scalar_bcs(Real* time,
 
   if (nup > 0)
   {
-    AMREX_HOST_DEVICE_FOR_3D(bx_xy_hi_3D, i, j, k,
+    amrex::ParallelFor(bx_xy_hi_3D, 
+      [bct_khi,dom_hi,bc0,comp,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       Real bc_scal(bc0);
       int my_comp(comp);
@@ -387,7 +395,9 @@ mfix::set_scalar_bcs(Real* time,
 
     if (comp == 2)
     {
-       AMREX_HOST_DEVICE_FOR_3D(bx_xy_hi_2D, i, j, k,
+       amrex::ParallelFor(bx_xy_hi_2D,
+         [bct_khi,dom_hi,minf,p_bc_ep_g,scal_arr] 
+         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
        {
          const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
          const int bct = bct_khi(i,j,dom_hi[2]+1,0);
@@ -397,8 +407,4 @@ mfix::set_scalar_bcs(Real* time,
        });
     }
   }
-
-#ifdef AMREX_USE_CUDA
-  Gpu::Device::synchronize();
-#endif
 }

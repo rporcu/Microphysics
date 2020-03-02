@@ -2,9 +2,6 @@
 
 set -euo pipefail
 
-# set case directory
-RUN_NAME="FLD01"
-
 MFIX=./mfix
 if [ -n "$1" ]; then
     MFIX=$1

@@ -7,7 +7,6 @@
 #include <AMReX_EB_utils.H>
 #include <AMReX_EB_levelset.H>
 
-
 #include <mfix.H>
 #include <mfix_eb_F.H>
 
@@ -18,7 +17,7 @@
  *                                                                              *
  *******************************************************************************/
 void
-mfix::make_eb_regular()
+mfix::make_eb_regular ()
 {
     /****************************************************************************
      *                                                                          *
@@ -34,20 +33,21 @@ mfix::make_eb_regular()
     // If filling level-set: this is used to store the implicit function (due to
     // any walls defined in mfix.dat). It is filled while after EB2::Build.
     // NOTE: this pointer is undefined if and of:
-    //     * ! solve_dem
-    //     * levelset__restart
+    //     * ! DEM::solve
+    //     * levelset_restart
     //     * ! has_walls
     // are true
-    std::unique_ptr<MultiFab> mf_impfunc;
+    
+    //MultiFab* mf_impfunc;
 
-    // if (solve_fluid)
+    // if (FLUID::solve)
     {
         bool has_walls = false;
-        std::unique_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls = get_real_walls(has_walls);
+        std::shared_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls = get_real_walls(has_walls);
 
         if (has_walls)
         {
-            auto gshop = EB2::makeShop(* impfunc_walls);
+            auto gshop = EB2::makeShop(*impfunc_walls);
 
             build_eb_levels(gshop);
 

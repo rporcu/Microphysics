@@ -3,6 +3,7 @@
 #include <AMReX_EB2_IF_Plane.H>
 #include <AMReX_EB2_IF_Union.H>
 #include <AMReX_EB2_IF_Intersection.H>
+#include <AMReX_EB2_IF_Complement.H>
 
 #include <algorithm>
 #include <AMReX_EB_utils.H>
@@ -16,7 +17,7 @@
  * Function to create a simple rectangular box with EB walls.                   *
  *                                                                              *
  *******************************************************************************/
-void mfix::make_eb_box()
+void mfix::make_eb_box ()
 {
     ParmParse pp("box");
 
@@ -46,6 +47,8 @@ void mfix::make_eb_box()
          *                                                                      *
          ***********************************************************************/
 
+        bool inside       = true;
+
         Vector<Real> boxLo(3), boxHi(3);
         Real offset    = 1.0e-15;
 
@@ -58,6 +61,7 @@ void mfix::make_eb_box()
         pp.queryarr("Lo", boxLo,  0, 3);
         pp.queryarr("Hi", boxHi,  0, 3);
 
+        pp.query("internal_flow", inside);
         pp.query("offset", offset);
 
         Real xlo = boxLo[0] + offset;
@@ -117,12 +121,31 @@ void mfix::make_eb_box()
         EB2::PlaneIF plane_loz(point_loz,normal_loz);
         EB2::PlaneIF plane_hiz(point_hiz,normal_hiz);
 
-        auto if_box = EB2::makeUnion(plane_lox, plane_hix, plane_loy,
+        auto my_box = EB2::makeUnion(plane_lox, plane_hix, plane_loy,
                                      plane_hiy, plane_loz, plane_hiz );
 
-        auto gshop = EB2::makeShop(if_box);
 
-        build_eb_levels(gshop);
+        if( inside ) {
+
+          auto gshop = EB2::makeShop(my_box);
+          build_eb_levels(gshop);
+
+        } else {
+
+          // box inside-out
+          auto my_xob = EB2::makeComplement(my_box);
+
+          bool has_real_walls = false;
+          std::shared_ptr<UnionListIF<EB2::PlaneIF>> my_walls = get_real_walls(has_real_walls);
+
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(has_real_walls,
+             "Must have real walls for box geometry with external flow.");
+
+          auto my_box_wwalls = EB2::makeUnion(*my_walls, my_xob);
+          auto gshop = EB2::makeShop(my_box_wwalls);
+          build_eb_levels(gshop);
+
+        }
 
         Print() << "Done making the eb levels ..." << std::endl;
         Print() << " " << std::endl;

@@ -9,6 +9,8 @@ amrex.fpe_trap_invalid = 1
 mfix.steady_state     = 1
 mfix.steady_state_tol = 1.0e-10
 
+mfix.gravity =  0.0   0.0   0.0
+
 amr.blocking_factor = 4
 
 #_______________________________________________________________________
@@ -35,28 +37,11 @@ amr.max_grid_size_x =  1024
 amr.max_grid_size_y =  1024
 amr.max_grid_size_z =  1024
 
-
-# Particles (not with KDTree)
-#particles.max_grid_size_x =   1024
-#particles.max_grid_size_y =   1024
-#particles.max_grid_size_z =   1024
-
-
 #! Tiles
 #!-----------------------------------------------------------//
 
 # Fluid: Maximum tile size within each grid
 fabarray.mfiter_tile_size =  4  4  4
-
-# Particles: Maximum particle title size
-particles.tile_size = 1024 1024 1024
-
-
-#! EB settings
-#!-----------------------------------------------------------//
-
-zlo.type = "nsw"
-zhi.type = "nsw"
 
 
 #_______________________________________________________________________
@@ -76,3 +61,67 @@ amr.check_file     ="chk"
 #amr.restart   ="restart-file"
 
 amr.plt_regtest = 1
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+fluid.density            = constant
+fluid.density.constant   = 1.0
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 1.0e-3
+
+
+#_______________________________________________________________________
+# DEM model settings
+
+dem.solve = None
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = full-domain  wall1  wall2
+
+regions.full-domain.lo = 0.000  0.000  0.000
+regions.full-domain.hi = 0.005  0.010  0.010
+
+regions.wall1.lo       = 0.000  0.000  0.000
+regions.wall1.hi       = 0.005  0.010  0.000
+
+regions.wall2.lo       = 0.000  0.000  0.010
+regions.wall2.hi       = 0.005  0.010  0.010
+
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = full-domain
+
+
+# Backgound IC covering the full domain with gas.
+#---------------------------------------------------------------------//
+ic.full-domain.fluid.volfrac   =  1.0
+ic.full-domain.fluid.pressure  = 101.325e+3
+ic.full-domain.fluid.velocity  = 0.0  12.5  0.0
+
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+
+bc.delp_dir =    1
+bc.delp     =   12.
+
+bc.regions = wall1  wall2
+
+bc.wall1 = nsw
+bc.wall1.normal = 0.0  0.0  1.0
+
+bc.wall2 = nsw
+bc.wall2.normal = 0.0  0.0 -1.0

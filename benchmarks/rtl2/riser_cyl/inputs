@@ -11,15 +11,18 @@ mfix.cfl = 0.5
 mfix.stop_time = 3.0
 
 mfix.particle_init_type = "Auto"
+
+mfix.gravity = -9.81  0.0  0.0
+
 mfix.drag_type = "BVK2"
 
 amr.blocking_factor = 2
 
-mac.mg_verbose     = 0
-mac.mg_cg_verbose  = 0
+mac_proj.verbose = 0
+mac_proj.bottom_verbose = 0
 
-mfix.mg_verbose    = 1
-mfix.mg_cg_verbose = 0
+nodal_proj.verbose = 1
+nodal_proj.bottom_verbose = 0
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -61,37 +64,16 @@ particles.tile_size = 1024 1024 1024
 
 #! EB settings
 #!-----------------------------------------------------------//
-
-# Level-set refinement 
-mfix.levelset__refinement    = 4 # levelset resolution
-
-mfix.write_eb_surface = false  # Needed to output eb-surfaces
-
-#! EB geometry
-#!-----------------------------------------------------------//
-
-mfix.geometry = "cylinder"
-
-cylinder.internal_flow = true
-cylinder.closed_bottom = false
-
-cylinder.radius = 0.000999
-cylinder.height = -1.0
-
-cylinder.direction = 0
-cylinder.center    =  0.004   0.001   0.001
-
-#! BCs 
-#!-----------------------------------------------------------//
+mfix.levelset__refinement = 4      # levelset resolution
+mfix.write_eb_surface     = false  # Needed to output eb-surfaces
 
 #_______________________________________________________________________
 # Particle load balancing
-
 #mfix.load_balance_type = "FixedSize"
-mfix.load_balance_type = "KnapSack"
+#mfix.load_balance_type = "KnapSack"
 
 amr.dual_grid          = 0
-amr.regrid_int         = 25
+amr.regrid_int         = -1
 
 #! KnapSack settings
 #!-----------------------------------------------------------//
@@ -133,3 +115,94 @@ amr.check_file     ="chk"
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="chk00100"
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+fluid.density            = constant
+fluid.density.constant   = 1.0
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 2.0e-5
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = solid0
+
+dem.friction_coeff.pp     =     0.0
+dem.friction_coeff.pw     =     0.0
+
+dem.spring_const.pp       =    10.0
+dem.spring_const.pw       =    10.0
+
+dem.restitution_coeff.solid0.solid0  =     0.8
+dem.restitution_coeff.solid0.wall    =     1.0
+
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+#! EB geometry
+#!-----------------------------------------------------------//
+
+mfix.geometry = "cylinder"
+
+cylinder.internal_flow = true
+
+cylinder.radius = 0.000999
+cylinder.height = -1.0
+
+cylinder.direction = 0
+cylinder.center    =  0.004   0.001   0.001
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = full-domain
+
+regions.full-domain.lo = 0.0000  0.0000  0.0000
+regions.full-domain.hi = 0.0080  0.0020  0.0020
+
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = full-domain
+
+
+# Define the initial solids
+#---------------------------------------------------------------------//
+ic.full-domain.fluid.volfrac   =  0.983
+
+ic.full-domain.fluid.pressure  =  0.0
+
+ic.full-domain.fluid.velocity  =  0.0  0.00  0.00
+
+ic.full-domain.solids  = solid0
+ic.full-domain.packing = pseudo_random
+
+ic.full-domain.solid0.volfrac  =  0.017
+
+ic.full-domain.solid0.velocity =  0.00  0.00  0.00
+
+ic.full-domain.solid0.diameter = constant
+ic.full-domain.solid0.density  = constant
+
+ic.full-domain.solid0.diameter.constant =  100.0e-6
+ic.full-domain.solid0.density.constant  = 1000.0
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+bc.delp_dir =    0
+bc.delp     =    2.
+

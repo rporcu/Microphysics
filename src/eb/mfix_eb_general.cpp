@@ -12,11 +12,13 @@
 #include <AMReX_EB_LSCore.H>
 #include <AMReX_EB_levelset.H>
 #include <mfix.H>
+#include <MFIX_DEM_Parms.H>
+#include <MFIX_FLUID_Parms.H>
 #include <mfix_eb_F.H>
 
 using namespace std;
 
-void mfix::make_eb_general() {
+void mfix::make_eb_general () {
 
     ParmParse pp("mfix");
 
@@ -44,16 +46,14 @@ void mfix::make_eb_general() {
     }
 
     // Non-planar side wall
-    std::unique_ptr<EB2::TranslationIF<EB2::PolynomialIF>> impfunc_poly2;
+    std::shared_ptr<EB2::TranslationIF<EB2::PolynomialIF>> impfunc_poly2;
 
     // Planar side walls (particles can see additional walls)
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls_part;
-    std::unique_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls_fluid;
+    shared_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls_part;
+    shared_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls_fluid;
 
     // Planar dividing wall
-    std::unique_ptr<
-        EB2::IntersectionIF<EB2::PlaneIF, EB2::PlaneIF, EB2::PlaneIF
-                            >> impfunc_divider;
+    shared_ptr<EB2::IntersectionIF<EB2::PlaneIF, EB2::PlaneIF, EB2::PlaneIF>> impfunc_divider;
 
     /****************************************************************************
      * Generate PolynomialIF representing the non-planar EB walls               *
@@ -97,11 +97,11 @@ void mfix::make_eb_general() {
      ***************************************************************************/
 
     // Stores implicit function for the combined particle IF
-    std::unique_ptr<MultiFab> mf_impfunc;
+    std::shared_ptr<MultiFab> mf_impfunc;
     // Stores implicit function for the particle walls IF only
-    std::unique_ptr<MultiFab> mf_impfunc_walls;
+    std::shared_ptr<MultiFab> mf_impfunc_walls;
     // Stores implicit function representing the polynomial "walls"
-    std::unique_ptr<MultiFab> mf_impfunc_poly2;
+    std::shared_ptr<MultiFab> mf_impfunc_poly2;
 
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -110,7 +110,7 @@ void mfix::make_eb_general() {
 
             // // For DEM: generate polynomial IF separately (to allow "water-tight"
             // // intersection with walls).
-            // if(solve_dem){
+            // if(DEM::solve){
             //     auto gshop = EB2::makeShop(* impfunc_poly2);
             //
             //     build_eb_levels(gshop);
@@ -118,7 +118,7 @@ void mfix::make_eb_general() {
 
             if (has_walls && use_divider) { // ........................... poly2 + walls + divider
 
-                if (solve_dem) {
+                if (DEM::solve) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
 
                     auto eb_if = EB2::makeUnion(* impfunc_poly2, * impfunc_walls_part,
@@ -130,7 +130,7 @@ void mfix::make_eb_general() {
                     amrex::Print() << "Done making the particle eb levels." << std::endl;
                 }
 
-                if (solve_fluid) {
+                if (FLUID::solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -153,7 +153,7 @@ void mfix::make_eb_general() {
 
             } else if (has_walls) { // ................................... poly2 + walls + ! divider
 
-                if (solve_dem) {
+                if (DEM::solve) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
 
                     auto eb_if = EB2::makeUnion(* impfunc_poly2, * impfunc_walls_part);
@@ -164,7 +164,7 @@ void mfix::make_eb_general() {
                     amrex::Print() << "Done making the particle eb levels." << std::endl;
                 }
 
-                if (solve_fluid) {
+                if (FLUID::solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -211,7 +211,7 @@ void mfix::make_eb_general() {
         } else {
             if (has_walls && use_divider) { // ........................... ! poly2 + walls + divider
 
-                if (solve_dem) {
+                if (DEM::solve) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
 
                     auto eb_if = EB2::makeUnion(* impfunc_walls_part, * impfunc_divider);
@@ -222,7 +222,7 @@ void mfix::make_eb_general() {
                     amrex::Print() << "Done making the particle eb levels." << std::endl;
                 }
 
-                if (solve_fluid) {
+                if (FLUID::solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -243,14 +243,14 @@ void mfix::make_eb_general() {
 
             } else if (has_walls) { // ................................... ! poly2 + walls + ! divider
 
-                if (solve_dem) {
+                if (DEM::solve) {
                     auto gshop = EB2::makeShop(* impfunc_walls_part);
 
                     build_eb_levels(gshop);
 
                 }
 
-                if (solve_fluid) {
+                if (FLUID::solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -288,9 +288,9 @@ void mfix::make_eb_general() {
 
 
 
-std::unique_ptr<EB2::TranslationIF<EB2::PolynomialIF>>
-mfix::get_poly(int max_order, std::string field_prefix) {
-
+std::shared_ptr<EB2::TranslationIF<EB2::PolynomialIF>>
+mfix::get_poly (int max_order, std::string field_prefix)
+{
     /****************************************************************************
      * Read polynomial data from inputs database                                *
      *      => Generate Vector<EB2::PolyTerm> used                              *
@@ -351,17 +351,16 @@ mfix::get_poly(int max_order, std::string field_prefix) {
     pp.getarr(translate_field.str().c_str(), offset_vec, 0, SpaceDim);
     std::copy_n(offset_vec.begin(), SpaceDim, offset.begin());
 
-    std::unique_ptr<EB2::TranslationIF<EB2::PolynomialIF>> ret =
-        std::unique_ptr<EB2::TranslationIF<EB2::PolynomialIF>>(
-            new EB2::TranslationIF<EB2::PolynomialIF>(mirror, offset)
-            );
+    shared_ptr<EB2::TranslationIF<EB2::PolynomialIF>> ret =
+      shared_ptr<EB2::TranslationIF<EB2::PolynomialIF>>(
+        new EB2::TranslationIF<EB2::PolynomialIF>(mirror, offset));
 
     return ret;
 }
 
 
-std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
-mfix::make_wall( int dir, // direction (long edge) of wall
+std::shared_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
+mfix::make_wall (int dir, // direction (long edge) of wall
                  Real position, Real height, Real width )
 {
     RealArray normal, center;
@@ -385,8 +384,8 @@ mfix::make_wall( int dir, // direction (long edge) of wall
     center[dir] = position - width;
     EB2::PlaneIF plane_2(center, normal, false);
 
-    std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>> ret =
-        std::unique_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
+    shared_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>> ret =
+      shared_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
         (new EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>(plane_up, plane_1, plane_2));
 
     return ret;

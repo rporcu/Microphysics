@@ -12,16 +12,19 @@ mfix.dt_max = 2.0e-4
 mfix.cfl = 0.5
 mfix.tcoll_ratio = 20.
 
-mfix.mg_maxiter    = 1000
-mfix.mg_cg_maxiter = 1000
-mac.mg_maxiter     = 1000
-mac.mg_cg_maxiter  = 1000
+nodal_proj.maxiter    = 1000
+nodal_proj.bottom_maxiter = 1000
+mac_proj.maxiter     = 1000
+mac_proj.bottom_maxiter  = 1000
 
-mac.mg_verbose   = 0
-mfix.mg_verbose  = 1
+mac_proj.verbose   = 0
+nodal_proj.verbose  = 1
 
 mfix.particle_init_type = "AsciiFile"
 particles.removeOutOfRange = 0
+
+mfix.gravity =  -9.81  0.0  0.0
+
 mfix.drag_type = "Gidaspow"
 
 #_______________________________________________________________________
@@ -139,3 +142,59 @@ amr.check_file     ="chk"
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="chk00100"
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+fluid.density            = constant
+fluid.density.constant   = 1.2
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 1.8e-5
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = solid0
+
+dem.friction_coeff.pp     =     0.35
+dem.friction_coeff.pw     =     0.35
+
+dem.spring_const.pp       =  2529.0
+dem.spring_const.pw       =  2529.0
+
+dem.restitution_coeff.solid0.solid0  =     0.84
+dem.restitution_coeff.solid0.wall    =     0.92
+
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = fluid-only
+
+regions.fluid-only.lo = 0.0000  0.0000  0.0000
+regions.fluid-only.hi = 1.2192  0.2286  0.0762
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = fluid-only
+
+
+# Backgound IC covering the full domain with gas.
+#---------------------------------------------------------------------//
+ic.fluid-only.fluid.volfrac   = 1.0
+
+ic.fluid-only.fluid.velocity  = 0.0  0.0  0.0

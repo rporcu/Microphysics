@@ -29,3 +29,63 @@ geometry.prob_lo     = 0.      0.    0.      # lo corner of physical domain
 geometry.prob_hi     = 0.0032  0.01  0.0032  # hi corner of physical domain
 
 mfix.drag_type = "BVK2"
+mfix.gravity   =  0.0  -9.80665  0.0
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+fluid.density            = constant
+fluid.density.constant   = 1.0
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 2.0e-5
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = solid0
+
+dem.friction_coeff.pp     =     0.0
+dem.friction_coeff.pw     =     0.0
+
+dem.spring_const.pp       =    10.0
+dem.spring_const.pw       =    10.0
+
+dem.restitution_coeff.solid0.solid0  =     0.8
+dem.restitution_coeff.solid0.wall    =     1.0
+
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+mfix.regions = full-domain
+
+regions.full-domain.lo  = 0.0000  0.0000  0.0000
+regions.full-domain.hi  = 0.0032  0.0100  0.0032
+
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+ic.regions = full-domain
+
+ic.full-domain.fluid.volfrac   = 1.0
+ic.full-domain.fluid.pressure  = 0.0
+ic.full-domain.fluid.velocity  = 0.0  0.0  0.0
+
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+bc.delp_dir =    1
+bc.delp     =    2.

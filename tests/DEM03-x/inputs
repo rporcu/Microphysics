@@ -2,6 +2,7 @@ amrex.fpe_trap_invalid = 1
 mfix.stop_time = .001
 
 mfix.fixed_dt = 1.e-4
+mfix.gravity = -9.80665 0.0  0.0
 
 particles.removeOutOfRange = 0
 
@@ -34,3 +35,34 @@ amr.check_file = DEM03_chk
 amr.par_ascii_int  = 1
 amr.par_ascii_file = DEM03_par
 amr.plt_regtest = 1
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = None
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = solid0  solid1
+
+dem.friction_coeff.pp     =    0.0
+dem.friction_coeff.pw     =    0.0
+                              
+dem.spring_const.pp       = 1000.0
+dem.spring_const.pw       = 1000.0
+                              
+dem.restitution_coeff.solid0.solid0 = 1.0
+dem.restitution_coeff.solid0.solid1 = 1.0
+dem.restitution_coeff.solid1.solid1 = 1.0
+
+dem.restitution_coeff.solid0.wall =   1.0
+dem.restitution_coeff.solid1.wall =   1.0
+                              
+dem.spring_tang_fac.pp    =    0.285714285
+dem.spring_tang_fac.pw    =    0.285714285
+                              
+dem.damping_tang_fac.pp   =    1.0
+dem.damping_tang_fac.pw   =    1.0

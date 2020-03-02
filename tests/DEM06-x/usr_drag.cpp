@@ -11,10 +11,10 @@ ComputeDragUser::operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg,
                              int i, int j, int k, int pid) const
 {
     amrex::Real ROg = ROPg / EPg;
-    amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROg/Mug : DEMParams::large_number;
+    amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROg/Mug : DEM::large_number;
     
     amrex::Real Cd = 0.0;
-    if (RE > DEMParams::eps) Cd = (24.0/RE)*(1.0 + 0.15*std::pow(RE, 0.687));
+    if (RE > DEM::eps) Cd = (24.0/RE)*(1.0 + 0.15*std::pow(RE, 0.687));
     
     return 0.75*(ROg*vrel/DPM)*Cd;
 }

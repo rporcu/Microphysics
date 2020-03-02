@@ -11,6 +11,9 @@ mfix.cfl = 0.5
 mfix.stop_time = 0.20
 
 mfix.particle_init_type = "Auto"
+
+mfix.gravity = -9.81  0.0  0.0
+
 mfix.drag_type = "BVK2"
 
 amr.blocking_factor = 4
@@ -111,3 +114,97 @@ amr.check_file     ="chk"
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="chk00100"
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+fluid.density            = constant
+fluid.density.constant   = 1.0
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 2.0e-5
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = solid0
+
+dem.friction_coeff.pp     =     0.0
+dem.friction_coeff.pw     =     0.0
+
+dem.spring_const.pp       =    10.0
+dem.spring_const.pw       =    10.0
+
+dem.restitution_coeff.solid0.solid0  =     0.8
+dem.restitution_coeff.solid0.wall    =     1.0
+
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+dem.friction_coeff.pp     =     0.0
+dem.friction_coeff.pw     =     0.0
+
+dem.spring_const.pp       =    10.0
+dem.spring_const.pw       =    10.0
+
+dem.restitution_coeff.solid0.solid0  =     0.8
+dem.restitution_coeff.solid0.wall    =     1.0
+
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = full-domain  bed
+
+regions.full-domain.lo = 0.0000  0.0000  0.0000
+regions.full-domain.hi = 0.0040  0.0010  0.0010
+
+regions.bed.lo = 0.0000  0.0000  0.0000
+regions.bed.hi = 0.0016  0.0010  0.0010
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = full-domain  bed
+
+
+# Backgound IC covering the full domain with gas.
+#---------------------------------------------------------------------//
+ic.full-domain.fluid.volfrac   = 1.0
+
+ic.full-domain.fluid.velocity  = 0.0  0.0  0.0
+
+
+# Define the initial bed of solids
+#---------------------------------------------------------------------//
+ic.bed.fluid.volfrac   =  0.5
+
+ic.bed.fluid.velocity  =  0.00  0.00  0.00
+
+ic.bed.solids  = solid0
+ic.bed.packing = hcp
+
+ic.bed.solid0.volfrac  =  0.5
+
+ic.bed.solid0.velocity =  0.00  0.00  0.00
+
+ic.bed.solid0.diameter = constant
+ic.bed.solid0.density  = constant
+
+ic.bed.solid0.diameter.constant =  100.0e-6
+ic.bed.solid0.density.constant  = 1000.0

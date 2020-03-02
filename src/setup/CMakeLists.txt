@@ -6,24 +6,18 @@ target_include_directories(mfixcore
 target_sources( mfixcore
    PRIVATE 
    amrex_to_mfix.F90
-   calc_cell.f90
-   calc_cell_F.H
-   mfix_calc_mu_g.hpp
+   MFIX_calc_cell.H
+   MFIX_calc_cell.cpp
+   mfix_calc_mu_g.H
    mfix_calc_mu_g.cpp
-   get_data.f90
-   mfix_init_fluid.hpp
+   mfix_init_fluid.H
    mfix_init_fluid.cpp
-   init_namelist.f90
    mfix_set_bc0.cpp
    mfix_set_ls_inflow.cpp
-   set_bc_type.f90
-   set_delp_dir.f90 
    mfix_set_p0.cpp
-   set_gp0.f90
-   set_ps.f90
-   set_ppe_bcs.f90
+   mfix_set_gp0.cpp
    mfix_init.cpp
    mfix_arrays.cpp
-   mfix_setup_nodal_solver.cpp
-   mfix_proj_F.H
+   mfix_setup_solvers.cpp
+   mfix_set_bc_type.cpp
    )

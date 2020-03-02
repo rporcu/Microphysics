@@ -8,19 +8,19 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
 #These are the directories in mfix/src_cc
 Bdirs 	:= src
-Bdirs 	+= src/des_fluid
+Bdirs 	+= src/des
 Bdirs 	+= src/io
 Bdirs 	+= src/convection
 Bdirs 	+= src/diffusion
 Bdirs 	+= src/projection
+Bdirs 	+= src/level_data
 Bdirs 	+= src/setup
 Bdirs 	+= src/util
-
-Bdirs 	+= src/check_data
+Bdirs 	+= src/deposition
 Bdirs 	+= src/mods
-Bdirs 	+= src/src_des
 Bdirs 	+= src/eb
 Bdirs 	+= src/usr
+Bdirs 	+= src/time_flow
 
 Bpack	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir)/Make.package)
 Blocs	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir))
@@ -48,6 +48,10 @@ VPATH_LOCATIONS   += $(Plocs)
 include $(AMREX_HOME)/Src/LinearSolvers/MLMG/Make.package
 INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/LinearSolvers/MLMG
 VPATH_LOCATIONS   += $(AMREX_HOME)/Src/LinearSolvers/MLMG
+
+include $(AMREX_HOME)/Src/LinearSolvers/Projections/Make.package
+INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/LinearSolvers/Projections
+VPATH_LOCATIONS   += $(AMREX_HOME)/Src/LinearSolvers/Projections
 
 #These are the directories in AMReX
 

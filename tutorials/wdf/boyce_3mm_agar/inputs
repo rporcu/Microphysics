@@ -9,24 +9,26 @@ amrex.fpe_trap_invalid = 1
 #mfix.max_step = 100
 mfix.stop_time = 4.0
 
+mfix.gravity =  -9.81  0.0  0.0
+
 mfix.drag_type = "WenYu"
 
-mfix.max_dt = 1.0d-3 
-mfix.min_dt = 1.0d-8
+mfix.dt_max = 1.0e-3 
+mfix.dt_min = 1.0e-8
 mfix.cfl    = 0.5
 
 mfix.particle_init_type = "AsciiFile"
 
 amr.blocking_factor = 2
 
-mfix.mg_max_coarsening_level = 1
+nodal_proj.mg_max_coarsening_level = 1
 
-mac.mg_verbose          = 1
+mac_proj.verbose = 1
 
-diff.mg_verbose = 0
+diffusion.verbose = 0
 
-mfix.mg_verbose         = 1
-mfix.mg_cg_verbose      = 0
+nodal_proj.verbose         = 1
+nodal_proj.bottom_verbose  = 0
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -79,35 +81,6 @@ mfix.levelset__eb_pad        = 2 # EB extends into neighboring grids
 
 mfix.write_eb_surface = false  # Needed to output eb-surfaces
 
-#! EB geometry
-#!-----------------------------------------------------------//
-mfix.geometry = "cylinder"
-
-cylinder.internal_flow = true
-cylinder.closed_bottom = true
-cylinder.bottom_offset = 1.0e-8
-
-cylinder.radius = 0.095
-cylinder.height = -1.0
-
-cylinder.direction = 0
-cylinder.center    =  0.192   0.096   0.096
-
-#! BCs 
-#!-----------------------------------------------------------//
-xlo.location = 0.0
-xlo.type = "mi"
-xlo.velocity = 0.8  0.0
-
-xlo.ylo = 0.090
-xlo.yhi = 0.102
-xlo.zlo = 0.090
-xlo.zhi = 0.102
-
-xhi.location = 0.384
-xhi.type = "po"
-xhi.pressure = 0.0
-
 #_______________________________________________________________________
 # Particle load balancing
 
@@ -157,3 +130,137 @@ amr.check_file     ="chk"
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
 #amr.restart   ="chk00100"
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+fluid.density            = constant
+fluid.density.constant   = 1.2
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 1.8e-5
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = solid0
+
+dem.friction_coeff.pp     =     0.56
+dem.friction_coeff.pw     =     0.56
+
+dem.spring_const.pp       =  1700.0
+dem.spring_const.pw       =  1700.0
+
+dem.restitution_coeff.solid0.solid0  =     0.69
+dem.restitution_coeff.solid0.wall    =     0.69
+
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = full-domain  inlet  jet  outlet
+
+regions.full-domain.lo = 0.500  0.000  0.000
+regions.full-domain.hi = 0.384  0.192  0.192
+
+regions.inlet.lo       = 0.000  0.000  0.000
+regions.inlet.hi       = 0.000  0.192  0.192
+
+regions.jet.lo         = 0.000  0.090  0.090
+regions.jet.hi         = 0.000  0.102  0.102
+
+regions.outlet.lo      = 0.384  0.000  0.000
+regions.outlet.hi      = 0.384  0.192  0.192
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = full-domain
+
+
+# Backgound IC covering the full domain with gas.
+#-------------------------------------------------------------//
+ic.full-domain.fluid.volfrac   = 1.0
+
+ic.full-domain.fluid.velocity  = 1.6  0.0  0.0
+
+
+#_______________________________________________________________________
+# EB geometry
+#
+mfix.geometry = "cylinder"
+
+cylinder.internal_flow = true
+cylinder.bottom_offset = 1.0e-8
+
+cylinder.radius = 0.095
+cylinder.height = -1.0
+
+cylinder.direction = 0
+cylinder.center    =  0.192   0.096   0.096
+
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+
+# Background flow
+# ------------------------------------------------------------//
+bc.regions = inlet  jet  outlet
+
+bc.inlet = "mi"
+
+bc.inlet.fluid.volfrac = 1.0
+
+bc.inlet.fluid.velocity = 0.8  0.0  0.0
+
+
+# Central jet
+# ------------------------------------------------------------//
+bc.jet = "mi"
+
+bc.jet.fluid.volfrac = 1.0
+
+bc.jet.fluid.velocity = 0.1  0.0  0.0
+
+
+# Pressure outflow
+# ------------------------------------------------------------//
+bc.outlet = "po"
+
+bc.outlet.fluid.pressure = 0.0
+
+
+
+
+
+// This is how we are currently specifying the inputs
+// for the mass inflows and pressure outflow. This
+// is to be changed to match the above.
+
+xlo.location = 0.0
+xlo.type = "mi"
+xlo.velocity = 0.8  0.0
+
+xlo.ylo = 0.090
+xlo.yhi = 0.102
+xlo.zlo = 0.090
+xlo.zhi = 0.102
+
+xhi.location = 0.384
+xhi.type = "po"
+xhi.pressure = 0.0
+~                                                                                                              
+~                       
