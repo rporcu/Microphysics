@@ -6,7 +6,7 @@
 
 void
 mfix::mfix_set_velocity_bcs (Real time,
-                             Vector< MultiFab* > vel_in,
+                             Vector< MultiFab* > const& vel_in,
                              int extrap_dir_bcs) const
 {
   BL_PROFILE("mfix::mfix_set_velocity_bcs()");

@@ -180,11 +180,7 @@ mfix::mfix_calc_drag_fluid (Real time)
 
   if(mfix::m_deposition_diffusion_coeff > 0.) {
     // Apply mean field diffusion to drag force
-    Vector< MultiFab* > drag(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      drag[lev] = m_leveldata[lev]->drag;
-
-    diffusion_op->diffuse_drag(drag, mfix::m_deposition_diffusion_coeff);
+    diffusion_op->diffuse_drag(get_drag(), mfix::m_deposition_diffusion_coeff);
   }
 
   // Impose periodic bc's at domain boundaries and fine-fine copies in the interior

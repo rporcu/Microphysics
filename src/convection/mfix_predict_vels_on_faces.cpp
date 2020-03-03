@@ -2,11 +2,11 @@
 
 void
 mfix::mfix_predict_vels_on_faces (int lev, Real time,
-                                  Vector< MultiFab* >& vel_in,
-                                  Vector< MultiFab* >& ep_u_mac,
-                                  Vector< MultiFab* >& ep_v_mac,
-                                  Vector< MultiFab* >& ep_w_mac,
-                                  Vector< MultiFab* >& ep_in)
+                                  Vector< MultiFab* > const& vel_in,
+                                  Vector< MultiFab* > const& ep_u_mac,
+                                  Vector< MultiFab* > const& ep_v_mac,
+                                  Vector< MultiFab* > const& ep_w_mac,
+                                  Vector< MultiFab* > const& ep_in)
 
 {
     BL_PROFILE("mfix::mfix_predict_vels_on_faces");
@@ -82,19 +82,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
     // ****************************************************************************
     int slopes_comp = 0;
 
-    Vector< MultiFab* > xslopes_u(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      xslopes_u[lev] = m_leveldata[lev]->xslopes_u;
-
-    Vector< MultiFab* > yslopes_u(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      yslopes_u[lev] = m_leveldata[lev]->yslopes_u;
-
-    Vector< MultiFab* > zslopes_u(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      zslopes_u[lev] = m_leveldata[lev]->zslopes_u;
-
-    mfix_compute_slopes(lev, time, *vel_in[lev], xslopes_u, yslopes_u, zslopes_u, slopes_comp);
+    mfix_compute_slopes(lev, time, *vel_in[lev],
+                        get_xslopes_u(), get_yslopes_u(), get_zslopes_u(),
+                        slopes_comp);
 
     // ****************************************************************************
     // Then predict to face centers
