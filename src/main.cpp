@@ -266,8 +266,11 @@ int main (int argc, char* argv[])
        mfix.mfix_init_solvers();
 
     // This checks if we want to regrid 
-    amrex::Print() << "Regridding at step " << nstep << std::endl;
-    mfix.Regrid();
+    if (!mfix.IsSteadyState() && regrid_int > -1 && nstep%regrid_int == 0)
+    {
+        amrex::Print() << "Regridding at step " << nstep << std::endl;
+        mfix.Regrid();
+    }
 
     if (DEM::solve && write_ls)
         mfix.WriteStaticPlotFile(static_plt_file);
