@@ -22,7 +22,10 @@ amr.max_level  = 0
 amr.plot_int   = 25
 amr.check_int  = 25
 
-amr.restart = chk00000_for_replicate
+amr.plt_regtest = 1
+
+amr.restart = newchk00000_for_replicate
+
 amr.repl_x = 2
 amr.repl_y = 2
 amr.repl_z = 2
@@ -69,7 +72,6 @@ dem.spring_tang_fac.pw    =     0.285714285
 
 dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
-
 
 
 #_______________________________________________________________________
