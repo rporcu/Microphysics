@@ -219,20 +219,20 @@ class mfix : public AmrCore
                                      Vector< MultiFab* >& ep_w_mac,
                                      Vector< MultiFab* >& ep_g);
 
-    void mfix_correct_small_cells (Vector< MultiFab*>& vel_in);
+    void mfix_correct_small_cells (Vector< MultiFab*> vel_in);
 
     void mfix_set_velocity_bcs (Real time,
-                                Vector< MultiFab* >& vel,
+                                Vector< MultiFab* > vel,
                                 int extrap_dir_bcs) const;
 
-    void mfix_set_epg_bcs (const Vector< MultiFab* >& ep_g) const;
+    void mfix_set_epg_bcs (const Vector< MultiFab* > ep_g) const;
 
     void mfix_set_density_bcs (Real time,
-                               Vector< MultiFab* >& ro_g);
+                               Vector< MultiFab* > ro_g);
 
     void mfix_set_scalar_bcs (Real time,
-                              Vector< MultiFab* >& trac,
-                              Vector< MultiFab* >& mu_g);
+                              Vector< MultiFab* > trac,
+                              Vector< MultiFab* > mu_g);
 
     void set_velocity_bcs (Real time,
                            const int lev,
@@ -537,10 +537,10 @@ class mfix : public AmrCore
 
     void mfix_compute_convective_term (Vector< MultiFab* >& conv_u,
                                        Vector< MultiFab* >& conv_s,
-                                       Vector< MultiFab* >& vel,
-                                       Vector< MultiFab* >& ep_g,
-                                       Vector< MultiFab* >& ro_g,
-                                       Vector< MultiFab* >& trac,
+                                       Vector< MultiFab* > vel,
+                                       Vector< MultiFab* > ep_g,
+                                       Vector< MultiFab* > ro_g,
+                                       Vector< MultiFab* > trac,
                                        Real time);
 
     int steady_state_reached (Real dt, int iter);
@@ -587,6 +587,27 @@ class mfix : public AmrCore
     Vector< IArrayBox* > bc_khi;
 
     amrex::Vector< std::shared_ptr<LevelData> > m_leveldata;
+
+    amrex::Vector<amrex::MultiFab*> get_ep_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_ro_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_ro_g_old () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_trac () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_trac_old () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_vel_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_vel_g_old () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_mu_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_drag () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_xslopes_u () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_yslopes_u () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_zslopes_u () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_xslopes_s () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_yslopes_s () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_zslopes_s () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_diveu () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_mac_phi () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_u_mac () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_v_mac () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_w_mac () noexcept;
 
     // Boundary conditions flags
     Vector< iMultiFab* > flag;

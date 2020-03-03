@@ -116,9 +116,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
        const auto& ccvel_fab = vel_in[lev]->array(mfi);
 
        // Cell-centered slopes
-       const auto& xslopes_fab = (xslopes_u[lev])->array(mfi);
-       const auto& yslopes_fab = (yslopes_u[lev])->array(mfi);
-       const auto& zslopes_fab = (zslopes_u[lev])->array(mfi);
+       const auto& xslopes_fab = m_leveldata[lev]->xslopes_u->array(mfi);
+       const auto& yslopes_fab = m_leveldata[lev]->yslopes_u->array(mfi);
+       const auto& zslopes_fab = m_leveldata[lev]->zslopes_u->array(mfi);
 
        // Face-centered velocity components
        const auto& umac_fab = (ep_u_mac[lev])->array(mfi);
@@ -222,10 +222,10 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
           // Cell centroids
           const auto& ccc_fab = cellcent.array(mfi);
 
-		  // Cell-based slopes
-          const auto& xslopes_fab = (xslopes_u[lev])->array(mfi);
-          const auto& yslopes_fab = (yslopes_u[lev])->array(mfi);
-          const auto& zslopes_fab = (zslopes_u[lev])->array(mfi);
+          // Cell-based slopes
+          const auto& xslopes_fab = m_leveldata[lev]->xslopes_u->array(mfi);
+          const auto& yslopes_fab = m_leveldata[lev]->yslopes_u->array(mfi);
+          const auto& zslopes_fab = m_leveldata[lev]->zslopes_u->array(mfi);
 
           // Face-centered ep
           const auto& epx_fab = (ep_face[0])->array(mfi);

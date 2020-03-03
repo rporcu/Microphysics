@@ -39,11 +39,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
     // Fill ghost nodes and reimpose boundary conditions
     //mfix_set_velocity_bcs(time, vel_g, 0);
 
-    Vector< MultiFab* > ro_g(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      ro_g[lev] = m_leveldata[lev]->ro_g;
-
-    mfix_set_density_bcs(time, ro_g);
+    mfix_set_density_bcs(time, get_ro_g());
     //mfix_set_scalar_bcs(time, trac, mu_g);
 
     //
@@ -238,26 +234,10 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
   amrex::Print() << "Doing initial pressure iterations with dt = " << dt << "\n";
 
-  Vector< MultiFab* > vel_g(m_leveldata.size(), nullptr);
-  for (int lev(0); lev < m_leveldata.size(); ++lev)
-    vel_g[lev] = m_leveldata[lev]->vel_g;
-
-  Vector< MultiFab* > ro_g(m_leveldata.size(), nullptr);
-  for (int lev(0); lev < m_leveldata.size(); ++lev)
-    ro_g[lev] = m_leveldata[lev]->ro_g;
-
-  Vector< MultiFab* > trac(m_leveldata.size(), nullptr);
-  for (int lev(0); lev < m_leveldata.size(); ++lev)
-    trac[lev] = m_leveldata[lev]->trac;
-
-  Vector< MultiFab* > mu_g(m_leveldata.size(), nullptr);
-  for (int lev(0); lev < m_leveldata.size(); ++lev)
-    mu_g[lev] = m_leveldata[lev]->mu_g;
-
   // Fill ghost nodes and reimpose boundary conditions
-  mfix_set_velocity_bcs(time, vel_g, 0);
-  mfix_set_density_bcs(time, ro_g);
-  mfix_set_scalar_bcs(time, trac, mu_g);
+  mfix_set_velocity_bcs(time, get_vel_g(), 0);
+  mfix_set_density_bcs(time, get_ro_g());
+  mfix_set_scalar_bcs(time, get_trac(), get_mu_g());
 
   // Copy vel_g into vel_go
   for (int lev = 0; lev < nlev; lev++)
@@ -310,22 +290,10 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
         MultiFab::Copy(*m_leveldata[lev]->trac, *m_leveldata[lev]->trac_o, 0, 0,
                        m_leveldata[lev]->trac->nComp(), m_leveldata[lev]->trac->nGrow());
  
-    Vector< MultiFab* > vel_g(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      vel_g[lev] = m_leveldata[lev]->vel_g;
-
-    Vector< MultiFab* > ro_g(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      ro_g[lev] = m_leveldata[lev]->ro_g;
-
-    Vector< MultiFab* > trac(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      trac[lev] = m_leveldata[lev]->trac;
-
     // Reset the boundary values (necessary if they are time-dependent)
-    mfix_set_velocity_bcs(time, vel_g, 0);
-    mfix_set_density_bcs(time, ro_g);
-    mfix_set_scalar_bcs(time, trac, mu_g);
+    mfix_set_velocity_bcs(time, get_vel_g(), 0);
+    mfix_set_density_bcs(time, get_ro_g());
+    mfix_set_scalar_bcs(time, get_trac(), get_mu_g());
   }
    
   for (int lev = 0; lev < nlev; lev++)
@@ -381,25 +349,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // We use the new-time value for things computed on the "*" state
     Real new_time = time + dt;
 
-    Vector< MultiFab* > ep_g(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); lev++)
-      ep_g[lev] = m_leveldata[lev]->ep_g;
-
-    Vector< MultiFab* > vel_go(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      vel_go[lev] = m_leveldata[lev]->vel_go;
-
-    Vector< MultiFab* > ro_go(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      ro_go[lev] = m_leveldata[lev]->ro_go;
-
-    Vector< MultiFab* > trac_o(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      trac_o[lev] = m_leveldata[lev]->trac_o;
-
     // Compute the explicit advective term R_u^n
-    mfix_compute_convective_term(conv_u_old, conv_s_old, vel_go, ep_g, ro_go,
-                                 trac_o ,time);
+    mfix_compute_convective_term(conv_u_old, conv_s_old, get_vel_g_old(),
+                                 get_ep_g(), get_ro_g_old(), get_trac_old(), time);
 
     // FOR NOW WE STILL DIVIDE BY EP_G BUT WE DON'T WANT TO KEEP DOING THIS!
     for (int lev = 0; lev < nlev; lev++)
@@ -414,27 +366,13 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
     if (explicit_diffusion_pred == 1)
     {
-      Vector< MultiFab* > ep_g(m_leveldata.size(), nullptr);
-      for (int lev(0); lev < m_leveldata.size(); lev++)
-        ep_g[lev] = m_leveldata[lev]->ep_g;
-
-      Vector< MultiFab* > vel_go(m_leveldata.size(), nullptr);
-      for (int lev(0); lev < m_leveldata.size(); ++lev)
-        vel_go[lev] = m_leveldata[lev]->vel_go;
-
-      Vector< MultiFab* > ro_g(m_leveldata.size(), nullptr);
-      for (int lev(0); lev < m_leveldata.size(); ++lev)
-        ro_g[lev] = m_leveldata[lev]->ro_g;
-
-      Vector< MultiFab* > mu_g(m_leveldata.size(), nullptr);
-      for (int lev(0); lev < m_leveldata.size(); ++lev)
-        mu_g[lev] = m_leveldata[lev]->mu_g;
-
         //mfix_set_velocity_bcs(time, vel_go, 0);
-        diffusion_op->ComputeDivTau(divtau_old, vel_go, ro_g, ep_g, mu_g);
+        diffusion_op->ComputeDivTau(divtau_old, get_vel_g_old(), get_ro_g(),
+                                    get_ep_g(), get_mu_g());
 
         // mfix_set_tracer_bcs (time, trac_o);
-        diffusion_op->ComputeLapS(laps_old, trac_o, ro_g, ep_g, mu_s);
+        diffusion_op->ComputeLapS(laps_old, get_trac_old(), get_ro_g(),
+                                  get_ep_g(), mu_s);
 
     } else {
        for (int lev = 0; lev < nlev; lev++)
@@ -488,42 +426,22 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // Note we multiply ep_g by ro_g so that we pass in a single array holding (ro_g * ep_g)
     if (explicit_diffusion_pred == 0)
     {
-      Vector< MultiFab* > ep_g(m_leveldata.size(), nullptr);
-      for (int lev(0); lev < m_leveldata.size(); lev++)
-        ep_g[lev] = m_leveldata[lev]->ep_g;
+      mfix_set_density_bcs(time, get_ro_g());
+      mfix_set_scalar_bcs(time, get_trac(), get_mu_g());
 
-      Vector< MultiFab* > vel_g(m_leveldata.size(), nullptr);
-      for (int lev(0); lev < m_leveldata.size(); ++lev)
-        vel_g[lev] = m_leveldata[lev]->vel_g;
+      for (int lev = 0; lev < nlev; lev++)
+        MultiFab::Multiply(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
+                           0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
 
-      Vector< MultiFab* > ro_g(m_leveldata.size(), nullptr);
-      for (int lev(0); lev < m_leveldata.size(); ++lev)
-        ro_g[lev] = m_leveldata[lev]->ro_g;
+      mfix_set_velocity_bcs(new_time, get_vel_g(), 0);
+      diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_mu_g(), dt);
 
-      Vector< MultiFab* > trac(m_leveldata.size(), nullptr);
-      for (int lev(0); lev < m_leveldata.size(); ++lev)
-        trac[lev] = m_leveldata[lev]->trac;
+      // mfix_set_tracer_bcs (new_time, trac, 0);
+      diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, dt);
 
-      Vector< MultiFab* > mu_g(m_leveldata.size(), nullptr);
-      for (int lev(0); lev < m_leveldata.size(); ++lev)
-        mu_g[lev] = m_leveldata[lev]->mu_g;
-
-        mfix_set_density_bcs(time, ro_g);
-        mfix_set_scalar_bcs(time, trac, mu_g);
-
-        for (int lev = 0; lev < nlev; lev++)
-            MultiFab::Multiply(*m_leveldata[lev]->ep_g,
-                               *m_leveldata[lev]->ro_g, 0, 0, 1,
-                               m_leveldata[lev]->ep_g->nGrow());
-
-        mfix_set_velocity_bcs(new_time, vel_g, 0);
-        diffusion_op->diffuse_velocity(vel_g, ep_g, mu_g, dt);
-
-        // mfix_set_tracer_bcs (new_time, trac, 0);
-        diffusion_op->diffuse_scalar(trac, ep_g, mu_s, dt);
-
-        for (int lev = 0; lev < nlev; lev++)
-            MultiFab::Divide(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g, 0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
+      for (int lev = 0; lev < nlev; lev++)
+          MultiFab::Divide(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
+                           0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
     }
 
     // Project velocity field -- depdt=0 for now
@@ -533,11 +451,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
     mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
 
-    Vector< MultiFab* > vel_g(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      vel_g[lev] = m_leveldata[lev]->vel_g;
-
-    mfix_correct_small_cells (vel_g);
+    mfix_correct_small_cells (get_vel_g());
 
     for (int lev(0); lev < nlev; ++lev)
       delete depdt[lev];
@@ -608,76 +522,57 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
        divtau[lev]->setVal(0.0);
     }
 
-    Vector< MultiFab* > ep_g(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); lev++)
-      ep_g[lev] = m_leveldata[lev]->ep_g;
-
-    Vector< MultiFab* > trac(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); lev++)
-      trac[lev] = m_leveldata[lev]->trac;
-
-    Vector< MultiFab* > ro_g(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); lev++)
-      ro_g[lev] = m_leveldata[lev]->ro_g;
-
-    Vector< MultiFab* > vel_g(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); lev++)
-      vel_g[lev] = m_leveldata[lev]->vel_g;
-
-    Vector< MultiFab* > mu_g(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); lev++)
-      mu_g[lev] = m_leveldata[lev]->mu_g;
-
     // Compute the explicit advective term R_u^*
-    mfix_compute_convective_term(conv_u, conv_s, vel_g, ep_g, ro_g, trac, new_time);
+    mfix_compute_convective_term(conv_u, conv_s, get_vel_g(), get_ep_g(),
+                                 get_ro_g(), get_trac(), new_time);
 
     // FOR NOW WE STILL DIVIDE BY EP_G BUT WE DON'T WANT TO KEEP DOING THIS!
     for (int lev = 0; lev < nlev; lev++)
-       for (int i = 0; i < 3; i++)
-          MultiFab::Divide(*conv_u[lev], *(m_leveldata[lev]->ep_g), 0, i, 1, 0);
+      for (int i = 0; i < 3; i++)
+        MultiFab::Divide(*conv_u[lev], *(m_leveldata[lev]->ep_g), 0, i, 1, 0);
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        for (int i = 0; i < 2; i++)
-          MultiFab::Divide(*conv_s[lev], *(m_leveldata[lev]->ep_g), 0, i, 1, 0);
+      for (int i = 0; i < 2; i++)
+        MultiFab::Divide(*conv_s[lev], *(m_leveldata[lev]->ep_g), 0, i, 1, 0);
 
-        // Make sure to do this multiply before we update density!
-        if (advect_tracer)
-        {
-          int conv_comp = 1;
-          MultiFab::Multiply(*m_leveldata[lev]->trac_o,
-                             *m_leveldata[lev]->ro_go, 0, 0, 1, 0);
+      // Make sure to do this multiply before we update density!
+      if (advect_tracer)
+      {
+        int conv_comp = 1;
+        MultiFab::Multiply(*m_leveldata[lev]->trac_o,
+                           *m_leveldata[lev]->ro_go, 0, 0, 1, 0);
 
-          // Add the convective terms so trac = trac_o + dt/2 (R_s^* + R_s^n)
-          MultiFab::LinComb(*m_leveldata[lev]->trac, 1.0,
-                            *m_leveldata[lev]->trac_o, 0, dt/2.0, *conv_s[lev],
-                            conv_comp, 0, 1, 0);
-          MultiFab::Saxpy(*m_leveldata[lev]->trac, dt/2.0, *conv_s_old[lev],
+        // Add the convective terms so trac = trac_o + dt/2 (R_s^* + R_s^n)
+        MultiFab::LinComb(*m_leveldata[lev]->trac, 1.0,
+                          *m_leveldata[lev]->trac_o, 0, dt/2.0, *conv_s[lev],
                           conv_comp, 0, 1, 0);
-        }
+        MultiFab::Saxpy(*m_leveldata[lev]->trac, dt/2.0, *conv_s_old[lev],
+                        conv_comp, 0, 1, 0);
+      }
 
-        if (advect_density)
-        {
-           int conv_comp = 0;
-           // Add the convective terms so trac = trac_o + dt/2 (R_s^* + R_s^n)
-           MultiFab::LinComb(*m_leveldata[lev]->ro_g, 1.0,
-                             *m_leveldata[lev]->ro_go, 0, dt/2.0, *conv_s[lev],
-                             conv_comp, 0, 1, 0);
-           MultiFab::Saxpy(*m_leveldata[lev]->ro_g, dt/2.0, *conv_s_old[lev],
+      if (advect_density)
+      {
+         int conv_comp = 0;
+         // Add the convective terms so trac = trac_o + dt/2 (R_s^* + R_s^n)
+         MultiFab::LinComb(*m_leveldata[lev]->ro_g, 1.0,
+                           *m_leveldata[lev]->ro_go, 0, dt/2.0, *conv_s[lev],
                            conv_comp, 0, 1, 0);
-        }
+         MultiFab::Saxpy(*m_leveldata[lev]->ro_g, dt/2.0, *conv_s_old[lev],
+                         conv_comp, 0, 1, 0);
+      }
 
-        // Make sure to do this divide after we update density!
-        if (advect_tracer)
-           MultiFab::Divide(*m_leveldata[lev]->trac,
-                            *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
+      // Make sure to do this divide after we update density!
+      if (advect_tracer)
+         MultiFab::Divide(*m_leveldata[lev]->trac,
+                          *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
 
-        // Add the convective terms so u_g = u_go + dt/2 (R_u^* + R_u^n)
-        MultiFab::LinComb(*m_leveldata[lev]->vel_g, 1.0,
-                          *m_leveldata[lev]->vel_go, 0, dt/2.0,
-                          *conv_u[lev], 0, 0, 3, 0);
-        MultiFab::Saxpy(*m_leveldata[lev]->vel_g, dt/2.0,
-                        *conv_u_old[lev], 0, 0, 3, 0);
+      // Add the convective terms so u_g = u_go + dt/2 (R_u^* + R_u^n)
+      MultiFab::LinComb(*m_leveldata[lev]->vel_g, 1.0,
+                        *m_leveldata[lev]->vel_go, 0, dt/2.0,
+                        *conv_u[lev], 0, 0, 3, 0);
+      MultiFab::Saxpy(*m_leveldata[lev]->vel_g, dt/2.0,
+                      *conv_u_old[lev], 0, 0, 3, 0);
     }
 
     // Add the explicit diffusion term so u_g = u_go + dt/2 (R_u^* + R_u^n) + dt/2 (Lu)^n
@@ -704,10 +599,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     //mfix_set_scalar_bcs(time, trac, mu_g);
 
     //mfix_set_velocity_bcs(new_time, vel_g, 0);
-    diffusion_op->diffuse_velocity(vel_g, ep_g, mu_g, 0.5*dt);
+    diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_mu_g(), 0.5*dt);
 
     // mfix_set_tracer_bcs (new_time, trac, 0);
-    diffusion_op->diffuse_scalar(trac, ep_g, mu_s, dt);
+    diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, dt);
 
     for (int lev = 0; lev < nlev; lev++)
         MultiFab::Divide(*m_leveldata[lev]->ep_g,
@@ -722,7 +617,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         depdt[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0, 1).release();
 
     mfix_apply_nodal_projection(depdt, new_time, dt, proj_2);
-    mfix_correct_small_cells (vel_g);
+    mfix_correct_small_cells(get_vel_g());
 
     for (int lev(0); lev < nlev; ++lev)
       delete depdt[lev];
@@ -886,11 +781,7 @@ mfix::steady_state_reached (Real dt, int iter)
 
     Real time = 0.;
 
-    Vector< MultiFab* > vel_g(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      vel_g[lev] = m_leveldata[lev]->vel_g;
-
-    mfix_set_velocity_bcs(time, vel_g, 0);
+    mfix_set_velocity_bcs(time, get_vel_g(), 0);
 
     //
     // Make sure velocity is up to date

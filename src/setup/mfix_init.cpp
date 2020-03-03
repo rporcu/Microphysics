@@ -815,71 +815,47 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
     if (is_restarting == 0)
     {
-       // Just for reference, we compute the volume inside the EB walls (as if there were no particles)
-       m_leveldata[0]->ep_g->setVal(1.0);
+      // Just for reference, we compute the volume inside the EB walls (as if
+      // there were no particles)
+      m_leveldata[0]->ep_g->setVal(1.0);
 
-       sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
+      sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
 
-       Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
+      Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
 
-       Real domain_vol = sum_vol_orig;
+      Real domain_vol = sum_vol_orig;
 
-       // Now initialize the volume fraction ep_g before the first projection
-       mfix_calc_volume_fraction(sum_vol_orig);
-       Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+      // Now initialize the volume fraction ep_g before the first projection
+      mfix_calc_volume_fraction(sum_vol_orig);
+      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
 
-       Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
+      Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
 
-       // This sets bcs for ep_g and mu_g
-       Real time = 0.0;
+      // This sets bcs for ep_g and mu_g
+      Real time = 0.0;
 
-       Vector< MultiFab* > ro_g(m_leveldata.size(), nullptr);
-       for (int lev(0); lev < m_leveldata.size(); ++lev)
-         ro_g[lev] = m_leveldata[lev]->ro_g;
+      mfix_set_density_bcs(time, get_ro_g());
+      mfix_set_density_bcs(time, get_ro_g_old());
 
-       Vector< MultiFab* > ro_go(m_leveldata.size(), nullptr);
-       for (int lev(0); lev < m_leveldata.size(); ++lev)
-         ro_go[lev] = m_leveldata[lev]->ro_go;
+      mfix_set_scalar_bcs(time, get_trac(), get_mu_g());
+      mfix_set_scalar_bcs(time, get_trac_old(), get_mu_g());
 
-       mfix_set_density_bcs(time, ro_g);
-       mfix_set_density_bcs(time, ro_go);
+      // Project the initial velocity field
+      if (do_initial_proj)
+        mfix_project_velocity();
 
-       Vector< MultiFab* > trac(m_leveldata.size(), nullptr);
-       for (int lev(0); lev < m_leveldata.size(); ++lev)
-         trac[lev] = m_leveldata[lev]->trac;
+      // Iterate to compute the initial pressure
+      if (initial_iterations > 0)
+        mfix_initial_iterations(dt,stop_time);
+    }
+    else
+    {
+      mfix_set_epg_bcs(get_ep_g());
 
-       Vector< MultiFab* > trac_o(m_leveldata.size(), nullptr);
-       for (int lev(0); lev < m_leveldata.size(); ++lev)
-         trac_o[lev] = m_leveldata[lev]->trac_o;
+      //Calculation of sum_vol_orig for a restarting point
+      sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
 
-       Vector< MultiFab* > mu_g(m_leveldata.size(), nullptr);
-       for (int lev(0); lev < m_leveldata.size(); ++lev)
-         mu_g[lev] = m_leveldata[lev]->mu_g;
-
-       mfix_set_scalar_bcs(time, trac, mu_g);
-       mfix_set_scalar_bcs(time, trac_o, mu_g);
-
-       // Project the initial velocity field
-       if (do_initial_proj)
-          mfix_project_velocity();
-
-       // Iterate to compute the initial pressure
-       if (initial_iterations > 0)
-
-          mfix_initial_iterations(dt,stop_time);
-
-    } else {
-
-      Vector< MultiFab* > ep_g(m_leveldata.size(), nullptr);
-      for (int lev(0); lev < m_leveldata.size(); ++lev)
-        ep_g[lev] = m_leveldata[lev]->ep_g;
-
-       mfix_set_epg_bcs(ep_g);
-
-       //Calculation of sum_vol_orig for a restarting point
-       sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
-
-       Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
     }
 }
 
@@ -912,11 +888,7 @@ mfix::mfix_set_bc0 ()
    Real time = 0.0;
    int extrap_dir_bcs = 0;
 
-   Vector< MultiFab* > vel_g(m_leveldata.size(), nullptr);
-   for (int lev(0); lev < m_leveldata.size(); ++lev)
-     vel_g[lev] = m_leveldata[lev]->vel_g;
-
-   mfix_set_velocity_bcs(time, vel_g, extrap_dir_bcs);
+   mfix_set_velocity_bcs(time, get_vel_g(), extrap_dir_bcs);
 
    for (int lev = 0; lev < nlev; lev++)
      m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());

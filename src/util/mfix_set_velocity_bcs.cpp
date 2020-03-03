@@ -6,7 +6,7 @@
 
 void
 mfix::mfix_set_velocity_bcs (Real time,
-                             Vector< MultiFab* > & vel_in,
+                             Vector< MultiFab* > vel_in,
                              int extrap_dir_bcs) const
 {
   BL_PROFILE("mfix::mfix_set_velocity_bcs()");
@@ -16,7 +16,7 @@ mfix::mfix_set_velocity_bcs (Real time,
      // Set all values outside the domain to covered_val just to avoid use of undefined
      vel_in[lev]->setDomainBndry(covered_val,geom[lev]);
 
-     vel_in[lev] -> FillBoundary (geom[lev].periodicity());
+     vel_in[lev]->FillBoundary(geom[lev].periodicity());
      Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
@@ -28,7 +28,7 @@ mfix::mfix_set_velocity_bcs (Real time,
      EB_set_covered(*vel_in[lev], 0, vel_in[lev]->nComp(), vel_in[lev]->nGrow(), covered_val);
 
      // Do this after as well as before to pick up terms that got updated in the call above
-     vel_in[lev] -> FillBoundary (geom[lev].periodicity());
+     vel_in[lev]->FillBoundary(geom[lev].periodicity());
   }
 }
 

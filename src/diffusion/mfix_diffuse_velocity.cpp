@@ -6,9 +6,9 @@ using namespace amrex;
 //
 // Implicit tensor solve for velocity diffusion
 //
-void DiffusionOp::diffuse_velocity (Vector< MultiFab* >& vel_in,
-                                    const Vector< MultiFab* >& ep_ro_in,
-                                    const Vector< MultiFab* >& eta_in,
+void DiffusionOp::diffuse_velocity (Vector< MultiFab* > vel_in,
+                                    const Vector< MultiFab* > ep_ro_in,
+                                    const Vector< MultiFab* > eta_in,
                                     Real dt)
 {
     BL_PROFILE("DiffusionOp::diffuse_velocity");

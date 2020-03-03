@@ -75,7 +75,6 @@ class LevelData
     // used if load_balance_type == "KnapSack"
     amrex::MultiFab* particle_cost;
     amrex::MultiFab* fluid_cost;
-
 };
 
 #endif

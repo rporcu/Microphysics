@@ -3,7 +3,7 @@
 
 using namespace amrex;
 
-void DiffusionOp::diffuse_drag (Vector< MultiFab* >& drag_in,
+void DiffusionOp::diffuse_drag (Vector< MultiFab* > drag_in,
                                 Real dcoeff)
 {
     BL_PROFILE("DiffusionOp::diffuse_drag");
