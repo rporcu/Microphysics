@@ -1,5 +1,7 @@
 mfix.stop_time = 0.0025
 
+mfix.load_balance_type = SFC
+
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 32 32 32
 
