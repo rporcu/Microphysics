@@ -9,8 +9,15 @@
 class LevelData
 {
   public:
+    // Default Constructor
+    LevelData () = default;
+
     // Constructor
-    LevelData ();
+    LevelData (amrex::BoxArray const& ba,
+               amrex::DistributionMapping const& dm,
+               const int nghost,
+               amrex::FabFactory<amrex::FArrayBox> const& fact,
+               const amrex::Real covered_val);
 
     // Destructor
     ~LevelData ();

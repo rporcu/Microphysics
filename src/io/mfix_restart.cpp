@@ -169,7 +169,19 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             make_eb_geometry();
             make_eb_factories();
 
-            if (FLUID::solve) AllocateArrays(lev);
+            if (FLUID::solve) {
+              int nlevs_max = maxLevel() + 1;
+
+              mfix_update_ebfactory(lev);
+
+              m_leveldata.resize(nlevs_max);
+              for (int lev(0); lev < nlevs_max; ++lev)
+                m_leveldata[lev].reset(new LevelData(grids[lev], dmap[lev],
+                                                     nghost, *ebfactory[lev],
+                                                     covered_val));
+
+              AllocateArrays(lev);
+            }
         }
     }
 

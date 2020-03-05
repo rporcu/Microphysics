@@ -586,7 +586,7 @@ class mfix : public AmrCore
     Vector< IArrayBox* > bc_klo;
     Vector< IArrayBox* > bc_khi;
 
-    amrex::Vector< std::shared_ptr<LevelData> > m_leveldata;
+    amrex::Vector< std::unique_ptr<LevelData> > m_leveldata;
 
     amrex::Vector<amrex::MultiFab*> get_ep_g () noexcept;
     amrex::Vector<amrex::MultiFab*> get_ro_g () noexcept;
