@@ -366,8 +366,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         }
     }
 
-    // used in load balancing
-    if (load_balance_type == "KnapSack") {
+    if (load_balance_type == "KnapSack" or load_balance_type == "SFC") 
+    {
       if (DEM::solve) {
         for (int lev = 0; lev <= finestLevel(); lev++)
         {

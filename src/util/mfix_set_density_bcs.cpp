@@ -11,7 +11,7 @@ using namespace amrex;
 //
 void
 mfix::mfix_set_density_bcs (Real time,
-                            Vector< MultiFab* > & ro_g_in)
+                            Vector< MultiFab* > const& ro_g_in)
 {
   BL_PROFILE("mfix::mfix_set_density_bcs()");
 

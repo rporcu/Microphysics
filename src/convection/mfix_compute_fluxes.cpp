@@ -42,15 +42,15 @@ mfix::mfix_compute_fluxes (int lev,
                            Vector< MultiFab* >& a_fx,
                            Vector< MultiFab* >& a_fy,
                            Vector< MultiFab* >& a_fz,
-                           Vector< MultiFab* >& state_in,
+                           Vector< MultiFab* > const& state_in,
                            const int state_comp, const int ncomp,
-                           Vector< MultiFab* >& xslopes_in,
-                           Vector< MultiFab* >& yslopes_in,
-                           Vector< MultiFab* >& zslopes_in,
+                           Vector< MultiFab* > const& xslopes_in,
+                           Vector< MultiFab* > const& yslopes_in,
+                           Vector< MultiFab* > const& zslopes_in,
                            const int slopes_comp,
-                           Vector< MultiFab* >& ep_u_mac,
-                           Vector< MultiFab* >& ep_v_mac,
-                           Vector< MultiFab* >& ep_w_mac)
+                           Vector< MultiFab* > const& ep_u_mac,
+                           Vector< MultiFab* > const& ep_v_mac,
+                           Vector< MultiFab* > const& ep_w_mac)
 {
         // Get EB geometric info
         Array< const MultiCutFab*,3> areafrac;

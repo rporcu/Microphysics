@@ -213,26 +213,26 @@ class mfix : public AmrCore
 
     void mfix_predict_vels_on_faces (int lev,
                                      Real time,
-                                     Vector< MultiFab* >& vel,
-                                     Vector< MultiFab* >& ep_u_mac,
-                                     Vector< MultiFab* >& ep_v_mac,
-                                     Vector< MultiFab* >& ep_w_mac,
-                                     Vector< MultiFab* >& ep_g);
+                                     Vector< MultiFab* > const& vel,
+                                     Vector< MultiFab* > const& ep_u_mac,
+                                     Vector< MultiFab* > const& ep_v_mac,
+                                     Vector< MultiFab* > const& ep_w_mac,
+                                     Vector< MultiFab* > const& ep_g);
 
-    void mfix_correct_small_cells (Vector< MultiFab*>& vel_in);
+    void mfix_correct_small_cells (Vector< MultiFab*> vel_in);
 
     void mfix_set_velocity_bcs (Real time,
-                                Vector< MultiFab* >& vel,
+                                Vector< MultiFab* > const& vel,
                                 int extrap_dir_bcs) const;
 
     void mfix_set_epg_bcs (const Vector< MultiFab* >& ep_g) const;
 
     void mfix_set_density_bcs (Real time,
-                               Vector< MultiFab* >& ro_g);
+                               Vector< MultiFab* > const& ro_g);
 
     void mfix_set_scalar_bcs (Real time,
-                              Vector< MultiFab* >& trac,
-                              Vector< MultiFab* >& mu_g);
+                              Vector< MultiFab* > const& trac,
+                              Vector< MultiFab* > const& mu_g);
 
     void set_velocity_bcs (Real time,
                            const int lev,
@@ -273,9 +273,9 @@ class mfix : public AmrCore
                         const Real* dx);
 
     void mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
-                              Vector< MultiFab* >& xslopes_in,
-                              Vector< MultiFab* >& yslopes_in,
-                              Vector< MultiFab* >& zslopes_in,
+                              Vector< MultiFab* > const& xslopes_in,
+                              Vector< MultiFab* > const& yslopes_in,
+                              Vector< MultiFab* > const& zslopes_in,
                               int slopes_comp);
 
     void set_bc0 (const Box& sbx,
@@ -329,25 +329,25 @@ class mfix : public AmrCore
     ////////////////////////////////////////////////////////////////////////////
 
     void set_MAC_velocity_bcs (int lev,
-                               Vector< MultiFab* >& u,
-                               Vector< MultiFab* >& v,
-                               Vector< MultiFab* >& w,
+                               Vector< MultiFab* > const& u,
+                               Vector< MultiFab* > const& v,
+                               Vector< MultiFab* > const& w,
                                Real time);
 
     void mfix_compute_fluxes (const int lev,
                               Vector< MultiFab* >& a_fx,
                               Vector< MultiFab* >& a_fy,
                               Vector< MultiFab* >& a_fz,
-                              Vector< MultiFab* >& state,
+                              Vector< MultiFab* > const& state,
                               const int state_comp,
                               const int n_comp,
-                              Vector< MultiFab* >& xslopes,
-                              Vector< MultiFab* >& yslopes,
-                              Vector< MultiFab* >& zslopes,
+                              Vector< MultiFab* > const& xslopes,
+                              Vector< MultiFab* > const& yslopes,
+                              Vector< MultiFab* > const& zslopes,
                               const int slopes_comp,
-                              Vector< MultiFab* >& ep_u_mac,
-                              Vector< MultiFab* >& ep_v_mac,
-                              Vector< MultiFab* >& ep_w_mac);
+                              Vector< MultiFab* > const& ep_u_mac,
+                              Vector< MultiFab* > const& ep_v_mac,
+                              Vector< MultiFab* > const& ep_w_mac);
 
     void mfix_compute_fluxes_on_box (const int lev, Box& bx,
                                      FArrayBox& a_fx,
@@ -473,11 +473,11 @@ class mfix : public AmrCore
                                       amrex::Real a_dt,
                                       bool proj_2 );
 
-    void apply_MAC_projection (Vector< MultiFab* >& ep_u_mac,
-                               Vector< MultiFab* >& ep_v_mac,
-                               Vector< MultiFab* >& ep_w_mac,
-                               Vector< MultiFab* >& ep,
-                               Vector< MultiFab* >& ro,
+    void apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
+                               Vector< MultiFab* > const& ep_v_mac,
+                               Vector< MultiFab* > const& ep_w_mac,
+                               Vector< MultiFab* > const& ep,
+                               Vector< MultiFab* > const& ro,
                                Real time);
 
     void FillPatchVel (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
@@ -537,10 +537,10 @@ class mfix : public AmrCore
 
     void mfix_compute_convective_term (Vector< MultiFab* >& conv_u,
                                        Vector< MultiFab* >& conv_s,
-                                       Vector< MultiFab* >& vel,
-                                       Vector< MultiFab* >& ep_g,
-                                       Vector< MultiFab* >& ro_g,
-                                       Vector< MultiFab* >& trac,
+                                       Vector< MultiFab* > const& vel,
+                                       Vector< MultiFab* > const& ep_g,
+                                       Vector< MultiFab* > const& ro_g,
+                                       Vector< MultiFab* > const& trac,
                                        Real time);
 
     int steady_state_reached (Real dt, int iter);
@@ -572,7 +572,7 @@ class mfix : public AmrCore
     static int ntrac;
 
     // Particle container
-    std::shared_ptr<MFIXParticleContainer> pc;
+    MFIXParticleContainer* pc;
 
     // Debug counter used for tracking number of level-set MultiFabs used in
     // intersection/union
@@ -587,6 +587,27 @@ class mfix : public AmrCore
     Vector< IArrayBox* > bc_khi;
 
     amrex::Vector< std::shared_ptr<LevelData> > m_leveldata;
+
+    amrex::Vector<amrex::MultiFab*> get_ep_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_ro_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_ro_g_old () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_trac () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_trac_old () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_vel_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_vel_g_old () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_mu_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_drag () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_xslopes_u () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_yslopes_u () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_zslopes_u () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_xslopes_s () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_yslopes_s () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_zslopes_s () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_diveu () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_mac_phi () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_u_mac () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_v_mac () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_w_mac () noexcept;
 
     // Boundary conditions flags
     Vector< iMultiFab* > flag;

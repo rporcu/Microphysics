@@ -12,10 +12,10 @@
 void
 mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
                                     Vector< MultiFab* >& conv_s_in,
-                                    Vector< MultiFab* >& vel_in,
-                                    Vector< MultiFab* >& ep_g_in,
-                                    Vector< MultiFab* >& ro_g_in,
-                                    Vector< MultiFab* >& trac_in,
+                                    Vector< MultiFab* > const& vel_in,
+                                    Vector< MultiFab* > const& ep_g_in,
+                                    Vector< MultiFab* > const& ro_g_in,
+                                    Vector< MultiFab* > const& trac_in,
                                     Real time)
 {
     BL_PROFILE("mfix::mfix_compute_convective_term");
@@ -78,37 +78,14 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         // Predict normal velocity to faces -- note that the {u_mac, v_mac, w_mac}
         //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
         //    on face CENTROIDS
-        Vector< MultiFab* > u_mac(m_leveldata.size(), nullptr);
-        for (int lev(0); lev < m_leveldata.size(); lev++)
-          u_mac[lev] = m_leveldata[lev]->u_mac;
-
-        Vector< MultiFab* > v_mac(m_leveldata.size(), nullptr);
-        for (int lev(0); lev < m_leveldata.size(); lev++)
-          v_mac[lev] = m_leveldata[lev]->v_mac;
-
-        Vector< MultiFab* > w_mac(m_leveldata.size(), nullptr);
-        for (int lev(0); lev < m_leveldata.size(); lev++)
-          w_mac[lev] = m_leveldata[lev]->w_mac;
-
-        mfix_predict_vels_on_faces(lev, time, vel_in, u_mac, v_mac, w_mac, ep_g_in);
+        mfix_predict_vels_on_faces(lev, time, vel_in, get_u_mac(), get_v_mac(),
+                                   get_w_mac(), ep_g_in);
     }
 
     // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
     //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
     //    on face CENTROIDS
-    Vector< MultiFab* > u_mac(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); lev++)
-      u_mac[lev] = m_leveldata[lev]->u_mac;
-
-    Vector< MultiFab* > v_mac(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); lev++)
-      v_mac[lev] = m_leveldata[lev]->v_mac;
-
-    Vector< MultiFab* > w_mac(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); lev++)
-      w_mac[lev] = m_leveldata[lev]->w_mac;
-
-    apply_MAC_projection(u_mac, v_mac, w_mac, ep_g_in, ro_g_in, time);
+    apply_MAC_projection(get_u_mac(), get_v_mac(), get_w_mac(), ep_g_in, ro_g_in, time);
 
     bool already_on_centroids = true;
 
@@ -132,57 +109,39 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
             MultiFab::Multiply(*trac_in[lev], *ro_g_in[lev], 0, 0, 1, trac_in[lev]->nGrow());
         }
 
-        Vector< MultiFab* > xslopes_s(m_leveldata.size(), nullptr);
-        for (int lev(0); lev < m_leveldata.size(); ++lev)
-          xslopes_s[lev] = m_leveldata[lev]->xslopes_s;
-
-        Vector< MultiFab* > yslopes_s(m_leveldata.size(), nullptr);
-        for (int lev(0); lev < m_leveldata.size(); ++lev)
-          yslopes_s[lev] = m_leveldata[lev]->yslopes_s;
-
-        Vector< MultiFab* > zslopes_s(m_leveldata.size(), nullptr);
-        for (int lev(0); lev < m_leveldata.size(); ++lev)
-          zslopes_s[lev] = m_leveldata[lev]->zslopes_s;
-
         // Compute slopes of density and tracer
         if (advect_density)
         {
            slopes_comp = 0;
-           mfix_compute_slopes(lev, time, *ro_g_in[lev], xslopes_s, yslopes_s, zslopes_s, slopes_comp);
+           mfix_compute_slopes(lev, time, *ro_g_in[lev],
+                               get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
+                               slopes_comp);
         }
 
         if (advect_tracer)
         {
            slopes_comp = 1;
-           mfix_compute_slopes(lev, time, *trac_in[lev], xslopes_s, yslopes_s, zslopes_s, slopes_comp);
+           mfix_compute_slopes(lev, time, *trac_in[lev],
+                               get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
+                               slopes_comp);
         }
 
         // Initialize conv_s to 0 for both density and tracer
-        conv_s_in[lev]->setVal(0.,0,conv_s_in[lev]->nComp(),conv_s_in[lev]->nGrow());
+        conv_s_in[lev]->setVal(0, 0, conv_s_in[lev]->nComp(), conv_s_in[lev]->nGrow());
 
         // **************************************************
         // Compute div (ep_g u u) -- the update for velocity
         // **************************************************
         conv_comp = 0; state_comp = 0; num_comp = 3; slopes_comp = 0;
 
-        Vector< MultiFab* > xslopes_u(m_leveldata.size(), nullptr);
-        for (int lev(0); lev < m_leveldata.size(); ++lev)
-          xslopes_u[lev] = m_leveldata[lev]->xslopes_u;
-
-        Vector< MultiFab* > yslopes_u(m_leveldata.size(), nullptr);
-        for (int lev(0); lev < m_leveldata.size(); ++lev)
-          yslopes_u[lev] = m_leveldata[lev]->yslopes_u;
-
-        Vector< MultiFab* > zslopes_u(m_leveldata.size(), nullptr);
-        for (int lev(0); lev < m_leveldata.size(); ++lev)
-          zslopes_u[lev] = m_leveldata[lev]->zslopes_u;
-
         mfix_compute_fluxes(lev, fx, fy, fz, vel_in, state_comp, num_comp,
-                            xslopes_u, yslopes_u, zslopes_u, slopes_comp,
-                            u_mac, v_mac, w_mac);
+                            get_xslopes_u(), get_yslopes_u(), get_zslopes_u(),
+                            slopes_comp, get_u_mac(), get_v_mac(), get_w_mac());
 
-        EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev], already_on_centroids);
-        single_level_weighted_redistribute(lev, conv_tmp, *conv_u_in[lev], *ep_g_in[lev], conv_comp, num_comp, geom);
+        EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes),
+                             geom[lev], already_on_centroids);
+        single_level_weighted_redistribute(lev, conv_tmp, *conv_u_in[lev],
+                                           *ep_g_in[lev], conv_comp, num_comp, geom);
 
         // **************************************************
         // Compute div (ep_g rho u) -- the update for density
@@ -191,10 +150,14 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         {
             conv_comp = 0; state_comp = 0; num_comp = 1; slopes_comp = 0;
             mfix_compute_fluxes(lev, fx, fy, fz, ro_g_in, state_comp, num_comp,
-                                xslopes_s, yslopes_s, zslopes_s, slopes_comp,
-                                u_mac, v_mac, w_mac);
-            EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev], already_on_centroids);
-            single_level_weighted_redistribute(lev, conv_tmp, *conv_s_in[lev], *ep_g_in[lev], conv_comp, num_comp, geom);
+                                get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
+                                slopes_comp, get_u_mac(), get_v_mac(), get_w_mac());
+
+            EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev],
+                                 already_on_centroids);
+
+            single_level_weighted_redistribute(lev, conv_tmp, *conv_s_in[lev],
+                                               *ep_g_in[lev], conv_comp, num_comp, geom);
         }
 
         // **********************************************************
@@ -204,10 +167,13 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         {
             conv_comp = 1; state_comp = 0; num_comp = 1; slopes_comp = 1;
             mfix_compute_fluxes(lev, fx, fy, fz, trac_in, state_comp, num_comp,
-                                xslopes_s, yslopes_s, zslopes_s, slopes_comp,
-                                u_mac, v_mac, w_mac);
-            EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev], already_on_centroids);
-            single_level_weighted_redistribute(lev, conv_tmp, *conv_s_in[lev], *ep_g_in[lev], conv_comp, num_comp, geom);
+                                get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
+                                slopes_comp, get_u_mac(), get_v_mac(), get_w_mac());
+
+            EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev],
+                                 already_on_centroids);
+            single_level_weighted_redistribute(lev, conv_tmp, *conv_s_in[lev],
+                                               *ep_g_in[lev], conv_comp, num_comp, geom);
         }
 
         if (advect_tracer)

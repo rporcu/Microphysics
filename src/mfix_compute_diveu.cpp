@@ -73,20 +73,12 @@ mfix::mfix_compute_diveu (Real time)
 
   matrix.setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
 
-  Vector< MultiFab* > diveu(m_leveldata.size(), nullptr);
-  for (int lev(0); lev < m_leveldata.size(); ++lev)
-    diveu[lev] = m_leveldata[lev]->diveu;
-
-  matrix.compDivergence(diveu, epu);
+  matrix.compDivergence(get_diveu(), epu);
 
   for(int lev(0); lev < nlev; lev++)
     delete epu[lev];
 
-  Vector< MultiFab* > vel_g(m_leveldata.size(), nullptr);
-  for(int lev(0); lev < m_leveldata.size(); ++lev)
-    vel_g[lev] = m_leveldata[lev]->vel_g;
-
   // Restore velocities to carry Dirichlet values on faces
   int extrap_dir_bcs = 0;
-  mfix_set_velocity_bcs(time, vel_g, extrap_dir_bcs);
+  mfix_set_velocity_bcs(time, get_vel_g(), extrap_dir_bcs);
 }

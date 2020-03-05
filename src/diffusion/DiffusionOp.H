@@ -48,21 +48,21 @@ class DiffusionOp
     void setSolverSettings (amrex::MLMG& solver);
 
     // Tensor viscous solve
-    void diffuse_velocity (amrex::Vector< amrex::MultiFab* >& vel, 
-                           const amrex::Vector< amrex::MultiFab* >& ep_ro, 
-                           const amrex::Vector< amrex::MultiFab* >& eta, 
+    void diffuse_velocity (amrex::Vector< amrex::MultiFab* > vel, 
+                           const amrex::Vector< amrex::MultiFab* > ep_ro, 
+                           const amrex::Vector< amrex::MultiFab* > eta, 
                            amrex::Real dt);
 
     // Scalar diffusion
-    void diffuse_scalar (amrex::Vector< amrex::MultiFab* >& scal,
-                         const amrex::Vector< amrex::MultiFab* >& ep_ro, 
+    void diffuse_scalar (amrex::Vector< amrex::MultiFab* > scal,
+                         const amrex::Vector< amrex::MultiFab* > ep_ro, 
                          const amrex::Vector<amrex::Real> mu_s, 
                          amrex::Real dt);
 
-    void diffuse_drag (amrex::Vector< amrex::MultiFab* >& drag,
+    void diffuse_drag (amrex::Vector< amrex::MultiFab* > drag,
                        amrex::Real doceff);
 
-    void diffuse_volfrac (amrex::Vector< amrex::MultiFab* >& scal,
+    void diffuse_volfrac (amrex::Vector< amrex::MultiFab* > scal,
                           amrex::Real doceff);
 
     // Explicit tensor viscous term

@@ -7,7 +7,7 @@
 using namespace amrex;
 
 void
-mfix::mfix_set_epg_bcs (const Vector< MultiFab* > & epg_in) const
+mfix::mfix_set_epg_bcs (const Vector< MultiFab* >& epg_in) const
 {
   BL_PROFILE("mfix::mfix_set_epg_bcs()");
 

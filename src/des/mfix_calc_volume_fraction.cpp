@@ -15,10 +15,6 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   // Start the timers ...
   const Real strttime = ParallelDescriptor::second();
 
-  Vector< MultiFab* > ep_g(m_leveldata.size(), nullptr);
-  for (int lev(0); lev < m_leveldata.size(); ++lev)
-    ep_g[lev] = m_leveldata[lev]->ep_g;
-
   if (DEM::solve)
   {
     // This re-calculates the volume fraction within the domain
@@ -177,7 +173,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
     // At this point, we have the particle volume on the fluid grid (ep_s).
     // We will diffuse it first, then convert it to ep_g.
     if(mfix::m_deposition_diffusion_coeff > 0.)
-      diffusion_op->diffuse_volfrac(ep_g, mfix::m_deposition_diffusion_coeff);
+      diffusion_op->diffuse_volfrac(get_ep_g(), mfix::m_deposition_diffusion_coeff);
 
     for (int lev = 0; lev < nlev; lev++) {
       // Now define this mf = (1 - particle_vol)
@@ -204,7 +200,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   for (int lev = 0; lev < nlev; lev++)
     m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
 
-  mfix_set_epg_bcs(ep_g);
+  mfix_set_epg_bcs(get_ep_g());
 
   // Sum up all the values of ep_g[lev], weighted by each cell's EB volfrac
   // Note ep_g = 1 - particle_volume / this_cell_volume where
