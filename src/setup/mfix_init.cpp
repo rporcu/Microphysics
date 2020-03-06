@@ -358,7 +358,12 @@ void mfix::Init (Real time)
      ***************************************************************************/
 
     if (DEM::solve)
+    {
+      if (pc != nullptr)
+        delete pc;
+
       pc = new MFIXParticleContainer(this);
+    }
 
     /****************************************************************************
      *                                                                          *
@@ -705,17 +710,28 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 void
 mfix::MakeBCArrays ()
 {
+    for (int lev = 0; lev < bc_ilo.size(); lev++)
+    {
+      if (bc_ilo[lev] != nullptr) delete bc_ilo[lev];
+      if (bc_ihi[lev] != nullptr) delete bc_ihi[lev];
+      if (bc_jlo[lev] != nullptr) delete bc_jlo[lev];
+      if (bc_jhi[lev] != nullptr) delete bc_jhi[lev];
+      if (bc_klo[lev] != nullptr) delete bc_klo[lev];
+      if (bc_khi[lev] != nullptr) delete bc_khi[lev];
+    }
+
     if (ooo_debug) amrex::Print() << "MakeBCArrays" << std::endl;
-    bc_ilo.resize(nlev);
-    bc_ihi.resize(nlev);
-    bc_jlo.resize(nlev);
-    bc_jhi.resize(nlev);
-    bc_klo.resize(nlev);
-    bc_khi.resize(nlev);
+    bc_ilo.clear(); bc_ilo.resize(nlev, nullptr);
+    bc_ihi.clear(); bc_ihi.resize(nlev, nullptr);
+    bc_jlo.clear(); bc_jlo.resize(nlev, nullptr);
+    bc_jhi.clear(); bc_jhi.resize(nlev, nullptr);
+    bc_klo.clear(); bc_klo.resize(nlev, nullptr);
+    bc_khi.clear(); bc_khi.resize(nlev, nullptr);
 
     for (int lev = 0; lev < nlev; lev++)
     {
-       // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
+       // Define and allocate the integer MultiFab that is the outside adjacent
+       // cells of the problem domain.
        Box domainx(geom[lev].Domain());
        domainx.grow(1,nghost);
        domainx.grow(2,nghost);

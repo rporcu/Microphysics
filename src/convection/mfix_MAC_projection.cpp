@@ -97,6 +97,17 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
     }
   }
 
+  for ( int lev=0; lev <= finest_level; ++lev )
+  {
+    delete ep_face[lev][0];
+    delete ep_face[lev][1];
+    delete ep_face[lev][2];
+
+    delete ro_face[lev][0];
+    delete ro_face[lev][1];
+    delete ro_face[lev][2];
+  }
+
   //
   // If we want to set max_coarsening_level we have to send it in to the constructor
   //
