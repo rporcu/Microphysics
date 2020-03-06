@@ -82,6 +82,4 @@ LevelData::~LevelData ()
   delete mac_phi;
   delete mac_rhs;
   delete u_mac, v_mac, w_mac;
-  delete particle_cost;
-  delete fluid_cost;
 }

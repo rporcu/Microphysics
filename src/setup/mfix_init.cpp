@@ -369,14 +369,6 @@ void mfix::Init (Real time)
     // ******************************************************
     // We only do these at level 0
     // ******************************************************
-    Real dx = geom[0].CellSize(0);
-    Real dy = geom[0].CellSize(1);
-    Real dz = geom[0].CellSize(2);
-
-    Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
-    Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
-    Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
-
     Box domain(geom[0].Domain());
 
     for (int lev = 0; lev < nlev; lev++)
@@ -470,6 +462,19 @@ void mfix::MakeNewLevelFromScratch (int lev, Real time,
     SetDistributionMap(lev, new_dmap);
     amrex::Print() << "SETTING NEW GRIDS IN MAKE NEW LEVEL " << new_grids << std::endl;
     amrex::Print() << "SETTING NEW DMAP IN MAKE NEW LEVEL " << new_dmap << std::endl;
+
+#ifdef AMREX_USE_EB
+    ebfactory[lev] = makeEBFabFactory(geom[lev], grids[lev], dmap[lev],
+        {4, 4, 2}, EBSupport::full).release();
+#else
+    if(ebfactory[lev] != nullptr)
+      delete ebfactory[lev];
+
+    ebfactory[lev] = new FArrayBoxFactory();
+#endif
+
+    m_leveldata[lev].reset(new LevelData(grids[lev], dmap[lev], nghost,
+                                         *ebfactory[lev], covered_val));
 
     // This is being done by mfix::make_eb_geometry,
     // otherwise it would be done here
@@ -567,27 +572,27 @@ void mfix::InitLevelData (Real time)
     // Used in load balancing
     if (DEM::solve)
     {
+      particle_cost.clear();
+      particle_cost.resize(nlev, nullptr);
+
       for (int lev = 0; lev < nlev; lev++)
       {
-        if (m_leveldata[lev]->particle_cost != nullptr)
-          delete m_leveldata[lev]->particle_cost;
-
-        m_leveldata[lev]->particle_cost = new MultiFab(pc->ParticleBoxArray(lev),
-                                                       pc->ParticleDistributionMap(lev), 1, 0);
-        m_leveldata[lev]->particle_cost->setVal(0.0);
+        particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                          pc->ParticleDistributionMap(lev), 1, 0);
+        particle_cost[lev]->setVal(0.0);
       }
     }
 
     // Used in load balancing
     if (FLUID::solve)
     {
+      fluid_cost.clear();
+      fluid_cost.resize(nlev, nullptr);
+
       for (int lev = 0; lev < nlev; lev++)
       {
-        if (m_leveldata[lev]->fluid_cost != nullptr)
-          delete m_leveldata[lev]->fluid_cost;
-
-        m_leveldata[lev]->fluid_cost = new MultiFab(grids[lev], dmap[lev], 1, 0);
-        m_leveldata[lev]->fluid_cost->setVal(0.0);
+        fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
+        fluid_cost[lev]->setVal(0.0);
       }
     }
 }
@@ -658,12 +663,12 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
             DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
             pc->Regrid(particle_dm, particle_ba);
 
-            if (m_leveldata[lev]->particle_cost != nullptr)
-              delete m_leveldata[lev]->particle_cost;
+            if (particle_cost[lev] != nullptr)
+              delete particle_cost[lev];
 
-            m_leveldata[lev]->particle_cost = new MultiFab(pc->ParticleBoxArray(lev),
+            particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                                            pc->ParticleDistributionMap(lev), 1, 0);
-            m_leveldata[lev]->particle_cost->setVal(0.0);
+            particle_cost[lev]->setVal(0.0);
 
             // This calls re-creates a proper particle_ebfactories
             //  and regrids all the multifabs that depend on it
@@ -914,11 +919,6 @@ mfix::mfix_set_p0 ()
 
   for (int lev = 0; lev < nlev; lev++)
   {
-
-     Real dx = geom[lev].CellSize(0);
-     Real dy = geom[lev].CellSize(1);
-     Real dz = geom[lev].CellSize(2);
-
      Box domain(geom[lev].Domain());
 
      // We put this outside the MFIter loop because we need gp0 even on ranks with no boxes

@@ -609,6 +609,10 @@ class mfix : public AmrCore
     amrex::Vector<amrex::MultiFab*> get_v_mac () noexcept;
     amrex::Vector<amrex::MultiFab*> get_w_mac () noexcept;
 
+    // used if load_balance_type == "KnapSack"
+    Vector< MultiFab* > particle_cost;
+    Vector< MultiFab* > fluid_cost;
+
     // Boundary conditions flags
     Vector< iMultiFab* > flag;
 

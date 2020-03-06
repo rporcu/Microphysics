@@ -6,15 +6,6 @@ mfix::ResizeArrays ()
 {
     int nlevs_max = maxLevel() + 1;
 
-    m_leveldata.resize(nlevs_max);
-
-    for (int lev(0); lev < nlevs_max; ++lev)
-    {
-      mfix_update_ebfactory(lev);
-      m_leveldata[lev].reset(new LevelData(grids[lev], dmap[lev], nghost,
-                                           *ebfactory[lev], covered_val));
-    }
-
     bcoeff.resize(nlevs_max);
 
     // Fluid grid EB factory
@@ -35,6 +26,9 @@ mfix::ResizeArrays ()
     particle_eb_levels.resize(std::max(2, nlevs_max));
 
     level_sets.resize(std::max(2, nlevs_max));
+ 
+    // LevelData class
+    m_leveldata.resize(nlevs_max);
 }
 
 void

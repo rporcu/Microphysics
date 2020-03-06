@@ -56,6 +56,10 @@ mfix::~mfix ()
 
     // Level-Set Data
     delete level_sets[lev];
+
+    // Particle and fluid costs
+    delete particle_cost[lev];
+    delete fluid_cost[lev];
   }
 
   //! EB factory that lives on the fluid grids
@@ -147,7 +151,7 @@ mfix::mfix_usr1_cpp (Real time) const
 {
   mfix_usr1(&time);
 
-  const int dim_bc = get_dim_bc();
+  // const int dim_bc = get_dim_bc();
 
   // for(unsigned i(1); i <= dim_bc; ++i)
   // {
