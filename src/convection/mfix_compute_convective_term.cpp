@@ -33,7 +33,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
 
     // First do FillPatch of {velocity, density, tracer} so we know the ghost cells of
     // these arrays are all filled
-    for (int lev = 0; lev <= finest_level; lev++)
+    for (int lev = 0; lev < nlev; lev++)
     {
         // State with ghost cells
         MultiFab Sborder_u(grids[lev], dmap[lev], vel_in[lev]->nComp(), nghost,

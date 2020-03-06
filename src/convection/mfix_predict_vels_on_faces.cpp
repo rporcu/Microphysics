@@ -40,9 +40,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
     // We will need ep on face centers to interpolate to face centroids below
     // ****************************************************************************
 
-    ep_face[0] = new MultiFab(ep_u_mac[lev]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-    ep_face[1] = new MultiFab(ep_v_mac[lev]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-    ep_face[2] = new MultiFab(ep_w_mac[lev]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+    ep_face[0] = new MultiFab(ep_u_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]);
+    ep_face[1] = new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]);
+    ep_face[2] = new MultiFab(ep_w_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]);
 
     // This is to make sure ep_face is defined everywhere
     ep_face[0]->setVal(covered_val);
@@ -406,6 +406,7 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
        } // Cut cells
     } // MFIter
 
-    for (int i(0); i < 3; ++i)
-      delete ep_face[i];
+    delete ep_face[0];
+    delete ep_face[1];
+    delete ep_face[2];
 }
