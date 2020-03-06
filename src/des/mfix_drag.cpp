@@ -26,7 +26,7 @@ mfix::mfix_calc_drag_fluid (Real time)
         " MFIXParticleContainer::TrilinearDepositionFluidDragForce can only"
         " handle up to 2 levels");
 
-  MultiFab* drag_ptr[nlev];
+  Vector< MultiFab* > drag_ptr(nlev, nullptr);
 
   for (int lev = 0; lev < nlev; lev++) {
 

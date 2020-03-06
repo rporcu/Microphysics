@@ -102,7 +102,6 @@ zhi.location = 0.0105
 #_______________________________________________________________________
 # Particle load balancing
 
-mfix.load_balance_type = "FixedSize"
 #mfix.load_balance_type = "KnapSack"
 
 amr.dual_grid          =  0

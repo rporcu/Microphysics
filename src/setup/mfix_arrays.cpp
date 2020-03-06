@@ -46,18 +46,27 @@ mfix::AllocateArrays (int lev)
     BoxArray ba = grids[lev];
     // Create a BoxArray on x-faces.
     // x-face-based coefficient for MAC and diffusive solves
+    if (bcoeff[lev][0] != nullptr)
+      delete bcoeff[lev][0];
+
     bcoeff[lev][0] = new MultiFab(BoxArray(ba).surroundingNodes(0), dmap[lev], 1,
                                   nghost, MFInfo(), *ebfactory[lev]);
     bcoeff[lev][0]->setVal(0.);
 
     // Create a BoxArray on y-faces.
     // y-face-based coefficient for MAC and diffusive solves
+    if (bcoeff[lev][1] != nullptr)
+      delete bcoeff[lev][1];
+
     bcoeff[lev][1] = new MultiFab(BoxArray(ba).surroundingNodes(1), dmap[lev], 1,
                                   nghost, MFInfo(), *ebfactory[lev]);
     bcoeff[lev][1]->setVal(0.);
 
     // Create a BoxArray on z-faces.
     // z-face-based coefficient for MAC and diffusive solves
+    if (bcoeff[lev][2] != nullptr)
+      delete bcoeff[lev][2];
+
     bcoeff[lev][2] = new MultiFab(BoxArray(ba).surroundingNodes(2), dmap[lev], 1,
                                   nghost, MFInfo(), *ebfactory[lev]);
     bcoeff[lev][2]->setVal(0.);
@@ -435,6 +444,8 @@ mfix::RegridLevelSetArray (int a_lev)
 
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
+          delete particle_ebfactory[a_lev];
+
           particle_ebfactory[a_lev] =
               new EBFArrayBoxFactory(*particle_eb_levels[a_lev], geom[a_lev], ba, dm,
                                      {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
@@ -535,6 +546,8 @@ bool mfix::mfix_update_ebfactory (int a_lev)
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
           Print() << "Updating ebfactory from existing" << std::endl;
+
+          delete ebfactory[a_lev];
 
           ebfactory[a_lev] =
               new EBFArrayBoxFactory(*eb_levels[a_lev], geom[a_lev], ba, dm,

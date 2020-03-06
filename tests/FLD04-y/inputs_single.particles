@@ -100,7 +100,6 @@ cylinder.center    =  2.0  0.5   2.0
 #_______________________________________________________________________
 # Particle load balancing
 
-#mfix.load_balance_type = "FixedSize"
 mfix.load_balance_type = "KnapSack"
 
 amr.dual_grid          = 0

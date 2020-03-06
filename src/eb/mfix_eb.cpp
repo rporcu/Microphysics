@@ -133,6 +133,8 @@ void mfix::make_eb_factories () {
 
     for (int lev = 0; lev < nlev; lev++)
     {
+        if (ebfactory[lev] != nullptr) delete ebfactory[lev];
+
         ebfactory[lev] =
             new EBFArrayBoxFactory(*eb_levels[lev], geom[lev], grids[lev], dmap[lev],
                                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
@@ -140,6 +142,8 @@ void mfix::make_eb_factories () {
 
         // Grow EB factory by +2 in order to avoid edge cases. This is not
         // necessary for multi-level mfix.
+        if (particle_ebfactory[lev] != nullptr) delete particle_ebfactory[lev];
+
         particle_ebfactory[lev] =
             new EBFArrayBoxFactory(*particle_eb_levels[lev], geom[lev], grids[lev], dmap[lev],
                                    {levelset_eb_pad + 2, levelset_eb_pad + 2,
@@ -273,7 +277,10 @@ void mfix::fill_eb_levelsets ()
                 lsf.Intersect(*mf_impfunc_box);
             }
 
+            if (level_sets[1] != nullptr) delete level_sets[1];
             level_sets[1] = lsf.copy_data(part_dm).release();
+
+            if (level_sets[0] != nullptr) delete level_sets[0];
             level_sets[0] = lsf.coarsen_data().release();
 
             return;
@@ -290,10 +297,13 @@ void mfix::fill_eb_levelsets ()
             eb_levels[1]->fillLevelSet(impfunc, lsf.get_ls_geom());
             impfunc.FillBoundary(lsf.get_ls_geom().periodicity());
 
-            lsf.Fill( * ebfactory[0], impfunc);
+            lsf.Fill(*ebfactory[0], impfunc);
         }
 
+        if (level_sets[1] != nullptr) delete level_sets[1];
         level_sets[1] = lsf.copy_data(part_dm).release();
+
+        if (level_sets[0] != nullptr) delete level_sets[0];
         level_sets[0] = lsf.coarsen_data().release();
     }
     else
@@ -311,6 +321,7 @@ void mfix::fill_eb_levelsets ()
 
         // NOTE: reference BoxArray is not nodal
         BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
+        if (level_sets[0] != nullptr) delete level_sets[0];
         level_sets[0] = new MultiFab();
         level_sets[0]->define(ba, part_dm, 1, levelset_pad);
         iMultiFab valid(ba, part_dm, 1, levelset_pad);
@@ -330,6 +341,7 @@ void mfix::fill_eb_levelsets ()
 
             // NOTE: reference BoxArray is not nodal
             BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
+            if (level_sets[lev] != nullptr) delete level_sets[lev];
             level_sets[lev] = new MultiFab();
             iMultiFab valid(ba, part_dm, 1, levelset_pad);
 
