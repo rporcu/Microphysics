@@ -567,27 +567,35 @@ void mfix::InitLevelData (Real time)
     // Used in load balancing
     if (DEM::solve)
     {
+      for (int lev(0); lev < particle_cost.size(); lev++)
+        if (particle_cost[lev] != nullptr)
+          delete particle_cost[lev];
+
+      particle_cost.clear();
+      particle_cost.resize(nlev, nullptr);
+
       for (int lev = 0; lev < nlev; lev++)
       {
-        if (m_leveldata[lev]->particle_cost != nullptr)
-          delete m_leveldata[lev]->particle_cost;
-
-        m_leveldata[lev]->particle_cost = new MultiFab(pc->ParticleBoxArray(lev),
-                                                       pc->ParticleDistributionMap(lev), 1, 0);
-        m_leveldata[lev]->particle_cost->setVal(0.0);
+        particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                          pc->ParticleDistributionMap(lev), 1, 0);
+        particle_cost[lev]->setVal(0.0);
       }
     }
 
     // Used in load balancing
     if (FLUID::solve)
     {
+      for (int lev(0); lev < fluid_cost.size(); lev++)
+        if (fluid_cost[lev] != nullptr)
+          delete fluid_cost[lev];
+
+      fluid_cost.clear();
+      fluid_cost.resize(nlev, nullptr);
+
       for (int lev = 0; lev < nlev; lev++)
       {
-        if (m_leveldata[lev]->fluid_cost != nullptr)
-          delete m_leveldata[lev]->fluid_cost;
-
-        m_leveldata[lev]->fluid_cost = new MultiFab(grids[lev], dmap[lev], 1, 0);
-        m_leveldata[lev]->fluid_cost->setVal(0.0);
+        fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
+        fluid_cost[lev]->setVal(0.0);
       }
     }
 }
@@ -658,12 +666,12 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
             DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
             pc->Regrid(particle_dm, particle_ba);
 
-            if (m_leveldata[lev]->particle_cost != nullptr)
-              delete m_leveldata[lev]->particle_cost;
+            if (particle_cost[lev] != nullptr)
+              delete particle_cost[lev];
 
-            m_leveldata[lev]->particle_cost = new MultiFab(pc->ParticleBoxArray(lev),
+            particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                                            pc->ParticleDistributionMap(lev), 1, 0);
-            m_leveldata[lev]->particle_cost->setVal(0.0);
+            particle_cost[lev]->setVal(0.0);
 
             // This calls re-creates a proper particle_ebfactories
             //  and regrids all the multifabs that depend on it

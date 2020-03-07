@@ -72,7 +72,7 @@ class mfix : public AmrCore
     void ResizeArrays ();
 
     void WriteCheckPointFile (std::string & check_file_name,
-                              int nstep = 0, Real dt = 0.0, Real time = 0.0)  const;
+                              int nstep = 0, Real dt = 0.0, Real time = 0.0);
 
     void WritePlotFile (std::string & plot_file_name,
                         int nstep = 0, Real time = 0.0);
@@ -169,6 +169,8 @@ class mfix : public AmrCore
     void WriteMyEBSurface ();
 
     void InitIOChkData ();
+
+    void ResetIOChkData ();
 
     void InitIOPltData ();
 
@@ -586,7 +588,7 @@ class mfix : public AmrCore
     Vector< IArrayBox* > bc_klo;
     Vector< IArrayBox* > bc_khi;
 
-    amrex::Vector< std::shared_ptr<LevelData> > m_leveldata;
+    amrex::Vector< std::unique_ptr<LevelData> > m_leveldata;
 
     amrex::Vector<amrex::MultiFab*> get_ep_g () noexcept;
     amrex::Vector<amrex::MultiFab*> get_ro_g () noexcept;
@@ -608,6 +610,10 @@ class mfix : public AmrCore
     amrex::Vector<amrex::MultiFab*> get_u_mac () noexcept;
     amrex::Vector<amrex::MultiFab*> get_v_mac () noexcept;
     amrex::Vector<amrex::MultiFab*> get_w_mac () noexcept;
+
+    // used if load_balance_type == "KnapSack"
+    amrex::Vector< amrex::MultiFab* > particle_cost;
+    amrex::Vector< amrex::MultiFab* > fluid_cost;
 
     // Boundary conditions flags
     Vector< iMultiFab* > flag;
