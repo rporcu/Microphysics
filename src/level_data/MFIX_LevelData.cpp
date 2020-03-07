@@ -66,22 +66,33 @@ LevelData::LevelData (BoxArray const& ba,
 
 LevelData::~LevelData ()
 {
-  delete ep_g, ep_go;
-  delete p_g, p_go;
-  delete ro_g, ro_go;
-  delete trac, trac_o;
-  delete vel_g, vel_go;
+  delete ep_g;
+  delete ep_go;
+  delete p_g;
+  delete p_go;
+  delete ro_g;
+  delete ro_go;
+  delete trac;
+  delete trac_o;
+  delete vel_g;
+  delete vel_go;
   delete p0_g;
   delete gp;
   delete mu_g;
   delete vort;
   delete drag;
-  delete xslopes_u, yslopes_u, zslopes_u;
-  delete xslopes_s, yslopes_s, zslopes_s;
+  delete xslopes_u;
+  delete yslopes_u;
+  delete zslopes_u;
+  delete xslopes_s;
+  delete yslopes_s;
+  delete zslopes_s;
   delete diveu;
   delete mac_phi;
   delete mac_rhs;
-  delete u_mac, v_mac, w_mac;
+  delete u_mac;
+  delete v_mac;
+  delete w_mac;
   delete particle_cost;
   delete fluid_cost;
 }

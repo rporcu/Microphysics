@@ -25,15 +25,15 @@ mfix::mfix_set_bc_type (int lev)
     Real dz = geom[lev].CellSize(2);
 
     // Extract the lower and upper boundaries of Box Domain
-    //const amrex::Dim3& dom_lo = amrex::lbound(domain);
-    //const amrex::Dim3& dom_hi = amrex::ubound(domain);
+    const amrex::Dim3& dom_lo = amrex::lbound(domain);
+    const amrex::Dim3& dom_hi = amrex::ubound(domain);
 
     const int und_  = bc_list.get_undefined();
     const int ig_   = bc_list.get_ig();
-    //const int pout_ = bc_list.get_pout();
-    //const int pinf_ = bc_list.get_pinf();
+    const int pout_ = bc_list.get_pout();
+    const int pinf_ = bc_list.get_pinf();
     const int minf_ = bc_list.get_minf();
-    //const int nsw_  = bc_list.get_nsw();
+    const int nsw_  = bc_list.get_nsw();
 
     {
 

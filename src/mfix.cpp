@@ -147,7 +147,7 @@ mfix::mfix_usr1_cpp (Real time) const
 {
   mfix_usr1(&time);
 
-  // const int dim_bc = get_dim_bc();
+  const int dim_bc = get_dim_bc();
 
   // for(unsigned i(1); i <= dim_bc; ++i)
   // {

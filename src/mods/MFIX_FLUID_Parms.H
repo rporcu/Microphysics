@@ -39,8 +39,8 @@ namespace FLUID
 
     FLUID_t() :
       volfrac(-1.0),
-      temperature(0.0),
-      pressure(-1.0) { }
+      pressure(-1.0),
+      temperature(0.0) { }
 
   };
 
