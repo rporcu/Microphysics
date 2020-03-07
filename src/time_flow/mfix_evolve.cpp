@@ -77,7 +77,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
               pc->EvolveParticles(ilev, nstep, dt, time, mfix::gravity,
                                   particle_ebfactory[ilev], ls_data,
                                   levelset_refinement,
-                                  particle_cost[ilev],
+                                  m_leveldata[ilev]->particle_cost,
                                   knapsack_weight_type, nsubsteps);
         }
         else
@@ -92,7 +92,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                 if (!test_tracer_conservation)
                 pc->EvolveParticles(lev, nstep, dt, time, mfix::gravity,
                                     particle_ebfactory[lev], ls_data, 1,
-                                    particle_cost[lev],
+                                    m_leveldata[lev]->particle_cost,
                                     knapsack_weight_type,
                                     nsubsteps);
             }

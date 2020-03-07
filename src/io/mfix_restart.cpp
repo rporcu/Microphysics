@@ -169,19 +169,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             make_eb_geometry();
             make_eb_factories();
 
-            if (FLUID::solve) {
-              int nlevs_max = maxLevel() + 1;
-
-              mfix_update_ebfactory(lev);
-
-              m_leveldata.resize(nlevs_max);
-              for (int lev(0); lev < nlevs_max; ++lev)
-                m_leveldata[lev].reset(new LevelData(grids[lev], dmap[lev],
-                                                     nghost, *ebfactory[lev],
-                                                     covered_val));
-
-              AllocateArrays(lev);
-            }
+            if (FLUID::solve) AllocateArrays(lev);
         }
     }
 
@@ -383,22 +371,22 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
       if (DEM::solve) {
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
-          if (particle_cost[lev] != nullptr)
-            delete particle_cost[lev];
+          if (m_leveldata[lev]->particle_cost != nullptr)
+            delete m_leveldata[lev]->particle_cost;
 
-          particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+          m_leveldata[lev]->particle_cost = new MultiFab(pc->ParticleBoxArray(lev),
                                                          pc->ParticleDistributionMap(lev), 1, 0);
-          particle_cost[lev]->setVal(0.0);
+          m_leveldata[lev]->particle_cost->setVal(0.0);
         }
       }
       if (FLUID::solve) {
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
-          if (fluid_cost[lev] != nullptr)
-            delete fluid_cost[lev];
+          if (m_leveldata[lev]->fluid_cost != nullptr)
+            delete m_leveldata[lev]->fluid_cost;
 
-          fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
-          fluid_cost[lev]->setVal(0.0);
+          m_leveldata[lev]->fluid_cost = new MultiFab(grids[lev], dmap[lev], 1, 0);
+          m_leveldata[lev]->fluid_cost->setVal(0.0);
         }
       }
     }

@@ -6,6 +6,10 @@ mfix::ResizeArrays ()
 {
     int nlevs_max = maxLevel() + 1;
 
+    m_leveldata.resize(nlevs_max);
+    for (int lev(0); lev < nlevs_max; ++lev)
+      m_leveldata[lev].reset(new LevelData());
+
     bcoeff.resize(nlevs_max);
 
     // Fluid grid EB factory
@@ -26,9 +30,6 @@ mfix::ResizeArrays ()
     particle_eb_levels.resize(std::max(2, nlevs_max));
 
     level_sets.resize(std::max(2, nlevs_max));
- 
-    // LevelData class
-    m_leveldata.resize(nlevs_max);
 }
 
 void
@@ -36,6 +37,13 @@ mfix::AllocateArrays (int lev)
 {
     if (ooo_debug) amrex::Print() << "AllocateArrays" << std::endl;
     mfix_update_ebfactory(lev);
+
+    // ********************************************************************************
+    // Cell- or node-based arrays
+    // ********************************************************************************
+
+    m_leveldata[lev].reset(new LevelData(grids[lev], dmap[lev], nghost,
+                                         *ebfactory[lev], covered_val));
 
     // ********************************************************************************
     // X-face-based arrays

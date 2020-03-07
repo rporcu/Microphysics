@@ -56,10 +56,6 @@ mfix::~mfix ()
 
     // Level-Set Data
     delete level_sets[lev];
-
-    // Particle and fluid costs
-    delete particle_cost[lev];
-    delete fluid_cost[lev];
   }
 
   //! EB factory that lives on the fluid grids
