@@ -59,7 +59,7 @@ namespace FLUID
 
       if (density_model == "constant") {
 
-        DENSITYMODEL DensityModel = ConstantDensity;
+        //DENSITYMODEL DensityModel = ConstantDensity;
         ppFluid.get("density.constant",   ro_g0 );
 
       } else {
@@ -75,7 +75,7 @@ namespace FLUID
 
       if (density_model == "constant") {
 
-        VISCOSITYMODEL ViscosityModel = ConstantViscosity;
+        //VISCOSITYMODEL ViscosityModel = ConstantViscosity;
         ppFluid.get("viscosity.constant", mu_g0 );
 
 

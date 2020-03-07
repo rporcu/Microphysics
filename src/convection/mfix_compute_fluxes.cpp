@@ -353,8 +353,6 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
   // Cell centroid
   const auto& ccc_fab = cell_centroid.array();
 
-  const auto& ccm_fab = cc_mask.const_array();
-
   const GpuArray<int, 3> bc_types =
     {bc_list.get_minf(), bc_list.get_pinf(), bc_list.get_pout()};
 
