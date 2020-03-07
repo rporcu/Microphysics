@@ -220,6 +220,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           }
 
        // Read scalar variables
+       ResetIOChkData();
+
        for (int i = 0; i < chkscalarVars.size(); i++ )
        {
            Print() << "Working on: " << chkscaVarsName[i] << std::endl;

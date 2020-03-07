@@ -72,7 +72,7 @@ class mfix : public AmrCore
     void ResizeArrays ();
 
     void WriteCheckPointFile (std::string & check_file_name,
-                              int nstep = 0, Real dt = 0.0, Real time = 0.0)  const;
+                              int nstep = 0, Real dt = 0.0, Real time = 0.0);
 
     void WritePlotFile (std::string & plot_file_name,
                         int nstep = 0, Real time = 0.0);
@@ -169,6 +169,8 @@ class mfix : public AmrCore
     void WriteMyEBSurface ();
 
     void InitIOChkData ();
+
+    void ResetIOChkData ();
 
     void InitIOPltData ();
 
