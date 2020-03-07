@@ -14,12 +14,15 @@ mfix.max_step   = 10
 
 # Nodal solver
 nodal_proj.verbose    = 2
+nodal_proj.maxiter = 2000
 nodal_proj.bottom_verbose = 0
 nodal_proj.bottom_maxiter = 1000
 nodal_proj.mg_rtol       = 1.e-8
 
+
 # MAC solver
 mac_proj.verbose     = 2
+mac_proj.maxiter  = 2000
 mac_proj.bottom_verbose  = 0
 mac_proj.bottom_maxiter  = 1000
 mac_proj.mg_rtol        = 1.e-8
@@ -94,17 +97,11 @@ particles.tile_size = 1024 1024 1024
 # Level-set refinement and padding
 mfix.levelset__refinement = 2 # levelset resolution
 
-mfix.write_eb_surface = false  # Needed to output eb-surfaces
+mfix.write_eb_surface = true  # Needed to output eb-surfaces
 mfix.write_ls         = false  # Needed to output level set
 
 #! EB geometry
 #!-----------------------------------------------------------//
-
-xlo.type = mi
-xlo.velocity = 0.01
-
-xhi.type = po
-xhi.pressure = 101325.0
 
 mfix.geometry = "prototype clr"
 
@@ -181,7 +178,7 @@ dem.damping_tang_fac.pw   =     0.5
 # Regions for defining ICs and BCs
 #
 
-mfix.regions = full-domain  riser  fuel-reactor  loop-seal  air-reactor  cyclone
+mfix.regions = full-domain  riser  fuel-reactor  loop-seal air-reactor  cyclone inflow  outflow 
 
 regions.full-domain.lo  = 0.0000  0.0000  0.0000
 regions.full-domain.hi  = 3.8400  0.3200  0.9600
@@ -201,12 +198,17 @@ regions.air-reactor.hi  = 3.8400  0.3200  0.3200
 regions.cyclone.lo      = 3.2000  0.0000  0.3200
 regions.cyclone.hi      = 3.8400  0.3200  0.9600
 
+regions.inflow.lo      = 0.0000  0.0000  0.0000
+regions.inflow.hi      = 0.0000  0.3200  0.9600
+
+regions.outflow.lo     = 3.8400  0.0000  0.0000
+regions.outflow.hi     = 3.8400  0.3200  0.9600
 
 #_______________________________________________________________________
 # Initial Conditions
 #
 
-ic.regions = full-domain  riser  fuel-reactor  loop-seal  air-reactor  cyclone
+ic.regions = full-domain  riser  fuel-reactor  loop-seal  air-reactor  cyclone 
 
 mfix.particle_init_type = Auto
 
@@ -306,3 +308,17 @@ ic.cyclone.solid0.diameter.constant = 1250.0e-6
 
 ic.cyclone.solid0.density =  constant
 ic.cyclone.solid0.density.constant  = 1000.0
+
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+bc.regions = inflow  outflow
+
+bc.inflow = mi
+bc.inflow.fluid.volfrac  =  1.0
+bc.inflow.fluid.velocity =  0.01  0.0  0.0
+
+bc.outflow = po
+bc.outflow.fluid.pressure =  101325.0
+
