@@ -5,8 +5,7 @@ using namespace amrex;
 LevelData::LevelData (BoxArray const& ba,
                       DistributionMapping const& dmap,
                       const int nghost,
-                      FabFactory<FArrayBox> const& factory,
-                      const Real covered_val)
+                      FabFactory<FArrayBox> const& factory)
   : ep_g(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , ep_go(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , p_g(new MultiFab(amrex::convert(ba, IntVect{1,1,1}), dmap, 1, nghost, MFInfo(), factory))
@@ -34,6 +33,9 @@ LevelData::LevelData (BoxArray const& ba,
   , u_mac(new MultiFab(BoxArray(ba).surroundingNodes(0), dmap, 1, 2, MFInfo(), factory))
   , v_mac(new MultiFab(BoxArray(ba).surroundingNodes(1), dmap, 1, 2, MFInfo(), factory))
   , w_mac(new MultiFab(BoxArray(ba).surroundingNodes(2), dmap, 1, 2, MFInfo(), factory))
+{}
+
+void LevelData::resetValues (const amrex::Real covered_val)
 {
   ep_g->setVal(1);
   ep_go->setVal(1);
@@ -93,6 +95,4 @@ LevelData::~LevelData ()
   delete u_mac;
   delete v_mac;
   delete w_mac;
-  delete particle_cost;
-  delete fluid_cost;
 }

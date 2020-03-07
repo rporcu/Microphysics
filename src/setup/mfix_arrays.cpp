@@ -43,7 +43,8 @@ mfix::AllocateArrays (int lev)
     // ********************************************************************************
 
     m_leveldata[lev].reset(new LevelData(grids[lev], dmap[lev], nghost,
-                                         *ebfactory[lev], covered_val));
+                                         *ebfactory[lev]));
+    m_leveldata[lev]->resetValues(covered_val);
 
     // ********************************************************************************
     // X-face-based arrays
