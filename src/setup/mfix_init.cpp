@@ -310,8 +310,6 @@ void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow)
 void mfix::Init (Real time)
 {
     if (ooo_debug) amrex::Print() << "Init" << std::endl;
-    InitIOChkData();
-    InitIOPltData();
 
     // Note that finest_level = last level
     finest_level = nlev-1;
@@ -350,6 +348,9 @@ void mfix::Init (Real time)
 
        MakeNewLevelFromScratch(lev, time, grids[lev], dmap[lev]);
     }
+
+    InitIOChkData();
+    InitIOPltData();
 
     /****************************************************************************
      *                                                                          *
