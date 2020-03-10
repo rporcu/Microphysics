@@ -93,8 +93,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     for (int lev(0); lev < nlev; ++lev)
     {
         // We only need one ghost cell here -- so no need to make it bigger
-        int nghost(1);
-        epu[lev] = new MultiFab(grids[lev], dmap[lev], 3, 1 , MFInfo(), *ebfactory[lev]);
+        epu[lev] = new MultiFab(grids[lev], dmap[lev], 3, 1, MFInfo(), *ebfactory[lev]);
 
         epu[lev]->setVal(1.e200);
 

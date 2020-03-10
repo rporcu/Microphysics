@@ -184,7 +184,8 @@ class mfix : public AmrCore
     // If > 0, dump plotfiles at exactcly the designated period by changing dt
     static Real plot_per_exact;
 
-    static std::string get_load_balance_type ();
+    static inline std::string get_load_balance_type ()
+    { return load_balance_type; }
 
     // flag enabling level-set restart (i.e. prevent make_eb_* from rebuilding
     // the level-set data).
@@ -615,9 +616,6 @@ class mfix : public AmrCore
     amrex::Vector< amrex::MultiFab* > particle_cost;
     amrex::Vector< amrex::MultiFab* > fluid_cost;
 
-    // Boundary conditions flags
-    Vector< iMultiFab* > flag;
-
     // Level-Set Data => used for particle-wall collisions and fluid
     // reconstruction in particle drag calculation. NOTE: this has at least 2
     // levels: 0) fluid reconstruction, 1..N) particle-wall (refined) collisions
@@ -836,8 +834,5 @@ class mfix : public AmrCore
 
     bool mfix_update_ebfactory (int a_lev);
 };
-
-inline std::string mfix::get_load_balance_type ()
-{ return load_balance_type; }
 
 #endif

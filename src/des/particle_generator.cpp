@@ -227,14 +227,10 @@ ParticlesGenerator::hex_close_pack (const int icv,
                IC::ic[icv].region->hi(),
                i_w, i_e, j_s, j_n, k_b, k_t);
 
-
-  const Real x_w(IC::ic[icv].region->lo(0));
   const Real y_s(IC::ic[icv].region->lo(1));
   const Real z_b(IC::ic[icv].region->lo(2));
-  const Real x_e(IC::ic[icv].region->hi(0));
   const Real y_n(IC::ic[icv].region->hi(1));
   const Real z_t(IC::ic[icv].region->hi(2));
-
 
   // Start/end of IC domain bounds
   ic_dlo[0] = (std::max(lo[0], i_w)) * dx;
@@ -494,13 +490,6 @@ ParticlesGenerator::random_fill (const int icv,
                IC::ic[icv].region->lo(),
                IC::ic[icv].region->hi(),
                i_w, i_e, j_s, j_n, k_b, k_t);
-
-  const Real x_w(IC::ic[icv].region->lo(0));
-  const Real y_s(IC::ic[icv].region->lo(1));
-  const Real z_b(IC::ic[icv].region->lo(2));
-  const Real x_e(IC::ic[icv].region->hi(0));
-  const Real y_n(IC::ic[icv].region->hi(1));
-  const Real z_t(IC::ic[icv].region->hi(2));
 
   // Start/end of IC domain bounds
   ic_dlo[0] = (std::max(lo[0], i_w)) * dx;

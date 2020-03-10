@@ -313,7 +313,6 @@ namespace BC
           std::string field = "bc."+regions[bcv]+"."+solids_types[lcs];
           amrex::ParmParse ppSolid(field.c_str());
 
-          amrex::Real temp_volfrac(0.0);
           ppSolid.get("volfrac", new_solid.volfrac);
           volfrac_total += new_bc.fluid.volfrac;
 
