@@ -7,6 +7,7 @@ amrex.fpe_trap_invalid = 1
 #!-----------------------------------------------------------//
 
 mfix.stop_time = 55.001
+#mfix.max_step = 20
 mfix.dt_min = 1.0e-8
 mfix.dt_max = 2.0e-4
 mfix.cfl = 0.5
@@ -40,9 +41,7 @@ geometry.prob_hi     = 0.176   0.044   0.011   # hi corner of physical domain
 
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell =  64  16  4
-amr.blocking_factor_x = 2
-amr.blocking_factor_y = 2
-amr.blocking_factor_z = 2
+amr.blocking_factor = 2
 
 #! Grids
 #!-----------------------------------------------------------//
@@ -74,30 +73,6 @@ particles.tile_size = 1024 1024 1024
 mfix.levelset__refinement    = 4 # levelset resolution
 
 #mfix.write_eb_surface = true  # Needed to output eb-surfaces
-
-#! EB geometry
-#!-----------------------------------------------------------//
-#! none
-
-#! BCs                
-#  U/Umf    xlo.velocity
-#   2       0.60
-#   3       0.90
-#!-----------------------------------------------------------//
-xlo.type = "mi"          
-xlo.velocity = 0.90
-
-xhi.type = "po"
-xhi.pressure = 0.0
-
-ylo.type = "nsw"
-yhi.type = "nsw"
-
-zlo.type = "nsw"
-zhi.type = "nsw"
-
-zlo.location = 0.0005
-zhi.location = 0.0105
 
 #_______________________________________________________________________
 # Particle load balancing
@@ -163,7 +138,7 @@ fluid.viscosity.constant = 1.8e-5
 #_______________________________________________________________________
 # DEM model settings
 #
-dem.solve = solid0
+dem.solve = poppys
 
 dem.friction_coeff.pp     =     0.1
 dem.friction_coeff.pw     =     0.1
@@ -171,8 +146,8 @@ dem.friction_coeff.pw     =     0.1
 dem.spring_const.pp       =   110.0
 dem.spring_const.pw       =   110.0
 
-dem.restitution_coeff.solid0.solid0  =     0.95
-dem.restitution_coeff.solid0.wall    =     0.95
+dem.restitution_coeff.poppys.poppys  =     0.95
+dem.restitution_coeff.poppys.wall    =     0.95
 
 dem.spring_tang_fac.pp    =     0.285714285
 dem.spring_tang_fac.pw    =     0.285714285
@@ -181,14 +156,37 @@ dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
 
 
+#! EB geometry
+#!-----------------------------------------------------------//
+#! none
+
 #_______________________________________________________________________
 # Regions for defining ICs and BCs
 #
 
-mfix.regions = fluid-only
+mfix.regions = fluid-only inflow  outflow  bottom-wall  top-wall  front-wall  back-wall
 
-regions.fluid-only.lo = 0.0000  0.0000  0.0000
-regions.fluid-only.hi = 0.1760  0.0440  0.0110
+regions.fluid-only.lo  = 0.0000  0.0000  0.0000
+regions.fluid-only.hi  = 0.1760  0.0440  0.0110
+
+regions.inflow.lo      = 0.0000  0.0000  0.0000
+regions.inflow.hi      = 0.0000  0.0440  0.0110
+
+regions.outflow.lo     = 0.1760  0.0000  0.0000
+regions.outflow.hi     = 0.1760  0.0440  0.0110
+
+regions.bottom-wall.lo = 0.0000  0.0000  0.0000
+regions.bottom-wall.hi = 0.1760  0.0000  0.0110
+
+regions.top-wall.lo    = 0.0000  0.0440  0.0000
+regions.top-wall.hi    = 0.1760  0.0440  0.0110
+
+regions.front-wall.lo  = 0.0000  0.0000  0.0005
+regions.front-wall.hi  = 0.1760  0.0440  0.0005
+
+regions.back-wall.lo   = 0.0000  0.0000  0.0105
+regions.back-wall.hi   = 0.1760  0.0440  0.0105
+
 
 #_______________________________________________________________________
 # Initial Conditions
@@ -202,3 +200,28 @@ ic.regions = fluid-only
 ic.fluid-only.fluid.volfrac   = 1.0
 
 ic.fluid-only.fluid.velocity  = 0.0  0.0  0.0
+
+#_______________________________________________________________________
+# Boundary Conditions
+# U/Umf                       =  2     3
+# bc.inflow.fluid.velocity(1) = 0.60  0.90
+#
+bc.regions = inflow  outflow  bottom-wall  top-wall  front-wall  back-wall
+
+bc.inflow = mi
+bc.inflow.fluid.volfrac  =  1.0
+bc.inflow.fluid.velocity =  0.60  0.0  0.0
+
+bc.outflow = po
+bc.outflow.fluid.pressure =  0.0
+
+bc.bottom-wall = nsw
+bc.top-wall    = nsw
+bc.front-wall  = nsw
+bc.back-wall   = nsw
+
+bc.bottom-wall.normal =  0.0  1.0  0.0
+bc.top-wall.normal    =  0.0 -1.0  0.0
+bc.front-wall.normal  =  0.0  0.0  1.0
+bc.back-wall.normal   =  0.0  0.0 -1.0
+
