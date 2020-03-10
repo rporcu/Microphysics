@@ -6,7 +6,8 @@ amrex.fpe_trap_invalid = 1
 #! Fluid solver
 #!-----------------------------------------------------------//
 
-mfix.stop_time = 22.001
+#mfix.stop_time = 22.001
+mfix.max_step = 2
 mfix.dt_min = 1.0e-8
 mfix.dt_max = 2.0e-4
 mfix.cfl = 0.5
@@ -35,13 +36,11 @@ amr.max_level = 0
 geometry.coord_sys   = 0                       # 0: Cartesian
 geometry.is_periodic = 0       0       0       # Is periodic in each direction?
 geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
-geometry.prob_hi     = 1.056   0.176   0.099   # hi corner of physical domain
+geometry.prob_hi     = 1.056   0.176   0.132   # hi corner of physical domain
 
 # Number of grid cells in each direction at the coarsest level
-amr.n_cell =  96  16  9
-amr.blocking_factor_x = 2
-amr.blocking_factor_y = 2
-amr.blocking_factor_z = 3
+amr.n_cell =  96  16 12
+amr.blocking_factor = 2
 
 #! Grids
 #!-----------------------------------------------------------//
@@ -74,38 +73,6 @@ mfix.levelset__refinement    = 4 # levelset resolution
 
 #mfix.write_eb_surface = true  # Needed to output eb-surfaces
 
-#! EB geometry
-#!-----------------------------------------------------------//
-#! none
-
-#! BCs                
-# case    xlo.velocity
-#   b1    2.5  60.
-#   b2    2.5  90.
-#   b3    3.5  65.         
-#!-----------------------------------------------------------//
-xlo.type = "mi"          
-xlo.velocity = 2.5 60.
-
-xlo.ylo = 0.077
-xlo.yhi = 0.099
-xlo.zlo = 0.044
-xlo.zhi = 0.055
-
-xhi.type = "po"
-xhi.pressure = 0.0
-
-ylo.type = "nsw"
-yhi.type = "nsw"
-
-ylo.location = 0.011
-yhi.location = 0.165
-
-zlo.type = "nsw"
-zhi.type = "nsw"
-
-zlo.location = 0.0075
-zhi.location = 0.0915
 
 #_______________________________________________________________________
 # Particle load balancing
@@ -128,16 +95,16 @@ amr.regrid_int         = -1
 amr.avg_int = 50
 amr.avg_file = "uio"
 
-amr.avg_vel_p =       1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     
-amr.avg_p_g   =       0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     
-amr.avg_ep_g  =       0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     
-amr.avg_vel_g =       0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     
-amr.avg_region_x_w =  0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.145 0.245 0.245 0.245 0.245 0.245 0.245 0.245 0.245 0.245 0.245 0.245 0.245 0.245 0.245 
-amr.avg_region_x_e =  0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.155 0.255 0.255 0.255 0.255 0.255 0.255 0.255 0.255 0.255 0.255 0.255 0.255 0.255 0.255 
-amr.avg_region_y_s =  0.011 0.022 0.033 0.044 0.055 0.066 0.077 0.088 0.099 0.110 0.121 0.132 0.143 0.154 0.011 0.022 0.033 0.044 0.055 0.066 0.077 0.088 0.099 0.110 0.121 0.132 0.143 0.154 
-amr.avg_region_y_n =  0.022 0.033 0.044 0.055 0.066 0.077 0.088 0.099 0.110 0.121 0.132 0.143 0.154 0.165 0.022 0.033 0.044 0.055 0.066 0.077 0.088 0.099 0.110 0.121 0.132 0.143 0.154 0.165 
-amr.avg_region_z_b =  0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 0.044 
-amr.avg_region_z_t =  0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 0.055 
+amr.avg_vel_p =       1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1      1     
+amr.avg_p_g   =       0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0     
+amr.avg_ep_g  =       0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0     
+amr.avg_vel_g =       0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0     
+amr.avg_region_x_w =  0.145  0.145  0.145  0.145  0.145  0.145  0.145  0.145  0.145  0.145  0.145  0.145  0.145  0.145  0.245  0.245  0.245  0.245  0.245  0.245  0.245  0.245  0.245  0.245  0.245  0.245  0.245  0.245 
+amr.avg_region_x_e =  0.155  0.155  0.155  0.155  0.155  0.155  0.155  0.155  0.155  0.155  0.155  0.155  0.155  0.155  0.255  0.255  0.255  0.255  0.255  0.255  0.255  0.255  0.255  0.255  0.255  0.255  0.255  0.255 
+amr.avg_region_y_s =  0.011  0.022  0.033  0.044  0.055  0.066  0.077  0.088  0.099  0.110  0.121  0.132  0.143  0.154  0.011  0.022  0.033  0.044  0.055  0.066  0.077  0.088  0.099  0.110  0.121  0.132  0.143  0.154 
+amr.avg_region_y_n =  0.022  0.033  0.044  0.055  0.066  0.077  0.088  0.099  0.110  0.121  0.132  0.143  0.154  0.165  0.022  0.033  0.044  0.055  0.066  0.077  0.088  0.099  0.110  0.121  0.132  0.143  0.154  0.165 
+amr.avg_region_z_b =  0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605 0.0605
+amr.avg_region_z_t =  0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715 0.0715
 
 #_______________________________________________________________________
 # IO / Checkpointing
@@ -189,14 +156,38 @@ dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
 
 
+#! EB geometry
+#!-----------------------------------------------------------//
+#! none
+
 #_______________________________________________________________________
 # Regions for defining ICs and BCs
 #
+mfix.regions = fluid-only inflow  jet  outflow  bottom-wall  top-wall  front-wall  back-wall
 
-mfix.regions = fluid-only
+regions.fluid-only.lo  = 0.0000  0.0000  0.0000
+regions.fluid-only.hi  = 1.0560  0.1760  0.0990
 
-regions.fluid-only.lo = 0.0000  0.0000  0.0000
-regions.fluid-only.hi = 1.0560  0.1760  0.0990
+regions.inflow.lo      = 0.0000  0.0000  0.0000
+regions.inflow.hi      = 0.0000  0.1760  0.0990
+
+regions.jet.lo         = 0.0000  0.0770  0.0605
+regions.jet.hi         = 0.0000  0.0990  0.0715
+
+regions.outflow.lo     = 1.0560  0.0000  0.0000
+regions.outflow.hi     = 1.0560  0.1760  0.1320
+
+regions.bottom-wall.lo = 0.0000  0.0110  0.0000
+regions.bottom-wall.hi = 1.0560  0.0110  0.1320
+
+regions.top-wall.lo    = 0.0000  0.1650  0.0000
+regions.top-wall.hi    = 1.0560  0.1650  0.1320
+
+regions.front-wall.lo  = 0.0000  0.0000  0.0240
+regions.front-wall.hi  = 1.0560  0.1760  0.0240
+
+regions.back-wall.lo   = 0.0000  0.0000  0.1080
+regions.back-wall.hi   = 1.0560  0.1760  0.1080
 
 #_______________________________________________________________________
 # Initial Conditions
@@ -210,3 +201,32 @@ ic.regions = fluid-only
 ic.fluid-only.fluid.volfrac   = 1.0
 
 ic.fluid-only.fluid.velocity  = 0.0  0.0  0.0
+
+#_______________________________________________________________________
+# Boundary Conditions
+# case                        =  b1    b2   b3
+# bc.inflow.fluid.velocity(1) =  2.5   2.5  3.5
+# bc.jet.fluid.velocity(1)    = 60.   90.  65.
+bc.regions = inflow  jet  outflow  bottom-wall  top-wall  front-wall  back-wall
+
+bc.inflow = mi
+bc.inflow.fluid.volfrac  =  1.0
+bc.inflow.fluid.velocity =  2.5  0.0  0.0
+
+bc.jet = mi
+bc.jet.fluid.volfrac  =  1.0
+bc.jet.fluid.velocity = 60.0  0.0  0.0
+
+bc.outflow = po
+bc.outflow.fluid.pressure =  0.0
+
+bc.bottom-wall = nsw
+bc.top-wall    = nsw
+bc.front-wall  = nsw
+bc.back-wall   = nsw
+
+bc.bottom-wall.normal =  0.0  1.0  0.0
+bc.top-wall.normal    =  0.0 -1.0  0.0
+bc.front-wall.normal  =  0.0  0.0  1.0
+bc.back-wall.normal   =  0.0  0.0 -1.0
+
