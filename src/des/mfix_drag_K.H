@@ -31,7 +31,7 @@ void trilinear_interp (const amrex::RealVect& pos,
 }
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void trilinear_interp (const amrex::RealVect& pos,
+void trilinear_interp_scalar (const amrex::RealVect& pos,
                        amrex::Real& dst,
                        amrex::Array4<amrex::Real const> const& src,
                        const amrex::RealVect& plo,

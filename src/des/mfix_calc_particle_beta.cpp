@@ -123,7 +123,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               trilinear_interp(particle.pos(), &velfp[0], vel_array, plo, dxi);
 
               Real ep;
-              trilinear_interp(particle.pos(), &ep, ep_array, plo, dxi);
+              trilinear_interp_scalar(particle.pos(), ep, ep_array, plo, dxi);
 
               // Indices of cell where particle is located
               int iloc = floor((particle.pos(0) - plo[0])*dxi[0]);
@@ -204,7 +204,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                     flags_array(i  ,j  ,k  ).isRegular()) {
 
                   trilinear_interp(particle.pos(), &velfp[0], vel_array, plo, dxi);
-                  trilinear_interp(particle.pos(), &ep, ep_array, plo, dxi);
+                  trilinear_interp_scalar(particle.pos(), ep, ep_array, plo, dxi);
 
                   // At least one of the cells in the stencil is cut/covered
 
