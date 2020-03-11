@@ -30,4 +30,30 @@ void trilinear_interp (const amrex::RealVect& pos,
                   sx_hi[0]*sx_hi[1]*sx_hi[2]*vel(i  , j  , k  ,n);
 }
 
+AMREX_GPU_HOST_DEVICE AMREX_INLINE
+void trilinear_interp (const amrex::RealVect& pos,
+                       amrex::Real& dst,
+                       amrex::Array4<amrex::Real const> const& src,
+                       const amrex::RealVect& plo,
+                       const amrex::RealVect& dxi)
+{
+    const amrex::RealVect lx = (pos - plo)*dxi + 0.5;
+    const amrex::IntVect ijk = lx.floor();
+
+    int i = ijk[0]; int j = ijk[1]; int k = ijk[2];
+
+    // Weights
+    const amrex::RealVect sx_hi = lx - ijk;
+    const amrex::RealVect sx_lo = 1 - sx_hi;
+
+    dst = sx_lo[0]*sx_lo[1]*sx_lo[2]*src(i-1, j-1, k-1) +
+          sx_lo[0]*sx_lo[1]*sx_hi[2]*src(i-1, j-1, k  ) +
+          sx_lo[0]*sx_hi[1]*sx_lo[2]*src(i-1, j  , k-1) +
+          sx_lo[0]*sx_hi[1]*sx_hi[2]*src(i-1, j  , k  ) +
+          sx_hi[0]*sx_lo[1]*sx_lo[2]*src(i  , j-1, k-1) +
+          sx_hi[0]*sx_lo[1]*sx_hi[2]*src(i  , j-1, k  ) +
+          sx_hi[0]*sx_hi[1]*sx_lo[2]*src(i  , j  , k-1) +
+          sx_hi[0]*sx_hi[1]*sx_hi[2]*src(i  , j  , k  );
+}
+
 #endif

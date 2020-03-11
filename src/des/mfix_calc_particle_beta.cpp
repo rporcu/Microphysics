@@ -122,12 +122,14 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               Real velfp[3];
               trilinear_interp(particle.pos(), &velfp[0], vel_array, plo, dxi);
 
+              Real ep;
+              trilinear_interp(particle.pos(), &ep, ep_array, plo, dxi);
+
               // Indices of cell where particle is located
               int iloc = floor((particle.pos(0) - plo[0])*dxi[0]);
               int jloc = floor((particle.pos(1) - plo[1])*dxi[1]);
               int kloc = floor((particle.pos(2) - plo[2])*dxi[2]);
 
-              Real  ep = ep_array(iloc,jloc,kloc);
               Real  ro = ro_array(iloc,jloc,kloc);
               Real  mu = mu_array(iloc,jloc,kloc);
 
@@ -172,6 +174,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
 
               Real velfp[3];
+              Real ep;
 
               // Pick upper cell in the stencil
               Real lx = (particle.pos(0) - plo[0])*dxi[0] + 0.5;
@@ -201,6 +204,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                     flags_array(i  ,j  ,k  ).isRegular()) {
 
                   trilinear_interp(particle.pos(), &velfp[0], vel_array, plo, dxi);
+                  trilinear_interp(particle.pos(), &ep, ep_array, plo, dxi);
 
                   // At least one of the cells in the stencil is cut/covered
 
@@ -291,14 +295,19 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                   velfp[1] = 0.0;
                   velfp[2] = 0.0;
 
+                  ep = 0.0;
+
                   for(int kk(0); kk<2; kk++){
                     for(int jj(0); jj<2; jj++){
                       for(int ii(0); ii<2; ii++){
                         if( flags_array(i,j,k).isConnected(ioff+ii,joff+jj,koff+kk)) {
                           amrex::Real weight = weights[ii][jj][kk]*inv_sum_weights;
+
                           velfp[0] += vel_array(ilo+ii,jlo+jj,klo+kk,0)*weight;
                           velfp[1] += vel_array(ilo+ii,jlo+jj,klo+kk,1)*weight;
                           velfp[2] += vel_array(ilo+ii,jlo+jj,klo+kk,2)*weight;
+
+                          ep += ep_array(ilo+ii,jlo+jj,klo+kk)*weight;
                         }
                       }
                     }
