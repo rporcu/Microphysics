@@ -7,9 +7,9 @@ void
 mfix::mfix_compute_slopes (int lev,
                            Real time,
                            MultiFab& Sborder,
-                           Vector< MultiFab* >& xslopes_in,
-                           Vector< MultiFab* >& yslopes_in,
-                           Vector< MultiFab* >& zslopes_in,
+                           Vector< MultiFab* > const& xslopes_in,
+                           Vector< MultiFab* > const& yslopes_in,
+                           Vector< MultiFab* > const& zslopes_in,
                            int slopes_comp)
 {
     BL_PROFILE("mfix::mfix_compute_slopes");

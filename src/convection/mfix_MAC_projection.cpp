@@ -19,11 +19,11 @@ using namespace amrex;
 //  This method returns the MAC velocity with up-to-date BCs in place
 //
 void
-mfix::apply_MAC_projection (Vector< MultiFab* >& ep_u_mac,
-                            Vector< MultiFab* >& ep_v_mac,
-                            Vector< MultiFab* >& ep_w_mac,
-                            Vector< MultiFab* >& ep_in,
-                            Vector< MultiFab* >& ro_in,
+mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
+                            Vector< MultiFab* > const& ep_v_mac,
+                            Vector< MultiFab* > const& ep_w_mac,
+                            Vector< MultiFab* > const& ep_in,
+                            Vector< MultiFab* > const& ro_in,
                             Real time)
 {
   BL_PROFILE("mfix::apply_MAC_projection()");
@@ -97,6 +97,17 @@ mfix::apply_MAC_projection (Vector< MultiFab* >& ep_u_mac,
     }
   }
 
+  for ( int lev=0; lev <= finest_level; ++lev )
+  {
+    delete ep_face[lev][0];
+    delete ep_face[lev][1];
+    delete ep_face[lev][2];
+
+    delete ro_face[lev][0];
+    delete ro_face[lev][1];
+    delete ro_face[lev][2];
+  }
+
   //
   // If we want to set max_coarsening_level we have to send it in to the constructor
   //
@@ -118,11 +129,7 @@ mfix::apply_MAC_projection (Vector< MultiFab* >& ep_u_mac,
   {
     // Solve using mac_phi as an initial guess -- note that mac_phi is
     //       stored from iteration to iteration
-    Vector< MultiFab* > mac_phi(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      mac_phi[lev] = m_leveldata[lev]->mac_phi;
-
-    macproj.project(mac_phi, mac_mg_rtol, mac_mg_atol, MLMG::Location::FaceCentroid);
+    macproj.project(get_mac_phi(), mac_mg_rtol, mac_mg_atol, MLMG::Location::FaceCentroid);
   }
   else
   {

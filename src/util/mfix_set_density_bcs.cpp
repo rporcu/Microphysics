@@ -11,7 +11,7 @@ using namespace amrex;
 //
 void
 mfix::mfix_set_density_bcs (Real time,
-                            Vector< MultiFab* > & ro_g_in)
+                            Vector< MultiFab* > const& ro_g_in)
 {
   BL_PROFILE("mfix::mfix_set_density_bcs()");
 
@@ -71,7 +71,6 @@ mfix::set_density_bcs (Real time,
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
 
-  amrex::Real* p_bc_ep_g = m_bc_ep_g.data();
   amrex::Real* p_bc_t_g  = m_bc_t_g.data();
 
   if (nlft > 0)

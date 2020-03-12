@@ -71,21 +71,13 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
                        << m_leveldata[lev]->ep_g->max(0) << std::endl;
     }
 
-    Vector< MultiFab* > vel_g(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      vel_g[lev] = m_leveldata[lev]->vel_g;
-
-    Vector< MultiFab* > vel_go(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      vel_go[lev] = m_leveldata[lev]->vel_go;
-
     // Set velocities BC before projection
-    mfix_set_velocity_bcs(a_time, vel_g, 0);
+    mfix_set_velocity_bcs(a_time, get_vel_g(), 0);
 
     // Define "vel" to be U^* - U^n rather than U^*
     if (proj_for_small_dt)
     {
-       mfix_set_velocity_bcs(a_time, vel_go, 0);
+       mfix_set_velocity_bcs(a_time, get_vel_g_old(), 0);
 
        for(int lev = 0; lev <= finest_level; lev++)
           MultiFab::Saxpy(*m_leveldata[lev]->vel_g, -1.0,
@@ -101,8 +93,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     for (int lev(0); lev < nlev; ++lev)
     {
         // We only need one ghost cell here -- so no need to make it bigger
-        int nghost(1);
-        epu[lev] = new MultiFab(grids[lev], dmap[lev], 3, 1 , MFInfo(), *ebfactory[lev]);
+        epu[lev] = new MultiFab(grids[lev], dmap[lev], 3, 1, MFInfo(), *ebfactory[lev]);
 
         epu[lev]->setVal(1.e200);
 
@@ -151,23 +142,18 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     //
     Box domain(geom[0].Domain());
 
-    Vector< MultiFab* > ep_g(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      ep_g[lev] = m_leveldata[lev]->ep_g;
-
     LPInfo info;
     info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
 
-    nodal_projector.reset(new NodalProjector(vel_g, GetVecOfConstPtrs(sigma), geom, info));
+    nodal_projector.reset(new NodalProjector(get_vel_g(),
+                                             GetVecOfConstPtrs(sigma),
+                                             geom, info));
+
     nodal_projector->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
-    nodal_projector->setAlpha(GetVecOfConstPtrs(ep_g));
+    nodal_projector->setAlpha(GetVecOfConstPtrs(get_ep_g()));
 
-    Vector< MultiFab* > diveu(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      diveu[lev] = m_leveldata[lev]->diveu;
-
-    nodal_projector->computeRHS(diveu, epu, a_depdt);
-    nodal_projector->setCustomRHS(GetVecOfConstPtrs(diveu));
+    nodal_projector->computeRHS(get_diveu(), epu, a_depdt);
+    nodal_projector->setCustomRHS(GetVecOfConstPtrs(get_diveu()));
 
     nodal_projector->project();
 
@@ -189,7 +175,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     gradphi = nodal_projector->getGradPhi();
 
     // Compute diveu to print it out
-    nodal_projector->computeRHS(diveu, epu, a_depdt);
+    nodal_projector->computeRHS(get_diveu(), epu, a_depdt);
 
     // Since I did not pass dt, I have to normalize here
     Real qdt(1.0/a_dt);
@@ -219,7 +205,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     //
     // This part is just to plot diveu
     //
-    mfix_set_velocity_bcs(a_time, vel_g, 0);
+    mfix_set_velocity_bcs(a_time, get_vel_g(), 0);
 
     for (int lev(0); lev < nlev; ++lev)
     {
@@ -253,7 +239,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
         EB_set_covered(*epu[lev], 0, epu[lev]->nComp(), 1, 0.0);
     }
 
-    nodal_projector->computeRHS(diveu, epu, a_depdt);
+    nodal_projector->computeRHS(get_diveu(), epu, a_depdt);
 
     for (int lev = nlev-1; lev > 0; lev--)
     {
@@ -262,7 +248,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     }
 
     // Swap ghost cells and apply BCs to velocity
-    mfix_set_velocity_bcs(a_time, vel_g, 0);
+    mfix_set_velocity_bcs(a_time, get_vel_g(), 0);
 
     // Print level info after projection
     for (int lev(0); lev < nlev; lev++)

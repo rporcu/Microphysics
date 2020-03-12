@@ -3,6 +3,8 @@
 #include <mfix.H>
 #include <param_mod_F.H>
 
+#include <MFIX_BC_Parms.H> //wdf
+#include <MFIX_BcList.H>   //wdf
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
@@ -57,13 +59,6 @@ mfix::~mfix ()
     // Level-Set Data
     delete level_sets[lev];
   }
-
-  // used if load_balance_type == "KnapSack"
-  for (int lev = 0; lev < particle_cost.size(); ++lev)
-    delete particle_cost[lev];
-
-  for (int lev = 0; lev < fluid_cost.size(); ++lev)
-    delete fluid_cost[lev];
 
   //! EB factory that lives on the fluid grids
   for (int lev(0); lev < ebfactory.size(); lev++)
@@ -154,7 +149,8 @@ mfix::mfix_usr1_cpp (Real time) const
 {
   mfix_usr1(&time);
 
-  // const int dim_bc = get_dim_bc();
+  const int minf_ = bc_list.get_minf(); //wdf
+  const int dim_bc = get_dim_bc();
 
   // for(unsigned i(1); i <= dim_bc; ++i)
   // {
@@ -166,6 +162,19 @@ mfix::mfix_usr1_cpp (Real time) const
 
   //   m_bc_ep_g[i] = get_bc_ep_g(i);
   // }
+
+   //wdf
+   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
+      if ( FLUID::solve && BC::bc[bcv].type == minf_ ) {
+         m_bc_u_g[bcv] = 0.0;
+         //2umf: m_bc_u_g[bcv] = std::max(1.0 + time, 2.19);
+         //3umf: m_bc_u_g[bcv] = std::max(1.0 + time, 3.28);
+         //4umf: m_bc_u_g[bcv] = std::max(1.0 + time, 4.38);
+         m_bc_v_g[bcv] = 0.0;
+         m_bc_w_g[bcv] = 0.0;
+      }
+   }//wdf
+
 }
 
 void

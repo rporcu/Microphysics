@@ -8,7 +8,7 @@
 0.084d0    !zl       domain z-dir size
 11.0d-3    !x0       shift in x-dir
 0.0d0      !y0       shift in y-dir
-7.5d-3     !z0       shift in z-dir
+0.0240     !z0       shift in z-dir
 1.0d-4     !T_0      thermal speed 
 0.0d0      !Us       mean vel in x-dir
 0.0d0      !Vs       mean vel in y-dir

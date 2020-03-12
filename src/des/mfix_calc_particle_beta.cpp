@@ -161,9 +161,6 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
           {
             // phi is always on the particle grids -- we do not use the refined
             // level here
-            const MultiFab & phi  = *level_sets[lev];
-            const auto& phi_array = phi.array(pti);
-
             amrex::ParallelFor(np,
               [particles_ptr,vel_array,ro_array,mu_array,ep_array,flags_array,DragFunc,plo,dxi]
               AMREX_GPU_DEVICE (int ip) noexcept

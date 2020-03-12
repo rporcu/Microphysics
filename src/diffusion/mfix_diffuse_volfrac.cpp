@@ -5,7 +5,7 @@ using namespace amrex;
 //
 // Implicit solve for scalar diffusion
 //
-void DiffusionOp::diffuse_volfrac (Vector< MultiFab* >& scal_in,
+void DiffusionOp::diffuse_volfrac (Vector< MultiFab* > scal_in,
                                    Real dcoeff)
 {
     BL_PROFILE("DiffusionOp::diffuse_volfrac");

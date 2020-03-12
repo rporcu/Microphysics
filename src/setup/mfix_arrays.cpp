@@ -42,116 +42,9 @@ mfix::AllocateArrays (int lev)
     // Cell- or node-based arrays
     // ********************************************************************************
 
-    // Void fraction
-    m_leveldata[lev]->ep_g = new MultiFab(grids[lev], dmap[lev], 1, nghost,
-                                          MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->ep_go = new MultiFab(grids[lev], dmap[lev], 1, nghost,
-                                           MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->ep_g->setVal(1);
-    m_leveldata[lev]->ep_go->setVal(1);
-
-    // Gas density
-    m_leveldata[lev]->ro_g = new MultiFab(grids[lev], dmap[lev], 1, nghost,
-                                          MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->ro_go = new MultiFab(grids[lev], dmap[lev], 1, nghost,
-                                           MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->ro_g->setVal(0);
-    m_leveldata[lev]->ro_go->setVal(0);
-
-    // Tracer in gas
-    m_leveldata[lev]->trac = new MultiFab(grids[lev], dmap[lev], 1, nghost,
-                                          MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->trac_o = new MultiFab(grids[lev], dmap[lev], 1, nghost,
-                                            MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->trac->setVal(0);
-    m_leveldata[lev]->trac_o->setVal(0);
-
-    const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
-
-    m_leveldata[lev]->p0_g = new MultiFab(nd_grids, dmap[lev], 1, nghost,
-                                          MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->p0_g->setVal(0.);
-
-    m_leveldata[lev]->p_g = new MultiFab(nd_grids, dmap[lev], 1, nghost,
-                                         MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->p_g->setVal(0.);
-
-    m_leveldata[lev]->p_go = new MultiFab(nd_grids, dmap[lev], 1, nghost,
-                                          MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->p_go->setVal(0.);
-
-    m_leveldata[lev]->diveu = new MultiFab(nd_grids, dmap[lev], 1, 0,
-                                           MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->diveu->setVal(0);
-
-    // Presssure gradients
-    m_leveldata[lev]->gp = new MultiFab(grids[lev], dmap[lev], 3, nghost,
-                                        MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->gp->setVal(0.);
-
-    // Molecular viscosity
-    m_leveldata[lev]->mu_g = new MultiFab(grids[lev], dmap[lev], 1, nghost,
-                                          MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->mu_g->setVal(0.);
-
-    // Current velocity
-    m_leveldata[lev]->vel_g = new MultiFab(grids[lev], dmap[lev], 3, nghost,
-                                           MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->vel_g->setVal(0);
-
-    // Old velocity
-    m_leveldata[lev]->vel_go = new MultiFab(grids[lev], dmap[lev], 3, nghost,
-                                            MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->vel_go->setVal(0.);
-
-    // Vorticity
-    m_leveldata[lev]->vort = new MultiFab(grids[lev], dmap[lev], 1, nghost,
-                                          MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->vort->setVal(0.);
-
-    // This is the deposition of the drag force onto the grid
-    // 0,1,2 is (drag coefficient * particle velocity)
-    // 4 is drag coefficient
-    m_leveldata[lev]->drag = new MultiFab(grids[lev], dmap[lev], 4, nghost,
-                                          MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->drag->setVal(0.);
-
-    // Array to store the rhs for MAC projection
-    m_leveldata[lev]->mac_rhs = new MultiFab(grids[lev], dmap[lev], 1, nghost,
-                                             MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->mac_rhs->setVal(0.);
-
-    // Array to store the solution for MAC projections
-    m_leveldata[lev]->mac_phi = new MultiFab(grids[lev],dmap[lev],1,nghost,
-                                             MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->mac_phi->setVal(0.);
-
-    // Slopes in x-direction
-    m_leveldata[lev]->xslopes_u = new MultiFab(grids[lev], dmap[lev], 3, nghost,
-                                               MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->xslopes_u->setVal(0.);
-
-    m_leveldata[lev]->xslopes_s = new MultiFab(grids[lev], dmap[lev], 2, nghost,
-                                               MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->xslopes_s->setVal(0);
-
-    // Slopes in y-direction
-    m_leveldata[lev]->yslopes_u = new MultiFab(grids[lev], dmap[lev], 3, nghost,
-                                               MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->yslopes_u->setVal(0.);
-
-    m_leveldata[lev]->yslopes_s = new MultiFab(grids[lev], dmap[lev], 2, nghost,
-                                               MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->yslopes_s->setVal(0.);
-
-    // Slopes in z-direction
-    m_leveldata[lev]->zslopes_u = new MultiFab(grids[lev], dmap[lev], 3, nghost,
-                                  MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->zslopes_u->setVal(0.);
-
-    m_leveldata[lev]->zslopes_s = new MultiFab(grids[lev], dmap[lev], 2, nghost,
-                                  MFInfo(), *ebfactory[lev]);
-    m_leveldata[lev]->zslopes_s->setVal(0.);
+    m_leveldata[lev].reset(new LevelData(grids[lev], dmap[lev], nghost,
+                                         *ebfactory[lev]));
+    m_leveldata[lev]->resetValues(covered_val);
 
     // ********************************************************************************
     // X-face-based arrays
@@ -159,42 +52,33 @@ mfix::AllocateArrays (int lev)
 
     // ****************************************************************
 
+    BoxArray ba = grids[lev];
     // Create a BoxArray on x-faces.
-    BoxArray x_edge_ba = grids[lev];
-    x_edge_ba.surroundingNodes(0);
-
     // x-face-based coefficient for MAC and diffusive solves
-    bcoeff[lev][0] = new MultiFab(x_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]);
+    if (bcoeff[lev][0] != nullptr)
+      delete bcoeff[lev][0];
+
+    bcoeff[lev][0] = new MultiFab(BoxArray(ba).surroundingNodes(0), dmap[lev], 1,
+                                  nghost, MFInfo(), *ebfactory[lev]);
     bcoeff[lev][0]->setVal(0.);
 
-    // U velocity at x-faces (MAC)
-    m_leveldata[lev]->u_mac = new MultiFab(x_edge_ba,dmap[lev],1,2,MFInfo(),*ebfactory[lev]);
-    m_leveldata[lev]->u_mac->setVal(covered_val); // Covered val as initial value
-
     // Create a BoxArray on y-faces.
-    BoxArray y_edge_ba = grids[lev];
-    y_edge_ba.surroundingNodes(1);
-
     // y-face-based coefficient for MAC and diffusive solves
-    bcoeff[lev][1] = new MultiFab(y_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]);
+    if (bcoeff[lev][1] != nullptr)
+      delete bcoeff[lev][1];
+
+    bcoeff[lev][1] = new MultiFab(BoxArray(ba).surroundingNodes(1), dmap[lev], 1,
+                                  nghost, MFInfo(), *ebfactory[lev]);
     bcoeff[lev][1]->setVal(0.);
 
-    // V velocity at y-faces (MAC)
-    m_leveldata[lev]->v_mac = new MultiFab(y_edge_ba,dmap[lev],1,2,MFInfo(),*ebfactory[lev]);
-    m_leveldata[lev]->v_mac->setVal(covered_val);
-
     // Create a BoxArray on z-faces.
-    BoxArray z_edge_ba = grids[lev];
-    z_edge_ba.surroundingNodes(2);
-
     // z-face-based coefficient for MAC and diffusive solves
-    bcoeff[lev][2] = new MultiFab(z_edge_ba,dmap[lev],1,nghost,MFInfo(),*ebfactory[lev]);
+    if (bcoeff[lev][2] != nullptr)
+      delete bcoeff[lev][2];
+
+    bcoeff[lev][2] = new MultiFab(BoxArray(ba).surroundingNodes(2), dmap[lev], 1,
+                                  nghost, MFInfo(), *ebfactory[lev]);
     bcoeff[lev][2]->setVal(0.);
-
-    // W velocity at z-faces (MAC)
-    m_leveldata[lev]->w_mac = new MultiFab(z_edge_ba,dmap[lev],1,2,MFInfo(),*ebfactory[lev]);
-    m_leveldata[lev]->w_mac->setVal(covered_val);
-
 }
 
 void
@@ -569,6 +453,8 @@ mfix::RegridLevelSetArray (int a_lev)
 
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
+          delete particle_ebfactory[a_lev];
+
           particle_ebfactory[a_lev] =
               new EBFArrayBoxFactory(*particle_eb_levels[a_lev], geom[a_lev], ba, dm,
                                      {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
@@ -669,6 +555,8 @@ bool mfix::mfix_update_ebfactory (int a_lev)
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
           Print() << "Updating ebfactory from existing" << std::endl;
+
+          delete ebfactory[a_lev];
 
           ebfactory[a_lev] =
               new EBFArrayBoxFactory(*eb_levels[a_lev], geom[a_lev], ba, dm,

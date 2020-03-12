@@ -358,8 +358,7 @@ void mfix::Init (Real time)
      ***************************************************************************/
 
     if (DEM::solve)
-        pc = std::unique_ptr<MFIXParticleContainer>(new MFIXParticleContainer(this));
-
+      pc = new MFIXParticleContainer(this);
 
     /****************************************************************************
      *                                                                          *
@@ -370,14 +369,6 @@ void mfix::Init (Real time)
     // ******************************************************
     // We only do these at level 0
     // ******************************************************
-    Real dx = geom[0].CellSize(0);
-    Real dy = geom[0].CellSize(1);
-    Real dz = geom[0].CellSize(2);
-
-    Real xlen = geom[0].ProbHi(0) - geom[0].ProbLo(0);
-    Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
-    Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
-
     Box domain(geom[0].Domain());
 
     for (int lev = 0; lev < nlev; lev++)
@@ -568,27 +559,35 @@ void mfix::InitLevelData (Real time)
     // Used in load balancing
     if (DEM::solve)
     {
+      for (int lev(0); lev < particle_cost.size(); lev++)
+        if (particle_cost[lev] != nullptr)
+          delete particle_cost[lev];
+
+      particle_cost.clear();
+      particle_cost.resize(nlev, nullptr);
+
       for (int lev = 0; lev < nlev; lev++)
       {
-        if (m_leveldata[lev]->particle_cost != nullptr)
-          delete m_leveldata[lev]->particle_cost;
-
-        m_leveldata[lev]->particle_cost = new MultiFab(pc->ParticleBoxArray(lev),
-                                                       pc->ParticleDistributionMap(lev), 1, 0);
-        m_leveldata[lev]->particle_cost->setVal(0.0);
+        particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                          pc->ParticleDistributionMap(lev), 1, 0);
+        particle_cost[lev]->setVal(0.0);
       }
     }
 
     // Used in load balancing
     if (FLUID::solve)
     {
+      for (int lev(0); lev < fluid_cost.size(); lev++)
+        if (fluid_cost[lev] != nullptr)
+          delete fluid_cost[lev];
+
+      fluid_cost.clear();
+      fluid_cost.resize(nlev, nullptr);
+
       for (int lev = 0; lev < nlev; lev++)
       {
-        if (m_leveldata[lev]->fluid_cost != nullptr)
-          delete m_leveldata[lev]->fluid_cost;
-
-        m_leveldata[lev]->fluid_cost = new MultiFab(grids[lev], dmap[lev], 1, 0);
-        m_leveldata[lev]->fluid_cost->setVal(0.0);
+        fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
+        fluid_cost[lev]->setVal(0.0);
       }
     }
 }
@@ -659,12 +658,12 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
             DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
             pc->Regrid(particle_dm, particle_ba);
 
-            if (m_leveldata[lev]->particle_cost != nullptr)
-              delete m_leveldata[lev]->particle_cost;
+            if (particle_cost[lev] != nullptr)
+              delete particle_cost[lev];
 
-            m_leveldata[lev]->particle_cost = new MultiFab(pc->ParticleBoxArray(lev),
+            particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                                            pc->ParticleDistributionMap(lev), 1, 0);
-            m_leveldata[lev]->particle_cost->setVal(0.0);
+            particle_cost[lev]->setVal(0.0);
 
             // This calls re-creates a proper particle_ebfactories
             //  and regrids all the multifabs that depend on it
@@ -706,17 +705,28 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 void
 mfix::MakeBCArrays ()
 {
+    for (int lev = 0; lev < bc_ilo.size(); lev++)
+    {
+      if (bc_ilo[lev] != nullptr) delete bc_ilo[lev];
+      if (bc_ihi[lev] != nullptr) delete bc_ihi[lev];
+      if (bc_jlo[lev] != nullptr) delete bc_jlo[lev];
+      if (bc_jhi[lev] != nullptr) delete bc_jhi[lev];
+      if (bc_klo[lev] != nullptr) delete bc_klo[lev];
+      if (bc_khi[lev] != nullptr) delete bc_khi[lev];
+    }
+
     if (ooo_debug) amrex::Print() << "MakeBCArrays" << std::endl;
-    bc_ilo.resize(nlev);
-    bc_ihi.resize(nlev);
-    bc_jlo.resize(nlev);
-    bc_jhi.resize(nlev);
-    bc_klo.resize(nlev);
-    bc_khi.resize(nlev);
+    bc_ilo.clear(); bc_ilo.resize(nlev, nullptr);
+    bc_ihi.clear(); bc_ihi.resize(nlev, nullptr);
+    bc_jlo.clear(); bc_jlo.resize(nlev, nullptr);
+    bc_jhi.clear(); bc_jhi.resize(nlev, nullptr);
+    bc_klo.clear(); bc_klo.resize(nlev, nullptr);
+    bc_khi.clear(); bc_khi.resize(nlev, nullptr);
 
     for (int lev = 0; lev < nlev; lev++)
     {
-       // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
+       // Define and allocate the integer MultiFab that is the outside adjacent
+       // cells of the problem domain.
        Box domainx(geom[lev].Domain());
        domainx.grow(1,nghost);
        domainx.grow(2,nghost);
@@ -816,71 +826,47 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
     if (is_restarting == 0)
     {
-       // Just for reference, we compute the volume inside the EB walls (as if there were no particles)
-       m_leveldata[0]->ep_g->setVal(1.0);
+      // Just for reference, we compute the volume inside the EB walls (as if
+      // there were no particles)
+      m_leveldata[0]->ep_g->setVal(1.0);
 
-       sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
+      sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
 
-       Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
+      Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
 
-       Real domain_vol = sum_vol_orig;
+      Real domain_vol = sum_vol_orig;
 
-       // Now initialize the volume fraction ep_g before the first projection
-       mfix_calc_volume_fraction(sum_vol_orig);
-       Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+      // Now initialize the volume fraction ep_g before the first projection
+      mfix_calc_volume_fraction(sum_vol_orig);
+      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
 
-       Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
+      Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
 
-       // This sets bcs for ep_g and mu_g
-       Real time = 0.0;
+      // This sets bcs for ep_g and mu_g
+      Real time = 0.0;
 
-       Vector< MultiFab* > ro_g(m_leveldata.size(), nullptr);
-       for (int lev(0); lev < m_leveldata.size(); ++lev)
-         ro_g[lev] = m_leveldata[lev]->ro_g;
+      mfix_set_density_bcs(time, get_ro_g());
+      mfix_set_density_bcs(time, get_ro_g_old());
 
-       Vector< MultiFab* > ro_go(m_leveldata.size(), nullptr);
-       for (int lev(0); lev < m_leveldata.size(); ++lev)
-         ro_go[lev] = m_leveldata[lev]->ro_go;
+      mfix_set_scalar_bcs(time, get_trac(), get_mu_g());
+      mfix_set_scalar_bcs(time, get_trac_old(), get_mu_g());
 
-       mfix_set_density_bcs(time, ro_g);
-       mfix_set_density_bcs(time, ro_go);
+      // Project the initial velocity field
+      if (do_initial_proj)
+        mfix_project_velocity();
 
-       Vector< MultiFab* > trac(m_leveldata.size(), nullptr);
-       for (int lev(0); lev < m_leveldata.size(); ++lev)
-         trac[lev] = m_leveldata[lev]->trac;
+      // Iterate to compute the initial pressure
+      if (initial_iterations > 0)
+        mfix_initial_iterations(dt,stop_time);
+    }
+    else
+    {
+      mfix_set_epg_bcs(get_ep_g());
 
-       Vector< MultiFab* > trac_o(m_leveldata.size(), nullptr);
-       for (int lev(0); lev < m_leveldata.size(); ++lev)
-         trac_o[lev] = m_leveldata[lev]->trac_o;
+      //Calculation of sum_vol_orig for a restarting point
+      sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
 
-       Vector< MultiFab* > mu_g(m_leveldata.size(), nullptr);
-       for (int lev(0); lev < m_leveldata.size(); ++lev)
-         mu_g[lev] = m_leveldata[lev]->mu_g;
-
-       mfix_set_scalar_bcs(time, trac, mu_g);
-       mfix_set_scalar_bcs(time, trac_o, mu_g);
-
-       // Project the initial velocity field
-       if (do_initial_proj)
-          mfix_project_velocity();
-
-       // Iterate to compute the initial pressure
-       if (initial_iterations > 0)
-
-          mfix_initial_iterations(dt,stop_time);
-
-    } else {
-
-      Vector< MultiFab* > ep_g(m_leveldata.size(), nullptr);
-      for (int lev(0); lev < m_leveldata.size(); ++lev)
-        ep_g[lev] = m_leveldata[lev]->ep_g;
-
-       mfix_set_epg_bcs(ep_g);
-
-       //Calculation of sum_vol_orig for a restarting point
-       sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
-
-       Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
     }
 }
 
@@ -913,11 +899,7 @@ mfix::mfix_set_bc0 ()
    Real time = 0.0;
    int extrap_dir_bcs = 0;
 
-   Vector< MultiFab* > vel_g(m_leveldata.size(), nullptr);
-   for (int lev(0); lev < m_leveldata.size(); ++lev)
-     vel_g[lev] = m_leveldata[lev]->vel_g;
-
-   mfix_set_velocity_bcs(time, vel_g, extrap_dir_bcs);
+   mfix_set_velocity_bcs(time, get_vel_g(), extrap_dir_bcs);
 
    for (int lev = 0; lev < nlev; lev++)
      m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
@@ -943,11 +925,6 @@ mfix::mfix_set_p0 ()
 
   for (int lev = 0; lev < nlev; lev++)
   {
-
-     Real dx = geom[lev].CellSize(0);
-     Real dy = geom[lev].CellSize(1);
-     Real dz = geom[lev].CellSize(2);
-
      Box domain(geom[lev].Domain());
 
      // We put this outside the MFIter loop because we need gp0 even on ranks with no boxes

@@ -101,7 +101,7 @@ zhi.type = "nsw"
 # Particle load balancing
 
 amr.dual_grid          = 0
-#!mfix.load_balance_type = "KnapSack"  #!"FixedSize"
+#!mfix.load_balance_type = "KnapSack" 
 #!amr.regrid_int         = 1000
 
 #! KnapSack settings

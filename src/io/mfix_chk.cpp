@@ -25,23 +25,31 @@ namespace
 void
 mfix::InitIOChkData ()
 {
-    if (ooo_debug) amrex::Print() << "InitIOData" << std::endl;
+    if (ooo_debug) amrex::Print() << "InitIOChkData" << std::endl;
     // Define the list of vector variables on faces that need to be written
     // to plotfile/checkfile.
     vecVarsName = {"u_g", "v_g", "w_g", "gpx", "gpy", "gpz"};
 
     chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "level_sets"};
 
-    chkscalarVars.resize(6, Vector< MultiFab**>(nlev));
+    ResetIOChkData();
+}
 
-    for (int lev(0); lev < nlev; ++lev) {
-      chkscalarVars[0][lev] = &(m_leveldata[lev]->ep_g);
-      chkscalarVars[1][lev] = &(m_leveldata[lev]->p_g);
-      chkscalarVars[2][lev] = &(m_leveldata[lev]->ro_g);
-      chkscalarVars[3][lev] = &(m_leveldata[lev]->ep_g);
-      chkscalarVars[4][lev] = &(m_leveldata[lev]->mu_g);
-      chkscalarVars[5][lev] = &level_sets[lev];
-    }
+
+void
+mfix::ResetIOChkData ()
+{
+  chkscalarVars.clear();
+  chkscalarVars.resize(6, Vector< MultiFab**>(nlev));
+
+  for (int lev(0); lev < nlev; ++lev) {
+    chkscalarVars[0][lev] = &(m_leveldata[lev]->ep_g);
+    chkscalarVars[1][lev] = &(m_leveldata[lev]->p_g);
+    chkscalarVars[2][lev] = &(m_leveldata[lev]->ro_g);
+    chkscalarVars[3][lev] = &(m_leveldata[lev]->ep_g);
+    chkscalarVars[4][lev] = &(m_leveldata[lev]->mu_g);
+    chkscalarVars[5][lev] = &level_sets[lev];
+  }
 }
 
 
@@ -107,7 +115,7 @@ void
 mfix::WriteCheckPointFile (std::string& check_file,
                            int nstep,
                            Real dt,
-                           Real time) const
+                           Real time)
 {
     BL_PROFILE("mfix::WriteCheckPointFile()");
 
@@ -125,6 +133,8 @@ mfix::WriteCheckPointFile (std::string& check_file,
     WriteJobInfo(checkpointname);
     if (FLUID::solve)
     {
+       ResetIOChkData();
+
        for (int lev = 0; lev < nlevels; ++lev) {
 
           // This writes all three velocity components

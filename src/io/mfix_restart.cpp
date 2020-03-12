@@ -220,6 +220,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           }
 
        // Read scalar variables
+       ResetIOChkData();
+
        for (int i = 0; i < chkscalarVars.size(); i++ )
        {
            Print() << "Working on: " << chkscaVarsName[i] << std::endl;
@@ -366,27 +368,35 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         }
     }
 
-    // used in load balancing
-    if (load_balance_type == "KnapSack") {
+    if (load_balance_type == "KnapSack" or load_balance_type == "SFC") 
+    {
       if (DEM::solve) {
+        for (int lev(0); lev < particle_cost.size(); ++lev)
+          if (particle_cost[lev] != nullptr)
+            delete particle_cost[lev];
+
+        particle_cost.clear();
+        particle_cost.resize(nlev, nullptr);
+
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
-          if (m_leveldata[lev]->particle_cost != nullptr)
-            delete m_leveldata[lev]->particle_cost;
-
-          m_leveldata[lev]->particle_cost = new MultiFab(pc->ParticleBoxArray(lev),
+          particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                                          pc->ParticleDistributionMap(lev), 1, 0);
-          m_leveldata[lev]->particle_cost->setVal(0.0);
+          particle_cost[lev]->setVal(0.0);
         }
       }
       if (FLUID::solve) {
+        for (int lev(0); lev < fluid_cost.size(); ++lev)
+          if (fluid_cost[lev] != nullptr)
+            delete fluid_cost[lev];
+
+        fluid_cost.clear();
+        fluid_cost.resize(nlev, nullptr);
+
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
-          if (m_leveldata[lev]->fluid_cost != nullptr)
-            delete m_leveldata[lev]->fluid_cost;
-
-          m_leveldata[lev]->fluid_cost = new MultiFab(grids[lev], dmap[lev], 1, 0);
-          m_leveldata[lev]->fluid_cost->setVal(0.0);
+          fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
+          fluid_cost[lev]->setVal(0.0);
         }
       }
     }

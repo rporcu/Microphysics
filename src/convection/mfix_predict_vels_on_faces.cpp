@@ -2,11 +2,11 @@
 
 void
 mfix::mfix_predict_vels_on_faces (int lev, Real time,
-                                  Vector< MultiFab* >& vel_in,
-                                  Vector< MultiFab* >& ep_u_mac,
-                                  Vector< MultiFab* >& ep_v_mac,
-                                  Vector< MultiFab* >& ep_w_mac,
-                                  Vector< MultiFab* >& ep_in)
+                                  Vector< MultiFab* > const& vel_in,
+                                  Vector< MultiFab* > const& ep_u_mac,
+                                  Vector< MultiFab* > const& ep_v_mac,
+                                  Vector< MultiFab* > const& ep_w_mac,
+                                  Vector< MultiFab* > const& ep_in)
 
 {
     BL_PROFILE("mfix::mfix_predict_vels_on_faces");
@@ -40,9 +40,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
     // We will need ep on face centers to interpolate to face centroids below
     // ****************************************************************************
 
-    ep_face[0] = new MultiFab(ep_u_mac[lev]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-    ep_face[1] = new MultiFab(ep_v_mac[lev]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-    ep_face[2] = new MultiFab(ep_w_mac[lev]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+    ep_face[0] = new MultiFab(ep_u_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]);
+    ep_face[1] = new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]);
+    ep_face[2] = new MultiFab(ep_w_mac[lev]->boxArray(),dmap[lev],1,1,MFInfo(),*ebfactory[lev]);
 
     // This is to make sure ep_face is defined everywhere
     ep_face[0]->setVal(covered_val);
@@ -82,19 +82,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
     // ****************************************************************************
     int slopes_comp = 0;
 
-    Vector< MultiFab* > xslopes_u(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      xslopes_u[lev] = m_leveldata[lev]->xslopes_u;
-
-    Vector< MultiFab* > yslopes_u(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      yslopes_u[lev] = m_leveldata[lev]->yslopes_u;
-
-    Vector< MultiFab* > zslopes_u(m_leveldata.size(), nullptr);
-    for (int lev(0); lev < m_leveldata.size(); ++lev)
-      zslopes_u[lev] = m_leveldata[lev]->zslopes_u;
-
-    mfix_compute_slopes(lev, time, *vel_in[lev], xslopes_u, yslopes_u, zslopes_u, slopes_comp);
+    mfix_compute_slopes(lev, time, *vel_in[lev],
+                        get_xslopes_u(), get_yslopes_u(), get_zslopes_u(),
+                        slopes_comp);
 
     // ****************************************************************************
     // Then predict to face centers
@@ -116,9 +106,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
        const auto& ccvel_fab = vel_in[lev]->array(mfi);
 
        // Cell-centered slopes
-       const auto& xslopes_fab = (xslopes_u[lev])->array(mfi);
-       const auto& yslopes_fab = (yslopes_u[lev])->array(mfi);
-       const auto& zslopes_fab = (zslopes_u[lev])->array(mfi);
+       const auto& xslopes_fab = m_leveldata[lev]->xslopes_u->array(mfi);
+       const auto& yslopes_fab = m_leveldata[lev]->yslopes_u->array(mfi);
+       const auto& zslopes_fab = m_leveldata[lev]->zslopes_u->array(mfi);
 
        // Face-centered velocity components
        const auto& umac_fab = (ep_u_mac[lev])->array(mfi);
@@ -222,10 +212,10 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
           // Cell centroids
           const auto& ccc_fab = cellcent.array(mfi);
 
-		  // Cell-based slopes
-          const auto& xslopes_fab = (xslopes_u[lev])->array(mfi);
-          const auto& yslopes_fab = (yslopes_u[lev])->array(mfi);
-          const auto& zslopes_fab = (zslopes_u[lev])->array(mfi);
+          // Cell-based slopes
+          const auto& xslopes_fab = m_leveldata[lev]->xslopes_u->array(mfi);
+          const auto& yslopes_fab = m_leveldata[lev]->yslopes_u->array(mfi);
+          const auto& zslopes_fab = m_leveldata[lev]->zslopes_u->array(mfi);
 
           // Face-centered ep
           const auto& epx_fab = (ep_face[0])->array(mfi);
@@ -416,6 +406,7 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
        } // Cut cells
     } // MFIter
 
-    for (int i(0); i < 3; ++i)
-      delete ep_face[i];
+    delete ep_face[0];
+    delete ep_face[1];
+    delete ep_face[2];
 }

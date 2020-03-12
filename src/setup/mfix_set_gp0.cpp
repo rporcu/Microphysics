@@ -15,10 +15,6 @@ void
 mfix::set_gp0 (const int lev,
                const Box& domain)
 {
-  Real dx = geom[lev].CellSize(0);
-  Real dy = geom[lev].CellSize(1);
-  Real dz = geom[lev].CellSize(2);
-
   const Real tolerance = std::numeric_limits<Real>::epsilon();
 
   const IntVect dom_lo(domain.loVect());

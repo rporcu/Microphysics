@@ -12,8 +12,8 @@ using namespace amrex;
 //
 void
 mfix::mfix_set_scalar_bcs (Real time,
-                           Vector< MultiFab* > & trac_in,
-                           Vector< MultiFab* > & mu_g_in)
+                           Vector< MultiFab* > const& trac_in,
+                           Vector< MultiFab* > const& mu_g_in)
 {
   BL_PROFILE("mfix::mfix_set_scalar_bcs()");
 
