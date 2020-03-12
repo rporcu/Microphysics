@@ -29,6 +29,11 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
   BL_PROFILE("mfix::mfix_calc_particle_beta()");
 
+  // We copy the value inside the domain to the outside to avoid
+  // unphysical volume fractions.
+  const int dir_bc_in = 2;
+  mfix_set_epg_bcs(get_ep_g(), dir_bc_in);
+
   // This is just a sanity check to make sure we're not using covered values
   // We can remove these lines once we're confident in the algoirthm 
   EB_set_covered(*m_leveldata[0]->vel_g, 0, 3, 1, covered_val);
@@ -138,7 +143,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
               int p_id = particle.id();
 
-              Real pvel[3]; 
+              Real pvel[3];
               pvel[0] = particle.rdata(realData::velx);
               pvel[1] = particle.rdata(realData::vely);
               pvel[2] = particle.rdata(realData::velz);
@@ -149,10 +154,10 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               vslp[0] = velfp[0] - pvel[0];
               vslp[1] = velfp[1] - pvel[1];
               vslp[2] = velfp[2] - pvel[2];
-              
+
               Real vrel = sqrt(dot_product(vslp, vslp));
               Real dpm = 2.0*rad;
-              Real phis = 1.0 - ep; 
+              Real phis = 1.0 - ep;
               Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
                  velfp[0], velfp[1], velfp[2], iloc, jloc, kloc, p_id);
 
@@ -176,14 +181,16 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               Real velfp[3];
               Real ep;
 
-              // Pick upper cell in the stencil
-              Real lx = (particle.pos(0) - plo[0])*dxi[0] + 0.5;
-              Real ly = (particle.pos(1) - plo[1])*dxi[1] + 0.5;
-              Real lz = (particle.pos(2) - plo[2])*dxi[2] + 0.5;
+              // Upper cell in trilinear stencil
+              int ic = std::floor((particle.pos(0) - plo[0])*dxi[0] + 0.5);
+              int jc = std::floor((particle.pos(1) - plo[1])*dxi[1] + 0.5);
+              int kc = std::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5);
 
-              int i = std::floor(lx);
-              int j = std::floor(ly);
-              int k = std::floor(lz);
+              // Cell containing particle centroid
+              int i = floor((particle.pos(0) - plo[0])*dxi[0]);
+              int j = floor((particle.pos(1) - plo[1])*dxi[1]);
+              int k = floor((particle.pos(2) - plo[2])*dxi[2]);
+
 
               if (flags_array(i,j,k).isCovered() ){
 
@@ -194,14 +201,14 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               // cells in the stencil because of the diagonal case)
               } else {
 
-                if (flags_array(i-1,j-1,k-1).isRegular() and
-                    flags_array(i  ,j-1,k-1).isRegular() and
-                    flags_array(i-1,j  ,k-1).isRegular() and
-                    flags_array(i  ,j  ,k-1).isRegular() and
-                    flags_array(i-1,j-1,k  ).isRegular() and
-                    flags_array(i  ,j-1,k  ).isRegular() and
-                    flags_array(i-1,j  ,k  ).isRegular() and
-                    flags_array(i  ,j  ,k  ).isRegular()) {
+                if (flags_array(ic-1,jc-1,kc-1).isRegular() and
+                    flags_array(ic  ,jc-1,kc-1).isRegular() and
+                    flags_array(ic-1,jc  ,kc-1).isRegular() and
+                    flags_array(ic  ,jc  ,kc-1).isRegular() and
+                    flags_array(ic-1,jc-1,kc  ).isRegular() and
+                    flags_array(ic  ,jc-1,kc  ).isRegular() and
+                    flags_array(ic-1,jc  ,kc  ).isRegular() and
+                    flags_array(ic  ,jc  ,kc  ).isRegular()) {
 
                   trilinear_interp(particle.pos(), &velfp[0], vel_array, plo, dxi);
                   trilinear_interp_scalar(particle.pos(), ep, ep_array, plo, dxi);
@@ -209,11 +216,6 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                   // At least one of the cells in the stencil is cut/covered
 
                 } else {
-
-                  // This identifies which cell the part is in
-                  int i = floor((particle.pos(0) - plo[0])*dxi[0]);
-                  int j = floor((particle.pos(1) - plo[1])*dxi[1]);
-                  int k = floor((particle.pos(2) - plo[2])*dxi[2]);
 
                   // Particle position relative to cell center [-0.5, 0.5]
                   Real gx = particle.pos(0)*dxi[0] - (i + 0.5);
@@ -315,7 +317,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
                 } // Cut cell
 
-                Real  ep = ep_array(i,j,k);
+                // Using i/j/k of centroid cell
                 Real  ro = ro_array(i,j,k);
                 Real  mu = mu_array(i,j,k);
 
@@ -359,4 +361,11 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
       delete vel_ptr;
     }
   } // lev
+
+
+  // Reset the volume fractions back to the correct values at
+  // inflow faces.
+  const int dir_bc_out = 1;
+  mfix_set_epg_bcs(get_ep_g(), dir_bc_out);
+
 }

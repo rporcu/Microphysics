@@ -358,14 +358,15 @@ mfix::mfix_calc_drag_particle (Real time)
                 MFIXParticleContainer::ParticleType& particle = pstruct[ip];
                 Real pbeta = particle.rdata(realData::dragx);
 
-                // Pick upper cell in the stencil
-                Real lx = (particle.pos(0) - plo[0])*dxi[0] + 0.5;
-                Real ly = (particle.pos(1) - plo[1])*dxi[1] + 0.5;
-                Real lz = (particle.pos(2) - plo[2])*dxi[2] + 0.5;
+                // Upper cell in trilinear stencil
+                int ic = std::floor((particle.pos(0) - plo[0])*dxi[0] + 0.5);
+                int jc = std::floor((particle.pos(1) - plo[1])*dxi[1] + 0.5);
+                int kc = std::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5);
 
-                int i = std::floor(lx);
-                int j = std::floor(ly);
-                int k = std::floor(lz);
+                // Cell containing particle centroid
+                int i = std::floor((particle.pos(0) - plo[0])*dxi[0]);
+                int j = std::floor((particle.pos(1) - plo[1])*dxi[1]);
+                int k = std::floor((particle.pos(2) - plo[2])*dxi[2]);
 
                 // Covered cell
                 if (flags_array(i,j,k).isCovered())
@@ -379,14 +380,14 @@ mfix::mfix_calc_drag_particle (Real time)
                   // Cut or regular cell and none of the cells in the stencil is covered
                   // (Note we can't assume regular cell has no covered cells in the stencil
                   //      because of the diagonal case)
-                  if (flags_array(i-1,j-1,k-1).isRegular() and
-                      flags_array(i  ,j-1,k-1).isRegular() and
-                      flags_array(i-1,j  ,k-1).isRegular() and
-                      flags_array(i  ,j  ,k-1).isRegular() and
-                      flags_array(i-1,j-1,k  ).isRegular() and
-                      flags_array(i  ,j-1,k  ).isRegular() and
-                      flags_array(i-1,j  ,k  ).isRegular() and
-                      flags_array(i  ,j  ,k  ).isRegular()) {
+                  if (flags_array(ic-1,jc-1,kc-1).isRegular() and
+                      flags_array(ic  ,jc-1,kc-1).isRegular() and
+                      flags_array(ic-1,jc  ,kc-1).isRegular() and
+                      flags_array(ic  ,jc  ,kc-1).isRegular() and
+                      flags_array(ic-1,jc-1,kc  ).isRegular() and
+                      flags_array(ic  ,jc-1,kc  ).isRegular() and
+                      flags_array(ic-1,jc  ,kc  ).isRegular() and
+                      flags_array(ic  ,jc  ,kc  ).isRegular()) {
 
                     trilinear_interp(particle.pos(), &velfp[0], vel_array, plo, dxi);
                     trilinear_interp(particle.pos(), &gradp[0],  gp_array, plo, dxi);
@@ -394,11 +395,6 @@ mfix::mfix_calc_drag_particle (Real time)
                   // At least one of the cells in the stencil is covered
                   else
                   {
-
-                    // This identifies which cell the part is in
-                    int i = floor((particle.pos(0) - plo[0])*dxi[0]);
-                    int j = floor((particle.pos(1) - plo[1])*dxi[1]);
-                    int k = floor((particle.pos(2) - plo[2])*dxi[2]);
 
                     // Particle position relative to cell center [-0.5, 0.5]
                     Real gx = particle.pos(0)*dxi[0] - (i + 0.5);

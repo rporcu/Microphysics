@@ -217,7 +217,8 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   for (int lev = 0; lev < nlev; lev++)
     m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
 
-  mfix_set_epg_bcs(get_ep_g());
+  const int dir_bc = 1;
+  mfix_set_epg_bcs(get_ep_g(), dir_bc);
 
   // Sum up all the values of ep_g[lev], weighted by each cell's EB volfrac
   // Note ep_g = 1 - particle_volume / this_cell_volume where

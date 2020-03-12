@@ -228,7 +228,7 @@ class mfix : public AmrCore
                                 Vector< MultiFab* > const& vel,
                                 int extrap_dir_bcs) const;
 
-    void mfix_set_epg_bcs (const Vector< MultiFab* >& ep_g) const;
+    void mfix_set_epg_bcs (const Vector< MultiFab* >& ep_g, const int dir_bc) const;
 
     void mfix_set_density_bcs (Real time,
                                Vector< MultiFab* > const& ro_g);

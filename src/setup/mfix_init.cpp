@@ -861,7 +861,8 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
     }
     else
     {
-      mfix_set_epg_bcs(get_ep_g());
+      const int dir_bc = 1;
+      mfix_set_epg_bcs(get_ep_g(), dir_bc);
 
       //Calculation of sum_vol_orig for a restarting point
       sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
