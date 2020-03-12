@@ -152,9 +152,9 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               
               Real vrel = sqrt(dot_product(vslp, vslp));
               Real dpm = 2.0*rad;
-              Real phis = 1.0 - ep;   
+              Real phis = 1.0 - ep; 
               Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
-                 velfp[0], velfp[1], velfp[2], iloc, jloc, kloc, p_id); 
+                 velfp[0], velfp[1], velfp[2], iloc, jloc, kloc, p_id);
 
               particle.rdata(realData::dragx) = beta;
             });

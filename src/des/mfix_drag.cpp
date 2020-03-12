@@ -97,33 +97,44 @@ mfix::mfix_calc_drag_fluid (Real time)
       delete crse_factory;
     }
 
-
+    // Deposit the drag force to the grid (beta and beta*particle_vel)
     pc->FluidDragForceDeposition(lev, *tmp_eps[lev], *drag_ptr[lev], volfrac, flags);
   }
 
-  // Move any volume deposited outside the domain back into the domain
-  // when BC is either a pressure inlet or mass inflow.
-  // for (int lev = 0; lev < nlev; lev++)
-  //   mfix_deposition_bcs_scalar(lev, *drag_ptr[lev]);
-
-  // Sum grid boundaries then clear the ghost cell values.
-  drag_ptr[0]->SumBoundary(gm.periodicity());
-  drag_ptr[0]->setBndry(0.0);
-
-  // Move excessive solids volume from small cells to neighboring cells. A copy
-  // of the deposition field is made so that when an average is calc
-  for (int lev(0); lev < nlev; ++lev )
   {
+
+    // The deposition occurred on level 0, thus the next few operations
+    // only need to be carried out on level 0.
+    int lev(0);
+
+    // Move any volume deposited outside the domain back into the domain
+    // when BC is either a pressure inlet or mass inflow.
+    mfix_deposition_bcs(lev, *drag_ptr[lev]);
+
+    // Sum grid boundaries to capture any material that was deposited into
+    // your grid from an adjacent gird.
+    drag_ptr[lev]->SumBoundary(gm.periodicity());
+    drag_ptr[lev]->setBndry(0.0);
+
+    // Sum grid boundaries then fill with correct ghost values.
+    tmp_eps[lev]->SumBoundary(gm.periodicity());
+    tmp_eps[lev]->FillBoundary(gm.periodicity());
+
+    // Move excessive solids volume from small cells to neighboring cells.
+    // Note that we don't change tmp_eps but use the redistribution of
+    // particle volume to determine how to redistribute the drag forces.
     mfix_redistribute_deposition(lev, *tmp_eps[lev], *drag_ptr[lev], volfrac, flags,
                                  mfix::m_max_solids_volume_fraction);
+
+    // Sum the boundaries again to recapture any solids moved across
+    // grid boundaries during the redistribute
+    drag_ptr[lev]->SumBoundary(gm.periodicity());
+    drag_ptr[lev]->FillBoundary(gm.periodicity());
   }
 
+  // This might not need to exist on all levels. Maybe only level 0.
   for (int lev(0); lev < nlev; ++lev)
     delete tmp_eps[lev];
-
-  // Sum the boundaries again to recapture any solids moved across
-  // grid boundaries during the redistribute
-  drag_ptr[0]->SumBoundary(gm.periodicity());
 
   int  src_nghost = 1;
   int dest_nghost = 0;

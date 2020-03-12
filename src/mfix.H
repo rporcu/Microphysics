@@ -310,7 +310,7 @@ class mfix : public AmrCore
 
     void mfix_calc_volume_fraction (Real & sum_vol);
 
-    void mfix_deposition_bcs_scalar (int lev, amrex::MultiFab & filled_mf);
+    void mfix_deposition_bcs (int lev, amrex::MultiFab & filled_mf);
 
     void mfix_redistribute_deposition (int lev,
                                        amrex::MultiFab & mf_eps,
