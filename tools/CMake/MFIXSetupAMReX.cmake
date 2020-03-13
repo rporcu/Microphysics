@@ -101,6 +101,19 @@ else ()
       include(AMReX_SetupCUDA)
    endif ()
 
+   # Append -w to AMREX flags (but not MFIX flags)
+   #
+   # In order to enable build flags for MFIX compiler warnings but not not
+   # enable AMReX compiler warnings, we save the CMAKE_CXX_FLAGS value set for
+   # MFIX, append -w to disable all warnings (at this point where AMREX subdir
+   # is added), then restore the previous CMAKE_CXX_FLAGS value for later when
+   # CMake reaches the point in the build scripts where the MFIX build targets
+   # are defined.
+   set(CMAKE_CXX_FLAGS_SAVE "${CMAKE_CXX_FLAGS}")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
    add_subdirectory(${AMREX_SRC_DIR})
+
+   # Restore CMAKE_CXX_FLAGS (without -w) for MFIX
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_SAVE}")
 
 endif ()
