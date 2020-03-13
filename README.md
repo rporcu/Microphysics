@@ -102,11 +102,10 @@ git clone https://github.com/AMReX-Codes/amrex.git
 git clone https://github.com/AMReX-Codes/regression_testing.git
 ```
 
-2. Create a local copy the regression test setup file from the
-MFIX repository.
-```shell
-cp mfix/tools/MFIX-tests.ini MFIX-local.ini
-```
+2. Create a local copy the regression test setup file by downloading from
+the CCSEfrom the [website](https://ccse.lbl.gov/pub/RegressionTesting/MFIX-Exa/).
+Click on the most recent date and there is a link to the newest .ini file.
+
 
 3. Edit the local setup file.
 Specify the top level directories for test and web output
