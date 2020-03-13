@@ -63,21 +63,23 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
       const BoxArray&            pba = pc->ParticleBoxArray(lev);
       const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
-      // Temporary arrays  -- copies with no ghost cells
-      ep_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->ep_g->nComp(), 0);
-      ep_ptr->copy(*m_leveldata[lev]->ep_g, 0, 0, 1, 0, 0);
+      // Ghost cells needed for interpolation
+      int ng = m_leveldata[lev]->ep_g->nGrow();
+      ep_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->ep_g->nComp(), ng);
+      ep_ptr->copy(*m_leveldata[lev]->ep_g, 0, 0, 1, ng, ng);
 
-      ro_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->ro_g->nComp(), 0);
+      // Temporary arrays  -- copies with no ghost cells
+      ro_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->ro_g->nComp(), 1);
       ro_ptr->copy(*m_leveldata[lev]->ro_g, 0, 0, 1, 0, 0);
 
-      mu_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->mu_g->nComp(), 0);
+      mu_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->mu_g->nComp(), 1);
       mu_ptr->copy(*m_leveldata[lev]->mu_g, 0, 0, 1, 0, 0);
 
       EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
                                        {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                                        EBSupport::volume);
 
-      int ng = m_leveldata[lev]->vel_g->nGrow();
+      ng = m_leveldata[lev]->vel_g->nGrow();
       vel_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->vel_g->nComp(), ng,
                              MFInfo(), ebfactory_loc);
       vel_ptr->copy(*m_leveldata[lev]->vel_g, 0, 0,
@@ -101,6 +103,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
         const int np = particles.size();
 
         Box bx = pti.tilebox();
+
 
         // This is to check efficiently if this tile contains any eb stuff
         const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_ptr)[pti]);

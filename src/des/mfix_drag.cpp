@@ -268,7 +268,7 @@ mfix::mfix_calc_drag_particle (Real time)
 
       EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
                                        {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                                       EBSupport::basic);
+                                       EBSupport::volume);
 
       ng = m_leveldata[lev]->vel_g->nGrow();
 
