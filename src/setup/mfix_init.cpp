@@ -76,9 +76,9 @@ mfix::InitParams ()
       if (steady_state_tol < 0)
         amrex::Abort("Must set steady_state_tol if running to steady state!");
 
-        amrex::Print() << "Running to steady state with maxiter = "
-                       << steady_state_maxiter << " and tolerance "
-                       << steady_state_tol << std::endl;
+      amrex::Print() << "Running to steady state with maxiter = "
+                     << steady_state_maxiter << " and tolerance "
+                     << steady_state_tol << std::endl;
     }
     else if (steady_state_tol > 0)
       amrex::Abort("steady_state_tol set but not steady_state!");
