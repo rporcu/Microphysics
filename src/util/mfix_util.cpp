@@ -109,12 +109,10 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 
     Real sum = amrex::ReduceSum(mf, *volfrac, 0,
         [comp] AMREX_GPU_HOST_DEVICE (Box const & bx,
-                                      FArrayBox const & rho_fab,
-                                      FArrayBox const & volfrac_fab)
+                                      Array4<const Real> const rho,
+                                      Array4<const Real> const vfrc)
         {
           Real dm = 0.0;
-          const auto rho = rho_fab.const_array();
-          const auto vfrc = volfrac_fab.const_array();
 
           amrex::Loop(bx, [rho,vfrc,comp,&dm] (int i, int j, int k) noexcept
               { dm += rho(i,j,k,comp) * vfrc(i,j,k); });
@@ -137,14 +135,11 @@ mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 
     Real sum = amrex::ReduceSum(mf, *volfrac, *(m_leveldata[lev]->ep_g), 0,
         [comp] AMREX_GPU_HOST_DEVICE (Box const & bx,
-                                      FArrayBox const & rho_fab,
-                                      FArrayBox const & volfrac_fab,
-                                      FArrayBox const & ep_g_fab)
+                                      Array4<const Real> const rho,
+                                      Array4<const Real> const vfrc,
+                                      Array4<const Real> const ep)
         {
           Real dm = 0.0;
-          const auto rho = rho_fab.const_array();
-          const auto vfrc = volfrac_fab.const_array();
-          const auto ep = ep_g_fab.const_array();
 
           amrex::Loop(bx, [rho,vfrc,ep,comp,&dm] (int i, int j, int k) noexcept
               { dm += rho(i,j,k,comp) * vfrc(i,j,k) * ep(i,j,k); });
