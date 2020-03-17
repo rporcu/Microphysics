@@ -136,9 +136,9 @@ namespace DEM
         kt_w = kt_w_fac * kn_w;
 
 
-        // We know that we should have an upper-triangular matrix worth
-        // of entries. (1-1, 1-2, 2-2, ...) for NPHASEs
-        int req_coeffs = NPHASE+NPHASE*(NPHASE-1)/2;
+        //// We know that we should have an upper-triangular matrix worth
+        //// of entries. (1-1, 1-2, 2-2, ...) for NPHASEs
+        //int req_coeffs = NPHASE+NPHASE*(NPHASE-1)/2;
 
 
         // Read restitution coefficients. These can be given two different ways:
