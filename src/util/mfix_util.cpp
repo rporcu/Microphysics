@@ -109,8 +109,8 @@ mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 
     Real sum = amrex::ReduceSum(mf, *volfrac, 0,
         [comp] AMREX_GPU_HOST_DEVICE (Box const & bx,
-                                      Array4<const Real> const rho,
-                                      Array4<const Real> const vfrc)
+                                      Array4<const Real> const & rho,
+                                      Array4<const Real> const & vfrc)
         {
           Real dm = 0.0;
 
@@ -135,9 +135,9 @@ mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local)
 
     Real sum = amrex::ReduceSum(mf, *volfrac, *(m_leveldata[lev]->ep_g), 0,
         [comp] AMREX_GPU_HOST_DEVICE (Box const & bx,
-                                      Array4<const Real> const rho,
-                                      Array4<const Real> const vfrc,
-                                      Array4<const Real> const ep)
+                                      Array4<const Real> const & rho,
+                                      Array4<const Real> const & vfrc,
+                                      Array4<const Real> const & ep)
         {
           Real dm = 0.0;
 
