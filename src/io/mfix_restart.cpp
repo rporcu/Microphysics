@@ -205,10 +205,10 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 mf_gp.FillBoundary(geom[lev].periodicity());
 
                FArrayBox single_fab_vel(mf_vel.boxArray()[0],3);
-               mf_vel.copyTo<RunOn::Host>(single_fab_vel);
+               mf_vel.copyTo(single_fab_vel);
 
                FArrayBox single_fab_gp ( mf_gp.boxArray()[0],3);
-               mf_gp.copyTo<RunOn::Host>(single_fab_gp);
+               mf_gp.copyTo(single_fab_gp);
 
               // Copy and replicate mf into velocity
               for (MFIter mfi(*m_leveldata[lev]->vel_g, false); mfi.isValid(); ++mfi)
