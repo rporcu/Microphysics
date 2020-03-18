@@ -205,17 +205,17 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 mf_gp.FillBoundary(geom[lev].periodicity());
 
                FArrayBox single_fab_vel(mf_vel.boxArray()[0],3);
-               mf_vel.copyTo(single_fab_vel);
+               mf_vel.copyTo<RunOn:Host>(single_fab_vel);
 
                FArrayBox single_fab_gp ( mf_gp.boxArray()[0],3);
-               mf_gp.copyTo(single_fab_gp);
+               mf_gp.copyTo<RunOn:Host>(single_fab_gp);
 
               // Copy and replicate mf into velocity
               for (MFIter mfi(*m_leveldata[lev]->vel_g, false); mfi.isValid(); ++mfi)
               {
                 int ib = mfi.index();
-                (*m_leveldata[lev]->vel_g)[ib].copy(single_fab_vel,single_fab_vel.box(),0,mfi.validbox(),0,3);
-                (*m_leveldata[lev]->gp)[ib].copy(single_fab_gp , single_fab_gp.box(),0,mfi.validbox(),0,3);
+                (*m_leveldata[lev]->vel_g)[ib].copy<RunOn:Host>(single_fab_vel,single_fab_vel.box(),0,mfi.validbox(),0,3);
+                (*m_leveldata[lev]->gp)[ib].copy<RunOn:Host>(single_fab_gp , single_fab_gp.box(),0,mfi.validbox(),0,3);
               }
           }
 
@@ -260,7 +260,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
               // Copy and replicate mf into chkscalarVars
               for (MFIter mfi(**(chkscalarVars[i][lev]), false); mfi.isValid(); ++mfi) {
                   int ib = mfi.index();
-                  (**(chkscalarVars[i][lev]))[ib].copy(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
+                  (**(chkscalarVars[i][lev]))[ib].copy<RunOn:Host>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
               }
           }
         }
