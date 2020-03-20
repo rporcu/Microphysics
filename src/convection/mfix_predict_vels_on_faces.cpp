@@ -119,9 +119,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
        {
          Real val = 1.2345e300;
 
-         (*ep_u_mac[lev])[mfi].setVal(val, ubx, 0, 1);
-         (*ep_v_mac[lev])[mfi].setVal(val, vbx, 0, 1);
-         (*ep_w_mac[lev])[mfi].setVal(val, wbx, 0, 1);
+         (*ep_u_mac[lev])[mfi].setVal<RunOn::Device>(val, ubx, 0, 1);
+         (*ep_v_mac[lev])[mfi].setVal<RunOn::Device>(val, vbx, 0, 1);
+         (*ep_w_mac[lev])[mfi].setVal<RunOn::Device>(val, wbx, 0, 1);
        }
 
        // No cut cells in this FAB

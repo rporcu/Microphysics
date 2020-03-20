@@ -662,7 +662,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 {
                     wt = nrp / tbx.d_numPts();
                 }
-                (*cost)[pti].plus(wt, tbx);
+                (*cost)[pti].plus<RunOn::Device>(wt, tbx);
             }
         }
 
