@@ -128,10 +128,10 @@ linter:shellcheck:
     - mfix-exa
   allow_failure: true
 
-linter:unused:
+linter:warnings:
   script:
-    - cmake -S . -B build -DCMAKE_CXX_FLAGS="-O0 -Werror=unused" -DCMAKE_Fortran_FLAGS="-O0"
-    - cmake --build build -j4
+    - cmake -S . -B build -DCMAKE_CXX_FLAGS="-O0 -Werror=unused -Werror=maybe-uninitialized" -DCMAKE_Fortran_FLAGS="-O0"
+    - make -C build -j4 -k
   tags:
     - mfix-exa
   allow_failure: true
