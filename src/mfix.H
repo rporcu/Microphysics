@@ -553,13 +553,13 @@ class mfix : public AmrCore
                                Vector< MultiFab* >&   laps_old,
                                Real time, Real dt, bool proj_2);
 
-  private:
     void mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                                Vector< MultiFab* >& conv_s_old,
                                Vector< MultiFab* >& divtau_old,
                                Vector< MultiFab* >&   laps_old,
                                Real time, Real dt, bool proj_2);
 
+  private:
     void mfix_compute_diveu (Real time);
 
     void mfix_print_max_vel (int lev);
