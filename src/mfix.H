@@ -548,12 +548,14 @@ class mfix : public AmrCore
 
     int steady_state_reached (Real dt, int iter);
 
+  public:
     void mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                                Vector< MultiFab* >& conv_s_old,
                                Vector< MultiFab* >& divtau_old,
                                Vector< MultiFab* >&   laps_old,
                                Real time, Real dt, bool proj_2);
 
+  private:
     void mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                                Vector< MultiFab* >& conv_s_old,
                                Vector< MultiFab* >& divtau_old,
