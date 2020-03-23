@@ -138,6 +138,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                 Array4<Real> const& epg          = ld.ep_g->array(mfi);
                 Array4<Real const> const& dtdt_o = conv_s_old[lev]->const_array(mfi);
                 Array4<Real const> const& dtdt   = conv_s[lev]->const_array(mfi);
+                Array4<Real const> const& laps_o = laps_old[lev]->const_array(mfi);
 
                 amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
@@ -147,6 +148,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                         tra_n(i,j,k,n) = (rho_o(i,j,k)*epg(i,j,k))*tra_o(i,j,k,n) 
                                       + 0.5 * l_dt * (dtdt_o(i,j,k,conv_comp) + dtdt(i,j,k,conv_comp));
                         tra_n(i,j,k,n) = tra_n(i,j,k,n) / (rho_n(i,j,k)*epg(i,j,k));
+
+                        // Crank-Nicolson so we add the explicit half here
+                        tra_n(i,j,k,n) += 0.5 * laps_o(i,j,k,n);
                     }
                 });
             } // mfi
@@ -168,13 +172,14 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
          // Tilebox
          Box bx = mfi.tilebox ();
 
-         Array4<Real const> const& vel_o   = ld.vel_go->const_array(mfi);
-         Array4<Real      > const& vel_n   = ld.vel_g->array(mfi);
-         Array4<Real const> const& dudt_o  = conv_u_old[lev]->const_array(mfi);
-         Array4<Real const> const& dudt    = conv_u[lev]->const_array(mfi);
-         Array4<Real const> const& gp      = ld.gp->const_array(mfi);
-         Array4<Real const> const& rho_nph = density_nph[lev].const_array(mfi);
-         Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
+         Array4<Real      > const& vel_n    = ld.vel_g->array(mfi);
+         Array4<Real const> const& vel_o    = ld.vel_go->const_array(mfi);
+         Array4<Real const> const& dudt_o   = conv_u_old[lev]->const_array(mfi);
+         Array4<Real const> const& dudt     = conv_u[lev]->const_array(mfi);
+         Array4<Real const> const& gp       = ld.gp->const_array(mfi);
+         Array4<Real const> const& rho_nph  = density_nph[lev].const_array(mfi);
+         Array4<Real const> const& epg      = ld.ep_g->const_array(mfi);
+         Array4<Real const> const& divtau_o = divtau_old[lev]->const_array(mfi);
 
          // We need this until we remove static attribute from mfix::gravity
          const RealVect gp0_dev(gp0);
@@ -189,6 +194,13 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
              vel_n(i,j,k,0) = vel_n(i,j,k,0) / epg(i,j,k);
              vel_n(i,j,k,1) = vel_n(i,j,k,1) / epg(i,j,k);
              vel_n(i,j,k,2) = vel_n(i,j,k,2) / epg(i,j,k);
+
+             // Crank-Nicolson so we should only add half of the explicit term here, but  
+             //     we go ahead and add all of it now before doing the implicit drag solve, 
+             //     then we will subtract half of it after the drag solve
+             vel_n(i,j,k,0) += l_dt * divtau_o(i,j,k,0);
+             vel_n(i,j,k,1) += l_dt * divtau_o(i,j,k,1);
+             vel_n(i,j,k,2) += l_dt * divtau_o(i,j,k,2);
 
              Real inv_dens = 1.0 / rho_nph(i,j,k);
              vel_n(i,j,k,0) += l_dt * (gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
@@ -205,12 +217,11 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         mfix_add_drag_implicit(l_dt);
 
     // *************************************************************************************
-    // Add the explicit diffusion term 
+    // Subtract off half of the explicit diffusion term (see comment above)
     // *************************************************************************************
     for (int lev = 0; lev <= finest_level; lev++)
     {
-        MultiFab::Saxpy(*m_leveldata[lev]->vel_g, l_dt/2.0, *divtau_old[lev], 0, 0,     3, 0);
-        MultiFab::Saxpy(*m_leveldata[lev]->trac , l_dt/2.0,   *laps_old[lev], 0, 0, ntrac, 0);
+        MultiFab::Saxpy(*m_leveldata[lev]->vel_g, -l_dt/2.0, *divtau_old[lev], 0, 0,     3, 0);
     }
 
     // *************************************************************************************

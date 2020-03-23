@@ -194,13 +194,13 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
          // Tilebox
          Box bx = mfi.tilebox ();
 
-         Array4<Real      > const& vel_n   = ld.vel_g->array(mfi);
-         Array4<Real const> const& vel_o   = ld.vel_go->const_array(mfi);
-         Array4<Real const> const& lapu_o  = divtau_old[lev]->const_array(mfi);
-         Array4<Real const> const& dudt_o  = conv_u_old[lev]->const_array(mfi);
-         Array4<Real const> const& gp      = ld.gp->const_array(mfi);
-         Array4<Real const> const& rho_nph = density_nph[lev].const_array(mfi);
-         Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
+         Array4<Real      > const& vel_n    = ld.vel_g->array(mfi);
+         Array4<Real const> const& vel_o    = ld.vel_go->const_array(mfi);
+         Array4<Real const> const& divtau_o = divtau_old[lev]->const_array(mfi);
+         Array4<Real const> const& dudt_o   = conv_u_old[lev]->const_array(mfi);
+         Array4<Real const> const& gp       = ld.gp->const_array(mfi);
+         Array4<Real const> const& rho_nph  = density_nph[lev].const_array(mfi);
+         Array4<Real const> const& epg      = ld.ep_g->const_array(mfi);
 
          // We need this until we remove static attribute from mfix::gravity
          const RealVect gp0_dev(gp0);
@@ -218,9 +218,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                  vel_n(i,j,k,1) = vel_n(i,j,k,1) / epg(i,j,k);
                  vel_n(i,j,k,2) = vel_n(i,j,k,2) / epg(i,j,k);
     
-                 vel_n(i,j,k,0) += l_dt * lapu_o(i,j,k,0);
-                 vel_n(i,j,k,1) += l_dt * lapu_o(i,j,k,1);
-                 vel_n(i,j,k,2) += l_dt * lapu_o(i,j,k,2);
+                 vel_n(i,j,k,0) += l_dt * divtau_o(i,j,k,0);
+                 vel_n(i,j,k,1) += l_dt * divtau_o(i,j,k,1);
+                 vel_n(i,j,k,2) += l_dt * divtau_o(i,j,k,2);
 
                  Real inv_dens = 1.0 / rho_nph(i,j,k);
                  vel_n(i,j,k,0) += l_dt * (gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
