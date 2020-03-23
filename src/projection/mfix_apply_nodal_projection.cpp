@@ -155,7 +155,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     nodal_projector->computeRHS(get_diveu(), epu, a_depdt);
     nodal_projector->setCustomRHS(GetVecOfConstPtrs(get_diveu()));
 
-    nodal_projector->project();
+    nodal_projector->project(nodal_mg_rtol, nodal_mg_atol);
 
 
     // Define "vel" to be U^{n+1} rather than (U^{n+1}-U^n)

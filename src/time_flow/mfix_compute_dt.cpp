@@ -88,7 +88,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
                 AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                   {
                     if (!flags_fab(i,j,k).isCovered())
-                    {  
+                    {
                         Real acc[3];
                         Real qro  = 1.0/ro(i,j,k);
                         Real qep  = 1.0/ep(i,j,k);

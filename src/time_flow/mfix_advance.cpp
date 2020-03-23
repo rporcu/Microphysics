@@ -593,12 +593,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     for (int lev = 0; lev < nlev; lev++)
         MultiFab::Multiply(*m_leveldata[lev]->ep_g,
                            *m_leveldata[lev]->ro_g, 0, 0, 1,
-                           m_leveldata[lev]->ep_g->nGrow());
+                            m_leveldata[lev]->ep_g->nGrow());
 
-    //mfix_set_density_bcs(time, ro_g);
-    //mfix_set_scalar_bcs(time, trac, mu_g);
-
-    //mfix_set_velocity_bcs(new_time, vel_g, 0);
     diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_mu_g(), 0.5*dt);
 
     // mfix_set_tracer_bcs (new_time, trac, 0);
