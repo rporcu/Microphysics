@@ -8,6 +8,7 @@
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
 #endif
+
 //
 // Compute predictor:
 //
@@ -73,10 +74,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       for (int i = 0; i < 3; i++)
         MultiFab::Divide(*conv_u_old[lev], *(m_leveldata[lev]->ep_g), 0, i, 1, 0);
 
-    for (int lev = 0; lev < nlev; lev++)
-      for (int i = 0; i < 2; i++)
-        MultiFab::Divide(*conv_s_old[lev], *(m_leveldata[lev]->ep_g), 0, i, 1, 0);
-
     // *************************************************************************************
     // Compute explicit diffusive update
     // *************************************************************************************
@@ -88,7 +85,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         diffusion_op->ComputeDivTau(divtau_old, get_vel_g_old(), get_ro_g(),
                                     get_ep_g(), get_mu_g());
 
-        // mfix_set_tracer_bcs (time, trac_o);
         diffusion_op->ComputeLapS(laps_old, get_trac_old(), get_ro_g(),
                                   get_ep_g(), mu_s);
 
@@ -121,11 +117,14 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 Array4<Real  const> const& rho_o  = ld.ro_go->const_array(mfi);
                 Array4<Real> const& rho_new       = ld.ro_g->array(mfi);
                 Array4<Real> const& rho_nph       = density_nph[lev].array(mfi);
+                Array4<Real> const& epg           = ld.ep_g->array(mfi);
                 Array4<Real const> const& drdt    = conv_s_old[lev]->const_array(mfi);
 
                 amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
-                    rho_new(i,j,k) = rho_o(i,j,k) + l_dt * drdt(i,j,k);
+                    rho_new(i,j,k) = epg(i,j,k)*rho_o(i,j,k) + l_dt * drdt(i,j,k);
+                    rho_new(i,j,k) = rho_new(i,j,k) / epg(i,j,k);
+
                     rho_nph(i,j,k) = 0.5 * (rho_o(i,j,k) + rho_new(i,j,k));
                 });
             } // mfi
@@ -134,7 +133,41 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     } // not constant density
 
     // *************************************************************************************
-    // Update other quantities
+    // Update tracer(s)
+    // *************************************************************************************
+    int l_ntrac = ntrac;
+    if (advect_tracer)
+    {
+        for (int lev = 0; lev <= finest_level; lev++)
+        {
+            auto& ld = *m_leveldata[lev];
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+            for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+            {
+                Box const& bx = mfi.tilebox();
+                Array4<Real const> const& tra_o  = ld.trac_o->const_array(mfi);
+                Array4<Real      > const& tra_n  = ld.trac->array(mfi);
+                Array4<Real const> const& rho_o  = ld.ro_go->const_array(mfi);
+                Array4<Real const> const& rho_n  = ld.ro_g->const_array(mfi);
+                Array4<Real> const& epg          = ld.ep_g->array(mfi);
+                Array4<Real const> const& dtdt   = conv_s_old[lev]->const_array(mfi);
+
+                amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                {
+                    for (int n = 0; n < l_ntrac; ++n)
+                    {
+                        tra_n(i,j,k) = (rho_o(i,j,k)*epg(i,j,k))*tra_o(i,j,k,n) + l_dt * dtdt(i,j,k);
+                        tra_n(i,j,k) = tra_n(i,j,k) / (rho_n(i,j,k)*epg(i,j,k));
+                    }
+                });
+            } // mfi
+        } // lev
+    } // advect_tracer
+
+    // *************************************************************************************
+    // Update velocity
     // *************************************************************************************
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -143,41 +176,26 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         // First add the convective term
         MultiFab::Saxpy(*m_leveldata[lev]->vel_g, l_dt, *conv_u_old[lev], 0, 0, 3, 0);
 
-        // Make sure to do this multiply before we update density!
-        if (advect_tracer)
-        {
-           int conv_comp = 1;
-           MultiFab::Multiply(*m_leveldata[lev]->trac,
-                              *m_leveldata[lev]->ro_go, 0, 0, 1, 0);
-           MultiFab::Saxpy(*m_leveldata[lev]->trac, l_dt,
-                           *conv_s_old[lev], conv_comp, 0, 1, 0);
-        }
-
-//      if (advect_density)
-//      {
-//         int conv_comp = 0;
-//         MultiFab::Saxpy(*m_leveldata[lev]->ro_g, l_dt, *conv_s_old[lev],
-//                         conv_comp, 0, 1, 0);
-//      }
-
-        // Make sure to do this divide after we update density!
-        if (advect_tracer)
-           MultiFab::Divide(*m_leveldata[lev]->trac, *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
-
         // Add the explicit diffusion terms
         if (explicit_diffusion_pred == 1)
            MultiFab::Saxpy(*m_leveldata[lev]->vel_g, l_dt, *divtau_old[lev], 0, 0, 3, 0);
     }
 
-    // Add source terms
+    // *************************************************************************************
+    // Add source terms to velocity
+    // *************************************************************************************
     mfix_add_gravity_and_gp(l_dt);
 
+    // *************************************************************************************
     // Add the drag term implicitly
+    // *************************************************************************************
     if (DEM::solve)
         mfix_add_drag_implicit(l_dt);
 
+    // *************************************************************************************
     // If doing implicit diffusion, solve here for u^*
     // Note we multiply ep_g by ro_g so that we pass in a single array holding (ro_g * ep_g)
+    // *************************************************************************************
     if (explicit_diffusion_pred == 0)
     {
       mfix_set_density_bcs(time, get_ro_g());
@@ -198,17 +216,20 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                            0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
     }
 
+    // *************************************************************************************
     // Project velocity field -- depdt=0 for now
+    // *************************************************************************************
     Vector< MultiFab* > depdt(nlev);
     for (int lev(0); lev < nlev; ++lev)
       depdt[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
 
     mfix_apply_nodal_projection(depdt, new_time, l_dt, proj_2);
 
+    // *************************************************************************************
+    // Correct small cells
+    // *************************************************************************************
     mfix_correct_small_cells (get_vel_g());
 
     for (int lev(0); lev < nlev; ++lev)
       delete depdt[lev];
-
-    //mfix_set_velocity_bcs(new_time, vel_g, 0);
 }

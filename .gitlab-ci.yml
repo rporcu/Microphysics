@@ -135,3 +135,15 @@ linter:warnings:
   tags:
     - mfix-exa
   allow_failure: true
+
+linter:spelling:
+  image: python:3.7.5-buster
+  script:
+    - rm -rf subprojects
+    - python -m pip install codespell
+    - codespell --ignore-words-list ba,ith,od,wen --enable-colors --quiet-level 2
+  allow_failure: true
+  except:
+    - schedules
+  tags:
+    - docker
