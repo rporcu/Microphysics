@@ -5,6 +5,8 @@ target_include_directories( mfixcore
 target_sources( mfixcore
    PRIVATE 
    mfix_advance.cpp
+   mfix_apply_predictor.cpp
+   mfix_apply_corrector.cpp
    mfix_compute_dt.cpp
    mfix_evolve.cpp
    )
