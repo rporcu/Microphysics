@@ -167,24 +167,46 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     } // advect_tracer
 
     // *************************************************************************************
-    // Update velocity
+    // Update velocity with convective update, diffusive update, gp and gravity source terms
     // *************************************************************************************
     for (int lev = 0; lev < nlev; lev++)
     {
-        EB_set_covered(*divtau_old[lev], 0, divtau_old[lev]->nComp(), divtau_old[lev]->nGrow(), 0.0);
+       EB_set_covered(*divtau_old[lev], 0, divtau_old[lev]->nComp(), divtau_old[lev]->nGrow(), 0.0);
 
-        // First add the convective term
-        MultiFab::Saxpy(*m_leveldata[lev]->vel_g, l_dt, *conv_u_old[lev], 0, 0, 3, 0);
+       auto& ld = *m_leveldata[lev];
 
-        // Add the explicit diffusion terms
-        if (explicit_diffusion_pred == 1)
-           MultiFab::Saxpy(*m_leveldata[lev]->vel_g, l_dt, *divtau_old[lev], 0, 0, 3, 0);
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+       for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+       {
+         // Tilebox
+         Box bx = mfi.tilebox ();
+
+         Array4<Real const> const& vel_o   = ld.vel_go->const_array(mfi);
+         Array4<Real      > const& vel_n   = ld.vel_g->array(mfi);
+         Array4<Real const> const& lapu_o  = divtau_old[lev]->const_array(mfi);
+         Array4<Real const> const& dudt_o  = conv_u_old[lev]->const_array(mfi);
+         Array4<Real const> const& gp      = ld.gp->const_array(mfi);
+         Array4<Real const> const& rho_nph = density_nph[lev].const_array(mfi);
+
+         // We need this until we remove static attribute from mfix::gravity
+         const RealVect gp0_dev(gp0);
+         const RealVect gravity_dev(gravity);
+
+         amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+         {
+             vel_n(i,j,k,0) = vel_o(i,j,k,1) + l_dt * dudt_o(i,j,k,0) + l_dt * lapu_o(i,j,k,0);
+             vel_n(i,j,k,1) = vel_o(i,j,k,2) + l_dt * dudt_o(i,j,k,1) + l_dt * lapu_o(i,j,k,1);
+             vel_n(i,j,k,2) = vel_o(i,j,k,2) + l_dt * dudt_o(i,j,k,2) + l_dt * lapu_o(i,j,k,2);
+
+             Real inv_dens = 1.0 / rho_nph(i,j,k);
+             vel_n(i,j,k,0) += l_dt * (gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
+             vel_n(i,j,k,1) += l_dt * (gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
+             vel_n(i,j,k,2) += l_dt * (gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
+         });
+       }
     }
-
-    // *************************************************************************************
-    // Add source terms to velocity
-    // *************************************************************************************
-    mfix_add_gravity_and_gp(l_dt);
 
     // *************************************************************************************
     // Add the drag term implicitly
