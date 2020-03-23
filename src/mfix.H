@@ -212,8 +212,6 @@ class mfix : public AmrCore
 
     void mfix_calc_drag_particle (Real time);
 
-    void mfix_add_gravity_and_gp (Real dt);
-
     void mfix_predict_vels_on_faces (int lev,
                                      Real time,
                                      Vector< MultiFab* > const& vel,

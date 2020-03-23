@@ -28,7 +28,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
     // Extrapolate boundary values for ro_g, tracer, ep_g and mu_g
     // The subsequent call to mfix_set_scalar_bcs will only overwrite
     // ep_g ghost values for PINF and POUT
-    for (int lev = 0; lev < nlev; lev++)
+    for (int lev = 0; lev <= finest_level; lev++)
     {
       m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
@@ -56,12 +56,12 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
     Vector< MultiFab* > divtau_old;
     Vector< MultiFab* >   laps_old;
 
-    conv_u_old.resize(nlev);
-    conv_s_old.resize(nlev);
-    divtau_old.resize(nlev);
-      laps_old.resize(nlev);
+    conv_u_old.resize(finest_level+1);
+    conv_s_old.resize(finest_level+1);
+    divtau_old.resize(finest_level+1);
+      laps_old.resize(finest_level+1);
 
-    for (int lev = 0; lev < nlev; lev++)
+    for (int lev = 0; lev <= finest_level; lev++)
     {
        conv_u_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
        conv_s_old[lev] = new MultiFab(grids[lev], dmap[lev], 2, 0, MFInfo(), *ebfactory[lev]);
@@ -79,7 +79,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
         mfix_compute_dt(nstep, time, stop_time, dt);
 
         // Set new and old time to correctly use in fillpatching
-        for (int lev = 0; lev < nlev; lev++)
+        for (int lev = 0; lev <= finest_level; lev++)
         {
             t_old[lev] = time;
             t_new[lev] = time+dt;
@@ -94,7 +94,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
                           << " with dt = " << dt << "\n" << std::endl;
         }
 
-        for (int lev = 0; lev < nlev; lev++)
+        for (int lev = 0; lev <= finest_level; lev++)
         {
           MultiFab& ep_g = *m_leveldata[lev]->ep_g;
           MultiFab& ep_go = *m_leveldata[lev]->ep_go;
@@ -184,7 +184,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
         }
 #endif
 
-    for (int lev = 0; lev < nlev; lev++)
+    for (int lev = 0; lev <= finest_level; lev++)
     {
        delete conv_u_old[lev];
        delete conv_s_old[lev];
@@ -207,17 +207,17 @@ mfix::mfix_project_velocity ()
     Real time = 0.0;
 
     // Apply projection -- depdt=0 for now
-    Vector< MultiFab* > depdt(nlev);
-    for (int lev(0); lev < nlev; ++lev)
+    Vector< MultiFab* > depdt(finest_level+1);
+    for (int lev(0); lev <= finest_level; ++lev)
       depdt[lev] = MFHelpers::createFrom(*(m_leveldata[lev]->ep_g), 0.0, 1).release();
 
     mfix_apply_nodal_projection(depdt, time, dummy_dt, proj_2);
 
-    for (int lev(0); lev < nlev; ++lev)
+    for (int lev(0); lev <= finest_level; ++lev)
       delete depdt[lev];
 
     // We initialize p_g and gp back to zero (p0_g may still be still non-zero)
-    for (int lev = 0; lev < nlev; lev++)
+    for (int lev = 0; lev <= finest_level; lev++)
     {
       m_leveldata[lev]->p_g->setVal(0);
       m_leveldata[lev]->gp->setVal(0);
@@ -240,7 +240,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   mfix_set_scalar_bcs(time, get_trac(), get_mu_g());
 
   // Copy vel_g into vel_go
-  for (int lev = 0; lev < nlev; lev++)
+  for (int lev = 0; lev <= finest_level; lev++)
     MultiFab::Copy(*m_leveldata[lev]->vel_go, *m_leveldata[lev]->vel_g, 0, 0,
                    m_leveldata[lev]->vel_g->nComp(), m_leveldata[lev]->vel_go->nGrow());
 
@@ -248,12 +248,12 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     mfix_calc_drag_fluid(time);
 
   // Create temporary multifabs to hold conv and divtau
-  Vector< MultiFab* > conv_u(nlev, nullptr);
-  Vector< MultiFab* > conv_s(nlev, nullptr);
-  Vector< MultiFab* > divtau(nlev, nullptr);
-  Vector< MultiFab* >   laps(nlev, nullptr);
+  Vector< MultiFab* > conv_u(finest_level+1, nullptr);
+  Vector< MultiFab* > conv_s(finest_level+1, nullptr);
+  Vector< MultiFab* > divtau(finest_level+1, nullptr);
+  Vector< MultiFab* >   laps(finest_level+1, nullptr);
 
-  for (int lev = 0; lev < nlev; lev++)
+  for (int lev = 0; lev <= finest_level; lev++)
   {
     conv_u[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
     conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 2, 0, MFInfo(), *ebfactory[lev]);
@@ -276,17 +276,17 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     mfix_apply_predictor(conv_u, conv_s, divtau, laps, time, dt, proj_2);
  
     // Reset any quantities which might have been updated
-    for (int lev = 0; lev < nlev; lev++)
+    for (int lev = 0; lev <= finest_level; lev++)
       MultiFab::Copy(*m_leveldata[lev]->vel_g, *m_leveldata[lev]->vel_go, 0, 0,
                      m_leveldata[lev]->vel_g->nComp(), m_leveldata[lev]->vel_g->nGrow());
  
     if (advect_density)
-      for (int lev = 0; lev < nlev; lev++)
+      for (int lev = 0; lev <= finest_level; lev++)
         MultiFab::Copy(*m_leveldata[lev]->ro_g, *m_leveldata[lev]->ro_go, 0, 0,
                         m_leveldata[lev]->ro_g->nComp(), m_leveldata[lev]->ro_g->nGrow());
  
     if (advect_tracer)
-      for (int lev = 0; lev < nlev; lev++)
+      for (int lev = 0; lev <= finest_level; lev++)
         MultiFab::Copy(*m_leveldata[lev]->trac, *m_leveldata[lev]->trac_o, 0, 0,
                        m_leveldata[lev]->trac->nComp(), m_leveldata[lev]->trac->nGrow());
  
@@ -296,48 +296,13 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     mfix_set_scalar_bcs(time, get_trac(), get_mu_g());
   }
    
-  for (int lev = 0; lev < nlev; lev++)
+  for (int lev = 0; lev <= finest_level; lev++)
   {
      delete conv_u[lev];
      delete conv_s[lev];
      delete divtau[lev];
      delete   laps[lev];
   }
-}
-
-void
-mfix::mfix_add_gravity_and_gp (Real dt)
-{
-    BL_PROFILE("mfix::mfix_add_gravity_and_gp");
-    for (int lev = 0; lev < nlev; lev++)
-    {
-
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-       for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
-       {
-         // Tilebox
-         Box bx = mfi.tilebox ();
-
-         const auto& vel_fab = m_leveldata[lev]->vel_g->array(mfi);
-         const auto&  gp_fab = m_leveldata[lev]->gp->array(mfi);
-         const auto& den_fab = m_leveldata[lev]->ro_g->array(mfi);
-
-         // we need this until we remove static attribute from mfix::gravity
-         const RealVect gp0_dev(gp0);
-         const RealVect gravity_dev(gravity);
-
-         amrex::ParallelFor(bx, [dt,vel_fab,gravity_dev,gp_fab,gp0_dev,den_fab]
-           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-         {
-             Real inv_dens = 1.0 / den_fab(i,j,k);
-             vel_fab(i,j,k,0) += dt * (gravity_dev[0]-(gp_fab(i,j,k,0)+gp0_dev[0])*inv_dens);
-             vel_fab(i,j,k,1) += dt * (gravity_dev[1]-(gp_fab(i,j,k,1)+gp0_dev[1])*inv_dens);
-             vel_fab(i,j,k,2) += dt * (gravity_dev[2]-(gp_fab(i,j,k,2)+gp0_dev[2])*inv_dens);
-         });
-       }
-    }
 }
 
 //
@@ -356,7 +321,7 @@ mfix::mfix_add_drag_explicit (Real dt)
 
   BL_PROFILE("mfix::mfix_add_drag_explicit");
 
-  for (int lev = 0; lev < nlev; lev++)
+  for (int lev = 0; lev <= finest_level; lev++)
   {
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -404,7 +369,7 @@ mfix::mfix_add_drag_implicit (Real dt)
 
   BL_PROFILE("mfix::mfix_add_drag_implicit");
 
-  for (int lev = 0; lev < nlev; lev++)
+  for (int lev = 0; lev <= finest_level; lev++)
   {
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -449,8 +414,8 @@ mfix::steady_state_reached (Real dt, int iter)
     //
     static int naccess = 0;
 
-    int condition1[nlev];
-    int condition2[nlev];
+    int condition1[finest_level+1];
+    int condition2[finest_level+1];
 
     Real time = 0.;
 
@@ -459,7 +424,7 @@ mfix::steady_state_reached (Real dt, int iter)
     //
     // Make sure velocity is up to date
     //
-    for (int lev = 0; lev < nlev; lev++)
+    for (int lev = 0; lev <= finest_level; lev++)
     {
 
        //
@@ -543,7 +508,7 @@ mfix::steady_state_reached (Real dt, int iter)
     }
 
     int reached = 1;
-    for (int lev = 0; lev < nlev; lev++)
+    for (int lev = 0; lev <= finest_level; lev++)
     {
        reached = reached and (condition1[lev] or condition2[lev]);
     }

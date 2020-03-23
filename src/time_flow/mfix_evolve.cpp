@@ -27,7 +27,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     Real drag_timing = 0.;
 
     BL_PROFILE_VAR("FLUID SOLVE",fluidSolve);
-    for (int lev = 0; lev < nlev; lev++)
+    for (int lev = 0; lev <= finest_level; lev++)
     {
        if (FLUID::solve)
        {
@@ -64,7 +64,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     if (DEM::solve)
     {
-        if (nlev == 1)
+        if (finest_level == 0)
         {
             //___________________________________________________________________
             // Single level case: the refined level-set is stored on level 1,
@@ -85,7 +85,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
             //___________________________________________________________________
             // Multi-level case: each level is treated separately
 
-            for (int lev = 0; lev < nlev; lev ++ )
+            for (int lev = 0; lev <= finest_level; lev ++ )
             {
                 const MultiFab* ls_data = level_sets[lev];
 

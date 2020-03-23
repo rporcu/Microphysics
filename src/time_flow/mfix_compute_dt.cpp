@@ -43,7 +43,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
       Real *cfl_max_ptr = cfl_max_gpu.dataPtr();
 #endif
     
-    for (int lev(0); lev < nlev; ++lev) {
+    for (int lev(0); lev <= finest_level; ++lev) {
 
         const Real* dx = geom[lev].CellSize();
 
