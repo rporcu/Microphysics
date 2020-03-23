@@ -15,14 +15,9 @@
 //  1. Compute
 //
 //     vel_g = vel_go + dt * R_u^n + dt * divtau*(1/(ro_g*ep_g))
+//                    + dt * ( g - grad(p_g+p0)/ro_g )
 //
-//  2. Add explicit forcing term ( AKA gravity, lagged pressure gradient,
-//     and explicit part of particles momentum exchange )
-//
-//     vel_g = vel_g + dt * ( g - grad(p_g+p0)/ro_g )
-//
-//  3. Add implicit forcing term ( AKA implicit part of particles
-//     momentum exchange )
+//  2. Add drag term implicitly ( AKA implicit part of particle smomentum exchange )
 //
 //     drag_coeff = drag(3)
 //     drag_coeff*velp = drag(0:2)
@@ -62,6 +57,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
     // *************************************************************************************
     // Compute the explicit advective term R_u^n
+    // Note that "conv_s_old" returns div(rho u tracer)
     // *************************************************************************************
     mfix_compute_convective_term(conv_u_old, conv_s_old, get_vel_g_old(),
                                  get_ep_g(), get_ro_g_old(), get_trac_old(), time);
@@ -151,17 +147,31 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 Array4<Real      > const& tra_n  = ld.trac->array(mfi);
                 Array4<Real const> const& rho_o  = ld.ro_go->const_array(mfi);
                 Array4<Real const> const& rho_n  = ld.ro_g->const_array(mfi);
+                Array4<Real const> const& laps_o = laps_old[lev]->const_array(mfi);
                 Array4<Real> const& epg          = ld.ep_g->array(mfi);
                 Array4<Real const> const& dtdt   = conv_s_old[lev]->const_array(mfi);
 
-                amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                if (explicit_diffusion_pred == 1)
                 {
-                    for (int n = 0; n < l_ntrac; ++n)
+                    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                     {
-                        tra_n(i,j,k) = (rho_o(i,j,k)*epg(i,j,k))*tra_o(i,j,k,n) + l_dt * dtdt(i,j,k);
-                        tra_n(i,j,k) = tra_n(i,j,k) / (rho_n(i,j,k)*epg(i,j,k));
-                    }
-                });
+                        for (int n = 0; n < l_ntrac; ++n)
+                        {
+                            tra_n(i,j,k) = (rho_o(i,j,k)*epg(i,j,k))*tra_o(i,j,k,n)
+                                           + l_dt * (dtdt(i,j,k) + laps_o(i,j,k));
+                            tra_n(i,j,k) = tra_n(i,j,k) / (rho_n(i,j,k)*epg(i,j,k));
+                        }
+                    });
+                } else {
+                    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                    {
+                        for (int n = 0; n < l_ntrac; ++n)
+                        {
+                            tra_n(i,j,k) = (rho_o(i,j,k)*epg(i,j,k))*tra_o(i,j,k,n) + l_dt * dtdt(i,j,k);
+                            tra_n(i,j,k) = tra_n(i,j,k) / (rho_n(i,j,k)*epg(i,j,k));
+                        }
+                    });
+                }
             } // mfi
         } // lev
     } // advect_tracer
@@ -196,8 +206,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
          amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
-             vel_n(i,j,k,0) = vel_o(i,j,k,1) + l_dt * dudt_o(i,j,k,0) + l_dt * lapu_o(i,j,k,0);
-             vel_n(i,j,k,1) = vel_o(i,j,k,2) + l_dt * dudt_o(i,j,k,1) + l_dt * lapu_o(i,j,k,1);
+             vel_n(i,j,k,0) = vel_o(i,j,k,0) + l_dt * dudt_o(i,j,k,0) + l_dt * lapu_o(i,j,k,0);
+             vel_n(i,j,k,1) = vel_o(i,j,k,1) + l_dt * dudt_o(i,j,k,1) + l_dt * lapu_o(i,j,k,1);
              vel_n(i,j,k,2) = vel_o(i,j,k,2) + l_dt * dudt_o(i,j,k,2) + l_dt * lapu_o(i,j,k,2);
 
              Real inv_dens = 1.0 / rho_nph(i,j,k);
