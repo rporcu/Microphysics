@@ -163,7 +163,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
         }
 
 
-        // Update interations count
+        // Update iteration count
         ++iter;
     }
     while ( keep_looping );
@@ -270,32 +270,32 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   {
     amrex::Print() << " " << std::endl;
     amrex::Print() << "In initial_iterations: iter = " << iter << "\n";
- 
+
     bool proj_2 = false;
- 
+
     mfix_apply_predictor(conv_u, conv_s, divtau, laps, time, dt, proj_2);
- 
+
     // Reset any quantities which might have been updated
     for (int lev = 0; lev <= finest_level; lev++)
       MultiFab::Copy(*m_leveldata[lev]->vel_g, *m_leveldata[lev]->vel_go, 0, 0,
                      m_leveldata[lev]->vel_g->nComp(), m_leveldata[lev]->vel_g->nGrow());
- 
+
     if (advect_density)
       for (int lev = 0; lev <= finest_level; lev++)
         MultiFab::Copy(*m_leveldata[lev]->ro_g, *m_leveldata[lev]->ro_go, 0, 0,
                         m_leveldata[lev]->ro_g->nComp(), m_leveldata[lev]->ro_g->nGrow());
- 
+
     if (advect_tracer)
       for (int lev = 0; lev <= finest_level; lev++)
         MultiFab::Copy(*m_leveldata[lev]->trac, *m_leveldata[lev]->trac_o, 0, 0,
                        m_leveldata[lev]->trac->nComp(), m_leveldata[lev]->trac->nGrow());
- 
+
     // Reset the boundary values (necessary if they are time-dependent)
     mfix_set_velocity_bcs(time, get_vel_g(), 0);
     mfix_set_density_bcs(time, get_ro_g());
     mfix_set_scalar_bcs(time, get_trac(), get_mu_g());
   }
-   
+
   for (int lev = 0; lev <= finest_level; lev++)
   {
      delete conv_u[lev];

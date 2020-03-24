@@ -114,9 +114,9 @@ amr.avg_vel_g =        0       0        0
 amr.avg_region_x_w =   0.000   0.0001   0.0021
 amr.avg_region_x_e =   0.512   0.0001   0.0021
 amr.avg_region_y_s =   0.000   0.000    0.000
-amr.avg_region_y_n =   0.064   0.064    0.064 
+amr.avg_region_y_n =   0.064   0.064    0.064
 amr.avg_region_z_b =   0.000   0.000    0.000
-amr.avg_region_z_t =   0.064   0.064    0.064 
+amr.avg_region_z_t =   0.064   0.064    0.064
 
 #_______________________________________________________________________
 # IO / Checkpointing
@@ -175,7 +175,7 @@ cylinder.radius = 0.03175
 cylinder.height = -1.0
 
 cylinder.direction = 0
-cylinder.center    =  0.256   0.032   0.032 
+cylinder.center    =  0.256   0.032   0.032
 
 #_______________________________________________________________________
 # Regions for defining ICs and BCs
@@ -202,7 +202,7 @@ regions.pout.hi = 0.5120  0.0640  0.0640
 ic.regions = bkg  bed
 
 
-# Backgound IC covering the full domain with gas.
+# Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.bkg.fluid.volfrac   = 1.0
 
@@ -219,7 +219,7 @@ ic.bed.fluid.pressure  = 0.0
 
 ic.bed.fluid.velocity  =  0.0  0.0  0.0
 
-ic.bed.solids  = hdpe 
+ic.bed.solids  = hdpe
 ic.bed.packing = hcp
 
 ic.bed.hdpe.volfrac  =  0.4
@@ -244,4 +244,3 @@ bc.uin.fluid.velocity =  0.0  0.0  0.0
 
 bc.pout = po
 bc.pout.fluid.pressure =  0.0
-

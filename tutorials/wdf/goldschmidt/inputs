@@ -99,16 +99,16 @@ amr.regrid_int         = -1
 amr.avg_int = 200
 amr.avg_file = "uio"
 
-amr.avg_vel_p =        1       
-amr.avg_p_g   =        0       
-amr.avg_ep_g  =        0       
-amr.avg_vel_g =        0       
+amr.avg_vel_p =        1
+amr.avg_p_g   =        0
+amr.avg_ep_g  =        0
+amr.avg_vel_g =        0
 amr.avg_region_x_w =   0.013
-amr.avg_region_x_e =   0.800 
-amr.avg_region_y_s =   0.0   
-amr.avg_region_y_n =   0.160 
-amr.avg_region_z_b =   0.0    
-amr.avg_region_z_t =   0.00625 #! 1.5dp + zlo.location 
+amr.avg_region_x_e =   0.800
+amr.avg_region_y_s =   0.0
+amr.avg_region_y_n =   0.160
+amr.avg_region_z_b =   0.0
+amr.avg_region_z_t =   0.00625 #! 1.5dp + zlo.location
 
 #_______________________________________________________________________
 # IO / Checkpointing
@@ -192,7 +192,7 @@ regions.back-wall.hi   = 0.8000  0.1600  0.0175
 ic.regions = fluid-only
 
 
-# Backgound IC covering the full domain with gas.
+# Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.fluid-only.fluid.volfrac   = 1.0
 
@@ -200,7 +200,7 @@ ic.fluid-only.fluid.velocity  = 0.0  0.0  0.0
 
 #_______________________________________________________________________
 # Boundary Conditions
-# U/Umf                       = 1.25     1.5      2.0     
+# U/Umf                       = 1.25     1.5      2.0
 # bc.inflow.fluid.velocity(1) = 1.5625   1.875    2.5
 #
 bc.regions = inflow  outflow  bottom-wall  top-wall  front-wall  back-wall
@@ -221,4 +221,3 @@ bc.bottom-wall.normal =  0.0  1.0  0.0
 bc.top-wall.normal    =  0.0 -1.0  0.0
 bc.front-wall.normal  =  0.0  0.0  1.0
 bc.back-wall.normal   =  0.0  0.0 -1.0
-

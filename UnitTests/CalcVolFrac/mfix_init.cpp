@@ -386,7 +386,7 @@ BoxArray mfix::MakeBaseGrids () const
     }
 
     if (ba == grids[0]) {
-        ba = grids[0];  // to avoid dupliates
+        ba = grids[0];  // to avoid duplicates
     }
     amrex::Print() << "In MakeBaseGrids: BA HAS " << ba.size() << " GRIDS " << std::endl;
     return ba;

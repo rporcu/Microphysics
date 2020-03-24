@@ -35,7 +35,7 @@
 
 ! Particle-particle and Particle-wall collision model parameters
 !----------------------------------------------------------------->>>
-! Spring contants
+! Spring constants
       real(rt) :: KN, KN_W  !Normal
       real(rt) :: KT, KT_W, KT_FAC, KT_W_FAC
 
@@ -46,7 +46,7 @@
 ! Tangential damping factors, eta_t = eta_t_factor * eta_N
       real(rt) :: DES_ETAT_FAC, DES_ETAT_W_FAC
 
-! Damping coeffients in array form
+! Damping coefficients in array form
       real(rt) :: DES_ETAN(DIM_M, DIM_M), DES_ETAN_WALL(DIM_M)
       real(rt) :: DES_ETAT(DIM_M, DIM_M), DES_ETAT_WALL(DIM_M)
 

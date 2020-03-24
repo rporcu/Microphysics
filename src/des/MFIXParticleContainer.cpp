@@ -57,7 +57,7 @@ void MFIXParticleContainer::AllocData ()
     resizeData();
 }
 
-void MFIXParticleContainer::PrintParticleCounts () 
+void MFIXParticleContainer::PrintParticleCounts ()
 {
   const int lev = 0;
   amrex::AllPrintToFile("load_balance") << "Particles on each box: \n";
@@ -123,7 +123,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
     Real eps = std::numeric_limits<Real>::epsilon();
 
-    amrex::Print() << "Evolving particles on level: " << lev 
+    amrex::Print() << "Evolving particles on level: " << lev
                    << " ... with fluid dt " << dt << std::endl;
 
     /****************************************************************************
@@ -133,7 +133,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
      *   -> Print max particle-wall and particle-particle forces                *
      ***************************************************************************/
 
-    // Debug level controls the detail of debug outut:
+    // Debug level controls the detail of debug output:
     //   -> debug_level = 0 : no debug output
     //   -> debug_level = 1 : debug output for every fluid step
     //   -> debug_level = 2 : debug output for every substep
@@ -1083,7 +1083,7 @@ ComputeAverageVelocities (const int lev,
                           const amrex::Vector<Real>& avg_region_z_t )
 {
 
-  // Count number of calls -- Used to determin when to create file from scratch
+  // Count number of calls -- Used to determine when to create file from scratch
   static int ncalls = 0;
   ++ncalls;
 

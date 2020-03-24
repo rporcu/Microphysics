@@ -7,7 +7,7 @@
 !  The user may insert code in this routine or call user defined       !
 !  subroutines.                                                        !
 !                                                                      !
-!  This routien is called from the time loop, but no indicies (fluid   !
+!  This routine is called from the time loop, but no indices (fluid    !
 !  cell or particle) are defined.                                      !
 !                                                                      !
 !  Author: J.Musser                                   Date: 06-Nov-12  !

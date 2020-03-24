@@ -7,7 +7,7 @@ mfix.stop_time = 0.35
 
 mfix.fixed_dt = 1.e-3
 
-mfix.gravity =  0.0   0.0  -9.80665 
+mfix.gravity =  0.0   0.0  -9.80665
 mfix.drag_type = "UserDrag"
 
 #! Fluid solver
@@ -127,7 +127,7 @@ regions.outflow.hi     = 0.01  0.01  0.10
 ic.regions = full-domain
 
 
-# Backgound IC covering the full domain with gas.
+# Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
 ic.full-domain.fluid.velocity  = 0.0  0.0  0.4

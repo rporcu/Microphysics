@@ -53,7 +53,7 @@ mfix::mfix_compute_slopes (int lev,
            const auto& ys_fab = yslopes_in[lev]->array(mfi);
            const auto& zs_fab = zslopes_in[lev]->array(mfi);
 
-           // No cut cells in tile + 1-cell witdh halo -> use non-eb routine
+           // No cut cells in tile + 1-cell width halo -> use non-eb routine
            if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
            {
              amrex::ParallelFor(bx, ncomp,
@@ -118,7 +118,7 @@ mfix::mfix_compute_slopes (int lev,
                              if( flag_fab(i,j,k).isConnected(ii,jj,kk) and
                                  not (ii==0 and jj==0 and kk==0)) {
 
-                               // Not multplying by dx to be consistent with how the
+                               // Not multiplying by dx to be consistent with how the
                                // slope is stored. Also not including the global shift
                                // wrt plo or i,j,k. We only need relative distance.
 
@@ -340,7 +340,7 @@ mfix::mfix_compute_slopes (int lev,
                    zs_fab(i,j,k,slopes_comp+n) = (du_zc       > 0.0) ? zslope : -zslope;
                }
            });
-           
+
         } // not covered
     } // MFIter
 

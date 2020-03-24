@@ -76,7 +76,7 @@ namespace DEM
       // You can't name a solids "None" or "0" -- you just can't
       if( solve == 0 && names.size() > 1 ){
         amrex::Abort("Invalid input: One or more DEM solids defined"
-                     "but, the solver is diabled!");
+                     "but, the solver is disabled!");
       }
 
 
