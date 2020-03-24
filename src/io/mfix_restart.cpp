@@ -260,7 +260,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
               // Copy and replicate mf into chkscalarVars
               for (MFIter mfi(**(chkscalarVars[i][lev]), false); mfi.isValid(); ++mfi) {
                   int ib = mfi.index();
-                  (**(chkscalarVars[i][lev]))[ib].copy<RunOn::Host>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
+                  (**(chkscalarVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
               }
           }
         }
