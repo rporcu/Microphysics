@@ -202,7 +202,7 @@ mfix::set_p0 (const Box& bx,
           { array4_p0_g(i,j,k) = ic_p_g; });
     }
   }
-  
+
   // ---------------------------------------------------------------->>>
 
   // Here the pressure in each cell is determined from a specified pressure
@@ -258,7 +258,7 @@ mfix::set_p0 (const Box& bx,
     pj += dpodz * dz * (sbx_hi[2] - sbx_lo[2] + 1);
   }
 
-  // pressure in all intial condition region cells was defined
+  // pressure in all initial condition region cells was defined
   goto_100(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), bct_ilo, bct_ihi,
            bct_jlo, bct_jhi, bct_klo, bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup,
            nghost);
@@ -319,7 +319,7 @@ void goto_60 (const Box& sbx,
     amrex::ParallelFor(sbx, [p0_g]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         { p0_g(i,j,k) = 0; });
-    
+
     pj = 0;
   }
 
@@ -396,7 +396,7 @@ void goto_60 (const Box& sbx,
           {
             p0_g(i,j,k) = pj + dpody*dy * (bx_hi_y - j);
           });
-      
+
       pj += (bx_delta_y + lower_stride) * dpody*dy;
     }
     else
@@ -408,7 +408,7 @@ void goto_60 (const Box& sbx,
           {
             p0_g(i,j,k) = pj - dpody*dy * (j - bx_lo_y);
           });
-      
+
       pj -= (bx_delta_y + upper_stride) * dpody*dy;
     }
   }
@@ -448,7 +448,7 @@ void goto_60 (const Box& sbx,
           {
             p0_g(i,j,k) = pj - dpodz*dz * (k - bx_lo_z);
           });
-      
+
       pj -= (bx_delta_z + upper_stride) * dpodz*dz;
     }
   }
@@ -456,7 +456,7 @@ void goto_60 (const Box& sbx,
   goto_100(sbx, domain, bc_list, p0_g, m_bc_p_g, bct_ilo, bct_ihi,
            bct_jlo, bct_jhi, bct_klo, bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup,
            nghost);
-  
+
   return;
 }
 

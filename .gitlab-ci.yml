@@ -141,7 +141,7 @@ linter:spelling:
   script:
     - rm -rf subprojects
     - python -m pip install codespell
-    - codespell --ignore-words-list ba,ith,od,wen --enable-colors --quiet-level 2
+    - codespell --ignore-words-list ba,blocs,ith,od,wen --enable-colors --quiet-level 2
   allow_failure: true
   except:
     - schedules

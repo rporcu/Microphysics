@@ -114,7 +114,7 @@
             dist_mag  = sqrt( dist_mag )
             normal(:) = dist(:) / dist_mag
 
-            ! calcuate the normal overlap
+            ! calculate the normal overlap
             overlap_n = r_lm-dist_mag
 
             ! calculate the components of translational relative velocity for a
@@ -134,7 +134,7 @@
             fn(:) =  -(   kn_des * overlap_n        * normal(:) + &
                         etan_des * v_rel_trans_norm * normal(:))
 
-            ! calcuate the tangential overlap
+            ! calculate the tangential overlap
             overlap_t(:) = dtsolid*vrel_t(:)
             mag_overlap_t = sqrt(dot_product(overlap_t,overlap_t))
 

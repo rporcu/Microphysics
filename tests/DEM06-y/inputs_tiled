@@ -126,7 +126,7 @@ regions.outflow.hi     = 0.01  0.10  0.01
 ic.regions = full-domain
 
 
-# Backgound IC covering the full domain with gas.
+# Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
 ic.full-domain.fluid.velocity  = 0.0  0.4  0.0
@@ -144,4 +144,3 @@ bc.inflow.fluid.velocity =  0.0  0.4  0.0
 
 bc.outflow = po
 bc.outflow.fluid.pressure = 0.0
-

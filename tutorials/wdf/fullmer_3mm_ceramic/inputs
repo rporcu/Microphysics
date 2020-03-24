@@ -85,7 +85,7 @@ mfix.write_eb_surface = true  # Needed to output eb-surfaces
 # (y/a)^2 + (z/b)^2 = 1
 mfix.use_walls       = true
 mfix.use_poly2       = true
-mfix.poly2_mirror    = true  # internal flow 
+mfix.poly2_mirror    = true  # internal flow
 #                        a0*x^0   a1*x^1   a2*x^2
 mfix.poly2_x_coeffs  =  -1.0     0.0      0.0
 mfix.poly2_y_coeffs  =   0.0     0.0     48.97
@@ -93,7 +93,7 @@ mfix.poly2_z_coeffs  =   0.0     0.0     43.45
 mfix.poly2_translate =   0.0     0.16416  0.0
 
 
-#! BCs 
+#! BCs
 #!-----------------------------------------------------------//
 xlo.location = 0.000001
 xlo.type     = "mi"
@@ -136,7 +136,7 @@ amr.avg_region_x_w =   0.0      0.001    0.004
 amr.avg_region_x_e =   0.65664  0.001    0.004
 amr.avg_region_y_s =   0.0      0.0      0.0
 amr.avg_region_y_n =   0.32832  0.32832  0.32832
-amr.avg_region_z_b =   0.0      0.0      0.0 
+amr.avg_region_z_b =   0.0      0.0      0.0
 amr.avg_region_z_t =   0.16416  0.16416  0.16416
 
 #_______________________________________________________________________
@@ -208,7 +208,7 @@ regions.bed.hi = 0.44200  0.32832  0.16416
 ic.regions = fluid-only  bed
 
 
-# Backgound IC covering the full domain with gas.
+# Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.fluid-only.fluid.volfrac   = 1.0
 

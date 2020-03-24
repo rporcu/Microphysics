@@ -13,7 +13,7 @@ mfix.gravity =  -9.81  0.0  0.0
 
 mfix.drag_type = "WenYu"
 
-mfix.dt_max = 1.0e-3 
+mfix.dt_max = 1.0e-3
 mfix.dt_min = 1.0e-8
 mfix.cfl    = 0.5
 
@@ -189,7 +189,7 @@ regions.outlet.hi      = 0.384  0.192  0.192
 ic.regions = full-domain
 
 
-# Backgound IC covering the full domain with gas.
+# Background IC covering the full domain with gas.
 #-------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
 
@@ -261,5 +261,5 @@ xlo.zhi = 0.102
 xhi.location = 0.384
 xhi.type = "po"
 xhi.pressure = 0.0
-~                                                                                                              
-~                       
+~
+~

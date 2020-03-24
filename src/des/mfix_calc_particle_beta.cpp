@@ -30,7 +30,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
   BL_PROFILE("mfix::mfix_calc_particle_beta()");
 
   // This is just a sanity check to make sure we're not using covered values
-  // We can remove these lines once we're confident in the algoirthm 
+  // We can remove these lines once we're confident in the algorithm
   EB_set_covered(*m_leveldata[0]->vel_g, 0, 3, 1, covered_val);
   EB_set_covered(*m_leveldata[0]->ep_g, 0, 1, 1, covered_val);
   EB_set_covered(*m_leveldata[0]->mu_g, 0, 1, 1, covered_val);
@@ -58,7 +58,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
       const BoxArray&            pba = pc->ParticleBoxArray(lev);
       const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
-      // Temporary arrays  -- copies with no ghost cells 
+      // Temporary arrays  -- copies with no ghost cells
       ep_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->ep_g->nComp(), 0);
       ep_ptr->copy(*m_leveldata[lev]->ep_g, 0, 0, 1, 0, 0);
 
@@ -136,7 +136,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
               int p_id = particle.id();
 
-              Real pvel[3]; 
+              Real pvel[3];
               pvel[0] = particle.rdata(realData::velx);
               pvel[1] = particle.rdata(realData::vely);
               pvel[2] = particle.rdata(realData::velz);
@@ -147,12 +147,12 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               vslp[0] = velfp[0] - pvel[0];
               vslp[1] = velfp[1] - pvel[1];
               vslp[2] = velfp[2] - pvel[2];
-              
+
               Real vrel = sqrt(dot_product(vslp, vslp));
               Real dpm = 2.0*rad;
-              Real phis = 1.0 - ep;   
+              Real phis = 1.0 - ep;
               Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
-                 velfp[0], velfp[1], velfp[2], iloc, jloc, kloc, p_id); 
+                 velfp[0], velfp[1], velfp[2], iloc, jloc, kloc, p_id);
 
               particle.rdata(realData::dragx) = beta;
             });
@@ -171,7 +171,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
               // This identifies which cell the particle is in
               int iloc = floor((particle.pos(0) - plo[0])*dxi[0]);
-              int jloc = floor((particle.pos(1) - plo[1])*dxi[1]); 
+              int jloc = floor((particle.pos(1) - plo[1])*dxi[1]);
               int kloc = floor((particle.pos(2) - plo[2])*dxi[2]);
 
               // Pick upper cell in the stencil
@@ -200,7 +200,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                     !flags_array(i-1,j-1,k  ).isCovered() and
                     !flags_array(i  ,j-1,k  ).isCovered() and
                     !flags_array(i-1,j  ,k  ).isCovered() and
-                    !flags_array(i  ,j  ,k  ).isCovered()) 
+                    !flags_array(i  ,j  ,k  ).isCovered())
                 {
                   trilinear_interp(particle.pos(), &velfp[0], vel_array, plo, dxi);
                 // At least one of the cells in the stencil is covered
@@ -223,10 +223,10 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                   }
                   else
                   {
-                    ii = iloc + 1; 
+                    ii = iloc + 1;
                     gx = -gx;
                   }
-                  
+
                   if (not flags_array(iloc, jloc-1, kloc).isCovered() and
                       not flags_array(ii  , jloc-1, kloc).isCovered())
                   {
@@ -234,10 +234,10 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                   }
                   else
                   {
-                    jj = jloc + 1; 
+                    jj = jloc + 1;
                     gy = -gy;
                   }
-                  
+
                   if (not flags_array(iloc, jloc, kloc-1).isCovered() and
                       not flags_array(ii  , jloc, kloc-1).isCovered() and
                       not flags_array(iloc, jj  , kloc-1).isCovered() and
@@ -247,7 +247,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                   }
                   else
                   {
-                    kk = kloc + 1; 
+                    kk = kloc + 1;
                     gz = -gz;
                   }
 
@@ -261,7 +261,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                     velfp[n] = (1.0+gx+gy+gz+gxy+gxz+gyz+gxyz) * vel_array(iloc,jloc,kloc,n)
                              + (-gz - gxz - gyz - gxyz)        * vel_array(iloc,jloc,kk  ,n)
                              + (-gy - gxy - gyz - gxyz)        * vel_array(iloc,jj  ,kloc,n)
-                             + (gyz + gxyz)                    * vel_array(iloc,jj  ,kk  ,n) 
+                             + (gyz + gxyz)                    * vel_array(iloc,jj  ,kk  ,n)
                              + (-gx - gxy - gxz - gxyz)        * vel_array(ii  ,jloc,kloc,n)
                              + (gxz + gxyz)                    * vel_array(ii  ,jloc,kk  ,n)
                              + (gxy + gxyz)                    * vel_array(ii  ,jj  ,kloc,n)
@@ -283,28 +283,28 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
                 Real rad = particle.rdata(realData::radius);
                 Real vol = particle.rdata(realData::volume);
-     
+
                 int p_id = particle.id();
 
-                Real pvel[3]; 
+                Real pvel[3];
                 pvel[0] = particle.rdata(realData::velx);
                 pvel[1] = particle.rdata(realData::vely);
                 pvel[2] = particle.rdata(realData::velz);
 
                 Real rop_g = ro * ep;
-                        
+
                 Real vslp[3];
                 vslp[0] = velfp[0] - pvel[0];
                 vslp[1] = velfp[1] - pvel[1];
                 vslp[2] = velfp[2] - pvel[2];
-                
+
                 Real vrel = sqrt(dot_product(vslp, vslp));
                 Real dpm = 2.0*rad;
                 Real phis = 1.0 - ep;
-            
+
                 Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
                                          velfp[0], velfp[1], velfp[2],
-                                         iloc, jloc, kloc, p_id); 
+                                         iloc, jloc, kloc, p_id);
                 particle.rdata(realData::dragx) = beta;
 
               } // Not covered

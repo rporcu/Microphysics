@@ -68,7 +68,7 @@ CONTAINS
       integer, PARAMETER :: DIM_COMMENT = 2
 ! The comment characters
       CHARACTER, PARAMETER :: COMMENT_CHAR(DIM_COMMENT) = (/'#', '!'/)
-! Loop indicies
+! Loop indices
       integer :: L, L2
 !.......................................................................!
 
@@ -138,7 +138,7 @@ CONTAINS
       CHARACTER(LEN=*), intent(IN) :: LINE
 ! length of input data line
       integer, intent(IN) :: LINE_LEN
-! maximum column that non-blank charcater are in the input data line
+! maximum column that non-blank character are in the input data line
       integer, intent(IN) :: MAXCOL
 
 ! Local Variables
@@ -212,7 +212,7 @@ CONTAINS
       integer, PARAMETER :: A_UP = ICHAR('A')
       integer, PARAMETER :: A_LO = ICHAR('a')
       integer, PARAMETER :: Z_LO = ICHAR('z')
-! ICHAR differnce between lower and uppercase letters
+! ICHAR difference between lower and uppercase letters
       integer, PARAMETER :: A_DIFF = A_LO - A_UP
 ! Holds ICHAR value of current character
       integer :: INT_C
