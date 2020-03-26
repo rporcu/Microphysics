@@ -243,9 +243,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
              vel_ny += l_dt * (gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
              vel_nz += l_dt * (gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
 
-             vel_nx = vel_n(i,j,k,0);
-             vel_ny = vel_n(i,j,k,1);
-             vel_nz = vel_n(i,j,k,2);
+             vel_n(i,j,k,0) = vel_nx;
+             vel_n(i,j,k,1) = vel_ny;
+             vel_n(i,j,k,2) = vel_nz;
            });
 
          } else { // Fully implicit
@@ -267,9 +267,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
              vel_ny += l_dt * (gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
              vel_nz += l_dt * (gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
 
-             vel_nx = vel_n(i,j,k,0);
-             vel_ny = vel_n(i,j,k,1);
-             vel_nz = vel_n(i,j,k,2);
+             vel_n(i,j,k,0) = vel_nx;
+             vel_n(i,j,k,1) = vel_ny;
+             vel_n(i,j,k,2) = vel_nz;
            });
          }
        } // mfi
