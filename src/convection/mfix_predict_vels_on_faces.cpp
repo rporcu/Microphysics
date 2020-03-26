@@ -145,57 +145,84 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
             [small_vel,ccvel_fab,epx_fab,xslopes_fab,upls_fab,umns_fab,umac_fab]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-              // X-faces
-              upls_fab(i,j,k) = ccvel_fab(i  ,j,k,0) - 0.5 * xslopes_fab(i  ,j,k,0);
-              umns_fab(i,j,k) = ccvel_fab(i-1,j,k,0) + 0.5 * xslopes_fab(i-1,j,k,0);
-              if ( umns_fab(i,j,k) < 0.0 && upls_fab(i,j,k) > 0.0 ) {
-                 umac_fab(i,j,k) = 0.0;
-              } else {
-                 Real avg = 0.5 * ( upls_fab(i,j,k) + umns_fab(i,j,k) );
-                 if ( std::abs(avg) <  small_vel) { umac_fab(i,j,k) = 0.0;
-                 } else if (avg >= 0)             { umac_fab(i,j,k) = umns_fab(i,j,k);
-                 } else                           { umac_fab(i,j,k) = upls_fab(i,j,k);
-                 }
-                 umac_fab(i,j,k) *= epx_fab(i,j,k);
+            // X-faces
+            const Real upls = ccvel_fab(i  ,j,k,0) - .5 * xslopes_fab(i  ,j,k,0);
+            const Real umns = ccvel_fab(i-1,j,k,0) + .5 * xslopes_fab(i-1,j,k,0);
+            Real umac(0);
+
+            if (umns > 0 or upls < 0) {
+              Real avg = .5 * ( upls + umns );
+
+              if (avg >= small_vel) {
+                umac = umns;
               }
+              else if(avg <= -small_vel) {
+                umac = upls;
+              }
+
+              umac *= epx_fab(i,j,k);
+            }
+
+            upls_fab(i,j,k) = upls;
+            umns_fab(i,j,k) = umns;
+
+            umac_fab(i,j,k) = umac;
           });
 
           amrex::ParallelFor(vbx,
             [small_vel,ccvel_fab,epy_fab,yslopes_fab,vpls_fab,vmns_fab,vmac_fab]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-              // Y-faces
-              vpls_fab(i,j,k) = ccvel_fab(i,j  ,k,1) - 0.5 * yslopes_fab(i,j  ,k,1);
-              vmns_fab(i,j,k) = ccvel_fab(i,j-1,k,1) + 0.5 * yslopes_fab(i,j-1,k,1);
-              if ( vmns_fab(i,j,k) < 0.0 && vpls_fab(i,j,k) > 0.0 ) {
-                 vmac_fab(i,j,k) = 0.0;
-              } else {
-                 Real avg = 0.5 * ( vpls_fab(i,j,k) + vmns_fab(i,j,k) );
-                 if ( std::abs(avg) <  small_vel) { vmac_fab(i,j,k) = 0.0;
-                 } else if (avg >= 0)             { vmac_fab(i,j,k) = vmns_fab(i,j,k);
-                 } else                           { vmac_fab(i,j,k) = vpls_fab(i,j,k);
-                 }
-                 vmac_fab(i,j,k) *= epy_fab(i,j,k);
+            // Y-faces
+            const Real vpls = ccvel_fab(i,j  ,k,1) - .5 * yslopes_fab(i,j  ,k,1);
+            const Real vmns = ccvel_fab(i,j-1,k,1) + .5 * yslopes_fab(i,j-1,k,1);
+            Real vmac(0);
+
+            if (vmns > 0 or vpls < 0) {
+              Real avg = .5 * (vpls + vmns);
+
+              if (avg >= small_vel) {
+                vmac = vmns;
               }
+              else if (avg <= -small_vel) {
+                vmac = vpls;
+              }
+
+              vmac *= epy_fab(i,j,k);
+            }
+
+            vpls_fab(i,j,k) = vpls;
+            vmns_fab(i,j,k) = vmns;
+
+            vmac_fab(i,j,k) = vmac;
           });
 
           amrex::ParallelFor(wbx,
             [small_vel,ccvel_fab,epz_fab,zslopes_fab,wpls_fab,wmns_fab,wmac_fab]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-              // Z-faces
-              wpls_fab(i,j,k) = ccvel_fab(i,j,k  ,2) - 0.5 * zslopes_fab(i,j,k  ,2);
-              wmns_fab(i,j,k) = ccvel_fab(i,j,k-1,2) + 0.5 * zslopes_fab(i,j,k-1,2);
-              if ( wmns_fab(i,j,k) < 0.0 && wpls_fab(i,j,k) > 0.0 ) {
-                 wmac_fab(i,j,k) = 0.0;
-              } else {
-                 Real avg = 0.5 * ( wpls_fab(i,j,k) + wmns_fab(i,j,k) );
-                 if ( std::abs(avg) <  small_vel) { wmac_fab(i,j,k) = 0.0;
-                 } else if (avg >= 0)             { wmac_fab(i,j,k) = wmns_fab(i,j,k);
-                 } else                           { wmac_fab(i,j,k) = wpls_fab(i,j,k);
-                 }
-                 wmac_fab(i,j,k) *= epz_fab(i,j,k);
+            // Z-faces
+            const Real wpls = ccvel_fab(i,j,k  ,2) - .5 * zslopes_fab(i,j,k  ,2);
+            const Real wmns = ccvel_fab(i,j,k-1,2) + .5 * zslopes_fab(i,j,k-1,2);
+            Real wmac(0);
+
+            if (wmns > 0 or wpls < 0) {
+              Real avg = .5 * (wpls + wmns);
+
+              if (avg >= small_vel) {
+                wmac = wmns;
               }
+              else if (avg <= -small_vel) {
+                wmac = wpls;
+              }
+
+              wmac *= epz_fab(i,j,k);
+            }
+
+            wpls_fab(i,j,k) = wpls;
+            wmns_fab(i,j,k) = wmns;
+
+            wmac_fab(i,j,k) = wmac;
           });
 
        // Cut cells in this FAB
@@ -235,61 +262,69 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
           const auto& apy_fab = areafrac[1]->array(mfi);
           const auto& apz_fab = areafrac[2]->array(mfi);
 
-          // This FAB has cut cells -- we predict from cell centroids to face centroids
+          // This FAB has cut cells -- we predict from cell centroids to face
+          // centroids
           amrex::ParallelFor(ubx,
             [apx_fab,fcx_fab,epx_fab,ccc_fab,upls_fab,umns_fab,ccvel_fab,xslopes_fab,yslopes_fab,zslopes_fab,umac_fab,small_vel]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-              // X-faces
-              if (apx_fab(i,j,k) > 0.0)
-              {
-                 Real yf = fcx_fab(i,j,k,0); // local (y,z) of centroid of x-face we are extrapolating to
-                 Real zf = fcx_fab(i,j,k,1);
+            // X-faces
+            if (apx_fab(i,j,k) > 0.0)
+            {
+              Real yf = fcx_fab(i,j,k,0); // local (y,z) of centroid of x-face we are extrapolating to
+              Real zf = fcx_fab(i,j,k,1);
 
-                 Real xc = ccc_fab(i,j,k,0); // centroid of cell (i,j,k)
-                 Real yc = ccc_fab(i,j,k,1);
-                 Real zc = ccc_fab(i,j,k,2);
+              Real xc = ccc_fab(i,j,k,0); // centroid of cell (i,j,k)
+              Real yc = ccc_fab(i,j,k,1);
+              Real zc = ccc_fab(i,j,k,2);
 
-                 Real delta_x = 0.5 + xc;
-                 Real delta_y = yf  - yc;
-                 Real delta_z = zf  - zc;
+              Real delta_x = 0.5 + xc;
+              Real delta_y = yf  - yc;
+              Real delta_z = zf  - zc;
 
-                 Real cc_umax = std::max(ccvel_fab(i,j,k,0), ccvel_fab(i-1,j,k,0));
-                 Real cc_umin = std::min(ccvel_fab(i,j,k,0), ccvel_fab(i-1,j,k,0));
+              Real cc_umax = std::max(ccvel_fab(i,j,k,0), ccvel_fab(i-1,j,k,0));
+              Real cc_umin = std::min(ccvel_fab(i,j,k,0), ccvel_fab(i-1,j,k,0));
 
-                 upls_fab(i,j,k) = ccvel_fab(i  ,j,k,0) - delta_x * xslopes_fab(i,j,k,0) 
-                                                        + delta_y * yslopes_fab(i,j,k,0) 
-                                                        + delta_z * zslopes_fab(i,j,k,0);
+              upls_fab(i,j,k) = ccvel_fab(i  ,j,k,0) - delta_x * xslopes_fab(i,j,k,0) 
+                                                     + delta_y * yslopes_fab(i,j,k,0) 
+                                                     + delta_z * zslopes_fab(i,j,k,0);
 
-                 upls_fab(i,j,k) = std::min(upls_fab(i,j,k), cc_umax);
-                 upls_fab(i,j,k) = std::max(upls_fab(i,j,k), cc_umin);
+              upls_fab(i,j,k) = std::min(upls_fab(i,j,k), cc_umax);
+              upls_fab(i,j,k) = std::max(upls_fab(i,j,k), cc_umin);
 
-                 xc = ccc_fab(i-1,j,k,0); // centroid of cell (i-1,j,k)
-                 yc = ccc_fab(i-1,j,k,1);
-                 zc = ccc_fab(i-1,j,k,2);
+              xc = ccc_fab(i-1,j,k,0); // centroid of cell (i-1,j,k)
+              yc = ccc_fab(i-1,j,k,1);
+              zc = ccc_fab(i-1,j,k,2);
 
-                 delta_x = 0.5 - xc;
-                 delta_y = yf  - yc;
-                 delta_z = zf  - zc;
+              delta_x = 0.5 - xc;
+              delta_y = yf  - yc;
+              delta_z = zf  - zc;
 
-                 umns_fab(i,j,k) = ccvel_fab(i-1,j,k,0) + delta_x * xslopes_fab(i-1,j,k,0) 
-                                                        + delta_y * yslopes_fab(i-1,j,k,0) 
-                                                        + delta_z * zslopes_fab(i-1,j,k,0);
+              umns_fab(i,j,k) = ccvel_fab(i-1,j,k,0) + delta_x * xslopes_fab(i-1,j,k,0) 
+                                                     + delta_y * yslopes_fab(i-1,j,k,0) 
+                                                     + delta_z * zslopes_fab(i-1,j,k,0);
 
-                 umns_fab(i,j,k) = std::min(umns_fab(i,j,k), cc_umax);
-                 umns_fab(i,j,k) = std::max(umns_fab(i,j,k), cc_umin);
+              umns_fab(i,j,k) = std::min(umns_fab(i,j,k), cc_umax);
+              umns_fab(i,j,k) = std::max(umns_fab(i,j,k), cc_umin);
 
-                 if ( umns_fab(i,j,k) < 0.0 && upls_fab(i,j,k) > 0.0 ) {
-                    umac_fab(i,j,k) = 0.0;
-                 } else {
-                    Real avg = 0.5 * ( upls_fab(i,j,k) + umns_fab(i,j,k) );
-                    if ( std::abs(avg) <  small_vel) { umac_fab(i,j,k) = 0.0;
-                    } else if (avg >= 0)             { umac_fab(i,j,k) = umns_fab(i,j,k);
-                    } else                           { umac_fab(i,j,k) = upls_fab(i,j,k);
-                    }
-                    umac_fab(i,j,k) *= epx_fab(i,j,k);
-                 }
+              if ( umns_fab(i,j,k) < 0.0 && upls_fab(i,j,k) > 0.0 ) {
+                umac_fab(i,j,k) = 0.0;
               }
+              else {
+                Real avg = 0.5 * ( upls_fab(i,j,k) + umns_fab(i,j,k) );
+                if ( std::abs(avg) <  small_vel) {
+                  umac_fab(i,j,k) = 0.0;
+                }
+                else if (avg >= 0) {
+                  umac_fab(i,j,k) = umns_fab(i,j,k);
+                }
+                else {
+                  umac_fab(i,j,k) = upls_fab(i,j,k);
+                }
+
+                umac_fab(i,j,k) *= epx_fab(i,j,k);
+              }
+            }
           });
 
           amrex::ParallelFor(vbx,
