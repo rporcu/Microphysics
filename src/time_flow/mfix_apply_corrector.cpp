@@ -105,11 +105,15 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
                 amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
-                    rho_new(i,j,k) = epg(i,j,k)*rho_o(i,j,k) 
-                                    + 0.5 * l_dt * (drdt_o(i,j,k,0) + drdt(i,j,k,0));
-                    rho_new(i,j,k) = rho_new(i,j,k) / epg(i,j,k);
+                  const Real epg_loc = epg(i,j,k);
+                  const Real rho_o_loc = rho_o(i,j,k);
 
-                    rho_nph(i,j,k) = 0.5 * (rho_o(i,j,k) + rho_new(i,j,k));
+                  Real rho = epg_loc*rho_o_loc + .5*l_dt*(drdt_o(i,j,k,0) + drdt(i,j,k,0));
+                  rho /= epg_loc;
+
+                  rho_new(i,j,k) = rho;
+
+                  rho_nph(i,j,k) = 0.5 * (rho_o_loc + rho);
                 });
             } // mfi
         } // lev
@@ -142,16 +146,21 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
                 amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
-                    for (int n = 0; n < l_ntrac; ++n)
-                    {
-                        int conv_comp = 1+n;
-                        tra_n(i,j,k,n) = (rho_o(i,j,k)*epg(i,j,k))*tra_o(i,j,k,n) 
-                                      + 0.5 * l_dt * (dtdt_o(i,j,k,conv_comp) + dtdt(i,j,k,conv_comp));
-                        tra_n(i,j,k,n) = tra_n(i,j,k,n) / (rho_n(i,j,k)*epg(i,j,k));
+                  const Real epg_loc = epg(i,j,k);
 
-                        // Crank-Nicolson so we add the explicit half here
-                        tra_n(i,j,k,n) += 0.5 * laps_o(i,j,k,n);
-                    }
+                  for (int n = 0; n < l_ntrac; ++n)
+                  {
+                    int conv_comp = 1+n;
+
+                    Real tra = (rho_o(i,j,k)*epg_loc)*tra_o(i,j,k,n) 
+                             + 0.5 * l_dt * (dtdt_o(i,j,k,conv_comp) + dtdt(i,j,k,conv_comp));
+                    tra /= (rho_n(i,j,k)*epg_loc);
+
+                    // Crank-Nicolson so we add the explicit half here
+                    tra += 0.5 * laps_o(i,j,k,n);
+
+                    tra_n(i,j,k,n) = tra;
+                  }
                 });
             } // mfi
         } // lev
@@ -187,25 +196,31 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
          amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
-             vel_n(i,j,k,0) = epg(i,j,k)*vel_o(i,j,k,0) + 0.5 * l_dt * (dudt_o(i,j,k,0)+dudt(i,j,k,0));
-             vel_n(i,j,k,1) = epg(i,j,k)*vel_o(i,j,k,1) + 0.5 * l_dt * (dudt_o(i,j,k,1)+dudt(i,j,k,1));
-             vel_n(i,j,k,2) = epg(i,j,k)*vel_o(i,j,k,2) + 0.5 * l_dt * (dudt_o(i,j,k,2)+dudt(i,j,k,2));
+           const Real epg_loc = epg(i,j,k);
 
-             vel_n(i,j,k,0) = vel_n(i,j,k,0) / epg(i,j,k);
-             vel_n(i,j,k,1) = vel_n(i,j,k,1) / epg(i,j,k);
-             vel_n(i,j,k,2) = vel_n(i,j,k,2) / epg(i,j,k);
+           Real vel_nx = epg_loc*vel_o(i,j,k,0) + .5*l_dt*(dudt_o(i,j,k,0)+dudt(i,j,k,0));
+           Real vel_ny = epg_loc*vel_o(i,j,k,1) + .5*l_dt*(dudt_o(i,j,k,1)+dudt(i,j,k,1));
+           Real vel_nz = epg_loc*vel_o(i,j,k,2) + .5*l_dt*(dudt_o(i,j,k,2)+dudt(i,j,k,2));
 
-             // Crank-Nicolson so we should only add half of the explicit term here, but  
-             //     we go ahead and add all of it now before doing the implicit drag solve, 
-             //     then we will subtract half of it after the drag solve
-             vel_n(i,j,k,0) += l_dt * divtau_o(i,j,k,0);
-             vel_n(i,j,k,1) += l_dt * divtau_o(i,j,k,1);
-             vel_n(i,j,k,2) += l_dt * divtau_o(i,j,k,2);
+           vel_nx /= epg_loc;
+           vel_ny /= epg_loc;
+           vel_nz /= epg_loc;
 
-             Real inv_dens = 1.0 / rho_nph(i,j,k);
-             vel_n(i,j,k,0) += l_dt * (gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
-             vel_n(i,j,k,1) += l_dt * (gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
-             vel_n(i,j,k,2) += l_dt * (gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
+           // Crank-Nicolson so we should only add half of the explicit term here, but  
+           //     we go ahead and add all of it now before doing the implicit drag solve, 
+           //     then we will subtract half of it after the drag solve
+           vel_nx += l_dt * divtau_o(i,j,k,0);
+           vel_ny += l_dt * divtau_o(i,j,k,1);
+           vel_nz += l_dt * divtau_o(i,j,k,2);
+
+           Real inv_dens = 1.0 / rho_nph(i,j,k);
+           vel_nx += l_dt * (gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
+           vel_ny += l_dt * (gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
+           vel_nz += l_dt * (gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
+
+           vel_n(i,j,k,0) = vel_nx;
+           vel_n(i,j,k,1) = vel_ny;
+           vel_n(i,j,k,2) = vel_nz;
          });
        }
     }

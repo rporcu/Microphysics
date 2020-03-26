@@ -339,15 +339,20 @@ mfix::mfix_add_drag_explicit (Real dt)
       amrex::ParallelFor(bx,[dt,vel_fab,drag_fab,ro_fab,ep_fab]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-          Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
+        const Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
 
-          Real drag_0 = (drag_fab(i,j,k,0) - drag_fab(i,j,k,3)*vel_fab(i,j,k,0)) * orop;
-          Real drag_1 = (drag_fab(i,j,k,1) - drag_fab(i,j,k,3)*vel_fab(i,j,k,1)) * orop;
-          Real drag_2 = (drag_fab(i,j,k,2) - drag_fab(i,j,k,3)*vel_fab(i,j,k,2)) * orop;
+        const Real A = drag_fab(i,j,k,3);
+        const Real vel_x = vel_fab(i,j,k,0);
+        const Real vel_y = vel_fab(i,j,k,1);
+        const Real vel_z = vel_fab(i,j,k,2);
 
-          vel_fab(i,j,k,0) += drag_0;
-          vel_fab(i,j,k,1) += drag_1;
-          vel_fab(i,j,k,2) += drag_2;
+        const Real drag_0 = (drag_fab(i,j,k,0) - A*vel_x) * orop;
+        const Real drag_1 = (drag_fab(i,j,k,1) - A*vel_y) * orop;
+        const Real drag_2 = (drag_fab(i,j,k,2) - A*vel_z) * orop;
+
+        vel_fab(i,j,k,0) = vel_x + drag_0;
+        vel_fab(i,j,k,1) = vel_y + drag_1;
+        vel_fab(i,j,k,2) = vel_z + drag_2;
       });
     }
   }
