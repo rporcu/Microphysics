@@ -52,11 +52,12 @@ void mfix::mfix_deposition_bcs_scalar (int lev, amrex::MultiFab& filled_mf)
     if(sbx_lo[0] < dom_lo.x) {
       const int ilo = dom_lo.x;
 
-      amrex::ParallelFor(sbx_yz, [bc_ilo_type,pinf,minf,dom_lo,vol,ilo]
+      amrex::ParallelFor(sbx_yz, [bc_ilo_type,pinf,minf,vol,ilo]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          if(bc_ilo_type(dom_lo.x-1,j,k,0) == pinf or
-             bc_ilo_type(dom_lo.x-1,j,k,0) == minf) 
+          const int bct_ilo = bc_ilo_type(ilo-1,j,k,0);
+
+          if(bct_ilo == pinf or bct_ilo == minf) 
           {
             vol(ilo,j,k) += vol(ilo-1,j,k);
             vol(ilo-1,j,k) = 0;
@@ -67,11 +68,12 @@ void mfix::mfix_deposition_bcs_scalar (int lev, amrex::MultiFab& filled_mf)
     if(sbx_hi[0] > dom_hi.x) {
       const int ihi = dom_hi.x;
 
-      amrex::ParallelFor(sbx_yz, [bc_ihi_type,pinf,minf,dom_hi,vol,ihi]
+      amrex::ParallelFor(sbx_yz, [bc_ihi_type,pinf,minf,vol,ihi]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          if(bc_ihi_type(dom_hi.x+1,j,k,0) == pinf or
-             bc_ihi_type(dom_hi.x+1,j,k,0) == minf)
+          const int bct_ihi = bc_ihi_type(ihi+1,j,k,0);
+
+          if(bct_ihi == pinf or bct_ihi == minf)
           {
             vol(ihi,j,k) += vol(ihi+1,j,k);
             vol(ihi+1,j,k) = 0;
@@ -82,11 +84,12 @@ void mfix::mfix_deposition_bcs_scalar (int lev, amrex::MultiFab& filled_mf)
     if(sbx_lo[1] < dom_lo.y) {
       const int jlo = dom_lo.y;
 
-      amrex::ParallelFor(sbx_xz, [bc_jlo_type,pinf,minf,dom_lo,vol,jlo]
+      amrex::ParallelFor(sbx_xz, [bc_jlo_type,pinf,minf,vol,jlo]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          if(bc_jlo_type(i,dom_lo.y-1,k,0) == pinf or
-             bc_jlo_type(i,dom_lo.y-1,k,0) == minf)
+          const int bct_jlo = bc_jlo_type(i,jlo-1,k,0);
+
+          if(bct_jlo == pinf or bct_jlo == minf)
           {
             vol(i,jlo,k) += vol(i,jlo-1,k);
             vol(i,jlo-1,k) = 0;
@@ -98,26 +101,28 @@ void mfix::mfix_deposition_bcs_scalar (int lev, amrex::MultiFab& filled_mf)
       {
         const int jhi = dom_hi.y;
 
-      amrex::ParallelFor(sbx_xz, [bc_jhi_type,pinf,minf,dom_hi,vol,jhi]
+      amrex::ParallelFor(sbx_xz, [bc_jhi_type,pinf,minf,vol,jhi]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-            if(bc_jhi_type(i,dom_hi.y+1,k,0) == pinf or
-               bc_jhi_type(i,dom_hi.y+1,k,0) == minf)
-            {
-              vol(i,jhi,k) += vol(i,jhi+1,k);
-              vol(i,jhi+1,k) = 0;
-            }
+          const int bct_jhi = bc_jhi_type(i,jhi+1,k,0);
+
+          if(bct_jhi == pinf or bct_jhi == minf)
+          {
+            vol(i,jhi,k) += vol(i,jhi+1,k);
+            vol(i,jhi+1,k) = 0;
+          }
         });
       }
 
     if(sbx_lo[2] < dom_lo.z) {
       const int klo = dom_lo.z;
       
-      amrex::ParallelFor(sbx_xy, [bc_klo_type,pinf,minf,dom_lo,vol,klo]
+      amrex::ParallelFor(sbx_xy, [bc_klo_type,pinf,minf,vol,klo]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          if(bc_klo_type(i,j,dom_lo.z-1,0) == pinf or
-             bc_klo_type(i,j,dom_lo.z-1,0) == minf)
+          const int bct_klo = bc_klo_type(i,j,klo-1,0);
+
+          if(bct_klo == pinf or bct_klo == minf)
           {
             vol(i,j,klo) += vol(i,j,klo-1);
             vol(i,j,klo-1) = 0;
@@ -128,11 +133,12 @@ void mfix::mfix_deposition_bcs_scalar (int lev, amrex::MultiFab& filled_mf)
     if(sbx_hi[2] > dom_hi.z) {
       const int khi = dom_hi.z;
       
-      amrex::ParallelFor(sbx_xy, [bc_khi_type,pinf,minf,dom_hi,vol,khi]
+      amrex::ParallelFor(sbx_xy, [bc_khi_type,pinf,minf,vol,khi]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          if(bc_khi_type(i,j,dom_hi.z+1,0) == pinf or
-             bc_khi_type(i,j,dom_hi.z+1,0) == minf)
+          const int bct_khi = bc_khi_type(i,j,khi+1,0);
+
+          if(bct_khi == pinf or bct_khi == minf)
           {
             vol(i,j,khi) += vol(i,j,khi+1);
             vol(i,j,khi+1) = 0;

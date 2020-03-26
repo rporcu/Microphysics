@@ -119,13 +119,16 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
             {
               MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
 
-              Real velfp[3];
-              trilinear_interp(particle.pos(), &velfp[0], vel_array, plo, dxi);
+              const RealVect pos = particle.pos();
+
+              RealVect velfp(0.);
+              trilinear_interp(pos, &velfp[0], vel_array, plo, dxi);
 
               // Indices of cell where particle is located
-              int iloc = floor((particle.pos(0) - plo[0])*dxi[0]);
-              int jloc = floor((particle.pos(1) - plo[1])*dxi[1]);
-              int kloc = floor((particle.pos(2) - plo[2])*dxi[2]);
+              const IntVect ijk_loc = ((pos - plo)*dxi).floor();
+              int iloc = ijk_loc[0];
+              int jloc = ijk_loc[1];
+              int kloc = ijk_loc[2];
 
               Real  ep = ep_array(iloc,jloc,kloc);
               Real  ro = ro_array(iloc,jloc,kloc);
@@ -136,19 +139,14 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
               int p_id = particle.id();
 
-              Real pvel[3];
-              pvel[0] = particle.rdata(realData::velx);
-              pvel[1] = particle.rdata(realData::vely);
-              pvel[2] = particle.rdata(realData::velz);
+              IntVect vel_idxs(realData::velx, realData::vely, realData::velz);
+              RealVect pvel = particle.rvec(vel_idxs);
 
               Real rop_g = ro * ep;
 
-              Real vslp[3];
-              vslp[0] = velfp[0] - pvel[0];
-              vslp[1] = velfp[1] - pvel[1];
-              vslp[2] = velfp[2] - pvel[2];
+              RealVect vslp = velfp - pvel;
 
-              Real vrel = sqrt(dot_product(vslp, vslp));
+              Real vrel = vslp.vectorLength();
               Real dpm = 2.0*rad;
               Real phis = 1.0 - ep;
               Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
@@ -167,17 +165,21 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
             {
               MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
 
-              Real velfp[3];
+              RealVect velfp(0.);
+
+              const RealVect pos = particle.pos();
 
               // This identifies which cell the particle is in
-              int iloc = floor((particle.pos(0) - plo[0])*dxi[0]);
-              int jloc = floor((particle.pos(1) - plo[1])*dxi[1]);
-              int kloc = floor((particle.pos(2) - plo[2])*dxi[2]);
+              const IntVect ijk_loc = ((pos - plo)*dxi).floor();
+              int iloc = ijk_loc[0];
+              int jloc = ijk_loc[1];
+              int kloc = ijk_loc[2];
 
               // Pick upper cell in the stencil
-              Real lx = (particle.pos(0) - plo[0])*dxi[0] + 0.5;
-              Real ly = (particle.pos(1) - plo[1])*dxi[1] + 0.5;
-              Real lz = (particle.pos(2) - plo[2])*dxi[2] + 0.5;
+              RealVect l_xyz = (pos - plo)*dxi + .5;
+              Real lx = l_xyz[0];
+              Real ly = l_xyz[1];
+              Real lz = l_xyz[2];
 
               int i = std::floor(lx);
               int j = std::floor(ly);
@@ -202,16 +204,17 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                     !flags_array(i-1,j  ,k  ).isCovered() and
                     !flags_array(i  ,j  ,k  ).isCovered())
                 {
-                  trilinear_interp(particle.pos(), &velfp[0], vel_array, plo, dxi);
-                // At least one of the cells in the stencil is covered
+                  trilinear_interp(pos, &velfp[0], vel_array, plo, dxi);
                 }
+                // At least one of the cells in the stencil is covered
                 else
                 {
                   // Particle position must be in [-.5:.5] is relative to cell
                   // center and scaled by dx
-                  Real gx = particle.pos(0)*dxi[0] - (iloc + 0.5);
-                  Real gy = particle.pos(1)*dxi[1] - (jloc + 0.5);
-                  Real gz = particle.pos(2)*dxi[2] - (kloc + 0.5);
+                  RealVect g_xyz = pos*dxi - (ijk_loc + .5);
+                  Real gx = g_xyz[0];
+                  Real gy = g_xyz[1];
+                  Real gz = g_xyz[2];
 
                   int ii;
                   int jj;
@@ -286,19 +289,14 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
                 int p_id = particle.id();
 
-                Real pvel[3];
-                pvel[0] = particle.rdata(realData::velx);
-                pvel[1] = particle.rdata(realData::vely);
-                pvel[2] = particle.rdata(realData::velz);
+                const IntVect vel_idxs(realData::velx, realData::vely, realData::velz);
+                RealVect pvel = particle.rvec(vel_idxs);
 
                 Real rop_g = ro * ep;
 
-                Real vslp[3];
-                vslp[0] = velfp[0] - pvel[0];
-                vslp[1] = velfp[1] - pvel[1];
-                vslp[2] = velfp[2] - pvel[2];
+                RealVect vslp = velfp - pvel;
 
-                Real vrel = sqrt(dot_product(vslp, vslp));
+                Real vrel = vslp.vectorLength();
                 Real dpm = 2.0*rad;
                 Real phis = 1.0 - ep;
 
