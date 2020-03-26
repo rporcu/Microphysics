@@ -117,11 +117,14 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
                 amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
-                    int conv_comp = 0;
-                    rho_new(i,j,k) = epg(i,j,k)*rho_o(i,j,k) + l_dt * drdt_o(i,j,k,conv_comp);
-                    rho_new(i,j,k) = rho_new(i,j,k) / epg(i,j,k);
+                  int conv_comp = 0;
 
-                    rho_nph(i,j,k) = 0.5 * (rho_o(i,j,k) + rho_new(i,j,k));
+                  const Real epg_loc = epg(i,j,k);
+                  Real rho = epg_loc*rho_o(i,j,k) + l_dt * drdt_o(i,j,k,conv_comp);
+                  rho /= epg_loc;
+
+                  rho_new(i,j,k) = rho;
+                  rho_nph(i,j,k) = 0.5 * (rho_o(i,j,k) + rho);
                 });
             } // mfi
         } // lev
@@ -155,23 +158,34 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 {
                     amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                     {
-                        for (int n = 0; n < l_ntrac; ++n)
-                        {
-                            int conv_comp = 1+n;
-                            tra_n(i,j,k,n) = (rho_o(i,j,k)*epg(i,j,k))*tra_o(i,j,k,n)
-                                             + l_dt * (dtdt_o(i,j,k,conv_comp) + laps_o(i,j,k));
-                            tra_n(i,j,k,n) = tra_n(i,j,k,n) / (rho_n(i,j,k)*epg(i,j,k));
-                        }
+                      for (int n = 0; n < l_ntrac; ++n)
+                      {
+                        int conv_comp = 1+n;
+
+                        const Real epg_loc = epg(i,j,k);
+
+                        Real tra = (rho_o(i,j,k)*epg_loc)*tra_o(i,j,k,n);
+                        tra += l_dt * (dtdt_o(i,j,k,conv_comp) + laps_o(i,j,k));
+                        tra /= (rho_n(i,j,k)*epg_loc);
+
+                        tra_n(i,j,k,n) = tra;
+                      }
                     });
                 } else { // Fully implicit diffusion
                     amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                     {
-                        for (int n = 0; n < l_ntrac; ++n)
-                        {
-                            int conv_comp = 1+n;
-                            tra_n(i,j,k,n) = (rho_o(i,j,k)*epg(i,j,k))*tra_o(i,j,k,n) + l_dt * dtdt_o(i,j,k,conv_comp);
-                            tra_n(i,j,k,n) = tra_n(i,j,k,n) / (rho_n(i,j,k)*epg(i,j,k));
-                        }
+                      for (int n = 0; n < l_ntrac; ++n)
+                      {
+                        int conv_comp = 1+n;
+
+                        const Real epg_loc = epg(i,j,k);
+
+                        Real tra = (rho_o(i,j,k)*epg_loc)*tra_o(i,j,k,n);
+                        tra += l_dt * dtdt_o(i,j,k,conv_comp);
+                        tra /= (rho_n(i,j,k)*epg_loc);
+
+                        tra_n(i,j,k,n) = tra;
+                      }
                     });
                 }
             } // mfi
@@ -208,43 +222,55 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
          if (explicit_diffusion_pred)
          {
-             amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-             {
-                 vel_n(i,j,k,0) = epg(i,j,k)*vel_o(i,j,k,0) + l_dt * dudt_o(i,j,k,0);
-                 vel_n(i,j,k,1) = epg(i,j,k)*vel_o(i,j,k,1) + l_dt * dudt_o(i,j,k,1);
-                 vel_n(i,j,k,2) = epg(i,j,k)*vel_o(i,j,k,2) + l_dt * dudt_o(i,j,k,2);
-    
-                 vel_n(i,j,k,0) = vel_n(i,j,k,0) / epg(i,j,k);
-                 vel_n(i,j,k,1) = vel_n(i,j,k,1) / epg(i,j,k);
-                 vel_n(i,j,k,2) = vel_n(i,j,k,2) / epg(i,j,k);
-    
-                 vel_n(i,j,k,0) += l_dt * divtau_o(i,j,k,0);
-                 vel_n(i,j,k,1) += l_dt * divtau_o(i,j,k,1);
-                 vel_n(i,j,k,2) += l_dt * divtau_o(i,j,k,2);
+           amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+           {
+             const Real epg_loc = epg(i,j,k);
 
-                 Real inv_dens = 1.0 / rho_nph(i,j,k);
-                 vel_n(i,j,k,0) += l_dt * (gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
-                 vel_n(i,j,k,1) += l_dt * (gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
-                 vel_n(i,j,k,2) += l_dt * (gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
-             });
+             Real vel_nx = epg_loc*vel_o(i,j,k,0) + l_dt*dudt_o(i,j,k,0);
+             Real vel_ny = epg_loc*vel_o(i,j,k,1) + l_dt*dudt_o(i,j,k,1);
+             Real vel_nz = epg_loc*vel_o(i,j,k,2) + l_dt*dudt_o(i,j,k,2);
+
+             vel_nx /= epg_loc;
+             vel_ny /= epg_loc;
+             vel_nz /= epg_loc;
+
+             vel_nx += l_dt * divtau_o(i,j,k,0);
+             vel_ny += l_dt * divtau_o(i,j,k,1);
+             vel_nz += l_dt * divtau_o(i,j,k,2);
+
+             Real inv_dens = 1.0 / rho_nph(i,j,k);
+             vel_nx += l_dt * (gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
+             vel_ny += l_dt * (gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
+             vel_nz += l_dt * (gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
+
+             vel_nx = vel_n(i,j,k,0);
+             vel_ny = vel_n(i,j,k,1);
+             vel_nz = vel_n(i,j,k,2);
+           });
 
          } else { // Fully implicit
 
-             amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-             {
-                 vel_n(i,j,k,0) = epg(i,j,k)*vel_o(i,j,k,0) + l_dt * dudt_o(i,j,k,0);
-                 vel_n(i,j,k,1) = epg(i,j,k)*vel_o(i,j,k,1) + l_dt * dudt_o(i,j,k,1);
-                 vel_n(i,j,k,2) = epg(i,j,k)*vel_o(i,j,k,2) + l_dt * dudt_o(i,j,k,2);
-    
-                 vel_n(i,j,k,0) = vel_n(i,j,k,0) / epg(i,j,k);
-                 vel_n(i,j,k,1) = vel_n(i,j,k,1) / epg(i,j,k);
-                 vel_n(i,j,k,2) = vel_n(i,j,k,2) / epg(i,j,k);
+           amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+           {
+             const Real epg_loc = epg(i,j,k);
 
-                 Real inv_dens = 1.0 / rho_nph(i,j,k);
-                 vel_n(i,j,k,0) += l_dt * (gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
-                 vel_n(i,j,k,1) += l_dt * (gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
-                 vel_n(i,j,k,2) += l_dt * (gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
-             });
+             Real vel_nx = epg_loc*vel_o(i,j,k,0) + l_dt * dudt_o(i,j,k,0);
+             Real vel_ny = epg_loc*vel_o(i,j,k,1) + l_dt * dudt_o(i,j,k,1);
+             Real vel_nz = epg_loc*vel_o(i,j,k,2) + l_dt * dudt_o(i,j,k,2);
+
+             vel_nx /= epg_loc;
+             vel_ny /= epg_loc;
+             vel_nz /= epg_loc;
+
+             Real inv_dens = 1.0 / rho_nph(i,j,k);
+             vel_nx += l_dt * (gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
+             vel_ny += l_dt * (gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
+             vel_nz += l_dt * (gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
+
+             vel_nx = vel_n(i,j,k,0);
+             vel_ny = vel_n(i,j,k,1);
+             vel_nz = vel_n(i,j,k,2);
+           });
          }
        } // mfi
     } // lev
