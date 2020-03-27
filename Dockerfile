@@ -11,16 +11,18 @@ RUN apt-get -qq update \
   git \
   libopenmpi-dev \
   openmpi-bin \
-  python \
+  python3 \
+  python3-setuptools \
   wget
 
 RUN wget https://bootstrap.pypa.io/get-pip.py
-RUN python get-pip.py
-RUN python -m pip install cmake
-RUN python -m pip install ninja
+RUN python3 get-pip.py
+RUN python3 -m pip install cmake
+RUN python3 -m pip install ninja
 
 RUN printf '#!/bin/bash\nenv $@' > /usr/local/bin/srun
 RUN chmod +x /usr/local/bin/srun
+RUN ln -s /usr/bin/python3 /usr/local/bin/python
 
 RUN useradd --create-home -s /bin/bash user
 WORKDIR /home/user
