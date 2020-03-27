@@ -1082,10 +1082,6 @@ ComputeAverageVelocities (const int lev,
                           const amrex::Vector<Real>& avg_region_z_b,
                           const amrex::Vector<Real>& avg_region_z_t )
 {
-  const Real p_radius = DEM_t::diameter / 2.;
-  const Real p_volume = (4./3.) * M_PI * (p_radius*p_radius*p_radius);
-  const Real p_mass = DEM_t::density * p_volume;
-
   // Count number of calls -- Used to determine when to create file from scratch
   static int ncalls = 0;
   ++ncalls;
@@ -1159,13 +1155,14 @@ ComputeAverageVelocities (const int lev,
               const Real velx = particles[p].rdata(realData::velx);
               const Real vely = particles[p].rdata(realData::vely);
               const Real velz = particles[p].rdata(realData::velz);
+              const Real mass = particles[p].rdata(realData::mass);
 
               sum_np++;
               sum_velx += velx;
               sum_vely += vely;
               sum_velz += velz;
 
-              sum_kin_energy += .5*p_mass*(velx*velx + vely*vely + velz*velz);
+              sum_kin_energy += .5*mass*(velx*velx + vely*vely + velz*velz);
             }
           }
         }
