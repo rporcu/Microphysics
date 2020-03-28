@@ -11,4 +11,5 @@ target_sources( mfixcore
    mfix_apply_corrector.cpp
    mfix_compute_dt.cpp
    mfix_evolve.cpp
+   mfix_evolve_fluid.cpp
    )
