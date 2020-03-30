@@ -60,28 +60,36 @@ mfix::mfix_compute_slopes (int lev,
                [state_fab,xs_fab,ys_fab,zs_fab,slopes_comp]
                AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                {
+                   const Real state = state_fab(i,j,k,n);
+                   const Real state_x_mns = state_fab(i-1,j,k,n);
+                   const Real state_x_pls = state_fab(i+1,j,k,n);
+                   const Real state_y_mns = state_fab(i,j-1,k,n);
+                   const Real state_y_pls = state_fab(i,j+1,k,n);
+                   const Real state_z_mns = state_fab(i,j,k-1,n);
+                   const Real state_z_pls = state_fab(i,j,k+1,n);
+
                    // X direction
-                   Real du_xl = 2.0*(state_fab(i  ,j,k,n) - state_fab(i-1,j,k,n));
-                   Real du_xr = 2.0*(state_fab(i+1,j,k,n) - state_fab(i  ,j,k,n));
-                   Real du_xc = 0.5*(state_fab(i+1,j,k,n) - state_fab(i-1,j,k,n));
+                   Real du_xl = 2.0*(state - state_x_mns);
+                   Real du_xr = 2.0*(state_x_pls - state);
+                   Real du_xc = 0.5*(state_x_pls - state_x_mns);
 
                    Real xslope = amrex::min(std::abs(du_xl), std::abs(du_xc), std::abs(du_xr));
                    xslope = (du_xr*du_xl > 0.0) ? xslope : 0.0;
                    xs_fab(i,j,k,slopes_comp+n) = (du_xc > 0.0) ? xslope : -xslope;
 
                    // Y direction
-                   Real du_yl = 2.0*(state_fab(i,j  ,k,n) - state_fab(i,j-1,k,n));
-                   Real du_yr = 2.0*(state_fab(i,j+1,k,n) - state_fab(i,j  ,k,n));
-                   Real du_yc = 0.5*(state_fab(i,j+1,k,n) - state_fab(i,j-1,k,n));
+                   Real du_yl = 2.0*(state - state_y_mns);
+                   Real du_yr = 2.0*(state_x_pls - state);
+                   Real du_yc = 0.5*(state_x_pls - state_y_mns);
 
                    Real yslope = amrex::min(std::abs(du_yl), std::abs(du_yc), std::abs(du_yr));
                    yslope = (du_yr*du_yl > 0.0) ? yslope : 0.0;
                    ys_fab(i,j,k,slopes_comp+n) = (du_yc > 0.0) ? yslope : -yslope;
 
                    // Z direction
-                   Real du_zl = 2.0*(state_fab(i,j,k  ,n) - state_fab(i,j,k-1,n));
-                   Real du_zr = 2.0*(state_fab(i,j,k+1,n) - state_fab(i,j,k  ,n));
-                   Real du_zc = 0.5*(state_fab(i,j,k+1,n) - state_fab(i,j,k-1,n));
+                   Real du_zl = 2.0*(state - state_z_mns);
+                   Real du_zr = 2.0*(state_z_pls - state);
+                   Real du_zc = 0.5*(state_z_pls - state_z_mns);
 
                    Real zslope = amrex::min(std::abs(du_zl), std::abs(du_zc), std::abs(du_zr));
                    zslope = (du_zr*du_zl > 0.0) ? zslope : 0.0;
