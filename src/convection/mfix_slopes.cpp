@@ -79,8 +79,8 @@ mfix::mfix_compute_slopes (int lev,
 
                    // Y direction
                    Real du_yl = 2.0*(state - state_y_mns);
-                   Real du_yr = 2.0*(state_x_pls - state);
-                   Real du_yc = 0.5*(state_x_pls - state_y_mns);
+                   Real du_yr = 2.0*(state_y_pls - state);
+                   Real du_yc = 0.5*(state_y_pls - state_y_mns);
 
                    Real yslope = amrex::min(std::abs(du_yl), std::abs(du_yc), std::abs(du_yr));
                    yslope = (du_yr*du_yl > 0.0) ? yslope : 0.0;
