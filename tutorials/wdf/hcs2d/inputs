@@ -28,7 +28,7 @@ amr.max_grid_size_z = 4
 fabarray.mfiter_tile_size = 1024 1024 1024
 
 # Maximum particle title size
-##particles.tile_size = 8  8  4 
+##particles.tile_size = 8  8  4
 
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
 amr.max_level  = 0
@@ -43,24 +43,24 @@ geometry.prob_hi     = 0.256   0.256  0.008   # hi corner of physical domain
 # EB geometry
 # none
 
-# BCs 
+# BCs
 # none
 
 # user data processing
 amr.avg_int = 100
 amr.avg_file = "uio"
 
-amr.avg_vel_p =        1 
-amr.avg_p_g   =        0 
-amr.avg_ep_g  =        0 
-amr.avg_vel_g =        0 
+amr.avg_vel_p =        1
+amr.avg_p_g   =        0
+amr.avg_ep_g  =        0
+amr.avg_vel_g =        0
 
 amr.avg_region_x_w =   0.000
 amr.avg_region_x_e =   0.256
-amr.avg_region_y_s =   0.000 
-amr.avg_region_y_n =   0.256 
-amr.avg_region_z_b =   0.000 
-amr.avg_region_z_t =   0.008 
+amr.avg_region_y_s =   0.000
+amr.avg_region_y_n =   0.256
+amr.avg_region_z_b =   0.000
+amr.avg_region_z_t =   0.008
 
 
 #_______________________________________________________________________
@@ -128,7 +128,7 @@ regions.fluid-only.hi = 0.2560  0.2560  0.0080
 ic.regions = fluid-only
 
 
-# Backgound IC covering the full domain with gas.
+# Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.fluid-only.fluid.volfrac   = 1.0
 

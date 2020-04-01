@@ -50,22 +50,31 @@ mfix::mfix_correct_small_cells (Vector< MultiFab*> vel_in)
              const auto& vfrac_fab = volfrac->array(mfi);
              const auto& ccvel_fab = vel_in[lev]->array(mfi);
 
-             // This FAB has cut cells -- we define the centroid value in terms of the MAC velocities onfaces
+             // This FAB has cut cells -- we define the centroid value in terms
+             // of the MAC velocities onfaces
              amrex::ParallelFor(bx,
                [vfrac_fab,apx_fab,apy_fab,apz_fab,ccvel_fab,umac_fab,vmac_fab,wmac_fab]
                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
              {
-                 if (vfrac_fab(i,j,k) > 0.0 && vfrac_fab(i,j,k) < 1.e-4)
-                 {
-                    Real u_avg = (apx_fab(i,j,k) * umac_fab(i,j,k) + apx_fab(i+1,j,k) * umac_fab(i+1,j,k)) / (apx_fab(i,j,k) + apx_fab(i+1,j,k));
-                    Real v_avg = (apy_fab(i,j,k) * vmac_fab(i,j,k) + apy_fab(i,j+1,k) * vmac_fab(i,j+1,k)) / (apy_fab(i,j,k) + apy_fab(i,j+1,k));
-                    Real w_avg = (apz_fab(i,j,k) * wmac_fab(i,j,k) + apz_fab(i,j,k+1) * wmac_fab(i,j,k+1)) / (apz_fab(i,j,k) + apz_fab(i,j,k+1));
+               Real vfrac = vfrac_fab(i,j,k);
+               if (vfrac > 0.0 and vfrac < 1.e-4)
+               {
+                 const Real apx_mns = apx_fab(i,j,k);
+                 const Real apx_pls = apx_fab(i+1,j,k);
 
-                    ccvel_fab(i,j,k,0) = u_avg;
-                    ccvel_fab(i,j,k,1) = v_avg;
-                    ccvel_fab(i,j,k,2) = w_avg;
+                 const Real apy_mns = apy_fab(i,j,k);
+                 const Real apy_pls = apy_fab(i,j+1,k);
 
-                 }
+                 const Real apz_mns = apz_fab(i,j,k);
+                 const Real apz_pls = apz_fab(i,j,k+1);
+
+                 ccvel_fab(i,j,k,0) =
+                   (apx_mns*umac_fab(i,j,k)+apx_pls*umac_fab(i+1,j,k))/(apx_mns+apx_pls);
+                 ccvel_fab(i,j,k,1) =
+                   (apy_mns*vmac_fab(i,j,k)+apy_pls*vmac_fab(i,j+1,k))/(apy_mns+apy_pls);
+                 ccvel_fab(i,j,k,2) =
+                   (apz_mns*wmac_fab(i,j,k)+apz_pls*wmac_fab(i,j,k+1))/(apz_mns+apz_pls);
+               }
              });
           }
        }

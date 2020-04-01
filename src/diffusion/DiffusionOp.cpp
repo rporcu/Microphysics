@@ -265,10 +265,6 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
     for(int lev = 0; lev <= finest_level; lev++)
     {
        amrex::single_level_redistribute(lev, *laps_aux[lev], *laps_out[lev], 0, ntrac, geom);
- 
-       // Divide by density
-       for(int n = 0; n < ntrac; n++)
-          MultiFab::Divide(*laps_out[lev], *ro_in[lev], 0, n, 1, 0);
     }
     
     for(int lev = 0; lev <= finest_level; lev++)

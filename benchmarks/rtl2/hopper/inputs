@@ -181,7 +181,7 @@ regions.outlet.hi      = 0.0000  0.0020  0.0020
 ic.regions = full-domain  bed
 
 
-# Backgound IC covering the full domain with gas.
+# Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
 
@@ -210,11 +210,10 @@ ic.bed.solid0.density.constant  = 1000.0
 #_______________________________________________________________________
 # Boundary Conditions
 #
-bc.regions = inlet  outlet 
+bc.regions = inlet  outlet
 
 bc.inlet = po
 bc.inlet.fluid.pressure =  0.0
 
 bc.outlet = po
 bc.outlet.fluid.pressure =  0.0
-

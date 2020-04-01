@@ -247,7 +247,7 @@ mfix::mfix_calc_drag_particle (Real time)
     MultiFab* vel_ptr;
 
     // This is just a sanity check to make sure we're not using covered values
-    // We can remove these lines once we're confident in the algoirthm
+    // We can remove these lines once we're confident in the algorithm
     EB_set_covered(*m_leveldata[0]->vel_g, 0, 3, 1, covered_val);
     EB_set_covered( gp_tmp  , 0, 3, 1, covered_val);
 

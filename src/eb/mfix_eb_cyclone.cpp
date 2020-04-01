@@ -91,7 +91,7 @@ mfix::make_eb_cyclone ()
     EB2::CylinderIF id(radius, height, direction, center, inside);
 
 
-    auto my_cyclone = 
+    auto my_cyclone =
       EB2::makeIntersection(id,
                             EB2::makeUnion(od,
                                            EB2::makeIntersection(inlet,main_body)));

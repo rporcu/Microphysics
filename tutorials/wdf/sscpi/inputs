@@ -94,16 +94,16 @@ amr.regrid_int         = -1
 amr.avg_int = 5
 amr.avg_file = "uio"
 
-amr.avg_vel_p =        0       0       0       0       1        1        1        1        1       
-amr.avg_p_g   =        1       1       1       1       0        0        0        0        0       
-amr.avg_ep_g  =        0       0       0       0       0        0        0        0        0       
-amr.avg_vel_g =        0       0       0       0       0        0        0        0        0       
-amr.avg_region_x_w =   0.044   0.045   0.348   0.350   0.05334  0.05334  0.05334  0.05334  0.05334   
-amr.avg_region_x_e =   0.044   0.045   0.348   0.350   0.09906  0.09906  0.09906  0.09906  0.09906 
-amr.avg_region_y_s =   0.0     0.0     0.0     0.0     0.0      0.04572  0.09144  0.13716  0.18288      
-amr.avg_region_y_n =   0.2286  0.2286  0.2286  0.2286  0.04572  0.09144  0.13716  0.18288  0.22860      
-amr.avg_region_z_b =   0.0     0.0     0.0     0.0     0.0      0.0      0.0      0.0      0.0     
-amr.avg_region_z_t =   0.0762  0.0762  0.0762  0.0762  0.003    0.003    0.003    0.003    0.003    
+amr.avg_vel_p =        0       0       0       0       1        1        1        1        1
+amr.avg_p_g   =        1       1       1       1       0        0        0        0        0
+amr.avg_ep_g  =        0       0       0       0       0        0        0        0        0
+amr.avg_vel_g =        0       0       0       0       0        0        0        0        0
+amr.avg_region_x_w =   0.044   0.045   0.348   0.350   0.05334  0.05334  0.05334  0.05334  0.05334
+amr.avg_region_x_e =   0.044   0.045   0.348   0.350   0.09906  0.09906  0.09906  0.09906  0.09906
+amr.avg_region_y_s =   0.0     0.0     0.0     0.0     0.0      0.04572  0.09144  0.13716  0.18288
+amr.avg_region_y_n =   0.2286  0.2286  0.2286  0.2286  0.04572  0.09144  0.13716  0.18288  0.22860
+amr.avg_region_z_b =   0.0     0.0     0.0     0.0     0.0      0.0      0.0      0.0      0.0
+amr.avg_region_z_t =   0.0762  0.0762  0.0762  0.0762  0.003    0.003    0.003    0.003    0.003
 
 #_______________________________________________________________________
 # IO / Checkpointing
@@ -191,7 +191,7 @@ regions.back-wall.hi   = 1.2192  0.2286  0.0762
 ic.regions = fluid-only
 
 
-# Backgound IC covering the full domain with gas.
+# Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.fluid-only.fluid.volfrac   = 1.0
 
@@ -220,4 +220,3 @@ bc.bottom-wall.normal =  0.0  1.0  0.0
 bc.top-wall.normal    =  0.0 -1.0  0.0
 bc.front-wall.normal  =  0.0  0.0  1.0
 bc.back-wall.normal   =  0.0  0.0 -1.0
-

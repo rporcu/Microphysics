@@ -1,4 +1,3 @@
-
 amrex.fpe_trap_invalid = 1
 
 #----------------------------------------------------------------------
@@ -95,7 +94,7 @@ amr.check_file     ="chk"
 
 
 #----------------------------------------------------------------------
-# Model specification    
+# Model specification
 #----------------------------------------------------------------------
 
 mfix.fixed_dt = 0
@@ -180,7 +179,7 @@ ic.regions = full-domain  riser
 mfix.particle_init_type = Auto
 
 
-# Backgound IC covering the full domain with gas.
+# Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
 ic.full-domain.fluid.velocity  = 0.0  0.0  0.0

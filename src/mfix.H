@@ -212,8 +212,6 @@ class mfix : public AmrCore
 
     void mfix_calc_drag_particle (Real time);
 
-    void mfix_add_gravity_and_gp (Real dt);
-
     void mfix_predict_vels_on_faces (int lev,
                                      Real time,
                                      Vector< MultiFab* > const& vel,
@@ -548,6 +546,7 @@ class mfix : public AmrCore
 
     int steady_state_reached (Real dt, int iter);
 
+  public:
     void mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                                Vector< MultiFab* >& conv_s_old,
                                Vector< MultiFab* >& divtau_old,
@@ -560,6 +559,7 @@ class mfix : public AmrCore
                                Vector< MultiFab* >&   laps_old,
                                Real time, Real dt, bool proj_2);
 
+  private:
     void mfix_compute_diveu (Real time);
 
     void mfix_print_max_vel (int lev);

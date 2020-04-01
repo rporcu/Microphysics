@@ -1,3 +1,8 @@
+CEXE_sources += mfix_apply_predictor.cpp
+CEXE_sources += mfix_apply_corrector.cpp
 CEXE_sources += mfix_advance.cpp
+CEXE_sources += mfix_apply_predictor.cpp
+CEXE_sources += mfix_apply_corrector.cpp
 CEXE_sources += mfix_compute_dt.cpp
 CEXE_sources += mfix_evolve.cpp
+CEXE_sources += mfix_evolve_fluid.cpp
