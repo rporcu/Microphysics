@@ -30,13 +30,9 @@ mfix::mfix_redistribute_deposition (int lev,
    MultiFab::Copy(mf_to_redist_copy, mf_to_redistribute, 0, 0,
                   mf_to_redistribute.nComp(), mf_to_redistribute.nGrow());
 
-   MultiFab mf_eps_copy(mf_eps.boxArray(),
-                        mf_eps.DistributionMap(),
-                        mf_eps.nComp(),
-                        mf_eps.nGrow(),
-                        MFInfo(),
-                        mf_eps.Factory());
-   mf_eps_copy.setVal(0.);
+   MultiFab scale_fab(mf_eps.boxArray(), mf_eps.DistributionMap(), mf_eps.nComp(),
+                      mf_eps.nGrow(), MFInfo(), mf_eps.Factory());
+   scale_fab.setVal(0.);
 
    for (MFIter mfi(mf_eps,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
@@ -56,6 +52,8 @@ mfix::mfix_redistribute_deposition (int lev,
        const Box& grow_bx1 = amrex::grow(bx,1);
 
        FArrayBox  mask_fbx(grow_bx1);
+       Elixir mask_eli = mask_fbx.elixir();
+
        Array4<Real> const& mask = mask_fbx.array();
 
        Box domain(geom[lev].Domain());
@@ -90,7 +88,7 @@ mfix::mfix_redistribute_deposition (int lev,
        Array4<Real> const& mf_redist = mf_to_redistribute.array(mfi);
 
        Array4<Real> const& duplicate = mf_to_redist_copy.array(mfi);
-       Array4<Real> const& scale_array = mf_eps_copy.array(mfi);
+       Array4<Real> const& scale_array = scale_fab.array(mfi);
 
        amrex::ParallelFor(bx,
          [flags,ep_s,duplicate,mf_redist,scale_array,mask,vfrac,max_eps,ncomp]
@@ -159,7 +157,6 @@ mfix::mfix_redistribute_deposition (int lev,
            }
          }
        });
-       amrex::Gpu::synchronize();
      }
 
    }
