@@ -21,6 +21,23 @@ mfix::mfix_redistribute_deposition (int lev,
 {
    BL_PROFILE("mfix::mfix_redistribute_solids_volume");
 
+   MultiFab mf_to_redist_copy(mf_to_redistribute.boxArray(),
+                              mf_to_redistribute.DistributionMap(),
+                              mf_to_redistribute.nComp(),
+                              mf_to_redistribute.nGrow(),
+                              MFInfo(),
+                              mf_to_redistribute.Factory());
+   MultiFab::Copy(mf_to_redist_copy, mf_to_redistribute, 0, 0,
+                  mf_to_redistribute.nComp(), mf_to_redistribute.nGrow());
+
+   MultiFab mf_eps_copy(mf_eps.boxArray(),
+                        mf_eps.DistributionMap(),
+                        mf_eps.nComp(),
+                        mf_eps.nGrow(),
+                        MFInfo(),
+                        mf_eps.Factory());
+   mf_eps_copy.setVal(0.);
+
    for (MFIter mfi(mf_eps,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
      // We don't want to do this for ghost cells
@@ -72,62 +89,76 @@ mfix::mfix_redistribute_deposition (int lev,
 
        Array4<Real> const& mf_redist = mf_to_redistribute.array(mfi);
 
+       Array4<Real> const& duplicate = mf_to_redist_copy.array(mfi);
+       Array4<Real> const& scale_array = mf_eps_copy.array(mfi);
+
        amrex::ParallelFor(bx,
-         [flags,ep_s,mf_redist,mask,vfrac,max_eps,ncomp]
+         [flags,ep_s,duplicate,mf_redist,scale_array,mask,vfrac,max_eps,ncomp]
          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-         {
+       {
+         if(flags(i,j,k).isSingleValued()) {
 
-           if(flags(i,j,k).isSingleValued()){
+           if( ep_s(i,j,k) > max_eps) {
 
-             if( ep_s(i,j,k) > max_eps){
+             amrex::Real sum_vfrac_eps = 0.0;
+             amrex::Real sum_vfrac     = 0.0;
 
-               amrex::Real sum_vfrac_eps = 0.0;
-               amrex::Real sum_vfrac     = 0.0;
-
-               for(int ii(-1); ii <= 1; ii++)
-                 for(int jj(-1); jj <= 1; jj++)
-                   for(int kk(-1); kk <= 1; kk++)
-                     if ( (ii != 0 or jj != 0 or kk != 0 ) and
-                          (flags(i,j,k).isConnected({ii,jj,kk}) == 1)) {
-                       sum_vfrac     += mask(i+ii,j+jj,k+kk)*vfrac(i+ii,j+jj,k+kk);
-                       sum_vfrac_eps += mask(i+ii,j+jj,k+kk)*vfrac(i+ii,j+jj,k+kk)*ep_s(i+ii,j+jj,k+kk);
-                     }
-
-               // Average volume fraction in the neighborhood around of the packed
-               // cell. This value is capped by the user-defined max pack value.
-               amrex::Real avg_eps = amrex::min(max_eps, sum_vfrac_eps / sum_vfrac );
-
-               // Fraction of material we want to redistribute
-               amrex::Real scale = amrex::max(0.0, ep_s(i,j,k) - avg_eps) / ep_s(i,j,k);
-
-               for(int n(0); n < ncomp; n++) {
-
-                 // This is the amount of the multifab we are redistributing
-                 // that we are moving into the packed cell's neighborhood.
-                 amrex::Real overflow = mf_redist(i,j,k,n) * scale * vfrac(i,j,k) / sum_vfrac;
-
-                 for(int kk(-1); kk <= 1; kk++) {
-                   for(int jj(-1); jj <= 1; jj++) {
-                     for(int ii(-1); ii <= 1; ii++) {
-                       if((ii != 0 or jj != 0 or kk != 0) and
-                          (flags(i,j,k).isConnected({ii,jj,kk}))) {
-
-                         amrex::Gpu::Atomic::Add(&mf_redist(i+ii,j+jj,k+kk,n),
-                                                 mask(i+ii,j+jj,k+kk)*overflow);
-                       }
-                     }
+             for(int ii(-1); ii <= 1; ii++)
+               for(int jj(-1); jj <= 1; jj++)
+                 for(int kk(-1); kk <= 1; kk++)
+                   if ( (ii != 0 or jj != 0 or kk != 0 ) and
+                        (flags(i,j,k).isConnected({ii,jj,kk}) == 1)) {
+                     sum_vfrac     += mask(i+ii,j+jj,k+kk)*vfrac(i+ii,j+jj,k+kk);
+                     sum_vfrac_eps += mask(i+ii,j+jj,k+kk)*vfrac(i+ii,j+jj,k+kk)*ep_s(i+ii,j+jj,k+kk);
                    }
-                 }
 
-                 // Account for the change in material in the source cell
-                 amrex::Real delta = -scale*mf_redist(i,j,k,n);
-                 amrex::Gpu::Atomic::Add(&mf_redist(i,j,k,n), delta);
-               }
+             // Average volume fraction in the neighborhood around of the packed
+             // cell. This value is capped by the user-defined max pack value.
+             amrex::Real avg_eps = amrex::min(max_eps, sum_vfrac_eps / sum_vfrac );
 
+             // Fraction of material we want to redistribute
+             amrex::Real scale = amrex::max(0.0, ep_s(i,j,k) - avg_eps) / ep_s(i,j,k);
+             scale_array(i,j,k) = scale;
+
+             for(int n(0); n < ncomp; n++) {
+               // This is the amount of the multifab we are redistributing
+               // that we are moving into the packed cell's neighborhood.
+               amrex::Real overflow = duplicate(i,j,k,n) * scale * vfrac(i,j,k) / sum_vfrac;
+
+               for(int kk(-1); kk <= 1; kk++)
+                 for(int jj(-1); jj <= 1; jj++)
+                   for(int ii(-1); ii <= 1; ii++)
+                     if((ii != 0 or jj != 0 or kk != 0) and
+                        (flags(i,j,k).isConnected({ii,jj,kk})))
+                       amrex::Gpu::Atomic::Add(&mf_redist(i+ii,j+jj,k+kk,n),
+                                               mask(i+ii,j+jj,k+kk)*overflow);
              }
            }
-         });
+         }
+       });
 
+       amrex::ParallelFor(bx,
+         [flags,ep_s,mf_redist,scale_array,max_eps,ncomp]
+         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+       {
+         if(flags(i,j,k).isSingleValued()) {
+
+           if( ep_s(i,j,k) > max_eps) {
+
+             const Real scale = scale_array(i,j,k);
+
+             for(int n(0); n < ncomp; n++) {
+               Real redist_val = mf_redist(i,j,k,n);
+
+               // Account for the change in material in the source cell
+               amrex::Real delta = -scale*redist_val;
+               redist_val += delta;
+               mf_redist(i,j,k,n) = redist_val;
+             }
+
+           }
+         }
+       });
        amrex::Gpu::synchronize();
      }
 
