@@ -24,7 +24,7 @@ mfix::InitParams ()
   DEM::Initialize();
 
   // Read in regions, initial and boundary conditions. Note that
-  // regions need to be processed frist as they define the
+  // regions need to be processed first as they define the
   // physical extents of ICs and BCs.
   REGIONS::Initialize();
   IC::Initialize();
@@ -48,13 +48,13 @@ mfix::InitParams ()
     // Verbosity and MLMG parameters are now ParmParse with "nodal_proj" in the
     // inputs file
     // Examples: nodal_proj.verbose = 1
-    //           nodal_proj.bottom_verbose = 1 
+    //           nodal_proj.bottom_verbose = 1
     //           nodal_proj.maxiter
     //           nodal_proj.bottom_maxiter
-    //           nodal_proj.bottom_rtol 
-    //           nodal_proj.bottom_atol 
-    //           nodal_proj.bottom_solver 
-    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_NodalProjector.cpp" 
+    //           nodal_proj.bottom_rtol
+    //           nodal_proj.bottom_atol
+    //           nodal_proj.bottom_solver
+    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_NodalProjector.cpp"
     ParmParse pp_nodal("nodal_proj");
     // Options to control MLMG behavior
     pp_nodal.query("mg_rtol", nodal_mg_rtol);
@@ -76,9 +76,9 @@ mfix::InitParams ()
       if (steady_state_tol < 0)
         amrex::Abort("Must set steady_state_tol if running to steady state!");
 
-        amrex::Print() << "Running to steady state with maxiter = "
-                       << steady_state_maxiter << " and tolerance "
-                       << steady_state_tol << std::endl;
+      amrex::Print() << "Running to steady state with maxiter = "
+                     << steady_state_maxiter << " and tolerance "
+                     << steady_state_tol << std::endl;
     }
     else if (steady_state_tol > 0)
       amrex::Abort("steady_state_tol set but not steady_state!");
@@ -131,7 +131,7 @@ mfix::InitParams ()
           " = false");
 
     if (advect_tracer && !advect_density)
-      amrex::Abort("Cant advect tracer without advecting density");
+      amrex::Abort("Can't advect tracer without advecting density");
 
     // The default type is "KnapSack"; alternative is "SFC"
     pp.query("load_balance_type", load_balance_type);
@@ -144,12 +144,12 @@ mfix::InitParams ()
     // Verbosity and MLMG parameters are now ParmParse with "mac_proj" in the
     // inputs file
     // Examples: mac_proj.verbose = 1
-    //           mac_proj.bottom_verbose = 1 
+    //           mac_proj.bottom_verbose = 1
     //           mac_proj.maxiter
     //           mac_proj.bottom_maxiter
-    //           mac_proj.bottom_rtol 
-    //           mac_proj.bottom_atol 
-    //           mac_proj.bottom_solver 
+    //           mac_proj.bottom_rtol
+    //           mac_proj.bottom_atol
+    //           mac_proj.bottom_solver
     // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp"
 
     ParmParse pp_mac("mac_proj");
@@ -387,11 +387,11 @@ BoxArray mfix::MakeBaseGrids () const
     //    create enough grids to have at least one grid per processor.
     // This option is controlled by "refine_grid_layout" which defaults to true.
     if ( refine_grid_layout &&
-         ba.size() < ParallelDescriptor::NProcs() ) 
+         ba.size() < ParallelDescriptor::NProcs() )
            ChopGrids(geom[0].Domain(), ba, ParallelDescriptor::NProcs());
 
     if (ba == grids[0]) {
-        ba = grids[0];  // to avoid dupliates
+        ba = grids[0];  // to avoid duplicates
     }
     amrex::Print() << "In MakeBaseGrids: BA HAS " << ba.size() << " GRIDS " << std::endl;
     return ba;

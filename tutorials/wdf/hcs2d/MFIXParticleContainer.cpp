@@ -135,7 +135,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
      *   -> Print max particle-wall and particle-particle forces                *
      ***************************************************************************/
 
-    // Debug level controls the detail of debug outut:
+    // Debug level controls the detail of debug output:
     //   -> debug_level = 0 : no debug output
     //   -> debug_level = 1 : debug output for every fluid step
     //   -> debug_level = 2 : debug output for every substep
@@ -422,7 +422,7 @@ void MFIXParticleContainer::EvolveParticles(int lev, int nstep, Real dt, Real ti
             AMREX_FOR_1D ( nrp, i,
             {
                 ParticleType& p1 = pstruct[i];
-                
+
                 for (const auto& p2 : nbor_data.getNeighbors(i))
                 {
                     Real dx = p2.pos(0) - p1.pos(0);
@@ -1794,7 +1794,7 @@ ComputeAverageVelocities ( const int lev,
                            const Gpu::ManagedDeviceVector<Real>& avg_region_z_t )
 {
 
-  // Count number of calls -- Used to determin when to create file from scratch
+  // Count number of calls -- Used to determine when to create file from scratch
   static int ncalls = 0;
   ++ncalls;
 
@@ -1869,7 +1869,7 @@ ComputeAverageVelocities ( const int lev,
 //                        sum_velz += particles[p].rdata(realData::velz);
                           sum_velx += pow(particles[p].rdata(realData::velx),2);
                           sum_vely += pow(particles[p].rdata(realData::vely),2);
-                          sum_velz += pow(particles[p].rdata(realData::velz),2); 
+                          sum_velz += pow(particles[p].rdata(realData::velz),2);
 //wdf
 
                         }

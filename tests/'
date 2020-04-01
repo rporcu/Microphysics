@@ -6,7 +6,7 @@
 #                                                                      #
 #  Comment: The particle-particle and particle-wall spring constants   #
 #  were made very small O(10) so that the test case runs in a few min. #
-#  This causes larger errros between the RK4 solution and MFIX, but    #
+#  This causes larger errors between the RK4 solution and MFIX, but    #
 #  at acceptable levels, percent relative error remains below 0.6% for #
 #  velocity and below 0.2% for position.                               #
 #                                                                      #

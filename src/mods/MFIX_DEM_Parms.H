@@ -60,9 +60,9 @@ namespace DEM
 
     struct INPUT_DIST_t {
       std::string distribution;
-      amrex::Real mean; // Mean value of distriubtion (or contant value)
+      amrex::Real mean; // Mean value of distriubtion (or constant value)
       amrex::Real std;  // Standard deivation
-      amrex::Real min;  // Mininum value of distribution
+      amrex::Real min;  // Minimum value of distribution
       amrex::Real max;  // Max value of distribution
 
       INPUT_DIST_t() :

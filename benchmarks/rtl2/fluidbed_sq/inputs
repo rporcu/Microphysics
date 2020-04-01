@@ -192,7 +192,7 @@ regions.back-wall.hi   = 0.0080  0.0020  0.0020
 ic.regions = full-domain  bed
 
 
-# Backgound IC covering the full domain with gas.
+# Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
 
@@ -239,4 +239,3 @@ bc.bottom-wall.normal =  0.0  1.0  0.0
 bc.top-wall.normal    =  0.0 -1.0  0.0
 bc.front-wall.normal  =  0.0  0.0  1.0
 bc.back-wall.normal   =  0.0  0.0 -1.0
-

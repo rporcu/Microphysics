@@ -214,8 +214,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
               for (MFIter mfi(*m_leveldata[lev]->vel_g, false); mfi.isValid(); ++mfi)
               {
                 int ib = mfi.index();
-                (*m_leveldata[lev]->vel_g)[ib].copy(single_fab_vel,single_fab_vel.box(),0,mfi.validbox(),0,3);
-                (*m_leveldata[lev]->gp)[ib].copy(single_fab_gp , single_fab_gp.box(),0,mfi.validbox(),0,3);
+                (*m_leveldata[lev]->vel_g)[ib].copy<RunOn::Host>(single_fab_vel,single_fab_vel.box(),0,mfi.validbox(),0,3);
+                (*m_leveldata[lev]->gp)[ib].copy<RunOn::Host>(single_fab_gp , single_fab_gp.box(),0,mfi.validbox(),0,3);
               }
           }
 
@@ -260,7 +260,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
               // Copy and replicate mf into chkscalarVars
               for (MFIter mfi(**(chkscalarVars[i][lev]), false); mfi.isValid(); ++mfi) {
                   int ib = mfi.index();
-                  (**(chkscalarVars[i][lev]))[ib].copy(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
+                  (**(chkscalarVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
               }
           }
         }

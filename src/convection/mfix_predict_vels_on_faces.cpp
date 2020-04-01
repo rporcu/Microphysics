@@ -119,9 +119,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
        {
          Real val = 1.2345e300;
 
-         (*ep_u_mac[lev])[mfi].setVal(val, ubx, 0, 1);
-         (*ep_v_mac[lev])[mfi].setVal(val, vbx, 0, 1);
-         (*ep_w_mac[lev])[mfi].setVal(val, wbx, 0, 1);
+         (*ep_u_mac[lev])[mfi].setVal<RunOn::Device>(val, ubx, 0, 1);
+         (*ep_v_mac[lev])[mfi].setVal<RunOn::Device>(val, vbx, 0, 1);
+         (*ep_w_mac[lev])[mfi].setVal<RunOn::Device>(val, wbx, 0, 1);
        }
 
        // No cut cells in this FAB
@@ -145,57 +145,84 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
             [small_vel,ccvel_fab,epx_fab,xslopes_fab,upls_fab,umns_fab,umac_fab]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-              // X-faces
-              upls_fab(i,j,k) = ccvel_fab(i  ,j,k,0) - 0.5 * xslopes_fab(i  ,j,k,0);
-              umns_fab(i,j,k) = ccvel_fab(i-1,j,k,0) + 0.5 * xslopes_fab(i-1,j,k,0);
-              if ( umns_fab(i,j,k) < 0.0 && upls_fab(i,j,k) > 0.0 ) {
-                 umac_fab(i,j,k) = 0.0;
-              } else {
-                 Real avg = 0.5 * ( upls_fab(i,j,k) + umns_fab(i,j,k) );
-                 if ( std::abs(avg) <  small_vel) { umac_fab(i,j,k) = 0.0;
-                 } else if (avg >= 0)             { umac_fab(i,j,k) = umns_fab(i,j,k);
-                 } else                           { umac_fab(i,j,k) = upls_fab(i,j,k);
-                 }
-                 umac_fab(i,j,k) *= epx_fab(i,j,k);
+            // X-faces
+            const Real upls = ccvel_fab(i  ,j,k,0) - .5 * xslopes_fab(i  ,j,k,0);
+            const Real umns = ccvel_fab(i-1,j,k,0) + .5 * xslopes_fab(i-1,j,k,0);
+            Real umac(0);
+
+            if (umns >= 0 or upls <= 0) {
+              Real avg = .5 * ( upls + umns );
+
+              if (avg >= small_vel) {
+                umac = umns;
               }
+              else if(avg <= -small_vel) {
+                umac = upls;
+              }
+
+              umac *= epx_fab(i,j,k);
+            }
+
+            upls_fab(i,j,k) = upls;
+            umns_fab(i,j,k) = umns;
+
+            umac_fab(i,j,k) = umac;
           });
 
           amrex::ParallelFor(vbx,
             [small_vel,ccvel_fab,epy_fab,yslopes_fab,vpls_fab,vmns_fab,vmac_fab]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-              // Y-faces
-              vpls_fab(i,j,k) = ccvel_fab(i,j  ,k,1) - 0.5 * yslopes_fab(i,j  ,k,1);
-              vmns_fab(i,j,k) = ccvel_fab(i,j-1,k,1) + 0.5 * yslopes_fab(i,j-1,k,1);
-              if ( vmns_fab(i,j,k) < 0.0 && vpls_fab(i,j,k) > 0.0 ) {
-                 vmac_fab(i,j,k) = 0.0;
-              } else {
-                 Real avg = 0.5 * ( vpls_fab(i,j,k) + vmns_fab(i,j,k) );
-                 if ( std::abs(avg) <  small_vel) { vmac_fab(i,j,k) = 0.0;
-                 } else if (avg >= 0)             { vmac_fab(i,j,k) = vmns_fab(i,j,k);
-                 } else                           { vmac_fab(i,j,k) = vpls_fab(i,j,k);
-                 }
-                 vmac_fab(i,j,k) *= epy_fab(i,j,k);
+            // Y-faces
+            const Real vpls = ccvel_fab(i,j  ,k,1) - .5 * yslopes_fab(i,j  ,k,1);
+            const Real vmns = ccvel_fab(i,j-1,k,1) + .5 * yslopes_fab(i,j-1,k,1);
+            Real vmac(0);
+
+            if (vmns >= 0 or vpls <= 0) {
+              Real avg = .5 * (vpls + vmns);
+
+              if (avg >= small_vel) {
+                vmac = vmns;
               }
+              else if (avg <= -small_vel) {
+                vmac = vpls;
+              }
+
+              vmac *= epy_fab(i,j,k);
+            }
+
+            vpls_fab(i,j,k) = vpls;
+            vmns_fab(i,j,k) = vmns;
+
+            vmac_fab(i,j,k) = vmac;
           });
 
           amrex::ParallelFor(wbx,
             [small_vel,ccvel_fab,epz_fab,zslopes_fab,wpls_fab,wmns_fab,wmac_fab]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-              // Z-faces
-              wpls_fab(i,j,k) = ccvel_fab(i,j,k  ,2) - 0.5 * zslopes_fab(i,j,k  ,2);
-              wmns_fab(i,j,k) = ccvel_fab(i,j,k-1,2) + 0.5 * zslopes_fab(i,j,k-1,2);
-              if ( wmns_fab(i,j,k) < 0.0 && wpls_fab(i,j,k) > 0.0 ) {
-                 wmac_fab(i,j,k) = 0.0;
-              } else {
-                 Real avg = 0.5 * ( wpls_fab(i,j,k) + wmns_fab(i,j,k) );
-                 if ( std::abs(avg) <  small_vel) { wmac_fab(i,j,k) = 0.0;
-                 } else if (avg >= 0)             { wmac_fab(i,j,k) = wmns_fab(i,j,k);
-                 } else                           { wmac_fab(i,j,k) = wpls_fab(i,j,k);
-                 }
-                 wmac_fab(i,j,k) *= epz_fab(i,j,k);
+            // Z-faces
+            const Real wpls = ccvel_fab(i,j,k  ,2) - .5 * zslopes_fab(i,j,k  ,2);
+            const Real wmns = ccvel_fab(i,j,k-1,2) + .5 * zslopes_fab(i,j,k-1,2);
+            Real wmac(0);
+
+            if (wmns >= 0 or wpls <= 0) {
+              Real avg = .5 * (wpls + wmns);
+
+              if (avg >= small_vel) {
+                wmac = wmns;
               }
+              else if (avg <= -small_vel) {
+                wmac = wpls;
+              }
+
+              wmac *= epz_fab(i,j,k);
+            }
+
+            wpls_fab(i,j,k) = wpls;
+            wmns_fab(i,j,k) = wmns;
+
+            wmac_fab(i,j,k) = wmac;
           });
 
        // Cut cells in this FAB
@@ -235,173 +262,184 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
           const auto& apy_fab = areafrac[1]->array(mfi);
           const auto& apz_fab = areafrac[2]->array(mfi);
 
-          // This FAB has cut cells -- we predict from cell centroids to face centroids
+          // This FAB has cut cells -- we predict from cell centroids to face
+          // centroids
           amrex::ParallelFor(ubx,
             [apx_fab,fcx_fab,epx_fab,ccc_fab,upls_fab,umns_fab,ccvel_fab,xslopes_fab,yslopes_fab,zslopes_fab,umac_fab,small_vel]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-              // X-faces
-              if (apx_fab(i,j,k) > 0.0)
-              {
-                 Real yf = fcx_fab(i,j,k,0); // local (y,z) of centroid of x-face we are extrapolating to
-                 Real zf = fcx_fab(i,j,k,1);
+            // X-faces
+            if (apx_fab(i,j,k) > 0.0)
+            {
+              Real yf = fcx_fab(i,j,k,0); // local (y,z) of centroid of x-face we are extrapolating to
+              Real zf = fcx_fab(i,j,k,1);
 
-                 Real xc = ccc_fab(i,j,k,0); // centroid of cell (i,j,k)
-                 Real yc = ccc_fab(i,j,k,1);
-                 Real zc = ccc_fab(i,j,k,2);
+              Real delta_x = .5 + ccc_fab(i,j,k,0);
+              Real delta_y = yf - ccc_fab(i,j,k,1);
+              Real delta_z = zf - ccc_fab(i,j,k,2);
 
-                 Real delta_x = 0.5 + xc;
-                 Real delta_y = yf  - yc;
-                 Real delta_z = zf  - zc;
+              const Real ccvel_pls = ccvel_fab(i,j,k,0);
+              const Real ccvel_mns = ccvel_fab(i-1,j,k,0);
 
-                 Real cc_umax = std::max(ccvel_fab(i,j,k,0), ccvel_fab(i-1,j,k,0));
-                 Real cc_umin = std::min(ccvel_fab(i,j,k,0), ccvel_fab(i-1,j,k,0));
+              Real cc_umax = std::max(ccvel_pls, ccvel_mns);
+              Real cc_umin = std::min(ccvel_pls, ccvel_mns);
 
-                 upls_fab(i,j,k) = ccvel_fab(i  ,j,k,0) - delta_x * xslopes_fab(i,j,k,0) 
-                                                        + delta_y * yslopes_fab(i,j,k,0) 
-                                                        + delta_z * zslopes_fab(i,j,k,0);
+              Real upls = ccvel_pls - delta_x * xslopes_fab(i,j,k,0) 
+                                    + delta_y * yslopes_fab(i,j,k,0) 
+                                    + delta_z * zslopes_fab(i,j,k,0);
 
-                 upls_fab(i,j,k) = std::min(upls_fab(i,j,k), cc_umax);
-                 upls_fab(i,j,k) = std::max(upls_fab(i,j,k), cc_umin);
+              upls = std::min(upls, cc_umax);
+              upls = std::max(upls, cc_umin);
 
-                 xc = ccc_fab(i-1,j,k,0); // centroid of cell (i-1,j,k)
-                 yc = ccc_fab(i-1,j,k,1);
-                 zc = ccc_fab(i-1,j,k,2);
+              delta_x = .5 - ccc_fab(i-1,j,k,0);
+              delta_y = yf - ccc_fab(i-1,j,k,1);
+              delta_z = zf - ccc_fab(i-1,j,k,2);
 
-                 delta_x = 0.5 - xc;
-                 delta_y = yf  - yc;
-                 delta_z = zf  - zc;
+              Real umns = ccvel_mns + delta_x * xslopes_fab(i-1,j,k,0) 
+                                    + delta_y * yslopes_fab(i-1,j,k,0) 
+                                    + delta_z * zslopes_fab(i-1,j,k,0);
 
-                 umns_fab(i,j,k) = ccvel_fab(i-1,j,k,0) + delta_x * xslopes_fab(i-1,j,k,0) 
-                                                        + delta_y * yslopes_fab(i-1,j,k,0) 
-                                                        + delta_z * zslopes_fab(i-1,j,k,0);
+              umns = std::min(umns, cc_umax);
+              umns = std::max(umns, cc_umin);
 
-                 umns_fab(i,j,k) = std::min(umns_fab(i,j,k), cc_umax);
-                 umns_fab(i,j,k) = std::max(umns_fab(i,j,k), cc_umin);
+              upls_fab(i,j,k) = upls;
+              umns_fab(i,j,k) = umns;
 
-                 if ( umns_fab(i,j,k) < 0.0 && upls_fab(i,j,k) > 0.0 ) {
-                    umac_fab(i,j,k) = 0.0;
-                 } else {
-                    Real avg = 0.5 * ( upls_fab(i,j,k) + umns_fab(i,j,k) );
-                    if ( std::abs(avg) <  small_vel) { umac_fab(i,j,k) = 0.0;
-                    } else if (avg >= 0)             { umac_fab(i,j,k) = umns_fab(i,j,k);
-                    } else                           { umac_fab(i,j,k) = upls_fab(i,j,k);
-                    }
-                    umac_fab(i,j,k) *= epx_fab(i,j,k);
-                 }
+              Real umac(0);
+
+              if (umns >= 0 or upls <= 0) {
+                Real avg = .5 * (upls + umns);
+
+                if (avg >= small_vel) {
+                  umac = umns;
+                }
+                else if (avg <= -small_vel) {
+                  umac = upls;
+                }
+
+                umac *= epx_fab(i,j,k);
               }
+
+              umac_fab(i,j,k) = umac;
+            }
           });
 
           amrex::ParallelFor(vbx,
             [apy_fab,fcy_fab,epy_fab,ccc_fab,vpls_fab,vmns_fab,ccvel_fab,xslopes_fab,yslopes_fab,zslopes_fab,vmac_fab,small_vel]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-              // Y-faces
-              if (apy_fab(i,j,k) > 0.0)
-              {
-                 Real xf = fcy_fab(i,j,k,0); // local (x,z) of centroid of y-face we are extrapolating to
-                 Real zf = fcy_fab(i,j,k,1);
+            // Y-faces
+            if (apy_fab(i,j,k) > 0.0)
+            {
+              Real xf = fcy_fab(i,j,k,0); // local (x,z) of centroid of y-face we are extrapolating to
+              Real zf = fcy_fab(i,j,k,1);
 
-                 Real xc = ccc_fab(i,j,k,0); // centroid of cell (i,j,k)
-                 Real yc = ccc_fab(i,j,k,1);
-                 Real zc = ccc_fab(i,j,k,2);
+              Real delta_x = xf - ccc_fab(i,j,k,0);
+              Real delta_y = .5 + ccc_fab(i,j,k,1);
+              Real delta_z = zf - ccc_fab(i,j,k,2);
 
-                 Real delta_x = xf  - xc;
-                 Real delta_y = 0.5 + yc;
-                 Real delta_z = zf  - zc;
+              const Real ccvel_pls = ccvel_fab(i,j,k,1);
+              const Real ccvel_mns = ccvel_fab(i,j-1,k,1);
 
-                 Real cc_umax = std::max(ccvel_fab(i,j,k,1), ccvel_fab(i,j-1,k,1));
-                 Real cc_umin = std::min(ccvel_fab(i,j,k,1), ccvel_fab(i,j-1,k,1));
+              Real cc_vmax = std::max(ccvel_pls, ccvel_mns);
+              Real cc_vmin = std::min(ccvel_pls, ccvel_mns);
 
-                 vpls_fab(i,j,k) = ccvel_fab(i,j  ,k,1) - delta_y * yslopes_fab(i,j,k,1) 
-                                                        + delta_x * xslopes_fab(i,j,k,1) 
-                                                        + delta_z * zslopes_fab(i,j,k,1);
+              Real vpls = ccvel_pls - delta_y * yslopes_fab(i,j,k,1) 
+                                    + delta_x * xslopes_fab(i,j,k,1) 
+                                    + delta_z * zslopes_fab(i,j,k,1);
 
-                 vpls_fab(i,j,k) = std::min(vpls_fab(i,j,k), cc_umax);
-                 vpls_fab(i,j,k) = std::max(vpls_fab(i,j,k), cc_umin);
+              vpls = std::min(vpls, cc_vmax);
+              vpls = std::max(vpls, cc_vmin);
+              vpls_fab(i,j,k) = vpls;
 
-                 xc = ccc_fab(i,j-1,k,0); // centroid of cell (i,j-1,k)
-                 yc = ccc_fab(i,j-1,k,1);
-                 zc = ccc_fab(i,j-1,k,2);
+              delta_x = xf - ccc_fab(i,j-1,k,0);
+              delta_y = .5 - ccc_fab(i,j-1,k,1);
+              delta_z = zf - ccc_fab(i,j-1,k,2);
 
-                 delta_x = xf  - xc;
-                 delta_y = 0.5 - yc;
-                 delta_z = zf  - zc;
+              Real vmns = ccvel_mns + delta_y * yslopes_fab(i,j-1,k,1) 
+                                    + delta_x * xslopes_fab(i,j-1,k,1) 
+                                    + delta_z * zslopes_fab(i,j-1,k,1);
 
-                 vmns_fab(i,j,k) = ccvel_fab(i,j-1,k,1) + delta_y * yslopes_fab(i,j-1,k,1) 
-                                                        + delta_x * xslopes_fab(i,j-1,k,1) 
-                                                        + delta_z * zslopes_fab(i,j-1,k,1);
+              vmns = std::min(vmns, cc_vmax);
+              vmns = std::max(vmns, cc_vmin);
+              vmns_fab(i,j,k) = vmns;
 
-                 vmns_fab(i,j,k) = std::min(vmns_fab(i,j,k), cc_umax);
-                 vmns_fab(i,j,k) = std::max(vmns_fab(i,j,k), cc_umin);
+              Real vmac(0);
 
-                 if ( vmns_fab(i,j,k) < 0.0 && vpls_fab(i,j,k) > 0.0 ) {
-                    vmac_fab(i,j,k) = 0.0;
-                 } else {
-                    Real avg = 0.5 * ( vpls_fab(i,j,k) + vmns_fab(i,j,k) );
-                    if ( std::abs(avg) <  small_vel) { vmac_fab(i,j,k) = 0.0;
-                    } else if (avg >= 0)             { vmac_fab(i,j,k) = vmns_fab(i,j,k);
-                    } else                           { vmac_fab(i,j,k) = vpls_fab(i,j,k);
-                    }
-                    vmac_fab(i,j,k) *= epy_fab(i,j,k);
-                 }
+              if (vmns >= 0 or vpls <= 0) {
+                Real avg = .5 * (vpls + vmns);
+
+                if (avg >= small_vel) {
+                  vmac = vmns;
+                }
+                else if (avg <= -small_vel) {
+                  vmac = vpls;
+                }
+
+                vmac *= epy_fab(i,j,k);
               }
+
+              vmac_fab(i,j,k) = vmac;
+            }
           });
 
           amrex::ParallelFor(wbx,
             [apz_fab,fcz_fab,epz_fab,ccc_fab,wpls_fab,wmns_fab,ccvel_fab,xslopes_fab,yslopes_fab,zslopes_fab,wmac_fab,small_vel]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-              // Z-faces
-              if (apz_fab(i,j,k) > 0.0) 
-              {
-                 Real xf = fcz_fab(i,j,k,0); // local (x,y) of centroid of z-face we are extrapolating to
-                 Real yf = fcz_fab(i,j,k,1);
+            // Z-faces
+            if (apz_fab(i,j,k) > 0.0) 
+            {
+              Real xf = fcz_fab(i,j,k,0); // local (x,y) of centroid of z-face we are extrapolating to
+              Real yf = fcz_fab(i,j,k,1);
 
-                 Real xc = ccc_fab(i,j,k,0); // centroid of cell (i,j,k)
-                 Real yc = ccc_fab(i,j,k,1);
-                 Real zc = ccc_fab(i,j,k,2);
+              Real delta_x = xf - ccc_fab(i,j,k,0);
+              Real delta_y = yf - ccc_fab(i,j,k,1);
+              Real delta_z = .5 + ccc_fab(i,j,k,2);
 
-                 Real delta_x = xf  - xc;
-                 Real delta_y = yf  - yc;
-                 Real delta_z = 0.5 + zc;
+              const Real ccvel_pls = ccvel_fab(i,j,k,2);
+              const Real ccvel_mns = ccvel_fab(i,j,k-1,2);
 
-                 Real cc_umax = std::max(ccvel_fab(i,j,k,2), ccvel_fab(i,j,k-1,2));
-                 Real cc_umin = std::min(ccvel_fab(i,j,k,2), ccvel_fab(i,j,k-1,2));
+              Real cc_wmax = std::max(ccvel_pls, ccvel_mns);
+              Real cc_wmin = std::min(ccvel_pls, ccvel_mns);
 
-                 wpls_fab(i,j,k) = ccvel_fab(i,j,k  ,2) - delta_z * zslopes_fab(i,j,k,2) 
-                                                        + delta_x * xslopes_fab(i,j,k,2) 
-                                                        + delta_y * yslopes_fab(i,j,k,2);
+              Real wpls = ccvel_pls - delta_z * zslopes_fab(i,j,k,2) 
+                                    + delta_x * xslopes_fab(i,j,k,2) 
+                                    + delta_y * yslopes_fab(i,j,k,2);
 
-                 wpls_fab(i,j,k) = std::min(wpls_fab(i,j,k), cc_umax);
-                 wpls_fab(i,j,k) = std::max(wpls_fab(i,j,k), cc_umin);
+              wpls = std::min(wpls, cc_wmax);
+              wpls = std::max(wpls, cc_wmin);
+              wpls_fab(i,j,k) = wpls;
 
-                 xc = ccc_fab(i,j,k-1,0); // centroid of cell (i,j,k-1)
-                 yc = ccc_fab(i,j,k-1,1);
-                 zc = ccc_fab(i,j,k-1,2);
+              delta_x = xf - ccc_fab(i,j,k-1,0);
+              delta_y = yf - ccc_fab(i,j,k-1,1);
+              delta_z = .5 - ccc_fab(i,j,k-1,2);
 
-                 delta_x = xf  - xc;
-                 delta_y = yf  - yc;
-                 delta_z = 0.5 - zc;
+              Real wmns = ccvel_mns + delta_z * zslopes_fab(i,j,k-1,2) 
+                                    + delta_x * xslopes_fab(i,j,k-1,2) 
+                                    + delta_y * yslopes_fab(i,j,k-1,2);
 
-                 wmns_fab(i,j,k) = ccvel_fab(i,j,k-1,2) + delta_z * zslopes_fab(i,j,k-1,2) 
-                                                        + delta_x * xslopes_fab(i,j,k-1,2) 
-                                                        + delta_y * yslopes_fab(i,j,k-1,2);
+              wmns = std::min(wmns, cc_wmax);
+              wmns = std::max(wmns, cc_wmin);
+              wmns_fab(i,j,k) = wmns;
 
-                 wmns_fab(i,j,k) = std::min(wmns_fab(i,j,k), cc_umax);
-                 wmns_fab(i,j,k) = std::max(wmns_fab(i,j,k), cc_umin);
+              Real wmac(0);
 
-                 if ( wmns_fab(i,j,k) < 0.0 && wpls_fab(i,j,k) > 0.0 ) {
-                    wmac_fab(i,j,k) = 0.0;
-                 } else {
-                    Real avg = 0.5 * ( wpls_fab(i,j,k) + wmns_fab(i,j,k) );
-                    if ( std::abs(avg) <  small_vel) { wmac_fab(i,j,k) = 0.0;
-                    } else if (avg >= 0)             { wmac_fab(i,j,k) = wmns_fab(i,j,k);
-                    } else                           { wmac_fab(i,j,k) = wpls_fab(i,j,k);
-                    }
-                    wmac_fab(i,j,k) *= epz_fab(i,j,k);
-                 }
+              if ( wmns >= 0 or wpls <= 0) {
+                Real avg = .5 * (wpls + wmns);
+
+                if (avg >= small_vel) {
+                  wmac = wmns;
+                }
+                else if (avg <= -small_vel) {
+                  wmac = wpls;
+                }
+
+                wmac *= epz_fab(i,j,k);
               }
+
+              wmac_fab(i,j,k) = wmac;
+            }
           });
        } // Cut cells
     } // MFIter

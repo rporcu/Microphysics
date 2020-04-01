@@ -179,7 +179,7 @@ regions.bed.hi = 0.5000  3.0000  3.0000
 ic.regions = fluid-only  bed
 
 
-# Backgound IC covering the full domain with gas.
+# Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.fluid-only.fluid.volfrac   = 1.0
 

@@ -126,7 +126,7 @@ regions.full-domain.hi = 0.004  0.004  0.004
 ic.regions = full-domain
 
 
-# Backgound IC covering the full domain with gas.
+# Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   =  1.0
 

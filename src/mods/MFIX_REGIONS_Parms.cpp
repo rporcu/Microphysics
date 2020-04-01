@@ -78,7 +78,6 @@ namespace REGIONS
   \-----------------------------------------------------------------*/
   int getIndex(std::string name){
 
-    int idx=-1;
     for(int lc=0; lc<names.size(); lc++){
       if( names[lc] == name){
         return lc;

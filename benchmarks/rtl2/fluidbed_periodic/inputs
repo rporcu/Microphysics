@@ -177,7 +177,7 @@ regions.outflow.hi      = 0.0080  0.0020  0.0020
 ic.regions = full-domain  bed
 
 
-# Backgound IC covering the full domain with gas.
+# Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
 
@@ -214,4 +214,3 @@ bc.inflow.fluid.velocity =  0.015  0.0  0.0
 
 bc.outflow = po
 bc.outflow.fluid.pressure =  0.0
-

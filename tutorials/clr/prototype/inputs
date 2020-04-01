@@ -1,4 +1,3 @@
-
 amrex.fpe_trap_invalid = 1
 
 #----------------------------------------------------------------------
@@ -178,7 +177,7 @@ dem.damping_tang_fac.pw   =     0.5
 # Regions for defining ICs and BCs
 #
 
-mfix.regions = full-domain  riser  fuel-reactor  loop-seal air-reactor  cyclone inflow  outflow 
+mfix.regions = full-domain  riser  fuel-reactor  loop-seal air-reactor  cyclone inflow  outflow
 
 regions.full-domain.lo  = 0.0000  0.0000  0.0000
 regions.full-domain.hi  = 3.8400  0.3200  0.9600
@@ -208,12 +207,12 @@ regions.outflow.hi     = 3.8400  0.3200  0.9600
 # Initial Conditions
 #
 
-ic.regions = full-domain  riser  fuel-reactor  loop-seal  air-reactor  cyclone 
+ic.regions = full-domain  riser  fuel-reactor  loop-seal  air-reactor  cyclone
 
 mfix.particle_init_type = Auto
 
 
-# Backgound IC covering the full domain with gas.
+# Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac  = 1.0
 
@@ -321,4 +320,3 @@ bc.inflow.fluid.velocity =  0.01  0.0  0.0
 
 bc.outflow = po
 bc.outflow.fluid.pressure =  101325.0
-

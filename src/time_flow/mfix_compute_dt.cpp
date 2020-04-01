@@ -8,7 +8,7 @@ using namespace std;
 void
 mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
 {
-    // dt is always computed even when fixed_dt is set, 
+    // dt is always computed even when fixed_dt is set,
     // so we can issue a warning if the value of fixed dt does not satisfy the CFL condition.
 
     Real dt_new;
@@ -17,19 +17,19 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
     // Store the dt we've just used in the previous time step as prev_dt
     prev_dt = dt;
 
-    /* 
+    /*
        Compute new dt by using the formula derived in
        "A Boundary Condition Capturing Method for Multiphase Incompressible Flow"
        by Kang et al. (JCP).
-      
+
        dt/2 * ( C+V + sqrt( (C+V)**2 + 4Fx/dx + 4Fy/dy + 4Fz/dz )
-     
+
       where
-      
+
       C = max(|U|)/dx + max(|V|)/dy + max(|W|)/dz    --> Convection
-      
+
       V = 2 * max(mu/ro) * (1/dx^2 + 1/dy^2 +1/dz^2) --> Diffusion
-      
+
       Fx, Fy, Fz = net acceleration due to external forces
 
     */
@@ -42,8 +42,8 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
       Gpu::DeviceScalar<Real> cfl_max_gpu(cfl_max);
       Real *cfl_max_ptr = cfl_max_gpu.dataPtr();
 #endif
-    
-    for (int lev(0); lev < nlev; ++lev) {
+
+    for (int lev(0); lev <= finest_level; ++lev) {
 
         const Real* dx = geom[lev].CellSize();
 
@@ -62,7 +62,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
             const auto& mu        = m_leveldata[lev]->mu_g->array(mfi);
             const auto& gradp     = m_leveldata[lev]->gp->array(mfi);
             const auto& drag_fab  = m_leveldata[lev]->drag->array(mfi);
-            
+
             Box bx(mfi.tilebox());
 
             const auto& vel_fab   =
@@ -88,21 +88,21 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
                 AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                   {
                     if (!flags_fab(i,j,k).isCovered())
-                    {  
+                    {
                         Real acc[3];
                         Real qro  = 1.0/ro(i,j,k);
                         Real qep  = 1.0/ep(i,j,k);
 
                         // Compute the three components of the net acceleration
-                        // Explicit particle forcing is given by 
+                        // Explicit particle forcing is given by
                         for (int n(0); n < 3; ++n) {
                             Real delp = gp0_dev[n] + gradp(i,j,k,n);
                             Real fp   = drag_fab(i,j,k,n) - drag_fab(i,j,k,3) * vel(i,j,k,n);
-                            
+
                             acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
                         }
-                        
-                        Real c_cfl   = abs(vel(i,j,k,0))*odx + abs(vel(i,j,k,1))*ody + abs(vel(i,j,k,2))*odz;                        
+
+                        Real c_cfl   = abs(vel(i,j,k,0))*odx + abs(vel(i,j,k,1))*ody + abs(vel(i,j,k,2))*odz;
                         Real v_cfl   = 2.0 * mu(i,j,k) * qro * (odx*odx + ody*ody + odz*odz);
                         Real cpv_cfl = c_cfl + v_cfl;
 
@@ -126,13 +126,13 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
       cfl_max = cfl_max_gpu.dataValue();
     }
 #endif
-   
+
     // Do global max operation
     ParallelDescriptor::ReduceRealMax(cfl_max);
 
     // New dt
-    dt_new = cfl * 2.0 / cfl_max; 
-    
+    dt_new = cfl * 2.0 / cfl_max;
+
     // Protect against cfl_max very small
     // This may happen, for example, when the initial velocity field
     // is zero for an inviscid flow with no external forcing
@@ -141,12 +141,12 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
 
     // Don't let the timestep grow by more than 1% per step.
     //       unless the previous time step was unduly shrunk to match plot_per_exact
-    if ( nstep > 1 && !(plot_per_exact > 0 && last_plt == nstep && nstep > 0) ) 
+    if ( nstep > 1 && !(plot_per_exact > 0 && last_plt == nstep && nstep > 0) )
         dt_new = amrex::min( dt_new, 1.01*old_dt );
 
     // Don't overshoot the final time if not running to steady state
-    if (steady_state == 0 && stop_time > 0.) 
-       if (time+dt_new > stop_time) 
+    if (steady_state == 0 && stop_time > 0.)
+       if (time+dt_new > stop_time)
            dt_new = stop_time - time;
 
     // Don't overshoot specified plot times
@@ -156,8 +156,8 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
         dt_new = trunc((time + dt_new) / plot_per_exact) * plot_per_exact - time;
     }
 
-    // dt_new is the step calculated with a cfl contraint; dt is the value set by fixed_dt
-    // When the test was on dt > dt_new, there were cases where they were effectively equal 
+    // dt_new is the step calculated with a cfl constraint; dt is the value set by fixed_dt
+    // When the test was on dt > dt_new, there were cases where they were effectively equal
     //   but (dt > dt_new) was being set to true due to precision issues.
     Real ope(1.0 + 1.e-8);
 

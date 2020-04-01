@@ -93,7 +93,7 @@ mfix::mfix_compute_fluxes (int lev,
 
             if (flags.getType(amrex::grow(bx,0)) != FabType::covered )
             {
-                // No cut cells in tile + nghost-cell witdh halo -> use non-eb routine
+                // No cut cells in tile + nghost-cell width halo -> use non-eb routine
                 if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
                 {
                     mfix_compute_fluxes_on_box(
@@ -171,10 +171,6 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
     [slopes_comp,state_comp,dom_low,dom_high,bct_ilo,bct_ihi,bc_types,state,x_slopes,u,fx]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
-    Real state_w(0)  ;
-    //Real state_e(0); DECLARED_BUT_NEVER_REFERENCED
-    Real state_mns(0); Real state_pls(0);
-
     //
     // West face
     //
@@ -184,29 +180,27 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
      ugradu_aux::is_equal_to_any(bct_ilo(dom_low.x-1,j,k,0),
                                  bc_types.data(), bc_types.size()))
     {
-      state_w = state(i-1,j,k,state_comp+n);
-
-    } else if ((i == dom_high.x+1) and
+      fx(i,j,k,n) = u(i,j,k) * state(i-1,j,k,state_comp+n);
+    }
+    else if ((i == dom_high.x+1) and
      ugradu_aux::is_equal_to_any(bct_ihi(dom_high.x+1,j,k,0),
                                  bc_types.data(), bc_types.size()))
     {
-      state_w = state(i,j,k,state_comp+n);
-    } else {
-      state_pls = state(i  ,j,k,state_comp+n) - .5*x_slopes(i  ,j,k,slopes_comp+n);
-      state_mns = state(i-1,j,k,state_comp+n) + .5*x_slopes(i-1,j,k,slopes_comp+n);
-      state_w = upwind( state_mns, state_pls, u(i,j,k) );
+      fx(i,j,k,n) = u(i,j,k) * state(i,j,k,state_comp+n);
     }
-    fx(i,j,k,n) = u(i,j,k) * state_w;
+    else {
+      const Real state_pls = state(i  ,j,k,state_comp+n) - .5*x_slopes(i  ,j,k,slopes_comp+n);
+      const Real state_mns = state(i-1,j,k,state_comp+n) + .5*x_slopes(i-1,j,k,slopes_comp+n);
+      const Real u_ijk = u(i,j,k);
+
+      fx(i,j,k,n) = u_ijk * upwind(state_mns, state_pls, u_ijk);
+    }
   });
 
   amrex::ParallelFor(vbx,ncomp,
     [slopes_comp,state_comp,dom_low,dom_high,bct_jlo,bct_jhi,bc_types,state,y_slopes,v,fy]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
-    Real state_s(0)  ;
-    //Real state_n(0); DECLARED_BUT_NEVER_REFERENCED
-    Real state_mns(0); Real state_pls(0);
-
     //
     // South face
     //
@@ -216,28 +210,27 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
      ugradu_aux::is_equal_to_any(bct_jlo(i,dom_low.y-1,k,0),
                                  bc_types.data(), bc_types.size()))
     {
-      state_s = state(i,j-1,k,state_comp+n);
-    } else if ((j == dom_high.y+1) and
+      fy(i,j,k,n) = v(i,j,k) * state(i,j-1,k,state_comp+n);
+    }
+    else if ((j == dom_high.y+1) and
      ugradu_aux::is_equal_to_any(bct_jhi(i,dom_high.y+1,k,0),
                                  bc_types.data(), bc_types.size()))
     {
-      state_s = state(i,j,k,state_comp+n);
-    } else {
-      state_pls = state(i,j  ,k,state_comp+n) - .5*y_slopes(i,j  ,k,slopes_comp+n);
-      state_mns = state(i,j-1,k,state_comp+n) + .5*y_slopes(i,j-1,k,slopes_comp+n);
-
-      state_s = upwind( state_mns, state_pls, v(i,j,k) );
+      fy(i,j,k,n) = v(i,j,k) * state(i,j,k,state_comp+n);
     }
-    fy(i,j,k,n) = v(i,j,k) * state_s;
+    else {
+      const Real state_pls = state(i,j  ,k,state_comp+n) - .5*y_slopes(i,j  ,k,slopes_comp+n);
+      const Real state_mns = state(i,j-1,k,state_comp+n) + .5*y_slopes(i,j-1,k,slopes_comp+n);
+      const Real v_ijk = v(i,j,k);
+
+      fy(i,j,k,n) = v_ijk * upwind(state_mns, state_pls, v_ijk);
+    }
   });
 
   amrex::ParallelFor(wbx, ncomp,
     [slopes_comp,state_comp,dom_low,dom_high,bct_klo,bct_khi,bc_types,state,z_slopes,w,fz]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
-    Real state_b(0)  ;
-    Real state_mns(0); Real state_pls(0);
-    
     //
     // Bottom face
     //
@@ -247,19 +240,21 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
      ugradu_aux::is_equal_to_any(bct_klo(i,j,dom_low.z-1,0),
                                  bc_types.data(), bc_types.size()))
     {
-      state_b = state(i,j,k-1,state_comp+n);
-    } else if ((k == dom_high.z+1) and
+      fz(i,j,k,n) = w(i,j,k) * state(i,j,k-1,state_comp+n);
+    }
+    else if ((k == dom_high.z+1) and
      ugradu_aux::is_equal_to_any(bct_khi(i,j,dom_high.z+1,0),
                                  bc_types.data(), bc_types.size()))
     {
-      state_b = state(i,j,k,state_comp+n);
-    } else {
-      state_pls = state(i,j,k  ,state_comp+n) - .5*z_slopes(i,j,k  ,slopes_comp+n);
-      state_mns = state(i,j,k-1,state_comp+n) + .5*z_slopes(i,j,k-1,slopes_comp+n);
-
-      state_b = upwind(state_mns, state_pls, w(i,j,k));
+      fz(i,j,k,n) = w(i,j,k) * state(i,j,k,state_comp+n);
     }
-    fz(i,j,k,n) = w(i,j,k) * state_b;
+    else {
+      const Real state_pls = state(i,j,k  ,state_comp+n) - .5*z_slopes(i,j,k  ,slopes_comp+n);
+      const Real state_mns = state(i,j,k-1,state_comp+n) + .5*z_slopes(i,j,k-1,slopes_comp+n);
+      const Real w_ijk = w(i,j,k);
+
+      fz(i,j,k,n) = w_ijk * upwind(state_mns, state_pls, w_ijk);
+    }
   });
 }
 
@@ -372,63 +367,70 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
      x_slopes,y_slopes,z_slopes,state,u,sx,fx]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
-    Real upls(0); Real umns(0);
-
-    if( areafrac_x(i,j,k) > 0 ) {
-      if( i <= dom_low.x and
-           ugradu_aux::is_equal_to_any(bct_ilo(dom_low.x-1,j,k,0),
-                                       bc_types.data(), bc_types.size()))
-        {
-         sx(i,j,k,n) = state(dom_low.x-1,j,k,state_comp+n);
-      }
-      else if( i >= dom_high.x+1 and
-           ugradu_aux::is_equal_to_any(bct_ihi(dom_high.x+1,j,k,0),
-                                       bc_types.data(), bc_types.size()))
+    if( areafrac_x(i,j,k) > 0 )
+    {
+      if(i <= dom_low.x and
+        ugradu_aux::is_equal_to_any(bct_ilo(dom_low.x-1,j,k,0),
+                                    bc_types.data(), bc_types.size()))
       {
-         sx(i,j,k,n) = state(dom_high.x+1,j,k,state_comp+n);
+        Real sx_ijkn = state(dom_low.x-1,j,k,state_comp+n);
+
+        sx(i,j,k,n) = sx_ijkn;
+        fx(i,j,k,n) = u(i,j,k) * sx_ijkn;
+      }
+      else if(i >= dom_high.x+1 and
+        ugradu_aux::is_equal_to_any(bct_ihi(dom_high.x+1,j,k,0),
+                                    bc_types.data(), bc_types.size()))
+      {
+        Real sx_ijkn = state(dom_high.x+1,j,k,state_comp+n);
+
+        sx(i,j,k,n) = sx_ijkn;
+        fx(i,j,k,n) = u(i,j,k) * sx_ijkn;
       }
       else 
       {
-         Real yf = fcx_fab(i,j,k,0); // local (y,z) of centroid of x-face we are extrapolating to
-         Real zf = fcx_fab(i,j,k,1);
+        Real yf = fcx_fab(i,j,k,0); // local (y,z) of centroid of x-face we are extrapolating to
+        Real zf = fcx_fab(i,j,k,1);
 
-         Real xc = ccc_fab(i,j,k,0); // centroid of cell (i,j,k)
-         Real yc = ccc_fab(i,j,k,1);
-         Real zc = ccc_fab(i,j,k,2);
+        Real delta_x = .5 + ccc_fab(i,j,k,0);
+        Real delta_y = yf - ccc_fab(i,j,k,1);
+        Real delta_z = zf - ccc_fab(i,j,k,2);
 
-         Real delta_x = 0.5 + xc;
-         Real delta_y = yf  - yc;
-         Real delta_z = zf  - zc;
+        Real state_pls = state(i,j,k,state_comp+n);
+        Real state_mns = state(i-1,j,k,state_comp+n);
 
-         Real cc_umax = std::max(state(i,j,k,state_comp+n), state(i-1,j,k,state_comp+n));
-         Real cc_umin = std::min(state(i,j,k,state_comp+n), state(i-1,j,k,state_comp+n));
+        Real cc_umax = std::max(state_pls, state_mns);
+        Real cc_umin = std::min(state_pls, state_mns);
 
-         upls = state(i  ,j,k,state_comp+n) - delta_x * x_slopes(i,j,k,slopes_comp+n) 
-                                            + delta_y * y_slopes(i,j,k,slopes_comp+n) 
-                                            + delta_z * z_slopes(i,j,k,slopes_comp+n);
+        Real upls = state_pls - delta_x * x_slopes(i,j,k,slopes_comp+n) 
+                              + delta_y * y_slopes(i,j,k,slopes_comp+n) 
+                              + delta_z * z_slopes(i,j,k,slopes_comp+n);
 
-         upls = std::max( std::min(upls, cc_umax), cc_umin );
+        upls = std::max( std::min(upls, cc_umax), cc_umin );
 
-              xc = ccc_fab(i-1,j,k,0); // centroid of cell (i,j,k)
-              yc = ccc_fab(i-1,j,k,1);
-              zc = ccc_fab(i-1,j,k,2);
+        delta_x = .5 - ccc_fab(i-1,j,k,0);
+        delta_y = yf - ccc_fab(i-1,j,k,1);
+        delta_z = zf - ccc_fab(i-1,j,k,2);
 
-              delta_x = 0.5 - xc;
-              delta_y = yf  - yc;
-              delta_z = zf  - zc;
+        Real umns = state_mns + delta_x * x_slopes(i-1,j,k,slopes_comp+n) 
+                              + delta_y * y_slopes(i-1,j,k,slopes_comp+n) 
+                              + delta_z * z_slopes(i-1,j,k,slopes_comp+n);
 
-         umns = state(i-1,j,k,state_comp+n) + delta_x * x_slopes(i-1,j,k,slopes_comp+n) 
-                                            + delta_y * y_slopes(i-1,j,k,slopes_comp+n) 
-                                            + delta_z * z_slopes(i-1,j,k,slopes_comp+n);
+        umns = std::max( std::min(umns, cc_umax), cc_umin );
 
-         umns = std::max( std::min(umns, cc_umax), cc_umin );
+        const Real u_ijk = u(i,j,k);
+        const Real sx_ijkn = upwind(umns, upls, u_ijk);
 
-         sx(i,j,k,n) = upwind( umns, upls, u(i,j,k) );
+        sx(i,j,k,n) = sx_ijkn;
+        fx(i,j,k,n) = u_ijk * sx_ijkn;
       }
-    } else {
-        sx(i,j,k,n) = my_huge;
     }
-    fx(i,j,k,n) = u(i,j,k) * sx(i,j,k,n);
+    else {
+      const Real sx_ijkn = my_huge;
+
+      sx(i,j,k,n) = sx_ijkn;
+      fx(i,j,k,n) = u(i,j,k) * sx_ijkn;
+    }
   });
 
   //
@@ -439,129 +441,141 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
      x_slopes,y_slopes,z_slopes,state,v,sy,fy]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
-    Real vpls(0); Real vmns(0);
-
     if( areafrac_y(i,j,k) > 0 ) {
       if( j <= dom_low.y and
        ugradu_aux::is_equal_to_any(bct_jlo(i,dom_low.y-1,k,0),
                                    bc_types.data(), bc_types.size()))
       {
-        sy(i,j,k,n) = state(i,dom_low.y-1,k,state_comp+n);
+        Real sy_ijkn = state(i,dom_low.y-1,k,state_comp+n);
+
+        sy(i,j,k,n) = sy_ijkn;
+        fy(i,j,k,n) = v(i,j,k) * sy_ijkn;
       }
       else if( j >= dom_high.y+1 and
        ugradu_aux::is_equal_to_any(bct_jhi(i,dom_high.y+1,k,0),
                                    bc_types.data(), bc_types.size()))
       {
-        sy(i,j,k,n) = state(i,dom_high.y+1,k,state_comp+n);
+        Real sy_ijkn = state(i,dom_high.y+1,k,state_comp+n);
+
+        sy(i,j,k,n) = sy_ijkn;
+        fy(i,j,k,n) = v(i,j,k) * sy_ijkn;
       }
       else 
       {
-         Real xf = fcy_fab(i,j,k,0); // local (x,z) of centroid of y-face we are extrapolating to
-         Real zf = fcy_fab(i,j,k,1);
+        Real xf = fcy_fab(i,j,k,0); // local (x,z) of centroid of y-face we are extrapolating to
+        Real zf = fcy_fab(i,j,k,1);
 
-         Real xc = ccc_fab(i,j,k,0); // centroid of cell (i,j,k)
-         Real yc = ccc_fab(i,j,k,1);
-         Real zc = ccc_fab(i,j,k,2);
+        Real delta_x = xf  - ccc_fab(i,j,k,0);
+        Real delta_y = 0.5 + ccc_fab(i,j,k,1);
+        Real delta_z = zf  - ccc_fab(i,j,k,2);
 
-         Real delta_x = xf  - xc;
-         Real delta_y = 0.5 + yc;
-         Real delta_z = zf  - zc;
+        Real state_pls = state(i,j  ,k,state_comp+n);
+        Real state_mns = state(i,j-1,k,state_comp+n);
 
-         Real cc_umax = std::max(state(i,j,k,state_comp+n), state(i,j-1,k,state_comp+n));
-         Real cc_umin = std::min(state(i,j,k,state_comp+n), state(i,j-1,k,state_comp+n));
+        Real cc_umax = std::max(state_pls, state_mns);
+        Real cc_umin = std::min(state_pls, state_mns);
 
-         vpls = state(i,j  ,k,state_comp+n) - delta_y * y_slopes(i,j,k,slopes_comp+n) 
-                                            + delta_x * x_slopes(i,j,k,slopes_comp+n) 
-                                            + delta_z * z_slopes(i,j,k,slopes_comp+n);
-         vpls = std::max( std::min(vpls, cc_umax), cc_umin );
+        Real vpls = state_pls - delta_y * y_slopes(i,j,k,slopes_comp+n) 
+                              + delta_x * x_slopes(i,j,k,slopes_comp+n) 
+                              + delta_z * z_slopes(i,j,k,slopes_comp+n);
 
-              xc = ccc_fab(i,j-1,k,0); // centroid of cell (i,j-1,k)
-              yc = ccc_fab(i,j-1,k,1);
-              zc = ccc_fab(i,j-1,k,2);
+        vpls = std::max( std::min(vpls, cc_umax), cc_umin );
 
-              delta_x = xf  - xc;
-              delta_y = 0.5 - yc;
-              delta_z = zf  - zc;
+        delta_x = xf  - ccc_fab(i,j-1,k,0);
+        delta_y = 0.5 - ccc_fab(i,j-1,k,1);
+        delta_z = zf  - ccc_fab(i,j-1,k,2);
 
-         vmns = state(i,j-1,k,state_comp+n) + delta_y * y_slopes(i,j-1,k,slopes_comp+n) 
-                                            + delta_x * x_slopes(i,j-1,k,slopes_comp+n) 
-                                            + delta_z * z_slopes(i,j-1,k,slopes_comp+n);
+        Real vmns = state_mns + delta_y * y_slopes(i,j-1,k,slopes_comp+n) 
+                              + delta_x * x_slopes(i,j-1,k,slopes_comp+n) 
+                              + delta_z * z_slopes(i,j-1,k,slopes_comp+n);
 
-         vmns = std::max( std::min(vmns, cc_umax), cc_umin );
+        vmns = std::max( std::min(vmns, cc_umax), cc_umin );
 
-         sy(i,j,k,n) = upwind( vmns, vpls, v(i,j,k) );
+        const Real v_ijk = v(i,j,k);
+        const Real sy_ijkn = upwind(vmns, vpls, v_ijk);
+
+        sy(i,j,k,n) = sy_ijkn;
+        fy(i,j,k,n) = v_ijk * sy_ijkn;
       }
     }
     else {
-        sy(i,j,k,n) = my_huge;
-    }
-    fy(i,j,k,n) = v(i,j,k) * sy(i,j,k,n);
-  });
+      const Real sy_ijkn = my_huge; 
 
-  //
-  // ===================== Z =====================
-  //
-  amrex::ParallelFor(wbx,ncomp,
+      sy(i,j,k,n) = sy_ijkn;
+      fy(i,j,k,n) = v(i,j,k) * sy_ijkn;
+    }                      
+  });                      
+                           
+  //                       
+  // =====================  Z =====================
+  //                       
+  amrex::ParallelFor(wbx, ncomp,
     [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_klo,bct_khi,bc_types,areafrac_z,fcz_fab,ccc_fab,
      x_slopes,y_slopes,z_slopes,state,w,sz,fz]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-  {
-    Real wpls(0); Real wmns(0);
-
+  {                        
     if( areafrac_z(i,j,k) > 0 ) {
       if( k <= dom_low.z and
        ugradu_aux::is_equal_to_any(bct_klo(i,j,dom_low.z-1,0),
                                    bc_types.data(), bc_types.size()))
-      {
-        sz(i,j,k,n) = state(i,j,dom_low.z-1,state_comp+n);
-      }
+      {                    
+        const Real sz_ijkn = state(i, j,dom_low.z-1,state_comp+n);
+
+        sz(i,j,k,n) = sz_ijkn;
+        fz(i,j,k,n) = w(i,j,k) * sz_ijkn;
+      }                    
       else if( k >= dom_high.z+1 and
        ugradu_aux::is_equal_to_any(bct_khi(i,j,dom_high.z+1,0),
                                    bc_types.data(), bc_types.size()))
-      {
-        sz(i,j,k,n) = state(i,j,dom_high.z+1,state_comp+n);
-      }
-      else 
-      {
-         Real xf = fcz_fab(i,j,k,0); // local (x,y) of centroid of z-face we are extrapolating to
-         Real yf = fcz_fab(i,j,k,1);
+      {                    
+        const Real sz_ijkn = state(i, j,dom_high.z+1,state_comp+n);
 
-         Real xc = ccc_fab(i,j,k,0); // centroid of cell (i,j,k)
-         Real yc = ccc_fab(i,j,k,1);
-         Real zc = ccc_fab(i,j,k,2);
+        sz(i,j,k,n) = sz_ijkn;
+        fz(i,j,k,n) = w(i,j,k) * sz_ijkn;
+      }                    
+      else                 
+      {                    
+        Real xf = fcz_fab(i,j,k,0); // local (x,y) of centroid of z-face we are extrapolating to
+        Real yf = fcz_fab(i,j,k,1);
 
-         Real delta_x = xf  - xc;
-         Real delta_y = yf  - yc;
-         Real delta_z = 0.5 + zc;
+        Real delta_x = xf - ccc_fab(i,j,k,0);
+        Real delta_y = yf - ccc_fab(i,j,k,1);
+        Real delta_z = .5 + ccc_fab(i,j,k,2);
 
-         Real cc_umax = std::max(state(i,j,k,state_comp+n), state(i,j,k-1,state_comp+n));
-         Real cc_umin = std::min(state(i,j,k,state_comp+n), state(i,j,k-1,state_comp+n));
+        Real state_pls = state(i,j,k  ,state_comp+n);
+        Real state_mns = state(i,j,k-1,state_comp+n);
 
-         wpls = state(i,j,k  ,state_comp+n) - delta_z * z_slopes(i,j,k,slopes_comp+n) 
-                                            + delta_x * x_slopes(i,j,k,slopes_comp+n) 
-                                            + delta_y * y_slopes(i,j,k,slopes_comp+n);
+        Real cc_umax = std::max(state_pls, state_mns);
+        Real cc_umin = std::min(state_pls, state_mns);
 
-         wpls = std::max( std::min(wpls, cc_umax), cc_umin );
+        Real wpls = state_pls - delta_z * z_slopes(i,j,k,slopes_comp+n) 
+                              + delta_x * x_slopes(i,j,k,slopes_comp+n) 
+                              + delta_y * y_slopes(i,j,k,slopes_comp+n);
 
-              xc = ccc_fab(i,j,k-1,0); // centroid of cell (i,j,k-1)
-              yc = ccc_fab(i,j,k-1,1);
-              zc = ccc_fab(i,j,k-1,2);
+        wpls = std::max( std::min(wpls, cc_umax), cc_umin );
 
-              delta_x = xf  - xc;
-              delta_y = yf  - yc;
-              delta_z = 0.5 - zc;
+        delta_x = xf - ccc_fab(i,j,k-1,0);
+        delta_y = yf - ccc_fab(i,j,k-1,1);
+        delta_z = .5 - ccc_fab(i,j,k-1,2);
 
-         wmns = state(i,j,k-1,state_comp+n) + delta_z * z_slopes(i,j,k-1,slopes_comp+n) 
-                                            + delta_x * x_slopes(i,j,k-1,slopes_comp+n) 
-                                            + delta_y * y_slopes(i,j,k-1,slopes_comp+n);
-         wmns = std::max( std::min(wmns, cc_umax), cc_umin );
+        Real wmns = state_mns + delta_z * z_slopes(i,j,k-1,slopes_comp+n) 
+                              + delta_x * x_slopes(i,j,k-1,slopes_comp+n) 
+                              + delta_y * y_slopes(i,j,k-1,slopes_comp+n);
 
-         sz(i,j,k,n) = upwind( wmns, wpls, w(i,j,k) );
+        wmns = std::max( std::min(wmns, cc_umax), cc_umin );
+
+        const Real w_ijk = w(i,j,k);
+        const Real sz_ijkn = upwind(wmns, wpls, w_ijk);
+
+        sz(i,j,k,n) = sz_ijkn;
+        fz(i,j,k,n) = w_ijk * sz_ijkn;
       }
     }
     else {
-        sz(i,j,k,n) = my_huge;
+      const Real sz_ijkn = my_huge;
+
+      sz(i,j,k,n) = sz_ijkn;
+      fz(i,j,k,n) = w(i,j,k) * sz_ijkn;
     }
-    fz(i,j,k,n) = w(i,j,k) * sz(i,j,k,n);
   });
 }
