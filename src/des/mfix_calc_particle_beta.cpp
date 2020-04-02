@@ -63,16 +63,10 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
       const BoxArray&            pba = pc->ParticleBoxArray(lev);
       const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
-<<<<<<< HEAD
       // Ghost cells needed for interpolation
       int ng = m_leveldata[lev]->ep_g->nGrow();
       ep_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->ep_g->nComp(), ng);
       ep_ptr->copy(*m_leveldata[lev]->ep_g, 0, 0, 1, ng, ng);
-=======
-      // Temporary arrays  -- copies with no ghost cells
-      ep_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->ep_g->nComp(), 0);
-      ep_ptr->copy(*m_leveldata[lev]->ep_g, 0, 0, 1, 0, 0);
->>>>>>> develop
 
       // Temporary arrays  -- copies with no ghost cells
       ro_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->ro_g->nComp(), 1);
@@ -98,8 +92,10 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 #endif
     {
       const auto dxi_array = geom[lev].InvCellSizeArray();
+      const auto dx_array  = geom[lev].CellSizeArray();
       const auto plo_array = geom[lev].ProbLoArray();
 
+      const amrex::RealVect  dx( dx_array[0],  dx_array[1],  dx_array[2]);
       const amrex::RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
       const amrex::RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
 
@@ -181,28 +177,26 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
             const auto cellcent = &(factory.getCentroid());
             const auto& ccent_fab = cellcent->array(pti);
 
+            const auto bndrycent = &(factory.getBndryCent());
+            const auto& bcent_fab = bndrycent->array(pti);
+
             amrex::ParallelFor(np,
-              [particles_ptr,vel_array,ro_array,mu_array,ep_array,flags_array,DragFunc,plo,dxi,ccent_fab]
-              AMREX_GPU_DEVICE (int ip) noexcept
+              [particles_ptr,vel_array,ro_array,mu_array,ep_array,flags_array,DragFunc,
+              plo,dx,dxi,ccent_fab, bcent_fab]
+              AMREX_GPU_DEVICE (int pid) noexcept
             {
-              MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
+              MFIXParticleContainer::ParticleType& particle = particles_ptr[pid];
 
               Real velfp[3];
               Real ep;
 
-<<<<<<< HEAD
-              // Upper cell in trilinear stencil
-              int ic = std::floor((particle.pos(0) - plo[0])*dxi[0] + 0.5);
-              int jc = std::floor((particle.pos(1) - plo[1])*dxi[1] + 0.5);
-              int kc = std::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5);
-
               // Cell containing particle centroid
-              int i = floor((particle.pos(0) - plo[0])*dxi[0]);
-              int j = floor((particle.pos(1) - plo[1])*dxi[1]);
-              int k = floor((particle.pos(2) - plo[2])*dxi[2]);
+              int ip = floor((particle.pos(0) - plo[0])*dxi[0]);
+              int jp = floor((particle.pos(1) - plo[1])*dxi[1]);
+              int kp = floor((particle.pos(2) - plo[2])*dxi[2]);
 
-
-              if (flags_array(i,j,k).isCovered() ){
+              // No drag force for particles in covered cells.
+              if (flags_array(ip,jp,kp).isCovered() ){
 
                 particle.rdata(realData::dragx) = 0.;
 
@@ -211,231 +205,644 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               // cells in the stencil because of the diagonal case)
               } else {
 
-                if (flags_array(ic-1,jc-1,kc-1).isRegular() and
-                    flags_array(ic  ,jc-1,kc-1).isRegular() and
-                    flags_array(ic-1,jc  ,kc-1).isRegular() and
-                    flags_array(ic  ,jc  ,kc-1).isRegular() and
-                    flags_array(ic-1,jc-1,kc  ).isRegular() and
-                    flags_array(ic  ,jc-1,kc  ).isRegular() and
-                    flags_array(ic-1,jc  ,kc  ).isRegular() and
-                    flags_array(ic  ,jc  ,kc  ).isRegular()) {
+                // Upper cell in trilinear stencil
+                int i = std::floor((particle.pos(0) - plo[0])*dxi[0] + 0.5);
+                int j = std::floor((particle.pos(1) - plo[1])*dxi[1] + 0.5);
+                int k = std::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5);
+
+                // All cells in the stencil are regular. Use
+                // traditional trilinear interpolation
+                if (flags_array(i-1,j-1,k-1).isRegular() and
+                    flags_array(i  ,j-1,k-1).isRegular() and
+                    flags_array(i-1,j  ,k-1).isRegular() and
+                    flags_array(i  ,j  ,k-1).isRegular() and
+                    flags_array(i-1,j-1,k  ).isRegular() and
+                    flags_array(i  ,j-1,k  ).isRegular() and
+                    flags_array(i-1,j  ,k  ).isRegular() and
+                    flags_array(i  ,j  ,k  ).isRegular()) {
 
                   trilinear_interp(particle.pos(), &velfp[0], vel_array, plo, dxi);
                   trilinear_interp_scalar(particle.pos(), ep, ep_array, plo, dxi);
 
-                  // At least one of the cells in the stencil is cut/covered
-
+                  // At least one of the cells in the stencil is cut or covered
                 } else {
 
                   // Particle position relative to cell center [-0.5, 0.5]
-                  Real gx = particle.pos(0)*dxi[0] - (i + 0.5);
-                  Real gy = particle.pos(1)*dxi[1] - (j + 0.5);
-                  Real gz = particle.pos(2)*dxi[2] - (k + 0.5);
+                  Real gx = particle.pos(0)*dxi[0] - (ip + 0.5);
+                  Real gy = particle.pos(1)*dxi[1] - (jp + 0.5);
+                  Real gz = particle.pos(2)*dxi[2] - (kp + 0.5);
 
-                  int ilo, ihi;
-                  amrex::Real x;
-                  if(gx < ccent_fab(i,j,k,0)){
-                    ilo = i-1;
-                    ihi = i;
-                    x = ccent_fab(ihi,j,k,0) - gx;
-                  } else {
-                    ilo = i;
-                    ihi = i+1;
-                    x = gx - ccent_fab(ilo,j,k,0);
-                  }
+                  // Use the centoid location of the cell containing the particle
+                  // to determine the interpolation stencil. If the particle is
+                  // on the low side, then the high side stencil is the index of the
+                  // cell contianing the particle, otherwise the particle is in
+                  // the low side cell.
+                  i = (gx < ccent_fab(ip,jp,kp,0)) ? ip : ip + 1;
+                  j = (gy < ccent_fab(ip,jp,kp,1)) ? jp : jp + 1;
+                  k = (gz < ccent_fab(ip,jp,kp,2)) ? kp : kp + 1;
 
-                  int jlo, jhi;
-                  amrex::Real y;
-                  if(gy < ccent_fab(i,j,k,1)){
-                    jlo = j-1;
-                    jhi = j;
-                    y = ccent_fab(i,jhi,k,1) - gy;
-                  } else {
-                    jlo = j;
-                    jhi = j+1;
-                    y = gy - ccent_fab(i,jlo,k,1);
-                  }
+                  amrex::Real nodes[8][3];
+                  amrex::Real values[8][4];
 
-                  int klo, khi;
-                  amrex::Real z;
-                  if(gz < ccent_fab(i,j,k,2)){
-                    klo = k-1;
-                    khi = k;
-                    z = ccent_fab(i,j,khi,2) - gz;
-                  } else {
-                    klo = k;
-                    khi = k+1;
-                    z = gz - ccent_fab(i,j,k,2);
-                  }
+                  int di = i - ip; // -1 or 0
+                  int dj = j - jp; // -1 or 0
+                  int dk = k - kp; // -1 or 0
 
-                  amrex::Real wx[2];
-                  amrex::Real wy[2];
-                  amrex::Real wz[2];
-
-                  wx[1] = x / (1.0 + ccent_fab(ihi,j  ,k  ,0) - ccent_fab(ilo,j  ,k  ,0));
-                  wy[1] = y / (1.0 + ccent_fab(i  ,jhi,k  ,1) - ccent_fab(i  ,jlo,k  ,1));
-                  wz[1] = z / (1.0 + ccent_fab(i  ,j  ,khi,2) - ccent_fab(i  ,j  ,klo,2));
-
-                  wx[0] = 1.0 - wx[1];
-                  wy[0] = 1.0 - wy[1];
-                  wz[0] = 1.0 - wz[1];
-
-                  amrex::Real weights[2][2][2];
-                  amrex::Real inv_sum_weights(0.0);
-
-                  const int ioff = ilo-i;
-                  const int joff = jlo-j;
-                  const int koff = klo-k;
-
-                  for(int kk(0); kk<2; kk++){
-                    for(int jj(0); jj<2; jj++){
-                      for(int ii(0); ii<2; ii++){
-                        // amrex::Print() << ioff+ii << " " << joff+jj << " " << koff+kk << std::endl;
-                        if( flags_array(i,j,k).isConnected(ioff+ii,joff+jj,koff+kk)) {
-                          weights[ii][jj][kk] = wx[ii]*wy[jj]*wz[kk];
-                          inv_sum_weights += weights[ii][jj][kk];
-                        } else {
-                          weights[ii][jj][kk] = -1.0;
-                        }
+                  // Count the number of non-conntected cells in the stencil
+                  int covered = 0;
+                  for(int kk(-1); kk<1; kk++){
+                    for(int jj(-1); jj<1; jj++){
+                      for(int ii(-1); ii<1; ii++){
+                        if(not flags_array(ip,jp,kp).isConnected(di+ii,dj+jj,dk+kk))
+                          covered += 1;
                       }
                     }
                   }
 
-                  inv_sum_weights = 1.0/inv_sum_weights;
+                  amrex::Print() <<  std::endl <<  std::endl;
+                  amrex::Print() << "Particle Index: " << ip << " " << jp << " "<< kp << std::endl;
+                  amrex::Print() << "Stencil Index:  " << i  << " " << j  << " "<< k  << std::endl;
+                  amrex::Print() << "Covered:        " << covered << std::endl;
 
-                  velfp[0] = 0.0;
-                  velfp[1] = 0.0;
-                  velfp[2] = 0.0;
+                  /*----------------------------------------------------------------------------------*
+                   *                                                                                  *
+                   *                                    NODE 0                                        *
+                   *                                                                                  *
+                   *----------------------------------------------------------------------------------*/
+                  // Node 0
+                  if(flags_array(ip,jp,kp).isConnected(di-1,dj-1,dk-1)) {
+                    //  DEBUG START ////////////////////////////////////////////////////////////////////
+                    amrex::Print() << std::endl;
+                    amrex::Print() << "Node 0 is connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i-1 << " " <<  j-1 << " "<<  k-1 << " " << std::endl;
+                    amrex::Print() << "REF:    " << di-1 << " " << dj-1 << " "<< dk-1 << " " << std::endl;
+                    amrex::Print() << "Node is regular?  "  << flags_array(i-1,j-1,k-1).isRegular() << std::endl;
+                    amrex::Print() << "Node is svalued?  "  << flags_array(i-1,j-1,k-1).isSingleValued() << std::endl;
+                    amrex::Print() << "Node is covered?  "  << flags_array(i-1,j-1,k-1).isCovered() << std::endl;
+                    amrex::Print() << "Cell Centroids:   "
+                                   << (i - 0.5 + ccent_fab(i-1,j-1,k-1,0))*dx[0] << " "
+                                   << (j - 0.5 + ccent_fab(i-1,j-1,k-1,1))*dx[1] << " "
+                                   << (k - 0.5 + ccent_fab(i-1,j-1,k-1,2))*dx[2] << std::endl;
+                    if(flags_array(i-1,j-1,k-1).isSingleValued()){
+                      amrex::Print() << "Bndry Centroids:  "
+                                   << (i - 0.5 + bcent_fab(i-1,j-1,k-1,0))*dx[0] << " "
+                                   << (j - 0.5 + bcent_fab(i-1,j-1,k-1,1))*dx[1] << " "
+                                   << (k - 0.5 + bcent_fab(i-1,j-1,k-1,2))*dx[2] << std::endl;
+                    }
+                    //  DEBUG END   ////////////////////////////////////////////////////////////////////
+                    nodes[0][0] = (i - 0.5 + ccent_fab(i-1,j-1,k-1,0))*dx[0];
+                    nodes[0][1] = (j - 0.5 + ccent_fab(i-1,j-1,k-1,1))*dx[1];
+                    nodes[0][2] = (k - 0.5 + ccent_fab(i-1,j-1,k-1,2))*dx[2];
 
-                  ep = 0.0;
+                    values[0][0] = vel_array(i-1,j-1,k-1,0);
+                    values[0][1] = vel_array(i-1,j-1,k-1,1);
+                    values[0][2] = vel_array(i-1,j-1,k-1,2);
+                    values[0][3] =  ep_array(i-1,j-1,k-1);
 
-                  for(int kk(0); kk<2; kk++){
-                    for(int jj(0); jj<2; jj++){
-                      for(int ii(0); ii<2; ii++){
-                        if( flags_array(i,j,k).isConnected(ioff+ii,joff+jj,koff+kk)) {
-                          amrex::Real weight = weights[ii][jj][kk]*inv_sum_weights;
+                  } else {
+                    amrex::Print() << std::endl << "Node 0 is not connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i-1 << " " <<  j-1 << " "<<  k-1 << " " << std::endl;
+                    amrex::Print() << "REF:    " << di-1 << " " << dj-1 << " "<< dk-1 << " " << std::endl;
 
-                          velfp[0] += vel_array(ilo+ii,jlo+jj,klo+kk,0)*weight;
-                          velfp[1] += vel_array(ilo+ii,jlo+jj,klo+kk,1)*weight;
-                          velfp[2] += vel_array(ilo+ii,jlo+jj,klo+kk,2)*weight;
+                    int ib = ip;
+                    int jb = jp;
+                    int kb = kp;
 
-                          ep += ep_array(ilo+ii,jlo+jj,klo+kk)*weight;
-                        }
+                    if(covered == 2) {
+                      if(flags_array(ip,jp,kp).isConnected(di  ,dj-1,dk-1)) {
+                        // Node 1 is covered --> use Node 7
+                        amrex::Print() << "Using EB in Node 7." << std::endl;
+                        ib = i-1;  jb = j  ;  kb = k  ;
+                      } else if(flags_array(ip,jp,kp).isConnected(di-1,dj  ,dk-1)) {
+                        // Node 3 is covered --> use Node 5
+                        amrex::Print() << "Using EB in Node 5." << std::endl;
+                        ib = i  ;  jb = j-1;  kb = k  ;
+                      } else if(flags_array(ip,jp,kp).isConnected(di-1,dj-1,dk  )) {
+                        // Node 4 is covered --> use Node 2
+                        amrex::Print() << "Using EB in Node 2." << std::endl;
+                        ib = i  ;  jb = j  ;  kb = k-1;
                       }
                     }
-=======
-              // This identifies which cell the particle is in
-              int iloc = floor((particle.pos(0) - plo[0])*dxi[0]);
-              int jloc = floor((particle.pos(1) - plo[1])*dxi[1]);
-              int kloc = floor((particle.pos(2) - plo[2])*dxi[2]);
+                    nodes[0][0] = (ib + 0.5 + bcent_fab(ib,jb,kb,0))*dx[0];
+                    nodes[0][1] = (jb + 0.5 + bcent_fab(ib,jb,kb,1))*dx[1];
+                    nodes[0][2] = (kb + 0.5 + bcent_fab(ib,jb,kb,2))*dx[2];
 
-              // Pick upper cell in the stencil
-              Real lx = (particle.pos(0) - plo[0])*dxi[0] + 0.5;
-              Real ly = (particle.pos(1) - plo[1])*dxi[1] + 0.5;
-              Real lz = (particle.pos(2) - plo[2])*dxi[2] + 0.5;
-
-              int i = std::floor(lx);
-              int j = std::floor(ly);
-              int k = std::floor(lz);
-
-              // Covered cell
-              if (flags_array(iloc,jloc,kloc).isCovered())
-              {
-                particle.rdata(realData::dragx) = 0.0;
-              }
-              else
-              {
-                // Cut or regular cell and none of the cells in the stencil is
-                // covered (Note we can't assume regular cell has no covered
-                // cells in the stencil because of the diagonal case)
-                if (!flags_array(i-1,j-1,k-1).isCovered() and
-                    !flags_array(i  ,j-1,k-1).isCovered() and
-                    !flags_array(i-1,j  ,k-1).isCovered() and
-                    !flags_array(i  ,j  ,k-1).isCovered() and
-                    !flags_array(i-1,j-1,k  ).isCovered() and
-                    !flags_array(i  ,j-1,k  ).isCovered() and
-                    !flags_array(i-1,j  ,k  ).isCovered() and
-                    !flags_array(i  ,j  ,k  ).isCovered())
-                {
-                  trilinear_interp(particle.pos(), &velfp[0], vel_array, plo, dxi);
-                // At least one of the cells in the stencil is covered
-                }
-                else
-                {
-                  // Particle position must be in [-.5:.5] is relative to cell
-                  // center and scaled by dx
-                  Real gx = particle.pos(0)*dxi[0] - (iloc + 0.5);
-                  Real gy = particle.pos(1)*dxi[1] - (jloc + 0.5);
-                  Real gz = particle.pos(2)*dxi[2] - (kloc + 0.5);
-
-                  int ii;
-                  int jj;
-                  int kk;
-
-                  if (not flags_array(iloc-1, jloc, kloc).isCovered())
-                  {
-                    ii = iloc - 1;
-                  }
-                  else
-                  {
-                    ii = iloc + 1;
-                    gx = -gx;
+                    values[0][0] = 0.;
+                    values[0][1] = 0.;
+                    values[0][2] = 0.;
+                    values[0][3] = ep_array(ib,jb,kb);
                   }
 
-                  if (not flags_array(iloc, jloc-1, kloc).isCovered() and
-                      not flags_array(ii  , jloc-1, kloc).isCovered())
-                  {
-                    jj = jloc - 1;
-                  }
-                  else
-                  {
-                    jj = jloc + 1;
-                    gy = -gy;
+                  /*----------------------------------------------------------------------------------*
+                   *                                                                                  *
+                   *                                    NODE 1                                        *
+                   *                                                                                  *
+                   *----------------------------------------------------------------------------------*/
+                  if(flags_array(ip,jp,kp).isConnected(di  ,dj-1,dk-1)) {
+                    //  DEBUG START ////////////////////////////////////////////////////////////////////
+                    amrex::Print() << std::endl;
+                    amrex::Print() << "Node 1 is connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i   << " " <<  j-1 << " "<<  k-1 << " " << std::endl;
+                    amrex::Print() << "REF:    " << di   << " " << dj-1 << " "<< dk-1 << " " << std::endl;
+                    amrex::Print() << "Node is regular?  "  << flags_array(i  ,j-1,k-1).isRegular() << std::endl;
+                    amrex::Print() << "Node is svalued?  "  << flags_array(i  ,j-1,k-1).isSingleValued() << std::endl;
+                    amrex::Print() << "Node is covered?  "  << flags_array(i  ,j-1,k-1).isCovered() << std::endl;
+                    amrex::Print() << "Cell Centroids:   "
+                                   << (i + 0.5 + ccent_fab(i  ,j-1,k-1,0))*dx[0] << " "
+                                   << (j - 0.5 + ccent_fab(i  ,j-1,k-1,1))*dx[1] << " "
+                                   << (k - 0.5 + ccent_fab(i  ,j-1,k-1,2))*dx[2] << std::endl;
+                    if(flags_array(i-1,j-1,k-1).isSingleValued()){
+                      amrex::Print() << "Bndry Centroids:  "
+                                   << (i + 0.5 + bcent_fab(i  ,j-1,k-1,0))*dx[0] << " "
+                                   << (j - 0.5 + bcent_fab(i  ,j-1,k-1,1))*dx[1] << " "
+                                   << (k - 0.5 + bcent_fab(i  ,j-1,k-1,2))*dx[2] << std::endl;
+                    }
+                    //  DEBUG END   ////////////////////////////////////////////////////////////////////
+
+                    nodes[1][0] = (i + 0.5 + ccent_fab(i  ,j-1,k-1,0))*dx[0];
+                    nodes[1][1] = (j - 0.5 + ccent_fab(i  ,j-1,k-1,1))*dx[1];
+                    nodes[1][2] = (k - 0.5 + ccent_fab(i  ,j-1,k-1,2))*dx[2];
+
+                    values[1][0] = vel_array(i  ,j-1,k-1,0);
+                    values[1][1] = vel_array(i  ,j-1,k-1,1);
+                    values[1][2] = vel_array(i  ,j-1,k-1,2);
+                    values[1][3] =  ep_array(i  ,j-1,k-1);
+                    
+                  } else {
+                    amrex::Print() << std::endl << "Node is not connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i   << " " <<  j-1 << " "<<  k-1 << " " << std::endl;
+                    amrex::Print() << "REF:    " << di   << " " << dj-1 << " "<< dk-1 << " " << std::endl;
+
+                    int ib = ip;
+                    int jb = jp;
+                    int kb = kp;
+
+                    if(covered == 2) {
+                      if(flags_array(ip,jp,kp).isConnected(di-1,dj-1,dk-1)) {
+                        // Node 0 is covered --> use Node 6
+                        amrex::Print() << "Using EB in Node 6." << std::endl;
+                        ib = i  ;  jb = j  ;  kb = k  ;
+                      } else if(flags_array(ip,jp,kp).isConnected(di  ,dj  ,dk-1)) {
+                        // Node 2 is covered --> use Node 4
+                        amrex::Print() << "Using EB in Node 4." << std::endl;
+                        ib = i-1;  jb = j-1;  kb = k  ;
+                      } else if(flags_array(ip,jp,kp).isConnected(di  ,dj-1,dk  )) {
+                        // Node 5 is covered --> use Node 3
+                        amrex::Print() << "Using EB in Node 3." << std::endl;
+                        ib = i-1;  jb = j  ;  kb = k-1;
+                      }
+                    }
+                    nodes[0][0] = (ib + 0.5 + bcent_fab(ib,jb,kb,0))*dx[0];
+                    nodes[0][1] = (jb + 0.5 + bcent_fab(ib,jb,kb,1))*dx[1];
+                    nodes[0][2] = (kb + 0.5 + bcent_fab(ib,jb,kb,2))*dx[2];
+
+                    values[0][0] = 0.;
+                    values[0][1] = 0.;
+                    values[0][2] = 0.;
+                    values[0][3] = ep_array(ib,jb,kb);
                   }
 
-                  if (not flags_array(iloc, jloc, kloc-1).isCovered() and
-                      not flags_array(ii  , jloc, kloc-1).isCovered() and
-                      not flags_array(iloc, jj  , kloc-1).isCovered() and
-                      not flags_array(ii  , jj  , kloc-1).isCovered())
-                  {
-                    kk = kloc - 1;
-                  }
-                  else
-                  {
-                    kk = kloc + 1;
-                    gz = -gz;
+                  /*----------------------------------------------------------------------------------*
+                   *                                                                                  *
+                   *                                    NODE 2                                        *
+                   *                                                                                  *
+                   *----------------------------------------------------------------------------------*/
+                  if(flags_array(ip,jp,kp).isConnected(di  ,dj  ,dk-1)) {
+                    //  DEBUG START ////////////////////////////////////////////////////////////////////
+                    amrex::Print() << std::endl;
+                    amrex::Print() << "Node 2 is connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i   << " " <<  j   << " "<<  k-1 << " " << std::endl;
+                    amrex::Print() << "REF:    " << di   << " " << dj   << " "<< dk-1 << " " << std::endl;
+                    amrex::Print() << "Node is regular?  "  << flags_array(i  ,j  ,k-1).isRegular() << std::endl;
+                    amrex::Print() << "Node is svalued?  "  << flags_array(i  ,j  ,k-1).isSingleValued() << std::endl;
+                    amrex::Print() << "Node is covered?  "  << flags_array(i  ,j  ,k-1).isCovered() << std::endl;
+                    amrex::Print() << "Cell Centroids:   "
+                                   << (i + 0.5 + ccent_fab(i  ,j  ,k-1,0))*dx[0] << " "
+                                   << (j + 0.5 + ccent_fab(i  ,j  ,k-1,1))*dx[1] << " "
+                                   << (k - 0.5 + ccent_fab(i  ,j  ,k-1,2))*dx[2] << std::endl;
+                    if(flags_array(i  ,j  ,k-1).isSingleValued()){
+                      amrex::Print() << "Bndry Centroids:  "
+                                   << (i + 0.5 + bcent_fab(i  ,j  ,k-1,0))*dx[0] << " "
+                                   << (j + 0.5 + bcent_fab(i  ,j  ,k-1,1))*dx[1] << " "
+                                   << (k - 0.5 + bcent_fab(i  ,j  ,k-1,2))*dx[2] << std::endl;
+                    }
+                    //  DEBUG END   ////////////////////////////////////////////////////////////////////
+
+
+                    nodes[2][0] = (i + 0.5 + ccent_fab(i  ,j  ,k-1,0))*dx[0];
+                    nodes[2][1] = (j + 0.5 + ccent_fab(i  ,j  ,k-1,1))*dx[1];
+                    nodes[2][2] = (k - 0.5 + ccent_fab(i  ,j  ,k-1,2))*dx[2];
+
+                    values[2][0] = vel_array(i  ,j  ,k-1,0);
+                    values[2][1] = vel_array(i  ,j  ,k-1,1);
+                    values[2][2] = vel_array(i  ,j  ,k-1,2);
+                    values[2][3] =  ep_array(i  ,j  ,k-1);
+                    
+                  } else {
+                    amrex::Print() << std::endl << "Node 2 is not connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i   << " " <<  j   << " "<<  k-1 << " " << std::endl;
+                    amrex::Print() << "REF:    " << di   << " " << dj   << " "<< dk-1 << " " << std::endl;
+                    int ib = ip;
+                    int jb = jp;
+                    int kb = kp;
+
+                    if(covered == 2) {
+                      if(flags_array(ip,jp,kp).isConnected(di  ,dj-1,dk-1)) {
+                        // Node 1 is covered --> use Node 7
+                        amrex::Print() << "Using EB in Node 7." << std::endl;
+                        ib = i-1;  jb = j  ;  kb = k  ;
+                      } else if(flags_array(ip,jp,kp).isConnected(di-1,dj  ,dk-1)) {
+                        // Node 3 is covered --> use Node 5
+                        amrex::Print() << "Using EB in Node 5." << std::endl;
+                        ib = i  ;  jb = j-1;  kb = k  ;
+                      } else if(flags_array(ip,jp,kp).isConnected(di  ,dj  ,dk  )) {
+                        // Node 6 is covered --> use Node 0
+                        amrex::Print() << "Using EB in Node 0." << std::endl;
+                        ib = i-1;  jb = j-1;  kb = k-1;
+                      }
+                    }
+                    nodes[0][0] = (ib + 0.5 + bcent_fab(ib,jb,kb,0))*dx[0];
+                    nodes[0][1] = (jb + 0.5 + bcent_fab(ib,jb,kb,1))*dx[1];
+                    nodes[0][2] = (kb + 0.5 + bcent_fab(ib,jb,kb,2))*dx[2];
+
+                    values[0][0] = 0.;
+                    values[0][1] = 0.;
+                    values[0][2] = 0.;
+                    values[0][3] = ep_array(ib,jb,kb);
                   }
 
-                  Real gxy = gx*gy;
-                  Real gxz = gx*gz;
-                  Real gyz = gy*gz;
-                  Real gxyz = gx*gy*gz;
+                  /*----------------------------------------------------------------------------------*
+                   *                                                                                  *
+                   *                                    NODE 3                                        *
+                   *                                                                                  *
+                   *----------------------------------------------------------------------------------*/
+                  if(flags_array(ip,jp,kp).isConnected(di-1,dj  ,dk-1)) {
+                    //  DEBUG START ////////////////////////////////////////////////////////////////////
+                    amrex::Print() << std::endl;
+                    amrex::Print() << "Node 3 is connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i-1 << " " <<  j   << " "<<  k-1 << " " << std::endl;
+                    amrex::Print() << "REF:    " << di-1 << " " << dj   << " "<< dk-1 << " " << std::endl;
+                    amrex::Print() << "Node is regular?  "  << flags_array(i-1,j  ,k-1).isRegular() << std::endl;
+                    amrex::Print() << "Node is svalued?  "  << flags_array(i-1,j  ,k-1).isSingleValued() << std::endl;
+                    amrex::Print() << "Node is covered?  "  << flags_array(i-1,j  ,k-1).isCovered() << std::endl;
+                    amrex::Print() << "Cell Centroids:   "
+                                   << (i - 0.5 + ccent_fab(i-1,j  ,k-1,0))*dx[0] << " "
+                                   << (j + 0.5 + ccent_fab(i-1,j  ,k-1,1))*dx[1] << " "
+                                   << (k - 0.5 + ccent_fab(i-1,j  ,k-1,2))*dx[2] << std::endl;
+                    if(flags_array(i-1,j  ,k-1).isSingleValued()){
+                      amrex::Print() << "Bndry Centroids:  "
+                                   << (i - 0.5 + bcent_fab(i-1,j  ,k-1,0))*dx[0] << " "
+                                   << (j + 0.5 + bcent_fab(i-1,j  ,k-1,1))*dx[1] << " "
+                                   << (k - 0.5 + bcent_fab(i-1,j  ,k-1,2))*dx[2] << std::endl;
+                    }
+                    //  DEBUG END   ////////////////////////////////////////////////////////////////////
+                    nodes[3][0] = (i - 0.5 + ccent_fab(i-1,j  ,k-1,0))*dx[0];
+                    nodes[3][1] = (j + 0.5 + ccent_fab(i-1,j  ,k-1,1))*dx[1];
+                    nodes[3][2] = (k - 0.5 + ccent_fab(i-1,j  ,k-1,2))*dx[2];
 
-                  for (int n = 0; n < 3; n++)
-                  {
-                    velfp[n] = (1.0+gx+gy+gz+gxy+gxz+gyz+gxyz) * vel_array(iloc,jloc,kloc,n)
-                             + (-gz - gxz - gyz - gxyz)        * vel_array(iloc,jloc,kk  ,n)
-                             + (-gy - gxy - gyz - gxyz)        * vel_array(iloc,jj  ,kloc,n)
-                             + (gyz + gxyz)                    * vel_array(iloc,jj  ,kk  ,n)
-                             + (-gx - gxy - gxz - gxyz)        * vel_array(ii  ,jloc,kloc,n)
-                             + (gxz + gxyz)                    * vel_array(ii  ,jloc,kk  ,n)
-                             + (gxy + gxyz)                    * vel_array(ii  ,jj  ,kloc,n)
-                             + (-gxyz)                         * vel_array(ii  ,jj  ,kk  ,n);
+                    values[3][0] = vel_array(i-1,j  ,k-1,0);
+                    values[3][1] = vel_array(i-1,j  ,k-1,1);
+                    values[3][2] = vel_array(i-1,j  ,k-1,2);
+                    values[3][3] =  ep_array(i-1,j  ,k-1);
+                    
+                  } else {
+                    amrex::Print() << std::endl << "Node 3 is not connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i-1 << " " <<  j   << " "<<  k-1 << " " << std::endl;
+                    amrex::Print() << "REF:    " << di-1 << " " << dj   << " "<< dk-1 << " " << std::endl;
+                    int ib = ip;
+                    int jb = jp;
+                    int kb = kp;
 
-                    // Keep the interpolated velocity between the cell value and
-                    // the wall value (0)
-                    if (velfp[n] > 0.0 && velfp[n] > vel_array(iloc,jloc,kloc,n))
-                      velfp[n] = vel_array(iloc,jloc,kloc,n);
-                    if (velfp[n] < 0.0 && velfp[n] < vel_array(iloc,jloc,kloc,n))
-                      velfp[n] = vel_array(iloc,jloc,kloc,n);
->>>>>>> develop
+                    if(covered == 2) {
+                      if(flags_array(ip,jp,kp).isConnected(di-1,dj-1,dk-1)) {
+                        // Node 0 is covered --> use Node 6
+                        amrex::Print() << "Using EB in Node 6." << std::endl;
+                        ib = i  ;  jb = j  ;  kb = k  ;
+                      } else if(flags_array(ip,jp,kp).isConnected(di  ,dj  ,dk-1)) {
+                        // Node 2 is covered --> use Node 4
+                        amrex::Print() << "Using EB in Node 4." << std::endl;
+                        ib = i-1;  jb = j-1;  kb = k  ;
+                      } else if(flags_array(ip,jp,kp).isConnected(di-1,dj  ,dk  )) {
+                        // Node 7 is covered --> use Node 1
+                        amrex::Print() << "Using EB in Node 1." << std::endl;
+                        ib = i  ;  jb = j-1;  kb = k-1;
+                      }
+                    }
+                    nodes[0][0] = (ib + 0.5 + bcent_fab(ib,jb,kb,0))*dx[0];
+                    nodes[0][1] = (jb + 0.5 + bcent_fab(ib,jb,kb,1))*dx[1];
+                    nodes[0][2] = (kb + 0.5 + bcent_fab(ib,jb,kb,2))*dx[2];
+
+                    values[0][0] = 0.;
+                    values[0][1] = 0.;
+                    values[0][2] = 0.;
+                    values[0][3] = ep_array(ib,jb,kb);
                   }
+
+                  /*----------------------------------------------------------------------------------*
+                   *                                                                                  *
+                   *                                    NODE 4                                        *
+                   *                                                                                  *
+                   *----------------------------------------------------------------------------------*/
+                  if(flags_array(ip,jp,kp).isConnected(di-1,dj-1,dk  )) {
+                    //  DEBUG START ////////////////////////////////////////////////////////////////////
+                    amrex::Print() << std::endl;
+                    amrex::Print() << "Node 4 is connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i-1 << " " <<  j-1 << " "<<  k   << " " << std::endl;
+                    amrex::Print() << "REF:    " << di-1 << " " << dj-1 << " "<< dk   << " " << std::endl;
+                    amrex::Print() << "Node is regular?  "  << flags_array(i-1,j-1,k  ).isRegular() << std::endl;
+                    amrex::Print() << "Node is svalued?  "  << flags_array(i-1,j-1,k  ).isSingleValued() << std::endl;
+                    amrex::Print() << "Node is covered?  "  << flags_array(i-1,j-1,k  ).isCovered() << std::endl;
+                    amrex::Print() << "Cell Centroids:   "
+                                   << (i - 0.5 + ccent_fab(i-1,j-1,k  ,0))*dx[0] << " "
+                                   << (j - 0.5 + ccent_fab(i-1,j-1,k  ,1))*dx[1] << " "
+                                   << (k + 0.5 + ccent_fab(i-1,j-1,k  ,2))*dx[2] << std::endl;
+                    if(flags_array(i-1,j-1,k  ).isSingleValued()){
+                      amrex::Print() << "Bndry Centroids:  "
+                                   << (i - 0.5 + bcent_fab(i-1,j-1,k  ,0))*dx[0] << " "
+                                   << (j - 0.5 + bcent_fab(i-1,j-1,k  ,1))*dx[1] << " "
+                                   << (k + 0.5 + bcent_fab(i-1,j-1,k  ,2))*dx[2] << std::endl;
+                    }
+                    //  DEBUG END   ////////////////////////////////////////////////////////////////////
+                    nodes[4][0] = (i - 0.5 + ccent_fab(i-1,j-1,k  ,0))*dx[0];
+                    nodes[4][1] = (j - 0.5 + ccent_fab(i-1,j-1,k  ,1))*dx[1];
+                    nodes[4][2] = (k + 0.5 + ccent_fab(i-1,j-1,k  ,2))*dx[2];
+
+                    values[4][0] = vel_array(i-1,j-1,k  ,0);
+                    values[4][1] = vel_array(i-1,j-1,k  ,1);
+                    values[4][2] = vel_array(i-1,j-1,k  ,2);
+                    values[4][3] =  ep_array(i-1,j-1,k  );
+
+                  } else {
+                    amrex::Print() << std::endl << "Node 4 is not connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i-1 << " " <<  j-1 << " "<<  k   << " " << std::endl;
+                    amrex::Print() << "REF:    " << di-1 << " " << dj-1 << " "<< dk   << " " << std::endl;
+                    int ib = ip;
+                    int jb = jp;
+                    int kb = kp;
+
+                    if(covered == 2) {
+                      if(flags_array(ip,jp,kp).isConnected(di-1,dj-1,dk-1)) {
+                        // Node 0 is covered --> use Node 6
+                        amrex::Print() << "Using EB in Node 6." << std::endl;
+                        ib = i  ;  jb = j  ;  kb = k  ;
+                      } else if(flags_array(ip,jp,kp).isConnected(di  ,dj-1,dk  )) {
+                        // Node 5 is covered --> use Node 3
+                        amrex::Print() << "Using EB in Node 3." << std::endl;
+                        ib = i-1;  jb = j  ;  kb = k-1;
+                      } else if(flags_array(ip,jp,kp).isConnected(di-1,dj  ,dk  )) {
+                        // Node 7 is covered --> use Node 1
+                        amrex::Print() << "Using EB in Node 1." << std::endl;
+                        ib = i  ;  jb = j-1;  kb = k-1;
+                      }
+                    }
+                    nodes[0][0] = (ib + 0.5 + bcent_fab(ib,jb,kb,0))*dx[0];
+                    nodes[0][1] = (jb + 0.5 + bcent_fab(ib,jb,kb,1))*dx[1];
+                    nodes[0][2] = (kb + 0.5 + bcent_fab(ib,jb,kb,2))*dx[2];
+
+                    values[0][0] = 0.;
+                    values[0][1] = 0.;
+                    values[0][2] = 0.;
+                    values[0][3] = ep_array(ib,jb,kb);
+                  }
+
+                  /*----------------------------------------------------------------------------------*
+                   *                                                                                  *
+                   *                                    NODE 5                                        *
+                   *                                                                                  *
+                   *----------------------------------------------------------------------------------*/
+                  if(flags_array(ip,jp,kp).isConnected(di  ,dj-1,dk  )) {
+                    //  DEBUG START ////////////////////////////////////////////////////////////////////
+                    amrex::Print() << std::endl;
+                    amrex::Print() << "Node 5 is connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i   << " " <<  j-1 << " "<<  k   << " " << std::endl;
+                    amrex::Print() << "REF:    " << di   << " " << dj-1 << " "<< dk   << " " << std::endl;
+                    amrex::Print() << "Node is regular?  "  << flags_array(i  ,j-1,k  ).isRegular() << std::endl;
+                    amrex::Print() << "Node is svalued?  "  << flags_array(i  ,j-1,k  ).isSingleValued() << std::endl;
+                    amrex::Print() << "Node is covered?  "  << flags_array(i  ,j-1,k  ).isCovered() << std::endl;
+                    amrex::Print() << "Cell Centroids:   "
+                                   << (i - 0.5 + ccent_fab(i  ,j-1,k  ,0))*dx[0] << " "
+                                   << (j - 0.5 + ccent_fab(i  ,j-1,k  ,1))*dx[1] << " "
+                                   << (k + 0.5 + ccent_fab(i  ,j-1,k  ,2))*dx[2] << std::endl;
+                    if(flags_array(i  ,j-1,k  ).isSingleValued()){
+                      amrex::Print() << "Bndry Centroids:  "
+                                   << (i - 0.5 + bcent_fab(i  ,j-1,k  ,0))*dx[0] << " "
+                                   << (j - 0.5 + bcent_fab(i  ,j-1,k  ,1))*dx[1] << " "
+                                   << (k + 0.5 + bcent_fab(i  ,j-1,k  ,2))*dx[2] << std::endl;
+                    }
+                    //  DEBUG END   ////////////////////////////////////////////////////////////////////
+                    nodes[5][0] = (i + 0.5 + ccent_fab(i  ,j-1,k  ,0))*dx[0];
+                    nodes[5][1] = (j - 0.5 + ccent_fab(i  ,j-1,k  ,1))*dx[1];
+                    nodes[5][2] = (k + 0.5 + ccent_fab(i  ,j-1,k  ,2))*dx[2];
+
+                    values[5][0] = vel_array(i  ,j-1,k  ,0);
+                    values[5][1] = vel_array(i  ,j-1,k  ,1);
+                    values[5][2] = vel_array(i  ,j-1,k  ,2);
+                    values[5][3] =  ep_array(i  ,j-1,k  );
+                    
+                  } else {
+                    amrex::Print() << std::endl << "Node 5 is not connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i   << " " <<  j-1 << " "<<  k   << " " << std::endl;
+                    amrex::Print() << "REF:    " << di   << " " << dj-1 << " "<< dk   << " " << std::endl;
+                    int ib = ip;
+                    int jb = jp;
+                    int kb = kp;
+
+                    if(covered == 2) {
+                      if(flags_array(ip,jp,kp).isConnected(di  ,dj-1,dk-1)) {
+                        // Node 1 is covered --> use Node 7
+                        amrex::Print() << "Using EB in Node 7." << std::endl;
+                        ib = i-1;  jb = j  ;  kb = k  ;
+                      } else if(flags_array(ip,jp,kp).isConnected(di-1,dj-1,dk  )) {
+                        // Node 4 is covered --> use Node 2
+                        amrex::Print() << "Using EB in Node 2." << std::endl;
+                        ib = i  ;  jb = j  ;  kb = k-1;
+                      } else if(flags_array(ip,jp,kp).isConnected(di  ,dj  ,dk  )) {
+                        // Node 6 is covered --> use Node 0
+                        amrex::Print() << "Using EB in Node 0." << std::endl;
+                        ib = i-1;  jb = j-1;  kb = k-1;
+                      }
+                    }
+                    nodes[0][0] = (ib + 0.5 + bcent_fab(ib,jb,kb,0))*dx[0];
+                    nodes[0][1] = (jb + 0.5 + bcent_fab(ib,jb,kb,1))*dx[1];
+                    nodes[0][2] = (kb + 0.5 + bcent_fab(ib,jb,kb,2))*dx[2];
+
+                    values[0][0] = 0.;
+                    values[0][1] = 0.;
+                    values[0][2] = 0.;
+                    values[0][3] = ep_array(ib,jb,kb);
+                  }
+
+                  /*----------------------------------------------------------------------------------*
+                   *                                                                                  *
+                   *                                    NODE 6                                        *
+                   *                                                                                  *
+                   *----------------------------------------------------------------------------------*/
+                  if(flags_array(ip,jp,kp).isConnected(di  ,dj  ,dk  )) {
+                    //  DEBUG START ////////////////////////////////////////////////////////////////////
+                    amrex::Print() << std::endl;
+                    amrex::Print() << "Node 6 is connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i   << " " <<  j   << " "<<  k   << " " << std::endl;
+                    amrex::Print() << "REF:    " << di   << " " << dj   << " "<< dk   << " " << std::endl;
+                    amrex::Print() << "Node is regular?  "  << flags_array(i  ,j  ,k  ).isRegular() << std::endl;
+                    amrex::Print() << "Node is svalued?  "  << flags_array(i  ,j  ,k  ).isSingleValued() << std::endl;
+                    amrex::Print() << "Node is covered?  "  << flags_array(i  ,j  ,k  ).isCovered() << std::endl;
+                    amrex::Print() << "Cell Centroids:   "
+                                   << (i + 0.5 + ccent_fab(i  ,j  ,k  ,0))*dx[0] << " "
+                                   << (j + 0.5 + ccent_fab(i  ,j  ,k  ,1))*dx[1] << " "
+                                   << (k + 0.5 + ccent_fab(i  ,j  ,k  ,2))*dx[2] << std::endl;
+                    if(flags_array(i  ,j  ,k  ).isSingleValued()){
+                      amrex::Print() << "Bndry Centroids:  "
+                                   << (i + 0.5 + bcent_fab(i  ,j  ,k  ,0))*dx[0] << " "
+                                   << (j + 0.5 + bcent_fab(i  ,j  ,k  ,1))*dx[1] << " "
+                                   << (k + 0.5 + bcent_fab(i  ,j  ,k  ,2))*dx[2] << std::endl;
+                    }
+                    //  DEBUG END   ////////////////////////////////////////////////////////////////////
+                    nodes[6][0] = (i + 0.5 + ccent_fab(i  ,j  ,k  ,0))*dx[0];
+                    nodes[6][1] = (j + 0.5 + ccent_fab(i  ,j  ,k  ,1))*dx[1];
+                    nodes[6][2] = (k + 0.5 + ccent_fab(i  ,j  ,k  ,2))*dx[2];
+
+                    values[6][0] = vel_array(i  ,j  ,k  ,0);
+                    values[6][1] = vel_array(i  ,j  ,k  ,1);
+                    values[6][2] = vel_array(i  ,j  ,k  ,2);
+                    values[6][3] =  ep_array(i  ,j  ,k  );
+                    
+                  } else {
+                    amrex::Print() << std::endl << "Node 6 is not connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i   << " " <<  j   << " "<<  k   << " " << std::endl;
+                    amrex::Print() << "REF:    " << di   << " " << dj   << " "<< dk   << " " << std::endl;
+
+                    int ib = ip;
+                    int jb = jp;
+                    int kb = kp;
+
+                    if(covered == 2) {
+                      if(not flags_array(ip,jp,kp).isConnected(di  ,dj  ,dk-1)) {
+                        // Node 2 is covered --> use Node 4
+                        amrex::Print() << "Using EB in Node 4." << std::endl;
+                        ib = i-1;  jb = j-1;  kb = k  ;
+                      } else if(not flags_array(ip,jp,kp).isConnected(di  ,dj-1,dk  )) {
+                        // Node 5 is covered --> use Node 3
+                        amrex::Print() << "Using EB in Node 3." << std::endl;
+                        ib = i-1;  jb = j  ;  kb = k-1;
+                      } else if(not flags_array(ip,jp,kp).isConnected(di-1,dj  ,dk  )) {
+                        // Node 7 is covered --> use Node 1
+                        amrex::Print() << "Using EB in Node 1." << std::endl;
+                        ib = i  ;  jb = j-1;  kb = k-1;
+                      }
+                    }
+
+                    amrex::Print() << "Index:  " <<  ib  << " " <<  jb  << " "<<  kb  << " " << std::endl;
+
+                    nodes[6][0] = (ib + 0.5 + bcent_fab(ib,jb,kb,0))*dx[0];
+                    nodes[6][1] = (jb + 0.5 + bcent_fab(ib,jb,kb,1))*dx[1];
+                    nodes[6][2] = (kb + 0.5 + bcent_fab(ib,jb,kb,2))*dx[2];
+
+                    values[6][0] = 0.;
+                    values[6][1] = 0.;
+                    values[6][2] = 0.;
+                    values[6][3] = ep_array(ib,jb,kb);
+                  }
+
+                  /*----------------------------------------------------------------------------------*
+                   *                                                                                  *
+                   *                                    NODE 7                                        *
+                   *                                                                                  *
+                   *----------------------------------------------------------------------------------*/
+                  if(flags_array(ip,jp,kp).isConnected(di-1,dj  ,dk  )) {
+                    //  DEBUG START ////////////////////////////////////////////////////////////////////
+                    amrex::Print() << std::endl;
+                    amrex::Print() << "Node 7 is connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i-1 << " " <<  j   << " "<<  k   << " " << std::endl;
+                    amrex::Print() << "REF:    " << di-1 << " " << dj   << " "<< dk   << " " << std::endl;
+                    amrex::Print() << "Node is regular?  "  << flags_array(i-1,j  ,k  ).isRegular() << std::endl;
+                    amrex::Print() << "Node is svalued?  "  << flags_array(i-1,j  ,k  ).isSingleValued() << std::endl;
+                    amrex::Print() << "Node is covered?  "  << flags_array(i-1,j  ,k  ).isCovered() << std::endl;
+                    amrex::Print() << "Cell Centroids:   "
+                                   << (i - 0.5 + ccent_fab(i-1,j  ,k  ,0))*dx[0] << " "
+                                   << (j + 0.5 + ccent_fab(i-1,j  ,k  ,1))*dx[1] << " "
+                                   << (k + 0.5 + ccent_fab(i-1,j  ,k  ,2))*dx[2] << std::endl;
+                    if(flags_array(i-1,j  ,k  ).isSingleValued()){
+                      amrex::Print() << "Bndry Centroids:  "
+                                   << (i - 0.5 + bcent_fab(i-1,j  ,k  ,0))*dx[0] << " "
+                                   << (j + 0.5 + bcent_fab(i-1,j  ,k  ,1))*dx[1] << " "
+                                   << (k + 0.5 + bcent_fab(i-1,j  ,k  ,2))*dx[2] << std::endl;
+                    }
+                    //  DEBUG END   ////////////////////////////////////////////////////////////////////
+                    nodes[7][0] = (i - 0.5 + ccent_fab(i-1,j  ,k  ,0))*dx[0];
+                    nodes[7][1] = (j + 0.5 + ccent_fab(i-1,j  ,k  ,1))*dx[1];
+                    nodes[7][2] = (k + 0.5 + ccent_fab(i-1,j  ,k  ,2))*dx[2];
+
+                    values[7][0] = vel_array(i-1,j  ,k  ,0);
+                    values[7][1] = vel_array(i-1,j  ,k  ,1);
+                    values[7][2] = vel_array(i-1,j  ,k  ,2);
+                    values[7][3] =  ep_array(i-1,j  ,k  );
+                    
+                  } else {
+                    amrex::Print() << std::endl << "Node 7 is not connected." << std::endl;
+                    amrex::Print() << "Index:  " <<  i-1 << " " <<  j   << " "<<  k   << " " << std::endl;
+                    amrex::Print() << "REF:    " << di-1 << " " << dj   << " "<< dk   << " " << std::endl;
+
+                    int ib = ip;
+                    int jb = jp;
+                    int kb = kp;
+
+                    if(covered == 2) {
+                      if(flags_array(ip,jp,kp).isConnected(di-1,dj  ,dk-1)) {
+                        // Node 3 is covered --> use Node 5
+                        amrex::Print() << "Using EB in Node 5." << std::endl;
+                        ib = i  ;  jb = j-1;  kb = k  ;
+                      } else if(flags_array(ip,jp,kp).isConnected(di-1,dj-1,dk  )) {
+                        // Node 4 is covered --> use Node 2
+                        amrex::Print() << "Using EB in Node 2." << std::endl;
+                        ib = i  ;  jb = j  ;  kb = k-1;
+                      } else if(flags_array(ip,jp,kp).isConnected(di  ,dj  ,dk  )) {
+                        // Node 6 is covered --> use Node 0
+                        amrex::Print() << "Using EB in Node 6." << std::endl;
+                        ib = i-1;  jb = j-1;  kb = k-1;
+                      }
+                    }
+                    nodes[7][0] = (ib + 0.5 + bcent_fab(ib,jb,kb,0))*dx[0];
+                    nodes[7][1] = (jb + 0.5 + bcent_fab(ib,jb,kb,1))*dx[1];
+                    nodes[7][2] = (kb + 0.5 + bcent_fab(ib,jb,kb,2))*dx[2];
+
+                    values[7][0] = 0.;
+                    values[7][1] = 0.;
+                    values[7][2] = 0.;
+                    values[7][3] = ep_array(ib,jb,kb);
+
+                  }
+
+                    amrex::Print() << std::endl << std::endl;
+                      for(int n(0); n<8; n++){
+                      amrex::Print() << " node " << n << ": " 
+                        << nodes[n][0] << " "
+                        << nodes[n][1] << " "
+                        << nodes[n][2] << std::endl;
+                      }
+
+                    amrex::Print() << std::endl << std::endl;
+                      for(int n(0); n<8; n++){
+                      amrex::Print() << " values " << n << ": " 
+                        << values[n][0] << " "
+                        << values[n][1] << " "
+                        << values[n][2] << " "
+                        << values[n][3] << std::endl;
+                      }
+
+
+
+
+                velfp[0] = vel_array(ip,jp,kp,0);
+                velfp[1] = vel_array(ip,jp,kp,1);
+                velfp[2] = vel_array(ip,jp,kp,2);
+
+                ep = ep_array(ip,jp,kp);
 
                 } // Cut cell
 
                 // Using i/j/k of centroid cell
-                Real  ro = ro_array(i,j,k);
-                Real  mu = mu_array(i,j,k);
+                Real  ro = ro_array(ip,jp,kp);
+                Real  mu = mu_array(ip,jp,kp);
 
                 Real rad = particle.rdata(realData::radius);
                 Real vol = particle.rdata(realData::volume);
@@ -460,15 +867,12 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
                 Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
                                          velfp[0], velfp[1], velfp[2],
-<<<<<<< HEAD
-                                         i, j, k, p_id);
-=======
-                                         iloc, jloc, kloc, p_id);
->>>>>>> develop
+                                         ip, jp, kp, p_id);
+
                 particle.rdata(realData::dragx) = beta;
 
               } // Not covered
-            }); // ip
+            }); // pid
           } // type of FAB
         } // if entire FAB not covered
       } // pti
