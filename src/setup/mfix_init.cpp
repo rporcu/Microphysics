@@ -412,7 +412,7 @@ void mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 
     IntVect chunk(domain.length(0),domain.length(1),domain.length(2));
 
-    int j;
+    int j = -1;
     for (int cnt = 1; cnt <= n; ++cnt)
     {
         if (chunk[0] >= chunk[1] && chunk[0] >= chunk[2])
