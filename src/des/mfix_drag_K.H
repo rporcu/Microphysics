@@ -4,7 +4,7 @@
 #include "MFIXParticleContainer.H"
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void trilinear_interp (const amrex::RealVect& pos, 
+void trilinear_interp (const amrex::RealVect& pos,
                        amrex::Real* velfp,
                        amrex::Array4<amrex::Real const> const& vel,
                        const amrex::RealVect& plo,
