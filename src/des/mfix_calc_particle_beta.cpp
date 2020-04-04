@@ -232,13 +232,13 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                   fe_interp(particle.pos(), ip, jp, kp, dx, dxi,
                     flags_array, ccent_fab, bcent_fab,
                     vel_array, ep_array, &velfp[0], ep);
-
+#if(0)
                   amrex::Print() << std::endl
                                  << "u_g  " << velfp[0] << "  "
                                  << "v_g  " << velfp[1] << "  "
                                  << "w_g  " << velfp[2] << "  " << std::endl
                                  << "ep_g " << ep << std::endl;
-
+#endif
                 } // Cut cell
 
                 // Using i/j/k of centroid cell

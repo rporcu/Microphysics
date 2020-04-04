@@ -17,14 +17,14 @@ amrex::Real f (const int dir,
                const amrex::Real& eta,
                const amrex::Real& zeta)
 {
-    amrex::Real a0 =  nodes[0][dir] - pos[dir];
-    amrex::Real a1 =  nodes[1][dir] - nodes[0][dir];
-    amrex::Real a2 =  nodes[2][dir] - nodes[0][dir];
-    amrex::Real a3 =  nodes[0][dir] - nodes[1][dir] - nodes[2][dir] + nodes[3][dir];
-    amrex::Real a4 =  nodes[4][dir] - nodes[0][dir];
-    amrex::Real a5 =  nodes[0][dir] - nodes[1][dir] - nodes[4][dir] + nodes[5][dir];
-    amrex::Real a6 =  nodes[0][dir] - nodes[2][dir] - nodes[4][dir] + nodes[6][dir];
-    amrex::Real a7 = -nodes[0][dir] + nodes[1][dir] + nodes[2][dir] - nodes[3][dir] + nodes[4][dir] - nodes[5][dir] - nodes[6][dir] + nodes[7][dir];
+    amrex::Real a0 = (nodes[0][dir] - pos[dir]);
+    amrex::Real a1 = (nodes[1][dir] - nodes[0][dir]);
+    amrex::Real a2 = (nodes[3][dir] - nodes[0][dir]);
+    amrex::Real a3 = (nodes[4][dir] - nodes[0][dir]);
+    amrex::Real a4 = (nodes[0][dir] - nodes[1][dir] + nodes[2][dir] - nodes[3][dir]);
+    amrex::Real a5 = (nodes[0][dir] - nodes[1][dir] - nodes[4][dir] + nodes[5][dir]);
+    amrex::Real a6 = (nodes[0][dir] - nodes[3][dir] - nodes[4][dir] + nodes[7][dir]);
+    amrex::Real a7 = (nodes[1][dir] - nodes[2][dir] + nodes[3][dir] + nodes[4][dir] - nodes[5][dir] + nodes[6][dir] - nodes[7][dir] - nodes[0][dir]);
 
     return a0 + a1*xi + a2*eta + a3*zeta + a4*xi*eta + a5*xi*zeta + a6*eta*zeta + a7*xi*eta*zeta;
 }
@@ -38,10 +38,10 @@ amrex::Real dfdxi (const int dir,
                    const amrex::Real& eta,
                    const amrex::Real& zeta)
 {
-    amrex::Real a1 =  nodes[1][dir] - nodes[0][dir];
-    amrex::Real a4 =  nodes[4][dir] - nodes[0][dir];
-    amrex::Real a5 =  nodes[0][dir] - nodes[1][dir] - nodes[4][dir] + nodes[5][dir];
-    amrex::Real a7 = -nodes[0][dir] + nodes[1][dir] + nodes[2][dir] - nodes[3][dir] + nodes[4][dir] - nodes[5][dir] - nodes[6][dir] + nodes[7][dir];
+    amrex::Real a1 = (nodes[1][dir] - nodes[0][dir]);
+    amrex::Real a4 = (nodes[0][dir] - nodes[1][dir] + nodes[2][dir] - nodes[3][dir]);
+    amrex::Real a5 = (nodes[0][dir] - nodes[1][dir] - nodes[4][dir] + nodes[5][dir]);
+    amrex::Real a7 = (nodes[1][dir] - nodes[2][dir] + nodes[3][dir] + nodes[4][dir] - nodes[5][dir] + nodes[6][dir] - nodes[7][dir] - nodes[0][dir]);
 
     return a1 + a4*eta + a5*zeta + a7*eta*zeta;
 }
@@ -54,10 +54,11 @@ amrex::Real dfdeta (const int dir,
                     const amrex::Real& eta,
                     const amrex::Real& zeta)
 {
-    amrex::Real a2 =  nodes[2][dir] - nodes[0][dir];
-    amrex::Real a4 =  nodes[4][dir] - nodes[0][dir];
-    amrex::Real a6 =  nodes[0][dir] - nodes[2][dir] - nodes[4][dir] + nodes[6][dir];
-    amrex::Real a7 = -nodes[0][dir] + nodes[1][dir] + nodes[2][dir] - nodes[3][dir] + nodes[4][dir] - nodes[5][dir] - nodes[6][dir] + nodes[7][dir];
+
+    amrex::Real a2 = (nodes[3][dir] - nodes[0][dir]);
+    amrex::Real a4 = (nodes[0][dir] - nodes[1][dir] + nodes[2][dir] - nodes[3][dir]);
+    amrex::Real a6 = (nodes[0][dir] - nodes[3][dir] - nodes[4][dir] + nodes[7][dir]);
+    amrex::Real a7 = (nodes[1][dir] - nodes[2][dir] + nodes[3][dir] + nodes[4][dir] - nodes[5][dir] + nodes[6][dir] - nodes[7][dir] - nodes[0][dir]);
 
     return a2 + a4*xi + a6*zeta + a7*xi*zeta;
 }
@@ -69,10 +70,11 @@ amrex::Real dfdzeta (const int dir,
                      const amrex::Real& eta,
                      const amrex::Real& zeta)
 {
-    amrex::Real a3 =  nodes[0][dir] - nodes[1][dir] - nodes[2][dir] + nodes[3][dir];
-    amrex::Real a5 =  nodes[0][dir] - nodes[1][dir] - nodes[4][dir] + nodes[5][dir];
-    amrex::Real a6 =  nodes[0][dir] - nodes[2][dir] - nodes[4][dir] + nodes[6][dir];
-    amrex::Real a7 = -nodes[0][dir] + nodes[1][dir] + nodes[2][dir] - nodes[3][dir] + nodes[4][dir] - nodes[5][dir] - nodes[6][dir] + nodes[7][dir];
+
+    amrex::Real a3 = (nodes[4][dir] - nodes[0][dir]);
+    amrex::Real a5 = (nodes[0][dir] - nodes[1][dir] - nodes[4][dir] + nodes[5][dir]);
+    amrex::Real a6 = (nodes[0][dir] - nodes[3][dir] - nodes[4][dir] + nodes[7][dir]);
+    amrex::Real a7 = (nodes[1][dir] - nodes[2][dir] + nodes[3][dir] + nodes[4][dir] - nodes[5][dir] + nodes[6][dir] - nodes[7][dir] - nodes[0][dir]);
 
     return a3 + a5*xi + a6*eta + a7*xi*eta;
 }
@@ -214,6 +216,8 @@ void fe_interp(const amrex::RealVect& pos,
         }
       }
     }
+
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE( covered  <= 4, "Too many convered cells");
 
     const amrex::IntVect Node0 = {i-1,j-1,k-1};
     const amrex::IntVect Node1 = {i  ,j-1,k-1};
@@ -934,6 +938,7 @@ void fe_interp(const amrex::RealVect& pos,
 
     }
 
+#if(0)
     amrex::Print() << std::endl << std::endl;
     for(int n(0); n<8; n++){
     amrex::Print() << " node " << n << ": "
@@ -950,6 +955,7 @@ void fe_interp(const amrex::RealVect& pos,
     << values[n][2] << " "
     << values[n][3] << std::endl;
     }
+#endif
 
     amrex::Real xi;
     amrex::Real eta;
@@ -957,17 +963,155 @@ void fe_interp(const amrex::RealVect& pos,
 
     get_interp_mapping(pos, nodes, dxi, xi, eta, zeta);
 
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+            if(xi < -0.1 or xi > 1.1) {
+                const std::string& myfile = "xi";
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << std::endl;
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << "  xi:"  << xi   << std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << " eta:"  << eta  << std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "zeta:"  << zeta << std::endl;
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << std::endl;
+                for(int n(0); n<8; n++){
+                amrex::PrintToFile(myfile, Print::AllProcs) << "  node " << n << ": "
+                << nodes[n][0] << " "
+                << nodes[n][1] << " "
+                << nodes[n][2] << std::endl;
+                }
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << "particle: "
+                   << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
+
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << std::endl;
+                for(int n(0); n<8; n++){
+                amrex::PrintToFile(myfile, Print::AllProcs) << " values " << n << ": "
+                << values[n][0] << " "
+                << values[n][1] << " "
+                << values[n][2] << " "
+                << values[n][3] << std::endl;
+                }
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << std::endl << "Covered: " << covered << std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << std::endl << "Covered logic:" << std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node0 " << Node0_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node1 " << Node1_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node2 " << Node2_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node3 " << Node3_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node4 " << Node4_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node5 " << Node5_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node6 " << Node6_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node7 " << Node7_isNotConnected <<  std::endl;
+            }
+
+            if(eta < -0.1 or eta > 1.1) {
+                const std::string& myfile = "eta";
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << std::endl;
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << "  xi:"  << xi   << std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << " eta:"  << eta  << std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "zeta:"  << zeta << std::endl;
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << std::endl;
+                for(int n(0); n<8; n++){
+                amrex::PrintToFile(myfile, Print::AllProcs) << " node " << n << ": "
+                << nodes[n][0] << " "
+                << nodes[n][1] << " "
+                << nodes[n][2] << std::endl;
+                }
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << "particle: "
+                   << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
+
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << std::endl;
+                for(int n(0); n<8; n++){
+                amrex::PrintToFile(myfile, Print::AllProcs) << " values " << n << ": "
+                << values[n][0] << " "
+                << values[n][1] << " "
+                << values[n][2] << " "
+                << values[n][3] << std::endl;
+                }
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << std::endl << "Covered: " << covered << std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << std::endl << "Covered logic:" << std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node0 " << Node0_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node1 " << Node1_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node2 " << Node2_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node3 " << Node3_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node4 " << Node4_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node5 " << Node5_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node6 " << Node6_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node7 " << Node7_isNotConnected <<  std::endl;
+            }
+
+            if(zeta < -1.0 or zeta > 1.1) {
+                const std::string& myfile = "zeta";
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << std::endl;
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << "  xi:"  << xi   << std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << " eta:"  << eta  << std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "zeta:"  << zeta << std::endl;
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << std::endl;
+                for(int n(0); n<8; n++){
+                amrex::PrintToFile(myfile, Print::AllProcs) << " node " << n << ": "
+                << nodes[n][0] << " "
+                << nodes[n][1] << " "
+                << nodes[n][2] << std::endl;
+                }
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << "particle: "
+                   << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
+
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << std::endl;
+                for(int n(0); n<8; n++){
+                amrex::PrintToFile(myfile, Print::AllProcs) << " values " << n << ": "
+                << values[n][0] << " "
+                << values[n][1] << " "
+                << values[n][2] << " "
+                << values[n][3] << std::endl;
+                }
+
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << std::endl << "Covered: " << covered << std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << std::endl << "Covered logic:" << std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node0 " << Node0_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node1 " << Node1_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node2 " << Node2_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node3 " << Node3_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node4 " << Node4_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node5 " << Node5_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node6 " << Node6_isNotConnected <<  std::endl;
+                amrex::PrintToFile(myfile, Print::AllProcs) << "Node7 " << Node7_isNotConnected <<  std::endl;
+            }
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE( -0.1 <= xi  &&  xi   <= 1.1, "Invalid xi for interpolation");
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE( -0.1 <= eta &&  eta  <= 1.1, "Invalid eta for interpolation");
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE( -0.1 <= zeta && zeta <= 1.1, "Invalid zeta for interpolation");
+
     //amrex::Print() << std::endl << std::endl << "Interpolated values:" << std::endl;
     amrex::Real val_gp[4];
     for(int lc(0); lc<4; lc++){
-    val_gp[lc] = (1 - xi - eta - zeta + xi * eta + xi * zeta + eta*zeta - xi*eta*zeta)*values[0][lc]
-               + (    xi              - xi * eta - xi * zeta            + xi*eta*zeta)*values[1][lc]
-               + (         eta        - xi * eta             - eta*zeta + xi*eta*zeta)*values[2][lc]
-               + (                      xi * eta                        - xi*eta*zeta)*values[3][lc]
-               + (               zeta            - xi * zeta - eta*zeta + xi*eta*zeta)*values[4][lc]
-               + (                                 xi * zeta            - xi*eta*zeta)*values[5][lc]
-               + (                                             eta*zeta - xi*eta*zeta)*values[6][lc]
-               + (                                                        xi*eta*zeta)*values[7][lc];
+      val_gp[lc] = (1 - xi - eta - zeta + xi*eta + xi*zeta + eta*zeta - xi*eta*zeta) * values[0][lc]
+                 + (    xi              - xi*eta - xi*zeta            + xi*eta*zeta) * values[1][lc]
+                 + (                      xi*eta                      - xi*eta*zeta) * values[2][lc]
+                 + (         eta        - xi*eta           - eta*zeta + xi*eta*zeta) * values[3][lc]
+                 + (               zeta          - xi*zeta - eta*zeta + xi*eta*zeta) * values[4][lc]
+                 + (                               xi*zeta            - xi*eta*zeta) * values[5][lc]
+                 + (                                                    xi*eta*zeta) * values[6][lc]
+                 + (                                         eta*zeta - xi*eta*zeta) * values[7][lc];
     //amrex::Print() << "value " << lc << " = " << val_gp[lc] << std::endl;
     }
     //amrex::Print() << std::endl << std::endl;
