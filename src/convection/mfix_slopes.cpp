@@ -143,13 +143,13 @@ mfix::mfix_compute_slopes (int lev,
             {
               tid_x += 1; tid_y += 1; tid_z += 1;
 
-              int local_list_x[3] = {0, tid_x, std::min(BLOCK_SIZE, bx_hi[0]-stride_x+1)+1};
-              int local_list_y[3] = {0, tid_y, std::min(BLOCK_SIZE, bx_hi[1]-stride_y+1)+1};
-              int local_list_z[3] = {0, tid_z, std::min(BLOCK_SIZE, bx_hi[2]-stride_z+1)+1};
+              int local_list_x[3] = {0, tid_x, amrex::min(BLOCK_SIZE, bx_hi[0]-stride_x+1)+1};
+              int local_list_y[3] = {0, tid_y, amrex::min(BLOCK_SIZE, bx_hi[1]-stride_y+1)+1};
+              int local_list_z[3] = {0, tid_z, amrex::min(BLOCK_SIZE, bx_hi[2]-stride_z+1)+1};
 
-              int global_list_x[3] = {stride_x-1, i, std::min(stride_x+BLOCK_SIZE, bx_hi[0]+1)};
-              int global_list_y[3] = {stride_y-1, j, std::min(stride_y+BLOCK_SIZE, bx_hi[1]+1)};
-              int global_list_z[3] = {stride_z-1, k, std::min(stride_z+BLOCK_SIZE, bx_hi[2]+1)};
+              int global_list_x[3] = {stride_x-1, i, amrex::min(stride_x+BLOCK_SIZE, bx_hi[0]+1)};
+              int global_list_y[3] = {stride_y-1, j, amrex::min(stride_y+BLOCK_SIZE, bx_hi[1]+1)};
+              int global_list_z[3] = {stride_z-1, k, amrex::min(stride_z+BLOCK_SIZE, bx_hi[2]+1)};
 
               for (int ii(0); ii < 3; ii++)
               for (int jj(0); jj < 3; jj++)

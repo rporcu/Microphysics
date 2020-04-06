@@ -399,14 +399,14 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
         Real state_pls = state(i,j,k,state_comp+n);
         Real state_mns = state(i-1,j,k,state_comp+n);
 
-        Real cc_umax = std::max(state_pls, state_mns);
-        Real cc_umin = std::min(state_pls, state_mns);
+        Real cc_umax = amrex::max(state_pls, state_mns);
+        Real cc_umin = amrex::min(state_pls, state_mns);
 
         Real upls = state_pls - delta_x * x_slopes(i,j,k,slopes_comp+n) 
                               + delta_y * y_slopes(i,j,k,slopes_comp+n) 
                               + delta_z * z_slopes(i,j,k,slopes_comp+n);
 
-        upls = std::max( std::min(upls, cc_umax), cc_umin );
+        upls = amrex::max( amrex::min(upls, cc_umax), cc_umin );
 
         delta_x = .5 - ccc_fab(i-1,j,k,0);
         delta_y = yf - ccc_fab(i-1,j,k,1);
@@ -416,7 +416,7 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
                               + delta_y * y_slopes(i-1,j,k,slopes_comp+n) 
                               + delta_z * z_slopes(i-1,j,k,slopes_comp+n);
 
-        umns = std::max( std::min(umns, cc_umax), cc_umin );
+        umns = amrex::max( amrex::min(umns, cc_umax), cc_umin );
 
         const Real u_ijk = u(i,j,k);
         const Real sx_ijkn = upwind(umns, upls, u_ijk);
@@ -472,14 +472,14 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
         Real state_pls = state(i,j  ,k,state_comp+n);
         Real state_mns = state(i,j-1,k,state_comp+n);
 
-        Real cc_umax = std::max(state_pls, state_mns);
-        Real cc_umin = std::min(state_pls, state_mns);
+        Real cc_umax = amrex::max(state_pls, state_mns);
+        Real cc_umin = amrex::min(state_pls, state_mns);
 
         Real vpls = state_pls - delta_y * y_slopes(i,j,k,slopes_comp+n) 
                               + delta_x * x_slopes(i,j,k,slopes_comp+n) 
                               + delta_z * z_slopes(i,j,k,slopes_comp+n);
 
-        vpls = std::max( std::min(vpls, cc_umax), cc_umin );
+        vpls = amrex::max( amrex::min(vpls, cc_umax), cc_umin );
 
         delta_x = xf  - ccc_fab(i,j-1,k,0);
         delta_y = 0.5 - ccc_fab(i,j-1,k,1);
@@ -489,7 +489,7 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
                               + delta_x * x_slopes(i,j-1,k,slopes_comp+n) 
                               + delta_z * z_slopes(i,j-1,k,slopes_comp+n);
 
-        vmns = std::max( std::min(vmns, cc_umax), cc_umin );
+        vmns = amrex::max( amrex::min(vmns, cc_umax), cc_umin );
 
         const Real v_ijk = v(i,j,k);
         const Real sy_ijkn = upwind(vmns, vpls, v_ijk);
@@ -545,14 +545,14 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
         Real state_pls = state(i,j,k  ,state_comp+n);
         Real state_mns = state(i,j,k-1,state_comp+n);
 
-        Real cc_umax = std::max(state_pls, state_mns);
-        Real cc_umin = std::min(state_pls, state_mns);
+        Real cc_umax = amrex::max(state_pls, state_mns);
+        Real cc_umin = amrex::min(state_pls, state_mns);
 
         Real wpls = state_pls - delta_z * z_slopes(i,j,k,slopes_comp+n) 
                               + delta_x * x_slopes(i,j,k,slopes_comp+n) 
                               + delta_y * y_slopes(i,j,k,slopes_comp+n);
 
-        wpls = std::max( std::min(wpls, cc_umax), cc_umin );
+        wpls = amrex::max( amrex::min(wpls, cc_umax), cc_umin );
 
         delta_x = xf - ccc_fab(i,j,k-1,0);
         delta_y = yf - ccc_fab(i,j,k-1,1);
@@ -562,7 +562,7 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
                               + delta_x * x_slopes(i,j,k-1,slopes_comp+n) 
                               + delta_y * y_slopes(i,j,k-1,slopes_comp+n);
 
-        wmns = std::max( std::min(wmns, cc_umax), cc_umin );
+        wmns = amrex::max( amrex::min(wmns, cc_umax), cc_umin );
 
         const Real w_ijk = w(i,j,k);
         const Real sz_ijkn = upwind(wmns, wpls, w_ijk);

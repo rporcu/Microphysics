@@ -281,15 +281,15 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
               const Real ccvel_pls = ccvel_fab(i,j,k,0);
               const Real ccvel_mns = ccvel_fab(i-1,j,k,0);
 
-              Real cc_umax = std::max(ccvel_pls, ccvel_mns);
-              Real cc_umin = std::min(ccvel_pls, ccvel_mns);
+              Real cc_umax = amrex::max(ccvel_pls, ccvel_mns);
+              Real cc_umin = amrex::min(ccvel_pls, ccvel_mns);
 
               Real upls = ccvel_pls - delta_x * xslopes_fab(i,j,k,0) 
                                     + delta_y * yslopes_fab(i,j,k,0) 
                                     + delta_z * zslopes_fab(i,j,k,0);
 
-              upls = std::min(upls, cc_umax);
-              upls = std::max(upls, cc_umin);
+              upls = amrex::min(upls, cc_umax);
+              upls = amrex::max(upls, cc_umin);
 
               delta_x = .5 - ccc_fab(i-1,j,k,0);
               delta_y = yf - ccc_fab(i-1,j,k,1);
@@ -299,8 +299,8 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
                                     + delta_y * yslopes_fab(i-1,j,k,0) 
                                     + delta_z * zslopes_fab(i-1,j,k,0);
 
-              umns = std::min(umns, cc_umax);
-              umns = std::max(umns, cc_umin);
+              umns = amrex::min(umns, cc_umax);
+              umns = amrex::max(umns, cc_umin);
 
               upls_fab(i,j,k) = upls;
               umns_fab(i,j,k) = umns;
@@ -341,15 +341,15 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
               const Real ccvel_pls = ccvel_fab(i,j,k,1);
               const Real ccvel_mns = ccvel_fab(i,j-1,k,1);
 
-              Real cc_vmax = std::max(ccvel_pls, ccvel_mns);
-              Real cc_vmin = std::min(ccvel_pls, ccvel_mns);
+              Real cc_vmax = amrex::max(ccvel_pls, ccvel_mns);
+              Real cc_vmin = amrex::min(ccvel_pls, ccvel_mns);
 
               Real vpls = ccvel_pls - delta_y * yslopes_fab(i,j,k,1) 
                                     + delta_x * xslopes_fab(i,j,k,1) 
                                     + delta_z * zslopes_fab(i,j,k,1);
 
-              vpls = std::min(vpls, cc_vmax);
-              vpls = std::max(vpls, cc_vmin);
+              vpls = amrex::min(vpls, cc_vmax);
+              vpls = amrex::max(vpls, cc_vmin);
               vpls_fab(i,j,k) = vpls;
 
               delta_x = xf - ccc_fab(i,j-1,k,0);
@@ -360,8 +360,8 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
                                     + delta_x * xslopes_fab(i,j-1,k,1) 
                                     + delta_z * zslopes_fab(i,j-1,k,1);
 
-              vmns = std::min(vmns, cc_vmax);
-              vmns = std::max(vmns, cc_vmin);
+              vmns = amrex::min(vmns, cc_vmax);
+              vmns = amrex::max(vmns, cc_vmin);
               vmns_fab(i,j,k) = vmns;
 
               Real vmac(0);
@@ -400,15 +400,15 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
               const Real ccvel_pls = ccvel_fab(i,j,k,2);
               const Real ccvel_mns = ccvel_fab(i,j,k-1,2);
 
-              Real cc_wmax = std::max(ccvel_pls, ccvel_mns);
-              Real cc_wmin = std::min(ccvel_pls, ccvel_mns);
+              Real cc_wmax = amrex::max(ccvel_pls, ccvel_mns);
+              Real cc_wmin = amrex::min(ccvel_pls, ccvel_mns);
 
               Real wpls = ccvel_pls - delta_z * zslopes_fab(i,j,k,2) 
                                     + delta_x * xslopes_fab(i,j,k,2) 
                                     + delta_y * yslopes_fab(i,j,k,2);
 
-              wpls = std::min(wpls, cc_wmax);
-              wpls = std::max(wpls, cc_wmin);
+              wpls = amrex::min(wpls, cc_wmax);
+              wpls = amrex::max(wpls, cc_wmin);
               wpls_fab(i,j,k) = wpls;
 
               delta_x = xf - ccc_fab(i,j,k-1,0);
@@ -419,8 +419,8 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
                                     + delta_x * xslopes_fab(i,j,k-1,2) 
                                     + delta_y * yslopes_fab(i,j,k-1,2);
 
-              wmns = std::min(wmns, cc_wmax);
-              wmns = std::max(wmns, cc_wmin);
+              wmns = amrex::min(wmns, cc_wmax);
+              wmns = amrex::max(wmns, cc_wmin);
               wmns_fab(i,j,k) = wmns;
 
               Real wmac(0);
