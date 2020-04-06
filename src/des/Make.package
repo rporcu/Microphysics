@@ -2,7 +2,6 @@ F90EXE_headers += mfix_des_F.H
 
 CEXE_headers += mfix_des_K.H
 CEXE_headers += mfix_drag_K.H
-CEXE_headers += mfix_eb_interp_K.H
 CEXE_headers += MFIXParticleContainer.H
 
 CEXE_headers += particle_generator.H

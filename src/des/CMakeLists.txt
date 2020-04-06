@@ -19,7 +19,6 @@ target_sources( mfixcore
    mfix_des_F.H
    mfix_des_K.H
    mfix_drag_K.H
-   mfix_eb_interp_K.H
    MFIXParticleContainer.cpp
    MFIXParticleContainer.H
    MFIX_PC_Init.cpp

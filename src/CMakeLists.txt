@@ -47,6 +47,7 @@ add_subdirectory(io)
 add_subdirectory(convection)
 
 # DES
+add_subdirectory(interpolation)
 add_subdirectory(deposition)
 add_subdirectory(des)
 

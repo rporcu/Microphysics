@@ -16,6 +16,7 @@ Bdirs 	+= src/projection
 Bdirs 	+= src/level_data
 Bdirs 	+= src/setup
 Bdirs 	+= src/util
+Bdirs 	+= src/interpolation
 Bdirs 	+= src/deposition
 Bdirs 	+= src/mods
 Bdirs 	+= src/eb

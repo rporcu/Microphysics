@@ -100,6 +100,12 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
       const amrex::RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
       const amrex::RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
 
+      const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(vel_ptr->Factory());
+
+      const auto cellcent = &(factory.getCentroid());
+      const auto bndrycent = &(factory.getBndryCent());
+      const auto areafrac = factory.getAreaFrac();
+
       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
       {
         auto& particles = pti.GetArrayOfStructs();
@@ -172,18 +178,18 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
           }
           else // FAB not all regular
           {
-
-            const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(vel_ptr->Factory());
-
-            const auto cellcent = &(factory.getCentroid());
+            // Cell centroids
             const auto& ccent_fab = cellcent->array(pti);
-
-            const auto bndrycent = &(factory.getBndryCent());
+            // Centroid of EB
             const auto& bcent_fab = bndrycent->array(pti);
+            // Area fractions
+            const auto& apx_fab = areafrac[0]->array(pti);
+            const auto& apy_fab = areafrac[1]->array(pti);
+            const auto& apz_fab = areafrac[2]->array(pti);
 
             amrex::ParallelFor(np,
               [particles_ptr,vel_array,ro_array,mu_array,ep_array,flags_array,DragFunc,
-              plo,dx,dxi,ccent_fab, bcent_fab]
+              plo,dx,dxi,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab]
               AMREX_GPU_DEVICE (int pid) noexcept
             {
               MFIXParticleContainer::ParticleType& particle = particles_ptr[pid];
@@ -228,17 +234,10 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                   // At least one of the cells in the stencil is cut or covered
                 } else {
 
-
                   fe_interp(particle.pos(), ip, jp, kp, dx, dxi,
-                    flags_array, ccent_fab, bcent_fab,
+                    flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                     vel_array, ep_array, &velfp[0], ep);
-#if(0)
-                  amrex::Print() << std::endl
-                                 << "u_g  " << velfp[0] << "  "
-                                 << "v_g  " << velfp[1] << "  "
-                                 << "w_g  " << velfp[2] << "  " << std::endl
-                                 << "ep_g " << ep << std::endl;
-#endif
+
                 } // Cut cell
 
                 // Using i/j/k of centroid cell
