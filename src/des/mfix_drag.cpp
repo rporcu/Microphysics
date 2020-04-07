@@ -67,8 +67,8 @@ mfix::mfix_calc_drag_fluid (Real time)
   }
 
   const Geometry& gm = Geom(0);
-  const FabArray<EBCellFlagFab>* flags;
-  const MultiFab* volfrac;
+  const FabArray<EBCellFlagFab>* flags = nullptr;
+  const MultiFab* volfrac = nullptr;
 
   Vector< MultiFab* > tmp_eps(nlev);
 

@@ -62,8 +62,8 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
     }
 
     const Geometry& gm  = Geom(0);
-    const FabArray<EBCellFlagFab>* flags;
-    const MultiFab* volfrac;
+    const FabArray<EBCellFlagFab>* flags = nullptr;
+    const MultiFab* volfrac = nullptr;
 
     for (int lev = 0; lev < nlev; lev++) {
 
