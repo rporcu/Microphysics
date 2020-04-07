@@ -101,13 +101,13 @@ amrex::IntVect Node1_EB(const int covered,
     } else if(covered == 2) {
         if(Node0_isNotConnected) {
         //amrex::Print() << "Using EB in Node 6." << std::endl;
-        return Node7;
+        return Node6;
         } else if(Node2_isNotConnected) {
         //amrex::Print() << "Using EB in Node 4." << std::endl;
-        return Node7;
+        return Node4;
         } else if(Node5_isNotConnected) {
         //amrex::Print() << "Using EB in Node 3." << std::endl;
-        return Node7;
+        return Node3;
         } else {
             amrex::Abort("Invalid interpolation for Node 1 with 2 covered cells.");
         }

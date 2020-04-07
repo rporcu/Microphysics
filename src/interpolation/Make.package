@@ -1,3 +1,4 @@
+CEXE_headers += mfix_interp_K.H
 CEXE_headers += mfix_eb_interp_K.H
 CEXE_headers += mfix_eb_newton_solver_K.H
 CEXE_headers += mfix_eb_node_connectivity_K.H
