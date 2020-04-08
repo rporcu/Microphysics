@@ -18,13 +18,14 @@ void fe_interp(const amrex::RealVect& pos,
                const amrex::RealVect& dx,
                const amrex::RealVect& dxi,
                amrex::Array4<const EBCellFlag> const& flags,
-               const amrex::Array4<const amrex::Real> ccent,
-               const amrex::Array4<const amrex::Real> bcent,
-               const amrex::Array4<const amrex::Real> apx,
-               const amrex::Array4<const amrex::Real> apy,
-               const amrex::Array4<const amrex::Real> apz,
+               amrex::Array4<const amrex::Real> const& ccent,
+               amrex::Array4<const amrex::Real> const& bcent,
+               amrex::Array4<const amrex::Real> const& apx,
+               amrex::Array4<const amrex::Real> const& apy,
+               amrex::Array4<const amrex::Real> const& apz,
                amrex::Array4<amrex::Real const> const& interp_array,
-               amrex::Real* interp_vals, const int ncomp)
+               amrex::Real* interp_vals,
+               const int ncomp)
 {
 
     const amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
@@ -32,8 +33,8 @@ void fe_interp(const amrex::RealVect& pos,
     amrex::Real par_dot_EB(2.);
     amrex::Real cent_dot_EB(1.);
 
-    // If the particle is inside a cut-cell, verify that it is on the correct side of the EB
-    // before trying to interpolate.
+    // If the particle is inside a cut-cell, verify that it is on the correct
+    // side of the EB before trying to interpolate.
     if(flags(ip,jp,kp).isSingleValued()){
 
         const Real adx = apx(ip+1,jp  ,kp  ) - apx(ip  ,jp  ,kp  );
@@ -92,11 +93,10 @@ void fe_interp(const amrex::RealVect& pos,
       }
     }
 
-
-
-    // A negative value implies that the particle is 'behind' the EB (and therefore inside
-    // the wall). Although this shouldn't occur often, it could for fast moving particles.
-    // Set the fluid velocity to zero and use the cell value for remaining items.
+    // A negative value implies that the particle is 'behind' the EB (and
+    // therefore inside the wall). Although this shouldn't occur often, it could
+    // for fast moving particles.  Set the fluid velocity to zero and use the
+    // cell value for remaining items.
     if( flags(ip,jp,kp).isSingleValued() and (par_dot_EB <= tolerance)){
 
         // Set the velocity to zero
@@ -139,7 +139,9 @@ void fe_interp(const amrex::RealVect& pos,
     } else {
 
         amrex::Real nodes[8][3];
-        amrex::Real values[8][ncomp];
+        amrex::Real* values[8];
+        for(int it(0); it < 8; it++)
+          values[it] = new Real [ncomp];
 
         // Alias the nodes in the stencil to make the following a little
         // easier to read and debug.
@@ -484,8 +486,8 @@ void fe_interp(const amrex::RealVect& pos,
         const amrex::Real lbnd = -0.5;
         const amrex::Real ubnd =  1.5;
 
-// DEBUG START ///////////////////////////////////////////////////////////////////////////////////////////////
-#if(1)
+// DEBUG START /////////////////////////////////////////////////////////////////
+#if 1 && (!defined AMREX_USE_CUDA)
         if((xi < lbnd or xi > ubnd) or (eta < lbnd or eta > ubnd) or (zeta < lbnd or zeta > ubnd)) {
 
             const std::string& myfile = "mapping";
@@ -764,13 +766,16 @@ void fe_interp(const amrex::RealVect& pos,
         }
 
 #endif
-// DEBUG END   ///////////////////////////////////////////////////////////////////////////////////////////////
+// DEBUG END   ////////////////////////////////////////////////////////////////
 
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE( lbnd <= xi  &&  xi   <= ubnd, "Invalid interpolation: xi out of range!");
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE( lbnd <= eta &&  eta  <= ubnd, "Invalid interpolation: eta out of range!");
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE( lbnd <= zeta && zeta <= ubnd, "Invalid interpolation: zeta out of range!");
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE( lbnd <= xi  &&  xi   <= ubnd,
+            "Invalid interpolation: xi out of range!");
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE( lbnd <= eta &&  eta  <= ubnd,
+            "Invalid interpolation: eta out of range!");
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE( lbnd <= zeta && zeta <= ubnd,
+            "Invalid interpolation: zeta out of range!");
 
-        for(int n=0; n<ncomp; n++){
+        for(int n=0; n < ncomp; n++) {
             interp_vals[n] = (1 - xi - eta - zeta + xi*eta + xi*zeta + eta*zeta - xi*eta*zeta) * values[0][n]
                            + (    xi              - xi*eta - xi*zeta            + xi*eta*zeta) * values[1][n]
                            + (                      xi*eta                      - xi*eta*zeta) * values[2][n]
@@ -782,6 +787,8 @@ void fe_interp(const amrex::RealVect& pos,
         }
 
 
+        for(int it(0); it < 8; it++)
+          delete values[it];
     }
 }
 
