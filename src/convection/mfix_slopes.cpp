@@ -1,5 +1,25 @@
 #include <mfix.H>
 
+namespace {
+  struct get_index
+  {
+    const unsigned stride_i, stride_j, stride_k;
+
+    AMREX_GPU_HOST_DEVICE
+    get_index(unsigned dim_x, unsigned dim_y, unsigned dim_z, unsigned dim_comp)
+      : stride_i(dim_y*dim_z*dim_comp)
+      , stride_j(dim_z*dim_comp)
+      , stride_k(dim_comp)
+    {}
+
+    AMREX_GPU_HOST_DEVICE
+    unsigned operator() (unsigned i, unsigned j, unsigned k, unsigned n=0) const
+    {
+      return i*stride_i + j*stride_j + k*stride_k + n;
+    }
+  };
+}
+
 //
 // Compute the slopes of Sborder (velocity, density or tracer)
 //
@@ -105,21 +125,21 @@ mfix::mfix_compute_slopes (int lev,
         bool kernel_run_with_launch_global(false);
 
 #ifdef AMREX_USE_CUDA
-#define BLOCK_SIZE 4
-        dim3 threadsPerBlock(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-        dim3 numBlocks(std::ceil(bx.length()[0]/float(threadsPerBlock.x)),
-                       std::ceil(bx.length()[1]/float(threadsPerBlock.y)),
-                       std::ceil(bx.length()[2]/float(threadsPerBlock.z)));
+        dim3 Block(4,4,4);
+        dim3 Grid(std::ceil(bx.length()[0] / float(Block.x)),
+                  std::ceil(bx.length()[1] / float(Block.y)),
+                  std::ceil(bx.length()[2] / float(Block.z)));
 
         const unsigned sm_size =
-          6*sizeof(amrex::Real)*(BLOCK_SIZE+2)*(BLOCK_SIZE+2)*(BLOCK_SIZE+2) +
-          sizeof(amrex::EBCellFlag)*(BLOCK_SIZE+2)*(BLOCK_SIZE+2)*(BLOCK_SIZE+2);
+          ncomp*sizeof(Real)*(Block.x+2)*(Block.y+2)*(Block.z+2) + // ccent_sm
+          ncomp*sizeof(Real)*(Block.x+2)*(Block.y+2)*(Block.z+2) + // state_sm
+          sizeof(EBCellFlag)*(Block.x+2)*(Block.y+2)*(Block.z+2);  // flags_sm
 
         if(sm_size <= Gpu::Device::sharedMemPerBlock()) {
           amrex::IntVect bx_lo(bx.loVect());
           amrex::IntVect bx_hi(bx.hiVect());
 
-          amrex::launch_global<<<numBlocks,threadsPerBlock,sm_size,Gpu::gpuStream()>>>(
+          amrex::launch_global<<<Grid,Block,sm_size,Gpu::gpuStream()>>>(
             [state_fab,xs_fab,ys_fab,zs_fab,slopes_comp,flag_fab,ccent_fab,ncomp,
              bx_lo,bx_hi] AMREX_GPU_DEVICE () noexcept
           {
@@ -127,54 +147,61 @@ mfix::mfix_compute_slopes (int lev,
             int tid_y = threadIdx.y;
             int tid_z = threadIdx.z;
 
-            const int stride_x = blockIdx.x*BLOCK_SIZE + bx_lo[0];
-            const int stride_y = blockIdx.y*BLOCK_SIZE + bx_lo[1];
-            const int stride_z = blockIdx.z*BLOCK_SIZE + bx_lo[2];
+            const int stride_x = blockIdx.x*blockDim.x + bx_lo[0];
+            const int stride_y = blockIdx.y*blockDim.y + bx_lo[1];
+            const int stride_z = blockIdx.z*blockDim.z + bx_lo[2];
 
             int i = tid_x + stride_x;
             int j = tid_y + stride_y;
             int k = tid_z + stride_z;
 
-            __shared__ Real ccent_sm[BLOCK_SIZE+2][BLOCK_SIZE+2][BLOCK_SIZE+2][3];
-            __shared__ Real state_sm[BLOCK_SIZE+2][BLOCK_SIZE+2][BLOCK_SIZE+2][3];
-            __shared__ EBCellFlag flags_sm[BLOCK_SIZE+2][BLOCK_SIZE+2][BLOCK_SIZE+2];
+            get_index idx_sca(blockDim.x+2,blockDim.y+2,blockDim.z+2,1);
+            get_index idx_vec(blockDim.x+2,blockDim.y+2,blockDim.z+2,ncomp);
+
+            extern __shared__ Real sm[];
+
+            const unsigned BlocksSize = (blockDim.x+2)*(blockDim.y+2)*(blockDim.z+2);
+
+            Real* ccent_sm = sm;
+            Real* state_sm = (Real*)&ccent_sm[ncomp*BlocksSize];
+            EBCellFlag* flags_sm = (EBCellFlag*)&state_sm[ncomp*BlocksSize];
 
             if((i <= bx_hi[0]) and (j <= bx_hi[1]) and (k <= bx_hi[2]))
             {
               tid_x += 1; tid_y += 1; tid_z += 1;
 
-              int local_list_x[3] = {0, tid_x, amrex::min(BLOCK_SIZE, bx_hi[0]-stride_x+1)+1};
-              int local_list_y[3] = {0, tid_y, amrex::min(BLOCK_SIZE, bx_hi[1]-stride_y+1)+1};
-              int local_list_z[3] = {0, tid_z, amrex::min(BLOCK_SIZE, bx_hi[2]-stride_z+1)+1};
+              int loc_x[3] = {0, tid_x, amrex::min((int)blockDim.x, bx_hi[0]-stride_x+1)+1};
+              int loc_y[3] = {0, tid_y, amrex::min((int)blockDim.y, bx_hi[1]-stride_y+1)+1};
+              int loc_z[3] = {0, tid_z, amrex::min((int)blockDim.z, bx_hi[2]-stride_z+1)+1};
 
-              int global_list_x[3] = {stride_x-1, i, amrex::min(stride_x+BLOCK_SIZE, bx_hi[0]+1)};
-              int global_list_y[3] = {stride_y-1, j, amrex::min(stride_y+BLOCK_SIZE, bx_hi[1]+1)};
-              int global_list_z[3] = {stride_z-1, k, amrex::min(stride_z+BLOCK_SIZE, bx_hi[2]+1)};
+              int glob_x[3] = {stride_x-1, i, amrex::min(stride_x+(int)blockDim.x, bx_hi[0]+1)};
+              int glob_y[3] = {stride_y-1, j, amrex::min(stride_y+(int)blockDim.y, bx_hi[1]+1)};
+              int glob_z[3] = {stride_z-1, k, amrex::min(stride_z+(int)blockDim.z, bx_hi[2]+1)};
 
               for (int ii(0); ii < 3; ii++)
               for (int jj(0); jj < 3; jj++)
               for (int kk(0); kk < 3; kk++) {
-                int t_x(local_list_x[ii]);
-                int t_y(local_list_y[jj]);
-                int t_z(local_list_z[kk]);
+                int t_x(loc_x[ii]);
+                int t_y(loc_y[jj]);
+                int t_z(loc_z[kk]);
 
-                int g_x(global_list_x[ii]);
-                int g_y(global_list_y[jj]);
-                int g_z(global_list_z[kk]);
+                int g_x(glob_x[ii]);
+                int g_y(glob_y[jj]);
+                int g_z(glob_z[kk]);
 
                 for (int n(0); n < ncomp; n++) {
-                  ccent_sm[t_x][t_y][t_z][n] = ccent_fab(g_x,g_y,g_z,n);
-                  state_sm[t_x][t_y][t_z][n] = state_fab(g_x,g_y,g_z,n);
+                  ccent_sm[idx_vec(t_x,t_y,t_z,n)] = ccent_fab(g_x,g_y,g_z,n);
+                  state_sm[idx_vec(t_x,t_y,t_z,n)] = state_fab(g_x,g_y,g_z,n);
                 }
 
-                flags_sm[t_x][t_y][t_z] = flag_fab(g_x,g_y,g_z);
+                flags_sm[idx_sca(t_x,t_y,t_z)] = flag_fab(g_x,g_y,g_z);
               }
 
               __syncthreads();
 
               for (int n(0); n < ncomp; n++)
               {
-                if (flags_sm[tid_x][tid_y][tid_z].isCovered())
+                if (flags_sm[idx_sca(tid_x,tid_y,tid_z)].isCovered())
                 {
                   xs_fab(i,j,k,slopes_comp+n) = 0.0;
                   ys_fab(i,j,k,slopes_comp+n) = 0.0;
@@ -191,15 +218,23 @@ mfix::mfix_compute_slopes (int lev,
                     for(int kk(-1); kk<=1; kk++)
                     for(int jj(-1); jj<=1; jj++)
                     for(int ii(-1); ii<=1; ii++) {
-                      if((ii!=0 or jj!=0 or kk!=0) and flags_sm[tid_x][tid_y][tid_z].isConnected(ii,jj,kk)) {
+                      if((ii!=0 or jj!=0 or kk!=0) and
+                         flags_sm[idx_sca(tid_x,tid_y,tid_z)].isConnected(ii,jj,kk)) {
                         // Not multiplying by dx to be consistent with how the
                         // slope is stored. Also not including the global shift
                         // wrt plo or i,j,k. We only need relative distance.
-                        A[lc][0] = ii+ccent_sm[tid_x+ii][tid_y+jj][tid_z+kk][0]-ccent_sm[tid_x][tid_y][tid_z][0];
-                        A[lc][1] = jj+ccent_sm[tid_x+ii][tid_y+jj][tid_z+kk][1]-ccent_sm[tid_x][tid_y][tid_z][1];
-                        A[lc][2] = kk+ccent_sm[tid_x+ii][tid_y+jj][tid_z+kk][2]-ccent_sm[tid_x][tid_y][tid_z][2];
+                        A[lc][0] =
+                          ii + ccent_sm[idx_vec(tid_x+ii,tid_y+jj,tid_z+kk,0)] -
+                          ccent_sm[idx_vec(tid_x,tid_y,tid_z,0)];
+                        A[lc][1] =
+                          jj + ccent_sm[idx_vec(tid_x+ii,tid_y+jj,tid_z+kk,1)] -
+                          ccent_sm[idx_vec(tid_x,tid_y,tid_z,1)];
+                        A[lc][2] =
+                          kk + ccent_sm[idx_vec(tid_x+ii,tid_y+jj,tid_z+kk,2)]-
+                          ccent_sm[idx_vec(tid_x,tid_y,tid_z,2)];
 
-                        du[lc] = state_sm[tid_x+ii][tid_y+jj][tid_z+kk][n] - state_sm[tid_x][tid_y][tid_z][n];
+                        du[lc] = state_sm[idx_vec(tid_x+ii,tid_y+jj,tid_z+kk,n)] -
+                          state_sm[idx_vec(tid_x,tid_y,tid_z,n)];
                       }
                       else {
                         A[lc][0] = 0.0;
@@ -249,11 +284,11 @@ mfix::mfix_compute_slopes (int lev,
                     AtA[0][2]*(AtA[1][0]*AtA[2][1] - AtA[1][1]*AtA[2][0]);
 
                   // X direction
-                  if(flags_sm[tid_x][tid_y][tid_z].isSingleValued() or
-                     (flags_sm[tid_x-1][tid_y][tid_z].isSingleValued() or
-                      (not flags_sm[tid_x][tid_y][tid_z].isConnected(-1,0,0))) or
-                     (flags_sm[tid_x+1][tid_y][tid_z].isSingleValued() or
-                      (not flags_sm[tid_x][tid_y][tid_z].isConnected( 1,0,0)))) {
+                  if(flags_sm[idx_sca(tid_x,tid_y,tid_z)].isSingleValued() or
+                     (flags_sm[idx_sca(tid_x-1,tid_y,tid_z)].isSingleValued() or
+                      (not flags_sm[idx_sca(tid_x,tid_y,tid_z)].isConnected(-1,0,0))) or
+                     (flags_sm[idx_sca(tid_x+1,tid_y,tid_z)].isSingleValued() or
+                      (not flags_sm[idx_sca(tid_x,tid_y,tid_z)].isConnected( 1,0,0)))) {
 
                     amrex::Real detAtA_x =
                       Atb[0]   *(AtA[1][1]*AtA[2][2] - AtA[1][2]*AtA[1][2]) -
@@ -264,9 +299,12 @@ mfix::mfix_compute_slopes (int lev,
                     xs_fab(i,j,k,slopes_comp+n) = detAtA_x / detAtA;
                   }
                   else {
-                    Real du_xl = 2.0*(state_sm[tid_x  ][tid_y][tid_z][n] - state_sm[tid_x-1][tid_y][tid_z][n]);
-                    Real du_xr = 2.0*(state_sm[tid_x+1][tid_y][tid_z][n] - state_sm[tid_x  ][tid_y][tid_z][n]);
-                    Real du_xc = 0.5*(state_sm[tid_x+1][tid_y][tid_z][n] - state_sm[tid_x-1][tid_y][tid_z][n]);
+                    Real du_xl = 2.0*(state_sm[idx_vec(tid_x,tid_y,tid_z,n)] -
+                        state_sm[idx_vec(tid_x-1,tid_y,tid_z,n)]);
+                    Real du_xr = 2.0*(state_sm[idx_vec(tid_x+1,tid_y,tid_z,n)] -
+                        state_sm[idx_vec(tid_x,tid_y,tid_z,n)]);
+                    Real du_xc = 0.5*(state_sm[idx_vec(tid_x+1,tid_y,tid_z,n)] -
+                        state_sm[idx_vec(tid_x-1,tid_y,tid_z,n)]);
 
                     Real xslope = amrex::min(std::abs(du_xl), std::abs(du_xc), std::abs(du_xr));
                     xslope = (du_xr*du_xl > 0.0) ? xslope : 0.0;
@@ -274,11 +312,11 @@ mfix::mfix_compute_slopes (int lev,
                   }
 
                   // Y direction
-                  if(flags_sm[tid_x][tid_y][tid_z].isSingleValued() or
-                     (flags_sm[tid_x][tid_y-1][tid_z].isSingleValued() or
-                      (not flags_sm[tid_x][tid_y][tid_z].isConnected(0,-1,0))) or
-                     (flags_sm[tid_x][tid_y+1][tid_z].isSingleValued() or
-                      (not flags_sm[tid_x][tid_y][tid_z].isConnected(0, 1,0)))) {
+                  if(flags_sm[idx_sca(tid_x,tid_y,tid_z)].isSingleValued() or
+                     (flags_sm[idx_sca(tid_x,tid_y-1,tid_z)].isSingleValued() or
+                      (not flags_sm[idx_sca(tid_x,tid_y,tid_z)].isConnected(0,-1,0))) or
+                     (flags_sm[idx_sca(tid_x,tid_y+1,tid_z)].isSingleValued() or
+                      (not flags_sm[idx_sca(tid_x,tid_y,tid_z)].isConnected(0, 1,0)))) {
 
                     amrex::Real detAtA_y =
                       AtA[0][0]*(Atb[1]  * AtA[2][2] - AtA[1][2]*Atb[2]   ) -
@@ -289,9 +327,12 @@ mfix::mfix_compute_slopes (int lev,
                     ys_fab(i,j,k,slopes_comp+n) = detAtA_y / detAtA;
                   }
                   else {
-                    Real du_yl = 2.0*(state_sm[tid_x][tid_y  ][tid_z][n] - state_sm[tid_x][tid_y-1][tid_z][n]);
-                    Real du_yr = 2.0*(state_sm[tid_x][tid_y+1][tid_z][n] - state_sm[tid_x][tid_y  ][tid_z][n]);
-                    Real du_yc = 0.5*(state_sm[tid_x][tid_y+1][tid_z][n] - state_sm[tid_x][tid_y-1][tid_z][n]);
+                    Real du_yl = 2.0*(state_sm[idx_vec(tid_x,tid_y,tid_z,n)] -
+                        state_sm[idx_vec(tid_x,tid_y-1,tid_z,n)]);
+                    Real du_yr = 2.0*(state_sm[idx_vec(tid_x,tid_y+1,tid_z,n)] -
+                        state_sm[idx_vec(tid_x,tid_y,tid_z,n)]);
+                    Real du_yc = 0.5*(state_sm[idx_vec(tid_x,tid_y+1,tid_z,n)] -
+                        state_sm[idx_vec(tid_x,tid_y-1,tid_z,n)]);
 
                     Real yslope = amrex::min(std::abs(du_yl), std::abs(du_yc), std::abs(du_yr));
                     yslope = (du_yr*du_yl > 0.0) ? yslope : 0.0;
@@ -299,11 +340,11 @@ mfix::mfix_compute_slopes (int lev,
                   }
 
                   // Z direction
-                  if(flags_sm[tid_x][tid_y][tid_z].isSingleValued() or
-                     (flags_sm[tid_x][tid_y][tid_z-1].isSingleValued() or
-                      (not flags_sm[tid_x][tid_y][tid_z].isConnected(0,0,-1))) or
-                     (flags_sm[tid_x][tid_y][tid_z+1].isSingleValued() or
-                      (not flags_sm[tid_x][tid_y][tid_z].isConnected(0,0, 1)))) {
+                  if(flags_sm[idx_sca(tid_x,tid_y,tid_z)].isSingleValued() or
+                     (flags_sm[idx_sca(tid_x,tid_y,tid_z-1)].isSingleValued() or
+                      (not flags_sm[idx_sca(tid_x,tid_y,tid_z)].isConnected(0,0,-1))) or
+                     (flags_sm[idx_sca(tid_x,tid_y,tid_z+1)].isSingleValued() or
+                      (not flags_sm[idx_sca(tid_x,tid_y,tid_z)].isConnected(0,0, 1)))) {
 
                     amrex::Real detAtA_z =
                       AtA[0][0]*(AtA[1][1]*Atb[2]    - Atb[1]   *AtA[1][2]) -
@@ -313,9 +354,12 @@ mfix::mfix_compute_slopes (int lev,
                     zs_fab(i,j,k,slopes_comp+n) = detAtA_z / detAtA;
                   }
                   else {
-                    Real du_zl = 2.0*(state_sm[tid_x][tid_y][tid_z  ][n] - state_sm[tid_x][tid_y][tid_z-1][n]);
-                    Real du_zr = 2.0*(state_sm[tid_x][tid_y][tid_z+1][n] - state_sm[tid_x][tid_y][tid_z  ][n]);
-                    Real du_zc = 0.5*(state_sm[tid_x][tid_y][tid_z+1][n] - state_sm[tid_x][tid_y][tid_z-1][n]);
+                    Real du_zl = 2.0*(state_sm[idx_vec(tid_x,tid_y,tid_z,n)] -
+                        state_sm[idx_vec(tid_x,tid_y,tid_z-1,n)]);
+                    Real du_zr = 2.0*(state_sm[idx_vec(tid_x,tid_y,tid_z+1,n)] -
+                        state_sm[idx_vec(tid_x,tid_y,tid_z,n)]);
+                    Real du_zc = 0.5*(state_sm[idx_vec(tid_x,tid_y,tid_z+1,n)] -
+                        state_sm[idx_vec(tid_x,tid_y,tid_z-1,n)]);
 
                     Real zslope = amrex::min(std::abs(du_zl), std::abs(du_zc), std::abs(du_zr));
                     zslope = (du_zr*du_zl > 0.0) ? zslope : 0.0;
@@ -326,7 +370,6 @@ mfix::mfix_compute_slopes (int lev,
             }
           });
         }
-#undef BLOCK_SIZE
 #endif
         if(not kernel_run_with_launch_global) {
                amrex::ParallelFor(bx, ncomp,
