@@ -139,7 +139,7 @@ linter:spelling:
   tags:
     - mfix-exa
 
-test:regression:
+.test:regression:
   image: mwm126/mfix-exa:py3
   tags:
     - mfix-exa
