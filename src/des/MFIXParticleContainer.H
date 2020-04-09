@@ -181,6 +181,11 @@ class MFIXParticleContainer final
                                    const amrex::Vector<amrex::Real>& avg_region_z_b,
                                    const amrex::Vector<amrex::Real>& avg_region_z_t);
 
+    void ls_has_walls (int& has_wall,
+                       const amrex::Box& bx,
+                       const amrex::FArrayBox& phi_fab,
+                       const amrex::Real tolerance);
+
   private:
     int nlev;
 

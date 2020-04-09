@@ -22,12 +22,6 @@ void mfix_get_real_walls(int* bcv,
                          void* normal,
                          void* center);
 
-void ls_has_walls(int * has_wall,
-                  const amrex::Real* phi,
-                  const int* phlo,
-                  const int* phhi,
-                  const amrex::Real* tol);
-
 void calc_wall_collisions(void* rparticles,
                           const int* ntot,
                           const int* nrp,

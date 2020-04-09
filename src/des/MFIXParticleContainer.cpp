@@ -190,7 +190,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         {
             int int_has_wall = 0;
             Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
-            ls_has_walls(& int_has_wall, BL_TO_FORTRAN_3D((* ls_phi)[pti]), & tol);
+            ls_has_walls(int_has_wall, bx, (*ls_phi)[pti], tol);
             has_wall = (int_has_wall > 0);
         }
 
