@@ -2,7 +2,6 @@
 
 #include <mfix.H>
 #include <mfix_F.H>
-#include <mfix_eb_F.H>
 
 #include <mfix_init_fluid.H>
 

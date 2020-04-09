@@ -14,7 +14,6 @@
 #include <AMReX_EB_LSCore.H>
 #include <AMReX_EB_levelset.H>
 #include <mfix.H>
-#include <mfix_eb_F.H>
 
 /********************************************************************************
  * Function to create a simple hopper EB.                                       *

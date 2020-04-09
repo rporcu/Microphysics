@@ -14,7 +14,6 @@
 #include <mfix.H>
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_FLUID_Parms.H>
-#include <mfix_eb_F.H>
 
 using namespace std;
 
