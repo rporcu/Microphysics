@@ -102,7 +102,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
       mfix_deposition_bcs(lev, *mf_pointer[lev]);
 
       // Sum grid boundaries to capture any material that was deposited into
-      // your grid from an adjacent gird.
+      // your grid from an adjacent grid.
       mf_pointer[lev]->SumBoundary(gm.periodicity());
 
       // Fill the boundaries so we calculate the correct average
@@ -126,7 +126,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
                                    mfix::m_max_solids_volume_fraction);
 
       // Sum grid boundaries to capture any material that was deposited into
-      // your grid from an adjacent gird.
+      // your grid from an adjacent grid.
       mf_pointer[lev]->SumBoundary(gm.periodicity());
       mf_pointer[lev]->FillBoundary(gm.periodicity());
 

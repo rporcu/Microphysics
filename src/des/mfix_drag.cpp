@@ -113,7 +113,7 @@ mfix::mfix_calc_drag_fluid (Real time)
     mfix_deposition_bcs(lev, *drag_ptr[lev]);
 
     // Sum grid boundaries to capture any material that was deposited into
-    // your grid from an adjacent gird.
+    // your grid from an adjacent grid.
     drag_ptr[lev]->SumBoundary(gm.periodicity());
     drag_ptr[lev]->setBndry(0.0);
 
