@@ -1,7 +1,7 @@
 #include <mfix.H>
 #include <param_mod_F.H>
 
-namespace ugradu_aux {
+namespace {
 
 //
 // Compute upwind non-normal velocity
@@ -30,9 +30,7 @@ is_equal_to_any (const int bc, const int* bc_types, const int size)
   return false;
 }
 
-} // end namespace ugradu_aux
-
-using namespace ugradu_aux;
+} // end anonym namespace
 
 //
 // Compute the three components of the convection term
@@ -176,25 +174,33 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
     //
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
-    if ((i == dom_low.x) and
-     ugradu_aux::is_equal_to_any(bct_ilo(dom_low.x-1,j,k,0),
-                                 bc_types.data(), bc_types.size()))
+    const Real u_val = u(i,j,k);
+    Real state_pls = state(i,j,k,state_comp+n);
+    Real state_mns = state(i-1,j,k,state_comp+n);
+    const Real x_slopes_pls = x_slopes(i,j,k,slopes_comp+n);
+    const Real x_slopes_mns = x_slopes(i-1,j,k,slopes_comp+n);
+
+    Real fx_val(0);
+
+    const int bct_ilo_val = bct_ilo(dom_low.x-1,j,k,0);
+    const int bct_ihi_val = bct_ihi(dom_high.x+1,j,k,0);
+
+    if ((i == dom_low.x) and is_equal_to_any(bct_ilo_val, bc_types.data(), bc_types.size()))
     {
-      fx(i,j,k,n) = u(i,j,k) * state(i-1,j,k,state_comp+n);
+      fx_val = u_val * state_mns;
     }
-    else if ((i == dom_high.x+1) and
-     ugradu_aux::is_equal_to_any(bct_ihi(dom_high.x+1,j,k,0),
-                                 bc_types.data(), bc_types.size()))
+    else if ((i == dom_high.x+1) and is_equal_to_any(bct_ihi_val, bc_types.data(), bc_types.size()))
     {
-      fx(i,j,k,n) = u(i,j,k) * state(i,j,k,state_comp+n);
+      fx_val = u_val * state_pls;
     }
     else {
-      const Real state_pls = state(i  ,j,k,state_comp+n) - .5*x_slopes(i  ,j,k,slopes_comp+n);
-      const Real state_mns = state(i-1,j,k,state_comp+n) + .5*x_slopes(i-1,j,k,slopes_comp+n);
-      const Real u_ijk = u(i,j,k);
+      state_pls -= .5*x_slopes_pls;
+      state_mns += .5*x_slopes_mns;
 
-      fx(i,j,k,n) = u_ijk * upwind(state_mns, state_pls, u_ijk);
+      fx_val = u_val * upwind(state_mns, state_pls, u_val);
     }
+
+    fx(i,j,k,n) = fx_val;
   });
 
   amrex::ParallelFor(vbx,ncomp,
@@ -206,25 +212,33 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
     //
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
-    if((j == dom_low.y) and
-     ugradu_aux::is_equal_to_any(bct_jlo(i,dom_low.y-1,k,0),
-                                 bc_types.data(), bc_types.size()))
+    const Real v_val = v(i,j,k);
+    Real state_pls = state(i,j,k,state_comp+n);
+    Real state_mns = state(i,j-1,k,state_comp+n);
+    const Real y_slopes_pls = y_slopes(i,j,k,slopes_comp+n);
+    const Real y_slopes_mns = y_slopes(i,j-1,k,slopes_comp+n);
+
+    Real fy_val(0);
+
+    const int bct_jlo_val = bct_jlo(i,dom_low.y-1,k,0);
+    const int bct_jhi_val = bct_jhi(i,dom_high.y+1,k,0);
+
+    if((j == dom_low.y) and is_equal_to_any(bct_jlo_val, bc_types.data(), bc_types.size()))
     {
-      fy(i,j,k,n) = v(i,j,k) * state(i,j-1,k,state_comp+n);
+      fy_val = v_val * state_mns;
     }
-    else if ((j == dom_high.y+1) and
-     ugradu_aux::is_equal_to_any(bct_jhi(i,dom_high.y+1,k,0),
-                                 bc_types.data(), bc_types.size()))
+    else if ((j == dom_high.y+1) and is_equal_to_any(bct_jhi_val, bc_types.data(), bc_types.size()))
     {
-      fy(i,j,k,n) = v(i,j,k) * state(i,j,k,state_comp+n);
+      fy_val = v_val * state_pls;
     }
     else {
-      const Real state_pls = state(i,j  ,k,state_comp+n) - .5*y_slopes(i,j  ,k,slopes_comp+n);
-      const Real state_mns = state(i,j-1,k,state_comp+n) + .5*y_slopes(i,j-1,k,slopes_comp+n);
-      const Real v_ijk = v(i,j,k);
+      state_pls -= .5*y_slopes_pls;
+      state_mns += .5*y_slopes_mns;
 
-      fy(i,j,k,n) = v_ijk * upwind(state_mns, state_pls, v_ijk);
+      fy_val = v_val * upwind(state_mns, state_pls, v_val);
     }
+
+    fy(i,j,k,n) = fy_val;
   });
 
   amrex::ParallelFor(wbx, ncomp,
@@ -236,25 +250,33 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
     //
     // In the case of MINF       we are using the prescribed Dirichlet value
     // In the case of PINF, POUT we are using the upwind value
-    if((k == dom_low.z) and
-     ugradu_aux::is_equal_to_any(bct_klo(i,j,dom_low.z-1,0),
-                                 bc_types.data(), bc_types.size()))
+    const Real w_val = w(i,j,k);
+    Real state_pls = state(i,j,k,state_comp+n);
+    Real state_mns = state(i,j,k-1,state_comp+n);
+    const Real z_slopes_pls = z_slopes(i,j,k,slopes_comp+n);
+    const Real z_slopes_mns = z_slopes(i,j,k-1,slopes_comp+n);
+
+    Real fz_val(0);
+
+    const int bct_klo_val = bct_klo(i,j,dom_low.z-1,0);
+    const int bct_khi_val = bct_khi(i,j,dom_high.z+1,0);
+
+    if((k == dom_low.z) and is_equal_to_any(bct_klo_val, bc_types.data(), bc_types.size()))
     {
-      fz(i,j,k,n) = w(i,j,k) * state(i,j,k-1,state_comp+n);
+      fz_val = w_val * state_mns;
     }
-    else if ((k == dom_high.z+1) and
-     ugradu_aux::is_equal_to_any(bct_khi(i,j,dom_high.z+1,0),
-                                 bc_types.data(), bc_types.size()))
+    else if ((k == dom_high.z+1) and is_equal_to_any(bct_khi_val, bc_types.data(), bc_types.size()))
     {
-      fz(i,j,k,n) = w(i,j,k) * state(i,j,k,state_comp+n);
+      fz_val = w_val * state_pls;
     }
     else {
-      const Real state_pls = state(i,j,k  ,state_comp+n) - .5*z_slopes(i,j,k  ,slopes_comp+n);
-      const Real state_mns = state(i,j,k-1,state_comp+n) + .5*z_slopes(i,j,k-1,slopes_comp+n);
-      const Real w_ijk = w(i,j,k);
+      state_pls -= .5*z_slopes_pls;
+      state_mns += .5*z_slopes_mns;
 
-      fz(i,j,k,n) = w_ijk * upwind(state_mns, state_pls, w_ijk);
+      fz_val = w_val * upwind(state_mns, state_pls, w_val);
     }
+
+    fz(i,j,k,n) = fz_val;
   });
 }
 
@@ -363,29 +385,27 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
   // ===================== X =====================
   //
   amrex::ParallelFor(ubx,ncomp,
-    [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_ilo,bct_ihi,bc_types,areafrac_x,fcx_fab,ccc_fab,
-     x_slopes,y_slopes,z_slopes,state,u,sx,fx]
+    [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_ilo,bct_ihi,bc_types,
+     areafrac_x,fcx_fab,ccc_fab,x_slopes,y_slopes,z_slopes,state,u,sx,fx]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
+    const Real u_val = u(i,j,k);
+
+    Real sx_ijkn(0);
+
     if( areafrac_x(i,j,k) > 0 )
     {
       if(i <= dom_low.x and
-        ugradu_aux::is_equal_to_any(bct_ilo(dom_low.x-1,j,k,0),
-                                    bc_types.data(), bc_types.size()))
+        is_equal_to_any(bct_ilo(dom_low.x-1,j,k,0),
+                        bc_types.data(), bc_types.size()))
       {
-        Real sx_ijkn = state(dom_low.x-1,j,k,state_comp+n);
-
-        sx(i,j,k,n) = sx_ijkn;
-        fx(i,j,k,n) = u(i,j,k) * sx_ijkn;
+        sx_ijkn = state(dom_low.x-1,j,k,state_comp+n);
       }
       else if(i >= dom_high.x+1 and
-        ugradu_aux::is_equal_to_any(bct_ihi(dom_high.x+1,j,k,0),
-                                    bc_types.data(), bc_types.size()))
+        is_equal_to_any(bct_ihi(dom_high.x+1,j,k,0),
+                        bc_types.data(), bc_types.size()))
       {
-        Real sx_ijkn = state(dom_high.x+1,j,k,state_comp+n);
-
-        sx(i,j,k,n) = sx_ijkn;
-        fx(i,j,k,n) = u(i,j,k) * sx_ijkn;
+        sx_ijkn = state(dom_high.x+1,j,k,state_comp+n);
       }
       else 
       {
@@ -418,47 +438,41 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
         umns = amrex::max( amrex::min(umns, cc_umax), cc_umin );
 
-        const Real u_ijk = u(i,j,k);
-        const Real sx_ijkn = upwind(umns, upls, u_ijk);
-
-        sx(i,j,k,n) = sx_ijkn;
-        fx(i,j,k,n) = u_ijk * sx_ijkn;
+        sx_ijkn = upwind(umns, upls, u_val);
       }
     }
     else {
-      const Real sx_ijkn = my_huge;
-
-      sx(i,j,k,n) = sx_ijkn;
-      fx(i,j,k,n) = u(i,j,k) * sx_ijkn;
+      sx_ijkn = my_huge;
     }
+
+    sx(i,j,k,n) = sx_ijkn;
+    fx(i,j,k,n) = u_val * sx_ijkn;
   });
 
   //
   // ===================== Y =====================
   //
   amrex::ParallelFor(vbx, ncomp,
-    [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_jlo,bct_jhi,bc_types,areafrac_y,fcy_fab,ccc_fab,
-     x_slopes,y_slopes,z_slopes,state,v,sy,fy]
+    [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_jlo,bct_jhi,bc_types,
+     areafrac_y,fcy_fab,ccc_fab,x_slopes,y_slopes,z_slopes,state,v,sy,fy]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
+    const Real v_val = v(i,j,k);
+
+    Real sy_ijkn(0);
+
     if( areafrac_y(i,j,k) > 0 ) {
       if( j <= dom_low.y and
-       ugradu_aux::is_equal_to_any(bct_jlo(i,dom_low.y-1,k,0),
-                                   bc_types.data(), bc_types.size()))
+       is_equal_to_any(bct_jlo(i,dom_low.y-1,k,0),
+                       bc_types.data(), bc_types.size()))
       {
-        Real sy_ijkn = state(i,dom_low.y-1,k,state_comp+n);
-
-        sy(i,j,k,n) = sy_ijkn;
-        fy(i,j,k,n) = v(i,j,k) * sy_ijkn;
+        sy_ijkn = state(i,dom_low.y-1,k,state_comp+n);
       }
       else if( j >= dom_high.y+1 and
-       ugradu_aux::is_equal_to_any(bct_jhi(i,dom_high.y+1,k,0),
-                                   bc_types.data(), bc_types.size()))
+       is_equal_to_any(bct_jhi(i,dom_high.y+1,k,0),
+                       bc_types.data(), bc_types.size()))
       {
-        Real sy_ijkn = state(i,dom_high.y+1,k,state_comp+n);
-
-        sy(i,j,k,n) = sy_ijkn;
-        fy(i,j,k,n) = v(i,j,k) * sy_ijkn;
+        sy_ijkn = state(i,dom_high.y+1,k,state_comp+n);
       }
       else 
       {
@@ -491,47 +505,41 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
         vmns = amrex::max( amrex::min(vmns, cc_umax), cc_umin );
 
-        const Real v_ijk = v(i,j,k);
-        const Real sy_ijkn = upwind(vmns, vpls, v_ijk);
-
-        sy(i,j,k,n) = sy_ijkn;
-        fy(i,j,k,n) = v_ijk * sy_ijkn;
+        sy_ijkn = upwind(vmns, vpls, v_val);
       }
     }
     else {
-      const Real sy_ijkn = my_huge; 
-
-      sy(i,j,k,n) = sy_ijkn;
-      fy(i,j,k,n) = v(i,j,k) * sy_ijkn;
+      sy_ijkn = my_huge; 
     }                      
+
+    sy(i,j,k,n) = sy_ijkn;
+    fy(i,j,k,n) = v_val * sy_ijkn;
   });                      
                            
   //                       
   // =====================  Z =====================
   //                       
   amrex::ParallelFor(wbx, ncomp,
-    [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_klo,bct_khi,bc_types,areafrac_z,fcz_fab,ccc_fab,
-     x_slopes,y_slopes,z_slopes,state,w,sz,fz]
+    [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_klo,bct_khi,bc_types,
+     areafrac_z,fcz_fab,ccc_fab,x_slopes,y_slopes,z_slopes,state,w,sz,fz]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {                        
+    const Real w_val = w(i,j,k);
+
+    Real sz_ijkn(0);
+
     if( areafrac_z(i,j,k) > 0 ) {
       if( k <= dom_low.z and
-       ugradu_aux::is_equal_to_any(bct_klo(i,j,dom_low.z-1,0),
-                                   bc_types.data(), bc_types.size()))
+       is_equal_to_any(bct_klo(i,j,dom_low.z-1,0),
+                       bc_types.data(), bc_types.size()))
       {                    
-        const Real sz_ijkn = state(i, j,dom_low.z-1,state_comp+n);
-
-        sz(i,j,k,n) = sz_ijkn;
-        fz(i,j,k,n) = w(i,j,k) * sz_ijkn;
+        sz_ijkn = state(i, j,dom_low.z-1,state_comp+n);
       }                    
       else if( k >= dom_high.z+1 and
-       ugradu_aux::is_equal_to_any(bct_khi(i,j,dom_high.z+1,0),
-                                   bc_types.data(), bc_types.size()))
+       is_equal_to_any(bct_khi(i,j,dom_high.z+1,0),
+                       bc_types.data(), bc_types.size()))
       {                    
-        const Real sz_ijkn = state(i, j,dom_high.z+1,state_comp+n);
-
-        sz(i,j,k,n) = sz_ijkn;
-        fz(i,j,k,n) = w(i,j,k) * sz_ijkn;
+        sz_ijkn = state(i, j,dom_high.z+1,state_comp+n);
       }                    
       else                 
       {                    
@@ -564,18 +572,14 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
         wmns = amrex::max( amrex::min(wmns, cc_umax), cc_umin );
 
-        const Real w_ijk = w(i,j,k);
-        const Real sz_ijkn = upwind(wmns, wpls, w_ijk);
-
-        sz(i,j,k,n) = sz_ijkn;
-        fz(i,j,k,n) = w_ijk * sz_ijkn;
+        sz_ijkn = upwind(wmns, wpls, w_val);
       }
     }
     else {
-      const Real sz_ijkn = my_huge;
-
-      sz(i,j,k,n) = sz_ijkn;
-      fz(i,j,k,n) = w(i,j,k) * sz_ijkn;
+      sz_ijkn = my_huge;
     }
+
+    sz(i,j,k,n) = sz_ijkn;
+    fz(i,j,k,n) = w_val * sz_ijkn;
   });
 }
