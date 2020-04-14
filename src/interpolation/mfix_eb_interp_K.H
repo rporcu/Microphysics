@@ -125,7 +125,7 @@ void fe_interp(const amrex::RealVect& pos,
     //  is very close to the EB. We could do the gymnatics to figure out how to
     // interpolate from the few cells available, but we don't. We use the cell
     // containing the particle and ignore the rest.
-    } else if(covered > 4) {
+    } else if(covered > 0) {
 
         // Linear interpolation from cell center to wall.
         const amrex::Real scale = (par_dot_EB / cent_dot_EB);
