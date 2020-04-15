@@ -6,7 +6,6 @@
 #include "mfix_eb_newton_solver_K.H"
 #include "mfix_eb_node_connectivity_K.H"
 
-
 /****************************************************************
  *                                                              *
  *                                                              *
@@ -49,8 +48,6 @@ void fe_interp(const amrex::RealVect& pos,
 
         return;
     }
-
-
 
     amrex::Real par_dot_EB(2.);
     amrex::Real cent_dot_EB(1.);
@@ -139,42 +136,33 @@ void fe_interp(const amrex::RealVect& pos,
 
         amrex::Real scale(1.);
 
-        if(flags(ip,jp,kp).isSingleValued()){
-            scale = (par_dot_EB / cent_dot_EB);
+        for(int kk(-1); kk<1; kk++){
+            for(int jj(-1); jj<1; jj++){
+                for(int ii(-1); ii<1; ii++){
+                    if(flags(i+ii,j+jj,k+kk).isSingleValued()) {
 
-        } else {
+                        // EB normal
+                        const amrex::Real adx = apx(i+ii+1,j+jj  ,k+kk  ) - apx(i+ii,j+jj,k+kk);
+                        const amrex::Real ady = apy(i+ii  ,j+jj+1,k+kk  ) - apy(i+ii,j+jj,k+kk);
+                        const amrex::Real adz = apz(i+ii  ,j+jj  ,k+kk+1) - apz(i+ii,j+jj,k+kk);
+                        const amrex::Real apnorminv = 1. / std::sqrt(adx*adx + ady*ady + adz*adz);
 
-            for(int kk(-1); kk<1; kk++){
-                for(int jj(-1); jj<1; jj++){
-                    for(int ii(-1); ii<1; ii++){
-                        if(flags(i+ii,j+jj,k+kk).isSingleValued()) {
+                        const amrex::RealVect normal = {adx*apnorminv, ady*apnorminv, adz*apnorminv};
 
-                            // EB normal
-                            const amrex::Real adx = apx(i+ii+1,j+jj  ,k+kk  ) - apx(i+ii,j+jj,k+kk);
-                            const amrex::Real ady = apy(i+ii  ,j+jj+1,k+kk  ) - apy(i+ii,j+jj,k+kk);
-                            const amrex::Real adz = apz(i+ii  ,j+jj  ,k+kk+1) - apz(i+ii,j+jj,k+kk);
-                            const amrex::Real apnorminv = 1. / std::sqrt(adx*adx + ady*ady + adz*adz);
+                        // Ratio of distance of particle-to-EB and cell-to-EB
+                        amrex::Real test_scale = ((pos[0] - (i+ii + 0.5 + bcent(i+ii,j+jj,k+kk,0))*dx[0])*normal[0] +
+                                                  (pos[1] - (j+jj + 0.5 + bcent(i+ii,j+jj,k+kk,1))*dx[1])*normal[1] +
+                                                  (pos[2] - (k+kk + 0.5 + bcent(i+ii,j+jj,k+kk,2))*dx[2])*normal[2]) /
+                                                 ((ccent(ip,jp,kp,0) - (di+ii + bcent(i+ii,j+jj,k+kk,0)))*dx[0]*normal[0] +
+                                                  (ccent(ip,jp,kp,1) - (dj+jj + bcent(i+ii,j+jj,k+kk,1)))*dx[1]*normal[1] +
+                                                  (ccent(ip,jp,kp,2) - (dk+kk + bcent(i+ii,j+jj,k+kk,2)))*dx[2]*normal[2]);
 
-                            const amrex::RealVect normal = {adx*apnorminv, ady*apnorminv, adz*apnorminv};
+                        // Save the shortest positive distance.
+                        scale = (test_scale > 0.) ? amrex::min(scale,test_scale) : scale;
 
-                            // Ratio of distance of particle-to-EB and cell-to-EB
-                            amrex::Real test_scale = ((pos[0] - (i+ii + 0.5 + bcent(i+ii,j+jj,k+kk,0))*dx[0])*normal[0] +
-                                                      (pos[1] - (j+jj + 0.5 + bcent(i+ii,j+jj,k+kk,1))*dx[1])*normal[1] +
-                                                      (pos[2] - (k+kk + 0.5 + bcent(i+ii,j+jj,k+kk,2))*dx[2])*normal[2]) /
-                                                     ((ccent(ip,jp,kp,0) - (di+ii + bcent(i+ii,j+jj,k+kk,0)))*dx[0]*normal[0] +
-                                                      (ccent(ip,jp,kp,1) - (dj+jj + bcent(i+ii,j+jj,k+kk,1)))*dx[1]*normal[1] +
-                                                      (ccent(ip,jp,kp,2) - (dk+kk + bcent(i+ii,j+jj,k+kk,2)))*dx[2]*normal[2]);
-
-                            // Save the shortest positive distance.
-                            scale = (test_scale > 0.) ? amrex::min(scale,test_scale) : scale;
-
-                        }
                     }
                 }
             }
-
-            //amrex::PrintToFile(myfile, Print::AllProcs) <<"Scale to use " << scale << std::endl;
-
         }
 
         // 1D interpolation from cell center to wall.
