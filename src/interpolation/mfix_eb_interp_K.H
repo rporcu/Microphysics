@@ -6,6 +6,7 @@
 #include "mfix_eb_newton_solver_K.H"
 #include "mfix_eb_node_connectivity_K.H"
 
+
 /****************************************************************
  *                                                              *
  *                                                              *
@@ -30,6 +31,27 @@ void fe_interp(const amrex::RealVect& pos,
 
     const amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
 
+    // Distance between particle and cell centoid.
+    const amrex::Real cdist = std::sqrt(
+        std::pow((pos[0] - (ip + 0.5 + ccent(ip,jp,kp,0))*dx[0]),2)+
+        std::pow((pos[1] - (jp + 0.5 + ccent(ip,jp,kp,1))*dx[1]),2)+
+        std::pow((pos[2] - (kp + 0.5 + ccent(ip,jp,kp,2))*dx[2]),2));
+
+    // Before doing anything fance, just check that the particle isn't overlapping
+    // the cell center. If it is, use the cell value.
+    if(cdist < tolerance){
+
+        interp_vals[0] = interp_array(ip,jp,kp,0);
+        interp_vals[1] = interp_array(ip,jp,kp,1);
+        interp_vals[2] = interp_array(ip,jp,kp,2);
+        for(int n=3; n<ncomp; n++)
+            interp_vals[n] = interp_array(ip,jp,kp,n);
+
+        return;
+    }
+
+
+
     amrex::Real par_dot_EB(2.);
     amrex::Real cent_dot_EB(1.);
 
@@ -44,7 +66,7 @@ void fe_interp(const amrex::RealVect& pos,
         const Real apnorm = std::sqrt(adx*adx + ady*ady + adz*adz);
 
         // Temporary sanity check.
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE( apnorm > std::numeric_limits<amrex::Real>::epsilon(),
+        AMREX_ASSERT_WITH_MESSAGE( apnorm > std::numeric_limits<amrex::Real>::epsilon(),
             "Invalid EB normal. Not sure how to interpolate!");
 
         // EB normal
@@ -62,7 +84,7 @@ void fe_interp(const amrex::RealVect& pos,
                       (ccent(ip,jp,kp,2) - bcent(ip,jp,kp,2))*dx[2]*normal[2];
 
         // Temporary sanity check
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE( cent_dot_EB > tolerance,
+        AMREX_ASSERT_WITH_MESSAGE( cent_dot_EB > tolerance,
             "cent_dot_EB < tolerance ... this makes no sense!");
 
 
@@ -107,32 +129,60 @@ void fe_interp(const amrex::RealVect& pos,
             interp_vals[n] = interp_array(ip,jp,kp,n);
         }
 
-    // The particle is between the centroid and wall. This leads to some really
-    // odd configurations that can mess up interpolation. For now -- linearly
-    // interpolate to the EB.
-    } else if( flags(ip,jp,kp).isSingleValued() and (par_dot_EB < cent_dot_EB)){
+    // The particle is near the EB. It is either
+    // 1) between the cell centroid and the EB, or
+    // 2) one or more cells in the 2^3 stencil is covered.
+    // Either way, interpolating to the particle is not straight forward so
+    // (for now) we do a 1D interpolation to the EB.
 
-        // Linear interpolation from cell center to wall.
-        const amrex::Real scale = (par_dot_EB / cent_dot_EB);
+    } else if((covered > 0) or (par_dot_EB < cent_dot_EB)){
+
+        amrex::Real scale(1.);
+
+        if(flags(ip,jp,kp).isSingleValued()){
+            scale = (par_dot_EB / cent_dot_EB);
+
+        } else {
+
+            for(int kk(-1); kk<1; kk++){
+                for(int jj(-1); jj<1; jj++){
+                    for(int ii(-1); ii<1; ii++){
+                        if(flags(i+ii,j+jj,k+kk).isSingleValued()) {
+
+                            // EB normal
+                            const amrex::Real adx = apx(i+ii+1,j+jj  ,k+kk  ) - apx(i+ii,j+jj,k+kk);
+                            const amrex::Real ady = apy(i+ii  ,j+jj+1,k+kk  ) - apy(i+ii,j+jj,k+kk);
+                            const amrex::Real adz = apz(i+ii  ,j+jj  ,k+kk+1) - apz(i+ii,j+jj,k+kk);
+                            const amrex::Real apnorminv = 1. / std::sqrt(adx*adx + ady*ady + adz*adz);
+
+                            const amrex::RealVect normal = {adx*apnorminv, ady*apnorminv, adz*apnorminv};
+
+                            // Ratio of distance of particle-to-EB and cell-to-EB
+                            amrex::Real test_scale = ((pos[0] - (i+ii + 0.5 + bcent(i+ii,j+jj,k+kk,0))*dx[0])*normal[0] +
+                                                      (pos[1] - (j+jj + 0.5 + bcent(i+ii,j+jj,k+kk,1))*dx[1])*normal[1] +
+                                                      (pos[2] - (k+kk + 0.5 + bcent(i+ii,j+jj,k+kk,2))*dx[2])*normal[2]) /
+                                                     ((ccent(ip,jp,kp,0) - (di+ii + bcent(i+ii,j+jj,k+kk,0)))*dx[0]*normal[0] +
+                                                      (ccent(ip,jp,kp,1) - (dj+jj + bcent(i+ii,j+jj,k+kk,1)))*dx[1]*normal[1] +
+                                                      (ccent(ip,jp,kp,2) - (dk+kk + bcent(i+ii,j+jj,k+kk,2)))*dx[2]*normal[2]);
+
+                            // Save the shortest positive distance.
+                            scale = (test_scale > 0.) ? amrex::min(scale,test_scale) : scale;
+
+                        }
+                    }
+                }
+            }
+
+            //amrex::PrintToFile(myfile, Print::AllProcs) <<"Scale to use " << scale << std::endl;
+
+        }
+
+        // 1D interpolation from cell center to wall.
 
         interp_vals[0] = scale*interp_array(ip,jp,kp,0);
         interp_vals[1] = scale*interp_array(ip,jp,kp,1);
         interp_vals[2] = scale*interp_array(ip,jp,kp,2);
-        for(int n=3; n<ncomp; n++)
-            interp_vals[n] = interp_array(ip,jp,kp,n);
 
-    // Four or more cells in the 2^3 stencil are covered implying that the particle
-    //  is very close to the EB. We could do the gymnatics to figure out how to
-    // interpolate from the few cells available, but we don't. We use the cell
-    // containing the particle and ignore the rest.
-    } else if(covered > 0) {
-
-        // Linear interpolation from cell center to wall.
-        const amrex::Real scale = (par_dot_EB / cent_dot_EB);
-
-        interp_vals[0] = scale*interp_array(ip,jp,kp,0);
-        interp_vals[1] = scale*interp_array(ip,jp,kp,1);
-        interp_vals[2] = scale*interp_array(ip,jp,kp,2);
         for(int n=3; n<ncomp; n++)
             interp_vals[n] = interp_array(ip,jp,kp,n);
 
@@ -154,328 +204,102 @@ void fe_interp(const amrex::RealVect& pos,
         const amrex::IntVect Node6 = {i  ,j  ,k  };
         const amrex::IntVect Node7 = {i-1,j  ,k  };
 
-        // Connectedness is relative to the cell containing the particle
-        const int Node0_isNotConnected = (not flags(ip,jp,kp).isConnected(di-1,dj-1,dk-1));
-        const int Node1_isNotConnected = (not flags(ip,jp,kp).isConnected(di  ,dj-1,dk-1));
-        const int Node2_isNotConnected = (not flags(ip,jp,kp).isConnected(di  ,dj  ,dk-1));
-        const int Node3_isNotConnected = (not flags(ip,jp,kp).isConnected(di-1,dj  ,dk-1));
-        const int Node4_isNotConnected = (not flags(ip,jp,kp).isConnected(di-1,dj-1,dk  ));
-        const int Node5_isNotConnected = (not flags(ip,jp,kp).isConnected(di  ,dj-1,dk  ));
-        const int Node6_isNotConnected = (not flags(ip,jp,kp).isConnected(di  ,dj  ,dk  ));
-        const int Node7_isNotConnected = (not flags(ip,jp,kp).isConnected(di-1,dj  ,dk  ));
-
-
         /*---------------------------------------------------------------------------------*
         *                                                                                  *
         *                                    NODE 0                                        *
         *                                                                                  *
         *----------------------------------------------------------------------------------*/
-        if(Node0_isNotConnected) {
-            //amrex::Print() << std::endl << "Node 0 is not connected." << std::endl;
-            amrex::IntVect NodeEB = Node0_EB(covered,
-                                            Node0, Node0_isNotConnected,
-                                            Node1, Node1_isNotConnected,
-                                            Node2, Node2_isNotConnected,
-                                            Node3, Node3_isNotConnected,
-                                            Node4, Node4_isNotConnected,
-                                            Node5, Node5_isNotConnected,
-                                            Node6, Node6_isNotConnected,
-                                            Node7, Node7_isNotConnected);
+        nodes[0][0] = (Node0[0] + 0.5 + ccent(Node0,0))*dx[0];
+        nodes[0][1] = (Node0[1] + 0.5 + ccent(Node0,1))*dx[1];
+        nodes[0][2] = (Node0[2] + 0.5 + ccent(Node0,2))*dx[2];
 
-
-            nodes[0][0] = (NodeEB[0] + 0.5 + bcent(NodeEB,0))*dx[0];
-            nodes[0][1] = (NodeEB[1] + 0.5 + bcent(NodeEB,1))*dx[1];
-            nodes[0][2] = (NodeEB[2] + 0.5 + bcent(NodeEB,2))*dx[2];
-
-            values[0][0] = 0.;
-            values[0][1] = 0.;
-            values[0][2] = 0.;
-
-            for(int n=3; n<ncomp; n++)
-                values[0][n] = interp_array(NodeEB,n);
-
-        } else {
-
-            nodes[0][0] = (Node0[0] + 0.5 + ccent(Node0,0))*dx[0];
-            nodes[0][1] = (Node0[1] + 0.5 + ccent(Node0,1))*dx[1];
-            nodes[0][2] = (Node0[2] + 0.5 + ccent(Node0,2))*dx[2];
-
-            for(int n=0; n<ncomp; n++)
-                values[0][n] = interp_array(Node0,n);
-
-
-        }
+        for(int n=0; n<ncomp; n++)
+            values[0][n] = interp_array(Node0,n);
 
         /*---------------------------------------------------------------------------------*
         *                                                                                  *
         *                                    NODE 1                                        *
         *                                                                                  *
         *----------------------------------------------------------------------------------*/
-        if(Node1_isNotConnected) {
-            //amrex::Print() << std::endl << "Node is not connected." << std::endl;
-            amrex::IntVect NodeEB = Node1_EB(covered,
-                                            Node0, Node0_isNotConnected,
-                                            Node1, Node1_isNotConnected,
-                                            Node2, Node2_isNotConnected,
-                                            Node3, Node3_isNotConnected,
-                                            Node4, Node4_isNotConnected,
-                                            Node5, Node5_isNotConnected,
-                                            Node6, Node6_isNotConnected,
-                                            Node7, Node7_isNotConnected);
+        nodes[1][0] = (Node1[0] + 0.5 + ccent(Node1,0))*dx[0];
+        nodes[1][1] = (Node1[1] + 0.5 + ccent(Node1,1))*dx[1];
+        nodes[1][2] = (Node1[2] + 0.5 + ccent(Node1,2))*dx[2];
 
-            nodes[1][0] = (NodeEB[0] + 0.5 + bcent(NodeEB,0))*dx[0];
-            nodes[1][1] = (NodeEB[1] + 0.5 + bcent(NodeEB,1))*dx[1];
-            nodes[1][2] = (NodeEB[2] + 0.5 + bcent(NodeEB,2))*dx[2];
-
-            values[1][0] = 0.;
-            values[1][1] = 0.;
-            values[1][2] = 0.;
-
-            for(int n=3; n<ncomp; n++)
-                values[1][n] = interp_array(NodeEB,n);
-
-        } else {
-
-            nodes[1][0] = (Node1[0] + 0.5 + ccent(Node1,0))*dx[0];
-            nodes[1][1] = (Node1[1] + 0.5 + ccent(Node1,1))*dx[1];
-            nodes[1][2] = (Node1[2] + 0.5 + ccent(Node1,2))*dx[2];
-
-            for(int n=0; n<ncomp; n++)
-                values[1][n] = interp_array(Node1,n);
-
-        }
+        for(int n=0; n<ncomp; n++)
+            values[1][n] = interp_array(Node1,n);
 
         /*---------------------------------------------------------------------------------*
         *                                                                                  *
         *                                    NODE 2                                        *
         *                                                                                  *
         *----------------------------------------------------------------------------------*/
-        if(Node2_isNotConnected) {
-            //amrex::Print() << std::endl << "Node 2 is not connected." << std::endl;
-            amrex::IntVect NodeEB = Node2_EB(covered,
-                                            Node0, Node0_isNotConnected,
-                                            Node1, Node1_isNotConnected,
-                                            Node2, Node2_isNotConnected,
-                                            Node3, Node3_isNotConnected,
-                                            Node4, Node4_isNotConnected,
-                                            Node5, Node5_isNotConnected,
-                                            Node6, Node6_isNotConnected,
-                                            Node7, Node7_isNotConnected);
+        nodes[2][0] = (Node2[0] + 0.5 + ccent(Node2,0))*dx[0];
+        nodes[2][1] = (Node2[1] + 0.5 + ccent(Node2,1))*dx[1];
+        nodes[2][2] = (Node2[2] + 0.5 + ccent(Node2,2))*dx[2];
 
-            nodes[2][0] = (NodeEB[0] + 0.5 + bcent(NodeEB,0))*dx[0];
-            nodes[2][1] = (NodeEB[1] + 0.5 + bcent(NodeEB,1))*dx[1];
-            nodes[2][2] = (NodeEB[2] + 0.5 + bcent(NodeEB,2))*dx[2];
-
-            values[2][0] = 0.;
-            values[2][1] = 0.;
-            values[2][2] = 0.;
-
-            for(int n=3; n<ncomp; n++)
-                values[2][n] = interp_array(NodeEB,n);
-
-        } else {
-
-            nodes[2][0] = (Node2[0] + 0.5 + ccent(Node2,0))*dx[0];
-            nodes[2][1] = (Node2[1] + 0.5 + ccent(Node2,1))*dx[1];
-            nodes[2][2] = (Node2[2] + 0.5 + ccent(Node2,2))*dx[2];
-
-            for(int n=0; n<ncomp; n++)
-                values[2][n] = interp_array(Node2,n);
-
-        }
+        for(int n=0; n<ncomp; n++)
+            values[2][n] = interp_array(Node2,n);
 
         /*---------------------------------------------------------------------------------*
         *                                                                                  *
         *                                    NODE 3                                        *
         *                                                                                  *
         *----------------------------------------------------------------------------------*/
-        if(Node3_isNotConnected) {
-            //amrex::Print() << std::endl << "Node 3 is not connected." << std::endl;
-            amrex::IntVect NodeEB = Node3_EB(covered,
-                                            Node0, Node0_isNotConnected,
-                                            Node1, Node1_isNotConnected,
-                                            Node2, Node2_isNotConnected,
-                                            Node3, Node3_isNotConnected,
-                                            Node4, Node4_isNotConnected,
-                                            Node5, Node5_isNotConnected,
-                                            Node6, Node6_isNotConnected,
-                                            Node7, Node7_isNotConnected);
+        nodes[3][0] = (Node3[0] + 0.5 + ccent(Node3,0))*dx[0];
+        nodes[3][1] = (Node3[1] + 0.5 + ccent(Node3,1))*dx[1];
+        nodes[3][2] = (Node3[2] + 0.5 + ccent(Node3,2))*dx[2];
 
-            nodes[3][0] = (NodeEB[0] + 0.5 + bcent(NodeEB,0))*dx[0];
-            nodes[3][1] = (NodeEB[1] + 0.5 + bcent(NodeEB,1))*dx[1];
-            nodes[3][2] = (NodeEB[2] + 0.5 + bcent(NodeEB,2))*dx[2];
-
-            values[3][0] = 0.;
-            values[3][1] = 0.;
-            values[3][2] = 0.;
-
-            for(int n=3; n<ncomp; n++)
-                values[3][n] = interp_array(NodeEB,n);
-
-            } else {
-
-            nodes[3][0] = (Node3[0] + 0.5 + ccent(Node3,0))*dx[0];
-            nodes[3][1] = (Node3[1] + 0.5 + ccent(Node3,1))*dx[1];
-            nodes[3][2] = (Node3[2] + 0.5 + ccent(Node3,2))*dx[2];
-
-            for(int n=0; n<ncomp; n++)
-                values[3][n] = interp_array(Node3,n);
-        }
+        for(int n=0; n<ncomp; n++)
+            values[3][n] = interp_array(Node3,n);
 
         /*---------------------------------------------------------------------------------*
         *                                                                                  *
         *                                    NODE 4                                        *
         *                                                                                  *
         *----------------------------------------------------------------------------------*/
-        if(Node4_isNotConnected) {
-            //amrex::Print() << std::endl << "Node 4 is not connected." << std::endl;
-            amrex::IntVect NodeEB = Node4_EB(covered,
-                                            Node0, Node0_isNotConnected,
-                                            Node1, Node1_isNotConnected,
-                                            Node2, Node2_isNotConnected,
-                                            Node3, Node3_isNotConnected,
-                                            Node4, Node4_isNotConnected,
-                                            Node5, Node5_isNotConnected,
-                                            Node6, Node6_isNotConnected,
-                                            Node7, Node7_isNotConnected);
+        nodes[4][0] = (Node4[0] + 0.5 + ccent(Node4,0))*dx[0];
+        nodes[4][1] = (Node4[1] + 0.5 + ccent(Node4,1))*dx[1];
+        nodes[4][2] = (Node4[2] + 0.5 + ccent(Node4,2))*dx[2];
 
-            nodes[4][0] = (NodeEB[0] + 0.5 + bcent(NodeEB,0))*dx[0];
-            nodes[4][1] = (NodeEB[1] + 0.5 + bcent(NodeEB,1))*dx[1];
-            nodes[4][2] = (NodeEB[2] + 0.5 + bcent(NodeEB,2))*dx[2];
-
-            values[4][0] = 0.;
-            values[4][1] = 0.;
-            values[4][2] = 0.;
-
-            for(int n=3; n<ncomp; n++)
-                values[4][n] = interp_array(NodeEB,n);
-
-        } else {
-
-            nodes[4][0] = (Node4[0] + 0.5 + ccent(Node4,0))*dx[0];
-            nodes[4][1] = (Node4[1] + 0.5 + ccent(Node4,1))*dx[1];
-            nodes[4][2] = (Node4[2] + 0.5 + ccent(Node4,2))*dx[2];
-
-            for(int n=0; n<ncomp; n++)
-                values[4][n] = interp_array(Node4,n);
-
-        }
+        for(int n=0; n<ncomp; n++)
+            values[4][n] = interp_array(Node4,n);
 
         /*---------------------------------------------------------------------------------*
         *                                                                                  *
         *                                    NODE 5                                        *
         *                                                                                  *
         *----------------------------------------------------------------------------------*/
-        if(Node5_isNotConnected) {
-            //amrex::Print() << std::endl << "Node 5 is not connected." << std::endl;
-            amrex::IntVect NodeEB = Node5_EB(covered,
-                                            Node0, Node0_isNotConnected,
-                                            Node1, Node1_isNotConnected,
-                                            Node2, Node2_isNotConnected,
-                                            Node3, Node3_isNotConnected,
-                                            Node4, Node4_isNotConnected,
-                                            Node5, Node5_isNotConnected,
-                                            Node6, Node6_isNotConnected,
-                                            Node7, Node7_isNotConnected);
+        nodes[5][0] = (Node5[0] + 0.5 + ccent(Node5,0))*dx[0];
+        nodes[5][1] = (Node5[1] + 0.5 + ccent(Node5,1))*dx[1];
+        nodes[5][2] = (Node5[2] + 0.5 + ccent(Node5,2))*dx[2];
 
-            nodes[5][0] = (NodeEB[0] + 0.5 + bcent(NodeEB,0))*dx[0];
-            nodes[5][1] = (NodeEB[1] + 0.5 + bcent(NodeEB,1))*dx[1];
-            nodes[5][2] = (NodeEB[2] + 0.5 + bcent(NodeEB,2))*dx[2];
-
-            values[5][0] = 0.;
-            values[5][1] = 0.;
-            values[5][2] = 0.;
-
-            for(int n=3; n<ncomp; n++)
-                values[5][n] = interp_array(NodeEB,n);
-
-        } else {
-
-            nodes[5][0] = (Node5[0] + 0.5 + ccent(Node5,0))*dx[0];
-            nodes[5][1] = (Node5[1] + 0.5 + ccent(Node5,1))*dx[1];
-            nodes[5][2] = (Node5[2] + 0.5 + ccent(Node5,2))*dx[2];
-
-            for(int n=0; n<ncomp; n++)
-                values[5][n] = interp_array(Node5,n);
-        }
+        for(int n=0; n<ncomp; n++)
+            values[5][n] = interp_array(Node5,n);
 
         /*---------------------------------------------------------------------------------*
         *                                                                                  *
         *                                    NODE 6                                        *
         *                                                                                  *
         *----------------------------------------------------------------------------------*/
-        if(Node6_isNotConnected) {
-            //amrex::Print() << std::endl << "Node 6 is not connected." << std::endl;
-            amrex::IntVect NodeEB = Node6_EB(covered,
-                                            Node0, Node0_isNotConnected,
-                                            Node1, Node1_isNotConnected,
-                                            Node2, Node2_isNotConnected,
-                                            Node3, Node3_isNotConnected,
-                                            Node4, Node4_isNotConnected,
-                                            Node5, Node5_isNotConnected,
-                                            Node6, Node6_isNotConnected,
-                                            Node7, Node7_isNotConnected);
+        nodes[6][0] = (Node6[0] + 0.5 + ccent(Node6,0))*dx[0];
+        nodes[6][1] = (Node6[1] + 0.5 + ccent(Node6,1))*dx[1];
+        nodes[6][2] = (Node6[2] + 0.5 + ccent(Node6,2))*dx[2];
 
-            nodes[6][0] = (NodeEB[0] + 0.5 + bcent(NodeEB,0))*dx[0];
-            nodes[6][1] = (NodeEB[1] + 0.5 + bcent(NodeEB,1))*dx[1];
-            nodes[6][2] = (NodeEB[2] + 0.5 + bcent(NodeEB,2))*dx[2];
-
-            values[6][0] = 0.;
-            values[6][1] = 0.;
-            values[6][2] = 0.;
-
-            for(int n=3; n<ncomp; n++)
-                values[6][n] = interp_array(NodeEB,n);
-
-        } else {
-
-            nodes[6][0] = (Node6[0] + 0.5 + ccent(Node6,0))*dx[0];
-            nodes[6][1] = (Node6[1] + 0.5 + ccent(Node6,1))*dx[1];
-            nodes[6][2] = (Node6[2] + 0.5 + ccent(Node6,2))*dx[2];
-
-            for(int n=0; n<ncomp; n++)
-                values[6][n] = interp_array(Node6,n);
-
-        }
+        for(int n=0; n<ncomp; n++)
+            values[6][n] = interp_array(Node6,n);
 
         /*---------------------------------------------------------------------------------*
         *                                                                                  *
         *                                    NODE 7                                        *
         *                                                                                  *
         *----------------------------------------------------------------------------------*/
-        if(Node7_isNotConnected) {
-            //amrex::Print() << std::endl << "Node 7 is not connected." << std::endl;
-            amrex::IntVect NodeEB = Node7_EB(covered,
-                                            Node0, Node0_isNotConnected,
-                                            Node1, Node1_isNotConnected,
-                                            Node2, Node2_isNotConnected,
-                                            Node3, Node3_isNotConnected,
-                                            Node4, Node4_isNotConnected,
-                                            Node5, Node5_isNotConnected,
-                                            Node6, Node6_isNotConnected,
-                                            Node7, Node7_isNotConnected);
+        nodes[7][0] = (Node7[0] + 0.5 + ccent(Node7,0))*dx[0];
+        nodes[7][1] = (Node7[1] + 0.5 + ccent(Node7,1))*dx[1];
+        nodes[7][2] = (Node7[2] + 0.5 + ccent(Node7,2))*dx[2];
 
-            nodes[7][0] = (NodeEB[0] + 0.5 + bcent(NodeEB,0))*dx[0];
-            nodes[7][1] = (NodeEB[1] + 0.5 + bcent(NodeEB,1))*dx[1];
-            nodes[7][2] = (NodeEB[2] + 0.5 + bcent(NodeEB,2))*dx[2];
+        for(int n=0; n<ncomp; n++)
+            values[7][n] = interp_array(Node7,n);
 
-            values[7][0] = 0.;
-            values[7][1] = 0.;
-            values[7][2] = 0.;
-
-            for(int n=3; n<ncomp; n++)
-                values[7][n] = interp_array(NodeEB,n);
-
-        } else {
-
-            nodes[7][0] = (Node7[0] + 0.5 + ccent(Node7,0))*dx[0];
-            nodes[7][1] = (Node7[1] + 0.5 + ccent(Node7,1))*dx[1];
-            nodes[7][2] = (Node7[2] + 0.5 + ccent(Node7,2))*dx[2];
-
-            for(int n=0; n<ncomp; n++)
-                values[7][n] = interp_array(Node7,n);
-
-        }
 
         amrex::Real xi;
         amrex::Real eta;
@@ -487,7 +311,7 @@ void fe_interp(const amrex::RealVect& pos,
         const amrex::Real ubnd =  1.5;
 
 // DEBUG START /////////////////////////////////////////////////////////////////
-#if 1 && (!defined AMREX_USE_CUDA)
+#if 0 && (!defined AMREX_USE_CUDA)
         if((xi < lbnd or xi > ubnd) or (eta < lbnd or eta > ubnd) or (zeta < lbnd or zeta > ubnd)) {
 
             const std::string& myfile = "mapping";
@@ -554,6 +378,17 @@ void fe_interp(const amrex::RealVect& pos,
            amrex::PrintToFile(myfile, Print::AllProcs) << std::endl
                 << "particle loc  dot boundary centroid:  " << par_dot_EB << std::endl
                 << "cell centroid dot boundary centroid:  " << cent_dot_EB << std::endl;
+
+            // Connectedness is relative to the cell containing the particle
+            const int Node0_isNotConnected = (not flags(ip,jp,kp).isConnected(di-1,dj-1,dk-1));
+            const int Node1_isNotConnected = (not flags(ip,jp,kp).isConnected(di  ,dj-1,dk-1));
+            const int Node2_isNotConnected = (not flags(ip,jp,kp).isConnected(di  ,dj  ,dk-1));
+            const int Node3_isNotConnected = (not flags(ip,jp,kp).isConnected(di-1,dj  ,dk-1));
+            const int Node4_isNotConnected = (not flags(ip,jp,kp).isConnected(di-1,dj-1,dk  ));
+            const int Node5_isNotConnected = (not flags(ip,jp,kp).isConnected(di  ,dj-1,dk  ));
+            const int Node6_isNotConnected = (not flags(ip,jp,kp).isConnected(di  ,dj  ,dk  ));
+            const int Node7_isNotConnected = (not flags(ip,jp,kp).isConnected(di-1,dj  ,dk  ));
+
 
             // The centroid sits closer to the boundary than the EB.
             if(par_dot_EB > cent_dot_EB){
@@ -646,8 +481,8 @@ void fe_interp(const amrex::RealVect& pos,
             amrex::PrintToFile(myfile, Print::AllProcs) << "Node is covered?  "  << flags(Node1).isCovered() << std::endl;
             amrex::PrintToFile(myfile, Print::AllProcs) << "Cell Centroids:   "
                             << (Node1[0] + 0.5 + ccent(Node1,0))*dx[0] << " "
-                            << (Node1[0] + 0.5 + ccent(Node1,1))*dx[1] << " "
-                            << (Node1[0] + 0.5 + ccent(Node1,2))*dx[2] << std::endl;
+                            << (Node1[1] + 0.5 + ccent(Node1,1))*dx[1] << " "
+                            << (Node1[2] + 0.5 + ccent(Node1,2))*dx[2] << std::endl;
             if(flags(Node1).isSingleValued()){
                 amrex::PrintToFile(myfile, Print::AllProcs) << "Bndry Centroids:  "
                             << (Node1[0] + 0.5 + bcent(Node1,0))*dx[0] << " "
@@ -768,11 +603,11 @@ void fe_interp(const amrex::RealVect& pos,
 #endif
 // DEBUG END   ////////////////////////////////////////////////////////////////
 
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE( lbnd <= xi  &&  xi   <= ubnd,
+        AMREX_ASSERT_WITH_MESSAGE( lbnd <= xi  &&  xi   <= ubnd,
             "Invalid interpolation: xi out of range!");
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE( lbnd <= eta &&  eta  <= ubnd,
+        AMREX_ASSERT_WITH_MESSAGE( lbnd <= eta &&  eta  <= ubnd,
             "Invalid interpolation: eta out of range!");
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE( lbnd <= zeta && zeta <= ubnd,
+        AMREX_ASSERT_WITH_MESSAGE( lbnd <= zeta && zeta <= ubnd,
             "Invalid interpolation: zeta out of range!");
 
         for(int n=0; n < ncomp; n++) {
