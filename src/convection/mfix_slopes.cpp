@@ -581,7 +581,7 @@ mfix::mfix_compute_slopes (int lev,
              Box bx_x_hi(IntVect(domain.bigEnd(0), bx.smallEnd(1), bx.smallEnd(2)),
                          IntVect(domain.bigEnd(0), bx.bigEnd(1), bx.bigEnd(2)));
 
-             amrex::ParallelFor(bx, ncomp,
+             amrex::ParallelFor(bx_x_hi, ncomp,
                [domain,flag_fab,ihi_ifab,state_fab,xs_fab,minf,slopes_comp]
                AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                {
