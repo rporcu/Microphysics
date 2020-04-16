@@ -30,11 +30,13 @@ void fe_interp(const amrex::RealVect& pos,
 
     const amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
 
+    const amrex::Real cdist_x = pos[0] - (ip + 0.5 + ccent(ip,jp,kp,0))*dx[0];
+    const amrex::Real cdist_y = pos[1] - (jp + 0.5 + ccent(ip,jp,kp,1))*dx[1];
+    const amrex::Real cdist_z = pos[2] - (kp + 0.5 + ccent(ip,jp,kp,2))*dx[2];
+
     // Distance between particle and cell centoid.
-    const amrex::Real cdist = std::sqrt(
-        std::pow((pos[0] - (ip + 0.5 + ccent(ip,jp,kp,0))*dx[0]),2)+
-        std::pow((pos[1] - (jp + 0.5 + ccent(ip,jp,kp,1))*dx[1]),2)+
-        std::pow((pos[2] - (kp + 0.5 + ccent(ip,jp,kp,2))*dx[2]),2));
+    const amrex::Real cdist =
+      std::sqrt(cdist_x*cdist_x + cdist_y*cdist_y + cdist_z*cdist_z);
 
     // Before doing anything fance, just check that the particle isn't overlapping
     // the cell center. If it is, use the cell value.
