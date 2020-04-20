@@ -64,9 +64,11 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
     ro_face[lev][1] = new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]);
     ro_face[lev][2] = new MultiFab(ep_w_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]);
 
-    // Define ep and rho on faces
+    // Define ep and rho on face centroids (using interpolation from cell centroids)
+    // The only use of bcs in this call is to test on whether a domain boundary is ext_dir
     average_cellcenter_to_face(ep_face[lev], *ep_in[lev], geom[lev]);
-    average_cellcenter_to_face(ro_face[lev], *ro_in[lev], geom[lev]);
+    EB_interp_CellCentroid_to_FaceCentroid (*ro_in[lev], ro_face[lev], 0, 0, 1, geom[lev], bcs_s);
+    // EB_interp_CellCentroid_to_FaceCentroid (*ep_in[lev], ep_face[lev], 0, 0, 1, geom[lev], bcs_s);
 
     // Compute ep_face into bcoeff
     MultiFab::Copy(*bcoeff[lev][0], *(ep_face[lev][0]), 0, 0, 1, 0);
