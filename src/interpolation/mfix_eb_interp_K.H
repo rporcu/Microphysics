@@ -297,8 +297,8 @@ void fe_interp(const amrex::RealVect& pos,
 
         get_interp_mapping(pos, nodes, dxi, xi, eta, zeta);
 
-        const amrex::Real lbnd = -0.5;
-        const amrex::Real ubnd =  1.5;
+        //const amrex::Real lbnd = -0.5;
+        //const amrex::Real ubnd =  1.5;
 
 // DEBUG START /////////////////////////////////////////////////////////////////
 #if 0 && (!defined AMREX_USE_CUDA)
