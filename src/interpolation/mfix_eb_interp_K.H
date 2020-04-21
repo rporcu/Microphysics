@@ -297,11 +297,11 @@ void fe_interp(const amrex::RealVect& pos,
 
         get_interp_mapping(pos, nodes, dxi, xi, eta, zeta);
 
-        //const amrex::Real lbnd = -0.5;
-        //const amrex::Real ubnd =  1.5;
-
 // DEBUG START /////////////////////////////////////////////////////////////////
 #if 0 && (!defined AMREX_USE_CUDA)
+        const amrex::Real lbnd = -0.5;
+        const amrex::Real ubnd =  1.5;
+
         if((xi < lbnd or xi > ubnd) or (eta < lbnd or eta > ubnd) or (zeta < lbnd or zeta > ubnd)) {
 
             const std::string& myfile = "mapping";
@@ -590,15 +590,14 @@ void fe_interp(const amrex::RealVect& pos,
 
         }
 
-#endif
-// DEBUG END   ////////////////////////////////////////////////////////////////
-
         AMREX_ASSERT_WITH_MESSAGE( lbnd <= xi  &&  xi   <= ubnd,
             "Invalid interpolation: xi out of range!");
         AMREX_ASSERT_WITH_MESSAGE( lbnd <= eta &&  eta  <= ubnd,
             "Invalid interpolation: eta out of range!");
         AMREX_ASSERT_WITH_MESSAGE( lbnd <= zeta && zeta <= ubnd,
             "Invalid interpolation: zeta out of range!");
+#endif
+// DEBUG END   ////////////////////////////////////////////////////////////////
 
         for(int n=0; n < ncomp; n++) {
             interp_vals[n] = (1 - xi - eta - zeta + xi*eta + xi*zeta + eta*zeta - xi*eta*zeta) * values[0][n]
