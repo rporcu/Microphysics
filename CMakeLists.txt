@@ -29,6 +29,7 @@ set(USE_CCACHE "")
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
   set( CMAKE_CXX_COMPILER_LAUNCHER ccache )
+  set( CMAKE_CUDA_COMPILER_LAUNCHER ccache )
 endif()
 
 # We want to offer the user some core options, i.e. MPI, OpenMP, CUDA, HYPRE
