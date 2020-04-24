@@ -1,12 +1,37 @@
+#ifndef AMREX_USE_CUDA
+
 #include <mfix.H>
 #include <param_mod_F.H>
 
-namespace {
+namespace aux {
+
+struct is_equal {
+  AMREX_GPU_HOST_DEVICE
+  is_equal () {}
+
+  template <class T>
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  bool operator() (const T& x, const T& y) const {return x == y;}
+};
+
+template <class Operator> bool
+AMREX_GPU_HOST_DEVICE
+AMREX_FORCE_INLINE
+any (const int bc, const int* bc_types, const int size, Operator op)
+{
+  for(int i(0); i < size; ++i)
+    if(op(bc, bc_types[i]))
+      return true;
+
+  return false;
+}
 
 //
 // Compute upwind non-normal velocity
 //
 AMREX_GPU_HOST_DEVICE
+AMREX_FORCE_INLINE
 Real
 upwind (const Real velocity_minus, const Real velocity_plus, const Real u_edge)
 {
@@ -19,18 +44,9 @@ upwind (const Real velocity_minus, const Real velocity_plus, const Real u_edge)
   return u_edge > 0 ? velocity_minus : velocity_plus;
 }
 
-AMREX_GPU_HOST_DEVICE
-bool
-is_equal_to_any (const int bc, const int* bc_types, const int size)
-{
-  for(int i(0); i < size; ++i)
-    if(bc == bc_types[i])
-      return true;
+} // end aux namespace
 
-  return false;
-}
-
-} // end anonym namespace
+using namespace aux;
 
 //
 // Compute the three components of the convection term
@@ -50,69 +66,69 @@ mfix::mfix_compute_fluxes (int lev,
                            Vector< MultiFab* > const& ep_v_mac,
                            Vector< MultiFab* > const& ep_w_mac)
 {
-        // Get EB geometric info
-        Array< const MultiCutFab*,3> areafrac;
-        Array< const MultiCutFab*,3> facecent;
-        const amrex::MultiFab*    volfrac;
-        const amrex::MultiCutFab* bndrycent;
+  // Get EB geometric info
+  Array< const MultiCutFab*,3> areafrac;
+  Array< const MultiCutFab*,3> facecent;
+  const amrex::MultiFab*    volfrac;
+  const amrex::MultiCutFab* bndrycent;
 
-        areafrac  =   ebfactory[lev]->getAreaFrac();
-        facecent  =   ebfactory[lev]->getFaceCent();
-        volfrac   = &(ebfactory[lev]->getVolFrac());
-        bndrycent = &(ebfactory[lev]->getBndryCent());
+  areafrac  =   ebfactory[lev]->getAreaFrac();
+  facecent  =   ebfactory[lev]->getFaceCent();
+  volfrac   = &(ebfactory[lev]->getVolFrac());
+  bndrycent = &(ebfactory[lev]->getBndryCent());
 
-        const auto& cellcent = ebfactory[lev]->getCentroid();
+  const auto& cellcent = ebfactory[lev]->getCentroid();
 
-        // Create cc_mask
-        iMultiFab cc_mask(grids[lev], dmap[lev], 1, 1);
+  // Create cc_mask
+  iMultiFab cc_mask(grids[lev], dmap[lev], 1, 1);
 
-        const int covered_value = 1;
-        const int notcovered_value = 0;
-        const int physical_boundaries_value = 0;
-        const int interior_value = 1;
+  const int covered_value = 1;
+  const int notcovered_value = 0;
+  const int physical_boundaries_value = 0;
+  const int interior_value = 1;
 
-        cc_mask.BuildMask(geom[lev].Domain(), geom[lev].periodicity(),
-                          covered_value, notcovered_value,
-                          physical_boundaries_value, interior_value);
+  cc_mask.BuildMask(geom[lev].Domain(), geom[lev].periodicity(),
+                    covered_value, notcovered_value,
+                    physical_boundaries_value, interior_value);
 
-        // We do this here to avoid any confusion about the FAB setVal.
-        a_fx[lev]->setVal(covered_val);
-        a_fy[lev]->setVal(covered_val);
-        a_fz[lev]->setVal(covered_val);
+  // We do this here to avoid any confusion about the FAB setVal.
+  a_fx[lev]->setVal(covered_val);
+  a_fy[lev]->setVal(covered_val);
+  a_fz[lev]->setVal(covered_val);
 
-        for (MFIter mfi(*state_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
-        {
-            // Tilebox
-            Box bx = mfi.tilebox ();
+  for (MFIter mfi(*state_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+  {
+    // Tilebox
+    Box bx = mfi.tilebox ();
 
-            // this is to check efficiently if this tile contains any eb stuff
-            const EBFArrayBox& state_fab = static_cast<EBFArrayBox const&>((*state_in[lev])[mfi]);
-            const EBCellFlagFab&  flags = state_fab.getEBCellFlagFab();
+    // this is to check efficiently if this tile contains any eb stuff
+    const EBFArrayBox& state_fab = static_cast<EBFArrayBox const&>((*state_in[lev])[mfi]);
+    const EBCellFlagFab&  flags = state_fab.getEBCellFlagFab();
 
-            if (flags.getType(amrex::grow(bx,0)) != FabType::covered )
-            {
-                // No cut cells in tile + nghost-cell width halo -> use non-eb routine
-                if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
-                {
-                    mfix_compute_fluxes_on_box(
-                          lev, bx, (*a_fx[lev])[mfi], (*a_fy[lev])[mfi], (*a_fz[lev])[mfi], 
-                          (*state_in[lev])[mfi], state_comp, ncomp,
-                          (*xslopes_in[lev])[mfi], (*yslopes_in[lev])[mfi], (*zslopes_in[lev])[mfi], slopes_comp,
-                          (*ep_u_mac[lev])[mfi], (*ep_v_mac[lev])[mfi], (*ep_w_mac[lev])[mfi]);
-                }
-                else
-                {
-                    mfix_compute_eb_fluxes_on_box(
-                          lev, bx, (*a_fx[lev])[mfi], (*a_fy[lev])[mfi], (*a_fz[lev])[mfi], 
-                          (*state_in[lev])[mfi], state_comp, ncomp,
-                          (*xslopes_in[lev])[mfi], (*yslopes_in[lev])[mfi], (*zslopes_in[lev])[mfi], slopes_comp,
-                          (*ep_u_mac[lev])[mfi], (*ep_v_mac[lev])[mfi], (*ep_w_mac[lev])[mfi],
-                          (*areafrac[0])[mfi], (*areafrac[1])[mfi], (*areafrac[2])[mfi], 
-                          (*facecent[0])[mfi], (*facecent[1])[mfi], (*facecent[2])[mfi], 
-                          cellcent[mfi], (*volfrac)[mfi], (*bndrycent)[mfi], cc_mask[mfi], flags);
-                }
-            }
-        } // MFIter
+    if (flags.getType(amrex::grow(bx,0)) != FabType::covered )
+    {
+      // No cut cells in tile + nghost-cell width halo -> use non-eb routine
+      if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
+      {
+        mfix_compute_fluxes_on_box(
+              lev, bx, (*a_fx[lev])[mfi], (*a_fy[lev])[mfi], (*a_fz[lev])[mfi], 
+              (*state_in[lev])[mfi], state_comp, ncomp,
+              (*xslopes_in[lev])[mfi], (*yslopes_in[lev])[mfi], (*zslopes_in[lev])[mfi], slopes_comp,
+              (*ep_u_mac[lev])[mfi], (*ep_v_mac[lev])[mfi], (*ep_w_mac[lev])[mfi]);
+      }
+      else
+      {
+        mfix_compute_eb_fluxes_on_box(
+              lev, bx, (*a_fx[lev])[mfi], (*a_fy[lev])[mfi], (*a_fz[lev])[mfi], 
+              (*state_in[lev])[mfi], state_comp, ncomp,
+              (*xslopes_in[lev])[mfi], (*yslopes_in[lev])[mfi], (*zslopes_in[lev])[mfi], slopes_comp,
+              (*ep_u_mac[lev])[mfi], (*ep_v_mac[lev])[mfi], (*ep_w_mac[lev])[mfi],
+              (*areafrac[0])[mfi], (*areafrac[1])[mfi], (*areafrac[2])[mfi], 
+              (*facecent[0])[mfi], (*facecent[1])[mfi], (*facecent[2])[mfi], 
+              cellcent[mfi], (*volfrac)[mfi], (*bndrycent)[mfi], cc_mask[mfi], flags);
+      }
+    }
+  } // MFIter
 }
 
 void
@@ -165,8 +181,9 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
   const GpuArray<int, 3> bc_types =
     {bc_list.get_minf(), bc_list.get_pinf(), bc_list.get_pout()};
 
-  amrex::ParallelFor(ubx,ncomp,
-    [slopes_comp,state_comp,dom_low,dom_high,bct_ilo,bct_ihi,bc_types,state,x_slopes,u,fx]
+  amrex::ParallelFor(ubx, ncomp,
+    [slopes_comp,state_comp,dom_low,dom_high,bct_ilo,bct_ihi,bc_types,
+     state,x_slopes,u,fx]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
     //
@@ -185,11 +202,16 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
     const int bct_ilo_val = bct_ilo(dom_low.x-1,j,k,0);
     const int bct_ihi_val = bct_ihi(dom_high.x+1,j,k,0);
 
-    if ((i == dom_low.x) and is_equal_to_any(bct_ilo_val, bc_types.data(), bc_types.size()))
+    const int* bct_data = bc_types.data();
+    const int bct_size = bc_types.size();
+
+    if ((i == dom_low.x) and
+      any(bct_ilo_val, bct_data, bct_size, aux::is_equal()))
     {
       fx_val = u_val * state_mns;
     }
-    else if ((i == dom_high.x+1) and is_equal_to_any(bct_ihi_val, bc_types.data(), bc_types.size()))
+    else if ((i == dom_high.x+1) and
+        any(bct_ihi_val, bct_data, bct_size, aux::is_equal()))
     {
       fx_val = u_val * state_pls;
     }
@@ -204,7 +226,8 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
   });
 
   amrex::ParallelFor(vbx,ncomp,
-    [slopes_comp,state_comp,dom_low,dom_high,bct_jlo,bct_jhi,bc_types,state,y_slopes,v,fy]
+    [slopes_comp,state_comp,dom_low,dom_high,bct_jlo,bct_jhi,bc_types,
+     state,y_slopes,v,fy]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
     //
@@ -223,11 +246,16 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
     const int bct_jlo_val = bct_jlo(i,dom_low.y-1,k,0);
     const int bct_jhi_val = bct_jhi(i,dom_high.y+1,k,0);
 
-    if((j == dom_low.y) and is_equal_to_any(bct_jlo_val, bc_types.data(), bc_types.size()))
+    const int* bct_data = bc_types.data();
+    const int bct_size = bc_types.size();
+
+    if((j == dom_low.y) and
+      any(bct_jlo_val, bct_data, bct_size, aux::is_equal()))
     {
       fy_val = v_val * state_mns;
     }
-    else if ((j == dom_high.y+1) and is_equal_to_any(bct_jhi_val, bc_types.data(), bc_types.size()))
+    else if ((j == dom_high.y+1) and
+        any(bct_jhi_val, bct_data, bct_size, aux::is_equal()))
     {
       fy_val = v_val * state_pls;
     }
@@ -242,7 +270,8 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
   });
 
   amrex::ParallelFor(wbx, ncomp,
-    [slopes_comp,state_comp,dom_low,dom_high,bct_klo,bct_khi,bc_types,state,z_slopes,w,fz]
+    [slopes_comp,state_comp,dom_low,dom_high,bct_klo,bct_khi,bc_types,state,
+     z_slopes,w,fz]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
     //
@@ -261,11 +290,16 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
     const int bct_klo_val = bct_klo(i,j,dom_low.z-1,0);
     const int bct_khi_val = bct_khi(i,j,dom_high.z+1,0);
 
-    if((k == dom_low.z) and is_equal_to_any(bct_klo_val, bc_types.data(), bc_types.size()))
+    const int* bct_data = bc_types.data();
+    const int bct_size = bc_types.size();
+
+    if((k == dom_low.z) and
+      any(bct_klo_val, bct_data, bct_size, aux::is_equal()))
     {
       fz_val = w_val * state_mns;
     }
-    else if ((k == dom_high.z+1) and is_equal_to_any(bct_khi_val, bc_types.data(), bc_types.size()))
+    else if ((k == dom_high.z+1) and
+        any(bct_khi_val, bct_data, bct_size, aux::is_equal()))
     {
       fz_val = w_val * state_pls;
     }
@@ -352,6 +386,10 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
   FArrayBox s_on_y_face(vbx_grown, ncomp);
   FArrayBox s_on_z_face(wbx_grown, ncomp);
 
+  s_on_x_face.prefetchToDevice();
+  s_on_y_face.prefetchToDevice();
+  s_on_z_face.prefetchToDevice();
+
   // These lines ensure that the temporary Fabs above aren't destroyed
   //   before we're done with them when running with GPUs
   Elixir eli_x = s_on_x_face.elixir();
@@ -393,17 +431,18 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
     Real sx_ijkn(0);
 
+    const int* bct_data = bc_types.data();
+    const int bct_size = bc_types.size();
+
     if( areafrac_x(i,j,k) > 0 )
     {
       if(i <= dom_low.x and
-        is_equal_to_any(bct_ilo(dom_low.x-1,j,k,0),
-                        bc_types.data(), bc_types.size()))
+        any(bct_ilo(dom_low.x-1,j,k,0), bct_data, bct_size, aux::is_equal()))
       {
         sx_ijkn = state(dom_low.x-1,j,k,state_comp+n);
       }
       else if(i >= dom_high.x+1 and
-        is_equal_to_any(bct_ihi(dom_high.x+1,j,k,0),
-                        bc_types.data(), bc_types.size()))
+        any(bct_ihi(dom_high.x+1,j,k,0), bct_data, bct_size, aux::is_equal()))
       {
         sx_ijkn = state(dom_high.x+1,j,k,state_comp+n);
       }
@@ -461,16 +500,17 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
     Real sy_ijkn(0);
 
+    const int* bct_data = bc_types.data();
+    const int bct_size = bc_types.size();
+
     if( areafrac_y(i,j,k) > 0 ) {
       if( j <= dom_low.y and
-       is_equal_to_any(bct_jlo(i,dom_low.y-1,k,0),
-                       bc_types.data(), bc_types.size()))
+       any(bct_jlo(i,dom_low.y-1,k,0), bct_data, bct_size, aux::is_equal()))
       {
         sy_ijkn = state(i,dom_low.y-1,k,state_comp+n);
       }
       else if( j >= dom_high.y+1 and
-       is_equal_to_any(bct_jhi(i,dom_high.y+1,k,0),
-                       bc_types.data(), bc_types.size()))
+       any(bct_jhi(i,dom_high.y+1,k,0), bct_data, bct_size, aux::is_equal()))
       {
         sy_ijkn = state(i,dom_high.y+1,k,state_comp+n);
       }
@@ -528,16 +568,17 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
     Real sz_ijkn(0);
 
+    const int* bct_data = bc_types.data();
+    const int bct_size = bc_types.size();
+
     if( areafrac_z(i,j,k) > 0 ) {
       if( k <= dom_low.z and
-       is_equal_to_any(bct_klo(i,j,dom_low.z-1,0),
-                       bc_types.data(), bc_types.size()))
+       any(bct_klo(i,j,dom_low.z-1,0), bct_data, bct_size, aux::is_equal()))
       {                    
         sz_ijkn = state(i, j,dom_low.z-1,state_comp+n);
       }                    
       else if( k >= dom_high.z+1 and
-       is_equal_to_any(bct_khi(i,j,dom_high.z+1,0),
-                       bc_types.data(), bc_types.size()))
+       any(bct_khi(i,j,dom_high.z+1,0), bct_data, bct_size, aux::is_equal()))
       {                    
         sz_ijkn = state(i, j,dom_high.z+1,state_comp+n);
       }                    
@@ -583,3 +624,5 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
     fz(i,j,k,n) = w_val * sz_ijkn;
   });
 }
+
+#endif

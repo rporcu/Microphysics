@@ -1,7 +1,9 @@
 CEXE_sources += mfix_compute_convective_term.cpp
 CEXE_sources += mfix_compute_fluxes.cpp
+CEXE_sources += mfix_compute_fluxes_gpu.cpp
 CEXE_sources += mfix_correct_small_cells.cpp
 CEXE_sources += mfix_MAC_projection.cpp
 CEXE_sources += mfix_predict_vels_on_faces.cpp
 CEXE_sources += mfix_set_mac_velocity_bcs.cpp
 CEXE_sources += mfix_slopes.cpp
+CEXE_sources += mfix_slopes_gpu.cpp

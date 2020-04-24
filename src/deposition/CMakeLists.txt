@@ -8,4 +8,5 @@ target_sources( mfixcore
    mfix_deposition_bcs.cpp
    MFIX_PC_Deposition.cpp
    mfix_redistribute_deposition.cpp
+   mfix_redistribute_deposition_gpu.cpp
    )
