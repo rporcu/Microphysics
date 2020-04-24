@@ -8,6 +8,7 @@ target_sources( mfixcore
    mfix_compute_convective_term.cpp
    mfix_correct_small_cells.cpp
    mfix_predict_vels_on_faces.cpp
+   mfix_predict_vels_on_faces_gpu.cpp
    mfix_MAC_projection.cpp
    mfix_slopes.cpp
    mfix_slopes_gpu.cpp

@@ -1,3 +1,5 @@
+#ifndef AMREX_USE_CUDA
+
 #include <mfix_F.H>
 #include <mfix.H>
 #include <param_mod_F.H>
@@ -142,3 +144,5 @@ void mfix::mfix_deposition_bcs (int lev, amrex::MultiFab& filled_mf)
 
   }
 }
+
+#endif
