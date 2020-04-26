@@ -52,7 +52,9 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
   ep_face[2]->setVal(covered_val);
 
   ep_in[lev]->FillBoundary(geom[lev].periodicity());
-  average_cellcenter_to_face(ep_face, *ep_in[lev], geom[lev]);
+  // average_cellcenter_to_face(ep_face, *ep_in[lev], geom[lev]);
+  Vector<BCRec> bcs_s;  // Just needed for this to compile
+  EB_interp_CellCentroid_to_FaceCentroid (*ep_in[lev], ep_face, 0, 0, 1, geom[lev], bcs_s);
 
   ep_face[0]->FillBoundary();
   ep_face[1]->FillBoundary();

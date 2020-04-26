@@ -67,9 +67,9 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
     // Define ep and rho on face centroids (using interpolation from cell centroids)
     // The only use of bcs in this call is to test on whether a domain boundary is ext_dir
     // average_cellcenter_to_face(ro_face[lev], *ro_in[lev], geom[lev]);
-    average_cellcenter_to_face(ep_face[lev], *ep_in[lev], geom[lev]);
+    // average_cellcenter_to_face(ep_face[lev], *ep_in[lev], geom[lev]);
     EB_interp_CellCentroid_to_FaceCentroid (*ro_in[lev], ro_face[lev], 0, 0, 1, geom[lev], bcs_s);
-    // EB_interp_CellCentroid_to_FaceCentroid (*ep_in[lev], ep_face[lev], 0, 0, 1, geom[lev], bcs_s);
+    EB_interp_CellCentroid_to_FaceCentroid (*ep_in[lev], ep_face[lev], 0, 0, 1, geom[lev], bcs_s);
 
     // Compute ep_face into bcoeff
     MultiFab::Copy(*bcoeff[lev][0], *(ep_face[lev][0]), 0, 0, 1, 0);
@@ -124,7 +124,10 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
   const_bcoeff.reserve(bcoeff.size());
   for (const auto& x : bcoeff) const_bcoeff.push_back(GetArrOfConstPtrs(x));
 
-  MacProjector macproj(vel, const_bcoeff, geom, lp_info);
+  MacProjector macproj(vel         , MLMG::Location::FaceCentroid, // location of vel 
+                       const_bcoeff, MLMG::Location::FaceCentroid, // location of beta 
+                                     MLMG::Location::CellCenter,   // location of phi 
+                       geom, lp_info);
 
   macproj.setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
 
@@ -132,12 +135,12 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
   {
     // Solve using mac_phi as an initial guess -- note that mac_phi is
     //       stored from iteration to iteration
-    macproj.project(get_mac_phi(), mac_mg_rtol, mac_mg_atol, MLMG::Location::FaceCentroid);
+    macproj.project(get_mac_phi(), mac_mg_rtol, mac_mg_atol);
   }
   else
   {
     // Solve with initial guess of zero
-    macproj.project(mac_mg_rtol, mac_mg_atol, MLMG::Location::FaceCentroid);
+    macproj.project(mac_mg_rtol, mac_mg_atol);
   }
 
   // Get MAC velocities at face CENTER by dividing solution by ep at faces

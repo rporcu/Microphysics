@@ -55,6 +55,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
 
     // Resize and reset data
     b.resize(max_level + 1);
+
     phi.resize(max_level + 1);
     rhs.resize(max_level + 1);
     vel_eb.resize(max_level + 1);
@@ -68,6 +69,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
             b[lev][dir].reset(new MultiFab(edge_ba, dmap[lev], 1, nghost,
                                            MFInfo(), *(*ebfactory)[lev]));
         }
+
         phi[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 1,
                                     MFInfo(), *(*ebfactory)[lev]));
 
@@ -181,16 +183,19 @@ void DiffusionOp::ComputeDivTau (Vector< MultiFab* >& divtau_out,
  
     // We want to return div (mu grad)) phi
     vel_matrix->setScalars(0.0, -1.0);
+
+    Vector<BCRec> bcs_s; // This is just to satisfy the call to EB_interp...
  
     // Compute the coefficients
     for (int lev = 0; lev <= finest_level; lev++)
     {
-        average_cellcenter_to_face( GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev] );
+        // average_cellcenter_to_face( GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev] );
+        EB_interp_CellCentroid_to_FaceCentroid (*eta_in[lev], GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
  
         for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
              b[lev][dir]->FillBoundary(geom[lev].periodicity());
  
-        vel_matrix->setShearViscosity  ( lev, GetArrOfConstPtrs(b[lev]));
+        vel_matrix->setShearViscosity  ( lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
         vel_matrix->setEBShearViscosity( lev, (*eta_in[lev]));
         vel_matrix->setLevelBC         ( lev, GetVecOfConstPtrs(vel_in)[lev] );
     }
@@ -225,7 +230,7 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
                                const Vector< MultiFab* >& scal_in,
                                const Vector< MultiFab* >& ro_in,
                                const Vector< MultiFab* >& ep_in,
-                               const Vector< Real > mu_s) 
+                                     Vector< Real      > const& mu_s) 
 {
     BL_PROFILE("DiffusionOp::ComputeLapS");
 
@@ -233,12 +238,20 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
 
     int ntrac = scal_in[0]->nComp();
 
-    Vector< MultiFab* > laps_aux(finest_level+1);
+    Vector< MultiFab* >  laps_aux(finest_level+1);
+    Vector< MultiFab* >    phi_eb(finest_level+1);
     for(int lev = 0; lev <= finest_level; lev++)
     {
        laps_aux[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, nghost,
                                     MFInfo(), *(*ebfactory)[lev]);
        laps_aux[lev]->setVal(0.0);
+
+       phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, 
+                                    MFInfo(), *(*ebfactory)[lev]);
+
+       // This value was just for testing
+       // if (eb_is_dirichlet) 
+       //    phi_eb[lev]->setVal(1.0);
     }
  
     // Whole domain
@@ -253,6 +266,9 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
         for(int dir = 0; dir < 3; dir++)
            for(int n = 0; n < ntrac; n++)
              b[lev][dir]->setVal(mu_s[n],n,1);
+
+        if (eb_is_dirichlet) 
+            scal_matrix->setEBDirichlet(lev, *phi_eb[lev], mu_s);
  
         scal_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]));
         scal_matrix->setLevelBC(lev, GetVecOfConstPtrs(scal_in)[lev]);
@@ -268,5 +284,8 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
     }
     
     for(int lev = 0; lev <= finest_level; lev++)
+    {
        delete laps_aux[lev];
+       delete   phi_eb[lev];
+    }
 }
