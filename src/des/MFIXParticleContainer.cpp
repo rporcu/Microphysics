@@ -411,7 +411,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 #endif
 
 #ifdef AMREX_USE_CUDA
-            auto nbor_data = m_neighbor_list[index].data();
+            auto nbor_data = m_neighbor_list[lev][index].data();
 
             constexpr Real small_number = 1.0e-15;
             Gpu::DeviceScalar<int> ncoll_gpu(ncoll);
