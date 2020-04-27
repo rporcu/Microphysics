@@ -206,13 +206,12 @@ void DiffusionOp::ComputeDivTau (Vector< MultiFab* >& divtau_out,
  
     for(int lev = 0; lev <= finest_level; lev++)
     {
-       amrex::single_level_weighted_redistribute(lev,
-                                                 *divtau_aux[lev],
+       amrex::single_level_weighted_redistribute(*divtau_aux[lev],
                                                  *divtau_out[lev],
                                                  *ep_in[lev],
                                                  0,
                                                  AMREX_SPACEDIM,
-                                                 geom);
+                                                 geom[lev]);
  
        // Divide by density
        for (int n = 0; n < 3; n++)
@@ -230,7 +229,7 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
                                const Vector< MultiFab* >& scal_in,
                                const Vector< MultiFab* >& ro_in,
                                const Vector< MultiFab* >& ep_in,
-                                     Vector< Real      > const& mu_s) 
+                               const Vector< Real      >& mu_s) 
 {
     BL_PROFILE("DiffusionOp::ComputeLapS");
 
@@ -280,7 +279,7 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
  
     for(int lev = 0; lev <= finest_level; lev++)
     {
-       amrex::single_level_redistribute(lev, *laps_aux[lev], *laps_out[lev], 0, ntrac, geom);
+       amrex::single_level_redistribute(*laps_aux[lev], *laps_out[lev], 0, ntrac, geom[lev]);
     }
     
     for(int lev = 0; lev <= finest_level; lev++)
