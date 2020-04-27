@@ -10,14 +10,13 @@ variables:
   GIT_DEPTH: 1
   GIT_STRATEGY: fetch
   GIT_SUBMODULE_STRATEGY: normal
+  JOULE_MODULES: "cuda/10.2 gnu/8.4.0 openmpi/4.0.3_gnu8.4"
 
 ###### Test jobs #####
 
 .test_job: &test_template
   only:
     - develop
-  tags:
-    - mfix-exa
   artifacts:
     name: "$CI_JOB_NAME"
     expire_in: 1 week
@@ -35,19 +34,25 @@ variables:
     - cmake --build build --target build_tests -j2 --verbose
     - cd build
     - $CTEST_CMD
+  tags:
+    - mfix-exa
   <<: *test_template
 
 .gpu_test: &gpu_template
   script:
-    - git submodule update --init
+    - module load $JOULE_MODULES
+    - git submodule update --init --force
     - cmake -S .
             -B build
+            -G Ninja
             -DENABLE_CUDA=1
             -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
-    - cmake --build build --target build_tests -j2 --verbose
+    - cmake --build build --target build_tests -j2
     - cd build
-    - $CTEST_CMD
+    # - $CTEST_CMD
+  tags:
+    - joule
   <<: *test_template
 
 
@@ -83,7 +88,7 @@ tiled-grid-parallel-openmp-cpu:
 
 #  GPU tests
 
-.single-grid-serial-gpu:
+single-grid-serial-gpu:
   variables:
     CTEST_CMD: "srun ctest -R SGS"
   <<: *gpu_template
