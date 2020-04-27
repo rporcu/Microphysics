@@ -77,7 +77,7 @@ class DiffusionOp
                       const amrex::Vector< amrex::MultiFab* >& scal_in,
                       const amrex::Vector< amrex::MultiFab* >& ro_in,
                       const amrex::Vector< amrex::MultiFab* >& ep_in,
-                      const amrex::Vector< amrex::Real > mu_s);
+                      const amrex::Vector< amrex::Real      >& mu_s);
 
   private:
     // AmrCore data 
@@ -118,6 +118,9 @@ class DiffusionOp
 
     // DiffusionOp verbosity
     int verbose = 0;
+
+    // Dirichlet vs Neumann bc's at EB walls
+    bool eb_is_dirichlet;
 
     // Options to control MLMG behavior
     int mg_verbose = 0;
