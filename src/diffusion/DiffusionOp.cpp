@@ -201,7 +201,7 @@ void DiffusionOp::ComputeDivTau (Vector< MultiFab* >& divtau_out,
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
-       amrex::single_level_weighted_redistribute(
+       amrex::single_level_weighted_redistribute(*divtau_aux[lev],
                                                  *divtau_out[lev],
                                                  *ep_in[lev],
                                                  0,
