@@ -15,8 +15,6 @@ variables:
 ###### Test jobs #####
 
 .test_job: &test_template
-  only:
-    - develop
   artifacts:
     name: "$CI_JOB_NAME"
     expire_in: 1 week
@@ -25,6 +23,8 @@ variables:
       - build/Testing/
 
 .cpu_test: &cpu_template
+  only:
+    - develop
   script:
     - git submodule update --init
     - cmake -S .
