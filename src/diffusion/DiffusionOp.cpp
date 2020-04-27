@@ -37,7 +37,7 @@ DiffusionOp::DiffusionOp (AmrCore* _amrcore,
     setup(_amrcore, _ebfactory);
 }
 
-void DiffusionOp::setup (AmrCore* _amrcore, 
+void DiffusionOp::setup (AmrCore* _amrcore,
                          Vector< const EBFArrayBoxFactory* >* _ebfactory)
 {
     // The amrcore boxArray and DistributionMap change when we regrid so we must
@@ -175,39 +175,39 @@ void DiffusionOp::ComputeDivTau (Vector< MultiFab* >& divtau_out,
                                       MFInfo(), *(*ebfactory)[lev]);
        divtau_aux[lev]->setVal(0.0);
     }
- 
+
     // Whole domain
     Box domain(geom[0].Domain());
- 
+
     // We want to return div (mu grad)) phi
     vel_matrix->setScalars(0.0, -1.0);
- 
+
     // Compute the coefficients
     for (int lev = 0; lev <= finest_level; lev++)
     {
         average_cellcenter_to_face( GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev] );
- 
+
         for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
              b[lev][dir]->FillBoundary(geom[lev].periodicity());
- 
+
         vel_matrix->setShearViscosity  ( lev, GetArrOfConstPtrs(b[lev]));
         vel_matrix->setEBShearViscosity( lev, (*eta_in[lev]));
         vel_matrix->setLevelBC         ( lev, GetVecOfConstPtrs(vel_in)[lev] );
     }
- 
+
     MLMG solver(*vel_matrix);
- 
+
     solver.apply(divtau_aux, vel_in);
- 
+
     for(int lev = 0; lev <= finest_level; lev++)
     {
-       amrex::single_level_weighted_redistribute(*divtau_aux[lev],
+       amrex::single_level_weighted_redistribute(
                                                  *divtau_out[lev],
                                                  *ep_in[lev],
                                                  0,
                                                  AMREX_SPACEDIM,
                                                  geom[lev]);
- 
+
        // Divide by density
        for (int n = 0; n < 3; n++)
        {
@@ -224,7 +224,7 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
                                const Vector< MultiFab* >& scal_in,
                                const Vector< MultiFab* >& ro_in,
                                const Vector< MultiFab* >& ep_in,
-                               const Vector< Real      >& mu_s) 
+                               const Vector< Real      >& mu_s)
 {
     BL_PROFILE("DiffusionOp::ComputeLapS");
 
@@ -239,33 +239,33 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
                                     MFInfo(), *(*ebfactory)[lev]);
        laps_aux[lev]->setVal(0.0);
     }
- 
+
     // Whole domain
     Box domain(geom[0].Domain());
- 
+
     // We want to return div (mu grad)) phi
     scal_matrix->setScalars(0.0, -1.0);
- 
+
     // Compute the coefficients
     for (int lev = 0; lev <= finest_level; lev++)
     {
         for(int dir = 0; dir < 3; dir++)
            for(int n = 0; n < ntrac; n++)
              b[lev][dir]->setVal(mu_s[n],n,1);
- 
+
         scal_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]));
         scal_matrix->setLevelBC(lev, GetVecOfConstPtrs(scal_in)[lev]);
     }
- 
+
     MLMG solver(*scal_matrix);
- 
+
     solver.apply(laps_aux, scal_in);
- 
+
     for(int lev = 0; lev <= finest_level; lev++)
     {
        amrex::single_level_redistribute(*laps_aux[lev], *laps_out[lev], 0, ntrac, geom[lev]);
     }
-    
+
     for(int lev = 0; lev <= finest_level; lev++)
        delete laps_aux[lev];
 }

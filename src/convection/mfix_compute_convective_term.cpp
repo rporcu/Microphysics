@@ -140,7 +140,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
 
         EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes),
                              geom[lev], already_on_centroids);
-        single_level_weighted_redistribute(lev, conv_tmp, *conv_u_in[lev],
+        single_level_weighted_redistribute(conv_tmp, *conv_u_in[lev],
                                            *ep_g_in[lev], conv_comp, num_comp, geom);
 
         // **************************************************
@@ -156,7 +156,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
             EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev],
                                  already_on_centroids);
 
-            single_level_weighted_redistribute(lev, conv_tmp, *conv_s_in[lev],
+            single_level_weighted_redistribute(conv_tmp, *conv_s_in[lev],
                                                *ep_g_in[lev], conv_comp, num_comp, geom);
         }
 
@@ -172,7 +172,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
 
             EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev],
                                  already_on_centroids);
-            single_level_weighted_redistribute(lev, conv_tmp, *conv_s_in[lev],
+            single_level_weighted_redistribute(conv_tmp, *conv_s_in[lev],
                                                *ep_g_in[lev], conv_comp, num_comp, geom);
         }
 
