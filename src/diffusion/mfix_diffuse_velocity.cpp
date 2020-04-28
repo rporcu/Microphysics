@@ -31,6 +31,7 @@ void DiffusionOp::diffuse_velocity (Vector< MultiFab* > vel_in,
     vel_matrix->setScalars(1.0, dt);
 
     Vector<BCRec> bcs_s; // This is just to satisfy the call to EB_interp...
+    bcs_s.resize(3);
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
@@ -38,7 +39,7 @@ void DiffusionOp::diffuse_velocity (Vector< MultiFab* > vel_in,
         // apparent viscosity
         // average_cellcenter_to_face(GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev]);
         EB_interp_CellCentroid_to_FaceCentroid (*eta_in[lev], GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
-        
+
         // This sets the coefficients
         vel_matrix->setACoeffs(lev, (*ep_ro_in[lev]));
         vel_matrix->setShearViscosity  (lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
@@ -46,7 +47,7 @@ void DiffusionOp::diffuse_velocity (Vector< MultiFab* > vel_in,
     }
 
     if(verbose > 0)
-        amrex::Print() << "Diffusing velocity components all together..." << std::endl; 
+        amrex::Print() << "Diffusing velocity components all together..." << std::endl;
 
     for(int lev = 0; lev <= finest_level; lev++)
     {

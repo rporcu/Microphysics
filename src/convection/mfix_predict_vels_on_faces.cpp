@@ -53,7 +53,7 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
 
   ep_in[lev]->FillBoundary(geom[lev].periodicity());
   // average_cellcenter_to_face(ep_face, *ep_in[lev], geom[lev]);
-  Vector<BCRec> bcs_s;  // Just needed for this to compile
+  //Vector<BCRec> bcs_s(1);  // Just needed for this to compile
   EB_interp_CellCentroid_to_FaceCentroid (*ep_in[lev], ep_face, 0, 0, 1, geom[lev], bcs_s);
 
   ep_face[0]->FillBoundary();
@@ -286,8 +286,8 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
           Real cc_umax = amrex::max(ccvel_pls, ccvel_mns);
           Real cc_umin = amrex::min(ccvel_pls, ccvel_mns);
 
-          Real upls = ccvel_pls - delta_x * xslopes_fab(i,j,k,0) 
-                                + delta_y * yslopes_fab(i,j,k,0) 
+          Real upls = ccvel_pls - delta_x * xslopes_fab(i,j,k,0)
+                                + delta_y * yslopes_fab(i,j,k,0)
                                 + delta_z * zslopes_fab(i,j,k,0);
 
           upls = amrex::min(upls, cc_umax);
@@ -297,8 +297,8 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
           delta_y = yf - ccc_fab(i-1,j,k,1);
           delta_z = zf - ccc_fab(i-1,j,k,2);
 
-          Real umns = ccvel_mns + delta_x * xslopes_fab(i-1,j,k,0) 
-                                + delta_y * yslopes_fab(i-1,j,k,0) 
+          Real umns = ccvel_mns + delta_x * xslopes_fab(i-1,j,k,0)
+                                + delta_y * yslopes_fab(i-1,j,k,0)
                                 + delta_z * zslopes_fab(i-1,j,k,0);
 
           umns = amrex::min(umns, cc_umax);
@@ -346,8 +346,8 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
           Real cc_vmax = amrex::max(ccvel_pls, ccvel_mns);
           Real cc_vmin = amrex::min(ccvel_pls, ccvel_mns);
 
-          Real vpls = ccvel_pls - delta_y * yslopes_fab(i,j,k,1) 
-                                + delta_x * xslopes_fab(i,j,k,1) 
+          Real vpls = ccvel_pls - delta_y * yslopes_fab(i,j,k,1)
+                                + delta_x * xslopes_fab(i,j,k,1)
                                 + delta_z * zslopes_fab(i,j,k,1);
 
           vpls = amrex::min(vpls, cc_vmax);
@@ -358,8 +358,8 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
           delta_y = .5 - ccc_fab(i,j-1,k,1);
           delta_z = zf - ccc_fab(i,j-1,k,2);
 
-          Real vmns = ccvel_mns + delta_y * yslopes_fab(i,j-1,k,1) 
-                                + delta_x * xslopes_fab(i,j-1,k,1) 
+          Real vmns = ccvel_mns + delta_y * yslopes_fab(i,j-1,k,1)
+                                + delta_x * xslopes_fab(i,j-1,k,1)
                                 + delta_z * zslopes_fab(i,j-1,k,1);
 
           vmns = amrex::min(vmns, cc_vmax);
@@ -390,7 +390,7 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         // Z-faces
-        if (apz_fab(i,j,k) > 0.0) 
+        if (apz_fab(i,j,k) > 0.0)
         {
           Real xf = fcz_fab(i,j,k,0); // local (x,y) of centroid of z-face we are extrapolating to
           Real yf = fcz_fab(i,j,k,1);
@@ -405,8 +405,8 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
           Real cc_wmax = amrex::max(ccvel_pls, ccvel_mns);
           Real cc_wmin = amrex::min(ccvel_pls, ccvel_mns);
 
-          Real wpls = ccvel_pls - delta_z * zslopes_fab(i,j,k,2) 
-                                + delta_x * xslopes_fab(i,j,k,2) 
+          Real wpls = ccvel_pls - delta_z * zslopes_fab(i,j,k,2)
+                                + delta_x * xslopes_fab(i,j,k,2)
                                 + delta_y * yslopes_fab(i,j,k,2);
 
           wpls = amrex::min(wpls, cc_wmax);
@@ -417,8 +417,8 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
           delta_y = yf - ccc_fab(i,j,k-1,1);
           delta_z = .5 - ccc_fab(i,j,k-1,2);
 
-          Real wmns = ccvel_mns + delta_z * zslopes_fab(i,j,k-1,2) 
-                                + delta_x * xslopes_fab(i,j,k-1,2) 
+          Real wmns = ccvel_mns + delta_z * zslopes_fab(i,j,k-1,2)
+                                + delta_x * xslopes_fab(i,j,k-1,2)
                                 + delta_y * yslopes_fab(i,j,k-1,2);
 
           wmns = amrex::min(wmns, cc_wmax);

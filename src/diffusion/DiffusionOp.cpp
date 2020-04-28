@@ -185,16 +185,16 @@ void DiffusionOp::ComputeDivTau (Vector< MultiFab* >& divtau_out,
     vel_matrix->setScalars(0.0, -1.0);
 
     Vector<BCRec> bcs_s; // This is just to satisfy the call to EB_interp...
- 
+    bcs_s.resize(3);
     // Compute the coefficients
     for (int lev = 0; lev <= finest_level; lev++)
     {
         // average_cellcenter_to_face( GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev] );
         EB_interp_CellCentroid_to_FaceCentroid (*eta_in[lev], GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
- 
+
         for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
              b[lev][dir]->FillBoundary(geom[lev].periodicity());
- 
+
         vel_matrix->setShearViscosity  ( lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
         vel_matrix->setEBShearViscosity( lev, (*eta_in[lev]));
         vel_matrix->setLevelBC         ( lev, GetVecOfConstPtrs(vel_in)[lev] );
@@ -245,11 +245,11 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
                                     MFInfo(), *(*ebfactory)[lev]);
        laps_aux[lev]->setVal(0.0);
 
-       phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, 
+       phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0,
                                     MFInfo(), *(*ebfactory)[lev]);
 
        // This value was just for testing
-       // if (eb_is_dirichlet) 
+       // if (eb_is_dirichlet)
        //    phi_eb[lev]->setVal(1.0);
     }
 
@@ -266,9 +266,9 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
            for(int n = 0; n < ntrac; n++)
              b[lev][dir]->setVal(mu_s[n],n,1);
 
-        if (eb_is_dirichlet) 
+        if (eb_is_dirichlet)
             scal_matrix->setEBDirichlet(lev, *phi_eb[lev], mu_s);
- 
+
         scal_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]));
         scal_matrix->setLevelBC(lev, GetVecOfConstPtrs(scal_in)[lev]);
     }
