@@ -86,6 +86,9 @@ void mfix::mfix_deposition_bcs (int lev, amrex::MultiFab& filled_mf)
             int k = idx / (sbx_yz_len.y);
             int j = idx - k*(sbx_yz_len.y);
 
+            j += sbx_yz_lo.y;
+            k += sbx_yz_lo.z;
+
             if(sbx_lo[0] < dom_lo.x) {
               int i = dom_lo.x;
 
@@ -117,6 +120,9 @@ void mfix::mfix_deposition_bcs (int lev, amrex::MultiFab& filled_mf)
             int k = idx / (sbx_xz_len.x);
             int i = idx - k*(sbx_xz_len.x);
 
+            i += sbx_xz_lo.x;
+            k += sbx_xz_lo.z;
+
             if(sbx_lo[1] < dom_lo.y) {
               int j = dom_lo.y;
 
@@ -147,6 +153,9 @@ void mfix::mfix_deposition_bcs (int lev, amrex::MultiFab& filled_mf)
           {
             int j = idx / (sbx_xy_len.x);
             int i = idx - j*(sbx_xy_len.x);
+
+            i += sbx_xy_lo.x;
+            j += sbx_xy_lo.y;
 
             if(sbx_lo[2] < dom_lo.z) {
               int k = dom_lo.z;

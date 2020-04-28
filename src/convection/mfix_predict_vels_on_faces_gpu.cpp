@@ -401,15 +401,15 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
             }
           }
 
-          if(idx < ubx_npoints)
+          if(idx < vbx_npoints)
           {
-            int k = idx / (ubx_len.x*ubx_len.y);
-            int j = (idx - k*(ubx_len.x*ubx_len.y)) / (ubx_len.x);
-            int i = (idx - k*(ubx_len.x*ubx_len.y)) - j*ubx_len.x;
+            int k = idx / (vbx_len.x*vbx_len.y);
+            int j = (idx - k*(vbx_len.x*vbx_len.y)) / (vbx_len.x);
+            int i = (idx - k*(vbx_len.x*vbx_len.y)) - j*vbx_len.x;
 
-            i += ubx_lo.x;
-            j += ubx_lo.y;
-            k += ubx_lo.z;
+            i += vbx_lo.x;
+            j += vbx_lo.y;
+            k += vbx_lo.z;
 
             // Y-faces
             if (apy_fab(i,j,k) > 0.0)
