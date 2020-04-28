@@ -10,7 +10,7 @@ variables:
   GIT_DEPTH: 1
   GIT_STRATEGY: fetch
   GIT_SUBMODULE_STRATEGY: normal
-  JOULE_MODULES: "cuda/10.2 gnu/8.4.0 openmpi/4.0.3_gnu8.4"
+  JOULE_MODULES: "cuda/10.2 gnu/8.4.0 openmpi/4.0.3_gnu8.4 ccache/3.7.9"
 
 ###### Test jobs #####
 
