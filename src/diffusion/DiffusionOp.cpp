@@ -35,6 +35,9 @@ DiffusionOp::DiffusionOp (AmrCore* _amrcore,
 
     // Actually do the setup work here
     setup(_amrcore, _ebfactory);
+
+    // We default to Neumann bc's for scalarson EB walls
+    eb_is_dirichlet = false;
 }
 
 void DiffusionOp::setup (AmrCore* _amrcore,
