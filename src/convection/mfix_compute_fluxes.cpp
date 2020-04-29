@@ -1,5 +1,3 @@
-#ifndef AMREX_USE_CUDA
-
 #include <mfix.H>
 #include <param_mod_F.H>
 
@@ -181,136 +179,171 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
   const GpuArray<int, 3> bc_types =
     {bc_list.get_minf(), bc_list.get_pinf(), bc_list.get_pout()};
 
-  amrex::ParallelFor(ubx, ncomp,
-    [slopes_comp,state_comp,dom_low,dom_high,bct_ilo,bct_ihi,bc_types,
-     state,x_slopes,u,fx]
-    AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+  const int ubx_npoints = ubx.numPts();
+  const auto ubx_lo = amrex::lbound(ubx);
+  const auto ubx_len = amrex::length(ubx);
+
+  const int vbx_npoints = vbx.numPts();
+  const auto vbx_lo = amrex::lbound(vbx);
+  const auto vbx_len = amrex::length(vbx);
+
+  const int wbx_npoints = wbx.numPts();
+  const auto wbx_lo = amrex::lbound(wbx);
+  const auto wbx_len = amrex::length(wbx);
+
+  const int npoints = amrex::max(ubx_npoints,vbx_npoints,wbx_npoints);
+
+  ParallelFor(npoints, [=] AMREX_GPU_DEVICE (int idx) noexcept
   {
-    //
-    // West face
-    //
-    // In the case of MINF       we are using the prescribed Dirichlet value
-    // In the case of PINF, POUT we are using the upwind value
-    const Real u_val = u(i,j,k);
-    Real state_pls = state(i,j,k,state_comp+n);
-    Real state_mns = state(i-1,j,k,state_comp+n);
-    const Real x_slopes_pls = x_slopes(i,j,k,slopes_comp+n);
-    const Real x_slopes_mns = x_slopes(i-1,j,k,slopes_comp+n);
-
-    Real fx_val(0);
-
-    const int bct_ilo_val = bct_ilo(dom_low.x-1,j,k,0);
-    const int bct_ihi_val = bct_ihi(dom_high.x+1,j,k,0);
-
     const int* bct_data = bc_types.data();
     const int bct_size = bc_types.size();
 
-    if ((i == dom_low.x) and
-      any(bct_ilo_val, bct_data, bct_size, aux::is_equal()))
+    if(idx < ubx_npoints)
     {
-      fx_val = u_val * state_mns;
+      int k = idx / (ubx_len.x*ubx_len.y); 
+      int j = (idx - k*(ubx_len.x*ubx_len.y)) / (ubx_len.x); 
+      int i = (idx - k*(ubx_len.x*ubx_len.y)) - j*ubx_len.x;
+
+      i += ubx_lo.x;
+      j += ubx_lo.y;
+      k += ubx_lo.z;
+
+      const Real u_val = u(i,j,k);
+
+      const int bct_ilo_val = bct_ilo(dom_low.x-1,j,k,0);
+      const int bct_ihi_val = bct_ihi(dom_high.x+1,j,k,0);
+
+      for(int n(0); n < ncomp; n++) { 
+        //
+        // West face
+        //
+        // In the case of MINF       we are using the prescribed Dirichlet value
+        // In the case of PINF, POUT we are using the upwind value
+        Real state_pls = state(i,j,k,state_comp+n);
+        Real state_mns = state(i-1,j,k,state_comp+n);
+        const Real x_slopes_pls = x_slopes(i,j,k,slopes_comp+n);
+        const Real x_slopes_mns = x_slopes(i-1,j,k,slopes_comp+n);
+
+        Real fx_val(0);
+
+        if ((i == dom_low.x) and
+          any(bct_ilo_val, bct_data, bct_size, aux::is_equal()))
+        {
+          fx_val = u_val * state_mns;
+        }
+        else if ((i == dom_high.x+1) and
+            any(bct_ihi_val, bct_data, bct_size, aux::is_equal()))
+        {
+          fx_val = u_val * state_pls;
+        }
+        else {
+          state_pls -= .5*x_slopes_pls;
+          state_mns += .5*x_slopes_mns;
+
+          fx_val = u_val * upwind(state_mns, state_pls, u_val);
+        }
+
+        fx(i,j,k,n) = fx_val;
+      }
     }
-    else if ((i == dom_high.x+1) and
-        any(bct_ihi_val, bct_data, bct_size, aux::is_equal()))
+
+    if(idx < vbx_npoints)
     {
-      fx_val = u_val * state_pls;
+      int k = idx / (vbx_len.x*vbx_len.y); 
+      int j = (idx - k*(vbx_len.x*vbx_len.y)) / (vbx_len.x); 
+      int i = (idx - k*(vbx_len.x*vbx_len.y)) - j*vbx_len.x;
+
+      i += vbx_lo.x;
+      j += vbx_lo.y;
+      k += vbx_lo.z;
+
+      const Real v_val = v(i,j,k);
+
+      const int bct_jlo_val = bct_jlo(i,dom_low.y-1,k,0);
+      const int bct_jhi_val = bct_jhi(i,dom_high.y+1,k,0);
+
+      for(int n(0); n < ncomp; n++) { 
+        //
+        // South face
+        //
+        // In the case of MINF       we are using the prescribed Dirichlet value
+        // In the case of PINF, POUT we are using the upwind value
+        Real state_pls = state(i,j,k,state_comp+n);
+        Real state_mns = state(i,j-1,k,state_comp+n);
+        const Real y_slopes_pls = y_slopes(i,j,k,slopes_comp+n);
+        const Real y_slopes_mns = y_slopes(i,j-1,k,slopes_comp+n);
+
+        Real fy_val(0);
+
+        if((j == dom_low.y) and
+          any(bct_jlo_val, bct_data, bct_size, aux::is_equal()))
+        {
+          fy_val = v_val * state_mns;
+        }
+        else if ((j == dom_high.y+1) and
+            any(bct_jhi_val, bct_data, bct_size, aux::is_equal()))
+        {
+          fy_val = v_val * state_pls;
+        }
+        else {
+          state_pls -= .5*y_slopes_pls;
+          state_mns += .5*y_slopes_mns;
+
+          fy_val = v_val * upwind(state_mns, state_pls, v_val);
+        }
+
+        fy(i,j,k,n) = fy_val;
+      }
     }
-    else {
-      state_pls -= .5*x_slopes_pls;
-      state_mns += .5*x_slopes_mns;
 
-      fx_val = u_val * upwind(state_mns, state_pls, u_val);
-    }
-
-    fx(i,j,k,n) = fx_val;
-  });
-
-  amrex::ParallelFor(vbx,ncomp,
-    [slopes_comp,state_comp,dom_low,dom_high,bct_jlo,bct_jhi,bc_types,
-     state,y_slopes,v,fy]
-    AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-  {
-    //
-    // South face
-    //
-    // In the case of MINF       we are using the prescribed Dirichlet value
-    // In the case of PINF, POUT we are using the upwind value
-    const Real v_val = v(i,j,k);
-    Real state_pls = state(i,j,k,state_comp+n);
-    Real state_mns = state(i,j-1,k,state_comp+n);
-    const Real y_slopes_pls = y_slopes(i,j,k,slopes_comp+n);
-    const Real y_slopes_mns = y_slopes(i,j-1,k,slopes_comp+n);
-
-    Real fy_val(0);
-
-    const int bct_jlo_val = bct_jlo(i,dom_low.y-1,k,0);
-    const int bct_jhi_val = bct_jhi(i,dom_high.y+1,k,0);
-
-    const int* bct_data = bc_types.data();
-    const int bct_size = bc_types.size();
-
-    if((j == dom_low.y) and
-      any(bct_jlo_val, bct_data, bct_size, aux::is_equal()))
+    if(idx < wbx_npoints)
     {
-      fy_val = v_val * state_mns;
+      int k = idx / (wbx_len.x*wbx_len.y); 
+      int j = (idx - k*(wbx_len.x*wbx_len.y)) / (wbx_len.x); 
+      int i = (idx - k*(wbx_len.x*wbx_len.y)) - j*wbx_len.x;
+
+      i += wbx_lo.x;
+      j += wbx_lo.y;
+      k += wbx_lo.z;
+
+      const Real w_val = w(i,j,k);
+
+      const int bct_klo_val = bct_klo(i,j,dom_low.z-1,0);
+      const int bct_khi_val = bct_khi(i,j,dom_high.z+1,0);
+
+      for(int n(0); n < ncomp; n++) { 
+        //
+        // Bottom face
+        //
+        // In the case of MINF       we are using the prescribed Dirichlet value
+        // In the case of PINF, POUT we are using the upwind value
+        Real state_pls = state(i,j,k,state_comp+n);
+        Real state_mns = state(i,j,k-1,state_comp+n);
+        const Real z_slopes_pls = z_slopes(i,j,k,slopes_comp+n);
+        const Real z_slopes_mns = z_slopes(i,j,k-1,slopes_comp+n);
+
+        Real fz_val(0);
+
+        if((k == dom_low.z) and
+          any(bct_klo_val, bct_data, bct_size, aux::is_equal()))
+        {
+          fz_val = w_val * state_mns;
+        }
+        else if ((k == dom_high.z+1) and
+            any(bct_khi_val, bct_data, bct_size, aux::is_equal()))
+        {
+          fz_val = w_val * state_pls;
+        }
+        else {
+          state_pls -= .5*z_slopes_pls;
+          state_mns += .5*z_slopes_mns;
+
+          fz_val = w_val * upwind(state_mns, state_pls, w_val);
+        }
+
+        fz(i,j,k,n) = fz_val;
+      }
     }
-    else if ((j == dom_high.y+1) and
-        any(bct_jhi_val, bct_data, bct_size, aux::is_equal()))
-    {
-      fy_val = v_val * state_pls;
-    }
-    else {
-      state_pls -= .5*y_slopes_pls;
-      state_mns += .5*y_slopes_mns;
-
-      fy_val = v_val * upwind(state_mns, state_pls, v_val);
-    }
-
-    fy(i,j,k,n) = fy_val;
-  });
-
-  amrex::ParallelFor(wbx, ncomp,
-    [slopes_comp,state_comp,dom_low,dom_high,bct_klo,bct_khi,bc_types,state,
-     z_slopes,w,fz]
-    AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-  {
-    //
-    // Bottom face
-    //
-    // In the case of MINF       we are using the prescribed Dirichlet value
-    // In the case of PINF, POUT we are using the upwind value
-    const Real w_val = w(i,j,k);
-    Real state_pls = state(i,j,k,state_comp+n);
-    Real state_mns = state(i,j,k-1,state_comp+n);
-    const Real z_slopes_pls = z_slopes(i,j,k,slopes_comp+n);
-    const Real z_slopes_mns = z_slopes(i,j,k-1,slopes_comp+n);
-
-    Real fz_val(0);
-
-    const int bct_klo_val = bct_klo(i,j,dom_low.z-1,0);
-    const int bct_khi_val = bct_khi(i,j,dom_high.z+1,0);
-
-    const int* bct_data = bc_types.data();
-    const int bct_size = bc_types.size();
-
-    if((k == dom_low.z) and
-      any(bct_klo_val, bct_data, bct_size, aux::is_equal()))
-    {
-      fz_val = w_val * state_mns;
-    }
-    else if ((k == dom_high.z+1) and
-        any(bct_khi_val, bct_data, bct_size, aux::is_equal()))
-    {
-      fz_val = w_val * state_pls;
-    }
-    else {
-      state_pls -= .5*z_slopes_pls;
-      state_mns += .5*z_slopes_mns;
-
-      fz_val = w_val * upwind(state_mns, state_pls, w_val);
-    }
-
-    fz(i,j,k,n) = fz_val;
   });
 }
 
@@ -419,210 +452,285 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
   // possible
   //
 
-  //
-  // ===================== X =====================
-  //
-  amrex::ParallelFor(ubx,ncomp,
-    [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_ilo,bct_ihi,bc_types,
-     areafrac_x,fcx_fab,ccc_fab,x_slopes,y_slopes,z_slopes,state,u,sx,fx]
-    AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+  const int ubx_npoints = ubx.numPts();
+  const auto ubx_lo = amrex::lbound(ubx);
+  const auto ubx_len = amrex::length(ubx);
+
+  const int vbx_npoints = vbx.numPts();
+  const auto vbx_lo = amrex::lbound(vbx);
+  const auto vbx_len = amrex::length(vbx);
+
+  const int wbx_npoints = wbx.numPts();
+  const auto wbx_lo = amrex::lbound(wbx);
+  const auto wbx_len = amrex::length(wbx);
+
+  const int npoints = amrex::max(ubx_npoints,vbx_npoints,wbx_npoints);
+
+  ParallelFor(npoints, [=] AMREX_GPU_DEVICE (int idx) noexcept
   {
-    const Real u_val = u(i,j,k);
-
-    Real sx_ijkn(0);
-
     const int* bct_data = bc_types.data();
     const int bct_size = bc_types.size();
 
-    if( areafrac_x(i,j,k) > 0 )
+    if(idx < ubx_npoints)
     {
-      if(i <= dom_low.x and
-        any(bct_ilo(dom_low.x-1,j,k,0), bct_data, bct_size, aux::is_equal()))
-      {
-        sx_ijkn = state(dom_low.x-1,j,k,state_comp+n);
-      }
-      else if(i >= dom_high.x+1 and
-        any(bct_ihi(dom_high.x+1,j,k,0), bct_data, bct_size, aux::is_equal()))
-      {
-        sx_ijkn = state(dom_high.x+1,j,k,state_comp+n);
-      }
-      else 
-      {
-        Real yf = fcx_fab(i,j,k,0); // local (y,z) of centroid of x-face we are extrapolating to
-        Real zf = fcx_fab(i,j,k,1);
+      int k = idx / (ubx_len.x*ubx_len.y); 
+      int j = (idx - k*(ubx_len.x*ubx_len.y)) / (ubx_len.x); 
+      int i = (idx - k*(ubx_len.x*ubx_len.y)) - j*ubx_len.x;
 
-        Real delta_x = .5 + ccc_fab(i,j,k,0);
-        Real delta_y = yf - ccc_fab(i,j,k,1);
-        Real delta_z = zf - ccc_fab(i,j,k,2);
+      i += ubx_lo.x;
+      j += ubx_lo.y;
+      k += ubx_lo.z;
 
-        Real state_pls = state(i,j,k,state_comp+n);
-        Real state_mns = state(i-1,j,k,state_comp+n);
+      const Real u_val = u(i,j,k);
 
-        Real cc_umax = amrex::max(state_pls, state_mns);
-        Real cc_umin = amrex::min(state_pls, state_mns);
+      const int bct_ilo_val = bct_ilo(dom_low.x-1,j,k,0);
+      const int bct_ihi_val = bct_ihi(dom_high.x+1,j,k,0);
 
-        Real upls = state_pls - delta_x * x_slopes(i,j,k,slopes_comp+n) 
-                              + delta_y * y_slopes(i,j,k,slopes_comp+n) 
-                              + delta_z * z_slopes(i,j,k,slopes_comp+n);
+      const Real afrac_x = areafrac_x(i,j,k);
 
-        upls = amrex::max( amrex::min(upls, cc_umax), cc_umin );
+      const Real fcx_fab_x = fcx_fab(i,j,k,0);
+      const Real fcx_fab_y = fcx_fab(i,j,k,1);
+      
+      const Real ccc_fab_x = ccc_fab(i,j,k,0);
+      const Real ccc_fab_y = ccc_fab(i,j,k,1);
+      const Real ccc_fab_z = ccc_fab(i,j,k,2);
 
-        delta_x = .5 - ccc_fab(i-1,j,k,0);
-        delta_y = yf - ccc_fab(i-1,j,k,1);
-        delta_z = zf - ccc_fab(i-1,j,k,2);
+      const Real ccc_fab_mns_x = ccc_fab(i-1,j,k,0);
+      const Real ccc_fab_mns_y = ccc_fab(i-1,j,k,1);
+      const Real ccc_fab_mns_z = ccc_fab(i-1,j,k,2);
 
-        Real umns = state_mns + delta_x * x_slopes(i-1,j,k,slopes_comp+n) 
-                              + delta_y * y_slopes(i-1,j,k,slopes_comp+n) 
-                              + delta_z * z_slopes(i-1,j,k,slopes_comp+n);
+      for(int n(0); n < ncomp; n++) {
+        Real sx_ijkn(0);
 
-        umns = amrex::max( amrex::min(umns, cc_umax), cc_umin );
+        if( afrac_x > 0 )
+        {
+          if(i <= dom_low.x and
+            any(bct_ilo_val, bct_data, bct_size, aux::is_equal()))
+          {
+            sx_ijkn = state(dom_low.x-1,j,k,state_comp+n);
+          }
+          else if(i >= dom_high.x+1 and
+            any(bct_ihi_val, bct_data, bct_size, aux::is_equal()))
+          {
+            sx_ijkn = state(dom_high.x+1,j,k,state_comp+n);
+          }
+          else 
+          {
+            Real yf = fcx_fab_x; // local (y,z) of centroid of x-face we are extrapolating to
+            Real zf = fcx_fab_y;
 
-        sx_ijkn = upwind(umns, upls, u_val);
-      }
-    }
-    else {
-      sx_ijkn = my_huge;
-    }
+            Real delta_x = .5 + ccc_fab_x;
+            Real delta_y = yf - ccc_fab_y;
+            Real delta_z = zf - ccc_fab_z;
 
-    sx(i,j,k,n) = sx_ijkn;
-    fx(i,j,k,n) = u_val * sx_ijkn;
-  });
+            Real state_pls = state(i,j,k,state_comp+n);
+            Real state_mns = state(i-1,j,k,state_comp+n);
 
-  //
-  // ===================== Y =====================
-  //
-  amrex::ParallelFor(vbx, ncomp,
-    [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_jlo,bct_jhi,bc_types,
-     areafrac_y,fcy_fab,ccc_fab,x_slopes,y_slopes,z_slopes,state,v,sy,fy]
-    AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-  {
-    const Real v_val = v(i,j,k);
+            Real cc_umax = amrex::max(state_pls, state_mns);
+            Real cc_umin = amrex::min(state_pls, state_mns);
 
-    Real sy_ijkn(0);
+            Real upls = state_pls - delta_x * x_slopes(i,j,k,slopes_comp+n) 
+                                  + delta_y * y_slopes(i,j,k,slopes_comp+n) 
+                                  + delta_z * z_slopes(i,j,k,slopes_comp+n);
 
-    const int* bct_data = bc_types.data();
-    const int bct_size = bc_types.size();
+            upls = amrex::max( amrex::min(upls, cc_umax), cc_umin );
 
-    if( areafrac_y(i,j,k) > 0 ) {
-      if( j <= dom_low.y and
-       any(bct_jlo(i,dom_low.y-1,k,0), bct_data, bct_size, aux::is_equal()))
-      {
-        sy_ijkn = state(i,dom_low.y-1,k,state_comp+n);
-      }
-      else if( j >= dom_high.y+1 and
-       any(bct_jhi(i,dom_high.y+1,k,0), bct_data, bct_size, aux::is_equal()))
-      {
-        sy_ijkn = state(i,dom_high.y+1,k,state_comp+n);
-      }
-      else 
-      {
-        Real xf = fcy_fab(i,j,k,0); // local (x,z) of centroid of y-face we are extrapolating to
-        Real zf = fcy_fab(i,j,k,1);
+            delta_x = .5 - ccc_fab_mns_x;
+            delta_y = yf - ccc_fab_mns_y;
+            delta_z = zf - ccc_fab_mns_z;
 
-        Real delta_x = xf  - ccc_fab(i,j,k,0);
-        Real delta_y = 0.5 + ccc_fab(i,j,k,1);
-        Real delta_z = zf  - ccc_fab(i,j,k,2);
+            Real umns = state_mns + delta_x * x_slopes(i-1,j,k,slopes_comp+n) 
+                                  + delta_y * y_slopes(i-1,j,k,slopes_comp+n) 
+                                  + delta_z * z_slopes(i-1,j,k,slopes_comp+n);
 
-        Real state_pls = state(i,j  ,k,state_comp+n);
-        Real state_mns = state(i,j-1,k,state_comp+n);
+            umns = amrex::max( amrex::min(umns, cc_umax), cc_umin );
 
-        Real cc_umax = amrex::max(state_pls, state_mns);
-        Real cc_umin = amrex::min(state_pls, state_mns);
+            sx_ijkn = upwind(umns, upls, u_val);
+          }
+        }
+        else {
+          sx_ijkn = my_huge;
+        }
 
-        Real vpls = state_pls - delta_y * y_slopes(i,j,k,slopes_comp+n) 
-                              + delta_x * x_slopes(i,j,k,slopes_comp+n) 
-                              + delta_z * z_slopes(i,j,k,slopes_comp+n);
-
-        vpls = amrex::max( amrex::min(vpls, cc_umax), cc_umin );
-
-        delta_x = xf  - ccc_fab(i,j-1,k,0);
-        delta_y = 0.5 - ccc_fab(i,j-1,k,1);
-        delta_z = zf  - ccc_fab(i,j-1,k,2);
-
-        Real vmns = state_mns + delta_y * y_slopes(i,j-1,k,slopes_comp+n) 
-                              + delta_x * x_slopes(i,j-1,k,slopes_comp+n) 
-                              + delta_z * z_slopes(i,j-1,k,slopes_comp+n);
-
-        vmns = amrex::max( amrex::min(vmns, cc_umax), cc_umin );
-
-        sy_ijkn = upwind(vmns, vpls, v_val);
+        sx(i,j,k,n) = sx_ijkn;
+        fx(i,j,k,n) = u_val * sx_ijkn;
       }
     }
-    else {
-      sy_ijkn = my_huge; 
-    }                      
 
-    sy(i,j,k,n) = sy_ijkn;
-    fy(i,j,k,n) = v_val * sy_ijkn;
-  });                      
-                           
-  //                       
-  // =====================  Z =====================
-  //                       
-  amrex::ParallelFor(wbx, ncomp,
-    [my_huge,slopes_comp,state_comp,dom_low,dom_high,bct_klo,bct_khi,bc_types,
-     areafrac_z,fcz_fab,ccc_fab,x_slopes,y_slopes,z_slopes,state,w,sz,fz]
-    AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-  {                        
-    const Real w_val = w(i,j,k);
+    if(idx < vbx_npoints)
+    {
+      int k = idx / (vbx_len.x*vbx_len.y); 
+      int j = (idx - k*(vbx_len.x*vbx_len.y)) / (vbx_len.x); 
+      int i = (idx - k*(vbx_len.x*vbx_len.y)) - j*vbx_len.x;
 
-    Real sz_ijkn(0);
+      i += vbx_lo.x;
+      j += vbx_lo.y;
+      k += vbx_lo.z;
 
-    const int* bct_data = bc_types.data();
-    const int bct_size = bc_types.size();
+      const Real v_val = v(i,j,k);
 
-    if( areafrac_z(i,j,k) > 0 ) {
-      if( k <= dom_low.z and
-       any(bct_klo(i,j,dom_low.z-1,0), bct_data, bct_size, aux::is_equal()))
-      {                    
-        sz_ijkn = state(i, j,dom_low.z-1,state_comp+n);
-      }                    
-      else if( k >= dom_high.z+1 and
-       any(bct_khi(i,j,dom_high.z+1,0), bct_data, bct_size, aux::is_equal()))
-      {                    
-        sz_ijkn = state(i, j,dom_high.z+1,state_comp+n);
-      }                    
-      else                 
-      {                    
-        Real xf = fcz_fab(i,j,k,0); // local (x,y) of centroid of z-face we are extrapolating to
-        Real yf = fcz_fab(i,j,k,1);
+      const int bct_jlo_val = bct_jlo(i,dom_low.y-1,k,0);
+      const int bct_jhi_val = bct_jhi(i,dom_high.y+1,k,0);
 
-        Real delta_x = xf - ccc_fab(i,j,k,0);
-        Real delta_y = yf - ccc_fab(i,j,k,1);
-        Real delta_z = .5 + ccc_fab(i,j,k,2);
+      const Real afrac_y = areafrac_y(i,j,k);
 
-        Real state_pls = state(i,j,k  ,state_comp+n);
-        Real state_mns = state(i,j,k-1,state_comp+n);
+      const Real fcy_fab_x = fcy_fab(i,j,k,0);
+      const Real fcy_fab_y = fcy_fab(i,j,k,1);
+      
+      const Real ccc_fab_x = ccc_fab(i,j,k,0);
+      const Real ccc_fab_y = ccc_fab(i,j,k,1);
+      const Real ccc_fab_z = ccc_fab(i,j,k,2);
 
-        Real cc_umax = amrex::max(state_pls, state_mns);
-        Real cc_umin = amrex::min(state_pls, state_mns);
+      const Real ccc_fab_mns_x = ccc_fab(i,j-1,k,0);
+      const Real ccc_fab_mns_y = ccc_fab(i,j-1,k,1);
+      const Real ccc_fab_mns_z = ccc_fab(i,j-1,k,2);
 
-        Real wpls = state_pls - delta_z * z_slopes(i,j,k,slopes_comp+n) 
-                              + delta_x * x_slopes(i,j,k,slopes_comp+n) 
-                              + delta_y * y_slopes(i,j,k,slopes_comp+n);
+      for(int n(0); n < ncomp; n++) {
+        Real sy_ijkn(0);
 
-        wpls = amrex::max( amrex::min(wpls, cc_umax), cc_umin );
+        const int* bct_data = bc_types.data();
+        const int bct_size = bc_types.size();
 
-        delta_x = xf - ccc_fab(i,j,k-1,0);
-        delta_y = yf - ccc_fab(i,j,k-1,1);
-        delta_z = .5 - ccc_fab(i,j,k-1,2);
+        if( afrac_y > 0 ) {
+          if( j <= dom_low.y and
+           any(bct_jlo_val, bct_data, bct_size, aux::is_equal()))
+          {
+            sy_ijkn = state(i,dom_low.y-1,k,state_comp+n);
+          }
+          else if( j >= dom_high.y+1 and
+           any(bct_jhi_val, bct_data, bct_size, aux::is_equal()))
+          {
+            sy_ijkn = state(i,dom_high.y+1,k,state_comp+n);
+          }
+          else 
+          {
+            Real xf = fcy_fab_x; // local (x,z) of centroid of y-face we are extrapolating to
+            Real zf = fcy_fab_y;
 
-        Real wmns = state_mns + delta_z * z_slopes(i,j,k-1,slopes_comp+n) 
-                              + delta_x * x_slopes(i,j,k-1,slopes_comp+n) 
-                              + delta_y * y_slopes(i,j,k-1,slopes_comp+n);
+            Real delta_x = xf  - ccc_fab_x;
+            Real delta_y = 0.5 + ccc_fab_y;
+            Real delta_z = zf  - ccc_fab_z;
 
-        wmns = amrex::max( amrex::min(wmns, cc_umax), cc_umin );
+            Real state_pls = state(i,j  ,k,state_comp+n);
+            Real state_mns = state(i,j-1,k,state_comp+n);
 
-        sz_ijkn = upwind(wmns, wpls, w_val);
+            Real cc_umax = amrex::max(state_pls, state_mns);
+            Real cc_umin = amrex::min(state_pls, state_mns);
+
+            Real vpls = state_pls - delta_y * y_slopes(i,j,k,slopes_comp+n) 
+                                  + delta_x * x_slopes(i,j,k,slopes_comp+n) 
+                                  + delta_z * z_slopes(i,j,k,slopes_comp+n);
+
+            vpls = amrex::max( amrex::min(vpls, cc_umax), cc_umin );
+
+            delta_x = xf  - ccc_fab_mns_x;
+            delta_y = 0.5 - ccc_fab_mns_y;
+            delta_z = zf  - ccc_fab_mns_z;
+
+            Real vmns = state_mns + delta_y * y_slopes(i,j-1,k,slopes_comp+n) 
+                                  + delta_x * x_slopes(i,j-1,k,slopes_comp+n) 
+                                  + delta_z * z_slopes(i,j-1,k,slopes_comp+n);
+
+            vmns = amrex::max( amrex::min(vmns, cc_umax), cc_umin );
+
+            sy_ijkn = upwind(vmns, vpls, v_val);
+          }
+        }
+        else {
+          sy_ijkn = my_huge; 
+        }                      
+
+        sy(i,j,k,n) = sy_ijkn;
+        fy(i,j,k,n) = v_val * sy_ijkn;
       }
     }
-    else {
-      sz_ijkn = my_huge;
-    }
 
-    sz(i,j,k,n) = sz_ijkn;
-    fz(i,j,k,n) = w_val * sz_ijkn;
+    if(idx < wbx_npoints)
+    {
+      int k = idx / (wbx_len.x*wbx_len.y); 
+      int j = (idx - k*(wbx_len.x*wbx_len.y)) / (wbx_len.x); 
+      int i = (idx - k*(wbx_len.x*wbx_len.y)) - j*wbx_len.x;
+
+      i += wbx_lo.x;
+      j += wbx_lo.y;
+      k += wbx_lo.z;
+
+      const Real w_val = w(i,j,k);
+
+      const int bct_klo_val = bct_klo(i,j,dom_low.z-1,0);
+      const int bct_khi_val = bct_khi(i,j,dom_high.z+1,0);
+
+      const Real afrac_z = areafrac_z(i,j,k);
+
+      const Real fcz_fab_x = fcz_fab(i,j,k,0);
+      const Real fcz_fab_y = fcz_fab(i,j,k,1);
+      
+      const Real ccc_fab_x = ccc_fab(i,j,k,0);
+      const Real ccc_fab_y = ccc_fab(i,j,k,1);
+      const Real ccc_fab_z = ccc_fab(i,j,k,2);
+
+      const Real ccc_fab_mns_x = ccc_fab(i,j,k-1,0);
+      const Real ccc_fab_mns_y = ccc_fab(i,j,k-1,1);
+      const Real ccc_fab_mns_z = ccc_fab(i,j,k-1,2);
+
+      for(int n(0); n < ncomp; n++) {
+        Real sz_ijkn(0);
+
+        const int* bct_data = bc_types.data();
+        const int bct_size = bc_types.size();
+
+        if( afrac_z > 0 ) {
+          if( k <= dom_low.z and
+           any(bct_klo_val, bct_data, bct_size, aux::is_equal()))
+          {                    
+            sz_ijkn = state(i, j,dom_low.z-1,state_comp+n);
+          }                    
+          else if( k >= dom_high.z+1 and
+           any(bct_khi_val, bct_data, bct_size, aux::is_equal()))
+          {                    
+            sz_ijkn = state(i, j,dom_high.z+1,state_comp+n);
+          }                    
+          else                 
+          {                    
+            Real xf = fcz_fab_x; // local (x,y) of centroid of z-face we are extrapolating to
+            Real yf = fcz_fab_y;
+
+            Real delta_x = xf - ccc_fab_x;
+            Real delta_y = yf - ccc_fab_y;
+            Real delta_z = .5 + ccc_fab_z;
+
+            Real state_pls = state(i,j,k  ,state_comp+n);
+            Real state_mns = state(i,j,k-1,state_comp+n);
+
+            Real cc_umax = amrex::max(state_pls, state_mns);
+            Real cc_umin = amrex::min(state_pls, state_mns);
+
+            Real wpls = state_pls - delta_z * z_slopes(i,j,k,slopes_comp+n) 
+                                  + delta_x * x_slopes(i,j,k,slopes_comp+n) 
+                                  + delta_y * y_slopes(i,j,k,slopes_comp+n);
+
+            wpls = amrex::max( amrex::min(wpls, cc_umax), cc_umin );
+
+            delta_x = xf - ccc_fab_mns_x;
+            delta_y = yf - ccc_fab_mns_y;
+            delta_z = .5 - ccc_fab_mns_z;
+
+            Real wmns = state_mns + delta_z * z_slopes(i,j,k-1,slopes_comp+n) 
+                                  + delta_x * x_slopes(i,j,k-1,slopes_comp+n) 
+                                  + delta_y * y_slopes(i,j,k-1,slopes_comp+n);
+
+            wmns = amrex::max( amrex::min(wmns, cc_umax), cc_umin );
+
+            sz_ijkn = upwind(wmns, wpls, w_val);
+          }
+        }
+        else {
+          sz_ijkn = my_huge;
+        }
+
+        sz(i,j,k,n) = sz_ijkn;
+        fz(i,j,k,n) = w_val * sz_ijkn;
+      }
+    }
   });
 }
-
-#endif
