@@ -73,7 +73,7 @@ namespace FLUID
       std::string viscosity_model;
       ppFluid.get("viscosity", viscosity_model );
 
-      if (density_model == "constant") {
+      if (viscosity_model == "constant") {
 
         //VISCOSITYMODEL ViscosityModel = ConstantViscosity;
         ppFluid.get("viscosity.constant", mu_g0 );
