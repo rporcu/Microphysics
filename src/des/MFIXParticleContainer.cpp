@@ -410,7 +410,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
 #endif
 
-#ifdef AMREX_USE_CUDA
             auto nbor_data = m_neighbor_list[lev][index].data();
 
             constexpr Real small_number = 1.0e-15;
@@ -525,18 +524,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                           }
                       }
               });
-#else
-            calc_particle_collisions(particles,
-                                     &nrp,
-                                     neighbors[lev][index].dataPtr(),
-                                     &size_ng,
-                                     neighbor_list[lev][index].dataPtr(),
-                                     &size_nl,
-                                     tow[index].dataPtr(),
-                                     fc[index].dataPtr(),
-                                     &subdt,
-                                     &ncoll);
-#endif
 
             // Debugging: copy data from the fc (all forces) vector to the wfor
             // (wall forces) vector. Note that since fc already contains the
