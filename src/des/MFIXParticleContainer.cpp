@@ -429,11 +429,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                   for (const auto& p2 : nbor_data.getNeighbors(i))
                   {
-                      Real dx = p2.pos(0) - p1.pos(0);
-                      Real dy = p2.pos(1) - p1.pos(1);
-                      Real dz = p2.pos(2) - p1.pos(2);
+                      Real dist_x = p2.pos(0) - p1.pos(0);
+                      Real dist_y = p2.pos(1) - p1.pos(1);
+                      Real dist_z = p2.pos(2) - p1.pos(2);
 
-                      Real r2 = dx*dx + dy*dy + dz*dz;
+                      Real r2 = dist_x*dist_x +
+                                dist_y*dist_y +
+                                dist_z*dist_z;
+
                       Real r_lm = p1.rdata(realData::radius) + p2.rdata(realData::radius);
 
                       if ( r2 <= (r_lm - small_number)*(r_lm - small_number) and (p1.id() != p2.id()))
@@ -448,9 +451,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                           Real dist_mag_inv = 1.e0/dist_mag;
 
                           Real normal[3];
-                          normal[0] = dx * dist_mag_inv;
-                          normal[1] = dy * dist_mag_inv;
-                          normal[2] = dz * dist_mag_inv;
+                          normal[0] = dist_x * dist_mag_inv;
+                          normal[1] = dist_y * dist_mag_inv;
+                          normal[2] = dist_z * dist_mag_inv;
 
                           Real overlap_n = r_lm - dist_mag;
                           Real vrel_trans_norm;
@@ -1110,7 +1113,7 @@ ComputeAverageVelocities (const int lev,
       // Jump to next iteration if this averaging region is not valid
       if ( !avg_region.ok() )
       {
-        amrex::Print() << "ComputeAverageVelocities: region " << nr 
+        amrex::Print() << "ComputeAverageVelocities: region " << nr
                        << " is invalid: skipping\n";
         continue;
       }

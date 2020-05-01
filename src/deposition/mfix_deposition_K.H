@@ -161,7 +161,7 @@ struct TrilinearDPVMSquareDeposition
       wx[0] = 1.0 - wx[1];
     }
 
-    if ( j == static_cast<int>)std::floor(y-0.5)) ) {
+    if ( j == static_cast<int>(std::floor(y-0.5)) ) {
       hh = (j*dx[1]) - p.pos(1) + rp;
 
       wy[0] = ( hh < 0.0 ) ? 0.0 :
@@ -455,7 +455,7 @@ struct CentroidDeposition
 
     // This gives us the i,j,k of the cell containing the centriod
     // of the particle.
-    const int ip = static_cast<int>(std::floor(x-0.5);
+    const int ip = static_cast<int>(std::floor(x-0.5));
     const int jp = static_cast<int>(std::floor(y-0.5));
     const int kp = static_cast<int>(std::floor(z-0.5));
 

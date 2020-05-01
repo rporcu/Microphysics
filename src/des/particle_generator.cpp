@@ -485,7 +485,7 @@ ParticlesGenerator::random_fill (const int icv,
 
   amrex::RealVect ic_dlo, ic_dhi, ic_len;
   amrex::Real max_dp, max_rp;
-  
+
   calc_cell_ic(dx, dy, dz,
                IC::ic[icv].region->lo(),
                IC::ic[icv].region->hi(),
@@ -526,7 +526,7 @@ ParticlesGenerator::random_fill (const int icv,
   ic_dlo[0] += max_rp;
   ic_dlo[1] += max_rp;
   ic_dlo[2] += max_rp;
-  
+
   const amrex::Real mindist = (1.01*max_dp)*(1.01*max_dp);
 
   const RealVect Oodx = {1/dx, 1/dy, 1/dz};
@@ -545,7 +545,7 @@ ParticlesGenerator::random_fill (const int icv,
   max_fitting_parts[0] = static_cast<int>(std::ceil(ic_len[0]/max_dp));
   max_fitting_parts[1] = static_cast<int>(std::ceil(ic_len[1]/max_dp));
   max_fitting_parts[2] = static_cast<int>(std::ceil(ic_len[2]/max_dp));
-  
+
   const int max_np = max_fitting_parts[0]*max_fitting_parts[1]*max_fitting_parts[2];
   grow_pdata(max_np);
 
@@ -602,11 +602,11 @@ ParticlesGenerator::random_fill (const int icv,
                      local_k*delta_bx[0]*delta_bx[1] +
                      p*delta_bx[0]*delta_bx[1]*delta_bx[2]];
 
-              const Real dx = p_rdata[local_pc*nr + 0] - pos[0];
-              const Real dy = p_rdata[local_pc*nr + 1] - pos[1];
-              const Real dz = p_rdata[local_pc*nr + 2] - pos[2];
+              const Real dist_x = p_rdata[local_pc*nr + 0] - pos[0];
+              const Real dist_y = p_rdata[local_pc*nr + 1] - pos[1];
+              const Real dist_z = p_rdata[local_pc*nr + 2] - pos[2];
 
-              const amrex::Real dist = dx*dx + dy*dy + dz*dz;
+              const amrex::Real dist = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
 
               if(dist < mindist)
                 overlaps++;
@@ -800,7 +800,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 
         iterations++;
       }
-      
+
       if(not(iterations < maxfails))
       {
 #ifdef AMREX_USE_CUDA
