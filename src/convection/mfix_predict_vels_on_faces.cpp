@@ -129,14 +129,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
     // No cut cells in this FAB
     else if (flags.getType(amrex::grow(bx,1)) == FabType::regular )
     {
-      // Face-centered left and right states
-      const auto& upls_fab = upls.array(mfi);
-      const auto& vpls_fab = vpls.array(mfi);
-      const auto& wpls_fab = wpls.array(mfi);
-      const auto& umns_fab = umns.array(mfi);
-      const auto& vmns_fab = vmns.array(mfi);
-      const auto& wmns_fab = wmns.array(mfi);
-
       // Face-centered ep
       const auto& epx_fab = (ep_face[0])->array(mfi);
       const auto& epy_fab = (ep_face[1])->array(mfi);
@@ -186,9 +178,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
             umac *= epx_fab(i,j,k);
           }
 
-          upls_fab(i,j,k) = upls;
-          umns_fab(i,j,k) = umns;
-
           umac_fab(i,j,k) = umac;
         }
 
@@ -219,10 +208,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
 
             vmac *= epy_fab(i,j,k);
           }
-
-          vpls_fab(i,j,k) = vpls;
-          vmns_fab(i,j,k) = vmns;
-
           vmac_fab(i,j,k) = vmac;
         }
 
@@ -254,9 +239,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
             wmac *= epz_fab(i,j,k);
           }
 
-          wpls_fab(i,j,k) = wpls;
-          wmns_fab(i,j,k) = wmns;
-
           wmac_fab(i,j,k) = wmac;
         }
       });
@@ -283,14 +265,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
       const auto& epx_fab = (ep_face[0])->array(mfi);
       const auto& epy_fab = (ep_face[1])->array(mfi);
       const auto& epz_fab = (ep_face[2])->array(mfi);
-
-      // Face-centered left and right states
-      const auto& upls_fab = upls.array(mfi);
-      const auto& vpls_fab = vpls.array(mfi);
-      const auto& wpls_fab = wpls.array(mfi);
-      const auto& umns_fab = umns.array(mfi);
-      const auto& vmns_fab = vmns.array(mfi);
-      const auto& wmns_fab = wmns.array(mfi);
 
       // Face-centered areas
       const auto& apx_fab = areafrac[0]->array(mfi);
@@ -360,9 +334,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
             umns = amrex::min(umns, cc_umax);
             umns = amrex::max(umns, cc_umin);
 
-            upls_fab(i,j,k) = upls;
-            umns_fab(i,j,k) = umns;
-
             Real umac(0);
 
             if (umns >= 0 or upls <= 0) {
@@ -414,7 +385,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
 
             vpls = amrex::min(vpls, cc_vmax);
             vpls = amrex::max(vpls, cc_vmin);
-            vpls_fab(i,j,k) = vpls;
 
             delta_x = xf - ccc_fab(i,j-1,k,0);
             delta_y = .5 - ccc_fab(i,j-1,k,1);
@@ -426,7 +396,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
 
             vmns = amrex::min(vmns, cc_vmax);
             vmns = amrex::max(vmns, cc_vmin);
-            vmns_fab(i,j,k) = vmns;
 
             Real vmac(0);
 
@@ -479,7 +448,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
 
             wpls = amrex::min(wpls, cc_wmax);
             wpls = amrex::max(wpls, cc_wmin);
-            wpls_fab(i,j,k) = wpls;
 
             delta_x = xf - ccc_fab(i,j,k-1,0);
             delta_y = yf - ccc_fab(i,j,k-1,1);
@@ -491,7 +459,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
 
             wmns = amrex::min(wmns, cc_wmax);
             wmns = amrex::max(wmns, cc_wmin);
-            wmns_fab(i,j,k) = wmns;
 
             Real wmac(0);
 
