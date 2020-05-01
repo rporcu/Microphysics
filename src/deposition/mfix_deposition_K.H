@@ -73,9 +73,9 @@ struct TrilinearDeposition
     amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
     amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
 
-    i = std::floor(x);
-    j = std::floor(y);
-    k = std::floor(z);
+    i = static_cast<int>(std::floor(x));
+    j = static_cast<int>(std::floor(y));
+    k = static_cast<int>(std::floor(z));
 
     amrex::Real wx[2];
     amrex::Real wy[2];
@@ -129,9 +129,9 @@ struct TrilinearDPVMSquareDeposition
     amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
     amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
 
-    i = std::floor(x);
-    j = std::floor(y);
-    k = std::floor(z);
+    i = static_cast<int>(std::floor(x));
+    j = static_cast<int>(std::floor(y));
+    k = static_cast<int>(std::floor(z));
 
     amrex::Real wx[2];
     amrex::Real wy[2];
@@ -144,7 +144,7 @@ struct TrilinearDPVMSquareDeposition
 
     amrex::Real hh;
 
-    if ( i == std::floor(x-0.5) ) {
+    if ( i == static_cast<int>(std::floor(x-0.5)) ) {
       hh = (i*dx[0]) - p.pos(0) + rp;
 
       wx[0] = ( hh < 0.0 ) ? 0.0 :
@@ -161,7 +161,7 @@ struct TrilinearDPVMSquareDeposition
       wx[0] = 1.0 - wx[1];
     }
 
-    if ( j == std::floor(y-0.5) ) {
+    if ( j == static_cast<int>)std::floor(y-0.5)) ) {
       hh = (j*dx[1]) - p.pos(1) + rp;
 
       wy[0] = ( hh < 0.0 ) ? 0.0 :
@@ -179,7 +179,7 @@ struct TrilinearDPVMSquareDeposition
     }
 
 
-    if ( k == std::floor(z-0.5) ) {
+    if ( k == static_cast<int>(std::floor(z-0.5)) ) {
       hh = (k*dx[2]) - p.pos(2) + rp;
 
       wz[0] = ( hh < 0.0 ) ? 0.0 :
@@ -238,9 +238,9 @@ struct TrueDPVMDeposition
     amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
     amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
 
-    i = std::floor(x);
-    j = std::floor(y);
-    k = std::floor(z);
+    i = static_cast<int>(std::floor(x));
+    j = static_cast<int>(std::floor(y));
+    k = static_cast<int>(std::floor(z));
 
     amrex::Real wx[2];
     amrex::Real wy[2];
@@ -251,9 +251,9 @@ struct TrueDPVMDeposition
 
     // This gives us the i,j,k of the cell containing the centriod
     // of the particle.
-    const int ip = std::floor(x-0.5);
-    const int jp = std::floor(y-0.5);
-    const int kp = std::floor(z-0.5);
+    const int ip = static_cast<int>(std::floor(x-0.5));
+    const int jp = static_cast<int>(std::floor(y-0.5));
+    const int kp = static_cast<int>(std::floor(z-0.5));
 
     amrex::Real overlap[3];
 
@@ -445,9 +445,9 @@ struct CentroidDeposition
     amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
     amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
 
-    i = std::floor(x);
-    j = std::floor(y);
-    k = std::floor(z);
+    i = static_cast<int>(std::floor(x));
+    j = static_cast<int>(std::floor(y));
+    k = static_cast<int>(std::floor(z));
 
     amrex::Real wx[2];
     amrex::Real wy[2];
@@ -455,9 +455,9 @@ struct CentroidDeposition
 
     // This gives us the i,j,k of the cell containing the centriod
     // of the particle.
-    const int ip = std::floor(x-0.5);
-    const int jp = std::floor(y-0.5);
-    const int kp = std::floor(z-0.5);
+    const int ip = static_cast<int>(std::floor(x-0.5);
+    const int jp = static_cast<int>(std::floor(y-0.5));
+    const int kp = static_cast<int>(std::floor(z-0.5));
 
     // particle sits on low side of i index otherwise in i-1
     wx[0] = ( i == ip ) ? 0.0 : 1.0;

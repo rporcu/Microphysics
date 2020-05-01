@@ -264,13 +264,13 @@ ParticlesGenerator::hex_close_pack (const int icv,
   max_seed[0] = static_cast<int>(seed / (max_seed[1]*max_seed[2]));
 
   // local grid seed loop hi/lo
-  seed_lo[0] = std::round((ic_dlo[0] - i_w*dx) / ((sqrt6o3x2) * max_rp));
-  seed_lo[1] = std::round((ic_dlo[1] - j_s*dy) / max_dp);
-  seed_lo[2] = std::round((ic_dlo[2] - k_b*dz) / (sqrt3 * max_rp));
+  seed_lo[0] = static_cast<int>(std::round((ic_dlo[0] - i_w*dx) / ((sqrt6o3x2) * max_rp)));
+  seed_lo[1] = static_cast<int>(std::round((ic_dlo[1] - j_s*dy) / max_dp));
+  seed_lo[2] = static_cast<int>(std::round((ic_dlo[2] - k_b*dz) / (sqrt3 * max_rp)));
 
-  seed_hi[0] = std::round((ic_dhi[0] - i_w*dx) / ((sqrt6o3x2) * max_rp) - seed_lo[1]*max_dp);
-  seed_hi[1] = std::round((ic_dhi[1] - j_s*dy) /  max_dp - seed_lo[1]*max_dp);
-  seed_hi[2] = std::round((ic_dhi[2] - k_b*dz) / (sqrt3 * max_rp) - seed_lo[1]*max_dp);
+  seed_hi[0] = static_cast<int>(std::round((ic_dhi[0] - i_w*dx) / ((sqrt6o3x2) * max_rp) - seed_lo[1]*max_dp));
+  seed_hi[1] = static_cast<int>(std::round((ic_dhi[1] - j_s*dy) /  max_dp - seed_lo[1]*max_dp));
+  seed_hi[2] = static_cast<int>(std::round((ic_dhi[2] - k_b*dz) / (sqrt3 * max_rp) - seed_lo[1]*max_dp));
 
   seed_hi[0] = std::min(max_seed[0], seed_hi[0]-1);
   seed_hi[1] = std::min(max_seed[1], seed_hi[1]-1);
@@ -347,13 +347,13 @@ ParticlesGenerator::one_per_fill (const int icv,
   const Real z_t(IC::ic[icv].region->hi(2));
 
   // local grid seed loop hi/lo
-  seed_lo[0] = std::max<int>(lo[0], std::ceil(x_w/dx - .5));
-  seed_lo[1] = std::max<int>(lo[1], std::ceil(y_s/dy - .5));
-  seed_lo[2] = std::max<int>(lo[2], std::ceil(z_b/dz - .5));
+  seed_lo[0] = std::max<int>(lo[0], static_cast<int>(std::ceil(x_w/dx - .5)));
+  seed_lo[1] = std::max<int>(lo[1], static_cast<int>(std::ceil(y_s/dy - .5)));
+  seed_lo[2] = std::max<int>(lo[2], static_cast<int>(std::ceil(z_b/dz - .5)));
 
-  seed_hi[0] = std::min<int>(hi[0], std::floor(x_e/dx - .5));
-  seed_hi[1] = std::min<int>(hi[1], std::floor(y_n/dy - .5));
-  seed_hi[2] = std::min<int>(hi[2], std::floor(z_t/dz - .5));
+  seed_hi[0] = std::min<int>(hi[0], static_cast<int>(std::floor(x_e/dx - .5)));
+  seed_hi[1] = std::min<int>(hi[1], static_cast<int>(std::floor(y_n/dy - .5)));
+  seed_hi[2] = std::min<int>(hi[2], static_cast<int>(std::floor(z_t/dz - .5)));
 
   const Box bx(seed_lo, seed_hi);
 
@@ -417,13 +417,13 @@ ParticlesGenerator::eight_per_fill (const int icv,
   const Real y_n(IC::ic[icv].region->hi(1));
   const Real z_t(IC::ic[icv].region->hi(2));
 
-  seed_lo[0] = std::max<int>(2*lo[0], std::ceil(x_w*(2/dx) - .5));
-  seed_lo[1] = std::max<int>(2*lo[1], std::ceil(y_s*(2/dy) - .5));
-  seed_lo[2] = std::max<int>(2*lo[2], std::ceil(z_b*(2/dz) - .5));
+  seed_lo[0] = std::max<int>(2*lo[0], static_cast<int>(std::ceil(x_w*(2/dx) - .5)));
+  seed_lo[1] = std::max<int>(2*lo[1], static_cast<int>(std::ceil(y_s*(2/dy) - .5)));
+  seed_lo[2] = std::max<int>(2*lo[2], static_cast<int>(std::ceil(z_b*(2/dz) - .5)));
 
-  seed_hi[0] = std::min<int>(2*hi[0]+1, std::floor(x_e*(2/dx) - .5));
-  seed_hi[1] = std::min<int>(2*hi[1]+1, std::floor(y_n*(2/dy) - .5));
-  seed_hi[2] = std::min<int>(2*hi[2]+1, std::floor(z_t*(2/dz) - .5));
+  seed_hi[0] = std::min<int>(2*hi[0]+1, static_cast<int>(std::floor(x_e*(2/dx) - .5)));
+  seed_hi[1] = std::min<int>(2*hi[1]+1, static_cast<int>(std::floor(y_n*(2/dy) - .5)));
+  seed_hi[2] = std::min<int>(2*hi[2]+1, static_cast<int>(std::floor(z_t*(2/dz) - .5)));
 
   const Box bx(seed_lo, seed_hi);
 
@@ -569,9 +569,9 @@ ParticlesGenerator::random_fill (const int icv,
 
       // Grid containing the new particle
       IntVect idx;
-      idx[0] = std::floor(pos[0]*Oodx[0]);
-      idx[1] = std::floor(pos[1]*Oodx[1]);
-      idx[2] = std::floor(pos[2]*Oodx[2]);
+      idx[0] = static_cast<int>(std::floor(pos[0]*Oodx[0]));
+      idx[1] = static_cast<int>(std::floor(pos[1]*Oodx[1]));
+      idx[2] = static_cast<int>(std::floor(pos[2]*Oodx[2]));
 
       // Local grid search for collisions.
       int overlaps = 0;
