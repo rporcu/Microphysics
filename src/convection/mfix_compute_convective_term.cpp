@@ -6,6 +6,8 @@
 #include <AMReX_SPACE.H>
 #include <AMReX_Array.H>
 
+#include <MFIX_FLUID_Parms.H>
+
 //
 // Compute the three components of the convection term
 //
@@ -15,6 +17,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
                                     Vector< MultiFab* > const& vel_in,
                                     Vector< MultiFab* > const& ep_g_in,
                                     Vector< MultiFab* > const& ro_g_in,
+                                    Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& trac_in,
                                     Real time)
 {
@@ -31,8 +34,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
 
     int slopes_comp; int conv_comp; int state_comp; int num_comp;
 
-    // First do FillPatch of {velocity, density, tracer} so we know the ghost cells of
-    // these arrays are all filled
+    // First do FillPatch of {velocity, density, tracer, temperature} so we know
+    // the ghost cells of these arrays are all filled
     for (int lev = 0; lev < nlev; lev++)
     {
         // State with ghost cells
@@ -50,13 +53,20 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
         MultiFab::Copy(*ro_g_in[lev], Sborder_s, 0, 0, num_comp, ro_g_in[lev]->nGrow());
 
-        if (advect_tracer)
+        if (advect_temperature)
         {
            state_comp =  1; num_comp = 1;
            FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
-           MultiFab::Copy(*trac_in[lev], Sborder_s, 0, 0, num_comp, trac_in[lev]->nGrow());
+           MultiFab::Copy(*T_g_in[lev], Sborder_s, 0, 0, num_comp, T_g_in[lev]->nGrow());
         }
 
+        if (advect_tracer)
+        {
+           state_comp =  2; num_comp = 1;
+           FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
+           MultiFab::Copy(*trac_in[lev], Sborder_s, 0, 0, num_comp, trac_in[lev]->nGrow());
+        }
+        
         // We make these with ncomp = 3 so they can hold all three velocity components at once;
         //    note we can also use them to just hold the single density or tracer comp
         fx[lev] = new MultiFab(m_leveldata[lev]->u_mac->boxArray(), dmap[lev], 3, 2,
@@ -97,8 +107,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         fluxes[1] = fy[lev];
         fluxes[2] = fz[lev];
 
-        // We make this with ncomp = 3 so it can hold all three velocity components at once;
-        //    note we can also use it to just hold the single density or tracer comp
+        // We make this with ncomp = 3 so it can hold all three velocity
+        // components at once; note we can also use it to just hold the single
+        // density, temperature or tracer comp.
         // We note that it needs two ghost cells for the redistribution step.
         MultiFab conv_tmp(grids[lev], dmap[lev], 3, 2, MFInfo(), *ebfactory[lev]);
         conv_tmp.setVal(0.);
@@ -109,7 +120,16 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
             MultiFab::Multiply(*trac_in[lev], *ro_g_in[lev], 0, 0, 1, trac_in[lev]->nGrow());
         }
 
-        // Compute slopes of density and tracer
+        if (advect_temperature)
+        {
+            // Convert temperature to (rho * Cp_g * T_g)
+            // TODO: Cp_g become a MultiFab when no longer a constant value
+            // MultiFab::Multiply(*T_g_in[lev], *Cp_g_in[lev], 0, 0, 1, T_g_in[lev]->nGrow());
+            T_g_in[lev]->mult(FLUID::Cp_g0, 0, 1, T_g_in[lev]->nGrow());
+            MultiFab::Multiply(*T_g_in[lev], *ro_g_in[lev], 0, 0, 1, T_g_in[lev]->nGrow());
+        }
+
+        // Compute slopes of density, temperature and tracer
         if (advect_density)
         {
            slopes_comp = 0;
@@ -126,7 +146,15 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
                                slopes_comp);
         }
 
-        // Initialize conv_s to 0 for both density and tracer
+        if (advect_temperature)
+        {
+           slopes_comp = 2;
+           mfix_compute_slopes(lev, time, *T_g_in[lev],
+                               get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
+                               slopes_comp);
+        }
+
+        // Initialize conv_s to 0 for both density, temperature and tracer
         conv_s_in[lev]->setVal(0, 0, conv_s_in[lev]->nComp(), conv_s_in[lev]->nGrow());
 
         // **************************************************
@@ -180,6 +208,31 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         {
            // Convert (rho * tracer) back to tracer
            MultiFab::Divide(*trac_in[lev],*ro_g_in[lev],0,0,1,trac_in[lev]->nGrow());
+        }
+
+        // **********************************************************
+        // Compute div (ep_g rho Cp_g T_g u) -- the update for (rho*temperature)
+        // **********************************************************
+        if (advect_temperature)
+        {
+            conv_comp = 2; state_comp = 0; num_comp = 1; slopes_comp = 2;
+            mfix_compute_fluxes(lev, fx, fy, fz, T_g_in, state_comp, num_comp,
+                                get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
+                                slopes_comp, get_u_mac(), get_v_mac(), get_w_mac());
+
+            EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev],
+                                 already_on_centroids);
+            single_level_weighted_redistribute(conv_tmp, *conv_s_in[lev],
+                                               *ep_g_in[lev], conv_comp, num_comp, geom[lev]);
+        }
+
+        if (advect_temperature)
+        {
+           // Convert (rho * Cp_g * temperature) back to temperature
+           // TODO: when C_g will be a MultiFab
+           // MultiFab::Divide(*T_g_in[lev],*Cp_g_in[lev],0,0,1,T_g_in[lev]->nGrow());
+           T_g_in[lev]->mult(1./FLUID::Cp_g0, 0, 1, T_g_in[lev]->nGrow());
+           MultiFab::Divide(*T_g_in[lev],*ro_g_in[lev],0,0,1,T_g_in[lev]->nGrow());
         }
 
         // Return the negative

@@ -228,6 +228,9 @@ class mfix : public AmrCore
 
     void mfix_set_epg_bcs (const Vector< MultiFab* >& ep_g, const int dir_bc) const;
 
+    void mfix_set_temperature_bcs (Real time,
+                                   Vector< MultiFab* > const& T_g);
+
     void mfix_set_density_bcs (Real time,
                                Vector< MultiFab* > const& ro_g);
 
@@ -245,6 +248,11 @@ class mfix : public AmrCore
                       FArrayBox& eps_fab,
                       const Box& domain,
                       const int* extrap_dir_bcs) const;
+
+    void set_temperature_bcs (Real time,
+                              const int lev,
+                              FArrayBox& scal_fab,
+                              const Box& domain);
 
     void set_density_bcs (Real time,
                           const int lev,
@@ -541,22 +549,25 @@ class mfix : public AmrCore
                                        Vector< MultiFab* > const& vel,
                                        Vector< MultiFab* > const& ep_g,
                                        Vector< MultiFab* > const& ro_g,
+                                       Vector< MultiFab* > const& T_g,
                                        Vector< MultiFab* > const& trac,
                                        Real time);
 
     int steady_state_reached (Real dt, int iter);
 
   public:
-    void mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
-                               Vector< MultiFab* >& conv_s_old,
-                               Vector< MultiFab* >& divtau_old,
-                               Vector< MultiFab* >&   laps_old,
+    void mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
+                               Vector< MultiFab* >&  conv_s_old,
+                               Vector< MultiFab* >&  divtau_old,
+                               Vector< MultiFab* >&    laps_old,
+                               Vector< MultiFab* >& laptemp_old,
                                Real time, Real dt, bool proj_2);
 
-    void mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
-                               Vector< MultiFab* >& conv_s_old,
-                               Vector< MultiFab* >& divtau_old,
-                               Vector< MultiFab* >&   laps_old,
+    void mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
+                               Vector< MultiFab* >&  conv_s_old,
+                               Vector< MultiFab* >&  divtau_old,
+                               Vector< MultiFab* >&    laps_old,
+                               Vector< MultiFab* >& laptemp_old,
                                Real time, Real dt, bool proj_2);
 
   private:
@@ -592,6 +603,8 @@ class mfix : public AmrCore
     amrex::Vector< std::unique_ptr<LevelData> > m_leveldata;
 
     amrex::Vector<amrex::MultiFab*> get_ep_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_T_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_T_g_old () noexcept;
     amrex::Vector<amrex::MultiFab*> get_ro_g () noexcept;
     amrex::Vector<amrex::MultiFab*> get_ro_g_old () noexcept;
     amrex::Vector<amrex::MultiFab*> get_trac () noexcept;
@@ -623,6 +636,7 @@ class mfix : public AmrCore
 
     int steady_state = 0;
 
+    bool advect_temperature = false;
     bool advect_density = false;
     bool advect_tracer  = false;
 
@@ -751,6 +765,7 @@ class mfix : public AmrCore
     int plt_ep_g    = 1;
     int plt_p_g     = 0;
     int plt_ro_g    = 0;
+    int plt_T_g     = 0;
     int plt_trac    = 0;
     int plt_mu_g    = 0;
     int plt_diveu   = 0;

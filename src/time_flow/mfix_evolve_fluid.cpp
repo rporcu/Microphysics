@@ -25,12 +25,13 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
     amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
 
-    // Extrapolate boundary values for ro_g, tracer, ep_g and mu_g
+    // Extrapolate boundary values for ro_g, temperature tracer, ep_g and mu_g
     // The subsequent call to mfix_set_scalar_bcs will only overwrite
     // ep_g ghost values for PINF and POUT
     for (int lev = 0; lev <= finest_level; lev++)
     {
       m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
@@ -40,6 +41,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
     //mfix_set_velocity_bcs(time, vel_g, 0);
 
     mfix_set_density_bcs(time, get_ro_g());
+    //mfix_set_temperature_bcs(time, get_T_g()); // TODO do we need it?
     //mfix_set_scalar_bcs(time, trac, mu_g);
 
     //
@@ -51,27 +53,33 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
     // Create temporary multifabs to hold the old-time conv and divtau
     //    so we don't have to re-compute them in the corrector
-    Vector< MultiFab* > conv_u_old;
-    Vector< MultiFab* > conv_s_old;
-    Vector< MultiFab* > divtau_old;
-    Vector< MultiFab* >   laps_old;
+    Vector< MultiFab* >  conv_u_old;
+    Vector< MultiFab* >  conv_s_old;
+    Vector< MultiFab* >  divtau_old;
+    Vector< MultiFab* >    laps_old;
+    Vector< MultiFab* > laptemp_old;
 
-    conv_u_old.resize(finest_level+1);
-    conv_s_old.resize(finest_level+1);
-    divtau_old.resize(finest_level+1);
-      laps_old.resize(finest_level+1);
+     conv_u_old.resize(finest_level+1);
+     conv_s_old.resize(finest_level+1);
+     divtau_old.resize(finest_level+1);
+       laps_old.resize(finest_level+1);
+    laptemp_old.resize(finest_level+1);
 
     for (int lev = 0; lev <= finest_level; lev++)
     {
        conv_u_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-       conv_s_old[lev] = new MultiFab(grids[lev], dmap[lev], 2, 0, MFInfo(), *ebfactory[lev]);
+       // TODO: check this, I set 3 components since we have density, tracer and
+       // temperature
+       conv_s_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
        divtau_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
          laps_old[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
+       laptemp_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
 
-       conv_u_old[lev]->setVal(0.0);
-       conv_s_old[lev]->setVal(0.0);
-       divtau_old[lev]->setVal(0.0);
-         laps_old[lev]->setVal(0.0);
+        conv_u_old[lev]->setVal(0.0);
+        conv_s_old[lev]->setVal(0.0);
+        divtau_old[lev]->setVal(0.0);
+          laps_old[lev]->setVal(0.0);
+       laptemp_old[lev]->setVal(0.0);
     }
 
     do
@@ -105,6 +113,9 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
           MultiFab& ro_g = *m_leveldata[lev]->ro_g;
           MultiFab& ro_go = *m_leveldata[lev]->ro_go;
 
+          MultiFab& T_g = *m_leveldata[lev]->T_g;
+          MultiFab& T_go = *m_leveldata[lev]->T_go;
+
           MultiFab& trac = *m_leveldata[lev]->trac;
           MultiFab& trac_o = *m_leveldata[lev]->trac_o;
 
@@ -115,6 +126,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
           MultiFab::Copy(ep_go, ep_g, 0, 0, ep_g.nComp(), ep_go.nGrow());
           MultiFab::Copy(p_go, p_g, 0, 0, p_g.nComp(), p_go.nGrow());
           MultiFab::Copy(ro_go, ro_g, 0, 0, ro_g.nComp(), ro_go.nGrow());
+          MultiFab::Copy(T_go, T_g, 0, 0, T_g.nComp(), T_go.nGrow());
           MultiFab::Copy(trac_o, trac, 0, 0, trac.nComp(), trac_o.nGrow());
           MultiFab::Copy(vel_go, vel_g, 0, 0, vel_g.nComp(), vel_go.nGrow());
 
@@ -137,7 +149,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
         // Predictor step
         bool proj_2_pred = true;
-        mfix_apply_predictor(conv_u_old, conv_s_old, divtau_old, laps_old, time, dt, proj_2_pred);
+        mfix_apply_predictor(conv_u_old, conv_s_old, divtau_old, laps_old, laptemp_old, time, dt, proj_2_pred);
 
         // Calculate drag coefficient
         if (DEM::solve)
@@ -151,7 +163,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
         bool proj_2_corr = true;
         // Corrector step
         if (!steady_state)
-           mfix_apply_corrector(conv_u_old, conv_s_old, divtau_old, laps_old, time, dt, proj_2_corr);
+           mfix_apply_corrector(conv_u_old, conv_s_old, divtau_old, laps_old, laptemp_old, time, dt, proj_2_corr);
 
         //
         // Check whether to exit the loop or not
@@ -186,10 +198,11 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
 
     for (int lev = 0; lev <= finest_level; lev++)
     {
-       delete conv_u_old[lev];
-       delete conv_s_old[lev];
-       delete divtau_old[lev];
-       delete   laps_old[lev];
+       delete  conv_u_old[lev];
+       delete  conv_s_old[lev];
+       delete  divtau_old[lev];
+       delete    laps_old[lev];
+       delete laptemp_old[lev];
     }
 
     BL_PROFILE_REGION_STOP("mfix::EvolveFluid");

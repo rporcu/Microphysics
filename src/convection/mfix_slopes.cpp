@@ -21,7 +21,7 @@ namespace {
 }
 
 //
-// Compute the slopes of Sborder (velocity, density or tracer)
+// Compute the slopes of Sborder (velocity, density, temperature or tracer)
 //
 void
 mfix::mfix_compute_slopes (int lev,
