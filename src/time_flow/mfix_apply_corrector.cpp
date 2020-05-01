@@ -4,6 +4,7 @@
 #include <AMReX_VisMF.H>
 #include <MFIX_MFHelpers.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_FLUID_Parms.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -40,10 +41,11 @@
 //     p_g = phi
 //
 void
-mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
-                            Vector< MultiFab* >& conv_s_old,
-                            Vector< MultiFab* >& divtau_old,
-                            Vector< MultiFab* >&   laps_old,
+mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
+                            Vector< MultiFab* >&  conv_s_old,
+                            Vector< MultiFab* >&  divtau_old,
+                            Vector< MultiFab* >&    laps_old,
+                            Vector< MultiFab* >& laptemp_old,
                             Real time, Real l_dt, bool proj_2)
 {
     BL_PROFILE("mfix::mfix_apply_corrector");
@@ -66,7 +68,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         density_nph.emplace_back(grids[lev], dmap[lev],       1, 1, MFInfo(),  *ebfactory[lev]);
 
         conv_u[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-        conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 2, 0, MFInfo(), *ebfactory[lev]);
+        // TODO: check that it is correct to set to 3 components since we need
+        // one for density, one for tracer and one for temperature
+        conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
 
         conv_u[lev]->setVal(0.0);
         conv_s[lev]->setVal(0.0);
@@ -76,7 +80,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // Compute the explicit advective term R_u^*
     // *************************************************************************************
     mfix_compute_convective_term(conv_u, conv_s, get_vel_g(), get_ep_g(),
-                                 get_ro_g(), get_trac(), new_time);
+                                 get_ro_g(), get_T_g(), get_trac(), new_time);
 
     // *************************************************************************************
     // Update density first
@@ -121,6 +125,49 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     } // not constant density
 
     // *************************************************************************************
+    // Update temperature
+    // *************************************************************************************
+    if (advect_temperature)
+    {
+        for (int lev = 0; lev <= finest_level; lev++)
+        {
+            auto& ld = *m_leveldata[lev];
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+            for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+            {
+                Box const& bx = mfi.tilebox();
+                Array4<Real const> const& T_g_o     = ld.T_go->const_array(mfi);
+                Array4<Real      > const& T_g_n     = ld.T_g->array(mfi);
+                Array4<Real const> const& rho_o     = ld.ro_go->const_array(mfi);
+                Array4<Real const> const& rho_n     = ld.ro_g->const_array(mfi);
+                Array4<Real> const& epg             = ld.ep_g->array(mfi);
+                Array4<Real const> const& dtdt_o    = conv_s_old[lev]->const_array(mfi);
+                Array4<Real const> const& dtdt      = conv_s[lev]->const_array(mfi);
+                Array4<Real const> const& laptemp_o = laptemp_old[lev]->const_array(mfi);
+
+                amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                {
+                  int conv_comp = 1;
+
+                  const Real epg_loc = epg(i,j,k);
+
+                  // TODO: Cp_g will be a MultiFab later
+                  Real T_g = (rho_o(i,j,k)*epg_loc*FLUID::Cp_g0)*T_g_o(i,j,k) 
+                           + 0.5 * l_dt * (dtdt_o(i,j,k,conv_comp) + dtdt(i,j,k,conv_comp));
+                  T_g /= (rho_n(i,j,k)*epg_loc);
+
+                  // Crank-Nicolson so we add the explicit half here
+                  T_g += 0.5 * laptemp_o(i,j,k);
+
+                  T_g_n(i,j,k) = T_g;
+                });
+            } // mfi
+        } // lev
+    } // advect_temperature
+
+    // *************************************************************************************
     // Update tracer(s)
     // *************************************************************************************
     int l_ntrac = ntrac;
@@ -150,7 +197,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
                   for (int n = 0; n < l_ntrac; ++n)
                   {
-                    int conv_comp = 1+n;
+                    int conv_comp = 2+n;
 
                     Real tra = (rho_o(i,j,k)*epg_loc)*tra_o(i,j,k,n) 
                              + 0.5 * l_dt * (dtdt_o(i,j,k,conv_comp) + dtdt(i,j,k,conv_comp));
@@ -250,7 +297,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
     diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_mu_g(), 0.5*l_dt);
 
-    // mfix_set_tracer_bcs (new_time, trac, 0);
+    // mfix_set_temperature_bcs (new_time, get_T_g());
+    diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), FLUID::k_g0, 0.5*l_dt);
+
+    // mfix_set_tracer_bcs (new_time, get_trac(), 0);
     diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, 0.5*l_dt);
 
     for (int lev = 0; lev <= finest_level; lev++)

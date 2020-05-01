@@ -33,6 +33,10 @@ class LevelData
     amrex::MultiFab* p_g;
     amrex::MultiFab* p_go;
 
+    // Gas temperature
+    amrex::MultiFab* T_g;
+    amrex::MultiFab* T_go;
+
     // Gas density
     amrex::MultiFab* ro_g;
     amrex::MultiFab* ro_go;

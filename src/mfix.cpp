@@ -208,6 +208,26 @@ Vector< MultiFab* > mfix::get_ep_g () noexcept
   return r;
 }
 
+Vector< MultiFab* > mfix::get_T_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->T_g);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_T_g_old () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->T_go);
+  }
+  return r;
+}
+
 Vector< MultiFab* > mfix::get_ro_g () noexcept
 {
   Vector<MultiFab*> r;

@@ -26,6 +26,7 @@ void init_fluid (const Box& sbx,
                  const Box& bx,
                  const Box& domain,
                  const FArrayBox& ep_g_fab,
+                 FArrayBox& T_g_fab,
                  FArrayBox& ro_g_fab,
                  FArrayBox& trac_fab,
                  const FArrayBox& p_g,
@@ -46,11 +47,17 @@ void init_fluid (const Box& sbx,
       // init_helix (bx, domain, vel_g_fab, dx, dy, dz);
 
       // Set the initial fluid density and viscosity
+      Array4<Real> const& T_g = T_g_fab.array();
       Array4<Real> const& ro_g = ro_g_fab.array();
       Array4<Real> const& trac = trac_fab.array();
 
+      const Real T_g0 = FLUID::T_g0;
       const Real ro_g0  = FLUID::ro_g0;
       const Real trac_0 = FLUID::trac_0;
+
+      amrex::ParallelFor(sbx, [T_g, T_g0]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
+          { T_g(i,j,k) = T_g0; });
 
       amrex::ParallelFor(sbx, [ro_g, ro_g0]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept 

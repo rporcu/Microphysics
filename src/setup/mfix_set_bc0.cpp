@@ -10,11 +10,13 @@ mfix::set_bc0 (const Box& sbx,
                const int lev,
                const Box& domain)
 {
+  const Real T_g0   = FLUID::T_g0;
   const Real ro_g0  = FLUID::ro_g0;
   const Real mu_g0  = FLUID::mu_g0;
   const Real trac_0 = FLUID::trac_0;
 
   Array4<Real> const& a_ep_g = m_leveldata[lev]->ep_g->array(*mfi);
+  Array4<Real> const& a_T_g  = m_leveldata[lev]->T_g->array(*mfi);
   Array4<Real> const& a_ro_g = m_leveldata[lev]->ro_g->array(*mfi);
   Array4<Real> const& a_trac = m_leveldata[lev]->trac->array(*mfi);
   Array4<Real> const& a_mu_g = m_leveldata[lev]->mu_g->array(*mfi);
@@ -58,31 +60,30 @@ mfix::set_bc0 (const Box& sbx,
 
     const Box bx_yz_lo_3D(sbx_lo, bx_yz_lo_hi_3D);
 
-    amrex::ParallelFor(bx_yz_lo_3D,
-        [a_bc_ilo,dom_lo,pinf,pout,minf,ro_g0,trac_0,mu_g0,undefined,
-         p_bc_t_g,p_bc_ep_g,a_ep_g,a_ro_g,a_trac,a_mu_g]
-        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        {
-          const int bcv = a_bc_ilo(dom_lo[0]-1,j,k,1);
-          const int bct = a_bc_ilo(dom_lo[0]-1,j,k,0);
+    ParallelFor(bx_yz_lo_3D, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      const int bcv = a_bc_ilo(dom_lo[0]-1,j,k,1);
+      const int bct = a_bc_ilo(dom_lo[0]-1,j,k,0);
 
-          if((bct == pinf) or (bct == pout) or (bct == minf))
-          {
-            Real bc_ro_g(ro_g0);
-            Real bc_trac(trac_0);
-            Real bc_mu_g(0);
+      if((bct == pinf) or (bct == pout) or (bct == minf))
+      {
+        Real bc_T_g(T_g0);
+        Real bc_ro_g(ro_g0);
+        Real bc_trac(trac_0);
+        Real bc_mu_g(0);
 
-            if (is_equal(mu_g0, undefined))
-              bc_mu_g = sutherland(p_bc_t_g[bcv]);
-            else
-              bc_mu_g = mu_g0;
+        if (is_equal(mu_g0, undefined))
+          bc_mu_g = sutherland(p_bc_t_g[bcv]);
+        else
+          bc_mu_g = mu_g0;
 
-            a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-            a_ro_g(i,j,k) = bc_ro_g;
-            a_trac(i,j,k) = bc_trac;
-            a_mu_g(i,j,k) = bc_mu_g;
-          }
-        });
+        a_ep_g(i,j,k) = p_bc_ep_g[bcv];
+        a_T_g(i,j,k)  = bc_T_g;
+        a_ro_g(i,j,k) = bc_ro_g;
+        a_trac(i,j,k) = bc_trac;
+        a_mu_g(i,j,k) = bc_mu_g;
+      }
+    });
   }
   
   if (nrgt > 0)
@@ -94,31 +95,30 @@ mfix::set_bc0 (const Box& sbx,
 
     const Box bx_yz_hi_3D(bx_yz_hi_lo_3D, sbx_hi);
     
-    amrex::ParallelFor(bx_yz_hi_3D,
-        [a_bc_ihi,dom_hi,pinf,pout,minf,ro_g0,trac_0,mu_g0,undefined,
-         p_bc_t_g,p_bc_ep_g,a_ep_g,a_ro_g,a_trac,a_mu_g]
-        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        {
-          const int bcv = a_bc_ihi(dom_hi[0]+1,j,k,1);
-          const int bct = a_bc_ihi(dom_hi[0]+1,j,k,0);
+    ParallelFor(bx_yz_hi_3D, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      const int bcv = a_bc_ihi(dom_hi[0]+1,j,k,1);
+      const int bct = a_bc_ihi(dom_hi[0]+1,j,k,0);
 
-          if((bct == pinf) or (bct == pout) or (bct == minf))
-          {
-            Real bc_ro_g(ro_g0);
-            Real bc_trac(trac_0);
-            Real bc_mu_g(0);
+      if((bct == pinf) or (bct == pout) or (bct == minf))
+      {
+        Real bc_T_g(T_g0);
+        Real bc_ro_g(ro_g0);
+        Real bc_trac(trac_0);
+        Real bc_mu_g(0);
 
-            if (is_equal(mu_g0, undefined))
-              bc_mu_g = sutherland(p_bc_t_g[bcv]);
-            else
-              bc_mu_g = mu_g0;
+        if (is_equal(mu_g0, undefined))
+          bc_mu_g = sutherland(p_bc_t_g[bcv]);
+        else
+          bc_mu_g = mu_g0;
 
-            a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-            a_ro_g(i,j,k) = bc_ro_g;
-            a_trac(i,j,k) = bc_trac;
-              a_mu_g(i,j,k) = bc_mu_g;
-          }
-        });
+        a_ep_g(i,j,k) = p_bc_ep_g[bcv];
+        a_T_g(i,j,k)  = bc_T_g;
+        a_ro_g(i,j,k) = bc_ro_g;
+        a_trac(i,j,k) = bc_trac;
+        a_mu_g(i,j,k) = bc_mu_g;
+      }
+    });
   }
 
   if (nbot > 0)
@@ -130,31 +130,30 @@ mfix::set_bc0 (const Box& sbx,
 
     const Box bx_xz_lo_3D(sbx_lo, bx_xz_lo_hi_3D);
 
-    amrex::ParallelFor(bx_xz_lo_3D,
-        [a_bc_jlo,dom_lo,pinf,pout,minf,ro_g0,trac_0,mu_g0,undefined,
-         p_bc_t_g,p_bc_ep_g,a_ep_g,a_ro_g,a_trac,a_mu_g]
-        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        {
-          const int bcv = a_bc_jlo(i,dom_lo[1]-1,k,1);
-          const int bct = a_bc_jlo(i,dom_lo[1]-1,k,0);
+    ParallelFor(bx_xz_lo_3D, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      const int bcv = a_bc_jlo(i,dom_lo[1]-1,k,1);
+      const int bct = a_bc_jlo(i,dom_lo[1]-1,k,0);
 
-          if((bct == pinf) or (bct == pout) or (bct == minf))
-          {
-            Real bc_ro_g(ro_g0);
-            Real bc_trac(trac_0);
-            Real bc_mu_g(0);
+      if((bct == pinf) or (bct == pout) or (bct == minf))
+      {
+        Real bc_T_g(T_g0);
+        Real bc_ro_g(ro_g0);
+        Real bc_trac(trac_0);
+        Real bc_mu_g(0);
 
-            if (is_equal(mu_g0, undefined))
-               bc_mu_g = sutherland(p_bc_t_g[bcv]);
-            else
-               bc_mu_g = mu_g0;
-      
-            a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-            a_ro_g(i,j,k) = bc_ro_g;
-            a_trac(i,j,k) = bc_trac;
-              a_mu_g(i,j,k) = bc_mu_g;
-          }
-        });
+        if (is_equal(mu_g0, undefined))
+           bc_mu_g = sutherland(p_bc_t_g[bcv]);
+        else
+           bc_mu_g = mu_g0;
+  
+        a_ep_g(i,j,k) = p_bc_ep_g[bcv];
+        a_T_g(i,j,k)  = bc_T_g;
+        a_ro_g(i,j,k) = bc_ro_g;
+        a_trac(i,j,k) = bc_trac;
+        a_mu_g(i,j,k) = bc_mu_g;
+      }
+    });
   }
 
   if (ntop > 0)
@@ -166,31 +165,30 @@ mfix::set_bc0 (const Box& sbx,
 
     const Box bx_xz_hi_3D(bx_xz_hi_lo_3D, sbx_hi);
 
-    amrex::ParallelFor(bx_xz_hi_3D,
-        [a_bc_jhi,dom_hi,pinf,pout,minf,ro_g0,trac_0,mu_g0,undefined,
-         p_bc_t_g,p_bc_ep_g,a_ep_g,a_ro_g,a_trac,a_mu_g]
-        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        {
-          const int bcv = a_bc_jhi(i,dom_hi[1]+1,k,1);
-          const int bct = a_bc_jhi(i,dom_hi[1]+1,k,0);
+    ParallelFor(bx_xz_hi_3D, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      const int bcv = a_bc_jhi(i,dom_hi[1]+1,k,1);
+      const int bct = a_bc_jhi(i,dom_hi[1]+1,k,0);
 
-          if((bct == pinf) or (bct == pout) or (bct == minf))
-          {
-            Real bc_ro_g(ro_g0);
-            Real bc_trac(trac_0);
-            Real bc_mu_g(0);
+      if((bct == pinf) or (bct == pout) or (bct == minf))
+      {
+        Real bc_T_g(T_g0);
+        Real bc_ro_g(ro_g0);
+        Real bc_trac(trac_0);
+        Real bc_mu_g(0);
 
-            if (is_equal(mu_g0, undefined))
-               bc_mu_g = sutherland(p_bc_t_g[bcv]);
-            else
-               bc_mu_g = mu_g0;
+        if (is_equal(mu_g0, undefined))
+           bc_mu_g = sutherland(p_bc_t_g[bcv]);
+        else
+           bc_mu_g = mu_g0;
 
-             a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-            a_ro_g(i,j,k) = bc_ro_g;
-            a_trac(i,j,k) = bc_trac;
-              a_mu_g(i,j,k) = bc_mu_g;
-          }
-        });
+        a_ep_g(i,j,k) = p_bc_ep_g[bcv];
+        a_T_g(i,j,k)  = bc_T_g;
+        a_ro_g(i,j,k) = bc_ro_g;
+        a_trac(i,j,k) = bc_trac;
+        a_mu_g(i,j,k) = bc_mu_g;
+      }
+    });
   }
 
   if (ndwn > 0)
@@ -202,31 +200,30 @@ mfix::set_bc0 (const Box& sbx,
 
     const Box bx_xy_lo_3D(sbx_lo, bx_xy_lo_hi_3D);
     
-    amrex::ParallelFor(bx_xy_lo_3D,
-        [a_bc_klo,dom_lo,pinf,pout,minf,ro_g0,trac_0,mu_g0,undefined,
-         p_bc_t_g,p_bc_ep_g,a_ep_g,a_ro_g,a_trac,a_mu_g]
-        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        {
-          const int bcv = a_bc_klo(i,j,dom_lo[2]-1,1);
-          const int bct = a_bc_klo(i,j,dom_lo[2]-1,0);
+    ParallelFor(bx_xy_lo_3D, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      const int bcv = a_bc_klo(i,j,dom_lo[2]-1,1);
+      const int bct = a_bc_klo(i,j,dom_lo[2]-1,0);
 
-          if((bct == pinf) or (bct == pout) or (bct == minf))
-          {
-            Real bc_ro_g(ro_g0);
-            Real bc_trac(trac_0);
-            Real bc_mu_g(0);
+      if((bct == pinf) or (bct == pout) or (bct == minf))
+      {
+        Real bc_T_g(T_g0);
+        Real bc_ro_g(ro_g0);
+        Real bc_trac(trac_0);
+        Real bc_mu_g(0);
 
-            if (is_equal(mu_g0, undefined))
-               bc_mu_g = sutherland(p_bc_t_g[bcv]);
-            else
-               bc_mu_g = mu_g0;
+        if (is_equal(mu_g0, undefined))
+           bc_mu_g = sutherland(p_bc_t_g[bcv]);
+        else
+           bc_mu_g = mu_g0;
 
-            a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-            a_ro_g(i,j,k) = bc_ro_g;
-            a_trac(i,j,k) = bc_trac;
-              a_mu_g(i,j,k) = bc_mu_g;
-          }
-        });
+        a_ep_g(i,j,k) = p_bc_ep_g[bcv];
+        a_T_g(i,j,k)  = bc_T_g;
+        a_ro_g(i,j,k) = bc_ro_g;
+        a_trac(i,j,k) = bc_trac;
+        a_mu_g(i,j,k) = bc_mu_g;
+      }
+    });
   }
 
   if (nup > 0)
@@ -238,30 +235,29 @@ mfix::set_bc0 (const Box& sbx,
 
     const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, sbx_hi);
     
-    amrex::ParallelFor(bx_xy_hi_3D,
-        [a_bc_khi,dom_hi,pinf,pout,minf,ro_g0,trac_0,mu_g0,undefined,
-         p_bc_t_g,p_bc_ep_g,a_ep_g,a_ro_g,a_trac,a_mu_g]
-        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        {
-          const int bcv = a_bc_khi(i,j,dom_hi[2]+1,1);
-          const int bct = a_bc_khi(i,j,dom_hi[2]+1,0);
+    ParallelFor(bx_xy_hi_3D, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      const int bcv = a_bc_khi(i,j,dom_hi[2]+1,1);
+      const int bct = a_bc_khi(i,j,dom_hi[2]+1,0);
 
-          if((bct == pinf) or (bct == pout) or (bct == minf))
-          {
-            Real bc_ro_g(ro_g0);
-            Real bc_trac(trac_0);
-            Real bc_mu_g(0);
+      if((bct == pinf) or (bct == pout) or (bct == minf))
+      {
+        Real bc_ro_g(ro_g0);
+        Real bc_T_g(T_g0);
+        Real bc_trac(trac_0);
+        Real bc_mu_g(0);
 
-            if (is_equal(mu_g0, undefined))
-               bc_mu_g = sutherland(p_bc_t_g[bcv]);
-            else
-               bc_mu_g = mu_g0;
+        if (is_equal(mu_g0, undefined))
+           bc_mu_g = sutherland(p_bc_t_g[bcv]);
+        else
+           bc_mu_g = mu_g0;
 
-            a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-            a_ro_g(i,j,k) = bc_ro_g;
-            a_trac(i,j,k) = bc_trac;
-              a_mu_g(i,j,k) = bc_mu_g;
-          }
-        });
+        a_ep_g(i,j,k) = p_bc_ep_g[bcv];
+        a_T_g(i,j,k)  = bc_T_g;
+        a_ro_g(i,j,k) = bc_ro_g;
+        a_trac(i,j,k) = bc_trac;
+        a_mu_g(i,j,k) = bc_mu_g;
+      }
+    });
   }
 }

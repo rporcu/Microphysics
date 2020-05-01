@@ -1,4 +1,5 @@
 CEXE_sources += mfix_set_velocity_bcs.cpp
+CEXE_sources += mfix_set_temperature_bcs.cpp
 CEXE_sources += mfix_set_density_bcs.cpp
 CEXE_sources += mfix_set_scalar_bcs.cpp
 
