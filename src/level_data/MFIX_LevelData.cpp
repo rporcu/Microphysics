@@ -29,9 +29,9 @@ LevelData::LevelData (BoxArray const& ba,
   , xslopes_u(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))
   , yslopes_u(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))
   , zslopes_u(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))
-  , xslopes_s(new MultiFab(ba, dmap, 2, nghost, MFInfo(), factory))
-  , yslopes_s(new MultiFab(ba, dmap, 2, nghost, MFInfo(), factory))
-  , zslopes_s(new MultiFab(ba, dmap, 2, nghost, MFInfo(), factory))
+  , xslopes_s(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))  // density, enthalpy, tracer
+  , yslopes_s(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))  // density, enthalpy, tracer
+  , zslopes_s(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))  // density, enthalpy, tracer
   , diveu(new MultiFab(amrex::convert(ba, IntVect{1,1,1}), dmap, 1, nghost, MFInfo(), factory))
   , mac_phi(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , mac_rhs(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))

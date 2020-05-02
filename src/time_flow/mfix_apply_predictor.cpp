@@ -233,7 +233,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
                         const Real epg_loc = epg(i,j,k);
 
                         Real tra = (rho_o(i,j,k)*epg_loc)*tra_o(i,j,k,n);
-                        tra += l_dt * (dtdt_o(i,j,k,conv_comp) + laps_o(i,j,k));
+                        tra += l_dt * (dtdt_o(i,j,k,conv_comp) + laps_o(i,j,k,n));
                         tra /= (rho_n(i,j,k)*epg_loc);
 
                         tra_n(i,j,k,n) = tra;

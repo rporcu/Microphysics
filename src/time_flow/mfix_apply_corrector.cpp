@@ -109,10 +109,12 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
 
                 amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
+                  int conv_comp = 0;
+
                   const Real epg_loc = epg(i,j,k);
                   const Real rho_o_loc = rho_o(i,j,k);
 
-                  Real rho = epg_loc*rho_o_loc + .5*l_dt*(drdt_o(i,j,k,0) + drdt(i,j,k,0));
+                  Real rho = epg_loc*rho_o_loc + .5*l_dt*(drdt_o(i,j,k,conv_comp) + drdt(i,j,k,conv_comp));
                   rho /= epg_loc;
 
                   rho_new(i,j,k) = rho;
