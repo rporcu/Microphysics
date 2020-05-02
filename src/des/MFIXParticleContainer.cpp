@@ -238,7 +238,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             PairIndex index(pti.index(), pti.LocalTileIndex());
 
             const int nrp = GetParticles(lev)[index].numRealParticles();
-            RealType* particles  = pti.GetArrayOfStructs().data();
 
             auto& plev = GetParticles(lev);
             auto& ptile = plev[index];
@@ -250,7 +249,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             int size_ng = aos.numNeighborParticles();
 #else
             int size_ng = neighbors[lev][index].size();
-            int size_nl = neighbor_list[lev][index].size();
 #endif
 
             // Number of particles including neighbor particles
