@@ -789,7 +789,9 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
           if ( is_restarting ) {
 
-            init_fluid_restart(bx, (*m_leveldata[lev]->cp_g)[mfi], (*m_leveldata[lev]->mu_g)[mfi]);
+            init_fluid_restart(bx, (*m_leveldata[lev]->T_g )[mfi], 
+                                   (*m_leveldata[lev]->cp_g)[mfi],
+                                   (*m_leveldata[lev]->mu_g)[mfi]);
 
           } else {
 

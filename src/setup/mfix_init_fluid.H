@@ -52,6 +52,7 @@ void init_periodic_tracer (const Box& bx,
                            const Real dz);
 
 void init_fluid_restart (const Box& bx,
+                         FArrayBox& temp,
                          FArrayBox& cp_g,
                          FArrayBox& mu_g);
 

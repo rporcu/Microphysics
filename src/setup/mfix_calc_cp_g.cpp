@@ -4,6 +4,7 @@
 #include <MFIX_FLUID_Parms.H>
 
 void calc_cp_g (const Box& bx,
+                FArrayBox& temp_fab,
                 FArrayBox& cp_g_fab)
 {
   Real cp_val;

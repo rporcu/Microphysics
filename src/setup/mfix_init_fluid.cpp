@@ -79,7 +79,7 @@ void init_fluid (const Box& sbx,
       if (test_tracer_conservation)
          init_periodic_tracer(bx, domain, vel_g_fab, trac_fab, dx, dy, dz);
 
-      calc_cp_g(bx, cp_g_fab);
+      calc_cp_g(bx, T_g_fab, cp_g_fab);
       calc_mu_g(bx, mu_g_fab);
 }
 
@@ -305,10 +305,11 @@ void init_periodic_tracer (const Box& bx,
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 void init_fluid_restart (const Box& bx,
+                         FArrayBox&  T_g_fab,
                          FArrayBox& cp_g_fab,
                          FArrayBox& mu_g_fab)
 {
-  calc_cp_g(bx, cp_g_fab);
+  calc_cp_g(bx, T_g_fab, cp_g_fab);
   calc_mu_g(bx, mu_g_fab);
 }
 
