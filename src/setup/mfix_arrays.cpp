@@ -121,6 +121,28 @@ mfix::RegridArrays (int lev)
     std::swap((m_leveldata[lev]->ep_go), ep_go_new);
     delete ep_go_new;
 
+    // Gas enthalpy
+    MultiFab* h_g_new = new MultiFab(grids[lev], dmap[lev],
+                                     m_leveldata[lev]->h_g->nComp(),
+                                     m_leveldata[lev]->h_g->nGrow(),
+                                     MFInfo(), *ebfactory[lev]);
+    h_g_new->setVal(0);
+    h_g_new->ParallelCopy(*m_leveldata[lev]->h_g, 0, 0, m_leveldata[lev]->h_g->nComp(),
+                   src_ngrow, m_leveldata[lev]->h_g->nGrow(), geom[lev].periodicity());
+    std::swap(m_leveldata[lev]->h_g, h_g_new);
+    delete h_g_new;
+
+    // Old gas enthalpy
+    MultiFab* h_go_new = new MultiFab(grids[lev], dmap[lev],
+                                      m_leveldata[lev]->h_go->nComp(),
+                                      m_leveldata[lev]->h_go->nGrow(),
+                                      MFInfo(), *ebfactory[lev]);
+    h_go_new->setVal(0);
+    h_go_new->ParallelCopy(*m_leveldata[lev]->h_go, 0, 0, m_leveldata[lev]->h_go->nComp(),
+                    src_ngrow, m_leveldata[lev]->h_go->nGrow(), geom[lev].periodicity());
+    std::swap(m_leveldata[lev]->h_go, h_go_new);
+    delete h_go_new;
+
     // Gas temperature
     MultiFab* T_g_new = new MultiFab(grids[lev], dmap[lev],
                                      m_leveldata[lev]->T_g->nComp(),

@@ -53,18 +53,18 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
         MultiFab::Copy(*ro_g_in[lev], Sborder_s, 0, 0, num_comp, ro_g_in[lev]->nGrow());
 
-        if (advect_enthalpy)
+        if (advect_tracer)
         {
-           state_comp =  1; num_comp = 1;
+           state_comp =  4; num_comp = 1;
            FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
            MultiFab::Copy(*h_g_in[lev], Sborder_s, 0, 0, num_comp, h_g_in[lev]->nGrow());
         }
 
-        if (advect_tracer)
+        if (advect_enthalpy)
         {
-           state_comp =  2; num_comp = 1;
+           state_comp =  5; num_comp = 1;
            FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
-           MultiFab::Copy(*trac_in[lev], Sborder_s, 0, 0, num_comp, trac_in[lev]->nGrow());
+           MultiFab::Copy(*h_g_in[lev], Sborder_s, 0, 0, num_comp, h_g_in[lev]->nGrow());
         }
         
         // We make these with ncomp = 3 so they can hold all three velocity components at once;

@@ -1,5 +1,6 @@
 mfix.stop_time = 0.0025
 
+mfix.max_step = 1
 
 # Number of grid cells in each direction at the coarsest level
 amr.n_cell = 32 32 32
@@ -47,7 +48,7 @@ fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
 fluid.specific_heat          = constant
-fluid.specific_heat.constant = 0.0
+fluid.specific_heat.constant = 1.0
 
 fluid.thermal_conductivity          = constant
 fluid.thermal_conductivity.constant = 0.0

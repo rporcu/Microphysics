@@ -51,6 +51,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   // Fill ghost nodes and reimpose boundary conditions
   mfix_set_velocity_bcs(time, get_vel_g(), 0);
   mfix_set_density_bcs(time, get_ro_g());
+  mfix_set_enthalpy_bcs(time, get_h_g());
   mfix_set_temperature_bcs(time, get_T_g());
   mfix_set_scalar_bcs(time, get_trac(), get_cp_g(), get_mu_g());
 
@@ -124,6 +125,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     // Reset the boundary values (necessary if they are time-dependent)
     mfix_set_velocity_bcs(time, get_vel_g(), 0);
     mfix_set_density_bcs(time, get_ro_g());
+    mfix_set_enthalpy_bcs(time, get_h_g());
     mfix_set_temperature_bcs(time, get_T_g());
     mfix_set_scalar_bcs(time, get_trac(), get_cp_g(), get_mu_g());
   }
