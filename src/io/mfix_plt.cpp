@@ -30,8 +30,10 @@ mfix::InitIOPltData ()
       pp.query("plt_ep_g",    plt_ep_g   );
       pp.query("plt_p_g",     plt_p_g    );
       pp.query("plt_ro_g",    plt_ro_g   );
+      pp.query("plt_h_g",     plt_h_g    );
       pp.query("plt_T_g",     plt_T_g    );
       pp.query("plt_trac",    plt_trac   );
+      pp.query("plt_cp_g",    plt_cp_g   );
       pp.query("plt_mu_g",    plt_mu_g   );
       pp.query("plt_diveu",   plt_diveu  );
       pp.query("plt_vort",    plt_vort   );
@@ -49,8 +51,10 @@ mfix::InitIOPltData ()
         plt_ep_g    = 1;
         plt_p_g     = 1;
         plt_ro_g    = 1;
+        plt_h_g     = 1;
         plt_T_g     = 1;
         plt_trac    = 1;
+        plt_cp_g    = 1;
         plt_mu_g    = 1;
         plt_vort    = 1;
         plt_diveu   = 1;
@@ -64,8 +68,10 @@ mfix::InitIOPltData ()
       if( plt_ep_g    == 1) pltVarCount += 1;
       if( plt_p_g     == 1) pltVarCount += 1;
       if( plt_ro_g    == 1) pltVarCount += 1;
+      if( plt_h_g     == 1) pltVarCount += 1;
       if( plt_T_g     == 1) pltVarCount += 1;
       if( plt_trac    == 1) pltVarCount += 1;
+      if( plt_cp_g    == 1) pltVarCount += 1;
       if( plt_mu_g    == 1) pltVarCount += 1;
       if( plt_vort    == 1) pltVarCount += 1;
       if( plt_diveu   == 1) pltVarCount += 1;
@@ -183,6 +189,10 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
       if( plt_ro_g    == 1)
         pltFldNames.push_back("ro_g");
 
+      // Fluid enthalpy
+      if( plt_h_g    == 1)
+        pltFldNames.push_back("h_g");
+
       // Temperature in fluid
       if( plt_T_g    == 1)
         pltFldNames.push_back("T_g");
@@ -190,6 +200,10 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
       // Tracer in fluid
       if( plt_trac    == 1)
         pltFldNames.push_back("trac");
+
+      // Specific heat
+      if( plt_cp_g    == 1)
+        pltFldNames.push_back("cp_g");
 
       // Fluid viscosity
       if( plt_mu_g    == 1)
@@ -254,6 +268,12 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
           lc += 1;
         }
 
+        // Fluid enthalpy
+        if( plt_h_g    == 1) {
+          MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->h_g), 0, lc, 1, 0);
+          lc += 1;
+        }
+
         // Fluid temperature
         if( plt_T_g    == 1) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->T_g), 0, lc, 1, 0);
@@ -263,6 +283,12 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         // Fluid tracer
         if( plt_trac    == 1) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->trac), 0, lc, 1, 0);
+          lc += 1;
+        }
+
+        // Specific heat
+        if( plt_cp_g    == 1) {
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->cp_g, 0, lc, 1, 0);
           lc += 1;
         }
 

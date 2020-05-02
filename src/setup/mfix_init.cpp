@@ -107,7 +107,7 @@ mfix::InitParams ()
     pp.query("initial_iterations", initial_iterations);
     pp.query("do_initial_proj", do_initial_proj);
 
-    pp.query("advect_temperature", advect_temperature);
+    pp.query("advect_enthalpy", advect_enthalpy);
     pp.query("advect_density", advect_density);
     pp.query("advect_tracer" , advect_tracer);
     pp.query("test_tracer_conservation", test_tracer_conservation);
@@ -130,8 +130,8 @@ mfix::InitParams ()
       amrex::Abort("No point in testing tracer conservation with advect_tracer"
           " = false");
 
-    if (advect_temperature && !advect_density)
-      amrex::Abort("Can't advect temperature without advecting density");
+    if (advect_enthalpy && !advect_density)
+      amrex::Abort("Can't advect enthalpy without advecting density");
 
     if (advect_tracer && !advect_density)
       amrex::Abort("Can't advect tracer without advecting density");
@@ -789,25 +789,28 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
           if ( is_restarting ) {
 
-            init_fluid_restart(bx, (*m_leveldata[lev]->mu_g)[mfi]);
+            init_fluid_restart(bx, (*m_leveldata[lev]->cp_g)[mfi], (*m_leveldata[lev]->mu_g)[mfi]);
 
           } else {
 
             init_fluid(sbx, bx, domain,
                        (*m_leveldata[lev]->ep_g)[mfi],
+                       (*m_leveldata[lev]->h_g)[mfi],
                        (*m_leveldata[lev]->T_g)[mfi],
                        (*m_leveldata[lev]->ro_g)[mfi],
                        (*m_leveldata[lev]->trac)[mfi],
                        (*m_leveldata[lev]->p_g)[mfi],
                        (*m_leveldata[lev]->vel_g)[mfi],
+                       (*m_leveldata[lev]->cp_g)[mfi],
                        (*m_leveldata[lev]->mu_g)[mfi],
                        dx, dy, dz, xlen, ylen, zlen, test_tracer_conservation);
           }
        }
 
        // Make sure to fill the "old state" before we start ...
-       MultiFab::Copy(*m_leveldata[lev]->T_go, *m_leveldata[lev]->T_g, 0, 0, 1, 0);
-       MultiFab::Copy(*m_leveldata[lev]->ro_go, *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
+       MultiFab::Copy(*m_leveldata[lev]->h_go,   *m_leveldata[lev]->h_g, 0, 0, 1, 0);
+       MultiFab::Copy(*m_leveldata[lev]->T_go,   *m_leveldata[lev]->T_g, 0, 0, 1, 0);
+       MultiFab::Copy(*m_leveldata[lev]->ro_go,  *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
        MultiFab::Copy(*m_leveldata[lev]->trac_o, *m_leveldata[lev]->trac, 0, 0, 1, 0);
     }
 
@@ -821,10 +824,14 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
     {
       m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
 
-      if (advect_temperature)
+      if (advect_enthalpy)
+      {
+        m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
         m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
+      }
 
       if (advect_tracer)
         m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
@@ -850,17 +857,20 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
       Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
 
-      // This sets bcs for ep_g and mu_g
+      // This sets bcs for ep_g, cp_g and mu_g
       Real time = 0.0;
 
       mfix_set_temperature_bcs(time, get_T_g());
       mfix_set_temperature_bcs(time, get_T_g_old());
 
+      mfix_set_enthalpy_bcs(time, get_h_g());
+      mfix_set_enthalpy_bcs(time, get_h_g_old());
+
       mfix_set_density_bcs(time, get_ro_g());
       mfix_set_density_bcs(time, get_ro_g_old());
 
-      mfix_set_scalar_bcs(time, get_trac(), get_mu_g());
-      mfix_set_scalar_bcs(time, get_trac_old(), get_mu_g());
+      mfix_set_scalar_bcs(time, get_trac()    , get_cp_g(), get_mu_g());
+      mfix_set_scalar_bcs(time, get_trac_old(), get_cp_g(), get_mu_g());
 
       // Project the initial velocity field
       if (do_initial_proj)
@@ -942,7 +952,6 @@ mfix::mfix_set_p0 ()
      // We put this outside the MFIter loop because we need gp0 even on ranks with no boxes
      // because we will use it in computing dt separately on every rank
      set_gp0(lev, domain);
-
 
      // We deliberately don't tile this loop since we will be looping
      //    over bc's on faces and it makes more sense to do this one grid at a time

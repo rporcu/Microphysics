@@ -30,7 +30,7 @@ mfix::InitIOChkData ()
     // to plotfile/checkfile.
     vecVarsName = {"u_g", "v_g", "w_g", "gpx", "gpy", "gpz"};
 
-    chkscaVarsName = {"ep_g", "p_g", "ro_g", "rop_g", "mu_g", "level_sets"};
+    chkscaVarsName = {"ep_g", "p_g", "ro_g", "h_g", "T_g", "cp_g", "mu_g", "level_sets"};
 
     ResetIOChkData();
 }
@@ -40,15 +40,17 @@ void
 mfix::ResetIOChkData ()
 {
   chkscalarVars.clear();
-  chkscalarVars.resize(6, Vector< MultiFab**>(nlev));
+  chkscalarVars.resize(8, Vector< MultiFab**>(nlev));
 
   for (int lev(0); lev < nlev; ++lev) {
     chkscalarVars[0][lev] = &(m_leveldata[lev]->ep_g);
     chkscalarVars[1][lev] = &(m_leveldata[lev]->p_g);
     chkscalarVars[2][lev] = &(m_leveldata[lev]->ro_g);
-    chkscalarVars[3][lev] = &(m_leveldata[lev]->ep_g);
-    chkscalarVars[4][lev] = &(m_leveldata[lev]->mu_g);
-    chkscalarVars[5][lev] = &level_sets[lev];
+    chkscalarVars[3][lev] = &(m_leveldata[lev]->h_g);
+    chkscalarVars[4][lev] = &(m_leveldata[lev]->T_g);
+    chkscalarVars[5][lev] = &(m_leveldata[lev]->cp_g);
+    chkscalarVars[6][lev] = &(m_leveldata[lev]->mu_g);
+    chkscalarVars[7][lev] = &level_sets[lev];
   }
 }
 

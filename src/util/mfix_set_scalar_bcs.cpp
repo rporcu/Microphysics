@@ -13,6 +13,7 @@ using namespace amrex;
 void
 mfix::mfix_set_scalar_bcs (Real time,
                            Vector< MultiFab* > const& trac_in,
+                           Vector< MultiFab* > const& cp_g_in,
                            Vector< MultiFab* > const& mu_g_in)
 {
   BL_PROFILE("mfix::mfix_set_scalar_bcs()");
@@ -26,17 +27,20 @@ mfix::mfix_set_scalar_bcs (Real time,
 #endif
      for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi)
      {
+        set_scalar_bcs(time, lev, (*cp_g_in[lev])[mfi], 4, domain);
         set_scalar_bcs(time, lev, (*mu_g_in[lev])[mfi], 3, domain);
 
         if (advect_tracer)
            set_scalar_bcs(time, lev, (*trac_in[lev])[mfi], 1, domain);
      }
 
+     cp_g_in[lev] -> FillBoundary (geom[lev].periodicity());
      mu_g_in[lev] -> FillBoundary (geom[lev].periodicity());
 
      if (advect_tracer)
         trac_in[lev] -> FillBoundary (geom[lev].periodicity());
 
+     EB_set_covered(*cp_g_in[lev], 0, cp_g_in[lev]->nComp(), cp_g_in[lev]->nGrow(), covered_val);
      EB_set_covered(*mu_g_in[lev], 0, mu_g_in[lev]->nComp(), mu_g_in[lev]->nGrow(), covered_val);
 
      if (advect_tracer)
@@ -66,10 +70,13 @@ mfix::set_scalar_bcs (Real time,
 
   Real bc0 = get_undefined();
 
-  if (comp == 1) {
+  if (comp == 1) {        // trac
     bc0 = FLUID::trac_0;
-  } else if (comp == 3) {
+  } else if (comp == 2) { // ep_g
+  } else if (comp == 3) { // mu_g
     bc0 = FLUID::mu_g0;
+  } else if (comp == 4) { // cp_g
+    bc0 = FLUID::Cp_g0;
   }
 
   IntVect scal_lo(scal_fab.loVect());

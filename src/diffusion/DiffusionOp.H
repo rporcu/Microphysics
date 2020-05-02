@@ -54,8 +54,10 @@ class DiffusionOp
                            amrex::Real dt);
 
     // Temperature diffusion
-    void diffuse_temperature (amrex::Vector< amrex::MultiFab* > T_g,
-                              const amrex::Vector< amrex::MultiFab* > ep_ro, 
+    void diffuse_temperature (      amrex::Vector< amrex::MultiFab* >  T_g,
+                              const amrex::Vector< amrex::MultiFab* > ep_g, 
+                              const amrex::Vector< amrex::MultiFab* > ro_g, 
+                              const amrex::Vector< amrex::MultiFab* > cp_g, 
                               const amrex::Real k_g,
                               amrex::Real dt);
 

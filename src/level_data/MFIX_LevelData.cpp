@@ -10,6 +10,8 @@ LevelData::LevelData (BoxArray const& ba,
   , ep_go(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , p_g(new MultiFab(amrex::convert(ba, IntVect{1,1,1}), dmap, 1, nghost, MFInfo(), factory))
   , p_go(new MultiFab(amrex::convert(ba, IntVect{1,1,1}), dmap, 1, nghost, MFInfo(), factory))
+  , h_g(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
+  , h_go(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , T_g(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , T_go(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , ro_g(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
@@ -20,6 +22,7 @@ LevelData::LevelData (BoxArray const& ba,
   , vel_go(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))
   , p0_g(new MultiFab(amrex::convert(ba, IntVect{1,1,1}), dmap, 1, nghost, MFInfo(), factory))
   , gp(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))
+  , cp_g(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , mu_g(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , vort(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , drag(new MultiFab(ba, dmap, 4, nghost, MFInfo(), factory))
@@ -41,6 +44,8 @@ void LevelData::resetValues (const amrex::Real covered_val)
 {
   ep_g->setVal(1);
   ep_go->setVal(1);
+  h_g->setVal(0);
+  h_go->setVal(0);
   T_g->setVal(0);
   T_go->setVal(0);
   ro_g->setVal(0);
@@ -52,6 +57,7 @@ void LevelData::resetValues (const amrex::Real covered_val)
   p_go->setVal(0);
   diveu->setVal(0);
   gp->setVal(0);
+  cp_g->setVal(0);
   mu_g->setVal(0);
   vel_g->setVal(0);
   vel_go->setVal(0);
@@ -76,6 +82,8 @@ LevelData::~LevelData ()
   delete ep_go;
   delete p_g;
   delete p_go;
+  delete h_g;
+  delete h_go;
   delete T_g;
   delete T_go;
   delete ro_g;
@@ -86,6 +94,7 @@ LevelData::~LevelData ()
   delete vel_go;
   delete p0_g;
   delete gp;
+  delete cp_g;
   delete mu_g;
   delete vort;
   delete drag;

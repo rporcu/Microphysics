@@ -33,6 +33,10 @@ class LevelData
     amrex::MultiFab* p_g;
     amrex::MultiFab* p_go;
 
+    // Gas enthalpy
+    amrex::MultiFab* h_g;
+    amrex::MultiFab* h_go;
+
     // Gas temperature
     amrex::MultiFab* T_g;
     amrex::MultiFab* T_go;
@@ -54,6 +58,9 @@ class LevelData
 
     // Pressure gradients
     amrex::MultiFab* gp;
+
+    // Specific heat
+    amrex::MultiFab* cp_g;
 
     // Molecular viscosity
     amrex::MultiFab* mu_g;

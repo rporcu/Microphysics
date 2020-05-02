@@ -227,6 +227,17 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->diveu, diveu_new);
     delete diveu_new;
 
+    // Specific heat
+    MultiFab* cp_g_new = new MultiFab(grids[lev], dmap[lev],
+                                      m_leveldata[lev]->cp_g->nComp(),
+                                      m_leveldata[lev]->cp_g->nGrow(),
+                                      MFInfo(), *ebfactory[lev]);
+    cp_g_new->setVal(0);
+    cp_g_new->ParallelCopy(*m_leveldata[lev]->cp_g, 0, 0, m_leveldata[lev]->cp_g->nComp(),
+                   src_ngrow, m_leveldata[lev]->cp_g->nGrow(), geom[lev].periodicity());
+    std::swap(m_leveldata[lev]->cp_g, cp_g_new);
+    delete cp_g_new;
+
     // Molecular viscosity
     MultiFab* mu_g_new = new MultiFab(grids[lev], dmap[lev],
                                       m_leveldata[lev]->mu_g->nComp(),

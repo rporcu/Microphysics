@@ -52,7 +52,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   mfix_set_velocity_bcs(time, get_vel_g(), 0);
   mfix_set_density_bcs(time, get_ro_g());
   mfix_set_temperature_bcs(time, get_T_g());
-  mfix_set_scalar_bcs(time, get_trac(), get_mu_g());
+  mfix_set_scalar_bcs(time, get_trac(), get_cp_g(), get_mu_g());
 
   // Copy vel_g into vel_go
   for (int lev = 0; lev <= finest_level; lev++)
@@ -105,10 +105,16 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
         MultiFab::Copy(*m_leveldata[lev]->ro_g, *m_leveldata[lev]->ro_go, 0, 0,
                         m_leveldata[lev]->ro_g->nComp(), m_leveldata[lev]->ro_g->nGrow());
 
-    if (advect_temperature)
+    if (advect_enthalpy)
+    {
       for (int lev = 0; lev <= finest_level; lev++)
+      {
         MultiFab::Copy(*m_leveldata[lev]->T_g, *m_leveldata[lev]->T_go, 0, 0,
-                       m_leveldata[lev]->T_g->nComp(), m_leveldata[lev]->T_g->nGrow());
+                        m_leveldata[lev]->T_g->nComp(), m_leveldata[lev]->T_g->nGrow());
+        MultiFab::Copy(*m_leveldata[lev]->h_g, *m_leveldata[lev]->h_go, 0, 0,
+                        m_leveldata[lev]->h_g->nComp(), m_leveldata[lev]->h_g->nGrow());
+      }
+    }
 
     if (advect_tracer)
       for (int lev = 0; lev <= finest_level; lev++)
@@ -119,7 +125,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     mfix_set_velocity_bcs(time, get_vel_g(), 0);
     mfix_set_density_bcs(time, get_ro_g());
     mfix_set_temperature_bcs(time, get_T_g());
-    mfix_set_scalar_bcs(time, get_trac(), get_mu_g());
+    mfix_set_scalar_bcs(time, get_trac(), get_cp_g(), get_mu_g());
   }
 
   for (int lev = 0; lev <= finest_level; lev++)

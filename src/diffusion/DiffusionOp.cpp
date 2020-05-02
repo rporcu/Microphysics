@@ -268,11 +268,16 @@ void DiffusionOp::ComputeLapTemp (Vector< MultiFab* >& laptemp_out,
     // We want to return div (k_g grad)) phi
     temp_matrix->setScalars(0.0, -1.0);
 
+    Vector<BCRec> bcs_s; // This is just to satisfy the call to EB_interp...
+    bcs_s.resize(3);
+
     // Compute the coefficients
     for (int lev = 0; lev <= finest_level; lev++)
     {
+        EB_interp_CellCentroid_to_FaceCentroid (*ep_in[lev], GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
+
         for(int dir = 0; dir < 3; dir++)
-           b[lev][dir]->setVal(k_g,0,1);
+           b[lev][dir]->mult(k_g,0,1);
 
         if (eb_is_dirichlet)
             temp_matrix->setEBDirichlet(lev, *phi_eb[lev], k_g);

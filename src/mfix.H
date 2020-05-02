@@ -228,6 +228,9 @@ class mfix : public AmrCore
 
     void mfix_set_epg_bcs (const Vector< MultiFab* >& ep_g, const int dir_bc) const;
 
+    void mfix_set_enthalpy_bcs (Real time,
+                                Vector< MultiFab* > const& h_g);
+
     void mfix_set_temperature_bcs (Real time,
                                    Vector< MultiFab* > const& T_g);
 
@@ -236,6 +239,7 @@ class mfix : public AmrCore
 
     void mfix_set_scalar_bcs (Real time,
                               Vector< MultiFab* > const& trac,
+                              Vector< MultiFab* > const& cp_g,
                               Vector< MultiFab* > const& mu_g);
 
     void set_velocity_bcs (Real time,
@@ -248,6 +252,11 @@ class mfix : public AmrCore
                       FArrayBox& eps_fab,
                       const Box& domain,
                       const int* extrap_dir_bcs) const;
+
+    void set_enthalpy_bcs (Real time,
+                           const int lev,
+                           FArrayBox& scal_fab,
+                           const Box& domain);
 
     void set_temperature_bcs (Real time,
                               const int lev,
@@ -603,6 +612,8 @@ class mfix : public AmrCore
     amrex::Vector< std::unique_ptr<LevelData> > m_leveldata;
 
     amrex::Vector<amrex::MultiFab*> get_ep_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_h_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_h_g_old () noexcept;
     amrex::Vector<amrex::MultiFab*> get_T_g () noexcept;
     amrex::Vector<amrex::MultiFab*> get_T_g_old () noexcept;
     amrex::Vector<amrex::MultiFab*> get_ro_g () noexcept;
@@ -611,6 +622,7 @@ class mfix : public AmrCore
     amrex::Vector<amrex::MultiFab*> get_trac_old () noexcept;
     amrex::Vector<amrex::MultiFab*> get_vel_g () noexcept;
     amrex::Vector<amrex::MultiFab*> get_vel_g_old () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_cp_g () noexcept;
     amrex::Vector<amrex::MultiFab*> get_mu_g () noexcept;
     amrex::Vector<amrex::MultiFab*> get_drag () noexcept;
     amrex::Vector<amrex::MultiFab*> get_xslopes_u () noexcept;
@@ -636,9 +648,9 @@ class mfix : public AmrCore
 
     int steady_state = 0;
 
-    bool advect_temperature = false;
-    bool advect_density = false;
-    bool advect_tracer  = false;
+    bool advect_enthalpy = false;
+    bool advect_density  = false;
+    bool advect_tracer   = false;
 
     bool test_tracer_conservation  = false;
 
@@ -765,8 +777,10 @@ class mfix : public AmrCore
     int plt_ep_g    = 1;
     int plt_p_g     = 0;
     int plt_ro_g    = 0;
+    int plt_h_g     = 0;
     int plt_T_g     = 0;
     int plt_trac    = 0;
+    int plt_cp_g    = 0;
     int plt_mu_g    = 0;
     int plt_diveu   = 0;
     int plt_volfrac = 0;
