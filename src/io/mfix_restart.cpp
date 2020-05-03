@@ -276,10 +276,6 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
               }
           }
         }
-        for (int i = 0; i < chkscalarVars.size(); i++ )
-        {
-            (**(chkscalarVars[i][lev])).norm0() << std::endl;
-        }
        }
        amrex::Print() << "  Finished reading fluid data" << std::endl;
     }
