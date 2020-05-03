@@ -721,6 +721,9 @@ class mfix : public AmrCore
 
     bool dual_grid = false;
 
+    // If true then we are restarting from a file with no thermal variables
+    bool restart_from_cold_flow = false;
+
     // If true then print the name of the routine we are in
     bool ooo_debug = false;
 

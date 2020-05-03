@@ -270,6 +270,8 @@ mfix::InitParams ()
   {
     ParmParse amr_pp("amr");
 
+    amr_pp.query("restart_from_cold_flow", restart_from_cold_flow);
+
     amr_pp.query("plot_int", plot_int);
     amr_pp.query("plot_per_exact", plot_per_exact);
     amr_pp.query("plot_per_approx", plot_per_approx);
