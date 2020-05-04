@@ -6,6 +6,7 @@
 #include <MFIX_MFHelpers.H>
 
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_PIC_Parms.H>
 #include <DiffusionOp.H>
 
 void mfix::mfix_calc_volume_fraction (Real& sum_vol)
@@ -15,7 +16,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   // Start the timers ...
   const Real strttime = ParallelDescriptor::second();
 
-  if (DEM::solve)
+  if (DEM::solve or PIC::solve)
   {
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain

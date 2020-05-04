@@ -13,7 +13,8 @@ class ParticlesGenerator {
   //< Radius................. 4
   //< Density................ 5
   //< Linear velocity........ 6,7,8
-  static constexpr int nr = 8;
+  //< Stat weight ........... 9
+  static constexpr int nr = 9;
 
   //< Type................... 1
   static constexpr int ni = 1;
@@ -73,16 +74,27 @@ class ParticlesGenerator {
                          const amrex::Real dy,
                          const amrex::Real dz);
 
-    void random_fill (const int icv,
-                      const int type,
-                      const amrex::IntVect& lo,
-                      const amrex::IntVect& hi,
-                      int& np,
-                      int& pc,
-                      const amrex::Real dx,
-                      const amrex::Real dy,
-                      const amrex::Real dz,
-                      const bool fix_seed);
+    void random_fill_dem (const int icv,
+                          const int type,
+                          const amrex::IntVect& lo,
+                          const amrex::IntVect& hi,
+                          int& np,
+                          int& pc,
+                          const amrex::Real dx,
+                          const amrex::Real dy,
+                          const amrex::Real dz,
+                          const bool fix_seed);
+
+    void random_fill_pic (const int icv,
+                          const int type,
+                          const amrex::IntVect& lo,
+                          const amrex::IntVect& hi,
+                          int& np,
+                          int& pc,
+                          const amrex::Real dx,
+                          const amrex::Real dy,
+                          const amrex::Real dz,
+                          const bool fix_seed);
 
     void nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
                   const amrex::Real mean,

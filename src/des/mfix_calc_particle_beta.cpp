@@ -123,6 +123,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
       const amrex::RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
       const amrex::RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
 
+
       const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(interp_ptr->Factory());
 
       const auto cellcent = &(factory.getCentroid());
@@ -200,7 +201,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
                  velfp[0], velfp[1], velfp[2], iloc, jloc, kloc, p_id);
 
-              particle.rdata(realData::dragx) = beta;
+              particle.rdata(realData::dragcoeff) = beta;
             });
           }
           else // FAB not all regular
@@ -261,9 +262,10 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                 // At least one of the cells in the stencil is cut or covered
                 } else {
 
+                  const int scomp = 3;
                   fe_interp(particle.pos(), ip, jp, kp, dx, dxi,
                             flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-                            interp_array, &interp_loc[0], interp_comp);
+                            interp_array, &interp_loc[0], interp_comp, scomp);
 
                 } // Cut cell
 
@@ -319,7 +321,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                                          velfp[0], velfp[1], velfp[2],
                                          ip, jp, kp, p_id);
 
-                particle.rdata(realData::dragx) = beta;
+                particle.rdata(realData::dragcoeff) = beta;
 
               } // Not covered
             }); // pid

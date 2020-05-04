@@ -99,10 +99,13 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                                             + phi_fab(i+1, j,   k+1) * wx_hi * wy_lo * wz_hi
                                             + phi_fab(i+1, j+1, k+1) * wx_hi * wy_hi * wz_hi;
 
-                            if (phi_interp < p.rdata(realData::radius))
+                            amrex::Real radius = p.rdata(realData::radius) *
+                                std::cbrt(p.rdata(realData::statwt));
+
+                            if (phi_interp < radius)
                             {
                                  p.id() = -1;
-                            } 
+                            }
 #if 0
                             else {
                                  std::cout << " 1 "

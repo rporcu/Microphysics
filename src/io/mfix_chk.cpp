@@ -11,6 +11,7 @@
 #include <mfix_F.H>
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_PIC_Parms.H>
 
 namespace
 {
@@ -150,7 +151,7 @@ mfix::WriteCheckPointFile (std::string& check_file,
 
           // Write scalar variables
           for (int i = 0; i < chkscalarVars.size(); i++ ) {
-              if ( DEM::solve || (chkscaVarsName[i] != "level_sets"))
+            if ( DEM::solve or PIC::solve or (chkscaVarsName[i] != "level_sets"))
                  VisMF::Write( **(chkscalarVars[i][lev]),
                    amrex::MultiFabFileFullPrefix(lev, checkpointname,
                          level_prefix, chkscaVarsName[i]));
@@ -158,13 +159,13 @@ mfix::WriteCheckPointFile (std::string& check_file,
        }
     }
 
-    if ( DEM::solve )
+    if ( DEM::solve or PIC::solve )
     {
-       pc -> Checkpoint(checkpointname, "particles");
+       pc->Checkpoint(checkpointname, "particles");
     }
 
 
-    if (DEM::solve)
+    if (DEM::solve or PIC::solve)
     {
         // The level set might have a higher refinement than the mfix level.
         //      => Current mechanism for saving checkpoint files requires the

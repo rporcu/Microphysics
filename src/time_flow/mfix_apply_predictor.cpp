@@ -4,6 +4,7 @@
 #include <AMReX_VisMF.H>
 #include <MFIX_MFHelpers.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_PIC_Parms.H>
 #include <MFIX_FLUID_Parms.H>
 
 #ifdef AMREX_MEM_PROFILING
@@ -188,7 +189,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
                         const Real num =         (rho_o(i,j,k) * epg(i,j,k));
                         const Real denom = 1.0 / (rho_n(i,j,k) * epg(i,j,k));
 
-                        Real h_g = num * h_g_o(i,j,k) + l_dt * dhdt_o(i,j,k,conv_comp); 
+                        Real h_g = num * h_g_o(i,j,k) + l_dt * dhdt_o(i,j,k,conv_comp);
 
                         h_g_n(i,j,k) = h_g * denom;
 
@@ -346,7 +347,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
     // *************************************************************************************
     // Add the drag term implicitly
     // *************************************************************************************
-    if (DEM::solve)
+    if (DEM::solve or PIC::solve)
         mfix_add_drag_implicit(l_dt);
 
     // *************************************************************************************

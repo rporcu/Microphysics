@@ -4,6 +4,7 @@
 #include <AMReX_VisMF.H>
 #include <MFIX_MFHelpers.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_PIC_Parms.H>
 #include <MFIX_FLUID_Parms.H>
 
 #ifdef AMREX_MEM_PROFILING
@@ -203,7 +204,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
                   {
                     int conv_comp = 2+n;
 
-                    Real tra = (rho_o(i,j,k)*epg_loc)*tra_o(i,j,k,n) 
+                    Real tra = (rho_o(i,j,k)*epg_loc)*tra_o(i,j,k,n)
                              + 0.5 * l_dt * (dtdt_o(i,j,k,conv_comp) + dtdt(i,j,k,conv_comp));
                     tra /= (rho_n(i,j,k)*epg_loc);
 
@@ -257,8 +258,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
            vel_ny /= epg_loc;
            vel_nz /= epg_loc;
 
-           // Crank-Nicolson so we should only add half of the explicit term here, but  
-           //     we go ahead and add all of it now before doing the implicit drag solve, 
+           // Crank-Nicolson so we should only add half of the explicit term here, but
+           //     we go ahead and add all of it now before doing the implicit drag solve,
            //     then we will subtract half of it after the drag solve
            vel_nx += l_dt * divtau_o(i,j,k,0);
            vel_ny += l_dt * divtau_o(i,j,k,1);
@@ -279,7 +280,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
     // *************************************************************************************
     // Add the drag term implicitly
     // *************************************************************************************
-    if (DEM::solve)
+    if (DEM::solve or PIC::solve)
         mfix_add_drag_implicit(l_dt);
 
     // *************************************************************************************
@@ -332,7 +333,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
     // Correct small cells
     // *************************************************************************************
     mfix_correct_small_cells(get_vel_g());
-    
+
     for (int lev = 0; lev <= finest_level; lev++)
     {
        delete conv_u[lev];

@@ -8,6 +8,7 @@
 #include <AMReX_Box.H>
 #include <AMReX_FillPatchUtil.H>
 #include <MFIX_MFHelpers.H>
+#include <MFIX_DEM_Parms.H>
 
 void
 mfix::mfix_calc_drag_fluid (Real time)
@@ -339,10 +340,12 @@ mfix::mfix_calc_drag_particle (Real time)
           // We need this until we remove static attribute from mfix::gp0;
           const RealVect gp0_dev(gp0);
 
+          const amrex::Real pmult = DEM::solve ? 1.0 : 0.0;
+
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
             amrex::ParallelFor(np,
-              [pstruct,interp_array,interp_comp,gp0_dev,plo,dxi]
+              [pstruct,interp_array,interp_comp,gp0_dev,plo,dxi,pmult]
               AMREX_GPU_DEVICE (int pid) noexcept
               {
                 // Local array storing interpolated values
@@ -353,19 +356,22 @@ mfix::mfix_calc_drag_particle (Real time)
                 trilinear_interp(particle.pos(), &interp_loc[0],
                                  interp_array, plo, dxi, interp_comp);
 
-                Real pbeta = particle.rdata(realData::dragx);
+                Real pbeta = particle.rdata(realData::dragcoeff);
 
-                // Particle drag calculation
+                // Particle drag calculation.  We multiply the particle velocity
+                // by "pmult" so that DEM uses the slip velocity. For PIC we
+                // only want the fluid velocity as it uses a pseudo implicit
+                // slip velocity for parcels.
                 particle.rdata(realData::dragx) =
-                  pbeta * ( interp_loc[0] - particle.rdata(realData::velx) ) -
+                  pbeta * ( interp_loc[0] - pmult*particle.rdata(realData::velx) ) -
                   (interp_loc[3] + gp0_dev[0]) * particle.rdata(realData::volume);
 
                 particle.rdata(realData::dragy) =
-                  pbeta * ( interp_loc[1] - particle.rdata(realData::vely) ) -
+                  pbeta * ( interp_loc[1] - pmult*particle.rdata(realData::vely) ) -
                   (interp_loc[4] + gp0_dev[1]) * particle.rdata(realData::volume);
 
                 particle.rdata(realData::dragz) =
-                  pbeta * ( interp_loc[2] - particle.rdata(realData::velz) ) -
+                  pbeta * ( interp_loc[2] - pmult*particle.rdata(realData::velz) ) -
                   (interp_loc[5] + gp0_dev[2]) * particle.rdata(realData::volume);
               });
           }
@@ -382,7 +388,7 @@ mfix::mfix_calc_drag_particle (Real time)
             const auto& apz_fab = areafrac[2]->array(pti);
 
             amrex::ParallelFor(np,
-              [pstruct,interp_array,interp_comp,flags_array,gp0_dev,
+              [pstruct,interp_array,interp_comp,flags_array,gp0_dev, pmult,
               plo,dx,dxi,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab]
               AMREX_GPU_DEVICE (int pid) noexcept
               {
@@ -390,7 +396,7 @@ mfix::mfix_calc_drag_particle (Real time)
                 amrex::Real interp_loc[interp_comp];
 
                 MFIXParticleContainer::ParticleType& particle = pstruct[pid];
-                Real pbeta = particle.rdata(realData::dragx);
+                Real pbeta = particle.rdata(realData::dragcoeff);
 
                 // Cell containing particle centroid
                 const int ip = floor((particle.pos(0) - plo[0])*dxi[0]);
@@ -431,23 +437,24 @@ mfix::mfix_calc_drag_particle (Real time)
                   // At least one of the cells in the stencil is cut or covered
                   } else {
 
+                  const int scomp = 3;
                   fe_interp(particle.pos(), ip, jp, kp, dx, dxi,
                             flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-                            interp_array, &interp_loc[0], interp_comp);
+                            interp_array, &interp_loc[0], interp_comp, scomp);
 
 
                   } // Cut cell
 
                   particle.rdata(realData::dragx) =
-                    pbeta * ( interp_loc[0] - particle.rdata(realData::velx) ) -
+                    pbeta * ( interp_loc[0] - pmult*particle.rdata(realData::velx) ) -
                     (interp_loc[3] + gp0_dev[0]) * particle.rdata(realData::volume);
 
                   particle.rdata(realData::dragy) =
-                    pbeta * ( interp_loc[1] - particle.rdata(realData::vely) ) -
+                    pbeta * ( interp_loc[1] - pmult*particle.rdata(realData::vely) ) -
                     (interp_loc[4] + gp0_dev[1]) * particle.rdata(realData::volume);
 
                   particle.rdata(realData::dragz) =
-                    pbeta * ( interp_loc[2] - particle.rdata(realData::velz) ) -
+                    pbeta * ( interp_loc[2] - pmult*particle.rdata(realData::velz) ) -
                     (interp_loc[5] + gp0_dev[2]) * particle.rdata(realData::volume);
 
                 } // Not covered

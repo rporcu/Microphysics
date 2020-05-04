@@ -4,6 +4,7 @@
 #include <AMReX_VisMF.H>
 #include <MFIX_MFHelpers.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_PIC_Parms.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -141,7 +142,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
         Real new_time = time+dt;
 
         // Calculate drag coefficient
-        if (DEM::solve) {
+        if (DEM::solve or PIC::solve) {
           Real start_drag = ParallelDescriptor::second();
           mfix_calc_drag_fluid(time);
           coupling_timing += ParallelDescriptor::second() - start_drag;
@@ -152,7 +153,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real coupli
         mfix_apply_predictor(conv_u_old, conv_s_old, divtau_old, laps_old, laptemp_old, time, dt, proj_2_pred);
 
         // Calculate drag coefficient
-        if (DEM::solve)
+        if (DEM::solve or PIC::solve)
         {
           Real start_drag = ParallelDescriptor::second();
           amrex::Print() << "\nRecalculating drag ..." << std::endl;

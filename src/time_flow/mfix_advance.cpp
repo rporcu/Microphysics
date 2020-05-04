@@ -4,6 +4,7 @@
 #include <AMReX_VisMF.H>
 #include <MFIX_MFHelpers.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_PIC_Parms.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -60,7 +61,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     MultiFab::Copy(*m_leveldata[lev]->vel_go, *m_leveldata[lev]->vel_g, 0, 0,
                    m_leveldata[lev]->vel_g->nComp(), m_leveldata[lev]->vel_go->nGrow());
 
-  if (DEM::solve)
+  if (DEM::solve or PIC::solve)
     mfix_calc_drag_fluid(time);
 
   // Create temporary multifabs to hold conv and divtau
