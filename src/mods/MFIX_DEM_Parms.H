@@ -76,6 +76,7 @@ namespace DEM
     struct DEM_t {
 
       amrex::Real volfrac;
+      amrex::Real statwt;
       amrex::Real temperature;
       amrex::Vector<amrex::Real> velocity;
 

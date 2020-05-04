@@ -33,6 +33,7 @@
 #include <mfix_des_F.H>
 #include <mfix_eb_if.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_PIC_Parms.H>
 #include <MFIX_LevelData.H>
 
 
@@ -116,7 +117,7 @@ class mfix : public AmrCore
     template<class F>
     void build_particle_eb_levels (EB2::GeometryShop<F> gshop)
     {
-      if(DEM::solve)
+      if(DEM::solve or PIC::solve)
         for (int lev = 0; lev < nlev; lev ++)
           particle_eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom, 100, 0);
     }
@@ -159,7 +160,7 @@ class mfix : public AmrCore
 
     std::shared_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls (bool & has_real_walls);
 
-    std::shared_ptr<EB2::TranslationIF<EB2::PolynomialIF>> 
+    std::shared_ptr<EB2::TranslationIF<EB2::PolynomialIF>>
       get_poly (int max_order, std::string field_prefix);
 
     std::shared_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
@@ -318,7 +319,7 @@ class mfix : public AmrCore
     static amrex::Real m_max_solids_volume_fraction;
 
     // input parameter defaulted to 50 used in file src_des/init_collision.f90
-    static amrex::Real tcoll_ratio; 
+    static amrex::Real tcoll_ratio;
 
     template <typename F>
     void mfix_calc_particle_beta (F DragFunc, Real time);
@@ -423,6 +424,35 @@ class mfix : public AmrCore
     ////////////////////////////////////////////////////////////////////////////
 
     std::shared_ptr<NodalProjector> nodal_projector;
+
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  //
+  // PIC solids
+  //
+  ////////////////////////////////////////////////////////////////////////////
+
+  void EvolveParcels (
+                      int nstep,
+                      amrex::Real dt,
+                      amrex::Real time,
+                      amrex::RealVect& gravity,
+                      amrex::Vector<amrex::Geometry> geom,
+                      amrex::Vector< amrex::EBFArrayBoxFactory* > particle_ebfactory,
+                      amrex::Vector< amrex::MultiFab* >& level_sets,
+                      const int ls_refinement
+                      );
+
+
+  void MFIX_CalcAvgSolidsProp (Vector< EBFArrayBoxFactory* > particle_ebfactory,
+                               Vector< MultiFab* >& avg_prop_in);
+
+  void MFIX_CalcSolidsStress (amrex::Vector< amrex::EBFArrayBoxFactory* > particle_ebfactory,
+                              amrex::Vector< amrex::MultiFab* >& ep_s_in,
+                              amrex::Vector< amrex::MultiFab* >& avg_prop_in);
+
+
 
   protected:
     //! Tagging cells for refinement
@@ -660,17 +690,17 @@ class mfix : public AmrCore
     // ***************************************************************
     // Nodal solve
     // ***************************************************************
-     
+
     // Verbosity and MLMG parameters are now ParmParse with "nodal_proj" in the
     // inputs file
     // Examples: nodal_proj.verbose = 1
-    //           nodal_proj.bottom_verbose = 1 
+    //           nodal_proj.bottom_verbose = 1
     //           nodal_proj.maxiter
     //           nodal_proj.bottom_maxiter
-    //           nodal_proj.bottom_rtol 
-    //           nodal_proj.bottom_atol 
-    //           nodal_proj.bottom_solver 
-    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_NodalProjector.cpp"   
+    //           nodal_proj.bottom_rtol
+    //           nodal_proj.bottom_atol
+    //           nodal_proj.bottom_solver
+    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_NodalProjector.cpp"
     // Verbosity
 
     // Control MLMG behavior
@@ -692,13 +722,13 @@ class mfix : public AmrCore
     // Verbosity and MLMG parameters are now ParmParse with "mac_proj" in the
     // inputs file
     // Examples: mac_proj.verbose = 1
-    //           mac_proj.bottom_verbose = 1 
+    //           mac_proj.bottom_verbose = 1
     //           mac_proj.maxiter
     //           mac_proj.bottom_maxiter
-    //           mac_proj.bottom_rtol 
-    //           mac_proj.bottom_atol 
-    //           mac_proj.bottom_solver 
-    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp" 
+    //           mac_proj.bottom_rtol
+    //           mac_proj.bottom_atol
+    //           mac_proj.bottom_solver
+    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp"
 
     // Control MLMG behavior
     Real mac_mg_rtol = 1.0e-11;
@@ -796,7 +826,7 @@ class mfix : public AmrCore
     // Flags for saving particle data. By default, we have all flags on,
     // we turn off what we don't want in the init IO routine. This is somewhat
     // different from what we do with the fluid.
-    Vector<int> write_real_comp = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    Vector<int> write_real_comp = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
     Vector<int> write_int_comp = {1, 1};
 
     //

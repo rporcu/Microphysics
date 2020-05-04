@@ -25,7 +25,7 @@ void fe_interp(const amrex::RealVect& pos,
                amrex::Array4<const amrex::Real> const& apz,
                amrex::Array4<amrex::Real const> const& interp_array,
                amrex::Real* interp_vals,
-               const int ncomp)
+               const int ncomp, const int scomp)
 {
 
     const amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
@@ -45,7 +45,7 @@ void fe_interp(const amrex::RealVect& pos,
         interp_vals[0] = interp_array(ip,jp,kp,0);
         interp_vals[1] = interp_array(ip,jp,kp,1);
         interp_vals[2] = interp_array(ip,jp,kp,2);
-        for(int n=3; n<ncomp; n++)
+        for(int n=scomp; n<ncomp; n++)
             interp_vals[n] = interp_array(ip,jp,kp,n);
 
         return;
@@ -124,7 +124,7 @@ void fe_interp(const amrex::RealVect& pos,
         interp_vals[0] = 0.;
         interp_vals[1] = 0.;
         interp_vals[2] = 0.;
-        for(int n=3; n<ncomp; n++){
+        for(int n=scomp; n<ncomp; n++){
             interp_vals[n] = interp_array(ip,jp,kp,n);
         }
 
@@ -173,7 +173,7 @@ void fe_interp(const amrex::RealVect& pos,
         interp_vals[1] = scale*interp_array(ip,jp,kp,1);
         interp_vals[2] = scale*interp_array(ip,jp,kp,2);
 
-        for(int n=3; n<ncomp; n++)
+        for(int n=scomp; n<ncomp; n++)
             interp_vals[n] = interp_array(ip,jp,kp,n);
 
     } else {

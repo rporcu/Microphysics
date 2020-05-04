@@ -11,6 +11,7 @@
 #include <mfix_F.H>
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_PIC_Parms.H>
 
 namespace
 {
@@ -132,7 +133,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             // Particle data is loaded into the MFIXParticleContainer's base
             // class using amrex::NeighborParticleContainer::Restart
 
-            if ( DEM::solve && lev == 0)
+            if ( (DEM::solve or PIC::solve) and lev == 0)
               pc->Restart(restart_file, "particles");
 
             amrex::Print() << "  Finished reading particle data" << std::endl;
@@ -282,7 +283,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
     // Make sure that the particle BoxArray is the same as the mesh data -- we can
     //      create a dual grid decomposition in the regrid operation
-    if (DEM::solve)
+    if (DEM::solve or PIC::solve)
     {
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
@@ -309,7 +310,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     * (compared to the rest of the checkpoint data) => the level-set data is   *
     * stored in separate ls_raw MultiFab.                                      *
     ****************************************************************************/
-    if (DEM::solve)
+    if (DEM::solve or PIC::solve)
     {
         if (levelset_restart) {
            // Load level-set Multifab
@@ -383,7 +384,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
     if (load_balance_type == "KnapSack" or load_balance_type == "SFC") 
     {
-      if (DEM::solve) {
+      if (DEM::solve or PIC::solve) {
         for (int lev(0); lev < particle_cost.size(); ++lev)
           if (particle_cost[lev] != nullptr)
             delete particle_cost[lev];

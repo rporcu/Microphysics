@@ -16,4 +16,6 @@ target_sources( mfixcore
    mfix_set_scalar_bcs.cpp
    MFIX_MFHelpers.H
    MFIX_MFHelpers.cpp
+   MFIX_gradient.H
+   MFIX_gradient.cpp
    )

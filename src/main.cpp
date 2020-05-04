@@ -12,6 +12,7 @@
 #include <mfix_F.H>
 
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_PIC_Parms.H>
 #include <MFIX_FLUID_Parms.H>
 
 int  max_step   = -1;
@@ -235,7 +236,7 @@ int main (int argc, char* argv[])
     if(write_eb_surface)
       mfix.WriteMyEBSurface();
 
-    if (DEM::solve)
+    if (DEM::solve or PIC::solve)
     {
         // Fill level-sets on each level
         mfix.fill_eb_levelsets();
@@ -272,7 +273,7 @@ int main (int argc, char* argv[])
         mfix.Regrid();
     }
 
-    if (DEM::solve && write_ls)
+    if ((DEM::solve or PIC::solve) and write_ls)
         mfix.WriteStaticPlotFile(static_plt_file);
 
     mfix.PostInit(dt, time, restart_flag, stop_time);

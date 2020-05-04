@@ -5,6 +5,8 @@
 #include <AMReX_ParmParse.H>
 
 #include <MFIX_IC_Parms.H>
+#include <MFIX_DEM_Parms.H>
+#include <MFIX_PIC_Parms.H>
 #include <MFIX_REGIONS_Parms.H>
 
 namespace IC
@@ -47,7 +49,7 @@ namespace IC
         new_ic.fluid.pressure_defined = ppFluid.query("pressure", new_ic.fluid.pressure);
       }
 
-      if(DEM::solve && new_ic.fluid.volfrac < 1.0) {
+      if((DEM::solve or PIC::solve) and new_ic.fluid.volfrac < 1.0) {
 
         // Get the list of solids used in defining the IC region
         std::vector<std::string> solids_types;
@@ -70,6 +72,9 @@ namespace IC
 
           ppSolid.getarr("velocity", new_solid.velocity, 0, 3);
           ppSolid.query("temperature", new_solid.temperature);
+
+          new_solid.statwt = 1.0;
+          ppSolid.query("statwt", new_solid.statwt);
 
           // Get information about diameter distribution.
           ppSolid.get("diameter", new_solid.diameter.distribution);
@@ -140,7 +145,7 @@ namespace IC
       }
 
 
-      if(DEM::solve && ic[icv].solids.size()>0){
+      if((DEM::solve or PIC::solve) and ic[icv].solids.size()>0){
 
         amrex::Print() << "       Solids packing: " << ic[icv].packing << std::endl;
 

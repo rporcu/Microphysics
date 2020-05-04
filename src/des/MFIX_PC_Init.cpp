@@ -1,6 +1,6 @@
 #include <AMReX.H>
-#include "AMReX_Particles.H"
-#include "AMReX_RealVect.H"
+#include <AMReX_Particles.H>
+#include <AMReX_RealVect.H>
 #include <iostream>
 #include <MFIXParticleContainer.H>
 #include <AMReX_EBFArrayBox.H>
@@ -12,12 +12,13 @@
 #include <AMReX_EBMultiFabUtil.H>
 #include <AMReX_FillPatchUtil.H>
 
-#include <math.h>
+#include <cmath>
 
 #include "mfix_F.H"
 #include "mfix_des_F.H"
 #include "mfix_des_K.H"
 #include "MFIX_DEM_Parms.H"
+#include <MFIX_PIC_Parms.H>
 #include <particle_generator.H>
 
 using namespace amrex;
@@ -78,18 +79,22 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
       set_particle_properties(pstate, pradius, pdensity, pvolume, pmass, pomoi, pomega);
 
       // Set other particle properties
-      p.idata(intData::phase)     = pphase;
-      p.idata(intData::state)     = pstate;
-      p.rdata(realData::volume)   = pvolume;
-      p.rdata(realData::density)  = pdensity;
-      p.rdata(realData::mass)     = pmass;
-      p.rdata(realData::oneOverI) = pomoi;
-      p.rdata(realData::radius)   = pradius;
-      p.rdata(realData::omegax)   = pomega;
-      p.rdata(realData::omegay)   = pomega;
-      p.rdata(realData::omegaz)   = pomega;
+      p.idata(intData::phase)       = pphase;
+      p.idata(intData::state)       = pstate;
+      p.rdata(realData::volume)     = pvolume;
+      p.rdata(realData::density)    = pdensity;
+      p.rdata(realData::mass)       = pmass;
+      p.rdata(realData::oneOverI)   = pomoi;
+      p.rdata(realData::radius)     = pradius;
+      p.rdata(realData::omegax)     = pomega;
+      p.rdata(realData::omegay)     = pomega;
+      p.rdata(realData::omegaz)     = pomega;
+
+      p.rdata(realData::statwt) = 1.0;
 
       // Initialize these for I/O purposes
+      p.rdata(realData::dragcoeff) = 0.0;
+
       p.rdata(realData::dragx) = 0.0;
       p.rdata(realData::dragy) = 0.0;
       p.rdata(realData::dragz) = 0.0;

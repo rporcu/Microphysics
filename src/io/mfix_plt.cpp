@@ -7,6 +7,7 @@
 #include <mfix_F.H>
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_PIC_Parms.H>
 
 namespace
 {
@@ -78,7 +79,7 @@ mfix::InitIOPltData ()
       if( plt_volfrac == 1) pltVarCount += 1;
     }
 
-  if(DEM::solve)
+  if(DEM::solve or PIC::solve)
     {
 
       int plt_ccse_regtest = 0;
@@ -121,10 +122,15 @@ mfix::InitIOPltData ()
         write_real_comp[10] = input_value;
 
         input_value = 0;
-        pp.query("plt_drag_p",   input_value );
+        pp.query("plt_statwt",   input_value );
         write_real_comp[11] = input_value;
-        write_real_comp[12] = input_value;
-        write_real_comp[13] = input_value;
+
+        input_value = 0;
+        pp.query("plt_drag_p",   input_value );
+        write_real_comp[12] = input_value;  // drag coeff
+        write_real_comp[13] = input_value;  // dragx
+        write_real_comp[14] = input_value;  // dragy
+        write_real_comp[15] = input_value;  // dragz
 
         input_value = 0;
         pp.query("plt_phase",   input_value );
@@ -140,8 +146,8 @@ mfix::InitIOPltData ()
 
 }
 
-void 
-mfix::WritePlotFile (std::string& plot_file, int nstep, Real time ) 
+void
+mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 {
     // If we've already written this plotfile, don't do it again!
     if (nstep == last_plt) return;
@@ -368,7 +374,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 
     WriteJobInfo(plotfilename);
 
-    if ( DEM::solve )
+    if ( DEM::solve or PIC::solve )
     {
         Vector<std::string> real_comp_names;
         Vector<std::string>  int_comp_names;
@@ -376,21 +382,33 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         real_comp_names.push_back("volume");
         real_comp_names.push_back("mass");
         real_comp_names.push_back("density");
-        real_comp_names.push_back("omoi");
+        if(DEM::solve){
+          real_comp_names.push_back("omoi");
+        } else {
+          real_comp_names.push_back("ep_s");
+        }
         real_comp_names.push_back("velx");
         real_comp_names.push_back("vely");
         real_comp_names.push_back("velz");
-        real_comp_names.push_back("omegax");
-        real_comp_names.push_back("omegay");
-        real_comp_names.push_back("omegaz");
+        if(DEM::solve){
+          real_comp_names.push_back("omegax");
+          real_comp_names.push_back("omegay");
+          real_comp_names.push_back("omegaz");
+        } else {
+          real_comp_names.push_back("grad_tau_x");
+          real_comp_names.push_back("grad_tau_y");
+          real_comp_names.push_back("grad_tau_z");
+        }
+        real_comp_names.push_back("statwt");
+        real_comp_names.push_back("dragcoeff");
         real_comp_names.push_back("dragx");
         real_comp_names.push_back("dragy");
         real_comp_names.push_back("dragz");
         int_comp_names.push_back("phase");
         int_comp_names.push_back("state");
 
-       pc -> WritePlotFile(plotfilename, "particles",
-                           write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+       pc->WritePlotFile(plotfilename, "particles",
+                         write_real_comp, write_int_comp, real_comp_names, int_comp_names);
 
     }
 }

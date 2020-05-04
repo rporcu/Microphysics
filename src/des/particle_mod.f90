@@ -17,7 +17,9 @@ module particle_mod
      real(rt)    :: omoi       !< One over momentum of inertia -- fortran component 8
      real(rt)    :: vel(3)     !< Linear velocity              -- fortran components 9,10,11
      real(rt)    :: omega(3)   !< Angular velocity             -- fortran components 12,13,14
-     real(rt)    :: drag(3)    !< Drag                         -- fortran components 15,16,17
+     real(rt)    :: statwt     !< Statical weight (PIC)        -- fortran component  15
+     real(rt)    :: dragcoeff  !< Statical weight              -- fortran component  16
+     real(rt)    :: drag(3)    !< Drag                         -- fortran components 17,18,19
      integer(c_int)  :: id
      integer(c_int)  :: cpu
      integer(c_int)  :: phase

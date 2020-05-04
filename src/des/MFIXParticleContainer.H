@@ -3,6 +3,11 @@
 
 #include <AMReX.H>
 #include <AMReX_AmrParGDB.H>
+#include <AMReX_IArrayBox.H>
+#include <AMReX_Particles.H>
+#include <AMReX_NeighborParticles.H>
+
+#include <AMReX_FabArray.H>
 #include <AMReX_EBSupport.H>
 #include <AMReX_EBMultiFabUtil.H>
 #include <AMReX_FabArray.H>
@@ -10,9 +15,11 @@
 #include <AMReX_Particles.H>
 #include <AMReX_NeighborParticles.H>
 
-#include <MFIX_BcList.H>
 #include <mfix_des_F.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_PIC_Parms.H>
+#include <MFIX_BcList.H>
+#include <mfix_des_F.H>
 
 struct realData
 {
@@ -28,6 +35,8 @@ struct realData
     omegax,
     omegay,
     omegaz,
+    statwt,
+    dragcoeff,
     dragx,
     dragy,
     dragz,
@@ -58,7 +67,7 @@ struct MFIXCheckPair
 class MFIXParticleContainer final
     : public amrex::NeighborParticleContainer<realData::count,intData::count>
 {
-  public:
+public:
     using MFIXParIter = amrex::ParIter<realData::count,intData::count,0,0>;
 
     // Get number of particles
@@ -180,6 +189,37 @@ class MFIXParticleContainer final
                                    const amrex::Vector<amrex::Real>& avg_region_y_n,
                                    const amrex::Vector<amrex::Real>& avg_region_z_b,
                                    const amrex::Vector<amrex::Real>& avg_region_z_t);
+
+
+
+    void MFIX_PC_CalcSolidsStressGrad (int lev,
+                                       amrex::EBFArrayBoxFactory* ebfactory,
+                                       amrex::MultiFab & ep_g_in,
+                                       amrex::MultiFab & grad_tau_in);
+
+
+    void MFIX_PC_SolidsVelocityDeposition (int lev,
+                                           amrex::MultiFab& vel_s_mf,
+                                           const amrex::FabArray<amrex::EBCellFlagFab>* flags);
+
+    ///
+    /// Deposit parcel velocity to the grid
+    ///
+    template <typename FB>
+    void MFIX_PC_SolidsVelocityDeposition (FB WeightFunc,
+                                           int lev,
+                                           amrex::MultiFab& vel_s_mf,
+                                           const amrex::FabArray<amrex::EBCellFlagFab>* flags);
+
+    void MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealVect& gravity,
+                                 amrex::Vector< amrex::EBFArrayBoxFactory* > ebfactory,
+                                 amrex::Vector< amrex::MultiFab*> & ep_s_in,
+                                 amrex::Vector< amrex::MultiFab*> & avg_prop_in);
+
+    void MFIX_PC_ImposeWalls (int lev,
+                              amrex::EBFArrayBoxFactory * ebfactory,
+                              const int ls_refinement,
+                              const amrex::MultiFab * ls_phi);
 
     void ls_has_walls (int& has_wall,
                        const amrex::Box& bx,

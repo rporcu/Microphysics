@@ -11,6 +11,7 @@
 #include <MFIX_BC_Parms.H>
 #include <MFIX_IC_Parms.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_PIC_Parms.H>
 #include <MFIX_FLUID_Parms.H>
 
 void
@@ -18,9 +19,10 @@ mfix::InitParams ()
 {
   if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
 
-  // Read and process fluid and DEM particle model options.
-  FLUID::Initialize();
-  DEM::Initialize();
+    // Read and process fluid and DEM particle model options.
+    FLUID::Initialize();
+    DEM::Initialize();
+    PIC::Initialize();
 
   // Read in regions, initial and boundary conditions. Note that
   // regions need to be processed first as they define the
@@ -196,7 +198,7 @@ mfix::InitParams ()
                    << "eb_pad        = " << levelset_eb_pad << std::endl;
   }
 
-  if (DEM::solve)
+  if (DEM::solve or PIC::solve)
   {
     ParmParse pp("particles");
 
@@ -208,14 +210,14 @@ mfix::InitParams ()
     pp.query("removeOutOfRange", removeOutOfRange);
   }
 
-  if (DEM::solve and (not FLUID::solve))
+  if ((DEM::solve or PIC::solve) and (not FLUID::solve))
   {
     if (fixed_dt <= 0.0)
       amrex::Abort("If running particle-only must specify a positive fixed_dt"
           " in the inputs file");
   }
 
-  if (DEM::solve and FLUID::solve)
+  if ((DEM::solve or PIC::solve) and FLUID::solve)
   {
     ParmParse pp("mfix");
 
@@ -259,6 +261,7 @@ mfix::InitParams ()
 
     m_max_solids_volume_fraction = 0.6;
     pp.query("max_solids_volume_fraction", m_max_solids_volume_fraction);
+    //pp.query("close_pack", m_max_solids_volume_fraction);
 
     m_deposition_scale_factor = 1.;
     pp.query("deposition_scale_factor", m_deposition_scale_factor);
@@ -362,7 +365,7 @@ void mfix::Init (Real time)
      *                                                                          *
      ***************************************************************************/
 
-    if (DEM::solve)
+    if (DEM::solve or PIC::solve)
       pc = new MFIXParticleContainer(this);
 
     /****************************************************************************
@@ -499,7 +502,7 @@ void mfix::InitLevelData (Real time)
           AllocateArrays(lev);
 
     // Allocate the particle data
-    if (DEM::solve)
+    if (DEM::solve or PIC::solve)
     {
       Real strt_init_part = ParallelDescriptor::second();
 
@@ -518,26 +521,28 @@ void mfix::InitLevelData (Real time)
                        << " particles per cell ..."
                        << std::endl;
 
-        Real  radius = 1.0;
-        Real  volume = 1.0;
-        Real    mass = 1.0;
-        Real density = 1.0;
-        Real    omoi = 1.0;
-        Real    velx = 0.0;
-        Real    vely = 0.0;
-        Real    velz = 0.0;
-        Real   dragx = 0.0;
-        Real   dragy = 0.0;
-        Real   dragz = 0.0;
-        Real  omegax = 0.0;
-        Real  omegay = 0.0;
-        Real  omegaz = 0.0;
-        int    phase = 1;
-        int    state = 0;
+        Real     radius = 1.0;
+        Real     volume = 1.0;
+        Real       mass = 1.0;
+        Real    density = 1.0;
+        Real       omoi = 1.0;
+        Real       velx = 0.0;
+        Real       vely = 0.0;
+        Real       velz = 0.0;
+        Real  dragcoeff = 0.0;
+        Real      dragx = 0.0;
+        Real      dragy = 0.0;
+        Real      dragz = 0.0;
+        Real     omegax = 0.0;
+        Real     omegay = 0.0;
+        Real     omegaz = 0.0;
+        Real     statwt = 1.0;
+        int       phase = 1;
+        int       state = 0;
 
         MFIXParticleContainer::ParticleInitData pdata = {radius,volume,mass,density,omoi,
                                                          velx,vely,velz,omegax,omegay,omegaz,
-                                                         dragx,dragy,dragz,phase,state};
+                                                         dragx,dragy,dragz,dragcoeff,statwt,phase,state};
 
         pc->InitNRandomPerCell(n_per_cell, pdata);
         pc->WriteAsciiFileForInit("random_particles");
@@ -602,7 +607,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
 
-    if (DEM::solve)
+    if (DEM::solve or PIC::solve)
     {
         // Auto generated particles may be out of the domain. This call will
         // remove them. Note that this has to occur after the EB geometry is
