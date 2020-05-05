@@ -85,6 +85,12 @@ mfix::InitIOPltData ()
       int plt_ccse_regtest = 0;
       pp.query("plt_regtest", plt_ccse_regtest);
 
+      if (DEM::nspecies_dem > 0) {
+          write_real_comp.resize(16+DEM::nspecies_dem);
+           for(int i=0; i < DEM::nspecies_dem; ++i){
+               write_real_comp[16+i] = 1;
+           }
+      }
       // All flags are true by default so we only need to turn off the
       // variables we don't want if not doing CCSE regression tests.
       if (plt_ccse_regtest == 0) {
@@ -131,6 +137,14 @@ mfix::InitIOPltData ()
         write_real_comp[13] = input_value;  // dragx
         write_real_comp[14] = input_value;  // dragy
         write_real_comp[15] = input_value;  // dragz
+
+        input_value = 0;
+        pp.query("plt_species_p",   input_value );
+        if (input_value > 0){
+           for(int i=0; i < DEM::nspecies_dem; ++i){
+               write_real_comp[16+i] = input_value;
+           }
+        }
 
         input_value = 0;
         pp.query("plt_phase",   input_value );
@@ -404,6 +418,11 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         real_comp_names.push_back("dragx");
         real_comp_names.push_back("dragy");
         real_comp_names.push_back("dragz");
+        if (DEM::nspecies_dem > 0){
+           for(int i=0; i < DEM::species_dem.size(); ++i){
+               real_comp_names.push_back(DEM::species_dem[i]);
+           }
+        }
         int_comp_names.push_back("phase");
         int_comp_names.push_back("state");
 

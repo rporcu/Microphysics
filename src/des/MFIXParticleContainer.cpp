@@ -48,6 +48,13 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     setIntCommComp(3, false);
 
     nlev = amr_core->maxLevel() + 1;
+
+    if (DEM::nspecies_dem > 0){
+       for(int i=0; i < DEM::species_dem.size(); ++i){
+          AddRealComp(true);
+       }
+    }
+
 }
 
 void MFIXParticleContainer::AllocData ()
@@ -557,6 +564,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             int z_lo_bc = BC::domain_bc[4];
             int z_hi_bc = BC::domain_bc[5];
 
+            //Access to species fractions
+            //auto spec_data = ptile.getParticleTileData();
+
             amrex::ParallelFor(nrp,
               [pstruct,subdt,fc_ptr,ntot,gravity,tow_ptr,eps,p_hi,p_lo,
                x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc]
@@ -587,6 +597,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 p.pos(0) += subdt * p.rdata(realData::velx);
                 p.pos(1) += subdt * p.rdata(realData::vely);
                 p.pos(2) += subdt * p.rdata(realData::velz);
+
+                //Compute something with species
+                //if (DEM::nspecies_dem > 0){
+                //   for(int j=0; j < DEM::nspecies_dem; ++j){
+                //      //j -- spec1,spec2 .. ; i -- particle index
+                //      spec_data.m_runtime_rdata[j][i] += subdt*spec_data.m_runtime_rdata[j][i]; 
+                //   }
+                //}
 
                 if (x_lo_bc && p.pos(0) < p_lo[0])
                 {
