@@ -47,10 +47,8 @@ add_subdirectory(io)
 add_subdirectory(convection)
 
 # DES
-add_subdirectory(interpolation)
 add_subdirectory(deposition)
 add_subdirectory(des)
-add_subdirectory(pic)
 
 # Diffusion
 add_subdirectory(diffusion)

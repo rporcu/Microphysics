@@ -1,3 +1,7 @@
 [submodule "subprojects/amrex"]
 	path = subprojects/amrex
 	url = https://github.com/AMReX-Codes/amrex.git
+	branch = development
+[submodule "subprojects/mfix_regression_testing"]
+	path = subprojects/mfix_regression_testing
+	url = ../mfix_regression_testing.git

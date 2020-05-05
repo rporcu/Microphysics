@@ -8,8 +8,6 @@ target_sources( mfixcore
    amrex_to_mfix.F90
    MFIX_calc_cell.H
    MFIX_calc_cell.cpp
-   mfix_calc_cp_g.H
-   mfix_calc_cp_g.cpp
    mfix_calc_mu_g.H
    mfix_calc_mu_g.cpp
    mfix_init_fluid.H

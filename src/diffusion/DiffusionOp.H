@@ -53,14 +53,6 @@ class DiffusionOp
                            const amrex::Vector< amrex::MultiFab* > eta, 
                            amrex::Real dt);
 
-    // Temperature diffusion
-    void diffuse_temperature (      amrex::Vector< amrex::MultiFab* >  T_g,
-                              const amrex::Vector< amrex::MultiFab* > ep_g, 
-                              const amrex::Vector< amrex::MultiFab* > ro_g, 
-                              const amrex::Vector< amrex::MultiFab* > cp_g, 
-                              const amrex::Real k_g,
-                              amrex::Real dt);
-
     // Scalar diffusion
     void diffuse_scalar (amrex::Vector< amrex::MultiFab* > scal,
                          const amrex::Vector< amrex::MultiFab* > ep_ro, 
@@ -80,19 +72,12 @@ class DiffusionOp
                         const amrex::Vector< amrex::MultiFab* >& ep_in,
                         const amrex::Vector< amrex::MultiFab* >& eta_in);
 
-    // Explicit tensor temperature term
-    void ComputeLapTemp (amrex::Vector< amrex::MultiFab* >& laps_out,
-                         const amrex::Vector< amrex::MultiFab* >& T_g_in,
-                         const amrex::Vector< amrex::MultiFab* >& ro_in,
-                         const amrex::Vector< amrex::MultiFab* >& ep_in,
-                         const amrex::Real& k_g);
-
-    // Explicit tensor viscous term // tracer
+    // Explicit tensor viscous term
     void ComputeLapS (amrex::Vector< amrex::MultiFab* >& laps_out,
                       const amrex::Vector< amrex::MultiFab* >& scal_in,
                       const amrex::Vector< amrex::MultiFab* >& ro_in,
                       const amrex::Vector< amrex::MultiFab* >& ep_in,
-                      const amrex::Vector< amrex::Real      >& mu_s);
+                      const amrex::Vector< amrex::Real > mu_s);
 
   private:
     // AmrCore data 
@@ -130,13 +115,9 @@ class DiffusionOp
     // ( alpha a - beta div ( b grad ) ) phi = rhs
     //
     std::unique_ptr<amrex::MLEBABecLap> scal_matrix;
-    std::unique_ptr<amrex::MLEBABecLap> temp_matrix;
 
     // DiffusionOp verbosity
     int verbose = 0;
-
-    // Dirichlet vs Neumann bc's at EB walls
-    bool eb_is_dirichlet;
 
     // Options to control MLMG behavior
     int mg_verbose = 0;

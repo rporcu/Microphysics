@@ -2,6 +2,7 @@
 
 #include <mfix.H>
 #include <mfix_F.H>
+#include <mfix_eb_F.H>
 
 #include <mfix_init_fluid.H>
 
@@ -11,7 +12,6 @@
 #include <MFIX_BC_Parms.H>
 #include <MFIX_IC_Parms.H>
 #include <MFIX_DEM_Parms.H>
-#include <MFIX_PIC_Parms.H>
 #include <MFIX_FLUID_Parms.H>
 
 void
@@ -19,10 +19,9 @@ mfix::InitParams ()
 {
   if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
 
-    // Read and process fluid and DEM particle model options.
-    FLUID::Initialize();
-    DEM::Initialize();
-    PIC::Initialize();
+  // Read and process fluid and DEM particle model options.
+  FLUID::Initialize();
+  DEM::Initialize();
 
   // Read in regions, initial and boundary conditions. Note that
   // regions need to be processed first as they define the
@@ -109,7 +108,6 @@ mfix::InitParams ()
     pp.query("initial_iterations", initial_iterations);
     pp.query("do_initial_proj", do_initial_proj);
 
-    pp.query("advect_enthalpy", advect_enthalpy);
     pp.query("advect_density", advect_density);
     pp.query("advect_tracer" , advect_tracer);
     pp.query("test_tracer_conservation", test_tracer_conservation);
@@ -131,9 +129,6 @@ mfix::InitParams ()
     if (test_tracer_conservation && !advect_tracer)
       amrex::Abort("No point in testing tracer conservation with advect_tracer"
           " = false");
-
-    if (advect_enthalpy && !advect_density)
-      amrex::Abort("Can't advect enthalpy without advecting density");
 
     if (advect_tracer && !advect_density)
       amrex::Abort("Can't advect tracer without advecting density");
@@ -198,7 +193,7 @@ mfix::InitParams ()
                    << "eb_pad        = " << levelset_eb_pad << std::endl;
   }
 
-  if (DEM::solve or PIC::solve)
+  if (DEM::solve)
   {
     ParmParse pp("particles");
 
@@ -210,14 +205,14 @@ mfix::InitParams ()
     pp.query("removeOutOfRange", removeOutOfRange);
   }
 
-  if ((DEM::solve or PIC::solve) and (not FLUID::solve))
+  if (DEM::solve and (not FLUID::solve))
   {
     if (fixed_dt <= 0.0)
       amrex::Abort("If running particle-only must specify a positive fixed_dt"
           " in the inputs file");
   }
 
-  if ((DEM::solve or PIC::solve) and FLUID::solve)
+  if (DEM::solve and FLUID::solve)
   {
     ParmParse pp("mfix");
 
@@ -261,7 +256,6 @@ mfix::InitParams ()
 
     m_max_solids_volume_fraction = 0.6;
     pp.query("max_solids_volume_fraction", m_max_solids_volume_fraction);
-    //pp.query("close_pack", m_max_solids_volume_fraction);
 
     m_deposition_scale_factor = 1.;
     pp.query("deposition_scale_factor", m_deposition_scale_factor);
@@ -272,8 +266,6 @@ mfix::InitParams ()
 
   {
     ParmParse amr_pp("amr");
-
-    amr_pp.query("restart_from_cold_flow", restart_from_cold_flow);
 
     amr_pp.query("plot_int", plot_int);
     amr_pp.query("plot_per_exact", plot_per_exact);
@@ -365,7 +357,7 @@ void mfix::Init (Real time)
      *                                                                          *
      ***************************************************************************/
 
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve)
       pc = new MFIXParticleContainer(this);
 
     /****************************************************************************
@@ -420,7 +412,7 @@ void mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 
     IntVect chunk(domain.length(0),domain.length(1),domain.length(2));
 
-    int j = -1;
+    int j;
     for (int cnt = 1; cnt <= n; ++cnt)
     {
         if (chunk[0] >= chunk[1] && chunk[0] >= chunk[2])
@@ -502,7 +494,7 @@ void mfix::InitLevelData (Real time)
           AllocateArrays(lev);
 
     // Allocate the particle data
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve)
     {
       Real strt_init_part = ParallelDescriptor::second();
 
@@ -521,28 +513,26 @@ void mfix::InitLevelData (Real time)
                        << " particles per cell ..."
                        << std::endl;
 
-        Real     radius = 1.0;
-        Real     volume = 1.0;
-        Real       mass = 1.0;
-        Real    density = 1.0;
-        Real       omoi = 1.0;
-        Real       velx = 0.0;
-        Real       vely = 0.0;
-        Real       velz = 0.0;
-        Real  dragcoeff = 0.0;
-        Real      dragx = 0.0;
-        Real      dragy = 0.0;
-        Real      dragz = 0.0;
-        Real     omegax = 0.0;
-        Real     omegay = 0.0;
-        Real     omegaz = 0.0;
-        Real     statwt = 1.0;
-        int       phase = 1;
-        int       state = 0;
+        Real  radius = 1.0;
+        Real  volume = 1.0;
+        Real    mass = 1.0;
+        Real density = 1.0;
+        Real    omoi = 1.0;
+        Real    velx = 0.0;
+        Real    vely = 0.0;
+        Real    velz = 0.0;
+        Real   dragx = 0.0;
+        Real   dragy = 0.0;
+        Real   dragz = 0.0;
+        Real  omegax = 0.0;
+        Real  omegay = 0.0;
+        Real  omegaz = 0.0;
+        int    phase = 1;
+        int    state = 0;
 
         MFIXParticleContainer::ParticleInitData pdata = {radius,volume,mass,density,omoi,
                                                          velx,vely,velz,omegax,omegay,omegaz,
-                                                         dragx,dragy,dragz,dragcoeff,statwt,phase,state};
+                                                         dragx,dragy,dragz,phase,state};
 
         pc->InitNRandomPerCell(n_per_cell, pdata);
         pc->WriteAsciiFileForInit("random_particles");
@@ -567,7 +557,7 @@ void mfix::InitLevelData (Real time)
     }
 
     // Used in load balancing
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve)
     {
       for (int lev(0); lev < particle_cost.size(); lev++)
         if (particle_cost[lev] != nullptr)
@@ -607,7 +597,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
 
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve)
     {
         // Auto generated particles may be out of the domain. This call will
         // remove them. Note that this has to occur after the EB geometry is
@@ -672,12 +662,12 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
               delete particle_cost[lev];
 
             particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                              pc->ParticleDistributionMap(lev), 1, 0);
+                                                           pc->ParticleDistributionMap(lev), 1, 0);
             particle_cost[lev]->setVal(0.0);
 
             // This calls re-creates a proper particle_ebfactories
             //  and regrids all the multifabs that depend on it
-            if (DEM::solve or PIC::solve)
+            if (DEM::solve)
                 RegridLevelSetArray(lev);
 
           }
@@ -796,30 +786,23 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
           if ( is_restarting ) {
 
-            init_fluid_restart(bx, (*m_leveldata[lev]->T_g )[mfi],
-                                   (*m_leveldata[lev]->cp_g)[mfi],
-                                   (*m_leveldata[lev]->mu_g)[mfi]);
+            init_fluid_restart(bx, (*m_leveldata[lev]->mu_g)[mfi]);
 
           } else {
 
             init_fluid(sbx, bx, domain,
                        (*m_leveldata[lev]->ep_g)[mfi],
-                       (*m_leveldata[lev]->h_g)[mfi],
-                       (*m_leveldata[lev]->T_g)[mfi],
                        (*m_leveldata[lev]->ro_g)[mfi],
                        (*m_leveldata[lev]->trac)[mfi],
                        (*m_leveldata[lev]->p_g)[mfi],
                        (*m_leveldata[lev]->vel_g)[mfi],
-                       (*m_leveldata[lev]->cp_g)[mfi],
                        (*m_leveldata[lev]->mu_g)[mfi],
                        dx, dy, dz, xlen, ylen, zlen, test_tracer_conservation);
           }
        }
 
        // Make sure to fill the "old state" before we start ...
-       MultiFab::Copy(*m_leveldata[lev]->h_go,   *m_leveldata[lev]->h_g, 0, 0, 1, 0);
-       MultiFab::Copy(*m_leveldata[lev]->T_go,   *m_leveldata[lev]->T_g, 0, 0, 1, 0);
-       MultiFab::Copy(*m_leveldata[lev]->ro_go,  *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
+       MultiFab::Copy(*m_leveldata[lev]->ro_go, *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
        MultiFab::Copy(*m_leveldata[lev]->trac_o, *m_leveldata[lev]->trac, 0, 0, 1, 0);
     }
 
@@ -833,14 +816,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
     {
       m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
-
-      if (advect_enthalpy)
-      {
-        m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
-        m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
-      }
 
       if (advect_tracer)
         m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
@@ -866,20 +842,14 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
       Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
 
-      // This sets bcs for ep_g, cp_g and mu_g
+      // This sets bcs for ep_g and mu_g
       Real time = 0.0;
-
-      mfix_set_temperature_bcs(time, get_T_g());
-      mfix_set_temperature_bcs(time, get_T_g_old());
-
-      mfix_set_enthalpy_bcs(time, get_h_g());
-      mfix_set_enthalpy_bcs(time, get_h_g_old());
 
       mfix_set_density_bcs(time, get_ro_g());
       mfix_set_density_bcs(time, get_ro_g_old());
 
-      mfix_set_scalar_bcs(time, get_trac()    , get_cp_g(), get_mu_g());
-      mfix_set_scalar_bcs(time, get_trac_old(), get_cp_g(), get_mu_g());
+      mfix_set_scalar_bcs(time, get_trac(), get_mu_g());
+      mfix_set_scalar_bcs(time, get_trac_old(), get_mu_g());
 
       // Project the initial velocity field
       if (do_initial_proj)
@@ -891,8 +861,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
     }
     else
     {
-      const int dir_bc = 1;
-      mfix_set_epg_bcs(get_ep_g(), dir_bc);
+      mfix_set_epg_bcs(get_ep_g());
 
       //Calculation of sum_vol_orig for a restarting point
       sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
@@ -961,6 +930,7 @@ mfix::mfix_set_p0 ()
      // We put this outside the MFIter loop because we need gp0 even on ranks with no boxes
      // because we will use it in computing dt separately on every rank
      set_gp0(lev, domain);
+
 
      // We deliberately don't tile this loop since we will be looping
      //    over bc's on faces and it makes more sense to do this one grid at a time

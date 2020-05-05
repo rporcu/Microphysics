@@ -6,8 +6,6 @@
 #include <AMReX_SPACE.H>
 #include <AMReX_Array.H>
 
-#include <MFIX_FLUID_Parms.H>
-
 //
 // Compute the three components of the convection term
 //
@@ -17,7 +15,6 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
                                     Vector< MultiFab* > const& vel_in,
                                     Vector< MultiFab* > const& ep_g_in,
                                     Vector< MultiFab* > const& ro_g_in,
-                                    Vector< MultiFab* > const& h_g_in,
                                     Vector< MultiFab* > const& trac_in,
                                     Real time)
 {
@@ -34,8 +31,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
 
     int slopes_comp; int conv_comp; int state_comp; int num_comp;
 
-    // First do FillPatch of {velocity, density, tracer, enthalpy} so we know
-    // the ghost cells of these arrays are all filled
+    // First do FillPatch of {velocity, density, tracer} so we know the ghost cells of
+    // these arrays are all filled
     for (int lev = 0; lev < nlev; lev++)
     {
         // State with ghost cells
@@ -60,13 +57,6 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
            MultiFab::Copy(*trac_in[lev], Sborder_s, 0, 0, num_comp, trac_in[lev]->nGrow());
         }
 
-        if (advect_enthalpy)
-        {
-           state_comp =  5; num_comp = 1;
-           FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
-           MultiFab::Copy(*h_g_in[lev], Sborder_s, 0, 0, num_comp, h_g_in[lev]->nGrow());
-        }
-        
         // We make these with ncomp = 3 so they can hold all three velocity components at once;
         //    note we can also use them to just hold the single density or tracer comp
         fx[lev] = new MultiFab(m_leveldata[lev]->u_mac->boxArray(), dmap[lev], 3, 2,
@@ -107,14 +97,19 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         fluxes[1] = fy[lev];
         fluxes[2] = fz[lev];
 
-        // We make this with ncomp = 3 so it can hold all three velocity
-        // components at once; note we can also use it to just hold the single
-        // density, enthalpy or tracer comp.
+        // We make this with ncomp = 3 so it can hold all three velocity components at once;
+        //    note we can also use it to just hold the single density or tracer comp
         // We note that it needs two ghost cells for the redistribution step.
         MultiFab conv_tmp(grids[lev], dmap[lev], 3, 2, MFInfo(), *ebfactory[lev]);
         conv_tmp.setVal(0.);
 
-        // Compute slopes of density, enthalpy and tracer
+        if (advect_tracer)
+        {
+            // Convert tracer to (rho * tracer) so we can use conservative update
+            MultiFab::Multiply(*trac_in[lev], *ro_g_in[lev], 0, 0, 1, trac_in[lev]->nGrow());
+        }
+
+        // Compute slopes of density and tracer
         if (advect_density)
         {
            slopes_comp = 0;
@@ -123,29 +118,15 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
                                slopes_comp);
         }
 
-        if (advect_enthalpy)
-        {
-            // Convert enthalpy h_g to (rho * h_g) so we can use conservative update
-            MultiFab::Multiply(*h_g_in[lev], *ro_g_in[lev], 0, 0, 1, h_g_in[lev]->nGrow());
-
-            slopes_comp = 1;
-            mfix_compute_slopes(lev, time, *h_g_in[lev],
-                                get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
-                                slopes_comp);
-        }
-
         if (advect_tracer)
         {
-            // Convert tracer to (rho * tracer) so we can use conservative update
-            MultiFab::Multiply(*trac_in[lev], *ro_g_in[lev], 0, 0, 1, trac_in[lev]->nGrow());
-
-            slopes_comp = 2;
-            mfix_compute_slopes(lev, time, *trac_in[lev],
-                                get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
-                                slopes_comp);
+           slopes_comp = 1;
+           mfix_compute_slopes(lev, time, *trac_in[lev],
+                               get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
+                               slopes_comp);
         }
 
-        // Initialize conv_s to 0 for both density, enthlapy and tracer
+        // Initialize conv_s to 0 for both density and tracer
         conv_s_in[lev]->setVal(0, 0, conv_s_in[lev]->nComp(), conv_s_in[lev]->nGrow());
 
         // **************************************************
@@ -159,8 +140,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
 
         EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes),
                              geom[lev], already_on_centroids);
-        single_level_weighted_redistribute(conv_tmp, *conv_u_in[lev],
-                                           *ep_g_in[lev], conv_comp, num_comp, geom[lev]);
+        single_level_weighted_redistribute(lev, conv_tmp, *conv_u_in[lev],
+                                           *ep_g_in[lev], conv_comp, num_comp, geom);
 
         // **************************************************
         // Compute div (ep_g rho u) -- the update for density
@@ -175,27 +156,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
             EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev],
                                  already_on_centroids);
 
-            single_level_weighted_redistribute(conv_tmp, *conv_s_in[lev],
-                                               *ep_g_in[lev], conv_comp, num_comp, geom[lev]);
-        }
-
-        // **********************************************************
-        // Compute div (ep_g rho h_g u) -- the update for (rho*enthlapy)
-        // **********************************************************
-        if (advect_enthalpy)
-        {
-            conv_comp = 1; state_comp = 0; num_comp = 1; slopes_comp = 1;
-            mfix_compute_fluxes(lev, fx, fy, fz, h_g_in, state_comp, num_comp,
-                                get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
-                                slopes_comp, get_u_mac(), get_v_mac(), get_w_mac());
-
-            EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev],
-                                 already_on_centroids);
-            single_level_weighted_redistribute(conv_tmp, *conv_s_in[lev],
-                                               *ep_g_in[lev], conv_comp, num_comp, geom[lev]);
-
-            // Convert (rho * enthalpy) back to enthalpy
-            MultiFab::Divide(*h_g_in[lev],*ro_g_in[lev],0,0,1,h_g_in[lev]->nGrow());
+            single_level_weighted_redistribute(lev, conv_tmp, *conv_s_in[lev],
+                                               *ep_g_in[lev], conv_comp, num_comp, geom);
         }
 
         // **********************************************************
@@ -203,23 +165,24 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         // **********************************************************
         if (advect_tracer)
         {
-            conv_comp = 2; state_comp = 0; num_comp = 1; slopes_comp = 2;
+            conv_comp = 1; state_comp = 0; num_comp = 1; slopes_comp = 1;
             mfix_compute_fluxes(lev, fx, fy, fz, trac_in, state_comp, num_comp,
                                 get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
                                 slopes_comp, get_u_mac(), get_v_mac(), get_w_mac());
 
             EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev],
                                  already_on_centroids);
-            single_level_weighted_redistribute(conv_tmp, *conv_s_in[lev],
-                                               *ep_g_in[lev], conv_comp, num_comp, geom[lev]);
-
-            // Convert (rho * tracer) back to tracer
-            MultiFab::Divide(*trac_in[lev],*ro_g_in[lev],0,0,1,trac_in[lev]->nGrow());
+            single_level_weighted_redistribute(lev, conv_tmp, *conv_s_in[lev],
+                                               *ep_g_in[lev], conv_comp, num_comp, geom);
         }
 
-        // **********************************************************
+        if (advect_tracer)
+        {
+           // Convert (rho * tracer) back to tracer
+           MultiFab::Divide(*trac_in[lev],*ro_g_in[lev],0,0,1,trac_in[lev]->nGrow());
+        }
+
         // Return the negative
-        // **********************************************************
         conv_u_in[lev]->mult(-1.0);
         conv_s_in[lev]->mult(-1.0);
     } // lev

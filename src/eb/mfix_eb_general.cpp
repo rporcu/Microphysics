@@ -13,8 +13,8 @@
 #include <AMReX_EB_levelset.H>
 #include <mfix.H>
 #include <MFIX_DEM_Parms.H>
-#include <MFIX_PIC_Parms.H>
 #include <MFIX_FLUID_Parms.H>
+#include <mfix_eb_F.H>
 
 using namespace std;
 
@@ -116,9 +116,9 @@ void mfix::make_eb_general () {
             //     build_eb_levels(gshop);
             // }
 
-            if (has_walls and use_divider) { // ........................... poly2 + walls + divider
+            if (has_walls && use_divider) { // ........................... poly2 + walls + divider
 
-                if (DEM::solve or PIC::solve) {
+                if (DEM::solve) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
 
                     auto eb_if = EB2::makeUnion(* impfunc_poly2, * impfunc_walls_part,
@@ -153,7 +153,7 @@ void mfix::make_eb_general () {
 
             } else if (has_walls) { // ................................... poly2 + walls + ! divider
 
-                if (DEM::solve or PIC::solve) {
+                if (DEM::solve) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
 
                     auto eb_if = EB2::makeUnion(* impfunc_poly2, * impfunc_walls_part);
@@ -209,9 +209,9 @@ void mfix::make_eb_general () {
             }
 
         } else {
-            if (has_walls and use_divider) { // ........................... ! poly2 + walls + divider
+            if (has_walls && use_divider) { // ........................... ! poly2 + walls + divider
 
-                if (DEM::solve or PIC::solve) {
+                if (DEM::solve) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
 
                     auto eb_if = EB2::makeUnion(* impfunc_walls_part, * impfunc_divider);
@@ -243,7 +243,7 @@ void mfix::make_eb_general () {
 
             } else if (has_walls) { // ................................... ! poly2 + walls + ! divider
 
-                if (DEM::solve or PIC::solve) {
+                if (DEM::solve) {
                     auto gshop = EB2::makeShop(* impfunc_walls_part);
 
                     build_eb_levels(gshop);

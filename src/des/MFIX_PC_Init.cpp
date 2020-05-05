@@ -1,6 +1,6 @@
 #include <AMReX.H>
-#include <AMReX_Particles.H>
-#include <AMReX_RealVect.H>
+#include "AMReX_Particles.H"
+#include "AMReX_RealVect.H"
 #include <iostream>
 #include <MFIXParticleContainer.H>
 #include <AMReX_EBFArrayBox.H>
@@ -12,13 +12,13 @@
 #include <AMReX_EBMultiFabUtil.H>
 #include <AMReX_FillPatchUtil.H>
 
-#include <cmath>
+#include <math.h>
 
 #include "mfix_F.H"
 #include "mfix_des_F.H"
+#include "mfix_eb_F.H"
 #include "mfix_des_K.H"
 #include "MFIX_DEM_Parms.H"
-#include <MFIX_PIC_Parms.H>
 #include <particle_generator.H>
 
 using namespace amrex;
@@ -50,8 +50,7 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
     const int grid = 0;
     const int tile = 0;
 
-    auto& particle_tile = DefineAndReturnParticleTile(lev,grid,tile);
-    //auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
+    auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
 
     ParticleType p;
     int  pstate, pphase;
@@ -80,22 +79,18 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
       set_particle_properties(pstate, pradius, pdensity, pvolume, pmass, pomoi, pomega);
 
       // Set other particle properties
-      p.idata(intData::phase)       = pphase;
-      p.idata(intData::state)       = pstate;
-      p.rdata(realData::volume)     = pvolume;
-      p.rdata(realData::density)    = pdensity;
-      p.rdata(realData::mass)       = pmass;
-      p.rdata(realData::oneOverI)   = pomoi;
-      p.rdata(realData::radius)     = pradius;
-      p.rdata(realData::omegax)     = pomega;
-      p.rdata(realData::omegay)     = pomega;
-      p.rdata(realData::omegaz)     = pomega;
-
-      p.rdata(realData::statwt) = 1.0;
+      p.idata(intData::phase)     = pphase;
+      p.idata(intData::state)     = pstate;
+      p.rdata(realData::volume)   = pvolume;
+      p.rdata(realData::density)  = pdensity;
+      p.rdata(realData::mass)     = pmass;
+      p.rdata(realData::oneOverI) = pomoi;
+      p.rdata(realData::radius)   = pradius;
+      p.rdata(realData::omegax)   = pomega;
+      p.rdata(realData::omegay)   = pomega;
+      p.rdata(realData::omegaz)   = pomega;
 
       // Initialize these for I/O purposes
-      p.rdata(realData::dragcoeff) = 0.0;
-
       p.rdata(realData::dragx) = 0.0;
       p.rdata(realData::dragy) = 0.0;
       p.rdata(realData::dragz) = 0.0;
@@ -139,10 +134,12 @@ void MFIXParticleContainer::InitParticlesAuto ()
 
       particles_generator.generate(pcount, lo, hi, dx, dy, dz);
 
+      const int grid_id = mfi.index();
+      const int tile_id = mfi.LocalTileIndex();
+
       // Now that we know pcount, go ahead and create a particle container for this
       // grid and add the particles to it
-      auto& particles = DefineAndReturnParticleTile(lev,mfi);
-      //ParticleTileType& particles = GetParticles(lev)[std::make_pair(grid_id,tile_id)];
+      ParticleTileType& particles = GetParticles(lev)[std::make_pair(grid_id,tile_id)];
 
       ParticleType p_new;
       for (int i = 0; i < pcount; i++) {
@@ -152,11 +149,6 @@ void MFIXParticleContainer::InitParticlesAuto ()
 
         // Add to the data structure
         particles.push_back(p_new);
-        if (DEM::nspecies_dem > 0){
-           for(int i=0; i < DEM::spec_frac_dem.size(); ++i){
-               particles.push_back_real(i, DEM::spec_frac_dem[i]);
-           }
-        }
       }
 
       const int np = pcount;

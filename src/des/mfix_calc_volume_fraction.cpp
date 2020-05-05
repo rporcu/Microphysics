@@ -6,7 +6,6 @@
 #include <MFIX_MFHelpers.H>
 
 #include <MFIX_DEM_Parms.H>
-#include <MFIX_PIC_Parms.H>
 #include <DiffusionOp.H>
 
 void mfix::mfix_calc_volume_fraction (Real& sum_vol)
@@ -16,7 +15,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   // Start the timers ...
   const Real strttime = ParallelDescriptor::second();
 
-  if (DEM::solve or PIC::solve)
+  if (DEM::solve)
   {
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain
@@ -63,8 +62,8 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
     }
 
     const Geometry& gm  = Geom(0);
-    const FabArray<EBCellFlagFab>* flags = nullptr;
-    const MultiFab* volfrac = nullptr;
+    const FabArray<EBCellFlagFab>* flags;
+    const MultiFab* volfrac;
 
     for (int lev = 0; lev < nlev; lev++) {
 
@@ -93,48 +92,31 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
       pc->ScalarDeposition(lev, *mf_pointer[lev], volfrac, flags);
     }
 
-    {
-      // The deposition occurred on level 0, thus the next few operations
-      // only need to be carried out on level 0.
-      int lev(0);
+    // Move any volume deposited outside the domain back into the domain
+    // when BC is either a pressure inlet or mass inflow.
+    for (int lev = 0; lev < nlev; lev++)
+      mfix_deposition_bcs_scalar(lev, *mf_pointer[lev]);
 
-      // Move any volume deposited outside the domain back into the domain
-      // when BC is either a pressure inlet or mass inflow.
-      mfix_deposition_bcs(lev, *mf_pointer[lev]);
+    // Sum grid boundaries then clear the ghost cell values.
+    mf_pointer[0]->SumBoundary(gm.periodicity());
+    mf_pointer[0]->setBndry(0.0);
 
-      // Sum grid boundaries to capture any material that was deposited into
-      // your grid from an adjacent grid.
-      mf_pointer[lev]->SumBoundary(gm.periodicity());
+    // Move excessive solids volume from small cells to neighboring cells. A copy
+    // of the deposition field is made so that when an average is calc
+    Vector< MultiFab* > eps_tmp(nlev);
+    for (int lev(0); lev < nlev; ++lev ){
+      eps_tmp[lev] = (MFHelpers::createFrom(*mf_pointer[lev])).release();
 
-      // Fill the boundaries so we calculate the correct average
-      // solids volume fraction for periodic boundaries.
-      mf_pointer[lev]->FillBoundary(gm.periodicity());
-
-      // Create a copy of the solids volume fraction to use
-      // in the redistribution.
-      MultiFab* eps_tmp;
-      eps_tmp = (MFHelpers::createFrom(*mf_pointer[lev])).release();
-
-      // Clear the grid boundaries to prepare for redistribution which
-      // could put material in your ghost cells. Do this AFTER
-      // we created the copy so the copy has the correct boundary info.
-      mf_pointer[lev]->setBndry(0.0);
-
-
-      // Move excessive solids volume from small cells to neighboring cells. A copy
-      // of the deposition field is made so that when an average is calc
-      mfix_redistribute_deposition(lev, *eps_tmp, *mf_pointer[lev], volfrac, flags,
+      mfix_redistribute_deposition(lev, *eps_tmp[lev], *mf_pointer[lev], volfrac, flags,
                                    mfix::m_max_solids_volume_fraction);
-
-      // Sum grid boundaries to capture any material that was deposited into
-      // your grid from an adjacent grid.
-      mf_pointer[lev]->SumBoundary(gm.periodicity());
-      mf_pointer[lev]->FillBoundary(gm.periodicity());
-
-      // we no longer need the copy.
-      delete eps_tmp;
-
     }
+
+    for (int lev(0); lev < nlev; ++lev)
+      delete eps_tmp[lev];
+
+    // Sum the boundaries again to recapture any solids moved across
+    // grid boundaries during the redistribute
+    mf_pointer[0]->SumBoundary(gm.periodicity());
 
 
     int  src_nghost = 1;
@@ -218,8 +200,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   for (int lev = 0; lev < nlev; lev++)
     m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
 
-  const int dir_bc = 1;
-  mfix_set_epg_bcs(get_ep_g(), dir_bc);
+  mfix_set_epg_bcs(get_ep_g());
 
   // Sum up all the values of ep_g[lev], weighted by each cell's EB volfrac
   // Note ep_g = 1 - particle_volume / this_cell_volume where

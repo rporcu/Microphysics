@@ -9,8 +9,6 @@
 #include <AMReX_ParmParse.H>
 
 #include <MFIX_BC_Parms.H>
-#include <MFIX_DEM_Parms.H>
-#include <MFIX_PIC_Parms.H>
 #include <MFIX_REGIONS_Parms.H>
 #include <MFIX_BcList.H>
 
@@ -300,7 +298,7 @@ namespace BC
 
       }
 
-      if(DEM::solve or PIC::solve) {
+      if(DEM::solve) {
 
         // Get the list of solids used in defining the BC region
         std::vector<std::string> solids_types;
@@ -391,7 +389,7 @@ namespace BC
       }
 
 
-      if(DEM::solve or PIC::solve){
+      if(DEM::solve){
 
         for(int lcs(0); lcs<bc[bcv].solids.size(); ++lcs){
           amrex::Print() << std::endl;

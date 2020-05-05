@@ -4,7 +4,9 @@ target_include_directories( mfixcore
 
 target_sources( mfixcore
    PRIVATE
-   mfix_calc_wall_collisions.cpp
+   calc_particle_collisions.f90
+   calc_wall_collisions.f90
+   cfrelvel.f90
    des_time_march.f90
    discretelement_mod.f90
    init_collision.f90
@@ -16,6 +18,7 @@ target_sources( mfixcore
    get_collision_coefficients.f90 
    mfix_des_F.H
    mfix_des_K.H
+   mfix_drag_K.H
    MFIXParticleContainer.cpp
    MFIXParticleContainer.H
    MFIX_PC_Init.cpp

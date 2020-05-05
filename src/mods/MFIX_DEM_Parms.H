@@ -58,14 +58,6 @@ namespace DEM
 
     extern amrex::Vector<std::string> names;
 
-    // Particle species
-    extern amrex::Vector<std::string> species_dem;
-
-    // Particle species fractions
-    extern amrex::Vector<amrex::Real> spec_frac_dem;
-
-    extern int AMREX_GPU_DEVICE_MANAGED nspecies_dem;
-
     struct INPUT_DIST_t {
       std::string distribution;
       amrex::Real mean; // Mean value of distriubtion (or constant value)
@@ -84,7 +76,6 @@ namespace DEM
     struct DEM_t {
 
       amrex::Real volfrac;
-      amrex::Real statwt;
       amrex::Real temperature;
       amrex::Vector<amrex::Real> velocity;
 

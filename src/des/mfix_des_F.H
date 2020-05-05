@@ -31,6 +31,20 @@ void calc_particle_collisions (void* rparticles, const int* nrp,
                                amrex::Real* subdt,
                                int* ncoll);
 
+void set_particle_properties (const int* pstate,
+                              amrex::Real* pradius,
+                              amrex::Real* pdensity,
+                              amrex::Real* pvol,
+                              amrex::Real* pmass,
+                              amrex::Real* omoi,
+                              amrex::Real* omega);
+
+void particle_get_position (void* particles,
+                            const int* nrp,
+                            amrex::Real* x,
+                            amrex::Real* y,
+                            amrex::Real* z);
+
 void des_init_time_loop (const  amrex::Real* tstart,
                          const amrex::Real* dt,
                          int* nsubsteps,
