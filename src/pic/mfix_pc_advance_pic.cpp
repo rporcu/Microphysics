@@ -15,11 +15,6 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
 
   BL_PROFILE("MFIXParticleContainer::MFIX_PC_AdvanceParcels()");
 
-  // Debug level controls the detail of debug output:
-  //   -> debug_level = 0 : no debug output
-  //   -> debug_level = 1 : debug output for every step
-  const int debug_level = 0;
-
   for (int lev = 0; lev < nlev; lev ++ )
   {
 
@@ -30,13 +25,9 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
 
-      // Timer used for load-balancing
-      Real wt = ParallelDescriptor::second();
-
       PairIndex index(pti.index(), pti.LocalTileIndex());
 
       const int nrp = GetParticles(lev)[index].numRealParticles();
-      RealType* particles  = pti.GetArrayOfStructs().data();
 
       auto& plev = GetParticles(lev);
       auto& ptile = plev[index];
@@ -203,23 +194,6 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
         (*cost)[pti].plus(wt, tbx);
       }
 #endif
-
-
-      if (debug_level > 0) {
-
-        UpdateMaxVelocity();
-
-        RealVect max_vel = GetMaxVelocity();
-
-        const Real * dx_crse = Geom(0).CellSize();
-        amrex::Print() << std::endl
-                       << "Maximum parcel velocity:    "
-                       << "u= " << max_vel[0] << " v= " << max_vel[1] << " w= " << max_vel[2] << std::endl
-                       << "Maximum distance traveled:  "
-                       <<  "x= " << max_vel[0] * dt << " y= " << max_vel[1] * dt << " z= " << max_vel[2] * dt
-                       << std::endl;
-
-      }
 
 
     } // particle-tile iterator

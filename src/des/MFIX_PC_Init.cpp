@@ -139,9 +139,6 @@ void MFIXParticleContainer::InitParticlesAuto ()
 
       particles_generator.generate(pcount, lo, hi, dx, dy, dz);
 
-      const int grid_id = mfi.index();
-      const int tile_id = mfi.LocalTileIndex();
-
       // Now that we know pcount, go ahead and create a particle container for this
       // grid and add the particles to it
       auto& particles = DefineAndReturnParticleTile(lev,mfi);
