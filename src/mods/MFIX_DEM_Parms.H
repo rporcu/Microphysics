@@ -64,7 +64,7 @@ namespace DEM
     // Particle species fractions
     extern amrex::Vector<amrex::Real> spec_frac_dem;
 
-    extern int nspecies_dem;
+    extern int AMREX_GPU_DEVICE_MANAGED nspecies_dem;
 
     struct INPUT_DIST_t {
       std::string distribution;
