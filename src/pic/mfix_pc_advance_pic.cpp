@@ -10,15 +10,12 @@
 void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealVect& gravity,
                                                     amrex::Vector< amrex::EBFArrayBoxFactory* > particle_ebfactory,
                                                     amrex::Vector< amrex::MultiFab* >& ep_s_in,
-                                                    amrex::Vector< amrex::MultiFab* >& avg_prop_in)
+                                                    amrex::Vector< amrex::MultiFab* >& avg_prop_in,
+                                                    amrex::Vector< amrex::MultiFab* >& cost,
+                                                    std::string& knapsack_weight_type)
 {
 
   BL_PROFILE("MFIXParticleContainer::MFIX_PC_AdvanceParcels()");
-
-  // Debug level controls the detail of debug output:
-  //   -> debug_level = 0 : no debug output
-  //   -> debug_level = 1 : debug output for every step
-  const int debug_level = 0;
 
   for (int lev = 0; lev < nlev; lev ++ )
   {
@@ -31,12 +28,11 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
     {
 
       // Timer used for load-balancing
-      Real wt = ParallelDescriptor::second();
+      amrex::Real wt = ParallelDescriptor::second();
 
       PairIndex index(pti.index(), pti.LocalTileIndex());
 
       const int nrp = GetParticles(lev)[index].numRealParticles();
-      RealType* particles  = pti.GetArrayOfStructs().data();
 
       auto& plev = GetParticles(lev);
       auto& ptile = plev[index];
@@ -63,23 +59,20 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
       const auto&      eps_array = ep_s_in[lev]->array(pti);
       const auto& avg_prop_array = avg_prop_in[lev]->array(pti);
 
-      const Real small_number = std::numeric_limits<Real>::epsilon();
+      const amrex::Real small_number = std::numeric_limits<Real>::epsilon();
 
-      const Real velfac = PIC::velfac;
-      const Real ep_cp = PIC::ep_cp;
-
-      const Real en = (PIC::damping_factor + 1.0);
-      const Real l3sqrt2 = 3.0*sqrt(2.0);
+      const amrex::Real velfac = PIC::velfac;
+      const amrex::Real en = (PIC::damping_factor + 1.0);
 
       amrex::ParallelFor(nrp,
          [pstruct,dt,gravity,small_number,p_hi,p_lo, dxi_array, avg_prop_array, eps_array,
-          en,l3sqrt2,ep_cp,x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc,velfac]
+          en,x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc,velfac]
         AMREX_GPU_DEVICE (int ip) noexcept
         {
           ParticleType& p = pstruct[ip];
 
           // position
-          const RealVect pos = p.pos();
+          const amrex::RealVect pos = p.pos();
 
           // cell containing particle
           const int i = floor((pos[0] - p_lo[0])*dxi_array[0]);
@@ -184,9 +177,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
       /********************************************************************
        * Update runtime cost (used in load-balancing)                     *
        *******************************************************************/
-
-#if(0)
-      if (cost)
+      if (cost[lev])
       {
         // Runtime cost is either (weighted by tile box size):
         //   * time spent
@@ -200,25 +191,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
         {
           wt = nrp / tbx.d_numPts();
         }
-        (*cost)[pti].plus(wt, tbx);
-      }
-#endif
-
-
-      if (debug_level > 0) {
-
-        UpdateMaxVelocity();
-
-        RealVect max_vel = GetMaxVelocity();
-
-        const Real * dx_crse = Geom(0).CellSize();
-        amrex::Print() << std::endl
-                       << "Maximum parcel velocity:    "
-                       << "u= " << max_vel[0] << " v= " << max_vel[1] << " w= " << max_vel[2] << std::endl
-                       << "Maximum distance traveled:  "
-                       <<  "x= " << max_vel[0] * dt << " y= " << max_vel[1] * dt << " z= " << max_vel[2] * dt
-                       << std::endl;
-
+        (*cost[lev])[pti].plus(wt, tbx);
       }
 
 

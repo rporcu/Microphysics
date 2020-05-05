@@ -54,7 +54,14 @@ namespace DEM
     // Names of the solids used to build input regions.
     amrex::Vector<std::string> names;
 
+    // Particle species  
+    amrex::Vector<std::string> species_dem;
 
+    // Particle species fractions
+    amrex::Vector<amrex::Real> spec_frac_dem;
+    // Number of species at each particle
+    AMREX_GPU_DEVICE_MANAGED int nspecies_dem = 0;
+   
     void Initialize ()
     {
 
@@ -135,6 +142,17 @@ namespace DEM
         kt   = kt_fac   * kn;
         kt_w = kt_w_fac * kn_w;
 
+        // Read species inputs -----------------------------------------//
+        int species = 0;
+        pp.query("species", species);
+        if (species > 0)
+        {
+             pp.getarr("species.names", species_dem);
+             nspecies_dem = species_dem.size();        
+             pp.getarr("species.fractions", spec_frac_dem);          
+             AMREX_ALWAYS_ASSERT_WITH_MESSAGE( species_dem.size() == spec_frac_dem.size(),
+             "Species fraction number does not match species number");
+        }
 
         //// We know that we should have an upper-triangular matrix worth
         //// of entries. (1-1, 1-2, 2-2, ...) for NPHASEs

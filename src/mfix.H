@@ -441,7 +441,9 @@ class mfix : public AmrCore
                       amrex::Vector<amrex::Geometry> geom,
                       amrex::Vector< amrex::EBFArrayBoxFactory* > particle_ebfactory,
                       amrex::Vector< amrex::MultiFab* >& level_sets,
-                      const int ls_refinement
+                      const int ls_refinement,
+                      amrex::Vector< amrex::MultiFab* >& cost,
+                      std::string& knapsack_weight_type
                       );
 
 

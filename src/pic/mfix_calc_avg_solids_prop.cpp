@@ -9,7 +9,7 @@ void mfix::MFIX_CalcAvgSolidsProp (amrex::Vector< amrex::EBFArrayBoxFactory* > p
 {
   BL_PROFILE("MFIX_CalcAvgSolidsProp()");
 
-  const amrex::FabArray<EBCellFlagFab>* flags;
+  const amrex::FabArray<EBCellFlagFab>* flags = nullptr;
 
   for (int lev = 0; lev < nlev; lev ++ )
   {
@@ -51,8 +51,6 @@ void mfix::MFIX_CalcAvgSolidsProp (amrex::Vector< amrex::EBFArrayBoxFactory* > p
 
   // Compute the mass-averaged velocity.
     const Real tolerance = std::numeric_limits<Real>::epsilon();
-
-    const auto     dxi = geom[lev].InvCellSizeArray();
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
