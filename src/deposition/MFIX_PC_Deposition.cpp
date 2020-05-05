@@ -104,7 +104,7 @@ ScalarDeposition (F WeightFunc, int lev,
             WeightFunc(plo, dx, dxi, flagsarr, p, i, j, k, weights,
                 deposition_scale_factor);
 
-            amrex::Real pvol = p.rdata(realData::volume) / reg_cell_vol;
+            amrex::Real pvol = p.rdata(realData::statwt) * p.rdata(realData::volume) / reg_cell_vol;
 
             for (int ii = -1; ii <= 0; ++ii) {
               for (int jj = -1; jj <= 0; ++jj) {
@@ -226,9 +226,12 @@ FluidDragForceDeposition (F WeightFunc, int lev,
             WeightFunc(plo, dx, dxi, flagsarr, p, i, j, k, weights,
                        deposition_scale_factor);
 
-            amrex::Real pvol = p.rdata(realData::volume) / reg_cell_vol;
+            amrex::Real pvol = p.rdata(realData::statwt) *
+              p.rdata(realData::volume) / reg_cell_vol;
 
-            amrex::Real pbeta = p.rdata(realData::dragx) / reg_cell_vol;
+            amrex::Real pbeta = p.rdata(realData::statwt) *
+              p.rdata(realData::dragcoeff) / reg_cell_vol;
+
             amrex::Real pvx   = p.rdata(realData::velx) * pbeta;
             amrex::Real pvy   = p.rdata(realData::vely) * pbeta;
             amrex::Real pvz   = p.rdata(realData::velz) * pbeta;

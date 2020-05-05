@@ -16,7 +16,6 @@
 
 #include <mfix_F.H>
 #include <mfix_des_F.H>
-#include <mfix_eb_F.H>
 #include <mfix_des_K.H>
 
 #include <MFIX_DEM_Parms.H>
@@ -49,6 +48,13 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     setIntCommComp(3, false);
 
     nlev = amr_core->maxLevel() + 1;
+
+    if (DEM::nspecies_dem > 0){
+       for(int i=0; i < DEM::species_dem.size(); ++i){
+          AddRealComp(true);
+       }
+    }
+
 }
 
 void MFIXParticleContainer::AllocData ()
@@ -190,7 +196,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         {
             int int_has_wall = 0;
             Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
-            ls_has_walls(& int_has_wall, BL_TO_FORTRAN_3D((* ls_phi)[pti]), & tol);
+            ls_has_walls(int_has_wall, bx, (*ls_phi)[pti], tol);
             has_wall = (int_has_wall > 0);
         }
 
@@ -239,7 +245,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             PairIndex index(pti.index(), pti.LocalTileIndex());
 
             const int nrp = GetParticles(lev)[index].numRealParticles();
-            RealType* particles  = pti.GetArrayOfStructs().data();
 
             auto& plev = GetParticles(lev);
             auto& ptile = plev[index];
@@ -251,7 +256,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             int size_ng = aos.numNeighborParticles();
 #else
             int size_ng = neighbors[lev][index].size();
-            int size_nl = neighbor_list[lev][index].size();
 #endif
 
             // Number of particles including neighbor particles
@@ -411,8 +415,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
 #endif
 
-#ifdef AMREX_USE_CUDA
-            auto nbor_data = m_neighbor_list[index].data();
+            auto nbor_data = m_neighbor_list[lev][index].data();
 
             constexpr Real small_number = 1.0e-15;
             Gpu::DeviceScalar<int> ncoll_gpu(ncoll);
@@ -431,11 +434,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                   for (const auto& p2 : nbor_data.getNeighbors(i))
                   {
-                      Real dx = p2.pos(0) - p1.pos(0);
-                      Real dy = p2.pos(1) - p1.pos(1);
-                      Real dz = p2.pos(2) - p1.pos(2);
+                      Real dist_x = p2.pos(0) - p1.pos(0);
+                      Real dist_y = p2.pos(1) - p1.pos(1);
+                      Real dist_z = p2.pos(2) - p1.pos(2);
 
-                      Real r2 = dx*dx + dy*dy + dz*dz;
+                      Real r2 = dist_x*dist_x +
+                                dist_y*dist_y +
+                                dist_z*dist_z;
+
                       Real r_lm = p1.rdata(realData::radius) + p2.rdata(realData::radius);
 
                       if ( r2 <= (r_lm - small_number)*(r_lm - small_number) and (p1.id() != p2.id()))
@@ -450,9 +456,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                           Real dist_mag_inv = 1.e0/dist_mag;
 
                           Real normal[3];
-                          normal[0] = dx * dist_mag_inv;
-                          normal[1] = dy * dist_mag_inv;
-                          normal[2] = dz * dist_mag_inv;
+                          normal[0] = dist_x * dist_mag_inv;
+                          normal[1] = dist_y * dist_mag_inv;
+                          normal[2] = dist_z * dist_mag_inv;
 
                           Real overlap_n = r_lm - dist_mag;
                           Real vrel_trans_norm;
@@ -526,18 +532,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                           }
                       }
               });
-#else
-            calc_particle_collisions(particles,
-                                     &nrp,
-                                     neighbors[lev][index].dataPtr(),
-                                     &size_ng,
-                                     neighbor_list[lev][index].dataPtr(),
-                                     &size_nl,
-                                     tow[index].dataPtr(),
-                                     fc[index].dataPtr(),
-                                     &subdt,
-                                     &ncoll);
-#endif
 
             // Debugging: copy data from the fc (all forces) vector to the wfor
             // (wall forces) vector. Note that since fc already contains the
@@ -570,6 +564,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             int z_lo_bc = BC::domain_bc[4];
             int z_hi_bc = BC::domain_bc[5];
 
+            //Access to species fractions
+            //auto spec_data = ptile.getParticleTileData();
+
             amrex::ParallelFor(nrp,
               [pstruct,subdt,fc_ptr,ntot,gravity,tow_ptr,eps,p_hi,p_lo,
                x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc]
@@ -600,6 +597,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 p.pos(0) += subdt * p.rdata(realData::velx);
                 p.pos(1) += subdt * p.rdata(realData::vely);
                 p.pos(2) += subdt * p.rdata(realData::velz);
+
+                //Compute something with species
+                //if (DEM::nspecies_dem > 0){
+                //   for(int j=0; j < DEM::nspecies_dem; ++j){
+                //      //j -- spec1,spec2 .. ; i -- particle index
+                //      spec_data.m_runtime_rdata[j][i] += subdt*spec_data.m_runtime_rdata[j][i]; 
+                //   }
+                //}
 
                 if (x_lo_bc && p.pos(0) < p_lo[0])
                 {
@@ -1124,7 +1129,7 @@ ComputeAverageVelocities (const int lev,
       // Jump to next iteration if this averaging region is not valid
       if ( !avg_region.ok() )
       {
-        amrex::Print() << "ComputeAverageVelocities: region " << nr 
+        amrex::Print() << "ComputeAverageVelocities: region " << nr
                        << " is invalid: skipping\n";
         continue;
       }

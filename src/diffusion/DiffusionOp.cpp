@@ -35,9 +35,12 @@ DiffusionOp::DiffusionOp (AmrCore* _amrcore,
 
     // Actually do the setup work here
     setup(_amrcore, _ebfactory);
+
+    // We default to Neumann bc's for scalarson EB walls
+    eb_is_dirichlet = false;
 }
 
-void DiffusionOp::setup (AmrCore* _amrcore, 
+void DiffusionOp::setup (AmrCore* _amrcore,
                          Vector< const EBFArrayBoxFactory* >* _ebfactory)
 {
     // The amrcore boxArray and DistributionMap change when we regrid so we must
@@ -55,6 +58,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
 
     // Resize and reset data
     b.resize(max_level + 1);
+
     phi.resize(max_level + 1);
     rhs.resize(max_level + 1);
     vel_eb.resize(max_level + 1);
@@ -68,6 +72,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
             b[lev][dir].reset(new MultiFab(edge_ba, dmap[lev], 1, nghost,
                                            MFInfo(), *(*ebfactory)[lev]));
         }
+
         phi[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 1,
                                     MFInfo(), *(*ebfactory)[lev]));
 
@@ -100,13 +105,21 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     //
     scal_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, *ebfactory));
 
+    //
+    // Define the matrix for the temperature diffusion solve.
+    //
+    temp_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, *ebfactory));
+
      // It is essential that we set MaxOrder to 2 if we want to use the standard
     // phi(i)-phi(i-1) approximation for the gradient at Dirichlet boundaries.
     // The solver's default order is 3 and this uses three points for the gradient.
     scal_matrix->setMaxOrder(2);
+    temp_matrix->setMaxOrder(2);
 
     // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
     scal_matrix->setDomainBC(m_scalbc_lo, m_scalbc_hi);
+    //temp_matrix->setDomainBC(m_tempbc_lo, m_tempbc_hi); // TODO
+    temp_matrix->setDomainBC(m_scalbc_lo, m_scalbc_hi); // for now we use same of scal
 }
 
 DiffusionOp::~DiffusionOp ()
@@ -175,40 +188,42 @@ void DiffusionOp::ComputeDivTau (Vector< MultiFab* >& divtau_out,
                                       MFInfo(), *(*ebfactory)[lev]);
        divtau_aux[lev]->setVal(0.0);
     }
- 
+
     // Whole domain
     Box domain(geom[0].Domain());
- 
+
     // We want to return div (mu grad)) phi
     vel_matrix->setScalars(0.0, -1.0);
- 
+
+    Vector<BCRec> bcs_s; // This is just to satisfy the call to EB_interp...
+    bcs_s.resize(3);
     // Compute the coefficients
     for (int lev = 0; lev <= finest_level; lev++)
     {
-        average_cellcenter_to_face( GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev] );
- 
+        // average_cellcenter_to_face( GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev] );
+        EB_interp_CellCentroid_to_FaceCentroid (*eta_in[lev], GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
+
         for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
              b[lev][dir]->FillBoundary(geom[lev].periodicity());
- 
-        vel_matrix->setShearViscosity  ( lev, GetArrOfConstPtrs(b[lev]));
+
+        vel_matrix->setShearViscosity  ( lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
         vel_matrix->setEBShearViscosity( lev, (*eta_in[lev]));
         vel_matrix->setLevelBC         ( lev, GetVecOfConstPtrs(vel_in)[lev] );
     }
- 
+
     MLMG solver(*vel_matrix);
- 
+
     solver.apply(divtau_aux, vel_in);
- 
+
     for(int lev = 0; lev <= finest_level; lev++)
     {
-       amrex::single_level_weighted_redistribute(lev,
-                                                 *divtau_aux[lev],
+       amrex::single_level_weighted_redistribute(*divtau_aux[lev],
                                                  *divtau_out[lev],
                                                  *ep_in[lev],
                                                  0,
                                                  AMREX_SPACEDIM,
-                                                 geom);
- 
+                                                 geom[lev]);
+
        // Divide by density
        for (int n = 0; n < 3; n++)
        {
@@ -221,11 +236,77 @@ void DiffusionOp::ComputeDivTau (Vector< MultiFab* >& divtau_out,
        delete divtau_aux[lev];
 }
 
+void DiffusionOp::ComputeLapTemp (Vector< MultiFab* >& laptemp_out,
+                                  const Vector< MultiFab* >& T_g_in,
+                                  const Vector< MultiFab* >& ro_in,
+                                  const Vector< MultiFab* >& ep_in,
+                                  const Real& k_g)
+{
+    BL_PROFILE("DiffusionOp::ComputeLapTemp");
+
+    int finest_level = amrcore->finestLevel();
+
+    Vector< MultiFab* >  laptemp_aux(finest_level+1);
+    Vector< MultiFab* >    phi_eb(finest_level+1);
+    for(int lev = 0; lev <= finest_level; lev++)
+    {
+       laptemp_aux[lev] = new MultiFab(grids[lev], dmap[lev], 1, nghost,
+                                    MFInfo(), *(*ebfactory)[lev]);
+       laptemp_aux[lev]->setVal(0.0);
+
+       phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0,
+                                    MFInfo(), *(*ebfactory)[lev]);
+
+       // This value was just for testing
+       // if (eb_is_dirichlet)
+       //    phi_eb[lev]->setVal(1.0);
+    }
+
+    // Whole domain
+    Box domain(geom[0].Domain());
+
+    // We want to return div (k_g grad)) phi
+    temp_matrix->setScalars(0.0, -1.0);
+
+    Vector<BCRec> bcs_s; // This is just to satisfy the call to EB_interp...
+    bcs_s.resize(3);
+
+    // Compute the coefficients
+    for (int lev = 0; lev <= finest_level; lev++)
+    {
+        EB_interp_CellCentroid_to_FaceCentroid (*ep_in[lev], GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
+
+        for(int dir = 0; dir < 3; dir++)
+           b[lev][dir]->mult(k_g,0,1);
+
+        if (eb_is_dirichlet)
+            temp_matrix->setEBDirichlet(lev, *phi_eb[lev], k_g);
+
+        temp_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]));
+        temp_matrix->setLevelBC(lev, GetVecOfConstPtrs(T_g_in)[lev]);
+    }
+
+    MLMG solver(*temp_matrix);
+
+    solver.apply(laptemp_aux, T_g_in);
+
+    for(int lev = 0; lev <= finest_level; lev++)
+    {
+       amrex::single_level_redistribute(*laptemp_aux[lev], *laptemp_out[lev], 0, 1, geom[lev]);
+    }
+
+    for(int lev = 0; lev <= finest_level; lev++)
+    {
+       delete laptemp_aux[lev];
+       delete   phi_eb[lev];
+    }
+}
+
 void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
                                const Vector< MultiFab* >& scal_in,
                                const Vector< MultiFab* >& ro_in,
                                const Vector< MultiFab* >& ep_in,
-                               const Vector< Real > mu_s) 
+                               const Vector< Real      >& mu_s)
 {
     BL_PROFILE("DiffusionOp::ComputeLapS");
 
@@ -233,40 +314,54 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
 
     int ntrac = scal_in[0]->nComp();
 
-    Vector< MultiFab* > laps_aux(finest_level+1);
+    Vector< MultiFab* >  laps_aux(finest_level+1);
+    Vector< MultiFab* >    phi_eb(finest_level+1);
     for(int lev = 0; lev <= finest_level; lev++)
     {
        laps_aux[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, nghost,
                                     MFInfo(), *(*ebfactory)[lev]);
        laps_aux[lev]->setVal(0.0);
+
+       phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0,
+                                    MFInfo(), *(*ebfactory)[lev]);
+
+       // This value was just for testing
+       // if (eb_is_dirichlet)
+       //    phi_eb[lev]->setVal(1.0);
     }
- 
+
     // Whole domain
     Box domain(geom[0].Domain());
- 
+
     // We want to return div (mu grad)) phi
     scal_matrix->setScalars(0.0, -1.0);
- 
+
     // Compute the coefficients
     for (int lev = 0; lev <= finest_level; lev++)
     {
         for(int dir = 0; dir < 3; dir++)
            for(int n = 0; n < ntrac; n++)
              b[lev][dir]->setVal(mu_s[n],n,1);
- 
+
+        if (eb_is_dirichlet)
+            scal_matrix->setEBDirichlet(lev, *phi_eb[lev], mu_s);
+
         scal_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]));
         scal_matrix->setLevelBC(lev, GetVecOfConstPtrs(scal_in)[lev]);
     }
- 
+
     MLMG solver(*scal_matrix);
- 
+
     solver.apply(laps_aux, scal_in);
- 
+
     for(int lev = 0; lev <= finest_level; lev++)
     {
-       amrex::single_level_redistribute(lev, *laps_aux[lev], *laps_out[lev], 0, ntrac, geom);
+       amrex::single_level_redistribute(*laps_aux[lev], *laps_out[lev], 0, ntrac, geom[lev]);
     }
-    
+
     for(int lev = 0; lev <= finest_level; lev++)
+    {
        delete laps_aux[lev];
+       delete   phi_eb[lev];
+    }
 }

@@ -7,6 +7,7 @@
 #include <mfix_F.H>
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_PIC_Parms.H>
 
 namespace
 {
@@ -30,7 +31,10 @@ mfix::InitIOPltData ()
       pp.query("plt_ep_g",    plt_ep_g   );
       pp.query("plt_p_g",     plt_p_g    );
       pp.query("plt_ro_g",    plt_ro_g   );
+      pp.query("plt_h_g",     plt_h_g    );
+      pp.query("plt_T_g",     plt_T_g    );
       pp.query("plt_trac",    plt_trac   );
+      pp.query("plt_cp_g",    plt_cp_g   );
       pp.query("plt_mu_g",    plt_mu_g   );
       pp.query("plt_diveu",   plt_diveu  );
       pp.query("plt_vort",    plt_vort   );
@@ -48,7 +52,10 @@ mfix::InitIOPltData ()
         plt_ep_g    = 1;
         plt_p_g     = 1;
         plt_ro_g    = 1;
+        plt_h_g     = 1;
+        plt_T_g     = 1;
         plt_trac    = 1;
+        plt_cp_g    = 1;
         plt_mu_g    = 1;
         plt_vort    = 1;
         plt_diveu   = 1;
@@ -62,19 +69,28 @@ mfix::InitIOPltData ()
       if( plt_ep_g    == 1) pltVarCount += 1;
       if( plt_p_g     == 1) pltVarCount += 1;
       if( plt_ro_g    == 1) pltVarCount += 1;
+      if( plt_h_g     == 1) pltVarCount += 1;
+      if( plt_T_g     == 1) pltVarCount += 1;
       if( plt_trac    == 1) pltVarCount += 1;
+      if( plt_cp_g    == 1) pltVarCount += 1;
       if( plt_mu_g    == 1) pltVarCount += 1;
       if( plt_vort    == 1) pltVarCount += 1;
       if( plt_diveu   == 1) pltVarCount += 1;
       if( plt_volfrac == 1) pltVarCount += 1;
     }
 
-  if(DEM::solve)
+  if(DEM::solve or PIC::solve)
     {
 
       int plt_ccse_regtest = 0;
       pp.query("plt_regtest", plt_ccse_regtest);
 
+      if (DEM::nspecies_dem > 0) {
+          write_real_comp.resize(16+DEM::nspecies_dem);
+           for(int i=0; i < DEM::nspecies_dem; ++i){
+               write_real_comp[16+i] = 1;
+           }
+      }
       // All flags are true by default so we only need to turn off the
       // variables we don't want if not doing CCSE regression tests.
       if (plt_ccse_regtest == 0) {
@@ -112,10 +128,23 @@ mfix::InitIOPltData ()
         write_real_comp[10] = input_value;
 
         input_value = 0;
-        pp.query("plt_drag_p",   input_value );
+        pp.query("plt_statwt",   input_value );
         write_real_comp[11] = input_value;
-        write_real_comp[12] = input_value;
-        write_real_comp[13] = input_value;
+
+        input_value = 0;
+        pp.query("plt_drag_p",   input_value );
+        write_real_comp[12] = input_value;  // drag coeff
+        write_real_comp[13] = input_value;  // dragx
+        write_real_comp[14] = input_value;  // dragy
+        write_real_comp[15] = input_value;  // dragz
+
+        input_value = 0;
+        pp.query("plt_species_p",   input_value );
+        if (input_value > 0){
+           for(int i=0; i < DEM::nspecies_dem; ++i){
+               write_real_comp[16+i] = input_value;
+           }
+        }
 
         input_value = 0;
         pp.query("plt_phase",   input_value );
@@ -131,8 +160,8 @@ mfix::InitIOPltData ()
 
 }
 
-void 
-mfix::WritePlotFile (std::string& plot_file, int nstep, Real time ) 
+void
+mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 {
     // If we've already written this plotfile, don't do it again!
     if (nstep == last_plt) return;
@@ -180,9 +209,21 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
       if( plt_ro_g    == 1)
         pltFldNames.push_back("ro_g");
 
+      // Fluid enthalpy
+      if( plt_h_g    == 1)
+        pltFldNames.push_back("h_g");
+
+      // Temperature in fluid
+      if( plt_T_g    == 1)
+        pltFldNames.push_back("T_g");
+
       // Tracer in fluid
       if( plt_trac    == 1)
         pltFldNames.push_back("trac");
+
+      // Specific heat
+      if( plt_cp_g    == 1)
+        pltFldNames.push_back("cp_g");
 
       // Fluid viscosity
       if( plt_mu_g    == 1)
@@ -247,9 +288,27 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
           lc += 1;
         }
 
-        // Fluid density
+        // Fluid enthalpy
+        if( plt_h_g    == 1) {
+          MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->h_g), 0, lc, 1, 0);
+          lc += 1;
+        }
+
+        // Fluid temperature
+        if( plt_T_g    == 1) {
+          MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->T_g), 0, lc, 1, 0);
+          lc += 1;
+        }
+
+        // Fluid tracer
         if( plt_trac    == 1) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->trac), 0, lc, 1, 0);
+          lc += 1;
+        }
+
+        // Specific heat
+        if( plt_cp_g    == 1) {
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->cp_g, 0, lc, 1, 0);
           lc += 1;
         }
 
@@ -329,7 +388,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 
     WriteJobInfo(plotfilename);
 
-    if ( DEM::solve )
+    if ( DEM::solve or PIC::solve )
     {
         Vector<std::string> real_comp_names;
         Vector<std::string>  int_comp_names;
@@ -337,21 +396,38 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         real_comp_names.push_back("volume");
         real_comp_names.push_back("mass");
         real_comp_names.push_back("density");
-        real_comp_names.push_back("omoi");
+        if(DEM::solve){
+          real_comp_names.push_back("omoi");
+        } else {
+          real_comp_names.push_back("ep_s");
+        }
         real_comp_names.push_back("velx");
         real_comp_names.push_back("vely");
         real_comp_names.push_back("velz");
-        real_comp_names.push_back("omegax");
-        real_comp_names.push_back("omegay");
-        real_comp_names.push_back("omegaz");
+        if(DEM::solve){
+          real_comp_names.push_back("omegax");
+          real_comp_names.push_back("omegay");
+          real_comp_names.push_back("omegaz");
+        } else {
+          real_comp_names.push_back("grad_tau_x");
+          real_comp_names.push_back("grad_tau_y");
+          real_comp_names.push_back("grad_tau_z");
+        }
+        real_comp_names.push_back("statwt");
+        real_comp_names.push_back("dragcoeff");
         real_comp_names.push_back("dragx");
         real_comp_names.push_back("dragy");
         real_comp_names.push_back("dragz");
+        if (DEM::nspecies_dem > 0){
+           for(int i=0; i < DEM::species_dem.size(); ++i){
+               real_comp_names.push_back(DEM::species_dem[i]);
+           }
+        }
         int_comp_names.push_back("phase");
         int_comp_names.push_back("state");
 
-       pc -> WritePlotFile(plotfilename, "particles",
-                           write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+       pc->WritePlotFile(plotfilename, "particles",
+                         write_real_comp, write_int_comp, real_comp_names, int_comp_names);
 
     }
 }
