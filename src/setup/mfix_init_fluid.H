@@ -13,13 +13,10 @@ void init_fluid (const Box& sbx,
                  const Box& bx,
                  const Box& domain,
                  const FArrayBox& ep_g,
-                 FArrayBox& T_g,
-                 FArrayBox& h_g,
                  FArrayBox& ro_g,
                  FArrayBox& trac,
                  const FArrayBox& p_g,
                  FArrayBox& vel_g,
-                 FArrayBox& cp_g,
                  FArrayBox& mu_g,
                  const Real dx,
                  const Real dy,
@@ -52,8 +49,6 @@ void init_periodic_tracer (const Box& bx,
                            const Real dz);
 
 void init_fluid_restart (const Box& bx,
-                         FArrayBox& temp,
-                         FArrayBox& cp_g,
                          FArrayBox& mu_g);
 
 void set_ic (const Box& sbx,

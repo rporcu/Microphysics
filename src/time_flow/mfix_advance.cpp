@@ -4,7 +4,6 @@
 #include <AMReX_VisMF.H>
 #include <MFIX_MFHelpers.H>
 #include <MFIX_DEM_Parms.H>
-#include <MFIX_PIC_Parms.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -52,40 +51,33 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   // Fill ghost nodes and reimpose boundary conditions
   mfix_set_velocity_bcs(time, get_vel_g(), 0);
   mfix_set_density_bcs(time, get_ro_g());
-  mfix_set_enthalpy_bcs(time, get_h_g());
-  mfix_set_temperature_bcs(time, get_T_g());
-  mfix_set_scalar_bcs(time, get_trac(), get_cp_g(), get_mu_g());
+  mfix_set_scalar_bcs(time, get_trac(), get_mu_g());
 
   // Copy vel_g into vel_go
   for (int lev = 0; lev <= finest_level; lev++)
     MultiFab::Copy(*m_leveldata[lev]->vel_go, *m_leveldata[lev]->vel_g, 0, 0,
                    m_leveldata[lev]->vel_g->nComp(), m_leveldata[lev]->vel_go->nGrow());
 
-  if (DEM::solve or PIC::solve)
+  if (DEM::solve)
     mfix_calc_drag_fluid(time);
 
   // Create temporary multifabs to hold conv and divtau
-  Vector< MultiFab* >  conv_u(finest_level+1, nullptr);
-  Vector< MultiFab* >  conv_s(finest_level+1, nullptr);
-  Vector< MultiFab* >  divtau(finest_level+1, nullptr);
-  Vector< MultiFab* >    laps(finest_level+1, nullptr);
-  Vector< MultiFab* > laptemp(finest_level+1, nullptr);
+  Vector< MultiFab* > conv_u(finest_level+1, nullptr);
+  Vector< MultiFab* > conv_s(finest_level+1, nullptr);
+  Vector< MultiFab* > divtau(finest_level+1, nullptr);
+  Vector< MultiFab* >   laps(finest_level+1, nullptr);
 
   for (int lev = 0; lev <= finest_level; lev++)
   {
     conv_u[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-    // TODO: check that 3 components is correct since now we have one for
-    // density, one for tracer and one for temperature
-    conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+    conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 2, 0, MFInfo(), *ebfactory[lev]);
     divtau[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
     laps[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
-    laptemp[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
 
     conv_u[lev]->setVal(0.0);
     conv_s[lev]->setVal(0.0);
     divtau[lev]->setVal(0.0);
     laps[lev]->setVal(0.0);
-    laptemp[lev]->setVal(0.0);
   }
 
   for (int iter = 0; iter < initial_iterations; ++iter)
@@ -95,7 +87,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     bool proj_2 = false;
 
-    mfix_apply_predictor(conv_u, conv_s, divtau, laps, laptemp, time, dt, proj_2);
+    mfix_apply_predictor(conv_u, conv_s, divtau, laps, time, dt, proj_2);
 
     // Reset any quantities which might have been updated
     for (int lev = 0; lev <= finest_level; lev++)
@@ -107,17 +99,6 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
         MultiFab::Copy(*m_leveldata[lev]->ro_g, *m_leveldata[lev]->ro_go, 0, 0,
                         m_leveldata[lev]->ro_g->nComp(), m_leveldata[lev]->ro_g->nGrow());
 
-    if (advect_enthalpy)
-    {
-      for (int lev = 0; lev <= finest_level; lev++)
-      {
-        MultiFab::Copy(*m_leveldata[lev]->T_g, *m_leveldata[lev]->T_go, 0, 0,
-                        m_leveldata[lev]->T_g->nComp(), m_leveldata[lev]->T_g->nGrow());
-        MultiFab::Copy(*m_leveldata[lev]->h_g, *m_leveldata[lev]->h_go, 0, 0,
-                        m_leveldata[lev]->h_g->nComp(), m_leveldata[lev]->h_g->nGrow());
-      }
-    }
-
     if (advect_tracer)
       for (int lev = 0; lev <= finest_level; lev++)
         MultiFab::Copy(*m_leveldata[lev]->trac, *m_leveldata[lev]->trac_o, 0, 0,
@@ -126,18 +107,15 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     // Reset the boundary values (necessary if they are time-dependent)
     mfix_set_velocity_bcs(time, get_vel_g(), 0);
     mfix_set_density_bcs(time, get_ro_g());
-    mfix_set_enthalpy_bcs(time, get_h_g());
-    mfix_set_temperature_bcs(time, get_T_g());
-    mfix_set_scalar_bcs(time, get_trac(), get_cp_g(), get_mu_g());
+    mfix_set_scalar_bcs(time, get_trac(), get_mu_g());
   }
 
   for (int lev = 0; lev <= finest_level; lev++)
   {
-     delete  conv_u[lev];
-     delete  conv_s[lev];
-     delete  divtau[lev];
-     delete    laps[lev];
-     delete laptemp[lev];
+     delete conv_u[lev];
+     delete conv_s[lev];
+     delete divtau[lev];
+     delete   laps[lev];
   }
 }
 

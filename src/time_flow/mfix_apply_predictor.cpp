@@ -4,8 +4,6 @@
 #include <AMReX_VisMF.H>
 #include <MFIX_MFHelpers.H>
 #include <MFIX_DEM_Parms.H>
-#include <MFIX_PIC_Parms.H>
-#include <MFIX_FLUID_Parms.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -39,11 +37,10 @@
 //     p_g = phi
 //
 void
-mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
-                            Vector< MultiFab* >&  conv_s_old,
-                            Vector< MultiFab* >&  divtau_old,
-                            Vector< MultiFab* >&    laps_old,
-                            Vector< MultiFab* >& laptemp_old,
+mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
+                            Vector< MultiFab* >& conv_s_old,
+                            Vector< MultiFab* >& divtau_old,
+                            Vector< MultiFab* >&   laps_old,
                             Real time,
                             Real l_dt,
                             bool proj_2)
@@ -61,11 +58,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
     // *************************************************************************************
     // Compute the explicit advective terms
     // Note that "conv_u_old" returns update to (ep_g u)
-    // Note that "conv_s_old" returns update to (ep_g rho), (ep_g rho h_g) and (ep_g rho tracer)
+    // Note that "conv_s_old" returns update to (ep_g rho) and (ep_g rho tracer)
     // *************************************************************************************
     mfix_compute_convective_term(conv_u_old, conv_s_old, get_vel_g_old(),
-                                 get_ep_g(), get_ro_g_old(), get_h_g_old(),
-                                 get_trac_old(), time);
+                                 get_ep_g(), get_ro_g_old(), get_trac_old(), time);
 
     // *************************************************************************************
     // Compute explicit diffusive update
@@ -78,16 +74,12 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
         diffusion_op->ComputeDivTau(divtau_old, get_vel_g_old(), get_ro_g(),
                                     get_ep_g(), get_mu_g());
 
-        diffusion_op->ComputeLapTemp(laptemp_old, get_T_g_old(), get_ro_g(),
-                                     get_ep_g(), FLUID::k_g0);
-
         diffusion_op->ComputeLapS(laps_old, get_trac_old(), get_ro_g(),
                                   get_ep_g(), mu_s);
 
         for (int lev = 0; lev <= finest_level; lev++)
         {
             EB_set_covered(*divtau_old[lev], 0, divtau_old[lev]->nComp(), divtau_old[lev]->nGrow(), 0.0);
-            EB_set_covered(  *laptemp_old[lev], 0,   laptemp_old[lev]->nComp(),   laptemp_old[lev]->nGrow(), 0.0);
             EB_set_covered(  *laps_old[lev], 0,   laps_old[lev]->nComp(),   laps_old[lev]->nGrow(), 0.0);
         }
 
@@ -95,7 +87,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
        for (int lev = 0; lev <= finest_level; lev++)
        {
           divtau_old[lev]->setVal(0.);
-         laptemp_old[lev]->setVal(0.);
             laps_old[lev]->setVal(0.);
        }
     }
@@ -141,66 +132,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
     } // not constant density
 
     // *************************************************************************************
-    // Update enthalpy and temperature
-    // *************************************************************************************
-    if (advect_enthalpy)
-    {
-        for (int lev = 0; lev <= finest_level; lev++)
-        {
-            auto& ld = *m_leveldata[lev];
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-            for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
-            {
-                Box const& bx = mfi.tilebox();
-                Array4<Real const> const& h_g_o     = ld.h_go->const_array(mfi);
-                Array4<Real      > const& h_g_n     = ld.h_g->array(mfi);
-                Array4<Real      > const& T_g_n     = ld.T_g->array(mfi);
-                Array4<Real const> const& rho_o     = ld.ro_go->const_array(mfi);
-                Array4<Real const> const& rho_n     = ld.ro_g->const_array(mfi);
-                Array4<Real const> const& laptemp_o = laptemp_old[lev]->const_array(mfi);
-                Array4<Real const> const& epg       = ld.ep_g->const_array(mfi);
-                Array4<Real const> const& cp_g      = ld.cp_g->const_array(mfi);
-                Array4<Real const> const& dhdt_o    = conv_s_old[lev]->const_array(mfi);
-
-                if (explicit_diffusion_pred)
-                {
-                    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-                    {
-                        int conv_comp = 1;
-
-                        const Real num =         (rho_o(i,j,k) * epg(i,j,k));
-                        const Real denom = 1.0 / (rho_n(i,j,k) * epg(i,j,k));
-
-                        Real h_g = num * h_g_o(i,j,k) + l_dt * dhdt_o(i,j,k,conv_comp)
-                                                      + l_dt * laptemp_o(i,j,k);
-
-                        h_g_n(i,j,k) = h_g * denom;
-
-                        T_g_n(i,j,k) = h_g_n(i,j,k) / cp_g(i,j,k);
-                    });
-
-                } else { // Fully implicit diffusion
-                    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-                    {
-                        int conv_comp = 1;
-
-                        const Real num =         (rho_o(i,j,k) * epg(i,j,k));
-                        const Real denom = 1.0 / (rho_n(i,j,k) * epg(i,j,k));
-
-                        Real h_g = num * h_g_o(i,j,k) + l_dt * dhdt_o(i,j,k,conv_comp);
-
-                        h_g_n(i,j,k) = h_g * denom;
-
-                        T_g_n(i,j,k) = h_g_n(i,j,k) / cp_g(i,j,k);
-                    });
-                }
-            } // mfi
-        } // lev
-    } // advect_enthalpy
-
-    // *************************************************************************************
     // Update tracer(s)
     // *************************************************************************************
     int l_ntrac = ntrac;
@@ -229,12 +160,12 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
                     {
                       for (int n = 0; n < l_ntrac; ++n)
                       {
-                        int conv_comp = 2+n;
+                        int conv_comp = 1+n;
 
                         const Real epg_loc = epg(i,j,k);
 
                         Real tra = (rho_o(i,j,k)*epg_loc)*tra_o(i,j,k,n);
-                        tra += l_dt * (dtdt_o(i,j,k,conv_comp) + laps_o(i,j,k,n));
+                        tra += l_dt * (dtdt_o(i,j,k,conv_comp) + laps_o(i,j,k));
                         tra /= (rho_n(i,j,k)*epg_loc);
 
                         tra_n(i,j,k,n) = tra;
@@ -245,7 +176,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
                     {
                       for (int n = 0; n < l_ntrac; ++n)
                       {
-                        int conv_comp = 2+n;
+                        int conv_comp = 1+n;
 
                         const Real epg_loc = epg(i,j,k);
 
@@ -347,7 +278,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
     // *************************************************************************************
     // Add the drag term implicitly
     // *************************************************************************************
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve)
         mfix_add_drag_implicit(l_dt);
 
     // *************************************************************************************
@@ -357,16 +288,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
     if (!explicit_diffusion_pred)
     {
       mfix_set_density_bcs(time, get_ro_g());
-      mfix_set_enthalpy_bcs(time, get_ro_g());
-      mfix_set_temperature_bcs(time, get_ro_g());
-      mfix_set_scalar_bcs(time, get_trac(), get_cp_g(), get_mu_g());
+      mfix_set_scalar_bcs(time, get_trac(), get_mu_g());
 
-      // mfix_set_temperature_bcs (new_time, get_T_g());
-      // TODO: k_g0 can be also non constant
-      // NOTE: we do this call before multiplying ep_g by ro_g
-      diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(), get_cp_g(), FLUID::k_g0, l_dt);
-
-      // Convert "ep_g" into (rho * ep_g)
       for (int lev = 0; lev <= finest_level; lev++)
         MultiFab::Multiply(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
                            0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
@@ -377,7 +300,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
       // mfix_set_tracer_bcs (new_time, trac, 0);
       diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, l_dt);
 
-      // Convert (rho * ep_g) back into ep_g
       for (int lev = 0; lev <= finest_level; lev++)
           MultiFab::Divide(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
                            0, 0, 1, m_leveldata[lev]->ep_g->nGrow());

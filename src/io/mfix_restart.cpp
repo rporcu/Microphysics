@@ -11,7 +11,6 @@
 #include <mfix_F.H>
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_DEM_Parms.H>
-#include <MFIX_PIC_Parms.H>
 
 namespace
 {
@@ -26,7 +25,6 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     BL_PROFILE("mfix::Restart()");
 
     amrex::Print() << "  Restarting from checkpoint " << restart_file << std::endl;
-
 
     if (Nrep != IntVect::TheUnitVector()) {
         amrex::Print() << "  Replication " << Nrep << std::endl;
@@ -133,7 +131,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             // Particle data is loaded into the MFIXParticleContainer's base
             // class using amrex::NeighborParticleContainer::Restart
 
-            if ( (DEM::solve or PIC::solve) and lev == 0)
+            if ( DEM::solve && lev == 0)
               pc->Restart(restart_file, "particles");
 
             amrex::Print() << "  Finished reading particle data" << std::endl;
@@ -226,54 +224,43 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
        for (int i = 0; i < chkscalarVars.size(); i++ )
        {
-           if ( restart_from_cold_flow and chkscaVarsName[i] == "T_g")
+           Print() << "Working on: " << chkscaVarsName[i] << std::endl;
+           if (chkscaVarsName[i] == "level_sets")
            {
-               amrex::Print() << "  Setting T_g to T_g0 = " << FLUID::T_g0 << std::endl;
-               m_leveldata[lev]->T_g->setVal(FLUID::T_g0);
+               Print() << "Skipping!" << std::endl;
                continue;
+           }
 
-           } else if ( restart_from_cold_flow and chkscaVarsName[i] == "h_g")
-           {
-               amrex::Print() << "  Setting h_g to Cp_g0 T_g0 = " << FLUID::Cp_g0 * FLUID::T_g0 << std::endl;
-               m_leveldata[lev]->h_g->setVal(FLUID::T_g0*FLUID::Cp_g0);
-               continue;
-
-           } else if (chkscaVarsName[i] == "level_sets") {
-
-               amrex::Print() << "  Skipping " << chkscaVarsName[i] << std::endl;
-               continue;
-
-           } else {
-              amrex::Print() << "  Loading " << chkscaVarsName[i] << std::endl;
-
-              MultiFab mf;
-              VisMF::Read(mf,
+          MultiFab mf;
+          VisMF::Read(mf,
                       amrex::MultiFabFileFullPrefix(lev,
                                                     restart_file, level_prefix,
                                                     chkscaVarsName[i]),
                                                     nullptr,
                                                     ParallelDescriptor::IOProcessorNumber());
 
-              if (Nrep == IntVect::TheUnitVector()) {
+          if (Nrep == IntVect::TheUnitVector()) {
 
-                 // Copy from the mf we used to read in to the mf we will use going forward
-                 (**(chkscalarVars[i][lev])).copy(mf, 0, 0, 1, 0, 0);
+              amrex::Print() << "  - loading scalar data: " << chkscaVarsName[i] << std::endl;
 
-              } else {
+             // Copy from the mf we used to read in to the mf we will use going forward
+             (**(chkscalarVars[i][lev])).copy(mf, 0, 0, 1, 0, 0);
 
-                 if (mf.boxArray().size() > 1)
-                     amrex::Abort("Replication only works if one initial grid");
 
-                 mf.FillBoundary(geom[lev].periodicity());
+          } else {
 
-                 FArrayBox single_fab(mf.boxArray()[0],1);
-                 mf.copyTo(single_fab);
-    
-                  // Copy and replicate mf into chkscalarVars
-                  for (MFIter mfi(**(chkscalarVars[i][lev]), false); mfi.isValid(); ++mfi) {
-                      int ib = mfi.index();
-                      (**(chkscalarVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
-                  }
+             if (mf.boxArray().size() > 1)
+                 amrex::Abort("Replication only works if one initial grid");
+
+             mf.FillBoundary(geom[lev].periodicity());
+
+             FArrayBox single_fab(mf.boxArray()[0],1);
+             mf.copyTo(single_fab);
+
+              // Copy and replicate mf into chkscalarVars
+              for (MFIter mfi(**(chkscalarVars[i][lev]), false); mfi.isValid(); ++mfi) {
+                  int ib = mfi.index();
+                  (**(chkscalarVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
               }
           }
         }
@@ -283,7 +270,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
     // Make sure that the particle BoxArray is the same as the mesh data -- we can
     //      create a dual grid decomposition in the regrid operation
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve)
     {
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
@@ -310,7 +297,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     * (compared to the rest of the checkpoint data) => the level-set data is   *
     * stored in separate ls_raw MultiFab.                                      *
     ****************************************************************************/
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve)
     {
         if (levelset_restart) {
            // Load level-set Multifab
@@ -371,7 +358,6 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->ro_go->FillBoundary(geom[lev].periodicity());
 
-          m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
      
           // Fill the bc's just in case
@@ -384,7 +370,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
     if (load_balance_type == "KnapSack" or load_balance_type == "SFC") 
     {
-      if (DEM::solve or PIC::solve) {
+      if (DEM::solve) {
         for (int lev(0); lev < particle_cost.size(); ++lev)
           if (particle_cost[lev] != nullptr)
             delete particle_cost[lev];

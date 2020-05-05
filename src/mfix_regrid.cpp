@@ -1,7 +1,6 @@
 #include <mfix.H>
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_DEM_Parms.H>
-#include <MFIX_PIC_Parms.H>
 
 void
 mfix::Regrid ()
@@ -15,9 +14,8 @@ mfix::Regrid ()
   {
     amrex::Print() << "Load balancing using " << load_balance_type << std::endl;
 
-    if (DEM::solve  or PIC::solve)
+    if (DEM::solve)
        AMREX_ALWAYS_ASSERT(particle_cost[0] != nullptr);
-
     if (FLUID::solve)
        AMREX_ALWAYS_ASSERT(fluid_cost[0] != nullptr);
 
@@ -84,7 +82,7 @@ mfix::Regrid ()
 
         // This calls re-creates a proper particle_ebfactories
         //  and regrids all the multifabs that depend on it
-        if (DEM::solve or PIC::solve)
+        if (DEM::solve)
           RegridLevelSetArray(lev);
       }
 
@@ -98,7 +96,7 @@ mfix::Regrid ()
       Print() << "costs ba = " << costs.boxArray() << std::endl;
 
       if(DEM::solve)
-        Print() << "particle_cost ba = "
+        Print() << "particle_cost ba = " 
                 << particle_cost[base_lev]->boxArray()
                 << std::endl;
 
@@ -152,7 +150,7 @@ mfix::Regrid ()
         particle_cost[base_lev]->setVal(0.0);
       }
 
-      if (DEM::solve or PIC::solve){
+      if (DEM::solve){
         pc->Regrid(dmap[base_lev], grids[base_lev], base_lev);
       }
 
@@ -160,7 +158,7 @@ mfix::Regrid ()
 
       // This calls re-creates a proper particles_ebfactory and regrids
       // all the multifab that depend on it
-      if (DEM::solve or PIC::solve)
+      if (DEM::solve)
         RegridLevelSetArray(base_lev);
       }
   } else {

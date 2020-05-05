@@ -146,7 +146,7 @@ mfix::FillPatchVel (int lev,
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
 // works for single level and 2-level cases (fill fine grid ghost by interpolating from coarse)
-// NOTE: icomp here refers to whether we are filling 0: density, 1: tracer, 2: ep_g, 3: mu_g, 4: temperature
+// NOTE: icomp here refers to whether we are filling 0: density, 1: tracer, 2: ep_g, 3: mu_g
 void
 mfix::FillPatchScalar (int lev,
                        Real time,
@@ -248,10 +248,6 @@ mfix::GetDataScalar (int lev,
            data.push_back(m_leveldata[lev]->trac);
         } else if (icomp == 2) {
            data.push_back(m_leveldata[lev]->ep_g);
-        } else if (icomp == 4) {
-           data.push_back(m_leveldata[lev]->T_g);
-        } else if (icomp == 5) {
-           data.push_back(m_leveldata[lev]->h_g);
         }
         datatime.push_back(t_new[lev]);
     }
@@ -263,10 +259,6 @@ mfix::GetDataScalar (int lev,
            data.push_back(m_leveldata[lev]->trac_o);
         } else if (icomp == 2) {
            data.push_back(m_leveldata[lev]->ep_go);
-        } else if (icomp == 4) {
-           data.push_back(m_leveldata[lev]->T_g);
-        } else if (icomp == 5) {
-           data.push_back(m_leveldata[lev]->h_go);
         }
         datatime.push_back(t_old[lev]);
     }
@@ -281,12 +273,6 @@ mfix::GetDataScalar (int lev,
         } else if (icomp == 2) {
            data.push_back(m_leveldata[lev]->ep_go);
            data.push_back(m_leveldata[lev]->ep_g);
-        } else if (icomp == 4) {
-           data.push_back(m_leveldata[lev]->T_go);
-           data.push_back(m_leveldata[lev]->T_g);
-        } else if (icomp == 5) {
-           data.push_back(m_leveldata[lev]->h_go);
-           data.push_back(m_leveldata[lev]->h_g);
         }
         datatime.push_back(t_old[lev]);
         datatime.push_back(t_new[lev]);
