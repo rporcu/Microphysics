@@ -11,7 +11,9 @@ void mfix::EvolveParcels (int nstep,
                           amrex::Vector<amrex::Geometry> geom,
                           Vector< EBFArrayBoxFactory* > particle_ebfactory,
                           Vector< MultiFab* >& level_sets,
-                          const int ls_refinement_in)
+                          const int ls_refinement_in,
+                          Vector< MultiFab* >& cost,
+                          std::string& knapsack_weight_type)
 {
   BL_PROFILE_REGION_START("MFIX_PIC::EvolveParcels()");
   BL_PROFILE("mfix::EvolveParcels()");
@@ -70,7 +72,8 @@ void mfix::EvolveParcels (int nstep,
 
 
   // Move the parcels.
-  pc->MFIX_PC_AdvanceParcels(dt, gravity, particle_ebfactory, ep_s, avg_prop);
+  pc->MFIX_PC_AdvanceParcels(dt, gravity, particle_ebfactory, ep_s, avg_prop,
+                             cost, knapsack_weight_type);
 
 
   // Now account for solid walls.

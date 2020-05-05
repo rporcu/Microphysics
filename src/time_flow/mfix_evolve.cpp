@@ -105,7 +105,8 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     if (PIC::solve) {
 
       EvolveParcels(nstep, dt, time, mfix::gravity, geom,
-                    particle_ebfactory, level_sets, levelset_refinement);
+                    particle_ebfactory, level_sets, levelset_refinement,
+                    particle_cost, knapsack_weight_type);
 
       // This is here for debugging and should be removed.
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_leveldata[0]->ep_g[0].min(0) >= 0.15, " EPg too small");
