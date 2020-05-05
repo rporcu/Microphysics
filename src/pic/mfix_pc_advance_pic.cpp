@@ -191,7 +191,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
         {
           wt = nrp / tbx.d_numPts();
         }
-        (*cost[lev])[pti].plus(wt, tbx);
+        (*cost[lev])[pti].plus<RunOn::Device>(wt, tbx);
       }
 
 
