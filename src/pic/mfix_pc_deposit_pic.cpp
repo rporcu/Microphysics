@@ -97,9 +97,6 @@ MFIX_PC_SolidsVelocityDeposition (F WeightFunc, int lev,
             WeightFunc(plo, dx, dxi, flagsarr, p, i, j, k, weights,
                        deposition_scale_factor);
 
-            amrex::Real pvol = p.rdata(realData::statwt) *
-              p.rdata(realData::volume) * inv_reg_cell_vol;
-
             amrex::Real pmass = p.rdata(realData::statwt)*p.rdata(realData::mass);
             amrex::Real pvelx = pmass*p.rdata(realData::velx);
             amrex::Real pvely = pmass*p.rdata(realData::vely);

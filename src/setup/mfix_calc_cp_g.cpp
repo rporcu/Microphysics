@@ -7,7 +7,6 @@ void calc_cp_g (const Box& bx,
                 FArrayBox& temp_fab,
                 FArrayBox& cp_g_fab)
 {
-  Real cp_val;
 
   const Real cp_g0 = FLUID::Cp_g0;
 
