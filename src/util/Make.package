@@ -1,4 +1,6 @@
 CEXE_sources += mfix_set_velocity_bcs.cpp
+CEXE_sources += mfix_set_enthalpy_bcs.cpp
+CEXE_sources += mfix_set_temperature_bcs.cpp
 CEXE_sources += mfix_set_density_bcs.cpp
 CEXE_sources += mfix_set_scalar_bcs.cpp
 
@@ -9,5 +11,8 @@ CEXE_headers +=   MFIX_FilCC.H
 CEXE_sources +=   MFIX_FilCC.cpp
 CEXE_headers +=   MFIX_MFHelpers.H
 CEXE_sources +=   MFIX_MFHelpers.cpp
+
+CEXE_headers +=   MFIX_gradient.H
+CEXE_sources +=   MFIX_gradient.cpp
 
 CEXE_sources += mfix_set_epg_bcs.cpp

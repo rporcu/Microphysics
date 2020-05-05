@@ -1,5 +1,6 @@
 #include <mfix_init_fluid.H>
 
+#include <mfix_calc_cp_g.H>
 #include <mfix_calc_mu_g.H>
 #include <param_mod_F.H>
 #include <MFIX_calc_cell.H>
@@ -26,10 +27,13 @@ void init_fluid (const Box& sbx,
                  const Box& bx,
                  const Box& domain,
                  const FArrayBox& ep_g_fab,
+                 FArrayBox& h_g_fab,
+                 FArrayBox& T_g_fab,
                  FArrayBox& ro_g_fab,
                  FArrayBox& trac_fab,
                  const FArrayBox& p_g,
                  FArrayBox& vel_g_fab,
+                 FArrayBox& cp_g_fab,
                  FArrayBox& mu_g_fab,
                  const Real dx,
                  const Real dy,
@@ -46,11 +50,23 @@ void init_fluid (const Box& sbx,
       // init_helix (bx, domain, vel_g_fab, dx, dy, dz);
 
       // Set the initial fluid density and viscosity
+      Array4<Real> const& h_g = h_g_fab.array();
+      Array4<Real> const& T_g = T_g_fab.array();
       Array4<Real> const& ro_g = ro_g_fab.array();
       Array4<Real> const& trac = trac_fab.array();
 
+      const Real h_g0   = FLUID::T_g0 * FLUID::Cp_g0;
+      const Real T_g0   = FLUID::T_g0;
       const Real ro_g0  = FLUID::ro_g0;
       const Real trac_0 = FLUID::trac_0;
+
+      amrex::ParallelFor(sbx, [h_g, h_g0]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
+          { h_g(i,j,k) = h_g0; });
+
+      amrex::ParallelFor(sbx, [T_g, T_g0]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
+          { T_g(i,j,k) = T_g0; });
 
       amrex::ParallelFor(sbx, [ro_g, ro_g0]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
@@ -63,6 +79,7 @@ void init_fluid (const Box& sbx,
       if (test_tracer_conservation)
          init_periodic_tracer(bx, domain, vel_g_fab, trac_fab, dx, dy, dz);
 
+      calc_cp_g(bx, T_g_fab, cp_g_fab);
       calc_mu_g(bx, mu_g_fab);
 }
 
@@ -288,8 +305,11 @@ void init_periodic_tracer (const Box& bx,
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 void init_fluid_restart (const Box& bx,
+                         FArrayBox&  T_g_fab,
+                         FArrayBox& cp_g_fab,
                          FArrayBox& mu_g_fab)
 {
+  calc_cp_g(bx, T_g_fab, cp_g_fab);
   calc_mu_g(bx, mu_g_fab);
 }
 

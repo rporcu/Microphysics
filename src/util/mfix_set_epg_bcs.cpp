@@ -7,7 +7,7 @@
 using namespace amrex;
 
 void
-mfix::mfix_set_epg_bcs (const Vector< MultiFab* >& epg_in) const
+mfix::mfix_set_epg_bcs (const Vector< MultiFab* >& epg_in, const int dir_bc) const
 {
   BL_PROFILE("mfix::mfix_set_epg_bcs()");
 
@@ -19,13 +19,11 @@ mfix::mfix_set_epg_bcs (const Vector< MultiFab* >& epg_in) const
      epg_in[lev]->FillBoundary(geom[lev].periodicity());
      Box domain(geom[lev].Domain());
 
-     const int extrap_dir_bcs(1);
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
      for (MFIter mfi(*epg_in[lev], false); mfi.isValid(); ++mfi)
-       set_epg_bcs(lev, (*epg_in[lev])[mfi], domain, &extrap_dir_bcs);
+       set_epg_bcs(lev, (*epg_in[lev])[mfi], domain, &dir_bc);
 
      EB_set_covered(*epg_in[lev], 0, epg_in[lev]->nComp(), epg_in[lev]->nGrow(), covered_val);
 
@@ -38,7 +36,7 @@ void
 mfix::set_epg_bcs (const int lev,
                    FArrayBox& epg_fab,
                    const Box& domain,
-                   const int* extrap_dir_bcs) const
+                   const int* dir_bc) const
 {
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
@@ -129,7 +127,7 @@ mfix::set_epg_bcs (const int lev,
 
   if (nlft > 0)
   {
-    amrex::ParallelFor(bx_yz_lo_3D, 
+    amrex::ParallelFor(bx_yz_lo_3D,
       [bct_ilo,dom_lo,minf,pinf,pout,p_bc_ep_g,epg] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
@@ -141,9 +139,9 @@ mfix::set_epg_bcs (const int lev,
         epg(i,j,k) = p_bc_ep_g[bcv];
     });
 
-    if(*extrap_dir_bcs > 0)
+    if(*dir_bc == 1 )
     {
-      amrex::ParallelFor(bx_yz_lo_2D, 
+      amrex::ParallelFor(bx_yz_lo_2D,
         [bct_ilo,dom_lo,minf,epg] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
@@ -152,11 +150,23 @@ mfix::set_epg_bcs (const int lev,
           epg(i,j,k) = 2*epg(i,j,k) - epg(i+1,j,k);
       });
     }
+    else if(*dir_bc == 2)
+    {
+      amrex::ParallelFor(bx_yz_lo_2D,
+        [bct_ilo,dom_lo,minf,epg]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
+
+        if(bct == minf)
+          epg(i,j,k) = epg(dom_lo[0],j,k);
+      });
+    }
   }
 
   if (nrgt > 0)
   {
-    amrex::ParallelFor(bx_yz_hi_3D, 
+    amrex::ParallelFor(bx_yz_hi_3D,
       [bct_ihi,dom_hi,minf,pinf,pout,p_bc_ep_g,epg] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
@@ -168,7 +178,7 @@ mfix::set_epg_bcs (const int lev,
         epg(i,j,k) = p_bc_ep_g[bcv];
     });
 
-    if(*extrap_dir_bcs > 0)
+    if(*dir_bc == 1)
     {
       amrex::ParallelFor(bx_yz_hi_2D, 
         [bct_ihi,dom_hi,minf,epg] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -177,6 +187,18 @@ mfix::set_epg_bcs (const int lev,
 
         if(bct == minf)
           epg(i,j,k) = 2*epg(i,j,k) - epg(i-1,j,k);
+      });
+    }
+    else if(*dir_bc == 2)
+    {
+      amrex::ParallelFor(bx_yz_hi_2D,
+        [bct_ihi,dom_hi,minf,epg]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
+
+        if(bct == minf)
+          epg(i,j,k) = epg(dom_hi[0],j,k);
       });
     }
   }
@@ -195,16 +217,28 @@ mfix::set_epg_bcs (const int lev,
         epg(i,j,k) = p_bc_ep_g[bcv];
     });
 
-    if(*extrap_dir_bcs > 0)
+    if(*dir_bc == 1)
     {
 
-      amrex::ParallelFor(bx_xz_lo_2D, 
+      amrex::ParallelFor(bx_xz_lo_2D,
         [bct_jlo,dom_lo,minf,epg] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
         if(bct == minf)
           epg(i,j,k) = 2*epg(i,j,k) - epg(i,j+1,k);
+      });
+    }
+    else if (*dir_bc == 2)
+    {
+      amrex::ParallelFor(bx_xz_lo_2D,
+        [bct_jlo,dom_lo,minf,epg]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
+
+        if(bct == minf)
+          epg(i,j,k) = epg(i,dom_lo[1],k);
       });
     }
   }
@@ -223,7 +257,7 @@ mfix::set_epg_bcs (const int lev,
         epg(i,j,k) = p_bc_ep_g[bcv];
     });
 
-    if(*extrap_dir_bcs > 0)
+    if(*dir_bc == 1)
     {
 
       amrex::ParallelFor(bx_xz_hi_2D, 
@@ -233,6 +267,18 @@ mfix::set_epg_bcs (const int lev,
 
         if(bct == minf)
           epg(i,j,k) = 2*epg(i,j,k) - epg(i,j-1,k);
+      });
+    }
+    else if (*dir_bc == 2)
+    {
+      amrex::ParallelFor(bx_xz_hi_2D,
+        [bct_jhi,dom_hi,minf,epg]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
+
+        if(bct == minf)
+          epg(i,j,k) = epg(i,dom_hi[1],k);
       });
     }
   }
@@ -251,10 +297,10 @@ mfix::set_epg_bcs (const int lev,
         epg(i,j,k) = p_bc_ep_g[bcv];
     });
 
-    if(*extrap_dir_bcs > 0)
+    if(*dir_bc == 1)
     {
 
-      amrex::ParallelFor(bx_xy_lo_2D, 
+      amrex::ParallelFor(bx_xy_lo_2D,
         [bct_klo,dom_lo,minf,epg] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_klo(i,j,dom_lo[2]-1,0);
@@ -263,11 +309,23 @@ mfix::set_epg_bcs (const int lev,
           epg(i,j,k) = 2*epg(i,j,k) - epg(i,j,k+1);
       });
     }
+    else if (*dir_bc == 2)
+    {
+      amrex::ParallelFor(bx_xy_lo_2D,
+        [bct_klo,dom_lo,minf,epg]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const int bct = bct_klo(i,j,dom_lo[2]-1,0);
+
+        if(bct == minf)
+          epg(i,j,k) = epg(i,j,dom_lo[2]);
+      });
+    }
   }
 
   if (nup > 0)
   {
-    amrex::ParallelFor(bx_xy_hi_3D, 
+    amrex::ParallelFor(bx_xy_hi_3D,
       [bct_khi,dom_hi,minf,pinf,pout,p_bc_ep_g,epg] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
@@ -279,9 +337,9 @@ mfix::set_epg_bcs (const int lev,
         epg(i,j,k) = p_bc_ep_g[bcv];
     });
 
-    if(*extrap_dir_bcs > 0)
+    if(*dir_bc == 1)
     {
-      amrex::ParallelFor(bx_xy_hi_2D, 
+      amrex::ParallelFor(bx_xy_hi_2D,
         [bct_khi,dom_hi,minf,epg] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_khi(i,j,dom_hi[2]+1,0);
@@ -290,5 +348,18 @@ mfix::set_epg_bcs (const int lev,
           epg(i,j,k) = 2*epg(i,j,k) - epg(i,j,k-1);
       });
     }
+    else if (*dir_bc == 2)
+    {
+      amrex::ParallelFor(bx_xy_hi_2D,
+        [bct_khi,dom_hi,minf,epg]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const int bct = bct_khi(i,j,dom_hi[2]+1,0);
+
+        if(bct == minf)
+          epg(i,j,k) = epg(i,j,dom_hi[2]);
+      });
+    }
+
   }
 }

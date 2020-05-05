@@ -33,6 +33,7 @@
 #include <mfix_des_F.H>
 #include <mfix_eb_if.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_PIC_Parms.H>
 #include <MFIX_LevelData.H>
 
 
@@ -116,7 +117,7 @@ class mfix : public AmrCore
     template<class F>
     void build_particle_eb_levels (EB2::GeometryShop<F> gshop)
     {
-      if(DEM::solve)
+      if(DEM::solve or PIC::solve)
         for (int lev = 0; lev < nlev; lev ++)
           particle_eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom, 100, 0);
     }
@@ -159,7 +160,7 @@ class mfix : public AmrCore
 
     std::shared_ptr<UnionListIF<EB2::PlaneIF>> get_real_walls (bool & has_real_walls);
 
-    std::shared_ptr<EB2::TranslationIF<EB2::PolynomialIF>> 
+    std::shared_ptr<EB2::TranslationIF<EB2::PolynomialIF>>
       get_poly (int max_order, std::string field_prefix);
 
     std::shared_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
@@ -226,13 +227,20 @@ class mfix : public AmrCore
                                 Vector< MultiFab* > const& vel,
                                 int extrap_dir_bcs) const;
 
-    void mfix_set_epg_bcs (const Vector< MultiFab* >& ep_g) const;
+    void mfix_set_epg_bcs (const Vector< MultiFab* >& ep_g, const int dir_bc) const;
+
+    void mfix_set_enthalpy_bcs (Real time,
+                                Vector< MultiFab* > const& h_g);
+
+    void mfix_set_temperature_bcs (Real time,
+                                   Vector< MultiFab* > const& T_g);
 
     void mfix_set_density_bcs (Real time,
                                Vector< MultiFab* > const& ro_g);
 
     void mfix_set_scalar_bcs (Real time,
                               Vector< MultiFab* > const& trac,
+                              Vector< MultiFab* > const& cp_g,
                               Vector< MultiFab* > const& mu_g);
 
     void set_velocity_bcs (Real time,
@@ -245,6 +253,16 @@ class mfix : public AmrCore
                       FArrayBox& eps_fab,
                       const Box& domain,
                       const int* extrap_dir_bcs) const;
+
+    void set_enthalpy_bcs (Real time,
+                           const int lev,
+                           FArrayBox& scal_fab,
+                           const Box& domain);
+
+    void set_temperature_bcs (Real time,
+                              const int lev,
+                              FArrayBox& scal_fab,
+                              const Box& domain);
 
     void set_density_bcs (Real time,
                           const int lev,
@@ -301,14 +319,14 @@ class mfix : public AmrCore
     static amrex::Real m_max_solids_volume_fraction;
 
     // input parameter defaulted to 50 used in file src_des/init_collision.f90
-    static amrex::Real tcoll_ratio; 
+    static amrex::Real tcoll_ratio;
 
     template <typename F>
     void mfix_calc_particle_beta (F DragFunc, Real time);
 
     void mfix_calc_volume_fraction (Real & sum_vol);
 
-    void mfix_deposition_bcs_scalar (int lev, amrex::MultiFab & filled_mf);
+    void mfix_deposition_bcs (int lev, amrex::MultiFab & filled_mf);
 
     void mfix_redistribute_deposition (int lev,
                                        amrex::MultiFab & mf_eps,
@@ -406,6 +424,37 @@ class mfix : public AmrCore
     ////////////////////////////////////////////////////////////////////////////
 
     std::shared_ptr<NodalProjector> nodal_projector;
+
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  //
+  // PIC solids
+  //
+  ////////////////////////////////////////////////////////////////////////////
+
+  void EvolveParcels (
+                      int nstep,
+                      amrex::Real dt,
+                      amrex::Real time,
+                      amrex::RealVect& gravity,
+                      amrex::Vector<amrex::Geometry> geom,
+                      amrex::Vector< amrex::EBFArrayBoxFactory* > particle_ebfactory,
+                      amrex::Vector< amrex::MultiFab* >& level_sets,
+                      const int ls_refinement,
+                      amrex::Vector< amrex::MultiFab* >& cost,
+                      std::string& knapsack_weight_type
+                      );
+
+
+  void MFIX_CalcAvgSolidsProp (Vector< EBFArrayBoxFactory* > particle_ebfactory,
+                               Vector< MultiFab* >& avg_prop_in);
+
+  void MFIX_CalcSolidsStress (amrex::Vector< amrex::EBFArrayBoxFactory* > particle_ebfactory,
+                              amrex::Vector< amrex::MultiFab* >& ep_s_in,
+                              amrex::Vector< amrex::MultiFab* >& avg_prop_in);
+
+
 
   protected:
     //! Tagging cells for refinement
@@ -541,22 +590,25 @@ class mfix : public AmrCore
                                        Vector< MultiFab* > const& vel,
                                        Vector< MultiFab* > const& ep_g,
                                        Vector< MultiFab* > const& ro_g,
+                                       Vector< MultiFab* > const& T_g,
                                        Vector< MultiFab* > const& trac,
                                        Real time);
 
     int steady_state_reached (Real dt, int iter);
 
   public:
-    void mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
-                               Vector< MultiFab* >& conv_s_old,
-                               Vector< MultiFab* >& divtau_old,
-                               Vector< MultiFab* >&   laps_old,
+    void mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
+                               Vector< MultiFab* >&  conv_s_old,
+                               Vector< MultiFab* >&  divtau_old,
+                               Vector< MultiFab* >&    laps_old,
+                               Vector< MultiFab* >& laptemp_old,
                                Real time, Real dt, bool proj_2);
 
-    void mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
-                               Vector< MultiFab* >& conv_s_old,
-                               Vector< MultiFab* >& divtau_old,
-                               Vector< MultiFab* >&   laps_old,
+    void mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
+                               Vector< MultiFab* >&  conv_s_old,
+                               Vector< MultiFab* >&  divtau_old,
+                               Vector< MultiFab* >&    laps_old,
+                               Vector< MultiFab* >& laptemp_old,
                                Real time, Real dt, bool proj_2);
 
   private:
@@ -592,12 +644,17 @@ class mfix : public AmrCore
     amrex::Vector< std::unique_ptr<LevelData> > m_leveldata;
 
     amrex::Vector<amrex::MultiFab*> get_ep_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_h_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_h_g_old () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_T_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_T_g_old () noexcept;
     amrex::Vector<amrex::MultiFab*> get_ro_g () noexcept;
     amrex::Vector<amrex::MultiFab*> get_ro_g_old () noexcept;
     amrex::Vector<amrex::MultiFab*> get_trac () noexcept;
     amrex::Vector<amrex::MultiFab*> get_trac_old () noexcept;
     amrex::Vector<amrex::MultiFab*> get_vel_g () noexcept;
     amrex::Vector<amrex::MultiFab*> get_vel_g_old () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_cp_g () noexcept;
     amrex::Vector<amrex::MultiFab*> get_mu_g () noexcept;
     amrex::Vector<amrex::MultiFab*> get_drag () noexcept;
     amrex::Vector<amrex::MultiFab*> get_xslopes_u () noexcept;
@@ -623,8 +680,9 @@ class mfix : public AmrCore
 
     int steady_state = 0;
 
-    bool advect_density = false;
-    bool advect_tracer  = false;
+    bool advect_enthalpy = false;
+    bool advect_density  = false;
+    bool advect_tracer   = false;
 
     bool test_tracer_conservation  = false;
 
@@ -634,17 +692,17 @@ class mfix : public AmrCore
     // ***************************************************************
     // Nodal solve
     // ***************************************************************
-     
+
     // Verbosity and MLMG parameters are now ParmParse with "nodal_proj" in the
     // inputs file
     // Examples: nodal_proj.verbose = 1
-    //           nodal_proj.bottom_verbose = 1 
+    //           nodal_proj.bottom_verbose = 1
     //           nodal_proj.maxiter
     //           nodal_proj.bottom_maxiter
-    //           nodal_proj.bottom_rtol 
-    //           nodal_proj.bottom_atol 
-    //           nodal_proj.bottom_solver 
-    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_NodalProjector.cpp"   
+    //           nodal_proj.bottom_rtol
+    //           nodal_proj.bottom_atol
+    //           nodal_proj.bottom_solver
+    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_NodalProjector.cpp"
     // Verbosity
 
     // Control MLMG behavior
@@ -666,13 +724,13 @@ class mfix : public AmrCore
     // Verbosity and MLMG parameters are now ParmParse with "mac_proj" in the
     // inputs file
     // Examples: mac_proj.verbose = 1
-    //           mac_proj.bottom_verbose = 1 
+    //           mac_proj.bottom_verbose = 1
     //           mac_proj.maxiter
     //           mac_proj.bottom_maxiter
-    //           mac_proj.bottom_rtol 
-    //           mac_proj.bottom_atol 
-    //           mac_proj.bottom_solver 
-    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp" 
+    //           mac_proj.bottom_rtol
+    //           mac_proj.bottom_atol
+    //           mac_proj.bottom_solver
+    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp"
 
     // Control MLMG behavior
     Real mac_mg_rtol = 1.0e-11;
@@ -694,6 +752,9 @@ class mfix : public AmrCore
     int call_udf;
 
     bool dual_grid = false;
+
+    // If true then we are restarting from a file with no thermal variables
+    bool restart_from_cold_flow = false;
 
     // If true then print the name of the routine we are in
     bool ooo_debug = false;
@@ -751,7 +812,10 @@ class mfix : public AmrCore
     int plt_ep_g    = 1;
     int plt_p_g     = 0;
     int plt_ro_g    = 0;
+    int plt_h_g     = 0;
+    int plt_T_g     = 0;
     int plt_trac    = 0;
+    int plt_cp_g    = 0;
     int plt_mu_g    = 0;
     int plt_diveu   = 0;
     int plt_volfrac = 0;
@@ -764,7 +828,7 @@ class mfix : public AmrCore
     // Flags for saving particle data. By default, we have all flags on,
     // we turn off what we don't want in the init IO routine. This is somewhat
     // different from what we do with the fluid.
-    Vector<int> write_real_comp = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    Vector<int> write_real_comp = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
     Vector<int> write_int_comp = {1, 1};
 
     //
