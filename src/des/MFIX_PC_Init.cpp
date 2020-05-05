@@ -50,7 +50,8 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
     const int grid = 0;
     const int tile = 0;
 
-    auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
+    auto& particle_tile = DefineAndReturnParticleTile(lev,grid,tile);
+    //auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
 
     ParticleType p;
     int  pstate, pphase;
@@ -143,7 +144,8 @@ void MFIXParticleContainer::InitParticlesAuto ()
 
       // Now that we know pcount, go ahead and create a particle container for this
       // grid and add the particles to it
-      ParticleTileType& particles = GetParticles(lev)[std::make_pair(grid_id,tile_id)];
+      auto& particles = DefineAndReturnParticleTile(lev,mfi);
+      //ParticleTileType& particles = GetParticles(lev)[std::make_pair(grid_id,tile_id)];
 
       ParticleType p_new;
       for (int i = 0; i < pcount; i++) {
@@ -153,6 +155,11 @@ void MFIXParticleContainer::InitParticlesAuto ()
 
         // Add to the data structure
         particles.push_back(p_new);
+        if (DEM::nspecies_dem > 0){
+           for(int i=0; i < DEM::spec_frac_dem.size(); ++i){
+               particles.push_back_real(i, DEM::spec_frac_dem[i]);
+           }
+        }
       }
 
       const int np = pcount;
