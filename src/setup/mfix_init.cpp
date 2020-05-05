@@ -567,7 +567,7 @@ void mfix::InitLevelData (Real time)
     }
 
     // Used in load balancing
-    if (DEM::solve)
+    if (DEM::solve or PIC::solve)
     {
       for (int lev(0); lev < particle_cost.size(); lev++)
         if (particle_cost[lev] != nullptr)
@@ -677,7 +677,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 
             // This calls re-creates a proper particle_ebfactories
             //  and regrids all the multifabs that depend on it
-            if (DEM::solve)
+            if (DEM::solve or PIC::solve)
                 RegridLevelSetArray(lev);
 
           }
@@ -796,7 +796,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
           if ( is_restarting ) {
 
-            init_fluid_restart(bx, (*m_leveldata[lev]->T_g )[mfi], 
+            init_fluid_restart(bx, (*m_leveldata[lev]->T_g )[mfi],
                                    (*m_leveldata[lev]->cp_g)[mfi],
                                    (*m_leveldata[lev]->mu_g)[mfi]);
 
