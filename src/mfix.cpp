@@ -113,7 +113,8 @@ mfix::mfix ()
      ***************************************************************************/
 
     bcs_u.resize(3); // one for each velocity component
-    bcs_s.resize(2); // density and tracer
+    // This needs to be one bigger than the highest index scalar in mfix_set_scalar_bcs
+    bcs_s.resize(6); // density and tracer
     bcs_f.resize(1); // just one
 
     //___________________________________________________________________________

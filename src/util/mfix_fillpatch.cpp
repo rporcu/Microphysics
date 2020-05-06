@@ -97,7 +97,7 @@ void ScalarFillBox (Box const& bx,
     FArrayBox dest_fab(dest);
     Elixir eli_dest_fab = dest_fab.elixir();
 
-    mfix_for_fillpatching->set_scalar_bcs(time, lev, dest_fab, dcomp, domain);
+    mfix_for_fillpatching->set_scalar_bcs(time, lev, dest_fab, orig_comp, domain);
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
@@ -170,8 +170,8 @@ mfix::FillPatchScalar (int lev,
 
         CpuBndryFuncFab bfunc(ScalarFillBox);
         PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev], bcs, bfunc);
-        amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, 0, ncomp, 
-                                    geom[lev], physbc, 0);
+        amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, 0, ncomp,
+                                    geom[lev], physbc, icomp);
     }
     else
     {
@@ -189,7 +189,7 @@ mfix::FillPatchScalar (int lev,
         amrex::FillPatchTwoLevels(mf, time, cmf, ctime, fmf, ftime,
                                   0, 0, ncomp, geom[lev-1], geom[lev],
                                   cphysbc, 0, fphysbc, 0,
-                                  refRatio(lev-1), mapper, bcs, 0);
+                                  refRatio(lev-1), mapper, bcs, icomp);
     }
 }
 
@@ -237,7 +237,7 @@ mfix::GetDataScalar (int lev,
 
     const Real teps = (t_new[lev] - t_old[lev]) * 1.e-3;
 
-    if (icomp == 3) 
+    if (icomp == 3)
        data.push_back(m_leveldata[lev]->mu_g);
 
     if (time > t_new[lev] - teps && time < t_new[lev] + teps)
