@@ -132,8 +132,9 @@ mfix::InitParams ()
       amrex::Abort("No point in testing tracer conservation with advect_tracer"
           " = false");
 
-    if (advect_enthalpy && !advect_density)
-      amrex::Abort("Can't advect enthalpy without advecting density");
+    // At the moment, there is no relation between density and temperature
+    //if (advect_enthalpy && !advect_density)
+    //  amrex::Abort("Can't advect enthalpy without advecting density");
 
     if (advect_tracer && !advect_density)
       amrex::Abort("Can't advect tracer without advecting density");
