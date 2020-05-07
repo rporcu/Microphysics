@@ -19,10 +19,10 @@ mfix::InitParams ()
 {
   if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
 
-    // Read and process fluid and DEM particle model options.
-    FLUID::Initialize();
-    DEM::Initialize();
-    PIC::Initialize();
+  // Read and process fluid and DEM particle model options.
+  FLUID::Initialize();
+  DEM::Initialize();
+  PIC::Initialize();
 
   // Read in regions, initial and boundary conditions. Note that
   // regions need to be processed first as they define the
