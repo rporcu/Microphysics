@@ -97,7 +97,7 @@ void ScalarFillBox (Box const& bx,
     FArrayBox dest_fab(dest);
     Elixir eli_dest_fab = dest_fab.elixir();
 
-    mfix_for_fillpatching->set_scalar_bcs(time, lev, dest_fab, dcomp, domain);
+    mfix_for_fillpatching->set_scalar_bcs(time, lev, dest_fab, orig_comp, domain);
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
@@ -146,7 +146,7 @@ mfix::FillPatchVel (int lev,
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
 // works for single level and 2-level cases (fill fine grid ghost by interpolating from coarse)
-// NOTE: icomp here refers to whether we are filling 0: density, 1: tracer, 2: ep_g, 3: mu_g
+// NOTE: icomp here refers to whether we are filling 0: density, 1: tracer, 2: ep_g, 3: mu_g, 4: temperature
 void
 mfix::FillPatchScalar (int lev,
                        Real time,
@@ -170,8 +170,8 @@ mfix::FillPatchScalar (int lev,
 
         CpuBndryFuncFab bfunc(ScalarFillBox);
         PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev], bcs, bfunc);
-        amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, 0, ncomp, 
-                                    geom[lev], physbc, 0);
+        amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, 0, ncomp,
+                                    geom[lev], physbc, icomp);
     }
     else
     {
@@ -189,7 +189,7 @@ mfix::FillPatchScalar (int lev,
         amrex::FillPatchTwoLevels(mf, time, cmf, ctime, fmf, ftime,
                                   0, 0, ncomp, geom[lev-1], geom[lev],
                                   cphysbc, 0, fphysbc, 0,
-                                  refRatio(lev-1), mapper, bcs, 0);
+                                  refRatio(lev-1), mapper, bcs, icomp);
     }
 }
 
@@ -237,7 +237,7 @@ mfix::GetDataScalar (int lev,
 
     const Real teps = (t_new[lev] - t_old[lev]) * 1.e-3;
 
-    if (icomp == 3) 
+    if (icomp == 3)
        data.push_back(m_leveldata[lev]->mu_g);
 
     if (time > t_new[lev] - teps && time < t_new[lev] + teps)
@@ -248,6 +248,10 @@ mfix::GetDataScalar (int lev,
            data.push_back(m_leveldata[lev]->trac);
         } else if (icomp == 2) {
            data.push_back(m_leveldata[lev]->ep_g);
+        } else if (icomp == 4) {
+           data.push_back(m_leveldata[lev]->T_g);
+        } else if (icomp == 5) {
+           data.push_back(m_leveldata[lev]->h_g);
         }
         datatime.push_back(t_new[lev]);
     }
@@ -259,6 +263,10 @@ mfix::GetDataScalar (int lev,
            data.push_back(m_leveldata[lev]->trac_o);
         } else if (icomp == 2) {
            data.push_back(m_leveldata[lev]->ep_go);
+        } else if (icomp == 4) {
+           data.push_back(m_leveldata[lev]->T_g);
+        } else if (icomp == 5) {
+           data.push_back(m_leveldata[lev]->h_go);
         }
         datatime.push_back(t_old[lev]);
     }
@@ -273,6 +281,12 @@ mfix::GetDataScalar (int lev,
         } else if (icomp == 2) {
            data.push_back(m_leveldata[lev]->ep_go);
            data.push_back(m_leveldata[lev]->ep_g);
+        } else if (icomp == 4) {
+           data.push_back(m_leveldata[lev]->T_go);
+           data.push_back(m_leveldata[lev]->T_g);
+        } else if (icomp == 5) {
+           data.push_back(m_leveldata[lev]->h_go);
+           data.push_back(m_leveldata[lev]->h_g);
         }
         datatime.push_back(t_old[lev]);
         datatime.push_back(t_new[lev]);

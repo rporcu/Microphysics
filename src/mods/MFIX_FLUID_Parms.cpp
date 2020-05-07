@@ -10,6 +10,15 @@ namespace FLUID
 
   int solve;
 
+  // Specified constant gas temperature
+  amrex::Real T_g0 = 273.15; // TODO
+
+  // Specified constant gas specific heat
+  amrex::Real Cp_g0 = 1.0;
+
+  // Gas phase thermal conductivity coefficient
+  amrex::Real k_g0;
+
   // Specified constant gas density
   amrex::Real ro_g0;
 
@@ -57,15 +66,19 @@ namespace FLUID
       std::string density_model;
       ppFluid.get("density", density_model );
 
-      if (density_model == "constant") {
-
+      if (density_model == "constant")
+      {
         //DENSITYMODEL DensityModel = ConstantDensity;
         ppFluid.get("density.constant",   ro_g0 );
-
-      } else {
-
+      }
+      else if(density_model == "idealgas")
+      {
+        //DENSITYMODEL DensityModel = IdealGas;
+        amrex::Abort("Not yet implemented.");
+      }
+      else
+      {
         amrex::Abort("Unknown fluid density model!");
-
       }
 
 
@@ -73,23 +86,63 @@ namespace FLUID
       std::string viscosity_model;
       ppFluid.get("viscosity", viscosity_model );
 
-      if (density_model == "constant") {
-
+      if (viscosity_model == "constant")
+      {
         //VISCOSITYMODEL ViscosityModel = ConstantViscosity;
         ppFluid.get("viscosity.constant", mu_g0 );
-
-
-      } else {
-
+      }
+      else if (viscosity_model == "sutherland")
+      {
+        //VISCOSITYMODEL ViscosityModel = Sutherland;
+        amrex::Abort("Not yet implemented.");
+        // TODO: get const, tg_ref, mu_ref
+      }
+      else
+      {
         amrex::Abort("Unknown fluid viscosity model!");
-
       }
 
+
+      // Get specific heat inputs ------------------------------------//
+      std::string specific_heat_model;
+      ppFluid.get("specific_heat", specific_heat_model );
+
+      if (specific_heat_model == "constant")
+      {
+        //SPECIFICHEATMODEL SpecificHeatModel = ConstantSpecificHeat;
+        // If this value is not set in the inputs file, the default is 1.0
+        ppFluid.query("specific_heat.constant",   Cp_g0 );
+      }
+      else if (specific_heat_model == "nasa9-poly")
+      {
+        //SPECIFICHEATMODEL SpecificHeatModel = NASA9_Polynomial;
+        amrex::Abort("Not yet implemented.");
+        // TODO: get Tlow, Thigh, coefficients
+      }
+      else 
+      {
+        amrex::Abort("Unknown fluid specific heat model!");
+      }
+
+      // Get specific heat inputs ------------------------------------//
+      std::string thermal_conductivity_model;
+      ppFluid.get("thermal_conductivity", thermal_conductivity_model );
+
+      if (thermal_conductivity_model == "constant")
+      {
+        //THERMALCONDUCTIVITYMODEL ThermalConductivityModel = ConstantThermalConductivity;
+        ppFluid.get("thermal_conductivity.constant", k_g0 );
+      }
+      else 
+      {
+        amrex::Abort("Unknown fluid thermal conductivity model!");
+      }
+
+
+      pp.query("T_g0",  T_g0 );
       pp.query("trac0",  trac_0 );
       pp.query("mw_avg", mw_avg );
 
     }
-
   }
-
 }

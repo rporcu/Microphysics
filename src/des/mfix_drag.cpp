@@ -1,12 +1,14 @@
 #include <mfix.H>
 #include <mfix_des_K.H>
-#include <mfix_drag_K.H>
+#include <mfix_interp_K.H>
+#include <mfix_eb_interp_K.H>
 #include <MFIX_FilCC.H>
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_FillPatchUtil.H>
 #include <MFIX_MFHelpers.H>
+#include <MFIX_DEM_Parms.H>
 
 void
 mfix::mfix_calc_drag_fluid (Real time)
@@ -66,8 +68,8 @@ mfix::mfix_calc_drag_fluid (Real time)
   }
 
   const Geometry& gm = Geom(0);
-  const FabArray<EBCellFlagFab>* flags;
-  const MultiFab* volfrac;
+  const FabArray<EBCellFlagFab>* flags = nullptr;
+  const MultiFab* volfrac = nullptr;
 
   Vector< MultiFab* > tmp_eps(nlev);
 
@@ -97,33 +99,44 @@ mfix::mfix_calc_drag_fluid (Real time)
       delete crse_factory;
     }
 
-
+    // Deposit the drag force to the grid (beta and beta*particle_vel)
     pc->FluidDragForceDeposition(lev, *tmp_eps[lev], *drag_ptr[lev], volfrac, flags);
   }
 
-  // Move any volume deposited outside the domain back into the domain
-  // when BC is either a pressure inlet or mass inflow.
-  // for (int lev = 0; lev < nlev; lev++)
-  //   mfix_deposition_bcs_scalar(lev, *drag_ptr[lev]);
-
-  // Sum grid boundaries then clear the ghost cell values.
-  drag_ptr[0]->SumBoundary(gm.periodicity());
-  drag_ptr[0]->setBndry(0.0);
-
-  // Move excessive solids volume from small cells to neighboring cells. A copy
-  // of the deposition field is made so that when an average is calc
-  for (int lev(0); lev < nlev; ++lev )
   {
+
+    // The deposition occurred on level 0, thus the next few operations
+    // only need to be carried out on level 0.
+    int lev(0);
+
+    // Move any volume deposited outside the domain back into the domain
+    // when BC is either a pressure inlet or mass inflow.
+    mfix_deposition_bcs(lev, *drag_ptr[lev]);
+
+    // Sum grid boundaries to capture any material that was deposited into
+    // your grid from an adjacent grid.
+    drag_ptr[lev]->SumBoundary(gm.periodicity());
+    drag_ptr[lev]->setBndry(0.0);
+
+    // Sum grid boundaries then fill with correct ghost values.
+    tmp_eps[lev]->SumBoundary(gm.periodicity());
+    tmp_eps[lev]->FillBoundary(gm.periodicity());
+
+    // Move excessive solids volume from small cells to neighboring cells.
+    // Note that we don't change tmp_eps but use the redistribution of
+    // particle volume to determine how to redistribute the drag forces.
     mfix_redistribute_deposition(lev, *tmp_eps[lev], *drag_ptr[lev], volfrac, flags,
                                  mfix::m_max_solids_volume_fraction);
+
+    // Sum the boundaries again to recapture any solids moved across
+    // grid boundaries during the redistribute
+    drag_ptr[lev]->SumBoundary(gm.periodicity());
+    drag_ptr[lev]->FillBoundary(gm.periodicity());
   }
 
+  // This might not need to exist on all levels. Maybe only level 0.
   for (int lev(0); lev < nlev; ++lev)
     delete tmp_eps[lev];
-
-  // Sum the boundaries again to recapture any solids moved across
-  // grid boundaries during the redistribute
-  drag_ptr[0]->SumBoundary(gm.periodicity());
 
   int  src_nghost = 1;
   int dest_nghost = 0;
@@ -231,50 +244,79 @@ mfix::mfix_calc_drag_particle (Real time)
     bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                          (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
-    // Pointers to Multifabs of interest
-    MultiFab*  gp_ptr;
-    MultiFab* vel_ptr;
+    // Pointer to Multifab for interpolation
+    MultiFab* interp_ptr;
 
     // This is just a sanity check to make sure we're not using covered values
     // We can remove these lines once we're confident in the algorithm
     EB_set_covered(*m_leveldata[0]->vel_g, 0, 3, 1, covered_val);
     EB_set_covered( gp_tmp  , 0, 3, 1, covered_val);
 
+    const int interp_ng = 1;    // Only one layer needed for interpolation
+    const int interp_comp = 6;  // Four components (3 vel_g + 3 gp)
+
     if (OnSameGrids)
     {
-      gp_ptr  = &gp_tmp;
-      vel_ptr = m_leveldata[lev]->vel_g;
+      // Store gas velocity and volume fraction for interpolation
+      interp_ptr = new MultiFab(grids[lev], dmap[lev], interp_comp, interp_ng, MFInfo(), *ebfactory[lev]);
+
+      // Copy fluid velocity
+      interp_ptr->copy(*m_leveldata[lev]->vel_g, 0, 0,
+                        m_leveldata[lev]->vel_g->nComp(),
+                        m_leveldata[lev]->vel_g->nGrow(),
+                        interp_ng);
+
+      // Copy volume fraction
+      interp_ptr->copy(gp_tmp,  0, 3,
+                       gp_tmp.nComp(),
+                       gp_tmp.nGrow(),
+                       interp_ng);
+
+      interp_ptr->FillBoundary(geom[lev].periodicity());
+
     }
     else
     {
       const BoxArray&            pba = pc->ParticleBoxArray(lev);
       const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
-      int ng = gp_tmp.nGrow();
-      gp_ptr = new MultiFab(pba, pdm, gp_tmp.nComp(), ng);
-      gp_ptr->copy(gp_tmp, 0, 0, gp_tmp.nComp(), ng, ng);
-      gp_ptr->FillBoundary(geom[lev].periodicity());
-
       EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
                                        {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                                       EBSupport::basic);
+                                       EBSupport::full);
 
-      ng = m_leveldata[lev]->vel_g->nGrow();
 
-      vel_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->vel_g->nComp(), ng, MFInfo(), ebfactory_loc);
-      vel_ptr->copy(*m_leveldata[lev]->vel_g, 0, 0, m_leveldata[lev]->vel_g->nComp(), ng, ng);
-      vel_ptr->FillBoundary(geom[lev].periodicity());
+      // Store gas velocity and volume fraction for interpolation
+      interp_ptr = new MultiFab(pba, pdm, interp_comp, interp_ng, MFInfo(), ebfactory_loc);
+
+      // Copy fluid velocity
+      interp_ptr->copy(*m_leveldata[lev]->vel_g, 0, 0,
+                        m_leveldata[lev]->vel_g->nComp(),
+                        m_leveldata[lev]->vel_g->nGrow(),
+                        interp_ng);
+
+      // Copy pressure gradient
+      interp_ptr->copy(gp_tmp,  0, 3, gp_tmp.nComp(), gp_tmp.nGrow(), interp_ng);
+
+      interp_ptr->FillBoundary(geom[lev].periodicity());
     }
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
     {
+      const auto dx_array  = geom[lev].CellSizeArray();
       const auto dxi_array = geom[lev].InvCellSizeArray();
       const auto plo_array = geom[lev].ProbLoArray();
 
+      const amrex::RealVect  dx( dx_array[0],  dx_array[1],  dx_array[2]);
       const amrex::RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
       const amrex::RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
+
+      const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(interp_ptr->Factory());
+
+      const auto cellcent = &(factory.getCentroid());
+      const auto bndrycent = &(factory.getBndryCent());
+      const auto areafrac = factory.getAreaFrac();
 
       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
       {
@@ -286,199 +328,134 @@ mfix::mfix_calc_drag_particle (Real time)
         Box bx = pti.tilebox ();
 
         // This is to check efficiently if this tile contains any eb stuff
-        const EBFArrayBox&  vel_fab = static_cast<EBFArrayBox const&>((*vel_ptr)[pti]);
-        const EBCellFlagFab&  flags = vel_fab.getEBCellFlagFab();
+        const EBFArrayBox&  interp_fab = static_cast<EBFArrayBox const&>((*interp_ptr)[pti]);
+        const EBCellFlagFab&  flags = interp_fab.getEBCellFlagFab();
 
         if (flags.getType(amrex::grow(bx,0)) != FabType::covered)
         {
-          const auto& vel_array = vel_ptr->array(pti);
-          const auto&  gp_array =  gp_ptr->array(pti);
+          const auto& interp_array = interp_ptr->array(pti);
 
           const auto& flags_array = flags.array();
 
           // We need this until we remove static attribute from mfix::gp0;
           const RealVect gp0_dev(gp0);
 
+          const amrex::Real pmult = DEM::solve ? 1.0 : 0.0;
+
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
             amrex::ParallelFor(np,
-              [pstruct,vel_array,gp_array,gp0_dev,plo,dxi]
-              AMREX_GPU_DEVICE (int ip) noexcept
+              [pstruct,interp_array,interp_comp,gp0_dev,plo,dxi,pmult]
+              AMREX_GPU_DEVICE (int pid) noexcept
               {
-                amrex::Real velfp[3];
-                amrex::Real gradp[3];
+                // Local array storing interpolated values
+                amrex::Real interp_loc[interp_comp];
 
-                MFIXParticleContainer::ParticleType& particle = pstruct[ip];
+                MFIXParticleContainer::ParticleType& particle = pstruct[pid];
 
-                trilinear_interp(particle.pos(), &velfp[0], vel_array, plo, dxi);
-                trilinear_interp(particle.pos(), &gradp[0],  gp_array, plo, dxi);
+                trilinear_interp(particle.pos(), &interp_loc[0],
+                                 interp_array, plo, dxi, interp_comp);
 
-                Real pbeta = particle.rdata(realData::dragx);
+                Real pbeta = particle.rdata(realData::dragcoeff);
 
-                // Particle drag calculation
+                // Particle drag calculation.  We multiply the particle velocity
+                // by "pmult" so that DEM uses the slip velocity. For PIC we
+                // only want the fluid velocity as it uses a pseudo implicit
+                // slip velocity for parcels.
                 particle.rdata(realData::dragx) =
-                  pbeta * ( velfp[0] - particle.rdata(realData::velx) ) -
-                  (gradp[0] + gp0_dev[0]) * particle.rdata(realData::volume);
+                  pbeta * ( interp_loc[0] - pmult*particle.rdata(realData::velx) ) -
+                  (interp_loc[3] + gp0_dev[0]) * particle.rdata(realData::volume);
 
                 particle.rdata(realData::dragy) =
-                  pbeta * ( velfp[1] - particle.rdata(realData::vely) ) -
-                  (gradp[1] + gp0_dev[1]) * particle.rdata(realData::volume);
+                  pbeta * ( interp_loc[1] - pmult*particle.rdata(realData::vely) ) -
+                  (interp_loc[4] + gp0_dev[1]) * particle.rdata(realData::volume);
 
                 particle.rdata(realData::dragz) =
-                  pbeta * ( velfp[2] - particle.rdata(realData::velz) ) -
-                  (gradp[2] + gp0_dev[2]) * particle.rdata(realData::volume);
+                  pbeta * ( interp_loc[2] - pmult*particle.rdata(realData::velz) ) -
+                  (interp_loc[5] + gp0_dev[2]) * particle.rdata(realData::volume);
               });
           }
           else // FAB not all regular
           {
-            // phi is always on the particles grid -- we do not use the refined level here
-            const MultiFab & phi = * level_sets[lev];
-            const auto& phi_array = phi.array(pti);
+
+            // Cell centroids
+            const auto& ccent_fab = cellcent->array(pti);
+            // Centroid of EB
+            const auto& bcent_fab = bndrycent->array(pti);
+            // Area fractions
+            const auto& apx_fab = areafrac[0]->array(pti);
+            const auto& apy_fab = areafrac[1]->array(pti);
+            const auto& apz_fab = areafrac[2]->array(pti);
 
             amrex::ParallelFor(np,
-              [pstruct,vel_array,phi_array,gp_array,flags_array,gp0_dev,plo,dxi]
-              AMREX_GPU_DEVICE (int ip) noexcept
+              [pstruct,interp_array,interp_comp,flags_array,gp0_dev, pmult,
+              plo,dx,dxi,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab]
+              AMREX_GPU_DEVICE (int pid) noexcept
               {
-                amrex::Real velfp[3];
-                amrex::Real gradp[3];
+                // Local array storing interpolated values
+                amrex::Real interp_loc[interp_comp];
 
-                MFIXParticleContainer::ParticleType& particle = pstruct[ip];
-                Real pbeta = particle.rdata(realData::dragx);
+                MFIXParticleContainer::ParticleType& particle = pstruct[pid];
+                Real pbeta = particle.rdata(realData::dragcoeff);
 
-                // This identifies which cell the particle is in
-                int iloc = floor((particle.pos(0) - plo[0])*dxi[0]);
-                int jloc = floor((particle.pos(1) - plo[1])*dxi[1]);
-                int kloc = floor((particle.pos(2) - plo[2])*dxi[2]);
+                // Cell containing particle centroid
+                const int ip = floor((particle.pos(0) - plo[0])*dxi[0]);
+                const int jp = floor((particle.pos(1) - plo[1])*dxi[1]);
+                const int kp = floor((particle.pos(2) - plo[2])*dxi[2]);
 
-                // Pick upper cell in the stencil
-                Real lx = (particle.pos(0) - plo[0])*dxi[0] + 0.5;
-                Real ly = (particle.pos(1) - plo[1])*dxi[1] + 0.5;
-                Real lz = (particle.pos(2) - plo[2])*dxi[2] + 0.5;
-
-                int i = std::floor(lx);
-                int j = std::floor(ly);
-                int k = std::floor(lz);
-
-                // Covered cell
-                if (flags_array(iloc,jloc,kloc).isCovered())
+                // The particle is in a covered cell.
+                if (flags_array(ip,jp,kp).isCovered())
                 {
                   particle.rdata(realData::dragx) = 0.0;
                   particle.rdata(realData::dragy) = 0.0;
                   particle.rdata(realData::dragz) = 0.0;
-                }
-                else
-                {
-                  // Cut or regular cell and none of the cells in the stencil is covered
-                  // (Note we can't assume regular cell has no covered cells in the stencil
-                  //      because of the diagonal case)
-                  if (not flags_array(i-1,j-1,k-1).isCovered() and
-                      not flags_array(i  ,j-1,k-1).isCovered() and
-                      not flags_array(i-1,j  ,k-1).isCovered() and
-                      not flags_array(i  ,j  ,k-1).isCovered() and
-                      not flags_array(i-1,j-1,k  ).isCovered() and
-                      not flags_array(i  ,j-1,k  ).isCovered() and
-                      not flags_array(i-1,j  ,k  ).isCovered() and
-                      not flags_array(i  ,j  ,k  ).isCovered())
-                  {
-                    trilinear_interp(particle.pos(), &velfp[0], vel_array, plo, dxi);
-                    trilinear_interp(particle.pos(), &gradp[0],  gp_array, plo, dxi);
-                  }
-                  // At least one of the cells in the stencil is covered
-                  else
-                  {
-                    // Particle position must be in [-.5:.5] is relative to cell
-                    // center and scaled by dx
-                    Real gx = particle.pos(0)*dxi[0] - (iloc + 0.5);
-                    Real gy = particle.pos(1)*dxi[1] - (jloc + 0.5);
-                    Real gz = particle.pos(2)*dxi[2] - (kloc + 0.5);
 
-                    int ii(0);
-                    int jj(0);
-                    int kk(0);
+                // Cut or regular cell and none of the cells in the stencil is covered
+                // (Note we can't assume regular cell has no covered cells in the stencil
+                //      because of the diagonal case)
+                } else {
 
-                    if (not flags_array(iloc-1, jloc, kloc).isCovered())
-                    {
-                      ii = iloc - 1;
-                    }
-                    else
-                    {
-                      ii = iloc + 1;
-                      gx = -gx;
-                    }
+                  // Upper cell in trilinear stencil
+                  const int i = std::floor((particle.pos(0) - plo[0])*dxi[0] + 0.5);
+                  const int j = std::floor((particle.pos(1) - plo[1])*dxi[1] + 0.5);
+                  const int k = std::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5);
 
-                    if (not flags_array(iloc, jloc-1, kloc).isCovered() and
-                        not flags_array(ii  , jloc-1, kloc).isCovered())
-                    {
-                      jj = jloc - 1;
-                    }
-                    else
-                    {
-                      jj = jloc + 1;
-                      gy = -gy;
-                    }
+                  // All cells in the stencil are regular. Use
+                  // traditional trilinear interpolation
+                  if (flags_array(i-1,j-1,k-1).isRegular() and
+                      flags_array(i  ,j-1,k-1).isRegular() and
+                      flags_array(i-1,j  ,k-1).isRegular() and
+                      flags_array(i  ,j  ,k-1).isRegular() and
+                      flags_array(i-1,j-1,k  ).isRegular() and
+                      flags_array(i  ,j-1,k  ).isRegular() and
+                      flags_array(i-1,j  ,k  ).isRegular() and
+                      flags_array(i  ,j  ,k  ).isRegular()) {
 
-                    if (not flags_array(iloc, jloc, kloc-1).isCovered() and
-                        not flags_array(ii  , jloc, kloc-1).isCovered() and
-                        not flags_array(iloc, jj  , kloc-1).isCovered() and
-                        not flags_array(ii  , jj  , kloc-1).isCovered())
-                    {
-                      kk = kloc - 1;
-                    }
-                    else
-                    {
-                      kk = kloc + 1;
-                      gz = -gz;
-                    }
+                    trilinear_interp(particle.pos(), &interp_loc[0],
+                                     interp_array, plo, dxi, interp_comp);
 
-                    Real gxy = gx*gy;
-                    Real gxz = gx*gz;
-                    Real gyz = gy*gz;
-                    Real gxyz = gx*gy*gz;
+                  // At least one of the cells in the stencil is cut or covered
+                  } else {
 
-                    for (int n = 0; n < 3; n++)
-                    {
-                      velfp[n] =
-                          (1.0+gx+gy+gz+gxy+gxz+gyz+gxyz) * vel_array(iloc,jloc,kloc,n)
-                        + (-gz - gxz - gyz - gxyz)        * vel_array(iloc,jloc,kk  ,n)
-                        + (-gy - gxy - gyz - gxyz)        * vel_array(iloc,jj  ,kloc,n)
-                        + (gyz + gxyz)                    * vel_array(iloc,jj  ,kk  ,n)
-                        + (-gx - gxy - gxz - gxyz)        * vel_array(ii  ,jloc,kloc,n)
-                        + (gxz + gxyz)                    * vel_array(ii  ,jloc,kk  ,n)
-                        + (gxy + gxyz)                    * vel_array(ii  ,jj  ,kloc,n)
-                        + (-gxyz)                         * vel_array(ii  ,jj  ,kk  ,n);
-                      gradp[n] =
-                          (1.0+gx+gy+gz+gxy+gxz+gyz+gxyz) *  gp_array(iloc,jloc,kloc,n)
-                        + (-gz - gxz - gyz - gxyz)        *  gp_array(iloc,jloc,kk  ,n)
-                        + (-gy - gxy - gyz - gxyz)        *  gp_array(iloc,jj  ,kloc,n)
-                        + (gyz + gxyz)                    *  gp_array(iloc,jj  ,kk  ,n)
-                        + (-gx - gxy - gxz - gxyz)        *  gp_array(ii  ,jloc,kloc,n)
-                        + (gxz + gxyz)                    *  gp_array(ii  ,jloc,kk  ,n)
-                        + (gxy + gxyz)                    *  gp_array(ii  ,jj  ,kloc,n)
-                        + (-gxyz)                         *  gp_array(ii  ,jj  ,kk  ,n);
+                  const int scomp = 3;
+                  fe_interp(particle.pos(), ip, jp, kp, dx, dxi,
+                            flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                            interp_array, &interp_loc[0], interp_comp, scomp);
 
-                      // Keep the interpolated velocity between the cell value
-                      // and the wall value (0)
-                      if ( (velfp[n] > 0.0 and velfp[n] > vel_array(iloc,jloc,kloc,n)) or
-                           (velfp[n] < 0.0 and velfp[n] < vel_array(iloc,jloc,kloc,n)) )
-                        velfp[n] = vel_array(iloc,jloc,kloc,n);
 
-                      if ( (gradp[n] > 0.0 and gradp[n] > gp_array(iloc,jloc,kloc,n)) or
-                           (gradp[n] < 0.0 and gradp[n] < gp_array(iloc,jloc,kloc,n)) )
-                        gradp[n] = gp_array(iloc,jloc,kloc,n);
-                    }
                   } // Cut cell
 
                   particle.rdata(realData::dragx) =
-                    pbeta * ( velfp[0] - particle.rdata(realData::velx) ) -
-                    (gradp[0] + gp0_dev[0]) * particle.rdata(realData::volume);
+                    pbeta * ( interp_loc[0] - pmult*particle.rdata(realData::velx) ) -
+                    (interp_loc[3] + gp0_dev[0]) * particle.rdata(realData::volume);
 
                   particle.rdata(realData::dragy) =
-                    pbeta * ( velfp[1] - particle.rdata(realData::vely) ) -
-                    (gradp[1] + gp0_dev[1]) * particle.rdata(realData::volume);
+                    pbeta * ( interp_loc[1] - pmult*particle.rdata(realData::vely) ) -
+                    (interp_loc[4] + gp0_dev[1]) * particle.rdata(realData::volume);
 
                   particle.rdata(realData::dragz) =
-                    pbeta * ( velfp[2] - particle.rdata(realData::velz) ) -
-                    (gradp[2] + gp0_dev[2]) * particle.rdata(realData::volume);
+                    pbeta * ( interp_loc[2] - pmult*particle.rdata(realData::velz) ) -
+                    (interp_loc[5] + gp0_dev[2]) * particle.rdata(realData::volume);
 
                 } // Not covered
               }); // particle loop
@@ -487,10 +464,8 @@ mfix::mfix_calc_drag_particle (Real time)
       } // pti
     } // omp region
 
-    if (not OnSameGrids) {
-      delete gp_ptr;
-      delete vel_ptr;
-    }
+    delete interp_ptr;
+
   } // lev
 
   // Reset velocity Dirichlet bc's to face values
