@@ -44,6 +44,8 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
         Gpu::HostVector<ParticleType> host_particles(np);
         Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
 
+        Gpu::HostVector<ParticleType> replicated_particles;
+
         for (const auto& p: host_particles)
         {
            //
@@ -85,13 +87,18 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                     p_rep.cpu() = ParallelDescriptor::MyProc();
 
                     // Add everything to the data structure
-                    particles.push_back(p_rep);
+                    replicated_particles.push_back(p_rep);
 
                    } // not copying itself
                  } // i
               } // j
            } // k
         } // p
+
+        auto new_np = np + replicated_particles.size();
+        particles.resize(new_np);
+        Gpu::copy(Gpu::hostToDevice, replicated_particles.begin(), replicated_particles.end(),
+                  particles.begin() + np);
     } // pti
 
     Redistribute();
