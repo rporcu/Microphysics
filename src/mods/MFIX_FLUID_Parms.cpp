@@ -103,39 +103,43 @@ namespace FLUID
       }
 
 
-      // Get specific heat inputs ------------------------------------//
-      std::string specific_heat_model;
-      ppFluid.query("specific_heat", specific_heat_model );
+      if (ppFluid.contains("specific_heat")) {
+        // Get specific heat inputs ------------------------------------//
+        std::string specific_heat_model;
+        ppFluid.query("specific_heat", specific_heat_model );
 
-      if (specific_heat_model == "constant")
-      {
-        //SPECIFICHEATMODEL SpecificHeatModel = ConstantSpecificHeat;
-        // If this value is not set in the inputs file, the default is 1.0
-        ppFluid.get("specific_heat.constant",   Cp_g0 );
-      }
-      else if (specific_heat_model == "nasa9-poly")
-      {
-        //SPECIFICHEATMODEL SpecificHeatModel = NASA9_Polynomial;
-        amrex::Abort("Not yet implemented.");
-        // TODO: get Tlow, Thigh, coefficients
-      }
-      else 
-      {
-        amrex::Abort("Unknown fluid specific heat model!");
+        if (specific_heat_model == "constant")
+        {
+          //SPECIFICHEATMODEL SpecificHeatModel = ConstantSpecificHeat;
+          // If this value is not set in the inputs file, the default is 1.0
+          ppFluid.get("specific_heat.constant",   Cp_g0 );
+        }
+        else if (specific_heat_model == "nasa9-poly")
+        {
+          //SPECIFICHEATMODEL SpecificHeatModel = NASA9_Polynomial;
+          amrex::Abort("Not yet implemented.");
+          // TODO: get Tlow, Thigh, coefficients
+        }
+        else 
+        {
+          amrex::Abort("Unknown fluid specific heat model!");
+        }
       }
 
-      // Get specific heat inputs ------------------------------------//
-      std::string thermal_conductivity_model;
-      ppFluid.query("thermal_conductivity", thermal_conductivity_model );
+      if (ppFluid.contains("thermal_conductivity")) {
+        // Get specific heat inputs ------------------------------------//
+        std::string thermal_conductivity_model;
+        ppFluid.query("thermal_conductivity", thermal_conductivity_model );
 
-      if (thermal_conductivity_model == "constant")
-      {
-        //THERMALCONDUCTIVITYMODEL ThermalConductivityModel = ConstantThermalConductivity;
-        ppFluid.get("thermal_conductivity.constant", k_g0 );
-      }
-      else 
-      {
-        amrex::Abort("Unknown fluid thermal conductivity model!");
+        if (thermal_conductivity_model == "constant")
+        {
+          //THERMALCONDUCTIVITYMODEL ThermalConductivityModel = ConstantThermalConductivity;
+          ppFluid.get("thermal_conductivity.constant", k_g0 );
+        }
+        else 
+        {
+          amrex::Abort("Unknown fluid thermal conductivity model!");
+        }
       }
 
 
