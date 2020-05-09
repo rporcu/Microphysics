@@ -30,10 +30,13 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
 {
     int lev = 0;
 
-    Vector<Real> orig_domain_size;
-    orig_domain_size.resize(BL_SPACEDIM);
+    RealVect orig_domain_size;
+    
     for (int d = 0; d < BL_SPACEDIM; d++)
-        orig_domain_size[d] = (geom.ProbHi(d) - geom.ProbLo(d)) / Nrep[d];
+      orig_domain_size[d] = (geom.ProbHi(d) - geom.ProbLo(d)) / Nrep[d];
+
+    const int next_id = ParticleType::NextID();
+    const int my_proc = ParallelDescriptor::MyProc();
 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
@@ -48,9 +51,6 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
         particles.resize(new_np);
 
         ParticleType* pstruct = particles().dataPtr();
-
-        const int next_id = ParticleType::NextID();
-        const int my_proc = ParallelDescriptor::MyProc();
 
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE (int n) noexcept
         {
@@ -72,9 +72,9 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                 {
                   ParticleType& p_rep = pstruct[index_repl + counter];
 
-                  p_rep.m_rdata.pos[0] = p.m_rdata.pos[0] + i * orig_domain_size[0];
-                  p_rep.m_rdata.pos[1] = p.m_rdata.pos[1] + j * orig_domain_size[1];
-                  p_rep.m_rdata.pos[2] = p.m_rdata.pos[2] + k * orig_domain_size[2];
+                  p_rep.pos(0) = p.pos(0) + i * orig_domain_size[0];
+                  p_rep.pos(1) = p.pos(1) + j * orig_domain_size[1];
+                  p_rep.pos(2) = p.pos(2) + k * orig_domain_size[2];
 
                   p_rep.rdata(realData::velx)   = p.rdata(realData::velx);
                   p_rep.rdata(realData::vely)   = p.rdata(realData::vely);
