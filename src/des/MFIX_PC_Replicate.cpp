@@ -57,7 +57,7 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
           int index = n;
           int index_repl = np + n * (Nrep[0]*Nrep[1]*Nrep[2] - 1);
 
-          ParticleType& p = pstruct[index];
+          ParticleType p = pstruct[index];
 
           int counter = 0;
 
