@@ -35,36 +35,35 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
     for (int d = 0; d < BL_SPACEDIM; d++)
         orig_domain_size[d] = (geom.ProbHi(d) - geom.ProbLo(d)) / Nrep[d];
 
-    ParticleType p_rep;
-
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+    for (int idim = 0; idim < 3; ++idim)
     {
-        auto& particles = pti.GetArrayOfStructs();
-        int np = pti.numParticles();
-        Gpu::HostVector<ParticleType> host_particles(np);
-        Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
-
-        Gpu::HostVector<ParticleType> replicated_particles;
-
-        for (const auto& p: host_particles)
+        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
-           //
-           // Shift the position.
-           //
-           for (int k = 0; k < Nrep[2]; k++) {
-               for (int j = 0; j < Nrep[1]; j++) {
-                 for (int i = 0; i < Nrep[0]; i++) {
+            auto& particles = pti.GetArrayOfStructs();
+            int np = pti.numParticles();
+            Gpu::HostVector<ParticleType> host_particles(np);
+            Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
 
-                   if ( !(i == 0 && j == 0 && k == 0) )
-                   {
-                    p_rep.m_rdata.pos[0] = p.m_rdata.pos[0] + i * orig_domain_size[0];
-                    p_rep.m_rdata.pos[1] = p.m_rdata.pos[1] + j * orig_domain_size[1];
-                    p_rep.m_rdata.pos[2] = p.m_rdata.pos[2] + k * orig_domain_size[2];
+            Gpu::HostVector<ParticleType> replicated_particles;
 
+            for (int i = 0; i < Nrep[idim]; i++)
+            {
+                if (i == 0) continue; // skip the first copy in each direction
+
+                RealVect shift = {0., 0., 0.};
+                shift[idim] = i * orig_domain_size[idim];
+
+                ParticleType p_rep;
+                for (const auto& p: host_particles)
+                {
+                    p_rep.m_rdata.pos[0] = p.m_rdata.pos[0] + shift[0];
+                    p_rep.m_rdata.pos[1] = p.m_rdata.pos[1] + shift[1];
+                    p_rep.m_rdata.pos[2] = p.m_rdata.pos[2] + shift[2];
+                
                     p_rep.rdata(realData::velx)   = p.rdata(realData::velx);
                     p_rep.rdata(realData::vely)   = p.rdata(realData::vely);
                     p_rep.rdata(realData::velz)   = p.rdata(realData::velz);
-
+                
                     // Set other particle properties
                     p_rep.idata(intData::phase)       = p.idata(intData::phase);
                     p_rep.idata(intData::state)       = p.idata(intData::state);
@@ -81,25 +80,24 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                     p_rep.rdata(realData::dragx)      = p.rdata(realData::dragx);
                     p_rep.rdata(realData::dragy)      = p.rdata(realData::dragy);
                     p_rep.rdata(realData::dragz)      = p.rdata(realData::dragz);
-
+                
                     // Set id and cpu for this particle
                     p_rep.id()  = ParticleType::NextID();
                     p_rep.cpu() = ParallelDescriptor::MyProc();
-
+                 
                     // Add everything to the data structure
                     replicated_particles.push_back(p_rep);
+                } // p
+            } // i
 
-                   } // not copying itself
-                 } // i
-              } // j
-           } // k
-        } // p
+            if (replicated_particles.size() == 0) continue;
 
-        auto new_np = np + replicated_particles.size();
-        particles.resize(new_np);
-        Gpu::copy(Gpu::hostToDevice, replicated_particles.begin(), replicated_particles.end(),
-                  particles.begin() + np);
-    } // pti
+            auto new_np = np + replicated_particles.size();
+            particles.resize(new_np);
+            Gpu::copy(Gpu::hostToDevice, replicated_particles.begin(), replicated_particles.end(),
+                      particles.begin() + np);
+        } // pti
 
-    Redistribute();
+        Redistribute();
+    } // idim
 }
