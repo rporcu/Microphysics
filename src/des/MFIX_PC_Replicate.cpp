@@ -35,26 +35,25 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
     for (int d = 0; d < BL_SPACEDIM; d++)
         orig_domain_size[d] = (geom.ProbHi(d) - geom.ProbLo(d)) / Nrep[d];
 
-    ParticleType p_rep;
-
     for (int idim = 0; idim < 3; ++idim)
     {
-        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) 
+        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
+            auto& particles = pti.GetArrayOfStructs();
+            int np = pti.numParticles();
+            Gpu::HostVector<ParticleType> host_particles(np);
+            Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
+
+            Gpu::HostVector<ParticleType> replicated_particles;
+
             for (int i = 0; i < Nrep[idim]; i++)
             {
-                if ( (i == 0) and (idim == 0) ) continue; // skip the first copy in the first direction
+                if (i == 0) continue; // skip the first copy in each direction
 
                 RealVect shift = {0., 0., 0.};
                 shift[idim] = i * orig_domain_size[idim];
 
-                auto& particles = pti.GetArrayOfStructs();
-                int np = pti.numParticles();
-                Gpu::HostVector<ParticleType> host_particles(np);
-                Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
-            
-                Gpu::HostVector<ParticleType> replicated_particles;
-            
+                ParticleType p_rep;
                 for (const auto& p: host_particles)
                 {
                     p_rep.m_rdata.pos[0] = p.m_rdata.pos[0] + shift[0];
@@ -89,12 +88,14 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                     // Add everything to the data structure
                     replicated_particles.push_back(p_rep);
                 } // p
-
-                auto new_np = np + replicated_particles.size();
-                particles.resize(new_np);
-                Gpu::copy(Gpu::hostToDevice, replicated_particles.begin(), replicated_particles.end(),
-                          particles.begin() + np);
             } // i
+
+            if (replicated_particles.size() == 0) continue;
+
+            auto new_np = np + replicated_particles.size();
+            particles.resize(new_np);
+            Gpu::copy(Gpu::hostToDevice, replicated_particles.begin(), replicated_particles.end(),
+                      particles.begin() + np);
         } // pti
 
         Redistribute();
