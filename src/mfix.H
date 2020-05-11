@@ -581,7 +581,7 @@ class mfix : public AmrCore
 
     static void GotoNextLine (std::istream & is);
 
-    void EvolveFluid (int nstep, Real & dt, Real & time, Real stop_time, Real drag_timing);
+    void EvolveFluid (int nstep, Real & dt, Real & time, Real stop_time, Real & drag_timing);
 
     void check_for_nans (int lev);
 
