@@ -9,8 +9,10 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 {
     BL_PROFILE_REGION_START("mfix::Evolve");
 
-    Real coupling_timing;
+    Real coupling_timing(0.);
+    Real drag_timing(0.);
     Real sum_vol;
+
     if ((DEM::solve or PIC::solve) and FLUID::solve)
     {
       Real start_coupling = ParallelDescriptor::second();
@@ -25,8 +27,6 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     }
 
     Real start_fluid = ParallelDescriptor::second();
-    Real drag_timing = 0.;
-
     BL_PROFILE_VAR("FLUID SOLVE",fluidSolve);
     for (int lev = 0; lev <= finest_level; lev++)
     {
