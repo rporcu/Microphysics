@@ -23,12 +23,12 @@ amr.blocking_factor = 8
 amr.max_level = 0
 
 geometry.coord_sys   = 0                    # 0: Cartesian
-geometry.is_periodic = 0      0      1      # Is periodic in each direction?
+geometry.is_periodic = 0      1      0      # Is periodic in each direction?
 geometry.prob_lo     = 0.     0.     0.     # lo corner of physical domain
-geometry.prob_hi     = 3.2    3.2    0.8    # hi corner of physical domain
+geometry.prob_hi     = 3.2    0.8    3.2    # hi corner of physical domain
 
 # Number of grid cells in each direction at the coarsest level
-amr.n_cell =  32  32   8
+amr.n_cell =  32   8  32
 
 #! Grids
 #!-----------------------------------------------------------//
@@ -107,8 +107,8 @@ mfix.geometry = "box"
 
 box.internal_flow = false
 
-box.Lo = 1.2  1.2 -1.0
-box.Hi = 2.0  2.0  1.0
+box.Lo = 1.2 -1.0  1.2
+box.Hi = 2.0  1.0  2.0
 
 
 #_______________________________________________________________________
@@ -118,19 +118,19 @@ box.Hi = 2.0  2.0  1.0
 mfix.regions = full-domain  wall1  wall2  inlet  outlet
 
 regions.full-domain.lo = 0.000  0.000  0.000
-regions.full-domain.hi = 3.200  3.200  0.800
+regions.full-domain.hi = 3.200  0.800  3.200
 
 regions.wall1.lo       = 0.000  0.000  0.000
-regions.wall1.hi       = 3.200  0.000  0.800
+regions.wall1.hi       = 0.000  0.800  3.200
 
-regions.wall2.lo       = 0.000  3.200  0.000
-regions.wall2.hi       = 3.200  3.200  0.800
+regions.wall2.lo       = 3.200  0.000  0.000
+regions.wall2.hi       = 3.200  0.800  3.200
 
 regions.inlet.lo       = 0.000  0.000  0.000
-regions.inlet.hi       = 0.000  3.200  0.800
+regions.inlet.hi       = 3.200  0.800  0.000
 
-regions.outlet.lo      = 3.200  0.000  0.000
-regions.outlet.hi      = 3.200  3.200  0.800
+regions.outlet.lo      = 0.000  0.000  3.200
+regions.outlet.hi      = 3.200  0.800  3.200
 
 
 # Initial Conditions
@@ -139,7 +139,7 @@ ic.regions = full-domain
 
 ic.full-domain.fluid.volfrac   = 1.0
 ic.full-domain.fluid.pressure  = 0.0
-ic.full-domain.fluid.velocity  = 0.1  0.0  0.0
+ic.full-domain.fluid.velocity  = 0.0  0.0  0.1
 
 
 # Boundary Conditions
@@ -147,14 +147,14 @@ ic.full-domain.fluid.velocity  = 0.1  0.0  0.0
 bc.regions = wall1  wall2  inlet  outlet
 
 bc.wall1 = nsw
-bc.wall1.normal = 0.0  1.0  0.0
+bc.wall1.normal =  1.0  0.0  0.0
 
 bc.wall2 = nsw
-bc.wall2.normal = 0.0 -1.0  0.0
+bc.wall2.normal = -1.0  0.0  0.0
 
 bc.inlet = mi
 bc.inlet.fluid.volfrac  =  1.0
-bc.inlet.fluid.velocity =  0.1  0.0  0.0
+bc.inlet.fluid.velocity =  0.0  0.0  0.1
 
 bc.outlet = po
 bc.outlet.fluid.pressure =  0.0
