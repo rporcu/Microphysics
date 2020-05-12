@@ -56,7 +56,6 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
       int z_lo_bc = BC::domain_bc[4];
       int z_hi_bc = BC::domain_bc[5];
 
-      const auto&      eps_array = ep_s_in[lev]->array(pti);
       const auto& avg_prop_array = avg_prop_in[lev]->array(pti);
 
       const amrex::Real small_number = std::numeric_limits<Real>::epsilon();
@@ -65,7 +64,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
       const amrex::Real en = (PIC::damping_factor + 1.0);
 
       amrex::ParallelFor(nrp,
-         [pstruct,dt,gravity,small_number,p_hi,p_lo, dxi_array, avg_prop_array, eps_array,
+         [pstruct,dt,gravity,small_number,p_hi,p_lo, dxi_array, avg_prop_array,
           en,x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc,velfac]
         AMREX_GPU_DEVICE (int ip) noexcept
         {
@@ -86,12 +85,6 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
           grad_tau_p[1] = p.rdata(realData::omegay);
           grad_tau_p[2] = p.rdata(realData::omegaz);
 
-          // slip velocity between parcel and the bulk solids
-          amrex::RealVect slip_vel;
-          slip_vel[0] = velfac*avg_prop_array(i,j,k,0) - p.rdata(realData::velx);
-          slip_vel[1] = velfac*avg_prop_array(i,j,k,1) - p.rdata(realData::vely);
-          slip_vel[2] = velfac*avg_prop_array(i,j,k,2) - p.rdata(realData::velz);
-
           // inverse of particle mass and macroscopic density
           const amrex::Real inv_mass = 1.0 / p.rdata(realData::mass);
 
@@ -104,6 +97,12 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
           vel[1] = scale*(p.rdata(realData::vely) + dt*(p.rdata(realData::dragy)*inv_mass + gravity[1]));
           vel[2] = scale*(p.rdata(realData::velz) + dt*(p.rdata(realData::dragz)*inv_mass + gravity[2]));
 
+          // Slip velocity between the parcel and the bulk. This needs to be the
+          // tentative new velocity, not the current velocity.
+          amrex::RealVect slip_vel;
+          slip_vel[0] = velfac*avg_prop_array(i,j,k,0) - vel[0];
+          slip_vel[1] = velfac*avg_prop_array(i,j,k,1) - vel[1];
+          slip_vel[2] = velfac*avg_prop_array(i,j,k,2) - vel[2];
 
           for( int dir(0); dir<3; dir++)
           {
