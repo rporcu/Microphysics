@@ -1,0 +1,6 @@
+difference() {
+	cube(size = [3e+06, 3e+06, 3e+06], center = true);
+	multmatrix([[0, 0, 1, 0.004], [0, 1, 0, 0.001], [-1, 0, 0, 0.001], [0, 0, 0, 1]]) {
+		cylinder(h = 1e+06, r = 0.0009, center = true);
+	}
+}
