@@ -35,7 +35,14 @@ void mfix::make_eb_geometry ()
     ParmParse pp("mfix");
 
     std::string geom_type;
+    std::string csg_file;
     pp.query("geometry", geom_type);
+    pp.query("geometry_filename", csg_file);
+    amrex::Print() << "mfix.geometry_filename: " << csg_file;
+
+#ifndef MFIX_GEOMETRY_CSG
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE( csg_file.empty(), "CSG Geometry defined in input deck but solver not built with CSG support!");
+#endif
 
     /****************************************************************************
      *                                                                          *
@@ -67,6 +74,11 @@ void mfix::make_eb_geometry ()
                          "at the same time."                                   );
         }
     }
+
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(geom_type.empty() || csg_file.empty(),
+                                     "The input file cannot specify both:\n"
+                                     "mfix.<geom_type> and mfix.geometry_filename\n"
+                                     "at the same time.");
 
     if (hourglass)  geom_type = "hourglass";
     if (eb_general) geom_type = "general";
@@ -109,6 +121,14 @@ void mfix::make_eb_geometry ()
       // TODO: deal with inflow volfrac
       make_eb_general();
       contains_ebs = true;
+
+#ifdef MFIX_GEOMETRY_CSG
+    } else if(!csg_file.empty()) {
+      amrex::Print() << "\n Building geometry from .csg file:  " << csg_file << std::endl;
+      make_eb_csg(csg_file);
+      contains_ebs = true;
+#endif
+
     } else {
         amrex::Print() << "\n No EB geometry declared in inputs => "
                        << " Will read walls from mfix.dat only."

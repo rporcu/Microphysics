@@ -18,3 +18,15 @@ target_sources( mfixcore
    writeEBsurface.cpp
    MFIX_BcList.H
    )
+
+if(ENABLE_CSG)
+   target_compile_definitions(mfixcore PRIVATE MFIX_GEOMETRY_CSG)
+   target_sources(mfixcore
+      PRIVATE
+      mfix_eb_csg.cpp
+      )
+    target_include_directories(mfixcore PRIVATE
+      ${CMAKE_SOURCE_DIR}/subprojects/mfix-parser/src/csg/
+      )
+    add_subdirectory(tests)
+endif()

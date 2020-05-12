@@ -143,6 +143,7 @@ dem.damping_tang_fac.pw   =     0.5
 # EB geometry
 #
 mfix.geometry = "cylinder"
+#mfix.geometry_filename = "geometry.csg"
 
 cylinder.internal_flow = true
 
@@ -166,7 +167,7 @@ regions.bed.hi         = 0.0064  0.0020  0.0020
 
 regions.inflow.lo      = 0.0000  0.0000  0.0000
 regions.inflow.hi      = 0.0000  0.0020  0.0020
-                        
+
 regions.outflow.lo     = 0.0080  0.0000  0.0000
 regions.outflow.hi     = 0.0080  0.0020  0.0020
 

@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 
+option(ENABLE_CSG "Build with CSG support" OFF)
+
 project(MFIX-Exa
    # VERSION <version>
    DESCRIPTION  "A multiphase modeling tool for the exascale"
@@ -61,6 +63,9 @@ set ( MFIX_EXENAME "mfix"     CACHE INTERNAL "Name of MFIX executable")
 
 set( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 
+if(ENABLE_CSG)
+  add_subdirectory(subprojects/mfix-parser)
+endif()
 
 #
 # Core MFIX library
@@ -126,3 +131,7 @@ if ( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
         ${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json
   )
 endif ()
+
+if(ENABLE_CSG)
+  target_link_libraries(mfixcore PRIVATE csg)
+endif()

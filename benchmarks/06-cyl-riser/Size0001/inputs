@@ -150,6 +150,7 @@ dem.damping_tang_fac.pw   =     0.5
 # EB geometry
 #
 mfix.geometry = "cylinder"
+# mfix.geometry_file = "riser_cylinder.csg"
 
 cylinder.internal_flow = true
 
