@@ -357,9 +357,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
     if (!explicit_diffusion_pred)
     {
       mfix_set_density_bcs(time, get_ro_g());
-      mfix_set_enthalpy_bcs(time, get_ro_g());
-      mfix_set_temperature_bcs(time, get_ro_g());
-      mfix_set_scalar_bcs(time, get_trac(), get_cp_g(), get_mu_g());
+      mfix_set_enthalpy_bcs(time, get_h_g());
+      mfix_set_temperature_bcs(time, get_T_g());
+      mfix_set_tracer_bcs(time, get_trac());
+      mfix_set_scalar_bcs(time, get_cp_g(), get_mu_g());
 
       // mfix_set_temperature_bcs (new_time, get_T_g());
       // TODO: k_g0 can be also non constant
