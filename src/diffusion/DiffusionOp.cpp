@@ -282,7 +282,7 @@ void DiffusionOp::ComputeLapTemp (Vector< MultiFab* >& laptemp_out,
         if (eb_is_dirichlet)
             temp_matrix->setEBDirichlet(lev, *phi_eb[lev], k_g);
 
-        temp_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]));
+        temp_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]),MLMG::Location::FaceCentroid);
         temp_matrix->setLevelBC(lev, GetVecOfConstPtrs(T_g_in)[lev]);
     }
 
@@ -346,7 +346,7 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
         if (eb_is_dirichlet)
             scal_matrix->setEBDirichlet(lev, *phi_eb[lev], mu_s);
 
-        scal_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]));
+        scal_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]),MLMG::Location::FaceCentroid);
         scal_matrix->setLevelBC(lev, GetVecOfConstPtrs(scal_in)[lev]);
     }
 
