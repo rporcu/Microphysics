@@ -879,8 +879,11 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       mfix_set_density_bcs(time, get_ro_g());
       mfix_set_density_bcs(time, get_ro_g_old());
 
-      mfix_set_scalar_bcs(time, get_trac()    , get_cp_g(), get_mu_g());
-      mfix_set_scalar_bcs(time, get_trac_old(), get_cp_g(), get_mu_g());
+      mfix_set_tracer_bcs(time, get_trac());
+      mfix_set_tracer_bcs(time, get_trac_old());
+
+      mfix_set_scalar_bcs(time, get_cp_g(), get_mu_g());
+      mfix_set_scalar_bcs(time, get_cp_g(), get_mu_g());
 
       // Project the initial velocity field
       if (do_initial_proj)

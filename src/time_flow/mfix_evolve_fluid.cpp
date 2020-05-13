@@ -43,7 +43,6 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real& coupl
 
     mfix_set_density_bcs(time, get_ro_g());
     //mfix_set_temperature_bcs(time, get_T_g()); // TODO do we need it?
-    //mfix_set_scalar_bcs(time, trac, mu_g);
 
     //
     // Start loop: if we are not seeking a steady state solution,
