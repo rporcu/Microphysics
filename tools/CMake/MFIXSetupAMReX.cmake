@@ -69,7 +69,7 @@ else ()
       find_package(Git REQUIRED)
 
       execute_process(
-         COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+         COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive subprojects/amrex
          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
          RESULT_VARIABLE GIT_SUBMOD_RESULT
          )

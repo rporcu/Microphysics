@@ -51,7 +51,7 @@ void DiffusionOp::diffuse_temperature (      Vector< MultiFab* >  T_g_in,
 
         // This sets the coefficients
         scal_matrix->setACoeffs (lev, (*ep_g_in[lev]));
-        scal_matrix->setBCoeffs (lev, GetArrOfConstPtrs(b[lev]));
+        scal_matrix->setBCoeffs (lev, GetArrOfConstPtrs(b[lev]),MLMG::Location::FaceCentroid);
 
         // Zero these out just to have a clean start because they have 3 components
         //      (due to re-use with velocity solve)

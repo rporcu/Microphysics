@@ -567,6 +567,10 @@ class mfix : public AmrCore
     void make_eb_clr_riser ();
     void make_eb_regular ();
 
+#ifdef MFIX_GEOMETRY_CSG
+  void make_eb_csg(std::string);
+#endif
+
     void MakeBCArrays ();
 
     void MakeNewLevelFromScratch (int lev, Real time, const BoxArray & new_grids,

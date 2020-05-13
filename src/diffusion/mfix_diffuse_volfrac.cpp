@@ -37,7 +37,7 @@ void DiffusionOp::diffuse_volfrac (Vector< MultiFab* > scal_in,
 
         // This sets the coefficients
         scal_matrix->setACoeffs (lev, 1.0);
-        scal_matrix->setBCoeffs (lev, GetArrOfConstPtrs(b[lev]));
+        scal_matrix->setBCoeffs (lev, GetArrOfConstPtrs(b[lev]),MLMG::Location::FaceCentroid);
     }
 
     if(verbose > 0)
