@@ -906,8 +906,8 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 
         w = std::sqrt((-2.0 * std::log(w)) / w);
 
-        amrex::Real dp1 = x * w * sigma + mean;
-        amrex::Real dp2 = y * w * sigma + mean;
+        dp1 = x * w * sigma + mean;
+        dp2 = y * w * sigma + mean;
 
         p_dp[2*i] = dp1;
 
