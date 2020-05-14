@@ -11,20 +11,19 @@
 #include <MFIX_MFHelpers.H>
 #include <MFIX_gradient.H>
 
-void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::EBFArrayBoxFactory* > particle_ebfactory,
-                                  amrex::Vector< amrex::MultiFab* >& ep_s_in,
+void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
                                   amrex::Vector< amrex::MultiFab* >& avg_prop_in)
 {
   BL_PROFILE("mfix::MFIX_CalcSolidsStress()");
 
 #define DO_VISMF 0
 
-    // We copy the value inside the domain to the outside to avoid
-    // unphysical volume fractions.
-    const int dir_bc_in = 2;
-    mfix_set_epg_bcs(ep_s_in, dir_bc_in);
+  // We copy the value inside the domain to the outside to avoid
+  // unphysical volume fractions.
+  const int dir_bc_in = 2;
+  mfix_set_epg_bcs(ep_s_in, dir_bc_in);
 
-    const amrex::Real covered_val = 9.8765e300;
+  const amrex::Real covered_val = 9.8765e300;
 
   for( int lev(0); lev < nlev; lev ++)
   {
@@ -323,7 +322,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::EBFArrayBoxFactory* > pa
       const auto dxi_array = geom[lev].InvCellSizeArray();
       const auto plo_array = geom[lev].ProbLoArray();
 
-      const amrex::RealVect dx(dx_array[0], dx_array[1], dx_array[2]);
+      const amrex::RealVect dxv(dx_array[0], dx_array[1], dx_array[2]);
       const amrex::RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
       const amrex::RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
 
@@ -415,7 +414,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::EBFArrayBoxFactory* > pa
 
 
           amrex::ParallelFor(np,
-            [pstruct,grad_tau_array,flags_array,plo,dxi,dx,flag_fab,ccent_fab,
+            [pstruct,grad_tau_array,flags_array,plo,dxi,dxv,flag_fab,ccent_fab,
              bcent_fab, apx_fab, apy_fab, apz_fab]
             AMREX_GPU_DEVICE (int pid) noexcept
           {
@@ -425,9 +424,9 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::EBFArrayBoxFactory* > pa
             MFIXParticleContainer::ParticleType& particle = pstruct[pid];
 
             // Cell containing particle centroid
-            const int ip = floor((particle.pos(0) - plo[0])*dxi[0]);
-            const int jp = floor((particle.pos(1) - plo[1])*dxi[1]);
-            const int kp = floor((particle.pos(2) - plo[2])*dxi[2]);
+            const int ip = static_cast<int>(floor((particle.pos(0) - plo[0])*dxi[0]));
+            const int jp = static_cast<int>(floor((particle.pos(1) - plo[1])*dxi[1]));
+            const int kp = static_cast<int>(floor((particle.pos(2) - plo[2])*dxi[2]));
 
             if(flags_array(ip,jp,kp).isCovered())
             {
@@ -441,9 +440,9 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::EBFArrayBoxFactory* > pa
             } else {
 
               // Upper cell in trilinear stencil
-              const int i = std::floor((particle.pos(0) - plo[0])*dxi[0] + 0.5);
-              const int j = std::floor((particle.pos(1) - plo[1])*dxi[1] + 0.5);
-              const int k = std::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5);
+              const int i = static_cast<int>(floor((particle.pos(0) - plo[0])*dxi[0] + 0.5));
+              const int j = static_cast<int>(floor((particle.pos(1) - plo[1])*dxi[1] + 0.5));
+              const int k = static_cast<int>(floor((particle.pos(2) - plo[2])*dxi[2] + 0.5));
 
               // All cells in the stencil are regular. Use
               // traditional trilinear interpolation
@@ -463,7 +462,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::EBFArrayBoxFactory* > pa
               } else {
 
                 const int scomp = 0;
-                fe_interp(particle.pos(), ip, jp, kp, dx, dxi,
+                fe_interp(particle.pos(), ip, jp, kp, dxv, dxi,
                           flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                           grad_tau_array, &interp_loc[0], interp_comp, scomp);
 

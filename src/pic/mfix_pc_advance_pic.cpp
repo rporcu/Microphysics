@@ -74,9 +74,9 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
           const amrex::RealVect pos = p.pos();
 
           // cell containing particle
-          const int i = floor((pos[0] - p_lo[0])*dxi_array[0]);
-          const int j = floor((pos[1] - p_lo[1])*dxi_array[1]);
-          const int k = floor((pos[2] - p_lo[2])*dxi_array[2]);
+          const int i = static_cast<int>(floor((pos[0] - p_lo[0])*dxi_array[0]));
+          const int j = static_cast<int>(floor((pos[1] - p_lo[1])*dxi_array[1]));
+          const int k = static_cast<int>(floor((pos[2] - p_lo[2])*dxi_array[2]));
 
           // solids stress gradient:
           // grad_tau_p = (volume * grad_tau_p) / (mass * ep_s))

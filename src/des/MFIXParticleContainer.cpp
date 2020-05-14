@@ -516,10 +516,10 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                           fc_ptr[i + ntot  ] += fn[1] + ft[1];
                           fc_ptr[i + 2*ntot] += fn[2] + ft[2];
 
-                          Real r1 = p1.rdata(realData::radius);
-                          Real r2 = p2.rdata(realData::radius);
+                          Real part1_r = p1.rdata(realData::radius);
+                          Real part2_r = p2.rdata(realData::radius);
 
-                          Real dist_cl = 0.5 * (dist_mag + (r1*r1 - r2*r2) * dist_mag_inv);
+                          Real dist_cl = 0.5 * (dist_mag + (part1_r*part1_r - part2_r*part2_r) * dist_mag_inv);
                           dist_cl = dist_mag - dist_cl;
 
                           Real tow_force[3];

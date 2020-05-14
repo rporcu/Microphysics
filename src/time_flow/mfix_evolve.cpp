@@ -103,11 +103,9 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     }
 
     if (PIC::solve) {
-
-      EvolveParcels(nstep, dt, time, mfix::gravity, geom,
-                    particle_ebfactory, level_sets, levelset_refinement,
-                    particle_cost, knapsack_weight_type);
-
+        EvolveParcels(nstep, dt, time, mfix::gravity,
+                      levelset_refinement,
+                      particle_cost, knapsack_weight_type);
     }
 
 

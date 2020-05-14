@@ -102,8 +102,8 @@ void writeNow (int nstep, Real time, Real dt, mfix& mfix)
         // the number of intervals that have elapsed for both the current
         // time and the time at the beginning of this timestep.
 
-        int num_per_old = (time-dt) / mfix::plot_per_approx;
-        int num_per_new = (time   ) / mfix::plot_per_approx;
+        int num_per_old = static_cast<int>( (time-dt) / mfix::plot_per_approx );
+        int num_per_new = static_cast<int>( (time   ) / mfix::plot_per_approx );
 
         // Before using these, however, we must test for the case where we're
         // within machine epsilon of the next interval. In that case, increment

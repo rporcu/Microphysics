@@ -449,20 +449,15 @@ class mfix : public AmrCore
                       amrex::Real dt,
                       amrex::Real time,
                       amrex::RealVect& gravity,
-                      amrex::Vector<amrex::Geometry> geom,
-                      amrex::Vector< amrex::EBFArrayBoxFactory* > particle_ebfactory,
-                      amrex::Vector< amrex::MultiFab* >& level_sets,
                       const int ls_refinement,
                       amrex::Vector< amrex::MultiFab* >& cost,
                       std::string& knapsack_weight_type
                       );
 
 
-  void MFIX_CalcAvgSolidsProp (Vector< EBFArrayBoxFactory* > particle_ebfactory,
-                               Vector< MultiFab* >& avg_prop_in);
+  void MFIX_CalcAvgSolidsProp (Vector< MultiFab* >& avg_prop_in);
 
-  void MFIX_CalcSolidsStress (amrex::Vector< amrex::EBFArrayBoxFactory* > particle_ebfactory,
-                              amrex::Vector< amrex::MultiFab* >& ep_s_in,
+  void MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
                               amrex::Vector< amrex::MultiFab* >& avg_prop_in);
 
 

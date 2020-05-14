@@ -145,7 +145,7 @@ mfix::set_tracer_bcs (Real time,
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
-      const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
+      // const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
       if ((bct == pinf) or (bct == pout))
@@ -167,7 +167,7 @@ mfix::set_tracer_bcs (Real time,
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
-      const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
+      // const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
       if((bct == pinf) or (bct == pout))
@@ -188,7 +188,7 @@ mfix::set_tracer_bcs (Real time,
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
-      const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
+      // const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
       if((bct == pinf) or (bct == pout))
@@ -209,7 +209,7 @@ mfix::set_tracer_bcs (Real time,
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
-      const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
+      // const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
       if((bct == pinf) or (bct == pout))
@@ -230,7 +230,7 @@ mfix::set_tracer_bcs (Real time,
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
-      const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
+      // const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
       if((bct == pinf) or (bct == pout))
@@ -251,7 +251,7 @@ mfix::set_tracer_bcs (Real time,
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
-      const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
+      // const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
       if ((bct == pinf) or (bct == pout))

@@ -585,7 +585,7 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
       const Real ccc_fab_mns_y = ccc_fab(i,j-1,k,1);
       const Real ccc_fab_mns_z = ccc_fab(i,j-1,k,2);
 
-      for(int n(0); n < ncomp; n++) {
+      for (int n(0); n < ncomp; n++) {
         Real sy_ijkn(0);
 
         const int* bct_data = bc_types.data();
