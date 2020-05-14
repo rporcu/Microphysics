@@ -63,9 +63,9 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                     {
                         ParticleType& p = pti.GetArrayOfStructs()[ip];
 
-                        int icell = floor( ( p.pos(0) - plo[0] ) / dx[0] );
-                        int jcell = floor( ( p.pos(1) - plo[1] ) / dx[1] );
-                        int kcell = floor( ( p.pos(2) - plo[2] ) / dx[2] );
+                        int icell = static_cast<int>(floor( ( p.pos(0) - plo[0] ) / dx[0] ));
+                        int jcell = static_cast<int>(floor( ( p.pos(1) - plo[1] ) / dx[1] ));
+                        int kcell = static_cast<int>(floor( ( p.pos(2) - plo[2] ) / dx[2] ));
 
                         if (flag_fab(icell,jcell,kcell).isCovered())
                         {
@@ -78,9 +78,9 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                             Real y = ( p.pos(1) - plo[1] ) / dx_ls[1];
                             Real z = ( p.pos(2) - plo[2] ) / dx_ls[2];
 
-                            int i = floor(x);
-                            int j = floor(y);
-                            int k = floor(z);
+                            int i = static_cast<int>(floor(x));
+                            int j = static_cast<int>(floor(y));
+                            int k = static_cast<int>(floor(z));
 
                             Real wx_hi = x - i;
                             Real wy_hi = y - j;

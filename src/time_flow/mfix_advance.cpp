@@ -54,7 +54,8 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   mfix_set_density_bcs(time, get_ro_g());
   mfix_set_enthalpy_bcs(time, get_h_g());
   mfix_set_temperature_bcs(time, get_T_g());
-  mfix_set_scalar_bcs(time, get_trac(), get_cp_g(), get_mu_g());
+  mfix_set_tracer_bcs(time, get_trac());
+  mfix_set_scalar_bcs(time, get_cp_g(), get_mu_g());
 
   // Copy vel_g into vel_go
   for (int lev = 0; lev <= finest_level; lev++)
@@ -128,7 +129,8 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     mfix_set_density_bcs(time, get_ro_g());
     mfix_set_enthalpy_bcs(time, get_h_g());
     mfix_set_temperature_bcs(time, get_T_g());
-    mfix_set_scalar_bcs(time, get_trac(), get_cp_g(), get_mu_g());
+    mfix_set_tracer_bcs(time, get_trac());
+    mfix_set_scalar_bcs(time, get_cp_g(), get_mu_g());
   }
 
   for (int lev = 0; lev <= finest_level; lev++)

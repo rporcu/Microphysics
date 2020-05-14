@@ -861,7 +861,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 
   const unsigned int nsize = dp.size();
 
-  const int nsize_half = std::ceil(nsize/2.);
+  const int nsize_half = static_cast<int>(std::ceil(nsize/2.));
 
   const amrex::Real tolerance =
     std::numeric_limits<amrex::Real>::epsilon();
@@ -906,8 +906,8 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 
         w = std::sqrt((-2.0 * std::log(w)) / w);
 
-        amrex::Real dp1 = x * w * sigma + mean;
-        amrex::Real dp2 = y * w * sigma + mean;
+        dp1 = x * w * sigma + mean;
+        dp2 = y * w * sigma + mean;
 
         p_dp[2*i] = dp1;
 

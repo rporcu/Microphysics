@@ -153,8 +153,8 @@ void MFIXParticleContainer::InitParticlesAuto ()
         // Add to the data structure
         particles.push_back(p_new);
         if (DEM::nspecies_dem > 0){
-           for(int i=0; i < DEM::spec_frac_dem.size(); ++i){
-               particles.push_back_real(i, DEM::spec_frac_dem[i]);
+           for(int ii=0; ii < DEM::spec_frac_dem.size(); ++ii){
+               particles.push_back_real(ii, DEM::spec_frac_dem[ii]);
            }
         }
       }

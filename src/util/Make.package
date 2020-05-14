@@ -3,6 +3,10 @@ CEXE_sources += mfix_set_enthalpy_bcs.cpp
 CEXE_sources += mfix_set_temperature_bcs.cpp
 CEXE_sources += mfix_set_density_bcs.cpp
 CEXE_sources += mfix_set_scalar_bcs.cpp
+CEXE_sources += mfix_set_specific_heat_bcs.cpp
+CEXE_sources += mfix_set_tracer_bcs.cpp
+CEXE_sources += mfix_set_viscosity_bcs.cpp
+
 
 CEXE_sources += mfix_fillpatch.cpp
 CEXE_sources += mfix_util.cpp

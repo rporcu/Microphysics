@@ -238,8 +238,10 @@ class mfix : public AmrCore
     void mfix_set_density_bcs (Real time,
                                Vector< MultiFab* > const& ro_g);
 
+    void mfix_set_tracer_bcs (Real time,
+                              Vector< MultiFab* > const& trac);
+
     void mfix_set_scalar_bcs (Real time,
-                              Vector< MultiFab* > const& trac,
                               Vector< MultiFab* > const& cp_g,
                               Vector< MultiFab* > const& mu_g);
 
@@ -269,11 +271,20 @@ class mfix : public AmrCore
                           FArrayBox& scal_fab,
                           const Box& domain);
 
-    void set_scalar_bcs (Real time,
+    void set_tracer_bcs (Real time,
                          const int lev,
                          FArrayBox& scal_fab,
-                         const int comp,
                          const Box& domain);
+
+    void set_viscosity_bcs (Real time,
+                            const int lev,
+                            FArrayBox& scal_fab,
+                            const Box& domain);
+
+    void set_specific_heat_bcs (Real time,
+                                const int lev,
+                                FArrayBox& scal_fab,
+                                const Box& domain);
 
     void set_vec_bcs (const int lev,
                       FArrayBox& vec_fab,
@@ -438,20 +449,15 @@ class mfix : public AmrCore
                       amrex::Real dt,
                       amrex::Real time,
                       amrex::RealVect& gravity,
-                      amrex::Vector<amrex::Geometry> geom,
-                      amrex::Vector< amrex::EBFArrayBoxFactory* > particle_ebfactory,
-                      amrex::Vector< amrex::MultiFab* >& level_sets,
                       const int ls_refinement,
                       amrex::Vector< amrex::MultiFab* >& cost,
                       std::string& knapsack_weight_type
                       );
 
 
-  void MFIX_CalcAvgSolidsProp (Vector< EBFArrayBoxFactory* > particle_ebfactory,
-                               Vector< MultiFab* >& avg_prop_in);
+  void MFIX_CalcAvgSolidsProp (Vector< MultiFab* >& avg_prop_in);
 
-  void MFIX_CalcSolidsStress (amrex::Vector< amrex::EBFArrayBoxFactory* > particle_ebfactory,
-                              amrex::Vector< amrex::MultiFab* >& ep_s_in,
+  void MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
                               amrex::Vector< amrex::MultiFab* >& avg_prop_in);
 
 

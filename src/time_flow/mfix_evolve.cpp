@@ -18,7 +18,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
       Real start_coupling = ParallelDescriptor::second();
       mfix_calc_volume_fraction(sum_vol);
 
-      if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
+      if (std::abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
         {
           amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
           amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
@@ -32,7 +32,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     {
        if (FLUID::solve)
        {
-         EvolveFluid(nstep,dt,time,stop_time, drag_timing);
+          EvolveFluid(nstep,dt,time,stop_time, drag_timing);
           prev_dt = dt;
        }
     }
@@ -103,11 +103,9 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     }
 
     if (PIC::solve) {
-
-      EvolveParcels(nstep, dt, time, mfix::gravity, geom,
-                    particle_ebfactory, level_sets, levelset_refinement,
-                    particle_cost, knapsack_weight_type);
-
+        EvolveParcels(nstep, dt, time, mfix::gravity,
+                      levelset_refinement,
+                      particle_cost, knapsack_weight_type);
     }
 
 

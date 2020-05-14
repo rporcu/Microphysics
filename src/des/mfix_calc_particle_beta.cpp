@@ -171,9 +171,9 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               ep       = interp_loc[3];
 
               // Indices of cell where particle is located
-              int iloc = floor((particle.pos(0) - plo[0])*dxi[0]);
-              int jloc = floor((particle.pos(1) - plo[1])*dxi[1]);
-              int kloc = floor((particle.pos(2) - plo[2])*dxi[2]);
+              int iloc = static_cast<int>(floor((particle.pos(0) - plo[0])*dxi[0]));
+              int jloc = static_cast<int>(floor((particle.pos(1) - plo[1])*dxi[1]));
+              int kloc = static_cast<int>(floor((particle.pos(2) - plo[2])*dxi[2]));
 
               Real  ro = ro_array(iloc,jloc,kloc);
               Real  mu = mu_array(iloc,jloc,kloc);
@@ -223,9 +223,9 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               MFIXParticleContainer::ParticleType& particle = particles_ptr[pid];
 
               // Cell containing particle centroid
-              int ip = floor((particle.pos(0) - plo[0])*dxi[0]);
-              int jp = floor((particle.pos(1) - plo[1])*dxi[1]);
-              int kp = floor((particle.pos(2) - plo[2])*dxi[2]);
+              int ip = static_cast<int>(floor((particle.pos(0) - plo[0])*dxi[0]));
+              int jp = static_cast<int>(floor((particle.pos(1) - plo[1])*dxi[1]));
+              int kp = static_cast<int>(floor((particle.pos(2) - plo[2])*dxi[2]));
 
               // No drag force for particles in covered cells.
               if (flags_array(ip,jp,kp).isCovered() ){
@@ -238,9 +238,9 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               } else {
 
                 // Upper cell in trilinear stencil
-                int i = std::floor((particle.pos(0) - plo[0])*dxi[0] + 0.5);
-                int j = std::floor((particle.pos(1) - plo[1])*dxi[1] + 0.5);
-                int k = std::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5);
+                int i = static_cast<int>(floor((particle.pos(0) - plo[0])*dxi[0] + 0.5));
+                int j = static_cast<int>(floor((particle.pos(1) - plo[1])*dxi[1] + 0.5));
+                int k = static_cast<int>(floor((particle.pos(2) - plo[2])*dxi[2] + 0.5));
 
                 // Local array storing interpolated values
                 Real interp_loc[interp_comp];
