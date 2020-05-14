@@ -11,7 +11,7 @@
 #endif
 
 void
-mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real& coupling_timing)
+mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_time, Real& coupling_timing)
 {
     BL_PROFILE_REGION_START("mfix::EvolveFluid");
     BL_PROFILE("mfix::EvolveFluid");
@@ -84,7 +84,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real& coupl
 
     do
     {
-        mfix_compute_dt(nstep, time, stop_time, dt);
+        mfix_compute_dt(nstep, time, stop_time, dt, prev_dt);
 
         // Set new and old time to correctly use in fillpatching
         for (int lev = 0; lev <= finest_level; lev++)
@@ -149,7 +149,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real& coupl
 
         // Predictor step
         bool proj_2_pred = true;
-        mfix_apply_predictor(conv_u_old, conv_s_old, divtau_old, laps_old, laptemp_old, time, dt, proj_2_pred);
+        mfix_apply_predictor(conv_u_old, conv_s_old, divtau_old, laps_old, laptemp_old, time, dt, prev_dt, proj_2_pred);
 
         // Calculate drag coefficient
         if (DEM::solve or PIC::solve)
@@ -163,7 +163,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& time, Real stop_time, Real& coupl
         bool proj_2_corr = true;
         // Corrector step
         if (!steady_state)
-           mfix_apply_corrector(conv_u_old, conv_s_old, divtau_old, laps_old, laptemp_old, time, dt, proj_2_corr);
+           mfix_apply_corrector(conv_u_old, conv_s_old, divtau_old, laps_old, laptemp_old, time, dt, prev_dt, proj_2_corr);
 
         //
         // Check whether to exit the loop or not

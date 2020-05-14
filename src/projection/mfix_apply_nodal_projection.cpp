@@ -24,6 +24,7 @@ void
 mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
                                    Real a_time,
                                    Real a_dt,
+                                   Real a_prev_dt,
                                    bool proj_2 )
 {
     BL_PROFILE("mfix::mfix_apply_nodal_projection");
@@ -33,7 +34,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     // If we have dropped the dt substantially for whatever reason, use a different form of the approximate
     // projection that projects (U^*-U^n + dt Gp) rather than (U^* + dt Gp)
 
-    if (a_time > 0 && a_dt < 0.1 * prev_dt)
+    if (a_time > 0 && a_dt < 0.1 * a_prev_dt)
        proj_for_small_dt      = true;
 
     for (int lev(0); lev < nlev; ++lev)
