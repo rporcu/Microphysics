@@ -68,36 +68,41 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
                                  get_trac_old(), time);
 
     // *************************************************************************************
-    // Compute explicit diffusive update
+    // Compute explicit diffusive updates
     // *************************************************************************************
     bool explicit_diffusion_pred = true;
 
     if (explicit_diffusion_pred)
     {
-        //mfix_set_velocity_bcs(time, vel_go, 0);
         diffusion_op->ComputeDivTau(divtau_old, get_vel_g_old(), get_ro_g(),
                                     get_ep_g(), get_mu_g());
-
-        diffusion_op->ComputeLapTemp(laptemp_old, get_T_g_old(), get_ro_g(),
-                                     get_ep_g(), FLUID::k_g0);
-
-        diffusion_op->ComputeLapS(laps_old, get_trac_old(), get_ro_g(),
-                                  get_ep_g(), mu_s);
-
         for (int lev = 0; lev <= finest_level; lev++)
-        {
             EB_set_covered(*divtau_old[lev], 0, divtau_old[lev]->nComp(), divtau_old[lev]->nGrow(), 0.0);
-            EB_set_covered(  *laptemp_old[lev], 0,   laptemp_old[lev]->nComp(),   laptemp_old[lev]->nGrow(), 0.0);
-            EB_set_covered(  *laps_old[lev], 0,   laps_old[lev]->nComp(),   laps_old[lev]->nGrow(), 0.0);
-        }
-
     } else {
-       for (int lev = 0; lev <= finest_level; lev++)
-       {
-          divtau_old[lev]->setVal(0.);
-         laptemp_old[lev]->setVal(0.);
+        for (int lev = 0; lev <= finest_level; lev++)
+            divtau_old[lev]->setVal(0.);
+    }
+
+    if (explicit_diffusion_pred && advect_enthalpy)
+    {
+        diffusion_op->ComputeLapTemp(laptemp_old, get_T_g_old(), get_ro_g(),
+                                      get_ep_g(), FLUID::k_g0);
+        for (int lev = 0; lev <= finest_level; lev++)
+            EB_set_covered(  *laptemp_old[lev], 0,   laptemp_old[lev]->nComp(),   laptemp_old[lev]->nGrow(), 0.0);
+    } else {
+        for (int lev = 0; lev <= finest_level; lev++)
+             laptemp_old[lev]->setVal(0.);
+    }
+
+    if (explicit_diffusion_pred && advect_tracer)
+    {
+        diffusion_op->ComputeLapS(laps_old, get_trac_old(), get_ro_g(),
+                                     get_ep_g(), mu_s);
+        for (int lev = 0; lev <= finest_level; lev++)
+            EB_set_covered(  *laps_old[lev], 0,   laps_old[lev]->nComp(),   laps_old[lev]->nGrow(), 0.0);
+    } else {
+        for (int lev = 0; lev <= finest_level; lev++)
             laps_old[lev]->setVal(0.);
-       }
     }
 
     // *************************************************************************************
