@@ -102,15 +102,15 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
                             acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
                         }
 
-                        Real c_cfl   = abs(vel(i,j,k,0))*odx + abs(vel(i,j,k,1))*ody + abs(vel(i,j,k,2))*odz;
+                        Real c_cfl   = std::abs(vel(i,j,k,0))*odx + std::abs(vel(i,j,k,1))*ody + std::abs(vel(i,j,k,2))*odz;
                         Real v_cfl   = 2.0 * mu(i,j,k) * qro * (odx*odx + ody*ody + odz*odz);
                         Real cpv_cfl = c_cfl + v_cfl;
 
                         // MAX CFL factor on cell (i,j,k)
                         Real cfl_max_cell = cpv_cfl + std::sqrt( cpv_cfl*cpv_cfl +
-                                                                 4.0*abs(acc[0])*odx  +
-                                                                 4.0*abs(acc[1])*ody  +
-                                                                 4.0*abs(acc[2])*odz  );
+                                                                 4.0*std::abs(acc[0])*odx  +
+                                                                 4.0*std::abs(acc[1])*ody  +
+                                                                 4.0*std::abs(acc[2])*odz  );
 #ifdef AMREX_USE_CUDA
                         Gpu::Atomic::Max(cfl_max_ptr, cfl_max_cell);
 #else

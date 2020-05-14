@@ -372,7 +372,7 @@ void goto_60 (const Box& sbx,
       pj -= (bx_delta_x + upper_stride) * dpodx*dx;
     }
   }
-  else if (abs(gravity[1]) > tolerance)
+  else if (std::abs(gravity[1]) > tolerance)
   {
     const Real dpody = -gravity[1]*ro_g0;
 

@@ -39,7 +39,7 @@ void DiffusionOp::diffuse_scalar (Vector< MultiFab* > scal_in,
 
         // This sets the coefficients
         scal_matrix->setACoeffs (lev, (*ep_ro_in[lev]));
-        scal_matrix->setBCoeffs (lev, GetArrOfConstPtrs(b[lev]));
+        scal_matrix->setBCoeffs (lev, GetArrOfConstPtrs(b[lev]),MLMG::Location::FaceCentroid);
     }
 
     if(verbose > 0)

@@ -7,13 +7,13 @@
 using namespace amrex;
 
 //
-// Set the BCs for density only
+// Set the BCs for temperature only
 //
 void
 mfix::mfix_set_temperature_bcs (Real time,
                                 Vector< MultiFab* > const& T_g_in)
 {
-  BL_PROFILE("mfix::mfix_set_density_bcs()");
+  BL_PROFILE("mfix::mfix_set_temperature_bcs()");
 
   for (int lev = 0; lev < nlev; lev++)
   {
@@ -33,13 +33,15 @@ mfix::mfix_set_temperature_bcs (Real time,
   }
 }
 
-void 
+void
 mfix::set_temperature_bcs (Real time,
                            const int lev,
                            FArrayBox& scal_fab,
                            const Box& domain)
 
 {
+  BL_PROFILE("mfix::set_temperature_bcs()");
+
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
 
@@ -141,7 +143,7 @@ mfix::set_temperature_bcs (Real time,
       [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_jhi(i,jhi+1,k,0);
-  
+
         if((bct == pinf) or (bct == pout))
            scal_arr(i,j,k) = scal_arr(i,dom_hi[1],k);
         else if(bct == minf)
@@ -177,11 +179,11 @@ mfix::set_temperature_bcs (Real time,
 
     int khi = dom_hi[2];
 
-    amrex::ParallelFor(bx_xy_hi_3D, 
+    amrex::ParallelFor(bx_xy_hi_3D,
       [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_khi(i,j,khi+1,0);
-  
+
         if ((bct == pinf) or (bct == pout))
            scal_arr(i,j,k) = scal_arr(i,j,dom_hi[2]);
         else if (bct == minf)

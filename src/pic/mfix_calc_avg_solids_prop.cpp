@@ -4,8 +4,7 @@
 
 using namespace amrex;
 
-void mfix::MFIX_CalcAvgSolidsProp (amrex::Vector< amrex::EBFArrayBoxFactory* > particle_ebfactory,
-                                   amrex::Vector< amrex::MultiFab* >& avg_prop_in)
+void mfix::MFIX_CalcAvgSolidsProp (amrex::Vector< amrex::MultiFab* >& avg_prop_in)
 {
   BL_PROFILE("MFIX_CalcAvgSolidsProp()");
 
