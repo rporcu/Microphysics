@@ -238,8 +238,10 @@ class mfix : public AmrCore
     void mfix_set_density_bcs (Real time,
                                Vector< MultiFab* > const& ro_g);
 
+    void mfix_set_tracer_bcs (Real time,
+                              Vector< MultiFab* > const& trac);
+
     void mfix_set_scalar_bcs (Real time,
-                              Vector< MultiFab* > const& trac,
                               Vector< MultiFab* > const& cp_g,
                               Vector< MultiFab* > const& mu_g);
 
@@ -269,11 +271,20 @@ class mfix : public AmrCore
                           FArrayBox& scal_fab,
                           const Box& domain);
 
-    void set_scalar_bcs (Real time,
+    void set_tracer_bcs (Real time,
                          const int lev,
                          FArrayBox& scal_fab,
-                         const int comp,
                          const Box& domain);
+
+    void set_viscosity_bcs (Real time,
+                            const int lev,
+                            FArrayBox& scal_fab,
+                            const Box& domain);
+
+    void set_specific_heat_bcs (Real time,
+                                const int lev,
+                                FArrayBox& scal_fab,
+                                const Box& domain);
 
     void set_vec_bcs (const int lev,
                       FArrayBox& vec_fab,

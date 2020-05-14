@@ -39,6 +39,8 @@ mfix::set_velocity_bcs (Real time,
                         const Box& domain,
                         const int* extrap_dir_bcs) const
 {
+  BL_PROFILE("mfix::set_velocity_bcs()");
+
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
 

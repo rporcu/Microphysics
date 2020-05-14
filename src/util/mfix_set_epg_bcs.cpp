@@ -38,6 +38,8 @@ mfix::set_epg_bcs (const int lev,
                    const Box& domain,
                    const int* dir_bc) const
 {
+  BL_PROFILE("mfix::set_epg_bcs()");
+
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
 
@@ -180,7 +182,7 @@ mfix::set_epg_bcs (const int lev,
 
     if(*dir_bc == 1)
     {
-      amrex::ParallelFor(bx_yz_hi_2D, 
+      amrex::ParallelFor(bx_yz_hi_2D,
         [bct_ihi,dom_hi,minf,epg] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
@@ -205,7 +207,7 @@ mfix::set_epg_bcs (const int lev,
 
   if (nbot > 0)
   {
-    amrex::ParallelFor(bx_xz_lo_3D, 
+    amrex::ParallelFor(bx_xz_lo_3D,
       [bct_jlo,dom_lo,minf,pinf,pout,p_bc_ep_g,epg] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
@@ -245,7 +247,7 @@ mfix::set_epg_bcs (const int lev,
 
   if (ntop > 0)
   {
-    amrex::ParallelFor(bx_xz_hi_3D, 
+    amrex::ParallelFor(bx_xz_hi_3D,
       [bct_jhi,dom_hi,minf,pinf,pout,p_bc_ep_g,epg] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
@@ -260,7 +262,7 @@ mfix::set_epg_bcs (const int lev,
     if(*dir_bc == 1)
     {
 
-      amrex::ParallelFor(bx_xz_hi_2D, 
+      amrex::ParallelFor(bx_xz_hi_2D,
         [bct_jhi,dom_hi,minf,epg] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
@@ -285,7 +287,7 @@ mfix::set_epg_bcs (const int lev,
 
   if (ndwn > 0)
   {
-    amrex::ParallelFor(bx_xy_lo_3D, 
+    amrex::ParallelFor(bx_xy_lo_3D,
       [bct_klo,dom_lo,minf,pinf,pout,p_bc_ep_g,epg] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
