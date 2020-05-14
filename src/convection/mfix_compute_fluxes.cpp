@@ -588,9 +588,6 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
       for (int n(0); n < ncomp; n++) {
         Real sy_ijkn(0);
 
-        const int* bct_data = bc_types.data();
-        const int bct_size = bc_types.size();
-
         if( afrac_y > 0 ) {
           if( j <= dom_low.y and
            any(bct_jlo_val, bct_data, bct_size, aux::is_equal()))
@@ -675,9 +672,6 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
       for(int n(0); n < ncomp; n++) {
         Real sz_ijkn(0);
-
-        const int* bct_data = bc_types.data();
-        const int bct_size = bc_types.size();
 
         if( afrac_z > 0 ) {
           if( k <= dom_low.z and
