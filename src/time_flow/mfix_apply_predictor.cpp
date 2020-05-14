@@ -46,6 +46,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
                             Vector< MultiFab* >& laptemp_old,
                             Real time,
                             Real l_dt,
+                            Real l_prev_dt,
                             bool proj_2)
 {
     // We use the new-time value for things computed on the "*" state
@@ -396,7 +397,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
     for (int lev(0); lev <= finest_level; ++lev)
       depdt[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
 
-    mfix_apply_nodal_projection(depdt, new_time, l_dt, proj_2);
+    mfix_apply_nodal_projection(depdt, new_time, l_dt, l_prev_dt, proj_2);
 
     // *************************************************************************************
     // Correct small cells

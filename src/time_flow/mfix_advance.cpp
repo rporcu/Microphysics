@@ -26,7 +26,7 @@ mfix::mfix_project_velocity ()
     for (int lev(0); lev <= finest_level; ++lev)
       depdt[lev] = MFHelpers::createFrom(*(m_leveldata[lev]->ep_g), 0.0, 1).release();
 
-    mfix_apply_nodal_projection(depdt, time, dummy_dt, proj_2);
+    mfix_apply_nodal_projection(depdt, time, dummy_dt, dummy_dt, proj_2);
 
     for (int lev(0); lev <= finest_level; ++lev)
       delete depdt[lev];
@@ -45,7 +45,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   Real time = 0.0;
   int nstep = 0;
 
-  mfix_compute_dt(nstep,time,stop_time,dt);
+  mfix_compute_dt(nstep,time,stop_time,dt,dt);
 
   amrex::Print() << "Doing initial pressure iterations with dt = " << dt << "\n";
 
@@ -96,7 +96,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     bool proj_2 = false;
 
-    mfix_apply_predictor(conv_u, conv_s, divtau, laps, laptemp, time, dt, proj_2);
+    mfix_apply_predictor(conv_u, conv_s, divtau, laps, laptemp, time, dt, dt, proj_2);
 
     // Reset any quantities which might have been updated
     for (int lev = 0; lev <= finest_level; lev++)
