@@ -6,7 +6,7 @@
 using namespace std;
 
 void
-mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
+mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& prev_dt)
 {
     // dt is always computed even when fixed_dt is set,
     // so we can issue a warning if the value of fixed dt does not satisfy the CFL condition.

@@ -194,7 +194,7 @@ class mfix : public AmrCore
 
     void mfix_compute_vort ();
 
-    void mfix_compute_dt (int nstep, Real time, Real stop_time, Real & dt);
+    void mfix_compute_dt (int nstep, Real time, Real stop_time, Real & dt, Real & prev_dt);
 
     ///
     /// Parameters describing the level-set grid:
@@ -527,6 +527,7 @@ class mfix : public AmrCore
     void mfix_apply_nodal_projection (Vector< amrex::MultiFab* >& a_depdt,
                                       amrex::Real a_time,
                                       amrex::Real a_dt,
+                                      amrex::Real a_prev_dt,
                                       bool proj_2 );
 
     void apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
@@ -591,7 +592,7 @@ class mfix : public AmrCore
 
     static void GotoNextLine (std::istream & is);
 
-    void EvolveFluid (int nstep, Real & dt, Real & time, Real stop_time, Real & drag_timing);
+    void EvolveFluid (int nstep, Real & dt, Real & time, Real & prev_dt, Real stop_time, Real & drag_timing);
 
     void check_for_nans (int lev);
 
@@ -612,14 +613,16 @@ class mfix : public AmrCore
                                Vector< MultiFab* >&  divtau_old,
                                Vector< MultiFab* >&    laps_old,
                                Vector< MultiFab* >& laptemp_old,
-                               Real time, Real dt, bool proj_2);
+                               Real time, Real dt, Real prev_dt,
+                               bool proj_2);
 
     void mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
                                Vector< MultiFab* >&  conv_s_old,
                                Vector< MultiFab* >&  divtau_old,
                                Vector< MultiFab* >&    laps_old,
                                Vector< MultiFab* >& laptemp_old,
-                               Real time, Real dt, bool proj_2);
+                               Real time, Real dt, Real prev_dt,
+                               bool proj_2);
 
   private:
     void mfix_compute_diveu (Real time);
@@ -781,8 +784,6 @@ class mfix : public AmrCore
     Real fixed_dt;
     Real dt_min = 0.;    // Min dt allowed
     Real dt_max = 1.e14; // Max dt allowed
-
-    Real prev_dt = 0.; // dt used in previous timestep
 
     int particle_max_grid_size_x = -1;
     int particle_max_grid_size_y = -1;

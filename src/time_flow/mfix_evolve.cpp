@@ -32,7 +32,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     {
        if (FLUID::solve)
        {
-          EvolveFluid(nstep,dt,time,stop_time, drag_timing);
+          EvolveFluid(nstep,dt,prev_dt,time,stop_time, drag_timing);
           prev_dt = dt;
        }
     }
