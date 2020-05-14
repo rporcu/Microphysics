@@ -44,7 +44,6 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
             auto& particles = pti.GetArrayOfStructs();
             int np = pti.numParticles();
 
-            // TODO: check the following
             int np_replicated = np * (Nrep[idim] - 1);
 
             int new_np = np + np_replicated;
@@ -61,22 +60,19 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
 
                 amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE (int n) noexcept
                 {
-
                     int index = n;
-                    // TODO: fix the following index
-                    int index_repl = np + n * (Nrep[idim] - 1);
+                    int index_repl = i*np + n;
 
                     ParticleType p = pstruct[index];
-                    // TODO: fix the following index
                     ParticleType& p_rep = pstruct[index_repl];
 
                     p_rep.pos(0) = p.pos(0) + shift[0];
                     p_rep.pos(1) = p.pos(1) + shift[1];
                     p_rep.pos(2) = p.pos(2) + shift[2];
                 
-                    p_rep.rdata(realData::velx)   = p.rdata(realData::velx);
-                    p_rep.rdata(realData::vely)   = p.rdata(realData::vely);
-                    p_rep.rdata(realData::velz)   = p.rdata(realData::velz);
+                    p_rep.rdata(realData::velx) = p.rdata(realData::velx);
+                    p_rep.rdata(realData::vely) = p.rdata(realData::vely);
+                    p_rep.rdata(realData::velz) = p.rdata(realData::velz);
                 
                     // Set other particle properties
                     p_rep.idata(intData::phase)       = p.idata(intData::phase);
