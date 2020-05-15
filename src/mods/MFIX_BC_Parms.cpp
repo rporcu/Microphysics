@@ -12,7 +12,7 @@
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
 #include <MFIX_REGIONS_Parms.H>
-#include <MFIX_BcList.H>
+#include <MFIX_BC_List.H>
 
 namespace BC
 {
@@ -49,7 +49,7 @@ namespace BC
   void Initialize (amrex::Geometry& geom)
   {
 
-    BcList bc_mask;
+    BCList bc_mask;
 
     // Integer ids for BCs
     const int pout_ = bc_mask.get_pout();

@@ -32,17 +32,24 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
     for (int lev = 0; lev <= finest_level; lev++)
     {
       m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
     }
 
     // Fill ghost nodes and reimpose boundary conditions
     //mfix_set_velocity_bcs(time, vel_g, 0);
 
     mfix_set_density_bcs(time, get_ro_g());
-    //mfix_set_temperature_bcs(time, get_T_g()); // TODO do we need it?
+    // TODO: commenting the following makes BENCH03 GPU to pass
+    //mfix_set_temperature_bcs(time, get_T_g());
+    //mfix_set_scalar_bcs(time, get_cp_g(), get_k_g(), get_mu_g());
+    //mfix_set_tracer_bcs(time, get_trac());
+    //mfix_set_enthalpy_bcs(time, get_h_g());
 
     //
     // Start loop: if we are not seeking a steady state solution,
@@ -68,8 +75,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
     for (int lev = 0; lev <= finest_level; lev++)
     {
        conv_u_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-       // TODO: check this, I set 3 components since we have density, tracer and
-       // temperature
+       // 3 components since we have density, tracer and enthalpy
        conv_s_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
        divtau_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
          laps_old[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
@@ -116,6 +122,9 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
           MultiFab& T_g = *m_leveldata[lev]->T_g;
           MultiFab& T_go = *m_leveldata[lev]->T_go;
 
+          MultiFab& h_g = *m_leveldata[lev]->h_g;
+          MultiFab& h_go = *m_leveldata[lev]->h_go;
+
           MultiFab& trac = *m_leveldata[lev]->trac;
           MultiFab& trac_o = *m_leveldata[lev]->trac_o;
 
@@ -127,6 +136,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
           MultiFab::Copy(p_go, p_g, 0, 0, p_g.nComp(), p_go.nGrow());
           MultiFab::Copy(ro_go, ro_g, 0, 0, ro_g.nComp(), ro_go.nGrow());
           MultiFab::Copy(T_go, T_g, 0, 0, T_g.nComp(), T_go.nGrow());
+          MultiFab::Copy(h_go, h_g, 0, 0, h_g.nComp(), h_go.nGrow());
           MultiFab::Copy(trac_o, trac, 0, 0, trac.nComp(), trac_o.nGrow());
           MultiFab::Copy(vel_go, vel_g, 0, 0, vel_g.nComp(), vel_go.nGrow());
 

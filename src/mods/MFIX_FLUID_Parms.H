@@ -14,8 +14,6 @@ namespace FLUID
 
   enum THERMALCONDUCTIVITYMODEL {ConstantThermalConductivity};
 
-  static constexpr amrex::Real R = 8.31446261815324; // [J / (K * mol)]
-
   // Flag to solve fluid equations
   extern int solve;
 
@@ -23,7 +21,7 @@ namespace FLUID
   extern amrex::Real T_g0;
 
   // Specified constant gas specific heat
-  extern amrex::Real Cp_g0;
+  extern amrex::Real cp_g0;
 
   // Gas phase thermal conductivity coefficient
   extern amrex::Real k_g0;

@@ -247,6 +247,7 @@ mfix::GetDataScalar (int lev,
 
     if (icomp == 3)
        data.push_back(m_leveldata[lev]->mu_g);
+    // TODO cp_g, k_g
 
     if (time > t_new[lev] - teps && time < t_new[lev] + teps)
     {

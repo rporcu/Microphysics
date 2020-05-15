@@ -29,7 +29,7 @@
 
 #include <DiffusionOp.H>
 #include <MFIXParticleContainer.H>
-#include <MFIX_BcList.H>
+#include <MFIX_BC_List.H>
 #include <mfix_des_F.H>
 #include <mfix_eb_if.H>
 #include <MFIX_DEM_Parms.H>
@@ -243,6 +243,7 @@ class mfix : public AmrCore
 
     void mfix_set_scalar_bcs (Real time,
                               Vector< MultiFab* > const& cp_g,
+                              Vector< MultiFab* > const& k_g,
                               Vector< MultiFab* > const& mu_g);
 
     void set_velocity_bcs (Real time,
@@ -258,12 +259,12 @@ class mfix : public AmrCore
 
     void set_enthalpy_bcs (Real time,
                            const int lev,
-                           FArrayBox& scal_fab,
+                           FArrayBox& h_g_fab,
                            const Box& domain);
 
     void set_temperature_bcs (Real time,
                               const int lev,
-                              FArrayBox& scal_fab,
+                              FArrayBox& T_g_fab,
                               const Box& domain);
 
     void set_density_bcs (Real time,
@@ -273,7 +274,7 @@ class mfix : public AmrCore
 
     void set_tracer_bcs (Real time,
                          const int lev,
-                         FArrayBox& scal_fab,
+                         FArrayBox& trac_fab,
                          const Box& domain);
 
     void set_viscosity_bcs (Real time,
@@ -285,6 +286,11 @@ class mfix : public AmrCore
                                 const int lev,
                                 FArrayBox& scal_fab,
                                 const Box& domain);
+
+    void set_thermal_conductivity_bcs (Real time,
+                                       const int lev,
+                                       FArrayBox& scal_fab,
+                                       const Box& domain);
 
     void set_vec_bcs (const int lev,
                       FArrayBox& vec_fab,
@@ -503,7 +509,7 @@ class mfix : public AmrCore
     // Scalar diffusive coefficient
     Vector<Real> mu_s;
 
-    BcList bc_list;
+    BCList bc_list;
 
     // "mutable" keyword is just a temporary fix to allow NodalProjection to
     // work as intended. This won't be needed when the BC will be given their own
@@ -601,7 +607,7 @@ class mfix : public AmrCore
                                        Vector< MultiFab* > const& vel,
                                        Vector< MultiFab* > const& ep_g,
                                        Vector< MultiFab* > const& ro_g,
-                                       Vector< MultiFab* > const& T_g,
+                                       Vector< MultiFab* > const& h_g,
                                        Vector< MultiFab* > const& trac,
                                        Real time);
 
@@ -668,6 +674,7 @@ class mfix : public AmrCore
     amrex::Vector<amrex::MultiFab*> get_vel_g () noexcept;
     amrex::Vector<amrex::MultiFab*> get_vel_g_old () noexcept;
     amrex::Vector<amrex::MultiFab*> get_cp_g () noexcept;
+    amrex::Vector<amrex::MultiFab*> get_k_g () noexcept;
     amrex::Vector<amrex::MultiFab*> get_mu_g () noexcept;
     amrex::Vector<amrex::MultiFab*> get_drag () noexcept;
     amrex::Vector<amrex::MultiFab*> get_xslopes_u () noexcept;
@@ -827,6 +834,7 @@ class mfix : public AmrCore
     int plt_T_g     = 0;
     int plt_trac    = 0;
     int plt_cp_g    = 0;
+    int plt_k_g     = 0;
     int plt_mu_g    = 0;
     int plt_diveu   = 0;
     int plt_volfrac = 0;

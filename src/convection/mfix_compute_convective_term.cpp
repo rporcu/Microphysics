@@ -49,26 +49,29 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         MultiFab Sborder_s(grids[lev], dmap[lev], 1, nghost, MFInfo(), *ebfactory[lev]);
 
         // We FillPatch density even if not advecting it because we need it in the projections
-        state_comp =  0; num_comp = 1;
+        state_comp =  0; // comp = 0 --> density
+        num_comp = 1;
         FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
         MultiFab::Copy(*ro_g_in[lev], Sborder_s, 0, 0, num_comp, ro_g_in[lev]->nGrow());
 
         if (advect_tracer)
         {
-           state_comp =  1; num_comp = 1;
+           state_comp =  1; // comp = 1 --> tracer
+           num_comp = 1;
            FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
            MultiFab::Copy(*trac_in[lev], Sborder_s, 0, 0, num_comp, trac_in[lev]->nGrow());
         }
 
         if (advect_enthalpy)
         {
-           state_comp =  5; num_comp = 1;
+           state_comp =  5; // comp = 1 --> enthalpy
+           num_comp = 1;
            FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
            MultiFab::Copy(*h_g_in[lev], Sborder_s, 0, 0, num_comp, h_g_in[lev]->nGrow());
         }
         
         // We make these with ncomp = 3 so they can hold all three velocity components at once;
-        //    note we can also use them to just hold the single density or tracer comp
+        //    note we can also use them to just hold the single density or tracer comp or enthalpy
         fx[lev] = new MultiFab(m_leveldata[lev]->u_mac->boxArray(), dmap[lev], 3, 2,
                                MFInfo(), *ebfactory[lev]);
         fy[lev] = new MultiFab(m_leveldata[lev]->v_mac->boxArray(), dmap[lev], 3, 2,

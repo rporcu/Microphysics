@@ -52,10 +52,10 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   // Fill ghost nodes and reimpose boundary conditions
   mfix_set_velocity_bcs(time, get_vel_g(), 0);
   mfix_set_density_bcs(time, get_ro_g());
-  mfix_set_enthalpy_bcs(time, get_h_g());
   mfix_set_temperature_bcs(time, get_T_g());
   mfix_set_tracer_bcs(time, get_trac());
-  mfix_set_scalar_bcs(time, get_cp_g(), get_mu_g());
+  mfix_set_scalar_bcs(time, get_cp_g(), get_k_g(), get_mu_g());
+  mfix_set_enthalpy_bcs(time, get_h_g());
 
   // Copy vel_g into vel_go
   for (int lev = 0; lev <= finest_level; lev++)
@@ -75,8 +75,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   for (int lev = 0; lev <= finest_level; lev++)
   {
     conv_u[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-    // TODO: check that 3 components is correct since now we have one for
-    // density, one for tracer and one for temperature
+    // density, one for tracer and one for enthalpy
     conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
     divtau[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
     laps[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
@@ -127,10 +126,10 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     // Reset the boundary values (necessary if they are time-dependent)
     mfix_set_velocity_bcs(time, get_vel_g(), 0);
     mfix_set_density_bcs(time, get_ro_g());
-    mfix_set_enthalpy_bcs(time, get_h_g());
     mfix_set_temperature_bcs(time, get_T_g());
+    mfix_set_scalar_bcs(time, get_cp_g(), get_k_g(), get_mu_g());
     mfix_set_tracer_bcs(time, get_trac());
-    mfix_set_scalar_bcs(time, get_cp_g(), get_mu_g());
+    mfix_set_enthalpy_bcs(time, get_h_g());
   }
 
   for (int lev = 0; lev <= finest_level; lev++)
