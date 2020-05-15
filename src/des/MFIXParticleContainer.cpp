@@ -173,6 +173,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> tow;
     std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> fc, pfor, wfor;
 
+    std::map<PairIndex, bool> tile_has_walls;
+
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
         const Box& bx = pti.tilebox();
@@ -182,6 +184,25 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         pfor[index] = Gpu::ManagedDeviceVector<Real>();
         wfor[index] = Gpu::ManagedDeviceVector<Real>();
 
+        // Only call the routine for wall collisions if we actually have walls
+        BL_PROFILE_VAR("ls_has_walls", has_wall);
+        bool has_wall = false;
+        if ((ebfactory != NULL)
+            && ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
+        {
+            has_wall = true;
+        }
+        else
+        {
+            int int_has_wall = 0;
+            Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
+            ls_has_walls(int_has_wall, bx, (*ls_phi)[pti], tol);
+            has_wall = (int_has_wall > 0);
+        }
+
+        tile_has_walls[index] = has_wall;
+
+        BL_PROFILE_VAR_STOP(has_wall);
     }
 
     /****************************************************************************
@@ -217,8 +238,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 #endif
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
-            const Box& bx = pti.tilebox();
-
             // Timer used for load-balancing
             Real wt = ParallelDescriptor::second();
 
@@ -264,8 +283,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
              * Particle-Wall collision forces (and torques)                     *
              *******************************************************************/
 
-            if ((ebfactory != NULL) &&
-               ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
+            if (tile_has_walls[index])
             {
                 // Calculate forces and torques from particle-wall collisions
 #ifndef AMREX_USE_CUDA
@@ -584,7 +602,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 //if (DEM::nspecies_dem > 0){
                 //   for(int j=0; j < DEM::nspecies_dem; ++j){
                 //      //j -- spec1,spec2 .. ; i -- particle index
-                //      spec_data.m_runtime_rdata[j][i] += subdt*spec_data.m_runtime_rdata[j][i];
+                //      spec_data.m_runtime_rdata[j][i] += subdt*spec_data.m_runtime_rdata[j][i]; 
                 //   }
                 //}
 
