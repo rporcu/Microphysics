@@ -184,27 +184,32 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         pfor[index] = Gpu::ManagedDeviceVector<Real>();
         wfor[index] = Gpu::ManagedDeviceVector<Real>();
 
-        // Only call the routine for wall collisions if we actually have walls
-        BL_PROFILE_VAR("ls_has_walls", has_wall);
+        // Determine if this particle tile actually has any walls
         bool has_wall = false;
+
         if ((ebfactory != NULL)
             && ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
         {
             has_wall = true;
         }
-#if 0
         else
         {
-            int int_has_wall = 0;
+            // We need this test for the case of an inflow boundary: 
+            // inflow does not appear in the EBFactory but 
+            // the particles see it as a wall
+
+            // Create the nodal refined box based on the current particle tile
+            Box refined_box(amrex::convert(amrex::refine(bx,ls_refinement), IntVect{1,1,1}));
+
+            // Set tol to 1/2 dx
             Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
-            ls_has_walls(int_has_wall, bx, (*ls_phi)[pti], tol);
-            has_wall = (int_has_wall > 0);
+
+            Real ls_min_over_box = ((*ls_phi)[pti]).min(refined_box,0);
+
+            if (ls_min_over_box < tol) has_wall = true;
         }
-#endif
 
         tile_has_walls[index] = has_wall;
-
-        BL_PROFILE_VAR_STOP(has_wall);
     }
 
     /****************************************************************************
