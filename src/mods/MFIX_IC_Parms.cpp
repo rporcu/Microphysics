@@ -24,7 +24,7 @@ namespace IC
 
     // Query if advect_enthalpy so we check if ic temperature inputs are correct
     amrex::ParmParse ppMFIX("mfix");
-    int advect_enthalpy;
+    int advect_enthalpy(0);
 
     ppMFIX.query("advect_enthalpy", advect_enthalpy);
 
