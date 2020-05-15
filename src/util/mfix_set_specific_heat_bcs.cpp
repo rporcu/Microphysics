@@ -108,7 +108,8 @@ mfix::set_specific_heat_bcs (Real time,
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
 
-  amrex::Real* p_bc_t_g = m_bc_t_g.data();
+  // Unused at the moment
+  // amrex::Real* p_bc_t_g = m_bc_t_g.data();
 
   if (nlft > 0)
   {
