@@ -35,6 +35,7 @@ mfix::InitIOPltData ()
       pp.query("plt_T_g",     plt_T_g    );
       pp.query("plt_trac",    plt_trac   );
       pp.query("plt_cp_g",    plt_cp_g   );
+      pp.query("plt_k_g",     plt_k_g    );
       pp.query("plt_mu_g",    plt_mu_g   );
       pp.query("plt_diveu",   plt_diveu  );
       pp.query("plt_vort",    plt_vort   );
@@ -56,6 +57,7 @@ mfix::InitIOPltData ()
         plt_T_g     = 1;
         plt_trac    = 1;
         plt_cp_g    = 1;
+        plt_k_g     = 0;
         plt_mu_g    = 1;
         plt_vort    = 1;
         plt_diveu   = 1;
@@ -73,6 +75,7 @@ mfix::InitIOPltData ()
       if( plt_T_g     == 1) pltVarCount += 1;
       if( plt_trac    == 1) pltVarCount += 1;
       if( plt_cp_g    == 1) pltVarCount += 1;
+      if( plt_k_g     == 1) pltVarCount += 1;
       if( plt_mu_g    == 1) pltVarCount += 1;
       if( plt_vort    == 1) pltVarCount += 1;
       if( plt_diveu   == 1) pltVarCount += 1;
@@ -225,6 +228,10 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
       if( plt_cp_g    == 1)
         pltFldNames.push_back("cp_g");
 
+      // Thermal conductivity
+      if( plt_k_g    == 1)
+        pltFldNames.push_back("k_g");
+
       // Fluid viscosity
       if( plt_mu_g    == 1)
         pltFldNames.push_back("mu_g");
@@ -309,6 +316,12 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         // Specific heat
         if( plt_cp_g    == 1) {
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->cp_g, 0, lc, 1, 0);
+          lc += 1;
+        }
+
+        // Specific heat
+        if( plt_k_g    == 1) {
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->k_g, 0, lc, 1, 0);
           lc += 1;
         }
 

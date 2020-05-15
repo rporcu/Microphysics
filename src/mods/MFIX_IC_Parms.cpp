@@ -22,6 +22,12 @@ namespace IC
     std::vector<std::string> regions;
     pp.queryarr("regions", regions);
 
+    // Query if advect_enthalpy so we check if ic temperature inputs are correct
+    amrex::ParmParse ppMFIX("mfix");
+    int advect_enthalpy;
+
+    ppMFIX.query("advect_enthalpy", advect_enthalpy);
+
     // Loop over ICs
     for(int icv=0; icv<regions.size(); icv++){
 
@@ -44,7 +50,11 @@ namespace IC
         volfrac_total += new_ic.fluid.volfrac;
 
         ppFluid.getarr("velocity", new_ic.fluid.velocity, 0, 3);
-        ppFluid.query("temperature", new_ic.fluid.temperature);
+
+        if (advect_enthalpy)
+          ppFluid.get("temperature", new_ic.fluid.temperature);
+        else
+          ppFluid.query("temperature", new_ic.fluid.temperature);
 
         new_ic.fluid.pressure_defined = ppFluid.query("pressure", new_ic.fluid.pressure);
       }
@@ -71,7 +81,11 @@ namespace IC
           volfrac_total += new_ic.fluid.volfrac;
 
           ppSolid.getarr("velocity", new_solid.velocity, 0, 3);
-          ppSolid.query("temperature", new_solid.temperature);
+
+          if (advect_enthalpy)
+            ppSolid.get("temperature", new_solid.temperature);
+          else
+            ppSolid.query("temperature", new_solid.temperature);
 
           new_solid.statwt = 1.0;
           ppSolid.query("statwt", new_solid.statwt);

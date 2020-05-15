@@ -1,5 +1,7 @@
 #include <DiffusionOp.H>
 
+#include <MFIX_FLUID_Parms.H>
+
 using namespace amrex;
 
 //
@@ -8,18 +10,19 @@ using namespace amrex;
 void DiffusionOp::diffuse_temperature (      Vector< MultiFab* >  T_g_in,
                                        const Vector< MultiFab* > ep_g_in,
                                        const Vector< MultiFab* > ro_g_in,
+                                       const Vector< MultiFab* >  h_g_in,
                                        const Vector< MultiFab* > cp_g_in,
-                                       const Real k_g,
+                                       const Vector< MultiFab* >  k_g_in,
                                        Real dt)
 {
     BL_PROFILE("DiffusionOp::diffuse_temperature");
 
     int finest_level = amrcore->finestLevel();
 
-    // Update the coefficients of the matrix going into the solve based on the current state of the
-    // simulation. Recall that the relevant matrix is
+    // Update the coefficients of the matrix going into the solve based on the
+    // current state of the simulation. Recall that the relevant matrix is
     //
-    //      alpha a - beta div ( b grad )   <--->   rho - dt div ( mu_s grad )
+    //      alpha a - beta div ( b grad )   <--->   rho - dt div ( k_g grad )
     //
     // So the constants and variable coefficients are:
     //
@@ -39,11 +42,15 @@ void DiffusionOp::diffuse_temperature (      Vector< MultiFab* >  T_g_in,
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
-        EB_interp_CellCentroid_to_FaceCentroid (*ep_g_in[lev], GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
+        MultiFab ep_g_k_g(ep_g_in[lev]->boxArray(), ep_g_in[lev]->DistributionMap(),
+            ep_g_in[lev]->nComp(), ep_g_in[lev]->nGrow(), MFInfo(), ep_g_in[lev]->Factory());
+        // Initialize to 0
+        ep_g_k_g.setVal(0.);
 
-        // Multiply so that the face-centroid-base coefficients are (k_g ep_g)
-        for(int dir = 0; dir < 3; dir++)
-           b[lev][dir]->mult(k_g,0,1);
+        MultiFab::Copy(ep_g_k_g, *ep_g_in[lev], 0, 0, 1, ep_g_in[lev]->nComp());
+        MultiFab::Multiply(ep_g_k_g, *k_g_in[lev], 0, 0, 1, k_g_in[lev]->nComp());
+
+        EB_interp_CellCentroid_to_FaceCentroid (ep_g_k_g, GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
 
         // Turn "ep_g_in" into (rho * ep_g * cp_g)
         MultiFab::Multiply((*ep_g_in[lev]), (*ro_g_in[lev]), 0, 0, 1, 0);
@@ -87,5 +94,7 @@ void DiffusionOp::diffuse_temperature (      Vector< MultiFab* >  T_g_in,
     {
         phi[lev]->FillBoundary(geom[lev].periodicity());
         MultiFab::Copy(*T_g_in[lev], *phi[lev], 0, 0, 1, 1);
+        MultiFab::Copy(*h_g_in[lev], *phi[lev], 0, 0, 1, 1);
+        MultiFab::Multiply(*h_g_in[lev], *cp_g_in[lev], 0, 0, 1, 1);
     }
 }

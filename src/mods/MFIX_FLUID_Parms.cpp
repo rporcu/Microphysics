@@ -11,10 +11,10 @@ namespace FLUID
   int solve;
 
   // Specified constant gas temperature
-  amrex::Real T_g0 = 273.15; // TODO
+  amrex::Real T_g0 = 273.15;
 
   // Specified constant gas specific heat
-  amrex::Real Cp_g0 = 1.0;
+  amrex::Real cp_g0 = 1.0;
 
   // Gas phase thermal conductivity coefficient
   amrex::Real k_g0 = 1.0;
@@ -112,7 +112,7 @@ namespace FLUID
         {
           //SPECIFICHEATMODEL SpecificHeatModel = ConstantSpecificHeat;
           // If this value is not set in the inputs file, the default is 1.0
-          ppFluid.get("specific_heat.constant",   Cp_g0 );
+          ppFluid.get("specific_heat.constant",   cp_g0 );
         }
         else if (specific_heat_model == "nasa9-poly")
         {

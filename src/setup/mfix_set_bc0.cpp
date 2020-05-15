@@ -10,13 +10,16 @@ mfix::set_bc0 (const Box& sbx,
                const int lev,
                const Box& domain)
 {
-  const Real T_g0   = FLUID::T_g0;
+  // TODO the following won't be constant but computed as functions of the other
+  // variables
+  //const Real T_g0   = FLUID::T_g0;
   const Real ro_g0  = FLUID::ro_g0;
-  const Real cp_g0  = FLUID::Cp_g0;
+  const Real cp_g0  = FLUID::cp_g0;
+  const Real k_g0   = FLUID::k_g0;
   const Real mu_g0  = FLUID::mu_g0;
   const Real trac_0 = FLUID::trac_0;
 
-  const Real h_g0   = FLUID::T_g0 * FLUID::Cp_g0;
+  //const Real h_g0   = FLUID::T_g0 * FLUID::cp_g0;
 
   Array4<Real> const& a_ep_g = m_leveldata[lev]->ep_g->array(*mfi);
   Array4<Real> const& a_h_g  = m_leveldata[lev]->h_g->array(*mfi);
@@ -24,6 +27,7 @@ mfix::set_bc0 (const Box& sbx,
   Array4<Real> const& a_ro_g = m_leveldata[lev]->ro_g->array(*mfi);
   Array4<Real> const& a_trac = m_leveldata[lev]->trac->array(*mfi);
   Array4<Real> const& a_cp_g = m_leveldata[lev]->cp_g->array(*mfi);
+  Array4<Real> const& a_k_g  = m_leveldata[lev]->k_g->array(*mfi);
   Array4<Real> const& a_mu_g = m_leveldata[lev]->mu_g->array(*mfi);
 
   const IntVect sbx_lo(sbx.loVect());
@@ -72,14 +76,11 @@ mfix::set_bc0 (const Box& sbx,
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
-        Real bc_h_g(h_g0);
-        Real bc_T_g(T_g0);
         Real bc_ro_g(ro_g0);
         Real bc_trac(trac_0);
-        Real bc_cp_g(0);
+        Real bc_cp_g(cp_g0);
+        Real bc_k_g(k_g0);
         Real bc_mu_g(0);
-
-        bc_cp_g = cp_g0;
 
         if (is_equal(mu_g0, undefined))
           bc_mu_g = sutherland(p_bc_t_g[bcv]);
@@ -87,12 +88,13 @@ mfix::set_bc0 (const Box& sbx,
           bc_mu_g = mu_g0;
 
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-        a_h_g(i,j,k)  = bc_h_g;
-        a_T_g(i,j,k)  = bc_T_g;
         a_ro_g(i,j,k) = bc_ro_g;
         a_trac(i,j,k) = bc_trac;
-        a_cp_g(i,j,k) = bc_cp_g;
         a_mu_g(i,j,k) = bc_mu_g;
+        a_T_g(i,j,k)  = p_bc_t_g[bcv];
+        a_cp_g(i,j,k) = bc_cp_g;
+        a_k_g(i,j,k)  = bc_k_g;
+        a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
       }
     });
   }
@@ -113,14 +115,11 @@ mfix::set_bc0 (const Box& sbx,
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
-        Real bc_h_g(h_g0);
-        Real bc_T_g(T_g0);
         Real bc_ro_g(ro_g0);
         Real bc_trac(trac_0);
-        Real bc_cp_g(0);
+        Real bc_cp_g(cp_g0);
+        Real bc_k_g(k_g0);
         Real bc_mu_g(0);
-
-        bc_cp_g = cp_g0;
 
         if (is_equal(mu_g0, undefined))
           bc_mu_g = sutherland(p_bc_t_g[bcv]);
@@ -128,12 +127,13 @@ mfix::set_bc0 (const Box& sbx,
           bc_mu_g = mu_g0;
 
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-        a_h_g(i,j,k)  = bc_h_g;
-        a_T_g(i,j,k)  = bc_T_g;
         a_ro_g(i,j,k) = bc_ro_g;
         a_trac(i,j,k) = bc_trac;
-        a_cp_g(i,j,k) = bc_cp_g;
         a_mu_g(i,j,k) = bc_mu_g;
+        a_T_g(i,j,k)  = p_bc_t_g[bcv];
+        a_cp_g(i,j,k) = bc_cp_g;
+        a_k_g(i,j,k)  = bc_k_g;
+        a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
       }
     });
   }
@@ -154,14 +154,11 @@ mfix::set_bc0 (const Box& sbx,
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
-        Real bc_h_g(h_g0);
-        Real bc_T_g(T_g0);
         Real bc_ro_g(ro_g0);
         Real bc_trac(trac_0);
-        Real bc_cp_g(0);
+        Real bc_cp_g(cp_g0);
+        Real bc_k_g(k_g0);
         Real bc_mu_g(0);
-
-        bc_cp_g = cp_g0;
 
         if (is_equal(mu_g0, undefined))
            bc_mu_g = sutherland(p_bc_t_g[bcv]);
@@ -169,12 +166,13 @@ mfix::set_bc0 (const Box& sbx,
            bc_mu_g = mu_g0;
   
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-        a_h_g(i,j,k)  = bc_h_g;
-        a_T_g(i,j,k)  = bc_T_g;
         a_ro_g(i,j,k) = bc_ro_g;
         a_trac(i,j,k) = bc_trac;
-        a_cp_g(i,j,k) = bc_cp_g;
         a_mu_g(i,j,k) = bc_mu_g;
+        a_T_g(i,j,k)  = p_bc_t_g[bcv];
+        a_cp_g(i,j,k) = bc_cp_g;
+        a_k_g(i,j,k)  = bc_k_g;
+        a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
       }
     });
   }
@@ -195,14 +193,11 @@ mfix::set_bc0 (const Box& sbx,
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
-        Real bc_h_g(h_g0);
-        Real bc_T_g(T_g0);
         Real bc_ro_g(ro_g0);
         Real bc_trac(trac_0);
-        Real bc_cp_g(0);
+        Real bc_cp_g(cp_g0);
+        Real bc_k_g(k_g0);
         Real bc_mu_g(0);
-
-        bc_cp_g = cp_g0;
 
         if (is_equal(mu_g0, undefined))
            bc_mu_g = sutherland(p_bc_t_g[bcv]);
@@ -210,12 +205,13 @@ mfix::set_bc0 (const Box& sbx,
            bc_mu_g = mu_g0;
 
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-        a_h_g(i,j,k)  = bc_h_g;
-        a_T_g(i,j,k)  = bc_T_g;
         a_ro_g(i,j,k) = bc_ro_g;
         a_trac(i,j,k) = bc_trac;
-        a_cp_g(i,j,k) = bc_cp_g;
         a_mu_g(i,j,k) = bc_mu_g;
+        a_T_g(i,j,k)  = p_bc_t_g[bcv];
+        a_cp_g(i,j,k) = bc_cp_g;
+        a_k_g(i,j,k)  = bc_k_g;
+        a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
       }
     });
   }
@@ -236,14 +232,11 @@ mfix::set_bc0 (const Box& sbx,
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
-        Real bc_h_g(h_g0);
-        Real bc_T_g(T_g0);
         Real bc_ro_g(ro_g0);
         Real bc_trac(trac_0);
-        Real bc_cp_g(0);
+        Real bc_cp_g(cp_g0);
+        Real bc_k_g(k_g0);
         Real bc_mu_g(0);
-
-        bc_cp_g = cp_g0;
 
         if (is_equal(mu_g0, undefined))
            bc_mu_g = sutherland(p_bc_t_g[bcv]);
@@ -251,12 +244,13 @@ mfix::set_bc0 (const Box& sbx,
            bc_mu_g = mu_g0;
 
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-        a_h_g(i,j,k)  = bc_h_g;
-        a_T_g(i,j,k)  = bc_T_g;
         a_ro_g(i,j,k) = bc_ro_g;
         a_trac(i,j,k) = bc_trac;
-        a_cp_g(i,j,k) = bc_cp_g;
         a_mu_g(i,j,k) = bc_mu_g;
+        a_T_g(i,j,k)  = p_bc_t_g[bcv];
+        a_cp_g(i,j,k) = bc_cp_g;
+        a_k_g(i,j,k)  = bc_k_g;
+        a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
       }
     });
   }
@@ -277,14 +271,11 @@ mfix::set_bc0 (const Box& sbx,
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
-        Real bc_h_g(h_g0);
-        Real bc_T_g(T_g0);
         Real bc_ro_g(ro_g0);
         Real bc_trac(trac_0);
-        Real bc_cp_g(0);
+        Real bc_cp_g(cp_g0);
+        Real bc_k_g(k_g0);
         Real bc_mu_g(0);
-
-        bc_cp_g = cp_g0;
 
         if (is_equal(mu_g0, undefined))
            bc_mu_g = sutherland(p_bc_t_g[bcv]);
@@ -292,12 +283,13 @@ mfix::set_bc0 (const Box& sbx,
            bc_mu_g = mu_g0;
 
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-        a_h_g(i,j,k)  = bc_h_g;
-        a_T_g(i,j,k)  = bc_T_g;
         a_ro_g(i,j,k) = bc_ro_g;
         a_trac(i,j,k) = bc_trac;
-        a_cp_g(i,j,k) = bc_cp_g;
         a_mu_g(i,j,k) = bc_mu_g;
+        a_T_g(i,j,k)  = p_bc_t_g[bcv];
+        a_cp_g(i,j,k) = bc_cp_g;
+        a_k_g(i,j,k)  = bc_k_g;
+        a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
       }
     });
   }

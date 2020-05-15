@@ -3,9 +3,9 @@
 
 // Boundary conditions list auxiliary structure
 //
-class BcList {
+class BCList {
   public:
-    BcList (const int undefined = 0,
+    BCList (const int undefined = 0,
             const int ig = 9,
             const int pinf = 10,
             const int pout = 11,
