@@ -20,13 +20,6 @@ module param
   ! Maximum number of user-defined output files
   integer, parameter :: dim_usr = 128
 
-  ! Number of Equation types:
-  !  1) Gas pressure
-  !  2) Gas and solids U-Momentum equation
-  !  3) Gas and solids V-Momentum equation
-  !  4) Gas and solids W-Momentum equation
-  integer, parameter :: dim_eqs = 4
-
 ! Parameters describing problem size: (set from user input)
 !'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 

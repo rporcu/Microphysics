@@ -10,7 +10,6 @@ target_sources( mfixcore
    param_mod.f90
    param_mod_F.H
    param_mod_F.cpp
-   run_mod.f90
    MFIX_BC_List.H
    MFIX_FLUID_Parms.cpp
    MFIX_FLUID_Parms.H

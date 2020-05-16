@@ -21,20 +21,14 @@ module des_time_march_module
 
 contains
 
-   subroutine des_init_time_loop (tstart, dt, nsubsteps, subdt) &
+   subroutine des_init_time_loop (dt, nsubsteps, subdt) &
         bind(C, name="des_init_time_loop")
 
       use discretelement,  only: dtsolid
-      use run,             only: des_tstart, des_dt
 
-      real(rt),   intent(in   ) :: tstart, dt
+      real(rt),       intent(in   ) :: dt
       integer(c_int), intent(  out) :: nsubsteps
-      real(rt),   intent(  out) :: subdt
-
-      ! update the global des_tstart, and des_dt (in run module) corresponding to this
-      ! des run: this enables usr[2,3]_des to know the time
-      des_tstart = tstart
-      des_dt     = dt
+      real(rt),       intent(  out) :: subdt
 
       ! Initialize time stepping variables
       if ( dt >= dtsolid ) then

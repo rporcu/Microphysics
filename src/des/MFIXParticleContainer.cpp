@@ -158,7 +158,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
      ***************************************************************************/
 
     Real subdt;
-    des_init_time_loop(&time, &dt, &nsubsteps, &subdt);
+    des_init_time_loop(&dt, &nsubsteps, &subdt);
 
     /****************************************************************************
      * Get particle EB geometric info
