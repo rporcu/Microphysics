@@ -7,18 +7,6 @@ module des_time_march_module
 
    private
 
-   ! Define interface for external functions so there will be no
-   ! warning at compile time
-   interface
-
-      subroutine usr0_des ()
-      end subroutine usr0_des
-
-      subroutine usr1_des ()
-      end subroutine usr1_des
-
-   end interface
-
 contains
 
    subroutine des_init_time_loop (dt, nsubsteps, subdt) &

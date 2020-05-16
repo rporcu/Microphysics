@@ -6,5 +6,4 @@ target_sources( mfixcore
    PRIVATE
    mfix_usr.cpp
    MFIX_PC_usr.cpp
-   usr_drag.cpp
    )
