@@ -14,13 +14,14 @@ variables:
   FC: "gfortran"
   GIT_DEPTH: 1
   GIT_STRATEGY: fetch
-  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_STRATEGY: none
   JOULE_MODULES: "cuda/10.2 gnu/8.4.0 openmpi/4.0.3_gnu8.4 ccache/3.7.9"
 
 ###### Test jobs #####
 
 test_csg: &test_template
   script:
+    - git submodule update --init --force --recursive
     - cmake -S .
             -B build
             -G Ninja
@@ -30,6 +31,7 @@ test_csg: &test_template
     - ./build/src/eb/tests/functional_tests
   tags:
     - mfix-exa
+  allow_failure: true
   artifacts:
     name: "$CI_JOB_NAME"
     expire_in: 1 week
@@ -47,7 +49,7 @@ test_csg: &test_template
 
 .cpu_test: &cpu_template
   script:
-    - git submodule update --init
+    - git submodule update --init --force subprojects/amrex
     - cmake -S .
             -B build
             -DENABLE_MPI=$ENABLE_MPI
@@ -62,7 +64,7 @@ test_csg: &test_template
 .gpu_test: &gpu_template
   script:
     - module load $JOULE_MODULES
-    - git submodule update --init --force
+    - git submodule update --init --force subprojects/amrex
     - cmake -S .
             -B build
             -G Ninja

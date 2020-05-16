@@ -799,6 +799,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
             init_fluid_restart(bx, (*m_leveldata[lev]->T_g )[mfi],
                                    (*m_leveldata[lev]->cp_g)[mfi],
+                                   (*m_leveldata[lev]->k_g)[mfi],
                                    (*m_leveldata[lev]->mu_g)[mfi]);
 
           } else {
@@ -812,6 +813,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
                        (*m_leveldata[lev]->p_g)[mfi],
                        (*m_leveldata[lev]->vel_g)[mfi],
                        (*m_leveldata[lev]->cp_g)[mfi],
+                       (*m_leveldata[lev]->k_g)[mfi],
                        (*m_leveldata[lev]->mu_g)[mfi],
                        dx, dy, dz, xlen, ylen, zlen, test_tracer_conservation);
           }
@@ -835,6 +837,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
 
       if (advect_enthalpy)
@@ -873,17 +876,16 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       mfix_set_temperature_bcs(time, get_T_g());
       mfix_set_temperature_bcs(time, get_T_g_old());
 
-      mfix_set_enthalpy_bcs(time, get_h_g());
-      mfix_set_enthalpy_bcs(time, get_h_g_old());
-
       mfix_set_density_bcs(time, get_ro_g());
       mfix_set_density_bcs(time, get_ro_g_old());
 
       mfix_set_tracer_bcs(time, get_trac());
       mfix_set_tracer_bcs(time, get_trac_old());
 
-      mfix_set_scalar_bcs(time, get_cp_g(), get_mu_g());
-      mfix_set_scalar_bcs(time, get_cp_g(), get_mu_g());
+      mfix_set_scalar_bcs(time, get_cp_g(), get_k_g(), get_mu_g());
+
+      mfix_set_enthalpy_bcs(time, get_h_g());
+      mfix_set_enthalpy_bcs(time, get_h_g_old());
 
       // Project the initial velocity field
       if (do_initial_proj)

@@ -23,6 +23,7 @@ LevelData::LevelData (BoxArray const& ba,
   , p0_g(new MultiFab(amrex::convert(ba, IntVect{1,1,1}), dmap, 1, nghost, MFInfo(), factory))
   , gp(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))
   , cp_g(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
+  , k_g(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , mu_g(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , vort(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , drag(new MultiFab(ba, dmap, 4, nghost, MFInfo(), factory))
@@ -58,6 +59,7 @@ void LevelData::resetValues (const amrex::Real covered_val)
   diveu->setVal(0);
   gp->setVal(0);
   cp_g->setVal(0);
+  k_g->setVal(0);
   mu_g->setVal(0);
   vel_g->setVal(0);
   vel_go->setVal(0);
@@ -95,6 +97,7 @@ LevelData::~LevelData ()
   delete p0_g;
   delete gp;
   delete cp_g;
+  delete k_g;
   delete mu_g;
   delete vort;
   delete drag;

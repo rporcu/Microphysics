@@ -114,7 +114,7 @@ mfix::mfix ()
 
     bcs_u.resize(3); // one for each velocity component
     // This needs to be one bigger than the highest index scalar in mfix_set_scalar_bcs
-    bcs_s.resize(6); // density and tracer
+    bcs_s.resize(6); // density, tracer, ep_g, mu_g, T_g, h_g --> TODO cp_g, k_g
     bcs_f.resize(1); // just one
 
     //___________________________________________________________________________
@@ -315,6 +315,16 @@ Vector< MultiFab* > mfix::get_cp_g () noexcept
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
     r.push_back(m_leveldata[lev]->cp_g);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_k_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->k_g);
   }
   return r;
 }

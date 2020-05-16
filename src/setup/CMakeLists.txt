@@ -10,6 +10,8 @@ target_sources( mfixcore
    MFIX_calc_cell.cpp
    mfix_calc_cp_g.H
    mfix_calc_cp_g.cpp
+   mfix_calc_k_g.H
+   mfix_calc_k_g.cpp
    mfix_calc_mu_g.H
    mfix_calc_mu_g.cpp
    mfix_init_fluid.H

@@ -15,6 +15,7 @@ target_sources( mfixcore
    mfix_set_density_bcs.cpp
    mfix_set_scalar_bcs.cpp
    mfix_set_specific_heat_bcs.cpp
+   mfix_set_thermal_conductivity_bcs.cpp
    mfix_set_tracer_bcs.cpp
    mfix_set_viscosity_bcs.cpp
    MFIX_MFHelpers.H

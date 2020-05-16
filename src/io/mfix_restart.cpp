@@ -234,8 +234,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
            } else if ( restart_from_cold_flow and chkscaVarsName[i] == "h_g")
            {
-               amrex::Print() << "  Setting h_g to Cp_g0 T_g0 = " << FLUID::Cp_g0 * FLUID::T_g0 << std::endl;
-               m_leveldata[lev]->h_g->setVal(FLUID::T_g0*FLUID::Cp_g0);
+               amrex::Print() << "  Setting h_g to Cp_g0 T_g0 = " << FLUID::cp_g0 * FLUID::T_g0 << std::endl;
+               m_leveldata[lev]->h_g->setVal(FLUID::T_g0*FLUID::cp_g0);
                continue;
 
            } else if (chkscaVarsName[i] == "level_sets") {
@@ -371,8 +371,13 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->ro_go->FillBoundary(geom[lev].periodicity());
 
-          m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
+
+          // Fill the bc's just in case
+          m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
+          m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
+          m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
+          m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
      
           // Fill the bc's just in case
           m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());

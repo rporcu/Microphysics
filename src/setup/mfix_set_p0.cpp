@@ -13,30 +13,30 @@
 
 namespace set_p0_aux {
 
-void goto_60 (const Box& sbx, const Box& domain, const BcList& bc_list,
-              Array4<Real> const& p0_g, Real* m_bc_p_g, Real& pj,
-              const RealVect& gravity, const Real dx, const Real dy, const Real dz,
-              Array4<const int> const& bct_ilo,
-              Array4<const int> const& bct_ihi,
-              Array4<const int> const& bct_jlo,
-              Array4<const int> const& bct_jhi,
-              Array4<const int> const& bct_klo,
-              Array4<const int> const& bct_khi,
-              const int nlft, const int nrgt, const int nbot,
-              const int ntop, const int ndwn, const int nup,
-              const int nghost);
+void compute_p0_bcs (const Box& sbx, const Box& domain, const BCList& bc_list,
+                     Array4<Real> const& p0_g, Real* m_bc_p_g, Real& pj,
+                     const RealVect& gravity, const Real dx, const Real dy, const Real dz,
+                     Array4<const int> const& bct_ilo,
+                     Array4<const int> const& bct_ihi,
+                     Array4<const int> const& bct_jlo,
+                     Array4<const int> const& bct_jhi,
+                     Array4<const int> const& bct_klo,
+                     Array4<const int> const& bct_khi,
+                     const int nlft, const int nrgt, const int nbot,
+                     const int ntop, const int ndwn, const int nup,
+                     const int nghost);
 
-void goto_100 (const Box& sbx, const Box& domain, const BcList& bc_list,
-               Array4<Real> const& p0_g, Real* m_bc_p_g,
-               Array4<const int> const& bct_ilo,
-               Array4<const int> const& bct_ihi,
-               Array4<const int> const& bct_jlo,
-               Array4<const int> const& bct_jhi,
-               Array4<const int> const& bct_klo,
-               Array4<const int> const& bct_khi,
-               const int nlft, const int nrgt, const int nbot,
-               const int ntop, const int ndwn, const int nup,
-               const int nghost);
+void set_p0_bcs (const Box& sbx, const Box& domain, const BCList& bc_list,
+                 Array4<Real> const& p0_g, Real* m_bc_p_g,
+                 Array4<const int> const& bct_ilo,
+                 Array4<const int> const& bct_ihi,
+                 Array4<const int> const& bct_jlo,
+                 Array4<const int> const& bct_jhi,
+                 Array4<const int> const& bct_klo,
+                 Array4<const int> const& bct_khi,
+                 const int nlft, const int nrgt, const int nbot,
+                 const int ntop, const int ndwn, const int nup,
+                 const int nghost);
 
 } // end namespace set_p0_aux
 
@@ -189,7 +189,7 @@ mfix::set_p0 (const Box& bx,
 
       if( not IC::ic[icv].fluid.pressure or gravity_square_module > tolerance)
       {
-        goto_60(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), pj,
+        compute_p0_bcs(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), pj,
             gravity, dx, dy, dz, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo,
             bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup, nghost);
         return;
@@ -259,9 +259,9 @@ mfix::set_p0 (const Box& bx,
   }
 
   // pressure in all initial condition region cells was defined
-  goto_100(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), bct_ilo, bct_ihi,
-           bct_jlo, bct_jhi, bct_klo, bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup,
-           nghost);
+  set_p0_bcs(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), bct_ilo, bct_ihi,
+             bct_jlo, bct_jhi, bct_klo, bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup,
+             nghost);
 
   return;
 }
@@ -269,29 +269,29 @@ mfix::set_p0 (const Box& bx,
 
 namespace set_p0_aux {
 
-void goto_60 (const Box& sbx,
-              const Box& domain,
-              const BcList& bc_list,
-              Array4<Real> const& p0_g,
-              Real* m_bc_p_g,
-              Real& pj,
-              const RealVect& gravity,
-              const Real dx,
-              const Real dy,
-              const Real dz,
-              Array4<const int> const& bct_ilo,
-              Array4<const int> const& bct_ihi,
-              Array4<const int> const& bct_jlo,
-              Array4<const int> const& bct_jhi,
-              Array4<const int> const& bct_klo,
-              Array4<const int> const& bct_khi,
-              const int nlft,
-              const int nrgt,
-              const int nbot,
-              const int ntop,
-              const int ndwn,
-              const int nup,
-              const int nghost)
+void compute_p0_bcs (const Box& sbx,
+                     const Box& domain,
+                     const BCList& bc_list,
+                     Array4<Real> const& p0_g,
+                     Real* m_bc_p_g,
+                     Real& pj,
+                     const RealVect& gravity,
+                     const Real dx,
+                     const Real dy,
+                     const Real dz,
+                     Array4<const int> const& bct_ilo,
+                     Array4<const int> const& bct_ihi,
+                     Array4<const int> const& bct_jlo,
+                     Array4<const int> const& bct_jhi,
+                     Array4<const int> const& bct_klo,
+                     Array4<const int> const& bct_khi,
+                     const int nlft,
+                     const int nrgt,
+                     const int nbot,
+                     const int ntop,
+                     const int ndwn,
+                     const int nup,
+                     const int nghost)
 {
   const Real tolerance = std::numeric_limits<Real>::epsilon();
 
@@ -453,31 +453,31 @@ void goto_60 (const Box& sbx,
     }
   }
 
-  goto_100(sbx, domain, bc_list, p0_g, m_bc_p_g, bct_ilo, bct_ihi,
+  set_p0_bcs(sbx, domain, bc_list, p0_g, m_bc_p_g, bct_ilo, bct_ihi,
            bct_jlo, bct_jhi, bct_klo, bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup,
            nghost);
 
   return;
 }
 
-void goto_100 (const Box& sbx,
-               const Box& domain,
-               const BcList& bc_list,
-               Array4<Real> const& p0_g,
-               Real* m_bc_p_g,
-               Array4<const int> const& bct_ilo,
-               Array4<const int> const& bct_ihi,
-               Array4<const int> const& bct_jlo,
-               Array4<const int> const& bct_jhi,
-               Array4<const int> const& bct_klo,
-               Array4<const int> const& bct_khi,
-               const int nlft,
-               const int nrgt,
-               const int nbot,
-               const int ntop,
-               const int ndwn,
-               const int nup,
-               const int nghost)
+void set_p0_bcs (const Box& sbx,
+                 const Box& domain,
+                 const BCList& bc_list,
+                 Array4<Real> const& p0_g,
+                 Real* m_bc_p_g,
+                 Array4<const int> const& bct_ilo,
+                 Array4<const int> const& bct_ihi,
+                 Array4<const int> const& bct_jlo,
+                 Array4<const int> const& bct_jhi,
+                 Array4<const int> const& bct_klo,
+                 Array4<const int> const& bct_khi,
+                 const int nlft,
+                 const int nrgt,
+                 const int nbot,
+                 const int ntop,
+                 const int ndwn,
+                 const int nup,
+                 const int nghost)
 {
   const IntVect sbx_lo(sbx.loVect());
   const IntVect sbx_hi(sbx.hiVect());

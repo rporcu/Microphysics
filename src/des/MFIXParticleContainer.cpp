@@ -192,6 +192,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         {
             has_wall = true;
         }
+#if 0
         else
         {
             int int_has_wall = 0;
@@ -199,6 +200,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             ls_has_walls(int_has_wall, bx, (*ls_phi)[pti], tol);
             has_wall = (int_has_wall > 0);
         }
+#endif
 
         tile_has_walls[index] = has_wall;
 

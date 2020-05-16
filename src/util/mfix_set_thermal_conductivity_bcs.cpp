@@ -8,13 +8,12 @@
 using namespace amrex;
 
 void
-mfix::set_specific_heat_bcs (Real time,
-                            const int lev,
-                            FArrayBox& scal_fab,
-                            const Box& domain)
-
+mfix::set_thermal_conductivity_bcs (Real time,
+                                    const int lev,
+                                    FArrayBox& scal_fab,
+                                    const Box& domain)
 {
-  BL_PROFILE("mfix::set_specific_heat_bcs()");
+  BL_PROFILE("mfix::set_thermal_conductivity_bcs()");
 
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
@@ -30,8 +29,8 @@ mfix::set_specific_heat_bcs (Real time,
 
   Real bc0 = get_undefined();
 
-  // TODO we will compute cp_g0 as function of temperature
-  bc0 = FLUID::cp_g0;
+  // TODO it will be computed as function of the temperature
+  bc0 = FLUID::k_g0;
 
   IntVect scal_lo(scal_fab.loVect());
   IntVect scal_hi(scal_fab.hiVect());
@@ -108,7 +107,7 @@ mfix::set_specific_heat_bcs (Real time,
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
 
-  // Unused at the moment
+  // This will be useful when k_g = k_g(T_g)
   // amrex::Real* p_bc_t_g = m_bc_t_g.data();
 
   if (nlft > 0)
@@ -118,7 +117,7 @@ mfix::set_specific_heat_bcs (Real time,
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
-      // const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
+      //const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
       if ((bct == pinf) or (bct == pout))
@@ -127,7 +126,7 @@ mfix::set_specific_heat_bcs (Real time,
       }
       else if (bct == minf)
       {
-        // TODO: here and in the following, cp_g0 can be computed as function of
+        // TODO: here and in the following, k_g0 can be computed as function of
         // p_bc_t_g[bcv]
         scal_arr(i,j,k) = bc0;
       }
@@ -141,7 +140,7 @@ mfix::set_specific_heat_bcs (Real time,
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
-      // const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
+      //const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
       if((bct == pinf) or (bct == pout))
@@ -162,7 +161,7 @@ mfix::set_specific_heat_bcs (Real time,
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
-      // const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
+      //const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
       if((bct == pinf) or (bct == pout))
@@ -183,7 +182,7 @@ mfix::set_specific_heat_bcs (Real time,
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
-      // const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
+      //const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
       if((bct == pinf) or (bct == pout))
@@ -204,7 +203,7 @@ mfix::set_specific_heat_bcs (Real time,
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
-      // const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
+      //const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
       if((bct == pinf) or (bct == pout))
@@ -225,7 +224,7 @@ mfix::set_specific_heat_bcs (Real time,
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
-      // const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
+      //const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
       if ((bct == pinf) or (bct == pout))
