@@ -32,6 +32,7 @@ target_sources(mfixcore
    mfix_compute_diveu.cpp
    mfix_regrid.cpp
    mfix.cpp
+   mfix_usr.cpp
    #  main.cpp <---- DO NOT ADD THIS HERE
    mfix_F.H
    mfix.H

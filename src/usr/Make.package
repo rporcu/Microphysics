@@ -1,6 +1,4 @@
-f90EXE_sources += usr0.f90
 f90EXE_sources += usr0_des.f90
-f90EXE_sources += usr1.f90
 f90EXE_sources += usr1_des.f90
 f90EXE_sources += usr2.f90
 f90EXE_sources += usr2_des.f90

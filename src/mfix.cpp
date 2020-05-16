@@ -150,48 +150,6 @@ mfix::mfix ()
 }
 
 void
-mfix::mfix_usr1_cpp (Real time) const
-{
-  mfix_usr1(&time);
-
-  // const int dim_bc = get_dim_bc();
-
-  // for(unsigned i(1); i <= dim_bc; ++i)
-  // {
-  //   m_bc_u_g[i] = get_bc_u_g(i);
-  //   m_bc_v_g[i] = get_bc_v_g(i);
-  //   m_bc_w_g[i] = get_bc_w_g(i);
-
-  //   m_bc_t_g[i] = get_bc_t_g(i);
-
-  //   m_bc_ep_g[i] = get_bc_ep_g(i);
-  // }
-}
-
-void
-mfix::usr3 ()
-{
-    if (FLUID::solve)
-    {
-       for (int lev = 0; lev < nlev; lev++)
-       {
-          Real dx = geom[lev].CellSize(0);
-          Real dy = geom[lev].CellSize(1);
-          Real dz = geom[lev].CellSize(2);
-
-          // We deliberately don't tile this loop
-          for (MFIter mfi(*(m_leveldata[lev]->p_g), false); mfi.isValid(); ++mfi)
-          {
-             mfix_usr3(BL_TO_FORTRAN_ANYD((*m_leveldata[lev]->vel_g)[mfi]),
-                       BL_TO_FORTRAN_ANYD((*m_leveldata[lev]->p_g)[mfi]),
-                       &dx, &dy, &dz);
-          }
-       }
-    }
-}
-
-
-void
 mfix::avgDown (int crse_lev, const MultiFab& S_fine, MultiFab& S_crse)
 {
     BL_PROFILE("mfix::avgDown()");

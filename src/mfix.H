@@ -97,9 +97,10 @@ class mfix : public AmrCore
 
     void Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time);
 
-    void mfix_usr1_cpp (Real time) const;
-
-    void usr3 ();
+    void mfix_usr0 () const;
+    void mfix_usr1 (Real time) const;
+    void mfix_usr2 () const;
+    void mfix_usr3 () const;
 
     void output (int estatus, int finish, int nstep, Real dt, Real time)
     { pc->output(estatus, finish, nstep, dt, time); };
