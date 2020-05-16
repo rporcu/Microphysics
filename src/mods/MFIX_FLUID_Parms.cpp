@@ -17,7 +17,7 @@ namespace FLUID
   amrex::Real cp_g0 = 1.0;
 
   // Gas phase thermal conductivity coefficient
-  amrex::Real k_g0 = 1.0;
+  amrex::Real k_g0 = 0.0;
 
   // Specified constant gas density
   amrex::Real ro_g0;
