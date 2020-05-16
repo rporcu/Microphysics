@@ -204,9 +204,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             // Set tol to 1/2 dx
             Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
 
-            Real ls_min_over_box = ((*ls_phi)[pti]).min(refined_box,0);
-
-            if (ls_min_over_box < tol) has_wall = true;
+            has_wall = ( ls_has_walls(refined_box,(*ls_phi)[pti],tol) > 0 );
         }
 
         tile_has_walls[index] = has_wall;

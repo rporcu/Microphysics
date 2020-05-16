@@ -2,12 +2,11 @@
 
 using namespace amrex;
 
-void MFIXParticleContainer::ls_has_walls(int& has_wall,
-                                         const Box& bx,
-                                         const FArrayBox& phi_fab,
-                                         const Real tolerance)
+int MFIXParticleContainer::ls_has_walls(const Box& bx,
+                                        const FArrayBox& phi_fab,
+                                        const Real tolerance)
 {
-  has_wall = 0;
+  int has_wall = 0;
 
   Array4<const Real> const& phi = phi_fab.array();
 
@@ -36,4 +35,6 @@ void MFIXParticleContainer::ls_has_walls(int& has_wall,
   Gpu::synchronize();
   has_wall = has_wall_gpu.dataValue();
 #endif
+
+  return has_wall;
 }

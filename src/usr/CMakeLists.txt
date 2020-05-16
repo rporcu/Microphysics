@@ -4,7 +4,7 @@ target_include_directories( mfixcore
 
 target_sources( mfixcore
    PRIVATE
-   usr0_des.f90
-   usr1_des.f90
-   usr_mod.f90
+   mfix_usr.cpp
+   MFIX_PC_usr.cpp
+   usr_drag.cpp
    )

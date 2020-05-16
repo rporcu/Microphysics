@@ -12,7 +12,6 @@ CEXE_sources += MFIXParticleContainer.cpp
 CEXE_sources += MFIX_PC_Init.cpp 
 CEXE_sources += MFIX_PC_RemoveOutOfRange.cpp 
 CEXE_sources += MFIX_PC_Replicate.cpp 
-CEXE_sources += MFIX_PC_usr.cpp 
 CEXE_sources += mfix_set_gradp_bcs.cpp
 CEXE_sources += mfix_calc_particle_beta.cpp
 CEXE_sources += mfix_calc_volume_fraction.cpp
