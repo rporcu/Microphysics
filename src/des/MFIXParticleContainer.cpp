@@ -654,7 +654,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 #ifdef AMREX_USE_CUDA
             ncoll = ncoll_gpu.dataValue();
 #endif
-            call_usr2_des(&nrp, pstruct);
+            usr2_des(nrp, pstruct);
 
             /********************************************************************
              * Update runtime cost (used in load-balancing)                     *
@@ -747,7 +747,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         const int nrp   = NumberOfParticles(pti);
         void* particles = pti.GetArrayOfStructs().data();
 
-        call_usr3_des(&nrp, particles);
+        usr3_des(nrp,particles);
     }
 
     if (debug_level > 0) {

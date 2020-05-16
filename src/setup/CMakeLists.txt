@@ -5,7 +5,6 @@ target_include_directories(mfixcore
 
 target_sources( mfixcore
    PRIVATE 
-   amrex_to_mfix.F90
    MFIX_calc_cell.H
    MFIX_calc_cell.cpp
    mfix_calc_cp_g.H

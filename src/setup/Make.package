@@ -1,5 +1,3 @@
-F90EXE_sources += amrex_to_mfix.F90
-
 CEXE_sources += mfix_set_bc0.cpp
 CEXE_sources += mfix_set_ls_inflow.cpp
 CEXE_sources += mfix_set_p0.cpp 

@@ -41,28 +41,4 @@ contains
 
    end subroutine des_init_time_loop
 
-   subroutine call_usr2_des (np, particles) &
-        bind(c, name="call_usr2_des")
-
-      use particle_mod,   only: particle_t
-
-      integer(c_int),   intent(in)    :: np
-      type(particle_t), intent(inout) :: particles(np)
-
-      call usr2_des(np, particles)
-
-   end subroutine call_usr2_des
-
-   subroutine call_usr3_des (np, particles) &
-        bind(c, name="call_usr3_des")
-
-      use particle_mod,   only: particle_t
-
-      integer(c_int),   intent(in)    :: np
-      type(particle_t), intent(inout) :: particles(np)
-
-      call usr3_des(np, particles)
-
-   end subroutine call_usr3_des
-
 end module des_time_march_module

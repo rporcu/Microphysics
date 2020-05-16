@@ -249,6 +249,11 @@ public:
                                   amrex::Real& pmass,
                                   amrex::Real& omoi,
                                   amrex::Real& omega);
+
+    void usr2_des (int np,
+                   NeighborParticleContainer<16, 2>::ParticleType*& particles);
+
+    void usr3_des (int np,void*&);
 };
 
 #endif

@@ -6,7 +6,5 @@ target_sources( mfixcore
    PRIVATE
    usr0_des.f90
    usr1_des.f90
-   usr2_des.f90
-   usr3_des.f90
    usr_mod.f90
    )
