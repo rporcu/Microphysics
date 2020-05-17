@@ -69,8 +69,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
         density_nph.emplace_back(grids[lev], dmap[lev],       1, 1, MFInfo(),  *ebfactory[lev]);
 
         conv_u[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-        // TODO: check that it is correct to set to 3 components since we need
-        // one for density, one for tracer and one for temperature
+        // 3 components: one for density, one for tracer and one for enthalpy
         conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
 
         conv_u[lev]->setVal(0.0);
@@ -298,7 +297,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
 
     // mfix_set_temperature_bcs (new_time, get_T_g());
     // NOTE: we do this call before multiplying ep_g by ro_g
-    diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(), get_cp_g(), FLUID::k_g0, 0.5*l_dt);
+    if (advect_enthalpy)
+        diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(), get_h_g(),
+                                          get_cp_g(), get_k_g(), 0.5*l_dt);
 
     // Convert "ep_g" into (rho * ep_g)
     for (int lev = 0; lev <= finest_level; lev++)
@@ -309,7 +310,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
     diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_mu_g(), 0.5*l_dt);
 
     // mfix_set_tracer_bcs (new_time, get_trac(), 0);
-    diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, 0.5*l_dt);
+    if (advect_tracer)
+        diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, 0.5*l_dt);
 
     // Convert (rho * ep_g) back into ep_g
     for (int lev = 0; lev <= finest_level; lev++)

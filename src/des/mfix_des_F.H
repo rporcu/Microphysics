@@ -31,16 +31,9 @@ void calc_particle_collisions (void* rparticles, const int* nrp,
                                amrex::Real* subdt,
                                int* ncoll);
 
-void des_init_time_loop (const  amrex::Real* tstart,
-                         const amrex::Real* dt,
+void des_init_time_loop (const amrex::Real* dt,
                          int* nsubsteps,
                          amrex::Real* subdt);
-
-void call_usr3_des (const int* np,
-                    void* particles);
-
-void call_usr2_des (const int* np,
-                    void* particles);
 
 #ifdef __cplusplus
 }

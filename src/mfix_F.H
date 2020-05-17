@@ -25,12 +25,6 @@ void init_collision (const int* mmax,
                      amrex::Real* etat_w,
                      amrex::Real* neighborhood);
 
-void mfix_usr0 ();
-
-void mfix_usr1 (amrex::Real* time);
-
-void mfix_usr2 ();
-
 void mfix_usr3 (amrex::Real* vel_g, const int* ulo, const int* uhi,
                 amrex::Real* p_g,   const int* slo, const int* shi,
                 amrex::Real* dx, amrex::Real* dy, amrex::Real* dz);

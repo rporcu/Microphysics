@@ -1,11 +1,3 @@
-f90EXE_sources += usr0.f90
-f90EXE_sources += usr0_des.f90
-f90EXE_sources += usr1.f90
-f90EXE_sources += usr1_des.f90
-f90EXE_sources += usr2.f90
-f90EXE_sources += usr2_des.f90
-f90EXE_sources += usr3.f90
-f90EXE_sources += usr3_des.f90
-f90EXE_sources += usr_mod.f90
-
+CEXE_sources += mfix_usr.cpp
+CEXE_sources += MFIX_PC_usr.cpp
 CEXE_sources += usr_drag.cpp

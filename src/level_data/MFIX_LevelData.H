@@ -62,6 +62,9 @@ class LevelData
     // Specific heat
     amrex::MultiFab* cp_g;
 
+    // Thermal conductivity
+    amrex::MultiFab* k_g;
+
     // Molecular viscosity
     amrex::MultiFab* mu_g;
 

@@ -6,11 +6,10 @@ target_sources( mfixcore
    PRIVATE
    eos_mod.H
    eos_mod.cpp
-   utilities_mod.f90
    param_mod.f90
    param_mod_F.H
    param_mod_F.cpp
-   run_mod.f90
+   MFIX_BC_List.H
    MFIX_FLUID_Parms.cpp
    MFIX_FLUID_Parms.H
    MFIX_DEM_Parms.cpp

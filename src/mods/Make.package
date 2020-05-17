@@ -1,6 +1,4 @@
 f90EXE_sources += param_mod.f90   
-f90EXE_sources += run_mod.f90  
-f90EXE_sources += utilities_mod.f90
 
 F90EXE_headers += param_mod_F.H
  
@@ -20,3 +18,4 @@ CEXE_sources += MFIX_BC_Parms.cpp
 CEXE_sources += MFIX_FLUID_Parms.cpp
 CEXE_sources += MFIX_DEM_Parms.cpp
 CEXE_sources += MFIX_PIC_Parms.cpp
+CEXE_headers += MFIX_BC_List.H

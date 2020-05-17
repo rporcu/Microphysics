@@ -87,7 +87,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
     if (explicit_diffusion_pred && advect_enthalpy)
     {
         diffusion_op->ComputeLapTemp(laptemp_old, get_T_g_old(), get_ro_g(),
-                                      get_ep_g(), FLUID::k_g0);
+                                     get_ep_g(), get_k_g());
         for (int lev = 0; lev <= finest_level; lev++)
             EB_set_covered(  *laptemp_old[lev], 0,   laptemp_old[lev]->nComp(),   laptemp_old[lev]->nGrow(), 0.0);
     } else {
@@ -360,18 +360,19 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
     // If doing implicit diffusion, solve here for u^*
     // Note we multiply ep_g by ro_g so that we pass in a single array holding (ro_g * ep_g)
     // *************************************************************************************
-    if (!explicit_diffusion_pred)
+    if (not explicit_diffusion_pred)
     {
       mfix_set_density_bcs(time, get_ro_g());
-      mfix_set_enthalpy_bcs(time, get_h_g());
       mfix_set_temperature_bcs(time, get_T_g());
+      mfix_set_scalar_bcs(time, get_cp_g(), get_k_g(), get_mu_g());
       mfix_set_tracer_bcs(time, get_trac());
-      mfix_set_scalar_bcs(time, get_cp_g(), get_mu_g());
+      mfix_set_enthalpy_bcs(time, get_h_g());
 
-      // mfix_set_temperature_bcs (new_time, get_T_g());
-      // TODO: k_g0 can be also non constant
       // NOTE: we do this call before multiplying ep_g by ro_g
-      diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(), get_cp_g(), FLUID::k_g0, l_dt);
+      if (advect_enthalpy) {
+        diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
+                                          get_h_g(), get_cp_g(), get_k_g(), l_dt);
+      }
 
       // Convert "ep_g" into (rho * ep_g)
       for (int lev = 0; lev <= finest_level; lev++)
@@ -382,7 +383,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
       diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_mu_g(), l_dt);
 
       // mfix_set_tracer_bcs (new_time, trac, 0);
-      diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, l_dt);
+      if (advect_tracer) {
+        diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, l_dt);
+      }
 
       // Convert (rho * ep_g) back into ep_g
       for (int lev = 0; lev <= finest_level; lev++)

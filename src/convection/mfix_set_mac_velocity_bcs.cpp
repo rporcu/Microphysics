@@ -58,7 +58,7 @@ mfix::set_MAC_velocity_bcs (int lev,
     const int ntop = std::max(0, vbx_hi[1]-dom_hi[1]);
     const int nup  = std::max(0, wbx_hi[2]-dom_hi[2]);
 
-    mfix_usr1_cpp(time);
+    mfix_usr1(time);
 
     const int minf = bc_list.get_minf();
 

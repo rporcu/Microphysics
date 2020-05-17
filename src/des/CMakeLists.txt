@@ -4,13 +4,11 @@ target_include_directories( mfixcore
 
 target_sources( mfixcore
    PRIVATE
-   mfix_calc_wall_collisions.cpp
    des_time_march.f90
    discretelement_mod.f90
    init_collision.f90
    particle_generator.H
    particle_generator.cpp
-   particle_mod.f90
    des_drag_K.H
    mfix_set_gradp_bcs.cpp
    get_collision_coefficients.f90 

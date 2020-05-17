@@ -158,7 +158,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
      ***************************************************************************/
 
     Real subdt;
-    des_init_time_loop(&time, &dt, &nsubsteps, &subdt);
+    des_init_time_loop(&dt, &nsubsteps, &subdt);
 
     /****************************************************************************
      * Get particle EB geometric info
@@ -184,9 +184,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         pfor[index] = Gpu::ManagedDeviceVector<Real>();
         wfor[index] = Gpu::ManagedDeviceVector<Real>();
 
-        // Only call the routine for wall collisions if we actually have walls
-        BL_PROFILE_VAR("ls_has_walls", has_wall);
+        // Determine if this particle tile actually has any walls
         bool has_wall = false;
+
         if ((ebfactory != NULL)
             && ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
         {
@@ -194,15 +194,22 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         }
         else
         {
-            int int_has_wall = 0;
+            // We need this test for the case of an inflow boundary: 
+            // inflow does not appear in the EBFactory but 
+            // the particles see it as a wall
+
+            // Create the nodal refined box based on the current particle tile
+            Box refined_box(amrex::convert(amrex::refine(bx,ls_refinement), IntVect{1,1,1}));
+
+            // Set tol to 1/2 dx
             Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
-            ls_has_walls(int_has_wall, bx, (*ls_phi)[pti], tol);
-            has_wall = (int_has_wall > 0);
+
+            Real ls_min_over_box = ((*ls_phi)[pti]).min<RunOn::Gpu>(refined_box,0);
+
+            if (ls_min_over_box < tol) has_wall = true;
         }
 
         tile_has_walls[index] = has_wall;
-
-        BL_PROFILE_VAR_STOP(has_wall);
     }
 
     /****************************************************************************
@@ -647,7 +654,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 #ifdef AMREX_USE_CUDA
             ncoll = ncoll_gpu.dataValue();
 #endif
-            call_usr2_des(&nrp, pstruct);
+            usr2_des(nrp, pstruct);
 
             /********************************************************************
              * Update runtime cost (used in load-balancing)                     *
@@ -740,7 +747,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         const int nrp   = NumberOfParticles(pti);
         void* particles = pti.GetArrayOfStructs().data();
 
-        call_usr3_des(&nrp, particles);
+        usr3_des(nrp,particles);
     }
 
     if (debug_level > 0) {

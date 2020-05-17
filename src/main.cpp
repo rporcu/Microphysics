@@ -341,7 +341,7 @@ int main (int argc, char* argv[])
         {
             while (finish == 0)
             {
-                mfix.mfix_usr1_cpp(time);
+                mfix.mfix_usr1(time);
 
                 Real strt_step = ParallelDescriptor::second();
 
@@ -386,7 +386,7 @@ int main (int argc, char* argv[])
     if ( par_ascii_int > 0  && nstep != last_par_ascii)
         mfix.WriteParticleAscii(par_ascii_file, nstep);
 
-    mfix.usr3();
+    mfix.mfix_usr3();
 
     Real end_time = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_time, ParallelDescriptor::IOProcessorNumber());

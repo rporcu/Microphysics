@@ -30,7 +30,8 @@ mfix::set_specific_heat_bcs (Real time,
 
   Real bc0 = get_undefined();
 
-  bc0 = FLUID::Cp_g0;
+  // TODO we will compute cp_g0 as function of temperature
+  bc0 = FLUID::cp_g0;
 
   IntVect scal_lo(scal_fab.loVect());
   IntVect scal_hi(scal_fab.hiVect());
@@ -107,6 +108,9 @@ mfix::set_specific_heat_bcs (Real time,
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
 
+  // Unused at the moment
+  // amrex::Real* p_bc_t_g = m_bc_t_g.data();
+
   if (nlft > 0)
   {
     amrex::ParallelFor(bx_yz_lo_3D,
@@ -123,6 +127,8 @@ mfix::set_specific_heat_bcs (Real time,
       }
       else if (bct == minf)
       {
+        // TODO: here and in the following, cp_g0 can be computed as function of
+        // p_bc_t_g[bcv]
         scal_arr(i,j,k) = bc0;
       }
     });

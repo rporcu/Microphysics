@@ -20,13 +20,6 @@ module param
   ! Maximum number of user-defined output files
   integer, parameter :: dim_usr = 128
 
-  ! Number of Equation types:
-  !  1) Gas pressure
-  !  2) Gas and solids U-Momentum equation
-  !  3) Gas and solids V-Momentum equation
-  !  4) Gas and solids W-Momentum equation
-  integer, parameter :: dim_eqs = 4
-
 ! Parameters describing problem size: (set from user input)
 !'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
@@ -46,8 +39,6 @@ module param
       real(rt), parameter :: two  = 2.0d0
       real(rt), parameter :: two_thirds  = 2.0_rt / 3.0_rt
 
-      real(rt), parameter :: my_huge  = 1.d200
-
       interface is_defined
          module procedure is_defined_db
          module procedure is_defined_i
@@ -66,25 +57,10 @@ module param
 ! Purpose: Getters for params values                                   !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      integer(c_int) function get_dim_ic () bind(C)
-        get_dim_ic = dim_ic
-        return
-      end function get_dim_ic
-
-      integer(c_int) function get_dim_m () bind(C)
-        get_dim_m = dim_m
-        return
-      end function get_dim_m
-
       integer(c_int) function get_dim_bc () bind(C)
         get_dim_bc = dim_bc
         return
       end function get_dim_bc
-
-      real(rt) function get_my_huge () bind(C)
-        get_my_huge = my_huge
-        return
-      end function get_my_huge
 
       real(rt) function get_undefined () bind(C)
         get_undefined = undefined

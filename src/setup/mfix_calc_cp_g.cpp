@@ -8,7 +8,7 @@ void calc_cp_g (const Box& bx,
                 FArrayBox& cp_g_fab)
 {
 
-  const Real cp_g0 = FLUID::Cp_g0;
+  const Real cp_g0 = FLUID::cp_g0;
 
   Array4<Real> const& cp_g = cp_g_fab.array();
 

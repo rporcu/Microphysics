@@ -122,7 +122,7 @@ mfix::set_velocity_bcs (Real time,
   const Box bx_xy_lo_3D(vel_lo, bx_xy_lo_hi_3D);
   const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, vel_hi);
 
-  mfix_usr1_cpp(time);
+  mfix_usr1(time);
 
   const int minf = bc_list.get_minf();
   const int pinf = bc_list.get_pinf();

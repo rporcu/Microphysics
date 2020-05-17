@@ -1,6 +1,7 @@
 #include <mfix_init_fluid.H>
 
 #include <mfix_calc_cp_g.H>
+#include <mfix_calc_k_g.H>
 #include <mfix_calc_mu_g.H>
 #include <param_mod_F.H>
 #include <MFIX_calc_cell.H>
@@ -10,9 +11,13 @@
 using namespace amrex;
 
 // Forward declarations
-void set_ic (const Box& sbx, const Box& domain,
-             const Real dx, const Real dy, const Real dz,
-             FArrayBox& vel_g_fab);
+void set_ic_temp (const Box& sbx, const Box& domain,
+                  const Real dx, const Real dy, const Real dz,
+                  FArrayBox& T_g_fab);
+
+void set_ic_vel (const Box& sbx, const Box& domain,
+                 const Real dx, const Real dy, const Real dz,
+                 FArrayBox& vel_g_fab);
 
 void init_helix (const Box& bx, const Box& domain, FArrayBox& vel_g_fab,
                  const Real dx, const Real dy, const Real dz);
@@ -34,6 +39,7 @@ void init_fluid (const Box& sbx,
                  const FArrayBox& p_g,
                  FArrayBox& vel_g_fab,
                  FArrayBox& cp_g_fab,
+                 FArrayBox& k_g_fab,
                  FArrayBox& mu_g_fab,
                  const Real dx,
                  const Real dy,
@@ -44,29 +50,27 @@ void init_fluid (const Box& sbx,
                  bool test_tracer_conservation)
 {
       // Set user specified initial conditions (IC)
-      set_ic(sbx, domain, dx, dy, dz, vel_g_fab);
+      // TODO: I think the following set_ic_temp should be correct
+      ////set_ic_temp(sbx, domain, dx, dy, dz, T_g_fab);
+      set_ic_vel(sbx, domain, dx, dy, dz, vel_g_fab);
 
       // init_periodic_vortices (bx, domain, vel_g_fab, dx, dy, dz);
       // init_helix (bx, domain, vel_g_fab, dx, dy, dz);
 
-      // Set the initial fluid density and viscosity
+      // TODO : this won't be needed if we use --> set_ic_temp
       Array4<Real> const& h_g = h_g_fab.array();
       Array4<Real> const& T_g = T_g_fab.array();
+
+      // TODO : this won't be needed if we use --> set_ic_temp
+      const Real h_g0   = FLUID::T_g0 * FLUID::cp_g0;
+      const Real T_g0   = FLUID::T_g0;
+      
+      // Set the initial fluid density and viscosity
       Array4<Real> const& ro_g = ro_g_fab.array();
       Array4<Real> const& trac = trac_fab.array();
 
-      const Real h_g0   = FLUID::T_g0 * FLUID::Cp_g0;
-      const Real T_g0   = FLUID::T_g0;
-      const Real ro_g0  = FLUID::ro_g0;
-      const Real trac_0 = FLUID::trac_0;
-
-      amrex::ParallelFor(sbx, [h_g, h_g0]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
-          { h_g(i,j,k) = h_g0; });
-
-      amrex::ParallelFor(sbx, [T_g, T_g0]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
-          { T_g(i,j,k) = T_g0; });
+      const Real ro_g0  = FLUID::ro_g0;  
+      const Real trac_0 = FLUID::trac_0; 
 
       amrex::ParallelFor(sbx, [ro_g, ro_g0]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
@@ -76,11 +80,31 @@ void init_fluid (const Box& sbx,
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
           { trac(i,j,k) = trac_0; });
 
+      // TODO: This is what is currently done on develop, I think it should be
+      // substituted by call to --> set_ic_temp (see above)
+      {
+        amrex::ParallelFor(sbx, [h_g, h_g0]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
+            { h_g(i,j,k) = h_g0; });
+
+        amrex::ParallelFor(sbx, [T_g, T_g0]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
+            { T_g(i,j,k) = T_g0; });
+      }
+
       if (test_tracer_conservation)
          init_periodic_tracer(bx, domain, vel_g_fab, trac_fab, dx, dy, dz);
 
-      calc_cp_g(bx, T_g_fab, cp_g_fab);
       calc_mu_g(bx, mu_g_fab);
+      
+      // Initialize Cp_g and k_g
+      calc_cp_g(bx, T_g_fab, cp_g_fab);
+      calc_k_g(bx, T_g_fab, k_g_fab);
+
+      // TODO the following is not needed if we do not call set_ic_temp
+      //// Initialize h_g
+      //h_g_fab.copy<RunOn::Gpu>(T_g_fab, 0, 0, 1);
+      //h_g_fab.mult<RunOn::Gpu>(cp_g_fab, 0, 0, 1);
 }
 
 void init_helix (const Box& bx,
@@ -307,25 +331,27 @@ void init_periodic_tracer (const Box& bx,
 void init_fluid_restart (const Box& bx,
                          FArrayBox&  T_g_fab,
                          FArrayBox& cp_g_fab,
+                         FArrayBox& k_g_fab,
                          FArrayBox& mu_g_fab)
 {
   calc_cp_g(bx, T_g_fab, cp_g_fab);
+  calc_k_g(bx, T_g_fab, k_g_fab);
   calc_mu_g(bx, mu_g_fab);
 }
 
 //!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 //!                                                                      !
-//!  Subroutine: SET_IC                                                  !
+//!  Subroutine: SET_IC_VEL                                              !
 //!                                                                      !
-//!  Purpose: This module sets all the initial conditions.               !
+//!  Purpose: Set velocity initial conditions.                           !
 //!                                                                      !
 //!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-void set_ic (const Box& sbx,
-             const Box& domain,
-             const Real dx,
-             const Real dy,
-             const Real dz,
-             FArrayBox& vel_g_fab)
+void set_ic_vel (const Box& sbx,
+                 const Box& domain,
+                 const Real dx,
+                 const Real dy,
+                 const Real dz,
+                 FArrayBox& vel_g_fab)
 {
   const IntVect slo(sbx.loVect());
   const IntVect shi(sbx.hiVect());
@@ -439,6 +465,128 @@ void set_ic (const Box& sbx,
         amrex::ParallelFor(box3, [velocity, wgx]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             { velocity(i,j,k,2) = wgx; });
+      }
+    }
+  }
+}
+
+//!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+//!                                                                      !
+//!  Subroutine: SET_IC_TEMP                                             !
+//!                                                                      !
+//!  Purpose: Set fluid temperature initial conditions.                  !
+//!                                                                      !
+//!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+void set_ic_temp (const Box& sbx,
+                  const Box& domain,
+                  const Real dx,
+                  const Real dy,
+                  const Real dz,
+                  FArrayBox& T_g_fab)
+{
+  const IntVect slo(sbx.loVect());
+  const IntVect shi(sbx.hiVect());
+
+  const IntVect domlo(domain.loVect());
+  const IntVect domhi(domain.hiVect());
+
+  Array4<Real> const& T_g = T_g_fab.array();
+
+  // Set the initial conditions.
+  for(int icv(0); icv < IC::ic.size(); ++icv)
+  {
+
+    int i_w(0), j_s(0), k_b(0);
+    int i_e(0), j_n(0), k_t(0);
+
+    calc_cell_ic(dx, dy, dz,
+                 IC::ic[icv].region->lo(),
+                 IC::ic[icv].region->hi(),
+                 i_w, i_e, j_s, j_n, k_b, k_t);
+
+    // Use the volume fraction already calculated from particle data
+    const Real temperature = IC::ic[icv].fluid.temperature;
+
+    const int istart = std::max(slo[0], i_w);
+    const int jstart = std::max(slo[1], j_s);
+    const int kstart = std::max(slo[2], k_b);
+    const int iend   = std::min(shi[0], i_e);
+    const int jend   = std::min(shi[1], j_n);
+    const int kend   = std::min(shi[2], k_t);
+
+    if (is_defined_db_cpp(temperature))
+    {
+      {
+        const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
+        const Box box1(low1, hi1);
+
+        ParallelFor(box1, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          { T_g(i,j,k) = temperature; });
+
+        if(slo[0] < domlo[0] and domlo[0] == istart)
+        {
+          const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
+          const Box box2(low2, hi2);
+          ParallelFor(box2, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            { T_g(i,j,k) = temperature; });
+        }
+
+        if(shi[0] > domhi[0] and domhi[0] == iend)
+        {
+          const IntVect low3(iend+1, jstart, kstart), hi3(shi[0], jend, kend);
+          const Box box3(low3, hi3);
+          ParallelFor(box3, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            { T_g(i,j,k) = temperature; });
+        }
+      }
+
+      {
+        const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
+        const Box box1(low1, hi1);
+
+        ParallelFor(box1, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          { T_g(i,j,k) = temperature; });
+
+        if (slo[1] < domlo[1] and domlo[1] == jstart)
+        {
+          const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
+          const Box box2(low2, hi2);
+          ParallelFor(box2, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            { T_g(i,j,k) = temperature; });
+        }
+
+        if (shi[1] > domhi[1] and domhi[1] == jend)
+        {
+          const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
+          const Box box3(low3, hi3);
+          ParallelFor(box3, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            { T_g(i,j,k) = temperature; });
+        }
+      }
+
+      {
+        const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
+        const Box box1(low1, hi1);
+        ParallelFor(box1, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          { T_g(i,j,k) = temperature; });
+
+        if (slo[2] < domlo[2] and domlo[2] == kstart)
+        {
+          const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
+          const Box box2(low2, hi2);
+          
+          ParallelFor(box2, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            { T_g(i,j,k) = temperature; });
+        }
+
+        if (shi[2] > domhi[2] and domhi[2] == kend)
+        {
+          const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
+          const Box box3(low3, hi3);
+          
+          ParallelFor(box3, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            { T_g(i,j,k) = temperature; });
+        }
       }
     }
   }

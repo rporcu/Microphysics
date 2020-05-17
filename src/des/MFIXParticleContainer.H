@@ -18,7 +18,7 @@
 #include <mfix_des_F.H>
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
-#include <MFIX_BcList.H>
+#include <MFIX_BC_List.H>
 #include <mfix_des_F.H>
 
 struct realData
@@ -223,11 +223,6 @@ public:
                               const int ls_refinement,
                               const amrex::MultiFab * ls_phi);
 
-    void ls_has_walls (int& has_wall,
-                       const amrex::Box& bx,
-                       const amrex::FArrayBox& phi_fab,
-                       const amrex::Real tolerance);
-
   private:
     int nlev;
 
@@ -249,6 +244,14 @@ public:
                                   amrex::Real& pmass,
                                   amrex::Real& omoi,
                                   amrex::Real& omega);
+
+    void usr0_des ();
+    void usr1_des ();
+
+    void usr2_des (int np,
+                   NeighborParticleContainer<16, 2>::ParticleType*& particles);
+
+    void usr3_des (int np,void*&);
 };
 
 #endif
