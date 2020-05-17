@@ -369,8 +369,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
       mfix_set_enthalpy_bcs(time, get_h_g());
 
       // NOTE: we do this call before multiplying ep_g by ro_g
-      diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
-                                        get_h_g(), get_cp_g(), get_k_g(), l_dt);
+      if (advect_enthalpy) {
+        diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
+                                          get_h_g(), get_cp_g(), get_k_g(), l_dt);
+      }
 
       // Convert "ep_g" into (rho * ep_g)
       for (int lev = 0; lev <= finest_level; lev++)
@@ -381,7 +383,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
       diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_mu_g(), l_dt);
 
       // mfix_set_tracer_bcs (new_time, trac, 0);
-      diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, l_dt);
+      if (advect_tracer) {
+        diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, l_dt);
+      }
 
       // Convert (rho * ep_g) back into ep_g
       for (int lev = 0; lev <= finest_level; lev++)
