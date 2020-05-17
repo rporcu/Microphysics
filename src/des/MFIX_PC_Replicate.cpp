@@ -34,9 +34,6 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
     for (int d = 0; d < BL_SPACEDIM; d++)
       orig_domain_size[d] = (geom.ProbHi(d) - geom.ProbLo(d)) / Nrep[d];
 
-    const int next_id = ParticleType::NextID();
-    const int my_proc = ParallelDescriptor::MyProc();
-
     for (int idim = 0; idim < 3; ++idim)
     {
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
@@ -57,6 +54,8 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
 
                 RealVect shift = {0., 0., 0.};
                 shift[idim] = i * orig_domain_size[idim];
+
+                const int myProc = ParallelDescriptor::MyProc();
 
                 amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE (int n) noexcept
                 {
@@ -92,8 +91,8 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                     p_rep.rdata(realData::dragz)      = p.rdata(realData::dragz);
                 
                     // Set id and cpu for this particle
-                    p_rep.id()  = next_id;
-                    p_rep.cpu() = my_proc;
+                    p_rep.id()  = ParticleType::NextID();
+                    p_rep.cpu() = myProc;
                  
                 }); // p
             } // i
