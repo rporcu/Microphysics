@@ -7,7 +7,6 @@ CEXE_headers += particle_generator.H
 CEXE_sources += particle_generator.cpp
 CEXE_headers += des_drag_K.H
 
-CEXE_sources += mfix_calc_wall_collisions.cpp
 CEXE_sources += MFIXParticleContainer.cpp
 CEXE_sources += MFIX_PC_Init.cpp 
 CEXE_sources += MFIX_PC_RemoveOutOfRange.cpp 

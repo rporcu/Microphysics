@@ -223,10 +223,6 @@ public:
                               const int ls_refinement,
                               const amrex::MultiFab * ls_phi);
 
-    int ls_has_walls (const amrex::Box& bx,
-                      const amrex::FArrayBox& phi_fab,
-                      const amrex::Real tolerance);
-
   private:
     int nlev;
 
