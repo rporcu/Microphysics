@@ -179,9 +179,7 @@ void fe_interp(const amrex::RealVect& pos,
     } else {
 
         amrex::Real nodes[8][3];
-        amrex::Real* values[8];
-        for(int it(0); it < 8; it++)
-          values[it] = new Real [ncomp];
+        amrex::Real values[8][ncomp];
 
         // Alias the nodes in the stencil to make the following a little
         // easier to read and debug.
@@ -609,10 +607,6 @@ void fe_interp(const amrex::RealVect& pos,
                            + (                                                    xi*eta*zeta) * values[6][n]
                            + (                                         eta*zeta - xi*eta*zeta) * values[7][n];
         }
-
-
-        for(int it(0); it < 8; it++)
-          delete values[it];
     }
 }
 

@@ -330,7 +330,7 @@ int main (int argc, char* argv[])
         amrex::Print() << " " << std::endl;
         bool unused_inputs = ParmParse::QueryUnusedInputs();
         if (unused_inputs)
-           amrex::Print() << "We should think about aborting here..." << std::endl;
+           amrex::Print() << "We should think about aborting here due to unused inputs" << std::endl;
     }
     { // Start profiling solve here
 
