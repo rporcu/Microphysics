@@ -269,13 +269,13 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
                 } // Cut cell
 
-                  Real velfp[3];
-                  Real ep;
+                Real velfp[3];
+                Real ep;
 
-                  velfp[0] = interp_loc[0];
-                  velfp[1] = interp_loc[1];
-                  velfp[2] = interp_loc[2];
-                  ep       = interp_loc[3];
+                velfp[0] = interp_loc[0];
+                velfp[1] = interp_loc[1];
+                velfp[2] = interp_loc[2];
+                ep       = interp_loc[3];
 
 
 
