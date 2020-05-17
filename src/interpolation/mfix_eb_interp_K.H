@@ -612,7 +612,7 @@ void fe_interp(const amrex::RealVect& pos,
 
 
         for(int it(0); it < 8; it++)
-          delete values[it];
+          delete[] values[it];
     }
 }
 
