@@ -17,12 +17,12 @@ amrex::Real f (const int dir,
 {
     amrex::Real a0 = (nodes[0][dir] - pos[dir]);
     amrex::Real a1 = (nodes[1][dir] - nodes[0][dir]);
-    amrex::Real a2 = (nodes[3][dir] - nodes[0][dir]);
+    amrex::Real a2 = (nodes[2][dir] - nodes[0][dir]);
     amrex::Real a3 = (nodes[4][dir] - nodes[0][dir]);
-    amrex::Real a4 = (nodes[0][dir] - nodes[1][dir] + nodes[2][dir] - nodes[3][dir]);
+    amrex::Real a4 = (nodes[0][dir] - nodes[1][dir] + nodes[3][dir] - nodes[2][dir]);
     amrex::Real a5 = (nodes[0][dir] - nodes[1][dir] - nodes[4][dir] + nodes[5][dir]);
-    amrex::Real a6 = (nodes[0][dir] - nodes[3][dir] - nodes[4][dir] + nodes[7][dir]);
-    amrex::Real a7 = (nodes[1][dir] - nodes[2][dir] + nodes[3][dir] + nodes[4][dir] - nodes[5][dir] + nodes[6][dir] - nodes[7][dir] - nodes[0][dir]);
+    amrex::Real a6 = (nodes[0][dir] - nodes[2][dir] - nodes[4][dir] + nodes[6][dir]);
+    amrex::Real a7 = (nodes[1][dir] - nodes[3][dir] + nodes[2][dir] + nodes[4][dir] - nodes[5][dir] + nodes[7][dir] - nodes[6][dir] - nodes[0][dir]);
 
     return a0 + a1*xi + a2*eta + a3*zeta + a4*xi*eta + a5*xi*zeta + a6*eta*zeta + a7*xi*eta*zeta;
 }
@@ -37,9 +37,9 @@ amrex::Real dfdxi (const int dir,
                    const amrex::Real& zeta)
 {
     amrex::Real a1 = (nodes[1][dir] - nodes[0][dir]);
-    amrex::Real a4 = (nodes[0][dir] - nodes[1][dir] + nodes[2][dir] - nodes[3][dir]);
+    amrex::Real a4 = (nodes[0][dir] - nodes[1][dir] + nodes[3][dir] - nodes[2][dir]);
     amrex::Real a5 = (nodes[0][dir] - nodes[1][dir] - nodes[4][dir] + nodes[5][dir]);
-    amrex::Real a7 = (nodes[1][dir] - nodes[2][dir] + nodes[3][dir] + nodes[4][dir] - nodes[5][dir] + nodes[6][dir] - nodes[7][dir] - nodes[0][dir]);
+    amrex::Real a7 = (nodes[1][dir] - nodes[3][dir] + nodes[2][dir] + nodes[4][dir] - nodes[5][dir] + nodes[7][dir] - nodes[6][dir] - nodes[0][dir]);
 
     return a1 + a4*eta + a5*zeta + a7*eta*zeta;
 }
@@ -53,10 +53,10 @@ amrex::Real dfdeta (const int dir,
                     const amrex::Real& zeta)
 {
 
-    amrex::Real a2 = (nodes[3][dir] - nodes[0][dir]);
-    amrex::Real a4 = (nodes[0][dir] - nodes[1][dir] + nodes[2][dir] - nodes[3][dir]);
-    amrex::Real a6 = (nodes[0][dir] - nodes[3][dir] - nodes[4][dir] + nodes[7][dir]);
-    amrex::Real a7 = (nodes[1][dir] - nodes[2][dir] + nodes[3][dir] + nodes[4][dir] - nodes[5][dir] + nodes[6][dir] - nodes[7][dir] - nodes[0][dir]);
+    amrex::Real a2 = (nodes[2][dir] - nodes[0][dir]);
+    amrex::Real a4 = (nodes[0][dir] - nodes[1][dir] + nodes[3][dir] - nodes[2][dir]);
+    amrex::Real a6 = (nodes[0][dir] - nodes[2][dir] - nodes[4][dir] + nodes[6][dir]);
+    amrex::Real a7 = (nodes[1][dir] - nodes[3][dir] + nodes[2][dir] + nodes[4][dir] - nodes[5][dir] + nodes[7][dir] - nodes[6][dir] - nodes[0][dir]);
 
     return a2 + a4*xi + a6*zeta + a7*xi*zeta;
 }
@@ -71,8 +71,8 @@ amrex::Real dfdzeta (const int dir,
 
     amrex::Real a3 = (nodes[4][dir] - nodes[0][dir]);
     amrex::Real a5 = (nodes[0][dir] - nodes[1][dir] - nodes[4][dir] + nodes[5][dir]);
-    amrex::Real a6 = (nodes[0][dir] - nodes[3][dir] - nodes[4][dir] + nodes[7][dir]);
-    amrex::Real a7 = (nodes[1][dir] - nodes[2][dir] + nodes[3][dir] + nodes[4][dir] - nodes[5][dir] + nodes[6][dir] - nodes[7][dir] - nodes[0][dir]);
+    amrex::Real a6 = (nodes[0][dir] - nodes[2][dir] - nodes[4][dir] + nodes[6][dir]);
+    amrex::Real a7 = (nodes[1][dir] - nodes[3][dir] + nodes[2][dir] + nodes[4][dir] - nodes[5][dir] + nodes[7][dir] - nodes[6][dir] - nodes[0][dir]);
 
     return a3 + a5*xi + a6*eta + a7*xi*eta;
 }
@@ -80,14 +80,10 @@ amrex::Real dfdzeta (const int dir,
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 void get_interp_mapping (const amrex::RealVect& pos,
                          const amrex::Real nodes[8][3],
-                         const amrex::RealVect& dxi,
                          amrex::Real& xi,
                          amrex::Real& eta,
                          amrex::Real& zeta)
 {
-    xi   = (pos[0] - nodes[0][0])*dxi[0];
-    eta  = (pos[1] - nodes[0][1])*dxi[1];
-    zeta = (pos[2] - nodes[0][2])*dxi[2];
 
 #if(0)
     amrex::Print() << 0
