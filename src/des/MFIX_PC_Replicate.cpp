@@ -101,6 +101,8 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                 ParticleType::NextID(nextID + np);
             } // i
 
+            amrex::Gpu::synchronize();
+
         } // pti
 
         Redistribute();
