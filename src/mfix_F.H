@@ -23,7 +23,8 @@ void init_collision (const int* mmax,
                      amrex::Real* etan_w,
                      amrex::Real* etat,
                      amrex::Real* etat_w,
-                     amrex::Real* neighborhood);
+                     amrex::Real* neighborhood,
+                     amrex::Real* dtsolid);
 
 void mfix_usr3 (amrex::Real* vel_g, const int* ulo, const int* uhi,
                 amrex::Real* p_g,   const int* slo, const int* shi,

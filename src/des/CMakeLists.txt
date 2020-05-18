@@ -4,7 +4,6 @@ target_include_directories( mfixcore
 
 target_sources( mfixcore
    PRIVATE
-   des_time_march.f90
    discretelement_mod.f90
    init_collision.f90
    particle_generator.H

@@ -17,6 +17,5 @@ CEXE_sources += mfix_calc_volume_fraction.cpp
 CEXE_sources += mfix_drag.cpp
 
 f90EXE_sources += get_collision_coefficients.f90
-f90EXE_sources += des_time_march.f90
 f90EXE_sources += discretelement_mod.f90
 f90EXE_sources += init_collision.f90

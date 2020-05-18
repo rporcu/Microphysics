@@ -699,8 +699,8 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
                        tcoll_ratio,
                        &DEM::etan[0][0], &DEM::etan_w[0],
                        &DEM::etat[0][0], &DEM::etat_w[0],
-                       &DEM::neighborhood);
-
+                       &DEM::neighborhood,
+                       &DEM::dtsolid);
 
         if (!FLUID::solve)
             dt = fixed_dt;

@@ -158,7 +158,15 @@ void MFIXParticleContainer::EvolveParticles (int lev,
      ***************************************************************************/
 
     Real subdt;
-    des_init_time_loop(&dt, &nsubsteps, &subdt);
+    // des_init_time_loop(&dt, &nsubsteps, &subdt);
+    if ( dt >= DEM::dtsolid ) 
+    {
+       nsubsteps = std::ceil (  dt / DEM::dtsolid );
+       subdt     =  dt / nsubsteps;
+    } else {
+       nsubsteps = 1;
+       subdt     = dt;
+    }
 
     /****************************************************************************
      * Get particle EB geometric info

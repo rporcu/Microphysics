@@ -9,11 +9,12 @@
 
 namespace DEM
 {
-
     int solve = 0;
 
     AMREX_GPU_DEVICE_MANAGED COLLISIONMODEL CollisionModel = LSD;
     AMREX_GPU_DEVICE_MANAGED int NPHASE;
+
+    AMREX_GPU_DEVICE_MANAGED amrex::Real dtsolid;
 
     AMREX_GPU_DEVICE_MANAGED amrex::Real mew;
     AMREX_GPU_DEVICE_MANAGED amrex::Real mew_w;

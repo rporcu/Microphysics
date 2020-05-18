@@ -11,7 +11,7 @@ subroutine init_collision (mmax,                  &
      &                     tcoll_ratio,           &
      &                     etan_out,  etan_w_out, &
      &                     etat_out, etat_w_out, &
-     &                     neighborhood ) &
+     &                     neighborhood, dtsolid ) &
      bind(C, name="init_collision")
 
   use amrex_fort_module, only : rt => amrex_real
@@ -38,6 +38,7 @@ subroutine init_collision (mmax,                  &
   real(rt), intent(inout) :: etan_out(dim_m, dim_m), etan_w_out(dim_m)
   real(rt), intent(inout) :: etat_out(dim_m, dim_m), etat_w_out(dim_m)
   real(rt), intent(inout) :: neighborhood
+  real(rt), intent(  out) :: dtsolid
 
   real(rt)             :: d_p0(dim_m),   ro_s0(dim_m)
 
@@ -64,7 +65,7 @@ subroutine init_collision (mmax,                  &
 
   enddo
 
-  call init_collision_lsd(mmax)
+  call init_collision_lsd(mmax, dtsolid)
 
   ! convert from Fortran to C ordering here
   do i = 1, dim_m
@@ -92,15 +93,16 @@ contains
 !      65-149 (pages 94-95)                                            !
 !   - Silbert et al., Physical Review E, 2001, 64, 051302 1-14 (page 5)!
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine init_collision_lsd(mmax)
+  subroutine init_collision_lsd(mmax, dtsolid)
 
   use amrex_constants_module, only: M_PI
   use discretelement, only: kn, kn_w, &
       & des_etan, des_etan_wall, des_etat, des_etat_wall,        &
       & des_en_input, des_en_wall_input, &
-      & des_etat_fac, des_etat_w_fac, dtsolid
+      & des_etat_fac, des_etat_w_fac
 
-  integer, intent(in   ) :: mmax
+  integer , intent(in   ) :: mmax
+  real(rt), intent(  out) :: dtsolid
 
   integer  :: m, l, lc
   real(rt) :: tcoll, tcoll_tmp

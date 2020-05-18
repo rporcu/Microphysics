@@ -18,6 +18,8 @@ namespace DEM
 
     extern int solve;
 
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real dtsolid;
+
     // tangential component of spring constant
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real kt;
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real kt_w;
