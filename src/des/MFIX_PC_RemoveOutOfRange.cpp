@@ -102,6 +102,11 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                             amrex::Real radius = p.rdata(realData::radius) *
                                 std::cbrt(p.rdata(realData::statwt));
 
+                            if (DEM::cg_dem)
+                            {
+                               radius = radius/std::cbrt(p.rdata(realData::statwt));
+                            }
+
                             if (phi_interp < radius)
                             {
                                  p.id() = -1;
