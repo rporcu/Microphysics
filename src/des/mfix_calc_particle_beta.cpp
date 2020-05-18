@@ -197,6 +197,10 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
               Real vrel = sqrt(dot_product(vslp, vslp));
               Real dpm = 2.0*rad;
+              if (DEM::cg_dem)
+              {
+                 dpm = dpm/std::pow(particle.rdata(realData::statwt),(1.0/3.0));
+              }
               Real phis = 1.0 - ep;
               Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
                  velfp[0], velfp[1], velfp[2], iloc, jloc, kloc, p_id);
@@ -315,8 +319,11 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
                 Real vrel = sqrt(dot_product(vslp, vslp));
                 Real dpm = 2.0*rad;
+                if (DEM::cg_dem)
+                {
+                   dpm = dpm/std::pow(particle.rdata(realData::statwt),(1.0/3.0));
+                }
                 Real phis = 1.0 - ep;
-
                 Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
                                          velfp[0], velfp[1], velfp[2],
                                          ip, jp, kp, p_id);

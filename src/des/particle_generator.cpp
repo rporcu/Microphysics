@@ -178,7 +178,11 @@ ParticlesGenerator::generate (int& pc,
     AMREX_GPU_DEVICE (int p) noexcept
   {
     // amrex::Real pvol = (M_PI/6.0) * (dp[p]*dp[p]*dp[p]); // UNUSED_VARIABLE
-
+    // If coarse-grain DEM is activated
+    if (DEM::cg_dem)
+    {
+       p_dp[p] = std::pow(statwt, 1.0/3.0) * p_dp[p];
+    }
     const int local_pc = pc + p;
 
     //< Radius................. 4
@@ -521,13 +525,21 @@ ParticlesGenerator::random_fill_dem (const int icv,
                              (ic_dhi[1] - ic_dlo[1]) *
                              (ic_dhi[2] - ic_dlo[2]);
 
-  const amrex::Real mean = IC::ic[icv].solids[type].diameter.mean;
+  amrex::Real mean = IC::ic[icv].solids[type].diameter.mean;
 
   // Spacing is based on maximum particle size
   if(IC::ic[icv].solids[type].diameter.max > 0.)
     max_dp = IC::ic[icv].solids[type].diameter.max;
   else
     max_dp = IC::ic[icv].solids[type].diameter.mean;
+
+  // If coarse-grain DEM is activated
+  if (DEM::cg_dem)
+  {
+     amrex::Real statwt = IC::ic[icv].solids[type].statwt;
+     mean = std::pow(statwt, 1.0/3.0) * mean;
+     max_dp = std::pow(statwt, 1.0/3.0) * max_dp;
+  }
 
   // Particle count is based on mean particle size
   const int seed =

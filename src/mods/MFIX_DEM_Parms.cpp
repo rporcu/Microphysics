@@ -62,6 +62,9 @@ namespace DEM
     amrex::Vector<amrex::Real> spec_frac_dem;
     // Number of species at each particle
     AMREX_GPU_DEVICE_MANAGED int nspecies_dem = 0;
+
+    // Coarse-grain DEM
+    AMREX_GPU_DEVICE_MANAGED int cg_dem = 0;
    
     void Initialize ()
     {
@@ -154,6 +157,9 @@ namespace DEM
              AMREX_ALWAYS_ASSERT_WITH_MESSAGE( species_dem.size() == spec_frac_dem.size(),
              "Species fraction number does not match species number");
         }
+
+        // Read coarse-grain DEM 
+        pp.query("coarse_grain", cg_dem);
 
         //// We know that we should have an upper-triangular matrix worth
         //// of entries. (1-1, 1-2, 2-2, ...) for NPHASEs
