@@ -45,11 +45,15 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
     //mfix_set_velocity_bcs(time, vel_g, 0);
 
     mfix_set_density_bcs(time, get_ro_g());
+    
     // TODO: commenting the following makes BENCH03 GPU to pass
-    //mfix_set_temperature_bcs(time, get_T_g());
     //mfix_set_scalar_bcs(time, get_cp_g(), get_k_g(), get_mu_g());
     //mfix_set_tracer_bcs(time, get_trac());
-    //mfix_set_enthalpy_bcs(time, get_h_g());
+    
+    if (advect_enthalpy) {
+      mfix_set_temperature_bcs(time, get_T_g());
+      mfix_set_enthalpy_bcs(time, get_h_g()); 
+    }
 
     //
     // Start loop: if we are not seeking a steady state solution,
