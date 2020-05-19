@@ -53,10 +53,10 @@ mfix::InitIOPltData ()
         plt_ep_g    = 1;
         plt_p_g     = 1;
         plt_ro_g    = 1;
-        plt_h_g     = 1;
-        plt_T_g     = 1;
+        plt_h_g     = 0;
+        plt_T_g     = 0;
         plt_trac    = 1;
-        plt_cp_g    = 1;
+        plt_cp_g    = 0;
         plt_k_g     = 0;
         plt_mu_g    = 1;
         plt_vort    = 1;

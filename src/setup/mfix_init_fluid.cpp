@@ -50,21 +50,12 @@ void init_fluid (const Box& sbx,
                  bool test_tracer_conservation)
 {
       // Set user specified initial conditions (IC)
-      // TODO: I think the following set_ic_temp should be correct
-      ////set_ic_temp(sbx, domain, dx, dy, dz, T_g_fab);
+      set_ic_temp(sbx, domain, dx, dy, dz, T_g_fab);
       set_ic_vel(sbx, domain, dx, dy, dz, vel_g_fab);
 
       // init_periodic_vortices (bx, domain, vel_g_fab, dx, dy, dz);
       // init_helix (bx, domain, vel_g_fab, dx, dy, dz);
 
-      // TODO : this won't be needed if we use --> set_ic_temp
-      Array4<Real> const& h_g = h_g_fab.array();
-      Array4<Real> const& T_g = T_g_fab.array();
-
-      // TODO : this won't be needed if we use --> set_ic_temp
-      const Real h_g0   = FLUID::T_g0 * FLUID::cp_g0;
-      const Real T_g0   = FLUID::T_g0;
-      
       // Set the initial fluid density and viscosity
       Array4<Real> const& ro_g = ro_g_fab.array();
       Array4<Real> const& trac = trac_fab.array();
@@ -80,18 +71,6 @@ void init_fluid (const Box& sbx,
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
           { trac(i,j,k) = trac_0; });
 
-      // TODO: This is what is currently done on develop, I think it should be
-      // substituted by call to --> set_ic_temp (see above)
-      {
-        amrex::ParallelFor(sbx, [h_g, h_g0]
-            AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
-            { h_g(i,j,k) = h_g0; });
-
-        amrex::ParallelFor(sbx, [T_g, T_g0]
-            AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
-            { T_g(i,j,k) = T_g0; });
-      }
-
       if (test_tracer_conservation)
          init_periodic_tracer(bx, domain, vel_g_fab, trac_fab, dx, dy, dz);
 
@@ -101,10 +80,9 @@ void init_fluid (const Box& sbx,
       calc_cp_g(bx, T_g_fab, cp_g_fab);
       calc_k_g(bx, T_g_fab, k_g_fab);
 
-      // TODO the following is not needed if we do not call set_ic_temp
-      //// Initialize h_g
-      //h_g_fab.copy<RunOn::Gpu>(T_g_fab, 0, 0, 1);
-      //h_g_fab.mult<RunOn::Gpu>(cp_g_fab, 0, 0, 1);
+      // Initialize h_g
+      h_g_fab.copy<RunOn::Gpu>(T_g_fab, 0, 0, 1);
+      h_g_fab.mult<RunOn::Gpu>(cp_g_fab, 0, 0, 1);
 }
 
 void init_helix (const Box& bx,
