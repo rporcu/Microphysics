@@ -26,6 +26,7 @@ mfix::mfix_set_bc_type (int lev)
     const int und_  = bc_list.get_undefined();
     const int ig_   = bc_list.get_ig();
     const int minf_ = bc_list.get_minf();
+    const int pinf_ = bc_list.get_pinf();
 
     {
       Array4<int> const& bc_ilo_type = bc_ilo[lev]->array();
@@ -300,7 +301,7 @@ mfix::mfix_set_bc_type (int lev)
     for(unsigned bcv(0); bcv < bc.size(); ++bcv)
     {
 
-      if ( FLUID::solve && bc[bcv].type == minf_ ) {
+      if ( FLUID::solve and bc[bcv].type == minf_ ) {
 
         m_bc_u_g[bcv] = bc[bcv].fluid.velocity[0];
         m_bc_v_g[bcv] = bc[bcv].fluid.velocity[1];
@@ -314,17 +315,24 @@ mfix::mfix_set_bc_type (int lev)
 
       }
 
-      if ( FLUID::solve ){
+      if ( FLUID::solve ) {
         m_bc_ep_g[bcv] = bc[bcv].fluid.volfrac;
         m_bc_p_g[bcv]  = bc[bcv].fluid.pressure;
-        m_bc_t_g[bcv]  = bc[bcv].fluid.temperature;
 
       } else {
         m_bc_ep_g[bcv] = 1e50;
         m_bc_p_g[bcv]  = 1e50;
-        m_bc_t_g[bcv]  = 1e50;
+      }
+
+      if ( FLUID::solve and advect_enthalpy ) {
+        if ( bc[bcv].type == minf_ or bc[bcv].type == pinf_ ) {
+          m_bc_t_g[bcv]  = bc[bcv].fluid.temperature;
+
+        } else {
+          m_bc_t_g[bcv]  = 1e50;
+        }
+
       }
 
     }
-
 }
