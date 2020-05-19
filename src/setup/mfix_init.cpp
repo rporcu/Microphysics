@@ -144,9 +144,6 @@ mfix::InitParams ()
     pp.query("knapsack_weight_type", knapsack_weight_type);
     pp.query("load_balance_fluid", load_balance_fluid);
 
-    // The default value for the rescaling ratio of the collision time is 50
-    pp.query("tcoll_ratio", tcoll_ratio);
-
     // Verbosity and MLMG parameters are now ParmParse with "mac_proj" in the
     // inputs file
     // Examples: mac_proj.verbose = 1
@@ -684,23 +681,8 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
           }
         }
 
-        Real min_dp[10], min_ro[10];
-        Real max_dp[10], max_ro[10];
-        Real avg_dp[10], avg_ro[10];
-
-        pc->GetParticleAvgProp(min_dp, min_ro,
-                               max_dp, max_ro,
-                               avg_dp, avg_ro);
-
-        init_collision(&DEM::NPHASE,
-                       min_dp, min_ro,
-                       max_dp, max_ro,
-                       avg_dp, avg_ro,
-                       tcoll_ratio,
-                       &DEM::etan[0][0], &DEM::etan_w[0],
-                       &DEM::etat[0][0], &DEM::etat_w[0],
-                       &DEM::neighborhood,
-                       &DEM::dtsolid);
+        if (DEM::solve)
+            pc->MFIX_PC_InitCollisionParams();
 
         if (!FLUID::solve)
             dt = fixed_dt;

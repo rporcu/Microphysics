@@ -55,7 +55,7 @@ namespace DEM
     // Names of the solids used to build input regions.
     amrex::Vector<std::string> names;
 
-    // Particle species  
+    // Particle species
     amrex::Vector<std::string> species_dem;
 
     // Particle species fractions
@@ -65,7 +65,7 @@ namespace DEM
 
     // Coarse-grain DEM
     AMREX_GPU_DEVICE_MANAGED int cg_dem = 0;
-   
+
     void Initialize ()
     {
 
@@ -152,13 +152,13 @@ namespace DEM
         if (species > 0)
         {
              pp.getarr("species.names", species_dem);
-             nspecies_dem = species_dem.size();        
-             pp.getarr("species.fractions", spec_frac_dem);          
+             nspecies_dem = species_dem.size();
+             pp.getarr("species.fractions", spec_frac_dem);
              AMREX_ALWAYS_ASSERT_WITH_MESSAGE( species_dem.size() == spec_frac_dem.size(),
              "Species fraction number does not match species number");
         }
 
-        // Read coarse-grain DEM 
+        // Read coarse-grain DEM
         pp.query("coarse_grain", cg_dem);
 
         //// We know that we should have an upper-triangular matrix worth
@@ -250,14 +250,6 @@ namespace DEM
 
           }
         }
-
-
-        set_lsd_collision_coefficients(&mew,         &mew_w,
-                                       &kn,          &kn_w,
-                                       &kt,          &kt_w,
-                                       &en_input[0], &en_w_input[0],
-                                       &kt_fac,      &kt_w_fac,
-                                       &eta_fac,     &eta_w_fac);
 
       }
 
