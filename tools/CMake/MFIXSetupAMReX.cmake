@@ -48,6 +48,11 @@ if (AMReX_FOUND)
       message (WARNING "MFIX build type (${CMAKE_BUILD_TYPE}) type does not match AMReX build type (${AMReX_BUILD_TYPE})")
    endif ()
 
+   # We load this here so we have the CUDA helper functions
+   # available everywhere we need it
+   if (ENABLE_CUDA)
+      include(AMReXTargetHelpers)
+   endif ()
 else ()
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~ SUPERBUILD MODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
