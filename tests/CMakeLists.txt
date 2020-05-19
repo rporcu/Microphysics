@@ -52,13 +52,7 @@ macro (setup_test _test _suffix _env _input_file )
 
             # Special treatment for CUDA
             if (ENABLE_CUDA)
-                get_target_property(_src_cpp ${_test_exe} SOURCES)
-                list(FILTER _src_cpp INCLUDE REGEX "\.cpp")
-                set_source_files_properties(${_src_cpp} PROPERTIES LANGUAGE CUDA )
-                set_target_properties( ${_test_exe}
-                    PROPERTIES
-                    CUDA_SEPARABLE_COMPILATION ON  # This add -dc flag
-                    )
+               setup_target_for_cuda_compilation(${_test_exe})
             endif ()
 
             target_link_libraries( ${_test_exe} ${MFIX_LIBNAME} )
