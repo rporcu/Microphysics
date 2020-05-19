@@ -7,11 +7,7 @@ add_executable( ${FEXTRACT_EXE} EXCLUDE_FROM_ALL C++/fextract.cpp )
 target_link_libraries( ${FEXTRACT_EXE} AMReX::amrex )
 
 if (ENABLE_CUDA)
-    set_source_files_properties( ${FEXTRACT_EXE} C++/fextract.cpp PROPERTIES LANGUAGE CUDA )
-    set_target_properties(
-        PROPERTIES
-        CUDA_SEPARABLE_COMPILATION ON  # This add -dc flag
-        )
+   setup_target_for_cuda_compilation(${FEXTRACT_EXE})
 endif ()
 
 # Communicate to main Cmakelists file

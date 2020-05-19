@@ -83,13 +83,7 @@ add_executable(${MFIX_EXENAME} ${MAIN} ${USR_OVERRIDES} ${MFIX_UDFS_STUBS} )
 target_link_libraries( ${MFIX_EXENAME} ${MFIX_LIBNAME} )
 
 if ( ENABLE_CUDA)
-    set_source_files_properties(${MAIN} ${MFIX_UDFS_STUBS}
-        PROPERTIES LANGUAGE CUDA
-        )
-   set_target_properties( ${MFIX_EXENAME}
-      PROPERTIES
-      CUDA_SEPARABLE_COMPILATION ON  # This add -dc flag
-      )
+   setup_target_for_cuda_compilation(${MFIX_EXENAME})
 endif ()
 
 # Tools

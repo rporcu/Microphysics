@@ -90,16 +90,7 @@ target_link_libraries( mfixcore PUBLIC AMReX::amrex )
 # make C++ files be compiled as CUDA sources
 #
 if (ENABLE_CUDA)
-   set_target_properties( mfixcore
-      PROPERTIES
-      CUDA_SEPARABLE_COMPILATION ON      # This adds -dc
-      CUDA_RESOLVE_DEVICE_SYMBOLS OFF
-      )
-
-   get_target_property(MFIX_CUDA_SOURCES mfixcore SOURCES)
-   list(FILTER MFIX_CUDA_SOURCES INCLUDE REGEX "\\.cpp")
-   set_source_files_properties(${MFIX_CUDA_SOURCES} PROPERTIES LANGUAGE CUDA)
-   unset(MFIX_CUDA_SOURCES)
+   setup_target_for_cuda_compilation(mfixcore)
 
    #
    # Add manually curand
