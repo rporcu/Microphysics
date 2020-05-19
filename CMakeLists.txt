@@ -72,15 +72,6 @@ endif()
 #
 add_subdirectory(src)
 
-#
-# We need to treat separately usr_drag.cpp to avoid duplication
-# of symbols when building the tests
-# If we do not do this and include usr_drag.cpp in mfixcore library,
-# CUDA compilation of the tests will fail
-#
-set(USR_DRAG_SRC  "${CMAKE_CURRENT_SOURCE_DIR}/src/usr/usr_drag.cpp"
-    CACHE INTERNAL "User drag routine")
-
 # Print out config summary
 print_mfix_configuration_summary (${MFIX_LIBNAME})
 
@@ -88,17 +79,11 @@ print_mfix_configuration_summary (${MFIX_LIBNAME})
 file (GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90 ${CMAKE_CURRENT_BINARY_DIR}/*.cpp)
 
 
-add_executable (${MFIX_EXENAME} ${MAIN} ${USR_OVERRIDES} ${USR_DRAG_SRC})
-target_link_libraries ( ${MFIX_EXENAME} ${MFIX_LIBNAME} )
+add_executable(${MFIX_EXENAME} ${MAIN} ${USR_OVERRIDES} ${MFIX_UDFS_STUBS} )
+target_link_libraries( ${MFIX_EXENAME} ${MFIX_LIBNAME} )
 
 if ( ENABLE_CUDA)
-    set_source_files_properties(${MAIN} ${USR_DRAG_SRC}
-        PROPERTIES LANGUAGE CUDA
-        )
-   set_target_properties( ${MFIX_EXENAME}
-      PROPERTIES
-      CUDA_SEPARABLE_COMPILATION ON  # This add -dc flag
-      )
+   setup_target_for_cuda_compilation(${MFIX_EXENAME})
 endif ()
 
 # Tools

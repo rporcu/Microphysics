@@ -18,6 +18,8 @@ namespace DEM
 
     extern int solve;
 
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real dtsolid;
+
     // tangential component of spring constant
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real kt;
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real kt_w;
@@ -65,6 +67,9 @@ namespace DEM
     extern amrex::Vector<amrex::Real> spec_frac_dem;
 
     extern int AMREX_GPU_DEVICE_MANAGED nspecies_dem;
+
+    // Coarse-grain DEM
+    extern int AMREX_GPU_DEVICE_MANAGED cg_dem;
 
     struct INPUT_DIST_t {
       std::string distribution;

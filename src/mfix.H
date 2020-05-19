@@ -336,9 +336,6 @@ class mfix : public AmrCore
     static amrex::Real m_deposition_scale_factor;
     static amrex::Real m_max_solids_volume_fraction;
 
-    // input parameter defaulted to 50 used in file src_des/init_collision.f90
-    static amrex::Real tcoll_ratio;
-
     template <typename F>
     void mfix_calc_particle_beta (F DragFunc, Real time);
 

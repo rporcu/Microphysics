@@ -11,19 +11,6 @@ extern "C"
 {
 #endif
 
-void init_collision (const int* mmax,
-                     amrex::Real *min_dp,
-                     amrex::Real *min_roi,
-                     amrex::Real *max_dp,
-                     amrex::Real *max_roi,
-                     amrex::Real *sum_dp,
-                     amrex::Real *sum_roi,
-                     const amrex::Real& tcoll_ratio,
-                     amrex::Real* etan,
-                     amrex::Real* etan_w,
-                     amrex::Real* etat,
-                     amrex::Real* etat_w,
-                     amrex::Real* neighborhood);
 
 void mfix_usr3 (amrex::Real* vel_g, const int* ulo, const int* uhi,
                 amrex::Real* p_g,   const int* slo, const int* shi,

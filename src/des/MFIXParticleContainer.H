@@ -112,11 +112,7 @@ public:
                           std::string & knapsack_weight_type,
                           int & nsubsteps);
 
-    void GetParticleAvgProp (amrex::Real (&min_dp)[10], amrex::Real (&min_ro)[10],
-                             amrex::Real (&max_dp)[10], amrex::Real (&max_ro)[10],
-                             amrex::Real (&avg_dp)[10], amrex::Real (&avg_ro)[10]);
-
-    //amrex::Real GetMaxRadius(int lev);
+    void MFIX_PC_InitCollisionParams ();
 
     void UpdateMaxVelocity ();
 

@@ -43,12 +43,12 @@ void DiffusionOp::diffuse_temperature (      Vector< MultiFab* >  T_g_in,
     for(int lev = 0; lev <= finest_level; lev++)
     {
         MultiFab ep_g_k_g(ep_g_in[lev]->boxArray(), ep_g_in[lev]->DistributionMap(),
-            ep_g_in[lev]->nComp(), ep_g_in[lev]->nGrow(), MFInfo(), ep_g_in[lev]->Factory());
+            1, 1, MFInfo(), ep_g_in[lev]->Factory());
         // Initialize to 0
         ep_g_k_g.setVal(0.);
 
-        MultiFab::Copy(ep_g_k_g, *ep_g_in[lev], 0, 0, 1, ep_g_in[lev]->nComp());
-        MultiFab::Multiply(ep_g_k_g, *k_g_in[lev], 0, 0, 1, k_g_in[lev]->nComp());
+        MultiFab::Copy(ep_g_k_g, *ep_g_in[lev], 0, 0, 1, 1);
+        MultiFab::Multiply(ep_g_k_g, *k_g_in[lev], 0, 0, 1, 1);
 
         EB_interp_CellCentroid_to_FaceCentroid (ep_g_k_g, GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
 

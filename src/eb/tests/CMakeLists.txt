@@ -19,16 +19,9 @@ target_include_directories(functional_tests PRIVATE
 
 # Special treatment for CUDA in functional_tests
 if(ENABLE_CUDA)
-  target_compile_definitions(functional_tests PRIVATE CSG_USE_GPU)
-  get_target_property(_src_cpp functional_tests SOURCES)
-  list(FILTER _src_cpp INCLUDE REGEX "\.cpp")
-  set_source_files_properties(${_src_cpp} PROPERTIES LANGUAGE CUDA )
-  set_target_properties( functional_tests
-        PROPERTIES
-        CUDA_SEPARABLE_COMPILATION ON  # This add -dc flag
-    )
+   setup_target_for_cuda_compilation(functional_tests)
 else()
-  target_compile_features(functional_tests PRIVATE cxx_std_17)
+   target_compile_features(functional_tests PRIVATE cxx_std_17)
 endif()
 
 get_filename_component(TUTORIAL_CLR_CSG

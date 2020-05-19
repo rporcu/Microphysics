@@ -23,17 +23,18 @@ macro (setup_test _test _suffix _env _input_file )
         file( GLOB _udf  ${_src_dir}/*.f90 ${_src_dir}/*.cpp )
 
         #
-        # Search if UDFs contain the usr_drag.cpp file
-        # If not, add to UDFs the one provided by mfix
+        # Search which UDFs files are defined by the user
+        # If not found, add to UDF stubs provided by mfix
         #
         if (_udf)
-            set(_tmp ${_udf})
-            list(FILTER _tmp INCLUDE REGEX "u+s+r+\\_+d+r+a+g")
-            if (NOT _tmp)
-                 list(APPEND _udf ${USR_DRAG_SRC})
-            endif()
+           set(_udfs_stubs ${MFIX_UDFS_STUBS})
+           foreach (_source IN LISTS _udf)
+              get_filename_component(_source_name ${_source} NAME)
+              list(FILTER _udfs_stubs EXCLUDE REGEX ${_source_name})
+           endforeach ()
+           list(APPEND _udf ${_udfs_stubs})
         else ()
-            list(APPEND _udf ${USR_DRAG_SRC})
+            list(APPEND _udf ${MFIX_UDFS_STUBS})
         endif ()
 
         set(_test_exe mfix_${_test})
@@ -51,13 +52,7 @@ macro (setup_test _test _suffix _env _input_file )
 
             # Special treatment for CUDA
             if (ENABLE_CUDA)
-                get_target_property(_src_cpp ${_test_exe} SOURCES)
-                list(FILTER _src_cpp INCLUDE REGEX "\.cpp")
-                set_source_files_properties(${_src_cpp} PROPERTIES LANGUAGE CUDA )
-                set_target_properties( ${_test_exe}
-                    PROPERTIES
-                    CUDA_SEPARABLE_COMPILATION ON  # This add -dc flag
-                    )
+               setup_target_for_cuda_compilation(${_test_exe})
             endif ()
 
             target_link_libraries( ${_test_exe} ${MFIX_LIBNAME} )

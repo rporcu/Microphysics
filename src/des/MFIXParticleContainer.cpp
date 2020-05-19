@@ -158,7 +158,15 @@ void MFIXParticleContainer::EvolveParticles (int lev,
      ***************************************************************************/
 
     Real subdt;
-    des_init_time_loop(&dt, &nsubsteps, &subdt);
+    // des_init_time_loop(&dt, &nsubsteps, &subdt);
+    if ( dt >= DEM::dtsolid ) 
+    {
+       nsubsteps = std::ceil (  dt / DEM::dtsolid );
+       subdt     =  dt / nsubsteps;
+    } else {
+       nsubsteps = 1;
+       subdt     = dt;
+    }
 
     /****************************************************************************
      * Get particle EB geometric info
@@ -194,8 +202,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         }
         else
         {
-            // We need this test for the case of an inflow boundary: 
-            // inflow does not appear in the EBFactory but 
+            // We need this test for the case of an inflow boundary:
+            // inflow does not appear in the EBFactory but
             // the particles see it as a wall
 
             // Create the nodal refined box based on the current particle tile
@@ -451,8 +459,10 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                       Real r_lm = p1.rdata(realData::radius) + p2.rdata(realData::radius);
 
-                      if ( r2 <= (r_lm - small_number)*(r_lm - small_number) and 
-                           !(p1.id() == p2.id() and p1.cpu() == p2.cpu())  )
+                      AMREX_ASSERT_WITH_MESSAGE(!(p1.id() == p2.id() and p1.cpu() == p2.cpu()),
+                        "A particle should not be its own neighbor!");
+
+                      if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
                       {
                           if (debug_level > 0)
                              Gpu::Atomic::Add(pncoll, 1);
@@ -610,7 +620,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 //if (DEM::nspecies_dem > 0){
                 //   for(int j=0; j < DEM::nspecies_dem; ++j){
                 //      //j -- spec1,spec2 .. ; i -- particle index
-                //      spec_data.m_runtime_rdata[j][i] += subdt*spec_data.m_runtime_rdata[j][i]; 
+                //      spec_data.m_runtime_rdata[j][i] += subdt*spec_data.m_runtime_rdata[j][i];
                 //   }
                 //}
 
@@ -895,85 +905,7 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
     }
 }
 
-void MFIXParticleContainer::GetParticleAvgProp (Real (&min_dp)[10], Real (&min_ro)[10],
-                                                Real (&max_dp)[10], Real (&max_ro)[10],
-                                                Real (&avg_dp)[10], Real (&avg_ro)[10])
-{
-   // The number of phases was previously hard set at 10, however lowering
-   //  this number would make this code faster.
-   int num_of_phases_in_use = 10; //Number of different phases being simulated
 
-   // Cycle through the different phases, starting from 1
-   for (int phse = 1; phse <= num_of_phases_in_use; ++phse)
-   {
-     Real p_num  = 0.0; //number of particle
-     Real p_diam = 0.0; //particle diameters
-     Real p_dens = 0.0; //particle density
-
-     Real min_diam =  1.0e32;
-     Real min_den  =  1.0e32;
-
-     Real max_diam = -1.0e32;
-     Real max_den  = -1.0e32;
-
-     for (int lev = 0; lev < nlev; lev++)
-     {
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:p_num, p_diam, p_dens) if (Gpu::notInLaunchRegion())
-#endif
-        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-        {
-            auto& particles = pti.GetArrayOfStructs();
-
-            Gpu::HostVector<ParticleType> host_particles(pti.numParticles());
-            Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
-
-            for (const auto& p: host_particles){
-                if ( phse==p.idata(intData::phase) )
-                {
-                    p_num  += 1.0;
-                    p_diam += p.rdata(realData::radius) * 2.0;
-                    p_dens += p.rdata(realData::density);
-
-                    min_diam = amrex::min(min_diam, p.rdata(realData::radius) * 2.0 );
-                    min_den  = amrex::min(min_den,  p.rdata(realData::density) );
-
-                    max_diam = amrex::max(max_diam, p.rdata(realData::radius) * 2.0 );
-                    max_den  = amrex::max(max_den,  p.rdata(realData::density) );
-
-                }
-            }
-        }
-     }
-
-     // A single MPI call passes all three variables
-     ParallelDescriptor::ReduceRealSum({p_num,p_diam,p_dens});
-     ParallelDescriptor::ReduceRealMin({min_diam, min_den});
-     ParallelDescriptor::ReduceRealMax({max_diam, max_den});
-
-     //calculate averages or set = zero if no particles of that phase
-     if (p_num==0){
-       avg_dp[phse-1] = 0.0;
-       avg_ro[phse-1] = 0.0;
-
-       min_dp[phse-1] = 0.0;
-       min_ro[phse-1] = 0.0;
-
-       max_dp[phse-1] = 0.0;
-       max_ro[phse-1] = 0.0;
-
-     } else {
-       avg_dp[phse-1] = p_diam/p_num;
-       avg_ro[phse-1] = p_dens/p_num;
-
-       min_dp[phse-1] = min_diam;
-       min_ro[phse-1] = min_den;
-
-       max_dp[phse-1] = max_diam;
-       max_ro[phse-1] = max_den;
-     }
-   }
-}
 
 void MFIXParticleContainer::UpdateMaxVelocity ()
 {
