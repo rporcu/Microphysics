@@ -21,7 +21,7 @@ namespace REGIONS
     std::vector<std::string> regions_in;
     pp.queryarr("regions", regions_in);
 
-    for(int lc=0; lc<regions_in.size(); lc++){
+    for(size_t lc=0; lc<regions_in.size(); lc++){
 
       amrex::RealBox new_box;
 

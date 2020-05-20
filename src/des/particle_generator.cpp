@@ -923,7 +923,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 
         p_dp[2*i] = dp1;
 
-        if((2*i+1) < nsize)
+        if(size_t(2*i+1) < nsize)
           p_dp[2*i+1] = dp2;
 
         iterations++;
@@ -955,7 +955,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 
     lmean /= nsize;
 
-    for(int i = 0; i < nsize; i++)
+    for(size_t i = 0; i < nsize; i++)
       lvariance += (dp[i]-lmean)*(dp[i]-lmean);
 
     lvariance /= nsize;
@@ -1024,8 +1024,8 @@ ParticlesGenerator::uni_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 void
 ParticlesGenerator::grow_pdata (const int gsize)
 {
-  const int r_gsize = gsize*nr;
-  const int i_gsize = gsize*ni;
+  const size_t r_gsize = gsize*nr;
+  const size_t i_gsize = gsize*ni;
 
   // Increase real data
   if(m_rdata.size() == 0)

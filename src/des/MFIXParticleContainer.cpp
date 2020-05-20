@@ -85,7 +85,7 @@ void MFIXParticleContainer::printParticles ()
     {
        const auto& particles = kv.second.GetArrayOfStructs();
 
-       for (unsigned i = 0; i < particles.numParticles(); ++i)
+       for (int i = 0; i < particles.numParticles(); ++i)
        {
           std::cout << "Particle ID  = " << i << " " << std::endl;
           std::cout << "X            = " << particles[i].pos(0) << " " << std::endl;
@@ -158,7 +158,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
     Real subdt;
     // des_init_time_loop(&dt, &nsubsteps, &subdt);
-    if ( dt >= DEM::dtsolid ) 
+    if ( dt >= DEM::dtsolid )
     {
        nsubsteps = std::ceil (  dt / DEM::dtsolid );
        subdt     =  dt / nsubsteps;
@@ -412,7 +412,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 // the wfor (wall forces) vector.
                 if (debug_level > 0) {
                     Gpu::synchronize();
-                    for (int i = 0; i < wfor[index].size(); i++ ) {
+                    for (size_t i = 0; i < wfor[index].size(); i++ ) {
                         wfor[index][i] = fc[index][i];
                     }
                 }
@@ -555,7 +555,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             // wall forces, these need to be subtracted here.
             if (debug_level > 0)
             {
-                for (int i = 0; i < pfor[index].size(); i++ ) {
+                for (size_t i = 0; i < pfor[index].size(); i++ ) {
                     pfor[index][i] = fc[index][i] - wfor[index][i];
                 }
             }

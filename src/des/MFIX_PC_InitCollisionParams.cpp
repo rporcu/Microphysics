@@ -14,8 +14,7 @@ using namespace std;
 void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
 {
 
-   amrex::Real min_dp[10], min_ro[10];
-   amrex::Real max_dp[10], max_ro[10];
+   // amrex::Real max_dp[10], max_ro[10];
    amrex::Real avg_dp[10], avg_ro[10];
 
    // The number of phases was previously hard set at 10, however lowering
@@ -28,9 +27,6 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
       amrex::Real p_num  = 0.0; //number of particle
       amrex::Real p_diam = 0.0; //particle diameters
       amrex::Real p_dens = 0.0; //particle density
-
-      amrex::Real min_diam =  1.0e32;
-      amrex::Real min_den  =  1.0e32;
 
       amrex::Real max_diam = -1.0e32;
       amrex::Real max_den  = -1.0e32;
@@ -70,15 +66,15 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
          avg_dp[phse-1] = 0.0;
          avg_ro[phse-1] = 0.0;
 
-         max_dp[phse-1] = 0.0;
-         max_ro[phse-1] = 0.0;
+         // max_dp[phse-1] = 0.0;
+         // max_ro[phse-1] = 0.0;
 
       } else {
          avg_dp[phse-1] = p_diam/p_num;
          avg_ro[phse-1] = p_dens/p_num;
 
-         max_dp[phse-1] = max_diam;
-         max_ro[phse-1] = max_den;
+         // max_dp[phse-1] = max_diam;
+         // max_ro[phse-1] = max_den;
       }
    }
 
