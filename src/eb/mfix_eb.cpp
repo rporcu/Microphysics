@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <AMReX_EB_levelset.H>
 #include <mfix.H>
-#include <mfix_F.H>
 #include <AMReX_EB2.H>
 #include <AMReX_EB2_IF_Cylinder.H>
 #include <AMReX_EB2_IF_Plane.H>

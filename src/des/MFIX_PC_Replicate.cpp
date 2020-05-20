@@ -14,7 +14,6 @@
 #include <cmath>
 #include <iostream>
 
-#include "mfix_F.H"
 #include "mfix_des_K.H"
 #include "MFIX_DEM_Parms.H"
 #include <MFIX_PIC_Parms.H>
@@ -58,11 +57,11 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                     p_rep.m_rdata.pos[0] = p.m_rdata.pos[0] + shift[0];
                     p_rep.m_rdata.pos[1] = p.m_rdata.pos[1] + shift[1];
                     p_rep.m_rdata.pos[2] = p.m_rdata.pos[2] + shift[2];
-                
+
                     p_rep.rdata(realData::velx)   = p.rdata(realData::velx);
                     p_rep.rdata(realData::vely)   = p.rdata(realData::vely);
                     p_rep.rdata(realData::velz)   = p.rdata(realData::velz);
-                
+
                     // Set other particle properties
                     p_rep.idata(intData::phase)       = p.idata(intData::phase);
                     p_rep.idata(intData::state)       = p.idata(intData::state);
@@ -79,11 +78,11 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                     p_rep.rdata(realData::dragx)      = p.rdata(realData::dragx);
                     p_rep.rdata(realData::dragy)      = p.rdata(realData::dragy);
                     p_rep.rdata(realData::dragz)      = p.rdata(realData::dragz);
-                
+
                     // Set id and cpu for this particle
                     p_rep.id()  = ParticleType::NextID();
                     p_rep.cpu() = ParallelDescriptor::MyProc();
-                 
+
                     // Add everything to the data structure
                     replicated_particles.push_back(p_rep);
                 } // p

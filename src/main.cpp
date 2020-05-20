@@ -9,7 +9,6 @@
 #include <AMReX_buildInfo.H>
 
 #include <mfix.H>
-#include <mfix_F.H>
 
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
@@ -266,7 +265,7 @@ int main (int argc, char* argv[])
     if (FLUID::solve)
        mfix.mfix_init_solvers();
 
-    // This checks if we want to regrid 
+    // This checks if we want to regrid
     if (!mfix.IsSteadyState() && regrid_int > -1 && nstep%regrid_int == 0)
     {
         amrex::Print() << "Regridding at step " << nstep << std::endl;
@@ -291,7 +290,7 @@ int main (int argc, char* argv[])
     Real prev_dt = dt;
 
     // Write checkpoint and plotfiles with the initial data
-    if ( (restart_file.empty() || plotfile_on_restart) && 
+    if ( (restart_file.empty() || plotfile_on_restart) &&
          (mfix::plot_int > 0 || mfix::plot_per_exact > 0 || mfix::plot_per_approx > 0) )
     {
       if (FLUID::solve)

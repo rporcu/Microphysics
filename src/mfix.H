@@ -349,9 +349,12 @@ class mfix : public AmrCore
                                        const amrex::FabArray<EBCellFlagFab>* flags,
                                        amrex::Real max_eps);
 
-    Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
+    Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false) const;
 
-    Real volEpsWgtSum (int lev, const MultiFab & mf, int comp, bool local=false);
+    Real volEpsWgtSum (int lev, const MultiFab & mf, int comp, bool local=false) const;
+
+    Real volWgtSumBox (int lev, const MultiFab & mf, int comp, const Box a_bx, bool local=false) const;
+
 
     void mfix_set_bc_type (int lev);
 

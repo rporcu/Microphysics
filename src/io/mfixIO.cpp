@@ -7,7 +7,6 @@
 #include <AMReX_buildInfo.H>
 
 #include <mfix.H>
-#include <mfix_F.H>
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
@@ -178,6 +177,7 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
   const int size_vel_g = avg_vel_g.size();
 
   const Real * dx   = geom[lev].CellSize();
+  const Real * dxi  = geom[lev].InvCellSize();
 
   //
   // Check the regions are defined correctly
@@ -197,6 +197,7 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
 
   // Array to hold the data for global collection.
   std::vector<Real> regions_data(var_count*nregions, 0.0);
+  std::vector<Real> new_regions_data(var_count*nregions, 0.0);
 
   Box domain(geom[lev].Domain());
 
@@ -205,9 +206,17 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
   MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
 
   // New multiFab to hold the cell center pressure.
-  std::unique_ptr<MultiFab> pg_cc(new MultiFab(
+  amrex::MultiFab* pg_cc(new MultiFab(
              ep_g.boxArray(), ep_g.DistributionMap(),
              ep_g.nComp(),    ep_g.nGrow(), MFInfo(), *ebfactory[lev]));
+
+  // New multiFab to hold the cell center pressure.
+  amrex::MultiFab* one(new MultiFab(
+             ep_g.boxArray(), ep_g.DistributionMap(),
+             1, 0, MFInfo(), *ebfactory[lev]));
+
+  one->setVal(1.0);
+
 
   // Create a temporary nodal pressure multifab to sum in p_g and p0_g
   MultiFab pg_nd(m_leveldata[lev]->p_g->boxArray(), dmap[lev], 1, 0);
@@ -229,64 +238,32 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
     // Jump to next iteration if this averaging region is not valid
     if ( !avg_region.ok () )
     {
-      amrex::Print() << "ComputeAverageVelocities: region "<< nr << 
+      amrex::Print() << "ComputeAverageVelocities: region "<< nr <<
         " is invalid: skipping\n";
       continue;
     }
 
-    Real sum_vol    = 0.;
-    Real sum_velx   = 0.;
-    Real sum_vely   = 0.;
-    Real sum_velz   = 0.;
-    Real sum_p_g    = 0.;
-    Real sum_ep_g   = 0.;
+    const IntVect domlo(domain.loVect());
+    const IntVect domhi(domain.hiVect());
 
-#if(0)
-    amrex::Print() << "\n\n  Collecting field averages for region " << nr << "\n";
-    if( size_p_g   > nr ) if( avg_p_g[nr]   == 1 ) amrex::Print() << "  > Gas pressure.......(p_g)\n";
-    if( size_ep_g  > nr ) if( avg_ep_g[nr]  == 1 ) amrex::Print() << "  > Volume fraction....(ep_g)\n";
-    if( size_vel_g > nr ) if( avg_vel_g[nr] == 1 ) amrex::Print() << "  > Gas velocity.......(m/s)\n";
-#endif
+    const IntVect lo(amrex::max(domlo[0], static_cast<int>(floor(avg_region_x_w[nr]*dxi[0] + 0.5))),
+                     amrex::max(domlo[1], static_cast<int>(floor(avg_region_y_s[nr]*dxi[1] + 0.5))),
+                     amrex::max(domlo[2], static_cast<int>(floor(avg_region_z_b[nr]*dxi[2] + 0.5))));
 
-    // Not tiling this loop.
-    for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
-    {
+    const IntVect hi(amrex::min(domhi[0], static_cast<int>(floor(avg_region_x_e[nr]*dxi[0] + 0.5))),
+                     amrex::min(domhi[1], static_cast<int>(floor(avg_region_y_n[nr]*dxi[1] + 0.5))),
+                     amrex::min(domhi[2], static_cast<int>(floor(avg_region_z_t[nr]*dxi[2] + 0.5))));
 
-      const Box& bx  = mfi.validbox();
+    const Box avg_box(lo, hi);
 
-      // this is to check efficiently if this grid contains any eb stuff
-      const EBFArrayBox&  epg_fab = static_cast<EBFArrayBox const&>(ep_g[mfi]);
-      const EBCellFlagFab&  flags = epg_fab.getEBCellFlagFab();
+    bool local = true;
 
-      RealBox box_region ( bx, Geom(lev).CellSize (), Geom(lev).ProbLo() );
-
-      if (flags.getType(bx) != FabType::covered)
-      {
-        if ( box_region.intersects ( avg_region ) )
-        {
-
-          // TODO: convert this in cpp
-          mfix_collect_fluid(BL_TO_FORTRAN_BOX(bx),
-                             BL_TO_FORTRAN_BOX(domain),
-                             BL_TO_FORTRAN_ANYD(         ep_g[mfi]),
-                             BL_TO_FORTRAN_ANYD((     *pg_cc)[mfi]),
-                             BL_TO_FORTRAN_ANYD((*m_leveldata[lev]->vel_g)[mfi]),
-                             BL_TO_FORTRAN_ANYD((   *volfrac)[mfi]),
-                             &avg_region_x_w[nr], &avg_region_x_e[nr],
-                             &avg_region_y_s[nr], &avg_region_y_n[nr],
-                             &avg_region_z_b[nr], &avg_region_z_t[nr], dx,
-                             &sum_ep_g, &sum_p_g,  &sum_vol,
-                             &sum_velx, &sum_vely, &sum_velz);
-        }
-      }
-    }
-
-    regions_data[var_count*nr + 0] = sum_vol;
-    regions_data[var_count*nr + 1] = sum_velx;
-    regions_data[var_count*nr + 2] = sum_vely;
-    regions_data[var_count*nr + 3] = sum_velz;
-    regions_data[var_count*nr + 4] = sum_p_g;
-    regions_data[var_count*nr + 5] = sum_ep_g;
+    regions_data[var_count*nr + 0] = volWgtSumBox(lev, *one                      , 0, avg_box, local);
+    regions_data[var_count*nr + 1] = volWgtSumBox(lev, *(m_leveldata[lev]->vel_g), 0, avg_box, local);
+    regions_data[var_count*nr + 2] = volWgtSumBox(lev, *(m_leveldata[lev]->vel_g), 1, avg_box, local);
+    regions_data[var_count*nr + 3] = volWgtSumBox(lev, *(m_leveldata[lev]->vel_g), 2, avg_box, local);
+    regions_data[var_count*nr + 4] = volWgtSumBox(lev, *pg_cc                    , 0, avg_box, local);
+    regions_data[var_count*nr + 5] = volWgtSumBox(lev, *(m_leveldata[lev]->ep_g) , 0, avg_box, local);
 
   }
 
@@ -296,6 +273,9 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
   // Only the IO processor takes care of the output
   if (ParallelDescriptor::IOProcessor())
     {
+
+      const amrex::Real cell_volume = dx[0]*dx[1]*dx[2];
+
       for ( int nr = 0; nr < nregions; ++nr )
         {
 
@@ -322,11 +302,11 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
                 if ( !ofs.good() ) amrex::FileOpenFailed ( fname );
 
                 if ( !exists ) ofs << "#  Time   p_g  vol" << std::endl;
-                ofs << time << " " << sum_p_g/sum_vol << "  " << sum_vol << std::endl;
+                ofs << time << " " << sum_p_g/sum_vol
+                            << " " << sum_vol*cell_volume << std::endl;
 
                 ofs.close();
             }
-
           }
 
           if( size_ep_g  > nr )
@@ -374,5 +354,8 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
         }
 
     }
+
+  delete pg_cc;
+  delete one;
 
 }

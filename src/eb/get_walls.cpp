@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <mfix.H>
-#include <mfix_F.H>
 
 #include <MFIX_BC_Parms.H>
 
