@@ -8,7 +8,6 @@
 #include <AMReX_Geometry.H>
 
 #include <mfix.H>
-#include <mfix_F.H>
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>

@@ -33,7 +33,6 @@ target_sources(mfixcore
    mfix_regrid.cpp
    mfix.cpp
    #  main.cpp <---- DO NOT ADD THIS HERE
-   mfix_F.H
    mfix.H
    )
 

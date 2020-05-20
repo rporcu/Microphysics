@@ -1,7 +1,6 @@
 #ifndef __MFIX_INIT_FLUID_HPP_
 #define __MFIX_INIT_FLUID_HPP_
 
-#include <mfix_F.H>
 #include <mfix.H>
 
 #include <AMReX_REAL.H>
