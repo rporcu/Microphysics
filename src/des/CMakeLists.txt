@@ -8,7 +8,6 @@ target_sources( mfixcore
    particle_generator.cpp
    des_drag_K.H
    mfix_set_gradp_bcs.cpp
-   mfix_des_F.H
    mfix_des_K.H
    MFIXParticleContainer.cpp
    MFIXParticleContainer.H

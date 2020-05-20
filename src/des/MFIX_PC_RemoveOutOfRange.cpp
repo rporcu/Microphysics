@@ -13,9 +13,6 @@
 
 #include <math.h>
 
-#include "mfix_F.H"
-#include "mfix_des_F.H"
-
 using namespace amrex;
 using namespace std;
 

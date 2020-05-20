@@ -15,7 +15,6 @@
 #include <math.h>
 
 #include <mfix_F.H>
-#include <mfix_des_F.H>
 #include <mfix_des_K.H>
 
 #include <MFIX_DEM_Parms.H>
