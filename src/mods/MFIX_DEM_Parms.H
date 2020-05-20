@@ -44,8 +44,8 @@ namespace DEM
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real etat_w[NMAX];
 
     // coefficients of restitution, normal and tangential
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real en_input[NMAX+NMAX*(NMAX-1)/2];
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real en_w_input[NMAX];
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real en[NMAX][NMAX];
+    extern AMREX_GPU_DEVICE_MANAGED amrex::Real en_w[NMAX];
 
 
     extern AMREX_GPU_DEVICE_MANAGED amrex::Real eta_fac;
