@@ -127,7 +127,7 @@ namespace BC
     pp.queryarr("regions", regions);
 
     // Loop over BCs
-    for(int bcv=0; bcv<regions.size(); bcv++){
+    for(size_t bcv=0; bcv<regions.size(); bcv++){
 
       amrex::Real volfrac_total(0.0);
 
@@ -308,7 +308,7 @@ namespace BC
           ppRegion.queryarr("solids", solids_types);
         }
 
-        for(int lcs(0); lcs < solids_types.size(); ++ lcs){
+        for(size_t lcs(0); lcs < solids_types.size(); ++ lcs){
 
           DEM::DEM_t new_solid;
 

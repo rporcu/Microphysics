@@ -148,7 +148,7 @@ linter:shellcheck:
 
 linter:warnings:
   script:
-    - cmake -S . -B build -DCMAKE_CXX_FLAGS="-O0 -Werror=unused -Werror=maybe-uninitialized" -DCMAKE_Fortran_FLAGS="-O0"
+    - cmake -S . -B build -DCMAKE_CXX_FLAGS="-Wall -Werror" -DCMAKE_Fortran_FLAGS="-O0"
     - cmake --build build -- -j4 -k
   tags:
     - mfix-exa
