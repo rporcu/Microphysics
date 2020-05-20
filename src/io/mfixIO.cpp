@@ -201,8 +201,6 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
 
   Box domain(geom[lev].Domain());
 
-  const amrex::MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
-
   MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
 
   // New multiFab to hold the cell center pressure.
@@ -216,7 +214,6 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
              1, 0, MFInfo(), *ebfactory[lev]));
 
   one->setVal(1.0);
-
 
   // Create a temporary nodal pressure multifab to sum in p_g and p0_g
   MultiFab pg_nd(m_leveldata[lev]->p_g->boxArray(), dmap[lev], 1, 0);
