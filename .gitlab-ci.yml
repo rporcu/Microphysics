@@ -1,12 +1,11 @@
-image: mwm126/mfix-exa:cuda
+image: mwm126/mfix-exa:20200519
 
 workflow:
   rules:
     - if: $CI_MERGE_REQUEST_ID               # Execute jobs in merge request context
-    - if: $CI_COMMIT_BRANCH == 'develop'      # Execute jobs when a new commit is pushed to master branch
+    - if: $CI_COMMIT_BRANCH == 'develop'     # Execute jobs when a new commit is pushed to master branch
 
 variables:
-  AMREX_HOME: "${CI_PROJECT_DIR}/amrex_install"
   CC: "gcc"
   CXX: "g++"
   ENABLE_MPI: "1"
@@ -15,7 +14,6 @@ variables:
   GIT_DEPTH: 1
   GIT_STRATEGY: fetch
   GIT_SUBMODULE_STRATEGY: none
-  JOULE_MODULES: "cuda/10.2 gnu/8.4.0 openmpi/4.0.3_gnu8.4 ccache/3.7.9"
 
 ###### Test jobs #####
 
@@ -27,7 +25,7 @@ test_csg: &test_template
             -G Ninja
             -DCMAKE_BUILD_TYPE=Debug
             -DENABLE_CSG=yes
-    - cmake --build build --target functional_tests -j2
+    - cmake --build build --target functional_tests
     - ./build/src/eb/tests/functional_tests
   tags:
     - mfix-exa
@@ -54,7 +52,8 @@ test_csg: &test_template
             -B build
             -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
-    - cmake --build build --target build_tests -j2 --verbose
+            -G Ninja
+    - cmake --build build --target build_tests
     - cd build
     - $CTEST_CMD
   tags:
@@ -63,19 +62,19 @@ test_csg: &test_template
 
 .gpu_test: &gpu_template
   script:
-    - module load $JOULE_MODULES
     - git submodule update --init --force subprojects/amrex
     - cmake -S .
             -B build
-            -G Ninja
+            -DCUDA_ARCH=Volta
             -DENABLE_CUDA=1
             -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
-    - cmake --build build --target build_tests -j2
+            -G Ninja
+    - cmake --build build --target build_tests
     - cd build
     # - $CTEST_CMD
   tags:
-    - joule
+    - mfix-exa
   <<: *test_template
 
 
@@ -149,7 +148,7 @@ linter:shellcheck:
 
 linter:warnings:
   script:
-    - cmake -S . -B build -DCMAKE_CXX_FLAGS="-O0 -Werror=unused -Werror=maybe-uninitialized" -DCMAKE_Fortran_FLAGS="-O0"
+    - cmake -S . -B build -DCMAKE_CXX_FLAGS="-Wall -Werror" -DCMAKE_Fortran_FLAGS="-O0"
     - cmake --build build -- -j4 -k
   tags:
     - mfix-exa

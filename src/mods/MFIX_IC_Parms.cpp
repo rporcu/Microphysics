@@ -29,7 +29,7 @@ namespace IC
     ppMFIX.query("advect_enthalpy", advect_enthalpy);
 
     // Loop over ICs
-    for(int icv=0; icv<regions.size(); icv++){
+    for(size_t icv=0; icv<regions.size(); icv++){
 
       amrex::Real volfrac_total(0.0);
 
@@ -70,7 +70,7 @@ namespace IC
           ppSolid.get("packing", new_ic.packing);
         }
 
-        for(int lcs(0); lcs < solids_types.size(); ++ lcs){
+        for(size_t lcs(0); lcs < solids_types.size(); ++ lcs){
 
           DEM::DEM_t new_solid;
 

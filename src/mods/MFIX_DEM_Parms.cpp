@@ -1,7 +1,6 @@
 #include <AMReX.H>
 #include <AMReX_Arena.H>
 #include <AMReX_Print.H>
-#include <mfix_des_F.H>
 
 #include <AMReX_Vector.H>
 #include <AMReX_ParmParse.H>
@@ -36,8 +35,8 @@ namespace DEM
     AMREX_GPU_DEVICE_MANAGED amrex::Real etat_w[NMAX];
 
     // coefficients of restitution, normal and tangential
-    AMREX_GPU_DEVICE_MANAGED amrex::Real en_input[NMAX+NMAX*(NMAX-1)/2];
-    AMREX_GPU_DEVICE_MANAGED amrex::Real en_w_input[NMAX];
+    AMREX_GPU_DEVICE_MANAGED amrex::Real en[NMAX][NMAX];
+    AMREX_GPU_DEVICE_MANAGED amrex::Real en_w[NMAX];
 
     AMREX_GPU_DEVICE_MANAGED amrex::Real eta_fac;
     AMREX_GPU_DEVICE_MANAGED amrex::Real eta_w_fac;
@@ -171,12 +170,8 @@ namespace DEM
         //    dem.restitution_coeff.solid2.solid1 = coeff
         //
         // We want to make sure that at least one is given. If both are given
-        // then they must be equal.  The values get stroed in en_input
-
-
+        // then they must be equal.  The values get stored in en.
         {
-          int lc_pp = 0;
-          int lc_pw = 0;
 
           amrex::ParmParse ppRC("dem.restitution_coeff");
           for (int idx0=0; idx0 < NPHASE; idx0++){
@@ -211,8 +206,8 @@ namespace DEM
               AMREX_ALWAYS_ASSERT_WITH_MESSAGE(rest_coeff >= 0.0 && rest_coeff <= 1.0,
                    "Invalid restitution coefficient.");
 
-              en_input[lc_pp] = rest_coeff;
-              lc_pp += 1;
+              en[idx0][idx1] = rest_coeff;
+              en[idx1][idx0] = rest_coeff;
 
             }
 
@@ -245,8 +240,7 @@ namespace DEM
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(rest_coeff >= 0.0 && rest_coeff <= 1.0,
                  "Invalid restitution coefficient.");
 
-            en_w_input[lc_pw] = rest_coeff;
-            lc_pw += 1;
+            en_w[idx0] = rest_coeff;
 
           }
         }

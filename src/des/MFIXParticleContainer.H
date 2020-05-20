@@ -15,11 +15,9 @@
 #include <AMReX_Particles.H>
 #include <AMReX_NeighborParticles.H>
 
-#include <mfix_des_F.H>
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
 #include <MFIX_BC_List.H>
-#include <mfix_des_F.H>
 
 struct realData
 {

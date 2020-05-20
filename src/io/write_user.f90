@@ -19,9 +19,6 @@ subroutine collect_fluid (lo, hi, domlo, domhi,                    &
   use amrex_fort_module, only : rt => amrex_real
   use iso_c_binding , only: c_int
 
-  use param, only: is_defined, dim_usr
-  use amrex_ebcellflag_module, only: is_covered_cell
-
   implicit none
 
 ! Dummy arguments ....................................................//
