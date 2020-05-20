@@ -3,7 +3,6 @@
 
 #include <mfix_F.H>
 #include <mfix.H>
-#include <mfix_des_F.H>
 
 #include <AMReX_REAL.H>
 #include <AMReX_BLFort.H>

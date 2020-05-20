@@ -30,7 +30,6 @@
 #include <DiffusionOp.H>
 #include <MFIXParticleContainer.H>
 #include <MFIX_BC_List.H>
-#include <mfix_des_F.H>
 #include <mfix_eb_if.H>
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
