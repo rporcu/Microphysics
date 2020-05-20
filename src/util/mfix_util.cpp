@@ -169,7 +169,7 @@ mfix::volWgtSumBox (int lev, const MultiFab& mf, int comp, const Box a_bx, bool 
         {
 
           // We want the intersection of this box (bx) and the box
-          // provided in the funciton call.
+          // provided in the function call.
           const Box insect_bx = bx&a_bx;
 
           Real dm = 0.0;
