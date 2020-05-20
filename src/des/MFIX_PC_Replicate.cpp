@@ -28,10 +28,11 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
 {
     int lev = 0;
 
-    Vector<Real> orig_domain_size;
-    orig_domain_size.resize(BL_SPACEDIM);
+    RealVect orig_domain_size;
     for (int d = 0; d < BL_SPACEDIM; d++)
-        orig_domain_size[d] = (geom.ProbHi(d) - geom.ProbLo(d)) / Nrep[d];
+      orig_domain_size[d] = (geom.ProbHi(d) - geom.ProbLo(d)) / Nrep[d];
+
+    const int myProc = ParallelDescriptor::MyProc();
 
     for (int idim = 0; idim < 3; ++idim)
     {
@@ -39,10 +40,13 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
         {
             auto& particles = pti.GetArrayOfStructs();
             int np = pti.numParticles();
-            Gpu::HostVector<ParticleType> host_particles(np);
-            Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
 
-            Gpu::HostVector<ParticleType> replicated_particles;
+            int np_replicated = np * (Nrep[idim] - 1);
+
+            int new_np = np + np_replicated;
+            particles.resize(new_np);
+
+            ParticleType* pstruct = particles().dataPtr();
 
             for (int i = 0; i < Nrep[idim]; i++)
             {
@@ -51,17 +55,24 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                 RealVect shift = {0., 0., 0.};
                 shift[idim] = i * orig_domain_size[idim];
 
-                ParticleType p_rep;
-                for (const auto& p: host_particles)
+                const int nextID = ParticleType::NextID();
+
+                amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE (int n) noexcept
                 {
-                    p_rep.m_rdata.pos[0] = p.m_rdata.pos[0] + shift[0];
-                    p_rep.m_rdata.pos[1] = p.m_rdata.pos[1] + shift[1];
-                    p_rep.m_rdata.pos[2] = p.m_rdata.pos[2] + shift[2];
+                    int index = n;
+                    int index_repl = i*np + n;
 
-                    p_rep.rdata(realData::velx)   = p.rdata(realData::velx);
-                    p_rep.rdata(realData::vely)   = p.rdata(realData::vely);
-                    p_rep.rdata(realData::velz)   = p.rdata(realData::velz);
+                    ParticleType p = pstruct[index];
+                    ParticleType& p_rep = pstruct[index_repl];
 
+                    p_rep.pos(0) = p.pos(0) + shift[0];
+                    p_rep.pos(1) = p.pos(1) + shift[1];
+                    p_rep.pos(2) = p.pos(2) + shift[2];
+                
+                    p_rep.rdata(realData::velx) = p.rdata(realData::velx);
+                    p_rep.rdata(realData::vely) = p.rdata(realData::vely);
+                    p_rep.rdata(realData::velz) = p.rdata(realData::velz);
+                
                     // Set other particle properties
                     p_rep.idata(intData::phase)       = p.idata(intData::phase);
                     p_rep.idata(intData::state)       = p.idata(intData::state);
@@ -80,22 +91,19 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                     p_rep.rdata(realData::dragz)      = p.rdata(realData::dragz);
 
                     // Set id and cpu for this particle
-                    p_rep.id()  = ParticleType::NextID();
-                    p_rep.cpu() = ParallelDescriptor::MyProc();
+                    p_rep.id()  = nextID + n;
+                    p_rep.cpu() = myProc;
+                 
+                }); // p
 
-                    // Add everything to the data structure
-                    replicated_particles.push_back(p_rep);
-                } // p
+                ParticleType::NextID(nextID + np);
             } // i
 
-            if (replicated_particles.size() == 0) continue;
+            amrex::Gpu::synchronize();
 
-            auto new_np = np + replicated_particles.size();
-            particles.resize(new_np);
-            Gpu::copy(Gpu::hostToDevice, replicated_particles.begin(), replicated_particles.end(),
-                      particles.begin() + np);
         } // pti
 
         Redistribute();
     } // idim
+
 }
