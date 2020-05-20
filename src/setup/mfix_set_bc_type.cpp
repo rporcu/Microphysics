@@ -1,4 +1,3 @@
-#include <mfix_F.H>
 #include <mfix.H>
 #include <param_mod_F.H>
 

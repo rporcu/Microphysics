@@ -1,14 +1,13 @@
-#include <mfix_F.H>
 #include <mfix.H>
 #include <param_mod_F.H>
 
 #include <MFIX_FLUID_Parms.H>
 
-// 
+//
 // Purpose: This routine is called before the time loop starts and is
-//          user-definable.   This can be used for setting constants 
+//          user-definable.   This can be used for setting constants
 //          and checking errors in data.
-// 
+//
 void
 mfix::mfix_usr0 () const
 {
@@ -36,9 +35,9 @@ mfix::mfix_usr2 () const
 {
 }
 
-// 
+//
 // Purpose: This routine is called after the time loop ends and is user-definable.
-// 
+//
 void
 mfix::mfix_usr3 () const
 {

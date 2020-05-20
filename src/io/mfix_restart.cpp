@@ -8,7 +8,6 @@
 #include <AMReX_Geometry.H>
 
 #include <mfix.H>
-#include <mfix_F.H>
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
@@ -117,7 +116,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             RealBox rb(prob_lo,prob_hi);
             Geom(lev).ProbDomain(rb);
             Geom(lev).ResetDefaultProbDomain(rb);
-            
+
             BoxArray orig_ba,ba;
             orig_ba.readFrom(is);
             GotoNextLine(is);
@@ -268,7 +267,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
                  FArrayBox single_fab(mf.boxArray()[0],1);
                  mf.copyTo(single_fab);
-    
+
                   // Copy and replicate mf into chkscalarVars
                   for (MFIter mfi(**(chkscalarVars[i][lev]), false); mfi.isValid(); ++mfi) {
                       int ib = mfi.index();
@@ -316,7 +315,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
            // Load level-set Multifab
            std::stringstream ls_data_path;
            ls_data_path << restart_file << "/ls_raw";
-   
+
            MultiFab ls_mf;
            VisMF::Read(ls_mf, ls_data_path.str());
 
@@ -334,12 +333,12 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
            amrex::readIntData(levelset_params, 4, param_file, FPC::NativeIntDescriptor());
            int ls_ref = levelset_params[0], ls_pad = levelset_params[1],
                eb_ref = levelset_params[2], eb_pad = levelset_params[3];
-   
+
            amrex::Print() << "     + Loaded level-set parameters:" << std::endl
                           << "       ref = " << ls_ref << "    pad = " << ls_pad
                           << "    eb_ref = " << eb_ref << " eb_pad = " << eb_pad
                           << std::endl;
-   
+
            // Inform the user if the checkpoint parameters do not match those in the
            // inputs file. The checkpoint inputs overwrite the inputs file.
            if(ls_ref != levelset_refinement)
@@ -378,7 +377,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
-     
+
           // Fill the bc's just in case
           m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->vel_go->FillBoundary(geom[lev].periodicity());
@@ -387,7 +386,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         }
     }
 
-    if (load_balance_type == "KnapSack" or load_balance_type == "SFC") 
+    if (load_balance_type == "KnapSack" or load_balance_type == "SFC")
     {
       if (DEM::solve or PIC::solve) {
         for (int lev(0); lev < particle_cost.size(); ++lev)

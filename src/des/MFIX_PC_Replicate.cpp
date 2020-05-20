@@ -14,7 +14,6 @@
 #include <cmath>
 #include <iostream>
 
-#include "mfix_F.H"
 #include "mfix_des_K.H"
 #include "MFIX_DEM_Parms.H"
 #include <MFIX_PIC_Parms.H>
@@ -90,7 +89,7 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                     p_rep.rdata(realData::dragx)      = p.rdata(realData::dragx);
                     p_rep.rdata(realData::dragy)      = p.rdata(realData::dragy);
                     p_rep.rdata(realData::dragz)      = p.rdata(realData::dragz);
-                
+
                     // Set id and cpu for this particle
                     p_rep.id()  = nextID + n;
                     p_rep.cpu() = myProc;

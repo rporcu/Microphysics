@@ -1,4 +1,3 @@
-#include <mfix_F.H>
 #include <mfix.H>
 #include <MFIX_BC_Parms.H>
 

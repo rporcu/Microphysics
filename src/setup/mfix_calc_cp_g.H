@@ -1,7 +1,6 @@
 #ifndef _MFIX_CALC_CP_G_HPP_
 #define _MFIX_CALC_CP_G_HPP_
 
-#include <mfix_F.H>
 #include <mfix.H>
 
 #include <AMReX_REAL.H>
