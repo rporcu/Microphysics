@@ -1,7 +1,6 @@
 #include <mfix.H>
 
 #include <climits>
-#include <param_mod_F.H>
 
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_BC_Parms.H>
@@ -300,7 +299,8 @@ void compute_p0_bcs (const Box& sbx,
   const IntVect sbx_hi(sbx.hiVect());
 
   // Search oran outflow boundary condition where pressure is specified
-  pj = get_undefined();
+  const Real undefined = 9.87654321e31;
+  pj = undefined;
 
   const int pout_ = bc_list.get_pout();
 
@@ -312,7 +312,7 @@ void compute_p0_bcs (const Box& sbx,
 
   // Either a PO was not specified or PO was specified but not the
   // pressure at the outlet
-  if (is_undefined_db_cpp(pj))
+  if ( std::abs(pj - undefined) < tolerance)
   {
     amrex::ParallelFor(sbx, [p0_g]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept

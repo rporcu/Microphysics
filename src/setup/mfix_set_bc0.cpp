@@ -1,10 +1,8 @@
 #include <mfix.H>
-#include <eos_mod.H>
-#include <param_mod_F.H>
 
 #include <MFIX_FLUID_Parms.H>
 
-void 
+void
 mfix::set_bc0 (const Box& sbx,
                MFIter* mfi,
                const int lev,
@@ -51,8 +49,6 @@ mfix::set_bc0 (const Box& sbx,
   const int ntop = std::max(0,sbx_hi[1]-dom_hi[1]);
   const int nup  = std::max(0,sbx_hi[2]-dom_hi[2]);
 
-  const Real undefined = get_undefined();
-
   const int minf = bc_list.get_minf();
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
@@ -63,7 +59,7 @@ mfix::set_bc0 (const Box& sbx,
   if (nlft > 0)
   {
     IntVect bx_yz_lo_hi_3D(sbx_hi);
-  
+
     // Fix lo and hi limits
     bx_yz_lo_hi_3D[0] = dom_lo[0]-1;
 
@@ -80,12 +76,7 @@ mfix::set_bc0 (const Box& sbx,
         Real bc_trac(trac_0);
         Real bc_cp_g(cp_g0);
         Real bc_k_g(k_g0);
-        Real bc_mu_g(0);
-
-        if (is_equal(mu_g0, undefined))
-          bc_mu_g = sutherland(p_bc_t_g[bcv]);
-        else
-          bc_mu_g = mu_g0;
+        Real bc_mu_g(mu_g0);
 
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
         a_ro_g(i,j,k) = bc_ro_g;
@@ -98,7 +89,7 @@ mfix::set_bc0 (const Box& sbx,
       }
     });
   }
-  
+
   if (nrgt > 0)
   {
     IntVect bx_yz_hi_lo_3D(sbx_lo);
@@ -107,7 +98,7 @@ mfix::set_bc0 (const Box& sbx,
     bx_yz_hi_lo_3D[0] = dom_hi[0]+1;
 
     const Box bx_yz_hi_3D(bx_yz_hi_lo_3D, sbx_hi);
-    
+
     ParallelFor(bx_yz_hi_3D, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_ihi(dom_hi[0]+1,j,k,1);
@@ -119,12 +110,7 @@ mfix::set_bc0 (const Box& sbx,
         Real bc_trac(trac_0);
         Real bc_cp_g(cp_g0);
         Real bc_k_g(k_g0);
-        Real bc_mu_g(0);
-
-        if (is_equal(mu_g0, undefined))
-          bc_mu_g = sutherland(p_bc_t_g[bcv]);
-        else
-          bc_mu_g = mu_g0;
+        Real bc_mu_g(mu_g0);
 
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
         a_ro_g(i,j,k) = bc_ro_g;
@@ -141,7 +127,7 @@ mfix::set_bc0 (const Box& sbx,
   if (nbot > 0)
   {
     IntVect bx_xz_lo_hi_3D(sbx_hi);
-  
+
     // Fix lo and hi limits
     bx_xz_lo_hi_3D[1] = dom_lo[1]-1;
 
@@ -158,13 +144,8 @@ mfix::set_bc0 (const Box& sbx,
         Real bc_trac(trac_0);
         Real bc_cp_g(cp_g0);
         Real bc_k_g(k_g0);
-        Real bc_mu_g(0);
+        Real bc_mu_g(mu_g0);
 
-        if (is_equal(mu_g0, undefined))
-           bc_mu_g = sutherland(p_bc_t_g[bcv]);
-        else
-           bc_mu_g = mu_g0;
-  
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
         a_ro_g(i,j,k) = bc_ro_g;
         a_trac(i,j,k) = bc_trac;
@@ -180,7 +161,7 @@ mfix::set_bc0 (const Box& sbx,
   if (ntop > 0)
   {
     IntVect bx_xz_hi_lo_3D(sbx_lo);
-  
+
     // Fix lo and hi limits
     bx_xz_hi_lo_3D[1] = dom_hi[1]+1;
 
@@ -197,12 +178,7 @@ mfix::set_bc0 (const Box& sbx,
         Real bc_trac(trac_0);
         Real bc_cp_g(cp_g0);
         Real bc_k_g(k_g0);
-        Real bc_mu_g(0);
-
-        if (is_equal(mu_g0, undefined))
-           bc_mu_g = sutherland(p_bc_t_g[bcv]);
-        else
-           bc_mu_g = mu_g0;
+        Real bc_mu_g(mu_g0);
 
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
         a_ro_g(i,j,k) = bc_ro_g;
@@ -219,12 +195,12 @@ mfix::set_bc0 (const Box& sbx,
   if (ndwn > 0)
   {
     IntVect bx_xy_lo_hi_3D(sbx_hi);
-  
+
     // Fix lo and hi limits
     bx_xy_lo_hi_3D[2] = dom_lo[2]-1;
 
     const Box bx_xy_lo_3D(sbx_lo, bx_xy_lo_hi_3D);
-    
+
     ParallelFor(bx_xy_lo_3D, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_klo(i,j,dom_lo[2]-1,1);
@@ -236,12 +212,7 @@ mfix::set_bc0 (const Box& sbx,
         Real bc_trac(trac_0);
         Real bc_cp_g(cp_g0);
         Real bc_k_g(k_g0);
-        Real bc_mu_g(0);
-
-        if (is_equal(mu_g0, undefined))
-           bc_mu_g = sutherland(p_bc_t_g[bcv]);
-        else
-           bc_mu_g = mu_g0;
+        Real bc_mu_g(mu_g0);
 
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
         a_ro_g(i,j,k) = bc_ro_g;
@@ -263,7 +234,7 @@ mfix::set_bc0 (const Box& sbx,
     bx_xy_hi_lo_3D[2] = dom_hi[2]+1;
 
     const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, sbx_hi);
-    
+
     ParallelFor(bx_xy_hi_3D, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_khi(i,j,dom_hi[2]+1,1);
@@ -275,12 +246,7 @@ mfix::set_bc0 (const Box& sbx,
         Real bc_trac(trac_0);
         Real bc_cp_g(cp_g0);
         Real bc_k_g(k_g0);
-        Real bc_mu_g(0);
-
-        if (is_equal(mu_g0, undefined))
-           bc_mu_g = sutherland(p_bc_t_g[bcv]);
-        else
-           bc_mu_g = mu_g0;
+        Real bc_mu_g(mu_g0);
 
         a_ep_g(i,j,k) = p_bc_ep_g[bcv];
         a_ro_g(i,j,k) = bc_ro_g;

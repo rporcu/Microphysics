@@ -1,7 +1,4 @@
 #include <mfix.H>
-
-#include <param_mod_F.H>
-
 #include <MFIX_FLUID_Parms.H>
 
 using namespace amrex;
@@ -178,7 +175,7 @@ mfix::set_temperature_bcs (Real time,
     });
 
     // Extrapolate BCs
-    amrex::ParallelFor(bx_yz_hi_2D, 
+    amrex::ParallelFor(bx_yz_hi_2D,
       [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
@@ -191,7 +188,7 @@ mfix::set_temperature_bcs (Real time,
 
   if (nbot > 0)
   {
-    amrex::ParallelFor(bx_xz_lo_3D, 
+    amrex::ParallelFor(bx_xz_lo_3D,
       [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
@@ -216,7 +213,7 @@ mfix::set_temperature_bcs (Real time,
 
   if (ntop > 0)
   {
-    amrex::ParallelFor(bx_xz_hi_3D, 
+    amrex::ParallelFor(bx_xz_hi_3D,
       [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
@@ -228,7 +225,7 @@ mfix::set_temperature_bcs (Real time,
         T_g(i,j,k) = p_bc_t_g[bcv];
     });
 
-    amrex::ParallelFor(bx_xz_hi_2D, 
+    amrex::ParallelFor(bx_xz_hi_2D,
       [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
@@ -240,7 +237,7 @@ mfix::set_temperature_bcs (Real time,
 
   if (ndwn > 0)
   {
-    amrex::ParallelFor(bx_xy_lo_3D, 
+    amrex::ParallelFor(bx_xy_lo_3D,
       [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);

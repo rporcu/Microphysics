@@ -1,6 +1,4 @@
 #include <mfix_calc_k_g.H>
-#include <eos_mod.H>
-#include <param_mod_F.H>
 #include <MFIX_FLUID_Parms.H>
 
 void calc_k_g (const Box& bx,

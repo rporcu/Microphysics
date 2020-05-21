@@ -3,7 +3,6 @@
 #include <mfix_calc_cp_g.H>
 #include <mfix_calc_k_g.H>
 #include <mfix_calc_mu_g.H>
-#include <param_mod_F.H>
 #include <MFIX_calc_cell.H>
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_IC_Parms.H>
@@ -60,22 +59,22 @@ void init_fluid (const Box& sbx,
       Array4<Real> const& ro_g = ro_g_fab.array();
       Array4<Real> const& trac = trac_fab.array();
 
-      const Real ro_g0  = FLUID::ro_g0;  
-      const Real trac_0 = FLUID::trac_0; 
+      const Real ro_g0  = FLUID::ro_g0;
+      const Real trac_0 = FLUID::trac_0;
 
       amrex::ParallelFor(sbx, [ro_g, ro_g0]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           { ro_g(i,j,k) = ro_g0; });
 
       amrex::ParallelFor(sbx, [trac, trac_0]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           { trac(i,j,k) = trac_0; });
 
       if (test_tracer_conservation)
          init_periodic_tracer(bx, domain, vel_g_fab, trac_fab, dx, dy, dz);
 
       calc_mu_g(bx, mu_g_fab);
-      
+
       // Initialize Cp_g and k_g
       calc_cp_g(bx, T_g_fab, cp_g_fab);
       calc_k_g(bx, T_g_fab, k_g_fab);
@@ -363,7 +362,6 @@ void set_ic_vel (const Box& sbx,
     const int jend   = std::min(shi[1], j_n);
     const int kend   = std::min(shi[2], k_t);
 
-    if (is_defined_db_cpp(ugx))
     {
       const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
       const Box box1(low1, hi1);
@@ -391,7 +389,6 @@ void set_ic_vel (const Box& sbx,
       }
     }
 
-    if (is_defined_db_cpp(vgx))
     {
       const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
       const Box box1(low1, hi1);
@@ -419,7 +416,6 @@ void set_ic_vel (const Box& sbx,
       }
     }
 
-    if (is_defined_db_cpp(wgx))
     {
       const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
       const Box box1(low1, hi1);
@@ -492,7 +488,6 @@ void set_ic_temp (const Box& sbx,
     const int jend   = std::min(shi[1], j_n);
     const int kend   = std::min(shi[2], k_t);
 
-    if (is_defined_db_cpp(temperature))
     {
       {
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
@@ -552,7 +547,7 @@ void set_ic_temp (const Box& sbx,
         {
           const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
           const Box box2(low2, hi2);
-          
+
           ParallelFor(box2, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             { T_g(i,j,k) = temperature; });
         }
@@ -561,7 +556,7 @@ void set_ic_temp (const Box& sbx,
         {
           const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
           const Box box3(low3, hi3);
-          
+
           ParallelFor(box3, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             { T_g(i,j,k) = temperature; });
         }
