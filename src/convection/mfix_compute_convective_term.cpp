@@ -1,5 +1,4 @@
 #include <mfix.H>
-#include <param_mod_F.H>
 
 #include <AMReX_REAL.H>
 #include <AMReX_BLFort.H>
@@ -69,7 +68,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
            FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
            MultiFab::Copy(*h_g_in[lev], Sborder_s, 0, 0, num_comp, h_g_in[lev]->nGrow());
         }
-        
+
         // We make these with ncomp = 3 so they can hold all three velocity components at once;
         //    note we can also use them to just hold the single density or tracer comp or enthalpy
         fx[lev] = new MultiFab(m_leveldata[lev]->u_mac->boxArray(), dmap[lev], 3, 2,
