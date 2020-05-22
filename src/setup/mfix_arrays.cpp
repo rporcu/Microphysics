@@ -26,10 +26,10 @@ mfix::ResizeArrays ()
     // Particle grid EB factory
     particle_ebfactory.resize(nlevs_max);
 
-    eb_levels.resize(std::max(2, nlevs_max));
-    particle_eb_levels.resize(std::max(2, nlevs_max));
+    eb_levels.resize(amrex::max(2, nlevs_max));
+    particle_eb_levels.resize(amrex::max(2, nlevs_max));
 
-    level_sets.resize(std::max(2, nlevs_max));
+    level_sets.resize(amrex::max(2, nlevs_max));
 }
 
 void

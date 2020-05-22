@@ -191,9 +191,9 @@ mfix::mfix_redistribute_deposition (int lev,
       });
 #else
       dim3 Block(4,4,4);
-      dim3 Grid(std::ceil(bx.length()[0] / float(Block.x)),
-                std::ceil(bx.length()[1] / float(Block.y)),
-                std::ceil(bx.length()[2] / float(Block.z)));
+      dim3 Grid(amrex::Math::ceil(bx.length()[0] / float(Block.x)),
+                amrex::Math::ceil(bx.length()[1] / float(Block.y)),
+                amrex::Math::ceil(bx.length()[2] / float(Block.z)));
 
       const unsigned sm_size =
         sizeof(Real)*(Block.x+2)*(Block.y+2)*(Block.z+2) + // eps_sm

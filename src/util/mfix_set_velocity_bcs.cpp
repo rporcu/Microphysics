@@ -56,13 +56,13 @@ mfix::set_velocity_bcs (Real time,
   Array4<const int> const& bct_klo = bc_klo[lev]->array();
   Array4<const int> const& bct_khi = bc_khi[lev]->array();
 
-  const int nlft = std::max(0, dom_lo[0]-vel_lo[0]);
-  const int nbot = std::max(0, dom_lo[1]-vel_lo[1]);
-  const int ndwn = std::max(0, dom_lo[2]-vel_lo[2]);
+  const int nlft = amrex::max(0, dom_lo[0]-vel_lo[0]);
+  const int nbot = amrex::max(0, dom_lo[1]-vel_lo[1]);
+  const int ndwn = amrex::max(0, dom_lo[2]-vel_lo[2]);
 
-  const int nrgt = std::max(0, vel_hi[0]-dom_hi[0]);
-  const int ntop = std::max(0, vel_hi[1]-dom_hi[1]);
-  const int nup  = std::max(0, vel_hi[2]-dom_hi[2]);
+  const int nrgt = amrex::max(0, vel_hi[0]-dom_hi[0]);
+  const int ntop = amrex::max(0, vel_hi[1]-dom_hi[1]);
+  const int nup  = amrex::max(0, vel_hi[2]-dom_hi[2]);
 
   // Create InVects for following 2D Boxes
   IntVect bx_yz_lo_lo_2D(vel_lo), bx_yz_lo_hi_2D(vel_hi);
@@ -391,13 +391,13 @@ mfix::set_vec_bcs (const int lev,
   Array4<const int> const& bct_klo = bc_klo[lev]->array();
   Array4<const int> const& bct_khi = bc_khi[lev]->array();
 
-  const int nlft = std::max(0, dom_lo[0]-vec_lo[0]);
-  const int nbot = std::max(0, dom_lo[1]-vec_lo[1]);
-  const int ndwn = std::max(0, dom_lo[2]-vec_lo[2]);
+  const int nlft = amrex::max(0, dom_lo[0]-vec_lo[0]);
+  const int nbot = amrex::max(0, dom_lo[1]-vec_lo[1]);
+  const int ndwn = amrex::max(0, dom_lo[2]-vec_lo[2]);
 
-  const int nrgt = std::max(0, vec_hi[0]-dom_hi[0]);
-  const int ntop = std::max(0, vec_hi[1]-dom_hi[1]);
-  const int nup  = std::max(0, vec_hi[2]-dom_hi[2]);
+  const int nrgt = amrex::max(0, vec_hi[0]-dom_hi[0]);
+  const int ntop = amrex::max(0, vec_hi[1]-dom_hi[1]);
+  const int nup  = amrex::max(0, vec_hi[2]-dom_hi[2]);
 
   // Create InVects for following 3D Boxes
   IntVect bx_yz_lo_hi_3D(vec_hi), bx_xz_lo_hi_3D(vec_hi), bx_xy_lo_hi_3D(vec_hi);

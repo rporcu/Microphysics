@@ -143,15 +143,15 @@ mfix::set_gp0 (const int lev,
   Real ylen = geom[0].ProbHi(1) - geom[0].ProbLo(1);
   Real zlen = geom[0].ProbHi(2) - geom[0].ProbLo(2);
 
-  if (std::abs(delp_x) > tolerance){
+  if (amrex::Math::abs(delp_x) > tolerance){
     gp0[0] = -delp_x / xlen;
   }
 
-  if (std::abs(delp_y) > tolerance){
+  if (amrex::Math::abs(delp_y) > tolerance){
     gp0[1] = -delp_y / ylen;
   }
 
-  if (std::abs(delp_z) > tolerance){
+  if (amrex::Math::abs(delp_z) > tolerance){
     gp0[2] = -delp_z / zlen;
   }
 

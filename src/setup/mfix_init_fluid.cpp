@@ -171,7 +171,7 @@ void init_periodic_vortices (const Box& bx,
         Real x = (Real(i) + .5) * dx;
         Real y = (Real(j) + .5) * dy;
 
-        velocity(i,j,k,0) = std::tanh(30*(.25 - std::abs(y-.5)));
+        velocity(i,j,k,0) = std::tanh(30*(.25 - amrex::Math::abs(y-.5)));
         velocity(i,j,k,1) = .05 * std::sin(twopi*x);
         velocity(i,j,k,2) = 0.;
       });
@@ -185,7 +185,7 @@ void init_periodic_vortices (const Box& bx,
         Real x = (Real(i) + .5) * dx;
         Real z = (Real(k) + .5) * dz;
 
-        velocity(i,j,k,0) = std::tanh(30*(.25 - std::abs(z-.5)));
+        velocity(i,j,k,0) = std::tanh(30*(.25 - amrex::Math::abs(z-.5)));
         velocity(i,j,k,1) = 0.;
         velocity(i,j,k,2) = .05 * std::sin(twopi*x);
       });
@@ -200,7 +200,7 @@ void init_periodic_vortices (const Box& bx,
         Real z = (Real(k) + .5) * dz;
 
         velocity(i,j,k,0) = 0.;
-        velocity(i,j,k,1) = std::tanh(30*(.25 - std::abs(z-.5)));
+        velocity(i,j,k,1) = std::tanh(30*(.25 - amrex::Math::abs(z-.5)));
         velocity(i,j,k,2) = .05 * std::sin(twopi*y);
       }); break;
 
@@ -356,12 +356,12 @@ void set_ic_vel (const Box& sbx,
     const Real vgx = IC::ic[icv].fluid.velocity[1];
     const Real wgx = IC::ic[icv].fluid.velocity[2];
 
-    const int istart = std::max(slo[0], i_w);
-    const int jstart = std::max(slo[1], j_s);
-    const int kstart = std::max(slo[2], k_b);
-    const int iend   = std::min(shi[0], i_e);
-    const int jend   = std::min(shi[1], j_n);
-    const int kend   = std::min(shi[2], k_t);
+    const int istart = amrex::max(slo[0], i_w);
+    const int jstart = amrex::max(slo[1], j_s);
+    const int kstart = amrex::max(slo[2], k_b);
+    const int iend   = amrex::min(shi[0], i_e);
+    const int jend   = amrex::min(shi[1], j_n);
+    const int kend   = amrex::min(shi[2], k_t);
 
     if (is_defined_db_cpp(ugx))
     {
@@ -485,12 +485,12 @@ void set_ic_temp (const Box& sbx,
     // Use the volume fraction already calculated from particle data
     const Real temperature = IC::ic[icv].fluid.temperature;
 
-    const int istart = std::max(slo[0], i_w);
-    const int jstart = std::max(slo[1], j_s);
-    const int kstart = std::max(slo[2], k_b);
-    const int iend   = std::min(shi[0], i_e);
-    const int jend   = std::min(shi[1], j_n);
-    const int kend   = std::min(shi[2], k_t);
+    const int istart = amrex::max(slo[0], i_w);
+    const int jstart = amrex::max(slo[1], j_s);
+    const int kstart = amrex::max(slo[2], k_b);
+    const int iend   = amrex::min(shi[0], i_e);
+    const int jend   = amrex::min(shi[1], j_n);
+    const int kend   = amrex::min(shi[2], k_t);
 
     if (is_defined_db_cpp(temperature))
     {

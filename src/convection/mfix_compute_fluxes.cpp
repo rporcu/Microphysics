@@ -36,7 +36,7 @@ upwind (const Real velocity_minus, const Real velocity_plus, const Real u_edge)
   // Small value to protect against tiny velocities used in upwinding
   const Real small_velocity(1.e-10);
 
-  if(std::abs(u_edge) < small_velocity)
+  if(amrex::Math::abs(u_edge) < small_velocity)
     return .5*(velocity_minus+velocity_plus);
 
   return u_edge > 0 ? velocity_minus : velocity_plus;

@@ -55,13 +55,13 @@ mfix::set_epg_bcs (const int lev,
   Array4<const int> const& bct_klo = bc_klo[lev]->array();
   Array4<const int> const& bct_khi = bc_khi[lev]->array();
 
-  const int nlft = std::max(0, dom_lo[0]-epg_lo[0]);
-  const int nbot = std::max(0, dom_lo[1]-epg_lo[1]);
-  const int ndwn = std::max(0, dom_lo[2]-epg_lo[2]);
+  const int nlft = amrex::max(0, dom_lo[0]-epg_lo[0]);
+  const int nbot = amrex::max(0, dom_lo[1]-epg_lo[1]);
+  const int ndwn = amrex::max(0, dom_lo[2]-epg_lo[2]);
 
-  const int nrgt = std::max(0, epg_hi[0]-dom_hi[0]);
-  const int ntop = std::max(0, epg_hi[1]-dom_hi[1]);
-  const int nup  = std::max(0, epg_hi[2]-dom_hi[2]);
+  const int nrgt = amrex::max(0, epg_hi[0]-dom_hi[0]);
+  const int ntop = amrex::max(0, epg_hi[1]-dom_hi[1]);
+  const int nup  = amrex::max(0, epg_hi[2]-dom_hi[2]);
 
   // Create InVects for following 2D Boxes
   IntVect bx_yz_lo_lo_2D(epg_lo), bx_yz_lo_hi_2D(epg_hi);

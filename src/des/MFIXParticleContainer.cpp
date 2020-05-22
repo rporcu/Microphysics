@@ -159,7 +159,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     // des_init_time_loop(&dt, &nsubsteps, &subdt);
     if ( dt >= DEM::dtsolid )
     {
-       nsubsteps = std::ceil (  dt / DEM::dtsolid );
+       nsubsteps = amrex::Math::ceil (  dt / DEM::dtsolid );
        subdt     =  dt / nsubsteps;
     } else {
        nsubsteps = 1;
@@ -208,7 +208,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             Box refined_box(amrex::convert(amrex::refine(bx,ls_refinement), IntVect{1,1,1}));
 
             // Set tol to 1/2 dx
-            Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
+            Real tol = amrex::min(dx[0], amrex::min(dx[1], dx[2])) / 2;
 
             Real ls_min_over_box = ((*ls_phi)[pti]).min<RunOn::Gpu>(refined_box,0);
 
@@ -923,9 +923,9 @@ void MFIXParticleContainer::UpdateMaxVelocity ()
 
            for(const auto & particle : host_particles)
            {
-              max_vel_x = std::max(Real(std::fabs(particle.rdata(realData::velx))), max_vel_x);
-              max_vel_y = std::max(Real(std::fabs(particle.rdata(realData::vely))), max_vel_y);
-              max_vel_z = std::max(Real(std::fabs(particle.rdata(realData::velz))), max_vel_z);
+              max_vel_x = amrex::max(Real(std::fabs(particle.rdata(realData::velx))), max_vel_x);
+              max_vel_y = amrex::max(Real(std::fabs(particle.rdata(realData::vely))), max_vel_y);
+              max_vel_z = amrex::max(Real(std::fabs(particle.rdata(realData::velz))), max_vel_z);
            }
        }
     }
@@ -964,19 +964,19 @@ void MFIXParticleContainer::UpdateMaxForces (std::map<PairIndex, Gpu::ManagedDev
 
             // Find max (abs) of particle-particle forces:
             for(int i = 0; i < ntot; i++ )
-                max_pfor_x = std::max(Real(std::fabs(pfor[index][i])), max_pfor_x);
+                max_pfor_x = amrex::max(Real(std::fabs(pfor[index][i])), max_pfor_x);
             for(int i = ntot; i < 2 * ntot; i++ )
-                max_pfor_y = std::max(Real(std::fabs(pfor[index][i])), max_pfor_y);
+                max_pfor_y = amrex::max(Real(std::fabs(pfor[index][i])), max_pfor_y);
             for(int i = 2 * ntot; i < 3 * ntot; i++ )
-                max_pfor_z = std::max(Real(std::fabs(pfor[index][i])), max_pfor_z);
+                max_pfor_z = amrex::max(Real(std::fabs(pfor[index][i])), max_pfor_z);
 
             // Find max (abs) of particle-wall forces:
             for(int i = 0; i < ntot; i++ )
-                max_wfor_x = std::max(Real(std::fabs(wfor[index][i])), max_wfor_x);
+                max_wfor_x = amrex::max(Real(std::fabs(wfor[index][i])), max_wfor_x);
             for(int i = ntot; i < 2 * ntot; i++ )
-                max_wfor_y = std::max(Real(std::fabs(wfor[index][i])), max_wfor_y);
+                max_wfor_y = amrex::max(Real(std::fabs(wfor[index][i])), max_wfor_y);
             for(int i = 2 * ntot; i < 3 * ntot; i++ )
-                max_wfor_z = std::max(Real(std::fabs(wfor[index][i])), max_wfor_z);
+                max_wfor_z = amrex::max(Real(std::fabs(wfor[index][i])), max_wfor_z);
         }
     }
 

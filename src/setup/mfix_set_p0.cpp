@@ -78,13 +78,13 @@ mfix::set_p0 (const Box& bx,
   Array4<const int> const& bct_klo = bc_klo[lev]->array();
   Array4<const int> const& bct_khi = bc_khi[lev]->array();
 
-  const int nlft = std::max(0, dom_lo[0]-sbx_lo[0]+1);
-  const int nbot = std::max(0, dom_lo[1]-sbx_lo[1]+1);
-  const int ndwn = std::max(0, dom_lo[2]-sbx_lo[2]+1);
+  const int nlft = amrex::max(0, dom_lo[0]-sbx_lo[0]+1);
+  const int nbot = amrex::max(0, dom_lo[1]-sbx_lo[1]+1);
+  const int ndwn = amrex::max(0, dom_lo[2]-sbx_lo[2]+1);
 
-  const int nrgt = std::max(0, sbx_hi[0]-dom_hi[0]);
-  const int ntop = std::max(0, sbx_hi[1]-dom_hi[1]);
-  const int nup  = std::max(0, sbx_hi[2]-dom_hi[2]);
+  const int nrgt = amrex::max(0, sbx_hi[0]-dom_hi[0]);
+  const int ntop = amrex::max(0, sbx_hi[1]-dom_hi[1]);
+  const int nup  = amrex::max(0, sbx_hi[2]-dom_hi[2]);
 
   int delp_dir_loc(BC::delp_dir);
 
@@ -214,7 +214,7 @@ mfix::set_p0 (const Box& bx,
   if(delp_dir_loc != BC::delp_dir)
     offset = -1.;
 
-  if(std::abs(delp_x) > tolerance)
+  if(amrex::Math::abs(delp_x) > tolerance)
   {
     const amrex::Real dpodx = delp_x / xlen;
     pj -= dpodx * dx * (bx_hi[0] - dom_hi[0] + nghost + 2 + offset);
@@ -228,7 +228,7 @@ mfix::set_p0 (const Box& bx,
     pj += dpodx * dx * (sbx_hi[0] - sbx_lo[0] + 1);
   }
 
-  if(std::abs(delp_y) > tolerance)
+  if(amrex::Math::abs(delp_y) > tolerance)
   {
     const Real dpody = delp_y / ylen;
     pj -= dpody * dy * (bx_hi[1] - dom_hi[1] + nghost + 2 + offset);
@@ -242,7 +242,7 @@ mfix::set_p0 (const Box& bx,
     pj += dpody * dy * (sbx_hi[1] - sbx_lo[1] + 1);
   }
 
-  if(std::abs(delp_z) > tolerance)
+  if(amrex::Math::abs(delp_z) > tolerance)
   {
     const Real dpodz = delp_z / zlen;
     pj -= dpodz * dz * (bx_hi[2] - dom_hi[2] + nghost + 2 + offset);
@@ -329,13 +329,13 @@ void compute_p0_bcs (const Box& sbx,
 
   const Real ro_g0 = FLUID::ro_g0;
 
-  if(std::abs(gravity[0]) > tolerance)
+  if(amrex::Math::abs(gravity[0]) > tolerance)
   {
     // Find the average weight per unit area over an x-z slice
     const Real dpodx = -gravity[0]*ro_g0;
 
-    const int bx_lo_x = std::max(dom_lo[0], sbx_lo[0]);
-    const int bx_hi_x = std::min(dom_hi[0]+1, sbx_hi[0]);
+    const int bx_lo_x = amrex::max(dom_lo[0], sbx_lo[0]);
+    const int bx_hi_x = amrex::min(dom_hi[0]+1, sbx_hi[0]);
 
     const Box bx({bx_lo_x, sbx_lo[1], sbx_lo[2]},
                  {bx_hi_x, sbx_hi[1], sbx_hi[2]});
@@ -370,12 +370,12 @@ void compute_p0_bcs (const Box& sbx,
       pj -= (bx_delta_x + upper_stride) * dpodx*dx;
     }
   }
-  else if (std::abs(gravity[1]) > tolerance)
+  else if (amrex::Math::abs(gravity[1]) > tolerance)
   {
     const Real dpody = -gravity[1]*ro_g0;
 
-    const int bx_lo_y = std::max(dom_lo[1], sbx_lo[1]);
-    const int bx_hi_y = std::min(dom_hi[1]+1, sbx_hi[1]);
+    const int bx_lo_y = amrex::max(dom_lo[1], sbx_lo[1]);
+    const int bx_hi_y = amrex::min(dom_hi[1]+1, sbx_hi[1]);
 
     const Box bx({sbx_lo[0], bx_lo_y, sbx_lo[2]},
                  {sbx_hi[0], bx_hi_y, sbx_hi[2]});
@@ -410,12 +410,12 @@ void compute_p0_bcs (const Box& sbx,
       pj -= (bx_delta_y + upper_stride) * dpody*dy;
     }
   }
-  else if(std::abs(gravity[2]) > tolerance)
+  else if(amrex::Math::abs(gravity[2]) > tolerance)
   {
     const Real dpodz = -gravity[2]*ro_g0;
 
-    const int bx_lo_z = std::max(dom_lo[2], sbx_lo[2]);
-    const int bx_hi_z = std::min(dom_hi[2]+1, sbx_hi[2]);
+    const int bx_lo_z = amrex::max(dom_lo[2], sbx_lo[2]);
+    const int bx_hi_z = amrex::min(dom_hi[2]+1, sbx_hi[2]);
 
     const Box bx({sbx_lo[0], sbx_lo[1], bx_lo_z},
                  {sbx_hi[0], sbx_hi[1], bx_hi_z});

@@ -18,7 +18,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
       Real start_coupling = ParallelDescriptor::second();
       mfix_calc_volume_fraction(sum_vol);
 
-      if (std::abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
+      if (amrex::Math::abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
         {
           amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
           amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;

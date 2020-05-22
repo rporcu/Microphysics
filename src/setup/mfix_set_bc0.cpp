@@ -43,13 +43,13 @@ mfix::set_bc0 (const Box& sbx,
   Array4<const int> const& a_bc_klo = bc_klo[lev]->array();
   Array4<const int> const& a_bc_khi = bc_khi[lev]->array();
 
-  const int nlft = std::max(0,dom_lo[0]-sbx_lo[0]);
-  const int nbot = std::max(0,dom_lo[1]-sbx_lo[1]);
-  const int ndwn = std::max(0,dom_lo[2]-sbx_lo[2]);
+  const int nlft = amrex::max(0,dom_lo[0]-sbx_lo[0]);
+  const int nbot = amrex::max(0,dom_lo[1]-sbx_lo[1]);
+  const int ndwn = amrex::max(0,dom_lo[2]-sbx_lo[2]);
 
-  const int nrgt = std::max(0,sbx_hi[0]-dom_hi[0]);
-  const int ntop = std::max(0,sbx_hi[1]-dom_hi[1]);
-  const int nup  = std::max(0,sbx_hi[2]-dom_hi[2]);
+  const int nrgt = amrex::max(0,sbx_hi[0]-dom_hi[0]);
+  const int ntop = amrex::max(0,sbx_hi[1]-dom_hi[1]);
+  const int nup  = amrex::max(0,sbx_hi[2]-dom_hi[2]);
 
   const Real undefined = get_undefined();
 

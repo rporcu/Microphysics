@@ -35,13 +35,13 @@ mfix::set_thermal_conductivity_bcs (Real time,
   IntVect scal_lo(scal_fab.loVect());
   IntVect scal_hi(scal_fab.hiVect());
 
-  const int nlft = std::max(0, dom_lo[0]-scal_lo[0]);
-  const int nbot = std::max(0, dom_lo[1]-scal_lo[1]);
-  const int ndwn = std::max(0, dom_lo[2]-scal_lo[2]);
+  const int nlft = amrex::max(0, dom_lo[0]-scal_lo[0]);
+  const int nbot = amrex::max(0, dom_lo[1]-scal_lo[1]);
+  const int ndwn = amrex::max(0, dom_lo[2]-scal_lo[2]);
 
-  const int nrgt = std::max(0, scal_hi[0]-dom_hi[0]);
-  const int ntop = std::max(0, scal_hi[1]-dom_hi[1]);
-  const int nup  = std::max(0, scal_hi[2]-dom_hi[2]);
+  const int nrgt = amrex::max(0, scal_hi[0]-dom_hi[0]);
+  const int ntop = amrex::max(0, scal_hi[1]-dom_hi[1]);
+  const int nup  = amrex::max(0, scal_hi[2]-dom_hi[2]);
 
   // Create InVects for following 2D Boxes
   IntVect bx_yz_lo_lo_2D(scal_lo), bx_yz_lo_hi_2D(scal_hi);

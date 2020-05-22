@@ -109,10 +109,10 @@ void writeNow (int nstep, Real time, Real dt, mfix& mfix)
         // the counter, because we have indeed reached the next mfix::plot_per_approx interval
         // at this point.
 
-        const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * std::abs(time);
+        const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * amrex::Math::abs(time);
         const Real next_plot_time = (num_per_old + 1) * mfix::plot_per_approx;
 
-        if ((num_per_new == num_per_old) && std::abs(time - next_plot_time) <= eps)
+        if ((num_per_new == num_per_old) && amrex::Math::abs(time - next_plot_time) <= eps)
         {
             num_per_new += 1;
         }
@@ -121,14 +121,14 @@ void writeNow (int nstep, Real time, Real dt, mfix& mfix)
         // machine epsilon of the beginning of this interval, so that we don't double
         // count that time threshold -- we already plotted at that time on the last timestep.
 
-        if ((num_per_new != num_per_old) && std::abs((time - dt) - next_plot_time) <= eps)
+        if ((num_per_new != num_per_old) && amrex::Math::abs((time - dt) - next_plot_time) <= eps)
             num_per_old += 1;
 
         if (num_per_old != num_per_new)
             plot_test = 1;
 
     }
-    else if ( mfix::plot_per_exact  > 0 && (std::abs(remainder(time, mfix::plot_per_exact)) < 1.e-12) )
+    else if ( mfix::plot_per_exact  > 0 && (amrex::Math::abs(remainder(time, mfix::plot_per_exact)) < 1.e-12) )
     {
         plot_test = 1;
     }

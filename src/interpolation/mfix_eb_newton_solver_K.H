@@ -142,7 +142,7 @@ void get_interp_mapping (const amrex::RealVect& pos,
         amrex::Real new_zeta = zeta - detJ_zeta / detJ;
 
         lc += 1;
-        err = amrex::max(std::abs(xi-new_xi), std::abs(eta-new_eta), std::abs(zeta-new_zeta));
+        err = amrex::max(amrex::Math::abs(xi-new_xi), amrex::Math::abs(eta-new_eta), amrex::Math::abs(zeta-new_zeta));
 
         xi   = new_xi;
         eta  = new_eta;

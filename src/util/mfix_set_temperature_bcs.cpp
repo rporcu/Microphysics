@@ -61,13 +61,13 @@ mfix::set_temperature_bcs (Real time,
   IntVect T_g_lo(T_g_fab.loVect());
   IntVect T_g_hi(T_g_fab.hiVect());
 
-  const int nlft = std::max(0, dom_lo[0]-T_g_lo[0]);
-  const int nbot = std::max(0, dom_lo[1]-T_g_lo[1]);
-  const int ndwn = std::max(0, dom_lo[2]-T_g_lo[2]);
+  const int nlft = amrex::max(0, dom_lo[0]-T_g_lo[0]);
+  const int nbot = amrex::max(0, dom_lo[1]-T_g_lo[1]);
+  const int ndwn = amrex::max(0, dom_lo[2]-T_g_lo[2]);
 
-  const int nrgt = std::max(0, T_g_hi[0]-dom_hi[0]);
-  const int ntop = std::max(0, T_g_hi[1]-dom_hi[1]);
-  const int nup  = std::max(0, T_g_hi[2]-dom_hi[2]);
+  const int nrgt = amrex::max(0, T_g_hi[0]-dom_hi[0]);
+  const int ntop = amrex::max(0, T_g_hi[1]-dom_hi[1]);
+  const int nup  = amrex::max(0, T_g_hi[2]-dom_hi[2]);
 
   // Create InVects for following 2D Boxes
   IntVect bx_yz_lo_lo_2D(T_g_lo), bx_yz_lo_hi_2D(T_g_hi);

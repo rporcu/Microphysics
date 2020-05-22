@@ -187,7 +187,7 @@ mfix::InitParams ()
     levelset_pad = 2*levelset_refinement;
     // Ensure that velocity_reconstruction has enough level-set to work off:
     // (2 => EB lives on the same grid resolution as fluid)
-    levelset_eb_pad = std::max(2, levelset_pad);
+    levelset_eb_pad = amrex::max(2, levelset_pad);
 
     amrex::Print() << "Auto-generating level-set parameters:" << std::endl
                    << "eb_refinement = " << levelset_eb_refinement << std::endl

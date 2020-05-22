@@ -72,9 +72,9 @@ amrex::Real interp_level_set (MFIXParticleContainer::ParticleType const& p,
     amrex::Real y = (p.pos(1) - plo[1]) * scaled_dxi[1];
     amrex::Real z = (p.pos(2) - plo[2]) * scaled_dxi[2];
 
-    int i = static_cast<int>(std::floor(x));
-    int j = static_cast<int>(std::floor(y));
-    int k = static_cast<int>(std::floor(z));
+    int i = static_cast<int>(amrex::Math::floor(x));
+    int j = static_cast<int>(amrex::Math::floor(y));
+    int k = static_cast<int>(amrex::Math::floor(z));
     
     amrex::Real wx_hi = x - i;
     amrex::Real wy_hi = y - j;
@@ -114,9 +114,9 @@ void level_set_normal (MFIXParticleContainer::ParticleType const& p,
     amrex::Real y = (p.pos(1) - plo[1]) * scaled_dxi[1];
     amrex::Real z = (p.pos(2) - plo[2]) * scaled_dxi[2];
 
-    int i = static_cast<int>(std::floor(x));
-    int j = static_cast<int>(std::floor(y));
-    int k = static_cast<int>(std::floor(z));
+    int i = static_cast<int>(amrex::Math::floor(x));
+    int j = static_cast<int>(amrex::Math::floor(y));
+    int k = static_cast<int>(amrex::Math::floor(z));
     
     amrex::Real wx_hi = x - i;
     amrex::Real wy_hi = y - j;

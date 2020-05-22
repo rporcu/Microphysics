@@ -111,9 +111,9 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
 
          //Calculate the M-L normal and tangential damping coefficients
          DEM::etan[m][l] = 2.0*std::sqrt(DEM::kn*mass_eff);
-         if(std::abs(DEM::en[m][l]) > 0.0){
+         if(amrex::Math::abs(DEM::en[m][l]) > 0.0){
             const amrex::Real log_en = std::log(DEM::en[m][l]);
-            DEM::etan[m][l] *= std::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
+            DEM::etan[m][l] *= amrex::Math::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
          }
          DEM::etat[m][l] = DEM::eta_fac * DEM::etan[m][l];
 
@@ -134,9 +134,9 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
 
          //Calculate the M-L normal and tangential damping coefficients
          DEM::etan_w[m] = 2.0*std::sqrt(DEM::kn_w*mass_eff);
-         if(std::abs(DEM::en_w[m]) > 0.0){
+         if(amrex::Math::abs(DEM::en_w[m]) > 0.0){
             const amrex::Real log_en = std::log(DEM::en_w[m]);
-            DEM::etan_w[m] *= std::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
+            DEM::etan_w[m] *= amrex::Math::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
          }
          DEM::etat_w[m] = DEM::eta_w_fac * DEM::etan_w[m];
 

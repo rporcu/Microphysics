@@ -188,11 +188,11 @@ namespace BC
         int sum_same_loc(0);
         for (int dir(0); dir<3; ++dir){
 
-          int same_loc = std::abs(new_bc.region->lo(dir) - new_bc.region->hi(dir)) < tolerance ? 1 : 0;
+          int same_loc = amrex::Math::abs(new_bc.region->lo(dir) - new_bc.region->hi(dir)) < tolerance ? 1 : 0;
 
           if (same_loc ){
 
-            if ( std::abs(new_bc.region->lo(dir) - plo[dir] ) < tolerance ){
+            if ( amrex::Math::abs(new_bc.region->lo(dir) - plo[dir] ) < tolerance ){
 
               point[dir] = plo[dir]+1.0e-15;
               normal[dir] =  1.0;
@@ -206,7 +206,7 @@ namespace BC
               }
 
 
-            } else if ( std::abs( new_bc.region->hi(dir) - phi[dir] ) < tolerance ){
+            } else if ( amrex::Math::abs( new_bc.region->hi(dir) - phi[dir] ) < tolerance ){
 
               point[dir] = phi[dir]-1.0e-15;
               normal[dir] = -1.0;

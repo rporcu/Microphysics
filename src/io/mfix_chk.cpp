@@ -175,7 +175,7 @@ mfix::WriteCheckPointFile (std::string& check_file,
         raw_ls_name << checkpointname << "/ls_raw";
 
         // There is always a level 1 in the level_sets array:
-        //    level_sets.size() == std::max(2, nlev)
+        //    level_sets.size() == amrex::max(2, nlev)
         VisMF::Write( * level_sets[1], raw_ls_name.str() );
 
         // Also save the parameters necessary to re-build the LSFactory
