@@ -45,6 +45,10 @@ class LevelData
     amrex::MultiFab* ro_g;
     amrex::MultiFab* ro_go;
 
+    // Gas species
+    amrex::MultiFab* X_g;
+    amrex::MultiFab* X_go;
+
     // Tracer in gas
     amrex::MultiFab* trac;
     amrex::MultiFab* trac_o;
@@ -68,6 +72,9 @@ class LevelData
     // Molecular viscosity
     amrex::MultiFab* mu_g;
 
+    // Species diffusion coefficients
+    amrex::MultiFab* D_g;
+
     // Cell-based
     amrex::MultiFab* vort;
 
@@ -80,6 +87,9 @@ class LevelData
     amrex::MultiFab* xslopes_s;
     amrex::MultiFab* yslopes_s;
     amrex::MultiFab* zslopes_s;
+    amrex::MultiFab* xslopes_species_g;
+    amrex::MultiFab* yslopes_species_g;
+    amrex::MultiFab* zslopes_species_g;
 
     // div (ep_g * u)
     amrex::MultiFab* diveu;

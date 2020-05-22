@@ -5,6 +5,8 @@
 #include <AMReX_GpuQualifiers.H>
 #include <AMReX_Vector.H>
 
+#include <MFIX_SPECIES_Parms.H>
+
 namespace DEM
 {
     constexpr int NMAX = 10;
@@ -60,12 +62,16 @@ namespace DEM
 
     extern amrex::Vector<std::string> names;
 
+    // Flag to solve species DEM particles equations
+    extern int solve_species;
+
     // Particle species
     extern amrex::Vector<std::string> species_dem;
 
     // Particle species fractions
     extern amrex::Vector<amrex::Real> spec_frac_dem;
 
+    // Total number of dem species
     extern int AMREX_GPU_DEVICE_MANAGED nspecies_dem;
 
     // Coarse-grain DEM
@@ -93,8 +99,20 @@ namespace DEM
       amrex::Real temperature;
       amrex::Vector<amrex::Real> velocity;
 
+      SPECIES::SPECIES_t species;
+
       INPUT_DIST_t diameter;
       INPUT_DIST_t density;
+
+      DEM_t() :
+        volfrac(0.0),
+        statwt(0.0),
+        temperature(0.0),
+        velocity(0),
+        species(DEM::nspecies_dem),
+        diameter(),
+        density()
+      {}
     };
 
     void Initialize ();

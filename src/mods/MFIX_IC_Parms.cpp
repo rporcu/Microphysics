@@ -8,6 +8,7 @@
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
 #include <MFIX_REGIONS_Parms.H>
+#include <MFIX_SPECIES_Parms.H>
 
 namespace IC
 {
@@ -57,6 +58,17 @@ namespace IC
           ppFluid.query("temperature", new_ic.fluid.temperature);
 
         new_ic.fluid.pressure_defined = ppFluid.query("pressure", new_ic.fluid.pressure);
+
+        if (FLUID::solve_species) {
+
+          std::string species_field = field+".species";
+          amrex::ParmParse ppSpecies(species_field.c_str());
+
+          for (int n(0); n < FLUID::nspecies_g; n++) {
+            std::string fluid_specie = FLUID::species_g[n];
+            ppSpecies.query(fluid_specie.c_str(), new_ic.fluid.species.mass_fractions[n]);
+          }
+        }
       }
 
       if((DEM::solve or PIC::solve) and new_ic.fluid.volfrac < 1.0) {
@@ -120,6 +132,17 @@ namespace IC
             ppSolidRho.get("std" , new_solid.density.std );
             ppSolidRho.get("min" , new_solid.density.min );
             ppSolidRho.get("max" , new_solid.density.max );
+          }
+
+          if (DEM::solve_species /*TODO or PIC::solve_species*/) {
+
+            std::string species_field = field+".species";
+            amrex::ParmParse ppSpecies(species_field.c_str());
+
+            for (int n(0); n < DEM::nspecies_dem; n++) {
+              std::string dem_specie = DEM::species_dem[n];
+              ppSpecies.query(dem_specie.c_str(), new_solid.species.mass_fractions[n]);
+            }
           }
 
           new_ic.solids.push_back(new_solid);

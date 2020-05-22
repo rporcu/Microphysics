@@ -1,6 +1,7 @@
 #include <mfix.H>
 
 #include <MFIX_FLUID_Parms.H>
+#include <MFIX_SPECIES_Parms.H>
 
 using namespace amrex;
 
@@ -9,9 +10,9 @@ using namespace amrex;
 //
 void
 mfix::mfix_set_scalar_bcs (Real time,
+                           Vector< MultiFab* > const& mu_g_in,
                            Vector< MultiFab* > const& cp_g_in,
-                           Vector< MultiFab* > const& k_g_in,
-                           Vector< MultiFab* > const& mu_g_in)
+                           Vector< MultiFab* > const& k_g_in)
 {
   BL_PROFILE("mfix::mfix_set_scalar_bcs()");
 

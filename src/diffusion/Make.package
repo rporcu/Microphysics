@@ -3,5 +3,6 @@ CEXE_headers += DiffusionOp.H
 CEXE_sources += mfix_diffuse_drag.cpp
 CEXE_sources += mfix_diffuse_scalar.cpp
 CEXE_sources += mfix_diffuse_temperature.cpp
+CEXE_sources += mfix_diffuse_species.cpp
 CEXE_sources += mfix_diffuse_velocity.cpp
 CEXE_sources += mfix_diffuse_volfrac.cpp

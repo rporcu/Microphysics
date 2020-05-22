@@ -25,6 +25,20 @@ namespace PIC
   extern AMREX_GPU_DEVICE_MANAGED amrex::Real small_number;
   extern AMREX_GPU_DEVICE_MANAGED amrex::Real damping_factor;
 
+  // TODO check on this
+  //struct PIC_t {
+
+  //  amrex::Real volfrac;
+  //  amrex::Real statwt;
+  //  amrex::Real temperature;
+  //  amrex::Vector<amrex::Real> velocity;
+
+  //  SPECIES::SPECIES_t species;
+
+  //  INPUT_DIST_t diameter;
+  //  INPUT_DIST_t density;
+  //};
+
   void Initialize ();
 }
 

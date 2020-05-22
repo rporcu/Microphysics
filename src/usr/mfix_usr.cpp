@@ -24,6 +24,7 @@ mfix::mfix_usr1 (Real time) const
   //   m_bc_w_g[i] = get_bc_w_g(i);
 
   //   m_bc_t_g[i] = get_bc_t_g(i);
+  //   m_bc_X_g[i] = get_bc_X_g(i);
 
   //   m_bc_ep_g[i] = get_bc_ep_g(i);
   // }

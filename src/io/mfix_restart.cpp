@@ -275,7 +275,45 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                   }
               }
           }
-        }
+       }
+
+       if (advect_fluid_species)
+       {
+          for (int i = 0; i < chkspeciesVars.size(); i++ )
+          {
+             amrex::Print() << "  Loading " << chkspeciesVarsName[i] << std::endl;
+
+             MultiFab mf;
+             VisMF::Read(mf,
+                     amrex::MultiFabFileFullPrefix(lev,
+                                                   restart_file, level_prefix,
+                                                   chkspeciesVarsName[i]),
+                                                   nullptr,
+                                                   ParallelDescriptor::IOProcessorNumber());
+
+             if (Nrep == IntVect::TheUnitVector()) {
+
+                // Copy from the mf we used to read in to the mf we will use going forward
+                (**(chkspeciesVars[i][lev])).copy(mf, 0, 0, 1, 0, 0);
+
+             } else {
+
+                if (mf.boxArray().size() > 1)
+                    amrex::Abort("Replication only works if one initial grid");
+
+                mf.FillBoundary(geom[lev].periodicity());
+
+                FArrayBox single_fab(mf.boxArray()[0],1);
+                mf.copyTo(single_fab);
+
+                 // Copy and replicate mf into chkscalarVars
+                 for (MFIter mfi(**(chkspeciesVars[i][lev]), false); mfi.isValid(); ++mfi) {
+                     int ib = mfi.index();
+                     (**(chkspeciesVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
+                 }
+               }
+             }
+          }
        }
        amrex::Print() << "  Finished reading fluid data" << std::endl;
     }
@@ -383,6 +421,12 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           m_leveldata[lev]->vel_go->FillBoundary(geom[lev].periodicity());
 
           m_leveldata[lev]->gp->FillBoundary(geom[lev].periodicity());
+          
+          // Fill the bc's just in case
+          if (advect_fluid_species) {
+            m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
+            m_leveldata[lev]->D_g->FillBoundary(geom[lev].periodicity());
+          }
         }
     }
 

@@ -40,6 +40,8 @@ mfix::InitIOPltData ()
       pp.query("plt_vort",    plt_vort   );
       pp.query("plt_volfrac", plt_volfrac);
       pp.query("plt_gradp_g", plt_gradp_g);
+      pp.query("plt_X_g",     plt_X_g    );
+      pp.query("plt_D_g",     plt_D_g    );
 
       // Special test for CCSE regression test. Override all individual
       // flags and save all data to plot file.
@@ -52,16 +54,18 @@ mfix::InitIOPltData ()
         plt_ep_g    = 1;
         plt_p_g     = 1;
         plt_ro_g    = 1;
-        plt_h_g     = 0;
-        plt_T_g     = 0;
+        plt_h_g     = 1;
+        plt_T_g     = 1;
         plt_trac    = 1;
-        plt_cp_g    = 0;
-        plt_k_g     = 0;
+        plt_cp_g    = 1;
+        plt_k_g     = 1;
         plt_mu_g    = 1;
         plt_vort    = 1;
         plt_diveu   = 1;
         plt_volfrac = 1;
         plt_gradp_g = 1;
+        plt_X_g     = 1;
+        plt_D_g     = 1;
       }
 
       // Count the number of variables to save.
@@ -79,6 +83,8 @@ mfix::InitIOPltData ()
       if( plt_vort    == 1) pltVarCount += 1;
       if( plt_diveu   == 1) pltVarCount += 1;
       if( plt_volfrac == 1) pltVarCount += 1;
+      if( plt_X_g     == 1) pltVarCount += FLUID::nspecies_g;
+      if( plt_D_g     == 1) pltVarCount += FLUID::nspecies_g;
     }
 
   if(DEM::solve or PIC::solve)
@@ -247,6 +253,15 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
       if( plt_volfrac   == 1)
         pltFldNames.push_back("volfrac");
 
+      // Fluid species mass fractions
+      if(FLUID::solve_species and plt_X_g == 1)
+        for(std::string specie: FLUID::species_g)
+          pltFldNames.push_back("X_"+specie+"_g");
+
+      // Fluid species mass diffusivities
+      if(FLUID::solve_species and plt_D_g == 1)
+        for(std::string specie: FLUID::species_g)
+          pltFldNames.push_back("D_"+specie+"_g");
 
       for (int lev = 0; lev < nlev; ++lev) {
 
@@ -350,6 +365,22 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
             mf[lev]->setVal(1.0,lc,1,0);
           }
           lc += 1;
+        }
+
+        // Fluid species mass fractions
+        if(FLUID::solve_species and plt_X_g == 1) {
+          for(int n(0); n < FLUID::nspecies_g; n++) {
+            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_g, n, lc+n, 1, 0);
+          }
+          lc += FLUID::nspecies_g;
+        }
+
+        // Species mass fraction
+        if(FLUID::solve_species and plt_D_g == 1) {
+          for(int n(0); n < FLUID::nspecies_g; n++) {
+            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->D_g, n, lc+n, 1, 0);
+          }
+          lc += FLUID::nspecies_g;
         }
 
       }

@@ -3,7 +3,10 @@
 #include <AMReX_VisMF.H>
 #include <MFIX_MFHelpers.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_FLUID_Parms.H>
+#include <MFIX_SPECIES_Parms.H>
 #include <MFIX_PIC_Parms.H>
+#include <mfix_rescale_mass_fractions_g.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -38,6 +41,11 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
       m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
+      
+      if (advect_fluid_species) {
+        m_leveldata[lev]->D_g->FillBoundary(geom[lev].periodicity());
+        m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
+      }
     }
 
     // Fill ghost nodes and reimpose boundary conditions
@@ -46,13 +54,16 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
     mfix_set_density_bcs(time, get_ro_g());
 
     // TODO: commenting the following makes BENCH03 GPU to pass
-    //mfix_set_scalar_bcs(time, get_cp_g(), get_k_g(), get_mu_g());
+    //mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g());
     //mfix_set_tracer_bcs(time, get_trac());
 
     if (advect_enthalpy) {
       mfix_set_temperature_bcs(time, get_T_g());
       mfix_set_enthalpy_bcs(time, get_h_g());
     }
+    
+    if (advect_fluid_species)
+      mfix_set_species_bcs(time, get_X_g(), get_D_g());
 
     //
     // Start loop: if we are not seeking a steady state solution,
@@ -63,17 +74,21 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
 
     // Create temporary multifabs to hold the old-time conv and divtau
     //    so we don't have to re-compute them in the corrector
-    Vector< MultiFab* >  conv_u_old;
-    Vector< MultiFab* >  conv_s_old;
-    Vector< MultiFab* >  divtau_old;
-    Vector< MultiFab* >    laps_old;
-    Vector< MultiFab* > laptemp_old;
+    Vector< MultiFab* > conv_u_old;
+    Vector< MultiFab* > conv_s_old;
+    Vector< MultiFab* > conv_X_old;
+    Vector< MultiFab* > divtau_old;
+    Vector< MultiFab* >   laps_old;
+    Vector< MultiFab* >   lapT_old;
+    Vector< MultiFab* >   lapX_old;
 
      conv_u_old.resize(finest_level+1);
      conv_s_old.resize(finest_level+1);
+     conv_X_old.resize(finest_level+1);
      divtau_old.resize(finest_level+1);
        laps_old.resize(finest_level+1);
-    laptemp_old.resize(finest_level+1);
+       lapT_old.resize(finest_level+1);
+       lapX_old.resize(finest_level+1);
 
     for (int lev = 0; lev <= finest_level; lev++)
     {
@@ -82,13 +97,22 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
        conv_s_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
        divtau_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
          laps_old[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
-       laptemp_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+         lapT_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
 
         conv_u_old[lev]->setVal(0.0);
         conv_s_old[lev]->setVal(0.0);
         divtau_old[lev]->setVal(0.0);
           laps_old[lev]->setVal(0.0);
-       laptemp_old[lev]->setVal(0.0);
+          lapT_old[lev]->setVal(0.0);
+       
+        if (advect_fluid_species) {
+          conv_X_old[lev] = new MultiFab(grids[lev], dmap[lev],
+              FLUID::nspecies_g, 0, MFInfo(), *ebfactory[lev]);
+          lapX_old[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies_g,
+              0, MFInfo(), *ebfactory[lev]);
+          conv_X_old[lev]->setVal(0.0);
+          lapX_old[lev]->setVal(0.0);
+        }
     }
 
     do
@@ -122,6 +146,9 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
           MultiFab& ro_g = *m_leveldata[lev]->ro_g;
           MultiFab& ro_go = *m_leveldata[lev]->ro_go;
 
+          MultiFab& X_g = *m_leveldata[lev]->X_g;
+          MultiFab& X_go = *m_leveldata[lev]->X_go;
+
           MultiFab& T_g = *m_leveldata[lev]->T_g;
           MultiFab& T_go = *m_leveldata[lev]->T_go;
 
@@ -142,6 +169,9 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
           MultiFab::Copy(h_go, h_g, 0, 0, h_g.nComp(), h_go.nGrow());
           MultiFab::Copy(trac_o, trac, 0, 0, trac.nComp(), trac_o.nGrow());
           MultiFab::Copy(vel_go, vel_g, 0, 0, vel_g.nComp(), vel_go.nGrow());
+          
+          if (advect_fluid_species)
+            MultiFab::Copy(X_go, X_g, 0, 0, X_g.nComp(), X_go.nGrow());
 
           // User hooks
           for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
@@ -162,7 +192,18 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
 
         // Predictor step
         bool proj_2_pred = true;
-        mfix_apply_predictor(conv_u_old, conv_s_old, divtau_old, laps_old, laptemp_old, time, dt, prev_dt, proj_2_pred);
+        mfix_apply_predictor(conv_u_old, conv_s_old, conv_X_old, divtau_old,
+            laps_old, lapT_old, lapX_old, time, dt, prev_dt, proj_2_pred);
+
+        // Rescale species in order to respect sum = 1
+        if (advect_fluid_species) {
+          rescale_species(get_X_g());
+          
+          for (int lev = 0; lev <= finest_level; lev++) {
+            // Update ghost cells
+            m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
+          }
+        }
 
         // Calculate drag coefficient
         if (DEM::solve or PIC::solve)
@@ -175,8 +216,20 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
 
         bool proj_2_corr = true;
         // Corrector step
-        if (!steady_state)
-           mfix_apply_corrector(conv_u_old, conv_s_old, divtau_old, laps_old, laptemp_old, time, dt, prev_dt, proj_2_corr);
+        if (!steady_state) {
+           mfix_apply_corrector(conv_u_old, conv_s_old, conv_X_old, divtau_old,
+               laps_old, lapT_old, lapX_old, time, dt, prev_dt, proj_2_corr);
+
+          // Rescale species in order to respect sum = 1
+          if (advect_fluid_species) {
+            rescale_species(get_X_g());
+
+            for (int lev = 0; lev <= finest_level; lev++) {
+              // Update ghost cells
+              m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
+            }
+          }
+        }
 
         //
         // Check whether to exit the loop or not
@@ -211,11 +264,16 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
 
     for (int lev = 0; lev <= finest_level; lev++)
     {
-       delete  conv_u_old[lev];
-       delete  conv_s_old[lev];
-       delete  divtau_old[lev];
-       delete    laps_old[lev];
-       delete laptemp_old[lev];
+       delete conv_u_old[lev];
+       delete conv_s_old[lev];
+       delete divtau_old[lev];
+       delete   laps_old[lev];
+       delete   lapT_old[lev];
+
+       if (advect_fluid_species) {
+         delete conv_X_old[lev];
+         delete   lapX_old[lev];
+       }
     }
 
     BL_PROFILE_REGION_STOP("mfix::EvolveFluid");

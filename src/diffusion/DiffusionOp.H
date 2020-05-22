@@ -54,13 +54,19 @@ class DiffusionOp
                            amrex::Real dt);
 
     // Temperature diffusion
-    void diffuse_temperature (      amrex::Vector< amrex::MultiFab* >  T_g,
+    void diffuse_temperature (amrex::Vector< amrex::MultiFab* >  T_g,
                               const amrex::Vector< amrex::MultiFab* > ep_g,
                               const amrex::Vector< amrex::MultiFab* > ro_g,
                               const amrex::Vector< amrex::MultiFab* > h_g,
                               const amrex::Vector< amrex::MultiFab* > cp_g,
                               const amrex::Vector< amrex::MultiFab* > k_g,
                               amrex::Real dt);
+
+    // Species mass fraction diffusion
+    void diffuse_species (amrex::Vector< amrex::MultiFab* >  X_g,
+                          const amrex::Vector< amrex::MultiFab* > ep_ro_g, 
+                          const amrex::Vector< amrex::MultiFab* >  D_g,
+                          amrex::Real dt);
 
     // Scalar diffusion
     void diffuse_scalar (amrex::Vector< amrex::MultiFab* > scal,
@@ -82,11 +88,18 @@ class DiffusionOp
                         const amrex::Vector< amrex::MultiFab* >& eta_in);
 
     // Explicit tensor temperature term
-    void ComputeLapTemp (amrex::Vector< amrex::MultiFab* >& laps_out,
-                         const amrex::Vector< amrex::MultiFab* >& T_g_in,
-                         const amrex::Vector< amrex::MultiFab* >& ro_in,
-                         const amrex::Vector< amrex::MultiFab* >& ep_in,
-                         const amrex::Vector< amrex::MultiFab* >& k_g_in);
+    void ComputeLapT (amrex::Vector< amrex::MultiFab* >& lapT_out,
+                      const amrex::Vector< amrex::MultiFab* >& T_g_in,
+                      const amrex::Vector< amrex::MultiFab* >& ro_in,
+                      const amrex::Vector< amrex::MultiFab* >& ep_in,
+                      const amrex::Vector< amrex::MultiFab* >& k_g_in);
+
+    // Explicit tensor temperature term
+    void ComputeLapX (amrex::Vector< amrex::MultiFab* >& lapX_out,
+                      const amrex::Vector< amrex::MultiFab* >& X_g_in,
+                      const amrex::Vector< amrex::MultiFab* >& ro_in,
+                      const amrex::Vector< amrex::MultiFab* >& ep_in,
+                      const amrex::Vector< amrex::MultiFab* >& D_g);
 
     // Explicit tensor viscous term // tracer
     void ComputeLapS (amrex::Vector< amrex::MultiFab* >& laps_out,

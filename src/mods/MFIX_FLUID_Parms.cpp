@@ -3,7 +3,11 @@
 #include <AMReX_Print.H>
 
 #include <AMReX_ParmParse.H>
+#include <AMReX_Utility.H>
+
 #include <MFIX_FLUID_Parms.H>
+#include <MFIX_SPECIES_Parms.H>
+
 
 namespace FLUID
 {
@@ -30,6 +34,18 @@ namespace FLUID
 
   // Average molecular weight of gas
   amrex::Real mw_avg;
+
+  // Flag to solve species fluid equations
+  int solve_species = 0;
+
+  // Fluid phase species names
+  std::vector<std::string> species_g;
+
+  // Total number of fluid species
+  int nspecies_g = 0;
+
+  // Fluid phase species diffusion coefficients
+  std::vector<amrex::Real> D_g0;
 
   // Name to later reference when building inputs for IC/BC regions
   std::string name;
@@ -139,6 +155,44 @@ namespace FLUID
         else 
         {
           amrex::Abort("Unknown fluid thermal conductivity model!");
+        }
+      }
+
+
+      // Fluid species inputs
+      if (ppFluid.contains("species"))
+      {
+        ppFluid.getarr("species", species_g);
+
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species_g.size() > 0, "No input provided for fluid.species");
+
+        // Disable the species solver if the species are defined as "None" (case
+        // insensitive) or 0
+        if (amrex::toLower(species_g[0]).compare("none") == 0 or
+            (species_g[0]).compare("0") == 0)
+        {
+          solve_species = 0;
+          nspecies_g = 0;
+        }
+        else {
+          solve_species = 1;
+          nspecies_g = species_g.size();
+
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nspecies_g <= SPECIES::nspecies,
+              "Fluid species_g number is higher than species_g number");
+
+          D_g0.resize(nspecies_g);
+
+          for (int n(0); n < nspecies_g; n++) {
+            std::string one_specie_g = species_g[n];
+            std::vector<std::string>::iterator it;
+
+            it = std::find(SPECIES::species.begin(), SPECIES::species.end(), one_specie_g);
+            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != SPECIES::species.end(),
+                "Fluid specie " + one_specie_g + " is not included in provided species");
+
+            D_g0[n] = SPECIES::D_0[std::distance(SPECIES::species.begin(), it)];
+          }
         }
       }
 

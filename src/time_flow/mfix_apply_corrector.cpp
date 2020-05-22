@@ -5,6 +5,7 @@
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
 #include <MFIX_FLUID_Parms.H>
+#include <MFIX_SPECIES_Parms.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -41,12 +42,17 @@
 //     p_g = phi
 //
 void
-mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
-                            Vector< MultiFab* >&  conv_s_old,
-                            Vector< MultiFab* >&  divtau_old,
-                            Vector< MultiFab* >&    laps_old,
-                            Vector< MultiFab* >& laptemp_old,
-                            Real time, Real l_dt, Real l_prev_dt, bool proj_2)
+mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
+                            Vector< MultiFab* >& conv_s_old,
+                            Vector< MultiFab* >& conv_X_old,
+                            Vector< MultiFab* >& divtau_old,
+                            Vector< MultiFab* >&   laps_old,
+                            Vector< MultiFab* >&   lapT_old,
+                            Vector< MultiFab* >&   lapX_old,
+                            Real time,
+                            Real l_dt,
+                            Real l_prev_dt,
+                            bool proj_2)
 {
     BL_PROFILE("mfix::mfix_apply_corrector");
 
@@ -59,9 +65,11 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
     Vector<MultiFab> density_nph;
     Vector<MultiFab*> conv_u;
     Vector<MultiFab*> conv_s;
+    Vector<MultiFab*> conv_X;
 
     conv_u.resize(finest_level+1);
     conv_s.resize(finest_level+1);
+    conv_X.resize(finest_level+1);
 
     for (int lev = 0; lev <= finest_level; ++lev)
     {
@@ -73,13 +81,20 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
 
         conv_u[lev]->setVal(0.0);
         conv_s[lev]->setVal(0.0);
+
+      if (advect_fluid_species) {
+        conv_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies_g, 0,
+            MFInfo(), *ebfactory[lev]);
+
+        conv_X[lev]->setVal(0.0);
+      }
     }
 
     // *************************************************************************************
     // Compute the explicit advective term R_u^*
     // *************************************************************************************
-    mfix_compute_convective_term(conv_u, conv_s, get_vel_g(), get_ep_g(),
-                                 get_ro_g(), get_h_g(), get_trac(), new_time);
+    mfix_compute_convective_term(conv_u, conv_s, conv_X, get_vel_g(),
+        get_ep_g(), get_ro_g(), get_h_g(), get_trac(), get_X_g(), new_time);
 
     // *************************************************************************************
     // Update density first
@@ -148,7 +163,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
                 Array4<Real> const& cp_g            = ld.cp_g->array(mfi);
                 Array4<Real const> const& dhdt_o    = conv_s_old[lev]->const_array(mfi);
                 Array4<Real const> const& dhdt      = conv_s[lev]->const_array(mfi);
-                Array4<Real const> const& laptemp_o = laptemp_old[lev]->const_array(mfi);
+                Array4<Real const> const& lapT_o    = lapT_old[lev]->const_array(mfi);
 
                 amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
@@ -159,7 +174,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
 
                   // Crank-Nicolson so we only add half of the diffusive term here
                   Real h_g = num * h_g_o(i,j,k) + 0.5 * l_dt * (dhdt_o(i,j,k,conv_comp) + dhdt(i,j,k,conv_comp))
-                                                + 0.5 * l_dt * laptemp_o(i,j,k);
+                                                + 0.5 * l_dt * lapT_o(i,j,k);
 
                   h_g_n(i,j,k) = h_g * denom;
 
@@ -216,6 +231,55 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
         } // lev
     } // advect_tracer
 
+    // *************************************************************************
+    // Update species mass fraction
+    // *************************************************************************
+    if (advect_fluid_species)
+    {
+      const int nspecies_g = FLUID::nspecies_g;
+      
+      for (int lev = 0; lev <= finest_level; lev++)
+      {
+        auto& ld = *m_leveldata[lev];
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+        for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        {
+          Box const& bx = mfi.tilebox();
+          Array4<Real const> const& X_g_o  = ld.X_go->const_array(mfi);
+          Array4<Real      > const& X_g_n  = ld.X_g->array(mfi);
+          Array4<Real const> const& rho_o  = ld.ro_go->const_array(mfi);
+          Array4<Real const> const& rho_n  = ld.ro_g->const_array(mfi);
+          Array4<Real      > const& epg    = ld.ep_g->array(mfi);
+          Array4<Real const> const& dXdt_o = conv_X_old[lev]->const_array(mfi);
+          Array4<Real const> const& dXdt   = conv_X[lev]->const_array(mfi);
+          Array4<Real const> const& lapX_o = lapX_old[lev]->const_array(mfi);
+
+          ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          {
+            const Real epg_loc = epg(i,j,k);
+
+            for (int n = 0; n < nspecies_g; ++n)
+            {
+              int conv_comp = n;
+
+              const Real num =         (rho_o(i,j,k) * epg_loc);
+              const Real denom = 1.0 / (rho_n(i,j,k) * epg_loc);
+
+              // Crank-Nicolson so we only add half of the diffusive term here
+              Real X_g = num * X_g_o(i,j,k,n)
+                  + 0.5 * l_dt * (dXdt_o(i,j,k,conv_comp) + dXdt(i,j,k,conv_comp))
+                  + 0.5 * l_dt * lapX_o(i,j,k,n);
+
+              X_g_n(i,j,k,n) = X_g * denom;
+            }
+          });
+        } // mfi
+      } // lev
+    } // advect_fluid_species
+
+    // *************************************************************************
     // *************************************************************************************
     // Update velocity with convective update, diffusive update, gp and gravity source terms
     // *************************************************************************************
@@ -294,7 +358,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
     // Note we multiply ep_g by ro_g so that we pass in a single array holding (ro_g * ep_g)
     // *************************************************************************************
 
-    // mfix_set_temperature_bcs (new_time, get_T_g());
     // NOTE: we do this call before multiplying ep_g by ro_g
     if (advect_enthalpy)
         diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(), get_h_g(),
@@ -311,6 +374,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
     // mfix_set_tracer_bcs (new_time, get_trac(), 0);
     if (advect_tracer)
         diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, 0.5*l_dt);
+
+    if (advect_fluid_species) {
+      diffusion_op->diffuse_species(get_X_g(), get_ep_g(), get_D_g(), 0.5*l_dt);
+    }
 
     // Convert (rho * ep_g) back into ep_g
     for (int lev = 0; lev <= finest_level; lev++)
@@ -339,5 +406,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
     {
        delete conv_u[lev];
        delete conv_s[lev];
+       
+       if (advect_fluid_species)
+         delete conv_X[lev];
     }
 }
