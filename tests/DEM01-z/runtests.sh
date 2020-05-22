@@ -1,7 +1,7 @@
 #!/bin/bash -lex
 
 cleanup() {
-    rm -rf ${RUN_NAME}* const_plt*  &> /dev/null
+    rm -rf ${RUN_NAME}* const_plt* tmp.out &> /dev/null
 }
 
 write_data() {
@@ -9,7 +9,8 @@ write_data() {
     echo "   Normal collision spring constant. $2  (N/m)" >> $1
     echo "   Restitution coefficient.          $3  ( - )" >> $1
     echo "   " >> ${1}
-    ${FJOIN_PAR} -f DEM01_par --end 100 --var $4 --format 8 --dt 0.005 >> $1
+    ${FJOIN_PAR} -f DEM01_par --end 100 --var $4 --format 8 --dt 0.005 -j tmp.out
+    cat tmp.out >> $1
 }
 
 RUN_NAME="DEM01"
@@ -60,5 +61,5 @@ done
 post_dats=../DEM01-y/AUTOTEST/POST*.dat
 
 for test_post_file in ${post_dats}; do
-    diff ${test_post_file} $(basename ${test_post_file})
+    diff -b -u -I '#.*'  ${test_post_file} $(basename ${test_post_file})
 done
