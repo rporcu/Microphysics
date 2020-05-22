@@ -26,7 +26,7 @@ fi
 rm -rf const_plt* POST_* &> /dev/null
 time -p ${MPIRUN} ${MFIX} ${INPUTS}
 
-${FJOIN_PAR} -f DEM07_par --end 25 --var 100 --format 6 &> POST_GRAN_TEMP.NEW
+${FJOIN_PAR} -f DEM07_par --end 25 --var 100 --format 6 --join POST_GRAN_TEMP.NEW
 
 post_dats=POST*.NEW
 for result in ${post_dats}; do
