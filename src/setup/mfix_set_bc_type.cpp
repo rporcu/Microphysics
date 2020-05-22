@@ -1,6 +1,4 @@
 #include <mfix.H>
-#include <param_mod_F.H>
-
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>

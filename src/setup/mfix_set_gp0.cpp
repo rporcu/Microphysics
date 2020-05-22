@@ -1,7 +1,5 @@
 #include <mfix.H>
 #include <climits>
-#include <param_mod_F.H>
-
 
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_BC_Parms.H>

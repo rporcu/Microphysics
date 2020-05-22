@@ -1,6 +1,4 @@
 #include <mfix.H>
-#include <param_mod_F.H>
-
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
@@ -73,12 +71,12 @@ mfix::~mfix ()
 
 // Constructor
 mfix::mfix ()
-  : m_bc_u_g(get_dim_bc()+1, 0)
-  , m_bc_v_g(get_dim_bc()+1, 0)
-  , m_bc_w_g(get_dim_bc()+1, 0)
-  , m_bc_t_g(get_dim_bc()+1, 0)
-  , m_bc_ep_g(get_dim_bc()+1, 0)
-  , m_bc_p_g(get_dim_bc()+1, 0)
+  : m_bc_u_g(50, 0)
+  , m_bc_v_g(50, 0)
+  , m_bc_w_g(50, 0)
+  , m_bc_t_g(50, 0)
+  , m_bc_ep_g(50, 0)
+  , m_bc_p_g(50, 0)
 {
     // NOTE: Geometry on all levels has just been defined in the AmrCore
     // constructor. No valid BoxArray and DistributionMapping have been defined.

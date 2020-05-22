@@ -1,7 +1,5 @@
 #include <mfix.H>
 
-#include <param_mod_F.H>
-
 #include <MFIX_FLUID_Parms.H>
 
 using namespace amrex;
@@ -66,9 +64,6 @@ mfix::set_density_bcs (Real time,
   const int nrgt = amrex::max(0, scal_hi[0]-dom_hi[0]);
   const int ntop = amrex::max(0, scal_hi[1]-dom_hi[1]);
   const int nup  = amrex::max(0, scal_hi[2]-dom_hi[2]);
-
-  // unused
-  //const Real undefined = get_undefined();
 
   const int minf = bc_list.get_minf();
   const int pinf = bc_list.get_pinf();
@@ -185,7 +180,7 @@ mfix::set_density_bcs (Real time,
 
     int khi = dom_hi[2];
 
-    amrex::ParallelFor(bx_xy_hi_3D, 
+    amrex::ParallelFor(bx_xy_hi_3D,
       [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_khi(i,j,khi+1,0);

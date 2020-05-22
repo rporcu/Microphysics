@@ -1,8 +1,4 @@
 #include <mfix.H>
-
-#include <eos_mod.H>
-
-#include <param_mod_F.H>
 #include <MFIX_FLUID_Parms.H>
 
 using namespace amrex;
@@ -28,10 +24,8 @@ mfix::set_specific_heat_bcs (Real time,
 
   Array4<Real> const& scal_arr = scal_fab.array();
 
-  Real bc0 = get_undefined();
-
   // TODO we will compute cp_g0 as function of temperature
-  bc0 = FLUID::cp_g0;
+  Real bc0 = FLUID::cp_g0;
 
   IntVect scal_lo(scal_fab.loVect());
   IntVect scal_hi(scal_fab.hiVect());
@@ -102,8 +96,6 @@ mfix::set_specific_heat_bcs (Real time,
   const Box bx_xy_lo_3D(scal_lo, bx_xy_lo_hi_3D);
   const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, scal_hi);
 
-  const Real undefined = get_undefined();
-
   const int minf = bc_list.get_minf();
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
@@ -114,7 +106,7 @@ mfix::set_specific_heat_bcs (Real time,
   if (nlft > 0)
   {
     amrex::ParallelFor(bx_yz_lo_3D,
-      [bct_ilo,dom_lo,bc0,pinf,pout,minf,undefined,scal_arr]
+      [bct_ilo,dom_lo,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -137,7 +129,7 @@ mfix::set_specific_heat_bcs (Real time,
   if (nrgt > 0)
   {
     amrex::ParallelFor(bx_yz_hi_3D,
-      [bct_ihi,dom_hi,bc0,pinf,pout,minf,undefined,scal_arr]
+      [bct_ihi,dom_hi,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -158,7 +150,7 @@ mfix::set_specific_heat_bcs (Real time,
   if (nbot > 0)
   {
     amrex::ParallelFor(bx_xz_lo_3D,
-      [bct_jlo,dom_lo,bc0,pinf,pout,minf,undefined,scal_arr]
+      [bct_jlo,dom_lo,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -179,7 +171,7 @@ mfix::set_specific_heat_bcs (Real time,
   if (ntop > 0)
   {
     amrex::ParallelFor(bx_xz_hi_3D,
-      [bct_jhi,dom_hi,bc0,pinf,pout,minf,undefined,scal_arr]
+      [bct_jhi,dom_hi,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -200,7 +192,7 @@ mfix::set_specific_heat_bcs (Real time,
   if (ndwn > 0)
   {
     amrex::ParallelFor(bx_xy_lo_3D,
-      [bct_klo,dom_lo,bc0,pinf,pout,minf,undefined,scal_arr]
+      [bct_klo,dom_lo,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -221,7 +213,7 @@ mfix::set_specific_heat_bcs (Real time,
   if (nup > 0)
   {
     amrex::ParallelFor(bx_xy_hi_3D,
-      [bct_khi,dom_hi,bc0,pinf,pout,minf,undefined,scal_arr]
+      [bct_khi,dom_hi,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 

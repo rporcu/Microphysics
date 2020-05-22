@@ -1,8 +1,5 @@
 #include <mfix.H>
 
-#include <eos_mod.H>
-
-#include <param_mod_F.H>
 #include <MFIX_FLUID_Parms.H>
 
 using namespace amrex;

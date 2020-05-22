@@ -1,5 +1,4 @@
 #include <mfix.H>
-#include <param_mod_F.H>
 
 namespace aux {
 
@@ -109,7 +108,7 @@ mfix::mfix_compute_fluxes (int lev,
       if (flags.getType(amrex::grow(bx,nghost)) == FabType::regular )
       {
         mfix_compute_fluxes_on_box(
-              lev, bx, (*a_fx[lev])[mfi], (*a_fy[lev])[mfi], (*a_fz[lev])[mfi], 
+              lev, bx, (*a_fx[lev])[mfi], (*a_fy[lev])[mfi], (*a_fz[lev])[mfi],
               (*state_in[lev])[mfi], state_comp, ncomp,
               (*xslopes_in[lev])[mfi], (*yslopes_in[lev])[mfi], (*zslopes_in[lev])[mfi], slopes_comp,
               (*ep_u_mac[lev])[mfi], (*ep_v_mac[lev])[mfi], (*ep_w_mac[lev])[mfi]);
@@ -117,12 +116,12 @@ mfix::mfix_compute_fluxes (int lev,
       else
       {
         mfix_compute_eb_fluxes_on_box(
-              lev, bx, (*a_fx[lev])[mfi], (*a_fy[lev])[mfi], (*a_fz[lev])[mfi], 
+              lev, bx, (*a_fx[lev])[mfi], (*a_fy[lev])[mfi], (*a_fz[lev])[mfi],
               (*state_in[lev])[mfi], state_comp, ncomp,
               (*xslopes_in[lev])[mfi], (*yslopes_in[lev])[mfi], (*zslopes_in[lev])[mfi], slopes_comp,
               (*ep_u_mac[lev])[mfi], (*ep_v_mac[lev])[mfi], (*ep_w_mac[lev])[mfi],
-              (*areafrac[0])[mfi], (*areafrac[1])[mfi], (*areafrac[2])[mfi], 
-              (*facecent[0])[mfi], (*facecent[1])[mfi], (*facecent[2])[mfi], 
+              (*areafrac[0])[mfi], (*areafrac[1])[mfi], (*areafrac[2])[mfi],
+              (*facecent[0])[mfi], (*facecent[1])[mfi], (*facecent[2])[mfi],
               cellcent[mfi], (*volfrac)[mfi], (*bndrycent)[mfi], cc_mask[mfi], flags);
       }
     }
@@ -200,8 +199,8 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
 
     if(idx < ubx_npoints)
     {
-      int k = idx / (ubx_len.x*ubx_len.y); 
-      int j = (idx - k*(ubx_len.x*ubx_len.y)) / (ubx_len.x); 
+      int k = idx / (ubx_len.x*ubx_len.y);
+      int j = (idx - k*(ubx_len.x*ubx_len.y)) / (ubx_len.x);
       int i = (idx - k*(ubx_len.x*ubx_len.y)) - j*ubx_len.x;
 
       i += ubx_lo.x;
@@ -213,7 +212,7 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
       const int bct_ilo_val = bct_ilo(dom_low.x-1,j,k,0);
       const int bct_ihi_val = bct_ihi(dom_high.x+1,j,k,0);
 
-      for(int n(0); n < ncomp; n++) { 
+      for(int n(0); n < ncomp; n++) {
         //
         // West face
         //
@@ -249,8 +248,8 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
 
     if(idx < vbx_npoints)
     {
-      int k = idx / (vbx_len.x*vbx_len.y); 
-      int j = (idx - k*(vbx_len.x*vbx_len.y)) / (vbx_len.x); 
+      int k = idx / (vbx_len.x*vbx_len.y);
+      int j = (idx - k*(vbx_len.x*vbx_len.y)) / (vbx_len.x);
       int i = (idx - k*(vbx_len.x*vbx_len.y)) - j*vbx_len.x;
 
       i += vbx_lo.x;
@@ -262,7 +261,7 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
       const int bct_jlo_val = bct_jlo(i,dom_low.y-1,k,0);
       const int bct_jhi_val = bct_jhi(i,dom_high.y+1,k,0);
 
-      for(int n(0); n < ncomp; n++) { 
+      for(int n(0); n < ncomp; n++) {
         //
         // South face
         //
@@ -298,8 +297,8 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
 
     if(idx < wbx_npoints)
     {
-      int k = idx / (wbx_len.x*wbx_len.y); 
-      int j = (idx - k*(wbx_len.x*wbx_len.y)) / (wbx_len.x); 
+      int k = idx / (wbx_len.x*wbx_len.y);
+      int j = (idx - k*(wbx_len.x*wbx_len.y)) / (wbx_len.x);
       int i = (idx - k*(wbx_len.x*wbx_len.y)) - j*wbx_len.x;
 
       i += wbx_lo.x;
@@ -311,7 +310,7 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
       const int bct_klo_val = bct_klo(i,j,dom_low.z-1,0);
       const int bct_khi_val = bct_khi(i,j,dom_high.z+1,0);
 
-      for(int n(0); n < ncomp; n++) { 
+      for(int n(0); n < ncomp; n++) {
         //
         // Bottom face
         //
@@ -353,28 +352,28 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
 //
 void
 mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
-                                     FArrayBox& a_fx, 
-                                     FArrayBox& a_fy, 
-                                     FArrayBox& a_fz, 
-                                     const FArrayBox& state_in, 
+                                     FArrayBox& a_fx,
+                                     FArrayBox& a_fy,
+                                     FArrayBox& a_fz,
+                                     const FArrayBox& state_in,
                                      const int state_comp, const int ncomp,
-                                     const FArrayBox& xslopes_in, 
-                                     const FArrayBox& yslopes_in, 
-                                     const FArrayBox& zslopes_in, 
+                                     const FArrayBox& xslopes_in,
+                                     const FArrayBox& yslopes_in,
+                                     const FArrayBox& zslopes_in,
                                      const int slopes_comp,
-                                     const FArrayBox& ep_u_mac, 
-                                     const FArrayBox& ep_v_mac, 
-                                     const FArrayBox& ep_w_mac, 
-                                     const FArrayBox& afrac_x_fab, 
-                                     const FArrayBox& afrac_y_fab, 
-                                     const FArrayBox& afrac_z_fab, 
-                                     const FArrayBox& face_centroid_x, 
-                                     const FArrayBox& face_centroid_y, 
-                                     const FArrayBox& face_centroid_z, 
-                                     const FArrayBox& cell_centroid, 
-                                     const FArrayBox& volfrac, 
-                                     const FArrayBox& bndry_centroid, 
-                                     const IArrayBox& cc_mask, 
+                                     const FArrayBox& ep_u_mac,
+                                     const FArrayBox& ep_v_mac,
+                                     const FArrayBox& ep_w_mac,
+                                     const FArrayBox& afrac_x_fab,
+                                     const FArrayBox& afrac_y_fab,
+                                     const FArrayBox& afrac_z_fab,
+                                     const FArrayBox& face_centroid_x,
+                                     const FArrayBox& face_centroid_y,
+                                     const FArrayBox& face_centroid_z,
+                                     const FArrayBox& cell_centroid,
+                                     const FArrayBox& volfrac,
+                                     const FArrayBox& bndry_centroid,
+                                     const IArrayBox& cc_mask,
                                      const EBCellFlagFab& flags)
 {
   Box domain(geom[lev].Domain());
@@ -473,8 +472,8 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
     if(idx < ubx_npoints)
     {
-      int k = idx / (ubx_len.x*ubx_len.y); 
-      int j = (idx - k*(ubx_len.x*ubx_len.y)) / (ubx_len.x); 
+      int k = idx / (ubx_len.x*ubx_len.y);
+      int j = (idx - k*(ubx_len.x*ubx_len.y)) / (ubx_len.x);
       int i = (idx - k*(ubx_len.x*ubx_len.y)) - j*ubx_len.x;
 
       i += ubx_lo.x;
@@ -490,7 +489,7 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
       const Real fcx_fab_x = fcx_fab(i,j,k,0);
       const Real fcx_fab_y = fcx_fab(i,j,k,1);
-      
+
       const Real ccc_fab_x = ccc_fab(i,j,k,0);
       const Real ccc_fab_y = ccc_fab(i,j,k,1);
       const Real ccc_fab_z = ccc_fab(i,j,k,2);
@@ -514,7 +513,7 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
           {
             sx_ijkn = state(dom_high.x+1,j,k,state_comp+n);
           }
-          else 
+          else
           {
             Real yf = fcx_fab_x; // local (y,z) of centroid of x-face we are extrapolating to
             Real zf = fcx_fab_y;
@@ -529,8 +528,8 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
             Real cc_umax = amrex::max(state_pls, state_mns);
             Real cc_umin = amrex::min(state_pls, state_mns);
 
-            Real upls = state_pls - delta_x * x_slopes(i,j,k,slopes_comp+n) 
-                                  + delta_y * y_slopes(i,j,k,slopes_comp+n) 
+            Real upls = state_pls - delta_x * x_slopes(i,j,k,slopes_comp+n)
+                                  + delta_y * y_slopes(i,j,k,slopes_comp+n)
                                   + delta_z * z_slopes(i,j,k,slopes_comp+n);
 
             upls = amrex::max( amrex::min(upls, cc_umax), cc_umin );
@@ -539,8 +538,8 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
             delta_y = yf - ccc_fab_mns_y;
             delta_z = zf - ccc_fab_mns_z;
 
-            Real umns = state_mns + delta_x * x_slopes(i-1,j,k,slopes_comp+n) 
-                                  + delta_y * y_slopes(i-1,j,k,slopes_comp+n) 
+            Real umns = state_mns + delta_x * x_slopes(i-1,j,k,slopes_comp+n)
+                                  + delta_y * y_slopes(i-1,j,k,slopes_comp+n)
                                   + delta_z * z_slopes(i-1,j,k,slopes_comp+n);
 
             umns = amrex::max( amrex::min(umns, cc_umax), cc_umin );
@@ -559,8 +558,8 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
     if(idx < vbx_npoints)
     {
-      int k = idx / (vbx_len.x*vbx_len.y); 
-      int j = (idx - k*(vbx_len.x*vbx_len.y)) / (vbx_len.x); 
+      int k = idx / (vbx_len.x*vbx_len.y);
+      int j = (idx - k*(vbx_len.x*vbx_len.y)) / (vbx_len.x);
       int i = (idx - k*(vbx_len.x*vbx_len.y)) - j*vbx_len.x;
 
       i += vbx_lo.x;
@@ -576,7 +575,7 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
       const Real fcy_fab_x = fcy_fab(i,j,k,0);
       const Real fcy_fab_y = fcy_fab(i,j,k,1);
-      
+
       const Real ccc_fab_x = ccc_fab(i,j,k,0);
       const Real ccc_fab_y = ccc_fab(i,j,k,1);
       const Real ccc_fab_z = ccc_fab(i,j,k,2);
@@ -599,7 +598,7 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
           {
             sy_ijkn = state(i,dom_high.y+1,k,state_comp+n);
           }
-          else 
+          else
           {
             Real xf = fcy_fab_x; // local (x,z) of centroid of y-face we are extrapolating to
             Real zf = fcy_fab_y;
@@ -614,8 +613,8 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
             Real cc_umax = amrex::max(state_pls, state_mns);
             Real cc_umin = amrex::min(state_pls, state_mns);
 
-            Real vpls = state_pls - delta_y * y_slopes(i,j,k,slopes_comp+n) 
-                                  + delta_x * x_slopes(i,j,k,slopes_comp+n) 
+            Real vpls = state_pls - delta_y * y_slopes(i,j,k,slopes_comp+n)
+                                  + delta_x * x_slopes(i,j,k,slopes_comp+n)
                                   + delta_z * z_slopes(i,j,k,slopes_comp+n);
 
             vpls = amrex::max( amrex::min(vpls, cc_umax), cc_umin );
@@ -624,8 +623,8 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
             delta_y = 0.5 - ccc_fab_mns_y;
             delta_z = zf  - ccc_fab_mns_z;
 
-            Real vmns = state_mns + delta_y * y_slopes(i,j-1,k,slopes_comp+n) 
-                                  + delta_x * x_slopes(i,j-1,k,slopes_comp+n) 
+            Real vmns = state_mns + delta_y * y_slopes(i,j-1,k,slopes_comp+n)
+                                  + delta_x * x_slopes(i,j-1,k,slopes_comp+n)
                                   + delta_z * z_slopes(i,j-1,k,slopes_comp+n);
 
             vmns = amrex::max( amrex::min(vmns, cc_umax), cc_umin );
@@ -634,8 +633,8 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
           }
         }
         else {
-          sy_ijkn = my_huge; 
-        }                      
+          sy_ijkn = my_huge;
+        }
 
         sy(i,j,k,n) = sy_ijkn;
         fy(i,j,k,n) = v_val * sy_ijkn;
@@ -644,8 +643,8 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
     if(idx < wbx_npoints)
     {
-      int k = idx / (wbx_len.x*wbx_len.y); 
-      int j = (idx - k*(wbx_len.x*wbx_len.y)) / (wbx_len.x); 
+      int k = idx / (wbx_len.x*wbx_len.y);
+      int j = (idx - k*(wbx_len.x*wbx_len.y)) / (wbx_len.x);
       int i = (idx - k*(wbx_len.x*wbx_len.y)) - j*wbx_len.x;
 
       i += wbx_lo.x;
@@ -661,7 +660,7 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
       const Real fcz_fab_x = fcz_fab(i,j,k,0);
       const Real fcz_fab_y = fcz_fab(i,j,k,1);
-      
+
       const Real ccc_fab_x = ccc_fab(i,j,k,0);
       const Real ccc_fab_y = ccc_fab(i,j,k,1);
       const Real ccc_fab_z = ccc_fab(i,j,k,2);
@@ -676,16 +675,16 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
         if( afrac_z > 0 ) {
           if( k <= dom_low.z and
            any(bct_klo_val, bct_data, bct_size, aux::is_equal()))
-          {                    
+          {
             sz_ijkn = state(i, j,dom_low.z-1,state_comp+n);
-          }                    
+          }
           else if( k >= dom_high.z+1 and
            any(bct_khi_val, bct_data, bct_size, aux::is_equal()))
-          {                    
+          {
             sz_ijkn = state(i, j,dom_high.z+1,state_comp+n);
-          }                    
-          else                 
-          {                    
+          }
+          else
+          {
             Real xf = fcz_fab_x; // local (x,y) of centroid of z-face we are extrapolating to
             Real yf = fcz_fab_y;
 
@@ -699,8 +698,8 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
             Real cc_umax = amrex::max(state_pls, state_mns);
             Real cc_umin = amrex::min(state_pls, state_mns);
 
-            Real wpls = state_pls - delta_z * z_slopes(i,j,k,slopes_comp+n) 
-                                  + delta_x * x_slopes(i,j,k,slopes_comp+n) 
+            Real wpls = state_pls - delta_z * z_slopes(i,j,k,slopes_comp+n)
+                                  + delta_x * x_slopes(i,j,k,slopes_comp+n)
                                   + delta_y * y_slopes(i,j,k,slopes_comp+n);
 
             wpls = amrex::max( amrex::min(wpls, cc_umax), cc_umin );
@@ -709,8 +708,8 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
             delta_y = yf - ccc_fab_mns_y;
             delta_z = .5 - ccc_fab_mns_z;
 
-            Real wmns = state_mns + delta_z * z_slopes(i,j,k-1,slopes_comp+n) 
-                                  + delta_x * x_slopes(i,j,k-1,slopes_comp+n) 
+            Real wmns = state_mns + delta_z * z_slopes(i,j,k-1,slopes_comp+n)
+                                  + delta_x * x_slopes(i,j,k-1,slopes_comp+n)
                                   + delta_y * y_slopes(i,j,k-1,slopes_comp+n);
 
             wmns = amrex::max( amrex::min(wmns, cc_umax), cc_umin );
