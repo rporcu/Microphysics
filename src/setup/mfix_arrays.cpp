@@ -1,5 +1,7 @@
 #include <mfix.H>
 #include <AMReX_EB_utils.H>
+#include <MFIX_FLUID_Parms.H>
+#include <MFIX_SPECIES_Parms.H>
 
 void
 mfix::ResizeArrays ()
@@ -187,6 +189,32 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->ro_go, ro_go_new);
     delete ro_go_new;
 
+    if (advect_fluid_species) {
+      // Gas species mass fraction
+      MultiFab* X_g_new = new MultiFab(grids[lev], dmap[lev],
+                                       m_leveldata[lev]->X_g->nComp(),
+                                       m_leveldata[lev]->X_g->nGrow(),
+                                       MFInfo(), *ebfactory[lev]);
+      X_g_new->setVal(0);
+      X_g_new->ParallelCopy(*m_leveldata[lev]->X_g, 0, 0,
+          m_leveldata[lev]->X_g->nComp(), src_ngrow,
+          m_leveldata[lev]->X_g->nGrow(), geom[lev].periodicity());
+      std::swap(m_leveldata[lev]->X_g, X_g_new);
+      delete X_g_new;
+
+      // Old gas species mass fraction
+      MultiFab* X_go_new = new MultiFab(grids[lev], dmap[lev],
+                                       m_leveldata[lev]->X_g->nComp(),
+                                       m_leveldata[lev]->X_g->nGrow(),
+                                       MFInfo(), *ebfactory[lev]);
+      X_go_new->setVal(0);
+      X_go_new->ParallelCopy(*m_leveldata[lev]->X_go, 0, 0,
+          m_leveldata[lev]->X_go->nComp(), src_ngrow,
+          m_leveldata[lev]->X_go->nGrow(), geom[lev].periodicity());
+      std::swap(m_leveldata[lev]->X_go, X_go_new);
+      delete X_go_new; 
+    }
+
     // Tracer in gas
     MultiFab* trac_new = new MultiFab(grids[lev], dmap[lev],
                                       m_leveldata[lev]->trac->nComp(),
@@ -281,6 +309,19 @@ mfix::RegridArrays (int lev)
                    src_ngrow, m_leveldata[lev]->mu_g->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->mu_g, mu_g_new);
     delete mu_g_new;
+
+    if (advect_fluid_species) {
+      // Species diffusion coefficients
+      MultiFab* D_g_new = new MultiFab(grids[lev], dmap[lev],
+                                       m_leveldata[lev]->D_g->nComp(),
+                                       m_leveldata[lev]->D_g->nGrow(),
+                                       MFInfo(), *ebfactory[lev]);
+      D_g_new->setVal(0);
+      D_g_new->ParallelCopy(*m_leveldata[lev]->D_g, 0, 0, m_leveldata[lev]->D_g->nComp(),
+                     src_ngrow, m_leveldata[lev]->D_g->nGrow(), geom[lev].periodicity());
+      std::swap(m_leveldata[lev]->D_g, D_g_new);
+      delete D_g_new;
+    }
 
     // Gas velocity
     MultiFab* vel_g_new = new MultiFab(grids[lev], dmap[lev],
@@ -405,6 +446,32 @@ mfix::RegridArrays (int lev)
     zslopes_s_new->setVal(0);
     std::swap(m_leveldata[lev]->zslopes_s, zslopes_s_new);
     delete zslopes_s_new;
+
+    if (advect_fluid_species) {
+      MultiFab* xslopes_species_g_new = new MultiFab(grids[lev], dmap[lev],
+                                             m_leveldata[lev]->xslopes_species_g->nComp(),
+                                             m_leveldata[lev]->xslopes_species_g->nGrow(),
+                                             MFInfo(), *ebfactory[lev]);
+      xslopes_species_g_new->setVal(0);
+      std::swap(m_leveldata[lev]->xslopes_species_g, xslopes_species_g_new);
+      delete xslopes_species_g_new;
+
+      MultiFab* yslopes_species_g_new = new MultiFab(grids[lev], dmap[lev],
+                                             m_leveldata[lev]->yslopes_species_g->nComp(),
+                                             m_leveldata[lev]->yslopes_species_g->nGrow(),
+                                             MFInfo(), *ebfactory[lev]);
+      yslopes_species_g_new->setVal(0);
+      std::swap(m_leveldata[lev]->yslopes_species_g, yslopes_species_g_new);
+      delete yslopes_species_g_new;
+
+      MultiFab* zslopes_species_g_new = new MultiFab(grids[lev], dmap[lev],
+                                             m_leveldata[lev]->zslopes_species_g->nComp(),
+                                             m_leveldata[lev]->zslopes_species_g->nGrow(),
+                                             MFInfo(), *ebfactory[lev]);
+      zslopes_species_g_new->setVal(0);
+      std::swap(m_leveldata[lev]->zslopes_species_g, zslopes_species_g_new);
+      delete zslopes_species_g_new;
+    }
 
    /****************************************************************************
     * x-face-based arrays                                                        *

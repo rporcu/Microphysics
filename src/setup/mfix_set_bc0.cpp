@@ -1,6 +1,8 @@
 #include <mfix.H>
 
 #include <MFIX_FLUID_Parms.H>
+#include <MFIX_SPECIES_Parms.H>
+#include <MFIX_MFHelpers.H>
 
 void
 mfix::set_bc0 (const Box& sbx,
@@ -19,6 +21,16 @@ mfix::set_bc0 (const Box& sbx,
 
   //const Real h_g0   = FLUID::T_g0 * FLUID::cp_g0;
 
+  const int nspecies_g = FLUID::nspecies_g;
+
+  Gpu::ManagedVector< Real > D_g0_managed(nspecies_g, 0.);
+
+  for (int n(0); n < nspecies_g; n++) {
+    D_g0_managed[n] = FLUID::D_g0[n];
+  }
+
+  Real* D_g0 = D_g0_managed.data();
+
   Array4<Real> const& a_ep_g = m_leveldata[lev]->ep_g->array(*mfi);
   Array4<Real> const& a_h_g  = m_leveldata[lev]->h_g->array(*mfi);
   Array4<Real> const& a_T_g  = m_leveldata[lev]->T_g->array(*mfi);
@@ -27,6 +39,22 @@ mfix::set_bc0 (const Box& sbx,
   Array4<Real> const& a_cp_g = m_leveldata[lev]->cp_g->array(*mfi);
   Array4<Real> const& a_k_g  = m_leveldata[lev]->k_g->array(*mfi);
   Array4<Real> const& a_mu_g = m_leveldata[lev]->mu_g->array(*mfi);
+ 
+  // The following auxiliary MultiFabs are helpful when we do not solve for
+  // species mass fractions
+  MultiFab* X_g_aux;
+  MultiFab* D_g_aux;
+  if (FLUID::nspecies_g == 0) {
+    X_g_aux = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0).release();
+    D_g_aux = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0).release();
+  }
+  else {
+    X_g_aux = m_leveldata[lev]->X_g;
+    D_g_aux = m_leveldata[lev]->D_g;
+  }
+
+  Array4<Real> const& a_X_g  = X_g_aux->array(*mfi);
+  Array4<Real> const& a_D_g  = D_g_aux->array(*mfi);
 
   const IntVect sbx_lo(sbx.loVect());
   const IntVect sbx_hi(sbx.hiVect());
@@ -55,6 +83,15 @@ mfix::set_bc0 (const Box& sbx,
 
   amrex::Real* p_bc_ep_g = m_bc_ep_g.data();
   amrex::Real* p_bc_t_g = m_bc_t_g.data();
+  
+  Gpu::ManagedVector< Real* > m_bc_X_g_managed(nspecies_g);
+  
+  if (advect_fluid_species) {
+    for (int n(0); n < nspecies_g; n++)
+      m_bc_X_g_managed[n] = m_bc_X_g[n].data();
+  }
+
+  Real** p_bc_X_g = m_bc_X_g_managed.data();
 
   if (nlft > 0)
   {
@@ -86,6 +123,11 @@ mfix::set_bc0 (const Box& sbx,
         a_cp_g(i,j,k) = bc_cp_g;
         a_k_g(i,j,k)  = bc_k_g;
         a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
+
+        for (int n(0); n < nspecies_g; n++) {
+          a_D_g(i,j,k,n) = D_g0[n];
+          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
+        }
       }
     });
   }
@@ -120,6 +162,11 @@ mfix::set_bc0 (const Box& sbx,
         a_cp_g(i,j,k) = bc_cp_g;
         a_k_g(i,j,k)  = bc_k_g;
         a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
+
+        for (int n(0); n < nspecies_g; n++) {
+          a_D_g(i,j,k,n) = D_g0[n];
+          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
+        }
       }
     });
   }
@@ -154,6 +201,11 @@ mfix::set_bc0 (const Box& sbx,
         a_cp_g(i,j,k) = bc_cp_g;
         a_k_g(i,j,k)  = bc_k_g;
         a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
+
+        for (int n(0); n < nspecies_g; n++) {
+          a_D_g(i,j,k,n) = D_g0[n];
+          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
+        }
       }
     });
   }
@@ -188,6 +240,11 @@ mfix::set_bc0 (const Box& sbx,
         a_cp_g(i,j,k) = bc_cp_g;
         a_k_g(i,j,k)  = bc_k_g;
         a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
+
+        for (int n(0); n < nspecies_g; n++) {
+          a_D_g(i,j,k,n) = D_g0[n];
+          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
+        }
       }
     });
   }
@@ -222,6 +279,11 @@ mfix::set_bc0 (const Box& sbx,
         a_cp_g(i,j,k) = bc_cp_g;
         a_k_g(i,j,k)  = bc_k_g;
         a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
+
+        for (int n(0); n < nspecies_g; n++) {
+          a_D_g(i,j,k,n) = D_g0[n];
+          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
+        }
       }
     });
   }
@@ -256,7 +318,23 @@ mfix::set_bc0 (const Box& sbx,
         a_cp_g(i,j,k) = bc_cp_g;
         a_k_g(i,j,k)  = bc_k_g;
         a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
+
+        for (int n(0); n < nspecies_g; n++) {
+          a_D_g(i,j,k,n) = D_g0[n];
+          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
+        }
       }
     });
+  }
+
+  Gpu::synchronize();
+
+  if (FLUID::nspecies_g == 0) {
+    delete X_g_aux;
+    delete D_g_aux;
+  }
+
+  if (advect_fluid_species) {
+    delete[] D_g0;
   }
 }

@@ -51,6 +51,8 @@ fluid.specific_heat.constant = 1.0
 fluid.thermal_conductivity          = constant
 fluid.thermal_conductivity.constant = 0.0
 
+fluid.species = none
+
 
 #_______________________________________________________________________
 # DEM model settings

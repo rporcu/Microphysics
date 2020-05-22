@@ -54,11 +54,15 @@ namespace DEM
     // Names of the solids used to build input regions.
     amrex::Vector<std::string> names;
 
+    // Flag to solve species fluid equations
+    int solve_species = 0;
+
     // Particle species
     amrex::Vector<std::string> species_dem;
 
     // Particle species fractions
     amrex::Vector<amrex::Real> spec_frac_dem;
+    
     // Number of species at each particle
     AMREX_GPU_DEVICE_MANAGED int nspecies_dem = 0;
 

@@ -3,7 +3,10 @@
 #include <AMReX_VisMF.H>
 #include <MFIX_MFHelpers.H>
 #include <MFIX_DEM_Parms.H>
+#include <MFIX_FLUID_Parms.H>
+#include <MFIX_SPECIES_Parms.H>
 #include <MFIX_PIC_Parms.H>
+#include <mfix_rescale_mass_fractions_g.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -53,8 +56,11 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   mfix_set_density_bcs(time, get_ro_g());
   mfix_set_temperature_bcs(time, get_T_g());
   mfix_set_tracer_bcs(time, get_trac());
-  mfix_set_scalar_bcs(time, get_cp_g(), get_k_g(), get_mu_g());
+  mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g());
   mfix_set_enthalpy_bcs(time, get_h_g());
+  
+  if (advect_fluid_species)
+    mfix_set_species_bcs(time, get_X_g(), get_D_g());
 
   // Copy vel_g into vel_go
   for (int lev = 0; lev <= finest_level; lev++)
@@ -65,11 +71,13 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     mfix_calc_drag_fluid(time);
 
   // Create temporary multifabs to hold conv and divtau
-  Vector< MultiFab* >  conv_u(finest_level+1, nullptr);
-  Vector< MultiFab* >  conv_s(finest_level+1, nullptr);
-  Vector< MultiFab* >  divtau(finest_level+1, nullptr);
-  Vector< MultiFab* >    laps(finest_level+1, nullptr);
-  Vector< MultiFab* > laptemp(finest_level+1, nullptr);
+  Vector< MultiFab* > conv_u(finest_level+1, nullptr);
+  Vector< MultiFab* > conv_s(finest_level+1, nullptr);
+  Vector< MultiFab* > conv_X(finest_level+1, nullptr);
+  Vector< MultiFab* > divtau(finest_level+1, nullptr);
+  Vector< MultiFab* >   laps(finest_level+1, nullptr);
+  Vector< MultiFab* >   lapT(finest_level+1, nullptr);
+  Vector< MultiFab* >   lapX(finest_level+1, nullptr);
 
   for (int lev = 0; lev <= finest_level; lev++)
   {
@@ -77,14 +85,24 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     // density, one for tracer and one for enthalpy
     conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
     divtau[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-    laps[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
-    laptemp[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-
+    laps[lev]   = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
+    lapT[lev]   = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+    
     conv_u[lev]->setVal(0.0);
     conv_s[lev]->setVal(0.0);
     divtau[lev]->setVal(0.0);
     laps[lev]->setVal(0.0);
-    laptemp[lev]->setVal(0.0);
+    lapT[lev]->setVal(0.0);
+    
+    if (advect_fluid_species) {
+      conv_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies_g, 0,
+          MFInfo(), *ebfactory[lev]);
+      lapX[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies_g, 0,
+          MFInfo(), *ebfactory[lev]);
+
+      conv_X[lev]->setVal(0.0);
+      lapX[lev]->setVal(0.0);
+    }
   }
 
   for (int iter = 0; iter < initial_iterations; ++iter)
@@ -94,7 +112,8 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     bool proj_2 = false;
 
-    mfix_apply_predictor(conv_u, conv_s, divtau, laps, laptemp, time, dt, dt, proj_2);
+    mfix_apply_predictor(conv_u, conv_s, conv_X, divtau, laps, lapT, lapX, time,
+        dt, dt, proj_2);
 
     // Reset any quantities which might have been updated
     for (int lev = 0; lev <= finest_level; lev++)
@@ -122,22 +141,43 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
         MultiFab::Copy(*m_leveldata[lev]->trac, *m_leveldata[lev]->trac_o, 0, 0,
                        m_leveldata[lev]->trac->nComp(), m_leveldata[lev]->trac->nGrow());
 
+    if (advect_fluid_species) {
+//      rescale_species(get_X_g());
+
+      for (int lev = 0; lev <= finest_level; lev++) {
+//        // Update ghost cells
+//        m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
+
+        // Reset species to the old values
+        MultiFab::Copy(*m_leveldata[lev]->X_g, *m_leveldata[lev]->X_go, 0, 0,
+                        m_leveldata[lev]->X_g->nComp(), m_leveldata[lev]->X_g->nGrow());
+      }
+    }
+
     // Reset the boundary values (necessary if they are time-dependent)
     mfix_set_velocity_bcs(time, get_vel_g(), 0);
     mfix_set_density_bcs(time, get_ro_g());
     mfix_set_temperature_bcs(time, get_T_g());
-    mfix_set_scalar_bcs(time, get_cp_g(), get_k_g(), get_mu_g());
+    mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g());
     mfix_set_tracer_bcs(time, get_trac());
     mfix_set_enthalpy_bcs(time, get_h_g());
+    
+    if (advect_fluid_species)
+      mfix_set_species_bcs(time, get_X_g(), get_D_g());
   }
 
   for (int lev = 0; lev <= finest_level; lev++)
   {
-     delete  conv_u[lev];
-     delete  conv_s[lev];
-     delete  divtau[lev];
-     delete    laps[lev];
-     delete laptemp[lev];
+     delete conv_u[lev];
+     delete conv_s[lev];
+     delete divtau[lev];
+     delete   laps[lev];
+     delete   lapT[lev];
+
+     if (advect_fluid_species) {
+       delete conv_X[lev];
+       delete   lapX[lev];
+     }
   }
 }
 

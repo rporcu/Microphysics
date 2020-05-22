@@ -242,9 +242,13 @@ class mfix : public AmrCore
                               Vector< MultiFab* > const& trac);
 
     void mfix_set_scalar_bcs (Real time,
+                              Vector< MultiFab* > const& mu_g,
                               Vector< MultiFab* > const& cp_g,
-                              Vector< MultiFab* > const& k_g,
-                              Vector< MultiFab* > const& mu_g);
+                              Vector< MultiFab* > const& k_g);
+
+    void mfix_set_species_bcs (Real time,
+                               Vector< MultiFab* > const& X_g,
+                               Vector< MultiFab* > const& D_g);
 
     void set_velocity_bcs (Real time,
                            const int lev,
@@ -291,6 +295,16 @@ class mfix : public AmrCore
                                        const int lev,
                                        FArrayBox& scal_fab,
                                        const Box& domain);
+
+    void set_mass_fractions_g_bcs (Real time,
+                                   const int lev,
+                                   FArrayBox& X_g_fab,
+                                   const Box& domain);
+
+    void set_species_diffusivities_g_bcs (Real time,
+                                          const int lev,
+                                          FArrayBox& D_g_fab,
+                                          const Box& domain);
 
     void set_vec_bcs (const int lev,
                       FArrayBox& vec_fab,
@@ -514,12 +528,13 @@ class mfix : public AmrCore
     // "mutable" keyword is just a temporary fix to allow NodalProjection to
     // work as intended. This won't be needed when the BC will be given their own
     // class
-    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_u_g;
-    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_v_g;
-    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_w_g;
-    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_t_g;
-    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_ep_g;
-    mutable amrex::Gpu::ManagedVector<amrex::Real> m_bc_p_g;
+    mutable Gpu::ManagedVector<Real> m_bc_u_g;
+    mutable Gpu::ManagedVector<Real> m_bc_v_g;
+    mutable Gpu::ManagedVector<Real> m_bc_w_g;
+    mutable Gpu::ManagedVector<Real> m_bc_t_g;
+    mutable Vector< Gpu::ManagedVector<Real> > m_bc_X_g;
+    mutable Gpu::ManagedVector<Real> m_bc_ep_g;
+    mutable Gpu::ManagedVector<Real> m_bc_p_g;
 
     //! The particles see an inflow face as a solid wall; thus instead of
     //! creating a separate EBfactory for particles, we simply modify the
@@ -552,8 +567,14 @@ class mfix : public AmrCore
     void FillPatchScalar (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
                           const Vector<BCRec> & bcr);
 
+    void FillPatchSpecies (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
+                           const Vector<BCRec> & bcr);
+
     void GetDataScalar (int lev, Real time, Vector<MultiFab *> & data, int icomp,
                         Vector<Real> & datatime);
+
+    void GetDataSpecies (int lev, Real time, Vector<MultiFab *> & data, int icomp,
+                         Vector<Real> & datatime);
 
     void mfix_calc_particle_beta (Real time);
 
@@ -604,29 +625,35 @@ class mfix : public AmrCore
 
     void mfix_compute_convective_term (Vector< MultiFab* >& conv_u,
                                        Vector< MultiFab* >& conv_s,
+                                       Vector< MultiFab* >& conv_X,
                                        Vector< MultiFab* > const& vel,
                                        Vector< MultiFab* > const& ep_g,
                                        Vector< MultiFab* > const& ro_g,
                                        Vector< MultiFab* > const& h_g,
                                        Vector< MultiFab* > const& trac,
+                                       Vector< MultiFab* > const& X_g,
                                        Real time);
 
     int steady_state_reached (Real dt, int iter);
 
   public:
-    void mfix_apply_predictor (Vector< MultiFab* >&  conv_u_old,
-                               Vector< MultiFab* >&  conv_s_old,
-                               Vector< MultiFab* >&  divtau_old,
-                               Vector< MultiFab* >&    laps_old,
-                               Vector< MultiFab* >& laptemp_old,
+    void mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
+                               Vector< MultiFab* >& conv_s_old,
+                               Vector< MultiFab* >& conv_X_old,
+                               Vector< MultiFab* >& divtau_old,
+                               Vector< MultiFab* >&   laps_old,
+                               Vector< MultiFab* >&   lapT_old,
+                               Vector< MultiFab* >&   lapX_old,
                                Real time, Real dt, Real prev_dt,
                                bool proj_2);
 
-    void mfix_apply_corrector (Vector< MultiFab* >&  conv_u_old,
-                               Vector< MultiFab* >&  conv_s_old,
-                               Vector< MultiFab* >&  divtau_old,
-                               Vector< MultiFab* >&    laps_old,
-                               Vector< MultiFab* >& laptemp_old,
+    void mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
+                               Vector< MultiFab* >& conv_s_old,
+                               Vector< MultiFab* >& conv_X_old,
+                               Vector< MultiFab* >& divtau_old,
+                               Vector< MultiFab* >&   laps_old,
+                               Vector< MultiFab* >&   lapT_old,
+                               Vector< MultiFab* >&   lapX_old,
                                Real time, Real dt, Real prev_dt,
                                bool proj_2);
 
@@ -660,34 +687,40 @@ class mfix : public AmrCore
     Vector< IArrayBox* > bc_klo;
     Vector< IArrayBox* > bc_khi;
 
-    amrex::Vector< std::unique_ptr<LevelData> > m_leveldata;
+    Vector< std::unique_ptr<LevelData> > m_leveldata;
 
-    amrex::Vector<amrex::MultiFab*> get_ep_g () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_h_g () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_h_g_old () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_T_g () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_T_g_old () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_ro_g () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_ro_g_old () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_trac () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_trac_old () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_vel_g () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_vel_g_old () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_cp_g () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_k_g () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_mu_g () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_drag () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_xslopes_u () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_yslopes_u () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_zslopes_u () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_xslopes_s () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_yslopes_s () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_zslopes_s () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_diveu () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_mac_phi () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_u_mac () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_v_mac () noexcept;
-    amrex::Vector<amrex::MultiFab*> get_w_mac () noexcept;
+    Vector< MultiFab* > get_ep_g () noexcept;
+    Vector< MultiFab* > get_h_g () noexcept;
+    Vector< MultiFab* > get_h_g_old () noexcept;
+    Vector< MultiFab* > get_T_g () noexcept;
+    Vector< MultiFab* > get_T_g_old () noexcept;
+    Vector< MultiFab* > get_ro_g () noexcept;
+    Vector< MultiFab* > get_ro_g_old () noexcept;
+    Vector< MultiFab* > get_X_g () noexcept;
+    Vector< MultiFab* > get_X_g_old () noexcept;
+    Vector< MultiFab* > get_trac () noexcept;
+    Vector< MultiFab* > get_trac_old () noexcept;
+    Vector< MultiFab* > get_vel_g () noexcept;
+    Vector< MultiFab* > get_vel_g_old () noexcept;
+    Vector< MultiFab* > get_cp_g () noexcept;
+    Vector< MultiFab* > get_k_g () noexcept;
+    Vector< MultiFab* > get_mu_g () noexcept;
+    Vector< MultiFab* > get_D_g () noexcept;
+    Vector< MultiFab* > get_drag () noexcept;
+    Vector< MultiFab* > get_xslopes_u () noexcept;
+    Vector< MultiFab* > get_yslopes_u () noexcept;
+    Vector< MultiFab* > get_zslopes_u () noexcept;
+    Vector< MultiFab* > get_xslopes_s () noexcept;
+    Vector< MultiFab* > get_yslopes_s () noexcept;
+    Vector< MultiFab* > get_zslopes_s () noexcept;
+    Vector< MultiFab* > get_xslopes_X_g () noexcept;
+    Vector< MultiFab* > get_yslopes_X_g () noexcept;
+    Vector< MultiFab* > get_zslopes_X_g () noexcept;
+    Vector< MultiFab* > get_diveu () noexcept;
+    Vector< MultiFab* > get_mac_phi () noexcept;
+    Vector< MultiFab* > get_u_mac () noexcept;
+    Vector< MultiFab* > get_v_mac () noexcept;
+    Vector< MultiFab* > get_w_mac () noexcept;
 
     // used if load_balance_type == "KnapSack"
     amrex::Vector< amrex::MultiFab* > particle_cost;
@@ -700,9 +733,10 @@ class mfix : public AmrCore
 
     int steady_state = 0;
 
-    bool advect_enthalpy = false;
-    bool advect_density  = false;
-    bool advect_tracer   = false;
+    bool advect_enthalpy      = false;
+    bool advect_density       = false;
+    bool advect_tracer        = false;
+    bool advect_fluid_species = false;
 
     bool test_tracer_conservation  = false;
 
@@ -830,12 +864,14 @@ class mfix : public AmrCore
     int plt_ep_g    = 1;
     int plt_p_g     = 0;
     int plt_ro_g    = 0;
+    int plt_X_g     = 0;
     int plt_h_g     = 0;
     int plt_T_g     = 0;
     int plt_trac    = 0;
     int plt_cp_g    = 0;
     int plt_k_g     = 0;
     int plt_mu_g    = 0;
+    int plt_D_g     = 0;
     int plt_diveu   = 0;
     int plt_volfrac = 0;
     int plt_gradp_g = 0;
@@ -881,6 +917,9 @@ class mfix : public AmrCore
     Vector< Vector< MultiFab** > > chkscalarVars;
     Vector< std::string > chkscaVarsName;
 
+    Vector< Vector< MultiFab** > > chkspeciesVars;
+    Vector< std::string > chkspeciesVarsName;
+
     /***************************************************************************
      *                                                                         *
      * Used for fillpatching ...                                               *
@@ -894,6 +933,7 @@ class mfix : public AmrCore
 
     Vector<BCRec> bcs_u; // For velocity components
     Vector<BCRec> bcs_s; // For scalars
+    Vector<BCRec> bcs_X; // For fluid species
     Vector<BCRec> bcs_f; // For generic first-order extrapolation
 
     /***************************************************************************

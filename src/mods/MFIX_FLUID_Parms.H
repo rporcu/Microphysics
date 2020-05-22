@@ -3,6 +3,8 @@
 
 #include <AMReX_REAL.H>
 
+#include <MFIX_SPECIES_Parms.H>
+
 namespace FLUID
 {
 
@@ -38,6 +40,21 @@ namespace FLUID
   // Average molecular weight of gas
   extern amrex::Real mw_avg;
 
+  // Flag to solve species fluid equations
+  extern int solve_species;
+
+  // Fluid phase species names
+  extern std::vector<std::string> species_g;
+
+  // Total number of fluid species
+  extern int nspecies_g;
+
+  // Fluid phase species diffusion coefficients
+  extern std::vector<amrex::Real> D_g0;
+
+  // Fluid phase species mass fraction
+  extern std::vector<amrex::Real> X_g0;
+
   // Name to later reference when building input regions
   extern std::string name;
 
@@ -50,10 +67,14 @@ namespace FLUID
 
     amrex::Real pressure_defined; // Flag to check if pressure is defined
 
+    SPECIES::SPECIES_t species;
+
     FLUID_t() :
       volfrac(-1.0),
       temperature(0.0),
-      pressure(-1.0) { }
+      pressure(-1.0),
+      species(FLUID::nspecies_g)
+    {}
 
   };
 

@@ -9,6 +9,8 @@ target_sources( mfixcore
    MFIX_BC_List.H
    MFIX_FLUID_Parms.cpp
    MFIX_FLUID_Parms.H
+   MFIX_SPECIES_Parms.cpp
+   MFIX_SPECIES_Parms.H
    MFIX_DEM_Parms.cpp
    MFIX_DEM_Parms.H
    MFIX_PIC_Parms.cpp

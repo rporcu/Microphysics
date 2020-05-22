@@ -4,6 +4,7 @@ CEXE_headers += MFIX_REGIONS_Parms.H
 CEXE_headers += MFIX_IC_Parms.H
 CEXE_headers += MFIX_BC_Parms.H
 CEXE_headers += MFIX_FLUID_Parms.H
+CEXE_headers += MFIX_SPECIES_Parms.H
 CEXE_headers += MFIX_DEM_Parms.H
 CEXE_headers += MFIX_PIC_Parms.H
 
@@ -12,6 +13,7 @@ CEXE_sources += MFIX_REGIONS_Parms.cpp
 CEXE_sources += MFIX_IC_Parms.cpp
 CEXE_sources += MFIX_BC_Parms.cpp
 CEXE_sources += MFIX_FLUID_Parms.cpp
+CEXE_sources += MFIX_SPECIES_Parms.cpp
 CEXE_sources += MFIX_DEM_Parms.cpp
 CEXE_sources += MFIX_PIC_Parms.cpp
 CEXE_headers += MFIX_BC_List.H

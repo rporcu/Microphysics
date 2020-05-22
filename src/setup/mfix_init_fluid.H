@@ -10,30 +10,17 @@
 void init_fluid (const Box& sbx,
                  const Box& bx,
                  const Box& domain,
-                 const FArrayBox& ep_g,
-                 FArrayBox& T_g,
-                 FArrayBox& h_g,
-                 FArrayBox& ro_g,
-                 FArrayBox& trac,
-                 const FArrayBox& p_g,
-                 FArrayBox& vel_g,
-                 FArrayBox& cp_g,
-                 FArrayBox& k_g,
-                 FArrayBox& mu_g,
+                 const MFIter& mfi,
+                 LevelData& ld,
                  const Real dx,
                  const Real dy,
                  const Real dz,
                  const Real xlength,
                  const Real ylength,
                  const Real zlength,
-                 bool test_tracer_conservation);
-
-void init_helix (const Box& bx,
-                 const Box& domain,
-                 FArrayBox& vel,
-                 const Real dx,
-                 const Real dy,
-                 const Real dz);
+                 bool test_tracer_conservation,
+                 const int advect_enthalpy,
+                 const int advect_fluid_species);
 
 void init_periodic_vortices (const Box& bx,
                              const Box& domain,
@@ -51,10 +38,10 @@ void init_periodic_tracer (const Box& bx,
                            const Real dz);
 
 void init_fluid_restart (const Box& bx,
-                         FArrayBox& temp,
-                         FArrayBox& cp_g,
-                         FArrayBox& k_g,
-                         FArrayBox& mu_g);
+                         const MFIter& mfi,
+                         LevelData& ld,
+                         const int advect_enthalpy,
+                         const int advect_fluid_species);
 
 void set_ic (const Box& sbx,
              const Box& domain,

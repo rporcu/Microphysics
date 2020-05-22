@@ -1,4 +1,6 @@
 #include <MFIX_LevelData.H>
+#include <MFIX_FLUID_Parms.H>
+#include <MFIX_SPECIES_Parms.H>
 
 using namespace amrex;
 
@@ -39,12 +41,23 @@ LevelData::LevelData (BoxArray const& ba,
   , u_mac(new MultiFab(BoxArray(ba).surroundingNodes(0), dmap, 1, 2, MFInfo(), factory))
   , v_mac(new MultiFab(BoxArray(ba).surroundingNodes(1), dmap, 1, 2, MFInfo(), factory))
   , w_mac(new MultiFab(BoxArray(ba).surroundingNodes(2), dmap, 1, 2, MFInfo(), factory))
-{}
+{
+  if (FLUID::solve_species) {
+    X_g = new MultiFab(ba, dmap, FLUID::nspecies_g, nghost, MFInfo(), factory);
+    X_go = new MultiFab(ba, dmap, FLUID::nspecies_g, nghost, MFInfo(), factory);
+    D_g = new MultiFab(ba, dmap, FLUID::nspecies_g, nghost, MFInfo(), factory);
+    xslopes_species_g = new MultiFab(ba, dmap, FLUID::nspecies_g, nghost, MFInfo(), factory);
+    yslopes_species_g = new MultiFab(ba, dmap, FLUID::nspecies_g, nghost, MFInfo(), factory);
+    zslopes_species_g = new MultiFab(ba, dmap, FLUID::nspecies_g, nghost, MFInfo(), factory);
+  }
+}
 
 void LevelData::resetValues (const amrex::Real covered_val)
 {
   ep_g->setVal(1);
   ep_go->setVal(1);
+  p_g->setVal(0);
+  p_go->setVal(0);
   h_g->setVal(0);
   h_go->setVal(0);
   T_g->setVal(0);
@@ -53,29 +66,36 @@ void LevelData::resetValues (const amrex::Real covered_val)
   ro_go->setVal(0);
   trac->setVal(0);
   trac_o->setVal(0);
+  vel_g->setVal(0);
+  vel_go->setVal(0);
   p0_g->setVal(0);
-  p_g->setVal(0);
-  p_go->setVal(0);
-  diveu->setVal(0);
   gp->setVal(0);
   cp_g->setVal(0);
   k_g->setVal(0);
   mu_g->setVal(0);
-  vel_g->setVal(0);
-  vel_go->setVal(0);
   vort->setVal(0);
   drag->setVal(0);
-  mac_rhs->setVal(0);
-  mac_phi->setVal(0);
   xslopes_u->setVal(0);
   xslopes_s->setVal(0);
   yslopes_u->setVal(0);
   yslopes_s->setVal(0);
   zslopes_u->setVal(0);
   zslopes_s->setVal(0);
+  diveu->setVal(0);
+  mac_rhs->setVal(0);
+  mac_phi->setVal(0);
   u_mac->setVal(covered_val);
   v_mac->setVal(covered_val);
   w_mac->setVal(covered_val);
+  
+  if (FLUID::solve_species) {
+    X_g->setVal(0);
+    X_go->setVal(0);
+    D_g->setVal(0);
+    xslopes_species_g->setVal(0);
+    yslopes_species_g->setVal(0);
+    zslopes_species_g->setVal(0);
+  }
 }
 
 LevelData::~LevelData ()
@@ -113,4 +133,13 @@ LevelData::~LevelData ()
   delete u_mac;
   delete v_mac;
   delete w_mac;
+
+  if (FLUID::solve_species) {
+    delete X_g;
+    delete X_go;
+    delete D_g;
+    delete xslopes_species_g;
+    delete yslopes_species_g;
+    delete zslopes_species_g;
+  }
 }

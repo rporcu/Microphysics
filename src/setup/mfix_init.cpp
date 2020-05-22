@@ -12,16 +12,29 @@
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
 #include <MFIX_FLUID_Parms.H>
+#include <MFIX_SPECIES_Parms.H>
 
 void
 mfix::InitParams ()
 {
   if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
 
-  // Read and process fluid and DEM particle model options.
+  // Read and process species, fluid and DEM particle model options.
+  SPECIES::Initialize();
   FLUID::Initialize();
+  
+  // Set the mfix class flag equal to the FLUID parameter
+  advect_fluid_species = FLUID::solve_species;
+
   DEM::Initialize();
   PIC::Initialize();
+
+  // Important! Resize the bc vector for the fluid species mass fractions
+  // We have to do it here becuse the size has to match the number of fluid
+  // species
+  // NOTE: once we will have a class for BCs this won't be needed anymore
+  m_bc_X_g.resize(FLUID::nspecies_g, Gpu::ManagedVector<Real>(50, 0));
+  bcs_X.resize(2*FLUID::nspecies_g);
 
   // Read in regions, initial and boundary conditions. Note that
   // regions need to be processed first as they define the
@@ -108,10 +121,15 @@ mfix::InitParams ()
     pp.query("initial_iterations", initial_iterations);
     pp.query("do_initial_proj", do_initial_proj);
 
-    pp.query("advect_enthalpy", advect_enthalpy);
     pp.query("advect_density", advect_density);
     pp.query("advect_tracer" , advect_tracer);
+    pp.query("advect_enthalpy", advect_enthalpy);
     pp.query("test_tracer_conservation", test_tracer_conservation);
+
+    // TODO: we might want to remove this and have
+    // advect_fluid_species = 1 whenever FLUID::solve_species = 1
+    if ( FLUID::solve_species )
+      pp.query("advect_fluid_species", advect_fluid_species);
 
     pp.query("ntrac", ntrac);
 
@@ -130,6 +148,10 @@ mfix::InitParams ()
     if (test_tracer_conservation && !advect_tracer)
       amrex::Abort("No point in testing tracer conservation with advect_tracer"
           " = false");
+
+    // At the moment, there is no relation between density and species
+    //if (advect_fluid_species && !advect_density)
+    //  amrex::Abort("Can't advect species mass fraction without advecting density");
 
     // At the moment, there is no relation between density and temperature
     //if (advect_enthalpy && !advect_density)
@@ -769,6 +791,8 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        Real dy = geom[lev].CellSize(1);
        Real dz = geom[lev].CellSize(2);
 
+       LevelData& ld = *m_leveldata[lev];
+
        // We deliberately don't tile this loop since we will be looping
        //    over bc's on faces and it makes more sense to do this one grid at a time
        for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi) {
@@ -778,25 +802,11 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
           if ( is_restarting ) {
 
-            init_fluid_restart(bx, (*m_leveldata[lev]->T_g )[mfi],
-                                   (*m_leveldata[lev]->cp_g)[mfi],
-                                   (*m_leveldata[lev]->k_g)[mfi],
-                                   (*m_leveldata[lev]->mu_g)[mfi]);
+            init_fluid_restart(bx, mfi, ld, advect_enthalpy, advect_fluid_species);
 
           } else {
-
-            init_fluid(sbx, bx, domain,
-                       (*m_leveldata[lev]->ep_g)[mfi],
-                       (*m_leveldata[lev]->h_g)[mfi],
-                       (*m_leveldata[lev]->T_g)[mfi],
-                       (*m_leveldata[lev]->ro_g)[mfi],
-                       (*m_leveldata[lev]->trac)[mfi],
-                       (*m_leveldata[lev]->p_g)[mfi],
-                       (*m_leveldata[lev]->vel_g)[mfi],
-                       (*m_leveldata[lev]->cp_g)[mfi],
-                       (*m_leveldata[lev]->k_g)[mfi],
-                       (*m_leveldata[lev]->mu_g)[mfi],
-                       dx, dy, dz, xlen, ylen, zlen, test_tracer_conservation);
+            init_fluid(sbx, bx, domain, mfi, ld, dx, dy, dz, xlen, ylen, zlen,
+                test_tracer_conservation, advect_enthalpy, advect_fluid_species);
           }
        }
 
@@ -805,6 +815,10 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        MultiFab::Copy(*m_leveldata[lev]->T_go,   *m_leveldata[lev]->T_g, 0, 0, 1, 0);
        MultiFab::Copy(*m_leveldata[lev]->ro_go,  *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
        MultiFab::Copy(*m_leveldata[lev]->trac_o, *m_leveldata[lev]->trac, 0, 0, 1, 0);
+       
+       if (advect_fluid_species)
+         MultiFab::Copy(*m_leveldata[lev]->X_go, *m_leveldata[lev]->X_g, 0, 0,
+                        m_leveldata[lev]->X_g->nComp(), 0);
     }
 
     mfix_set_p0();
@@ -817,18 +831,24 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
     {
       m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
 
       if (advect_enthalpy)
       {
         m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
         m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
+        m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
+        m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
       }
 
       if (advect_tracer)
         m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
+
+      if (advect_fluid_species)
+      {
+        m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
+        m_leveldata[lev]->D_g->FillBoundary(geom[lev].periodicity());
+      }
 
       m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
     }
@@ -851,7 +871,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
       Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
 
-      // This sets bcs for ep_g, cp_g and mu_g
+      // This sets bcs for ep_g, cp_g, mu_g and D_g
       Real time = 0.0;
 
       mfix_set_temperature_bcs(time, get_T_g());
@@ -863,10 +883,15 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       mfix_set_tracer_bcs(time, get_trac());
       mfix_set_tracer_bcs(time, get_trac_old());
 
-      mfix_set_scalar_bcs(time, get_cp_g(), get_k_g(), get_mu_g());
+      mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g());
 
       mfix_set_enthalpy_bcs(time, get_h_g());
       mfix_set_enthalpy_bcs(time, get_h_g_old());
+
+      if (advect_fluid_species) {
+        mfix_set_species_bcs(time, get_X_g(), get_D_g());
+        mfix_set_species_bcs(time, get_X_g_old(), get_D_g());
+      }
 
       // Project the initial velocity field
       if (do_initial_proj)
@@ -909,8 +934,19 @@ mfix::mfix_set_bc0 ()
 
      ep_g.FillBoundary(geom[lev].periodicity());
      m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
+     
+     if (advect_enthalpy) {
+       m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
+       m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
+     }
+     
      if (advect_tracer)
        m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
+     
+     if (advect_fluid_species) {
+       m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
+     }
+     
    }
 
    // Put velocity Dirichlet bc's on faces

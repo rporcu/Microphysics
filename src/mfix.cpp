@@ -4,6 +4,7 @@
 #include <AMReX_Box.H>
 
 #include <MFIX_FLUID_Parms.H>
+#include <MFIX_SPECIES_Parms.H>
 
 std::string      mfix::particle_init_type   = "AsciiFile";
 std::string      mfix::load_balance_type    = "KnapSack";
@@ -75,6 +76,9 @@ mfix::mfix ()
   , m_bc_v_g(50, 0)
   , m_bc_w_g(50, 0)
   , m_bc_t_g(50, 0)
+  // Once we will have a class for BCs, the following initialization won't be
+  // like this anymore and we won't need to resize it after Parameters reading
+  , m_bc_X_g(0) // This is resized in mfix_init.cpp
   , m_bc_ep_g(50, 0)
   , m_bc_p_g(50, 0)
 {
@@ -111,6 +115,8 @@ mfix::mfix ()
     bcs_u.resize(3); // one for each velocity component
     // This needs to be one bigger than the highest index scalar in mfix_set_scalar_bcs
     bcs_s.resize(6); // density, tracer, ep_g, mu_g, T_g, h_g --> TODO cp_g, k_g
+    bcs_X.resize(0); // X_g, D_g. TODO this has to be resized on the basis of 
+                     // FLUID::nspecies_g. So we do it after parameter parsing
     bcs_f.resize(1); // just one
 
     //___________________________________________________________________________
@@ -223,6 +229,26 @@ Vector< MultiFab* > mfix::get_ro_g_old () noexcept
   return r;
 }
 
+Vector< MultiFab* > mfix::get_X_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->X_g);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_X_g_old () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->X_go);
+  }
+  return r;
+}
+
 Vector< MultiFab* > mfix::get_trac () noexcept
 {
   Vector<MultiFab*> r;
@@ -293,6 +319,16 @@ Vector< MultiFab* > mfix::get_mu_g () noexcept
   return r;
 }
 
+Vector< MultiFab* > mfix::get_D_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->D_g);
+  }
+  return r;
+}
+
 Vector< MultiFab* > mfix::get_drag () noexcept
 {
   Vector<MultiFab*> r;
@@ -359,6 +395,36 @@ Vector< MultiFab* > mfix::get_zslopes_s () noexcept
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
     r.push_back(m_leveldata[lev]->zslopes_s);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_xslopes_X_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->xslopes_species_g);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_yslopes_X_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->yslopes_species_g);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_zslopes_X_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->zslopes_species_g);
   }
   return r;
 }
