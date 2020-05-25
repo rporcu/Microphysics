@@ -90,7 +90,7 @@ file( GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.cpp)
 add_udfs_to_target(mfix ${USR_OVERRIDES})
 
 if (ENABLE_CUDA)
-   setup_target_for_cuda_compilation(mfixcore)
+   setup_target_for_cuda_compilation(mfix)
 endif ()
 
 # Tools
