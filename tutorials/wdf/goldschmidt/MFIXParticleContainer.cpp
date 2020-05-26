@@ -222,7 +222,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             fillNeighbors();
             // send in "false" for sort_neighbor_list option
 
-            buildNeighborList(MFIXCheckPair(), false);
+            buildNeighborList(MFIXCheckPair(DEM::neighborhood), false);
         } else {
             updateNeighbors();
         }
@@ -247,7 +247,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             ParticleType* pstruct = aos().dataPtr();
 
             // Neighbor particles
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
             int size_ng = aos.numNeighborParticles();
 #else
             int size_ng = neighbors[lev][index].size();
@@ -282,16 +282,16 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             if (tile_has_walls[index])
             {
                 // Calculate forces and torques from particle-wall collisions
-#ifndef AMREX_USE_CUDA
                 BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-#endif
                 auto& geom = this->Geom(lev);
                 const auto dxi = geom.InvCellSizeArray();
                 const auto plo = geom.ProbLoArray();
                 const auto phiarr = ls_phi->array(pti);
 
                 amrex::ParallelFor(nrp,
-                  [pstruct,ls_refinement,phiarr,plo,dxi,subdt,ntot,fc_ptr,tow_ptr]
+                  [pstruct,ls_refinement,phiarr,plo,dxi,subdt,ntot,fc_ptr,tow_ptr,
+                   local_mew=DEM::mew,local_mew_w=DEM::mew_w,local_kn_w=DEM::kn_w,
+                   local_etan_des_w=DEM::etan_w]
                   AMREX_GPU_DEVICE (int i) noexcept
                   {
                     ParticleType& p = pstruct[i];
@@ -398,18 +398,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                         wfor[index][i] = fc[index][i];
                     }
                 }
-#ifndef AMREX_USE_CUDA
                 BL_PROFILE_VAR_STOP(calc_wall_collisions);
-#endif
             }
 
             /********************************************************************
              * Particle-Particle collision forces (and torques)                 *
              *******************************************************************/
 
-#ifndef AMREX_USE_CUDA
             BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
-#endif
 
 #ifdef AMREX_USE_CUDA
             auto nbor_data = m_neighbor_list[index].data();
@@ -549,13 +545,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 }
             }
 
-#ifndef AMREX_USE_CUDA
             BL_PROFILE_VAR_STOP(calc_particle_collisions);
-#endif
 
-#ifndef AMREX_USE_CUDA
             BL_PROFILE_VAR("des_time_march()", des_time_march);
-#endif
             /********************************************************************
              * Move particles based on collision forces and torques             *
              *******************************************************************/
@@ -635,9 +627,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
             Gpu::synchronize();
 
-#ifndef AMREX_USE_CUDA
             BL_PROFILE_VAR_STOP(des_time_march);
-#endif
 
 #ifdef AMREX_USE_CUDA
             ncoll = ncoll_gpu.dataValue();
