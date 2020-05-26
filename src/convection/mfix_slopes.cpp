@@ -121,7 +121,7 @@ mfix::mfix_compute_slopes (int lev,
                const auto& flag_fab = flags.array();
                const auto& ccent_fab = cellcent->array(mfi);
 
-#ifndef AMREX_USE_CUDA
+#ifndef AMREX_USE_GPU
                amrex::ParallelFor(bx, ncomp,
                [state_fab,xs_fab,ys_fab,zs_fab,slopes_comp,flag_fab,ccent_fab]
                AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept

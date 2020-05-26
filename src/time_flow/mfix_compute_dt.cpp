@@ -37,7 +37,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
     // Max CFL factor for all levels
     Real cfl_max(0.0);
 
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
     {
       Gpu::DeviceScalar<Real> cfl_max_gpu(cfl_max);
       Real *cfl_max_ptr = cfl_max_gpu.dataPtr();
@@ -80,7 +80,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
             {
               amrex::ParallelFor(bx,
                   [ro,ep,gp0_dev,gradp,drag_fab,gravity_dev,vel,odx,ody,odz,flags_fab,mu,
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
                   cfl_max_ptr]
 #else
                   &cfl_max]
@@ -113,7 +113,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
                                                                  4.0*amrex::Math::abs(acc[0])*odx  +
                                                                  4.0*amrex::Math::abs(acc[1])*ody  +
                                                                  4.0*amrex::Math::abs(acc[2])*odz  );
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
                         Gpu::Atomic::Max(cfl_max_ptr, cfl_max_cell);
 #else
                         cfl_max = amrex::max(cfl_max, cfl_max_cell);
@@ -124,7 +124,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
         }
     }
 
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
       cfl_max = cfl_max_gpu.dataValue();
     }
 #endif

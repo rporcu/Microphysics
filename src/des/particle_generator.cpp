@@ -882,14 +882,14 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
   const int maxfails = 10000;
   int fails(0);
 
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
   Gpu::DeviceScalar<int> fails_gpu(fails);
   int* p_fails = fails_gpu.dataPtr();
 #endif
 
   amrex::ParallelFor(nsize_half,
     [p_dp,dp_min,dp_max,maxfails,tolerance,sigma,mean,nsize,
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
      p_fails]
 #else
      &fails]
@@ -930,7 +930,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 
       if(not(iterations < maxfails))
       {
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
         Gpu::Atomic::Add(p_fails, 1);
 #else
         fails++;
@@ -940,7 +940,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 
   Gpu::synchronize();
 
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
   fails = fails_gpu.dataValue();
 #endif
 
