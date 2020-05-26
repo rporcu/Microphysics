@@ -24,7 +24,7 @@ amr.check_int  = 25
 
 amr.plt_regtest = 1
 
-amr.restart = newchk00000_for_replicate
+amr.restart = replicate_chk00000
 
 amr.repl_x = 2
 amr.repl_y = 2

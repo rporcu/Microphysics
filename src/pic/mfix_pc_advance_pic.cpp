@@ -39,9 +39,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
       auto& aos   = ptile.GetArrayOfStructs();
       ParticleType* pstruct = aos().dataPtr();
 
-#ifndef AMREX_USE_CUDA
       BL_PROFILE_VAR("pic_time_march()", pic_time_march);
-#endif
       /********************************************************************
        * Move particles based on collision forces and torques             *
        *******************************************************************/
@@ -169,9 +167,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
 
       Gpu::synchronize();
 
-#ifndef AMREX_USE_CUDA
       BL_PROFILE_VAR_STOP(pic_time_march);
-#endif
 
       /********************************************************************
        * Update runtime cost (used in load-balancing)                     *

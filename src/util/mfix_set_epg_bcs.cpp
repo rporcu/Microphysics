@@ -87,7 +87,7 @@ mfix::set_epg_bcs (const int lev,
   bx_xy_hi_lo_2D[2] = dom_hi[2]+1;
   bx_xy_hi_hi_2D[2] = dom_hi[2]+1;
 
-  // Create 2D boxes for CUDA loops
+  // Create 2D boxes for GPU loops
   const Box bx_yz_lo_2D(bx_yz_lo_lo_2D, bx_yz_lo_hi_2D);
   const Box bx_yz_hi_2D(bx_yz_hi_lo_2D, bx_yz_hi_hi_2D);
 
@@ -111,7 +111,7 @@ mfix::set_epg_bcs (const int lev,
   bx_xy_lo_hi_3D[2] = dom_lo[2]-1;
   bx_xy_hi_lo_3D[2] = dom_hi[2]+1;
 
-  // Create 3D boxes for CUDA loops
+  // Create 3D boxes for GPU loops
   const Box bx_yz_lo_3D(epg_lo, bx_yz_lo_hi_3D);
   const Box bx_yz_hi_3D(bx_yz_hi_lo_3D, epg_hi);
 

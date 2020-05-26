@@ -1,23 +1,6 @@
 add_library(mfixcore)
 
 #
-# Path where to store module files
-#
-set( MFIX_Fortran_MOD_PATH ${CMAKE_CURRENT_BINARY_DIR}/mod_files
-   CACHE INTERNAL "Fortran modules location")
-
-set_target_properties( mfixcore
-   PROPERTIES
-   Fortran_MODULE_DIRECTORY
-   ${MFIX_Fortran_MOD_PATH}
-   )
-
-target_include_directories( mfixcore
-   PUBLIC
-   $<BUILD_INTERFACE:${MFIX_Fortran_MOD_PATH}>)
-
-
-#
 # Add sources and header from current dir and all sub dirs
 #
 
@@ -102,9 +85,6 @@ endif ()
 #
 # Set the default flags
 #
-if ( NOT CMAKE_Fortran_FLAGS )
-   target_link_libraries(mfixcore PUBLIC AMReX::Flags_Fortran)
-endif ()
 
 if ( NOT CMAKE_CXX_FLAGS )
    target_link_libraries(mfixcore PUBLIC AMReX::Flags_CXX)
@@ -113,14 +93,6 @@ endif ()
 if (ENABLE_FPE)
    target_link_libraries(mfixcore PUBLIC AMReX::Flags_FPE)
 endif ()
-
-
-#
-# Add typecheck target for mfixcore
-#
-include( AMReXTypecheck )
-add_typecheck_target(mfixcore)
-
 
 #
 # Add AMReX "build info" capabilities

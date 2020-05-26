@@ -116,7 +116,7 @@ mfix::mfix_redistribute_deposition (int lev,
        Array4<Real> const& duplicate = mf_to_redist_copy.array(mfi);
        Array4<Real> const& scale_array = scale_fab.array(mfi);
 
-#ifndef AMREX_USE_CUDA
+#ifndef AMREX_USE_GPU
        amrex::ParallelFor(bx,
          [flags,ep_s,mf_redist,vfrac,duplicate,scale_array,max_eps,ncomp,
           mask_box] AMREX_GPU_DEVICE (int i, int j, int k) noexcept

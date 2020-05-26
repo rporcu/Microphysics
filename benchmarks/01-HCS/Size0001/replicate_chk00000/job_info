@@ -1,0 +1,41 @@
+===============================================================================
+ MFIx Job Information
+===============================================================================
+number of MPI processes: 1
+
+
+===============================================================================
+ Build Information
+===============================================================================
+build date:    2020-05-05 09:58:28.765529
+build machine: Linux manda 4.4.0-170-generic #199-Ubuntu SMP Thu Nov 14 01:45:04 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
+build dir:     /home/almgren/GitCode/mfix/exec
+AMReX dir:     /home/almgren/GitCode/amrex
+
+COMP:          gnu
+COMP version:  5.4.0
+
+C++ compiler:  mpicxx
+C++ flags:      -Werror=return-type -g -O3 -std=c++14  -pthread  -DBL_USE_MPI -DAMREX_USE_MPI -DAMREX_GIT_VERSION="20.05-12-g0dbb88eb0671-dirty" -DBL_GCC_VERSION=5.4.0 -DBL_GCC_MAJOR_VERSION=5 -DBL_GCC_MINOR_VERSION=4 -DAMREX_LAUNCH= -DAMREX_DEVICE= -DAMREX_CUDA_FORT_GLOBAL= -DAMREX_CUDA_FORT_DEVICE= -DAMREX_CUDA_FORT_HOST= -DAMREX_CUDA_FORT_HOST_DEVICE= -DBL_SPACEDIM=3 -DAMREX_SPACEDIM=3 -DBL_FORT_USE_UNDERSCORE -DAMREX_FORT_USE_UNDERSCORE -DBL_Linux -DAMREX_Linux -DAMREX_PARTICLES -DAMREX_USE_EB -DAMREX_PARTICLES -I. -I../src -I../src/des -I../src/io -I../src/convection -I../src/diffusion -I../src/pic -I../src/projection -I../src/level_data -I../src/setup -I../src/util -I../src/interpolation -I../src/deposition -I../src/mods -I../src/eb -I../src/usr -I../src/time_flow -I../src/include -I/home/almgren/GitCode/amrex/Src/Base -I/home/almgren/GitCode/amrex/Src/AmrCore -I/home/almgren/GitCode/amrex/Src/Boundary -I/home/almgren/GitCode/amrex/Src/Particle -I/home/almgren/GitCode/amrex/Src/EB -I/home/almgren/GitCode/amrex/Src/Base -I/home/almgren/GitCode/amrex/Src/AmrCore -I/home/almgren/GitCode/amrex/Src/Boundary -I/home/almgren/GitCode/amrex/Src/Particle -I/home/almgren/GitCode/amrex/Src/EB -I/home/almgren/GitCode/amrex/Src/LinearSolvers/MLMG -I/home/almgren/GitCode/amrex/Src/LinearSolvers/MLMG -I/home/almgren/GitCode/amrex/Src/LinearSolvers/Projections -I/home/almgren/GitCode/amrex/Src/LinearSolvers/Projections -I/home/almgren/GitCode/amrex/Tools/C_scripts
+
+Fortran comp:  mpif90
+Fortran flags:  -g -O3 -ffree-line-length-none -fno-range-check -fno-second-underscore -fimplicit-none  
+
+Link flags:    -L. -L/usr/lib/gcc/x86_64-linux-gnu/5/
+Libraries:      -pthread -I/usr/lib/openmpi/lib -Wl,-rpath -Wl,/usr/lib/openmpi/lib -Wl,--enable-new-dtags -L/usr/lib/openmpi/lib -lmpi_usempif08 -lmpi_usempi_ignore_tkr -lmpi_mpifh -lmpi -lmpi_cxx -lmpi -lgfortran -lquadmath
+MFIX git hash: 18.12.1-1855-gd7a265ea-dirty
+AMReX git hash: 20.05-12-g0dbb88eb0-dirty
+
+
+===============================================================================
+ Grid Information
+===============================================================================
+ level: 0
+   number of boxes = 1
+   maximum zones   = 32 32 32 
+
+
+
+===============================================================================
+ Inputs File Parameters
+===============================================================================

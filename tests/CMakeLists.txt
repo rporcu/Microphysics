@@ -19,43 +19,28 @@ macro (setup_test _test _suffix _env _input_file )
         # Copy file to binary dir
         file( COPY ${CMAKE_CURRENT_SOURCE_DIR}/${_test} DESTINATION ${CMAKE_BINARY_DIR}/tests/ )
 
-        # Find UDFs if any is present
-        file( GLOB _udf  ${_src_dir}/*.f90 ${_src_dir}/*.cpp )
-
-        #
-        # Search which UDFs files are defined by the user
-        # If not found, add to UDF stubs provided by mfix
-        #
-        if (_udf)
-           set(_udfs_stubs ${MFIX_UDFS_STUBS})
-           foreach (_source IN LISTS _udf)
-              get_filename_component(_source_name ${_source} NAME)
-              list(FILTER _udfs_stubs EXCLUDE REGEX ${_source_name})
-           endforeach ()
-           list(APPEND _udf ${_udfs_stubs})
-        else ()
-            list(APPEND _udf ${MFIX_UDFS_STUBS})
-        endif ()
-
         set(_test_exe mfix_${_test})
 
         # Create target if needed
         if (NOT TARGET ${_test_exe})
-            add_executable(${_test_exe} EXCLUDE_FROM_ALL ${MAIN} ${_udf})
+            add_executable(${_test_exe} EXCLUDE_FROM_ALL ${MAIN} )
 
-            target_include_directories(${_test_exe} PUBLIC ${_test_dir} ${CMAKE_Fortran_MODULE_DIRECTORY})
+            # Find UDFs if any is present and add them to the build
+            file( GLOB _udfs  ${_src_dir}/*.cpp )
+            add_udfs_to_target( ${_test_exe} ${_udfs} )
+
+            target_include_directories(${_test_exe} PUBLIC ${_test_dir} )
 
             set_target_properties( ${_test_exe}
-                PROPERTIES
-                Fortran_MODULE_DIRECTORY ${_test_dir}
-                RUNTIME_OUTPUT_DIRECTORY ${_test_dir} )
+               PROPERTIES
+               RUNTIME_OUTPUT_DIRECTORY ${_test_dir} )
 
             # Special treatment for CUDA
             if (ENABLE_CUDA)
                setup_target_for_cuda_compilation(${_test_exe})
             endif ()
 
-            target_link_libraries( ${_test_exe} ${MFIX_LIBNAME} )
+            target_link_libraries( ${_test_exe} mfixcore )
 
             # Accumulate the build for each test into target "build_tests"
             add_dependencies( ${BUILD_TEST} ${_test_exe} )
@@ -74,12 +59,12 @@ macro (setup_test _test _suffix _env _input_file )
 
         add_custom_target(${_test_run} DEPENDS ${_test_exe}
             COMMAND ${CMAKE_COMMAND} -E env ${_env}
-            ${_test_dir}/runtests.sh ${_test_dir}/${_test_exe} ${MFIX_TOOLS_EXE} ${_input_file}
+            ${_test_dir}/runtests.sh ${_test_dir}/${_test_exe} ${MFIX_TOOLS_DIR} ${_input_file}
             WORKING_DIRECTORY  ${_test_dir}
             )
 
         # Make sure that fcompare and fextract are always built before a test is run
-        add_dependencies ( ${_test_run} ${MFIX_F90_TOOLS} )
+        add_dependencies( ${_test_run} ${MFIX_TOOLS} )
 
         add_test(NAME ${_test_name}_${_suffix}
             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${_test_run}
