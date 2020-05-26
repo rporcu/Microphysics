@@ -94,6 +94,17 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
 
    amrex::Real tcoll(1.0);
 
+   DEM::A2D::array_type host_etan, host_etat, host_en;
+   DEM::A1D::array_type host_etan_w, host_etat_w, host_en_w;
+#ifdef AMREX_USE_GPU
+   amrex::Gpu::dtoh_memcpy_async(&host_en, DEM::en.arrayPtr(), sizeof(DEM::A2D::array_type));
+   amrex::Gpu::dtoh_memcpy_async(&host_en_w, DEM::en_w.arrayPtr(), sizeof(DEM::A1D::array_type));
+   amrex::Gpu::synchronize();
+#else
+   host_en = *(DEM::en.arrayPtr());
+   host_en_w = *(DEM::en_w.arrayPtr());
+#endif
+
    for (int m(0); m < num_of_phases_in_use; ++m)
    {
 
@@ -110,20 +121,20 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
          const amrex::Real mass_eff = (mass_m * mass_l) / (mass_m + mass_l);
 
          //Calculate the M-L normal and tangential damping coefficients
-         DEM::etan[m][l] = 2.0*std::sqrt(DEM::kn*mass_eff);
-         if(amrex::Math::abs(DEM::en[m][l]) > 0.0){
-            const amrex::Real log_en = std::log(DEM::en[m][l]);
-            DEM::etan[m][l] *= amrex::Math::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
+         host_etan(m,l) = 2.0*std::sqrt(DEM::kn*mass_eff);
+         if(amrex::Math::abs(host_en(m,l)) > 0.0){
+            const amrex::Real log_en = std::log(host_en(m,l));
+            host_etan(m,l) *= amrex::Math::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
          }
-         DEM::etat[m][l] = DEM::eta_fac * DEM::etan[m][l];
+         host_etat(m,l) = DEM::eta_fac * host_etan(m,l);
 
          // Store the symmetric components
-         DEM::etan[l][m] = DEM::etan[m][l];
-         DEM::etat[l][m] = DEM::etat[m][l];
+         host_etan(l,m) = host_etan(m,l);
+         host_etat(l,m) = host_etat(m,l);
 
          // Collision time scale for M-L interactions
          amrex::Real tcoll_ml = M_PI/sqrt(DEM::kn/mass_eff -
-            0.25*(DEM::etan[m][l]/mass_eff)*(DEM::etan[m][l]/mass_eff));
+            0.25*(host_etan(m,l)/mass_eff)*(host_etan(m,l)/mass_eff));
 
          tcoll = amrex::min(tcoll, tcoll_ml);
       }
@@ -133,22 +144,35 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
          const amrex::Real mass_eff = mass_m;
 
          //Calculate the M-L normal and tangential damping coefficients
-         DEM::etan_w[m] = 2.0*std::sqrt(DEM::kn_w*mass_eff);
-         if(amrex::Math::abs(DEM::en_w[m]) > 0.0){
-            const amrex::Real log_en = std::log(DEM::en_w[m]);
-            DEM::etan_w[m] *= amrex::Math::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
+         host_etan_w(m) = 2.0*std::sqrt(DEM::kn_w*mass_eff);
+         if(amrex::Math::abs(host_en_w(m)) > 0.0){
+            const amrex::Real log_en = std::log(host_en_w(m));
+            host_etan_w(m) *= amrex::Math::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
          }
-         DEM::etat_w[m] = DEM::eta_w_fac * DEM::etan_w[m];
+         host_etat_w(m) = DEM::eta_w_fac * host_etan_w(m);
 
         // Calculate the collision time scale.
         amrex::Real tcoll_w = M_PI/std::sqrt(DEM::kn_w/mass_eff -
-           0.25*(DEM::etan_w[m]/mass_eff)*(DEM::etan_w[m]/mass_eff));
+           0.25*(host_etan_w(m)/mass_eff)*(host_etan_w(m)/mass_eff));
 
         tcoll = amrex::min(tcoll, tcoll_w);
 
       }
 
    }
+
+#ifdef AMREX_USE_GPU
+   amrex::Gpu::htod_memcpy_async(DEM::etan.arrayPtr(), &host_etan, sizeof(DEM::A2D::array_type));
+   amrex::Gpu::htod_memcpy_async(DEM::etat.arrayPtr(), &host_etat, sizeof(DEM::A2D::array_type));
+   amrex::Gpu::htod_memcpy_async(DEM::etan_w.arrayPtr(), &host_etan_w, sizeof(DEM::A1D::array_type));
+   amrex::Gpu::htod_memcpy_async(DEM::etat_w.arrayPtr(), &host_etat_w, sizeof(DEM::A1D::array_type));
+   amrex::Gpu::synchronize();
+#else
+   *(DEM::etan.arrayPtr()) = host_etan;
+   *(DEM::etat.arrayPtr()) = host_etat;
+   *(DEM::etan_w.arrayPtr()) = host_etan_w;
+   *(DEM::etat_w.arrayPtr()) = host_etat_w;
+#endif
 
    ParmParse pp("mfix");
    amrex::Real tcoll_ratio = 50.;

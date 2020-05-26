@@ -241,7 +241,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             fillNeighbors();
             // send in "false" for sort_neighbor_list option
 
-            buildNeighborList(MFIXCheckPair(), false);
+            buildNeighborList(MFIXCheckPair(DEM::neighborhood), false);
         } else {
             updateNeighbors();
         }
@@ -307,7 +307,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 const auto phiarr = ls_phi->array(pti);
 
                 amrex::ParallelFor(nrp,
-                  [pstruct,ls_refinement,phiarr,plo,dxi,subdt,ntot,fc_ptr,tow_ptr]
+                  [pstruct,ls_refinement,phiarr,plo,dxi,subdt,ntot,fc_ptr,tow_ptr,
+                   local_mew_w=DEM::mew_w,local_kn_w=DEM::kn_w,local_etan_w=DEM::etan_w]
                   AMREX_GPU_DEVICE (int i) noexcept
                   {
                     ParticleType& p = pstruct[i];
@@ -348,8 +349,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                         int phase = p.idata(intData::phase);
 
-                        Real kn_des_w   = DEM::kn_w;
-                        Real etan_des_w = DEM::etan_w[phase-1];
+                        Real kn_des_w   = local_kn_w;
+                        Real etan_des_w = local_etan_w(phase-1);
 
                         // NOTE - we don't use the tangential components right now,
                         // but we might in the future
@@ -377,7 +378,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                         mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
 
                         if (mag_overlap_t > 0.0) {
-                            Real fnmd = DEM::mew_w * sqrt(dot_product(fn, fn));
+                            Real fnmd = local_mew_w * sqrt(dot_product(fn, fn));
                             Real tangent[3];
                             tangent[0] = overlap_t[0]/mag_overlap_t;
                             tangent[1] = overlap_t[1]/mag_overlap_t;
@@ -435,7 +436,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 #if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
                  eps,
 #endif
-                 subdt,ntot,small_number]
+                 subdt,ntot,small_number,local_mew=DEM::mew,local_kn=DEM::kn,
+                 local_etan=DEM::etan]
               AMREX_GPU_DEVICE (int i) noexcept
               {
                   ParticleType& p1 = pstruct[i];
@@ -480,8 +482,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                           int phase1 = p1.idata(intData::phase);
                           int phase2 = p2.idata(intData::phase);
 
-                          Real kn_des = DEM::kn;
-                          Real etan_des = DEM::etan[phase1-1][phase2-1];
+                          Real kn_des = local_kn;
+                          Real etan_des = local_etan(phase1-1,phase2-1);
 
                           // NOTE - we don't use the tangential components right now,
                           // but we might in the future
@@ -508,7 +510,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                           mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
 
                           if (mag_overlap_t > 0.0) {
-                              Real fnmd = DEM::mew * sqrt(dot_product(fn, fn));
+                              Real fnmd = local_mew * sqrt(dot_product(fn, fn));
                               Real tangent[3];
                               tangent[0] = overlap_t[0]/mag_overlap_t;
                               tangent[1] = overlap_t[1]/mag_overlap_t;

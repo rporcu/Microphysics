@@ -15,7 +15,6 @@
 #include <AMReX_Particles.H>
 #include <AMReX_NeighborParticles.H>
 
-#include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
 #include <MFIX_BC_List.H>
 
@@ -56,10 +55,13 @@ struct intData
 ///
 struct MFIXCheckPair
 {
+  amrex::Real neighborhood;
+  MFIXCheckPair (amrex::Real neighborhood_) : neighborhood(neighborhood_) {}
+
   template <class P>
   AMREX_GPU_DEVICE AMREX_INLINE
   bool operator() (const P& p1, const P& p2) const
-  { return (p1.pos() - p2.pos()).radSquared() <= DEM::neighborhood; }
+  { return (p1.pos() - p2.pos()).radSquared() <= neighborhood; }
 };
 
 class MFIXParticleContainer final

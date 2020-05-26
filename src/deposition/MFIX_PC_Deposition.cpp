@@ -90,7 +90,7 @@ ScalarDeposition (F WeightFunc, int lev,
 
         amrex::ParallelFor(nrp,
           [pstruct,plo,dx,dxi,vfrac,deposition_scale_factor,volarr,
-           reg_cell_vol,WeightFunc,flagsarr]
+           reg_cell_vol,WeightFunc,flagsarr,local_cg_dem=DEM::cg_dem]
           AMREX_GPU_DEVICE (int ip) noexcept
           {
             const ParticleType& p = pstruct[ip];
@@ -106,7 +106,7 @@ ScalarDeposition (F WeightFunc, int lev,
 
             amrex::Real pvol = p.rdata(realData::statwt) * p.rdata(realData::volume) / reg_cell_vol;
 
-            if (DEM::cg_dem){
+            if (local_cg_dem){
                pvol = pvol/p.rdata(realData::statwt);
             }
 
@@ -216,7 +216,7 @@ FluidDragForceDeposition (F WeightFunc, int lev,
 
         amrex::ParallelFor(nrp,
           [pstruct,plo,dx,dxi,vfrac,volarr,deposition_scale_factor,
-           reg_cell_vol,WeightFunc,flagsarr,drag_arr]
+           reg_cell_vol,WeightFunc,flagsarr,drag_arr,local_cg_dem=DEM::cg_dem]
           AMREX_GPU_DEVICE (int ip) noexcept
           {
             const ParticleType& p = pstruct[ip];
@@ -236,7 +236,7 @@ FluidDragForceDeposition (F WeightFunc, int lev,
             amrex::Real pbeta = p.rdata(realData::statwt) *
               p.rdata(realData::dragcoeff) / reg_cell_vol;
 
-            if (DEM::cg_dem){
+            if (local_cg_dem){
                pvol = pvol/p.rdata(realData::statwt);
                pbeta = pbeta/p.rdata(realData::statwt);
             }

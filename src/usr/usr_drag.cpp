@@ -1,7 +1,6 @@
 #include <AMReX_REAL.H>
 #include <AMReX_Utility.H>
 
-#include <MFIX_DEM_Parms.H>
 #include <des_drag_K.H>
 
 #include <cmath>

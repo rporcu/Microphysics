@@ -3,6 +3,7 @@
 #include "AMReX_RealVect.H"
 #include <iostream>
 #include <MFIXParticleContainer.H>
+#include <MFIX_DEM_Parms.H>
 #include <AMReX_EBFArrayBox.H>
 #include <AMReX_MultiCutFab.H>
 #include <AMReX_EB_F.H>

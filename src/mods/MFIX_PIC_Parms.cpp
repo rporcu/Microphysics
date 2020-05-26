@@ -10,18 +10,18 @@ namespace PIC
 {
   int solve = 0;
 
-//  AMREX_GPU_DEVICE_MANAGED COLLISIONMODEL CollisionModel = LSD;
-  AMREX_GPU_DEVICE_MANAGED int NPHASE;
+//  COLLISIONMODEL CollisionModel = LSD;
+  int NPHASE;
 
-  AMREX_GPU_DEVICE_MANAGED amrex::Real Ps;
-  AMREX_GPU_DEVICE_MANAGED amrex::Real beta;
-  AMREX_GPU_DEVICE_MANAGED amrex::Real ep_cp;
+  amrex::Real Ps;
+  amrex::Real beta;
+  amrex::Real ep_cp;
 
-  AMREX_GPU_DEVICE_MANAGED amrex::Real velfac;
+  amrex::Real velfac;
 
-  AMREX_GPU_DEVICE_MANAGED amrex::Real small_number = 1.e-7;
+  amrex::Real small_number = 1.e-7;
 
-  AMREX_GPU_DEVICE_MANAGED amrex::Real damping_factor;
+  amrex::Real damping_factor;
 
   // Names of the solids used to build input regions.
   amrex::Vector<std::string> names;
@@ -56,7 +56,7 @@ namespace PIC
           "Invalid value: pic.close_pack must be in [0.0, 1.0]");
 
       // Read small number
-      pp.query("small_number", small_number, 1.e-7);
+      pp.query("small_number", small_number);
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(small_number > 0,
           "Invalid value: pic.small_number must be > 0");
 

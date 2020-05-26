@@ -2,28 +2,27 @@
 #define MFIX_PIC_PARMS_H_
 
 #include <AMReX_REAL.H>
-#include <AMReX_GpuQualifiers.H>
 
 namespace PIC
 {
   constexpr int NMAX = 10;
-  extern AMREX_GPU_DEVICE_MANAGED int NPHASE;
+  extern int NPHASE;
 
 //  enum COLLISIONMODEL {LSD};
 //
-//  extern AMREX_GPU_DEVICE_MANAGED COLLISIONMODEL CollisionModel;
+//  extern COLLISIONMODEL CollisionModel;
 
   extern int solve;
 
   // Coefficients for computing the solid stress
-  extern AMREX_GPU_DEVICE_MANAGED amrex::Real Ps;
-  extern AMREX_GPU_DEVICE_MANAGED amrex::Real beta;
-  extern AMREX_GPU_DEVICE_MANAGED amrex::Real ep_cp;
+  extern amrex::Real Ps;
+  extern amrex::Real beta;
+  extern amrex::Real ep_cp;
 
-  extern AMREX_GPU_DEVICE_MANAGED amrex::Real velfac;
+  extern amrex::Real velfac;
 
-  extern AMREX_GPU_DEVICE_MANAGED amrex::Real small_number;
-  extern AMREX_GPU_DEVICE_MANAGED amrex::Real damping_factor;
+  extern amrex::Real small_number;
+  extern amrex::Real damping_factor;
 
   // TODO check on this
   //struct PIC_t {

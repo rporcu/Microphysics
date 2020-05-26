@@ -92,8 +92,8 @@ void eb_compute_gradient (int i, int j, int k,
     const amrex::Real apx_minus_value = apx(i-1,j,k);
     if (apx_minus_value != 0.0 and apx_minus_value != 1.0)
     {
-      int jj = j + static_cast<int>(std::copysign(1.0, fcx(i-1,j,k,0)));
-      int kk = k + static_cast<int>(std::copysign(1.0, fcx(i-1,j,k,1)));
+      int jj = j + static_cast<int>(amrex::Math::copysign(1.0, fcx(i-1,j,k,0)));
+      int kk = k + static_cast<int>(amrex::Math::copysign(1.0, fcx(i-1,j,k,1)));
 
       amrex::Real fracy = (ccm(i-1,jj,k) || ccm(i,jj,k)) ? amrex::Math::abs(fcx(i-1,j,k,0)) : 0.0;
       amrex::Real fracz = (ccm(i-1,j,kk) || ccm(i,j,kk)) ? amrex::Math::abs(fcx(i-1,j,k,1)) : 0.0;
@@ -107,8 +107,8 @@ void eb_compute_gradient (int i, int j, int k,
     const amrex::Real apx_plus_value = apx(i+1,j,k);
     if (apx_plus_value != 0.0 and apx_plus_value != 1.0)
     {
-      int jj = j + static_cast<int>(std::copysign(1.0, fcx(i+1,j,k,0)));
-      int kk = k + static_cast<int>(std::copysign(1.0, fcx(i+1,j,k,1)));
+      int jj = j + static_cast<int>(amrex::Math::copysign(1.0, fcx(i+1,j,k,0)));
+      int kk = k + static_cast<int>(amrex::Math::copysign(1.0, fcx(i+1,j,k,1)));
 
       amrex::Real fracy = (ccm(i,jj,k) || ccm(i+1,jj,k)) ? amrex::Math::abs(fcx(i+1,j,k,0)) : 0.0;
       amrex::Real fracz = (ccm(i,j,kk) || ccm(i+1,j,kk)) ? amrex::Math::abs(fcx(i+1,j,k,1)) : 0.0;
@@ -122,8 +122,8 @@ void eb_compute_gradient (int i, int j, int k,
     const amrex::Real apy_minus_value = apy(i,j-1,k);
     if (apy_minus_value != 0.0 and apy_minus_value != 1.0)
     {
-      int ii = i + static_cast<int>(std::copysign(1.0, fcy(i,j-1,k,0)));
-      int kk = k + static_cast<int>(std::copysign(1.0, fcy(i,j-1,k,1)));
+      int ii = i + static_cast<int>(amrex::Math::copysign(1.0, fcy(i,j-1,k,0)));
+      int kk = k + static_cast<int>(amrex::Math::copysign(1.0, fcy(i,j-1,k,1)));
 
       amrex::Real fracx = (ccm(ii,j-1,k) || ccm(ii,j,k)) ? amrex::Math::abs(fcy(i,j-1,k,0)) : 0.0;
       amrex::Real fracz = (ccm(i,j-1,kk) || ccm(i,j,kk)) ? amrex::Math::abs(fcy(i,j-1,k,1)) : 0.0;
@@ -137,8 +137,8 @@ void eb_compute_gradient (int i, int j, int k,
     const amrex::Real apy_plus_value = apy(i,j+1,k);
     if (apy_plus_value != 0.0 and apy_plus_value != 1.0)
     {
-      int ii = i + static_cast<int>(std::copysign(1.0, fcy(i,j+1,k,0)));
-      int kk = k + static_cast<int>(std::copysign(1.0, fcy(i,j+1,k,1)));
+      int ii = i + static_cast<int>(amrex::Math::copysign(1.0, fcy(i,j+1,k,0)));
+      int kk = k + static_cast<int>(amrex::Math::copysign(1.0, fcy(i,j+1,k,1)));
 
       amrex::Real fracx = (ccm(ii,j,k) || ccm(ii,j+1,k)) ? amrex::Math::abs(fcy(i,j+1,k,0)) : 0.0;
       amrex::Real fracz = (ccm(i,j,kk) || ccm(i,j+1,kk)) ? amrex::Math::abs(fcy(i,j+1,k,1)) : 0.0;
@@ -152,8 +152,8 @@ void eb_compute_gradient (int i, int j, int k,
     const amrex::Real apz_minus_value = apz(i,j,k-1);
     if (apz_minus_value != 0.0 and apz_minus_value != 1.0)
     {
-      int ii = i + static_cast<int>(std::copysign(1.0, fcz(i,j,k-1,0)));
-      int jj = j + static_cast<int>(std::copysign(1.0, fcz(i,j,k-1,1)));
+      int ii = i + static_cast<int>(amrex::Math::copysign(1.0, fcz(i,j,k-1,0)));
+      int jj = j + static_cast<int>(amrex::Math::copysign(1.0, fcz(i,j,k-1,1)));
 
       amrex::Real fracx = (ccm(ii,j,k-1) || ccm(ii,j,k)) ? amrex::Math::abs(fcz(i,j,k-1,0)) : 0.0;
       amrex::Real fracy = (ccm(i,jj,k-1) || ccm(i,jj,k)) ? amrex::Math::abs(fcz(i,j,k-1,1)) : 0.0;
@@ -167,8 +167,8 @@ void eb_compute_gradient (int i, int j, int k,
     const amrex::Real apz_plus_value = apz(i,j,k+1);
     if (apz_plus_value != 0.0 and apz_plus_value != 1.0)
     {
-      int ii = i + static_cast<int>(std::copysign(1.0, fcz(i,j,k+1,0)));
-      int jj = j + static_cast<int>(std::copysign(1.0, fcz(i,j,k+1,1)));
+      int ii = i + static_cast<int>(amrex::Math::copysign(1.0, fcz(i,j,k+1,0)));
+      int jj = j + static_cast<int>(amrex::Math::copysign(1.0, fcz(i,j,k+1,1)));
 
       amrex::Real fracx = (ccm(ii,j,k) || ccm(ii,j,k+1)) ? amrex::Math::abs(fcz(i,j,k+1,0)) : 0.0;
       amrex::Real fracy = (ccm(i,jj,k) || ccm(i,jj,k+1)) ? amrex::Math::abs(fcz(i,j,k+1,1)) : 0.0;
