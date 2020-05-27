@@ -11,7 +11,7 @@ variables:
   ENABLE_MPI: "1"
   ENABLE_OMP: "0"
   FC: "gfortran"
-  GIT_DEPTH: 1
+  GIT_DEPTH: 100
   GIT_STRATEGY: fetch
   GIT_SUBMODULE_STRATEGY: none
 
