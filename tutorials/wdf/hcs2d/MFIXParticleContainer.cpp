@@ -1917,7 +1917,7 @@ ComputeAverageVelocities ( const int lev,
               if ( ncalls == 1 )
                 {
                   // Create output files only the first time this function is called
-                  // Use ios:trunc to delete previous contect
+                  // Use ios:trunc to delete previous content
                   ofs.open ( fname.c_str(), ios::out | ios::trunc );
                 }
               else
