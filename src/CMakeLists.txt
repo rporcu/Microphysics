@@ -66,6 +66,11 @@ add_subdirectory(time_flow)
 #
 target_link_libraries( mfixcore PUBLIC AMReX::amrex )
 
+#
+# Require C++14 or newer and no compiler extensions.
+#
+set_target_properties(mfixcore PROPERTIES CXX_EXTENSIONS OFF)
+target_compile_features(mfixcore PUBLIC cxx_std_14)
 
 #
 # If ENABLE_CUDA, set CUDA-specific properties and
@@ -85,7 +90,6 @@ endif ()
 #
 # Set the default flags
 #
-
 if ( NOT CMAKE_CXX_FLAGS )
    target_link_libraries(mfixcore PUBLIC AMReX::Flags_CXX)
 endif ()
