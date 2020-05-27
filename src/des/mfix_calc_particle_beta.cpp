@@ -7,16 +7,20 @@
 void mfix::mfix_calc_particle_beta (Real time)
 {
   if (m_drag_type == DragType::WenYu) {
-    mfix_calc_particle_beta(ComputeDragWenYu(), time);
+      mfix_calc_particle_beta(ComputeDragWenYu(DEM::small_number,DEM::large_number,DEM::eps),
+                              time);
   }
   else if (m_drag_type == DragType::Gidaspow) {
-    mfix_calc_particle_beta(ComputeDragGidaspow(), time);
+    mfix_calc_particle_beta(ComputeDragGidaspow(DEM::small_number,DEM::large_number,DEM::eps),
+                            time);
   }
   else if (m_drag_type == DragType::BVK2) {
-    mfix_calc_particle_beta(ComputeDragBVK2(), time);
+    mfix_calc_particle_beta(ComputeDragBVK2(DEM::small_number,DEM::large_number,DEM::eps),
+                            time);
   }
   else if (m_drag_type == DragType::UserDrag) {
-    mfix_calc_particle_beta(ComputeDragUser(), time);
+    mfix_calc_particle_beta(ComputeDragUser(DEM::small_number,DEM::large_number,DEM::eps),
+                            time);
   }
     else {
     amrex::Abort("Invalid Drag Type.");
@@ -153,7 +157,8 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
             amrex::ParallelFor(np,
-              [particles_ptr,interp_array,ro_array,mu_array,DragFunc,plo,dxi,interp_comp]
+              [particles_ptr,interp_array,ro_array,mu_array,DragFunc,plo,dxi,interp_comp,
+               local_cg_dem=DEM::cg_dem]
               AMREX_GPU_DEVICE (int ip) noexcept
             {
               MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
@@ -171,9 +176,9 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               ep       = interp_loc[3];
 
               // Indices of cell where particle is located
-              int iloc = static_cast<int>(floor((particle.pos(0) - plo[0])*dxi[0]));
-              int jloc = static_cast<int>(floor((particle.pos(1) - plo[1])*dxi[1]));
-              int kloc = static_cast<int>(floor((particle.pos(2) - plo[2])*dxi[2]));
+              int iloc = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0]));
+              int jloc = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1]));
+              int kloc = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2]));
 
               Real  ro = ro_array(iloc,jloc,kloc);
               Real  mu = mu_array(iloc,jloc,kloc);
@@ -197,7 +202,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
               Real vrel = sqrt(dot_product(vslp, vslp));
               Real dpm = 2.0*rad;
-              if (DEM::cg_dem)
+              if (local_cg_dem)
               {
                  dpm = dpm/std::pow(particle.rdata(realData::statwt),(1.0/3.0));
               }
@@ -221,15 +226,15 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
             amrex::ParallelFor(np,
               [particles_ptr,interp_array,interp_comp,ro_array,mu_array,flags_array,DragFunc,
-              plo,dx,dxi,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab]
+               plo,dx,dxi,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,local_cg_dem=DEM::cg_dem]
               AMREX_GPU_DEVICE (int pid) noexcept
             {
               MFIXParticleContainer::ParticleType& particle = particles_ptr[pid];
 
               // Cell containing particle centroid
-              int ip = static_cast<int>(floor((particle.pos(0) - plo[0])*dxi[0]));
-              int jp = static_cast<int>(floor((particle.pos(1) - plo[1])*dxi[1]));
-              int kp = static_cast<int>(floor((particle.pos(2) - plo[2])*dxi[2]));
+              int ip = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0]));
+              int jp = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1]));
+              int kp = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2]));
 
               // No drag force for particles in covered cells.
               if (flags_array(ip,jp,kp).isCovered() ){
@@ -242,9 +247,9 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               } else {
 
                 // Upper cell in trilinear stencil
-                int i = static_cast<int>(floor((particle.pos(0) - plo[0])*dxi[0] + 0.5));
-                int j = static_cast<int>(floor((particle.pos(1) - plo[1])*dxi[1] + 0.5));
-                int k = static_cast<int>(floor((particle.pos(2) - plo[2])*dxi[2] + 0.5));
+                int i = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0] + 0.5));
+                int j = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1] + 0.5));
+                int k = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5));
 
                 // Local array storing interpolated values
                 Real interp_loc[interp_comp];
@@ -319,7 +324,7 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
                 Real vrel = sqrt(dot_product(vslp, vslp));
                 Real dpm = 2.0*rad;
-                if (DEM::cg_dem)
+                if (local_cg_dem)
                 {
                    dpm = dpm/std::pow(particle.rdata(realData::statwt),(1.0/3.0));
                 }

@@ -173,12 +173,13 @@ ParticlesGenerator::generate (int& pc,
   const int local_ni = this->ni;
 
   amrex::ParallelFor(np,
-    [p_rdata,p_idata,p_dp,p_ro_s,pc,ic_u_s,ic_v_s,ic_w_s,statwt,type,local_nr,local_ni]
+    [p_rdata,p_idata,p_dp,p_ro_s,pc,ic_u_s,ic_v_s,ic_w_s,statwt,type,local_nr,local_ni,
+     local_cg_dem=DEM::cg_dem]
     AMREX_GPU_DEVICE (int p) noexcept
   {
     // amrex::Real pvol = (M_PI/6.0) * (dp[p]*dp[p]*dp[p]); // UNUSED_VARIABLE
     // If coarse-grain DEM is activated
-    if (DEM::cg_dem)
+    if (local_cg_dem)
     {
        p_dp[p] = std::pow(statwt, 1.0/3.0) * p_dp[p];
     }

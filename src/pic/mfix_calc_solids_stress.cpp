@@ -424,9 +424,9 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
             MFIXParticleContainer::ParticleType& particle = pstruct[pid];
 
             // Cell containing particle centroid
-            const int ip = static_cast<int>(floor((particle.pos(0) - plo[0])*dxi[0]));
-            const int jp = static_cast<int>(floor((particle.pos(1) - plo[1])*dxi[1]));
-            const int kp = static_cast<int>(floor((particle.pos(2) - plo[2])*dxi[2]));
+            const int ip = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0]));
+            const int jp = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1]));
+            const int kp = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2]));
 
             if(flags_array(ip,jp,kp).isCovered())
             {
@@ -440,9 +440,9 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
             } else {
 
               // Upper cell in trilinear stencil
-              const int i = static_cast<int>(floor((particle.pos(0) - plo[0])*dxi[0] + 0.5));
-              const int j = static_cast<int>(floor((particle.pos(1) - plo[1])*dxi[1] + 0.5));
-              const int k = static_cast<int>(floor((particle.pos(2) - plo[2])*dxi[2] + 0.5));
+              const int i = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0] + 0.5));
+              const int j = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1] + 0.5));
+              const int k = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5));
 
               // All cells in the stencil are regular. Use
               // traditional trilinear interpolation

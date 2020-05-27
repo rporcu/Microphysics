@@ -117,6 +117,9 @@ void mfix::make_eb_general () {
             // }
 
             if (has_walls and use_divider) { // ........................... poly2 + walls + divider
+#ifdef AMREX_USE_DPCPP
+                amrex::Abort("DPD++: make_eb_general poly2 not supportted");
+#else
 
                 if (DEM::solve or PIC::solve) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
@@ -150,8 +153,12 @@ void mfix::make_eb_general () {
 
                     amrex::Print() << "Done making the fluid eb levels." << std::endl;
                 }
+#endif
 
             } else if (has_walls) { // ................................... poly2 + walls + ! divider
+#ifdef AMREX_USE_DPCPP
+                amrex::Abort("DPD++: make_eb_general poly2 not supportted");
+#else
 
                 if (DEM::solve or PIC::solve) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
@@ -183,8 +190,12 @@ void mfix::make_eb_general () {
 
                     amrex::Print() << "Done making the fluid eb levels." << std::endl;
                 }
+#endif
 
             } else if (use_divider) { // ................................. poly2 + ! walls + divider
+#ifdef AMREX_USE_DPCPP
+                amrex::Abort("DPD++: make_eb_general poly2 not supportted");
+#else
 
                 // NOTE: the divider applies to both, particles _and_ fluid
 
@@ -196,8 +207,12 @@ void mfix::make_eb_general () {
                 build_eb_levels(gshop);
 
                 amrex::Print() << "Done making the particle and fluid eb levels." << std::endl;
+#endif
 
             } else { // .................................................. poly2 + ! walls + ! divider
+#ifdef AMREX_USE_DPCPP
+                amrex::Abort("DPD++: make_eb_general poly2 not supportted");
+#else
 
                 amrex::Print() << "Making the particle and fluid eb levels ..." << std::endl;
 
@@ -206,6 +221,7 @@ void mfix::make_eb_general () {
                 build_eb_levels(gshop);
 
                 amrex::Print() << "Done making the particle and fluid eb levels." << std::endl;
+#endif
             }
 
         } else {

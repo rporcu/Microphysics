@@ -2,63 +2,110 @@
 #define MFIX_DEM_PARMS_H_
 
 #include <AMReX_REAL.H>
-#include <AMReX_GpuQualifiers.H>
+#include <AMReX_Gpu.H>
+#include <AMReX_Arena.H>
 #include <AMReX_Vector.H>
+#include <AMReX_Array.H>
 
 #include <MFIX_SPECIES_Parms.H>
 
 namespace DEM
 {
     constexpr int NMAX = 10;
-    extern AMREX_GPU_DEVICE_MANAGED int NPHASE;
+    extern int NPHASE;
 
     enum COLLISIONMODEL {
         LSD
     };
 
-    extern AMREX_GPU_DEVICE_MANAGED COLLISIONMODEL CollisionModel;
+    extern COLLISIONMODEL CollisionModel;
 
     extern int solve;
 
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real dtsolid;
+    extern amrex::Real dtsolid;
 
     // tangential component of spring constant
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real kt;
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real kt_w;
+    extern amrex::Real kt;
+    extern amrex::Real kt_w;
 
     // normal component of spring constant
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real kn;
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real kn_w;
+    extern amrex::Real kn;
+    extern amrex::Real kn_w;
 
     // friction coefficients for particle-particle and particle-wall collisions
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real mew;
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real mew_w;
+    extern amrex::Real mew;
+    extern amrex::Real mew_w;
 
     // assumed to be a constant factor relating these for linear spring-dashpot
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real kt_fac;
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real kt_w_fac;
+    extern amrex::Real kt_fac;
+    extern amrex::Real kt_w_fac;
+
+    template <typename ARRAY_TYPE>
+    struct DeviceArray
+    {
+        typedef ARRAY_TYPE array_type;
+
+        template <typename... Is>
+        AMREX_GPU_DEVICE AMREX_FORCE_INLINE
+        amrex::Real& operator() (Is... index) const noexcept {
+            return (*a)(index...);
+        }
+
+        void alloc () {
+#ifdef AMREX_USE_GPU
+            auto p = (ARRAY_TYPE*)amrex::The_Device_Arena()->alloc(sizeof(ARRAY_TYPE));
+            amrex::single_task(amrex::Gpu::gpuStream(), [=] AMREX_GPU_DEVICE
+            {
+                new (p) ARRAY_TYPE;
+            });
+            amrex::Gpu::synchronize();
+            a = p;
+#else
+            a = new ARRAY_TYPE;
+#endif
+        }
+
+        void free () {
+#ifdef AMREX_USE_GPU
+            amrex::single_task(amrex::Gpu::gpuStream(), [p=a] AMREX_GPU_DEVICE
+            {
+                p->~ARRAY_TYPE();
+            });
+            amrex::Gpu::synchronize();
+            amrex::The_Device_Arena()->free(a);
+#else
+            delete a;
+#endif
+        }
+
+        ARRAY_TYPE* arrayPtr () { return a; }
+
+    private:
+        ARRAY_TYPE * a = nullptr;
+    };
+
+    using A2D = DeviceArray<amrex::Array2D<amrex::Real,0,NMAX-1,0,NMAX-1,amrex::Order::C> >;
+    using A1D = DeviceArray<amrex::Array1D<amrex::Real,0,NMAX-1> >;
 
     // normal and tangential components of the damping coefficients
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real etan[NMAX][NMAX];
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real etan_w[NMAX];
+    extern A2D etan;
+    extern A1D etan_w;
 
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real etat[NMAX][NMAX];
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real etat_w[NMAX];
+    extern A2D etat;
+    extern A1D etat_w;
 
     // coefficients of restitution, normal and tangential
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real en[NMAX][NMAX];
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real en_w[NMAX];
+    extern A2D en;
+    extern A1D en_w;
 
+    extern amrex::Real eta_fac;
+    extern amrex::Real eta_w_fac;
 
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real eta_fac;
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real eta_w_fac;
+    extern amrex::Real small_number;
+    extern amrex::Real large_number;
+    extern amrex::Real eps;
 
-
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real small_number;
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real large_number;
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real eps;
-
-    extern AMREX_GPU_DEVICE_MANAGED amrex::Real neighborhood;
+    extern amrex::Real neighborhood;
 
     extern amrex::Vector<std::string> names;
 
@@ -72,10 +119,10 @@ namespace DEM
     extern amrex::Vector<amrex::Real> spec_frac_dem;
 
     // Total number of dem species
-    extern int AMREX_GPU_DEVICE_MANAGED nspecies_dem;
+    extern int nspecies_dem;
 
     // Coarse-grain DEM
-    extern int AMREX_GPU_DEVICE_MANAGED cg_dem;
+    extern int cg_dem;
 
     struct INPUT_DIST_t {
       std::string distribution;
@@ -116,6 +163,7 @@ namespace DEM
     };
 
     void Initialize ();
+    void Finalize ();
 
 }
 

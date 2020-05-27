@@ -192,8 +192,23 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
 
   const int npoints = amrex::max(ubx_npoints,vbx_npoints,wbx_npoints);
 
+#ifdef AMREX_USE_DPCPP
+  // Current Intel GPU has a limit for kernel parameter size (< 1K).
+  Array<Array4<int>,6> h_tmp = {bct_ilo,bct_ihi,bct_jlo,bct_jhi,bct_klo,bct_khi};
+  Gpu::AsyncArray<Array4<int> > d_tmp(h_tmp.data(), h_tmp.size());
+  auto dp = d_tmp.data();
+#endif
+
   ParallelFor(npoints, [=] AMREX_GPU_DEVICE (int idx) noexcept
   {
+#ifdef AMREX_USE_DPCPP
+    auto bct_ilo = dp[0];
+    auto bct_ihi = dp[1];
+    auto bct_jlo = dp[2];
+    auto bct_jhi = dp[3];
+    auto bct_klo = dp[4];
+    auto bct_khi = dp[5];    
+#endif
     const int* bct_data = bc_types.data();
     const int bct_size = bc_types.size();
 
