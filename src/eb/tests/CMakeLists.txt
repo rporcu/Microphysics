@@ -7,14 +7,8 @@ add_executable(functional_tests EXCLUDE_FROM_ALL
   benchmarks/07-hopper.cpp
   benchmarks/08-cyclone.cpp
   benchmarks/02-settling.cpp
+  benchmarks/functional_tests.main.cpp
   benchmarks/tutorial-clr-prototype.cpp
-  benchmarks/main.cpp
-  )
-
-target_include_directories(functional_tests PRIVATE
-  ${CMAKE_SOURCE_DIR}/subprojects/PEGTL/include
-  ${CMAKE_SOURCE_DIR}/subprojects/mfix-parser/src/csg/
-  amrex
   )
 
 # Special treatment for CUDA in functional_tests
@@ -45,4 +39,5 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
   endif()
 endif()
 
-target_link_libraries(functional_tests Catch2::Catch2 AMReX::amrex csg)
+target_include_directories(functional_tests PRIVATE "${MFIXPARSER_CATCH2_INC}")
+target_link_libraries(functional_tests AMReX::amrex csg)
