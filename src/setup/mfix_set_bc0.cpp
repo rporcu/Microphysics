@@ -29,7 +29,7 @@ mfix::set_bc0 (const Box& sbx,
     D_g0_managed[n] = FLUID::D_g0[n];
   }
 
-  Real* D_g0 = D_g0_managed.data();
+  Real* p_D_g0 = D_g0_managed.data();
 
   Array4<Real> const& a_ep_g = m_leveldata[lev]->ep_g->array(*mfi);
   Array4<Real> const& a_h_g  = m_leveldata[lev]->h_g->array(*mfi);
@@ -125,7 +125,7 @@ mfix::set_bc0 (const Box& sbx,
         a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
 
         for (int n(0); n < nspecies_g; n++) {
-          a_D_g(i,j,k,n) = D_g0[n];
+          a_D_g(i,j,k,n) = p_D_g0[n];
           a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
         }
       }
@@ -164,7 +164,7 @@ mfix::set_bc0 (const Box& sbx,
         a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
 
         for (int n(0); n < nspecies_g; n++) {
-          a_D_g(i,j,k,n) = D_g0[n];
+          a_D_g(i,j,k,n) = p_D_g0[n];
           a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
         }
       }
@@ -203,7 +203,7 @@ mfix::set_bc0 (const Box& sbx,
         a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
 
         for (int n(0); n < nspecies_g; n++) {
-          a_D_g(i,j,k,n) = D_g0[n];
+          a_D_g(i,j,k,n) = p_D_g0[n];
           a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
         }
       }
@@ -242,7 +242,7 @@ mfix::set_bc0 (const Box& sbx,
         a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
 
         for (int n(0); n < nspecies_g; n++) {
-          a_D_g(i,j,k,n) = D_g0[n];
+          a_D_g(i,j,k,n) = p_D_g0[n];
           a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
         }
       }
@@ -281,7 +281,7 @@ mfix::set_bc0 (const Box& sbx,
         a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
 
         for (int n(0); n < nspecies_g; n++) {
-          a_D_g(i,j,k,n) = D_g0[n];
+          a_D_g(i,j,k,n) = p_D_g0[n];
           a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
         }
       }
@@ -320,7 +320,7 @@ mfix::set_bc0 (const Box& sbx,
         a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
 
         for (int n(0); n < nspecies_g; n++) {
-          a_D_g(i,j,k,n) = D_g0[n];
+          a_D_g(i,j,k,n) = p_D_g0[n];
           a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
         }
       }
@@ -334,7 +334,4 @@ mfix::set_bc0 (const Box& sbx,
     delete D_g_aux;
   }
 
-  if (advect_fluid_species) {
-    delete[] D_g0;
-  }
 }
