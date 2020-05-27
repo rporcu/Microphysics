@@ -118,7 +118,7 @@ void mfix::make_eb_general () {
 
             if (has_walls and use_divider) { // ........................... poly2 + walls + divider
 #ifdef AMREX_USE_DPCPP
-                amrex::Abort("DPD++: make_eb_general poly2 not supportted");
+                amrex::Abort("DPD++: make_eb_general poly2 not supported");
 #else
 
                 if (DEM::solve or PIC::solve) {
@@ -157,7 +157,7 @@ void mfix::make_eb_general () {
 
             } else if (has_walls) { // ................................... poly2 + walls + ! divider
 #ifdef AMREX_USE_DPCPP
-                amrex::Abort("DPD++: make_eb_general poly2 not supportted");
+                amrex::Abort("DPD++: make_eb_general poly2 not supported");
 #else
 
                 if (DEM::solve or PIC::solve) {
@@ -194,7 +194,7 @@ void mfix::make_eb_general () {
 
             } else if (use_divider) { // ................................. poly2 + ! walls + divider
 #ifdef AMREX_USE_DPCPP
-                amrex::Abort("DPD++: make_eb_general poly2 not supportted");
+                amrex::Abort("DPD++: make_eb_general poly2 not supported");
 #else
 
                 // NOTE: the divider applies to both, particles _and_ fluid
@@ -211,7 +211,7 @@ void mfix::make_eb_general () {
 
             } else { // .................................................. poly2 + ! walls + ! divider
 #ifdef AMREX_USE_DPCPP
-                amrex::Abort("DPD++: make_eb_general poly2 not supportted");
+                amrex::Abort("DPD++: make_eb_general poly2 not supported");
 #else
 
                 amrex::Print() << "Making the particle and fluid eb levels ..." << std::endl;

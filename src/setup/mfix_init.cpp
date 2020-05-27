@@ -22,7 +22,7 @@ mfix::InitParams ()
   // Read and process species, fluid and DEM particle model options.
   SPECIES::Initialize();
   FLUID::Initialize();
-  
+
   // Set the mfix class flag equal to the FLUID parameter
   advect_fluid_species = FLUID::solve_species;
 
@@ -30,7 +30,7 @@ mfix::InitParams ()
   PIC::Initialize();
 
   // Important! Resize the bc vector for the fluid species mass fractions
-  // We have to do it here becuse the size has to match the number of fluid
+  // We have to do it here because the size has to match the number of fluid
   // species
   // NOTE: once we will have a class for BCs this won't be needed anymore
   m_bc_X_g.resize(FLUID::nspecies_g, Gpu::ManagedVector<Real>(50, 0));
@@ -815,7 +815,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        MultiFab::Copy(*m_leveldata[lev]->T_go,   *m_leveldata[lev]->T_g, 0, 0, 1, 0);
        MultiFab::Copy(*m_leveldata[lev]->ro_go,  *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
        MultiFab::Copy(*m_leveldata[lev]->trac_o, *m_leveldata[lev]->trac, 0, 0, 1, 0);
-       
+
        if (advect_fluid_species)
          MultiFab::Copy(*m_leveldata[lev]->X_go, *m_leveldata[lev]->X_g, 0, 0,
                         m_leveldata[lev]->X_g->nComp(), 0);
@@ -934,19 +934,19 @@ mfix::mfix_set_bc0 ()
 
      ep_g.FillBoundary(geom[lev].periodicity());
      m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
-     
+
      if (advect_enthalpy) {
        m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
        m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
      }
-     
+
      if (advect_tracer)
        m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
-     
+
      if (advect_fluid_species) {
        m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
      }
-     
+
    }
 
    // Put velocity Dirichlet bc's on faces
