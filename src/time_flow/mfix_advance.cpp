@@ -6,7 +6,6 @@
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_SPECIES_Parms.H>
 #include <MFIX_PIC_Parms.H>
-#include <mfix_rescale_mass_fractions_g.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -142,12 +141,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
                        m_leveldata[lev]->trac->nComp(), m_leveldata[lev]->trac->nGrow());
 
     if (advect_fluid_species) {
-//      rescale_species(get_X_g());
-
       for (int lev = 0; lev <= finest_level; lev++) {
-//        // Update ghost cells
-//        m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
-
         // Reset species to the old values
         MultiFab::Copy(*m_leveldata[lev]->X_g, *m_leveldata[lev]->X_go, 0, 0,
                         m_leveldata[lev]->X_g->nComp(), m_leveldata[lev]->X_g->nGrow());

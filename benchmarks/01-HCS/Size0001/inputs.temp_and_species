@@ -33,6 +33,7 @@ mfix.drag_type = "BVK2"
 
 mfix.gravity =  0.0  0.0  0.0
 
+mfix.advect_enthalpy      = 1
 mfix.advect_fluid_species = 1
 
 #_______________________________________________________________________
@@ -60,10 +61,10 @@ fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
 fluid.specific_heat          = constant
-fluid.specific_heat.constant = 1.0
+fluid.specific_heat.constant = 918  ## Oxygen
 
 fluid.thermal_conductivity          = constant
-fluid.thermal_conductivity.constant = 0.0
+fluid.thermal_conductivity.constant = 0.024  ## Oxygen
 
 fluid.species  =  O2  CO  H2O  He
 
@@ -92,10 +93,7 @@ dem.damping_tang_fac.pw   =     0.5
 #_______________________________________________________________________
 # Regions for defining ICs and BCs
 #
-mfix.regions = full-domain  O2-region  CO-region   H2O-region   He-region
-
-regions.full-domain.lo  = 0.0000  0.0000  0.0000
-regions.full-domain.hi  = 0.0064  0.0064  0.0064
+mfix.regions = O2-region  CO-region   H2O-region   He-region
 
 regions.O2-region.lo  = 0.0000  0.0000  0.0000
 regions.O2-region.hi  = 0.0030  0.0064  0.0064
@@ -113,35 +111,36 @@ regions.He-region.hi  = 0.0064  0.0064  0.0064
 #_______________________________________________________________________
 # Initial Conditions
 #
-ic.regions = full-domain  O2-region  CO-region   H2O-region   He-region
+ic.regions = O2-region  CO-region   H2O-region   He-region
 
-ic.full-domain.fluid.volfrac   =  1.0
-ic.full-domain.fluid.velocity  = 0.0  0.0  0.0
+ic.O2-region.fluid.species.O2  =  1.0
+ic.O2-region.fluid.species.CO  =  0.0
+ic.O2-region.fluid.species.H2O =  0.0
+ic.O2-region.fluid.species.He  =  0.0
+ic.O2-region.fluid.volfrac     =  1.0
+ic.O2-region.fluid.velocity    =  0.0  0.0  0.0
+ic.O2-region.fluid.temperature =  300
 
-ic.O2-region.fluid.species.O  =  1.0
-ic.O2-region.fluid.species.CO =  0.0
-ic.O2-region.fluid.species.N2 =  0.0
-ic.O2-region.fluid.species.H  =  0.0
-ic.O2-region.fluid.volfrac    =  1.0
-ic.O2-region.fluid.velocity   =  0.0  0.0  0.0
+ic.CO-region.fluid.species.O2  =  0.0
+ic.CO-region.fluid.species.CO  =  1.0
+ic.CO-region.fluid.species.H2O =  0.0
+ic.CO-region.fluid.species.He  =  0.0
+ic.CO-region.fluid.volfrac     =  1.0
+ic.CO-region.fluid.velocity    =  0.0  0.0  0.0
+ic.CO-region.fluid.temperature =  500
 
-ic.CO-region.fluid.species.O  =  0.0
-ic.CO-region.fluid.species.CO =  1.0
-ic.CO-region.fluid.species.N2 =  0.0
-ic.CO-region.fluid.species.H  =  0.0
-ic.CO-region.fluid.volfrac    =  1.0
-ic.CO-region.fluid.velocity   =  0.0  0.0  0.0
+ic.H2O-region.fluid.species.O2  =  0.0
+ic.H2O-region.fluid.species.CO  =  0.0
+ic.H2O-region.fluid.species.H2O =  1.0
+ic.H2O-region.fluid.species.He  =  0.0
+ic.H2O-region.fluid.volfrac     =  1.0
+ic.H2O-region.fluid.velocity    =  0.0  0.0  0.0
+ic.H2O-region.fluid.temperature =  900
 
-ic.H2O-region.fluid.species.O  =  0.0
-ic.H2O-region.fluid.species.CO =  0.0
-ic.H2O-region.fluid.species.N2 =  1.0
-ic.H2O-region.fluid.species.H  =  0.0
-ic.H2O-region.fluid.volfrac    =  1.0
-ic.H2O-region.fluid.velocity   =  0.0  0.0  0.0
-
-ic.He-region.fluid.species.O  =  0.0
-ic.He-region.fluid.species.CO =  0.0
-ic.He-region.fluid.species.N2 =  0.0
-ic.He-region.fluid.species.H  =  1.0
-ic.He-region.fluid.volfrac    =  1.0
-ic.He-region.fluid.velocity   =  0.0  0.0  0.0
+ic.He-region.fluid.species.O2  =  0.0
+ic.He-region.fluid.species.CO  =  0.0
+ic.He-region.fluid.species.H2O =  0.0
+ic.He-region.fluid.species.He  =  1.0
+ic.He-region.fluid.volfrac     =  1.0
+ic.He-region.fluid.velocity    =  0.0  0.0  0.0
+ic.He-region.fluid.temperature =  400

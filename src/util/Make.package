@@ -1,6 +1,7 @@
 CEXE_sources += mfix_set_velocity_bcs.cpp
 CEXE_sources += mfix_set_enthalpy_bcs.cpp
 CEXE_sources += mfix_set_temperature_bcs.cpp
+CEXE_sources += mfix_set_eb_temperature_bcs.cpp
 CEXE_sources += mfix_set_density_bcs.cpp
 CEXE_sources += mfix_set_scalar_bcs.cpp
 CEXE_sources += mfix_set_species_bcs.cpp
@@ -22,5 +23,5 @@ CEXE_sources +=   MFIX_gradient.cpp
 
 CEXE_sources += mfix_set_epg_bcs.cpp
 
-CEXE_headers += mfix_rescale_mass_fractions_g.H
-CEXE_sources += mfix_rescale_mass_fractions_g.cpp
+CEXE_headers += mfix_normalize_species_g.H
+CEXE_sources += mfix_normalize_species_g.cpp

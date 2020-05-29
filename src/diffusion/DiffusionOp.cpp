@@ -5,6 +5,7 @@
 #include <AMReX_Vector.H>
 
 #include <DiffusionOp.H>
+#include <MFIX_BC_Parms.H>
 #include <MFIX_FLUID_Parms.H>
 
 using namespace amrex;
@@ -19,6 +20,10 @@ DiffusionOp::DiffusionOp (AmrCore* _amrcore,
                           std::array<amrex::LinOpBCType,3> a_velbc_hi,
                           std::array<amrex::LinOpBCType,3> a_scalbc_lo,
                           std::array<amrex::LinOpBCType,3> a_scalbc_hi,
+                          std::array<amrex::LinOpBCType,3> a_temperaturebc_lo,
+                          std::array<amrex::LinOpBCType,3> a_temperaturebc_hi,
+                          std::array<amrex::LinOpBCType,3> a_speciesbc_lo,
+                          std::array<amrex::LinOpBCType,3> a_speciesbc_hi,
                           int _nghost)
 {
     if(verbose > 0)
@@ -30,6 +35,10 @@ DiffusionOp::DiffusionOp (AmrCore* _amrcore,
     m_velbc_hi = a_velbc_hi;
     m_scalbc_lo = a_scalbc_lo;
     m_scalbc_hi = a_scalbc_hi;
+    m_temperaturebc_lo = a_temperaturebc_lo;
+    m_temperaturebc_hi = a_temperaturebc_hi;
+    m_speciesbc_lo = a_speciesbc_lo;
+    m_speciesbc_hi = a_speciesbc_hi;
 
     // Get inputs from ParmParse
     readParameters();
@@ -39,6 +48,24 @@ DiffusionOp::DiffusionOp (AmrCore* _amrcore,
 
     // We default to Neumann bc's for scalarson EB walls
     eb_is_dirichlet = false;
+    eb_temperature_is_dirichlet = false;
+}
+
+void DiffusionOp::setup_eb_temperature (Vector< std::unique_ptr< MultiFab > >& eb_T_g_in,
+                                        Vector< std::unique_ptr< MultiFab > >& eb_k_g_in)
+{
+  eb_temperature_is_dirichlet = true;
+
+  const int finest_level = eb_T_g_in.size()-1;
+
+  T_g_on_eb.resize(finest_level+1);
+  k_g_on_eb.resize(finest_level+1);
+
+  for(int lev = 0; lev <= finest_level; lev++)
+  {
+    T_g_on_eb[lev].reset(eb_T_g_in[lev].release());
+    k_g_on_eb[lev].reset(eb_k_g_in[lev].release());
+  }
 }
 
 void DiffusionOp::setup (AmrCore* _amrcore,
@@ -105,14 +132,20 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     // Define the matrix for the scalar diffusion solve.
     //
     scal_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, *ebfactory));
+    temperature_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, *ebfactory));
+    species_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, *ebfactory));
 
     // It is essential that we set MaxOrder to 2 if we want to use the standard
     // phi(i)-phi(i-1) approximation for the gradient at Dirichlet boundaries.
     // The solver's default order is 3 and this uses three points for the gradient.
     scal_matrix->setMaxOrder(2);
+    temperature_matrix->setMaxOrder(2);
+    species_matrix->setMaxOrder(2);
 
     // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
     scal_matrix->setDomainBC(m_scalbc_lo, m_scalbc_hi);
+    temperature_matrix->setDomainBC(m_temperaturebc_lo, m_temperaturebc_hi);
+    species_matrix->setDomainBC(m_speciesbc_lo, m_speciesbc_hi);
 }
 
 DiffusionOp::~DiffusionOp ()
@@ -239,27 +272,20 @@ void DiffusionOp::ComputeLapT (Vector< MultiFab* >& lapT_out,
 
     int finest_level = amrcore->finestLevel();
 
-    Vector< MultiFab* >  lapT_aux(finest_level+1);
-    Vector< MultiFab* >    phi_eb(finest_level+1);
+    Vector< MultiFab* > lapT_aux(finest_level+1);
+
     for(int lev = 0; lev <= finest_level; lev++)
     {
        lapT_aux[lev] = new MultiFab(grids[lev], dmap[lev], 1, nghost,
                                     MFInfo(), *(*ebfactory)[lev]);
        lapT_aux[lev]->setVal(0.0);
-
-       phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0,
-                                    MFInfo(), *(*ebfactory)[lev]);
-
-       // This value was just for testing
-       // if (eb_is_dirichlet)
-       //    phi_eb[lev]->setVal(1.0);
     }
 
     // Whole domain
     Box domain(geom[0].Domain());
 
     // We want to return div (k_g grad)) phi
-    scal_matrix->setScalars(0.0, -1.0);
+    temperature_matrix->setScalars(0.0, -1.0);
 
     Vector<BCRec> bcs_s; // This is just to satisfy the call to EB_interp...
     bcs_s.resize(3);
@@ -278,14 +304,17 @@ void DiffusionOp::ComputeLapT (Vector< MultiFab* >& lapT_out,
 
         EB_interp_CellCentroid_to_FaceCentroid (ep_g_k_g, GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
 
-        if (eb_is_dirichlet)
-            scal_matrix->setEBDirichlet(lev, *phi_eb[lev], *k_g_in[lev]);
+        if (eb_temperature_is_dirichlet) {
+          // The following is a WIP in AMReX
+          //temperature_matrix->setPhiOnCentroid();
+          temperature_matrix->setEBDirichlet(lev, *T_g_on_eb[lev], *k_g_on_eb[lev]);
+        }
 
-        scal_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]),MLMG::Location::FaceCentroid);
-        scal_matrix->setLevelBC(lev, GetVecOfConstPtrs(T_g_in)[lev]);
+        temperature_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
+        temperature_matrix->setLevelBC(lev, GetVecOfConstPtrs(T_g_in)[lev]);
     }
 
-    MLMG solver(*scal_matrix);
+    MLMG solver(*temperature_matrix);
 
     solver.apply(lapT_aux, T_g_in);
 
@@ -297,7 +326,6 @@ void DiffusionOp::ComputeLapT (Vector< MultiFab* >& lapT_out,
     for(int lev = 0; lev <= finest_level; lev++)
     {
        delete lapT_aux[lev];
-       delete   phi_eb[lev];
     }
 }
 
@@ -322,7 +350,7 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
        laps_aux[lev]->setVal(0.0);
 
        phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0,
-                                    MFInfo(), *(*ebfactory)[lev]);
+                                  MFInfo(), *(*ebfactory)[lev]);
 
        // This value was just for testing
        // if (eb_is_dirichlet)
@@ -417,17 +445,13 @@ void DiffusionOp::ComputeLapX (Vector< MultiFab* >& lapX_out,
 
       phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(),
           *(*ebfactory)[lev]);
-
-      // This value was just for testing
-      // if (eb_is_dirichlet)
-      //    phi_eb[lev]->setVal(1.0);
     }
 
     // Whole domain
     Box domain(geom[0].Domain());
 
     // We want to return div (D_g grad)) phi
-    scal_matrix->setScalars(0.0, -1.0);
+    species_matrix->setScalars(0.0, -1.0);
 
     Vector<BCRec> bcs_X; // This is just to satisfy the call to EB_interp...
     bcs_X.resize(3);
@@ -446,15 +470,12 @@ void DiffusionOp::ComputeLapX (Vector< MultiFab* >& lapX_out,
       EB_interp_CellCentroid_to_FaceCentroid (ep_D_g, GetArrOfPtrs(b[lev]), 0,
           0, 1, geom[lev], bcs_X);
 
-      if (eb_is_dirichlet)
-          scal_matrix->setEBDirichlet(lev, *phi_eb[lev], *D_g[lev]);
+      species_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
 
-      scal_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
-
-      scal_matrix->setLevelBC(lev, GetVecOfConstPtrs(X_g)[lev]);
+      species_matrix->setLevelBC(lev, GetVecOfConstPtrs(X_g)[lev]);
     }
 
-    MLMG solver(*scal_matrix);
+    MLMG solver(*species_matrix);
 
     solver.apply(lapX_aux, X_g);
       
@@ -480,5 +501,5 @@ void DiffusionOp::ComputeLapX (Vector< MultiFab* >& lapX_out,
     }
 
   }
-}
 
+}

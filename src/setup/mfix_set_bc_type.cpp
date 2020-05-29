@@ -48,7 +48,7 @@ mfix::mfix_set_bc_type (int lev)
            {bc_ilo_type(i,j,k,0) = init_x;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc<bc_xlo.size(); ++lc) {
+        for (int lc(0); lc < bc_xlo.size(); ++lc) {
 
           const int bcv  = bc_xlo[lc];
           const int type = bc[bcv].type;
@@ -87,7 +87,7 @@ mfix::mfix_set_bc_type (int lev)
            {bc_ihi_type(i,j,k,0) = init_x;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc<bc_xhi.size(); ++lc) {
+        for (int lc(0); lc < bc_xhi.size(); ++lc) {
 
           const int bcv  = bc_xhi[lc];
           const int type = bc[bcv].type;
@@ -139,7 +139,7 @@ mfix::mfix_set_bc_type (int lev)
            {bc_jlo_type(i,j,k,0) = init_y;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc<bc_ylo.size(); ++lc) {
+        for (int lc(0); lc < bc_ylo.size(); ++lc) {
 
           const int bcv  = bc_ylo[lc];
           const int type = bc[bcv].type;
@@ -178,7 +178,7 @@ mfix::mfix_set_bc_type (int lev)
            {bc_jhi_type(i,j,k,0) = init_y;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc<bc_yhi.size(); ++lc) {
+        for (int lc(0); lc < bc_yhi.size(); ++lc) {
 
           const int bcv  = bc_yhi[lc];
           const int type = bc[bcv].type;
@@ -230,7 +230,7 @@ mfix::mfix_set_bc_type (int lev)
            {bc_klo_type(i,j,k,0) = init_z;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc<bc_zlo.size(); ++lc) {
+        for (int lc(0); lc < bc_zlo.size(); ++lc) {
 
           const int bcv  = bc_zlo[lc];
           const int type = bc[bcv].type;
@@ -269,7 +269,7 @@ mfix::mfix_set_bc_type (int lev)
            {bc_khi_type(i,j,k,0) = init_z;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc<bc_zhi.size(); ++lc) {
+        for (int lc(0); lc < bc_zhi.size(); ++lc) {
 
           const int bcv  = bc_zhi[lc];
           const int type = bc[bcv].type;
@@ -321,6 +321,7 @@ mfix::mfix_set_bc_type (int lev)
         m_bc_p_g[bcv]  = 1e50;
       }
 
+      // Fluid temperature
       if ( FLUID::solve and advect_enthalpy ) {
         if ( bc[bcv].type == minf_ or bc[bcv].type == pinf_ ) {
           m_bc_t_g[bcv]  = bc[bcv].fluid.temperature;
@@ -330,6 +331,7 @@ mfix::mfix_set_bc_type (int lev)
         }
       }
 
+      // Fluid species mass fractions
       if ( FLUID::solve and advect_fluid_species) {
         if ( bc[bcv].type == minf_ or bc[bcv].type == pinf_ ) {
           for (int n(0); n < FLUID::nspecies_g; n++) {

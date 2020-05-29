@@ -67,12 +67,15 @@ namespace FLUID
 
     amrex::Real pressure_defined; // Flag to check if pressure is defined
 
+    amrex::Real eb_temperature;
+
     SPECIES::SPECIES_t species;
 
     FLUID_t() :
       volfrac(-1.0),
       temperature(0.0),
       pressure(-1.0),
+      eb_temperature(0),
       species(FLUID::nspecies_g)
     {}
 

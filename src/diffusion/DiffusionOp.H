@@ -32,6 +32,10 @@ class DiffusionOp
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_velbc_hi,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_scalbc_lo,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_scalbc_hi,
+                 std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_temperaturebc_lo,
+                 std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_temperaturebc_hi,
+                 std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_specieslbc_lo,
+                 std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_specieslbc_hi,
                  int _nghost);
 
     // Destructor
@@ -40,6 +44,10 @@ class DiffusionOp
     // Actually do the setup work here
     void setup (amrex::AmrCore* _amrcore, 
                 amrex::Vector< const amrex::EBFArrayBoxFactory* >* _ebfactory);
+
+    // Actually do the setup work here
+    void setup_eb_temperature (amrex::Vector< std::unique_ptr< amrex::MultiFab > >& eb_T_g_in,
+                               amrex::Vector< std::unique_ptr< amrex::MultiFab > >& eb_k_g_in);
 
     // Read input from ParmParse (solver settings)
     void readParameters ();
@@ -124,6 +132,10 @@ class DiffusionOp
     std::array<amrex::LinOpBCType,3> m_velbc_hi;
     std::array<amrex::LinOpBCType,3> m_scalbc_lo;
     std::array<amrex::LinOpBCType,3> m_scalbc_hi;
+    std::array<amrex::LinOpBCType,3> m_temperaturebc_lo;
+    std::array<amrex::LinOpBCType,3> m_temperaturebc_hi;
+    std::array<amrex::LinOpBCType,3> m_speciesbc_lo;
+    std::array<amrex::LinOpBCType,3> m_speciesbc_hi;
 
     // Internal data used in the matrix solve
     //
@@ -138,18 +150,24 @@ class DiffusionOp
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> rhs;
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> vel_eb;
 
+    amrex::Vector<std::unique_ptr<amrex::MultiFab>> T_g_on_eb;
+    amrex::Vector<std::unique_ptr<amrex::MultiFab>> k_g_on_eb;
+
     //
     // MultiLevel EmbeddedBoundary cell-centered Laplacian:
     //
     // ( alpha a - beta div ( b grad ) ) phi = rhs
     //
     std::unique_ptr<amrex::MLEBABecLap> scal_matrix;
+    std::unique_ptr<amrex::MLEBABecLap> temperature_matrix;
+    std::unique_ptr<amrex::MLEBABecLap> species_matrix;
 
     // DiffusionOp verbosity
     int verbose = 0;
 
     // Dirichlet vs Neumann bc's at EB walls
     bool eb_is_dirichlet;
+    bool eb_temperature_is_dirichlet;
 
     // Options to control MLMG behavior
     int mg_verbose = 0;

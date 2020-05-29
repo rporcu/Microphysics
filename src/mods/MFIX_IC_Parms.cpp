@@ -30,7 +30,7 @@ namespace IC
     ppMFIX.query("advect_enthalpy", advect_enthalpy);
 
     // Loop over ICs
-    for(size_t icv=0; icv<regions.size(); icv++){
+    for(size_t icv=0; icv < regions.size(); icv++){
 
       amrex::Real volfrac_total(0.0);
 
@@ -52,10 +52,9 @@ namespace IC
 
         ppFluid.getarr("velocity", new_ic.fluid.velocity, 0, 3);
 
-        if (advect_enthalpy)
-          ppFluid.get("temperature", new_ic.fluid.temperature);
-        else
-          ppFluid.query("temperature", new_ic.fluid.temperature);
+        if (advect_enthalpy) {
+          ppFluid.get("temperature", new_ic.fluid.temperature); 
+        }
 
         new_ic.fluid.pressure_defined = ppFluid.query("pressure", new_ic.fluid.pressure);
 
@@ -94,10 +93,9 @@ namespace IC
 
           ppSolid.getarr("velocity", new_solid.velocity, 0, 3);
 
-          if (advect_enthalpy)
-            ppSolid.get("temperature", new_solid.temperature);
-          else
-            ppSolid.query("temperature", new_solid.temperature);
+          if (advect_enthalpy) {
+            ppSolid.query("temperature", new_solid.temperature); 
+          }
 
           new_solid.statwt = 1.0;
           ppSolid.query("statwt", new_solid.statwt);
