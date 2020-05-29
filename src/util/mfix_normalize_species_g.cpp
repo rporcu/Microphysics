@@ -1,5 +1,5 @@
 #include <mfix.H>
-#include <mfix_rescale_mass_fractions_g.H>
+#include <mfix_normalize_species_g.H>
 
 #include <AMReX_VisMF.H>
 #include <MFIX_MFHelpers.H>
@@ -9,7 +9,7 @@
 #include <AMReX_MemProfiler.H>
 #endif
 
-void rescale_species(const Vector< MultiFab* >& X_g)
+void normalize_species_g(const Vector< MultiFab* >& X_g)
 {
   const int nspecies_g = X_g[0]->nComp();
   const int finest_level = X_g.size() - 1;
@@ -93,6 +93,10 @@ void rescale_species(const Vector< MultiFab* >& X_g)
     for (int n = 0; n < nspecies_g; n++) {
       MultiFab::Add(*X_g_sum[lev], *X_g[lev], n, 0, 1, 0);
     }
+
+    // Set covered vals to 1
+    const Real covered_value = 1.;
+    EB_set_covered(*X_g_sum[lev], 0, 1, 0, covered_value);
   }
 
 // FOR DEBUG PURPOSES
@@ -114,8 +118,12 @@ void rescale_species(const Vector< MultiFab* >& X_g)
     for (int lev = 0; lev <= finest_level; lev++)
     {
       amrex::Print() << "On level " << lev << " :" << std::endl;
-      amrex::Print() << "Max SUMMED fluid species mass fractions BEFORE rescale = " << X_g_sum_max[lev] << std::endl;
-      amrex::Print() << "Min SUMMED fluid species mass fractions BEFORE rescale = " << X_g_sum_min[lev] << std::endl;
+
+      amrex::Print() << "Max SUMMED fluid species mass fractions BEFORE normalization = "
+                     << X_g_sum_max[lev] << std::endl;
+
+      amrex::Print() << "Min SUMMED fluid species mass fractions BEFORE normalization = "
+                     << X_g_sum_min[lev] << std::endl;
 
       // For now we take out the following sanity check
       //if ((X_g_sum_max[lev] > max_X_g_sum) or (X_g_sum_min[lev] < min_X_g_sum)) {
@@ -129,25 +137,8 @@ void rescale_species(const Vector< MultiFab* >& X_g)
   // Rescale species mass fractions in order to have their cellwise sum = 1
   for (int lev = 0; lev <= finest_level; lev++)
   {
-    for (MFIter mfi(*X_g_sum[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-      const Box& bx = mfi.tilebox();
-
-      const auto& X_g_arr     = X_g[lev]->array(mfi);
-      const auto& X_g_sum_arr = X_g_sum[lev]->array(mfi);
-
-      const EBFArrayBox& X_g_fab =
-        static_cast<EBFArrayBox const&>((*X_g[lev])[mfi]);
-
-      const EBCellFlagFab& flags_fab = X_g_fab.getEBCellFlagFab();
-
-      const auto& flags = flags_fab.array();
-
-      amrex::ParallelFor(bx, nspecies_g,
-        [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-      {
-        if (not flags(i,j,k).isCovered())
-          X_g_arr(i,j,k,n) /= X_g_sum_arr(i,j,k);
-      });
+    for (int n = 0; n < nspecies_g; n++) {
+      MultiFab::Divide(*X_g[lev], *X_g_sum[lev], 0, n, 1, 0);
     }
   }
 
@@ -161,6 +152,10 @@ void rescale_species(const Vector< MultiFab* >& X_g)
     for (int n = 0; n < nspecies_g; n++) {
       MultiFab::Add(*X_g_sum[lev], *X_g[lev], n, 0, 1, 0);
     }
+    
+    // Set covered vals to 1
+    const Real covered_value = 1.;
+    EB_set_covered(*X_g_sum[lev], 0, 1, 0, covered_value);
   }
 
   {
@@ -179,8 +174,12 @@ void rescale_species(const Vector< MultiFab* >& X_g)
     for (int lev = 0; lev <= finest_level; lev++)
     {
       amrex::Print() << "On level " << lev << " :" << std::endl;
-      amrex::Print() << "Max SUMMED fluid species mass fractions AFTER rescale = " << X_g_sum_max[lev] << std::endl;
-      amrex::Print() << "Min SUMMED fluid species mass fractions AFTER rescale = " << X_g_sum_min[lev] << std::endl;
+
+      amrex::Print() << "Max SUMMED fluid species mass fractions AFTER normalization = "
+                     << X_g_sum_max[lev] << std::endl;
+
+      amrex::Print() << "Min SUMMED fluid species mass fractions AFTER normalization = "
+                     << X_g_sum_min[lev] << std::endl;
 
       if (std::fabs(X_g_sum_max[lev]-1) > epsilon or
           std::fabs(X_g_sum_min[lev]-1) > epsilon)

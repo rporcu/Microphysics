@@ -235,6 +235,9 @@ class mfix : public AmrCore
     void mfix_set_temperature_bcs (Real time,
                                    Vector< MultiFab* > const& T_g);
 
+    void mfix_set_eb_temperature_bcs (Vector< std::unique_ptr< MultiFab > > const& eb_T_g_in,
+                                      Vector< std::unique_ptr< MultiFab > > const& eb_k_g_in);
+
     void mfix_set_density_bcs (Real time,
                                Vector< MultiFab* > const& ro_g);
 
@@ -270,6 +273,17 @@ class mfix : public AmrCore
                               const int lev,
                               FArrayBox& T_g_fab,
                               const Box& domain);
+
+    void set_eb_temperature_bcs (const Box& sbx,
+                                 const Box& bx,
+                                 const Box& domain,
+                                 const Real dx,
+                                 const Real dy,
+                                 const Real dz,
+                                 FArrayBox& eb_T_g_fab,
+                                 FArrayBox& eb_k_g_fab,
+                                 FArrayBox& k_g_fab,
+                                 const EBCellFlagFab& flags_fab);
 
     void set_density_bcs (Real time,
                           const int lev,

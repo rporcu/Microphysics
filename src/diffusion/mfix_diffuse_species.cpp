@@ -44,7 +44,7 @@ void DiffusionOp::diffuse_species (      Vector< MultiFab* >     X_g_in,
       //      b: eta
 
       // Set alpha and beta
-      scal_matrix->setScalars(1.0, dt);
+      species_matrix->setScalars(1.0, dt);
 
       Vector<BCRec> bcs_X; // This is just to satisfy the call to EB_interp...
       bcs_X.resize(3);
@@ -63,8 +63,8 @@ void DiffusionOp::diffuse_species (      Vector< MultiFab* >     X_g_in,
           EB_interp_CellCentroid_to_FaceCentroid (ep_ro_D_g, GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_X);
 
           // This sets the coefficients
-          scal_matrix->setACoeffs (lev, (*ep_ro_g_in[lev]));
-          scal_matrix->setBCoeffs (lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
+          species_matrix->setACoeffs (lev, (*ep_ro_g_in[lev]));
+          species_matrix->setBCoeffs (lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
       }
 
       if(verbose > 0)
@@ -88,10 +88,10 @@ void DiffusionOp::diffuse_species (      Vector< MultiFab* >     X_g_in,
           MultiFab::Multiply((*rhs[lev]), (*ep_ro_g_in[lev]), 0, 0, 1, 0);
 
           MultiFab::Copy(*phi[lev], *X_g[lev], 0, 0, 1, 1);
-          scal_matrix->setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
+          species_matrix->setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
       }
 
-      MLMG solver(*scal_matrix);
+      MLMG solver(*species_matrix);
       setSolverSettings(solver);
 
       // This ensures that ghost cells of sol are correctly filled when returned from the solver

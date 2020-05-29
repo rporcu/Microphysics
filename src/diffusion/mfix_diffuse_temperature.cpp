@@ -35,7 +35,7 @@ void DiffusionOp::diffuse_temperature (      Vector< MultiFab* >  T_g_in,
         amrex::Print() << "Diffusing temperature ..." << std::endl; 
 
     // Set alpha and beta
-    scal_matrix->setScalars(1.0, dt);
+    temperature_matrix->setScalars(1.0, dt);
 
     Vector<BCRec> bcs_s; // This is just to satisfy the call to EB_interp...
     bcs_s.resize(3);
@@ -57,8 +57,8 @@ void DiffusionOp::diffuse_temperature (      Vector< MultiFab* >  T_g_in,
         MultiFab::Multiply((*ep_g_in[lev]), (*cp_g_in[lev]), 0, 0, 1, 0);
 
         // This sets the coefficients
-        scal_matrix->setACoeffs (lev, (*ep_g_in[lev]));
-        scal_matrix->setBCoeffs (lev, GetArrOfConstPtrs(b[lev]),MLMG::Location::FaceCentroid);
+        temperature_matrix->setACoeffs (lev, (*ep_g_in[lev]));
+        temperature_matrix->setBCoeffs (lev, GetArrOfConstPtrs(b[lev]),MLMG::Location::FaceCentroid);
 
         // Zero these out just to have a clean start because they have 3 components
         //      (due to re-use with velocity solve)
@@ -78,11 +78,18 @@ void DiffusionOp::diffuse_temperature (      Vector< MultiFab* >  T_g_in,
         MultiFab::Divide((*ep_g_in[lev]), (*ro_g_in[lev]), 0, 0, 1, 0);
         MultiFab::Divide((*ep_g_in[lev]), (*cp_g_in[lev]), 0, 0, 1, 0);
 
+        if (eb_temperature_is_dirichlet) {
+          // The following is a WIP in AMReX
+          //temperature_matrix->setPhiOnCentroid();
+          temperature_matrix->setEBDirichlet(lev, *T_g_on_eb[lev], *k_g_on_eb[lev]);
+        }
+
         MultiFab::Copy(*phi[lev],*T_g_in[lev], 0, 0, 1, 1);
-        scal_matrix->setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
+
+        temperature_matrix->setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
     }
 
-    MLMG solver(*scal_matrix);
+    MLMG solver(*temperature_matrix);
     setSolverSettings(solver);
 
     // This ensures that ghost cells of sol are correctly filled when returned from the solver

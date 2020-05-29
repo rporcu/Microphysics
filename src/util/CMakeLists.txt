@@ -12,6 +12,7 @@ target_sources( mfixcore
    mfix_set_epg_bcs.cpp
    mfix_set_enthalpy_bcs.cpp
    mfix_set_temperature_bcs.cpp
+   mfix_set_eb_temperature_bcs.cpp
    mfix_set_density_bcs.cpp
    mfix_set_scalar_bcs.cpp
    mfix_set_species_bcs.cpp
@@ -19,8 +20,8 @@ target_sources( mfixcore
    mfix_set_thermal_conductivity_bcs.cpp
    mfix_set_tracer_bcs.cpp
    mfix_set_viscosity_bcs.cpp
-   mfix_rescale_mass_fractions_g.H
-   mfix_rescale_mass_fractions_g.cpp
+   mfix_normalize_species_g.H
+   mfix_normalize_species_g.cpp
    MFIX_MFHelpers.H
    MFIX_MFHelpers.cpp
    MFIX_gradient.H

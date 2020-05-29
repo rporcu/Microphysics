@@ -24,7 +24,9 @@ mfix::mfix_usr1 (Real time) const
   //   m_bc_w_g[i] = get_bc_w_g(i);
 
   //   m_bc_t_g[i] = get_bc_t_g(i);
-  //   m_bc_X_g[i] = get_bc_X_g(i);
+  //
+  //   Loop over species number
+  //   m_bc_X_g[n][i] = get_bc_X_g(i,n);
 
   //   m_bc_ep_g[i] = get_bc_ep_g(i);
   // }

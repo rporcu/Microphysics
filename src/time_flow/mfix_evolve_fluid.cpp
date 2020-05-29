@@ -6,7 +6,7 @@
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_SPECIES_Parms.H>
 #include <MFIX_PIC_Parms.H>
-#include <mfix_rescale_mass_fractions_g.H>
+#include <mfix_normalize_species_g.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -197,7 +197,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
 
         // Rescale species in order to respect sum = 1
         if (advect_fluid_species) {
-          rescale_species(get_X_g());
+          normalize_species_g(get_X_g());
           
           for (int lev = 0; lev <= finest_level; lev++) {
             // Update ghost cells
@@ -222,7 +222,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
 
           // Rescale species in order to respect sum = 1
           if (advect_fluid_species) {
-            rescale_species(get_X_g());
+            normalize_species_g(get_X_g());
 
             for (int lev = 0; lev <= finest_level; lev++) {
               // Update ghost cells

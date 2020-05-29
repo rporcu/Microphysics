@@ -19,7 +19,7 @@ namespace BC
 
   struct BC_t {
 
-    // BC type (mi, pi, po, nsw)
+    // BC type (mi, pi, po, nsw, eb)
     int type;
 
     const amrex::RealBox* region;
@@ -55,6 +55,12 @@ namespace BC
 
   extern std::array<amrex::LinOpBCType,3> diff_scal_lobc;
   extern std::array<amrex::LinOpBCType,3> diff_scal_hibc;
+
+  extern std::array<amrex::LinOpBCType,3> diff_temperature_lobc;
+  extern std::array<amrex::LinOpBCType,3> diff_temperature_hibc;
+
+  extern std::array<amrex::LinOpBCType,3> diff_species_lobc;
+  extern std::array<amrex::LinOpBCType,3> diff_species_hibc;
 
   // Data structure for BC data
   extern amrex::Vector<BC_t> bc;
