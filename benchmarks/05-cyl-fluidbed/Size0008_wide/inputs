@@ -144,6 +144,8 @@ dem.damping_tang_fac.pw   =     0.5
 # EB geometry
 #
 mfix.geometry = "cylinder"
+# mfix.geometry_filename = "external_flow_geometry.csg"
+# csg.internal_flow = false
 
 cylinder.internal_flow = true
 
