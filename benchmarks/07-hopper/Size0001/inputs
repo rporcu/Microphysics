@@ -193,8 +193,7 @@ ic.bed.solid0.density.constant  = 1000.0
 #! EB geometry
 #!-----------------------------------------------------------//
 mfix.geometry = "hopper"
-# mfix.geometry_filename = "external_flow_hopper.csg"
-# csg.internal_flow = false
+# mfix.geometry_filename = "hopper.csg"
 
 hopper.orifice_radius = 0.000249
 hopper.funnel_radius  = 0.000499
