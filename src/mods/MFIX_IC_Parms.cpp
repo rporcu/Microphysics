@@ -8,6 +8,7 @@
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
 #include <MFIX_REGIONS_Parms.H>
+#include <MFIX_SPECIES_Parms.H>
 
 namespace IC
 {
@@ -22,8 +23,14 @@ namespace IC
     std::vector<std::string> regions;
     pp.queryarr("regions", regions);
 
+    // Query if advect_enthalpy so we check if ic temperature inputs are correct
+    amrex::ParmParse ppMFIX("mfix");
+    int advect_enthalpy(0);
+
+    ppMFIX.query("advect_enthalpy", advect_enthalpy);
+
     // Loop over ICs
-    for(int icv=0; icv<regions.size(); icv++){
+    for(size_t icv=0; icv < regions.size(); icv++){
 
       amrex::Real volfrac_total(0.0);
 
@@ -44,9 +51,23 @@ namespace IC
         volfrac_total += new_ic.fluid.volfrac;
 
         ppFluid.getarr("velocity", new_ic.fluid.velocity, 0, 3);
-        ppFluid.query("temperature", new_ic.fluid.temperature);
+
+        if (advect_enthalpy) {
+          ppFluid.get("temperature", new_ic.fluid.temperature); 
+        }
 
         new_ic.fluid.pressure_defined = ppFluid.query("pressure", new_ic.fluid.pressure);
+
+        if (FLUID::solve_species) {
+
+          std::string species_field = field+".species";
+          amrex::ParmParse ppSpecies(species_field.c_str());
+
+          for (int n(0); n < FLUID::nspecies_g; n++) {
+            std::string fluid_specie = FLUID::species_g[n];
+            ppSpecies.query(fluid_specie.c_str(), new_ic.fluid.species.mass_fractions[n]);
+          }
+        }
       }
 
       if((DEM::solve or PIC::solve) and new_ic.fluid.volfrac < 1.0) {
@@ -60,7 +81,7 @@ namespace IC
           ppSolid.get("packing", new_ic.packing);
         }
 
-        for(int lcs(0); lcs < solids_types.size(); ++ lcs){
+        for(size_t lcs(0); lcs < solids_types.size(); ++ lcs){
 
           DEM::DEM_t new_solid;
 
@@ -71,7 +92,10 @@ namespace IC
           volfrac_total += new_ic.fluid.volfrac;
 
           ppSolid.getarr("velocity", new_solid.velocity, 0, 3);
-          ppSolid.query("temperature", new_solid.temperature);
+
+          if (advect_enthalpy) {
+            ppSolid.query("temperature", new_solid.temperature); 
+          }
 
           new_solid.statwt = 1.0;
           ppSolid.query("statwt", new_solid.statwt);
@@ -106,6 +130,17 @@ namespace IC
             ppSolidRho.get("std" , new_solid.density.std );
             ppSolidRho.get("min" , new_solid.density.min );
             ppSolidRho.get("max" , new_solid.density.max );
+          }
+
+          if (DEM::solve_species /*TODO or PIC::solve_species*/) {
+
+            std::string species_field = field+".species";
+            amrex::ParmParse ppSpecies(species_field.c_str());
+
+            for (int n(0); n < DEM::nspecies_dem; n++) {
+              std::string dem_specie = DEM::species_dem[n];
+              ppSpecies.query(dem_specie.c_str(), new_solid.species.mass_fractions[n]);
+            }
           }
 
           new_ic.solids.push_back(new_solid);

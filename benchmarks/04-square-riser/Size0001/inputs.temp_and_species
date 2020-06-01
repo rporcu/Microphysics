@@ -1,0 +1,128 @@
+mfix.stop_time = 0.10
+
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell =  4 50 4
+
+# Maximum allowable size of each subdomain in the problem domain;
+#    this is used to decompose the domain for parallel calculations.
+amr.max_grid_size_x =  4
+amr.max_grid_size_y = 50
+amr.max_grid_size_z =  4
+
+amr.blocking_factor = 2
+
+# Maximum tile size within each grid
+fabarray.mfiter_tile_size =  4 50 4
+
+# Maximum particle tile size
+particles.tile_size =  4 50 4
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 0
+amr.plot_int  = -1
+amr.check_int  = 1000
+amr.plt_regtest = 1
+
+# Geometry
+geometry.coord_sys   = 0                     # 0: Cartesian
+geometry.is_periodic = 1       1     1       # Is periodic in each direction?
+geometry.prob_lo     = 0.      0.    0.      # lo corner of physical domain
+geometry.prob_hi     = 0.0008  0.01  0.0008  # hi corner of physical domain
+
+mfix.drag_type = "BVK2"
+mfix.gravity   =  0.0  -9.80665  0.0
+
+mfix.advect_enthalpy      = 1
+mfix.advect_fluid_species = 1
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+species.solve  =  O2  SO2  H2O
+
+species.diffusivity = constant
+
+species.O2.diffusivity  = 1.9e-5
+species.SO2.diffusivity = 1.3e-5
+species.H2O.diffusivity = 2.4e-5
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+fluid.density            = constant
+fluid.density.constant   = 1.0
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 2.0e-5
+
+fluid.specific_heat          = constant
+fluid.specific_heat.constant = 918  ## Oxygen
+
+fluid.thermal_conductivity          = constant
+fluid.thermal_conductivity.constant = 0.024 ## Oxygen
+
+fluid.species  =  O2  SO2  H2O
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = solid0
+
+dem.friction_coeff.pp     =     0.0
+dem.friction_coeff.pw     =     0.0
+
+dem.spring_const.pp       =    10.0
+dem.spring_const.pw       =    10.0
+
+dem.restitution_coeff.solid0.solid0  =     0.8
+dem.restitution_coeff.solid0.wall    =     1.0
+
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+mfix.regions = full-domain  inner-domain
+
+regions.full-domain.lo  = 0.0000  0.0000  0.0000
+regions.full-domain.hi  = 0.0008  0.0100  0.0008
+
+regions.inner-domain.lo  = 0.0001  0.0030  0.0001
+regions.inner-domain.hi  = 0.0007  0.0070  0.0007
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+ic.regions = full-domain  inner-domain
+
+
+ic.full-domain.fluid.volfrac     =  1.0
+ic.full-domain.fluid.pressure    =  0.0
+ic.full-domain.fluid.velocity    =  0.0  0.0  0.0
+ic.full-domain.fluid.temperature =  700
+ic.full-domain.fluid.species.O2  =  0.3
+ic.full-domain.fluid.species.SO2 =  0.4
+ic.full-domain.fluid.species.H2O =  0.3
+
+ic.inner-domain.fluid.volfrac     =  1.0
+ic.inner-domain.fluid.pressure    =  0.0
+ic.inner-domain.fluid.velocity    =  0.0  0.0  0.0
+ic.inner-domain.fluid.temperature =  300
+ic.inner-domain.fluid.species.O2  =  0.3
+ic.inner-domain.fluid.species.SO2 =  0.4
+ic.inner-domain.fluid.species.H2O =  0.3
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+bc.delp_dir =    1
+bc.delp     =    2.

@@ -59,27 +59,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
   ep_face[2]->FillBoundary();
 
   // ****************************************************************************
-  // We will store the left and right states in arrays for interpolation
-  // ****************************************************************************
-
-  MultiFab upls(ep_face[0]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-  MultiFab umns(ep_face[0]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-
-  MultiFab vpls(ep_face[1]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-  MultiFab vmns(ep_face[1]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-
-  MultiFab wpls(ep_face[2]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-  MultiFab wmns(ep_face[2]->boxArray(), dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
-
-  // We need this just to avoid FPE (eg for outflow faces)
-  upls.setVal(covered_val);
-  umns.setVal(covered_val);
-  vpls.setVal(covered_val);
-  vmns.setVal(covered_val);
-  wpls.setVal(covered_val);
-  wmns.setVal(covered_val);
-
-  // ****************************************************************************
   // First compute the slopes
   // ****************************************************************************
   int slopes_comp = 0;
@@ -246,8 +225,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
     // Cut cells in this FAB
     else
     {
-      const auto& ccvel_fab = vel_in[lev]->array(mfi);
-
       // Face centroids
       const auto& fcx_fab = facecent[0]->array(mfi);
       const auto& fcy_fab = facecent[1]->array(mfi);
@@ -255,11 +232,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
 
       // Cell centroids
       const auto& ccc_fab = cellcent.array(mfi);
-
-      // Cell-based slopes
-      const auto& xslopes_fab = m_leveldata[lev]->xslopes_u->array(mfi);
-      const auto& yslopes_fab = m_leveldata[lev]->yslopes_u->array(mfi);
-      const auto& zslopes_fab = m_leveldata[lev]->zslopes_u->array(mfi);
 
       // Face-centered ep
       const auto& epx_fab = (ep_face[0])->array(mfi);

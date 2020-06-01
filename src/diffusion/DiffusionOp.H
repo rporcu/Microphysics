@@ -32,6 +32,10 @@ class DiffusionOp
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_velbc_hi,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_scalbc_lo,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_scalbc_hi,
+                 std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_temperaturebc_lo,
+                 std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_temperaturebc_hi,
+                 std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_specieslbc_lo,
+                 std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_specieslbc_hi,
                  int _nghost);
 
     // Destructor
@@ -40,6 +44,10 @@ class DiffusionOp
     // Actually do the setup work here
     void setup (amrex::AmrCore* _amrcore, 
                 amrex::Vector< const amrex::EBFArrayBoxFactory* >* _ebfactory);
+
+    // Actually do the setup work here
+    void setup_eb_temperature (amrex::Vector< std::unique_ptr< amrex::MultiFab > >& eb_T_g_in,
+                               amrex::Vector< std::unique_ptr< amrex::MultiFab > >& eb_k_g_in);
 
     // Read input from ParmParse (solver settings)
     void readParameters ();
@@ -54,12 +62,19 @@ class DiffusionOp
                            amrex::Real dt);
 
     // Temperature diffusion
-    void diffuse_temperature (      amrex::Vector< amrex::MultiFab* >  T_g,
-                              const amrex::Vector< amrex::MultiFab* > ep_g, 
-                              const amrex::Vector< amrex::MultiFab* > ro_g, 
-                              const amrex::Vector< amrex::MultiFab* > cp_g, 
-                              const amrex::Real k_g,
+    void diffuse_temperature (amrex::Vector< amrex::MultiFab* >  T_g,
+                              const amrex::Vector< amrex::MultiFab* > ep_g,
+                              const amrex::Vector< amrex::MultiFab* > ro_g,
+                              const amrex::Vector< amrex::MultiFab* > h_g,
+                              const amrex::Vector< amrex::MultiFab* > cp_g,
+                              const amrex::Vector< amrex::MultiFab* > k_g,
                               amrex::Real dt);
+
+    // Species mass fraction diffusion
+    void diffuse_species (amrex::Vector< amrex::MultiFab* >  X_g,
+                          const amrex::Vector< amrex::MultiFab* > ep_ro_g, 
+                          const amrex::Vector< amrex::MultiFab* >  D_g,
+                          amrex::Real dt);
 
     // Scalar diffusion
     void diffuse_scalar (amrex::Vector< amrex::MultiFab* > scal,
@@ -81,11 +96,18 @@ class DiffusionOp
                         const amrex::Vector< amrex::MultiFab* >& eta_in);
 
     // Explicit tensor temperature term
-    void ComputeLapTemp (amrex::Vector< amrex::MultiFab* >& laps_out,
-                         const amrex::Vector< amrex::MultiFab* >& T_g_in,
-                         const amrex::Vector< amrex::MultiFab* >& ro_in,
-                         const amrex::Vector< amrex::MultiFab* >& ep_in,
-                         const amrex::Real& k_g);
+    void ComputeLapT (amrex::Vector< amrex::MultiFab* >& lapT_out,
+                      const amrex::Vector< amrex::MultiFab* >& T_g_in,
+                      const amrex::Vector< amrex::MultiFab* >& ro_in,
+                      const amrex::Vector< amrex::MultiFab* >& ep_in,
+                      const amrex::Vector< amrex::MultiFab* >& k_g_in);
+
+    // Explicit tensor temperature term
+    void ComputeLapX (amrex::Vector< amrex::MultiFab* >& lapX_out,
+                      const amrex::Vector< amrex::MultiFab* >& X_g_in,
+                      const amrex::Vector< amrex::MultiFab* >& ro_in,
+                      const amrex::Vector< amrex::MultiFab* >& ep_in,
+                      const amrex::Vector< amrex::MultiFab* >& D_g);
 
     // Explicit tensor viscous term // tracer
     void ComputeLapS (amrex::Vector< amrex::MultiFab* >& laps_out,
@@ -110,6 +132,10 @@ class DiffusionOp
     std::array<amrex::LinOpBCType,3> m_velbc_hi;
     std::array<amrex::LinOpBCType,3> m_scalbc_lo;
     std::array<amrex::LinOpBCType,3> m_scalbc_hi;
+    std::array<amrex::LinOpBCType,3> m_temperaturebc_lo;
+    std::array<amrex::LinOpBCType,3> m_temperaturebc_hi;
+    std::array<amrex::LinOpBCType,3> m_speciesbc_lo;
+    std::array<amrex::LinOpBCType,3> m_speciesbc_hi;
 
     // Internal data used in the matrix solve
     //
@@ -124,19 +150,24 @@ class DiffusionOp
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> rhs;
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> vel_eb;
 
+    amrex::Vector<std::unique_ptr<amrex::MultiFab>> T_g_on_eb;
+    amrex::Vector<std::unique_ptr<amrex::MultiFab>> k_g_on_eb;
+
     //
     // MultiLevel EmbeddedBoundary cell-centered Laplacian:
     //
     // ( alpha a - beta div ( b grad ) ) phi = rhs
     //
     std::unique_ptr<amrex::MLEBABecLap> scal_matrix;
-    std::unique_ptr<amrex::MLEBABecLap> temp_matrix;
+    std::unique_ptr<amrex::MLEBABecLap> temperature_matrix;
+    std::unique_ptr<amrex::MLEBABecLap> species_matrix;
 
     // DiffusionOp verbosity
     int verbose = 0;
 
     // Dirichlet vs Neumann bc's at EB walls
     bool eb_is_dirichlet;
+    bool eb_temperature_is_dirichlet;
 
     // Options to control MLMG behavior
     int mg_verbose = 0;

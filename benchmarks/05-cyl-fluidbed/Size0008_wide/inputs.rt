@@ -55,7 +55,7 @@ eb2.max_grid_size = 20
 # Fluid: Maximum tile size within each grid
 fabarray.mfiter_tile_size = 1024 1024 1024
 
-# Particles: Maximum particle title size
+# Particles: Maximum particle tile size
 particles.tile_size = 1024 1024 1024
 
 
@@ -137,6 +137,8 @@ dem.damping_tang_fac.pw   =     0.5
 # EB geometry
 #
 mfix.geometry = "cylinder"
+# mfix.geometry_filename = "external_flow_geometry.csg"
+# csg.internal_flow = false
 
 cylinder.internal_flow = true
 

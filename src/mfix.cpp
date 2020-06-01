@@ -1,12 +1,10 @@
-#include <mfix_F.H>
 #include <mfix.H>
-#include <param_mod_F.H>
-
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 
 #include <MFIX_FLUID_Parms.H>
+#include <MFIX_SPECIES_Parms.H>
 
 std::string      mfix::particle_init_type   = "AsciiFile";
 std::string      mfix::load_balance_type    = "KnapSack";
@@ -15,7 +13,6 @@ int              mfix::load_balance_fluid   = 1;
 int              mfix::knapsack_nmax        = 128;
 DragType         mfix::m_drag_type          = DragType::Invalid;
 DepositionScheme mfix::m_deposition_scheme;
-amrex::Real      mfix::tcoll_ratio          = 50.;
 amrex::Real      mfix::m_deposition_diffusion_coeff = -1.0;
 amrex::Real      mfix::m_deposition_scale_factor = 1.0;
 amrex::Real      mfix::m_max_solids_volume_fraction = 0.64356;
@@ -75,12 +72,15 @@ mfix::~mfix ()
 
 // Constructor
 mfix::mfix ()
-  : m_bc_u_g(get_dim_bc()+1, 0)
-  , m_bc_v_g(get_dim_bc()+1, 0)
-  , m_bc_w_g(get_dim_bc()+1, 0)
-  , m_bc_t_g(get_dim_bc()+1, 0)
-  , m_bc_ep_g(get_dim_bc()+1, 0)
-  , m_bc_p_g(get_dim_bc()+1, 0)
+  : m_bc_u_g(50, 0)
+  , m_bc_v_g(50, 0)
+  , m_bc_w_g(50, 0)
+  , m_bc_t_g(50, 0)
+  // Once we will have a class for BCs, the following initialization won't be
+  // like this anymore and we won't need to resize it after Parameters reading
+  , m_bc_X_g(0) // This is resized in mfix_init.cpp
+  , m_bc_ep_g(50, 0)
+  , m_bc_p_g(50, 0)
 {
     // NOTE: Geometry on all levels has just been defined in the AmrCore
     // constructor. No valid BoxArray and DistributionMapping have been defined.
@@ -114,7 +114,9 @@ mfix::mfix ()
 
     bcs_u.resize(3); // one for each velocity component
     // This needs to be one bigger than the highest index scalar in mfix_set_scalar_bcs
-    bcs_s.resize(6); // density and tracer
+    bcs_s.resize(6); // density, tracer, ep_g, mu_g, T_g, h_g --> TODO cp_g, k_g
+    bcs_X.resize(0); // X_g, D_g. TODO this has to be resized on the basis of 
+                     // FLUID::nspecies_g. So we do it after parameter parsing
     bcs_f.resize(1); // just one
 
     //___________________________________________________________________________
@@ -148,48 +150,6 @@ mfix::mfix ()
         }
     }
 }
-
-void
-mfix::mfix_usr1_cpp (Real time) const
-{
-  mfix_usr1(&time);
-
-  // const int dim_bc = get_dim_bc();
-
-  // for(unsigned i(1); i <= dim_bc; ++i)
-  // {
-  //   m_bc_u_g[i] = get_bc_u_g(i);
-  //   m_bc_v_g[i] = get_bc_v_g(i);
-  //   m_bc_w_g[i] = get_bc_w_g(i);
-
-  //   m_bc_t_g[i] = get_bc_t_g(i);
-
-  //   m_bc_ep_g[i] = get_bc_ep_g(i);
-  // }
-}
-
-void
-mfix::usr3 ()
-{
-    if (FLUID::solve)
-    {
-       for (int lev = 0; lev < nlev; lev++)
-       {
-          Real dx = geom[lev].CellSize(0);
-          Real dy = geom[lev].CellSize(1);
-          Real dz = geom[lev].CellSize(2);
-
-          // We deliberately don't tile this loop
-          for (MFIter mfi(*(m_leveldata[lev]->p_g), false); mfi.isValid(); ++mfi)
-          {
-             mfix_usr3(BL_TO_FORTRAN_ANYD((*m_leveldata[lev]->vel_g)[mfi]),
-                       BL_TO_FORTRAN_ANYD((*m_leveldata[lev]->p_g)[mfi]),
-                       &dx, &dy, &dz);
-          }
-       }
-    }
-}
-
 
 void
 mfix::avgDown (int crse_lev, const MultiFab& S_fine, MultiFab& S_crse)
@@ -269,6 +229,26 @@ Vector< MultiFab* > mfix::get_ro_g_old () noexcept
   return r;
 }
 
+Vector< MultiFab* > mfix::get_X_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->X_g);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_X_g_old () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->X_go);
+  }
+  return r;
+}
+
 Vector< MultiFab* > mfix::get_trac () noexcept
 {
   Vector<MultiFab*> r;
@@ -319,12 +299,32 @@ Vector< MultiFab* > mfix::get_cp_g () noexcept
   return r;
 }
 
+Vector< MultiFab* > mfix::get_k_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->k_g);
+  }
+  return r;
+}
+
 Vector< MultiFab* > mfix::get_mu_g () noexcept
 {
   Vector<MultiFab*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
     r.push_back(m_leveldata[lev]->mu_g);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_D_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->D_g);
   }
   return r;
 }
@@ -395,6 +395,36 @@ Vector< MultiFab* > mfix::get_zslopes_s () noexcept
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
     r.push_back(m_leveldata[lev]->zslopes_s);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_xslopes_X_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->xslopes_species_g);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_yslopes_X_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->yslopes_species_g);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_zslopes_X_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->zslopes_species_g);
   }
   return r;
 }

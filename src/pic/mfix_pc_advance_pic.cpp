@@ -39,7 +39,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
       auto& aos   = ptile.GetArrayOfStructs();
       ParticleType* pstruct = aos().dataPtr();
 
-#ifndef AMREX_USE_CUDA
+#ifndef AMREX_USE_GPU
       BL_PROFILE_VAR("pic_time_march()", pic_time_march);
 #endif
       /********************************************************************
@@ -56,7 +56,6 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
       int z_lo_bc = BC::domain_bc[4];
       int z_hi_bc = BC::domain_bc[5];
 
-      const auto&      eps_array = ep_s_in[lev]->array(pti);
       const auto& avg_prop_array = avg_prop_in[lev]->array(pti);
 
       const amrex::Real small_number = std::numeric_limits<Real>::epsilon();
@@ -65,7 +64,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
       const amrex::Real en = (PIC::damping_factor + 1.0);
 
       amrex::ParallelFor(nrp,
-         [pstruct,dt,gravity,small_number,p_hi,p_lo, dxi_array, avg_prop_array, eps_array,
+         [pstruct,dt,gravity,small_number,p_hi,p_lo, dxi_array, avg_prop_array,
           en,x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc,velfac]
         AMREX_GPU_DEVICE (int ip) noexcept
         {
@@ -75,9 +74,9 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
           const amrex::RealVect pos = p.pos();
 
           // cell containing particle
-          const int i = floor((pos[0] - p_lo[0])*dxi_array[0]);
-          const int j = floor((pos[1] - p_lo[1])*dxi_array[1]);
-          const int k = floor((pos[2] - p_lo[2])*dxi_array[2]);
+          const int i = static_cast<int>(amrex::Math::floor((pos[0] - p_lo[0])*dxi_array[0]));
+          const int j = static_cast<int>(amrex::Math::floor((pos[1] - p_lo[1])*dxi_array[1]));
+          const int k = static_cast<int>(amrex::Math::floor((pos[2] - p_lo[2])*dxi_array[2]));
 
           // solids stress gradient:
           // grad_tau_p = (volume * grad_tau_p) / (mass * ep_s))
@@ -85,12 +84,6 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
           grad_tau_p[0] = p.rdata(realData::omegax);
           grad_tau_p[1] = p.rdata(realData::omegay);
           grad_tau_p[2] = p.rdata(realData::omegaz);
-
-          // slip velocity between parcel and the bulk solids
-          amrex::RealVect slip_vel;
-          slip_vel[0] = velfac*avg_prop_array(i,j,k,0) - p.rdata(realData::velx);
-          slip_vel[1] = velfac*avg_prop_array(i,j,k,1) - p.rdata(realData::vely);
-          slip_vel[2] = velfac*avg_prop_array(i,j,k,2) - p.rdata(realData::velz);
 
           // inverse of particle mass and macroscopic density
           const amrex::Real inv_mass = 1.0 / p.rdata(realData::mass);
@@ -104,6 +97,12 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
           vel[1] = scale*(p.rdata(realData::vely) + dt*(p.rdata(realData::dragy)*inv_mass + gravity[1]));
           vel[2] = scale*(p.rdata(realData::velz) + dt*(p.rdata(realData::dragz)*inv_mass + gravity[2]));
 
+          // Slip velocity between the parcel and the bulk. This needs to be the
+          // tentative new velocity, not the current velocity.
+          amrex::RealVect slip_vel;
+          slip_vel[0] = velfac*avg_prop_array(i,j,k,0) - vel[0];
+          slip_vel[1] = velfac*avg_prop_array(i,j,k,1) - vel[1];
+          slip_vel[2] = velfac*avg_prop_array(i,j,k,2) - vel[2];
 
           for( int dir(0); dir<3; dir++)
           {
@@ -170,7 +169,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
 
       Gpu::synchronize();
 
-#ifndef AMREX_USE_CUDA
+#ifndef AMREX_USE_GPU
       BL_PROFILE_VAR_STOP(pic_time_march);
 #endif
 

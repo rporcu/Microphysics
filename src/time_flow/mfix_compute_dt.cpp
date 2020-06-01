@@ -6,7 +6,7 @@
 using namespace std;
 
 void
-mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
+mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& prev_dt)
 {
     // dt is always computed even when fixed_dt is set,
     // so we can issue a warning if the value of fixed dt does not satisfy the CFL condition.
@@ -37,7 +37,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
     // Max CFL factor for all levels
     Real cfl_max(0.0);
 
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
     {
       Gpu::DeviceScalar<Real> cfl_max_gpu(cfl_max);
       Real *cfl_max_ptr = cfl_max_gpu.dataPtr();
@@ -80,7 +80,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
             {
               amrex::ParallelFor(bx,
                   [ro,ep,gp0_dev,gradp,drag_fab,gravity_dev,vel,odx,ody,odz,flags_fab,mu,
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
                   cfl_max_ptr]
 #else
                   &cfl_max]
@@ -102,19 +102,21 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
                             acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
                         }
 
-                        Real c_cfl   = abs(vel(i,j,k,0))*odx + abs(vel(i,j,k,1))*ody + abs(vel(i,j,k,2))*odz;
+                        Real c_cfl   = amrex::Math::abs(vel(i,j,k,0))*odx + 
+                                       amrex::Math::abs(vel(i,j,k,1))*ody + 
+                                       amrex::Math::abs(vel(i,j,k,2))*odz;
                         Real v_cfl   = 2.0 * mu(i,j,k) * qro * (odx*odx + ody*ody + odz*odz);
                         Real cpv_cfl = c_cfl + v_cfl;
 
                         // MAX CFL factor on cell (i,j,k)
                         Real cfl_max_cell = cpv_cfl + std::sqrt( cpv_cfl*cpv_cfl +
-                                                                 4.0*abs(acc[0])*odx  +
-                                                                 4.0*abs(acc[1])*ody  +
-                                                                 4.0*abs(acc[2])*odz  );
-#ifdef AMREX_USE_CUDA
+                                                                 4.0*amrex::Math::abs(acc[0])*odx  +
+                                                                 4.0*amrex::Math::abs(acc[1])*ody  +
+                                                                 4.0*amrex::Math::abs(acc[2])*odz  );
+#ifdef AMREX_USE_GPU
                         Gpu::Atomic::Max(cfl_max_ptr, cfl_max_cell);
 #else
-                        cfl_max = std::max(cfl_max, cfl_max_cell);
+                        cfl_max = amrex::max(cfl_max, cfl_max_cell);
 #endif
                     }
                   });
@@ -122,7 +124,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt)
         }
     }
 
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
       cfl_max = cfl_max_gpu.dataValue();
     }
 #endif

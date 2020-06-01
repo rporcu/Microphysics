@@ -48,6 +48,11 @@ if (AMReX_FOUND)
       message (WARNING "MFIX build type (${CMAKE_BUILD_TYPE}) type does not match AMReX build type (${AMReX_BUILD_TYPE})")
    endif ()
 
+   # We load this here so we have the CUDA helper functions
+   # available everywhere we need it
+   if (ENABLE_CUDA)
+      include(AMReXTargetHelpers)
+   endif ()
 else ()
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~ SUPERBUILD MODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -69,7 +74,7 @@ else ()
       find_package(Git REQUIRED)
 
       execute_process(
-         COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+         COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive subprojects/amrex
          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
          RESULT_VARIABLE GIT_SUBMOD_RESULT
          )

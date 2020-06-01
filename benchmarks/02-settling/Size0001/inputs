@@ -14,7 +14,7 @@ amr.blocking_factor = 1
 # Maximum tile size within each grid
 fabarray.mfiter_tile_size = 1024 1024 1024
 
-# Maximum particle title size
+# Maximum particle tile size
 particles.tile_size = 1024 1024 1024
 
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)

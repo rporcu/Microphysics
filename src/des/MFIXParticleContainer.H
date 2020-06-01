@@ -15,11 +15,8 @@
 #include <AMReX_Particles.H>
 #include <AMReX_NeighborParticles.H>
 
-#include <mfix_des_F.H>
-#include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
-#include <MFIX_BcList.H>
-#include <mfix_des_F.H>
+#include <MFIX_BC_List.H>
 
 struct realData
 {
@@ -58,10 +55,13 @@ struct intData
 ///
 struct MFIXCheckPair
 {
+  amrex::Real neighborhood;
+  MFIXCheckPair (amrex::Real neighborhood_) : neighborhood(neighborhood_) {}
+
   template <class P>
   AMREX_GPU_DEVICE AMREX_INLINE
   bool operator() (const P& p1, const P& p2) const
-  { return (p1.pos() - p2.pos()).radSquared() <= DEM::neighborhood; }
+  { return (p1.pos() - p2.pos()).radSquared() <= neighborhood; }
 };
 
 class MFIXParticleContainer final
@@ -112,11 +112,7 @@ public:
                           std::string & knapsack_weight_type,
                           int & nsubsteps);
 
-    void GetParticleAvgProp (amrex::Real (&min_dp)[10], amrex::Real (&min_ro)[10],
-                             amrex::Real (&max_dp)[10], amrex::Real (&max_ro)[10],
-                             amrex::Real (&avg_dp)[10], amrex::Real (&avg_ro)[10]);
-
-    //amrex::Real GetMaxRadius(int lev);
+    void MFIX_PC_InitCollisionParams ();
 
     void UpdateMaxVelocity ();
 
@@ -223,11 +219,6 @@ public:
                               const int ls_refinement,
                               const amrex::MultiFab * ls_phi);
 
-    void ls_has_walls (int& has_wall,
-                       const amrex::Box& bx,
-                       const amrex::FArrayBox& phi_fab,
-                       const amrex::Real tolerance);
-
   private:
     int nlev;
 
@@ -249,6 +240,14 @@ public:
                                   amrex::Real& pmass,
                                   amrex::Real& omoi,
                                   amrex::Real& omega);
+
+    void usr0_des ();
+    void usr1_des ();
+
+    void usr2_des (int np,
+                   NeighborParticleContainer<16, 2>::ParticleType*& particles);
+
+    void usr3_des (int np,void*&);
 };
 
 #endif

@@ -1,7 +1,6 @@
 #include <AMReX.H>
 #include <AMReX_Arena.H>
 #include <AMReX_Print.H>
-#include <mfix_des_F.H>
 
 #include <AMReX_Vector.H>
 #include <AMReX_ParmParse.H>
@@ -9,43 +8,44 @@
 
 namespace DEM
 {
-
     int solve = 0;
 
-    AMREX_GPU_DEVICE_MANAGED COLLISIONMODEL CollisionModel = LSD;
-    AMREX_GPU_DEVICE_MANAGED int NPHASE;
+    COLLISIONMODEL CollisionModel = LSD;
+    int NPHASE;
 
-    AMREX_GPU_DEVICE_MANAGED amrex::Real mew;
-    AMREX_GPU_DEVICE_MANAGED amrex::Real mew_w;
+    amrex::Real dtsolid;
 
-    AMREX_GPU_DEVICE_MANAGED amrex::Real kt;
-    AMREX_GPU_DEVICE_MANAGED amrex::Real kt_w;
+    amrex::Real mew;
+    amrex::Real mew_w;
 
-    AMREX_GPU_DEVICE_MANAGED amrex::Real kn;
-    AMREX_GPU_DEVICE_MANAGED amrex::Real kn_w;
+    amrex::Real kt;
+    amrex::Real kt_w;
 
-    AMREX_GPU_DEVICE_MANAGED amrex::Real kt_fac = 2.0/7.0;
-    AMREX_GPU_DEVICE_MANAGED amrex::Real kt_w_fac = 2.0/7.0;
+    amrex::Real kn;
+    amrex::Real kn_w;
+
+    amrex::Real kt_fac = 2.0/7.0;
+    amrex::Real kt_w_fac = 2.0/7.0;
 
     // normal and tangential components of the damping coefficients
-    AMREX_GPU_DEVICE_MANAGED amrex::Real etan[NMAX][NMAX];
-    AMREX_GPU_DEVICE_MANAGED amrex::Real etan_w[NMAX];
+    A2D etan;
+    A1D etan_w;
 
-    AMREX_GPU_DEVICE_MANAGED amrex::Real etat[NMAX][NMAX];
-    AMREX_GPU_DEVICE_MANAGED amrex::Real etat_w[NMAX];
+    A2D etat;
+    A1D etat_w;
 
     // coefficients of restitution, normal and tangential
-    AMREX_GPU_DEVICE_MANAGED amrex::Real en_input[NMAX+NMAX*(NMAX-1)/2];
-    AMREX_GPU_DEVICE_MANAGED amrex::Real en_w_input[NMAX];
+    A2D en;
+    A1D en_w;
 
-    AMREX_GPU_DEVICE_MANAGED amrex::Real eta_fac;
-    AMREX_GPU_DEVICE_MANAGED amrex::Real eta_w_fac;
+    amrex::Real eta_fac;
+    amrex::Real eta_w_fac;
 
-    AMREX_GPU_DEVICE_MANAGED amrex::Real small_number = 1.0e-15;
-    AMREX_GPU_DEVICE_MANAGED amrex::Real large_number = 1.0e32;
-    AMREX_GPU_DEVICE_MANAGED amrex::Real eps = std::numeric_limits<amrex::Real>::epsilon();
+    amrex::Real small_number = 1.0e-15;
+    amrex::Real large_number = 1.0e32;
+    amrex::Real eps = std::numeric_limits<amrex::Real>::epsilon();
 
-    AMREX_GPU_DEVICE_MANAGED amrex::Real neighborhood = 1.0;
+    amrex::Real neighborhood = 1.0;
 
     // Tangential damping factor ratio
     amrex::Real eta_fac_pp = 0.5;
@@ -54,16 +54,32 @@ namespace DEM
     // Names of the solids used to build input regions.
     amrex::Vector<std::string> names;
 
-    // Particle species  
+    // Flag to solve species fluid equations
+    int solve_species = 0;
+
+    // Particle species
     amrex::Vector<std::string> species_dem;
 
     // Particle species fractions
     amrex::Vector<amrex::Real> spec_frac_dem;
+    
     // Number of species at each particle
-    AMREX_GPU_DEVICE_MANAGED int nspecies_dem = 0;
-   
+    int nspecies_dem = 0;
+
+    // Coarse-grain DEM
+    int cg_dem = 0;
+
     void Initialize ()
     {
+
+      amrex::ExecOnFinalize(Finalize);
+
+      etan.alloc();
+      etan_w.alloc();
+      etat.alloc();
+      etat_w.alloc();
+      en.alloc();
+      en_w.alloc();
 
       amrex::ParmParse pp("dem");
 
@@ -148,11 +164,14 @@ namespace DEM
         if (species > 0)
         {
              pp.getarr("species.names", species_dem);
-             nspecies_dem = species_dem.size();        
-             pp.getarr("species.fractions", spec_frac_dem);          
+             nspecies_dem = species_dem.size();
+             pp.getarr("species.fractions", spec_frac_dem);
              AMREX_ALWAYS_ASSERT_WITH_MESSAGE( species_dem.size() == spec_frac_dem.size(),
              "Species fraction number does not match species number");
         }
+
+        // Read coarse-grain DEM
+        pp.query("coarse_grain", cg_dem);
 
         //// We know that we should have an upper-triangular matrix worth
         //// of entries. (1-1, 1-2, 2-2, ...) for NPHASEs
@@ -164,12 +183,10 @@ namespace DEM
         //    dem.restitution_coeff.solid2.solid1 = coeff
         //
         // We want to make sure that at least one is given. If both are given
-        // then they must be equal.  The values get stroed in en_input
-
-
+        // then they must be equal.  The values get stored in en.
         {
-          int lc_pp = 0;
-          int lc_pw = 0;
+          A2D::array_type host_en;
+          A1D::array_type host_en_w;
 
           amrex::ParmParse ppRC("dem.restitution_coeff");
           for (int idx0=0; idx0 < NPHASE; idx0++){
@@ -204,8 +221,8 @@ namespace DEM
               AMREX_ALWAYS_ASSERT_WITH_MESSAGE(rest_coeff >= 0.0 && rest_coeff <= 1.0,
                    "Invalid restitution coefficient.");
 
-              en_input[lc_pp] = rest_coeff;
-              lc_pp += 1;
+              host_en(idx0,idx1) = rest_coeff;
+              host_en(idx1,idx0) = rest_coeff;
 
             }
 
@@ -238,22 +255,30 @@ namespace DEM
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(rest_coeff >= 0.0 && rest_coeff <= 1.0,
                  "Invalid restitution coefficient.");
 
-            en_w_input[lc_pw] = rest_coeff;
-            lc_pw += 1;
+            host_en_w(idx0) = rest_coeff;
 
           }
+#ifdef AMREX_USE_GPU
+          amrex::Gpu::htod_memcpy_async(DEM::en.arrayPtr(), &host_en, sizeof(DEM::A2D::array_type));
+          amrex::Gpu::htod_memcpy_async(DEM::en_w.arrayPtr(), &host_en_w, sizeof(DEM::A1D::array_type));
+          amrex::Gpu::synchronize();
+#else
+          *(DEM::en.arrayPtr()) = host_en;
+          *(DEM::en_w.arrayPtr()) = host_en_w;
+#endif
         }
-
-
-        set_lsd_collision_coefficients(&mew,         &mew_w,
-                                       &kn,          &kn_w,
-                                       &kt,          &kt_w,
-                                       &en_input[0], &en_w_input[0],
-                                       &kt_fac,      &kt_w_fac,
-                                       &eta_fac,     &eta_w_fac);
 
       }
 
     }
 
+    void Finalize ()
+    {
+      etan.free();
+      etan_w.free();
+      etat.free();
+      etat_w.free();
+      en.free();
+      en_w.free();
+    }
 }

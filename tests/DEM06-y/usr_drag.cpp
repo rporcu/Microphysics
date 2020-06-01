@@ -1,5 +1,4 @@
 #include <AMReX_REAL.H>
-#include <MFIX_DEM_Parms.H>
 #include <des_drag_K.H>
 #include <cmath>
 
@@ -11,10 +10,10 @@ ComputeDragUser::operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg,
                              int i, int j, int k, int pid) const
 {
     amrex::Real ROg = ROPg / EPg;
-    amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROg/Mug : DEM::large_number;
+    amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROg/Mug : large_number;
     
     amrex::Real Cd = 0.0;
-    if (RE > DEM::eps) Cd = (24.0/RE)*(1.0 + 0.15*std::pow(RE, 0.687));
+    if (RE > eps) Cd = (24.0/RE)*(1.0 + 0.15*std::pow(RE, 0.687));
     
     return 0.75*(ROg*vrel/DPM)*Cd;
 }

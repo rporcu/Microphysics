@@ -1,5 +1,7 @@
 #include <mfix.H>
 #include <AMReX_EB_utils.H>
+#include <MFIX_FLUID_Parms.H>
+#include <MFIX_SPECIES_Parms.H>
 
 void
 mfix::ResizeArrays ()
@@ -26,10 +28,10 @@ mfix::ResizeArrays ()
     // Particle grid EB factory
     particle_ebfactory.resize(nlevs_max);
 
-    eb_levels.resize(std::max(2, nlevs_max));
-    particle_eb_levels.resize(std::max(2, nlevs_max));
+    eb_levels.resize(amrex::max(2, nlevs_max));
+    particle_eb_levels.resize(amrex::max(2, nlevs_max));
 
-    level_sets.resize(std::max(2, nlevs_max));
+    level_sets.resize(amrex::max(2, nlevs_max));
 }
 
 void
@@ -187,6 +189,32 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->ro_go, ro_go_new);
     delete ro_go_new;
 
+    if (advect_fluid_species) {
+      // Gas species mass fraction
+      MultiFab* X_g_new = new MultiFab(grids[lev], dmap[lev],
+                                       m_leveldata[lev]->X_g->nComp(),
+                                       m_leveldata[lev]->X_g->nGrow(),
+                                       MFInfo(), *ebfactory[lev]);
+      X_g_new->setVal(0);
+      X_g_new->ParallelCopy(*m_leveldata[lev]->X_g, 0, 0,
+          m_leveldata[lev]->X_g->nComp(), src_ngrow,
+          m_leveldata[lev]->X_g->nGrow(), geom[lev].periodicity());
+      std::swap(m_leveldata[lev]->X_g, X_g_new);
+      delete X_g_new;
+
+      // Old gas species mass fraction
+      MultiFab* X_go_new = new MultiFab(grids[lev], dmap[lev],
+                                       m_leveldata[lev]->X_g->nComp(),
+                                       m_leveldata[lev]->X_g->nGrow(),
+                                       MFInfo(), *ebfactory[lev]);
+      X_go_new->setVal(0);
+      X_go_new->ParallelCopy(*m_leveldata[lev]->X_go, 0, 0,
+          m_leveldata[lev]->X_go->nComp(), src_ngrow,
+          m_leveldata[lev]->X_go->nGrow(), geom[lev].periodicity());
+      std::swap(m_leveldata[lev]->X_go, X_go_new);
+      delete X_go_new; 
+    }
+
     // Tracer in gas
     MultiFab* trac_new = new MultiFab(grids[lev], dmap[lev],
                                       m_leveldata[lev]->trac->nComp(),
@@ -260,6 +288,17 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->cp_g, cp_g_new);
     delete cp_g_new;
 
+    // Thermal conductivity
+    MultiFab* k_g_new = new MultiFab(grids[lev], dmap[lev],
+                                      m_leveldata[lev]->k_g->nComp(),
+                                      m_leveldata[lev]->k_g->nGrow(),
+                                      MFInfo(), *ebfactory[lev]);
+    k_g_new->setVal(0);
+    k_g_new->ParallelCopy(*m_leveldata[lev]->k_g, 0, 0, m_leveldata[lev]->k_g->nComp(),
+                   src_ngrow, m_leveldata[lev]->k_g->nGrow(), geom[lev].periodicity());
+    std::swap(m_leveldata[lev]->k_g, k_g_new);
+    delete k_g_new;
+
     // Molecular viscosity
     MultiFab* mu_g_new = new MultiFab(grids[lev], dmap[lev],
                                       m_leveldata[lev]->mu_g->nComp(),
@@ -270,6 +309,19 @@ mfix::RegridArrays (int lev)
                    src_ngrow, m_leveldata[lev]->mu_g->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->mu_g, mu_g_new);
     delete mu_g_new;
+
+    if (advect_fluid_species) {
+      // Species diffusion coefficients
+      MultiFab* D_g_new = new MultiFab(grids[lev], dmap[lev],
+                                       m_leveldata[lev]->D_g->nComp(),
+                                       m_leveldata[lev]->D_g->nGrow(),
+                                       MFInfo(), *ebfactory[lev]);
+      D_g_new->setVal(0);
+      D_g_new->ParallelCopy(*m_leveldata[lev]->D_g, 0, 0, m_leveldata[lev]->D_g->nComp(),
+                     src_ngrow, m_leveldata[lev]->D_g->nGrow(), geom[lev].periodicity());
+      std::swap(m_leveldata[lev]->D_g, D_g_new);
+      delete D_g_new;
+    }
 
     // Gas velocity
     MultiFab* vel_g_new = new MultiFab(grids[lev], dmap[lev],
@@ -394,6 +446,32 @@ mfix::RegridArrays (int lev)
     zslopes_s_new->setVal(0);
     std::swap(m_leveldata[lev]->zslopes_s, zslopes_s_new);
     delete zslopes_s_new;
+
+    if (advect_fluid_species) {
+      MultiFab* xslopes_species_g_new = new MultiFab(grids[lev], dmap[lev],
+                                             m_leveldata[lev]->xslopes_species_g->nComp(),
+                                             m_leveldata[lev]->xslopes_species_g->nGrow(),
+                                             MFInfo(), *ebfactory[lev]);
+      xslopes_species_g_new->setVal(0);
+      std::swap(m_leveldata[lev]->xslopes_species_g, xslopes_species_g_new);
+      delete xslopes_species_g_new;
+
+      MultiFab* yslopes_species_g_new = new MultiFab(grids[lev], dmap[lev],
+                                             m_leveldata[lev]->yslopes_species_g->nComp(),
+                                             m_leveldata[lev]->yslopes_species_g->nGrow(),
+                                             MFInfo(), *ebfactory[lev]);
+      yslopes_species_g_new->setVal(0);
+      std::swap(m_leveldata[lev]->yslopes_species_g, yslopes_species_g_new);
+      delete yslopes_species_g_new;
+
+      MultiFab* zslopes_species_g_new = new MultiFab(grids[lev], dmap[lev],
+                                             m_leveldata[lev]->zslopes_species_g->nComp(),
+                                             m_leveldata[lev]->zslopes_species_g->nGrow(),
+                                             MFInfo(), *ebfactory[lev]);
+      zslopes_species_g_new->setVal(0);
+      std::swap(m_leveldata[lev]->zslopes_species_g, zslopes_species_g_new);
+      delete zslopes_species_g_new;
+    }
 
    /****************************************************************************
     * x-face-based arrays                                                        *
@@ -555,24 +633,24 @@ mfix::RegridLevelSetArray (int a_lev)
            BoxArray ref_nd_ba = amrex::convert(ba, IntVect::TheNodeVector());
            ref_nd_ba.refine(levelset_refinement);
 
-           MultiFab* new_level_set = new MultiFab();
+           MultiFab* new_level_set_lev = new MultiFab();
 
            if (level_sets[a_lev+1]->boxArray() == ref_nd_ba)
            {
-               MFUtil::regrid(*new_level_set, ref_nd_ba, dm, *level_sets[a_lev+1], true);
+               MFUtil::regrid(*new_level_set_lev, ref_nd_ba, dm, *level_sets[a_lev+1], true);
            }
            else
            {
                int nc = level_sets[a_lev+1]->nComp();
                int ng = level_sets[a_lev+1]->nGrow();
                const Periodicity& period = geom[a_lev].periodicity();
-               new_level_set->define(ref_nd_ba, dm, nc, ng);
-               new_level_set->setVal(0.0);
-               new_level_set->copy(*level_sets[a_lev+1], 0, 0, nc, 0, ng, period);
+               new_level_set_lev->define(ref_nd_ba, dm, nc, ng);
+               new_level_set_lev->setVal(0.0);
+               new_level_set_lev->copy(*level_sets[a_lev+1], 0, 0, nc, 0, ng, period);
            }
 
-           std::swap(level_sets[a_lev+1], new_level_set);
-           delete new_level_set;
+           std::swap(level_sets[a_lev+1], new_level_set_lev);
+           delete new_level_set_lev;
        }
    }
 }

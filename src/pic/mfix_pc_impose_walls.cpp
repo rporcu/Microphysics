@@ -11,9 +11,7 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
                                                  const int ls_refinement,
                                                  const amrex::MultiFab* ls_phi)
 {
-
-
-  BL_PROFILE("MFIXParticleContainer::MFIX_PC_AdvanceParcels()");
+    BL_PROFILE_VAR("MFIXParticleContainer::MFIX_PC_Imposewalls()",mfix_pc_impose_walls);
 
     /****************************************************************************
      * Geometry                                                                 *
@@ -103,18 +101,7 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
                     }
             });
 
-
-#ifndef AMREX_USE_CUDA
-                BL_PROFILE_VAR_STOP(calc_wall_collisions);
-#endif
             }
-
     }
-
-
-
-
-
-
-
+    BL_PROFILE_VAR_STOP(mfix_pc_impose_walls);
 }

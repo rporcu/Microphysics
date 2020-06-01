@@ -14,8 +14,6 @@
 
 #include <math.h>
 
-#include <mfix_F.H>
-#include <mfix_des_F.H>
 #include <mfix_des_K.H>
 
 #include <MFIX_DEM_Parms.H>
@@ -86,7 +84,7 @@ void MFIXParticleContainer::printParticles ()
     {
        const auto& particles = kv.second.GetArrayOfStructs();
 
-       for (unsigned i = 0; i < particles.numParticles(); ++i)
+       for (int i = 0; i < particles.numParticles(); ++i)
        {
           std::cout << "Particle ID  = " << i << " " << std::endl;
           std::cout << "X            = " << particles[i].pos(0) << " " << std::endl;
@@ -158,7 +156,15 @@ void MFIXParticleContainer::EvolveParticles (int lev,
      ***************************************************************************/
 
     Real subdt;
-    des_init_time_loop(&time, &dt, &nsubsteps, &subdt);
+    // des_init_time_loop(&dt, &nsubsteps, &subdt);
+    if ( dt >= DEM::dtsolid )
+    {
+       nsubsteps = amrex::Math::ceil (  dt / DEM::dtsolid );
+       subdt     =  dt / nsubsteps;
+    } else {
+       nsubsteps = 1;
+       subdt     = dt;
+    }
 
     /****************************************************************************
      * Get particle EB geometric info
@@ -184,9 +190,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         pfor[index] = Gpu::ManagedDeviceVector<Real>();
         wfor[index] = Gpu::ManagedDeviceVector<Real>();
 
-        // Only call the routine for wall collisions if we actually have walls
-        BL_PROFILE_VAR("ls_has_walls", has_wall);
+        // Determine if this particle tile actually has any walls
         bool has_wall = false;
+
         if ((ebfactory != NULL)
             && ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
         {
@@ -194,15 +200,22 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         }
         else
         {
-            int int_has_wall = 0;
-            Real tol = std::min(dx[0], std::min(dx[1], dx[2])) / 2;
-            ls_has_walls(int_has_wall, bx, (*ls_phi)[pti], tol);
-            has_wall = (int_has_wall > 0);
+            // We need this test for the case of an inflow boundary:
+            // inflow does not appear in the EBFactory but
+            // the particles see it as a wall
+
+            // Create the nodal refined box based on the current particle tile
+            Box refined_box(amrex::convert(amrex::refine(bx,ls_refinement), IntVect{1,1,1}));
+
+            // Set tol to 1/2 dx
+            Real tol = amrex::min(dx[0], amrex::min(dx[1], dx[2])) / 2;
+
+            Real ls_min_over_box = ((*ls_phi)[pti]).min<RunOn::Gpu>(refined_box,0);
+
+            if (ls_min_over_box < tol) has_wall = true;
         }
 
         tile_has_walls[index] = has_wall;
-
-        BL_PROFILE_VAR_STOP(has_wall);
     }
 
     /****************************************************************************
@@ -228,7 +241,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             fillNeighbors();
             // send in "false" for sort_neighbor_list option
 
-            buildNeighborList(MFIXCheckPair(), false);
+            buildNeighborList(MFIXCheckPair(DEM::neighborhood), false);
         } else {
             updateNeighbors();
         }
@@ -252,7 +265,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             ParticleType* pstruct = aos().dataPtr();
 
             // Neighbor particles
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
             int size_ng = aos.numNeighborParticles();
 #else
             int size_ng = neighbors[lev][index].size();
@@ -286,16 +299,16 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             if (tile_has_walls[index])
             {
                 // Calculate forces and torques from particle-wall collisions
-#ifndef AMREX_USE_CUDA
                 BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
-#endif
+
                 auto& geom = this->Geom(lev);
                 const auto dxi = geom.InvCellSizeArray();
                 const auto plo = geom.ProbLoArray();
                 const auto phiarr = ls_phi->array(pti);
 
                 amrex::ParallelFor(nrp,
-                  [pstruct,ls_refinement,phiarr,plo,dxi,subdt,ntot,fc_ptr,tow_ptr]
+                  [pstruct,ls_refinement,phiarr,plo,dxi,subdt,ntot,fc_ptr,tow_ptr,
+                   local_mew_w=DEM::mew_w,local_kn_w=DEM::kn_w,local_etan_w=DEM::etan_w]
                   AMREX_GPU_DEVICE (int i) noexcept
                   {
                     ParticleType& p = pstruct[i];
@@ -336,8 +349,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                         int phase = p.idata(intData::phase);
 
-                        Real kn_des_w   = DEM::kn_w;
-                        Real etan_des_w = DEM::etan_w[phase-1];
+                        Real kn_des_w   = local_kn_w;
+                        Real etan_des_w = local_etan_w(phase-1);
 
                         // NOTE - we don't use the tangential components right now,
                         // but we might in the future
@@ -365,7 +378,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                         mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
 
                         if (mag_overlap_t > 0.0) {
-                            Real fnmd = DEM::mew_w * sqrt(dot_product(fn, fn));
+                            Real fnmd = local_mew_w * sqrt(dot_product(fn, fn));
                             Real tangent[3];
                             tangent[0] = overlap_t[0]/mag_overlap_t;
                             tangent[1] = overlap_t[1]/mag_overlap_t;
@@ -398,22 +411,18 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 // the wfor (wall forces) vector.
                 if (debug_level > 0) {
                     Gpu::synchronize();
-                    for (int i = 0; i < wfor[index].size(); i++ ) {
+                    for (size_t i = 0; i < wfor[index].size(); i++ ) {
                         wfor[index][i] = fc[index][i];
                     }
                 }
-#ifndef AMREX_USE_CUDA
                 BL_PROFILE_VAR_STOP(calc_wall_collisions);
-#endif
             }
 
             /********************************************************************
              * Particle-Particle collision forces (and torques)                 *
              *******************************************************************/
 
-#ifndef AMREX_USE_CUDA
             BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
-#endif
 
             auto nbor_data = m_neighbor_list[lev][index].data();
 
@@ -427,7 +436,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 #if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
                  eps,
 #endif
-                 subdt,ntot,small_number]
+                 subdt,ntot,small_number,local_mew=DEM::mew,local_kn=DEM::kn,
+                 local_etan=DEM::etan]
               AMREX_GPU_DEVICE (int i) noexcept
               {
                   ParticleType& p1 = pstruct[i];
@@ -444,7 +454,10 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                       Real r_lm = p1.rdata(realData::radius) + p2.rdata(realData::radius);
 
-                      if ( r2 <= (r_lm - small_number)*(r_lm - small_number) and (p1.id() != p2.id()))
+                      AMREX_ASSERT_WITH_MESSAGE(!(p1.id() == p2.id() and p1.cpu() == p2.cpu()),
+                        "A particle should not be its own neighbor!");
+
+                      if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
                       {
                           if (debug_level > 0)
                              Gpu::Atomic::Add(pncoll, 1);
@@ -469,8 +482,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                           int phase1 = p1.idata(intData::phase);
                           int phase2 = p2.idata(intData::phase);
 
-                          Real kn_des = DEM::kn;
-                          Real etan_des = DEM::etan[phase1-1][phase2-1];
+                          Real kn_des = local_kn;
+                          Real etan_des = local_etan(phase1-1,phase2-1);
 
                           // NOTE - we don't use the tangential components right now,
                           // but we might in the future
@@ -497,7 +510,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                           mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
 
                           if (mag_overlap_t > 0.0) {
-                              Real fnmd = DEM::mew * sqrt(dot_product(fn, fn));
+                              Real fnmd = local_mew * sqrt(dot_product(fn, fn));
                               Real tangent[3];
                               tangent[0] = overlap_t[0]/mag_overlap_t;
                               tangent[1] = overlap_t[1]/mag_overlap_t;
@@ -516,10 +529,10 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                           fc_ptr[i + ntot  ] += fn[1] + ft[1];
                           fc_ptr[i + 2*ntot] += fn[2] + ft[2];
 
-                          Real r1 = p1.rdata(realData::radius);
-                          Real r2 = p2.rdata(realData::radius);
+                          Real part1_r = p1.rdata(realData::radius);
+                          Real part2_r = p2.rdata(realData::radius);
 
-                          Real dist_cl = 0.5 * (dist_mag + (r1*r1 - r2*r2) * dist_mag_inv);
+                          Real dist_cl = 0.5 * (dist_mag + (part1_r*part1_r - part2_r*part2_r) * dist_mag_inv);
                           dist_cl = dist_mag - dist_cl;
 
                           Real tow_force[3];
@@ -538,18 +551,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             // wall forces, these need to be subtracted here.
             if (debug_level > 0)
             {
-                for (int i = 0; i < pfor[index].size(); i++ ) {
+                for (size_t i = 0; i < pfor[index].size(); i++ ) {
                     pfor[index][i] = fc[index][i] - wfor[index][i];
                 }
             }
 
-#ifndef AMREX_USE_CUDA
             BL_PROFILE_VAR_STOP(calc_particle_collisions);
-#endif
 
-#ifndef AMREX_USE_CUDA
             BL_PROFILE_VAR("des_time_march()", des_time_march);
-#endif
             /********************************************************************
              * Move particles based on collision forces and torques             *
              *******************************************************************/
@@ -602,7 +611,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 //if (DEM::nspecies_dem > 0){
                 //   for(int j=0; j < DEM::nspecies_dem; ++j){
                 //      //j -- spec1,spec2 .. ; i -- particle index
-                //      spec_data.m_runtime_rdata[j][i] += subdt*spec_data.m_runtime_rdata[j][i]; 
+                //      spec_data.m_runtime_rdata[j][i] += subdt*spec_data.m_runtime_rdata[j][i];
                 //   }
                 //}
 
@@ -640,14 +649,12 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
             Gpu::synchronize();
 
-#ifndef AMREX_USE_CUDA
             BL_PROFILE_VAR_STOP(des_time_march);
-#endif
 
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
             ncoll = ncoll_gpu.dataValue();
 #endif
-            call_usr2_des(&nrp, pstruct);
+            usr2_des(nrp, pstruct);
 
             /********************************************************************
              * Update runtime cost (used in load-balancing)                     *
@@ -740,7 +747,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         const int nrp   = NumberOfParticles(pti);
         void* particles = pti.GetArrayOfStructs().data();
 
-        call_usr3_des(&nrp, particles);
+        usr3_des(nrp,particles);
     }
 
     if (debug_level > 0) {
@@ -887,85 +894,7 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
     }
 }
 
-void MFIXParticleContainer::GetParticleAvgProp (Real (&min_dp)[10], Real (&min_ro)[10],
-                                                Real (&max_dp)[10], Real (&max_ro)[10],
-                                                Real (&avg_dp)[10], Real (&avg_ro)[10])
-{
-   // The number of phases was previously hard set at 10, however lowering
-   //  this number would make this code faster.
-   int num_of_phases_in_use = 10; //Number of different phases being simulated
 
-   // Cycle through the different phases, starting from 1
-   for (int phse = 1; phse <= num_of_phases_in_use; ++phse)
-   {
-     Real p_num  = 0.0; //number of particle
-     Real p_diam = 0.0; //particle diameters
-     Real p_dens = 0.0; //particle density
-
-     Real min_diam =  1.0e32;
-     Real min_den  =  1.0e32;
-
-     Real max_diam = -1.0e32;
-     Real max_den  = -1.0e32;
-
-     for (int lev = 0; lev < nlev; lev++)
-     {
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:p_num, p_diam, p_dens) if (Gpu::notInLaunchRegion())
-#endif
-        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-        {
-            auto& particles = pti.GetArrayOfStructs();
-
-            Gpu::HostVector<ParticleType> host_particles(pti.numParticles());
-            Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
-
-            for (const auto& p: host_particles){
-                if ( phse==p.idata(intData::phase) )
-                {
-                    p_num  += 1.0;
-                    p_diam += p.rdata(realData::radius) * 2.0;
-                    p_dens += p.rdata(realData::density);
-
-                    min_diam = amrex::min(min_diam, p.rdata(realData::radius) * 2.0 );
-                    min_den  = amrex::min(min_den,  p.rdata(realData::density) );
-
-                    max_diam = amrex::max(max_diam, p.rdata(realData::radius) * 2.0 );
-                    max_den  = amrex::max(max_den,  p.rdata(realData::density) );
-
-                }
-            }
-        }
-     }
-
-     // A single MPI call passes all three variables
-     ParallelDescriptor::ReduceRealSum({p_num,p_diam,p_dens});
-     ParallelDescriptor::ReduceRealMin({min_diam, min_den});
-     ParallelDescriptor::ReduceRealMax({max_diam, max_den});
-
-     //calculate averages or set = zero if no particles of that phase
-     if (p_num==0){
-       avg_dp[phse-1] = 0.0;
-       avg_ro[phse-1] = 0.0;
-
-       min_dp[phse-1] = 0.0;
-       min_ro[phse-1] = 0.0;
-
-       max_dp[phse-1] = 0.0;
-       max_ro[phse-1] = 0.0;
-
-     } else {
-       avg_dp[phse-1] = p_diam/p_num;
-       avg_ro[phse-1] = p_dens/p_num;
-
-       min_dp[phse-1] = min_diam;
-       min_ro[phse-1] = min_den;
-
-       max_dp[phse-1] = max_diam;
-       max_ro[phse-1] = max_den;
-     }
-   }
-}
 
 void MFIXParticleContainer::UpdateMaxVelocity ()
 {
@@ -985,9 +914,9 @@ void MFIXParticleContainer::UpdateMaxVelocity ()
 
            for(const auto & particle : host_particles)
            {
-              max_vel_x = std::max(Real(std::fabs(particle.rdata(realData::velx))), max_vel_x);
-              max_vel_y = std::max(Real(std::fabs(particle.rdata(realData::vely))), max_vel_y);
-              max_vel_z = std::max(Real(std::fabs(particle.rdata(realData::velz))), max_vel_z);
+              max_vel_x = amrex::max(Real(std::fabs(particle.rdata(realData::velx))), max_vel_x);
+              max_vel_y = amrex::max(Real(std::fabs(particle.rdata(realData::vely))), max_vel_y);
+              max_vel_z = amrex::max(Real(std::fabs(particle.rdata(realData::velz))), max_vel_z);
            }
        }
     }
@@ -1013,7 +942,7 @@ void MFIXParticleContainer::UpdateMaxForces (std::map<PairIndex, Gpu::ManagedDev
             //      p1_x, p2_x, ..., pn_x, p1_y, p2_y, ..., pn_y, p1_z, p2_z, ..., pn_z
             // Where n is the total number of particle and neighbor particles.
             const int nrp     = NumberOfParticles(pti);
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
             auto& plev = GetParticles(lev);
             auto& ptile = plev[index];
             auto& aos   = ptile.GetArrayOfStructs();
@@ -1026,19 +955,19 @@ void MFIXParticleContainer::UpdateMaxForces (std::map<PairIndex, Gpu::ManagedDev
 
             // Find max (abs) of particle-particle forces:
             for(int i = 0; i < ntot; i++ )
-                max_pfor_x = std::max(Real(std::fabs(pfor[index][i])), max_pfor_x);
+                max_pfor_x = amrex::max(Real(std::fabs(pfor[index][i])), max_pfor_x);
             for(int i = ntot; i < 2 * ntot; i++ )
-                max_pfor_y = std::max(Real(std::fabs(pfor[index][i])), max_pfor_y);
+                max_pfor_y = amrex::max(Real(std::fabs(pfor[index][i])), max_pfor_y);
             for(int i = 2 * ntot; i < 3 * ntot; i++ )
-                max_pfor_z = std::max(Real(std::fabs(pfor[index][i])), max_pfor_z);
+                max_pfor_z = amrex::max(Real(std::fabs(pfor[index][i])), max_pfor_z);
 
             // Find max (abs) of particle-wall forces:
             for(int i = 0; i < ntot; i++ )
-                max_wfor_x = std::max(Real(std::fabs(wfor[index][i])), max_wfor_x);
+                max_wfor_x = amrex::max(Real(std::fabs(wfor[index][i])), max_wfor_x);
             for(int i = ntot; i < 2 * ntot; i++ )
-                max_wfor_y = std::max(Real(std::fabs(wfor[index][i])), max_wfor_y);
+                max_wfor_y = amrex::max(Real(std::fabs(wfor[index][i])), max_wfor_y);
             for(int i = 2 * ntot; i < 3 * ntot; i++ )
-                max_wfor_z = std::max(Real(std::fabs(wfor[index][i])), max_wfor_z);
+                max_wfor_z = amrex::max(Real(std::fabs(wfor[index][i])), max_wfor_z);
         }
     }
 
@@ -1223,7 +1152,7 @@ ComputeAverageVelocities (const int lev,
         if ( ncalls == 1 )
         {
           // Create output files only the first time this function is called
-          // Use ios:trunc to delete previous contect
+          // Use ios:trunc to delete previous content
           ofs.open ( fname.c_str(), ios::out | ios::trunc );
         }
         else

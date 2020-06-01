@@ -13,11 +13,14 @@ RUN apt-get -qq update \
   openmpi-bin \
   python3 \
   python3-setuptools \
+  python3-venv \
   wget
 
 RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python3 get-pip.py
 RUN python3 -m pip install cmake
+RUN python3 -m pip install codespell
+RUN python3 -m pip install conan
 RUN python3 -m pip install ninja
 
 RUN printf '#!/bin/bash\nenv $@' > /usr/local/bin/srun

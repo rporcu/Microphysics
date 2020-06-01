@@ -160,7 +160,7 @@ int main ( int argc, char* argv[] )
           Real  val = *( lineFabs[nv]->dataPtr() + m );
 
           // Set to zero all the values lower than a certain tolerance
-          if ( abs(val) < tol )
+          if ( amrex::Math::abs(val) < tol )
             val = 0.;
 
           outfile << setw(25) << val;

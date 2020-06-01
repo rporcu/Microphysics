@@ -51,7 +51,7 @@ amr.max_grid_size_z = 10
 # Fluid: Maximum tile size within each grid
 fabarray.mfiter_tile_size = 1024 1024 1024
 
-# Particles: Maximum particle title size
+# Particles: Maximum particle tile size
 particles.tile_size = 1024 1024 1024
 
 

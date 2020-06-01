@@ -1,26 +1,23 @@
-#_______________________________________________________________________
-# Solver settings
 
 amrex.fpe_trap_invalid = 1
-mfix.gravity =  0.0  0.0   0.0
+
+#######################################################################
+#                           Solver settings                           #
+#######################################################################
 
 #! Fluid solver
 #!-----------------------------------------------------------//
 
-#mfix.stop_time    =  0.2
-mfix.max_step     =  0
-mfix.steady_state =  0
+mfix.steady_state     = 1
+mfix.steady_state_tol = 1.0e-5
+mfix.steady_state_maxiter =500
 
-mfix.initial_iterations =  1
-
-#mfix.cfl = 0.9
-mfix.fixed_dt = 1.0e-4
-
-amr.blocking_factor = 4
+amr.blocking_factor = 8
 
 
-#_______________________________________________________________________
-# Geometry / grids / tiles
+#######################################################################
+#                       Geometry / Grids / Tiles                      #
+#######################################################################
 
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
 amr.max_level = 0
@@ -50,51 +47,40 @@ amr.max_grid_size_z =  1024
 fabarray.mfiter_tile_size = 1024 1024 1024
 
 
-#! EB settings
-#!-----------------------------------------------------------//
-
-mfix.write_eb_surface = false
-
-mfix.geometry = "box"
-
-box.internal_flow = false
-
-box.Lo = 1.2  1.2 -1.0
-box.Hi = 2.0  2.0  1.0
+#######################################################################
+#                       Particle load balancing                       #
+#######################################################################
 
 
-ylo.type     = "nsw"
-yhi.type     = "nsw"
 
-xlo.type     = "mi"
-xlo.velocity = 0.1
-
-xhi.type     = "po"
-xhi.pressure = 0.0
-
-
-#_______________________________________________________________________
-# IO / Checkpointing
+#######################################################################
+#                          IO / Checkpointing                         #
+#######################################################################
 
 amr.par_ascii_int  = -1
 amr.par_ascii_file ="vis"
 
-amr.plot_int=50
-amr.plot_file=FLD06
+amr.plot_int=1
+amr.plot_file=FLD07
 
 amr.check_int      = -1
 amr.check_file     ="chk"
 
-#! Restart from checkpoint
-#!-----------------------------------------------------------//
-#amr.restart   ="restart-file"
+mfix.write_eb_surface = false
 
-amr.plt_regtest = 1
+#amr.plt_regtest = 1
 
 
-#_______________________________________________________________________
+#######################################################################
+#                       Physical model settings                       #
+#######################################################################
+
+mfix.gravity =  0.0  0.0   0.0
+
+
+
 # Fluid model settings
-#
+#----------------------------------------------------------------------
 fluid.solve = fluid
 
 fluid.density            = constant
@@ -109,32 +95,66 @@ fluid.specific_heat.constant = 1.0
 fluid.thermal_conductivity          = constant
 fluid.thermal_conductivity.constant = 0.0
 
-#_______________________________________________________________________
-# DEM model settings
 
+# DEM model settings
+#----------------------------------------------------------------------
 dem.solve = None
+
+
+# EB geometry
+#----------------------------------------------------------------------
+mfix.geometry = "box"
+
+box.internal_flow = false
+
+box.Lo = 1.2  1.2 -1.0
+box.Hi = 2.0  2.0  1.0
 
 
 #_______________________________________________________________________
 # Regions for defining ICs and BCs
 #
 
-mfix.regions = full-domain
+mfix.regions = full-domain  wall1  wall2  inlet  outlet
 
 regions.full-domain.lo = 0.000  0.000  0.000
 regions.full-domain.hi = 3.200  3.200  0.800
 
-#_______________________________________________________________________
-# Initial Conditions
-#
+regions.wall1.lo       = 0.000  0.000  0.000
+regions.wall1.hi       = 3.200  0.000  0.800
 
+regions.wall2.lo       = 0.000  3.200  0.000
+regions.wall2.hi       = 3.200  3.200  0.800
+
+regions.inlet.lo       = 0.000  0.000  0.000
+regions.inlet.hi       = 0.000  3.200  0.800
+
+regions.outlet.lo      = 3.200  0.000  0.000
+regions.outlet.hi      = 3.200  3.200  0.800
+
+
+# Initial Conditions
+#----------------------------------------------------------------------
 ic.regions = full-domain
 
-
-# Background IC covering the full domain with gas.
-#---------------------------------------------------------------------//
-ic.full-domain.fluid.volfrac   =  1.0
-
+ic.full-domain.fluid.volfrac   = 1.0
 ic.full-domain.fluid.pressure  = 0.0
+ic.full-domain.fluid.velocity  = 0.1  0.0  0.0
 
-ic.full-domain.fluid.velocity  = 1.0  0.0  0.0
+
+# Boundary Conditions
+#----------------------------------------------------------------------
+bc.regions = wall1  wall2  inlet  outlet
+
+bc.wall1 = nsw
+bc.wall1.normal = 0.0  1.0  0.0
+
+bc.wall2 = nsw
+bc.wall2.normal = 0.0 -1.0  0.0
+
+bc.inlet = mi
+bc.inlet.fluid.volfrac  =  1.0
+bc.inlet.fluid.velocity =  0.1  0.0  0.0
+
+bc.outlet = po
+bc.outlet.fluid.pressure =  0.0

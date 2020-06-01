@@ -103,6 +103,8 @@ mfix.write_ls         = false  # Needed to output level set
 #!-----------------------------------------------------------//
 
 mfix.geometry = "prototype clr"
+# mfix.geometry_filename = "clr.csg"
+# csg.internal_flow = false
 
 eb2.small_volfrac = 1.e-6
 
