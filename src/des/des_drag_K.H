@@ -1,10 +1,13 @@
 #include <AMReX_REAL.H>
-#include <MFIX_DEM_Parms.H>
+#include <AMReX_GpuQualifiers.H>
 
 #include <cmath>
 
 struct ComputeDragWenYu
 {
+    amrex::Real small_number, large_number, eps;
+    ComputeDragWenYu (amrex::Real small_, amrex::Real large_, amrex::Real eps_)
+        : small_number(small_), large_number(large_), eps(eps_) {}
 
      // Literature/Document References:                                     C
      // Wen CY, Yu YH (1966). Chemical Engineering Progress Symposium    C
@@ -33,25 +36,28 @@ struct ComputeDragWenYu
                             amrex::Real fvelx, amrex::Real fvely, amrex::Real fvelz,
                             int i, int j, int k, int pid) const
     {
-        amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROPg/Mug : DEM::large_number;
+        amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROPg/Mug : large_number;
 
         amrex::Real C_d;
         if (RE <= 1000.0)
         {
-            C_d = (24.0/(RE+DEM::small_number)) * (1.0 + 0.15*std::pow(RE, 0.687));
+            C_d = (24.0/(RE+small_number)) * (1.0 + 0.15*std::pow(RE, 0.687));
         }
         else
         {
             C_d = 0.44;
         }
 
-        if (RE < DEM::eps) return 0.0;
+        if (RE < eps) return 0.0;
         return 0.75 * C_d * vrel * ROPg * std::pow(EPg, -2.65) / DPM;
     }
 };
 
 struct ComputeDragGidaspow
 {
+    amrex::Real small_number, large_number, eps;
+    ComputeDragGidaspow (amrex::Real small_, amrex::Real large_, amrex::Real eps_)
+        : small_number(small_), large_number(large_), eps(eps_) {}
 
     // Literature/Document References:
     //  Ding J, Gidaspow D (1990). AIChE Journal 36: 523-538.
@@ -85,7 +91,7 @@ struct ComputeDragGidaspow
     {
   amrex::Real ROg = ROPg / EPg;
 
-        amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROPg/Mug : DEM::large_number;
+        amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROPg/Mug : large_number;
 
   // Dense phase - EPg <= 0.8
   amrex::Real Ergun = 150.0*(1.0 - EPg)*Mug / (EPg*DPM*DPM) + 1.75*ROg*vrel/DPM;
@@ -94,7 +100,7 @@ struct ComputeDragGidaspow
   amrex::Real C_d;
   if (RE <= 1000.0)
   {
-    C_d = (24.0/(RE+DEM::small_number)) * (1.0 + 0.15*std::pow(RE, 0.687));
+    C_d = (24.0/(RE+small_number)) * (1.0 + 0.15*std::pow(RE, 0.687));
   }
   else
   {
@@ -106,7 +112,7 @@ struct ComputeDragGidaspow
   amrex::Real PHI_gs = std::atan(150.0*1.75*(EPg - 0.8))/M_PI + 0.5;
 
   // blend the models
-  if (RE < DEM::eps) return 0.0;
+  if (RE < eps) return 0.0;
   return (1.0 - PHI_gs)*Ergun + PHI_gs*WenYu;
     }
 };
@@ -126,6 +132,9 @@ struct ComputeDragGidaspow
  */
 struct ComputeDragBVK2
 {
+    amrex::Real small_number, large_number, eps;
+    ComputeDragBVK2 (amrex::Real small_, amrex::Real large_, amrex::Real eps_)
+        : small_number(small_), large_number(large_), eps(eps_) {}
 
     // Literature/Document References:
     //  Beetstra, van der Hoef, Kuipers, Chem. Eng. Science 62
@@ -157,9 +166,9 @@ struct ComputeDragBVK2
               amrex::Real fvelx, amrex::Real fvely, amrex::Real fvelz,
               int i, int j, int k, int pid) const
     {
-        amrex::Real RE = (Mug > 0.0) ? DPA*vrel*ROPg/Mug : DEM::large_number;
+        amrex::Real RE = (Mug > 0.0) ? DPA*vrel*ROPg/Mug : large_number;
 
-        if (RE > DEM::eps)
+        if (RE > eps)
         {
       amrex::Real oEPgfour = 1.0/EPg/EPg/EPg/EPg;
 
@@ -187,6 +196,10 @@ struct ComputeDragBVK2
 
 struct ComputeDragUser
 {
+    amrex::Real small_number, large_number, eps;
+    ComputeDragUser (amrex::Real small_, amrex::Real large_, amrex::Real eps_)
+        : small_number(small_), large_number(large_), eps(eps_) {}
+
     /**
      *  \brief Returns: the calculated drag coefficient.
      *
@@ -204,6 +217,7 @@ struct ComputeDragUser
      *    i, j, k - particle cell indices
      *    pid     - particle id number
      */
+    AMREX_GPU_EXTERNAL
     AMREX_GPU_HOST_DEVICE
     amrex::Real operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel,
                             amrex::Real DPM, amrex::Real DPA, amrex::Real PHIS,

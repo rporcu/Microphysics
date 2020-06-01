@@ -12,7 +12,11 @@ tmp.*
 *.RES
 *.LOG
 
-Size*
+*.pvtp
+*.vtp
+*.vtr
+chk?????
+plt?????
 
 Makefile
 
@@ -87,3 +91,6 @@ doc/UsersGuide/*.out
 doc/UsersGuide/*.pdf
 doc/UsersGuide/*.ps
 doc/UsersGuide/*.toc
+
+CMakeFiles
+CMakeCache.txt

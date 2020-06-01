@@ -8,7 +8,6 @@
 #include <AMReX_Geometry.H>
 
 #include <mfix.H>
-#include <mfix_F.H>
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
@@ -117,7 +116,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             RealBox rb(prob_lo,prob_hi);
             Geom(lev).ProbDomain(rb);
             Geom(lev).ResetDefaultProbDomain(rb);
-            
+
             BoxArray orig_ba,ba;
             orig_ba.readFrom(is);
             GotoNextLine(is);
@@ -234,8 +233,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
            } else if ( restart_from_cold_flow and chkscaVarsName[i] == "h_g")
            {
-               amrex::Print() << "  Setting h_g to Cp_g0 T_g0 = " << FLUID::Cp_g0 * FLUID::T_g0 << std::endl;
-               m_leveldata[lev]->h_g->setVal(FLUID::T_g0*FLUID::Cp_g0);
+               amrex::Print() << "  Setting h_g to Cp_g0 T_g0 = " << FLUID::cp_g0 * FLUID::T_g0 << std::endl;
+               m_leveldata[lev]->h_g->setVal(FLUID::T_g0*FLUID::cp_g0);
                continue;
 
            } else if (chkscaVarsName[i] == "level_sets") {
@@ -268,7 +267,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
                  FArrayBox single_fab(mf.boxArray()[0],1);
                  mf.copyTo(single_fab);
-    
+
                   // Copy and replicate mf into chkscalarVars
                   for (MFIter mfi(**(chkscalarVars[i][lev]), false); mfi.isValid(); ++mfi) {
                       int ib = mfi.index();
@@ -276,7 +275,45 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                   }
               }
           }
-        }
+       }
+
+       if (advect_fluid_species)
+       {
+          for (int i = 0; i < chkspeciesVars.size(); i++ )
+          {
+             amrex::Print() << "  Loading " << chkspeciesVarsName[i] << std::endl;
+
+             MultiFab mf;
+             VisMF::Read(mf,
+                     amrex::MultiFabFileFullPrefix(lev,
+                                                   restart_file, level_prefix,
+                                                   chkspeciesVarsName[i]),
+                                                   nullptr,
+                                                   ParallelDescriptor::IOProcessorNumber());
+
+             if (Nrep == IntVect::TheUnitVector()) {
+
+                // Copy from the mf we used to read in to the mf we will use going forward
+                (**(chkspeciesVars[i][lev])).copy(mf, 0, 0, 1, 0, 0);
+
+             } else {
+
+                if (mf.boxArray().size() > 1)
+                    amrex::Abort("Replication only works if one initial grid");
+
+                mf.FillBoundary(geom[lev].periodicity());
+
+                FArrayBox single_fab(mf.boxArray()[0],1);
+                mf.copyTo(single_fab);
+
+                 // Copy and replicate mf into chkscalarVars
+                 for (MFIter mfi(**(chkspeciesVars[i][lev]), false); mfi.isValid(); ++mfi) {
+                     int ib = mfi.index();
+                     (**(chkspeciesVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
+                 }
+               }
+             }
+          }
        }
        amrex::Print() << "  Finished reading fluid data" << std::endl;
     }
@@ -316,7 +353,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
            // Load level-set Multifab
            std::stringstream ls_data_path;
            ls_data_path << restart_file << "/ls_raw";
-   
+
            MultiFab ls_mf;
            VisMF::Read(ls_mf, ls_data_path.str());
 
@@ -334,12 +371,12 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
            amrex::readIntData(levelset_params, 4, param_file, FPC::NativeIntDescriptor());
            int ls_ref = levelset_params[0], ls_pad = levelset_params[1],
                eb_ref = levelset_params[2], eb_pad = levelset_params[3];
-   
+
            amrex::Print() << "     + Loaded level-set parameters:" << std::endl
                           << "       ref = " << ls_ref << "    pad = " << ls_pad
                           << "    eb_ref = " << eb_ref << " eb_pad = " << eb_pad
                           << std::endl;
-   
+
            // Inform the user if the checkpoint parameters do not match those in the
            // inputs file. The checkpoint inputs overwrite the inputs file.
            if(ls_ref != levelset_refinement)
@@ -371,18 +408,29 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->ro_go->FillBoundary(geom[lev].periodicity());
 
-          m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
-     
+
+          // Fill the bc's just in case
+          m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
+          m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
+          m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
+          m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
+
           // Fill the bc's just in case
           m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->vel_go->FillBoundary(geom[lev].periodicity());
 
           m_leveldata[lev]->gp->FillBoundary(geom[lev].periodicity());
+          
+          // Fill the bc's just in case
+          if (advect_fluid_species) {
+            m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
+            m_leveldata[lev]->D_g->FillBoundary(geom[lev].periodicity());
+          }
         }
     }
 
-    if (load_balance_type == "KnapSack" or load_balance_type == "SFC") 
+    if (load_balance_type == "KnapSack" or load_balance_type == "SFC")
     {
       if (DEM::solve or PIC::solve) {
         for (int lev(0); lev < particle_cost.size(); ++lev)

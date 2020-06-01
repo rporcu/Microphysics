@@ -1,6 +1,5 @@
 #include <particle_generator.H>
 #include <AMReX_AmrParGDB.H>
-#include <param_mod_F.H>
 #include <MFIX_calc_cell.H>
 
 #include <limits>
@@ -56,7 +55,7 @@ ParticlesGenerator::generate (int& pc,
 
   for(; icv0 < IC::ic.size(); icv0++)
   {
-    if( std::abs(IC::ic[icv0].fluid.volfrac -1.0) > tolerance)
+    if( amrex::Math::abs(IC::ic[icv0].fluid.volfrac -1.0) > tolerance)
     {
       // Get the solids type index
       int type0(0);
@@ -174,11 +173,16 @@ ParticlesGenerator::generate (int& pc,
   const int local_ni = this->ni;
 
   amrex::ParallelFor(np,
-    [p_rdata,p_idata,p_dp,p_ro_s,pc,ic_u_s,ic_v_s,ic_w_s,statwt,type,local_nr,local_ni]
+    [p_rdata,p_idata,p_dp,p_ro_s,pc,ic_u_s,ic_v_s,ic_w_s,statwt,type,local_nr,local_ni,
+     local_cg_dem=DEM::cg_dem]
     AMREX_GPU_DEVICE (int p) noexcept
   {
     // amrex::Real pvol = (M_PI/6.0) * (dp[p]*dp[p]*dp[p]); // UNUSED_VARIABLE
-
+    // If coarse-grain DEM is activated
+    if (local_cg_dem)
+    {
+       p_dp[p] = std::pow(statwt, 1.0/3.0) * p_dp[p];
+    }
     const int local_pc = pc + p;
 
     //< Radius................. 4
@@ -249,13 +253,13 @@ ParticlesGenerator::hex_close_pack (const int icv,
   const Real z_t(IC::ic[icv].region->hi(2));
 
   // Start/end of IC domain bounds
-  ic_dlo[0] = (std::max(lo[0], i_w)) * dx;
-  ic_dlo[1] = (std::max(lo[1], j_s)) * dy;
-  ic_dlo[2] = (std::max(lo[2], k_b)) * dz;
+  ic_dlo[0] = (amrex::max(lo[0], i_w)) * dx;
+  ic_dlo[1] = (amrex::max(lo[1], j_s)) * dy;
+  ic_dlo[2] = (amrex::max(lo[2], k_b)) * dz;
 
-  ic_dhi[0] = (std::min(hi[0], i_e)+1) * dx;
-  ic_dhi[1] = (std::min(hi[1], j_n)+1) * dy;
-  ic_dhi[2] = (std::min(hi[2], k_t)+1) * dz;
+  ic_dhi[0] = (amrex::min(hi[0], i_e)+1) * dx;
+  ic_dhi[1] = (amrex::min(hi[1], j_n)+1) * dy;
+  ic_dhi[2] = (amrex::min(hi[2], k_t)+1) * dz;
 
   // physical volume of IC region
   const amrex::Real ic_vol = IC::ic[icv].region->volume();
@@ -288,15 +292,15 @@ ParticlesGenerator::hex_close_pack (const int icv,
   seed_hi[1] = static_cast<int>(std::round((ic_dhi[1] - j_s*dy) /  max_dp - seed_lo[1]*max_dp));
   seed_hi[2] = static_cast<int>(std::round((ic_dhi[2] - k_b*dz) / (sqrt3 * max_rp) - seed_lo[1]*max_dp));
 
-  seed_hi[0] = std::min(max_seed[0], seed_hi[0]-1);
-  seed_hi[1] = std::min(max_seed[1], seed_hi[1]-1);
-  seed_hi[2] = std::min(max_seed[2], seed_hi[2]-1);
+  seed_hi[0] = amrex::min(max_seed[0], seed_hi[0]-1);
+  seed_hi[1] = amrex::min(max_seed[1], seed_hi[1]-1);
+  seed_hi[2] = amrex::min(max_seed[2], seed_hi[2]-1);
 
   const Box bx(seed_lo, seed_hi);
 
-  delta_bx[0] = std::max(0, seed_hi[0] - seed_lo[0] + 1);
-  delta_bx[1] = std::max(0, seed_hi[1] - seed_lo[1] + 1);
-  delta_bx[2] = std::max(0, seed_hi[2] - seed_lo[2] + 1);
+  delta_bx[0] = amrex::max(0, seed_hi[0] - seed_lo[0] + 1);
+  delta_bx[1] = amrex::max(0, seed_hi[1] - seed_lo[1] + 1);
+  delta_bx[2] = amrex::max(0, seed_hi[2] - seed_lo[2] + 1);
 
   np = delta_bx[0] * delta_bx[1] * delta_bx[2];
   grow_pdata(pc + np);
@@ -363,19 +367,19 @@ ParticlesGenerator::one_per_fill (const int icv,
   const Real z_t(IC::ic[icv].region->hi(2));
 
   // local grid seed loop hi/lo
-  seed_lo[0] = std::max<int>(lo[0], static_cast<int>(std::ceil(x_w/dx - .5)));
-  seed_lo[1] = std::max<int>(lo[1], static_cast<int>(std::ceil(y_s/dy - .5)));
-  seed_lo[2] = std::max<int>(lo[2], static_cast<int>(std::ceil(z_b/dz - .5)));
+  seed_lo[0] = amrex::max<int>(lo[0], static_cast<int>(amrex::Math::ceil(x_w/dx - .5)));
+  seed_lo[1] = amrex::max<int>(lo[1], static_cast<int>(amrex::Math::ceil(y_s/dy - .5)));
+  seed_lo[2] = amrex::max<int>(lo[2], static_cast<int>(amrex::Math::ceil(z_b/dz - .5)));
 
-  seed_hi[0] = std::min<int>(hi[0], static_cast<int>(std::floor(x_e/dx - .5)));
-  seed_hi[1] = std::min<int>(hi[1], static_cast<int>(std::floor(y_n/dy - .5)));
-  seed_hi[2] = std::min<int>(hi[2], static_cast<int>(std::floor(z_t/dz - .5)));
+  seed_hi[0] = amrex::min<int>(hi[0], static_cast<int>(amrex::Math::floor(x_e/dx - .5)));
+  seed_hi[1] = amrex::min<int>(hi[1], static_cast<int>(amrex::Math::floor(y_n/dy - .5)));
+  seed_hi[2] = amrex::min<int>(hi[2], static_cast<int>(amrex::Math::floor(z_t/dz - .5)));
 
   const Box bx(seed_lo, seed_hi);
 
-  delta_bx[0] = std::max(0, seed_hi[0] - seed_lo[0] + 1);
-  delta_bx[1] = std::max(0, seed_hi[1] - seed_lo[1] + 1);
-  delta_bx[2] = std::max(0, seed_hi[2] - seed_lo[2] + 1);
+  delta_bx[0] = amrex::max(0, seed_hi[0] - seed_lo[0] + 1);
+  delta_bx[1] = amrex::max(0, seed_hi[1] - seed_lo[1] + 1);
+  delta_bx[2] = amrex::max(0, seed_hi[2] - seed_lo[2] + 1);
 
   np = delta_bx[0] * delta_bx[1] * delta_bx[2];
   grow_pdata(pc + np);
@@ -433,19 +437,19 @@ ParticlesGenerator::eight_per_fill (const int icv,
   const Real y_n(IC::ic[icv].region->hi(1));
   const Real z_t(IC::ic[icv].region->hi(2));
 
-  seed_lo[0] = std::max<int>(2*lo[0], static_cast<int>(std::ceil(x_w*(2/dx) - .5)));
-  seed_lo[1] = std::max<int>(2*lo[1], static_cast<int>(std::ceil(y_s*(2/dy) - .5)));
-  seed_lo[2] = std::max<int>(2*lo[2], static_cast<int>(std::ceil(z_b*(2/dz) - .5)));
+  seed_lo[0] = amrex::max<int>(2*lo[0], static_cast<int>(amrex::Math::ceil(x_w*(2/dx) - .5)));
+  seed_lo[1] = amrex::max<int>(2*lo[1], static_cast<int>(amrex::Math::ceil(y_s*(2/dy) - .5)));
+  seed_lo[2] = amrex::max<int>(2*lo[2], static_cast<int>(amrex::Math::ceil(z_b*(2/dz) - .5)));
 
-  seed_hi[0] = std::min<int>(2*hi[0]+1, static_cast<int>(std::floor(x_e*(2/dx) - .5)));
-  seed_hi[1] = std::min<int>(2*hi[1]+1, static_cast<int>(std::floor(y_n*(2/dy) - .5)));
-  seed_hi[2] = std::min<int>(2*hi[2]+1, static_cast<int>(std::floor(z_t*(2/dz) - .5)));
+  seed_hi[0] = amrex::min<int>(2*hi[0]+1, static_cast<int>(amrex::Math::floor(x_e*(2/dx) - .5)));
+  seed_hi[1] = amrex::min<int>(2*hi[1]+1, static_cast<int>(amrex::Math::floor(y_n*(2/dy) - .5)));
+  seed_hi[2] = amrex::min<int>(2*hi[2]+1, static_cast<int>(amrex::Math::floor(z_t*(2/dz) - .5)));
 
   const Box bx(seed_lo, seed_hi);
 
-  delta_bx[0] = std::max(0, seed_hi[0] - seed_lo[0] + 1);
-  delta_bx[1] = std::max(0, seed_hi[1] - seed_lo[1] + 1);
-  delta_bx[2] = std::max(0, seed_hi[2] - seed_lo[2] + 1);
+  delta_bx[0] = amrex::max(0, seed_hi[0] - seed_lo[0] + 1);
+  delta_bx[1] = amrex::max(0, seed_hi[1] - seed_lo[1] + 1);
+  delta_bx[2] = amrex::max(0, seed_hi[2] - seed_lo[2] + 1);
 
   np = delta_bx[0] * delta_bx[1] * delta_bx[2];
   grow_pdata(pc + np);
@@ -508,26 +512,34 @@ ParticlesGenerator::random_fill_dem (const int icv,
                i_w, i_e, j_s, j_n, k_b, k_t);
 
   // Start/end of IC domain bounds
-  ic_dlo[0] = (std::max(lo[0], i_w)) * dx;
-  ic_dlo[1] = (std::max(lo[1], j_s)) * dy;
-  ic_dlo[2] = (std::max(lo[2], k_b)) * dz;
+  ic_dlo[0] = (amrex::max(lo[0], i_w)) * dx;
+  ic_dlo[1] = (amrex::max(lo[1], j_s)) * dy;
+  ic_dlo[2] = (amrex::max(lo[2], k_b)) * dz;
 
-  ic_dhi[0] = (std::min(hi[0], i_e)+1) * dx;
-  ic_dhi[1] = (std::min(hi[1], j_n)+1) * dy;
-  ic_dhi[2] = (std::min(hi[2], k_t)+1) * dz;
+  ic_dhi[0] = (amrex::min(hi[0], i_e)+1) * dx;
+  ic_dhi[1] = (amrex::min(hi[1], j_n)+1) * dy;
+  ic_dhi[2] = (amrex::min(hi[2], k_t)+1) * dz;
 
   // physical volume of IC region intersecting this grid
   const amrex::Real ic_vol = (ic_dhi[0] - ic_dlo[0]) *
                              (ic_dhi[1] - ic_dlo[1]) *
                              (ic_dhi[2] - ic_dlo[2]);
 
-  const amrex::Real mean = IC::ic[icv].solids[type].diameter.mean;
+  amrex::Real mean = IC::ic[icv].solids[type].diameter.mean;
 
   // Spacing is based on maximum particle size
   if(IC::ic[icv].solids[type].diameter.max > 0.)
     max_dp = IC::ic[icv].solids[type].diameter.max;
   else
     max_dp = IC::ic[icv].solids[type].diameter.mean;
+
+  // If coarse-grain DEM is activated
+  if (DEM::cg_dem)
+  {
+     amrex::Real statwt = IC::ic[icv].solids[type].statwt;
+     mean = std::pow(statwt, 1.0/3.0) * mean;
+     max_dp = std::pow(statwt, 1.0/3.0) * max_dp;
+  }
 
   // Particle count is based on mean particle size
   const int seed =
@@ -558,9 +570,9 @@ ParticlesGenerator::random_fill_dem (const int icv,
   amrex::Vector<int> pbin(delta_bx[0]*delta_bx[1]*delta_bx[2]*nb, 0);
 
   IntVect max_fitting_parts;
-  max_fitting_parts[0] = static_cast<int>(std::ceil(ic_len[0]/max_dp));
-  max_fitting_parts[1] = static_cast<int>(std::ceil(ic_len[1]/max_dp));
-  max_fitting_parts[2] = static_cast<int>(std::ceil(ic_len[2]/max_dp));
+  max_fitting_parts[0] = static_cast<int>(amrex::Math::ceil(ic_len[0]/max_dp));
+  max_fitting_parts[1] = static_cast<int>(amrex::Math::ceil(ic_len[1]/max_dp));
+  max_fitting_parts[2] = static_cast<int>(amrex::Math::ceil(ic_len[2]/max_dp));
 
   const int max_np = max_fitting_parts[0]*max_fitting_parts[1]*max_fitting_parts[2];
   grow_pdata(max_np);
@@ -585,21 +597,21 @@ ParticlesGenerator::random_fill_dem (const int icv,
 
       // Grid containing the new particle
       IntVect idx;
-      idx[0] = static_cast<int>(std::floor(pos[0]*Oodx[0]));
-      idx[1] = static_cast<int>(std::floor(pos[1]*Oodx[1]));
-      idx[2] = static_cast<int>(std::floor(pos[2]*Oodx[2]));
+      idx[0] = static_cast<int>(amrex::Math::floor(pos[0]*Oodx[0]));
+      idx[1] = static_cast<int>(amrex::Math::floor(pos[1]*Oodx[1]));
+      idx[2] = static_cast<int>(amrex::Math::floor(pos[2]*Oodx[2]));
 
       // Local grid search for collisions.
       int overlaps = 0;
 
       IntVect seed_lo, seed_hi;
-      seed_lo[0] = std::max(lo[0], idx[0]-1);
-      seed_lo[1] = std::max(lo[1], idx[1]-1);
-      seed_lo[2] = std::max(lo[2], idx[2]-1);
+      seed_lo[0] = amrex::max(lo[0], idx[0]-1);
+      seed_lo[1] = amrex::max(lo[1], idx[1]-1);
+      seed_lo[2] = amrex::max(lo[2], idx[2]-1);
 
-      seed_hi[0] = std::min(hi[0], idx[0]+1);
-      seed_hi[1] = std::min(hi[1], idx[1]+1);
-      seed_hi[2] = std::min(hi[2], idx[2]+1);
+      seed_hi[0] = amrex::min(hi[0], idx[0]+1);
+      seed_hi[1] = amrex::min(hi[1], idx[1]+1);
+      seed_hi[2] = amrex::min(hi[2], idx[2]+1);
 
       for(int k = seed_lo[2]; k <= seed_hi[2]; ++k) {
         for(int j = seed_lo[1]; j <= seed_hi[1]; ++j) {
@@ -707,13 +719,13 @@ ParticlesGenerator::random_fill_pic (const int icv,
 
 
   // Start/end of IC domain bounds
-  ic_dlo[0] = (std::max(lo[0], i_w)) * dx;
-  ic_dlo[1] = (std::max(lo[1], j_s)) * dy;
-  ic_dlo[2] = (std::max(lo[2], k_b)) * dz;
+  ic_dlo[0] = (amrex::max(lo[0], i_w)) * dx;
+  ic_dlo[1] = (amrex::max(lo[1], j_s)) * dy;
+  ic_dlo[2] = (amrex::max(lo[2], k_b)) * dz;
 
-  ic_dhi[0] = (std::min(hi[0], i_e)+1) * dx;
-  ic_dhi[1] = (std::min(hi[1], j_n)+1) * dy;
-  ic_dhi[2] = (std::min(hi[2], k_t)+1) * dz;
+  ic_dhi[0] = (amrex::min(hi[0], i_e)+1) * dx;
+  ic_dhi[1] = (amrex::min(hi[1], j_n)+1) * dy;
+  ic_dhi[2] = (amrex::min(hi[2], k_t)+1) * dz;
 
   // physical volume of IC region intersecting this grid
   const amrex::Real ic_vol = (ic_dhi[0] - ic_dlo[0]) *
@@ -861,7 +873,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 
   const unsigned int nsize = dp.size();
 
-  const int nsize_half = std::ceil(nsize/2.);
+  const int nsize_half = static_cast<int>(amrex::Math::ceil(nsize/2.));
 
   const amrex::Real tolerance =
     std::numeric_limits<amrex::Real>::epsilon();
@@ -871,14 +883,14 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
   const int maxfails = 10000;
   int fails(0);
 
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
   Gpu::DeviceScalar<int> fails_gpu(fails);
   int* p_fails = fails_gpu.dataPtr();
 #endif
 
   amrex::ParallelFor(nsize_half,
     [p_dp,dp_min,dp_max,maxfails,tolerance,sigma,mean,nsize,
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
      p_fails]
 #else
      &fails]
@@ -897,7 +909,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
             iterations < maxfails)
       {
         amrex::Real w(1.1);
-        while(w > 1 or std::abs(w-1) < tolerance)
+        while(w > 1 or amrex::Math::abs(w-1) < tolerance)
         {
           x = 2*amrex::Random() - 1;
           y = 2*amrex::Random() - 1;
@@ -906,12 +918,12 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 
         w = std::sqrt((-2.0 * std::log(w)) / w);
 
-        amrex::Real dp1 = x * w * sigma + mean;
-        amrex::Real dp2 = y * w * sigma + mean;
+        dp1 = x * w * sigma + mean;
+        dp2 = y * w * sigma + mean;
 
         p_dp[2*i] = dp1;
 
-        if((2*i+1) < nsize)
+        if(size_t(2*i+1) < nsize)
           p_dp[2*i+1] = dp2;
 
         iterations++;
@@ -919,7 +931,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 
       if(not(iterations < maxfails))
       {
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
         Gpu::Atomic::Add(p_fails, 1);
 #else
         fails++;
@@ -929,7 +941,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 
   Gpu::synchronize();
 
-#ifdef AMREX_USE_CUDA
+#ifdef AMREX_USE_GPU
   fails = fails_gpu.dataValue();
 #endif
 
@@ -943,7 +955,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 
     lmean /= nsize;
 
-    for(int i = 0; i < nsize; i++)
+    for(size_t i = 0; i < nsize; i++)
       lvariance += (dp[i]-lmean)*(dp[i]-lmean);
 
     lvariance /= nsize;
@@ -1012,19 +1024,19 @@ ParticlesGenerator::uni_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 void
 ParticlesGenerator::grow_pdata (const int gsize)
 {
-  const int r_gsize = gsize*nr;
-  const int i_gsize = gsize*ni;
+  const size_t r_gsize = gsize*nr;
+  const size_t i_gsize = gsize*ni;
 
   // Increase real data
   if(m_rdata.size() == 0)
   {
-    const int size = std::max<int>(r_gsize, 1024*nr);
+    const int size = amrex::max<int>(r_gsize, 1024*nr);
 
     m_rdata.resize(size, 0);
   }
   else if(r_gsize >= m_rdata.size())
   {
-    const int size = std::max<int>(2*m_rdata.size(), r_gsize);
+    const int size = amrex::max<int>(2*m_rdata.size(), r_gsize);
 
     m_rdata.resize(size, 0);
   }
@@ -1032,13 +1044,13 @@ ParticlesGenerator::grow_pdata (const int gsize)
   // Increase integer data
   if(m_idata.size() == 0)
   {
-    const int size = std::max<int>(i_gsize, 1024*ni);
+    const int size = amrex::max<int>(i_gsize, 1024*ni);
 
     m_idata.resize(size, 0);
   }
   else if(i_gsize >= m_idata.size())
   {
-    const int size = std::max<int>(2*m_idata.size(), i_gsize);
+    const int size = amrex::max<int>(2*m_idata.size(), i_gsize);
 
     m_idata.resize(size, 0);
   }

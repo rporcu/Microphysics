@@ -12,7 +12,8 @@
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
 #include <MFIX_REGIONS_Parms.H>
-#include <MFIX_BcList.H>
+#include <MFIX_SPECIES_Parms.H>
+#include <MFIX_BC_List.H>
 
 namespace BC
 {
@@ -41,6 +42,12 @@ namespace BC
   std::array<amrex::LinOpBCType,3> diff_scal_lobc;
   std::array<amrex::LinOpBCType,3> diff_scal_hibc;
 
+  std::array<amrex::LinOpBCType,3> diff_temperature_lobc;
+  std::array<amrex::LinOpBCType,3> diff_temperature_hibc;
+
+  std::array<amrex::LinOpBCType,3> diff_species_lobc;
+  std::array<amrex::LinOpBCType,3> diff_species_hibc;
+
 
   // Data structure storing individual BC information
   amrex::Vector<BC_t> bc;
@@ -49,13 +56,14 @@ namespace BC
   void Initialize (amrex::Geometry& geom)
   {
 
-    BcList bc_mask;
+    BCList bc_mask;
 
     // Integer ids for BCs
     const int pout_ = bc_mask.get_pout();
     const int pinf_ = bc_mask.get_pinf();
     const int minf_ = bc_mask.get_minf();
     const int nsw_  = bc_mask.get_nsw();
+    const int eb_   = bc_mask.get_eb();
 
     // Set flag to keep particles from leaving unless periodic.
     for (int dir(0); dir<3; ++dir) {
@@ -82,6 +90,12 @@ namespace BC
         diff_scal_lobc[dir] = amrex::LinOpBCType::Periodic;
         diff_scal_hibc[dir] = amrex::LinOpBCType::Periodic;
 
+        diff_temperature_lobc[dir] = amrex::LinOpBCType::Periodic;
+        diff_temperature_hibc[dir] = amrex::LinOpBCType::Periodic;
+
+        diff_species_lobc[dir] = amrex::LinOpBCType::Periodic;
+        diff_species_hibc[dir] = amrex::LinOpBCType::Periodic;
+
       } else {
 
         ppe_lobc[dir] = amrex::LinOpBCType::Neumann;
@@ -92,6 +106,14 @@ namespace BC
 
         diff_scal_lobc[dir] = amrex::LinOpBCType::Dirichlet;
         diff_scal_hibc[dir] = amrex::LinOpBCType::Dirichlet;
+
+        // TODO: check if this is correct
+        diff_temperature_lobc[dir] = amrex::LinOpBCType::Dirichlet;
+        diff_temperature_hibc[dir] = amrex::LinOpBCType::Dirichlet;
+
+        // TODO: check if this is correct
+        diff_species_lobc[dir] = amrex::LinOpBCType::Dirichlet;
+        diff_species_hibc[dir] = amrex::LinOpBCType::Dirichlet;
 
       }
     }
@@ -127,7 +149,7 @@ namespace BC
     pp.queryarr("regions", regions);
 
     // Loop over BCs
-    for(int bcv=0; bcv<regions.size(); bcv++){
+    for(size_t bcv=0; bcv < regions.size(); bcv++){
 
       amrex::Real volfrac_total(0.0);
 
@@ -139,9 +161,9 @@ namespace BC
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE( new_bc.region != NULL, "Invalid bc region!");
 
 
-      // Get the BC type (MI/PI/PO/NSW)
+      // Get the BC type (MI/PI/PO/NSW/EB)
       std::string bc_type;
-      pp.get(regions[bcv].c_str(),bc_type);
+      pp.get(regions[bcv].c_str(), bc_type);
 
       // Convert the input string into the integers
       if( bc_type == "mi") {
@@ -152,6 +174,8 @@ namespace BC
         new_bc.type = pout_;
       } else if (bc_type == "nsw") {
         new_bc.type = nsw_;
+      } else if (bc_type == "eb") {
+        new_bc.type = eb_;
       } else {
         amrex::Abort("Unknown BC type inputs file. Fix it.");
       }
@@ -170,16 +194,15 @@ namespace BC
 
       int dir_int = -1;
 
-      if(new_bc.type == nsw_ ){
+      if ( new_bc.type == nsw_ ) {
 
         // Walls need a normal because they might not be on a domain extent.
-
         amrex::Vector<amrex::Real> normal_in(3);
         ppRegion.getarr("normal", normal_in, 0, 3);
 
         normal={normal_in[0], normal_in[1], normal_in[2]};
 
-      } else {
+      } else if ( new_bc.type != eb_ ) {
 
         // This covers mass inflows (mi), pressure inflows (pi), and
         // pressure outflows (po). These all must align with a domain
@@ -188,35 +211,46 @@ namespace BC
         int sum_same_loc(0);
         for (int dir(0); dir<3; ++dir){
 
-          int same_loc = std::abs(new_bc.region->lo(dir) - new_bc.region->hi(dir)) < tolerance ? 1 : 0;
+          int same_loc = amrex::Math::abs(new_bc.region->lo(dir) - new_bc.region->hi(dir)) < tolerance ? 1 : 0;
 
           if (same_loc ){
 
-            if ( std::abs(new_bc.region->lo(dir) - plo[dir] ) < tolerance ){
+            if ( amrex::Math::abs(new_bc.region->lo(dir) - plo[dir] ) < tolerance ){
 
               point[dir] = plo[dir]+1.0e-15;
               normal[dir] =  1.0;
 
               dir_int = 2*dir;
 
-              if( new_bc.type == pinf_ || new_bc.type == pout_){
+              if( new_bc.type == pinf_ or new_bc.type == pout_) {
                 ppe_lobc[dir] = amrex::LinOpBCType::Dirichlet;
                 diff_vel_lobc[dir] = amrex::LinOpBCType::Neumann;
                 diff_scal_lobc[dir] = amrex::LinOpBCType::Neumann;
               }
 
+              // TODO: check if this is correct
+              if( new_bc.type == pout_) {
+                diff_temperature_lobc[dir] = amrex::LinOpBCType::Neumann;
+                diff_species_lobc[dir] = amrex::LinOpBCType::Neumann;
+              }
 
-            } else if ( std::abs( new_bc.region->hi(dir) - phi[dir] ) < tolerance ){
+            } else if ( amrex::Math::abs( new_bc.region->hi(dir) - phi[dir] ) < tolerance ){
 
               point[dir] = phi[dir]-1.0e-15;
               normal[dir] = -1.0;
 
               dir_int = 2*dir+1;
 
-              if( new_bc.type == pinf_ || new_bc.type == pout_){
+              if( new_bc.type == pinf_ or new_bc.type == pout_) {
                 ppe_hibc[dir] = amrex::LinOpBCType::Dirichlet;
                 diff_vel_hibc[dir] = amrex::LinOpBCType::Neumann;
                 diff_scal_hibc[dir] = amrex::LinOpBCType::Neumann;
+              }
+
+              // TODO: check if this is correct
+              if( new_bc.type == pout_) {
+                diff_temperature_hibc[dir] = amrex::LinOpBCType::Neumann;
+                diff_species_hibc[dir] = amrex::LinOpBCType::Neumann;
               }
 
             } else {
@@ -289,17 +323,34 @@ namespace BC
         // Read in fluid pressure
         new_bc.fluid.pressure_defined =
           ppFluid.query("pressure", new_bc.fluid.pressure);
-        if(( new_bc.type == pinf_ || new_bc.type == pout_) &&
-           !new_bc.fluid.pressure_defined) {
+        if(( new_bc.type == pinf_ or new_bc.type == pout_) and (not new_bc.fluid.pressure_defined)) {
           amrex::Print() << "Pressure BCs must have pressure defined!" << std::endl;
           amrex::Print() << "BC region: " << regions[bcv] << std::endl;
           amrex::Abort("Fix the inputs file!");
         }
 
-        ppFluid.query("temperature", new_bc.fluid.temperature);
+        if( new_bc.type == minf_ or new_bc.type == pinf_ ) {
+          ppFluid.query("temperature", new_bc.fluid.temperature);
+        }
 
+        // Get EB data.
+        if( new_bc.type == eb_ ) {
+          ppFluid.get("eb_temperature", new_bc.fluid.eb_temperature);
+        }
+
+        // Get species data.
+        if (FLUID::solve_species) {
+          std::string species_field = field+".species";
+          amrex::ParmParse ppSpecies(species_field.c_str());
+
+          for (int n(0); n < FLUID::nspecies_g; n++) {
+            std::string fluid_specie = FLUID::species_g[n];
+            ppSpecies.query(fluid_specie.c_str(), new_bc.fluid.species.mass_fractions[n]);
+          }
+        }
       }
 
+      // Get solid data.
       if(DEM::solve or PIC::solve) {
 
         // Get the list of solids used in defining the BC region
@@ -308,7 +359,7 @@ namespace BC
           ppRegion.queryarr("solids", solids_types);
         }
 
-        for(int lcs(0); lcs < solids_types.size(); ++ lcs){
+        for(size_t lcs(0); lcs < solids_types.size(); ++ lcs){
 
           DEM::DEM_t new_solid;
 
@@ -351,6 +402,17 @@ namespace BC
             ppSolidRho.get("std" , new_solid.density.std );
             ppSolidRho.get("min" , new_solid.density.min );
             ppSolidRho.get("max" , new_solid.density.max );
+          }
+
+          if (DEM::solve_species /*TODO or PIC::solve_species*/) {
+
+            std::string species_field = field+".species";
+            amrex::ParmParse ppSpecies(species_field.c_str());
+
+            for (int n(0); n < DEM::nspecies_dem; n++) {
+              std::string dem_specie = DEM::species_dem[n];
+              ppSpecies.query(dem_specie.c_str(), new_solid.species.mass_fractions[n]);
+            }
           }
 
           new_bc.solids.push_back(new_solid);

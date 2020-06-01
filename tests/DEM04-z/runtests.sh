@@ -3,7 +3,7 @@
 RUN_NAME="DEM04"
 
 cleanup() {
-    rm -rf ${RUN_NAME}* const_plt*  &> /dev/null
+    rm -rf ${RUN_NAME}* const_plt* tmp.out &> /dev/null
 }
 
 write_data() {
@@ -11,7 +11,8 @@ write_data() {
     echo "   Friction coefficient $2  (N/m)" >> $1
     echo "   " >> $1
 
-    ${FJOIN_PAR} -f DEM04_par --end 50 --var $3 --var $4 --format 6 --dt 0.0004 >> $1
+    ${FJOIN_PAR} -f DEM04_par --end 50 --var $3 --var $4 --format 6 --dt 0.0004 -j tmp.out
+    cat tmp.out >> $1
 
 }
 
@@ -41,5 +42,5 @@ done
 post_dats=../DEM04-y/AUTOTEST/POST*.dat
 
 for test_post_file in ${post_dats}; do
-    diff ${test_post_file} $(basename ${test_post_file})
+    diff -b -u -I '#.*'  ${test_post_file} $(basename ${test_post_file})
 done

@@ -50,7 +50,7 @@ public:
         // NOTE: this would have been nice, but for some reason it does not work :(
         // even though according to https://en.cppreference.com/w/cpp/algorithm/max
         // it should ... ?
-        //F & f_max = std::max( m_ifs,
+        //F & f_max = amrex::max( m_ifs,
         //                      [&](const F & f1, const F & f2) {
         //                          return f1(p) < f2(p);
         //                      });
@@ -146,7 +146,7 @@ public:
         if (! f1_active) return m_f2(p);
         if (! f2_active) return m_f1(p);
 
-        return std::max(m_f1(p), m_f2(p));
+        return amrex::max(m_f1(p), m_f2(p));
     }
 
 
@@ -194,7 +194,7 @@ public:
         if (! f1_active) return m_f2(p);
         if (! f2_active) return m_f1(p);
 
-        return std::min(m_f1(p), m_f2(p));
+        return amrex::min(m_f1(p), m_f2(p));
     }
 
 

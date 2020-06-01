@@ -9,7 +9,6 @@
 #include <AMReX_buildInfo.H>
 
 #include <mfix.H>
-#include <mfix_F.H>
 
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
@@ -102,18 +101,18 @@ void writeNow (int nstep, Real time, Real dt, mfix& mfix)
         // the number of intervals that have elapsed for both the current
         // time and the time at the beginning of this timestep.
 
-        int num_per_old = (time-dt) / mfix::plot_per_approx;
-        int num_per_new = (time   ) / mfix::plot_per_approx;
+        int num_per_old = static_cast<int>( (time-dt) / mfix::plot_per_approx );
+        int num_per_new = static_cast<int>( (time   ) / mfix::plot_per_approx );
 
         // Before using these, however, we must test for the case where we're
         // within machine epsilon of the next interval. In that case, increment
         // the counter, because we have indeed reached the next mfix::plot_per_approx interval
         // at this point.
 
-        const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * std::abs(time);
+        const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * amrex::Math::abs(time);
         const Real next_plot_time = (num_per_old + 1) * mfix::plot_per_approx;
 
-        if ((num_per_new == num_per_old) && std::abs(time - next_plot_time) <= eps)
+        if ((num_per_new == num_per_old) && amrex::Math::abs(time - next_plot_time) <= eps)
         {
             num_per_new += 1;
         }
@@ -122,14 +121,14 @@ void writeNow (int nstep, Real time, Real dt, mfix& mfix)
         // machine epsilon of the beginning of this interval, so that we don't double
         // count that time threshold -- we already plotted at that time on the last timestep.
 
-        if ((num_per_new != num_per_old) && std::abs((time - dt) - next_plot_time) <= eps)
+        if ((num_per_new != num_per_old) && amrex::Math::abs((time - dt) - next_plot_time) <= eps)
             num_per_old += 1;
 
         if (num_per_old != num_per_new)
             plot_test = 1;
 
     }
-    else if ( mfix::plot_per_exact  > 0 && (std::abs(remainder(time, mfix::plot_per_exact)) < 1.e-12) )
+    else if ( mfix::plot_per_exact  > 0 && (amrex::Math::abs(remainder(time, mfix::plot_per_exact)) < 1.e-12) )
     {
         plot_test = 1;
     }
@@ -266,7 +265,7 @@ int main (int argc, char* argv[])
     if (FLUID::solve)
        mfix.mfix_init_solvers();
 
-    // This checks if we want to regrid 
+    // This checks if we want to regrid
     if (!mfix.IsSteadyState() && regrid_int > -1 && nstep%regrid_int == 0)
     {
         amrex::Print() << "Regridding at step " << nstep << std::endl;
@@ -291,7 +290,7 @@ int main (int argc, char* argv[])
     Real prev_dt = dt;
 
     // Write checkpoint and plotfiles with the initial data
-    if ( (restart_file.empty() || plotfile_on_restart) && 
+    if ( (restart_file.empty() || plotfile_on_restart) &&
          (mfix::plot_int > 0 || mfix::plot_per_exact > 0 || mfix::plot_per_approx > 0) )
     {
       if (FLUID::solve)
@@ -330,7 +329,7 @@ int main (int argc, char* argv[])
         amrex::Print() << " " << std::endl;
         bool unused_inputs = ParmParse::QueryUnusedInputs();
         if (unused_inputs)
-           amrex::Print() << "We should think about aborting here..." << std::endl;
+           amrex::Print() << "We should think about aborting here due to unused inputs" << std::endl;
     }
     { // Start profiling solve here
 
@@ -341,7 +340,7 @@ int main (int argc, char* argv[])
         {
             while (finish == 0)
             {
-                mfix.mfix_usr1_cpp(time);
+                mfix.mfix_usr1(time);
 
                 Real strt_step = ParallelDescriptor::second();
 
@@ -386,7 +385,7 @@ int main (int argc, char* argv[])
     if ( par_ascii_int > 0  && nstep != last_par_ascii)
         mfix.WriteParticleAscii(par_ascii_file, nstep);
 
-    mfix.usr3();
+    mfix.mfix_usr3();
 
     Real end_time = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_time, ParallelDescriptor::IOProcessorNumber());

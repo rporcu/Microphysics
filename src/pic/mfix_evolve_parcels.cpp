@@ -8,9 +8,6 @@ void mfix::EvolveParcels (int nstep,
                           Real dt,
                           Real time,
                           RealVect& gravity,
-                          amrex::Vector<amrex::Geometry> geom,
-                          Vector< EBFArrayBoxFactory* > particle_ebfactory,
-                          Vector< MultiFab* >& level_sets,
                           const int ls_refinement_in,
                           Vector< MultiFab* >& cost,
                           std::string& knapsack_weight_type)
@@ -62,13 +59,12 @@ void mfix::EvolveParcels (int nstep,
   // Calculate the averaged solids velocity. This is used to assess how
   // a parcel is moving relative to the bulk solids motion.  A consequence
   // of the deposition is that we get ep_s on the correct boxes.
-  MFIX_CalcAvgSolidsProp(particle_ebfactory, avg_prop);
-
+  MFIX_CalcAvgSolidsProp(avg_prop);
 
   // Calculate the solids stress gradient using the local solids
   // volume fraction. The solids stress is a field variable that
   // we will later interpolate to the parcel's position.
-  MFIX_CalcSolidsStress(particle_ebfactory, ep_s, avg_prop);
+  MFIX_CalcSolidsStress(ep_s, avg_prop);
 
 
   // Move the parcels.
@@ -84,7 +80,7 @@ void mfix::EvolveParcels (int nstep,
       const MultiFab* ls_data = level_sets[lev];
 
       pc->MFIX_PC_ImposeWalls(lev, particle_ebfactory[lev],
-                                 ls_refinement, ls_data);
+                              ls_refinement, ls_data);
 
     } else {
 
@@ -92,7 +88,7 @@ void mfix::EvolveParcels (int nstep,
       const MultiFab* ls_data = level_sets[1];
 
       pc->MFIX_PC_ImposeWalls(nlev, particle_ebfactory[lev],
-                                 ls_refinement, ls_data);
+                              ls_refinement, ls_data);
     }
 
   }

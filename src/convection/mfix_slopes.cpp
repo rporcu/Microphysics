@@ -93,7 +93,7 @@ mfix::mfix_compute_slopes (int lev,
                    Real du_xr = 2.0*(state_x_pls - state);
                    Real du_xc = 0.5*(state_x_pls - state_x_mns);
 
-                   Real xslope = amrex::min(std::abs(du_xl), std::abs(du_xc), std::abs(du_xr));
+                   Real xslope = amrex::min(amrex::Math::abs(du_xl), amrex::Math::abs(du_xc), amrex::Math::abs(du_xr));
                    xslope = (du_xr*du_xl > 0.0) ? xslope : 0.0;
                    xs_fab(i,j,k,slopes_comp+n) = (du_xc > 0.0) ? xslope : -xslope;
 
@@ -102,7 +102,7 @@ mfix::mfix_compute_slopes (int lev,
                    Real du_yr = 2.0*(state_y_pls - state);
                    Real du_yc = 0.5*(state_y_pls - state_y_mns);
 
-                   Real yslope = amrex::min(std::abs(du_yl), std::abs(du_yc), std::abs(du_yr));
+                   Real yslope = amrex::min(amrex::Math::abs(du_yl), amrex::Math::abs(du_yc), amrex::Math::abs(du_yr));
                    yslope = (du_yr*du_yl > 0.0) ? yslope : 0.0;
                    ys_fab(i,j,k,slopes_comp+n) = (du_yc > 0.0) ? yslope : -yslope;
 
@@ -111,7 +111,7 @@ mfix::mfix_compute_slopes (int lev,
                    Real du_zr = 2.0*(state_z_pls - state);
                    Real du_zc = 0.5*(state_z_pls - state_z_mns);
 
-                   Real zslope = amrex::min(std::abs(du_zl), std::abs(du_zc), std::abs(du_zr));
+                   Real zslope = amrex::min(amrex::Math::abs(du_zl), amrex::Math::abs(du_zc), amrex::Math::abs(du_zr));
                    zslope = (du_zr*du_zl > 0.0) ? zslope : 0.0;
                    zs_fab(i,j,k,slopes_comp+n) = (du_zc > 0.0) ? zslope : -zslope;
                });
@@ -230,7 +230,7 @@ mfix::mfix_compute_slopes (int lev,
                        Real du_xr = 2.0*(state_fab(i+1,j,k,n) - state_fab(i  ,j,k,n));
                        Real du_xc = 0.5*(state_fab(i+1,j,k,n) - state_fab(i-1,j,k,n));
 
-                       Real xslope = amrex::min(std::abs(du_xl), std::abs(du_xc), std::abs(du_xr));
+                       Real xslope = amrex::min(amrex::Math::abs(du_xl), amrex::Math::abs(du_xc), amrex::Math::abs(du_xr));
                        xslope = (du_xr*du_xl > 0.0) ? xslope : 0.0;
                        xs_fab(i,j,k,slopes_comp+n) = (du_xc > 0.0) ? xslope : -xslope;
 
@@ -256,7 +256,7 @@ mfix::mfix_compute_slopes (int lev,
                        Real du_yr = 2.0*(state_fab(i,j+1,k,n) - state_fab(i,j  ,k,n));
                        Real du_yc = 0.5*(state_fab(i,j+1,k,n) - state_fab(i,j-1,k,n));
 
-                       Real yslope = amrex::min(std::abs(du_yl), std::abs(du_yc), std::abs(du_yr));
+                       Real yslope = amrex::min(amrex::Math::abs(du_yl), amrex::Math::abs(du_yc), amrex::Math::abs(du_yr));
                        yslope = (du_yr*du_yl > 0.0) ? yslope : 0.0;
                        ys_fab(i,j,k,slopes_comp+n) = (du_yc > 0.0) ? yslope : -yslope;
                      }
@@ -280,7 +280,7 @@ mfix::mfix_compute_slopes (int lev,
                        Real du_zr = 2.0*(state_fab(i,j,k+1,n) - state_fab(i,j,k  ,n));
                        Real du_zc = 0.5*(state_fab(i,j,k+1,n) - state_fab(i,j,k-1,n));
 
-                       Real zslope = amrex::min(std::abs(du_zl), std::abs(du_zc), std::abs(du_zr));
+                       Real zslope = amrex::min(amrex::Math::abs(du_zl), amrex::Math::abs(du_zc), amrex::Math::abs(du_zr));
                        zslope = (du_zr*du_zl > 0.0) ? zslope : 0.0;
                        zs_fab(i,j,k,slopes_comp+n) = (du_zc > 0.0) ? zslope : -zslope;
 
@@ -289,9 +289,9 @@ mfix::mfix_compute_slopes (int lev,
                });
 #else
         dim3 Block(4,4,4);
-        dim3 Grid(std::ceil(bx.length()[0] / float(Block.x)),
-                  std::ceil(bx.length()[1] / float(Block.y)),
-                  std::ceil(bx.length()[2] / float(Block.z)));
+        dim3 Grid(amrex::Math::ceil(bx.length()[0] / float(Block.x)),
+                  amrex::Math::ceil(bx.length()[1] / float(Block.y)),
+                  amrex::Math::ceil(bx.length()[2] / float(Block.z)));
 
         const unsigned sm_size =
           ncomp*sizeof(Real)*(Block.x+2)*(Block.y+2)*(Block.z+2) + // ccent_sm
@@ -472,7 +472,7 @@ mfix::mfix_compute_slopes (int lev,
                   Real du_xc = 0.5*(state_sm[idx_vec(tid_x+1,tid_y,tid_z,n)] -
                       state_sm[idx_vec(tid_x-1,tid_y,tid_z,n)]);
 
-                  Real xslope = amrex::min(std::abs(du_xl), std::abs(du_xc), std::abs(du_xr));
+                  Real xslope = amrex::min(amrex::Math::abs(du_xl), amrex::Math::abs(du_xc), amrex::Math::abs(du_xr));
                   xslope = (du_xr*du_xl > 0.0) ? xslope : 0.0;
                   xs_fab(i,j,k,slopes_comp+n) = (du_xc > 0.0) ? xslope : -xslope;
                 }
@@ -500,7 +500,7 @@ mfix::mfix_compute_slopes (int lev,
                   Real du_yc = 0.5*(state_sm[idx_vec(tid_x,tid_y+1,tid_z,n)] -
                       state_sm[idx_vec(tid_x,tid_y-1,tid_z,n)]);
 
-                  Real yslope = amrex::min(std::abs(du_yl), std::abs(du_yc), std::abs(du_yr));
+                  Real yslope = amrex::min(amrex::Math::abs(du_yl), amrex::Math::abs(du_yc), amrex::Math::abs(du_yr));
                   yslope = (du_yr*du_yl > 0.0) ? yslope : 0.0;
                   ys_fab(i,j,k,slopes_comp+n) = (du_yc > 0.0) ? yslope : -yslope;
                 }
@@ -527,7 +527,7 @@ mfix::mfix_compute_slopes (int lev,
                   Real du_zc = 0.5*(state_sm[idx_vec(tid_x,tid_y,tid_z+1,n)] -
                       state_sm[idx_vec(tid_x,tid_y,tid_z-1,n)]);
 
-                  Real zslope = amrex::min(std::abs(du_zl), std::abs(du_zc), std::abs(du_zr));
+                  Real zslope = amrex::min(amrex::Math::abs(du_zl), amrex::Math::abs(du_zc), amrex::Math::abs(du_zr));
                   zslope = (du_zr*du_zl > 0.0) ? zslope : 0.0;
                   zs_fab(i,j,k,slopes_comp+n) = (du_zc > 0.0) ? zslope : -zslope;
                 }
@@ -568,7 +568,7 @@ mfix::mfix_compute_slopes (int lev,
                      Real du_xr = 2.0*(state_pls - state);
                      Real du_xc = (state_pls+3.0*state-4.0*state_mns)/3.0;
 
-                     Real xslope = amrex::min(std::abs(du_xl),std::abs(du_xc),std::abs(du_xr));
+                     Real xslope = amrex::min(amrex::Math::abs(du_xl),amrex::Math::abs(du_xc),amrex::Math::abs(du_xr));
                      xslope = (du_xr*du_xl > 0.0) ? xslope : 0.0;
                      xs_fab(i,j,k,slopes_comp+n) = (du_xc > 0.0) ? xslope : -xslope;
                  }
@@ -593,7 +593,7 @@ mfix::mfix_compute_slopes (int lev,
                      Real du_xr = 2.0*(state_pls - state);
                      Real du_xc = -(state_mns+3.0*state-4.0*state_pls)/3.0;
 
-                     Real xslope = amrex::min(std::abs(du_xl),std::abs(du_xc),std::abs(du_xr));
+                     Real xslope = amrex::min(amrex::Math::abs(du_xl),amrex::Math::abs(du_xc),amrex::Math::abs(du_xr));
                      xslope = (du_xr*du_xl > 0.0) ? xslope : 0.0;
                      xs_fab(i,j,k,slopes_comp+n) = (du_xc > 0.0) ? xslope : -xslope;
                  }
@@ -619,7 +619,7 @@ mfix::mfix_compute_slopes (int lev,
                      Real du_yr = 2.0*(state_pls - state);
                      Real du_yc = (state_pls+3.0*state-4.0*state_mns)/3.0;
 
-                     Real yslope = amrex::min(std::abs(du_yl),std::abs(du_yc),std::abs(du_yr));
+                     Real yslope = amrex::min(amrex::Math::abs(du_yl),amrex::Math::abs(du_yc),amrex::Math::abs(du_yr));
                      yslope = (du_yr*du_yl > 0.0) ? yslope : 0.0;
                      ys_fab(i,j,k,slopes_comp+n) = (du_yc > 0.0) ? yslope : -yslope;
                  }
@@ -645,7 +645,7 @@ mfix::mfix_compute_slopes (int lev,
                      Real du_yr = 2.0*(state_pls - state);
                      Real du_yc = -(state_mns+3.0*state-4.0*state_pls)/3.0;
 
-                     Real yslope = amrex::min(std::abs(du_yl),std::abs(du_yc),std::abs(du_yr));
+                     Real yslope = amrex::min(amrex::Math::abs(du_yl),amrex::Math::abs(du_yc),amrex::Math::abs(du_yr));
                      yslope = (du_yr*du_yl > 0.0) ? yslope : 0.0;
                      ys_fab(i,j,k,slopes_comp+n) = (du_yc > 0.0) ? yslope : -yslope;
                  }
@@ -671,7 +671,7 @@ mfix::mfix_compute_slopes (int lev,
                      Real du_zr = 2.0*(state_pls - state);
                      Real du_zc = (state_pls+3.0*state-4.0*state_mns)/3.0;
 
-                     Real zslope = amrex::min(std::abs(du_zl),std::abs(du_zc),std::abs(du_zr));
+                     Real zslope = amrex::min(amrex::Math::abs(du_zl),amrex::Math::abs(du_zc),amrex::Math::abs(du_zr));
                      zslope = (du_zr*du_zl > 0.0) ? zslope : 0.0;
                      zs_fab(i,j,k,slopes_comp+n) = (du_zc > 0.0) ? zslope : -zslope;
                  }
@@ -697,7 +697,7 @@ mfix::mfix_compute_slopes (int lev,
                      Real du_zr = 2.0*(state_pls - state);
                      Real du_zc = -(state_mns+3.0*state-4.0*state_pls)/3.0;
 
-                     Real zslope = amrex::min(std::abs(du_zl),std::abs(du_zc),std::abs(du_zr));
+                     Real zslope = amrex::min(amrex::Math::abs(du_zl),amrex::Math::abs(du_zc),amrex::Math::abs(du_zr));
                      zslope = (du_zr*du_zl > 0.0) ? zslope : 0.0;
                      zs_fab(i,j,k,slopes_comp+n) = (du_zc > 0.0) ? zslope : -zslope;
                  }

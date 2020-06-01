@@ -9,14 +9,16 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 {
     BL_PROFILE_REGION_START("mfix::Evolve");
 
-    Real coupling_timing;
+    Real coupling_timing(0.);
+    Real drag_timing(0.);
     Real sum_vol;
+
     if ((DEM::solve or PIC::solve) and FLUID::solve)
     {
       Real start_coupling = ParallelDescriptor::second();
       mfix_calc_volume_fraction(sum_vol);
 
-      if (abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
+      if (amrex::Math::abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
         {
           amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
           amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
@@ -25,14 +27,12 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     }
 
     Real start_fluid = ParallelDescriptor::second();
-    Real drag_timing = 0.;
-
     BL_PROFILE_VAR("FLUID SOLVE",fluidSolve);
     for (int lev = 0; lev <= finest_level; lev++)
     {
        if (FLUID::solve)
        {
-         EvolveFluid(nstep,dt,time,stop_time, drag_timing);
+          EvolveFluid(nstep,dt,prev_dt,time,stop_time, drag_timing);
           prev_dt = dt;
        }
     }
@@ -103,13 +103,9 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     }
 
     if (PIC::solve) {
-
-      EvolveParcels(nstep, dt, time, mfix::gravity, geom,
-                    particle_ebfactory, level_sets, levelset_refinement,
-                    particle_cost, knapsack_weight_type);
-
-      // This is here for debugging and should be removed.
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_leveldata[0]->ep_g[0].min(0) >= 0.15, " EPg too small");
+        EvolveParcels(nstep, dt, time, mfix::gravity,
+                      levelset_refinement,
+                      particle_cost, knapsack_weight_type);
     }
 
 

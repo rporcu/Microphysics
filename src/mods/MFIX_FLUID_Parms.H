@@ -3,6 +3,8 @@
 
 #include <AMReX_REAL.H>
 
+#include <MFIX_SPECIES_Parms.H>
+
 namespace FLUID
 {
 
@@ -14,8 +16,6 @@ namespace FLUID
 
   enum THERMALCONDUCTIVITYMODEL {ConstantThermalConductivity};
 
-  static constexpr amrex::Real R = 8.31446261815324; // [J / (K * mol)]
-
   // Flag to solve fluid equations
   extern int solve;
 
@@ -23,7 +23,7 @@ namespace FLUID
   extern amrex::Real T_g0;
 
   // Specified constant gas specific heat
-  extern amrex::Real Cp_g0;
+  extern amrex::Real cp_g0;
 
   // Gas phase thermal conductivity coefficient
   extern amrex::Real k_g0;
@@ -40,6 +40,21 @@ namespace FLUID
   // Average molecular weight of gas
   extern amrex::Real mw_avg;
 
+  // Flag to solve species fluid equations
+  extern int solve_species;
+
+  // Fluid phase species names
+  extern std::vector<std::string> species_g;
+
+  // Total number of fluid species
+  extern int nspecies_g;
+
+  // Fluid phase species diffusion coefficients
+  extern std::vector<amrex::Real> D_g0;
+
+  // Fluid phase species mass fraction
+  extern std::vector<amrex::Real> X_g0;
+
   // Name to later reference when building input regions
   extern std::string name;
 
@@ -52,10 +67,17 @@ namespace FLUID
 
     amrex::Real pressure_defined; // Flag to check if pressure is defined
 
+    amrex::Real eb_temperature;
+
+    SPECIES::SPECIES_t species;
+
     FLUID_t() :
       volfrac(-1.0),
       temperature(0.0),
-      pressure(-1.0) { }
+      pressure(-1.0),
+      eb_temperature(0),
+      species(FLUID::nspecies_g)
+    {}
 
   };
 

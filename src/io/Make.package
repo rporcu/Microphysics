@@ -1,5 +1,3 @@
-f90EXE_sources += write_user.f90
-
 CEXE_sources += mfixIO.cpp
 CEXE_sources += mfix_build_info.cpp
 CEXE_sources += mfix_chk.cpp

@@ -51,7 +51,7 @@ amr.max_grid_size_z = 32
 # Fluid: Maximum tile size within each grid
 fabarray.mfiter_tile_size = 1024 1024 1024
 
-# Particles: Maximum particle title size
+# Particles: Maximum particle tile size
 particles.tile_size = 1024 1024 1024
 
 
@@ -193,6 +193,8 @@ ic.bed.solid0.density.constant  = 1000.0
 #! EB geometry
 #!-----------------------------------------------------------//
 mfix.geometry = "hopper"
+# mfix.geometry_filename = "external_flow_hopper.csg"
+# csg.internal_flow = false
 
 hopper.orifice_radius = 0.000249
 hopper.funnel_radius  = 0.000499

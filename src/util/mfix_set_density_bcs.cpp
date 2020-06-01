@@ -1,7 +1,5 @@
 #include <mfix.H>
 
-#include <param_mod_F.H>
-
 #include <MFIX_FLUID_Parms.H>
 
 using namespace amrex;
@@ -33,13 +31,15 @@ mfix::mfix_set_density_bcs (Real time,
   }
 }
 
-void 
+void
 mfix::set_density_bcs (Real time,
                        const int lev,
                        FArrayBox& scal_fab,
                        const Box& domain)
 
 {
+  BL_PROFILE("mfix::set_density_bcs()");
+
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
 
@@ -57,21 +57,20 @@ mfix::set_density_bcs (Real time,
   IntVect scal_lo(scal_fab.loVect());
   IntVect scal_hi(scal_fab.hiVect());
 
-  const int nlft = std::max(0, dom_lo[0]-scal_lo[0]);
-  const int nbot = std::max(0, dom_lo[1]-scal_lo[1]);
-  const int ndwn = std::max(0, dom_lo[2]-scal_lo[2]);
+  const int nlft = amrex::max(0, dom_lo[0]-scal_lo[0]);
+  const int nbot = amrex::max(0, dom_lo[1]-scal_lo[1]);
+  const int ndwn = amrex::max(0, dom_lo[2]-scal_lo[2]);
 
-  const int nrgt = std::max(0, scal_hi[0]-dom_hi[0]);
-  const int ntop = std::max(0, scal_hi[1]-dom_hi[1]);
-  const int nup  = std::max(0, scal_hi[2]-dom_hi[2]);
-
-  const Real undefined = get_undefined();
+  const int nrgt = amrex::max(0, scal_hi[0]-dom_hi[0]);
+  const int ntop = amrex::max(0, scal_hi[1]-dom_hi[1]);
+  const int nup  = amrex::max(0, scal_hi[2]-dom_hi[2]);
 
   const int minf = bc_list.get_minf();
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
 
-  amrex::Real* p_bc_t_g  = m_bc_t_g.data();
+  // The temperature will be useful in the future
+  // amrex::Real* p_bc_t_g  = m_bc_t_g.data();
 
   if (nlft > 0)
   {
@@ -82,8 +81,7 @@ mfix::set_density_bcs (Real time,
     int ilo = dom_lo[0];
 
     amrex::ParallelFor(bx_yz_lo_3D,
-      [bct_ilo,ilo,bc0,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
-      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_ilo(ilo-1,j,k,0);
 
@@ -103,8 +101,7 @@ mfix::set_density_bcs (Real time,
     int ihi = dom_hi[0];
 
     amrex::ParallelFor(bx_yz_hi_3D,
-      [bct_ihi,ihi,bc0,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
-      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_ihi(ihi+1,j,k,0);
 
@@ -124,8 +121,7 @@ mfix::set_density_bcs (Real time,
     int jlo = dom_lo[1];
 
     amrex::ParallelFor(bx_xz_lo_3D,
-      [bct_jlo,jlo,bc0,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
-      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_jlo(i,jlo-1,k,0);
 
@@ -145,11 +141,10 @@ mfix::set_density_bcs (Real time,
     int jhi = dom_hi[1];
 
     amrex::ParallelFor(bx_xz_hi_3D,
-      [bct_jhi,jhi,dom_hi,bc0,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
-      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_jhi(i,jhi+1,k,0);
-  
+
         if((bct == pinf) or (bct == pout))
            scal_arr(i,j,k) = scal_arr(i,dom_hi[1],k);
         else if(bct == minf)
@@ -166,8 +161,7 @@ mfix::set_density_bcs (Real time,
     int klo = dom_lo[2];
 
     amrex::ParallelFor(bx_xy_lo_3D,
-      [bct_klo,klo,dom_lo,bc0,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
-      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_klo(i,j,klo-1,0);
 
@@ -186,12 +180,11 @@ mfix::set_density_bcs (Real time,
 
     int khi = dom_hi[2];
 
-    amrex::ParallelFor(bx_xy_hi_3D, 
-      [bct_khi,khi,dom_hi,bc0,pinf,pout,minf,undefined,p_bc_t_g,scal_arr] 
-      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    amrex::ParallelFor(bx_xy_hi_3D,
+      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bct = bct_khi(i,j,khi+1,0);
-  
+
         if ((bct == pinf) or (bct == pout))
            scal_arr(i,j,k) = scal_arr(i,j,dom_hi[2]);
         else if (bct == minf)

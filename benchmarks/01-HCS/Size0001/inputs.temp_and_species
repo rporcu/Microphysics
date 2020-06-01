@@ -1,0 +1,146 @@
+mfix.stop_time = 0.0025
+
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell = 32 32 32
+
+# Maximum allowable size of each subdomain in the problem domain;
+#    this is used to decompose the domain for parallel calculations.
+amr.max_grid_size_x = 32
+amr.max_grid_size_y = 32
+amr.max_grid_size_z = 32
+
+# Maximum tile size within each grid
+fabarray.mfiter_tile_size = 32 32 32
+
+# Maximum particle tile size
+particles.tile_size = 32 32 32
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level  = 0
+
+amr.plt_regtest = 1
+
+amr.plot_int   =  25
+amr.check_int  = -25
+
+# Geometry
+geometry.coord_sys   = 0                      # 0: Cartesian
+geometry.is_periodic = 1       1      1       # Is periodic in each direction?
+geometry.prob_lo     = 0.      0.     0.      # lo corner of physical domain
+geometry.prob_hi     = 0.0064  0.0064 0.0064  # hi corner of physical domain
+
+mfix.drag_type = "BVK2"
+
+mfix.gravity =  0.0  0.0  0.0
+
+mfix.advect_enthalpy      = 1
+mfix.advect_fluid_species = 1
+
+#_______________________________________________________________________
+# Species model settings
+#
+species.solve  =  O2  CO  H2O  He
+
+species.diffusivity = constant
+
+species.O2.diffusivity  = 1.9e-5
+species.CO.diffusivity  = 1.9e-5
+species.H2O.diffusivity = 2.4e-5
+species.He.diffusivity  = 7.1e-5
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+fluid.density            = constant
+fluid.density.constant   = 1.0
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 2.0e-5
+
+fluid.specific_heat          = constant
+fluid.specific_heat.constant = 918  ## Oxygen
+
+fluid.thermal_conductivity          = constant
+fluid.thermal_conductivity.constant = 0.024  ## Oxygen
+
+fluid.species  =  O2  CO  H2O  He
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = solid0
+
+dem.friction_coeff.pp     =     0.0
+dem.friction_coeff.pw     =     0.0
+
+dem.spring_const.pp       =    10.0
+dem.spring_const.pw       =    10.0
+
+dem.restitution_coeff.solid0.solid0  =     0.8
+dem.restitution_coeff.solid0.wall    =     1.0
+
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+mfix.regions = O2-region  CO-region   H2O-region   He-region
+
+regions.O2-region.lo  = 0.0000  0.0000  0.0000
+regions.O2-region.hi  = 0.0030  0.0064  0.0064
+
+regions.CO-region.lo = 0.0030  0.0000  0.0000
+regions.CO-region.hi = 0.0064  0.0032  0.0020
+
+regions.H2O-region.lo = 0.0030  0.0032  0.0000
+regions.H2O-region.hi = 0.0064  0.0064  0.0020
+
+regions.He-region.lo  = 0.0030  0.0000  0.0020
+regions.He-region.hi  = 0.0064  0.0064  0.0064
+
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+ic.regions = O2-region  CO-region   H2O-region   He-region
+
+ic.O2-region.fluid.species.O2  =  1.0
+ic.O2-region.fluid.species.CO  =  0.0
+ic.O2-region.fluid.species.H2O =  0.0
+ic.O2-region.fluid.species.He  =  0.0
+ic.O2-region.fluid.volfrac     =  1.0
+ic.O2-region.fluid.velocity    =  0.0  0.0  0.0
+ic.O2-region.fluid.temperature =  300
+
+ic.CO-region.fluid.species.O2  =  0.0
+ic.CO-region.fluid.species.CO  =  1.0
+ic.CO-region.fluid.species.H2O =  0.0
+ic.CO-region.fluid.species.He  =  0.0
+ic.CO-region.fluid.volfrac     =  1.0
+ic.CO-region.fluid.velocity    =  0.0  0.0  0.0
+ic.CO-region.fluid.temperature =  500
+
+ic.H2O-region.fluid.species.O2  =  0.0
+ic.H2O-region.fluid.species.CO  =  0.0
+ic.H2O-region.fluid.species.H2O =  1.0
+ic.H2O-region.fluid.species.He  =  0.0
+ic.H2O-region.fluid.volfrac     =  1.0
+ic.H2O-region.fluid.velocity    =  0.0  0.0  0.0
+ic.H2O-region.fluid.temperature =  900
+
+ic.He-region.fluid.species.O2  =  0.0
+ic.He-region.fluid.species.CO  =  0.0
+ic.He-region.fluid.species.H2O =  0.0
+ic.He-region.fluid.species.He  =  1.0
+ic.He-region.fluid.volfrac     =  1.0
+ic.He-region.fluid.velocity    =  0.0  0.0  0.0
+ic.He-region.fluid.temperature =  400

@@ -1,23 +1,6 @@
 add_library(mfixcore)
 
 #
-# Path where to store module files
-#
-set( MFIX_Fortran_MOD_PATH ${CMAKE_CURRENT_BINARY_DIR}/mod_files
-   CACHE INTERNAL "Fortran modules location")
-
-set_target_properties( mfixcore
-   PROPERTIES
-   Fortran_MODULE_DIRECTORY
-   ${MFIX_Fortran_MOD_PATH}
-   )
-
-target_include_directories( mfixcore
-   PUBLIC
-   $<BUILD_INTERFACE:${MFIX_Fortran_MOD_PATH}>)
-
-
-#
 # Add sources and header from current dir and all sub dirs
 #
 
@@ -33,7 +16,6 @@ target_sources(mfixcore
    mfix_regrid.cpp
    mfix.cpp
    #  main.cpp <---- DO NOT ADD THIS HERE
-   mfix_F.H
    mfix.H
    )
 
@@ -84,22 +66,18 @@ add_subdirectory(time_flow)
 #
 target_link_libraries( mfixcore PUBLIC AMReX::amrex )
 
+#
+# Require C++14 or newer and no compiler extensions.
+#
+set_target_properties(mfixcore PROPERTIES CXX_EXTENSIONS OFF)
+target_compile_features(mfixcore PUBLIC cxx_std_14)
 
 #
 # If ENABLE_CUDA, set CUDA-specific properties and
 # make C++ files be compiled as CUDA sources
 #
 if (ENABLE_CUDA)
-   set_target_properties( mfixcore
-      PROPERTIES
-      CUDA_SEPARABLE_COMPILATION ON      # This adds -dc
-      CUDA_RESOLVE_DEVICE_SYMBOLS OFF
-      )
-
-   get_target_property(MFIX_CUDA_SOURCES mfixcore SOURCES)
-   list(FILTER MFIX_CUDA_SOURCES INCLUDE REGEX "\\.cpp")
-   set_source_files_properties(${MFIX_CUDA_SOURCES} PROPERTIES LANGUAGE CUDA)
-   unset(MFIX_CUDA_SOURCES)
+   setup_target_for_cuda_compilation(mfixcore)
 
    #
    # Add manually curand
@@ -112,10 +90,6 @@ endif ()
 #
 # Set the default flags
 #
-if ( NOT CMAKE_Fortran_FLAGS )
-   target_link_libraries(mfixcore PUBLIC AMReX::Flags_Fortran)
-endif ()
-
 if ( NOT CMAKE_CXX_FLAGS )
    target_link_libraries(mfixcore PUBLIC AMReX::Flags_CXX)
 endif ()
@@ -123,14 +97,6 @@ endif ()
 if (ENABLE_FPE)
    target_link_libraries(mfixcore PUBLIC AMReX::Flags_FPE)
 endif ()
-
-
-#
-# Add typecheck target for mfixcore
-#
-include( AMReXTypecheck )
-add_typecheck_target(mfixcore)
-
 
 #
 # Add AMReX "build info" capabilities

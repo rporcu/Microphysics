@@ -18,7 +18,7 @@
  *******************************************************************************/
 void mfix::make_eb_box ()
 {
-    ParmParse pp("box");
+    ParmParse pp_box("box");
 
     /****************************************************************************
      *                                                                          *
@@ -57,11 +57,11 @@ void mfix::make_eb_box ()
             boxHi[i] = geom[0].ProbHi(i);
         }
 
-        pp.queryarr("Lo", boxLo,  0, 3);
-        pp.queryarr("Hi", boxHi,  0, 3);
+        pp_box.queryarr("Lo", boxLo,  0, 3);
+        pp_box.queryarr("Hi", boxHi,  0, 3);
 
-        pp.query("internal_flow", inside);
-        pp.query("offset", offset);
+        pp_box.query("internal_flow", inside);
+        pp_box.query("offset", offset);
 
         Real xlo = boxLo[0] + offset;
         Real xhi = boxHi[0] - offset;

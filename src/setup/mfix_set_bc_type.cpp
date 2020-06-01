@@ -1,7 +1,4 @@
-#include <mfix_F.H>
 #include <mfix.H>
-#include <param_mod_F.H>
-
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
@@ -26,6 +23,7 @@ mfix::mfix_set_bc_type (int lev)
     const int und_  = bc_list.get_undefined();
     const int ig_   = bc_list.get_ig();
     const int minf_ = bc_list.get_minf();
+    const int pinf_ = bc_list.get_pinf();
 
     {
       Array4<int> const& bc_ilo_type = bc_ilo[lev]->array();
@@ -50,17 +48,17 @@ mfix::mfix_set_bc_type (int lev)
            {bc_ilo_type(i,j,k,0) = init_x;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc<bc_xlo.size(); ++lc) {
+        for (int lc(0); lc < bc_xlo.size(); ++lc) {
 
           const int bcv  = bc_xlo[lc];
           const int type = bc[bcv].type;
 
           if (lc > 0){
-            ibx_lo[1] = floor(bc[bcv].region->lo(1)/dy + 0.5);
-            ibx_lo[2] = floor(bc[bcv].region->lo(2)/dz + 0.5);
+            ibx_lo[1] = static_cast<int>(floor(bc[bcv].region->lo(1)/dy + 0.5));
+            ibx_lo[2] = static_cast<int>(floor(bc[bcv].region->lo(2)/dz + 0.5));
 
-            ibx_hi[1] = floor(bc[bcv].region->hi(1)/dy + 0.5)-1;
-            ibx_hi[2] = floor(bc[bcv].region->hi(2)/dz + 0.5)-1;
+            ibx_hi[1] = static_cast<int>(floor(bc[bcv].region->hi(1)/dy + 0.5))-1;
+            ibx_hi[2] = static_cast<int>(floor(bc[bcv].region->hi(2)/dz + 0.5))-1;
           }
 
           const Box lo_box(ibx_lo, ibx_hi);
@@ -89,17 +87,17 @@ mfix::mfix_set_bc_type (int lev)
            {bc_ihi_type(i,j,k,0) = init_x;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc<bc_xhi.size(); ++lc) {
+        for (int lc(0); lc < bc_xhi.size(); ++lc) {
 
           const int bcv  = bc_xhi[lc];
           const int type = bc[bcv].type;
 
           if (lc > 0){
-            ibx_lo[1] = floor(bc[bcv].region->lo(1)/dy + 0.5);
-            ibx_lo[2] = floor(bc[bcv].region->lo(2)/dz + 0.5);
+            ibx_lo[1] = static_cast<int>(floor(bc[bcv].region->lo(1)/dy + 0.5));
+            ibx_lo[2] = static_cast<int>(floor(bc[bcv].region->lo(2)/dz + 0.5));
 
-            ibx_hi[1] = floor(bc[bcv].region->hi(1)/dy + 0.5)-1;
-            ibx_hi[2] = floor(bc[bcv].region->hi(2)/dz + 0.5)-1;
+            ibx_hi[1] = static_cast<int>(floor(bc[bcv].region->hi(1)/dy + 0.5))-1;
+            ibx_hi[2] = static_cast<int>(floor(bc[bcv].region->hi(2)/dz + 0.5))-1;
           }
 
           const Box hi_box(ibx_lo, ibx_hi);
@@ -141,17 +139,17 @@ mfix::mfix_set_bc_type (int lev)
            {bc_jlo_type(i,j,k,0) = init_y;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc<bc_ylo.size(); ++lc) {
+        for (int lc(0); lc < bc_ylo.size(); ++lc) {
 
           const int bcv  = bc_ylo[lc];
           const int type = bc[bcv].type;
 
           if (lc > 0){
-            jbx_lo[0] = floor(bc[bcv].region->lo(0)/dx + 0.5);
-            jbx_lo[2] = floor(bc[bcv].region->lo(2)/dz + 0.5);
+            jbx_lo[0] = static_cast<int>(floor(bc[bcv].region->lo(0)/dx + 0.5));
+            jbx_lo[2] = static_cast<int>(floor(bc[bcv].region->lo(2)/dz + 0.5));
 
-            jbx_hi[0] = floor(bc[bcv].region->hi(0)/dx + 0.5)-1;
-            jbx_hi[2] = floor(bc[bcv].region->hi(2)/dz + 0.5)-1;
+            jbx_hi[0] = static_cast<int>(floor(bc[bcv].region->hi(0)/dx + 0.5))-1;
+            jbx_hi[2] = static_cast<int>(floor(bc[bcv].region->hi(2)/dz + 0.5))-1;
           }
 
           const Box lo_box(jbx_lo, jbx_hi);
@@ -180,17 +178,17 @@ mfix::mfix_set_bc_type (int lev)
            {bc_jhi_type(i,j,k,0) = init_y;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc<bc_yhi.size(); ++lc) {
+        for (int lc(0); lc < bc_yhi.size(); ++lc) {
 
           const int bcv  = bc_yhi[lc];
           const int type = bc[bcv].type;
 
           if (lc > 0){
-            jbx_lo[0] = floor(bc[bcv].region->lo(0)/dx + 0.5);
-            jbx_lo[2] = floor(bc[bcv].region->lo(2)/dz + 0.5);
+            jbx_lo[0] = static_cast<int>(floor(bc[bcv].region->lo(0)/dx + 0.5));
+            jbx_lo[2] = static_cast<int>(floor(bc[bcv].region->lo(2)/dz + 0.5));
 
-            jbx_hi[0] = floor(bc[bcv].region->hi(0)/dx + 0.5)-1;
-            jbx_hi[2] = floor(bc[bcv].region->hi(2)/dz + 0.5)-1;
+            jbx_hi[0] = static_cast<int>(floor(bc[bcv].region->hi(0)/dx + 0.5))-1;
+            jbx_hi[2] = static_cast<int>(floor(bc[bcv].region->hi(2)/dz + 0.5))-1;
           }
 
           const Box hi_box(jbx_lo, jbx_hi);
@@ -232,17 +230,17 @@ mfix::mfix_set_bc_type (int lev)
            {bc_klo_type(i,j,k,0) = init_z;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc<bc_zlo.size(); ++lc) {
+        for (int lc(0); lc < bc_zlo.size(); ++lc) {
 
           const int bcv  = bc_zlo[lc];
           const int type = bc[bcv].type;
 
           if (lc > 0){
-            kbx_lo[0] = floor(bc[bcv].region->lo(0)/dx + 0.5);
-            kbx_lo[1] = floor(bc[bcv].region->lo(1)/dy + 0.5);
+            kbx_lo[0] = static_cast<int>(floor(bc[bcv].region->lo(0)/dx + 0.5));
+            kbx_lo[1] = static_cast<int>(floor(bc[bcv].region->lo(1)/dy + 0.5));
 
-            kbx_hi[0] = floor(bc[bcv].region->hi(0)/dx + 0.5)-1;
-            kbx_hi[1] = floor(bc[bcv].region->hi(1)/dy + 0.5)-1;
+            kbx_hi[0] = static_cast<int>(floor(bc[bcv].region->hi(0)/dx + 0.5))-1;
+            kbx_hi[1] = static_cast<int>(floor(bc[bcv].region->hi(1)/dy + 0.5))-1;
           }
 
           const Box lo_box(kbx_lo, kbx_hi);
@@ -271,17 +269,17 @@ mfix::mfix_set_bc_type (int lev)
            {bc_khi_type(i,j,k,0) = init_z;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc<bc_zhi.size(); ++lc) {
+        for (int lc(0); lc < bc_zhi.size(); ++lc) {
 
           const int bcv  = bc_zhi[lc];
           const int type = bc[bcv].type;
 
           if (lc > 0){
-            kbx_lo[0] = floor(bc[bcv].region->lo(0)/dx + 0.5);
-            kbx_lo[1] = floor(bc[bcv].region->lo(1)/dy + 0.5);
+            kbx_lo[0] = static_cast<int>(floor(bc[bcv].region->lo(0)/dx + 0.5));
+            kbx_lo[1] = static_cast<int>(floor(bc[bcv].region->lo(1)/dy + 0.5));
 
-            kbx_hi[0] = floor(bc[bcv].region->hi(0)/dx + 0.5)-1;
-            kbx_hi[1] = floor(bc[bcv].region->hi(1)/dy + 0.5)-1;
+            kbx_hi[0] = static_cast<int>(floor(bc[bcv].region->hi(0)/dx + 0.5))-1;
+            kbx_hi[1] = static_cast<int>(floor(bc[bcv].region->hi(1)/dy + 0.5))-1;
           }
 
           const Box hi_box(kbx_lo, kbx_hi);
@@ -300,7 +298,7 @@ mfix::mfix_set_bc_type (int lev)
     for(unsigned bcv(0); bcv < bc.size(); ++bcv)
     {
 
-      if ( FLUID::solve && bc[bcv].type == minf_ ) {
+      if ( FLUID::solve and bc[bcv].type == minf_ ) {
 
         m_bc_u_g[bcv] = bc[bcv].fluid.velocity[0];
         m_bc_v_g[bcv] = bc[bcv].fluid.velocity[1];
@@ -314,17 +312,37 @@ mfix::mfix_set_bc_type (int lev)
 
       }
 
-      if ( FLUID::solve ){
+      if ( FLUID::solve ) {
         m_bc_ep_g[bcv] = bc[bcv].fluid.volfrac;
         m_bc_p_g[bcv]  = bc[bcv].fluid.pressure;
-        m_bc_t_g[bcv]  = bc[bcv].fluid.temperature;
 
       } else {
         m_bc_ep_g[bcv] = 1e50;
         m_bc_p_g[bcv]  = 1e50;
-        m_bc_t_g[bcv]  = 1e50;
+      }
+
+      // Fluid temperature
+      if ( FLUID::solve and advect_enthalpy ) {
+        if ( bc[bcv].type == minf_ or bc[bcv].type == pinf_ ) {
+          m_bc_t_g[bcv]  = bc[bcv].fluid.temperature;
+
+        } else {
+          m_bc_t_g[bcv]  = 1e50;
+        }
+      }
+
+      // Fluid species mass fractions
+      if ( FLUID::solve and advect_fluid_species) {
+        if ( bc[bcv].type == minf_ or bc[bcv].type == pinf_ ) {
+          for (int n(0); n < FLUID::nspecies_g; n++) {
+            m_bc_X_g[n][bcv] = bc[bcv].fluid.species.mass_fractions[n];
+          }
+        }
+        else {
+          for (int n(0); n < FLUID::nspecies_g; n++)
+            m_bc_X_g[n][bcv] = 1e50;
+        }
       }
 
     }
-
 }
