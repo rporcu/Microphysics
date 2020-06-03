@@ -154,16 +154,16 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
             for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 Box const& bx = mfi.tilebox();
-                Array4<Real const> const& h_g_o     = ld.h_go->const_array(mfi);
-                Array4<Real      > const& h_g_n     = ld.h_g->array(mfi);
-                Array4<Real      > const& T_g_n     = ld.T_g->array(mfi);
-                Array4<Real const> const& rho_o     = ld.ro_go->const_array(mfi);
-                Array4<Real const> const& rho_n     = ld.ro_g->const_array(mfi);
-                Array4<Real> const& epg             = ld.ep_g->array(mfi);
-                Array4<Real> const& cp_g            = ld.cp_g->array(mfi);
-                Array4<Real const> const& dhdt_o    = conv_s_old[lev]->const_array(mfi);
-                Array4<Real const> const& dhdt      = conv_s[lev]->const_array(mfi);
-                Array4<Real const> const& lapT_o    = lapT_old[lev]->const_array(mfi);
+                Array4<Real const> const& h_g_o  = ld.h_go->const_array(mfi);
+                Array4<Real      > const& h_g_n  = ld.h_g->array(mfi);
+                Array4<Real      > const& T_g_n  = ld.T_g->array(mfi);
+                Array4<Real const> const& rho_o  = ld.ro_go->const_array(mfi);
+                Array4<Real const> const& rho_n  = ld.ro_g->const_array(mfi);
+                Array4<Real const> const& epg    = ld.ep_g->array(mfi);
+                Array4<Real const> const& cp_g   = ld.cp_g->array(mfi);
+                Array4<Real const> const& dhdt_o = conv_s_old[lev]->const_array(mfi);
+                Array4<Real const> const& dhdt   = conv_s[lev]->const_array(mfi);
+                Array4<Real const> const& lapT_o = lapT_old[lev]->const_array(mfi);
 
                 amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
@@ -237,7 +237,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     if (advect_fluid_species)
     {
       const int nspecies_g = FLUID::nspecies_g;
-      
+
       for (int lev = 0; lev <= finest_level; lev++)
       {
         auto& ld = *m_leveldata[lev];
@@ -343,7 +343,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // Add the drag term implicitly
     // *************************************************************************************
     if (DEM::solve or PIC::solve)
-        mfix_add_drag_implicit(l_dt);
+        mfix_add_txfr_implicit(l_dt);
 
     // *************************************************************************************
     // Subtract off half of the explicit diffusion term (see comment above)
@@ -406,7 +406,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     {
        delete conv_u[lev];
        delete conv_s[lev];
-       
+
        if (advect_fluid_species)
          delete conv_X[lev];
     }

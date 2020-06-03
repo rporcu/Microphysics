@@ -48,7 +48,7 @@ namespace SPECIES
         pp.get("diffusivity", diffusivity_model);
 
         if (amrex::toLower(diffusivity_model).compare("constant") == 0) {
-          
+
           //SPECIESDIFFUSIVITYMODEL SpeciesDiffusivityModel = ConstantSpeciesDiffusivity;
           for (int n(0); n < nspecies; n++) {
             std::string name = "species." + species[n];

@@ -68,32 +68,35 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                     p_rep.pos(0) = p.pos(0) + shift[0];
                     p_rep.pos(1) = p.pos(1) + shift[1];
                     p_rep.pos(2) = p.pos(2) + shift[2];
-                
+
                     p_rep.rdata(realData::velx) = p.rdata(realData::velx);
                     p_rep.rdata(realData::vely) = p.rdata(realData::vely);
                     p_rep.rdata(realData::velz) = p.rdata(realData::velz);
-                
+
                     // Set other particle properties
-                    p_rep.idata(intData::phase)       = p.idata(intData::phase);
-                    p_rep.idata(intData::state)       = p.idata(intData::state);
-                    p_rep.rdata(realData::volume)     = p.rdata(realData::volume);
-                    p_rep.rdata(realData::density)    = p.rdata(realData::density);
-                    p_rep.rdata(realData::mass)       = p.rdata(realData::mass);
-                    p_rep.rdata(realData::oneOverI)   = p.rdata(realData::oneOverI);
-                    p_rep.rdata(realData::radius)     = p.rdata(realData::radius);
-                    p_rep.rdata(realData::omegax)     = p.rdata(realData::omegax);
-                    p_rep.rdata(realData::omegay)     = p.rdata(realData::omegay);
-                    p_rep.rdata(realData::omegaz)     = p.rdata(realData::omegaz);
-                    p_rep.rdata(realData::statwt)     = p.rdata(realData::statwt);
-                    p_rep.rdata(realData::dragcoeff)  = p.rdata(realData::dragcoeff);
-                    p_rep.rdata(realData::dragx)      = p.rdata(realData::dragx);
-                    p_rep.rdata(realData::dragy)      = p.rdata(realData::dragy);
-                    p_rep.rdata(realData::dragz)      = p.rdata(realData::dragz);
+                    p_rep.idata(intData::phase)        = p.idata(intData::phase);
+                    p_rep.idata(intData::state)        = p.idata(intData::state);
+                    p_rep.rdata(realData::volume)      = p.rdata(realData::volume);
+                    p_rep.rdata(realData::density)     = p.rdata(realData::density);
+                    p_rep.rdata(realData::mass)        = p.rdata(realData::mass);
+                    p_rep.rdata(realData::oneOverI)    = p.rdata(realData::oneOverI);
+                    p_rep.rdata(realData::radius)      = p.rdata(realData::radius);
+                    p_rep.rdata(realData::omegax)      = p.rdata(realData::omegax);
+                    p_rep.rdata(realData::omegay)      = p.rdata(realData::omegay);
+                    p_rep.rdata(realData::omegaz)      = p.rdata(realData::omegaz);
+                    p_rep.rdata(realData::statwt)      = p.rdata(realData::statwt);
+                    p_rep.rdata(realData::dragcoeff)   = p.rdata(realData::dragcoeff);
+                    p_rep.rdata(realData::dragx)       = p.rdata(realData::dragx);
+                    p_rep.rdata(realData::dragy)       = p.rdata(realData::dragy);
+                    p_rep.rdata(realData::dragz)       = p.rdata(realData::dragz);
+                    p_rep.rdata(realData::c_ps)        = p.rdata(realData::c_ps);
+                    p_rep.rdata(realData::temperature) = p.rdata(realData::temperature);
+                    p_rep.rdata(realData::convection)  = p.rdata(realData::convection);
 
                     // Set id and cpu for this particle
                     p_rep.id()  = nextID + n;
                     p_rep.cpu() = myProc;
-                 
+
                 }); // p
 
                 ParticleType::NextID(nextID + np);

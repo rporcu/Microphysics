@@ -17,6 +17,8 @@
 #include "mfix_des_K.H"
 #include "MFIX_DEM_Parms.H"
 #include <MFIX_PIC_Parms.H>
+#include <MFIX_IC_Parms.H>
+
 #include <particle_generator.H>
 
 using namespace amrex;
@@ -98,6 +100,10 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
       p.rdata(realData::dragy) = 0.0;
       p.rdata(realData::dragz) = 0.0;
 
+      p.rdata(realData::c_ps) = 0.0;
+      p.rdata(realData::temperature) = 0.0;
+      p.rdata(realData::convection) = 0.0;
+
       // Add everything to the data structure
       particle_tile.push_back(p);
 
@@ -140,7 +146,6 @@ void MFIXParticleContainer::InitParticlesAuto ()
       // Now that we know pcount, go ahead and create a particle container for this
       // grid and add the particles to it
       auto& particles = DefineAndReturnParticleTile(lev,mfi);
-      //ParticleTileType& particles = GetParticles(lev)[std::make_pair(grid_id,tile_id)];
 
       ParticleType p_new;
       for (int i = 0; i < pcount; i++) {
@@ -151,8 +156,8 @@ void MFIXParticleContainer::InitParticlesAuto ()
         // Add to the data structure
         particles.push_back(p_new);
         if (DEM::nspecies_dem > 0){
-           for(int ii=0; ii < DEM::spec_frac_dem.size(); ++ii){
-               particles.push_back_real(ii, DEM::spec_frac_dem[ii]);
+           for(int ii=0; ii < DEM::nspecies_dem; ++ii){
+               particles.push_back_real(ii, -1.0);
            }
         }
       }
@@ -171,5 +176,92 @@ void MFIXParticleContainer::InitParticlesAuto ()
   // We shouldn't need this if the particles are tiled with one tile per grid, but otherwise
   // we do need this to move particles from tile 0 to the correct tile.
   Redistribute();
+
+}
+
+
+
+void MFIXParticleContainer::InitParticlesEnthalpy ()
+{
+  int lev = 0;
+  const auto dx  = Geom(lev).CellSizeArray();
+  const auto idx = Geom(lev).InvCellSizeArray();
+
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+  {
+
+    amrex::GpuArray<amrex::Real, DEM::NMAX> cp0_loc;
+    for(int phase(0); phase<DEM::names.size(); phase++) {
+      cp0_loc[phase] = DEM::c_p0[phase];
+    }
+
+    // Set the initial conditions.
+    for(int icv(0); icv < IC::ic.size(); ++icv)
+    {
+      IC::IC_t ic = IC::ic[icv];
+
+      // This is a round about way to address what is likely overly complex
+      // logic in the particle generator. We take the region specified by
+      // a user and convert it index space (i,j,k). That in turn is turned
+      // back into a physical region that may be a little larger than what
+      // was actually defined to account for spatial discretization.
+      const IntVect bx_lo(amrex::Math::floor(ic.region->lo(0)*idx[0] + 0.5),
+                          amrex::Math::floor(ic.region->lo(1)*idx[1] + 0.5),
+                          amrex::Math::floor(ic.region->lo(2)*idx[0] + 0.5));
+
+      const IntVect bx_hi(amrex::Math::floor(ic.region->hi(0)*idx[0] + 0.5),
+                          amrex::Math::floor(ic.region->hi(1)*idx[1] + 0.5),
+                          amrex::Math::floor(ic.region->hi(2)*idx[0] + 0.5));
+
+      // Start/end of IC domain bounds
+      const amrex::RealVect ic_lo = {bx_lo[0]*dx[0], bx_lo[1]*dx[1], bx_lo[2]*dx[2]};
+      const amrex::RealVect ic_hi = {bx_hi[0]*dx[0], bx_hi[1]*dx[1], bx_hi[2]*dx[2]};
+
+      const Box ic_box(bx_lo, bx_hi);
+
+      if ( pti.tilebox().intersects ( ic_box ) ){
+
+        // Create a temporary copy of IC particle temperatures mapped
+        // to the particle type.
+        amrex::GpuArray<amrex::Real, DEM::NMAX> temperature_loc;
+        for(int solid_type(0); solid_type<DEM::names.size(); solid_type++) {
+          // Initialize to zero
+          temperature_loc[solid_type] = 0.0;
+
+          // Loop through IC solids looking for match.
+          for(int ics(0); ics < IC::ic[icv].solids.size(); ics++) {
+            DEM::DEM_t ic_solid = IC::ic[icv].solids[ics];
+            if(DEM::names[solid_type] == ic_solid.name) {
+              temperature_loc[solid_type] = ic_solid.temperature;
+            }
+          }
+        }
+
+        auto& particles = pti.GetArrayOfStructs();
+        int np = pti.numParticles();
+
+        auto particles_ptr = particles().dataPtr();
+
+        amrex::ParallelFor(np,
+          [particles_ptr, temperature_loc, cp0_loc, ic_lo, ic_hi]
+          AMREX_GPU_DEVICE (int ip) noexcept
+        {
+          MFIXParticleContainer::ParticleType& p = particles_ptr[ip];
+
+          if(ic_lo[0] <= p.pos(0) and p.pos(0) <= ic_hi[0] and
+             ic_lo[1] <= p.pos(1) and p.pos(1) <= ic_hi[1] and
+             ic_lo[2] <= p.pos(2) and p.pos(2) <= ic_hi[2])
+          {
+            const int phase = p.idata(intData::phase);
+            p.rdata(realData::temperature) = temperature_loc[phase-1];
+            p.rdata(realData::c_ps) = cp0_loc[phase-1];
+          }
+        });
+
+
+
+      } // Intersecting Boxes
+    } // IC regions
+  } // MFIXParIter
 
 }

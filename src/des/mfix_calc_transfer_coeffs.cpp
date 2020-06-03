@@ -3,36 +3,40 @@
 #include <mfix_interp_K.H>
 #include <mfix_eb_interp_K.H>
 #include <des_drag_K.H>
+#include <des_conv_coeff_K.H>
 
-void mfix::mfix_calc_particle_beta (Real time)
+void mfix::mfix_calc_transfer_coeffs ()
 {
   if (m_drag_type == DragType::WenYu) {
-      mfix_calc_particle_beta(ComputeDragWenYu(DEM::small_number,DEM::large_number,DEM::eps),
-                              time);
+      mfix_calc_transfer_coeffs(ComputeDragWenYu(DEM::small_number,DEM::large_number,DEM::eps),
+            ComputeConvectionCoeff_RanzMarshall(DEM::small_number,DEM::large_number,DEM::eps));
   }
   else if (m_drag_type == DragType::Gidaspow) {
-    mfix_calc_particle_beta(ComputeDragGidaspow(DEM::small_number,DEM::large_number,DEM::eps),
-                            time);
+    mfix_calc_transfer_coeffs(ComputeDragGidaspow(DEM::small_number,DEM::large_number,DEM::eps),
+              ComputeConvectionCoeff_RanzMarshall(DEM::small_number,DEM::large_number,DEM::eps));
+
   }
   else if (m_drag_type == DragType::BVK2) {
-    mfix_calc_particle_beta(ComputeDragBVK2(DEM::small_number,DEM::large_number,DEM::eps),
-                            time);
+    mfix_calc_transfer_coeffs(ComputeDragBVK2(DEM::small_number,DEM::large_number,DEM::eps),
+          ComputeConvectionCoeff_RanzMarshall(DEM::small_number,DEM::large_number,DEM::eps));
+
   }
   else if (m_drag_type == DragType::UserDrag) {
-    mfix_calc_particle_beta(ComputeDragUser(DEM::small_number,DEM::large_number,DEM::eps),
-                            time);
+    mfix_calc_transfer_coeffs(ComputeDragUser(DEM::small_number,DEM::large_number,DEM::eps),
+          ComputeConvectionCoeff_RanzMarshall(DEM::small_number,DEM::large_number,DEM::eps));
+
   }
-    else {
+  else {
     amrex::Abort("Invalid Drag Type.");
   }
 }
 
-template <typename F>
-void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
+template <typename F1, typename F2>
+void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
 {
   using MFIXParIter = MFIXParticleContainer::MFIXParIter;
 
-  BL_PROFILE("mfix::mfix_calc_particle_beta()");
+  BL_PROFILE("mfix::mfix_calc_transfer_coeff()");
 
   // We copy the value inside the domain to the outside to avoid
   // unphysical volume fractions.
@@ -42,9 +46,11 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
   // This is just a sanity check to make sure we're not using covered values
   // We can remove these lines once we're confident in the algorithm
   EB_set_covered(*m_leveldata[0]->vel_g, 0, 3, 1, covered_val);
-  EB_set_covered(*m_leveldata[0]->ep_g, 0, 1, 1, covered_val);
-  EB_set_covered(*m_leveldata[0]->mu_g, 0, 1, 1, covered_val);
-  EB_set_covered(*m_leveldata[0]->ro_g, 0, 1, 1, covered_val);
+  EB_set_covered(*m_leveldata[0]->ep_g,  0, 1, 1, covered_val);
+  EB_set_covered(*m_leveldata[0]->mu_g,  0, 1, 1, covered_val);
+  EB_set_covered(*m_leveldata[0]->ro_g,  0, 1, 1, covered_val);
+  EB_set_covered(*m_leveldata[0]->k_g,   0, 1, 1, covered_val);
+  EB_set_covered(*m_leveldata[0]->cp_g,  0, 1, 1, covered_val);
 
   for (int lev = 0; lev < nlev; lev++)
   {
@@ -53,6 +59,8 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
     MultiFab* ro_ptr;
     MultiFab* mu_ptr;
+    MultiFab* cp_ptr;
+    MultiFab* kg_ptr;
     MultiFab* interp_ptr;
 
     const int interp_ng = 1;    // Only one layer needed for interpolation
@@ -62,6 +70,8 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
     {
       ro_ptr  = m_leveldata[lev]->ro_g;
       mu_ptr  = m_leveldata[lev]->mu_g;
+      kg_ptr  = m_leveldata[lev]->k_g;
+      cp_ptr  = m_leveldata[lev]->cp_g;
 
       // Store gas velocity and volume fraction for interpolation
       interp_ptr = new MultiFab(grids[lev], dmap[lev], interp_comp, interp_ng, MFInfo(), *ebfactory[lev]);
@@ -92,6 +102,12 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
 
       mu_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->mu_g->nComp(), 1);
       mu_ptr->copy(*m_leveldata[lev]->mu_g, 0, 0, 1, 0, 0);
+
+      kg_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->k_g->nComp(), 1);
+      kg_ptr->copy(*m_leveldata[lev]->k_g, 0, 0, 1, 0, 0);
+
+      cp_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->cp_g->nComp(), 1);
+      cp_ptr->copy(*m_leveldata[lev]->cp_g, 0, 0, 1, 0, 0);
 
       EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
                                        {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
@@ -127,7 +143,6 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
       const amrex::RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
       const amrex::RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
 
-
       const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(interp_ptr->Factory());
 
       const auto cellcent = &(factory.getCentroid());
@@ -150,6 +165,9 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
           const auto& interp_array = interp_ptr->array(pti);
           const auto& ro_array     = ro_ptr->array(pti);
           const auto& mu_array     = mu_ptr->array(pti);
+          const auto& kg_array     = kg_ptr->array(pti);
+          const auto& cp_array     = cp_ptr->array(pti);
+
           const auto& flags_array  = flags.array();
 
           auto particles_ptr = particles().dataPtr();
@@ -157,8 +175,9 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
             amrex::ParallelFor(np,
-              [particles_ptr,interp_array,ro_array,mu_array,DragFunc,plo,dxi,interp_comp,
-               local_cg_dem=DEM::cg_dem]
+              [particles_ptr,interp_array,interp_comp,ro_array,mu_array,kg_array,cp_array,
+               DragFunc, ConvectionCoeff,plo,dxi,
+               local_cg_dem=DEM::cg_dem, local_advect_enthalpy=advect_enthalpy]
               AMREX_GPU_DEVICE (int ip) noexcept
             {
               MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
@@ -201,16 +220,24 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
               vslp[2] = velfp[2] - pvel[2];
 
               Real vrel = sqrt(dot_product(vslp, vslp));
-              Real dpm = 2.0*rad;
+              Real dp = 2.0*rad;
               if (local_cg_dem)
               {
-                 dpm = dpm/std::pow(particle.rdata(realData::statwt),(1.0/3.0));
+                 dp = dp/std::pow(particle.rdata(realData::statwt),(1.0/3.0));
               }
               Real phis = 1.0 - ep;
-              Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
+              Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dp, dp, phis,
                  velfp[0], velfp[1], velfp[2], iloc, jloc, kloc, p_id);
 
               particle.rdata(realData::dragcoeff) = beta;
+
+              if(local_advect_enthalpy){
+                Real kg = kg_array(iloc,jloc,kloc);
+                Real cp = cp_array(iloc,jloc,kloc);
+                Real gamma = ConvectionCoeff(ep, mu, kg, cp, rop_g, vrel, dp, iloc, jloc, kloc, p_id);
+                particle.rdata(realData::convection) = 4.0*M_PI*rad*rad*gamma;
+              }
+
             });
           }
           else // FAB not all regular
@@ -225,8 +252,10 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
             const auto& apz_fab = areafrac[2]->array(pti);
 
             amrex::ParallelFor(np,
-              [particles_ptr,interp_array,interp_comp,ro_array,mu_array,flags_array,DragFunc,
-               plo,dx,dxi,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,local_cg_dem=DEM::cg_dem]
+              [particles_ptr,interp_array,interp_comp,ro_array,mu_array,kg_array,cp_array,
+               DragFunc, ConvectionCoeff,
+               plo,dx,dxi,flags_array,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+               local_cg_dem=DEM::cg_dem,local_advect_enthalpy=advect_enthalpy]
               AMREX_GPU_DEVICE (int pid) noexcept
             {
               MFIXParticleContainer::ParticleType& particle = particles_ptr[pid];
@@ -286,21 +315,6 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                 velfp[2] = interp_loc[2];
                 ep       = interp_loc[3];
 
-
-
-// DEBUG START ///////////////////////////////////////////////////////////////////////////////////////////////
-#if(0)
-        const std::string& myfile = "result";
-
-        amrex::PrintToFile(myfile, Print::AllProcs) << std::endl << "particle: "
-            << particle.pos(0) << " " << particle.pos(1) << " " << particle.pos(2) << std::endl << std::endl;
-        amrex::PrintToFile(myfile, Print::AllProcs) << "ug: " << velfp[0] << "  "
-                                                    << "vg: " << velfp[1] << "  "
-                                                    << "wg: " << velfp[2] << "  "
-                                                    << "ep: " << ep << std::endl;
-#endif
-// DEBUG END   ///////////////////////////////////////////////////////////////////////////////////////////////
-
                 // Using i/j/k of centroid cell
                 Real  ro = ro_array(ip,jp,kp);
                 Real  mu = mu_array(ip,jp,kp);
@@ -323,17 +337,24 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
                 vslp[2] = velfp[2] - pvel[2];
 
                 Real vrel = sqrt(dot_product(vslp, vslp));
-                Real dpm = 2.0*rad;
+                Real dp = 2.0*rad;
                 if (local_cg_dem)
                 {
-                   dpm = dpm/std::pow(particle.rdata(realData::statwt),(1.0/3.0));
+                   dp = dp/std::pow(particle.rdata(realData::statwt),(1.0/3.0));
                 }
                 Real phis = 1.0 - ep;
-                Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dpm, dpm, phis,
+                Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dp, dp, phis,
                                          velfp[0], velfp[1], velfp[2],
                                          ip, jp, kp, p_id);
 
                 particle.rdata(realData::dragcoeff) = beta;
+
+              if(local_advect_enthalpy){
+                Real kg = kg_array(ip,jp,kp);
+                Real cp = cp_array(ip,jp,kp);
+                Real gamma = ConvectionCoeff(ep, mu, kg, cp, rop_g, vrel, dp, ip, jp, kp, p_id);
+                particle.rdata(realData::convection) = 4.0*M_PI*rad*rad*gamma;
+              }
 
               } // Not covered
             }); // pid
@@ -345,6 +366,8 @@ void mfix::mfix_calc_particle_beta (F DragFunc, Real time)
     if (not OnSameGrids) {
       delete ro_ptr;
       delete mu_ptr;
+      delete kg_ptr;
+      delete cp_ptr;
     }
     delete interp_ptr;
   } // lev

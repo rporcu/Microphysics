@@ -94,3 +94,4 @@ doc/UsersGuide/*.toc
 
 CMakeFiles
 CMakeCache.txt
+subprojects/mfix-parser

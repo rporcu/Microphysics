@@ -41,7 +41,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
       m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
-      
+
       if (advect_fluid_species) {
         m_leveldata[lev]->D_g->FillBoundary(geom[lev].periodicity());
         m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
@@ -61,7 +61,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
       mfix_set_temperature_bcs(time, get_T_g());
       mfix_set_enthalpy_bcs(time, get_h_g());
     }
-    
+
     if (advect_fluid_species)
       mfix_set_species_bcs(time, get_X_g(), get_D_g());
 
@@ -104,7 +104,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
         divtau_old[lev]->setVal(0.0);
           laps_old[lev]->setVal(0.0);
           lapT_old[lev]->setVal(0.0);
-       
+
         if (advect_fluid_species) {
           conv_X_old[lev] = new MultiFab(grids[lev], dmap[lev],
               FLUID::nspecies_g, 0, MFInfo(), *ebfactory[lev]);
@@ -169,7 +169,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
           MultiFab::Copy(h_go, h_g, 0, 0, h_g.nComp(), h_go.nGrow());
           MultiFab::Copy(trac_o, trac, 0, 0, trac.nComp(), trac_o.nGrow());
           MultiFab::Copy(vel_go, vel_g, 0, 0, vel_g.nComp(), vel_go.nGrow());
-          
+
           if (advect_fluid_species)
             MultiFab::Copy(X_go, X_g, 0, 0, X_g.nComp(), X_go.nGrow());
 
@@ -186,7 +186,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
         // Calculate drag coefficient
         if (DEM::solve or PIC::solve) {
           Real start_drag = ParallelDescriptor::second();
-          mfix_calc_drag_fluid(time);
+          mfix_calc_txfr_fluid(time);
           coupling_timing += ParallelDescriptor::second() - start_drag;
         }
 
@@ -198,7 +198,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
         // Rescale species in order to respect sum = 1
         if (advect_fluid_species) {
           normalize_species_g(get_X_g());
-          
+
           for (int lev = 0; lev <= finest_level; lev++) {
             // Update ghost cells
             m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
@@ -210,7 +210,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
         {
           Real start_drag = ParallelDescriptor::second();
           amrex::Print() << "\nRecalculating drag ..." << std::endl;
-          mfix_calc_drag_fluid(new_time);
+          mfix_calc_txfr_fluid(new_time);
           coupling_timing += ParallelDescriptor::second() - start_drag;
         }
 

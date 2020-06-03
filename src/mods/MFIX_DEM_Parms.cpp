@@ -54,15 +54,15 @@ namespace DEM
     // Names of the solids used to build input regions.
     amrex::Vector<std::string> names;
 
+    // Specified constant specific heat
+    amrex::Vector<amrex::Real> c_p0;
+
     // Flag to solve species fluid equations
     int solve_species = 0;
 
     // Particle species
     amrex::Vector<std::string> species_dem;
 
-    // Particle species fractions
-    amrex::Vector<amrex::Real> spec_frac_dem;
-    
     // Number of species at each particle
     int nspecies_dem = 0;
 
@@ -81,9 +81,9 @@ namespace DEM
       en.alloc();
       en_w.alloc();
 
-      amrex::ParmParse pp("dem");
+      amrex::ParmParse ppDEM("dem");
 
-      pp.queryarr("solve", names);
+      ppDEM.queryarr("solve", names);
 
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(names.size() >= 1,
            "DEM solver not specified: Input dem.solve is undefined!");
@@ -102,11 +102,7 @@ namespace DEM
                      "but, the solver is disabled!");
       }
 
-
-
-
       //TODO: Add check to prevent using the same name twice.
-
 
       if( solve ) {
 
@@ -114,42 +110,42 @@ namespace DEM
         NPHASE = names.size();
 
         // Read MEW
-        pp.get("friction_coeff.pp", mew);
+        ppDEM.get("friction_coeff.pp", mew);
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= mew && mew <= 1.0,
              "Invalid value: dem.friction_coeff.pp must be in [0.0, 1.0]");
 
         // Read MEW_W
-        pp.get("friction_coeff.pw", mew_w);
+        ppDEM.get("friction_coeff.pw", mew_w);
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= mew_w && mew_w <= 1.0,
              "Invalid value: dem.friction_coeff.pw must be in [0.0, 1.0]");
 
         // Read KN
-        pp.get("spring_const.pp", kn);
+        ppDEM.get("spring_const.pp", kn);
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(kn > 0.0,
              "Invalid value: dem.spring_const.pp must be > 0.0");
 
         // Read KN_w
-        pp.get("spring_const.pw", kn_w);
+        ppDEM.get("spring_const.pw", kn_w);
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(kn_w > 0.0,
              "Invalid value: dem.spring_const.pw must be > 0.0");
 
          // Read KT_FAC
-        pp.get("spring_tang_fac.pp", kt_fac);
+        ppDEM.get("spring_tang_fac.pp", kt_fac);
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= kt_fac && kt_fac <= 1.0,
              "Invalid value: dem.spring_tang_fac.pp must be in [0.0, 1.0]");
 
         //Read KT_W_FAC
-        pp.get("spring_tang_fac.pw", kt_w_fac);
+        ppDEM.get("spring_tang_fac.pw", kt_w_fac);
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= kt_w_fac && kt_w_fac <= 1.0,
              "Invalid value: dem.spring_tang_fac.pw must be in [0.0, 1.0]");
 
         // Read DES_ETA_FAC
-        pp.get("damping_tang_fac.pp", eta_fac);
+        ppDEM.get("damping_tang_fac.pp", eta_fac);
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= eta_fac && eta_fac <= 1.0,
              "Invalid value: dem.damping_tang_fac.pp must be in [0.0, 1.0]");
 
         // Read DES_ETA_W_FAC
-        pp.get("damping_tang_fac.pw", eta_w_fac);
+        ppDEM.get("damping_tang_fac.pw", eta_w_fac);
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= eta_w_fac && eta_w_fac <= 1.0,
              "Invalid value: dem.damping_tang_fac.pw must be in [0.0, 1.0]");
 
@@ -157,21 +153,6 @@ namespace DEM
         // Calculate the tangential spring stiffness
         kt   = kt_fac   * kn;
         kt_w = kt_w_fac * kn_w;
-
-        // Read species inputs -----------------------------------------//
-        int species = 0;
-        pp.query("species", species);
-        if (species > 0)
-        {
-             pp.getarr("species.names", species_dem);
-             nspecies_dem = species_dem.size();
-             pp.getarr("species.fractions", spec_frac_dem);
-             AMREX_ALWAYS_ASSERT_WITH_MESSAGE( species_dem.size() == spec_frac_dem.size(),
-             "Species fraction number does not match species number");
-        }
-
-        // Read coarse-grain DEM
-        pp.query("coarse_grain", cg_dem);
 
         //// We know that we should have an upper-triangular matrix worth
         //// of entries. (1-1, 1-2, 2-2, ...) for NPHASEs
@@ -267,6 +248,55 @@ namespace DEM
           *(DEM::en_w.arrayPtr()) = host_en_w;
 #endif
         }
+
+        if (ppDEM.contains("specific_heat")) {
+
+          std::string specific_heat_model;
+          ppDEM.query("specific_heat", specific_heat_model );
+
+          amrex::ParmParse ppDEM_CP("dem.specific_heat");
+
+          if (specific_heat_model == "constant")
+          {
+            //SPECIFICHEATMODEL SpecificHeatModel = ConstantSpecificHeat;
+            // If this value is not set in the inputs file, the default is 1.0
+
+            for (int idx0=0; idx0 < NPHASE; idx0++){
+
+              std::string ppCP0 = "constant."+DEM::names[idx0];
+              amrex::Real cp0_in = -1.0;
+              ppDEM_CP.get(ppCP0.c_str(), cp0_in);
+              AMREX_ALWAYS_ASSERT_WITH_MESSAGE(cp0_in > 0.0, "Invalid DEM constant specific heat.");
+
+              DEM::c_p0.push_back(cp0_in);
+            }
+
+          }
+          else if (specific_heat_model == "nasa9-poly")
+          {
+            //SPECIFICHEATMODEL SpecificHeatModel = NASA9_Polynomial;
+            amrex::Abort("Not yet implemented.");
+            // TODO: get Tlow, Thigh, coefficients
+          }
+          else
+          {
+            amrex::Abort("Unknown DEM specific heat model!");
+          }
+        } // end specific heat
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Read species inputs -----------------------------------------//
+        int species = 0;
+        ppDEM.query("species", species);
+        if (species > 0)
+        {
+              ppDEM.getarr("species.names", species_dem);
+              nspecies_dem = species_dem.size();
+        }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Read coarse-grain DEM
+        ppDEM.query("coarse_grain", cg_dem);
 
       }
 

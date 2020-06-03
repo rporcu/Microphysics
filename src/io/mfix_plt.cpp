@@ -147,10 +147,22 @@ mfix::InitIOPltData ()
         write_real_comp[15] = input_value;  // dragz
 
         input_value = 0;
+        pp.query("plt_cp_s",  input_value);
+        write_real_comp[16] = input_value;  // specific heat
+
+        input_value = 0;
+        pp.query("plt_T_p",   input_value );
+        write_real_comp[17] = input_value;  // temperature
+
+        input_value = 0;
+        pp.query("plt_convection", input_value );
+        write_real_comp[18] = input_value;  // heat transfer coefficient
+
+        input_value = 0;
         pp.query("plt_species_p",   input_value );
         if (input_value > 0){
            for(int i=0; i < DEM::nspecies_dem; ++i){
-               write_real_comp[16+i] = input_value;
+               write_real_comp[18+i] = input_value;
            }
         }
 
@@ -461,6 +473,12 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         real_comp_names.push_back("dragx");
         real_comp_names.push_back("dragy");
         real_comp_names.push_back("dragz");
+
+
+        real_comp_names.push_back("c_ps");
+        real_comp_names.push_back("temperature");
+        real_comp_names.push_back("convection");
+
         if (DEM::nspecies_dem > 0){
            for(int i=0; i < DEM::species_dem.size(); ++i){
                real_comp_names.push_back(DEM::species_dem[i]);

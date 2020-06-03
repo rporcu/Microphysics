@@ -5,14 +5,14 @@ void MFIXParticleContainer::usr0_des ()
 {
 }
 
-//  This routine is called within the discrete phase time loop 
+//  This routine is called within the discrete phase time loop
 //  after the source terms have been calculated but before they are applied.
 void MFIXParticleContainer::usr1_des ()
 {
 }
 
 void MFIXParticleContainer::usr2_des (int np,
-                                      NeighborParticleContainer<16, 2>::ParticleType*&)
+                                      NeighborParticleContainer<19, 2>::ParticleType*&)
 {
 }
 

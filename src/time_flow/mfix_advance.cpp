@@ -57,7 +57,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   mfix_set_tracer_bcs(time, get_trac());
   mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g());
   mfix_set_enthalpy_bcs(time, get_h_g());
-  
+
   if (advect_fluid_species)
     mfix_set_species_bcs(time, get_X_g(), get_D_g());
 
@@ -67,7 +67,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
                    m_leveldata[lev]->vel_g->nComp(), m_leveldata[lev]->vel_go->nGrow());
 
   if (DEM::solve or PIC::solve)
-    mfix_calc_drag_fluid(time);
+    mfix_calc_txfr_fluid(time);
 
   // Create temporary multifabs to hold conv and divtau
   Vector< MultiFab* > conv_u(finest_level+1, nullptr);
@@ -86,13 +86,13 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     divtau[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
     laps[lev]   = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
     lapT[lev]   = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-    
+
     conv_u[lev]->setVal(0.0);
     conv_s[lev]->setVal(0.0);
     divtau[lev]->setVal(0.0);
     laps[lev]->setVal(0.0);
     lapT[lev]->setVal(0.0);
-    
+
     if (advect_fluid_species) {
       conv_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies_g, 0,
           MFInfo(), *ebfactory[lev]);
@@ -155,7 +155,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g());
     mfix_set_tracer_bcs(time, get_trac());
     mfix_set_enthalpy_bcs(time, get_h_g());
-    
+
     if (advect_fluid_species)
       mfix_set_species_bcs(time, get_X_g(), get_D_g());
   }
@@ -181,7 +181,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 // momentum exchange
 //
 void
-mfix::mfix_add_drag_explicit (Real dt)
+mfix::mfix_add_txfr_explicit (Real dt)
 {
   /*
      This adds both components of the drag term
@@ -189,7 +189,7 @@ mfix::mfix_add_drag_explicit (Real dt)
                               = drag(0:2) - drag(3) * fluid_velocity
   */
 
-  BL_PROFILE("mfix::mfix_add_drag_explicit");
+  BL_PROFILE("mfix::mfix_add_txfr_explicit");
 
   for (int lev = 0; lev <= finest_level; lev++)
   {
@@ -201,29 +201,51 @@ mfix::mfix_add_drag_explicit (Real dt)
       // Tilebox
       Box bx = mfi.tilebox();
 
-      const auto&  vel_fab = m_leveldata[lev]->vel_g->array(mfi);
-      const auto& drag_fab = m_leveldata[lev]->drag->array(mfi);
-      const auto&   ro_fab = m_leveldata[lev]->ro_g->array(mfi);
-      const auto&   ep_fab = m_leveldata[lev]->ep_g->array(mfi);
+      Array4<Real      > const&  vel_fab = m_leveldata[lev]->vel_g->array(mfi);
+      Array4<Real const> const& txfr_fab = m_leveldata[lev]->txfr->array(mfi);
+      Array4<Real const> const&   ro_fab = m_leveldata[lev]->ro_g->array(mfi);
+      Array4<Real const> const&   ep_fab = m_leveldata[lev]->ep_g->array(mfi);
 
-      amrex::ParallelFor(bx,[dt,vel_fab,drag_fab,ro_fab,ep_fab]
+      amrex::ParallelFor(bx,[dt,vel_fab,txfr_fab,ro_fab,ep_fab]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
 
-        const Real A = drag_fab(i,j,k,3);
+        const Real beta = txfr_fab(i,j,k,3);
         const Real vel_x = vel_fab(i,j,k,0);
         const Real vel_y = vel_fab(i,j,k,1);
         const Real vel_z = vel_fab(i,j,k,2);
 
-        const Real drag_0 = (drag_fab(i,j,k,0) - A*vel_x) * orop;
-        const Real drag_1 = (drag_fab(i,j,k,1) - A*vel_y) * orop;
-        const Real drag_2 = (drag_fab(i,j,k,2) - A*vel_z) * orop;
+        const Real drag_0 = (txfr_fab(i,j,k,0) - beta*vel_x) * orop;
+        const Real drag_1 = (txfr_fab(i,j,k,1) - beta*vel_y) * orop;
+        const Real drag_2 = (txfr_fab(i,j,k,2) - beta*vel_z) * orop;
 
         vel_fab(i,j,k,0) = vel_x + drag_0;
         vel_fab(i,j,k,1) = vel_y + drag_1;
         vel_fab(i,j,k,2) = vel_z + drag_2;
       });
+
+      if(advect_enthalpy){
+
+        Array4<Real      > const& hg_fab = m_leveldata[lev]->h_g->array(mfi);
+        Array4<Real      > const& Tg_fab = m_leveldata[lev]->T_g->array(mfi);
+        Array4<Real const> const& cp_fab = m_leveldata[lev]->cp_g->array(mfi);
+
+        amrex::ParallelFor(bx,[dt,hg_fab,Tg_fab,cp_fab,txfr_fab,ro_fab,ep_fab]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+
+          const Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
+
+          const Real Tg    = hg_fab(i,j,k) / cp_fab(i,j,k);
+          const Real Ts    = txfr_fab(i,j,k,4);
+          const Real gamma = txfr_fab(i,j,k,5);
+
+          hg_fab(i,j,k) += (Ts - gamma * Tg) * orop;
+          Tg_fab(i,j,k) = hg_fab(i,j,k) / cp_fab(i,j,k);
+
+        });
+      }
     }
   }
 }
@@ -234,7 +256,7 @@ mfix::mfix_add_drag_explicit (Real dt)
 // momentum exchange
 //
 void
-mfix::mfix_add_drag_implicit (Real dt)
+mfix::mfix_add_txfr_implicit (Real dt)
 {
   /*
      This adds both components of the drag term
@@ -242,7 +264,7 @@ mfix::mfix_add_drag_implicit (Real dt)
                               = drag(0:2) - drag(3) * fluid_velocity
   */
 
-  BL_PROFILE("mfix::mfix_add_drag_implicit");
+  BL_PROFILE("mfix::mfix_add_txfr_implicit");
 
   for (int lev = 0; lev <= finest_level; lev++)
   {
@@ -254,21 +276,42 @@ mfix::mfix_add_drag_implicit (Real dt)
       // Tilebox
       Box bx = mfi.tilebox();
 
-      const auto&  vel_fab = m_leveldata[lev]->vel_g->array(mfi);
-      const auto& drag_fab = m_leveldata[lev]->drag->array(mfi);
-      const auto&   ro_fab = m_leveldata[lev]->ro_g->array(mfi);
-      const auto&   ep_fab = m_leveldata[lev]->ep_g->array(mfi);
+      Array4<Real      > const&  vel_fab = m_leveldata[lev]->vel_g->array(mfi);
+      Array4<Real const> const& txfr_fab = m_leveldata[lev]->txfr->array(mfi);
+      Array4<Real const> const&   ro_fab = m_leveldata[lev]->ro_g->array(mfi);
+      Array4<Real const> const&   ep_fab = m_leveldata[lev]->ep_g->array(mfi);
 
-      amrex::ParallelFor(bx,[dt,vel_fab,drag_fab,ro_fab,ep_fab]
+      amrex::ParallelFor(bx,[dt,vel_fab,txfr_fab,ro_fab,ep_fab]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
           Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
-          Real denom = 1.0 / (1.0 + drag_fab(i,j,k,3) * orop);
+          Real denom = 1.0 / (1.0 + txfr_fab(i,j,k,3) * orop);
 
-          vel_fab(i,j,k,0) = (vel_fab(i,j,k,0) + drag_fab(i,j,k,0) * orop) * denom;
-          vel_fab(i,j,k,1) = (vel_fab(i,j,k,1) + drag_fab(i,j,k,1) * orop) * denom;
-          vel_fab(i,j,k,2) = (vel_fab(i,j,k,2) + drag_fab(i,j,k,2) * orop) * denom;
+          vel_fab(i,j,k,0) = (vel_fab(i,j,k,0) + txfr_fab(i,j,k,0) * orop) * denom;
+          vel_fab(i,j,k,1) = (vel_fab(i,j,k,1) + txfr_fab(i,j,k,1) * orop) * denom;
+          vel_fab(i,j,k,2) = (vel_fab(i,j,k,2) + txfr_fab(i,j,k,2) * orop) * denom;
       });
+
+      if(advect_enthalpy){
+
+        Array4<Real      > const& hg_fab = m_leveldata[lev]->h_g->array(mfi);
+        Array4<Real      > const& Tg_fab = m_leveldata[lev]->T_g->array(mfi);
+        Array4<Real const> const& cp_fab = m_leveldata[lev]->cp_g->array(mfi);
+
+        amrex::ParallelFor(bx,[dt,hg_fab,Tg_fab,cp_fab,txfr_fab,ro_fab,ep_fab]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+          const Real Ts = txfr_fab(i,j,k,4);
+          const Real dt_gamma = dt * txfr_fab(i,j,k,5);
+
+          Real rop_g  = ro_fab(i,j,k) * ep_fab(i,j,k);
+          Real denom = 1.0 / (rop_g + dt_gamma/cp_fab(i,j,k));
+
+          hg_fab(i,j,k) = (rop_g * hg_fab(i,j,k) + dt * Ts) * denom;
+          Tg_fab(i,j,k) = hg_fab(i,j,k) / cp_fab(i,j,k);
+
+        });
+      }
     }
   }
 }

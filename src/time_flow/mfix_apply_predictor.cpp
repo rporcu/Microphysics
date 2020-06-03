@@ -431,7 +431,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // Add the drag term implicitly
     // *************************************************************************************
     if (DEM::solve or PIC::solve)
-        mfix_add_drag_implicit(l_dt);
+        mfix_add_txfr_implicit(l_dt);
 
     // *************************************************************************************
     // If doing implicit diffusion, solve here for u^*
@@ -444,7 +444,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g());
       mfix_set_tracer_bcs(time, get_trac());
       mfix_set_enthalpy_bcs(time, get_h_g());
-      
+
       if (advect_fluid_species)
         mfix_set_species_bcs(time, get_X_g(), get_D_g());
 

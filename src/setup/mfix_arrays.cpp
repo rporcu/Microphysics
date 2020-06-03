@@ -99,7 +99,7 @@ mfix::RegridArrays (int lev)
     // ********************************************************************************
     //
     // Note: after calling copy() using dst_ngrow, we do not need to call FillBoundary().
-    //       However, we want to be sure to only use valid regions of the src, so we use 
+    //       However, we want to be sure to only use valid regions of the src, so we use
     //       src_ngrow = 0 and dst_ngrow = all
     //
     //
@@ -212,7 +212,7 @@ mfix::RegridArrays (int lev)
           m_leveldata[lev]->X_go->nComp(), src_ngrow,
           m_leveldata[lev]->X_go->nGrow(), geom[lev].periodicity());
       std::swap(m_leveldata[lev]->X_go, X_go_new);
-      delete X_go_new; 
+      delete X_go_new;
     }
 
     // Tracer in gas
@@ -272,7 +272,7 @@ mfix::RegridArrays (int lev)
     MultiFab* diveu_new = new MultiFab(nd_grids, dmap[lev], m_leveldata[lev]->diveu->nComp(),
                                        m_leveldata[lev]->diveu->nGrow(), MFInfo(), *ebfactory[lev]);
     diveu_new->setVal(0);
-    diveu_new->ParallelCopy(*m_leveldata[lev]->diveu, 0, 0, m_leveldata[lev]->diveu->nComp(), 
+    diveu_new->ParallelCopy(*m_leveldata[lev]->diveu, 0, 0, m_leveldata[lev]->diveu->nComp(),
                     src_ngrow, m_leveldata[lev]->diveu->nGrow(), geom[lev].periodicity());
     std::swap(m_leveldata[lev]->diveu, diveu_new);
     delete diveu_new;
@@ -367,16 +367,16 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->vort, vort_new);
     delete vort_new;
 
-    // Particle/fluid drag -- note it is important to copy from previous step in order to use in dt calculation
-    MultiFab* drag_new = new MultiFab(grids[lev], dmap[lev],
-                                      m_leveldata[lev]->drag->nComp(),
-                                      m_leveldata[lev]->drag->nGrow(),
+    // Particle/fluid interphase transfer -- note it is important to copy from previous step in order to use in dt calculation
+    MultiFab* txfr_new = new MultiFab(grids[lev], dmap[lev],
+                                      m_leveldata[lev]->txfr->nComp(),
+                                      m_leveldata[lev]->txfr->nGrow(),
                                       MFInfo(), *ebfactory[lev]);
-    drag_new->setVal(0.);
-    drag_new->ParallelCopy(*m_leveldata[lev]->drag, 0, 0, m_leveldata[lev]->drag->nComp(),
-                   src_ngrow, m_leveldata[lev]->drag->nGrow(), geom[lev].periodicity());
-    std::swap(m_leveldata[lev]->drag, drag_new);
-    delete drag_new;
+    txfr_new->setVal(0.);
+    txfr_new->ParallelCopy(*m_leveldata[lev]->txfr, 0, 0, m_leveldata[lev]->txfr->nComp(),
+                   src_ngrow, m_leveldata[lev]->txfr->nGrow(), geom[lev].periodicity());
+    std::swap(m_leveldata[lev]->txfr, txfr_new);
+    delete txfr_new;
 
     // Array to store the rhs for cell-centered solves
     MultiFab* mac_rhs_new = new MultiFab(grids[lev], dmap[lev],

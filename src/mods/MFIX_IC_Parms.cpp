@@ -88,6 +88,8 @@ namespace IC
           std::string field = "ic."+regions[icv]+"."+solids_types[lcs];
           amrex::ParmParse ppSolid(field.c_str());
 
+          new_solid.name = solids_types[lcs];
+
           ppSolid.get("volfrac", new_solid.volfrac);
           volfrac_total += new_ic.fluid.volfrac;
 
@@ -152,10 +154,9 @@ namespace IC
     }
 
 
-#if 0
+#if defined(AMREX_DEBUG)
     //Dump out what we read for debugging!
     for (int icv(0); icv<ic.size(); icv++){
-
 
       amrex::Print() << std::endl << "Summarizing IC regions:\n" << std::endl;
       amrex::Print() << " IC: " << icv << std::endl << std::endl <<

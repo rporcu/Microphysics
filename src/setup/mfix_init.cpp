@@ -540,28 +540,33 @@ void mfix::InitLevelData (Real time)
                        << " particles per cell ..."
                        << std::endl;
 
-        Real     radius = 1.0;
-        Real     volume = 1.0;
-        Real       mass = 1.0;
-        Real    density = 1.0;
-        Real       omoi = 1.0;
-        Real       velx = 0.0;
-        Real       vely = 0.0;
-        Real       velz = 0.0;
-        Real  dragcoeff = 0.0;
-        Real      dragx = 0.0;
-        Real      dragy = 0.0;
-        Real      dragz = 0.0;
-        Real     omegax = 0.0;
-        Real     omegay = 0.0;
-        Real     omegaz = 0.0;
-        Real     statwt = 1.0;
-        int       phase = 1;
-        int       state = 0;
+        Real      radius = 1.0;
+        Real      volume = 1.0;
+        Real        mass = 1.0;
+        Real     density = 1.0;
+        Real        omoi = 1.0;
+        Real        velx = 0.0;
+        Real        vely = 0.0;
+        Real        velz = 0.0;
+        Real   dragcoeff = 0.0;
+        Real       dragx = 0.0;
+        Real       dragy = 0.0;
+        Real       dragz = 0.0;
+        Real      omegax = 0.0;
+        Real      omegay = 0.0;
+        Real      omegaz = 0.0;
+        Real      statwt = 1.0;
+        Real        c_ps = 1.0;
+        Real temperature = 0.0;
+        Real  convection = 0.0;
+        int        phase = 1;
+        int        state = 0;
 
         MFIXParticleContainer::ParticleInitData pdata = {radius,volume,mass,density,omoi,
                                                          velx,vely,velz,omegax,omegay,omegaz,
-                                                         dragx,dragy,dragz,dragcoeff,statwt,phase,state};
+                                                         dragx,dragy,dragz,dragcoeff,statwt,
+                                                         c_ps, temperature, convection,
+                                                         phase,state};
 
         pc->InitNRandomPerCell(n_per_cell, pdata);
         pc->WriteAsciiFileForInit("random_particles");
@@ -702,11 +707,17 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
           }
         }
 
-        if (DEM::solve)
+        if (DEM::solve) {
             pc->MFIX_PC_InitCollisionParams();
+        }
 
-        if (!FLUID::solve)
+        if(advect_enthalpy) {
+          pc->InitParticlesEnthalpy();
+        }
+
+        if (!FLUID::solve){
             dt = fixed_dt;
+        }
     }
 
     if (FLUID::solve)

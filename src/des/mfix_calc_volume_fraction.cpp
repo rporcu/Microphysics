@@ -90,7 +90,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
       }
 
       // Deposit particle volume to the grid
-      pc->ScalarDeposition(lev, *mf_pointer[lev], volfrac, flags);
+      pc->SolidsVolumeDeposition(lev, *mf_pointer[lev], volfrac, flags);
     }
 
     {
