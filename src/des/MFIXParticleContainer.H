@@ -37,6 +37,9 @@ struct realData
     dragx,
     dragy,
     dragz,
+    c_ps,
+    temperature,
+    convection,
     count
   };
 };
@@ -84,6 +87,8 @@ public:
 
     void InitParticlesAuto ();
 
+    void InitParticlesEnthalpy ();
+
     void RemoveOutOfRange (int lev,
                            const amrex::EBFArrayBoxFactory * ebfactory,
                            const amrex::MultiFab * ls_phi,
@@ -110,7 +115,8 @@ public:
                           const int ls_refinement,
                           amrex::MultiFab * cost,
                           std::string & knapsack_weight_type,
-                          int & nsubsteps);
+                          int & nsubsteps,
+                          const int advect_enthalpy);
 
     void MFIX_PC_InitCollisionParams ();
 
@@ -140,35 +146,35 @@ public:
     ///
     void writeAllAtLevel (int lev = 0);
 
-    void ScalarDeposition (int lev,
-                           amrex::MultiFab& mf,
-                           const amrex::MultiFab* volfrac,
-                           const amrex::FabArray<amrex::EBCellFlagFab>* flags);
+    void SolidsVolumeDeposition (int lev,
+                                 amrex::MultiFab& mf,
+                                 const amrex::MultiFab* volfrac,
+                                 const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
     ///
     /// Do the actual PIC deposition for CalcVolumeFraction
     ///
     template <typename FB>
-    void ScalarDeposition (FB WeightFunc,
-                           int lev,
-                           amrex::MultiFab& mf,
-                           const amrex::MultiFab* volfrac,
-                           const amrex::FabArray<amrex::EBCellFlagFab>* flags);
+    void SolidsVolumeDeposition (FB WeightFunc,
+                                 int lev,
+                                 amrex::MultiFab& mf,
+                                 const amrex::MultiFab* volfrac,
+                                 const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
     ///
-    void FluidDragForceDeposition (int lev,
+    void InterphaseTxfrDeposition (int lev,
                                    amrex::MultiFab& mf_tmp_eps,
-                                   amrex::MultiFab& drag_mf,
+                                   amrex::MultiFab& txfr_mf,
                                    const amrex::MultiFab* volfrac,
                                    const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
     template <typename F>
-    void FluidDragForceDeposition (F WeightFunc,
+    void InterphaseTxfrDeposition (F WeightFunc,
                                    int lev,
                                    amrex::MultiFab& mf_tmp_eps,
-                                   amrex::MultiFab& drag_mf,
+                                   amrex::MultiFab& txfr_mf,
                                    const amrex::MultiFab* volfrac,
                                    const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
@@ -245,7 +251,7 @@ public:
     void usr1_des ();
 
     void usr2_des (int np,
-                   NeighborParticleContainer<16, 2>::ParticleType*& particles);
+                   NeighborParticleContainer<19, 2>::ParticleType*& particles);
 
     void usr3_des (int np,void*&);
 };

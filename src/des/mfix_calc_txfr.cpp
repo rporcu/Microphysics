@@ -11,24 +11,25 @@
 #include <MFIX_DEM_Parms.H>
 
 void
-mfix::mfix_calc_drag_fluid (Real time)
+mfix::mfix_calc_txfr_fluid (Real time)
 {
   const Real strttime = ParallelDescriptor::second();
 
-  mfix_calc_particle_beta(time);
+  mfix_calc_transfer_coeffs();
 
   // ******************************************************************************
-  // Now use the beta of individual particles to create the drag terms on the fluid
+  // Now use the transfer coeffs of individual particles to create the
+  // interphase transfer terms on the fluid
   // ******************************************************************************
   for (int lev = 0; lev < nlev; lev++)
-    m_leveldata[lev]->drag->setVal(0);
+    m_leveldata[lev]->txfr->setVal(0);
 
   if (nlev > 2)
     amrex::Abort("For right now"
         " MFIXParticleContainer::TrilinearDepositionFluidDragForce can only"
         " handle up to 2 levels");
 
-  Vector< MultiFab* > drag_ptr(nlev, nullptr);
+  Vector< MultiFab* > txfr_ptr(nlev, nullptr);
 
   for (int lev = 0; lev < nlev; lev++) {
 
@@ -39,32 +40,32 @@ mfix::mfix_calc_drag_fluid (Real time)
 
       // If we are already working with the internal mf defined on the
       // particle_box_array, then we just work with this.
-      drag_ptr[lev] = m_leveldata[lev]->drag;
+      txfr_ptr[lev] = m_leveldata[lev]->txfr;
 
     } else if (lev == 0 and (not OnSameGrids)) {
 
       // If beta_mf is not defined on the particle_box_array, then we need
       // to make a temporary here and copy into beta_mf at the end.
-      drag_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                   pc->ParticleDistributionMap(lev),
-                                   m_leveldata[lev]->drag->nComp(),
-                                   m_leveldata[lev]->drag->nGrow());
+      txfr_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                              pc->ParticleDistributionMap(lev),
+                                              m_leveldata[lev]->txfr->nComp(),
+                                              m_leveldata[lev]->txfr->nGrow());
 
     } else {
       // If lev > 0 we make a temporary at the coarse resolution
       BoxArray ba_crse(amrex::coarsen(pc->ParticleBoxArray(lev),this->m_gdb->refRatio(0)));
-      drag_ptr[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev),
-                                   m_leveldata[lev]->drag->nComp(), 1);
+      txfr_ptr[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev),
+                                   m_leveldata[lev]->txfr->nComp(), 1);
     }
 
     // We must have ghost cells for each FAB so that a particle in one grid can spread
     // its effect to an adjacent grid by first putting the value into ghost cells of its
     // own grid.  The mf->sumBoundary call then adds the value from one grid's ghost cell
     // to another grid's valid region.
-    if (drag_ptr[lev]->nGrow() < 1)
+    if (txfr_ptr[lev]->nGrow() < 1)
       amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
 
-    drag_ptr[lev]->setVal(0.0, 0, 4, drag_ptr[lev]->nGrow());
+    txfr_ptr[lev]->setVal(0.0, 0, m_leveldata[lev]->txfr->nComp(), txfr_ptr[lev]->nGrow());
   }
 
   const Geometry& gm = Geom(0);
@@ -75,7 +76,7 @@ mfix::mfix_calc_drag_fluid (Real time)
 
   for (int lev = 0; lev < nlev; lev++) {
 
-    tmp_eps[lev] = (MFHelpers::createFrom(*drag_ptr[lev], 0.0)).release();
+    tmp_eps[lev] = (MFHelpers::createFrom(*txfr_ptr[lev], 0.0)).release();
 
     // Use level 0 to define the EB factory. If we are not on level 0
     // then create a copy of the coarse factory to use.
@@ -89,8 +90,8 @@ mfix::mfix_calc_drag_fluid (Real time)
       Vector<int> ngrow = {1,1,1};
       EBFArrayBoxFactory* crse_factory;
 
-      crse_factory = (makeEBFabFactory(gm, drag_ptr[lev]->boxArray(),
-                                      drag_ptr[lev]->DistributionMap(),
+      crse_factory = (makeEBFabFactory(gm, txfr_ptr[lev]->boxArray(),
+                                      txfr_ptr[lev]->DistributionMap(),
                                       ngrow, EBSupport::volume)).release();
 
       flags   = &(crse_factory->getMultiEBCellFlagFab());
@@ -99,8 +100,10 @@ mfix::mfix_calc_drag_fluid (Real time)
       delete crse_factory;
     }
 
-    // Deposit the drag force to the grid (beta and beta*particle_vel)
-    pc->FluidDragForceDeposition(lev, *tmp_eps[lev], *drag_ptr[lev], volfrac, flags);
+    // Deposit the interphase transfer forces to the grid
+    // Drag force: (beta and beta*particle_vel)
+    // Heat transfer: gamma and gamma*particle temperature
+    pc->InterphaseTxfrDeposition(lev, *tmp_eps[lev], *txfr_ptr[lev], volfrac, flags);
   }
 
   {
@@ -111,12 +114,12 @@ mfix::mfix_calc_drag_fluid (Real time)
 
     // Move any volume deposited outside the domain back into the domain
     // when BC is either a pressure inlet or mass inflow.
-    mfix_deposition_bcs(lev, *drag_ptr[lev]);
+    mfix_deposition_bcs(lev, *txfr_ptr[lev]);
 
     // Sum grid boundaries to capture any material that was deposited into
     // your grid from an adjacent grid.
-    drag_ptr[lev]->SumBoundary(gm.periodicity());
-    drag_ptr[lev]->setBndry(0.0);
+    txfr_ptr[lev]->SumBoundary(gm.periodicity());
+    txfr_ptr[lev]->setBndry(0.0);
 
     // Sum grid boundaries then fill with correct ghost values.
     tmp_eps[lev]->SumBoundary(gm.periodicity());
@@ -125,13 +128,13 @@ mfix::mfix_calc_drag_fluid (Real time)
     // Move excessive solids volume from small cells to neighboring cells.
     // Note that we don't change tmp_eps but use the redistribution of
     // particle volume to determine how to redistribute the drag forces.
-    mfix_redistribute_deposition(lev, *tmp_eps[lev], *drag_ptr[lev], volfrac, flags,
+    mfix_redistribute_deposition(lev, *tmp_eps[lev], *txfr_ptr[lev], volfrac, flags,
                                  mfix::m_max_solids_volume_fraction);
 
     // Sum the boundaries again to recapture any solids moved across
     // grid boundaries during the redistribute
-    drag_ptr[lev]->SumBoundary(gm.periodicity());
-    drag_ptr[lev]->FillBoundary(gm.periodicity());
+    txfr_ptr[lev]->SumBoundary(gm.periodicity());
+    txfr_ptr[lev]->FillBoundary(gm.periodicity());
   }
 
   // This might not need to exist on all levels. Maybe only level 0.
@@ -141,7 +144,7 @@ mfix::mfix_calc_drag_fluid (Real time)
   int  src_nghost = 1;
   int dest_nghost = 0;
   for (int lev = 1; lev < nlev; lev++) {
-    drag_ptr[0]->copy(*drag_ptr[lev],0,0,drag_ptr[0]->nComp(),
+    txfr_ptr[0]->copy(*txfr_ptr[lev],0,0,txfr_ptr[0]->nComp(),
                       src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
   }
 
@@ -161,8 +164,8 @@ mfix::mfix_calc_drag_fluid (Real time)
 
       PhysBCFunct<BndryFuncArray> cphysbc(Geom(lev-1), bcs, bfunc);
       PhysBCFunct<BndryFuncArray> fphysbc(Geom(lev  ), bcs, bfunc);
-      m_leveldata[lev]->drag->setVal(0);
-      amrex::InterpFromCoarseLevel(*m_leveldata[lev]->drag, time, *drag_ptr[lev-1],
+      m_leveldata[lev]->txfr->setVal(0);
+      amrex::InterpFromCoarseLevel(*m_leveldata[lev]->txfr, time, *txfr_ptr[lev-1],
                                    0, 0, 1, Geom(lev-1), Geom(lev),
                                    cphysbc, 0, fphysbc, 0,
                                    ref_ratio[0], mapper,
@@ -171,16 +174,16 @@ mfix::mfix_calc_drag_fluid (Real time)
   }
 
   // If mf_to_be_filled is not defined on the particle_box_array, then we need
-  // to copy here from drag_ptr into mf_to_be_filled. I believe that we don't
+  // to copy here from txfr_ptr into mf_to_be_filled. I believe that we don't
   // need any information in ghost cells so we don't copy those.
 
-  if (drag_ptr[0] != m_leveldata[0]->drag) {
-    m_leveldata[0]->drag->copy(*drag_ptr[0], 0, 0, m_leveldata[0]->drag->nComp());
+  if (txfr_ptr[0] != m_leveldata[0]->txfr) {
+    m_leveldata[0]->txfr->copy(*txfr_ptr[0], 0, 0, m_leveldata[0]->txfr->nComp());
   }
 
   for (int lev = 0; lev < nlev; lev++) {
-    if (drag_ptr[lev] != m_leveldata[lev]->drag)
-      delete drag_ptr[lev];
+    if (txfr_ptr[lev] != m_leveldata[lev]->txfr)
+      delete txfr_ptr[lev];
   }
 
   if (m_verbose > 1) {
@@ -193,20 +196,20 @@ mfix::mfix_calc_drag_fluid (Real time)
 
   if(mfix::m_deposition_diffusion_coeff > 0.) {
     // Apply mean field diffusion to drag force
-    diffusion_op->diffuse_drag(get_drag(), mfix::m_deposition_diffusion_coeff);
+    diffusion_op->diffuse_drag(get_txfr(), mfix::m_deposition_diffusion_coeff);
   }
 
   // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
   for (int lev = 0; lev < nlev; lev++)
-    m_leveldata[lev]->drag->FillBoundary(geom[lev].periodicity());
+    m_leveldata[lev]->txfr->FillBoundary(geom[lev].periodicity());
 }
 
 void
-mfix::mfix_calc_drag_particle (Real time)
+mfix::mfix_calc_txfr_particle (Real time)
 {
   using MFIXParIter = MFIXParticleContainer::MFIXParIter;
 
-  BL_PROFILE("mfix::mfix_calc_drag_particle()");
+  BL_PROFILE("mfix::mfix_calc_txfr_particle()");
 
   // Extrapolate velocity Dirichlet bc's to ghost cells
   int extrap_dir_bcs = 1;
@@ -251,13 +254,14 @@ mfix::mfix_calc_drag_particle (Real time)
     // We can remove these lines once we're confident in the algorithm
     EB_set_covered(*m_leveldata[0]->vel_g, 0, 3, 1, covered_val);
     EB_set_covered( gp_tmp  , 0, 3, 1, covered_val);
+    EB_set_covered(*m_leveldata[0]->T_g, 0, 1, 1, covered_val);
 
     const int interp_ng = 1;    // Only one layer needed for interpolation
-    const int interp_comp = 6;  // Four components (3 vel_g + 3 gp)
+    const int interp_comp = 7;  // Four components (3 vel_g + 3 gp + temperature)
 
     if (OnSameGrids)
     {
-      // Store gas velocity and volume fraction for interpolation
+      // Store gas velocity and pressure gradient for interpolation
       interp_ptr = new MultiFab(grids[lev], dmap[lev], interp_comp, interp_ng, MFInfo(), *ebfactory[lev]);
 
       // Copy fluid velocity
@@ -266,11 +270,21 @@ mfix::mfix_calc_drag_particle (Real time)
                         m_leveldata[lev]->vel_g->nGrow(),
                         interp_ng);
 
-      // Copy volume fraction
+      // Copy pressure gradient
       interp_ptr->copy(gp_tmp,  0, 3,
                        gp_tmp.nComp(),
                        gp_tmp.nGrow(),
                        interp_ng);
+
+      // Copy fluid temperature
+      if(advect_enthalpy){
+        interp_ptr->copy(*m_leveldata[lev]->T_g, 0, 6,
+                          m_leveldata[lev]->T_g->nComp(),
+                          m_leveldata[lev]->T_g->nGrow(),
+                          interp_ng);
+      } else {
+        interp_ptr->setVal(0.0, 6, 1, interp_ng);
+      }
 
       interp_ptr->FillBoundary(geom[lev].periodicity());
 
@@ -296,6 +310,16 @@ mfix::mfix_calc_drag_particle (Real time)
 
       // Copy pressure gradient
       interp_ptr->copy(gp_tmp,  0, 3, gp_tmp.nComp(), gp_tmp.nGrow(), interp_ng);
+
+      // Copy fluid temperature
+      if(advect_enthalpy) {
+        interp_ptr->copy(*m_leveldata[lev]->T_g, 0, 6,
+                          m_leveldata[lev]->T_g->nComp(),
+                          m_leveldata[lev]->T_g->nGrow(),
+                          interp_ng);
+      } else {
+        interp_ptr->setVal(0.0, 6, 1, interp_ng);
+      }
 
       interp_ptr->FillBoundary(geom[lev].periodicity());
     }
@@ -345,7 +369,8 @@ mfix::mfix_calc_drag_particle (Real time)
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
             amrex::ParallelFor(np,
-              [pstruct,interp_array,interp_comp,gp0_dev,plo,dxi,pmult]
+              [pstruct,interp_array,interp_comp,gp0_dev,plo,dxi,pmult,
+              local_advect_enthalpy=advect_enthalpy]
               AMREX_GPU_DEVICE (int pid) noexcept
               {
                 // Local array storing interpolated values
@@ -373,6 +398,14 @@ mfix::mfix_calc_drag_particle (Real time)
                 particle.rdata(realData::dragz) =
                   pbeta * ( interp_loc[2] - pmult*particle.rdata(realData::velz) ) -
                   (interp_loc[5] + gp0_dev[2]) * particle.rdata(realData::volume);
+
+
+                if(local_advect_enthalpy) {
+                  Real pgamma = particle.rdata(realData::convection);
+                  particle.rdata(realData::convection) =
+                    pgamma * ( interp_loc[6] - particle.rdata(realData::temperature) );
+                }
+
               });
           }
           else // FAB not all regular
@@ -389,7 +422,8 @@ mfix::mfix_calc_drag_particle (Real time)
 
             amrex::ParallelFor(np,
               [pstruct,interp_array,interp_comp,flags_array,gp0_dev, pmult,
-              plo,dx,dxi,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab]
+              plo,dx,dxi,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+              local_advect_enthalpy=advect_enthalpy]
               AMREX_GPU_DEVICE (int pid) noexcept
               {
                 // Local array storing interpolated values
@@ -456,6 +490,14 @@ mfix::mfix_calc_drag_particle (Real time)
                   particle.rdata(realData::dragz) =
                     pbeta * ( interp_loc[2] - pmult*particle.rdata(realData::velz) ) -
                     (interp_loc[5] + gp0_dev[2]) * particle.rdata(realData::volume);
+
+                  if(local_advect_enthalpy) {
+                    // gamma == (heat transfer coeff) * (particle surface area)
+                    Real pgamma = particle.rdata(realData::convection);
+
+                    particle.rdata(realData::convection) =
+                      pgamma * ( interp_loc[6] - particle.rdata(realData::temperature) );
+                  }
 
                 } // Not covered
               }); // particle loop

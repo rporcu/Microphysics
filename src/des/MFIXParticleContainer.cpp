@@ -40,6 +40,9 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     setRealCommComp(14, false);
     setRealCommComp(15, false);
     setRealCommComp(16, false);
+    setRealCommComp(17, false);
+    setRealCommComp(18, false);
+    setRealCommComp(19, false);
 
     setIntCommComp(0, false);
     setIntCommComp(1, false);
@@ -120,7 +123,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                                              const int ls_refinement,
                                              MultiFab* cost,
                                              std::string& knapsack_weight_type,
-                                             int& nsubsteps)
+                                             int& nsubsteps,
+                                             const int advect_enthalpy)
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
@@ -573,8 +577,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             int z_lo_bc = BC::domain_bc[4];
             int z_hi_bc = BC::domain_bc[5];
 
-            //Access to species fractions
-            //auto spec_data = ptile.getParticleTileData();
 
             amrex::ParallelFor(nrp,
               [pstruct,subdt,fc_ptr,ntot,gravity,tow_ptr,eps,p_hi,p_lo,
@@ -607,14 +609,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 p.pos(1) += subdt * p.rdata(realData::vely);
                 p.pos(2) += subdt * p.rdata(realData::velz);
 
-                //Compute something with species
-                //if (DEM::nspecies_dem > 0){
-                //   for(int j=0; j < DEM::nspecies_dem; ++j){
-                //      //j -- spec1,spec2 .. ; i -- particle index
-                //      spec_data.m_runtime_rdata[j][i] += subdt*spec_data.m_runtime_rdata[j][i];
-                //   }
-                //}
-
                 if (x_lo_bc && p.pos(0) < p_lo[0])
                 {
                     p.pos(0) = p_lo[0] + eps;
@@ -646,6 +640,45 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                    p.rdata(realData::velz) = -p.rdata(realData::velz);
                 }
               });
+
+
+            if(advect_enthalpy){
+
+              amrex::ParallelFor(nrp, [pstruct,subdt]
+              AMREX_GPU_DEVICE (int i) noexcept
+              {
+                  ParticleType& p = pstruct[i];
+
+                  AMREX_ASSERT(p.rdata(realData::c_ps) > 0.);
+
+                  p.rdata(realData::temperature) += subdt * p.rdata(realData::convection) /
+                      (p.rdata(realData::mass) * p.rdata(realData::c_ps));
+
+              });
+            }
+
+
+#if 0
+            if (DEM::nspecies_dem > 0) {
+
+              //Access to species fractions
+              auto spec_data = ptile.getParticleTileData();
+
+              amrex::ParallelFor(nrp, [pstruct,subdt,spec_data]
+              AMREX_GPU_DEVICE (int i) noexcept
+              {
+
+                //Compute something with species
+                //   for(int j=0; j < DEM::nspecies_dem; ++j){
+                //      //j -- spec1,spec2 .. ; i -- particle index
+                //      spec_data.m_runtime_rdata[j][i] += subdt*spec_data.m_runtime_rdata[j][i];
+                //   }
+                //}
+              });
+            }
+#endif
+
+
 
             Gpu::synchronize();
 

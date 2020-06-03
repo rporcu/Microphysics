@@ -61,7 +61,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
             const auto& ro        = m_leveldata[lev]->ro_g->array(mfi);
             const auto& mu        = m_leveldata[lev]->mu_g->array(mfi);
             const auto& gradp     = m_leveldata[lev]->gp->array(mfi);
-            const auto& drag_fab  = m_leveldata[lev]->drag->array(mfi);
+            const auto& txfr_fab  = m_leveldata[lev]->txfr->array(mfi);
 
             Box bx(mfi.tilebox());
 
@@ -79,7 +79,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
             if (flags.getType(bx) != FabType::covered)
             {
               amrex::ParallelFor(bx,
-                  [ro,ep,gp0_dev,gradp,drag_fab,gravity_dev,vel,odx,ody,odz,flags_fab,mu,
+                  [ro,ep,gp0_dev,gradp,txfr_fab,gravity_dev,vel,odx,ody,odz,flags_fab,mu,
 #ifdef AMREX_USE_GPU
                   cfl_max_ptr]
 #else
@@ -97,13 +97,13 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
                         // Explicit particle forcing is given by
                         for (int n(0); n < 3; ++n) {
                             Real delp = gp0_dev[n] + gradp(i,j,k,n);
-                            Real fp   = drag_fab(i,j,k,n) - drag_fab(i,j,k,3) * vel(i,j,k,n);
+                            Real fp   = txfr_fab(i,j,k,n) - txfr_fab(i,j,k,3) * vel(i,j,k,n);
 
                             acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
                         }
 
-                        Real c_cfl   = amrex::Math::abs(vel(i,j,k,0))*odx + 
-                                       amrex::Math::abs(vel(i,j,k,1))*ody + 
+                        Real c_cfl   = amrex::Math::abs(vel(i,j,k,0))*odx +
+                                       amrex::Math::abs(vel(i,j,k,1))*ody +
                                        amrex::Math::abs(vel(i,j,k,2))*odz;
                         Real v_cfl   = 2.0 * mu(i,j,k) * qro * (odx*odx + ody*ody + odz*odz);
                         Real cpv_cfl = c_cfl + v_cfl;

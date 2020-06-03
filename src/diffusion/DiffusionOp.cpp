@@ -284,7 +284,7 @@ void DiffusionOp::ComputeLapT (Vector< MultiFab* >& lapT_out,
     // Whole domain
     Box domain(geom[0].Domain());
 
-    // We want to return div (k_g grad)) phi
+    // We want to return div (ep_g k_g grad)) T_g
     temperature_matrix->setScalars(0.0, -1.0);
 
     Vector<BCRec> bcs_s; // This is just to satisfy the call to EB_interp...
@@ -411,7 +411,7 @@ void DiffusionOp::ComputeLapX (Vector< MultiFab* >& lapX_out,
     Vector< MultiFab* > D_g(finest_level+1);
     Vector< MultiFab* > X_g(finest_level+1);
     Vector< MultiFab* > lapX(finest_level+1);
-    
+
     for(int lev = 0; lev <= finest_level; lev++)
     {
       D_g[lev] = new MultiFab(D_g_in[lev]->boxArray(), D_g_in[lev]->DistributionMap(),
@@ -478,7 +478,7 @@ void DiffusionOp::ComputeLapX (Vector< MultiFab* >& lapX_out,
     MLMG solver(*species_matrix);
 
     solver.apply(lapX_aux, X_g);
-      
+
     for(int lev = 0; lev <= finest_level; lev++)
     {
       amrex::single_level_redistribute(*lapX_aux[lev], *lapX[lev], 0, 1, geom[lev]);
@@ -495,7 +495,7 @@ void DiffusionOp::ComputeLapX (Vector< MultiFab* >& lapX_out,
     {
       delete lapX_aux[lev];
       delete phi_eb[lev];
-      
+
       delete D_g[lev];
       delete X_g[lev];
     }

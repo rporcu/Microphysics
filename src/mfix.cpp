@@ -115,7 +115,7 @@ mfix::mfix ()
     bcs_u.resize(3); // one for each velocity component
     // This needs to be one bigger than the highest index scalar in mfix_set_scalar_bcs
     bcs_s.resize(6); // density, tracer, ep_g, mu_g, T_g, h_g --> TODO cp_g, k_g
-    bcs_X.resize(0); // X_g, D_g. TODO this has to be resized on the basis of 
+    bcs_X.resize(0); // X_g, D_g. TODO this has to be resized on the basis of
                      // FLUID::nspecies_g. So we do it after parameter parsing
     bcs_f.resize(1); // just one
 
@@ -329,12 +329,12 @@ Vector< MultiFab* > mfix::get_D_g () noexcept
   return r;
 }
 
-Vector< MultiFab* > mfix::get_drag () noexcept
+Vector< MultiFab* > mfix::get_txfr () noexcept
 {
   Vector<MultiFab*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->drag);
+    r.push_back(m_leveldata[lev]->txfr);
   }
   return r;
 }

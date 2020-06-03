@@ -28,7 +28,7 @@ LevelData::LevelData (BoxArray const& ba,
   , k_g(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , mu_g(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , vort(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
-  , drag(new MultiFab(ba, dmap, 4, nghost, MFInfo(), factory))
+  , txfr(new MultiFab(ba, dmap, 6, nghost, MFInfo(), factory))
   , xslopes_u(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))
   , yslopes_u(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))
   , zslopes_u(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))
@@ -74,7 +74,7 @@ void LevelData::resetValues (const amrex::Real covered_val)
   k_g->setVal(0);
   mu_g->setVal(0);
   vort->setVal(0);
-  drag->setVal(0);
+  txfr->setVal(0);
   xslopes_u->setVal(0);
   xslopes_s->setVal(0);
   yslopes_u->setVal(0);
@@ -87,7 +87,7 @@ void LevelData::resetValues (const amrex::Real covered_val)
   u_mac->setVal(covered_val);
   v_mac->setVal(covered_val);
   w_mac->setVal(covered_val);
-  
+
   if (FLUID::solve_species) {
     X_g->setVal(0);
     X_go->setVal(0);
@@ -120,7 +120,7 @@ LevelData::~LevelData ()
   delete k_g;
   delete mu_g;
   delete vort;
-  delete drag;
+  delete txfr;
   delete xslopes_u;
   delete yslopes_u;
   delete zslopes_u;

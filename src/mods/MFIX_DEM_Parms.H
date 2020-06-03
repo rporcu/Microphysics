@@ -109,14 +109,14 @@ namespace DEM
 
     extern amrex::Vector<std::string> names;
 
+    // Specified constant specific heats
+    extern amrex::Vector<amrex::Real> c_p0;
+
     // Flag to solve species DEM particles equations
     extern int solve_species;
 
     // Particle species
     extern amrex::Vector<std::string> species_dem;
-
-    // Particle species fractions
-    extern amrex::Vector<amrex::Real> spec_frac_dem;
 
     // Total number of dem species
     extern int nspecies_dem;
@@ -141,6 +141,7 @@ namespace DEM
 
     struct DEM_t {
 
+      std::string name;
       amrex::Real volfrac;
       amrex::Real statwt;
       amrex::Real temperature;

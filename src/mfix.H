@@ -207,11 +207,11 @@ class mfix : public AmrCore
 
     bool contains_ebs = false;
 
-    void mfix_add_drag_explicit (Real dt);
+    void mfix_add_txfr_explicit (Real dt);
 
-    void mfix_add_drag_implicit (Real dt);
+    void mfix_add_txfr_implicit (Real dt);
 
-    void mfix_calc_drag_particle (Real time);
+    void mfix_calc_txfr_particle (Real time);
 
     void mfix_predict_vels_on_faces (int lev,
                                      Real time,
@@ -363,8 +363,8 @@ class mfix : public AmrCore
     static amrex::Real m_deposition_scale_factor;
     static amrex::Real m_max_solids_volume_fraction;
 
-    template <typename F>
-    void mfix_calc_particle_beta (F DragFunc, Real time);
+    template <typename F1, typename F2>
+    void mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff);
 
     void mfix_calc_volume_fraction (Real & sum_vol);
 
@@ -590,9 +590,9 @@ class mfix : public AmrCore
     void GetDataSpecies (int lev, Real time, Vector<MultiFab *> & data, int icomp,
                          Vector<Real> & datatime);
 
-    void mfix_calc_particle_beta (Real time);
+    void mfix_calc_transfer_coeffs ();
 
-    void mfix_calc_drag_fluid (Real time);
+    void mfix_calc_txfr_fluid (Real time);
 
     void AllocateArrays (int lev);
 
@@ -720,7 +720,7 @@ class mfix : public AmrCore
     Vector< MultiFab* > get_k_g () noexcept;
     Vector< MultiFab* > get_mu_g () noexcept;
     Vector< MultiFab* > get_D_g () noexcept;
-    Vector< MultiFab* > get_drag () noexcept;
+    Vector< MultiFab* > get_txfr () noexcept;
     Vector< MultiFab* > get_xslopes_u () noexcept;
     Vector< MultiFab* > get_yslopes_u () noexcept;
     Vector< MultiFab* > get_zslopes_u () noexcept;
@@ -897,7 +897,7 @@ class mfix : public AmrCore
     // Flags for saving particle data. By default, we have all flags on,
     // we turn off what we don't want in the init IO routine. This is somewhat
     // different from what we do with the fluid.
-    Vector<int> write_real_comp = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    Vector<int> write_real_comp = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0};
     Vector<int> write_int_comp = {1, 1};
 
     //

@@ -29,10 +29,10 @@ void DiffusionOp::diffuse_temperature (      Vector< MultiFab* >  T_g_in,
     //      alpha: 1
     //      beta: dt
     //      a: ro_g ep_g cp_g
-    //      b: eta
+    //      b: ep_g k_g
 
     if(verbose > 0)
-        amrex::Print() << "Diffusing temperature ..." << std::endl; 
+        amrex::Print() << "Diffusing temperature ..." << std::endl;
 
     // Set alpha and beta
     temperature_matrix->setScalars(1.0, dt);

@@ -28,7 +28,7 @@ class LevelData
     // Void fraction
     amrex::MultiFab* ep_g;
     amrex::MultiFab* ep_go;
-    
+
     // Gas pressure fraction
     amrex::MultiFab* p_g;
     amrex::MultiFab* p_go;
@@ -78,8 +78,9 @@ class LevelData
     // Cell-based
     amrex::MultiFab* vort;
 
-    amrex::MultiFab* drag;
-    
+    // interphase transfer (drag, heat, etc)
+    amrex::MultiFab* txfr;
+
     // These are multi-component multifabs
     amrex::MultiFab* xslopes_u;
     amrex::MultiFab* yslopes_u;
@@ -93,7 +94,7 @@ class LevelData
 
     // div (ep_g * u)
     amrex::MultiFab* diveu;
-    
+
     // Solution for MAC projection
     amrex::MultiFab* mac_phi;
 

@@ -100,6 +100,9 @@ int main ( int argc, char* argv[] )
       ifs >> nr;
       ifs >> ni;
 
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nr == 19,"Number of reals does not equal 20. Need to update fjoin par.");
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ni ==  2,"Number of ints does not equal 2. Need to update fjoin par.");
+
       if(lc2 == 0){
         npo = np;
         nro = nr;
@@ -126,31 +129,34 @@ int main ( int argc, char* argv[] )
         particle_t p;
 
         amrex::Real rtmp;
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  0: x-position
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  1: y-position
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  2: z-position
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  3: radius
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  4: volume
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  5: mass
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  6: density
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  7: oneOverI
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  8: x-velocity
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  9: y-velocity
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 10: z-velocity
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 11: x-rotation
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 12: y-rotation
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 13: z-rotation
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 14: stat_wt
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 15: drag coeff
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 16: x-drag
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 17: y-drag
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 18: z-drag
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  //   : x-position
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  //   : y-position
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  //   : z-position
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  1: radius
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  2: volume
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  3: mass
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  4: density
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  5: oneOverI
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  6: x-velocity
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  7: y-velocity
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  8: z-velocity
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  9: x-rotation
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 10: y-rotation
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 11: z-rotation
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 12: stat_wt
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 13: drag coeff
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 14: x-drag
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 15: y-drag
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 16: z-drag
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 17: c_ps
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 18: temperature
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 19: convection
 
         int itmp;
-        ifs >> itmp;  p.idata.push_back(itmp);  //  0: id
-        ifs >> itmp;  p.idata.push_back(itmp);  //  1: cpu
-        ifs >> itmp;  p.idata.push_back(itmp);  //  2: phase
-        ifs >> itmp;  p.idata.push_back(itmp);  //  3: state
+        ifs >> itmp;  p.idata.push_back(itmp);  //   : id
+        ifs >> itmp;  p.idata.push_back(itmp);  //   : cpu
+        ifs >> itmp;  p.idata.push_back(itmp);  //  1: phase
+        ifs >> itmp;  p.idata.push_back(itmp);  //  2: state
 
         particles.push_back(p);
 

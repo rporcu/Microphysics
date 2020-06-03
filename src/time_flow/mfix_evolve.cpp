@@ -47,7 +47,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     if ( (DEM::solve or PIC::solve) and FLUID::solve){
       Real start_coupling = ParallelDescriptor::second();
 
-      mfix_calc_drag_particle(new_time);
+      mfix_calc_txfr_particle(new_time);
 
       coupling_timing += ParallelDescriptor::second() - start_coupling + drag_timing;
       ParallelDescriptor::ReduceRealMax(coupling_timing, ParallelDescriptor::IOProcessorNumber());
@@ -81,7 +81,8 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                   particle_ebfactory[ilev], ls_data,
                                   levelset_refinement,
                                   particle_cost[ilev],
-                                  knapsack_weight_type, nsubsteps);
+                                  knapsack_weight_type, nsubsteps,
+                                  advect_enthalpy);
         }
         else
         {
@@ -96,8 +97,8 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                 pc->EvolveParticles(lev, nstep, dt, time, mfix::gravity,
                                     particle_ebfactory[lev], ls_data, 1,
                                     particle_cost[lev],
-                                    knapsack_weight_type,
-                                    nsubsteps);
+                                    knapsack_weight_type, nsubsteps,
+                                    advect_enthalpy);
             }
         }
     }
