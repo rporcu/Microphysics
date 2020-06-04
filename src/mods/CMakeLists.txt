@@ -7,6 +7,7 @@ target_sources( mfixcore
    eos_mod.H
    eos_mod.cpp
    MFIX_BC_List.H
+   MFIX_EB_Parms.H
    MFIX_FLUID_Parms.cpp
    MFIX_FLUID_Parms.H
    MFIX_SPECIES_Parms.cpp

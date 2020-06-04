@@ -1,8 +1,8 @@
- 
 CEXE_headers += eos_mod.H
 CEXE_headers += MFIX_REGIONS_Parms.H
 CEXE_headers += MFIX_IC_Parms.H
 CEXE_headers += MFIX_BC_Parms.H
+CEXE_headers += MFIX_EB_Parms.H
 CEXE_headers += MFIX_FLUID_Parms.H
 CEXE_headers += MFIX_SPECIES_Parms.H
 CEXE_headers += MFIX_DEM_Parms.H

@@ -9,6 +9,7 @@
 #include <AMReX_ParmParse.H>
 
 #include <MFIX_BC_Parms.H>
+#include <MFIX_EB_Parms.H>
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_PIC_Parms.H>
 #include <MFIX_REGIONS_Parms.H>
@@ -306,6 +307,13 @@ namespace BC
 
       }
 
+      // Get EB data.
+      if (new_bc.type == eb_) {
+        std::string field = "bc."+regions[bcv]+".eb";
+        amrex::ParmParse ppEB(field.c_str());
+
+        ppEB.get("temperature", new_bc.eb.temperature);
+      }
 
       // Get fluid data.
       if(FLUID::solve) {
@@ -331,11 +339,6 @@ namespace BC
 
         if( new_bc.type == minf_ or new_bc.type == pinf_ ) {
           ppFluid.query("temperature", new_bc.fluid.temperature);
-        }
-
-        // Get EB data.
-        if( new_bc.type == eb_ ) {
-          ppFluid.get("eb_temperature", new_bc.fluid.eb_temperature);
         }
 
         // Get species data.

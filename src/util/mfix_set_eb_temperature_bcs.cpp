@@ -111,7 +111,7 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
                    i_w, i_e, j_s, j_n, k_b, k_t);
 
       // Use the volume fraction already calculated from particle data
-      const Real eb_temperature = BC::bc[bcv].fluid.eb_temperature;
+      const Real eb_temperature = BC::bc[bcv].eb.temperature;
 
       const int istart = amrex::max(slo[0], i_w);
       const int jstart = amrex::max(slo[1], j_s);
