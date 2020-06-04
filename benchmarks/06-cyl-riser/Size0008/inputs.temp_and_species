@@ -170,6 +170,9 @@ dem.spring_tang_fac.pw    =     0.285714285
 dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
 
+dem.specific_heat = constant
+dem.specific_heat.constant.solid0 = 385 ## Copper
+
 
 #_______________________________________________________________________
 # EB geometry
@@ -228,7 +231,7 @@ ic.full-domain.solid0.density.constant  = 1000.0
 bc.regions = half-domain
 
 bc.half-domain = eb
-bc.half-domain.fluid.eb_temperature = 1200
+bc.half-domain.eb.temperature = 1200
 
 bc.delp_dir =    0
 bc.delp     =    2.

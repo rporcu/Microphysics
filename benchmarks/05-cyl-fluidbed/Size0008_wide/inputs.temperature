@@ -134,6 +134,9 @@ dem.spring_tang_fac.pw    =     0.285714285
 dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
 
+dem.specific_heat = constant
+dem.specific_heat.constant.solid0 = 385 ## Copper
+
 
 #_______________________________________________________________________
 # EB geometry
@@ -210,4 +213,4 @@ bc.outflow = po
 bc.outflow.fluid.pressure =  0.0
 
 bc.hot-walls = eb
-bc.hot-walls.fluid.eb_temperature = 900
+bc.hot-walls.eb.temperature = 900

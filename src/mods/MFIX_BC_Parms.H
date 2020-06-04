@@ -11,6 +11,7 @@
 #include <AMReX_EB2.H>
 #include <AMReX_EB2_IF_Plane.H>
 
+#include <MFIX_EB_Parms.H>
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_DEM_Parms.H>
 
@@ -23,6 +24,8 @@ namespace BC
     int type;
 
     const amrex::RealBox* region;
+
+    EB::EB_t eb;
 
     FLUID::FLUID_t fluid;
 

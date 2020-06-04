@@ -91,6 +91,9 @@ dem.spring_tang_fac.pw    =     0.285714285
 dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
 
+dem.specific_heat = constant
+dem.specific_heat.constant.solid0 = 385 ## Copper
+
 
 #_______________________________________________________________________
 # Regions for defining ICs and BCs
