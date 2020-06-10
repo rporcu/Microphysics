@@ -106,7 +106,7 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
     }
 
     // No cut cells in this FAB
-    else if (flags.getType(amrex::grow(bx,1)) == FabType::regular )
+    else if (flags.getType(amrex::grow(bx,2)) == FabType::regular )
     {
       // Face-centered ep
       const auto& epx_fab = (ep_face[0])->array(mfi);
