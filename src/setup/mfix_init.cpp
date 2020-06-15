@@ -818,6 +818,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
           } else {
             init_fluid(sbx, bx, domain, mfi, ld, dx, dy, dz, xlen, ylen, zlen,
                 test_tracer_conservation, advect_enthalpy, advect_fluid_species);
+    
           }
        }
 

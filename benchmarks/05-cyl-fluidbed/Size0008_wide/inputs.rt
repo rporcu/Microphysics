@@ -19,6 +19,9 @@ mfix.gravity = -9.81  0.0  0.0
 
 mfix.drag_type = "BVK2"
 
+mfix.advect_enthalpy      = 1
+mfix.advect_fluid_species = 1
+
 #_______________________________________________________________________
 # Geometry / grids / tiles
 
@@ -97,6 +100,18 @@ amr.check_file     ="chk"
 #_______________________________________________________________________
 # Fluid model settings
 #
+species.solve  =  O2  H2O  He
+
+species.diffusivity = constant
+
+species.O2.diffusivity  = 1.9e-5
+species.H2O.diffusivity = 2.4e-5
+species.He.diffusivity  = 7.1e-5
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
 fluid.solve = fluid
 
 fluid.density            = constant
@@ -106,10 +121,12 @@ fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
 fluid.specific_heat          = constant
-fluid.specific_heat.constant = 1.0
+fluid.specific_heat.constant = 918
 
 fluid.thermal_conductivity          = constant
-fluid.thermal_conductivity.constant = 0.0
+fluid.thermal_conductivity.constant = 0.024
+
+fluid.species  =  O2  H2O  He
 
 
 #_______________________________________________________________________
@@ -132,13 +149,14 @@ dem.spring_tang_fac.pw    =     0.285714285
 dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
 
+dem.specific_heat = constant
+dem.specific_heat.constant.solid0 = 385 ## Copper
+
 
 #_______________________________________________________________________
 # EB geometry
 #
 mfix.geometry = "cylinder"
-# mfix.geometry_filename = "external_flow_geometry.csg"
-# csg.internal_flow = false
 
 cylinder.internal_flow = true
 
@@ -152,7 +170,7 @@ cylinder.center    =  0.004   0.004   0.004
 #_______________________________________________________________________
 # Regions for defining ICs and BCs
 #
-mfix.regions = full-domain  bed  inflow   outflow
+mfix.regions = full-domain  bed  inflow   outflow  hot-walls
 
 regions.full-domain.lo = 0.0000  0.0000  0.0000
 regions.full-domain.hi = 0.0080  0.0080  0.0080
@@ -166,17 +184,28 @@ regions.inflow.hi      = 0.0000  0.0080  0.0080
 regions.outflow.lo     = 0.0080  0.0000  0.0000
 regions.outflow.hi     = 0.0080  0.0080  0.0080
 
+regions.hot-walls.lo = 0.0000  0.0000  0.0000
+regions.hot-walls.hi = 0.0080  0.0080  0.0080
+
 
 #_______________________________________________________________________
 # Initial Conditions
 #
 ic.regions = full-domain  bed
 
-ic.full-domain.fluid.volfrac   = 1.0
-ic.full-domain.fluid.velocity  = 0.015  0.0  0.0
+ic.full-domain.fluid.volfrac     = 1.0
+ic.full-domain.fluid.velocity    = 0.015  0.0  0.0
+ic.full-domain.fluid.temperature = 300
+ic.full-domain.fluid.species.O2  = 0.25
+ic.full-domain.fluid.species.H2O = 0.75
+ic.full-domain.fluid.species.He  = 0.0
 
-ic.bed.fluid.volfrac   =  0.725
-ic.bed.fluid.velocity  =  0.015  0.00  0.00
+ic.bed.fluid.volfrac     = 0.725
+ic.bed.fluid.velocity    = 0.015  0.00  0.00
+ic.bed.fluid.temperature = 300
+ic.bed.fluid.species.O2  = 0.25
+ic.bed.fluid.species.H2O = 0.75
+ic.bed.fluid.species.He  = 0.0
 
 ic.bed.solids  = solid0
 ic.bed.packing = pseudo_random
@@ -194,11 +223,18 @@ ic.bed.solid0.density.constant  = 1000.0
 #_______________________________________________________________________
 # Boundary Conditions
 #
-bc.regions = inflow  outflow
+bc.regions = inflow  outflow  hot-walls
 
 bc.inflow = mi
-bc.inflow.fluid.volfrac  =  1.0
-bc.inflow.fluid.velocity =  0.015  0.0  0.0
+bc.inflow.fluid.volfrac     =  1.0
+bc.inflow.fluid.velocity    =  0.015  0.0  0.0
+bc.inflow.fluid.temperature =  300
+bc.inflow.fluid.species.O2  =  0.0
+bc.inflow.fluid.species.H2O =  0.0
+bc.inflow.fluid.species.He  =  1.0
 
 bc.outflow = po
 bc.outflow.fluid.pressure =  0.0
+
+bc.hot-walls = eb
+bc.hot-walls.eb.temperature = 900

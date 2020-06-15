@@ -80,7 +80,7 @@ void init_fluid (const Box& sbx,
       }
 
       if (advect_fluid_species)
-        calc_D_g(bx, (*ld.D_g)[mfi], (*ld.T_g)[mfi]);
+        calc_D_g(bx, (*ld.D_g)[mfi]);
 
       // Initialize h_g
       if (advect_enthalpy) {
@@ -325,7 +325,7 @@ void init_fluid_restart (const Box& bx,
   }
 
   if (advect_fluid_species)
-    calc_D_g(bx, (*ld.D_g)[mfi], (*ld.T_g)[mfi]);
+    calc_D_g(bx, (*ld.D_g)[mfi]);
 }
 
 //!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -604,7 +604,6 @@ void set_ic_species_g (const Box& sbx,
   // Set the initial conditions.
   for(int icv(0); icv < IC::ic.size(); ++icv)
   {
-
     int i_w(0), j_s(0), k_b(0);
     int i_e(0), j_n(0), k_t(0);
 
@@ -612,11 +611,12 @@ void set_ic_species_g (const Box& sbx,
                  i_w, i_e, j_s, j_n, k_b, k_t);
 
     // Get the initial condition values
-    Real* mass_fractions;
-    mass_fractions = new Real [nspecies_g];
+    Gpu::ManagedVector< Real> mass_fractions(nspecies_g, 0);
     
     for (int n(0); n < nspecies_g; n++)
       mass_fractions[n] = IC::ic[icv].fluid.species.mass_fractions[n];
+
+    Real* p_mass_fractions = mass_fractions.data();
 
     const int istart = std::max(slo[0], i_w);
     const int jstart = std::max(slo[1], j_s);
@@ -625,80 +625,89 @@ void set_ic_species_g (const Box& sbx,
     const int jend   = std::min(shi[1], j_n);
     const int kend   = std::min(shi[2], k_t);
 
-    for (int n(0); n < nspecies_g; n++) 
     {
+      const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
+      const Box box1(low1, hi1);
+
+      ParallelFor(box1, nspecies_g,
+        [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+      { X_g(i,j,k,n) = p_mass_fractions[n]; });
+
+      if(slo[0] < domlo[0] and domlo[0] == istart)
       {
-        const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
-        const Box box1(low1, hi1);
-
-        ParallelFor(box1, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-          { X_g(i,j,k,n) = mass_fractions[n]; });
-
-        if(slo[0] < domlo[0] and domlo[0] == istart)
-        {
-          const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
-          const Box box2(low2, hi2);
-          ParallelFor(box2, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            { X_g(i,j,k,n) = mass_fractions[n]; });
-        }
-
-        if(shi[0] > domhi[0] and domhi[0] == iend)
-        {
-          const IntVect low3(iend+1, jstart, kstart), hi3(shi[0], jend, kend);
-          const Box box3(low3, hi3);
-          ParallelFor(box3, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            { X_g(i,j,k,n) = mass_fractions[n]; });
-        }
+        const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
+        const Box box2(low2, hi2);
+        ParallelFor(box2, nspecies_g,
+          [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+        { X_g(i,j,k,n) = p_mass_fractions[n]; });
       }
 
+      if(shi[0] > domhi[0] and domhi[0] == iend)
       {
-        const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
-        const Box box1(low1, hi1);
-
-        ParallelFor(box1, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-          { X_g(i,j,k,n) = mass_fractions[n]; });
-
-        if (slo[1] < domlo[1] and domlo[1] == jstart)
-        {
-          const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
-          const Box box2(low2, hi2);
-          ParallelFor(box2, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            { X_g(i,j,k,n) = mass_fractions[n]; });
-        }
-
-        if (shi[1] > domhi[1] and domhi[1] == jend)
-        {
-          const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
-          const Box box3(low3, hi3);
-          ParallelFor(box3, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            { X_g(i,j,k,n) = mass_fractions[n]; });
-        }
-      }
-
-      {
-        const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
-        const Box box1(low1, hi1);
-        ParallelFor(box1, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-          { X_g(i,j,k,n) = mass_fractions[n]; });
-
-        if (slo[2] < domlo[2] and domlo[2] == kstart)
-        {
-          const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
-          const Box box2(low2, hi2);
-          
-          ParallelFor(box2, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            { X_g(i,j,k,n) = mass_fractions[n]; });
-        }
-
-        if (shi[2] > domhi[2] and domhi[2] == kend)
-        {
-          const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
-          const Box box3(low3, hi3);
-          
-          ParallelFor(box3, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            { X_g(i,j,k,n) = mass_fractions[n]; });
-        }
+        const IntVect low3(iend+1, jstart, kstart), hi3(shi[0], jend, kend);
+        const Box box3(low3, hi3);
+        ParallelFor(box3, nspecies_g,
+          [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+        { X_g(i,j,k,n) = p_mass_fractions[n]; });
       }
     }
+
+    {
+      const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
+      const Box box1(low1, hi1);
+
+      ParallelFor(box1, nspecies_g,
+        [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+      { X_g(i,j,k,n) = p_mass_fractions[n]; });
+
+      if (slo[1] < domlo[1] and domlo[1] == jstart)
+      {
+        const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
+        const Box box2(low2, hi2);
+        ParallelFor(box2, nspecies_g,
+          [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+        { X_g(i,j,k,n) = p_mass_fractions[n]; });
+      }
+
+      if (shi[1] > domhi[1] and domhi[1] == jend)
+      {
+        const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
+        const Box box3(low3, hi3);
+        ParallelFor(box3, nspecies_g,
+          [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+        { X_g(i,j,k,n) = p_mass_fractions[n]; });
+      }
+    }
+
+    {
+      const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
+      const Box box1(low1, hi1);
+      ParallelFor(box1, nspecies_g,
+        [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+      { X_g(i,j,k,n) = p_mass_fractions[n]; });
+
+      if (slo[2] < domlo[2] and domlo[2] == kstart)
+      {
+        const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
+        const Box box2(low2, hi2);
+        
+        ParallelFor(box2, nspecies_g, 
+          [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+        { X_g(i,j,k,n) = p_mass_fractions[n]; });
+      }
+
+      if (shi[2] > domhi[2] and domhi[2] == kend)
+      {
+        const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
+        const Box box3(low3, hi3);
+        
+        ParallelFor(box3, nspecies_g,
+          [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+        { X_g(i,j,k,n) = p_mass_fractions[n]; });
+      }
+    }
+
+    Gpu::synchronize();
+
   }
 }

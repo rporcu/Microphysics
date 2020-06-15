@@ -336,7 +336,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
              if (Nrep == IntVect::TheUnitVector()) {
 
                 // Copy from the mf we used to read in to the mf we will use going forward
-                (**(chkspeciesVars[i][lev])).copy(mf, 0, 0, 1, 0, 0);
+                (**(chkspeciesVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies_g, 0, 0);
 
              } else {
 
@@ -345,13 +345,13 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
                 mf.FillBoundary(geom[lev].periodicity());
 
-                FArrayBox single_fab(mf.boxArray()[0],1);
+                FArrayBox single_fab(mf.boxArray()[0], FLUID::nspecies_g);
                 mf.copyTo(single_fab);
 
                  // Copy and replicate mf into chkscalarVars
                  for (MFIter mfi(**(chkspeciesVars[i][lev]), false); mfi.isValid(); ++mfi) {
                      int ib = mfi.index();
-                     (**(chkspeciesVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
+                     (**(chkspeciesVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, FLUID::nspecies_g);
                  }
                }
              }

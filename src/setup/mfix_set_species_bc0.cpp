@@ -195,4 +195,6 @@ mfix::set_species_bc0 (const Box& sbx,
     });
   }
 
+  Gpu::synchronize();
+
 }

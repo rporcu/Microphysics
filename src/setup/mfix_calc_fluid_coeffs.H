@@ -11,15 +11,14 @@ void calc_mu_g (const Box& bx,
                 FArrayBox& mu_g_fab);
 
 void calc_D_g (const Box& bx,
-               FArrayBox& D_g_fab,
-               FArrayBox& temp_fab);
+               FArrayBox& D_g_fab);
 
 void calc_cp_g (const Box& bx,
                 FArrayBox& cp_g_fab,
-                FArrayBox& temp_fab);
+                FArrayBox& T_g_fab);
 
 void calc_k_g (const Box& bx,
                FArrayBox& k_g_fab,
-               FArrayBox& temp_fab);
+               FArrayBox& T_g_fab);
 
 #endif

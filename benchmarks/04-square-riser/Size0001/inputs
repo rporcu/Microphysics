@@ -32,6 +32,20 @@ geometry.prob_hi     = 0.0008  0.01  0.0008  # hi corner of physical domain
 mfix.drag_type = "BVK2"
 mfix.gravity   =  0.0  -9.80665  0.0
 
+mfix.advect_enthalpy      = 1
+mfix.advect_fluid_species = 1
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+species.solve  =  O2  SO2  H2O
+
+species.diffusivity = constant
+
+species.O2.diffusivity  = 1.9e-5
+species.SO2.diffusivity = 1.3e-5
+species.H2O.diffusivity = 2.4e-5
+
 
 #_______________________________________________________________________
 # Fluid model settings
@@ -45,10 +59,12 @@ fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
 fluid.specific_heat          = constant
-fluid.specific_heat.constant = 1.0
+fluid.specific_heat.constant = 918  ## Oxygen
 
 fluid.thermal_conductivity          = constant
-fluid.thermal_conductivity.constant = 0.0
+fluid.thermal_conductivity.constant = 0.024 ## Oxygen
+
+fluid.species  =  O2  SO2  H2O
 
 
 #_______________________________________________________________________
@@ -71,26 +87,42 @@ dem.spring_tang_fac.pw    =     0.285714285
 dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
 
+dem.specific_heat = constant
+dem.specific_heat.constant.solid0 = 385 ## Copper
+
 
 #_______________________________________________________________________
 # Regions for defining ICs and BCs
 #
-mfix.regions = full-domain
+mfix.regions = full-domain  inner-domain
 
 regions.full-domain.lo  = 0.0000  0.0000  0.0000
 regions.full-domain.hi  = 0.0008  0.0100  0.0008
 
+regions.inner-domain.lo  = 0.0001  0.0030  0.0001
+regions.inner-domain.hi  = 0.0007  0.0070  0.0007
 
 #_______________________________________________________________________
 # Initial Conditions
 #
-ic.regions = full-domain
+ic.regions = full-domain  inner-domain
 
 
-ic.full-domain.fluid.volfrac   =  1.0
-ic.full-domain.fluid.pressure  =  0.0
-ic.full-domain.fluid.velocity  =  0.0  0.0  0.0
+ic.full-domain.fluid.volfrac     =  1.0
+ic.full-domain.fluid.pressure    =  0.0
+ic.full-domain.fluid.velocity    =  0.0  0.0  0.0
+ic.full-domain.fluid.temperature =  700
+ic.full-domain.fluid.species.O2  =  0.3
+ic.full-domain.fluid.species.SO2 =  0.4
+ic.full-domain.fluid.species.H2O =  0.3
 
+ic.inner-domain.fluid.volfrac     =  1.0
+ic.inner-domain.fluid.pressure    =  0.0
+ic.inner-domain.fluid.velocity    =  0.0  0.0  0.0
+ic.inner-domain.fluid.temperature =  300
+ic.inner-domain.fluid.species.O2  =  0.3
+ic.inner-domain.fluid.species.SO2 =  0.4
+ic.inner-domain.fluid.species.H2O =  0.3
 
 #_______________________________________________________________________
 # Boundary Conditions
