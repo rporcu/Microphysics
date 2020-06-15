@@ -15,23 +15,18 @@ mfix::mfix_set_enthalpy_bcs (Real time,
 
   for (int lev = 0; lev < nlev; lev++)
   {
-     // Set all values outside the domain to covered_val just to avoid use of undefined
-     h_g_in[lev]->setDomainBndry(covered_val,geom[lev]);
-
-     h_g_in[lev]->FillBoundary(geom[lev].periodicity());
-
-     Box domain(geom[lev].Domain());
+    Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-     for (MFIter mfi(*h_g_in[lev], false); mfi.isValid(); ++mfi)
-       set_enthalpy_bcs(time, lev, (*h_g_in[lev])[mfi], domain);
+    for (MFIter mfi(*h_g_in[lev], false); mfi.isValid(); ++mfi)
+      set_enthalpy_bcs(time, lev, (*h_g_in[lev])[mfi], domain);
 
-     EB_set_covered(*h_g_in[lev], 0, h_g_in[lev]->nComp(), h_g_in[lev]->nGrow(), covered_val);
+    h_g_in[lev]->FillBoundary(geom[lev].periodicity());
 
-     // Do this after as well as before to pick up terms that got updated in the call above
-     h_g_in[lev]->FillBoundary(geom[lev].periodicity());
+    EB_set_covered(*h_g_in[lev], 0, h_g_in[lev]->nComp(), h_g_in[lev]->nGrow(),
+        covered_val);
   }
 }
 
@@ -68,40 +63,6 @@ mfix::set_enthalpy_bcs (Real time,
   const int nrgt = amrex::max(0, h_g_hi[0]-dom_hi[0]);
   const int ntop = amrex::max(0, h_g_hi[1]-dom_hi[1]);
   const int nup  = amrex::max(0, h_g_hi[2]-dom_hi[2]);
-
-  // Create InVects for following 2D Boxes
-  IntVect bx_yz_lo_lo_2D(h_g_lo), bx_yz_lo_hi_2D(h_g_hi);
-  IntVect bx_yz_hi_lo_2D(h_g_lo), bx_yz_hi_hi_2D(h_g_hi);
-  IntVect bx_xz_lo_lo_2D(h_g_lo), bx_xz_lo_hi_2D(h_g_hi);
-  IntVect bx_xz_hi_lo_2D(h_g_lo), bx_xz_hi_hi_2D(h_g_hi);
-  IntVect bx_xy_lo_lo_2D(h_g_lo), bx_xy_lo_hi_2D(h_g_hi);
-  IntVect bx_xy_hi_lo_2D(h_g_lo), bx_xy_hi_hi_2D(h_g_hi);
-
-  // Fix lo and hi limits
-  bx_yz_lo_lo_2D[0] = dom_lo[0]-1;
-  bx_yz_lo_hi_2D[0] = dom_lo[0]-1;
-  bx_yz_hi_lo_2D[0] = dom_hi[0]+1;
-  bx_yz_hi_hi_2D[0] = dom_hi[0]+1;
-
-  bx_xz_lo_lo_2D[1] = dom_lo[1]-1;
-  bx_xz_lo_hi_2D[1] = dom_lo[1]-1;
-  bx_xz_hi_lo_2D[1] = dom_hi[1]+1;
-  bx_xz_hi_hi_2D[1] = dom_hi[1]+1;
-
-  bx_xy_lo_lo_2D[2] = dom_lo[2]-1;
-  bx_xy_lo_hi_2D[2] = dom_lo[2]-1;
-  bx_xy_hi_lo_2D[2] = dom_hi[2]+1;
-  bx_xy_hi_hi_2D[2] = dom_hi[2]+1;
-
-  // Create 2D boxes for GPU loops
-  const Box bx_yz_lo_2D(bx_yz_lo_lo_2D, bx_yz_lo_hi_2D);
-  const Box bx_yz_hi_2D(bx_yz_hi_lo_2D, bx_yz_hi_hi_2D);
-
-  const Box bx_xz_lo_2D(bx_xz_lo_lo_2D, bx_xz_lo_hi_2D);
-  const Box bx_xz_hi_2D(bx_xz_hi_lo_2D, bx_xz_hi_hi_2D);
-
-  const Box bx_xy_lo_2D(bx_xy_lo_lo_2D, bx_xy_lo_hi_2D);
-  const Box bx_xy_hi_2D(bx_xy_hi_lo_2D, bx_xy_hi_hi_2D);
 
   // Create InVects for following 3D Boxes
   IntVect bx_yz_lo_hi_3D(h_g_hi), bx_xz_lo_hi_3D(h_g_hi), bx_xy_lo_hi_3D(h_g_hi);
@@ -141,24 +102,11 @@ mfix::set_enthalpy_bcs (Real time,
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
 
-      if((bct == pout)) {
+      if(bct == pout) {
         h_g(i,j,k) = h_g(dom_lo[0],j,k);
       }
-      else if ((bct == minf) or (bct == pinf)) {
-        // TODO: here and in the following, cp_g0 can be computed as function of
-        // p_bc_t_g[bcv]
+      else if (bct == minf or bct == pinf) {
         h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
-      }
-    });
-
-    // For BCs extrapolation values
-    amrex::ParallelFor(bx_yz_lo_2D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-    {
-      const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
-
-      if((bct == minf) or (bct == pinf)) {
-        h_g(i,j,k) = 2*h_g(i,j,k) - h_g(i+1,j,k);
       }
     });
   }
@@ -174,18 +122,8 @@ mfix::set_enthalpy_bcs (Real time,
       if(bct == pout) {
         h_g(i,j,k) = h_g(dom_hi[0],j,k);
       }
-      else if ((bct == minf) or (bct == pinf)) {
+      else if (bct == minf or bct == pinf) {
         h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
-      }
-    });
-
-    amrex::ParallelFor(bx_yz_hi_2D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-    {
-      const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
-
-      if((bct == minf) or (bct == pinf)) {
-        h_g(i,j,k) = 2*h_g(i,j,k) - h_g(i-1,j,k);
       }
     });
   }
@@ -201,18 +139,8 @@ mfix::set_enthalpy_bcs (Real time,
       if(bct == pout) {
         h_g(i,j,k) = h_g(i,dom_lo[1],k);
       }
-      else if ((bct == minf) or (bct == pinf)) {
+      else if (bct == minf or bct == pinf) {
         h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
-      }
-    });
-
-    amrex::ParallelFor(bx_xz_lo_2D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-    {
-      const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
-
-      if ((bct == minf) or (bct == pinf)) {
-        h_g(i,j,k) = 2*h_g(i,j,k) - h_g(i,j+1,k);
       }
     });
   }
@@ -225,19 +153,12 @@ mfix::set_enthalpy_bcs (Real time,
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
 
-      if(bct == pout)
+      if(bct == pout) {
         h_g(i,j,k) = h_g(i,dom_hi[1],k);
-      else if ((bct == minf) or (bct == pinf))
+      }
+      else if (bct == minf or bct == pinf) {
         h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
-    });
-
-    amrex::ParallelFor(bx_xz_hi_2D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-    {
-      const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
-
-      if ((bct == minf) or (bct == pinf))
-        h_g(i,j,k) = 2*h_g(i,j,k) - h_g(i,j-1,k);
+      }
     });
   }
 
@@ -249,19 +170,12 @@ mfix::set_enthalpy_bcs (Real time,
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
 
-      if(bct == pout)
+      if(bct == pout) {
         h_g(i,j,k) = h_g(i,j,dom_lo[2]);
-      else if ((bct == minf) or (bct == pinf))
-        h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
-    });
-
-    amrex::ParallelFor(bx_xy_lo_2D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-    {
-      const int bct = bct_klo(i,j,dom_lo[2]-1,0);
-
-      if ((bct == minf) or (bct == pinf))
-        h_g(i,j,k) = 2*h_g(i,j,k) - h_g(i,j,k+1);
+      }
+      else if (bct == minf or bct == pinf) {
+        h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];  
+      }
     });
   }
 
@@ -273,20 +187,13 @@ mfix::set_enthalpy_bcs (Real time,
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
 
-      if(bct == pout)
+      if(bct == pout) {
         h_g(i,j,k) = h_g(i,j,dom_hi[2]);
-      else if ((bct == minf) or (bct == pinf))
-        h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
+      }
+      else if (bct == minf or bct == pinf) {
+        h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];  
+      }
     });
-
-    amrex::ParallelFor(bx_xy_hi_2D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-    {
-      const int bct = bct_khi(i,j,dom_hi[2]+1,0);
-
-      if((bct == minf) or (bct == pinf))
-        h_g(i,j,k) = 2*h_g(i,j,k) - h_g(i,j,k-1);
-    });
-
   }
+
 }

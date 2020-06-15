@@ -3,7 +3,6 @@
 #include <MFIX_FLUID_Parms.H>
 
 void calc_mu_g (const Box& bx,
-                FArrayBox& /*T_g_fab*/,
                 FArrayBox& mu_g_fab)
 {
   const Real mu_g0 = FLUID::mu_g0;
@@ -16,8 +15,8 @@ void calc_mu_g (const Box& bx,
 }
 
 void calc_cp_g (const Box& bx,
-                FArrayBox& /*T_g_fab*/,
-                FArrayBox& cp_g_fab)
+                FArrayBox& cp_g_fab,
+                FArrayBox& /*T_g_fab*/)
 {
 
   const Real cp_g0 = FLUID::cp_g0;
@@ -30,8 +29,8 @@ void calc_cp_g (const Box& bx,
 }
 
 void calc_k_g (const Box& bx,
-               FArrayBox& /*T_g_fab*/,
-               FArrayBox& k_g_fab)
+               FArrayBox& k_g_fab,
+               FArrayBox& /*T_g_fab*/)
 {
 
   const Real k_g0 = FLUID::k_g0;
@@ -44,8 +43,8 @@ void calc_k_g (const Box& bx,
 }
 
 void calc_D_g (const Box& bx,
-               FArrayBox& /*T_g_fab*/,
-               FArrayBox& D_g_fab)
+               FArrayBox& D_g_fab,
+               FArrayBox& /*T_g_fab*/)
 {
   Real* D_g0;
   D_g0 = new Real [FLUID::nspecies_g];

@@ -108,11 +108,9 @@ namespace BC
         diff_scal_lobc[dir] = amrex::LinOpBCType::Dirichlet;
         diff_scal_hibc[dir] = amrex::LinOpBCType::Dirichlet;
 
-        // TODO: check if this is correct
         diff_temperature_lobc[dir] = amrex::LinOpBCType::Dirichlet;
         diff_temperature_hibc[dir] = amrex::LinOpBCType::Dirichlet;
 
-        // TODO: check if this is correct
         diff_species_lobc[dir] = amrex::LinOpBCType::Dirichlet;
         diff_species_hibc[dir] = amrex::LinOpBCType::Dirichlet;
 
@@ -229,7 +227,6 @@ namespace BC
                 diff_scal_lobc[dir] = amrex::LinOpBCType::Neumann;
               }
 
-              // TODO: check if this is correct
               if( new_bc.type == pout_) {
                 diff_temperature_lobc[dir] = amrex::LinOpBCType::Neumann;
                 diff_species_lobc[dir] = amrex::LinOpBCType::Neumann;
@@ -248,7 +245,6 @@ namespace BC
                 diff_scal_hibc[dir] = amrex::LinOpBCType::Neumann;
               }
 
-              // TODO: check if this is correct
               if( new_bc.type == pout_) {
                 diff_temperature_hibc[dir] = amrex::LinOpBCType::Neumann;
                 diff_species_hibc[dir] = amrex::LinOpBCType::Neumann;
@@ -312,7 +308,10 @@ namespace BC
         std::string field = "bc."+regions[bcv]+".eb";
         amrex::ParmParse ppEB(field.c_str());
 
-        ppEB.get("temperature", new_bc.eb.temperature);
+        if (ppEB.contains("temperature")) {
+          EB::fix_temperature = 1;
+          ppEB.get("temperature", new_bc.eb.temperature);
+        }
       }
 
       // Get fluid data.

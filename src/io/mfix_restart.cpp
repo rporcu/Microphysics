@@ -225,19 +225,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
        for (int i = 0; i < chkscalarVars.size(); i++ )
        {
-           if ( restart_from_cold_flow and chkscaVarsName[i] == "T_g")
-           {
-               amrex::Print() << "  Setting T_g to T_g0 = " << FLUID::T_g0 << std::endl;
-               m_leveldata[lev]->T_g->setVal(FLUID::T_g0);
-               continue;
-
-           } else if ( restart_from_cold_flow and chkscaVarsName[i] == "h_g")
-           {
-               amrex::Print() << "  Setting h_g to Cp_g0 T_g0 = " << FLUID::cp_g0 * FLUID::T_g0 << std::endl;
-               m_leveldata[lev]->h_g->setVal(FLUID::T_g0*FLUID::cp_g0);
-               continue;
-
-           } else if (chkscaVarsName[i] == "level_sets") {
+           if (chkscaVarsName[i] == "level_sets") {
 
                amrex::Print() << "  Skipping " << chkscaVarsName[i] << std::endl;
                continue;
@@ -277,6 +265,60 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           }
        }
 
+       if (advect_enthalpy)
+       {
+          for (int i = 0; i < chktemperatureVars.size(); i++ )
+          {
+             if ( restart_from_cold_flow and chkscaVarsName[i] == "T_g")
+             {
+                 amrex::Print() << "  Setting T_g to T_g0 = " << FLUID::T_g0 << std::endl;
+                 m_leveldata[lev]->T_g->setVal(FLUID::T_g0);
+                 continue;
+
+             } else if ( restart_from_cold_flow and chkscaVarsName[i] == "h_g") {
+
+                 amrex::Print() << "  Setting h_g to Cp_g0 T_g0 = " <<
+                   FLUID::cp_g0 * FLUID::T_g0 << std::endl;
+
+                 m_leveldata[lev]->h_g->setVal(FLUID::T_g0*FLUID::cp_g0);
+                 continue;
+             }
+
+             amrex::Print() << "  Loading " << chktemperatureVarsName[i] << std::endl;
+
+             MultiFab mf;
+             VisMF::Read(mf,
+                     amrex::MultiFabFileFullPrefix(lev,
+                                                   restart_file, level_prefix,
+                                                   chktemperatureVarsName[i]),
+                                                   nullptr,
+                                                   ParallelDescriptor::IOProcessorNumber());
+
+             if (Nrep == IntVect::TheUnitVector()) {
+
+                // Copy from the mf we used to read in to the mf we will use
+                // going forward
+                (**(chktemperatureVars[i][lev])).copy(mf, 0, 0, 1, 0, 0);
+
+             } else {
+
+                if (mf.boxArray().size() > 1)
+                    amrex::Abort("Replication only works if one initial grid");
+
+                mf.FillBoundary(geom[lev].periodicity());
+
+                FArrayBox single_fab(mf.boxArray()[0],1);
+                mf.copyTo(single_fab);
+
+                 // Copy and replicate mf into chkscalarVars
+                 for (MFIter mfi(**(chktemperatureVars[i][lev]), false); mfi.isValid(); ++mfi) {
+                     int ib = mfi.index();
+                     (**(chktemperatureVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
+                 }
+               }
+             }
+          }
+
        if (advect_fluid_species)
        {
           for (int i = 0; i < chkspeciesVars.size(); i++ )
@@ -315,6 +357,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
              }
           }
        }
+
        amrex::Print() << "  Finished reading fluid data" << std::endl;
     }
 
@@ -410,11 +453,12 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
           m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
 
-          // Fill the bc's just in case
-          m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
-          m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
-          m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
-          m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
+          if (advect_enthalpy) {
+            m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
+            m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
+            m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
+            m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
+          }
 
           // Fill the bc's just in case
           m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());

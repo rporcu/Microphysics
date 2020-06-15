@@ -38,40 +38,6 @@ mfix::set_viscosity_bcs (Real time,
   const int ntop = amrex::max(0, scal_hi[1]-dom_hi[1]);
   const int nup  = amrex::max(0, scal_hi[2]-dom_hi[2]);
 
-  // Create InVects for following 2D Boxes
-  IntVect bx_yz_lo_lo_2D(scal_lo), bx_yz_lo_hi_2D(scal_hi);
-  IntVect bx_yz_hi_lo_2D(scal_lo), bx_yz_hi_hi_2D(scal_hi);
-  IntVect bx_xz_lo_lo_2D(scal_lo), bx_xz_lo_hi_2D(scal_hi);
-  IntVect bx_xz_hi_lo_2D(scal_lo), bx_xz_hi_hi_2D(scal_hi);
-  IntVect bx_xy_lo_lo_2D(scal_lo), bx_xy_lo_hi_2D(scal_hi);
-  IntVect bx_xy_hi_lo_2D(scal_lo), bx_xy_hi_hi_2D(scal_hi);
-
-  // Fix lo and hi limits
-  bx_yz_lo_lo_2D[0] = dom_lo[0]-1;
-  bx_yz_lo_hi_2D[0] = dom_lo[0]-1;
-  bx_yz_hi_lo_2D[0] = dom_hi[0]+1;
-  bx_yz_hi_hi_2D[0] = dom_hi[0]+1;
-
-  bx_xz_lo_lo_2D[1] = dom_lo[1]-1;
-  bx_xz_lo_hi_2D[1] = dom_lo[1]-1;
-  bx_xz_hi_lo_2D[1] = dom_hi[1]+1;
-  bx_xz_hi_hi_2D[1] = dom_hi[1]+1;
-
-  bx_xy_lo_lo_2D[2] = dom_lo[2]-1;
-  bx_xy_lo_hi_2D[2] = dom_lo[2]-1;
-  bx_xy_hi_lo_2D[2] = dom_hi[2]+1;
-  bx_xy_hi_hi_2D[2] = dom_hi[2]+1;
-
-  // Create 2D boxes for GPU loops
-  const Box bx_yz_lo_2D(bx_yz_lo_lo_2D, bx_yz_lo_hi_2D);
-  const Box bx_yz_hi_2D(bx_yz_hi_lo_2D, bx_yz_hi_hi_2D);
-
-  const Box bx_xz_lo_2D(bx_xz_lo_lo_2D, bx_xz_lo_hi_2D);
-  const Box bx_xz_hi_2D(bx_xz_hi_lo_2D, bx_xz_hi_hi_2D);
-
-  const Box bx_xy_lo_2D(bx_xy_lo_lo_2D, bx_xy_lo_hi_2D);
-  const Box bx_xy_hi_2D(bx_xy_hi_lo_2D, bx_xy_hi_hi_2D);
-
   // Create InVects for following 3D Boxes
   IntVect bx_yz_lo_hi_3D(scal_hi), bx_xz_lo_hi_3D(scal_hi), bx_xy_lo_hi_3D(scal_hi);
   IntVect bx_yz_hi_lo_3D(scal_lo), bx_xz_hi_lo_3D(scal_lo), bx_xy_hi_lo_3D(scal_lo);

@@ -18,6 +18,8 @@ CEXE_sources +=   MFIX_FilCC.cpp
 CEXE_headers +=   MFIX_MFHelpers.H
 CEXE_sources +=   MFIX_MFHelpers.cpp
 
+CEXE_headers +=   mfix_algorithm.H
+
 CEXE_headers +=   MFIX_gradient.H
 CEXE_sources +=   MFIX_gradient.cpp
 

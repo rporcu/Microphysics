@@ -65,7 +65,7 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
 
   mfix_compute_slopes(lev, time, *vel_in[lev],
                       get_xslopes_u(), get_yslopes_u(), get_zslopes_u(),
-                      slopes_comp);
+                      slopes_comp, m_vel_g_bc_types);
 
   // ****************************************************************************
   // Then predict to face centers

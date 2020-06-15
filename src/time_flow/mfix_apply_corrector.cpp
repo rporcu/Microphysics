@@ -359,9 +359,11 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
 
     // NOTE: we do this call before multiplying ep_g by ro_g
-    if (advect_enthalpy)
-        diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(), get_h_g(),
-                                          get_cp_g(), get_k_g(), 0.5*l_dt);
+    if (advect_enthalpy) {
+      diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
+          get_h_g(), get_cp_g(), get_k_g(), get_T_g_on_eb(), get_k_g_on_eb(),
+          0.5*l_dt);
+    }
 
     // Convert "ep_g" into (rho * ep_g)
     for (int lev = 0; lev <= finest_level; lev++)

@@ -1,28 +1,7 @@
 #include <mfix.H>
+#include <mfix_algorithm.H>
 
 namespace aux {
-
-struct is_equal {
-  AMREX_GPU_HOST_DEVICE
-  is_equal () {}
-
-  template <class T>
-  AMREX_GPU_HOST_DEVICE
-  AMREX_FORCE_INLINE
-  bool operator() (const T& x, const T& y) const {return x == y;}
-};
-
-template <class Operator> bool
-AMREX_GPU_HOST_DEVICE
-AMREX_FORCE_INLINE
-any (const int bc, const int* bc_types, const int size, Operator op)
-{
-  for(int i(0); i < size; ++i)
-    if(op(bc, bc_types[i]))
-      return true;
-
-  return false;
-}
 
 //
 // Compute upwind non-normal velocity
@@ -241,12 +220,12 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
         Real fx_val(0);
 
         if ((i == dom_low.x) and
-          any(bct_ilo_val, bct_data, bct_size, aux::is_equal()))
+          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_ilo_val)))
         {
           fx_val = u_val * state_mns;
         }
         else if ((i == dom_high.x+1) and
-            any(bct_ihi_val, bct_data, bct_size, aux::is_equal()))
+          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_ihi_val)))
         {
           fx_val = u_val * state_pls;
         }
@@ -290,12 +269,12 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
         Real fy_val(0);
 
         if((j == dom_low.y) and
-          any(bct_jlo_val, bct_data, bct_size, aux::is_equal()))
+          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_jlo_val)))
         {
           fy_val = v_val * state_mns;
         }
         else if ((j == dom_high.y+1) and
-            any(bct_jhi_val, bct_data, bct_size, aux::is_equal()))
+          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_jhi_val)))
         {
           fy_val = v_val * state_pls;
         }
@@ -339,12 +318,12 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
         Real fz_val(0);
 
         if((k == dom_low.z) and
-          any(bct_klo_val, bct_data, bct_size, aux::is_equal()))
+          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_klo_val)))
         {
           fz_val = w_val * state_mns;
         }
         else if ((k == dom_high.z+1) and
-            any(bct_khi_val, bct_data, bct_size, aux::is_equal()))
+          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_khi_val)))
         {
           fz_val = w_val * state_pls;
         }
@@ -519,12 +498,12 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
         if( afrac_x > 0 )
         {
           if(i <= dom_low.x and
-            any(bct_ilo_val, bct_data, bct_size, aux::is_equal()))
+          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_ilo_val)))
           {
             sx_ijkn = state(dom_low.x-1,j,k,state_comp+n);
           }
           else if(i >= dom_high.x+1 and
-            any(bct_ihi_val, bct_data, bct_size, aux::is_equal()))
+          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_ihi_val)))
           {
             sx_ijkn = state(dom_high.x+1,j,k,state_comp+n);
           }
@@ -604,12 +583,12 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
         if( afrac_y > 0 ) {
           if( j <= dom_low.y and
-           any(bct_jlo_val, bct_data, bct_size, aux::is_equal()))
+          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_jlo_val)))
           {
             sy_ijkn = state(i,dom_low.y-1,k,state_comp+n);
           }
           else if( j >= dom_high.y+1 and
-           any(bct_jhi_val, bct_data, bct_size, aux::is_equal()))
+          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_jhi_val)))
           {
             sy_ijkn = state(i,dom_high.y+1,k,state_comp+n);
           }
@@ -689,12 +668,12 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
         if( afrac_z > 0 ) {
           if( k <= dom_low.z and
-           any(bct_klo_val, bct_data, bct_size, aux::is_equal()))
+          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_klo_val)))
           {
             sz_ijkn = state(i, j,dom_low.z-1,state_comp+n);
           }
           else if( k >= dom_high.z+1 and
-           any(bct_khi_val, bct_data, bct_size, aux::is_equal()))
+          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_khi_val)))
           {
             sz_ijkn = state(i, j,dom_high.z+1,state_comp+n);
           }

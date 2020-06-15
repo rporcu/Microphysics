@@ -4,6 +4,7 @@
 #include <mfix_eb_interp_K.H>
 #include <des_drag_K.H>
 #include <des_conv_coeff_K.H>
+#include <MFIX_MFHelpers.H>
 
 void mfix::mfix_calc_transfer_coeffs ()
 {
@@ -49,8 +50,11 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
   EB_set_covered(*m_leveldata[0]->ep_g,  0, 1, 1, covered_val);
   EB_set_covered(*m_leveldata[0]->mu_g,  0, 1, 1, covered_val);
   EB_set_covered(*m_leveldata[0]->ro_g,  0, 1, 1, covered_val);
-  EB_set_covered(*m_leveldata[0]->k_g,   0, 1, 1, covered_val);
-  EB_set_covered(*m_leveldata[0]->cp_g,  0, 1, 1, covered_val);
+
+  if (advect_enthalpy) {
+    EB_set_covered(*m_leveldata[0]->cp_g,  0, 1, 1, covered_val);
+    EB_set_covered(*m_leveldata[0]->k_g,   0, 1, 1, covered_val);
+  }
 
   for (int lev = 0; lev < nlev; lev++)
   {
@@ -68,10 +72,17 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
 
     if (OnSameGrids)
     {
-      ro_ptr  = m_leveldata[lev]->ro_g;
-      mu_ptr  = m_leveldata[lev]->mu_g;
-      kg_ptr  = m_leveldata[lev]->k_g;
-      cp_ptr  = m_leveldata[lev]->cp_g;
+      ro_ptr = m_leveldata[lev]->ro_g;
+      mu_ptr = m_leveldata[lev]->mu_g;
+
+      if (advect_enthalpy) {
+        kg_ptr = m_leveldata[lev]->k_g;
+        cp_ptr = m_leveldata[lev]->cp_g;
+      }
+      else {
+        kg_ptr = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+        cp_ptr = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+      }
 
       // Store gas velocity and volume fraction for interpolation
       interp_ptr = new MultiFab(grids[lev], dmap[lev], interp_comp, interp_ng, MFInfo(), *ebfactory[lev]);
@@ -89,7 +100,6 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
                         interp_ng);
 
       interp_ptr->FillBoundary(geom[lev].periodicity());
-
     }
     else
     {
@@ -103,11 +113,17 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
       mu_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->mu_g->nComp(), 1);
       mu_ptr->copy(*m_leveldata[lev]->mu_g, 0, 0, 1, 0, 0);
 
-      kg_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->k_g->nComp(), 1);
-      kg_ptr->copy(*m_leveldata[lev]->k_g, 0, 0, 1, 0, 0);
+      if (advect_enthalpy) {
+        kg_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->k_g->nComp(), 1);
+        kg_ptr->copy(*m_leveldata[lev]->k_g, 0, 0, 1, 0, 0);
 
-      cp_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->cp_g->nComp(), 1);
-      cp_ptr->copy(*m_leveldata[lev]->cp_g, 0, 0, 1, 0, 0);
+        cp_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->cp_g->nComp(), 1);
+        cp_ptr->copy(*m_leveldata[lev]->cp_g, 0, 0, 1, 0, 0);
+      }
+      else {
+        kg_ptr = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+        cp_ptr = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+      }
 
       EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
                                        {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
@@ -369,6 +385,11 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
       delete kg_ptr;
       delete cp_ptr;
     }
+    else if (not advect_enthalpy) {
+      delete kg_ptr;
+      delete cp_ptr;
+    }
+
     delete interp_ptr;
   } // lev
 

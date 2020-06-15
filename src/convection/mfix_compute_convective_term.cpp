@@ -187,7 +187,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
            slopes_comp = 0;
            mfix_compute_slopes(lev, time, *ro_g_in[lev],
                                get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
-                               slopes_comp);
+                               slopes_comp, m_ro_g_bc_types);
         }
 
         if (advect_enthalpy)
@@ -198,7 +198,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
             slopes_comp = 1;
             mfix_compute_slopes(lev, time, *h_g_in[lev],
                                 get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
-                                slopes_comp);
+                                slopes_comp, m_T_g_bc_types);
         }
 
         if (advect_tracer)
@@ -209,7 +209,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
             slopes_comp = 2;
             mfix_compute_slopes(lev, time, *trac_in[lev],
                                 get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
-                                slopes_comp);
+                                slopes_comp, m_trac_g_bc_types);
         }
 
         // Compute slopes of fluid species mass fractions
@@ -223,7 +223,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
           slopes_comp = 0;
 
           mfix_compute_slopes(lev, time, *X_g_in[lev], get_xslopes_X_g(),
-              get_yslopes_X_g(), get_zslopes_X_g(), slopes_comp);
+              get_yslopes_X_g(), get_zslopes_X_g(), slopes_comp,
+              m_X_g_bc_types);
         }
 
         // Initialize conv_s to 0 for both density, enthlapy and tracer

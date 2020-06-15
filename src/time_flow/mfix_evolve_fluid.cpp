@@ -2,6 +2,7 @@
 
 #include <AMReX_VisMF.H>
 #include <MFIX_MFHelpers.H>
+#include <MFIX_EB_Parms.H>
 #include <MFIX_DEM_Parms.H>
 #include <MFIX_FLUID_Parms.H>
 #include <MFIX_SPECIES_Parms.H>
@@ -37,10 +38,13 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
       m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
+
+      if (advect_enthalpy) {
+        m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
+        m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
+        m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
+        m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
+      }
 
       if (advect_fluid_species) {
         m_leveldata[lev]->D_g->FillBoundary(geom[lev].periodicity());
@@ -60,6 +64,19 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
     if (advect_enthalpy) {
       mfix_set_temperature_bcs(time, get_T_g());
       mfix_set_enthalpy_bcs(time, get_h_g());
+
+      if (EB::fix_temperature) {
+        const Vector< MultiFab* >& T_g_on_eb = get_T_g_on_eb();
+        const Vector< MultiFab* >& k_g = get_k_g();
+        const Vector< MultiFab* >& k_g_on_eb = get_k_g_on_eb();
+
+        for (int lev(0); lev <= finest_level; ++lev) {
+          T_g_on_eb[lev]->setVal(0);
+          MultiFab::Copy(*k_g_on_eb[lev], *k_g[lev], 0, 0, 1, k_g_on_eb[lev]->nGrow());
+        }
+
+        mfix_set_eb_temperature_bcs(get_T_g_on_eb(), get_k_g_on_eb());
+      }
     }
 
     if (advect_fluid_species)
@@ -165,10 +182,13 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
           MultiFab::Copy(ep_go, ep_g, 0, 0, ep_g.nComp(), ep_go.nGrow());
           MultiFab::Copy(p_go, p_g, 0, 0, p_g.nComp(), p_go.nGrow());
           MultiFab::Copy(ro_go, ro_g, 0, 0, ro_g.nComp(), ro_go.nGrow());
-          MultiFab::Copy(T_go, T_g, 0, 0, T_g.nComp(), T_go.nGrow());
-          MultiFab::Copy(h_go, h_g, 0, 0, h_g.nComp(), h_go.nGrow());
           MultiFab::Copy(trac_o, trac, 0, 0, trac.nComp(), trac_o.nGrow());
           MultiFab::Copy(vel_go, vel_g, 0, 0, vel_g.nComp(), vel_go.nGrow());
+
+          if (advect_enthalpy) {
+            MultiFab::Copy(T_go, T_g, 0, 0, T_g.nComp(), T_go.nGrow());
+            MultiFab::Copy(h_go, h_g, 0, 0, h_g.nComp(), h_go.nGrow());
+          }
 
           if (advect_fluid_species)
             MultiFab::Copy(X_go, X_g, 0, 0, X_g.nComp(), X_go.nGrow());

@@ -5,6 +5,7 @@
 #include <AMReX_Vector.H>
 
 #include <DiffusionOp.H>
+#include <MFIX_EB_Parms.H>
 #include <MFIX_BC_Parms.H>
 #include <MFIX_FLUID_Parms.H>
 
@@ -48,24 +49,6 @@ DiffusionOp::DiffusionOp (AmrCore* _amrcore,
 
     // We default to Neumann bc's for scalarson EB walls
     eb_is_dirichlet = false;
-    eb_temperature_is_dirichlet = false;
-}
-
-void DiffusionOp::setup_eb_temperature (Vector< std::unique_ptr< MultiFab > >& eb_T_g_in,
-                                        Vector< std::unique_ptr< MultiFab > >& eb_k_g_in)
-{
-  eb_temperature_is_dirichlet = true;
-
-  const int finest_level = eb_T_g_in.size()-1;
-
-  T_g_on_eb.resize(finest_level+1);
-  k_g_on_eb.resize(finest_level+1);
-
-  for(int lev = 0; lev <= finest_level; lev++)
-  {
-    T_g_on_eb[lev].reset(eb_T_g_in[lev].release());
-    k_g_on_eb[lev].reset(eb_k_g_in[lev].release());
-  }
 }
 
 void DiffusionOp::setup (AmrCore* _amrcore,
@@ -263,70 +246,77 @@ void DiffusionOp::ComputeDivTau (Vector< MultiFab* >& divtau_out,
 }
 
 void DiffusionOp::ComputeLapT (Vector< MultiFab* >& lapT_out,
-                               const Vector< MultiFab* >& T_g_in,
-                               const Vector< MultiFab* >& ro_g_in,
-                               const Vector< MultiFab* >& ep_g_in,
-                               const Vector< MultiFab* >& k_g_in)
+                               const Vector< MultiFab* >& T_g,
+                               const Vector< MultiFab* >& ro_g,
+                               const Vector< MultiFab* >& ep_g,
+                               const Vector< MultiFab* >& k_g,
+                               const Vector< MultiFab* >& T_g_on_eb,
+                               const Vector< MultiFab* >& k_g_on_eb)
 {
-    BL_PROFILE("DiffusionOp::ComputeLapT");
+  BL_PROFILE("DiffusionOp::ComputeLapT");
 
-    int finest_level = amrcore->finestLevel();
+  int finest_level = amrcore->finestLevel();
 
-    Vector< MultiFab* > lapT_aux(finest_level+1);
+  Vector< MultiFab* > lapT_aux(finest_level+1);
 
-    for(int lev = 0; lev <= finest_level; lev++)
-    {
-       lapT_aux[lev] = new MultiFab(grids[lev], dmap[lev], 1, nghost,
-                                    MFInfo(), *(*ebfactory)[lev]);
-       lapT_aux[lev]->setVal(0.0);
+  for(int lev = 0; lev <= finest_level; lev++)
+  {
+    lapT_aux[lev] = new MultiFab(grids[lev], dmap[lev], 1, nghost, MFInfo(),
+        *(*ebfactory)[lev]);
+
+    lapT_aux[lev]->setVal(0.0);
+  }
+
+  // Whole domain
+  Box domain(geom[0].Domain());
+
+  // We want to return div (ep_g k_g grad)) T_g
+  temperature_matrix->setScalars(0.0, -1.0);
+
+  Vector<BCRec> bcs_s; // This is just to satisfy the call to EBterp...
+  bcs_s.resize(3);
+
+  // Compute the coefficients
+  for (int lev = 0; lev <= finest_level; lev++)
+  {
+    MultiFab ep_g_k_g(ep_g[lev]->boxArray(), ep_g[lev]->DistributionMap(), 1, 1,
+        MFInfo(), ep_g[lev]->Factory());
+
+    // Initialize to 0
+    ep_g_k_g.setVal(0.);
+
+    MultiFab::Copy(ep_g_k_g, *ep_g[lev], 0, 0, 1, 1);
+    MultiFab::Multiply(ep_g_k_g, *k_g[lev], 0, 0, 1, 1);
+
+    EB_interp_CellCentroid_to_FaceCentroid (ep_g_k_g, GetArrOfPtrs(b[lev]), 0,
+        0, 1, geom[lev], bcs_s);
+
+    if (EB::fix_temperature) {
+      // The following is a WIP in AMReX
+      //temperature_matrix->setPhiOnCentroid();
+      temperature_matrix->setEBDirichlet(lev, *T_g_on_eb[lev], *k_g_on_eb[lev]);
     }
 
-    // Whole domain
-    Box domain(geom[0].Domain());
+    temperature_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]),
+        MLMG::Location::FaceCentroid);
 
-    // We want to return div (ep_g k_g grad)) T_g
-    temperature_matrix->setScalars(0.0, -1.0);
+    temperature_matrix->setLevelBC(lev, GetVecOfConstPtrs(T_g)[lev]);
+  }
 
-    Vector<BCRec> bcs_s; // This is just to satisfy the call to EB_interp...
-    bcs_s.resize(3);
+  MLMG solver(*temperature_matrix);
 
-    // Compute the coefficients
-    for (int lev = 0; lev <= finest_level; lev++)
-    {
-        MultiFab ep_g_k_g(ep_g_in[lev]->boxArray(), ep_g_in[lev]->DistributionMap(),
-            1, 1, MFInfo(), ep_g_in[lev]->Factory());
+  solver.apply(lapT_aux, T_g);
 
-        // Initialize to 0
-        ep_g_k_g.setVal(0.);
+  for(int lev = 0; lev <= finest_level; lev++)
+  {
+    amrex::single_level_redistribute(*lapT_aux[lev], *lapT_out[lev], 0, 1,
+        geom[lev]);
+  }
 
-        MultiFab::Copy(ep_g_k_g, *ep_g_in[lev], 0, 0, 1, 1);
-        MultiFab::Multiply(ep_g_k_g, *k_g_in[lev], 0, 0, 1, 1);
-
-        EB_interp_CellCentroid_to_FaceCentroid (ep_g_k_g, GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
-
-        if (eb_temperature_is_dirichlet) {
-          // The following is a WIP in AMReX
-          //temperature_matrix->setPhiOnCentroid();
-          temperature_matrix->setEBDirichlet(lev, *T_g_on_eb[lev], *k_g_on_eb[lev]);
-        }
-
-        temperature_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
-        temperature_matrix->setLevelBC(lev, GetVecOfConstPtrs(T_g_in)[lev]);
-    }
-
-    MLMG solver(*temperature_matrix);
-
-    solver.apply(lapT_aux, T_g_in);
-
-    for(int lev = 0; lev <= finest_level; lev++)
-    {
-       amrex::single_level_redistribute(*lapT_aux[lev], *lapT_out[lev], 0, 1, geom[lev]);
-    }
-
-    for(int lev = 0; lev <= finest_level; lev++)
-    {
-       delete lapT_aux[lev];
-    }
+  for(int lev = 0; lev <= finest_level; lev++)
+  {
+    delete lapT_aux[lev];
+  }
 }
 
 void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,

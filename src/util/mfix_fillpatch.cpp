@@ -102,7 +102,7 @@ void ScalarFillBox (Box const& bx,
       mfix_for_fillpatching->set_density_bcs(time, lev, dest_fab, domain);
    else if(orig_comp == 1)
       mfix_for_fillpatching->set_tracer_bcs(time, lev, dest_fab, domain);
-   else if(orig_comp == 5)
+   else if(orig_comp == 5 and FLUID::solve_enthalpy)
       mfix_for_fillpatching->set_enthalpy_bcs(time, lev, dest_fab, domain);
    else
       amrex::Abort("Unknown component in ScalarFillBox!");

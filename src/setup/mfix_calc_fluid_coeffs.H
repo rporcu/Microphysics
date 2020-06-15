@@ -7,12 +7,19 @@
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
 
-void calc_mu_g (const Box& bx, FArrayBox& T_g_fab, FArrayBox& mu_g_fab);
+void calc_mu_g (const Box& bx,
+                FArrayBox& mu_g_fab);
 
-void calc_D_g (const Box& bx, FArrayBox& temp_fab, FArrayBox& D_g_fab);
+void calc_D_g (const Box& bx,
+               FArrayBox& D_g_fab,
+               FArrayBox& temp_fab);
 
-void calc_cp_g (const Box& bx, FArrayBox& temp_fab, FArrayBox& cp_g_fab);
+void calc_cp_g (const Box& bx,
+                FArrayBox& cp_g_fab,
+                FArrayBox& temp_fab);
 
-void calc_k_g (const Box& bx, FArrayBox& temp_fab, FArrayBox& k_g_fab);
+void calc_k_g (const Box& bx,
+               FArrayBox& k_g_fab,
+               FArrayBox& temp_fab);
 
 #endif

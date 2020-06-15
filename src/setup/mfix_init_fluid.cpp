@@ -45,7 +45,7 @@ void init_fluid (const Box& sbx,
       // Set user specified initial conditions (IC)
       set_ic_vel(sbx, domain, dx, dy, dz, (*ld.vel_g)[mfi]);
 
-      if ( advect_enthalpy )
+      if (advect_enthalpy)
         set_ic_temp(sbx, domain, dx, dy, dz, (*ld.T_g)[mfi]);
 
       if (advect_fluid_species)
@@ -61,32 +61,32 @@ void init_fluid (const Box& sbx,
       const Real ro_g0  = FLUID::ro_g0;
       const Real trac_0 = FLUID::trac_0;
 
-      amrex::ParallelFor(sbx, [ro_g, ro_g0]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
-          { ro_g(i,j,k) = ro_g0; });
+      ParallelFor(sbx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
+      { ro_g(i,j,k) = ro_g0; });
 
-      amrex::ParallelFor(sbx, [trac, trac_0]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
-          { trac(i,j,k) = trac_0; });
+      ParallelFor(sbx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
+      { trac(i,j,k) = trac_0; });
 
       if (test_tracer_conservation)
-         init_periodic_tracer(bx, domain, (*ld.vel_g)[mfi], (*ld.trac)[mfi], dx, dy, dz);
+        init_periodic_tracer(bx, domain, (*ld.vel_g)[mfi], (*ld.trac)[mfi], dx, dy, dz);
 
       // Initialize mu_g
-      calc_mu_g(bx, (*ld.T_g)[mfi], (*ld.mu_g)[mfi]);
+      calc_mu_g(bx, (*ld.mu_g)[mfi]);
 
       // Initialize Cp_g and k_g
-      if ( advect_enthalpy ) {
-        calc_cp_g(bx, (*ld.T_g)[mfi], (*ld.cp_g)[mfi]);
-        calc_k_g(bx, (*ld.T_g)[mfi], (*ld.k_g)[mfi]);
+      if (advect_enthalpy) {
+        calc_cp_g(bx, (*ld.cp_g)[mfi], (*ld.T_g)[mfi]);
+        calc_k_g(bx, (*ld.k_g)[mfi], (*ld.T_g)[mfi]);
       }
 
       if (advect_fluid_species)
-        calc_D_g(bx, (*ld.T_g)[mfi], (*ld.D_g)[mfi]);
+        calc_D_g(bx, (*ld.D_g)[mfi], (*ld.T_g)[mfi]);
 
       // Initialize h_g
-      ((*ld.h_g)[mfi]).copy<RunOn::Gpu>((*ld.T_g)[mfi], 0, 0, 1);
-      ((*ld.h_g)[mfi]).mult<RunOn::Gpu>((*ld.cp_g)[mfi], 0, 0, 1);
+      if (advect_enthalpy) {
+        ((*ld.h_g)[mfi]).copy<RunOn::Gpu>((*ld.T_g)[mfi], 0, 0, 1);
+        ((*ld.h_g)[mfi]).mult<RunOn::Gpu>((*ld.cp_g)[mfi], 0, 0, 1);
+      }
 
 }
 
@@ -317,15 +317,15 @@ void init_fluid_restart (const Box& bx,
                          const int advect_enthalpy,
                          const int advect_fluid_species)
 {
+  calc_mu_g(bx, (*ld.mu_g)[mfi]);
+
   if (advect_enthalpy) {
-    calc_cp_g(bx, (*ld.T_g)[mfi], (*ld.cp_g)[mfi]);
-    calc_k_g(bx, (*ld.T_g)[mfi], (*ld.k_g)[mfi]);
+    calc_cp_g(bx, (*ld.cp_g)[mfi], (*ld.T_g)[mfi]);
+    calc_k_g(bx, (*ld.k_g)[mfi], (*ld.T_g)[mfi]);
   }
 
-  calc_mu_g(bx, (*ld.T_g)[mfi], (*ld.mu_g)[mfi]);
-
   if (advect_fluid_species)
-    calc_D_g(bx, (*ld.T_g)[mfi], (*ld.D_g)[mfi]);
+    calc_D_g(bx, (*ld.D_g)[mfi], (*ld.T_g)[mfi]);
 }
 
 //!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!

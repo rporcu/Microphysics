@@ -149,6 +149,21 @@ mfix::mfix ()
             amrex::Abort("Invalid level-set bc_hi");
         }
     }
+
+    m_vel_g_bc_types["Dirichlet"] = {bc_list.get_minf()};
+    m_vel_g_bc_types["Neumann"] = {bc_list.get_pinf(), bc_list.get_pout()};
+
+    m_ro_g_bc_types["Dirichlet"] = {bc_list.get_minf()};
+    m_ro_g_bc_types["Neumann"] = {bc_list.get_pinf(), bc_list.get_pout()};
+
+    m_T_g_bc_types["Dirichlet"] = {bc_list.get_minf(), bc_list.get_pinf()};
+    m_T_g_bc_types["Neumann"] = {bc_list.get_pout()};
+
+    m_trac_g_bc_types["Dirichlet"] = {bc_list.get_minf()};
+    m_trac_g_bc_types["Neumann"] = {bc_list.get_pinf(), bc_list.get_pout()};
+
+    m_X_g_bc_types["Dirichlet"] = {bc_list.get_minf(), bc_list.get_pinf()};
+    m_X_g_bc_types["Neumann"] = {bc_list.get_pout()};
 }
 
 void
@@ -169,46 +184,6 @@ Vector< MultiFab* > mfix::get_ep_g () noexcept
   return r;
 }
 
-Vector< MultiFab* > mfix::get_h_g () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->h_g);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_h_g_old () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->h_go);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_T_g () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->T_g);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_T_g_old () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->T_go);
-  }
-  return r;
-}
-
 Vector< MultiFab* > mfix::get_ro_g () noexcept
 {
   Vector<MultiFab*> r;
@@ -225,26 +200,6 @@ Vector< MultiFab* > mfix::get_ro_g_old () noexcept
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
     r.push_back(m_leveldata[lev]->ro_go);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_X_g () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->X_g);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_X_g_old () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->X_go);
   }
   return r;
 }
@@ -289,6 +244,36 @@ Vector< MultiFab* > mfix::get_vel_g_old () noexcept
   return r;
 }
 
+Vector< MultiFab* > mfix::get_mu_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->mu_g);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_T_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->T_g);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_T_g_old () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->T_go);
+  }
+  return r;
+}
+
 Vector< MultiFab* > mfix::get_cp_g () noexcept
 {
   Vector<MultiFab*> r;
@@ -309,12 +294,62 @@ Vector< MultiFab* > mfix::get_k_g () noexcept
   return r;
 }
 
-Vector< MultiFab* > mfix::get_mu_g () noexcept
+Vector< MultiFab* > mfix::get_h_g () noexcept
 {
   Vector<MultiFab*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->mu_g);
+    r.push_back(m_leveldata[lev]->h_g);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_h_g_old () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->h_go);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_T_g_on_eb () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->T_g_on_eb);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_k_g_on_eb () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->k_g_on_eb);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_X_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->X_g);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_X_g_old () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->X_go);
   }
   return r;
 }
@@ -404,7 +439,7 @@ Vector< MultiFab* > mfix::get_xslopes_X_g () noexcept
   Vector<MultiFab*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->xslopes_species_g);
+    r.push_back(m_leveldata[lev]->xslopes_X);
   }
   return r;
 }
@@ -414,7 +449,7 @@ Vector< MultiFab* > mfix::get_yslopes_X_g () noexcept
   Vector<MultiFab*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->yslopes_species_g);
+    r.push_back(m_leveldata[lev]->yslopes_X);
   }
   return r;
 }
@@ -424,7 +459,7 @@ Vector< MultiFab* > mfix::get_zslopes_X_g () noexcept
   Vector<MultiFab*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->zslopes_species_g);
+    r.push_back(m_leveldata[lev]->zslopes_X);
   }
   return r;
 }

@@ -31,8 +31,10 @@ mfix::mfix_set_species_bcs (Real time,
      X_g_in[lev]->FillBoundary(geom[lev].periodicity());
      D_g_in[lev]->FillBoundary(geom[lev].periodicity());
 
-     EB_set_covered(*X_g_in[lev], 0, X_g_in[lev]->nComp(), X_g_in[lev]->nGrow(), covered_val);
-     EB_set_covered(*D_g_in[lev], 0, D_g_in[lev]->nComp(), D_g_in[lev]->nGrow(), covered_val);
+     EB_set_covered(*X_g_in[lev], 0, X_g_in[lev]->nComp(), X_g_in[lev]->nGrow(),
+         covered_val);
+     EB_set_covered(*D_g_in[lev], 0, D_g_in[lev]->nComp(), D_g_in[lev]->nGrow(),
+         covered_val);
   }
 }
 
@@ -64,40 +66,6 @@ mfix::set_mass_fractions_g_bcs (Real time,
   const int nrgt = std::max(0, X_g_hi[0]-dom_hi[0]);
   const int ntop = std::max(0, X_g_hi[1]-dom_hi[1]);
   const int nup  = std::max(0, X_g_hi[2]-dom_hi[2]);
-
-  // Create InVects for following 2D Boxes
-  IntVect bx_yz_lo_lo_2D(X_g_lo), bx_yz_lo_hi_2D(X_g_hi);
-  IntVect bx_yz_hi_lo_2D(X_g_lo), bx_yz_hi_hi_2D(X_g_hi);
-  IntVect bx_xz_lo_lo_2D(X_g_lo), bx_xz_lo_hi_2D(X_g_hi);
-  IntVect bx_xz_hi_lo_2D(X_g_lo), bx_xz_hi_hi_2D(X_g_hi);
-  IntVect bx_xy_lo_lo_2D(X_g_lo), bx_xy_lo_hi_2D(X_g_hi);
-  IntVect bx_xy_hi_lo_2D(X_g_lo), bx_xy_hi_hi_2D(X_g_hi);
-
-  // Fix lo and hi limits
-  bx_yz_lo_lo_2D[0] = dom_lo[0]-1;
-  bx_yz_lo_hi_2D[0] = dom_lo[0]-1;
-  bx_yz_hi_lo_2D[0] = dom_hi[0]+1;
-  bx_yz_hi_hi_2D[0] = dom_hi[0]+1;
-
-  bx_xz_lo_lo_2D[1] = dom_lo[1]-1;
-  bx_xz_lo_hi_2D[1] = dom_lo[1]-1;
-  bx_xz_hi_lo_2D[1] = dom_hi[1]+1;
-  bx_xz_hi_hi_2D[1] = dom_hi[1]+1;
-
-  bx_xy_lo_lo_2D[2] = dom_lo[2]-1;
-  bx_xy_lo_hi_2D[2] = dom_lo[2]-1;
-  bx_xy_hi_lo_2D[2] = dom_hi[2]+1;
-  bx_xy_hi_hi_2D[2] = dom_hi[2]+1;
-
-  // Create 2D boxes for GPU loops
-  const Box bx_yz_lo_2D(bx_yz_lo_lo_2D, bx_yz_lo_hi_2D);
-  const Box bx_yz_hi_2D(bx_yz_hi_lo_2D, bx_yz_hi_hi_2D);
-
-  const Box bx_xz_lo_2D(bx_xz_lo_lo_2D, bx_xz_lo_hi_2D);
-  const Box bx_xz_hi_2D(bx_xz_hi_lo_2D, bx_xz_hi_hi_2D);
-
-  const Box bx_xy_lo_2D(bx_xy_lo_lo_2D, bx_xy_lo_hi_2D);
-  const Box bx_xy_hi_2D(bx_xy_hi_lo_2D, bx_xy_hi_hi_2D);
 
   // Create InVects for following 3D Boxes
   IntVect bx_yz_lo_hi_3D(X_g_hi), bx_xz_lo_hi_3D(X_g_hi), bx_xy_lo_hi_3D(X_g_hi);
@@ -151,17 +119,6 @@ mfix::set_mass_fractions_g_bcs (Real time,
         X_g(i,j,k,n) = p_bc_X_g[n][bcv];
       }
     });
-
-    // BCs extrapolation
-    amrex::ParallelFor(bx_yz_lo_2D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-    {
-      const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
-
-      if((bct == minf) or (bct == pinf)) {
-        X_g(i,j,k,n) = 2*X_g(i,j,k,n) - X_g(i+1,j,k,n);
-      }
-    });
   }
 
   if (nrgt > 0)
@@ -177,17 +134,6 @@ mfix::set_mass_fractions_g_bcs (Real time,
       }
       else if ((bct == minf) or (bct == pinf)) {
         X_g(i,j,k,n) = p_bc_X_g[n][bcv];
-      }
-    });
-
-    // Extrapolate BCs
-    amrex::ParallelFor(bx_yz_hi_2D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-    {
-      const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
-
-      if((bct == minf) or (bct == pinf)) {
-        X_g(i,j,k,n) = 2*X_g(i,j,k,n) - X_g(i-1,j,k,n);
       }
     });
   }
@@ -206,15 +152,6 @@ mfix::set_mass_fractions_g_bcs (Real time,
       else if ((bct == minf) or (bct == pinf))
         X_g(i,j,k,n) = p_bc_X_g[n][bcv];
     });
-
-    amrex::ParallelFor(bx_xz_lo_2D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-    {
-      const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
-
-      if ((bct == minf) or (bct == pinf))
-        X_g(i,j,k,n) = 2*X_g(i,j,k,n) - X_g(i,j+1,k,n);
-    });
   }
 
   if (ntop > 0)
@@ -229,15 +166,6 @@ mfix::set_mass_fractions_g_bcs (Real time,
         X_g(i,j,k,n) = X_g(i,dom_hi[1],k,n);
       else if ((bct == minf) or (bct == pinf))
         X_g(i,j,k,n) = p_bc_X_g[n][bcv];
-    });
-
-    amrex::ParallelFor(bx_xz_hi_2D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-    {
-      const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
-
-      if ((bct == minf) or (bct == pinf))
-        X_g(i,j,k,n) = 2*X_g(i,j,k,n) - X_g(i,j-1,k,n);
     });
   }
 
@@ -254,15 +182,6 @@ mfix::set_mass_fractions_g_bcs (Real time,
       else if ((bct == minf) or (bct == pinf))
         X_g(i,j,k,n) = p_bc_X_g[n][bcv];
     });
-
-    amrex::ParallelFor(bx_xy_lo_2D,nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-    {
-      const int bct = bct_klo(i,j,dom_lo[2]-1,0);
-
-      if ((bct == minf) or (bct == pinf))
-        X_g(i,j,k,n) = 2*X_g(i,j,k,n) - X_g(i,j,k+1,n);
-    });
   }
 
   if (nup > 0)
@@ -278,19 +197,10 @@ mfix::set_mass_fractions_g_bcs (Real time,
       else if ((bct == minf) or (bct == pinf))
         X_g(i,j,k,n) = p_bc_X_g[n][bcv];
     });
-
-    amrex::ParallelFor(bx_xy_hi_2D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-    {
-      const int bct = bct_khi(i,j,dom_hi[2]+1,0);
-
-      if((bct == minf) or (bct == pinf))
-        X_g(i,j,k,n) = 2*X_g(i,j,k,n) - X_g(i,j,k-1,n);
-    });
-
   }
 
 }
+
 
 void 
 mfix::set_species_diffusivities_g_bcs (Real time,
@@ -347,9 +257,9 @@ mfix::set_species_diffusivities_g_bcs (Real time,
     {
       const int bct = bct_ilo(ilo-1,j,k,0);
 
-      if ((bct == pinf) or (bct == pout))
+      if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(ilo,j,k,n);
-      else if (bct == minf)
+      else if (bct == minf or bct == pinf)
          scal_arr(i,j,k,n) = p_D_g0[n];
     });
   }
@@ -367,9 +277,9 @@ mfix::set_species_diffusivities_g_bcs (Real time,
     {
       const int bct = bct_ihi(ihi+1,j,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(ihi,j,k,n);
-      else if(bct == minf)
+      else if (bct == minf or bct == pinf)
          scal_arr(i,j,k,n) = p_D_g0[n];
     });
   }
@@ -387,9 +297,9 @@ mfix::set_species_diffusivities_g_bcs (Real time,
     {
       const int bct = bct_jlo(i,jlo-1,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,jlo,k,n);
-      else if(bct == minf)
+      else if (bct == minf or bct == pinf)
          scal_arr(i,j,k,n) = p_D_g0[n];
     });
   }
@@ -407,9 +317,9 @@ mfix::set_species_diffusivities_g_bcs (Real time,
     {
       const int bct = bct_jhi(i,jhi+1,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,dom_hi[1],k,n);
-      else if(bct == minf)
+      else if (bct == minf or bct == pinf)
          scal_arr(i,j,k,n) = p_D_g0[n];
     });
   }
@@ -427,9 +337,9 @@ mfix::set_species_diffusivities_g_bcs (Real time,
     {
       const int bct = bct_klo(i,j,klo-1,0);
 
-      if((bct == pinf) or (bct == pout))
+      if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,j,klo,n);
-      else if(bct == minf)
+      else if (bct == minf or bct == pinf)
          scal_arr(i,j,k,n) = p_D_g0[n];
     });
   }
@@ -447,9 +357,9 @@ mfix::set_species_diffusivities_g_bcs (Real time,
     {
       const int bct = bct_khi(i,j,khi+1,0);
 
-      if ((bct == pinf) or (bct == pout))
+      if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,j,dom_hi[2],n);
-      else if (bct == minf)
+      else if (bct == minf or bct == pinf)
          scal_arr(i,j,k,n) = p_D_g0[n];
     });
   }

@@ -5,22 +5,27 @@
 #include <MFIX_MFHelpers.H>
 
 void
-mfix::set_bc0 (const Box& sbx,
-               MFIter* mfi,
-               const int lev,
-               const Box& domain)
+mfix::set_species_bc0 (const Box& sbx,
+                       MFIter* mfi,
+                       const int lev,
+                       const Box& domain)
 {
-  const Real ro_g0  = FLUID::ro_g0;
-  const Real mu_g0  = FLUID::mu_g0;
-  const Real trac_0 = FLUID::trac_0;
+  const int nspecies_g = FLUID::nspecies_g;
 
-  amrex::Real* p_bc_ep_g = m_bc_ep_g.data();
+  Gpu::ManagedVector< Real* > m_bc_X_g_managed(nspecies_g);
+  Gpu::ManagedVector< Real > D_g0_managed(nspecies_g, 0.);
+  
+  for (int n(0); n < nspecies_g; n++) {
+    m_bc_X_g_managed[n] = m_bc_X_g[n].data();
+    D_g0_managed[n] = FLUID::D_g0[n];
+  }
 
-  Array4<Real> const& a_ep_g = m_leveldata[lev]->ep_g->array(*mfi);
-  Array4<Real> const& a_ro_g = m_leveldata[lev]->ro_g->array(*mfi);
-  Array4<Real> const& a_trac = m_leveldata[lev]->trac->array(*mfi);
-  Array4<Real> const& a_mu_g = m_leveldata[lev]->mu_g->array(*mfi);
- 
+  Real** p_bc_X_g = m_bc_X_g_managed.data();
+  Real* p_D_g0 = D_g0_managed.data();
+
+  Array4<Real> const& a_X_g = m_leveldata[lev]->X_g->array(*mfi);
+  Array4<Real> const& a_D_g = m_leveldata[lev]->D_g->array(*mfi);
+
   const IntVect sbx_lo(sbx.loVect());
   const IntVect sbx_hi(sbx.hiVect());
 
@@ -62,10 +67,10 @@ mfix::set_bc0 (const Box& sbx,
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
-        a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-        a_ro_g(i,j,k) = ro_g0;
-        a_trac(i,j,k) = trac_0;
-        a_mu_g(i,j,k) = mu_g0;
+        for (int n(0); n < nspecies_g; n++) {
+          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
+          a_D_g(i,j,k,n) = p_D_g0[n];
+        }
       }
     });
   }
@@ -86,10 +91,10 @@ mfix::set_bc0 (const Box& sbx,
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
-        a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-        a_ro_g(i,j,k) = ro_g0;
-        a_trac(i,j,k) = trac_0;
-        a_mu_g(i,j,k) = mu_g0;
+        for (int n(0); n < nspecies_g; n++) {
+          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
+          a_D_g(i,j,k,n) = p_D_g0[n];
+        }
       }
     });
   }
@@ -110,10 +115,10 @@ mfix::set_bc0 (const Box& sbx,
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
-        a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-        a_ro_g(i,j,k) = ro_g0;
-        a_trac(i,j,k) = trac_0;
-        a_mu_g(i,j,k) = mu_g0;
+        for (int n(0); n < nspecies_g; n++) {
+          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
+          a_D_g(i,j,k,n) = p_D_g0[n];
+        }
       }
     });
   }
@@ -134,10 +139,10 @@ mfix::set_bc0 (const Box& sbx,
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
-        a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-        a_ro_g(i,j,k) = ro_g0;
-        a_trac(i,j,k) = trac_0;
-        a_mu_g(i,j,k) = mu_g0;
+        for (int n(0); n < nspecies_g; n++) {
+          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
+          a_D_g(i,j,k,n) = p_D_g0[n];
+        }
       }
     });
   }
@@ -158,10 +163,10 @@ mfix::set_bc0 (const Box& sbx,
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
-        a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-        a_ro_g(i,j,k) = ro_g0;
-        a_trac(i,j,k) = trac_0;
-        a_mu_g(i,j,k) = mu_g0;
+        for (int n(0); n < nspecies_g; n++) {
+          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
+          a_D_g(i,j,k,n) = p_D_g0[n];
+        }
       }
     });
   }
@@ -182,10 +187,10 @@ mfix::set_bc0 (const Box& sbx,
 
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
-        a_ep_g(i,j,k) = p_bc_ep_g[bcv];
-        a_ro_g(i,j,k) = ro_g0;
-        a_trac(i,j,k) = trac_0;
-        a_mu_g(i,j,k) = mu_g0;
+        for (int n(0); n < nspecies_g; n++) {
+          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
+          a_D_g(i,j,k,n) = p_D_g0[n];
+        }
       }
     });
   }

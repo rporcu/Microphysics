@@ -235,8 +235,8 @@ class mfix : public AmrCore
     void mfix_set_temperature_bcs (Real time,
                                    Vector< MultiFab* > const& T_g);
 
-    void mfix_set_eb_temperature_bcs (Vector< std::unique_ptr< MultiFab > > const& eb_T_g_in,
-                                      Vector< std::unique_ptr< MultiFab > > const& eb_k_g_in);
+    void mfix_set_eb_temperature_bcs (Vector< MultiFab* > const& eb_T_g_in,
+                                      Vector< MultiFab* > const& eb_k_g_in);
 
     void mfix_set_density_bcs (Real time,
                                Vector< MultiFab* > const& ro_g);
@@ -340,12 +340,23 @@ class mfix : public AmrCore
                               Vector< MultiFab* > const& xslopes_in,
                               Vector< MultiFab* > const& yslopes_in,
                               Vector< MultiFab* > const& zslopes_in,
-                              int slopes_comp);
+                              int slopes_comp,
+                              std::map<std::string, Gpu::ManagedVector<int>>& bc_types);
 
     void set_bc0 (const Box& sbx,
                   MFIter* mfi,
                   const int lev,
                   const Box& domain);
+
+    void set_temperature_bc0 (const Box& sbx,
+                              MFIter* mfi,
+                              const int lev,
+                              const Box& domain);
+
+    void set_species_bc0 (const Box& sbx,
+                          MFIter* mfi,
+                          const int lev,
+                          const Box& domain);
 
     void set_p0 (const Box& bx,
                  MFIter* mfi,
@@ -550,6 +561,12 @@ class mfix : public AmrCore
     mutable Gpu::ManagedVector<Real> m_bc_ep_g;
     mutable Gpu::ManagedVector<Real> m_bc_p_g;
 
+    std::map< std::string, Gpu::ManagedVector<int> > m_vel_g_bc_types;
+    std::map< std::string, Gpu::ManagedVector<int> > m_ro_g_bc_types;
+    std::map< std::string, Gpu::ManagedVector<int> > m_T_g_bc_types;
+    std::map< std::string, Gpu::ManagedVector<int> > m_trac_g_bc_types;
+    std::map< std::string, Gpu::ManagedVector<int> > m_X_g_bc_types;
+
     //! The particles see an inflow face as a solid wall; thus instead of
     //! creating a separate EBfactory for particles, we simply modify the
     //! level-set near inflow to see it as a wall
@@ -704,21 +721,23 @@ class mfix : public AmrCore
     Vector< std::unique_ptr<LevelData> > m_leveldata;
 
     Vector< MultiFab* > get_ep_g () noexcept;
-    Vector< MultiFab* > get_h_g () noexcept;
-    Vector< MultiFab* > get_h_g_old () noexcept;
-    Vector< MultiFab* > get_T_g () noexcept;
-    Vector< MultiFab* > get_T_g_old () noexcept;
     Vector< MultiFab* > get_ro_g () noexcept;
     Vector< MultiFab* > get_ro_g_old () noexcept;
-    Vector< MultiFab* > get_X_g () noexcept;
-    Vector< MultiFab* > get_X_g_old () noexcept;
     Vector< MultiFab* > get_trac () noexcept;
     Vector< MultiFab* > get_trac_old () noexcept;
     Vector< MultiFab* > get_vel_g () noexcept;
     Vector< MultiFab* > get_vel_g_old () noexcept;
+    Vector< MultiFab* > get_mu_g () noexcept;
+    Vector< MultiFab* > get_T_g () noexcept;
+    Vector< MultiFab* > get_T_g_old () noexcept;
     Vector< MultiFab* > get_cp_g () noexcept;
     Vector< MultiFab* > get_k_g () noexcept;
-    Vector< MultiFab* > get_mu_g () noexcept;
+    Vector< MultiFab* > get_h_g () noexcept;
+    Vector< MultiFab* > get_h_g_old () noexcept;
+    Vector< MultiFab* > get_T_g_on_eb () noexcept;
+    Vector< MultiFab* > get_k_g_on_eb () noexcept;
+    Vector< MultiFab* > get_X_g () noexcept;
+    Vector< MultiFab* > get_X_g_old () noexcept;
     Vector< MultiFab* > get_D_g () noexcept;
     Vector< MultiFab* > get_txfr () noexcept;
     Vector< MultiFab* > get_xslopes_u () noexcept;
@@ -930,6 +949,9 @@ class mfix : public AmrCore
 
     Vector< Vector< MultiFab** > > chkscalarVars;
     Vector< std::string > chkscaVarsName;
+
+    Vector< Vector< MultiFab** > > chktemperatureVars;
+    Vector< std::string > chktemperatureVarsName;
 
     Vector< Vector< MultiFab** > > chkspeciesVars;
     Vector< std::string > chkspeciesVarsName;
