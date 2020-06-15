@@ -14,6 +14,9 @@
 namespace EB
 {
 
+  // Flag to specify if we have Dirichlet BCs on the EB
+  extern int fix_temperature;
+
   struct EB_t {
 
     // Temperature to set on EB walls

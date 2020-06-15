@@ -25,18 +25,30 @@ mfix::mfix_set_scalar_bcs (Real time,
 #endif
      for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi)
      {
-        set_thermal_conductivity_bcs(time, lev, (*k_g_in[lev])[mfi], domain);
-        set_specific_heat_bcs(time, lev, (*cp_g_in[lev])[mfi], domain);
         set_viscosity_bcs(time, lev, (*mu_g_in[lev])[mfi], domain);
+        
+        if (advect_enthalpy) {
+          set_specific_heat_bcs(time, lev, (*cp_g_in[lev])[mfi], domain);
+          set_thermal_conductivity_bcs(time, lev, (*k_g_in[lev])[mfi], domain);
+        }
      }
 
-     k_g_in[lev] -> FillBoundary (geom[lev].periodicity());
-     cp_g_in[lev] -> FillBoundary (geom[lev].periodicity());
      mu_g_in[lev] -> FillBoundary (geom[lev].periodicity());
 
-     EB_set_covered(*k_g_in[lev], 0, k_g_in[lev]->nComp(), k_g_in[lev]->nGrow(), covered_val);
-     EB_set_covered(*cp_g_in[lev], 0, cp_g_in[lev]->nComp(), cp_g_in[lev]->nGrow(), covered_val);
-     EB_set_covered(*mu_g_in[lev], 0, mu_g_in[lev]->nComp(), mu_g_in[lev]->nGrow(), covered_val);
+     if (advect_enthalpy) {
+       cp_g_in[lev] -> FillBoundary (geom[lev].periodicity());
+       k_g_in[lev] -> FillBoundary (geom[lev].periodicity());
+     }
+
+     EB_set_covered(*mu_g_in[lev], 0, mu_g_in[lev]->nComp(),
+         mu_g_in[lev]->nGrow(), covered_val);
+
+     if (advect_enthalpy) {
+       EB_set_covered(*cp_g_in[lev], 0, cp_g_in[lev]->nComp(),
+           cp_g_in[lev]->nGrow(), covered_val);
+       EB_set_covered(*k_g_in[lev], 0, k_g_in[lev]->nComp(),
+           k_g_in[lev]->nGrow(), covered_val);
+     }
 
   }
 }

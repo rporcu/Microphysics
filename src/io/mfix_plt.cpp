@@ -74,17 +74,23 @@ mfix::InitIOPltData ()
       if( plt_ep_g    == 1) pltVarCount += 1;
       if( plt_p_g     == 1) pltVarCount += 1;
       if( plt_ro_g    == 1) pltVarCount += 1;
-      if( plt_h_g     == 1) pltVarCount += 1;
-      if( plt_T_g     == 1) pltVarCount += 1;
       if( plt_trac    == 1) pltVarCount += 1;
-      if( plt_cp_g    == 1) pltVarCount += 1;
-      if( plt_k_g     == 1) pltVarCount += 1;
       if( plt_mu_g    == 1) pltVarCount += 1;
       if( plt_vort    == 1) pltVarCount += 1;
       if( plt_diveu   == 1) pltVarCount += 1;
       if( plt_volfrac == 1) pltVarCount += 1;
-      if( plt_X_g     == 1) pltVarCount += FLUID::nspecies_g;
-      if( plt_D_g     == 1) pltVarCount += FLUID::nspecies_g;
+
+      if (advect_enthalpy) {
+        if( plt_T_g  == 1) pltVarCount += 1;
+        if( plt_cp_g == 1) pltVarCount += 1;
+        if( plt_k_g  == 1) pltVarCount += 1;
+        if( plt_h_g  == 1) pltVarCount += 1;
+      }
+
+      if (FLUID::solve_species) {
+        if( plt_X_g == 1) pltVarCount += FLUID::nspecies_g;
+        if( plt_D_g == 1) pltVarCount += FLUID::nspecies_g;
+      }
     }
 
   if(DEM::solve or PIC::solve)
@@ -230,11 +236,11 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         pltFldNames.push_back("ro_g");
 
       // Fluid enthalpy
-      if( plt_h_g    == 1)
+      if( advect_enthalpy and plt_h_g    == 1)
         pltFldNames.push_back("h_g");
 
       // Temperature in fluid
-      if( plt_T_g    == 1)
+      if( advect_enthalpy and plt_T_g    == 1)
         pltFldNames.push_back("T_g");
 
       // Tracer in fluid
@@ -242,11 +248,11 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         pltFldNames.push_back("trac");
 
       // Specific heat
-      if( plt_cp_g    == 1)
+      if( advect_enthalpy and plt_cp_g    == 1)
         pltFldNames.push_back("cp_g");
 
       // Thermal conductivity
-      if( plt_k_g    == 1)
+      if( advect_enthalpy and plt_k_g    == 1)
         pltFldNames.push_back("k_g");
 
       // Fluid viscosity
@@ -266,12 +272,12 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         pltFldNames.push_back("volfrac");
 
       // Fluid species mass fractions
-      if(FLUID::solve_species and plt_X_g == 1)
+      if( FLUID::solve_species and plt_X_g == 1)
         for(std::string specie: FLUID::species_g)
           pltFldNames.push_back("X_"+specie+"_g");
 
       // Fluid species mass diffusivities
-      if(FLUID::solve_species and plt_D_g == 1)
+      if( FLUID::solve_species and plt_D_g == 1)
         for(std::string specie: FLUID::species_g)
           pltFldNames.push_back("D_"+specie+"_g");
 
@@ -322,13 +328,13 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Fluid enthalpy
-        if( plt_h_g    == 1) {
+        if( advect_enthalpy and plt_h_g    == 1) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->h_g), 0, lc, 1, 0);
           lc += 1;
         }
 
         // Fluid temperature
-        if( plt_T_g    == 1) {
+        if( advect_enthalpy and plt_T_g    == 1) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->T_g), 0, lc, 1, 0);
           lc += 1;
         }
@@ -340,13 +346,13 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Specific heat
-        if( plt_cp_g    == 1) {
+        if( advect_enthalpy and plt_cp_g    == 1) {
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->cp_g, 0, lc, 1, 0);
           lc += 1;
         }
 
         // Specific heat
-        if( plt_k_g    == 1) {
+        if( advect_enthalpy and plt_k_g    == 1) {
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->k_g, 0, lc, 1, 0);
           lc += 1;
         }
@@ -380,7 +386,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Fluid species mass fractions
-        if(FLUID::solve_species and plt_X_g == 1) {
+        if( FLUID::solve_species and plt_X_g == 1) {
           for(int n(0); n < FLUID::nspecies_g; n++) {
             MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_g, n, lc+n, 1, 0);
           }
@@ -388,7 +394,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Species mass fraction
-        if(FLUID::solve_species and plt_D_g == 1) {
+        if( FLUID::solve_species and plt_D_g == 1) {
           for(int n(0); n < FLUID::nspecies_g; n++) {
             MultiFab::Copy(*mf[lev], *m_leveldata[lev]->D_g, n, lc+n, 1, 0);
           }

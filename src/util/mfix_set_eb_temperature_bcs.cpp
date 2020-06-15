@@ -1,7 +1,9 @@
 #include <mfix.H>
+
 #include <MFIX_calc_cell.H>
 #include <MFIX_BC_Parms.H>
 #include <MFIX_FLUID_Parms.H>
+#include <MFIX_BC_List.H>
 
 using namespace amrex;
 
@@ -9,10 +11,10 @@ using namespace amrex;
 // Set the BCs for temperature only
 //
 void
-mfix::mfix_set_eb_temperature_bcs (Vector< std::unique_ptr< MultiFab > > const& eb_T_g_in,
-                                   Vector< std::unique_ptr< MultiFab > > const& eb_k_g_in)
+mfix::mfix_set_eb_temperature_bcs (Vector< MultiFab* > const& eb_T_g_in,
+                                   Vector< MultiFab* > const& eb_k_g_in)
 {
-  BL_PROFILE("mfix::mfix_set_temperature_bcs()");
+  BL_PROFILE("mfix::mfix_set_eb_temperature_bcs()");
 
   Vector< MultiFab* > k_g = get_k_g();
 
@@ -26,7 +28,9 @@ mfix::mfix_set_eb_temperature_bcs (Vector< std::unique_ptr< MultiFab > > const& 
      eb_T_g_in[lev]->setVal(0.);
      eb_k_g_in[lev]->setVal(0.);
 
-     const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(eb_T_g_in[lev]->Factory());
+     const auto& factory =
+       dynamic_cast<EBFArrayBoxFactory const&>(eb_T_g_in[lev]->Factory());
+
      const auto& flags = factory.getMultiEBCellFlagFab();
 
      Real dx = geom[lev].CellSize(0);
@@ -78,8 +82,8 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
   Array4<Real> const& eb_T_g = eb_T_g_fab.array();
   Array4<Real> const& eb_k_g = eb_k_g_fab.array();
 
-//  // Problem variable
-//  Array4<const Real> const& k_g = k_g_fab.array();
+  //// Problem variable
+  //Array4<const Real> const& k_g = k_g_fab.array();
 
   // TODO this has to be replaced by the above k_g
   const Real k_g = FLUID::k_g0;
@@ -121,142 +125,56 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
       const int kend   = amrex::min(shi[2], k_t);
 
       {
+        const int first = (dom_lo[0] == i_w) ? slo[0] : i_w;
+        const int last  = (dom_hi[0] == i_e) ? shi[0] : i_e;
+
+        const Box bx(IntVect(first, jstart, kstart),
+                     IntVect(last,  jend,   kend));
+
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
-          const Box box1(low1, hi1);
-
-          ParallelFor(box1,
-            [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-          {
-            if (flags(i,j,k).isSingleValued()) {
-              eb_T_g(i,j,k) = eb_temperature;
-//              eb_k_g(i,j,k) = k_g(i,j,k);
-              eb_k_g(i,j,k) = k_g;
-            }
-          });
-
-          if(slo[0] < domlo[0] and domlo[0] == istart)
-          {
-            const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
-            const Box box2(low2, hi2);
-            ParallelFor(box2,
-              [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            {
-              if (flags(i,j,k).isSingleValued()) {
-                eb_T_g(i,j,k) = eb_temperature;
-//                eb_k_g(i,j,k) = k_g(i,j,k);
-                eb_k_g(i,j,k) = k_g;
-              }
-            });
+          if (flags(i,j,k).isSingleValued()) {
+            eb_T_g(i,j,k) = eb_temperature;
+            //eb_k_g(i,j,k) = k_g(i,j,k);
+            eb_k_g(i,j,k) = k_g;
           }
-
-          if(shi[0] > domhi[0] and domhi[0] == iend)
-          {
-            const IntVect low3(iend+1, jstart, kstart), hi3(shi[0], jend, kend);
-            const Box box3(low3, hi3);
-            ParallelFor(box3,
-              [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            {
-              if (flags(i,j,k).isSingleValued()) {
-                eb_T_g(i,j,k) = eb_temperature;
-//                eb_k_g(i,j,k) = k_g(i,j,k);
-                eb_k_g(i,j,k) = k_g;
-              }
-            });
-          }
-        }
-
-        {
-          const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
-          const Box box1(low1, hi1);
-
-          ParallelFor(box1,
-            [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-          {
-            if (flags(i,j,k).isSingleValued()) {
-              eb_T_g(i,j,k) = eb_temperature;
-//              eb_k_g(i,j,k) = k_g(i,j,k);
-              eb_k_g(i,j,k) = k_g;
-            }
-          });
-
-          if (slo[1] < domlo[1] and domlo[1] == jstart)
-          {
-            const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
-            const Box box2(low2, hi2);
-            ParallelFor(box2,
-              [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            {
-              if (flags(i,j,k).isSingleValued()) {
-                eb_T_g(i,j,k) = eb_temperature;
-//                eb_k_g(i,j,k) = k_g(i,j,k);
-                eb_k_g(i,j,k) = k_g;
-              }
-            });
-          }
-
-          if (shi[1] > domhi[1] and domhi[1] == jend)
-          {
-            const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
-            const Box box3(low3, hi3);
-            ParallelFor(box3,
-              [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            {
-              if (flags(i,j,k).isSingleValued()) {
-                eb_T_g(i,j,k) = eb_temperature;
-//                eb_k_g(i,j,k) = k_g(i,j,k);
-                eb_k_g(i,j,k) = k_g;
-              }
-            });
-          }
-        }
-
-        {
-          const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
-          const Box box1(low1, hi1);
-          ParallelFor(box1,
-            [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-          {
-            if (flags(i,j,k).isSingleValued()) {
-              eb_T_g(i,j,k) = eb_temperature;
-//              eb_k_g(i,j,k) = k_g(i,j,k);
-              eb_k_g(i,j,k) = k_g;
-            }
-          });
-
-          if (slo[2] < domlo[2] and domlo[2] == kstart)
-          {
-            const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
-            const Box box2(low2, hi2);
-
-            ParallelFor(box2,
-              [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            {
-              if (flags(i,j,k).isSingleValued()) {
-                eb_T_g(i,j,k) = eb_temperature;
-//                eb_k_g(i,j,k) = k_g(i,j,k);
-                eb_k_g(i,j,k) = k_g;
-              }
-            });
-          }
-
-          if (shi[2] > domhi[2] and domhi[2] == kend)
-          {
-            const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
-            const Box box3(low3, hi3);
-
-            ParallelFor(box3,
-              [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            {
-              if (flags(i,j,k).isSingleValued()) {
-                eb_T_g(i,j,k) = eb_temperature;
-//                eb_k_g(i,j,k) = k_g(i,j,k);
-                eb_k_g(i,j,k) = k_g;
-              }
-            });
-          }
-        }
+        });
       }
+
+      {
+        const int first = (dom_lo[1] == j_s) ? slo[1] : j_s;
+        const int last  = (dom_hi[1] == j_n) ? shi[1] : j_n;
+
+        const Box bx(IntVect(istart, first, kstart),
+                     IntVect(iend,   last,  kend));
+
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+          if (flags(i,j,k).isSingleValued()) {
+            eb_T_g(i,j,k) = eb_temperature;
+            //eb_k_g(i,j,k) = k_g(i,j,k);
+            eb_k_g(i,j,k) = k_g;
+          }
+        });
+      }
+
+      {
+        const int first = (dom_lo[2] == k_b) ? slo[2] : k_b;
+        const int last  = (dom_hi[2] == k_t) ? shi[2] : k_t;
+
+        const Box bx(IntVect(istart, jstart, first),
+                     IntVect(iend,   jend,   last));
+
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+          if (flags(i,j,k).isSingleValued()) {
+            eb_T_g(i,j,k) = eb_temperature;
+            //eb_k_g(i,j,k) = k_g(i,j,k);
+            eb_k_g(i,j,k) = k_g;
+          }
+        });
+      }
+
     }
   }
 }

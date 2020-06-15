@@ -254,7 +254,9 @@ mfix::mfix_calc_txfr_particle (Real time)
     // We can remove these lines once we're confident in the algorithm
     EB_set_covered(*m_leveldata[0]->vel_g, 0, 3, 1, covered_val);
     EB_set_covered( gp_tmp  , 0, 3, 1, covered_val);
-    EB_set_covered(*m_leveldata[0]->T_g, 0, 1, 1, covered_val);
+
+    if (advect_enthalpy)
+      EB_set_covered(*m_leveldata[0]->T_g, 0, 1, 1, covered_val);
 
     const int interp_ng = 1;    // Only one layer needed for interpolation
     const int interp_comp = 7;  // Four components (3 vel_g + 3 gp + temperature)

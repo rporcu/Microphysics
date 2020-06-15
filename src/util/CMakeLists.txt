@@ -4,6 +4,7 @@ target_include_directories(mfixcore
 
 target_sources( mfixcore
    PRIVATE
+   mfix_algorithm.H
    MFIX_FilCC.H
    MFIX_FilCC.cpp
    mfix_util.cpp

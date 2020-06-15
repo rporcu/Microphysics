@@ -38,40 +38,6 @@ mfix::set_specific_heat_bcs (Real time,
   const int ntop = amrex::max(0, scal_hi[1]-dom_hi[1]);
   const int nup  = amrex::max(0, scal_hi[2]-dom_hi[2]);
 
-  // Create InVects for following 2D Boxes
-  IntVect bx_yz_lo_lo_2D(scal_lo), bx_yz_lo_hi_2D(scal_hi);
-  IntVect bx_yz_hi_lo_2D(scal_lo), bx_yz_hi_hi_2D(scal_hi);
-  IntVect bx_xz_lo_lo_2D(scal_lo), bx_xz_lo_hi_2D(scal_hi);
-  IntVect bx_xz_hi_lo_2D(scal_lo), bx_xz_hi_hi_2D(scal_hi);
-  IntVect bx_xy_lo_lo_2D(scal_lo), bx_xy_lo_hi_2D(scal_hi);
-  IntVect bx_xy_hi_lo_2D(scal_lo), bx_xy_hi_hi_2D(scal_hi);
-
-  // Fix lo and hi limits
-  bx_yz_lo_lo_2D[0] = dom_lo[0]-1;
-  bx_yz_lo_hi_2D[0] = dom_lo[0]-1;
-  bx_yz_hi_lo_2D[0] = dom_hi[0]+1;
-  bx_yz_hi_hi_2D[0] = dom_hi[0]+1;
-
-  bx_xz_lo_lo_2D[1] = dom_lo[1]-1;
-  bx_xz_lo_hi_2D[1] = dom_lo[1]-1;
-  bx_xz_hi_lo_2D[1] = dom_hi[1]+1;
-  bx_xz_hi_hi_2D[1] = dom_hi[1]+1;
-
-  bx_xy_lo_lo_2D[2] = dom_lo[2]-1;
-  bx_xy_lo_hi_2D[2] = dom_lo[2]-1;
-  bx_xy_hi_lo_2D[2] = dom_hi[2]+1;
-  bx_xy_hi_hi_2D[2] = dom_hi[2]+1;
-
-  // Create 2D boxes for GPU loops
-  const Box bx_yz_lo_2D(bx_yz_lo_lo_2D, bx_yz_lo_hi_2D);
-  const Box bx_yz_hi_2D(bx_yz_hi_lo_2D, bx_yz_hi_hi_2D);
-
-  const Box bx_xz_lo_2D(bx_xz_lo_lo_2D, bx_xz_lo_hi_2D);
-  const Box bx_xz_hi_2D(bx_xz_hi_lo_2D, bx_xz_hi_hi_2D);
-
-  const Box bx_xy_lo_2D(bx_xy_lo_lo_2D, bx_xy_lo_hi_2D);
-  const Box bx_xy_hi_2D(bx_xy_hi_lo_2D, bx_xy_hi_hi_2D);
-
   // Create InVects for following 3D Boxes
   IntVect bx_yz_lo_hi_3D(scal_hi), bx_xz_lo_hi_3D(scal_hi), bx_xy_lo_hi_3D(scal_hi);
   IntVect bx_yz_hi_lo_3D(scal_lo), bx_xz_hi_lo_3D(scal_lo), bx_xy_hi_lo_3D(scal_lo);
@@ -109,18 +75,15 @@ mfix::set_specific_heat_bcs (Real time,
       [bct_ilo,dom_lo,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-
       // const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-      if ((bct == pinf) or (bct == pout))
+      if (bct == pout)
       {
         scal_arr(i,j,k) = scal_arr(dom_lo[0],j,k);
       }
-      else if (bct == minf)
+      else if (bct == minf or bct == pinf)
       {
-        // TODO: here and in the following, cp_g0 can be computed as function of
-        // p_bc_t_g[bcv]
         scal_arr(i,j,k) = bc0;
       }
     });
@@ -132,15 +95,14 @@ mfix::set_specific_heat_bcs (Real time,
       [bct_ihi,dom_hi,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-
       // const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if (bct == pout)
       {
         scal_arr(i,j,k) = scal_arr(dom_hi[0],j,k);
       }
-      else if(bct == minf)
+      else if (bct == minf or bct == pinf)
       {
         scal_arr(i,j,k) = bc0;
       }
@@ -153,15 +115,14 @@ mfix::set_specific_heat_bcs (Real time,
       [bct_jlo,dom_lo,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-
       // const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if (bct == pout)
       {
         scal_arr(i,j,k) = scal_arr(i,dom_lo[1],k);
       }
-      else if(bct == minf)
+      else if (bct == minf or bct == pinf)
       {
         scal_arr(i,j,k) = bc0;
       }
@@ -174,15 +135,14 @@ mfix::set_specific_heat_bcs (Real time,
       [bct_jhi,dom_hi,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-
       // const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if (bct == pout)
       {
         scal_arr(i,j,k) = scal_arr(i,dom_hi[1],k);
       }
-      else if(bct == minf)
+      else if (bct == minf or bct == pinf)
       {
         scal_arr(i,j,k) = bc0;
       }
@@ -195,15 +155,14 @@ mfix::set_specific_heat_bcs (Real time,
       [bct_klo,dom_lo,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-
       // const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-      if((bct == pinf) or (bct == pout))
+      if (bct == pout)
       {
         scal_arr(i,j,k) = scal_arr(i,j,dom_lo[2]);
       }
-      else if(bct == minf)
+      else if (bct == minf or bct == pinf)
       {
         scal_arr(i,j,k) = bc0;
       }
@@ -216,15 +175,14 @@ mfix::set_specific_heat_bcs (Real time,
       [bct_khi,dom_hi,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-
       // const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-      if ((bct == pinf) or (bct == pout))
+      if (bct == pout)
       {
         scal_arr(i,j,k) = scal_arr(i,j,dom_hi[2]);
       }
-      else if (bct == minf)
+      else if (bct == minf or bct == pinf)
       {
         scal_arr(i,j,k) = bc0;
       }

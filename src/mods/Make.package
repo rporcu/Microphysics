@@ -12,6 +12,7 @@ CEXE_sources += eos_mod.cpp
 CEXE_sources += MFIX_REGIONS_Parms.cpp
 CEXE_sources += MFIX_IC_Parms.cpp
 CEXE_sources += MFIX_BC_Parms.cpp
+CEXE_sources += MFIX_EB_Parms.cpp
 CEXE_sources += MFIX_FLUID_Parms.cpp
 CEXE_sources += MFIX_SPECIES_Parms.cpp
 CEXE_sources += MFIX_DEM_Parms.cpp

@@ -19,15 +19,6 @@ namespace FLUID
   // Flag to solve fluid equations
   extern int solve;
 
-  // Specified constant gas temperature
-  extern amrex::Real T_g0;
-
-  // Specified constant gas specific heat
-  extern amrex::Real cp_g0;
-
-  // Gas phase thermal conductivity coefficient
-  extern amrex::Real k_g0;
-
   // Specified constant gas density
   extern amrex::Real ro_g0;
 
@@ -39,6 +30,18 @@ namespace FLUID
 
   // Average molecular weight of gas
   extern amrex::Real mw_avg;
+
+  // Flag to solve enthalpy fluid equation
+  extern int solve_enthalpy;
+
+  // Specified constant gas temperature
+  extern amrex::Real T_g0;
+
+  // Specified constant gas specific heat
+  extern amrex::Real cp_g0;
+
+  // Gas phase thermal conductivity coefficient
+  extern amrex::Real k_g0;
 
   // Flag to solve species fluid equations
   extern int solve_species;

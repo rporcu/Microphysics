@@ -30,9 +30,9 @@ mfix::InitIOChkData ()
     // to plotfile/checkfile.
     vecVarsName = {"u_g", "v_g", "w_g", "gpx", "gpy", "gpz"};
 
-    chkscaVarsName = {"ep_g", "p_g", "ro_g", "h_g", "T_g", "mu_g", "level_sets"};
-    // TODO: adding cp_g and k_g makes BENCH01-replicate to fail
-//    chkscaVarsName = {"ep_g", "p_g", "ro_g", "h_g", "T_g", "mu_g", "cp_g", "k_g", "level_sets"};
+    chkscaVarsName = {"ep_g", "p_g", "ro_g", "mu_g", "level_sets"};
+    
+    chktemperatureVarsName = {"h_g", "T_g", "cp_g", "k_g"};
 
     chkspeciesVarsName = {"X_g", "D_g"};
 
@@ -44,10 +44,10 @@ void
 mfix::ResetIOChkData ()
 {
   chkscalarVars.clear();
-  chkscalarVars.resize(7, Vector< MultiFab**>(nlev));
+  chkscalarVars.resize(5, Vector< MultiFab**>(nlev));
 
-  // TODO: when cp_g and k_g will be in the replicate
-//  chkscalarVars.resize(9, Vector< MultiFab**>(nlev));
+  chktemperatureVars.clear();
+  chktemperatureVars.resize(4, Vector< MultiFab**>(nlev));
 
   chkspeciesVars.clear();
   chkspeciesVars.resize(2, Vector< MultiFab**>(nlev));
@@ -56,13 +56,15 @@ mfix::ResetIOChkData ()
     chkscalarVars[0][lev] = &(m_leveldata[lev]->ep_g);
     chkscalarVars[1][lev] = &(m_leveldata[lev]->p_g);
     chkscalarVars[2][lev] = &(m_leveldata[lev]->ro_g);
-    chkscalarVars[3][lev] = &(m_leveldata[lev]->h_g);
-    chkscalarVars[4][lev] = &(m_leveldata[lev]->T_g);
-    chkscalarVars[5][lev] = &(m_leveldata[lev]->mu_g);
-//    chkscalarVars[6][lev] = &(m_leveldata[lev]->cp_g);
-//    chkscalarVars[7][lev] = &(m_leveldata[lev]->k_g);
-//    chkscalarVars[8][lev] = &level_sets[lev];
-    chkscalarVars[6][lev] = &level_sets[lev];
+    chkscalarVars[3][lev] = &(m_leveldata[lev]->mu_g);
+    chkscalarVars[4][lev] = &level_sets[lev];
+    
+    if (advect_enthalpy) {
+      chktemperatureVars[0][lev] = &(m_leveldata[lev]->h_g);
+      chktemperatureVars[1][lev] = &(m_leveldata[lev]->T_g);
+      chktemperatureVars[2][lev] = &(m_leveldata[lev]->cp_g);
+      chktemperatureVars[3][lev] = &(m_leveldata[lev]->k_g);
+    }
 
     if (advect_fluid_species) {
       chkspeciesVars[0][lev] = &(m_leveldata[lev]->X_g);
@@ -172,6 +174,16 @@ mfix::WriteCheckPointFile (std::string& check_file,
                  VisMF::Write( **(chkscalarVars[i][lev]),
                    amrex::MultiFabFileFullPrefix(lev, checkpointname,
                          level_prefix, chkscaVarsName[i]));
+          }
+
+          if (advect_enthalpy) {
+             // Write temperature variables
+             for (int i = 0; i < chktemperatureVars.size(); i++) {
+               if ( DEM::solve or PIC::solve )
+                    VisMF::Write( **(chktemperatureVars[i][lev]),
+                      amrex::MultiFabFileFullPrefix(lev, checkpointname,
+                            level_prefix, chktemperatureVarsName[i]));
+             }
           }
 
           if (advect_fluid_species) {

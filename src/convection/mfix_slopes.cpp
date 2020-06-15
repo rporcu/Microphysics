@@ -1,4 +1,5 @@
 #include <mfix.H>
+#include <mfix_algorithm.H>
 
 namespace {
   struct get_index
@@ -20,6 +21,8 @@ namespace {
   };
 }
 
+using namespace std;
+
 //
 // Compute the slopes of Sborder (velocity, density, temperature or tracer)
 //
@@ -30,7 +33,8 @@ mfix::mfix_compute_slopes (int lev,
                            Vector< MultiFab* > const& xslopes_in,
                            Vector< MultiFab* > const& yslopes_in,
                            Vector< MultiFab* > const& zslopes_in,
-                           int slopes_comp)
+                           int slopes_comp,
+                           map<string, Gpu::ManagedVector<int>>& bc_types)
 {
     BL_PROFILE("mfix::mfix_compute_slopes");
 
@@ -53,6 +57,9 @@ mfix::mfix_compute_slopes (int lev,
     zslopes_in[lev]->setVal(1.2345e300, slopes_comp, ncomp, 0);
 
     const auto cellcent = &(ebfactory[lev] -> getCentroid());
+
+    const int* bct_Dirichlet = (bc_types["Dirichlet"]).data();
+    const int bct_size = (bc_types["Dirichlet"]).size();
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -538,8 +545,6 @@ mfix::mfix_compute_slopes (int lev,
 #endif
            } // end of cut cell region
 
-           const int minf = bc_list.get_minf();
-
            const auto& flag_fab = flags.array();
 
            const auto& ilo_ifab = bc_ilo[lev]->array();
@@ -555,14 +560,15 @@ mfix::mfix_compute_slopes (int lev,
                          IntVect(domain.smallEnd(0), bx.bigEnd(1), bx.bigEnd(2)));
 
              amrex::ParallelFor(bx_x_lo, ncomp,
-               [domain,flag_fab,ilo_ifab,state_fab,xs_fab,minf,slopes_comp]
-               AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+               [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                {
                  const Real state = state_fab(i,j,k,n);
                  const Real state_mns = state_fab(i-1,j,k,n);
                  const Real state_pls = state_fab(i+1,j,k,n);
 
-                 if (!flag_fab(i,j,k).isCovered() and ilo_ifab(i-1,j,k,0) == minf)
+                 if (!flag_fab(i,j,k).isCovered() and
+                   aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
+                     aux::is_equal<int>(ilo_ifab(i-1,j,k,0))))
                  {
                      Real du_xl = 2.0*(state - state_mns);
                      Real du_xr = 2.0*(state_pls - state);
@@ -580,14 +586,15 @@ mfix::mfix_compute_slopes (int lev,
                          IntVect(domain.bigEnd(0), bx.bigEnd(1), bx.bigEnd(2)));
 
              amrex::ParallelFor(bx_x_hi, ncomp,
-               [domain,flag_fab,ihi_ifab,state_fab,xs_fab,minf,slopes_comp]
-               AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+               [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                {
                  const Real state = state_fab(i,j,k,n);
                  const Real state_mns = state_fab(i-1,j,k,n);
                  const Real state_pls = state_fab(i+1,j,k,n);
 
-                 if (!flag_fab(i,j,k).isCovered() and ihi_ifab(i+1,j,k,0) == minf)
+                 if (!flag_fab(i,j,k).isCovered() and
+                   aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
+                     aux::is_equal<int>(ihi_ifab(i+1,j,k,0))))
                  {
                      Real du_xl = 2.0*(state - state_mns);
                      Real du_xr = 2.0*(state_pls - state);
@@ -606,14 +613,15 @@ mfix::mfix_compute_slopes (int lev,
                          IntVect(bx.bigEnd(0), domain.smallEnd(1), bx.bigEnd(2)));
 
              amrex::ParallelFor(bx_y_lo, ncomp,
-               [domain,flag_fab,jlo_ifab,state_fab,ys_fab,minf,slopes_comp]
-               AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+               [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                {
                  const Real state = state_fab(i,j,k,n);
                  const Real state_mns = state_fab(i,j-1,k,n);
                  const Real state_pls = state_fab(i,j+1,k,n);
 
-                 if (!flag_fab(i,j,k).isCovered() and jlo_ifab(i,j-1,k,0) == minf)
+                 if (!flag_fab(i,j,k).isCovered() and
+                   aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
+                     aux::is_equal<int>(jlo_ifab(i,j-1,k,0))))
                  {
                      Real du_yl = 2.0*(state - state_mns);
                      Real du_yr = 2.0*(state_pls - state);
@@ -632,14 +640,15 @@ mfix::mfix_compute_slopes (int lev,
                          IntVect(bx.bigEnd(0), domain.bigEnd(1), bx.bigEnd(2)));
 
              amrex::ParallelFor(bx_y_hi, ncomp,
-               [domain,flag_fab,jhi_ifab,state_fab,ys_fab,minf,slopes_comp]
-               AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+               [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                {
                  const Real state = state_fab(i,j,k,n);
                  const Real state_mns = state_fab(i,j-1,k,n);
                  const Real state_pls = state_fab(i,j+1,k,n);
 
-                 if (!flag_fab(i,j,k).isCovered() and jhi_ifab(i,j+1,k,0) == minf)
+                 if (!flag_fab(i,j,k).isCovered() and
+                   aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
+                     aux::is_equal<int>(jhi_ifab(i,j+1,k,0))))
                  {
                      Real du_yl = 2.0*(state - state_mns);
                      Real du_yr = 2.0*(state_pls - state);
@@ -658,14 +667,15 @@ mfix::mfix_compute_slopes (int lev,
                          IntVect(bx.bigEnd(0), bx.bigEnd(1), domain.smallEnd(2)));
 
              amrex::ParallelFor(bx_z_lo, ncomp,
-               [domain,flag_fab,klo_ifab,state_fab,zs_fab,minf,slopes_comp]
-               AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+               [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                {
                  const Real state = state_fab(i,j,k,n);
                  const Real state_mns = state_fab(i,j,k-1,n);
                  const Real state_pls = state_fab(i,j,k+1,n);
 
-                 if (!flag_fab(i,j,k).isCovered() and klo_ifab(i,j,k-1,0) == minf)
+                 if (!flag_fab(i,j,k).isCovered() and
+                   aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
+                     aux::is_equal<int>(klo_ifab(i,j,k-1,0))))
                  {
                      Real du_zl = 2.0*(state - state_mns);
                      Real du_zr = 2.0*(state_pls - state);
@@ -684,14 +694,15 @@ mfix::mfix_compute_slopes (int lev,
                          IntVect(bx.bigEnd(0), bx.bigEnd(1), domain.bigEnd(2)));
 
              amrex::ParallelFor(bx_z_hi, ncomp,
-               [domain,flag_fab,khi_ifab,state_fab,zs_fab,minf,slopes_comp]
-               AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+               [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                {
                  const Real state = state_fab(i,j,k,n);
                  const Real state_mns = state_fab(i,j,k-1,n);
                  const Real state_pls = state_fab(i,j,k+1,n);
 
-                 if (!flag_fab(i,j,k).isCovered() and khi_ifab(i,j,k+1,0) == minf)
+                 if (!flag_fab(i,j,k).isCovered() and
+                   aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
+                     aux::is_equal<int>(khi_ifab(i,j,k+1,0))))
                  {
                      Real du_zl = 2.0*(state - state_mns);
                      Real du_zr = 2.0*(state_pls - state);

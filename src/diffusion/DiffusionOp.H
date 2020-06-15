@@ -45,10 +45,6 @@ class DiffusionOp
     void setup (amrex::AmrCore* _amrcore, 
                 amrex::Vector< const amrex::EBFArrayBoxFactory* >* _ebfactory);
 
-    // Actually do the setup work here
-    void setup_eb_temperature (amrex::Vector< std::unique_ptr< amrex::MultiFab > >& eb_T_g_in,
-                               amrex::Vector< std::unique_ptr< amrex::MultiFab > >& eb_k_g_in);
-
     // Read input from ParmParse (solver settings)
     void readParameters ();
 
@@ -62,18 +58,20 @@ class DiffusionOp
                            amrex::Real dt);
 
     // Temperature diffusion
-    void diffuse_temperature (amrex::Vector< amrex::MultiFab* >  T_g,
+    void diffuse_temperature (amrex::Vector< amrex::MultiFab* > T_g,
                               const amrex::Vector< amrex::MultiFab* > ep_g,
                               const amrex::Vector< amrex::MultiFab* > ro_g,
                               const amrex::Vector< amrex::MultiFab* > h_g,
                               const amrex::Vector< amrex::MultiFab* > cp_g,
                               const amrex::Vector< amrex::MultiFab* > k_g,
+                              const amrex::Vector< amrex::MultiFab* > T_g_on_eb,
+                              const amrex::Vector< amrex::MultiFab* > k_g_on_eb,
                               amrex::Real dt);
 
     // Species mass fraction diffusion
-    void diffuse_species (amrex::Vector< amrex::MultiFab* >  X_g,
+    void diffuse_species (amrex::Vector< amrex::MultiFab* > X_g,
                           const amrex::Vector< amrex::MultiFab* > ep_ro_g, 
-                          const amrex::Vector< amrex::MultiFab* >  D_g,
+                          const amrex::Vector< amrex::MultiFab* > D_g,
                           amrex::Real dt);
 
     // Scalar diffusion
@@ -97,10 +95,12 @@ class DiffusionOp
 
     // Explicit tensor temperature term
     void ComputeLapT (amrex::Vector< amrex::MultiFab* >& lapT_out,
-                      const amrex::Vector< amrex::MultiFab* >& T_g_in,
-                      const amrex::Vector< amrex::MultiFab* >& ro_in,
-                      const amrex::Vector< amrex::MultiFab* >& ep_in,
-                      const amrex::Vector< amrex::MultiFab* >& k_g_in);
+                      const amrex::Vector< amrex::MultiFab* >& T_g,
+                      const amrex::Vector< amrex::MultiFab* >& ro,
+                      const amrex::Vector< amrex::MultiFab* >& ep,
+                      const amrex::Vector< amrex::MultiFab* >& k_g,
+                      const amrex::Vector< amrex::MultiFab* >& T_g_on_eb,
+                      const amrex::Vector< amrex::MultiFab* >& k_g_on_eb);
 
     // Explicit tensor temperature term
     void ComputeLapX (amrex::Vector< amrex::MultiFab* >& lapX_out,
@@ -149,9 +149,6 @@ class DiffusionOp
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> phi;
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> rhs;
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> vel_eb;
-
-    amrex::Vector<std::unique_ptr<amrex::MultiFab>> T_g_on_eb;
-    amrex::Vector<std::unique_ptr<amrex::MultiFab>> k_g_on_eb;
 
     //
     // MultiLevel EmbeddedBoundary cell-centered Laplacian:

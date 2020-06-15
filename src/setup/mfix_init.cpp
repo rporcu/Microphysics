@@ -822,14 +822,18 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        }
 
        // Make sure to fill the "old state" before we start ...
-       MultiFab::Copy(*m_leveldata[lev]->h_go,   *m_leveldata[lev]->h_g, 0, 0, 1, 0);
-       MultiFab::Copy(*m_leveldata[lev]->T_go,   *m_leveldata[lev]->T_g, 0, 0, 1, 0);
        MultiFab::Copy(*m_leveldata[lev]->ro_go,  *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
        MultiFab::Copy(*m_leveldata[lev]->trac_o, *m_leveldata[lev]->trac, 0, 0, 1, 0);
 
-       if (advect_fluid_species)
+       if (advect_enthalpy) {
+         MultiFab::Copy(*m_leveldata[lev]->T_go, *m_leveldata[lev]->T_g, 0, 0, 1, 0);
+         MultiFab::Copy(*m_leveldata[lev]->h_go, *m_leveldata[lev]->h_g, 0, 0, 1, 0);
+       }
+
+       if (advect_fluid_species) {
          MultiFab::Copy(*m_leveldata[lev]->X_go, *m_leveldata[lev]->X_g, 0, 0,
-                        m_leveldata[lev]->X_g->nComp(), 0);
+             m_leveldata[lev]->X_g->nComp(), 0);
+       }
     }
 
     mfix_set_p0();
@@ -885,19 +889,23 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       // This sets bcs for ep_g, cp_g, mu_g and D_g
       Real time = 0.0;
 
-      mfix_set_temperature_bcs(time, get_T_g());
-      mfix_set_temperature_bcs(time, get_T_g_old());
-
       mfix_set_density_bcs(time, get_ro_g());
       mfix_set_density_bcs(time, get_ro_g_old());
 
       mfix_set_tracer_bcs(time, get_trac());
       mfix_set_tracer_bcs(time, get_trac_old());
 
+      if (advect_enthalpy) {
+        mfix_set_temperature_bcs(time, get_T_g());
+        mfix_set_temperature_bcs(time, get_T_g_old());
+      }
+
       mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g());
 
-      mfix_set_enthalpy_bcs(time, get_h_g());
-      mfix_set_enthalpy_bcs(time, get_h_g_old());
+      if (advect_enthalpy) {
+        mfix_set_enthalpy_bcs(time, get_h_g());
+        mfix_set_enthalpy_bcs(time, get_h_g_old());
+      }
 
       if (advect_fluid_species) {
         mfix_set_species_bcs(time, get_X_g(), get_D_g());
@@ -941,6 +949,12 @@ mfix::mfix_set_bc0 ()
        const Box& sbx = ep_g[mfi].box();
 
        set_bc0(sbx, &mfi, lev, domain);
+
+       if (advect_enthalpy)
+         set_temperature_bc0(sbx, &mfi, lev, domain);
+
+       if (advect_fluid_species)
+         set_species_bc0(sbx, &mfi, lev, domain);
      }
 
      ep_g.FillBoundary(geom[lev].periodicity());

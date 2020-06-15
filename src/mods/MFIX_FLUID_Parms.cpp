@@ -14,15 +14,6 @@ namespace FLUID
 
   int solve;
 
-  // Specified constant gas temperature
-  amrex::Real T_g0 = 273.15;
-
-  // Specified constant gas specific heat
-  amrex::Real cp_g0 = 1.0;
-
-  // Gas phase thermal conductivity coefficient
-  amrex::Real k_g0 = 0.0;
-
   // Specified constant gas density
   amrex::Real ro_g0;
 
@@ -34,6 +25,18 @@ namespace FLUID
 
   // Average molecular weight of gas
   amrex::Real mw_avg;
+
+  // Flag to solve enthalpy fluid equation
+  int solve_enthalpy = 0;
+
+  // Specified constant gas temperature
+  amrex::Real T_g0 = 273.15;
+
+  // Specified constant gas specific heat
+  amrex::Real cp_g0 = 1.0;
+
+  // Gas phase thermal conductivity coefficient
+  amrex::Real k_g0 = 0.0;
 
   // Flag to solve species fluid equations
   int solve_species = 0;
@@ -119,10 +122,17 @@ namespace FLUID
       }
 
 
-      if (ppFluid.contains("specific_heat")) {
+      // Get fluid temperature inputs ----------------------------------//
+      amrex::ParmParse ppMFIX("mfix");
+      int advect_enthalpy(0);
+      ppMFIX.query("advect_enthalpy", advect_enthalpy);
+
+      if (advect_enthalpy == 1) {
+        solve_enthalpy = 1;
+
         // Get specific heat inputs ------------------------------------//
         std::string specific_heat_model;
-        ppFluid.query("specific_heat", specific_heat_model );
+        ppFluid.get("specific_heat", specific_heat_model );
 
         if (specific_heat_model == "constant")
         {
@@ -140,12 +150,10 @@ namespace FLUID
         {
           amrex::Abort("Unknown fluid specific heat model!");
         }
-      }
 
-      if (ppFluid.contains("thermal_conductivity")) {
         // Get specific heat inputs ------------------------------------//
         std::string thermal_conductivity_model;
-        ppFluid.query("thermal_conductivity", thermal_conductivity_model );
+        ppFluid.get("thermal_conductivity", thermal_conductivity_model );
 
         if (thermal_conductivity_model == "constant")
         {

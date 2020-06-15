@@ -33,21 +33,9 @@ class LevelData
     amrex::MultiFab* p_g;
     amrex::MultiFab* p_go;
 
-    // Gas enthalpy
-    amrex::MultiFab* h_g;
-    amrex::MultiFab* h_go;
-
-    // Gas temperature
-    amrex::MultiFab* T_g;
-    amrex::MultiFab* T_go;
-
     // Gas density
     amrex::MultiFab* ro_g;
     amrex::MultiFab* ro_go;
-
-    // Gas species
-    amrex::MultiFab* X_g;
-    amrex::MultiFab* X_go;
 
     // Tracer in gas
     amrex::MultiFab* trac;
@@ -63,14 +51,28 @@ class LevelData
     // Pressure gradients
     amrex::MultiFab* gp;
 
+    // Molecular viscosity
+    amrex::MultiFab* mu_g;
+
+    // Gas temperature
+    amrex::MultiFab* T_g;
+    amrex::MultiFab* T_go;
+    amrex::MultiFab* T_g_on_eb;
+
     // Specific heat
     amrex::MultiFab* cp_g;
 
     // Thermal conductivity
     amrex::MultiFab* k_g;
+    amrex::MultiFab* k_g_on_eb;
 
-    // Molecular viscosity
-    amrex::MultiFab* mu_g;
+    // Gas enthalpy
+    amrex::MultiFab* h_g;
+    amrex::MultiFab* h_go;
+
+    // Gas species
+    amrex::MultiFab* X_g;
+    amrex::MultiFab* X_go;
 
     // Species diffusion coefficients
     amrex::MultiFab* D_g;
@@ -88,9 +90,9 @@ class LevelData
     amrex::MultiFab* xslopes_s;
     amrex::MultiFab* yslopes_s;
     amrex::MultiFab* zslopes_s;
-    amrex::MultiFab* xslopes_species_g;
-    amrex::MultiFab* yslopes_species_g;
-    amrex::MultiFab* zslopes_species_g;
+    amrex::MultiFab* xslopes_X;
+    amrex::MultiFab* yslopes_X;
+    amrex::MultiFab* zslopes_X;
 
     // div (ep_g * u)
     amrex::MultiFab* diveu;

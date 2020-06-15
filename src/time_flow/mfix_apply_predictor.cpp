@@ -88,12 +88,17 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
     if (explicit_diffusion_pred and advect_enthalpy)
     {
-        diffusion_op->ComputeLapT(lapT_old, get_T_g_old(), get_ro_g(), get_ep_g(), get_k_g());
-        for (int lev = 0; lev <= finest_level; lev++)
-            EB_set_covered(*lapT_old[lev], 0, lapT_old[lev]->nComp(), lapT_old[lev]->nGrow(), 0.);
-    } else {
-        for (int lev = 0; lev <= finest_level; lev++)
-             lapT_old[lev]->setVal(0.);
+      diffusion_op->ComputeLapT(lapT_old, get_T_g_old(), get_ro_g(),
+          get_ep_g(), get_k_g(), get_T_g_on_eb(), get_k_g_on_eb());
+
+      for (int lev = 0; lev <= finest_level; lev++)
+        EB_set_covered(*lapT_old[lev], 0, lapT_old[lev]->nComp(),
+            lapT_old[lev]->nGrow(), 0.);
+    } 
+    else
+    {
+      for (int lev = 0; lev <= finest_level; lev++)
+        lapT_old[lev]->setVal(0.);
     }
 
     if (explicit_diffusion_pred and advect_tracer)
@@ -440,10 +445,15 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     if (not explicit_diffusion_pred)
     {
       mfix_set_density_bcs(time, get_ro_g());
-      mfix_set_temperature_bcs(time, get_T_g());
-      mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g());
       mfix_set_tracer_bcs(time, get_trac());
-      mfix_set_enthalpy_bcs(time, get_h_g());
+
+      if (advect_enthalpy)
+        mfix_set_temperature_bcs(time, get_T_g());
+
+      mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g());
+
+      if (advect_enthalpy)
+        mfix_set_enthalpy_bcs(time, get_h_g());
 
       if (advect_fluid_species)
         mfix_set_species_bcs(time, get_X_g(), get_D_g());
@@ -451,7 +461,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       // NOTE: we do this call before multiplying ep_g by ro_g
       if (advect_enthalpy) {
         diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
-                                          get_h_g(), get_cp_g(), get_k_g(), l_dt);
+            get_h_g(), get_cp_g(), get_k_g(), get_T_g_on_eb(), get_k_g_on_eb(),
+            l_dt);
       }
 
       // Convert "ep_g" into (rho * ep_g)
