@@ -38,6 +38,18 @@ geometry.prob_hi     = 0.0008   0.01  0.0008   # hi corner of physical domain
 mfix.drag_type = "BVK2"
 mfix.gravity   =  0.0  -9.80665  0.0
 
+mfix.advect_enthalpy      = 1
+mfix.advect_fluid_species = 1
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+species.solve  =  CO  He
+
+species.diffusivity = constant
+
+species.CO.diffusivity  = 1.9e-5
+species.He.diffusivity  = 7.1e-5
 
 #_______________________________________________________________________
 # Fluid model settings
@@ -51,10 +63,12 @@ fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
 fluid.specific_heat          = constant
-fluid.specific_heat.constant = 1.0
+fluid.specific_heat.constant = 918  ##  Oxygen
 
 fluid.thermal_conductivity          = constant
-fluid.thermal_conductivity.constant = 0.0
+fluid.thermal_conductivity.constant = 0.024  ## Oxygen
+
+fluid.species  =  CO  He
 
 
 #_______________________________________________________________________
@@ -77,6 +91,9 @@ dem.spring_tang_fac.pw    =     0.285714285
 dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
 
+dem.specific_heat = constant
+dem.specific_heat.constant.solid0 = 385 ## Copper
+
 
 #_______________________________________________________________________
 # Regions for defining ICs and BCs
@@ -98,8 +115,11 @@ regions.outflow.hi      = 0.0008  0.0100  0.0008
 #
 ic.regions = full-domain
 
-ic.full-domain.fluid.volfrac   =  1.0
-ic.full-domain.fluid.velocity  = 0.0  0.0  0.0
+ic.full-domain.fluid.volfrac    =  1.0
+ic.full-domain.fluid.velocity   = 0.0  0.0  0.0
+ic.full-domain.fluid.temperature   = 400
+ic.full-domain.fluid.species.CO =  1.0
+ic.full-domain.fluid.species.He =  0.0
 
 
 #_______________________________________________________________________
@@ -108,8 +128,11 @@ ic.full-domain.fluid.velocity  = 0.0  0.0  0.0
 bc.regions = inflow  outflow
 
 bc.inflow = mi
-bc.inflow.fluid.volfrac  =  1.0
-bc.inflow.fluid.velocity =  0.0  0.015  0.0
+bc.inflow.fluid.volfrac    =  1.0
+bc.inflow.fluid.velocity   =  0.0  0.015  0.0
+bc.inflow.fluid.temperature   =  1000
+bc.inflow.fluid.species.CO =  0.0
+bc.inflow.fluid.species.He =  1.0
 
 
 bc.outflow = po

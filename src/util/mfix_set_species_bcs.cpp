@@ -199,6 +199,8 @@ mfix::set_mass_fractions_g_bcs (Real time,
     });
   }
 
+  Gpu::synchronize();
+
 }
 
 
@@ -363,4 +365,7 @@ mfix::set_species_diffusivities_g_bcs (Real time,
          scal_arr(i,j,k,n) = p_D_g0[n];
     });
   }
+
+  Gpu::synchronize();
+
 }

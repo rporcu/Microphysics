@@ -43,19 +43,23 @@ void calc_k_g (const Box& bx,
 }
 
 void calc_D_g (const Box& bx,
-               FArrayBox& D_g_fab,
-               FArrayBox& /*T_g_fab*/)
+               FArrayBox& D_g_fab)
 {
-  Real* D_g0;
-  D_g0 = new Real [FLUID::nspecies_g];
-  for (int n(0); n < FLUID::nspecies_g; n++)
+  const int nspecies_g = FLUID::nspecies_g;
+
+  Gpu::ManagedVector< Real> D_g0(nspecies_g, 0);
+
+  for (int n(0); n < nspecies_g; n++)
     D_g0[n] = FLUID::D_g0[n];
+
+  Real* p_D_g0 = D_g0.data();
 
   Array4<Real> const& D_g = D_g_fab.array();
 
-  amrex::ParallelFor(bx, FLUID::nspecies_g, [D_g, D_g0]
+  amrex::ParallelFor(bx, nspecies_g, [D_g, p_D_g0]
       AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-      {D_g(i,j,k,n) = D_g0[n];});
+      {D_g(i,j,k,n) = p_D_g0[n];});
+  
+  Gpu::synchronize();
 
-  delete D_g0;
 }

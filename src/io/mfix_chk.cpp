@@ -179,20 +179,18 @@ mfix::WriteCheckPointFile (std::string& check_file,
           if (advect_enthalpy) {
              // Write temperature variables
              for (int i = 0; i < chktemperatureVars.size(); i++) {
-               if ( DEM::solve or PIC::solve )
-                    VisMF::Write( **(chktemperatureVars[i][lev]),
-                      amrex::MultiFabFileFullPrefix(lev, checkpointname,
-                            level_prefix, chktemperatureVarsName[i]));
+                VisMF::Write( **(chktemperatureVars[i][lev]),
+                  amrex::MultiFabFileFullPrefix(lev, checkpointname,
+                        level_prefix, chktemperatureVarsName[i]));
              }
           }
 
           if (advect_fluid_species) {
              // Write species variables
              for (int i = 0; i < chkspeciesVars.size(); i++) {
-               if ( DEM::solve or PIC::solve )
-                    VisMF::Write( **(chkspeciesVars[i][lev]),
-                      amrex::MultiFabFileFullPrefix(lev, checkpointname,
-                            level_prefix, chkspeciesVarsName[i]));
+                VisMF::Write( **(chkspeciesVars[i][lev]),
+                  amrex::MultiFabFileFullPrefix(lev, checkpointname,
+                        level_prefix, chkspeciesVarsName[i]));
              }
           }
        }
