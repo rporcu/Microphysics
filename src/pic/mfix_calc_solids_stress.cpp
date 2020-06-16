@@ -462,7 +462,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
               } else {
 
                 const int scomp = 0;
-                fe_interp(particle.pos(), ip, jp, kp, dxv, dxi,
+                fe_interp(particle.pos(), ip, jp, kp, dxv, dxi, plo,
                           flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                           grad_tau_array, &interp_loc[0], interp_comp, scomp);
 

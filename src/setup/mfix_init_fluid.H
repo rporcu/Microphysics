@@ -18,6 +18,7 @@ void init_fluid (const Box& sbx,
                  const Real xlength,
                  const Real ylength,
                  const Real zlength,
+                 const Real* plo,
                  bool test_tracer_conservation,
                  const int advect_enthalpy,
                  const int advect_fluid_species);

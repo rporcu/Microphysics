@@ -312,15 +312,13 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
 
                   trilinear_interp(particle.pos(), &interp_loc[0],
                                    interp_array, plo, dxi, interp_comp);
-
                 // At least one of the cells in the stencil is cut or covered
                 } else {
 
                   const int scomp = 3;
-                  fe_interp(particle.pos(), ip, jp, kp, dx, dxi,
+                  fe_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
                             flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                             interp_array, &interp_loc[0], interp_comp, scomp);
-
                 } // Cut cell
 
                 Real velfp[3];
@@ -346,7 +344,6 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
                 pvel[2] = particle.rdata(realData::velz);
 
                 Real rop_g = ro * ep;
-
                 Real vslp[3];
                 vslp[0] = velfp[0] - pvel[0];
                 vslp[1] = velfp[1] - pvel[1];

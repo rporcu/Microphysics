@@ -141,7 +141,9 @@ void MFIXParticleContainer::InitParticlesAuto ()
       const IntVect lo(tilebx.loVect());
       const IntVect hi(tilebx.hiVect());
 
-      particles_generator.generate(pcount, lo, hi, dx, dy, dz);
+      const Real* plo = Geom(lev).ProbLo();
+
+      particles_generator.generate(pcount, lo, hi, dx, dy, dz, plo);
 
       // Now that we know pcount, go ahead and create a particle container for this
       // grid and add the particles to it

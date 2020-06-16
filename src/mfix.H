@@ -280,6 +280,7 @@ class mfix : public AmrCore
                                  const Real dx,
                                  const Real dy,
                                  const Real dz,
+                                 const Real* plo,
                                  FArrayBox& eb_T_g_fab,
                                  FArrayBox& eb_k_g_fab,
                                  FArrayBox& k_g_fab,

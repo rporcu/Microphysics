@@ -474,7 +474,7 @@ mfix::mfix_calc_txfr_particle (Real time)
                   } else {
 
                   const int scomp = 3;
-                  fe_interp(particle.pos(), ip, jp, kp, dx, dxi,
+                  fe_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
                             flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                             interp_array, &interp_loc[0], interp_comp, scomp);
 

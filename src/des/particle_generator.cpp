@@ -40,7 +40,8 @@ ParticlesGenerator::generate (int& pc,
                               const IntVect& hi,
                               const amrex::Real dx,
                               const amrex::Real dy,
-                              const amrex::Real dz)
+                              const amrex::Real dz,
+                              const amrex::Real* plo)
 {
   const int init_pc(pc);
 
@@ -69,25 +70,25 @@ ParticlesGenerator::generate (int& pc,
       int np0(0);
 
       if(ic_pack_type_str.compare("hcp") == 0)
-        hex_close_pack(icv0, type0, lo, hi, np0, pc, dx, dy, dz);
+        hex_close_pack(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
       else if(ic_pack_type_str.compare("random") == 0)
         if(DEM::solve)
-          random_fill_dem(icv0, type0, lo, hi, np0, pc, dx, dy, dz, false);
+          random_fill_dem(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo, false);
         else if(PIC::solve)
-          random_fill_pic(icv0, type0, lo, hi, np0, pc, dx, dy, dz, false);
+          random_fill_pic(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo, false);
         else
           amrex::Abort("Unknown solids model.");
       else if(ic_pack_type_str.compare("pseudo_random") == 0)
         if(DEM::solve)
-          random_fill_dem(icv0, type0, lo, hi, np0, pc, dx, dy, dz, true);
+          random_fill_dem(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo, true);
         else if(PIC::solve)
-          random_fill_pic(icv0, type0, lo, hi, np0, pc, dx, dy, dz, true);
+          random_fill_pic(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo, true);
         else
           amrex::Abort("Unknown solids model.");
       else if(ic_pack_type_str.compare("oneper") == 0)
-        one_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz);
+        one_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
       else if(ic_pack_type_str.compare("eightper") == 0)
-        eight_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz);
+        eight_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
       else
       {
         amrex::Print() << "Unknown particle generator fill type" << std::endl;
@@ -229,7 +230,8 @@ ParticlesGenerator::hex_close_pack (const int icv,
                                     int& pc,
                                     const amrex::Real dx,
                                     const amrex::Real dy,
-                                    const amrex::Real dz)
+                                    const amrex::Real dz,
+                                    const amrex::Real* plo)
 {
   // indices
   int i_w, i_e, j_s, j_n, k_b, k_t;
@@ -245,6 +247,7 @@ ParticlesGenerator::hex_close_pack (const int icv,
   calc_cell_ic(dx, dy, dz,
                IC::ic[icv].region->lo(),
                IC::ic[icv].region->hi(),
+               plo,
                i_w, i_e, j_s, j_n, k_b, k_t);
 
   const Real y_s(IC::ic[icv].region->lo(1));
@@ -310,7 +313,7 @@ ParticlesGenerator::hex_close_pack (const int icv,
   const int local_nr = this->nr;
 
   amrex::ParallelFor(bx,
-    [p_rdata,seed_lo,delta_bx,max_rp,i_w,j_s,k_b,local_nr,pc,sqrt6o3x2,sqrt3,dx,dy,dz]
+    [p_rdata,seed_lo,delta_bx,max_rp,i_w,j_s,k_b,local_nr,pc,sqrt6o3x2,sqrt3,dx,dy,dz,plo]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int local_i = i - seed_lo[0];
@@ -320,9 +323,9 @@ ParticlesGenerator::hex_close_pack (const int icv,
       const int local_pc =
         pc + (local_j + local_k*delta_bx[1] + local_i*delta_bx[1]*delta_bx[2]);
 
-      p_rdata[local_pc*local_nr + 0] = i_w*dx + max_rp*(1. + i*sqrt6o3x2);
-      p_rdata[local_pc*local_nr + 1] = j_s*dy + max_rp*(1. + 2.*j + ((i+k)%2));
-      p_rdata[local_pc*local_nr + 2] = k_b*dz + max_rp*(1. + sqrt3*(k+((i%2)/3.)));
+      p_rdata[local_pc*local_nr + 0] = plo[0] + i_w*dx + max_rp*(1. + i*sqrt6o3x2);
+      p_rdata[local_pc*local_nr + 1] = plo[1] + j_s*dy + max_rp*(1. + 2.*j + ((i+k)%2));
+      p_rdata[local_pc*local_nr + 2] = plo[2] + k_b*dz + max_rp*(1. + sqrt3*(k+((i%2)/3.)));
     });
 
   pc += np;
@@ -347,7 +350,8 @@ ParticlesGenerator::one_per_fill (const int icv,
                                   int& pc,
                                   const amrex::Real dx,
                                   const amrex::Real dy,
-                                  const amrex::Real dz)
+                                  const amrex::Real dz,
+                                  const amrex::Real* plo)
 {
   // indices
   int i_w, i_e, j_s, j_n, k_b, k_t;
@@ -357,6 +361,7 @@ ParticlesGenerator::one_per_fill (const int icv,
   calc_cell_ic(dx, dy, dz,
                IC::ic[icv].region->lo(),
                IC::ic[icv].region->hi(),
+               plo,
                i_w, i_e, j_s, j_n, k_b, k_t);
 
   const Real x_w(IC::ic[icv].region->lo(0));
@@ -388,7 +393,7 @@ ParticlesGenerator::one_per_fill (const int icv,
 
   const int local_nr = this->nr;
 
-  amrex::ParallelFor(bx, [p_rdata,seed_lo,delta_bx,local_nr,dx,dy,dz,pc]
+  amrex::ParallelFor(bx, [p_rdata,seed_lo,delta_bx,local_nr,dx,dy,dz,plo,pc]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int local_i = i - seed_lo[0];
@@ -398,9 +403,9 @@ ParticlesGenerator::one_per_fill (const int icv,
       const int local_pc =
         pc + (local_i + local_k*delta_bx[0] + local_j*delta_bx[0]*delta_bx[2]);
 
-      p_rdata[local_pc*local_nr + 0] = (i + 0.5) * dx;
-      p_rdata[local_pc*local_nr + 1] = (j + 0.5) * dy;
-      p_rdata[local_pc*local_nr + 2] = (k + 0.5) * dz;
+      p_rdata[local_pc*local_nr + 0] = plo[0] + (i + 0.5) * dx;
+      p_rdata[local_pc*local_nr + 1] = plo[1] + (j + 0.5) * dy;
+      p_rdata[local_pc*local_nr + 2] = plo[2] + (k + 0.5) * dz;
     });
 
   pc += np;
@@ -425,7 +430,8 @@ ParticlesGenerator::eight_per_fill (const int icv,
                                     int& pc,
                                     const amrex::Real dx,
                                     const amrex::Real dy,
-                                    const amrex::Real dz)
+                                    const amrex::Real dz,
+                                    const amrex::Real* plo)
 {
   // indices
   amrex::IntVect seed_lo, seed_hi, delta_bx;
@@ -437,13 +443,13 @@ ParticlesGenerator::eight_per_fill (const int icv,
   const Real y_n(IC::ic[icv].region->hi(1));
   const Real z_t(IC::ic[icv].region->hi(2));
 
-  seed_lo[0] = amrex::max<int>(2*lo[0], static_cast<int>(amrex::Math::ceil(x_w*(2/dx) - .5)));
-  seed_lo[1] = amrex::max<int>(2*lo[1], static_cast<int>(amrex::Math::ceil(y_s*(2/dy) - .5)));
-  seed_lo[2] = amrex::max<int>(2*lo[2], static_cast<int>(amrex::Math::ceil(z_b*(2/dz) - .5)));
+  seed_lo[0] = amrex::max<int>(2*lo[0], static_cast<int>(amrex::Math::ceil((x_w-plo[0])*(2/dx) - .5)));
+  seed_lo[1] = amrex::max<int>(2*lo[1], static_cast<int>(amrex::Math::ceil((y_s-plo[1])*(2/dy) - .5)));
+  seed_lo[2] = amrex::max<int>(2*lo[2], static_cast<int>(amrex::Math::ceil((z_b-plo[2])*(2/dz) - .5)));
 
-  seed_hi[0] = amrex::min<int>(2*hi[0]+1, static_cast<int>(amrex::Math::floor(x_e*(2/dx) - .5)));
-  seed_hi[1] = amrex::min<int>(2*hi[1]+1, static_cast<int>(amrex::Math::floor(y_n*(2/dy) - .5)));
-  seed_hi[2] = amrex::min<int>(2*hi[2]+1, static_cast<int>(amrex::Math::floor(z_t*(2/dz) - .5)));
+  seed_hi[0] = amrex::min<int>(2*hi[0]+1, static_cast<int>(amrex::Math::floor((x_e-plo[0])*(2/dx) - .5)));
+  seed_hi[1] = amrex::min<int>(2*hi[1]+1, static_cast<int>(amrex::Math::floor((y_n-plo[1])*(2/dy) - .5)));
+  seed_hi[2] = amrex::min<int>(2*hi[2]+1, static_cast<int>(amrex::Math::floor((z_t-plo[2])*(2/dz) - .5)));
 
   const Box bx(seed_lo, seed_hi);
 
@@ -458,7 +464,7 @@ ParticlesGenerator::eight_per_fill (const int icv,
 
   const int local_nr = this->nr;
 
-  amrex::ParallelFor(bx, [p_rdata,seed_lo,delta_bx,pc,dx,dy,dz,local_nr]
+  amrex::ParallelFor(bx, [p_rdata,seed_lo,delta_bx,pc,dx,dy,dz,plo,local_nr]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int local_i = i - seed_lo[0];
@@ -468,9 +474,9 @@ ParticlesGenerator::eight_per_fill (const int icv,
       const int local_pc =
         pc + (local_i + local_k*delta_bx[0] + local_j*delta_bx[0]*delta_bx[2]);
 
-      p_rdata[local_pc*local_nr + 0] = (i + 0.5)*dx/2.;
-      p_rdata[local_pc*local_nr + 1] = (j + 0.5)*dy/2.;
-      p_rdata[local_pc*local_nr + 2] = (k + 0.5)*dz/2.;
+      p_rdata[local_pc*local_nr + 0] = plo[0] + (i + 0.5)*dx/2.;
+      p_rdata[local_pc*local_nr + 1] = plo[1] + (j + 0.5)*dy/2.;
+      p_rdata[local_pc*local_nr + 2] = plo[2] + (k + 0.5)*dz/2.;
     });
 
   pc += np;
@@ -496,6 +502,7 @@ ParticlesGenerator::random_fill_dem (const int icv,
                                      const amrex::Real dx,
                                      const amrex::Real dy,
                                      const amrex::Real dz,
+                                     const amrex::Real* plo,
                                      const bool fix_seed)
 {
     // indices
@@ -509,6 +516,7 @@ ParticlesGenerator::random_fill_dem (const int icv,
   calc_cell_ic(dx, dy, dz,
                IC::ic[icv].region->lo(),
                IC::ic[icv].region->hi(),
+               plo,
                i_w, i_e, j_s, j_n, k_b, k_t);
 
   // Start/end of IC domain bounds
@@ -630,9 +638,9 @@ ParticlesGenerator::random_fill_dem (const int icv,
                      local_k*delta_bx[0]*delta_bx[1] +
                      p*delta_bx[0]*delta_bx[1]*delta_bx[2]];
 
-              const Real dist_x = p_rdata[local_pc*nr + 0] - pos[0];
-              const Real dist_y = p_rdata[local_pc*nr + 1] - pos[1];
-              const Real dist_z = p_rdata[local_pc*nr + 2] - pos[2];
+              const Real dist_x = p_rdata[local_pc*nr + 0] - pos[0] - plo[0];
+              const Real dist_y = p_rdata[local_pc*nr + 1] - pos[1] - plo[1];
+              const Real dist_z = p_rdata[local_pc*nr + 2] - pos[2] - plo[2];
 
               const amrex::Real dist = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
 
@@ -645,9 +653,9 @@ ParticlesGenerator::random_fill_dem (const int icv,
 
       if(overlaps == 0)
       {
-        p_rdata[np*nr + 0] = pos[0];
-        p_rdata[np*nr + 1] = pos[1];
-        p_rdata[np*nr + 2] = pos[2];
+        p_rdata[np*nr + 0] = pos[0] + plo[0];
+        p_rdata[np*nr + 1] = pos[1] + plo[1];
+        p_rdata[np*nr + 2] = pos[2] + plo[2];
 
         const int local_idx_x = idx[0] - lo[0];
         const int local_idx_y = idx[1] - lo[1];
@@ -704,6 +712,7 @@ ParticlesGenerator::random_fill_pic (const int icv,
                                      const amrex::Real dx,
                                      const amrex::Real dy,
                                      const amrex::Real dz,
+                                     const amrex::Real* plo,
                                      const bool fix_seed)
 {
     // indices
@@ -715,6 +724,7 @@ ParticlesGenerator::random_fill_pic (const int icv,
   calc_cell_ic(dx, dy, dz,
                IC::ic[icv].region->lo(),
                IC::ic[icv].region->hi(),
+               plo,
                i_w, i_e, j_s, j_n, k_b, k_t);
 
 
@@ -765,9 +775,9 @@ ParticlesGenerator::random_fill_pic (const int icv,
 
   while(np < seed)
   {
-    p_rdata[np*nr + 0] = ic_dlo[0] + ic_len[0]*amrex::Random();
-    p_rdata[np*nr + 1] = ic_dlo[1] + ic_len[1]*amrex::Random();
-    p_rdata[np*nr + 2] = ic_dlo[2] + ic_len[2]*amrex::Random();
+    p_rdata[np*nr + 0] = plo[0] + ic_dlo[0] + ic_len[0]*amrex::Random();
+    p_rdata[np*nr + 1] = plo[1] + ic_dlo[1] + ic_len[1]*amrex::Random();
+    p_rdata[np*nr + 2] = plo[2] + ic_dlo[2] + ic_len[2]*amrex::Random();
 
     np++;
   }

@@ -37,6 +37,8 @@ mfix::mfix_set_eb_temperature_bcs (Vector< MultiFab* > const& eb_T_g_in,
      Real dy = geom[lev].CellSize(1);
      Real dz = geom[lev].CellSize(2);
 
+     const Real* plo = Geom(lev).ProbLo();    
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -48,7 +50,7 @@ mfix::mfix_set_eb_temperature_bcs (Vector< MultiFab* > const& eb_T_g_in,
 
        // We update only cut-cells values
        if (t == FabType::singlevalued) {
-         set_eb_temperature_bcs(sbx, bx, domain, dx, dy, dz,
+         set_eb_temperature_bcs(sbx, bx, domain, dx, dy, dz, plo,
              (*eb_T_g_in[lev])[mfi], (*eb_k_g_in[lev])[mfi], (*k_g[lev])[mfi],
              flags[mfi]);
        }
@@ -68,6 +70,7 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
                               const Real dx,
                               const Real dy,
                               const Real dz,
+                              const Real* plo,
                               FArrayBox& eb_T_g_fab,
                               FArrayBox& eb_k_g_fab,
                               FArrayBox& k_g_fab,
@@ -112,6 +115,7 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
       calc_cell_ic(dx, dy, dz,
                    BC::bc[bcv].region->lo(),
                    BC::bc[bcv].region->hi(),
+                   plo,
                    i_w, i_e, j_s, j_n, k_b, k_t);
 
       // Use the volume fraction already calculated from particle data

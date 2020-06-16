@@ -802,6 +802,8 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        Real dy = geom[lev].CellSize(1);
        Real dz = geom[lev].CellSize(2);
 
+       const Real* plo = geom[lev].ProbLo();
+
        LevelData& ld = *m_leveldata[lev];
 
        // We deliberately don't tile this loop since we will be looping
@@ -816,7 +818,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
             init_fluid_restart(bx, mfi, ld, advect_enthalpy, advect_fluid_species);
 
           } else {
-            init_fluid(sbx, bx, domain, mfi, ld, dx, dy, dz, xlen, ylen, zlen,
+            init_fluid(sbx, bx, domain, mfi, ld, dx, dy, dz, xlen, ylen, zlen, plo,
                 test_tracer_conservation, advect_enthalpy, advect_fluid_species);
     
           }
