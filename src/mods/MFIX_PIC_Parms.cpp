@@ -3,6 +3,7 @@
 #include <AMReX_Print.H>
 #include <AMReX_Vector.H>
 #include <AMReX_ParmParse.H>
+#include <AMReX_Utility.H>
 
 #include <MFIX_PIC_Parms.H>
 
@@ -35,6 +36,18 @@ namespace PIC
     solve = names.size();
 
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(solve >= 0, "pic.solve must be >= 0");
+
+    for(int lc=0; lc < names.size(); ++lc){
+      if (amrex::toLower(names[0]).compare("none") == 0 or
+        (names[0]).compare("0") == 0) solve = 0;
+    }
+
+    // You can't name a solids "None" or "0" -- you just can't
+    if( solve == 0 && names.size() > 1 ){
+      amrex::Abort("Invalid input: One or more PIC solids defined"
+                    "but, the solver is disabled!");
+    }
+
     NPHASE = solve;
 
     if(solve)
