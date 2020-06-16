@@ -17,6 +17,7 @@ void fe_interp(const amrex::RealVect& pos,
                const int ip, const int jp, const int kp,
                const amrex::RealVect& dx,
                const amrex::RealVect& dxi,
+               const amrex::RealVect& plo,
                amrex::Array4<const EBCellFlag> const& flags,
                amrex::Array4<const amrex::Real> const& ccent,
                amrex::Array4<const amrex::Real> const& bcent,
@@ -30,9 +31,9 @@ void fe_interp(const amrex::RealVect& pos,
 
     const amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
 
-    const amrex::Real cdist_x = pos[0] - (ip + 0.5 + ccent(ip,jp,kp,0))*dx[0];
-    const amrex::Real cdist_y = pos[1] - (jp + 0.5 + ccent(ip,jp,kp,1))*dx[1];
-    const amrex::Real cdist_z = pos[2] - (kp + 0.5 + ccent(ip,jp,kp,2))*dx[2];
+    const amrex::Real cdist_x = pos[0] - (ip + 0.5 + ccent(ip,jp,kp,0))*dx[0] - plo[0];
+    const amrex::Real cdist_y = pos[1] - (jp + 0.5 + ccent(ip,jp,kp,1))*dx[1] - plo[1];
+    const amrex::Real cdist_z = pos[2] - (kp + 0.5 + ccent(ip,jp,kp,2))*dx[2] - plo[2];
 
     // Distance between particle and cell centoid.
     const amrex::Real cdist =
@@ -73,9 +74,9 @@ void fe_interp(const amrex::RealVect& pos,
         const amrex::RealVect normal = {adx*apnorminv, ady*apnorminv, adz*apnorminv};
 
         // Projection of vector pointing from EB centroid to particle onto EB normal
-        par_dot_EB = (pos[0] - (ip + 0.5 + bcent(ip,jp,kp,0))*dx[0])*normal[0] +
-                     (pos[1] - (jp + 0.5 + bcent(ip,jp,kp,1))*dx[1])*normal[1] +
-                     (pos[2] - (kp + 0.5 + bcent(ip,jp,kp,2))*dx[2])*normal[2];
+        par_dot_EB = (pos[0] - (ip + 0.5 + bcent(ip,jp,kp,0))*dx[0] - plo[0])*normal[0] +
+                     (pos[1] - (jp + 0.5 + bcent(ip,jp,kp,1))*dx[1] - plo[1])*normal[1] +
+                     (pos[2] - (kp + 0.5 + bcent(ip,jp,kp,2))*dx[2] - plo[2])*normal[2];
 
         // Projection of vector pointing from EB centroid to cell centroid onto EB normal
         cent_dot_EB = (ccent(ip,jp,kp,0) - bcent(ip,jp,kp,0))*dx[0]*normal[0] +
@@ -89,9 +90,9 @@ void fe_interp(const amrex::RealVect& pos,
 
     }
     // Particle position relative to cell center [-0.5, 0.5]
-    amrex::Real gx = pos[0]*dxi[0] - (ip + 0.5);
-    amrex::Real gy = pos[1]*dxi[1] - (jp + 0.5);
-    amrex::Real gz = pos[2]*dxi[2] - (kp + 0.5);
+    amrex::Real gx = (pos[0]-plo[0])*dxi[0] - (ip + 0.5);
+    amrex::Real gy = (pos[1]-plo[1])*dxi[1] - (jp + 0.5);
+    amrex::Real gz = (pos[2]-plo[2])*dxi[2] - (kp + 0.5);
 
     // Use the centoid location of the cell containing the particle
     // to guess the interpolation stencil.
@@ -152,9 +153,9 @@ void fe_interp(const amrex::RealVect& pos,
                         const amrex::RealVect normal = {adx*apnorminv, ady*apnorminv, adz*apnorminv};
 
                         // Ratio of distance of particle-to-EB and cell-to-EB
-                        amrex::Real test_scale = ((pos[0] - (i+ii + 0.5 + bcent(i+ii,j+jj,k+kk,0))*dx[0])*normal[0] +
-                                                  (pos[1] - (j+jj + 0.5 + bcent(i+ii,j+jj,k+kk,1))*dx[1])*normal[1] +
-                                                  (pos[2] - (k+kk + 0.5 + bcent(i+ii,j+jj,k+kk,2))*dx[2])*normal[2]) /
+                        amrex::Real test_scale = ((pos[0] - (i+ii + 0.5 + bcent(i+ii,j+jj,k+kk,0))*dx[0] - plo[0])*normal[0] +
+                                                  (pos[1] - (j+jj + 0.5 + bcent(i+ii,j+jj,k+kk,1))*dx[1] - plo[1])*normal[1] +
+                                                  (pos[2] - (k+kk + 0.5 + bcent(i+ii,j+jj,k+kk,2))*dx[2] - plo[2])*normal[2]) /
                                                  ((ccent(ip,jp,kp,0) - (di+ii + bcent(i+ii,j+jj,k+kk,0)))*dx[0]*normal[0] +
                                                   (ccent(ip,jp,kp,1) - (dj+jj + bcent(i+ii,j+jj,k+kk,1)))*dx[1]*normal[1] +
                                                   (ccent(ip,jp,kp,2) - (dk+kk + bcent(i+ii,j+jj,k+kk,2)))*dx[2]*normal[2]);
@@ -198,11 +199,11 @@ void fe_interp(const amrex::RealVect& pos,
             }
         }
 
-        amrex::Real xi   = (pos[0] - nodes[0][0])*dxi[0];
-        amrex::Real eta  = (pos[1] - nodes[0][1])*dxi[1];
-        amrex::Real zeta = (pos[2] - nodes[0][2])*dxi[2];
+        amrex::Real xi   = (pos[0] - nodes[0][0] - plo[0])*dxi[0];
+        amrex::Real eta  = (pos[1] - nodes[0][1] - plo[1])*dxi[1];
+        amrex::Real zeta = (pos[2] - nodes[0][2] - plo[2])*dxi[2];
 
-        get_interp_mapping(pos, nodes, xi, eta, zeta);
+        get_interp_mapping(pos-plo, nodes, xi, eta, zeta);
 
         for(int n=0; n < ncomp; n++) {
             interp_vals[n] = (1 - xi - eta - zeta + xi*eta + xi*zeta + eta*zeta - xi*eta*zeta) * interp_array(i-1,j-1,k-1,n)

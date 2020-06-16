@@ -35,7 +35,8 @@ class ParticlesGenerator {
                    const amrex::IntVect& hi,
                    const amrex::Real dx,
                    const amrex::Real dy,
-                   const amrex::Real dz);
+                   const amrex::Real dz,
+                   const amrex::Real* plo);
 
     void generate_prop (const int nrp, ParticleTileType& particles);
 
@@ -52,7 +53,8 @@ class ParticlesGenerator {
                          int& pc,
                          const amrex::Real dx,
                          const amrex::Real dy,
-                         const amrex::Real dz);
+                         const amrex::Real dz,
+                         const amrex::Real* plo);
 
     void one_per_fill (const int icv,
                        const int type,
@@ -62,7 +64,8 @@ class ParticlesGenerator {
                        int& pc,
                        const amrex::Real dx,
                        const amrex::Real dy,
-                       const amrex::Real dz);
+                       const amrex::Real dz,
+                       const amrex::Real* plo);
 
     void eight_per_fill (const int icv,
                          const int type,
@@ -72,7 +75,8 @@ class ParticlesGenerator {
                          int& pc,
                          const amrex::Real dx,
                          const amrex::Real dy,
-                         const amrex::Real dz);
+                         const amrex::Real dz,
+                         const amrex::Real* plo);
 
     void random_fill_dem (const int icv,
                           const int type,
@@ -83,6 +87,7 @@ class ParticlesGenerator {
                           const amrex::Real dx,
                           const amrex::Real dy,
                           const amrex::Real dz,
+                          const amrex::Real* plo,
                           const bool fix_seed);
 
     void random_fill_pic (const int icv,
@@ -94,6 +99,7 @@ class ParticlesGenerator {
                           const amrex::Real dx,
                           const amrex::Real dy,
                           const amrex::Real dz,
+                          const amrex::Real* plo,
                           const bool fix_seed);
 
     void nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,

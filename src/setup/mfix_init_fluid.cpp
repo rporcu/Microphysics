@@ -10,13 +10,13 @@ using namespace amrex;
 
 // Forward declarations
 void set_ic_vel (const Box& sbx, const Box& domain,
-                 const Real dx, const Real dy, const Real dz, FArrayBox& vel_g_fab);
+                 const Real dx, const Real dy, const Real dz, const Real* plo, FArrayBox& vel_g_fab);
 
 void set_ic_temp (const Box& sbx, const Box& domain,
-                  const Real dx, const Real dy, const Real dz, FArrayBox& T_g_fab);
+                  const Real dx, const Real dy, const Real dz, const Real* plo, FArrayBox& T_g_fab);
 
 void set_ic_species_g (const Box& sbx, const Box& domain,
-                       const Real dx, const Real dy, const Real dz, FArrayBox& X_g_fab);
+                       const Real dx, const Real dy, const Real dz, const Real* plo, FArrayBox& X_g_fab);
 
 void init_helix (const Box& bx, const Box& domain, FArrayBox& vel_g_fab,
                  const Real dx, const Real dy, const Real dz);
@@ -38,18 +38,19 @@ void init_fluid (const Box& sbx,
                  const Real xlength,
                  const Real ylength,
                  const Real zlength,
+                 const Real* plo,
                  bool test_tracer_conservation,
                  const int advect_enthalpy,
                  const int advect_fluid_species)
 {
       // Set user specified initial conditions (IC)
-      set_ic_vel(sbx, domain, dx, dy, dz, (*ld.vel_g)[mfi]);
+      set_ic_vel(sbx, domain, dx, dy, dz, plo, (*ld.vel_g)[mfi]);
 
       if (advect_enthalpy)
-        set_ic_temp(sbx, domain, dx, dy, dz, (*ld.T_g)[mfi]);
+        set_ic_temp(sbx, domain, dx, dy, dz, plo, (*ld.T_g)[mfi]);
 
       if (advect_fluid_species)
-        set_ic_species_g(sbx, domain, dx, dy, dz, (*ld.X_g)[mfi]);
+        set_ic_species_g(sbx, domain, dx, dy, dz, plo, (*ld.X_g)[mfi]);
 
       // init_periodic_vortices (bx, domain, vel_g_fab, dx, dy, dz);
       // init_helix (bx, domain, vel_g_fab, dx, dy, dz);
@@ -340,6 +341,7 @@ void set_ic_vel (const Box& sbx,
                  const Real dx,
                  const Real dy,
                  const Real dz,
+                 const Real* plo,
                  FArrayBox& vel_g_fab)
 {
   const IntVect slo(sbx.loVect());
@@ -360,6 +362,7 @@ void set_ic_vel (const Box& sbx,
     calc_cell_ic(dx, dy, dz,
                  IC::ic[icv].region->lo(),
                  IC::ic[icv].region->hi(),
+                 plo,
                  i_w, i_e, j_s, j_n, k_b, k_t);
 
     // Use the volume fraction already calculated from particle data
@@ -468,6 +471,7 @@ void set_ic_temp (const Box& sbx,
                   const Real dx,
                   const Real dy,
                   const Real dz,
+                  const Real* plo,
                   FArrayBox& T_g_fab)
 {
   const IntVect slo(sbx.loVect());
@@ -488,6 +492,7 @@ void set_ic_temp (const Box& sbx,
     calc_cell_ic(dx, dy, dz,
                  IC::ic[icv].region->lo(),
                  IC::ic[icv].region->hi(),
+                 plo,
                  i_w, i_e, j_s, j_n, k_b, k_t);
 
     // Use the volume fraction already calculated from particle data
@@ -589,6 +594,7 @@ void set_ic_species_g (const Box& sbx,
                        const Real dx,
                        const Real dy,
                        const Real dz,
+                       const Real* plo,
                        FArrayBox& X_g_fab)
 {
   const IntVect slo(sbx.loVect());
@@ -607,7 +613,7 @@ void set_ic_species_g (const Box& sbx,
     int i_w(0), j_s(0), k_b(0);
     int i_e(0), j_n(0), k_t(0);
 
-    calc_cell_ic(dx, dy, dz, IC::ic[icv].region->lo(), IC::ic[icv].region->hi(),
+    calc_cell_ic(dx, dy, dz, IC::ic[icv].region->lo(), IC::ic[icv].region->hi(), plo,
                  i_w, i_e, j_s, j_n, k_b, k_t);
 
     // Get the initial condition values
