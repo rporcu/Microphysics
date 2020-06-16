@@ -90,10 +90,8 @@ namespace DEM
 
       solve = 1;
       for(int lc=0; lc < names.size(); ++lc){
-        if (names[0] == "None" ||
-            names[0] == "none" ||
-            names[0] == "NONE" ||
-            names[0] == "0" ) solve = 0;
+        if (amrex::toLower(names[0]).compare("none") == 0 or
+          (names[0]).compare("0") == 0) solve = 0;
       }
 
       // You can't name a solids "None" or "0" -- you just can't
