@@ -69,30 +69,38 @@ ParticlesGenerator::generate (int& pc,
 
       int np0(0);
 
-      if(ic_pack_type_str.compare("hcp") == 0)
-        hex_close_pack(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
-      else if(ic_pack_type_str.compare("random") == 0)
-        if(DEM::solve)
+      if(DEM::solve){
+        if(ic_pack_type_str.compare("hcp") == 0)
+          hex_close_pack(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
+        else if(ic_pack_type_str.compare("random") == 0)
           random_fill_dem(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo, false);
-        else if(PIC::solve)
-          random_fill_pic(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo, false);
-        else
-          amrex::Abort("Unknown solids model.");
-      else if(ic_pack_type_str.compare("pseudo_random") == 0)
-        if(DEM::solve)
+        else if(ic_pack_type_str.compare("pseudo_random") == 0)
           random_fill_dem(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo, true);
-        else if(PIC::solve)
-          random_fill_pic(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo, true);
+        else if(ic_pack_type_str.compare("oneper") == 0)
+          one_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
+        else if(ic_pack_type_str.compare("eightper") == 0)
+          eight_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
         else
-          amrex::Abort("Unknown solids model.");
-      else if(ic_pack_type_str.compare("oneper") == 0)
-        one_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
-      else if(ic_pack_type_str.compare("eightper") == 0)
-        eight_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
-      else
-      {
-        amrex::Print() << "Unknown particle generator fill type" << std::endl;
-        exit(1000);
+        {
+          amrex::Print() << "Unknown particle generator fill type" << std::endl;
+          exit(1000);
+        }
+      }
+
+      if(PIC::solve){
+        if(ic_pack_type_str.compare("random") == 0)
+          random_fill_pic(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo, false);
+        else if(ic_pack_type_str.compare("pseudo_random") == 0)
+          random_fill_pic(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo, true);
+        else if(ic_pack_type_str.compare("oneper") == 0)
+          one_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
+        else if(ic_pack_type_str.compare("eightper") == 0)
+          eight_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
+        else
+        {
+          amrex::Print() << "Unknown particle generator fill type" << std::endl;
+          exit(1000);
+        }
       }
 
       // HACK -- the original code assumed that only one IC region would have
@@ -715,74 +723,83 @@ ParticlesGenerator::random_fill_pic (const int icv,
                                      const amrex::Real* plo,
                                      const bool fix_seed)
 {
-    // indices
-  int i_w, i_e, j_s, j_n, k_b, k_t;
 
-  amrex::RealVect ic_dlo, ic_dhi, ic_len;
-  amrex::Real max_dp, max_rp;
+  const amrex::Real* ic_rlo = IC::ic[icv].region->lo();
+  const amrex::Real* ic_rhi = IC::ic[icv].region->hi();
 
-  calc_cell_ic(dx, dy, dz,
-               IC::ic[icv].region->lo(),
-               IC::ic[icv].region->hi(),
-               plo,
-               i_w, i_e, j_s, j_n, k_b, k_t);
+  amrex::IntVect seed_lo, seed_hi;
 
+  seed_lo[0] = amrex::max<int>(lo[0], static_cast<int>(amrex::Math::ceil((ic_rlo[0]-plo[0])/dx - .5)));
+  seed_lo[1] = amrex::max<int>(lo[1], static_cast<int>(amrex::Math::ceil((ic_rlo[1]-plo[1])/dy - .5)));
+  seed_lo[2] = amrex::max<int>(lo[2], static_cast<int>(amrex::Math::ceil((ic_rlo[2]-plo[2])/dz - .5)));
 
-  // Start/end of IC domain bounds
-  ic_dlo[0] = (amrex::max(lo[0], i_w)) * dx;
-  ic_dlo[1] = (amrex::max(lo[1], j_s)) * dy;
-  ic_dlo[2] = (amrex::max(lo[2], k_b)) * dz;
+  seed_hi[0] = amrex::min<int>(hi[0], static_cast<int>(amrex::Math::floor((ic_rhi[0]-plo[0])/dx - .5)));
+  seed_hi[1] = amrex::min<int>(hi[1], static_cast<int>(amrex::Math::floor((ic_rhi[1]-plo[1])/dy - .5)));
+  seed_hi[2] = amrex::min<int>(hi[2], static_cast<int>(amrex::Math::floor((ic_rhi[2]-plo[2])/dz - .5)));
 
-  ic_dhi[0] = (amrex::min(hi[0], i_e)+1) * dx;
-  ic_dhi[1] = (amrex::min(hi[1], j_n)+1) * dy;
-  ic_dhi[2] = (amrex::min(hi[2], k_t)+1) * dz;
+  const Box bx(seed_lo, seed_hi);
 
-  // physical volume of IC region intersecting this grid
-  const amrex::Real ic_vol = (ic_dhi[0] - ic_dlo[0]) *
-                             (ic_dhi[1] - ic_dlo[1]) *
-                             (ic_dhi[2] - ic_dlo[2]);
+  amrex::IntVect delta_bx;
 
+  delta_bx[0] = amrex::max(0, seed_hi[0] - seed_lo[0] + 1);
+  delta_bx[1] = amrex::max(0, seed_hi[1] - seed_lo[1] + 1);
+  delta_bx[2] = amrex::max(0, seed_hi[2] - seed_lo[2] + 1);
+
+  // Number of cells in IC region
+  const amrex::Real ic_cells = delta_bx[0] * delta_bx[1] * delta_bx[2];
+
+  // Particle properties: Mean diameter, stat weight, volume
   const amrex::Real mean = IC::ic[icv].solids[type].diameter.mean;
   const amrex::Real statwt(IC::ic[icv].solids[type].statwt);
-
-  // Spacing is based on effective mean parcel size
-  max_dp = mean * std::pow(statwt, 0.333);
-
-  // Volume of a parcel
   const amrex::Real parcel_volume = statwt*((M_PI/6.0)*mean*mean*mean);
 
-  // Particle count is based on mean particle size
-  const int seed =
-    static_cast<int>(ic_vol * IC::ic[icv].solids[type].volfrac / parcel_volume);
+  // Parcels per cell to satisfy the IC condtion
+  const amrex::Real parcels_per_cell =
+      (dx * dy * dz * IC::ic[icv].solids[type].volfrac / parcel_volume);
 
-  max_rp = 0.5 * max_dp;
+  const int whole_parcels_per_cell = amrex::Math::floor(parcels_per_cell);
 
-  ic_len[0] = ic_dhi[0] - ic_dlo[0] - max_dp;
-  ic_len[1] = ic_dhi[1] - ic_dlo[1] - max_dp;
-  ic_len[2] = ic_dhi[2] - ic_dlo[2] - max_dp;
+  // This is the total number of particles that will be generated.
+  np = static_cast<int>(ic_cells) * whole_parcels_per_cell;
+  grow_pdata(pc + np);
 
-  ic_dlo[0] += max_rp;
-  ic_dlo[1] += max_rp;
-  ic_dlo[2] += max_rp;
-
-  grow_pdata(seed);
+  amrex::Real* p_rdata = m_rdata.data();
+  const int local_nr = this->nr;
 
   amrex::ResetRandomSeed(ParallelDescriptor::MyProc()+1);
 
-  amrex::Real* p_rdata = m_rdata.data();
+  amrex::ParallelFor(bx,
+    [p_rdata,seed_lo,delta_bx,local_nr,dx,dy,dz,plo,pc,whole_parcels_per_cell]
+    AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      const int local_i = i - seed_lo[0];
+      const int local_j = j - seed_lo[1];
+      const int local_k = k - seed_lo[2];
 
-  np = 0;
+      const int local_pc = pc + whole_parcels_per_cell *
+        (local_i + local_k*delta_bx[0] + local_j*delta_bx[0]*delta_bx[2]);
 
-  while(np < seed)
-  {
-    p_rdata[np*nr + 0] = plo[0] + ic_dlo[0] + ic_len[0]*amrex::Random();
-    p_rdata[np*nr + 1] = plo[1] + ic_dlo[1] + ic_len[1]*amrex::Random();
-    p_rdata[np*nr + 2] = plo[2] + ic_dlo[2] + ic_len[2]*amrex::Random();
+      const amrex::Real xlo = plo[0] + (i * dx);
+      const amrex::Real ylo = plo[1] + (j * dy);
+      const amrex::Real zlo = plo[2] + (k * dz);
 
-    np++;
-  }
+      for(int pseed(0); pseed < whole_parcels_per_cell; pseed++){
 
+        p_rdata[(local_pc + pseed)*local_nr + 0] = xlo + dx*amrex::Random();
+        p_rdata[(local_pc + pseed)*local_nr + 1] = ylo + dy*amrex::Random();
+        p_rdata[(local_pc + pseed)*local_nr + 2] = zlo + dz*amrex::Random();
+      }
+    }
+  );
   pc += np;
+
+  // TODO: At this point, we have seeded the bulk of the parcels. However there
+  // are two oversites --
+  // 1) This will get us close to the requested solids volume fraction, but
+  //    not exact. We need to deal with the remainder.
+  // 2) If the IC region is dilute (with less than one parcel per cell), this
+  //    will not create any parcles. This could be addressed by adding a
+  //    stride to the above logic so we skip past the stride cells.
 
   return;
 }
