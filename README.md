@@ -11,7 +11,7 @@
 
 # Building MFIX-Exa
 
-Refer to the **[MFiX-Exa user guide](https://amrex-codes.github.io/MFIX-Exa/docs_html/GettingStarted.html)** for instructions on how to build MFiX-Exa.
+Refer to the **[MFiX-Exa user guide](https://amrex-codes.github.io/MFIX-Exa/docs_html/GettingStarted_Chapter.html)** for instructions on how to build MFiX-Exa.
 
 
 # Running MFIX Test Suite
