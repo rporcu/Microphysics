@@ -2,34 +2,23 @@
 #include <mfix_algorithm.H>
 
 namespace {
-
-struct get_index
-{
-  const Long jstride;
-  const Long kstride;
-  const Long nstride;
-  const Dim3 begin;
-  const Dim3 end;
-  const int ncomp;
-
-  AMREX_GPU_HOST_DEVICE
-  constexpr get_index(Dim3 const& a_begin, Dim3 const& a_end, int a_ncomp) noexcept
-    : jstride(a_end.x-a_begin.x)
-    , kstride(jstride*(a_end.y-a_begin.y))
-    , nstride(kstride*(a_end.z-a_begin.z))
-    , begin(a_begin)
-    , end(a_end)
-    , ncomp(a_ncomp)
-  {}
-
-  AMREX_GPU_HOST_DEVICE
-  AMREX_FORCE_INLINE
-  int operator() (int i, int j, int k, int n=0) const noexcept
+  struct get_index
   {
-    return (i-begin.x)+(j-begin.y)*jstride+(k-begin.z)*kstride+n*nstride;
-  }
-};
+    const unsigned stride_i, stride_j, stride_k;
 
+    AMREX_GPU_HOST_DEVICE
+    get_index(unsigned dim_x, unsigned dim_y, unsigned dim_z, unsigned dim_comp)
+      : stride_i(dim_y*dim_z*dim_comp)
+      , stride_j(dim_z*dim_comp)
+      , stride_k(dim_comp)
+    {}
+
+    AMREX_GPU_HOST_DEVICE
+    unsigned operator() (unsigned i, unsigned j, unsigned k, unsigned n=0) const
+    {
+      return i*stride_i + j*stride_j + k*stride_k + n;
+    }
+  };
 }
 
 using namespace std;
@@ -139,280 +128,421 @@ mfix::mfix_compute_slopes (int lev,
                const auto& flag_fab = flags.array();
                const auto& ccent_fab = cellcent->array(mfi);
 
-#ifdef AMREX_USE_CUDA
-               dim3 Block(4,4,4);
-               dim3 Grid(amrex::Math::ceil(bx.length()[0] / float(Block.x)),
-                         amrex::Math::ceil(bx.length()[1] / float(Block.y)),
-                         amrex::Math::ceil(bx.length()[2] / float(Block.z)));
-
-               const unsigned sm_size =
-                 3*sizeof(Real)*(Block.x+2)*(Block.y+2)*(Block.z+2) + // ccent_sm
-                 ncomp*sizeof(Real)*(Block.x+2)*(Block.y+2)*(Block.z+2) + // state_sm
-                 sizeof(EBCellFlag)*(Block.x+2)*(Block.y+2)*(Block.z+2);  // flags_sm
-
-               if(sm_size > Gpu::Device::sharedMemPerBlock()) {
-                 amrex::Abort("Exceeding GPU shared memory in mfix_slopes_gpu.cpp");
-               }
-
-               amrex::IntVect bx_lo(bx.loVect());
-               amrex::IntVect bx_hi(bx.hiVect());
-
-               amrex::launch_global<<<Grid,Block,sm_size,Gpu::gpuStream()>>>(
-                 [state_fab,xs_fab,ys_fab,zs_fab,slopes_comp,flag_fab,ccent_fab,ncomp,
-                  bx_lo,bx_hi] AMREX_GPU_DEVICE () noexcept
+#ifndef AMREX_USE_CUDA
+               amrex::ParallelFor(bx, ncomp,
+               [state_fab,xs_fab,ys_fab,zs_fab,slopes_comp,flag_fab,ccent_fab]
+               AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                {
-                 int tid_x = threadIdx.x;
-                 int tid_y = threadIdx.y;
-                 int tid_z = threadIdx.z;
-
-                 const int stride_x = blockIdx.x*blockDim.x + bx_lo[0];
-                 const int stride_y = blockIdx.y*blockDim.y + bx_lo[1];
-                 const int stride_z = blockIdx.z*blockDim.z + bx_lo[2];
-
-                 int i = tid_x + stride_x;
-                 int j = tid_y + stride_y;
-                 int k = tid_z + stride_z;
-
-                 IntVect sm_begin = IntVect::TheZeroVector();
-                 IntVect sm_end(blockDim.x+2, blockDim.y+2, blockDim.z+2);
-
-                 get_index idx_ccent(sm_begin.dim3(), sm_end.dim3(), 3);
-                 get_index idx_state(sm_begin.dim3(), sm_end.dim3(), ncomp);
-                 get_index idx_flags(sm_begin.dim3(), sm_end.dim3(), 1);
-
-                 extern __shared__ Real sm[];
-
-                 const Box sm_box(sm_begin, sm_end - IntVect::TheUnitVector());
-                 const Long BlocksSize = sm_box.numPts();
-
-                 Real* ccent_sm = sm;
-                 Real* state_sm = (Real*)&ccent_sm[3*BlocksSize];
-                 EBCellFlag* flags_sm = (EBCellFlag*)&state_sm[ncomp*BlocksSize];
-
-                 if((i <= bx_hi[0]) and (j <= bx_hi[1]) and (k <= bx_hi[2]))
-                 {
-                   tid_x += 1; tid_y += 1; tid_z += 1;
-
-                   int loc_x[3] = {0, tid_x, amrex::min((int)blockDim.x, bx_hi[0]-stride_x+1)+1};
-                   int loc_y[3] = {0, tid_y, amrex::min((int)blockDim.y, bx_hi[1]-stride_y+1)+1};
-                   int loc_z[3] = {0, tid_z, amrex::min((int)blockDim.z, bx_hi[2]-stride_z+1)+1};
-
-                   int glob_x[3] = {stride_x-1, i, amrex::min(stride_x+(int)blockDim.x, bx_hi[0]+1)};
-                   int glob_y[3] = {stride_y-1, j, amrex::min(stride_y+(int)blockDim.y, bx_hi[1]+1)};
-                   int glob_z[3] = {stride_z-1, k, amrex::min(stride_z+(int)blockDim.z, bx_hi[2]+1)};
-
-                   for (int ii(0); ii < 3; ii++)
-                   for (int jj(0); jj < 3; jj++)
-                   for (int kk(0); kk < 3; kk++) {
-                     int t_x(loc_x[ii]);
-                     int t_y(loc_y[jj]);
-                     int t_z(loc_z[kk]);
-
-                     int g_x(glob_x[ii]);
-                     int g_y(glob_y[jj]);
-                     int g_z(glob_z[kk]);
-
-                     for (int n(0); n < 3; n++) {
-                       ccent_sm[idx_ccent(t_x,t_y,t_z,n)] = ccent_fab(g_x,g_y,g_z,n);
-                     }
-
-                     for (int n(0); n < ncomp; n++) {
-                       state_sm[idx_state(t_x,t_y,t_z,n)] = state_fab(g_x,g_y,g_z,n);
-                     }
-
-                     flags_sm[idx_flags(t_x,t_y,t_z)] = flag_fab(g_x,g_y,g_z);
-                   }
-
-                   __syncthreads();
-#else
-               amrex::ParallelFor(bx,
-               [state_fab,xs_fab,ys_fab,zs_fab,slopes_comp,flag_fab,ccent_fab,ncomp]
-               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-               {
-                 const Real* ccent_sm = ccent_fab.dataPtr();
-                 const Real* state_sm = state_fab.dataPtr();
-                 const EBCellFlag* flags_sm = flag_fab.dataPtr();
-
-                 get_index idx_ccent(ccent_fab.begin, ccent_fab.end, ncomp);
-                 get_index idx_state(state_fab.begin, state_fab.end, ncomp);
-                 get_index idx_flags(flag_fab.begin, flag_fab.end, 1);
-
-                 const int tid_x = i;
-                 const int tid_y = j;
-                 const int tid_z = k;
-
-                 {
-#endif
-                   for (int n(0); n < ncomp; n++)
+                   if (flag_fab(i,j,k).isCovered())
                    {
-                     if (flags_sm[idx_flags(tid_x,tid_y,tid_z)].isCovered())
-                     {
                        xs_fab(i,j,k,slopes_comp+n) = 0.0;
                        ys_fab(i,j,k,slopes_comp+n) = 0.0;
                        zs_fab(i,j,k,slopes_comp+n) = 0.0;
-                     }
-                     else
+                   }
+                   else
+                   {
+
+                     amrex::Real A[27][3];
+                     amrex::Real du[27];
+
                      {
-                       amrex::Real A[27][3];
-                       amrex::Real du[27];
+                       int lc=0;
+                       for(int kk(-1); kk<=1; kk++){
+                         for(int jj(-1); jj<=1; jj++){
+                           for(int ii(-1); ii<=1; ii++){
+                             if( flag_fab(i,j,k).isConnected(ii,jj,kk) and
+                                 not (ii==0 and jj==0 and kk==0)) {
 
-                       {
-                         int lc = 0;
+                               // Not multiplying by dx to be consistent with how the
+                               // slope is stored. Also not including the global shift
+                               // wrt plo or i,j,k. We only need relative distance.
 
-                         for(int kk(-1); kk<=1; kk++)
-                         for(int jj(-1); jj<=1; jj++)
-                         for(int ii(-1); ii<=1; ii++) {
-                           if((ii!=0 or jj!=0 or kk!=0) and
-                              flags_sm[idx_flags(tid_x,tid_y,tid_z)].isConnected(ii,jj,kk)) {
-                             // Not multiplying by dx to be consistent with how the
-                             // slope is stored. Also not including the global shift
-                             // wrt plo or i,j,k. We only need relative distance.
-                             A[lc][0] =
-                               ii + ccent_sm[idx_ccent(tid_x+ii,tid_y+jj,tid_z+kk,0)] -
-                               ccent_sm[idx_ccent(tid_x,tid_y,tid_z,0)];
-                             A[lc][1] =
-                               jj + ccent_sm[idx_ccent(tid_x+ii,tid_y+jj,tid_z+kk,1)] -
-                               ccent_sm[idx_ccent(tid_x,tid_y,tid_z,1)];
-                             A[lc][2] =
-                               kk + ccent_sm[idx_ccent(tid_x+ii,tid_y+jj,tid_z+kk,2)]-
-                               ccent_sm[idx_ccent(tid_x,tid_y,tid_z,2)];
+                               A[lc][0] = ii + ccent_fab(i+ii,j+jj,k+kk,0) - ccent_fab(i,j,k,0);
+                               A[lc][1] = jj + ccent_fab(i+ii,j+jj,k+kk,1) - ccent_fab(i,j,k,1);
+                               A[lc][2] = kk + ccent_fab(i+ii,j+jj,k+kk,2) - ccent_fab(i,j,k,2);
 
-                             du[lc] = state_sm[idx_state(tid_x+ii,tid_y+jj,tid_z+kk,n)] -
-                               state_sm[idx_state(tid_x,tid_y,tid_z,n)];
+                               du[lc] = state_fab(i+ii,j+jj,k+kk,n) - state_fab(i,j,k,n);
+
+                             } else {
+
+                               A[lc][0] = 0.0;
+                               A[lc][1] = 0.0;
+                               A[lc][2] = 0.0;
+
+                               du[lc] = 0.0;
+                             }
+
+                             lc++;
                            }
-                           else {
-                             A[lc][0] = 0.0;
-                             A[lc][1] = 0.0;
-                             A[lc][2] = 0.0;
-
-                             du[lc] = 0.0;
-                           }
-
-                           lc++;
                          }
                        }
+                     }
 
-                       amrex::Real AtA[3][3];
-                       amrex::Real Atb[3];
+                     amrex::Real AtA[3][3];
+                     amrex::Real Atb[3];
 
-                       for(int jj(0); jj<3; ++jj){
-                         for(int ii(0); ii<3; ++ii){
-                           AtA[ii][jj] = 0.0;
-                         }
-                         Atb[jj] = 0.0;
+                     for(int jj(0); jj<3; ++jj){
+                       for(int ii(0); ii<3; ++ii){
+                         AtA[ii][jj] = 0.0;
                        }
+                       Atb[jj] = 0.0;
+                     }
 
-                       {
-                         for(int lc(0); lc<27; ++lc){
-                           AtA[0][0] += A[lc][0]* A[lc][0];
-                           AtA[0][1] += A[lc][0]* A[lc][1];
-                           AtA[0][2] += A[lc][0]* A[lc][2];
-                           AtA[1][1] += A[lc][1]* A[lc][1];
-                           AtA[1][2] += A[lc][1]* A[lc][2];
-                           AtA[2][2] += A[lc][2]* A[lc][2];
 
-                           Atb[0] += A[lc][0]*du[lc];
-                           Atb[1] += A[lc][1]*du[lc];
-                           Atb[2] += A[lc][2]*du[lc];
-                         }
+                     {
+
+                       for(int lc(0); lc<27; ++lc){
+                         AtA[0][0] += A[lc][0]* A[lc][0];
+                         AtA[0][1] += A[lc][0]* A[lc][1];
+                         AtA[0][2] += A[lc][0]* A[lc][2];
+                         AtA[1][1] += A[lc][1]* A[lc][1];
+                         AtA[1][2] += A[lc][1]* A[lc][2];
+                         AtA[2][2] += A[lc][2]* A[lc][2];
+
+                         Atb[0] += A[lc][0]*du[lc];
+                         Atb[1] += A[lc][1]*du[lc];
+                         Atb[2] += A[lc][2]*du[lc];
                        }
+                     }
 
-                       // Fill in symmetric
-                       AtA[1][0] = AtA[0][1];
-                       AtA[2][0] = AtA[0][2];
-                       AtA[2][1] = AtA[1][2];
+                     // Fill in symmetric
+                     AtA[1][0] = AtA[0][1];
+                     AtA[2][0] = AtA[0][2];
+                     AtA[2][1] = AtA[1][2];
 
-                       amrex::Real detAtA =
-                         AtA[0][0]*(AtA[1][1]*AtA[2][2] - AtA[1][2]*AtA[1][2]) -
-                         AtA[0][1]*(AtA[1][0]*AtA[2][2] - AtA[1][2]*AtA[2][0]) +
-                         AtA[0][2]*(AtA[1][0]*AtA[2][1] - AtA[1][1]*AtA[2][0]);
 
-                       // X direction
-                       if(flags_sm[idx_flags(tid_x,tid_y,tid_z)].isSingleValued() or
-                          (flags_sm[idx_flags(tid_x-1,tid_y,tid_z)].isSingleValued() or
-                           (not flags_sm[idx_flags(tid_x,tid_y,tid_z)].isConnected(-1,0,0))) or
-                          (flags_sm[idx_flags(tid_x+1,tid_y,tid_z)].isSingleValued() or
-                           (not flags_sm[idx_flags(tid_x,tid_y,tid_z)].isConnected( 1,0,0)))) {
+                     amrex::Real detAtA =
+                       AtA[0][0]*(AtA[1][1]*AtA[2][2] - AtA[1][2]*AtA[1][2]) -
+                       AtA[0][1]*(AtA[1][0]*AtA[2][2] - AtA[1][2]*AtA[2][0]) +
+                       AtA[0][2]*(AtA[1][0]*AtA[2][1] - AtA[1][1]*AtA[2][0]);
 
-                         amrex::Real detAtA_x =
-                           Atb[0]   *(AtA[1][1]*AtA[2][2] - AtA[1][2]*AtA[1][2]) -
-                           AtA[0][1]*(Atb[1] *  AtA[2][2] - AtA[1][2]*Atb[2]   ) +
-                           AtA[0][2]*(Atb[1] *  AtA[2][1] - AtA[1][1]*Atb[2]   );
 
-                         // Slope at centroid of (i,j,k)
-                         xs_fab(i,j,k,slopes_comp+n) = detAtA_x / detAtA;
-                       }
-                       else {
-                         Real du_xl = 2.0*(state_sm[idx_state(tid_x,tid_y,tid_z,n)] -
-                             state_sm[idx_state(tid_x-1,tid_y,tid_z,n)]);
-                         Real du_xr = 2.0*(state_sm[idx_state(tid_x+1,tid_y,tid_z,n)] -
-                             state_sm[idx_state(tid_x,tid_y,tid_z,n)]);
-                         Real du_xc = 0.5*(state_sm[idx_state(tid_x+1,tid_y,tid_z,n)] -
-                             state_sm[idx_state(tid_x-1,tid_y,tid_z,n)]);
 
-                         Real xslope = amrex::min(amrex::Math::abs(du_xl), amrex::Math::abs(du_xc), amrex::Math::abs(du_xr));
-                         xslope = (du_xr*du_xl > 0.0) ? xslope : 0.0;
-                         xs_fab(i,j,k,slopes_comp+n) = (du_xc > 0.0) ? xslope : -xslope;
-                       }
+                     // X direction
+                     if( flag_fab(i  ,j,k).isSingleValued() or
+                        (flag_fab(i-1,j,k).isSingleValued() or not flag_fab(i,j,k).isConnected(-1,0,0)) or
+                        (flag_fab(i+1,j,k).isSingleValued() or not flag_fab(i,j,k).isConnected( 1,0,0))) {
 
-                       // Y direction
-                       if(flags_sm[idx_flags(tid_x,tid_y,tid_z)].isSingleValued() or
-                          (flags_sm[idx_flags(tid_x,tid_y-1,tid_z)].isSingleValued() or
-                           (not flags_sm[idx_flags(tid_x,tid_y,tid_z)].isConnected(0,-1,0))) or
-                          (flags_sm[idx_flags(tid_x,tid_y+1,tid_z)].isSingleValued() or
-                           (not flags_sm[idx_flags(tid_x,tid_y,tid_z)].isConnected(0, 1,0)))) {
+                       amrex::Real detAtA_x =
+                         Atb[0]   *(AtA[1][1]*AtA[2][2] - AtA[1][2]*AtA[1][2]) -
+                         AtA[0][1]*(Atb[1] *  AtA[2][2] - AtA[1][2]*Atb[2]   ) +
+                         AtA[0][2]*(Atb[1] *  AtA[2][1] - AtA[1][1]*Atb[2]   );
 
-                         amrex::Real detAtA_y =
-                           AtA[0][0]*(Atb[1]  * AtA[2][2] - AtA[1][2]*Atb[2]   ) -
-                           Atb[0] *  (AtA[1][0]*AtA[2][2] - AtA[1][2]*AtA[2][0]) +
-                           AtA[0][2]*(AtA[1][0]*Atb[2]    - Atb[1]   *AtA[2][0]);
+                       // Slope at centroid of (i,j,k)
+                       xs_fab(i,j,k,slopes_comp+n) = detAtA_x / detAtA;
 
-                         // Slope at centroid of (i,j,k)
-                         ys_fab(i,j,k,slopes_comp+n) = detAtA_y / detAtA;
-                       }
-                       else {
-                         Real du_yl = 2.0*(state_sm[idx_state(tid_x,tid_y,tid_z,n)] -
-                             state_sm[idx_state(tid_x,tid_y-1,tid_z,n)]);
-                         Real du_yr = 2.0*(state_sm[idx_state(tid_x,tid_y+1,tid_z,n)] -
-                             state_sm[idx_state(tid_x,tid_y,tid_z,n)]);
-                         Real du_yc = 0.5*(state_sm[idx_state(tid_x,tid_y+1,tid_z,n)] -
-                             state_sm[idx_state(tid_x,tid_y-1,tid_z,n)]);
+                     } else {
 
-                         Real yslope = amrex::min(amrex::Math::abs(du_yl), amrex::Math::abs(du_yc), amrex::Math::abs(du_yr));
-                         yslope = (du_yr*du_yl > 0.0) ? yslope : 0.0;
-                         ys_fab(i,j,k,slopes_comp+n) = (du_yc > 0.0) ? yslope : -yslope;
-                       }
+                       Real du_xl = 2.0*(state_fab(i  ,j,k,n) - state_fab(i-1,j,k,n));
+                       Real du_xr = 2.0*(state_fab(i+1,j,k,n) - state_fab(i  ,j,k,n));
+                       Real du_xc = 0.5*(state_fab(i+1,j,k,n) - state_fab(i-1,j,k,n));
 
-                       // Z direction
-                       if(flags_sm[idx_flags(tid_x,tid_y,tid_z)].isSingleValued() or
-                          (flags_sm[idx_flags(tid_x,tid_y,tid_z-1)].isSingleValued() or
-                           (not flags_sm[idx_flags(tid_x,tid_y,tid_z)].isConnected(0,0,-1))) or
-                          (flags_sm[idx_flags(tid_x,tid_y,tid_z+1)].isSingleValued() or
-                           (not flags_sm[idx_flags(tid_x,tid_y,tid_z)].isConnected(0,0, 1)))) {
+                       Real xslope = amrex::min(amrex::Math::abs(du_xl), amrex::Math::abs(du_xc), amrex::Math::abs(du_xr));
+                       xslope = (du_xr*du_xl > 0.0) ? xslope : 0.0;
+                       xs_fab(i,j,k,slopes_comp+n) = (du_xc > 0.0) ? xslope : -xslope;
 
-                         amrex::Real detAtA_z =
-                           AtA[0][0]*(AtA[1][1]*Atb[2]    - Atb[1]   *AtA[1][2]) -
-                           AtA[0][1]*(AtA[1][0]*Atb[2]    - Atb[1]   *AtA[2][0]) +
-                           Atb[0]   *(AtA[1][0]*AtA[2][1] - AtA[1][1]*AtA[2][0]);
+                     }
 
-                         zs_fab(i,j,k,slopes_comp+n) = detAtA_z / detAtA;
-                       }
-                       else {
-                         Real du_zl = 2.0*(state_sm[idx_state(tid_x,tid_y,tid_z,n)] -
-                             state_sm[idx_state(tid_x,tid_y,tid_z-1,n)]);
-                         Real du_zr = 2.0*(state_sm[idx_state(tid_x,tid_y,tid_z+1,n)] -
-                             state_sm[idx_state(tid_x,tid_y,tid_z,n)]);
-                         Real du_zc = 0.5*(state_sm[idx_state(tid_x,tid_y,tid_z+1,n)] -
-                             state_sm[idx_state(tid_x,tid_y,tid_z-1,n)]);
 
-                         Real zslope = amrex::min(amrex::Math::abs(du_zl), amrex::Math::abs(du_zc), amrex::Math::abs(du_zr));
-                         zslope = (du_zr*du_zl > 0.0) ? zslope : 0.0;
-                         zs_fab(i,j,k,slopes_comp+n) = (du_zc > 0.0) ? zslope : -zslope;
-                       }
+                     // Y direction
+                     if(flag_fab(i,j  ,k).isSingleValued() or
+                       (flag_fab(i,j-1,k).isSingleValued() or not flag_fab(i,j,k).isConnected(0,-1,0)) or
+                       (flag_fab(i,j+1,k).isSingleValued() or not flag_fab(i,j,k).isConnected(0, 1,0))) {
+
+                       amrex::Real detAtA_y =
+                         AtA[0][0]*(Atb[1]  * AtA[2][2] - AtA[1][2]*Atb[2]   ) -
+                         Atb[0] *  (AtA[1][0]*AtA[2][2] - AtA[1][2]*AtA[2][0]) +
+                         AtA[0][2]*(AtA[1][0]*Atb[2]    - Atb[1]   *AtA[2][0]);
+
+                       // Slope at centroid of (i,j,k)
+                       ys_fab(i,j,k,slopes_comp+n) = detAtA_y / detAtA;
+
+                     } else {
+
+                       Real du_yl = 2.0*(state_fab(i,j  ,k,n) - state_fab(i,j-1,k,n));
+                       Real du_yr = 2.0*(state_fab(i,j+1,k,n) - state_fab(i,j  ,k,n));
+                       Real du_yc = 0.5*(state_fab(i,j+1,k,n) - state_fab(i,j-1,k,n));
+
+                       Real yslope = amrex::min(amrex::Math::abs(du_yl), amrex::Math::abs(du_yc), amrex::Math::abs(du_yr));
+                       yslope = (du_yr*du_yl > 0.0) ? yslope : 0.0;
+                       ys_fab(i,j,k,slopes_comp+n) = (du_yc > 0.0) ? yslope : -yslope;
+                     }
+
+
+                     // Z direction
+                     if(flag_fab(i,j,k  ).isSingleValued() or
+                       (flag_fab(i,j,k-1).isSingleValued() or not flag_fab(i,j,k).isConnected(0,0,-1)) or
+                       (flag_fab(i,j,k+1).isSingleValued() or not flag_fab(i,j,k).isConnected(0,0, 1))) {
+
+                       amrex::Real detAtA_z =
+                         AtA[0][0]*(AtA[1][1]*Atb[2]    - Atb[1]   *AtA[1][2]) -
+                         AtA[0][1]*(AtA[1][0]*Atb[2]    - Atb[1]   *AtA[2][0]) +
+                         Atb[0]   *(AtA[1][0]*AtA[2][1] - AtA[1][1]*AtA[2][0]);
+
+                       zs_fab(i,j,k,slopes_comp+n) = detAtA_z / detAtA;
+
+                     } else {
+
+                       Real du_zl = 2.0*(state_fab(i,j,k  ,n) - state_fab(i,j,k-1,n));
+                       Real du_zr = 2.0*(state_fab(i,j,k+1,n) - state_fab(i,j,k  ,n));
+                       Real du_zc = 0.5*(state_fab(i,j,k+1,n) - state_fab(i,j,k-1,n));
+
+                       Real zslope = amrex::min(amrex::Math::abs(du_zl), amrex::Math::abs(du_zc), amrex::Math::abs(du_zr));
+                       zslope = (du_zr*du_zl > 0.0) ? zslope : 0.0;
+                       zs_fab(i,j,k,slopes_comp+n) = (du_zc > 0.0) ? zslope : -zslope;
+
                      }
                    }
-                 }
                });
+#else
+        dim3 Block(4,4,4);
+        dim3 Grid(amrex::Math::ceil(bx.length()[0] / float(Block.x)),
+                  amrex::Math::ceil(bx.length()[1] / float(Block.y)),
+                  amrex::Math::ceil(bx.length()[2] / float(Block.z)));
+
+        const unsigned sm_size =
+          ncomp*sizeof(Real)*(Block.x+2)*(Block.y+2)*(Block.z+2) + // ccent_sm
+          ncomp*sizeof(Real)*(Block.x+2)*(Block.y+2)*(Block.z+2) + // state_sm
+          sizeof(EBCellFlag)*(Block.x+2)*(Block.y+2)*(Block.z+2);  // flags_sm
+
+        if(sm_size > Gpu::Device::sharedMemPerBlock()) {
+          amrex::Abort("Exceeding GPU shared memory in mfix_slopes_gpu.cpp");
+        }
+
+        amrex::IntVect bx_lo(bx.loVect());
+        amrex::IntVect bx_hi(bx.hiVect());
+
+        amrex::launch_global<<<Grid,Block,sm_size,Gpu::gpuStream()>>>(
+          [state_fab,xs_fab,ys_fab,zs_fab,slopes_comp,flag_fab,ccent_fab,ncomp,
+           bx_lo,bx_hi] AMREX_GPU_DEVICE () noexcept
+        {
+          int tid_x = threadIdx.x;
+          int tid_y = threadIdx.y;
+          int tid_z = threadIdx.z;
+
+          const int stride_x = blockIdx.x*blockDim.x + bx_lo[0];
+          const int stride_y = blockIdx.y*blockDim.y + bx_lo[1];
+          const int stride_z = blockIdx.z*blockDim.z + bx_lo[2];
+
+          int i = tid_x + stride_x;
+          int j = tid_y + stride_y;
+          int k = tid_z + stride_z;
+
+          get_index idx_sca(blockDim.x+2,blockDim.y+2,blockDim.z+2,1);
+          get_index idx_vec(blockDim.x+2,blockDim.y+2,blockDim.z+2,ncomp);
+
+          extern __shared__ Real sm[];
+
+          const unsigned BlocksSize = (blockDim.x+2)*(blockDim.y+2)*(blockDim.z+2);
+
+          Real* ccent_sm = sm;
+          Real* state_sm = (Real*)&ccent_sm[ncomp*BlocksSize];
+          EBCellFlag* flags_sm = (EBCellFlag*)&state_sm[ncomp*BlocksSize];
+
+          if((i <= bx_hi[0]) and (j <= bx_hi[1]) and (k <= bx_hi[2]))
+          {
+            tid_x += 1; tid_y += 1; tid_z += 1;
+
+            int loc_x[3] = {0, tid_x, amrex::min((int)blockDim.x, bx_hi[0]-stride_x+1)+1};
+            int loc_y[3] = {0, tid_y, amrex::min((int)blockDim.y, bx_hi[1]-stride_y+1)+1};
+            int loc_z[3] = {0, tid_z, amrex::min((int)blockDim.z, bx_hi[2]-stride_z+1)+1};
+
+            int glob_x[3] = {stride_x-1, i, amrex::min(stride_x+(int)blockDim.x, bx_hi[0]+1)};
+            int glob_y[3] = {stride_y-1, j, amrex::min(stride_y+(int)blockDim.y, bx_hi[1]+1)};
+            int glob_z[3] = {stride_z-1, k, amrex::min(stride_z+(int)blockDim.z, bx_hi[2]+1)};
+
+            for (int ii(0); ii < 3; ii++)
+            for (int jj(0); jj < 3; jj++)
+            for (int kk(0); kk < 3; kk++) {
+              int t_x(loc_x[ii]);
+              int t_y(loc_y[jj]);
+              int t_z(loc_z[kk]);
+
+              int g_x(glob_x[ii]);
+              int g_y(glob_y[jj]);
+              int g_z(glob_z[kk]);
+
+              for (int n(0); n < ncomp; n++) {
+                ccent_sm[idx_vec(t_x,t_y,t_z,n)] = ccent_fab(g_x,g_y,g_z,n);
+                state_sm[idx_vec(t_x,t_y,t_z,n)] = state_fab(g_x,g_y,g_z,n);
+              }
+
+              flags_sm[idx_sca(t_x,t_y,t_z)] = flag_fab(g_x,g_y,g_z);
+            }
+
+            __syncthreads();
+
+            for (int n(0); n < ncomp; n++)
+            {
+              if (flags_sm[idx_sca(tid_x,tid_y,tid_z)].isCovered())
+              {
+                xs_fab(i,j,k,slopes_comp+n) = 0.0;
+                ys_fab(i,j,k,slopes_comp+n) = 0.0;
+                zs_fab(i,j,k,slopes_comp+n) = 0.0;
+              }
+              else
+              {
+                amrex::Real A[27][3];
+                amrex::Real du[27];
+
+                {
+                  int lc = 0;
+
+                  for(int kk(-1); kk<=1; kk++)
+                  for(int jj(-1); jj<=1; jj++)
+                  for(int ii(-1); ii<=1; ii++) {
+                    if((ii!=0 or jj!=0 or kk!=0) and
+                       flags_sm[idx_sca(tid_x,tid_y,tid_z)].isConnected(ii,jj,kk)) {
+                      // Not multiplying by dx to be consistent with how the
+                      // slope is stored. Also not including the global shift
+                      // wrt plo or i,j,k. We only need relative distance.
+                      A[lc][0] =
+                        ii + ccent_sm[idx_vec(tid_x+ii,tid_y+jj,tid_z+kk,0)] -
+                        ccent_sm[idx_vec(tid_x,tid_y,tid_z,0)];
+                      A[lc][1] =
+                        jj + ccent_sm[idx_vec(tid_x+ii,tid_y+jj,tid_z+kk,1)] -
+                        ccent_sm[idx_vec(tid_x,tid_y,tid_z,1)];
+                      A[lc][2] =
+                        kk + ccent_sm[idx_vec(tid_x+ii,tid_y+jj,tid_z+kk,2)]-
+                        ccent_sm[idx_vec(tid_x,tid_y,tid_z,2)];
+
+                      du[lc] = state_sm[idx_vec(tid_x+ii,tid_y+jj,tid_z+kk,n)] -
+                        state_sm[idx_vec(tid_x,tid_y,tid_z,n)];
+                    }
+                    else {
+                      A[lc][0] = 0.0;
+                      A[lc][1] = 0.0;
+                      A[lc][2] = 0.0;
+
+                      du[lc] = 0.0;
+                    }
+
+                    lc++;
+                  }
+                }
+
+                amrex::Real AtA[3][3];
+                amrex::Real Atb[3];
+
+                for(int jj(0); jj<3; ++jj){
+                  for(int ii(0); ii<3; ++ii){
+                    AtA[ii][jj] = 0.0;
+                  }
+                  Atb[jj] = 0.0;
+                }
+
+                {
+                  for(int lc(0); lc<27; ++lc){
+                    AtA[0][0] += A[lc][0]* A[lc][0];
+                    AtA[0][1] += A[lc][0]* A[lc][1];
+                    AtA[0][2] += A[lc][0]* A[lc][2];
+                    AtA[1][1] += A[lc][1]* A[lc][1];
+                    AtA[1][2] += A[lc][1]* A[lc][2];
+                    AtA[2][2] += A[lc][2]* A[lc][2];
+
+                    Atb[0] += A[lc][0]*du[lc];
+                    Atb[1] += A[lc][1]*du[lc];
+                    Atb[2] += A[lc][2]*du[lc];
+                  }
+                }
+
+                // Fill in symmetric
+                AtA[1][0] = AtA[0][1];
+                AtA[2][0] = AtA[0][2];
+                AtA[2][1] = AtA[1][2];
+
+                amrex::Real detAtA =
+                  AtA[0][0]*(AtA[1][1]*AtA[2][2] - AtA[1][2]*AtA[1][2]) -
+                  AtA[0][1]*(AtA[1][0]*AtA[2][2] - AtA[1][2]*AtA[2][0]) +
+                  AtA[0][2]*(AtA[1][0]*AtA[2][1] - AtA[1][1]*AtA[2][0]);
+
+                // X direction
+                if(flags_sm[idx_sca(tid_x,tid_y,tid_z)].isSingleValued() or
+                   (flags_sm[idx_sca(tid_x-1,tid_y,tid_z)].isSingleValued() or
+                    (not flags_sm[idx_sca(tid_x,tid_y,tid_z)].isConnected(-1,0,0))) or
+                   (flags_sm[idx_sca(tid_x+1,tid_y,tid_z)].isSingleValued() or
+                    (not flags_sm[idx_sca(tid_x,tid_y,tid_z)].isConnected( 1,0,0)))) {
+
+                  amrex::Real detAtA_x =
+                    Atb[0]   *(AtA[1][1]*AtA[2][2] - AtA[1][2]*AtA[1][2]) -
+                    AtA[0][1]*(Atb[1] *  AtA[2][2] - AtA[1][2]*Atb[2]   ) +
+                    AtA[0][2]*(Atb[1] *  AtA[2][1] - AtA[1][1]*Atb[2]   );
+
+                  // Slope at centroid of (i,j,k)
+                  xs_fab(i,j,k,slopes_comp+n) = detAtA_x / detAtA;
+                }
+                else {
+                  Real du_xl = 2.0*(state_sm[idx_vec(tid_x,tid_y,tid_z,n)] -
+                      state_sm[idx_vec(tid_x-1,tid_y,tid_z,n)]);
+                  Real du_xr = 2.0*(state_sm[idx_vec(tid_x+1,tid_y,tid_z,n)] -
+                      state_sm[idx_vec(tid_x,tid_y,tid_z,n)]);
+                  Real du_xc = 0.5*(state_sm[idx_vec(tid_x+1,tid_y,tid_z,n)] -
+                      state_sm[idx_vec(tid_x-1,tid_y,tid_z,n)]);
+
+                  Real xslope = amrex::min(amrex::Math::abs(du_xl), amrex::Math::abs(du_xc), amrex::Math::abs(du_xr));
+                  xslope = (du_xr*du_xl > 0.0) ? xslope : 0.0;
+                  xs_fab(i,j,k,slopes_comp+n) = (du_xc > 0.0) ? xslope : -xslope;
+                }
+
+                // Y direction
+                if(flags_sm[idx_sca(tid_x,tid_y,tid_z)].isSingleValued() or
+                   (flags_sm[idx_sca(tid_x,tid_y-1,tid_z)].isSingleValued() or
+                    (not flags_sm[idx_sca(tid_x,tid_y,tid_z)].isConnected(0,-1,0))) or
+                   (flags_sm[idx_sca(tid_x,tid_y+1,tid_z)].isSingleValued() or
+                    (not flags_sm[idx_sca(tid_x,tid_y,tid_z)].isConnected(0, 1,0)))) {
+
+                  amrex::Real detAtA_y =
+                    AtA[0][0]*(Atb[1]  * AtA[2][2] - AtA[1][2]*Atb[2]   ) -
+                    Atb[0] *  (AtA[1][0]*AtA[2][2] - AtA[1][2]*AtA[2][0]) +
+                    AtA[0][2]*(AtA[1][0]*Atb[2]    - Atb[1]   *AtA[2][0]);
+
+                  // Slope at centroid of (i,j,k)
+                  ys_fab(i,j,k,slopes_comp+n) = detAtA_y / detAtA;
+                }
+                else {
+                  Real du_yl = 2.0*(state_sm[idx_vec(tid_x,tid_y,tid_z,n)] -
+                      state_sm[idx_vec(tid_x,tid_y-1,tid_z,n)]);
+                  Real du_yr = 2.0*(state_sm[idx_vec(tid_x,tid_y+1,tid_z,n)] -
+                      state_sm[idx_vec(tid_x,tid_y,tid_z,n)]);
+                  Real du_yc = 0.5*(state_sm[idx_vec(tid_x,tid_y+1,tid_z,n)] -
+                      state_sm[idx_vec(tid_x,tid_y-1,tid_z,n)]);
+
+                  Real yslope = amrex::min(amrex::Math::abs(du_yl), amrex::Math::abs(du_yc), amrex::Math::abs(du_yr));
+                  yslope = (du_yr*du_yl > 0.0) ? yslope : 0.0;
+                  ys_fab(i,j,k,slopes_comp+n) = (du_yc > 0.0) ? yslope : -yslope;
+                }
+
+                // Z direction
+                if(flags_sm[idx_sca(tid_x,tid_y,tid_z)].isSingleValued() or
+                   (flags_sm[idx_sca(tid_x,tid_y,tid_z-1)].isSingleValued() or
+                    (not flags_sm[idx_sca(tid_x,tid_y,tid_z)].isConnected(0,0,-1))) or
+                   (flags_sm[idx_sca(tid_x,tid_y,tid_z+1)].isSingleValued() or
+                    (not flags_sm[idx_sca(tid_x,tid_y,tid_z)].isConnected(0,0, 1)))) {
+
+                  amrex::Real detAtA_z =
+                    AtA[0][0]*(AtA[1][1]*Atb[2]    - Atb[1]   *AtA[1][2]) -
+                    AtA[0][1]*(AtA[1][0]*Atb[2]    - Atb[1]   *AtA[2][0]) +
+                    Atb[0]   *(AtA[1][0]*AtA[2][1] - AtA[1][1]*AtA[2][0]);
+
+                  zs_fab(i,j,k,slopes_comp+n) = detAtA_z / detAtA;
+                }
+                else {
+                  Real du_zl = 2.0*(state_sm[idx_vec(tid_x,tid_y,tid_z,n)] -
+                      state_sm[idx_vec(tid_x,tid_y,tid_z-1,n)]);
+                  Real du_zr = 2.0*(state_sm[idx_vec(tid_x,tid_y,tid_z+1,n)] -
+                      state_sm[idx_vec(tid_x,tid_y,tid_z,n)]);
+                  Real du_zc = 0.5*(state_sm[idx_vec(tid_x,tid_y,tid_z+1,n)] -
+                      state_sm[idx_vec(tid_x,tid_y,tid_z-1,n)]);
+
+                  Real zslope = amrex::min(amrex::Math::abs(du_zl), amrex::Math::abs(du_zc), amrex::Math::abs(du_zr));
+                  zslope = (du_zr*du_zl > 0.0) ? zslope : 0.0;
+                  zs_fab(i,j,k,slopes_comp+n) = (du_zc > 0.0) ? zslope : -zslope;
+                }
+              }
+            }
+          }
+        });
+#endif
            } // end of cut cell region
 
            const auto& flag_fab = flags.array();
