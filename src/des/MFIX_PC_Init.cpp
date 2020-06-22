@@ -181,13 +181,13 @@ void MFIXParticleContainer::InitParticlesAuto ()
 
 }
 
-
-
 void MFIXParticleContainer::InitParticlesEnthalpy ()
 {
   int lev = 0;
   const auto dx  = Geom(lev).CellSizeArray();
   const auto idx = Geom(lev).InvCellSizeArray();
+
+  const Real * plo = Geom(lev).ProbLo();
 
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
   {
@@ -207,13 +207,13 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
       // a user and convert it index space (i,j,k). That in turn is turned
       // back into a physical region that may be a little larger than what
       // was actually defined to account for spatial discretization.
-      const IntVect bx_lo(amrex::Math::floor(ic.region->lo(0)*idx[0] + 0.5),
-                          amrex::Math::floor(ic.region->lo(1)*idx[1] + 0.5),
-                          amrex::Math::floor(ic.region->lo(2)*idx[0] + 0.5));
+      const IntVect bx_lo(amrex::Math::floor((ic.region->lo(0)-plo[0])*idx[0] + 0.5),
+                          amrex::Math::floor((ic.region->lo(1)-plo[1])*idx[1] + 0.5),
+                          amrex::Math::floor((ic.region->lo(2)-plo[2])*idx[0] + 0.5));
 
-      const IntVect bx_hi(amrex::Math::floor(ic.region->hi(0)*idx[0] + 0.5),
-                          amrex::Math::floor(ic.region->hi(1)*idx[1] + 0.5),
-                          amrex::Math::floor(ic.region->hi(2)*idx[0] + 0.5));
+      const IntVect bx_hi(amrex::Math::floor((ic.region->hi(0)-plo[0])*idx[0] + 0.5),
+                          amrex::Math::floor((ic.region->hi(1)-plo[1])*idx[1] + 0.5),
+                          amrex::Math::floor((ic.region->hi(2)-plo[2])*idx[0] + 0.5));
 
       // Start/end of IC domain bounds
       const amrex::RealVect ic_lo = {bx_lo[0]*dx[0], bx_lo[1]*dx[1], bx_lo[2]*dx[2]};

@@ -331,6 +331,7 @@ int main (int argc, char* argv[])
         if (unused_inputs)
            amrex::Print() << "We should think about aborting here due to unused inputs" << std::endl;
     }
+
     { // Start profiling solve here
 
         BL_PROFILE("mfix_solve");
@@ -398,8 +399,6 @@ int main (int argc, char* argv[])
 
     amrex::Print() << " " << std::endl;
     bool unused_inputs = ParmParse::QueryUnusedInputs();
-    if (unused_inputs)
-       amrex::Print() << "We should think about aborting here..." << std::endl;
 
     BL_PROFILE_REGION_STOP("mfix::main()");
     BL_PROFILE_VAR_STOP(pmain);

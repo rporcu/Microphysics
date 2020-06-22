@@ -23,8 +23,8 @@ namespace SPECIES
 
     SPECIES_t() {}
 
-    SPECIES_t(const int nspecies) :
-      mass_fractions(nspecies, 0.0)
+    SPECIES_t(const int nspec) :
+      mass_fractions(nspec, 0.0)
     {}
 
   };
