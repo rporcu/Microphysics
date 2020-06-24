@@ -62,10 +62,11 @@ test_csg: &test_template
 
 .gpu_test: &gpu_template
   script:
-    - git submodule update --init --force subprojects/amrex
+    - git submodule update --init --force
     - cmake -S .
             -B build
             -DCUDA_ARCH=Volta
+            -DENABLE_CSG=yes
             -DENABLE_CUDA=1
             -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
