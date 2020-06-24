@@ -19,7 +19,7 @@ mfix::mfix_set_bc_type (int lev)
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
-    const Real * plo = geom[lev].ProbLo();
+    const GpuArray<Real, 3> plo = geom[lev].ProbLoArray();
 
     // Extract the lower and upper boundaries of Box Domain
     const int und_  = bc_list.get_undefined();

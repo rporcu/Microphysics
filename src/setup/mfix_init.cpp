@@ -802,7 +802,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        Real dy = geom[lev].CellSize(1);
        Real dz = geom[lev].CellSize(2);
 
-       const Real* plo = geom[lev].ProbLo();
+       const GpuArray<Real, 3> plo = geom[lev].ProbLoArray();
 
        LevelData& ld = *m_leveldata[lev];
 
