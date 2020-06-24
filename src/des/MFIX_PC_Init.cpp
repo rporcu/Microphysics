@@ -141,7 +141,7 @@ void MFIXParticleContainer::InitParticlesAuto ()
       const IntVect lo(tilebx.loVect());
       const IntVect hi(tilebx.hiVect());
 
-      const Real* plo = Geom(lev).ProbLo();
+      const GpuArray<Real, 3> plo = Geom(lev).ProbLoArray();
 
       particles_generator.generate(pcount, lo, hi, dx, dy, dz, plo);
 

@@ -6,19 +6,20 @@
 #include <AMReX_REAL.H>
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
+#include <AMReX_GpuContainers.H>
 
-void init_fluid (const Box& sbx,
-                 const Box& bx,
-                 const Box& domain,
-                 const MFIter& mfi,
+void init_fluid (const amrex::Box& sbx,
+                 const amrex::Box& bx,
+                 const amrex::Box& domain,
+                 const amrex::MFIter& mfi,
                  LevelData& ld,
-                 const Real dx,
-                 const Real dy,
-                 const Real dz,
-                 const Real xlength,
-                 const Real ylength,
-                 const Real zlength,
-                 const Real* plo,
+                 const amrex::Real dx,
+                 const amrex::Real dy,
+                 const amrex::Real dz,
+                 const amrex::Real xlength,
+                 const amrex::Real ylength,
+                 const amrex::Real zlength,
+                 const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo,
                  bool test_tracer_conservation,
                  const int advect_enthalpy,
                  const int advect_fluid_species);

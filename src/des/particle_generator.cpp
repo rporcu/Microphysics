@@ -41,7 +41,7 @@ ParticlesGenerator::generate (int& pc,
                               const amrex::Real dx,
                               const amrex::Real dy,
                               const amrex::Real dz,
-                              const amrex::Real* plo)
+                              const amrex::GpuArray<Real, 3>& plo)
 {
   const int init_pc(pc);
 
@@ -239,7 +239,7 @@ ParticlesGenerator::hex_close_pack (const int icv,
                                     const amrex::Real dx,
                                     const amrex::Real dy,
                                     const amrex::Real dz,
-                                    const amrex::Real* plo)
+                                    const amrex::GpuArray<Real, 3>& plo)
 {
   // indices
   int i_w, i_e, j_s, j_n, k_b, k_t;
@@ -255,7 +255,7 @@ ParticlesGenerator::hex_close_pack (const int icv,
   calc_cell_ic(dx, dy, dz,
                IC::ic[icv].region->lo(),
                IC::ic[icv].region->hi(),
-               plo,
+               plo.data(),
                i_w, i_e, j_s, j_n, k_b, k_t);
 
   const Real y_s(IC::ic[icv].region->lo(1));
@@ -324,6 +324,8 @@ ParticlesGenerator::hex_close_pack (const int icv,
     [p_rdata,seed_lo,delta_bx,max_rp,i_w,j_s,k_b,local_nr,pc,sqrt6o3x2,sqrt3,dx,dy,dz,plo]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
+      const Real* plo_ptr = plo.data();
+
       const int local_i = i - seed_lo[0];
       const int local_j = j - seed_lo[1];
       const int local_k = k - seed_lo[2];
@@ -331,9 +333,9 @@ ParticlesGenerator::hex_close_pack (const int icv,
       const int local_pc =
         pc + (local_j + local_k*delta_bx[1] + local_i*delta_bx[1]*delta_bx[2]);
 
-      p_rdata[local_pc*local_nr + 0] = plo[0] + i_w*dx + max_rp*(1. + i*sqrt6o3x2);
-      p_rdata[local_pc*local_nr + 1] = plo[1] + j_s*dy + max_rp*(1. + 2.*j + ((i+k)%2));
-      p_rdata[local_pc*local_nr + 2] = plo[2] + k_b*dz + max_rp*(1. + sqrt3*(k+((i%2)/3.)));
+      p_rdata[local_pc*local_nr + 0] = plo_ptr[0] + i_w*dx + max_rp*(1. + i*sqrt6o3x2);
+      p_rdata[local_pc*local_nr + 1] = plo_ptr[1] + j_s*dy + max_rp*(1. + 2.*j + ((i+k)%2));
+      p_rdata[local_pc*local_nr + 2] = plo_ptr[2] + k_b*dz + max_rp*(1. + sqrt3*(k+((i%2)/3.)));
     });
 
   pc += np;
@@ -359,7 +361,7 @@ ParticlesGenerator::one_per_fill (const int icv,
                                   const amrex::Real dx,
                                   const amrex::Real dy,
                                   const amrex::Real dz,
-                                  const amrex::Real* plo)
+                                  const amrex::GpuArray<Real, 3>& plo)
 {
   // indices
   int i_w, i_e, j_s, j_n, k_b, k_t;
@@ -369,7 +371,7 @@ ParticlesGenerator::one_per_fill (const int icv,
   calc_cell_ic(dx, dy, dz,
                IC::ic[icv].region->lo(),
                IC::ic[icv].region->hi(),
-               plo,
+               plo.data(),
                i_w, i_e, j_s, j_n, k_b, k_t);
 
   const Real x_w(IC::ic[icv].region->lo(0));
@@ -404,6 +406,8 @@ ParticlesGenerator::one_per_fill (const int icv,
   amrex::ParallelFor(bx, [p_rdata,seed_lo,delta_bx,local_nr,dx,dy,dz,plo,pc]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
+      const Real* plo_ptr = plo.data();
+
       const int local_i = i - seed_lo[0];
       const int local_j = j - seed_lo[1];
       const int local_k = k - seed_lo[2];
@@ -411,9 +415,9 @@ ParticlesGenerator::one_per_fill (const int icv,
       const int local_pc =
         pc + (local_i + local_k*delta_bx[0] + local_j*delta_bx[0]*delta_bx[2]);
 
-      p_rdata[local_pc*local_nr + 0] = plo[0] + (i + 0.5) * dx;
-      p_rdata[local_pc*local_nr + 1] = plo[1] + (j + 0.5) * dy;
-      p_rdata[local_pc*local_nr + 2] = plo[2] + (k + 0.5) * dz;
+      p_rdata[local_pc*local_nr + 0] = plo_ptr[0] + (i + 0.5) * dx;
+      p_rdata[local_pc*local_nr + 1] = plo_ptr[1] + (j + 0.5) * dy;
+      p_rdata[local_pc*local_nr + 2] = plo_ptr[2] + (k + 0.5) * dz;
     });
 
   pc += np;
@@ -439,7 +443,7 @@ ParticlesGenerator::eight_per_fill (const int icv,
                                     const amrex::Real dx,
                                     const amrex::Real dy,
                                     const amrex::Real dz,
-                                    const amrex::Real* plo)
+                                    const amrex::GpuArray<Real, 3>& plo)
 {
   // indices
   amrex::IntVect seed_lo, seed_hi, delta_bx;
@@ -475,6 +479,8 @@ ParticlesGenerator::eight_per_fill (const int icv,
   amrex::ParallelFor(bx, [p_rdata,seed_lo,delta_bx,pc,dx,dy,dz,plo,local_nr]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
+      const Real* plo_ptr = plo.data();
+
       const int local_i = i - seed_lo[0];
       const int local_j = j - seed_lo[1];
       const int local_k = k - seed_lo[2];
@@ -482,9 +488,9 @@ ParticlesGenerator::eight_per_fill (const int icv,
       const int local_pc =
         pc + (local_i + local_k*delta_bx[0] + local_j*delta_bx[0]*delta_bx[2]);
 
-      p_rdata[local_pc*local_nr + 0] = plo[0] + (i + 0.5)*dx/2.;
-      p_rdata[local_pc*local_nr + 1] = plo[1] + (j + 0.5)*dy/2.;
-      p_rdata[local_pc*local_nr + 2] = plo[2] + (k + 0.5)*dz/2.;
+      p_rdata[local_pc*local_nr + 0] = plo_ptr[0] + (i + 0.5)*dx/2.;
+      p_rdata[local_pc*local_nr + 1] = plo_ptr[1] + (j + 0.5)*dy/2.;
+      p_rdata[local_pc*local_nr + 2] = plo_ptr[2] + (k + 0.5)*dz/2.;
     });
 
   pc += np;
@@ -510,7 +516,7 @@ ParticlesGenerator::random_fill_dem (const int icv,
                                      const amrex::Real dx,
                                      const amrex::Real dy,
                                      const amrex::Real dz,
-                                     const amrex::Real* plo,
+                                     const amrex::GpuArray<Real, 3>& plo,
                                      const bool fix_seed)
 {
     // indices
@@ -524,7 +530,7 @@ ParticlesGenerator::random_fill_dem (const int icv,
   calc_cell_ic(dx, dy, dz,
                IC::ic[icv].region->lo(),
                IC::ic[icv].region->hi(),
-               plo,
+               plo.data(),
                i_w, i_e, j_s, j_n, k_b, k_t);
 
   // Start/end of IC domain bounds
@@ -641,14 +647,16 @@ ParticlesGenerator::random_fill_dem (const int icv,
 
             for(int p = 0; p < upper_limit; p++)
             {
+              const Real* plo_ptr = plo.data();
+
               const int local_pc =
                 pbin[local_i + local_j*delta_bx[0] +
                      local_k*delta_bx[0]*delta_bx[1] +
                      p*delta_bx[0]*delta_bx[1]*delta_bx[2]];
 
-              const Real dist_x = p_rdata[local_pc*nr + 0] - pos[0] - plo[0];
-              const Real dist_y = p_rdata[local_pc*nr + 1] - pos[1] - plo[1];
-              const Real dist_z = p_rdata[local_pc*nr + 2] - pos[2] - plo[2];
+              const Real dist_x = p_rdata[local_pc*nr + 0] - pos[0] - plo_ptr[0];
+              const Real dist_y = p_rdata[local_pc*nr + 1] - pos[1] - plo_ptr[1];
+              const Real dist_z = p_rdata[local_pc*nr + 2] - pos[2] - plo_ptr[2];
 
               const amrex::Real dist = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
 
@@ -720,7 +728,7 @@ ParticlesGenerator::random_fill_pic (const int icv,
                                      const amrex::Real dx,
                                      const amrex::Real dy,
                                      const amrex::Real dz,
-                                     const amrex::Real* plo,
+                                     const amrex::GpuArray<Real, 3>& plo,
                                      const bool fix_seed)
 {
 
@@ -772,6 +780,8 @@ ParticlesGenerator::random_fill_pic (const int icv,
     [p_rdata,seed_lo,delta_bx,local_nr,dx,dy,dz,plo,pc,whole_parcels_per_cell]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
+      const Real* plo_ptr = plo.data();
+
       const int local_i = i - seed_lo[0];
       const int local_j = j - seed_lo[1];
       const int local_k = k - seed_lo[2];
@@ -779,9 +789,9 @@ ParticlesGenerator::random_fill_pic (const int icv,
       const int local_pc = pc + whole_parcels_per_cell *
         (local_i + local_k*delta_bx[0] + local_j*delta_bx[0]*delta_bx[2]);
 
-      const amrex::Real xlo = plo[0] + (i * dx);
-      const amrex::Real ylo = plo[1] + (j * dy);
-      const amrex::Real zlo = plo[2] + (k * dz);
+      const amrex::Real xlo = plo_ptr[0] + (i * dx);
+      const amrex::Real ylo = plo_ptr[1] + (j * dy);
+      const amrex::Real zlo = plo_ptr[2] + (k * dz);
 
       for(int pseed(0); pseed < whole_parcels_per_cell; pseed++){
 

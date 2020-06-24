@@ -10,13 +10,16 @@ using namespace amrex;
 
 // Forward declarations
 void set_ic_vel (const Box& sbx, const Box& domain,
-                 const Real dx, const Real dy, const Real dz, const Real* plo, FArrayBox& vel_g_fab);
+                 const Real dx, const Real dy, const Real dz,
+                 const GpuArray<Real, 3>& plo, FArrayBox& vel_g_fab);
 
 void set_ic_temp (const Box& sbx, const Box& domain,
-                  const Real dx, const Real dy, const Real dz, const Real* plo, FArrayBox& T_g_fab);
+                  const Real dx, const Real dy, const Real dz,
+                  const GpuArray<Real, 3>& plo, FArrayBox& T_g_fab);
 
 void set_ic_species_g (const Box& sbx, const Box& domain,
-                       const Real dx, const Real dy, const Real dz, const Real* plo, FArrayBox& X_g_fab);
+                       const Real dx, const Real dy, const Real dz,
+                       const GpuArray<Real, 3>& plo, FArrayBox& X_g_fab);
 
 void init_helix (const Box& bx, const Box& domain, FArrayBox& vel_g_fab,
                  const Real dx, const Real dy, const Real dz);
@@ -38,7 +41,7 @@ void init_fluid (const Box& sbx,
                  const Real xlength,
                  const Real ylength,
                  const Real zlength,
-                 const Real* plo,
+                 const GpuArray<Real, 3>& plo,
                  bool test_tracer_conservation,
                  const int advect_enthalpy,
                  const int advect_fluid_species)
@@ -341,7 +344,7 @@ void set_ic_vel (const Box& sbx,
                  const Real dx,
                  const Real dy,
                  const Real dz,
-                 const Real* plo,
+                 const GpuArray<Real, 3>& plo,
                  FArrayBox& vel_g_fab)
 {
   const IntVect slo(sbx.loVect());
@@ -362,7 +365,7 @@ void set_ic_vel (const Box& sbx,
     calc_cell_ic(dx, dy, dz,
                  IC::ic[icv].region->lo(),
                  IC::ic[icv].region->hi(),
-                 plo,
+                 plo.data(),
                  i_w, i_e, j_s, j_n, k_b, k_t);
 
     // Use the volume fraction already calculated from particle data
@@ -471,7 +474,7 @@ void set_ic_temp (const Box& sbx,
                   const Real dx,
                   const Real dy,
                   const Real dz,
-                  const Real* plo,
+                  const GpuArray<Real, 3>& plo,
                   FArrayBox& T_g_fab)
 {
   const IntVect slo(sbx.loVect());
@@ -492,7 +495,7 @@ void set_ic_temp (const Box& sbx,
     calc_cell_ic(dx, dy, dz,
                  IC::ic[icv].region->lo(),
                  IC::ic[icv].region->hi(),
-                 plo,
+                 plo.data(),
                  i_w, i_e, j_s, j_n, k_b, k_t);
 
     // Use the volume fraction already calculated from particle data
@@ -594,7 +597,7 @@ void set_ic_species_g (const Box& sbx,
                        const Real dx,
                        const Real dy,
                        const Real dz,
-                       const Real* plo,
+                       const GpuArray<Real, 3>& plo,
                        FArrayBox& X_g_fab)
 {
   const IntVect slo(sbx.loVect());
@@ -613,7 +616,9 @@ void set_ic_species_g (const Box& sbx,
     int i_w(0), j_s(0), k_b(0);
     int i_e(0), j_n(0), k_t(0);
 
-    calc_cell_ic(dx, dy, dz, IC::ic[icv].region->lo(), IC::ic[icv].region->hi(), plo,
+    calc_cell_ic(dx, dy, dz,
+                 IC::ic[icv].region->lo(), IC::ic[icv].region->hi(),
+                 plo.data(),
                  i_w, i_e, j_s, j_n, k_b, k_t);
 
     // Get the initial condition values
