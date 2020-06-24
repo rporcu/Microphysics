@@ -106,6 +106,10 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
       const BoxArray&            pba = pc->ParticleBoxArray(lev);
       const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
+      EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
+                                       {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                                       EBSupport::full);
+
       // Temporary arrays  -- copies with no ghost cells
       ro_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->ro_g->nComp(), 1);
       ro_ptr->copy(*m_leveldata[lev]->ro_g, 0, 0, 1, 0, 0);
@@ -121,13 +125,9 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
         cp_ptr->copy(*m_leveldata[lev]->cp_g, 0, 0, 1, 0, 0);
       }
       else {
-        kg_ptr = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-        cp_ptr = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+        kg_ptr = new MultiFab(pba, pdm, 1, 0, MFInfo(), ebfactory_loc);
+        cp_ptr = new MultiFab(pba, pdm, 1, 0, MFInfo(), ebfactory_loc);
       }
-
-      EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
-                                       {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
-                                       EBSupport::full);
 
       // Store gas velocity and volume fraction for interpolation
       interp_ptr = new MultiFab(pba, pdm, interp_comp, interp_ng, MFInfo(), ebfactory_loc);
