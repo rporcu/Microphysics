@@ -139,9 +139,11 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 
     int  src_nghost = 1;
     int dest_nghost = 0;
+    int ng_to_copy = amrex::min(src_nghost, dest_nghost);
+
     for (int lev = 1; lev < nlev; lev++)
       mf_pointer[0]->copy(*mf_pointer[lev],0,0, m_leveldata[lev]->ep_g->nComp(),
-                          src_nghost, dest_nghost, gm.periodicity(), FabArrayBase::ADD);
+          ng_to_copy, ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
 
     if (nlev > 1)
     {

@@ -143,9 +143,11 @@ mfix::mfix_calc_txfr_fluid (Real time)
 
   int  src_nghost = 1;
   int dest_nghost = 0;
+  int ng_to_copy = amrex::min(src_nghost, dest_nghost);
+
   for (int lev = 1; lev < nlev; lev++) {
-    txfr_ptr[0]->copy(*txfr_ptr[lev],0,0,txfr_ptr[0]->nComp(),
-                      src_nghost,dest_nghost,gm.periodicity(),FabArrayBase::ADD);
+    txfr_ptr[0]->copy(*txfr_ptr[lev], 0, 0, txfr_ptr[0]->nComp(), ng_to_copy,
+        ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
   }
 
   if (nlev > 1) {
@@ -269,21 +271,18 @@ mfix::mfix_calc_txfr_particle (Real time)
       // Copy fluid velocity
       interp_ptr->copy(*m_leveldata[lev]->vel_g, 0, 0,
                         m_leveldata[lev]->vel_g->nComp(),
-                        m_leveldata[lev]->vel_g->nGrow(),
-                        interp_ng);
+                        interp_ng, interp_ng);
 
       // Copy pressure gradient
-      interp_ptr->copy(gp_tmp,  0, 3,
+      interp_ptr->copy(gp_tmp, 0, 3,
                        gp_tmp.nComp(),
-                       gp_tmp.nGrow(),
-                       interp_ng);
+                       interp_ng, interp_ng);
 
       // Copy fluid temperature
       if(advect_enthalpy){
         interp_ptr->copy(*m_leveldata[lev]->T_g, 0, 6,
                           m_leveldata[lev]->T_g->nComp(),
-                          m_leveldata[lev]->T_g->nGrow(),
-                          interp_ng);
+                          interp_ng, interp_ng);
       } else {
         interp_ptr->setVal(0.0, 6, 1, interp_ng);
       }
@@ -300,25 +299,22 @@ mfix::mfix_calc_txfr_particle (Real time)
                                        {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
                                        EBSupport::full);
 
-
       // Store gas velocity and volume fraction for interpolation
       interp_ptr = new MultiFab(pba, pdm, interp_comp, interp_ng, MFInfo(), ebfactory_loc);
 
       // Copy fluid velocity
       interp_ptr->copy(*m_leveldata[lev]->vel_g, 0, 0,
                         m_leveldata[lev]->vel_g->nComp(),
-                        m_leveldata[lev]->vel_g->nGrow(),
-                        interp_ng);
+                        interp_ng, interp_ng);
 
       // Copy pressure gradient
-      interp_ptr->copy(gp_tmp,  0, 3, gp_tmp.nComp(), gp_tmp.nGrow(), interp_ng);
+      interp_ptr->copy(gp_tmp, 0, 3, gp_tmp.nComp(), interp_ng, interp_ng);
 
       // Copy fluid temperature
       if(advect_enthalpy) {
         interp_ptr->copy(*m_leveldata[lev]->T_g, 0, 6,
                           m_leveldata[lev]->T_g->nComp(),
-                          m_leveldata[lev]->T_g->nGrow(),
-                          interp_ng);
+                          interp_ng, interp_ng);
       } else {
         interp_ptr->setVal(0.0, 6, 1, interp_ng);
       }

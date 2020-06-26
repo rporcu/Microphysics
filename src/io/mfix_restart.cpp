@@ -194,8 +194,10 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           if (Nrep == IntVect::TheUnitVector())
           {
             // Simply copy mf_vel into vel_g, mf_gp into gp
-            m_leveldata[lev]->vel_g->copy(mf_vel, 0, 0, 3, 0, 0);
-            m_leveldata[lev]->gp->copy(mf_gp, 0, 0, 3, 0, 0);
+            const int ng_to_copy = 0;
+
+            m_leveldata[lev]->vel_g->copy(mf_vel, 0, 0, 3, ng_to_copy, ng_to_copy);
+            m_leveldata[lev]->gp->copy(mf_gp, 0, 0, 3, ng_to_copy, ng_to_copy);
 
           } else {
 
@@ -215,8 +217,12 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
               for (MFIter mfi(*m_leveldata[lev]->vel_g, false); mfi.isValid(); ++mfi)
               {
                 int ib = mfi.index();
-                (*m_leveldata[lev]->vel_g)[ib].copy<RunOn::Host>(single_fab_vel,single_fab_vel.box(),0,mfi.validbox(),0,3);
-                (*m_leveldata[lev]->gp)[ib].copy<RunOn::Host>(single_fab_gp , single_fab_gp.box(),0,mfi.validbox(),0,3);
+
+                (*m_leveldata[lev]->vel_g)[ib].copy<RunOn::Host>(single_fab_vel,
+                    single_fab_vel.box(), 0, mfi.validbox(), 0, 3);
+
+                (*m_leveldata[lev]->gp)[ib].copy<RunOn::Host>(single_fab_gp,
+                    single_fab_gp.box(), 0, mfi.validbox(), 0, 3);
               }
           }
 
@@ -244,7 +250,9 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
               if (Nrep == IntVect::TheUnitVector()) {
 
                  // Copy from the mf we used to read in to the mf we will use going forward
-                 (**(chkscalarVars[i][lev])).copy(mf, 0, 0, 1, 0, 0);
+                 const int ng_to_copy = 0;
+
+                 (**(chkscalarVars[i][lev])).copy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
               } else {
 
@@ -259,7 +267,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                   // Copy and replicate mf into chkscalarVars
                   for (MFIter mfi(**(chkscalarVars[i][lev]), false); mfi.isValid(); ++mfi) {
                       int ib = mfi.index();
-                      (**(chkscalarVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
+                      (**(chkscalarVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
+                          single_fab.box(), 0, mfi.validbox(), 0, 1);
                   }
               }
           }
@@ -298,7 +307,9 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
                 // Copy from the mf we used to read in to the mf we will use
                 // going forward
-                (**(chktemperatureVars[i][lev])).copy(mf, 0, 0, 1, 0, 0);
+                const int ng_to_copy = 0;
+
+                (**(chktemperatureVars[i][lev])).copy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
              } else {
 
@@ -313,7 +324,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                  // Copy and replicate mf into chkscalarVars
                  for (MFIter mfi(**(chktemperatureVars[i][lev]), false); mfi.isValid(); ++mfi) {
                      int ib = mfi.index();
-                     (**(chktemperatureVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, 1);
+                     (**(chktemperatureVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
+                         single_fab.box(), 0, mfi.validbox(), 0, 1);
                  }
                }
              }
@@ -336,7 +348,10 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
              if (Nrep == IntVect::TheUnitVector()) {
 
                 // Copy from the mf we used to read in to the mf we will use going forward
-                (**(chkspeciesVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies_g, 0, 0);
+                const int ng_to_copy = 0;
+
+                (**(chkspeciesVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies_g,
+                    ng_to_copy, ng_to_copy);
 
              } else {
 
@@ -351,7 +366,9 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                  // Copy and replicate mf into chkscalarVars
                  for (MFIter mfi(**(chkspeciesVars[i][lev]), false); mfi.isValid(); ++mfi) {
                      int ib = mfi.index();
-                     (**(chkspeciesVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, FLUID::nspecies_g);
+                     (**(chkspeciesVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
+                         single_fab.box(), 0, mfi.validbox(), 0,
+                         FLUID::nspecies_g);
                  }
                }
              }

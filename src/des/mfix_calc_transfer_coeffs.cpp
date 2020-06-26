@@ -90,14 +90,12 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
       // Copy fluid velocity
       interp_ptr->copy(*m_leveldata[lev]->vel_g, 0, 0,
                         m_leveldata[lev]->vel_g->nComp(),
-                        m_leveldata[lev]->vel_g->nGrow(),
-                        interp_ng);
+                        interp_ng, interp_ng);
 
       // Copy volume fraction
       interp_ptr->copy(*m_leveldata[lev]->ep_g,  0, 3,
                         m_leveldata[lev]->ep_g->nComp(),
-                        m_leveldata[lev]->ep_g->nGrow(),
-                        interp_ng);
+                        interp_ng, interp_ng);
 
       interp_ptr->FillBoundary(geom[lev].periodicity());
     }
@@ -111,18 +109,20 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
                                        EBSupport::full);
 
       // Temporary arrays  -- copies with no ghost cells
+      const int ng_to_copy = 0;
+
       ro_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->ro_g->nComp(), 1);
-      ro_ptr->copy(*m_leveldata[lev]->ro_g, 0, 0, 1, 0, 0);
+      ro_ptr->copy(*m_leveldata[lev]->ro_g, 0, 0, 1, ng_to_copy, ng_to_copy);
 
       mu_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->mu_g->nComp(), 1);
-      mu_ptr->copy(*m_leveldata[lev]->mu_g, 0, 0, 1, 0, 0);
+      mu_ptr->copy(*m_leveldata[lev]->mu_g, 0, 0, 1, ng_to_copy, ng_to_copy);
 
       if (advect_enthalpy) {
         kg_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->k_g->nComp(), 1);
-        kg_ptr->copy(*m_leveldata[lev]->k_g, 0, 0, 1, 0, 0);
+        kg_ptr->copy(*m_leveldata[lev]->k_g, 0, 0, 1, ng_to_copy, ng_to_copy);
 
         cp_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->cp_g->nComp(), 1);
-        cp_ptr->copy(*m_leveldata[lev]->cp_g, 0, 0, 1, 0, 0);
+        cp_ptr->copy(*m_leveldata[lev]->cp_g, 0, 0, 1, ng_to_copy, ng_to_copy);
       }
       else {
         kg_ptr = new MultiFab(pba, pdm, 1, 0, MFInfo(), ebfactory_loc);
@@ -135,14 +135,12 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
       // Copy fluid velocity
       interp_ptr->copy(*m_leveldata[lev]->vel_g, 0, 0,
                         m_leveldata[lev]->vel_g->nComp(),
-                        m_leveldata[lev]->vel_g->nGrow(),
-                        interp_ng);
+                        interp_ng, interp_ng);
 
       // Copy volume fraction
       interp_ptr->copy(*m_leveldata[lev]->ep_g,  0, 3,
                         m_leveldata[lev]->ep_g->nComp(),
-                        m_leveldata[lev]->ep_g->nGrow(),
-                        interp_ng);
+                        interp_ng, interp_ng);
 
       interp_ptr->FillBoundary(geom[lev].periodicity());
     }
