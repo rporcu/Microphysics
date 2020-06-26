@@ -46,8 +46,7 @@ void mfix::EvolveParcels (int nstep,
     // Copy gas phase volume fraction
     ep_s[lev]->copy(*m_leveldata[lev]->ep_g,  0, 0,
                       m_leveldata[lev]->ep_g->nComp(),
-                      m_leveldata[lev]->ep_g->nGrow(),
-                      pic_nghost);
+                      pic_nghost, pic_nghost);
 
     // Now define this ep_s = (1 - ep_g)
     ep_s[lev]->mult(-1.0, ep_s[lev]->nGrow());
