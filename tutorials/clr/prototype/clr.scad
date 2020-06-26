@@ -1,4 +1,5 @@
 $fn = 50;
+$fn = 50;
 
 module air_reactor_and_riser(reactor_radius,
                              reactor_height,
@@ -145,65 +146,32 @@ module clr(reactor_radius,
     }
 }
 
-module exa_clr(visualize=true) {
-    if(visualize) {
-        clr(reactor_radius=10,
-            reactor_height=75,
-            riser_radius=5,
-            riser_height=375,
-            c2c_height=10,
-            offset=16,
-            crossover_radius=5,
-            crossover_height=360,
-            crossover_length=63.6,
-            cyclone_radius=10,
-            cyclone_height=35,
-            cyclone_dipleg_radius=4,
-            cyclone_dipleg_height=20,
-            cyclone_top=380,
-            cyclone_dipleg_bottom=15,
-            loopseal_radius=12,
-            loopseal_height=50,
-            loopseal_bottom=224,
-            fuelreactor_radius=12,
-            loopseal_offset=0.4,
-            fuelreactor_height=154,
-            fuelreactor_bottom=52,
-            lvalve_radius=5,
-            lvalve_height=20,
-            lvalve_length=63.6);
-    }
-    else {
-        riser_height = 3.75;
-        difference() {
-            cube(size = riser_height*1000, center = true);
-            clr(reactor_radius=0.1,
-                reactor_height=0.75,
-                riser_radius=0.05,
-                riser_height=riser_height,
-                c2c_height=0.1,
-                offset=0.16,
-                crossover_radius=0.05,
-                crossover_height=3.6,
-                crossover_length=0.636,
-                cyclone_radius=0.1,
-                cyclone_height=0.35,
-                cyclone_dipleg_radius=0.04,
-                cyclone_dipleg_height=0.2,
-                cyclone_top=3.8,
-                cyclone_dipleg_bottom=0.15,
-                loopseal_radius=0.12,
-                loopseal_height=0.5,
-                loopseal_bottom=2.24,
-                loopseal_offset=0.004,
-                fuelreactor_radius=0.12,
-                fuelreactor_height=1.54,
-                fuelreactor_bottom=0.52,
-                lvalve_radius=0.05,
-                lvalve_height=0.2,
-                lvalve_length=0.636);
-        }
-    }
+module exa_clr() {
+    clr(reactor_radius=0.1,
+        reactor_height=0.75,
+        riser_radius=0.05,
+        riser_height=3.75,
+        c2c_height=0.1,
+        offset=0.16,
+        crossover_radius=0.05,
+        crossover_height=3.6,
+        crossover_length=0.636,
+        cyclone_radius=0.1,
+        cyclone_height=0.35,
+        cyclone_dipleg_radius=0.04,
+        cyclone_dipleg_height=0.2,
+        cyclone_top=3.8,
+        cyclone_dipleg_bottom=0.15,
+        loopseal_radius=0.12,
+        loopseal_height=0.5,
+        loopseal_bottom=2.24,
+        loopseal_offset=0.004,
+        fuelreactor_radius=0.12,
+        fuelreactor_height=1.54,
+        fuelreactor_bottom=0.52,
+        lvalve_radius=0.05,
+        lvalve_height=0.2,
+        lvalve_length=0.636);
 }
 
-exa_clr(visualize=true);
+exa_clr();
