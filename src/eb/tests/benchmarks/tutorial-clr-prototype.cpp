@@ -509,7 +509,7 @@ TEST_CASE("clr", "[benchmarks]") {
     auto maybe_st = csg::parse_csg(buffer.str());
     CHECK(maybe_st != nullptr);
 
-    csg::CsgIF my_clr(maybe_st);
+    csg::CsgIF my_clr(maybe_st, true);
 
     check_clr(my_clr);
 
