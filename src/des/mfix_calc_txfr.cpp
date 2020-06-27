@@ -216,7 +216,10 @@ mfix::mfix_calc_txfr_particle (Real time)
   // Extrapolate velocity Dirichlet bc's to ghost cells
   int extrap_dir_bcs = 1;
 
-  mfix_set_velocity_bcs(time, get_vel_g(), extrap_dir_bcs);
+  mfix_set_velocity_bcs   (time, get_vel_g(), extrap_dir_bcs);
+
+  if (advect_enthalpy)
+      mfix_set_temperature_bcs(time, get_T_g());
 
   for (int lev = 0; lev < nlev; lev++)
   {
