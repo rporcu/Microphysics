@@ -115,6 +115,8 @@ ic.full-domain.fluid.temperature =  700
 ic.full-domain.fluid.species.O2  =  0.3
 ic.full-domain.fluid.species.SO2 =  0.4
 ic.full-domain.fluid.species.H2O =  0.3
+ic.full-domain.solids = solid0
+ic.full-domain.solid0.temperature = 300
 
 ic.inner-domain.fluid.volfrac     =  1.0
 ic.inner-domain.fluid.pressure    =  0.0
@@ -123,6 +125,8 @@ ic.inner-domain.fluid.temperature =  300
 ic.inner-domain.fluid.species.O2  =  0.3
 ic.inner-domain.fluid.species.SO2 =  0.4
 ic.inner-domain.fluid.species.H2O =  0.3
+ic.inner-domain.solids = solid0
+ic.inner-domain.solid0.temperature = 300
 
 #_______________________________________________________________________
 # Boundary Conditions

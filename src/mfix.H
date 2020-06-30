@@ -917,7 +917,7 @@ class mfix : public AmrCore
     // Flags for saving particle data. By default, we have all flags on,
     // we turn off what we don't want in the init IO routine. This is somewhat
     // different from what we do with the fluid.
-    Vector<int> write_real_comp = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0};
+    Vector<int> write_real_comp = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
     Vector<int> write_int_comp = {1, 1};
 
     //

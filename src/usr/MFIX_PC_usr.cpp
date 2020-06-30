@@ -12,7 +12,7 @@ void MFIXParticleContainer::usr1_des ()
 }
 
 void MFIXParticleContainer::usr2_des (int np,
-                                      NeighborParticleContainer<19, 2>::ParticleType*&)
+                                      NeighborParticleContainer<realData::count, intData::count>::ParticleType*&)
 {
 }
 

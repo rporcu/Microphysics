@@ -123,6 +123,8 @@ ic.O2-region.fluid.species.He  =  0.0
 ic.O2-region.fluid.volfrac     =  1.0
 ic.O2-region.fluid.velocity    =  0.0  0.0  0.0
 ic.O2-region.fluid.temperature =  300
+ic.02-region.solids = solid0
+ic.02-region.solid0.temperature = 350
 
 ic.CO-region.fluid.species.O2  =  0.0
 ic.CO-region.fluid.species.CO  =  1.0
@@ -131,6 +133,8 @@ ic.CO-region.fluid.species.He  =  0.0
 ic.CO-region.fluid.volfrac     =  1.0
 ic.CO-region.fluid.velocity    =  0.0  0.0  0.0
 ic.CO-region.fluid.temperature =  500
+ic.CO-region.solids = solid0
+ic.CO-region.solid0.temperature = 350
 
 ic.H2O-region.fluid.species.O2  =  0.0
 ic.H2O-region.fluid.species.CO  =  0.0
@@ -139,6 +143,8 @@ ic.H2O-region.fluid.species.He  =  0.0
 ic.H2O-region.fluid.volfrac     =  1.0
 ic.H2O-region.fluid.velocity    =  0.0  0.0  0.0
 ic.H2O-region.fluid.temperature =  900
+ic.H2O-region.solids = solid0
+ic.H2O-region.solid0.temperature = 350
 
 ic.He-region.fluid.species.O2  =  0.0
 ic.He-region.fluid.species.CO  =  0.0
@@ -147,3 +153,5 @@ ic.He-region.fluid.species.He  =  1.0
 ic.He-region.fluid.volfrac     =  1.0
 ic.He-region.fluid.velocity    =  0.0  0.0  0.0
 ic.He-region.fluid.temperature =  400
+ic.He-region.solids = solid0
+ic.He-region.solid0.temperature = 350

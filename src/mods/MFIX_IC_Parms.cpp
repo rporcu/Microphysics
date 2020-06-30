@@ -10,6 +10,8 @@
 #include <MFIX_REGIONS_Parms.H>
 #include <MFIX_SPECIES_Parms.H>
 
+using namespace amrex;
+
 namespace IC
 {
 
@@ -70,82 +72,123 @@ namespace IC
         }
       }
 
-      if((DEM::solve or PIC::solve) and new_ic.fluid.volfrac < 1.0) {
-
-        // Get the list of solids used in defining the IC region
-        std::vector<std::string> solids_types;
+      if (DEM::solve or PIC::solve)
+      {
+        // If we initialize particles with particle generator
+        if (new_ic.fluid.volfrac < 1.0)
         {
-          std::string field = "ic."+regions[icv];
-          amrex::ParmParse ppSolid(field.c_str());
-          ppSolid.getarr("solids", solids_types);
-          ppSolid.get("packing", new_ic.packing);
-        }
-
-        for(size_t lcs(0); lcs < solids_types.size(); ++ lcs){
-
-          DEM::DEM_t new_solid;
-
-          std::string field = "ic."+regions[icv]+"."+solids_types[lcs];
-          amrex::ParmParse ppSolid(field.c_str());
-
-          new_solid.name = solids_types[lcs];
-
-          ppSolid.get("volfrac", new_solid.volfrac);
-          volfrac_total += new_ic.fluid.volfrac;
-
-          ppSolid.getarr("velocity", new_solid.velocity, 0, 3);
-
-          if (advect_enthalpy) {
-            ppSolid.query("temperature", new_solid.temperature); 
+          // Get the list of solids used in defining the IC region
+          std::vector<std::string> solids_types;
+          {
+            std::string field = "ic."+regions[icv];
+            amrex::ParmParse ppSolid(field.c_str());
+            ppSolid.getarr("solids", solids_types);
+            ppSolid.get("packing", new_ic.packing);
           }
 
-          new_solid.statwt = 1.0;
-          ppSolid.query("statwt", new_solid.statwt);
+          for(size_t lcs(0); lcs < solids_types.size(); ++ lcs) {
 
-          // Get information about diameter distribution.
-          ppSolid.get("diameter", new_solid.diameter.distribution);
+            DEM::DEM_t new_solid;
 
-          std::string dp_field = "ic."+regions[icv]+"."+solids_types[lcs]+".diameter";
-          amrex::ParmParse ppSolidDp(dp_field.c_str());
+            std::string field = "ic."+regions[icv]+"."+solids_types[lcs];
+            amrex::ParmParse ppSolid(field.c_str());
 
-          if( new_solid.diameter.distribution == "constant") {
-            ppSolidDp.get("constant", new_solid.diameter.mean);
+            new_solid.name = solids_types[lcs];
 
-          } else { // This could probably be an else-if to better catch errors
-            ppSolidDp.get("mean", new_solid.diameter.mean);
-            ppSolidDp.get("std" , new_solid.diameter.std);
-            ppSolidDp.get("min" , new_solid.diameter.min);
-            ppSolidDp.get("max" , new_solid.diameter.max);
-          }
+            ppSolid.get("volfrac", new_solid.volfrac);
+            volfrac_total += new_ic.fluid.volfrac;
 
-          // Get information about density distribution.
-          ppSolid.get("density", new_solid.density.distribution);
+            ppSolid.getarr("velocity", new_solid.velocity, 0, 3);
 
-          std::string roh_field = "ic."+regions[icv]+"."+solids_types[lcs]+".density";
-          amrex::ParmParse ppSolidRho(roh_field.c_str());
-
-          if( new_solid.diameter.distribution == "constant") {
-            ppSolidRho.get("constant", new_solid.density.mean);
-
-          } else { // This could probably be an else-if to better catch errors
-            ppSolidRho.get("mean", new_solid.density.mean);
-            ppSolidRho.get("std" , new_solid.density.std );
-            ppSolidRho.get("min" , new_solid.density.min );
-            ppSolidRho.get("max" , new_solid.density.max );
-          }
-
-          if (DEM::solve_species /*TODO or PIC::solve_species*/) {
-
-            std::string species_field = field+".species";
-            amrex::ParmParse ppSpecies(species_field.c_str());
-
-            for (int n(0); n < DEM::nspecies_dem; n++) {
-              std::string dem_specie = DEM::species_dem[n];
-              ppSpecies.query(dem_specie.c_str(), new_solid.species.mass_fractions[n]);
+            if (advect_enthalpy) {
+              ppSolid.query("temperature", new_solid.temperature); 
             }
+
+            new_solid.statwt = 1.0;
+            ppSolid.query("statwt", new_solid.statwt);
+
+            // Get information about diameter distribution.
+            ppSolid.get("diameter", new_solid.diameter.distribution);
+
+            std::string dp_field = "ic."+regions[icv]+"."+solids_types[lcs]+".diameter";
+            amrex::ParmParse ppSolidDp(dp_field.c_str());
+
+            if( new_solid.diameter.distribution == "constant") {
+              ppSolidDp.get("constant", new_solid.diameter.mean);
+
+            } else { // This could probably be an else-if to better catch errors
+              ppSolidDp.get("mean", new_solid.diameter.mean);
+              ppSolidDp.get("std" , new_solid.diameter.std);
+              ppSolidDp.get("min" , new_solid.diameter.min);
+              ppSolidDp.get("max" , new_solid.diameter.max);
+            }
+
+            // Get information about density distribution.
+            ppSolid.get("density", new_solid.density.distribution);
+
+            std::string roh_field = "ic."+regions[icv]+"."+solids_types[lcs]+".density";
+            amrex::ParmParse ppSolidRho(roh_field.c_str());
+
+            if( new_solid.diameter.distribution == "constant") {
+              ppSolidRho.get("constant", new_solid.density.mean);
+
+            } else { // This could probably be an else-if to better catch errors
+              ppSolidRho.get("mean", new_solid.density.mean);
+              ppSolidRho.get("std" , new_solid.density.std );
+              ppSolidRho.get("min" , new_solid.density.min );
+              ppSolidRho.get("max" , new_solid.density.max );
+            }
+
+            if (DEM::solve_species /*TODO or PIC::solve_species*/) {
+
+              std::string species_field = field+".species";
+              amrex::ParmParse ppSpecies(species_field.c_str());
+
+              for (int n(0); n < DEM::nspecies_dem; n++) {
+                std::string dem_specie = DEM::species_dem[n];
+                ppSpecies.query(dem_specie.c_str(), new_solid.species.mass_fractions[n]);
+              }
+            }
+
+            new_ic.solids.push_back(new_solid);
+          }
+        }
+        // If we initialize particles through particle_input.dat
+        else {
+          // Get the list of solids used in defining the IC region
+          std::vector<std::string> solids_types(0);
+          {
+            std::string field = "ic."+regions[icv];
+            amrex::ParmParse ppSolid(field.c_str());
+            ppSolid.queryarr("solids", solids_types);
           }
 
-          new_ic.solids.push_back(new_solid);
+          for(size_t lcs(0); lcs < solids_types.size(); ++ lcs) {
+
+            DEM::DEM_t new_solid;
+
+            std::string field = "ic."+regions[icv]+"."+solids_types[lcs];
+            amrex::ParmParse ppSolid(field.c_str());
+
+            new_solid.name = solids_types[lcs];
+
+            if (advect_enthalpy) {
+              ppSolid.get("temperature", new_solid.temperature); 
+            }
+
+            if (DEM::solve_species /*TODO or PIC::solve_species*/) {
+
+              std::string species_field = field+".species";
+              amrex::ParmParse ppSpecies(species_field.c_str());
+
+              for (int n(0); n < DEM::nspecies_dem; n++) {
+                std::string dem_specie = DEM::species_dem[n];
+                ppSpecies.query(dem_specie.c_str(), new_solid.species.mass_fractions[n]);
+              }
+            }
+
+            new_ic.solids.push_back(new_solid);
+          }
         }
       }
 

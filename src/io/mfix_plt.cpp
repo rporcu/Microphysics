@@ -100,9 +100,9 @@ mfix::InitIOPltData ()
       pp.query("plt_regtest", plt_ccse_regtest);
 
       if (DEM::nspecies_dem > 0) {
-          write_real_comp.resize(16+DEM::nspecies_dem);
+          write_real_comp.resize(realData::count+DEM::nspecies_dem);
            for(int i=0; i < DEM::nspecies_dem; ++i){
-               write_real_comp[16+i] = 1;
+               write_real_comp[realData::count+i] = 1;
            }
       }
       // All flags are true by default so we only need to turn off the
