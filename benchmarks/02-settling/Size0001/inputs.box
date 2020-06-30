@@ -128,9 +128,13 @@ ic.full-domain.fluid.velocity  = 0.0  0.0  0.0
 ic.full-domain.fluid.temperature = 400
 ic.full-domain.fluid.species.CO  = 0.6
 ic.full-domain.fluid.species.H2O = 0.4
+ic.full-domain.solids = solid0
+ic.full-domain.solid0.temperature = 400
 
 ic.sub-domain.fluid.volfrac     = 1.0
 ic.sub-domain.fluid.velocity    = 0.0  0.0  0.0
 ic.sub-domain.fluid.temperature = 800
 ic.sub-domain.fluid.species.CO  = 0.6
 ic.sub-domain.fluid.species.H2O = 0.4
+ic.sub-domain.solids = solid0
+ic.sub-domain.solid0.temperature = 800

@@ -215,6 +215,8 @@ ic.full-domain.fluid.species.He  = 0.75
 ic.full-domain.solids  = solid0
 ic.full-domain.packing = pseudo_random
 
+ic.full-domain.solid0.temperature = 400
+
 ic.full-domain.solid0.volfrac  =  0.017
 ic.full-domain.solid0.velocity =  0.00  0.00  0.00
 

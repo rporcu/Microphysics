@@ -228,6 +228,8 @@ ic.bed.fluid.species.He  = 0.25
 ic.bed.solids  = solid0
 ic.bed.packing = pseudo_random
 
+ic.bed.solid0.temperature = 400
+
 ic.bed.solid0.volfrac  =  0.275
 ic.bed.solid0.velocity =  0.00  0.00  0.00
 

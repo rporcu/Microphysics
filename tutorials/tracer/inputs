@@ -5,6 +5,9 @@ mfix.advect_density           = true
 mfix.advect_tracer            = true
 mfix.test_tracer_conservation = true
 
+mfix.advect_enthalpy = 1
+mfix.advect_fluid_species = 1
+
 #_______________________________________________________________________
 # Debugging settings
 
@@ -121,6 +124,30 @@ amr.check_file     ="chk"
 mfix.drag_type = "BVK2"
 
 
+#! EB geometry
+#!-----------------------------------------------------------//
+
+mfix.geometry = "cylinder"
+
+cylinder.internal_flow = true
+
+cylinder.radius = 0.49
+cylinder.height = -1.0
+
+cylinder.direction = 0
+cylinder.center    =  0.5  1.5   1.5
+
+
+#_______________________________________________________________________
+# Species model settings
+#
+species.solve  =  O2  CO
+
+species.diffusivity = constant
+
+species.O2.diffusivity  = 1.9e-5
+species.CO.diffusivity  = 1.9e-5
+
 
 #_______________________________________________________________________
 # Fluid model settings
@@ -134,13 +161,12 @@ fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-2
 
 fluid.specific_heat          = constant
-fluid.specific_heat.constant = 1.0
+fluid.specific_heat.constant = 918
 
 fluid.thermal_conductivity          = constant
-fluid.thermal_conductivity.constant = 0.0
+fluid.thermal_conductivity.constant = 0.024
 
-bc.delp     = 1000.
-bc.delp_dir =    0
+fluid.species  =  O2  CO
 
 
 #_______________________________________________________________________
@@ -163,6 +189,8 @@ dem.spring_tang_fac.pw    =     0.285714285
 dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
 
+dem.specific_heat = constant
+dem.specific_heat.constant.solid0 = 385
 
 
 #_______________________________________________________________________
@@ -187,22 +215,26 @@ ic.regions = fluid-only  bed
 # Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.fluid-only.fluid.volfrac   = 1.0
-
 ic.fluid-only.fluid.pressure  = 0.0
-
 ic.fluid-only.fluid.velocity  = 0.0  0.0  0.0
+ic.fluid-only.fluid.temperature = 300
+ic.fluid-only.fluid.species.O2  =  0.6
+ic.fluid-only.fluid.species.CO  =  0.4
 
 
 # Define the initial bed of solids
 #---------------------------------------------------------------------//
 ic.bed.fluid.volfrac   =  0.75
-
 ic.bed.fluid.pressure  = 0.0
-
 ic.bed.fluid.velocity  =  0.0  0.0  0.0
+ic.fluid-only.fluid.temperature = 300
+ic.fluid-only.fluid.species.O2  =  0.6
+ic.fluid-only.fluid.species.CO  =  0.4
 
 ic.bed.solids  = solid0
 ic.bed.packing = pseudo_random
+
+ic.bed.solid0.temperature = 300
 
 ic.bed.solid0.volfrac  =  0.25
 
@@ -215,15 +247,9 @@ ic.bed.solid0.diameter.constant =  100.0e-3
 ic.bed.solid0.density.constant  = 1000.0
 
 
-#! EB geometry
-#!-----------------------------------------------------------//
+#_______________________________________________________________________
+# Boundary Conditions
+#
 
-mfix.geometry = "cylinder"
-
-cylinder.internal_flow = true
-
-cylinder.radius = 0.49
-cylinder.height = -1.0
-
-cylinder.direction = 0
-cylinder.center    =  0.5  1.5   1.5
+bc.delp     = 1000.
+bc.delp_dir =    0
