@@ -227,9 +227,9 @@ ic.fluid-only.fluid.species.CO  =  0.4
 ic.bed.fluid.volfrac   =  0.75
 ic.bed.fluid.pressure  = 0.0
 ic.bed.fluid.velocity  =  0.0  0.0  0.0
-ic.fluid-only.fluid.temperature = 300
-ic.fluid-only.fluid.species.O2  =  0.6
-ic.fluid-only.fluid.species.CO  =  0.4
+ic.bed.fluid.temperature = 300
+ic.bed.fluid.species.O2  =  0.6
+ic.bed.fluid.species.CO  =  0.4
 
 ic.bed.solids  = solid0
 ic.bed.packing = pseudo_random
