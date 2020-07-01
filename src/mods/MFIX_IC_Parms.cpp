@@ -75,7 +75,7 @@ namespace IC
       if (DEM::solve or PIC::solve)
       {
         // If we initialize particles with particle generator
-        if (new_ic.fluid.volfrac < 1.0)
+        if (FLUID::solve and new_ic.fluid.volfrac < 1.0)
         {
           // Get the list of solids used in defining the IC region
           std::vector<std::string> solids_types;
