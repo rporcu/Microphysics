@@ -398,7 +398,7 @@ int main (int argc, char* argv[])
     }
 
     amrex::Print() << " " << std::endl;
-    bool unused_inputs = ParmParse::QueryUnusedInputs();
+    //bool unused_inputs = ParmParse::QueryUnusedInputs(); UNUSED VARIABLE
 
     BL_PROFILE_REGION_STOP("mfix::main()");
     BL_PROFILE_VAR_STOP(pmain);

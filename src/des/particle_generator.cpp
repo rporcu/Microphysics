@@ -761,7 +761,7 @@ ParticlesGenerator::random_fill_pic (const int icv,
   const amrex::Real statwt(IC::ic[icv].solids[type].statwt);
   const amrex::Real parcel_volume = statwt*((M_PI/6.0)*mean*mean*mean);
 
-  // Parcels per cell to satisfy the IC condtion
+  // Parcels per cell to satisfy the IC condition
   const amrex::Real parcels_per_cell =
       (dx * dy * dz * IC::ic[icv].solids[type].volfrac / parcel_volume);
 
