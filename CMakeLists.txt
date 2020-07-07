@@ -50,6 +50,12 @@ endif()
 # IN SUPERBUILD mode, These options will supersede AMReX options with the same name
 option( ENABLE_OMP    "Enable OpenMP" NO )
 option( ENABLE_MPI    "Enable MPI"   YES )
+
+include(CMakeDependentOption)
+cmake_dependent_option( ENABLE_MPI_THREAD_MULTIPLE
+   "whether to initialize MPI so that multiple threads can make MPI calls at the same time"  OFF
+   "ENABLE_MPI" OFF)
+
 option( ENABLE_HYPRE  "Enable HYPRE"  NO )
 option( ENABLE_CUDA   "Enable CUDA"   NO )
 option( ENABLE_FPE    "Enable Floating Point Exceptions checks" NO )
