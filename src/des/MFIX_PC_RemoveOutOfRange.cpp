@@ -25,8 +25,10 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
     // Only call the routine for wall collisions if we actually have walls
     if (ebfactory != NULL) {
 
-        const Real * dx  = Geom(lev).CellSize();
-        const Real * plo = Geom(lev).ProbLo();
+        const Real* cell_size  = Geom(lev).CellSize();
+
+        const RealVect dx(cell_size[0], cell_size[1], cell_size[2]);
+        const GpuArray<Real,3> plo = Geom(lev).ProbLoArray();
 
         // This holds the mesh spacing of the level set, which may be finer than
         // the local mesh spacing
@@ -45,25 +47,32 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
             // Remove particles outside of or touching the walls
             if ((*flags)[pti].getType(bx) != FabType::regular)
             {
+                auto& aos = pti.GetArrayOfStructs();
+                ParticleType* pstruct = aos().dataPtr();
+                const int np = pti.numParticles();
+
                 if ((*flags)[pti].getType(bx) == FabType::covered)
                 {
-                    for (int ip = 0; ip < pti.numParticles(); ++ip)
+                    amrex::ParallelFor(np, [pstruct] AMREX_GPU_DEVICE (int ip) noexcept
                     {
-                        ParticleType& p = pti.GetArrayOfStructs()[ip];
-                        p.id() = -1;
-                    }
+                      ParticleType& p = pstruct[ip];
+                      p.id() = -1;
+                    });
                 }
                 else
                 {
                     const auto& flag_fab =  flags->array(pti);
                     const auto&  phi_fab = ls_phi->array(pti);
-                    for (int ip = 0; ip < pti.numParticles(); ++ip)
-                    {
-                        ParticleType& p = pti.GetArrayOfStructs()[ip];
 
-                        int icell = static_cast<int>(floor( ( p.pos(0) - plo[0] ) / dx[0] ));
-                        int jcell = static_cast<int>(floor( ( p.pos(1) - plo[1] ) / dx[1] ));
-                        int kcell = static_cast<int>(floor( ( p.pos(2) - plo[2] ) / dx[2] ));
+                    amrex::ParallelFor(np, [pstruct,plo,dx,flag_fab,dx_ls,phi_fab,cg_dem=DEM::cg_dem]
+                      AMREX_GPU_DEVICE (int ip) noexcept
+                    {
+                        ParticleType& p = pstruct[ip];
+
+                        const Real* plo_ptr = plo.data();
+                        int icell = static_cast<int>(floor( ( p.pos(0) - plo_ptr[0] ) / dx[0] ));
+                        int jcell = static_cast<int>(floor( ( p.pos(1) - plo_ptr[1] ) / dx[1] ));
+                        int kcell = static_cast<int>(floor( ( p.pos(2) - plo_ptr[2] ) / dx[2] ));
 
                         if (flag_fab(icell,jcell,kcell).isCovered())
                         {
@@ -72,9 +81,9 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                         else
                         { // Interpolates level-set from nodal phi to position pos
 
-                            Real x = ( p.pos(0) - plo[0] ) / dx_ls[0];
-                            Real y = ( p.pos(1) - plo[1] ) / dx_ls[1];
-                            Real z = ( p.pos(2) - plo[2] ) / dx_ls[2];
+                            Real x = ( p.pos(0) - plo_ptr[0] ) / dx_ls[0];
+                            Real y = ( p.pos(1) - plo_ptr[1] ) / dx_ls[1];
+                            Real z = ( p.pos(2) - plo_ptr[2] ) / dx_ls[2];
 
                             int i = static_cast<int>(floor(x));
                             int j = static_cast<int>(floor(y));
@@ -100,7 +109,7 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                             amrex::Real radius = p.rdata(realData::radius) *
                                 std::cbrt(p.rdata(realData::statwt));
 
-                            if (DEM::cg_dem)
+                            if (cg_dem)
                             {
                                radius = radius/std::cbrt(p.rdata(realData::statwt));
                             }
@@ -123,7 +132,7 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                             }
 #endif
                         }
-                    }
+                    });
                 }
             }
         }
