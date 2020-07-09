@@ -123,7 +123,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
         amrex::ParallelFor(bx,
           [ep_s_arr,grad_tau_arr,Ps,beta,ep_cp,small_number,flagsarr,
-          interp_comp, covered_val,ccent,dx, dxinv]
+          covered_val,ccent,dx, dxinv]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           if (flagsarr(i,j,k).isCovered())
@@ -401,8 +401,6 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
         else // FAB not all regular
         {
 
-          const auto& flag_fab = flags.array();
-
           // Cell centroids
           const auto& ccent_fab = cellcent->array(pti);
           // Centroid of EB
@@ -414,7 +412,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
 
           amrex::ParallelFor(np,
-            [pstruct,grad_tau_array,flags_array,plo,dxi,dxv,flag_fab,ccent_fab,
+            [pstruct,grad_tau_array,flags_array,plo,dxi,dxv,ccent_fab,
              bcent_fab, apx_fab, apy_fab, apz_fab]
             AMREX_GPU_DEVICE (int pid) noexcept
           {

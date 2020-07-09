@@ -509,7 +509,7 @@ void set_p0_bcs (const Box& sbx,
     const Box sbx_hi_x({dom_hi[0]+1, sbx_lo[1], sbx_lo[2]}, sbx_hi);
 
     amrex::ParallelFor(sbx_hi_x,
-        [dom_hi,nghost,bct_ihi,bc_list,dom_lo,m_bc_p_g,p0_g]
+        [dom_hi,nghost,bct_ihi,bc_list,m_bc_p_g,p0_g]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const int jbc = (j > dom_hi[1]+nghost) ? j-1 : j;
@@ -551,7 +551,7 @@ void set_p0_bcs (const Box& sbx,
     const Box sbx_hi_y({sbx_lo[0], dom_hi[1]+1, sbx_lo[2]}, sbx_hi);
 
     amrex::ParallelFor(sbx_hi_y,
-        [dom_hi,nghost,bct_jhi,bc_list,dom_lo,m_bc_p_g,p0_g]
+        [dom_hi,nghost,bct_jhi,bc_list,m_bc_p_g,p0_g]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const int ibc = (i > dom_hi[0]+nghost) ? i-1 : i;
@@ -593,7 +593,7 @@ void set_p0_bcs (const Box& sbx,
     const Box sbx_hi_z({sbx_lo[0], sbx_lo[1], dom_hi[2]+1}, sbx_hi);
 
     amrex::ParallelFor(sbx_hi_z,
-        [dom_hi,nghost,bct_khi,bc_list,dom_lo,m_bc_p_g,p0_g]
+        [dom_hi,nghost,bct_khi,bc_list,m_bc_p_g,p0_g]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const int ibc = (i > dom_hi[0]+nghost) ? i-1 : i;

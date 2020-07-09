@@ -396,7 +396,6 @@ void mfix::Init (Real time)
     // ******************************************************
     // We only do these at level 0
     // ******************************************************
-    Box domain(geom[0].Domain());
 
     for (int lev = 0; lev < nlev; lev++)
         mfix_set_bc_type(lev);
@@ -820,7 +819,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
           } else {
             init_fluid(sbx, bx, domain, mfi, ld, dx, dy, dz, xlen, ylen, zlen, plo,
                 test_tracer_conservation, advect_enthalpy, advect_fluid_species);
-    
+
           }
        }
 

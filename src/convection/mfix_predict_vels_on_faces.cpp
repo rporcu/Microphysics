@@ -13,8 +13,6 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
 
   Array< MultiFab*, 3> ep_face;
 
-  Box domain(geom[lev].Domain());
-
   iMultiFab cc_mask(grids[lev], dmap[lev], 1, 1);
 
   const int covered_value = 1;

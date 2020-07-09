@@ -189,7 +189,7 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
             amrex::ParallelFor(np,
-              [particles_ptr,interp_array,interp_comp,ro_array,mu_array,kg_array,cp_array,
+              [particles_ptr,interp_array,ro_array,mu_array,kg_array,cp_array,
                DragFunc, ConvectionCoeff,plo,dxi,
                local_cg_dem=DEM::cg_dem, local_advect_enthalpy=advect_enthalpy]
               AMREX_GPU_DEVICE (int ip) noexcept
@@ -266,7 +266,7 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
             const auto& apz_fab = areafrac[2]->array(pti);
 
             amrex::ParallelFor(np,
-              [particles_ptr,interp_array,interp_comp,ro_array,mu_array,kg_array,cp_array,
+              [particles_ptr,interp_array,ro_array,mu_array,kg_array,cp_array,
                DragFunc, ConvectionCoeff,
                plo,dx,dxi,flags_array,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                local_cg_dem=DEM::cg_dem,local_advect_enthalpy=advect_enthalpy]

@@ -370,7 +370,7 @@ mfix::mfix_calc_txfr_particle (Real time)
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
             amrex::ParallelFor(np,
-              [pstruct,interp_array,interp_comp,gp0_dev,plo,dxi,pmult,
+              [pstruct,interp_array,gp0_dev,plo,dxi,pmult,
               local_advect_enthalpy=advect_enthalpy]
               AMREX_GPU_DEVICE (int pid) noexcept
               {
@@ -422,7 +422,7 @@ mfix::mfix_calc_txfr_particle (Real time)
             const auto& apz_fab = areafrac[2]->array(pti);
 
             amrex::ParallelFor(np,
-              [pstruct,interp_array,interp_comp,flags_array,gp0_dev, pmult,
+              [pstruct,interp_array,flags_array,gp0_dev, pmult,
               plo,dx,dxi,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
               local_advect_enthalpy=advect_enthalpy]
               AMREX_GPU_DEVICE (int pid) noexcept

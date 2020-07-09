@@ -14,12 +14,6 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
     BL_PROFILE_VAR("MFIXParticleContainer::MFIX_PC_Imposewalls()",mfix_pc_impose_walls);
 
     /****************************************************************************
-     * Geometry                                                                 *
-     ***************************************************************************/
-
-    Box domain(Geom(lev).Domain());
-
-    /****************************************************************************
      * Get particle EB geometric info
      ***************************************************************************/
     const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());

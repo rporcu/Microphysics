@@ -143,8 +143,6 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                  for (int j = 0; j < Nrep[1]; j++) {
                    for (int i = 0; i < Nrep[0]; i++) {
                       Box b(orig_ba[nb]);
-                      IntVect lo(b.smallEnd());
-                      IntVect hi(b.bigEnd());
                       IntVect shift_vec(i*orig_domain.length(0),
                                         j*orig_domain.length(1),
                                         k*orig_domain.length(2));
@@ -482,7 +480,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           m_leveldata[lev]->vel_go->FillBoundary(geom[lev].periodicity());
 
           m_leveldata[lev]->gp->FillBoundary(geom[lev].periodicity());
-          
+
           // Fill the bc's just in case
           if (advect_fluid_species) {
             m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
@@ -525,4 +523,3 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     }
     amrex::Print() << "  Done with mfix::Restart " << std::endl;
 }
-

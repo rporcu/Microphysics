@@ -140,7 +140,6 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     //
     // Setup the nodal projector
     //
-    Box domain(geom[0].Domain());
 
     LPInfo info;
     info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);

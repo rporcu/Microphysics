@@ -54,8 +54,6 @@ MFIX_PC_SolidsVelocityDeposition (F WeightFunc, int lev,
   const auto      dx  = gm.CellSizeArray();
   const auto      dxi = gm.InvCellSizeArray();
 
-  const auto      inv_reg_cell_vol = 1.0 / (dx[0]*dx[1]*dx[2]);
-
   using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
 
 #ifdef _OPENMP
@@ -83,7 +81,7 @@ MFIX_PC_SolidsVelocityDeposition (F WeightFunc, int lev,
 
         amrex::ParallelFor(nrp,
           [pstruct,plo,dx,dxi,deposition_scale_factor,
-           inv_reg_cell_vol,WeightFunc,flagsarr,vel_s_arr]
+           WeightFunc,flagsarr,vel_s_arr]
           AMREX_GPU_DEVICE (int ip) noexcept
           {
             const ParticleType& p = pstruct[ip];

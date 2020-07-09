@@ -68,7 +68,6 @@ mfix::mfix_compute_diveu (Real time)
 
   // Set domain BCs for Poisson's solver
   // The domain BCs refer to level 0 only
-  Box domain(geom[0].Domain());
 
   matrix.setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
 

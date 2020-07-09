@@ -926,7 +926,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 #endif
 
   amrex::ParallelFor(nsize_half,
-    [p_dp,dp_min,dp_max,maxfails,tolerance,sigma,mean,nsize,
+    [p_dp,dp_min,dp_max,tolerance,sigma,mean,nsize,
 #ifdef AMREX_USE_GPU
      p_fails]
 #else

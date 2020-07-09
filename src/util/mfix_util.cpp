@@ -55,8 +55,6 @@ mfix::mfix_compute_vort ()
 
     for (int lev = 0; lev < nlev; lev++)
     {
-      Box domain(geom[lev].Domain());
-
       m_leveldata[lev]->vort->setVal(0.0);
 
 #ifdef _OPENMP

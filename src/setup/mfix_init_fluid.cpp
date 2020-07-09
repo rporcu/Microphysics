@@ -65,10 +65,10 @@ void init_fluid (const Box& sbx,
       const Real ro_g0  = FLUID::ro_g0;
       const Real trac_0 = FLUID::trac_0;
 
-      ParallelFor(sbx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
+      ParallelFor(sbx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       { ro_g(i,j,k) = ro_g0; });
 
-      ParallelFor(sbx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept 
+      ParallelFor(sbx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       { trac(i,j,k) = trac_0; });
 
       if (test_tracer_conservation)
@@ -249,7 +249,7 @@ void init_periodic_tracer (const Box& bx,
 
         L = Real(domain.bigEnd(0)+1) * dx;
         C = twopi / L;
-        amrex::ParallelFor(bx,[A,L,C,dx,dy,dz,trac,vel]
+        amrex::ParallelFor(bx,[A,C,dx,dy,dz,trac,vel]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
 
@@ -268,7 +268,7 @@ void init_periodic_tracer (const Box& bx,
 
         L = Real(domain.bigEnd(1)+1) * dy;
         C = twopi / L;
-        amrex::ParallelFor(bx,[A,L,C,dx,dy,dz,trac,vel]
+        amrex::ParallelFor(bx,[A,C,dx,dy,dz,trac,vel]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
 
@@ -289,7 +289,7 @@ void init_periodic_tracer (const Box& bx,
 
         L = Real(domain.bigEnd(2)+1) * dz;
         C = twopi / L;
-        amrex::ParallelFor(bx,[A,L,C,dx,dy,dz,trac,vel]
+        amrex::ParallelFor(bx,[A,C,dx,dy,dz,trac,vel]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
             Real z = (Real(k) + .5) * dz - .00037;
@@ -623,7 +623,7 @@ void set_ic_species_g (const Box& sbx,
 
     // Get the initial condition values
     Gpu::ManagedVector< Real> mass_fractions(nspecies_g, 0);
-    
+
     for (int n(0); n < nspecies_g; n++)
       mass_fractions[n] = IC::ic[icv].fluid.species.mass_fractions[n];
 
@@ -701,8 +701,8 @@ void set_ic_species_g (const Box& sbx,
       {
         const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
         const Box box2(low2, hi2);
-        
-        ParallelFor(box2, nspecies_g, 
+
+        ParallelFor(box2, nspecies_g,
           [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
         { X_g(i,j,k,n) = p_mass_fractions[n]; });
       }
@@ -711,7 +711,7 @@ void set_ic_species_g (const Box& sbx,
       {
         const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
         const Box box3(low3, hi3);
-        
+
         ParallelFor(box3, nspecies_g,
           [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
         { X_g(i,j,k,n) = p_mass_fractions[n]; });
