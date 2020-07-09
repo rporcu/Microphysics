@@ -66,12 +66,10 @@ mfix::set_viscosity_bcs (Real time,
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
 
-  amrex::Real* p_bc_t_g  = m_bc_t_g.data();
-
   if (nlft > 0)
   {
     amrex::ParallelFor(bx_yz_lo_3D,
-      [bct_ilo,dom_lo,bc0,pinf,pout,minf,p_bc_t_g,scal_arr]
+      [bct_ilo,dom_lo,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -92,7 +90,7 @@ mfix::set_viscosity_bcs (Real time,
   if (nrgt > 0)
   {
     amrex::ParallelFor(bx_yz_hi_3D,
-      [bct_ihi,dom_hi,bc0,pinf,pout,minf,p_bc_t_g,scal_arr]
+      [bct_ihi,dom_hi,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -113,7 +111,7 @@ mfix::set_viscosity_bcs (Real time,
   if (nbot > 0)
   {
     amrex::ParallelFor(bx_xz_lo_3D,
-      [bct_jlo,dom_lo,bc0,pinf,pout,minf,p_bc_t_g,scal_arr]
+      [bct_jlo,dom_lo,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -134,7 +132,7 @@ mfix::set_viscosity_bcs (Real time,
   if (ntop > 0)
   {
     amrex::ParallelFor(bx_xz_hi_3D,
-      [bct_jhi,dom_hi,bc0,pinf,pout,minf,p_bc_t_g,scal_arr]
+      [bct_jhi,dom_hi,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -155,7 +153,7 @@ mfix::set_viscosity_bcs (Real time,
   if (ndwn > 0)
   {
     amrex::ParallelFor(bx_xy_lo_3D,
-      [bct_klo,dom_lo,bc0,pinf,pout,minf,p_bc_t_g,scal_arr]
+      [bct_klo,dom_lo,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -176,7 +174,7 @@ mfix::set_viscosity_bcs (Real time,
   if (nup > 0)
   {
     amrex::ParallelFor(bx_xy_hi_3D,
-      [bct_khi,dom_hi,bc0,pinf,pout,minf,p_bc_t_g,scal_arr]
+      [bct_khi,dom_hi,bc0,pinf,pout,minf,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 

@@ -13,8 +13,6 @@ using namespace BC;
 void
 mfix::mfix_set_bc_type (int lev)
 {
-    Box domain(geom[lev].Domain());
-
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -240,7 +238,7 @@ mfix::mfix_set_bc_type (int lev)
           if (lc > 0){
             kbx_lo[0] = static_cast<int>(floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
             kbx_lo[1] = static_cast<int>(floor((bc[bcv].region->lo(1)-plo[1])/dy + 0.5));
- 
+
             kbx_hi[0] = static_cast<int>(floor((bc[bcv].region->hi(0)-plo[0])/dx + 0.5))-1;
             kbx_hi[1] = static_cast<int>(floor((bc[bcv].region->hi(1)-plo[1])/dy + 0.5))-1;
           }

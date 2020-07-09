@@ -43,7 +43,7 @@ void filcc (Real* data,
   const int orig_comp = 0;
 
   amrex::ParallelFor(bx,
-    [q,geom,bcr,time,dcomp,numcomp,bcomp,orig_comp]
+    [q,geom,bcr,time]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
   {
     IntVect iv(i,j,k);

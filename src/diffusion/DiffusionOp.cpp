@@ -198,9 +198,6 @@ void DiffusionOp::ComputeDivTau (Vector< MultiFab* >& divtau_out,
        divtau_aux[lev]->setVal(0.0);
     }
 
-    // Whole domain
-    Box domain(geom[0].Domain());
-
     // We want to return div (mu grad)) phi
     vel_matrix->setScalars(0.0, -1.0);
 
@@ -266,9 +263,6 @@ void DiffusionOp::ComputeLapT (Vector< MultiFab* >& lapT_out,
 
     lapT_aux[lev]->setVal(0.0);
   }
-
-  // Whole domain
-  Box domain(geom[0].Domain());
 
   // We want to return div (ep_g k_g grad)) T_g
   temperature_matrix->setScalars(0.0, -1.0);
@@ -346,9 +340,6 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
        // if (eb_is_dirichlet)
        //    phi_eb[lev]->setVal(1.0);
     }
-
-    // Whole domain
-    Box domain(geom[0].Domain());
 
     // We want to return div (mu grad)) phi
     scal_matrix->setScalars(0.0, -1.0);
@@ -436,9 +427,6 @@ void DiffusionOp::ComputeLapX (Vector< MultiFab* >& lapX_out,
       phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(),
           *(*ebfactory)[lev]);
     }
-
-    // Whole domain
-    Box domain(geom[0].Domain());
 
     // We want to return div (D_g grad)) phi
     species_matrix->setScalars(0.0, -1.0);

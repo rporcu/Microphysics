@@ -151,8 +151,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
      * Geometry                                                                 *
      ***************************************************************************/
 
-    Box domain(Geom(lev).Domain());
-
     const Real* dx = Geom(lev).CellSize();
 
     /****************************************************************************
@@ -440,7 +438,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 #if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
                  eps,
 #endif
-                 subdt,ntot,small_number,local_mew=DEM::mew,local_kn=DEM::kn,
+                 subdt,ntot,local_mew=DEM::mew,local_kn=DEM::kn,
                  local_etan=DEM::etan]
               AMREX_GPU_DEVICE (int i) noexcept
               {
