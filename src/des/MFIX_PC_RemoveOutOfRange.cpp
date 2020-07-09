@@ -32,9 +32,7 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
 
         // This holds the mesh spacing of the level set, which may be finer than
         // the local mesh spacing
-        Real dx_ls[3];
-        for (int i = 0; i < 3; i++)
-           dx_ls[i] = dx[i] / ls_refinement;
+        const GpuArray<Real,3> dx_ls{dx[0]/ls_refinement, dx[1]/ls_refinement, dx[2]/ls_refinement};
 
         const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
 
