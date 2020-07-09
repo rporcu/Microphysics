@@ -20,5 +20,7 @@ amrex::Real sutherland (const amrex::Real& tg)
    // For air  C = 110 (Tb=74.82)
    //         mu = 1.71*10-4 poise at T = 273K
 
-   return 1.7e-5 * std::pow(tg/273.0, 1.5) * (383./(tg+110.));
+   const amrex::Real tg_scaled = tg/273.0;
+
+   return 1.7e-5 * tg_scaled * std::sqrt(tg_scaled) * (383./(tg+110.));
 }

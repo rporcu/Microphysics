@@ -40,7 +40,7 @@ struct ComputeConvectionCoeff_RanzMarshall
         amrex::Real N_Pr = (Kg  > 0.0) ? Cpg*Mug/Kg : large_number;
 
         // Calculate the Nusselt Number
-        amrex::Real N_Nu = 2.0 + 0.6 * std::pow(N_Re,0.5) * std::pow(N_Pr,0.333);
+        amrex::Real N_Nu = 2.0 + 0.6 * std::sqrt(N_Re) * std::pow(N_Pr, 0.333);
 
         return N_Nu * Kg / dp;
     }

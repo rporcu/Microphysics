@@ -190,7 +190,7 @@ ParticlesGenerator::generate (int& pc,
     // If coarse-grain DEM is activated
     if (local_cg_dem)
     {
-       p_dp[p] = std::pow(statwt, 1.0/3.0) * p_dp[p];
+       p_dp[p] = std::cbrt(statwt) * p_dp[p];
     }
     const int local_pc = pc + p;
 
@@ -559,8 +559,8 @@ ParticlesGenerator::random_fill_dem (const int icv,
   if (DEM::cg_dem)
   {
      amrex::Real statwt = IC::ic[icv].solids[type].statwt;
-     mean = std::pow(statwt, 1.0/3.0) * mean;
-     max_dp = std::pow(statwt, 1.0/3.0) * max_dp;
+     mean = std::cbrt(statwt) * mean;
+     max_dp = std::cbrt(statwt) * max_dp;
   }
 
   // Particle count is based on mean particle size

@@ -237,7 +237,7 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
               Real dp = 2.0*rad;
               if (local_cg_dem)
               {
-                 dp = dp/std::pow(particle.rdata(realData::statwt),(1.0/3.0));
+                 dp = dp/std::cbrt(particle.rdata(realData::statwt));
               }
               Real phis = 1.0 - ep;
               Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dp, dp, phis,
@@ -351,7 +351,7 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
                 Real dp = 2.0*rad;
                 if (local_cg_dem)
                 {
-                   dp = dp/std::pow(particle.rdata(realData::statwt),(1.0/3.0));
+                   dp = dp/std::cbrt(particle.rdata(realData::statwt));
                 }
                 Real phis = 1.0 - ep;
                 Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dp, dp, phis,
