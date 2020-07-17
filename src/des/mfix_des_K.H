@@ -1,7 +1,9 @@
 #include "MFIXParticleContainer.H"
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void cross_product (const amrex::Real* a, const amrex::Real* b, amrex::Real* c)
+void cross_product (const amrex::RealVect& a,
+                    const amrex::RealVect& b,
+                    amrex::RealVect& c)
 {
     c[0] = a[1]*b[2] - a[2]*b[1];
     c[1] = a[2]*b[0] - a[0]*b[2];
@@ -9,7 +11,8 @@ void cross_product (const amrex::Real* a, const amrex::Real* b, amrex::Real* c)
 }
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-amrex::Real dot_product (const amrex::Real* a, const amrex::Real* b)
+amrex::Real dot_product (const amrex::RealVect& a,
+                         const amrex::RealVect& b)
 {
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 }
@@ -17,12 +20,13 @@ amrex::Real dot_product (const amrex::Real* a, const amrex::Real* b)
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 void cfrelvel (const MFIXParticleContainer::ParticleType& p1, 
                const MFIXParticleContainer::ParticleType& p2,
-               amrex::Real& vrn, amrex::Real* vslip,
-               const amrex::Real* normal, 
+               amrex::Real& vrn, 
+               amrex::RealVect& vslip,
+               const amrex::RealVect& normal, 
                const amrex::Real dist_mag)
 {
     // translational relative velocity
-    amrex::Real vreltrans[3];
+    amrex::RealVect vreltrans(0.);
     vreltrans[0] =  p1.rdata(realData::velx) - p2.rdata(realData::velx);
     vreltrans[1] =  p1.rdata(realData::vely) - p2.rdata(realData::vely);
     vreltrans[2] =  p1.rdata(realData::velz) - p2.rdata(realData::velz);
@@ -34,13 +38,13 @@ void cfrelvel (const MFIXParticleContainer::ParticleType& p1,
 
     amrex::Real dist_c2 = dist_mag - dist_c1;
 
-    amrex::Real omega_sum[3];
+    amrex::RealVect omega_sum(0.);
     omega_sum[0] = p1.rdata(realData::omegax) * dist_c1 + p2.rdata(realData::omegax) * dist_c2;
     omega_sum[1] = p1.rdata(realData::omegay) * dist_c1 + p2.rdata(realData::omegay) * dist_c2;
     omega_sum[2] = p1.rdata(realData::omegaz) * dist_c1 + p2.rdata(realData::omegaz) * dist_c2;
 
     // the rotational relative velocity
-    amrex::Real v_rot[3];
+    amrex::RealVect v_rot(0.);
     cross_product(omega_sum, normal, v_rot);
 
     // total relative velocity
@@ -63,7 +67,7 @@ amrex::Real interp_level_set (MFIXParticleContainer::ParticleType const& p,
                               amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
                               amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi)
 {
-    amrex::Real scaled_dxi[3];
+    amrex::RealVect scaled_dxi(0.);
     scaled_dxi[0] = n_refine * dxi[0];
     scaled_dxi[1] = n_refine * dxi[1];
     scaled_dxi[2] = n_refine * dxi[2];
@@ -100,12 +104,12 @@ amrex::Real interp_level_set (MFIXParticleContainer::ParticleType const& p,
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 void level_set_normal (MFIXParticleContainer::ParticleType const& p,
                        const int n_refine,
-                       amrex::Real* normal,
+                       amrex::RealVect& normal,
                        amrex::Array4<amrex::Real const> const& phi,
                        amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
                        amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi)
 {
-    amrex::Real scaled_dxi[3];
+    amrex::RealVect scaled_dxi(0.);
     scaled_dxi[0] = n_refine * dxi[0];
     scaled_dxi[1] = n_refine * dxi[1];
     scaled_dxi[2] = n_refine * dxi[2];

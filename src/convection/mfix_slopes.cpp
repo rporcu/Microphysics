@@ -121,8 +121,8 @@ mfix::mfix_compute_slopes (int lev,
                    else
                    {
 
-                     amrex::Real A[27][3];
-                     amrex::Real du[27];
+                     amrex::GpuArray< amrex::GpuArray<amrex::Real, 3>, 27> A;
+                     amrex::GpuArray< amrex::Real, 27> du;
 
                      {
                        int lc=0;
@@ -157,8 +157,8 @@ mfix::mfix_compute_slopes (int lev,
                        }
                      }
 
-                     amrex::Real AtA[3][3];
-                     amrex::Real Atb[3];
+                     amrex::GpuArray< amrex::GpuArray<amrex::Real, 3>, 3> AtA;
+                     amrex::GpuArray< amrex::Real, 3> Atb;
 
                      for(int jj(0); jj<3; ++jj){
                        for(int ii(0); ii<3; ++ii){

@@ -196,12 +196,12 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
             {
               MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
 
-              Real interp_loc[interp_comp];
-              trilinear_interp(particle.pos(), &interp_loc[0],
+              GpuArray< Real, interp_comp> interp_loc;
+              trilinear_interp(particle.pos(), interp_loc.data(),
                                interp_array, plo, dxi, interp_comp);
 
-              Real velfp[3];
-              Real ep;
+              RealVect velfp(0.);
+              Real ep(0.);
 
               velfp[0] = interp_loc[0];
               velfp[1] = interp_loc[1];
@@ -221,14 +221,14 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
 
               int p_id = particle.id();
 
-              Real pvel[3];
+              RealVect pvel(0.);
               pvel[0] = particle.rdata(realData::velx);
               pvel[1] = particle.rdata(realData::vely);
               pvel[2] = particle.rdata(realData::velz);
 
               Real rop_g = ro * ep;
 
-              Real vslp[3];
+              RealVect vslp(0.);
               vslp[0] = velfp[0] - pvel[0];
               vslp[1] = velfp[1] - pvel[1];
               vslp[2] = velfp[2] - pvel[2];
@@ -295,7 +295,7 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
                 int k = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5));
 
                 // Local array storing interpolated values
-                Real interp_loc[interp_comp];
+                GpuArray< Real, interp_comp> interp_loc;
 
                 // All cells in the stencil are regular. Use
                 // traditional trilinear interpolation
@@ -308,7 +308,7 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
                     flags_array(i-1,j  ,k  ).isRegular() and
                     flags_array(i  ,j  ,k  ).isRegular()) {
 
-                  trilinear_interp(particle.pos(), &interp_loc[0],
+                  trilinear_interp(particle.pos(), interp_loc.data(),
                                    interp_array, plo, dxi, interp_comp);
                 // At least one of the cells in the stencil is cut or covered
                 } else {
@@ -316,11 +316,11 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
                   const int scomp = 3;
                   fe_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
                             flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-                            interp_array, &interp_loc[0], interp_comp, scomp);
+                            interp_array, interp_loc.data(), interp_comp, scomp);
                 } // Cut cell
 
-                Real velfp[3];
-                Real ep;
+                RealVect velfp(0.);
+                Real ep(0.);
 
                 velfp[0] = interp_loc[0];
                 velfp[1] = interp_loc[1];
@@ -336,13 +336,13 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
 
                 int p_id = particle.id();
 
-                Real pvel[3];
+                RealVect pvel(0.);
                 pvel[0] = particle.rdata(realData::velx);
                 pvel[1] = particle.rdata(realData::vely);
                 pvel[2] = particle.rdata(realData::velz);
 
                 Real rop_g = ro * ep;
-                Real vslp[3];
+                RealVect vslp(0.);
                 vslp[0] = velfp[0] - pvel[0];
                 vslp[1] = velfp[1] - pvel[1];
                 vslp[2] = velfp[2] - pvel[2];

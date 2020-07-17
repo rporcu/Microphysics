@@ -65,7 +65,8 @@ struct TrilinearDeposition
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
                    amrex::Array4<const EBCellFlag> const& flags,
                    const MFIXParticleContainer::ParticleType& p,
-                   int& i, int& j, int& k, amrex::Real weights[2][2][2],
+                   int& i, int& j, int& k,
+                   amrex::GpuArray<amrex::GpuArray<amrex::GpuArray<amrex::Real,2>,2>,2>& weights,
                    const amrex::Real) const
   {
 
@@ -77,9 +78,9 @@ struct TrilinearDeposition
     j = static_cast<int>(amrex::Math::floor(y));
     k = static_cast<int>(amrex::Math::floor(z));
 
-    amrex::Real wx[2];
-    amrex::Real wy[2];
-    amrex::Real wz[2];
+    amrex::GpuArray<amrex::Real,2> wx;
+    amrex::GpuArray<amrex::Real,2> wy;
+    amrex::GpuArray<amrex::Real,2> wz;
 
     wx[1] = x - i;
     wy[1] = y - j;
@@ -121,7 +122,8 @@ struct TrilinearDPVMSquareDeposition
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
                    amrex::Array4<const EBCellFlag> const& flags,
                    const MFIXParticleContainer::ParticleType& p,
-                   int& i, int& j, int& k, amrex::Real weights[2][2][2],
+                   int& i, int& j, int& k,
+                   amrex::GpuArray<amrex::GpuArray<amrex::GpuArray<amrex::Real,2>,2>,2>& weights,
                    const amrex::Real deposition_scale_factor) const
   {
 
@@ -133,9 +135,9 @@ struct TrilinearDPVMSquareDeposition
     j = static_cast<int>(amrex::Math::floor(y));
     k = static_cast<int>(amrex::Math::floor(z));
 
-    amrex::Real wx[2];
-    amrex::Real wy[2];
-    amrex::Real wz[2];
+    amrex::GpuArray<amrex::Real,2> wx;
+    amrex::GpuArray<amrex::Real,2> wy;
+    amrex::GpuArray<amrex::Real,2> wz;
 
     amrex::Real rp  = amrex::max(dx[0], p.rdata(realData::radius) *
                                  deposition_scale_factor);
@@ -230,7 +232,8 @@ struct TrueDPVMDeposition
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
                    amrex::Array4<const EBCellFlag> const& flags,
                    const MFIXParticleContainer::ParticleType& p,
-                   int& i, int& j, int& k, amrex::Real weights[2][2][2],
+                   int& i, int& j, int& k,
+                   amrex::GpuArray<amrex::GpuArray<amrex::GpuArray<amrex::Real,2>,2>,2>& weights,
                    const amrex::Real deposition_scale_factor) const
   {
 
@@ -242,9 +245,9 @@ struct TrueDPVMDeposition
     j = static_cast<int>(amrex::Math::floor(y));
     k = static_cast<int>(amrex::Math::floor(z));
 
-    amrex::Real wx[2];
-    amrex::Real wy[2];
-    amrex::Real wz[2];
+    amrex::GpuArray<amrex::Real,2> wx;
+    amrex::GpuArray<amrex::Real,2> wy;
+    amrex::GpuArray<amrex::Real,2> wz;
 
     amrex::Real rp  = amrex::max(dx[0], p.rdata(realData::radius) *
                                  deposition_scale_factor);
@@ -255,7 +258,7 @@ struct TrueDPVMDeposition
     const int jp = static_cast<int>(amrex::Math::floor(y-0.5));
     const int kp = static_cast<int>(amrex::Math::floor(z-0.5));
 
-    amrex::Real overlap[3];
+    amrex::RealVect overlap(0.);
 
     if ( i == ip ) {
 
@@ -437,7 +440,8 @@ struct CentroidDeposition
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
                    amrex::Array4<const EBCellFlag> const& flags,
                    const MFIXParticleContainer::ParticleType& p,
-                   int& i, int& j, int& k, amrex::Real weights[2][2][2],
+                   int& i, int& j, int& k,
+                   amrex::GpuArray<amrex::GpuArray<amrex::GpuArray<amrex::Real,2>,2>,2>& weights,
                    const amrex::Real deposition_scale_factor) const
   {
 
@@ -449,9 +453,9 @@ struct CentroidDeposition
     j = static_cast<int>(amrex::Math::floor(y));
     k = static_cast<int>(amrex::Math::floor(z));
 
-    amrex::Real wx[2];
-    amrex::Real wy[2];
-    amrex::Real wz[2];
+    amrex::GpuArray<amrex::Real,2> wx;
+    amrex::GpuArray<amrex::Real,2> wy;
+    amrex::GpuArray<amrex::Real,2> wz;
 
     // This gives us the i,j,k of the cell containing the centriod
     // of the particle.
