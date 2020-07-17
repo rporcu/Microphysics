@@ -89,7 +89,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
                   {
                     if (!flags_fab(i,j,k).isCovered())
                     {
-                        Real acc[3];
+                        RealVect acc(0.);
                         Real qro  = 1.0/ro(i,j,k);
                         Real qep  = 1.0/ep(i,j,k);
 

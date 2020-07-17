@@ -179,7 +179,7 @@ void fe_interp(const amrex::RealVect& pos,
 
     } else {
 
-        amrex::Real nodes[8][3];
+        amrex::GpuArray<amrex::GpuArray<amrex::Real, 3>, 8> nodes;
 
         // Here we pack the local 2x2x2 stencil into a local array. Note that
         // the node ordering is not consistent with the previous version.

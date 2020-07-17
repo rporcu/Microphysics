@@ -322,20 +322,20 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                     if (ls_value < rp)
                     {
-                        Real normal[3];
-                        level_set_normal(p, ls_refinement, &normal[0], phiarr, plo, dxi);
+                        RealVect normal(0.);
+                        level_set_normal(p, ls_refinement, normal, phiarr, plo, dxi);
 
                         normal[0] *= -1;
                         normal[1] *= -1;
                         normal[2] *= -1;
 
-                        Real v_rot[3];
+                        RealVect v_rot(0.);
                         v_rot[0] = ls_value * p.rdata(realData::omegax);
                         v_rot[1] = ls_value * p.rdata(realData::omegay);
                         v_rot[2] = ls_value * p.rdata(realData::omegaz);
 
-                        Real vreltrans[3];
-                        Real cprod[3];
+                        RealVect vreltrans(0.);
+                        RealVect cprod(0.);
 
                         cross_product(v_rot, normal, cprod);
                         vreltrans[0] = p.rdata(realData::velx) + cprod[0];
@@ -344,7 +344,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                         Real vreltrans_norm = dot_product(vreltrans, normal);
 
-                        Real vrel_t[3];
+                        RealVect vrel_t(0.);
                         vrel_t[0] = vreltrans[0] - vreltrans_norm*normal[0];
                         vrel_t[1] = vreltrans[1] - vreltrans_norm*normal[1];
                         vrel_t[2] = vreltrans[2] - vreltrans_norm*normal[2];
@@ -359,10 +359,10 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                         // Real kt_des_w = DEM::kt_w;
                         // Real etat_des_w = DEM::etat_w[phase-1];
 
-                        Real fn[3];
-                        Real ft[3];
-                        Real overlap_t[3];
-                        Real mag_overlap_t;
+                        RealVect fn(0.);
+                        RealVect ft(0.);
+                        RealVect overlap_t(0.);
+                        Real mag_overlap_t(0.);
 
                         // calculate the normal contact force
                         fn[0] = -(kn_des_w*overlap_n*normal[0]
@@ -381,7 +381,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                         if (mag_overlap_t > 0.0) {
                             Real fnmd = local_mew_w * sqrt(dot_product(fn, fn));
-                            Real tangent[3];
+                            RealVect tangent(0.);
                             tangent[0] = overlap_t[0]/mag_overlap_t;
                             tangent[1] = overlap_t[1]/mag_overlap_t;
                             tangent[2] = overlap_t[2]/mag_overlap_t;
@@ -399,7 +399,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                         fc_ptr[i + ntot  ] += fn[1] + ft[1];
                         fc_ptr[i + 2*ntot] += fn[2] + ft[2];
 
-                        Real tow_force[3];
+                        RealVect tow_force(0.);
 
                         cross_product(normal, ft, tow_force);
 
@@ -470,14 +470,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                           Real dist_mag_inv = 1.e0/dist_mag;
 
-                          Real normal[3];
+                          RealVect normal(0.);
                           normal[0] = dist_x * dist_mag_inv;
                           normal[1] = dist_y * dist_mag_inv;
                           normal[2] = dist_z * dist_mag_inv;
 
                           Real overlap_n = r_lm - dist_mag;
                           Real vrel_trans_norm;
-                          Real vrel_t[3];
+                          RealVect vrel_t(0.);
 
                           cfrelvel(p1, p2, vrel_trans_norm, vrel_t, normal, dist_mag);
 
@@ -492,10 +492,10 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                           // Real kt_des = DEM::kt;
                           // Real etat_des = DEM::etat[phase1-1][phase2-1];
 
-                          Real fn[3];
-                          Real ft[3];
-                          Real overlap_t[3];
-                          Real mag_overlap_t;
+                          RealVect fn(0.);
+                          RealVect ft(0.);
+                          RealVect overlap_t(0.);
+                          Real mag_overlap_t(0.);
 
                           // calculate the normal contact force
                           fn[0] = -(kn_des*overlap_n*normal[0]
@@ -513,7 +513,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                           if (mag_overlap_t > 0.0) {
                               Real fnmd = local_mew * sqrt(dot_product(fn, fn));
-                              Real tangent[3];
+                              RealVect tangent(0.);
                               tangent[0] = overlap_t[0]/mag_overlap_t;
                               tangent[1] = overlap_t[1]/mag_overlap_t;
                               tangent[2] = overlap_t[2]/mag_overlap_t;
@@ -537,7 +537,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                           Real dist_cl = 0.5 * (dist_mag + (part1_r*part1_r - part2_r*part2_r) * dist_mag_inv);
                           dist_cl = dist_mag - dist_cl;
 
-                          Real tow_force[3];
+                          RealVect tow_force(0.);
 
                           cross_product(normal, ft, tow_force);
 

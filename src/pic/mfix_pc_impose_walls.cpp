@@ -57,8 +57,8 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
                     // The particle is actually touching the wall. Reflect it.
                     if (overlap > 0.)
                     {
-                        amrex::Real normal[3];
-                        level_set_normal(particle, ls_refinement, &normal[0], phiarr, plo, dxi);
+                        amrex::RealVect normal(0.);
+                        level_set_normal(particle, ls_refinement, normal, phiarr, plo, dxi);
 
                         // Reflect the particle.
                         particle.pos(0) += overlap*normal[0];

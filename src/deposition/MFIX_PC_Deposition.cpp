@@ -99,7 +99,7 @@ SolidsVolumeDeposition (F WeightFunc, int lev,
             int j;
             int k;
 
-            amrex::Real weights[2][2][2];
+            GpuArray<GpuArray<GpuArray<Real,2>,2>,2> weights;
 
             WeightFunc(plo, dx, dxi, flagsarr, p, i, j, k, weights,
                 deposition_scale_factor);
@@ -225,7 +225,7 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
             int j;
             int k;
 
-            amrex::Real weights[2][2][2];
+            GpuArray<GpuArray<GpuArray<Real,2>,2>,2> weights;
 
             WeightFunc(plo, dx, dxi, flagsarr, p, i, j, k, weights,
                        deposition_scale_factor);

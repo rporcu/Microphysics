@@ -375,7 +375,7 @@ mfix::mfix_calc_txfr_particle (Real time)
               AMREX_GPU_DEVICE (int pid) noexcept
               {
                 // Local array storing interpolated values
-                amrex::Real interp_loc[interp_comp];
+                GpuArray<Real, interp_comp> interp_loc;
 
                 MFIXParticleContainer::ParticleType& particle = pstruct[pid];
 
@@ -428,7 +428,7 @@ mfix::mfix_calc_txfr_particle (Real time)
               AMREX_GPU_DEVICE (int pid) noexcept
               {
                 // Local array storing interpolated values
-                amrex::Real interp_loc[interp_comp];
+                GpuArray<Real, interp_comp> interp_loc;
 
                 MFIXParticleContainer::ParticleType& particle = pstruct[pid];
                 Real pbeta = particle.rdata(realData::dragcoeff);

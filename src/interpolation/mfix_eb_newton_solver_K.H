@@ -10,7 +10,7 @@
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::Real f (const int dir,
                const amrex::RealVect& pos,
-               const amrex::Real nodes[8][3],
+               const amrex::GpuArray<amrex::GpuArray<amrex::Real,3>,8>& nodes,
                const amrex::Real& xi,
                const amrex::Real& eta,
                const amrex::Real& zeta)
@@ -31,7 +31,7 @@ amrex::Real f (const int dir,
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::Real dfdxi (const int dir,
-                   const amrex::Real nodes[8][3],
+                   const amrex::GpuArray<amrex::GpuArray<amrex::Real,3>,8>& nodes,
                    const amrex::Real& xi,
                    const amrex::Real& eta,
                    const amrex::Real& zeta)
@@ -47,7 +47,7 @@ amrex::Real dfdxi (const int dir,
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::Real dfdeta (const int dir,
-                    const amrex::Real nodes[8][3],
+                    const amrex::GpuArray<amrex::GpuArray<amrex::Real,3>,8>& nodes,
                     const amrex::Real& xi,
                     const amrex::Real& eta,
                     const amrex::Real& zeta)
@@ -63,7 +63,7 @@ amrex::Real dfdeta (const int dir,
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::Real dfdzeta (const int dir,
-                     const amrex::Real nodes[8][3],
+                     const amrex::GpuArray<amrex::GpuArray<amrex::Real,3>,8>& nodes,
                      const amrex::Real& xi,
                      const amrex::Real& eta,
                      const amrex::Real& zeta)
@@ -79,7 +79,7 @@ amrex::Real dfdzeta (const int dir,
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 void get_interp_mapping (const amrex::RealVect& pos,
-                         const amrex::Real nodes[8][3],
+                         const amrex::GpuArray<amrex::GpuArray<amrex::Real,3>,8>& nodes,
                          amrex::Real& xi,
                          amrex::Real& eta,
                          amrex::Real& zeta)

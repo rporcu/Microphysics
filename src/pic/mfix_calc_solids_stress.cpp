@@ -188,8 +188,8 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
                 do_least_squares[1] == 1 or
                 do_least_squares[2] == 1 ) {
 
-              amrex::Real A[27][3];
-              amrex::Real du[27];
+              GpuArray< GpuArray <Real, 3>, 27> A;
+              GpuArray< Real, 27> du;
 
               {
                 const amrex::Real tau_lo = solids_pressure(Ps, beta, ep_cp, small_number, ep_s_arr(i,j,k));
@@ -224,8 +224,8 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
                 }
               }
 
-              amrex::Real AtA[3][3];
-              amrex::Real Atb[3];
+              GpuArray< GpuArray< Real, 3>, 3> AtA;
+              GpuArray< Real, 3> Atb;
 
               for(int jj(0); jj<3; ++jj){
                 for(int ii(0); ii<3; ++ii){
@@ -369,10 +369,10 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
             MFIXParticleContainer::ParticleType& particle = pstruct[ip];
 
             // Local array storing interpolated values
-            amrex::Real interp_loc[interp_comp];
+            GpuArray<Real, interp_comp> interp_loc;
 
             // Remember we cheated an stored ep_s as a 4th component
-            trilinear_interp(particle.pos(), &interp_loc[0],
+            trilinear_interp(particle.pos(), interp_loc.data(),
               grad_tau_array, plo, dxi, interp_comp);
 
             const Real ep_s_loc = interp_loc[3];
@@ -417,7 +417,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
             AMREX_GPU_DEVICE (int pid) noexcept
           {
             // Local array storing interpolated values
-            amrex::Real interp_loc[interp_comp];
+            GpuArray<Real, interp_comp> interp_loc;
 
             MFIXParticleContainer::ParticleType& particle = pstruct[pid];
 
@@ -453,7 +453,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
                   flags_array(i-1,j  ,k  ).isRegular() and
                   flags_array(i  ,j  ,k  ).isRegular()) {
 
-                  trilinear_interp(particle.pos(), &interp_loc[0],
+                  trilinear_interp(particle.pos(), interp_loc.data(),
                                     grad_tau_array, plo, dxi, interp_comp);
 
               // At least one of the cells in the stencil is cut or covered
@@ -462,7 +462,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
                 const int scomp = 0;
                 fe_interp(particle.pos(), ip, jp, kp, dxv, dxi, plo,
                           flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-                          grad_tau_array, &interp_loc[0], interp_comp, scomp);
+                          grad_tau_array, interp_loc.data(), interp_comp, scomp);
 
               } // Cut cell
 
