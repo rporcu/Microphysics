@@ -5,8 +5,8 @@ target_include_directories(mfixcore
 
 target_sources( mfixcore
    PRIVATE 
-   MFIX_calc_cell.H
-   MFIX_calc_cell.cpp
+   mfix_calc_cell.H
+   mfix_calc_cell.cpp
    mfix_calc_fluid_coeffs.H
    mfix_calc_fluid_coeffs.cpp
    mfix_init_fluid.H

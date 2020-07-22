@@ -5,9 +5,10 @@ target_include_directories(mfixcore
 target_sources( mfixcore
    PRIVATE
    mfix_algorithm.H
-   MFIX_FilCC.H
-   MFIX_FilCC.cpp
+   mfix_filcc.H
+   mfix_filcc.cpp
    mfix_util.cpp
+   mfix_regrid.cpp
    mfix_fillpatch.cpp
    mfix_set_velocity_bcs.cpp
    mfix_set_epg_bcs.cpp
@@ -23,8 +24,6 @@ target_sources( mfixcore
    mfix_set_viscosity_bcs.cpp
    mfix_normalize_species_g.H
    mfix_normalize_species_g.cpp
-   MFIX_MFHelpers.H
-   MFIX_MFHelpers.cpp
-   MFIX_gradient.H
-   MFIX_gradient.cpp
+   mfix_mf_helpers.H
+   mfix_mf_helpers.cpp
    )

@@ -1,7 +1,7 @@
-#include <DiffusionOp.H>
+#include <mfix_diffusion_op.H>
 
-#include <MFIX_EB_Parms.H>
-#include <MFIX_FLUID_Parms.H>
+#include <mfix_eb_parms.H>
+#include <mfix_fluid_parms.H>
 
 using namespace amrex;
 

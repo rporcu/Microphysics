@@ -1,13 +1,13 @@
 #include <mfix.H>
-#include <MFIX_FilCC.H>
+#include <mfix_filcc.H>
 
 #include <AMReX_FillPatchUtil.H>
-#include <MFIXParticleContainer.H>
-#include <MFIX_MFHelpers.H>
+#include <mfix_pc.H>
+#include <mfix_mf_helpers.H>
 
-#include <MFIX_DEM_Parms.H>
-#include <MFIX_PIC_Parms.H>
-#include <DiffusionOp.H>
+#include <mfix_dem_parms.H>
+#include <mfix_pic_parms.H>
+#include <mfix_diffusion_op.H>
 
 void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 {

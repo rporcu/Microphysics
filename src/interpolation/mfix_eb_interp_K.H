@@ -1,7 +1,7 @@
 #ifndef _MFIX_EB_INTERP_K_H_
 #define _MFIX_EB_INTERP_K_H_
 
-#include "MFIXParticleContainer.H"
+#include "mfix_pc.H"
 
 #include "mfix_eb_newton_solver_K.H"
 #include "mfix_eb_node_connectivity_K.H"

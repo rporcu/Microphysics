@@ -12,15 +12,10 @@ target_include_directories(mfixcore
 # IMPORTANT: DO NOT ADD main.cpp HERE!
 target_sources(mfixcore
    PRIVATE
-   mfix_compute_diveu.cpp
-   mfix_regrid.cpp
    mfix.cpp
    #  main.cpp <---- DO NOT ADD THIS HERE
    mfix.H
    )
-
-# Fortran include files
-add_subdirectory(include)
 
 # I/0
 add_subdirectory(io)
@@ -38,7 +33,7 @@ add_subdirectory(pic)
 add_subdirectory(diffusion)
 
 # LevelData
-add_subdirectory(level_data)
+add_subdirectory(leveldata)
 
 # Projection
 add_subdirectory(projection)
@@ -59,7 +54,7 @@ add_subdirectory(usr)
 add_subdirectory(eb)
 
 # Time evolution functions
-add_subdirectory(time_flow)
+add_subdirectory(timestepping)
 
 #
 # Link to imported AMReX

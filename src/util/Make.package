@@ -13,15 +13,14 @@ CEXE_sources += mfix_set_viscosity_bcs.cpp
 CEXE_sources += mfix_fillpatch.cpp
 CEXE_sources += mfix_util.cpp
 
-CEXE_headers +=   MFIX_FilCC.H
-CEXE_sources +=   MFIX_FilCC.cpp
-CEXE_headers +=   MFIX_MFHelpers.H
-CEXE_sources +=   MFIX_MFHelpers.cpp
+CEXE_sources += mfix_regrid.cpp
 
-CEXE_headers +=   mfix_algorithm.H
+CEXE_headers += mfix_filcc.H
+CEXE_sources += mfix_filcc.cpp
+CEXE_headers += mfix_mf_helpers.H
+CEXE_sources += mfix_mf_helpers.cpp
 
-CEXE_headers +=   MFIX_gradient.H
-CEXE_sources +=   MFIX_gradient.cpp
+CEXE_headers += mfix_algorithm.H
 
 CEXE_sources += mfix_set_epg_bcs.cpp
 

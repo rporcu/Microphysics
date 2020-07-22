@@ -1,5 +1,5 @@
 CEXE_sources += mfix_eb.cpp
-CEXE_sources += writeEBsurface.cpp
+CEXE_sources += mfix_write_eb_surface.cpp
 CEXE_sources += mfix_eb_air_reactor.cpp
 CEXE_sources += mfix_eb_box.cpp
 CEXE_sources += mfix_eb_cyclone.cpp
@@ -8,5 +8,5 @@ CEXE_sources += mfix_eb_hopper.cpp
 CEXE_sources += mfix_eb_proto_clr.cpp
 CEXE_sources += mfix_eb_regular.cpp
 CEXE_sources += mfix_eb_general.cpp
-CEXE_sources += get_walls.cpp
+CEXE_sources += mfix_get_walls.cpp
 CEXE_headers += mfix_eb_if.H

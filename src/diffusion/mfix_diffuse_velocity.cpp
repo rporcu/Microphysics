@@ -1,5 +1,5 @@
 #include <AMReX_MultiFabUtil.H>
-#include <DiffusionOp.H>
+#include <mfix_diffusion_op.H>
 
 using namespace amrex;
 

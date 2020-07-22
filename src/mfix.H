@@ -27,13 +27,13 @@
 #include <AMReX_NodalProjector.H>
 #include <AMReX_PhysBCFunct.H>
 
-#include <DiffusionOp.H>
-#include <MFIXParticleContainer.H>
-#include <MFIX_BC_List.H>
+#include <mfix_diffusion_op.H>
+#include <mfix_pc.H>
+#include <mfix_bc_list.H>
 #include <mfix_eb_if.H>
-#include <MFIX_DEM_Parms.H>
-#include <MFIX_PIC_Parms.H>
-#include <MFIX_LevelData.H>
+#include <mfix_dem_parms.H>
+#include <mfix_pic_parms.H>
+#include <mfix_leveldata.H>
 
 
 // Drag type enumeration

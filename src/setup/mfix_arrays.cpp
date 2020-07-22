@@ -1,8 +1,8 @@
 #include <mfix.H>
 #include <AMReX_EB_utils.H>
-#include <MFIX_EB_Parms.H>
-#include <MFIX_FLUID_Parms.H>
-#include <MFIX_SPECIES_Parms.H>
+#include <mfix_eb_parms.H>
+#include <mfix_fluid_parms.H>
+#include <mfix_species_parms.H>
 
 void
 mfix::ResizeArrays ()

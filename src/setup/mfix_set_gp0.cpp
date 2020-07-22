@@ -1,9 +1,9 @@
 #include <mfix.H>
 #include <climits>
 
-#include <MFIX_FLUID_Parms.H>
-#include <MFIX_BC_Parms.H>
-#include <MFIX_IC_Parms.H>
+#include <mfix_fluid_parms.H>
+#include <mfix_bc_parms.H>
+#include <mfix_ic_parms.H>
 
 #include <string>
 

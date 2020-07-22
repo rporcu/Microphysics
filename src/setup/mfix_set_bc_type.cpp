@@ -3,8 +3,8 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 
-#include <MFIX_BC_Parms.H>
-#include <MFIX_FLUID_Parms.H>
+#include <mfix_bc_parms.H>
+#include <mfix_fluid_parms.H>
 
 #include <math.h>
 

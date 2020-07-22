@@ -4,17 +4,17 @@ target_include_directories( mfixcore
 
 target_sources( mfixcore
    PRIVATE
-   particle_generator.H
-   particle_generator.cpp
-   des_drag_K.H
+   mfix_particle_generator.H
+   mfix_particle_generator.cpp
+   mfix_des_drag_K.H
    mfix_set_gradp_bcs.cpp
    mfix_des_K.H
-   MFIXParticleContainer.cpp
-   MFIXParticleContainer.H
-   MFIX_PC_Init.cpp
-   MFIX_PC_InitCollisionParams.cpp
-   MFIX_PC_RemoveOutOfRange.cpp
-   MFIX_PC_Replicate.cpp
+   mfix_pc.cpp
+   mfix_pc.H
+   mfix_pc_init.cpp
+   mfix_pc_init_collision_params.cpp
+   mfix_pc_remove_out_of_range.cpp
+   mfix_pc_replicate.cpp
    mfix_calc_transfer_coeffs.cpp
    mfix_calc_volume_fraction.cpp
    mfix_calc_txfr.cpp

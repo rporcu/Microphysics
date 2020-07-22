@@ -2,8 +2,8 @@
 #include <mfix_normalize_species_g.H>
 
 #include <AMReX_VisMF.H>
-#include <MFIX_MFHelpers.H>
-#include <MFIX_FLUID_Parms.H>
+#include <mfix_mf_helpers.H>
+#include <mfix_fluid_parms.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>

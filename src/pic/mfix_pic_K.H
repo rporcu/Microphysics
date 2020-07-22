@@ -1,4 +1,4 @@
-#include "MFIXParticleContainer.H"
+#include "mfix_pc.H"
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::Real solids_pressure (const amrex::Real Ps,

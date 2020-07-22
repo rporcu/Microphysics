@@ -5,8 +5,8 @@
 #include <AMReX_SPACE.H>
 #include <AMReX_Array.H>
 
-#include <MFIX_FLUID_Parms.H>
-#include <MFIX_SPECIES_Parms.H>
+#include <mfix_fluid_parms.H>
+#include <mfix_species_parms.H>
 
 //
 // Compute the three components of the convection term

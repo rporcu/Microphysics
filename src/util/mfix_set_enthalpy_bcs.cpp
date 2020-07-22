@@ -1,6 +1,6 @@
 #include <mfix.H>
 
-#include <MFIX_FLUID_Parms.H>
+#include <mfix_fluid_parms.H>
 
 using namespace amrex;
 

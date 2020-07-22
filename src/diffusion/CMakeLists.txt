@@ -4,8 +4,8 @@ target_include_directories(mfixcore
 
 target_sources( mfixcore
    PRIVATE
-   DiffusionOp.cpp
-   DiffusionOp.H
+   mfix_diffusion_op.cpp
+   mfix_diffusion_op.H
    mfix_diffuse_drag.cpp
    mfix_diffuse_velocity.cpp
    mfix_diffuse_temperature.cpp

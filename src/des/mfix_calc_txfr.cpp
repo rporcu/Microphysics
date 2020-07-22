@@ -2,13 +2,13 @@
 #include <mfix_des_K.H>
 #include <mfix_interp_K.H>
 #include <mfix_eb_interp_K.H>
-#include <MFIX_FilCC.H>
+#include <mfix_filcc.H>
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_FillPatchUtil.H>
-#include <MFIX_MFHelpers.H>
-#include <MFIX_DEM_Parms.H>
+#include <mfix_mf_helpers.H>
+#include <mfix_dem_parms.H>
 
 void
 mfix::mfix_calc_txfr_fluid (Real time)

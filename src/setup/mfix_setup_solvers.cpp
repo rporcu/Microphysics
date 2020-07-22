@@ -1,8 +1,8 @@
 #include <mfix.H>
 
 #include <AMReX_NodalProjector.H>
-#include <DiffusionOp.H>
-#include <MFIX_BC_Parms.H>
+#include <mfix_diffusion_op.H>
+#include <mfix_bc_parms.H>
 
 void
 mfix::mfix_init_solvers ()

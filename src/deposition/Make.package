@@ -1,5 +1,5 @@
 CEXE_headers += mfix_deposition_K.H
 
 CEXE_sources += mfix_deposition_bcs.cpp
-CEXE_sources += MFIX_PC_Deposition.cpp
+CEXE_sources += mfix_pc_deposition.cpp
 CEXE_sources += mfix_redistribute_deposition.cpp

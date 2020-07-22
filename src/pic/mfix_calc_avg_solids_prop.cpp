@@ -1,6 +1,6 @@
 #include <AMReX.H>
 #include <mfix.H>
-#include <MFIX_MFHelpers.H>
+#include <mfix_mf_helpers.H>
 
 using namespace amrex;
 

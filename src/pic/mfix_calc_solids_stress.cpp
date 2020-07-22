@@ -8,8 +8,7 @@
 #include <mfix_pic_K.H>
 #include <mfix_interp_K.H>
 #include <mfix_eb_interp_K.H>
-#include <MFIX_MFHelpers.H>
-#include <MFIX_gradient.H>
+#include <mfix_mf_helpers.H>
 
 void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
                                   amrex::Vector< amrex::MultiFab* >& avg_prop_in)

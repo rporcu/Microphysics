@@ -2,8 +2,8 @@
 #include <AMReX_Box.H>
 
 #include <mfix.H>
-#include <MFIX_BC_Parms.H>
-#include <MFIX_PIC_Parms.H>
+#include <mfix_bc_parms.H>
+#include <mfix_pic_parms.H>
 
 #include <math.h>
 
