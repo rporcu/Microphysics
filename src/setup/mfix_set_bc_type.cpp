@@ -54,11 +54,11 @@ mfix::mfix_set_bc_type (int lev)
           const int type = bc[bcv].type;
 
           if (lc > 0){
-            ibx_lo[1] = static_cast<int>((floor(bc[bcv].region->lo(1)-plo[1])/dy + 0.5));
-            ibx_lo[2] = static_cast<int>((floor(bc[bcv].region->lo(2)-plo[2])/dz + 0.5));
+            ibx_lo[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(1)-plo[1])/dy + 0.5));
+            ibx_lo[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(2)-plo[2])/dz + 0.5));
 
-            ibx_hi[1] = static_cast<int>((floor(bc[bcv].region->hi(1)-plo[1])/dy + 0.5))-1;
-            ibx_hi[2] = static_cast<int>((floor(bc[bcv].region->hi(2)-plo[2])/dz + 0.5))-1;
+            ibx_hi[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(1)-plo[1])/dy + 0.5))-1;
+            ibx_hi[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(2)-plo[2])/dz + 0.5))-1;
           }
 
           const Box lo_box(ibx_lo, ibx_hi);
@@ -93,11 +93,11 @@ mfix::mfix_set_bc_type (int lev)
           const int type = bc[bcv].type;
 
           if (lc > 0){
-            ibx_lo[1] = static_cast<int>(floor((bc[bcv].region->lo(1)-plo[1])/dy + 0.5));
-            ibx_lo[2] = static_cast<int>(floor((bc[bcv].region->lo(2)-plo[2])/dz + 0.5));
+            ibx_lo[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(1)-plo[1])/dy + 0.5));
+            ibx_lo[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(2)-plo[2])/dz + 0.5));
 
-            ibx_hi[1] = static_cast<int>(floor((bc[bcv].region->hi(1)-plo[1])/dy + 0.5))-1;
-            ibx_hi[2] = static_cast<int>(floor((bc[bcv].region->hi(2)-plo[2])/dz + 0.5))-1;
+            ibx_hi[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(1)-plo[1])/dy + 0.5))-1;
+            ibx_hi[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(2)-plo[2])/dz + 0.5))-1;
           }
 
           const Box hi_box(ibx_lo, ibx_hi);
@@ -145,11 +145,11 @@ mfix::mfix_set_bc_type (int lev)
           const int type = bc[bcv].type;
 
           if (lc > 0){
-            jbx_lo[0] = static_cast<int>((floor(bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
-            jbx_lo[2] = static_cast<int>((floor(bc[bcv].region->lo(2)-plo[2])/dz + 0.5));
+            jbx_lo[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
+            jbx_lo[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(2)-plo[2])/dz + 0.5));
 
-            jbx_hi[0] = static_cast<int>((floor(bc[bcv].region->hi(0)-plo[0])/dx + 0.5))-1;
-            jbx_hi[2] = static_cast<int>((floor(bc[bcv].region->hi(2)-plo[2])/dz + 0.5))-1;
+            jbx_hi[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(0)-plo[0])/dx + 0.5))-1;
+            jbx_hi[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(2)-plo[2])/dz + 0.5))-1;
           }
 
           const Box lo_box(jbx_lo, jbx_hi);
@@ -184,11 +184,11 @@ mfix::mfix_set_bc_type (int lev)
           const int type = bc[bcv].type;
 
           if (lc > 0){
-            jbx_lo[0] = static_cast<int>(floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
-            jbx_lo[2] = static_cast<int>(floor((bc[bcv].region->lo(2)-plo[2])/dz + 0.5));
+            jbx_lo[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
+            jbx_lo[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(2)-plo[2])/dz + 0.5));
 
-            jbx_hi[0] = static_cast<int>(floor((bc[bcv].region->hi(0)-plo[0])/dx + 0.5))-1;
-            jbx_hi[2] = static_cast<int>(floor((bc[bcv].region->hi(2)-plo[2])/dz + 0.5))-1;
+            jbx_hi[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(0)-plo[0])/dx + 0.5))-1;
+            jbx_hi[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(2)-plo[2])/dz + 0.5))-1;
           }
 
           const Box hi_box(jbx_lo, jbx_hi);
@@ -236,11 +236,11 @@ mfix::mfix_set_bc_type (int lev)
           const int type = bc[bcv].type;
 
           if (lc > 0){
-            kbx_lo[0] = static_cast<int>(floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
-            kbx_lo[1] = static_cast<int>(floor((bc[bcv].region->lo(1)-plo[1])/dy + 0.5));
+            kbx_lo[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
+            kbx_lo[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(1)-plo[1])/dy + 0.5));
 
-            kbx_hi[0] = static_cast<int>(floor((bc[bcv].region->hi(0)-plo[0])/dx + 0.5))-1;
-            kbx_hi[1] = static_cast<int>(floor((bc[bcv].region->hi(1)-plo[1])/dy + 0.5))-1;
+            kbx_hi[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(0)-plo[0])/dx + 0.5))-1;
+            kbx_hi[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(1)-plo[1])/dy + 0.5))-1;
           }
 
           const Box lo_box(kbx_lo, kbx_hi);
@@ -275,11 +275,11 @@ mfix::mfix_set_bc_type (int lev)
           const int type = bc[bcv].type;
 
           if (lc > 0){
-            kbx_lo[0] = static_cast<int>(floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
-            kbx_lo[1] = static_cast<int>(floor((bc[bcv].region->lo(1)-plo[1])/dy + 0.5));
+            kbx_lo[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
+            kbx_lo[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(1)-plo[1])/dy + 0.5));
 
-            kbx_hi[0] = static_cast<int>(floor((bc[bcv].region->hi(0)-plo[0])/dx + 0.5))-1;
-            kbx_hi[1] = static_cast<int>(floor((bc[bcv].region->hi(1)-plo[1])/dy + 0.5))-1;
+            kbx_hi[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(0)-plo[0])/dx + 0.5))-1;
+            kbx_hi[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(1)-plo[1])/dy + 0.5))-1;
           }
 
           const Box hi_box(kbx_lo, kbx_hi);
