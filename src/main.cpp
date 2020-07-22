@@ -10,9 +10,9 @@
 
 #include <mfix.H>
 
-#include <MFIX_DEM_Parms.H>
-#include <MFIX_PIC_Parms.H>
-#include <MFIX_FLUID_Parms.H>
+#include <mfix_dem_parms.H>
+#include <mfix_pic_parms.H>
+#include <mfix_fluid_parms.H>
 
 int  max_step   = -1;
 int  regrid_int = -1;

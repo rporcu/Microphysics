@@ -3,8 +3,8 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 
-#include <MFIX_FLUID_Parms.H>
-#include <MFIX_SPECIES_Parms.H>
+#include <mfix_fluid_parms.H>
+#include <mfix_species_parms.H>
 
 std::string      mfix::particle_init_type   = "AsciiFile";
 std::string      mfix::load_balance_type    = "KnapSack";

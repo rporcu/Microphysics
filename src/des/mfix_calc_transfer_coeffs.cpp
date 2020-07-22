@@ -2,9 +2,9 @@
 #include <mfix_des_K.H>
 #include <mfix_interp_K.H>
 #include <mfix_eb_interp_K.H>
-#include <des_drag_K.H>
-#include <des_conv_coeff_K.H>
-#include <MFIX_MFHelpers.H>
+#include <mfix_des_drag_K.H>
+#include <mfix_des_conv_coeff_K.H>
+#include <mfix_mf_helpers.H>
 
 void mfix::mfix_calc_transfer_coeffs ()
 {

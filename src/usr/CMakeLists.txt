@@ -6,6 +6,6 @@
 #
 set(MFIX_UDFS_STUBS
    ${CMAKE_CURRENT_LIST_DIR}/mfix_usr.cpp
-   ${CMAKE_CURRENT_LIST_DIR}/usr_drag.cpp
-   ${CMAKE_CURRENT_LIST_DIR}/MFIX_PC_usr.cpp
+   ${CMAKE_CURRENT_LIST_DIR}/mfix_usr_drag.cpp
+   ${CMAKE_CURRENT_LIST_DIR}/mfix_pc_usr.cpp
    CACHE INTERNAL "MFIX default UDFS")

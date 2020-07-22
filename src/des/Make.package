@@ -1,15 +1,15 @@
 CEXE_headers += mfix_des_K.H
-CEXE_headers += MFIXParticleContainer.H
+CEXE_headers += mfix_pc.H
 
-CEXE_headers += particle_generator.H
-CEXE_sources += particle_generator.cpp
-CEXE_headers += des_drag_K.H
+CEXE_headers += mfix_particle_generator.H
+CEXE_sources += mfix_particle_generator.cpp
+CEXE_headers += mfix_des_drag_K.H
 
-CEXE_sources += MFIXParticleContainer.cpp
-CEXE_sources += MFIX_PC_Init.cpp
-CEXE_sources += MFIX_PC_InitCollisionParams.cpp
-CEXE_sources += MFIX_PC_RemoveOutOfRange.cpp
-CEXE_sources += MFIX_PC_Replicate.cpp
+CEXE_sources += mfix_pc.cpp
+CEXE_sources += mfix_pc_init.cpp
+CEXE_sources += mfix_pc_init_collision_params.cpp
+CEXE_sources += mfix_pc_remove_out_of_range.cpp
+CEXE_sources += mfix_pc_replicate.cpp
 CEXE_sources += mfix_set_gradp_bcs.cpp
 CEXE_sources += mfix_calc_transfer_coeffs.cpp
 CEXE_sources += mfix_calc_volume_fraction.cpp

@@ -1,5 +1,5 @@
-CEXE_sources += DiffusionOp.cpp
-CEXE_headers += DiffusionOp.H
+CEXE_sources += mfix_diffusion_op.cpp
+CEXE_headers += mfix_diffusion_op.H
 CEXE_sources += mfix_diffuse_drag.cpp
 CEXE_sources += mfix_diffuse_scalar.cpp
 CEXE_sources += mfix_diffuse_temperature.cpp

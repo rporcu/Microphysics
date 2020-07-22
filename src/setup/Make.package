@@ -12,5 +12,5 @@ CEXE_sources += mfix_arrays.cpp
 CEXE_sources += mfix_init.cpp
 CEXE_sources += mfix_setup_solvers.cpp
 CEXE_sources += mfix_set_bc_type.cpp
-CEXE_sources += MFIX_calc_cell.cpp
-CEXE_headers += MFIX_calc_cell.H
+CEXE_sources += mfix_calc_cell.cpp
+CEXE_headers += mfix_calc_cell.H

@@ -14,7 +14,7 @@ Bdirs 	+= src/convection
 Bdirs 	+= src/diffusion
 Bdirs 	+= src/pic
 Bdirs 	+= src/projection
-Bdirs 	+= src/level_data
+Bdirs 	+= src/leveldata
 Bdirs 	+= src/setup
 Bdirs 	+= src/util
 Bdirs 	+= src/interpolation
@@ -22,7 +22,7 @@ Bdirs 	+= src/deposition
 Bdirs 	+= src/mods
 Bdirs 	+= src/eb
 Bdirs 	+= src/usr
-Bdirs 	+= src/time_flow
+Bdirs 	+= src/timestepping
 
 Bpack	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir)/Make.package)
 Blocs	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir))
@@ -30,9 +30,6 @@ Blocs	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir))
 include $(Bpack)
 INCLUDE_LOCATIONS += $(Blocs)
 VPATH_LOCATIONS   += $(Blocs)
-
-INCLUDE_LOCATIONS += $(TOP)/src/include
-VPATH_LOCATIONS   += $(TOP)/src/include
 
 Pdirs   := Base AmrCore Boundary Particle EB
 

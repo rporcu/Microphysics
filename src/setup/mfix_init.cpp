@@ -6,13 +6,13 @@
 
 #include <AMReX_EBAmrUtil.H>
 
-#include <MFIX_REGIONS_Parms.H>
-#include <MFIX_BC_Parms.H>
-#include <MFIX_IC_Parms.H>
-#include <MFIX_DEM_Parms.H>
-#include <MFIX_PIC_Parms.H>
-#include <MFIX_FLUID_Parms.H>
-#include <MFIX_SPECIES_Parms.H>
+#include <mfix_regions_parms.H>
+#include <mfix_bc_parms.H>
+#include <mfix_ic_parms.H>
+#include <mfix_dem_parms.H>
+#include <mfix_pic_parms.H>
+#include <mfix_fluid_parms.H>
+#include <mfix_species_parms.H>
 
 void
 mfix::InitParams ()

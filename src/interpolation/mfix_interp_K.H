@@ -1,7 +1,7 @@
 #ifndef _MFIX_INTERP_K_H_
 #define _MFIX_INTERP_K_H_
 
-#include "MFIXParticleContainer.H"
+#include "mfix_pc.H"
 
 /****************************************************************
  *                                                              *

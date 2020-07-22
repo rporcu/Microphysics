@@ -1,6 +1,6 @@
 #include <mfix_calc_fluid_coeffs.H>
-#include <eos_mod.H>
-#include <MFIX_FLUID_Parms.H>
+#include <mfix_eos_mod.H>
+#include <mfix_fluid_parms.H>
 
 void calc_mu_g (const Box& bx,
                 FArrayBox& mu_g_fab)

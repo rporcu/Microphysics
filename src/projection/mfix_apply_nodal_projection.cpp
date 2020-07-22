@@ -1,5 +1,5 @@
 #include <mfix.H>
-#include <MFIX_BC_Parms.H>
+#include <mfix_bc_parms.H>
 
 #include <AMReX_REAL.H>
 #include <AMReX_BLFort.H>
@@ -11,7 +11,7 @@
 #include <AMReX_BLassert.H>
 #include <AMReX_NodalProjector.H>
 
-#include <MFIX_MFHelpers.H>
+#include <mfix_mf_helpers.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>

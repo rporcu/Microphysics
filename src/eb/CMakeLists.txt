@@ -14,8 +14,8 @@ target_sources( mfixcore
    mfix_eb_general.cpp
    mfix_eb_if.H
    mfix_eb_proto_clr.cpp
-   get_walls.cpp
-   writeEBsurface.cpp
+   mfix_get_walls.cpp
+   mfix_write_eb_surface.cpp
    )
 
 if(ENABLE_CSG)

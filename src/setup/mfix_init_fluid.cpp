@@ -1,10 +1,10 @@
 #include <mfix_init_fluid.H>
 
 #include <mfix_calc_fluid_coeffs.H>
-#include <MFIX_calc_cell.H>
-#include <MFIX_FLUID_Parms.H>
-#include <MFIX_SPECIES_Parms.H>
-#include <MFIX_IC_Parms.H>
+#include <mfix_calc_cell.H>
+#include <mfix_fluid_parms.H>
+#include <mfix_species_parms.H>
+#include <mfix_ic_parms.H>
 
 using namespace amrex;
 

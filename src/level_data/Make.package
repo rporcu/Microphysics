@@ -1,2 +1,0 @@
-CEXE_headers += MFIX_LevelData.H
-CEXE_sources += MFIX_LevelData.cpp

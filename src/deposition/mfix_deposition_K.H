@@ -1,4 +1,4 @@
-#include "MFIXParticleContainer.H"
+#include "mfix_pc.H"
 #include <mfix.H>
 
 

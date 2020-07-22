@@ -1,6 +1,6 @@
 #include <AMReX.H>
 #include "AMReX_Particles.H"
-#include <MFIXParticleContainer.H>
+#include <mfix_pc.H>
 
 #include <mfix_deposition_K.H>
 #include <mfix.H>

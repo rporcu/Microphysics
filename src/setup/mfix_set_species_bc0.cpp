@@ -1,8 +1,8 @@
 #include <mfix.H>
 
-#include <MFIX_FLUID_Parms.H>
-#include <MFIX_SPECIES_Parms.H>
-#include <MFIX_MFHelpers.H>
+#include <mfix_fluid_parms.H>
+#include <mfix_species_parms.H>
+#include <mfix_mf_helpers.H>
 
 void
 mfix::set_species_bc0 (const Box& sbx,

@@ -1,4 +1,4 @@
-CEXE_sources += mfixIO.cpp
+CEXE_sources += mfix_io.cpp
 CEXE_sources += mfix_build_info.cpp
 CEXE_sources += mfix_chk.cpp
 CEXE_sources += mfix_plt.cpp

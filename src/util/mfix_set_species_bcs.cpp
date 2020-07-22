@@ -1,7 +1,7 @@
 #include <mfix.H>
 
-#include <MFIX_FLUID_Parms.H>
-#include <MFIX_SPECIES_Parms.H>
+#include <mfix_fluid_parms.H>
+#include <mfix_species_parms.H>
 
 using namespace amrex;
 
