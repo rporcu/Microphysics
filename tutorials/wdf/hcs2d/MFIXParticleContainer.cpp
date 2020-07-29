@@ -13,7 +13,6 @@
 #include <AMReX_EBMultiFabUtil.H>
 #include <AMReX_FillPatchUtil.H>
 
-#include <math.h>
 
 #include "mfix_F.H"
 #include "mfix_des_F.H"

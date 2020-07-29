@@ -1,11 +1,6 @@
-#include <AMReX_EBFArrayBox.H>
-#include <AMReX_Box.H>
-
 #include <mfix.H>
 #include <mfix_bc_parms.H>
-#include <mfix_pic_parms.H>
 
-#include <math.h>
 
 void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealVect& gravity,
                                                     amrex::Vector< amrex::EBFArrayBoxFactory* > particle_ebfactory,

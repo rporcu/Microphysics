@@ -1,10 +1,4 @@
-#include <AMReX.H>
-#include <AMReX_ParmParse.H>
-#include <AMReX_Particles.H>
 #include <mfix_pc.H>
-
-#include <math.h>
-
 #include <mfix_dem_parms.H>
 
 using namespace amrex;

@@ -8,7 +8,6 @@
 #include <AMReX_Math.H>
 #include <mfix_calc_cell.H>
 
-// #include <cmath>
 
 using namespace amrex;
 

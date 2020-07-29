@@ -1,6 +1,5 @@
 #include <mfix.H>
 
-#include <cmath>
 #include <limits>
 
 using namespace std;
