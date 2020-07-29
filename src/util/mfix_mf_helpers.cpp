@@ -2,20 +2,18 @@
 #include <AMReX_MultiFab.H>
 #include <mfix_mf_helpers.H>
 
-using namespace std;
 using namespace amrex;
-
 
 
 //
 // Creates an exact copy ("shape" + value) of "mold"
 //
-unique_ptr< MultiFab >
+std::unique_ptr< MultiFab >
 MFHelpers::createFrom (MultiFab& mold)
 {
     AMREX_ASSERT(mold.ok());
 
-    unique_ptr< MultiFab > mf;
+    std::unique_ptr< MultiFab > mf;
 
     mf.reset(new MultiFab(mold.boxArray(), mold.DistributionMap(),
                           mold.nComp(), mold.nGrow(), MFInfo(),
@@ -30,12 +28,12 @@ MFHelpers::createFrom (MultiFab& mold)
 //
 // Creates a copy of "mold" and initializes it to "val".
 //
-unique_ptr< MultiFab >
+std::unique_ptr< MultiFab >
 MFHelpers::createFrom ( MultiFab& mold, Real val )
 {
     AMREX_ASSERT(mold.ok());
 
-    unique_ptr< MultiFab > mf;
+    std::unique_ptr< MultiFab > mf;
 
     mf.reset(new MultiFab(mold.boxArray(), mold.DistributionMap(),
                           mold.nComp(), mold.nGrow(), MFInfo(),
@@ -48,12 +46,12 @@ MFHelpers::createFrom ( MultiFab& mold, Real val )
 //
 // Creates a copy of "mold" with nGrow ghosts and initializes it to "val".
 //
-unique_ptr< MultiFab >
+std::unique_ptr< MultiFab >
 MFHelpers::createFrom (MultiFab& mold, Real val, int nGrow )
 {
     AMREX_ASSERT(mold.ok());
 
-    unique_ptr< MultiFab > mf;
+    std::unique_ptr< MultiFab > mf;
 
     mf.reset(new MultiFab(mold.boxArray(), mold.DistributionMap(),
                           mold.nComp(), nGrow, MFInfo(),

@@ -2,7 +2,6 @@
 
 #include <limits>
 
-using namespace std;
 
 void
 mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& prev_dt)
@@ -137,7 +136,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
     // Protect against cfl_max very small
     // This may happen, for example, when the initial velocity field
     // is zero for an inviscid flow with no external forcing
-    Real eps = numeric_limits<Real>::epsilon();
+    Real eps = std::numeric_limits<Real>::epsilon();
     if ( nstep > 1 && cfl_max <= eps ) dt_new = 0.5 * old_dt;
 
     // Don't let the timestep grow by more than 1% per step.

@@ -2,7 +2,6 @@
 #include <mfix_pic_parms.H>
 
 using namespace amrex;
-using namespace std;
 
 void MFIXParticleContainer::Replicate (IntVect& Nrep,
                                        Geometry& geom,

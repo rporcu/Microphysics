@@ -1917,13 +1917,13 @@ ComputeAverageVelocities ( const int lev,
                 {
                   // Create output files only the first time this function is called
                   // Use ios:trunc to delete previous content
-                  ofs.open ( fname.c_str(), ios::out | ios::trunc );
+                  ofs.open ( fname.c_str(), std::ios::out | ios::trunc );
                 }
               else
                 {
                   // If this is not the first time we write to this file
                   // we append to it
-                  ofs.open ( fname.c_str(), ios::out | ios::app );
+                  ofs.open ( fname.c_str(), std::ios::out | std::ios::app );
                 }
 
               // Check if file is good

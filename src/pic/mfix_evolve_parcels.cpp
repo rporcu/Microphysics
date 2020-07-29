@@ -2,7 +2,6 @@
 #include <mfix.H>
 
 using namespace amrex;
-using namespace std;
 
 void mfix::EvolveParcels (int nstep,
                           Real dt,
@@ -105,4 +104,3 @@ void mfix::EvolveParcels (int nstep,
 
     BL_PROFILE_REGION_STOP("MFIX_PIC::EvolveParcels()");
 }
-

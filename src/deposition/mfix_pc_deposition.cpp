@@ -6,7 +6,6 @@
 #include <mfix.H>
 
 using namespace amrex;
-using namespace std;
 
 void MFIXParticleContainer::
 SolidsVolumeDeposition (int lev,
