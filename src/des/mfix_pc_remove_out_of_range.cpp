@@ -68,9 +68,9 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                         ParticleType& p = pstruct[ip];
 
                         const Real* plo_ptr = plo.data();
-                        int icell = static_cast<int>(floor( ( p.pos(0) - plo_ptr[0] ) / dx[0] ));
-                        int jcell = static_cast<int>(floor( ( p.pos(1) - plo_ptr[1] ) / dx[1] ));
-                        int kcell = static_cast<int>(floor( ( p.pos(2) - plo_ptr[2] ) / dx[2] ));
+                        int icell = static_cast<int>(amrex::Math::floor( ( p.pos(0) - plo_ptr[0] ) / dx[0] ));
+                        int jcell = static_cast<int>(amrex::Math::floor( ( p.pos(1) - plo_ptr[1] ) / dx[1] ));
+                        int kcell = static_cast<int>(amrex::Math::floor( ( p.pos(2) - plo_ptr[2] ) / dx[2] ));
 
                         if (flag_fab(icell,jcell,kcell).isCovered())
                         {
@@ -83,9 +83,9 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                             Real y = ( p.pos(1) - plo_ptr[1] ) / dx_ls[1];
                             Real z = ( p.pos(2) - plo_ptr[2] ) / dx_ls[2];
 
-                            int i = static_cast<int>(floor(x));
-                            int j = static_cast<int>(floor(y));
-                            int k = static_cast<int>(floor(z));
+                            int i = static_cast<int>(amrex::Math::floor(x));
+                            int j = static_cast<int>(amrex::Math::floor(y));
+                            int k = static_cast<int>(amrex::Math::floor(z));
 
                             Real wx_hi = x - i;
                             Real wy_hi = y - j;
