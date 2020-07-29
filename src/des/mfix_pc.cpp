@@ -4,7 +4,6 @@
 #include <mfix_bc_parms.H>
 
 using namespace amrex;
-using namespace std;
 
 int  MFIXParticleContainer::domain_bc[6] {0};
 
@@ -806,9 +805,9 @@ void MFIXParticleContainer::writeAllAtLevel (int lev)
            const IntVect& iv = Index(p, lev);
 
            RealVect xyz(p.pos(0), p.pos(1), p.pos(2));
-           cout << " id " << p.id()
+           std::cout << " id " << p.id()
                 << " index " << iv
-                << " position " << xyz << endl;
+                << " position " << xyz << std::endl;
        }
     }
 }
@@ -1022,7 +1021,7 @@ Vector<RealVect> MFIXParticleContainer::GetMaxForces ()
 void MFIXParticleContainer::
 ComputeAverageVelocities (const int lev,
                           const amrex::Real time,
-                          const string&  basename,
+                          const std::string&  basename,
                           const amrex::Vector<Real>& avg_vel_p,
                           const amrex::Vector<Real>& avg_region_x_w,
                           const amrex::Vector<Real>& avg_region_x_e,
@@ -1053,11 +1052,11 @@ ComputeAverageVelocities (const int lev,
       return;
     }
 
-    vector<long> region_np(nregions, 0);
-    vector<Real> region_velx(nregions, 0.0);
-    vector<Real> region_vely(nregions, 0.0);
-    vector<Real> region_velz(nregions, 0.0);
-    vector<Real> region_kin_energy(nregions, 0.0);
+    std::vector<long> region_np(nregions, 0);
+    std::vector<Real> region_velx(nregions, 0.0);
+    std::vector<Real> region_vely(nregions, 0.0);
+    std::vector<Real> region_velz(nregions, 0.0);
+    std::vector<Real> region_kin_energy(nregions, 0.0);
 
     for ( int nr = 0; nr < nregions; ++nr )
     {
@@ -1168,13 +1167,13 @@ ComputeAverageVelocities (const int lev,
         {
           // Create output files only the first time this function is called
           // Use ios:trunc to delete previous content
-          ofs.open ( fname.c_str(), ios::out | ios::trunc );
+          ofs.open ( fname.c_str(), std::ios::out | std::ios::trunc );
         }
         else
         {
           // If this is not the first time we write to this file
           // we append to it
-          ofs.open ( fname.c_str(), ios::out | ios::app );
+          ofs.open ( fname.c_str(), std::ios::out | std::ios::app );
         }
 
         // Check if file is good

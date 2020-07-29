@@ -16,7 +16,6 @@
 #include <mfix_pic_parms.H>
 #include <mfix_fluid_parms.H>
 
-using namespace std;
 
 void mfix::make_eb_general () {
 
@@ -49,11 +48,11 @@ void mfix::make_eb_general () {
     std::shared_ptr<EB2::TranslationIF<EB2::PolynomialIF>> impfunc_poly2;
 
     // Planar side walls (particles can see additional walls)
-    shared_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls_part;
-    shared_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls_fluid;
+    std::shared_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls_part;
+    std::shared_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls_fluid;
 
     // Planar dividing wall
-    shared_ptr<EB2::IntersectionIF<EB2::PlaneIF, EB2::PlaneIF, EB2::PlaneIF>> impfunc_divider;
+    std::shared_ptr<EB2::IntersectionIF<EB2::PlaneIF, EB2::PlaneIF, EB2::PlaneIF>> impfunc_divider;
 
     /****************************************************************************
      * Generate PolynomialIF representing the non-planar EB walls               *
@@ -319,7 +318,7 @@ mfix::get_poly (int max_order, std::string field_prefix)
     // Coefficients vector is stored in the inputs database with the field name:
     //      <field_prefix>_[x,y,z]_coeffs
     const std::array<const std::string, 3> var_names{"x", "y", "z"};
-    std::array<      string, 3> field_names;
+    std::array<std::string, 3> field_names;
     for(int i = 0; i < 3; i++) {
         std::stringstream field_name;
         field_name << field_prefix;
@@ -367,8 +366,8 @@ mfix::get_poly (int max_order, std::string field_prefix)
     pp.getarr(translate_field.str().c_str(), offset_vec, 0, SpaceDim);
     std::copy_n(offset_vec.begin(), SpaceDim, offset.begin());
 
-    shared_ptr<EB2::TranslationIF<EB2::PolynomialIF>> ret =
-      shared_ptr<EB2::TranslationIF<EB2::PolynomialIF>>(
+         std::shared_ptr<EB2::TranslationIF<EB2::PolynomialIF>> ret =
+           std::shared_ptr<EB2::TranslationIF<EB2::PolynomialIF>>(
         new EB2::TranslationIF<EB2::PolynomialIF>(mirror, offset));
 
     return ret;
@@ -400,8 +399,8 @@ mfix::make_wall (int dir, // direction (long edge) of wall
     center[dir] = position - width;
     EB2::PlaneIF plane_2(center, normal, false);
 
-    shared_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>> ret =
-      shared_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
+         std::shared_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>> ret =
+           std::shared_ptr<EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>>
         (new EB2::IntersectionIF<EB2::PlaneIF,EB2::PlaneIF,EB2::PlaneIF>(plane_up, plane_1, plane_2));
 
     return ret;

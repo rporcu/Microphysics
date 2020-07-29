@@ -4,7 +4,6 @@
 #include <mfix_particle_generator.H>
 
 using namespace amrex;
-using namespace std;
 
 void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
 {

@@ -11,7 +11,6 @@
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
 
-using namespace std;
 
 namespace
 {
@@ -295,7 +294,7 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
                 std::ifstream ifile(fname.c_str());
                 bool exists = (bool)ifile;
 
-                ofs.open ( fname.c_str(), ios::out | ios::app );
+                ofs.open ( fname.c_str(), std::ios::out | std::ios::app );
                 if ( !ofs.good() ) amrex::FileOpenFailed ( fname );
 
                 if ( !exists ) ofs << "#  Time   p_g  vol" << std::endl;
@@ -315,7 +314,7 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
                   std::ifstream ifile(fname.c_str());
                   bool exists = (bool)ifile;
 
-                  ofs.open ( fname.c_str(), ios::out | ios::app );
+                  ofs.open ( fname.c_str(), std::ios::out | std::ios::app );
                   if ( !ofs.good() ) amrex::FileOpenFailed ( fname );
 
                   if ( !exists ) ofs << "#  Time   ep_g" << std::endl;
@@ -335,7 +334,7 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
                   std::ifstream ifile(fname.c_str());
                   bool exists = (bool)ifile;
 
-                  ofs.open ( fname.c_str(), ios::out | ios::app );
+                  ofs.open ( fname.c_str(), std::ios::out | std::ios::app );
                   if ( !ofs.good() ) amrex::FileOpenFailed ( fname );
 
                   if ( !exists ) ofs << "#  Time   velx  vely  velz" << std::endl;

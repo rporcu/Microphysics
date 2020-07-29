@@ -2,7 +2,6 @@
 #include <mfix_dem_parms.H>
 
 using namespace amrex;
-using namespace std;
 
 
 void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()

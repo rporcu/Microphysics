@@ -1,7 +1,6 @@
 #include <mfix.H>
 #include <mfix_algorithm.H>
 
-using namespace std;
 
 //
 // Compute the slopes of Sborder (velocity, density, temperature or tracer)
@@ -14,7 +13,7 @@ mfix::mfix_compute_slopes (int lev,
                            Vector< MultiFab* > const& yslopes_in,
                            Vector< MultiFab* > const& zslopes_in,
                            int slopes_comp,
-                           map<string, Gpu::ManagedVector<int>>& bc_types)
+                           std::map<std::string, Gpu::ManagedVector<int>>& bc_types)
 {
     BL_PROFILE("mfix::mfix_compute_slopes");
 
@@ -337,7 +336,7 @@ mfix::mfix_compute_slopes (int lev,
              });
            }
 
-           if(domain.smallEnd(1) >= bx.smallEnd(1) and domain.smallEnd(1) <= bx.bigEnd(1)) 
+           if(domain.smallEnd(1) >= bx.smallEnd(1) and domain.smallEnd(1) <= bx.bigEnd(1))
            {
              Box bx_y_lo(IntVect(bx.smallEnd(0), domain.smallEnd(1), bx.smallEnd(2)),
                          IntVect(bx.bigEnd(0), domain.smallEnd(1), bx.bigEnd(2)));
