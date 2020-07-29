@@ -1,21 +1,9 @@
 #include <AMReX.H>
-#include "AMReX_Particles.H"
-#include "AMReX_RealVect.H"
-#include <iostream>
+
 #include <mfix_pc.H>
 #include <mfix_dem_parms.H>
-#include <AMReX_EBFArrayBox.H>
-#include <AMReX_MultiCutFab.H>
-#include <AMReX_EB_F.H>
-
-#include <AMReX_EBAmrUtil.H>
-#include <AMReX_EBSupport.H>
-#include <AMReX_EBMultiFabUtil.H>
-
-#include <math.h>
 
 using namespace amrex;
-using namespace std;
 
 void MFIXParticleContainer::RemoveOutOfRange (int lev,
                                               const EBFArrayBoxFactory * ebfactory,

@@ -1,19 +1,3 @@
-#include <AMReX.H>
-#include <AMReX_Particles.H>
-#include <AMReX_RealVect.H>
-#include <iostream>
-#include <mfix_pc.H>
-#include <AMReX_EBFArrayBox.H>
-#include <AMReX_MultiCutFab.H>
-#include <AMReX_EB_F.H>
-
-#include <AMReX_EBAmrUtil.H>
-#include <AMReX_EBSupport.H>
-#include <AMReX_EBMultiFabUtil.H>
-#include <AMReX_FillPatchUtil.H>
-
-#include <math.h>
-
 #include <mfix_des_K.H>
 
 #include <mfix_dem_parms.H>

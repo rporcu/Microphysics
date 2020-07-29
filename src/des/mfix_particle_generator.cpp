@@ -8,7 +8,6 @@
 #include <iomanip>
 #include <fstream>
 #include <sstream>
-#include <cmath>
 
 #include <mfix_ic_parms.H>
 #include <mfix_dem_parms.H>

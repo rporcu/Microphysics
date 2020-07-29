@@ -1,12 +1,7 @@
 #ifndef _EOS_MOD_F_H_
 #define _EOS_MOD_F_H_
 
-#include <AMReX_REAL.H>
-
 #include <AMReX_BLFort.H>
-#include <AMReX_SPACE.H>
-
-#include <cmath>
 
 
 AMREX_GPU_HOST_DEVICE

@@ -1,7 +1,6 @@
 #include <AMReX_REAL.H>
 #include <AMReX_GpuQualifiers.H>
 
-#include <cmath>
 
 struct ComputeConvectionCoeff_RanzMarshall
 {

@@ -1,14 +1,12 @@
-#include <AMReX_REAL.H>
 #include <AMReX_Utility.H>
 
 #include <mfix_des_drag_K.H>
 
-#include <cmath>
 
 AMREX_GPU_HOST_DEVICE
 amrex::Real
-ComputeDragUser::operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel, 
-                             amrex::Real DPM, amrex::Real DPA, amrex::Real PHIS, 
+ComputeDragUser::operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel,
+                             amrex::Real DPM, amrex::Real DPA, amrex::Real PHIS,
                              amrex::Real fvelx, amrex::Real fvely, amrex::Real fvelz,
                              int i, int j, int k, int pid) const
 {
