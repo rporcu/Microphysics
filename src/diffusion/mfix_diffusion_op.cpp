@@ -374,7 +374,7 @@ void DiffusionOp::ComputeLapS (Vector< MultiFab* >& laps_out,
     }
 }
 
-void DiffusionOp::ComputeLapX (Vector< MultiFab* >& lapX_out,
+void DiffusionOp::ComputeLapX (const Vector< MultiFab* >& lapX_out,
                                const Vector< MultiFab* >& X_g_in,
                                const Vector< MultiFab* >& ro_g_in,
                                const Vector< MultiFab* >& ep_g_in,
@@ -389,19 +389,11 @@ void DiffusionOp::ComputeLapX (Vector< MultiFab* >& lapX_out,
 
   for (int n(0); n < nspecies_g; n++)
   {
-    Vector< MultiFab* > D_g(finest_level+1);
     Vector< MultiFab* > X_g(finest_level+1);
     Vector< MultiFab* > lapX(finest_level+1);
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
-      D_g[lev] = new MultiFab(D_g_in[lev]->boxArray(), D_g_in[lev]->DistributionMap(),
-          1, 1, MFInfo(), D_g_in[lev]->Factory());
-
-      D_g[lev]->setVal(0.0);
-
-      MultiFab::Copy(*D_g[lev], *D_g_in[lev], n, 0, 1, 1);
-
       X_g[lev] = new MultiFab(X_g_in[lev]->boxArray(), X_g_in[lev]->DistributionMap(),
           1, 1, MFInfo(), X_g_in[lev]->Factory());
 
@@ -416,7 +408,7 @@ void DiffusionOp::ComputeLapX (Vector< MultiFab* >& lapX_out,
     }
 
     Vector< MultiFab* > lapX_aux(finest_level+1);
-    Vector< MultiFab* > phi_eb(finest_level+1);
+    //Vector< MultiFab* > phi_eb(finest_level+1);
     for(int lev = 0; lev <= finest_level; lev++)
     {
       lapX_aux[lev] = new MultiFab(grids[lev], dmap[lev], 1, nghost, MFInfo(),
@@ -424,8 +416,8 @@ void DiffusionOp::ComputeLapX (Vector< MultiFab* >& lapX_out,
 
       lapX_aux[lev]->setVal(0.0);
 
-      phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(),
-          *(*ebfactory)[lev]);
+      //phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(),
+      //    *(*ebfactory)[lev]);
     }
 
     // We want to return div (D_g grad)) phi
@@ -437,15 +429,16 @@ void DiffusionOp::ComputeLapX (Vector< MultiFab* >& lapX_out,
     // Compute the coefficients
     for (int lev = 0; lev <= finest_level; lev++)
     {
-      MultiFab ep_D_g(ep_g_in[lev]->boxArray(), ep_g_in[lev]->DistributionMap(),
+      MultiFab b_coeffs(ep_g_in[lev]->boxArray(), ep_g_in[lev]->DistributionMap(),
           1, 1, MFInfo(), ep_g_in[lev]->Factory());
 
-      ep_D_g.setVal(0.);
+      b_coeffs.setVal(0.);
 
-      MultiFab::Copy(ep_D_g, *ep_g_in[lev], 0, 0, 1, 1);
-      MultiFab::Multiply(ep_D_g, *D_g[lev], 0, 0, 1, 1);
+      MultiFab::Copy(b_coeffs, *ep_g_in[lev], 0, 0, 1, 1);
+      MultiFab::Multiply(b_coeffs, *ro_g_in[lev], 0, 0, 1, 1);
+      MultiFab::Multiply(b_coeffs, *D_g_in[lev], n, 0, 1, 1);
 
-      EB_interp_CellCentroid_to_FaceCentroid (ep_D_g, GetArrOfPtrs(b[lev]), 0,
+      EB_interp_CellCentroid_to_FaceCentroid (b_coeffs, GetArrOfPtrs(b[lev]), 0,
           0, 1, geom[lev], bcs_X);
 
       species_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
@@ -472,10 +465,10 @@ void DiffusionOp::ComputeLapX (Vector< MultiFab* >& lapX_out,
     for(int lev = 0; lev <= finest_level; lev++)
     {
       delete lapX_aux[lev];
-      delete phi_eb[lev];
+      //delete phi_eb[lev];
 
-      delete D_g[lev];
       delete X_g[lev];
+      delete lapX[lev];
     }
 
   }
