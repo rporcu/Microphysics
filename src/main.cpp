@@ -210,6 +210,10 @@ int main (int argc, char* argv[])
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix mfix;
 
+    // Set the extend domain flag by default
+    ParmParse pp("eb2");
+    pp.add("extend_domain_face",true);
+
     ReadParameters();
 
     // Set global static pointer to mfix object. Used by fill-patch utility
