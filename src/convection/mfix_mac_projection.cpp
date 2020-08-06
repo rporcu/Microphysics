@@ -1,5 +1,6 @@
 #include <mfix.H>
 #include <mfix_bc_parms.H>
+#include <mfix_mf_helpers.H>
 
 #include <AMReX_MacProjector.H>
 
@@ -14,7 +15,7 @@ using namespace amrex;
 //
 //  phi is computed by solving
 //
-//       div(ep*grad(phi)/ro) = div(ep u*)
+//       div(ep*grad(phi)/ro) = div(ep u*) - S
 //
 //  This method returns the MAC velocity with up-to-date BCs in place
 //
@@ -22,8 +23,10 @@ void
 mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
                             Vector< MultiFab* > const& ep_v_mac,
                             Vector< MultiFab* > const& ep_w_mac,
-                            Vector< MultiFab* > const& ep_in,
-                            Vector< MultiFab* > const& ro_in,
+                            Vector< MultiFab* > const& ep_g_in,
+                            Vector< MultiFab* > const& ro_g_in,
+                            Vector< MultiFab* > const& T_g_in,
+                            Vector< MultiFab* > const& X_gk_in,
                             Real time)
 {
   BL_PROFILE("mfix::apply_MAC_projection()");
@@ -42,7 +45,7 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
     Print() << " >> Before projection\n" ;
 
   // Set bc's on density and ep_g so ro_face and ep_face will have correct values
-  mfix_set_density_bcs(time, ro_in);
+  mfix_set_density_bcs(time, ro_g_in);
 
   // ro_face and ep_face are temporary, no need to keep it outside this routine
   Vector< Array<MultiFab*,3> > ro_face;
@@ -53,8 +56,8 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
 
   for ( int lev=0; lev <= finest_level; ++lev )
   {
-    ep_in[lev]->FillBoundary(geom[lev].periodicity());
-    ro_in[lev]->FillBoundary(geom[lev].periodicity());
+    ep_g_in[lev]->FillBoundary(geom[lev].periodicity());
+    ro_g_in[lev]->FillBoundary(geom[lev].periodicity());
 
     ep_face[lev][0] = new MultiFab(ep_u_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]);
     ep_face[lev][1] = new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]);
@@ -66,10 +69,10 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
 
     // Define ep and rho on face centroids (using interpolation from cell centroids)
     // The only use of bcs in this call is to test on whether a domain boundary is ext_dir
-    // average_cellcenter_to_face(ro_face[lev], *ro_in[lev], geom[lev]);
-    // average_cellcenter_to_face(ep_face[lev], *ep_in[lev], geom[lev]);
-    EB_interp_CellCentroid_to_FaceCentroid (*ro_in[lev], ro_face[lev], 0, 0, 1, geom[lev], bcs_s);
-    EB_interp_CellCentroid_to_FaceCentroid (*ep_in[lev], ep_face[lev], 0, 0, 1, geom[lev], bcs_s);
+    // average_cellcenter_to_face(ro_face[lev], *ro_g_in[lev], geom[lev]);
+    // average_cellcenter_to_face(ep_face[lev], *ep_g_in[lev], geom[lev]);
+    EB_interp_CellCentroid_to_FaceCentroid (*ro_g_in[lev], ro_face[lev], 0, 0, 1, geom[lev], bcs_s);
+    EB_interp_CellCentroid_to_FaceCentroid (*ep_g_in[lev], ep_face[lev], 0, 0, 1, geom[lev], bcs_s);
 
     // Compute ep_face into bcoeff
     MultiFab::Copy(*bcoeff[lev][0], *(ep_face[lev][0]), 0, 0, 1, 0);
@@ -111,6 +114,39 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
     delete ro_face[lev][2];
   }
 
+  // Set the incompressibility or open-system constraint
+  Vector< MultiFab* > depdt(finest_level+1);
+  Vector< MultiFab* > mac_rhs(finest_level+1);
+  Vector< MultiFab* > S_cc(finest_level+1);
+
+  for (int lev(0); lev <= finest_level; ++lev) {
+    depdt[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
+    mac_rhs[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
+    S_cc[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
+  }
+
+  if (open_system_constraint) {
+    mfix_open_system_rhs(mac_rhs, T_g_in, X_gk_in);
+  }
+
+  for (int lev(0); lev <= finest_level; ++lev) {
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (MFIter mfi(*S_cc[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+      const Box& bx = mfi.tilebox();
+
+      Array4< Real > const& depdt_array = depdt[lev]->array(mfi);
+      Array4< Real > const& mac_rhs_array = mac_rhs[lev]->array(mfi);
+      Array4< Real > const& S_cc_array = S_cc[lev]->array(mfi);
+
+      AMREX_HOST_DEVICE_PARALLEL_FOR_3D ( bx, i, j, k,
+      {
+        S_cc_array(i,j,k) = depdt_array(i,j,k) - mac_rhs_array(i,j,k);
+      });
+    }
+  }
+
   //
   // If we want to set max_coarsening_level we have to send it in to the constructor
   //
@@ -124,10 +160,13 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
   const_bcoeff.reserve(bcoeff.size());
   for (const auto& x : bcoeff) const_bcoeff.push_back(GetArrOfConstPtrs(x));
 
-  MacProjector macproj(vel         , MLMG::Location::FaceCentroid, // location of vel 
-                       const_bcoeff, MLMG::Location::FaceCentroid, // location of beta 
-                                     MLMG::Location::CellCenter,   // location of phi 
-                       geom, lp_info);
+  Vector< const MultiFab* > const_S_cc = GetVecOfConstPtrs(S_cc);
+
+  MacProjector macproj(vel,           MLMG::Location::FaceCentroid,  // location of vel 
+                       const_bcoeff,  MLMG::Location::FaceCentroid,  // location of beta 
+                                      MLMG::Location::CellCenter,    // location of phi 
+                       geom, lp_info,
+                       const_S_cc   , MLMG::Location::CellCentroid); // location of MAC rhs
 
   macproj.setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
 
@@ -169,5 +208,11 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
     ep_u_mac[lev]->FillBoundary(geom[lev].periodicity());
     ep_v_mac[lev]->FillBoundary(geom[lev].periodicity());
     ep_w_mac[lev]->FillBoundary(geom[lev].periodicity());
+  }
+
+  for (int lev(0); lev <= finest_level; lev++) {
+    delete depdt[lev];
+    delete mac_rhs[lev];
+    delete S_cc[lev];
   }
 }

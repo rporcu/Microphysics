@@ -18,9 +18,10 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
                                     Vector< MultiFab* > const& vel_in,
                                     Vector< MultiFab* > const& ep_g_in,
                                     Vector< MultiFab* > const& ro_g_in,
+                                    Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& h_g_in,
                                     Vector< MultiFab* > const& trac_in,
-                                    Vector< MultiFab* > const& X_g_in,
+                                    Vector< MultiFab* > const& X_gk_in,
                                     Real time)
 {
     BL_PROFILE("mfix::mfix_compute_convective_term");
@@ -93,8 +94,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
 
           FillPatchSpecies(lev, time, Sborder_X, state_comp, num_comp, bcs_X);
 
-          MultiFab::Copy(*X_g_in[lev], Sborder_X, 0, 0, num_comp,
-              X_g_in[lev]->nGrow());
+          MultiFab::Copy(*X_gk_in[lev], Sborder_X, 0, 0, num_comp,
+              X_gk_in[lev]->nGrow());
         }
 
         // We make these with ncomp = 3 so they can hold all three velocity components at once;
@@ -142,7 +143,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
     // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
     //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
     //    on face CENTROIDS
-    apply_MAC_projection(get_u_mac(), get_v_mac(), get_w_mac(), ep_g_in, ro_g_in, time);
+    apply_MAC_projection(get_u_mac(), get_v_mac(), get_w_mac(), ep_g_in, ro_g_in, T_g_in, X_gk_in, time);
 
     bool already_on_centroids = true;
 
@@ -215,16 +216,16 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         // Compute slopes of fluid species mass fractions
         if (advect_fluid_species)
         {
-          // Convert mass fraction X_g to (rho * X_g) so we can use conservative update
+          // Convert mass fraction X_gk to (rho * X_gk) so we can use conservative update
           for (int n(0); n < FLUID::nspecies_g; n++)
-            MultiFab::Multiply(*X_g_in[lev], *ro_g_in[lev], 0, n, 1,
-                X_g_in[lev]->nGrow());
+            MultiFab::Multiply(*X_gk_in[lev], *ro_g_in[lev], 0, n, 1,
+                X_gk_in[lev]->nGrow());
 
           slopes_comp = 0;
 
-          mfix_compute_slopes(lev, time, *X_g_in[lev], get_xslopes_X_g(),
-              get_yslopes_X_g(), get_zslopes_X_g(), slopes_comp,
-              m_X_g_bc_types);
+          mfix_compute_slopes(lev, time, *X_gk_in[lev], get_xslopes_X_gk(),
+              get_yslopes_X_gk(), get_zslopes_X_gk(), slopes_comp,
+              m_X_gk_bc_types);
         }
 
         // Initialize conv_s to 0 for both density, enthlapy and tracer
@@ -313,8 +314,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
           num_comp = FLUID::nspecies_g;
           slopes_comp = 0;
 
-          mfix_compute_fluxes(lev, fx_X, fy_X, fz_X, X_g_in, state_comp, num_comp,
-              get_xslopes_X_g(), get_yslopes_X_g(), get_zslopes_X_g(),
+          mfix_compute_fluxes(lev, fx_X, fy_X, fz_X, X_gk_in, state_comp, num_comp,
+              get_xslopes_X_gk(), get_yslopes_X_gk(), get_zslopes_X_gk(),
               slopes_comp, get_u_mac(), get_v_mac(), get_w_mac());
 
           EB_computeDivergence(*conv_X_tmp, GetArrOfConstPtrs(fluxes_X),
@@ -325,8 +326,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
 
           // Convert (rho * mass_fractions) back to mass_fractions
           for (int n(0); n < FLUID::nspecies_g; n++)
-            MultiFab::Divide(*X_g_in[lev], *ro_g_in[lev], 0, n, 1,
-                X_g_in[lev]->nGrow());
+            MultiFab::Divide(*X_gk_in[lev], *ro_g_in[lev], 0, n, 1,
+                X_gk_in[lev]->nGrow());
         }
 
         // **********************************************************

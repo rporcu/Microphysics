@@ -64,6 +64,26 @@ MFHelpers::createFrom (MultiFab& mold, Real val, int nGrow )
 
 
 //
+// Creates a copy of "mold" with nComp components, nGrow ghosts and initializes
+// it to "val".
+//
+std::unique_ptr< MultiFab >
+MFHelpers::createFrom (MultiFab& mold, Real val, int nGrow, int nComp)
+{
+    AMREX_ASSERT(mold.ok());
+
+    std::unique_ptr< MultiFab > mf;
+
+    mf.reset(new MultiFab(mold.boxArray(), mold.DistributionMap(),
+                          nComp, nGrow, MFInfo(), mold.Factory()));
+
+    mf->setVal(val);
+
+    return mf;
+}
+
+
+//
 // Copies src to dst including all components and ghost cells
 //
 void

@@ -412,28 +412,25 @@ mfix::GetDataSpecies (int lev,
 
     const Real teps = (t_new[lev] - t_old[lev]) * 1.e-3;
 
-    if (icomp == 1)
-       data.push_back(m_leveldata[lev]->D_g);
-
     if (time > t_new[lev] - teps && time < t_new[lev] + teps)
     {
         if (icomp == 0) {
-           data.push_back(m_leveldata[lev]->X_g);
+           data.push_back(m_leveldata[lev]->X_gk);
         }
         datatime.push_back(t_new[lev]);
     }
     else if (time > t_old[lev] - teps && time < t_old[lev] + teps)
     {
         if (icomp == 0) {
-           data.push_back(m_leveldata[lev]->X_go);
+           data.push_back(m_leveldata[lev]->X_gko);
         }
         datatime.push_back(t_old[lev]);
     }
     else
     {
         if (icomp == 0) {
-           data.push_back(m_leveldata[lev]->X_go);
-           data.push_back(m_leveldata[lev]->X_g);
+           data.push_back(m_leveldata[lev]->X_gko);
+           data.push_back(m_leveldata[lev]->X_gk);
         }
         datatime.push_back(t_old[lev]);
         datatime.push_back(t_new[lev]);

@@ -4,13 +4,12 @@
 using namespace amrex;
 
 void
-mfix::set_specific_heat_bcs (Real time,
-                            const int lev,
-                            FArrayBox& scal_fab,
-                            const Box& domain)
-
+mfix::set_molecular_weight_bcs (Real time,
+                                const int lev,
+                                FArrayBox& scal_fab,
+                                const Box& domain)
 {
-  BL_PROFILE("mfix::set_specific_heat_bcs()");
+  BL_PROFILE("mfix::set_molecular_weight_bcs()");
 
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
@@ -24,23 +23,23 @@ mfix::set_specific_heat_bcs (Real time,
 
   Array4<Real> const& scal_arr = scal_fab.array();
 
-  Real bc0 = FLUID::cp_g0;
+  Real bc0 = FLUID::MW_g0;
 
   const int nspecies_g = FLUID::nspecies_g;
 
   Gpu::ManagedVector< Real* > m_bc_X_gk_managed(nspecies_g);
-  Gpu::ManagedVector< Real > cp_gk0_managed(nspecies_g);
+  Gpu::ManagedVector< Real > MW_gk0_managed(nspecies_g);
 
   for (int n(0); n < nspecies_g; n++) {
     m_bc_X_gk_managed[n] = m_bc_X_gk[n].data();
-    cp_gk0_managed[n] = FLUID::cp_gk0[n];
+    MW_gk0_managed[n] = FLUID::MW_gk0[n];
   }
 
   // Flag to understand if fluid is a mixture
   const int fluid_is_a_mixture = FLUID::is_a_mixture;
 
   Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_managed.data() : nullptr;
-  Real* p_cp_gk0 = fluid_is_a_mixture ? cp_gk0_managed.data() : nullptr;
+  Real* p_MW_gk0 = fluid_is_a_mixture ? MW_gk0_managed.data() : nullptr;
 
   IntVect scal_lo(scal_fab.loVect());
   IntVect scal_hi(scal_fab.hiVect());
@@ -85,7 +84,7 @@ mfix::set_specific_heat_bcs (Real time,
   {
     amrex::ParallelFor(bx_yz_lo_3D,
       [bct_ilo,dom_lo,bc0,pinf,pout,minf,scal_arr,
-       fluid_is_a_mixture,p_bc_X_gk,p_cp_gk0,nspecies_g]
+       fluid_is_a_mixture,nspecies_g,p_MW_gk0,p_bc_X_gk]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
@@ -97,16 +96,17 @@ mfix::set_specific_heat_bcs (Real time,
       }
       else if (bct == minf or bct == pinf)
       {
-        if (not fluid_is_a_mixture)
+        if (not fluid_is_a_mixture) {
           scal_arr(i,j,k) = bc0;
+        }
         else {
-          Real cp_g_sum(0.);
+          Real MW_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            MW_g_sum += p_bc_X_gk[n][bcv]/p_MW_gk0[n];
           }
 
-          scal_arr(i,j,k) = cp_g_sum;
+          scal_arr(i,j,k) = 1./MW_g_sum;
         }
       }
     });
@@ -116,7 +116,7 @@ mfix::set_specific_heat_bcs (Real time,
   {
     amrex::ParallelFor(bx_yz_hi_3D,
       [bct_ihi,dom_hi,bc0,pinf,pout,minf,scal_arr,
-       fluid_is_a_mixture,p_bc_X_gk,p_cp_gk0,nspecies_g]
+       fluid_is_a_mixture,nspecies_g,p_MW_gk0,p_bc_X_gk]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
@@ -128,16 +128,17 @@ mfix::set_specific_heat_bcs (Real time,
       }
       else if (bct == minf or bct == pinf)
       {
-        if (not fluid_is_a_mixture)
+        if (not fluid_is_a_mixture) {
           scal_arr(i,j,k) = bc0;
+        }
         else {
-          Real cp_g_sum(0.);
+          Real MW_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            MW_g_sum += p_bc_X_gk[n][bcv]/p_MW_gk0[n];
           }
 
-          scal_arr(i,j,k) = cp_g_sum;
+          scal_arr(i,j,k) = 1./MW_g_sum;
         }
       }
     });
@@ -147,7 +148,7 @@ mfix::set_specific_heat_bcs (Real time,
   {
     amrex::ParallelFor(bx_xz_lo_3D,
       [bct_jlo,dom_lo,bc0,pinf,pout,minf,scal_arr,
-       fluid_is_a_mixture,p_bc_X_gk,p_cp_gk0,nspecies_g]
+       fluid_is_a_mixture,nspecies_g,p_MW_gk0,p_bc_X_gk]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
@@ -159,16 +160,17 @@ mfix::set_specific_heat_bcs (Real time,
       }
       else if (bct == minf or bct == pinf)
       {
-        if (not fluid_is_a_mixture)
+        if (not fluid_is_a_mixture) {
           scal_arr(i,j,k) = bc0;
+        }
         else {
-          Real cp_g_sum(0.);
+          Real MW_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            MW_g_sum += p_bc_X_gk[n][bcv]/p_MW_gk0[n];
           }
 
-          scal_arr(i,j,k) = cp_g_sum;
+          scal_arr(i,j,k) = 1./MW_g_sum;
         }
       }
     });
@@ -178,7 +180,7 @@ mfix::set_specific_heat_bcs (Real time,
   {
     amrex::ParallelFor(bx_xz_hi_3D,
       [bct_jhi,dom_hi,bc0,pinf,pout,minf,scal_arr,
-       fluid_is_a_mixture,p_bc_X_gk,p_cp_gk0,nspecies_g]
+       fluid_is_a_mixture,nspecies_g,p_MW_gk0,p_bc_X_gk]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
@@ -190,16 +192,17 @@ mfix::set_specific_heat_bcs (Real time,
       }
       else if (bct == minf or bct == pinf)
       {
-        if (not fluid_is_a_mixture)
+        if (not fluid_is_a_mixture) {
           scal_arr(i,j,k) = bc0;
+        }
         else {
-          Real cp_g_sum(0.);
+          Real MW_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            MW_g_sum += p_bc_X_gk[n][bcv]/p_MW_gk0[n];
           }
 
-          scal_arr(i,j,k) = cp_g_sum;
+          scal_arr(i,j,k) = 1./MW_g_sum;
         }
       }
     });
@@ -209,7 +212,7 @@ mfix::set_specific_heat_bcs (Real time,
   {
     amrex::ParallelFor(bx_xy_lo_3D,
       [bct_klo,dom_lo,bc0,pinf,pout,minf,scal_arr,
-       fluid_is_a_mixture,p_bc_X_gk,p_cp_gk0,nspecies_g]
+       fluid_is_a_mixture,nspecies_g,p_MW_gk0,p_bc_X_gk]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
@@ -221,16 +224,17 @@ mfix::set_specific_heat_bcs (Real time,
       }
       else if (bct == minf or bct == pinf)
       {
-        if (not fluid_is_a_mixture)
+        if (not fluid_is_a_mixture) {
           scal_arr(i,j,k) = bc0;
+        }
         else {
-          Real cp_g_sum(0.);
+          Real MW_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            MW_g_sum += p_bc_X_gk[n][bcv]/p_MW_gk0[n];
           }
 
-          scal_arr(i,j,k) = cp_g_sum;
+          scal_arr(i,j,k) = 1./MW_g_sum;
         }
       }
     });
@@ -240,7 +244,7 @@ mfix::set_specific_heat_bcs (Real time,
   {
     amrex::ParallelFor(bx_xy_hi_3D,
       [bct_khi,dom_hi,bc0,pinf,pout,minf,scal_arr,
-       fluid_is_a_mixture,p_bc_X_gk,p_cp_gk0,nspecies_g]
+       fluid_is_a_mixture,nspecies_g,p_MW_gk0,p_bc_X_gk]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
@@ -252,16 +256,17 @@ mfix::set_specific_heat_bcs (Real time,
       }
       else if (bct == minf or bct == pinf)
       {
-        if (not fluid_is_a_mixture)
+        if (not fluid_is_a_mixture) {
           scal_arr(i,j,k) = bc0;
+        }
         else {
-          Real cp_g_sum(0.);
+          Real MW_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            MW_g_sum += p_bc_X_gk[n][bcv]/p_MW_gk0[n];
           }
 
-          scal_arr(i,j,k) = cp_g_sum;
+          scal_arr(i,j,k) = 1./MW_g_sum;
         }
       }
     });

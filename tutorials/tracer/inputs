@@ -145,8 +145,8 @@ species.solve  =  O2  CO
 
 species.diffusivity = constant
 
-species.O2.diffusivity  = 1.9e-5
-species.CO.diffusivity  = 1.9e-5
+species.O2.diffusivity.constant  = 1.9e-5
+species.CO.diffusivity.constant  = 1.9e-5
 
 
 #_______________________________________________________________________

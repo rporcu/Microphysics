@@ -12,19 +12,36 @@ mfix::set_species_bc0 (const Box& sbx,
 {
   const int nspecies_g = FLUID::nspecies_g;
 
-  Gpu::ManagedVector< Real* > m_bc_X_g_managed(nspecies_g);
-  Gpu::ManagedVector< Real > D_g0_managed(nspecies_g, 0.);
+  Gpu::ManagedVector< Real* > m_bc_X_gk_managed(nspecies_g);
+  Gpu::ManagedVector< Real > D_gk0_managed(nspecies_g, 0.);
   
   for (int n(0); n < nspecies_g; n++) {
-    m_bc_X_g_managed[n] = m_bc_X_g[n].data();
-    D_g0_managed[n] = FLUID::D_g0[n];
+    m_bc_X_gk_managed[n] = m_bc_X_gk[n].data();
+    D_gk0_managed[n] = FLUID::D_gk0[n];
   }
 
-  Real** p_bc_X_g = m_bc_X_g_managed.data();
-  Real* p_D_g0 = D_g0_managed.data();
+  Real** p_bc_X_gk = m_bc_X_gk_managed.data();
+  Real* p_D_gk0 = D_gk0_managed.data();
 
-  Array4<Real> const& a_X_g = m_leveldata[lev]->X_g->array(*mfi);
-  Array4<Real> const& a_D_g = m_leveldata[lev]->D_g->array(*mfi);
+  // In case of advect_enthalpy
+  Gpu::ManagedVector< Real > cp_gk0_managed(nspecies_g);
+
+  for (int n(0); n < nspecies_g; n++) {
+    cp_gk0_managed[n] = FLUID::cp_gk0[n];
+  }
+
+  Real* p_cp_gk0 = advect_enthalpy ? cp_gk0_managed.data() : nullptr;
+  Real* p_bc_t_g = advect_enthalpy ? m_bc_t_g.data() : nullptr;
+
+  // Get data
+  Array4<Real> const& a_X_gk = m_leveldata[lev]->X_gk->array(*mfi);
+  Array4<Real> const& a_D_gk = m_leveldata[lev]->D_gk->array(*mfi);
+
+  Array4<Real> const& a_cp_gk = advect_enthalpy ?
+    m_leveldata[lev]->cp_gk->array(*mfi) : Array4<Real>();
+
+  Array4<Real> const& a_h_gk = advect_enthalpy ?
+    m_leveldata[lev]->h_gk->array(*mfi) : Array4<Real>();
 
   const IntVect sbx_lo(sbx.loVect());
   const IntVect sbx_hi(sbx.hiVect());
@@ -68,8 +85,13 @@ mfix::set_species_bc0 (const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         for (int n(0); n < nspecies_g; n++) {
-          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
-          a_D_g(i,j,k,n) = p_D_g0[n];
+          a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
+          a_D_gk(i,j,k,n) = p_D_gk0[n];
+
+          if (advect_enthalpy) {
+            a_cp_gk(i,j,k,n) = p_cp_gk0[n];
+            a_h_gk(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
+          }
         }
       }
     });
@@ -92,8 +114,13 @@ mfix::set_species_bc0 (const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         for (int n(0); n < nspecies_g; n++) {
-          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
-          a_D_g(i,j,k,n) = p_D_g0[n];
+          a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
+          a_D_gk(i,j,k,n) = p_D_gk0[n];
+
+          if (advect_enthalpy) {
+            a_cp_gk(i,j,k,n) = p_cp_gk0[n];
+            a_h_gk(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
+          }
         }
       }
     });
@@ -116,8 +143,13 @@ mfix::set_species_bc0 (const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         for (int n(0); n < nspecies_g; n++) {
-          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
-          a_D_g(i,j,k,n) = p_D_g0[n];
+          a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
+          a_D_gk(i,j,k,n) = p_D_gk0[n];
+
+          if (advect_enthalpy) {
+            a_cp_gk(i,j,k,n) = p_cp_gk0[n];
+            a_h_gk(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
+          }
         }
       }
     });
@@ -140,8 +172,13 @@ mfix::set_species_bc0 (const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         for (int n(0); n < nspecies_g; n++) {
-          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
-          a_D_g(i,j,k,n) = p_D_g0[n];
+          a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
+          a_D_gk(i,j,k,n) = p_D_gk0[n];
+
+          if (advect_enthalpy) {
+            a_cp_gk(i,j,k,n) = p_cp_gk0[n];
+            a_h_gk(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
+          }
         }
       }
     });
@@ -164,8 +201,13 @@ mfix::set_species_bc0 (const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         for (int n(0); n < nspecies_g; n++) {
-          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
-          a_D_g(i,j,k,n) = p_D_g0[n];
+          a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
+          a_D_gk(i,j,k,n) = p_D_gk0[n];
+
+          if (advect_enthalpy) {
+            a_cp_gk(i,j,k,n) = p_cp_gk0[n];
+            a_h_gk(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
+          }
         }
       }
     });
@@ -188,8 +230,13 @@ mfix::set_species_bc0 (const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         for (int n(0); n < nspecies_g; n++) {
-          a_X_g(i,j,k,n) = p_bc_X_g[n][bcv];
-          a_D_g(i,j,k,n) = p_D_g0[n];
+          a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
+          a_D_gk(i,j,k,n) = p_D_gk0[n];
+
+          if (advect_enthalpy) {
+            a_cp_gk(i,j,k,n) = p_cp_gk0[n];
+            a_h_gk(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
+          }
         }
       }
     });

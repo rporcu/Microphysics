@@ -30,6 +30,7 @@ mfix::InitIOPltData ()
       pp.query("plt_ep_g",    plt_ep_g   );
       pp.query("plt_p_g",     plt_p_g    );
       pp.query("plt_ro_g",    plt_ro_g   );
+      pp.query("plt_MW_g",    plt_MW_g   );
       pp.query("plt_h_g",     plt_h_g    );
       pp.query("plt_T_g",     plt_T_g    );
       pp.query("plt_trac",    plt_trac   );
@@ -40,8 +41,10 @@ mfix::InitIOPltData ()
       pp.query("plt_vort",    plt_vort   );
       pp.query("plt_volfrac", plt_volfrac);
       pp.query("plt_gradp_g", plt_gradp_g);
-      pp.query("plt_X_g",     plt_X_g    );
-      pp.query("plt_D_g",     plt_D_g    );
+      pp.query("plt_X_gk",     plt_X_gk   );
+      pp.query("plt_D_gk",     plt_D_gk   );
+      pp.query("plt_cp_gk",   plt_cp_gk  );
+      pp.query("plt_h_gk",    plt_h_gk   );
 
       // Special test for CCSE regression test. Override all individual
       // flags and save all data to plot file.
@@ -54,6 +57,7 @@ mfix::InitIOPltData ()
         plt_ep_g    = 1;
         plt_p_g     = 1;
         plt_ro_g    = 1;
+        plt_MW_g    = 0;
         plt_h_g     = 1;
         plt_T_g     = 1;
         plt_trac    = 1;
@@ -64,8 +68,10 @@ mfix::InitIOPltData ()
         plt_diveu   = 1;
         plt_volfrac = 1;
         plt_gradp_g = 1;
-        plt_X_g     = 1;
-        plt_D_g     = 1;
+        plt_X_gk    = 1;
+        plt_D_gk    = 1;
+        plt_cp_gk   = 0;
+        plt_h_gk    = 0;
       }
 
       // Count the number of variables to save.
@@ -74,6 +80,7 @@ mfix::InitIOPltData ()
       if( plt_ep_g    == 1) pltVarCount += 1;
       if( plt_p_g     == 1) pltVarCount += 1;
       if( plt_ro_g    == 1) pltVarCount += 1;
+      if( plt_MW_g    == 1) pltVarCount += 1;
       if( plt_trac    == 1) pltVarCount += 1;
       if( plt_mu_g    == 1) pltVarCount += 1;
       if( plt_vort    == 1) pltVarCount += 1;
@@ -88,14 +95,18 @@ mfix::InitIOPltData ()
       }
 
       if (FLUID::solve_species) {
-        if( plt_X_g == 1) pltVarCount += FLUID::nspecies_g;
-        if( plt_D_g == 1) pltVarCount += FLUID::nspecies_g;
+        if( plt_X_gk == 1)  pltVarCount += FLUID::nspecies_g;
+        if( plt_D_gk == 1)  pltVarCount += FLUID::nspecies_g;
+
+        if (advect_enthalpy) {
+        if( plt_cp_gk == 1) pltVarCount += FLUID::nspecies_g;
+        if( plt_h_gk == 1)  pltVarCount += FLUID::nspecies_g;
+        }
       }
     }
 
-  if(DEM::solve or PIC::solve)
+    if(DEM::solve or PIC::solve)
     {
-
       int plt_ccse_regtest = 0;
       pp.query("plt_regtest", plt_ccse_regtest);
 
@@ -107,8 +118,8 @@ mfix::InitIOPltData ()
       }
       // All flags are true by default so we only need to turn off the
       // variables we don't want if not doing CCSE regression tests.
-      if (plt_ccse_regtest == 0) {
-
+      if (plt_ccse_regtest == 0)
+      {
         int input_value = 0;
         pp.query("plt_radius",   input_value );
         write_real_comp[0] = input_value;
@@ -224,65 +235,79 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
       }
 
       // Fluid volume fraction
-      if( plt_ep_g    == 1)
+      if( plt_ep_g == 1 )
         pltFldNames.push_back("ep_g");
 
       // Fluid pressure
-      if( plt_p_g    == 1)
+      if( plt_p_g == 1 )
         pltFldNames.push_back("p_g");
 
       // Fluid density
-      if( plt_ro_g    == 1)
+      if( plt_ro_g == 1 )
         pltFldNames.push_back("ro_g");
 
+      // Fluid molecular weight
+      if( plt_MW_g == 1 )
+        pltFldNames.push_back("MW_g");
+
       // Fluid enthalpy
-      if( advect_enthalpy and plt_h_g    == 1)
+      if( advect_enthalpy and plt_h_g == 1 )
         pltFldNames.push_back("h_g");
 
       // Temperature in fluid
-      if( advect_enthalpy and plt_T_g    == 1)
+      if( advect_enthalpy and plt_T_g == 1 )
         pltFldNames.push_back("T_g");
 
       // Tracer in fluid
-      if( plt_trac    == 1)
+      if( plt_trac == 1 )
         pltFldNames.push_back("trac");
 
       // Specific heat
-      if( advect_enthalpy and plt_cp_g    == 1)
+      if( advect_enthalpy and plt_cp_g == 1 )
         pltFldNames.push_back("cp_g");
 
       // Thermal conductivity
-      if( advect_enthalpy and plt_k_g    == 1)
+      if( advect_enthalpy and plt_k_g == 1 )
         pltFldNames.push_back("k_g");
 
       // Fluid viscosity
-      if( plt_mu_g    == 1)
+      if( plt_mu_g == 1 )
         pltFldNames.push_back("mu_g");
 
       // vorticity
-      if( plt_vort   == 1)
+      if( plt_vort == 1 )
         pltFldNames.push_back("vort");
 
       // div(ep_g.u)
-      if( plt_diveu   == 1)
+      if( plt_diveu == 1 )
         pltFldNames.push_back("diveu");
 
       // EB cell volume fraction
-      if( plt_volfrac   == 1)
+      if( plt_volfrac == 1 )
         pltFldNames.push_back("volfrac");
 
       // Fluid species mass fractions
-      if( FLUID::solve_species and plt_X_g == 1)
+      if( FLUID::solve_species and plt_X_gk == 1 )
         for(std::string specie: FLUID::species_g)
           pltFldNames.push_back("X_"+specie+"_g");
 
       // Fluid species mass diffusivities
-      if( FLUID::solve_species and plt_D_g == 1)
+      if( FLUID::solve_species and plt_D_gk == 1)
         for(std::string specie: FLUID::species_g)
           pltFldNames.push_back("D_"+specie+"_g");
 
-      for (int lev = 0; lev < nlev; ++lev) {
+      // Fluid species specific heat
+      if( FLUID::solve_species and advect_enthalpy and plt_cp_gk == 1)
+        for(std::string specie: FLUID::species_g)
+          pltFldNames.push_back("cp_"+specie+"_g");
 
+      // Fluid species enthalpy
+      if( FLUID::solve_species and advect_enthalpy and plt_h_gk == 1)
+        for(std::string specie: FLUID::species_g)
+          pltFldNames.push_back("h_"+specie+"_g");
+
+      for (int lev = 0; lev < nlev; ++lev)
+      {
         // Multifab to hold all the variables -- there can be only one!!!!
         const int ncomp = pltVarCount;
         mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow,  MFInfo(), *ebfactory[lev]));
@@ -290,7 +315,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         int lc=0;
 
         // Velocity components
-        if( plt_vel_g   == 1) {
+        if( plt_vel_g == 1 ) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->vel_g), 0, lc  , 1, 0);
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->vel_g), 1, lc+1, 1, 0);
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->vel_g), 2, lc+2, 1, 0);
@@ -298,7 +323,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Pressure gradient
-        if( plt_gradp_g == 1) {
+        if( plt_gradp_g == 1 ) {
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->gp, 0, lc  , 1, 0);
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->gp, 1, lc+1, 1, 0);
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->gp, 2, lc+2, 1, 0);
@@ -306,13 +331,13 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Fluid volume fraction
-        if( plt_ep_g    == 1) {
+        if( plt_ep_g == 1 ) {
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->ep_g, 0, lc, 1, 0);
           lc += 1;
         }
 
         // Fluid pressure
-        if( plt_p_g    == 1) {
+        if( plt_p_g == 1 ) {
           MultiFab p_nd(m_leveldata[lev]->p_g->boxArray(), dmap[lev], 1, 0);
           p_nd.setVal(0.);
           MultiFab::Copy(p_nd, *m_leveldata[lev]->p_g, 0, 0, 1, 0);
@@ -322,61 +347,67 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Fluid density
-        if( plt_ro_g    == 1) {
+        if( plt_ro_g == 1 ) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->ro_g), 0, lc, 1, 0);
           lc += 1;
         }
 
+        // Fluid molecular weight
+        if( plt_MW_g == 1 ) {
+          MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->MW_g), 0, lc, 1, 0);
+          lc += 1;
+        }
+
         // Fluid enthalpy
-        if( advect_enthalpy and plt_h_g    == 1) {
+        if( advect_enthalpy and plt_h_g == 1 ) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->h_g), 0, lc, 1, 0);
           lc += 1;
         }
 
         // Fluid temperature
-        if( advect_enthalpy and plt_T_g    == 1) {
+        if( advect_enthalpy and plt_T_g == 1 ) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->T_g), 0, lc, 1, 0);
           lc += 1;
         }
 
         // Fluid tracer
-        if( plt_trac    == 1) {
+        if( plt_trac == 1 ) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->trac), 0, lc, 1, 0);
           lc += 1;
         }
 
         // Specific heat
-        if( advect_enthalpy and plt_cp_g    == 1) {
+        if( advect_enthalpy and plt_cp_g == 1 ) {
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->cp_g, 0, lc, 1, 0);
           lc += 1;
         }
 
         // Specific heat
-        if( advect_enthalpy and plt_k_g    == 1) {
+        if( advect_enthalpy and plt_k_g == 1 ) {
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->k_g, 0, lc, 1, 0);
           lc += 1;
         }
 
         // Fluid viscosity
-        if( plt_mu_g    == 1) {
+        if( plt_mu_g == 1 ) {
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->mu_g, 0, lc, 1, 0);
           lc += 1;
         }
 
         // vorticity
-        if( plt_vort   == 1) {
+        if( plt_vort == 1 ) {
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->vort, 0, lc, 1, 0);
           lc += 1;
         }
 
         // div(ep_g.u)
-        if( plt_diveu   == 1) {
+        if( plt_diveu == 1 ) {
           amrex::average_node_to_cellcenter(*mf[lev], lc, *m_leveldata[lev]->diveu, 0, 1);
           lc += 1;
         }
 
         // EB cell volume fraction
-        if( plt_volfrac   == 1) {
+        if( plt_volfrac == 1 ) {
           if (ebfactory[lev]) {
             MultiFab::Copy(*mf[lev], ebfactory[lev]->getVolFrac(), 0, lc, 1, 0);
           } else {
@@ -386,17 +417,33 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Fluid species mass fractions
-        if( FLUID::solve_species and plt_X_g == 1) {
+        if( FLUID::solve_species and plt_X_gk == 1 ) {
           for(int n(0); n < FLUID::nspecies_g; n++) {
-            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_g, n, lc+n, 1, 0);
+            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_gk, n, lc+n, 1, 0);
           }
           lc += FLUID::nspecies_g;
         }
 
         // Species mass fraction
-        if( FLUID::solve_species and plt_D_g == 1) {
+        if( FLUID::solve_species and plt_D_gk == 1 ) {
           for(int n(0); n < FLUID::nspecies_g; n++) {
-            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->D_g, n, lc+n, 1, 0);
+            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->D_gk, n, lc+n, 1, 0);
+          }
+          lc += FLUID::nspecies_g;
+        }
+
+        // Fluid species specific heat
+        if( FLUID::solve_species and advect_enthalpy and plt_cp_gk == 1 ) {
+          for(int n(0); n < FLUID::nspecies_g; n++) {
+            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->cp_gk, n, lc+n, 1, 0);
+          }
+          lc += FLUID::nspecies_g;
+        }
+
+        // Fluid species enthalpy
+        if( FLUID::solve_species and plt_h_gk == 1 ) {
+          for(int n(0); n < FLUID::nspecies_g; n++) {
+            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->h_gk, n, lc+n, 1, 0);
           }
           lc += FLUID::nspecies_g;
         }

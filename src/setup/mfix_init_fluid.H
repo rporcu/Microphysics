@@ -39,11 +39,11 @@ void init_periodic_tracer (const Box& bx,
                            const Real dy,
                            const Real dz);
 
-void init_fluid_restart (const Box& bx,
-                         const MFIter& mfi,
-                         LevelData& ld,
-                         const int advect_enthalpy,
-                         const int advect_fluid_species);
+void init_fluid_parameters (const Box& bx,
+                            const MFIter& mfi,
+                            LevelData& ld,
+                            const int advect_enthalpy,
+                            const int advect_fluid_species);
 
 void set_ic (const Box& sbx,
              const Box& domain,

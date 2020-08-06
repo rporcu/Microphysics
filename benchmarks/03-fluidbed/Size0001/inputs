@@ -48,8 +48,8 @@ species.solve  =  CO  He
 
 species.diffusivity = constant
 
-species.CO.diffusivity  = 1.9e-5
-species.He.diffusivity  = 7.1e-5
+species.CO.diffusivity.constant  = 1.9e-5
+species.He.diffusivity.constant  = 7.1e-5
 
 #_______________________________________________________________________
 # Fluid model settings

@@ -20,7 +20,7 @@
 using namespace amrex;
 
 void
-mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
+mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
                                    Real a_time,
                                    Real a_dt,
                                    Real a_prev_dt,
@@ -125,6 +125,10 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
         EB_set_covered(*epu[lev], 0, epu[lev]->nComp(), 1, 0.0);
     }
 
+    for (int lev(0); lev <= finest_level; lev++) {
+      EB_set_covered(*a_S_cc[lev], 0, a_S_cc[lev]->nComp(), 1, 0.0);
+    }
+
     //
     // Create sigma
     //
@@ -146,12 +150,13 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
 
     nodal_projector.reset(new NodalProjector(get_vel_g(),
                                              GetVecOfConstPtrs(sigma),
-                                             geom, info));
+                                             geom, info,
+                                             a_S_cc));
 
     nodal_projector->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
     nodal_projector->setAlpha(GetVecOfConstPtrs(get_ep_g()));
 
-    nodal_projector->computeRHS(get_diveu(), epu, a_depdt);
+    nodal_projector->computeRHS(get_diveu(), epu, a_S_cc);
     nodal_projector->setCustomRHS(GetVecOfConstPtrs(get_diveu()));
 
     nodal_projector->project(nodal_mg_rtol, nodal_mg_atol);
@@ -174,7 +179,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
     gradphi = nodal_projector->getGradPhi();
 
     // Compute diveu to print it out
-    nodal_projector->computeRHS(get_diveu(), epu, a_depdt);
+    nodal_projector->computeRHS(get_diveu(), epu, a_S_cc);
 
     // Since I did not pass dt, I have to normalize here
     Real qdt(1.0/a_dt);
@@ -192,7 +197,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
         }
         else
         {
-            // p := p + phi
+            // p := p + phi/dt
             MultiFab::Saxpy(*m_leveldata[lev]->p_g, qdt, *phi[lev], 0, 0, 1,
                             phi[lev]->nGrow());
             MultiFab::Saxpy(*m_leveldata[lev]->gp, qdt, *gradphi[lev], 0, 0, 3,
@@ -238,7 +243,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_depdt,
         EB_set_covered(*epu[lev], 0, epu[lev]->nComp(), 1, 0.0);
     }
 
-    nodal_projector->computeRHS(get_diveu(), epu, a_depdt);
+    nodal_projector->computeRHS(get_diveu(), epu, a_S_cc);
 
     for (int lev = nlev-1; lev > 0; lev--)
     {

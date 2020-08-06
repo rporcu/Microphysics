@@ -7,20 +7,39 @@
 
 namespace FLUID
 {
+  // List of recognized fluid density models
+  struct DENSITYMODEL { enum {Invalid=-1, Constant, IdealGas}; };
+  
+  extern int DensityModel;
 
-  enum DENSITYMODEL {ConstantDensity, IdealGas};
+  // List of recognized fluid molecular weight models
+  struct MOLECULARWEIGHTMODEL { enum {Invalid=-1, Constant, Mixture}; };
+  
+  extern int MolecularWeightModel;
 
-  enum VISCOSITYMODEL {ConstantViscosity, Sutherland};
+  // List of recognized fluid viscosity models
+  struct VISCOSITYMODEL { enum {Invalid=-1, Constant, Sutherland}; };
+  
+  extern int ViscosityModel;
 
-  enum SPECIFICHEATMODEL {ConstantSpecificHeat, NASA9Polynomials};
+  // List of recognized fluid specific heat models
+  struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA9Polynomials}; };
+  
+  extern int SpecificHeatModel;
 
-  enum THERMALCONDUCTIVITYMODEL {ConstantThermalConductivity};
+  // List of recognized fluid thermal conductivity models
+  struct THERMALCONDUCTIVITYMODEL{ enum {Invalid=-1, Constant}; };
+  
+  extern int ThermalConductivityModel;
 
   // Flag to solve fluid equations
   extern int solve;
 
   // Specified constant gas density
   extern amrex::Real ro_g0;
+
+  // Specified constant molecular weight of gas
+  extern amrex::Real MW_g0;
 
   // Specified constant tracer value
   extern amrex::Real trac_0;
@@ -40,7 +59,7 @@ namespace FLUID
   // Specified constant gas specific heat
   extern amrex::Real cp_g0;
 
-  // Gas phase thermal conductivity coefficient
+  // Specified constant gas phase thermal conductivity coefficient
   extern amrex::Real k_g0;
 
   // Flag to solve species fluid equations
@@ -52,11 +71,17 @@ namespace FLUID
   // Total number of fluid species
   extern int nspecies_g;
 
-  // Fluid phase species diffusion coefficients
-  extern std::vector<amrex::Real> D_g0;
+  // Specified constant gas phase species molecular weight
+  extern std::vector<amrex::Real> MW_gk0;
 
-  // Fluid phase species mass fraction
-  extern std::vector<amrex::Real> X_g0;
+  // Specified constant gas phase species diffusion coefficients
+  extern std::vector<amrex::Real> D_gk0;
+
+  // Specified constant gas phase species specific heat
+  extern std::vector<amrex::Real> cp_gk0;
+
+  // Flag to understand if fluid is a mixture of fluid species
+  extern int is_a_mixture;
 
   // Name to later reference when building input regions
   extern std::string name;

@@ -50,8 +50,23 @@ mfix::set_enthalpy_bcs (Real time,
 
   Array4<Real> const& h_g = h_g_fab.array();
 
-  // TODO cp_g0 can be function of temperature instead of being constant
   Real cp_g0 = FLUID::cp_g0;
+
+  const int nspecies_g = FLUID::nspecies_g;
+
+  Gpu::ManagedVector< Real* > m_bc_X_gk_managed(nspecies_g);
+  Gpu::ManagedVector< Real > cp_gk0_managed(nspecies_g);
+
+  for (int n(0); n < nspecies_g; n++) {
+    m_bc_X_gk_managed[n] = m_bc_X_gk[n].data();
+    cp_gk0_managed[n] = FLUID::cp_gk0[n];
+  }
+
+  // Flag to understand if fluid is a mixture
+  const int fluid_is_a_mixture = FLUID::is_a_mixture;
+
+  Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_managed.data() : nullptr;
+  Real* p_cp_gk0 = fluid_is_a_mixture ? cp_gk0_managed.data() : nullptr;
 
   IntVect h_g_lo(h_g_fab.loVect());
   IntVect h_g_hi(h_g_fab.hiVect());
@@ -106,7 +121,18 @@ mfix::set_enthalpy_bcs (Real time,
         h_g(i,j,k) = h_g(dom_lo[0],j,k);
       }
       else if (bct == minf or bct == pinf) {
-        h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
+        if (not fluid_is_a_mixture) {
+          h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
+        }
+        else {
+          Real h_g_sum(0);
+
+          for (int n(0); n < nspecies_g; n++) {
+            h_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+          }
+
+          h_g(i,j,k) = h_g_sum;
+        }
       }
     });
   }
@@ -123,7 +149,18 @@ mfix::set_enthalpy_bcs (Real time,
         h_g(i,j,k) = h_g(dom_hi[0],j,k);
       }
       else if (bct == minf or bct == pinf) {
-        h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
+        if (not fluid_is_a_mixture) {
+          h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
+        }
+        else {
+          Real h_g_sum(0);
+
+          for (int n(0); n < nspecies_g; n++) {
+            h_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+          }
+
+          h_g(i,j,k) = h_g_sum;
+        }
       }
     });
   }
@@ -140,7 +177,18 @@ mfix::set_enthalpy_bcs (Real time,
         h_g(i,j,k) = h_g(i,dom_lo[1],k);
       }
       else if (bct == minf or bct == pinf) {
-        h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
+        if (not fluid_is_a_mixture) {
+          h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
+        }
+        else {
+          Real h_g_sum(0);
+
+          for (int n(0); n < nspecies_g; n++) {
+            h_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+          }
+
+          h_g(i,j,k) = h_g_sum;
+        }
       }
     });
   }
@@ -157,7 +205,18 @@ mfix::set_enthalpy_bcs (Real time,
         h_g(i,j,k) = h_g(i,dom_hi[1],k);
       }
       else if (bct == minf or bct == pinf) {
-        h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
+        if (not fluid_is_a_mixture) {
+          h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
+        }
+        else {
+          Real h_g_sum(0);
+
+          for (int n(0); n < nspecies_g; n++) {
+            h_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+          }
+
+          h_g(i,j,k) = h_g_sum;
+        }
       }
     });
   }
@@ -174,7 +233,18 @@ mfix::set_enthalpy_bcs (Real time,
         h_g(i,j,k) = h_g(i,j,dom_lo[2]);
       }
       else if (bct == minf or bct == pinf) {
-        h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];  
+        if (not fluid_is_a_mixture) {
+          h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
+        }
+        else {
+          Real h_g_sum(0);
+
+          for (int n(0); n < nspecies_g; n++) {
+            h_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+          }
+
+          h_g(i,j,k) = h_g_sum;
+        }
       }
     });
   }
@@ -191,7 +261,18 @@ mfix::set_enthalpy_bcs (Real time,
         h_g(i,j,k) = h_g(i,j,dom_hi[2]);
       }
       else if (bct == minf or bct == pinf) {
-        h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];  
+        if (not fluid_is_a_mixture) {
+          h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
+        }
+        else {
+          Real h_g_sum(0);
+
+          for (int n(0); n < nspecies_g; n++) {
+            h_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+          }
+
+          h_g(i,j,k) = h_g_sum;
+        }
       }
     });
   }

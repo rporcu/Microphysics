@@ -127,8 +127,8 @@ species.solve  =  H2O  He
 
 species.diffusivity = constant
 
-species.H2O.diffusivity = 2.4e-5
-species.He.diffusivity  = 7.1e-5
+species.H2O.diffusivity.constant = 2.4e-5
+species.He.diffusivity.constant  = 7.1e-5
 
 
 #_______________________________________________________________________

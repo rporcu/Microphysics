@@ -33,7 +33,7 @@ mfix::InitParams ()
   // We have to do it here because the size has to match the number of fluid
   // species
   // NOTE: once we will have a class for BCs this won't be needed anymore
-  m_bc_X_g.resize(FLUID::nspecies_g, Gpu::ManagedVector<Real>(50, 0));
+  m_bc_X_gk.resize(FLUID::nspecies_g, Gpu::ManagedVector<Real>(50, 0));
   bcs_X.resize(2*FLUID::nspecies_g);
 
   // Read in regions, initial and boundary conditions. Note that
@@ -121,15 +121,18 @@ mfix::InitParams ()
     pp.query("initial_iterations", initial_iterations);
     pp.query("do_initial_proj", do_initial_proj);
 
+    pp.query("open_system_constraint", open_system_constraint);
+
     pp.query("advect_density", advect_density);
     pp.query("advect_tracer" , advect_tracer);
     pp.query("advect_enthalpy", advect_enthalpy);
     pp.query("test_tracer_conservation", test_tracer_conservation);
 
-    // TODO: we might want to remove this and have
-    // advect_fluid_species = 1 whenever FLUID::solve_species = 1
-    if ( FLUID::solve_species )
-      pp.query("advect_fluid_species", advect_fluid_species);
+    pp.query("advect_fluid_species", advect_fluid_species);
+
+    if (advect_fluid_species)
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(FLUID::solve_species,
+          "Advect fluid species flag is on but no fluid species were provided");
 
     pp.query("ntrac", ntrac);
 
@@ -720,7 +723,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
     }
 
     if (FLUID::solve)
-        mfix_init_fluid(restart_flag,dt,stop_time);
+        mfix_init_fluid(restart_flag, dt, stop_time);
 
     // Call user-defined subroutine to set constants, check data, etc.
     if (call_udf) mfix_usr0();
@@ -808,18 +811,14 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        // We deliberately don't tile this loop since we will be looping
        //    over bc's on faces and it makes more sense to do this one grid at a time
        for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi) {
-
           const Box& bx = mfi.validbox();
           const Box& sbx = ep_g[mfi].box();
 
           if ( is_restarting ) {
-
-            init_fluid_restart(bx, mfi, ld, advect_enthalpy, advect_fluid_species);
-
+            init_fluid_parameters(bx, mfi, ld, advect_enthalpy, advect_fluid_species);
           } else {
             init_fluid(sbx, bx, domain, mfi, ld, dx, dy, dz, xlen, ylen, zlen, plo,
                 test_tracer_conservation, advect_enthalpy, advect_fluid_species);
-
           }
        }
 
@@ -833,8 +832,8 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        }
 
        if (advect_fluid_species) {
-         MultiFab::Copy(*m_leveldata[lev]->X_go, *m_leveldata[lev]->X_g, 0, 0,
-             m_leveldata[lev]->X_g->nComp(), 0);
+         MultiFab::Copy(*m_leveldata[lev]->X_gko, *m_leveldata[lev]->X_gk, 0, 0,
+             m_leveldata[lev]->X_gk->nComp(), 0);
        }
     }
 
@@ -863,8 +862,13 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
       if (advect_fluid_species)
       {
-        m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
-        m_leveldata[lev]->D_g->FillBoundary(geom[lev].periodicity());
+        m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
+        m_leveldata[lev]->D_gk->FillBoundary(geom[lev].periodicity());
+
+        if (advect_enthalpy) {
+          m_leveldata[lev]->cp_gk->FillBoundary(geom[lev].periodicity());
+          m_leveldata[lev]->h_gk->FillBoundary(geom[lev].periodicity());
+        }
       }
 
       m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
@@ -888,7 +892,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
       Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
 
-      // This sets bcs for ep_g, cp_g, mu_g and D_g
+      // This sets bcs for ep_g, cp_g, mu_g and D_gk
       Real time = 0.0;
 
       mfix_set_density_bcs(time, get_ro_g());
@@ -902,7 +906,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
         mfix_set_temperature_bcs(time, get_T_g_old());
       }
 
-      mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g());
+      mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g(), get_MW_g());
 
       if (advect_enthalpy) {
         mfix_set_enthalpy_bcs(time, get_h_g());
@@ -910,8 +914,8 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       }
 
       if (advect_fluid_species) {
-        mfix_set_species_bcs(time, get_X_g(), get_D_g());
-        mfix_set_species_bcs(time, get_X_g_old(), get_D_g());
+        mfix_set_species_bcs(time, get_X_gk(), get_D_gk(), get_cp_gk(), get_h_gk());
+        mfix_set_species_bcs(time, get_X_gk_old(), get_D_gk(), get_cp_gk(), get_h_gk());
       }
 
       // Project the initial velocity field
@@ -971,7 +975,10 @@ mfix::mfix_set_bc0 ()
        m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
 
      if (advect_fluid_species) {
-       m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
+       m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
+
+       if (advect_enthalpy)
+         m_leveldata[lev]->h_gk->FillBoundary(geom[lev].periodicity());
      }
 
    }

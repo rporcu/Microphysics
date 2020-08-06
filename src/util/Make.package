@@ -7,6 +7,7 @@ CEXE_sources += mfix_set_scalar_bcs.cpp
 CEXE_sources += mfix_set_species_bcs.cpp
 CEXE_sources += mfix_set_specific_heat_bcs.cpp
 CEXE_sources += mfix_set_thermal_conductivity_bcs.cpp
+CEXE_sources += mfix_set_molecular_weight_bcs.cpp
 CEXE_sources += mfix_set_tracer_bcs.cpp
 CEXE_sources += mfix_set_viscosity_bcs.cpp
 
@@ -24,5 +25,4 @@ CEXE_headers += mfix_algorithm.H
 
 CEXE_sources += mfix_set_epg_bcs.cpp
 
-CEXE_headers += mfix_normalize_species_g.H
 CEXE_sources += mfix_normalize_species_g.cpp

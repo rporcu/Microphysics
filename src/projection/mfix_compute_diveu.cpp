@@ -1,5 +1,7 @@
 #include <mfix.H>
 #include <mfix_bc_parms.H>
+#include <mfix_fluid_parms.H>
+#include <mfix_mf_helpers.H>
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_VisMF.H>
@@ -11,6 +13,185 @@
 #include <AMReX_MLMG.H>
 #include <AMReX_MLEBABecLap.H>
 #include <AMReX_MLNodeLaplacian.H>
+
+
+//
+// Compute incompressibility constraint div(ep_g * u) for an open system
+//
+void
+mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
+                            Vector< MultiFab* > const& T_g,
+                            Vector< MultiFab* > const& X_gk)
+{
+  Vector< MultiFab* > ro_g = get_ro_g();
+
+  Vector< MultiFab* > cp_g = get_cp_g();
+  Vector< MultiFab* > h_gk = get_h_gk();
+
+  Vector< MultiFab* > S_h(nlev, nullptr);
+  Vector< MultiFab* > S_sk(nlev, nullptr);
+
+  if (advect_enthalpy)
+  {
+    for (int lev(0); lev <= finest_level; lev++) {
+      S_h[lev] = MFHelpers::createFrom(*rhs[lev], 0., 1).release();
+    }
+
+    // Compute S_h, aka enthalpy RHS
+    mfix_enthalpy_rhs(S_h, T_g, X_gk);
+
+    // TODO: I think this should be included in mfix::mfix_enthalpy_rhs
+    Vector< MultiFab* > txfr = get_txfr();
+
+    for (int lev(0); lev <= finest_level; lev++) {
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+      for (MFIter mfi(*rhs[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        const Box& bx = mfi.tilebox();
+
+        auto       S_h_arr = S_h[lev]->array(mfi);
+        auto const txfr_arr = txfr[lev]->array(mfi);
+        auto const T_g_arr = T_g[lev]->array(mfi);
+
+        AMREX_HOST_DEVICE_PARALLEL_FOR_3D ( bx, i, j, k,
+        {
+          S_h_arr(i,j,k) += txfr_arr(i,j,k,4) - txfr_arr(i,j,k,5)*T_g_arr(i,j,k);
+        });
+      }
+    }
+
+    // Divide S_h by ( ro_g c_p T_g )
+    for (int lev(0); lev <= finest_level; lev++) {
+      const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(S_h[lev]->Factory());
+      const auto& flags = factory.getMultiEBCellFlagFab();
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+      for (MFIter mfi(*rhs[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        const Box& bx = mfi.tilebox();
+
+        Array4< Real > const& S_h_arr  = S_h[lev]->array(mfi);
+        Array4< const Real > const& ro_g_arr = ro_g[lev]->const_array(mfi);
+        Array4< const Real > const& T_g_arr  = T_g[lev]->const_array(mfi);
+        Array4< const Real > const& cp_g_arr = cp_g[lev]->const_array(mfi);
+        auto const& flags_arr = flags.const_array(mfi);
+
+        AMREX_HOST_DEVICE_PARALLEL_FOR_3D ( bx, i, j, k,
+        {
+          if (not flags_arr(i,j,k).isCovered())
+            S_h_arr(i,j,k) /= (ro_g_arr(i,j,k)*cp_g_arr(i,j,k)*T_g_arr(i,j,k));
+          else
+            S_h_arr(i,j,k) = 0.0;
+        });
+      }
+    }
+  }
+  
+  const int nspecies_g = FLUID::nspecies_g;
+
+  if (FLUID::is_a_mixture)
+  {
+    Vector< MultiFab* > MW_g  = get_MW_g();
+
+    Gpu::ManagedVector< Real > MW_gk_managed(nspecies_g);
+
+    for (int n(0); n < nspecies_g; n++)
+      MW_gk_managed[n] = FLUID::MW_gk0[n];
+
+    Real* p_MW_gk = MW_gk_managed.data();
+
+    for (int lev(0); lev <= finest_level; lev++) {
+      S_sk[lev] = MFHelpers::createFrom(*rhs[lev], 0., 1, nspecies_g).release();
+    }
+
+    // compute S_sk
+    mfix_species_X_rhs(S_sk, X_gk);
+
+    for (int lev(0); lev <= finest_level; lev++)
+    {
+      const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(rhs[lev]->Factory());
+      const auto& flags = factory.getMultiEBCellFlagFab();
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+      for (MFIter mfi(*rhs[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+      {
+        const Box& bx = mfi.tilebox();
+
+        Array4< Real > const& S_sk_arr  = S_sk[lev]->array(mfi);
+        Array4< const Real > const& ro_g_arr = ro_g[lev]->const_array(mfi);
+        Array4< const Real > const& MW_g_arr = MW_g[lev]->const_array(mfi);
+        Array4< const Real > const& T_g_arr  = T_g[lev]->const_array(mfi);
+        Array4< const Real > const& cp_g_arr = cp_g[lev]->const_array(mfi);
+        Array4< const Real > const& h_gk_arr = h_gk[lev]->const_array(mfi);
+        auto const& flags_arr = flags.const_array(mfi);
+
+        AMREX_HOST_DEVICE_PARALLEL_FOR_4D ( bx, nspecies_g, i, j, k, n,
+        {
+          if (not flags_arr(i,j,k).isCovered()) {
+            S_sk_arr(i,j,k,n) *= (MW_g_arr(i,j,k)/p_MW_gk[n] - h_gk_arr(i,j,k,n)/(cp_g_arr(i,j,k)*T_g_arr(i,j,k)));
+            S_sk_arr(i,j,k,n) /= ro_g_arr(i,j,k);
+          }
+          else {
+            S_sk_arr(i,j,k,n) = 0.;
+          }
+        });
+      }
+    }
+  }
+
+  for (int lev(0); lev <= finest_level; lev++) {
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (MFIter mfi(*rhs[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+      const Box& bx = mfi.tilebox();
+
+      const int fluid_is_mixture = FLUID::is_a_mixture;
+
+      auto rhs_arr  = rhs[lev]->array(mfi);
+      auto const S_h_arr = advect_enthalpy ? S_h[lev]->const_array(mfi) :
+                                             Array4<const Real>();
+      auto const S_sk_arr = fluid_is_mixture ? S_sk[lev]->const_array(mfi) :
+                                               Array4<const Real>();
+
+      AMREX_HOST_DEVICE_PARALLEL_FOR_3D (bx, i, j, k,
+      {
+        Real rhs_sum(0);
+
+        if (advect_enthalpy)
+          rhs_sum += S_h_arr(i,j,k);
+
+        if (fluid_is_mixture)
+          for (int n(0); n < nspecies_g; n++)
+            rhs_sum += S_sk_arr(i,j,k,n);
+
+        rhs_arr(i,j,k) = rhs_sum;
+      });
+    }
+  }
+
+  for (int lev(0); lev <= finest_level; lev++) {
+    EB_set_covered(*rhs[lev], 0, 1, 0, 0.0);
+  }
+
+  for (int lev(0); lev <= finest_level; lev++) {
+    rhs[lev]->FillBoundary(geom[lev].periodicity());
+  }
+
+  for (int lev(0); lev <= finest_level; lev++)
+  {
+    if (advect_enthalpy)
+      delete S_h[lev];
+
+    if (FLUID::is_a_mixture)
+      delete S_sk[lev];
+  }
+}
+
 
 //
 // Compute div(ep_g * u)
