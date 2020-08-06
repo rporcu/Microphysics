@@ -41,8 +41,8 @@ mfix::InitIOPltData ()
       pp.query("plt_vort",    plt_vort   );
       pp.query("plt_volfrac", plt_volfrac);
       pp.query("plt_gradp_g", plt_gradp_g);
-      pp.query("plt_X_gk",     plt_X_gk   );
-      pp.query("plt_D_gk",     plt_D_gk   );
+      pp.query("plt_X_g",     plt_X_gk   );
+      pp.query("plt_D_g",     plt_D_gk   );
       pp.query("plt_cp_gk",   plt_cp_gk  );
       pp.query("plt_h_gk",    plt_h_gk   );
 
