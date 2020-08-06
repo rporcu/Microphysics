@@ -14,7 +14,23 @@ mfix::set_temperature_bc0 (const Box& sbx,
   const Real k_g0   = FLUID::k_g0;
 
   amrex::Real* p_bc_t_g = m_bc_t_g.data();
-  
+ 
+  const int nspecies_g = FLUID::nspecies_g;
+
+  Gpu::ManagedVector< Real* > m_bc_X_gk_managed(nspecies_g);
+  Gpu::ManagedVector< Real > cp_gk0_managed(nspecies_g);
+
+  for (int n(0); n < nspecies_g; n++) {
+    m_bc_X_gk_managed[n] = m_bc_X_gk[n].data();
+    cp_gk0_managed[n] = FLUID::cp_gk0[n];
+  }
+
+  // Flag to understand if fluid is a mixture
+  const int fluid_is_a_mixture = FLUID::is_a_mixture;
+
+  Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_managed.data() : nullptr;
+  Real* p_cp_gk0 = fluid_is_a_mixture ? cp_gk0_managed.data() : nullptr;
+
   Array4<Real> const& a_T_g  = m_leveldata[lev]->T_g->array(*mfi);
   Array4<Real> const& a_cp_g = m_leveldata[lev]->cp_g->array(*mfi);
   Array4<Real> const& a_k_g  = m_leveldata[lev]->k_g->array(*mfi);
@@ -62,9 +78,22 @@ mfix::set_temperature_bc0 (const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         a_T_g(i,j,k)  = p_bc_t_g[bcv];
-        a_cp_g(i,j,k) = cp_g0;
         a_k_g(i,j,k)  = k_g0;
-        a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
+
+        if (not fluid_is_a_mixture) {
+          a_cp_g(i,j,k) = cp_g0;
+          a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
+        }
+        else {
+          Real cp_g_sum(0);
+
+          for (int n(0); n < nspecies_g; n++) {
+            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+          }
+
+          a_cp_g(i,j,k) = cp_g_sum;
+          a_h_g(i,j,k)  = cp_g_sum * p_bc_t_g[bcv];
+        }
       }
     });
   }
@@ -86,9 +115,22 @@ mfix::set_temperature_bc0 (const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         a_T_g(i,j,k)  = p_bc_t_g[bcv];
-        a_cp_g(i,j,k) = cp_g0;
         a_k_g(i,j,k)  = k_g0;
-        a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
+
+        if (not fluid_is_a_mixture) {
+          a_cp_g(i,j,k) = cp_g0;
+          a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
+        }
+        else {
+          Real cp_g_sum(0);
+
+          for (int n(0); n < nspecies_g; n++) {
+            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+          }
+
+          a_cp_g(i,j,k) = cp_g_sum;
+          a_h_g(i,j,k)  = cp_g_sum * p_bc_t_g[bcv];
+        }
       }
     });
   }
@@ -110,9 +152,22 @@ mfix::set_temperature_bc0 (const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         a_T_g(i,j,k)  = p_bc_t_g[bcv];
-        a_cp_g(i,j,k) = cp_g0;
         a_k_g(i,j,k)  = k_g0;
-        a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
+
+        if (not fluid_is_a_mixture) {
+          a_cp_g(i,j,k) = cp_g0;
+          a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
+        }
+        else {
+          Real cp_g_sum(0);
+
+          for (int n(0); n < nspecies_g; n++) {
+            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+          }
+
+          a_cp_g(i,j,k) = cp_g_sum;
+          a_h_g(i,j,k)  = cp_g_sum * p_bc_t_g[bcv];
+        }
       }
     });
   }
@@ -134,9 +189,22 @@ mfix::set_temperature_bc0 (const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         a_T_g(i,j,k)  = p_bc_t_g[bcv];
-        a_cp_g(i,j,k) = cp_g0;
         a_k_g(i,j,k)  = k_g0;
-        a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
+
+        if (not fluid_is_a_mixture) {
+          a_cp_g(i,j,k) = cp_g0;
+          a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
+        }
+        else {
+          Real cp_g_sum(0);
+
+          for (int n(0); n < nspecies_g; n++) {
+            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+          }
+
+          a_cp_g(i,j,k) = cp_g_sum;
+          a_h_g(i,j,k)  = cp_g_sum * p_bc_t_g[bcv];
+        }
       }
     });
   }
@@ -158,9 +226,22 @@ mfix::set_temperature_bc0 (const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         a_T_g(i,j,k)  = p_bc_t_g[bcv];
-        a_cp_g(i,j,k) = cp_g0;
         a_k_g(i,j,k)  = k_g0;
-        a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
+
+        if (not fluid_is_a_mixture) {
+          a_cp_g(i,j,k) = cp_g0;
+          a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
+        }
+        else {
+          Real cp_g_sum(0);
+
+          for (int n(0); n < nspecies_g; n++) {
+            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+          }
+
+          a_cp_g(i,j,k) = cp_g_sum;
+          a_h_g(i,j,k)  = cp_g_sum * p_bc_t_g[bcv];
+        }
       }
     });
   }
@@ -182,9 +263,22 @@ mfix::set_temperature_bc0 (const Box& sbx,
       if((bct == pinf) or (bct == pout) or (bct == minf))
       {
         a_T_g(i,j,k)  = p_bc_t_g[bcv];
-        a_cp_g(i,j,k) = cp_g0;
         a_k_g(i,j,k)  = k_g0;
-        a_h_g(i,j,k)  = a_cp_g(i,j,k)*p_bc_t_g[bcv];
+
+        if (not fluid_is_a_mixture) {
+          a_cp_g(i,j,k) = cp_g0;
+          a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
+        }
+        else {
+          Real cp_g_sum(0);
+
+          for (int n(0); n < nspecies_g; n++) {
+            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+          }
+
+          a_cp_g(i,j,k) = cp_g_sum;
+          a_h_g(i,j,k)  = cp_g_sum * p_bc_t_g[bcv];
+        }
       }
     });
   }

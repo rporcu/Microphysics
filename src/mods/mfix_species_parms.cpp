@@ -9,14 +9,30 @@
 
 namespace SPECIES
 {
+  int DiffusivityModel = DIFFUSIVITYMODEL::Invalid;
+
+  int SpecificHeatModel = SPECIFICHEATMODEL::Invalid;
+
+  // Flag to solve species equations
+  int solve;
+
   // Total number of species
   int nspecies(0);
 
   // Species names
   std::vector<std::string> species(0);
 
-  // Species diffusion coefficients
-  std::vector<amrex::Real> D_0(0);
+  // Specified species molecular weight
+  std::vector<amrex::Real> MW_k0(0);
+
+  // Specified species diffusion coefficients
+  std::vector<amrex::Real> D_k0(0);
+
+  // Flag to solve enthalpy species equations
+  int solve_enthalpy(0);
+
+  // Specified constant species specific heat
+  std::vector<amrex::Real> cp_k0(0);
 
 
   void Initialize ()
@@ -27,37 +43,93 @@ namespace SPECIES
     {
       pp.getarr("solve", species);
 
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.size() > 0, "No input provided for species.solve");
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.size() > 0,
+          "No input provided for species.solve");
 
       // Disable the species solver if the species are defined as "None" (case
       // insensitive) or 0
       if (amrex::toLower(species[0]).compare("none") == 0 or
-          (species[0]).compare("0") == 0) {
-        nspecies = 0;
+          (species[0]).compare("0") == 0)
+      {
+        solve = 0;
       }
-      else {
+      else
+      {
+        solve = 1;
         nspecies = species.size();
-        D_0.resize(nspecies);
+
+        MW_k0.resize(nspecies);
+        D_k0.resize(nspecies);
+
+        // Get species temperature inputs -----------------------------//
+        amrex::ParmParse ppMFIX("mfix");
+        int advect_enthalpy(0);
+        ppMFIX.query("advect_enthalpy", advect_enthalpy);
+
+        if (advect_enthalpy == 1) {
+          solve_enthalpy = 1;
+          cp_k0.resize(nspecies);
+        }
       }
 
+      if(solve)
+      {
+        // Get molecular weights input --------------------------------//
+        for (int n(0); n < nspecies; n++) {
+          std::string name = "species." + species[n];
+          amrex::ParmParse ppSpecies(name.c_str());
+          int exists = ppSpecies.query("molecular_weight", MW_k0[n]);
 
-      if( nspecies > 0 ) {
+          if (not exists) {
+            amrex::Print() << "Warning: specie " + species[n] + 
+                              " molecular weight not provided.\n";
+            amrex::Print() << "Default: assuming " + species[n] +"_MW = 0.\n";
+            //amrex::Abort("Unknown species specific heat model!");
+          }
+        }
 
         // Get diffusivity model input --------------------------------//
         std::string diffusivity_model;
         pp.get("diffusivity", diffusivity_model);
 
-        if (amrex::toLower(diffusivity_model).compare("constant") == 0) {
+        if (amrex::toLower(diffusivity_model).compare("constant") == 0)
+        {
+          DiffusivityModel = DIFFUSIVITYMODEL::Constant;
 
-          //SPECIESDIFFUSIVITYMODEL SpeciesDiffusivityModel = ConstantSpeciesDiffusivity;
           for (int n(0); n < nspecies; n++) {
             std::string name = "species." + species[n];
             amrex::ParmParse ppSpecies(name.c_str());
-            ppSpecies.get("diffusivity", D_0[n]);
+            ppSpecies.get("diffusivity.constant", D_k0[n]);
           }
         }
         else {
-          amrex::Abort("Unknown fluid species mass diffusivity model!");
+          amrex::Abort("Unknown species mass diffusivity model!");
+        }
+
+        if (solve_enthalpy)
+        {
+          // Get specific heat model input ------------------------//
+          std::string specific_heat_model;
+          pp.query("specific_heat", specific_heat_model);
+
+          if (amrex::toLower(specific_heat_model).compare("constant") == 0)
+          {
+            SpecificHeatModel = SPECIFICHEATMODEL::Constant;
+
+            for (int n(0); n < nspecies; n++) {
+              std::string name = "species." + species[n];
+              amrex::ParmParse ppSpecies(name.c_str());
+              ppSpecies.get("specific_heat.constant", cp_k0[n]);
+            }
+          }
+          else {
+            SpecificHeatModel = SPECIFICHEATMODEL::Constant;
+
+            amrex::Print() << "Warning: species specific heat model not provided.\n";
+            amrex::Print() << "Default: Constant model with cp_gk = 0.\n";
+            //amrex::Abort("Unknown species specific heat model!");
+          }
+
         }
       }
     }

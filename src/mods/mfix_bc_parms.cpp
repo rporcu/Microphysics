@@ -337,17 +337,19 @@ namespace BC
         }
 
         if( new_bc.type == minf_ or new_bc.type == pinf_ ) {
-          ppFluid.query("temperature", new_bc.fluid.temperature);
-        }
+          if (FLUID::solve_enthalpy) {
+            ppFluid.get("temperature", new_bc.fluid.temperature);
+          }
 
-        // Get species data.
-        if (FLUID::solve_species) {
-          std::string species_field = field+".species";
-          amrex::ParmParse ppSpecies(species_field.c_str());
+          // Get species data.
+          if (FLUID::solve_species) {
+            std::string species_field = field+".species";
+            amrex::ParmParse ppSpecies(species_field.c_str());
 
-          for (int n(0); n < FLUID::nspecies_g; n++) {
-            std::string fluid_specie = FLUID::species_g[n];
-            ppSpecies.query(fluid_specie.c_str(), new_bc.fluid.species.mass_fractions[n]);
+            for (int n(0); n < FLUID::nspecies_g; n++) {
+              std::string fluid_specie = FLUID::species_g[n];
+              ppSpecies.get(fluid_specie.c_str(), new_bc.fluid.species.mass_fractions[n]);
+            }
           }
         }
       }

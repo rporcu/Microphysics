@@ -7,7 +7,6 @@
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
 #include <mfix_pic_parms.H>
-#include <mfix_normalize_species_g.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -38,6 +37,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
       m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
+      m_leveldata[lev]->MW_g->FillBoundary(geom[lev].periodicity());
 
       if (advect_enthalpy) {
         m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
@@ -47,8 +47,13 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
       }
 
       if (advect_fluid_species) {
-        m_leveldata[lev]->D_g->FillBoundary(geom[lev].periodicity());
-        m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
+        m_leveldata[lev]->D_gk->FillBoundary(geom[lev].periodicity());
+        m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
+      }
+
+      if (advect_enthalpy and advect_fluid_species) {
+        m_leveldata[lev]->cp_gk->FillBoundary(geom[lev].periodicity());
+        m_leveldata[lev]->h_gk->FillBoundary(geom[lev].periodicity());
       }
     }
 
@@ -58,7 +63,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
     mfix_set_density_bcs(time, get_ro_g());
 
     // TODO: commenting the following makes BENCH03 GPU to pass
-    //mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g());
+    //mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g(), get_MW_g());
     //mfix_set_tracer_bcs(time, get_trac());
 
     if (advect_enthalpy) {
@@ -80,7 +85,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
     }
 
     if (advect_fluid_species)
-      mfix_set_species_bcs(time, get_X_g(), get_D_g());
+      mfix_set_species_bcs(time, get_X_gk(), get_D_gk(), get_cp_gk(), get_h_gk());
 
     //
     // Start loop: if we are not seeking a steady state solution,
@@ -163,8 +168,8 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
           MultiFab& ro_g = *m_leveldata[lev]->ro_g;
           MultiFab& ro_go = *m_leveldata[lev]->ro_go;
 
-          MultiFab& X_g = *m_leveldata[lev]->X_g;
-          MultiFab& X_go = *m_leveldata[lev]->X_go;
+          MultiFab& X_gk = *m_leveldata[lev]->X_gk;
+          MultiFab& X_gko = *m_leveldata[lev]->X_gko;
 
           MultiFab& T_g = *m_leveldata[lev]->T_g;
           MultiFab& T_go = *m_leveldata[lev]->T_go;
@@ -191,7 +196,7 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
           }
 
           if (advect_fluid_species)
-            MultiFab::Copy(X_go, X_g, 0, 0, X_g.nComp(), X_go.nGrow());
+            MultiFab::Copy(X_gko, X_gk, 0, 0, X_gk.nComp(), X_gko.nGrow());
 
           // User hooks
           for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
@@ -215,16 +220,6 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
         mfix_apply_predictor(conv_u_old, conv_s_old, conv_X_old, divtau_old,
             laps_old, lapT_old, lapX_old, time, dt, prev_dt, proj_2_pred);
 
-        // Rescale species in order to respect sum = 1
-        if (advect_fluid_species) {
-          normalize_species_g(get_X_g());
-
-          for (int lev = 0; lev <= finest_level; lev++) {
-            // Update ghost cells
-            m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
-          }
-        }
-
         // Calculate drag coefficient
         if (DEM::solve or PIC::solve)
         {
@@ -239,16 +234,6 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
         if (!steady_state) {
            mfix_apply_corrector(conv_u_old, conv_s_old, conv_X_old, divtau_old,
                laps_old, lapT_old, lapX_old, time, dt, prev_dt, proj_2_corr);
-
-          // Rescale species in order to respect sum = 1
-          if (advect_fluid_species) {
-            normalize_species_g(get_X_g());
-
-            for (int lev = 0; lev <= finest_level; lev++) {
-              // Update ghost cells
-              m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
-            }
-          }
         }
 
         //

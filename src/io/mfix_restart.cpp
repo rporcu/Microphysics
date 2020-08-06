@@ -227,7 +227,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
        // Read scalar variables
        ResetIOChkData();
 
-       for (int i = 0; i < chkscalarVars.size(); i++ )
+       for (int i = 0; i < chkScalarVars.size(); i++ )
        {
            if (chkscaVarsName[i] == "level_sets") {
 
@@ -250,7 +250,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                  // Copy from the mf we used to read in to the mf we will use going forward
                  const int ng_to_copy = 0;
 
-                 (**(chkscalarVars[i][lev])).copy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
+                 (**(chkScalarVars[i][lev])).copy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
               } else {
 
@@ -262,10 +262,10 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                  FArrayBox single_fab(mf.boxArray()[0],1);
                  mf.copyTo(single_fab);
 
-                  // Copy and replicate mf into chkscalarVars
-                  for (MFIter mfi(**(chkscalarVars[i][lev]), false); mfi.isValid(); ++mfi) {
+                  // Copy and replicate mf into chkScalarVars
+                  for (MFIter mfi(**(chkScalarVars[i][lev]), false); mfi.isValid(); ++mfi) {
                       int ib = mfi.index();
-                      (**(chkscalarVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
+                      (**(chkScalarVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
                           single_fab.box(), 0, mfi.validbox(), 0, 1);
                   }
               }
@@ -274,7 +274,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
        if (advect_enthalpy)
        {
-          for (int i = 0; i < chktemperatureVars.size(); i++ )
+          for (int i = 0; i < chkTVars.size(); i++ )
           {
              if ( restart_from_cold_flow and chkscaVarsName[i] == "T_g")
              {
@@ -291,13 +291,13 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                  continue;
              }
 
-             amrex::Print() << "  Loading " << chktemperatureVarsName[i] << std::endl;
+             amrex::Print() << "  Loading " << chkTVarsName[i] << std::endl;
 
              MultiFab mf;
              VisMF::Read(mf,
                      amrex::MultiFabFileFullPrefix(lev,
                                                    restart_file, level_prefix,
-                                                   chktemperatureVarsName[i]),
+                                                   chkTVarsName[i]),
                                                    nullptr,
                                                    ParallelDescriptor::IOProcessorNumber());
 
@@ -307,7 +307,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 // going forward
                 const int ng_to_copy = 0;
 
-                (**(chktemperatureVars[i][lev])).copy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
+                (**(chkTVars[i][lev])).copy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
              } else {
 
@@ -319,10 +319,10 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 FArrayBox single_fab(mf.boxArray()[0],1);
                 mf.copyTo(single_fab);
 
-                 // Copy and replicate mf into chkscalarVars
-                 for (MFIter mfi(**(chktemperatureVars[i][lev]), false); mfi.isValid(); ++mfi) {
+                 // Copy and replicate mf into chkScalarVars
+                 for (MFIter mfi(**(chkTVars[i][lev]), false); mfi.isValid(); ++mfi) {
                      int ib = mfi.index();
-                     (**(chktemperatureVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
+                     (**(chkTVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
                          single_fab.box(), 0, mfi.validbox(), 0, 1);
                  }
                }
@@ -331,15 +331,15 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
        if (advect_fluid_species)
        {
-          for (int i = 0; i < chkspeciesVars.size(); i++ )
+          for (int i = 0; i < chkSpeciesVars.size(); i++ )
           {
-             amrex::Print() << "  Loading " << chkspeciesVarsName[i] << std::endl;
+             amrex::Print() << "  Loading " << chkSpeciesVarsName[i] << std::endl;
 
              MultiFab mf;
              VisMF::Read(mf,
                      amrex::MultiFabFileFullPrefix(lev,
                                                    restart_file, level_prefix,
-                                                   chkspeciesVarsName[i]),
+                                                   chkSpeciesVarsName[i]),
                                                    nullptr,
                                                    ParallelDescriptor::IOProcessorNumber());
 
@@ -348,7 +348,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 // Copy from the mf we used to read in to the mf we will use going forward
                 const int ng_to_copy = 0;
 
-                (**(chkspeciesVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies_g,
+                (**(chkSpeciesVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies_g,
                     ng_to_copy, ng_to_copy);
 
              } else {
@@ -361,10 +361,53 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 FArrayBox single_fab(mf.boxArray()[0], FLUID::nspecies_g);
                 mf.copyTo(single_fab);
 
-                 // Copy and replicate mf into chkscalarVars
-                 for (MFIter mfi(**(chkspeciesVars[i][lev]), false); mfi.isValid(); ++mfi) {
+                // Copy and replicate mf into chkScalarVars
+                for (MFIter mfi(**(chkSpeciesVars[i][lev]), false); mfi.isValid(); ++mfi) {
+                    int ib = mfi.index();
+                    (**(chkSpeciesVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
+                        single_fab.box(), 0, mfi.validbox(), 0,
+                        FLUID::nspecies_g);
+                }
+             }
+          }
+       }
+
+       if (advect_fluid_species and advect_enthalpy)
+       {
+          for (int i = 0; i < chkSpeciesTVars.size(); i++ )
+          {
+             amrex::Print() << "  Loading " << chkSpeciesTVarsName[i] << std::endl;
+
+             MultiFab mf;
+             VisMF::Read(mf,
+                     amrex::MultiFabFileFullPrefix(lev,
+                                                   restart_file, level_prefix,
+                                                   chkSpeciesTVarsName[i]),
+                                                   nullptr,
+                                                   ParallelDescriptor::IOProcessorNumber());
+
+             if (Nrep == IntVect::TheUnitVector()) {
+
+                // Copy from the mf we used to read in to the mf we will use going forward
+                const int ng_to_copy = 0;
+
+                (**(chkSpeciesTVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies_g,
+                    ng_to_copy, ng_to_copy);
+
+             } else {
+
+                if (mf.boxArray().size() > 1)
+                    amrex::Abort("Replication only works if one initial grid");
+
+                mf.FillBoundary(geom[lev].periodicity());
+
+                FArrayBox single_fab(mf.boxArray()[0], FLUID::nspecies_g);
+                mf.copyTo(single_fab);
+
+                 // Copy and replicate mf into chkScalarVars
+                 for (MFIter mfi(**(chkSpeciesTVars[i][lev]), false); mfi.isValid(); ++mfi) {
                      int ib = mfi.index();
-                     (**(chkspeciesVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
+                     (**(chkSpeciesTVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
                          single_fab.box(), 0, mfi.validbox(), 0,
                          FLUID::nspecies_g);
                  }
@@ -466,6 +509,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->ro_go->FillBoundary(geom[lev].periodicity());
 
+          m_leveldata[lev]->MW_g->FillBoundary(geom[lev].periodicity());
+
           m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
 
           if (advect_enthalpy) {
@@ -483,8 +528,14 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
           // Fill the bc's just in case
           if (advect_fluid_species) {
-            m_leveldata[lev]->X_g->FillBoundary(geom[lev].periodicity());
-            m_leveldata[lev]->D_g->FillBoundary(geom[lev].periodicity());
+            m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
+            m_leveldata[lev]->D_gk->FillBoundary(geom[lev].periodicity());
+          }
+
+          // Fill the bc's just in case
+          if (advect_fluid_species and advect_enthalpy) {
+            m_leveldata[lev]->cp_gk->FillBoundary(geom[lev].periodicity());
+            m_leveldata[lev]->h_gk->FillBoundary(geom[lev].periodicity());
           }
         }
     }

@@ -247,11 +247,14 @@ class mfix : public AmrCore
     void mfix_set_scalar_bcs (Real time,
                               Vector< MultiFab* > const& mu_g,
                               Vector< MultiFab* > const& cp_g,
-                              Vector< MultiFab* > const& k_g);
+                              Vector< MultiFab* > const& k_g,
+                              Vector< MultiFab* > const& MW_g);
 
     void mfix_set_species_bcs (Real time,
-                               Vector< MultiFab* > const& X_g,
-                               Vector< MultiFab* > const& D_g);
+                               Vector< MultiFab* > const& X_gk,
+                               Vector< MultiFab* > const& D_gk,
+                               Vector< MultiFab* > const& cp_gk,
+                               Vector< MultiFab* > const& h_gk);
 
     void set_velocity_bcs (Real time,
                            const int lev,
@@ -311,15 +314,30 @@ class mfix : public AmrCore
                                        FArrayBox& scal_fab,
                                        const Box& domain);
 
+    void set_molecular_weight_bcs (Real time,
+                                   const int lev,
+                                   FArrayBox& scal_fab,
+                                   const Box& domain);
+
     void set_mass_fractions_g_bcs (Real time,
                                    const int lev,
-                                   FArrayBox& X_g_fab,
+                                   FArrayBox& X_gk_fab,
                                    const Box& domain);
 
     void set_species_diffusivities_g_bcs (Real time,
                                           const int lev,
-                                          FArrayBox& D_g_fab,
+                                          FArrayBox& D_gk_fab,
                                           const Box& domain);
+
+    void set_species_specific_heat_g_bcs (Real time,
+                                          const int lev,
+                                          FArrayBox& cp_gk_fab,
+                                          const Box& domain);
+
+    void set_species_enthalpy_g_bcs (Real time,
+                                     const int lev,
+                                     FArrayBox& h_gk_fab,
+                                     const Box& domain);
 
     void set_vec_bcs (const int lev,
                       FArrayBox& vec_fab,
@@ -558,7 +576,7 @@ class mfix : public AmrCore
     mutable Gpu::ManagedVector<Real> m_bc_v_g;
     mutable Gpu::ManagedVector<Real> m_bc_w_g;
     mutable Gpu::ManagedVector<Real> m_bc_t_g;
-    mutable Vector< Gpu::ManagedVector<Real> > m_bc_X_g;
+    mutable Vector< Gpu::ManagedVector<Real> > m_bc_X_gk;
     mutable Gpu::ManagedVector<Real> m_bc_ep_g;
     mutable Gpu::ManagedVector<Real> m_bc_p_g;
 
@@ -566,7 +584,7 @@ class mfix : public AmrCore
     std::map< std::string, Gpu::ManagedVector<int> > m_ro_g_bc_types;
     std::map< std::string, Gpu::ManagedVector<int> > m_T_g_bc_types;
     std::map< std::string, Gpu::ManagedVector<int> > m_trac_g_bc_types;
-    std::map< std::string, Gpu::ManagedVector<int> > m_X_g_bc_types;
+    std::map< std::string, Gpu::ManagedVector<int> > m_X_gk_bc_types;
 
     //! The particles see an inflow face as a solid wall; thus instead of
     //! creating a separate EBfactory for particles, we simply modify the
@@ -583,13 +601,17 @@ class mfix : public AmrCore
                                       amrex::Real a_prev_dt,
                                       bool proj_2 );
 
+  public:
     void apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
                                Vector< MultiFab* > const& ep_v_mac,
                                Vector< MultiFab* > const& ep_w_mac,
                                Vector< MultiFab* > const& ep,
                                Vector< MultiFab* > const& ro,
+                               Vector< MultiFab* > const& T_g,
+                               Vector< MultiFab* > const& X_gk,
                                Real time);
 
+  protected:
     void FillPatchVel (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
                        const Vector<BCRec> & bcr);
 
@@ -661,9 +683,10 @@ class mfix : public AmrCore
                                        Vector< MultiFab* > const& vel,
                                        Vector< MultiFab* > const& ep_g,
                                        Vector< MultiFab* > const& ro_g,
+                                       Vector< MultiFab* > const& T_g,
                                        Vector< MultiFab* > const& h_g,
                                        Vector< MultiFab* > const& trac,
-                                       Vector< MultiFab* > const& X_g,
+                                       Vector< MultiFab* > const& X_gk,
                                        Real time);
 
     int steady_state_reached (Real dt, int iter);
@@ -679,6 +702,19 @@ class mfix : public AmrCore
                                Real time, Real dt, Real prev_dt,
                                bool proj_2);
 
+    void mfix_momentum_rhs(Vector< MultiFab* > const& rhs,
+                           Vector< MultiFab* > const& vel_g);
+
+    void mfix_enthalpy_rhs(Vector< MultiFab* > const& rhs,
+                           Vector< MultiFab* > const& T_g,
+                           Vector< MultiFab* > const& X_gkk);
+
+    void mfix_scalar_rhs(Vector< MultiFab* > const& rhs,
+                         Vector< MultiFab* > const& sca);
+
+    void mfix_species_X_rhs(Vector< MultiFab* > const& rhs,
+                            Vector< MultiFab* > const& X_gkk);
+
     void mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                                Vector< MultiFab* >& conv_s_old,
                                Vector< MultiFab* >& conv_X_old,
@@ -692,6 +728,22 @@ class mfix : public AmrCore
   private:
     void mfix_compute_diveu (Real time);
 
+  public:
+    void mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk);
+
+    void mfix_update_fluid_and_species(const Vector< MultiFab* >& cp_gk,
+                                        const Vector< MultiFab* >& h_gk,
+                                        const Vector< MultiFab* >& MW_g,
+                                        const Vector< MultiFab* >& cp_g,
+                                        const Vector< MultiFab* >& h_g,
+                                        const Vector< MultiFab* >& T_g,
+                                        const Vector< MultiFab* >& X_gk);
+
+    void mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
+                               Vector< MultiFab* > const& T_g,
+                               Vector< MultiFab* > const& X_gk);
+
+  private:
     void mfix_print_max_vel (int lev);
 
     void mfix_print_max_gp (int lev);
@@ -724,6 +776,7 @@ class mfix : public AmrCore
     Vector< MultiFab* > get_ep_g () noexcept;
     Vector< MultiFab* > get_ro_g () noexcept;
     Vector< MultiFab* > get_ro_g_old () noexcept;
+    Vector< MultiFab* > get_MW_g () noexcept;
     Vector< MultiFab* > get_trac () noexcept;
     Vector< MultiFab* > get_trac_old () noexcept;
     Vector< MultiFab* > get_vel_g () noexcept;
@@ -737,9 +790,11 @@ class mfix : public AmrCore
     Vector< MultiFab* > get_h_g_old () noexcept;
     Vector< MultiFab* > get_T_g_on_eb () noexcept;
     Vector< MultiFab* > get_k_g_on_eb () noexcept;
-    Vector< MultiFab* > get_X_g () noexcept;
-    Vector< MultiFab* > get_X_g_old () noexcept;
-    Vector< MultiFab* > get_D_g () noexcept;
+    Vector< MultiFab* > get_X_gk () noexcept;
+    Vector< MultiFab* > get_X_gk_old () noexcept;
+    Vector< MultiFab* > get_D_gk () noexcept;
+    Vector< MultiFab* > get_cp_gk () noexcept;
+    Vector< MultiFab* > get_h_gk () noexcept;
     Vector< MultiFab* > get_txfr () noexcept;
     Vector< MultiFab* > get_xslopes_u () noexcept;
     Vector< MultiFab* > get_yslopes_u () noexcept;
@@ -747,11 +802,12 @@ class mfix : public AmrCore
     Vector< MultiFab* > get_xslopes_s () noexcept;
     Vector< MultiFab* > get_yslopes_s () noexcept;
     Vector< MultiFab* > get_zslopes_s () noexcept;
-    Vector< MultiFab* > get_xslopes_X_g () noexcept;
-    Vector< MultiFab* > get_yslopes_X_g () noexcept;
-    Vector< MultiFab* > get_zslopes_X_g () noexcept;
+    Vector< MultiFab* > get_xslopes_X_gk () noexcept;
+    Vector< MultiFab* > get_yslopes_X_gk () noexcept;
+    Vector< MultiFab* > get_zslopes_X_gk () noexcept;
     Vector< MultiFab* > get_diveu () noexcept;
     Vector< MultiFab* > get_mac_phi () noexcept;
+    Vector< MultiFab* > get_mac_rhs () noexcept;
     Vector< MultiFab* > get_u_mac () noexcept;
     Vector< MultiFab* > get_v_mac () noexcept;
     Vector< MultiFab* > get_w_mac () noexcept;
@@ -771,6 +827,7 @@ class mfix : public AmrCore
     bool advect_density       = false;
     bool advect_tracer        = false;
     bool advect_fluid_species = false;
+    bool open_system_constraint = false; // by default we use incompressibility constraint
 
     bool test_tracer_conservation  = false;
 
@@ -898,14 +955,17 @@ class mfix : public AmrCore
     int plt_ep_g    = 1;
     int plt_p_g     = 0;
     int plt_ro_g    = 0;
-    int plt_X_g     = 0;
-    int plt_h_g     = 0;
-    int plt_T_g     = 0;
+    int plt_MW_g    = 0;
     int plt_trac    = 0;
     int plt_cp_g    = 0;
+    int plt_T_g     = 0;
+    int plt_h_g     = 0;
     int plt_k_g     = 0;
     int plt_mu_g    = 0;
-    int plt_D_g     = 0;
+    int plt_X_gk    = 0;
+    int plt_D_gk    = 0;
+    int plt_cp_gk   = 0;
+    int plt_h_gk    = 0;
     int plt_diveu   = 0;
     int plt_volfrac = 0;
     int plt_gradp_g = 0;
@@ -917,8 +977,8 @@ class mfix : public AmrCore
     // Flags for saving particle data. By default, we have all flags on,
     // we turn off what we don't want in the init IO routine. This is somewhat
     // different from what we do with the fluid.
-    Vector<int> write_real_comp = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    Vector<int> write_int_comp = {1, 1};
+    Vector<int> write_real_comp = Vector<int>(realData::count,1);
+    Vector<int> write_int_comp = Vector<int>(intData::count,1);
 
     //
     // Here we set the number of ghost nodes of the field arrays.
@@ -948,14 +1008,17 @@ class mfix : public AmrCore
     Vector< Vector< MultiFab** > > vectorVars;
     Vector< std::string > vecVarsName;
 
-    Vector< Vector< MultiFab** > > chkscalarVars;
+    Vector< Vector< MultiFab** > > chkScalarVars;
     Vector< std::string > chkscaVarsName;
 
-    Vector< Vector< MultiFab** > > chktemperatureVars;
-    Vector< std::string > chktemperatureVarsName;
+    Vector< Vector< MultiFab** > > chkTVars;
+    Vector< std::string > chkTVarsName;
 
-    Vector< Vector< MultiFab** > > chkspeciesVars;
-    Vector< std::string > chkspeciesVarsName;
+    Vector< Vector< MultiFab** > > chkSpeciesVars;
+    Vector< std::string > chkSpeciesVarsName;
+
+    Vector< Vector< MultiFab** > > chkSpeciesTVars;
+    Vector< std::string > chkSpeciesTVarsName;
 
     /***************************************************************************
      *                                                                         *

@@ -11,44 +11,71 @@
 
 namespace FLUID
 {
+  // Fluid density model
+  int DensityModel = DENSITYMODEL::Invalid;
 
+  // Fluid molecular weight model
+  int MolecularWeightModel = MOLECULARWEIGHTMODEL::Invalid;
+
+  // Fluid viscosity model
+  int ViscosityModel = VISCOSITYMODEL::Invalid;
+
+  // Fluid specific heat model
+  int SpecificHeatModel = SPECIFICHEATMODEL::Invalid;
+
+  // Fluid thermal conductivity model
+  int ThermalConductivityModel = THERMALCONDUCTIVITYMODEL::Invalid;
+
+  // Flag to solve fluid equations
   int solve;
 
   // Specified constant gas density
-  amrex::Real ro_g0;
+  amrex::Real ro_g0(0);
+
+  // Specified constant gas molecular weight
+  amrex::Real MW_g0(0);
 
   // Specified constant tracer value
-  amrex::Real trac_0 = 0.0;
+  amrex::Real trac_0(0);
 
   // Specified constant gas viscosity
-  amrex::Real mu_g0;
+  amrex::Real mu_g0(0);
 
   // Average molecular weight of gas
-  amrex::Real mw_avg;
+  amrex::Real mw_avg(0);
 
   // Flag to solve enthalpy fluid equation
-  int solve_enthalpy = 0;
+  int solve_enthalpy(0);
 
   // Specified constant gas temperature
-  amrex::Real T_g0 = 273.15;
+  amrex::Real T_g0(273.15);
 
   // Specified constant gas specific heat
-  amrex::Real cp_g0 = 1.0;
+  amrex::Real cp_g0(1);
 
-  // Gas phase thermal conductivity coefficient
-  amrex::Real k_g0 = 0.0;
+  // Specified constant gas phase thermal conductivity coefficient
+  amrex::Real k_g0(0);
 
   // Flag to solve species fluid equations
-  int solve_species = 0;
+  int solve_species(0);
 
   // Fluid phase species names
   std::vector<std::string> species_g;
 
   // Total number of fluid species
-  int nspecies_g = 0;
+  int nspecies_g(0);
 
-  // Fluid phase species diffusion coefficients
-  std::vector<amrex::Real> D_g0;
+  // Specified constant gas phase species molecular weight
+  std::vector<amrex::Real> MW_gk0(0);
+
+  // Specified constant gas phase species diffusion coefficients
+  std::vector<amrex::Real> D_gk0(0);
+
+  // Specified constant gas phase species specific heat
+  std::vector<amrex::Real> cp_gk0(0);
+
+  // Flag to understand if fluid is a mixture of fluid species
+  int is_a_mixture(0);
 
   // Name to later reference when building inputs for IC/BC regions
   std::string name;
@@ -56,7 +83,6 @@ namespace FLUID
 
   void Initialize ()
   {
-
     amrex::ParmParse pp("fluid");
 
     std::vector<std::string> fluid_name;
@@ -66,33 +92,29 @@ namespace FLUID
        "Fluid solver not specified. fluid.sove = ? ");
 
     // Disable the fluid solver if the fluid is defined as "None"
-    if (fluid_name[0] == "None" ||
-        fluid_name[0] == "none" ||
-        fluid_name[0] == "NONE" ||
-        fluid_name[0] == "0" ) {
+    if (amrex::toLower(fluid_name[0]).compare("none") == 0 or fluid_name[0] == "0" ) {
       solve = 0;
     } else {
       solve = 1;
       name = fluid_name[0];
     }
 
-
-    if( solve ) {
-
+    if (solve)
+    {
       amrex::ParmParse ppFluid(name.c_str());
 
       // Get density inputs ------------------------------------//
       std::string density_model;
-      ppFluid.get("density", density_model );
+      ppFluid.get("density", density_model);
 
-      if (density_model == "constant")
+      if (amrex::toLower(density_model).compare("constant") == 0)
       {
-        //DENSITYMODEL DensityModel = ConstantDensity;
-        ppFluid.get("density.constant",   ro_g0 );
+        DensityModel = DENSITYMODEL::Constant;
+        ppFluid.get("density.constant", ro_g0);
       }
-      else if(density_model == "idealgas")
+      else if(amrex::toLower(density_model).compare("idealgas") == 0)
       {
-        //DENSITYMODEL DensityModel = IdealGas;
+        DensityModel = DENSITYMODEL::IdealGas;
         amrex::Abort("Not yet implemented.");
       }
       else
@@ -100,21 +122,42 @@ namespace FLUID
         amrex::Abort("Unknown fluid density model!");
       }
 
+      // Get molecular weight inputs ---------------------------//
+      std::string molecular_weight_model;
+      ppFluid.query("molecular_weight", molecular_weight_model);
+
+      if (amrex::toLower(molecular_weight_model).compare("constant") == 0)
+      {
+        MolecularWeightModel = MOLECULARWEIGHTMODEL::Constant;
+        ppFluid.get("molecular_weight.constant", MW_g0);
+      }
+      else if(amrex::toLower(molecular_weight_model).compare("mixture") == 0)
+      {
+        MolecularWeightModel = MOLECULARWEIGHTMODEL::Mixture;
+      }
+      else
+      {
+        //TODO:: do not abort here. Just send a Warning
+        MolecularWeightModel = MOLECULARWEIGHTMODEL::Constant;
+
+        amrex::Print() << "Warning: fluid molecular weight model not provided.\n";
+        amrex::Print() << "Default: Constant model with MW_g = 0\n";
+        //amrex::Abort("Unknown species specific heat model!");
+      }
 
       // Get viscosity inputs ----------------------------------//
       std::string viscosity_model;
       ppFluid.get("viscosity", viscosity_model );
 
-      if (viscosity_model == "constant")
+      if (amrex::toLower(viscosity_model).compare("constant") == 0)
       {
-        //VISCOSITYMODEL ViscosityModel = ConstantViscosity;
-        ppFluid.get("viscosity.constant", mu_g0 );
+        ViscosityModel = VISCOSITYMODEL::Constant;
+        ppFluid.get("viscosity.constant", mu_g0);
       }
-      else if (viscosity_model == "sutherland")
+      else if (amrex::toLower(viscosity_model).compare("sutherland") == 0)
       {
-        //VISCOSITYMODEL ViscosityModel = Sutherland;
+        ViscosityModel = VISCOSITYMODEL::Sutherland;
         amrex::Abort("Not yet implemented.");
-        // TODO: get const, tg_ref, mu_ref
       }
       else
       {
@@ -130,35 +173,36 @@ namespace FLUID
       if (advect_enthalpy == 1) {
         solve_enthalpy = 1;
 
-        // Get specific heat inputs ------------------------------------//
-        std::string specific_heat_model;
-        ppFluid.get("specific_heat", specific_heat_model );
+        if (MolecularWeightModel != MOLECULARWEIGHTMODEL::Mixture)
+        {
+          // Get specific heat inputs ------------------------------------//
+          std::string specific_heat_model;
+          ppFluid.get("specific_heat", specific_heat_model);
 
-        if (specific_heat_model == "constant")
-        {
-          //SPECIFICHEATMODEL SpecificHeatModel = ConstantSpecificHeat;
-          // If this value is not set in the inputs file, the default is 1.0
-          ppFluid.get("specific_heat.constant",   cp_g0 );
-        }
-        else if (specific_heat_model == "nasa9-poly")
-        {
-          //SPECIFICHEATMODEL SpecificHeatModel = NASA9_Polynomial;
-          amrex::Abort("Not yet implemented.");
-          // TODO: get Tlow, Thigh, coefficients
-        }
-        else 
-        {
-          amrex::Abort("Unknown fluid specific heat model!");
+          if (amrex::toLower(specific_heat_model).compare("constant") == 0)
+          {
+            SpecificHeatModel = SPECIFICHEATMODEL::Constant;
+            ppFluid.get("specific_heat.constant", cp_g0);
+          }
+          else if (amrex::toLower(specific_heat_model).compare("nasa9-poly") == 0)
+          {
+            SpecificHeatModel = SPECIFICHEATMODEL::NASA9Polynomials;
+            amrex::Abort("Not yet implemented.");
+          }
+          else 
+          {
+            amrex::Abort("Unknown fluid specific heat model!");
+          }
         }
 
-        // Get specific heat inputs ------------------------------------//
+        // Get thermal conductivity inputs -----------------------------//
         std::string thermal_conductivity_model;
-        ppFluid.get("thermal_conductivity", thermal_conductivity_model );
+        ppFluid.get("thermal_conductivity", thermal_conductivity_model);
 
-        if (thermal_conductivity_model == "constant")
+        if (amrex::toLower(thermal_conductivity_model).compare("constant") == 0)
         {
-          //THERMALCONDUCTIVITYMODEL ThermalConductivityModel = ConstantThermalConductivity;
-          ppFluid.get("thermal_conductivity.constant", k_g0 );
+          ThermalConductivityModel = THERMALCONDUCTIVITYMODEL::Constant;
+          ppFluid.get("thermal_conductivity.constant", k_g0);
         }
         else 
         {
@@ -166,13 +210,14 @@ namespace FLUID
         }
       }
 
-
       // Fluid species inputs
-      if (ppFluid.contains("species"))
+      if (ppFluid.contains("species") or
+          MolecularWeightModel == MOLECULARWEIGHTMODEL::Mixture)
       {
         ppFluid.getarr("species", species_g);
 
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species_g.size() > 0, "No input provided for fluid.species");
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species_g.size() > 0, 
+            "No input provided for fluid.species");
 
         // Disable the species solver if the species are defined as "None" (case
         // insensitive) or 0
@@ -187,23 +232,38 @@ namespace FLUID
           nspecies_g = species_g.size();
 
           AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nspecies_g <= SPECIES::nspecies,
-              "Fluid species_g number is higher than species_g number");
+              "Fluid species_g number is higher than species number");
 
-          D_g0.resize(nspecies_g);
+          MW_gk0.resize(nspecies_g);
+          D_gk0.resize(nspecies_g);
+
+          if (solve_enthalpy)
+            cp_gk0.resize(nspecies_g);
 
           for (int n(0); n < nspecies_g; n++) {
             std::string one_specie_g = species_g[n];
             std::vector<std::string>::iterator it;
 
-            it = std::find(SPECIES::species.begin(), SPECIES::species.end(), one_specie_g);
-            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != SPECIES::species.end(),
-                "Fluid specie " + one_specie_g + " is not included in provided species");
+            it = std::find(SPECIES::species.begin(), SPECIES::species.end(),
+                one_specie_g);
 
-            D_g0[n] = SPECIES::D_0[std::distance(SPECIES::species.begin(), it)];
+            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != SPECIES::species.end(),
+                "Fluid specie " + one_specie_g + " missing in input");
+
+            const auto pos = std::distance(SPECIES::species.begin(), it);
+
+            MW_gk0[n] = SPECIES::MW_k0[pos];
+            D_gk0[n] = SPECIES::D_k0[pos];
+
+            if (solve_enthalpy)
+              cp_gk0[n] = SPECIES::cp_k0[pos];
           }
         }
       }
 
+      // Flag to determine if we want to solve the fluid as a mixture
+      is_a_mixture = solve_species and
+        (FLUID::MolecularWeightModel == FLUID::MOLECULARWEIGHTMODEL::Mixture);
 
       pp.query("T_g0",  T_g0 );
       pp.query("trac0",  trac_0 );

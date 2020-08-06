@@ -19,7 +19,7 @@ void set_ic_temp (const Box& sbx, const Box& domain,
 
 void set_ic_species_g (const Box& sbx, const Box& domain,
                        const Real dx, const Real dy, const Real dz,
-                       const GpuArray<Real, 3>& plo, FArrayBox& X_g_fab);
+                       const GpuArray<Real, 3>& plo, FArrayBox& X_gk_fab);
 
 void init_helix (const Box& bx, const Box& domain, FArrayBox& vel_g_fab,
                  const Real dx, const Real dy, const Real dz);
@@ -46,52 +46,45 @@ void init_fluid (const Box& sbx,
                  const int advect_enthalpy,
                  const int advect_fluid_species)
 {
-      // Set user specified initial conditions (IC)
-      set_ic_vel(sbx, domain, dx, dy, dz, plo, (*ld.vel_g)[mfi]);
+  // Set user specified initial conditions (IC)
+  // Set initial fluid velocity
+  set_ic_vel(sbx, domain, dx, dy, dz, plo, (*ld.vel_g)[mfi]);
 
-      if (advect_enthalpy)
-        set_ic_temp(sbx, domain, dx, dy, dz, plo, (*ld.T_g)[mfi]);
+  // init_periodic_vortices (bx, domain, vel_g_fab, dx, dy, dz);
+  // init_helix (bx, domain, vel_g_fab, dx, dy, dz);
 
-      if (advect_fluid_species)
-        set_ic_species_g(sbx, domain, dx, dy, dz, plo, (*ld.X_g)[mfi]);
+  // Set the initial fluid density
+  Array4<Real> const& ro_g = ld.ro_g->array(mfi);
 
-      // init_periodic_vortices (bx, domain, vel_g_fab, dx, dy, dz);
-      // init_helix (bx, domain, vel_g_fab, dx, dy, dz);
+  const Real ro_g0  = FLUID::ro_g0;
 
-      // Set the initial fluid density and viscosity
-      Array4<Real> const& ro_g = ld.ro_g->array(mfi);
-      Array4<Real> const& trac = ld.trac->array(mfi);
+  ParallelFor(sbx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+  { ro_g(i,j,k) = ro_g0; });
 
-      const Real ro_g0  = FLUID::ro_g0;
-      const Real trac_0 = FLUID::trac_0;
+  // Set the initial fluid tracer
+  Array4<Real> const& trac = ld.trac->array(mfi);
 
-      ParallelFor(sbx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-      { ro_g(i,j,k) = ro_g0; });
+  const Real trac_0 = FLUID::trac_0;
 
-      ParallelFor(sbx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-      { trac(i,j,k) = trac_0; });
+  ParallelFor(sbx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+  { trac(i,j,k) = trac_0; });
 
-      if (test_tracer_conservation)
-        init_periodic_tracer(bx, domain, (*ld.vel_g)[mfi], (*ld.trac)[mfi], dx, dy, dz);
+  // Set the initial fluid temperature
+  if (advect_enthalpy) {
+    set_ic_temp(sbx, domain, dx, dy, dz, plo, (*ld.T_g)[mfi]);
+  }
 
-      // Initialize mu_g
-      calc_mu_g(bx, (*ld.mu_g)[mfi]);
+  // Fluid SPECIES Initialization
+  if (advect_fluid_species) {
+    // Set the initial fluid species mass fractions
+    set_ic_species_g(sbx, domain, dx, dy, dz, plo, (*ld.X_gk)[mfi]);
+  }
 
-      // Initialize Cp_g and k_g
-      if (advect_enthalpy) {
-        calc_cp_g(bx, (*ld.cp_g)[mfi], (*ld.T_g)[mfi]);
-        calc_k_g(bx, (*ld.k_g)[mfi], (*ld.T_g)[mfi]);
-      }
+  // Initialize all the fluid and fluid species parameters
+  init_fluid_parameters(bx, mfi, ld, advect_enthalpy, advect_fluid_species);
 
-      if (advect_fluid_species)
-        calc_D_g(bx, (*ld.D_g)[mfi]);
-
-      // Initialize h_g
-      if (advect_enthalpy) {
-        ((*ld.h_g)[mfi]).copy<RunOn::Gpu>((*ld.T_g)[mfi], 0, 0, 1);
-        ((*ld.h_g)[mfi]).mult<RunOn::Gpu>((*ld.cp_g)[mfi], 0, 0, 1);
-      }
-
+  if (test_tracer_conservation)
+    init_periodic_tracer(bx, domain, (*ld.vel_g)[mfi], (*ld.trac)[mfi], dx, dy, dz);
 }
 
 void init_helix (const Box& bx,
@@ -312,24 +305,96 @@ void init_periodic_tracer (const Box& bx,
 
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 //                                                                      !
-//  Subroutine: init_fluid_restart                                      !
+//  Subroutine: init_fluid_parameters                                   !
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-void init_fluid_restart (const Box& bx,
-                         const MFIter& mfi,
-                         LevelData& ld,
-                         const int advect_enthalpy,
-                         const int advect_fluid_species)
+void init_fluid_parameters (const Box& bx,
+                            const MFIter& mfi,
+                            LevelData& ld,
+                            const int advect_enthalpy,
+                            const int advect_fluid_species)
 {
+  Array4<Real> const& MW_g = ld.MW_g->array(mfi);
+
+  // Initialize mu_g
   calc_mu_g(bx, (*ld.mu_g)[mfi]);
 
-  if (advect_enthalpy) {
-    calc_cp_g(bx, (*ld.cp_g)[mfi], (*ld.T_g)[mfi]);
+  // Initialize D_gk
+  if (advect_fluid_species)
+    calc_D_gk(bx, (*ld.D_gk)[mfi], (*ld.T_g)[mfi]);
+
+  // Initialize k_g
+  if (advect_enthalpy)
     calc_k_g(bx, (*ld.k_g)[mfi], (*ld.T_g)[mfi]);
+
+  // Initialize cp_gk and h_gk
+  if (advect_enthalpy and advect_fluid_species) {
+    calc_cp_gk(bx, (*ld.cp_gk)[mfi], (*ld.T_g)[mfi]);
+    calc_h_gk(bx, (*ld.h_gk)[mfi], (*ld.cp_gk)[mfi], (*ld.T_g)[mfi]);
   }
 
-  if (advect_fluid_species)
-    calc_D_g(bx, (*ld.D_g)[mfi]);
+  // Initialize MW_g0, cp_g, h_g, cp_gk, and h_gk
+  if (not FLUID::is_a_mixture)
+  {
+    const Real MW_g0  = FLUID::MW_g0;
+
+    ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    { MW_g(i,j,k) = MW_g0; });
+
+    // Initialize Cp_g and k_g
+    if (advect_enthalpy) {
+      calc_cp_g(bx, (*ld.cp_g)[mfi], (*ld.T_g)[mfi]);
+      calc_h_g(bx, (*ld.h_g)[mfi], (*ld.cp_g)[mfi], (*ld.T_g)[mfi]);
+    }
+  }
+  else // fluid_is_a_mixture == true
+  {
+    const int nspecies_g = FLUID::nspecies_g;
+
+    Array4<const Real> const& X_gk = ld.X_gk->const_array(mfi);
+
+    Gpu::ManagedVector< Real > MW_gk0_managed(nspecies_g);
+
+    for (int n(0); n < nspecies_g; n++)
+      MW_gk0_managed[n] = FLUID::MW_gk0[n];
+
+    Real* p_MW_gk0 = MW_gk0_managed.data();
+
+    // Set initial species molecular weights and fluid molecular weight
+    ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      Real MW_g_sum(0);
+
+      for (int n(0); n < nspecies_g; n++)
+        MW_g_sum += X_gk(i,j,k,n) / p_MW_gk0[n];
+
+      MW_g(i,j,k) = 1./MW_g_sum;
+    });
+
+    if (advect_enthalpy)
+    {
+      Array4<Real> const& cp_g  = ld.cp_g->array(mfi);
+      Array4<Real> const& cp_gk = ld.cp_gk->array(mfi);
+      Array4<Real> const& h_g   = ld.h_g->array(mfi);
+      Array4<Real> const& h_gk  = ld.h_gk->array(mfi);
+
+      // Update cp_g and h_g from species quantities
+      ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        Real cp_g_sum(0);
+        Real h_g_sum(0);
+
+        for (int n(0); n < nspecies_g; n++) {
+          cp_g_sum += X_gk(i,j,k,n) * cp_gk(i,j,k,n);
+          h_g_sum += X_gk(i,j,k,n) * h_gk(i,j,k,n);
+        }
+
+        cp_g(i,j,k) = cp_g_sum;
+        h_g(i,j,k) = h_g_sum;
+      });
+
+    }
+  }
 }
 
 //!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -598,7 +663,7 @@ void set_ic_species_g (const Box& sbx,
                        const Real dy,
                        const Real dz,
                        const GpuArray<Real, 3>& plo,
-                       FArrayBox& X_g_fab)
+                       FArrayBox& X_gk_fab)
 {
   const IntVect slo(sbx.loVect());
   const IntVect shi(sbx.hiVect());
@@ -606,9 +671,9 @@ void set_ic_species_g (const Box& sbx,
   const IntVect domlo(domain.loVect());
   const IntVect domhi(domain.hiVect());
 
-  Array4<Real> const& X_g = X_g_fab.array();
+  Array4<Real> const& X_gk = X_gk_fab.array();
 
-  const int nspecies_g = X_g_fab.nComp();
+  const int nspecies_g = X_gk_fab.nComp();
 
   // Set the initial conditions.
   for(int icv(0); icv < IC::ic.size(); ++icv)
@@ -642,7 +707,7 @@ void set_ic_species_g (const Box& sbx,
 
       ParallelFor(box1, nspecies_g,
         [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-      { X_g(i,j,k,n) = p_mass_fractions[n]; });
+      { X_gk(i,j,k,n) = p_mass_fractions[n]; });
 
       if(slo[0] < domlo[0] and domlo[0] == istart)
       {
@@ -650,7 +715,7 @@ void set_ic_species_g (const Box& sbx,
         const Box box2(low2, hi2);
         ParallelFor(box2, nspecies_g,
           [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-        { X_g(i,j,k,n) = p_mass_fractions[n]; });
+        { X_gk(i,j,k,n) = p_mass_fractions[n]; });
       }
 
       if(shi[0] > domhi[0] and domhi[0] == iend)
@@ -659,7 +724,7 @@ void set_ic_species_g (const Box& sbx,
         const Box box3(low3, hi3);
         ParallelFor(box3, nspecies_g,
           [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-        { X_g(i,j,k,n) = p_mass_fractions[n]; });
+        { X_gk(i,j,k,n) = p_mass_fractions[n]; });
       }
     }
 
@@ -669,7 +734,7 @@ void set_ic_species_g (const Box& sbx,
 
       ParallelFor(box1, nspecies_g,
         [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-      { X_g(i,j,k,n) = p_mass_fractions[n]; });
+      { X_gk(i,j,k,n) = p_mass_fractions[n]; });
 
       if (slo[1] < domlo[1] and domlo[1] == jstart)
       {
@@ -677,7 +742,7 @@ void set_ic_species_g (const Box& sbx,
         const Box box2(low2, hi2);
         ParallelFor(box2, nspecies_g,
           [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-        { X_g(i,j,k,n) = p_mass_fractions[n]; });
+        { X_gk(i,j,k,n) = p_mass_fractions[n]; });
       }
 
       if (shi[1] > domhi[1] and domhi[1] == jend)
@@ -686,7 +751,7 @@ void set_ic_species_g (const Box& sbx,
         const Box box3(low3, hi3);
         ParallelFor(box3, nspecies_g,
           [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-        { X_g(i,j,k,n) = p_mass_fractions[n]; });
+        { X_gk(i,j,k,n) = p_mass_fractions[n]; });
       }
     }
 
@@ -695,7 +760,7 @@ void set_ic_species_g (const Box& sbx,
       const Box box1(low1, hi1);
       ParallelFor(box1, nspecies_g,
         [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-      { X_g(i,j,k,n) = p_mass_fractions[n]; });
+      { X_gk(i,j,k,n) = p_mass_fractions[n]; });
 
       if (slo[2] < domlo[2] and domlo[2] == kstart)
       {
@@ -704,7 +769,7 @@ void set_ic_species_g (const Box& sbx,
 
         ParallelFor(box2, nspecies_g,
           [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-        { X_g(i,j,k,n) = p_mass_fractions[n]; });
+        { X_gk(i,j,k,n) = p_mass_fractions[n]; });
       }
 
       if (shi[2] > domhi[2] and domhi[2] == kend)
@@ -714,7 +779,7 @@ void set_ic_species_g (const Box& sbx,
 
         ParallelFor(box3, nspecies_g,
           [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-        { X_g(i,j,k,n) = p_mass_fractions[n]; });
+        { X_gk(i,j,k,n) = p_mass_fractions[n]; });
       }
     }
 

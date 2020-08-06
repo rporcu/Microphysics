@@ -20,6 +20,13 @@ namespace MFHelpers
                                                  amrex::Real val,
                                                  int nGrow);
 
+    // Creates a copy of "mold" with nComp components, nGrow ghosts and
+    // initializes it to "val"
+    std::unique_ptr<amrex::MultiFab> createFrom (amrex::MultiFab& mold,
+                                                 amrex::Real val,
+                                                 int nGrow,
+                                                 int nComp);
+
     // Copies src to dst including all components and ghost cells
     void copy (amrex::MultiFab& dst, amrex::MultiFab& src);
 

@@ -5,17 +5,36 @@
 
 namespace SPECIES
 {
+  // List of recognized species diffusivity models
+  struct DIFFUSIVITYMODEL { enum {Invalid=-1, Constant}; };
 
-  enum SPECIESDIFFUSIVITYMODEL {ConstantSpeciesDiffusivity};
+  extern int DiffusivityModel;
+
+  // List of recognized species specific heat models
+  struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant}; };
+
+  extern int SpecificHeatModel;
+
+  // Flag to solve species equations
+  extern int solve;
 
   // Total number of species
   extern int nspecies;
 
-  // Species names
+  // Specified species names
   extern std::vector<std::string> species;
 
-  // Species diffusion coefficients
-  extern std::vector<amrex::Real> D_0;
+  // Specified species constant molecular weights
+  extern std::vector<amrex::Real> MW_k0;
+
+  // Specified species constant diffusion coefficients
+  extern std::vector<amrex::Real> D_k0;
+
+  // Flag to solve enthalpy species equation
+  extern int solve_enthalpy;
+
+  // Specified constant species specific heat
+  extern std::vector<amrex::Real> cp_k0;
 
   struct SPECIES_t {
 

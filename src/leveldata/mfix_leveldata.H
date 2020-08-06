@@ -37,6 +37,9 @@ class LevelData
     amrex::MultiFab* ro_g;
     amrex::MultiFab* ro_go;
 
+    // Gas molecular weight
+    amrex::MultiFab* MW_g;
+
     // Tracer in gas
     amrex::MultiFab* trac;
     amrex::MultiFab* trac_o;
@@ -71,11 +74,17 @@ class LevelData
     amrex::MultiFab* h_go;
 
     // Gas species
-    amrex::MultiFab* X_g;
-    amrex::MultiFab* X_go;
+    amrex::MultiFab* X_gk;
+    amrex::MultiFab* X_gko;
 
     // Species diffusion coefficients
-    amrex::MultiFab* D_g;
+    amrex::MultiFab* D_gk;
+
+    // Gas species enthalpy
+    amrex::MultiFab* cp_gk;
+
+    // Gas species enthalpy
+    amrex::MultiFab* h_gk;
 
     // Cell-based
     amrex::MultiFab* vort;

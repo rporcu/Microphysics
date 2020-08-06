@@ -58,13 +58,13 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   if (advect_enthalpy)
     mfix_set_temperature_bcs(time, get_T_g());
 
-  mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g());
+  mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g(), get_MW_g());
 
   if (advect_enthalpy)
     mfix_set_enthalpy_bcs(time, get_h_g());
 
   if (advect_fluid_species)
-    mfix_set_species_bcs(time, get_X_g(), get_D_g());
+    mfix_set_species_bcs(time, get_X_gk(), get_D_gk(), get_cp_gk(), get_h_gk());
 
   // Copy vel_g into vel_go
   for (int lev = 0; lev <= finest_level; lev++)
@@ -148,8 +148,8 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     if (advect_fluid_species) {
       for (int lev = 0; lev <= finest_level; lev++) {
         // Reset species to the old values
-        MultiFab::Copy(*m_leveldata[lev]->X_g, *m_leveldata[lev]->X_go, 0, 0,
-                        m_leveldata[lev]->X_g->nComp(), m_leveldata[lev]->X_g->nGrow());
+        MultiFab::Copy(*m_leveldata[lev]->X_gk, *m_leveldata[lev]->X_gko, 0, 0,
+                        m_leveldata[lev]->X_gk->nComp(), m_leveldata[lev]->X_gk->nGrow());
       }
     }
 
@@ -161,13 +161,13 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     if (advect_enthalpy)
       mfix_set_temperature_bcs(time, get_T_g());
 
-    mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g());
+    mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g(), get_MW_g());
 
     if (advect_enthalpy)
       mfix_set_enthalpy_bcs(time, get_h_g());
 
     if (advect_fluid_species)
-      mfix_set_species_bcs(time, get_X_g(), get_D_g());
+      mfix_set_species_bcs(time, get_X_gk(), get_D_gk(), get_cp_gk(), get_h_gk());
   }
 
   for (int lev = 0; lev <= finest_level; lev++)
