@@ -17,294 +17,302 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
 #define DO_VISMF 0
 
-  // We copy the value inside the domain to the outside to avoid
-  // unphysical volume fractions.
-  const int dir_bc_in = 2;
-  mfix_set_epg_bcs(ep_s_in, dir_bc_in);
-
   const amrex::Real covered_val = 9.8765e300;
 
   for( int lev(0); lev < nlev; lev ++)
   {
-    const int interp_comp = 4;  // Four components (3 grad_tau + 1 ep_s)
 
     const BoxArray&            pba = pc->ParticleBoxArray(lev);
     const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
     // Solids stress gradient. Note that it has an extra component to
     // store a copy of the solids volume fraction for interpolation.
-    MultiFab grad_tau;
-    grad_tau.define(pba, pdm, interp_comp, 1, MFInfo(), *particle_ebfactory[lev]);
-    grad_tau.setVal(0.0, 0, interp_comp, grad_tau.nGrow());
+    MultiFab Ps;
+    Ps.define(pba, pdm, 1, 1, MFInfo(), *particle_ebfactory[lev]);
+    Ps.setVal(-1.0e100, 0, 1, Ps.nGrow());
 
-    const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(grad_tau.Factory());
+    const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(Ps.Factory());
     const auto& flags = factory.getMultiEBCellFlagFab();
     const auto& cellcent = factory.getCentroid();
 
     const GpuArray<Real, AMREX_SPACEDIM> dx = geom[lev].CellSizeArray();
     const GpuArray<Real, AMREX_SPACEDIM> dxinv = geom[lev].InvCellSizeArray();
 
+    const Real Ps0 = PIC::Ps;
+    const Real beta = PIC::beta;
+    const Real ep_cp = PIC::ep_cp;
+    const Real small_number = PIC::small_number;
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(grad_tau, TilingIfNotGPU()); mfi.isValid(); ++mfi)
+    for (MFIter mfi(Ps, TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
       // Tilebox
       const Box& bx = mfi.tilebox();
 
       Array4<const Real> const& ep_s_arr = ep_s_in[lev]->const_array(mfi);
-      Array4<Real> const& grad_tau_arr = grad_tau.array(mfi);
-
-      const Real Ps = PIC::Ps;
-      const Real beta = PIC::beta;
-      const Real ep_cp = PIC::ep_cp;
-      const Real small_number = PIC::small_number;
-
-      // const auto& area  = particle_ebfactory.getAreaFrac();
+      Array4<      Real> const& Ps_arr   = Ps.array(mfi);
 
 
       const auto& flagfab = flags[mfi];
 
       // Fully covered FAB
-      if (flagfab.getType(amrex::grow(bx,0)) == FabType::covered )
-      {
-        amrex::ParallelFor(bx,[grad_tau_arr, covered_val]
+      if (flagfab.getType(amrex::grow(bx,0)) == FabType::covered ) {
+        amrex::ParallelFor(bx,[Ps_arr]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-           grad_tau_arr(i,j,k,0) = covered_val;
-           grad_tau_arr(i,j,k,1) = covered_val;
-           grad_tau_arr(i,j,k,2) = covered_val;
-           grad_tau_arr(i,j,k,3) = covered_val;
+           Ps_arr(i,j,k) = 0.0;
         });
-      }
 
-      // No cut cells in this FAB
-      else if (flagfab.getType(amrex::grow(bx,1)) == FabType::regular )
-      {
+      } else if (flagfab.getType(amrex::grow(bx,1)) == FabType::regular ) {
 
         amrex::ParallelFor(bx,
-          [ep_s_arr,grad_tau_arr,Ps,beta,ep_cp,small_number,dxinv]
+          [ep_s_arr,Ps_arr,Ps0,beta,ep_cp,small_number]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
 
-          grad_tau_arr(i,j,k,3) = ep_s_arr(i,j,k);
-
-          amrex::Real tau_lo;
-          amrex::Real tau_hi;
-
-          // x-direction
-          tau_lo = solids_pressure(Ps, beta, ep_cp, small_number, ep_s_arr(i-1,j  ,k  ));
-          tau_hi = solids_pressure(Ps, beta, ep_cp, small_number, ep_s_arr(i+1,j  ,k  ));
-
-          grad_tau_arr(i,j,k,0) = 0.5 * dxinv[0] * (tau_hi - tau_lo);
-
-          // Y-direction
-          tau_lo = solids_pressure(Ps, beta, ep_cp, small_number, ep_s_arr(i  ,j-1,k  ));
-          tau_hi = solids_pressure(Ps, beta, ep_cp, small_number, ep_s_arr(i  ,j+1,k  ));
-
-          grad_tau_arr(i,j,k,1) = 0.5 * dxinv[1] * (tau_hi - tau_lo);
-
-          // Z-direction
-          tau_lo = solids_pressure(Ps, beta, ep_cp, small_number, ep_s_arr(i  ,j  ,k-1));
-          tau_hi = solids_pressure(Ps, beta, ep_cp, small_number, ep_s_arr(i  ,j  ,k+1));
-
-          grad_tau_arr(i,j,k,2) = 0.5 * dxinv[2] * (tau_hi - tau_lo);
+          Ps_arr(i,j,k) = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
 
         });
 
-      }
-
-      // A mix of regular and cut cells
-      else
-      {
+      } else {
         const auto& flagsarr = flagfab.array();
-        Array4<Real const> const& ccent = cellcent.const_array(mfi);
 
         amrex::ParallelFor(bx,
-          [ep_s_arr,grad_tau_arr,Ps,beta,ep_cp,small_number,flagsarr,
-          covered_val,ccent,dx, dxinv]
+          [ep_s_arr,Ps_arr,Ps0,beta,ep_cp,small_number,flagsarr]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          if (flagsarr(i,j,k).isCovered())
-          {
-            grad_tau_arr(i,j,k,0) = covered_val;
-            grad_tau_arr(i,j,k,1) = covered_val;
-            grad_tau_arr(i,j,k,2) = covered_val;
-            grad_tau_arr(i,j,k,3) = covered_val;
-          }
-          else
-          {
+          if (flagsarr(i,j,k).isCovered()) {
+            Ps_arr(i,j,k) = 0.0;
 
-            grad_tau_arr(i,j,k,3) = ep_s_arr(i,j,k);
+          } else {
 
-            amrex::IntVect do_least_squares = {0,0,0};
+            Ps_arr(i,j,k) = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
 
-            if (flagsarr(i,j,k).isSingleValued()) {
-              do_least_squares = {1,1,1};
-
-            } else {
-              // Checking x-dir
-              if (not flagsarr(i,j,k).isConnected(-1,0,0) or flagsarr(i-1,j  ,k  ).isSingleValued() or
-                  not flagsarr(i,j,k).isConnected( 1,0,0) or flagsarr(i+1,j  ,k  ).isSingleValued()) {
-                do_least_squares[0] = 1;
-
-              } else {
-
-                const amrex::Real tau_lo = solids_pressure(Ps, beta, ep_cp, small_number, ep_s_arr(i-1,j  ,k  ));
-                const amrex::Real tau_hi = solids_pressure(Ps, beta, ep_cp, small_number, ep_s_arr(i+1,j  ,k  ));
-
-                grad_tau_arr(i,j,k,0) = 0.5 * dxinv[0] * (tau_hi - tau_lo);
-              }
-
-              // Checking y-dir
-              if (not flagsarr(i,j,k).isConnected(0,-1,0) or flagsarr(i  ,j-1,k  ).isSingleValued() or
-                  not flagsarr(i,j,k).isConnected(0, 1,0) or flagsarr(i  ,j+1,k  ).isSingleValued()) {
-                do_least_squares[1] = 1;
-
-              } else {
-
-                const amrex::Real tau_lo = solids_pressure(Ps, beta, ep_cp, small_number, ep_s_arr(i  ,j-1,k  ));
-                const amrex::Real tau_hi = solids_pressure(Ps, beta, ep_cp, small_number, ep_s_arr(i  ,j+1,k  ));
-
-                grad_tau_arr(i,j,k,1) = 0.5 * dxinv[1] * (tau_hi - tau_lo);
-              }
-
-              // Checking z-dir
-              if (not flagsarr(i,j,k).isConnected(0,0,-1) or flagsarr(i  ,j  ,k-1).isSingleValued() or
-                  not flagsarr(i,j,k).isConnected(0,0, 1) or flagsarr(i  ,j  ,k+1).isSingleValued()) {
-                do_least_squares[2] = 1;
-
-              } else {
-
-                const amrex::Real tau_lo = solids_pressure(Ps, beta, ep_cp, small_number, ep_s_arr(i  ,j  ,k-1));
-                const amrex::Real tau_hi = solids_pressure(Ps, beta, ep_cp, small_number, ep_s_arr(i  ,j  ,k+1));
-
-                grad_tau_arr(i,j,k,2) = 0.5 * dxinv[2] * (tau_hi - tau_lo);
-              }
-            }
-
-            if( do_least_squares[0] == 1 or
-                do_least_squares[1] == 1 or
-                do_least_squares[2] == 1 ) {
-
-              GpuArray< GpuArray <Real, 3>, 27> A;
-              GpuArray< Real, 27> du;
-
-              {
-                const amrex::Real tau_lo = solids_pressure(Ps, beta, ep_cp, small_number, ep_s_arr(i,j,k));
-
-                int lc=0;
-                for(int kk(-1); kk<=1; kk++){
-                  for(int jj(-1); jj<=1; jj++){
-                    for(int ii(-1); ii<=1; ii++){
-                      if( flagsarr(i,j,k).isConnected(ii,jj,kk) ) {
-
-                        A[lc][0] = (ii + ccent(i+ii,j+jj,k+kk,0) - ccent(i,j,k,0))*dx[0];
-                        A[lc][1] = (jj + ccent(i+ii,j+jj,k+kk,1) - ccent(i,j,k,1))*dx[1];
-                        A[lc][2] = (kk + ccent(i+ii,j+jj,k+kk,2) - ccent(i,j,k,2))*dx[2];
-
-                        const amrex::Real tau_hi = solids_pressure(Ps, beta, ep_cp,
-                            small_number, ep_s_arr(i+ii,j+jj,k+kk));
-
-                        du[lc] = tau_hi - tau_lo;
-
-                      } else {
-
-                        A[lc][0] = 0.0;
-                        A[lc][1] = 0.0;
-                        A[lc][2] = 0.0;
-
-                        du[lc] = 0.0;
-                      }
-
-                      lc++;
-                    }
-                  }
-                }
-              }
-
-              GpuArray< GpuArray< Real, 3>, 3> AtA;
-              GpuArray< Real, 3> Atb;
-
-              for(int jj(0); jj<3; ++jj){
-                for(int ii(0); ii<3; ++ii){
-                  AtA[ii][jj] = 0.0;
-                }
-                Atb[jj] = 0.0;
-              }
-
-              for(int lc(0); lc<27; ++lc){
-                AtA[0][0] += A[lc][0]* A[lc][0];
-                AtA[0][1] += A[lc][0]* A[lc][1];
-                AtA[0][2] += A[lc][0]* A[lc][2];
-                AtA[1][1] += A[lc][1]* A[lc][1];
-                AtA[1][2] += A[lc][1]* A[lc][2];
-                AtA[2][2] += A[lc][2]* A[lc][2];
-
-                Atb[0] += A[lc][0]*du[lc];
-                Atb[1] += A[lc][1]*du[lc];
-                Atb[2] += A[lc][2]*du[lc];
-              }
-
-              // Fill in symmetric
-              AtA[1][0] = AtA[0][1];
-              AtA[2][0] = AtA[0][2];
-              AtA[2][1] = AtA[1][2];
-
-              const amrex::Real detAtA =
-                AtA[0][0]*(AtA[1][1]*AtA[2][2] - AtA[1][2]*AtA[1][2]) -
-                AtA[0][1]*(AtA[1][0]*AtA[2][2] - AtA[1][2]*AtA[2][0]) +
-                AtA[0][2]*(AtA[1][0]*AtA[2][1] - AtA[1][1]*AtA[2][0]);
-
-              AMREX_ASSERT_WITH_MESSAGE(detAtA > 0.,
-                "Negative determinate in solids stress term");
-
-              if( do_least_squares[0] == 1 ) {
-
-                const amrex::Real detAtA_x =
-                  Atb[0]   *(AtA[1][1]*AtA[2][2] - AtA[1][2]*AtA[1][2]) -
-                  AtA[0][1]*(Atb[1] *  AtA[2][2] - AtA[1][2]*Atb[2]   ) +
-                  AtA[0][2]*(Atb[1] *  AtA[2][1] - AtA[1][1]*Atb[2]   );
-
-                grad_tau_arr(i,j,k,0) = detAtA_x / detAtA;
-              }
-
-              if( do_least_squares[1] == 1 ) {
-
-                amrex::Real detAtA_y =
-                  AtA[0][0]*(Atb[1]  * AtA[2][2] - AtA[1][2]*Atb[2]   ) -
-                  Atb[0] *  (AtA[1][0]*AtA[2][2] - AtA[1][2]*AtA[2][0]) +
-                  AtA[0][2]*(AtA[1][0]*Atb[2]    - Atb[1]   *AtA[2][0]);
-
-                grad_tau_arr(i,j,k,1) = detAtA_y / detAtA;
-              }
-
-              if( do_least_squares[2] == 1 ) {
-
-                amrex::Real detAtA_z =
-                  AtA[0][0]*(AtA[1][1]*Atb[2]    - Atb[1]   *AtA[1][2]) -
-                  AtA[0][1]*(AtA[1][0]*Atb[2]    - Atb[1]   *AtA[2][0]) +
-                  Atb[0]   *(AtA[1][0]*AtA[2][1] - AtA[1][1]*AtA[2][0]);
-
-                grad_tau_arr(i,j,k,2) = detAtA_z / detAtA;
-              }
-
-            } // do least squares
           }
         });
       }
     }
 
-    grad_tau.FillBoundary(geom[lev].periodicity());
+    // Set all values outside the domain to a crazy value to make
+    // catching errors easier to find.
+    Ps.setDomainBndry(-2.0e100,geom[lev]);
+
+    // Calculate the pressure in flow boundary cells. This is needed
+    // for inflow faces that may need to support the weight of the bed.
+
+    Box domain(geom[lev].Domain());
+
+    IntVect dom_lo(domain.loVect());
+    IntVect dom_hi(domain.hiVect());
+
+    for (MFIter mfi(Ps, TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+
+      Array4<Real> const& ep_s_arr = ep_s_in[lev]->array(mfi);
+      Array4<Real> const& Ps_arr = Ps.array(mfi);
+
+      IntVect ps_lo(Ps[mfi].loVect());
+      IntVect ps_hi(Ps[mfi].hiVect());
+
+      const Box ps_bx(ps_lo, ps_hi);
+
+      Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
+      Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
+      Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
+      Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
+      Array4<const int> const& bct_klo = bc_klo[lev]->array();
+      Array4<const int> const& bct_khi = bc_khi[lev]->array();
+
+      const int nlft = amrex::max(0, dom_lo[0]-ps_lo[0]);
+      const int nbot = amrex::max(0, dom_lo[1]-ps_lo[1]);
+      const int ndwn = amrex::max(0, dom_lo[2]-ps_lo[2]);
+
+      const int nrgt = amrex::max(0, ps_hi[0]-dom_hi[0]);
+      const int ntop = amrex::max(0, ps_hi[1]-dom_hi[1]);
+      const int nup  = amrex::max(0, ps_hi[2]-dom_hi[2]);
+
+      // Create InVects for following 2D Boxes
+      IntVect bx_yz_lo_lo_2D(ps_lo), bx_yz_lo_hi_2D(ps_hi);
+      IntVect bx_yz_hi_lo_2D(ps_lo), bx_yz_hi_hi_2D(ps_hi);
+      IntVect bx_xz_lo_lo_2D(ps_lo), bx_xz_lo_hi_2D(ps_hi);
+      IntVect bx_xz_hi_lo_2D(ps_lo), bx_xz_hi_hi_2D(ps_hi);
+      IntVect bx_xy_lo_lo_2D(ps_lo), bx_xy_lo_hi_2D(ps_hi);
+      IntVect bx_xy_hi_lo_2D(ps_lo), bx_xy_hi_hi_2D(ps_hi);
+
+      // Fix lo and hi limits
+      bx_yz_lo_lo_2D[0] = dom_lo[0]-1;
+      bx_yz_lo_hi_2D[0] = dom_lo[0]-1;
+      bx_yz_hi_lo_2D[0] = dom_hi[0]+1;
+      bx_yz_hi_hi_2D[0] = dom_hi[0]+1;
+
+      bx_xz_lo_lo_2D[1] = dom_lo[1]-1;
+      bx_xz_lo_hi_2D[1] = dom_lo[1]-1;
+      bx_xz_hi_lo_2D[1] = dom_hi[1]+1;
+      bx_xz_hi_hi_2D[1] = dom_hi[1]+1;
+
+      bx_xy_lo_lo_2D[2] = dom_lo[2]-1;
+      bx_xy_lo_hi_2D[2] = dom_lo[2]-1;
+      bx_xy_hi_lo_2D[2] = dom_hi[2]+1;
+      bx_xy_hi_hi_2D[2] = dom_hi[2]+1;
+
+      // Create 2D boxes for GPU loops
+      const Box bx_yz_lo_2D(bx_yz_lo_lo_2D, bx_yz_lo_hi_2D);
+      const Box bx_yz_hi_2D(bx_yz_hi_lo_2D, bx_yz_hi_hi_2D);
+
+      const Box bx_xz_lo_2D(bx_xz_lo_lo_2D, bx_xz_lo_hi_2D);
+      const Box bx_xz_hi_2D(bx_xz_hi_lo_2D, bx_xz_hi_hi_2D);
+
+      const Box bx_xy_lo_2D(bx_xy_lo_lo_2D, bx_xy_lo_hi_2D);
+      const Box bx_xy_hi_2D(bx_xy_hi_lo_2D, bx_xy_hi_hi_2D);
+
+      const int minf = bc_list.get_minf();
+      const int pinf = bc_list.get_pinf();
+      const int pout = bc_list.get_pout();
 
 
-#if DO_VISMF > 0
-    {
-      EB_set_covered(grad_tau, 0, 4, 1, 0.0);
-      const std::string& tfile = "grad_tau";
-      VisMF::Write(grad_tau, tfile);
+      if (nlft > 0) {
+
+        amrex::ParallelFor(bx_yz_lo_2D,
+        [bct_ilo,dom_lo,minf,pinf,pout,Ps_arr,ep_s_arr,
+         Ps0,beta,ep_cp, small_number]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+
+          const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
+
+          if((bct == pinf) or (bct == pout) or (bct == minf)){
+
+            const amrex::Real ep_s_extrap = 2.0*ep_s_arr(dom_lo[0],j,k) - ep_s_arr(dom_lo[0]+1,j,k);
+
+            ep_s_arr(i,j,k) = amrex::max(0.0,
+                              amrex::min(ep_s_extrap,
+                              amrex::max(ep_cp,ep_s_arr(dom_lo[0],j,k))));
+
+            Ps_arr(i,j,k) = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
+
+          }
+        });
+      } // nlft
+
+
+      if (nrgt > 0) {
+
+        amrex::ParallelFor(bx_yz_hi_2D,
+        [bct_ihi,dom_hi,minf,pinf,pout,Ps_arr,ep_s_arr,
+         Ps0,beta,ep_cp,small_number]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+
+          const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
+
+          if((bct == pinf) or (bct == pout) or (bct == minf)){
+            const amrex::Real ep_s_extrap = 2.0*ep_s_arr(dom_hi[0],j,k) - ep_s_arr(dom_hi[0]-1,j,k);
+
+            ep_s_arr(i,j,k) = amrex::max(0.0,
+                              amrex::min(ep_s_extrap,
+                              amrex::max(ep_cp,ep_s_arr(dom_hi[0],j,k))));
+
+            Ps_arr(i,j,k) = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
+          }
+        });
+      } // nrgt
+
+
+      if (nbot > 0) {
+
+        amrex::ParallelFor(bx_xz_lo_2D,
+        [bct_jlo,dom_lo,minf,pinf,pout,Ps_arr,ep_s_arr,
+         Ps0,beta,ep_cp, small_number]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+
+          const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
+
+          if((bct == pinf) or (bct == pout) or (bct == minf)){
+
+            const amrex::Real ep_s_extrap = 2.0*ep_s_arr(i,dom_lo[1],k) - ep_s_arr(i,dom_lo[1]+1,k);
+
+            ep_s_arr(i,j,k) = amrex::max(0.0,
+                              amrex::min(ep_s_extrap,
+                              amrex::max(ep_cp,ep_s_arr(i,dom_lo[1],k))));
+
+            Ps_arr(i,j,k) = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
+
+          }
+        });
+      } // nbot
+
+
+      if (ntop > 0) {
+
+        amrex::ParallelFor(bx_xz_hi_2D,
+        [bct_jhi,dom_hi,minf,pinf,pout,Ps_arr,ep_s_arr,
+         Ps0,beta,ep_cp,small_number]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+
+          const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
+
+          if((bct == pinf) or (bct == pout) or (bct == minf)){
+            const amrex::Real ep_s_extrap = 2.0*ep_s_arr(i,dom_hi[1],k) - ep_s_arr(i,dom_hi[1]-1,k);
+
+            ep_s_arr(i,j,k) = amrex::max(0.0,
+                              amrex::min(ep_s_extrap,
+                              amrex::max(ep_cp,ep_s_arr(i,dom_hi[1],k))));
+
+            Ps_arr(i,j,k) = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
+          }
+        });
+      } // ntop
+
+
+      if (ndwn > 0) {
+
+        amrex::ParallelFor(bx_xy_lo_2D,
+        [bct_klo,dom_lo,minf,pinf,pout,Ps_arr,ep_s_arr,
+         Ps0,beta,ep_cp, small_number]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+
+          const int bct = bct_klo(i,j,dom_lo[2]-1,0);
+
+          if((bct == pinf) or (bct == pout) or (bct == minf)){
+
+            const amrex::Real ep_s_extrap = 2.0*ep_s_arr(i,j,dom_lo[2]) - ep_s_arr(i,j,dom_lo[2]+1);
+
+            ep_s_arr(i,j,k) = amrex::max(0.0,
+                              amrex::min(ep_s_extrap,
+                              amrex::max(ep_cp,ep_s_arr(i,j,dom_lo[2]))));
+
+            Ps_arr(i,j,k) = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
+
+          }
+        });
+      } // ndwn
+
+
+      if (nup  > 0) {
+
+        amrex::ParallelFor(bx_xy_hi_2D,
+        [bct_khi,dom_hi,minf,pinf,pout,Ps_arr,ep_s_arr,
+         Ps0,beta,ep_cp,small_number]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+
+          const int bct = bct_khi(i,j,dom_hi[2]+1,0);
+
+          if((bct == pinf) or (bct == pout) or (bct == minf)){
+            const amrex::Real ep_s_extrap = 2.0*ep_s_arr(i,j,dom_hi[2]) - ep_s_arr(i,j,dom_hi[2]-1);
+
+            ep_s_arr(i,j,k) = amrex::max(0.0,
+                              amrex::min(ep_s_extrap,
+                              amrex::max(ep_cp,ep_s_arr(i,j,dom_hi[2]))));
+
+            Ps_arr(i,j,k) = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
+          }
+        });
+      } // nup
+
     }
-#endif
+
+    Ps.FillBoundary(geom[lev].periodicity());
+
+
 
     // We now have the solids stress on the field. We now need to interpolate
     // this to the parcel positions. We are going to store this for the
@@ -321,7 +329,6 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
       const auto dxi_array = geom[lev].InvCellSizeArray();
       const auto plo_array = geom[lev].ProbLoArray();
 
-      const amrex::RealVect dxv(dx_array[0], dx_array[1], dx_array[2]);
       const amrex::RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
       const amrex::RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
 
@@ -342,7 +349,8 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
         const EBFArrayBox&  ep_s_fab = static_cast<EBFArrayBox const&>((*ep_s_in[lev])[pti]);
         const EBCellFlagFab&  flags = ep_s_fab.getEBCellFlagFab();
 
-        const auto& grad_tau_array = grad_tau.const_array(pti);
+        Array4<const Real> const& ep_s_arr = ep_s_in[lev]->const_array(pti);
+        Array4<const Real> const& Ps_arr   = Ps.array(pti);
         const auto& flags_array = flags.array();
 
         if (flags.getType(amrex::grow(bx,1)) == FabType::covered)
@@ -360,67 +368,109 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
         }
         else if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
         {
-          amrex::ParallelFor(np,
-            [pstruct,grad_tau_array,plo,dxi]
+          amrex::ParallelFor(np, [pstruct,ep_s_arr,Ps_arr,plo,dxi]
             AMREX_GPU_DEVICE (int ip) noexcept
           {
 
             MFIXParticleContainer::ParticleType& particle = pstruct[ip];
 
-            // Local array storing interpolated values
-            GpuArray<Real, interp_comp> interp_loc;
+            const amrex::Real lx = (particle.pos(0) - plo[0]) * dxi[0] + 0.5;
+            const amrex::Real ly = (particle.pos(1) - plo[1]) * dxi[1] + 0.5;
+            const amrex::Real lz = (particle.pos(2) - plo[2]) * dxi[2] + 0.5;
 
-            // Remember we cheated an stored ep_s as a 4th component
-            trilinear_interp(particle.pos(), interp_loc.data(),
-              grad_tau_array, plo, dxi, interp_comp);
+            const int i = static_cast<int>(amrex::Math::floor(lx));
+            const int j = static_cast<int>(amrex::Math::floor(ly));
+            const int k = static_cast<int>(amrex::Math::floor(lz));
 
-            const Real ep_s_loc = interp_loc[3];
+            const amrex::Real wx_hi(lx - static_cast<amrex::Real>(i));
+            const amrex::Real wy_hi(ly - static_cast<amrex::Real>(j));
+            const amrex::Real wz_hi(lz - static_cast<amrex::Real>(k));
+
+            const amrex::Real wx_lo(1.0 - wx_hi);
+            const amrex::Real wy_lo(1.0 - wy_hi);
+            const amrex::Real wz_lo(1.0 - wz_hi);
+
+            AMREX_ASSERT(ep_s_arr(i-1,j-1, k-1) >= 0.);
+            AMREX_ASSERT(ep_s_arr(i-1,j-1, k  ) >= 0.);
+            AMREX_ASSERT(ep_s_arr(i-1,j  , k-1) >= 0.);
+            AMREX_ASSERT(ep_s_arr(i-1,j  , k  ) >= 0.);
+            AMREX_ASSERT(ep_s_arr(i  ,j-1, k-1) >= 0.);
+            AMREX_ASSERT(ep_s_arr(i  ,j-1, k  ) >= 0.);
+            AMREX_ASSERT(ep_s_arr(i  ,j  , k-1) >= 0.);
+            AMREX_ASSERT(ep_s_arr(i  ,j  , k  ) >= 0.);
+
+            AMREX_ASSERT(Ps_arr(i-1,j-1, k-1) >= 0.);
+            AMREX_ASSERT(Ps_arr(i-1,j-1, k  ) >= 0.);
+            AMREX_ASSERT(Ps_arr(i-1,j  , k-1) >= 0.);
+            AMREX_ASSERT(Ps_arr(i-1,j  , k  ) >= 0.);
+            AMREX_ASSERT(Ps_arr(i  ,j-1, k-1) >= 0.);
+            AMREX_ASSERT(Ps_arr(i  ,j-1, k  ) >= 0.);
+            AMREX_ASSERT(Ps_arr(i  ,j  , k-1) >= 0.);
+            AMREX_ASSERT(Ps_arr(i  ,j  , k  ) >= 0.);
+
+            const Real ep_s_loc =
+              + wx_lo*wy_lo*wz_lo*ep_s_arr(i-1,j-1, k-1)
+              + wx_lo*wy_lo*wz_hi*ep_s_arr(i-1,j-1, k  )
+              + wx_lo*wy_hi*wz_lo*ep_s_arr(i-1,j  , k-1)
+              + wx_lo*wy_hi*wz_hi*ep_s_arr(i-1,j  , k  )
+              + wx_hi*wy_lo*wz_lo*ep_s_arr(i  ,j-1, k-1)
+              + wx_hi*wy_lo*wz_hi*ep_s_arr(i  ,j-1, k  )
+              + wx_hi*wy_hi*wz_lo*ep_s_arr(i  ,j  , k-1)
+              + wx_hi*wy_hi*wz_hi*ep_s_arr(i  ,j  , k  );
+
+            const Real dPsdx = dxi[0]*(
+              - wy_lo*wz_lo*Ps_arr(i-1,j-1, k-1)
+              - wy_lo*wz_hi*Ps_arr(i-1,j-1, k  )
+              - wy_hi*wz_lo*Ps_arr(i-1,j  , k-1)
+              - wy_hi*wz_hi*Ps_arr(i-1,j  , k  )
+              + wy_lo*wz_lo*Ps_arr(i  ,j-1, k-1)
+              + wy_lo*wz_hi*Ps_arr(i  ,j-1, k  )
+              + wy_hi*wz_lo*Ps_arr(i  ,j  , k-1)
+              + wy_hi*wz_hi*Ps_arr(i  ,j  , k  ));
+
+            const Real dPsdy = dxi[1]*(
+              - wx_lo*wz_lo*Ps_arr(i-1,j-1, k-1)
+              - wx_lo*wz_hi*Ps_arr(i-1,j-1, k  )
+              + wx_lo*wz_lo*Ps_arr(i-1,j  , k-1)
+              + wx_lo*wz_hi*Ps_arr(i-1,j  , k  )
+              - wx_hi*wz_lo*Ps_arr(i  ,j-1, k-1)
+              - wx_hi*wz_hi*Ps_arr(i  ,j-1, k  )
+              + wx_hi*wz_lo*Ps_arr(i  ,j  , k-1)
+              + wx_hi*wz_hi*Ps_arr(i  ,j  , k  ));
+
+            const Real dPsdz = dxi[2]*(
+              - wx_lo*wy_lo*Ps_arr(i-1,j-1, k-1)
+              + wx_lo*wy_lo*Ps_arr(i-1,j-1, k  )
+              - wx_lo*wy_hi*Ps_arr(i-1,j  , k-1)
+              + wx_lo*wy_hi*Ps_arr(i-1,j  , k  )
+              - wx_hi*wy_lo*Ps_arr(i  ,j-1, k-1)
+              + wx_hi*wy_lo*Ps_arr(i  ,j-1, k  )
+              - wx_hi*wy_hi*Ps_arr(i  ,j  , k-1)
+              + wx_hi*wy_hi*Ps_arr(i  ,j  , k  ));
+
 
             // Store local solids volume fraction in unused array location.
             particle.rdata(realData::oneOverI) = ep_s_loc;
 
-            if(ep_s_loc > 1.e-4) {
+            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_loc >= 0.,"Check valid ep_s_loc");
 
-              const amrex::Real inv_rops = 1.0 / (ep_s_loc*particle.rdata(realData::density));
-
-              particle.rdata(realData::omegax) = interp_loc[0]*inv_rops;
-              particle.rdata(realData::omegay) = interp_loc[1]*inv_rops;
-              particle.rdata(realData::omegaz) = interp_loc[2]*inv_rops;
-
-            } else {
-
-              particle.rdata(realData::omegax) = 0.0;
-              particle.rdata(realData::omegay) = 0.0;
-              particle.rdata(realData::omegaz) = 0.0;
-
-            }
+            particle.rdata(realData::omegax) = dPsdx;
+            particle.rdata(realData::omegay) = dPsdy;
+            particle.rdata(realData::omegaz) = dPsdz;
 
           });
         }
         else // FAB not all regular
         {
 
-          // Cell centroids
-          const auto& ccent_fab = cellcent->array(pti);
-          // Centroid of EB
-          const auto& bcent_fab = bndrycent->array(pti);
-          // Area fractions
-          const auto& apx_fab = areafrac[0]->array(pti);
-          const auto& apy_fab = areafrac[1]->array(pti);
-          const auto& apz_fab = areafrac[2]->array(pti);
-
-
           amrex::ParallelFor(np,
-            [pstruct,grad_tau_array,flags_array,plo,dxi,dxv,ccent_fab,
-             bcent_fab, apx_fab, apy_fab, apz_fab]
-            AMREX_GPU_DEVICE (int pid) noexcept
+          [pstruct,flags_array,ep_s_arr,Ps_arr,plo,dxi,
+           Ps0,beta,ep_cp,small_number]
+          AMREX_GPU_DEVICE (int pid) noexcept
           {
-            // Local array storing interpolated values
-            GpuArray<Real, interp_comp> interp_loc;
 
             MFIXParticleContainer::ParticleType& particle = pstruct[pid];
 
-            // Cell containing particle centroid
             const int ip = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0]));
             const int jp = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1]));
             const int kp = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2]));
@@ -436,52 +486,229 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
             //      because of the diagonal case)
             } else {
 
+              const amrex::Real lx = (particle.pos(0) - plo[0]) * dxi[0] + 0.5;
+              const amrex::Real ly = (particle.pos(1) - plo[1]) * dxi[1] + 0.5;
+              const amrex::Real lz = (particle.pos(2) - plo[2]) * dxi[2] + 0.5;
+
               // Upper cell in trilinear stencil
-              const int i = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0] + 0.5));
-              const int j = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1] + 0.5));
-              const int k = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5));
+              const int i = static_cast<int>(amrex::Math::floor(lx));
+              const int j = static_cast<int>(amrex::Math::floor(ly));
+              const int k = static_cast<int>(amrex::Math::floor(lz));
 
-              // All cells in the stencil are regular. Use
-              // traditional trilinear interpolation
-              if (flags_array(i-1,j-1,k-1).isRegular() and
-                  flags_array(i  ,j-1,k-1).isRegular() and
-                  flags_array(i-1,j  ,k-1).isRegular() and
-                  flags_array(i  ,j  ,k-1).isRegular() and
-                  flags_array(i-1,j-1,k  ).isRegular() and
-                  flags_array(i  ,j-1,k  ).isRegular() and
-                  flags_array(i-1,j  ,k  ).isRegular() and
-                  flags_array(i  ,j  ,k  ).isRegular()) {
+              const int di = i - ip; // 0 or 1
+              const int dj = j - jp; // 0 or 1
+              const int dk = k - kp; // 0 or 1
 
-                  trilinear_interp(particle.pos(), interp_loc.data(),
-                                    grad_tau_array, plo, dxi, interp_comp);
+              amrex::Real ep_s_loc;
 
-              // At least one of the cells in the stencil is cut or covered
+              amrex::Real dPsdx;
+              amrex::Real dPsdy;
+              amrex::Real dPsdz;
+
+              // Check that all the cells in the stencil are connected to the
+              // that contains the parcels centroid. We don't need to check
+              // cell (ip,jp,kp) as we've already tested if it is covered.
+
+              if (flags_array(ip,jp,kp).isConnected(di-1,dj-1,dk-1) and
+                  flags_array(ip,jp,kp).isConnected(di  ,dj-1,dk-1) and
+                  flags_array(ip,jp,kp).isConnected(di-1,dj  ,dk-1) and
+                  flags_array(ip,jp,kp).isConnected(di  ,dj  ,dk-1) and
+                  flags_array(ip,jp,kp).isConnected(di-1,dj-1,dk  ) and
+                  flags_array(ip,jp,kp).isConnected(di  ,dj-1,dk  ) and
+                  flags_array(ip,jp,kp).isConnected(di-1,dj  ,dk  ) and
+                  flags_array(ip,jp,kp).isConnected(di  ,dj  ,dk  )) {
+
+                // After sufficient testing, these should be changed to
+                // standard AMREX_ASSERT checks
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i-1,j-1, k-1) >= 0.,"Check valid ep_s A");
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i-1,j-1, k  ) >= 0.,"Check valid ep_s B");
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i-1,j  , k-1) >= 0.,"Check valid ep_s C");
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i-1,j  , k  ) >= 0.,"Check valid ep_s D");
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i  ,j-1, k-1) >= 0.,"Check valid ep_s E");
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i  ,j-1, k  ) >= 0.,"Check valid ep_s F");
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i  ,j  , k-1) >= 0.,"Check valid ep_s G");
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i  ,j  , k  ) >= 0.,"Check valid ep_s H");
+
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i-1,j-1, k-1) >= 0.,"Check valid Ps A");
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i-1,j-1, k  ) >= 0.,"Check valid Ps B");
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i-1,j  , k-1) >= 0.,"Check valid Ps C");
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i-1,j  , k  ) >= 0.,"Check valid Ps D");
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i  ,j-1, k-1) >= 0.,"Check valid Ps E");
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i  ,j-1, k  ) >= 0.,"Check valid Ps F");
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i  ,j  , k-1) >= 0.,"Check valid Ps G");
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i  ,j  , k  ) >= 0.,"Check valid Ps H");
+
+                const amrex::Real wx_hi(lx - static_cast<amrex::Real>(i));
+                const amrex::Real wy_hi(ly - static_cast<amrex::Real>(j));
+                const amrex::Real wz_hi(lz - static_cast<amrex::Real>(k));
+
+                const amrex::Real wx_lo(1.0 - wx_hi);
+                const amrex::Real wy_lo(1.0 - wy_hi);
+                const amrex::Real wz_lo(1.0 - wz_hi);
+
+                ep_s_loc =
+                  + wx_lo*wy_lo*wz_lo*ep_s_arr(i-1,j-1, k-1)
+                  + wx_lo*wy_lo*wz_hi*ep_s_arr(i-1,j-1, k  )
+                  + wx_lo*wy_hi*wz_lo*ep_s_arr(i-1,j  , k-1)
+                  + wx_lo*wy_hi*wz_hi*ep_s_arr(i-1,j  , k  )
+                  + wx_hi*wy_lo*wz_lo*ep_s_arr(i  ,j-1, k-1)
+                  + wx_hi*wy_lo*wz_hi*ep_s_arr(i  ,j-1, k  )
+                  + wx_hi*wy_hi*wz_lo*ep_s_arr(i  ,j  , k-1)
+                  + wx_hi*wy_hi*wz_hi*ep_s_arr(i  ,j  , k  );
+
+                dPsdx = dxi[0]*(
+                  - wy_lo*wz_lo*Ps_arr(i-1,j-1, k-1)
+                  - wy_lo*wz_hi*Ps_arr(i-1,j-1, k  )
+                  - wy_hi*wz_lo*Ps_arr(i-1,j  , k-1)
+                  - wy_hi*wz_hi*Ps_arr(i-1,j  , k  )
+                  + wy_lo*wz_lo*Ps_arr(i  ,j-1, k-1)
+                  + wy_lo*wz_hi*Ps_arr(i  ,j-1, k  )
+                  + wy_hi*wz_lo*Ps_arr(i  ,j  , k-1)
+                  + wy_hi*wz_hi*Ps_arr(i  ,j  , k  ));
+
+                dPsdy = dxi[1]*(
+                  - wx_lo*wz_lo*Ps_arr(i-1,j-1, k-1)
+                  - wx_lo*wz_hi*Ps_arr(i-1,j-1, k  )
+                  + wx_lo*wz_lo*Ps_arr(i-1,j  , k-1)
+                  + wx_lo*wz_hi*Ps_arr(i-1,j  , k  )
+                  - wx_hi*wz_lo*Ps_arr(i  ,j-1, k-1)
+                  - wx_hi*wz_hi*Ps_arr(i  ,j-1, k  )
+                  + wx_hi*wz_lo*Ps_arr(i  ,j  , k-1)
+                  + wx_hi*wz_hi*Ps_arr(i  ,j  , k  ));
+
+                dPsdz = dxi[2]*(
+                  - wx_lo*wy_lo*Ps_arr(i-1,j-1, k-1)
+                  + wx_lo*wy_lo*Ps_arr(i-1,j-1, k  )
+                  - wx_lo*wy_hi*Ps_arr(i-1,j  , k-1)
+                  + wx_lo*wy_hi*Ps_arr(i-1,j  , k  )
+                  - wx_hi*wy_lo*Ps_arr(i  ,j-1, k-1)
+                  + wx_hi*wy_lo*Ps_arr(i  ,j-1, k  )
+                  - wx_hi*wy_hi*Ps_arr(i  ,j  , k-1)
+                  + wx_hi*wy_hi*Ps_arr(i  ,j  , k  ));
+
+              // At least one of the cells in the stencil is not connected
               } else {
 
-                const int scomp = 0;
-                fe_interp(particle.pos(), ip, jp, kp, dxv, dxi, plo,
-                          flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-                          grad_tau_array, interp_loc.data(), interp_comp, scomp);
+                ep_s_loc = ep_s_arr(ip,jp,kp);
+
+                // 1D approx of dPsdx
+
+                if (flags_array(ip,jp,kp).isConnected(di-1,0,0) and
+                    flags_array(ip,jp,kp).isConnected(di  ,0,0)){
+
+                  dPsdx = dxi[0]*(Ps_arr(i,jp,kp) - Ps_arr(i-1,jp,kp));
+
+                } else {
+
+                  if(di == 0){
+
+                    // Don't use the low side Ps because i==ip and ip is not covered.
+
+                    const amrex::Real ep_s_extrap = amrex::max(0.0,
+                      amrex::min(2.0*ep_s_arr(i,jp,kp) - ep_s_arr(i+1,jp,kp),
+                      amrex::max(ep_cp, ep_s_arr(ip,jp,kp))));
+
+                    const amrex::Real Ps_lo = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
+
+                    dPsdx = dxi[0]*(Ps_arr(ip,jp,kp) - Ps_lo);
+
+                  } else {
+
+                    // Don't use the high side Ps because i==ip+1 and ip is not covered.
+
+                    const amrex::Real ep_s_extrap = amrex::max(0.0,
+                      amrex::min(2.0*ep_s_arr(ip,jp,kp) - ep_s_arr(ip-1,jp,kp),
+                      amrex::max(ep_cp, ep_s_arr(ip,jp,kp))));
+
+                    const amrex::Real Ps_hi = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
+
+                    dPsdx = dxi[0]*(Ps_hi - Ps_arr(ip,jp,kp));
+
+                  }
+
+                }
+
+                // 1D approx of dPsdy
+
+                if (flags_array(ip,jp,kp).isConnected(0,dj-1,0) and
+                    flags_array(ip,jp,kp).isConnected(0,dj  ,0)){
+
+                  dPsdy = dxi[1]*(Ps_arr(ip,j,kp) - Ps_arr(ip,j-1,kp));
+
+                } else {
+
+                  if(dj == 0){ // Low side is NOT connected
+
+                    const amrex::Real ep_s_extrap = amrex::max(0.0,
+                      amrex::min(2.0*ep_s_arr(ip,j,kp) - ep_s_arr(ip,j+1,kp),
+                      amrex::max(ep_cp, ep_s_arr(ip,jp,kp))));
+
+                    const amrex::Real Ps_lo = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
+
+                    dPsdy = dxi[1]*(Ps_arr(ip,jp,kp) - Ps_lo);
+
+                  } else {
+
+                    // Don't use the high side Ps because i==ip+1 and ip is not covered.
+
+                    const amrex::Real ep_s_extrap = amrex::max(0.0,
+                      amrex::min(2.0*ep_s_arr(ip,jp,kp) - ep_s_arr(ip,jp-1,kp),
+                      amrex::max(ep_cp, ep_s_arr(ip,jp,kp))));
+
+                    const amrex::Real Ps_hi = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
+
+                    dPsdy = dxi[1]*(Ps_hi - Ps_arr(ip,jp,kp));
+
+                  }
+
+                }
+
+                // 1D approx of dPsdz
+
+                if (flags_array(ip,jp,kp).isConnected(0,0,dk-1) and
+                    flags_array(ip,jp,kp).isConnected(0,0,dk  )){
+
+                  dPsdz = dxi[2]*(Ps_arr(ip,jp,k) - Ps_arr(ip,jp,k-1));
+
+                } else {
+
+                  if(dk == 0){ // Low side is NOT connected
+
+                    const amrex::Real ep_s_extrap = amrex::max(0.0,
+                      amrex::min(2.0*ep_s_arr(ip,jp,k) - ep_s_arr(ip,jp,k+1),
+                      amrex::max(ep_cp, ep_s_arr(ip,jp,kp))));
+
+                    const amrex::Real Ps_lo = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
+
+                    dPsdz = dxi[2]*(Ps_arr(ip,jp,kp) - Ps_lo);
+
+                  } else { // High side is NOT connected
+
+                    const amrex::Real ep_s_extrap = amrex::max(0.0,
+                      amrex::min(2.0*ep_s_arr(ip,jp,kp) - ep_s_arr(ip,jp,kp-1),
+                      amrex::max(ep_cp, ep_s_arr(ip,jp,kp))));
+
+                    const amrex::Real Ps_hi = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
+
+                    dPsdz = dxi[2]*(Ps_hi - Ps_arr(ip,jp,kp));
+
+                  }
+
+                }
 
               } // Cut cell
 
               // Store local solids volume fraction in unused array location.
-              const Real ep_s_loc = interp_loc[3];
               particle.rdata(realData::oneOverI) = ep_s_loc;
 
-              if(ep_s_loc > 1.e-4) {
+              AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_loc >= 0.,"Check valid ep_s_loc");
 
-                const amrex::Real inv_rops = 1.0 / (ep_s_loc*particle.rdata(realData::density));
-                particle.rdata(realData::omegax) = interp_loc[0]*inv_rops;
-                particle.rdata(realData::omegay) = interp_loc[1]*inv_rops;
-                particle.rdata(realData::omegaz) = interp_loc[2]*inv_rops;
+              particle.rdata(realData::omegax) = dPsdx;
+              particle.rdata(realData::omegay) = dPsdy;
+              particle.rdata(realData::omegaz) = dPsdz;
 
-              } else {
-                particle.rdata(realData::omegax) = 0.0;
-                particle.rdata(realData::omegay) = 0.0;
-                particle.rdata(realData::omegaz) = 0.0;
-              }
             }
+
           }); // part loop
         } // if box not all regular
       } // FAB not covered

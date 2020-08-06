@@ -23,6 +23,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
           amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
           amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
         }
+      //mfix_print_min_epg();
       coupling_timing = ParallelDescriptor::second() - start_coupling;
     }
 
@@ -104,12 +105,10 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     }
 
     if (PIC::solve) {
-        EvolveParcels(nstep, dt, time, mfix::gravity,
+        EvolveParcels(dt, time, mfix::gravity,
                       levelset_refinement,
                       particle_cost, knapsack_weight_type);
     }
-
-
 
     BL_PROFILE_VAR_STOP(particlesSolve);
 

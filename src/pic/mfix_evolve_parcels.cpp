@@ -3,8 +3,7 @@
 
 using namespace amrex;
 
-void mfix::EvolveParcels (int nstep,
-                          Real dt,
+void mfix::EvolveParcels (Real dt,
                           Real time,
                           RealVect& gravity,
                           const int ls_refinement_in,
@@ -18,9 +17,8 @@ void mfix::EvolveParcels (int nstep,
 
   // MultiFabs that hold PIC specific field data all on particle grids.
 
-  const int pic_nghost = 1;
-  const int pic_ncomp  = 4;  // Four components (3 vel_s + 1 mass)
-
+  const int pic_nghost = 2;
+  const int pic_ncomp  = 6;  // Four components (3 vel_s + 3 mass)
 
   // NOTE:Ideally we want all/most of these in the same MultiFab to
   // minimize calls to FillBoundary. However, we are limited given
@@ -52,23 +50,24 @@ void mfix::EvolveParcels (int nstep,
     ep_s[lev]->plus( 1.0, ep_s[lev]->nGrow());
 
     ep_s[lev]->FillBoundary(geom[lev].periodicity());
-  }
 
-  // Calculate the averaged solids velocity. This is used to assess how
-  // a parcel is moving relative to the bulk solids motion.  A consequence
-  // of the deposition is that we get ep_s on the correct boxes.
-  MFIX_CalcAvgSolidsProp(avg_prop);
+  }
 
   // Calculate the solids stress gradient using the local solids
   // volume fraction. The solids stress is a field variable that
   // we will later interpolate to the parcel's position.
   MFIX_CalcSolidsStress(ep_s, avg_prop);
 
+  // Calculate the averaged solids velocity. This is used to assess how
+  // a parcel is moving relative to the bulk solids motion.  A consequence
+  // of the deposition is that we get ep_s on the correct boxes.
+  MFIX_CalcAvgSolidsVel(avg_prop);
 
   // Move the parcels.
-  pc->MFIX_PC_AdvanceParcels(dt, gravity, particle_ebfactory, ep_s, avg_prop,
-                             cost, knapsack_weight_type);
+  pc->MFIX_PC_AdvanceParcels(dt, gravity, avg_prop, cost, knapsack_weight_type);
 
+  // Account for cross process movements.
+  pc->Redistribute(0, 0, 0, 0);
 
   // Now account for solid walls.
   for (int lev = 0; lev < nlev; lev ++ ) {
@@ -91,7 +90,10 @@ void mfix::EvolveParcels (int nstep,
 
   }
 
-  pc->Redistribute(0, 0, 0, 0);
+  // This redistribute might not be needed, but it's done "just in case"
+  // that accounting for a boundary collision doesn't position a parcel
+  // on another process.
+  pc->Redistribute(0, 0, 0, 1);
 
   // Clean up the temporary fluid volume fraction
   for (int lev = 0; lev < nlev; lev++){
