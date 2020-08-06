@@ -182,3 +182,57 @@ mfix::volWgtSumBox (int lev, const MultiFab& mf, int comp, const Box a_bx, bool 
 
     return sum;
 }
+
+
+
+
+//
+// Print the minimum volume fraction and cell location.
+//
+void
+mfix::mfix_print_min_epg ()
+{
+
+#ifndef AMREX_USE_GPU
+
+  for (int lev = 0; lev <= finest_level; lev++) {
+
+    const amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
+    auto& ld = *m_leveldata[lev];
+    const amrex::Real min_epg = ld.ep_g->min(0);
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+      Box const& bx = mfi.tilebox();
+      Array4<Real const> const& epg = ld.ep_g->const_array(mfi);
+
+      IntVect epg_cell = {-100,-100,-100};
+      int found(0);
+
+      amrex::ParallelFor(bx, [epg, min_epg, &found, &epg_cell, tolerance]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+
+        if( amrex::Math::abs(epg(i,j,k) - min_epg) < tolerance ){
+          epg_cell[0] = i;
+          epg_cell[1] = j;
+          epg_cell[2] = k;
+          found +=1;
+        }
+      });
+
+      if(found > 0){
+        amrex::Print(Print::AllProcs)
+          << std::endl << std::endl << "min epg "  << min_epg
+          << "  at " << epg_cell[0] << "  " << epg_cell[1] << "  " << epg_cell[2]
+          << "   total found " << found << std::endl << std::endl;
+      }
+
+      AMREX_ALWAYS_ASSERT(min_epg > 0.275);
+
+    } // mfi
+  } // lev
+#endif
+}

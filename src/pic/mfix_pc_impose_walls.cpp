@@ -18,14 +18,39 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
      ***************************************************************************/
     const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
 
+    const Real* dx = Geom(lev).CellSize();
+
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
         const Box& bx = pti.tilebox();
         PairIndex index(pti.index(), pti.LocalTileIndex());
 
+        // Determine if this particle tile actually has any walls
+        bool has_wall = false;
+
         if ((ebfactory != NULL) and
            ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))  {
 
+          has_wall = true;
+
+        } else {
+          // We need this test for the case of an inflow boundary:
+          // inflow does not appear in the EBFactory but
+          // the particles see it as a wall
+
+          // Create the nodal refined box based on the current particle tile
+          Box refined_box(amrex::convert(amrex::refine(bx,ls_refinement), IntVect{1,1,1}));
+
+          // Set tol to 1/2 dx
+          Real tol = amrex::min(dx[0], amrex::min(dx[1], dx[2])) / 2;
+
+          Real ls_min_over_box = ((*ls_phi)[pti]).min<RunOn::Gpu>(refined_box,0);
+
+          if (ls_min_over_box < tol) has_wall = true;
+
+        }
+
+        if( has_wall ) {
 
             auto& plev = GetParticles(lev);
             auto& ptile = plev[index];

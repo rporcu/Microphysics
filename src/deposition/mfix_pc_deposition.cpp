@@ -109,11 +109,17 @@ SolidsVolumeDeposition (F WeightFunc, int lev,
                pvol = pvol/p.rdata(realData::statwt);
             }
 
-            for (int ii = -1; ii <= 0; ++ii) {
+            for (int kk = -1; kk <= 0; ++kk) {
               for (int jj = -1; jj <= 0; ++jj) {
-                for (int kk = -1; kk <= 0; ++kk) {
+                for (int ii = -1; ii <= 0; ++ii) {
                   if (flagsarr(i+ii,j+jj,k+kk).isCovered())
                     continue;
+
+
+
+                  // if(p.id() == 13413 and p.cpu() == 2){
+                  //   printf("%i %i %i %16.10e\n",i+ii,j+jj,k+kk, weights[ii+1][jj+1][kk+1]);
+                  // }
 
                   amrex::Real weight_vol = weights[ii+1][jj+1][kk+1] / vfrac(i+ii,j+jj,k+kk);
 

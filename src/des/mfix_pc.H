@@ -199,23 +199,15 @@ public:
                                        amrex::MultiFab & ep_g_in,
                                        amrex::MultiFab & grad_tau_in);
 
-
+    ///
+    /// Deposit parcel velocity to the grid
+    ///
     void MFIX_PC_SolidsVelocityDeposition (int lev,
                                            amrex::MultiFab& vel_s_mf,
                                            const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
-    ///
-    /// Deposit parcel velocity to the grid
-    ///
-    template <typename FB>
-    void MFIX_PC_SolidsVelocityDeposition (FB WeightFunc,
-                                           int lev,
-                                           amrex::MultiFab& vel_s_mf,
-                                           const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
     void MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealVect& gravity,
-                                 amrex::Vector< amrex::EBFArrayBoxFactory* > ebfactory,
-                                 amrex::Vector< amrex::MultiFab*> & ep_s_in,
                                  amrex::Vector< amrex::MultiFab*> & avg_prop_in,
                                  amrex::Vector< amrex::MultiFab*> & cost,
                                  std::string& knapsack_weight_type);

@@ -508,9 +508,7 @@ class mfix : public AmrCore
   //
   ////////////////////////////////////////////////////////////////////////////
 
-  void EvolveParcels (
-                      int nstep,
-                      amrex::Real dt,
+  void EvolveParcels (amrex::Real dt,
                       amrex::Real time,
                       amrex::RealVect& gravity,
                       const int ls_refinement,
@@ -519,7 +517,7 @@ class mfix : public AmrCore
                       );
 
 
-  void MFIX_CalcAvgSolidsProp (Vector< MultiFab* >& avg_prop_in);
+  void MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in);
 
   void MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
                               amrex::Vector< amrex::MultiFab* >& avg_prop_in);
@@ -747,6 +745,8 @@ class mfix : public AmrCore
     void mfix_print_max_vel (int lev);
 
     void mfix_print_max_gp (int lev);
+
+    void mfix_print_min_epg ();
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
