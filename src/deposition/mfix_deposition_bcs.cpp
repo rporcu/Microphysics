@@ -66,7 +66,11 @@ void mfix::mfix_deposition_bcs (int lev, amrex::MultiFab& filled_mf)
 
       const int npoints = amrex::max(sbx_yz_npoints,sbx_xz_npoints,sbx_xy_npoints);
 
-      ParallelFor(npoints, [=] AMREX_GPU_DEVICE (int idx) noexcept
+      ParallelFor(npoints, [sbx_xy_npoints,sbx_yz_npoints,sbx_xz_npoints,
+          sbx_xy_len,sbx_yz_len,sbx_xz_len,sbx_xy_lo,sbx_yz_lo,sbx_xz_lo,
+          dom_lo,dom_hi,bc_ilo_type,bc_ihi_type,bc_jlo_type,bc_jhi_type,
+          bc_klo_type,bc_khi_type,vol,ncomp,pinf,minf,sbx_hi,sbx_lo]
+        AMREX_GPU_DEVICE (int idx) noexcept
       {
         if(idx < sbx_yz_npoints)
         {

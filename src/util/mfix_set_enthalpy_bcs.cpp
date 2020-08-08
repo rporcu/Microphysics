@@ -111,8 +111,9 @@ mfix::set_enthalpy_bcs (Real time,
 
   if (nlft > 0)
   {
-    amrex::ParallelFor(bx_yz_lo_3D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    amrex::ParallelFor(bx_yz_lo_3D, [bct_ilo,dom_lo,pout,pinf,minf,h_g,p_bc_t_g,
+        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
@@ -139,8 +140,9 @@ mfix::set_enthalpy_bcs (Real time,
 
   if (nrgt > 0)
   {
-    amrex::ParallelFor(bx_yz_hi_3D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    amrex::ParallelFor(bx_yz_hi_3D, [bct_ihi,dom_hi,pout,pinf,minf,h_g,p_bc_t_g,
+        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
@@ -167,8 +169,9 @@ mfix::set_enthalpy_bcs (Real time,
 
   if (nbot > 0)
   {
-    amrex::ParallelFor(bx_xz_lo_3D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    amrex::ParallelFor(bx_xz_lo_3D, [bct_jlo,dom_lo,pout,pinf,minf,h_g,p_bc_t_g,
+        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
@@ -195,8 +198,9 @@ mfix::set_enthalpy_bcs (Real time,
 
   if (ntop > 0)
   {
-    amrex::ParallelFor(bx_xz_hi_3D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    amrex::ParallelFor(bx_xz_hi_3D, [bct_jhi,dom_hi,pout,pinf,minf,h_g,p_bc_t_g,
+        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
@@ -223,8 +227,9 @@ mfix::set_enthalpy_bcs (Real time,
 
   if (ndwn > 0)
   {
-    amrex::ParallelFor(bx_xy_lo_3D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    amrex::ParallelFor(bx_xy_lo_3D, [bct_klo,dom_lo,pout,pinf,minf,h_g,p_bc_t_g,
+        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
@@ -251,8 +256,9 @@ mfix::set_enthalpy_bcs (Real time,
 
   if (nup > 0)
   {
-    amrex::ParallelFor(bx_xy_hi_3D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    amrex::ParallelFor(bx_xy_hi_3D, [bct_khi,dom_hi,pout,pinf,minf,h_g,p_bc_t_g,
+        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);

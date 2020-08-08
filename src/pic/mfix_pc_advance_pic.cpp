@@ -36,7 +36,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
     {
 
       // Timer used for load-balancing
-      amrex::Real wt = ParallelDescriptor::second();
+      //amrex::Real wt = ParallelDescriptor::second(); UNUSED
 
       PairIndex index(pti.index(), pti.LocalTileIndex());
 

@@ -185,7 +185,7 @@ void mfix::MFIX_CalcAvgSolidsVel (amrex::Vector< amrex::MultiFab* >& avg_prop_in
 
       const int minf = bc_list.get_minf();
       const int pinf = bc_list.get_pinf();
-      const int pout = bc_list.get_pout();
+      //const int pout = bc_list.get_pout(); UNUSED
 
       if (nlft > 0) {
         amrex::ParallelFor(bx_yz_lo_2D,

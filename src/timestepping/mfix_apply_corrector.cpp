@@ -121,7 +121,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                 Array4<Real const> const& drdt_o  = conv_s_old[lev]->const_array(mfi);
                 Array4<Real const> const& drdt    = conv_s[lev]->const_array(mfi);
 
-                amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                amrex::ParallelFor(bx, [epg,rho_o,l_dt,drdt,drdt_o,rho_new,rho_nph]
+                  AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
                   int conv_comp = 0;
 
@@ -165,7 +166,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                 Array4<Real const> const& dhdt   = conv_s[lev]->const_array(mfi);
                 Array4<Real const> const& lapT_o = lapT_old[lev]->const_array(mfi);
 
-                amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_n,rho_o,rho_n,epg,cp_g,
+                    dhdt_o,dhdt,lapT_o,l_dt]
+                  AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
                   int conv_comp = 1;
 
@@ -209,7 +212,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                 Array4<Real const> const& dtdt   = conv_s[lev]->const_array(mfi);
                 Array4<Real const> const& laps_o = laps_old[lev]->const_array(mfi);
 
-                amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                amrex::ParallelFor(bx, [tra_o,tra_n,rho_o,rho_n,epg,dtdt_o,dtdt,
+                    laps_o,l_dt,l_ntrac]
+                  AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
                   const Real epg_loc = epg(i,j,k);
 
@@ -256,7 +261,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
           Array4<Real const> const& dXdt   = conv_X[lev]->const_array(mfi);
           Array4<Real const> const& lapX_o = lapX_old[lev]->const_array(mfi);
 
-          ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          ParallelFor(bx, [X_gk_o,X_gk_n,rho_o,rho_n,epg,dXdt_o,dXdt,lapX_o,
+              l_dt,nspecies_g]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             const Real epg_loc = epg(i,j,k);
 
@@ -308,7 +315,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
          const RealVect gp0_dev(gp0);
          const RealVect gravity_dev(gravity);
 
-         amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+         amrex::ParallelFor(bx, [vel_n,vel_o,dudt_o,dudt,gp,rho_nph,epg,divtau_o,
+             gp0_dev,gravity_dev,l_dt]
+           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
            const Real epg_loc = epg(i,j,k);
 

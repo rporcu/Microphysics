@@ -54,7 +54,7 @@ namespace DEM
         void alloc () {
 #ifdef AMREX_USE_GPU
             auto p = (ARRAY_TYPE*)amrex::The_Device_Arena()->alloc(sizeof(ARRAY_TYPE));
-            amrex::single_task(amrex::Gpu::gpuStream(), [=] AMREX_GPU_DEVICE
+            amrex::single_task(amrex::Gpu::gpuStream(), [p] AMREX_GPU_DEVICE
             {
                 new (p) ARRAY_TYPE;
             });

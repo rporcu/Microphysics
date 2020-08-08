@@ -80,8 +80,8 @@ mfix::set_density_bcs (Real time,
 
     int ilo = dom_lo[0];
 
-    amrex::ParallelFor(bx_yz_lo_3D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    amrex::ParallelFor(bx_yz_lo_3D, [bct_ilo,ilo,scal_arr,bc0,minf,pinf,pout]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_ilo(ilo-1,j,k,0);
 
@@ -100,8 +100,8 @@ mfix::set_density_bcs (Real time,
 
     int ihi = dom_hi[0];
 
-    amrex::ParallelFor(bx_yz_hi_3D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    amrex::ParallelFor(bx_yz_hi_3D, [bct_ihi,ihi,scal_arr,bc0,minf,pinf,pout]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_ihi(ihi+1,j,k,0);
 
@@ -120,8 +120,8 @@ mfix::set_density_bcs (Real time,
 
     int jlo = dom_lo[1];
 
-    amrex::ParallelFor(bx_xz_lo_3D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    amrex::ParallelFor(bx_xz_lo_3D, [bct_jlo,jlo,scal_arr,bc0,minf,pinf,pout]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_jlo(i,jlo-1,k,0);
 
@@ -140,16 +140,16 @@ mfix::set_density_bcs (Real time,
 
     int jhi = dom_hi[1];
 
-    amrex::ParallelFor(bx_xz_hi_3D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-      {
-        const int bct = bct_jhi(i,jhi+1,k,0);
+    amrex::ParallelFor(bx_xz_hi_3D, [bct_jhi,jhi,scal_arr,bc0,minf,pinf,pout]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      const int bct = bct_jhi(i,jhi+1,k,0);
 
-        if((bct == pinf) or (bct == pout))
-           scal_arr(i,j,k) = scal_arr(i,dom_hi[1],k);
-        else if(bct == minf)
-           scal_arr(i,j,k) = bc0;
-      });
+      if((bct == pinf) or (bct == pout))
+         scal_arr(i,j,k) = scal_arr(i,jhi,k);
+      else if(bct == minf)
+         scal_arr(i,j,k) = bc0;
+    });
   }
 
   if (ndwn > 0)
@@ -160,16 +160,16 @@ mfix::set_density_bcs (Real time,
 
     int klo = dom_lo[2];
 
-    amrex::ParallelFor(bx_xy_lo_3D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-      {
-        const int bct = bct_klo(i,j,klo-1,0);
+    amrex::ParallelFor(bx_xy_lo_3D, [bct_klo,klo,scal_arr,bc0,minf,pinf,pout]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      const int bct = bct_klo(i,j,klo-1,0);
 
-        if((bct == pinf) or (bct == pout))
-           scal_arr(i,j,k) = scal_arr(i,j,klo);
-        else if(bct == minf)
-           scal_arr(i,j,k) = bc0;
-      });
+      if((bct == pinf) or (bct == pout))
+         scal_arr(i,j,k) = scal_arr(i,j,klo);
+      else if(bct == minf)
+         scal_arr(i,j,k) = bc0;
+    });
   }
 
   if (nup > 0)
@@ -180,15 +180,15 @@ mfix::set_density_bcs (Real time,
 
     int khi = dom_hi[2];
 
-    amrex::ParallelFor(bx_xy_hi_3D,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-      {
-        const int bct = bct_khi(i,j,khi+1,0);
+    amrex::ParallelFor(bx_xy_hi_3D, [bct_khi,khi,scal_arr,bc0,minf,pinf,pout]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      const int bct = bct_khi(i,j,khi+1,0);
 
-        if ((bct == pinf) or (bct == pout))
-           scal_arr(i,j,k) = scal_arr(i,j,dom_hi[2]);
-        else if (bct == minf)
-           scal_arr(i,j,k) = bc0;
-      });
+      if ((bct == pinf) or (bct == pout))
+         scal_arr(i,j,k) = scal_arr(i,j,khi);
+      else if (bct == minf)
+         scal_arr(i,j,k) = bc0;
+    });
   }
 }

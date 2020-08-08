@@ -125,8 +125,9 @@ mfix::set_mass_fractions_g_bcs (Real time,
 
   if (nlft > 0)
   {
-    amrex::ParallelFor(bx_yz_lo_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_yz_lo_3D, nspecies_g, [bct_ilo,dom_lo,pout,minf,pinf,
+        X_gk,p_bc_X_gk]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
@@ -142,8 +143,9 @@ mfix::set_mass_fractions_g_bcs (Real time,
 
   if (nrgt > 0)
   {
-    amrex::ParallelFor(bx_yz_hi_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_yz_hi_3D, nspecies_g, [bct_ihi,dom_hi,pout,minf,pinf,
+        X_gk,p_bc_X_gk]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
@@ -159,8 +161,9 @@ mfix::set_mass_fractions_g_bcs (Real time,
 
   if (nbot > 0)
   {
-    amrex::ParallelFor(bx_xz_lo_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xz_lo_3D, nspecies_g, [bct_jlo,dom_lo,pout,minf,pinf,
+        X_gk,p_bc_X_gk]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
@@ -175,8 +178,9 @@ mfix::set_mass_fractions_g_bcs (Real time,
 
   if (ntop > 0)
   {
-    amrex::ParallelFor(bx_xz_hi_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xz_hi_3D, nspecies_g, [bct_jhi,dom_hi,pout,minf,pinf,
+        X_gk,p_bc_X_gk]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
@@ -190,8 +194,9 @@ mfix::set_mass_fractions_g_bcs (Real time,
 
   if (ndwn > 0)
   {
-    amrex::ParallelFor(bx_xy_lo_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xy_lo_3D, nspecies_g, [bct_klo,dom_lo,pout,minf,pinf,
+        X_gk,p_bc_X_gk]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
@@ -205,8 +210,9 @@ mfix::set_mass_fractions_g_bcs (Real time,
 
   if (nup > 0)
   {
-    amrex::ParallelFor(bx_xy_hi_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xy_hi_3D, nspecies_g, [bct_khi,dom_hi,pout,minf,pinf,
+        X_gk,p_bc_X_gk]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
@@ -273,8 +279,9 @@ mfix::set_species_diffusivities_g_bcs (Real time,
 
     int ilo = dom_lo[0];
 
-    amrex::ParallelFor(bx_yz_lo_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_yz_lo_3D, nspecies_g, [bct_ilo,ilo,pout,minf,pinf,
+        scal_arr,p_D_gk0]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_ilo(ilo-1,j,k,0);
 
@@ -293,8 +300,9 @@ mfix::set_species_diffusivities_g_bcs (Real time,
 
     int ihi = dom_hi[0];
 
-    amrex::ParallelFor(bx_yz_hi_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_yz_hi_3D, nspecies_g, [bct_ihi,ihi,pout,minf,pinf,
+        scal_arr,p_D_gk0]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_ihi(ihi+1,j,k,0);
 
@@ -313,8 +321,9 @@ mfix::set_species_diffusivities_g_bcs (Real time,
 
     int jlo = dom_lo[1];
 
-    amrex::ParallelFor(bx_xz_lo_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xz_lo_3D, nspecies_g, [bct_jlo,jlo,pout,minf,pinf,
+        scal_arr,p_D_gk0]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_jlo(i,jlo-1,k,0);
 
@@ -333,13 +342,14 @@ mfix::set_species_diffusivities_g_bcs (Real time,
 
     int jhi = dom_hi[1];
 
-    amrex::ParallelFor(bx_xz_hi_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xz_hi_3D, nspecies_g, [bct_jhi,jhi,pout,minf,pinf,
+        scal_arr,p_D_gk0]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_jhi(i,jhi+1,k,0);
 
       if (bct == pout)
-         scal_arr(i,j,k,n) = scal_arr(i,dom_hi[1],k,n);
+         scal_arr(i,j,k,n) = scal_arr(i,jhi,k,n);
       else if (bct == minf or bct == pinf)
          scal_arr(i,j,k,n) = p_D_gk0[n];
     });
@@ -353,8 +363,9 @@ mfix::set_species_diffusivities_g_bcs (Real time,
 
     int klo = dom_lo[2];
 
-    amrex::ParallelFor(bx_xy_lo_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xy_lo_3D, nspecies_g, [bct_klo,klo,pout,minf,pinf,
+        scal_arr,p_D_gk0]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_klo(i,j,klo-1,0);
 
@@ -373,13 +384,14 @@ mfix::set_species_diffusivities_g_bcs (Real time,
 
     int khi = dom_hi[2];
 
-    amrex::ParallelFor(bx_xy_hi_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xy_hi_3D, nspecies_g, [bct_khi,khi,pout,minf,pinf,
+        scal_arr,p_D_gk0]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_khi(i,j,khi+1,0);
 
       if (bct == pout)
-         scal_arr(i,j,k,n) = scal_arr(i,j,dom_hi[2],n);
+         scal_arr(i,j,k,n) = scal_arr(i,j,khi,n);
       else if (bct == minf or bct == pinf)
          scal_arr(i,j,k,n) = p_D_gk0[n];
     });
@@ -440,8 +452,9 @@ mfix::set_species_specific_heat_g_bcs (Real time,
 
     int ilo = dom_lo[0];
 
-    amrex::ParallelFor(bx_yz_lo_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_yz_lo_3D, nspecies_g, [bct_ilo,ilo,scal_arr,p_cp_gk0,
+        pout,minf,pinf]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_ilo(ilo-1,j,k,0);
 
@@ -460,8 +473,9 @@ mfix::set_species_specific_heat_g_bcs (Real time,
 
     int ihi = dom_hi[0];
 
-    amrex::ParallelFor(bx_yz_hi_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_yz_hi_3D, nspecies_g, [bct_ihi,ihi,scal_arr,p_cp_gk0,
+        pout,minf,pinf]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_ihi(ihi+1,j,k,0);
 
@@ -480,8 +494,9 @@ mfix::set_species_specific_heat_g_bcs (Real time,
 
     int jlo = dom_lo[1];
 
-    amrex::ParallelFor(bx_xz_lo_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xz_lo_3D, nspecies_g, [bct_jlo,jlo,scal_arr,p_cp_gk0,
+        pout,minf,pinf]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_jlo(i,jlo-1,k,0);
 
@@ -500,13 +515,14 @@ mfix::set_species_specific_heat_g_bcs (Real time,
 
     int jhi = dom_hi[1];
 
-    amrex::ParallelFor(bx_xz_hi_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xz_hi_3D, nspecies_g, [bct_jhi,jhi,scal_arr,p_cp_gk0,
+        pout,minf,pinf]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_jhi(i,jhi+1,k,0);
 
       if (bct == pout)
-         scal_arr(i,j,k,n) = scal_arr(i,dom_hi[1],k,n);
+         scal_arr(i,j,k,n) = scal_arr(i,jhi,k,n);
       else if (bct == minf or bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n];
     });
@@ -520,8 +536,9 @@ mfix::set_species_specific_heat_g_bcs (Real time,
 
     int klo = dom_lo[2];
 
-    amrex::ParallelFor(bx_xy_lo_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xy_lo_3D, nspecies_g, [bct_klo,klo,scal_arr,p_cp_gk0,
+        pout,minf,pinf]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_klo(i,j,klo-1,0);
 
@@ -540,13 +557,14 @@ mfix::set_species_specific_heat_g_bcs (Real time,
 
     int khi = dom_hi[2];
 
-    amrex::ParallelFor(bx_xy_hi_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xy_hi_3D, nspecies_g, [bct_khi,khi,scal_arr,p_cp_gk0,
+        pout,minf,pinf]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_khi(i,j,khi+1,0);
 
       if (bct == pout)
-         scal_arr(i,j,k,n) = scal_arr(i,j,dom_hi[2],n);
+         scal_arr(i,j,k,n) = scal_arr(i,j,khi,n);
       else if (bct == minf or bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n];
     });
@@ -610,11 +628,12 @@ mfix::set_species_enthalpy_g_bcs (Real time,
 
     int ilo = dom_lo[0];
 
-    amrex::ParallelFor(bx_yz_lo_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_yz_lo_3D, nspecies_g, [bct_ilo,ilo,scal_arr,p_cp_gk0,
+        p_bc_t_g,pout,minf,pinf]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_ilo(ilo-1,j,k,0);
-      const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
+      const int bcv = bct_ilo(ilo-1,j,k,1);
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(ilo,j,k,n);
@@ -631,11 +650,12 @@ mfix::set_species_enthalpy_g_bcs (Real time,
 
     int ihi = dom_hi[0];
 
-    amrex::ParallelFor(bx_yz_hi_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_yz_hi_3D, nspecies_g, [bct_ihi,ihi,scal_arr,p_cp_gk0,
+        p_bc_t_g,pout,minf,pinf]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_ihi(ihi+1,j,k,0);
-      const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
+      const int bcv = bct_ihi(ihi+1,j,k,1);
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(ihi,j,k,n);
@@ -652,11 +672,12 @@ mfix::set_species_enthalpy_g_bcs (Real time,
 
     int jlo = dom_lo[1];
 
-    amrex::ParallelFor(bx_xz_lo_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xz_lo_3D, nspecies_g, [bct_jlo,jlo,scal_arr,p_cp_gk0,
+        p_bc_t_g,pout,minf,pinf]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_jlo(i,jlo-1,k,0);
-      const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
+      const int bcv = bct_jlo(i,jlo-1,k,1);
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,jlo,k,n);
@@ -673,14 +694,15 @@ mfix::set_species_enthalpy_g_bcs (Real time,
 
     int jhi = dom_hi[1];
 
-    amrex::ParallelFor(bx_xz_hi_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xz_hi_3D, nspecies_g, [bct_jhi,jhi,scal_arr,p_cp_gk0,
+        p_bc_t_g,pout,minf,pinf]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_jhi(i,jhi+1,k,0);
-      const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
+      const int bcv = bct_jhi(i,jhi+1,k,1);
 
       if (bct == pout)
-         scal_arr(i,j,k,n) = scal_arr(i,dom_hi[1],k,n);
+         scal_arr(i,j,k,n) = scal_arr(i,jhi,k,n);
       else if (bct == minf or bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
     });
@@ -694,11 +716,12 @@ mfix::set_species_enthalpy_g_bcs (Real time,
 
     int klo = dom_lo[2];
 
-    amrex::ParallelFor(bx_xy_lo_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xy_lo_3D, nspecies_g, [bct_klo,klo,scal_arr,p_cp_gk0,
+        p_bc_t_g,pout,minf,pinf]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_klo(i,j,klo-1,0);
-      const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
+      const int bcv = bct_klo(i,j,klo-1,1);
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,j,klo,n);
@@ -715,14 +738,15 @@ mfix::set_species_enthalpy_g_bcs (Real time,
 
     int khi = dom_hi[2];
 
-    amrex::ParallelFor(bx_xy_hi_3D, nspecies_g,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    amrex::ParallelFor(bx_xy_hi_3D, nspecies_g, [bct_khi,khi,scal_arr,p_cp_gk0,
+        p_bc_t_g,pout,minf,pinf]
+      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_khi(i,j,khi+1,0);
-      const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
+      const int bcv = bct_khi(i,j,khi+1,1);
 
       if (bct == pout)
-         scal_arr(i,j,k,n) = scal_arr(i,j,dom_hi[2],n);
+         scal_arr(i,j,k,n) = scal_arr(i,j,khi,n);
       else if (bct == minf or bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
     });

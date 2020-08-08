@@ -135,7 +135,8 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
         const Box bx(IntVect(first, jstart, kstart),
                      IntVect(last,  jend,   kend));
 
-        ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        ParallelFor(bx, [flags,eb_temperature,eb_T_g,k_g,eb_k_g]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           if (flags(i,j,k).isSingleValued()) {
             eb_T_g(i,j,k) = eb_temperature;
@@ -152,7 +153,8 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
         const Box bx(IntVect(istart, first, kstart),
                      IntVect(iend,   last,  kend));
 
-        ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        ParallelFor(bx, [flags,eb_temperature,eb_T_g,k_g,eb_k_g]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           if (flags(i,j,k).isSingleValued()) {
             eb_T_g(i,j,k) = eb_temperature;
@@ -169,7 +171,8 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
         const Box bx(IntVect(istart, jstart, first),
                      IntVect(iend,   jend,   last));
 
-        ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        ParallelFor(bx, [flags,eb_temperature,eb_T_g,k_g,eb_k_g]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           if (flags(i,j,k).isSingleValued()) {
             eb_T_g(i,j,k) = eb_temperature;

@@ -17,7 +17,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
 #define DO_VISMF 0
 
-  const amrex::Real covered_val = 9.8765e300;
+  //const amrex::Real covered_val = 9.8765e300; UNUSED
 
   for( int lev(0); lev < nlev; lev ++)
   {
@@ -33,7 +33,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
     const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(Ps.Factory());
     const auto& flags = factory.getMultiEBCellFlagFab();
-    const auto& cellcent = factory.getCentroid();
+    //const auto& cellcent = factory.getCentroid(); UNUSED
 
     const GpuArray<Real, AMREX_SPACEDIM> dx = geom[lev].CellSizeArray();
     const GpuArray<Real, AMREX_SPACEDIM> dxinv = geom[lev].InvCellSizeArray();
@@ -332,8 +332,8 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
       const amrex::RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
       const amrex::RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
 
-      const auto cellcent =  &(particle_ebfactory[lev]->getCentroid());
-      const auto bndrycent = &(particle_ebfactory[lev]->getBndryCent());
+      //const auto cellcent =  &(particle_ebfactory[lev]->getCentroid()); UNUSED
+      //const auto bndrycent = &(particle_ebfactory[lev]->getBndryCent()); UNUSED
       const auto areafrac =  particle_ebfactory[lev]->getAreaFrac();
 
       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)

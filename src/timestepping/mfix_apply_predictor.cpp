@@ -134,7 +134,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
                 Array4<Real const> const& drdt_o  = conv_s_old[lev]->const_array(mfi);
 
-                amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                amrex::ParallelFor(bx, [rho_new,rho_nph,rho_o,epg,drdt_o,l_dt]
+                  AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
                   int conv_comp = 0;
 
@@ -176,7 +177,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
                 if (explicit_diffusion_pred)
                 {
-                    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                    amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_n,rho_o,rho_n,lapT_o,
+                        epg,cp_g,dhdt_o,l_dt]
+                      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                     {
                         int conv_comp = 1;
 
@@ -192,7 +195,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                     });
 
                 } else { // Fully implicit diffusion
-                    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                    amrex::ParallelFor(bx, [rho_o,rho_n,epg,dhdt_o,l_dt,cp_g,
+                        h_g_n,h_g_o,T_g_n]
+                      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                     {
                         int conv_comp = 1;
 
@@ -235,7 +240,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
                 if (explicit_diffusion_pred)
                 {
-                    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                    amrex::ParallelFor(bx, [tra_n,tra_o,rho_o,rho_n,laps_o,epg,
+                        dtdt_o,l_ntrac,l_dt]
+                      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                     {
                       for (int n = 0; n < l_ntrac; ++n)
                       {
@@ -251,7 +258,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                       }
                     });
                 } else { // Fully implicit diffusion
-                    amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                    amrex::ParallelFor(bx, [epg,rho_o,tra_o,dtdt_o,l_ntrac,
+                        l_dt,rho_n,tra_n]
+                      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                     {
                       for (int n = 0; n < l_ntrac; ++n)
                       {
@@ -297,7 +306,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
           if (explicit_diffusion_pred)
           {
-            ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            ParallelFor(bx, [nspecies_g,epg,rho_o,rho_n,X_gk_o,dXdt_o,lapX_o,
+                l_dt,X_gk_n]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               for (int n = 0; n < nspecies_g; ++n)
               {
@@ -314,7 +325,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
             });
           }
           else { // Fully implicit diffusion
-            ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            ParallelFor(bx, [nspecies_g,rho_o,rho_n,epg,X_gk_o,X_gk_n,dXdt_o,l_dt]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               for (int n = 0; n < nspecies_g; ++n)
               {
@@ -363,7 +375,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
          if (explicit_diffusion_pred)
          {
-           amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+           amrex::ParallelFor(bx, [epg,vel_o,dudt_o,divtau_o,gp0_dev,gravity_dev,
+               gp,l_dt,vel_n,rho_nph]
+             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
            {
              const Real epg_loc = epg(i,j,k);
 
@@ -391,7 +405,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
          } else { // Fully implicit
 
-           amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+           amrex::ParallelFor(bx, [epg,vel_o,dudt_o,gravity_dev,gp,gp0_dev,l_dt,
+               vel_n,rho_nph]
+             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
            {
              const Real epg_loc = epg(i,j,k);
 

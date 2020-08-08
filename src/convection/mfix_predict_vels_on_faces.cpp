@@ -125,7 +125,10 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
 
       const int npoints = amrex::max(ubx_npoints,vbx_npoints,wbx_npoints);
 
-      ParallelFor(npoints, [=] AMREX_GPU_DEVICE (int idx) noexcept
+      ParallelFor(npoints, [ubx_npoints,ubx_len,ubx_lo,vbx_npoints,vbx_len,
+          vbx_lo,wbx_npoints,wbx_len,wbx_lo,xslopes_fab,yslopes_fab,zslopes_fab,
+          ccvel_fab,small_vel,umac_fab,vmac_fab,epx_fab,epy_fab,epz_fab,wmac_fab]
+        AMREX_GPU_DEVICE (int idx) noexcept
       {
         if(idx < ubx_npoints)
         {
@@ -257,7 +260,11 @@ mfix::mfix_predict_vels_on_faces (int lev, Real time,
 
       // This FAB has cut cells -- we predict from cell centroids to face
       // centroids
-      ParallelFor(npoints, [=] AMREX_GPU_DEVICE (int idx) noexcept
+      ParallelFor(npoints, [ubx_npoints,ubx_len,ubx_lo,vbx_npoints,vbx_len,vbx_lo,
+          wbx_npoints,wbx_len,wbx_lo,ccc_fab,fcx_fab,fcy_fab,fcz_fab,apx_fab,
+          apy_fab,apz_fab,ccvel_fab,xslopes_fab,yslopes_fab,zslopes_fab,umac_fab,
+          vmac_fab,wmac_fab,small_vel,epx_fab,epy_fab,epz_fab]
+        AMREX_GPU_DEVICE (int idx) noexcept
       {
         if(idx < ubx_npoints)
         {
