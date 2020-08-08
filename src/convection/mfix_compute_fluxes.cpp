@@ -178,7 +178,11 @@ mfix::mfix_compute_fluxes_on_box (const int lev, Box& bx,
   auto dp = d_tmp.data();
 #endif
 
-  ParallelFor(npoints, [=] AMREX_GPU_DEVICE (int idx) noexcept
+  ParallelFor(npoints, [bc_types,ubx_npoints,vbx_npoints,wbx_npoints,ubx_len,
+      vbx_len,wbx_len,ubx_lo,vbx_lo,wbx_lo,bct_ilo,bct_ihi,bct_jlo,bct_jhi,
+      bct_klo,bct_khi,dom_low,dom_high,fx,fy,fz,slopes_comp,x_slopes,y_slopes,
+      z_slopes,state_comp,state,ncomp,u,v,w]
+    AMREX_GPU_DEVICE (int idx) noexcept
   {
 #ifdef AMREX_USE_DPCPP
     auto bct_ilo = dp[0];
@@ -459,7 +463,12 @@ mfix::mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
   const int npoints = amrex::max(ubx_npoints,vbx_npoints,wbx_npoints);
 
-  ParallelFor(npoints, [=] AMREX_GPU_DEVICE (int idx) noexcept
+  ParallelFor(npoints, [bc_types,ubx_npoints,vbx_npoints,wbx_npoints,ubx_len,
+      vbx_len,wbx_len,ubx_lo,vbx_lo,wbx_lo,bct_ilo,bct_ihi,bct_jlo,bct_jhi,
+      bct_klo,bct_khi,state_comp,dom_low,dom_high,state,x_slopes,y_slopes,z_slopes,
+      ccc_fab,fcx_fab,fcy_fab,fcz_fab,areafrac_x,areafrac_y,areafrac_z,u,v,w,sx,
+      sy,sz,fx,fy,fz,my_huge,ncomp,slopes_comp]
+    AMREX_GPU_DEVICE (int idx) noexcept
   {
     const int* bct_data = bc_types.data();
     const int bct_size = bc_types.size();

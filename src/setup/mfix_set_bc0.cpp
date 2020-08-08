@@ -73,7 +73,10 @@ mfix::set_bc0 (const Box& sbx,
 
     const Box bx_yz_lo_3D(sbx_lo, bx_yz_lo_hi_3D);
 
-    ParallelFor(bx_yz_lo_3D, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    ParallelFor(bx_yz_lo_3D, [a_bc_ilo,minf,pinf,pout,a_ep_g,a_ro_g,a_trac,
+        a_mu_g,p_bc_ep_g,ro_g0,trac_0,mu_g0,a_MW_g,MW_g0,p_bc_X_gk,p_MW_gk0,
+        nspecies_g,dom_lo,fluid_is_a_mixture]
+    AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_ilo(dom_lo[0]-1,j,k,1);
       const int bct = a_bc_ilo(dom_lo[0]-1,j,k,0);
@@ -110,7 +113,10 @@ mfix::set_bc0 (const Box& sbx,
 
     const Box bx_yz_hi_3D(bx_yz_hi_lo_3D, sbx_hi);
 
-    ParallelFor(bx_yz_hi_3D, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    ParallelFor(bx_yz_hi_3D, [a_bc_ihi,minf,pinf,pout,a_ep_g,a_ro_g,a_trac,
+        a_mu_g,p_bc_ep_g,ro_g0,trac_0,mu_g0,a_MW_g,MW_g0,p_bc_X_gk,p_MW_gk0,
+        nspecies_g,dom_hi,fluid_is_a_mixture]
+    AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_ihi(dom_hi[0]+1,j,k,1);
       const int bct = a_bc_ihi(dom_hi[0]+1,j,k,0);
@@ -147,7 +153,10 @@ mfix::set_bc0 (const Box& sbx,
 
     const Box bx_xz_lo_3D(sbx_lo, bx_xz_lo_hi_3D);
 
-    ParallelFor(bx_xz_lo_3D, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    ParallelFor(bx_xz_lo_3D, [a_bc_jlo,minf,pinf,pout,a_ep_g,a_ro_g,a_trac,
+        a_mu_g,p_bc_ep_g,ro_g0,trac_0,mu_g0,a_MW_g,MW_g0,p_bc_X_gk,p_MW_gk0,
+        nspecies_g,dom_lo,fluid_is_a_mixture]
+    AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_jlo(i,dom_lo[1]-1,k,1);
       const int bct = a_bc_jlo(i,dom_lo[1]-1,k,0);
@@ -184,7 +193,10 @@ mfix::set_bc0 (const Box& sbx,
 
     const Box bx_xz_hi_3D(bx_xz_hi_lo_3D, sbx_hi);
 
-    ParallelFor(bx_xz_hi_3D, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    ParallelFor(bx_xz_hi_3D, [a_bc_jhi,minf,pinf,pout,a_ep_g,a_ro_g,a_trac,
+        a_mu_g,p_bc_ep_g,ro_g0,trac_0,mu_g0,a_MW_g,MW_g0,p_bc_X_gk,p_MW_gk0,
+        nspecies_g,dom_hi,fluid_is_a_mixture]
+    AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_jhi(i,dom_hi[1]+1,k,1);
       const int bct = a_bc_jhi(i,dom_hi[1]+1,k,0);
@@ -221,7 +233,10 @@ mfix::set_bc0 (const Box& sbx,
 
     const Box bx_xy_lo_3D(sbx_lo, bx_xy_lo_hi_3D);
 
-    ParallelFor(bx_xy_lo_3D, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    ParallelFor(bx_xy_lo_3D, [a_bc_klo,minf,pinf,pout,a_ep_g,a_ro_g,a_trac,
+        a_mu_g,p_bc_ep_g,ro_g0,trac_0,mu_g0,a_MW_g,MW_g0,p_bc_X_gk,p_MW_gk0,
+        nspecies_g,dom_lo,fluid_is_a_mixture]
+    AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_klo(i,j,dom_lo[2]-1,1);
       const int bct = a_bc_klo(i,j,dom_lo[2]-1,0);
@@ -258,7 +273,10 @@ mfix::set_bc0 (const Box& sbx,
 
     const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, sbx_hi);
 
-    ParallelFor(bx_xy_hi_3D, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    ParallelFor(bx_xy_hi_3D, [a_bc_khi,minf,pinf,pout,a_ep_g,a_ro_g,a_trac,
+        a_mu_g,p_bc_ep_g,ro_g0,trac_0,mu_g0,a_MW_g,MW_g0,p_bc_X_gk,p_MW_gk0,
+        nspecies_g,dom_hi,fluid_is_a_mixture]
+    AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_khi(i,j,dom_hi[2]+1,1);
       const int bct = a_bc_khi(i,j,dom_hi[2]+1,0);

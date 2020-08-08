@@ -39,7 +39,8 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
 
                 const int nextID = ParticleType::NextID();
 
-                amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE (int n) noexcept
+                amrex::ParallelFor(np, [pstruct,np,nextID,myProc,shift,i]
+                  AMREX_GPU_DEVICE (int n) noexcept
                 {
                     int index = n;
                     int index_repl = i*np + n;

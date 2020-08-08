@@ -62,8 +62,8 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
 
       const auto& X_gk_array = X_gk[lev]->array(mfi);
 
-      amrex::ParallelFor(bx, nspecies_g,
-        [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+      amrex::ParallelFor(bx, nspecies_g, [X_gk_array] 
+        AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
       {
         if (X_gk_array(i,j,k,n) > 1)
           X_gk_array(i,j,k,n) = 1;
@@ -258,7 +258,8 @@ mfix::mfix_update_fluid_and_species(const Vector< MultiFab* >& cp_gk,
         Array4< Real > const& MW_g_arr = MW_g[lev]->array(mfi);
         Array4< Real > const& X_gk_arr = X_gk[lev]->array(mfi);
 
-        ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        ParallelFor(bx, [nspecies_g,X_gk_arr,p_MW_gk,MW_g_arr]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           Real MW_g_sum(0);
 
@@ -276,7 +277,9 @@ mfix::mfix_update_fluid_and_species(const Vector< MultiFab* >& cp_gk,
           Array4< Real > const& cp_g_arr  = cp_g[lev]->array(mfi);
           Array4< Real > const& h_g_arr   = h_g[lev]->array(mfi);
 
-          ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          ParallelFor(bx, [cp_gk_arr,h_gk_arr,cp_g_arr,h_g_arr,nspecies_g,
+              X_gk_arr,MW_g_arr]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             Real cp_g_sum(0);
             Real h_g_sum(0);

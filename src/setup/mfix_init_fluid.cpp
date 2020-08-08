@@ -58,7 +58,7 @@ void init_fluid (const Box& sbx,
 
   const Real ro_g0  = FLUID::ro_g0;
 
-  ParallelFor(sbx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+  ParallelFor(sbx, [ro_g,ro_g0] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
   { ro_g(i,j,k) = ro_g0; });
 
   // Set the initial fluid tracer
@@ -66,7 +66,7 @@ void init_fluid (const Box& sbx,
 
   const Real trac_0 = FLUID::trac_0;
 
-  ParallelFor(sbx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+  ParallelFor(sbx, [trac,trac_0] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
   { trac(i,j,k) = trac_0; });
 
   // Set the initial fluid temperature
@@ -338,7 +338,7 @@ void init_fluid_parameters (const Box& bx,
   {
     const Real MW_g0  = FLUID::MW_g0;
 
-    ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    ParallelFor(bx, [MW_g,MW_g0] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     { MW_g(i,j,k) = MW_g0; });
 
     // Initialize Cp_g and k_g
@@ -361,7 +361,8 @@ void init_fluid_parameters (const Box& bx,
     Real* p_MW_gk0 = MW_gk0_managed.data();
 
     // Set initial species molecular weights and fluid molecular weight
-    ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    ParallelFor(bx, [nspecies_g,X_gk,MW_g,p_MW_gk0]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       Real MW_g_sum(0);
 
@@ -379,7 +380,8 @@ void init_fluid_parameters (const Box& bx,
       Array4<Real> const& h_gk  = ld.h_gk->array(mfi);
 
       // Update cp_g and h_g from species quantities
-      ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      ParallelFor(bx, [nspecies_g,X_gk,cp_gk,h_gk,cp_g,h_g]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         Real cp_g_sum(0);
         Real h_g_sum(0);
@@ -578,23 +580,26 @@ void set_ic_temp (const Box& sbx,
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
 
-        ParallelFor(box1, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-          { T_g(i,j,k) = temperature; });
+        ParallelFor(box1, [T_g,temperature]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        { T_g(i,j,k) = temperature; });
 
         if(slo[0] < domlo[0] and domlo[0] == istart)
         {
           const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
           const Box box2(low2, hi2);
-          ParallelFor(box2, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            { T_g(i,j,k) = temperature; });
+          ParallelFor(box2, [T_g,temperature]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          { T_g(i,j,k) = temperature; });
         }
 
         if(shi[0] > domhi[0] and domhi[0] == iend)
         {
           const IntVect low3(iend+1, jstart, kstart), hi3(shi[0], jend, kend);
           const Box box3(low3, hi3);
-          ParallelFor(box3, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            { T_g(i,j,k) = temperature; });
+          ParallelFor(box3, [T_g,temperature]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          { T_g(i,j,k) = temperature; });
         }
       }
 
@@ -602,39 +607,44 @@ void set_ic_temp (const Box& sbx,
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
 
-        ParallelFor(box1, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-          { T_g(i,j,k) = temperature; });
+        ParallelFor(box1, [T_g,temperature]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        { T_g(i,j,k) = temperature; });
 
         if (slo[1] < domlo[1] and domlo[1] == jstart)
         {
           const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
           const Box box2(low2, hi2);
-          ParallelFor(box2, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            { T_g(i,j,k) = temperature; });
+          ParallelFor(box2, [T_g,temperature]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          { T_g(i,j,k) = temperature; });
         }
 
         if (shi[1] > domhi[1] and domhi[1] == jend)
         {
           const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
           const Box box3(low3, hi3);
-          ParallelFor(box3, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            { T_g(i,j,k) = temperature; });
+          ParallelFor(box3, [T_g,temperature]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          { T_g(i,j,k) = temperature; });
         }
       }
 
       {
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
-        ParallelFor(box1, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-          { T_g(i,j,k) = temperature; });
+        ParallelFor(box1, [T_g,temperature]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        { T_g(i,j,k) = temperature; });
 
         if (slo[2] < domlo[2] and domlo[2] == kstart)
         {
           const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
           const Box box2(low2, hi2);
 
-          ParallelFor(box2, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            { T_g(i,j,k) = temperature; });
+          ParallelFor(box2, [T_g,temperature]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          { T_g(i,j,k) = temperature; });
         }
 
         if (shi[2] > domhi[2] and domhi[2] == kend)
@@ -642,8 +652,9 @@ void set_ic_temp (const Box& sbx,
           const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
           const Box box3(low3, hi3);
 
-          ParallelFor(box3, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            { T_g(i,j,k) = temperature; });
+          ParallelFor(box3, [T_g,temperature]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          { T_g(i,j,k) = temperature; });
         }
       }
     }
@@ -705,16 +716,16 @@ void set_ic_species_g (const Box& sbx,
       const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
       const Box box1(low1, hi1);
 
-      ParallelFor(box1, nspecies_g,
-        [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+      ParallelFor(box1, nspecies_g, [X_gk,p_mass_fractions]
+        AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
       { X_gk(i,j,k,n) = p_mass_fractions[n]; });
 
       if(slo[0] < domlo[0] and domlo[0] == istart)
       {
         const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
         const Box box2(low2, hi2);
-        ParallelFor(box2, nspecies_g,
-          [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+        ParallelFor(box2, nspecies_g, [X_gk,p_mass_fractions]
+          AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
         { X_gk(i,j,k,n) = p_mass_fractions[n]; });
       }
 
@@ -722,8 +733,8 @@ void set_ic_species_g (const Box& sbx,
       {
         const IntVect low3(iend+1, jstart, kstart), hi3(shi[0], jend, kend);
         const Box box3(low3, hi3);
-        ParallelFor(box3, nspecies_g,
-          [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+        ParallelFor(box3, nspecies_g, [X_gk,p_mass_fractions]
+          AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
         { X_gk(i,j,k,n) = p_mass_fractions[n]; });
       }
     }
@@ -732,16 +743,16 @@ void set_ic_species_g (const Box& sbx,
       const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
       const Box box1(low1, hi1);
 
-      ParallelFor(box1, nspecies_g,
-        [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+      ParallelFor(box1, nspecies_g, [X_gk,p_mass_fractions]
+        AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
       { X_gk(i,j,k,n) = p_mass_fractions[n]; });
 
       if (slo[1] < domlo[1] and domlo[1] == jstart)
       {
         const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
         const Box box2(low2, hi2);
-        ParallelFor(box2, nspecies_g,
-          [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+        ParallelFor(box2, nspecies_g, [X_gk,p_mass_fractions]
+          AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
         { X_gk(i,j,k,n) = p_mass_fractions[n]; });
       }
 
@@ -749,8 +760,8 @@ void set_ic_species_g (const Box& sbx,
       {
         const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
         const Box box3(low3, hi3);
-        ParallelFor(box3, nspecies_g,
-          [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+        ParallelFor(box3, nspecies_g, [X_gk,p_mass_fractions]
+          AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
         { X_gk(i,j,k,n) = p_mass_fractions[n]; });
       }
     }
@@ -758,8 +769,8 @@ void set_ic_species_g (const Box& sbx,
     {
       const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
       const Box box1(low1, hi1);
-      ParallelFor(box1, nspecies_g,
-        [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+      ParallelFor(box1, nspecies_g, [X_gk,p_mass_fractions]
+        AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
       { X_gk(i,j,k,n) = p_mass_fractions[n]; });
 
       if (slo[2] < domlo[2] and domlo[2] == kstart)
@@ -767,8 +778,8 @@ void set_ic_species_g (const Box& sbx,
         const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
         const Box box2(low2, hi2);
 
-        ParallelFor(box2, nspecies_g,
-          [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+        ParallelFor(box2, nspecies_g, [X_gk,p_mass_fractions]
+          AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
         { X_gk(i,j,k,n) = p_mass_fractions[n]; });
       }
 
@@ -777,8 +788,8 @@ void set_ic_species_g (const Box& sbx,
         const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
         const Box box3(low3, hi3);
 
-        ParallelFor(box3, nspecies_g,
-          [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+        ParallelFor(box3, nspecies_g, [X_gk,p_mass_fractions]
+          AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
         { X_gk(i,j,k,n) = p_mass_fractions[n]; });
       }
     }
