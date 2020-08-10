@@ -10,8 +10,6 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
 
   BL_PROFILE("MFIXParticleContainer::MFIX_PC_AdvanceParcels()");
 
-  const amrex::Real small_number = std::numeric_limits<Real>::epsilon();
-
   const amrex::Real en = (PIC::damping_factor + 1.0);
   const amrex::Real velfac = PIC::velfac;
 
@@ -61,7 +59,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
       const Real tolerance = std::numeric_limits<Real>::epsilon();
 
       amrex::ParallelFor(nrp,
-        [pstruct,dt,gravity, small_number,p_hi,p_lo, dxi, tolerance,
+        [pstruct,dt,gravity, p_hi,p_lo, dxi, tolerance,
          avg_prop_array, velfac, en, three_sqrt_two,
          x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc]
         AMREX_GPU_DEVICE (int lp) noexcept
@@ -204,23 +202,28 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
           // centroid is inside. A later routine will take into account the wall
           // collision and redirection of velocity.
 
-          if (x_lo_bc && p.pos(0) < p_lo[0]+small_number)
-              p.pos(0) = p_lo[0] + small_number;
+          // Take the particle radius as the offset. This should be (much) smaller
+          // than the effective parcel radius. We only want to move the parcel a
+          // little but it needs to be enough to keep it inside the domain.
+          const amrex::Real offset = p.rdata(realData::radius);
 
-          if (x_hi_bc && p.pos(0) + small_number > p_hi[0])
-            p.pos(0) = p_hi[0] - small_number;
+          if (x_lo_bc && p.pos(0) < p_lo[0]+offset)
+              p.pos(0) = p_lo[0] + offset;
 
-          if (y_lo_bc && p.pos(1) < p_lo[1]+small_number)
-            p.pos(1) = p_lo[1] + small_number;
+          if (x_hi_bc && p.pos(0) + offset > p_hi[0])
+            p.pos(0) = p_hi[0] - offset;
 
-          if (y_hi_bc && p.pos(1) + small_number > p_hi[1])
-            p.pos(1) = p_hi[1] - small_number;
+          if (y_lo_bc && p.pos(1) < p_lo[1]+offset)
+            p.pos(1) = p_lo[1] + offset;
 
-          if (z_lo_bc && p.pos(2) < p_lo[2]+small_number)
-            p.pos(2) = p_lo[2] + small_number;
+          if (y_hi_bc && p.pos(1) + offset > p_hi[1])
+            p.pos(1) = p_hi[1] - offset;
 
-          if (z_hi_bc && p.pos(2) + small_number > p_hi[2])
-            p.pos(2) = p_hi[2] - small_number;
+          if (z_lo_bc && p.pos(2) < p_lo[2]+offset)
+            p.pos(2) = p_lo[2] + offset;
+
+          if (z_hi_bc && p.pos(2) + offset > p_hi[2])
+            p.pos(2) = p_hi[2] - offset;
 
         });
 
