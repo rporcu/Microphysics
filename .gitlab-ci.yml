@@ -1,4 +1,4 @@
-image: mwm126/mfix-exa:20200526
+image: mwm126/mfix-exa:20200809
 
 workflow:
   rules:
