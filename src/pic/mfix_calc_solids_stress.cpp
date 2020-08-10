@@ -33,10 +33,6 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
     const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(Ps.Factory());
     const auto& flags = factory.getMultiEBCellFlagFab();
-    //const auto& cellcent = factory.getCentroid(); UNUSED
-
-    const GpuArray<Real, AMREX_SPACEDIM> dx = geom[lev].CellSizeArray();
-    const GpuArray<Real, AMREX_SPACEDIM> dxinv = geom[lev].InvCellSizeArray();
 
     const Real Ps0 = PIC::Ps;
     const Real beta = PIC::beta;
@@ -325,16 +321,12 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 #endif
     {
 
-      const auto dx_array  = geom[lev].CellSizeArray();
       const auto dxi_array = geom[lev].InvCellSizeArray();
       const auto plo_array = geom[lev].ProbLoArray();
 
       const amrex::RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
       const amrex::RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
 
-      //const auto cellcent =  &(particle_ebfactory[lev]->getCentroid()); UNUSED
-      //const auto bndrycent = &(particle_ebfactory[lev]->getBndryCent()); UNUSED
-      const auto areafrac =  particle_ebfactory[lev]->getAreaFrac();
 
       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
       {
