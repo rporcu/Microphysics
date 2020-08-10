@@ -1,6 +1,6 @@
 # Docker Image for running MfiX-Exa ctests
 
-FROM nvidia/cuda:10.2-devel-ubuntu18.04
+FROM nvidia/cuda:11.0-devel-ubuntu18.04
 
 MAINTAINER Mark Meredith <mark.meredith@netl.doe.gov>
 
