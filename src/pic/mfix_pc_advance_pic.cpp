@@ -29,7 +29,6 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
 
     Box domain(Geom(lev).Domain());
 
-    const auto dx  = Geom(lev).CellSizeArray();
     const auto dxi = Geom(lev).InvCellSizeArray();
 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
