@@ -55,11 +55,7 @@ mfix::InitIOPltData ()
       if (plt_ccse_regtest != 0) {
         plt_vel_g   = 1;
         plt_ep_g    = 1;
-#ifdef AMREX_USE_GPU
         plt_p_g     = 0;
-#else
-        plt_p_g     = 1;
-#endif
         plt_ro_g    = 1;
         plt_MW_g    = 0;
         plt_h_g     = 1;
