@@ -51,12 +51,6 @@ namespace DEM
     amrex::Real eta_fac_pp = 0.5;
     amrex::Real eta_fac_pw = 0.5;
 
-    // Names of the solids used to build input regions.
-    amrex::Vector<std::string> names;
-
-    // Specified constant specific heat
-    amrex::Vector<amrex::Real> c_p0;
-
     // Flag to solve species fluid equations
     int solve_species = 0;
 
@@ -82,6 +76,9 @@ namespace DEM
       en_w.alloc();
 
       amrex::ParmParse ppDEM("dem");
+
+      // Names of the solids used to build input regions.
+      amrex::Vector<std::string> names;
 
       ppDEM.queryarr("solve", names);
 
@@ -171,11 +168,11 @@ namespace DEM
           for (int idx0=0; idx0 < NPHASE; idx0++){
             for (int idx1=idx0; idx1 < NPHASE; idx1++){
 
-              std::string pp01 = DEM::names[idx0]+"."+DEM::names[idx1];
+              std::string pp01 = names[idx0]+"."+names[idx1];
               amrex::Real coeff01 = -1.0;
               ppRC.query(pp01.c_str(), coeff01);
 
-              std::string pp10 = DEM::names[idx1]+"."+DEM::names[idx0];
+              std::string pp10 = names[idx1]+"."+names[idx0];
               amrex::Real coeff10 = -1.0;
               ppRC.query(pp10.c_str(), coeff10);
 
@@ -205,11 +202,11 @@ namespace DEM
 
             }
 
-            std::string pp01 = DEM::names[idx0]+".wall";
+            std::string pp01 = names[idx0]+".wall";
             amrex::Real coeff01 = -1.0;
             ppRC.query(pp01.c_str(), coeff01);
 
-            std::string pp10 = "wall."+DEM::names[idx0];
+            std::string pp10 = "wall."+names[idx0];
             amrex::Real coeff10 = -1.0;
             ppRC.query(pp10.c_str(), coeff10);
 
@@ -247,51 +244,6 @@ namespace DEM
 #endif
         }
 
-        if (ppDEM.contains("specific_heat")) {
-
-          std::string specific_heat_model;
-          ppDEM.query("specific_heat", specific_heat_model );
-
-          amrex::ParmParse ppDEM_CP("dem.specific_heat");
-
-          if (specific_heat_model == "constant")
-          {
-            //SPECIFICHEATMODEL SpecificHeatModel = ConstantSpecificHeat;
-            // If this value is not set in the inputs file, the default is 1.0
-
-            for (int idx0=0; idx0 < NPHASE; idx0++){
-
-              std::string ppCP0 = "constant."+DEM::names[idx0];
-              amrex::Real cp0_in = -1.0;
-              ppDEM_CP.get(ppCP0.c_str(), cp0_in);
-              AMREX_ALWAYS_ASSERT_WITH_MESSAGE(cp0_in > 0.0, "Invalid DEM constant specific heat.");
-
-              DEM::c_p0.push_back(cp0_in);
-            }
-
-          }
-          else if (specific_heat_model == "nasa9-poly")
-          {
-            //SPECIFICHEATMODEL SpecificHeatModel = NASA9_Polynomial;
-            amrex::Abort("Not yet implemented.");
-            // TODO: get Tlow, Thigh, coefficients
-          }
-          else
-          {
-            amrex::Abort("Unknown DEM specific heat model!");
-          }
-        } // end specific heat
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Read species inputs -----------------------------------------//
-        int species = 0;
-        ppDEM.query("species", species);
-        if (species > 0)
-        {
-              ppDEM.getarr("species.names", species_dem);
-              nspecies_dem = species_dem.size();
-        }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // Read coarse-grain DEM
         ppDEM.query("coarse_grain", cg_dem);

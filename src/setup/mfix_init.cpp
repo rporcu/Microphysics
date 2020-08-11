@@ -12,6 +12,7 @@
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
 #include <mfix_fluid_parms.H>
+#include <mfix_solids_parms.H>
 #include <mfix_species_parms.H>
 
 void
@@ -22,6 +23,7 @@ mfix::InitParams ()
   // Read and process species, fluid and DEM particle model options.
   SPECIES::Initialize();
   FLUID::Initialize();
+  SOLIDS::Initialize();
 
   // Set the mfix class flag equal to the FLUID parameter
   advect_fluid_species = FLUID::solve_species;

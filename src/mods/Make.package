@@ -5,6 +5,7 @@ CEXE_headers += mfix_bc_parms.H
 CEXE_headers += mfix_eb_parms.H
 CEXE_headers += mfix_fluid_parms.H
 CEXE_headers += mfix_species_parms.H
+CEXE_headers += mfix_solids_parms.H
 CEXE_headers += mfix_dem_parms.H
 CEXE_headers += mfix_pic_parms.H
 
@@ -15,6 +16,7 @@ CEXE_sources += mfix_bc_parms.cpp
 CEXE_sources += mfix_eb_parms.cpp
 CEXE_sources += mfix_fluid_parms.cpp
 CEXE_sources += mfix_species_parms.cpp
+CEXE_sources += mfix_solids_parms.cpp
 CEXE_sources += mfix_dem_parms.cpp
 CEXE_sources += mfix_pic_parms.cpp
 CEXE_headers += mfix_bc_list.H
