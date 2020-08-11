@@ -50,7 +50,8 @@ amr.plot_file = FLD03
 amr.check_int = -1
 amr.par_ascii_int = -1
 
-amr.plt_regtest = 1
+amr.plt_vel_g = 1
+amr.plt_p_g = 1
 
 
 #_______________________________________________________________________
