@@ -13,7 +13,7 @@
 
 #include <mfix_eb_parms.H>
 #include <mfix_fluid_parms.H>
-#include <mfix_dem_parms.H>
+#include <mfix_solids_parms.H>
 
 namespace BC
 {
@@ -29,7 +29,7 @@ namespace BC
 
     FLUID::FLUID_t fluid;
 
-    amrex::Vector<DEM::DEM_t> solids;
+    amrex::Vector<SOLIDS::SOLIDS_t> solids;
 
   };
 

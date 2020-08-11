@@ -105,9 +105,8 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     }
 
     if (PIC::solve) {
-        EvolveParcels(dt, time, mfix::gravity,
-                      levelset_refinement,
-                      particle_cost, knapsack_weight_type);
+        EvolveParcels(dt, time, mfix::gravity, levelset_refinement,
+                      particle_cost, knapsack_weight_type, advect_enthalpy);
     }
 
     BL_PROFILE_VAR_STOP(particlesSolve);

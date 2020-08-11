@@ -5,7 +5,8 @@
 void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealVect& gravity,
                                                     amrex::Vector< amrex::MultiFab* >& avg_prop_in,
                                                     amrex::Vector< amrex::MultiFab* >& cost,
-                                                    std::string& knapsack_weight_type)
+                                                    std::string& knapsack_weight_type,
+                                                    const int advect_enthalpy)
 {
 
   BL_PROFILE("MFIXParticleContainer::MFIX_PC_AdvanceParcels()");
@@ -223,6 +224,22 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
             p.pos(2) = p_hi[2] - small_number;
 
         });
+
+
+
+      if(advect_enthalpy){
+
+        amrex::ParallelFor(nrp, [pstruct,dt] AMREX_GPU_DEVICE (int lp) noexcept
+        {
+          ParticleType& p = pstruct[lp];
+
+          AMREX_ASSERT(p.rdata(realData::c_ps) > 0.);
+
+          p.rdata(realData::temperature) += dt * p.rdata(realData::convection) /
+            (p.rdata(realData::mass) * p.rdata(realData::c_ps));
+
+        });
+      }
 
       Gpu::synchronize();
 

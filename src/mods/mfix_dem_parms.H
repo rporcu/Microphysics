@@ -7,11 +7,10 @@
 #include <AMReX_Vector.H>
 #include <AMReX_Array.H>
 
-#include <mfix_species_parms.H>
+#include <mfix_solids_parms.H>
 
 namespace DEM
 {
-    constexpr int NMAX = 10;
     extern int NPHASE;
 
     enum COLLISIONMODEL {
@@ -84,8 +83,8 @@ namespace DEM
         ARRAY_TYPE * a = nullptr;
     };
 
-    using A2D = DeviceArray<amrex::Array2D<amrex::Real,0,NMAX-1,0,NMAX-1,amrex::Order::C> >;
-    using A1D = DeviceArray<amrex::Array1D<amrex::Real,0,NMAX-1> >;
+    using A2D = DeviceArray<amrex::Array2D<amrex::Real,0,SOLIDS::NMAX-1,0,SOLIDS::NMAX-1,amrex::Order::C> >;
+    using A1D = DeviceArray<amrex::Array1D<amrex::Real,0,SOLIDS::NMAX-1> >;
 
     // normal and tangential components of the damping coefficients
     extern A2D etan;
@@ -107,11 +106,6 @@ namespace DEM
 
     extern amrex::Real neighborhood;
 
-    extern amrex::Vector<std::string> names;
-
-    // Specified constant specific heats
-    extern amrex::Vector<amrex::Real> c_p0;
-
     // Flag to solve species DEM particles equations
     extern int solve_species;
 
@@ -124,44 +118,6 @@ namespace DEM
     // Coarse-grain DEM
     extern int cg_dem;
 
-    struct INPUT_DIST_t {
-      std::string distribution;
-      amrex::Real mean; // Mean value of distriubtion (or constant value)
-      amrex::Real std;  // Standard deivation
-      amrex::Real min;  // Minimum value of distribution
-      amrex::Real max;  // Max value of distribution
-
-      INPUT_DIST_t() :
-        mean(-1.0),
-        std(-1.0),
-        min(-1.0),
-        max(-1.0) { }
-
-    };
-
-    struct DEM_t {
-
-      std::string name;
-      amrex::Real volfrac;
-      amrex::Real statwt;
-      amrex::Real temperature;
-      amrex::Vector<amrex::Real> velocity;
-
-      SPECIES::SPECIES_t species;
-
-      INPUT_DIST_t diameter;
-      INPUT_DIST_t density;
-
-      DEM_t() :
-        volfrac(0.0),
-        statwt(0.0),
-        temperature(0.0),
-        velocity(0),
-        species(DEM::nspecies_dem),
-        diameter(),
-        density()
-      {}
-    };
 
     void Initialize ();
     void Finalize ();

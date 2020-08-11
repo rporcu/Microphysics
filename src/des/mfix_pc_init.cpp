@@ -1,4 +1,4 @@
-#include "mfix_dem_parms.H"
+#include "mfix_solids_parms.H"
 #include <mfix_ic_parms.H>
 
 #include <mfix_particle_generator.H>
@@ -138,10 +138,10 @@ void MFIXParticleContainer::InitParticlesAuto ()
 
         // Add to the data structure
         particles.push_back(p_new);
-        if (DEM::nspecies_dem > 0){
-           for(int ii=0; ii < DEM::nspecies_dem; ++ii){
-               particles.push_back_real(ii, -1.0);
-           }
+        if (SOLIDS::nspecies > 0){
+          for(int ii=0; ii < SOLIDS::nspecies; ++ii){
+            particles.push_back_real(ii, -1.0);
+          }
         }
       }
 
@@ -173,9 +173,9 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
   {
 
-    amrex::GpuArray<amrex::Real, DEM::NMAX> cp0_loc;
-    for(int phase(0); phase<DEM::names.size(); phase++) {
-      cp0_loc[phase] = DEM::c_p0[phase];
+    amrex::GpuArray<amrex::Real, SOLIDS::NMAX> cp0_loc;
+    for(int phase(0); phase<SOLIDS::names.size(); phase++) {
+      cp0_loc[phase] = SOLIDS::cp_p0[phase];
     }
 
     // Set the initial conditions.
@@ -206,15 +206,15 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
 
         // Create a temporary copy of IC particle temperatures mapped
         // to the particle type.
-        amrex::GpuArray<amrex::Real, DEM::NMAX> temperature_loc;
-        for(int solid_type(0); solid_type<DEM::names.size(); solid_type++) {
+        amrex::GpuArray<amrex::Real, SOLIDS::NMAX> temperature_loc;
+        for(int solid_type(0); solid_type<SOLIDS::names.size(); solid_type++) {
           // Initialize to zero
           temperature_loc[solid_type] = 0.0;
 
           // Loop through IC solids looking for match.
           for(int ics(0); ics < IC::ic[icv].solids.size(); ics++) {
-            DEM::DEM_t ic_solid = IC::ic[icv].solids[ics];
-            if(DEM::names[solid_type] == ic_solid.name) {
+            SOLIDS::SOLIDS_t ic_solid = IC::ic[icv].solids[ics];
+            if(SOLIDS::names[solid_type] == ic_solid.name) {
               temperature_loc[solid_type] = ic_solid.temperature;
             }
           }

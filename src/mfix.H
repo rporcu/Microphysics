@@ -513,8 +513,8 @@ class mfix : public AmrCore
                       amrex::RealVect& gravity,
                       const int ls_refinement,
                       amrex::Vector< amrex::MultiFab* >& cost,
-                      std::string& knapsack_weight_type
-                      );
+                      std::string& knapsack_weight_type,
+                      const int advect_enthalpy);
 
 
   void MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in);

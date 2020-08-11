@@ -5,8 +5,6 @@
 
 namespace PIC
 {
-  constexpr int NMAX = 10;
-  extern int NPHASE;
 
 //  enum COLLISIONMODEL {LSD};
 //

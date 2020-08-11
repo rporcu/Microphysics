@@ -71,6 +71,15 @@ fluid.species  =  CO  H2O
 
 
 #_______________________________________________________________________
+# Solids properties
+#
+solids.types = solid0
+
+solid0.specific_heat = constant
+solid0.specific_heat.constant = 385 ## Copper
+
+
+#_______________________________________________________________________
 # DEM model settings
 #
 dem.solve = solid0
@@ -89,9 +98,6 @@ dem.spring_tang_fac.pw    =     0.285714285
 
 dem.damping_tang_fac.pp   =     0.5
 dem.damping_tang_fac.pw   =     0.5
-
-dem.specific_heat = constant
-dem.specific_heat.constant.solid0 = 385 ## Copper
 
 
 #_______________________________________________________________________

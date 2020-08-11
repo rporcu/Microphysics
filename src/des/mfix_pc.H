@@ -210,7 +210,8 @@ public:
     void MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealVect& gravity,
                                  amrex::Vector< amrex::MultiFab*> & avg_prop_in,
                                  amrex::Vector< amrex::MultiFab*> & cost,
-                                 std::string& knapsack_weight_type);
+                                 std::string& knapsack_weight_type,
+                                 const int advect_enthalpy);
 
     void MFIX_PC_ImposeWalls (int lev,
                               amrex::EBFArrayBoxFactory * ebfactory,

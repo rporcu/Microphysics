@@ -10,6 +10,7 @@
 #include <sstream>
 
 #include <mfix_ic_parms.H>
+#include <mfix_solids_parms.H>
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
 
@@ -124,7 +125,7 @@ ParticlesGenerator::generate (int& pc,
   amrex::Real* p_dp = dp.data();
   amrex::Real* p_ro_s = ro_s.data();
 
-  DEM::DEM_t solid;
+  SOLIDS::SOLIDS_t solid;
   solid = IC::ic[icv].solids[type];
 
   // Setup particle diameters

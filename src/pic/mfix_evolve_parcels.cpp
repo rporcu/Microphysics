@@ -8,7 +8,8 @@ void mfix::EvolveParcels (Real dt,
                           RealVect& gravity,
                           const int ls_refinement_in,
                           Vector< MultiFab* >& cost,
-                          std::string& knapsack_weight_type)
+                          std::string& knapsack_weight_type,
+                          const int advect_enthalpy)
 {
   BL_PROFILE_REGION_START("MFIX_PIC::EvolveParcels()");
   BL_PROFILE("mfix::EvolveParcels()");
@@ -64,7 +65,9 @@ void mfix::EvolveParcels (Real dt,
   MFIX_CalcAvgSolidsVel(avg_prop);
 
   // Move the parcels.
-  pc->MFIX_PC_AdvanceParcels(dt, gravity, avg_prop, cost, knapsack_weight_type);
+  pc->MFIX_PC_AdvanceParcels(dt, gravity, avg_prop,
+                             cost, knapsack_weight_type,
+                             advect_enthalpy);
 
   // Account for cross process movements.
   pc->Redistribute(0, 0, 0, 0);

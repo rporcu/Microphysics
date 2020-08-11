@@ -365,7 +365,7 @@ namespace BC
 
         for(size_t lcs(0); lcs < solids_types.size(); ++ lcs){
 
-          DEM::DEM_t new_solid;
+          SOLIDS::SOLIDS_t new_solid;
 
           std::string field = "bc."+regions[bcv]+"."+solids_types[lcs];
           amrex::ParmParse ppSolid(field.c_str());
