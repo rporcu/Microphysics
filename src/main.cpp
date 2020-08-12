@@ -48,6 +48,16 @@ std::string mfix_dat {"mfix.dat"};
 
 void set_ptr_to_mfix (mfix& mfix);
 
+// Set the extend domain flag by default, since the mfix default
+// is different (true) from the amrex default (false)
+// only if its not already specified in the inputs file
+void add_par () {
+   ParmParse pp("eb2"); 
+   if(not pp.contains("extend_domain_face")) {
+      pp.add("extend_domain_face",true);
+   }
+};
+
 void writeBuildInfo ();
 
 void ReadParameters ()
@@ -184,10 +194,9 @@ int main (int argc, char* argv[])
 
     // AMReX will now read the inputs file and the command line arguments, but the
     //        command line arguments are in mfix-format so it will just ignore them.
-    amrex::Initialize(argc,argv);
+    amrex::Initialize(argc,argv,true,MPI_COMM_WORLD,add_par);
     { // This start bracket and the end bracket before Finalize are essential so
       // that the mfix object is deleted before Finalize
-
     BL_PROFILE_VAR("main()", pmain)
     BL_PROFILE_REGION_START("mfix::main()");
 
@@ -209,10 +218,6 @@ int main (int argc, char* argv[])
     //                                                             |
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix mfix;
-
-    // Set the extend domain flag by default
-    ParmParse pp("eb2");
-    pp.add("extend_domain_face",true);
 
     ReadParameters();
 

@@ -92,11 +92,11 @@ regions.inflow.hi      = 0.010  0.005  0.000
 regions.outflow.lo     = 0.000  0.000  0.010
 regions.outflow.hi     = 0.010  0.005  0.010
 
-regions.wall1.lo       = 0.000  0.000  0.000
-regions.wall1.hi       = 0.000  0.005  0.010
+regions.wall1.lo       = 1.25e-6  0.000  0.000
+regions.wall1.hi       = 1.25e-6  0.005  0.010
 
-regions.wall2.lo       = 0.010  0.000  0.000
-regions.wall2.hi       = 0.010  0.005  0.010
+regions.wall2.lo       = 9.99875e-3  0.000  0.000
+regions.wall2.hi       = 9.99875e-3  0.005  0.010
 
 
 #_______________________________________________________________________
