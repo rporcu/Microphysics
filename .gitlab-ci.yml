@@ -6,18 +6,18 @@ workflow:
     - if: $CI_COMMIT_BRANCH == 'develop'     # Execute jobs when a new commit is pushed to master branch
 
 variables:
-  CC: "gcc"
-  CXX: "g++"
-  ENABLE_MPI: "1"
-  ENABLE_OMP: "0"
-  FC: "gfortran"
+  CC: gcc
+  CXX: g++
+  ENABLE_MPI: 1
+  ENABLE_OMP: 0
+  FC: gfortran
   GIT_DEPTH: 100
   GIT_STRATEGY: fetch
   GIT_SUBMODULE_STRATEGY: none
 
 ###### Test jobs #####
 
-test_csg: &test_template
+test:csg: &test_template
   script:
     - git submodule update --init --force
     - cmake -S .
@@ -31,7 +31,7 @@ test_csg: &test_template
     - mfix-exa
   allow_failure: true
   artifacts:
-    name: "$CI_JOB_NAME"
+    name: $CI_JOB_NAME
     expire_in: 1 week
     when: on_failure
     paths:
@@ -39,13 +39,13 @@ test_csg: &test_template
 
 .test_job: &test_template
   artifacts:
-    name: "$CI_JOB_NAME"
+    name: $CI_JOB_NAME
     expire_in: 1 week
     when: on_failure
     paths:
       - build/Testing/
 
-.cpu_test: &cpu_template
+.test: &test_template
   script:
     - git submodule update --init --force subprojects/amrex
     - cmake -S .
@@ -60,7 +60,7 @@ test_csg: &test_template
     - mfix-exa
   <<: *test_template
 
-.gpu_test: &gpu_template
+build:gpu:
   script:
     - git submodule update --init --force
     - cmake -S .
@@ -72,71 +72,38 @@ test_csg: &test_template
             -DENABLE_OMP=$ENABLE_OMP
             -G Ninja
     - cmake --build build --target build_tests
-    - cd build
-    # - $CTEST_CMD
   tags:
     - mfix-exa
   <<: *test_template
 
 
-#  CPU tests
-
-single-grid-serial-cpu:
+test:single-serial:
   variables:
-    CTEST_CMD: "srun ctest -R SGS"
-  <<: *cpu_template
+    CTEST_CMD: srun ctest -R SGS
+  <<: *test_template
 
-multiple-grid-serial-cpu:
+test:multiple-serial:
   variables:
-    CTEST_CMD: "srun ctest -R MGS"
-  <<: *cpu_template
+    CTEST_CMD: srun ctest -R MGS
+  <<: *test_template
 
-tiled-grid-serial-cpu:
+test:tiled-serial:
   variables:
-    CTEST_CMD: "srun ctest -R TGS"
-  <<: *cpu_template
+    CTEST_CMD: srun ctest -R TGS
+  <<: *test_template
 
-multiple-grid-parallel-cpu:
+test:multiple-parallel:
   variables:
-    CTEST_CMD: "srun ctest -R MGP"
-  <<: *cpu_template
+    CTEST_CMD: srun ctest -R MGP
+  <<: *test_template
 
-tiled-grid-parallel-openmp-cpu:
+test:tiled-parallel-openmp:
   variables:
-    ENABLE_MPI: "0"
-    ENABLE_OMP: "1"
-    CTEST_CMD: "srun ctest -R TGP"
-  <<: *cpu_template
+    ENABLE_MPI: 0
+    ENABLE_OMP: 1
+    CTEST_CMD: srun ctest -R TGP
+  <<: *test_template
 
-
-#  GPU tests
-
-single-grid-serial-gpu:
-  variables:
-    CTEST_CMD: "srun ctest -R SGS"
-  <<: *gpu_template
-
-.multiple-grid-serial-gpu:
-  variables:
-    CTEST_CMD: "srun ctest -R MGS"
-  <<: *gpu_template
-
-.tiled-grid-serial-gpu:
-  variables:
-    CTEST_CMD: "srun ctest -R TGS"
-  <<: *gpu_template
-
-.multiple-grid-parallel-gpu:
-  variables:
-    CTEST_CMD: "srun ctest -R MGP"
-  <<: *gpu_template
-
-.tiled-grid-parallel-openmp-gpu:
-  variables:
-    ENABLE_MPI: "0"
-    ENABLE_OMP: "1"
-    CTEST_CMD: "srun ctest -R TGP"
-  <<: *gpu_template
 
 linter:shellcheck:
   script:
@@ -162,30 +129,5 @@ linter:spelling:
   allow_failure: true
   except:
     - schedules
-  tags:
-    - mfix-exa
-
-.test:regression:
-  image: mwm126/mfix-exa:py3
-  tags:
-    - mfix-exa
-  script:
-    - python3 subprojects/mfix_regression_testing/regtest.py subprojects/mfix_regression_testing/MFIX-tests.ini
-  tags:
-    - mfix-exa
-
-test:make-regression-benchmark:
-  when: manual
-  image: mwm126/mfix-exa:py3
-  tags:
-    - mfix-exa
-  script:
-    - rm -rf subprojects/mfix_regression_testing/top_test_dir
-    - python3 subprojects/mfix_regression_testing/regtest.py --make_benchmarks "MFIX" subprojects/mfix_regression_testing/MFIX-tests.ini
-  artifacts:
-    name: "$CI_JOB_NAME"
-    expire_in: 1 week
-    paths:
-      - subprojects/mfix_regression_testing/top_test_dir
   tags:
     - mfix-exa
