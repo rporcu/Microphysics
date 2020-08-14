@@ -1,4 +1,5 @@
 #include <AMReX_EB2.H>
+#include <AMReX_EB2_IF.H>
 #include <AMReX_EB2_IF_Cylinder.H>
 #include <AMReX_EB2_IF_Plane.H>
 #include <AMReX_EB2_IF_Union.H>
@@ -31,14 +32,19 @@ void mfix::make_eb_cylinder ()
 
     int direction  = 0;
     Vector<Real> centervec(3);
+    Real rotation = 0.;
+    int rotation_axe  = 0;
 
     pp.query("internal_flow", inside);
 
-    pp.query("radius",     radius);
-    pp.query("height",     height);
-    pp.query("direction",  direction);
-    pp.getarr("center",    centervec,  0, 3);
+    pp.query("radius",       radius);
+    pp.query("height",       height);
+    pp.query("direction",    direction);
+    pp.getarr("center",      centervec,  0, 3);
+    pp.query("rotation",     rotation);
+    pp.query("rotation_axe", rotation_axe);
     Array<Real,3> center={centervec[0], centervec[1], centervec[2]};
+    
 
     /****************************************************************************
      *                                                                          *
@@ -51,17 +57,35 @@ void mfix::make_eb_cylinder ()
     amrex::Print() << " Radius:    " << radius    << std::endl;
     amrex::Print() << " Height:    " << height    << std::endl;
     amrex::Print() << " Direction: " << direction << std::endl;
+    amrex::Print() << " Rotation angle: " << rotation << std::endl;
+    amrex::Print() << " Rotation axe: " << rotation_axe << std::endl;
     amrex::Print() << " Center:    " << center[0] << ", "
                    << center[1] << ", "
                    << center[2] << std::endl;
 
-    // Build the Cylinder geometry first representing the curved walls (this is
-    // always present regardless of user input).
-    EB2::CylinderIF my_cyl(radius, height, direction, center, inside);
+    if(rotation == 0.0) {
+       // Build the Cylinder geometry first representing the curved walls (this is
+       // always present regardless of user input).
+       EB2::CylinderIF my_cyl(radius, height, direction, center, inside);
 
-    auto gshop_cyl = EB2::makeShop(my_cyl);
+       auto gshop_cyl = EB2::makeShop(my_cyl);
 
-    build_eb_levels(gshop_cyl);
+       build_eb_levels(gshop_cyl);
+    }
+    else {
+       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(height == -1, "You cannot rotate cylinders of finite length.");
+
+       rotation = (rotation/180.) * M_PI;
+
+       Array<Real,3> origin = {0.0, 0.0, 0.0};
+       EB2::CylinderIF my_cyl(radius, height, direction, origin, inside);
+       auto my_cyl_rotated = EB2::rotate(my_cyl, rotation, rotation_axe);
+       auto my_cyl_final = EB2::translate(my_cyl_rotated,  center);
+
+       auto gshop_cyl = EB2::makeShop(my_cyl_final);
+
+       build_eb_levels(gshop_cyl);
+    }
 
     Print() << "Done making the fluid eb levels ..." << std::endl;
 }
