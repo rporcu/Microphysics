@@ -9,7 +9,9 @@
 void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
                                                  amrex::EBFArrayBoxFactory* ebfactory,
                                                  const int ls_refinement,
-                                                 const amrex::MultiFab* ls_phi)
+                                                 const amrex::MultiFab* ls_phi,
+                                                 amrex::MultiFab* cost,
+                                                 std::string& knapsack_weight_type)
 {
     BL_PROFILE_VAR("MFIXParticleContainer::MFIX_PC_Imposewalls()",mfix_pc_impose_walls);
 
@@ -22,6 +24,9 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
+        // Timer used for load-balancing
+        amrex::Real wt = ParallelDescriptor::second();
+
         const Box& bx = pti.tilebox();
         PairIndex index(pti.index(), pti.LocalTileIndex());
 
@@ -120,7 +125,29 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
                     }
             });
 
+
+          /********************************************************************
+           * Update runtime cost (used in load-balancing)                     *
+           *******************************************************************/
+          if (cost)
+          {
+            // Runtime cost is either (weighted by tile box size):
+            //   * time spent
+            //   * number of particles
+            const Box& tbx = pti.tilebox();
+            if (knapsack_weight_type == "RunTimeCosts")
+            {
+              wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
             }
+            else if (knapsack_weight_type == "NumParticles")
+            {
+              wt = nrp / tbx.d_numPts();
+            }
+            (*cost)[pti].plus<RunOn::Device>(wt, tbx);
+          }
+
+        }
+
     }
     BL_PROFILE_VAR_STOP(mfix_pc_impose_walls);
 }

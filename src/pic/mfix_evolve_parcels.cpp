@@ -57,7 +57,7 @@ void mfix::EvolveParcels (Real dt,
   // Calculate the solids stress gradient using the local solids
   // volume fraction. The solids stress is a field variable that
   // we will later interpolate to the parcel's position.
-  MFIX_CalcSolidsStress(ep_s, avg_prop);
+  MFIX_CalcSolidsStress(ep_s, avg_prop, cost, knapsack_weight_type);
 
   // Calculate the averaged solids velocity. This is used to assess how
   // a parcel is moving relative to the bulk solids motion.  A consequence
@@ -80,7 +80,8 @@ void mfix::EvolveParcels (Real dt,
       const MultiFab* ls_data = level_sets[lev];
 
       pc->MFIX_PC_ImposeWalls(lev, particle_ebfactory[lev],
-                              ls_refinement, ls_data);
+                              ls_refinement, ls_data,
+                              cost[lev], knapsack_weight_type);
 
     } else {
 
@@ -88,7 +89,8 @@ void mfix::EvolveParcels (Real dt,
       const MultiFab* ls_data = level_sets[1];
 
       pc->MFIX_PC_ImposeWalls(nlev, particle_ebfactory[lev],
-                              ls_refinement, ls_data);
+                              ls_refinement, ls_data,
+                              cost[lev], knapsack_weight_type);
     }
 
   }

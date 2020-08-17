@@ -520,8 +520,9 @@ class mfix : public AmrCore
   void MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in);
 
   void MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
-                              amrex::Vector< amrex::MultiFab* >& avg_prop_in);
-
+                              amrex::Vector< amrex::MultiFab* >& avg_prop_in,
+                              amrex::Vector< amrex::MultiFab* >& cost,
+                              std::string& knapsack_weight_type);
 
 
   protected:
