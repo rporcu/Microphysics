@@ -197,7 +197,9 @@ public:
     void MFIX_PC_CalcSolidsStressGrad (int lev,
                                        amrex::EBFArrayBoxFactory* ebfactory,
                                        amrex::MultiFab & ep_g_in,
-                                       amrex::MultiFab & grad_tau_in);
+                                       amrex::MultiFab & grad_tau_in,
+                                       amrex::Vector< amrex::MultiFab* >& cost,
+                                       std::string& knapsack_weight_type);
 
     ///
     /// Deposit parcel velocity to the grid
@@ -216,7 +218,9 @@ public:
     void MFIX_PC_ImposeWalls (int lev,
                               amrex::EBFArrayBoxFactory * ebfactory,
                               const int ls_refinement,
-                              const amrex::MultiFab * ls_phi);
+                              const amrex::MultiFab * ls_phi,
+                              amrex::MultiFab* cost,
+                              std::string& knapsack_weight_type);
 
   private:
     int nlev;

@@ -34,7 +34,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
     {
 
       // Timer used for load-balancing
-      //amrex::Real wt = ParallelDescriptor::second(); UNUSED
+      amrex::Real wt = ParallelDescriptor::second();
 
       PairIndex index(pti.index(), pti.LocalTileIndex());
 
@@ -243,6 +243,28 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
 
         });
       }
+
+
+      /********************************************************************
+       * Update runtime cost (used in load-balancing)                     *
+       *******************************************************************/
+      if (cost[lev])
+      {
+        // Runtime cost is either (weighted by tile box size):
+        //   * time spent
+        //   * number of particles
+        const Box& tbx = pti.tilebox();
+        if (knapsack_weight_type == "RunTimeCosts")
+        {
+          wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
+        }
+        else if (knapsack_weight_type == "NumParticles")
+        {
+          wt = nrp / tbx.d_numPts();
+        }
+        (*cost[lev])[pti].plus<RunOn::Device>(wt, tbx);
+      }
+
 
       Gpu::synchronize();
 
