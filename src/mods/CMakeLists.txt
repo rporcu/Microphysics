@@ -15,6 +15,8 @@ target_sources( mfixcore
    mfix_solids_parms.H
    mfix_species_parms.cpp
    mfix_species_parms.H
+   mfix_reactions_parms.cpp
+   mfix_reactions_parms.H
    mfix_dem_parms.cpp
    mfix_dem_parms.H
    mfix_pic_parms.cpp

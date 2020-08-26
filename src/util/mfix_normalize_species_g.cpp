@@ -13,7 +13,7 @@
 void
 mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
 {
-  const int nspecies_g = FLUID::nspecies_g;
+  const int nspecies_g = FLUID::nspecies;
 
   for (int lev = 0; lev <= finest_level; lev++) {
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(not X_gk[lev]->contains_nan(),
@@ -231,7 +231,7 @@ mfix::mfix_update_fluid_and_species(const Vector< MultiFab* >& cp_gk,
     }
   }
 
-  const int nspecies_g = FLUID::nspecies_g;
+  const int nspecies_g = FLUID::nspecies;
 
   if (FLUID::is_a_mixture)
   {

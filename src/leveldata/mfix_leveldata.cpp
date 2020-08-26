@@ -2,6 +2,7 @@
 #include <mfix_eb_parms.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
+#include <mfix_reactions_parms.H>
 
 using namespace amrex;
 
@@ -35,7 +36,8 @@ LevelData::LevelData (BoxArray const& ba,
   , cp_gk(nullptr)
   , h_gk(nullptr)
   , vort(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
-  , txfr(new MultiFab(ba, dmap, 6, nghost, MFInfo(), factory))
+  , txfr(new MultiFab(ba, dmap, Transfer::count, nghost, MFInfo(), factory))
+  , ro_gk_txfr(nullptr)
   , xslopes_u(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))
   , yslopes_u(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))
   , zslopes_u(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))
@@ -68,20 +70,23 @@ LevelData::LevelData (BoxArray const& ba,
   }
 
   if (FLUID::solve_species) {
-    X_gk  = new MultiFab(ba, dmap, FLUID::nspecies_g, nghost, MFInfo(), factory);
-    X_gko = new MultiFab(ba, dmap, FLUID::nspecies_g, nghost, MFInfo(), factory);
-    D_gk  = new MultiFab(ba, dmap, FLUID::nspecies_g, nghost, MFInfo(), factory);
+    X_gk  = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
+    X_gko = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
+    D_gk  = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
 
-    xslopes_X = new MultiFab(ba, dmap, FLUID::nspecies_g, nghost, MFInfo(), factory);
-    yslopes_X = new MultiFab(ba, dmap, FLUID::nspecies_g, nghost, MFInfo(), factory);
-    zslopes_X = new MultiFab(ba, dmap, FLUID::nspecies_g, nghost, MFInfo(), factory);
+    xslopes_X = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
+    yslopes_X = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
+    zslopes_X = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
   }
 
   if (FLUID::solve_enthalpy and FLUID::solve_species) {
-    cp_gk  = new MultiFab(ba, dmap, FLUID::nspecies_g, nghost, MFInfo(), factory);
-    h_gk  = new MultiFab(ba, dmap, FLUID::nspecies_g, nghost, MFInfo(), factory);
+    cp_gk  = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
+    h_gk  = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
   }
 
+  if (REACTIONS::solve and FLUID::solve_species) {
+    ro_gk_txfr = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
+  }
 }
 
 void LevelData::resetValues (const amrex::Real covered_val)
@@ -142,6 +147,10 @@ void LevelData::resetValues (const amrex::Real covered_val)
     cp_gk->setVal(0);
     h_gk->setVal(0);
   }
+
+  if (REACTIONS::solve and FLUID::solve_species) {
+    ro_gk_txfr->setVal(0);
+  }
 }
 
 LevelData::~LevelData ()
@@ -198,8 +207,12 @@ LevelData::~LevelData ()
     delete zslopes_X;
   }
 
-  if (FLUID::solve_species and FLUID::solve_enthalpy) {
+  if (FLUID::solve_enthalpy and FLUID::solve_species) {
     delete cp_gk;
     delete h_gk;
+  }
+
+  if (REACTIONS::solve and FLUID::solve_species) {
+    delete ro_gk_txfr;
   }
 }

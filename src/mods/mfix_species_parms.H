@@ -24,6 +24,10 @@ namespace SPECIES
   // Specified species names
   extern std::vector<std::string> species;
 
+  // Species unique identifying code (at the moment = their index in the input
+  // entries)
+  extern std::vector<int> species_id;
+
   // Specified species constant molecular weights
   extern std::vector<amrex::Real> MW_k0;
 
@@ -37,15 +41,13 @@ namespace SPECIES
   extern std::vector<amrex::Real> cp_k0;
 
   struct SPECIES_t {
-
-    std::vector<amrex::Real> mass_fractions;
-
-    SPECIES_t() {}
-
-    SPECIES_t(const int nspec) :
-      mass_fractions(nspec, 0.0)
+    // Constructor
+    SPECIES_t() :
+      mass_fraction(0.)
     {}
 
+    // Species mass fraction, used for ICs and BCs
+    amrex::Real mass_fraction;
   };
 
   void Initialize ();

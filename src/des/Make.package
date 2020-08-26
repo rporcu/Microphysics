@@ -4,6 +4,7 @@ CEXE_headers += mfix_pc.H
 CEXE_headers += mfix_particle_generator.H
 CEXE_sources += mfix_particle_generator.cpp
 CEXE_headers += mfix_des_drag_K.H
+CEXE_headers += mfix_des_heterogeneous_rates_K.H
 
 CEXE_sources += mfix_pc.cpp
 CEXE_sources += mfix_pc_init.cpp
@@ -14,3 +15,4 @@ CEXE_sources += mfix_set_gradp_bcs.cpp
 CEXE_sources += mfix_calc_transfer_coeffs.cpp
 CEXE_sources += mfix_calc_volume_fraction.cpp
 CEXE_sources += mfix_calc_txfr.cpp
+CEXE_sources += mfix_calc_chem_txfr.cpp

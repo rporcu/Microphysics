@@ -25,8 +25,17 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
                             Vector< MultiFab* > const& ep_w_mac,
                             Vector< MultiFab* > const& ep_g_in,
                             Vector< MultiFab* > const& ro_g_in,
+                            Vector< MultiFab* > const& MW_g_in,
                             Vector< MultiFab* > const& T_g_in,
+                            Vector< MultiFab* > const& cp_g_in,
+                            Vector< MultiFab* > const& k_g_in,
+                            Vector< MultiFab* > const& T_g_on_eb_in,
+                            Vector< MultiFab* > const& k_g_on_eb_in,
                             Vector< MultiFab* > const& X_gk_in,
+                            Vector< MultiFab* > const& D_gk_in,
+                            Vector< MultiFab* > const& h_gk_in,
+                            Vector< MultiFab* > const& txfr_in,
+                            Vector< MultiFab* > const& ro_gk_txfr_in,
                             Real time)
 {
   BL_PROFILE("mfix::apply_MAC_projection()");
@@ -126,7 +135,9 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
   }
 
   if (open_system_constraint) {
-    mfix_open_system_rhs(mac_rhs, T_g_in, X_gk_in);
+    mfix_open_system_rhs(mac_rhs, ep_g_in, ro_g_in, MW_g_in, T_g_in, cp_g_in,
+        k_g_in, T_g_on_eb_in, k_g_on_eb_in, X_gk_in, D_gk_in, h_gk_in, txfr_in,
+        ro_gk_txfr_in);
   }
 
   for (int lev(0); lev <= finest_level; ++lev) {
@@ -140,7 +151,8 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
       Array4< Real > const& mac_rhs_array = mac_rhs[lev]->array(mfi);
       Array4< Real > const& S_cc_array = S_cc[lev]->array(mfi);
 
-      AMREX_HOST_DEVICE_PARALLEL_FOR_3D ( bx, i, j, k,
+      amrex::ParallelFor ( bx, [S_cc_array,depdt_array,mac_rhs_array]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         S_cc_array(i,j,k) = depdt_array(i,j,k) - mac_rhs_array(i,j,k);
       });

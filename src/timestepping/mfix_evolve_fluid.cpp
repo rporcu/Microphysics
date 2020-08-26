@@ -6,14 +6,21 @@
 #include <mfix_dem_parms.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
+#include <mfix_reactions_parms.H>
 #include <mfix_pic_parms.H>
+#include <mfix_des_heterogeneous_rates_K.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
 #endif
 
 void
-mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_time, Real& coupling_timing)
+mfix::EvolveFluid (int nstep,
+                   Real& dt,
+                   Real& prev_dt,
+                   Real& time,
+                   Real stop_time,
+                   Real& coupling_timing)
 {
     BL_PROFILE_REGION_START("mfix::EvolveFluid");
     BL_PROFILE("mfix::EvolveFluid");
@@ -94,47 +101,51 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
     int keep_looping = 1;
     int iter = 1;
 
-    // Create temporary multifabs to hold the old-time conv and divtau
+    // Create temporary multifabs to hold the old-time conv and vel_RHS
     //    so we don't have to re-compute them in the corrector
     Vector< MultiFab* > conv_u_old;
     Vector< MultiFab* > conv_s_old;
     Vector< MultiFab* > conv_X_old;
+    Vector< MultiFab* > ro_RHS_old;
     Vector< MultiFab* > divtau_old;
-    Vector< MultiFab* >   laps_old;
-    Vector< MultiFab* >   lapT_old;
-    Vector< MultiFab* >   lapX_old;
+    Vector< MultiFab* > trac_RHS_old;
+    Vector< MultiFab* > enthalpy_RHS_old;
+    Vector< MultiFab* > species_RHS_old;
 
-     conv_u_old.resize(finest_level+1);
-     conv_s_old.resize(finest_level+1);
-     conv_X_old.resize(finest_level+1);
-     divtau_old.resize(finest_level+1);
-       laps_old.resize(finest_level+1);
-       lapT_old.resize(finest_level+1);
-       lapX_old.resize(finest_level+1);
+    conv_u_old.resize(finest_level+1);
+    conv_s_old.resize(finest_level+1);
+    conv_X_old.resize(finest_level+1);
+    ro_RHS_old.resize(finest_level+1);
+    divtau_old.resize(finest_level+1);
+    trac_RHS_old.resize(finest_level+1);
+    enthalpy_RHS_old.resize(finest_level+1);
+    species_RHS_old.resize(finest_level+1);
 
     for (int lev = 0; lev <= finest_level; lev++)
     {
        conv_u_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
        // 3 components since we have density, tracer and enthalpy
        conv_s_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+       ro_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
        divtau_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-         laps_old[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
-         lapT_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+       trac_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
+       enthalpy_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
 
-        conv_u_old[lev]->setVal(0.0);
-        conv_s_old[lev]->setVal(0.0);
-        divtau_old[lev]->setVal(0.0);
-          laps_old[lev]->setVal(0.0);
-          lapT_old[lev]->setVal(0.0);
+       conv_u_old[lev]->setVal(0.0);
+       conv_s_old[lev]->setVal(0.0);
+       ro_RHS_old[lev]->setVal(0.0);
+       divtau_old[lev]->setVal(0.0);
+       trac_RHS_old[lev]->setVal(0.0);
+       enthalpy_RHS_old[lev]->setVal(0.0);
 
-        if (advect_fluid_species) {
-          conv_X_old[lev] = new MultiFab(grids[lev], dmap[lev],
-              FLUID::nspecies_g, 0, MFInfo(), *ebfactory[lev]);
-          lapX_old[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies_g,
-              0, MFInfo(), *ebfactory[lev]);
-          conv_X_old[lev]->setVal(0.0);
-          lapX_old[lev]->setVal(0.0);
-        }
+       if (advect_fluid_species) {
+         conv_X_old[lev] = new MultiFab(grids[lev], dmap[lev],
+             FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
+         species_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
+             0, MFInfo(), *ebfactory[lev]);
+         conv_X_old[lev]->setVal(0.0);
+         species_RHS_old[lev]->setVal(0.0);
+       }
     }
 
     do
@@ -212,13 +223,19 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
         if (DEM::solve or PIC::solve) {
           Real start_drag = ParallelDescriptor::second();
           mfix_calc_txfr_fluid(time);
+
+          if (REACTIONS::solve) {
+            mfix_calc_chem_txfr(time, get_ep_g(), get_ro_g_old(), get_X_gk_old());
+          }
+
           coupling_timing += ParallelDescriptor::second() - start_drag;
         }
 
         // Predictor step
         bool proj_2_pred = true;
-        mfix_apply_predictor(conv_u_old, conv_s_old, conv_X_old, divtau_old,
-            laps_old, lapT_old, lapX_old, time, dt, prev_dt, proj_2_pred);
+        mfix_apply_predictor(conv_u_old, conv_s_old, conv_X_old, ro_RHS_old,
+            divtau_old, trac_RHS_old, enthalpy_RHS_old, species_RHS_old, time,
+            dt, prev_dt, proj_2_pred);
 
         // Calculate drag coefficient
         if (DEM::solve or PIC::solve)
@@ -226,14 +243,21 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
           Real start_drag = ParallelDescriptor::second();
           amrex::Print() << "\nRecalculating drag ..." << std::endl;
           mfix_calc_txfr_fluid(new_time);
+
+          // TODO NOW: not sure we need to do this again
+          if (REACTIONS::solve) {
+            mfix_calc_chem_txfr(time, get_ep_g(), get_ro_g(), get_X_gk());
+          }
+
           coupling_timing += ParallelDescriptor::second() - start_drag;
         }
 
         bool proj_2_corr = true;
         // Corrector step
         if (!steady_state) {
-           mfix_apply_corrector(conv_u_old, conv_s_old, conv_X_old, divtau_old,
-               laps_old, lapT_old, lapX_old, time, dt, prev_dt, proj_2_corr);
+           mfix_apply_corrector(conv_u_old, conv_s_old, conv_X_old, ro_RHS_old,
+               divtau_old, trac_RHS_old, enthalpy_RHS_old, species_RHS_old,
+               time, dt, prev_dt, proj_2_corr);
         }
 
         //
@@ -271,13 +295,14 @@ mfix::EvolveFluid (int nstep, Real& dt,  Real& prev_dt, Real& time, Real stop_ti
     {
        delete conv_u_old[lev];
        delete conv_s_old[lev];
+       delete ro_RHS_old[lev];
        delete divtau_old[lev];
-       delete   laps_old[lev];
-       delete   lapT_old[lev];
+       delete trac_RHS_old[lev];
+       delete enthalpy_RHS_old[lev];
 
        if (advect_fluid_species) {
          delete conv_X_old[lev];
-         delete   lapX_old[lev];
+         delete species_RHS_old[lev];
        }
     }
 

@@ -77,7 +77,8 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
             if (flags.getType(bx) != FabType::covered)
             {
               amrex::ParallelFor(bx,
-                  [ro,ep,gp0_dev,gradp,txfr_fab,gravity_dev,vel,odx,ody,odz,flags_fab,mu,
+                  [ro,ep,gp0_dev,gradp,txfr_fab,gravity_dev,vel,odx,ody,odz,
+                   flags_fab,mu,
 #ifdef AMREX_USE_GPU
                   cfl_max_ptr]
 #else
@@ -95,7 +96,8 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
                         // Explicit particle forcing is given by
                         for (int n(0); n < 3; ++n) {
                             Real delp = gp0_dev[n] + gradp(i,j,k,n);
-                            Real fp   = txfr_fab(i,j,k,n) - txfr_fab(i,j,k,3) * vel(i,j,k,n);
+                            Real fp   = txfr_fab(i,j,k,n) -
+                              txfr_fab(i,j,k,Transfer::beta) * vel(i,j,k,n);
 
                             acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
                         }

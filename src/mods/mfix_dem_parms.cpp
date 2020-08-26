@@ -51,15 +51,6 @@ namespace DEM
     amrex::Real eta_fac_pp = 0.5;
     amrex::Real eta_fac_pw = 0.5;
 
-    // Flag to solve species fluid equations
-    int solve_species = 0;
-
-    // Particle species
-    amrex::Vector<std::string> species_dem;
-
-    // Number of species at each particle
-    int nspecies_dem = 0;
-
     // Coarse-grain DEM
     int cg_dem = 0;
 

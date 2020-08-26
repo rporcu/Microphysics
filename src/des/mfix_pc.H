@@ -44,6 +44,22 @@ struct realData
   };
 };
 
+struct speciesData
+{
+  enum { // Added Particle data stored in p.m_runtime_data
+    X_sn = 0,
+    count
+  };
+};
+
+struct reactionsData
+{
+  enum { // Added Particle data stored in p.m_runtime_data
+    G_sn_pg_q = 0,
+    count
+  };
+};
+
 struct intData
 {
   enum { // Particle data stored in p.m_data
@@ -88,6 +104,8 @@ public:
     void InitParticlesAuto ();
 
     void InitParticlesEnthalpy ();
+
+    void InitParticlesSpecies ();
 
     void RemoveOutOfRange (int lev,
                            const amrex::EBFArrayBoxFactory * ebfactory,
@@ -178,6 +196,23 @@ public:
                                    const amrex::MultiFab* volfrac,
                                    const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
+    ///
+    /// Do the actual PIC deposition for CalcDragOnFluid
+    ///
+    void InterphaseChemDeposition (int lev,
+                                   amrex::MultiFab& mf_tmp_eps,
+                                   amrex::MultiFab& Rrates,
+                                   const amrex::MultiFab* volfrac,
+                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags);
+
+    template <typename F>
+    void InterphaseChemDeposition (F WeightFunc,
+                                   int lev,
+                                   amrex::MultiFab& mf_tmp_eps,
+                                   amrex::MultiFab& chem_txfr_mf,
+                                   const amrex::MultiFab* volfrac,
+                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags);
+
     //
     // Postprocessing utilities to compute spatially-averaged particle velocities
     //
@@ -248,7 +283,7 @@ public:
     void usr1_des ();
 
     void usr2_des (int np,
-                   NeighborParticleContainer<19, 2>::ParticleType*& particles);
+                   NeighborParticleContainer<realData::count, intData::count>::ParticleType*& particles);
 
     void usr3_des (int np,void*&);
 };

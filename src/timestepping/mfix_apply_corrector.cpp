@@ -45,10 +45,11 @@ void
 mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                             Vector< MultiFab* >& conv_s_old,
                             Vector< MultiFab* >& conv_X_old,
+                            Vector< MultiFab* >& ro_RHS_old,
                             Vector< MultiFab* >& divtau_old,
-                            Vector< MultiFab* >&   laps_old,
-                            Vector< MultiFab* >&   lapT_old,
-                            Vector< MultiFab* >&   lapX_old,
+                            Vector< MultiFab* >& trac_RHS_old,
+                            Vector< MultiFab* >& enthalpy_RHS_old,
+                            Vector< MultiFab* >& species_RHS_old,
                             Real time,
                             Real l_dt,
                             Real l_prev_dt,
@@ -66,27 +67,47 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     Vector<MultiFab*> conv_u;
     Vector<MultiFab*> conv_s;
     Vector<MultiFab*> conv_X;
+    Vector<MultiFab*> ro_RHS;
+    Vector<MultiFab*> trac_RHS;
+    Vector<MultiFab*> enthalpy_RHS;
+    Vector<MultiFab*> species_RHS;
 
     conv_u.resize(finest_level+1);
     conv_s.resize(finest_level+1);
     conv_X.resize(finest_level+1);
+    ro_RHS.resize(finest_level+1);
+    trac_RHS.resize(finest_level+1);
+    enthalpy_RHS.resize(finest_level+1);
+    species_RHS.resize(finest_level+1);
 
     for (int lev = 0; lev <= finest_level; ++lev)
     {
-        density_nph.emplace_back(grids[lev], dmap[lev],       1, 1, MFInfo(),  *ebfactory[lev]);
+        density_nph.emplace_back(grids[lev], dmap[lev], 1, 1, MFInfo(),  *ebfactory[lev]);
 
         conv_u[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
         // 3 components: one for density, one for tracer and one for enthalpy
         conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+        
+        ro_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+        trac_RHS[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
+        enthalpy_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
 
         conv_u[lev]->setVal(0.0);
         conv_s[lev]->setVal(0.0);
 
+        ro_RHS[lev]->setVal(0.0);
+        trac_RHS[lev]->setVal(0.0);
+        enthalpy_RHS[lev]->setVal(0.0);
+
       if (advect_fluid_species) {
-        conv_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies_g, 0,
+        conv_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0,
             MFInfo(), *ebfactory[lev]);
+        species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
+            0, MFInfo(), *ebfactory[lev]);
 
         conv_X[lev]->setVal(0.0);
+
+        species_RHS[lev]->setVal(0.0);
       }
     }
 
@@ -94,7 +115,48 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // Compute the explicit advective term R_u^*
     // *************************************************************************************
     mfix_compute_convective_term(conv_u, conv_s, conv_X, get_vel_g(),
-        get_ep_g(), get_ro_g(), get_T_g(), get_h_g(), get_trac(), get_X_gk(), new_time);
+        get_ep_g(), get_ro_g(), get_MW_g(), get_T_g(), get_cp_g(), get_k_g(),
+        get_h_g(), get_T_g_on_eb(), get_k_g_on_eb(), get_trac(), get_X_gk(),
+        get_D_gk(), get_h_gk(), get_txfr(), get_ro_gk_txfr(), new_time);
+
+    // *************************************************************************************
+    // Compute right hand side terms on the intermediate status
+    // *************************************************************************************
+    
+    {
+      for (int lev = 0; lev <= finest_level; lev++)
+          ro_RHS[lev]->setVal(0.);
+
+      mfix_density_rhs(ro_RHS, get_ro_gk_txfr());
+    }
+
+    bool explicit_diffusive_enthalpy = false;
+    if (advect_enthalpy) {
+      for (int lev = 0; lev <= finest_level; lev++)
+          enthalpy_RHS[lev]->setVal(0.);
+
+      mfix_enthalpy_rhs(explicit_diffusive_enthalpy, enthalpy_RHS, get_T_g(),
+          get_ep_g(), get_ro_g(), get_k_g(), get_T_g_on_eb(), get_k_g_on_eb(),
+          get_X_gk(), get_D_gk(), get_h_gk());
+    }
+
+    bool explicit_diffusive_trac = true;
+    if (advect_tracer) {
+      for (int lev = 0; lev <= finest_level; lev++)
+          trac_RHS[lev]->setVal(0.);
+
+      mfix_scalar_rhs(explicit_diffusive_trac, trac_RHS, get_trac(), get_ep_g(),
+          get_ro_g(), mu_s);
+    }
+
+    bool explicit_diffusive_species = true;
+    if (advect_fluid_species) {
+      for (int lev = 0; lev <= finest_level; lev++)
+        species_RHS[lev]->setVal(0.);
+
+      mfix_species_X_rhs(explicit_diffusive_species, species_RHS, get_X_gk(),
+          get_ep_g(), get_ro_g(), get_D_gk(), get_ro_gk_txfr());
+    }
 
     // *************************************************************************************
     // Update density first
@@ -114,14 +176,17 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
             for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 Box const& bx = mfi.tilebox();
-                Array4<Real  const> const& rho_o  = ld.ro_go->const_array(mfi);
-                Array4<Real> const& rho_new       = ld.ro_g->array(mfi);
-                Array4<Real> const& rho_nph       = density_nph[lev].array(mfi);
-                Array4<Real> const& epg           = ld.ep_g->array(mfi);
-                Array4<Real const> const& drdt_o  = conv_s_old[lev]->const_array(mfi);
-                Array4<Real const> const& drdt    = conv_s[lev]->const_array(mfi);
+                Array4<Real  const> const& rho_o    = ld.ro_go->const_array(mfi);
+                Array4<Real> const& rho_new         = ld.ro_g->array(mfi);
+                Array4<Real> const& rho_nph         = density_nph[lev].array(mfi);
+                Array4<Real> const& epg             = ld.ep_g->array(mfi);
+                Array4<Real const> const& drdt_o    = conv_s_old[lev]->const_array(mfi);
+                Array4<Real const> const& drdt      = conv_s[lev]->const_array(mfi);
+                Array4<Real const> const& rho_rhs_o = ro_RHS_old[lev]->const_array(mfi);
+                Array4<Real const> const& rho_rhs   = ro_RHS[lev]->const_array(mfi);
 
-                amrex::ParallelFor(bx, [epg,rho_o,l_dt,drdt,drdt_o,rho_new,rho_nph]
+                amrex::ParallelFor(bx, [epg,rho_o,l_dt,drdt,drdt_o,rho_new,
+                    rho_nph,rho_rhs_o,rho_rhs]
                   AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
                   int conv_comp = 0;
@@ -129,7 +194,11 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                   const Real epg_loc = epg(i,j,k);
                   const Real rho_o_loc = rho_o(i,j,k);
 
-                  Real rho = epg_loc*rho_o_loc + .5*l_dt*(drdt_o(i,j,k,conv_comp) + drdt(i,j,k,conv_comp));
+                  Real rho = epg_loc*rho_o_loc + 0.5 * l_dt * (drdt_o(i,j,k,conv_comp) +
+                                                               drdt(i,j,k,conv_comp))
+                                               + 0.5 * l_dt * (rho_rhs_o(i,j,k) +
+                                                               rho_rhs(i,j,k));
+
                   rho /= epg_loc;
 
                   rho_new(i,j,k) = rho;
@@ -155,19 +224,20 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
             for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 Box const& bx = mfi.tilebox();
-                Array4<Real const> const& h_g_o  = ld.h_go->const_array(mfi);
-                Array4<Real      > const& h_g_n  = ld.h_g->array(mfi);
-                Array4<Real      > const& T_g_n  = ld.T_g->array(mfi);
-                Array4<Real const> const& rho_o  = ld.ro_go->const_array(mfi);
-                Array4<Real const> const& rho_n  = ld.ro_g->const_array(mfi);
-                Array4<Real const> const& epg    = ld.ep_g->array(mfi);
-                Array4<Real const> const& cp_g   = ld.cp_g->array(mfi);
-                Array4<Real const> const& dhdt_o = conv_s_old[lev]->const_array(mfi);
-                Array4<Real const> const& dhdt   = conv_s[lev]->const_array(mfi);
-                Array4<Real const> const& lapT_o = lapT_old[lev]->const_array(mfi);
+                Array4<Real const> const& h_g_o   = ld.h_go->const_array(mfi);
+                Array4<Real      > const& h_g_n   = ld.h_g->array(mfi);
+                Array4<Real      > const& T_g_n   = ld.T_g->array(mfi);
+                Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
+                Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
+                Array4<Real const> const& epg     = ld.ep_g->array(mfi);
+                Array4<Real const> const& cp_g    = ld.cp_g->array(mfi);
+                Array4<Real const> const& dhdt_o  = conv_s_old[lev]->const_array(mfi);
+                Array4<Real const> const& dhdt    = conv_s[lev]->const_array(mfi);
+                Array4<Real const> const& h_rhs_o = enthalpy_RHS_old[lev]->const_array(mfi);
+                Array4<Real const> const& h_rhs   = enthalpy_RHS[lev]->const_array(mfi);
 
                 amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_n,rho_o,rho_n,epg,cp_g,
-                    dhdt_o,dhdt,lapT_o,l_dt]
+                    dhdt_o,dhdt,h_rhs_o,h_rhs,l_dt]
                   AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
                   int conv_comp = 1;
@@ -176,13 +246,16 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                   const Real denom = 1.0 / (rho_n(i,j,k) * epg(i,j,k));
 
                   // Crank-Nicolson so we only add half of the diffusive term here
-                  Real h_g = num * h_g_o(i,j,k) + 0.5 * l_dt * (dhdt_o(i,j,k,conv_comp) + dhdt(i,j,k,conv_comp))
-                                                + 0.5 * l_dt * lapT_o(i,j,k);
+                  Real h_g = num * h_g_o(i,j,k) + 0.5 * l_dt * (dhdt_o(i,j,k,conv_comp) +
+                                                                dhdt(i,j,k,conv_comp))
+                                                + 0.5 * l_dt * (h_rhs_o(i,j,k) +
+                                                                h_rhs(i,j,k));
 
-                  h_g_n(i,j,k) = h_g * denom;
+                  h_g *= denom;
 
-                  T_g_n(i,j,k) = h_g_n(i,j,k) / cp_g(i,j,k);
+                  h_g_n(i,j,k) = h_g;
 
+                  T_g_n(i,j,k) = h_g / cp_g(i,j,k);
                 });
             } // mfi
         } // lev
@@ -203,33 +276,36 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
             for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 Box const& bx = mfi.tilebox();
-                Array4<Real const> const& tra_o  = ld.trac_o->const_array(mfi);
-                Array4<Real      > const& tra_n  = ld.trac->array(mfi);
-                Array4<Real const> const& rho_o  = ld.ro_go->const_array(mfi);
-                Array4<Real const> const& rho_n  = ld.ro_g->const_array(mfi);
-                Array4<Real> const& epg          = ld.ep_g->array(mfi);
-                Array4<Real const> const& dtdt_o = conv_s_old[lev]->const_array(mfi);
-                Array4<Real const> const& dtdt   = conv_s[lev]->const_array(mfi);
-                Array4<Real const> const& laps_o = laps_old[lev]->const_array(mfi);
+                Array4<Real const> const& tra_o     = ld.trac_o->const_array(mfi);
+                Array4<Real      > const& tra_n     = ld.trac->array(mfi);
+                Array4<Real const> const& rho_o     = ld.ro_go->const_array(mfi);
+                Array4<Real const> const& rho_n     = ld.ro_g->const_array(mfi);
+                Array4<Real> const& epg             = ld.ep_g->array(mfi);
+                Array4<Real const> const& dtdt_o    = conv_s_old[lev]->const_array(mfi);
+                Array4<Real const> const& dtdt      = conv_s[lev]->const_array(mfi);
+                Array4<Real const> const& tra_rhs_o = trac_RHS_old[lev]->const_array(mfi);
+                Array4<Real const> const& tra_rhs   = trac_RHS[lev]->const_array(mfi);
 
                 amrex::ParallelFor(bx, [tra_o,tra_n,rho_o,rho_n,epg,dtdt_o,dtdt,
-                    laps_o,l_dt,l_ntrac]
+                    tra_rhs_o,tra_rhs,l_dt,l_ntrac]
                   AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
                   const Real epg_loc = epg(i,j,k);
+
+                  const Real num =         (rho_o(i,j,k) * epg_loc);
+                  const Real denom = 1.0 / (rho_n(i,j,k) * epg_loc);
 
                   for (int n = 0; n < l_ntrac; ++n)
                   {
                     int conv_comp = 2+n;
 
-                    Real tra = (rho_o(i,j,k)*epg_loc)*tra_o(i,j,k,n)
-                             + 0.5 * l_dt * (dtdt_o(i,j,k,conv_comp) + dtdt(i,j,k,conv_comp));
-                    tra /= (rho_n(i,j,k)*epg_loc);
-
                     // Crank-Nicolson so we add the explicit half here
-                    tra += 0.5 * laps_o(i,j,k,n);
+                    Real tra = num*tra_o(i,j,k,n) + 0.5 * l_dt * (dtdt_o(i,j,k,conv_comp) +
+                                                                  dtdt(i,j,k,conv_comp))
+                                                  + 0.5 * l_dt * (tra_rhs_o(i,j,k,n) +
+                                                                  tra_rhs(i,j,k,n));
 
-                    tra_n(i,j,k,n) = tra;
+                    tra_n(i,j,k,n) = tra * denom;
                   }
                 });
             } // mfi
@@ -241,7 +317,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************
     if (advect_fluid_species)
     {
-      const int nspecies_g = FLUID::nspecies_g;
+      const int nspecies_g = FLUID::nspecies;
 
       for (int lev = 0; lev <= finest_level; lev++)
       {
@@ -254,30 +330,29 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
           Box const& bx = mfi.tilebox();
           Array4<Real const> const& X_gk_o  = ld.X_gko->const_array(mfi);
           Array4<Real      > const& X_gk_n  = ld.X_gk->array(mfi);
-          Array4<Real const> const& rho_o  = ld.ro_go->const_array(mfi);
-          Array4<Real const> const& rho_n  = ld.ro_g->const_array(mfi);
-          Array4<Real      > const& epg    = ld.ep_g->array(mfi);
-          Array4<Real const> const& dXdt_o = conv_X_old[lev]->const_array(mfi);
-          Array4<Real const> const& dXdt   = conv_X[lev]->const_array(mfi);
-          Array4<Real const> const& lapX_o = lapX_old[lev]->const_array(mfi);
+          Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
+          Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
+          Array4<Real      > const& epg     = ld.ep_g->array(mfi);
+          Array4<Real const> const& dXdt_o  = conv_X_old[lev]->const_array(mfi);
+          Array4<Real const> const& dXdt    = conv_X[lev]->const_array(mfi);
+          Array4<Real const> const& X_rhs_o = species_RHS_old[lev]->const_array(mfi);
+          Array4<Real const> const& X_rhs   = species_RHS[lev]->const_array(mfi);
 
-          ParallelFor(bx, [X_gk_o,X_gk_n,rho_o,rho_n,epg,dXdt_o,dXdt,lapX_o,
-              l_dt,nspecies_g]
+          ParallelFor(bx, [X_gk_o,X_gk_n,rho_o,rho_n,epg,dXdt_o,dXdt,X_rhs_o,
+              X_rhs,l_dt,nspecies_g]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             const Real epg_loc = epg(i,j,k);
 
+            const Real num =         (rho_o(i,j,k) * epg_loc);
+            const Real denom = 1.0 / (rho_n(i,j,k) * epg_loc);
+
             for (int n = 0; n < nspecies_g; ++n)
             {
-              int conv_comp = n;
-
-              const Real num =         (rho_o(i,j,k) * epg_loc);
-              const Real denom = 1.0 / (rho_n(i,j,k) * epg_loc);
-
               // Crank-Nicolson so we only add half of the diffusive term here
               Real X_gk = num * X_gk_o(i,j,k,n)
-                  + 0.5 * l_dt * (dXdt_o(i,j,k,conv_comp) + dXdt(i,j,k,conv_comp))
-                  + 0.5 * l_dt * lapX_o(i,j,k,n);
+                  + 0.5 * l_dt * (dXdt_o(i,j,k,n) + dXdt(i,j,k,n))
+                  + 0.5 * l_dt * (X_rhs_o(i,j,k,n) + X_rhs(i,j,k,n));
 
               X_gk_n(i,j,k,n) = X_gk * denom;
             }
@@ -359,7 +434,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     for (int lev = 0; lev <= finest_level; lev++)
     {
-        MultiFab::Saxpy(*m_leveldata[lev]->vel_g, -l_dt/2.0, *divtau_old[lev], 0, 0,     3, 0);
+        MultiFab::Saxpy(*m_leveldata[lev]->vel_g, -l_dt/2.0, *divtau_old[lev], 0, 0, 3, 0);
     }
 
     // *************************************************************************************
@@ -368,7 +443,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
 
     // NOTE: we do this call before multiplying ep_g by ro_g
-    if (advect_enthalpy) {
+    if (advect_enthalpy and (not explicit_diffusive_enthalpy)) {
       diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(), get_h_g(),
           get_cp_g(), get_k_g(), get_T_g_on_eb(), get_k_g_on_eb(), 0.5*l_dt);
     }
@@ -382,10 +457,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_mu_g(), 0.5*l_dt);
 
     // mfix_set_tracer_bcs (new_time, get_trac(), 0);
-    if (advect_tracer)
+    if (advect_tracer and (not explicit_diffusive_trac))
         diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, 0.5*l_dt);
 
-    if (advect_fluid_species) {
+    if (advect_fluid_species and (not explicit_diffusive_species)) {
       diffusion_op->diffuse_species(get_X_gk(), get_ep_g(), get_D_gk(), 0.5*l_dt);
     }
 
@@ -424,7 +499,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     }
 
     if (open_system_constraint) {
-      mfix_open_system_rhs(constraint_RHS, get_T_g(), get_X_gk());
+      mfix_open_system_rhs(constraint_RHS, get_ep_g(), get_ro_g(), get_MW_g(),
+          get_T_g(), get_cp_g(), get_k_g(), get_T_g_on_eb(), get_k_g_on_eb(),
+          get_X_gk(), get_D_gk(), get_h_gk(), get_txfr(), get_ro_gk_txfr());
     }
 
     for (int lev(0); lev <= finest_level; ++lev) {
@@ -438,7 +515,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         Array4< Real > const& constraint_RHS_array = constraint_RHS[lev]->array(mfi);
         Array4< Real > const& S_cc_array = S_cc[lev]->array(mfi);
 
-        AMREX_HOST_DEVICE_PARALLEL_FOR_3D ( bx, i, j, k,
+        amrex::ParallelFor(bx, [S_cc_array,depdt_array,constraint_RHS_array]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           S_cc_array(i,j,k) = depdt_array(i,j,k) - constraint_RHS_array(i,j,k);
         });
@@ -458,12 +536,21 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     mfix_correct_small_cells(get_vel_g());
 
+    // *************************************************************************************
+    // Free up memory from temporary data
+    // *************************************************************************************
     for (int lev = 0; lev <= finest_level; lev++)
     {
        delete conv_u[lev];
        delete conv_s[lev];
 
-       if (advect_fluid_species)
+       delete ro_RHS[lev];
+       delete trac_RHS[lev];
+       delete enthalpy_RHS[lev];
+
+       if (advect_fluid_species) {
          delete conv_X[lev];
+         delete species_RHS[lev];
+       }
     }
 }

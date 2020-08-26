@@ -444,6 +444,19 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->txfr, txfr_new);
     delete txfr_new;
 
+    if (advect_fluid_species and solve_reactions) {
+      // Species mass transfer rates
+      MultiFab* ro_gk_txfr_new = new MultiFab(grids[lev], dmap[lev],
+                                        m_leveldata[lev]->ro_gk_txfr->nComp(),
+                                        m_leveldata[lev]->ro_gk_txfr->nGrow(),
+                                        MFInfo(), *ebfactory[lev]);
+      ro_gk_txfr_new->setVal(0.);
+      ro_gk_txfr_new->ParallelCopy(*m_leveldata[lev]->ro_gk_txfr, 0, 0, m_leveldata[lev]->ro_gk_txfr->nComp(),
+                     src_ngrow, m_leveldata[lev]->ro_gk_txfr->nGrow(), geom[lev].periodicity());
+      std::swap(m_leveldata[lev]->ro_gk_txfr, ro_gk_txfr_new);
+      delete ro_gk_txfr_new;
+    }
+
     // Array to store the rhs for cell-centered solves
     MultiFab* mac_rhs_new = new MultiFab(grids[lev], dmap[lev],
                                          m_leveldata[lev]->mac_rhs->nComp(),

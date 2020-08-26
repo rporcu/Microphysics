@@ -6,6 +6,8 @@
 #include <AMReX_FabFactory.H>
 #include <AMReX_MultiFab.H>
 
+struct Transfer{ enum {velx=0, vely, velz, beta, gammaTp, gamma, count}; };
+
 class LevelData
 {
   public:
@@ -91,6 +93,9 @@ class LevelData
 
     // interphase transfer (drag, heat, etc)
     amrex::MultiFab* txfr;
+
+    // Fluid species density rates of change due to heterogeneous reactions
+    amrex::MultiFab* ro_gk_txfr;
 
     // These are multi-component multifabs
     amrex::MultiFab* xslopes_u;

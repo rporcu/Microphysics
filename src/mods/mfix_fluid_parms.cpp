@@ -60,22 +60,25 @@ namespace FLUID
   int solve_species(0);
 
   // Fluid phase species names
-  std::vector<std::string> species_g;
+  amrex::Vector<std::string> species;
+
+  // Species unique identifying code
+  std::vector<int> species_id;
 
   // Total number of fluid species
-  int nspecies_g(0);
+  int nspecies(0);
 
   // Specified constant gas phase species molecular weight
-  std::vector<amrex::Real> MW_gk0(0);
+  amrex::Vector<amrex::Real> MW_gk0(0);
 
   // Specified constant gas phase species diffusion coefficients
   std::vector<amrex::Real> D_gk0(0);
 
-  // Specified constant gas phase species specific heat
-  std::vector<amrex::Real> cp_gk0(0);
-
   // Flag to understand if fluid is a mixture of fluid species
   int is_a_mixture(0);
+
+  // Specified constant gas phase species specific heat
+  std::vector<amrex::Real> cp_gk0(0);
 
   // Name to later reference when building inputs for IC/BC regions
   std::string name;
@@ -214,44 +217,43 @@ namespace FLUID
       if (ppFluid.contains("species") or
           MolecularWeightModel == MOLECULARWEIGHTMODEL::Mixture)
       {
-        ppFluid.getarr("species", species_g);
+        ppFluid.getarr("species", species);
 
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species_g.size() > 0, 
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.size() > 0, 
             "No input provided for fluid.species");
 
         // Disable the species solver if the species are defined as "None" (case
         // insensitive) or 0
-        if (amrex::toLower(species_g[0]).compare("none") == 0 or
-            (species_g[0]).compare("0") == 0)
+        if (amrex::toLower(species[0]).compare("none") == 0 or
+            (species[0]).compare("0") == 0)
         {
           solve_species = 0;
-          nspecies_g = 0;
+          nspecies = 0;
         }
         else {
           solve_species = 1;
-          nspecies_g = species_g.size();
+          nspecies = species.size();
 
-          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nspecies_g <= SPECIES::nspecies,
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nspecies <= SPECIES::nspecies,
               "Fluid species_g number is higher than species number");
 
-          MW_gk0.resize(nspecies_g);
-          D_gk0.resize(nspecies_g);
+          species_id.resize(nspecies);
+          MW_gk0.resize(nspecies);
+          D_gk0.resize(nspecies);
 
           if (solve_enthalpy)
-            cp_gk0.resize(nspecies_g);
+            cp_gk0.resize(nspecies);
 
-          for (int n(0); n < nspecies_g; n++) {
-            std::string one_specie_g = species_g[n];
-            std::vector<std::string>::iterator it;
-
-            it = std::find(SPECIES::species.begin(), SPECIES::species.end(),
-                one_specie_g);
+          for (int n(0); n < nspecies; n++) {
+            auto it = std::find(SPECIES::species.begin(), SPECIES::species.end(),
+                species[n]);
 
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != SPECIES::species.end(),
-                "Fluid specie " + one_specie_g + " missing in input");
+                "Fluid specie " + species[n] + " missing in input");
 
             const auto pos = std::distance(SPECIES::species.begin(), it);
 
+            species_id[n] = SPECIES::species_id[pos];
             MW_gk0[n] = SPECIES::MW_k0[pos];
             D_gk0[n] = SPECIES::D_k0[pos];
 

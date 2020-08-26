@@ -43,9 +43,9 @@ void fe_interp(const amrex::RealVect& pos,
     // the cell center. If it is, use the cell value.
     if(cdist < tolerance){
 
-        interp_vals[0] = interp_array(ip,jp,kp,0);
-        interp_vals[1] = interp_array(ip,jp,kp,1);
-        interp_vals[2] = interp_array(ip,jp,kp,2);
+        for(int n(0); n < scomp; n++)
+            interp_vals[n] = interp_array(ip,jp,kp,n);
+
         for(int n=scomp; n<ncomp; n++)
             interp_vals[n] = interp_array(ip,jp,kp,n);
 
@@ -122,9 +122,9 @@ void fe_interp(const amrex::RealVect& pos,
     if( flags(ip,jp,kp).isSingleValued() and (par_dot_EB <= tolerance)){
 
         // Set the velocity to zero
-        interp_vals[0] = 0.;
-        interp_vals[1] = 0.;
-        interp_vals[2] = 0.;
+        for (int n(0); n < scomp; n++)
+            interp_vals[n] = 0.;
+
         for(int n=scomp; n<ncomp; n++){
             interp_vals[n] = interp_array(ip,jp,kp,n);
         }
@@ -170,9 +170,8 @@ void fe_interp(const amrex::RealVect& pos,
 
         // 1D interpolation from cell center to wall.
 
-        interp_vals[0] = scale*interp_array(ip,jp,kp,0);
-        interp_vals[1] = scale*interp_array(ip,jp,kp,1);
-        interp_vals[2] = scale*interp_array(ip,jp,kp,2);
+        for (int n(0); n < scomp; n++)
+            interp_vals[n] = scale*interp_array(ip,jp,kp,n);
 
         for(int n=scomp; n<ncomp; n++)
             interp_vals[n] = interp_array(ip,jp,kp,n);

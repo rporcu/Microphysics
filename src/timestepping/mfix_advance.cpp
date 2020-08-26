@@ -5,7 +5,9 @@
 #include <mfix_dem_parms.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
+#include <mfix_reactions_parms.H>
 #include <mfix_pic_parms.H>
+#include <mfix_des_heterogeneous_rates_K.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -71,41 +73,49 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     MultiFab::Copy(*m_leveldata[lev]->vel_go, *m_leveldata[lev]->vel_g, 0, 0,
                    m_leveldata[lev]->vel_g->nComp(), m_leveldata[lev]->vel_go->nGrow());
 
-  if (DEM::solve or PIC::solve)
+  if (DEM::solve or PIC::solve) {
     mfix_calc_txfr_fluid(time);
 
-  // Create temporary multifabs to hold conv and divtau
+    if (REACTIONS::solve) {
+      mfix_calc_chem_txfr(time, get_ep_g(), get_ro_g_old(), get_X_gk_old());
+    }
+  }
+
+  // Create temporary multifabs to hold conv and vel_RHS
   Vector< MultiFab* > conv_u(finest_level+1, nullptr);
   Vector< MultiFab* > conv_s(finest_level+1, nullptr);
   Vector< MultiFab* > conv_X(finest_level+1, nullptr);
+  Vector< MultiFab* > ro_RHS(finest_level+1, nullptr);
   Vector< MultiFab* > divtau(finest_level+1, nullptr);
-  Vector< MultiFab* >   laps(finest_level+1, nullptr);
-  Vector< MultiFab* >   lapT(finest_level+1, nullptr);
-  Vector< MultiFab* >   lapX(finest_level+1, nullptr);
+  Vector< MultiFab* > trac_RHS(finest_level+1, nullptr);
+  Vector< MultiFab* > enthalpy_RHS(finest_level+1, nullptr);
+  Vector< MultiFab* > species_RHS(finest_level+1, nullptr);
 
   for (int lev = 0; lev <= finest_level; lev++)
   {
     conv_u[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
     // density, one for tracer and one for enthalpy
     conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+    ro_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
     divtau[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-    laps[lev]   = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
-    lapT[lev]   = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+    trac_RHS[lev]   = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
+    enthalpy_RHS[lev]   = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
 
     conv_u[lev]->setVal(0.0);
     conv_s[lev]->setVal(0.0);
+    ro_RHS[lev]->setVal(0.0);
     divtau[lev]->setVal(0.0);
-    laps[lev]->setVal(0.0);
-    lapT[lev]->setVal(0.0);
+    trac_RHS[lev]->setVal(0.0);
+    enthalpy_RHS[lev]->setVal(0.0);
 
     if (advect_fluid_species) {
-      conv_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies_g, 0,
+      conv_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0,
           MFInfo(), *ebfactory[lev]);
-      lapX[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies_g, 0,
+      species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0,
           MFInfo(), *ebfactory[lev]);
 
       conv_X[lev]->setVal(0.0);
-      lapX[lev]->setVal(0.0);
+      species_RHS[lev]->setVal(0.0);
     }
   }
 
@@ -116,8 +126,8 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     bool proj_2 = false;
 
-    mfix_apply_predictor(conv_u, conv_s, conv_X, divtau, laps, lapT, lapX, time,
-        dt, dt, proj_2);
+    mfix_apply_predictor(conv_u, conv_s, conv_X, ro_RHS, divtau, trac_RHS,
+        enthalpy_RHS, species_RHS, time, dt, dt, proj_2);
 
     // Reset any quantities which might have been updated
     for (int lev = 0; lev <= finest_level; lev++)
@@ -174,13 +184,14 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   {
      delete conv_u[lev];
      delete conv_s[lev];
+     delete ro_RHS[lev];
      delete divtau[lev];
-     delete   laps[lev];
-     delete   lapT[lev];
+     delete trac_RHS[lev];
+     delete enthalpy_RHS[lev];
 
      if (advect_fluid_species) {
        delete conv_X[lev];
-       delete   lapX[lev];
+       delete species_RHS[lev];
      }
   }
 }
@@ -221,14 +232,15 @@ mfix::mfix_add_txfr_explicit (Real dt)
       {
         const Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
 
-        const Real beta = txfr_fab(i,j,k,3);
+        const Real beta = txfr_fab(i,j,k,Transfer::beta);
+
         const Real vel_x = vel_fab(i,j,k,0);
         const Real vel_y = vel_fab(i,j,k,1);
         const Real vel_z = vel_fab(i,j,k,2);
 
-        const Real drag_0 = (txfr_fab(i,j,k,0) - beta*vel_x) * orop;
-        const Real drag_1 = (txfr_fab(i,j,k,1) - beta*vel_y) * orop;
-        const Real drag_2 = (txfr_fab(i,j,k,2) - beta*vel_z) * orop;
+        const Real drag_0 = (txfr_fab(i,j,k,Transfer::velx) - beta*vel_x) * orop;
+        const Real drag_1 = (txfr_fab(i,j,k,Transfer::vely) - beta*vel_y) * orop;
+        const Real drag_2 = (txfr_fab(i,j,k,Transfer::velz) - beta*vel_z) * orop;
 
         vel_fab(i,j,k,0) = vel_x + drag_0;
         vel_fab(i,j,k,1) = vel_y + drag_1;
@@ -248,8 +260,8 @@ mfix::mfix_add_txfr_explicit (Real dt)
           const Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
 
           const Real Tg    = hg_fab(i,j,k) / cp_fab(i,j,k);
-          const Real Ts    = txfr_fab(i,j,k,4);
-          const Real gamma = txfr_fab(i,j,k,5);
+          const Real Ts    = txfr_fab(i,j,k,Transfer::gammaTp);
+          const Real gamma = txfr_fab(i,j,k,Transfer::gamma);
 
           hg_fab(i,j,k) += (Ts - gamma * Tg) * orop;
           Tg_fab(i,j,k) = hg_fab(i,j,k) / cp_fab(i,j,k);

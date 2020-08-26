@@ -10,7 +10,7 @@ mfix::set_species_bc0 (const Box& sbx,
                        const int lev,
                        const Box& domain)
 {
-  const int nspecies_g = FLUID::nspecies_g;
+  const int nspecies_g = FLUID::nspecies;
 
   Gpu::ManagedVector< Real* > m_bc_X_gk_managed(nspecies_g);
   Gpu::ManagedVector< Real > D_gk0_managed(nspecies_g, 0.);
@@ -26,8 +26,10 @@ mfix::set_species_bc0 (const Box& sbx,
   // In case of advect_enthalpy
   Gpu::ManagedVector< Real > cp_gk0_managed(nspecies_g);
 
-  for (int n(0); n < nspecies_g; n++) {
-    cp_gk0_managed[n] = FLUID::cp_gk0[n];
+  if (advect_enthalpy) {
+    for (int n(0); n < nspecies_g; n++) {
+      cp_gk0_managed[n] = FLUID::cp_gk0[n];
+    }
   }
 
   const int loc_advect_enthalpy = advect_enthalpy;

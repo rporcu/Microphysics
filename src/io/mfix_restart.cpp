@@ -348,7 +348,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 // Copy from the mf we used to read in to the mf we will use going forward
                 const int ng_to_copy = 0;
 
-                (**(chkSpeciesVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies_g,
+                (**(chkSpeciesVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies,
                     ng_to_copy, ng_to_copy);
 
              } else {
@@ -358,7 +358,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
                 mf.FillBoundary(geom[lev].periodicity());
 
-                FArrayBox single_fab(mf.boxArray()[0], FLUID::nspecies_g);
+                FArrayBox single_fab(mf.boxArray()[0], FLUID::nspecies);
                 mf.copyTo(single_fab);
 
                 // Copy and replicate mf into chkScalarVars
@@ -366,7 +366,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                     int ib = mfi.index();
                     (**(chkSpeciesVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
                         single_fab.box(), 0, mfi.validbox(), 0,
-                        FLUID::nspecies_g);
+                        FLUID::nspecies);
                 }
              }
           }
@@ -391,7 +391,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 // Copy from the mf we used to read in to the mf we will use going forward
                 const int ng_to_copy = 0;
 
-                (**(chkSpeciesTVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies_g,
+                (**(chkSpeciesTVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies,
                     ng_to_copy, ng_to_copy);
 
              } else {
@@ -401,7 +401,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
                 mf.FillBoundary(geom[lev].periodicity());
 
-                FArrayBox single_fab(mf.boxArray()[0], FLUID::nspecies_g);
+                FArrayBox single_fab(mf.boxArray()[0], FLUID::nspecies);
                 mf.copyTo(single_fab);
 
                  // Copy and replicate mf into chkScalarVars
@@ -409,7 +409,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                      int ib = mfi.index();
                      (**(chkSpeciesTVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
                          single_fab.box(), 0, mfi.validbox(), 0,
-                         FLUID::nspecies_g);
+                         FLUID::nspecies);
                  }
                }
              }
