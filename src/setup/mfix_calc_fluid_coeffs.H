@@ -13,8 +13,7 @@ void calc_mu_g (const Box& bx,
 
 // Compute fluid species diffusivity
 void calc_D_gk (const Box& bx,
-               FArrayBox& D_gk_fab,
-               FArrayBox& T_g_fab);
+               FArrayBox& D_gk_fab);
 
 // Compute fluid specific heat
 void calc_cp_g (const Box& bx,

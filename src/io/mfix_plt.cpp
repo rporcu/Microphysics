@@ -95,13 +95,18 @@ mfix::InitIOPltData ()
       }
 
       if (FLUID::solve_species) {
-        if( plt_X_gk == 1)  pltVarCount += FLUID::nspecies_g;
-        if( plt_D_gk == 1)  pltVarCount += FLUID::nspecies_g;
+        if( plt_X_gk == 1)  pltVarCount += FLUID::nspecies;
+        if( plt_D_gk == 1)  pltVarCount += FLUID::nspecies;
 
         if (advect_enthalpy) {
-        if( plt_cp_gk == 1) pltVarCount += FLUID::nspecies_g;
-        if( plt_h_gk == 1)  pltVarCount += FLUID::nspecies_g;
+        if( plt_cp_gk == 1) pltVarCount += FLUID::nspecies;
+        if( plt_h_gk == 1)  pltVarCount += FLUID::nspecies;
         }
+      }
+
+      if (solve_reactions) {
+        // Plt X_gk_txfr
+        pltVarCount += FLUID::nspecies;
       }
     }
 
@@ -110,9 +115,9 @@ mfix::InitIOPltData ()
       int plt_ccse_regtest = 0;
       pp.query("plt_regtest", plt_ccse_regtest);
 
-      if (DEM::nspecies_dem > 0) {
-          write_real_comp.resize(realData::count+DEM::nspecies_dem);
-           for(int i=0; i < DEM::nspecies_dem; ++i){
+      if (SOLIDS::solve_species) {
+          write_real_comp.resize(realData::count+SOLIDS::nspecies);
+           for(int i=0; i < SOLIDS::nspecies; ++i){
                write_real_comp[realData::count+i] = 1;
            }
       }
@@ -177,10 +182,10 @@ mfix::InitIOPltData ()
 
         input_value = 0;
         pp.query("plt_species_p",   input_value );
-        if (input_value > 0){
-           for(int i=0; i < DEM::nspecies_dem; ++i){
-               write_real_comp[18+i] = input_value;
-           }
+        if (SOLIDS::solve_species)
+        {
+          for(int specie_id(0); specie_id < SOLIDS::nspecies; ++specie_id)
+            write_real_comp[19+specie_id] = input_value;
         }
 
         input_value = 0;
@@ -287,24 +292,30 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         pltFldNames.push_back("volfrac");
 
       // Fluid species mass fractions
-      if( FLUID::solve_species and plt_X_gk == 1 )
-        for(std::string specie: FLUID::species_g)
+      if(FLUID::solve_species and plt_X_gk == 1)
+        for(std::string specie: FLUID::species)
           pltFldNames.push_back("X_"+specie+"_g");
 
       // Fluid species mass diffusivities
-      if( FLUID::solve_species and plt_D_gk == 1)
-        for(std::string specie: FLUID::species_g)
+      if(FLUID::solve_species and plt_D_gk == 1)
+        for(std::string specie: FLUID::species)
           pltFldNames.push_back("D_"+specie+"_g");
 
       // Fluid species specific heat
-      if( FLUID::solve_species and advect_enthalpy and plt_cp_gk == 1)
-        for(std::string specie: FLUID::species_g)
+      if(FLUID::solve_species and advect_enthalpy and plt_cp_gk == 1)
+        for(std::string specie: FLUID::species)
           pltFldNames.push_back("cp_"+specie+"_g");
 
       // Fluid species enthalpy
-      if( FLUID::solve_species and advect_enthalpy and plt_h_gk == 1)
-        for(std::string specie: FLUID::species_g)
+      if(FLUID::solve_species and advect_enthalpy and plt_h_gk == 1)
+        for(std::string specie: FLUID::species)
           pltFldNames.push_back("h_"+specie+"_g");
+
+      if (solve_reactions) {
+        // X_gk_txfr
+        for(std::string specie: FLUID::species)
+          pltFldNames.push_back("ro_gk_txfr_"+specie+"_g");
+      }
 
       for (int lev = 0; lev < nlev; ++lev)
       {
@@ -417,37 +428,43 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Fluid species mass fractions
-        if( FLUID::solve_species and plt_X_gk == 1 ) {
-          for(int n(0); n < FLUID::nspecies_g; n++) {
+        if(FLUID::solve_species and plt_X_gk == 1 ) {
+          for(int n(0); n < FLUID::nspecies; n++) {
             MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_gk, n, lc+n, 1, 0);
           }
-          lc += FLUID::nspecies_g;
+          lc += FLUID::nspecies;
         }
 
         // Species mass fraction
-        if( FLUID::solve_species and plt_D_gk == 1 ) {
-          for(int n(0); n < FLUID::nspecies_g; n++) {
+        if(FLUID::solve_species and plt_D_gk == 1 ) {
+          for(int n(0); n < FLUID::nspecies; n++) {
             MultiFab::Copy(*mf[lev], *m_leveldata[lev]->D_gk, n, lc+n, 1, 0);
           }
-          lc += FLUID::nspecies_g;
+          lc += FLUID::nspecies;
         }
 
         // Fluid species specific heat
-        if( FLUID::solve_species and advect_enthalpy and plt_cp_gk == 1 ) {
-          for(int n(0); n < FLUID::nspecies_g; n++) {
+        if( SPECIES::solve and advect_enthalpy and plt_cp_gk == 1 ) {
+          for(int n(0); n < FLUID::nspecies; n++) {
             MultiFab::Copy(*mf[lev], *m_leveldata[lev]->cp_gk, n, lc+n, 1, 0);
           }
-          lc += FLUID::nspecies_g;
+          lc += FLUID::nspecies;
         }
 
         // Fluid species enthalpy
-        if( FLUID::solve_species and plt_h_gk == 1 ) {
-          for(int n(0); n < FLUID::nspecies_g; n++) {
+        if(FLUID::solve_species and plt_h_gk == 1 ) {
+          for(int n(0); n < FLUID::nspecies; n++) {
             MultiFab::Copy(*mf[lev], *m_leveldata[lev]->h_gk, n, lc+n, 1, 0);
           }
-          lc += FLUID::nspecies_g;
+          lc += FLUID::nspecies;
         }
 
+        if (solve_reactions) {
+          for(int n(0); n < FLUID::nspecies; n++) {
+            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->ro_gk_txfr, n, lc+n, 1, 0);
+          }
+          lc += FLUID::nspecies;
+        }
       }
 
       // Cleanup places where we have no data.
@@ -532,11 +549,32 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         real_comp_names.push_back("temperature");
         real_comp_names.push_back("convection");
 
-        if (DEM::nspecies_dem > 0){
-           for(int i=0; i < DEM::species_dem.size(); ++i){
-               real_comp_names.push_back(DEM::species_dem[i]);
-           }
+        if (SOLIDS::solve_species) {
+          for(int n_s(0); n_s < SOLIDS::nspecies; ++n_s) {
+            real_comp_names.push_back(SOLIDS::species[n_s]);
+          }
+
+          write_real_comp.resize(realData::count + SOLIDS::nspecies, 1);
         }
+
+        if (SOLIDS::solve_species and REACTIONS::solve) {
+          for(int n_s(0); n_s < SOLIDS::nspecies; ++n_s) {
+            const std::string& current_species = SOLIDS::species[n_s];
+
+            for(int q(0); q < REACTIONS::nreactions; q++) {
+              const auto& reaction_q = REACTIONS::chemical_reactions[q];
+
+              const std::string component_name =
+                reaction_q.m_reaction + "_" + current_species + "_chem_txfr";
+
+              real_comp_names.push_back(component_name);
+            }
+          }
+
+          write_real_comp.resize(realData::count + SOLIDS::nspecies +
+              SOLIDS::nspecies*REACTIONS::nreactions, 1);
+        }
+
         int_comp_names.push_back("phase");
         int_comp_names.push_back("state");
 

@@ -25,8 +25,8 @@ mfix::InitParams ()
   FLUID::Initialize();
   SOLIDS::Initialize();
 
-  // Set the mfix class flag equal to the FLUID parameter
-  advect_fluid_species = FLUID::solve_species;
+  // Read and process chemical reactions inputs.
+  REACTIONS::Initialize();
 
   DEM::Initialize();
   PIC::Initialize();
@@ -35,8 +35,8 @@ mfix::InitParams ()
   // We have to do it here because the size has to match the number of fluid
   // species
   // NOTE: once we will have a class for BCs this won't be needed anymore
-  m_bc_X_gk.resize(FLUID::nspecies_g, Gpu::ManagedVector<Real>(50, 0));
-  bcs_X.resize(2*FLUID::nspecies_g);
+  m_bc_X_gk.resize(FLUID::nspecies, Gpu::ManagedVector<Real>(50, 0));
+  bcs_X.resize(2*FLUID::nspecies);
 
   // Read in regions, initial and boundary conditions. Note that
   // regions need to be processed first as they define the
@@ -130,7 +130,22 @@ mfix::InitParams ()
     pp.query("advect_enthalpy", advect_enthalpy);
     pp.query("test_tracer_conservation", test_tracer_conservation);
 
+    // Set the mfix class flag equal to the FLUID parameter
+    advect_fluid_species = FLUID::solve_species;
+
+    // We can still turn it off explicitly even if we passed species inputs
     pp.query("advect_fluid_species", advect_fluid_species);
+
+    // Set the mfix class flag equal to the REACTIONS parameter
+    solve_reactions = REACTIONS::solve and SPECIES::solve; //TODO check this
+
+    // We can still turn it off explicitly even if we passed stoichiometry inputs
+    pp.query("solve_reactions", solve_reactions);
+
+    if (solve_reactions) {
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(open_system_constraint, "Cannot solve reactions"
+          "if the cold flow constraint is being used");
+    }
 
     if (advect_fluid_species)
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(FLUID::solve_species,
@@ -717,6 +732,10 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 
         if(advect_enthalpy) {
           pc->InitParticlesEnthalpy();
+        }
+
+        if (SOLIDS::solve_species) {
+          pc->InitParticlesSpecies();
         }
 
         if (!FLUID::solve){

@@ -114,7 +114,7 @@ mfix::set_mass_fractions_g_bcs (Real time,
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
 
-  const int nspecies_g = FLUID::nspecies_g;
+  const int nspecies_g = FLUID::nspecies;
 
   Gpu::ManagedVector< Real* > m_bc_X_gk_managed(nspecies_g);
 
@@ -247,7 +247,7 @@ mfix::set_species_diffusivities_g_bcs (Real time,
 
   Array4<Real> const& scal_arr = scal_fab.array();
 
-  const int nspecies_g = FLUID::nspecies_g;
+  const int nspecies_g = FLUID::nspecies;
 
   Gpu::ManagedVector< Real > D_gk0_managed(nspecies_g);
 
@@ -420,7 +420,7 @@ mfix::set_species_specific_heat_g_bcs (Real time,
 
   Array4<Real> const& scal_arr = scal_fab.array();
 
-  const int nspecies_g = FLUID::nspecies_g;
+  const int nspecies_g = FLUID::nspecies;
 
   Gpu::ManagedVector< Real > cp_gk0_managed(nspecies_g);
 
@@ -593,7 +593,7 @@ mfix::set_species_enthalpy_g_bcs (Real time,
 
   Array4<Real> const& scal_arr = scal_fab.array();
 
-  const int nspecies_g = FLUID::nspecies_g;
+  const int nspecies_g = FLUID::nspecies;
 
   Gpu::ManagedVector< Real > cp_gk0_managed(nspecies_g);
 

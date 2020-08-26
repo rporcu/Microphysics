@@ -60,10 +60,9 @@ void calc_k_g (const Box& bx,
 
 
 void calc_D_gk (const Box& bx,
-                FArrayBox& D_gk_fab,
-                FArrayBox& /*T_g_fab*/)
+                FArrayBox& D_gk_fab)
 {
-  const int nspecies_g = FLUID::nspecies_g;
+  const int nspecies_g = FLUID::nspecies;
 
   Gpu::ManagedVector< Real> D_gk0(nspecies_g, 0);
 
@@ -84,7 +83,7 @@ void calc_cp_gk (const Box& bx,
                  FArrayBox& cp_gk_fab,
                  FArrayBox& /*T_g_fab*/)
 {
-  const int nspecies_g = FLUID::nspecies_g;
+  const int nspecies_g = FLUID::nspecies;
 
   Gpu::ManagedVector< Real> cp_gk0(nspecies_g, 0);
 
@@ -106,7 +105,7 @@ void calc_h_gk (const Box& bx,
                 FArrayBox& cp_gk_fab,
                 FArrayBox& T_g_fab)
 {
-  const int nspecies_g = FLUID::nspecies_g;
+  const int nspecies_g = FLUID::nspecies;
 
   Array4<Real> const& h_gk = h_gk_fab.array();
   Array4<Real> const& cp_gk = cp_gk_fab.array();

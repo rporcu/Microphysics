@@ -30,14 +30,26 @@ namespace SOLIDS
 
   extern int ThermalConductivityModel;
 
+  // Specified constant molecular weight of solids
+  extern amrex::Real MW_s0;
+
   // Names of solids used in IC/BC setups
   extern amrex::Vector<std::string> names;
+
+  // Flag to solve species solids equations
+  extern int solve_species;
+
+  // Species unique identifying code
+  extern std::vector<int> species_id;
 
   // Total number of dem species
   extern int nspecies;
 
   // Particle species
   extern amrex::Vector<std::string> species;
+
+  // Specified constant solid phase species molecular weight
+  extern amrex::Vector<amrex::Real> MW_sn0;
 
   // Specified constant specific heat
   extern amrex::Vector<amrex::Real> cp_p0;
@@ -65,7 +77,7 @@ namespace SOLIDS
     amrex::Real temperature;
     amrex::Vector<amrex::Real> velocity;
 
-    SPECIES::SPECIES_t species;
+    amrex::Vector<SPECIES::SPECIES_t> species;
 
     INPUT_DIST_t diameter;
     INPUT_DIST_t density;
@@ -75,7 +87,7 @@ namespace SOLIDS
       statwt(0.0),
       temperature(0.0),
       velocity(0),
-      species(),
+      species(0),
       diameter(),
       density()
     {}

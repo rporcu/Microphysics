@@ -15,7 +15,7 @@ mfix::set_bc0 (const Box& sbx,
   const Real trac_0 = FLUID::trac_0;
   const Real MW_g0  = FLUID::MW_g0;
 
-  const int nspecies_g = FLUID::nspecies_g;
+  const int nspecies_g = FLUID::nspecies;
 
   Gpu::ManagedVector< Real > MW_gk0_managed(nspecies_g);
   Gpu::ManagedVector< Real* > m_bc_X_gk_managed(nspecies_g);

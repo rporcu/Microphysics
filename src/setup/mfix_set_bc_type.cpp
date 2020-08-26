@@ -330,12 +330,12 @@ mfix::mfix_set_bc_type (int lev)
       // Fluid species mass fractions
       if ( FLUID::solve and advect_fluid_species) {
         if ( bc[bcv].type == minf_ or bc[bcv].type == pinf_ ) {
-          for (int n(0); n < FLUID::nspecies_g; n++) {
-            m_bc_X_gk[n][bcv] = bc[bcv].fluid.species.mass_fractions[n];
+          for (int n(0); n < FLUID::nspecies; n++) {
+            m_bc_X_gk[n][bcv] = bc[bcv].fluid.species[n].mass_fraction;
           }
         }
         else {
-          for (int n(0); n < FLUID::nspecies_g; n++)
+          for (int n(0); n < FLUID::nspecies; n++)
             m_bc_X_gk[n][bcv] = 1e50;
         }
       }

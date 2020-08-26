@@ -25,7 +25,7 @@ mfix::set_molecular_weight_bcs (Real time,
 
   Real bc0 = FLUID::MW_g0;
 
-  const int nspecies_g = FLUID::nspecies_g;
+  const int nspecies_g = FLUID::nspecies;
 
   Gpu::ManagedVector< Real* > m_bc_X_gk_managed(nspecies_g);
   Gpu::ManagedVector< Real > MW_gk0_managed(nspecies_g);

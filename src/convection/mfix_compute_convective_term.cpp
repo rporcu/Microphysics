@@ -18,10 +18,19 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
                                     Vector< MultiFab* > const& vel_in,
                                     Vector< MultiFab* > const& ep_g_in,
                                     Vector< MultiFab* > const& ro_g_in,
+                                    Vector< MultiFab* > const& MW_g_in,
                                     Vector< MultiFab* > const& T_g_in,
+                                    Vector< MultiFab* > const& cp_g_in,
+                                    Vector< MultiFab* > const& k_g_in,
                                     Vector< MultiFab* > const& h_g_in,
+                                    Vector< MultiFab* > const& T_g_on_eb_in,
+                                    Vector< MultiFab* > const& k_g_on_eb_in,
                                     Vector< MultiFab* > const& trac_in,
                                     Vector< MultiFab* > const& X_gk_in,
+                                    Vector< MultiFab* > const& D_gk_in,
+                                    Vector< MultiFab* > const& h_gk_in,
+                                    Vector< MultiFab* > const& txfr_in,
+                                    Vector< MultiFab* > const& ro_gk_txfr_in,
                                     Real time)
 {
     BL_PROFILE("mfix::mfix_compute_convective_term");
@@ -84,13 +93,13 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
 
         if (advect_fluid_species)
         {
-          MultiFab Sborder_X(grids[lev], dmap[lev], FLUID::nspecies_g, nghost,
+          MultiFab Sborder_X(grids[lev], dmap[lev], FLUID::nspecies, nghost,
               MFInfo(), *ebfactory[lev]);
 
           Sborder_X.setVal(0);
 
           state_comp = 0;
-          num_comp = FLUID::nspecies_g;
+          num_comp = FLUID::nspecies;
 
           FillPatchSpecies(lev, time, Sborder_X, state_comp, num_comp, bcs_X);
 
@@ -108,14 +117,14 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
                                MFInfo(), *ebfactory[lev]);
 
         if (advect_fluid_species) {
-          // We make these with ncomp = FLUID::nspecies_g so they can hold all
+          // We make these with ncomp = FLUID::nspecies so they can hold all
           // fluid species at once;
           fx_X[lev] = new MultiFab(m_leveldata[lev]->u_mac->boxArray(), dmap[lev],
-              FLUID::nspecies_g, 2, MFInfo(), *ebfactory[lev]);
+              FLUID::nspecies, 2, MFInfo(), *ebfactory[lev]);
           fy_X[lev] = new MultiFab(m_leveldata[lev]->v_mac->boxArray(), dmap[lev],
-              FLUID::nspecies_g, 2, MFInfo(), *ebfactory[lev]);
+              FLUID::nspecies, 2, MFInfo(), *ebfactory[lev]);
           fz_X[lev] = new MultiFab(m_leveldata[lev]->w_mac->boxArray(), dmap[lev],
-              FLUID::nspecies_g, 2, MFInfo(), *ebfactory[lev]);
+              FLUID::nspecies, 2, MFInfo(), *ebfactory[lev]);
         }
 
         // We need this to avoid FPE
@@ -143,7 +152,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
     // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
     //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
     //    on face CENTROIDS
-    apply_MAC_projection(get_u_mac(), get_v_mac(), get_w_mac(), ep_g_in, ro_g_in, T_g_in, X_gk_in, time);
+    apply_MAC_projection(get_u_mac(), get_v_mac(), get_w_mac(), ep_g_in,
+        ro_g_in, MW_g_in, T_g_in, cp_g_in, k_g_in, T_g_on_eb_in, k_g_on_eb_in,
+        X_gk_in, D_gk_in, h_gk_in, txfr_in, ro_gk_txfr_in, time);
 
     bool already_on_centroids = true;
 
@@ -173,10 +184,10 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         MultiFab* conv_X_tmp(nullptr);
 
         if (advect_fluid_species) {
-          // We make this with ncomp = FLUID::nspecies_g so it can hold all the
+          // We make this with ncomp = FLUID::nspecies so it can hold all the
           // fluid species at once.  We note that it needs two ghost cells for
           // the redistribution step.
-          conv_X_tmp = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies_g, 2,
+          conv_X_tmp = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 2,
               MFInfo(), *ebfactory[lev]);
 
           conv_X_tmp->setVal(0.);
@@ -217,7 +228,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         if (advect_fluid_species)
         {
           // Convert mass fraction X_gk to (rho * X_gk) so we can use conservative update
-          for (int n(0); n < FLUID::nspecies_g; n++)
+          for (int n(0); n < FLUID::nspecies; n++)
             MultiFab::Multiply(*X_gk_in[lev], *ro_g_in[lev], 0, n, 1,
                 X_gk_in[lev]->nGrow());
 
@@ -311,7 +322,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
         {
           conv_comp = 0;
           state_comp = 0;
-          num_comp = FLUID::nspecies_g;
+          num_comp = FLUID::nspecies;
           slopes_comp = 0;
 
           mfix_compute_fluxes(lev, fx_X, fy_X, fz_X, X_gk_in, state_comp, num_comp,
@@ -325,7 +336,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
               *ep_g_in[lev], conv_comp, num_comp, geom[lev]);
 
           // Convert (rho * mass_fractions) back to mass_fractions
-          for (int n(0); n < FLUID::nspecies_g; n++)
+          for (int n(0); n < FLUID::nspecies; n++)
             MultiFab::Divide(*X_gk_in[lev], *ro_g_in[lev], 0, n, 1,
                 X_gk_in[lev]->nGrow());
         }

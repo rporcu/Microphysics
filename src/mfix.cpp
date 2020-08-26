@@ -11,8 +11,9 @@ std::string      mfix::load_balance_type    = "KnapSack";
 std::string      mfix::knapsack_weight_type = "RunTimeCosts";
 int              mfix::load_balance_fluid   = 1;
 int              mfix::knapsack_nmax        = 128;
-DragType         mfix::m_drag_type          = DragType::Invalid;
+int              mfix::m_drag_type          = DragType::Invalid;
 DepositionScheme mfix::m_deposition_scheme;
+int              mfix::m_reaction_rates_type = ReactionRatesType::RRatesUser;
 amrex::Real      mfix::m_deposition_diffusion_coeff = -1.0;
 amrex::Real      mfix::m_deposition_scale_factor = 1.0;
 amrex::Real      mfix::m_max_solids_volume_fraction = 0.64356;
@@ -116,7 +117,7 @@ mfix::mfix ()
     // This needs to be one bigger than the highest index scalar in mfix_set_scalar_bcs
     bcs_s.resize(6); // density, tracer, ep_g, mu_g, T_g, h_g --> TODO cp_g, k_g
     bcs_X.resize(0); // X_gk, D_gk. TODO this has to be resized on the basis of
-                     // FLUID::nspecies_g. So we do it after parameter parsing
+                     // FLUID::nspecies. So we do it after parameter parsing
     bcs_f.resize(1); // just one
 
     //___________________________________________________________________________
@@ -400,6 +401,16 @@ Vector< MultiFab* > mfix::get_txfr () noexcept
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
     r.push_back(m_leveldata[lev]->txfr);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_ro_gk_txfr () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->ro_gk_txfr);
   }
   return r;
 }

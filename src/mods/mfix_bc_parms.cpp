@@ -343,12 +343,18 @@ namespace BC
 
           // Get species data.
           if (FLUID::solve_species) {
+
+            const int nspecies_g = FLUID::nspecies;
+            new_bc.fluid.species.resize(nspecies_g);
+
             std::string species_field = field+".species";
             amrex::ParmParse ppSpecies(species_field.c_str());
 
-            for (int n(0); n < FLUID::nspecies_g; n++) {
-              std::string fluid_specie = FLUID::species_g[n];
-              ppSpecies.get(fluid_specie.c_str(), new_bc.fluid.species.mass_fractions[n]);
+            for (int n(0); n < FLUID::nspecies; n++) {
+              // Get the name of the fluid species we want to get the IC
+              std::string fluid_specie = FLUID::species[n];
+              // Get the BC mass fraction for the current species
+              ppSpecies.get(fluid_specie.c_str(), new_bc.fluid.species[n].mass_fraction);
             }
           }
         }
@@ -408,14 +414,19 @@ namespace BC
             ppSolidRho.get("max" , new_solid.density.max );
           }
 
-          if (DEM::solve_species /*TODO or PIC::solve_species*/) {
+          if (SOLIDS::solve_species) {
+
+            const int nspecies_s = SOLIDS::nspecies;
+            new_solid.species.resize(nspecies_s);
 
             std::string species_field = field+".species";
             amrex::ParmParse ppSpecies(species_field.c_str());
 
-            for (int n(0); n < DEM::nspecies_dem; n++) {
-              std::string dem_specie = DEM::species_dem[n];
-              ppSpecies.query(dem_specie.c_str(), new_solid.species.mass_fractions[n]);
+            for (int n(0); n < SOLIDS::nspecies; n++) {
+              // Get the name of the solid species we want to get the BC
+              std::string dem_specie = SOLIDS::species[n];
+              // Get the BC mass fraction for the current species
+              ppSpecies.query(dem_specie.c_str(), new_solid.species[n].mass_fraction);
             }
           }
 

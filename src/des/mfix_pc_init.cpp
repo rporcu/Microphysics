@@ -1,4 +1,7 @@
-#include "mfix_solids_parms.H"
+#include <mfix_solids_parms.H>
+#include <mfix_dem_parms.H>
+#include <mfix_reactions_parms.H>
+#include <mfix_species_parms.H>
 #include <mfix_ic_parms.H>
 
 #include <mfix_particle_generator.H>
@@ -131,6 +134,7 @@ void MFIXParticleContainer::InitParticlesAuto ()
       auto& particles = DefineAndReturnParticleTile(lev,mfi);
 
       ParticleType p_new;
+      // If possible Parallelize this
       for (int i = 0; i < pcount; i++) {
         // Set id and cpu for this particle
         p_new.id()  = ParticleType::NextID();
@@ -138,9 +142,26 @@ void MFIXParticleContainer::InitParticlesAuto ()
 
         // Add to the data structure
         particles.push_back(p_new);
-        if (SOLIDS::nspecies > 0){
-          for(int ii=0; ii < SOLIDS::nspecies; ++ii){
-            particles.push_back_real(ii, -1.0);
+
+        // Add real components for solid species
+        if (SOLIDS::solve_species)
+        {
+          // Add SOLIDS::nspecies components for each of the new species vars
+          for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
+            particles.push_back_real(n_s, 0.);
+        }
+
+        // Add real components for solid species
+        if (SOLIDS::solve_species and REACTIONS::solve)
+        {
+          const int gap = SOLIDS::nspecies;
+
+          // Add SOLIDS::nspecies components for each of the reactions
+          for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s) {
+            for(int q(0); q < REACTIONS::nreactions; ++q) {
+              const int comp = gap + n_s*REACTIONS::nreactions + q;
+              particles.push_back_real(comp, 0.);
+            }
           }
         }
       }
@@ -242,6 +263,97 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
         });
 
 
+
+      } // Intersecting Boxes
+    } // IC regions
+  } // MFIXParIter
+
+}
+
+
+void MFIXParticleContainer::InitParticlesSpecies ()
+{
+  int lev = 0;
+  const auto dx  = Geom(lev).CellSizeArray();
+  const auto idx = Geom(lev).InvCellSizeArray();
+
+  const Real * plo = Geom(lev).ProbLo();
+
+  const int nspecies_s = SOLIDS::nspecies;
+
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+  {
+    auto& particles = pti.GetArrayOfStructs();
+    int np = pti.numParticles();
+
+    auto particles_ptr = particles().dataPtr();
+
+    PairIndex index(pti.index(), pti.LocalTileIndex());
+    auto& plev = GetParticles(lev);
+    auto& ptile = plev[index];
+    auto ptile_data = ptile.getParticleTileData();
+
+    // Set the initial conditions.
+    for(int icv(0); icv < IC::ic.size(); ++icv)
+    {
+      IC::IC_t ic = IC::ic[icv];
+
+      // This is a round about way to address what is likely overly complex
+      // logic in the particle generator. We take the region specified by
+      // a user and convert it index space (i,j,k). That in turn is turned
+      // back into a physical region that may be a little larger than what
+      // was actually defined to account for spatial discretization.
+      const IntVect bx_lo(amrex::Math::floor((ic.region->lo(0)-plo[0])*idx[0] + 0.5),
+                          amrex::Math::floor((ic.region->lo(1)-plo[1])*idx[1] + 0.5),
+                          amrex::Math::floor((ic.region->lo(2)-plo[2])*idx[0] + 0.5));
+
+      const IntVect bx_hi(amrex::Math::floor((ic.region->hi(0)-plo[0])*idx[0] + 0.5),
+                          amrex::Math::floor((ic.region->hi(1)-plo[1])*idx[1] + 0.5),
+                          amrex::Math::floor((ic.region->hi(2)-plo[2])*idx[0] + 0.5));
+
+      // Start/end of IC domain bounds
+      const amrex::RealVect ic_lo = {bx_lo[0]*dx[0], bx_lo[1]*dx[1], bx_lo[2]*dx[2]};
+      const amrex::RealVect ic_hi = {bx_hi[0]*dx[0], bx_hi[1]*dx[1], bx_hi[2]*dx[2]};
+
+      const Box ic_box(bx_lo, bx_hi);
+
+      if (pti.tilebox().intersects(ic_box))
+      {
+        for(int solid_type(0); solid_type<SOLIDS::names.size(); solid_type++)
+        {
+          // Create a temporary copy of IC particle mass fractions mapped
+          // to the particle type.
+          Gpu::ManagedVector<Real> mass_fractions(nspecies_s);
+
+          // Loop through IC solids looking for match.
+          for(int ics(0); ics < IC::ic[icv].solids.size(); ics++)
+          {
+            const SOLIDS::SOLIDS_t& ic_solid = IC::ic[icv].solids[ics];
+
+            if(SOLIDS::names[solid_type] == ic_solid.name) {
+              for (int n_s(0); n_s < nspecies_s; n_s++) {
+                mass_fractions[n_s] = ic_solid.species[n_s].mass_fraction;
+              }
+            }
+          }
+
+          Real* p_mass_fractions = mass_fractions.data();
+
+          amrex::ParallelFor(np, [particles_ptr,ptile_data,p_mass_fractions,
+              ic_lo,ic_hi,nspecies_s]
+            AMREX_GPU_DEVICE (int ip) noexcept
+          {
+            MFIXParticleContainer::ParticleType& p = particles_ptr[ip];
+
+            if(ic_lo[0] <= p.pos(0) and p.pos(0) <= ic_hi[0] and
+               ic_lo[1] <= p.pos(1) and p.pos(1) <= ic_hi[1] and
+               ic_lo[2] <= p.pos(2) and p.pos(2) <= ic_hi[2])
+            {
+              for (int n_s(0); n_s < nspecies_s; n_s++)
+                ptile_data.m_runtime_rdata[n_s][ip] = p_mass_fractions[n_s];
+            }
+          });
+        }
 
       } // Intersecting Boxes
     } // IC regions

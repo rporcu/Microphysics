@@ -66,22 +66,25 @@ namespace FLUID
   extern int solve_species;
 
   // Fluid phase species names
-  extern std::vector<std::string> species_g;
+  extern amrex::Vector<std::string> species;
+
+  // Species unique identifying code
+  extern std::vector<int> species_id;
 
   // Total number of fluid species
-  extern int nspecies_g;
+  extern int nspecies;
 
   // Specified constant gas phase species molecular weight
-  extern std::vector<amrex::Real> MW_gk0;
+  extern amrex::Vector<amrex::Real> MW_gk0;
 
   // Specified constant gas phase species diffusion coefficients
   extern std::vector<amrex::Real> D_gk0;
 
-  // Specified constant gas phase species specific heat
-  extern std::vector<amrex::Real> cp_gk0;
-
   // Flag to understand if fluid is a mixture of fluid species
   extern int is_a_mixture;
+
+  // Specified constant gas phase species specific heat
+  extern std::vector<amrex::Real> cp_gk0;
 
   // Name to later reference when building input regions
   extern std::string name;
@@ -95,13 +98,13 @@ namespace FLUID
 
     amrex::Real pressure_defined; // Flag to check if pressure is defined
 
-    SPECIES::SPECIES_t species;
+    amrex::Vector<SPECIES::SPECIES_t> species;
 
     FLUID_t() :
       volfrac(-1.0),
       temperature(0.0),
       pressure(-1.0),
-      species(FLUID::nspecies_g)
+      species(0)
     {}
 
   };

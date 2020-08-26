@@ -22,6 +22,10 @@ namespace SPECIES
   // Species names
   std::vector<std::string> species(0);
 
+  // Species unique identifying code (at the moment = their index in the input
+  // entries)
+  std::vector<int> species_id(0);
+
   // Specified species molecular weight
   std::vector<amrex::Real> MW_k0(0);
 
@@ -57,6 +61,11 @@ namespace SPECIES
       {
         solve = 1;
         nspecies = species.size();
+
+        species_id.resize(nspecies);
+        for (int n(0); n < nspecies; n++) {
+          species_id[n] = n;
+        }
 
         MW_k0.resize(nspecies);
         D_k0.resize(nspecies);

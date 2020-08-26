@@ -52,7 +52,7 @@ mfix::set_enthalpy_bcs (Real time,
 
   Real cp_g0 = FLUID::cp_g0;
 
-  const int nspecies_g = FLUID::nspecies_g;
+  const int nspecies_g = FLUID::nspecies;
 
   Gpu::ManagedVector< Real* > m_bc_X_gk_managed(nspecies_g);
   Gpu::ManagedVector< Real > cp_gk0_managed(nspecies_g);

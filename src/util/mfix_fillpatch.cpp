@@ -124,7 +124,7 @@ void SpeciesFillBox (Box const& bx,
 {
     if (dcomp != 0)
          amrex::Abort("Must have dcomp = 0 in SpeciesFillBox");
-    if (numcomp != FLUID::nspecies_g)
+    if (numcomp != FLUID::nspecies)
          amrex::Abort("Must have numcomp = nspecies_g in SpeciesFillBox");
 
     const Box& domain = geom.Domain();

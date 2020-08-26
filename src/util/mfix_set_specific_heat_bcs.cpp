@@ -26,7 +26,7 @@ mfix::set_specific_heat_bcs (Real time,
 
   Real bc0 = FLUID::cp_g0;
 
-  const int nspecies_g = FLUID::nspecies_g;
+  const int nspecies_g = FLUID::nspecies;
 
   Gpu::ManagedVector< Real* > m_bc_X_gk_managed(nspecies_g);
   Gpu::ManagedVector< Real > cp_gk0_managed(nspecies_g);

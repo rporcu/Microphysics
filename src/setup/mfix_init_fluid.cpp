@@ -320,8 +320,9 @@ void init_fluid_parameters (const Box& bx,
   calc_mu_g(bx, (*ld.mu_g)[mfi]);
 
   // Initialize D_gk
-  if (advect_fluid_species)
-    calc_D_gk(bx, (*ld.D_gk)[mfi], (*ld.T_g)[mfi]);
+  if (advect_fluid_species) {
+    calc_D_gk(bx, (*ld.D_gk)[mfi]);
+  }
 
   // Initialize k_g
   if (advect_enthalpy)
@@ -349,7 +350,7 @@ void init_fluid_parameters (const Box& bx,
   }
   else // fluid_is_a_mixture == true
   {
-    const int nspecies_g = FLUID::nspecies_g;
+    const int nspecies_g = FLUID::nspecies;
 
     Array4<const Real> const& X_gk = ld.X_gk->const_array(mfi);
 
@@ -701,7 +702,7 @@ void set_ic_species_g (const Box& sbx,
     Gpu::ManagedVector< Real> mass_fractions(nspecies_g, 0);
 
     for (int n(0); n < nspecies_g; n++)
-      mass_fractions[n] = IC::ic[icv].fluid.species.mass_fractions[n];
+      mass_fractions[n] = IC::ic[icv].fluid.species[n].mass_fraction;
 
     Real* p_mass_fractions = mass_fractions.data();
 

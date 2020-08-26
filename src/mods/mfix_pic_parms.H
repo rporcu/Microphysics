@@ -5,11 +5,6 @@
 
 namespace PIC
 {
-
-//  enum COLLISIONMODEL {LSD};
-//
-//  extern COLLISIONMODEL CollisionModel;
-
   extern int solve;
 
   // Coefficients for computing the solid stress
@@ -21,20 +16,6 @@ namespace PIC
 
   extern amrex::Real small_number;
   extern amrex::Real damping_factor;
-
-  // TODO check on this
-  //struct PIC_t {
-
-  //  amrex::Real volfrac;
-  //  amrex::Real statwt;
-  //  amrex::Real temperature;
-  //  amrex::Vector<amrex::Real> velocity;
-
-  //  SPECIES::SPECIES_t species;
-
-  //  INPUT_DIST_t diameter;
-  //  INPUT_DIST_t density;
-  //};
 
   void Initialize ();
 }

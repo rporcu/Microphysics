@@ -1,6 +1,8 @@
 #include <mfix_des_K.H>
 
+#include <mfix_solids_parms.H>
 #include <mfix_dem_parms.H>
+#include <mfix_reactions_parms.H>
 #include <mfix_bc_parms.H>
 
 using namespace amrex;
@@ -33,10 +35,25 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
 
     nlev = amr_core->maxLevel() + 1;
 
-    if (DEM::nspecies_dem > 0){
-       for(int i=0; i < DEM::species_dem.size(); ++i){
+    // Add real components for solid species
+    if (SOLIDS::solve_species)
+    {
+      // Add SOLIDS::nspecies copmonents for each of the new species vars
+      for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
+        AddRealComp(true);
+    }
+
+    // Add real components for solid species
+    if (SOLIDS::solve_species and REACTIONS::solve)
+    {
+      // Add SOLIDS::nspecies components for each of the reactions
+      for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
+      {
+        for(int q(0); q < REACTIONS::nreactions; ++q)
+        {
           AddRealComp(true);
-       }
+        }
+      }
     }
 
 }
@@ -638,28 +655,136 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               });
             }
 
+            if (SOLIDS::solve_species and REACTIONS::solve)
+            {
+              //Access to added variables
+              auto ptile_data = ptile.getParticleTileData();
 
-#if 0
-            if (DEM::nspecies_dem > 0) {
+              const int nspecies_s = SOLIDS::nspecies;
+              const int nreactions = REACTIONS::nreactions;
 
-              //Access to species fractions
-              auto spec_data = ptile.getParticleTileData();
+              Gpu::ManagedVector< Real > mng_MW_sn(nspecies_s);
 
-              amrex::ParallelFor(nrp, [pstruct,subdt,spec_data]
-              AMREX_GPU_DEVICE (int i) noexcept
+              for (int n(0); n < nspecies_s; n++) {
+                mng_MW_sn[n] = SOLIDS::MW_sn0[n];
+              }
+
+              Real* p_MW_sn = mng_MW_sn.data();
+
+              const int Solid = CHEMICALPHASE::Solid;
+
+              const int idx_X = speciesData::X_sn*nspecies_s;
+
+              const int idx_G = speciesData::count*nspecies_s +
+                                reactionsData::G_sn_pg_q*nreactions;
+
+              amrex::ParallelFor(nrp, [nrp,pstruct,subdt,ptile_data,
+                  nspecies_s,nreactions,idx_X,idx_G,Solid,p_MW_sn]
+              AMREX_GPU_DEVICE (int p_id) noexcept
               {
+                ParticleType& p = pstruct[p_id];
+                Real p_mass = p.rdata(realData::mass);
+                Real p_vol = p.rdata(realData::volume);
 
-                //Compute something with species
-                //   for(int j=0; j < DEM::nspecies_dem; ++j){
-                //      //j -- spec1,spec2 .. ; i -- particle index
-                //      spec_data.m_runtime_rdata[j][i] += subdt*spec_data.m_runtime_rdata[j][i];
-                //   }
-                //}
+                // Pointer to this particle's species mass fractions
+                Real* X_sn = new Real [nspecies_s];
+
+                for (int n_s(0); n_s < nspecies_s; n_s++) {
+                  const int idx = idx_X + n_s;
+
+                  X_sn[n_s] = ptile_data.m_runtime_rdata[idx][p_id];
+                }
+
+                // Pointer to this particle's species density exchange rate for
+                // each reaction
+                Real** G_sn_pg_q = new Real* [nspecies_s];
+                
+                for (int n_s(0); n_s < nspecies_s; n_s++)
+                  G_sn_pg_q[n_s] = new Real [nreactions];
+
+                for (int n_s(0); n_s < nspecies_s; n_s++) {
+                  for (int q(0); q < nreactions; q++) {
+                    const int idx = idx_G + n_s*nreactions + q;
+
+                    G_sn_pg_q[n_s][q] = ptile_data.m_runtime_rdata[idx][p_id];
+                  }
+                }
+
+                // Total particle density exchange rate
+                Real G_s_pg(0.);
+
+                // Densities of the singular particle's species
+                Real* p_species_mass = new Real [nspecies_s];
+
+                for (int n_s(0); n_s < nspecies_s; n_s++)
+                  p_species_mass[n_s] = 0;
+
+                // Update species mass fractions
+                for (int n_s(0); n_s < nspecies_s; ++n_s)
+                {
+                  // Initialize particle's species mass
+                  p_species_mass[n_s] = X_sn[n_s] * p_mass;
+
+                  // Total particle species n density exchange rate
+                  Real G_sn_pg(0);
+
+                  for (int q(0); q < nreactions; q++)
+                  {
+                    G_sn_pg += G_sn_pg_q[n_s][q];
+                  }
+
+                  // Update the total mass exchange rate
+                  G_s_pg += G_sn_pg;
+
+                  // Update specie mass with specie rate of formation
+                  p_species_mass[n_s] += subdt * G_sn_pg * p_vol;
+
+                  if (p_species_mass[n_s] <= 0.0) {
+                    p_species_mass[n_s] = 0.;
+                  }
+                }
+
+                p_mass += subdt * G_s_pg * p_vol;
+
+                if (p_mass <= 0.0) {
+                  amrex::Abort("Error: not yet implemented");
+                  // TODO: here we have to remove the current particle since it
+                  // disappeared
+                }
+
+                // Update particle's mass
+                p.rdata(realData::mass) = p_mass;
+                p.rdata(realData::density) = p_mass / p_vol;
+
+                for (int n_s(0); n_s < nspecies_s; n_s++) {
+                  // Update species mass fractions
+                  X_sn[n_s] = p_species_mass[n_s]/p_mass;
+                }
+
+                // Renormalization of particle's species
+                // just to be sure hey really sum up to 1
+                Real X_sn_sum(0);
+
+                for (int n_s(0); n_s < nspecies_s; n_s++) {
+                  X_sn_sum += X_sn[n_s];
+                }
+
+                for (int n_s(0); n_s < nspecies_s; n_s++) {
+                  X_sn[n_s] /= X_sn_sum;
+
+                  const int idx = idx_X + n_s;
+
+                  ptile_data.m_runtime_rdata[idx][p_id] = X_sn[n_s];
+                }
+
+                delete[] p_species_mass;
+                delete[] X_sn;
+
+                for (int n_s(0); n_s < nspecies_s; n_s++)
+                  delete[] G_sn_pg_q[n_s];
+                delete[] G_sn_pg_q;
               });
             }
-#endif
-
-
 
             Gpu::synchronize();
 

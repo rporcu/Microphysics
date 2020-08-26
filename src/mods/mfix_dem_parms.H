@@ -106,18 +106,8 @@ namespace DEM
 
     extern amrex::Real neighborhood;
 
-    // Flag to solve species DEM particles equations
-    extern int solve_species;
-
-    // Particle species
-    extern amrex::Vector<std::string> species_dem;
-
-    // Total number of dem species
-    extern int nspecies_dem;
-
     // Coarse-grain DEM
     extern int cg_dem;
-
 
     void Initialize ();
     void Finalize ();

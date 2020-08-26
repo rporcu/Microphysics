@@ -40,4 +40,15 @@ bool any_of (InputIterator first, InputIterator last, UnaryPredicate pred)
 
 }
 
+AMREX_GPU_HOST_DEVICE
+AMREX_FORCE_INLINE
+int MFIXfind (const int* array, const int N, const int elem)
+{
+  for (int n(0); n < N; n++)
+    if (array[n] == elem)
+      return n;
+
+  return -1; // -1 is the InvalidIdx value
+}
+
 #endif
