@@ -189,12 +189,12 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
   const auto dx  = Geom(lev).CellSizeArray();
   const auto idx = Geom(lev).InvCellSizeArray();
 
-  const Real * plo = Geom(lev).ProbLo();
+  const GpuArray<Real, 3> plo = Geom(lev).ProbLoArray();
 
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
   {
 
-    amrex::GpuArray<amrex::Real, SOLIDS::NMAX> cp0_loc;
+    Gpu::ManagedVector<Real> cp0_loc(SOLIDS::NMAX);
     for(int phase(0); phase<SOLIDS::names.size(); phase++) {
       cp0_loc[phase] = SOLIDS::cp_p0[phase];
     }
@@ -218,8 +218,13 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
                           amrex::Math::floor((ic.region->hi(2)-plo[2])*idx[0] + 0.5));
 
       // Start/end of IC domain bounds
-      const amrex::RealVect ic_lo = {bx_lo[0]*dx[0], bx_lo[1]*dx[1], bx_lo[2]*dx[2]};
-      const amrex::RealVect ic_hi = {bx_hi[0]*dx[0], bx_hi[1]*dx[1], bx_hi[2]*dx[2]};
+      const amrex::RealVect ic_lo = {plo[0]+bx_lo[0]*dx[0],
+                                     plo[1]+bx_lo[1]*dx[1],
+                                     plo[2]+bx_lo[2]*dx[2]};
+
+      const amrex::RealVect ic_hi = {plo[0]+bx_hi[0]*dx[0],
+                                     plo[1]+bx_hi[1]*dx[1],
+                                     plo[2]+bx_hi[2]*dx[2]};
 
       const Box ic_box(bx_lo, bx_hi);
 
@@ -227,7 +232,7 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
 
         // Create a temporary copy of IC particle temperatures mapped
         // to the particle type.
-        amrex::GpuArray<amrex::Real, SOLIDS::NMAX> temperature_loc;
+        Gpu::ManagedVector<Real> temperature_loc(SOLIDS::NMAX);
         for(int solid_type(0); solid_type<SOLIDS::names.size(); solid_type++) {
           // Initialize to zero
           temperature_loc[solid_type] = 0.0;
@@ -244,10 +249,13 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
         auto& particles = pti.GetArrayOfStructs();
         int np = pti.numParticles();
 
+        amrex::Real* p_temperature_loc = temperature_loc.data();
+        amrex::Real* p_cp0_loc = cp0_loc.data();
+
         auto particles_ptr = particles().dataPtr();
 
         amrex::ParallelFor(np,
-          [particles_ptr, temperature_loc, cp0_loc, ic_lo, ic_hi]
+          [particles_ptr, p_temperature_loc, p_cp0_loc, ic_lo, ic_hi]
           AMREX_GPU_DEVICE (int ip) noexcept
         {
           MFIXParticleContainer::ParticleType& p = particles_ptr[ip];
@@ -257,12 +265,10 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
              ic_lo[2] <= p.pos(2) and p.pos(2) <= ic_hi[2])
           {
             const int phase = p.idata(intData::phase);
-            p.rdata(realData::temperature) = temperature_loc[phase-1];
-            p.rdata(realData::c_ps) = cp0_loc[phase-1];
+            p.rdata(realData::temperature) = p_temperature_loc[phase-1];
+            p.rdata(realData::c_ps) = p_cp0_loc[phase-1];
           }
         });
-
-
 
       } // Intersecting Boxes
     } // IC regions
@@ -312,8 +318,13 @@ void MFIXParticleContainer::InitParticlesSpecies ()
                           amrex::Math::floor((ic.region->hi(2)-plo[2])*idx[0] + 0.5));
 
       // Start/end of IC domain bounds
-      const amrex::RealVect ic_lo = {bx_lo[0]*dx[0], bx_lo[1]*dx[1], bx_lo[2]*dx[2]};
-      const amrex::RealVect ic_hi = {bx_hi[0]*dx[0], bx_hi[1]*dx[1], bx_hi[2]*dx[2]};
+      const amrex::RealVect ic_lo = {plo[0]+bx_lo[0]*dx[0],
+                                     plo[1]+bx_lo[1]*dx[1],
+                                     plo[2]+bx_lo[2]*dx[2]};
+
+      const amrex::RealVect ic_hi = {plo[0]+bx_hi[0]*dx[0],
+                                     plo[1]+bx_hi[1]*dx[1],
+                                     plo[2]+bx_hi[2]*dx[2]};
 
       const Box ic_box(bx_lo, bx_hi);
 
