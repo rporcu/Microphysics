@@ -154,7 +154,7 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
       amrex::ParallelFor ( bx, [S_cc_array,depdt_array,mac_rhs_array]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-        S_cc_array(i,j,k) = depdt_array(i,j,k) - mac_rhs_array(i,j,k);
+        S_cc_array(i,j,k) = mac_rhs_array(i,j,k) - depdt_array(i,j,k);
       });
     }
   }

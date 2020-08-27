@@ -518,7 +518,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         amrex::ParallelFor(bx, [S_cc_array,depdt_array,constraint_RHS_array]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          S_cc_array(i,j,k) = depdt_array(i,j,k) - constraint_RHS_array(i,j,k);
+          S_cc_array(i,j,k) = constraint_RHS_array(i,j,k) - depdt_array(i,j,k);
         });
       }
     }
