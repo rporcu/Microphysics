@@ -382,13 +382,14 @@ ParticlesGenerator::one_per_fill (const int icv,
   const Real z_t(IC::ic[icv].region->hi(2));
 
   // local grid seed loop hi/lo
-  seed_lo[0] = amrex::max<int>(lo[0], static_cast<int>(amrex::Math::ceil(x_w/dx - .5)));
-  seed_lo[1] = amrex::max<int>(lo[1], static_cast<int>(amrex::Math::ceil(y_s/dy - .5)));
-  seed_lo[2] = amrex::max<int>(lo[2], static_cast<int>(amrex::Math::ceil(z_b/dz - .5)));
+  seed_lo[0] = amrex::max<int>(lo[0], static_cast<int>(amrex::Math::ceil((x_w-plo[0])/dx - .5)));
+  seed_lo[1] = amrex::max<int>(lo[1], static_cast<int>(amrex::Math::ceil((y_s-plo[1])/dy - .5)));
+  seed_lo[2] = amrex::max<int>(lo[2], static_cast<int>(amrex::Math::ceil((z_b-plo[2])/dz - .5)));
 
-  seed_hi[0] = amrex::min<int>(hi[0], static_cast<int>(amrex::Math::floor(x_e/dx - .5)));
-  seed_hi[1] = amrex::min<int>(hi[1], static_cast<int>(amrex::Math::floor(y_n/dy - .5)));
-  seed_hi[2] = amrex::min<int>(hi[2], static_cast<int>(amrex::Math::floor(z_t/dz - .5)));
+  seed_hi[0] = amrex::min<int>(hi[0], static_cast<int>(amrex::Math::floor((x_e-plo[0])/dx - .5)));
+  seed_hi[1] = amrex::min<int>(hi[1], static_cast<int>(amrex::Math::floor((y_n-plo[1])/dy - .5)));
+  seed_hi[2] = amrex::min<int>(hi[2], static_cast<int>(amrex::Math::floor((z_t-plo[2])/dz - .5)));
+
 
   const Box bx(seed_lo, seed_hi);
 
