@@ -169,16 +169,16 @@ regions.full-domain.lo = 0.0000  0.0000  0.0000
 regions.full-domain.hi = 0.0080  0.0020  0.0020
 
 regions.bottom-wall.lo = 0.0000  0.0000  0.0000
-regions.bottom-wall.hi = 0.0080  0.0000  0.0020
+regions.bottom-wall.hi = 0.0080  0.00001 0.0020
 
-regions.top-wall.lo    = 0.0000  0.0020  0.0000
-regions.top-wall.hi    = 0.0080  0.0020  0.0020
+regions.top-wall.lo    = 0.0000  0.00199 0.0000
+regions.top-wall.hi    = 0.0080  0.00199 0.0020
 
-regions.front-wall.lo  = 0.0000  0.0000  0.0000
-regions.front-wall.hi  = 0.0080  0.0020  0.0000
+regions.front-wall.lo  = 0.0000  0.0000  0.00001
+regions.front-wall.hi  = 0.0080  0.0020  0.00001
 
-regions.back-wall.lo   = 0.0000  0.0000  0.0020
-regions.back-wall.hi   = 0.0080  0.0020  0.0020
+regions.back-wall.lo   = 0.0000  0.0000  0.00199
+regions.back-wall.hi   = 0.0080  0.0020  0.00199
 
 #_______________________________________________________________________
 # Initial Conditions
