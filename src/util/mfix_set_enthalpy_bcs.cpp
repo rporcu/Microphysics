@@ -283,4 +283,5 @@ mfix::set_enthalpy_bcs (Real time,
     });
   }
 
+  Gpu::synchronize();
 }

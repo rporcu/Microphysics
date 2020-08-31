@@ -267,7 +267,7 @@ mfix::mfix_calc_chem_txfr (const Real time,
               {
                 auto& particle = pstruct[p_id];
                 
-                Real* X_sn = new Real [nspecies_s];
+                GpuArray<Real,SPECIES::NMAX> X_sn;
 
                 for (int n_s(0); n_s < nspecies_s; n_s++) {
                   const int idx = idx_X + n_s;
@@ -275,28 +275,27 @@ mfix::mfix_calc_chem_txfr (const Real time,
                 }
 
                 // Pointer to this particle's species rate of formation
-                Real** G_sn_pg_q = new Real* [nspecies_s];
+                GpuArray<GpuArray<Real,REACTIONS::NMAX>,SPECIES::NMAX> G_sn_pg_q;
 
                 for (int n_s(0); n_s < nspecies_s; n_s++) {
-                  G_sn_pg_q[n_s] = new Real [nreactions];
                   for (int q(0); q < nreactions; q++)
                     G_sn_pg_q[n_s][q] = 0;
                 }
 
-                Real* interp_loc = new Real[interp_comp];
+                GpuArray<Real,SPECIES::NMAX+2> interp_loc;
 
                 for(int n(0); n < interp_comp; n++)
                   interp_loc[n] = 0;
 
-                Real* R_q = new Real[nreactions];
+                GpuArray<Real,REACTIONS::NMAX> R_q;
 
                 for(int q(0); q < nreactions; q++)
                   R_q[q] = 0;
 
-                trilinear_interp(particle.pos(), interp_loc,
+                trilinear_interp(particle.pos(), interp_loc.data(),
                                  interp_array, plo, dxi, interp_comp);
 
-                Real* X_gk = new Real [nspecies_g];
+                GpuArray<Real,SPECIES::NMAX> X_gk;
 
                 for (int n_g(0); n_g < nspecies_g; n_g++)
                   X_gk[n_g] = interp_loc[n_g];
@@ -310,11 +309,11 @@ mfix::mfix_calc_chem_txfr (const Real time,
                 Real ro_s = particle.rdata(realData::mass) /
                   particle.rdata(realData::volume);
 
-                RRatesFunc(R_q, nreactions, p_nreactants, p_nproducts,
+                RRatesFunc(R_q.data(), nreactions, p_nreactants, p_nproducts,
                     p_reactants_id, p_reactants_coeffs, p_reactants_phases,
                     p_products_id, p_products_coeffs, p_products_phases,
-                    p_species_id_s, X_sn, p_MW_sn, nspecies_s, ro_s, ep_s,
-                    p_species_id_g, X_gk, p_MW_gk, nspecies_g, ro_g, ep_g);
+                    p_species_id_s, X_sn.data(), p_MW_sn, nspecies_s, ro_s, ep_s,
+                    p_species_id_g, X_gk.data(), p_MW_gk, nspecies_g, ro_g, ep_g);
 
                 for (int n_s(0); n_s < nspecies_s; n_s++)
                 {
@@ -365,16 +364,6 @@ mfix::mfix_calc_chem_txfr (const Real time,
                     ptile_data.m_runtime_rdata[idx][p_id] = G_sn_pg_q[n_s][q];
                   }
                 }
-
-                delete[] interp_loc;
-                delete[] X_gk;
-                delete[] X_sn;
-                delete[] R_q;
-
-                for (int n_s(0); n_s < nspecies_s; n_s++)
-                  delete[] G_sn_pg_q[n_s];
-
-                delete[] G_sn_pg_q;
               });
             }
             else // FAB not all regular
@@ -401,10 +390,9 @@ mfix::mfix_calc_chem_txfr (const Real time,
                 auto& particle = pstruct[p_id];
 
                 // Pointer to this particle's species rate of formation
-                Real** G_sn_pg_q = new Real* [nspecies_s];
+                GpuArray<GpuArray<Real,REACTIONS::NMAX>,SPECIES::NMAX> G_sn_pg_q;
                 
                 for (int n_s(0); n_s < nspecies_s; n_s++) {
-                  G_sn_pg_q[n_s] = new Real [nreactions];
                   for (int q(0); q < nreactions; q++)
                     G_sn_pg_q[n_s][q] = 0.;
                 }
@@ -436,7 +424,7 @@ mfix::mfix_calc_chem_txfr (const Real time,
                   int k = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5));
 
                   // Local array storing interpolated values
-                  Real* interp_loc = new Real [interp_comp];
+                  GpuArray<Real,SPECIES::NMAX+2> interp_loc;
 
                   // All cells in the stencil are regular. Use
                   // traditional trilinear interpolation
@@ -449,7 +437,7 @@ mfix::mfix_calc_chem_txfr (const Real time,
                       flags_array(i-1,j  ,k  ).isRegular() and
                       flags_array(i  ,j  ,k  ).isRegular()) {
 
-                    trilinear_interp(particle.pos(), interp_loc,
+                    trilinear_interp(particle.pos(), interp_loc.data(),
                                      interp_array, plo, dxi, interp_comp);
                   // At least one of the cells in the stencil is cut or covered
                   }
@@ -461,12 +449,12 @@ mfix::mfix_calc_chem_txfr (const Real time,
 
                     fe_interp(particle.pos(), ip, jp, kp, dx, dxi, plo, flags_array,
                               ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-                              interp_array, interp_loc, interp_comp, scomp);
+                              interp_array, interp_loc.data(), interp_comp, scomp);
                   } // Cut cell
 
-                  Real* X_gk = new Real [nspecies_g];
-                  Real* X_sn = new Real [nspecies_s];
-                  Real* R_q = new Real[nreactions];
+                  GpuArray<Real,SPECIES::NMAX> X_gk;
+                  GpuArray<Real,SPECIES::NMAX> X_sn;
+                  GpuArray<Real,REACTIONS::NMAX> R_q;
 
                   BL_ASSERT(interp_comp-2 == nspecies_g);
 
@@ -486,11 +474,11 @@ mfix::mfix_calc_chem_txfr (const Real time,
                   Real ro_s = particle.rdata(realData::mass) /
                     particle.rdata(realData::volume);
 
-                  RRatesFunc(R_q, nreactions, p_nreactants, p_nproducts,
+                  RRatesFunc(R_q.data(), nreactions, p_nreactants, p_nproducts,
                       p_reactants_id, p_reactants_coeffs, p_reactants_phases,
                       p_products_id, p_products_coeffs, p_products_phases,
-                      p_species_id_s, X_sn, p_MW_sn, nspecies_s, ro_s, ep_s,
-                      p_species_id_g, X_gk, p_MW_gk, nspecies_g, ro_g, ep_g);
+                      p_species_id_s, X_sn.data(), p_MW_sn, nspecies_s, ro_s, ep_s,
+                      p_species_id_g, X_gk.data(), p_MW_gk, nspecies_g, ro_g, ep_g);
 
                   for (int n_s(0); n_s < nspecies_s; n_s++)
                   {
@@ -542,19 +530,7 @@ mfix::mfix_calc_chem_txfr (const Real time,
                       ptile_data.m_runtime_rdata[idx][p_id] = G_sn_pg_q[n_s][q];
                     }
                   }
-
-                  delete[] interp_loc;
-                  delete[] X_gk;
-                  delete[] X_sn;
-                  delete[] R_q;
-
                 } // Not covered
-
-                for (int n_s(0); n_s < nspecies_s; n_s++)
-                  delete[] G_sn_pg_q[n_s];
-
-                delete[] G_sn_pg_q;
-
               }); // p_id
 
             } // type of FAB

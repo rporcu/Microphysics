@@ -13,6 +13,8 @@ struct REACTIONTYPE { enum {Invalid=-1, Homogeneous, Heterogeneous}; };
 
 namespace REACTIONS
 {
+  constexpr int NMAX = 10;
+
   // Switch for turning on/off chemical reactions modeling
   extern bool solve;
 

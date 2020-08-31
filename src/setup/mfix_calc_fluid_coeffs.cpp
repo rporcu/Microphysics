@@ -76,6 +76,8 @@ void calc_D_gk (const Box& bx,
   amrex::ParallelFor(bx, nspecies_g, [D_gk, p_D_gk0]
   AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   { D_gk(i,j,k,n) = p_D_gk0[n]; });
+
+  Gpu::synchronize();
 }
 
 
@@ -97,6 +99,8 @@ void calc_cp_gk (const Box& bx,
   amrex::ParallelFor(bx, nspecies_g, [cp_gk, p_cp_gk0]
   AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   { cp_gk(i,j,k,n) = p_cp_gk0[n]; });
+
+  Gpu::synchronize();
 }
 
 

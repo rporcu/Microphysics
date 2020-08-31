@@ -191,10 +191,13 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
 
   const GpuArray<Real, 3> plo = Geom(lev).ProbLoArray();
 
+  // Create a temporary copy of IC particle temperatures mapped
+  // to the particle type.
+  Gpu::ManagedVector<Real> temperature_loc(SOLIDS::NMAX);
+  Gpu::ManagedVector<Real> cp0_loc(SOLIDS::NMAX);
+  
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
   {
-
-    Gpu::ManagedVector<Real> cp0_loc(SOLIDS::NMAX);
     for(int phase(0); phase<SOLIDS::names.size(); phase++) {
       cp0_loc[phase] = SOLIDS::cp_p0[phase];
     }
@@ -228,11 +231,8 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
 
       const Box ic_box(bx_lo, bx_hi);
 
-      if ( pti.tilebox().intersects ( ic_box ) ){
-
-        // Create a temporary copy of IC particle temperatures mapped
-        // to the particle type.
-        Gpu::ManagedVector<Real> temperature_loc(SOLIDS::NMAX);
+      if ( pti.tilebox().intersects ( ic_box ) )
+      {
         for(int solid_type(0); solid_type<SOLIDS::names.size(); solid_type++) {
           // Initialize to zero
           temperature_loc[solid_type] = 0.0;
@@ -287,6 +287,10 @@ void MFIXParticleContainer::InitParticlesSpecies ()
 
   const int nspecies_s = SOLIDS::nspecies;
 
+  // Create a temporary copy of IC particle mass fractions mapped
+  // to the particle type.
+  Gpu::ManagedVector<Real> mass_fractions(nspecies_s);
+
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
   {
     auto& particles = pti.GetArrayOfStructs();
@@ -332,10 +336,6 @@ void MFIXParticleContainer::InitParticlesSpecies ()
       {
         for(int solid_type(0); solid_type<SOLIDS::names.size(); solid_type++)
         {
-          // Create a temporary copy of IC particle mass fractions mapped
-          // to the particle type.
-          Gpu::ManagedVector<Real> mass_fractions(nspecies_s);
-
           // Loop through IC solids looking for match.
           for(int ics(0); ics < IC::ic[icv].solids.size(); ics++)
           {

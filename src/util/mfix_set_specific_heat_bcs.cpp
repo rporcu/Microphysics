@@ -266,4 +266,6 @@ mfix::set_specific_heat_bcs (Real time,
       }
     });
   }
+
+  Gpu::synchronize();
 }

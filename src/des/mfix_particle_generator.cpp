@@ -214,7 +214,7 @@ ParticlesGenerator::generate (int& pc,
 
   pc += np;
 
-  amrex::Gpu::synchronize();
+  Gpu::synchronize();
 
   return;
 }

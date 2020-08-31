@@ -25,8 +25,13 @@ mfix::InitParams ()
   FLUID::Initialize();
   SOLIDS::Initialize();
 
+  BL_ASSERT(FLUID::nspecies <= SPECIES::NMAX);
+  BL_ASSERT(SOLIDS::nspecies <= SPECIES::NMAX);
+
   // Read and process chemical reactions inputs.
   REACTIONS::Initialize();
+
+  BL_ASSERT(REACTIONS::nreactions <= REACTIONS::NMAX);
 
   DEM::Initialize();
   PIC::Initialize();

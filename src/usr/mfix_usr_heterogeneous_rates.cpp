@@ -39,10 +39,10 @@ ComputeRRateUser::operator() (amrex::Real* R_q,
   // Loop over reactions
   for (int q(0); q < nreactions; q++)
   {
-    amrex::Real k = 0.1;
+  //  amrex::Real k = 0.1;
 
-    // Initially set it as constant
-    R_q[q] = k;
+  //  // Initially set it as constant
+  //  R_q[q] = k;
 
   //  // Loop over reactants
   //  for (int n(0); n < nreactants[q]; n++)
@@ -60,7 +60,7 @@ ComputeRRateUser::operator() (amrex::Real* R_q,
   //    }
   //    else if (reactants_phases[q][n] == CHEMICALPHASE::Fluid)
   //    {
-  //      const int pos = MFIXfind(species_id_s, nspecies_s, current_species_id);
+  //      const int pos = MFIXfind(species_id_g, nspecies_g, current_species_id);
 
   //      concentration = (ep_g*ro_g*X_gk[pos])/ (MW_gk[pos]);
   //    }
