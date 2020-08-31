@@ -67,7 +67,7 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
             auto& geom = this->Geom(lev);
             const auto dxi = geom.InvCellSizeArray();
             const auto plo = geom.ProbLoArray();
-            const auto phiarr = ls_phi->array(pti);
+            const auto& phiarr = ls_phi->array(pti);
 
             const amrex::Real En = 0.85;
             const amrex::Real Et = 1.00;

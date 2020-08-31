@@ -271,4 +271,6 @@ mfix::set_molecular_weight_bcs (Real time,
       }
     });
   }
+
+  Gpu::synchronize();
 }

@@ -397,6 +397,9 @@ void init_fluid_parameters (const Box& bx,
       });
 
     }
+
+    Gpu::synchronize();
+
   }
 }
 

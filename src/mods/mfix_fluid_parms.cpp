@@ -249,7 +249,7 @@ namespace FLUID
                 species[n]);
 
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != SPECIES::species.end(),
-                "Fluid specie " + species[n] + " missing in input");
+                "Fluid species missing in input");
 
             const auto pos = std::distance(SPECIES::species.begin(), it);
 

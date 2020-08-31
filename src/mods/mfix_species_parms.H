@@ -5,6 +5,8 @@
 
 namespace SPECIES
 {
+  constexpr int NMAX = 15;
+
   // List of recognized species diffusivity models
   struct DIFFUSIVITYMODEL { enum {Invalid=-1, Constant}; };
 

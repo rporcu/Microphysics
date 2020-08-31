@@ -306,7 +306,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 auto& geom = this->Geom(lev);
                 const auto dxi = geom.InvCellSizeArray();
                 const auto plo = geom.ProbLoArray();
-                const auto phiarr = ls_phi->array(pti);
+                const auto& phiarr = ls_phi->array(pti);
 
                 amrex::ParallelFor(nrp,
                   [pstruct,ls_refinement,phiarr,plo,dxi,subdt,ntot,fc_ptr,tow_ptr,
@@ -687,7 +687,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 Real p_vol = p.rdata(realData::volume);
 
                 // Pointer to this particle's species mass fractions
-                Real* X_sn = new Real [nspecies_s];
+                GpuArray<Real,SPECIES::NMAX> X_sn;
 
                 for (int n_s(0); n_s < nspecies_s; n_s++) {
                   const int idx = idx_X + n_s;
@@ -697,15 +697,11 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                 // Pointer to this particle's species density exchange rate for
                 // each reaction
-                Real** G_sn_pg_q = new Real* [nspecies_s];
+                GpuArray<GpuArray<Real,SPECIES::NMAX>,REACTIONS::NMAX> G_sn_pg_q;
                 
-                for (int n_s(0); n_s < nspecies_s; n_s++)
-                  G_sn_pg_q[n_s] = new Real [nreactions];
-
                 for (int n_s(0); n_s < nspecies_s; n_s++) {
                   for (int q(0); q < nreactions; q++) {
                     const int idx = idx_G + n_s*nreactions + q;
-
                     G_sn_pg_q[n_s][q] = ptile_data.m_runtime_rdata[idx][p_id];
                   }
                 }
@@ -714,7 +710,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 Real G_s_pg(0.);
 
                 // Densities of the singular particle's species
-                Real* p_species_mass = new Real [nspecies_s];
+                GpuArray<Real,SPECIES::NMAX> p_species_mass;
 
                 for (int n_s(0); n_s < nspecies_s; n_s++)
                   p_species_mass[n_s] = 0;
@@ -776,14 +772,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                   ptile_data.m_runtime_rdata[idx][p_id] = X_sn[n_s];
                 }
-
-                delete[] p_species_mass;
-                delete[] X_sn;
-
-                for (int n_s(0); n_s < nspecies_s; n_s++)
-                  delete[] G_sn_pg_q[n_s];
-                delete[] G_sn_pg_q;
               });
+
+              Gpu::synchronize();
             }
 
             Gpu::synchronize();

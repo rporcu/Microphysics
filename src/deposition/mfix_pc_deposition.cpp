@@ -484,11 +484,10 @@ InterphaseChemDeposition (F WeightFunc,
                      deposition_scale_factor);
 
           // Pointer to this particle's species rate of formation
-          Real** G_sn_pg_q = new Real* [nspecies_s];
+          GpuArray<GpuArray<Real,REACTIONS::NMAX>,SPECIES::NMAX> G_sn_pg_q;
           
           for (int n_s(0); n_s < nspecies_s; n_s++) {
-            G_sn_pg_q[n_s] = new Real [nreactions];
-            for (int q(0); q < nreactions; q ++)
+            for (int q(0); q < nreactions; q++)
               G_sn_pg_q[n_s][q] = 0;
           } 
           
@@ -500,13 +499,13 @@ InterphaseChemDeposition (F WeightFunc,
           }
 
           // Create R_q for storing chemical reactions Rates
-          Real* R_q = new Real [nreactions];
+          GpuArray<Real,REACTIONS::NMAX> R_q;
 
           for (int q(0); q < nreactions; q++)
             R_q[q] = 0;
 
           // Create G_gk_fp_q for computing fluid density rate of change
-          Real* G_gk_fp = new Real [nspecies_g];
+          GpuArray<Real,SPECIES::NMAX> G_gk_fp;
 
           for (int n_g(0); n_g < nspecies_g; n_g++)
             G_gk_fp[n_g] = 0;
@@ -635,15 +634,6 @@ InterphaseChemDeposition (F WeightFunc,
               }
             }
           }
-
-          // Free up memory
-          delete[] R_q;
-          delete[] G_gk_fp;
-
-          for (int n_s(0); n_s < nspecies_s; n_s++)
-            delete[] G_sn_pg_q[n_s];
-
-          delete[] G_sn_pg_q;
         });
       }
     }

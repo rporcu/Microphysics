@@ -3,7 +3,7 @@
 
 #include <AMReX_REAL.H>
 #include <AMReX_Vector.H>
-#include <AMReX_GpuQualifiers.H>
+#include <AMReX_Gpu.H>
 
 #include <cmath>
 
