@@ -82,11 +82,11 @@ function( print_mfix_configuration_summary mfix_libname )
 
         # _${_ll}${_p} is a variable named as _lang_property,
         # both lower case.
-        evaluate_genex(${_p} _${_ll}${_p}
-           LANG ${_l}
-           COMP ${CMAKE_${_l}_COMPILER_ID}
-           CONFIG ${CMAKE_BUILD_TYPE}
-           INTERFACE BUILD)
+        set(_${_ll}${_p} "${${_p}}")
+        eval_genex( _${_ll}${_p} ${_l} ${CMAKE_${_l}_COMPILER_ID}
+           COMP_VERSION ${CMAKE_${_l}_COMPILER_VERSION}
+           CONFIG       ${CMAKE_BUILD_TYPE}
+           INTERFACE    BUILD)
 
         if (_${_ll}${_p})
 
