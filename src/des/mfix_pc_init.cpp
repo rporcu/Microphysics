@@ -34,8 +34,8 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
     const int grid = 0;
     const int tile = 0;
 
-    auto& particle_tile = DefineAndReturnParticleTile(lev,grid,tile);
-    //auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
+    auto& particles = DefineAndReturnParticleTile(lev,grid,tile);
+    //auto& particles = GetParticles(lev)[std::make_pair(grid,tile)];
 
     ParticleType p;
     int  pstate, pphase;
@@ -89,7 +89,29 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
       p.rdata(realData::convection) = 0.0;
 
       // Add everything to the data structure
-      particle_tile.push_back(p);
+      particles.push_back(p);
+
+      // Add real components for solid species
+      if (SOLIDS::solve_species)
+      {
+        // Add SOLIDS::nspecies components for each of the new species vars
+        for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
+          particles.push_back_real(n_s, 0.);
+      }
+
+      // Add real components for solid species
+      if (SOLIDS::solve_species and REACTIONS::solve)
+      {
+        const int gap = SOLIDS::nspecies;
+
+        // Add SOLIDS::nspecies components for each of the reactions
+        for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s) {
+          for(int q(0); q < REACTIONS::nreactions; ++q) {
+            const int comp = gap + n_s*REACTIONS::nreactions + q;
+            particles.push_back_real(comp, 0.);
+          }
+        }
+      }
 
       if (!ifs.good())
           amrex::Abort("Error initializing particles from Ascii file. \n");

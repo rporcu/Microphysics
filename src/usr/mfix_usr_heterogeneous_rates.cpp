@@ -39,10 +39,10 @@ ComputeRRateUser::operator() (amrex::Real* R_q,
   // Loop over reactions
   for (int q(0); q < nreactions; q++)
   {
-  //  amrex::Real k = 0.1;
+    amrex::Real k = 0.01;
 
-  //  // Initially set it as constant
-  //  R_q[q] = k;
+    // Initially set it as constant
+    R_q[q] = k;
 
   //  // Loop over reactants
   //  for (int n(0); n < nreactants[q]; n++)

@@ -45,6 +45,7 @@ mfix::InitIOPltData ()
       pp.query("plt_D_g",     plt_D_gk   );
       pp.query("plt_cp_gk",   plt_cp_gk  );
       pp.query("plt_h_gk",    plt_h_gk   );
+      pp.query("plt_ro_txfr", plt_ro_txfr);
 
       // Special test for CCSE regression test. Override all individual
       // flags and save all data to plot file.
@@ -72,6 +73,7 @@ mfix::InitIOPltData ()
         plt_D_gk    = 1;
         plt_cp_gk   = 0;
         plt_h_gk    = 0;
+        plt_ro_txfr = 0;
       }
 
       // Count the number of variables to save.
@@ -104,9 +106,8 @@ mfix::InitIOPltData ()
         }
       }
 
-      if (solve_reactions) {
-        // Plt X_gk_txfr
-        pltVarCount += FLUID::nspecies;
+      if (FLUID::solve_species and REACTIONS::solve) {
+        if ( plt_ro_txfr == 1) pltVarCount += FLUID::nspecies;
       }
     }
 
@@ -116,11 +117,18 @@ mfix::InitIOPltData ()
       pp.query("plt_regtest", plt_ccse_regtest);
 
       if (SOLIDS::solve_species) {
-          write_real_comp.resize(realData::count+SOLIDS::nspecies);
-           for(int i=0; i < SOLIDS::nspecies; ++i){
-               write_real_comp[realData::count+i] = 1;
-           }
+        const int size = realData::count +
+                         speciesData::count*SOLIDS::nspecies;
+        write_real_comp.resize(size, 0);
       }
+
+      if (SOLIDS::solve_species and REACTIONS::solve) {
+        const int size = realData::count +
+                         speciesData::count*SOLIDS::nspecies +
+                         reactionsData::count*SOLIDS::nspecies*REACTIONS::nreactions;
+        write_real_comp.resize(size, 0);
+      }
+
       // All flags are true by default so we only need to turn off the
       // variables we don't want if not doing CCSE regression tests.
       if (plt_ccse_regtest == 0)
@@ -184,8 +192,23 @@ mfix::InitIOPltData ()
         pp.query("plt_species_p",   input_value );
         if (SOLIDS::solve_species)
         {
-          for(int specie_id(0); specie_id < SOLIDS::nspecies; ++specie_id)
-            write_real_comp[19+specie_id] = input_value;
+          const int gap = realData::count;
+
+          for(int n(0); n < SOLIDS::nspecies; ++n)
+            write_real_comp[gap+n] = input_value;
+        }
+
+        input_value = 0;
+        pp.query("plt_ro_rates_p", input_value );
+        if (SOLIDS::solve_species and REACTIONS::solve)
+        {
+          const int gap = realData::count + speciesData::count*SOLIDS::nspecies;
+
+          for(int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
+            for(int q(0); q < REACTIONS::nreactions; ++q) {
+              const int comp = gap + n_s*REACTIONS::nreactions + q;
+              write_real_comp[comp] = input_value;
+            }
         }
 
         input_value = 0;
@@ -311,11 +334,10 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         for(std::string specie: FLUID::species)
           pltFldNames.push_back("h_"+specie+"_g");
 
-      if (solve_reactions) {
-        // X_gk_txfr
+      // Fluid species density reaction rates
+      if (FLUID::solve_species and REACTIONS::solve and plt_ro_txfr == 1)
         for(std::string specie: FLUID::species)
-          pltFldNames.push_back("ro_gk_txfr_"+specie+"_g");
-      }
+          pltFldNames.push_back("ro_txfr_"+specie+"_g");
 
       for (int lev = 0; lev < nlev; ++lev)
       {
@@ -459,7 +481,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
           lc += FLUID::nspecies;
         }
 
-        if (solve_reactions) {
+        if (FLUID::solve_species and REACTIONS::solve and plt_ro_txfr == 1) {
           for(int n(0); n < FLUID::nspecies; n++) {
             MultiFab::Copy(*mf[lev], *m_leveldata[lev]->ro_gk_txfr, n, lc+n, 1, 0);
           }
@@ -544,42 +566,24 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         real_comp_names.push_back("dragy");
         real_comp_names.push_back("dragz");
 
-
         real_comp_names.push_back("c_ps");
         real_comp_names.push_back("temperature");
         real_comp_names.push_back("convection");
 
-        if (SOLIDS::solve_species) {
-          for(int n_s(0); n_s < SOLIDS::nspecies; ++n_s) {
-            real_comp_names.push_back(SOLIDS::species[n_s]);
-          }
+        if (SOLIDS::solve_species)
+          for(auto species: SOLIDS::species)
+            real_comp_names.push_back("X_"+species+"_s");
 
-          write_real_comp.resize(realData::count + SOLIDS::nspecies, 1);
-        }
-
-        if (SOLIDS::solve_species and REACTIONS::solve) {
-          for(int n_s(0); n_s < SOLIDS::nspecies; ++n_s) {
-            const std::string& current_species = SOLIDS::species[n_s];
-
-            for(int q(0); q < REACTIONS::nreactions; q++) {
-              const auto& reaction_q = REACTIONS::chemical_reactions[q];
-
-              const std::string component_name =
-                reaction_q.m_reaction + "_" + current_species + "_chem_txfr";
-
-              real_comp_names.push_back(component_name);
-            }
-          }
-
-          write_real_comp.resize(realData::count + SOLIDS::nspecies +
-              SOLIDS::nspecies*REACTIONS::nreactions, 1);
-        }
+        if (SOLIDS::solve_species and REACTIONS::solve)
+          for(auto species: SOLIDS::species)
+            for(auto reaction: REACTIONS::reactions)
+              real_comp_names.push_back(reaction+"_"+species+"_txfr");
 
         int_comp_names.push_back("phase");
         int_comp_names.push_back("state");
 
-       pc->WritePlotFile(plotfilename, "particles",
-                         write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+        pc->WritePlotFile(plotfilename, "particles", write_real_comp,
+                          write_int_comp, real_comp_names, int_comp_names);
 
     }
 }
