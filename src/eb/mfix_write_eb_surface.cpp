@@ -13,7 +13,8 @@ void mfix::WriteMyEBSurface ()
 
   const EBFArrayBoxFactory * ebf;
 
-  if (particle_ebfactory[lev] != nullptr && DEM::solve) {
+  if (particle_ebfactory[lev] != nullptr &&
+      (DEM::solve or PIC::solve)) {
       ebf = particle_ebfactory[lev];
       ba  = pc->ParticleBoxArray(lev);
       dm  = pc->ParticleDistributionMap(lev);

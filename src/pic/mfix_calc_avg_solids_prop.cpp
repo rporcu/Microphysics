@@ -84,6 +84,7 @@ void mfix::MFIX_CalcAvgSolidsVel (amrex::Vector< amrex::MultiFab* >& avg_prop_in
 
 
         });
+        amrex::Gpu::synchronize();
       }
 
       // A mix of regular and cut-cells.
@@ -114,7 +115,9 @@ void mfix::MFIX_CalcAvgSolidsVel (amrex::Vector< amrex::MultiFab* >& avg_prop_in
               avg_prop_arr(i,j,k,2) = 0.0;
           }
         });
+        amrex::Gpu::synchronize();
       }
+
     }
 
     Box domain(geom[lev].Domain());
@@ -198,6 +201,7 @@ void mfix::MFIX_CalcAvgSolidsVel (amrex::Vector< amrex::MultiFab* >& avg_prop_in
             avg_prop_arr(dom_lo[0],j,k,0) = 0.0;
 
         });
+        amrex::Gpu::synchronize();
       } // nlft
 
       if (nrgt > 0 ) {
@@ -211,6 +215,7 @@ void mfix::MFIX_CalcAvgSolidsVel (amrex::Vector< amrex::MultiFab* >& avg_prop_in
             avg_prop_arr(dom_hi[0]+1,j,k,0) = 0.0;
 
         });
+        amrex::Gpu::synchronize();
       } // nrgt
 
       if (nbot > 0) {
@@ -224,6 +229,7 @@ void mfix::MFIX_CalcAvgSolidsVel (amrex::Vector< amrex::MultiFab* >& avg_prop_in
             avg_prop_arr(i,dom_lo[1],k,1) = 0.0;
 
         });
+        amrex::Gpu::synchronize();
       } // nbot
 
       if (ntop > 0 ) {
@@ -237,6 +243,7 @@ void mfix::MFIX_CalcAvgSolidsVel (amrex::Vector< amrex::MultiFab* >& avg_prop_in
             avg_prop_arr(i,dom_hi[1]+1,k,1) = 0.0;
 
         });
+        amrex::Gpu::synchronize();
       } // ntop
 
       if (ndwn > 0) {
@@ -250,6 +257,7 @@ void mfix::MFIX_CalcAvgSolidsVel (amrex::Vector< amrex::MultiFab* >& avg_prop_in
             avg_prop_arr(i,j,dom_lo[2],2) = 0.0;
 
         });
+        amrex::Gpu::synchronize();
       } // ndwn
 
       if (nup  > 0 ) {
@@ -263,9 +271,10 @@ void mfix::MFIX_CalcAvgSolidsVel (amrex::Vector< amrex::MultiFab* >& avg_prop_in
             avg_prop_arr(i,j,dom_hi[2]+1,2) = 0.0;
 
         });
+        amrex::Gpu::synchronize();
       } // nup
 
-
+      amrex::Gpu::synchronize();
     }
 
     // Set covered cells and any remaining domain boundary cells to zero.

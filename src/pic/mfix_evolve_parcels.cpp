@@ -54,23 +54,36 @@ void mfix::EvolveParcels (Real dt,
 
   }
 
+  amrex::Gpu::synchronize();
+
   // Calculate the solids stress gradient using the local solids
   // volume fraction. The solids stress is a field variable that
   // we will later interpolate to the parcel's position.
   MFIX_CalcSolidsStress(ep_s, avg_prop, cost, knapsack_weight_type);
+
+  amrex::Gpu::synchronize();
 
   // Calculate the averaged solids velocity. This is used to assess how
   // a parcel is moving relative to the bulk solids motion.  A consequence
   // of the deposition is that we get ep_s on the correct boxes.
   MFIX_CalcAvgSolidsVel(avg_prop);
 
+  amrex::Gpu::synchronize();
+
   // Move the parcels.
   pc->MFIX_PC_AdvanceParcels(dt, gravity, avg_prop,
                              cost, knapsack_weight_type,
                              advect_enthalpy);
 
+  amrex::Gpu::synchronize();
+
   // Account for cross process movements.
-  pc->Redistribute(0, 0, 0, 0);
+  amrex::Print() << "Redistribute parcels";
+  pc->Redistribute(0, 0, 0, 1);
+  int junk = 1; ParallelAllReduce::Sum(junk, ParallelContext::CommunicatorSub());
+  amrex::Print() << " " << " DONE" << std::endl;
+
+  amrex::Gpu::synchronize();
 
   // Now account for solid walls.
   for (int lev = 0; lev < nlev; lev ++ ) {
@@ -95,10 +108,14 @@ void mfix::EvolveParcels (Real dt,
 
   }
 
+  amrex::Gpu::synchronize();
+
   // This redistribute might not be needed, but it's done "just in case"
   // that accounting for a boundary collision doesn't position a parcel
   // on another process.
   pc->Redistribute(0, 0, 0, 1);
+
+  amrex::Gpu::synchronize();
 
   // Clean up the temporary fluid volume fraction
   for (int lev = 0; lev < nlev; lev++){
