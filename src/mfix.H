@@ -1045,6 +1045,7 @@ class mfix : public AmrCore
     int plt_volfrac = 0;
     int plt_gradp_g = 0;
     int plt_vort    = 0;
+    int plt_ro_txfr = 0;
 
     // Total number of variables to write in plot file
     int pltVarCount = 0;
