@@ -17,7 +17,6 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 {
   BL_PROFILE("mfix::MFIX_CalcSolidsStress()");
 
-  //const amrex::Real covered_val = 9.8765e300; UNUSED
 
   for( int lev(0); lev < nlev; lev ++)
   {
@@ -60,6 +59,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
         {
            Ps_arr(i,j,k) = 0.0;
         });
+        amrex::Gpu::synchronize();
 
       } else if (flagfab.getType(amrex::grow(bx,1)) == FabType::regular ) {
 
@@ -71,6 +71,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
           Ps_arr(i,j,k) = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
 
         });
+        amrex::Gpu::synchronize();
 
       } else {
         const auto& flagsarr = flagfab.array();
@@ -88,7 +89,11 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
           }
         });
+        amrex::Gpu::synchronize();
       }
+
+      amrex::Gpu::synchronize();
+
     }
 
     // Set all values outside the domain to a crazy value to make
@@ -188,6 +193,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
           }
         });
+        amrex::Gpu::synchronize();
       } // nlft
 
 
@@ -210,6 +216,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
             Ps_arr(i,j,k) = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
           }
         });
+        amrex::Gpu::synchronize();
       } // nrgt
 
 
@@ -234,6 +241,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
           }
         });
+        amrex::Gpu::synchronize();
       } // nbot
 
 
@@ -256,6 +264,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
             Ps_arr(i,j,k) = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
           }
         });
+        amrex::Gpu::synchronize();
       } // ntop
 
 
@@ -280,6 +289,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
           }
         });
+        amrex::Gpu::synchronize();
       } // ndwn
 
 
@@ -302,8 +312,10 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
             Ps_arr(i,j,k) = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
           }
         });
+        amrex::Gpu::synchronize();
       } // nup
 
+      amrex::Gpu::synchronize();
     }
 
     Ps.FillBoundary(geom[lev].periodicity());
@@ -361,6 +373,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
               particle.rdata(realData::omegay) = 0.0;
               particle.rdata(realData::omegaz) = 0.0;
             });
+          amrex::Gpu::synchronize();
         }
         else if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
         {
@@ -455,6 +468,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
             particle.rdata(realData::omegaz) = dPsdz;
 
           });
+          amrex::Gpu::synchronize();
         }
         else // FAB not all regular
         {
@@ -516,23 +530,23 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
                 // After sufficient testing, these should be changed to
                 // standard AMREX_ASSERT checks
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i-1,j-1, k-1) >= 0.,"Check valid ep_s A");
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i-1,j-1, k  ) >= 0.,"Check valid ep_s B");
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i-1,j  , k-1) >= 0.,"Check valid ep_s C");
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i-1,j  , k  ) >= 0.,"Check valid ep_s D");
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i  ,j-1, k-1) >= 0.,"Check valid ep_s E");
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i  ,j-1, k  ) >= 0.,"Check valid ep_s F");
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i  ,j  , k-1) >= 0.,"Check valid ep_s G");
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_arr(i  ,j  , k  ) >= 0.,"Check valid ep_s H");
+                AMREX_ASSERT_WITH_MESSAGE(ep_s_arr(i-1,j-1, k-1) >= 0.,"Check valid ep_s A");
+                AMREX_ASSERT_WITH_MESSAGE(ep_s_arr(i-1,j-1, k  ) >= 0.,"Check valid ep_s B");
+                AMREX_ASSERT_WITH_MESSAGE(ep_s_arr(i-1,j  , k-1) >= 0.,"Check valid ep_s C");
+                AMREX_ASSERT_WITH_MESSAGE(ep_s_arr(i-1,j  , k  ) >= 0.,"Check valid ep_s D");
+                AMREX_ASSERT_WITH_MESSAGE(ep_s_arr(i  ,j-1, k-1) >= 0.,"Check valid ep_s E");
+                AMREX_ASSERT_WITH_MESSAGE(ep_s_arr(i  ,j-1, k  ) >= 0.,"Check valid ep_s F");
+                AMREX_ASSERT_WITH_MESSAGE(ep_s_arr(i  ,j  , k-1) >= 0.,"Check valid ep_s G");
+                AMREX_ASSERT_WITH_MESSAGE(ep_s_arr(i  ,j  , k  ) >= 0.,"Check valid ep_s H");
 
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i-1,j-1, k-1) >= 0.,"Check valid Ps A");
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i-1,j-1, k  ) >= 0.,"Check valid Ps B");
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i-1,j  , k-1) >= 0.,"Check valid Ps C");
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i-1,j  , k  ) >= 0.,"Check valid Ps D");
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i  ,j-1, k-1) >= 0.,"Check valid Ps E");
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i  ,j-1, k  ) >= 0.,"Check valid Ps F");
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i  ,j  , k-1) >= 0.,"Check valid Ps G");
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i  ,j  , k  ) >= 0.,"Check valid Ps H");
+                AMREX_ASSERT_WITH_MESSAGE(Ps_arr(i-1,j-1, k-1) >= 0.,"Check valid Ps A");
+                AMREX_ASSERT_WITH_MESSAGE(Ps_arr(i-1,j-1, k  ) >= 0.,"Check valid Ps B");
+                AMREX_ASSERT_WITH_MESSAGE(Ps_arr(i-1,j  , k-1) >= 0.,"Check valid Ps C");
+                AMREX_ASSERT_WITH_MESSAGE(Ps_arr(i-1,j  , k  ) >= 0.,"Check valid Ps D");
+                AMREX_ASSERT_WITH_MESSAGE(Ps_arr(i  ,j-1, k-1) >= 0.,"Check valid Ps E");
+                AMREX_ASSERT_WITH_MESSAGE(Ps_arr(i  ,j-1, k  ) >= 0.,"Check valid Ps F");
+                AMREX_ASSERT_WITH_MESSAGE(Ps_arr(i  ,j  , k-1) >= 0.,"Check valid Ps G");
+                AMREX_ASSERT_WITH_MESSAGE(Ps_arr(i  ,j  , k  ) >= 0.,"Check valid Ps H");
 
                 const amrex::Real wx_hi(lx - static_cast<amrex::Real>(i));
                 const amrex::Real wy_hi(ly - static_cast<amrex::Real>(j));
@@ -697,7 +711,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
               // Store local solids volume fraction in unused array location.
               particle.rdata(realData::oneOverI) = ep_s_loc;
 
-              AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_loc >= 0.,"Check valid ep_s_loc");
+              AMREX_ASSERT_WITH_MESSAGE(ep_s_loc >= 0.,"Check valid ep_s_loc");
 
               particle.rdata(realData::omegax) = dPsdx;
               particle.rdata(realData::omegay) = dPsdy;
@@ -706,6 +720,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
             }
 
           }); // part loop
+          amrex::Gpu::synchronize();
         } // if box not all regular
 
 
@@ -729,6 +744,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
           (*cost[lev])[pti].plus<RunOn::Device>(wt, tbx);
         }
 
+        amrex::Gpu::synchronize();
       } // pti
     }  // omp region
   }// lev

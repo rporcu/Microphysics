@@ -28,7 +28,12 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
 
     Box domain(Geom(lev).Domain());
 
+    const auto dx  = Geom(lev).CellSizeArray();
     const auto dxi = Geom(lev).InvCellSizeArray();
+
+    // Velocity limit
+    const amrex::Real vls = 0.5/dt;
+    const amrex::RealVect vel_limit = {vls*dx[0], vls*dx[1], vls*dx[2]};
 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
@@ -45,9 +50,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
       auto& aos   = ptile.GetArrayOfStructs();
       ParticleType* pstruct = aos().dataPtr();
 
-#ifndef AMREX_USE_GPU
-      BL_PROFILE_VAR("pic_time_march()", pic_time_march);
-#endif
+
       /********************************************************************
        * Move particles based on collision forces and torques             *
        *******************************************************************/
@@ -60,7 +63,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
       const Real tolerance = std::numeric_limits<Real>::epsilon();
 
       amrex::ParallelFor(nrp,
-        [pstruct,dt,gravity, p_hi,p_lo, dxi, tolerance,
+         [pstruct,dt,gravity, p_hi,p_lo, dxi, tolerance,vel_limit,
          avg_prop_array, velfac, en, three_sqrt_two,
          x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc]
         AMREX_GPU_DEVICE (int lp) noexcept
@@ -147,8 +150,6 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
 
           const amrex::Real inv_rops = 1.0 / (eps_p*p.rdata(realData::density));
 
-          const amrex::Real vel_limit = p.rdata(realData::radius) / (dt * three_sqrt_two * eps_p);
-
           for( int dir(0); dir<3; dir++)
           {
 
@@ -182,8 +183,8 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
 
             // Limit parcel velocity based on the mean free path
             vel[dir] = ( vel[dir] > 0.0 ) ?
-              amrex::min(vel[dir], vel_limit):
-              amrex::max(vel[dir],-vel_limit);
+              amrex::min(vel[dir], vel_limit[dir]):
+              amrex::max(vel[dir],-vel_limit[dir]);
 
           }
 
@@ -208,26 +209,52 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
           // little but it needs to be enough to keep it inside the domain.
           const amrex::Real offset = p.rdata(realData::radius);
 
-          if (x_lo_bc && p.pos(0) < p_lo[0]+offset)
+          if (p.pos(0) < p_lo[0]+offset){
+            if( x_lo_bc )
               p.pos(0) = p_lo[0] + offset;
+            else
+              p.id() = -1;
+          }
 
-          if (x_hi_bc && p.pos(0) + offset > p_hi[0])
-            p.pos(0) = p_hi[0] - offset;
+          if (p.pos(0) + offset > p_hi[0]){
+            if( x_hi_bc )
+              p.pos(0) = p_hi[0] - offset;
+            else
+              p.id() = -1;
+          }
 
-          if (y_lo_bc && p.pos(1) < p_lo[1]+offset)
-            p.pos(1) = p_lo[1] + offset;
+          if (p.pos(1) < p_lo[1]+offset){
+            if( y_lo_bc )
+              p.pos(1) = p_lo[1] + offset;
+            else
+              p.id() = -1;
+          }
 
-          if (y_hi_bc && p.pos(1) + offset > p_hi[1])
-            p.pos(1) = p_hi[1] - offset;
+          if (p.pos(1) + offset > p_hi[1]){
+            if( y_hi_bc )
+              p.pos(1) = p_hi[1] - offset;
+            else
+              p.id() = -1;
+          }
 
-          if (z_lo_bc && p.pos(2) < p_lo[2]+offset)
-            p.pos(2) = p_lo[2] + offset;
+          if (p.pos(2) < p_lo[2]+offset){
+            if( z_lo_bc )
+              p.pos(2) = p_lo[2] + offset;
+            else
+              p.id() = -1;
+          }
 
-          if (z_hi_bc && p.pos(2) + offset > p_hi[2])
-            p.pos(2) = p_hi[2] - offset;
+          if (p.pos(2) + offset > p_hi[2]){
+            if( z_hi_bc )
+              p.pos(2) = p_hi[2] - offset;
+            else
+              p.id() = -1;
+          }
 
         });
 
+
+      amrex::Gpu::synchronize();
 
 
       if(advect_enthalpy){
@@ -242,8 +269,9 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
             (p.rdata(realData::mass) * p.rdata(realData::c_ps));
 
         });
-      }
 
+        amrex::Gpu::synchronize();
+      }
 
       /********************************************************************
        * Update runtime cost (used in load-balancing)                     *
@@ -265,13 +293,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
         (*cost[lev])[pti].plus<RunOn::Device>(wt, tbx);
       }
 
-
-      Gpu::synchronize();
-
-#ifndef AMREX_USE_GPU
-      BL_PROFILE_VAR_STOP(pic_time_march);
-#endif
-
+      amrex::Gpu::synchronize();
 
     } // particle-tile iterator
 

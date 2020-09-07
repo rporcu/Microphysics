@@ -97,14 +97,14 @@ mfix::Regrid ()
       Print() << "grids = " << grids[base_lev] << std::endl;
       Print() << "costs ba = " << costs.boxArray() << std::endl;
 
-      if(DEM::solve)
+      if(DEM::solve or PIC::solve)
         Print() << "particle_cost ba = "
                 << particle_cost[base_lev]->boxArray()
                 << std::endl;
 
       //Print() << "fluid cost ba = " << fluid_cost[base_lev]->boxArray() << std::endl;
 
-      if (DEM::solve) {
+      if (DEM::solve or PIC::solve) {
         // costs.plus(* particle_cost[base_lev], 0, 1, 0);
 
         // MultiFab particle_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
@@ -143,7 +143,7 @@ mfix::Regrid ()
         fluid_cost[base_lev]->setVal(0.0);
       }
 
-      if (DEM::solve)
+      if (DEM::solve or PIC::solve)
       {
         if (particle_cost[base_lev] != nullptr)
           delete particle_cost[base_lev];
@@ -167,7 +167,7 @@ mfix::Regrid ()
       amrex::Abort("load_balance_type must be KnapSack or SFC");
   }
 
-  if (DEM::solve)
+  if (DEM::solve or PIC::solve)
     for (int i_lev = base_lev; i_lev < nlev; i_lev++)
     {
       // This calls re-creates a proper particle_ebfactories and regrids

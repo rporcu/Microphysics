@@ -33,7 +33,7 @@ RealVect mfix::gp0     {0.};
 // Destructor
 mfix::~mfix ()
 {
-  if (DEM::solve)
+  if (DEM::solve or PIC::solve)
     delete pc;
 
   for (int lev(0); lev < nlev; ++lev)
