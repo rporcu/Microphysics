@@ -208,7 +208,7 @@ namespace IC
     }
 
 
-#if 0
+#if defined(AMREX_DEBUG)
     //Dump out what we read for debugging!
     for (int icv(0); icv<ic.size(); icv++){
 

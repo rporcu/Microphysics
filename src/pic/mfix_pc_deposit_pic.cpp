@@ -155,7 +155,6 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
               amrex::Gpu::Atomic::Add(&vel_s_arr(i,   j,   kk+1, 5),wx_hi*wy_hi*ww_hi*pmass);
             }
           });
-        amrex::Gpu::synchronize();
       }
     }
   }
