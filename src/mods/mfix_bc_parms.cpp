@@ -438,7 +438,7 @@ namespace BC
 
     }
 
-#if defined(AMREX_DEBUG)
+#if 0
     //Dump out what we read for debugging!
     for (int bcv(0); bcv<bc.size(); bcv++){
 
