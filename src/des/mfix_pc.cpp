@@ -1214,7 +1214,7 @@ ComputeAverageVelocities (const int lev,
 
           for (int p = 0; p < np; ++p )
           {
-            if ( avg_region.contains(&(particles[p].m_rdata.pos[0])))
+            if ( avg_region.contains(particles[p].pos()))
             {
               const Real velx = particles[p].rdata(realData::velx);
               const Real vely = particles[p].rdata(realData::vely);
