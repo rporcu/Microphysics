@@ -1,0 +1,481 @@
+amrex.fpe_trap_invalid = 1
+
+#----------------------------------------------------------------------
+# Run settings
+#----------------------------------------------------------------------
+
+mfix.max_step   = 50
+#mfix.stop_time = 10.0
+
+#----------------------------------------------------------------------
+# Solver settings
+#----------------------------------------------------------------------
+
+# Nodal solver
+nodal_proj.verbose    = 2
+nodal_proj.maxiter = 2000
+nodal_proj.bottom_verbose = 0
+nodal_proj.bottom_maxiter = 1000
+nodal_proj.mg_rtol       = 1.e-8
+
+
+# MAC solver
+mac_proj.verbose     = 2
+mac_proj.maxiter  = 2000
+mac_proj.bottom_verbose  = 0
+mac_proj.bottom_maxiter  = 1000
+mac_proj.mg_rtol        = 1.e-8
+
+#----------------------------------------------------------------------
+# Particle initialization
+#----------------------------------------------------------------------
+
+mfix.particle_init_type = "Auto"
+
+#----------------------------------------------------------------------
+# Fluid solver
+#----------------------------------------------------------------------
+mfix.fixed_dt = 0
+mfix.cfl      = 0.5
+
+mfix.gravity =  -9.81  0.0  0.0
+
+mfix.dt_min   = 1.e-7
+mfix.dt_max   = 5.e-5
+
+mfix.do_initial_proj    = 1
+mfix.initial_iterations = 1
+
+mfix.drag_type = "WenYu"
+
+mfix.advect_density         = 1
+mfix.advect_enthalpy        = 1
+mfix.advect_fluid_species   = 1
+mfix.solve_reactions        = 1
+mfix.open_system_constraint = 1
+
+amr.plt_regtest = 0
+
+amr.plt_volfrac = 1
+amr.plt_T_g = 1
+amr.plt_X_g = 1
+amr.plt_ro_txfr = 1
+amr.plt_vel_g = 1
+amr.plt_ep_g = 1
+amr.plt_p_g = 1
+amr.plt_ro_g = 1
+
+amr.plt_T_p = 1
+amr.plt_vel_p = 1
+amr.plt_ro_p = 1
+amr.plt_mass = 1
+amr.plt_species_p = 1
+
+#_______________________________________________________________________
+# Geometry / grids / tiles
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 0
+
+# Geometry
+geometry.coord_sys   = 0                       # 0: Cartesian
+geometry.is_periodic = 0       0       0       # Is periodic in each direction?
+geometry.prob_lo     = 0.0000  0.0000  0.0000  # lo corner of physical domain
+geometry.prob_hi     = 3.8400  0.3200  0.9600  # hi corner of physical domain
+
+# Number of grid cells in each direction at the coarsest level
+#amr.n_cell =  1728 128 128
+amr.n_cell =  384 32 96
+
+amr.blocking_factor = 16
+
+#! Grids
+#!-----------------------------------------------------------//
+# Maximum allowable size of each fluid subdomain in the problem domain;
+
+# Fluid
+amr.max_grid_size_x = 32
+amr.max_grid_size_y = 32
+amr.max_grid_size_z = 32
+
+# Particles (not with KDTree)
+#particles.max_grid_size_x =   64
+#particles.max_grid_size_y =   64
+#particles.max_grid_size_z =   64
+
+#! Tiles
+#!-----------------------------------------------------------//
+
+# Fluid: Maximum tile size within each grid
+fabarray.mfiter_tile_size = 1024 1024 1024
+
+# Particles: Maximum particle title size
+particles.tile_size = 1024 1024 1024
+
+
+#! EB settings
+#!-----------------------------------------------------------//
+
+# Level-set refinement and padding
+mfix.levelset__refinement = 2 # levelset resolution
+
+mfix.write_eb_surface = true  # Needed to output eb-surfaces
+mfix.write_ls         = false  # Needed to output level set
+
+#! EB geometry
+#!-----------------------------------------------------------//
+
+mfix.geometry = "prototype clr"
+# mfix.geometry_filename = "clr.csg"
+
+eb2.small_volfrac = 1.e-6
+
+#_______________________________________________________________________
+# Particle load balancing
+
+#mfix.load_balance_type = "KnapSack"
+
+amr.dual_grid          =  0
+amr.regrid_int         = -1
+
+#! KnapSack settings
+#!-----------------------------------------------------------//
+#default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
+#this option is only relevant if load_balance_type = KnapSack
+
+#mfix.knapsack_weight_type = "NumParticles"
+#mfix.knapsack_weight_type = "RunTimeCosts"
+
+#_______________________________________________________________________
+# IO / Checkpointing
+
+amr.par_ascii_int  = -1
+amr.par_ascii_file ="vis"
+
+amr.plot_int       = 1
+amr.plot_file      ="plt"
+
+amr.check_int      = -1
+amr.check_file     ="chk"
+
+#! Restart from checkpoint
+#!-----------------------------------------------------------//
+#amr.restart   ="chk00100"
+
+
+#_______________________________________________________________________
+# Species model settings
+#
+species.solve = Fe2O3 CH4 FeO CO H2O H2 O2 N2 CO2
+
+species.Fe2O3.molecular_weight = 159.69
+species.CH4.molecular_weight = 16.04
+species.FeO.molecular_weight = 71.84
+species.CO.molecular_weight = 28.01
+species.H2O.molecular_weight = 18.02
+species.H2.molecular_weight = 2.02
+species.O2.molecular_weight = 32.00
+species.N2.molecular_weight = 28.01
+species.CO2.molecular_weight = 44.01
+
+species.diffusivity = constant
+species.Fe2O3.diffusivity.constant = 0
+species.CH4.diffusivity.constant = 2.1e-5
+species.FeO.diffusivity.constant = 0
+species.CO.diffusivity.constant = 2.1e-5
+species.H2O.diffusivity.constant = 2.1e-5
+species.H2.diffusivity.constant = 2.1e-5
+species.O2.diffusivity.constant = 2.1e-5
+species.N2.diffusivity.constant = 2.1e-5
+species.CO2.diffusivity.constant = 2.1e-5
+
+species.specific_heat = constant
+species.Fe2O3.specific_heat.constant = 751.456
+species.CH4.specific_heat.constant = 2525
+species.FeO.specific_heat.constant = 949.332
+species.CO.specific_heat.constant = 1048
+species.H2O.specific_heat.constant = 918
+species.H2.specific_heat.constant = 1901
+species.O2.specific_heat.constant = 941
+species.N2.specific_heat.constant = 1040
+species.CO2.specific_heat.constant = 939
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+fluid.molecular_weight = mixture
+
+fluid.density            = constant
+fluid.density.constant   = 1.0
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 2.0e-5
+
+fluid.thermal_conductivity          = constant
+fluid.thermal_conductivity.constant = 0.024
+
+fluid.species = CH4 CO H2O H2 O2 N2 CO2
+
+
+#_______________________________________________________________________
+# Solids properties
+#
+solids.types = solid0
+
+solid0.specific_heat = constant
+solid0.specific_heat.constant = 918
+
+solid0.species  =  Fe2O3 FeO
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = solid0
+
+dem.friction_coeff.pp     =     0.25
+dem.friction_coeff.pw     =     0.15
+
+dem.spring_const.pp       =   100.0
+dem.spring_const.pw       =   100.0
+
+dem.restitution_coeff.solid0.solid0  =     0.85
+dem.restitution_coeff.solid0.wall    =     0.85
+
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+#_______________________________________________________________________
+## CHEMICAL reactions
+#
+chemistry.solve  = Hem_CH4 Hem_H2 Hem_CO Wus_O2
+
+chemistry.Hem_CH4.reaction = 4Fe2O3(s)+CH4(g)-->8FeO(s)+CO2(g)+2H2O(g)
+chemistry.Hem_H2.reaction = Fe2O3(s)+H2(g)-->2FeO(s)+H2O(g)
+chemistry.Hem_CO.reaction = Fe2O3(s)+CO(g)-->2FeO(s)+CO2(g)
+chemistry.Wus_O2.reaction = 4FeO(s)+O2(g)-->2Fe2O3(s)
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = full-domain  riser  fuel-reactor  loop-seal air-reactor  cyclone inflow  outflow
+
+regions.full-domain.lo  = 0.0000  0.0000  0.0000
+regions.full-domain.hi  = 3.8400  0.3200  0.9600
+
+regions.riser.lo        = 0.0000  0.0000  0.0000
+regions.riser.hi        = 0.6400  0.3200  0.9600
+
+regions.fuel-reactor.lo = 0.6400  0.0000  0.6400
+regions.fuel-reactor.hi = 0.9600  0.3200  0.9600
+
+regions.loop-seal.lo    = 2.2400  0.0000  0.6400
+regions.loop-seal.hi    = 2.5600  0.3200  0.9600
+
+regions.air-reactor.lo  = 0.6400  0.0000  0.0000
+regions.air-reactor.hi  = 3.8400  0.3200  0.3200
+
+regions.cyclone.lo      = 3.2000  0.0000  0.3200
+regions.cyclone.hi      = 3.8400  0.3200  0.9600
+
+regions.inflow.lo      = 0.0000  0.0000  0.0000
+regions.inflow.hi      = 0.0000  0.3200  0.9600
+
+regions.outflow.lo     = 3.8400  0.0000  0.0000
+regions.outflow.hi     = 3.8400  0.3200  0.9600
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = full-domain  riser  fuel-reactor  loop-seal  air-reactor  cyclone
+
+mfix.particle_init_type = Auto
+
+
+# Background IC covering the full domain with gas.
+#---------------------------------------------------------------------//
+ic.full-domain.fluid.volfrac  = 1.0
+
+ic.full-domain.fluid.velocity = 0.0  0.0  0.0
+ic.full-domain.fluid.temperature = 400
+ic.full-domain.fluid.species.CH4 = 0.0
+ic.full-domain.fluid.species.CO = 0.0
+ic.full-domain.fluid.species.H2O = 0.0
+ic.full-domain.fluid.species.H2 = 0.0
+ic.full-domain.fluid.species.O2 = 0.0
+ic.full-domain.fluid.species.N2 = 1.0
+ic.full-domain.fluid.species.CO2 = 0.0
+
+# riser section (above air reactor)
+#---------------------------------------------------------------------//
+ic.riser.fluid.volfrac  = 0.2
+ic.riser.fluid.velocity = 0.0  0.0  0.0
+ic.riser.fluid.temperature = 400
+ic.riser.fluid.species.CH4 = 0.0
+ic.riser.fluid.species.CO = 0.0
+ic.riser.fluid.species.H2O = 0.0
+ic.riser.fluid.species.H2 = 0.0
+ic.riser.fluid.species.O2 = 0.0
+ic.riser.fluid.species.N2 = 1.0
+ic.riser.fluid.species.CO2 = 0.0
+
+ic.riser.solids = solid0
+ic.riser.packing = hcp
+
+ic.riser.solid0.volfrac  = 0.8
+ic.riser.solid0.velocity = 0.0  0.0  0.0
+ic.riser.solid0.temperature = 400
+ic.riser.solid0.species.Fe2O3 = 0.5
+ic.riser.solid0.species.FeO = 0.5
+
+ic.riser.solid0.diameter = constant
+ic.riser.solid0.diameter.constant = 1250.0e-6
+
+ic.riser.solid0.density =  constant
+ic.riser.solid0.density.constant  = 1000.0
+
+
+# fuel reactor
+#---------------------------------------------------------------------//
+ic.fuel-reactor.fluid.volfrac  = 0.4
+ic.fuel-reactor.fluid.velocity = 0.0  0.0  0.0
+ic.fuel-reactor.fluid.temperature = 400
+ic.fuel-reactor.fluid.species.CH4 = 0.15
+ic.fuel-reactor.fluid.species.CO = 0.15
+ic.fuel-reactor.fluid.species.H2O = 0.0
+ic.fuel-reactor.fluid.species.H2 = 0.15
+ic.fuel-reactor.fluid.species.O2 = 0.0
+ic.fuel-reactor.fluid.species.N2 = 0.0
+ic.fuel-reactor.fluid.species.CO2 = 0.55
+
+ic.fuel-reactor.solids = solid0
+ic.fuel-reactor.packing = hcp
+
+ic.fuel-reactor.solid0.volfrac  = 0.6
+ic.fuel-reactor.solid0.velocity = 0.0  0.0  0.0
+ic.fuel-reactor.solid0.temperature = 400
+ic.fuel-reactor.solid0.species.Fe2O3 = 0.5
+ic.fuel-reactor.solid0.species.FeO = 0.5
+
+ic.fuel-reactor.solid0.diameter = constant
+ic.fuel-reactor.solid0.diameter.constant = 1250.0e-6
+
+ic.fuel-reactor.solid0.density =  constant
+ic.fuel-reactor.solid0.density.constant  = 1000.0
+
+
+#  loop-seal
+#---------------------------------------------------------------------//
+ic.loop-seal.fluid.volfrac  = 0.4
+ic.loop-seal.fluid.velocity = 0.0  0.0  0.0
+ic.loop-seal.fluid.temperature = 400
+ic.loop-seal.fluid.species.CH4 = 0.0
+ic.loop-seal.fluid.species.CO = 0.0
+ic.loop-seal.fluid.species.H2O = 0.0
+ic.loop-seal.fluid.species.H2 = 0.0
+ic.loop-seal.fluid.species.O2 = 0.0
+ic.loop-seal.fluid.species.N2 = 1.0
+ic.loop-seal.fluid.species.CO2 = 0.0
+
+ic.loop-seal.solids = solid0
+ic.loop-seal.packing = hcp
+
+ic.loop-seal.solid0.volfrac  = 0.6
+ic.loop-seal.solid0.velocity = 0.0  0.0  0.0
+ic.loop-seal.solid0.temperature = 400
+ic.loop-seal.solid0.species.Fe2O3 = 0.5
+ic.loop-seal.solid0.species.FeO = 0.5
+
+ic.loop-seal.solid0.diameter = constant
+ic.loop-seal.solid0.diameter.constant = 1250.0e-6
+
+ic.loop-seal.solid0.density =  constant
+ic.loop-seal.solid0.density.constant  = 1000.0
+
+
+#  air-reactor
+#---------------------------------------------------------------------//
+ic.air-reactor.fluid.volfrac  = 0.99
+ic.air-reactor.fluid.velocity = 0.0  0.0  0.0
+ic.air-reactor.fluid.temperature = 400
+ic.air-reactor.fluid.species.CH4 = 0.0
+ic.air-reactor.fluid.species.CO = 0.0
+ic.air-reactor.fluid.species.H2O = 0.0
+ic.air-reactor.fluid.species.H2 = 0.0
+ic.air-reactor.fluid.species.O2 = 0.4
+ic.air-reactor.fluid.species.N2 = 0.6
+ic.air-reactor.fluid.species.CO2 = 0.0
+
+ic.air-reactor.solids = solid0
+ic.air-reactor.packing = oneper
+
+ic.air-reactor.solid0.volfrac  = 0.01
+ic.air-reactor.solid0.velocity = 0.0  0.0  0.0
+ic.air-reactor.solid0.temperature = 400
+ic.air-reactor.solid0.species.Fe2O3 = 0.5
+ic.air-reactor.solid0.species.FeO = 0.5
+
+ic.air-reactor.solid0.diameter = constant
+ic.air-reactor.solid0.diameter.constant = 1250.0e-6
+
+ic.air-reactor.solid0.density =  constant
+ic.air-reactor.solid0.density.constant  = 1000.0
+
+
+#  cyclone
+#---------------------------------------------------------------------//
+ic.cyclone.fluid.volfrac  = 0.99
+ic.cyclone.fluid.velocity = 0.0  0.0  0.0
+ic.cyclone.fluid.temperature = 400
+ic.cyclone.fluid.species.CH4 = 0.0
+ic.cyclone.fluid.species.CO = 0.0
+ic.cyclone.fluid.species.H2O = 0.0
+ic.cyclone.fluid.species.H2 = 0.0
+ic.cyclone.fluid.species.O2 = 0.0
+ic.cyclone.fluid.species.N2 = 1.0
+ic.cyclone.fluid.species.CO2 = 0.0
+
+ic.cyclone.solids = solid0
+ic.cyclone.packing = oneper
+
+ic.cyclone.solid0.volfrac  = 0.01
+ic.cyclone.solid0.velocity = 0.0  0.0  0.0
+ic.cyclone.solid0.temperature = 400
+ic.cyclone.solid0.species.Fe2O3 = 0.5
+ic.cyclone.solid0.species.FeO = 0.5
+
+ic.cyclone.solid0.diameter = constant
+ic.cyclone.solid0.diameter.constant = 1250.0e-6
+
+ic.cyclone.solid0.density =  constant
+ic.cyclone.solid0.density.constant  = 1000.0
+
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+bc.regions = inflow  outflow
+
+bc.inflow = mi
+bc.inflow.fluid.volfrac  =  1.0
+bc.inflow.fluid.velocity =  0.01  0.0  0.0
+bc.inflow.fluid.temperature = 400
+bc.inflow.fluid.species.CH4 = 0.0
+bc.inflow.fluid.species.CO = 0.0
+bc.inflow.fluid.species.H2O = 0.0
+bc.inflow.fluid.species.H2 = 0.0
+bc.inflow.fluid.species.O2 = 0.0
+bc.inflow.fluid.species.N2 = 1.0
+bc.inflow.fluid.species.CO2 = 0.0
+
+bc.outflow = po
+bc.outflow.fluid.pressure =  101325.0

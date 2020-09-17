@@ -4,6 +4,7 @@
 
 #include <AMReX_ParmParse.H>
 
+#include <mfix.H>
 #include <mfix_reactions_parms.H>
 #include <mfix_ic_parms.H>
 #include <mfix_dem_parms.H>
@@ -248,8 +249,8 @@ namespace REACTIONS
   // Number of chemical reactions allowed by the model
   int nreactions = 0;
 
-  // Vector of allowed chemical reactions
-  amrex::Vector<ChemicalReaction> chemical_reactions;
+  // Chemical reactions equations
+  std::vector<std::string> reaction_equations;
 
   // Initialization: read input parameters and set up reactions
   void Initialize ()
@@ -271,24 +272,19 @@ namespace REACTIONS
         solve = false;
         reactions.clear();
         nreactions = 0;
+        reaction_equations.clear();
       }
       else {
         solve = true;
         nreactions = reactions.size();
+        reaction_equations.clear();
+        reaction_equations.resize(nreactions);
       }
 
       if (solve) {
         for (int n(0); n < nreactions; n++) {
-          // Declare the string where we store the equation
-          std::string reaction_equation;
-
           // Get the reation equation relative to given reaction name
-          pp.get((reactions[n]+".reaction").c_str(), reaction_equation);
-
-          ChemicalReaction reaction(reaction_equation);
-
-          // Add new chemical reaction to the back of vector
-          chemical_reactions.push_back(reaction);
+          pp.get((reactions[n]+".reaction").c_str(), reaction_equations[n]);
         }
       }
     }
@@ -311,5 +307,23 @@ namespace REACTIONS
     parse_chemical_reaction(m_reaction, m_phases, m_reaction_type, m_reactants,
         m_reactants_id, m_reactants_coeffs, m_reactants_phases, m_products,
         m_products_id, m_products_coeffs, m_products_phases);
+  }
+}
+
+
+// Initialization: read input parameters and set up reactions
+void mfix::initialize_chem_reactions ()
+{
+  if (REACTIONS::solve)
+  {
+    const int nreactions = REACTIONS::nreactions;
+    m_chemical_reactions.resize(nreactions, nullptr);
+    
+    for (int n(0); n < nreactions; n++)
+    {
+      const std::string& equation = REACTIONS::reaction_equations[n];
+
+      m_chemical_reactions[n] = new REACTIONS::ChemicalReaction(equation);
+    }
   }
 }

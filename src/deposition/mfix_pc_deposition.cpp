@@ -297,27 +297,28 @@ InterphaseChemDeposition (int lev,
                             amrex::MultiFab & mf_tmp_eps,
                             amrex::MultiFab & Rrates,
                             const amrex::MultiFab * volfrac,
-                            const amrex::FabArray<EBCellFlagFab>* flags)
+                            const amrex::FabArray<EBCellFlagFab>* flags,
+                            const amrex::Vector< REACTIONS::ChemicalReaction* >& chemical_reactions)
 {
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear)
   {
-    InterphaseChemDeposition(TrilinearDeposition(),
-                               lev, mf_tmp_eps, Rrates, volfrac, flags);
+    InterphaseChemDeposition(TrilinearDeposition(), lev, mf_tmp_eps, Rrates,
+                             volfrac, flags, chemical_reactions);
   }
   else if (mfix::m_deposition_scheme == DepositionScheme::square_dpvm)
   {
-    InterphaseChemDeposition(TrilinearDPVMSquareDeposition(),
-                               lev, mf_tmp_eps, Rrates, volfrac, flags);
+    InterphaseChemDeposition(TrilinearDPVMSquareDeposition(), lev, mf_tmp_eps,
+                             Rrates, volfrac, flags, chemical_reactions);
   }
   else if (mfix::m_deposition_scheme == DepositionScheme::true_dpvm)
   {
-    InterphaseChemDeposition(TrueDPVMDeposition(),
-                               lev, mf_tmp_eps, Rrates, volfrac, flags);
+    InterphaseChemDeposition(TrueDPVMDeposition(), lev, mf_tmp_eps, Rrates,
+                             volfrac, flags, chemical_reactions);
   }
   else if (mfix::m_deposition_scheme == DepositionScheme::centroid)
   {
-    InterphaseChemDeposition(CentroidDeposition(),
-                               lev, mf_tmp_eps, Rrates, volfrac, flags);
+    InterphaseChemDeposition(CentroidDeposition(), lev, mf_tmp_eps, Rrates,
+                             volfrac, flags, chemical_reactions);
   }
   else
   {
@@ -333,7 +334,8 @@ InterphaseChemDeposition (F WeightFunc,
                           amrex::MultiFab& mf_tmp_eps,
                           amrex::MultiFab& mf_G_gk_fp,
                           const amrex::MultiFab* volfrac,
-                          const amrex::FabArray<EBCellFlagFab>* flags)
+                          const amrex::FabArray<EBCellFlagFab>* flags,
+                          const amrex::Vector< REACTIONS::ChemicalReaction* >& chemical_reactions)
 {
   BL_PROFILE("MFIXParticleContainer::InterphaseChemDeposition()");
 
@@ -374,7 +376,6 @@ InterphaseChemDeposition (F WeightFunc,
   Real* p_MW_gk = mng_MW_gk.data();
 
   // Reactions data
-  const auto& chemical_reactions = REACTIONS::chemical_reactions;
   const int nreactions = REACTIONS::nreactions;
 
   Gpu::ManagedVector< int > mng_types(nreactions);
@@ -382,9 +383,9 @@ InterphaseChemDeposition (F WeightFunc,
   Gpu::ManagedVector< int > mng_nphases(nreactions);
 
   for (int q(0); q < nreactions; q++) {
-    mng_types[q] = chemical_reactions[q].m_reaction_type;
-    mng_phases[q] = chemical_reactions[q].m_phases.data();
-    mng_nphases[q] = chemical_reactions[q].m_phases.size();
+    mng_types[q] = chemical_reactions[q]->m_reaction_type;
+    mng_phases[q] = chemical_reactions[q]->m_phases.data();
+    mng_nphases[q] = chemical_reactions[q]->m_phases.size();
   }
 
   int* p_types = mng_types.data();
@@ -397,10 +398,10 @@ InterphaseChemDeposition (F WeightFunc,
   Gpu::ManagedVector< const int* > mng_reactants_phases(nreactions);
 
   for (int q(0); q < nreactions; q++) {
-    mng_nreactants[q] = chemical_reactions[q].m_reactants.size();
-    mng_reactants_id[q] = chemical_reactions[q].m_reactants_id.data();
-    mng_reactants_coeffs[q] = chemical_reactions[q].m_reactants_coeffs.data();
-    mng_reactants_phases[q] = chemical_reactions[q].m_reactants_phases.data();
+    mng_nreactants[q] = chemical_reactions[q]->m_reactants.size();
+    mng_reactants_id[q] = chemical_reactions[q]->m_reactants_id.data();
+    mng_reactants_coeffs[q] = chemical_reactions[q]->m_reactants_coeffs.data();
+    mng_reactants_phases[q] = chemical_reactions[q]->m_reactants_phases.data();
   }
 
   int* p_nreactants = mng_nreactants.data();
@@ -414,10 +415,10 @@ InterphaseChemDeposition (F WeightFunc,
   Gpu::ManagedVector< const int* > mng_products_phases(nreactions);
 
   for (int q(0); q < nreactions; q++) {
-    mng_nproducts[q] = chemical_reactions[q].m_products.size();
-    mng_products_id[q] = chemical_reactions[q].m_products_id.data();
-    mng_products_coeffs[q] = chemical_reactions[q].m_products_coeffs.data();
-    mng_products_phases[q] = chemical_reactions[q].m_products_phases.data();
+    mng_nproducts[q] = chemical_reactions[q]->m_products.size();
+    mng_products_id[q] = chemical_reactions[q]->m_products_id.data();
+    mng_products_coeffs[q] = chemical_reactions[q]->m_products_coeffs.data();
+    mng_products_phases[q] = chemical_reactions[q]->m_products_phases.data();
   }
 
   int* p_nproducts = mng_nproducts.data();
