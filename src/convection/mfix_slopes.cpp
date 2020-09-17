@@ -183,63 +183,15 @@ mfix::mfix_compute_slopes (int lev,
                    }
                    else
                    {
-                     // X direction
-                     if( flag_fab(i  ,j,k).isSingleValued() or
-                        (flag_fab(i-1,j,k).isSingleValued() or not flag_fab(i,j,k).isConnected(-1,0,0)) or
-                        (flag_fab(i+1,j,k).isSingleValued() or not flag_fab(i,j,k).isConnected( 1,0,0))) {
-
-                       auto eb_slopes = amrex_calc_slopes_extdir_eb(i,j,k,n,
+                     auto eb_slopes = amrex_calc_slopes_extdir_eb(i,j,k,n,
                                           state_fab,ccent_fab,fcx_fab,fcy_fab,fcz_fab,flag_fab,
                                           ed_ilo,ed_jlo,ed_klo,ed_ihi,ed_jhi,ed_khi,
                                           domain_ilo,domain_jlo,domain_klo,
                                           domain_ihi,domain_jhi,domain_khi);
 
-                       xs_fab(i,j,k,slopes_comp+n) = eb_slopes[0];
-
-                     } else {
-                       
-                       xs_fab(i,j,k,slopes_comp+n) = amrex_calc_xslope_extdir(i,j,k,n,2,state_fab,
-                                                        ed_ilo,ed_ihi,domain_ilo,domain_ihi);
-                     }
-
-                     // Y direction
-                     if(flag_fab(i,j  ,k).isSingleValued() or
-                       (flag_fab(i,j-1,k).isSingleValued() or not flag_fab(i,j,k).isConnected(0,-1,0)) or
-                       (flag_fab(i,j+1,k).isSingleValued() or not flag_fab(i,j,k).isConnected(0, 1,0))) {
-
-                       auto eb_slopes = amrex_calc_slopes_extdir_eb(i,j,k,n,
-                                          state_fab,ccent_fab,fcx_fab,fcy_fab,fcz_fab,flag_fab,
-                                          ed_ilo,ed_jlo,ed_klo,ed_ihi,ed_jhi,ed_khi,
-                                          domain_ilo,domain_jlo,domain_klo,
-                                          domain_ihi,domain_jhi,domain_khi);
-
-                       ys_fab(i,j,k,slopes_comp+n) = eb_slopes[1];
-                     } else {
-
-                       ys_fab(i,j,k,slopes_comp+n) = amrex_calc_yslope_extdir(i,j,k,n,2,state_fab,
-                                                        ed_jlo,ed_jhi,domain_jlo,domain_jhi);
-
-                     }
-
-                     // Z direction
-                     if(flag_fab(i,j,k  ).isSingleValued() or
-                       (flag_fab(i,j,k-1).isSingleValued() or not flag_fab(i,j,k).isConnected(0,0,-1)) or
-                       (flag_fab(i,j,k+1).isSingleValued() or not flag_fab(i,j,k).isConnected(0,0, 1))) {
-
-                       auto eb_slopes = amrex_calc_slopes_extdir_eb(i,j,k,n,
-                                          state_fab,ccent_fab,fcx_fab,fcy_fab,fcz_fab,flag_fab,
-                                          ed_ilo,ed_jlo,ed_klo,ed_ihi,ed_jhi,ed_khi,
-                                          domain_ilo,domain_jlo,domain_klo,
-                                          domain_ihi,domain_jhi,domain_khi);
-
-                       zs_fab(i,j,k,slopes_comp+n) = eb_slopes[2];
-
-                     } else {
-
-                       zs_fab(i,j,k,slopes_comp+n) = amrex_calc_zslope_extdir(i,j,k,n,2,state_fab,
-                                                        ed_klo,ed_khi,domain_klo,domain_khi);
-
-                     }
+                     xs_fab(i,j,k,slopes_comp+n) = eb_slopes[0];
+                     ys_fab(i,j,k,slopes_comp+n) = eb_slopes[1];
+                     zs_fab(i,j,k,slopes_comp+n) = eb_slopes[2];
                    }
                });
            } // end of cut cell region
