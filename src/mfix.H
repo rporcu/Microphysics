@@ -33,6 +33,7 @@
 #include <mfix_eb_if.H>
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
+#include <mfix_reactions_parms.H>
 #include <mfix_leveldata.H>
 #include <mfix_des_heterogeneous_rates_K.H>
 
@@ -648,7 +649,14 @@ class mfix : public AmrCore
 
     void mfix_calc_txfr_fluid (Real time);
 
+  protected:
+    // Vector of allowed chemical reactions
+    amrex::Vector< REACTIONS::ChemicalReaction* > m_chemical_reactions;
+
   public:
+    // Initialization: read input parameters and set up reactions
+    void initialize_chem_reactions ();
+
     void mfix_calc_chem_txfr (const Real time,
                               const Vector< MultiFab* >& ep_g_in,
                               const Vector< MultiFab* >& ro_g_in,

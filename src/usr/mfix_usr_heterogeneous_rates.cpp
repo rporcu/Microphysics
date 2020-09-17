@@ -67,6 +67,94 @@ ComputeRRateUser::operator() (amrex::Real* R_q,
 
   //    R_q[q] *= concentration;
   //  }
+
+    if (q == 0) // Hem_CH4
+    {
+      R_q[q] = 1.e-5;
+
+      for (int n(0); n < nreactants[q]; n++)
+      {
+        const int current_species_id = reactants_id[q][n];
+
+        {
+          const int pos = MFIXfind(species_id_g, nspecies_g, current_species_id);
+          if (pos != -1)
+            R_q[q] *= (X_gk[pos] > 0);
+        }
+
+        {
+          const int pos = MFIXfind(species_id_s, nspecies_s, current_species_id);
+          if (pos != -1)
+            R_q[q] *= (X_sn[pos] > 0);
+        }
+      }
+    }
+
+    if (q == 1) // Hem_H2
+    {
+      R_q[q] = 1.e-5;
+
+      for (int n(0); n < nreactants[q]; n++)
+      {
+        const int current_species_id = reactants_id[q][n];
+
+        {
+          const int pos = MFIXfind(species_id_g, nspecies_g, current_species_id);
+          if (pos != -1)
+            R_q[q] *= (X_gk[pos] > 0);
+        }
+
+        {
+          const int pos = MFIXfind(species_id_s, nspecies_s, current_species_id);
+          if (pos != -1)
+            R_q[q] *= (X_sn[pos] > 0);
+        }
+      }
+    }
+
+    if (q == 2) // Hem_CO
+    {
+      R_q[q] = 1.e-5;
+
+      for (int n(0); n < nreactants[q]; n++)
+      {
+        const int current_species_id = reactants_id[q][n];
+
+        {
+          const int pos = MFIXfind(species_id_g, nspecies_g, current_species_id);
+          if (pos != -1)
+            R_q[q] *= (X_gk[pos] > 0);
+        }
+
+        {
+          const int pos = MFIXfind(species_id_s, nspecies_s, current_species_id);
+          if (pos != -1)
+            R_q[q] *= (X_sn[pos] > 0);
+        }
+      }
+    }
+
+    if (q == 3) // Wus_O2
+    {
+      R_q[q] = 1.e-5;
+
+      for (int n(0); n < nreactants[q]; n++)
+      {
+        const int current_species_id = reactants_id[q][n];
+
+        {
+          const int pos = MFIXfind(species_id_g, nspecies_g, current_species_id);
+          if (pos != -1)
+            R_q[q] *= (X_gk[pos] > 0);
+        }
+
+        {
+          const int pos = MFIXfind(species_id_s, nspecies_s, current_species_id);
+          if (pos != -1)
+            R_q[q] *= (X_sn[pos] > 0);
+        }
+      }
+    }
   }
 
 }

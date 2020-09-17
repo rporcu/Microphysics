@@ -24,11 +24,24 @@ namespace REACTIONS
   // Number of chemical reactions allowed by the model
   extern int nreactions;
 
+  // Chemical reactions equations
+  extern std::vector<std::string> reaction_equations;
+
   // Class for chemical reaction details
   class ChemicalReaction {
     public:
+      // Default constructor
+      explicit ChemicalReaction () = default;
+
       // class constructor
-      ChemicalReaction (const std::string& reaction);
+      explicit ChemicalReaction (const std::string& reaction);
+
+      ChemicalReaction (const ChemicalReaction&) = delete;
+
+      ChemicalReaction& operator = (const ChemicalReaction&) = delete;
+
+      // Default destructor
+      ~ChemicalReaction () = default;
 
       // chemical formula
       const std::string m_reaction;
@@ -51,11 +64,7 @@ namespace REACTIONS
       amrex::Gpu::ManagedVector<int> m_products_phases;
   };
 
-  // Initialization: read input parameters and set up reactions
-  void Initialize ();
-
-  // Vector of allowed chemical reactions
-  extern amrex::Vector<ChemicalReaction> chemical_reactions;
+  void Initialize();
 
 }
 

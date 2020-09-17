@@ -30,6 +30,7 @@ mfix::InitParams ()
 
   // Read and process chemical reactions inputs.
   REACTIONS::Initialize();
+  initialize_chem_reactions();
 
   BL_ASSERT(REACTIONS::nreactions <= REACTIONS::NMAX);
 
@@ -146,11 +147,6 @@ mfix::InitParams ()
 
     // We can still turn it off explicitly even if we passed stoichiometry inputs
     pp.query("solve_reactions", solve_reactions);
-
-    if (solve_reactions) {
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(open_system_constraint, "Cannot solve reactions"
-          "if the cold flow constraint is being used");
-    }
 
     if (advect_fluid_species)
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(FLUID::solve_species,

@@ -69,6 +69,11 @@ mfix::~mfix ()
   //! EB factory that lives on the particle grids
   for (int lev(0); lev < particle_ebfactory.size(); ++lev)
     delete particle_ebfactory[lev];
+
+  if (REACTIONS::solve) {
+    for (int n(0); n < REACTIONS::nreactions; n++)
+      delete m_chemical_reactions[n];
+  }
 };
 
 // Constructor

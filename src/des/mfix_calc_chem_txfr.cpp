@@ -74,7 +74,6 @@ mfix::mfix_calc_chem_txfr (const Real time,
   Real* p_MW_gk = mng_MW_gk.data();
 
   // Reactions data
-  const auto& chemical_reactions = REACTIONS::chemical_reactions;
   const int nreactions = REACTIONS::nreactions;
 
   Gpu::ManagedVector< int > mng_types(nreactions);
@@ -82,9 +81,9 @@ mfix::mfix_calc_chem_txfr (const Real time,
   Gpu::ManagedVector< int > mng_nphases(nreactions);
 
   for (int q(0); q < nreactions; q++) {
-    mng_types[q] = chemical_reactions[q].m_reaction_type;
-    mng_phases[q] = chemical_reactions[q].m_phases.data();
-    mng_nphases[q] = chemical_reactions[q].m_phases.size();
+    mng_types[q] = m_chemical_reactions[q]->m_reaction_type;
+    mng_phases[q] = m_chemical_reactions[q]->m_phases.data();
+    mng_nphases[q] = m_chemical_reactions[q]->m_phases.size();
   }
 
   int* p_types = mng_types.data();
@@ -97,10 +96,10 @@ mfix::mfix_calc_chem_txfr (const Real time,
   Gpu::ManagedVector< const int* > mng_reactants_phases(nreactions);
 
   for (int q(0); q < nreactions; q++) {
-    mng_nreactants[q] = chemical_reactions[q].m_reactants.size();
-    mng_reactants_id[q] = chemical_reactions[q].m_reactants_id.data();
-    mng_reactants_coeffs[q] = chemical_reactions[q].m_reactants_coeffs.data();
-    mng_reactants_phases[q] = chemical_reactions[q].m_reactants_phases.data();
+    mng_nreactants[q] = m_chemical_reactions[q]->m_reactants.size();
+    mng_reactants_id[q] = m_chemical_reactions[q]->m_reactants_id.data();
+    mng_reactants_coeffs[q] = m_chemical_reactions[q]->m_reactants_coeffs.data();
+    mng_reactants_phases[q] = m_chemical_reactions[q]->m_reactants_phases.data();
   }
 
   int* p_nreactants = mng_nreactants.data();
@@ -114,10 +113,10 @@ mfix::mfix_calc_chem_txfr (const Real time,
   Gpu::ManagedVector< const int* > mng_products_phases(nreactions);
 
   for (int q(0); q < nreactions; q++) {
-    mng_nproducts[q] = chemical_reactions[q].m_products.size();
-    mng_products_id[q] = chemical_reactions[q].m_products_id.data();
-    mng_products_coeffs[q] = chemical_reactions[q].m_products_coeffs.data();
-    mng_products_phases[q] = chemical_reactions[q].m_products_phases.data();
+    mng_nproducts[q] = m_chemical_reactions[q]->m_products.size();
+    mng_products_id[q] = m_chemical_reactions[q]->m_products_id.data();
+    mng_products_coeffs[q] = m_chemical_reactions[q]->m_products_coeffs.data();
+    mng_products_phases[q] = m_chemical_reactions[q]->m_products_phases.data();
   }
 
   int* p_nproducts = mng_nproducts.data();
@@ -641,7 +640,7 @@ mfix::mfix_calc_chem_txfr (const Real time,
       // Drag force: (beta and beta*particle_vel)
       // Heat transfer: gamma and gamma*particle temperature
       pc->InterphaseChemDeposition(lev, *tmp_eps[lev], *ro_gk_txfr_ptr[lev],
-          volfrac, flags);
+          volfrac, flags, m_chemical_reactions);
     }
 
     {

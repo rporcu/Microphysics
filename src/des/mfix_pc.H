@@ -16,6 +16,7 @@
 #include <AMReX_NeighborParticles.H>
 
 #include <mfix_pic_parms.H>
+#include <mfix_reactions_parms.H>
 #include <mfix_bc_list.H>
 
 struct realData
@@ -203,7 +204,8 @@ public:
                                    amrex::MultiFab& mf_tmp_eps,
                                    amrex::MultiFab& Rrates,
                                    const amrex::MultiFab* volfrac,
-                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags);
+                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags,
+                                   const amrex::Vector< REACTIONS::ChemicalReaction* >&);
 
     template <typename F>
     void InterphaseChemDeposition (F WeightFunc,
@@ -211,7 +213,8 @@ public:
                                    amrex::MultiFab& mf_tmp_eps,
                                    amrex::MultiFab& chem_txfr_mf,
                                    const amrex::MultiFab* volfrac,
-                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags);
+                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags,
+                                   const amrex::Vector< REACTIONS::ChemicalReaction* >&);
 
     //
     // Postprocessing utilities to compute spatially-averaged particle velocities
