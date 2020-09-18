@@ -4,7 +4,7 @@ amrex.fpe_trap_invalid = 1
 # Run settings
 #----------------------------------------------------------------------
 
-mfix.max_step   = 50
+mfix.max_step   = 1000
 #mfix.stop_time = 10.0
 
 #----------------------------------------------------------------------
@@ -12,7 +12,7 @@ mfix.max_step   = 50
 #----------------------------------------------------------------------
 
 # Nodal solver
-nodal_proj.verbose    = 2
+nodal_proj.verbose    = 0
 nodal_proj.maxiter = 2000
 nodal_proj.bottom_verbose = 0
 nodal_proj.bottom_maxiter = 1000
@@ -20,7 +20,7 @@ nodal_proj.mg_rtol       = 1.e-8
 
 
 # MAC solver
-mac_proj.verbose     = 2
+mac_proj.verbose     = 0
 mac_proj.maxiter  = 2000
 mac_proj.bottom_verbose  = 0
 mac_proj.bottom_maxiter  = 1000
@@ -44,7 +44,7 @@ mfix.dt_min   = 1.e-7
 mfix.dt_max   = 5.e-5
 
 mfix.do_initial_proj    = 1
-mfix.initial_iterations = 1
+mfix.initial_iterations = 3
 
 mfix.drag_type = "WenYu"
 
@@ -84,10 +84,9 @@ geometry.prob_lo     = 0.0000  0.0000  0.0000  # lo corner of physical domain
 geometry.prob_hi     = 3.8400  0.3200  0.9600  # hi corner of physical domain
 
 # Number of grid cells in each direction at the coarsest level
-#amr.n_cell =  1728 128 128
 amr.n_cell =  384 32 96
 
-amr.blocking_factor = 16
+amr.blocking_factor = 32
 
 #! Grids
 #!-----------------------------------------------------------//
@@ -96,7 +95,7 @@ amr.blocking_factor = 16
 # Fluid
 amr.max_grid_size_x = 32
 amr.max_grid_size_y = 32
-amr.max_grid_size_z = 32
+amr.max_grid_size_z = 48
 
 # Particles (not with KDTree)
 #particles.max_grid_size_x =   64
@@ -119,7 +118,7 @@ particles.tile_size = 1024 1024 1024
 # Level-set refinement and padding
 mfix.levelset__refinement = 2 # levelset resolution
 
-mfix.write_eb_surface = true  # Needed to output eb-surfaces
+mfix.write_eb_surface = false  # Needed to output eb-surfaces
 mfix.write_ls         = false  # Needed to output level set
 
 #! EB geometry
@@ -152,7 +151,7 @@ amr.regrid_int         = -1
 amr.par_ascii_int  = -1
 amr.par_ascii_file ="vis"
 
-amr.plot_int       = 1
+amr.plot_int       =  5
 amr.plot_file      ="plt"
 
 amr.check_int      = -1
@@ -266,37 +265,44 @@ chemistry.Wus_O2.reaction = 4FeO(s)+O2(g)-->2Fe2O3(s)
 # Regions for defining ICs and BCs
 #
 
-mfix.regions = full-domain  riser  fuel-reactor  loop-seal air-reactor  cyclone inflow  outflow
+mfix.regions = full-domain fuel-reactor air-reactor riser loop-seal cyclone inflow outflow redux reox
 
 regions.full-domain.lo  = 0.0000  0.0000  0.0000
 regions.full-domain.hi  = 3.8400  0.3200  0.9600
 
-regions.riser.lo        = 0.0000  0.0000  0.0000
-regions.riser.hi        = 0.6400  0.3200  0.9600
+regions.air-reactor.lo  = 0.0000  0.0000  0.0000
+regions.air-reactor.hi  = 0.6400  0.3200  0.9600
 
 regions.fuel-reactor.lo = 0.6400  0.0000  0.6400
 regions.fuel-reactor.hi = 0.9600  0.3200  0.9600
 
+regions.riser.lo        = 0.6400  0.0000  0.0000
+regions.riser.hi        = 3.8400  0.3200  0.3200
+
 regions.loop-seal.lo    = 2.2400  0.0000  0.6400
 regions.loop-seal.hi    = 2.5600  0.3200  0.9600
-
-regions.air-reactor.lo  = 0.6400  0.0000  0.0000
-regions.air-reactor.hi  = 3.8400  0.3200  0.3200
 
 regions.cyclone.lo      = 3.2000  0.0000  0.3200
 regions.cyclone.hi      = 3.8400  0.3200  0.9600
 
-regions.inflow.lo      = 0.0000  0.0000  0.0000
-regions.inflow.hi      = 0.0000  0.3200  0.9600
+regions.inflow.lo       = 0.0000  0.0000  0.0000
+regions.inflow.hi       = 0.0000  0.3200  0.9600
+                        
+regions.outflow.lo      = 3.8400  0.0000  0.0000
+regions.outflow.hi      = 3.8400  0.3200  0.9600
+                        
+regions.redux.lo        = 0.5200  0.0000  0.4800
+regions.redux.hi        = 1.5200  0.3200  0.9600
+                        
+regions.reox.lo         = 0.0000  0.0000  0.0000
+regions.reox.hi         = 3.8400  0.3200  0.2600
 
-regions.outflow.lo     = 3.8400  0.0000  0.0000
-regions.outflow.hi     = 3.8400  0.3200  0.9600
 
 #_______________________________________________________________________
 # Initial Conditions
 #
 
-ic.regions = full-domain  riser  fuel-reactor  loop-seal  air-reactor  cyclone
+ic.regions = full-domain riser fuel-reactor loop-seal air-reactor cyclone redux reox
 
 mfix.particle_init_type = Auto
 
@@ -306,36 +312,59 @@ mfix.particle_init_type = Auto
 ic.full-domain.fluid.volfrac  = 1.0
 
 ic.full-domain.fluid.velocity = 0.0  0.0  0.0
-ic.full-domain.fluid.temperature = 400
+ic.full-domain.fluid.temperature = 1100
+
 ic.full-domain.fluid.species.CH4 = 0.0
-ic.full-domain.fluid.species.CO = 0.0
-ic.full-domain.fluid.species.H2O = 0.0
-ic.full-domain.fluid.species.H2 = 0.0
-ic.full-domain.fluid.species.O2 = 0.0
-ic.full-domain.fluid.species.N2 = 1.0
+ic.full-domain.fluid.species.CO  = 0.0
+ic.full-domain.fluid.species.H2O = 1.0
+ic.full-domain.fluid.species.H2  = 0.0
+ic.full-domain.fluid.species.O2  = 0.0
+ic.full-domain.fluid.species.N2  = 0.0
 ic.full-domain.fluid.species.CO2 = 0.0
+
+ic.full-domain.solids = solid0
+ic.full-domain.packing = none
+
+ic.full-domain.solid0.volfrac  = 0.0
+ic.full-domain.solid0.velocity = 0.0  0.0  0.0
+
+ic.full-domain.solid0.temperature = 1100
+
+ic.full-domain.solid0.species.Fe2O3 = 1.0
+ic.full-domain.solid0.species.FeO   = 0.0
+
+ic.full-domain.solid0.diameter = constant
+ic.full-domain.solid0.diameter.constant = 1250.0e-6
+
+ic.full-domain.solid0.density =  constant
+ic.full-domain.solid0.density.constant  = 1000.0
+
 
 # riser section (above air reactor)
 #---------------------------------------------------------------------//
 ic.riser.fluid.volfrac  = 0.2
 ic.riser.fluid.velocity = 0.0  0.0  0.0
-ic.riser.fluid.temperature = 400
+
+ic.riser.fluid.temperature = 1100
+
 ic.riser.fluid.species.CH4 = 0.0
-ic.riser.fluid.species.CO = 0.0
-ic.riser.fluid.species.H2O = 0.0
-ic.riser.fluid.species.H2 = 0.0
-ic.riser.fluid.species.O2 = 0.0
-ic.riser.fluid.species.N2 = 1.0
+ic.riser.fluid.species.CO  = 0.0
+ic.riser.fluid.species.H2O = 1.0
+ic.riser.fluid.species.H2  = 0.0
+ic.riser.fluid.species.O2  = 0.0
+ic.riser.fluid.species.N2  = 0.0
 ic.riser.fluid.species.CO2 = 0.0
 
 ic.riser.solids = solid0
-ic.riser.packing = hcp
+ic.riser.packing = oneper
 
 ic.riser.solid0.volfrac  = 0.8
 ic.riser.solid0.velocity = 0.0  0.0  0.0
-ic.riser.solid0.temperature = 400
-ic.riser.solid0.species.Fe2O3 = 0.5
-ic.riser.solid0.species.FeO = 0.5
+
+ic.riser.solid0.temperature = 1100
+
+ic.riser.solid0.species.Fe2O3 = 1.0
+ic.riser.solid0.species.FeO   = 0.0
 
 ic.riser.solid0.diameter = constant
 ic.riser.solid0.diameter.constant = 1250.0e-6
@@ -348,23 +377,27 @@ ic.riser.solid0.density.constant  = 1000.0
 #---------------------------------------------------------------------//
 ic.fuel-reactor.fluid.volfrac  = 0.4
 ic.fuel-reactor.fluid.velocity = 0.0  0.0  0.0
-ic.fuel-reactor.fluid.temperature = 400
-ic.fuel-reactor.fluid.species.CH4 = 0.15
-ic.fuel-reactor.fluid.species.CO = 0.15
-ic.fuel-reactor.fluid.species.H2O = 0.0
-ic.fuel-reactor.fluid.species.H2 = 0.15
-ic.fuel-reactor.fluid.species.O2 = 0.0
-ic.fuel-reactor.fluid.species.N2 = 0.0
-ic.fuel-reactor.fluid.species.CO2 = 0.55
+
+ic.fuel-reactor.fluid.temperature = 1100
+
+ic.fuel-reactor.fluid.species.CH4 = 0.0
+ic.fuel-reactor.fluid.species.CO  = 0.0
+ic.fuel-reactor.fluid.species.H2O = 1.0
+ic.fuel-reactor.fluid.species.H2  = 0.0
+ic.fuel-reactor.fluid.species.O2  = 0.0
+ic.fuel-reactor.fluid.species.N2  = 0.0
+ic.fuel-reactor.fluid.species.CO2 = 0.0
 
 ic.fuel-reactor.solids = solid0
 ic.fuel-reactor.packing = hcp
 
 ic.fuel-reactor.solid0.volfrac  = 0.6
 ic.fuel-reactor.solid0.velocity = 0.0  0.0  0.0
-ic.fuel-reactor.solid0.temperature = 400
-ic.fuel-reactor.solid0.species.Fe2O3 = 0.5
-ic.fuel-reactor.solid0.species.FeO = 0.5
+
+ic.fuel-reactor.solid0.temperature = 1100
+
+ic.fuel-reactor.solid0.species.Fe2O3 = 1.0
+ic.fuel-reactor.solid0.species.FeO   = 0.0
 
 ic.fuel-reactor.solid0.diameter = constant
 ic.fuel-reactor.solid0.diameter.constant = 1250.0e-6
@@ -375,25 +408,29 @@ ic.fuel-reactor.solid0.density.constant  = 1000.0
 
 #  loop-seal
 #---------------------------------------------------------------------//
-ic.loop-seal.fluid.volfrac  = 0.4
+ic.loop-seal.fluid.volfrac  = 0.1
 ic.loop-seal.fluid.velocity = 0.0  0.0  0.0
-ic.loop-seal.fluid.temperature = 400
+
+ic.loop-seal.fluid.temperature = 1100
+
 ic.loop-seal.fluid.species.CH4 = 0.0
-ic.loop-seal.fluid.species.CO = 0.0
-ic.loop-seal.fluid.species.H2O = 0.0
-ic.loop-seal.fluid.species.H2 = 0.0
-ic.loop-seal.fluid.species.O2 = 0.0
-ic.loop-seal.fluid.species.N2 = 1.0
+ic.loop-seal.fluid.species.CO  = 0.0
+ic.loop-seal.fluid.species.H2O = 1.0
+ic.loop-seal.fluid.species.H2  = 0.0
+ic.loop-seal.fluid.species.O2  = 0.0
+ic.loop-seal.fluid.species.N2  = 0.0
 ic.loop-seal.fluid.species.CO2 = 0.0
 
 ic.loop-seal.solids = solid0
 ic.loop-seal.packing = hcp
 
-ic.loop-seal.solid0.volfrac  = 0.6
+ic.loop-seal.solid0.volfrac  = 0.9
 ic.loop-seal.solid0.velocity = 0.0  0.0  0.0
-ic.loop-seal.solid0.temperature = 400
-ic.loop-seal.solid0.species.Fe2O3 = 0.5
-ic.loop-seal.solid0.species.FeO = 0.5
+
+ic.loop-seal.solid0.temperature = 1100
+
+ic.loop-seal.solid0.species.Fe2O3 = 1.0
+ic.loop-seal.solid0.species.FeO   = 0.0
 
 ic.loop-seal.solid0.diameter = constant
 ic.loop-seal.solid0.diameter.constant = 1250.0e-6
@@ -401,28 +438,31 @@ ic.loop-seal.solid0.diameter.constant = 1250.0e-6
 ic.loop-seal.solid0.density =  constant
 ic.loop-seal.solid0.density.constant  = 1000.0
 
-
 #  air-reactor
 #---------------------------------------------------------------------//
-ic.air-reactor.fluid.volfrac  = 0.99
+ic.air-reactor.fluid.volfrac  = 0.1
 ic.air-reactor.fluid.velocity = 0.0  0.0  0.0
-ic.air-reactor.fluid.temperature = 400
+
+ic.air-reactor.fluid.temperature = 1100
+
 ic.air-reactor.fluid.species.CH4 = 0.0
-ic.air-reactor.fluid.species.CO = 0.0
-ic.air-reactor.fluid.species.H2O = 0.0
-ic.air-reactor.fluid.species.H2 = 0.0
-ic.air-reactor.fluid.species.O2 = 0.4
-ic.air-reactor.fluid.species.N2 = 0.6
+ic.air-reactor.fluid.species.CO  = 0.0
+ic.air-reactor.fluid.species.H2O = 1.0
+ic.air-reactor.fluid.species.H2  = 0.0
+ic.air-reactor.fluid.species.O2  = 0.0
+ic.air-reactor.fluid.species.N2  = 0.0
 ic.air-reactor.fluid.species.CO2 = 0.0
 
 ic.air-reactor.solids = solid0
-ic.air-reactor.packing = oneper
+ic.air-reactor.packing = hcp
 
-ic.air-reactor.solid0.volfrac  = 0.01
+ic.air-reactor.solid0.volfrac  = 0.9
 ic.air-reactor.solid0.velocity = 0.0  0.0  0.0
-ic.air-reactor.solid0.temperature = 400
-ic.air-reactor.solid0.species.Fe2O3 = 0.5
-ic.air-reactor.solid0.species.FeO = 0.5
+
+ic.air-reactor.solid0.temperature = 1100
+
+ic.air-reactor.solid0.species.Fe2O3 = 1.0
+ic.air-reactor.solid0.species.FeO   = 0.0
 
 ic.air-reactor.solid0.diameter = constant
 ic.air-reactor.solid0.diameter.constant = 1250.0e-6
@@ -435,13 +475,15 @@ ic.air-reactor.solid0.density.constant  = 1000.0
 #---------------------------------------------------------------------//
 ic.cyclone.fluid.volfrac  = 0.99
 ic.cyclone.fluid.velocity = 0.0  0.0  0.0
-ic.cyclone.fluid.temperature = 400
+
+ic.cyclone.fluid.temperature = 1100
+
 ic.cyclone.fluid.species.CH4 = 0.0
-ic.cyclone.fluid.species.CO = 0.0
-ic.cyclone.fluid.species.H2O = 0.0
-ic.cyclone.fluid.species.H2 = 0.0
-ic.cyclone.fluid.species.O2 = 0.0
-ic.cyclone.fluid.species.N2 = 1.0
+ic.cyclone.fluid.species.CO  = 0.0
+ic.cyclone.fluid.species.H2O = 1.0
+ic.cyclone.fluid.species.H2  = 0.0
+ic.cyclone.fluid.species.O2  = 0.0
+ic.cyclone.fluid.species.N2  = 0.0
 ic.cyclone.fluid.species.CO2 = 0.0
 
 ic.cyclone.solids = solid0
@@ -449,15 +491,83 @@ ic.cyclone.packing = oneper
 
 ic.cyclone.solid0.volfrac  = 0.01
 ic.cyclone.solid0.velocity = 0.0  0.0  0.0
-ic.cyclone.solid0.temperature = 400
-ic.cyclone.solid0.species.Fe2O3 = 0.5
-ic.cyclone.solid0.species.FeO = 0.5
+
+ic.cyclone.solid0.temperature = 1100
+
+ic.cyclone.solid0.species.Fe2O3 = 1.0
+ic.cyclone.solid0.species.FeO   = 0.0
 
 ic.cyclone.solid0.diameter = constant
 ic.cyclone.solid0.diameter.constant = 1250.0e-6
 
 ic.cyclone.solid0.density =  constant
 ic.cyclone.solid0.density.constant  = 1000.0
+
+
+
+#---------------------------------------------------------------------//
+ic.redux.fluid.volfrac  = 1.0 
+
+ic.redux.fluid.velocity = 0.0  0.0  0.0
+ic.redux.fluid.temperature = 1100
+
+ic.redux.fluid.species.CH4 = 0.15
+ic.redux.fluid.species.CO  = 0.15
+ic.redux.fluid.species.H2O = 0.0 
+ic.redux.fluid.species.H2  = 0.15
+ic.redux.fluid.species.O2  = 0.0 
+ic.redux.fluid.species.N2  = 0.0 
+ic.redux.fluid.species.CO2 = 0.55
+
+ic.redux.solids = solid0
+ic.redux.packing = none
+
+ic.redux.solid0.volfrac  = 0.0 
+ic.redux.solid0.velocity = 0.0  0.0  0.0
+
+ic.redux.solid0.temperature = 1095
+
+ic.redux.solid0.species.Fe2O3 = 0.98
+ic.redux.solid0.species.FeO   = 0.02
+
+ic.redux.solid0.diameter = constant
+ic.redux.solid0.diameter.constant = 1250.0e-6
+
+ic.redux.solid0.density =  constant
+ic.redux.solid0.density.constant  = 1000.0
+
+
+#---------------------------------------------------------------------//
+ic.reox.fluid.volfrac  = 1.0
+
+ic.reox.fluid.velocity = 0.0  0.0  0.0
+ic.reox.fluid.temperature = 1100
+
+ic.reox.fluid.species.CH4 = 0.0
+ic.reox.fluid.species.CO  = 0.0
+ic.reox.fluid.species.H2O = 0.0
+ic.reox.fluid.species.H2  = 0.0
+ic.reox.fluid.species.O2  = 0.22
+ic.reox.fluid.species.N2  = 0.78
+ic.reox.fluid.species.CO2 = 0.0
+
+ic.reox.solids = solid0
+ic.reox.packing = none
+
+ic.reox.solid0.volfrac  = 0.0
+ic.reox.solid0.velocity = 0.0  0.0  0.0
+
+ic.reox.solid0.temperature = 1105
+
+ic.reox.solid0.species.Fe2O3 = 0.96
+ic.reox.solid0.species.FeO   = 0.04
+
+ic.reox.solid0.diameter = constant
+ic.reox.solid0.diameter.constant = 1250.0e-6
+
+ic.reox.solid0.density =  constant
+ic.reox.solid0.density.constant  = 1000.0
+
 
 
 #_______________________________________________________________________
@@ -467,14 +577,14 @@ bc.regions = inflow  outflow
 
 bc.inflow = mi
 bc.inflow.fluid.volfrac  =  1.0
-bc.inflow.fluid.velocity =  0.01  0.0  0.0
-bc.inflow.fluid.temperature = 400
+bc.inflow.fluid.velocity =  0.0  0.0  0.0
+bc.inflow.fluid.temperature = 1100
 bc.inflow.fluid.species.CH4 = 0.0
 bc.inflow.fluid.species.CO = 0.0
-bc.inflow.fluid.species.H2O = 0.0
+bc.inflow.fluid.species.H2O = 1.0
 bc.inflow.fluid.species.H2 = 0.0
-bc.inflow.fluid.species.O2 = 0.0
-bc.inflow.fluid.species.N2 = 1.0
+bc.inflow.fluid.species.O2 = 0.22
+bc.inflow.fluid.species.N2 = 0.78
 bc.inflow.fluid.species.CO2 = 0.0
 
 bc.outflow = po

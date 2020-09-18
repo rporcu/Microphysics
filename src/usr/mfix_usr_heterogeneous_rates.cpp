@@ -39,122 +39,27 @@ ComputeRRateUser::operator() (amrex::Real* R_q,
   // Loop over reactions
   for (int q(0); q < nreactions; q++)
   {
-    amrex::Real k = 0.01;
 
-    // Initially set it as constant
-    R_q[q] = k;
-
-  //  // Loop over reactants
-  //  for (int n(0); n < nreactants[q]; n++)
-  //  {
-  //    const int current_species_id = reactants_id[q][n];
-
-  //    // Current species concentration
-  //    amrex::Real concentration(0.);
-
-  //    if (reactants_phases[q][n] == CHEMICALPHASE::Solid)
-  //    {
-  //      const int pos = MFIXfind(species_id_s, nspecies_s, current_species_id);
-
-  //      concentration = (ep_s*ro_s*X_sn[pos])/ (MW_sn[pos]);
-  //    }
-  //    else if (reactants_phases[q][n] == CHEMICALPHASE::Fluid)
-  //    {
-  //      const int pos = MFIXfind(species_id_g, nspecies_g, current_species_id);
-
-  //      concentration = (ep_g*ro_g*X_gk[pos])/ (MW_gk[pos]);
-  //    }
-
-  //    R_q[q] *= concentration;
-  //  }
-
-    if (q == 0) // Hem_CH4
+    int nreact(0);
+    for (int n(0); n < nreactants[q]; n++)
     {
-      R_q[q] = 1.e-5;
+      const int current_species_id = reactants_id[q][n];
 
-      for (int n(0); n < nreactants[q]; n++)
       {
-        const int current_species_id = reactants_id[q][n];
+        const int pos = MFIXfind(species_id_g, nspecies_g, current_species_id);
+        if (pos != -1)
+          if (X_gk[pos] > 0)
+            nreact += 1;
+      }
 
-        {
-          const int pos = MFIXfind(species_id_g, nspecies_g, current_species_id);
-          if (pos != -1)
-            R_q[q] *= (X_gk[pos] > 0);
-        }
-
-        {
-          const int pos = MFIXfind(species_id_s, nspecies_s, current_species_id);
-          if (pos != -1)
-            R_q[q] *= (X_sn[pos] > 0);
-        }
+      {
+        const int pos = MFIXfind(species_id_s, nspecies_s, current_species_id);
+        if (pos != -1)
+          if (X_sn[pos] > 0)
+            nreact += 1;
       }
     }
-
-    if (q == 1) // Hem_H2
-    {
-      R_q[q] = 1.e-5;
-
-      for (int n(0); n < nreactants[q]; n++)
-      {
-        const int current_species_id = reactants_id[q][n];
-
-        {
-          const int pos = MFIXfind(species_id_g, nspecies_g, current_species_id);
-          if (pos != -1)
-            R_q[q] *= (X_gk[pos] > 0);
-        }
-
-        {
-          const int pos = MFIXfind(species_id_s, nspecies_s, current_species_id);
-          if (pos != -1)
-            R_q[q] *= (X_sn[pos] > 0);
-        }
-      }
-    }
-
-    if (q == 2) // Hem_CO
-    {
-      R_q[q] = 1.e-5;
-
-      for (int n(0); n < nreactants[q]; n++)
-      {
-        const int current_species_id = reactants_id[q][n];
-
-        {
-          const int pos = MFIXfind(species_id_g, nspecies_g, current_species_id);
-          if (pos != -1)
-            R_q[q] *= (X_gk[pos] > 0);
-        }
-
-        {
-          const int pos = MFIXfind(species_id_s, nspecies_s, current_species_id);
-          if (pos != -1)
-            R_q[q] *= (X_sn[pos] > 0);
-        }
-      }
-    }
-
-    if (q == 3) // Wus_O2
-    {
-      R_q[q] = 1.e-5;
-
-      for (int n(0); n < nreactants[q]; n++)
-      {
-        const int current_species_id = reactants_id[q][n];
-
-        {
-          const int pos = MFIXfind(species_id_g, nspecies_g, current_species_id);
-          if (pos != -1)
-            R_q[q] *= (X_gk[pos] > 0);
-        }
-
-        {
-          const int pos = MFIXfind(species_id_s, nspecies_s, current_species_id);
-          if (pos != -1)
-            R_q[q] *= (X_sn[pos] > 0);
-        }
-      }
-    }
+  R_q[q] = (nreact == nreactants[q]) ? 1.e-5 : 0.0;
   }
 
 }
