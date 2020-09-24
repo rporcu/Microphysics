@@ -5,7 +5,6 @@
 #include <AMReX_EB2_IF_Union.H>
 
 #include <algorithm>
-#include <AMReX_EB_levelset.H>
 #include <mfix.H>
 
 

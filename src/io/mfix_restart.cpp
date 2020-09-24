@@ -250,7 +250,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                  // Copy from the mf we used to read in to the mf we will use going forward
                  const int ng_to_copy = 0;
 
-                 (**(chkScalarVars[i][lev])).copy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
+                 (*(chkScalarVars[i][lev])).copy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
               } else {
 
@@ -263,9 +263,9 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                  mf.copyTo(single_fab);
 
                   // Copy and replicate mf into chkScalarVars
-                  for (MFIter mfi(**(chkScalarVars[i][lev]), false); mfi.isValid(); ++mfi) {
+                  for (MFIter mfi(*(chkScalarVars[i][lev]), false); mfi.isValid(); ++mfi) {
                       int ib = mfi.index();
-                      (**(chkScalarVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
+                      (*(chkScalarVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
                           single_fab.box(), 0, mfi.validbox(), 0, 1);
                   }
               }
@@ -307,7 +307,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 // going forward
                 const int ng_to_copy = 0;
 
-                (**(chkTVars[i][lev])).copy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
+                (*(chkTVars[i][lev])).copy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
              } else {
 
@@ -320,9 +320,9 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 mf.copyTo(single_fab);
 
                  // Copy and replicate mf into chkScalarVars
-                 for (MFIter mfi(**(chkTVars[i][lev]), false); mfi.isValid(); ++mfi) {
+                 for (MFIter mfi(*(chkTVars[i][lev]), false); mfi.isValid(); ++mfi) {
                      int ib = mfi.index();
-                     (**(chkTVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
+                     (*(chkTVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
                          single_fab.box(), 0, mfi.validbox(), 0, 1);
                  }
                }
@@ -348,7 +348,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 // Copy from the mf we used to read in to the mf we will use going forward
                 const int ng_to_copy = 0;
 
-                (**(chkSpeciesVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies,
+                (*(chkSpeciesVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies,
                     ng_to_copy, ng_to_copy);
 
              } else {
@@ -362,9 +362,9 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 mf.copyTo(single_fab);
 
                 // Copy and replicate mf into chkScalarVars
-                for (MFIter mfi(**(chkSpeciesVars[i][lev]), false); mfi.isValid(); ++mfi) {
+                for (MFIter mfi(*(chkSpeciesVars[i][lev]), false); mfi.isValid(); ++mfi) {
                     int ib = mfi.index();
-                    (**(chkSpeciesVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
+                    (*(chkSpeciesVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
                         single_fab.box(), 0, mfi.validbox(), 0,
                         FLUID::nspecies);
                 }
@@ -391,7 +391,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 // Copy from the mf we used to read in to the mf we will use going forward
                 const int ng_to_copy = 0;
 
-                (**(chkSpeciesTVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies,
+                (*(chkSpeciesTVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies,
                     ng_to_copy, ng_to_copy);
 
              } else {
@@ -405,9 +405,9 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 mf.copyTo(single_fab);
 
                  // Copy and replicate mf into chkScalarVars
-                 for (MFIter mfi(**(chkSpeciesTVars[i][lev]), false); mfi.isValid(); ++mfi) {
+                 for (MFIter mfi(*(chkSpeciesTVars[i][lev]), false); mfi.isValid(); ++mfi) {
                      int ib = mfi.index();
-                     (**(chkSpeciesTVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
+                     (*(chkSpeciesTVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
                          single_fab.box(), 0, mfi.validbox(), 0,
                          FLUID::nspecies);
                  }

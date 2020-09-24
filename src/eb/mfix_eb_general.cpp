@@ -9,8 +9,6 @@
 #include <algorithm>
 #include <type_traits>
 #include <AMReX_EB_utils.H>
-#include <AMReX_EB_LSCore.H>
-#include <AMReX_EB_levelset.H>
 #include <mfix.H>
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>

@@ -16,7 +16,7 @@ using namespace amrex;
 // We set up everything which doesn't change between timesteps here
 //
 DiffusionOp::DiffusionOp (AmrCore* _amrcore,
-                          Vector< const EBFArrayBoxFactory* >* _ebfactory,
+                          Vector< const EBFArrayBoxFactory* >const& _ebfactory,
                           std::array<amrex::LinOpBCType,3> a_velbc_lo,
                           std::array<amrex::LinOpBCType,3> a_velbc_hi,
                           std::array<amrex::LinOpBCType,3> a_scalbc_lo,
@@ -52,7 +52,7 @@ DiffusionOp::DiffusionOp (AmrCore* _amrcore,
 }
 
 void DiffusionOp::setup (AmrCore* _amrcore,
-                         Vector< const EBFArrayBoxFactory* >* _ebfactory)
+                         Vector< const EBFArrayBoxFactory* >const& _ebfactory)
 {
     // The amrcore boxArray and DistributionMap change when we regrid so we must
     // pass the new object in here.
@@ -81,18 +81,18 @@ void DiffusionOp::setup (AmrCore* _amrcore,
             BoxArray edge_ba = grids[lev];
             edge_ba.surroundingNodes(dir);
             b[lev][dir].reset(new MultiFab(edge_ba, dmap[lev], 1, nghost,
-                                           MFInfo(), *(*ebfactory)[lev]));
+                                           MFInfo(), *ebfactory[lev]));
         }
 
         phi[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 1,
-                                    MFInfo(), *(*ebfactory)[lev]));
+                                    MFInfo(), *ebfactory[lev]));
 
         // No ghost cells needed for rhs
         rhs[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0,
-                                    MFInfo(), *(*ebfactory)[lev]));
+                                    MFInfo(), *ebfactory[lev]));
 
         vel_eb[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, nghost,
-                                       MFInfo(), *(*ebfactory)[lev]));
+                                       MFInfo(), *ebfactory[lev]));
         vel_eb[lev]->setVal(0.0);
     }
 
@@ -101,7 +101,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     //
     LPInfo info;
     info.setMaxCoarseningLevel(mg_max_coarsening_level);
-    vel_matrix.reset(new MLEBTensorOp(geom, grids, dmap, info, *ebfactory));
+    vel_matrix.reset(new MLEBTensorOp(geom, grids, dmap, info, ebfactory));
 
     // It is essential that we set MaxOrder to 2 if we want to use the standard
     // phi(i)-phi(i-1) approximation for the gradient at Dirichlet boundaries.
@@ -114,9 +114,9 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     //
     // Define the matrix for the scalar diffusion solve.
     //
-    scal_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, *ebfactory));
-    temperature_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, *ebfactory));
-    species_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, *ebfactory));
+    scal_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory));
+    temperature_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory));
+    species_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory));
 
     // It is essential that we set MaxOrder to 2 if we want to use the standard
     // phi(i)-phi(i-1) approximation for the gradient at Dirichlet boundaries.
@@ -194,7 +194,7 @@ void DiffusionOp::ComputeDivTau (const Vector< MultiFab* >& divtau_out,
     for(int lev = 0; lev <= finest_level; lev++)
     {
        divtau_aux[lev] = new MultiFab(grids[lev], dmap[lev], 3, nghost,
-                                      MFInfo(), *(*ebfactory)[lev]);
+                                      MFInfo(), *ebfactory[lev]);
        divtau_aux[lev]->setVal(0.0);
     }
 
@@ -258,7 +258,7 @@ void DiffusionOp::ComputeLapT (const Vector< MultiFab* >& lapT_out,
   for(int lev = 0; lev <= finest_level; lev++)
   {
     lapT_aux[lev] = new MultiFab(grids[lev], dmap[lev], 1, nghost, MFInfo(),
-        *(*ebfactory)[lev]);
+        *ebfactory[lev]);
 
     lapT_aux[lev]->setVal(0.0);
   }
@@ -329,11 +329,11 @@ void DiffusionOp::ComputeLapS (const Vector< MultiFab* >& laps_out,
     for(int lev = 0; lev <= finest_level; lev++)
     {
        laps_aux[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, nghost,
-                                    MFInfo(), *(*ebfactory)[lev]);
+                                    MFInfo(), *ebfactory[lev]);
        laps_aux[lev]->setVal(0.0);
 
        phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0,
-                                  MFInfo(), *(*ebfactory)[lev]);
+                                  MFInfo(), *ebfactory[lev]);
 
        // This value was just for testing
        // if (eb_is_dirichlet)
@@ -412,12 +412,12 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab* >& lapX_out,
     for(int lev = 0; lev <= finest_level; lev++)
     {
       lapX_aux[lev] = new MultiFab(grids[lev], dmap[lev], 1, nghost, MFInfo(),
-          *(*ebfactory)[lev]);
+          *ebfactory[lev]);
 
       lapX_aux[lev]->setVal(0.0);
 
       //phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(),
-      //    *(*ebfactory)[lev]);
+      //    *ebfactory[lev]);
     }
 
     // We want to return div (ep_g ro_g D_gk grad)) phi

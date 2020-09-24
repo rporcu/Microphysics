@@ -9,7 +9,7 @@ mfix::mfix_init_solvers ()
 {
     BL_PROFILE("mfix::mfix_init_solvers");
 
-    diffusion_op.reset(new DiffusionOp(this, &ebfactory,
+    diffusion_op.reset(new DiffusionOp(this, amrex::GetVecOfConstPtrs(ebfactory),
                                        BC::diff_vel_lobc,         BC::diff_vel_hibc,
                                        BC::diff_scal_lobc,        BC::diff_scal_hibc,
                                        BC::diff_temperature_lobc, BC::diff_temperature_hibc,
@@ -22,5 +22,5 @@ mfix::mfix_setup_solvers ()
 {
     BL_PROFILE("mfix::mfix_setup_solvers");
 
-    diffusion_op->setup(this, &ebfactory);
+    diffusion_op->setup(this, amrex::GetVecOfConstPtrs(ebfactory));
 }

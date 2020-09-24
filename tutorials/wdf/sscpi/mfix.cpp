@@ -55,9 +55,6 @@ mfix::~mfix ()
     delete bc_jhi[lev];
     delete bc_klo[lev];
     delete bc_khi[lev];
-
-    // Level-Set Data
-    delete level_sets[lev];
   }
 
   //! EB factory that lives on the fluid grids

@@ -366,8 +366,7 @@ void mfix::Init (Real time)
 
     /****************************************************************************
      *                                                                          *
-     * Generate levels using ErrorEst tagging. This approach has been based on  *
-     * the LSCoreBase::Init().                                                  *
+     * Generate levels using ErrorEst tagging.                                  *
      *                                                                          *
      ***************************************************************************/
 
@@ -668,11 +667,11 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 
             Print() << "Clean up auto-generated particles.\n" << std::endl;
 
-            const MultiFab * ls_data = level_sets[1];
+            const MultiFab * ls_data = level_sets[1].get();
             iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                ls_data->nComp(), ls_data->nGrow());
 
-            pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level],
+            pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
                                  ls_data, levelset_refinement);
           }
           else if (!restart_flag && particle_ebfactory[finest_level])
@@ -684,11 +683,11 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 
             for (int ilev = 0; ilev < nlev; ilev ++)
             {
-              const MultiFab * ls_data = level_sets[ilev];
+              const MultiFab * ls_data = level_sets[ilev].get();
               iMultiFab ls_valid(ls_data->boxArray(), ls_data->DistributionMap(),
                                  ls_data->nComp(), ls_data->nGrow());
 
-              pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev],
+              pc->RemoveOutOfRange(ilev, particle_ebfactory[ilev].get(),
                                    ls_data, 1);
             }
           }
@@ -1071,7 +1070,7 @@ void mfix::mfix_set_ls_near_inflow ()
         {
             Box domain(geom[lev].Domain());
 
-            MultiFab* ls_phi = level_sets[lev];
+            MultiFab* ls_phi = level_sets[lev].get();
             const Real* dx   = geom[lev].CellSize();
 
             // Don't tile this
@@ -1094,7 +1093,7 @@ void mfix::mfix_set_ls_near_inflow ()
         {
             Box domain(geom[lev].Domain());
             const Real* dx   = geom[lev].CellSize();
-            MultiFab* ls_phi = level_sets[lev_ref];
+            MultiFab* ls_phi = level_sets[lev_ref].get();
 
             // Don't tile this
             for (MFIter mfi(*ls_phi, false); mfi.isValid(); ++mfi)
@@ -1111,7 +1110,7 @@ void mfix::mfix_set_ls_near_inflow ()
         {
             Box domain(geom[lev].Domain());
             const Real* dx   = geom[lev].CellSize();
-            MultiFab* ls_phi = level_sets[lev];
+            MultiFab* ls_phi = level_sets[lev].get();
 
             // Don't tile this
             for (MFIter mfi(*ls_phi, false); mfi.isValid(); ++mfi)

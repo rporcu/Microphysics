@@ -1,13 +1,11 @@
 #include <algorithm>
-#include <AMReX_EB_levelset.H>
 #include <mfix.H>
 #include <AMReX_EB2.H>
+#include <AMReX_EB_utils.H>
 #include <AMReX_EB2_IF_Cylinder.H>
 #include <AMReX_EB2_IF_Plane.H>
 #include <AMReX_EB2_IF_Union.H>
 #include <AMReX_EB2_IF_Intersection.H>
-
-
 
 void mfix::make_eb_geometry ()
 {
@@ -151,21 +149,17 @@ void mfix::make_eb_factories () {
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        if (ebfactory[lev] != nullptr) delete ebfactory[lev];
-
-        ebfactory[lev] =
+        ebfactory[lev].reset(
             new EBFArrayBoxFactory(*eb_levels[lev], geom[lev], grids[lev], dmap[lev],
                                    {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                    m_eb_full_grow_cells}, m_eb_support_level);
+                                    m_eb_full_grow_cells}, m_eb_support_level));
 
         // Grow EB factory by +2 in order to avoid edge cases. This is not
         // necessary for multi-level mfix.
-        if (particle_ebfactory[lev] != nullptr) delete particle_ebfactory[lev];
-
-        particle_ebfactory[lev] =
+        particle_ebfactory[lev].reset(
             new EBFArrayBoxFactory(*particle_eb_levels[lev], geom[lev], grids[lev], dmap[lev],
                                    {levelset_eb_pad + 2, levelset_eb_pad + 2,
-                                    levelset_eb_pad + 2}, m_eb_support_level);
+                                    levelset_eb_pad + 2}, m_eb_support_level));
     }
 }
 
@@ -190,8 +184,14 @@ void mfix::fill_eb_levelsets ()
         const DistributionMapping & part_dm = pc->ParticleDistributionMap(0);
         const BoxArray &            part_ba = pc->ParticleBoxArray(0);
 
-        LSFactory lsf(0, levelset_refinement, levelset_eb_refinement,
-                      levelset_pad, levelset_eb_pad, part_ba, geom[0], part_dm);
+        const DistributionMapping& ls_dm = part_dm;
+        const Geometry& ls_geom = amrex::refine(geom[0], levelset_refinement);
+
+        BoxArray ls_ba = amrex::convert(part_ba, IntVect::TheNodeVector());
+        level_sets[0].reset(new MultiFab(ls_ba, ls_dm, 1, levelset_pad/levelset_refinement));
+
+        if (levelset_refinement != 1) ls_ba.refine(levelset_refinement);
+        level_sets[1].reset(new MultiFab(ls_ba, ls_dm, 1, levelset_pad));
 
         //___________________________________________________________________________
         // NOTE: Boxes are different (since we're not refining, we need to treat
@@ -204,14 +204,13 @@ void mfix::fill_eb_levelsets ()
         std::string geom_type;
         pp.query("geometry", geom_type);
 
-
         if (geom_type == "box")
         {
-            ParmParse pp_box("box");
-
             if ( geom[0].isAllPeriodic() )
             {
                 make_eb_regular();
+                level_sets[1]->setVal(std::numeric_limits<Real>::max());
+                level_sets[0]->setVal(std::numeric_limits<Real>::max());
             }
             else
             {
@@ -223,6 +222,8 @@ void mfix::fill_eb_levelsets ()
                     boxLo[i] = geom[0].ProbLo(i);
                     boxHi[i] = geom[0].ProbHi(i);
                 }
+
+                ParmParse pp_box("box");
 
                 pp_box.queryarr("Lo", boxLo,  0, 3);
                 pp_box.queryarr("Hi", boxHi,  0, 3);
@@ -290,43 +291,40 @@ void mfix::fill_eb_levelsets ()
                                              plane_hiy, plane_loz, plane_hiz );
                 auto gshop = EB2::makeShop(if_box);
 
-                GShopLSFactory<decltype(if_box)> gshop_lsfactory(gshop, lsf);
-                std::unique_ptr<MultiFab> mf_impfunc_box = gshop_lsfactory.fill_impfunc();
-                lsf.Intersect(*mf_impfunc_box);
+                amrex::FillImpFunc(*level_sets[1], gshop, ls_geom);
+                level_sets[1]->negate(level_sets[1]->nGrow()); // signed distance f = - imp. f.
+                if (levelset_refinement == 1) {
+                    MultiFab::Copy(*level_sets[0], *level_sets[1], 0, 0, 1, level_sets[0]->nGrow());
+                } else {
+                    amrex::average_down_nodal(*level_sets[1], *level_sets[0],
+                                              IntVect(levelset_refinement),
+                                              level_sets[0]->nGrow(), true);
+                }
             }
-
-            if (level_sets[1] != nullptr) delete level_sets[1];
-            level_sets[1] = lsf.copy_data(part_dm).release();
-
-            if (level_sets[0] != nullptr) delete level_sets[0];
-            level_sets[0] = lsf.coarsen_data().release();
 
             return;
         }
 
-
-        //___________________________________________________________________________
-        // If there is an eb in the system, fill everything else using the
-        // LSFactory EBF filling routine
-
-        if (contains_ebs)
-        {
-            MultiFab impfunc(lsf.get_ls_ba(), lsf.get_dm(), 1, lsf.get_ls_pad());
-            eb_levels[1]->fillLevelSet(impfunc, lsf.get_ls_geom());
-            impfunc.FillBoundary(lsf.get_ls_geom().periodicity());
-
-            lsf.Fill(*ebfactory[0], impfunc);
+        if (contains_ebs) {
+            AMREX_ALWAYS_ASSERT(levelset_eb_refinement == 1); // Not sure about its purpose anyway
+            amrex::FillSignedDistance(*level_sets[1], *eb_levels[1], *ebfactory[0],
+                                      levelset_refinement);
+            if (levelset_refinement == 1) {
+                MultiFab::Copy(*level_sets[0], *level_sets[1], 0, 0, 1, level_sets[0]->nGrow());
+            } else {
+                amrex::average_down_nodal(*level_sets[1], *level_sets[0],
+                                          IntVect(levelset_refinement),
+                                          level_sets[0]->nGrow(), true);
+            }
+        } else {
+            level_sets[1]->setVal(std::numeric_limits<Real>::max());
+            level_sets[0]->setVal(std::numeric_limits<Real>::max());
         }
-
-        if (level_sets[1] != nullptr) delete level_sets[1];
-        level_sets[1] = lsf.copy_data(part_dm).release();
-
-        if (level_sets[0] != nullptr) delete level_sets[0];
-        level_sets[0] = lsf.coarsen_data().release();
     }
     else
     {
-
+        amrex::Abort("xxxxx fill_eb_levelsets todo");
+#if 0
         const DistributionMapping & part_dm = pc->ParticleDistributionMap(0);
         const BoxArray &            part_ba = pc->ParticleBoxArray(0);
 
@@ -339,9 +337,7 @@ void mfix::fill_eb_levelsets ()
 
         // NOTE: reference BoxArray is not nodal
         BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
-        if (level_sets[0] != nullptr) delete level_sets[0];
-        level_sets[0] = new MultiFab();
-        level_sets[0]->define(ba, part_dm, 1, levelset_pad);
+        level_sets[0].reset(new MultiFab(ba, part_dm, 1, levelset_pad));
         iMultiFab valid(ba, part_dm, 1, levelset_pad);
 
         MultiFab impfunc(ba, part_dm, 1, levelset_pad);
@@ -380,6 +376,7 @@ void mfix::fill_eb_levelsets ()
             LSCoreBase::FillLevelSet(* level_sets[lev], * level_sets[lev], eb_factory_lev, impfunc_lev,
                                      ebt_size, levelset_eb_pad, geom[lev]);
         }
+#endif
     }
 
     // Add walls (for instance MI) to levelset data
@@ -405,48 +402,60 @@ void mfix::intersect_ls_walls ()
             const int ng = level_sets[0]->nGrow();
             const BoxArray & ba = level_sets[0]->boxArray();
             const DistributionMapping & dm = level_sets[0]->DistributionMap();
-
             MultiFab wall_if(ba, dm, 1, ng);
-            iMultiFab valid(ba, dm, 1, ng);
-            valid.setVal(1);
 
-            GShopLSFactory<UnionListIF<EB2::PlaneIF>> gshop_lsf(gshop, geom[0], ba, dm, ng);
-            std::unique_ptr<MultiFab> impfunc = gshop_lsf.fill_impfunc();
+            amrex::FillImpFunc(wall_if, gshop, geom[0]);
 
-            const auto & flags = particle_ebfactory[0]->getMultiEBCellFlagFab();
-            int ngrow_eb = flags.nGrow();
-            LSFactory::fill_data(wall_if, valid, *impfunc, ngrow_eb, geom[0]);
-            LSFactory::intersect_data(*level_sets[0], valid, wall_if, valid, geom[0]);
+            // The difference between this and the previous code is we no
+            // longer clamp the level sets.
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+            for (MFIter mfi(*level_sets[0],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+            {
+                Box const& bx = mfi.growntilebox();
+                Array4<Real> const& sdf = level_sets[0]->array(mfi);
+                Array4<Real const> const& wif = wall_if.const_array(mfi);
+                amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                {
+                    sdf(i,j,k) = amrex::min(sdf(i,j,k),-wif(i,j,k));
+                });
+            }
         }
 
         //_______________________________________________________________________
         // Refined Level-Set
-        // TODO: Don't actually refine this thing if levelset refinement is 1
-        {
+        if (levelset_refinement == 1) {
+            MultiFab::Copy(*level_sets[1], *level_sets[0], 0, 0, 1, level_sets[0]->nGrow());
+        } else {
             const int ng = level_sets[1]->nGrow();
             const BoxArray & ba = level_sets[1]->boxArray();
             const DistributionMapping & dm = level_sets[1]->DistributionMap();
-
             MultiFab wall_if(ba, dm, 1, ng);
-            iMultiFab valid_ref(ba, dm, 1, ng);
-            valid_ref.setVal(1);
 
-            // Set up refined geometry
-            Box dom = geom[0].Domain();
-            dom.refine(levelset_refinement);
-            Geometry geom_lev(dom);
+            amrex::FillImpFunc(wall_if, gshop, amrex::refine(geom[0],levelset_refinement));
 
-            GShopLSFactory<UnionListIF<EB2::PlaneIF>> gshop_lsf(gshop, geom_lev, ba, dm, ng);
-            std::unique_ptr<MultiFab> impfunc = gshop_lsf.fill_impfunc();
-
-            const auto & flags = particle_ebfactory[0]->getMultiEBCellFlagFab();
-            int ngrow_eb = flags.nGrow();
-            LSFactory::fill_data(wall_if, valid_ref, *impfunc, ngrow_eb, geom_lev);
-            LSFactory::intersect_data(*level_sets[1], valid_ref, wall_if, valid_ref, geom_lev);
+            // The difference between this and the previous code is we no
+            // longer clamp the level sets.
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+            for (MFIter mfi(*level_sets[1],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+            {
+                Box const& bx = mfi.growntilebox();
+                Array4<Real> const& sdf = level_sets[1]->array(mfi);
+                Array4<Real const> const& wif = wall_if.const_array(mfi);
+                amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                {
+                    sdf(i,j,k) = amrex::min(sdf(i,j,k),-wif(i,j,k));
+                });
+            }
         }
     }
     else
     {
+        amrex::Abort("xxxxx intersect_ls_walls todo");
+#if 0
         //_______________________________________________________________________
         // Multi-level level-set: apply wall-intersection to each level
 
@@ -466,5 +475,6 @@ void mfix::intersect_ls_walls ()
             LSFactory::fill_data(wall_if, valid_lev, *impfunc, levelset_eb_pad, geom[lev]);
             LSFactory::intersect_data(*level_sets[lev], valid_lev, wall_if, valid_lev, geom[lev]);
         }
+#endif
     }
 }
