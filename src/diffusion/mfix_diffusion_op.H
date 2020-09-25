@@ -167,9 +167,9 @@ class DiffusionOp
 
     // Options to control MLMG behavior
     int mg_verbose = 0;
-    int mg_cg_verbose = 0;
+    int mg_bottom_verbose = 0;
     int mg_maxiter = 100;
-    int mg_cg_maxiter = 100;
+    int mg_bottom_maxiter = 100;
     int mg_max_fmg_iter = 0;
     int mg_max_coarsening_level = 100;
     amrex::Real mg_rtol = 1.0e-11;
