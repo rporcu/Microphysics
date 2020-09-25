@@ -140,9 +140,9 @@ void DiffusionOp::readParameters ()
 
     pp.query("verbose_solver", verbose);
     pp.query("verbose", mg_verbose);
-    pp.query("bottom_verbose", mg_cg_verbose);
+    pp.query("bottom_verbose", mg_bottom_verbose);
     pp.query("maxiter", mg_maxiter);
-    pp.query("bottom_maxiter", mg_cg_maxiter);
+    pp.query("bottom_maxiter", mg_bottom_maxiter);
     pp.query("mg_max_fmg_iter", mg_max_fmg_iter);
     pp.query("mg_max_coarsening_level", mg_max_coarsening_level);
     pp.query("rtol", mg_rtol);
@@ -169,11 +169,11 @@ void DiffusionOp::setSolverSettings (MLMG& solver)
         // Maximum iterations for MultiGrid / ConjugateGradients
         solver.setMaxIter(mg_maxiter);
         solver.setMaxFmgIter(mg_max_fmg_iter);
-        solver.setCGMaxIter(mg_cg_maxiter);
+        solver.setBottomMaxIter(mg_bottom_maxiter);
 
         // Verbosity for MultiGrid / ConjugateGradients
         solver.setVerbose(mg_verbose);
-        solver.setCGVerbose(mg_cg_verbose);
+        solver.setBottomVerbose(mg_bottom_verbose);
 
         // This ensures that ghost cells of phi are correctly filled when
         // returned from the solver
