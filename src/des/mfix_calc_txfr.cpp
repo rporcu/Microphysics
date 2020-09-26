@@ -103,7 +103,8 @@ mfix::mfix_calc_txfr_fluid (Real time)
     // Deposit the interphase transfer forces to the grid
     // Drag force: (beta and beta*particle_vel)
     // Heat transfer: gamma and gamma*particle temperature
-    pc->InterphaseTxfrDeposition(lev, *tmp_eps[lev], *txfr_ptr[lev], volfrac, flags);
+    pc->InterphaseTxfrDeposition(lev, *tmp_eps[lev], *txfr_ptr[lev], volfrac,
+        flags, advect_enthalpy);
   }
 
   {

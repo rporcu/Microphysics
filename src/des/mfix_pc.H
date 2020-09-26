@@ -187,7 +187,8 @@ public:
                                    amrex::MultiFab& mf_tmp_eps,
                                    amrex::MultiFab& txfr_mf,
                                    const amrex::MultiFab* volfrac,
-                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags);
+                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags,
+                                   const int advect_enthalpy);
 
     template <typename F>
     void InterphaseTxfrDeposition (F WeightFunc,
@@ -195,7 +196,8 @@ public:
                                    amrex::MultiFab& mf_tmp_eps,
                                    amrex::MultiFab& txfr_mf,
                                    const amrex::MultiFab* volfrac,
-                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags);
+                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags,
+                                   const int advect_enthalpy);
 
     ///
     /// Do the actual PIC deposition for CalcDragOnFluid
