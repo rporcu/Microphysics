@@ -144,28 +144,29 @@ InterphaseTxfrDeposition (int lev,
                           amrex::MultiFab & mf_tmp_eps,
                           amrex::MultiFab & txfr_mf,
                           const amrex::MultiFab * volfrac,
-                          const amrex::FabArray<EBCellFlagFab>* flags)
+                          const amrex::FabArray<EBCellFlagFab>* flags,
+                          const int advect_enthalpy)
 {
 
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
 
-    InterphaseTxfrDeposition(TrilinearDeposition(),
-                             lev, mf_tmp_eps, txfr_mf, volfrac, flags);
+    InterphaseTxfrDeposition(TrilinearDeposition(), lev, mf_tmp_eps, txfr_mf,
+        volfrac, flags, advect_enthalpy);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::square_dpvm) {
 
-    InterphaseTxfrDeposition(TrilinearDPVMSquareDeposition(),
-                             lev, mf_tmp_eps, txfr_mf, volfrac, flags);
+    InterphaseTxfrDeposition(TrilinearDPVMSquareDeposition(), lev, mf_tmp_eps,
+        txfr_mf, volfrac, flags, advect_enthalpy);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::true_dpvm) {
 
-    InterphaseTxfrDeposition(TrueDPVMDeposition(),
-                             lev, mf_tmp_eps, txfr_mf, volfrac, flags);
+    InterphaseTxfrDeposition(TrueDPVMDeposition(), lev, mf_tmp_eps, txfr_mf,
+        volfrac, flags, advect_enthalpy);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::centroid) {
 
-    InterphaseTxfrDeposition(CentroidDeposition(),
-                             lev, mf_tmp_eps, txfr_mf, volfrac, flags);
+    InterphaseTxfrDeposition(CentroidDeposition(), lev, mf_tmp_eps, txfr_mf,
+        volfrac, flags, advect_enthalpy);
 
   } else {
 
@@ -183,7 +184,8 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
                           amrex::MultiFab & mf_tmp_eps,
                           amrex::MultiFab & txfr_mf,
                           const amrex::MultiFab * volfrac,
-                          const amrex::FabArray<EBCellFlagFab>* flags)
+                          const amrex::FabArray<EBCellFlagFab>* flags,
+                          const int advect_enthalpy)
 {
   BL_PROFILE("MFIXParticleContainer::InterphaseTxfrDeposition()");
 
@@ -225,8 +227,8 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
 
         amrex::ParallelFor(nrp,
           [pstruct,plo,dx,dxi,vfrac,volarr,deposition_scale_factor,
-           reg_cell_vol,WeightFunc,flagsarr,txfr_arr,local_cg_dem=DEM::cg_dem]
-          AMREX_GPU_DEVICE (int ip) noexcept
+           reg_cell_vol,WeightFunc,flagsarr,txfr_arr,advect_enthalpy,
+           local_cg_dem=DEM::cg_dem] AMREX_GPU_DEVICE (int ip) noexcept
           {
             const ParticleType& p = pstruct[ip];
 
@@ -234,30 +236,31 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
             int j;
             int k;
 
+            const Real statwt = p.rdata(realData::statwt);
+
             GpuArray<GpuArray<GpuArray<Real,2>,2>,2> weights;
 
             WeightFunc(plo, dx, dxi, flagsarr, p, i, j, k, weights,
                        deposition_scale_factor);
 
-            amrex::Real pvol = p.rdata(realData::statwt) *
-              p.rdata(realData::volume) / reg_cell_vol;
+            amrex::Real pvol = statwt * p.rdata(realData::volume) / reg_cell_vol;
 
-            amrex::Real pbeta = p.rdata(realData::statwt) *
-              p.rdata(realData::dragcoeff) / reg_cell_vol;
+            amrex::Real pbeta = statwt * p.rdata(realData::dragcoeff) / reg_cell_vol;
 
-            amrex::Real pgamma = p.rdata(realData::statwt) *
-              p.rdata(realData::convection) / reg_cell_vol;
+            amrex::Real pgamma = advect_enthalpy ?
+              statwt * p.rdata(realData::convection) / reg_cell_vol : 0;
 
             if (local_cg_dem){
-               pvol = pvol/p.rdata(realData::statwt);
-               pbeta = pbeta/p.rdata(realData::statwt);
+               pvol = pvol / statwt;
+               pbeta = pbeta / statwt;
             }
 
             amrex::Real pvx   = p.rdata(realData::velx) * pbeta;
             amrex::Real pvy   = p.rdata(realData::vely) * pbeta;
             amrex::Real pvz   = p.rdata(realData::velz) * pbeta;
 
-            amrex::Real pTp   = p.rdata(realData::temperature) * pgamma;
+            amrex::Real pTp   = advect_enthalpy ?
+              p.rdata(realData::temperature) * pgamma : 0;
 
             for (int ii = -1; ii <= 0; ++ii) {
               for (int jj = -1; jj <= 0; ++jj) {
@@ -278,10 +281,13 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
                   amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::beta),
                                           weight_vol*pbeta);
 
-                  amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gammaTp),
-                                          weight_vol*pTp);
-                  amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gamma),
-                                          weight_vol*pgamma);
+                  if (advect_enthalpy)
+                  {
+                    amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gammaTp),
+                                            weight_vol*pTp);
+                    amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gamma),
+                                            weight_vol*pgamma);
+                  }
                 }
               }
             }
