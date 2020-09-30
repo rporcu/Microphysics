@@ -19,8 +19,6 @@
 #include <AMReX_EBMultiFabUtil.H>
 #include <AMReX_EBFabFactory.H>
 #include <AMReX_EBFArrayBox.H>
-#include <AMReX_EB_levelset.H>
-#include <AMReX_EB_LSCore.H>
 #include <AMReX_iMultiFab.H>
 #include <AMReX_MLMG.H>
 #include <AMReX_MLNodeLaplacian.H>
@@ -119,14 +117,6 @@ class mfix : public AmrCore
 
     void intersect_ls_walls ();
 
-    template<class F>
-    void build_particle_eb_levels (EB2::GeometryShop<F> gshop)
-    {
-      if(DEM::solve or PIC::solve)
-        for (int lev = 0; lev < nlev; lev ++)
-          particle_eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom, 100, 0);
-    }
-
     //! Construct EB levels from Geometry shop. This builds each EB level and
     //! saves a pointer to each level into `eb_levels`.
     template<class F> void build_eb_levels (EB2::GeometryShop<F> gshop)
@@ -136,25 +126,27 @@ class mfix : public AmrCore
        * Build EB levels                                                      *
        *                                                                      *
        ***********************************************************************/
+      EB2::Build(gshop, geom[nlev-1], nlev-1, 100);
+      const EB2::IndexSpace& ebis = EB2::IndexSpace::top();
       for (int lev = 0; lev < nlev; lev ++)
       {
-        // NOTE: the last two parameters are the max coarsening level and
-        // the required coarsening level. They are also used by the Poisson
-        // solver, => changing these will result in slight changes of the
-        // fluid solve.
-        eb_levels[lev] = LSCore<F>::BuildEBLevel(gshop, lev, geom, 100, 0);
-        particle_eb_levels[lev] = eb_levels[lev];
+          eb_levels[lev] = &(ebis.getLevel(geom[lev]));
+          particle_eb_levels[lev] = eb_levels[lev];
       }
 
       if (nlev == 1)
       {
-        Box dom_ls = geom[0].Domain();
-        dom_ls.refine(levelset_refinement);
-        Geometry geom_ls(dom_ls);
-        Vector<Geometry> vgeom{geom_ls};
-        // NOTE: lev here is index in vgeom
-        eb_levels[1] = LSCore<F>::BuildEBLevel(gshop, 0, vgeom, 100, 0);
-        particle_eb_levels[1] = eb_levels[1];
+          // We could skip the rebuilding for ref ratio of 1, but that makes
+          // BENCH05-Size0008_wide to fail on 4 processes.
+//          if (levelset_refinement == 1) {
+//              eb_levels[1] = eb_levels[0];
+//              particle_eb_levels[1] = eb_levels[1];
+//          } else {
+              Geometry geom_ls = amrex::refine(geom[0],levelset_refinement);
+              EB2::Build(gshop, geom_ls, 0, 100);
+              eb_levels[1] = &(EB2::IndexSpace::top().getLevel(geom_ls));
+              particle_eb_levels[1] = eb_levels[1];
+//          }
       }
     }
 
@@ -901,7 +893,7 @@ class mfix : public AmrCore
     // Level-Set Data => used for particle-wall collisions and fluid
     // reconstruction in particle drag calculation. NOTE: this has at least 2
     // levels: 0) fluid reconstruction, 1..N) particle-wall (refined) collisions
-    Vector< MultiFab* > level_sets;
+    Vector< std::unique_ptr<MultiFab> > level_sets;
 
     int steady_state = 0;
 
@@ -1089,19 +1081,19 @@ class mfix : public AmrCore
      **************************************************************************/
 
     // Variables to simplify checkpoint IO
-    Vector< Vector< MultiFab** > > vectorVars;
+    // Vector< Vector< MultiFab* > > vectorVars;
     Vector< std::string > vecVarsName;
 
-    Vector< Vector< MultiFab** > > chkScalarVars;
+    Vector< Vector< MultiFab* > > chkScalarVars;
     Vector< std::string > chkscaVarsName;
 
-    Vector< Vector< MultiFab** > > chkTVars;
+    Vector< Vector< MultiFab* > > chkTVars;
     Vector< std::string > chkTVarsName;
 
-    Vector< Vector< MultiFab** > > chkSpeciesVars;
+    Vector< Vector< MultiFab* > > chkSpeciesVars;
     Vector< std::string > chkSpeciesVarsName;
 
-    Vector< Vector< MultiFab** > > chkSpeciesTVars;
+    Vector< Vector< MultiFab* > > chkSpeciesTVars;
     Vector< std::string > chkSpeciesTVarsName;
 
     /***************************************************************************
@@ -1134,10 +1126,10 @@ class mfix : public AmrCore
     Vector<const EB2::Level*> particle_eb_levels;
 
     //! EB factory that lives on the fluid grids
-    Vector<const EBFArrayBoxFactory*> ebfactory;
+    Vector<std::unique_ptr<EBFArrayBoxFactory> > ebfactory;
 
     //! EB factory that lives on the particle grids
-    Vector<EBFArrayBoxFactory*> particle_ebfactory;
+    Vector<std::unique_ptr<EBFArrayBoxFactory> > particle_ebfactory;
 
     bool mfix_update_ebfactory (int a_lev);
 };

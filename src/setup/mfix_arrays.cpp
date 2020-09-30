@@ -648,10 +648,10 @@ mfix::RegridLevelSetArray (int a_lev)
    {
       amrex::Print() << "Updating particle ebfactory 1" << std::endl;
 
-      particle_ebfactory[a_lev] =
+      particle_ebfactory[a_lev].reset(
         new EBFArrayBoxFactory(*particle_eb_levels[a_lev], geom[a_lev], ba, dm,
                                {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                m_eb_full_grow_cells}, m_eb_support_level);
+                                m_eb_full_grow_cells}, m_eb_support_level));
 
       changed = true;
 
@@ -665,12 +665,10 @@ mfix::RegridLevelSetArray (int a_lev)
 
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
-          delete particle_ebfactory[a_lev];
-
-          particle_ebfactory[a_lev] =
+          particle_ebfactory[a_lev].reset(
               new EBFArrayBoxFactory(*particle_eb_levels[a_lev], geom[a_lev], ba, dm,
                                      {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                      m_eb_full_grow_cells}, m_eb_support_level);
+                                      m_eb_full_grow_cells}, m_eb_support_level));
 
          changed = true;
       }
@@ -683,7 +681,7 @@ mfix::RegridLevelSetArray (int a_lev)
 
        const BoxArray nd_ba = amrex::convert(ba, IntVect::TheNodeVector());
 
-       MultiFab* new_level_set = new MultiFab();
+       std::unique_ptr<MultiFab> new_level_set{new MultiFab()};
 
        if (level_sets[a_lev]->boxArray() == nd_ba)
        {
@@ -702,7 +700,6 @@ mfix::RegridLevelSetArray (int a_lev)
        }
 
        std::swap(level_sets[a_lev], new_level_set);
-       delete new_level_set;
 
        //________________________________________________________________________
        // If we're operating in single-level mode, the level-set has a second
@@ -714,7 +711,7 @@ mfix::RegridLevelSetArray (int a_lev)
            BoxArray ref_nd_ba = amrex::convert(ba, IntVect::TheNodeVector());
            ref_nd_ba.refine(levelset_refinement);
 
-           MultiFab* new_level_set_lev = new MultiFab();
+           std::unique_ptr<MultiFab> new_level_set_lev {new MultiFab()};
 
            if (level_sets[a_lev+1]->boxArray() == ref_nd_ba)
            {
@@ -733,7 +730,6 @@ mfix::RegridLevelSetArray (int a_lev)
            }
 
            std::swap(level_sets[a_lev+1], new_level_set_lev);
-           delete new_level_set_lev;
        }
    }
 }
@@ -756,10 +752,10 @@ bool mfix::mfix_update_ebfactory (int a_lev)
    {
       Print() << "Updating ebfactory from nullptr" << std::endl;
 
-      ebfactory[a_lev] =
+      ebfactory[a_lev].reset(
           new EBFArrayBoxFactory(*eb_levels[a_lev], geom[a_lev], ba, dm,
                                  {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                  m_eb_full_grow_cells}, m_eb_support_level);
+                                  m_eb_full_grow_cells}, m_eb_support_level));
 
       is_updated = true;
    }
@@ -772,12 +768,10 @@ bool mfix::mfix_update_ebfactory (int a_lev)
       {
           Print() << "Updating ebfactory from existing" << std::endl;
 
-          delete ebfactory[a_lev];
-
-          ebfactory[a_lev] =
+          ebfactory[a_lev].reset(
               new EBFArrayBoxFactory(*eb_levels[a_lev], geom[a_lev], ba, dm,
                                      {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                      m_eb_full_grow_cells}, m_eb_support_level);
+                                      m_eb_full_grow_cells}, m_eb_support_level));
 
           is_updated = true;
       }

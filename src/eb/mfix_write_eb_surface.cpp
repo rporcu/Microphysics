@@ -14,11 +14,11 @@ void mfix::WriteMyEBSurface ()
   const EBFArrayBoxFactory * ebf;
 
   if (particle_ebfactory[lev] != nullptr && DEM::solve) {
-      ebf = particle_ebfactory[lev];
+      ebf = particle_ebfactory[lev].get();
       ba  = pc->ParticleBoxArray(lev);
       dm  = pc->ParticleDistributionMap(lev);
   } else {
-      ebf = ebfactory[lev];
+      ebf = ebfactory[lev].get();
   }
 
   WriteEBSurface(ba,dm,Geom(lev),ebf);

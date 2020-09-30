@@ -50,9 +50,6 @@ mfix::~mfix ()
     delete bc_jhi[lev];
     delete bc_klo[lev];
     delete bc_khi[lev];
-
-    // Level-Set Data
-    delete level_sets[lev];
   }
 
   // used if load_balance_type == "KnapSack"
@@ -61,14 +58,6 @@ mfix::~mfix ()
 
   for (int lev = 0; lev < fluid_cost.size(); ++lev)
     delete fluid_cost[lev];
-
-  //! EB factory that lives on the fluid grids
-  for (int lev(0); lev < ebfactory.size(); lev++)
-    delete ebfactory[lev];
-
-  //! EB factory that lives on the particle grids
-  for (int lev(0); lev < particle_ebfactory.size(); ++lev)
-    delete particle_ebfactory[lev];
 
   if (REACTIONS::solve) {
     for (int n(0); n < REACTIONS::nreactions; n++)

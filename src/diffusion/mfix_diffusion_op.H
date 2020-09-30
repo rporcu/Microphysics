@@ -27,7 +27,7 @@ class DiffusionOp
   public: 
     // Constructor, with initialisation
     DiffusionOp (amrex::AmrCore* _amrcore, 
-                 amrex::Vector< const amrex::EBFArrayBoxFactory* >* _ebfactory,
+                 amrex::Vector< const amrex::EBFArrayBoxFactory* >const& _ebfactory,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_velbc_lo,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_velbc_hi,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_scalbc_lo,
@@ -43,7 +43,7 @@ class DiffusionOp
 
     // Actually do the setup work here
     void setup (amrex::AmrCore* _amrcore, 
-                amrex::Vector< const amrex::EBFArrayBoxFactory* >* _ebfactory);
+                amrex::Vector< const amrex::EBFArrayBoxFactory* >const& _ebfactory);
 
     // Read input from ParmParse (solver settings)
     void readParameters ();
@@ -118,7 +118,7 @@ class DiffusionOp
   private:
     // AmrCore data 
     amrex::AmrCore* amrcore;
-    amrex::Vector< const amrex::EBFArrayBoxFactory* >* ebfactory;
+    amrex::Vector< const amrex::EBFArrayBoxFactory* > ebfactory;
 
     amrex::Vector<amrex::Geometry> geom;
     amrex::Vector<amrex::BoxArray> grids;          

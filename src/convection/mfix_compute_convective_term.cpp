@@ -4,6 +4,7 @@
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
 #include <AMReX_Array.H>
+#include <AMReX_EB_utils.H>
 
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>

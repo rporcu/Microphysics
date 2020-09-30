@@ -77,18 +77,18 @@ void mfix::EvolveParcels (Real dt,
 
     if (nlev == 1){
       const int ls_refinement = 1;
-      const MultiFab* ls_data = level_sets[lev];
+      const MultiFab* ls_data = level_sets[lev].get();
 
-      pc->MFIX_PC_ImposeWalls(lev, particle_ebfactory[lev],
+      pc->MFIX_PC_ImposeWalls(lev, particle_ebfactory[lev].get(),
                               ls_refinement, ls_data,
                               cost[lev], knapsack_weight_type);
 
     } else {
 
       const int ls_refinement = ls_refinement_in;
-      const MultiFab* ls_data = level_sets[1];
+      const MultiFab* ls_data = level_sets[1].get();
 
-      pc->MFIX_PC_ImposeWalls(nlev, particle_ebfactory[lev],
+      pc->MFIX_PC_ImposeWalls(nlev, particle_ebfactory[lev].get(),
                               ls_refinement, ls_data,
                               cost[lev], knapsack_weight_type);
     }

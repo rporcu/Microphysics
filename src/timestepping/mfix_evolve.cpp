@@ -81,11 +81,11 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
             // everything else lives on level 0
             int ilev = 0;
 
-            const MultiFab* ls_data = level_sets[1];
+            const MultiFab* ls_data = level_sets[1].get();
 
             if (!test_tracer_conservation)
               pc->EvolveParticles(ilev, nstep, dt, time, mfix::gravity,
-                                  particle_ebfactory[ilev], ls_data,
+                                  particle_ebfactory[ilev].get(), ls_data,
                                   levelset_refinement,
                                   particle_cost[ilev],
                                   knapsack_weight_type, nsubsteps,
@@ -98,11 +98,11 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
             for (int lev = 0; lev <= finest_level; lev ++ )
             {
-                const MultiFab* ls_data = level_sets[lev];
+                const MultiFab* ls_data = level_sets[lev].get();
 
                 if (!test_tracer_conservation)
                 pc->EvolveParticles(lev, nstep, dt, time, mfix::gravity,
-                                    particle_ebfactory[lev], ls_data, 1,
+                                    particle_ebfactory[lev].get(), ls_data, 1,
                                     particle_cost[lev],
                                     knapsack_weight_type, nsubsteps,
                                     advect_enthalpy);
