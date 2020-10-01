@@ -777,9 +777,9 @@ ParticlesGenerator::random_fill_pic (const int icv,
 
   amrex::ResetRandomSeed(ParallelDescriptor::MyProc()+1);
 
-  amrex::ParallelFor(bx,
+  amrex::ParallelForRNG(bx,
     [p_rdata,seed_lo,delta_bx,local_nr,dx,dy,dz,plo,pc,whole_parcels_per_cell]
-    AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    AMREX_GPU_DEVICE (int i, int j, int k, amrex::RandomEngine const& engine) noexcept
     {
       const Real* plo_ptr = plo.data();
 
@@ -796,9 +796,9 @@ ParticlesGenerator::random_fill_pic (const int icv,
 
       for(int pseed(0); pseed < whole_parcels_per_cell; pseed++){
 
-        p_rdata[(local_pc + pseed)*local_nr + 0] = xlo + dx*amrex::Random();
-        p_rdata[(local_pc + pseed)*local_nr + 1] = ylo + dy*amrex::Random();
-        p_rdata[(local_pc + pseed)*local_nr + 2] = zlo + dz*amrex::Random();
+        p_rdata[(local_pc + pseed)*local_nr + 0] = xlo + dx*amrex::Random(engine);
+        p_rdata[(local_pc + pseed)*local_nr + 1] = ylo + dy*amrex::Random(engine);
+        p_rdata[(local_pc + pseed)*local_nr + 2] = zlo + dz*amrex::Random(engine);
       }
     }
   );
@@ -926,14 +926,14 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
   int* p_fails = fails_gpu.dataPtr();
 #endif
 
-  amrex::ParallelFor(nsize_half,
+  amrex::ParallelForRNG(nsize_half,
     [p_dp,dp_min,dp_max,tolerance,sigma,mean,nsize,
 #ifdef AMREX_USE_GPU
      p_fails]
 #else
      &fails]
 #endif
-    AMREX_GPU_DEVICE (int i) noexcept
+    AMREX_GPU_DEVICE (int i, RandomEngine const& engine) noexcept
     {
       amrex::Real x(0);
       amrex::Real y(0);
@@ -949,8 +949,8 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
         amrex::Real w(1.1);
         while(w > 1 or amrex::Math::abs(w-1) < tolerance)
         {
-          x = 2*amrex::Random() - 1;
-          y = 2*amrex::Random() - 1;
+          x = 2*amrex::Random(engine) - 1;
+          y = 2*amrex::Random(engine) - 1;
           w = x*x + y*y;
         }
 
@@ -1048,8 +1048,8 @@ ParticlesGenerator::uni_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 
   amrex::Real* p_dp = dp.data();
 
-  amrex::ParallelFor(nsize, [p_dp,dp_min,lscale]
-    AMREX_GPU_DEVICE (int lc) noexcept { p_dp[lc] = dp_min + lscale*amrex::Random(); });
+  amrex::ParallelForRNG(nsize, [p_dp,dp_min,lscale]
+    AMREX_GPU_DEVICE (int lc, amrex::RandomEngine const& engine) noexcept { p_dp[lc] = dp_min + lscale*amrex::Random(engine); });
 
   return;
 }
