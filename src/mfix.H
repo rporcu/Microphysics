@@ -357,7 +357,7 @@ class mfix : public AmrCore
                               Vector< MultiFab* > const& yslopes_in,
                               Vector< MultiFab* > const& zslopes_in,
                               int slopes_comp,
-                              std::map<std::string, Gpu::ManagedVector<int>>& bc_types);
+                              std::map<std::string, Gpu::DeviceVector<int>>& bc_types);
 
     void set_bc0 (const Box& sbx,
                   MFIter* mfi,
@@ -567,22 +567,27 @@ class mfix : public AmrCore
 
     BCList bc_list;
 
-    // "mutable" keyword is just a temporary fix to allow NodalProjection to
-    // work as intended. This won't be needed when the BC will be given their own
-    // class
-    mutable Gpu::ManagedVector<Real> m_bc_u_g;
-    mutable Gpu::ManagedVector<Real> m_bc_v_g;
-    mutable Gpu::ManagedVector<Real> m_bc_w_g;
-    mutable Gpu::ManagedVector<Real> m_bc_t_g;
-    mutable Vector< Gpu::ManagedVector<Real> > m_bc_X_gk;
-    mutable Gpu::ManagedVector<Real> m_bc_ep_g;
-    mutable Gpu::ManagedVector<Real> m_bc_p_g;
+    Gpu::DeviceVector<Real> m_bc_u_g;
+    Gpu::DeviceVector<Real> m_bc_v_g;
+    Gpu::DeviceVector<Real> m_bc_w_g;
+    Gpu::DeviceVector<Real> m_bc_t_g;
+    Gpu::DeviceVector<Real> m_bc_ep_g;
+    Gpu::DeviceVector<Real> m_bc_p_g;
+    Vector< Gpu::DeviceVector<Real> > m_bc_X_gk;
+    Gpu::DeviceVector<Real*> m_bc_X_gk_ptr;
+    Vector<Real> m_h_bc_u_g;
+    Vector<Real> m_h_bc_v_g;
+    Vector<Real> m_h_bc_w_g;
+    Vector<Real> m_h_bc_t_g;
+    Vector<Real> m_h_bc_ep_g;
+    Vector<Real> m_h_bc_p_g;
+    Vector<Vector<Real> > m_h_bc_X_gk;
 
-    std::map< std::string, Gpu::ManagedVector<int> > m_vel_g_bc_types;
-    std::map< std::string, Gpu::ManagedVector<int> > m_ro_g_bc_types;
-    std::map< std::string, Gpu::ManagedVector<int> > m_T_g_bc_types;
-    std::map< std::string, Gpu::ManagedVector<int> > m_trac_g_bc_types;
-    std::map< std::string, Gpu::ManagedVector<int> > m_X_gk_bc_types;
+    std::map< std::string, Gpu::DeviceVector<int> > m_vel_g_bc_types;
+    std::map< std::string, Gpu::DeviceVector<int> > m_ro_g_bc_types;
+    std::map< std::string, Gpu::DeviceVector<int> > m_T_g_bc_types;
+    std::map< std::string, Gpu::DeviceVector<int> > m_trac_g_bc_types;
+    std::map< std::string, Gpu::DeviceVector<int> > m_X_gk_bc_types;
 
     //! The particles see an inflow face as a solid wall; thus instead of
     //! creating a separate EBfactory for particles, we simply modify the

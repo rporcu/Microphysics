@@ -54,19 +54,14 @@ mfix::set_enthalpy_bcs (Real time,
 
   const int nspecies_g = FLUID::nspecies;
 
-  Gpu::ManagedVector< Real* > m_bc_X_gk_managed(nspecies_g);
-  Gpu::ManagedVector< Real > cp_gk0_managed(nspecies_g);
-
-  for (int n(0); n < nspecies_g; n++) {
-    m_bc_X_gk_managed[n] = m_bc_X_gk[n].data();
-    cp_gk0_managed[n] = FLUID::cp_gk0[n];
-  }
+  Gpu::DeviceVector< Real > cp_gk0_d(nspecies_g);
+  Gpu::copyAsync(Gpu::hostToDevice, FLUID::cp_gk0.begin(), FLUID::cp_gk0.end(), cp_gk0_d.begin());
 
   // Flag to understand if fluid is a mixture
   const int fluid_is_a_mixture = FLUID::is_a_mixture;
 
-  Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_managed.data() : nullptr;
-  Real* p_cp_gk0 = fluid_is_a_mixture ? cp_gk0_managed.data() : nullptr;
+  Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_ptr.data() : nullptr;
+  Real* p_cp_gk0 = fluid_is_a_mixture ? cp_gk0_d.data() : nullptr;
 
   IntVect h_g_lo(h_g_fab.loVect());
   IntVect h_g_hi(h_g_fab.hiVect());

@@ -63,11 +63,8 @@ void calc_D_gk (const Box& bx,
                 FArrayBox& D_gk_fab)
 {
   const int nspecies_g = FLUID::nspecies;
-
-  Gpu::ManagedVector< Real> D_gk0(nspecies_g, 0);
-
-  for (int n(0); n < nspecies_g; n++)
-    D_gk0[n] = FLUID::D_gk0[n];
+  Gpu::DeviceVector< Real> D_gk0(nspecies_g);
+  Gpu::copyAsync(Gpu::hostToDevice, FLUID::D_gk0.begin(), FLUID::D_gk0.end(), D_gk0.begin());
 
   Real* p_D_gk0 = D_gk0.data();
 
@@ -86,11 +83,8 @@ void calc_cp_gk (const Box& bx,
                  FArrayBox& /*T_g_fab*/)
 {
   const int nspecies_g = FLUID::nspecies;
-
-  Gpu::ManagedVector< Real> cp_gk0(nspecies_g, 0);
-
-  for (int n(0); n < nspecies_g; n++)
-    cp_gk0[n] = FLUID::cp_gk0[n];
+  Gpu::DeviceVector< Real> cp_gk0(nspecies_g);
+  Gpu::copyAsync(Gpu::hostToDevice, FLUID::cp_gk0.begin(), FLUID::cp_gk0.end(), cp_gk0.begin());
 
   Real* p_cp_gk0 = cp_gk0.data();
 

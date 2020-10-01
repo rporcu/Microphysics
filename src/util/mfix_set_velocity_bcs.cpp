@@ -431,7 +431,7 @@ mfix::set_vec_bcs (const int lev,
   const amrex::Real* p_bc_v_g = m_bc_v_g.data();
   const amrex::Real* p_bc_w_g = m_bc_w_g.data();
 
-  amrex::Real* p_bc_ep_g = m_bc_ep_g.data();
+  const amrex::Real* p_bc_ep_g = m_bc_ep_g.data();
 
   if (nlft > 0)
   {

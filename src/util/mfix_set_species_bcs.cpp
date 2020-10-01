@@ -116,12 +116,7 @@ mfix::set_mass_fractions_g_bcs (Real time,
 
   const int nspecies_g = FLUID::nspecies;
 
-  Gpu::ManagedVector< Real* > m_bc_X_gk_managed(nspecies_g);
-
-  for (int n(0); n < nspecies_g; n++)
-    m_bc_X_gk_managed[n] = m_bc_X_gk[n].data();
-
-  Real** p_bc_X_gk = m_bc_X_gk_managed.data();
+  Real** p_bc_X_gk = m_bc_X_gk_ptr.data();
 
   if (nlft > 0)
   {
@@ -223,9 +218,6 @@ mfix::set_mass_fractions_g_bcs (Real time,
         X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
     });
   }
-
-  Gpu::synchronize();
-
 }
 
 
@@ -249,12 +241,10 @@ mfix::set_species_diffusivities_g_bcs (Real time,
 
   const int nspecies_g = FLUID::nspecies;
 
-  Gpu::ManagedVector< Real > D_gk0_managed(nspecies_g);
+  Gpu::DeviceVector< Real > D_gk0_d(nspecies_g);
+  Gpu::copyAsync(Gpu::hostToDevice, FLUID::D_gk0.begin(), FLUID::D_gk0.end(), D_gk0_d.begin());
 
-  for (int n(0); n < nspecies_g; n++)
-    D_gk0_managed[n] = FLUID::D_gk0[n];
-
-  Real* p_D_gk0 = D_gk0_managed.data();
+  Real* p_D_gk0 = D_gk0_d.data();
 
   IntVect scal_lo(scal_fab.loVect());
   IntVect scal_hi(scal_fab.hiVect());
@@ -422,12 +412,10 @@ mfix::set_species_specific_heat_g_bcs (Real time,
 
   const int nspecies_g = FLUID::nspecies;
 
-  Gpu::ManagedVector< Real > cp_gk0_managed(nspecies_g);
+  Gpu::DeviceVector< Real > cp_gk0_d(nspecies_g);
+  Gpu::copyAsync(Gpu::hostToDevice, FLUID::cp_gk0.begin(), FLUID::cp_gk0.end(), cp_gk0_d.begin());
 
-  for (int n(0); n < nspecies_g; n++)
-    cp_gk0_managed[n] = FLUID::cp_gk0[n];
-
-  Real* p_cp_gk0 = cp_gk0_managed.data();
+  Real* p_cp_gk0 = cp_gk0_d.data();
 
   IntVect scal_lo(scal_fab.loVect());
   IntVect scal_hi(scal_fab.hiVect());
@@ -595,13 +583,10 @@ mfix::set_species_enthalpy_g_bcs (Real time,
 
   const int nspecies_g = FLUID::nspecies;
 
-  Gpu::ManagedVector< Real > cp_gk0_managed(nspecies_g);
+  Gpu::DeviceVector< Real > cp_gk0_d(nspecies_g);
+  Gpu::copyAsync(Gpu::hostToDevice, FLUID::cp_gk0.begin(), FLUID::cp_gk0.end(), cp_gk0_d.begin());
 
-  for (int n(0); n < nspecies_g; n++) {
-    cp_gk0_managed[n] = FLUID::cp_gk0[n];
-  }
-
-  Real* p_cp_gk0 = cp_gk0_managed.data();
+  Real* p_cp_gk0 = cp_gk0_d.data();
 
   amrex::Real* p_bc_t_g = m_bc_t_g.data();
 

@@ -12,29 +12,23 @@ mfix::set_species_bc0 (const Box& sbx,
 {
   const int nspecies_g = FLUID::nspecies;
 
-  Gpu::ManagedVector< Real* > m_bc_X_gk_managed(nspecies_g);
-  Gpu::ManagedVector< Real > D_gk0_managed(nspecies_g, 0.);
-  
-  for (int n(0); n < nspecies_g; n++) {
-    m_bc_X_gk_managed[n] = m_bc_X_gk[n].data();
-    D_gk0_managed[n] = FLUID::D_gk0[n];
-  }
+  Gpu::DeviceVector< Real > D_gk0_d(nspecies_g);
+  Gpu::copyAsync(Gpu::hostToDevice, FLUID::D_gk0.begin(), FLUID::D_gk0.end(), D_gk0_d.begin());
 
-  Real** p_bc_X_gk = m_bc_X_gk_managed.data();
-  Real* p_D_gk0 = D_gk0_managed.data();
+  Real** p_bc_X_gk = m_bc_X_gk_ptr.data();
+  Real* p_D_gk0 = D_gk0_d.data();
 
   // In case of advect_enthalpy
-  Gpu::ManagedVector< Real > cp_gk0_managed(nspecies_g);
-
+  Gpu::DeviceVector< Real > cp_gk0_d;
   if (advect_enthalpy) {
-    for (int n(0); n < nspecies_g; n++) {
-      cp_gk0_managed[n] = FLUID::cp_gk0[n];
-    }
+      cp_gk0_d.resize(nspecies_g);
+      Gpu::copyAsync(Gpu::hostToDevice, FLUID::cp_gk0.begin(), FLUID::cp_gk0.end(),
+                     cp_gk0_d.begin());
   }
 
   const int loc_advect_enthalpy = advect_enthalpy;
 
-  Real* p_cp_gk0 = loc_advect_enthalpy ? cp_gk0_managed.data() : nullptr;
+  Real* p_cp_gk0 = loc_advect_enthalpy ? cp_gk0_d.data() : nullptr;
   Real* p_bc_t_g = loc_advect_enthalpy ? m_bc_t_g.data() : nullptr;
 
   // Get data

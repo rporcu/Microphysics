@@ -71,9 +71,6 @@ mfix::mfix ()
   , m_bc_v_g(50, 0)
   , m_bc_w_g(50, 0)
   , m_bc_t_g(50, 0)
-  // Once we will have a class for BCs, the following initialization won't be
-  // like this anymore and we won't need to resize it after Parameters reading
-  , m_bc_X_gk(0) // This is resized in mfix_init.cpp
   , m_bc_ep_g(50, 0)
   , m_bc_p_g(50, 0)
 {
@@ -159,6 +156,8 @@ mfix::mfix ()
 
     m_X_gk_bc_types["Dirichlet"] = {bc_list.get_minf(), bc_list.get_pinf()};
     m_X_gk_bc_types["Neumann"] = {bc_list.get_pout()};
+
+    Gpu::synchronize();
 }
 
 void

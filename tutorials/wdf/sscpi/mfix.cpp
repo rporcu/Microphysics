@@ -146,6 +146,10 @@ mfix::mfix_usr1_cpp (Real time) const
 {
   mfix_usr1(&time);
 
+  m_h_bc_u_g.resize(m_bc_u_g.size());
+  m_h_bc_v_g.resize(m_bc_v_g.size());
+  m_h_bc_w_g.resize(m_bc_w_g.size());
+
   const int minf_ = bc_list.get_minf(); //wdf
   const int dim_bc = get_dim_bc();
 
@@ -172,6 +176,10 @@ mfix::mfix_usr1_cpp (Real time) const
       }
    }//wdf
 
+   Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_u_g.begin(), m_h_bc_u_g.end(), m_bc_u_g.begin());
+   Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_v_g.begin(), m_h_bc_v_g.end(), m_bc_v_g.begin());
+   Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_w_g.begin(), m_h_bc_w_g.end(), m_bc_w_g.begin());
+   Gpu::synchronize();
 }
 
 void

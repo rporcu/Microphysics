@@ -11,7 +11,7 @@
 namespace set_p0_aux {
 
 void compute_p0_bcs (const Box& sbx, const Box& domain, const BCList& bc_list,
-                     Array4<Real> const& p0_g, Real* m_bc_p_g, Real& pj,
+                     Array4<Real> const& p0_g, Real const* m_bc_p_g, Real& pj,
                      const RealVect& gravity, const Real dx, const Real dy, const Real dz,
                      Array4<const int> const& bct_ilo,
                      Array4<const int> const& bct_ihi,
@@ -24,7 +24,7 @@ void compute_p0_bcs (const Box& sbx, const Box& domain, const BCList& bc_list,
                      const int nghost);
 
 void set_p0_bcs (const Box& sbx, const Box& domain, const BCList& bc_list,
-                 Array4<Real> const& p0_g, Real* m_bc_p_g,
+                 Array4<Real> const& p0_g, Real const* m_bc_p_g,
                  Array4<const int> const& bct_ilo,
                  Array4<const int> const& bct_ihi,
                  Array4<const int> const& bct_jlo,
@@ -106,10 +106,10 @@ mfix::set_p0 (const Box& bx,
     delp_dir_loc = 0;
 
     const int bcv_lo = bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],1);
-    const Real p_lo  = m_bc_p_g[bcv_lo];
+    const Real p_lo  = m_h_bc_p_g[bcv_lo];
 
     const int bcv_hi = bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],1);
-    const Real p_hi  = m_bc_p_g[bcv_hi];
+    const Real p_hi  = m_h_bc_p_g[bcv_hi];
 
     delp_x = p_lo - p_hi;
     BC::delp[0] = delp_x;
@@ -125,10 +125,10 @@ mfix::set_p0 (const Box& bx,
     delp_dir_loc = 1;
 
     const int bcv_lo = bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],1);
-    const Real p_lo  = m_bc_p_g[bcv_lo];
+    const Real p_lo  = m_h_bc_p_g[bcv_lo];
 
     const int bcv_hi = bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],1);
-    const Real p_hi  = m_bc_p_g[bcv_hi];
+    const Real p_hi  = m_h_bc_p_g[bcv_hi];
 
     delp_y = p_lo - p_hi;
     BC::delp[1] = delp_y;
@@ -144,10 +144,10 @@ mfix::set_p0 (const Box& bx,
     delp_dir_loc = 2;
 
     const int bcv_lo = bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,1);
-    const Real p_lo  = m_bc_p_g[bcv_lo];
+    const Real p_lo  = m_h_bc_p_g[bcv_lo];
 
     const int bcv_hi = bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,1);
-    const Real p_hi  = m_bc_p_g[bcv_hi];
+    const Real p_hi  = m_h_bc_p_g[bcv_hi];
 
     delp_z = p_lo - p_hi;
     BC::delp[2] = delp_z;
@@ -270,7 +270,7 @@ void compute_p0_bcs (const Box& sbx,
                      const Box& domain,
                      const BCList& bc_list,
                      Array4<Real> const& p0_g,
-                     Real* m_bc_p_g,
+                     Real const* m_bc_p_g,
                      Real& pj,
                      const RealVect& gravity,
                      const Real dx,
@@ -462,7 +462,7 @@ void set_p0_bcs (const Box& sbx,
                  const Box& domain,
                  const BCList& bc_list,
                  Array4<Real> const& p0_g,
-                 Real* m_bc_p_g,
+                 Real const* m_bc_p_g,
                  Array4<const int> const& bct_ilo,
                  Array4<const int> const& bct_ihi,
                  Array4<const int> const& bct_jlo,

@@ -41,7 +41,16 @@ mfix::InitParams ()
   // We have to do it here because the size has to match the number of fluid
   // species
   // NOTE: once we will have a class for BCs this won't be needed anymore
-  m_bc_X_gk.resize(FLUID::nspecies, Gpu::ManagedVector<Real>(50, 0));
+  m_bc_X_gk.resize(FLUID::nspecies, Gpu::DeviceVector<Real>(50, 0));
+  m_bc_X_gk_ptr.resize(FLUID::nspecies, nullptr);
+  {
+      Vector<Real*> tmp(FLUID::nspecies);
+      for (int i = 0; i < FLUID::nspecies; ++i) {
+          tmp[i] = m_bc_X_gk[i].data();
+      }
+      Gpu::copyAsync(Gpu::hostToDevice, tmp.begin(), tmp.end(), m_bc_X_gk_ptr.begin());
+      Gpu::synchronize();
+  }
   bcs_X.resize(2*FLUID::nspecies);
 
   // Read in regions, initial and boundary conditions. Note that

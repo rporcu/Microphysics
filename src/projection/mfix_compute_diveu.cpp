@@ -113,12 +113,11 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
       lap_X[lev] = MFHelpers::createFrom(*rhs[lev], 0., 1, nspecies_g).release();
     }
 
-    Gpu::ManagedVector< Real > MW_gk_managed(nspecies_g);
-
-    for (int n(0); n < nspecies_g; n++)
-      MW_gk_managed[n] = FLUID::MW_gk0[n];
-
-    Real* p_MW_gk = MW_gk_managed.data();
+    Gpu::DeviceVector< Real > MW_gk_d(nspecies_g);
+    Gpu::copyAsync(Gpu::hostToDevice, FLUID::MW_gk0.begin(), FLUID::MW_gk0.end(),
+                   MW_gk_d.begin());
+    Gpu::synchronize();
+    Real* p_MW_gk = MW_gk_d.data();
 
     // compute S_sk
     mfix_species_X_rhs(true, S_sk, lap_X, X_gk, ep_g, ro_g, D_gk, ro_gk_txfr);

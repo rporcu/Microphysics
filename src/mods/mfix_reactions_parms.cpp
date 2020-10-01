@@ -93,9 +93,9 @@ std::string get_products(const std::string& formula)
 void
 get_stoichiometric_data(const std::string& s,
                         std::vector<std::string>& compounds,
-                        amrex::Gpu::ManagedVector<int>& compounds_id,
-                        amrex::Gpu::ManagedVector<amrex::Real>& coefficients,
-                        amrex::Gpu::ManagedVector<int>& phases)
+                        amrex::Gpu::HostVector<int>& compounds_id,
+                        amrex::Gpu::HostVector<amrex::Real>& coefficients,
+                        amrex::Gpu::HostVector<int>& phases)
 {
   std::string formula(trim(s));
   std::replace(formula.begin(), formula.end(), '+', ' ');
@@ -169,16 +169,16 @@ get_stoichiometric_data(const std::string& s,
 
 void
 parse_chemical_reaction(const std::string& equation,
-                        amrex::Gpu::ManagedVector<int>& phases,
+                        amrex::Gpu::HostVector<int>& phases,
                         int& reaction_type,
                         std::vector<std::string>& reactants,
-                        amrex::Gpu::ManagedVector<int>& reactants_id,
-                        amrex::Gpu::ManagedVector<amrex::Real>& reactants_coeffs,
-                        amrex::Gpu::ManagedVector<int>& reactants_phases,
+                        amrex::Gpu::HostVector<int>& reactants_id,
+                        amrex::Gpu::HostVector<amrex::Real>& reactants_coeffs,
+                        amrex::Gpu::HostVector<int>& reactants_phases,
                         std::vector<std::string>& products,
-                        amrex::Gpu::ManagedVector<int>& products_id,
-                        amrex::Gpu::ManagedVector<amrex::Real>& products_coeffs,
-                        amrex::Gpu::ManagedVector<int>& products_phases)
+                        amrex::Gpu::HostVector<int>& products_id,
+                        amrex::Gpu::HostVector<amrex::Real>& products_coeffs,
+                        amrex::Gpu::HostVector<int>& products_phases)
 {
   // Clear reactants containers
   reactants.clear();
@@ -304,9 +304,48 @@ namespace REACTIONS
     , m_products_coeffs(0)
     , m_products_phases(0)
   {
-    parse_chemical_reaction(m_reaction, m_phases, m_reaction_type, m_reactants,
-        m_reactants_id, m_reactants_coeffs, m_reactants_phases, m_products,
-        m_products_id, m_products_coeffs, m_products_phases);
+    Gpu::HostVector<int> h_phases;
+
+    Gpu::HostVector<int> h_reactants_id;
+    Gpu::HostVector<Real> h_reactants_coeffs;
+    Gpu::HostVector<int> h_reactants_phases;
+
+    Gpu::HostVector<int> h_products_id;
+    Gpu::HostVector<Real> h_products_coeffs;
+    Gpu::HostVector<int> h_products_phases;
+
+    parse_chemical_reaction(m_reaction, h_phases, m_reaction_type, m_reactants,
+        h_reactants_id, h_reactants_coeffs, h_reactants_phases, m_products,
+        h_products_id, h_products_coeffs, h_products_phases);
+
+    m_phases.resize(h_phases.size());
+    Gpu::copyAsync(Gpu::hostToDevice, h_phases.begin(), h_phases.end(), m_phases.begin());
+
+    m_reactants_id.resize(h_reactants_id.size());
+    Gpu::copyAsync(Gpu::hostToDevice, h_reactants_id.begin(), h_reactants_id.end(),
+                   m_reactants_id.begin());
+
+    m_reactants_coeffs.resize(h_reactants_coeffs.size());
+    Gpu::copyAsync(Gpu::hostToDevice, h_reactants_coeffs.begin(), h_reactants_coeffs.end(),
+                   m_reactants_coeffs.begin());
+
+    m_reactants_phases.resize(h_reactants_phases.size());
+    Gpu::copyAsync(Gpu::hostToDevice, h_reactants_phases.begin(), h_reactants_phases.end(),
+                   m_reactants_phases.begin());
+
+    m_products_id.resize(h_products_id.size());
+    Gpu::copyAsync(Gpu::hostToDevice, h_products_id.begin(), h_products_id.end(),
+                   m_products_id.begin());
+
+    m_products_coeffs.resize(h_products_coeffs.size());
+    Gpu::copyAsync(Gpu::hostToDevice, h_products_coeffs.begin(), h_products_coeffs.end(),
+                   m_products_coeffs.begin());
+
+    m_products_phases.resize(h_products_phases.size());
+    Gpu::copyAsync(Gpu::hostToDevice, h_products_phases.begin(), h_products_phases.end(),
+                   m_products_phases.begin());
+
+    Gpu::synchronize();
   }
 }
 

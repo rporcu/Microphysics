@@ -235,12 +235,11 @@ mfix::mfix_update_fluid_and_species(const Vector< MultiFab* >& cp_gk,
 
   if (FLUID::is_a_mixture)
   {
-    Gpu::ManagedVector< Real > MW_gk_managed(nspecies_g);
+    Gpu::DeviceVector< Real > MW_gk_d(nspecies_g);
+    Gpu::copyAsync(Gpu::hostToDevice, FLUID::MW_gk0.begin(), FLUID::MW_gk0.end(), MW_gk_d.begin());
+    Gpu::synchronize();
 
-    for (int n(0); n < nspecies_g; n++)
-      MW_gk_managed[n] = FLUID::MW_gk0[n];
-
-    Real* p_MW_gk = MW_gk_managed.data();
+    Real* p_MW_gk = MW_gk_d.data();
 
     // Set covered values
     for (int lev(0); lev <= finest_level; lev++) {

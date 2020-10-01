@@ -178,8 +178,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
      *   -> particle-particle, and particle-wall forces                         *
      *   -> particle-particle, and particle-wall torques                        *
      ***************************************************************************/
-    std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> tow;
-    std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> fc, pfor, wfor;
+    std::map<PairIndex, Gpu::DeviceVector<Real>> tow;
+    std::map<PairIndex, Gpu::DeviceVector<Real>> fc, pfor, wfor;
 
     std::map<PairIndex, bool> tile_has_walls;
 
@@ -187,10 +187,10 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     {
         const Box& bx = pti.tilebox();
         PairIndex index(pti.index(), pti.LocalTileIndex());
-        tow[index]  = Gpu::ManagedDeviceVector<Real>();
-        fc[index]   = Gpu::ManagedDeviceVector<Real>();
-        pfor[index] = Gpu::ManagedDeviceVector<Real>();
-        wfor[index] = Gpu::ManagedDeviceVector<Real>();
+        tow[index]  = Gpu::DeviceVector<Real>();
+        fc[index]   = Gpu::DeviceVector<Real>();
+        pfor[index] = Gpu::DeviceVector<Real>();
+        wfor[index] = Gpu::DeviceVector<Real>();
 
         // Determine if this particle tile actually has any walls
         bool has_wall = false;
@@ -663,14 +663,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               const int nspecies_s = SOLIDS::nspecies;
               const int nreactions = REACTIONS::nreactions;
 
-              Gpu::ManagedVector< Real > mng_MW_sn(nspecies_s);
-
-              for (int n(0); n < nspecies_s; n++) {
-                mng_MW_sn[n] = SOLIDS::MW_sn0[n];
-              }
-
-              Real* p_MW_sn = mng_MW_sn.data();
-
               const int Solid = CHEMICALPHASE::Solid;
 
               const int idx_X = speciesData::X_sn*nspecies_s;
@@ -679,7 +671,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                                 reactionsData::G_sn_pg_q*nreactions;
 
               amrex::ParallelFor(nrp, [nrp,pstruct,subdt,ptile_data,
-                  nspecies_s,nreactions,idx_X,idx_G,Solid,p_MW_sn]
+                  nspecies_s,nreactions,idx_X,idx_G,Solid]
               AMREX_GPU_DEVICE (int p_id) noexcept
               {
                 ParticleType& p = pstruct[p_id];
@@ -1053,8 +1045,8 @@ void MFIXParticleContainer::UpdateMaxVelocity ()
     loc_maxvel = RealVect(max_vel_x, max_vel_y, max_vel_z);
 }
 
-void MFIXParticleContainer::UpdateMaxForces (std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> pfor,
-                                             std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> wfor)
+void MFIXParticleContainer::UpdateMaxForces (std::map<PairIndex, Gpu::DeviceVector<Real>> pfor,
+                                             std::map<PairIndex, Gpu::DeviceVector<Real>> wfor)
 {
     Real max_pfor_x = loc_maxpfor[0], max_pfor_y = loc_maxpfor[1], max_pfor_z = loc_maxpfor[2];
     Real max_wfor_x = loc_maxwfor[0], max_wfor_y = loc_maxwfor[1], max_wfor_z = loc_maxwfor[2];

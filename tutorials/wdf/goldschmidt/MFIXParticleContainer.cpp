@@ -162,8 +162,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
      *   -> particle-particle, and particle-wall forces                         *
      *   -> particle-particle, and particle-wall torques                        *
      ***************************************************************************/
-    std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> tow;
-    std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> fc, pfor, wfor;
+    std::map<PairIndex, Gpu::DeviceVector<Real>> tow;
+    std::map<PairIndex, Gpu::DeviceVector<Real>> fc, pfor, wfor;
 
     std::map<PairIndex, bool> tile_has_walls;
 
@@ -171,10 +171,10 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     {
         const Box& bx = pti.tilebox();
         PairIndex index(pti.index(), pti.LocalTileIndex());
-        tow[index]  = Gpu::ManagedDeviceVector<Real>();
-        fc[index]   = Gpu::ManagedDeviceVector<Real>();
-        pfor[index] = Gpu::ManagedDeviceVector<Real>();
-        wfor[index] = Gpu::ManagedDeviceVector<Real>();
+        tow[index]  = Gpu::DeviceVector<Real>();
+        fc[index]   = Gpu::DeviceVector<Real>();
+        pfor[index] = Gpu::DeviceVector<Real>();
+        wfor[index] = Gpu::DeviceVector<Real>();
 
         // Only call the routine for wall collisions if we actually have walls
         BL_PROFILE_VAR("ls_has_walls", has_wall);
@@ -977,8 +977,8 @@ void MFIXParticleContainer::UpdateMaxVelocity ()
     loc_maxvel = RealVect(max_vel_x, max_vel_y, max_vel_z);
 }
 
-void MFIXParticleContainer::UpdateMaxForces (std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> pfor,
-                                             std::map<PairIndex, Gpu::ManagedDeviceVector<Real>> wfor)
+void MFIXParticleContainer::UpdateMaxForces (std::map<PairIndex, Gpu::DeviceVector<Real>> pfor,
+                                             std::map<PairIndex, Gpu::DeviceVector<Real>> wfor)
 {
     Real max_pfor_x = loc_maxpfor[0], max_pfor_y = loc_maxpfor[1], max_pfor_z = loc_maxpfor[2];
     Real max_wfor_x = loc_maxwfor[0], max_wfor_y = loc_maxwfor[1], max_wfor_z = loc_maxwfor[2];
