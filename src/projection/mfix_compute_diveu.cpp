@@ -35,7 +35,9 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
                             Vector< MultiFab* > const& ro_gk_txfr)
 {
   Vector< MultiFab* > S_h(nlev, nullptr);
+  Vector< MultiFab* > lap_T(nlev, nullptr);
   Vector< MultiFab* > S_sk(nlev, nullptr);
+  Vector< MultiFab* > lap_X(nlev, nullptr);
 
   const int adv_enthalpy = advect_enthalpy;
   const int fluid_is_mixture = FLUID::is_a_mixture;
@@ -44,10 +46,11 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
   {
     for (int lev(0); lev <= finest_level; lev++) {
       S_h[lev] = MFHelpers::createFrom(*rhs[lev], 0., 1).release();
+      lap_T[lev] = MFHelpers::createFrom(*rhs[lev], 0., 1).release();
     }
 
     // Compute S_h, aka enthalpy RHS
-    mfix_enthalpy_rhs(true, S_h, T_g, ep_g, ro_g, k_g, T_g_on_eb,
+    mfix_enthalpy_rhs(true, S_h, lap_T, T_g, ep_g, ro_g, k_g, T_g_on_eb,
         k_g_on_eb, X_gk, D_gk, h_gk);
 
     for (int lev(0); lev <= finest_level; lev++) {
@@ -57,15 +60,17 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
       for (MFIter mfi(*rhs[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
         const Box& bx = mfi.tilebox();
 
-        Array4<Real> const& S_h_arr = S_h[lev]->array(mfi);
-        Array4<const Real> const& txfr_arr = txfr[lev]->const_array(mfi);
-        Array4<const Real> const& T_g_arr = T_g[lev]->const_array(mfi);
+        Array4<      Real> const& S_h_arr   = S_h[lev]->array(mfi);
+        Array4<const Real> const& lap_T_arr = lap_T[lev]->const_array(mfi);
+        Array4<const Real> const& txfr_arr  = txfr[lev]->const_array(mfi);
+        Array4<const Real> const& T_g_arr   = T_g[lev]->const_array(mfi);
 
-        amrex::ParallelFor(bx, [S_h_arr,txfr_arr,T_g_arr]
+        amrex::ParallelFor(bx, [S_h_arr,txfr_arr,T_g_arr,lap_T_arr]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          S_h_arr(i,j,k) += txfr_arr(i,j,k,Transfer::gammaTp) -
-            txfr_arr(i,j,k,Transfer::gamma)*T_g_arr(i,j,k);
+          S_h_arr(i,j,k) += lap_T_arr(i,j,k)
+            + txfr_arr(i,j,k,Transfer::gammaTp)
+            - txfr_arr(i,j,k,Transfer::gamma)*T_g_arr(i,j,k);
         });
       }
     }
@@ -105,6 +110,7 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
   {
     for (int lev(0); lev <= finest_level; lev++) {
       S_sk[lev] = MFHelpers::createFrom(*rhs[lev], 0., 1, nspecies_g).release();
+      lap_X[lev] = MFHelpers::createFrom(*rhs[lev], 0., 1, nspecies_g).release();
     }
 
     Gpu::ManagedVector< Real > MW_gk_managed(nspecies_g);
@@ -115,7 +121,7 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
     Real* p_MW_gk = MW_gk_managed.data();
 
     // compute S_sk
-    mfix_species_X_rhs(true, S_sk, X_gk, ep_g, ro_g, D_gk, ro_gk_txfr);
+    mfix_species_X_rhs(true, S_sk, lap_X, X_gk, ep_g, ro_g, D_gk, ro_gk_txfr);
 
     for (int lev(0); lev <= finest_level; lev++)
     {
@@ -129,9 +135,10 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
       {
         const Box& bx = mfi.tilebox();
 
-        Array4< Real > const& S_sk_arr  = S_sk[lev]->array(mfi);
-        Array4< const Real > const& ro_g_arr = ro_g[lev]->const_array(mfi);
-        Array4< const Real > const& MW_g_arr = MW_g[lev]->const_array(mfi);
+        Array4<       Real > const& S_sk_arr  = S_sk[lev]->array(mfi);
+        Array4< const Real > const& lap_X_arr = ro_g[lev]->const_array(mfi);
+        Array4< const Real > const& ro_g_arr  = ro_g[lev]->const_array(mfi);
+        Array4< const Real > const& MW_g_arr  = MW_g[lev]->const_array(mfi);
 
         Array4< const Real > const& T_g_arr  = adv_enthalpy ?
           T_g[lev]->const_array(mfi) : Array4<const Real>();
@@ -142,10 +149,12 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
         auto const& flags_arr = flags.const_array(mfi);
 
         amrex::ParallelFor(bx, nspecies_g, [flags_arr,S_sk_arr,MW_g_arr,p_MW_gk,
-            h_gk_arr,cp_g_arr,T_g_arr,ro_g_arr,adv_enthalpy]
+            h_gk_arr,cp_g_arr,T_g_arr,ro_g_arr,adv_enthalpy,lap_X_arr]
             AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
         {
           if (not flags_arr(i,j,k).isCovered()) {
+            S_sk_arr(i,j,k,n) += lap_X_arr(i,j,k,n);
+
             amrex::Real coeff = MW_g_arr(i,j,k)/p_MW_gk[n];
 
             if (adv_enthalpy)
@@ -204,11 +213,15 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
 
   for (int lev(0); lev <= finest_level; lev++)
   {
-    if (adv_enthalpy)
+    if (adv_enthalpy) {
       delete S_h[lev];
+      delete lap_T[lev];
+    }
 
-    if (fluid_is_mixture)
+    if (fluid_is_mixture) {
       delete S_sk[lev];
+      delete lap_X[lev];
+    }
   }
 }
 

@@ -87,9 +87,11 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   Vector< MultiFab* > conv_X(finest_level+1, nullptr);
   Vector< MultiFab* > ro_RHS(finest_level+1, nullptr);
   Vector< MultiFab* > divtau(finest_level+1, nullptr);
-  Vector< MultiFab* > trac_RHS(finest_level+1, nullptr);
+  Vector< MultiFab* > lap_trac(finest_level+1, nullptr);
   Vector< MultiFab* > enthalpy_RHS(finest_level+1, nullptr);
+  Vector< MultiFab* > lap_T(finest_level+1, nullptr);
   Vector< MultiFab* > species_RHS(finest_level+1, nullptr);
+  Vector< MultiFab* > lap_X(finest_level+1, nullptr);
 
   for (int lev = 0; lev <= finest_level; lev++)
   {
@@ -98,24 +100,29 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
     ro_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
     divtau[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-    trac_RHS[lev]   = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
+    lap_trac[lev]   = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
     enthalpy_RHS[lev]   = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+    lap_T[lev]   = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
 
     conv_u[lev]->setVal(0.0);
     conv_s[lev]->setVal(0.0);
     ro_RHS[lev]->setVal(0.0);
     divtau[lev]->setVal(0.0);
-    trac_RHS[lev]->setVal(0.0);
+    lap_trac[lev]->setVal(0.0);
     enthalpy_RHS[lev]->setVal(0.0);
+    lap_T[lev]->setVal(0.0);
 
     if (advect_fluid_species) {
       conv_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0,
           MFInfo(), *ebfactory[lev]);
       species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0,
           MFInfo(), *ebfactory[lev]);
+      lap_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0,
+          MFInfo(), *ebfactory[lev]);
 
       conv_X[lev]->setVal(0.0);
       species_RHS[lev]->setVal(0.0);
+      lap_X[lev]->setVal(0.0);
     }
   }
 
@@ -126,8 +133,8 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     bool proj_2 = false;
 
-    mfix_apply_predictor(conv_u, conv_s, conv_X, ro_RHS, divtau, trac_RHS,
-        enthalpy_RHS, species_RHS, time, dt, dt, proj_2);
+    mfix_apply_predictor(conv_u, conv_s, conv_X, ro_RHS, divtau, lap_trac,
+        enthalpy_RHS, lap_T, species_RHS, lap_X, time, dt, dt, proj_2);
 
     // Reset any quantities which might have been updated
     for (int lev = 0; lev <= finest_level; lev++)
@@ -186,12 +193,14 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
      delete conv_s[lev];
      delete ro_RHS[lev];
      delete divtau[lev];
-     delete trac_RHS[lev];
+     delete lap_trac[lev];
      delete enthalpy_RHS[lev];
+     delete lap_T[lev];
 
      if (advect_fluid_species) {
        delete conv_X[lev];
        delete species_RHS[lev];
+       delete lap_X[lev];
      }
   }
 }

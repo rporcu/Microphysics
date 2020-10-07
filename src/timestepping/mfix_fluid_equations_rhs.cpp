@@ -27,6 +27,7 @@ mfix::mfix_density_rhs (Vector< MultiFab* > const& rhs,
 void
 mfix::mfix_enthalpy_rhs (const bool explicit_diffusion,
                          Vector< MultiFab* > const& rhs,
+                         Vector< MultiFab* > const& lap_T,
                          Vector< MultiFab* > const& T_g,
                          Vector< MultiFab* > const& ep_g,
                          Vector< MultiFab* > const& ro_g,
@@ -37,11 +38,14 @@ mfix::mfix_enthalpy_rhs (const bool explicit_diffusion,
                          Vector< MultiFab* > const& D_gk,
                          Vector< MultiFab* > const& h_gk)
 {
+  for (int lev = 0; lev <= finest_level; lev++)
+    rhs[lev]->setVal(0.);
+
   if (explicit_diffusion) {
-    diffusion_op->ComputeLapT(rhs, T_g, ep_g, k_g, T_g_on_eb, k_g_on_eb);
+    diffusion_op->ComputeLapT(lap_T, T_g, ep_g, k_g, T_g_on_eb, k_g_on_eb);
 
     for (int lev = 0; lev <= finest_level; lev++)
-      EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
+      EB_set_covered(*lap_T[lev], 0, lap_T[lev]->nComp(), lap_T[lev]->nGrow(), 0.);
   }
 
   if (FLUID::is_a_mixture)
@@ -80,17 +84,17 @@ mfix::mfix_enthalpy_rhs (const bool explicit_diffusion,
 
 void
 mfix::mfix_scalar_rhs (const bool explicit_diffusion,
-                       Vector< MultiFab* > const& rhs,
+                       Vector< MultiFab* > const& lap_trac,
                        Vector< MultiFab* > const& trac,
                        Vector< MultiFab* > const& ep_g,
                        Vector< MultiFab* > const& ro_g,
                        const Vector<Real>& mu_s_in)
 {
   if (explicit_diffusion) {
-    diffusion_op->ComputeLapS(rhs, trac, ro_g, ep_g, mu_s_in);
+    diffusion_op->ComputeLapS(lap_trac, trac, ro_g, ep_g, mu_s_in);
 
     for (int lev = 0; lev <= finest_level; lev++)
-      EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
+      EB_set_covered(*lap_trac[lev], 0, lap_trac[lev]->nComp(), lap_trac[lev]->nGrow(), 0.);
   }
 }
 
@@ -98,17 +102,21 @@ mfix::mfix_scalar_rhs (const bool explicit_diffusion,
 void
 mfix::mfix_species_X_rhs (const bool explicit_diffusion,
                           Vector< MultiFab* > const& rhs,
+                          Vector< MultiFab* > const& lap_X,
                           Vector< MultiFab* > const& X_gk,
                           Vector< MultiFab* > const& ep_g,
                           Vector< MultiFab* > const& ro_g,
                           Vector< MultiFab* > const& D_gk,
                           Vector< MultiFab* > const& ro_gk_txfr)
 {
+  for (int lev = 0; lev <= finest_level; lev++)
+    rhs[lev]->setVal(0.);
+
   if (explicit_diffusion) {
-    diffusion_op->ComputeLapX(rhs, X_gk, ro_g, ep_g, D_gk);
+    diffusion_op->ComputeLapX(lap_X, X_gk, ro_g, ep_g, D_gk);
 
     for (int lev = 0; lev <= finest_level; lev++)
-      EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
+      EB_set_covered(*lap_X[lev], 0, lap_X[lev]->nComp(), lap_X[lev]->nGrow(), 0.);
   }
 
   if (solve_reactions) {
