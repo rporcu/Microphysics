@@ -45,9 +45,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                             Vector< MultiFab* >& conv_X_old,
                             Vector< MultiFab* >& ro_RHS_old,
                             Vector< MultiFab* >& divtau_old,
-                            Vector< MultiFab* >& trac_RHS_old,
+                            Vector< MultiFab* >& lap_trac_old,
                             Vector< MultiFab* >& enthalpy_RHS_old,
+                            Vector< MultiFab* >& lap_T_old,
                             Vector< MultiFab* >& species_RHS_old,
+                            Vector< MultiFab* >& lap_X_old,
                             Real time,
                             Real l_dt,
                             Real l_prev_dt,
@@ -104,16 +106,16 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       for (int lev = 0; lev <= finest_level; lev++)
           enthalpy_RHS_old[lev]->setVal(0.);
 
-      mfix_enthalpy_rhs(explicit_diffusion_pred, enthalpy_RHS_old,
+      mfix_enthalpy_rhs(explicit_diffusion_pred, enthalpy_RHS_old, lap_T_old,
           get_T_g_old(), get_ep_g(), get_ro_g_old(), get_k_g(), get_T_g_on_eb(),
           get_k_g_on_eb(), get_X_gk_old(), get_D_gk(), get_h_gk());
     }
 
     if (advect_tracer) {
       for (int lev = 0; lev <= finest_level; lev++)
-          trac_RHS_old[lev]->setVal(0.);
+          lap_trac_old[lev]->setVal(0.);
 
-      mfix_scalar_rhs(explicit_diffusion_pred, trac_RHS_old, get_trac_old(),
+      mfix_scalar_rhs(explicit_diffusion_pred, lap_trac_old, get_trac_old(),
           get_ep_g(), get_ro_g_old(), mu_s);
     }
 
@@ -122,7 +124,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       for (int lev = 0; lev <= finest_level; lev++)
         species_RHS_old[lev]->setVal(0.);
 
-      mfix_species_X_rhs(explicit_diffusion_pred, species_RHS_old,
+      mfix_species_X_rhs(explicit_diffusion_pred, species_RHS_old, lap_X_old,
           get_X_gk_old(), get_ep_g(), get_ro_g_old(), get_D_gk(), get_ro_gk_txfr());
     }
 
@@ -189,6 +191,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 Array4<Real      > const& T_g_n   = ld.T_g->array(mfi);
                 Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
                 Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
+                Array4<Real const> const& lap_T_o = lap_T_old[lev]->const_array(mfi);
                 Array4<Real const> const& h_RHS_o = enthalpy_RHS_old[lev]->const_array(mfi);
                 Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
                 Array4<Real const> const& cp_g    = ld.cp_g->const_array(mfi);
@@ -197,7 +200,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 // explicit_diffusion_pred is handled inside RHS computation
                 // no need to separate computation in here anymore
                 amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_n,rho_o,rho_n,h_RHS_o,
-                    epg,cp_g,dhdt_o,l_dt]
+                    epg,cp_g,dhdt_o,l_dt,lap_T_o,explicit_diffusion_pred]
                   AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
                     int conv_comp = 1;
@@ -207,6 +210,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
                     Real h_g = num * h_g_o(i,j,k) + l_dt * dhdt_o(i,j,k,conv_comp)
                                                   + l_dt * h_RHS_o(i,j,k);
+
+                    if (explicit_diffusion_pred)
+                      h_g += l_dt * lap_T_o(i,j,k);
 
                     h_g_n(i,j,k) = h_g * denom;
 
@@ -235,14 +241,14 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 Array4<Real const> const& tra_o     = ld.trac_o->const_array(mfi);
                 Array4<Real const> const& rho_o     = ld.ro_go->const_array(mfi);
                 Array4<Real const> const& rho_n     = ld.ro_g->const_array(mfi);
-                Array4<Real const> const& tra_RHS_o = trac_RHS_old[lev]->const_array(mfi);
+                Array4<Real const> const& lap_tra_o = lap_trac_old[lev]->const_array(mfi);
                 Array4<Real const> const& epg       = ld.ep_g->const_array(mfi);
                 Array4<Real const> const& dtdt_o    = conv_s_old[lev]->const_array(mfi);
 
                 // explicit_diffusion_pred is handled inside RHS computation
                 // no need to separate computation in here anymore
-                amrex::ParallelFor(bx, [tra_n,tra_o,rho_o,rho_n,tra_RHS_o,epg,
-                    dtdt_o,l_ntrac,l_dt]
+                amrex::ParallelFor(bx, [tra_n,tra_o,rho_o,rho_n,lap_tra_o,epg,
+                    dtdt_o,l_ntrac,l_dt,explicit_diffusion_pred]
                   AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
                   for (int n = 0; n < l_ntrac; ++n)
@@ -252,7 +258,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                     const Real epg_loc = epg(i,j,k);
 
                     Real tra = (rho_o(i,j,k)*epg_loc)*tra_o(i,j,k,n);
-                    tra += l_dt * (dtdt_o(i,j,k,conv_comp) + tra_RHS_o(i,j,k,n));
+                    tra += l_dt * dtdt_o(i,j,k,conv_comp);
+
+                    if (explicit_diffusion_pred)
+                      tra += l_dt * lap_tra_o(i,j,k,n);
+
                     tra /= (rho_n(i,j,k)*epg_loc);
 
                     tra_n(i,j,k,n) = tra;
@@ -284,12 +294,13 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
           Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
           Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
           Array4<Real const> const& dXdt_o  = conv_X_old[lev]->const_array(mfi);
+          Array4<Real const> const& lap_X_o = lap_X_old[lev]->const_array(mfi);
           Array4<Real const> const& X_RHS_o = species_RHS_old[lev]->const_array(mfi);
           
           // explicit_diffusion_pred is handled inside RHS computation
           // no need to separate computation in here anymore
-          ParallelFor(bx, [nspecies_g,epg,rho_o,rho_n,X_gk_o,dXdt_o,
-              l_dt,X_gk_n,X_RHS_o]
+          ParallelFor(bx, [nspecies_g,epg,rho_o,rho_n,X_gk_o,dXdt_o,lap_X_o,
+              l_dt,X_gk_n,X_RHS_o,explicit_diffusion_pred]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             const Real num =         (rho_o(i,j,k) * epg(i,j,k));
@@ -299,6 +310,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
             {
               Real X_gk = num * X_gk_o(i,j,k,n) + l_dt * dXdt_o(i,j,k,n)
                                                 + l_dt * X_RHS_o(i,j,k,n);
+
+              if (explicit_diffusion_pred)
+                X_gk += l_dt * lap_X_o(i,j,k,n);
 
               X_gk_n(i,j,k,n) = X_gk * denom;
             }
@@ -335,62 +349,37 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
          const RealVect gp0_dev(gp0);
          const RealVect gravity_dev(gravity);
 
-         if (explicit_diffusion_pred)
+         amrex::ParallelFor(bx, [epg,vel_o,dudt_o,divtau_o,gp0_dev,gravity_dev,
+             gp,l_dt,vel_n,rho_nph,explicit_diffusion_pred]
+           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
-           amrex::ParallelFor(bx, [epg,vel_o,dudt_o,divtau_o,gp0_dev,gravity_dev,
-               gp,l_dt,vel_n,rho_nph]
-             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+           const Real epg_loc = epg(i,j,k);
+
+           Real vel_nx = epg_loc*vel_o(i,j,k,0) + l_dt*dudt_o(i,j,k,0);
+           Real vel_ny = epg_loc*vel_o(i,j,k,1) + l_dt*dudt_o(i,j,k,1);
+           Real vel_nz = epg_loc*vel_o(i,j,k,2) + l_dt*dudt_o(i,j,k,2);
+
+           vel_nx /= epg_loc;
+           vel_ny /= epg_loc;
+           vel_nz /= epg_loc;
+
+           if (explicit_diffusion_pred)
            {
-             const Real epg_loc = epg(i,j,k);
-
-             Real vel_nx = epg_loc*vel_o(i,j,k,0) + l_dt*dudt_o(i,j,k,0);
-             Real vel_ny = epg_loc*vel_o(i,j,k,1) + l_dt*dudt_o(i,j,k,1);
-             Real vel_nz = epg_loc*vel_o(i,j,k,2) + l_dt*dudt_o(i,j,k,2);
-
-             vel_nx /= epg_loc;
-             vel_ny /= epg_loc;
-             vel_nz /= epg_loc;
-
              vel_nx += l_dt * divtau_o(i,j,k,0);
              vel_ny += l_dt * divtau_o(i,j,k,1);
              vel_nz += l_dt * divtau_o(i,j,k,2);
+           }
 
-             Real inv_dens = 1.0 / rho_nph(i,j,k);
-             vel_nx += l_dt * (gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
-             vel_ny += l_dt * (gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
-             vel_nz += l_dt * (gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
+           Real inv_dens = 1.0 / rho_nph(i,j,k);
+           vel_nx += l_dt * (gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
+           vel_ny += l_dt * (gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
+           vel_nz += l_dt * (gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
 
-             vel_n(i,j,k,0) = vel_nx;
-             vel_n(i,j,k,1) = vel_ny;
-             vel_n(i,j,k,2) = vel_nz;
-           });
+           vel_n(i,j,k,0) = vel_nx;
+           vel_n(i,j,k,1) = vel_ny;
+           vel_n(i,j,k,2) = vel_nz;
+         });
 
-         } else { // Fully implicit
-
-           amrex::ParallelFor(bx, [epg,vel_o,dudt_o,gravity_dev,gp,gp0_dev,l_dt,
-               vel_n,rho_nph]
-             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-           {
-             const Real epg_loc = epg(i,j,k);
-
-             Real vel_nx = epg_loc*vel_o(i,j,k,0) + l_dt * dudt_o(i,j,k,0);
-             Real vel_ny = epg_loc*vel_o(i,j,k,1) + l_dt * dudt_o(i,j,k,1);
-             Real vel_nz = epg_loc*vel_o(i,j,k,2) + l_dt * dudt_o(i,j,k,2);
-
-             vel_nx /= epg_loc;
-             vel_ny /= epg_loc;
-             vel_nz /= epg_loc;
-
-             Real inv_dens = 1.0 / rho_nph(i,j,k);
-             vel_nx += l_dt * (gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
-             vel_ny += l_dt * (gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
-             vel_nz += l_dt * (gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
-
-             vel_n(i,j,k,0) = vel_nx;
-             vel_n(i,j,k,1) = vel_ny;
-             vel_n(i,j,k,2) = vel_nz;
-           });
-         }
        } // mfi
     } // lev
 

@@ -103,47 +103,43 @@ mfix::EvolveFluid (int nstep,
 
     // Create temporary multifabs to hold the old-time conv and vel_RHS
     //    so we don't have to re-compute them in the corrector
-    Vector< MultiFab* > conv_u_old;
-    Vector< MultiFab* > conv_s_old;
-    Vector< MultiFab* > conv_X_old;
-    Vector< MultiFab* > ro_RHS_old;
-    Vector< MultiFab* > divtau_old;
-    Vector< MultiFab* > trac_RHS_old;
-    Vector< MultiFab* > enthalpy_RHS_old;
-    Vector< MultiFab* > species_RHS_old;
-
-    conv_u_old.resize(finest_level+1);
-    conv_s_old.resize(finest_level+1);
-    conv_X_old.resize(finest_level+1);
-    ro_RHS_old.resize(finest_level+1);
-    divtau_old.resize(finest_level+1);
-    trac_RHS_old.resize(finest_level+1);
-    enthalpy_RHS_old.resize(finest_level+1);
-    species_RHS_old.resize(finest_level+1);
+    Vector< MultiFab* > conv_s_old(finest_level+1);
+    Vector< MultiFab* > conv_X_old(finest_level+1);
+    Vector< MultiFab* > conv_u_old(finest_level+1);
+    Vector< MultiFab* > lap_T_old(finest_level+1);
+    Vector< MultiFab* > lap_X_old(finest_level+1);
+    Vector< MultiFab* > lap_trac_old(finest_level+1);
+    Vector< MultiFab* > divtau_old(finest_level+1);
+    Vector< MultiFab* > ro_RHS_old(finest_level+1);
+    Vector< MultiFab* > enthalpy_RHS_old(finest_level+1);
+    Vector< MultiFab* > species_RHS_old(finest_level+1);
 
     for (int lev = 0; lev <= finest_level; lev++)
     {
-       conv_u_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
        // 3 components since we have density, tracer and enthalpy
        conv_s_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-       ro_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+       conv_u_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+       lap_T_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+       lap_trac_old[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
        divtau_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-       trac_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
+       ro_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
        enthalpy_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
 
-       conv_u_old[lev]->setVal(0.0);
        conv_s_old[lev]->setVal(0.0);
-       ro_RHS_old[lev]->setVal(0.0);
+       conv_u_old[lev]->setVal(0.0);
+       lap_T_old[lev]->setVal(0.0);
+       lap_trac_old[lev]->setVal(0.0);
        divtau_old[lev]->setVal(0.0);
-       trac_RHS_old[lev]->setVal(0.0);
+       ro_RHS_old[lev]->setVal(0.0);
        enthalpy_RHS_old[lev]->setVal(0.0);
 
        if (advect_fluid_species) {
-         conv_X_old[lev] = new MultiFab(grids[lev], dmap[lev],
-             FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
-         species_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
-             0, MFInfo(), *ebfactory[lev]);
+         conv_X_old[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
+         lap_X_old[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
+         species_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
+
          conv_X_old[lev]->setVal(0.0);
+         lap_X_old[lev]->setVal(0.0);
          species_RHS_old[lev]->setVal(0.0);
        }
     }
@@ -234,8 +230,8 @@ mfix::EvolveFluid (int nstep,
         // Predictor step
         bool proj_2_pred = true;
         mfix_apply_predictor(conv_u_old, conv_s_old, conv_X_old, ro_RHS_old,
-            divtau_old, trac_RHS_old, enthalpy_RHS_old, species_RHS_old, time,
-            dt, prev_dt, proj_2_pred);
+            divtau_old, lap_trac_old, lap_T_old, enthalpy_RHS_old, species_RHS_old,
+            lap_X_old, time, dt, prev_dt, proj_2_pred);
 
         // Calculate drag coefficient
         if (DEM::solve or PIC::solve)
@@ -256,8 +252,8 @@ mfix::EvolveFluid (int nstep,
         // Corrector step
         if (!steady_state) {
            mfix_apply_corrector(conv_u_old, conv_s_old, conv_X_old, ro_RHS_old,
-               divtau_old, trac_RHS_old, enthalpy_RHS_old, species_RHS_old,
-               time, dt, prev_dt, proj_2_corr);
+               divtau_old, lap_trac_old, lap_T_old, enthalpy_RHS_old, species_RHS_old,
+               lap_X_old, time, dt, prev_dt, proj_2_corr);
         }
 
         //
@@ -297,11 +293,13 @@ mfix::EvolveFluid (int nstep,
        delete conv_s_old[lev];
        delete ro_RHS_old[lev];
        delete divtau_old[lev];
-       delete trac_RHS_old[lev];
+       delete lap_trac_old[lev];
        delete enthalpy_RHS_old[lev];
+       delete lap_T_old[lev];
 
        if (advect_fluid_species) {
          delete conv_X_old[lev];
+         delete lap_X_old[lev];
          delete species_RHS_old[lev];
        }
     }
