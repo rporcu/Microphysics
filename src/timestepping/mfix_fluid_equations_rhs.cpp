@@ -78,6 +78,11 @@ mfix::mfix_enthalpy_rhs (const bool explicit_diffusion,
 
     for (int lev = 0; lev <= finest_level; lev++)
       EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
+
+    for (int lev = 0; lev <= finest_level; lev++) {
+      delete h_gk_D_gk[lev];
+      delete auxiliary[lev];
+    }
   }
 }
 
