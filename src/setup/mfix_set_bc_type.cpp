@@ -291,39 +291,47 @@ mfix::mfix_set_bc_type (int lev)
       }
     }
 
+    m_h_bc_u_g.resize(bc.size());
+    m_h_bc_v_g.resize(bc.size());
+    m_h_bc_w_g.resize(bc.size());
+    m_h_bc_ep_g.resize(bc.size());
+    m_h_bc_p_g.resize(bc.size());
+    m_h_bc_t_g.resize(bc.size());
+    m_h_bc_X_gk.resize(FLUID::nspecies, Vector<Real>(bc.size()));
+
     for(unsigned bcv(0); bcv < bc.size(); ++bcv)
     {
 
       if ( FLUID::solve and bc[bcv].type == minf_ ) {
 
-        m_bc_u_g[bcv] = bc[bcv].fluid.velocity[0];
-        m_bc_v_g[bcv] = bc[bcv].fluid.velocity[1];
-        m_bc_w_g[bcv] = bc[bcv].fluid.velocity[2];
+        m_h_bc_u_g[bcv] = bc[bcv].fluid.velocity[0];
+        m_h_bc_v_g[bcv] = bc[bcv].fluid.velocity[1];
+        m_h_bc_w_g[bcv] = bc[bcv].fluid.velocity[2];
 
       } else {
 
-        m_bc_u_g[bcv] = 1e50;
-        m_bc_v_g[bcv] = 1e50;
-        m_bc_w_g[bcv] = 1e50;
+        m_h_bc_u_g[bcv] = 1e50;
+        m_h_bc_v_g[bcv] = 1e50;
+        m_h_bc_w_g[bcv] = 1e50;
 
       }
 
       if ( FLUID::solve ) {
-        m_bc_ep_g[bcv] = bc[bcv].fluid.volfrac;
-        m_bc_p_g[bcv]  = bc[bcv].fluid.pressure;
+        m_h_bc_ep_g[bcv] = bc[bcv].fluid.volfrac;
+        m_h_bc_p_g[bcv]  = bc[bcv].fluid.pressure;
 
       } else {
-        m_bc_ep_g[bcv] = 1e50;
-        m_bc_p_g[bcv]  = 1e50;
+        m_h_bc_ep_g[bcv] = 1e50;
+        m_h_bc_p_g[bcv]  = 1e50;
       }
 
       // Fluid temperature
       if ( FLUID::solve and advect_enthalpy ) {
         if ( bc[bcv].type == minf_ or bc[bcv].type == pinf_ ) {
-          m_bc_t_g[bcv]  = bc[bcv].fluid.temperature;
+          m_h_bc_t_g[bcv]  = bc[bcv].fluid.temperature;
 
         } else {
-          m_bc_t_g[bcv]  = 1e50;
+          m_h_bc_t_g[bcv]  = 1e50;
         }
       }
 
@@ -331,14 +339,30 @@ mfix::mfix_set_bc_type (int lev)
       if ( FLUID::solve and advect_fluid_species) {
         if ( bc[bcv].type == minf_ or bc[bcv].type == pinf_ ) {
           for (int n(0); n < FLUID::nspecies; n++) {
-            m_bc_X_gk[n][bcv] = bc[bcv].fluid.species[n].mass_fraction;
+            m_h_bc_X_gk[n][bcv] = bc[bcv].fluid.species[n].mass_fraction;
           }
         }
         else {
           for (int n(0); n < FLUID::nspecies; n++)
-            m_bc_X_gk[n][bcv] = 1e50;
+            m_h_bc_X_gk[n][bcv] = 1e50;
         }
       }
 
     }
+
+    Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_u_g.begin(), m_h_bc_u_g.end(), m_bc_u_g.begin());
+    Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_v_g.begin(), m_h_bc_v_g.end(), m_bc_v_g.begin());
+    Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_w_g.begin(), m_h_bc_w_g.end(), m_bc_w_g.begin());
+    Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_p_g.begin(), m_h_bc_p_g.end(), m_bc_p_g.begin());
+    Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_ep_g.begin(), m_h_bc_ep_g.end(), m_bc_ep_g.begin());
+    if ( FLUID::solve and advect_enthalpy ) {
+        Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_t_g.begin(), m_h_bc_t_g.end(), m_bc_t_g.begin());
+    }
+    if ( FLUID::solve and advect_fluid_species) {
+        for (int n = 0; n < FLUID::nspecies; ++n) {
+            Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk[n].begin(), m_h_bc_X_gk[n].end(),
+                           m_bc_X_gk[n].begin());
+        }
+    }
+    Gpu::synchronize();
 }

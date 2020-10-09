@@ -102,21 +102,21 @@ class ParticlesGenerator {
                           const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo,
                           const bool fix_seed);
 
-    void nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
+    void nor_rno (amrex::Gpu::DeviceVector<amrex::Real>& dp,
                   const amrex::Real mean,
                   const amrex::Real sigma,
                   const amrex::Real dp_min,
                   const amrex::Real dp_max);
 
-    void uni_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
+    void uni_rno (amrex::Gpu::DeviceVector<amrex::Real>& dp,
                   const amrex::Real dp_min,
                   const amrex::Real dp_max);
 
     void grow_pdata (const int gsize);
 
   private:
-    amrex::Gpu::ManagedVector<amrex::Real> m_rdata;
-    amrex::Gpu::ManagedVector<int> m_idata;
+    amrex::Gpu::DeviceVector<amrex::Real> m_rdata;
+    amrex::Gpu::DeviceVector<int> m_idata;
 };
 
 #endif

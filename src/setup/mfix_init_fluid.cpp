@@ -354,12 +354,10 @@ void init_fluid_parameters (const Box& bx,
 
     Array4<const Real> const& X_gk = ld.X_gk->const_array(mfi);
 
-    Gpu::ManagedVector< Real > MW_gk0_managed(nspecies_g);
+    Gpu::DeviceVector< Real > MW_gk0_d(nspecies_g);
+    Gpu::copyAsync(Gpu::hostToDevice, FLUID::MW_gk0.begin(), FLUID::MW_gk0.end(), MW_gk0_d.begin());
 
-    for (int n(0); n < nspecies_g; n++)
-      MW_gk0_managed[n] = FLUID::MW_gk0[n];
-
-    Real* p_MW_gk0 = MW_gk0_managed.data();
+    Real* p_MW_gk0 = MW_gk0_d.data();
 
     // Set initial species molecular weights and fluid molecular weight
     ParallelFor(bx, [nspecies_g,X_gk,MW_g,p_MW_gk0]
@@ -702,12 +700,15 @@ void set_ic_species_g (const Box& sbx,
                  i_w, i_e, j_s, j_n, k_b, k_t);
 
     // Get the initial condition values
-    Gpu::ManagedVector< Real> mass_fractions(nspecies_g, 0);
+    Gpu::DeviceVector< Real> mass_fractions_d(nspecies_g);
+    Gpu::HostVector  < Real> mass_fractions_h(nspecies_g);
+    for (int n(0); n < nspecies_g; n++) {
+      mass_fractions_h[n] = IC::ic[icv].fluid.species[n].mass_fraction;
+    }
+    Gpu::copyAsync(Gpu::hostToDevice, mass_fractions_h.begin(), mass_fractions_h.end(),
+                   mass_fractions_d.begin());
 
-    for (int n(0); n < nspecies_g; n++)
-      mass_fractions[n] = IC::ic[icv].fluid.species[n].mass_fraction;
-
-    Real* p_mass_fractions = mass_fractions.data();
+    Real* p_mass_fractions = mass_fractions_d.data();
 
     const int istart = std::max(slo[0], i_w);
     const int jstart = std::max(slo[1], j_s);

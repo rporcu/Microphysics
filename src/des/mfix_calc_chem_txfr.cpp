@@ -48,81 +48,118 @@ mfix::mfix_calc_chem_txfr (const Real time,
   // Solid species data
   const int nspecies_s = SOLIDS::nspecies;
 
-  Gpu::ManagedVector< int > mng_species_id_s(nspecies_s);
-  Gpu::ManagedVector< Real > mng_MW_sn(nspecies_s);
-
-  for (int n(0); n < nspecies_s; n++) {
-    mng_species_id_s[n] = SOLIDS::species_id[n];
-    mng_MW_sn[n] = SOLIDS::MW_sn0[n];
-  }
-
-  int* p_species_id_s = mng_species_id_s.data();
-  Real* p_MW_sn = mng_MW_sn.data();
+  Gpu::DeviceVector< int > d_species_id_s(nspecies_s);
+  Gpu::DeviceVector< Real > d_MW_sn(nspecies_s);
+  Gpu::copyAsync(Gpu::hostToDevice, SOLIDS::species_id.begin(), SOLIDS::species_id.end(),
+                 d_species_id_s.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, SOLIDS::MW_sn0.begin(), SOLIDS::MW_sn0.end(),
+                 d_MW_sn.begin());
+  int* p_species_id_s = d_species_id_s.data();
+  Real* p_MW_sn = d_MW_sn.data();
 
   // Fluid species data
   const int nspecies_g = FLUID::nspecies;
 
-  Gpu::ManagedVector< int > mng_species_id_g(nspecies_g);
-  Gpu::ManagedVector< Real > mng_MW_gk(nspecies_g);
-
-  for (int n(0); n < nspecies_g; n++) {
-    mng_species_id_g[n] = FLUID::species_id[n];
-    mng_MW_gk[n] = FLUID::MW_gk0[n];
-  }
-
-  int* p_species_id_g = mng_species_id_g.data();
-  Real* p_MW_gk = mng_MW_gk.data();
+  Gpu::DeviceVector< int > d_species_id_g(nspecies_g);
+  Gpu::DeviceVector< Real > d_MW_gk(nspecies_g);
+  Gpu::copyAsync(Gpu::hostToDevice, FLUID::species_id.begin(), FLUID::species_id.end(),
+                 d_species_id_g.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, FLUID::MW_gk0.begin(), FLUID::MW_gk0.end(),
+                 d_MW_gk.begin());
+  int* p_species_id_g = d_species_id_g.data();
+  Real* p_MW_gk = d_MW_gk.data();
 
   // Reactions data
   const int nreactions = REACTIONS::nreactions;
 
-  Gpu::ManagedVector< int > mng_types(nreactions);
-  Gpu::ManagedVector< const int* > mng_phases(nreactions);
-  Gpu::ManagedVector< int > mng_nphases(nreactions);
+  Gpu::DeviceVector< int > d_types(nreactions);
+  Gpu::HostVector  < int > h_types(nreactions);
+  Gpu::DeviceVector< const int* > d_phases(nreactions);
+  Gpu::HostVector  < const int* > h_phases(nreactions);
+  Gpu::DeviceVector< int > d_nphases(nreactions);
+  Gpu::HostVector  < int > h_nphases(nreactions);
 
   for (int q(0); q < nreactions; q++) {
-    mng_types[q] = m_chemical_reactions[q]->m_reaction_type;
-    mng_phases[q] = m_chemical_reactions[q]->m_phases.data();
-    mng_nphases[q] = m_chemical_reactions[q]->m_phases.size();
+    h_types[q] = m_chemical_reactions[q]->m_reaction_type;
+    h_phases[q] = m_chemical_reactions[q]->m_phases.data();
+    h_nphases[q] = m_chemical_reactions[q]->m_phases.size();
   }
 
-  int* p_types = mng_types.data();
-  const int** p_phases = mng_phases.data();
-  int* p_nphases = mng_nphases.data();
+  Gpu::copyAsync(Gpu::hostToDevice, h_types.begin(), h_types.end(), d_types.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, h_phases.begin(), h_phases.end(), d_phases.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, h_nphases.begin(), h_nphases.end(), d_nphases.begin());
 
-  Gpu::ManagedVector< int > mng_nreactants(nreactions);
-  Gpu::ManagedVector< const int* > mng_reactants_id(nreactions);
-  Gpu::ManagedVector< const Real* > mng_reactants_coeffs(nreactions);
-  Gpu::ManagedVector< const int* > mng_reactants_phases(nreactions);
+  int* p_types = d_types.data();
+  const int** p_phases = d_phases.data();
+  int* p_nphases = d_nphases.data();
+
+  Gpu::DeviceVector< int > d_nreactants(nreactions);
+  Gpu::HostVector  < int > h_nreactants(nreactions);
+  Gpu::DeviceVector< const int* > d_reactants_id(nreactions);
+  Gpu::HostVector  < const int* > h_reactants_id(nreactions);
+  Gpu::DeviceVector< const Real* > d_reactants_coeffs(nreactions);
+  Gpu::HostVector  < const Real* > h_reactants_coeffs(nreactions);
+  Gpu::DeviceVector< const int* > d_reactants_phases(nreactions);
+  Gpu::HostVector  < const int* > h_reactants_phases(nreactions);
 
   for (int q(0); q < nreactions; q++) {
-    mng_nreactants[q] = m_chemical_reactions[q]->m_reactants.size();
-    mng_reactants_id[q] = m_chemical_reactions[q]->m_reactants_id.data();
-    mng_reactants_coeffs[q] = m_chemical_reactions[q]->m_reactants_coeffs.data();
-    mng_reactants_phases[q] = m_chemical_reactions[q]->m_reactants_phases.data();
+    h_nreactants[q] = m_chemical_reactions[q]->m_reactants.size();
+    h_reactants_id[q] = m_chemical_reactions[q]->m_reactants_id.data();
+    h_reactants_coeffs[q] = m_chemical_reactions[q]->m_reactants_coeffs.data();
+    h_reactants_phases[q] = m_chemical_reactions[q]->m_reactants_phases.data();
   }
 
-  int* p_nreactants = mng_nreactants.data();
-  const int** p_reactants_id = mng_reactants_id.data();
-  const Real** p_reactants_coeffs = mng_reactants_coeffs.data();
-  const int** p_reactants_phases = mng_reactants_phases.data();
+  Gpu::copyAsync(Gpu::hostToDevice,
+                 h_nreactants.begin(), h_nreactants.end(),
+                 d_nreactants.begin());
+  Gpu::copyAsync(Gpu::hostToDevice,
+                 h_reactants_id.begin(), h_reactants_id.end(),
+                 d_reactants_id.begin());
+  Gpu::copyAsync(Gpu::hostToDevice,
+                 h_reactants_coeffs.begin(), h_reactants_coeffs.end(),
+                 d_reactants_coeffs.begin());
+  Gpu::copyAsync(Gpu::hostToDevice,
+                 h_reactants_phases.begin(), h_reactants_phases.end(),
+                 d_reactants_phases.begin());
 
-  Gpu::ManagedVector< int > mng_nproducts(nreactions);
-  Gpu::ManagedVector< const int* > mng_products_id(nreactions);
-  Gpu::ManagedVector< const Real* > mng_products_coeffs(nreactions);
-  Gpu::ManagedVector< const int* > mng_products_phases(nreactions);
+  int* p_nreactants = d_nreactants.data();
+  const int** p_reactants_id = d_reactants_id.data();
+  const Real** p_reactants_coeffs = d_reactants_coeffs.data();
+  const int** p_reactants_phases = d_reactants_phases.data();
+
+  Gpu::DeviceVector< int > d_nproducts(nreactions);
+  Gpu::HostVector  < int > h_nproducts(nreactions);
+  Gpu::DeviceVector< const int* > d_products_id(nreactions);
+  Gpu::HostVector  < const int* > h_products_id(nreactions);
+  Gpu::DeviceVector< const Real* > d_products_coeffs(nreactions);
+  Gpu::HostVector  < const Real* > h_products_coeffs(nreactions);
+  Gpu::DeviceVector< const int* > d_products_phases(nreactions);
+  Gpu::HostVector  < const int* > h_products_phases(nreactions);
 
   for (int q(0); q < nreactions; q++) {
-    mng_nproducts[q] = m_chemical_reactions[q]->m_products.size();
-    mng_products_id[q] = m_chemical_reactions[q]->m_products_id.data();
-    mng_products_coeffs[q] = m_chemical_reactions[q]->m_products_coeffs.data();
-    mng_products_phases[q] = m_chemical_reactions[q]->m_products_phases.data();
+    h_nproducts[q] = m_chemical_reactions[q]->m_products.size();
+    h_products_id[q] = m_chemical_reactions[q]->m_products_id.data();
+    h_products_coeffs[q] = m_chemical_reactions[q]->m_products_coeffs.data();
+    h_products_phases[q] = m_chemical_reactions[q]->m_products_phases.data();
   }
 
-  int* p_nproducts = mng_nproducts.data();
-  const int** p_products_id = mng_products_id.data();
-  const Real** p_products_coeffs = mng_products_coeffs.data();
-  const int** p_products_phases = mng_products_phases.data();
+  Gpu::copyAsync(Gpu::hostToDevice,
+                 h_nproducts.begin(), h_nproducts.end(),
+                 d_nproducts.begin());
+  Gpu::copyAsync(Gpu::hostToDevice,
+                 h_products_id.begin(), h_products_id.end(),
+                 d_products_id.begin());
+  Gpu::copyAsync(Gpu::hostToDevice,
+                 h_products_coeffs.begin(), h_products_coeffs.end(),
+                 d_products_coeffs.begin());
+  Gpu::copyAsync(Gpu::hostToDevice,
+                 h_products_phases.begin(), h_products_phases.end(),
+                 d_products_phases.begin());
+
+  int* p_nproducts = d_nproducts.data();
+  const int** p_products_id = d_products_id.data();
+  const Real** p_products_coeffs = d_products_coeffs.data();
+  const int** p_products_phases = d_products_phases.data();
 
   // Solid phase integer ID
   const int Solid = CHEMICALPHASE::Solid;
@@ -133,6 +170,8 @@ mfix::mfix_calc_chem_txfr (const Real time,
   const int idx_X = speciesData::X_sn*nspecies_s;
 
   const int idx_G = speciesData::count*nspecies_s + reactionsData::G_sn_pg_q*nreactions;
+
+  Gpu::synchronize();
 
   // START MFIX_CALC_CHEM_TRANSFER_COEFFS
   {

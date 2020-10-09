@@ -15,7 +15,7 @@ mfix::mfix_compute_slopes (int lev,
                            Vector< MultiFab* > const& yslopes_in,
                            Vector< MultiFab* > const& zslopes_in,
                            int slopes_comp,
-                           std::map<std::string, Gpu::ManagedVector<int>>& bc_types)
+                           std::map<std::string, Gpu::DeviceVector<int>>& bc_types)
 {
     BL_PROFILE("mfix::mfix_compute_slopes");
 

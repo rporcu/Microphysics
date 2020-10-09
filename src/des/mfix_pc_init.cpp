@@ -215,14 +215,17 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
 
   // Create a temporary copy of IC particle temperatures mapped
   // to the particle type.
-  Gpu::ManagedVector<Real> temperature_loc(SOLIDS::NMAX);
-  Gpu::ManagedVector<Real> cp0_loc(SOLIDS::NMAX);
+  Gpu::HostVector<Real> h_temperature_loc(SOLIDS::NMAX);
+  Gpu::HostVector<Real> h_cp0_loc(SOLIDS::NMAX);
   
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
   {
     for(int phase(0); phase<SOLIDS::names.size(); phase++) {
-      cp0_loc[phase] = SOLIDS::cp_p0[phase];
+      h_cp0_loc[phase] = SOLIDS::cp_p0[phase];
     }
+
+    Gpu::AsyncArray<Real> d_dcp0_loc(h_cp0_loc.data(), h_cp0_loc.size());
+    amrex::Real* p_cp0_loc = d_dcp0_loc.data();
 
     // Set the initial conditions.
     for(int icv(0); icv < IC::ic.size(); ++icv)
@@ -257,13 +260,13 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
       {
         for(int solid_type(0); solid_type<SOLIDS::names.size(); solid_type++) {
           // Initialize to zero
-          temperature_loc[solid_type] = 0.0;
+          h_temperature_loc[solid_type] = 0.0;
 
           // Loop through IC solids looking for match.
           for(int ics(0); ics < IC::ic[icv].solids.size(); ics++) {
             SOLIDS::SOLIDS_t ic_solid = IC::ic[icv].solids[ics];
             if(SOLIDS::names[solid_type] == ic_solid.name) {
-              temperature_loc[solid_type] = ic_solid.temperature;
+              h_temperature_loc[solid_type] = ic_solid.temperature;
             }
           }
         }
@@ -271,8 +274,8 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
         auto& particles = pti.GetArrayOfStructs();
         int np = pti.numParticles();
 
-        amrex::Real* p_temperature_loc = temperature_loc.data();
-        amrex::Real* p_cp0_loc = cp0_loc.data();
+        Gpu::AsyncArray<Real> d_temperature_loc(h_temperature_loc.data(), h_temperature_loc.size());
+        amrex::Real* p_temperature_loc = d_temperature_loc.data();
 
         auto particles_ptr = particles().dataPtr();
 
@@ -311,7 +314,7 @@ void MFIXParticleContainer::InitParticlesSpecies ()
 
   // Create a temporary copy of IC particle mass fractions mapped
   // to the particle type.
-  Gpu::ManagedVector<Real> mass_fractions(nspecies_s);
+  Gpu::HostVector<Real> h_mass_fractions(nspecies_s);
 
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
   {
@@ -365,12 +368,13 @@ void MFIXParticleContainer::InitParticlesSpecies ()
 
             if(SOLIDS::names[solid_type] == ic_solid.name) {
               for (int n_s(0); n_s < nspecies_s; n_s++) {
-                mass_fractions[n_s] = ic_solid.species[n_s].mass_fraction;
+                h_mass_fractions[n_s] = ic_solid.species[n_s].mass_fraction;
               }
             }
           }
 
-          Real* p_mass_fractions = mass_fractions.data();
+          Gpu::AsyncArray<Real> d_mass_fractions(h_mass_fractions.data(), h_mass_fractions.size());
+          Real* p_mass_fractions = d_mass_fractions.data();
 
           amrex::ParallelFor(np, [particles_ptr,ptile_data,p_mass_fractions,
               ic_lo,ic_hi,nspecies_s]

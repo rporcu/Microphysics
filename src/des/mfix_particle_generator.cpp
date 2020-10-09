@@ -119,8 +119,8 @@ ParticlesGenerator::generate (int& pc,
   if(np == 0)
     return;
 
-  amrex::Gpu::ManagedVector<amrex::Real> dp(np, 0);
-  amrex::Gpu::ManagedVector<amrex::Real> ro_s(np, 0);
+  amrex::Gpu::DeviceVector<amrex::Real> dp(np, 0);
+  amrex::Gpu::DeviceVector<amrex::Real> ro_s(np, 0);
 
   amrex::Real* p_dp = dp.data();
   amrex::Real* p_ro_s = ro_s.data();
@@ -602,7 +602,10 @@ ParticlesGenerator::random_fill_dem (const int icv,
 
   amrex::ResetRandomSeed(ParallelDescriptor::MyProc()+1);
 
-  amrex::Real* p_rdata = m_rdata.data();
+  amrex::Gpu::HostVector<amrex::Real> h_rdata(m_rdata.size());
+  Gpu::copyAsync(Gpu::deviceToHost, m_rdata.begin(), m_rdata.end(), h_rdata.begin());
+  Gpu::synchronize();
+  amrex::Real* p_rdata = h_rdata.data();
 
   np = 0;
   int iterations(0);
@@ -707,6 +710,9 @@ ParticlesGenerator::random_fill_dem (const int icv,
   }
 
   pc += np;
+
+  Gpu::copyAsync(Gpu::hostToDevice, h_rdata.begin(), h_rdata.end(), m_rdata.begin());
+  Gpu::synchronize();
 
   return;
 }
@@ -898,7 +904,7 @@ ParticlesGenerator::generate_prop (const int nrp, ParticleTileType& particles)
 //                                                                     !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 void
-ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
+ParticlesGenerator::nor_rno (amrex::Gpu::DeviceVector<amrex::Real>& dp,
                              const amrex::Real mean,
                              const amrex::Real sigma,
                              const amrex::Real dp_min,
@@ -1038,7 +1044,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
 //                                                                     !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 void
-ParticlesGenerator::uni_rno (amrex::Gpu::ManagedVector<amrex::Real>& dp,
+ParticlesGenerator::uni_rno (amrex::Gpu::DeviceVector<amrex::Real>& dp,
                              const amrex::Real dp_min,
                              const amrex::Real dp_max)
 {

@@ -17,19 +17,21 @@ mfix::set_bc0 (const Box& sbx,
 
   const int nspecies_g = FLUID::nspecies;
 
-  Gpu::ManagedVector< Real > MW_gk0_managed(nspecies_g);
-  Gpu::ManagedVector< Real* > m_bc_X_gk_managed(nspecies_g);
-
-  for (int n(0); n < nspecies_g; n++) {
-    MW_gk0_managed[n] = FLUID::MW_gk0[n];
-    m_bc_X_gk_managed[n] = m_bc_X_gk[n].data();
-  }
-
   // Flag to understand if fluid is a mixture
   const int fluid_is_a_mixture = FLUID::is_a_mixture;
 
-  Real* p_MW_gk0 = fluid_is_a_mixture ? MW_gk0_managed.data() : nullptr;
-  Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_managed.data() : nullptr;
+  Gpu::DeviceVector< Real > MW_gk0_d;
+  Gpu::HostVector  < Real > MW_gk0_h;
+  if (fluid_is_a_mixture) {
+      for (int n(0); n < nspecies_g; n++) {
+          MW_gk0_h.push_back(FLUID::MW_gk0[n]);
+      }
+      MW_gk0_d.resize(MW_gk0_h.size());
+      Gpu::copyAsync(Gpu::hostToDevice, MW_gk0_h.begin(), MW_gk0_h.end(), MW_gk0_d.begin());
+  }
+
+  Real* p_MW_gk0 = fluid_is_a_mixture ? MW_gk0_d.data() : nullptr;
+  Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_ptr.data() : nullptr;
 
   amrex::Real* p_bc_ep_g = m_bc_ep_g.data();
 
