@@ -457,9 +457,7 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab* >& lapX_out,
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
-      MultiFab::Copy(*X_gn[lev], *X_gk_in[lev], n, 0, 1, 1);
-
-      MultiFab::Copy(*lapXn[lev], *lapX_out[lev], n, 0, 1, lapX_out[lev]->nGrow());
+      MultiFab::Copy(*lapX_out[lev], *lapXn[lev], 0, n, 1, lapX_out[lev]->nGrow());
     }
 
     for(int lev = 0; lev <= finest_level; lev++)
