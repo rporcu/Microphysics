@@ -1,4 +1,8 @@
-image: mwm126/mfix-exa:20200809
+image: hello-world:latest
+
+stages:
+  - build-img
+  - test
 
 workflow:
   rules:
@@ -15,9 +19,36 @@ variables:
   GIT_STRATEGY: fetch
   GIT_SUBMODULE_STRATEGY: none
 
+build-test-env:
+  stage: build-img
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR --dockerfile ./Dockerfile --destination $CI_REGISTRY_IMAGE:latest
+  tags:
+    - docker
+
+
 ###### Test jobs #####
 
-test:csg: &test_template
+.test: &test_template
+  stage: test
+  image: $CI_REGISTRY_IMAGE:latest
+  needs: ['build-test-env']
+  artifacts:
+    name: $CI_JOB_NAME
+    expire_in: 1 week
+    when: on_failure
+    paths:
+      - build/Testing/
+  tags:
+    - docker
+
+test:csg:
+  <<: *test_template
   script:
     - git submodule update --init --force
     - cmake -S .
@@ -27,25 +58,10 @@ test:csg: &test_template
             -DENABLE_CSG=yes
     - cmake --build build --target functional_tests
     - ./build/src/eb/tests/functional_tests
-  tags:
-    - mfix-exa
   allow_failure: true
-  artifacts:
-    name: $CI_JOB_NAME
-    expire_in: 1 week
-    when: on_failure
-    paths:
-      - build/Testing/
 
-.test_job: &test_template
-  artifacts:
-    name: $CI_JOB_NAME
-    expire_in: 1 week
-    when: on_failure
-    paths:
-      - build/Testing/
-
-.test: &test_template
+.ctest: &ctest_template
+  image: $CI_REGISTRY_IMAGE:latest
   script:
     - git submodule update --init --force subprojects/amrex
     - cmake -S .
@@ -56,11 +72,10 @@ test:csg: &test_template
     - cmake --build build --target build_tests
     - cd build
     - $CTEST_CMD
-  tags:
-    - mfix-exa
   <<: *test_template
 
 build:gpu:
+  image: $CI_REGISTRY_IMAGE:latest
   script:
     - git submodule update --init --force
     - cmake -S .
@@ -72,57 +87,61 @@ build:gpu:
             -DENABLE_OMP=$ENABLE_OMP
             -G Ninja
     - cmake --build build --target build_tests
-  tags:
-    - mfix-exa
   <<: *test_template
 
 
 test:single-serial:
   variables:
     CTEST_CMD: srun ctest -R SGS
-  <<: *test_template
+  <<: *ctest_template
 
 test:multiple-serial:
   variables:
     CTEST_CMD: srun ctest -R MGS
-  <<: *test_template
+  <<: *ctest_template
 
 test:tiled-serial:
   variables:
     CTEST_CMD: srun ctest -R TGS
-  <<: *test_template
+  <<: *ctest_template
 
 test:multiple-parallel:
   variables:
     CTEST_CMD: srun ctest -R MGP
-  <<: *test_template
+  <<: *ctest_template
 
 test:tiled-parallel-openmp:
   variables:
     ENABLE_MPI: 0
     ENABLE_OMP: 1
     CTEST_CMD: srun ctest -R TGP
-  <<: *test_template
+  <<: *ctest_template
 
 
 linter:shellcheck:
+  stage: test
+  image: $CI_REGISTRY_IMAGE:latest
   script:
-    - wget https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.linux.x86_64.tar.xz
-    - tar xf shellcheck-stable.linux.x86_64.tar.xz
-    - find . -name "*.sh" -not -path "./subprojects/*" | xargs shellcheck-stable/shellcheck -e SC2086,SC2125,SC2046,SC2129,SC2044
+    - find . -name "*.sh" -not -path "./subprojects/*" | xargs shellcheck -e SC2086,SC2125,SC2046,SC2129,SC2044
   tags:
-    - mfix-exa
+    - docker
   allow_failure: true
 
 linter:warnings:
+  stage: test
+  image: $CI_REGISTRY_IMAGE:latest
+  needs: ['build-test-env']
   script:
     - cmake -S . -B build -DCMAKE_CXX_FLAGS="-Wall -Werror" -DCMAKE_Fortran_FLAGS="-O0" -GNinja
     - cmake --build build -- -k0
   tags:
-    - mfix-exa
+    - docker
   allow_failure: true
 
 linter:spelling:
+  stage: test
+  image: $CI_REGISTRY_IMAGE:latest
+  needs: ['build-test-env']
   script:
     - rm -rf subprojects
     - codespell --ignore-words-list ba,blocs,inout,ith,od,wen --enable-colors --quiet-level 2
@@ -130,4 +149,4 @@ linter:spelling:
   except:
     - schedules
   tags:
-    - mfix-exa
+    - docker
