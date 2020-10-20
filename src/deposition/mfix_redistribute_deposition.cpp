@@ -147,6 +147,8 @@ mfix::mfix_redistribute_deposition (int lev,
         }
       });
 
+      Gpu::synchronize();
+
       amrex::ParallelFor(bx,
         [flags,ep_s,mf_redist,scale_array,max_eps,ncomp]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept

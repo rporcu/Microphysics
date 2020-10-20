@@ -72,21 +72,36 @@ SolidsVolumeDeposition (F WeightFunc, int lev,
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
   {
+    FArrayBox local_fab_to_be_filled;
+
     for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
 
       const auto& particles = pti.GetArrayOfStructs();
       const ParticleType* pstruct = particles().dataPtr();
 
       const long nrp = pti.numParticles();
-      FArrayBox& fab = mf_to_be_filled[pti];
+      FArrayBox& fab_to_be_filled = mf_to_be_filled[pti];
 
       const Box& bx  = pti.tilebox(); // I need a box without ghosts
 
       if ((*flags)[pti].getType(bx) != FabType::covered ) {
 
-        const auto& volarr = fab.array();
+        auto volarr = fab_to_be_filled.array();
         const auto& flagsarr = (*flags)[pti].array();
         const auto& vfrac = (*volfrac)[pti].array();
+
+#ifdef _OPENMP
+        const int ncomp = mf_to_be_filled.nComp();
+        Box tile_box = bx;
+
+        if(Gpu::notInLaunchRegion())
+        {
+          tile_box.grow(mf_to_be_filled.nGrow());
+          local_fab_to_be_filled.resize(tile_box, ncomp);
+          local_fab_to_be_filled.setVal<RunOn::Host>(0.0);
+          volarr = local_fab_to_be_filled.array();
+        }
+#endif
 
         const amrex::Real deposition_scale_factor =
           mfix::m_deposition_scale_factor;
@@ -119,12 +134,6 @@ SolidsVolumeDeposition (F WeightFunc, int lev,
                   if (flagsarr(i+ii,j+jj,k+kk).isCovered())
                     continue;
 
-
-
-                  // if(p.id() == 13413 and p.cpu() == 2){
-                  //   printf("%i %i %i %16.10e\n",i+ii,j+jj,k+kk, weights[ii+1][jj+1][kk+1]);
-                  // }
-
                   amrex::Real weight_vol = weights[ii+1][jj+1][kk+1] / vfrac(i+ii,j+jj,k+kk);
 
                   amrex::Gpu::Atomic::Add(&volarr(i+ii,j+jj,k+kk), weight_vol*pvol);
@@ -132,6 +141,15 @@ SolidsVolumeDeposition (F WeightFunc, int lev,
               }
             }
           });
+
+#ifdef _OPENMP
+        if(Gpu::notInLaunchRegion())
+        {
+          fab_to_be_filled.atomicAdd<RunOn::Host>(local_fab_to_be_filled,
+              tile_box, tile_box, 0, 0, ncomp);
+        }
+#endif
+
       }
     }
   }
@@ -203,6 +221,7 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
   {
+    FArrayBox local_txfr;
 
     for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
 
@@ -217,13 +236,26 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
 
       if ((*flags)[pti].getType(box) != FabType::covered ) {
 
-        const auto& txfr_arr = txfr_fab.array();
+        auto        txfr_arr = txfr_fab.array();
         const auto&   volarr = eps_fab.array();
         const auto& flagsarr = (*flags)[pti].array();
         const auto&    vfrac = (*volfrac)[pti].array();
 
         const amrex::Real deposition_scale_factor =
           mfix::m_deposition_scale_factor;
+
+#ifdef _OPENMP
+        const int ncomp = txfr_mf.nComp();
+        Box tile_box = box;
+
+        if (Gpu::notInLaunchRegion())
+        {
+          tile_box.grow(txfr_mf.nGrow());
+          local_txfr.resize(tile_box, ncomp);
+          local_txfr.setVal<RunOn::Host>(0.0);
+          txfr_arr = local_txfr.array();
+        }
+#endif
 
         amrex::ParallelFor(nrp,
           [pstruct,plo,dx,dxi,vfrac,volarr,deposition_scale_factor,
@@ -292,6 +324,14 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
               }
             }
           });
+
+#ifdef _OPENMP
+        if (Gpu::notInLaunchRegion())
+        {
+          txfr_fab.atomicAdd<RunOn::Host>(local_txfr, tile_box, tile_box, 0, 0, ncomp);
+        }
+#endif
+
       }
     }
   }
@@ -487,6 +527,8 @@ InterphaseChemDeposition (F WeightFunc,
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
   {
+    FArrayBox local_fab_txfr;
+
     for (ParConstIter pti(*this, lev); pti.isValid(); ++pti)
     {
       //Access to added variables
@@ -504,12 +546,25 @@ InterphaseChemDeposition (F WeightFunc,
 
       if ((*flags)[pti].getType(box) != FabType::covered )
       {
-        const auto& arr_G_gk_fp = fab_G_gk_fp.array();
+        auto     arr_G_gk_fp = fab_G_gk_fp.array();
         const auto& flagsarr = (*flags)[pti].array();
-        const auto& vfrac = (*volfrac)[pti].array();
+        const auto&    vfrac = (*volfrac)[pti].array();
 
         const amrex::Real deposition_scale_factor =
           mfix::m_deposition_scale_factor;
+
+#ifdef _OPENMP
+        const int ncomp = mf_G_gk_fp.nComp();
+        Box tile_box = box;
+
+        if (Gpu::notInLaunchRegion())
+        {
+          tile_box.grow(mf_G_gk_fp.nGrow());
+          local_fab_txfr.resize(tile_box, ncomp);
+          local_fab_txfr.setVal<RunOn::Host>(0.0);
+          arr_G_gk_fp = local_fab_txfr.array();
+        }
+#endif
 
         amrex::ParallelFor(nrp,
           [pstruct,plo,dx,dxi,vfrac,deposition_scale_factor,reg_cell_vol,
@@ -681,6 +736,15 @@ InterphaseChemDeposition (F WeightFunc,
             }
           }
         });
+
+#ifdef _OPENMP
+        if (Gpu::notInLaunchRegion())
+        {
+          fab_G_gk_fp.atomicAdd<RunOn::Host>(local_fab_txfr, tile_box, tile_box,
+              0, 0, ncomp);
+        }
+#endif
+
       }
     }
   }
