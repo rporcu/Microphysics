@@ -24,6 +24,7 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
   {
+    FArrayBox local_vel_s_fab;
 
     for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
 
@@ -37,7 +38,20 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
 
       if ((*flags)[pti].getType(box) != FabType::covered ) {
 
-        const auto& vel_s_arr = vel_s_fab.array();
+        auto vel_s_arr = vel_s_fab.array();
+
+#ifdef _OPENMP
+        const int ncomp = vel_s_mf.nComp();
+        Box tile_box = box;
+
+        if (Gpu::notInLaunchRegion())
+        {
+          tile_box.grow(vel_s_mf.nGrow());
+          local_vel_s_fab.resize(tile_box, ncomp);
+          local_vel_s_fab.setVal<RunOn::Host>(0.0);
+          vel_s_arr = local_vel_s_fab.array();
+        }
+#endif
 
         amrex::ParallelFor(nrp,
           [pstruct,plo,dxi,vel_s_arr]
@@ -155,6 +169,15 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
               amrex::Gpu::Atomic::Add(&vel_s_arr(i,   j,   kk+1, 5),wx_hi*wy_hi*ww_hi*pmass);
             }
           });
+
+#ifdef _OPENMP
+        if (Gpu::notInLaunchRegion())
+        {
+          vel_s_fab.atomicAdd<RunOn::Host>(local_vel_s_fab, tile_box, tile_box,
+              0, 0, ncomp);
+        }
+#endif
+
       }
     }
   }
