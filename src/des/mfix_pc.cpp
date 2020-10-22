@@ -1020,7 +1020,19 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
 
 void MFIXParticleContainer::UpdateMaxVelocity ()
 {
-    Real max_vel_x = loc_maxvel[0], max_vel_y = loc_maxvel[1], max_vel_z = loc_maxvel[2];
+    Real max_vel_x = loc_maxvel[0];
+    Real max_vel_y = loc_maxvel[1];
+    Real max_vel_z = loc_maxvel[2];
+
+#ifdef AMREX_USE_GPU
+    Gpu::DeviceScalar<Real> d_max_vel_x(max_vel_x);
+    Gpu::DeviceScalar<Real> d_max_vel_y(max_vel_y);
+    Gpu::DeviceScalar<Real> d_max_vel_z(max_vel_z);
+
+    Real *p_max_vel_x = d_max_vel_x.dataPtr();
+    Real *p_max_vel_y = d_max_vel_y.dataPtr();
+    Real *p_max_vel_z = d_max_vel_z.dataPtr();
+#endif
 
 #ifdef _OPENMP
 #pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z) if (Gpu::notInLaunchRegion())
@@ -1029,32 +1041,75 @@ void MFIXParticleContainer::UpdateMaxVelocity ()
     {
        for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
        {
-           auto & particles = pti.GetArrayOfStructs();
-           int np = pti.numParticles();
-           Gpu::HostVector<ParticleType> host_particles(np);
-           Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
+           auto& particles = pti.GetArrayOfStructs();
+           const int np = pti.numParticles();
+           ParticleType* pstruct = particles().dataPtr();
 
-           for(const auto & particle : host_particles)
+           amrex::ParallelFor(np, [pstruct,
+#ifdef AMREX_USE_GPU
+                 p_max_vel_x,p_max_vel_y,p_max_vel_z]
+#else
+                 &max_vel_x,&max_vel_y,&max_vel_z]
+#endif
+              AMREX_GPU_DEVICE (int p_id) noexcept
            {
-              max_vel_x = amrex::max(Real(std::fabs(particle.rdata(realData::velx))), max_vel_x);
-              max_vel_y = amrex::max(Real(std::fabs(particle.rdata(realData::vely))), max_vel_y);
-              max_vel_z = amrex::max(Real(std::fabs(particle.rdata(realData::velz))), max_vel_z);
-           }
+              ParticleType p = pstruct[p_id];
+#ifdef AMREX_USE_GPU
+              Gpu::Atomic::Max(p_max_vel_x, Math::abs(p.rdata(realData::velx)));
+              Gpu::Atomic::Max(p_max_vel_y, Math::abs(p.rdata(realData::vely)));
+              Gpu::Atomic::Max(p_max_vel_z, Math::abs(p.rdata(realData::velz)));
+#else
+              max_vel_x = amrex::max(Math::abs(p.rdata(realData::velx)), max_vel_x);
+              max_vel_y = amrex::max(Math::abs(p.rdata(realData::vely)), max_vel_y);
+              max_vel_z = amrex::max(Math::abs(p.rdata(realData::velz)), max_vel_z);
+#endif
+           });
        }
     }
+
+#ifdef AMREX_USE_GPU
+    max_vel_x = d_max_vel_x.dataValue();
+    max_vel_y = d_max_vel_y.dataValue();
+    max_vel_z = d_max_vel_z.dataValue();
+#endif
+
     loc_maxvel = RealVect(max_vel_x, max_vel_y, max_vel_z);
 }
 
 void MFIXParticleContainer::UpdateMaxForces (std::map<PairIndex, Gpu::DeviceVector<Real>> pfor,
                                              std::map<PairIndex, Gpu::DeviceVector<Real>> wfor)
 {
-    Real max_pfor_x = loc_maxpfor[0], max_pfor_y = loc_maxpfor[1], max_pfor_z = loc_maxpfor[2];
-    Real max_wfor_x = loc_maxwfor[0], max_wfor_y = loc_maxwfor[1], max_wfor_z = loc_maxwfor[2];
+    Real max_pfor_x = loc_maxpfor[0];
+    Real max_pfor_y = loc_maxpfor[1];
+    Real max_pfor_z = loc_maxpfor[2];
+
+    Real max_wfor_x = loc_maxwfor[0];
+    Real max_wfor_y = loc_maxwfor[1];
+    Real max_wfor_z = loc_maxwfor[2];
+
+#ifdef AMREX_USE_GPU
+    Gpu::DeviceScalar<Real> d_max_pfor_x(max_pfor_x);
+    Gpu::DeviceScalar<Real> d_max_pfor_y(max_pfor_y);
+    Gpu::DeviceScalar<Real> d_max_pfor_z(max_pfor_z);
+
+    Gpu::DeviceScalar<Real> d_max_wfor_x(max_wfor_x);
+    Gpu::DeviceScalar<Real> d_max_wfor_y(max_wfor_y);
+    Gpu::DeviceScalar<Real> d_max_wfor_z(max_wfor_z);
+
+    Real *p_max_pfor_x = d_max_pfor_x.dataPtr();
+    Real *p_max_pfor_y = d_max_pfor_y.dataPtr();
+    Real *p_max_pfor_z = d_max_pfor_z.dataPtr();
+
+    Real *p_max_wfor_x = d_max_wfor_x.dataPtr();
+    Real *p_max_wfor_y = d_max_wfor_y.dataPtr();
+    Real *p_max_wfor_z = d_max_wfor_z.dataPtr();
+#endif
 
     for (int lev = 0; lev < nlev; lev++)
     {
 #ifdef _OPENMP
-#pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z,max_wfor_x,max_wfor_y,max_wfor_z) if (Gpu::notInLaunchRegion())
+#pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z,max_wfor_x,\
+    max_wfor_y,max_wfor_z) if (Gpu::notInLaunchRegion())
 #endif
         for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
         {
@@ -1075,23 +1130,48 @@ void MFIXParticleContainer::UpdateMaxForces (std::map<PairIndex, Gpu::DeviceVect
             // Number of particles including neighbor particles
             const int ntot = nrp + size_ng;
 
-            // Find max (abs) of particle-particle forces:
-            for(int i = 0; i < ntot; i++ )
-                max_pfor_x = amrex::max(Real(std::fabs(pfor[index][i])), max_pfor_x);
-            for(int i = ntot; i < 2 * ntot; i++ )
-                max_pfor_y = amrex::max(Real(std::fabs(pfor[index][i])), max_pfor_y);
-            for(int i = 2 * ntot; i < 3 * ntot; i++ )
-                max_pfor_z = amrex::max(Real(std::fabs(pfor[index][i])), max_pfor_z);
+            Real* p_pfor = pfor[index].data();
+            Real* p_wfor = wfor[index].data();
 
-            // Find max (abs) of particle-wall forces:
-            for(int i = 0; i < ntot; i++ )
-                max_wfor_x = amrex::max(Real(std::fabs(wfor[index][i])), max_wfor_x);
-            for(int i = ntot; i < 2 * ntot; i++ )
-                max_wfor_y = amrex::max(Real(std::fabs(wfor[index][i])), max_wfor_y);
-            for(int i = 2 * ntot; i < 3 * ntot; i++ )
-                max_wfor_z = amrex::max(Real(std::fabs(wfor[index][i])), max_wfor_z);
+            // Find max (abs) of particle-particle forces:
+            amrex::ParallelFor(ntot, [p_pfor,p_wfor,ntot,
+#ifdef AMREX_USE_GPU
+                p_max_pfor_x,p_max_pfor_y,p_max_pfor_z,p_max_wfor_x,p_max_wfor_y,p_max_wfor_z]
+#else
+                &max_pfor_x,&max_pfor_y,&max_pfor_z,&max_wfor_x,&max_wfor_y,&max_wfor_z]
+#endif
+              AMREX_GPU_DEVICE (int i) noexcept
+            {
+#ifdef AMREX_USE_GPU
+                Gpu::Atomic::Max(p_max_pfor_x, Math::abs(p_pfor[i]));
+                Gpu::Atomic::Max(p_max_pfor_y, Math::abs(p_pfor[i+ntot]));
+                Gpu::Atomic::Max(p_max_pfor_z, Math::abs(p_pfor[i+2*ntot]));
+
+                Gpu::Atomic::Max(p_max_wfor_x, Math::abs(p_wfor[i]));
+                Gpu::Atomic::Max(p_max_wfor_y, Math::abs(p_wfor[i+ntot]));
+                Gpu::Atomic::Max(p_max_wfor_z, Math::abs(p_wfor[i+2*ntot]));
+#else
+                max_pfor_x = amrex::max(Math::abs(p_pfor[i]), max_pfor_x);
+                max_pfor_y = amrex::max(Math::abs(p_pfor[i+ntot]), max_pfor_y);
+                max_pfor_z = amrex::max(Math::abs(p_pfor[i+2*ntot]), max_pfor_z);
+
+                max_wfor_x = amrex::max(Math::abs(p_wfor[i]), max_wfor_x);
+                max_wfor_y = amrex::max(Math::abs(p_wfor[i+ntot]), max_wfor_y);
+                max_wfor_z = amrex::max(Math::abs(p_wfor[i+2*ntot]), max_wfor_z);
+#endif
+            });
         }
     }
+
+#ifdef AMREX_USE_GPU
+    max_pfor_x = d_max_pfor_x.dataValue();
+    max_pfor_y = d_max_pfor_y.dataValue();
+    max_pfor_z = d_max_pfor_z.dataValue();
+
+    max_wfor_x = d_max_wfor_x.dataValue();
+    max_wfor_y = d_max_wfor_y.dataValue();
+    max_wfor_z = d_max_wfor_z.dataValue();
+#endif
 
     loc_maxpfor = RealVect(max_pfor_x, max_pfor_y, max_pfor_z);
     loc_maxwfor = RealVect(max_wfor_x, max_wfor_y, max_wfor_z);
@@ -1191,38 +1271,77 @@ ComputeAverageVelocities (const int lev,
       Real sum_velz = 0.;
       Real sum_kin_energy = 0.;
 
+#ifdef AMREX_USE_GPU
+      Gpu::DeviceScalar<long> d_sum_np(sum_np);
+      Gpu::DeviceScalar<Real> d_sum_velx(sum_velx);
+      Gpu::DeviceScalar<Real> d_sum_vely(sum_vely);
+      Gpu::DeviceScalar<Real> d_sum_velz(sum_velz);
+      Gpu::DeviceScalar<Real> d_sum_kin_energy(sum_kin_energy);
+
+      long *p_sum_np         = d_sum_np.dataPtr();
+      Real *p_sum_velx       = d_sum_velx.dataPtr();
+      Real *p_sum_vely       = d_sum_vely.dataPtr();
+      Real *p_sum_velz       = d_sum_velz.dataPtr();
+      Real *p_sum_kin_energy = d_sum_kin_energy.dataPtr();
+#endif
+
 #ifdef _OPENMP
 #pragma omp parallel reduction(+:sum_np,sum_velx,sum_vely,sum_velz) if (Gpu::notInLaunchRegion())
 #endif
-      for ( MFIXParIter pti(*this, lev); pti.isValid(); ++ pti)
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       {
         Box bx = pti.tilebox();
         RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
 
-        if ( tile_region.intersects ( avg_region ) )
+        if (tile_region.intersects(avg_region))
         {
           const int np         = NumberOfParticles(pti);
           const AoS &particles = pti.GetArrayOfStructs();
+          const ParticleType* pstruct = particles().dataPtr();
 
-          for (int p = 0; p < np; ++p )
+          amrex::ParallelFor(np, [pstruct,avg_region,
+#ifdef AMREX_USE_GPU
+              p_sum_np,p_sum_velx,p_sum_vely,p_sum_velz,p_sum_kin_energy]
+#else
+              &sum_np,&sum_velx,&sum_vely,&sum_velz,&sum_kin_energy]
+#endif
+            AMREX_GPU_DEVICE (int p_id) noexcept
           {
-            if ( avg_region.contains(particles[p].pos()))
-            {
-              const Real velx = particles[p].rdata(realData::velx);
-              const Real vely = particles[p].rdata(realData::vely);
-              const Real velz = particles[p].rdata(realData::velz);
-              const Real mass = particles[p].rdata(realData::mass);
+            const ParticleType p = pstruct[p_id];
 
+            if (avg_region.contains(p.pos()))
+            {
+              const Real velx = p.rdata(realData::velx);
+              const Real vely = p.rdata(realData::vely);
+              const Real velz = p.rdata(realData::velz);
+              const Real mass = p.rdata(realData::mass);
+              const Real k_en = .5*mass*(velx*velx + vely*vely + velz*velz);
+
+#ifdef AMREX_USE_GPU
+              Gpu::Atomic::Add(p_sum_np, static_cast<long>(1));
+              Gpu::Atomic::Add(p_sum_velx, velx);
+              Gpu::Atomic::Add(p_sum_vely, vely);
+              Gpu::Atomic::Add(p_sum_velz, velz);
+              Gpu::Atomic::Add(p_sum_kin_energy, k_en);
+#else
               sum_np++;
               sum_velx += velx;
               sum_vely += vely;
               sum_velz += velz;
-
-              sum_kin_energy += .5*mass*(velx*velx + vely*vely + velz*velz);
+              sum_kin_energy += k_en;
+#endif
             }
-          }
+          });
         }
       }
+
+#ifdef AMREX_USE_GPU
+      sum_np         = d_sum_np.dataValue();
+      sum_velx       = d_sum_velx.dataValue();
+      sum_vely       = d_sum_vely.dataValue();
+      sum_velz       = d_sum_velz.dataValue();
+      sum_kin_energy = d_sum_kin_energy.dataValue();
+#endif
 
       region_np[nr]   = sum_np;
       region_velx[nr] = sum_velx;
