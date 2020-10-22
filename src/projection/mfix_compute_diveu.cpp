@@ -135,7 +135,7 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
         const Box& bx = mfi.tilebox();
 
         Array4<       Real > const& S_sk_arr  = S_sk[lev]->array(mfi);
-        Array4< const Real > const& lap_X_arr = ro_g[lev]->const_array(mfi);
+        Array4< const Real > const& lap_X_arr = lap_X[lev]->const_array(mfi);
         Array4< const Real > const& ro_g_arr  = ro_g[lev]->const_array(mfi);
         Array4< const Real > const& MW_g_arr  = MW_g[lev]->const_array(mfi);
 
