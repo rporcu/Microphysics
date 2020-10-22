@@ -199,17 +199,17 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
           } else {
 
-               if (mf_vel.boxArray().size() > 1)
-                   amrex::Abort("Replication only works if one initial grid");
+              if (mf_vel.boxArray().size() > 1)
+                  amrex::Abort("Replication only works if one initial grid");
 
-               mf_vel.FillBoundary(geom[lev].periodicity());
-                mf_gp.FillBoundary(geom[lev].periodicity());
+              mf_vel.FillBoundary(geom[lev].periodicity());
+              mf_gp.FillBoundary(geom[lev].periodicity());
 
-               FArrayBox single_fab_vel(mf_vel.boxArray()[0],3);
-               mf_vel.copyTo(single_fab_vel);
+              FArrayBox single_fab_vel(mf_vel.boxArray()[0],3);
+              mf_vel.copyTo(single_fab_vel);
 
-               FArrayBox single_fab_gp ( mf_gp.boxArray()[0],3);
-               mf_gp.copyTo(single_fab_gp);
+              FArrayBox single_fab_gp ( mf_gp.boxArray()[0],3);
+              mf_gp.copyTo(single_fab_gp);
 
               // Copy and replicate mf into velocity
               for (MFIter mfi(*m_leveldata[lev]->vel_g, false); mfi.isValid(); ++mfi)

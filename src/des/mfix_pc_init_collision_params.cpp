@@ -15,71 +15,112 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
    int num_of_phases_in_use = DEM::NPHASE;
 
    // Cycle through the different phases, starting from 1
-   for (int phse = 1; phse <= num_of_phases_in_use; ++phse)
+   for (int phase = 1; phase <= num_of_phases_in_use; ++phase)
    {
-      amrex::Real p_num  = 0.0; //number of particle
-      amrex::Real p_diam = 0.0; //particle diameters
-      amrex::Real p_dens = 0.0; //particle density
+      Real h_pnum  = 0;   //number of particle
+      Real h_pdiam = 0.0; //particle diameters
+      Real h_pdens = 0.0; //particle density
+      Real h_maxdiam = -1.0e32;
+      Real h_maxdens = -1.0e32;
 
-      amrex::Real max_diam = -1.0e32;
-      amrex::Real max_den  = -1.0e32;
+#ifdef AMREX_USE_GPU
+      Gpu::DeviceScalar<Real> d_pnum(h_pnum);
+      Gpu::DeviceScalar<Real> d_pdiam(h_pdiam);
+      Gpu::DeviceScalar<Real> d_pdens(h_pdens);
+      Gpu::DeviceScalar<Real> d_maxdiam(h_maxdiam);
+      Gpu::DeviceScalar<Real> d_maxdens(h_maxdens);
+
+      Real *p_pnum    = d_pnum.dataPtr();
+      Real *p_pdiam   = d_pdiam.dataPtr();
+      Real *p_pdens   = d_pdens.dataPtr();
+      Real *p_maxdiam = d_maxdiam.dataPtr();
+      Real *p_maxdens = d_maxdens.dataPtr();
+#endif
 
       for (int lev = 0; lev < nlev; lev++)
       {
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:p_num, p_diam, p_dens) if (Gpu::notInLaunchRegion())
+#pragma omp parallel reduction(+:h_pnum,h_pdiam,h_pdens) \
+                     reduction(max:h_maxdiam,h_maxdens) \
+                     if (Gpu::notInLaunchRegion())
 #endif
          for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
          {
             auto& particles = pti.GetArrayOfStructs();
+            const int np = particles.size();
+            ParticleType* pstruct = particles().dataPtr();
 
-            Gpu::HostVector<ParticleType> host_particles(pti.numParticles());
-            Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
+            amrex::ParallelFor(np, [pstruct,phase,
+#ifdef AMREX_USE_GPU
+                p_pnum,p_pdiam,p_pdens,p_maxdiam,p_maxdens]
+#else
+                &h_pnum,&h_pdiam,&h_pdens,&h_maxdiam,&h_maxdens]
+#endif
+              AMREX_GPU_DEVICE (int p_id) noexcept
+            {
+               ParticleType p = pstruct[p_id];
 
-            for (const auto& p: host_particles){
-               if ( phse==p.idata(intData::phase) )
+               if (phase == p.idata(intData::phase))
                {
-                  p_num  += 1.0;
-                  p_diam += p.rdata(realData::radius) * 2.0;
-                  p_dens += p.rdata(realData::density);
+                  const Real density  = p.rdata(realData::density);
+                  const Real diameter = 2.0*p.rdata(realData::radius);
 
-                  max_diam = amrex::max(max_diam, p.rdata(realData::radius) * 2.0 );
-                  max_den  = amrex::max(max_den,  p.rdata(realData::density) );
+#ifdef AMREX_USE_GPU
+                  Gpu::Atomic::Add(p_pnum, 1.0);
+                  Gpu::Atomic::Add(p_pdiam, diameter);
+                  Gpu::Atomic::Add(p_pdens, density);
+                  Gpu::Atomic::Max(p_maxdiam, diameter);
+                  Gpu::Atomic::Max(p_maxdens, density);
+#else
+                  h_pnum += 1.0;
+                  h_pdiam += diameter;
+                  h_pdens += density;
+                  h_maxdiam = amrex::max(h_maxdiam, diameter);
+                  h_maxdens = amrex::max(h_maxdens, density);
+#endif
                }
-            }
-        }
-     }
+            });
+         }
+      }
+
+#ifdef AMREX_USE_GPU
+      h_pnum = d_pnum.dataValue();
+      h_pdiam = d_pdiam.dataValue();
+      h_pdens = d_pdens.dataValue();
+      h_maxdiam = d_maxdiam.dataValue();
+      h_maxdens = d_maxdens.dataValue();
+#endif
 
       // A single MPI call passes all three variables
-      ParallelDescriptor::ReduceRealSum({p_num,p_diam,p_dens});
-      ParallelDescriptor::ReduceRealMax({max_diam, max_den});
+      ParallelDescriptor::ReduceRealSum({h_pnum,h_pdiam,h_pdens});
+      ParallelDescriptor::ReduceRealMax({h_maxdiam,h_maxdens});
 
       //calculate averages or set = zero if no particles of that phase
-      if (p_num==0){
-         avg_dp[phse-1] = 0.0;
-         avg_ro[phse-1] = 0.0;
+      if (h_pnum==0){
+         avg_dp[phase-1] = 0.0;
+         avg_ro[phase-1] = 0.0;
 
-         // max_dp[phse-1] = 0.0;
-         // max_ro[phse-1] = 0.0;
+         // max_dp[phase-1] = 0.0;
+         // max_ro[phase-1] = 0.0;
 
       } else {
-         avg_dp[phse-1] = p_diam/p_num;
-         avg_ro[phse-1] = p_dens/p_num;
+         avg_dp[phase-1] = h_pdiam/h_pnum;
+         avg_ro[phase-1] = h_pdens/h_pnum;
 
-         // max_dp[phse-1] = max_diam;
-         // max_ro[phse-1] = max_den;
+         // max_dp[phase-1] = max_diam;
+         // max_ro[phase-1] = max_den;
       }
    }
 
    amrex::Real max_max_dp(0.);
-   for (int phse = 0; phse < num_of_phases_in_use; ++phse)
+   for (int phase = 0; phase < num_of_phases_in_use; ++phase)
    {
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(avg_dp[phse] > 0.0,
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(avg_dp[phase] > 0.0,
          "Average particle diameter cannot be zero");
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(avg_ro[phse] > 0.0,
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(avg_ro[phase] > 0.0,
          "Average particle density cannot be zero");
 
-      max_max_dp = amrex::max(max_max_dp, avg_dp[phse]);
+      max_max_dp = amrex::max(max_max_dp, avg_dp[phase]);
    }
 
    // (3*max_dp/2)^2
