@@ -560,7 +560,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
             BL_PROFILE_VAR_STOP(calc_particle_collisions);
 
-            BL_PROFILE_VAR("des_time_march()", des_time_march);
+            BL_PROFILE_VAR("des::update_particle_velocity_and_position()", des_time_march);
             /********************************************************************
              * Move particles based on collision forces and torques             *
              *******************************************************************/
@@ -639,9 +639,11 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 }
               });
 
+            BL_PROFILE_VAR_STOP(des_time_march);
 
             if(advect_enthalpy){
 
+              BL_PROFILE_VAR("des::update_particle_enthalpy()", des_update_enthalpy);
               amrex::ParallelFor(nrp, [pstruct,subdt]
               AMREX_GPU_DEVICE (int i) noexcept
               {
@@ -653,10 +655,12 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                       (p.rdata(realData::mass) * p.rdata(realData::c_ps));
 
               });
+              BL_PROFILE_VAR_STOP(des_update_enthalpy);
             }
 
             if (SOLIDS::solve_species and REACTIONS::solve)
             {
+              BL_PROFILE_VAR("des::update_particle_species()", des_update_species);
               //Access to added variables
               auto ptile_data = ptile.getParticleTileData();
 
@@ -690,7 +694,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 // Pointer to this particle's species density exchange rate for
                 // each reaction
                 GpuArray<GpuArray<Real,SPECIES::NMAX>,REACTIONS::NMAX> G_sn_pg_q;
-                
+
                 for (int n_s(0); n_s < nspecies_s; n_s++) {
                   for (int q(0); q < nreactions; q++) {
                     const int idx = idx_G + n_s*nreactions + q;
@@ -766,12 +770,12 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 }
               });
 
+              BL_PROFILE_VAR_STOP(des_update_species);
               Gpu::synchronize();
             }
 
             Gpu::synchronize();
 
-            BL_PROFILE_VAR_STOP(des_time_march);
 
 #ifdef AMREX_USE_GPU
             ncoll = ncoll_gpu.dataValue();
