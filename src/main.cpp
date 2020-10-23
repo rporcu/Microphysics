@@ -286,7 +286,8 @@ int main (int argc, char* argv[])
 
     mfix.PostInit(dt, time, restart_flag, stop_time);
 
-    mfix.ReportGridStats();
+    if (FLUID::solve)
+      mfix.ReportGridStats();
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
