@@ -241,12 +241,10 @@ mfix::ReportGridStats () const
       return dm;
     });
 
-  counts[3] = 0;
-  counts[4] = 0;
-  counts[5] = 0;
+  int regular(0), covered(0), cut(0);
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:counts) if (Gpu::notInLaunchRegion())
+#pragma omp parallel reduction(+:regular, covered, cut) if (Gpu::notInLaunchRegion())
 #endif
   for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
@@ -257,22 +255,26 @@ mfix::ReportGridStats () const
 
     // Count number of regular grids
     if (flags.getType() == FabType::regular ) {
-      counts[3] += 1;
+      regular += 1;
     } else if (flags.getType() == FabType::covered ) {
-      counts[4] += 1;
+      covered += 1;
     } else {
-      counts[5] += 1;
+      cut += 1;
     }
   }
+
+  counts[3] = regular;
+  counts[4] = covered;
+  counts[5] = cut;
 
   ParallelDescriptor::ReduceLongSum(counts.data(), 6);
 
   if(ParallelDescriptor::IOProcessor()){
     printf("\n\n****************************************\n");
     printf("  Coverage report:  Grids        Cells\n");
-    printf("          regular:  %5d   %10d\n", counts[3], counts[0]);
-    printf("          covered:  %5d   %10d\n", counts[4], counts[1]);
-    printf("              cut:  %5d   %10d\n", counts[5], counts[2]);
+    printf("          regular:  %5ld   %10ld\n", counts[3], counts[0]);
+    printf("          covered:  %5ld   %10ld\n", counts[4], counts[1]);
+    printf("              cut:  %5ld   %10ld\n", counts[5], counts[2]);
     printf("****************************************\n\n");
   }
 
