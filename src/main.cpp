@@ -52,7 +52,7 @@ void set_ptr_to_mfix (mfix& mfix);
 // is different (true) from the amrex default (false)
 // only if its not already specified in the inputs file
 void add_par () {
-   ParmParse pp("eb2"); 
+   ParmParse pp("eb2");
    if(not pp.contains("extend_domain_face")) {
       pp.add("extend_domain_face",true);
    }
@@ -285,6 +285,8 @@ int main (int argc, char* argv[])
         mfix.WriteStaticPlotFile(static_plt_file);
 
     mfix.PostInit(dt, time, restart_flag, stop_time);
+
+    mfix.ReportGridStats();
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
