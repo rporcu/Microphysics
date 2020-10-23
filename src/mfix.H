@@ -412,6 +412,7 @@ class mfix : public AmrCore
 
     Real volWgtSumBox (int lev, const MultiFab & mf, int comp, const Box a_bx, bool local=false) const;
 
+    void ReportGridStats () const;
 
     void mfix_set_bc_type (int lev);
 

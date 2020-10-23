@@ -185,6 +185,101 @@ mfix::volWgtSumBox (int lev, const MultiFab& mf, int comp, const Box a_bx, bool 
 
 
 
+//
+//
+//
+void
+mfix::ReportGridStats () const
+{
+  BL_PROFILE("mfix::volEpsWgtSum()");
+
+  std::vector<long> counts(6,0);
+
+  int lev = 0;
+
+  const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
+
+  // Count the number of regular cells
+  counts[0] = amrex::ReduceSum(*volfrac, *(m_leveldata[lev]->ep_g), 0,
+    [=] AMREX_GPU_HOST_DEVICE (Box const & bx,
+                               Array4<const Real> const & vfrc,
+                               Array4<const Real> const & ep) -> int
+    {
+      int dm = 0;
+
+      amrex::Loop(bx, [vfrc,ep,&dm] (int i, int j, int k) noexcept
+      {if(vfrc(i,j,k)==1.0) dm += 1;});
+
+      return dm;
+    });
+
+  // Count the number of covered cells
+  counts[1] = amrex::ReduceSum( *volfrac, *(m_leveldata[lev]->ep_g), 0,
+    [=] AMREX_GPU_HOST_DEVICE (Box const & bx,
+                               Array4<const Real> const & vfrc,
+                               Array4<const Real> const & ep) -> int
+    {
+      int dm = 0;
+
+      amrex::Loop(bx, [vfrc,ep,&dm] (int i, int j, int k) noexcept
+      {if(vfrc(i,j,k)==0.0) dm += 1;});
+
+      return dm;
+    });
+
+  // Count the number of cut cells
+  counts[2] = amrex::ReduceSum( *volfrac, *(m_leveldata[lev]->ep_g), 0,
+    [=] AMREX_GPU_HOST_DEVICE (Box const & bx,
+                               Array4<const Real> const & vfrc,
+                               Array4<const Real> const & ep) -> int
+    {
+      int dm = 0;
+
+      amrex::Loop(bx, [vfrc,ep,&dm] (int i, int j, int k) noexcept
+      {if(0.0 < vfrc(i,j,k) and vfrc(i,j,k) < 1.0) dm += 1;});
+
+      return dm;
+    });
+
+  counts[3] = 0;
+  counts[4] = 0;
+  counts[5] = 0;
+
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:counts) if (Gpu::notInLaunchRegion())
+#endif
+  for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+
+    const auto& vel_fab   =
+      static_cast<EBFArrayBox const&>((*m_leveldata[lev]->vel_g)[mfi]);
+
+    const auto& flags     = vel_fab.getEBCellFlagFab();
+
+    // Count number of regular grids
+    if (flags.getType() == FabType::regular ) {
+      counts[3] += 1;
+    } else if (flags.getType() == FabType::covered ) {
+      counts[4] += 1;
+    } else {
+      counts[5] += 1;
+    }
+  }
+
+  ParallelDescriptor::ReduceLongSum(counts.data(), 6);
+
+  if(ParallelDescriptor::IOProcessor()){
+    printf("\n\n****************************************\n");
+    printf("  Coverage report:  Grids        Cells\n");
+    printf("          regular:  %5d   %10d\n", counts[3], counts[0]);
+    printf("          covered:  %5d   %10d\n", counts[4], counts[1]);
+    printf("              cut:  %5d   %10d\n", counts[5], counts[2]);
+    printf("****************************************\n\n");
+  }
+
+}
+
+
+
 
 //
 // Print the minimum volume fraction and cell location.
