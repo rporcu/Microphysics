@@ -90,10 +90,8 @@ namespace SPECIES
           int exists = ppSpecies.query("molecular_weight", MW_k0[n]);
 
           if (not exists) {
-            amrex::Print() << "Warning: specie " + species[n] + 
-                              " molecular weight not provided.\n";
-            amrex::Print() << "Default: assuming " + species[n] +"_MW = 0.\n";
-            //amrex::Abort("Unknown species specific heat model!");
+            amrex::Warning(species[n] + "_MW not provided. Assuming " +
+                           species[n] + "_MW = 0");
           }
         }
 
@@ -134,9 +132,8 @@ namespace SPECIES
           else {
             SpecificHeatModel = SPECIFICHEATMODEL::Constant;
 
-            amrex::Print() << "Warning: species specific heat model not provided.\n";
-            amrex::Print() << "Default: Constant model with cp_gk = 0.\n";
-            //amrex::Abort("Unknown species specific heat model!");
+            amrex::Warning("Species specific heat model not provided."
+                           " Assuming constant model with cp_gk = 0");
           }
 
         }

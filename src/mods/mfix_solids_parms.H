@@ -54,6 +54,8 @@ namespace SOLIDS
   // Specified constant specific heat
   extern amrex::Vector<amrex::Real> cp_p0;
 
+  extern amrex::Real enthalpy_source;
+
   struct INPUT_DIST_t {
     std::string distribution;
     amrex::Real mean; // Mean value of distriubtion (or constant value)

@@ -39,6 +39,9 @@
 // Drag type enumeration
 struct DragType { enum {Invalid=-1, WenYu, Gidaspow, BVK2, UserDrag}; };
 
+// Convection type enumeration
+struct ConvectionType { enum {Invalid=-1, RanzMarshall, Gunn}; };
+
 // Deposition scheme enumeration
 enum DepositionScheme {trilinear, square_dpvm, true_dpvm, centroid};
 
@@ -384,6 +387,8 @@ class mfix : public AmrCore
 
     static int m_drag_type;
 
+    static int m_convection_type;
+
     static DepositionScheme m_deposition_scheme;
 
     static int m_reaction_rates_type;
@@ -391,6 +396,9 @@ class mfix : public AmrCore
     static amrex::Real m_deposition_diffusion_coeff;
     static amrex::Real m_deposition_scale_factor;
     static amrex::Real m_max_solids_volume_fraction;
+
+    template <typename F1>
+    void mfix_calc_transfer_coeffs (F1 DragFunc);
 
     template <typename F1, typename F2>
     void mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff);
@@ -909,14 +917,16 @@ class mfix : public AmrCore
 
     int steady_state = 0;
 
-    bool advect_enthalpy      = false;
-    bool advect_density       = false;
-    bool advect_tracer        = false;
-    bool advect_fluid_species = false;
-    bool solve_reactions      = false;
-    bool open_system_constraint = false; // by default we use incompressibility constraint
+    bool advect_enthalpy        = false;
+    bool advect_density         = false;
+    bool advect_tracer          = false;
+    bool advect_fluid_species   = false;
+    bool solve_reactions        = false;
+    bool open_system_constraint = false; // by default use cold-flow constraint
 
-    bool test_tracer_conservation  = false;
+    bool test_tracer_conservation = false;
+
+    amrex::Real enthalpy_source = 0;
 
     // Options to control mfix verbosity level
     int m_verbose = 0;
@@ -1024,8 +1034,10 @@ class mfix : public AmrCore
     amrex::Vector<Real> avg_p_g;
     amrex::Vector<Real> avg_ep_g;
     amrex::Vector<Real> avg_vel_g;
+    amrex::Vector<Real> avg_T_g;
 
     amrex::Vector<Real> avg_vel_p;
+    amrex::Vector<Real> avg_T_p;
 
     amrex::Vector<Real> avg_region_x_e;
     amrex::Vector<Real> avg_region_x_w;

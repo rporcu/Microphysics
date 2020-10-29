@@ -158,6 +158,15 @@ mfix::WriteAverageRegions ( std::string& avg_file, int nstep, Real time ) const
                                        avg_region_x_w, avg_region_x_e,
                                        avg_region_y_s, avg_region_y_n,
                                        avg_region_z_b, avg_region_z_t );
+
+        if (advect_enthalpy)
+          pc->ComputeAverageTemperatures ( lev,
+                                           time,
+                                           avg_file,
+                                           avg_T_p,
+                                           avg_region_x_w, avg_region_x_e,
+                                           avg_region_y_s, avg_region_y_n,
+                                           avg_region_z_b, avg_region_z_t );
       }
     }
 
@@ -174,6 +183,8 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
   const int size_p_g   = avg_p_g.size();
   const int size_ep_g  = avg_ep_g.size();
   const int size_vel_g = avg_vel_g.size();
+
+  const int size_T_g   = advect_enthalpy ? avg_T_g.size() : 0;
 
   const Real * dx   = geom[lev].CellSize();
   const Real * dxi  = geom[lev].InvCellSize();
@@ -192,7 +203,7 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
     return;
   }
 
-  const int var_count = 6;
+  const int var_count = advect_enthalpy ? 7 : 6;
 
   // Array to hold the data for global collection.
   std::vector<Real> regions_data(var_count*nregions, 0.0);
@@ -261,6 +272,9 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
     regions_data[var_count*nr + 4] = volWgtSumBox(lev, *pg_cc                    , 0, avg_box, local);
     regions_data[var_count*nr + 5] = volWgtSumBox(lev, *(m_leveldata[lev]->ep_g) , 0, avg_box, local);
 
+    if (advect_enthalpy)
+      regions_data[var_count*nr + 6] = volWgtSumBox(lev, *(m_leveldata[lev]->T_g), 0, avg_box, local);
+
   }
 
   // Compute parallel reductions
@@ -281,6 +295,8 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
           Real sum_velz = regions_data[var_count*nr + 3];
           Real sum_p_g  = regions_data[var_count*nr + 4];
           Real sum_ep_g = regions_data[var_count*nr + 5];
+
+          Real sum_T_g  = advect_enthalpy ? regions_data[var_count*nr + 6] : 0;
 
           std::ofstream  ofs;
           std::string    fname;
@@ -341,6 +357,26 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
                   ofs << time << " " << sum_velx / sum_vol << " "
                       <<                sum_vely / sum_vol << " "
                       <<                sum_velz / sum_vol << std::endl;
+
+                  ofs.close();
+
+                }
+            }
+
+          if( size_T_g  > nr )
+            {
+              if( avg_T_g[nr] == 1)
+                {
+                  fname = basename + "_T_g_" + std::to_string(nr) + ".dat";
+
+                  std::ifstream ifile(fname.c_str());
+                  bool exists = (bool)ifile;
+
+                  ofs.open ( fname.c_str(), std::ios::out | std::ios::app );
+                  if ( !ofs.good() ) amrex::FileOpenFailed ( fname );
+
+                  if ( !exists ) ofs << "#  Time   T_g" << std::endl;
+                  ofs << time << " " << sum_T_g / sum_vol << std::endl;
 
                   ofs.close();
 

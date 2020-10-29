@@ -12,6 +12,7 @@ std::string      mfix::knapsack_weight_type = "RunTimeCosts";
 int              mfix::load_balance_fluid   = 1;
 int              mfix::knapsack_nmax        = 128;
 int              mfix::m_drag_type          = DragType::Invalid;
+int              mfix::m_convection_type    = ConvectionType::Invalid;
 DepositionScheme mfix::m_deposition_scheme;
 int              mfix::m_reaction_rates_type = ReactionRatesType::RRatesUser;
 amrex::Real      mfix::m_deposition_diffusion_coeff = -1.0;
