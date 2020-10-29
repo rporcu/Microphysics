@@ -75,8 +75,10 @@ test:csg:
   <<: *test_template
 
 build:gpu:
-  image: $CI_REGISTRY_IMAGE:latest
+  stage: test
+  needs: []
   script:
+    - module load ccache/3.7.9 gnu/8.4.0 openmpi/4.0.3_gnu8.4 cuda/10.1
     - git submodule update --init --force
     - cmake -S .
             -B build
@@ -85,9 +87,9 @@ build:gpu:
             -DENABLE_CUDA=1
             -DENABLE_MPI=$ENABLE_MPI
             -DENABLE_OMP=$ENABLE_OMP
-            -G Ninja
     - cmake --build build --target build_tests
-  <<: *test_template
+  tags:
+    - joule
 
 
 test:single-serial:
