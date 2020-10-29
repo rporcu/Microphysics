@@ -25,6 +25,8 @@ mfix::InitParams ()
   FLUID::Initialize();
   SOLIDS::Initialize();
 
+  enthalpy_source = SOLIDS::enthalpy_source;
+
   BL_ASSERT(FLUID::nspecies <= SPECIES::NMAX);
   BL_ASSERT(SOLIDS::nspecies <= SPECIES::NMAX);
 
@@ -289,6 +291,31 @@ mfix::InitParams ()
       amrex::Abort("Don't know this drag_type!");
     }
 
+    if (advect_enthalpy)
+    {
+      std::string convection_type = "None";
+
+      if(not pp.contains("convection_type"))
+      {
+        amrex::Warning("Convection type not specified in input file. "
+            "Assuming RanzMarshall convection type");
+        convection_type = "RanzMarshall";
+      }
+      else {
+        pp.get("convection_type", convection_type);
+      }
+
+      if (convection_type.compare("RanzMarshall") == 0) {
+        m_convection_type = ConvectionType::RanzMarshall;
+      }
+      else if (convection_type.compare("Gunn") == 0) {
+        m_convection_type = ConvectionType::Gunn;
+      }
+      else {
+        amrex::Abort("Don't know this convection_type!");
+      }
+    }
+
     std::string deposition_scheme = "trilinear";
     pp.query("deposition_scheme", deposition_scheme);
 
@@ -336,8 +363,11 @@ mfix::InitParams ()
     amr_pp.queryarr("avg_p_g", avg_p_g);
     amr_pp.queryarr("avg_ep_g", avg_ep_g);
     amr_pp.queryarr("avg_vel_g", avg_vel_g);
+    amr_pp.queryarr("avg_T_g", avg_T_g);
 
     amr_pp.queryarr("avg_vel_p", avg_vel_p);
+
+    amr_pp.queryarr("avg_T_p", avg_T_p);
 
     // Regions geometry
     amr_pp.queryarr("avg_region_x_e", avg_region_x_e);

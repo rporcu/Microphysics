@@ -135,7 +135,8 @@ public:
                           amrex::MultiFab * cost,
                           std::string & knapsack_weight_type,
                           int & nsubsteps,
-                          const int advect_enthalpy);
+                          const int advect_enthalpy,
+                          const amrex::Real enthalpy_source);
 
     void MFIX_PC_InitCollisionParams ();
 
@@ -231,6 +232,21 @@ public:
                                    const amrex::Vector<amrex::Real>& avg_region_y_n,
                                    const amrex::Vector<amrex::Real>& avg_region_z_b,
                                    const amrex::Vector<amrex::Real>& avg_region_z_t);
+
+
+    //
+    // Postprocessing utilities to compute spatially-averaged particle velocities
+    //
+    void ComputeAverageTemperatures (const int lev,
+                                     const amrex::Real time,
+                                     const std::string& basename,
+                                     const amrex::Vector<amrex::Real>& avg_T_p,
+                                     const amrex::Vector<amrex::Real>& avg_region_x_w,
+                                     const amrex::Vector<amrex::Real>& avg_region_x_e,
+                                     const amrex::Vector<amrex::Real>& avg_region_y_s,
+                                     const amrex::Vector<amrex::Real>& avg_region_y_n,
+                                     const amrex::Vector<amrex::Real>& avg_region_z_b,
+                                     const amrex::Vector<amrex::Real>& avg_region_z_t);
 
 
 

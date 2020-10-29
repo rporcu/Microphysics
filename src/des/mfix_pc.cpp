@@ -124,7 +124,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                                              MultiFab* cost,
                                              std::string& knapsack_weight_type,
                                              int& nsubsteps,
-                                             const int advect_enthalpy)
+                                             const int advect_enthalpy,
+                                             const Real enthalpy_source)
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
@@ -644,7 +645,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             if(advect_enthalpy){
 
               BL_PROFILE_VAR("des::update_particle_enthalpy()", des_update_enthalpy);
-              amrex::ParallelFor(nrp, [pstruct,subdt]
+              amrex::ParallelFor(nrp, [pstruct,subdt,enthalpy_source]
               AMREX_GPU_DEVICE (int i) noexcept
               {
                   ParticleType& p = pstruct[i];
@@ -654,6 +655,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                   p.rdata(realData::temperature) += subdt * p.rdata(realData::convection) /
                       (p.rdata(realData::mass) * p.rdata(realData::c_ps));
 
+                  p.rdata(realData::temperature) += subdt * enthalpy_source /
+                      (p.rdata(realData::mass) * p.rdata(realData::c_ps));
               });
               BL_PROFILE_VAR_STOP(des_update_enthalpy);
             }
@@ -1290,7 +1293,7 @@ ComputeAverageVelocities (const int lev,
 #endif
 
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:sum_np,sum_velx,sum_vely,sum_velz) if (Gpu::notInLaunchRegion())
+#pragma omp parallel reduction(+:sum_np,sum_velx,sum_vely,sum_velz,sum_kin_energy) if (Gpu::notInLaunchRegion())
 #endif
       for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
       {
@@ -1421,6 +1424,157 @@ ComputeAverageVelocities (const int lev,
             << region_vely[nr] << " "
             << region_velz[nr] << " "
             << region_kin_energy[nr] << std::endl;
+
+        ofs.close();
+      }
+    }
+  }
+}
+
+void MFIXParticleContainer::
+ComputeAverageTemperatures (const int lev,
+                            const amrex::Real time,
+                            const std::string&  basename,
+                            const amrex::Vector<Real>& avg_T_p,
+                            const amrex::Vector<Real>& avg_region_x_w,
+                            const amrex::Vector<Real>& avg_region_x_e,
+                            const amrex::Vector<Real>& avg_region_y_s,
+                            const amrex::Vector<Real>& avg_region_y_n,
+                            const amrex::Vector<Real>& avg_region_z_b,
+                            const amrex::Vector<Real>& avg_region_z_t )
+{
+  // Count number of calls -- Used to determine when to create file from scratch
+  static int ncalls = 0;
+  ++ncalls;
+
+  int  nregions = avg_region_x_w.size();
+
+  if(avg_T_p.size() > 0)
+  {
+    //
+    // Check the regions are defined correctly
+    //
+    if ( ( avg_region_x_e.size() != nregions ) or
+         ( avg_region_y_s.size() != nregions ) or
+         ( avg_region_y_n.size() != nregions ) or
+         ( avg_region_z_b.size() != nregions ) or
+         ( avg_region_z_t.size() != nregions ) )
+    {
+      amrex::Print() << "ComputeAverageTemperatures: some regions are not properly"
+        " defined: skipping.";
+      return;
+    }
+
+    std::vector<long> region_np(nregions, 0);
+    std::vector<Real> region_T_p(nregions, 0.0);
+
+    for ( int nr = 0; nr < nregions; ++nr )
+    {
+      amrex::Print() << "size of avg_T_p " << avg_T_p[nr] << "\n";
+
+      // This region isn't needed for particle data.
+      if( avg_T_p[nr] == 0) continue;
+
+      // Create Real box for this region
+      RealBox avg_region({avg_region_x_w[nr], avg_region_y_s[nr], avg_region_z_b[nr]},
+                         {avg_region_x_e[nr], avg_region_y_n[nr], avg_region_z_t[nr]});
+
+      // Jump to next iteration if this averaging region is not valid
+      if ( !avg_region.ok() )
+      {
+        amrex::Print() << "ComputeAverageTemperatures: region " << nr
+                       << " is invalid: skipping\n";
+        continue;
+      }
+
+      long sum_np   = 0;    // Number of particle in avg region
+      Real sum_T_p = 0.;
+
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:sum_np,sum_T_p) if (Gpu::notInLaunchRegion())
+#endif
+      for ( MFIXParIter pti(*this, lev); pti.isValid(); ++ pti)
+      {
+        Box bx = pti.tilebox();
+        RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
+
+        if ( tile_region.intersects ( avg_region ) )
+        {
+          const int np         = NumberOfParticles(pti);
+          const AoS &particles = pti.GetArrayOfStructs();
+
+          for (int p = 0; p < np; ++p )
+          {
+            if ( avg_region.contains(particles[p].pos()))
+            {
+              const Real T_p = particles[p].rdata(realData::temperature);
+
+              sum_np++;
+              sum_T_p += T_p;
+            }
+          }
+        }
+      }
+
+      region_np[nr]  = sum_np;
+      region_T_p[nr] = sum_T_p;
+    }
+
+    // Compute parallel reductions
+    ParallelDescriptor::ReduceLongSum(region_np.data(),  nregions);
+    ParallelDescriptor::ReduceRealSum(region_T_p.data(), nregions);
+
+    // Only the IO processor takes care of the output
+    if (ParallelDescriptor::IOProcessor())
+    {
+      for ( int nr = 0; nr < nregions; ++nr )
+      {
+        // Skip this region.
+        if( avg_T_p[nr] == 0 ) continue;
+
+        //
+        // Compute averages (NaN if NP=0 )
+        //
+        if (region_np[nr]==0) {
+          region_T_p[nr] = 0.0;
+        }
+        else {
+          region_T_p[nr] /= region_np[nr];
+        }
+
+        //
+        // Print to file
+        //
+        std::ofstream  ofs;
+        std::string    fname;
+
+        fname = basename + "_T_p_" + std::to_string(nr) + ".dat";
+
+        // Open file
+        if ( ncalls == 1 )
+        {
+          // Create output files only the first time this function is called
+          // Use ios:trunc to delete previous content
+          ofs.open ( fname.c_str(), std::ios::out | std::ios::trunc );
+        }
+        else
+        {
+          // If this is not the first time we write to this file
+          // we append to it
+          ofs.open ( fname.c_str(), std::ios::out | std::ios::app );
+        }
+
+        // Check if file is good
+        if ( !ofs.good() )
+          amrex::FileOpenFailed ( fname );
+
+        // Print header if first access
+        if ( ncalls == 1 )
+          ofs << "#  Time   NP  T" << std::endl;
+
+        ofs << time << " "
+            << region_np[nr] << " "
+            << region_T_p[nr] << std::endl;
 
         ofs.close();
       }

@@ -46,6 +46,8 @@ namespace SOLIDS
   // Specified constant specific heat
   amrex::Vector<amrex::Real> cp_p0;
 
+  amrex::Real enthalpy_source(0);
+
   void Initialize ()
   {
 
@@ -54,6 +56,11 @@ namespace SOLIDS
     {
       amrex::ParmParse pp_mfix("mfix");
       pp_mfix.query("advect_enthalpy", check_energy);
+
+      {
+        amrex::ParmParse pp_mfix_solids("mfix.particles");
+        pp_mfix_solids.query("enthalpy_source", enthalpy_source);
+      }
     }
 
     amrex::ParmParse pp("solids");

@@ -140,12 +140,10 @@ namespace FLUID
       }
       else
       {
-        //TODO:: do not abort here. Just send a Warning
         MolecularWeightModel = MOLECULARWEIGHTMODEL::Constant;
 
-        amrex::Print() << "Warning: fluid molecular weight model not provided.\n";
-        amrex::Print() << "Default: Constant model with MW_g = 0\n";
-        //amrex::Abort("Unknown species specific heat model!");
+        amrex::Warning("Fluid molecular weight model not provided. "
+          "Assuming constant model with MW_g = 0");
       }
 
       // Get viscosity inputs ----------------------------------//

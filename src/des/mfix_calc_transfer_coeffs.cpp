@@ -9,26 +9,39 @@
 void mfix::mfix_calc_transfer_coeffs ()
 {
   if (m_drag_type == DragType::WenYu) {
-      mfix_calc_transfer_coeffs(ComputeDragWenYu(DEM::small_number,DEM::large_number,DEM::eps),
-            ComputeConvectionCoeff_RanzMarshall(DEM::small_number,DEM::large_number,DEM::eps));
+    mfix_calc_transfer_coeffs(ComputeDragWenYu(DEM::small_number,DEM::large_number,DEM::eps));
   }
   else if (m_drag_type == DragType::Gidaspow) {
-    mfix_calc_transfer_coeffs(ComputeDragGidaspow(DEM::small_number,DEM::large_number,DEM::eps),
-              ComputeConvectionCoeff_RanzMarshall(DEM::small_number,DEM::large_number,DEM::eps));
-
+    mfix_calc_transfer_coeffs(ComputeDragGidaspow(DEM::small_number,DEM::large_number,DEM::eps));
   }
   else if (m_drag_type == DragType::BVK2) {
-    mfix_calc_transfer_coeffs(ComputeDragBVK2(DEM::small_number,DEM::large_number,DEM::eps),
-          ComputeConvectionCoeff_RanzMarshall(DEM::small_number,DEM::large_number,DEM::eps));
-
+    mfix_calc_transfer_coeffs(ComputeDragBVK2(DEM::small_number,DEM::large_number,DEM::eps));
   }
   else if (m_drag_type == DragType::UserDrag) {
-    mfix_calc_transfer_coeffs(ComputeDragUser(DEM::small_number,DEM::large_number,DEM::eps),
-          ComputeConvectionCoeff_RanzMarshall(DEM::small_number,DEM::large_number,DEM::eps));
-
+    mfix_calc_transfer_coeffs(ComputeDragUser(DEM::small_number,DEM::large_number,DEM::eps));
   }
   else {
     amrex::Abort("Invalid Drag Type.");
+  }
+}
+
+template <typename F1>
+void mfix::mfix_calc_transfer_coeffs (F1 DragFunc)
+{
+  if (advect_enthalpy)
+  {
+    if (m_convection_type == ConvectionType::RanzMarshall) {
+        mfix_calc_transfer_coeffs(DragFunc, ComputeConvRanzMarshall(DEM::small_number,DEM::large_number,DEM::eps));
+    }
+    else if (m_convection_type == ConvectionType::Gunn) {
+      mfix_calc_transfer_coeffs(DragFunc, ComputeConvGunn(DEM::small_number,DEM::large_number,DEM::eps));
+    }
+    else {
+      amrex::Abort("Invalid Convection Type.");
+    }
+  }
+  else {
+    mfix_calc_transfer_coeffs(DragFunc, NullConvectionCoeff());
   }
 }
 
