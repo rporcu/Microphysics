@@ -4,6 +4,7 @@
 
 #include <AMReX_ParmParse.H>
 #include <AMReX_Utility.H>
+#include <AMReX_ParallelDescriptor.H>
 
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
@@ -142,8 +143,9 @@ namespace FLUID
       {
         MolecularWeightModel = MOLECULARWEIGHTMODEL::Constant;
 
-        amrex::Warning("Fluid molecular weight model not provided. "
-          "Assuming constant model with MW_g = 0");
+        if ( amrex::ParallelDescriptor::IOProcessor() )
+          amrex::Warning("Fluid molecular weight model not provided. "
+            "Assuming constant model with MW_g = 0");
       }
 
       // Get viscosity inputs ----------------------------------//

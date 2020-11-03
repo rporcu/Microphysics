@@ -297,8 +297,10 @@ mfix::InitParams ()
 
       if(not pp.contains("convection_type"))
       {
-        amrex::Warning("Convection type not specified in input file. "
-            "Assuming RanzMarshall convection type");
+        if ( ParallelDescriptor::IOProcessor() )
+          amrex::Warning("Convection type not specified in input file. "
+              "Assuming RanzMarshall convection type");
+
         convection_type = "RanzMarshall";
       }
       else {

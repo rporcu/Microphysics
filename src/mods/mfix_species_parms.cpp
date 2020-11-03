@@ -3,6 +3,7 @@
 #include <AMReX_Print.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_Utility.H>
+#include <AMReX_ParallelDescriptor.H>
 
 #include <mfix_species_parms.H>
 
@@ -90,8 +91,9 @@ namespace SPECIES
           int exists = ppSpecies.query("molecular_weight", MW_k0[n]);
 
           if (not exists) {
-            amrex::Warning(species[n] + "_MW not provided. Assuming " +
-                           species[n] + "_MW = 0");
+            if ( amrex::ParallelDescriptor::IOProcessor() )
+              amrex::Warning(species[n] + "_MW not provided. Assuming " +
+                             species[n] + "_MW = 0");
           }
         }
 
@@ -132,8 +134,9 @@ namespace SPECIES
           else {
             SpecificHeatModel = SPECIFICHEATMODEL::Constant;
 
-            amrex::Warning("Species specific heat model not provided."
-                           " Assuming constant model with cp_gk = 0");
+            if ( amrex::ParallelDescriptor::IOProcessor() )
+              amrex::Warning("Species specific heat model not provided."
+                             " Assuming constant model with cp_gk = 0");
           }
 
         }
