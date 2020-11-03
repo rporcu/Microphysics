@@ -286,8 +286,8 @@ ParticlesGenerator::hex_close_pack (const int icv,
   max_rp = 0.5 * max_dp;
 
   // Particle count is based on mean particle size
-  const int seed =
-    static_cast<int>(ic_vol * IC::ic[icv].solids[type].volfrac / ((M_PI/6.0)*mean*mean*mean));
+  const long seed =
+    static_cast<long>(ic_vol * IC::ic[icv].solids[type].volfrac / ((M_PI/6.0)*mean*mean*mean));
 
   // Total to seed over the whole IC region
   max_seed[1] = static_cast<int>((y_n - y_s - max_dp) / max_dp);
