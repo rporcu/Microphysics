@@ -68,11 +68,23 @@ namespace IC
           std::string species_field = field+".species";
           amrex::ParmParse ppSpecies(species_field.c_str());
 
+          // Auxiliary variable to check that species sum up to 1
+          Real total_mass_fraction(0);
+
           for (int n(0); n < nspecies_g; n++) {
             // Get the name of the fluid species we want to get the IC
             std::string fluid_specie = FLUID::species[n];
             // Get the IC mass fraction for the current species
             ppSpecies.query(fluid_specie.c_str(), new_ic.fluid.species[n].mass_fraction);
+            total_mass_fraction += new_ic.fluid.species[n].mass_fraction;
+          }
+
+          // Sanity check that the input species mass fractions sum up to 1
+          if (not(Math::abs(total_mass_fraction-1) < 1.e-15)) {
+            std::string message = "Error: species ICs mass fractions in region "
+              + regions[icv] + " sum up to " + std::to_string(total_mass_fraction) + "\n";
+
+            amrex::Abort(message);
           }
         }
       }
@@ -152,10 +164,24 @@ namespace IC
               // TODO: check this when nb of solids > 1
               new_solid.species.resize(SOLIDS::nspecies);
 
+              amrex::Real total_mass_fraction(0);
+
               for (int n(0); n < SOLIDS::nspecies; n++) {
                 std::string current_species = SOLIDS::species[n];
                 ppSpecies.get(current_species.c_str(), new_solid.species[n].mass_fraction);
+
+                total_mass_fraction += new_solid.species[n].mass_fraction;
               }
+
+              // Sanity check that the input species mass fractions sum up to 1
+              if (not(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
+                std::string message = "Error: SOLID type " + solids_types[lcs]
+                  + " species ICs mass fractions in region " + regions[icv]
+                  + " sum up to " + std::to_string(total_mass_fraction) + "\n";
+
+                amrex::Abort(message);
+              }
+
             }
 
             new_ic.solids.push_back(new_solid);

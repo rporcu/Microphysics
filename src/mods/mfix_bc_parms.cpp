@@ -350,11 +350,23 @@ namespace BC
             std::string species_field = field+".species";
             amrex::ParmParse ppSpecies(species_field.c_str());
 
+            amrex::Real total_mass_fraction(0);
+
             for (int n(0); n < FLUID::nspecies; n++) {
               // Get the name of the fluid species we want to get the IC
               std::string fluid_specie = FLUID::species[n];
               // Get the BC mass fraction for the current species
               ppSpecies.get(fluid_specie.c_str(), new_bc.fluid.species[n].mass_fraction);
+
+              total_mass_fraction += new_bc.fluid.species[n].mass_fraction;
+            }
+
+            // Sanity check that the input species mass fractions sum up to 1
+            if (not(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
+              std::string message = "Error: FLUID species BCs mass fractions in region "
+                + regions[bcv] + " sum up to " + std::to_string(total_mass_fraction) + "\n";
+
+              amrex::Abort(message);
             }
           }
         }
@@ -422,11 +434,24 @@ namespace BC
             std::string species_field = field+".species";
             amrex::ParmParse ppSpecies(species_field.c_str());
 
+            amrex::Real total_mass_fraction(0);
+
             for (int n(0); n < SOLIDS::nspecies; n++) {
               // Get the name of the solid species we want to get the BC
               std::string dem_specie = SOLIDS::species[n];
               // Get the BC mass fraction for the current species
               ppSpecies.query(dem_specie.c_str(), new_solid.species[n].mass_fraction);
+
+              total_mass_fraction += new_solid.species[n].mass_fraction;
+            }
+
+            // Sanity check that the input species mass fractions sum up to 1
+            if (not(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
+              std::string message = "Error: SOLID type " + solids_types[lcs]
+                + " species BCs mass fractions in region " + regions[bcv]
+                + " sum up to " + std::to_string(total_mass_fraction) + "\n";
+
+              amrex::Abort(message);
             }
           }
 
