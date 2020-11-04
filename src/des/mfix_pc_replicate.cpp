@@ -1,4 +1,6 @@
-#include "mfix_des_K.H"
+#include <mfix_des_K.H>
+#include <mfix_solids_parms.H>
+#include <mfix_reactions_parms.H>
 #include <mfix_pic_parms.H>
 
 using namespace amrex;
@@ -16,19 +18,49 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
 
     const int myProc = ParallelDescriptor::MyProc();
 
+    const int nspecies_s = SOLIDS::nspecies;
+    const int nreactions = REACTIONS::nreactions;
+
+    const int idx_X = speciesData::X_sn * nspecies_s;
+
+    const int idx_G = speciesData::count * nspecies_s +
+                      reactionsData::G_sn_pg_q * nreactions;
+
     for (int idim = 0; idim < 3; ++idim)
     {
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
-            auto& particles = pti.GetArrayOfStructs();
+            auto& ptile = DefineAndReturnParticleTile(lev,pti);
             int np = pti.numParticles();
 
             int np_replicated = np * (Nrep[idim] - 1);
 
             int new_np = np + np_replicated;
-            particles.resize(new_np);
+            ptile.resize(new_np);
 
+            // Add runtime-added components for species mass fractions
+            if (SOLIDS::solve_species) {
+              for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
+                ptile.push_back_real(n_s, np_replicated, 0.);
+            }
+
+            // Add runtime-added components for species mass rate transfer for
+            // each reaction
+            if (SOLIDS::solve_species and REACTIONS::solve) {
+              const int gap = SOLIDS::nspecies;
+
+              for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
+                for (int q(gap); q < (gap+REACTIONS::nreactions); ++q) {
+                  const int comp = q + n_s * REACTIONS::nreactions;
+                  ptile.push_back_real(comp, np_replicated, 0.);
+                }
+            }
+
+            auto& particles = ptile.GetArrayOfStructs();
             ParticleType* pstruct = particles().dataPtr();
+
+            //Access to added variables
+            auto ptile_data = ptile.getParticleTileData();
 
             for (int i = 0; i < Nrep[idim]; i++)
             {
@@ -39,7 +71,8 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
 
                 const int nextID = ParticleType::NextID();
 
-                amrex::ParallelFor(np, [pstruct,np,nextID,myProc,shift,i]
+                amrex::ParallelFor(np, [pstruct,ptile_data,np,nextID,myProc,
+                    nspecies_s,nreactions,idx_X,idx_G,shift,i]
                   AMREX_GPU_DEVICE (int n) noexcept
                 {
                     int index = n;
@@ -79,6 +112,26 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                     // Set id and cpu for this particle
                     p_rep.id()  = nextID + n;
                     p_rep.cpu() = myProc;
+
+                    // Runtime added variables -- species mass fractions
+                    for (int n_s(idx_X); n_s < (idx_X+nspecies_s); n_s++) {
+                      // Copy data from particle to replicated one
+                      ptile_data.m_runtime_rdata[n_s][index_repl] =
+                        ptile_data.m_runtime_rdata[n_s][index];
+                    }
+
+                    // Runtime added variables -- species mass transfer rate per
+                    // reaction
+                    for (int n_s(0); n_s < nspecies_s; n_s++) {
+                      for (int q(idx_G); q < (idx_G+nreactions); q++) {
+                        // Set the index for the q-th mass txfr rate in the SoA
+                        const int txfr_idx = q + n_s * nreactions;
+
+                        // Copy data from particle to replicated one
+                        ptile_data.m_runtime_rdata[txfr_idx][index_repl] =
+                          ptile_data.m_runtime_rdata[txfr_idx][index];
+                      }
+                    }
 
                 }); // p
 
