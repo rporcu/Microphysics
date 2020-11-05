@@ -36,7 +36,7 @@ macro (setup_test _test _suffix _env _input_file )
                RUNTIME_OUTPUT_DIRECTORY ${_test_dir} )
 
             # Special treatment for CUDA
-            if (ENABLE_CUDA)
+            if (MFIX_CUDA)
                setup_target_for_cuda_compilation(${_test_exe})
             endif ()
 
@@ -102,7 +102,7 @@ foreach( THIS_TEST ${SGS_TESTS})
     setup_test(
         ${THIS_TEST}
         "SGS"
-        "ENABLE_MPI=0;ENABLE_OMP=0;OMP_NUM_THREADS=1"
+        "MFIX_MPI=0;MFIX_OMP=0;OMP_NUM_THREADS=1"
         "inputs_single")
 
 endforeach( THIS_TEST ${SGS_TESTS} )
@@ -129,14 +129,14 @@ foreach( THIS_TEST ${MGS_TESTS})
     setup_test(
         ${THIS_TEST}
         "MGS"
-        "ENABLE_MPI=0;ENABLE_OMP=0;OMP_NUM_THREADS=1"
+        "MFIX_MPI=0;MFIX_OMP=0;OMP_NUM_THREADS=1"
         "inputs_multiple")
 
-    if (ENABLE_MPI)
+    if (MFIX_MPI)
         setup_test(
             ${THIS_TEST}
             "MGP"
-            "ENABLE_MPI=1;ENABLE_OMP=0;OMP_NUM_THREADS=1"
+            "MFIX_MPI=1;MFIX_OMP=0;OMP_NUM_THREADS=1"
             "inputs_multiple")
     endif ()
 
@@ -165,14 +165,14 @@ foreach( THIS_TEST ${TGS_TESTS})
     setup_test(
         ${THIS_TEST}
         "TGS"
-        "ENABLE_MPI=0;ENABLE_OMP=0;OMP_NUM_THREADS=1"
+        "MFIX_MPI=0;MFIX_OMP=0;OMP_NUM_THREADS=1"
         "inputs_tiled")
 
-    if (ENABLE_OMP)
+    if (MFIX_OMP)
         setup_test(
             ${THIS_TEST}
             "TGSO"
-            "ENABLE_MPI=0;ENABLE_OMP=1;OMP_NUM_THREADS=4"
+            "MFIX_MPI=0;MFIX_OMP=1;OMP_NUM_THREADS=4"
             "inputs_tiled")
     endif ()
 
@@ -184,7 +184,7 @@ endforeach( THIS_TEST ${TGS_TESTS} )
 #                      TGM TESTS                           #
 #                                                          #
 ############################################################
-if ( ENABLE_OMP AND ENABLE_MPI )
+if ( MFIX_OMP AND MFIX_MPI )
 
     set( TGM_TESTS
         FLD01-x FLD01-y FLD01-z
@@ -199,7 +199,7 @@ if ( ENABLE_OMP AND ENABLE_MPI )
         setup_test(
             ${THIS_TEST}
             "TGPO"
-            "ENABLE_MPI=1;ENABLE_OMP=1;OMP_NUM_THREADS=2"
+            "MFIX_MPI=1;MFIX_OMP=1;OMP_NUM_THREADS=2"
             "inputs_multiple_tiled")
 
     endforeach( )

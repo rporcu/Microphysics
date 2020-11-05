@@ -12,7 +12,7 @@ add_executable(functional_tests EXCLUDE_FROM_ALL
   )
 
 # Special treatment for CUDA in functional_tests
-if(ENABLE_CUDA)
+if(MFIX_CUDA)
    setup_target_for_cuda_compilation(functional_tests)
 else()
    target_compile_features(functional_tests PRIVATE cxx_std_17)

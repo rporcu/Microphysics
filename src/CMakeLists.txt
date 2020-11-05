@@ -68,10 +68,10 @@ set_target_properties(mfixcore PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_features(mfixcore PUBLIC cxx_std_14)
 
 #
-# If ENABLE_CUDA, set CUDA-specific properties and
+# If MFIX_CUDA, set CUDA-specific properties and
 # make C++ files be compiled as CUDA sources
 #
-if (ENABLE_CUDA)
+if (MFIX_CUDA)
    setup_target_for_cuda_compilation(mfixcore)
 
    #
@@ -89,7 +89,7 @@ if ( NOT CMAKE_CXX_FLAGS )
    target_link_libraries(mfixcore PUBLIC AMReX::Flags_CXX)
 endif ()
 
-if (ENABLE_FPE)
+if (MFIX_FPE)
    target_link_libraries(mfixcore PUBLIC AMReX::Flags_FPE)
 endif ()
 

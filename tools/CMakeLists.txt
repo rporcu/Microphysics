@@ -7,7 +7,7 @@ target_link_libraries( ${FJOIN_PAR_EXE} AMReX::amrex )
 add_executable( ${FEXTRACT_EXE} EXCLUDE_FROM_ALL C++/fextract.cpp )
 target_link_libraries( ${FEXTRACT_EXE} AMReX::amrex )
 
-if (ENABLE_CUDA)
+if (MFIX_CUDA)
    setup_target_for_cuda_compilation(${FEXTRACT_EXE})
 endif ()
 
