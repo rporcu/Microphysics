@@ -55,7 +55,7 @@ test:csg:
             -B build
             -G Ninja
             -DCMAKE_BUILD_TYPE=Debug
-            -DENABLE_CSG=yes
+            -DMFIX_CSG=yes
     - cmake --build build --target functional_tests
     - ./build/src/eb/tests/functional_tests
   allow_failure: true
@@ -66,8 +66,8 @@ test:csg:
     - git submodule update --init --force subprojects/amrex
     - cmake -S .
             -B build
-            -DENABLE_MPI=$ENABLE_MPI
-            -DENABLE_OMP=$ENABLE_OMP
+            -DMFIX_MPI=$ENABLE_MPI
+            -DMFIX_OMP=$ENABLE_OMP
             -G Ninja
     - cmake --build build --target build_tests
     - cd build
@@ -82,11 +82,11 @@ build:gpu:
     - git submodule update --init --force
     - cmake -S .
             -B build
-            -DCUDA_ARCH=Volta
-            -DENABLE_CSG=yes
-            -DENABLE_CUDA=1
-            -DENABLE_MPI=$ENABLE_MPI
-            -DENABLE_OMP=$ENABLE_OMP
+            -DAMReX_CUDA_ARCH=Volta
+            -DMFIX_CSG=yes
+            -DMFIX_CUDA=1
+            -DMFIX_MPI=$ENABLE_MPI
+            -DMFIX_OMP=$ENABLE_OMP
     - cmake --build build --target build_tests
   tags:
     - joule

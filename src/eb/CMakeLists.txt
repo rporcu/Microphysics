@@ -18,7 +18,7 @@ target_sources( mfixcore
    mfix_write_eb_surface.cpp
    )
 
-if(ENABLE_CSG)
+if(MFIX_CSG)
    target_compile_definitions(mfixcore PRIVATE MFIX_GEOMETRY_CSG)
    target_sources(mfixcore PRIVATE mfix_eb_csg.cpp)
    add_subdirectory(tests)

@@ -48,23 +48,23 @@ endif()
 # be enabled in the installation.
 # In STANDALONE mode, find_package will make sure these options are available
 # IN SUPERBUILD mode, These options will supersede AMReX options with the same name
-option( ENABLE_OMP    "Enable OpenMP" NO )
-option( ENABLE_MPI    "Enable MPI"   YES )
+option( MFIX_OMP    "Enable OpenMP" NO )
+option( MFIX_MPI    "Enable MPI"   YES )
 
 include(CMakeDependentOption)
-cmake_dependent_option( ENABLE_MPI_THREAD_MULTIPLE
+cmake_dependent_option( MFIX_MPI_THREAD_MULTIPLE
    "whether to initialize MPI so that multiple threads can make MPI calls at the same time"  OFF
-   "ENABLE_MPI" OFF)
+   "MFIX_MPI" OFF)
 
-option( ENABLE_HYPRE  "Enable HYPRE"  NO )
-option( ENABLE_CUDA   "Enable CUDA"   NO )
-option( ENABLE_FPE    "Enable Floating Point Exceptions checks" NO )
+option( MFIX_HYPRE  "Enable HYPRE"  NO )
+option( MFIX_CUDA   "Enable CUDA"   NO )
+option( MFIX_FPE    "Enable Floating Point Exceptions checks" NO )
 
 
 # CSG support
-option( ENABLE_CSG "Build with CSG support" OFF)
+option( MFIX_CSG "Build with CSG support" OFF)
 
-if (ENABLE_CUDA)
+if (MFIX_CUDA)
     enable_language(CUDA)
 endif ()
 
@@ -76,7 +76,7 @@ get_git_info( )
 # Set some cache variable for the whole project
 set( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp CACHE INTERNAL "Main source file")
 
-if(ENABLE_CSG)
+if(MFIX_CSG)
   add_subdirectory(subprojects/csg-eb)
 endif()
 
@@ -95,7 +95,7 @@ target_link_libraries( mfix mfixcore )
 file( GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.cpp)
 add_udfs_to_target(mfix ${USR_OVERRIDES})
 
-if (ENABLE_CUDA)
+if (MFIX_CUDA)
    setup_target_for_cuda_compilation(mfix)
 endif ()
 
@@ -130,6 +130,6 @@ if ( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
   )
 endif ()
 
-if(ENABLE_CSG)
+if(MFIX_CSG)
   target_link_libraries(mfixcore PRIVATE csg)
 endif()

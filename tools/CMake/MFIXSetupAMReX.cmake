@@ -16,23 +16,23 @@ if (AMReX_FOUND)
 
    # We are in this branch because an AMReX installation has been found.
    # In this scenario, we don't know how AMReX has been built. We only know
-   # that some AMReX components, namely 3D, DP, DPARTICLES, AMRDATA, EB, and LSOLVERS
-   # MUST be present in the installation.
-   set(AMREX_REQUIRED_COMPONENTS 3D DP DPARTICLES AMRDATA EB LSOLVERS)
+   # that some AMReX components, namely 3D DOUBLE PARTICLES PDOUBLE AMRDATA
+   # EB LSOLVERS  MUST be present in the installation.
+   set(AMREX_REQUIRED_COMPONENTS 3D DOUBLE PARTICLES PDOUBLE AMRDATA EB LSOLVERS)
 
-   if (ENABLE_MPI)
+   if (MFIX_MPI)
       list(APPEND AMREX_REQUIRED_COMPONENTS MPI)
-      if (ENABLE_MPI_THREAD_MULTIPLE)
+      if (MFIX_MPI_THREAD_MULTIPLE)
          list(APPEND AMREX_REQUIRED_COMPONENTS MPI_THREAD_MULTIPLE)
       endif ()
    endif ()
-   if (ENABLE_OMP)
+   if (MFIX_OMP)
       list(APPEND AMREX_REQUIRED_COMPONENTS OMP)
    endif ()
-   if (ENABLE_CUDA)
+   if (MFIX_CUDA)
       list(APPEND AMREX_REQUIRED_COMPONENTS CUDA)
    endif ()
-   if (ENABLE_HYPRE)
+   if (MFIX_HYPRE)
       list(APPEND AMREX_REQUIRED_COMPONENTS HYPRE)
    endif ()
 
@@ -53,7 +53,7 @@ if (AMReX_FOUND)
 
    # We load this here so we have the CUDA helper functions
    # available everywhere we need it
-   if (ENABLE_CUDA)
+   if (MFIX_CUDA)
       include(AMReXTargetHelpers)
    endif ()
 else ()
@@ -90,11 +90,20 @@ else ()
 
    endif ()
 
-   set(ENABLE_DP ON)
-   set(ENABLE_TUTORIALS OFF)
-   set(ENABLE_PARTICLES ON)
-   set(ENABLE_EB ON)
-   set(ENABLE_AMRDATA ON)
+   set(AMReX_SPACEDIM              3)
+   set(AMReX_PRECISION             DOUBLE)
+   set(AMReX_MPI                   ${MFIX_MPI})
+   set(AMReX_MPI_THREAD_MULTIPLE   ${MFIX_MPI_THREAD_MULTIPLE})
+   set(AMReX_OMP                   ${MFIX_OMP})
+   set(AMReX_CUDA                  ${MFIX_CUDA})
+   set(AMReX_PARTICLES             ON)
+   set(AMReX_PARTICLES_PRECISION   DOUBLE)
+   set(AMReX_EB                    ON)
+   set(AMReX_AMRDATA               ON)
+   set(AMReX_LINEAR_SOLVERS        ON)
+   set(AMReX_HYPRE                 ${MFIX_HYPRE})
+   set(AMReX_BUILD_TUTORIALS       OFF)
+
 
    list(APPEND CMAKE_MODULE_PATH ${AMREX_SRC_DIR}/Tools/CMake)
 
@@ -105,7 +114,7 @@ else ()
    # from a sub-project is included via add_subdirectory.
    # IMPORTANT: if you don't do this, AMReX will perform this step in a sub-scope and therefore
    # it will not setup CUDA here!
-   if(ENABLE_CUDA)
+   if(MFIX_CUDA)
       include(AMReX_SetupCUDA)
    endif ()
 

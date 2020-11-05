@@ -23,7 +23,7 @@ if [ -n "$3" ]; then
 fi
 echo "Using INPUTS file ${INPUTS}"
 
-if [ "$ENABLE_MPI" -eq "1" ]; then
+if [ "$MFIX_MPI" -eq "1" ]; then
     MPIRUN="mpirun -np 2"
 else
     MPIRUN=""
