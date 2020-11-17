@@ -129,14 +129,6 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                amrex::Print() << " OLD Domain" << orig_domain      << std::endl;
             }
 
-            // Particle data is loaded into the MFIXParticleContainer's base
-            // class using amrex::NeighborParticleContainer::Restart
-
-            if ( (DEM::solve or PIC::solve) and lev == 0)
-              pc->Restart(restart_file, "particles");
-
-            amrex::Print() << "  Finished reading particle data" << std::endl;
-
             BoxList bl;
             for (int nb = 0; nb < orig_ba.size(); nb++) {
              for (int k = 0; k < Nrep[2]; k++) {
@@ -167,6 +159,14 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             // should not change after the eb-dependent MultiFabs are allocated.
             make_eb_geometry();
             make_eb_factories();
+
+            // Particle data is loaded into the MFIXParticleContainer's base
+            // class using amrex::NeighborParticleContainer::Restart
+
+            if ( (DEM::solve or PIC::solve) and lev == 0)
+              pc->Restart(restart_file, "particles");
+
+            amrex::Print() << "  Finished reading particle data" << std::endl;
 
             if (FLUID::solve) AllocateArrays(lev);
         }
