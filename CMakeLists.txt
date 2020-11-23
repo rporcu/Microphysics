@@ -51,6 +51,17 @@ endif()
 option( MFIX_OMP    "Enable OpenMP" NO )
 option( MFIX_MPI    "Enable MPI"   YES )
 
+#
+# Temporary hack
+# We need AMReX_FORTRAN=on (default, equivalent to BL_NO_FORT=FALSE)  for amrex.
+# In STANDALONE mode, this implies that that the AMReX config file will try to
+# search for the Fortran OpenMP library but this will fail unless the
+# Fortran language is enabled on mfix' side.
+#
+if (MFIX_OMP)
+   enable_language(Fortran)
+endif ()
+
 include(CMakeDependentOption)
 cmake_dependent_option( MFIX_MPI_THREAD_MULTIPLE
    "whether to initialize MPI so that multiple threads can make MPI calls at the same time"  OFF
