@@ -145,10 +145,13 @@ class DiffusionOp
     std::unique_ptr<amrex::MLEBTensorOp> vel_matrix;
 
     amrex::Vector<amrex::Array<std::unique_ptr<amrex::MultiFab>, AMREX_SPACEDIM>> b;
+
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> phi;
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> rhs;
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> vel_eb;
 
+    amrex::Vector<std::unique_ptr<amrex::MultiFab>> species_phi;
+    amrex::Vector<std::unique_ptr<amrex::MultiFab>> species_rhs;
     //
     // MultiLevel EmbeddedBoundary cell-centered Laplacian:
     //
@@ -157,6 +160,8 @@ class DiffusionOp
     std::unique_ptr<amrex::MLEBABecLap> scal_matrix;
     std::unique_ptr<amrex::MLEBABecLap> temperature_matrix;
     std::unique_ptr<amrex::MLEBABecLap> species_matrix;
+
+    amrex::Vector<amrex::Array<std::unique_ptr<amrex::MultiFab>, AMREX_SPACEDIM>> species_b;
 
     // DiffusionOp verbosity
     int verbose = 0;

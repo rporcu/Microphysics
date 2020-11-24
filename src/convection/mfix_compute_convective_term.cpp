@@ -13,9 +13,12 @@
 // Compute the three components of the convection term
 //
 void
-mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
+mfix::mfix_compute_convective_term (const bool update_laplacians,
+                                    Vector< MultiFab* >& conv_u_in,
                                     Vector< MultiFab* >& conv_s_in,
                                     Vector< MultiFab* >& conv_X_in,
+                                    Vector< MultiFab* >& lap_T_out,
+                                    Vector< MultiFab* >& lap_X_out,
                                     Vector< MultiFab* > const& vel_in,
                                     Vector< MultiFab* > const& ep_g_in,
                                     Vector< MultiFab* > const& ro_g_in,
@@ -153,9 +156,10 @@ mfix::mfix_compute_convective_term (Vector< MultiFab* >& conv_u_in,
     // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
     //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
     //    on face CENTROIDS
-    apply_MAC_projection(get_u_mac(), get_v_mac(), get_w_mac(), ep_g_in,
-        ro_g_in, MW_g_in, T_g_in, cp_g_in, k_g_in, T_g_on_eb_in, k_g_on_eb_in,
-        X_gk_in, D_gk_in, h_gk_in, txfr_in, ro_gk_txfr_in, time);
+    apply_MAC_projection(update_laplacians, lap_T_out, lap_X_out, get_u_mac(),
+        get_v_mac(), get_w_mac(), ep_g_in, ro_g_in, MW_g_in, T_g_in, cp_g_in,
+        k_g_in, T_g_on_eb_in, k_g_on_eb_in, X_gk_in, D_gk_in, h_gk_in, txfr_in,
+        ro_gk_txfr_in, time);
 
     bool already_on_centroids = true;
 

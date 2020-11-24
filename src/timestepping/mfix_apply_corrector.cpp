@@ -50,8 +50,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                             Vector< MultiFab* >& lap_trac_old,
                             Vector< MultiFab* >& enthalpy_RHS_old,
                             Vector< MultiFab* >& lap_T_old,
+                            Vector< MultiFab* >& lap_T_star,
                             Vector< MultiFab* >& species_RHS_old,
                             Vector< MultiFab* >& lap_X_old,
+                            Vector< MultiFab* >& lap_X_star,
                             Real time,
                             Real l_dt,
                             Real l_prev_dt,
@@ -72,9 +74,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     Vector<MultiFab*> ro_RHS(finest_level+1);
     Vector<MultiFab*> lap_trac(finest_level+1);
     Vector<MultiFab*> enthalpy_RHS(finest_level+1);
-    Vector<MultiFab*> lap_T_new(finest_level+1);
     Vector<MultiFab*> species_RHS(finest_level+1);
-    Vector<MultiFab*> lap_X_new(finest_level+1);
 
     for (int lev = 0; lev <= finest_level; ++lev)
     {
@@ -87,7 +87,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         ro_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
         lap_trac[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
         enthalpy_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-        lap_T_new[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
 
         conv_u[lev]->setVal(0.0);
         conv_s[lev]->setVal(0.0);
@@ -95,29 +94,28 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         ro_RHS[lev]->setVal(0.0);
         lap_trac[lev]->setVal(0.0);
         enthalpy_RHS[lev]->setVal(0.0);
-        lap_T_new[lev]->setVal(0.0);
 
       if (advect_fluid_species) {
         conv_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0,
             MFInfo(), *ebfactory[lev]);
         species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
             0, MFInfo(), *ebfactory[lev]);
-        lap_X_new[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
-            0, MFInfo(), *ebfactory[lev]);
 
         conv_X[lev]->setVal(0.0);
         species_RHS[lev]->setVal(0.0);
-        lap_X_new[lev]->setVal(0.0);
       }
     }
 
     // *************************************************************************************
     // Compute the explicit advective term R_u^*
     // *************************************************************************************
-    mfix_compute_convective_term(conv_u, conv_s, conv_X, get_vel_g(),
-        get_ep_g(), get_ro_g(), get_MW_g(), get_T_g(), get_cp_g(), get_k_g(),
-        get_h_g(), get_T_g_on_eb(), get_k_g_on_eb(), get_trac(), get_X_gk(),
-        get_D_gk(), get_h_gk(), get_txfr(), get_ro_gk_txfr(), new_time);
+    bool update_laplacians = not open_system_constraint;
+
+    mfix_compute_convective_term(update_laplacians, conv_u, conv_s, conv_X,
+        lap_T_star, lap_X_star, get_vel_g(), get_ep_g(), get_ro_g(), get_MW_g(),
+        get_T_g(), get_cp_g(), get_k_g(), get_h_g(), get_T_g_on_eb(),
+        get_k_g_on_eb(), get_trac(), get_X_gk(), get_D_gk(), get_h_gk(),
+        get_txfr(), get_ro_gk_txfr(), new_time);
 
     // *************************************************************************************
     // Compute right hand side terms on the intermediate status
@@ -135,7 +133,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       for (int lev = 0; lev <= finest_level; lev++)
           enthalpy_RHS[lev]->setVal(0.);
 
-      mfix_enthalpy_rhs(explicit_diffusive_enthalpy, enthalpy_RHS, lap_T_new,
+      bool update_laplacian = explicit_diffusive_enthalpy and
+                              (not open_system_constraint);
+
+      mfix_enthalpy_rhs(update_laplacian, enthalpy_RHS, lap_T_star,
           get_T_g(), get_ep_g(), get_ro_g(), get_k_g(), get_T_g_on_eb(),
           get_k_g_on_eb(), get_X_gk(), get_D_gk(), get_h_gk());
     }
@@ -154,7 +155,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       for (int lev = 0; lev <= finest_level; lev++)
         species_RHS[lev]->setVal(0.);
 
-      mfix_species_X_rhs(explicit_diffusive_species, species_RHS, lap_X_new,
+      bool update_laplacian = explicit_diffusive_species and
+                              (not open_system_constraint);
+
+      mfix_species_X_rhs(update_laplacian, species_RHS, lap_X_star,
           get_X_gk(), get_ep_g(), get_ro_g(), get_D_gk(), get_ro_gk_txfr());
     }
 
@@ -233,7 +237,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                 Array4<Real const> const& h_rhs_o = enthalpy_RHS_old[lev]->const_array(mfi);
                 Array4<Real const> const& h_rhs   = enthalpy_RHS[lev]->const_array(mfi);
                 Array4<Real const> const& lap_T_o = lap_T_old[lev]->const_array(mfi);
-                Array4<Real const> const& lap_T   = lap_T_new[lev]->const_array(mfi);
+                Array4<Real const> const& lap_T   = lap_T_star[lev]->const_array(mfi);
 
                 amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_n,rho_o,rho_n,epg,cp_g,
                     dhdt_o,dhdt,h_rhs_o,h_rhs,l_dt,lap_T_o,lap_T,
@@ -346,7 +350,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
           Array4<Real const> const& dXdt_o  = conv_X_old[lev]->const_array(mfi);
           Array4<Real const> const& dXdt    = conv_X[lev]->const_array(mfi);
           Array4<Real const> const& lap_X_o = lap_X_old[lev]->const_array(mfi);
-          Array4<Real const> const& lap_X   = lap_X_new[lev]->const_array(mfi);
+          Array4<Real const> const& lap_X   = lap_X_star[lev]->const_array(mfi);
           Array4<Real const> const& X_rhs_o = species_RHS_old[lev]->const_array(mfi);
           Array4<Real const> const& X_rhs   = species_RHS[lev]->const_array(mfi);
 
@@ -545,9 +549,12 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     }
 
     if (open_system_constraint) {
-      mfix_open_system_rhs(constraint_RHS, get_ep_g(), get_ro_g(), get_MW_g(),
-          get_T_g(), get_cp_g(), get_k_g(), get_T_g_on_eb(), get_k_g_on_eb(),
-          get_X_gk(), get_D_gk(), get_h_gk(), get_txfr(), get_ro_gk_txfr());
+      bool update_laplacians = true;
+
+      mfix_open_system_rhs(constraint_RHS, update_laplacians, lap_T_star,
+          lap_X_star, get_ep_g(), get_ro_g(), get_MW_g(), get_T_g(), get_cp_g(),
+          get_k_g(), get_T_g_on_eb(), get_k_g_on_eb(), get_X_gk(), get_D_gk(),
+          get_h_gk(), get_txfr(), get_ro_gk_txfr());
     }
 
     for (int lev(0); lev <= finest_level; ++lev) {
@@ -593,12 +600,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
        delete ro_RHS[lev];
        delete lap_trac[lev];
        delete enthalpy_RHS[lev];
-       delete lap_T_new[lev];
 
        if (advect_fluid_species) {
          delete conv_X[lev];
          delete species_RHS[lev];
-         delete lap_X_new[lev];
        }
     }
 }

@@ -22,174 +22,37 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
         "The species computation contains Inf");
   }
 
-  Vector< Real > X_gk_max(finest_level+1, std::numeric_limits<Real>::min());
-  Vector< Real > X_gk_min(finest_level+1, std::numeric_limits<Real>::max());
-
-#if defined(AMREX_DEBUG)
-  for (int lev = 0; lev <= finest_level; lev++)
+  // Divide S_h by ( ro_g c_p T_g )
+  for (int lev(0); lev <= finest_level; lev++)
   {
-    for (int n = 0; n < nspecies_g; ++n)
-    {
-      X_gk_max[lev] = amrex::max(X_gk_max[lev], X_gk[lev]->max(n));
-      X_gk_min[lev] = amrex::min(X_gk_min[lev], X_gk[lev]->min(n));
-    }
-  }
+    const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(X_gk[lev]->Factory());
+    const auto& flags = factory.getMultiEBCellFlagFab();
 
-  //const Real epsilon = std::numeric_limits<Real>::epsilon();
-
-  for (int lev = 0; lev <= finest_level; lev++)
-  {
-    amrex::Print() << "On level " << lev << " :" << std::endl;
-    amrex::Print() << "Max fluid species mass fraction = " << X_gk_max[lev] << std::endl;
-    amrex::Print() << "Min fluid species mass fraction = " << X_gk_min[lev] << std::endl;
-
-    // For now we take out the following sanity check
-    //if (((X_gk_max[lev]-1) > epsilon) or (X_gk_min[lev] < -epsilon)) {
-    //  amrex::Abort("Fluid mass fractions exceed admissibile domain [0,1] of definition");
-    //}
-  }
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-
-// This is a cheat: we try to make this rescaling more numerically robust
-// if X_gk(i,j,k,n) > 1 --> X_gk(i,j,k,n) = 1;
-// if X_gk(i,j,k,n) < 0 --> X_gk(i,j,k,n) = 0
-  for (int lev = 0; lev <= finest_level; lev++)
-  {
     for (MFIter mfi(*X_gk[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
-      // Tilebox
-      Box bx = mfi.tilebox();
+      const Box& bx = mfi.tilebox();
 
-      const auto& X_gk_array = X_gk[lev]->array(mfi);
+      Array4<Real> const& X_gk_arr = X_gk[lev]->array(mfi);
+      auto const& flags_arr = flags.const_array(mfi);
 
-      amrex::ParallelFor(bx, nspecies_g, [X_gk_array] 
-        AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+      amrex::ParallelFor(bx, [flags_arr,X_gk_arr,nspecies_g]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-        if (X_gk_array(i,j,k,n) > 1)
-          X_gk_array(i,j,k,n) = 1;
-        
-        if (X_gk_array(i,j,k,n) < 0)
-          X_gk_array(i,j,k,n) = 0;
+        if (not flags_arr(i,j,k).isCovered())
+        {
+          Real sum(0);
+
+          for (int n(0); n < nspecies_g; ++n)
+            sum += X_gk_arr(i,j,k,n);
+
+          for (int n(0); n < nspecies_g; ++n)
+            X_gk_arr(i,j,k,n) /= sum;
+        }
       });
     }
-  }
-
-  // The following MultiFabs store the cellwise sum of species mass fractions
-  Vector< MultiFab* > X_gk_sum(finest_level+1, nullptr);
-
-  // We allocate memory
-  for (int lev = 0; lev <= finest_level; lev++)
-  {
-    X_gk_sum[lev] = new MultiFab (X_gk[lev]->boxArray(),
-        X_gk[lev]->DistributionMap(), 1, 0, MFInfo(), X_gk[lev]->Factory());
-
-    X_gk_sum[lev]->setVal(0.);
-  }
-
-  // Cellwise sum fluid species mass fractions on every level
-  for (int lev = 0; lev <= finest_level; lev++)
-  {
-    for (int n = 0; n < nspecies_g; n++) {
-      MultiFab::Add(*X_gk_sum[lev], *X_gk[lev], n, 0, 1, 0);
-    }
-
-    // Set covered vals to 1
-    const Real covered_value = 1.;
-    EB_set_covered(*X_gk_sum[lev], 0, 1, 0, covered_value);
-  }
-
-#if defined(AMREX_DEBUG)
-  {
-    Vector< Real > X_gk_sum_max(finest_level+1, std::numeric_limits<Real>::min());
-    Vector< Real > X_gk_sum_min(finest_level+1, std::numeric_limits<Real>::max());
-    
-    for (int lev = 0; lev <= finest_level; lev++)
-    {
-      X_gk_sum_max[lev] = amrex::max(X_gk_sum_max[lev], X_gk_sum[lev]->max(0));
-      X_gk_sum_min[lev] = amrex::min(X_gk_sum_min[lev], X_gk_sum[lev]->min(0));
-    }
-
-    // For now we take out the following sanity check
-    //const Real min_X_gk_sum = 0.5; // TODO: check which value we want in here
-    //const Real max_X_gk_sum = 1.5; // TODO: check which value we want in here
-    
-    for (int lev = 0; lev <= finest_level; lev++)
-    {
-      amrex::Print() << "On level " << lev << " :" << std::endl;
-
-      amrex::Print() << "Max SUMMED fluid species mass fractions BEFORE normalization = "
-                     << X_gk_sum_max[lev] << std::endl;
-
-      amrex::Print() << "Min SUMMED fluid species mass fractions BEFORE normalization = "
-                     << X_gk_sum_min[lev] << std::endl;
-
-      // For now we take out the following sanity check
-      //if ((X_gk_sum_max[lev] > max_X_gk_sum) or (X_gk_sum_min[lev] < min_X_gk_sum)) {
-      //  amrex::Abort("Fluid summed mass fractions exceed admissibile values");
-      //}
-    }
-  }
-#endif
-
-  // Rescale species mass fractions in order to have their cellwise sum = 1
-  for (int lev = 0; lev <= finest_level; lev++)
-  {
-    for (int n = 0; n < nspecies_g; n++) {
-      MultiFab::Divide(*X_gk[lev], *X_gk_sum[lev], 0, n, 1, 0);
-    }
-  }
-
-#if defined(AMREX_DEBUG)
-  // We recompute the sum
-  for (int lev = 0; lev <= finest_level; lev++)
-  {
-    X_gk_sum[lev]->setVal(0.);
-
-    for (int n = 0; n < nspecies_g; n++) {
-      MultiFab::Add(*X_gk_sum[lev], *X_gk[lev], n, 0, 1, 0);
-    }
-    
-    // Set covered vals to 1
-    const Real covered_value = 1.;
-    EB_set_covered(*X_gk_sum[lev], 0, 1, 0, covered_value);
-  }
-
-  {
-    Vector< Real > X_gk_sum_max(finest_level+1, std::numeric_limits<Real>::min());
-    Vector< Real > X_gk_sum_min(finest_level+1, std::numeric_limits<Real>::max());
-    
-    for (int lev = 0; lev <= finest_level; lev++)
-    {
-      X_gk_sum_max[lev] = amrex::max(X_gk_sum_max[lev], X_gk_sum[lev]->max(0));
-      X_gk_sum_min[lev] = amrex::min(X_gk_sum_min[lev], X_gk_sum[lev]->min(0));
-    }
-
-    //const Real epsilon = std::numeric_limits<Real>::epsilon();
-    const Real epsilon = 1.e-12;
-
-    for (int lev = 0; lev <= finest_level; lev++)
-    {
-      amrex::Print() << "On level " << lev << " :" << std::endl;
-
-      amrex::Print() << "Max SUMMED fluid species mass fractions AFTER normalization = "
-                     << X_gk_sum_max[lev] << std::endl;
-
-      amrex::Print() << "Min SUMMED fluid species mass fractions AFTER normalization = "
-                     << X_gk_sum_min[lev] << std::endl;
-
-      if (std::fabs(X_gk_sum_max[lev]-1) > epsilon or
-          std::fabs(X_gk_sum_min[lev]-1) > epsilon)
-      {
-        amrex::Abort("Fluid mass fractions rescaling FAILED");
-      }
-    }
-  }
-#endif
-
-  // Deallocate auxiliary memory
-  for (int lev = 0; lev <= finest_level; lev++)
-  {
-    delete X_gk_sum[lev];
   }
 
   // Update ghost cells
@@ -197,6 +60,195 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
     X_gk[lev]->FillBoundary(geom[lev].periodicity());
   }
 }
+
+
+//void
+//mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
+//{
+//  const int nspecies_g = FLUID::nspecies;
+//
+//  for (int lev = 0; lev <= finest_level; lev++) {
+//    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(not X_gk[lev]->contains_nan(),
+//        "The species computation contains NaN");
+//    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(not X_gk[lev]->contains_inf(),
+//        "The species computation contains Inf");
+//  }
+//
+//  Vector< Real > X_gk_max(finest_level+1, std::numeric_limits<Real>::min());
+//  Vector< Real > X_gk_min(finest_level+1, std::numeric_limits<Real>::max());
+//
+//#if defined(AMREX_DEBUG)
+//  for (int lev = 0; lev <= finest_level; lev++)
+//  {
+//    for (int n = 0; n < nspecies_g; ++n)
+//    {
+//      X_gk_max[lev] = amrex::max(X_gk_max[lev], X_gk[lev]->max(n));
+//      X_gk_min[lev] = amrex::min(X_gk_min[lev], X_gk[lev]->min(n));
+//    }
+//  }
+//
+//  //const Real epsilon = std::numeric_limits<Real>::epsilon();
+//
+//  for (int lev = 0; lev <= finest_level; lev++)
+//  {
+//    amrex::Print() << "On level " << lev << " :" << std::endl;
+//    amrex::Print() << "Max fluid species mass fraction = " << X_gk_max[lev] << std::endl;
+//    amrex::Print() << "Min fluid species mass fraction = " << X_gk_min[lev] << std::endl;
+//
+//    // For now we take out the following sanity check
+//    //if (((X_gk_max[lev]-1) > epsilon) or (X_gk_min[lev] < -epsilon)) {
+//    //  amrex::Abort("Fluid mass fractions exceed admissibile domain [0,1] of definition");
+//    //}
+//  }
+//#endif
+//
+//// This is a cheat: we try to make this rescaling more numerically robust
+//// if X_gk(i,j,k,n) > 1 --> X_gk(i,j,k,n) = 1;
+//// if X_gk(i,j,k,n) < 0 --> X_gk(i,j,k,n) = 0
+//  for (int lev = 0; lev <= finest_level; lev++)
+//  {
+//    for (MFIter mfi(*X_gk[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+//    {
+//      // Tilebox
+//      Box bx = mfi.tilebox();
+//
+//      const auto& X_gk_array = X_gk[lev]->array(mfi);
+//
+//      amrex::ParallelFor(bx, nspecies_g, [X_gk_array] 
+//        AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+//      {
+//        if (X_gk_array(i,j,k,n) > 1)
+//          X_gk_array(i,j,k,n) = 1;
+//        
+//        if (X_gk_array(i,j,k,n) < 0)
+//          X_gk_array(i,j,k,n) = 0;
+//      });
+//    }
+//  }
+//
+//  // The following MultiFabs store the cellwise sum of species mass fractions
+//  Vector< MultiFab* > X_gk_sum(finest_level+1, nullptr);
+//
+//  // We allocate memory
+//  for (int lev = 0; lev <= finest_level; lev++)
+//  {
+//    X_gk_sum[lev] = new MultiFab (X_gk[lev]->boxArray(),
+//        X_gk[lev]->DistributionMap(), 1, 0, MFInfo(), X_gk[lev]->Factory());
+//
+//    X_gk_sum[lev]->setVal(0.);
+//  }
+//
+//  // Cellwise sum fluid species mass fractions on every level
+//  for (int lev = 0; lev <= finest_level; lev++)
+//  {
+//    for (int n = 0; n < nspecies_g; n++) {
+//      MultiFab::Add(*X_gk_sum[lev], *X_gk[lev], n, 0, 1, 0);
+//    }
+//
+//    // Set covered vals to 1
+//    const Real covered_value = 1.;
+//    EB_set_covered(*X_gk_sum[lev], 0, 1, 0, covered_value);
+//  }
+//
+//#if defined(AMREX_DEBUG)
+//  {
+//    Vector< Real > X_gk_sum_max(finest_level+1, std::numeric_limits<Real>::min());
+//    Vector< Real > X_gk_sum_min(finest_level+1, std::numeric_limits<Real>::max());
+//    
+//    for (int lev = 0; lev <= finest_level; lev++)
+//    {
+//      X_gk_sum_max[lev] = amrex::max(X_gk_sum_max[lev], X_gk_sum[lev]->max(0));
+//      X_gk_sum_min[lev] = amrex::min(X_gk_sum_min[lev], X_gk_sum[lev]->min(0));
+//    }
+//
+//    // For now we take out the following sanity check
+//    //const Real min_X_gk_sum = 0.5; // TODO: check which value we want in here
+//    //const Real max_X_gk_sum = 1.5; // TODO: check which value we want in here
+//    
+//    for (int lev = 0; lev <= finest_level; lev++)
+//    {
+//      amrex::Print() << "On level " << lev << " :" << std::endl;
+//
+//      amrex::Print() << "Max SUMMED fluid species mass fractions BEFORE normalization = "
+//                     << X_gk_sum_max[lev] << std::endl;
+//
+//      amrex::Print() << "Min SUMMED fluid species mass fractions BEFORE normalization = "
+//                     << X_gk_sum_min[lev] << std::endl;
+//
+//      // For now we take out the following sanity check
+//      //if ((X_gk_sum_max[lev] > max_X_gk_sum) or (X_gk_sum_min[lev] < min_X_gk_sum)) {
+//      //  amrex::Abort("Fluid summed mass fractions exceed admissibile values");
+//      //}
+//    }
+//  }
+//#endif
+//
+//  // Rescale species mass fractions in order to have their cellwise sum = 1
+//  for (int lev = 0; lev <= finest_level; lev++)
+//  {
+//    for (int n = 0; n < nspecies_g; n++) {
+//      MultiFab::Divide(*X_gk[lev], *X_gk_sum[lev], 0, n, 1, 0);
+//    }
+//  }
+//
+//#if defined(AMREX_DEBUG)
+//  // We recompute the sum
+//  for (int lev = 0; lev <= finest_level; lev++)
+//  {
+//    X_gk_sum[lev]->setVal(0.);
+//
+//    for (int n = 0; n < nspecies_g; n++) {
+//      MultiFab::Add(*X_gk_sum[lev], *X_gk[lev], n, 0, 1, 0);
+//    }
+//    
+//    // Set covered vals to 1
+//    const Real covered_value = 1.;
+//    EB_set_covered(*X_gk_sum[lev], 0, 1, 0, covered_value);
+//  }
+//
+//  {
+//    Vector< Real > X_gk_sum_max(finest_level+1, std::numeric_limits<Real>::min());
+//    Vector< Real > X_gk_sum_min(finest_level+1, std::numeric_limits<Real>::max());
+//    
+//    for (int lev = 0; lev <= finest_level; lev++)
+//    {
+//      X_gk_sum_max[lev] = amrex::max(X_gk_sum_max[lev], X_gk_sum[lev]->max(0));
+//      X_gk_sum_min[lev] = amrex::min(X_gk_sum_min[lev], X_gk_sum[lev]->min(0));
+//    }
+//
+//    //const Real epsilon = std::numeric_limits<Real>::epsilon();
+//    const Real epsilon = 1.e-12;
+//
+//    for (int lev = 0; lev <= finest_level; lev++)
+//    {
+//      amrex::Print() << "On level " << lev << " :" << std::endl;
+//
+//      amrex::Print() << "Max SUMMED fluid species mass fractions AFTER normalization = "
+//                     << X_gk_sum_max[lev] << std::endl;
+//
+//      amrex::Print() << "Min SUMMED fluid species mass fractions AFTER normalization = "
+//                     << X_gk_sum_min[lev] << std::endl;
+//
+//      if (std::fabs(X_gk_sum_max[lev]-1) > epsilon or
+//          std::fabs(X_gk_sum_min[lev]-1) > epsilon)
+//      {
+//        amrex::Abort("Fluid mass fractions rescaling FAILED");
+//      }
+//    }
+//  }
+//#endif
+//
+//  // Deallocate auxiliary memory
+//  for (int lev = 0; lev <= finest_level; lev++)
+//  {
+//    delete X_gk_sum[lev];
+//  }
+//
+//  // Update ghost cells
+//  for (int lev = 0; lev <= finest_level; lev++) {
+//    X_gk[lev]->FillBoundary(geom[lev].periodicity());
+//  }
+//}
 
 
 void

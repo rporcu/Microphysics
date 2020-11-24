@@ -20,7 +20,10 @@ using namespace amrex;
 //  This method returns the MAC velocity with up-to-date BCs in place
 //
 void
-mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
+mfix::apply_MAC_projection (const bool update_laplacians,
+                            Vector< MultiFab* > const& lap_T,
+                            Vector< MultiFab* > const& lap_X,
+                            Vector< MultiFab* > const& ep_u_mac,
                             Vector< MultiFab* > const& ep_v_mac,
                             Vector< MultiFab* > const& ep_w_mac,
                             Vector< MultiFab* > const& ep_g_in,
@@ -135,9 +138,9 @@ mfix::apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
   }
 
   if (open_system_constraint) {
-    mfix_open_system_rhs(mac_rhs, ep_g_in, ro_g_in, MW_g_in, T_g_in, cp_g_in,
-        k_g_in, T_g_on_eb_in, k_g_on_eb_in, X_gk_in, D_gk_in, h_gk_in, txfr_in,
-        ro_gk_txfr_in);
+    mfix_open_system_rhs(mac_rhs, update_laplacians, lap_T, lap_X, ep_g_in,
+        ro_g_in, MW_g_in, T_g_in, cp_g_in, k_g_in, T_g_on_eb_in, k_g_on_eb_in,
+        X_gk_in, D_gk_in, h_gk_in, txfr_in, ro_gk_txfr_in);
   }
 
   for (int lev(0); lev <= finest_level; ++lev) {

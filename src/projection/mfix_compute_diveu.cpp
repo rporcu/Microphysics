@@ -20,6 +20,9 @@
 //
 void
 mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
+                            const bool update_laplacians,
+                            Vector< MultiFab* > const& lap_T_star,
+                            Vector< MultiFab* > const& lap_X_star,
                             Vector< MultiFab* > const& ep_g,
                             Vector< MultiFab* > const& ro_g,
                             Vector< MultiFab* > const& MW_g,
@@ -35,9 +38,7 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
                             Vector< MultiFab* > const& ro_gk_txfr)
 {
   Vector< MultiFab* > S_h(nlev, nullptr);
-  Vector< MultiFab* > lap_T(nlev, nullptr);
   Vector< MultiFab* > S_sk(nlev, nullptr);
-  Vector< MultiFab* > lap_X(nlev, nullptr);
 
   const int adv_enthalpy = advect_enthalpy;
   const int fluid_is_mixture = FLUID::is_a_mixture;
@@ -46,12 +47,11 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
   {
     for (int lev(0); lev <= finest_level; lev++) {
       S_h[lev] = MFHelpers::createFrom(*rhs[lev], 0., 1).release();
-      lap_T[lev] = MFHelpers::createFrom(*rhs[lev], 0., 1).release();
     }
 
     // Compute S_h, aka enthalpy RHS
-    mfix_enthalpy_rhs(true, S_h, lap_T, T_g, ep_g, ro_g, k_g, T_g_on_eb,
-        k_g_on_eb, X_gk, D_gk, h_gk);
+    mfix_enthalpy_rhs(update_laplacians, S_h, lap_T_star, T_g, ep_g, ro_g, k_g,
+        T_g_on_eb, k_g_on_eb, X_gk, D_gk, h_gk);
 
     for (int lev(0); lev <= finest_level; lev++) {
 #ifdef _OPENMP
@@ -61,7 +61,7 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
         const Box& bx = mfi.tilebox();
 
         Array4<      Real> const& S_h_arr   = S_h[lev]->array(mfi);
-        Array4<const Real> const& lap_T_arr = lap_T[lev]->const_array(mfi);
+        Array4<const Real> const& lap_T_arr = lap_T_star[lev]->const_array(mfi);
         Array4<const Real> const& txfr_arr  = txfr[lev]->const_array(mfi);
         Array4<const Real> const& T_g_arr   = T_g[lev]->const_array(mfi);
 
@@ -110,7 +110,6 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
   {
     for (int lev(0); lev <= finest_level; lev++) {
       S_sk[lev] = MFHelpers::createFrom(*rhs[lev], 0., 1, nspecies_g).release();
-      lap_X[lev] = MFHelpers::createFrom(*rhs[lev], 0., 1, nspecies_g).release();
     }
 
     Gpu::DeviceVector< Real > MW_gk_d(nspecies_g);
@@ -120,7 +119,8 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
     Real* p_MW_gk = MW_gk_d.data();
 
     // compute S_sk
-    mfix_species_X_rhs(true, S_sk, lap_X, X_gk, ep_g, ro_g, D_gk, ro_gk_txfr);
+    mfix_species_X_rhs(update_laplacians, S_sk, lap_X_star, X_gk, ep_g, ro_g,
+        D_gk, ro_gk_txfr);
 
     for (int lev(0); lev <= finest_level; lev++)
     {
@@ -135,7 +135,7 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
         const Box& bx = mfi.tilebox();
 
         Array4<       Real > const& S_sk_arr  = S_sk[lev]->array(mfi);
-        Array4< const Real > const& lap_X_arr = lap_X[lev]->const_array(mfi);
+        Array4< const Real > const& lap_X_arr = lap_X_star[lev]->const_array(mfi);
         Array4< const Real > const& ro_g_arr  = ro_g[lev]->const_array(mfi);
         Array4< const Real > const& MW_g_arr  = MW_g[lev]->const_array(mfi);
 
@@ -214,12 +214,10 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
   {
     if (adv_enthalpy) {
       delete S_h[lev];
-      delete lap_T[lev];
     }
 
     if (fluid_is_mixture) {
       delete S_sk[lev];
-      delete lap_X[lev];
     }
   }
 }

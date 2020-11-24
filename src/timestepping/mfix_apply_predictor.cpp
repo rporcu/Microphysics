@@ -48,8 +48,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                             Vector< MultiFab* >& lap_trac_old,
                             Vector< MultiFab* >& enthalpy_RHS_old,
                             Vector< MultiFab* >& lap_T_old,
+                            Vector< MultiFab* >& lap_T_star,
                             Vector< MultiFab* >& species_RHS_old,
                             Vector< MultiFab* >& lap_X_old,
+                            Vector< MultiFab* >& lap_X_star,
                             Real time,
                             Real l_dt,
                             Real l_prev_dt,
@@ -70,11 +72,14 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // Note that "conv_u_old" returns update to (ep_g u)
     // Note that "conv_s_old" returns update to (ep_g rho), (ep_g rho h_g) and (ep_g rho tracer)
     // *************************************************************************************
-    mfix_compute_convective_term(conv_u_old, conv_s_old, conv_X_old,
-        get_vel_g_old(), get_ep_g(), get_ro_g_old(), get_MW_g(), get_T_g_old(),
-        get_cp_g(), get_k_g(), get_h_g_old(), get_T_g_on_eb(), get_k_g_on_eb(),
-        get_trac_old(), get_X_gk_old(), get_D_gk(), get_h_gk(), get_txfr(),
-        get_ro_gk_txfr(), time);
+    bool update_laplacians = open_system_constraint;
+
+    mfix_compute_convective_term(update_laplacians, conv_u_old, conv_s_old,
+        conv_X_old, lap_T_old, lap_X_old, get_vel_g_old(), get_ep_g(),
+        get_ro_g_old(), get_MW_g(), get_T_g_old(), get_cp_g(), get_k_g(),
+        get_h_g_old(), get_T_g_on_eb(), get_k_g_on_eb(), get_trac_old(),
+        get_X_gk_old(), get_D_gk(), get_h_gk(), get_txfr(), get_ro_gk_txfr(),
+        time);
 
     // *************************************************************************************
     // Compute right hand side terms on the old status
@@ -106,7 +111,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       for (int lev = 0; lev <= finest_level; lev++)
           enthalpy_RHS_old[lev]->setVal(0.);
 
-      mfix_enthalpy_rhs(explicit_diffusion_pred, enthalpy_RHS_old, lap_T_old,
+      bool update_laplacian = explicit_diffusion_pred and
+                              (not open_system_constraint);
+
+      mfix_enthalpy_rhs(update_laplacian, enthalpy_RHS_old, lap_T_old,
           get_T_g_old(), get_ep_g(), get_ro_g_old(), get_k_g(), get_T_g_on_eb(),
           get_k_g_on_eb(), get_X_gk_old(), get_D_gk(), get_h_gk());
     }
@@ -124,8 +132,12 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       for (int lev = 0; lev <= finest_level; lev++)
         species_RHS_old[lev]->setVal(0.);
 
-      mfix_species_X_rhs(explicit_diffusion_pred, species_RHS_old, lap_X_old,
-          get_X_gk_old(), get_ep_g(), get_ro_g_old(), get_D_gk(), get_ro_gk_txfr());
+      bool update_laplacian = explicit_diffusion_pred and
+                              (not open_system_constraint);
+
+      mfix_species_X_rhs(update_laplacian, species_RHS_old, lap_X_old,
+          get_X_gk_old(), get_ep_g(), get_ro_g_old(), get_D_gk(),
+          get_ro_gk_txfr());
     }
 
     // *************************************************************************************
@@ -472,9 +484,12 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     }
 
     if (open_system_constraint) {
-      mfix_open_system_rhs(constraint_RHS, get_ep_g(), get_ro_g(), get_MW_g(),
-          get_T_g(), get_cp_g(), get_k_g(), get_T_g_on_eb(), get_k_g_on_eb(),
-          get_X_gk(), get_D_gk(), get_h_gk(), get_txfr(), get_ro_gk_txfr());
+      bool update_laplacians = true;
+
+      mfix_open_system_rhs(constraint_RHS, update_laplacians, lap_T_star,
+          lap_X_star, get_ep_g(), get_ro_g(), get_MW_g(), get_T_g(), get_cp_g(),
+          get_k_g(), get_T_g_on_eb(), get_k_g_on_eb(), get_X_gk(), get_D_gk(),
+          get_h_gk(), get_txfr(), get_ro_gk_txfr());
     }
 
     for (int lev(0); lev <= finest_level; ++lev) {

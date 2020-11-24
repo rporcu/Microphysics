@@ -133,8 +133,13 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     bool proj_2 = false;
 
+    auto& lap_T_star = lap_T;
+    auto& lap_X_star = lap_X;
+    auto& dt_star = dt;
+
     mfix_apply_predictor(conv_u, conv_s, conv_X, ro_RHS, divtau, lap_trac,
-        enthalpy_RHS, lap_T, species_RHS, lap_X, time, dt, dt, proj_2);
+        enthalpy_RHS, lap_T, lap_T_star, species_RHS, lap_X, lap_X_star, time,
+        dt, dt_star, proj_2);
 
     // Reset any quantities which might have been updated
     for (int lev = 0; lev <= finest_level; lev++)
