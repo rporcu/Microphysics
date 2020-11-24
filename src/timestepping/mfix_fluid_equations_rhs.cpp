@@ -25,7 +25,7 @@ mfix::mfix_density_rhs (Vector< MultiFab* > const& rhs,
 
 
 void
-mfix::mfix_enthalpy_rhs (const bool explicit_diffusion,
+mfix::mfix_enthalpy_rhs (const bool update_laplacian,
                          Vector< MultiFab* > const& rhs,
                          Vector< MultiFab* > const& lap_T,
                          Vector< MultiFab* > const& T_g,
@@ -41,7 +41,7 @@ mfix::mfix_enthalpy_rhs (const bool explicit_diffusion,
   for (int lev = 0; lev <= finest_level; lev++)
     rhs[lev]->setVal(0.);
 
-  if (explicit_diffusion) {
+  if (update_laplacian) {
     diffusion_op->ComputeLapT(lap_T, T_g, ep_g, k_g, T_g_on_eb, k_g_on_eb);
 
     for (int lev = 0; lev <= finest_level; lev++)
@@ -117,7 +117,7 @@ mfix::mfix_species_X_rhs (const bool explicit_diffusion,
   for (int lev = 0; lev <= finest_level; lev++)
     rhs[lev]->setVal(0.);
 
-  if (explicit_diffusion) {
+  if (explicit_diffusion and (not open_system_constraint)) {
     diffusion_op->ComputeLapX(lap_X, X_gk, ro_g, ep_g, D_gk);
 
     for (int lev = 0; lev <= finest_level; lev++)

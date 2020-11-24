@@ -614,7 +614,10 @@ class mfix : public AmrCore
                                       bool proj_2 );
 
   public:
-    void apply_MAC_projection (Vector< MultiFab* > const& ep_u_mac,
+    void apply_MAC_projection (const bool update_laplacians,
+                               Vector< MultiFab* > const& lap_T,
+                               Vector< MultiFab* > const& lap_X,
+                               Vector< MultiFab* > const& ep_u_mac,
                                Vector< MultiFab* > const& ep_v_mac,
                                Vector< MultiFab* > const& ep_w_mac,
                                Vector< MultiFab* > const& ep_g_in,
@@ -719,9 +722,12 @@ class mfix : public AmrCore
 
     void check_for_nans (int lev);
 
-    void mfix_compute_convective_term (Vector< MultiFab* >& conv_u,
+    void mfix_compute_convective_term (const bool update_laplacian,
+                                       Vector< MultiFab* >& conv_u,
                                        Vector< MultiFab* >& conv_s,
                                        Vector< MultiFab* >& conv_X,
+                                       Vector< MultiFab* >& lap_T,
+                                       Vector< MultiFab* >& lap_X,
                                        Vector< MultiFab* > const& vel_in,
                                        Vector< MultiFab* > const& ep_g_in,
                                        Vector< MultiFab* > const& ro_g_in,
@@ -751,8 +757,10 @@ class mfix : public AmrCore
                                Vector< MultiFab* >& lap_trac_old,
                                Vector< MultiFab* >& enthalpy_RHS_old,
                                Vector< MultiFab* >& lap_T_old,
+                               Vector< MultiFab* >& lap_T_star,
                                Vector< MultiFab* >& species_RHS_old,
                                Vector< MultiFab* >& lap_X_old,
+                               Vector< MultiFab* >& lap_X_star,
                                Real time,
                                Real dt,
                                Real prev_dt,
@@ -798,8 +806,10 @@ class mfix : public AmrCore
                                Vector< MultiFab* >& lap_trac_old,
                                Vector< MultiFab* >& enthalpy_RHS_old,
                                Vector< MultiFab* >& lap_T_old,
+                               Vector< MultiFab* >& lap_T_star,
                                Vector< MultiFab* >& species_RHS_old,
                                Vector< MultiFab* >& lap_X_old,
+                               Vector< MultiFab* >& lap_X_star,
                                Real time,
                                Real dt,
                                Real prev_dt,
@@ -820,6 +830,9 @@ class mfix : public AmrCore
                                         const Vector< MultiFab* >& X_gk);
 
     void mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
+                               const bool update_laplacians,
+                               Vector< MultiFab* > const& lap_T_star,
+                               Vector< MultiFab* > const& lap_X_star,
                                Vector< MultiFab* > const& ep_g,
                                Vector< MultiFab* > const& ro_g,
                                Vector< MultiFab* > const& MW_g,

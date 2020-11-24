@@ -1,112 +1,133 @@
 #include <mfix_diffusion_op.H>
+#include <mfix_fluid_parms.H>
 
 using namespace amrex;
 
 //
 // Implicit solve for species mass fraction
 //
-void DiffusionOp::diffuse_species (      Vector< MultiFab* >     X_gk_in,
+void DiffusionOp::diffuse_species (      Vector< MultiFab* >    X_gk_in,
                                    const Vector< MultiFab* > ep_ro_g_in,
-                                   const Vector< MultiFab* >     D_gk_in,
+                                   const Vector< MultiFab* >    D_gk_in,
                                    Real dt)
 {
     BL_PROFILE("DiffusionOp::diffuse_species");
 
     int finest_level = amrcore->finestLevel();
 
+    // Update the coefficients of the matrix going into the solve based on the current state of the
+    // simulation. Recall that the relevant matrix is
+    //
+    //      alpha a - beta div ( b grad )   <--->   rho - dt div ( mu_s grad )
+    //
+    // So the constants and variable coefficients are:
+    //
+    //      alpha: 1
+    //      beta: dt
+    //      a: ro_g ep_g
+    //      b: ro_g ep_g D_gk
+
+    if(verbose > 0)
+      amrex::Print() << "Diffusing species mass fractions ..." << std::endl;
+
+    // Set alpha and beta
+    species_matrix->setScalars(1.0, dt);
+
     // Number of fluid species
-    const int nspecies_g = X_gk_in[0]->nComp();
+    const int nspecies_g = FLUID::nspecies;
 
-    for (int n(0); n < nspecies_g; n++)
+    Vector<BCRec> bcs_X; // This is just to satisfy the call to EB_interp...
+    bcs_X.resize(3*nspecies_g);
+
+    for(int lev = 0; lev <= finest_level; lev++)
     {
-      Vector< MultiFab* > X_gk(finest_level+1);
+        MultiFab ep_ro_D_gk(ep_ro_g_in[lev]->boxArray(),
+            ep_ro_g_in[lev]->DistributionMap(), nspecies_g, 1, MFInfo(),
+            ep_ro_g_in[lev]->Factory());
 
-      for(int lev = 0; lev <= finest_level; lev++)
-      {
-        X_gk[lev] = new MultiFab(X_gk_in[lev]->boxArray(), X_gk_in[lev]->DistributionMap(),
-            1, 1, MFInfo(), X_gk_in[lev]->Factory());
+        ep_ro_D_gk.setVal(0.);
 
-        X_gk[lev]->setVal(0.0);
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+        for (MFIter mfi(*ep_ro_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        {
+          Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
-        MultiFab::Copy(*X_gk[lev], *X_gk_in[lev], n, 0, 1, 1);
-      }
+          if (bx.ok())
+          {
+            Array4<Real const> const& ep_ro_g_arr    = ep_ro_g_in[lev]->const_array(mfi);
+            Array4<Real const> const& D_gk_arr       = D_gk_in[lev]->const_array(mfi);
+            Array4<Real      > const& ep_ro_D_gk_arr = ep_ro_D_gk.array(mfi);
 
-      // Update the coefficients of the matrix going into the solve based on the current state of the
-      // simulation. Recall that the relevant matrix is
-      //
-      //      alpha a - beta div ( b grad )   <--->   rho - dt div ( mu_s grad )
-      //
-      // So the constants and variable coefficients are:
-      //
-      //      alpha: 1
-      //      beta: dt
-      //      a: ro_g ep_g
-      //      b: ro_g ep_g D_gk
+            amrex::ParallelFor(bx, [ep_ro_g_arr,D_gk_arr,ep_ro_D_gk_arr,nspecies_g]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            {
+              const Real ep_ro_g = ep_ro_g_arr(i,j,k);
 
-      // Set alpha and beta
-      species_matrix->setScalars(1.0, dt);
+              for (int n(0); n < nspecies_g; ++n)
+                ep_ro_D_gk_arr(i,j,k,n) = ep_ro_g*D_gk_arr(i,j,k,n);
+            });
+          }
+        }
 
-      Vector<BCRec> bcs_X; // This is just to satisfy the call to EB_interp...
-      bcs_X.resize(3);
+        EB_interp_CellCentroid_to_FaceCentroid (ep_ro_D_gk, GetArrOfPtrs(species_b[lev]),
+                                                0, 0, nspecies_g, geom[lev], bcs_X);
 
-      for(int lev = 0; lev <= finest_level; lev++)
-      {
-          MultiFab ep_ro_D_gk(ep_ro_g_in[lev]->boxArray(),
-              ep_ro_g_in[lev]->DistributionMap(), 1, 1, MFInfo(),
-              ep_ro_g_in[lev]->Factory());
+        // This sets the coefficients
+        species_matrix->setACoeffs (lev, (*ep_ro_g_in[lev]));
+        species_matrix->setBCoeffs (lev, GetArrOfConstPtrs(species_b[lev]),
+                                    MLMG::Location::FaceCentroid);
 
-          ep_ro_D_gk.setVal(0.);
+        // Zero these out just to have a clean start because they have 3 components
+        //      (due to re-use with velocity solve)
+        species_phi[lev]->setVal(0.0);
+        species_rhs[lev]->setVal(0.0);
 
-          MultiFab::Copy(ep_ro_D_gk, *ep_ro_g_in[lev], 0, 0, 1, 1);
-          MultiFab::Multiply(ep_ro_D_gk, *D_gk_in[lev], n, 0, 1, 1);
+        // Set rhs equal to X_gk and
+        // Multiply rhs by (rho * ep_g * D_gk) -- we are solving
+        //
+        //      rho ep_g X_star = rho ep_g T_old + dt ( - div (rho u ep_g X_gk) + rho div (ep_g D_gk (grad X_gk)) )
+        //
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+        for (MFIter mfi(*X_gk_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        {
+          Box const& bx = mfi.growntilebox(IntVect(0));
 
-          EB_interp_CellCentroid_to_FaceCentroid (ep_ro_D_gk, GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_X);
+          if (bx.ok())
+          {
+            Array4<Real const> const& ep_ro_g_arr = ep_ro_g_in[lev]->const_array(mfi);
+            Array4<Real const> const& X_gk_arr    = X_gk_in[lev]->const_array(mfi);
+            Array4<Real      > const& rhs_arr     = species_rhs[lev]->array(mfi);
 
-          // This sets the coefficients
-          species_matrix->setACoeffs (lev, (*ep_ro_g_in[lev]));
-          species_matrix->setBCoeffs (lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
-      }
+            amrex::ParallelFor(bx, [ep_ro_g_arr,X_gk_arr,rhs_arr,nspecies_g]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            {
+              const Real ep_ro_g = ep_ro_g_arr(i,j,k);
 
-      if(verbose > 0)
-        amrex::Print() << "Diffusing fluid mass fractions one at a time ..."
-                       << std::endl;
+              for (int n(0); n < nspecies_g; ++n)
+                rhs_arr(i,j,k,n) = X_gk_arr(i,j,k,n)*ep_ro_g;
+            });
+          }
+        }
 
-      for(int lev = 0; lev <= finest_level; lev++)
-      {
-          // Zero these out just to have a clean start because they have 3 components
-          //      (due to re-use with velocity solve)
-          phi[lev]->setVal(0.0);
-          rhs[lev]->setVal(0.0);
+        MultiFab::Copy(*species_phi[lev], *X_gk_in[lev], 0, 0, nspecies_g, 1);
+        species_matrix->setLevelBC(lev, GetVecOfConstPtrs(species_phi)[lev]);
+    }
 
-          // Set the right hand side to equal rhs
-          MultiFab::Copy((*rhs[lev]), (*X_gk[lev]), 0, 0, 1, 0);
+    MLMG solver(*species_matrix);
+    setSolverSettings(solver);
 
-          // Multiply rhs by (rho * ep_g * D_gk) -- we are solving
-          //
-          //      rho ep_g X_star = rho ep_g T_old + dt ( - div (rho u ep_g X_gk) + rho div (ep_g D_gk (grad X_gk)) )
-          //
-          MultiFab::Multiply((*rhs[lev]), (*ep_ro_g_in[lev]), 0, 0, 1, 0);
+    // This ensures that ghost cells of sol are correctly filled when returned from the solver
+    solver.setFinalFillBC(true);
 
-          MultiFab::Copy(*phi[lev], *X_gk[lev], 0, 0, 1, 1);
-          species_matrix->setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
-      }
+    solver.solve(GetVecOfPtrs(species_phi), GetVecOfConstPtrs(species_rhs), mg_rtol, mg_atol);
 
-      MLMG solver(*species_matrix);
-      setSolverSettings(solver);
-
-      // This ensures that ghost cells of sol are correctly filled when returned from the solver
-      solver.setFinalFillBC(true);
-
-      solver.solve(GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol);
-
-      for(int lev = 0; lev <= finest_level; lev++)
-      {
-          phi[lev]->FillBoundary(geom[lev].periodicity());
-          MultiFab::Copy(*X_gk_in[lev], *phi[lev], 0, n, 1, 1);
-      }
-
-      for (int lev(0); lev <= finest_level; lev++) {
-        delete X_gk[lev];
-      }
+    for(int lev = 0; lev <= finest_level; lev++)
+    {
+        species_phi[lev]->FillBoundary(geom[lev].periodicity());
+        MultiFab::Copy(*X_gk_in[lev], *species_phi[lev], 0, 0, nspecies_g, 1);
     }
 }

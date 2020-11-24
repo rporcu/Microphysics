@@ -67,12 +67,17 @@ void DiffusionOp::setup (AmrCore* _amrcore,
 
     int max_level = amrcore->maxLevel();
 
+    const int nspecies_g = FLUID::nspecies;
+
     // Resize and reset data
     b.resize(max_level + 1);
 
     phi.resize(max_level + 1);
     rhs.resize(max_level + 1);
     vel_eb.resize(max_level + 1);
+
+    species_phi.resize(max_level + 1);
+    species_rhs.resize(max_level + 1);
 
     for(int lev = 0; lev <= max_level; lev++)
     {
@@ -94,6 +99,13 @@ void DiffusionOp::setup (AmrCore* _amrcore,
         vel_eb[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, nghost,
                                        MFInfo(), *ebfactory[lev]));
         vel_eb[lev]->setVal(0.0);
+        
+        species_phi[lev].reset(new MultiFab(grids[lev], dmap[lev], nspecies_g, 1,
+                                            MFInfo(), *ebfactory[lev]));
+
+        // No ghost cells needed for rhs
+        species_rhs[lev].reset(new MultiFab(grids[lev], dmap[lev], nspecies_g, 0,
+                                            MFInfo(), *ebfactory[lev]));
     }
 
     //
@@ -116,7 +128,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     //
     scal_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory));
     temperature_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory));
-    species_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory));
+    species_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory, nspecies_g));
 
     // It is essential that we set MaxOrder to 2 if we want to use the standard
     // phi(i)-phi(i-1) approximation for the gradient at Dirichlet boundaries.
@@ -129,6 +141,20 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     scal_matrix->setDomainBC(m_scalbc_lo, m_scalbc_hi);
     temperature_matrix->setDomainBC(m_temperaturebc_lo, m_temperaturebc_hi);
     species_matrix->setDomainBC(m_speciesbc_lo, m_speciesbc_hi);
+    
+    species_b.resize(max_level + 1);
+
+    for(int lev = 0; lev <= max_level; lev++)
+    {
+        for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
+        {
+            BoxArray edge_ba = grids[lev];
+            edge_ba.surroundingNodes(dir);
+            species_b[lev][dir].reset(new MultiFab(edge_ba, dmap[lev], nspecies_g, nghost,
+                                                   MFInfo(), *ebfactory[lev]));
+        }
+    }
+
 }
 
 DiffusionOp::~DiffusionOp ()
@@ -384,91 +410,78 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab* >& lapX_out,
   int finest_level = amrcore->finestLevel();
 
   // Number of fluid species
-  const int nspecies_g = X_gk_in[0]->nComp();
+  const int nspecies_g = FLUID::nspecies;
 
-  for (int n(0); n < nspecies_g; n++)
+  Vector< MultiFab* > lapX_aux(finest_level+1);
+
+  for(int lev = 0; lev <= finest_level; lev++)
   {
-    Vector< MultiFab* > X_gn(finest_level+1);
-    Vector< MultiFab* > lapXn(finest_level+1);
+    lapX_aux[lev] = new MultiFab(grids[lev], dmap[lev], nspecies_g, nghost, MFInfo(),
+        *ebfactory[lev]);
 
-    for(int lev = 0; lev <= finest_level; lev++)
+    lapX_aux[lev]->setVal(0.0);
+  }
+
+  // We want to return div (ep_g ro_g D_gk grad)) phi
+  species_matrix->setScalars(0.0, -1.0);
+
+  Vector<BCRec> bcs_X; // This is just to satisfy the call to EB_interp...
+  bcs_X.resize(3*nspecies_g);
+
+  // Compute the coefficients
+  for (int lev = 0; lev <= finest_level; lev++)
+  {
+    MultiFab b_coeffs(ep_g_in[lev]->boxArray(), ep_g_in[lev]->DistributionMap(),
+        nspecies_g, 1, MFInfo(), ep_g_in[lev]->Factory());
+
+    b_coeffs.setVal(0.);
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (MFIter mfi(*ep_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
-      X_gn[lev] = new MultiFab(X_gk_in[lev]->boxArray(), X_gk_in[lev]->DistributionMap(),
-          1, 1, MFInfo(), X_gk_in[lev]->Factory());
+      Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
-      X_gn[lev]->setVal(0.0);
+      if (bx.ok())
+      {
+        Array4<Real const> const& ep_g_arr     = ep_g_in[lev]->const_array(mfi);
+        Array4<Real const> const& ro_g_arr     = ro_g_in[lev]->const_array(mfi);
+        Array4<Real const> const& D_gk_arr     = D_gk_in[lev]->const_array(mfi);
+        Array4<Real      > const& b_coeffs_arr = b_coeffs.array(mfi);
 
-      MultiFab::Copy(*X_gn[lev], *X_gk_in[lev], n, 0, 1, 1);
+        amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,D_gk_arr,b_coeffs_arr,nspecies_g]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+          const Real ep_g = ep_g_arr(i,j,k);
+          const Real ro_g = ro_g_arr(i,j,k);
 
-      lapXn[lev] = new MultiFab(lapX_out[lev]->boxArray(), lapX_out[lev]->DistributionMap(),
-          1, lapX_out[lev]->nGrow(), MFInfo(), lapX_out[lev]->Factory());
-
-      lapXn[lev]->setVal(0.0);
+          for (int n(0); n < nspecies_g; ++n)
+            b_coeffs_arr(i,j,k,n) = ep_g*ro_g*D_gk_arr(i,j,k,n);
+        });
+      }
     }
 
-    Vector< MultiFab* > lapX_aux(finest_level+1);
-    //Vector< MultiFab* > phi_eb(finest_level+1);
+    EB_interp_CellCentroid_to_FaceCentroid (b_coeffs, GetArrOfPtrs(species_b[lev]), 0,
+        0, nspecies_g, geom[lev], bcs_X);
 
-    for(int lev = 0; lev <= finest_level; lev++)
-    {
-      lapX_aux[lev] = new MultiFab(grids[lev], dmap[lev], 1, nghost, MFInfo(),
-          *ebfactory[lev]);
+    species_matrix->setBCoeffs(lev, GetArrOfConstPtrs(species_b[lev]), MLMG::Location::FaceCentroid);
 
-      lapX_aux[lev]->setVal(0.0);
+    species_matrix->setLevelBC(lev, GetVecOfConstPtrs(X_gk_in)[lev]);
+  }
 
-      //phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(),
-      //    *ebfactory[lev]);
-    }
+  MLMG solver(*species_matrix);
 
-    // We want to return div (ep_g ro_g D_gk grad)) phi
-    species_matrix->setScalars(0.0, -1.0);
+  solver.apply(lapX_aux, X_gk_in);
 
-    Vector<BCRec> bcs_X; // This is just to satisfy the call to EB_interp...
-    bcs_X.resize(3);
+  for(int lev = 0; lev <= finest_level; lev++)
+  {
+    amrex::single_level_redistribute(*lapX_aux[lev], *lapX_out[lev], 0, nspecies_g, geom[lev]);
+  }
 
-    // Compute the coefficients
-    for (int lev = 0; lev <= finest_level; lev++)
-    {
-      MultiFab b_coeffs(ep_g_in[lev]->boxArray(), ep_g_in[lev]->DistributionMap(),
-          1, 1, MFInfo(), ep_g_in[lev]->Factory());
-
-      b_coeffs.setVal(0.);
-
-      MultiFab::Copy(b_coeffs, *ep_g_in[lev], 0, 0, 1, 1);
-      MultiFab::Multiply(b_coeffs, *ro_g_in[lev], 0, 0, 1, 1);
-      MultiFab::Multiply(b_coeffs, *D_gk_in[lev], n, 0, 1, 1);
-
-      EB_interp_CellCentroid_to_FaceCentroid (b_coeffs, GetArrOfPtrs(b[lev]), 0,
-          0, 1, geom[lev], bcs_X);
-
-      species_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
-
-      species_matrix->setLevelBC(lev, GetVecOfConstPtrs(X_gn)[lev]);
-    }
-
-    MLMG solver(*species_matrix);
-
-    solver.apply(lapX_aux, X_gn);
-
-    for(int lev = 0; lev <= finest_level; lev++)
-    {
-      amrex::single_level_redistribute(*lapX_aux[lev], *lapXn[lev], 0, 1, geom[lev]);
-    }
-
-    for(int lev = 0; lev <= finest_level; lev++)
-    {
-      MultiFab::Copy(*lapX_out[lev], *lapXn[lev], 0, n, 1, lapX_out[lev]->nGrow());
-    }
-
-    for(int lev = 0; lev <= finest_level; lev++)
-    {
-      delete lapX_aux[lev];
-      //delete phi_eb[lev];
-
-      delete X_gn[lev];
-      delete lapXn[lev];
-    }
-
+  for(int lev = 0; lev <= finest_level; lev++)
+  {
+    delete lapX_aux[lev];
   }
 
 }
