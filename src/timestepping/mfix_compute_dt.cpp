@@ -35,99 +35,158 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
     // Max CFL factor for all levels
     Real cfl_max(0.0);
 
-#ifdef AMREX_USE_GPU
+    for (int lev(0); lev <= finest_level; ++lev)
     {
-      Gpu::DeviceScalar<Real> cfl_max_gpu(cfl_max);
-      Real *cfl_max_ptr = cfl_max_gpu.dataPtr();
+      const Real* dx = geom[lev].CellSize();
+
+      Real odx(1.0 / dx[0]);
+      Real ody(1.0 / dx[1]);
+      Real odz(1.0 / dx[2]);
+
+#ifdef AMREX_USE_GPU
+      if (Gpu::inLaunchRegion())
+      {
+        // Reduce max operation for cfl_max
+        ReduceOps<ReduceOpMax> reduce_op;
+        ReduceData<Real> reduce_data(reduce_op);
+        using ReduceTuple = typename decltype(reduce_data)::Type;
+
+        for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        {
+          const auto& vel       = m_leveldata[lev]->vel_g->array(mfi);
+          const auto& ep        = m_leveldata[lev]->ep_g->array(mfi);
+          const auto& ro        = m_leveldata[lev]->ro_g->array(mfi);
+          const auto& mu        = m_leveldata[lev]->mu_g->array(mfi);
+          const auto& gradp     = m_leveldata[lev]->gp->array(mfi);
+          const auto& txfr_fab  = m_leveldata[lev]->txfr->array(mfi);
+
+          Box bx(mfi.tilebox());
+
+          const auto& vel_fab   =
+            static_cast<EBFArrayBox const&>((*m_leveldata[lev]->vel_g)[mfi]);
+
+          const auto& flags     = vel_fab.getEBCellFlagFab();
+          const auto& flags_fab = flags.array();
+
+          // ew need this until we remove static attribute from mfix::gp0
+          const RealVect gp0_dev(gp0);
+          const RealVect gravity_dev(gravity);
+
+          // Compute CFL on a per cell basis
+          if (flags.getType(bx) != FabType::covered)
+          {
+            reduce_op.eval(bx, reduce_data,
+              [ro,ep,gp0_dev,gradp,txfr_fab,gravity_dev,vel,odx,ody,odz,
+               flags_fab,mu] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+            {
+              Real l_cfl_max = 0._rt;
+
+              if (!flags_fab(i,j,k).isCovered())
+              {
+                RealVect acc(0.);
+                Real qro  = 1.0/ro(i,j,k);
+                Real qep  = 1.0/ep(i,j,k);
+
+                // Compute the three components of the net acceleration
+                // Explicit particle forcing is given by
+                for (int n(0); n < 3; ++n)
+                {
+                  Real delp = gp0_dev[n] + gradp(i,j,k,n);
+                  Real fp   = txfr_fab(i,j,k,n) -
+                    txfr_fab(i,j,k,Transfer::beta) * vel(i,j,k,n);
+
+                  acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
+                }
+
+                Real c_cfl   = amrex::Math::abs(vel(i,j,k,0))*odx +
+                               amrex::Math::abs(vel(i,j,k,1))*ody +
+                               amrex::Math::abs(vel(i,j,k,2))*odz;
+                Real v_cfl   = 2.0 * mu(i,j,k) * qro * (odx*odx + ody*ody + odz*odz);
+                Real cpv_cfl = c_cfl + v_cfl;
+
+                // MAX CFL factor on cell (i,j,k)
+                Real cfl_max_cell = cpv_cfl + std::sqrt(cpv_cfl*cpv_cfl +
+                                                        4*amrex::Math::abs(acc[0])*odx +
+                                                        4*amrex::Math::abs(acc[1])*ody +
+                                                        4*amrex::Math::abs(acc[2])*odz);
+                l_cfl_max = amrex::max(l_cfl_max, cfl_max_cell);
+              }
+
+              return {l_cfl_max};
+            });
+          }
+        }
+
+        ReduceTuple host_tuple = reduce_data.value();
+        cfl_max = amrex::max(cfl_max, amrex::get<0>(host_tuple));
+      }
+      else
 #endif
-
-    for (int lev(0); lev <= finest_level; ++lev) {
-
-        const Real* dx = geom[lev].CellSize();
-
-        Real odx(1.0 / dx[0]);
-        Real ody(1.0 / dx[1]);
-        Real odz(1.0 / dx[2]);
-
+      {
 #ifdef _OPENMP
 #pragma omp parallel reduction(max:cfl_max) if (Gpu::notInLaunchRegion())
 #endif
         for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
-            const auto& vel       = m_leveldata[lev]->vel_g->array(mfi);
-            const auto& ep        = m_leveldata[lev]->ep_g->array(mfi);
-            const auto& ro        = m_leveldata[lev]->ro_g->array(mfi);
-            const auto& mu        = m_leveldata[lev]->mu_g->array(mfi);
-            const auto& gradp     = m_leveldata[lev]->gp->array(mfi);
-            const auto& txfr_fab  = m_leveldata[lev]->txfr->array(mfi);
+          const auto& vel       = m_leveldata[lev]->vel_g->array(mfi);
+          const auto& ep        = m_leveldata[lev]->ep_g->array(mfi);
+          const auto& ro        = m_leveldata[lev]->ro_g->array(mfi);
+          const auto& mu        = m_leveldata[lev]->mu_g->array(mfi);
+          const auto& gradp     = m_leveldata[lev]->gp->array(mfi);
+          const auto& txfr_fab  = m_leveldata[lev]->txfr->array(mfi);
 
-            Box bx(mfi.tilebox());
+          Box bx(mfi.tilebox());
 
-            const auto& vel_fab   =
-              static_cast<EBFArrayBox const&>((*m_leveldata[lev]->vel_g)[mfi]);
+          const auto& vel_fab   =
+            static_cast<EBFArrayBox const&>((*m_leveldata[lev]->vel_g)[mfi]);
 
-            const auto& flags     = vel_fab.getEBCellFlagFab();
-            const auto& flags_fab = flags.array();
+          const auto& flags     = vel_fab.getEBCellFlagFab();
+          const auto& flags_fab = flags.array();
 
-            // ew need this until we remove static attribute from mfix::gp0
-            const RealVect gp0_dev(gp0);
-            const RealVect gravity_dev(gravity);
+          // ew need this until we remove static attribute from mfix::gp0
+          const RealVect gp0_dev(gp0);
+          const RealVect gravity_dev(gravity);
 
-            // Compute CFL on a per cell basis
-            if (flags.getType(bx) != FabType::covered)
+          // Compute CFL on a per cell basis
+          if (flags.getType(bx) != FabType::covered)
+          {
+            AMREX_LOOP_3D(bx, i, j, k,
             {
-              amrex::ParallelFor(bx,
-                  [ro,ep,gp0_dev,gradp,txfr_fab,gravity_dev,vel,odx,ody,odz,
-                   flags_fab,mu,
-#ifdef AMREX_USE_GPU
-                  cfl_max_ptr]
-#else
-                  &cfl_max]
-#endif
-                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-                  {
-                    if (!flags_fab(i,j,k).isCovered())
-                    {
-                        RealVect acc(0.);
-                        Real qro  = 1.0/ro(i,j,k);
-                        Real qep  = 1.0/ep(i,j,k);
+              if (!flags_fab(i,j,k).isCovered())
+              {
+                RealVect acc(0.);
+                Real qro  = 1.0/ro(i,j,k);
+                Real qep  = 1.0/ep(i,j,k);
 
-                        // Compute the three components of the net acceleration
-                        // Explicit particle forcing is given by
-                        for (int n(0); n < 3; ++n) {
-                            Real delp = gp0_dev[n] + gradp(i,j,k,n);
-                            Real fp   = txfr_fab(i,j,k,n) -
-                              txfr_fab(i,j,k,Transfer::beta) * vel(i,j,k,n);
+                // Compute the three components of the net acceleration
+                // Explicit particle forcing is given by
+                for (int n(0); n < 3; ++n)
+                {
+                  Real delp = gp0_dev[n] + gradp(i,j,k,n);
+                  Real fp   = txfr_fab(i,j,k,n) -
+                    txfr_fab(i,j,k,Transfer::beta) * vel(i,j,k,n);
 
-                            acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
-                        }
+                  acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
+                }
 
-                        Real c_cfl   = amrex::Math::abs(vel(i,j,k,0))*odx +
-                                       amrex::Math::abs(vel(i,j,k,1))*ody +
-                                       amrex::Math::abs(vel(i,j,k,2))*odz;
-                        Real v_cfl   = 2.0 * mu(i,j,k) * qro * (odx*odx + ody*ody + odz*odz);
-                        Real cpv_cfl = c_cfl + v_cfl;
+                Real c_cfl   = amrex::Math::abs(vel(i,j,k,0))*odx +
+                               amrex::Math::abs(vel(i,j,k,1))*ody +
+                               amrex::Math::abs(vel(i,j,k,2))*odz;
+                Real v_cfl   = 2.0 * mu(i,j,k) * qro * (odx*odx + ody*ody + odz*odz);
+                Real cpv_cfl = c_cfl + v_cfl;
 
-                        // MAX CFL factor on cell (i,j,k)
-                        Real cfl_max_cell = cpv_cfl + std::sqrt( cpv_cfl*cpv_cfl +
-                                                                 4.0*amrex::Math::abs(acc[0])*odx  +
-                                                                 4.0*amrex::Math::abs(acc[1])*ody  +
-                                                                 4.0*amrex::Math::abs(acc[2])*odz  );
-#ifdef AMREX_USE_GPU
-                        Gpu::Atomic::Max(cfl_max_ptr, cfl_max_cell);
-#else
-                        cfl_max = amrex::max(cfl_max, cfl_max_cell);
-#endif
-                    }
-                  });
-            }
+                // MAX CFL factor on cell (i,j,k)
+                Real cfl_max_cell = cpv_cfl + std::sqrt(cpv_cfl*cpv_cfl +
+                                                        4*amrex::Math::abs(acc[0])*odx +
+                                                        4*amrex::Math::abs(acc[1])*ody +
+                                                        4*amrex::Math::abs(acc[2])*odz);
+                cfl_max = amrex::max(cfl_max, cfl_max_cell);
+              }
+            });
+          }
         }
+      }
     }
-
-#ifdef AMREX_USE_GPU
-      cfl_max = cfl_max_gpu.dataValue();
-    }
-#endif
 
     // Do global max operation
     ParallelDescriptor::ReduceRealMax(cfl_max);

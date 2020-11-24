@@ -142,8 +142,8 @@ public:
 
     void UpdateMaxVelocity ();
 
-    void UpdateMaxForces (std::map<PairIndex, amrex::Gpu::DeviceVector<amrex::Real>> pfor,
-                          std::map<PairIndex, amrex::Gpu::DeviceVector<amrex::Real>> wfor);
+    void UpdateMaxForces (std::map<PairIndex, amrex::Gpu::DeviceVector<amrex::Real>>& pfor,
+                          std::map<PairIndex, amrex::Gpu::DeviceVector<amrex::Real>>& wfor);
 
     amrex::RealVect GetMaxVelocity ();
 
