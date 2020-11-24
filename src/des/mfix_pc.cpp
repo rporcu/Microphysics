@@ -233,8 +233,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
     while (n < nsubsteps)
     {
-        int ncoll = 0;  // Counts number of collisions (over sub-steps)
-
         // Redistribute particles ever so often BUT always update the neighbour
         // list (Note that this fills the neighbour list after every
         // redistribute operation)
@@ -249,8 +247,116 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             updateNeighbors();
         }
 
+        /********************************************************************
+         * Compute number of Particle-Particle collisions
+         *******************************************************************/
+        int ncoll = 0;  // Counts number of collisions (over sub-steps)
+
+        if (debug_level > 0) 
+        {
+#ifdef AMREX_USE_GPU
+          if (Gpu::inLaunchRegion())
+          {
+            // Reduce sum operation for ncoll
+            ReduceOps<ReduceOpSum> reduce_op;
+            ReduceData<int> reduce_data(reduce_op);
+            using ReduceTuple = typename decltype(reduce_data)::Type;
+
+            for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+            {
+              PairIndex index(pti.index(), pti.LocalTileIndex());
+
+              const int nrp = GetParticles(lev)[index].numRealParticles();
+
+              auto& plev = GetParticles(lev);
+              auto& ptile = plev[index];
+              auto& aos   = ptile.GetArrayOfStructs();
+              ParticleType* pstruct = aos().dataPtr();
+
+              auto nbor_data = m_neighbor_list[lev][index].data();
+
+              constexpr Real small_number = 1.0e-15;
+
+              reduce_op.eval(nrp, reduce_data, [pstruct,nbor_data,small_number]
+                AMREX_GPU_DEVICE (int i) -> ReduceTuple
+              {
+                int l_ncoll(0);
+
+                ParticleType p1 = pstruct[i];
+                const RealVect pos1 = p1.pos();
+                const Real radius1 = p1.rdata(realData::radius);
+
+                for (const auto p2 : nbor_data.getNeighbors(i))
+                {
+                  const RealVect pos2 = p2.pos();
+                  const Real radius2 = p2.rdata(realData::radius);
+
+                  Real r2 = (pos1 - pos2).radSquared();
+
+                  Real r_lm = radius1 + radius2;
+
+                  if (r2 <= (r_lm-small_number)*(r_lm-small_number))
+                    l_ncoll = 1;
+                }
+
+                return {l_ncoll};
+              });
+            }
+
+            ReduceTuple host_tuple = reduce_data.value();
+            ncoll += amrex::get<0>(host_tuple);
+          }
+          else
+#endif
+          {
 #ifdef _OPENMP
 #pragma omp parallel reduction(+:ncoll) if (Gpu::notInLaunchRegion())
+#endif
+            for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+            {
+              PairIndex index(pti.index(), pti.LocalTileIndex());
+
+              const int nrp = GetParticles(lev)[index].numRealParticles();
+
+              auto& plev = GetParticles(lev);
+              auto& ptile = plev[index];
+              auto& aos   = ptile.GetArrayOfStructs();
+              ParticleType* pstruct = aos().dataPtr();
+
+              auto nbor_data = m_neighbor_list[lev][index].data();
+
+              constexpr Real small_number = 1.0e-15;
+
+              for(int i(0); i < nrp; ++i)
+              {
+                ParticleType p1 = pstruct[i];
+                const RealVect pos1 = p1.pos();
+                const Real radius1 = p1.rdata(realData::radius);
+
+                for (const auto p2 : nbor_data.getNeighbors(i))
+                {
+                  const RealVect pos2 = p2.pos();
+                  const Real radius2 = p2.rdata(realData::radius);
+
+                  Real r2 = (pos1 - pos2).radSquared();
+
+                  Real r_lm = radius1 + radius2;
+
+                  if (r2 <= (r_lm-small_number)*(r_lm-small_number))
+                  {
+                    ncoll += 1;
+                  }
+                }
+              }
+            }
+          } 
+        } // end if (debug_level > 0)
+
+        /********************************************************************
+         * Particles routines                                               *
+         *******************************************************************/
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
@@ -430,12 +536,10 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             auto nbor_data = m_neighbor_list[lev][index].data();
 
             constexpr Real small_number = 1.0e-15;
-            Gpu::DeviceScalar<int> ncoll_gpu(ncoll);
-            int* pncoll = ncoll_gpu.dataPtr();
 
             // now we loop over the neighbor list and compute the forces
             amrex::ParallelFor(nrp,
-                [pstruct,fc_ptr,tow_ptr,nbor_data,pncoll,
+                [pstruct,fc_ptr,tow_ptr,nbor_data,
 #if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
                  eps,
 #endif
@@ -462,10 +566,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                       if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
                       {
-                          if (debug_level > 0)
-                             Gpu::Atomic::Add(pncoll, 1);
-
-                          Real dist_mag     = sqrt(r2);
+                          Real dist_mag = sqrt(r2);
 
                           AMREX_ASSERT(dist_mag >= eps);
 
@@ -779,10 +880,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
             Gpu::synchronize();
 
-
-#ifdef AMREX_USE_GPU
-            ncoll = ncoll_gpu.dataValue();
-#endif
             usr2_des(nrp, pstruct);
 
             /********************************************************************
@@ -1027,161 +1124,181 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
 
 void MFIXParticleContainer::UpdateMaxVelocity ()
 {
-    Real max_vel_x = loc_maxvel[0];
-    Real max_vel_y = loc_maxvel[1];
-    Real max_vel_z = loc_maxvel[2];
+  Real max_vel_x = loc_maxvel[0];
+  Real max_vel_y = loc_maxvel[1];
+  Real max_vel_z = loc_maxvel[2];
 
+  for (int lev = 0; lev < nlev; lev++)
+  {
 #ifdef AMREX_USE_GPU
-    Gpu::DeviceScalar<Real> d_max_vel_x(max_vel_x);
-    Gpu::DeviceScalar<Real> d_max_vel_y(max_vel_y);
-    Gpu::DeviceScalar<Real> d_max_vel_z(max_vel_z);
-
-    Real *p_max_vel_x = d_max_vel_x.dataPtr();
-    Real *p_max_vel_y = d_max_vel_y.dataPtr();
-    Real *p_max_vel_z = d_max_vel_z.dataPtr();
-#endif
-
-#ifdef _OPENMP
-#pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z) if (Gpu::notInLaunchRegion())
-#endif
-    for (int lev = 0; lev < nlev; lev++)
+    if (Gpu::inLaunchRegion())
     {
-       for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
-       {
-           auto& particles = pti.GetArrayOfStructs();
-           const int np = pti.numParticles();
-           ParticleType* pstruct = particles().dataPtr();
+      // Reduce max operation for velx, vely,velz
+      ReduceOps<ReduceOpMax, ReduceOpMax, ReduceOpMax> reduce_op;
+      ReduceData<Real, Real, Real> reduce_data(reduce_op);
+      using ReduceTuple = typename decltype(reduce_data)::Type;
 
-           amrex::ParallelFor(np, [pstruct,
-#ifdef AMREX_USE_GPU
-                 p_max_vel_x,p_max_vel_y,p_max_vel_z]
-#else
-                 &max_vel_x,&max_vel_y,&max_vel_z]
-#endif
-              AMREX_GPU_DEVICE (int p_id) noexcept
-           {
-              ParticleType p = pstruct[p_id];
-#ifdef AMREX_USE_GPU
-              Gpu::Atomic::Max(p_max_vel_x, Math::abs(p.rdata(realData::velx)));
-              Gpu::Atomic::Max(p_max_vel_y, Math::abs(p.rdata(realData::vely)));
-              Gpu::Atomic::Max(p_max_vel_z, Math::abs(p.rdata(realData::velz)));
-#else
-              max_vel_x = amrex::max(Math::abs(p.rdata(realData::velx)), max_vel_x);
-              max_vel_y = amrex::max(Math::abs(p.rdata(realData::vely)), max_vel_y);
-              max_vel_z = amrex::max(Math::abs(p.rdata(realData::velz)), max_vel_z);
-#endif
-           });
-       }
+      for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
+      {
+        auto& particles = pti.GetArrayOfStructs();
+        const int np = pti.numParticles();
+        ParticleType* pstruct = particles().dataPtr();
+
+        reduce_op.eval(np, reduce_data,
+            [pstruct] AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
+        {
+          ParticleType p = pstruct[p_id];
+
+          Real l_vel_x = Math::abs(p.rdata(realData::velx));
+          Real l_vel_y = Math::abs(p.rdata(realData::vely));
+          Real l_vel_z = Math::abs(p.rdata(realData::velz));
+
+          return {l_vel_x, l_vel_y, l_vel_z};
+        });
+      }
+
+      ReduceTuple host_tuple = reduce_data.value();
+      max_vel_x = amrex::max(max_vel_x, Math::abs(amrex::get<0>(host_tuple)));
+      max_vel_y = amrex::max(max_vel_y, Math::abs(amrex::get<1>(host_tuple)));
+      max_vel_z = amrex::max(max_vel_z, Math::abs(amrex::get<2>(host_tuple)));
     }
-
-#ifdef AMREX_USE_GPU
-    max_vel_x = d_max_vel_x.dataValue();
-    max_vel_y = d_max_vel_y.dataValue();
-    max_vel_z = d_max_vel_z.dataValue();
+    else
 #endif
+    {
+#ifdef _OPENMP
+#pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z) \
+                              if (Gpu::notInLaunchRegion())
+#endif
+      for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
+      {
+        auto& particles = pti.GetArrayOfStructs();
+        const int np = pti.numParticles();
+        ParticleType* pstruct = particles().dataPtr();
 
-    loc_maxvel = RealVect(max_vel_x, max_vel_y, max_vel_z);
+        for(int p_id(0); p_id < np; ++p_id)
+        {
+          ParticleType p = pstruct[p_id];
+          max_vel_x = amrex::max(Math::abs(p.rdata(realData::velx)), max_vel_x);
+          max_vel_y = amrex::max(Math::abs(p.rdata(realData::vely)), max_vel_y);
+          max_vel_z = amrex::max(Math::abs(p.rdata(realData::velz)), max_vel_z);
+        }
+      }
+    }
+  }
+
+  loc_maxvel = RealVect(max_vel_x, max_vel_y, max_vel_z);
 }
 
-void MFIXParticleContainer::UpdateMaxForces (std::map<PairIndex, Gpu::DeviceVector<Real>> pfor,
-                                             std::map<PairIndex, Gpu::DeviceVector<Real>> wfor)
+void MFIXParticleContainer::UpdateMaxForces (std::map<PairIndex, Gpu::DeviceVector<Real>>& pfor,
+                                             std::map<PairIndex, Gpu::DeviceVector<Real>>& wfor)
 {
-    Real max_pfor_x = loc_maxpfor[0];
-    Real max_pfor_y = loc_maxpfor[1];
-    Real max_pfor_z = loc_maxpfor[2];
+  Real max_pfor_x = loc_maxpfor[0];
+  Real max_pfor_y = loc_maxpfor[1];
+  Real max_pfor_z = loc_maxpfor[2];
 
-    Real max_wfor_x = loc_maxwfor[0];
-    Real max_wfor_y = loc_maxwfor[1];
-    Real max_wfor_z = loc_maxwfor[2];
+  Real max_wfor_x = loc_maxwfor[0];
+  Real max_wfor_y = loc_maxwfor[1];
+  Real max_wfor_z = loc_maxwfor[2];
 
+  for (int lev = 0; lev < nlev; lev++)
+  {
 #ifdef AMREX_USE_GPU
-    Gpu::DeviceScalar<Real> d_max_pfor_x(max_pfor_x);
-    Gpu::DeviceScalar<Real> d_max_pfor_y(max_pfor_y);
-    Gpu::DeviceScalar<Real> d_max_pfor_z(max_pfor_z);
+    if (Gpu::inLaunchRegion())
+    {
+      // Reduce max operation for pforx, pfory, pforz, wforx, wfory, wforz
+      ReduceOps<ReduceOpMax, ReduceOpMax, ReduceOpMax,
+                ReduceOpMax, ReduceOpMax, ReduceOpMax> reduce_op;
+      ReduceData<Real, Real, Real, Real, Real, Real> reduce_data(reduce_op);
+      using ReduceTuple = typename decltype(reduce_data)::Type;
 
-    Gpu::DeviceScalar<Real> d_max_wfor_x(max_wfor_x);
-    Gpu::DeviceScalar<Real> d_max_wfor_y(max_wfor_y);
-    Gpu::DeviceScalar<Real> d_max_wfor_z(max_wfor_z);
+      for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
+      {
+        PairIndex index(pti.index(), pti.LocalTileIndex());
 
-    Real *p_max_pfor_x = d_max_pfor_x.dataPtr();
-    Real *p_max_pfor_y = d_max_pfor_y.dataPtr();
-    Real *p_max_pfor_z = d_max_pfor_z.dataPtr();
+        // Note the particle force data layout:
+        //      p1_x, p2_x, ..., pn_x, p1_y, p2_y, ..., pn_y, p1_z, p2_z, ..., pn_z
+        // Where n is the total number of particle and neighbor particles.
+        const int nrp = GetParticles(lev)[index].numRealParticles();
 
-    Real *p_max_wfor_x = d_max_wfor_x.dataPtr();
-    Real *p_max_wfor_y = d_max_wfor_y.dataPtr();
-    Real *p_max_wfor_z = d_max_wfor_z.dataPtr();
+        auto& plev = GetParticles(lev);
+        auto& ptile = plev[index];
+        auto& aos   = ptile.GetArrayOfStructs();
+        int size_ng = aos.numNeighborParticles();
+
+        // Number of particles including neighbor particles
+        const int ntot = nrp + size_ng;
+
+        Real* p_pfor = pfor[index].data();
+        Real* p_wfor = wfor[index].data();
+
+        // Find max (abs) of particle-particle forces:
+        reduce_op.eval(ntot, reduce_data, [p_pfor,p_wfor,ntot]
+          AMREX_GPU_DEVICE (int i) -> ReduceTuple
+        {
+          Real l_pfor_x = Math::abs(p_pfor[i]);
+          Real l_pfor_y = Math::abs(p_pfor[i+ntot]);
+          Real l_pfor_z = Math::abs(p_pfor[i+2*ntot]);
+
+          Real l_wfor_x = Math::abs(p_wfor[i]);
+          Real l_wfor_y = Math::abs(p_wfor[i+ntot]);
+          Real l_wfor_z = Math::abs(p_wfor[i+2*ntot]);
+
+          return {l_pfor_x, l_pfor_y, l_pfor_z, l_wfor_x, l_wfor_y, l_wfor_z};
+        });
+      }
+
+      ReduceTuple host_tuple = reduce_data.value();
+      
+      max_pfor_x = amrex::max(max_pfor_x, Math::abs(amrex::get<0>(host_tuple)));
+      max_pfor_y = amrex::max(max_pfor_y, Math::abs(amrex::get<1>(host_tuple)));
+      max_pfor_z = amrex::max(max_pfor_z, Math::abs(amrex::get<2>(host_tuple)));
+      
+      max_pfor_x = amrex::max(max_pfor_x, Math::abs(amrex::get<3>(host_tuple)));
+      max_pfor_y = amrex::max(max_pfor_y, Math::abs(amrex::get<4>(host_tuple)));
+      max_pfor_z = amrex::max(max_pfor_z, Math::abs(amrex::get<5>(host_tuple)));
+    }
+    else
 #endif
-
-    for (int lev = 0; lev < nlev; lev++)
     {
 #ifdef _OPENMP
-#pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z,max_wfor_x,\
-    max_wfor_y,max_wfor_z) if (Gpu::notInLaunchRegion())
+#pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z, \
+                                   max_wfor_x,max_wfor_y,max_wfor_z) \
+                              if (Gpu::notInLaunchRegion())
 #endif
-        for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
+      for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
+      {
+        PairIndex index(pti.index(), pti.LocalTileIndex());
+
+        // Note the particle force data layout:
+        //      p1_x, p2_x, ..., pn_x, p1_y, p2_y, ..., pn_y, p1_z, p2_z, ..., pn_z
+        // Where n is the total number of particle and neighbor particles.
+        const int nrp = GetParticles(lev)[index].numRealParticles();
+
+        int size_ng = neighbors[lev][index].size();
+        
+        // Number of particles including neighbor particles
+        const int ntot = nrp + size_ng;
+
+        Real* p_pfor = pfor[index].data();
+        Real* p_wfor = wfor[index].data();
+
+        // Find max (abs) of particle-particle forces:
+        for (int i(0); i < ntot; ++i)
         {
-            PairIndex index(pti.index(), pti.LocalTileIndex());
+          max_pfor_x = amrex::max(Math::abs(p_pfor[i]), max_pfor_x);
+          max_pfor_y = amrex::max(Math::abs(p_pfor[i+ntot]), max_pfor_y);
+          max_pfor_z = amrex::max(Math::abs(p_pfor[i+2*ntot]), max_pfor_z);
 
-            // Note the particle force data layout:
-            //      p1_x, p2_x, ..., pn_x, p1_y, p2_y, ..., pn_y, p1_z, p2_z, ..., pn_z
-            // Where n is the total number of particle and neighbor particles.
-            const int nrp     = NumberOfParticles(pti);
-#ifdef AMREX_USE_GPU
-            auto& plev = GetParticles(lev);
-            auto& ptile = plev[index];
-            auto& aos   = ptile.GetArrayOfStructs();
-            int size_ng = aos.numNeighborParticles();
-#else
-            int size_ng = neighbors[lev][index].size();
-#endif
-            // Number of particles including neighbor particles
-            const int ntot = nrp + size_ng;
-
-            Real* p_pfor = pfor[index].data();
-            Real* p_wfor = wfor[index].data();
-
-            // Find max (abs) of particle-particle forces:
-            amrex::ParallelFor(ntot, [p_pfor,p_wfor,ntot,
-#ifdef AMREX_USE_GPU
-                p_max_pfor_x,p_max_pfor_y,p_max_pfor_z,p_max_wfor_x,p_max_wfor_y,p_max_wfor_z]
-#else
-                &max_pfor_x,&max_pfor_y,&max_pfor_z,&max_wfor_x,&max_wfor_y,&max_wfor_z]
-#endif
-              AMREX_GPU_DEVICE (int i) noexcept
-            {
-#ifdef AMREX_USE_GPU
-                Gpu::Atomic::Max(p_max_pfor_x, Math::abs(p_pfor[i]));
-                Gpu::Atomic::Max(p_max_pfor_y, Math::abs(p_pfor[i+ntot]));
-                Gpu::Atomic::Max(p_max_pfor_z, Math::abs(p_pfor[i+2*ntot]));
-
-                Gpu::Atomic::Max(p_max_wfor_x, Math::abs(p_wfor[i]));
-                Gpu::Atomic::Max(p_max_wfor_y, Math::abs(p_wfor[i+ntot]));
-                Gpu::Atomic::Max(p_max_wfor_z, Math::abs(p_wfor[i+2*ntot]));
-#else
-                max_pfor_x = amrex::max(Math::abs(p_pfor[i]), max_pfor_x);
-                max_pfor_y = amrex::max(Math::abs(p_pfor[i+ntot]), max_pfor_y);
-                max_pfor_z = amrex::max(Math::abs(p_pfor[i+2*ntot]), max_pfor_z);
-
-                max_wfor_x = amrex::max(Math::abs(p_wfor[i]), max_wfor_x);
-                max_wfor_y = amrex::max(Math::abs(p_wfor[i+ntot]), max_wfor_y);
-                max_wfor_z = amrex::max(Math::abs(p_wfor[i+2*ntot]), max_wfor_z);
-#endif
-            });
+          max_wfor_x = amrex::max(Math::abs(p_wfor[i]), max_wfor_x);
+          max_wfor_y = amrex::max(Math::abs(p_wfor[i+ntot]), max_wfor_y);
+          max_wfor_z = amrex::max(Math::abs(p_wfor[i+2*ntot]), max_wfor_z);
         }
+      }
     }
+  }
 
-#ifdef AMREX_USE_GPU
-    max_pfor_x = d_max_pfor_x.dataValue();
-    max_pfor_y = d_max_pfor_y.dataValue();
-    max_pfor_z = d_max_pfor_z.dataValue();
-
-    max_wfor_x = d_max_wfor_x.dataValue();
-    max_wfor_y = d_max_wfor_y.dataValue();
-    max_wfor_z = d_max_wfor_z.dataValue();
-#endif
-
-    loc_maxpfor = RealVect(max_pfor_x, max_pfor_y, max_pfor_z);
-    loc_maxwfor = RealVect(max_wfor_x, max_wfor_y, max_wfor_z);
+  loc_maxpfor = RealVect(max_pfor_x, max_pfor_y, max_pfor_z);
+  loc_maxwfor = RealVect(max_wfor_x, max_wfor_y, max_wfor_z);
 }
 
 RealVect MFIXParticleContainer::GetMaxVelocity ()
@@ -1251,7 +1368,7 @@ ComputeAverageVelocities (const int lev,
     std::vector<Real> region_velx(nregions, 0.0);
     std::vector<Real> region_vely(nregions, 0.0);
     std::vector<Real> region_velz(nregions, 0.0);
-    std::vector<Real> region_kin_energy(nregions, 0.0);
+    std::vector<Real> region_k_en(nregions, 0.0);
 
     for ( int nr = 0; nr < nregions; ++nr )
     {
@@ -1276,85 +1393,107 @@ ComputeAverageVelocities (const int lev,
       Real sum_velx = 0.;
       Real sum_vely = 0.;
       Real sum_velz = 0.;
-      Real sum_kin_energy = 0.;
+      Real sum_k_en = 0.;
 
 #ifdef AMREX_USE_GPU
-      Gpu::DeviceScalar<long> d_sum_np(sum_np);
-      Gpu::DeviceScalar<Real> d_sum_velx(sum_velx);
-      Gpu::DeviceScalar<Real> d_sum_vely(sum_vely);
-      Gpu::DeviceScalar<Real> d_sum_velz(sum_velz);
-      Gpu::DeviceScalar<Real> d_sum_kin_energy(sum_kin_energy);
-
-      long *p_sum_np         = d_sum_np.dataPtr();
-      Real *p_sum_velx       = d_sum_velx.dataPtr();
-      Real *p_sum_vely       = d_sum_vely.dataPtr();
-      Real *p_sum_velz       = d_sum_velz.dataPtr();
-      Real *p_sum_kin_energy = d_sum_kin_energy.dataPtr();
-#endif
-
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:sum_np,sum_velx,sum_vely,sum_velz,sum_kin_energy) if (Gpu::notInLaunchRegion())
-#endif
-      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+      if (Gpu::inLaunchRegion())
       {
-        Box bx = pti.tilebox();
-        RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
+        // Reduce sum operation for np, velx, vely, velz, kinetic energy
+        ReduceOps<ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum> reduce_op;
+        ReduceData<long, Real, Real, Real, Real> reduce_data(reduce_op);
+        using ReduceTuple = typename decltype(reduce_data)::Type;
 
-        if (tile_region.intersects(avg_region))
+        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
-          const int np         = NumberOfParticles(pti);
-          const AoS &particles = pti.GetArrayOfStructs();
-          const ParticleType* pstruct = particles().dataPtr();
+          Box bx = pti.tilebox();
+          RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
 
-          amrex::ParallelFor(np, [pstruct,avg_region,
-#ifdef AMREX_USE_GPU
-              p_sum_np,p_sum_velx,p_sum_vely,p_sum_velz,p_sum_kin_energy]
-#else
-              &sum_np,&sum_velx,&sum_vely,&sum_velz,&sum_kin_energy]
-#endif
-            AMREX_GPU_DEVICE (int p_id) noexcept
+          if (tile_region.intersects(avg_region))
           {
-            const ParticleType p = pstruct[p_id];
+            const int np         = NumberOfParticles(pti);
+            const AoS &particles = pti.GetArrayOfStructs();
+            const ParticleType* pstruct = particles().dataPtr();
 
-            if (avg_region.contains(p.pos()))
+            reduce_op.eval(np, reduce_data, [pstruct,avg_region]
+              AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
             {
-              const Real velx = p.rdata(realData::velx);
-              const Real vely = p.rdata(realData::vely);
-              const Real velz = p.rdata(realData::velz);
-              const Real mass = p.rdata(realData::mass);
-              const Real k_en = .5*mass*(velx*velx + vely*vely + velz*velz);
+              const ParticleType p = pstruct[p_id];
 
-#ifdef AMREX_USE_GPU
-              Gpu::Atomic::Add(p_sum_np, static_cast<long>(1));
-              Gpu::Atomic::Add(p_sum_velx, velx);
-              Gpu::Atomic::Add(p_sum_vely, vely);
-              Gpu::Atomic::Add(p_sum_velz, velz);
-              Gpu::Atomic::Add(p_sum_kin_energy, k_en);
-#else
-              sum_np++;
-              sum_velx += velx;
-              sum_vely += vely;
-              sum_velz += velz;
-              sum_kin_energy += k_en;
+              long l_np   = static_cast<long>(0);
+              Real l_velx = 0._rt;
+              Real l_vely = 0._rt;
+              Real l_velz = 0._rt;
+              Real l_k_en = 0._rt;
+              
+              if (avg_region.contains(p.pos()))
+              {
+                const Real mass = p.rdata(realData::mass);
+
+                l_np = static_cast<long>(1);
+                l_velx = p.rdata(realData::velx);
+                l_vely = p.rdata(realData::vely);
+                l_velz = p.rdata(realData::velz);
+                l_k_en = 0.5*mass*(l_velx*l_velx + l_vely*l_vely + l_velz*l_velz);
+              }
+
+              return {l_np, l_velx, l_vely, l_velz, l_k_en};
+            });
+          }
+        }
+
+        ReduceTuple host_tuple = reduce_data.value();
+        sum_np   = amrex::get<0>(host_tuple);
+        sum_velx = amrex::get<1>(host_tuple);
+        sum_vely = amrex::get<2>(host_tuple);
+        sum_velz = amrex::get<3>(host_tuple);
+        sum_k_en = amrex::get<4>(host_tuple);
+      }
+      else
 #endif
+      {
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:sum_np,sum_velx,sum_vely,sum_velz, \
+                                 sum_k_en) if (Gpu::notInLaunchRegion())
+#endif
+        for (MFIXParIter pti(*this,lev); pti.isValid(); ++pti)
+        {
+          Box bx = pti.tilebox();
+          RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
+
+          if (tile_region.intersects(avg_region))
+          {
+            const int np         = NumberOfParticles(pti);
+            const AoS &particles = pti.GetArrayOfStructs();
+            const ParticleType* pstruct = particles().dataPtr();
+
+            for (int p_id(0); p_id < np; ++p_id)
+            {
+              const ParticleType p = pstruct[p_id];
+
+              if (avg_region.contains(p.pos()))
+              {
+                const Real mass = p.rdata(realData::mass);
+                const Real velx = p.rdata(realData::velx);
+                const Real vely = p.rdata(realData::vely);
+                const Real velz = p.rdata(realData::velz);
+                const Real k_en = 0.5*mass*(velx*velx + vely*vely + velz*velz);
+
+                sum_np   += static_cast<long>(1);
+                sum_velx += velx;
+                sum_vely += vely;
+                sum_velz += velz;
+                sum_k_en += k_en;
+              }
             }
-          });
+          }
         }
       }
-
-#ifdef AMREX_USE_GPU
-      sum_np         = d_sum_np.dataValue();
-      sum_velx       = d_sum_velx.dataValue();
-      sum_vely       = d_sum_vely.dataValue();
-      sum_velz       = d_sum_velz.dataValue();
-      sum_kin_energy = d_sum_kin_energy.dataValue();
-#endif
 
       region_np[nr]   = sum_np;
       region_velx[nr] = sum_velx;
       region_vely[nr] = sum_vely;
       region_velz[nr] = sum_velz;
-      region_kin_energy[nr] = sum_kin_energy;
+      region_k_en[nr] = sum_k_en;
     }
 
     // Compute parallel reductions
@@ -1362,7 +1501,7 @@ ComputeAverageVelocities (const int lev,
     ParallelDescriptor::ReduceRealSum(region_velx.data(), nregions);
     ParallelDescriptor::ReduceRealSum(region_vely.data(), nregions);
     ParallelDescriptor::ReduceRealSum(region_velz.data(), nregions);
-    ParallelDescriptor::ReduceRealSum(region_kin_energy.data(), nregions);
+    ParallelDescriptor::ReduceRealSum(region_k_en.data(), nregions);
 
     // Only the IO processor takes care of the output
     if (ParallelDescriptor::IOProcessor())
@@ -1375,17 +1514,17 @@ ComputeAverageVelocities (const int lev,
         //
         // Compute averages (NaN if NP=0 )
         //
-        if (region_np[nr]==0) {
+        if (region_np[nr] == 0) {
           region_velx[nr] = 0.0;
           region_vely[nr] = 0.0;
           region_velz[nr] = 0.0;
-          region_kin_energy[nr] = 0.;
+          region_k_en[nr] = 0.0;
         }
         else {
           region_velx[nr] /= region_np[nr];
           region_vely[nr] /= region_np[nr];
           region_velz[nr] /= region_np[nr];
-          region_kin_energy[nr] /= region_np[nr];
+          region_k_en[nr] /= region_np[nr];
         }
 
         //
@@ -1423,7 +1562,7 @@ ComputeAverageVelocities (const int lev,
             << region_velx[nr] << " "
             << region_vely[nr] << " "
             << region_velz[nr] << " "
-            << region_kin_energy[nr] << std::endl;
+            << region_k_en[nr] << std::endl;
 
         ofs.close();
       }
@@ -1466,7 +1605,7 @@ ComputeAverageTemperatures (const int lev,
     }
 
     std::vector<long> region_np(nregions, 0);
-    std::vector<Real> region_T_p(nregions, 0.0);
+    std::vector<Real> region_Tp(nregions, 0.0);
 
     for ( int nr = 0; nr < nregions; ++nr )
     {
@@ -1480,49 +1619,96 @@ ComputeAverageTemperatures (const int lev,
                          {avg_region_x_e[nr], avg_region_y_n[nr], avg_region_z_t[nr]});
 
       // Jump to next iteration if this averaging region is not valid
-      if ( !avg_region.ok() )
+      if (!avg_region.ok())
       {
         amrex::Print() << "ComputeAverageTemperatures: region " << nr
                        << " is invalid: skipping\n";
         continue;
       }
 
-      long sum_np   = 0;    // Number of particle in avg region
-      Real sum_T_p = 0.;
+      long sum_np = 0;    // Number of particle in avg region
+      Real sum_Tp = 0.;
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:sum_np,sum_T_p) if (Gpu::notInLaunchRegion())
-#endif
-      for ( MFIXParIter pti(*this, lev); pti.isValid(); ++ pti)
+#ifdef AMREX_USE_GPU
+      if (Gpu::inLaunchRegion())
       {
-        Box bx = pti.tilebox();
-        RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
+        // Reduce sum operation for np, Tp
+        ReduceOps<ReduceOpSum, ReduceOpSum> reduce_op;
+        ReduceData<long, Real> reduce_data(reduce_op);
+        using ReduceTuple = typename decltype(reduce_data)::Type;
 
-        if ( tile_region.intersects ( avg_region ) )
+        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
-          const int np         = NumberOfParticles(pti);
-          const AoS &particles = pti.GetArrayOfStructs();
+          Box bx = pti.tilebox();
+          RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
 
-          for (int p = 0; p < np; ++p )
+          if (tile_region.intersects(avg_region))
           {
-            if ( avg_region.contains(particles[p].pos()))
-            {
-              const Real T_p = particles[p].rdata(realData::temperature);
+            const int np         = NumberOfParticles(pti);
+            const AoS &particles = pti.GetArrayOfStructs();
+            const ParticleType* pstruct = particles().dataPtr();
 
-              sum_np++;
-              sum_T_p += T_p;
+            reduce_op.eval(np, reduce_data, [pstruct,avg_region]
+              AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
+            {
+              const ParticleType p = pstruct[p_id];
+
+              long l_np = static_cast<long>(0);
+              Real l_Tp = 0.0;
+
+              if (avg_region.contains(p.pos()))
+              {
+                l_np = static_cast<long>(1);
+                l_Tp = p.rdata(realData::temperature);
+              }
+
+              return {l_np, l_Tp};
+            });
+          }
+        }
+
+        ReduceTuple host_tuple = reduce_data.value();
+        sum_np = amrex::get<0>(host_tuple);
+        sum_Tp = amrex::get<1>(host_tuple);
+      }
+      else
+#endif
+      {
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:sum_np,sum_Tp) if (Gpu::notInLaunchRegion())
+#endif
+        for (MFIXParIter pti(*this, lev); pti.isValid(); ++ pti)
+        {
+          Box bx = pti.tilebox();
+          RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
+
+          if (tile_region.intersects(avg_region))
+          {
+            const int np          = NumberOfParticles(pti);
+            const AoS& particles  = pti.GetArrayOfStructs();
+            const ParticleType* pstruct = particles().dataPtr();
+
+            for (int p_id(0); p_id < np; ++p_id)
+            {
+              const ParticleType& p = pstruct[p_id];
+
+              if (avg_region.contains(p.pos()))
+              {
+                sum_np += static_cast<long>(1);
+                sum_Tp += p.rdata(realData::temperature);;
+              }
             }
           }
         }
       }
 
-      region_np[nr]  = sum_np;
-      region_T_p[nr] = sum_T_p;
+      region_np[nr] = sum_np;
+      region_Tp[nr] = sum_Tp;
     }
 
     // Compute parallel reductions
-    ParallelDescriptor::ReduceLongSum(region_np.data(),  nregions);
-    ParallelDescriptor::ReduceRealSum(region_T_p.data(), nregions);
+    ParallelDescriptor::ReduceLongSum(region_np.data(), nregions);
+    ParallelDescriptor::ReduceRealSum(region_Tp.data(), nregions);
 
     // Only the IO processor takes care of the output
     if (ParallelDescriptor::IOProcessor())
@@ -1535,11 +1721,11 @@ ComputeAverageTemperatures (const int lev,
         //
         // Compute averages (NaN if NP=0 )
         //
-        if (region_np[nr]==0) {
-          region_T_p[nr] = 0.0;
+        if (region_np[nr] == 0) {
+          region_Tp[nr] = 0.0;
         }
         else {
-          region_T_p[nr] /= region_np[nr];
+          region_Tp[nr] /= region_np[nr];
         }
 
         //
@@ -1574,7 +1760,7 @@ ComputeAverageTemperatures (const int lev,
 
         ofs << time << " "
             << region_np[nr] << " "
-            << region_T_p[nr] << std::endl;
+            << region_Tp[nr] << std::endl;
 
         ofs.close();
       }
