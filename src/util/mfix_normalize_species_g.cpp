@@ -107,10 +107,8 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
       amrex::Print() << "Max fluid species mass fraction AFTER normalization = " << X_gk_max[lev] << std::endl;
       amrex::Print() << "Min fluid species mass fraction AFTER normalization = " << X_gk_min[lev] << std::endl;
 
-      if (std::fabs(X_gk_max[lev]-1) > 1.e-15 or std::fabs(X_gk_min[lev]-1) > 1.e-15)
-      {
+      if (X_gk_max[lev] > 1 or X_gk_min[lev] < 0)
         amrex::Abort("Fluid mass fractions rescaling FAILED");
-      }
     }
   }
 #endif
