@@ -7,6 +7,7 @@
 #include <mfix_diffusion_op.H>
 #include <mfix_eb_parms.H>
 #include <mfix_bc_parms.H>
+#include <mfix_species_parms.H>
 #include <mfix_fluid_parms.H>
 
 using namespace amrex;
@@ -76,8 +77,11 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     rhs.resize(max_level + 1);
     vel_eb.resize(max_level + 1);
 
-    species_phi.resize(max_level + 1);
-    species_rhs.resize(max_level + 1);
+    if (SPECIES::solve)
+    {
+      species_phi.resize(max_level + 1);
+      species_rhs.resize(max_level + 1);
+    }
 
     for(int lev = 0; lev <= max_level; lev++)
     {
@@ -99,13 +103,16 @@ void DiffusionOp::setup (AmrCore* _amrcore,
         vel_eb[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, nghost,
                                        MFInfo(), *ebfactory[lev]));
         vel_eb[lev]->setVal(0.0);
-        
-        species_phi[lev].reset(new MultiFab(grids[lev], dmap[lev], nspecies_g, 1,
-                                            MFInfo(), *ebfactory[lev]));
 
-        // No ghost cells needed for rhs
-        species_rhs[lev].reset(new MultiFab(grids[lev], dmap[lev], nspecies_g, 0,
-                                            MFInfo(), *ebfactory[lev]));
+        if (SPECIES::solve)
+        {
+          species_phi[lev].reset(new MultiFab(grids[lev], dmap[lev], nspecies_g, 1,
+                                              MFInfo(), *ebfactory[lev]));
+
+          // No ghost cells needed for rhs
+          species_rhs[lev].reset(new MultiFab(grids[lev], dmap[lev], nspecies_g, 0,
+                                              MFInfo(), *ebfactory[lev]));
+        }
     }
 
     //
@@ -128,31 +135,41 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     //
     scal_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory));
     temperature_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory));
-    species_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory, nspecies_g));
+
+    if (SPECIES::solve) {
+      species_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory, nspecies_g));
+    }
 
     // It is essential that we set MaxOrder to 2 if we want to use the standard
     // phi(i)-phi(i-1) approximation for the gradient at Dirichlet boundaries.
     // The solver's default order is 3 and this uses three points for the gradient.
     scal_matrix->setMaxOrder(2);
     temperature_matrix->setMaxOrder(2);
-    species_matrix->setMaxOrder(2);
+    
+    if (SPECIES::solve) {
+      species_matrix->setMaxOrder(2);
+    }
 
     // LinOpBCType Definitions are in amrex/Src/Boundary/AMReX_LO_BCTYPES.H
     scal_matrix->setDomainBC(m_scalbc_lo, m_scalbc_hi);
     temperature_matrix->setDomainBC(m_temperaturebc_lo, m_temperaturebc_hi);
-    species_matrix->setDomainBC(m_speciesbc_lo, m_speciesbc_hi);
-    
-    species_b.resize(max_level + 1);
 
-    for(int lev = 0; lev <= max_level; lev++)
+    if (SPECIES::solve)
     {
-        for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
-        {
-            BoxArray edge_ba = grids[lev];
-            edge_ba.surroundingNodes(dir);
-            species_b[lev][dir].reset(new MultiFab(edge_ba, dmap[lev], nspecies_g, nghost,
-                                                   MFInfo(), *ebfactory[lev]));
-        }
+      species_matrix->setDomainBC(m_speciesbc_lo, m_speciesbc_hi);
+      
+      species_b.resize(max_level + 1);
+
+      for(int lev = 0; lev <= max_level; lev++)
+      {
+          for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
+          {
+              BoxArray edge_ba = grids[lev];
+              edge_ba.surroundingNodes(dir);
+              species_b[lev][dir].reset(new MultiFab(edge_ba, dmap[lev], nspecies_g, nghost,
+                                                     MFInfo(), *ebfactory[lev]));
+          }
+      }
     }
 
 }
