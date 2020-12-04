@@ -10,9 +10,9 @@ using namespace amrex;
 
 void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
 {
-
   // only read the file on the IO proc
-  if (ParallelDescriptor::IOProcessor())  {
+  if (ParallelDescriptor::IOProcessor())
+  {
     std::ifstream ifs;
     ifs.open(file.c_str(), std::ios::in);
 
@@ -35,88 +35,93 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
     const int tile = 0;
 
     auto& particles = DefineAndReturnParticleTile(lev,grid,tile);
-    //auto& particles = GetParticles(lev)[std::make_pair(grid,tile)];
+    particles.resize(np);
 
-    ParticleType p;
+    Gpu::HostVector<ParticleType> host_particles(np);
+
     int  pstate, pphase;
     Real pradius, pdensity, pvolume, pomoi, pmass, pomega;
 
     pstate = 1;
 
-    for (int i = 0; i < np; i++) {
-
+    for (int i = 0; i < np; i++)
+    {
       // Read from input file
       ifs >> pphase;
-      ifs >> p.pos(0);
-      ifs >> p.pos(1);
-      ifs >> p.pos(2);
+      ifs >> host_particles[i].pos(0);
+      ifs >> host_particles[i].pos(1);
+      ifs >> host_particles[i].pos(2);
       ifs >> pradius;
       ifs >> pdensity;
-      ifs >> p.rdata(realData::velx);
-      ifs >> p.rdata(realData::vely);
-      ifs >> p.rdata(realData::velz);
-
-      // Set id and cpu for this particle
-      p.id()  = ParticleType::NextID();
-      p.cpu() = ParallelDescriptor::MyProc();
+      ifs >> host_particles[i].rdata(realData::velx);
+      ifs >> host_particles[i].rdata(realData::vely);
+      ifs >> host_particles[i].rdata(realData::velz);
 
       // Compute other particle properties
       set_particle_properties(pstate, pradius, pdensity, pvolume, pmass, pomoi, pomega);
 
-      // Set other particle properties
-      p.idata(intData::phase)       = pphase;
-      p.idata(intData::state)       = pstate;
-      p.rdata(realData::volume)     = pvolume;
-      p.rdata(realData::density)    = pdensity;
-      p.rdata(realData::mass)       = pmass;
-      p.rdata(realData::oneOverI)   = pomoi;
-      p.rdata(realData::radius)     = pradius;
-      p.rdata(realData::omegax)     = pomega;
-      p.rdata(realData::omegay)     = pomega;
-      p.rdata(realData::omegaz)     = pomega;
+      // Set id and cpu for this particle
+      host_particles[i].id()  = ParticleType::NextID();
+      host_particles[i].cpu() = ParallelDescriptor::MyProc();
 
-      p.rdata(realData::statwt) = 1.0;
+      // Set other particle properties
+      host_particles[i].idata(intData::phase)     = pphase;
+      host_particles[i].idata(intData::state)     = pstate;
+      host_particles[i].rdata(realData::volume)   = pvolume;
+      host_particles[i].rdata(realData::density)  = pdensity;
+      host_particles[i].rdata(realData::mass)     = pmass;
+      host_particles[i].rdata(realData::oneOverI) = pomoi;
+      host_particles[i].rdata(realData::radius)   = pradius;
+      host_particles[i].rdata(realData::omegax)   = pomega;
+      host_particles[i].rdata(realData::omegay)   = pomega;
+      host_particles[i].rdata(realData::omegaz)   = pomega;
+      host_particles[i].rdata(realData::statwt)   = 1.0;
 
       // Initialize these for I/O purposes
-      p.rdata(realData::dragcoeff) = 0.0;
-
-      p.rdata(realData::dragx) = 0.0;
-      p.rdata(realData::dragy) = 0.0;
-      p.rdata(realData::dragz) = 0.0;
-
-      p.rdata(realData::c_ps) = 0.0;
-      p.rdata(realData::temperature) = 0.0;
-      p.rdata(realData::convection) = 0.0;
-
-      // Add everything to the data structure
-      particles.push_back(p);
-
-      // Add real components for solid species
-      if (SOLIDS::solve_species)
-      {
-        // Add SOLIDS::nspecies components for each of the new species vars
-        for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
-          particles.push_back_real(n_s, 0.);
-      }
-
-      // Add real components for solid species
-      if (SOLIDS::solve_species and REACTIONS::solve)
-      {
-        const int gap = SOLIDS::nspecies;
-
-        // Add SOLIDS::nspecies components for each of the reactions
-        for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s) {
-          for(int q(0); q < REACTIONS::nreactions; ++q) {
-            const int comp = gap + n_s*REACTIONS::nreactions + q;
-            particles.push_back_real(comp, 0.);
-          }
-        }
-      }
+      host_particles[i].rdata(realData::dragcoeff)   = 0.0;
+      host_particles[i].rdata(realData::dragx)       = 0.0;
+      host_particles[i].rdata(realData::dragy)       = 0.0;
+      host_particles[i].rdata(realData::dragz)       = 0.0;
+      host_particles[i].rdata(realData::c_ps)        = 0.0;
+      host_particles[i].rdata(realData::temperature) = 0.0;
+      host_particles[i].rdata(realData::convection)  = 0.0;
 
       if (!ifs.good())
           amrex::Abort("Error initializing particles from Ascii file. \n");
     }
+
+    auto& aos = particles.GetArrayOfStructs();
+    Gpu::DeviceVector<ParticleType>& gpu_particles = aos();
+
+    // Copy particles from host to device
+    Gpu::copyAsync(Gpu::hostToDevice, host_particles.begin(), host_particles.end(), gpu_particles.begin());
+
+    // Add real components for solid species
+    if (SOLIDS::solve_species)
+    {
+      // Add SOLIDS::nspecies components for each of the new species vars
+      for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
+        particles.push_back_real(n_s, np, 0.);
+    }
+
+    // Add real components for chemical reactions rates
+    if (SOLIDS::solve_species and REACTIONS::solve)
+    {
+      // Add components after solid species
+      const int gap = SOLIDS::nspecies;
+
+      // Add SOLIDS::nspecies components for each of the reactions
+      for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s) {
+        for(int q(0); q < REACTIONS::nreactions; ++q) {
+          const int comp = gap + n_s*REACTIONS::nreactions + q;
+
+          particles.push_back_real(comp, np, 0.);
+        }
+      }
+    }
+
   }
+
   Redistribute();
 }
 
@@ -155,35 +160,43 @@ void MFIXParticleContainer::InitParticlesAuto ()
       // grid and add the particles to it
       auto& particles = DefineAndReturnParticleTile(lev,mfi);
 
-      ParticleType p_new;
-      // If possible Parallelize this
-      for (int i = 0; i < pcount; i++) {
-        // Set id and cpu for this particle
-        p_new.id()  = ParticleType::NextID();
-        p_new.cpu() = ParallelDescriptor::MyProc();
+      if (pcount > 0) {
+        auto& aos = particles.GetArrayOfStructs();
+        ParticleType* pstruct = aos().dataPtr();
 
-        // Add to the data structure
-        particles.push_back(p_new);
+        const int nextID = ParticleType::NextID();
+        const int myProc = ParallelDescriptor::MyProc();
 
-        // Add real components for solid species
-        if (SOLIDS::solve_species)
+        amrex::ParallelFor(pcount, [pstruct,nextID,myProc]
+          AMREX_GPU_DEVICE (int p) noexcept
         {
-          // Add SOLIDS::nspecies components for each of the new species vars
-          for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
-            particles.push_back_real(n_s, 0.);
-        }
+          ParticleType& part = pstruct[p];
 
-        // Add real components for solid species
-        if (SOLIDS::solve_species and REACTIONS::solve)
-        {
-          const int gap = SOLIDS::nspecies;
+          part.id() = nextID + p;
+          part.cpu() = myProc;
+        });
 
-          // Add SOLIDS::nspecies components for each of the reactions
-          for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s) {
-            for(int q(0); q < REACTIONS::nreactions; ++q) {
-              const int comp = gap + n_s*REACTIONS::nreactions + q;
-              particles.push_back_real(comp, 0.);
-            }
+        ParticleType::NextID(nextID + pcount);
+      }
+
+      // Add real components for solid species
+      if (SOLIDS::solve_species)
+      {
+        // Add SOLIDS::nspecies components for each of the new species vars
+        for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
+          particles.push_back_real(n_s, pcount, 0.);
+      }
+
+      // Add real components for solid species
+      if (SOLIDS::solve_species and REACTIONS::solve)
+      {
+        const int gap = SOLIDS::nspecies;
+
+        // Add SOLIDS::nspecies components for each of the reactions
+        for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s) {
+          for(int q(0); q < REACTIONS::nreactions; ++q) {
+            const int comp = gap + n_s*REACTIONS::nreactions + q;
+            particles.push_back_real(comp, pcount, 0.);
           }
         }
       }
