@@ -1,12 +1,13 @@
 #include <mfix.H>
-#include <climits>
 
 #include <mfix_fluid_parms.H>
 #include <mfix_bc_parms.H>
 #include <mfix_ic_parms.H>
 
-#include <string>
+#include <AMReX_GpuDevice.H>
 
+#include <string>
+#include <climits>
 
 void
 mfix::set_gp0 (const int lev,
@@ -17,12 +18,31 @@ mfix::set_gp0 (const int lev,
   const IntVect dom_lo(domain.loVect());
   const IntVect dom_hi(domain.hiVect());
 
-  Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
-  Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
-  Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
-  Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
-  Array4<const int> const& bct_klo = bc_klo[lev]->array();
-  Array4<const int> const& bct_khi = bc_khi[lev]->array();
+  auto make_ifab_host = [] (IArrayBox const* dfab) -> IArrayBox
+  {
+      IArrayBox ifab_host(dfab->box(),dfab->nComp(),The_Pinned_Arena());
+#ifdef AMREX_USE_GPU
+      Gpu::dtoh_memcpy_async(ifab_host.dataPtr(), dfab->dataPtr(), ifab_host.nBytes());
+#else
+      std::memcpy(ifab_host.dataPtr(), dfab->dataPtr(), ifab_host.nBytes());
+#endif
+      return ifab_host;
+  };
+
+  IArrayBox const& bc_ilo_host = make_ifab_host(bc_ilo[lev]);
+  IArrayBox const& bc_ihi_host = make_ifab_host(bc_ihi[lev]);
+  IArrayBox const& bc_jlo_host = make_ifab_host(bc_jlo[lev]);
+  IArrayBox const& bc_jhi_host = make_ifab_host(bc_jhi[lev]);
+  IArrayBox const& bc_klo_host = make_ifab_host(bc_klo[lev]);
+  IArrayBox const& bc_khi_host = make_ifab_host(bc_khi[lev]);
+  Gpu::synchronize();
+
+  Array4<const int> const& bct_ilo = bc_ilo_host.const_array();
+  Array4<const int> const& bct_ihi = bc_ihi_host.const_array();
+  Array4<const int> const& bct_jlo = bc_jlo_host.const_array();
+  Array4<const int> const& bct_jhi = bc_jhi_host.const_array();
+  Array4<const int> const& bct_klo = bc_klo_host.const_array();
+  Array4<const int> const& bct_khi = bc_khi_host.const_array();
 
   int delp_dir_loc(BC::delp_dir);
 
