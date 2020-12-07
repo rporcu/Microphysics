@@ -160,43 +160,35 @@ void MFIXParticleContainer::InitParticlesAuto ()
       // grid and add the particles to it
       auto& particles = DefineAndReturnParticleTile(lev,mfi);
 
-      if (pcount > 0) {
-        auto& aos = particles.GetArrayOfStructs();
-        ParticleType* pstruct = aos().dataPtr();
+      ParticleType p_new;
+      // If possible Parallelize this
+      for (int i = 0; i < pcount; i++) {
+        // Set id and cpu for this particle
+        p_new.id()  = ParticleType::NextID();
+        p_new.cpu() = ParallelDescriptor::MyProc();
 
-        const int nextID = ParticleType::NextID();
-        const int myProc = ParallelDescriptor::MyProc();
+        // Add to the data structure
+        particles.push_back(p_new);
 
-        amrex::ParallelFor(pcount, [pstruct,nextID,myProc]
-          AMREX_GPU_DEVICE (int p) noexcept
+        // Add real components for solid species
+        if (SOLIDS::solve_species)
         {
-          ParticleType& part = pstruct[p];
+          // Add SOLIDS::nspecies components for each of the new species vars
+          for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
+            particles.push_back_real(n_s, 0.);
+        }
 
-          part.id() = nextID + p;
-          part.cpu() = myProc;
-        });
+        // Add real components for solid species
+        if (SOLIDS::solve_species and REACTIONS::solve)
+        {
+          const int gap = SOLIDS::nspecies;
 
-        ParticleType::NextID(nextID + pcount);
-      }
-
-      // Add real components for solid species
-      if (SOLIDS::solve_species)
-      {
-        // Add SOLIDS::nspecies components for each of the new species vars
-        for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
-          particles.push_back_real(n_s, pcount, 0.);
-      }
-
-      // Add real components for solid species
-      if (SOLIDS::solve_species and REACTIONS::solve)
-      {
-        const int gap = SOLIDS::nspecies;
-
-        // Add SOLIDS::nspecies components for each of the reactions
-        for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s) {
-          for(int q(0); q < REACTIONS::nreactions; ++q) {
-            const int comp = gap + n_s*REACTIONS::nreactions + q;
-            particles.push_back_real(comp, pcount, 0.);
+          // Add SOLIDS::nspecies components for each of the reactions
+          for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s) {
+            for(int q(0); q < REACTIONS::nreactions; ++q) {
+              const int comp = gap + n_s*REACTIONS::nreactions + q;
+              particles.push_back_real(comp, 0.);
+            }
           }
         }
       }
