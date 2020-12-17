@@ -84,7 +84,7 @@ build:gpu:
             -B build
             -DAMReX_CUDA_ARCH=Volta
             -DMFIX_CSG=yes
-            -DMFIX_CUDA=1
+            -DMFIX_GPU_BACKEND=CUDA
             -DMFIX_MPI=$ENABLE_MPI
             -DMFIX_OMP=$ENABLE_OMP
     - cmake --build build --target build_tests
