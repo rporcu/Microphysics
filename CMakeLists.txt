@@ -68,9 +68,40 @@ cmake_dependent_option( MFIX_MPI_THREAD_MULTIPLE
    "MFIX_MPI" OFF)
 
 option( MFIX_HYPRE  "Enable HYPRE"  NO )
-option( MFIX_CUDA   "Enable CUDA"   NO )
 option( MFIX_FPE    "Enable Floating Point Exceptions checks" NO )
 
+#
+# GPU backends    =============================================================
+#
+set(MFIX_GPU_BACKEND_VALUES NONE SYCL CUDA HIP)
+set(MFIX_GPU_BACKEND NONE CACHE STRING "On-node, accelerated GPU backend: <NONE,SYCL,CUDA,HIP>")
+set_property(CACHE MFIX_GPU_BACKEND PROPERTY STRINGS ${MFIX_GPU_BACKEND_VALUES})
+if (NOT MFIX_GPU_BACKEND IN_LIST MFIX_GPU_BACKEND_VALUES)
+   message(FATAL_ERROR "MFIX_GPU_BACKEND=${MFIX_GPU_BACKEND} is not allowed."
+      " Must be one of ${MFIX_GPU_BACKEND_VALUES}")
+endif ()
+
+if (NOT MFIX_GPU_BACKEND STREQUAL NONE)
+   message( STATUS "   MFIX_GPU_BACKEND = ${MFIX_GPU_BACKEND}")
+endif ()
+
+if (MFIX_GPU_BACKEND STREQUAL SYCL)
+   set(MFIX_DPCPP ON  )
+   set(MFIX_CUDA  OFF )
+   set(MFIX_HIP   OFF )
+elseif (MFIX_GPU_BACKEND STREQUAL CUDA)
+   set(MFIX_DPCPP OFF )
+   set(MFIX_CUDA  ON  )
+   set(MFIX_HIP   OFF )
+elseif (MFIX_GPU_BACKEND STREQUAL HIP)
+   set(MFIX_DPCPP OFF )
+   set(MFIX_CUDA  OFF )
+   set(MFIX_HIP   ON  )
+elseif ()
+   set(MFIX_DPCPP OFF )
+   set(MFIX_CUDA  OFF )
+   set(MFIX_HIP   OFF )
+endif ()
 
 # CSG support
 option( MFIX_CSG "Build with CSG support" OFF)
