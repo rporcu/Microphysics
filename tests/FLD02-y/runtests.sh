@@ -32,8 +32,8 @@ fi
 rm -rf POST_* const_plt* ${RUN_NAME}* &> /dev/null
 time -p ${MPIRUN} "${MFIX}" "${INPUTS}"
 
-${FEXTRACT} -p FLD0200001/ -d 3 -f 9 -t 1.0e-10 -v v_g -s POST_VG.dat
-${FEXTRACT} -p FLD0200001/ -d 2 -f 9 -t 1.0e-10 -v p_g -s POST_PG.dat
+${FEXTRACT} -d 2 -v v_g -e -p 8 -t 1.0e-10 -s POST_VG.dat FLD0200001
+${FEXTRACT} -d 1 -v p_g -e -p 8 -t 1.0e-10 -s POST_PG.dat FLD0200001
 
 post_dats=POST*.dat
 for result in ${post_dats}; do

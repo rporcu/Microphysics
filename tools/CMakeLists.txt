@@ -1,17 +1,9 @@
-set( FJOIN_PAR_EXE    fjoin_par )
-set( FEXTRACT_EXE     fextract )
-
-add_executable( ${FJOIN_PAR_EXE} EXCLUDE_FROM_ALL C++/fjoin_par.cpp )
-target_link_libraries( ${FJOIN_PAR_EXE} AMReX::amrex )
-
-add_executable( ${FEXTRACT_EXE} EXCLUDE_FROM_ALL C++/fextract.cpp )
-target_link_libraries( ${FEXTRACT_EXE} AMReX::amrex )
+add_executable( fjoin_par EXCLUDE_FROM_ALL C++/fjoin_par.cpp )
+target_link_libraries( fjoin_par AMReX::amrex )
 
 if (MFIX_CUDA)
-   setup_target_for_cuda_compilation(${FEXTRACT_EXE})
+   setup_target_for_cuda_compilation(fjoin_par)
 endif ()
 
-# Communicate to main Cmakelists file
-set( MFIX_TOOLS ${FEXTRACT_EXE} ${FJOIN_PAR_EXE} PARENT_SCOPE  )
-set( FEXTRACT_EXE ${FEXTRACT_EXE} PARENT_SCOPE )
-set( FJOIN_PAR_EXE ${FJOIN_PAR_EXE} PARENT_SCOPE )
+# Define full path to fjoin_par
+set(FJOIN_PAR ${CMAKE_CURRENT_BINARY_DIR}/fjoin_par CACHE INTERNAL "")

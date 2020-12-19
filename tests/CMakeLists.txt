@@ -57,14 +57,15 @@ macro (setup_test _test _suffix _env _input_file )
         # Setup for running the a single test
         set(_test_run run_${_test_name}_${_suffix})
 
+        # FEXTRACT AND FJOIN_PAR are defined as internal cache variables
         add_custom_target(${_test_run} DEPENDS ${_test_exe}
-            COMMAND ${CMAKE_COMMAND} -E env ${_env}
-            ${_test_dir}/runtests.sh ${_test_dir}/${_test_exe} ${MFIX_TOOLS_DIR} ${_input_file}
+            COMMAND ${CMAKE_COMMAND} -E env ${_env};FEXTRACT=${FEXTRACT};FJOIN_PAR=${FJOIN_PAR}
+            ${_test_dir}/runtests.sh ${_test_dir}/${_test_exe} "\"\"" ${_input_file}
             WORKING_DIRECTORY  ${_test_dir}
             )
 
         # Make sure that fcompare and fextract are always built before a test is run
-        add_dependencies( ${_test_run} ${MFIX_TOOLS} )
+        add_dependencies(${_test_run} fjoin_par AMReX::fextract)
 
         add_test(NAME ${_test_name}_${_suffix}
             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${_test_run}

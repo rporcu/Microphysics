@@ -12,9 +12,9 @@ if (AMReX_FOUND)
 
    # We are in this branch because an AMReX installation has been found.
    # In this scenario, we don't know how AMReX has been built. We only know
-   # that some AMReX components, namely 3D DOUBLE PARTICLES PDOUBLE AMRDATA
+   # that some AMReX components, namely 3D DOUBLE PARTICLES PDOUBLE PFTOOLS
    # EB LSOLVERS  MUST be present in the installation.
-   set(AMREX_REQUIRED_COMPONENTS 3D DOUBLE PARTICLES PDOUBLE AMRDATA EB LSOLVERS)
+   set(AMREX_REQUIRED_COMPONENTS 3D DOUBLE PARTICLES PDOUBLE EB LSOLVERS PFTOOLS)
 
    if (MFIX_MPI)
       list(APPEND AMREX_REQUIRED_COMPONENTS MPI)
@@ -53,6 +53,15 @@ if (AMReX_FOUND)
    if (MFIX_CUDA)
       include(AMReXTargetHelpers)
    endif ()
+
+   #
+   # Define full path to fextract
+   #
+   get_target_property(_config AMReX::fextract IMPORTED_CONFIGURATIONS)
+   get_target_property(FEXTRACT AMReX::fextract IMPORTED_LOCATION_${_config})
+   set(FEXTRACT ${FEXTRACT} CACHE INTERNAL "")
+   unset(_config)
+
 else ()
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~ SUPERBUILD MODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,6 +96,7 @@ else ()
 
    endif ()
 
+
    set(AMReX_SPACEDIM              3)
    set(AMReX_PRECISION             DOUBLE)
    set(AMReX_MPI                   ${MFIX_MPI})
@@ -96,11 +106,10 @@ else ()
    set(AMReX_PARTICLES             ON)
    set(AMReX_PARTICLES_PRECISION   DOUBLE)
    set(AMReX_EB                    ON)
-   set(AMReX_AMRDATA               ON)
    set(AMReX_LINEAR_SOLVERS        ON)
    set(AMReX_HYPRE                 ${MFIX_HYPRE})
    set(AMReX_BUILD_TUTORIALS       OFF)
-
+   set(AMReX_PLOTFILE_TOOLS        ON)
 
    list(APPEND CMAKE_MODULE_PATH ${AMREX_SRC_DIR}/Tools/CMake)
 
@@ -129,5 +138,11 @@ else ()
 
    # Restore CMAKE_CXX_FLAGS (without -w) for MFIX
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_SAVE}")
+
+   #
+   # Define full path to fextract
+   #
+   get_target_property(FEXTRACT AMReX::fextract BINARY_DIR)
+   set(FEXTRACT ${FEXTRACT}/fextract CACHE INTERNAL "")
 
 endif ()
