@@ -142,7 +142,6 @@ if (MFIX_CUDA)
 endif ()
 
 # Tools
-set(MFIX_TOOLS_DIR ${PROJECT_BINARY_DIR}/tools/ CACHE INTERNAL "Path to tools directory")
 add_subdirectory(tools)
 
 # Tests

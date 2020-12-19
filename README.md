@@ -121,7 +121,7 @@ Specify the AMReX source directory location under the `[AMReX]` heading.
 [AMReX]
 dir = /home/user/exa-rt/amrex
 branch = development
-cmakeSetupOpts = -DAMReX_AMRDATA=ON -DAMReX_MPI=ON -DAMReX_OMP=ON -DAMReX_PARTICLES=ON -DAMReX_EB=ON
+cmakeSetupOpts = -DAMReX_MPI=ON -DAMReX_OMP=ON -DAMReX_PARTICLES=ON -DAMReX_EB=ON
 ```
 Specify the MFIX-Exa source directory location under the `[source]` heading.
 ```shell
