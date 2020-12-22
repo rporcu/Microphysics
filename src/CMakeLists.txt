@@ -1,4 +1,4 @@
-add_library(mfixcore)
+add_library(mfixcore OBJECT)
 
 #
 # Add sources and header from current dir and all sub dirs
