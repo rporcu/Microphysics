@@ -3,7 +3,7 @@
 | File       | Description                                         |
 | ---------  | --------------------------------------------------- |
 | benchmarks | UC Benchmark cases (see benchmark/README.md)        |
-| src        | Fortran source files                                |
+| src        | Source files                                        |
 | tests      | Regression tests (see tests/README.md)              |
 | ThirdParty | External libraries sources                          |
 | Tools      | CMake configuration files                           |
@@ -121,7 +121,7 @@ Specify the AMReX source directory location under the `[AMReX]` heading.
 [AMReX]
 dir = /home/user/exa-rt/amrex
 branch = development
-cmakeSetupOpts = -DAMReX_MPI=ON -DAMReX_OMP=ON -DAMReX_PARTICLES=ON -DAMReX_EB=ON
+cmakeSetupOpts = -DAMReX_MPI=ON -DAMReX_OMP=ON -DAMReX_PARTICLES=ON -DAMReX_EB=ON -DAMReX_PLOTFILE_TOOLS=ON
 ```
 Specify the MFIX-Exa source directory location under the `[source]` heading.
 ```shell

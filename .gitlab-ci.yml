@@ -134,7 +134,7 @@ linter:warnings:
   image: $CI_REGISTRY_IMAGE:latest
   needs: ['build-test-env']
   script:
-    - cmake -S . -B build -DCMAKE_CXX_FLAGS="-Wall -Werror" -DCMAKE_Fortran_FLAGS="-O0" -GNinja
+    - cmake -S . -B build -DCMAKE_CXX_FLAGS="-Wall -Werror" -GNinja
     - cmake --build build -- -k0
   tags:
     - docker
