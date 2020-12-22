@@ -1,4 +1,4 @@
-set(AMREX_MINIMUM_VERSION 20.11 CACHE INTERNAL "Minimum required AMReX version")
+set(AMREX_MINIMUM_VERSION 20.12.1 CACHE INTERNAL "Minimum required AMReX version")
 
 # We first check if we can find an AMReX installation.
 # If so, we proceed with STANDALONE mode
@@ -99,6 +99,7 @@ else ()
 
    set(AMReX_SPACEDIM              3)
    set(AMReX_PRECISION             DOUBLE)
+   set(AMReX_FORTRAN               OFF)
    set(AMReX_MPI                   ${MFIX_MPI})
    set(AMReX_MPI_THREAD_MULTIPLE   ${MFIX_MPI_THREAD_MULTIPLE})
    set(AMReX_OMP                   ${MFIX_OMP})

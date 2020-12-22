@@ -71,11 +71,6 @@ void mfix::WriteJobInfo (const std::string& dir) const
 
        jobInfoFile << "\n";
 
-       jobInfoFile << "Fortran comp:  " << buildInfoGetFName() << "\n";
-       jobInfoFile << "Fortran flags: " << buildInfoGetFFlags() << "\n";
-
-       jobInfoFile << "\n";
-
        jobInfoFile << "Link flags:    " << buildInfoGetLinkFlags() << "\n";
        jobInfoFile << "Libraries:     " << buildInfoGetLibraries() << "\n";
 
