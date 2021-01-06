@@ -74,11 +74,11 @@ test:csg:
     - $CTEST_CMD
   <<: *test_template
 
-build:gpu:
+.build:gpu: &build_gpu
   stage: test
   needs: []
   script:
-    - module load ccache/3.7.9 gnu/8.4.0 openmpi/4.0.3_gnu8.4 cuda/10.1
+    - module load cmake/3.19.1 ccache/3.7.9 gnu/8.4.0 openmpi/4.0.3_gnu8.4 $CUDA_MODULE
     - git submodule update --init --force
     - cmake -S .
             -B build
@@ -91,6 +91,20 @@ build:gpu:
   tags:
     - joule
 
+build:cuda-10.1:
+  variables:
+    CUDA_MODULE: cuda/10.1
+  <<: *build_gpu
+
+build:cuda-10.2:
+  variables:
+    CUDA_MODULE: cuda/10.2
+  <<: *build_gpu
+
+build:cuda-11.0:
+  variables:
+    CUDA_MODULE: cuda/11.0
+  <<: *build_gpu
 
 test:single-serial:
   variables:
