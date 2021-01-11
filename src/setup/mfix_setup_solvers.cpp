@@ -15,6 +15,12 @@ mfix::mfix_init_solvers ()
                                        BC::diff_temperature_lobc, BC::diff_temperature_hibc,
                                        BC::diff_species_lobc,     BC::diff_species_hibc,
                                        nghost));
+
+    macproj.reset(new MacProjector(Geom(0,finest_level),
+                                   MLMG::Location::FaceCentroid,  // Location of mac_vec
+                                   MLMG::Location::FaceCentroid,  // Location of beta
+                                   MLMG::Location::CellCenter,    // Location of solution variable phi
+                                   MLMG::Location::CellCentroid));// Location of MAC RHS
 }
 
 void

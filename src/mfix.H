@@ -24,6 +24,7 @@
 #include <AMReX_MLNodeLaplacian.H>
 #include <AMReX_NodalProjector.H>
 #include <AMReX_PhysBCFunct.H>
+#include <AMReX_MacProjector.H>
 
 #include <mfix_diffusion_op.H>
 #include <mfix_pc.H>
@@ -986,6 +987,8 @@ class mfix : public AmrCore
     //           mac_proj.bottom_atol
     //           mac_proj.bottom_solver
     // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp"
+
+    std::unique_ptr<amrex::MacProjector> macproj;
 
     // Control MLMG behavior
     Real mac_mg_rtol = 1.0e-11;
