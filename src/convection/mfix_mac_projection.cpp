@@ -50,8 +50,9 @@ mfix::apply_MAC_projection (const bool update_laplacians,
   // update_internals();
 
   // Setup for solve
-  Vector< Array<MultiFab*,3> > vel;
-  vel.resize(finest_level+1);
+  Vector< Array<MultiFab*,3> > vel(finest_level+1);
+
+  Vector<Array<MultiFab*,AMREX_SPACEDIM> > mac_vec(finest_level+1);
 
   if (m_verbose)
     Print() << " >> Before projection\n" ;
@@ -97,17 +98,17 @@ mfix::apply_MAC_projection (const bool update_laplacians,
     MultiFab::Divide(*bcoeff[lev][2], *(ro_face[lev][2]), 0, 0, 1, 0);
 
     // Store (ep * u) in temporaries
-    (vel[lev])[0] = ep_u_mac[lev];
-    (vel[lev])[1] = ep_v_mac[lev];
-    (vel[lev])[2] = ep_w_mac[lev];
+    (mac_vec[lev])[0] = ep_u_mac[lev];
+    (mac_vec[lev])[1] = ep_v_mac[lev];
+    (mac_vec[lev])[2] = ep_w_mac[lev];
 
     for (int i=0; i < 3; ++i)
-      (vel[lev])[i]->FillBoundary(geom[lev].periodicity());
+      (mac_vec[lev])[i]->FillBoundary(geom[lev].periodicity());
 
     if (m_verbose)
     {
       bool already_on_centroid = true;
-      EB_computeDivergence(*m_leveldata[lev]->mac_rhs, GetArrOfConstPtrs(vel[lev]),
+      EB_computeDivergence(*m_leveldata[lev]->mac_rhs, GetArrOfConstPtrs(mac_vec[lev]),
           geom[lev], already_on_centroid);
 
       Print() << "  * On level "<< lev << " max(abs(diveu)) = "
@@ -126,47 +127,25 @@ mfix::apply_MAC_projection (const bool update_laplacians,
     delete ro_face[lev][2];
   }
 
-  // Set the incompressibility or open-system constraint
+  // Set the incompressibility or open-system constraint.
   Vector< MultiFab* > depdt(finest_level+1);
-  Vector< MultiFab* > mac_rhs(finest_level+1);
-  Vector< MultiFab* > S_cc(finest_level+1);
 
   for (int lev(0); lev <= finest_level; ++lev) {
-    depdt[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
-    mac_rhs[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
-    S_cc[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
+    depdt[lev]   = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
+    m_leveldata[lev]->mac_rhs->setVal(0.0);
   }
 
+
   if (open_system_constraint) {
-    mfix_open_system_rhs(mac_rhs, update_laplacians, lap_T, lap_X, ep_g_in,
+    mfix_open_system_rhs(get_mac_rhs(), update_laplacians, lap_T, lap_X, ep_g_in,
         ro_g_in, MW_g_in, T_g_in, cp_g_in, k_g_in, T_g_on_eb_in, k_g_on_eb_in,
         X_gk_in, D_gk_in, h_gk_in, txfr_in, ro_gk_txfr_in);
   }
 
+  // Subtract the change in phasic volume fraction
   for (int lev(0); lev <= finest_level; ++lev) {
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-    for (MFIter mfi(*S_cc[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-      const Box& bx = mfi.tilebox();
-
-      Array4< Real > const& depdt_array = depdt[lev]->array(mfi);
-      Array4< Real > const& mac_rhs_array = mac_rhs[lev]->array(mfi);
-      Array4< Real > const& S_cc_array = S_cc[lev]->array(mfi);
-
-      amrex::ParallelFor ( bx, [S_cc_array,depdt_array,mac_rhs_array]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-      {
-        S_cc_array(i,j,k) = mac_rhs_array(i,j,k) - depdt_array(i,j,k);
-      });
-    }
+    MultiFab::Subtract(*(m_leveldata[lev]->mac_rhs), *depdt[lev],0,0,1,0);
   }
-
-  //
-  // If we want to set max_coarsening_level we have to send it in to the constructor
-  //
-  LPInfo lp_info;
-  lp_info.setMaxCoarseningLevel(mac_mg_max_coarsening_level);
 
   //
   // Perform MAC projection
@@ -175,26 +154,34 @@ mfix::apply_MAC_projection (const bool update_laplacians,
   const_bcoeff.reserve(bcoeff.size());
   for (const auto& x : bcoeff) const_bcoeff.push_back(GetArrOfConstPtrs(x));
 
-  Vector< const MultiFab* > const_S_cc = GetVecOfConstPtrs(S_cc);
 
-  MacProjector macproj(vel,           MLMG::Location::FaceCentroid,  // location of vel 
-                       const_bcoeff,  MLMG::Location::FaceCentroid,  // location of beta 
-                                      MLMG::Location::CellCenter,    // location of phi 
-                       geom, lp_info,
-                       const_S_cc   , MLMG::Location::CellCentroid); // location of MAC rhs
+  if (macproj->needInitialization())
+  {
+    LPInfo lp_info;
+    // If we want to set max_coarsening_level we have to send it in to the constructor
+    lp_info.setMaxCoarseningLevel(mac_mg_max_coarsening_level);
+    macproj->initProjector(lp_info, const_bcoeff);
+    macproj->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
+  } else {
+    macproj->updateBeta(const_bcoeff);
+  }
 
-  macproj.setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
+  macproj->setUMAC(mac_vec);
+
+  macproj->setDivU(GetVecOfConstPtrs(get_mac_rhs()));
+
 
   if (steady_state)
   {
     // Solve using mac_phi as an initial guess -- note that mac_phi is
     //       stored from iteration to iteration
-    macproj.project(get_mac_phi(), mac_mg_rtol, mac_mg_atol);
+    macproj->project(get_mac_phi(),mac_mg_rtol, mac_mg_atol);
+
   }
   else
   {
     // Solve with initial guess of zero
-    macproj.project(mac_mg_rtol, mac_mg_atol);
+    macproj->project(mac_mg_rtol, mac_mg_atol);
   }
 
   // Get MAC velocities at face CENTER by dividing solution by ep at faces
@@ -205,12 +192,12 @@ mfix::apply_MAC_projection (const bool update_laplacians,
   {
     if (m_verbose)
     {
-      vel[lev][0]->FillBoundary(geom[lev].periodicity());
-      vel[lev][1]->FillBoundary(geom[lev].periodicity());
-      vel[lev][2]->FillBoundary(geom[lev].periodicity());
+      mac_vec[lev][0]->FillBoundary(geom[lev].periodicity());
+      mac_vec[lev][1]->FillBoundary(geom[lev].periodicity());
+      mac_vec[lev][2]->FillBoundary(geom[lev].periodicity());
 
       bool already_on_centroid = true;
-      EB_computeDivergence(*m_leveldata[lev]->mac_rhs, GetArrOfConstPtrs(vel[lev]),
+      EB_computeDivergence(*m_leveldata[lev]->mac_rhs, GetArrOfConstPtrs(mac_vec[lev]),
                            geom[lev], already_on_centroid);
 
       Print() << "  * On level "<< lev << " max(abs(diveu)) = "
@@ -227,7 +214,5 @@ mfix::apply_MAC_projection (const bool update_laplacians,
 
   for (int lev(0); lev <= finest_level; lev++) {
     delete depdt[lev];
-    delete mac_rhs[lev];
-    delete S_cc[lev];
   }
 }
