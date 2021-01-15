@@ -11,6 +11,7 @@ Bdirs 	:= src
 Bdirs 	+= src/des
 Bdirs 	+= src/io
 Bdirs 	+= src/convection
+Bdirs 	+= src/convection/MOL
 Bdirs 	+= src/diffusion
 Bdirs 	+= src/pic
 Bdirs 	+= src/projection

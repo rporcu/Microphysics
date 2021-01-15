@@ -9,7 +9,6 @@
 //
 void
 mfix::mfix_compute_slopes (int lev,
-                           Real time,
                            MultiFab& Sborder,
                            Vector< MultiFab* > const& xslopes_in,
                            Vector< MultiFab* > const& yslopes_in,
@@ -88,12 +87,12 @@ mfix::mfix_compute_slopes (int lev,
                AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                {
                    bool ed_ilo = (domain_ilo >= bx.smallEnd(0) and domain_ilo <= bx.bigEnd(0)) and
-                                 (i == domain_ilo) and 
+                                 (i == domain_ilo) and
                                  (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                                     aux::is_equal<int>(ilo_ifab(i-1,j,k,0))));
 
                    bool ed_ihi = (domain_ihi >= bx.smallEnd(0) and domain_ihi <= bx.bigEnd(0)) and
-                                 (i == domain_ihi) and 
+                                 (i == domain_ihi) and
                                  (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                                     aux::is_equal<int>(ihi_ifab(i+1,j,k,0))));
 
@@ -103,12 +102,12 @@ mfix::mfix_compute_slopes (int lev,
                                     aux::is_equal<int>(jlo_ifab(i,j-1,k,0))));
 
                    bool ed_jhi = (domain_jhi >= bx.smallEnd(1) and domain_jhi <= bx.bigEnd(1)) and
-                                 (j == domain_jhi) and 
+                                 (j == domain_jhi) and
                                  (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                                     aux::is_equal<int>(jhi_ifab(i,j+1,k,0))));
 
                    bool ed_klo = (domain_klo >= bx.smallEnd(2) and domain_klo <= bx.bigEnd(2)) and
-                                 (k == domain_klo) and 
+                                 (k == domain_klo) and
                                  (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                                     aux::is_equal<int>(klo_ifab(i,j,k-1,0))));
 
@@ -146,32 +145,32 @@ mfix::mfix_compute_slopes (int lev,
                AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                {
                    bool ed_ilo = (domain_ilo >= bx.smallEnd(0) and domain_ilo <= bx.bigEnd(0)) and
-                                 (i == domain_ilo) and 
+                                 (i == domain_ilo) and
                                  (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                                     aux::is_equal<int>(ilo_ifab(i-1,j,k,0))));
 
                    bool ed_ihi = (domain_ihi >= bx.smallEnd(0) and domain_ihi <= bx.bigEnd(0)) and
-                                 (i == domain_ihi) and 
+                                 (i == domain_ihi) and
                                  (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                                     aux::is_equal<int>(ihi_ifab(i+1,j,k,0))));
 
                    bool ed_jlo = (domain_jlo >= bx.smallEnd(1) and domain_jlo <= bx.bigEnd(1)) and
-                                 (j == domain_jlo) and 
+                                 (j == domain_jlo) and
                                  (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                                     aux::is_equal<int>(jlo_ifab(i,j-1,k,0))));
 
                    bool ed_jhi = (domain_jhi >= bx.smallEnd(1) and domain_jhi <= bx.bigEnd(1)) and
-                                 (j == domain_jhi) and 
+                                 (j == domain_jhi) and
                                  (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                                     aux::is_equal<int>(jhi_ifab(i,j+1,k,0))));
 
                    bool ed_klo = (domain_klo >= bx.smallEnd(2) and domain_klo <= bx.bigEnd(2)) and
-                                 (k == domain_klo) and 
+                                 (k == domain_klo) and
                                  (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                                     aux::is_equal<int>(klo_ifab(i,j,k-1,0))));
 
                    bool ed_khi = (domain_khi >= bx.smallEnd(2) and domain_khi <= bx.bigEnd(2)) and
-                                 (k == domain_khi) and 
+                                 (k == domain_khi) and
                                  (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                                     aux::is_equal<int>(khi_ifab(i,j,k+1,0))));
 

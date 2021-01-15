@@ -6,7 +6,6 @@ target_sources( mfixcore
    mfix_compute_fluxes.cpp
    mfix_compute_convective_term.cpp
    mfix_correct_small_cells.cpp
-   mfix_predict_vels_on_faces.cpp
-   mfix_mac_projection.cpp
    mfix_slopes.cpp
+   mfix_compute_MAC_projected_velocities.cpp
    )

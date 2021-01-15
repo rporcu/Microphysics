@@ -214,14 +214,6 @@ class mfix : public AmrCore
 
     void mfix_calc_txfr_particle (Real time);
 
-    void mfix_predict_vels_on_faces (int lev,
-                                     Real time,
-                                     Vector< MultiFab* > const& vel,
-                                     Vector< MultiFab* > const& ep_u_mac,
-                                     Vector< MultiFab* > const& ep_v_mac,
-                                     Vector< MultiFab* > const& ep_w_mac,
-                                     Vector< MultiFab* > const& ep_g);
-
     void mfix_correct_small_cells (Vector< MultiFab*> vel_in);
 
     void mfix_set_velocity_bcs (Real time,
@@ -356,7 +348,7 @@ class mfix : public AmrCore
                         const int& nref,
                         const Real* dx);
 
-    void mfix_compute_slopes (int lev, Real time, MultiFab& Sborder,
+    void mfix_compute_slopes (int lev, MultiFab& Sborder,
                               Vector< MultiFab* > const& xslopes_in,
                               Vector< MultiFab* > const& yslopes_in,
                               Vector< MultiFab* > const& zslopes_in,
@@ -436,6 +428,28 @@ class mfix : public AmrCore
                                Vector< MultiFab* > const& v,
                                Vector< MultiFab* > const& w,
                                Real time);
+
+  void compute_MAC_projected_velocities (amrex::Real time,
+                                         amrex::Vector< amrex::MultiFab* > const& vel_in,
+                                         amrex::Vector< amrex::MultiFab* > const& ep_u_mac,
+                                         amrex::Vector< amrex::MultiFab* > const& ep_v_mac,
+                                         amrex::Vector< amrex::MultiFab* > const& ep_w_mac,
+                                         amrex::Vector< amrex::MultiFab* > const& ep_g_in,
+                                         amrex::Vector< amrex::MultiFab* > const& ro_g_in,
+                                         amrex::Vector< amrex::MultiFab* > const& MW_g_in,
+                                         amrex::Vector< amrex::MultiFab* > const& T_g_in,
+                                         amrex::Vector< amrex::MultiFab* > const& cp_g_in,
+                                         amrex::Vector< amrex::MultiFab* > const& k_g_in,
+                                         amrex::Vector< amrex::MultiFab* > const& T_g_on_eb_in,
+                                         amrex::Vector< amrex::MultiFab* > const& k_g_on_eb_in,
+                                         amrex::Vector< amrex::MultiFab* > const& X_gk_in,
+                                         amrex::Vector< amrex::MultiFab* > const& D_gk_in,
+                                         amrex::Vector< amrex::MultiFab* > const& h_gk_in,
+                                         amrex::Vector< amrex::MultiFab* > const& txfr_in,
+                                         amrex::Vector< amrex::MultiFab* > const& ro_gk_txfr_in,
+                                         const bool update_laplacians,
+                                         amrex::Vector< amrex::MultiFab* > const& lap_T,
+                                         amrex::Vector< amrex::MultiFab* > const& lap_X);
 
     void mfix_compute_fluxes (const int lev,
                               Vector< MultiFab* >& a_fx,
@@ -1167,6 +1181,14 @@ class mfix : public AmrCore
 
     //! EB factory that lives on the fluid grids
     Vector<std::unique_ptr<EBFArrayBoxFactory> > ebfactory;
+
+    amrex::EBFArrayBoxFactory const&
+    EBFactory (int lev) const noexcept {
+        return static_cast<amrex::EBFArrayBoxFactory const&>(*ebfactory[lev]);
+    }
+
+
+
 
     //! EB factory that lives on the particle grids
     Vector<std::unique_ptr<EBFArrayBoxFactory> > particle_ebfactory;
