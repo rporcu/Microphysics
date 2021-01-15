@@ -39,23 +39,6 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
 {
     BL_PROFILE("mfix::mfix_compute_convective_term");
 
-    // Temporaries to store fluxes
-    Vector< MultiFab* > fx;
-    Vector< MultiFab* > fy;
-    Vector< MultiFab* > fz;
-
-    fx.resize(nlev);
-    fy.resize(nlev);
-    fz.resize(nlev);
-
-    // Temporaries to store species fluxes
-    Vector< MultiFab* > fx_X;
-    Vector< MultiFab* > fy_X;
-    Vector< MultiFab* > fz_X;
-
-    fx_X.resize(nlev);
-    fy_X.resize(nlev);
-    fz_X.resize(nlev);
 
     int slopes_comp; int conv_comp; int state_comp; int num_comp;
 
@@ -111,6 +94,36 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
               X_gk_in[lev]->nGrow());
         }
 
+    }
+
+    // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
+    //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
+    //    on face CENTROIDS
+    compute_MAC_projected_velocities(time, vel_in, get_u_mac(), get_v_mac(), get_w_mac(),
+       ep_g_in, ro_g_in, MW_g_in, T_g_in, cp_g_in, k_g_in, T_g_on_eb_in,
+       k_g_on_eb_in, X_gk_in, D_gk_in, h_gk_in, txfr_in, ro_gk_txfr_in,
+       update_laplacians, lap_T_out, lap_X_out);
+
+
+    bool already_on_centroids = true;
+
+    // Temporaries to store fluxes
+    Vector< MultiFab* > fx(nlev);
+    Vector< MultiFab* > fy(nlev);
+    Vector< MultiFab* > fz(nlev);
+
+    // Temporaries to store species fluxes
+    Vector< MultiFab* > fx_X(nlev);
+    Vector< MultiFab* > fy_X(nlev);
+    Vector< MultiFab* > fz_X(nlev);
+
+    Array<MultiFab*,3> fluxes;
+    Array<MultiFab*,3> fluxes_X = {nullptr, nullptr, nullptr};
+
+    for (int lev=0; lev < nlev; ++lev)
+    {
+
+
         // We make these with ncomp = 3 so they can hold all three velocity components at once;
         //    note we can also use them to just hold the single density or tracer comp or enthalpy
         fx[lev] = new MultiFab(m_leveldata[lev]->u_mac->boxArray(), dmap[lev], 3, 2,
@@ -119,6 +132,14 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
                                MFInfo(), *ebfactory[lev]);
         fz[lev] = new MultiFab(m_leveldata[lev]->w_mac->boxArray(), dmap[lev], 3, 2,
                                MFInfo(), *ebfactory[lev]);
+
+        fx[lev]->setVal(covered_val);
+        fy[lev]->setVal(covered_val);
+        fz[lev]->setVal(covered_val);
+
+        fluxes[0] = fx[lev];
+        fluxes[1] = fy[lev];
+        fluxes[2] = fz[lev];
 
         if (advect_fluid_species) {
           // We make these with ncomp = FLUID::nspecies so they can hold all
@@ -129,50 +150,11 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
               FLUID::nspecies, 2, MFInfo(), *ebfactory[lev]);
           fz_X[lev] = new MultiFab(m_leveldata[lev]->w_mac->boxArray(), dmap[lev],
               FLUID::nspecies, 2, MFInfo(), *ebfactory[lev]);
-        }
 
-        // We need this to avoid FPE
-        m_leveldata[lev]->u_mac->setVal(covered_val);
-        m_leveldata[lev]->v_mac->setVal(covered_val);
-        m_leveldata[lev]->w_mac->setVal(covered_val);
-
-        fx[lev]->setVal(covered_val);
-        fy[lev]->setVal(covered_val);
-        fz[lev]->setVal(covered_val);
-
-        if (advect_fluid_species) {
           fx_X[lev]->setVal(covered_val);
           fy_X[lev]->setVal(covered_val);
           fz_X[lev]->setVal(covered_val);
-        }
 
-        // Predict normal velocity to faces -- note that the {u_mac, v_mac, w_mac}
-        //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
-        //    on face CENTROIDS
-        mfix_predict_vels_on_faces(lev, time, vel_in, get_u_mac(), get_v_mac(),
-                                   get_w_mac(), ep_g_in);
-    }
-
-    // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
-    //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
-    //    on face CENTROIDS
-    apply_MAC_projection(update_laplacians, lap_T_out, lap_X_out, get_u_mac(),
-        get_v_mac(), get_w_mac(), ep_g_in, ro_g_in, MW_g_in, T_g_in, cp_g_in,
-        k_g_in, T_g_on_eb_in, k_g_on_eb_in, X_gk_in, D_gk_in, h_gk_in, txfr_in,
-        ro_gk_txfr_in, time);
-
-    bool already_on_centroids = true;
-
-    Array<MultiFab*,3> fluxes;
-    Array<MultiFab*,3> fluxes_X = {nullptr, nullptr, nullptr};
-
-    for (int lev=0; lev < nlev; ++lev)
-    {
-        fluxes[0] = fx[lev];
-        fluxes[1] = fy[lev];
-        fluxes[2] = fz[lev];
-
-        if (advect_fluid_species) {
           fluxes_X[0] = fx_X[lev];
           fluxes_X[1] = fy_X[lev];
           fluxes_X[2] = fz_X[lev];
@@ -198,11 +180,17 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
           conv_X_tmp->setVal(0.);
         }
 
-        // Compute slopes of density, enthalpy and tracer
+        // Compute slopes of velocity, density, enthalpy and tracer
+
+        slopes_comp = 0;
+        mfix_compute_slopes(lev, *vel_in[lev],
+                            get_xslopes_u(), get_yslopes_u(), get_zslopes_u(),
+                            slopes_comp, m_vel_g_bc_types);
+
         if (advect_density)
         {
            slopes_comp = 0;
-           mfix_compute_slopes(lev, time, *ro_g_in[lev],
+           mfix_compute_slopes(lev, *ro_g_in[lev],
                                get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
                                slopes_comp, m_ro_g_bc_types);
         }
@@ -213,7 +201,7 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
             MultiFab::Multiply(*h_g_in[lev], *ro_g_in[lev], 0, 0, 1, h_g_in[lev]->nGrow());
 
             slopes_comp = 1;
-            mfix_compute_slopes(lev, time, *h_g_in[lev],
+            mfix_compute_slopes(lev, *h_g_in[lev],
                                 get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
                                 slopes_comp, m_T_g_bc_types);
         }
@@ -224,7 +212,7 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
             MultiFab::Multiply(*trac_in[lev], *ro_g_in[lev], 0, 0, 1, trac_in[lev]->nGrow());
 
             slopes_comp = 2;
-            mfix_compute_slopes(lev, time, *trac_in[lev],
+            mfix_compute_slopes(lev, *trac_in[lev],
                                 get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
                                 slopes_comp, m_trac_g_bc_types);
         }
@@ -239,7 +227,7 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
 
           slopes_comp = 0;
 
-          mfix_compute_slopes(lev, time, *X_gk_in[lev], get_xslopes_X_gk(),
+          mfix_compute_slopes(lev, *X_gk_in[lev], get_xslopes_X_gk(),
               get_yslopes_X_gk(), get_zslopes_X_gk(), slopes_comp,
               m_X_gk_bc_types);
         }

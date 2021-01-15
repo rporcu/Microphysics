@@ -1,10 +1,9 @@
-#include <mfix.H>
+#include <MOL.H>
 #include <mfix_bc_parms.H>
 #include <mfix_mf_helpers.H>
+#include <mfix.H>
 
 #include <AMReX_MacProjector.H>
-
-using namespace amrex;
 
 //
 // Computes the following decomposition:
@@ -20,52 +19,40 @@ using namespace amrex;
 //  This method returns the MAC velocity with up-to-date BCs in place
 //
 void
-mfix::apply_MAC_projection (const bool update_laplacians,
-                            Vector< MultiFab* > const& lap_T,
-                            Vector< MultiFab* > const& lap_X,
-                            Vector< MultiFab* > const& ep_u_mac,
-                            Vector< MultiFab* > const& ep_v_mac,
-                            Vector< MultiFab* > const& ep_w_mac,
-                            Vector< MultiFab* > const& ep_g_in,
-                            Vector< MultiFab* > const& ro_g_in,
-                            Vector< MultiFab* > const& MW_g_in,
-                            Vector< MultiFab* > const& T_g_in,
-                            Vector< MultiFab* > const& cp_g_in,
-                            Vector< MultiFab* > const& k_g_in,
-                            Vector< MultiFab* > const& T_g_on_eb_in,
-                            Vector< MultiFab* > const& k_g_on_eb_in,
-                            Vector< MultiFab* > const& X_gk_in,
-                            Vector< MultiFab* > const& D_gk_in,
-                            Vector< MultiFab* > const& h_gk_in,
-                            Vector< MultiFab* > const& txfr_in,
-                            Vector< MultiFab* > const& ro_gk_txfr_in,
-                            Real time)
+mfix::compute_MAC_projected_velocities (amrex::Real time,
+                                        amrex::Vector< amrex::MultiFab* > const& vel_in,
+                                        amrex::Vector< amrex::MultiFab* > const& ep_u_mac,
+                                        amrex::Vector< amrex::MultiFab* > const& ep_v_mac,
+                                        amrex::Vector< amrex::MultiFab* > const& ep_w_mac,
+                                        amrex::Vector< amrex::MultiFab* > const& ep_g_in,
+                                        amrex::Vector< amrex::MultiFab* > const& ro_g_in,
+                                        amrex::Vector< amrex::MultiFab* > const& MW_g_in,
+                                        amrex::Vector< amrex::MultiFab* > const& T_g_in,
+                                        amrex::Vector< amrex::MultiFab* > const& cp_g_in,
+                                        amrex::Vector< amrex::MultiFab* > const& k_g_in,
+                                        amrex::Vector< amrex::MultiFab* > const& T_g_on_eb_in,
+                                        amrex::Vector< amrex::MultiFab* > const& k_g_on_eb_in,
+                                        amrex::Vector< amrex::MultiFab* > const& X_gk_in,
+                                        amrex::Vector< amrex::MultiFab* > const& D_gk_in,
+                                        amrex::Vector< amrex::MultiFab* > const& h_gk_in,
+                                        amrex::Vector< amrex::MultiFab* > const& txfr_in,
+                                        amrex::Vector< amrex::MultiFab* > const& ro_gk_txfr_in,
+                                        const bool update_laplacians,
+                                        amrex::Vector< amrex::MultiFab* > const& lap_T_out,
+                                        amrex::Vector< amrex::MultiFab* > const& lap_X_out)
 {
-  BL_PROFILE("mfix::apply_MAC_projection()");
+  BL_PROFILE("mfix::compute_MAC_projected_velocities()");
 
-  if (m_verbose)
+  if (m_verbose) {
     Print() << "MAC Projection:\n";
-
-  // Check that everything is consistent with amrcore
-  // update_internals();
-
-  // Setup for solve
-  Vector< Array<MultiFab*,3> > vel(finest_level+1);
-
-  Vector<Array<MultiFab*,AMREX_SPACEDIM> > mac_vec(finest_level+1);
-
-  if (m_verbose)
-    Print() << " >> Before projection\n" ;
+  }
 
   // Set bc's on density and ep_g so ro_face and ep_face will have correct values
   mfix_set_density_bcs(time, ro_g_in);
 
   // ro_face and ep_face are temporary, no need to keep it outside this routine
-  Vector< Array<MultiFab*,3> > ro_face;
-  Vector< Array<MultiFab*,3> > ep_face;
-
-  ep_face.resize(finest_level+1);
-  ro_face.resize(finest_level+1);
+  Vector< Array<MultiFab*,3> > ro_face(finest_level+1);
+  Vector< Array<MultiFab*,3> > ep_face(finest_level+1);
 
   for ( int lev=0; lev <= finest_level; ++lev )
   {
@@ -75,6 +62,10 @@ mfix::apply_MAC_projection (const bool update_laplacians,
     ep_face[lev][0] = new MultiFab(ep_u_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]);
     ep_face[lev][1] = new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]);
     ep_face[lev][2] = new MultiFab(ep_w_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]);
+
+    ep_face[lev][0]->setVal(covered_val);
+    ep_face[lev][1]->setVal(covered_val);
+    ep_face[lev][2]->setVal(covered_val);
 
     ro_face[lev][0] = new MultiFab(ep_u_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]);
     ro_face[lev][1] = new MultiFab(ep_v_mac[lev]->boxArray(),dmap[lev],1,0,MFInfo(),*ebfactory[lev]);
@@ -87,6 +78,11 @@ mfix::apply_MAC_projection (const bool update_laplacians,
     EB_interp_CellCentroid_to_FaceCentroid (*ro_g_in[lev], ro_face[lev], 0, 0, 1, geom[lev], bcs_s);
     EB_interp_CellCentroid_to_FaceCentroid (*ep_g_in[lev], ep_face[lev], 0, 0, 1, geom[lev], bcs_s);
 
+    // These will be reused to predict velocites (ep*u) on faces
+    ep_face[lev][0]->FillBoundary();
+    ep_face[lev][1]->FillBoundary();
+    ep_face[lev][2]->FillBoundary();
+
     // Compute ep_face into bcoeff
     MultiFab::Copy(*bcoeff[lev][0], *(ep_face[lev][0]), 0, 0, 1, 0);
     MultiFab::Copy(*bcoeff[lev][1], *(ep_face[lev][1]), 0, 0, 1, 0);
@@ -96,6 +92,66 @@ mfix::apply_MAC_projection (const bool update_laplacians,
     MultiFab::Divide(*bcoeff[lev][0], *(ro_face[lev][0]), 0, 0, 1, 0);
     MultiFab::Divide(*bcoeff[lev][1], *(ro_face[lev][1]), 0, 0, 1, 0);
     MultiFab::Divide(*bcoeff[lev][2], *(ro_face[lev][2]), 0, 0, 1, 0);
+  }
+
+
+  Vector< Array <MultiFab const*, 3>> const_bcoeff;
+  const_bcoeff.reserve(bcoeff.size());
+  for (const auto& x : bcoeff) const_bcoeff.push_back(GetArrOfConstPtrs(x));
+
+  //
+  // Initialize (or redefine the beta in) the MacProjector
+  //
+
+  if (macproj->needInitialization())
+    {
+      LPInfo lp_info;
+      // If we want to set max_coarsening_level we have to send it in to the constructor
+      lp_info.setMaxCoarseningLevel(mac_mg_max_coarsening_level);
+      macproj->initProjector(lp_info, const_bcoeff);
+      macproj->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
+    } else {
+    macproj->updateBeta(const_bcoeff);
+  }
+
+
+
+  // Predict normal velocity to faces -- note that the {u_mac, v_mac, w_mac}
+  //    arrays returned from this call are on face CENTROIDS and have been
+  //    multiplied by the phasic voluem fraction {ep * u_mac, ep * v_mac, ep * w_mac}
+  for (int lev = 0; lev < nlev; ++lev) {
+
+    const EBFArrayBoxFactory* ebfact = &EBFactory(lev);
+
+    // We need this to avoid FPE
+    ep_u_mac[lev]->setVal(covered_val);
+    ep_v_mac[lev]->setVal(covered_val);
+    ep_w_mac[lev]->setVal(covered_val);
+
+    mol::predict_vels_on_faces(lev,
+                               *ep_u_mac[lev],   *ep_v_mac[lev],   *ep_w_mac[lev],
+                               *ep_face[lev][0], *ep_face[lev][1], *ep_face[lev][2],
+                               *vel_in[lev], m_vel_g_bc_types,
+                               bc_ilo[lev]->array(), bc_ihi[lev]->array(),
+                               bc_jlo[lev]->array(), bc_jhi[lev]->array(),
+                               bc_klo[lev]->array(), bc_khi[lev]->array(),
+                               ebfact, geom);
+  }
+
+
+  // Check that everything is consistent with amrcore
+  // update_internals();
+
+  // Setup for solve
+  Vector<Array<MultiFab*,AMREX_SPACEDIM> > mac_vec(finest_level+1);
+
+  if (m_verbose)
+    Print() << " >> Before projection\n" ;
+
+
+
+  for ( int lev=0; lev <= finest_level; ++lev )
+  {
 
     // Store (ep * u) in temporaries
     (mac_vec[lev])[0] = ep_u_mac[lev];
@@ -137,7 +193,7 @@ mfix::apply_MAC_projection (const bool update_laplacians,
 
 
   if (open_system_constraint) {
-    mfix_open_system_rhs(get_mac_rhs(), update_laplacians, lap_T, lap_X, ep_g_in,
+    mfix_open_system_rhs(get_mac_rhs(), update_laplacians, lap_T_out, lap_X_out, ep_g_in,
         ro_g_in, MW_g_in, T_g_in, cp_g_in, k_g_in, T_g_on_eb_in, k_g_on_eb_in,
         X_gk_in, D_gk_in, h_gk_in, txfr_in, ro_gk_txfr_in);
   }
@@ -145,25 +201,6 @@ mfix::apply_MAC_projection (const bool update_laplacians,
   // Subtract the change in phasic volume fraction
   for (int lev(0); lev <= finest_level; ++lev) {
     MultiFab::Subtract(*(m_leveldata[lev]->mac_rhs), *depdt[lev],0,0,1,0);
-  }
-
-  //
-  // Perform MAC projection
-  //
-  Vector< Array <MultiFab const*, 3>> const_bcoeff;
-  const_bcoeff.reserve(bcoeff.size());
-  for (const auto& x : bcoeff) const_bcoeff.push_back(GetArrOfConstPtrs(x));
-
-
-  if (macproj->needInitialization())
-  {
-    LPInfo lp_info;
-    // If we want to set max_coarsening_level we have to send it in to the constructor
-    lp_info.setMaxCoarseningLevel(mac_mg_max_coarsening_level);
-    macproj->initProjector(lp_info, const_bcoeff);
-    macproj->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
-  } else {
-    macproj->updateBeta(const_bcoeff);
   }
 
   macproj->setUMAC(mac_vec);
@@ -215,4 +252,6 @@ mfix::apply_MAC_projection (const bool update_laplacians,
   for (int lev(0); lev <= finest_level; lev++) {
     delete depdt[lev];
   }
+
+
 }
