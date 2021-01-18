@@ -154,6 +154,7 @@ dem.damping_tang_fac.pw   =     0.5
 #! EB geometry
 #!-----------------------------------------------------------//
 mfix.geometry = "hopper"
+# mfix.geometry_filename = "hopper.csg"
 
 hopper.orifice_radius = 0.00049
 hopper.funnel_radius  = 0.00099
