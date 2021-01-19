@@ -61,6 +61,28 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     Real new_time = time + l_dt;
 
     // *************************************************************************************
+    // Allocate space for the MAC velocities
+    // *************************************************************************************
+    Vector<MultiFab> u_mac(finest_level+1), v_mac(finest_level+1), w_mac(finest_level+1);
+    int ngmac = nghost_mac();
+
+    for (int lev = 0; lev <= finest_level; ++lev) {
+      u_mac[lev].define(amrex::convert(grids[lev],IntVect::TheDimensionVector(0)), dmap[lev],
+                        1, ngmac, MFInfo(), *ebfactory[lev]);
+      v_mac[lev].define(amrex::convert(grids[lev],IntVect::TheDimensionVector(1)), dmap[lev],
+                        1, ngmac, MFInfo(), *ebfactory[lev]);
+      w_mac[lev].define(amrex::convert(grids[lev],IntVect::TheDimensionVector(2)), dmap[lev],
+                        1, ngmac, MFInfo(), *ebfactory[lev]);
+      if (ngmac > 0) {
+        u_mac[lev].setBndry(0.0);
+        v_mac[lev].setBndry(0.0);
+        w_mac[lev].setBndry(0.0);
+      }
+    }
+
+
+
+    // *************************************************************************************
     // Allocate space for half-time density
     // *************************************************************************************
     Vector<MultiFab> density_nph;
@@ -308,7 +330,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
           Array4<Real const> const& dXdt_o  = conv_X_old[lev]->const_array(mfi);
           Array4<Real const> const& lap_X_o = lap_X_old[lev]->const_array(mfi);
           Array4<Real const> const& X_RHS_o = species_RHS_old[lev]->const_array(mfi);
-          
+
           // explicit_diffusion_pred is handled inside RHS computation
           // no need to separate computation in here anymore
           ParallelFor(bx, [nspecies_g,epg,rho_o,rho_n,X_gk_o,dXdt_o,lap_X_o,

@@ -954,6 +954,8 @@ class mfix : public AmrCore
 
     bool test_tracer_conservation = false;
 
+    std::string m_advection_type = "MOL";
+
     amrex::Real enthalpy_source = 0;
 
     // Options to control mfix verbosity level
@@ -1194,6 +1196,16 @@ class mfix : public AmrCore
     Vector<std::unique_ptr<EBFArrayBoxFactory> > particle_ebfactory;
 
     bool mfix_update_ebfactory (int a_lev);
+
+  // For Godunov, we need 1 ghost cell
+  // For MOL    , we need 0 ghost cells
+
+    int nghost_mac () const {
+      if (!EBFactory(0).isAllRegular()) return (m_advection_type != "MOL") ? 4 : 3;
+      return (m_advection_type != "MOL") ? 1 : 0;
+    }
+
+
 };
 
 #endif
