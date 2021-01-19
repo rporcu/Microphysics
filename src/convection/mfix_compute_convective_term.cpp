@@ -21,6 +21,9 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
                                     Vector< MultiFab* >& lap_X_out,
                                     Vector< MultiFab* > const& vel_in,
                                     Vector< MultiFab* > const& ep_g_in,
+                                    Vector< MultiFab* > const& ep_u_mac,
+                                    Vector< MultiFab* > const& ep_v_mac,
+                                    Vector< MultiFab* > const& ep_w_mac,
                                     Vector< MultiFab* > const& ro_g_in,
                                     Vector< MultiFab* > const& MW_g_in,
                                     Vector< MultiFab* > const& T_g_in,
@@ -99,7 +102,7 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
     // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
     //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
     //    on face CENTROIDS
-    compute_MAC_projected_velocities(time, vel_in, get_u_mac(), get_v_mac(), get_w_mac(),
+    compute_MAC_projected_velocities(time, vel_in, ep_u_mac, ep_v_mac, ep_w_mac,
        ep_g_in, ro_g_in, MW_g_in, T_g_in, cp_g_in, k_g_in, T_g_on_eb_in,
        k_g_on_eb_in, X_gk_in, D_gk_in, h_gk_in, txfr_in, ro_gk_txfr_in,
        update_laplacians, lap_T_out, lap_X_out);
@@ -246,7 +249,7 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
 
         mfix_compute_fluxes(lev, fx, fy, fz, vel_in, state_comp, num_comp,
                             get_xslopes_u(), get_yslopes_u(), get_zslopes_u(),
-                            slopes_comp, get_u_mac(), get_v_mac(), get_w_mac());
+                            slopes_comp, ep_u_mac, ep_v_mac, ep_w_mac);
 
         EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes),
                              geom[lev], already_on_centroids);
@@ -261,7 +264,7 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
             conv_comp = 0; state_comp = 0; num_comp = 1; slopes_comp = 0;
             mfix_compute_fluxes(lev, fx, fy, fz, ro_g_in, state_comp, num_comp,
                                 get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
-                                slopes_comp, get_u_mac(), get_v_mac(), get_w_mac());
+                                slopes_comp, ep_u_mac, ep_v_mac, ep_w_mac);
 
             EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev],
                                  already_on_centroids);
@@ -278,7 +281,7 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
             conv_comp = 1; state_comp = 0; num_comp = 1; slopes_comp = 1;
             mfix_compute_fluxes(lev, fx, fy, fz, h_g_in, state_comp, num_comp,
                                 get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
-                                slopes_comp, get_u_mac(), get_v_mac(), get_w_mac());
+                                slopes_comp, ep_u_mac, ep_v_mac, ep_w_mac);
 
             EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev],
                                  already_on_centroids);
@@ -297,7 +300,7 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
             conv_comp = 2; state_comp = 0; num_comp = 1; slopes_comp = 2;
             mfix_compute_fluxes(lev, fx, fy, fz, trac_in, state_comp, num_comp,
                                 get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
-                                slopes_comp, get_u_mac(), get_v_mac(), get_w_mac());
+                                slopes_comp, ep_u_mac, ep_v_mac, ep_w_mac);
 
             EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev],
                                  already_on_centroids);
@@ -320,7 +323,7 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
 
           mfix_compute_fluxes(lev, fx_X, fy_X, fz_X, X_gk_in, state_comp, num_comp,
               get_xslopes_X_gk(), get_yslopes_X_gk(), get_zslopes_X_gk(),
-              slopes_comp, get_u_mac(), get_v_mac(), get_w_mac());
+              slopes_comp, ep_u_mac, ep_v_mac, ep_w_mac);
 
           EB_computeDivergence(*conv_X_tmp, GetArrOfConstPtrs(fluxes_X),
               geom[lev], already_on_centroids);

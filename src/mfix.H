@@ -214,7 +214,10 @@ class mfix : public AmrCore
 
     void mfix_calc_txfr_particle (Real time);
 
-    void mfix_correct_small_cells (Vector< MultiFab*> vel_in);
+    void mfix_correct_small_cells (Vector< MultiFab*     > const& vel_in,
+                                   Vector<MultiFab const*> const& ep_u_mac,
+                                   Vector<MultiFab const*> const& ep_v_mac,
+                                   Vector<MultiFab const*> const& ep_w_mac);
 
     void mfix_set_velocity_bcs (Real time,
                                 Vector< MultiFab* > const& vel,
@@ -745,6 +748,9 @@ class mfix : public AmrCore
                                        Vector< MultiFab* >& lap_X,
                                        Vector< MultiFab* > const& vel_in,
                                        Vector< MultiFab* > const& ep_g_in,
+                                       Vector< MultiFab* > const& u_mac,
+                                       Vector< MultiFab* > const& v_mac,
+                                       Vector< MultiFab* > const& w_mac,
                                        Vector< MultiFab* > const& ro_g_in,
                                        Vector< MultiFab* > const& MW_g_in,
                                        Vector< MultiFab* > const& T_g_in,
@@ -930,9 +936,6 @@ class mfix : public AmrCore
     Vector< MultiFab* > get_diveu () noexcept;
     Vector< MultiFab* > get_mac_phi () noexcept;
     Vector< MultiFab* > get_mac_rhs () noexcept;
-    Vector< MultiFab* > get_u_mac () noexcept;
-    Vector< MultiFab* > get_v_mac () noexcept;
-    Vector< MultiFab* > get_w_mac () noexcept;
 
     // used if load_balance_type == "KnapSack"
     amrex::Vector< amrex::MultiFab* > particle_cost;

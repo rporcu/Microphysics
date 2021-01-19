@@ -528,33 +528,3 @@ Vector< MultiFab* > mfix::get_mac_rhs () noexcept
   }
   return r;
 }
-
-Vector< MultiFab* > mfix::get_u_mac () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->u_mac);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_v_mac () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->v_mac);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_w_mac () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->w_mac);
-  }
-  return r;
-}
