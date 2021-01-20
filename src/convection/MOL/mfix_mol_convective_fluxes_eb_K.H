@@ -39,7 +39,6 @@ void mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
                                     const FArrayBox& cell_centroid,
                                     const FArrayBox& volfrac,
                                     const FArrayBox& bndry_centroid,
-                                    const EBCellFlagFab& flags,
                                     const GpuArray<int, 3> bc_types,
                                     Array4<int const> const& bct_ilo,
                                     Array4<int const> const& bct_ihi,
@@ -101,9 +100,6 @@ void mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
 
   // Cell centroid
   const auto& ccc_fab = cell_centroid.array();
-
-  // const GpuArray<int, 3> bc_types =
-  //   {bc_list.get_minf(), bc_list.get_pinf(), bc_list.get_pout()};
 
   const Real my_huge = 1.e200;
 
