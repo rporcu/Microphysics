@@ -45,6 +45,12 @@ mfix::Regrid ()
 
           SetDistributionMap(lev, new_fluid_dm);
 
+          macproj.reset(new MacProjector(Geom(0,finest_level),
+                                         MLMG::Location::FaceCentroid,  // Location of mac_vec
+                                         MLMG::Location::FaceCentroid,  // Location of beta
+                                         MLMG::Location::CellCenter,    // Location of solution variable phi
+                                         MLMG::Location::CellCentroid));// Location of MAC RHS
+
           RegridArrays(lev);
 
           if (fluid_cost[lev] != nullptr)
@@ -130,6 +136,12 @@ mfix::Regrid ()
       DistributionMapping newdm = DistributionMapping::makeKnapSack(costs,knapsack_nmax);
 
       SetDistributionMap(base_lev, newdm);
+
+      macproj.reset(new MacProjector(Geom(0,finest_level),
+                                     MLMG::Location::FaceCentroid,  // Location of mac_vec
+                                     MLMG::Location::FaceCentroid,  // Location of beta
+                                     MLMG::Location::CellCenter,    // Location of solution variable phi
+                                     MLMG::Location::CellCentroid));// Location of MAC RHS
 
       if (FLUID::solve)
         RegridArrays(base_lev);
