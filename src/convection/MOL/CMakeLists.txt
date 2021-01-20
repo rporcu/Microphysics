@@ -5,4 +5,7 @@ target_sources( mfixcore
    mfix_mol_predict.cpp
    mfix_mol_predict_vels_on_faces_K.H
    mfix_mol_predict_vels_on_faces_eb_K.H
+   mfix_mol_convective_fluxes.cpp
+   mfix_mol_convective_fluxes_K.H
+   mfix_mol_convective_fluxes_eb_K.H
    )

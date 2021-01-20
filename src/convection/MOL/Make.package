@@ -1,5 +1,8 @@
 CEXE_headers += MOL.H
 CEXE_Headers += mfix_mol_predict_vels_on_faces_K.H
 CEXE_Headers += mfix_mol_predict_vels_on_faces_eb_K.H
+CEXE_headers += mfix_mol_convective_fluxes_K.H
+CEXE_Headers += mfix_mol_convective_fluxes_eb_K.H
 
 CEXE_sources +=  mfix_mol_predict.cpp
+CEXE_sources +=  mfix_mol_convective_fluxes.cpp

@@ -242,6 +242,23 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
           conv_X_in[lev]->setVal(0, 0, conv_X_in[lev]->nComp(),
               conv_X_in[lev]->nGrow());
 
+
+
+
+        const EBFArrayBoxFactory* ebfact = &EBFactory(lev);
+
+        const GpuArray<int, 3> bc_types =
+          {bc_list.get_minf(), bc_list.get_pinf(), bc_list.get_pout()};
+
+        // Array4<int> const& bct_ilo = bc_ilo[lev]->array();
+        // Array4<int> const& bct_ihi = bc_ihi[lev]->array();
+        // Array4<int> const& bct_jlo = bc_jlo[lev]->array();
+        // Array4<int> const& bct_jhi = bc_jhi[lev]->array();
+        // Array4<int> const& bct_klo = bc_klo[lev]->array();
+        // Array4<int> const& bct_khi = bc_khi[lev]->array();
+
+
+
         // **************************************************
         // Compute div (ep_g u u) -- the update for velocity
         // **************************************************
@@ -249,12 +266,17 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
 
         mfix_compute_fluxes(lev, fx, fy, fz, vel_in, state_comp, num_comp,
                             get_xslopes_u(), get_yslopes_u(), get_zslopes_u(),
-                            slopes_comp, ep_u_mac, ep_v_mac, ep_w_mac);
+                            slopes_comp, ep_u_mac, ep_v_mac, ep_w_mac,
+                            nghost, covered_val, bc_types,
+                            bc_ilo[lev]->array(), bc_ihi[lev]->array(),
+                            bc_jlo[lev]->array(), bc_jhi[lev]->array(),
+                            bc_klo[lev]->array(), bc_khi[lev]->array(),
+                            ebfact, geom);
 
-        EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes),
-                             geom[lev], already_on_centroids);
+        EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev], already_on_centroids);
+
         single_level_weighted_redistribute(conv_tmp, *conv_u_in[lev],
-                                           *ep_g_in[lev], conv_comp, num_comp, geom[lev]);
+               *ep_g_in[lev], conv_comp, num_comp, geom[lev]);
 
         // **************************************************
         // Compute div (ep_g rho u) -- the update for density
@@ -264,13 +286,17 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
             conv_comp = 0; state_comp = 0; num_comp = 1; slopes_comp = 0;
             mfix_compute_fluxes(lev, fx, fy, fz, ro_g_in, state_comp, num_comp,
                                 get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
-                                slopes_comp, ep_u_mac, ep_v_mac, ep_w_mac);
+                                slopes_comp, ep_u_mac, ep_v_mac, ep_w_mac,
+                                nghost, covered_val, bc_types,
+                                bc_ilo[lev]->array(), bc_ihi[lev]->array(),
+                                bc_jlo[lev]->array(), bc_jhi[lev]->array(),
+                                bc_klo[lev]->array(), bc_khi[lev]->array(),
+                                ebfact, geom);
 
-            EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev],
-                                 already_on_centroids);
+            EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev], already_on_centroids);
 
             single_level_weighted_redistribute(conv_tmp, *conv_s_in[lev],
-                                               *ep_g_in[lev], conv_comp, num_comp, geom[lev]);
+                   *ep_g_in[lev], conv_comp, num_comp, geom[lev]);
         }
 
         // **********************************************************
@@ -281,12 +307,17 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
             conv_comp = 1; state_comp = 0; num_comp = 1; slopes_comp = 1;
             mfix_compute_fluxes(lev, fx, fy, fz, h_g_in, state_comp, num_comp,
                                 get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
-                                slopes_comp, ep_u_mac, ep_v_mac, ep_w_mac);
+                                slopes_comp, ep_u_mac, ep_v_mac, ep_w_mac,
+                                nghost, covered_val, bc_types,
+                                bc_ilo[lev]->array(), bc_ihi[lev]->array(),
+                                bc_jlo[lev]->array(), bc_jhi[lev]->array(),
+                                bc_klo[lev]->array(), bc_khi[lev]->array(),
+                                ebfact, geom);
 
-            EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev],
-                                 already_on_centroids);
+            EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev], already_on_centroids);
+
             single_level_weighted_redistribute(conv_tmp, *conv_s_in[lev],
-                                               *ep_g_in[lev], conv_comp, num_comp, geom[lev]);
+                   *ep_g_in[lev], conv_comp, num_comp, geom[lev]);
 
             // Convert (rho * enthalpy) back to enthalpy
             MultiFab::Divide(*h_g_in[lev],*ro_g_in[lev],0,0,1,h_g_in[lev]->nGrow());
@@ -300,12 +331,18 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
             conv_comp = 2; state_comp = 0; num_comp = 1; slopes_comp = 2;
             mfix_compute_fluxes(lev, fx, fy, fz, trac_in, state_comp, num_comp,
                                 get_xslopes_s(), get_yslopes_s(), get_zslopes_s(),
-                                slopes_comp, ep_u_mac, ep_v_mac, ep_w_mac);
+                                slopes_comp, ep_u_mac, ep_v_mac, ep_w_mac,
+                                nghost, covered_val, bc_types,
+                                bc_ilo[lev]->array(), bc_ihi[lev]->array(),
+                                bc_jlo[lev]->array(), bc_jhi[lev]->array(),
+                                bc_klo[lev]->array(), bc_khi[lev]->array(),
+                                ebfact, geom);
 
-            EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev],
-                                 already_on_centroids);
+
+            EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev], already_on_centroids);
+
             single_level_weighted_redistribute(conv_tmp, *conv_s_in[lev],
-                                               *ep_g_in[lev], conv_comp, num_comp, geom[lev]);
+                   *ep_g_in[lev], conv_comp, num_comp, geom[lev]);
 
             // Convert (rho * tracer) back to tracer
             MultiFab::Divide(*trac_in[lev],*ro_g_in[lev],0,0,1,trac_in[lev]->nGrow());
@@ -323,10 +360,14 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
 
           mfix_compute_fluxes(lev, fx_X, fy_X, fz_X, X_gk_in, state_comp, num_comp,
               get_xslopes_X_gk(), get_yslopes_X_gk(), get_zslopes_X_gk(),
-              slopes_comp, ep_u_mac, ep_v_mac, ep_w_mac);
+                              slopes_comp, ep_u_mac, ep_v_mac, ep_w_mac,
+                              nghost, covered_val, bc_types,
+                              bc_ilo[lev]->array(), bc_ihi[lev]->array(),
+                              bc_jlo[lev]->array(), bc_jhi[lev]->array(),
+                              bc_klo[lev]->array(), bc_khi[lev]->array(),
+                              ebfact, geom);
 
-          EB_computeDivergence(*conv_X_tmp, GetArrOfConstPtrs(fluxes_X),
-              geom[lev], already_on_centroids);
+          EB_computeDivergence(*conv_X_tmp, GetArrOfConstPtrs(fluxes_X), geom[lev], already_on_centroids);
 
           single_level_weighted_redistribute(*conv_X_tmp, *conv_X_in[lev],
               *ep_g_in[lev], conv_comp, num_comp, geom[lev]);
