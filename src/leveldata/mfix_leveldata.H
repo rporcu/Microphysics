@@ -97,17 +97,6 @@ class LevelData
     // Fluid species density rates of change due to heterogeneous reactions
     amrex::MultiFab* ro_gk_txfr;
 
-    // These are multi-component multifabs
-    amrex::MultiFab* xslopes_u;
-    amrex::MultiFab* yslopes_u;
-    amrex::MultiFab* zslopes_u;
-    amrex::MultiFab* xslopes_s;
-    amrex::MultiFab* yslopes_s;
-    amrex::MultiFab* zslopes_s;
-    amrex::MultiFab* xslopes_X;
-    amrex::MultiFab* yslopes_X;
-    amrex::MultiFab* zslopes_X;
-
     // div (ep_g * u)
     amrex::MultiFab* diveu;
 

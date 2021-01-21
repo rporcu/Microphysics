@@ -5,6 +5,5 @@ target_sources( mfixcore
    mfix_set_mac_velocity_bcs.cpp
    mfix_compute_convective_term.cpp
    mfix_correct_small_cells.cpp
-   mfix_slopes.cpp
    mfix_compute_MAC_projected_velocities.cpp
    )

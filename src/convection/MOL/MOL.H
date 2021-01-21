@@ -31,7 +31,27 @@ namespace mol {
                               amrex::EBFArrayBoxFactory const* ebfact,
                               amrex::Vector<amrex::Geometry> geom);
 
-
+  void mfix_compute_fluxes (const int lev,
+                            amrex::Vector< amrex::MultiFab* >& a_fx,
+                            amrex::Vector< amrex::MultiFab* >& a_fy,
+                            amrex::Vector< amrex::MultiFab* >& a_fz,
+                            amrex::Vector< amrex::MultiFab* > const& state,
+                            const int state_comp,
+                            const int n_comp,
+                            amrex::Vector< amrex::MultiFab* > const& ep_u_mac,
+                            amrex::Vector< amrex::MultiFab* > const& ep_v_mac,
+                            amrex::Vector< amrex::MultiFab* > const& ep_w_mac,
+                            const int nghosts,
+                            const amrex::Real covered_val,
+                            const amrex::GpuArray<int, 2> bc_types,
+                            amrex::Array4<int const> const& bct_ilo,
+                            amrex::Array4<int const> const& bct_ihi,
+                            amrex::Array4<int const> const& bct_jlo,
+                            amrex::Array4<int const> const& bct_jhi,
+                            amrex::Array4<int const> const& bct_klo,
+                            amrex::Array4<int const> const& bct_khi,
+                            amrex::EBFArrayBoxFactory const* ebfact,
+                            amrex::Vector<amrex::Geometry> geom);
 
 } // namespace mol
 

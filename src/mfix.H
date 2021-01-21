@@ -351,13 +351,6 @@ class mfix : public AmrCore
                         const int& nref,
                         const Real* dx);
 
-    void mfix_compute_slopes (int lev, MultiFab& Sborder,
-                              Vector< MultiFab* > const& xslopes_in,
-                              Vector< MultiFab* > const& yslopes_in,
-                              Vector< MultiFab* > const& zslopes_in,
-                              int slopes_comp,
-                              std::map<std::string, Gpu::DeviceVector<int>>& bc_types);
-
     void set_bc0 (const Box& sbx,
                   MFIter* mfi,
                   const int lev,
@@ -454,31 +447,6 @@ class mfix : public AmrCore
                                          amrex::Vector< amrex::MultiFab* > const& lap_T,
                                          amrex::Vector< amrex::MultiFab* > const& lap_X);
 
-    void mfix_compute_fluxes (const int lev,
-                              Vector< MultiFab* >& a_fx,
-                              Vector< MultiFab* >& a_fy,
-                              Vector< MultiFab* >& a_fz,
-                              Vector< MultiFab* > const& state,
-                              const int state_comp,
-                              const int n_comp,
-                              Vector< MultiFab* > const& xslopes,
-                              Vector< MultiFab* > const& yslopes,
-                              Vector< MultiFab* > const& zslopes,
-                              const int slopes_comp,
-                              Vector< MultiFab* > const& ep_u_mac,
-                              Vector< MultiFab* > const& ep_v_mac,
-                              Vector< MultiFab* > const& ep_w_mac,
-                              const int nghosts,
-                              const Real covered_val,
-                              const GpuArray<int, 3> bc_types,
-                              Array4<int const> const& bct_ilo,
-                              Array4<int const> const& bct_ihi,
-                              Array4<int const> const& bct_jlo,
-                              Array4<int const> const& bct_jhi,
-                              Array4<int const> const& bct_klo,
-                              Array4<int const> const& bct_khi,
-                              EBFArrayBoxFactory const* ebfact,
-                              Vector<Geometry> geom);
 
     ////////////////////////////////////////////////////////////////////////////
     //
@@ -894,15 +862,6 @@ class mfix : public AmrCore
     Vector< MultiFab* > get_h_gk () noexcept;
     Vector< MultiFab* > get_txfr () noexcept;
     Vector< MultiFab* > get_ro_gk_txfr () noexcept;
-    Vector< MultiFab* > get_xslopes_u () noexcept;
-    Vector< MultiFab* > get_yslopes_u () noexcept;
-    Vector< MultiFab* > get_zslopes_u () noexcept;
-    Vector< MultiFab* > get_xslopes_s () noexcept;
-    Vector< MultiFab* > get_yslopes_s () noexcept;
-    Vector< MultiFab* > get_zslopes_s () noexcept;
-    Vector< MultiFab* > get_xslopes_X_gk () noexcept;
-    Vector< MultiFab* > get_yslopes_X_gk () noexcept;
-    Vector< MultiFab* > get_zslopes_X_gk () noexcept;
     Vector< MultiFab* > get_diveu () noexcept;
     Vector< MultiFab* > get_mac_phi () noexcept;
     Vector< MultiFab* > get_mac_rhs () noexcept;

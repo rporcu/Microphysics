@@ -1,4 +1,3 @@
-#include <mfix.H>
 #include <mfix_algorithm.H>
 
 #include <MOL.H>
@@ -11,43 +10,34 @@ using namespace aux;
 // Compute the three components of the convection term
 //
 void
-mfix::mfix_compute_fluxes (const int lev,
-                           Vector< MultiFab* >& a_fx,
-                           Vector< MultiFab* >& a_fy,
-                           Vector< MultiFab* >& a_fz,
-                           Vector< MultiFab* > const& state_in,
-                           const int state_comp, const int ncomp,
-                           Vector< MultiFab* > const& xslopes_in,
-                           Vector< MultiFab* > const& yslopes_in,
-                           Vector< MultiFab* > const& zslopes_in,
-                           const int slopes_comp,
-                           Vector< MultiFab* > const& ep_u_mac,
-                           Vector< MultiFab* > const& ep_v_mac,
-                           Vector< MultiFab* > const& ep_w_mac,
-                           const int  nghost,
-                           const Real covered_val,
-                           const GpuArray<int, 3> bc_types,
-                           Array4<int const> const& bct_ilo,
-                           Array4<int const> const& bct_ihi,
-                           Array4<int const> const& bct_jlo,
-                           Array4<int const> const& bct_jhi,
-                           Array4<int const> const& bct_klo,
-                           Array4<int const> const& bct_khi,
-                           EBFArrayBoxFactory const* ebfact,
-                           Vector<Geometry> geom)
+mol::mfix_compute_fluxes (const int lev,
+                          Vector< MultiFab* >& a_fx,
+                          Vector< MultiFab* >& a_fy,
+                          Vector< MultiFab* >& a_fz,
+                          Vector< MultiFab* > const& state_in,
+                          const int state_comp, const int ncomp,
+                          Vector< MultiFab* > const& ep_u_mac,
+                          Vector< MultiFab* > const& ep_v_mac,
+                          Vector< MultiFab* > const& ep_w_mac,
+                          const int  nghost,
+                          const Real covered_val,
+                          const GpuArray<int, 2> bc_types,
+                          Array4<int const> const& bct_ilo,
+                          Array4<int const> const& bct_ihi,
+                          Array4<int const> const& bct_jlo,
+                          Array4<int const> const& bct_jhi,
+                          Array4<int const> const& bct_klo,
+                          Array4<int const> const& bct_khi,
+                          EBFArrayBoxFactory const* ebfact,
+                          Vector<Geometry> geom)
 {
   // Get EB geometric info
-  Array< const MultiCutFab*,3> areafrac;
-  Array< const MultiCutFab*,3> facecent;
-  const amrex::MultiFab*    volfrac;
-  const amrex::MultiCutFab* bndrycent;
+  Array< const MultiCutFab*,3> areafrac  =   ebfact->getAreaFrac();
+  Array< const MultiCutFab*,3> facecent  =   ebfact->getFaceCent();
+  const amrex::MultiFab*       volfrac   = &(ebfact->getVolFrac());
+  const amrex::MultiCutFab*    bndrycent = &(ebfact->getBndryCent());
 
   auto const& flags = ebfact->getMultiEBCellFlagFab();
-
-  areafrac  =   ebfact->getAreaFrac();
-  facecent  =   ebfact->getFaceCent();
-  volfrac   = &(ebfact->getVolFrac());
-  bndrycent = &(ebfact->getBndryCent());
 
   const auto& cellcent = ebfact->getCentroid();
 
@@ -97,15 +87,18 @@ mfix::mfix_compute_fluxes (const int lev,
       }
       else
       {
+        // Face centroids
+        const auto& fcx_fab = facecent[0]->const_array(mfi);
+        const auto& fcy_fab = facecent[1]->const_array(mfi);
+        const auto& fcz_fab = facecent[2]->const_array(mfi);
+
+        // Cell centroids
+        const auto& ccc_fab = cellcent.const_array(mfi);
+
         mol::mfix_compute_eb_fluxes_on_box(
-               lev, bx, xbx, ybx, zbx,
-              (*a_fx[lev])[mfi], (*a_fy[lev])[mfi], (*a_fz[lev])[mfi],
-              (*state_in[lev])[mfi], state_comp, ncomp,
-              (*xslopes_in[lev])[mfi], (*yslopes_in[lev])[mfi], (*zslopes_in[lev])[mfi], slopes_comp,
-              (*ep_u_mac[lev])[mfi], (*ep_v_mac[lev])[mfi], (*ep_w_mac[lev])[mfi],
-              (*areafrac[0])[mfi], (*areafrac[1])[mfi], (*areafrac[2])[mfi],
-              (*facecent[0])[mfi], (*facecent[1])[mfi], (*facecent[2])[mfi],
-               cellcent[mfi], (*volfrac)[mfi], (*bndrycent)[mfi],
+               lev, domain_bx, xbx, ybx, zbx, ncomp, state_comp, state_fab,
+               fx_fab, fy_fab, fz_fab, ep_u_mac_fab, ep_v_mac_fab, ep_w_mac_fab,
+               flagarr, fcx_fab, fcy_fab, fcz_fab, ccc_fab,
                bc_types, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi, geom);
       }
     }

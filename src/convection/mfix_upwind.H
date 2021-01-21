@@ -8,11 +8,11 @@ namespace aux {
   //
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
-  Real
-  upwind (const Real velocity_minus, const Real velocity_plus, const Real u_edge)
+  amrex::Real
+  upwind (const amrex::Real velocity_minus, const amrex::Real velocity_plus, const amrex::Real u_edge)
   {
     // Small value to protect against tiny velocities used in upwinding
-    const Real small_velocity(1.e-10);
+    const amrex::Real small_velocity(1.e-10);
 
     if(amrex::Math::abs(u_edge) < small_velocity)
       return .5*(velocity_minus+velocity_plus);

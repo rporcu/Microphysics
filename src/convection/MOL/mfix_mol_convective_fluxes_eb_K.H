@@ -1,9 +1,9 @@
 #ifndef MFIX_MOL_CONVECTIVE_FLUXES_EB_K_H_
 #define MFIX_MOL_CONVECTIVE_FLUXES_EB_K_H_
 
-#include <mfix.H>
 #include <mfix_upwind.H>
 #include <mfix_algorithm.H>
+#include <AMReX_EB_slopes_K.H>
 
 using namespace aux;
 using namespace amrex;
@@ -14,32 +14,26 @@ namespace mol {
 // Compute the three components of the convection term when we have embedded
 // boundaries
 //
-void mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
-                                    Box const& ubx,
-                                    Box const& vbx,
-                                    Box const& wbx,
-                                    FArrayBox& a_fx,
-                                    FArrayBox& a_fy,
-                                    FArrayBox& a_fz,
-                                    const FArrayBox& state_in,
-                                    const int state_comp, const int ncomp,
-                                    const FArrayBox& xslopes_in,
-                                    const FArrayBox& yslopes_in,
-                                    const FArrayBox& zslopes_in,
-                                    const int slopes_comp,
-                                    const FArrayBox& ep_u_mac,
-                                    const FArrayBox& ep_v_mac,
-                                    const FArrayBox& ep_w_mac,
-                                    const FArrayBox& afrac_x_fab,
-                                    const FArrayBox& afrac_y_fab,
-                                    const FArrayBox& afrac_z_fab,
-                                    const FArrayBox& face_centroid_x,
-                                    const FArrayBox& face_centroid_y,
-                                    const FArrayBox& face_centroid_z,
-                                    const FArrayBox& cell_centroid,
-                                    const FArrayBox& volfrac,
-                                    const FArrayBox& bndry_centroid,
-                                    const GpuArray<int, 3> bc_types,
+void mfix_compute_eb_fluxes_on_box (const int lev,
+                                    Box const& domain_box,
+                                    Box const& xbx,
+                                    Box const& ybx,
+                                    Box const& zbx,
+                                    const int ncomp,
+                                    const int state_comp,
+                                    Array4<Real const> const& state,
+                                    Array4<Real      > const& fx,
+                                    Array4<Real      > const& fy,
+                                    Array4<Real      > const& fz,
+                                    Array4<Real const> const& ep_u_mac,
+                                    Array4<Real const> const& ep_v_mac,
+                                    Array4<Real const> const& ep_w_mac,
+                                    Array4<EBCellFlag const> const& flag,
+                                    Array4<Real const> const& fcx,
+                                    Array4<Real const> const& fcy,
+                                    Array4<Real const> const& fcz,
+                                    Array4<Real const> const& ccc,
+                                    const GpuArray<int, 2> bc_types,
                                     Array4<int const> const& bct_ilo,
                                     Array4<int const> const& bct_ihi,
                                     Array4<int const> const& bct_jlo,
@@ -48,60 +42,28 @@ void mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
                                     Array4<int const> const& bct_khi,
                                     Vector<Geometry> geom)
 {
-  Box domain(geom[lev].Domain());
+  constexpr Real my_huge = 1.e200;
 
-  const amrex::Dim3 dom_low = amrex::lbound(domain);
-  const amrex::Dim3 dom_high = amrex::ubound(domain);
+  const int* bct_data = bc_types.data();
+  const int  bct_size = bc_types.size();
 
-  Array4<Real> const& fx = a_fx.array();
-  Array4<Real> const& fy = a_fy.array();
-  Array4<Real> const& fz = a_fz.array();
+  const int domain_ilo = domain_box.smallEnd(0);
+  const int domain_ihi = domain_box.bigEnd(0);
+  const int domain_jlo = domain_box.smallEnd(1);
+  const int domain_jhi = domain_box.bigEnd(1);
+  const int domain_klo = domain_box.smallEnd(2);
+  const int domain_khi = domain_box.bigEnd(2);
 
-  Array4<const Real> const& state = state_in.array();
+  const bool check_extdir_ilo = (domain_ilo >= xbx.smallEnd(0) and domain_ilo <= xbx.bigEnd(0));
+  const bool check_extdir_ihi = (domain_ihi >= xbx.smallEnd(0) and domain_ihi <= xbx.bigEnd(0));
+  const bool check_extdir_jlo = (domain_jlo >= ybx.smallEnd(1) and domain_jlo <= ybx.bigEnd(1));
+  const bool check_extdir_jhi = (domain_jhi >= ybx.smallEnd(1) and domain_jhi <= ybx.bigEnd(1));
+  const bool check_extdir_klo = (domain_klo >= zbx.smallEnd(2) and domain_klo <= zbx.bigEnd(2));
+  const bool check_extdir_khi = (domain_khi >= zbx.smallEnd(2) and domain_khi <= zbx.bigEnd(2));
 
-  Array4<const Real> const& areafrac_x = afrac_x_fab.array();
-  Array4<const Real> const& areafrac_y = afrac_y_fab.array();
-  Array4<const Real> const& areafrac_z = afrac_z_fab.array();
-
-  Array4<const Real> const& u = ep_u_mac.array();
-  Array4<const Real> const& v = ep_v_mac.array();
-  Array4<const Real> const& w = ep_w_mac.array();
-
-  Array4<const Real> const& x_slopes = xslopes_in.array();
-  Array4<const Real> const& y_slopes = yslopes_in.array();
-  Array4<const Real> const& z_slopes = zslopes_in.array();
-
-  const Box ubx_grown = amrex::surroundingNodes(amrex::grow(bx,1),0);
-  const Box vbx_grown = amrex::surroundingNodes(amrex::grow(bx,1),1);
-  const Box wbx_grown = amrex::surroundingNodes(amrex::grow(bx,1),2);
-
-  FArrayBox s_on_x_face(ubx_grown, ncomp);
-  FArrayBox s_on_y_face(vbx_grown, ncomp);
-  FArrayBox s_on_z_face(wbx_grown, ncomp);
-
-  s_on_x_face.prefetchToDevice();
-  s_on_y_face.prefetchToDevice();
-  s_on_z_face.prefetchToDevice();
-
-  // These lines ensure that the temporary Fabs above aren't destroyed
-  //   before we're done with them when running with GPUs
-  Elixir eli_x = s_on_x_face.elixir();
-  Elixir eli_y = s_on_y_face.elixir();
-  Elixir eli_z = s_on_z_face.elixir();
-
-  Array4<Real> const& sx = s_on_x_face.array();
-  Array4<Real> const& sy = s_on_y_face.array();
-  Array4<Real> const& sz = s_on_z_face.array();
-
-  // Face centroids
-  const auto& fcx_fab = face_centroid_x.array();
-  const auto& fcy_fab = face_centroid_y.array();
-  const auto& fcz_fab = face_centroid_z.array();
-
-  // Cell centroid
-  const auto& ccc_fab = cell_centroid.array();
-
-  const Real my_huge = 1.e200;
+  const bool check_extdir = check_extdir_ilo or check_extdir_ihi or
+                            check_extdir_jlo or check_extdir_jhi or
+                            check_extdir_klo or check_extdir_khi;
 
   //
   // First compute the convective fluxes at the face center
@@ -109,286 +71,342 @@ void mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
   // possible
   //
 
-  const int ubx_npoints = ubx.numPts();
-  const auto ubx_lo = amrex::lbound(ubx);
-  const auto ubx_len = amrex::length(ubx);
+  /*********************************************************************************
+   *                                                                               *
+   *                                  x-direction                                  *
+   *                                                                               *
+   *********************************************************************************/
 
-  const int vbx_npoints = vbx.numPts();
-  const auto vbx_lo = amrex::lbound(vbx);
-  const auto vbx_len = amrex::length(vbx);
 
-  const int wbx_npoints = wbx.numPts();
-  const auto wbx_lo = amrex::lbound(wbx);
-  const auto wbx_len = amrex::length(wbx);
-
-  const int npoints = amrex::max(ubx_npoints,vbx_npoints,wbx_npoints);
-
-  ParallelFor(npoints, [bc_types,ubx_npoints,vbx_npoints,wbx_npoints,ubx_len,
-      vbx_len,wbx_len,ubx_lo,vbx_lo,wbx_lo,bct_ilo,bct_ihi,bct_jlo,bct_jhi,
-      bct_klo,bct_khi,state_comp,dom_low,dom_high,state,x_slopes,y_slopes,z_slopes,
-      ccc_fab,fcx_fab,fcy_fab,fcz_fab,areafrac_x,areafrac_y,areafrac_z,u,v,w,sx,
-      sy,sz,fx,fy,fz,my_huge,ncomp,slopes_comp]
-    AMREX_GPU_DEVICE (int idx) noexcept
+  ParallelFor(xbx,ncomp,[fx,ep_u_mac,state,state_comp,ccc,fcx,fcy,fcz,flag,
+  check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi, bct_ilo, bct_ihi,
+  check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi, bct_jlo, bct_jhi,
+  check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bct_klo, bct_khi,
+  bct_data,bct_size,my_huge]
+  AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
   {
-    const int* bct_data = bc_types.data();
-    const int bct_size = bc_types.size();
+    Real sx;
 
-    if(idx < ubx_npoints)
+    if( flag(i,j,k).isConnected(-1,0,0) )
     {
-      int k = idx / (ubx_len.x*ubx_len.y);
-      int j = (idx - k*(ubx_len.x*ubx_len.y)) / (ubx_len.x);
-      int i = (idx - k*(ubx_len.x*ubx_len.y)) - j*ubx_len.x;
 
-      i += ubx_lo.x;
-      j += ubx_lo.y;
-      k += ubx_lo.z;
+      bool extdir_ilo = aux::any_of(&bct_data[0], &bct_data[bct_size],
+                  aux::is_equal<int>(bct_ilo(domain_ilo-1,j,k,0)));
 
-      const Real u_val = u(i,j,k);
+      bool extdir_ihi = aux::any_of(&bct_data[0], &bct_data[bct_size],
+                  aux::is_equal<int>(bct_ihi(domain_ihi+1,j,k,0)));
 
-      const int bct_ilo_val = bct_ilo(dom_low.x-1,j,k,0);
-      const int bct_ihi_val = bct_ihi(dom_high.x+1,j,k,0);
+      bool extdir_jlo = check_extdir_jlo && (j-1 <= domain_jlo) &&
+        aux::any_of(&bct_data[0], &bct_data[bct_size],
+                    aux::is_equal<int>(bct_jlo(i,domain_jlo-1,k,0)));
 
-      const Real afrac_x = areafrac_x(i,j,k);
+      bool extdir_jhi = check_extdir_jhi && (j   >= domain_jlo) &&
+        aux::any_of(&bct_data[0], &bct_data[bct_size],
+                    aux::is_equal<int>(bct_jhi(i,domain_jhi+1,k,0)));
 
-      const Real fcx_fab_x = fcx_fab(i,j,k,0);
-      const Real fcx_fab_y = fcx_fab(i,j,k,1);
+      bool extdir_klo = check_extdir_khi && (k   >= domain_klo) &&
+        aux::any_of(&bct_data[0], &bct_data[bct_size],
+                    aux::is_equal<int>(bct_klo(i,j,domain_klo-1,0)));
 
-      const Real ccc_fab_x = ccc_fab(i,j,k,0);
-      const Real ccc_fab_y = ccc_fab(i,j,k,1);
-      const Real ccc_fab_z = ccc_fab(i,j,k,2);
+      bool extdir_khi = check_extdir_khi && (k   >= domain_klo) &&
+        aux::any_of(&bct_data[0], &bct_data[bct_size],
+                    aux::is_equal<int>(bct_khi(i,j,domain_khi+1,0)));
 
-      const Real ccc_fab_mns_x = ccc_fab(i-1,j,k,0);
-      const Real ccc_fab_mns_y = ccc_fab(i-1,j,k,1);
-      const Real ccc_fab_mns_z = ccc_fab(i-1,j,k,2);
+      int comp = n+state_comp;
 
-      for(int n(0); n < ncomp; n++) {
-        Real sx_ijkn(0);
+      if (i <= domain_ilo && extdir_ilo) {
+        sx = state(domain_ilo-1,j,k,comp);
 
-        if( afrac_x > 0 )
-        {
-          if(i <= dom_low.x and
-          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_ilo_val)))
-          {
-            sx_ijkn = state(dom_low.x-1,j,k,state_comp+n);
-          }
-          else if(i >= dom_high.x+1 and
-          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_ihi_val)))
-          {
-            sx_ijkn = state(dom_high.x+1,j,k,state_comp+n);
-          }
-          else
-          {
-            Real yf = fcx_fab_x; // local (y,z) of centroid of x-face we are extrapolating to
-            Real zf = fcx_fab_y;
+      } else if (i >= domain_ihi+1 && extdir_ihi) {
+        sx = state(domain_ihi+1,j,k,comp);
 
-            Real delta_x = .5 + ccc_fab_x;
-            Real delta_y = yf - ccc_fab_y;
-            Real delta_z = zf - ccc_fab_z;
+      } else {
 
-            Real state_pls = state(i,j,k,state_comp+n);
-            Real state_mns = state(i-1,j,k,state_comp+n);
+        // Not sure this is needed.
+        extdir_ilo = extdir_ilo && check_extdir_ilo && (i-1 <= domain_ilo);
+        extdir_ihi = extdir_ihi && check_extdir_ihi && (i   >= domain_ihi);
 
-            Real cc_umax = amrex::max(state_pls, state_mns);
-            Real cc_umin = amrex::min(state_pls, state_mns);
+        const Real state_pls = state(i,j,k,state_comp+n);
+        const Real state_mns = state(i-1,j,k,state_comp+n);
 
-            Real upls = state_pls - delta_x * x_slopes(i,j,k,slopes_comp+n)
-                                  + delta_y * y_slopes(i,j,k,slopes_comp+n)
-                                  + delta_z * z_slopes(i,j,k,slopes_comp+n);
+        const Real cc_umax = amrex::max(state_pls, state_mns);
+        const Real cc_umin = amrex::min(state_pls, state_mns);
 
-            upls = amrex::max( amrex::min(upls, cc_umax), cc_umin );
+        const Real yf = fcx(i,j,k,0);
+        const Real zf = fcx(i,j,k,1);
 
-            delta_x = .5 - ccc_fab_mns_x;
-            delta_y = yf - ccc_fab_mns_y;
-            delta_z = zf - ccc_fab_mns_z;
+        Real delta_x = .5 + ccc(i,j,k,0);
+        Real delta_y = yf - ccc(i,j,k,1);
+        Real delta_z = zf - ccc(i,j,k,2);
 
-            Real umns = state_mns + delta_x * x_slopes(i-1,j,k,slopes_comp+n)
-                                  + delta_y * y_slopes(i-1,j,k,slopes_comp+n)
-                                  + delta_z * z_slopes(i-1,j,k,slopes_comp+n);
+        const auto& slopes_eb_hi = amrex_calc_slopes_extdir_eb(i  ,j,k,comp,
+                                      state, ccc, fcx, fcy, fcz, flag,
+                                      extdir_ilo, extdir_jlo, extdir_klo,
+                                      extdir_ihi, extdir_jhi, extdir_khi,
+                                      domain_ilo, domain_jlo, domain_klo,
+                                      domain_ihi, domain_jhi, domain_khi);
 
-            umns = amrex::max( amrex::min(umns, cc_umax), cc_umin );
+        Real upls = state_pls - delta_x * slopes_eb_hi[0]
+                              + delta_y * slopes_eb_hi[1]
+                              + delta_z * slopes_eb_hi[2];
 
-            sx_ijkn = upwind(umns, upls, u_val);
-          }
-        }
-        else {
-          sx_ijkn = my_huge;
-        }
+        upls = amrex::max( amrex::min(upls, cc_umax), cc_umin );
 
-        sx(i,j,k,n) = sx_ijkn;
-        fx(i,j,k,n) = u_val * sx_ijkn;
+        delta_x = .5 - ccc(i-1,j,k,0);
+        delta_y = yf - ccc(i-1,j,k,1);
+        delta_z = zf - ccc(i-1,j,k,2);
+
+        const auto& slopes_eb_lo = amrex_calc_slopes_extdir_eb(i-1,j,k,comp,
+                                      state, ccc, fcx, fcy, fcz, flag,
+                                      extdir_ilo, extdir_jlo, extdir_klo,
+                                      extdir_ihi, extdir_jhi, extdir_khi,
+                                      domain_ilo, domain_jlo, domain_klo,
+                                      domain_ihi, domain_jhi, domain_khi);
+
+        Real umns = state_mns + delta_x * slopes_eb_lo[0]
+                              + delta_y * slopes_eb_lo[1]
+                              + delta_z * slopes_eb_lo[2];
+
+        umns = amrex::max( amrex::min(umns, cc_umax), cc_umin );
+
+        sx = upwind(umns, upls, ep_u_mac(i,j,k));
+
       }
     }
-
-    if(idx < vbx_npoints)
-    {
-      int k = idx / (vbx_len.x*vbx_len.y);
-      int j = (idx - k*(vbx_len.x*vbx_len.y)) / (vbx_len.x);
-      int i = (idx - k*(vbx_len.x*vbx_len.y)) - j*vbx_len.x;
-
-      i += vbx_lo.x;
-      j += vbx_lo.y;
-      k += vbx_lo.z;
-
-      const Real v_val = v(i,j,k);
-
-      const int bct_jlo_val = bct_jlo(i,dom_low.y-1,k,0);
-      const int bct_jhi_val = bct_jhi(i,dom_high.y+1,k,0);
-
-      const Real afrac_y = areafrac_y(i,j,k);
-
-      const Real fcy_fab_x = fcy_fab(i,j,k,0);
-      const Real fcy_fab_y = fcy_fab(i,j,k,1);
-
-      const Real ccc_fab_x = ccc_fab(i,j,k,0);
-      const Real ccc_fab_y = ccc_fab(i,j,k,1);
-      const Real ccc_fab_z = ccc_fab(i,j,k,2);
-
-      const Real ccc_fab_mns_x = ccc_fab(i,j-1,k,0);
-      const Real ccc_fab_mns_y = ccc_fab(i,j-1,k,1);
-      const Real ccc_fab_mns_z = ccc_fab(i,j-1,k,2);
-
-      for (int n(0); n < ncomp; n++) {
-        Real sy_ijkn(0);
-
-        if( afrac_y > 0 ) {
-          if( j <= dom_low.y and
-          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_jlo_val)))
-          {
-            sy_ijkn = state(i,dom_low.y-1,k,state_comp+n);
-          }
-          else if( j >= dom_high.y+1 and
-          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_jhi_val)))
-          {
-            sy_ijkn = state(i,dom_high.y+1,k,state_comp+n);
-          }
-          else
-          {
-            Real xf = fcy_fab_x; // local (x,z) of centroid of y-face we are extrapolating to
-            Real zf = fcy_fab_y;
-
-            Real delta_x = xf  - ccc_fab_x;
-            Real delta_y = 0.5 + ccc_fab_y;
-            Real delta_z = zf  - ccc_fab_z;
-
-            Real state_pls = state(i,j  ,k,state_comp+n);
-            Real state_mns = state(i,j-1,k,state_comp+n);
-
-            Real cc_umax = amrex::max(state_pls, state_mns);
-            Real cc_umin = amrex::min(state_pls, state_mns);
-
-            Real vpls = state_pls - delta_y * y_slopes(i,j,k,slopes_comp+n)
-                                  + delta_x * x_slopes(i,j,k,slopes_comp+n)
-                                  + delta_z * z_slopes(i,j,k,slopes_comp+n);
-
-            vpls = amrex::max( amrex::min(vpls, cc_umax), cc_umin );
-
-            delta_x = xf  - ccc_fab_mns_x;
-            delta_y = 0.5 - ccc_fab_mns_y;
-            delta_z = zf  - ccc_fab_mns_z;
-
-            Real vmns = state_mns + delta_y * y_slopes(i,j-1,k,slopes_comp+n)
-                                  + delta_x * x_slopes(i,j-1,k,slopes_comp+n)
-                                  + delta_z * z_slopes(i,j-1,k,slopes_comp+n);
-
-            vmns = amrex::max( amrex::min(vmns, cc_umax), cc_umin );
-
-            sy_ijkn = upwind(vmns, vpls, v_val);
-          }
-        }
-        else {
-          sy_ijkn = my_huge;
-        }
-
-        sy(i,j,k,n) = sy_ijkn;
-        fy(i,j,k,n) = v_val * sy_ijkn;
-      }
+    else {
+      sx = my_huge;
     }
 
-    if(idx < wbx_npoints)
-    {
-      int k = idx / (wbx_len.x*wbx_len.y);
-      int j = (idx - k*(wbx_len.x*wbx_len.y)) / (wbx_len.x);
-      int i = (idx - k*(wbx_len.x*wbx_len.y)) - j*wbx_len.x;
+    fx(i,j,k,n) = ep_u_mac(i,j,k) * sx;
 
-      i += wbx_lo.x;
-      j += wbx_lo.y;
-      k += wbx_lo.z;
-
-      const Real w_val = w(i,j,k);
-
-      const int bct_klo_val = bct_klo(i,j,dom_low.z-1,0);
-      const int bct_khi_val = bct_khi(i,j,dom_high.z+1,0);
-
-      const Real afrac_z = areafrac_z(i,j,k);
-
-      const Real fcz_fab_x = fcz_fab(i,j,k,0);
-      const Real fcz_fab_y = fcz_fab(i,j,k,1);
-
-      const Real ccc_fab_x = ccc_fab(i,j,k,0);
-      const Real ccc_fab_y = ccc_fab(i,j,k,1);
-      const Real ccc_fab_z = ccc_fab(i,j,k,2);
-
-      const Real ccc_fab_mns_x = ccc_fab(i,j,k-1,0);
-      const Real ccc_fab_mns_y = ccc_fab(i,j,k-1,1);
-      const Real ccc_fab_mns_z = ccc_fab(i,j,k-1,2);
-
-      for(int n(0); n < ncomp; n++) {
-        Real sz_ijkn(0);
-
-        if( afrac_z > 0 ) {
-          if( k <= dom_low.z and
-          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_klo_val)))
-          {
-            sz_ijkn = state(i, j,dom_low.z-1,state_comp+n);
-          }
-          else if( k >= dom_high.z+1 and
-          aux::any_of(&bct_data[0], &bct_data[bct_size], aux::is_equal<int>(bct_khi_val)))
-          {
-            sz_ijkn = state(i, j,dom_high.z+1,state_comp+n);
-          }
-          else
-          {
-            Real xf = fcz_fab_x; // local (x,y) of centroid of z-face we are extrapolating to
-            Real yf = fcz_fab_y;
-
-            Real delta_x = xf - ccc_fab_x;
-            Real delta_y = yf - ccc_fab_y;
-            Real delta_z = .5 + ccc_fab_z;
-
-            Real state_pls = state(i,j,k  ,state_comp+n);
-            Real state_mns = state(i,j,k-1,state_comp+n);
-
-            Real cc_umax = amrex::max(state_pls, state_mns);
-            Real cc_umin = amrex::min(state_pls, state_mns);
-
-            Real wpls = state_pls - delta_z * z_slopes(i,j,k,slopes_comp+n)
-                                  + delta_x * x_slopes(i,j,k,slopes_comp+n)
-                                  + delta_y * y_slopes(i,j,k,slopes_comp+n);
-
-            wpls = amrex::max( amrex::min(wpls, cc_umax), cc_umin );
-
-            delta_x = xf - ccc_fab_mns_x;
-            delta_y = yf - ccc_fab_mns_y;
-            delta_z = .5 - ccc_fab_mns_z;
-
-            Real wmns = state_mns + delta_z * z_slopes(i,j,k-1,slopes_comp+n)
-                                  + delta_x * x_slopes(i,j,k-1,slopes_comp+n)
-                                  + delta_y * y_slopes(i,j,k-1,slopes_comp+n);
-
-            wmns = amrex::max( amrex::min(wmns, cc_umax), cc_umin );
-
-            sz_ijkn = upwind(wmns, wpls, w_val);
-          }
-        }
-        else {
-          sz_ijkn = my_huge;
-        }
-
-        sz(i,j,k,n) = sz_ijkn;
-        fz(i,j,k,n) = w_val * sz_ijkn;
-      }
-    }
   });
+
+
+
+
+  /*********************************************************************************
+   *                                                                               *
+   *                                  y-direction                                  *
+   *                                                                               *
+   *********************************************************************************/
+
+
+
+  ParallelFor(ybx,ncomp,[fy,ep_v_mac,state,state_comp,ccc,fcx,fcy,fcz,flag,
+  check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi, bct_ilo, bct_ihi,
+  check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi, bct_jlo, bct_jhi,
+  check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bct_klo, bct_khi,
+  bct_data, bct_size, my_huge]
+  AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+  {
+
+    Real sy;
+
+    if( flag(i,j,k).isConnected(0,-1,0) ) {
+
+      bool extdir_ilo = check_extdir_ilo && (i-1 <= domain_ilo) &&
+        aux::any_of(&bct_data[0], &bct_data[bct_size],
+                    aux::is_equal<int>(bct_ilo(domain_ilo-1,j,k,0)));
+
+      bool extdir_ihi = check_extdir_ihi && (i   >= domain_ilo) &&
+        aux::any_of(&bct_data[0], &bct_data[bct_size],
+                    aux::is_equal<int>(bct_ihi(domain_ihi+1,j,k,0)));
+
+      bool extdir_jlo = aux::any_of(&bct_data[0], &bct_data[bct_size],
+                  aux::is_equal<int>(bct_jlo(i,domain_jlo-1,k,0)));
+
+      bool extdir_jhi = aux::any_of(&bct_data[0], &bct_data[bct_size],
+                  aux::is_equal<int>(bct_jhi(i,domain_jhi+1,k,0)));
+
+      bool extdir_klo = check_extdir_khi && (k   >= domain_klo) &&
+        aux::any_of(&bct_data[0], &bct_data[bct_size],
+                    aux::is_equal<int>(bct_klo(i,j,domain_klo-1,0)));
+
+      bool extdir_khi = check_extdir_khi && (k   >= domain_klo) &&
+        aux::any_of(&bct_data[0], &bct_data[bct_size],
+                    aux::is_equal<int>(bct_khi(i,j,domain_khi+1,0)));
+
+      int comp = n+state_comp;
+
+      if  (j <= domain_jlo && extdir_jlo) {
+        sy = state(i,domain_jlo-1,k,comp);
+
+      } else if (j >= domain_jhi+1 && extdir_jhi) {
+        sy = state(i,domain_jhi+1,k,comp);
+
+      } else {
+
+        extdir_jlo = extdir_jlo && check_extdir_jlo && (j-1 <= domain_jlo);
+        extdir_jhi = extdir_jhi && check_extdir_jhi && (j   >= domain_jhi);
+
+        const Real state_pls = state(i,j  ,k,state_comp+n);
+        const Real state_mns = state(i,j-1,k,state_comp+n);
+
+        const Real cc_umax = amrex::max(state_pls, state_mns);
+        const Real cc_umin = amrex::min(state_pls, state_mns);
+
+        const Real xf = fcy(i,j,k,0);
+        const Real zf = fcy(i,j,k,1);
+
+        Real delta_y = .5 + ccc(i,j,k,1);
+        Real delta_x = xf - ccc(i,j,k,0);
+        Real delta_z = zf - ccc(i,j,k,2);
+
+        const auto& slopes_eb_hi = amrex_calc_slopes_extdir_eb(i,j  ,k,comp,
+                                      state, ccc, fcx, fcy, fcz, flag,
+                                      extdir_ilo, extdir_jlo, extdir_klo,
+                                      extdir_ihi, extdir_jhi, extdir_khi,
+                                      domain_ilo, domain_jlo, domain_klo,
+                                      domain_ihi, domain_jhi, domain_khi);
+
+        Real vpls = state_pls - delta_y * slopes_eb_hi[1]
+                              + delta_x * slopes_eb_hi[0]
+                              + delta_z * slopes_eb_hi[2];
+
+        vpls = amrex::max( amrex::min(vpls, cc_umax), cc_umin );
+
+        delta_y = .5 - ccc(i,j-1,k,1);
+        delta_x = xf - ccc(i,j-1,k,0);
+        delta_z = zf - ccc(i,j-1,k,2);
+
+        const auto& slopes_eb_lo = amrex_calc_slopes_extdir_eb(i,j-1,k,comp,
+                                      state, ccc, fcx, fcy, fcz, flag,
+                                      extdir_ilo, extdir_jlo, extdir_klo,
+                                      extdir_ihi, extdir_jhi, extdir_khi,
+                                      domain_ilo, domain_jlo, domain_klo,
+                                      domain_ihi, domain_jhi, domain_khi);
+
+        Real vmns = state_mns + delta_y * slopes_eb_lo[1]
+                              + delta_x * slopes_eb_lo[0]
+                              + delta_z * slopes_eb_lo[2];
+
+        vmns = amrex::max( amrex::min(vmns, cc_umax), cc_umin );
+
+        sy = upwind(vmns, vpls, ep_v_mac(i,j,k));
+      }
+    }
+    else {
+      sy = my_huge;
+    }
+
+    fy(i,j,k,n) = ep_v_mac(i,j,k) * sy;
+
+  });
+
+
+
+  /*********************************************************************************
+   *                                                                               *
+   *                                  z-direction                                  *
+   *                                                                               *
+   *********************************************************************************/
+
+
+  ParallelFor(zbx,ncomp,[fz,ep_w_mac,state,state_comp,ccc,fcx,fcy,fcz,flag,
+  check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi, bct_ilo, bct_ihi,
+  check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi, bct_jlo, bct_jhi,
+  check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bct_klo, bct_khi,
+  bct_data, bct_size, my_huge]
+  AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+  {
+
+    Real sz;
+
+    if( flag(i,j,k).isConnected(0,0,-1) ) {
+
+      bool extdir_ilo = check_extdir_ilo && (i-1 <= domain_ilo) &&
+        aux::any_of(&bct_data[0], &bct_data[bct_size],
+                    aux::is_equal<int>(bct_ilo(domain_ilo-1,j,k,0)));
+
+      bool extdir_ihi = check_extdir_ihi && (i   >= domain_ilo) &&
+        aux::any_of(&bct_data[0], &bct_data[bct_size],
+                    aux::is_equal<int>(bct_ihi(domain_ihi+1,j,k,0)));
+
+      bool extdir_jlo = check_extdir_jlo && (j-1 <= domain_jlo) &&
+        aux::any_of(&bct_data[0], &bct_data[bct_size],
+                    aux::is_equal<int>(bct_jlo(i,domain_jlo-1,k,0)));
+
+      bool extdir_jhi = check_extdir_jhi && (j   >= domain_jlo) &&
+        aux::any_of(&bct_data[0], &bct_data[bct_size],
+                    aux::is_equal<int>(bct_jhi(i,domain_jhi+1,k,0)));
+
+      bool extdir_klo = aux::any_of(&bct_data[0], &bct_data[bct_size],
+                    aux::is_equal<int>(bct_klo(i,j,domain_klo-1,0)));
+
+      bool extdir_khi = aux::any_of(&bct_data[0], &bct_data[bct_size],
+                    aux::is_equal<int>(bct_khi(i,j,domain_khi+1,0)));
+
+      int comp = n+state_comp;
+
+      if (k <= domain_klo && extdir_klo) {
+        sz = state(i, j,domain_klo-1,comp);
+
+      } else if (k >= domain_khi+1 && extdir_khi) {
+        sz = state(i, j,domain_khi+1,comp);
+
+      } else {
+
+        extdir_klo = extdir_klo && check_extdir_klo && (k-1 <= domain_klo);
+        extdir_khi = extdir_khi && check_extdir_khi && (k   >= domain_khi);
+
+        const Real state_pls = state(i,j,k  ,state_comp+n);
+        const Real state_mns = state(i,j,k-1,state_comp+n);
+
+        const Real cc_umax = amrex::max(state_pls, state_mns);
+        const Real cc_umin = amrex::min(state_pls, state_mns);
+
+        const Real xf = fcz(i,j,k,0);
+        const Real yf = fcz(i,j,k,1);
+
+        Real delta_x = xf - ccc(i,j,k,0);
+        Real delta_y = yf - ccc(i,j,k,1);
+        Real delta_z = .5 + ccc(i,j,k,2);
+
+        const auto& slopes_eb_hi = amrex_calc_slopes_extdir_eb(i,j,k  ,comp,
+                                      state, ccc, fcx, fcy, fcz, flag,
+                                      extdir_ilo, extdir_jlo, extdir_klo,
+                                      extdir_ihi, extdir_jhi, extdir_khi,
+                                      domain_ilo, domain_jlo, domain_klo,
+                                      domain_ihi, domain_jhi, domain_khi);
+
+        Real wpls = state_pls - delta_z * slopes_eb_hi[2]
+                              + delta_x * slopes_eb_hi[0]
+                              + delta_y * slopes_eb_hi[1];
+
+        wpls = amrex::max( amrex::min(wpls, cc_umax), cc_umin );
+
+        delta_x = xf - ccc(i,j,k-1,0);
+        delta_y = yf - ccc(i,j,k-1,1);
+        delta_z = .5 - ccc(i,j,k-1,2);
+
+        const auto& slopes_eb_lo = amrex_calc_slopes_extdir_eb(i,j,k-1,comp,
+                                      state, ccc, fcx, fcy, fcz, flag,
+                                      extdir_ilo, extdir_jlo, extdir_klo,
+                                      extdir_ihi, extdir_jhi, extdir_khi,
+                                      domain_ilo, domain_jlo, domain_klo,
+                                      domain_ihi, domain_jhi, domain_khi);
+
+        Real wmns = state_mns + delta_z * slopes_eb_lo[2]
+                              + delta_x * slopes_eb_lo[0]
+                              + delta_y * slopes_eb_lo[1];
+
+        wmns = amrex::max( amrex::min(wmns, cc_umax), cc_umin );
+
+        sz = upwind(wmns, wpls, ep_w_mac(i,j,k));
+      }
+    }
+    else {
+      sz = my_huge;
+    }
+
+    fz(i,j,k,n) = ep_w_mac(i,j,k) * sz;
+
+  });
+
+
+
+
+
 }
 
 }//end mol namespace
