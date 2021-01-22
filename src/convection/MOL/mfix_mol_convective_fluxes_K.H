@@ -12,27 +12,27 @@ using namespace aux;
 namespace mol {
 
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-void mfix_compute_fluxes_on_box (const int lev,
-                                 Box const& domain_box,
-                                 Box const& xbx,
-                                 Box const& ybx,
-                                 Box const& zbx,
-                                 const int ncomp,
-                                 const int state_comp,
-                                 Array4<Real const> const& state,
-                                 Array4<Real      > const& fx,
-                                 Array4<Real      > const& fy,
-                                 Array4<Real      > const& fz,
-                                 Array4<Real const> const& ep_u_mac,
-                                 Array4<Real const> const& ep_v_mac,
-                                 Array4<Real const> const& ep_w_mac,
-                                 const GpuArray<int, 2> bc_types,
-                                 Array4<int const> const& bct_ilo,
-                                 Array4<int const> const& bct_ihi,
-                                 Array4<int const> const& bct_jlo,
-                                 Array4<int const> const& bct_jhi,
-                                 Array4<int const> const& bct_klo,
-                                 Array4<int const> const& bct_khi)
+void compute_convective_fluxes (const int lev,
+                                Box const& domain_box,
+                                Box const& xbx,
+                                Box const& ybx,
+                                Box const& zbx,
+                                const int ncomp,
+                                const int state_comp,
+                                Array4<Real const> const& state,
+                                Array4<Real      > const& fx,
+                                Array4<Real      > const& fy,
+                                Array4<Real      > const& fz,
+                                Array4<Real const> const& ep_u_mac,
+                                Array4<Real const> const& ep_v_mac,
+                                Array4<Real const> const& ep_w_mac,
+                                const GpuArray<int, 2> bc_types,
+                                Array4<int const> const& bct_ilo,
+                                Array4<int const> const& bct_ihi,
+                                Array4<int const> const& bct_jlo,
+                                Array4<int const> const& bct_jhi,
+                                Array4<int const> const& bct_klo,
+                                Array4<int const> const& bct_khi)
 {
 
   constexpr int order = 2;

@@ -10,26 +10,26 @@ using namespace aux;
 // Compute the three components of the convection term
 //
 void
-mol::mfix_compute_fluxes (const int lev,
-                          Vector< MultiFab* >& a_fx,
-                          Vector< MultiFab* >& a_fy,
-                          Vector< MultiFab* >& a_fz,
-                          Vector< MultiFab* > const& state_in,
-                          const int state_comp, const int ncomp,
-                          Vector< MultiFab* > const& ep_u_mac,
-                          Vector< MultiFab* > const& ep_v_mac,
-                          Vector< MultiFab* > const& ep_w_mac,
-                          const int  nghost,
-                          const Real covered_val,
-                          const GpuArray<int, 2> bc_types,
-                          Array4<int const> const& bct_ilo,
-                          Array4<int const> const& bct_ihi,
-                          Array4<int const> const& bct_jlo,
-                          Array4<int const> const& bct_jhi,
-                          Array4<int const> const& bct_klo,
-                          Array4<int const> const& bct_khi,
-                          EBFArrayBoxFactory const* ebfact,
-                          Vector<Geometry> geom)
+mol::compute_convective_fluxes (const int lev,
+                                Vector< MultiFab* >& a_fx,
+                                Vector< MultiFab* >& a_fy,
+                                Vector< MultiFab* >& a_fz,
+                                Vector< MultiFab* > const& state_in,
+                                const int state_comp, const int ncomp,
+                                Vector< MultiFab* > const& ep_u_mac,
+                                Vector< MultiFab* > const& ep_v_mac,
+                                Vector< MultiFab* > const& ep_w_mac,
+                                const int  nghost,
+                                const Real covered_val,
+                                const GpuArray<int, 2> bc_types,
+                                Array4<int const> const& bct_ilo,
+                                Array4<int const> const& bct_ihi,
+                                Array4<int const> const& bct_jlo,
+                                Array4<int const> const& bct_jhi,
+                                Array4<int const> const& bct_klo,
+                                Array4<int const> const& bct_khi,
+                                EBFArrayBoxFactory const* ebfact,
+                                Vector<Geometry> geom)
 {
   // Get EB geometric info
   Array< const MultiCutFab*,3> areafrac  =   ebfact->getAreaFrac();
@@ -80,7 +80,7 @@ mol::mfix_compute_fluxes (const int lev,
       // No cut cells in tile + nghost-cell width halo -> use non-eb routine
       if (flagfab.getType(amrex::grow(bx,nghost)) == FabType::regular )
       {
-        mol::mfix_compute_fluxes_on_box(
+        mol::compute_convective_fluxes(
                lev, domain_bx, xbx, ybx, zbx, ncomp, state_comp, state_fab,
                fx_fab, fy_fab, fz_fab, ep_u_mac_fab, ep_v_mac_fab, ep_w_mac_fab,
                bc_types, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi);
@@ -95,11 +95,11 @@ mol::mfix_compute_fluxes (const int lev,
         // Cell centroids
         const auto& ccc_fab = cellcent.const_array(mfi);
 
-        mol::mfix_compute_eb_fluxes_on_box(
+        mol::compute_convective_fluxes_eb(
                lev, domain_bx, xbx, ybx, zbx, ncomp, state_comp, state_fab,
                fx_fab, fy_fab, fz_fab, ep_u_mac_fab, ep_v_mac_fab, ep_w_mac_fab,
                flagarr, fcx_fab, fcy_fab, fcz_fab, ccc_fab,
-               bc_types, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi, geom);
+               bc_types, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi);
       }
     }
   } // MFIter
