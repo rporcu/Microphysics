@@ -388,8 +388,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             // substep) of particles.
             tow[index].clear();
             fc[index].clear();
-            tow[index].resize(ntot*3,0.0);
-            fc[index].resize(ntot*3,0.0);
+            tow[index].resize(3*ntot, 0.0);
+            fc[index].resize(3*ntot, 0.0);
 
             Real* fc_ptr = fc[index].dataPtr();
             Real* tow_ptr = tow[index].dataPtr();
@@ -398,8 +398,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             // particle-wall (wfor) forces
             pfor[index].clear();
             wfor[index].clear();
-            pfor[index].resize(3 * ntot, 0.0);
-            wfor[index].resize(3 * ntot, 0.0);
+            pfor[index].resize(3*ntot, 0.0);
+            wfor[index].resize(3*ntot, 0.0);
 
             /********************************************************************
              * Particle-Wall collision forces (and torques)                     *
@@ -501,18 +501,31 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                             ft[2] = 0.0;
                         }
 
-                        // each particle updates its force (no need for atomics)
-                        fc_ptr[i         ] += fn[0] + ft[0];
-                        fc_ptr[i + ntot  ] += fn[1] + ft[1];
-                        fc_ptr[i + 2*ntot] += fn[2] + ft[2];
+#ifdef _OPENMP
+#pragma omp critical
+                        {
+#endif
+                          Gpu::Atomic::Add(&fc_ptr[i         ], fn[0] + ft[0]);
+                          Gpu::Atomic::Add(&fc_ptr[i + ntot  ], fn[1] + ft[1]);
+                          Gpu::Atomic::Add(&fc_ptr[i + 2*ntot], fn[2] + ft[2]);
+#ifdef _OPENMP
+                        }
+#endif
 
                         RealVect tow_force(0.);
 
                         cross_product(normal, ft, tow_force);
 
-                        tow_ptr[i         ] += ls_value*tow_force[0];
-                        tow_ptr[i + ntot  ] += ls_value*tow_force[1];
-                        tow_ptr[i + 2*ntot] += ls_value*tow_force[2];
+#ifdef _OPENMP
+#pragma omp critical
+                        {
+#endif
+                          Gpu::Atomic::Add(&tow_ptr[i         ], ls_value*tow_force[0]);
+                          Gpu::Atomic::Add(&tow_ptr[i + ntot  ], ls_value*tow_force[1]);
+                          Gpu::Atomic::Add(&tow_ptr[i + 2*ntot], ls_value*tow_force[2]);
+#ifdef _OPENMP
+                        }
+#endif
                     }
                   });
 
@@ -539,116 +552,153 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
             // now we loop over the neighbor list and compute the forces
             amrex::ParallelFor(nrp,
-                [pstruct,fc_ptr,tow_ptr,nbor_data,
+                [nrp,pstruct,fc_ptr,tow_ptr,nbor_data,
 #if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
                  eps,
 #endif
                  subdt,ntot,local_mew=DEM::mew,local_kn=DEM::kn,
                  local_etan=DEM::etan]
               AMREX_GPU_DEVICE (int i) noexcept
-              {
-                  ParticleType& p1 = pstruct[i];
+            {
+                ParticleType& p1 = pstruct[i];
 
-                  for (const auto& p2 : nbor_data.getNeighbors(i))
-                  {
-                      Real dist_x = p2.pos(0) - p1.pos(0);
-                      Real dist_y = p2.pos(1) - p1.pos(1);
-                      Real dist_z = p2.pos(2) - p1.pos(2);
+                const auto neighbs = nbor_data.getNeighbors(i);
+                for (auto mit = neighbs.begin(); mit != neighbs.end(); ++mit)
+                {
+                    const auto& p2 = *mit;
 
-                      Real r2 = dist_x*dist_x +
-                                dist_y*dist_y +
-                                dist_z*dist_z;
+                    Real dist_x = p2.pos(0) - p1.pos(0);
+                    Real dist_y = p2.pos(1) - p1.pos(1);
+                    Real dist_z = p2.pos(2) - p1.pos(2);
 
-                      Real r_lm = p1.rdata(realData::radius) + p2.rdata(realData::radius);
+                    Real r2 = dist_x*dist_x +
+                              dist_y*dist_y +
+                              dist_z*dist_z;
 
-                      AMREX_ASSERT_WITH_MESSAGE(!(p1.id() == p2.id() and p1.cpu() == p2.cpu()),
-                        "A particle should not be its own neighbor!");
+                    Real r_lm = p1.rdata(realData::radius) + p2.rdata(realData::radius);
 
-                      if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
-                      {
-                          Real dist_mag = sqrt(r2);
+                    AMREX_ASSERT_WITH_MESSAGE(!(p1.id() == p2.id() and p1.cpu() == p2.cpu()),
+                      "A particle should not be its own neighbor!");
 
-                          AMREX_ASSERT(dist_mag >= eps);
+                    if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
+                    {
+                        const int j = mit.index();
 
-                          Real dist_mag_inv = 1.e0/dist_mag;
+                        Real dist_mag = sqrt(r2);
 
-                          RealVect normal(0.);
-                          normal[0] = dist_x * dist_mag_inv;
-                          normal[1] = dist_y * dist_mag_inv;
-                          normal[2] = dist_z * dist_mag_inv;
+                        AMREX_ASSERT(dist_mag >= eps);
 
-                          Real overlap_n = r_lm - dist_mag;
-                          Real vrel_trans_norm;
-                          RealVect vrel_t(0.);
+                        Real dist_mag_inv = 1.e0/dist_mag;
 
-                          cfrelvel(p1, p2, vrel_trans_norm, vrel_t, normal, dist_mag);
+                        RealVect normal(0.);
+                        normal[0] = dist_x * dist_mag_inv;
+                        normal[1] = dist_y * dist_mag_inv;
+                        normal[2] = dist_z * dist_mag_inv;
 
-                          int phase1 = p1.idata(intData::phase);
-                          int phase2 = p2.idata(intData::phase);
+                        Real overlap_n = r_lm - dist_mag;
+                        Real vrel_trans_norm;
+                        RealVect vrel_t(0.);
 
-                          Real kn_des = local_kn;
-                          Real etan_des = local_etan(phase1-1,phase2-1);
+                        cfrelvel(p1, p2, vrel_trans_norm, vrel_t, normal, dist_mag);
 
-                          // NOTE - we don't use the tangential components right now,
-                          // but we might in the future
-                          // Real kt_des = DEM::kt;
-                          // Real etat_des = DEM::etat[phase1-1][phase2-1];
+                        int phase1 = p1.idata(intData::phase);
+                        int phase2 = p2.idata(intData::phase);
 
-                          RealVect fn(0.);
-                          RealVect ft(0.);
-                          RealVect overlap_t(0.);
-                          Real mag_overlap_t(0.);
+                        Real kn_des = local_kn;
+                        Real etan_des = local_etan(phase1-1,phase2-1);
 
-                          // calculate the normal contact force
-                          fn[0] = -(kn_des*overlap_n*normal[0]
-                                  + etan_des*vrel_trans_norm*normal[0]);
-                          fn[1] = -(kn_des*overlap_n*normal[1]
-                                  + etan_des*vrel_trans_norm*normal[1]);
-                          fn[2] = -(kn_des*overlap_n*normal[2]
-                                  + etan_des*vrel_trans_norm*normal[2]);
+                        // NOTE - we don't use the tangential components right now,
+                        // but we might in the future
+                        // Real kt_des = DEM::kt;
+                        // Real etat_des = DEM::etat[phase1-1][phase2-1];
 
-                          // calculate the tangential overlap
-                          overlap_t[0] = subdt*vrel_t[0];
-                          overlap_t[1] = subdt*vrel_t[1];
-                          overlap_t[2] = subdt*vrel_t[2];
-                          mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
+                        RealVect fn(0.);
+                        RealVect ft(0.);
+                        RealVect overlap_t(0.);
+                        Real mag_overlap_t(0.);
 
-                          if (mag_overlap_t > 0.0) {
-                              Real fnmd = local_mew * sqrt(dot_product(fn, fn));
-                              RealVect tangent(0.);
-                              tangent[0] = overlap_t[0]/mag_overlap_t;
-                              tangent[1] = overlap_t[1]/mag_overlap_t;
-                              tangent[2] = overlap_t[2]/mag_overlap_t;
-                              ft[0] = -fnmd * tangent[0];
-                              ft[1] = -fnmd * tangent[1];
-                              ft[2] = -fnmd * tangent[2];
-                          } else {
-                              ft[0] = 0.0;
-                              ft[1] = 0.0;
-                              ft[2] = 0.0;
-                          }
+                        // calculate the normal contact force
+                        fn[0] = -(kn_des*overlap_n*normal[0]
+                                + etan_des*vrel_trans_norm*normal[0]);
+                        fn[1] = -(kn_des*overlap_n*normal[1]
+                                + etan_des*vrel_trans_norm*normal[1]);
+                        fn[2] = -(kn_des*overlap_n*normal[2]
+                                + etan_des*vrel_trans_norm*normal[2]);
 
-                          // each particle updates its force (no need for atomics)
-                          fc_ptr[i         ] += fn[0] + ft[0];
-                          fc_ptr[i + ntot  ] += fn[1] + ft[1];
-                          fc_ptr[i + 2*ntot] += fn[2] + ft[2];
+                        // calculate the tangential overlap
+                        overlap_t[0] = subdt*vrel_t[0];
+                        overlap_t[1] = subdt*vrel_t[1];
+                        overlap_t[2] = subdt*vrel_t[2];
+                        mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
 
-                          Real part1_r = p1.rdata(realData::radius);
-                          Real part2_r = p2.rdata(realData::radius);
+                        if (mag_overlap_t > 0.0) {
+                            Real fnmd = local_mew * sqrt(dot_product(fn, fn));
+                            RealVect tangent(0.);
+                            tangent[0] = overlap_t[0]/mag_overlap_t;
+                            tangent[1] = overlap_t[1]/mag_overlap_t;
+                            tangent[2] = overlap_t[2]/mag_overlap_t;
+                            ft[0] = -fnmd * tangent[0];
+                            ft[1] = -fnmd * tangent[1];
+                            ft[2] = -fnmd * tangent[2];
+                        } else {
+                            ft[0] = 0.0;
+                            ft[1] = 0.0;
+                            ft[2] = 0.0;
+                        }
 
-                          Real dist_cl = 0.5 * (dist_mag + (part1_r*part1_r - part2_r*part2_r) * dist_mag_inv);
-                          dist_cl = dist_mag - dist_cl;
+#ifdef _OPENMP
+#pragma omp critical
+                        {
+#endif
+                            Gpu::Atomic::Add(&fc_ptr[i         ], fn[0] + ft[0]);
+                            Gpu::Atomic::Add(&fc_ptr[i + ntot  ], fn[1] + ft[1]);
+                            Gpu::Atomic::Add(&fc_ptr[i + 2*ntot], fn[2] + ft[2]);
 
-                          RealVect tow_force(0.);
+                            if (j < nrp)
+                            {
+                                Gpu::Atomic::Add(&fc_ptr[j         ], -(fn[0] + ft[0]));
+                                Gpu::Atomic::Add(&fc_ptr[j + ntot  ], -(fn[1] + ft[1]));
+                                Gpu::Atomic::Add(&fc_ptr[j + 2*ntot], -(fn[2] + ft[2]));
+                            }
+#ifdef _OPENMP
+                        }
+#endif
 
-                          cross_product(normal, ft, tow_force);
+                        Real part1_r = p1.rdata(realData::radius);
+                        Real part2_r = p2.rdata(realData::radius);
 
-                          tow_ptr[i         ] += dist_cl*tow_force[0];
-                          tow_ptr[i + ntot  ] += dist_cl*tow_force[1];
-                          tow_ptr[i + 2*ntot] += dist_cl*tow_force[2];
-                          }
-                      }
-              });
+                        Real dist_cl1 = 0.5 * (dist_mag + (part1_r*part1_r - part2_r*part2_r) * dist_mag_inv);
+                        dist_cl1 = dist_mag - dist_cl1;
+
+                        Real dist_cl2 = 0.5 * (dist_mag + (part2_r*part2_r - part1_r*part1_r) * dist_mag_inv);
+                        dist_cl2 = dist_mag - dist_cl2;
+
+                        RealVect tow_force(0.);
+
+                        cross_product(normal, ft, tow_force);
+
+#ifdef _OPENMP
+#pragma omp critical
+                        {
+#endif
+                            Gpu::Atomic::Add(&tow_ptr[i         ], dist_cl1*tow_force[0]);
+                            Gpu::Atomic::Add(&tow_ptr[i + ntot  ], dist_cl1*tow_force[1]);
+                            Gpu::Atomic::Add(&tow_ptr[i + 2*ntot], dist_cl1*tow_force[2]);
+
+                            if (j < nrp)
+                            {
+                                Gpu::Atomic::Add(&tow_ptr[j         ], dist_cl2*tow_force[0]);
+                                Gpu::Atomic::Add(&tow_ptr[j + ntot  ], dist_cl2*tow_force[1]);
+                                Gpu::Atomic::Add(&tow_ptr[j + 2*ntot], dist_cl2*tow_force[2]);
+                            }
+#ifdef _OPENMP
+                        }
+#endif
+                    }
+                }
+            });
+
+            Gpu::Device::synchronize();
 
             // Debugging: copy data from the fc (all forces) vector to the wfor
             // (wall forces) vector. Note that since fc already contains the
@@ -676,7 +726,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             int y_hi_bc = BC::domain_bc[3];
             int z_lo_bc = BC::domain_bc[4];
             int z_hi_bc = BC::domain_bc[5];
-
 
             amrex::ParallelFor(nrp,
               [pstruct,subdt,fc_ptr,ntot,gravity,tow_ptr,eps,p_hi,p_lo,

@@ -80,8 +80,17 @@ struct MFIXCheckPair
 
   template <class P>
   AMREX_GPU_DEVICE AMREX_INLINE
-  bool operator() (const P& p1, const P& p2) const
-  { return (p1.pos() - p2.pos()).radSquared() <= neighborhood; }
+  bool operator() (const P* particles, const int i, const int j) const
+  {
+    const P& p1 = particles[i];
+    const P& p2 = particles[j];
+
+    if (i < j)
+      if ((p1.pos() - p2.pos()).radSquared() <= neighborhood)
+        return true;  
+
+    return false;
+  }
 };
 
 class MFIXParticleContainer final
