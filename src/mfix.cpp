@@ -409,96 +409,6 @@ Vector< MultiFab* > mfix::get_ro_gk_txfr () noexcept
   return r;
 }
 
-Vector< MultiFab* > mfix::get_xslopes_u () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->xslopes_u);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_yslopes_u () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->yslopes_u);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_zslopes_u () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->zslopes_u);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_xslopes_s () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->xslopes_s);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_yslopes_s () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->yslopes_s);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_zslopes_s () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->zslopes_s);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_xslopes_X_gk () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->xslopes_X);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_yslopes_X_gk () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->yslopes_X);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_zslopes_X_gk () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->zslopes_X);
-  }
-  return r;
-}
-
 Vector< MultiFab* > mfix::get_diveu () noexcept
 {
   Vector<MultiFab*> r;
@@ -525,36 +435,6 @@ Vector< MultiFab* > mfix::get_mac_rhs () noexcept
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
     r.push_back(m_leveldata[lev]->mac_rhs);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_u_mac () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->u_mac);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_v_mac () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->v_mac);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_w_mac () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->w_mac);
   }
   return r;
 }

@@ -214,7 +214,10 @@ class mfix : public AmrCore
 
     void mfix_calc_txfr_particle (Real time);
 
-    void mfix_correct_small_cells (Vector< MultiFab*> vel_in);
+    void mfix_correct_small_cells (Vector< MultiFab*     > const& vel_in,
+                                   Vector<MultiFab const*> const& ep_u_mac,
+                                   Vector<MultiFab const*> const& ep_v_mac,
+                                   Vector<MultiFab const*> const& ep_w_mac);
 
     void mfix_set_velocity_bcs (Real time,
                                 Vector< MultiFab* > const& vel,
@@ -348,13 +351,6 @@ class mfix : public AmrCore
                         const int& nref,
                         const Real* dx);
 
-    void mfix_compute_slopes (int lev, MultiFab& Sborder,
-                              Vector< MultiFab* > const& xslopes_in,
-                              Vector< MultiFab* > const& yslopes_in,
-                              Vector< MultiFab* > const& zslopes_in,
-                              int slopes_comp,
-                              std::map<std::string, Gpu::DeviceVector<int>>& bc_types);
-
     void set_bc0 (const Box& sbx,
                   MFIter* mfi,
                   const int lev,
@@ -451,61 +447,6 @@ class mfix : public AmrCore
                                          amrex::Vector< amrex::MultiFab* > const& lap_T,
                                          amrex::Vector< amrex::MultiFab* > const& lap_X);
 
-    void mfix_compute_fluxes (const int lev,
-                              Vector< MultiFab* >& a_fx,
-                              Vector< MultiFab* >& a_fy,
-                              Vector< MultiFab* >& a_fz,
-                              Vector< MultiFab* > const& state,
-                              const int state_comp,
-                              const int n_comp,
-                              Vector< MultiFab* > const& xslopes,
-                              Vector< MultiFab* > const& yslopes,
-                              Vector< MultiFab* > const& zslopes,
-                              const int slopes_comp,
-                              Vector< MultiFab* > const& ep_u_mac,
-                              Vector< MultiFab* > const& ep_v_mac,
-                              Vector< MultiFab* > const& ep_w_mac);
-
-    void mfix_compute_fluxes_on_box (const int lev, Box& bx,
-                                     FArrayBox& a_fx,
-                                     FArrayBox& a_fy,
-                                     FArrayBox& a_fz,
-                                     const FArrayBox& state,
-                                     const int state_comp,
-                                     const int n_comp,
-                                     const FArrayBox& xslopes,
-                                     const FArrayBox& yslopes,
-                                     const FArrayBox& zslopes,
-                                     const int slopes_comp,
-                                     const FArrayBox& ep_u_mac,
-                                     const FArrayBox& ep_v_mac,
-                                     const FArrayBox& ep_w_mac);
-
-    void mfix_compute_eb_fluxes_on_box (const int lev, Box& bx,
-                                        FArrayBox& a_fx,
-                                        FArrayBox& a_fy,
-                                        FArrayBox& a_fz,
-                                        const FArrayBox& state,
-                                        const int state_comp,
-                                        const int n_comp,
-                                        const FArrayBox& xslopes,
-                                        const FArrayBox& yslopes,
-                                        const FArrayBox& zslopes,
-                                        const int slopes_comp,
-                                        const FArrayBox& ep_u_mac,
-                                        const FArrayBox& ep_v_mac,
-                                        const FArrayBox& ep_w_mac,
-                                        const FArrayBox& ax,
-                                        const FArrayBox& ay,
-                                        const FArrayBox& az,
-                                        const FArrayBox& fc_x,
-                                        const FArrayBox& fc_y,
-                                        const FArrayBox& fc_z,
-                                        const FArrayBox& cell_centroid,
-                                        const FArrayBox& volfrac,
-                                        const FArrayBox& bndrycent,
-                                        const IArrayBox& cc_mask,
-                                        const EBCellFlagFab& flags);
 
     ////////////////////////////////////////////////////////////////////////////
     //
@@ -745,6 +686,9 @@ class mfix : public AmrCore
                                        Vector< MultiFab* >& lap_X,
                                        Vector< MultiFab* > const& vel_in,
                                        Vector< MultiFab* > const& ep_g_in,
+                                       Vector< MultiFab* > const& u_mac,
+                                       Vector< MultiFab* > const& v_mac,
+                                       Vector< MultiFab* > const& w_mac,
                                        Vector< MultiFab* > const& ro_g_in,
                                        Vector< MultiFab* > const& MW_g_in,
                                        Vector< MultiFab* > const& T_g_in,
@@ -918,21 +862,9 @@ class mfix : public AmrCore
     Vector< MultiFab* > get_h_gk () noexcept;
     Vector< MultiFab* > get_txfr () noexcept;
     Vector< MultiFab* > get_ro_gk_txfr () noexcept;
-    Vector< MultiFab* > get_xslopes_u () noexcept;
-    Vector< MultiFab* > get_yslopes_u () noexcept;
-    Vector< MultiFab* > get_zslopes_u () noexcept;
-    Vector< MultiFab* > get_xslopes_s () noexcept;
-    Vector< MultiFab* > get_yslopes_s () noexcept;
-    Vector< MultiFab* > get_zslopes_s () noexcept;
-    Vector< MultiFab* > get_xslopes_X_gk () noexcept;
-    Vector< MultiFab* > get_yslopes_X_gk () noexcept;
-    Vector< MultiFab* > get_zslopes_X_gk () noexcept;
     Vector< MultiFab* > get_diveu () noexcept;
     Vector< MultiFab* > get_mac_phi () noexcept;
     Vector< MultiFab* > get_mac_rhs () noexcept;
-    Vector< MultiFab* > get_u_mac () noexcept;
-    Vector< MultiFab* > get_v_mac () noexcept;
-    Vector< MultiFab* > get_w_mac () noexcept;
 
     // used if load_balance_type == "KnapSack"
     amrex::Vector< amrex::MultiFab* > particle_cost;
@@ -953,6 +885,8 @@ class mfix : public AmrCore
     bool open_system_constraint = false; // by default use cold-flow constraint
 
     bool test_tracer_conservation = false;
+
+    std::string m_advection_type = "MOL";
 
     amrex::Real enthalpy_source = 0;
 
@@ -1194,6 +1128,16 @@ class mfix : public AmrCore
     Vector<std::unique_ptr<EBFArrayBoxFactory> > particle_ebfactory;
 
     bool mfix_update_ebfactory (int a_lev);
+
+  // For Godunov, we need 1 ghost cell
+  // For MOL    , we need 0 ghost cells
+
+    int nghost_mac () const {
+      if (!EBFactory(0).isAllRegular()) return (m_advection_type != "MOL") ? 4 : 3;
+      return (m_advection_type != "MOL") ? 1 : 0;
+    }
+
+
 };
 
 #endif
