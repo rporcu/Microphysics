@@ -37,7 +37,12 @@ mol::compute_convective_term (const int lev,
                               Vector< MultiFab* > const& h_g_in,
                               Vector< MultiFab* > const& trac_in,
                               Vector< MultiFab* > const& X_gk_in,
-                              const GpuArray<int, 2> bc_types,
+                              const GpuArray<int, 3> bc_types,
+                              std::map<std::string, Gpu::DeviceVector<int>>& velocity_bcs,
+                              std::map<std::string, Gpu::DeviceVector<int>>& density_bcs,
+                              std::map<std::string, Gpu::DeviceVector<int>>& enthalpy_bcs,
+                              std::map<std::string, Gpu::DeviceVector<int>>& tracer_bcs,
+                              std::map<std::string, Gpu::DeviceVector<int>>& species_bcs,
                               Array4<int const> const& bct_ilo,
                               Array4<int const> const& bct_ihi,
                               Array4<int const> const& bct_jlo,
@@ -86,9 +91,8 @@ mol::compute_convective_term (const int lev,
     conv_comp = 0; state_comp = 0; num_comp = 3;
 
     mol::compute_convective_fluxes(lev, fx, fy, fz, vel_in, state_comp, num_comp,
-                        ep_u_mac, ep_v_mac, ep_w_mac, nghost, covered_val, bc_types,
-                        bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi,
-                        ebfact, geom);
+            ep_u_mac, ep_v_mac, ep_w_mac, nghost, covered_val, bc_types, velocity_bcs,
+            bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi, ebfact, geom);
 
     EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes),
                          geom[lev], already_on_centroids);
@@ -104,9 +108,8 @@ mol::compute_convective_term (const int lev,
     {
         conv_comp = 0; state_comp = 0; num_comp = 1;
         mol::compute_convective_fluxes(lev, fx, fy, fz, ro_g_in, state_comp, num_comp,
-                            ep_u_mac, ep_v_mac, ep_w_mac, nghost, covered_val, bc_types,
-                            bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi,
-                            ebfact, geom);
+                ep_u_mac, ep_v_mac, ep_w_mac, nghost, covered_val, bc_types, density_bcs,
+                bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi, ebfact, geom);
 
         EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes),
                              geom[lev], already_on_centroids);
@@ -127,9 +130,8 @@ mol::compute_convective_term (const int lev,
 
       conv_comp = 1; state_comp = 0; num_comp = 1;
         mol::compute_convective_fluxes(lev, fx, fy, fz, h_g_in, state_comp, num_comp,
-                            ep_u_mac, ep_v_mac, ep_w_mac, nghost, covered_val, bc_types,
-                            bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi,
-                            ebfact, geom);
+                ep_u_mac, ep_v_mac, ep_w_mac, nghost, covered_val, bc_types, enthalpy_bcs,
+                bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi, ebfact, geom);
 
         EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes),
                              geom[lev], already_on_centroids);
@@ -151,9 +153,8 @@ mol::compute_convective_term (const int lev,
 
       conv_comp = 2; state_comp = 0; num_comp = 1;
       mol::compute_convective_fluxes(lev, fx, fy, fz, trac_in, state_comp, num_comp,
-                            ep_u_mac, ep_v_mac, ep_w_mac, nghost, covered_val, bc_types,
-                            bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi,
-                            ebfact, geom);
+              ep_u_mac, ep_v_mac, ep_w_mac, nghost, covered_val, bc_types, tracer_bcs,
+              bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi, ebfact, geom);
 
 
         EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev], already_on_centroids);
@@ -181,9 +182,8 @@ mol::compute_convective_term (const int lev,
       num_comp = FLUID::nspecies;
 
       mol::compute_convective_fluxes(lev, fx, fy, fz, X_gk_in, state_comp, num_comp,
-                          ep_u_mac, ep_v_mac, ep_w_mac, nghost, covered_val, bc_types,
-                          bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi,
-                          ebfact, geom);
+              ep_u_mac, ep_v_mac, ep_w_mac, nghost, covered_val, bc_types, species_bcs,
+              bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi, ebfact, geom);
 
       EB_computeDivergence(conv_tmp, GetArrOfConstPtrs(fluxes), geom[lev], already_on_centroids);
 

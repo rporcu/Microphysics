@@ -21,7 +21,8 @@ mol::compute_convective_fluxes (const int lev,
                                 Vector< MultiFab* > const& ep_w_mac,
                                 const int  nghost,
                                 const Real covered_val,
-                                const GpuArray<int, 2> bc_types,
+                                const GpuArray<int, 3> bc_types,
+                                std::map<std::string, Gpu::DeviceVector<int>>& state_bcs,
                                 Array4<int const> const& bct_ilo,
                                 Array4<int const> const& bct_ihi,
                                 Array4<int const> const& bct_jlo,
@@ -32,13 +33,9 @@ mol::compute_convective_fluxes (const int lev,
                                 Vector<Geometry> geom)
 {
   // Get EB geometric info
-  Array< const MultiCutFab*,3> areafrac  =   ebfact->getAreaFrac();
+
   Array< const MultiCutFab*,3> facecent  =   ebfact->getFaceCent();
-  const amrex::MultiFab*       volfrac   = &(ebfact->getVolFrac());
-  const amrex::MultiCutFab*    bndrycent = &(ebfact->getBndryCent());
-
   auto const& flags = ebfact->getMultiEBCellFlagFab();
-
   const auto& cellcent = ebfact->getCentroid();
 
   // We do this here to avoid any confusion about the FAB setVal.
@@ -73,8 +70,6 @@ mol::compute_convective_fluxes (const int lev,
     EBCellFlagFab const& flagfab = flags[mfi];
     Array4<EBCellFlag const> const& flagarr = flagfab.const_array();
 
-    auto const typ = flagfab.getType(amrex::grow(bx,2));
-
     if (flagfab.getType(amrex::grow(bx,0)) != FabType::covered )
     {
       // No cut cells in tile + nghost-cell width halo -> use non-eb routine
@@ -83,7 +78,7 @@ mol::compute_convective_fluxes (const int lev,
         mol::compute_convective_fluxes(
                lev, domain_bx, xbx, ybx, zbx, ncomp, state_comp, state_fab,
                fx_fab, fy_fab, fz_fab, ep_u_mac_fab, ep_v_mac_fab, ep_w_mac_fab,
-               bc_types, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi);
+               bc_types, state_bcs, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi);
       }
       else
       {
@@ -99,7 +94,7 @@ mol::compute_convective_fluxes (const int lev,
                lev, domain_bx, xbx, ybx, zbx, ncomp, state_comp, state_fab,
                fx_fab, fy_fab, fz_fab, ep_u_mac_fab, ep_v_mac_fab, ep_w_mac_fab,
                flagarr, fcx_fab, fcy_fab, fcz_fab, ccc_fab,
-               bc_types, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi);
+               bc_types, state_bcs, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi);
       }
     }
   } // MFIter

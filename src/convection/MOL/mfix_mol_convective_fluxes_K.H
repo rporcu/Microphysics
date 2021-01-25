@@ -26,7 +26,8 @@ void compute_convective_fluxes (const int lev,
                                 Array4<Real const> const& ep_u_mac,
                                 Array4<Real const> const& ep_v_mac,
                                 Array4<Real const> const& ep_w_mac,
-                                const GpuArray<int, 2> bc_types,
+                                const GpuArray<int, 3> bc_types,
+                                std::map<std::string, Gpu::DeviceVector<int>>& state_bcs,
                                 Array4<int const> const& bct_ilo,
                                 Array4<int const> const& bct_ihi,
                                 Array4<int const> const& bct_jlo,
@@ -37,6 +38,9 @@ void compute_convective_fluxes (const int lev,
 
   constexpr int order = 2;
   constexpr Real small_vel = 1.e-10;
+
+  const int* dirichlet_bcs  = (state_bcs["Dirichlet"]).data();
+  const int  dirichlet_size = (state_bcs["Dirichlet"]).size();
 
   /*********************************************************************************
    *                                                                               *
@@ -54,7 +58,7 @@ void compute_convective_fluxes (const int lev,
   {
     ParallelFor(xbx, ncomp, [fx, ep_u_mac, state, state_comp, order, small_vel,
     check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi,
-    bc_types, bct_ilo,bct_ihi]
+    bc_types, dirichlet_bcs, dirichlet_size, bct_ilo, bct_ihi]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int* bct_data = bc_types.data();
@@ -66,27 +70,31 @@ void compute_convective_fluxes (const int lev,
       // In the case of MINF       we are using the prescribed Dirichlet value
       // In the case of PINF, POUT we are using the upwind value
 
-      bool extdir_ilo = aux::any_of(&bct_data[0], &bct_data[bct_size],
+      bool valid_bc_ilo = aux::any_of(&bct_data[0], &bct_data[bct_size],
                   aux::is_equal<int>(bct_ilo(domain_ilo-1,j,k,0)));
 
-      bool extdir_ihi = aux::any_of(&bct_data[0], &bct_data[bct_size],
+      bool valid_bc_ihi = aux::any_of(&bct_data[0], &bct_data[bct_size],
                   aux::is_equal<int>(bct_ihi(domain_ihi+1,j,k,0)));
 
       int comp = n+state_comp;
 
       Real fx_val(0.);
 
-      if (i <= domain_ilo && extdir_ilo) {
+      if (i <= domain_ilo && valid_bc_ilo) {
         fx_val = state(domain_ilo-1,j,k,comp);
 
-      } else if (i >= domain_ihi+1 && extdir_ihi) {
+      } else if (i >= domain_ihi+1 && valid_bc_ihi) {
         fx_val = state(domain_ihi+1,j,k,comp);
 
       } else {
 
-        // Not sure this is needed.
-        extdir_ilo = extdir_ilo && check_extdir_ilo && (i-1 <= domain_ilo);
-        extdir_ihi = extdir_ihi && check_extdir_ihi && (i   >= domain_ihi);
+        bool extdir_ilo = check_extdir_ilo && (i-1 <= domain_ilo) &&
+          aux::any_of(&dirichlet_bcs[0], &dirichlet_bcs[dirichlet_size],
+                      aux::is_equal<int>(bct_ilo(domain_ilo-1,j,k,0)));
+
+        bool extdir_ihi = check_extdir_ihi && (i   >= domain_ihi) &&
+          aux::any_of(&dirichlet_bcs[0], &dirichlet_bcs[dirichlet_size],
+                      aux::is_equal<int>(bct_ihi(domain_ihi+1,j,k,0)));
 
         Real spls = state(i  ,j,k,comp) - 0.5 * amrex_calc_xslope_extdir
           (i  ,j,k,comp,order,state,extdir_ilo,extdir_ihi,domain_ilo,domain_ihi);
@@ -136,7 +144,7 @@ void compute_convective_fluxes (const int lev,
   {
     ParallelFor(ybx, ncomp, [fy, ep_v_mac, state, state_comp, order, small_vel,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi,
-    bc_types, bct_jlo,bct_jhi]
+    bc_types, dirichlet_bcs, dirichlet_size, bct_jlo, bct_jhi]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int* bct_data = bc_types.data();
@@ -147,26 +155,31 @@ void compute_convective_fluxes (const int lev,
       //
       // In the case of MINF       we are using the prescribed Dirichlet value
       // In the case of PINF, POUT we are using the upwind value
-      bool extdir_jlo = aux::any_of(&bct_data[0], &bct_data[bct_size],
+      bool valid_bc_jlo = aux::any_of(&bct_data[0], &bct_data[bct_size],
                   aux::is_equal<int>(bct_jlo(i,domain_jlo-1,k,0)));
 
-      bool extdir_jhi = aux::any_of(&bct_data[0], &bct_data[bct_size],
+      bool valid_bc_jhi = aux::any_of(&bct_data[0], &bct_data[bct_size],
                   aux::is_equal<int>(bct_jhi(i,domain_jhi+1,k,0)));
 
       int comp = n+state_comp;
 
       Real fy_val(0);
 
-      if (j <= domain_jlo && extdir_jlo) {
+      if (j <= domain_jlo && valid_bc_jlo) {
         fy_val = state(i,domain_jlo-1,k,comp);
 
-      } else if (j >= domain_jhi+1 && extdir_jhi) {
+      } else if (j >= domain_jhi+1 && valid_bc_jhi) {
         fy_val = state(i,domain_jhi+1,k,comp);
     }
       else {
 
-        extdir_jlo = extdir_jlo && check_extdir_jlo && (j-1 <= domain_jlo);
-        extdir_jhi = extdir_jhi && check_extdir_jhi && (j   >= domain_jhi);
+        bool extdir_jlo = check_extdir_jlo && (j-1 <= domain_jlo) &&
+          aux::any_of(&dirichlet_bcs[0], &dirichlet_bcs[dirichlet_size],
+                      aux::is_equal<int>(bct_jlo(i,domain_jlo-1,k,0)));
+
+        bool extdir_jhi = check_extdir_jhi && (j   >= domain_jlo) &&
+          aux::any_of(&dirichlet_bcs[0], &dirichlet_bcs[dirichlet_size],
+                      aux::is_equal<int>(bct_jhi(i,domain_jhi+1,k,0)));
 
         Real spls = state(i,j  ,k,comp) - 0.5 * amrex_calc_yslope_extdir
           (i,j  ,k,comp,order,state,extdir_jlo,extdir_jhi,domain_jlo,domain_jhi);
@@ -214,7 +227,7 @@ void compute_convective_fluxes (const int lev,
   {
     ParallelFor(zbx, ncomp, [fz, ep_w_mac, state, state_comp, order, small_vel,
     check_extdir_klo, check_extdir_khi, domain_klo, domain_khi,
-    bc_types, bct_klo,bct_khi]
+    bc_types, dirichlet_bcs, dirichlet_size, bct_klo, bct_khi]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int* bct_data = bc_types.data();
@@ -226,26 +239,31 @@ void compute_convective_fluxes (const int lev,
       // In the case of MINF       we are using the prescribed Dirichlet value
       // In the case of PINF, POUT we are using the upwind value
 
-      bool extdir_klo = aux::any_of(&bct_data[0], &bct_data[bct_size],
+      bool valid_bc_klo = aux::any_of(&bct_data[0], &bct_data[bct_size],
                   aux::is_equal<int>(bct_klo(i,j,domain_klo-1,0)));
 
-      bool extdir_khi = aux::any_of(&bct_data[0], &bct_data[bct_size],
+      bool valid_bc_khi = aux::any_of(&bct_data[0], &bct_data[bct_size],
                   aux::is_equal<int>(bct_khi(i,j,domain_khi+1,0)));
 
       int comp = n+state_comp;
 
       Real fz_val(0);
 
-      if (k <= domain_klo && extdir_klo) {
+      if (k <= domain_klo && valid_bc_klo) {
         fz_val = state(i,j,domain_klo-1,comp);
 
-      } else if (k >= domain_khi+1 && extdir_khi) {
+      } else if (k >= domain_khi+1 && valid_bc_khi) {
         fz_val = state(i,j,domain_khi+1,comp);
       }
       else {
 
-        extdir_klo = extdir_klo && check_extdir_klo and (k-1 <= domain_klo);
-        extdir_khi = extdir_khi && check_extdir_khi and (k   >= domain_khi);
+        bool extdir_klo = check_extdir_klo && (k-1 <= domain_klo) &&
+          aux::any_of(&dirichlet_bcs[0], &dirichlet_bcs[dirichlet_size],
+                      aux::is_equal<int>(bct_klo(i,j,domain_klo-1,0)));
+
+        bool extdir_khi = check_extdir_khi && (k   >= domain_khi) &&
+          aux::any_of(&dirichlet_bcs[0], &dirichlet_bcs[dirichlet_size],
+                      aux::is_equal<int>(bct_khi(i,j,domain_khi+1,0)));
 
         Real state_pls = state(i,j,k  ,comp) - 0.5 * amrex_calc_zslope_extdir
           (i,j,k  ,comp,order,state,extdir_klo,extdir_khi,domain_klo,domain_khi);

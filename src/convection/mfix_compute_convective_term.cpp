@@ -136,14 +136,15 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
       fy[lev]->setVal(covered_val);
       fz[lev]->setVal(covered_val);
 
-      const GpuArray<int, 2> bc_types =
-        {bc_list.get_minf(), bc_list.get_pinf()};
+      const GpuArray<int, 3> bc_types =
+        {bc_list.get_minf(), bc_list.get_pout(), bc_list.get_pinf()};
 
       mol::compute_convective_term(lev, grids, dmap[lev], conv_u_in, conv_s_in, conv_X_in,
                                    advect_density, advect_enthalpy, advect_tracer, advect_fluid_species,
                                    fx, fy, fz, vel_in, ep_g_in, ep_u_mac, ep_v_mac, ep_w_mac,
                                    ro_g_in, h_g_in, trac_in, X_gk_in,
-                                   bc_types,
+                                   bc_types, m_vel_g_bc_types, m_ro_g_bc_types,
+                                   m_T_g_bc_types, m_trac_g_bc_types, m_X_gk_bc_types,
                                    bc_ilo[lev]->array(), bc_ihi[lev]->array(),
                                    bc_jlo[lev]->array(), bc_jhi[lev]->array(),
                                    bc_klo[lev]->array(), bc_khi[lev]->array(),
