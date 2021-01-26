@@ -8,7 +8,6 @@ using namespace amrex;
 
 namespace mol {
 
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void predict_vels_on_faces (Box const& domain_box,
                             Box const& ubx,
                             Box const& vbx,

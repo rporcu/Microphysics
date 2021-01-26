@@ -11,7 +11,6 @@ using namespace aux;
 
 namespace mol {
 
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void compute_convective_fluxes (const int lev,
                                 Box const& domain_box,
                                 Box const& xbx,
