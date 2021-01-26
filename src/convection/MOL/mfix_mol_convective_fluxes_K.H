@@ -147,7 +147,7 @@ void compute_convective_fluxes (const int lev,
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int* bct_data = bc_types.data();
-      const int bct_size = bc_types.size();
+      const int  bct_size = bc_types.size();
 
       //
       // South face
@@ -230,7 +230,7 @@ void compute_convective_fluxes (const int lev,
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int* bct_data = bc_types.data();
-      const int bct_size = bc_types.size();
+      const int  bct_size = bc_types.size();
 
       //
       // Bottom face

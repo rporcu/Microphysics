@@ -44,9 +44,6 @@ void compute_convective_fluxes_eb (const int lev,
 {
   constexpr Real my_huge = 1.e200;
 
-  const int* bct_data = bc_types.data();
-  const int  bct_size = bc_types.size();
-
   const int* dirichlet_bcs  = (state_bcs["Dirichlet"]).data();
   const int  dirichlet_size = (state_bcs["Dirichlet"]).size();
 
@@ -67,7 +64,6 @@ void compute_convective_fluxes_eb (const int lev,
   const bool check_extdir = check_extdir_ilo or check_extdir_ihi or
                             check_extdir_jlo or check_extdir_jhi or
                             check_extdir_klo or check_extdir_khi;
-
   /*********************************************************************************
    *                                                                               *
    *                                  x-direction                                  *
@@ -80,13 +76,15 @@ void compute_convective_fluxes_eb (const int lev,
     check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi, bct_ilo, bct_ihi,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi, bct_jlo, bct_jhi,
     check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bct_klo, bct_khi,
-    bct_data,bct_size, dirichlet_bcs, dirichlet_size]
+    bc_types, dirichlet_bcs, dirichlet_size]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       Real sx;
 
-      if( flag(i,j,k).isConnected(-1,0,0) )
-      {
+      if( flag(i,j,k).isConnected(-1,0,0) ) {
+
+        const int* bct_data = bc_types.data();
+        const int  bct_size = bc_types.size();
 
         bool valid_bc_ilo = aux::any_of(&bct_data[0], &bct_data[bct_size],
                     aux::is_equal<int>(bct_ilo(domain_ilo-1,j,k,0)));
@@ -257,13 +255,16 @@ void compute_convective_fluxes_eb (const int lev,
     check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi, bct_ilo, bct_ihi,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi, bct_jlo, bct_jhi,
     check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bct_klo, bct_khi,
-    bct_data, bct_size, dirichlet_bcs, dirichlet_size]
+    bc_types, dirichlet_bcs, dirichlet_size]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
 
       Real sy;
 
       if( flag(i,j,k).isConnected(0,-1,0) ) {
+
+        const int* bct_data = bc_types.data();
+        const int  bct_size = bc_types.size();
 
         bool valid_bc_jlo = aux::any_of(&bct_data[0], &bct_data[bct_size],
                     aux::is_equal<int>(bct_jlo(i,domain_jlo-1,k,0)));
@@ -429,13 +430,16 @@ void compute_convective_fluxes_eb (const int lev,
     check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi, bct_ilo, bct_ihi,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi, bct_jlo, bct_jhi,
     check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bct_klo, bct_khi,
-    bct_data, bct_size, dirichlet_bcs, dirichlet_size]
+    bc_types, dirichlet_bcs, dirichlet_size]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
 
       Real sz;
 
       if( flag(i,j,k).isConnected(0,0,-1) ) {
+
+        const int* bct_data = bc_types.data();
+        const int  bct_size = bc_types.size();
 
         bool valid_bc_klo = aux::any_of(&bct_data[0], &bct_data[bct_size],
                       aux::is_equal<int>(bct_klo(i,j,domain_klo-1,0)));
@@ -588,12 +592,7 @@ void compute_convective_fluxes_eb (const int lev,
     });
 
   }
-
-
-
-
 }
 
 }//end mol namespace
-
 #endif
