@@ -64,15 +64,17 @@ struct TrilinearDeposition
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
                    amrex::Array4<const EBCellFlag> const& flags,
-                   const MFIXParticleContainer::ParticleType& p,
-                   int& i, int& j, int& k,
+                   const amrex::RealVect& pos,
+                   const amrex::Real radius,
+                   int& i,
+                   int& j,
+                   int& k,
                    amrex::GpuArray<amrex::GpuArray<amrex::GpuArray<amrex::Real,2>,2>,2>& weights,
                    const amrex::Real) const
   {
-
-    amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
-    amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
-    amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
+    amrex::Real x = (pos[0] - plo[0]) * dxi[0] + 0.5;
+    amrex::Real y = (pos[1] - plo[1]) * dxi[1] + 0.5;
+    amrex::Real z = (pos[2] - plo[2]) * dxi[2] + 0.5;
 
     i = static_cast<int>(amrex::Math::floor(x));
     j = static_cast<int>(amrex::Math::floor(y));
@@ -108,9 +110,7 @@ struct TrilinearDeposition
       for (int jj = 0; jj <= 1; ++jj)
         for (int kk = 0; kk <= 1; ++kk)
           weights[ii][jj][kk] /= total_weight;
-
   }
-
 };
 
 
@@ -121,15 +121,17 @@ struct TrilinearDPVMSquareDeposition
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
                    amrex::Array4<const EBCellFlag> const& flags,
-                   const MFIXParticleContainer::ParticleType& p,
-                   int& i, int& j, int& k,
+                   const amrex::RealVect& pos,
+                   const amrex::Real radius,
+                   int& i,
+                   int& j,
+                   int& k,
                    amrex::GpuArray<amrex::GpuArray<amrex::GpuArray<amrex::Real,2>,2>,2>& weights,
                    const amrex::Real deposition_scale_factor) const
   {
-
-    amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
-    amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
-    amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
+    amrex::Real x = (pos[0] - plo[0]) * dxi[0] + 0.5;
+    amrex::Real y = (pos[1] - plo[1]) * dxi[1] + 0.5;
+    amrex::Real z = (pos[2] - plo[2]) * dxi[2] + 0.5;
 
     i = static_cast<int>(amrex::Math::floor(x));
     j = static_cast<int>(amrex::Math::floor(y));
@@ -139,15 +141,14 @@ struct TrilinearDPVMSquareDeposition
     amrex::GpuArray<amrex::Real,2> wy;
     amrex::GpuArray<amrex::Real,2> wz;
 
-    amrex::Real rp  = amrex::max(dx[0], p.rdata(realData::radius) *
-                                 deposition_scale_factor);
+    amrex::Real rp  = amrex::max(dx[0], radius * deposition_scale_factor);
 
     amrex::Real i4rp3 = 1./(4.*rp*rp*rp);
 
     amrex::Real hh;
 
     if ( i == static_cast<int>(amrex::Math::floor(x-0.5)) ) {
-      hh = (i*dx[0]) - p.pos(0) + rp;
+      hh = (i*dx[0]) - pos[0] + rp;
 
       wx[0] = ( hh < 0.0 ) ? 0.0 :
         (hh*hh*(3.*rp - hh)) * i4rp3;
@@ -155,7 +156,7 @@ struct TrilinearDPVMSquareDeposition
       wx[1] = 1.0 - wx[0];
 
     } else {
-      hh = p.pos(0) + rp - (i*dx[0]);
+      hh = pos[0] + rp - (i*dx[0]);
 
       wx[1] = ( hh < 0.0 ) ? 0.0 :
         (hh*hh*(3.*rp - hh)) * i4rp3;
@@ -164,7 +165,7 @@ struct TrilinearDPVMSquareDeposition
     }
 
     if ( j == static_cast<int>(amrex::Math::floor(y-0.5)) ) {
-      hh = (j*dx[1]) - p.pos(1) + rp;
+      hh = (j*dx[1]) - pos[1] + rp;
 
       wy[0] = ( hh < 0.0 ) ? 0.0 :
         (hh*hh*(3.*rp - hh)) * i4rp3;
@@ -172,7 +173,7 @@ struct TrilinearDPVMSquareDeposition
       wy[1] = 1.0 - wy[0];
 
     } else {
-      hh = p.pos(1) + rp - (j*dx[1]);
+      hh = pos[1] + rp - (j*dx[1]);
 
       wy[1] = ( hh < 0.0 ) ? 0.0 :
         (hh*hh*(3.*rp - hh)) * i4rp3;
@@ -182,7 +183,7 @@ struct TrilinearDPVMSquareDeposition
 
 
     if ( k == static_cast<int>(amrex::Math::floor(z-0.5)) ) {
-      hh = (k*dx[2]) - p.pos(2) + rp;
+      hh = (k*dx[2]) - pos[2] + rp;
 
       wz[0] = ( hh < 0.0 ) ? 0.0 :
         (hh*hh*(3.*rp - hh)) * i4rp3;
@@ -190,7 +191,7 @@ struct TrilinearDPVMSquareDeposition
       wz[1] = 1.0 - wz[0];
 
     } else {
-      hh = p.pos(2) + rp - (k*dx[2]);
+      hh = pos[2] + rp - (k*dx[2]);
 
       wz[1] = ( hh < 0.0 ) ? 0.0 :
         (hh*hh*(3.*rp - hh)) * i4rp3;
@@ -217,10 +218,7 @@ struct TrilinearDPVMSquareDeposition
       for (int jj = 0; jj <= 1; ++jj)
         for (int kk = 0; kk <= 1; ++kk)
           weights[ii][jj][kk] /= total_weight;
-
-
   }
-
 };
 
 
@@ -231,15 +229,17 @@ struct TrueDPVMDeposition
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
                    amrex::Array4<const EBCellFlag> const& flags,
-                   const MFIXParticleContainer::ParticleType& p,
-                   int& i, int& j, int& k,
+                   const amrex::RealVect& pos,
+                   const amrex::Real radius,
+                   int& i,
+                   int& j,
+                   int& k,
                    amrex::GpuArray<amrex::GpuArray<amrex::GpuArray<amrex::Real,2>,2>,2>& weights,
                    const amrex::Real deposition_scale_factor) const
   {
-
-    amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
-    amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
-    amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
+    amrex::Real x = (pos[0] - plo[0]) * dxi[0] + 0.5;
+    amrex::Real y = (pos[1] - plo[1]) * dxi[1] + 0.5;
+    amrex::Real z = (pos[2] - plo[2]) * dxi[2] + 0.5;
 
     i = static_cast<int>(amrex::Math::floor(x));
     j = static_cast<int>(amrex::Math::floor(y));
@@ -249,8 +249,7 @@ struct TrueDPVMDeposition
     amrex::GpuArray<amrex::Real,2> wy;
     amrex::GpuArray<amrex::Real,2> wz;
 
-    amrex::Real rp  = amrex::max(dx[0], p.rdata(realData::radius) *
-                                 deposition_scale_factor);
+    amrex::Real rp  = amrex::max(dx[0], radius * deposition_scale_factor);
 
     // This gives us the i,j,k of the cell containing the centriod
     // of the particle.
@@ -263,7 +262,7 @@ struct TrueDPVMDeposition
     if ( i == ip ) {
 
       // particle sits on low side of i index
-      overlap[0] = amrex::max(0.0, (i*dx[0]) - p.pos(0) + rp);
+      overlap[0] = amrex::max(0.0, (i*dx[0]) - pos[0] + rp);
 
       wx[0] = (overlap[0] == 0.0) ? 0.0 : fface(overlap[0], rp);
       wx[1] = 1.0 - wx[0];
@@ -271,7 +270,7 @@ struct TrueDPVMDeposition
     } else {
 
       // particle sits on high side of i-1 index
-      overlap[0] = amrex::max(0.0, p.pos(0) + rp - (i*dx[0]));
+      overlap[0] = amrex::max(0.0, pos[0] + rp - (i*dx[0]));
 
       wx[1] = (overlap[0] == 0.0) ? 0.0 : fface(overlap[0], rp);
       wx[0] = 1.0 - wx[1];
@@ -281,7 +280,7 @@ struct TrueDPVMDeposition
     if ( j == jp ) {
 
       // particle sits on low side of j index
-      overlap[1] = amrex::max(0.0, (j*dx[1]) - p.pos(1) + rp);
+      overlap[1] = amrex::max(0.0, (j*dx[1]) - pos[1] + rp);
 
       wy[0] = (overlap[1] == 0.0) ? 0.0 : fface(overlap[1], rp);
       wy[1] = 1.0 - wy[0];
@@ -289,7 +288,7 @@ struct TrueDPVMDeposition
     } else {
 
       // particle sits on high side of j-1 index
-      overlap[1] = amrex::max(0.0, p.pos(1) + rp - (j*dx[1]));
+      overlap[1] = amrex::max(0.0, pos[1] + rp - (j*dx[1]));
 
       wy[1] = (overlap[1] == 0.0) ? 0.0 : fface(overlap[1], rp);
       wy[0] = 1.0 - wy[1];
@@ -300,7 +299,7 @@ struct TrueDPVMDeposition
     if ( k == kp ) {
 
       // particle sits on low side of k index
-      overlap[2] = amrex::max(0.0, (k*dx[2]) - p.pos(2) + rp);
+      overlap[2] = amrex::max(0.0, (k*dx[2]) - pos[2] + rp);
 
       wz[0] = (overlap[2] == 0.0) ? 0.0 : fface(overlap[2], rp);
       wz[1] = 1.0 - wz[0];
@@ -308,19 +307,17 @@ struct TrueDPVMDeposition
     } else {
 
       // particle sits on high side of k-1 index
-      overlap[2] = amrex::max(0.0, p.pos(2) + rp - (k*dx[2]));
+      overlap[2] = amrex::max(0.0, pos[2] + rp - (k*dx[2]));
 
       wz[1] = (overlap[2] == 0.0) ? 0.0 : fface(overlap[2], rp);
       wz[0] = 1.0 - wz[1];
 
     }
 
-
     int cuts = 0;
     for ( int ii=0; ii<=2; ++ii) {
       if( overlap[ii] != 0. ) cuts += 1;
     }
-
 
     const int i0 = i-ip;
     const int i1 = amrex::Math::abs(1-i0);
@@ -328,7 +325,6 @@ struct TrueDPVMDeposition
     const int j1 = amrex::Math::abs(1-j0);
     const int k0 = k-kp;
     const int k1 = amrex::Math::abs(1-k0);
-
 
     // if ( cuts == 0 || cuts == 1 ) we don't need to do anything as the
     // calculation of the initial 'weights' makes that all work out.
@@ -439,15 +435,17 @@ struct CentroidDeposition
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
                    amrex::Array4<const EBCellFlag> const& flags,
-                   const MFIXParticleContainer::ParticleType& p,
-                   int& i, int& j, int& k,
+                   const amrex::RealVect& pos,
+                   const amrex::Real radius,
+                   int& i,
+                   int& j,
+                   int& k,
                    amrex::GpuArray<amrex::GpuArray<amrex::GpuArray<amrex::Real,2>,2>,2>& weights,
                    const amrex::Real deposition_scale_factor) const
   {
-
-    amrex::Real x = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
-    amrex::Real y = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
-    amrex::Real z = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
+    amrex::Real x = (pos[0] - plo[0]) * dxi[0] + 0.5;
+    amrex::Real y = (pos[1] - plo[1]) * dxi[1] + 0.5;
+    amrex::Real z = (pos[2] - plo[2]) * dxi[2] + 0.5;
 
     i = static_cast<int>(amrex::Math::floor(x));
     j = static_cast<int>(amrex::Math::floor(y));
@@ -482,6 +480,5 @@ struct CentroidDeposition
       for (int jj = 0; jj <= 1; ++jj)
         for (int kk = 0; kk <= 1; ++kk)
           weights[ii][jj][kk] = wx[ii]*wy[jj]*wz[kk];
-
   }
 };

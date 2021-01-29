@@ -179,6 +179,10 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
       {
         auto& particles = pti.GetArrayOfStructs();
+
+        auto& soa = pti.GetStructOfArrays();
+        auto p_realarray = soa.realarray();
+
         const int np = particles.size();
 
         Box bx = pti.tilebox();
@@ -202,7 +206,7 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
             amrex::ParallelFor(np,
-              [particles_ptr,interp_array,ro_array,mu_array,kg_array,cp_array,
+              [particles_ptr,p_realarray,interp_array,ro_array,mu_array,kg_array,cp_array,
                DragFunc, ConvectionCoeff,plo,dxi,
                local_cg_dem=DEM::cg_dem, local_advect_enthalpy=advect_enthalpy]
               AMREX_GPU_DEVICE (int ip) noexcept
@@ -229,15 +233,15 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
               Real  ro = ro_array(iloc,jloc,kloc);
               Real  mu = mu_array(iloc,jloc,kloc);
 
-              Real rad = particle.rdata(realData::radius);
-              Real vol = particle.rdata(realData::volume);
+              Real rad = p_realarray[SoArealData::radius][ip];
+              Real vol = p_realarray[SoArealData::volume][ip];
 
               int p_id = particle.id();
 
               RealVect pvel(0.);
-              pvel[0] = particle.rdata(realData::velx);
-              pvel[1] = particle.rdata(realData::vely);
-              pvel[2] = particle.rdata(realData::velz);
+              pvel[0] = p_realarray[SoArealData::velx][ip];
+              pvel[1] = p_realarray[SoArealData::vely][ip];
+              pvel[2] = p_realarray[SoArealData::velz][ip];
 
               Real rop_g = ro * ep;
 
@@ -250,19 +254,19 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
               Real dp = 2.0*rad;
               if (local_cg_dem)
               {
-                 dp = dp/std::cbrt(particle.rdata(realData::statwt));
+                 dp = dp/std::cbrt(p_realarray[SoArealData::statwt][ip]);
               }
               Real phis = 1.0 - ep;
               Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dp, dp, phis,
                  velfp[0], velfp[1], velfp[2], iloc, jloc, kloc, p_id);
 
-              particle.rdata(realData::dragcoeff) = beta;
+              p_realarray[SoArealData::dragcoeff][ip] = beta;
 
               if(local_advect_enthalpy){
                 Real kg = kg_array(iloc,jloc,kloc);
                 Real cp = cp_array(iloc,jloc,kloc);
                 Real gamma = ConvectionCoeff(ep, mu, kg, cp, rop_g, vrel, dp, iloc, jloc, kloc, p_id);
-                particle.rdata(realData::convection) = 4.0*M_PI*rad*rad*gamma;
+                p_realarray[SoArealData::convection][ip] = 4.0*M_PI*rad*rad*gamma;
               }
 
             });
@@ -279,7 +283,7 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
             const auto& apz_fab = areafrac[2]->array(pti);
 
             amrex::ParallelFor(np,
-              [particles_ptr,interp_array,ro_array,mu_array,kg_array,cp_array,
+              [particles_ptr,p_realarray,interp_array,ro_array,mu_array,kg_array,cp_array,
                DragFunc, ConvectionCoeff,
                plo,dx,dxi,flags_array,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                local_cg_dem=DEM::cg_dem,local_advect_enthalpy=advect_enthalpy]
@@ -295,7 +299,7 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
               // No drag force for particles in covered cells.
               if (flags_array(ip,jp,kp).isCovered() ){
 
-                particle.rdata(realData::dragx) = 0.;
+                p_realarray[SoArealData::dragcoeff][pid] = 0.;
 
               // Cut or regular cell and none of the cells in the stencil is
               // covered (Note we can't assume regular cell has no covered
@@ -344,15 +348,15 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
                 Real  ro = ro_array(ip,jp,kp);
                 Real  mu = mu_array(ip,jp,kp);
 
-                Real rad = particle.rdata(realData::radius);
-                Real vol = particle.rdata(realData::volume);
+                Real rad = p_realarray[SoArealData::radius][pid];
+                Real vol = p_realarray[SoArealData::volume][pid];
 
                 int p_id = particle.id();
 
                 RealVect pvel(0.);
-                pvel[0] = particle.rdata(realData::velx);
-                pvel[1] = particle.rdata(realData::vely);
-                pvel[2] = particle.rdata(realData::velz);
+                pvel[0] = p_realarray[SoArealData::velx][pid];
+                pvel[1] = p_realarray[SoArealData::vely][pid];
+                pvel[2] = p_realarray[SoArealData::velz][pid];
 
                 Real rop_g = ro * ep;
                 RealVect vslp(0.);
@@ -364,20 +368,20 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
                 Real dp = 2.0*rad;
                 if (local_cg_dem)
                 {
-                   dp = dp/std::cbrt(particle.rdata(realData::statwt));
+                   dp = dp/std::cbrt(p_realarray[SoArealData::statwt][pid]);
                 }
                 Real phis = 1.0 - ep;
                 Real beta = vol*DragFunc(ep, mu, rop_g, vrel, dp, dp, phis,
                                          velfp[0], velfp[1], velfp[2],
                                          ip, jp, kp, p_id);
 
-                particle.rdata(realData::dragcoeff) = beta;
+                p_realarray[SoArealData::dragcoeff][pid] = beta;
 
               if(local_advect_enthalpy){
                 Real kg = kg_array(ip,jp,kp);
                 Real cp = cp_array(ip,jp,kp);
                 Real gamma = ConvectionCoeff(ep, mu, kg, cp, rop_g, vrel, dp, ip, jp, kp, p_id);
-                particle.rdata(realData::convection) = 4.0*M_PI*rad*rad*gamma;
+                p_realarray[SoArealData::convection][pid] = 4.0*M_PI*rad*rad*gamma;
               }
 
               } // Not covered

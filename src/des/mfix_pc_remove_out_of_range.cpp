@@ -35,6 +35,10 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
             {
                 auto& aos = pti.GetArrayOfStructs();
                 ParticleType* pstruct = aos().dataPtr();
+
+                auto& soa = pti.GetStructOfArrays();
+                auto p_realarray = soa.realarray();
+
                 const int np = pti.numParticles();
 
                 if ((*flags)[pti].getType(bx) == FabType::covered)
@@ -50,7 +54,8 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                     const auto& flag_fab =  flags->array(pti);
                     const auto&  phi_fab = ls_phi->array(pti);
 
-                    amrex::ParallelFor(np, [pstruct,plo,dx,flag_fab,dx_ls,phi_fab,cg_dem=DEM::cg_dem]
+                    amrex::ParallelFor(np, [pstruct,p_realarray,plo,dx,flag_fab,
+                        dx_ls,phi_fab,cg_dem=DEM::cg_dem]
                       AMREX_GPU_DEVICE (int ip) noexcept
                     {
                         ParticleType& p = pstruct[ip];
@@ -92,12 +97,12 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                                             + phi_fab(i+1, j,   k+1) * wx_hi * wy_lo * wz_hi
                                             + phi_fab(i+1, j+1, k+1) * wx_hi * wy_hi * wz_hi;
 
-                            amrex::Real radius = p.rdata(realData::radius) *
-                                std::cbrt(p.rdata(realData::statwt));
+                            amrex::Real radius = p_realarray[SoArealData::radius][ip] *
+                                std::cbrt(p_realarray[SoArealData::statwt][ip]);
 
                             if (cg_dem)
                             {
-                               radius = radius/std::cbrt(p.rdata(realData::statwt));
+                               radius = radius/std::cbrt(p_realarray[SoArealData::statwt][ip]);
                             }
 
                             if (phi_interp < radius)
@@ -110,11 +115,11 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                                            << p.pos(0) << " "
                                            << p.pos(1) << " "
                                            << p.pos(2) << " "
-                                           << p.rdata(realData::radius)  << " "
-                                           << p.rdata(realData::density) << " "
-                                           << p.rdata(realData::velx)    << " "
-                                           << p.rdata(realData::vely)    << " "
-                                           << p.rdata(realData::velz) << std::endl;
+                                           << p_realarray[SoArealData::radius][ip]  << " "
+                                           << p_realarray[SoArealData::density][ip] << " "
+                                           << p_realarray[SoArealData::velx][ip]    << " "
+                                           << p_realarray[SoArealData::vely][ip]    << " "
+                                           << p_realarray[SoArealData::velz][ip] << std::endl;
                             }
 #endif
                         }

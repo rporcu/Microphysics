@@ -167,9 +167,9 @@ mfix::mfix_calc_chem_txfr (const Real time,
   const int InvalidIdx = -1; //TODO define this somewhere else
 
   // Particles indexes
-  const int idx_X = speciesData::X_sn*nspecies_s;
+  const int idx_X = SoAspeciesData::X_sn*nspecies_s;
 
-  const int idx_G = speciesData::count*nspecies_s + reactionsData::G_sn_pg_q*nreactions;
+  const int idx_G = SoAspeciesData::count*nspecies_s + SoAreactionsData::G_sn_pg_q*nreactions;
 
   Gpu::synchronize();
 
@@ -276,6 +276,9 @@ mfix::mfix_calc_chem_txfr (const Real time,
           auto& particles = pti.GetArrayOfStructs();
           MFIXParticleContainer::ParticleType* pstruct = particles().dataPtr();
 
+          auto& soa = pti.GetStructOfArrays();
+          auto p_realarray = soa.realarray();
+
           const int np = particles.size();
 
           Box bx = pti.tilebox();
@@ -295,7 +298,7 @@ mfix::mfix_calc_chem_txfr (const Real time,
             if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
             {
               amrex::ParallelFor(np,
-                [pstruct,interp_array,RRatesFunc,plo,dxi,ptile_data,
+                [pstruct,p_realarray,interp_array,RRatesFunc,plo,dxi,ptile_data,
                  nspecies_g,nspecies_s,nreactions,interp_comp,Solid,
                  p_MW_sn,idx_X,idx_G,p_MW_gk,p_species_id_s,p_species_id_g,
                  p_reactants_id,p_reactants_coeffs,p_reactants_phases,
@@ -344,8 +347,8 @@ mfix::mfix_calc_chem_txfr (const Real time,
 
                 Real ep_s = 1. - ep_g;
 
-                Real ro_s = particle.rdata(realData::mass) /
-                  particle.rdata(realData::volume);
+                Real ro_s = p_realarray[SoArealData::mass][p_id] /
+                  p_realarray[SoArealData::volume][p_id];
 
                 RRatesFunc(R_q.data(), nreactions, p_nreactants, p_nproducts,
                     p_reactants_id, p_reactants_coeffs, p_reactants_phases,
@@ -416,7 +419,7 @@ mfix::mfix_calc_chem_txfr (const Real time,
               const auto& apz_fab = areafrac[2]->array(pti);
 
               amrex::ParallelFor(np,
-                [pstruct,interp_array,RRatesFunc,plo,dx,dxi,flags_array,
+                [pstruct,p_realarray,interp_array,RRatesFunc,plo,dx,dxi,flags_array,
                  ccent_fab,bcent_fab,apx_fab,apy_fab, apz_fab,nspecies_s,
                  ptile_data,interp_comp,nspecies_g,nreactions,p_species_id_s,
                  p_species_id_g,p_types,p_phases,p_nphases,p_products_id,
@@ -509,8 +512,8 @@ mfix::mfix_calc_chem_txfr (const Real time,
 
                   Real ep_s = 1. - ep_g;
 
-                  Real ro_s = particle.rdata(realData::mass) /
-                    particle.rdata(realData::volume);
+                  Real ro_s = p_realarray[SoArealData::mass][p_id] /
+                    p_realarray[SoArealData::volume][p_id];
 
                   RRatesFunc(R_q.data(), nreactions, p_nreactants, p_nproducts,
                       p_reactants_id, p_reactants_coeffs, p_reactants_phases,

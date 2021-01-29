@@ -349,6 +349,9 @@ mfix::mfix_calc_txfr_particle (Real time)
         auto& particles = pti.GetArrayOfStructs();
         MFIXParticleContainer::ParticleType* pstruct = particles().dataPtr();
 
+        auto& soa = pti.GetStructOfArrays();
+        auto p_realarray = soa.realarray();
+
         const int np = particles.size();
 
         Box bx = pti.tilebox ();
@@ -371,7 +374,7 @@ mfix::mfix_calc_txfr_particle (Real time)
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
             amrex::ParallelFor(np,
-              [pstruct,interp_array,gp0_dev,plo,dxi,pmult,
+              [pstruct,p_realarray,interp_array,gp0_dev,plo,dxi,pmult,
               local_advect_enthalpy=advect_enthalpy]
               AMREX_GPU_DEVICE (int pid) noexcept
               {
@@ -383,29 +386,29 @@ mfix::mfix_calc_txfr_particle (Real time)
                 trilinear_interp(particle.pos(), &interp_loc[0],
                                  interp_array, plo, dxi, interp_comp);
 
-                Real pbeta = particle.rdata(realData::dragcoeff);
+                Real pbeta = p_realarray[SoArealData::dragcoeff][pid];
+                Real pvol = p_realarray[SoArealData::volume][pid];
 
                 // Particle drag calculation.  We multiply the particle velocity
                 // by "pmult" so that DEM uses the slip velocity. For PIC we
                 // only want the fluid velocity as it uses a pseudo implicit
                 // slip velocity for parcels.
-                particle.rdata(realData::dragx) =
-                  pbeta * ( interp_loc[0] - pmult*particle.rdata(realData::velx) ) -
-                  (interp_loc[3] + gp0_dev[0]) * particle.rdata(realData::volume);
+                p_realarray[SoArealData::dragx][pid] =
+                  pbeta * ( interp_loc[0] - pmult*p_realarray[SoArealData::velx][pid] ) -
+                  (interp_loc[3] + gp0_dev[0]) * pvol;
 
-                particle.rdata(realData::dragy) =
-                  pbeta * ( interp_loc[1] - pmult*particle.rdata(realData::vely) ) -
-                  (interp_loc[4] + gp0_dev[1]) * particle.rdata(realData::volume);
+                p_realarray[SoArealData::dragy][pid] =
+                  pbeta * ( interp_loc[1] - pmult*p_realarray[SoArealData::vely][pid] ) -
+                  (interp_loc[4] + gp0_dev[1]) * pvol;
 
-                particle.rdata(realData::dragz) =
-                  pbeta * ( interp_loc[2] - pmult*particle.rdata(realData::velz) ) -
-                  (interp_loc[5] + gp0_dev[2]) * particle.rdata(realData::volume);
-
+                p_realarray[SoArealData::dragz][pid] =
+                  pbeta * ( interp_loc[2] - pmult*p_realarray[SoArealData::velz][pid] ) -
+                  (interp_loc[5] + gp0_dev[2]) * pvol;
 
                 if(local_advect_enthalpy) {
-                  Real pgamma = particle.rdata(realData::convection);
-                  particle.rdata(realData::convection) =
-                    pgamma * ( interp_loc[6] - particle.rdata(realData::temperature) );
+                  Real pgamma = p_realarray[SoArealData::convection][pid];
+                  p_realarray[SoArealData::convection][pid] =
+                    pgamma * ( interp_loc[6] - p_realarray[SoArealData::temperature][pid] );
                 }
 
               });
@@ -423,7 +426,7 @@ mfix::mfix_calc_txfr_particle (Real time)
             const auto& apz_fab = areafrac[2]->array(pti);
 
             amrex::ParallelFor(np,
-              [pstruct,interp_array,flags_array,gp0_dev, pmult,
+              [pstruct,p_realarray,interp_array,flags_array,gp0_dev, pmult,
               plo,dx,dxi,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
               local_advect_enthalpy=advect_enthalpy]
               AMREX_GPU_DEVICE (int pid) noexcept
@@ -432,7 +435,7 @@ mfix::mfix_calc_txfr_particle (Real time)
                 GpuArray<Real, interp_comp> interp_loc;
 
                 MFIXParticleContainer::ParticleType& particle = pstruct[pid];
-                Real pbeta = particle.rdata(realData::dragcoeff);
+                Real pbeta = p_realarray[SoArealData::dragcoeff][pid];
 
                 // Cell containing particle centroid
                 const int ip = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0]));
@@ -442,9 +445,9 @@ mfix::mfix_calc_txfr_particle (Real time)
                 // The particle is in a covered cell.
                 if (flags_array(ip,jp,kp).isCovered())
                 {
-                  particle.rdata(realData::dragx) = 0.0;
-                  particle.rdata(realData::dragy) = 0.0;
-                  particle.rdata(realData::dragz) = 0.0;
+                  p_realarray[SoArealData::dragx][pid] = 0.0;
+                  p_realarray[SoArealData::dragy][pid] = 0.0;
+                  p_realarray[SoArealData::dragz][pid] = 0.0;
 
                 // Cut or regular cell and none of the cells in the stencil is covered
                 // (Note we can't assume regular cell has no covered cells in the stencil
@@ -481,24 +484,26 @@ mfix::mfix_calc_txfr_particle (Real time)
 
                   } // Cut cell
 
-                  particle.rdata(realData::dragx) =
-                    pbeta * ( interp_loc[0] - pmult*particle.rdata(realData::velx) ) -
-                    (interp_loc[3] + gp0_dev[0]) * particle.rdata(realData::volume);
+                  Real pvol = p_realarray[SoArealData::volume][pid];
 
-                  particle.rdata(realData::dragy) =
-                    pbeta * ( interp_loc[1] - pmult*particle.rdata(realData::vely) ) -
-                    (interp_loc[4] + gp0_dev[1]) * particle.rdata(realData::volume);
+                  p_realarray[SoArealData::dragx][pid] =
+                    pbeta * ( interp_loc[0] - pmult*p_realarray[SoArealData::velx][pid] ) -
+                    (interp_loc[3] + gp0_dev[0]) * pvol;
 
-                  particle.rdata(realData::dragz) =
-                    pbeta * ( interp_loc[2] - pmult*particle.rdata(realData::velz) ) -
-                    (interp_loc[5] + gp0_dev[2]) * particle.rdata(realData::volume);
+                  p_realarray[SoArealData::dragy][pid] =
+                    pbeta * ( interp_loc[1] - pmult*p_realarray[SoArealData::vely][pid] ) -
+                    (interp_loc[4] + gp0_dev[1]) * pvol;
+
+                  p_realarray[SoArealData::dragz][pid] =
+                    pbeta * ( interp_loc[2] - pmult*p_realarray[SoArealData::velz][pid] ) -
+                    (interp_loc[5] + gp0_dev[2]) * pvol;
 
                   if(local_advect_enthalpy) {
                     // gamma == (heat transfer coeff) * (particle surface area)
-                    Real pgamma = particle.rdata(realData::convection);
+                    Real pgamma = p_realarray[SoArealData::convection][pid];
 
-                    particle.rdata(realData::convection) =
-                      pgamma * ( interp_loc[6] - particle.rdata(realData::temperature) );
+                    p_realarray[SoArealData::convection][pid] =
+                      pgamma * ( interp_loc[6] - p_realarray[SoArealData::temperature][pid] );
                   }
 
                 } // Not covered

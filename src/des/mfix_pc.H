@@ -19,9 +19,23 @@
 #include <mfix_reactions_parms.H>
 #include <mfix_bc_list.H>
 
-struct realData
+struct AoSrealData
 {
-  enum { // Particle data stored in p.m_data
+  enum {
+    count = 0
+  };
+};
+
+struct AoSintData
+{
+  enum {
+    count = 0
+  };
+};
+
+struct SoArealData
+{
+  enum {
     radius = 0,
     volume,
     mass,
@@ -45,7 +59,7 @@ struct realData
   };
 };
 
-struct speciesData
+struct SoAspeciesData
 {
   enum { // Added Particle data stored in p.m_runtime_data
     X_sn = 0,
@@ -53,7 +67,7 @@ struct speciesData
   };
 };
 
-struct reactionsData
+struct SoAreactionsData
 {
   enum { // Added Particle data stored in p.m_runtime_data
     G_sn_pg_q = 0,
@@ -61,9 +75,9 @@ struct reactionsData
   };
 };
 
-struct intData
+struct SoAintData
 {
-  enum { // Particle data stored in p.m_data
+  enum {
     phase = 0,
     state,
     count
@@ -94,14 +108,18 @@ struct MFIXCheckPair
 };
 
 class MFIXParticleContainer final
-    : public amrex::NeighborParticleContainer<realData::count,intData::count>
+    : public amrex::NeighborParticleContainer<AoSrealData::count,AoSintData::count,
+                                              SoArealData::count,SoAintData::count>
 {
 public:
-    using MFIXParIter = amrex::ParIter<realData::count,intData::count,0,0>;
+    using MFIXParIter = amrex::ParIter<AoSrealData::count,AoSintData::count,
+                                       SoArealData::count,SoAintData::count>;
+    using MFIXParConstIter = amrex::ParConstIter<AoSrealData::count,AoSintData::count,
+                                                 SoArealData::count,SoAintData::count>;
 
     // Get number of particles
     int NumberOfParticles (MFIXParIter& pti)
-    { return pti.GetArrayOfStructs().size(); }
+    { return pti.numParticles(); }
 
     MFIXParticleContainer (amrex::AmrCore* amr_core);
 
@@ -287,8 +305,12 @@ public:
                               amrex::MultiFab* cost,
                               std::string& knapsack_weight_type);
 
+    void setSortingBinSizes (amrex::IntVect sorting_bin) { m_sorting_bin = sorting_bin;  }
+
   private:
     int nlev;
+
+    amrex::IntVect m_sorting_bin = amrex::IntVect::TheZeroVector();
 
     static int domain_bc[6];
 
@@ -312,8 +334,7 @@ public:
     void usr0_des ();
     void usr1_des ();
 
-    void usr2_des (int np,
-                   NeighborParticleContainer<realData::count, intData::count>::ParticleType*& particles);
+    void usr2_des (int np, ParticleTileType& particles);
 
     void usr3_des (int np,void*&);
 };

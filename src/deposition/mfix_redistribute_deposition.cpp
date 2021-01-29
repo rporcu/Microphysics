@@ -58,7 +58,7 @@ mfix::mfix_redistribute_deposition (int lev,
        Array4<const EBCellFlag> const& flags = (*flags_fab)[mfi].array();
        Array4<const Real> const& vfrac = volfrac->array(mfi);
 
-       Array4<Real> const&      ep_s = mf_eps.array(mfi);
+       Array4<Real> const& ep_s = mf_eps.array(mfi);
 
        const int cyclic_x = geom[0].isPeriodic(0);
        const int cyclic_y = geom[0].isPeriodic(1);

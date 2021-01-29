@@ -30,19 +30,18 @@ void get_input_arguments ( const int argc, char** argv,
 void help ();
 
 struct particle_t {
-  amrex::Vector<amrex::Real> idata;
+  amrex::Vector<int>         idata;
   amrex::Vector<amrex::Real> rdata;
 };
 
 
 amrex::Real calc_granular_temperature (amrex::Vector<particle_t> a_particles);
 amrex::Real cleaned_value (amrex::Real value_in);
-//
-//
-//
+
+
+
 int main ( int argc, char* argv[] )
 {
-
   std::string  fbase;
   std::string  fjoin;
   int id(-1);
@@ -53,25 +52,25 @@ int main ( int argc, char* argv[] )
   amrex::Vector<int> var;
   bool verbose(false);
 
-  get_input_arguments ( argc, argv, fbase, fjoin, id, var,
-    istart, iend, dt, iformat, verbose );
+  get_input_arguments(argc, argv, fbase, fjoin, id, var, istart, iend, dt,
+      iformat, verbose);
 
   const size_t var_count = var.size();
 
-  if(verbose) {
-  // Print summary
-  std::cout << "\n\nfjoin_par input summary: **"
-            << "\n   File base name " << fbase
-            << "\n   Output File    " << fjoin
-            << "\n   Verbose        " << verbose
-            << "\n   Particle ID    " << id
-            << "\n   Simulation dt  " << dt
-            << "\n   Interval start " << istart
-            << "\n   Interval end   " << iend
-            << "\n   Format         " << iformat
-            << "\n   Variable count " << var_count
-            << "\n\n";
-
+  if(verbose)
+  {
+    // Print summary
+    std::cout << "\n\nfjoin_par input summary: **"
+              << "\n   File base name " << fbase
+              << "\n   Output File    " << fjoin
+              << "\n   Verbose        " << verbose
+              << "\n   Particle ID    " << id
+              << "\n   Simulation dt  " << dt
+              << "\n   Interval start " << istart
+              << "\n   Interval end   " << iend
+              << "\n   Format         " << iformat
+              << "\n   Variable count " << var_count
+              << "\n\n";
   }
 
   int fcount(0);
@@ -83,7 +82,8 @@ int main ( int argc, char* argv[] )
   ofstream  outfile;
   outfile.open( fjoin.c_str(), ofstream::out | ofstream::trunc );
 
-  while( lc2 + istart <= iend && err == 0 ){
+  while( lc2 + istart <= iend && err == 0 )
+  {
     std::stringstream clc2;
     clc2 << std::setw(5) << std::setfill('0') << istart + lc2;
     std::string lfile = fbase + clc2.str();
@@ -94,69 +94,68 @@ int main ( int argc, char* argv[] )
     if (ifs.good()) {
       //if(verbose) std::cout << lfile << "     found!" << std::endl;
 
-      int np(-1), nr(-1), ni(-1);
+      int np(-1), AoS_nr(-1), AoS_ni(-1), SoA_nr(-1), SoA_ni(-1);
 
       ifs >> np;
-      ifs >> nr;
-      ifs >> ni;
+      ifs >> AoS_nr;
+      ifs >> AoS_ni;
+      ifs >> SoA_nr;
+      ifs >> SoA_ni;
 
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nr == 19,"Number of reals does not equal 20. Need to update fjoin par.");
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ni ==  2,"Number of ints does not equal 2. Need to update fjoin par.");
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE((AoS_nr + SoA_nr) == 19,
+          "Number of reals does not equal 20. Need to update fjoin par.");
+
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE((AoS_ni + SoA_ni) ==  2,
+          "Number of ints does not equal 2. Need to update fjoin par.");
 
       if(lc2 == 0){
         npo = np;
-        nro = nr;
-        nio = ni;
+        nro = AoS_nr + SoA_nr;
+        nio = AoS_ni + SoA_ni;
       } else {
         err += (np == npo) ? 0 : 1;
-        err += (nr == nro) ? 0 : 1;
-        err += (ni == nio) ? 0 : 1;
+        err += ((AoS_nr+SoA_nr) == nro) ? 0 : 1;
+        err += ((AoS_ni+SoA_ni) == nio) ? 0 : 1;
       }
 
-      if( dt > 0.0) {
+      if( dt > 0.0)
+      {
         outfile << fixed << uppercase << setprecision(6);
         outfile << setw(18) << dt*lc2;
       }
 
-
-      // Skip next two rows
-      ifs >> nr;
-      ifs >> ni;
-
       // Read and store particle data.
       amrex::Vector<particle_t> particles;
-      for (int lc(0); lc < np; lc++) {
+
+      for (int lc(0); lc < np; lc++)
+      {
         particle_t p;
 
         amrex::Real rtmp;
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //   : x-position
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //   : y-position
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //   : z-position
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  1: radius
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  2: volume
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  3: mass
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  4: density
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  5: oneOverI
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  6: x-velocity
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  7: y-velocity
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  8: z-velocity
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  //  9: x-rotation
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 10: y-rotation
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 11: z-rotation
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 12: stat_wt
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 13: drag coeff
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 14: x-drag
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 15: y-drag
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 16: z-drag
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 17: c_ps
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 18: temperature
-        ifs >> rtmp;  p.rdata.push_back(rtmp);  // 19: convection
-
         int itmp;
-        ifs >> itmp;  p.idata.push_back(itmp);  //   : id
-        ifs >> itmp;  p.idata.push_back(itmp);  //   : cpu
-        ifs >> itmp;  p.idata.push_back(itmp);  //  1: phase
-        ifs >> itmp;  p.idata.push_back(itmp);  //  2: state
+
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  //   : x-position (AoS)
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  //   : y-position (AoS)
+        ifs >> rtmp;  p.rdata.push_back(rtmp);  //   : z-position (AoS)
+
+        for (int AoS_rcount(0); AoS_rcount < AoS_nr; ++AoS_rcount) {
+          ifs >> rtmp;  p.rdata.push_back(rtmp);  // : AoS Real variables
+        }
+
+        ifs >> itmp;  p.idata.push_back(itmp);  //   : id  (AoS)
+        ifs >> itmp;  p.idata.push_back(itmp);  //   : cpu (AoS)
+
+        for (int AoS_icount(0); AoS_icount < AoS_ni; ++AoS_icount) {
+          ifs >> itmp;  p.idata.push_back(itmp);  // : AoS int variables
+        }
+
+        for (int SoA_rcount(0); SoA_rcount < SoA_nr; ++SoA_rcount) {
+          ifs >> rtmp;  p.rdata.push_back(rtmp);  // : SoA Real variables
+        }
+
+        for (int SoA_icount(0); SoA_icount < SoA_ni; ++SoA_icount) {
+          ifs >> itmp;  p.idata.push_back(itmp);  // : SoA int variables
+        }
 
         particles.push_back(p);
 
@@ -167,33 +166,48 @@ int main ( int argc, char* argv[] )
 
       outfile << fixed << uppercase << setprecision(iformat);
 
-      for(size_t lc=0; lc<var_count; lc++){
-        const bool last = lc == var_count-1;
+      for(size_t lc=0; lc < var_count; lc++)
+      {
+        const bool last = (lc == var_count-1);
         const int var_id = var[lc];
 
-        if( var_id == 100 ) {
+        if( var_id == 100 )
+        {
           outfile << setw(24) << cleaned_value(calc_granular_temperature(particles));
-        } else {
+        }
+        else 
+        {
+          if( id == -1 )
+          {
+            if(verbose)
+              std::cout << "Writing all particles!" << std::endl;
 
-          if( id == -1 ){
-            if(verbose) std::cout << "Writing all particles!" << std::endl;
-              for(int lc(0); lc<np; lc++){
-                outfile << setw(24) << cleaned_value(particles[lc].rdata[var_id-1]);
-              }
-          } else {
+            for(int llc(0); llc<np; llc++)
+            {
+              outfile << setw(24) << cleaned_value(particles[llc].rdata[var_id-1]);
+            }
+          }
+          else
+          {
             outfile << setw(24) << cleaned_value(particles[id-1].rdata[var_id-1]);
           }
-
         }
-        if(last)  outfile << std::endl;
+
+        if(last) 
+          outfile << std::endl;
       }
-    } else {
-      if(verbose) std::cout << lfile << " not found!" << std::endl;
+
     }
+    else {
+      if(verbose)
+        std::cout << lfile << " not found!" << std::endl;
+    }
+
     lc2++;
   }
-outfile.close();
-return err;
+
+  outfile.close();
+  return err;
 };
 
 

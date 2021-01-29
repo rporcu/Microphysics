@@ -37,23 +37,24 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
           {
             auto& particles = pti.GetArrayOfStructs();
             const int np = particles.size();
-            ParticleType* pstruct = particles().dataPtr();
 
-            reduce_op.eval(np, reduce_data, [pstruct,phase]
+            auto& soa = pti.GetStructOfArrays();
+            auto p_realarray = soa.realarray();
+            auto p_intarray = soa.intarray();
+
+            reduce_op.eval(np, reduce_data, [p_realarray,p_intarray,phase]
                 AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
             {
-              ParticleType p = pstruct[p_id];
-
               Real l_pnum  = 0._rt;
               Real l_pdiam = 0._rt;
               Real l_pdens = 0._rt;
               Real l_maxdiam = -1.e32;
               Real l_maxdens = -1.e32;
 
-              if (phase == p.idata(intData::phase))
+              if (phase == p_intarray[SoAintData::phase][p_id])
               {
-                const Real density  = p.rdata(realData::density);
-                const Real diameter = 2.0*p.rdata(realData::radius);
+                const Real density  = p_realarray[SoArealData::density][p_id];
+                const Real diameter = 2.0*p_realarray[SoArealData::radius][p_id];
 
                 l_pnum  = 1._rt;
                 l_pdiam = diameter;
@@ -85,16 +86,17 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
           {
             auto& particles = pti.GetArrayOfStructs();
             const int np = particles.size();
-            ParticleType* pstruct = particles().dataPtr();
+
+            auto& soa = pti.GetStructOfArrays();
+            auto p_realarray = soa.realarray();
+            auto p_intarray = soa.intarray();
 
             for (int p_id(0); p_id < np; ++p_id)
             {
-              ParticleType p = pstruct[p_id];
-
-              if (phase == p.idata(intData::phase))
+              if (phase == p_intarray[SoAintData::phase][p_id])
               {
-                const Real density  = p.rdata(realData::density);
-                const Real diameter = 2.0*p.rdata(realData::radius);
+                const Real density  = p_realarray[SoArealData::density][p_id];
+                const Real diameter = 2.0*p_realarray[SoArealData::radius][p_id];
 
                 h_pnum  += 1.0;
                 h_pdiam += diameter;

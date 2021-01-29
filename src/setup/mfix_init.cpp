@@ -15,6 +15,9 @@
 #include <mfix_solids_parms.H>
 #include <mfix_species_parms.H>
 
+using MFIXParIter = MFIXParticleContainer::MFIXParIter;
+using PairIndex = MFIXParticleContainer::PairIndex;
+
 void
 mfix::InitParams ()
 {
@@ -134,6 +137,10 @@ mfix::InitParams ()
     // The default type is "AsciiFile" but we can over-write that in the inputs
     // file with "Random"
     pp.query("particle_init_type", particle_init_type);
+
+    Array<int,3> sorting_bin{0, 0, 0};
+    pp.query("particle_sorting_bin", sorting_bin);
+    particle_sorting_bin = IntVect(sorting_bin);
 
     // Options to control initial projections (mostly we use these for
     // debugging)
@@ -445,8 +452,10 @@ void mfix::Init (Real time)
      *                                                                          *
      ***************************************************************************/
 
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve or PIC::solve) {
       pc = new MFIXParticleContainer(this);
+      pc->setSortingBinSizes(IntVect(particle_sorting_bin));
+    }
 
     /****************************************************************************
      *                                                                          *
@@ -628,11 +637,10 @@ void mfix::InitLevelData (Real time)
         int        phase = 1;
         int        state = 0;
 
-        MFIXParticleContainer::ParticleInitData pdata = {radius,volume,mass,density,omoi,
-                                                         velx,vely,velz,omegax,omegay,omegaz,
-                                                         dragx,dragy,dragz,dragcoeff,statwt,
-                                                         c_ps, temperature, convection,
-                                                         phase,state};
+        MFIXParticleContainer::ParticleInitData pdata =
+          {{}, {}, {radius,volume,mass,density,omoi,velx,vely,velz,
+            omegax,omegay,omegaz,dragx,dragy,dragz,dragcoeff,statwt,c_ps,
+            temperature,convection}, {phase,state}};
 
         pc->InitNRandomPerCell(n_per_cell, pdata);
         pc->WriteAsciiFileForInit("random_particles");
