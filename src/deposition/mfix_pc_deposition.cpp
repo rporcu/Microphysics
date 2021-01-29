@@ -51,9 +51,9 @@ SolidsVolumeDeposition (int lev,
 template <typename F>
 void MFIXParticleContainer::
 SolidsVolumeDeposition (F WeightFunc, int lev,
-                  amrex::MultiFab & mf_to_be_filled,
-                  const amrex::MultiFab * volfrac,
-                  const amrex::FabArray<EBCellFlagFab>* flags)
+                        amrex::MultiFab & mf_to_be_filled,
+                        const amrex::MultiFab * volfrac,
+                        const amrex::FabArray<EBCellFlagFab>* flags)
 {
   BL_PROFILE("MFIXParticleContainer::SolidsVolumeDeposition()");
 
@@ -65,19 +65,19 @@ SolidsVolumeDeposition (F WeightFunc, int lev,
 
   const auto      reg_cell_vol = dx[0]*dx[1]*dx[2];
 
-
-  using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
   {
     FArrayBox local_fab_to_be_filled;
 
-    for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
       const auto& particles = pti.GetArrayOfStructs();
       const ParticleType* pstruct = particles().dataPtr();
+
+      auto& soa = pti.GetStructOfArrays();
+      auto p_realarray = soa.realarray();
 
       const long nrp = pti.numParticles();
       FArrayBox& fab_to_be_filled = mf_to_be_filled[pti];
@@ -107,7 +107,7 @@ SolidsVolumeDeposition (F WeightFunc, int lev,
           mfix::m_deposition_scale_factor;
 
         amrex::ParallelFor(nrp,
-          [pstruct,plo,dx,dxi,vfrac,deposition_scale_factor,volarr,
+          [pstruct,p_realarray,plo,dx,dxi,vfrac,deposition_scale_factor,volarr,
            reg_cell_vol,WeightFunc,flagsarr,local_cg_dem=DEM::cg_dem]
           AMREX_GPU_DEVICE (int ip) noexcept
           {
@@ -119,13 +119,13 @@ SolidsVolumeDeposition (F WeightFunc, int lev,
 
             GpuArray<GpuArray<GpuArray<Real,2>,2>,2> weights;
 
-            WeightFunc(plo, dx, dxi, flagsarr, p, i, j, k, weights,
+            WeightFunc(plo, dx, dxi, flagsarr, p.pos(), p_realarray[SoArealData::radius][ip], i, j, k, weights,
                 deposition_scale_factor);
 
-            amrex::Real pvol = p.rdata(realData::statwt) * p.rdata(realData::volume) / reg_cell_vol;
+            amrex::Real pvol = p_realarray[SoArealData::statwt][ip] * p_realarray[SoArealData::volume][ip] / reg_cell_vol;
 
             if (local_cg_dem){
-               pvol = pvol/p.rdata(realData::statwt);
+               pvol = pvol / p_realarray[SoArealData::statwt][ip];
             }
 
             for (int kk = -1; kk <= 0; ++kk) {
@@ -215,18 +215,20 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
 
   const auto      reg_cell_vol = dx[0]*dx[1]*dx[2];
 
-  using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
   {
     FArrayBox local_txfr;
 
-    for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
       const auto& particles = pti.GetArrayOfStructs();
       const ParticleType* pstruct = particles().dataPtr();
+
+      auto& soa = pti.GetStructOfArrays();
+      auto p_realarray = soa.realarray();
+
       const long nrp = pti.numParticles();
 
       FArrayBox& eps_fab  = mf_tmp_eps[pti];
@@ -258,7 +260,7 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
 #endif
 
         amrex::ParallelFor(nrp,
-          [pstruct,plo,dx,dxi,vfrac,volarr,deposition_scale_factor,
+          [pstruct,p_realarray,plo,dx,dxi,vfrac,volarr,deposition_scale_factor,
            reg_cell_vol,WeightFunc,flagsarr,txfr_arr,advect_enthalpy,
            local_cg_dem=DEM::cg_dem] AMREX_GPU_DEVICE (int ip) noexcept
           {
@@ -268,31 +270,31 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
             int j;
             int k;
 
-            const Real statwt = p.rdata(realData::statwt);
+            const Real statwt = p_realarray[SoArealData::statwt][ip];
 
             GpuArray<GpuArray<GpuArray<Real,2>,2>,2> weights;
 
-            WeightFunc(plo, dx, dxi, flagsarr, p, i, j, k, weights,
+            WeightFunc(plo, dx, dxi, flagsarr, p.pos(), p_realarray[SoArealData::radius][ip], i, j, k, weights,
                        deposition_scale_factor);
 
-            amrex::Real pvol = statwt * p.rdata(realData::volume) / reg_cell_vol;
+            amrex::Real pvol = statwt * p_realarray[SoArealData::volume][ip] / reg_cell_vol;
 
-            amrex::Real pbeta = statwt * p.rdata(realData::dragcoeff) / reg_cell_vol;
+            amrex::Real pbeta = statwt * p_realarray[SoArealData::dragcoeff][ip] / reg_cell_vol;
 
             amrex::Real pgamma = advect_enthalpy ?
-              statwt * p.rdata(realData::convection) / reg_cell_vol : 0;
+              statwt * p_realarray[SoArealData::convection][ip] / reg_cell_vol : 0;
 
             if (local_cg_dem){
                pvol = pvol / statwt;
                pbeta = pbeta / statwt;
             }
 
-            amrex::Real pvx   = p.rdata(realData::velx) * pbeta;
-            amrex::Real pvy   = p.rdata(realData::vely) * pbeta;
-            amrex::Real pvz   = p.rdata(realData::velz) * pbeta;
+            amrex::Real pvx   = p_realarray[SoArealData::velx][ip] * pbeta;
+            amrex::Real pvy   = p_realarray[SoArealData::vely][ip] * pbeta;
+            amrex::Real pvz   = p_realarray[SoArealData::velz][ip] * pbeta;
 
             amrex::Real pTp   = advect_enthalpy ?
-              p.rdata(realData::temperature) * pgamma : 0;
+              p_realarray[SoArealData::temperature][ip] * pgamma : 0;
 
             for (int ii = -1; ii <= 0; ++ii) {
               for (int jj = -1; jj <= 0; ++jj) {
@@ -517,9 +519,7 @@ InterphaseChemDeposition (F WeightFunc,
   const int InvalidIdx = -1; //TODO define this somewhere else
 
   // Particles indexes
-  const int idx_G = speciesData::count*nspecies_s + reactionsData::G_sn_pg_q*nreactions;
-  
-  using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
+  const int idx_G = SoAspeciesData::count*nspecies_s + SoAreactionsData::G_sn_pg_q*nreactions;
 
   Gpu::synchronize();
 
@@ -529,7 +529,7 @@ InterphaseChemDeposition (F WeightFunc,
   {
     FArrayBox local_fab_txfr;
 
-    for (ParConstIter pti(*this, lev); pti.isValid(); ++pti)
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
       //Access to added variables
       PairIndex index(pti.index(), pti.LocalTileIndex());
@@ -539,6 +539,9 @@ InterphaseChemDeposition (F WeightFunc,
       const auto& particles = pti.GetArrayOfStructs();
       const ParticleType* pstruct = particles().dataPtr();
       const long nrp = pti.numParticles();
+
+      auto& soa = pti.GetStructOfArrays();
+      auto p_realarray = soa.realarray();
 
       FArrayBox& fab_G_gk_fp = mf_G_gk_fp[pti];
 
@@ -567,7 +570,7 @@ InterphaseChemDeposition (F WeightFunc,
 #endif
 
         amrex::ParallelFor(nrp,
-          [pstruct,plo,dx,dxi,vfrac,deposition_scale_factor,reg_cell_vol,
+          [pstruct,p_realarray,plo,dx,dxi,vfrac,deposition_scale_factor,reg_cell_vol,
            WeightFunc,flagsarr,arr_G_gk_fp,idx_G,nspecies_s,nreactions,
            ptile_data,nrp,p_species_id_s,p_species_id_g,nspecies_g,p_nproducts,
            p_nreactants,p_reactants_id,p_reactants_coeffs,p_reactants_phases,
@@ -581,7 +584,7 @@ InterphaseChemDeposition (F WeightFunc,
 
           GpuArray<GpuArray<GpuArray<Real,2>,2>,2> weights;
 
-          WeightFunc(plo, dx, dxi, flagsarr, p, i, j, k, weights,
+          WeightFunc(plo, dx, dxi, flagsarr, p.pos(), p_realarray[SoArealData::radius][p_id], i, j, k, weights,
                      deposition_scale_factor);
 
           // Pointer to this particle's species rate of formation

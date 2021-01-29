@@ -42,7 +42,7 @@ class ParticlesGenerator {
 
     // Write particles data
     void write (const int nrp,
-                const ParticleTileType& particles,
+                ParticleTileType& particles,
                 const int nstep = 0) const;
 
     void hex_close_pack (const int icv,

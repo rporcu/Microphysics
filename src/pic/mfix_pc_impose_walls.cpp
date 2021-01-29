@@ -62,6 +62,9 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
             auto& aos   = ptile.GetArrayOfStructs();
             ParticleType* pstruct = aos().dataPtr();
 
+            auto& soa = ptile.GetStructOfArrays();
+            auto p_realarray = soa.realarray();
+
             const int nrp = GetParticles(lev)[index].numRealParticles();
 
             auto& geom = this->Geom(lev);
@@ -73,14 +76,14 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
             const amrex::Real Et = 1.00;
 
             amrex::ParallelFor(nrp,
-                [pstruct,ls_refinement,phiarr,plo,dxi,En,Et]
+                [pstruct,p_realarray,ls_refinement,phiarr,plo,dxi,En,Et]
                 AMREX_GPU_DEVICE (int pid) noexcept
                 {
                     ParticleType& particle = pstruct[pid];
-                    amrex::Real radius = particle.rdata(realData::radius) *
-                        std::cbrt(particle.rdata(realData::statwt));
+                    amrex::Real radius = p_realarray[SoArealData::radius][pid] *
+                        std::cbrt(p_realarray[SoArealData::statwt][pid]);
 
-                    amrex::Real ls_value = interp_level_set(particle, ls_refinement, phiarr, plo, dxi);
+                    amrex::Real ls_value = interp_level_set(particle.pos(), ls_refinement, phiarr, plo, dxi);
 
                     const amrex::Real overlap = radius - ls_value;
 
@@ -88,7 +91,7 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
                     if (overlap > 0.)
                     {
                         amrex::RealVect normal(0.);
-                        level_set_normal(particle, ls_refinement, normal, phiarr, plo, dxi);
+                        level_set_normal(particle.pos(), ls_refinement, normal, phiarr, plo, dxi);
 
                         // Reflect the particle.
                         particle.pos(0) += overlap*normal[0];
@@ -96,9 +99,9 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
                         particle.pos(2) += overlap*normal[2];
 
                         // Plane ref point
-                        const amrex::Real Nw_Vp = normal[0]*particle.rdata(realData::velx)
-                                                + normal[1]*particle.rdata(realData::vely)
-                                                + normal[2]*particle.rdata(realData::velz);
+                        const amrex::Real Nw_Vp = normal[0]*p_realarray[SoArealData::velx][pid]
+                                                + normal[1]*p_realarray[SoArealData::vely][pid]
+                                                + normal[2]*p_realarray[SoArealData::velz][pid];
 
                         // Parcel normal velocity
                         const amrex::RealVect Vpn = {Nw_Vp*normal[0],
@@ -106,20 +109,20 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
                                                      Nw_Vp*normal[2]};
 
                         // Parcel tangential velocity
-                        const amrex::RealVect Vpt = {particle.rdata(realData::velx) - Vpn[0],
-                                                     particle.rdata(realData::vely) - Vpn[1],
-                                                     particle.rdata(realData::velz) - Vpn[2]};
+                        const amrex::RealVect Vpt = {p_realarray[SoArealData::velx][pid] - Vpn[0],
+                                                     p_realarray[SoArealData::vely][pid] - Vpn[1],
+                                                     p_realarray[SoArealData::velz][pid] - Vpn[2]};
 
                         // Rebound parcel if moving towards wall.
                         if(Nw_Vp < 0.) {
-                            particle.rdata(realData::velx) = -En*Vpn[0] + Et*Vpt[0];
-                            particle.rdata(realData::vely) = -En*Vpn[1] + Et*Vpt[1];
-                            particle.rdata(realData::velz) = -En*Vpn[2] + Et*Vpt[2];
+                            p_realarray[SoArealData::velx][pid] = -En*Vpn[0] + Et*Vpt[0];
+                            p_realarray[SoArealData::vely][pid] = -En*Vpn[1] + Et*Vpt[1];
+                            p_realarray[SoArealData::velz][pid] = -En*Vpn[2] + Et*Vpt[2];
 
                         } else {
-                            particle.rdata(realData::velx) = Vpn[0] + Et*Vpt[0];
-                            particle.rdata(realData::vely) = Vpn[1] + Et*Vpt[1];
-                            particle.rdata(realData::velz) = Vpn[2] + Et*Vpt[2];
+                            p_realarray[SoArealData::velx][pid] = Vpn[0] + Et*Vpt[0];
+                            p_realarray[SoArealData::vely][pid] = Vpn[1] + Et*Vpt[1];
+                            p_realarray[SoArealData::velz][pid] = Vpn[2] + Et*Vpt[2];
                         }
 
                     }

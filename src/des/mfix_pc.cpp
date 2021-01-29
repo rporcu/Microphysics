@@ -10,7 +10,8 @@ using namespace amrex;
 int  MFIXParticleContainer::domain_bc[6] {0};
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
-    : NeighborParticleContainer<realData::count,intData::count>
+    : NeighborParticleContainer<AoSrealData::count,AoSintData::count,
+                                SoArealData::count,SoAintData::count>
       (amr_core->GetParGDB(), 1)
 {
     ReadStaticParameters();
@@ -81,11 +82,14 @@ void MFIXParticleContainer::PrintParticleCounts ()
 void MFIXParticleContainer::printParticles ()
 {
     const int lev = 0;
-    const auto& plevel = GetParticles(lev);
+    auto& plevel = GetParticles(lev);
 
-    for (const auto& kv : plevel)
+    for (auto& kv : plevel)
     {
        const auto& particles = kv.second.GetArrayOfStructs();
+       auto& soa = kv.second.GetStructOfArrays();
+       auto p_realarray = soa.realarray();
+       auto p_intarray = soa.intarray();
 
        for (int i = 0; i < particles.numParticles(); ++i)
        {
@@ -93,12 +97,12 @@ void MFIXParticleContainer::printParticles ()
           std::cout << "X            = " << particles[i].pos(0) << " " << std::endl;
           std::cout << "Y            = " << particles[i].pos(1) << " " << std::endl;
           std::cout << "Z            = " << particles[i].pos(2) << " " << std::endl;
-          std::cout << "state        = " << particles[i].idata(intData::state) << " " << std::endl;
-          std::cout << "phase        = " << particles[i].idata(intData::phase) << " " << std::endl;
+          std::cout << "state        = " << p_intarray[SoAintData::state][i] << " " << std::endl;
+          std::cout << "phase        = " << p_intarray[SoAintData::phase][i] << " " << std::endl;
           std::cout << "Real properties = " << std::endl;
 
-          for (int j = 0; j < realData::count; j++)
-            std::cout << "property " << j << "  = " << particles[i].rdata(j) << " " << std::endl;
+          for (int j = 0; j < SoArealData::count; j++)
+            std::cout << "property " << j << "  = " << p_realarray[j][i] << " " << std::endl;
 
           std::cout << std::endl;
        }
@@ -273,23 +277,31 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               auto& aos   = ptile.GetArrayOfStructs();
               ParticleType* pstruct = aos().dataPtr();
 
+              auto& soa = ptile.GetStructOfArrays();
+              auto p_realarray = soa.realarray();
+
               auto nbor_data = m_neighbor_list[lev][index].data();
 
               constexpr Real small_number = 1.0e-15;
 
-              reduce_op.eval(nrp, reduce_data, [pstruct,nbor_data,small_number]
+              reduce_op.eval(nrp, reduce_data, [pstruct,p_realarray,
+                  nbor_data,small_number]
                 AMREX_GPU_DEVICE (int i) -> ReduceTuple
               {
                 int l_ncoll(0);
 
                 ParticleType p1 = pstruct[i];
                 const RealVect pos1 = p1.pos();
-                const Real radius1 = p1.rdata(realData::radius);
+                const Real radius1 = p_realarray[SoArealData::radius][i];
 
-                for (const auto p2 : nbor_data.getNeighbors(i))
+                const auto neighbs = nbor_data.getNeighbors(i);
+                for (auto mit = neighbs.begin(); mit != neighbs.end(); ++mit)
                 {
+                  const auto p2 = *mit;
+                  const int j = mit.index();
+
                   const RealVect pos2 = p2.pos();
-                  const Real radius2 = p2.rdata(realData::radius);
+                  const Real radius2 = p_realarray[SoArealData::radius][j];
 
                   Real r2 = (pos1 - pos2).radSquared();
 
@@ -323,6 +335,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               auto& aos   = ptile.GetArrayOfStructs();
               ParticleType* pstruct = aos().dataPtr();
 
+              auto& soa = ptile.GetStructOfArrays();
+              auto p_realarray = soa.realarray();
+
               auto nbor_data = m_neighbor_list[lev][index].data();
 
               constexpr Real small_number = 1.0e-15;
@@ -331,12 +346,16 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               {
                 ParticleType p1 = pstruct[i];
                 const RealVect pos1 = p1.pos();
-                const Real radius1 = p1.rdata(realData::radius);
+                const Real radius1 = p_realarray[SoArealData::radius][i];
 
-                for (const auto p2 : nbor_data.getNeighbors(i))
+                const auto neighbs = nbor_data.getNeighbors(i);
+                for (auto mit = neighbs.begin(); mit != neighbs.end(); ++mit)
                 {
+                  const auto p2 = *mit;
+                  const int j = mit.index();
+
                   const RealVect pos2 = p2.pos();
-                  const Real radius2 = p2.rdata(realData::radius);
+                  const Real radius2 = p_realarray[SoArealData::radius][j];
 
                   Real r2 = (pos1 - pos2).radSquared();
 
@@ -366,22 +385,19 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             //const Box& bx = pti.tilebox(); // UNUSED_VARIABLE
             PairIndex index(pti.index(), pti.LocalTileIndex());
 
-            const int nrp = GetParticles(lev)[index].numRealParticles();
-
             auto& plev = GetParticles(lev);
             auto& ptile = plev[index];
             auto& aos   = ptile.GetArrayOfStructs();
             ParticleType* pstruct = aos().dataPtr();
 
-            // Neighbor particles
-#ifdef AMREX_USE_GPU
-            int size_ng = aos.numNeighborParticles();
-#else
-            int size_ng = neighbors[lev][index].size();
-#endif
+            const int nrp = GetParticles(lev)[index].numRealParticles();
+
+            auto& soa   = pti.GetStructOfArrays();
+            auto p_realarray = soa.realarray();
+            auto p_intarray = soa.intarray();
 
             // Number of particles including neighbor particles
-            int ntot = nrp + size_ng;
+            int ntot = nrp;
 
             // Particle-particle (and particle-wall) forces and torques. We need
             // these to be zero every time we start a new batch (i.e tile and
@@ -416,38 +432,41 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 const auto& phiarr = ls_phi->array(pti);
 
                 amrex::ParallelFor(nrp,
-                  [pstruct,ls_refinement,phiarr,plo,dxi,subdt,ntot,fc_ptr,tow_ptr,
+                  [pstruct,p_realarray,p_intarray,ls_refinement,phiarr,plo,dxi,subdt,ntot,fc_ptr,tow_ptr,
                    local_mew_w=DEM::mew_w,local_kn_w=DEM::kn_w,local_etan_w=DEM::etan_w]
                   AMREX_GPU_DEVICE (int i) noexcept
                   {
-                    ParticleType& p = pstruct[i];
-                    Real rp = p.rdata(realData::radius);
+                    auto particle = pstruct[i];
 
-                    Real ls_value = interp_level_set(p, ls_refinement, phiarr, plo, dxi);
+                    Real rp = p_realarray[SoArealData::radius][i];
+
+                    RealVect pos(particle.pos());
+
+                    Real ls_value = interp_level_set(pos, ls_refinement, phiarr, plo, dxi);
 
                     Real overlap_n = rp - ls_value;
 
                     if (ls_value < rp)
                     {
                         RealVect normal(0.);
-                        level_set_normal(p, ls_refinement, normal, phiarr, plo, dxi);
+                        level_set_normal(pos, ls_refinement, normal, phiarr, plo, dxi);
 
                         normal[0] *= -1;
                         normal[1] *= -1;
                         normal[2] *= -1;
 
                         RealVect v_rot(0.);
-                        v_rot[0] = ls_value * p.rdata(realData::omegax);
-                        v_rot[1] = ls_value * p.rdata(realData::omegay);
-                        v_rot[2] = ls_value * p.rdata(realData::omegaz);
+                        v_rot[0] = ls_value * p_realarray[SoArealData::omegax][i];
+                        v_rot[1] = ls_value * p_realarray[SoArealData::omegay][i];
+                        v_rot[2] = ls_value * p_realarray[SoArealData::omegaz][i];
 
                         RealVect vreltrans(0.);
                         RealVect cprod(0.);
 
                         cross_product(v_rot, normal, cprod);
-                        vreltrans[0] = p.rdata(realData::velx) + cprod[0];
-                        vreltrans[1] = p.rdata(realData::vely) + cprod[1];
-                        vreltrans[2] = p.rdata(realData::velz) + cprod[2];
+                        vreltrans[0] = p_realarray[SoArealData::velx][i] + cprod[0];
+                        vreltrans[1] = p_realarray[SoArealData::vely][i] + cprod[1];
+                        vreltrans[2] = p_realarray[SoArealData::velz][i] + cprod[2];
 
                         Real vreltrans_norm = dot_product(vreltrans, normal);
 
@@ -456,7 +475,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                         vrel_t[1] = vreltrans[1] - vreltrans_norm*normal[1];
                         vrel_t[2] = vreltrans[2] - vreltrans_norm*normal[2];
 
-                        int phase = p.idata(intData::phase);
+                        int phase = p_intarray[SoAintData::phase][i];
 
                         Real kn_des_w   = local_kn_w;
                         Real etan_des_w = local_etan_w(phase-1);
@@ -552,103 +571,127 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
             // now we loop over the neighbor list and compute the forces
             amrex::ParallelFor(nrp,
-                [nrp,pstruct,fc_ptr,tow_ptr,nbor_data,
+                [nrp,pstruct,p_realarray,p_intarray,fc_ptr,tow_ptr,nbor_data,
 #if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
                  eps,
 #endif
                  subdt,ntot,local_mew=DEM::mew,local_kn=DEM::kn,
                  local_etan=DEM::etan]
               AMREX_GPU_DEVICE (int i) noexcept
-            {
-                ParticleType& p1 = pstruct[i];
+              {
+                  auto particle = pstruct[i];
 
-                const auto neighbs = nbor_data.getNeighbors(i);
-                for (auto mit = neighbs.begin(); mit != neighbs.end(); ++mit)
-                {
-                    const auto& p2 = *mit;
+                  RealVect pos1(particle.pos());
 
-                    Real dist_x = p2.pos(0) - p1.pos(0);
-                    Real dist_y = p2.pos(1) - p1.pos(1);
-                    Real dist_z = p2.pos(2) - p1.pos(2);
+                  const auto neighbs = nbor_data.getNeighbors(i);
+                  for (auto mit = neighbs.begin(); mit != neighbs.end(); ++mit)
+                  {
+                      const auto p2 = *mit;
+                      const int j = mit.index();
 
-                    Real r2 = dist_x*dist_x +
-                              dist_y*dist_y +
-                              dist_z*dist_z;
+                      Real dist_x = p2.pos(0) - pos1[0];
+                      Real dist_y = p2.pos(1) - pos1[1];
+                      Real dist_z = p2.pos(2) - pos1[2];
 
-                    Real r_lm = p1.rdata(realData::radius) + p2.rdata(realData::radius);
+                      Real r2 = dist_x*dist_x +
+                                dist_y*dist_y +
+                                dist_z*dist_z;
 
-                    AMREX_ASSERT_WITH_MESSAGE(!(p1.id() == p2.id() and p1.cpu() == p2.cpu()),
-                      "A particle should not be its own neighbor!");
+                      const Real p1radius = p_realarray[SoArealData::radius][i];
+                      const Real p2radius = p_realarray[SoArealData::radius][j];
 
-                    if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
-                    {
-                        const int j = mit.index();
+                      Real r_lm = p1radius + p2radius;
 
-                        Real dist_mag = sqrt(r2);
+                      AMREX_ASSERT_WITH_MESSAGE(
+                          not (particle.id() == p2.id() and
+                               particle.cpu() == p2.cpu()),
+                        "A particle should not be its own neighbor!");
 
-                        AMREX_ASSERT(dist_mag >= eps);
+                      if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
+                      {
+                          Real dist_mag = sqrt(r2);
 
-                        Real dist_mag_inv = 1.e0/dist_mag;
+                          AMREX_ASSERT(dist_mag >= eps);
 
-                        RealVect normal(0.);
-                        normal[0] = dist_x * dist_mag_inv;
-                        normal[1] = dist_y * dist_mag_inv;
-                        normal[2] = dist_z * dist_mag_inv;
+                          Real dist_mag_inv = 1.e0/dist_mag;
 
-                        Real overlap_n = r_lm - dist_mag;
-                        Real vrel_trans_norm;
-                        RealVect vrel_t(0.);
+                          RealVect normal(0.);
+                          normal[0] = dist_x * dist_mag_inv;
+                          normal[1] = dist_y * dist_mag_inv;
+                          normal[2] = dist_z * dist_mag_inv;
 
-                        cfrelvel(p1, p2, vrel_trans_norm, vrel_t, normal, dist_mag);
+                          Real overlap_n = r_lm - dist_mag;
+                          Real vrel_trans_norm;
+                          RealVect vrel_t(0.);
 
-                        int phase1 = p1.idata(intData::phase);
-                        int phase2 = p2.idata(intData::phase);
+                          RealVect p1vel(p_realarray[SoArealData::velx][i],
+                                         p_realarray[SoArealData::vely][i],
+                                         p_realarray[SoArealData::velz][i]);
 
-                        Real kn_des = local_kn;
-                        Real etan_des = local_etan(phase1-1,phase2-1);
+                          RealVect p2vel(p_realarray[SoArealData::velx][j],
+                                         p_realarray[SoArealData::vely][j],
+                                         p_realarray[SoArealData::velz][j]);
 
-                        // NOTE - we don't use the tangential components right now,
-                        // but we might in the future
-                        // Real kt_des = DEM::kt;
-                        // Real etat_des = DEM::etat[phase1-1][phase2-1];
+                          RealVect p1omega(p_realarray[SoArealData::omegax][i],
+                                           p_realarray[SoArealData::omegay][i],
+                                           p_realarray[SoArealData::omegaz][i]);
 
-                        RealVect fn(0.);
-                        RealVect ft(0.);
-                        RealVect overlap_t(0.);
-                        Real mag_overlap_t(0.);
+                          RealVect p2omega(p_realarray[SoArealData::omegax][j],
+                                           p_realarray[SoArealData::omegay][j],
+                                           p_realarray[SoArealData::omegaz][j]);
 
-                        // calculate the normal contact force
-                        fn[0] = -(kn_des*overlap_n*normal[0]
-                                + etan_des*vrel_trans_norm*normal[0]);
-                        fn[1] = -(kn_des*overlap_n*normal[1]
-                                + etan_des*vrel_trans_norm*normal[1]);
-                        fn[2] = -(kn_des*overlap_n*normal[2]
-                                + etan_des*vrel_trans_norm*normal[2]);
+                          cfrelvel(p1vel, p2vel, p1radius, p2radius, p1omega,
+                              p2omega, vrel_trans_norm, vrel_t, normal, dist_mag);
 
-                        // calculate the tangential overlap
-                        overlap_t[0] = subdt*vrel_t[0];
-                        overlap_t[1] = subdt*vrel_t[1];
-                        overlap_t[2] = subdt*vrel_t[2];
-                        mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
+                          int phase1 = p_intarray[SoAintData::phase][i];
+                          int phase2 = p_intarray[SoAintData::phase][j];
 
-                        if (mag_overlap_t > 0.0) {
-                            Real fnmd = local_mew * sqrt(dot_product(fn, fn));
-                            RealVect tangent(0.);
-                            tangent[0] = overlap_t[0]/mag_overlap_t;
-                            tangent[1] = overlap_t[1]/mag_overlap_t;
-                            tangent[2] = overlap_t[2]/mag_overlap_t;
-                            ft[0] = -fnmd * tangent[0];
-                            ft[1] = -fnmd * tangent[1];
-                            ft[2] = -fnmd * tangent[2];
-                        } else {
-                            ft[0] = 0.0;
-                            ft[1] = 0.0;
-                            ft[2] = 0.0;
-                        }
+                          Real kn_des = local_kn;
+                          Real etan_des = local_etan(phase1-1,phase2-1);
+
+                          // NOTE - we don't use the tangential components right now,
+                          // but we might in the future
+                          // Real kt_des = DEM::kt;
+                          // Real etat_des = DEM::etat[phase1-1][phase2-1];
+
+                          RealVect fn(0.);
+                          RealVect ft(0.);
+                          RealVect overlap_t(0.);
+                          Real mag_overlap_t(0.);
+
+                          // calculate the normal contact force
+                          fn[0] = -(kn_des*overlap_n*normal[0]
+                                  + etan_des*vrel_trans_norm*normal[0]);
+                          fn[1] = -(kn_des*overlap_n*normal[1]
+                                  + etan_des*vrel_trans_norm*normal[1]);
+                          fn[2] = -(kn_des*overlap_n*normal[2]
+                                  + etan_des*vrel_trans_norm*normal[2]);
+
+                          // calculate the tangential overlap
+                          overlap_t[0] = subdt*vrel_t[0];
+                          overlap_t[1] = subdt*vrel_t[1];
+                          overlap_t[2] = subdt*vrel_t[2];
+                          mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
+
+                          if (mag_overlap_t > 0.0) {
+                              Real fnmd = local_mew * sqrt(dot_product(fn, fn));
+                              RealVect tangent(0.);
+                              tangent[0] = overlap_t[0]/mag_overlap_t;
+                              tangent[1] = overlap_t[1]/mag_overlap_t;
+                              tangent[2] = overlap_t[2]/mag_overlap_t;
+                              ft[0] = -fnmd * tangent[0];
+                              ft[1] = -fnmd * tangent[1];
+                              ft[2] = -fnmd * tangent[2];
+                          } else {
+                              ft[0] = 0.0;
+                              ft[1] = 0.0;
+                              ft[2] = 0.0;
+                          }
+
 
 #ifdef _OPENMP
 #pragma omp critical
-                        {
+                          {
 #endif
                             Gpu::Atomic::Add(&fc_ptr[i         ], fn[0] + ft[0]);
                             Gpu::Atomic::Add(&fc_ptr[i + ntot  ], fn[1] + ft[1]);
@@ -656,30 +699,27 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                             if (j < nrp)
                             {
-                                Gpu::Atomic::Add(&fc_ptr[j         ], -(fn[0] + ft[0]));
-                                Gpu::Atomic::Add(&fc_ptr[j + ntot  ], -(fn[1] + ft[1]));
-                                Gpu::Atomic::Add(&fc_ptr[j + 2*ntot], -(fn[2] + ft[2]));
+                              Gpu::Atomic::Add(&fc_ptr[j         ], -(fn[0] + ft[0]));
+                              Gpu::Atomic::Add(&fc_ptr[j + ntot  ], -(fn[1] + ft[1]));
+                              Gpu::Atomic::Add(&fc_ptr[j + 2*ntot], -(fn[2] + ft[2]));
                             }
 #ifdef _OPENMP
-                        }
+                          }
 #endif
 
-                        Real part1_r = p1.rdata(realData::radius);
-                        Real part2_r = p2.rdata(realData::radius);
+                          Real dist_cl1 = 0.5 * (dist_mag + (p1radius*p1radius - p2radius*p2radius) * dist_mag_inv);
+                          dist_cl1 = dist_mag - dist_cl1;
 
-                        Real dist_cl1 = 0.5 * (dist_mag + (part1_r*part1_r - part2_r*part2_r) * dist_mag_inv);
-                        dist_cl1 = dist_mag - dist_cl1;
+                          Real dist_cl2 = 0.5 * (dist_mag + (p2radius*p2radius - p1radius*p1radius) * dist_mag_inv);
+                          dist_cl2 = dist_mag - dist_cl2;
 
-                        Real dist_cl2 = 0.5 * (dist_mag + (part2_r*part2_r - part1_r*part1_r) * dist_mag_inv);
-                        dist_cl2 = dist_mag - dist_cl2;
+                          RealVect tow_force(0.);
 
-                        RealVect tow_force(0.);
-
-                        cross_product(normal, ft, tow_force);
+                          cross_product(normal, ft, tow_force);
 
 #ifdef _OPENMP
 #pragma omp critical
-                        {
+                          {
 #endif
                             Gpu::Atomic::Add(&tow_ptr[i         ], dist_cl1*tow_force[0]);
                             Gpu::Atomic::Add(&tow_ptr[i + ntot  ], dist_cl1*tow_force[1]);
@@ -692,11 +732,11 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                                 Gpu::Atomic::Add(&tow_ptr[j + 2*ntot], dist_cl2*tow_force[2]);
                             }
 #ifdef _OPENMP
-                        }
+                          }
 #endif
-                    }
-                }
-            });
+                      }
+                  }
+              });
 
             Gpu::Device::synchronize();
 
@@ -728,92 +768,99 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             int z_hi_bc = BC::domain_bc[5];
 
             amrex::ParallelFor(nrp,
-              [pstruct,subdt,fc_ptr,ntot,gravity,tow_ptr,eps,p_hi,p_lo,
+              [pstruct,p_realarray,subdt,fc_ptr,ntot,gravity,tow_ptr,eps,p_hi,p_lo,
                x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc]
               AMREX_GPU_DEVICE (int i) noexcept
               {
-                ParticleType& p = pstruct[i];
+                auto& particle = pstruct[i];
 
-                p.rdata(realData::velx) += subdt * (
-                    (p.rdata(realData::dragx) + fc_ptr[i]) /
-                     p.rdata(realData::mass)  + gravity[0]
+                RealVect ppos(particle.pos());
+
+                Real mass = p_realarray[SoArealData::mass][i];
+
+                p_realarray[SoArealData::velx][i] += subdt * (
+                    (p_realarray[SoArealData::dragx][i] + fc_ptr[i]) /
+                     mass + gravity[0]
                 );
-                p.rdata(realData::vely) += subdt * (
-                    (p.rdata(realData::dragy) + fc_ptr[i+ntot]) /
-                     p.rdata(realData::mass)  + gravity[1]
+                p_realarray[SoArealData::vely][i] += subdt * (
+                    (p_realarray[SoArealData::dragy][i] + fc_ptr[i+ntot]) /
+                     mass + gravity[1]
                 );
-                p.rdata(realData::velz) += subdt * (
-                    (p.rdata(realData::dragz) + fc_ptr[i+2*ntot]) /
-                     p.rdata(realData::mass)  + gravity[2]
+                p_realarray[SoArealData::velz][i] += subdt * (
+                    (p_realarray[SoArealData::dragz][i] + fc_ptr[i+2*ntot]) /
+                     mass + gravity[2]
                 );
 
-                p.rdata(realData::omegax) +=
-                  subdt * p.rdata(realData::oneOverI) * tow_ptr[i];
-                p.rdata(realData::omegay) +=
-                  subdt * p.rdata(realData::oneOverI) * tow_ptr[i+ntot];
-                p.rdata(realData::omegaz) +=
-                  subdt * p.rdata(realData::oneOverI) * tow_ptr[i+2*ntot];
+                p_realarray[SoArealData::omegax][i] +=
+                  subdt * p_realarray[SoArealData::oneOverI][i] * tow_ptr[i];
+                p_realarray[SoArealData::omegay][i] +=
+                  subdt * p_realarray[SoArealData::oneOverI][i] * tow_ptr[i+ntot];
+                p_realarray[SoArealData::omegaz][i] +=
+                  subdt * p_realarray[SoArealData::oneOverI][i] * tow_ptr[i+2*ntot];
 
-                p.pos(0) += subdt * p.rdata(realData::velx);
-                p.pos(1) += subdt * p.rdata(realData::vely);
-                p.pos(2) += subdt * p.rdata(realData::velz);
+                ppos[0] += subdt * p_realarray[SoArealData::velx][i];
+                ppos[1] += subdt * p_realarray[SoArealData::vely][i];
+                ppos[2] += subdt * p_realarray[SoArealData::velz][i];
 
-                if (x_lo_bc && p.pos(0) < p_lo[0])
+                if (x_lo_bc and ppos[0] < p_lo[0])
                 {
-                    p.pos(0) = p_lo[0] + eps;
-                    p.rdata(realData::velx) = -p.rdata(realData::velx);
+                  ppos[0] = p_lo[0] + eps;
+                  p_realarray[SoArealData::velx][i] = -p_realarray[SoArealData::velx][i];
                 }
-                if (x_hi_bc && p.pos(0) > p_hi[0])
+                else if (x_hi_bc and ppos[0] > p_hi[0])
                 {
-                   p.pos(0) = p_hi[0] - eps;
-                   p.rdata(realData::velx) = -p.rdata(realData::velx);
+                  ppos[0] = p_hi[0] - eps;
+                  p_realarray[SoArealData::velx][i] = -p_realarray[SoArealData::velx][i];
                 }
-                if (y_lo_bc && p.pos(1) < p_lo[1])
+                else if (y_lo_bc and ppos[1] < p_lo[1])
                 {
-                    p.pos(1) = p_lo[1] + eps;
-                    p.rdata(realData::vely) = -p.rdata(realData::vely);
+                  ppos[1] = p_lo[1] + eps;
+                  p_realarray[SoArealData::vely][i] = -p_realarray[SoArealData::vely][i];
                 }
-                if (y_hi_bc && p.pos(1) > p_hi[1])
+                else if (y_hi_bc and ppos[1] > p_hi[1])
                 {
-                   p.pos(1) = p_hi[1] - eps;
-                   p.rdata(realData::vely) = -p.rdata(realData::vely);
+                  ppos[1] = p_hi[1] - eps;
+                  p_realarray[SoArealData::vely][i] = -p_realarray[SoArealData::vely][i];
                 }
-                if (z_lo_bc && p.pos(2) < p_lo[2])
+                else if (z_lo_bc and ppos[2] < p_lo[2])
                 {
-                   p.pos(2) = p_lo[2] + eps;
-                   p.rdata(realData::velz) = -p.rdata(realData::velz);
+                  ppos[2] = p_lo[2] + eps;
+                  p_realarray[SoArealData::velz][i] = -p_realarray[SoArealData::velz][i];
                 }
-                if (z_hi_bc && p.pos(2) > p_hi[2])
+                else if (z_hi_bc and ppos[2] > p_hi[2])
                 {
-                   p.pos(2) = p_hi[2] - eps;
-                   p.rdata(realData::velz) = -p.rdata(realData::velz);
+                  ppos[2] = p_hi[2] - eps;
+                  p_realarray[SoArealData::velz][i] = -p_realarray[SoArealData::velz][i];
                 }
+
+                particle.pos(0) = ppos[0];
+                particle.pos(1) = ppos[1];
+                particle.pos(2) = ppos[2];
               });
 
             BL_PROFILE_VAR_STOP(des_time_march);
 
-            if(advect_enthalpy){
-
+            if(advect_enthalpy)
+            {
               BL_PROFILE_VAR("des::update_particle_enthalpy()", des_update_enthalpy);
-              amrex::ParallelFor(nrp, [pstruct,subdt,enthalpy_source]
+
+              amrex::ParallelFor(nrp, [p_realarray,subdt,enthalpy_source]
               AMREX_GPU_DEVICE (int i) noexcept
               {
-                  ParticleType& p = pstruct[i];
+                  AMREX_ASSERT(p_realarray[SoArealData::c_ps][i] > 0.);
 
-                  AMREX_ASSERT(p.rdata(realData::c_ps) > 0.);
-
-                  p.rdata(realData::temperature) += subdt * p.rdata(realData::convection) /
-                      (p.rdata(realData::mass) * p.rdata(realData::c_ps));
-
-                  p.rdata(realData::temperature) += subdt * enthalpy_source /
-                      (p.rdata(realData::mass) * p.rdata(realData::c_ps));
+                  p_realarray[SoArealData::temperature][i] +=
+                    subdt * (p_realarray[SoArealData::convection][i] + enthalpy_source) /
+                    (p_realarray[SoArealData::mass][i] * p_realarray[SoArealData::c_ps][i]);
               });
+
               BL_PROFILE_VAR_STOP(des_update_enthalpy);
             }
 
             if (SOLIDS::solve_species and REACTIONS::solve)
             {
               BL_PROFILE_VAR("des::update_particle_species()", des_update_species);
+
               //Access to added variables
               auto ptile_data = ptile.getParticleTileData();
 
@@ -822,114 +869,109 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
               const int Solid = CHEMICALPHASE::Solid;
 
-              const int idx_X = speciesData::X_sn*nspecies_s;
+              const int idx_X = SoAspeciesData::X_sn*nspecies_s;
 
-              const int idx_G = speciesData::count*nspecies_s +
-                                reactionsData::G_sn_pg_q*nreactions;
+              const int idx_G = SoAspeciesData::count*nspecies_s +
+                                SoAreactionsData::G_sn_pg_q*nreactions;
 
-              amrex::ParallelFor(nrp, [nrp,pstruct,subdt,ptile_data,
+              amrex::ParallelFor(nrp, [nrp,p_realarray,subdt,ptile_data,
                   nspecies_s,nreactions,idx_X,idx_G,Solid]
               AMREX_GPU_DEVICE (int p_id) noexcept
               {
-                ParticleType& p = pstruct[p_id];
-                Real p_mass = p.rdata(realData::mass);
-                Real p_vol = p.rdata(realData::volume);
+                Real p_mass_old = p_realarray[SoArealData::mass][p_id];
+                Real p_mass_new(p_mass_old);
 
-                // Pointer to this particle's species mass fractions
-                GpuArray<Real,SPECIES::NMAX> X_sn;
+                Real p_oneOverI_old = p_realarray[SoArealData::oneOverI][p_id];
+                Real p_oneOverI_new(p_oneOverI_old);
 
-                for (int n_s(0); n_s < nspecies_s; n_s++) {
-                  const int idx = idx_X + n_s;
-
-                  X_sn[n_s] = ptile_data.m_runtime_rdata[idx][p_id];
-                }
-
-                // Pointer to this particle's species density exchange rate for
-                // each reaction
-                GpuArray<GpuArray<Real,SPECIES::NMAX>,REACTIONS::NMAX> G_sn_pg_q;
-
-                for (int n_s(0); n_s < nspecies_s; n_s++) {
-                  for (int q(0); q < nreactions; q++) {
-                    const int idx = idx_G + n_s*nreactions + q;
-                    G_sn_pg_q[n_s][q] = ptile_data.m_runtime_rdata[idx][p_id];
-                  }
-                }
+                Real p_vol = p_realarray[SoArealData::volume][p_id];
 
                 // Total particle density exchange rate
-                Real G_s_pg(0.);
+                Real total_rho_txfr_rate(0);
 
-                // Densities of the singular particle's species
-                GpuArray<Real,SPECIES::NMAX> p_species_mass;
-
-                for (int n_s(0); n_s < nspecies_s; n_s++)
-                  p_species_mass[n_s] = 0;
+                // Cumulative particle's species mass for normalization purposes
+                Real cumulative_mass(0);
 
                 // Update species mass fractions
                 for (int n_s(0); n_s < nspecies_s; ++n_s)
                 {
-                  // Initialize particle's species mass
-                  p_species_mass[n_s] = X_sn[n_s] * p_mass;
-
                   // Total particle species n density exchange rate
-                  Real G_sn_pg(0);
+                  Real total_species_rho_txfr_rate(0);
 
+                  // Index for accessing species mass fractions data
+                  const int idx_species = idx_X + n_s;
+
+                  // Current species mass fraction
+                  const Real X_sn = ptile_data.m_runtime_rdata[idx_species][p_id];
+
+                  // Current species mass
+                  Real p_species_mass = X_sn * p_mass_old;
+
+                  // Loop over reactions to sum up the total rate for current
+                  // species n_s
                   for (int q(0); q < nreactions; q++)
                   {
-                    G_sn_pg += G_sn_pg_q[n_s][q];
-                  }
+                    // Index for accessing the correct rate of reaction q for
+                    // species n_s
+                    const int idx_reaction = idx_G + n_s*nreactions + q;
 
-                  // Update the total mass exchange rate
-                  G_s_pg += G_sn_pg;
+                    // Get the current reaction rate for species n_s
+                    const Real reaction_rate = ptile_data.m_runtime_rdata[idx_reaction][p_id];
+
+                    // Sum up the reaction rate
+                    total_species_rho_txfr_rate += reaction_rate;
+                  }
 
                   // Update specie mass with specie rate of formation
-                  p_species_mass[n_s] += subdt * G_sn_pg * p_vol;
+                  p_species_mass += subdt * total_species_rho_txfr_rate * p_vol;
 
-                  if (p_species_mass[n_s] <= 0.0) {
-                    p_species_mass[n_s] = 0.;
+                  if (p_species_mass < 0) {
+                    p_species_mass = 0;
                   }
+
+                  // Currently saving mass in species mass fractions
+                  ptile_data.m_runtime_rdata[idx_species][p_id] = p_species_mass;
+
+                  // Sum up the species mass for normalization purposes
+                  cumulative_mass += p_species_mass;
+
+                  // Update the total mass exchange rate
+                  total_rho_txfr_rate += total_species_rho_txfr_rate;
                 }
 
-                p_mass += subdt * G_s_pg * p_vol;
+                // Update the total mass of the particle
+                p_mass_new = p_mass_old + subdt * total_rho_txfr_rate * p_vol;
 
-                if (p_mass <= 0.0) {
+                if (p_mass_new <= 0) {
                   amrex::Abort("Error: not yet implemented");
                   // TODO: here we have to remove the current particle since it
                   // disappeared
                 }
 
                 // Update particle's mass
-                p.rdata(realData::mass) = p_mass;
-                p.rdata(realData::density) = p_mass / p_vol;
+                p_realarray[SoArealData::mass][p_id] = p_mass_new;
+                p_realarray[SoArealData::density][p_id] = p_mass_new / p_vol;
 
+                // Update particle's oneOverI
+                p_oneOverI_new = (p_mass_old/p_mass_new)*p_oneOverI_old;
+                p_realarray[SoArealData::oneOverI][p_id] = p_oneOverI_new;
+
+                // Normalize species mass fractions
                 for (int n_s(0); n_s < nspecies_s; n_s++) {
-                  // Update species mass fractions
-                  X_sn[n_s] = p_species_mass[n_s]/p_mass;
-                }
+                  // Index for accessing species mass fractions data
+                  const int idx_species = idx_X + n_s;
 
-                // Renormalization of particle's species
-                // just to be sure hey really sum up to 1
-                Real X_sn_sum(0);
-
-                for (int n_s(0); n_s < nspecies_s; n_s++) {
-                  X_sn_sum += X_sn[n_s];
-                }
-
-                for (int n_s(0); n_s < nspecies_s; n_s++) {
-                  X_sn[n_s] /= X_sn_sum;
-
-                  const int idx = idx_X + n_s;
-
-                  ptile_data.m_runtime_rdata[idx][p_id] = X_sn[n_s];
+                  // Divide updated species mass by particle's cumulative_mass
+                  ptile_data.m_runtime_rdata[idx_species][p_id] /= cumulative_mass;
                 }
               });
 
               BL_PROFILE_VAR_STOP(des_update_species);
-              Gpu::synchronize();
             }
 
             Gpu::synchronize();
 
-            usr2_des(nrp, pstruct);
+            usr2_des(nrp, ptile);
 
             /********************************************************************
              * Update runtime cost (used in load-balancing)                     *
@@ -997,6 +1039,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                            << " pwz= " << max_forces[1][2] << std::endl;
 
         }
+
     } // end of loop over substeps
 
     // Redistribute particles at the end of all substeps (note that the particle
@@ -1133,22 +1176,49 @@ MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
               auto& particles = pti.GetArrayOfStructs();
               int np = pti.numParticles();
 
+              auto& soa = pti.GetStructOfArrays();
+              auto p_realarray = soa.realarray();
+              auto p_intarray = soa.intarray();
+
+              std::array<RealVector, SoArealData::count> host_realarrays;
+              std::array<IntVector, SoAintData::count> host_intarrays;
+
+              for (int comp(0); comp < SoArealData::count; ++comp)
+                host_realarrays[comp].resize(np);
+
+              for (int comp(0); comp < SoAintData::count; ++comp)
+                host_intarrays[comp].resize(np);
+
+              // Copy particles from device to host
+              for (int comp(0); comp < SoArealData::count; ++comp) {
+                Gpu::copyAsync(Gpu::deviceToHost, &(p_realarray[comp][0]),
+                    &(p_realarray[comp][np]), host_realarrays[comp].begin());
+              }
+
+              // Copy particles from device to host
+              for (int comp(0); comp < SoAintData::count; ++comp) {
+                Gpu::copyAsync(Gpu::deviceToHost, &(p_intarray[comp][0]),
+                    &(p_intarray[comp][np]), host_intarrays[comp].begin());
+              }
+
               Gpu::HostVector<ParticleType> host_particles(np);
               Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
 
               int index = 0;
-              for (const auto& p: host_particles)
+              for (int ip(0); ip < np; ++ip)
               {
+                  auto& p = host_particles[ip];
+
                   if (p.id() > 0) {
-                      File << p.idata(intData::phase) << ' ';
+                      File << p_intarray[SoAintData::phase][ip] << ' ';
                       File << p.pos(0) << ' ';
                       File << p.pos(1) << ' ';
                       File << p.pos(2) << ' ';
-                      File << p.rdata(realData::radius) << ' ';
-                      File << p.rdata(realData::density) << ' ';
-                      File << p.rdata(realData::velx) << ' ';
-                      File << p.rdata(realData::vely) << ' ';
-                      File << p.rdata(realData::velz) << ' ';
+                      File << p_realarray[SoArealData::radius][ip] << ' ';
+                      File << p_realarray[SoArealData::density][ip] << ' ';
+                      File << p_realarray[SoArealData::velx][ip] << ' ';
+                      File << p_realarray[SoArealData::vely][ip] << ' ';
+                      File << p_realarray[SoArealData::velz][ip] << ' ';
 
                       File << '\n';
 
@@ -1189,18 +1259,17 @@ void MFIXParticleContainer::UpdateMaxVelocity ()
 
       for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
       {
-        auto& particles = pti.GetArrayOfStructs();
         const int np = pti.numParticles();
-        ParticleType* pstruct = particles().dataPtr();
+
+        auto& soa = pti.GetStructOfArrays();
+        auto p_realarray = soa.realarray();
 
         reduce_op.eval(np, reduce_data,
-            [pstruct] AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
+            [p_realarray] AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
         {
-          ParticleType p = pstruct[p_id];
-
-          Real l_vel_x = Math::abs(p.rdata(realData::velx));
-          Real l_vel_y = Math::abs(p.rdata(realData::vely));
-          Real l_vel_z = Math::abs(p.rdata(realData::velz));
+          Real l_vel_x = Math::abs(p_realarray[SoArealData::velx][p_id]);
+          Real l_vel_y = Math::abs(p_realarray[SoArealData::vely][p_id]);
+          Real l_vel_z = Math::abs(p_realarray[SoArealData::velz][p_id]);
 
           return {l_vel_x, l_vel_y, l_vel_z};
         });
@@ -1220,16 +1289,16 @@ void MFIXParticleContainer::UpdateMaxVelocity ()
 #endif
       for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
       {
-        auto& particles = pti.GetArrayOfStructs();
         const int np = pti.numParticles();
-        ParticleType* pstruct = particles().dataPtr();
+
+        auto& soa = pti.GetStructOfArrays();
+        auto p_realarray = soa.realarray();
 
         for(int p_id(0); p_id < np; ++p_id)
         {
-          ParticleType p = pstruct[p_id];
-          max_vel_x = amrex::max(Math::abs(p.rdata(realData::velx)), max_vel_x);
-          max_vel_y = amrex::max(Math::abs(p.rdata(realData::vely)), max_vel_y);
-          max_vel_z = amrex::max(Math::abs(p.rdata(realData::velz)), max_vel_z);
+          max_vel_x = amrex::max(Math::abs(p_realarray[SoArealData::velx][p_id]), max_vel_x);
+          max_vel_y = amrex::max(Math::abs(p_realarray[SoArealData::vely][p_id]), max_vel_y);
+          max_vel_z = amrex::max(Math::abs(p_realarray[SoArealData::velz][p_id]), max_vel_z);
         }
       }
     }
@@ -1459,11 +1528,15 @@ ComputeAverageVelocities (const int lev,
 
           if (tile_region.intersects(avg_region))
           {
-            const int np         = NumberOfParticles(pti);
-            const AoS &particles = pti.GetArrayOfStructs();
-            const ParticleType* pstruct = particles().dataPtr();
+            AoS& aos = pti.GetArrayOfStructs();
+            ParticleType* pstruct = aos().dataPtr();
 
-            reduce_op.eval(np, reduce_data, [pstruct,avg_region]
+            const int np         = NumberOfParticles(pti);
+
+            SoA& soa = pti.GetStructOfArrays();
+            auto p_realarray = soa.realarray();
+
+            reduce_op.eval(np, reduce_data, [pstruct,p_realarray,avg_region]
               AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
             {
               const ParticleType p = pstruct[p_id];
@@ -1476,12 +1549,12 @@ ComputeAverageVelocities (const int lev,
               
               if (avg_region.contains(p.pos()))
               {
-                const Real mass = p.rdata(realData::mass);
+                const Real mass = p_realarray[SoArealData::mass][p_id];
 
                 l_np = static_cast<long>(1);
-                l_velx = p.rdata(realData::velx);
-                l_vely = p.rdata(realData::vely);
-                l_velz = p.rdata(realData::velz);
+                l_velx = p_realarray[SoArealData::velx][p_id];
+                l_vely = p_realarray[SoArealData::vely][p_id];
+                l_velz = p_realarray[SoArealData::velz][p_id];
                 l_k_en = 0.5*mass*(l_velx*l_velx + l_vely*l_vely + l_velz*l_velz);
               }
 
@@ -1515,16 +1588,19 @@ ComputeAverageVelocities (const int lev,
             const AoS &particles = pti.GetArrayOfStructs();
             const ParticleType* pstruct = particles().dataPtr();
 
+            SoA& soa = pti.GetStructOfArrays();
+            auto p_realarray = soa.realarray();
+
             for (int p_id(0); p_id < np; ++p_id)
             {
               const ParticleType p = pstruct[p_id];
 
               if (avg_region.contains(p.pos()))
               {
-                const Real mass = p.rdata(realData::mass);
-                const Real velx = p.rdata(realData::velx);
-                const Real vely = p.rdata(realData::vely);
-                const Real velz = p.rdata(realData::velz);
+                const Real mass = p_realarray[SoArealData::mass][p_id];
+                const Real velx = p_realarray[SoArealData::velx][p_id];
+                const Real vely = p_realarray[SoArealData::vely][p_id];
+                const Real velz = p_realarray[SoArealData::velz][p_id];
                 const Real k_en = 0.5*mass*(velx*velx + vely*vely + velz*velz);
 
                 sum_np   += static_cast<long>(1);
@@ -1697,7 +1773,10 @@ ComputeAverageTemperatures (const int lev,
             const AoS &particles = pti.GetArrayOfStructs();
             const ParticleType* pstruct = particles().dataPtr();
 
-            reduce_op.eval(np, reduce_data, [pstruct,avg_region]
+            auto& soa = pti.GetStructOfArrays();
+            auto p_realarray = soa.realarray();
+
+            reduce_op.eval(np, reduce_data, [pstruct,p_realarray,avg_region]
               AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
             {
               const ParticleType p = pstruct[p_id];
@@ -1708,7 +1787,7 @@ ComputeAverageTemperatures (const int lev,
               if (avg_region.contains(p.pos()))
               {
                 l_np = static_cast<long>(1);
-                l_Tp = p.rdata(realData::temperature);
+                l_Tp = p_realarray[SoArealData::temperature][p_id];
               }
 
               return {l_np, l_Tp};
@@ -1737,6 +1816,9 @@ ComputeAverageTemperatures (const int lev,
             const AoS& particles  = pti.GetArrayOfStructs();
             const ParticleType* pstruct = particles().dataPtr();
 
+            auto& soa = pti.GetStructOfArrays();
+            auto p_realarray = soa.realarray();
+
             for (int p_id(0); p_id < np; ++p_id)
             {
               const ParticleType& p = pstruct[p_id];
@@ -1744,7 +1826,7 @@ ComputeAverageTemperatures (const int lev,
               if (avg_region.contains(p.pos()))
               {
                 sum_np += static_cast<long>(1);
-                sum_Tp += p.rdata(realData::temperature);;
+                sum_Tp += p_realarray[SoArealData::temperature][p_id];
               }
             }
           }

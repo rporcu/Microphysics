@@ -117,15 +117,15 @@ mfix::InitIOPltData ()
       pp.query("plt_regtest", plt_ccse_regtest);
 
       if (SOLIDS::solve_species) {
-        const int size = realData::count +
-                         speciesData::count*SOLIDS::nspecies;
+        const int size = AoSrealData::count + SoArealData::count +
+                         SoAspeciesData::count*SOLIDS::nspecies;
         write_real_comp.resize(size, 0);
       }
 
       if (SOLIDS::solve_species and REACTIONS::solve) {
-        const int size = realData::count +
-                         speciesData::count*SOLIDS::nspecies +
-                         reactionsData::count*SOLIDS::nspecies*REACTIONS::nreactions;
+        const int size = AoSrealData::count + SoArealData::count +
+                         SoAspeciesData::count*SOLIDS::nspecies +
+                         SoAreactionsData::count*SOLIDS::nspecies*REACTIONS::nreactions;
         write_real_comp.resize(size, 0);
       }
 
@@ -133,77 +133,79 @@ mfix::InitIOPltData ()
       // variables we don't want if not doing CCSE regression tests.
       if (plt_ccse_regtest == 0)
       {
+        int gap = AoSrealData::count;
+
         int input_value = 0;
         pp.query("plt_radius",   input_value );
-        write_real_comp[0] = input_value;
+        write_real_comp[gap+SoArealData::radius] = input_value;
 
         input_value = 0;
         pp.query("plt_volume",   input_value );
-        write_real_comp[1] = input_value;
+        write_real_comp[gap+SoArealData::volume] = input_value;
 
         input_value = 0;
         pp.query("plt_mass",     input_value );
-        write_real_comp[2] = input_value;
+        write_real_comp[gap+SoArealData::mass] = input_value;
 
         input_value = 0;
         pp.query("plt_ro_p",     input_value );
-        write_real_comp[3] = input_value;
+        write_real_comp[gap+SoArealData::density] = input_value;
 
         input_value = 0;
         pp.query("plt_omoi"   ,  input_value );
-        write_real_comp[4] = input_value;
+        write_real_comp[gap+SoArealData::oneOverI] = input_value;
 
         input_value = 1;
         pp.query("plt_vel_p"   ,  input_value );
-        write_real_comp[5] = input_value;
-        write_real_comp[6] = input_value;
-        write_real_comp[7] = input_value;
+        write_real_comp[gap+SoArealData::velx] = input_value;
+        write_real_comp[gap+SoArealData::vely] = input_value;
+        write_real_comp[gap+SoArealData::velz] = input_value;
 
         input_value = 0;
         pp.query("plt_omega_p",   input_value );
-        write_real_comp[8] = input_value;
-        write_real_comp[9] = input_value;
-        write_real_comp[10] = input_value;
+        write_real_comp[gap+SoArealData::omegax] = input_value;
+        write_real_comp[gap+SoArealData::omegay] = input_value;
+        write_real_comp[gap+SoArealData::omegaz] = input_value;
 
         input_value = 0;
         pp.query("plt_statwt",   input_value );
-        write_real_comp[11] = input_value;
+        write_real_comp[gap+SoArealData::statwt] = input_value;
 
         input_value = 0;
         pp.query("plt_drag_p",   input_value );
-        write_real_comp[12] = input_value;  // drag coeff
-        write_real_comp[13] = input_value;  // dragx
-        write_real_comp[14] = input_value;  // dragy
-        write_real_comp[15] = input_value;  // dragz
+        write_real_comp[gap+SoArealData::dragcoeff] = input_value;  // drag coeff
+        write_real_comp[gap+SoArealData::dragx] = input_value;  // dragx
+        write_real_comp[gap+SoArealData::dragy] = input_value;  // dragy
+        write_real_comp[gap+SoArealData::dragz] = input_value;  // dragz
 
         input_value = 0;
         pp.query("plt_cp_s",  input_value);
-        write_real_comp[16] = input_value;  // specific heat
+        write_real_comp[gap+SoArealData::c_ps] = input_value;  // specific heat
 
         input_value = 0;
         pp.query("plt_T_p",   input_value );
-        write_real_comp[17] = input_value;  // temperature
+        write_real_comp[gap+SoArealData::temperature] = input_value;  // temperature
 
         input_value = 0;
         pp.query("plt_convection", input_value );
-        write_real_comp[18] = input_value;  // heat transfer coefficient
+        write_real_comp[gap+SoArealData::convection] = input_value;  // heat transfer coefficient
+
+        gap = AoSrealData::count + SoArealData::count;
 
         input_value = 0;
         pp.query("plt_species_p",   input_value );
         if (SOLIDS::solve_species)
         {
-          const int gap = realData::count;
-
           for(int n(0); n < SOLIDS::nspecies; ++n)
             write_real_comp[gap+n] = input_value;
         }
+
+        gap = AoSrealData::count + SoArealData::count + SoAspeciesData::count*SOLIDS::nspecies;
 
         input_value = 0;
         pp.query("plt_ro_rates_p", input_value );
         if (SOLIDS::solve_species and REACTIONS::solve)
         {
-          const int gap = realData::count + speciesData::count*SOLIDS::nspecies;
-
           for(int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
             for(int q(0); q < REACTIONS::nreactions; ++q) {
               const int comp = gap + n_s*REACTIONS::nreactions + q;
@@ -211,13 +213,15 @@ mfix::InitIOPltData ()
             }
         }
 
+        gap = AoSintData::count;
+
         input_value = 0;
         pp.query("plt_phase",   input_value );
-        write_int_comp[0] = input_value;
+        write_int_comp[gap+SoAintData::phase] = input_value;
 
         input_value = 0;
         pp.query("plt_state",   input_value );
-        write_int_comp[1] = input_value;
+        write_int_comp[gap+SoAintData::state] = input_value;
 
       }
 
@@ -539,18 +543,22 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
     {
         Vector<std::string> real_comp_names;
         Vector<std::string>  int_comp_names;
+
         real_comp_names.push_back("radius");
         real_comp_names.push_back("volume");
         real_comp_names.push_back("mass");
         real_comp_names.push_back("density");
+
         if(DEM::solve){
           real_comp_names.push_back("omoi");
         } else {
           real_comp_names.push_back("ep_s");
         }
+
         real_comp_names.push_back("velx");
         real_comp_names.push_back("vely");
         real_comp_names.push_back("velz");
+
         if(DEM::solve){
           real_comp_names.push_back("omegax");
           real_comp_names.push_back("omegay");
@@ -560,6 +568,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
           real_comp_names.push_back("grad_tau_y");
           real_comp_names.push_back("grad_tau_z");
         }
+
         real_comp_names.push_back("statwt");
         real_comp_names.push_back("dragcoeff");
         real_comp_names.push_back("dragx");
@@ -586,6 +595,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
                           write_int_comp, real_comp_names, int_comp_names);
 
     }
+
 }
 
 void mfix::WriteStaticPlotFile (const std::string & plotfilename) const

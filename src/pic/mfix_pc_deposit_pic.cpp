@@ -17,19 +17,20 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
   const auto      plo = gm.ProbLoArray();
   const auto      dxi = gm.InvCellSizeArray();
 
-  using ParConstIter = ParConstIter<realData::count,intData::count,0,0>;
-
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
   {
     FArrayBox local_vel_s_fab;
 
-    for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
       const auto& particles = pti.GetArrayOfStructs();
       const ParticleType* pstruct = particles().dataPtr();
+
+      auto& soa = pti.GetStructOfArrays();
+      auto p_realarray = soa.realarray();
+
       const long nrp = pti.numParticles();
 
       FArrayBox& vel_s_fab = vel_s_mf[pti];
@@ -53,8 +54,7 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
         }
 #endif
 
-        amrex::ParallelFor(nrp,
-          [pstruct,plo,dxi,vel_s_arr]
+        amrex::ParallelFor(nrp, [pstruct,p_realarray,plo,dxi,vel_s_arr]
           AMREX_GPU_DEVICE (int ip) noexcept
           {
             const ParticleType& p = pstruct[ip];
@@ -75,12 +75,12 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
             const amrex::Real wy_lo(1.0 - wy_hi);
             const amrex::Real wz_lo(1.0 - wz_hi);
 
-            const amrex::Real pmass = p.rdata(realData::statwt)*p.rdata(realData::mass);
-
+            const amrex::Real pmass = p_realarray[SoArealData::statwt][ip] *
+              p_realarray[SoArealData::mass][ip];
 
             {// Deposition of x velocity -- x-face deposition
 
-              const amrex::Real pvelx = pmass*p.rdata(realData::velx);
+              const amrex::Real pvelx = pmass*p_realarray[SoArealData::velx][ip];
 
               const amrex::Real lxc = (p.pos(0) - plo[0]) * dxi[0];
 
@@ -111,7 +111,7 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
 
             {// Deposition of y velocity -- y-face deposition
 
-              const amrex::Real pvely = pmass*p.rdata(realData::vely);
+              const amrex::Real pvely = pmass*p_realarray[SoArealData::vely][ip];
 
               const amrex::Real lyc = (p.pos(1) - plo[1]) * dxi[1];
 
@@ -142,7 +142,7 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
 
             {// Deposition of z velocity -- z-face deposition
 
-              const amrex::Real pvelz = pmass*p.rdata(realData::velz);
+              const amrex::Real pvelz = pmass*p_realarray[SoArealData::velz][ip];
               const amrex::Real lzc = (p.pos(2) - plo[2]) * dxi[2];
 
               const int kk = static_cast<int>(amrex::Math::floor(lzc));

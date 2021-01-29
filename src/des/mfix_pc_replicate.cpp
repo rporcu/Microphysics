@@ -21,10 +21,10 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
     const int nspecies_s = SOLIDS::nspecies;
     const int nreactions = REACTIONS::nreactions;
 
-    const int idx_X = speciesData::X_sn * nspecies_s;
+    const int idx_X = SoAspeciesData::X_sn * nspecies_s;
 
-    const int idx_G = speciesData::count * nspecies_s +
-                      reactionsData::G_sn_pg_q * nreactions;
+    const int idx_G = SoAspeciesData::count * nspecies_s +
+                      SoAreactionsData::G_sn_pg_q * nreactions;
 
     for (int idim = 0; idim < 3; ++idim)
     {
@@ -59,6 +59,10 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
             auto& particles = ptile.GetArrayOfStructs();
             ParticleType* pstruct = particles().dataPtr();
 
+            auto& soa = ptile.GetStructOfArrays();
+            auto p_realarray = soa.realarray();
+            auto p_intarray = soa.intarray();
+
             //Access to added variables
             auto ptile_data = ptile.getParticleTileData();
 
@@ -71,8 +75,8 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
 
                 const int nextID = ParticleType::NextID();
 
-                amrex::ParallelFor(np, [pstruct,ptile_data,np,nextID,myProc,
-                    nspecies_s,nreactions,idx_X,idx_G,shift,i]
+                amrex::ParallelFor(np, [pstruct,p_realarray,p_intarray,ptile_data,np,
+                    nextID,myProc,nspecies_s,nreactions,idx_X,idx_G,shift,i]
                   AMREX_GPU_DEVICE (int n) noexcept
                 {
                     int index = n;
@@ -85,29 +89,28 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                     p_rep.pos(1) = p.pos(1) + shift[1];
                     p_rep.pos(2) = p.pos(2) + shift[2];
 
-                    p_rep.rdata(realData::velx) = p.rdata(realData::velx);
-                    p_rep.rdata(realData::vely) = p.rdata(realData::vely);
-                    p_rep.rdata(realData::velz) = p.rdata(realData::velz);
+                    p_realarray[SoArealData::velx][index_repl] = p_realarray[SoArealData::velx][index];
+                    p_realarray[SoArealData::vely][index_repl] = p_realarray[SoArealData::vely][index];
+                    p_realarray[SoArealData::velz][index_repl] = p_realarray[SoArealData::velz][index];
 
                     // Set other particle properties
-                    p_rep.idata(intData::phase)        = p.idata(intData::phase);
-                    p_rep.idata(intData::state)        = p.idata(intData::state);
-                    p_rep.rdata(realData::volume)      = p.rdata(realData::volume);
-                    p_rep.rdata(realData::density)     = p.rdata(realData::density);
-                    p_rep.rdata(realData::mass)        = p.rdata(realData::mass);
-                    p_rep.rdata(realData::oneOverI)    = p.rdata(realData::oneOverI);
-                    p_rep.rdata(realData::radius)      = p.rdata(realData::radius);
-                    p_rep.rdata(realData::omegax)      = p.rdata(realData::omegax);
-                    p_rep.rdata(realData::omegay)      = p.rdata(realData::omegay);
-                    p_rep.rdata(realData::omegaz)      = p.rdata(realData::omegaz);
-                    p_rep.rdata(realData::statwt)      = p.rdata(realData::statwt);
-                    p_rep.rdata(realData::dragcoeff)   = p.rdata(realData::dragcoeff);
-                    p_rep.rdata(realData::dragx)       = p.rdata(realData::dragx);
-                    p_rep.rdata(realData::dragy)       = p.rdata(realData::dragy);
-                    p_rep.rdata(realData::dragz)       = p.rdata(realData::dragz);
-                    p_rep.rdata(realData::c_ps)        = p.rdata(realData::c_ps);
-                    p_rep.rdata(realData::temperature) = p.rdata(realData::temperature);
-                    p_rep.rdata(realData::convection)  = p.rdata(realData::convection);
+                    p_intarray[SoAintData::phase][index_repl] = p_intarray[SoAintData::phase][index];
+                    p_realarray[SoArealData::volume][index_repl] = p_realarray[SoArealData::volume][index];
+                    p_realarray[SoArealData::density][index_repl] = p_realarray[SoArealData::density][index];
+                    p_realarray[SoArealData::mass][index_repl] = p_realarray[SoArealData::mass][index];
+                    p_realarray[SoArealData::oneOverI][index_repl] = p_realarray[SoArealData::oneOverI][index];
+                    p_realarray[SoArealData::radius][index_repl] = p_realarray[SoArealData::radius][index];
+                    p_realarray[SoArealData::omegax][index_repl] = p_realarray[SoArealData::omegax][index];
+                    p_realarray[SoArealData::omegay][index_repl] = p_realarray[SoArealData::omegay][index];
+                    p_realarray[SoArealData::omegaz][index_repl] = p_realarray[SoArealData::omegaz][index];
+                    p_realarray[SoArealData::statwt][index_repl] = p_realarray[SoArealData::statwt][index];
+                    p_realarray[SoArealData::dragcoeff][index_repl] = p_realarray[SoArealData::dragcoeff][index];
+                    p_realarray[SoArealData::dragx][index_repl] = p_realarray[SoArealData::dragx][index];
+                    p_realarray[SoArealData::dragy][index_repl] = p_realarray[SoArealData::dragy][index];
+                    p_realarray[SoArealData::dragz][index_repl] = p_realarray[SoArealData::dragz][index];
+                    p_realarray[SoArealData::c_ps][index_repl] = p_realarray[SoArealData::c_ps][index];
+                    p_realarray[SoArealData::temperature][index_repl] = p_realarray[SoArealData::temperature][index];
+                    p_realarray[SoArealData::convection][index_repl] = p_realarray[SoArealData::convection][index];
 
                     // Set id and cpu for this particle
                     p_rep.id()  = nextID + n;

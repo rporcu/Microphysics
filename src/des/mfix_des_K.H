@@ -18,8 +18,12 @@ amrex::Real dot_product (const amrex::RealVect& a,
 }
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void cfrelvel (const MFIXParticleContainer::ParticleType& p1, 
-               const MFIXParticleContainer::ParticleType& p2,
+void cfrelvel (const amrex::RealVect& vel1, 
+               const amrex::RealVect& vel2,
+               const amrex::Real& radius1,
+               const amrex::Real& radius2,
+               const amrex::RealVect& omega1,
+               const amrex::RealVect& omega2,
                amrex::Real& vrn, 
                amrex::RealVect& vslip,
                const amrex::RealVect& normal, 
@@ -27,21 +31,20 @@ void cfrelvel (const MFIXParticleContainer::ParticleType& p1,
 {
     // translational relative velocity
     amrex::RealVect vreltrans(0.);
-    vreltrans[0] =  p1.rdata(realData::velx) - p2.rdata(realData::velx);
-    vreltrans[1] =  p1.rdata(realData::vely) - p2.rdata(realData::vely);
-    vreltrans[2] =  p1.rdata(realData::velz) - p2.rdata(realData::velz);
+    vreltrans[0] =  vel1[0] - vel2[0];
+    vreltrans[1] =  vel1[1] - vel2[1];
+    vreltrans[2] =  vel1[2] - vel2[2];
 
     // distance from the contact point to the particle centers
     amrex::Real dist_c1 = (dist_mag*dist_mag 
-                    + p1.rdata(realData::radius)*p1.rdata(realData::radius) 
-                    - p2.rdata(realData::radius)*p2.rdata(realData::radius)) / (2.0*dist_mag);
+                          + radius1*radius1 - radius2*radius2) / (2.0*dist_mag);
 
     amrex::Real dist_c2 = dist_mag - dist_c1;
 
     amrex::RealVect omega_sum(0.);
-    omega_sum[0] = p1.rdata(realData::omegax) * dist_c1 + p2.rdata(realData::omegax) * dist_c2;
-    omega_sum[1] = p1.rdata(realData::omegay) * dist_c1 + p2.rdata(realData::omegay) * dist_c2;
-    omega_sum[2] = p1.rdata(realData::omegaz) * dist_c1 + p2.rdata(realData::omegaz) * dist_c2;
+    omega_sum[0] = omega1[0] * dist_c1 + omega2[0] * dist_c2;
+    omega_sum[1] = omega1[1] * dist_c1 + omega2[1] * dist_c2;
+    omega_sum[2] = omega1[2] * dist_c1 + omega2[2] * dist_c2;
 
     // the rotational relative velocity
     amrex::RealVect v_rot(0.);
@@ -61,7 +64,7 @@ void cfrelvel (const MFIXParticleContainer::ParticleType& p1,
 }
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-amrex::Real interp_level_set (MFIXParticleContainer::ParticleType const& p,
+amrex::Real interp_level_set (const amrex::RealVect& pos,
                               const int n_refine,
                               amrex::Array4<amrex::Real const> const& phi,
                               amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
@@ -72,9 +75,9 @@ amrex::Real interp_level_set (MFIXParticleContainer::ParticleType const& p,
     scaled_dxi[1] = n_refine * dxi[1];
     scaled_dxi[2] = n_refine * dxi[2];
     
-    amrex::Real x = (p.pos(0) - plo[0]) * scaled_dxi[0];
-    amrex::Real y = (p.pos(1) - plo[1]) * scaled_dxi[1];
-    amrex::Real z = (p.pos(2) - plo[2]) * scaled_dxi[2];
+    amrex::Real x = (pos[0] - plo[0]) * scaled_dxi[0];
+    amrex::Real y = (pos[1] - plo[1]) * scaled_dxi[1];
+    amrex::Real z = (pos[2] - plo[2]) * scaled_dxi[2];
 
     int i = static_cast<int>(amrex::Math::floor(x));
     int j = static_cast<int>(amrex::Math::floor(y));
@@ -102,7 +105,7 @@ amrex::Real interp_level_set (MFIXParticleContainer::ParticleType const& p,
 }
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void level_set_normal (MFIXParticleContainer::ParticleType const& p,
+void level_set_normal (const amrex::RealVect& pos,
                        const int n_refine,
                        amrex::RealVect& normal,
                        amrex::Array4<amrex::Real const> const& phi,
@@ -114,9 +117,9 @@ void level_set_normal (MFIXParticleContainer::ParticleType const& p,
     scaled_dxi[1] = n_refine * dxi[1];
     scaled_dxi[2] = n_refine * dxi[2];
     
-    amrex::Real x = (p.pos(0) - plo[0]) * scaled_dxi[0];
-    amrex::Real y = (p.pos(1) - plo[1]) * scaled_dxi[1];
-    amrex::Real z = (p.pos(2) - plo[2]) * scaled_dxi[2];
+    amrex::Real x = (pos[0] - plo[0]) * scaled_dxi[0];
+    amrex::Real y = (pos[1] - plo[1]) * scaled_dxi[1];
+    amrex::Real z = (pos[2] - plo[2]) * scaled_dxi[2];
 
     int i = static_cast<int>(amrex::Math::floor(x));
     int j = static_cast<int>(amrex::Math::floor(y));

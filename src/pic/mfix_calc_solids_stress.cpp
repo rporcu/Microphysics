@@ -330,12 +330,14 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
       {
-
         // Timer used for load-balancing
         amrex::Real wt = ParallelDescriptor::second();
 
         auto& particles = pti.GetArrayOfStructs();
         MFIXParticleContainer::ParticleType* pstruct = particles().dataPtr();
+
+        auto& soa = pti.GetStructOfArrays();
+        auto p_realarray = soa.realarray();
 
         const int np = particles.size();
 
@@ -352,19 +354,19 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
         if (flags.getType(amrex::grow(bx,1)) == FabType::covered)
         {
           // We shouldn't have this case but if we do -- zero the stress.
-          amrex::ParallelFor(np, [pstruct]
+          amrex::ParallelFor(np, [p_realarray]
             AMREX_GPU_DEVICE (int ip) noexcept
             {
-              MFIXParticleContainer::ParticleType& particle = pstruct[ip];
-              particle.rdata(realData::oneOverI) = 0.0;
-              particle.rdata(realData::omegax) = 0.0;
-              particle.rdata(realData::omegay) = 0.0;
-              particle.rdata(realData::omegaz) = 0.0;
+              p_realarray[SoArealData::oneOverI][ip] = 0.0;
+
+              p_realarray[SoArealData::omegax][ip] = 0.0;
+              p_realarray[SoArealData::omegay][ip] = 0.0;
+              p_realarray[SoArealData::omegaz][ip] = 0.0;
             });
         }
         else if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
         {
-          amrex::ParallelFor(np, [pstruct,ep_s_arr,Ps_arr,plo,dxi]
+          amrex::ParallelFor(np, [pstruct,p_realarray,ep_s_arr,Ps_arr,plo,dxi]
             AMREX_GPU_DEVICE (int ip) noexcept
           {
 
@@ -446,21 +448,20 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
 
             // Store local solids volume fraction in unused array location.
-            particle.rdata(realData::oneOverI) = ep_s_loc;
+            p_realarray[SoArealData::oneOverI][ip] = ep_s_loc;
 
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_loc >= 0.,"Check valid ep_s_loc");
 
-            particle.rdata(realData::omegax) = dPsdx;
-            particle.rdata(realData::omegay) = dPsdy;
-            particle.rdata(realData::omegaz) = dPsdz;
-
+            p_realarray[SoArealData::omegax][ip] = dPsdx;
+            p_realarray[SoArealData::omegay][ip] = dPsdy;
+            p_realarray[SoArealData::omegaz][ip] = dPsdz;
           });
         }
         else // FAB not all regular
         {
 
           amrex::ParallelFor(np,
-          [pstruct,flags_array,ep_s_arr,Ps_arr,plo,dxi,
+          [pstruct,p_realarray,flags_array,ep_s_arr,Ps_arr,plo,dxi,
            Ps0,beta,ep_cp,small_number]
           AMREX_GPU_DEVICE (int pid) noexcept
           {
@@ -473,9 +474,9 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
             if(flags_array(ip,jp,kp).isCovered())
             {
-              particle.rdata(realData::omegax) = 0.0;
-              particle.rdata(realData::omegay) = 0.0;
-              particle.rdata(realData::omegaz) = 0.0;
+              p_realarray[SoArealData::omegax][ip] = 0.0;
+              p_realarray[SoArealData::omegay][ip] = 0.0;
+              p_realarray[SoArealData::omegaz][ip] = 0.0;
 
             // Cut or regular cell and none of the cells in the stencil is covered
             // (Note we can't assume regular cell has no covered cells in the stencil
@@ -695,14 +696,13 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
               } // Cut cell
 
               // Store local solids volume fraction in unused array location.
-              particle.rdata(realData::oneOverI) = ep_s_loc;
+              p_realarray[SoArealData::oneOverI][ip] = ep_s_loc;
 
               AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_loc >= 0.,"Check valid ep_s_loc");
 
-              particle.rdata(realData::omegax) = dPsdx;
-              particle.rdata(realData::omegay) = dPsdy;
-              particle.rdata(realData::omegaz) = dPsdz;
-
+              p_realarray[SoArealData::omegax][ip] = dPsdx;
+              p_realarray[SoArealData::omegay][ip] = dPsdy;
+              p_realarray[SoArealData::omegaz][ip] = dPsdz;
             }
 
           }); // part loop

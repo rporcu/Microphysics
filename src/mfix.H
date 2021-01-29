@@ -1041,8 +1041,8 @@ class mfix : public AmrCore
     // Flags for saving particle data. By default, we have all flags on,
     // we turn off what we don't want in the init IO routine. This is somewhat
     // different from what we do with the fluid.
-    Vector<int> write_real_comp = Vector<int>(realData::count,1);
-    Vector<int> write_int_comp = Vector<int>(intData::count,1);
+    Vector<int> write_real_comp = Vector<int>(AoSrealData::count+SoArealData::count,1);
+    Vector<int> write_int_comp = Vector<int>(AoSintData::count+SoAintData::count,1);
 
     //
     // Here we set the number of ghost nodes of the field arrays.
@@ -1058,6 +1058,8 @@ class mfix : public AmrCore
     const int m_eb_basic_grow_cells = nghost;
     const int m_eb_volume_grow_cells = nghost;
     const int m_eb_full_grow_cells = nghost;
+
+    IntVect particle_sorting_bin = IntVect::TheZeroVector();
 
     bool do_initial_proj    = true;
     int  initial_iterations = 3;

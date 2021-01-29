@@ -39,7 +39,17 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
 
     Gpu::HostVector<ParticleType> host_particles(np);
 
+    std::array<RealVector, SoArealData::count> host_realarrays;
+    std::array<IntVector, SoAintData::count> host_intarrays;
+
+    for (int comp(0); comp < SoArealData::count; ++comp)
+      host_realarrays[comp].resize(np);
+
+    for (int comp(0); comp < SoAintData::count; ++comp)
+      host_intarrays[comp].resize(np);
+
     int  pstate, pphase;
+    Real velx, vely, velz;
     Real pradius, pdensity, pvolume, pomoi, pmass, pomega;
 
     pstate = 1;
@@ -53,9 +63,13 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
       ifs >> host_particles[i].pos(2);
       ifs >> pradius;
       ifs >> pdensity;
-      ifs >> host_particles[i].rdata(realData::velx);
-      ifs >> host_particles[i].rdata(realData::vely);
-      ifs >> host_particles[i].rdata(realData::velz);
+      ifs >> velx;
+      ifs >> vely;
+      ifs >> velz;
+
+      host_realarrays[SoArealData::velx][i]   = velx;
+      host_realarrays[SoArealData::vely][i]   = vely;
+      host_realarrays[SoArealData::velz][i]   = velz;
 
       // Compute other particle properties
       set_particle_properties(pstate, pradius, pdensity, pvolume, pmass, pomoi, pomega);
@@ -65,26 +79,26 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
       host_particles[i].cpu() = ParallelDescriptor::MyProc();
 
       // Set other particle properties
-      host_particles[i].idata(intData::phase)     = pphase;
-      host_particles[i].idata(intData::state)     = pstate;
-      host_particles[i].rdata(realData::volume)   = pvolume;
-      host_particles[i].rdata(realData::density)  = pdensity;
-      host_particles[i].rdata(realData::mass)     = pmass;
-      host_particles[i].rdata(realData::oneOverI) = pomoi;
-      host_particles[i].rdata(realData::radius)   = pradius;
-      host_particles[i].rdata(realData::omegax)   = pomega;
-      host_particles[i].rdata(realData::omegay)   = pomega;
-      host_particles[i].rdata(realData::omegaz)   = pomega;
-      host_particles[i].rdata(realData::statwt)   = 1.0;
+      host_intarrays[SoAintData::phase][i]        = pphase;
+      host_intarrays[SoAintData::state][i]        = pstate;
+      host_realarrays[SoArealData::volume][i]     = pvolume;
+      host_realarrays[SoArealData::density][i]    = pdensity;
+      host_realarrays[SoArealData::mass][i]       = pmass;
+      host_realarrays[SoArealData::oneOverI][i]   = pomoi;
+      host_realarrays[SoArealData::radius][i]     = pradius;
+      host_realarrays[SoArealData::omegax][i]     = pomega;
+      host_realarrays[SoArealData::omegay][i]     = pomega;
+      host_realarrays[SoArealData::omegaz][i]     = pomega;
+      host_realarrays[SoArealData::statwt][i]   = 1.0;
 
       // Initialize these for I/O purposes
-      host_particles[i].rdata(realData::dragcoeff)   = 0.0;
-      host_particles[i].rdata(realData::dragx)       = 0.0;
-      host_particles[i].rdata(realData::dragy)       = 0.0;
-      host_particles[i].rdata(realData::dragz)       = 0.0;
-      host_particles[i].rdata(realData::c_ps)        = 0.0;
-      host_particles[i].rdata(realData::temperature) = 0.0;
-      host_particles[i].rdata(realData::convection)  = 0.0;
+      host_realarrays[SoArealData::dragcoeff][i]     = 0.0;
+      host_realarrays[SoArealData::dragx][i]         = 0.0;
+      host_realarrays[SoArealData::dragy][i]         = 0.0;
+      host_realarrays[SoArealData::dragz][i]         = 0.0;
+      host_realarrays[SoArealData::c_ps][i]          = 0.0;
+      host_realarrays[SoArealData::temperature][i]   = 0.0;
+      host_realarrays[SoArealData::convection][i]    = 0.0;
 
       if (!ifs.good())
           amrex::Abort("Error initializing particles from Ascii file. \n");
@@ -95,6 +109,22 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
 
     // Copy particles from host to device
     Gpu::copyAsync(Gpu::hostToDevice, host_particles.begin(), host_particles.end(), gpu_particles.begin());
+
+    auto& soa = particles.GetStructOfArrays();
+    auto p_realarray = soa.realarray();
+    auto p_intarray = soa.intarray();
+
+    // Copy particles from host to device
+    for (int comp(0); comp < SoArealData::count; ++comp) {
+      Gpu::copyAsync(Gpu::hostToDevice, host_realarrays[comp].begin(),
+          host_realarrays[comp].end(), &(p_realarray[comp][0]));
+    }
+
+    // Copy particles from host to device
+    for (int comp(0); comp < SoAintData::count; ++comp) {
+      Gpu::copyAsync(Gpu::hostToDevice, host_intarrays[comp].begin(),
+          host_intarrays[comp].end(), &(p_intarray[comp][0]));
+    }
 
     // Add real components for solid species
     if (SOLIDS::solve_species)
@@ -160,7 +190,17 @@ void MFIXParticleContainer::InitParticlesAuto ()
       // grid and add the particles to it
       auto& particles = DefineAndReturnParticleTile(lev,mfi);
 
-      ParticleType p_new;
+      SuperParticleType p_new;
+
+      // Set p_new.pos() to avoid warnings
+      p_new.m_pos[0] = 0;
+      p_new.m_pos[1] = 0;
+      p_new.m_pos[2] = 0;
+      // Set p_new.id() to avoid warnings
+      p_new.m_idata[0] = 0;
+      // Set p_new.cpu() to avoid warnings
+      p_new.m_idata[1] = 0;
+
       // If possible Parallelize this
       for (int i = 0; i < pcount; i++) {
         // Set id and cpu for this particle
@@ -282,10 +322,14 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
         Gpu::AsyncArray<Real> d_temperature_loc(h_temperature_loc.data(), h_temperature_loc.size());
         amrex::Real* p_temperature_loc = d_temperature_loc.data();
 
+        auto& soa = pti.GetStructOfArrays();
+        auto p_realarray = soa.realarray();
+        auto p_intarray = soa.intarray();
+
         auto particles_ptr = particles().dataPtr();
 
         amrex::ParallelFor(np,
-          [particles_ptr, p_temperature_loc, p_cp0_loc, ic_lo, ic_hi]
+          [particles_ptr,p_realarray,p_intarray,p_temperature_loc,p_cp0_loc,ic_lo,ic_hi]
           AMREX_GPU_DEVICE (int ip) noexcept
         {
           MFIXParticleContainer::ParticleType& p = particles_ptr[ip];
@@ -294,9 +338,9 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
              ic_lo[1] <= p.pos(1) and p.pos(1) <= ic_hi[1] and
              ic_lo[2] <= p.pos(2) and p.pos(2) <= ic_hi[2])
           {
-            const int phase = p.idata(intData::phase);
-            p.rdata(realData::temperature) = p_temperature_loc[phase-1];
-            p.rdata(realData::c_ps) = p_cp0_loc[phase-1];
+            const int phase = p_intarray[SoAintData::phase][ip];
+            p_realarray[SoArealData::temperature][ip] = p_temperature_loc[phase-1];
+            p_realarray[SoArealData::c_ps][ip] = p_cp0_loc[phase-1];
           }
         });
 

@@ -839,6 +839,10 @@ ParticlesGenerator::generate_prop (const int nrp, ParticleTileType& particles)
   auto& aos = particles.GetArrayOfStructs();
   ParticleType* pstruct = aos().dataPtr();
 
+  auto& soa = particles.GetStructOfArrays();
+  auto p_realarray = soa.realarray();
+  auto p_intarray = soa.intarray();
+
   amrex::Real* p_rdata = m_rdata.data();
   int* p_idata = m_idata.data();
 
@@ -847,7 +851,8 @@ ParticlesGenerator::generate_prop (const int nrp, ParticleTileType& particles)
 
   const amrex::Real picmulti = (DEM::solve) ? 1.0 : 0.0;
 
-  amrex::ParallelFor(nrp, [pstruct,p_rdata,p_idata,local_nr,local_ni,picmulti]
+  amrex::ParallelFor(nrp, [pstruct,p_realarray,p_intarray,p_rdata,p_idata,
+      local_nr,local_ni,picmulti]
     AMREX_GPU_DEVICE (int p) noexcept
   {
     ParticleType& part = pstruct[p];
@@ -859,35 +864,38 @@ ParticlesGenerator::generate_prop (const int nrp, ParticleTileType& particles)
     amrex::Real rad = p_rdata[p*local_nr + 3];
     amrex::Real rho = p_rdata[p*local_nr + 4];
 
-    part.rdata(realData::velx) = p_rdata[p*local_nr + 5];
-    part.rdata(realData::vely) = p_rdata[p*local_nr + 6];
-    part.rdata(realData::velz) = p_rdata[p*local_nr + 7];
-
-    part.rdata(realData::statwt) = p_rdata[p*local_nr + 8];
-
     amrex::Real vol  = (4.0/3.0)*M_PI*rad*rad*rad;
     amrex::Real mass = vol * rho;
     amrex::Real omoi = 2.5/(mass * rad*rad);
 
-    part.rdata(realData::radius) = rad;
-    part.rdata(realData::density) = rho;
+    p_intarray[SoAintData::phase][p] = p_idata[p*local_ni + 0];
+    p_intarray[SoAintData::state][p] = 1;
 
-    part.rdata(realData::volume) = vol;
-    part.rdata(realData::mass) = mass;
-    part.rdata(realData::oneOverI) = omoi*picmulti;
+    p_realarray[SoArealData::velx][p] = p_rdata[p*local_nr + 5];
+    p_realarray[SoArealData::vely][p] = p_rdata[p*local_nr + 6];
+    p_realarray[SoArealData::velz][p] = p_rdata[p*local_nr + 7];
 
-    part.rdata(realData::omegax) = 0.0;
-    part.rdata(realData::omegay) = 0.0;
-    part.rdata(realData::omegaz) = 0.0;
+    p_realarray[SoArealData::statwt][p] = p_rdata[p*local_nr + 8];
 
-    part.rdata(realData::dragcoeff) = 0.0;
+    p_realarray[SoArealData::radius][p] = rad;
+    p_realarray[SoArealData::density][p] = rho;
 
-    part.rdata(realData::dragx) = 0.0;
-    part.rdata(realData::dragy) = 0.0;
-    part.rdata(realData::dragz) = 0.0;
+    p_realarray[SoArealData::volume][p] = vol;
+    p_realarray[SoArealData::mass][p] = mass;
+    p_realarray[SoArealData::oneOverI][p] = omoi*picmulti;
 
-    part.idata(intData::phase) = p_idata[p*local_ni + 0];
-    part.idata(intData::state) = 1;
+    p_realarray[SoArealData::omegax][p] = 0.0;
+    p_realarray[SoArealData::omegay][p] = 0.0;
+    p_realarray[SoArealData::omegaz][p] = 0.0;
+
+    p_realarray[SoArealData::dragcoeff][p] = 0.0;
+
+    p_realarray[SoArealData::dragx][p] = 0.0;
+    p_realarray[SoArealData::dragy][p] = 0.0;
+    p_realarray[SoArealData::dragz][p] = 0.0;
+
+    p_intarray[SoAintData::phase][p] = p_idata[p*local_ni + 0];
+    p_intarray[SoAintData::state][p] = 1;
   });
 
   Gpu::synchronize();
@@ -1109,11 +1117,14 @@ ParticlesGenerator::grow_pdata (const int gsize)
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 void
 ParticlesGenerator::write (const int nrp,
-                           const ParticleTileType& particles,
+                           ParticleTileType& particles,
                            const int nstep) const
 {
   const auto& aos = particles.GetArrayOfStructs();
   const ParticleType* pstruct = aos().dataPtr();
+
+  auto& soa = particles.GetStructOfArrays();
+  auto p_realarray = soa.realarray();
 
   std::ostringstream nstep_stream;
   nstep_stream << nstep;
@@ -1144,11 +1155,9 @@ ParticlesGenerator::write (const int nrp,
 
   for(int lc1 = 0; lc1 < nrp; ++lc1)
   {
-    const ParticleType& part = pstruct[lc1];
-
     output_file << "               "
                 << std::scientific << std::setw(13) << std::setprecision(6)
-                << std::setfill(' ') << amrex::Real(part.rdata(realData::radius)) << std::endl;
+                << std::setfill(' ') << amrex::Real(p_realarray[SoArealData::radius][lc1]) << std::endl;
   }
 
   output_file << "            " << "</DataArray>" << std::endl;
@@ -1159,11 +1168,9 @@ ParticlesGenerator::write (const int nrp,
 
   for(int lc1 = 0; lc1 < nrp; ++lc1)
   {
-    const ParticleType& part = pstruct[lc1];
-
     output_file << "               "
                 << std::scientific << std::setw(13) << std::setprecision(6)
-                << amrex::Real(part.rdata(realData::density)) << std::endl;
+                << amrex::Real(p_realarray[SoArealData::density][lc1]) << std::endl;
   }
 
   output_file << "            " << "</DataArray>" << std::endl;
