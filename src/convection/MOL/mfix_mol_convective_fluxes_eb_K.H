@@ -139,7 +139,7 @@ void compute_convective_fluxes_eb (const int lev,
           Real delta_y = yf - ccc(i,j,k,1);
           Real delta_z = zf - ccc(i,j,k,2);
 
-          const auto& slopes_eb_hi = amrex_calc_slopes_extdir_eb(i  ,j,k,comp,
+          const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i  ,j,k,comp,
                                         state, ccc, fcx, fcy, fcz, flag,
                                         extdir_ilo, extdir_jlo, extdir_klo,
                                         extdir_ihi, extdir_jhi, extdir_khi,
@@ -156,7 +156,7 @@ void compute_convective_fluxes_eb (const int lev,
           delta_y = yf - ccc(i-1,j,k,1);
           delta_z = zf - ccc(i-1,j,k,2);
 
-          const auto& slopes_eb_lo = amrex_calc_slopes_extdir_eb(i-1,j,k,comp,
+          const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i-1,j,k,comp,
                                         state, ccc, fcx, fcy, fcz, flag,
                                         extdir_ilo, extdir_jlo, extdir_klo,
                                         extdir_ihi, extdir_jhi, extdir_khi,
@@ -207,7 +207,7 @@ void compute_convective_fluxes_eb (const int lev,
         Real delta_y = yf - ccc(i,j,k,1);
         Real delta_z = zf - ccc(i,j,k,2);
 
-        const auto& slopes_eb_hi = amrex_calc_slopes_eb(i  ,j,k,comp, state, ccc, flag);
+        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i  ,j,k,comp, state, ccc, fcx, fcy, fcz, flag);
 
         Real upls = state_pls - delta_x * slopes_eb_hi[0]
                               + delta_y * slopes_eb_hi[1]
@@ -219,7 +219,7 @@ void compute_convective_fluxes_eb (const int lev,
         delta_y = yf - ccc(i-1,j,k,1);
         delta_z = zf - ccc(i-1,j,k,2);
 
-        const auto& slopes_eb_lo = amrex_calc_slopes_eb(i-1,j,k,comp, state, ccc, flag);
+        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i-1,j,k,comp, state, ccc, fcx, fcy, fcz, flag);
 
         Real umns = state_mns + delta_x * slopes_eb_lo[0]
                               + delta_y * slopes_eb_lo[1]
@@ -319,7 +319,7 @@ void compute_convective_fluxes_eb (const int lev,
           Real delta_x = xf - ccc(i,j,k,0);
           Real delta_z = zf - ccc(i,j,k,2);
 
-          const auto& slopes_eb_hi = amrex_calc_slopes_extdir_eb(i,j  ,k,comp,
+          const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j  ,k,comp,
                                         state, ccc, fcx, fcy, fcz, flag,
                                         extdir_ilo, extdir_jlo, extdir_klo,
                                         extdir_ihi, extdir_jhi, extdir_khi,
@@ -336,7 +336,7 @@ void compute_convective_fluxes_eb (const int lev,
           delta_x = xf - ccc(i,j-1,k,0);
           delta_z = zf - ccc(i,j-1,k,2);
 
-          const auto& slopes_eb_lo = amrex_calc_slopes_extdir_eb(i,j-1,k,comp,
+          const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i,j-1,k,comp,
                                         state, ccc, fcx, fcy, fcz, flag,
                                         extdir_ilo, extdir_jlo, extdir_klo,
                                         extdir_ihi, extdir_jhi, extdir_khi,
@@ -386,7 +386,7 @@ void compute_convective_fluxes_eb (const int lev,
         Real delta_x = xf - ccc(i,j,k,0);
         Real delta_z = zf - ccc(i,j,k,2);
 
-        const auto& slopes_eb_hi = amrex_calc_slopes_eb(i,j  ,k,comp, state, ccc, flag);
+        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j  ,k,comp, state, ccc, fcx, fcy, fcz, flag);
 
         Real vpls = state_pls - delta_y * slopes_eb_hi[1]
                               + delta_x * slopes_eb_hi[0]
@@ -398,7 +398,7 @@ void compute_convective_fluxes_eb (const int lev,
         delta_x = xf - ccc(i,j-1,k,0);
         delta_z = zf - ccc(i,j-1,k,2);
 
-        const auto& slopes_eb_lo = amrex_calc_slopes_eb(i,j-1,k,comp, state, ccc, flag);
+        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j-1,k,comp, state, ccc, fcx, fcy, fcz, flag);
 
         Real vmns = state_mns + delta_y * slopes_eb_lo[1]
                               + delta_x * slopes_eb_lo[0]
@@ -494,7 +494,7 @@ void compute_convective_fluxes_eb (const int lev,
           Real delta_y = yf - ccc(i,j,k,1);
           Real delta_z = .5 + ccc(i,j,k,2);
 
-          const auto& slopes_eb_hi = amrex_calc_slopes_extdir_eb(i,j,k  ,comp,
+          const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j,k  ,comp,
                                         state, ccc, fcx, fcy, fcz, flag,
                                         extdir_ilo, extdir_jlo, extdir_klo,
                                         extdir_ihi, extdir_jhi, extdir_khi,
@@ -511,7 +511,7 @@ void compute_convective_fluxes_eb (const int lev,
           delta_y = yf - ccc(i,j,k-1,1);
           delta_z = .5 - ccc(i,j,k-1,2);
 
-          const auto& slopes_eb_lo = amrex_calc_slopes_extdir_eb(i,j,k-1,comp,
+          const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i,j,k-1,comp,
                                         state, ccc, fcx, fcy, fcz, flag,
                                         extdir_ilo, extdir_jlo, extdir_klo,
                                         extdir_ihi, extdir_jhi, extdir_khi,
@@ -560,7 +560,7 @@ void compute_convective_fluxes_eb (const int lev,
         Real delta_y = yf - ccc(i,j,k,1);
         Real delta_z = .5 + ccc(i,j,k,2);
 
-        const auto& slopes_eb_hi = amrex_calc_slopes_eb(i,j,k  ,comp, state, ccc, flag);
+        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,k  ,comp, state, ccc, fcx, fcy, fcz, flag);
 
         Real wpls = state_pls - delta_z * slopes_eb_hi[2]
                               + delta_x * slopes_eb_hi[0]
@@ -572,7 +572,7 @@ void compute_convective_fluxes_eb (const int lev,
         delta_y = yf - ccc(i,j,k-1,1);
         delta_z = .5 - ccc(i,j,k-1,2);
 
-        const auto& slopes_eb_lo = amrex_calc_slopes_eb(i,j,k-1,comp, state, ccc, flag);
+        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j,k-1,comp, state, ccc, fcx, fcy, fcz, flag);
 
         Real wmns = state_mns + delta_z * slopes_eb_lo[2]
                               + delta_x * slopes_eb_lo[0]
