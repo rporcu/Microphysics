@@ -100,7 +100,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         get_ro_g_old(), get_MW_g(), get_T_g_old(), get_cp_g(), get_k_g(),
         get_h_g_old(), get_T_g_on_eb(), get_k_g_on_eb(), get_trac_old(),
         get_X_gk_old(), get_D_gk(), get_h_gk(), get_txfr(), get_ro_gk_txfr(),
-        time);
+        l_dt, time);
 
     // *************************************************************************************
     // Compute right hand side terms on the old status

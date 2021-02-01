@@ -703,7 +703,30 @@ class mfix : public AmrCore
                                        Vector< MultiFab* > const& h_gk_in,
                                        Vector< MultiFab* > const& txfr_in,
                                        Vector< MultiFab* > const& ro_gk_txfr_in,
-                                       Real time);
+                                       Real l_dt, Real time);
+
+void compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
+                              Array4<Real> const& dvdt, // velocity
+                              Array4<Real> const& dsdt, // density, enthalpy, tracer
+                              Array4<Real> const& dXdt, // tracer
+                              const bool l_advect_density,
+                              const bool l_advect_enthalpy,
+                              const bool l_advect_tracer,
+                              const bool l_advect_species,
+                              Array4<Real const> const& vel,
+                              Array4<Real const> const& ep_g,
+                              Array4<Real const> const& rho,
+                              Array4<Real const> const& hg,
+                              Array4<Real const> const& tra,
+                              Array4<Real const> const& Xgk,
+                              const int l_nspecies,
+                              Array4<Real const> const& divu,
+                              Array4<Real const> const& ep_umac,
+                              Array4<Real const> const& ep_vmac,
+                              Array4<Real const> const& ep_wmac,
+                              const Real l_dt);
+
+
 
     int steady_state_reached (Real dt, int iter);
 
