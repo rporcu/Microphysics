@@ -117,7 +117,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         Real cc_umin = amrex::min(vcc_pls, vcc_mns);
 
         // Compute slopes of component "0" of vcc
-        const auto& slopes_eb_hi = amrex_calc_slopes_extdir_eb(i  ,j,k,0,
+        const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i  ,j,k,0,
                                       vcc, ccc, fcx, fcy, fcz, flag,
                                       extdir_ilo, extdir_jlo, extdir_klo,
                                       extdir_ihi, extdir_jhi, extdir_khi,
@@ -135,7 +135,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         delta_y = yf - ccc(i-1,j,k,1);
         delta_z = zf - ccc(i-1,j,k,2);
 
-        const auto& slopes_eb_lo = amrex_calc_slopes_extdir_eb(i-1,j,k,0,
+        const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i-1,j,k,0,
                                       vcc, ccc, fcx, fcy, fcz, flag,
                                       extdir_ilo, extdir_jlo, extdir_klo,
                                       extdir_ihi, extdir_jhi, extdir_khi,
@@ -198,7 +198,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         Real cc_umin = amrex::min(vcc_pls, vcc_mns);
 
         // Compute slopes of component "0" of vcc
-        const auto& slopes_eb_hi = amrex_calc_slopes_eb(i  ,j,k,0,vcc,ccc,flag);
+        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i  ,j,k,0,vcc,ccc,fcx,fcy,fcz,flag);
 
         Real upls = vcc_pls - delta_x * slopes_eb_hi[0]
                             + delta_y * slopes_eb_hi[1]
@@ -211,7 +211,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         delta_y = yf - ccc(i-1,j,k,1);
         delta_z = zf - ccc(i-1,j,k,2);
 
-        const auto& slopes_eb_lo = amrex_calc_slopes_eb(i-1,j,k,0,vcc,ccc,flag);
+        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i-1,j,k,0,vcc,ccc,fcx,fcy,fcz,flag);
 
         Real umns = vcc_mns + delta_x * slopes_eb_lo[0]
                             + delta_y * slopes_eb_lo[1]
@@ -301,7 +301,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         Real cc_vmax = amrex::max(vcc_pls, vcc_mns);
         Real cc_vmin = amrex::min(vcc_pls, vcc_mns);
 
-        const auto& slopes_eb_hi = amrex_calc_slopes_extdir_eb(i,j  ,k,1,
+        const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j  ,k,1,
                                       vcc, ccc, fcx, fcy, fcz, flag,
                                       extdir_ilo, extdir_jlo, extdir_klo,
                                       extdir_ihi, extdir_jhi, extdir_khi,
@@ -319,7 +319,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         delta_y = .5 - ccc(i,j-1,k,1);
         delta_z = zf - ccc(i,j-1,k,2);
 
-        const auto& slopes_eb_lo = amrex_calc_slopes_extdir_eb(i,j-1,k,1,
+        const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i,j-1,k,1,
                                       vcc, ccc, fcx, fcy, fcz, flag,
                                       extdir_ilo, extdir_jlo, extdir_klo,
                                       extdir_ihi, extdir_jhi, extdir_khi,
@@ -379,7 +379,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         Real cc_vmax = amrex::max(vcc_pls, vcc_mns);
         Real cc_vmin = amrex::min(vcc_pls, vcc_mns);
 
-        const auto& slopes_eb_hi = amrex_calc_slopes_eb(i,j  ,k,1,vcc,ccc,flag);
+        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j  ,k,1,vcc,ccc,fcx,fcy,fcz,flag);
 
         Real vpls = vcc_pls - delta_y * slopes_eb_hi[1]
                             + delta_x * slopes_eb_hi[0]
@@ -392,7 +392,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         delta_y = .5 - ccc(i,j-1,k,1);
         delta_z = zf - ccc(i,j-1,k,2);
 
-        const auto& slopes_eb_lo = amrex_calc_slopes_eb(i,j-1,k,1,vcc,ccc,flag);
+        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j-1,k,1,vcc,ccc,fcx,fcy,fcz,flag);
 
         Real vmns = vcc_mns + delta_y * slopes_eb_lo[1]
                             + delta_x * slopes_eb_lo[0]
@@ -479,7 +479,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         Real cc_wmax = amrex::max(vcc_pls, vcc_mns);
         Real cc_wmin = amrex::min(vcc_pls, vcc_mns);
 
-        const auto& slopes_eb_hi = amrex_calc_slopes_extdir_eb(i,j,k  ,2,
+        const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j,k  ,2,
                                       vcc, ccc, fcx, fcy, fcz, flag,
                                       extdir_ilo, extdir_jlo, extdir_klo,
                                       extdir_ihi, extdir_jhi, extdir_khi,
@@ -497,7 +497,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         delta_y = yf - ccc(i,j,k-1,1);
         delta_z = 0.5 - ccc(i,j,k-1,2);
 
-        const auto& slopes_eb_lo = amrex_calc_slopes_extdir_eb(i,j,k-1,2,
+        const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i,j,k-1,2,
                                       vcc, ccc, fcx, fcy, fcz, flag,
                                       extdir_ilo, extdir_jlo, extdir_klo,
                                       extdir_ihi, extdir_jhi, extdir_khi,
@@ -559,7 +559,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         Real cc_wmax = amrex::max(vcc_pls, vcc_mns);
         Real cc_wmin = amrex::min(vcc_pls, vcc_mns);
 
-        const auto& slopes_eb_hi = amrex_calc_slopes_eb(i,j,k  ,2,vcc,ccc,flag);
+        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,  k,2,vcc,ccc,fcx,fcy,fcz,flag);
 
         Real wpls = vcc_pls - delta_z * slopes_eb_hi[2]
                             + delta_x * slopes_eb_hi[0]
@@ -572,7 +572,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         delta_y = yf - ccc(i,j,k-1,1);
         delta_z = 0.5 - ccc(i,j,k-1,2);
 
-        const auto& slopes_eb_lo = amrex_calc_slopes_eb(i,j,k-1,2,vcc,ccc,flag);
+        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j,k-1,2,vcc,ccc,fcx,fcy,fcz,flag);
 
         Real wmns = vcc_mns + delta_z * slopes_eb_lo[2]
                             + delta_x * slopes_eb_lo[0]
