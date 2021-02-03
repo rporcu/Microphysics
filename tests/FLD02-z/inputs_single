@@ -14,7 +14,9 @@ mfix.gravity =  0.0   0.0   0.0
 
 amr.blocking_factor = 4
 
-mac.mg_rtol = 1.e-13
+nodal_proj.mg_rtol = 1.e-13
+mac_proj.mg_rtol = 1.e-13
+diffusion.rtol = 1.e-13
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
