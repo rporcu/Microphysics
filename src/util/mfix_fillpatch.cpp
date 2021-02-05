@@ -1,6 +1,8 @@
 #include <mfix.H>
-#include <AMReX_FillPatchUtil.H>
 #include <mfix_fluid_parms.H>
+#include <mfix_fillpatch_bc.H>
+
+#include <AMReX_FillPatchUtil.H>
 
 namespace
 {
@@ -435,4 +437,108 @@ mfix::GetDataSpecies (int lev,
         datatime.push_back(t_old[lev]);
         datatime.push_back(t_new[lev]);
     }
+}
+
+
+void mfix::fillpatch_force (Real time, Vector<MultiFab*> const& force, int ng)
+{
+
+  /* JMusser: This was some serious copy-and-paste straight out of      *
+   * incflow. If this doesn't do what it is supposed to do, it's not my *
+   * fault, because I have no idea what any of this means.              *
+   * You're Welcome.                                                    */
+  const int ncomp = force[0]->nComp();
+
+  amrex::Vector<amrex::BCRec> bcrec_force;
+  bcrec_force.resize(ncomp);
+
+  int l_probtype = -1;
+  int lev = 0;
+
+  {
+    PhysBCFunct<GpuBndryFuncFab<MFIXForFill> > physbc
+          (geom[lev], bcrec_force, MFIXForFill{l_probtype});
+        FillPatchSingleLevel(*force[lev], IntVect(ng), time,
+                             {force[lev]}, {time},
+                             0, 0, ncomp, geom[lev],
+                             physbc, 0);
+    }
+    for (lev = 1; lev <= finest_level; ++lev)
+    {
+        PhysBCFunct<GpuBndryFuncFab<MFIXForFill> > cphysbc
+            (geom[lev-1], bcrec_force, MFIXForFill{l_probtype});
+        PhysBCFunct<GpuBndryFuncFab<MFIXForFill> > fphysbc
+            (geom[lev  ], bcrec_force, MFIXForFill{l_probtype});
+        Interpolater* mapper = &pc_interp;
+        FillPatchTwoLevels(*force[lev], IntVect(ng), time,
+                           {force[lev-1]}, {time},
+                           {force[lev  ]}, {time},
+                           0, 0, ncomp, geom[lev-1], geom[lev],
+                           cphysbc, 0, fphysbc, 0,
+                           refRatio(lev-1), mapper, bcrec_force, 0);
+    }
+}
+
+
+
+
+
+void
+mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
+                     Vector< MultiFab* > const& ro_g_in,
+                     Vector< MultiFab* > const& h_g_in,
+                     Vector< MultiFab* > const& trac_in,
+                     Vector< MultiFab* > const& X_gk_in,
+                     Real time)
+{
+
+  const int l_nspecies = FLUID::nspecies;
+
+  // First do FillPatch of {velocity, density, tracer, enthalpy} so we know
+  // the ghost cells of these arrays are all filled
+  for (int lev = 0; lev < nlev; lev++) {
+
+    int state_comp, num_comp;
+
+    // State with ghost cells
+    MultiFab Sborder_u(grids[lev], dmap[lev], vel_in[lev]->nComp(), nghost,
+                       MFInfo(), *ebfactory[lev]);
+    FillPatchVel(lev, time, Sborder_u, 0, Sborder_u.nComp(), bcs_u);
+
+    // Copy each FAB back from Sborder_u into the vel array, complete with filled ghost cells
+    MultiFab::Copy(*vel_in[lev], Sborder_u, 0, 0, vel_in[lev]->nComp(), vel_in[lev]->nGrow());
+
+    MultiFab Sborder_s(grids[lev], dmap[lev], 1, nghost, MFInfo(), *ebfactory[lev]);
+
+    // We FillPatch density even if not advecting it because we need it in the projections
+    state_comp =  0; // comp = 0 --> density
+    num_comp = 1;
+    FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
+    MultiFab::Copy(*ro_g_in[lev], Sborder_s, 0, 0, num_comp, ro_g_in[lev]->nGrow());
+
+    if (advect_tracer) {
+      state_comp =  1; // comp = 1 --> tracer
+      num_comp = 1;
+      FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
+      MultiFab::Copy(*trac_in[lev], Sborder_s, 0, 0, num_comp, trac_in[lev]->nGrow());
+    }
+
+    if (advect_enthalpy) {
+      state_comp =  5; // comp = 1 --> enthalpy
+      num_comp = 1;
+      FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
+      MultiFab::Copy(*h_g_in[lev], Sborder_s, 0, 0, num_comp, h_g_in[lev]->nGrow());
+    }
+
+    if (advect_fluid_species) {
+      MultiFab Sborder_X(grids[lev], dmap[lev], FLUID::nspecies, nghost,
+                         MFInfo(), *ebfactory[lev]);
+      Sborder_X.setVal(0);
+      state_comp = 0;
+      num_comp = l_nspecies;
+      FillPatchSpecies(lev, time, Sborder_X, state_comp, num_comp, bcs_X);
+      MultiFab::Copy(*X_gk_in[lev], Sborder_X, 0, 0, num_comp,
+                     X_gk_in[lev]->nGrow());
+    }
+  }
 }

@@ -20,7 +20,7 @@ namespace mol {
                               amrex::MultiFab& ep_face_x,
                               amrex::MultiFab& ep_face_y,
                               amrex::MultiFab& ep_face_z,
-                              amrex::MultiFab& vel,
+                              const amrex::MultiFab& vel,
                               std::map<std::string, amrex::Gpu::DeviceVector<int>>& bc_types,
                               amrex::Array4<int const> const& bc_ilo,
                               amrex::Array4<int const> const& bc_ihi,

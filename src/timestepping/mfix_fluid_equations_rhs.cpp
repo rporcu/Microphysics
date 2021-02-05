@@ -8,8 +8,8 @@
 
 
 void
-mfix::mfix_density_rhs (Vector< MultiFab* > const& rhs,
-                        Vector< MultiFab* > const& ro_gk_txfr)
+mfix::mfix_density_rhs (Vector< MultiFab*      > const& rhs,
+                        Vector< MultiFab const*> const& ro_gk_txfr)
 {
   if (solve_reactions) {
     for (int lev = 0; lev <= finest_level; lev++) {
@@ -25,49 +25,60 @@ mfix::mfix_density_rhs (Vector< MultiFab* > const& rhs,
 
 
 void
-mfix::mfix_enthalpy_rhs (const bool update_laplacian,
-                         Vector< MultiFab* > const& rhs,
-                         Vector< MultiFab* > const& lap_T,
-                         Vector< MultiFab* > const& T_g,
-                         Vector< MultiFab* > const& ep_g,
-                         Vector< MultiFab* > const& ro_g,
-                         Vector< MultiFab* > const& k_g,
-                         Vector< MultiFab* > const& T_g_on_eb,
-                         Vector< MultiFab* > const& k_g_on_eb,
-                         Vector< MultiFab* > const& X_gk,
-                         Vector< MultiFab* > const& D_gk,
-                         Vector< MultiFab* > const& h_gk)
+mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
+                         Vector< MultiFab const*> const& ep_g,
+                         Vector< MultiFab const*> const& ro_g,
+                         Vector< MultiFab const*> const& X_gk,
+                         Vector< MultiFab const*> const& D_gk,
+                         Vector< MultiFab const*> const& h_gk)
 {
   for (int lev = 0; lev <= finest_level; lev++)
     rhs[lev]->setVal(0.);
 
-  if (update_laplacian) {
-    diffusion_op->ComputeLapT(lap_T, T_g, ep_g, k_g, T_g_on_eb, k_g_on_eb);
-
-    for (int lev = 0; lev <= finest_level; lev++)
-      EB_set_covered(*lap_T[lev], 0, lap_T[lev]->nComp(), lap_T[lev]->nGrow(), 0.);
-  }
-
   if (FLUID::is_a_mixture)
   {
+
     // Temporary for computing other terms of RHS
+    Vector< MultiFab* > X_gk_tmp(nlev, nullptr);
     Vector< MultiFab* > h_gk_D_gk(nlev, nullptr);
     Vector< MultiFab* > auxiliary(nlev, nullptr);
-
+#if 0
     // Allocate memory for computing fluid species contribution
     for (int lev(0); lev <= finest_level; lev++) {
       h_gk_D_gk[lev] = MFHelpers::createFrom(*D_gk[lev]).release();
       auxiliary[lev] = MFHelpers::createFrom(*X_gk[lev], 0.).release();
     }
+#endif
+
+    // Allocate memory for computing fluid species contribution
+    for (int lev(0); lev <= finest_level; lev++) {
+
+      X_gk_tmp[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
+                                   mfix::nghost, MFInfo(), *ebfactory[lev]);
+
+      h_gk_D_gk[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
+                                    mfix::nghost, MFInfo(), *ebfactory[lev]);
+
+      auxiliary[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
+                                    mfix::nghost, MFInfo(), *ebfactory[lev]);
+
+    }
 
     // Transform h_gk_D_gk into h_gk * D_gk
     for (int lev(0); lev <= finest_level; lev++) {
+
+      MultiFab::Copy(*X_gk_tmp[lev], *D_gk[lev], 0, 0, FLUID::nspecies,
+                     X_gk_tmp[lev]->nGrow());
+
+      MultiFab::Copy(*h_gk_D_gk[lev], *D_gk[lev], 0, 0, FLUID::nspecies,
+                     h_gk_D_gk[lev]->nGrow());
+
       MultiFab::Multiply(*h_gk_D_gk[lev], *h_gk[lev], 0, 0, FLUID::nspecies,
-          h_gk_D_gk[lev]->nGrow());
+                         h_gk_D_gk[lev]->nGrow());
     }
 
     // Compute the mixed enthalpy/species term
-    diffusion_op->ComputeLapX(auxiliary, X_gk, ro_g, ep_g, h_gk_D_gk);
+    diffusion_op->ComputeLapX(auxiliary, X_gk_tmp, ro_g, ep_g, GetVecOfConstPtrs(h_gk_D_gk));
 
     for (int lev(0); lev <= finest_level; lev++) {
       // Add the contribution due to the nth specie
@@ -80,6 +91,7 @@ mfix::mfix_enthalpy_rhs (const bool update_laplacian,
       EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
 
     for (int lev = 0; lev <= finest_level; lev++) {
+      delete X_gk_tmp[lev];
       delete h_gk_D_gk[lev];
       delete auxiliary[lev];
     }
@@ -95,41 +107,25 @@ mfix::mfix_scalar_rhs (const bool explicit_diffusion,
                        Vector< MultiFab* > const& ro_g,
                        const Vector<Real>& mu_s_in)
 {
-  if (explicit_diffusion) {
-    diffusion_op->ComputeLapS(lap_trac, trac, ro_g, ep_g, mu_s_in);
-
-    for (int lev = 0; lev <= finest_level; lev++)
-      EB_set_covered(*lap_trac[lev], 0, lap_trac[lev]->nComp(), lap_trac[lev]->nGrow(), 0.);
-  }
 }
 
 
 void
-mfix::mfix_species_X_rhs (const bool explicit_diffusion,
-                          Vector< MultiFab* > const& rhs,
-                          Vector< MultiFab* > const& lap_X,
-                          Vector< MultiFab* > const& X_gk,
-                          Vector< MultiFab* > const& ep_g,
-                          Vector< MultiFab* > const& ro_g,
-                          Vector< MultiFab* > const& D_gk,
-                          Vector< MultiFab* > const& ro_gk_txfr)
+mfix::mfix_species_X_rhs (Vector< MultiFab*      > const& rhs,
+                          Vector< MultiFab const*> const& ro_gk_txfr)
 {
-  for (int lev = 0; lev <= finest_level; lev++)
-    rhs[lev]->setVal(0.);
-
-  if (explicit_diffusion and (not open_system_constraint)) {
-    diffusion_op->ComputeLapX(lap_X, X_gk, ro_g, ep_g, D_gk);
-
-    for (int lev = 0; lev <= finest_level; lev++)
-      EB_set_covered(*lap_X[lev], 0, lap_X[lev]->nComp(), lap_X[lev]->nGrow(), 0.);
-  }
 
   if (solve_reactions) {
+
     for (int lev = 0; lev <= finest_level; lev++) {
       rhs[lev]->plus(*ro_gk_txfr[lev], 0, FLUID::nspecies, rhs[lev]->nGrow());
+      EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
     }
 
+  } else {
+
     for (int lev = 0; lev <= finest_level; lev++)
-      EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
+      rhs[lev]->setVal(0.);
+
   }
 }

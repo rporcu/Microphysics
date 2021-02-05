@@ -1,4 +1,5 @@
 #include <redistribution.H>
+#include <AMReX_IArrayBox.H>
 
 using namespace amrex;
 
@@ -28,7 +29,8 @@ void redistribution::redistribute_eb (Box const& bx, int ncomp, int scomp,
     // redist_type = 3;   // merge_redistribute update
     // redist_type = 4;   // merge_redistribute full
 
-
+    amrex::Abort("This is not used yet.");
+#if 0
     amrex::Print() << "redistribution::redistribute_eb \n";
 
     if (advection_type == "MOL")
@@ -79,4 +81,5 @@ void redistribution::redistribute_eb (Box const& bx, int ncomp, int scomp,
     } else {
        amrex::Error("Not a legit redist_type");
     }
+#endif
 }

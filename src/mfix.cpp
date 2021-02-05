@@ -429,12 +429,303 @@ Vector< MultiFab* > mfix::get_mac_phi () noexcept
   return r;
 }
 
-Vector< MultiFab* > mfix::get_mac_rhs () noexcept
+Vector< MultiFab* > mfix::get_divtau () noexcept
 {
   Vector<MultiFab*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->mac_rhs);
+    r.push_back(m_leveldata[lev]->divtau_o);
+  }
+  return r;
+}
+
+
+
+
+
+
+
+
+//////////////////////////////////////
+
+
+
+
+
+
+
+
+
+/////////////////////////
+
+
+
+Vector< MultiFab const*> mfix::get_ep_g_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->ep_g);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_ro_g_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->ro_g);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_ro_g_old_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->ro_go);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_MW_g_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->MW_g);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_trac_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->trac);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_trac_old_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->trac_o);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_vel_g_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->vel_g);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_vel_g_old_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->vel_go);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_mu_g_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->mu_g);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_T_g_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->T_g);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_T_g_old_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->T_go);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_cp_g_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->cp_g);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_k_g_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->k_g);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_h_g_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->h_g);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_h_g_old_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->h_go);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_T_g_on_eb_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->T_g_on_eb);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_k_g_on_eb_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->k_g_on_eb);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_X_gk_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->X_gk);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_X_gk_old_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->X_gko);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_D_gk_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->D_gk);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_cp_gk_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->cp_gk);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_h_gk_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->h_gk);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_txfr_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->txfr);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_ro_gk_txfr_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->ro_gk_txfr);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_diveu_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->diveu);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_mac_phi_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->mac_phi);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_divtau_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->divtau_o);
   }
   return r;
 }

@@ -22,19 +22,12 @@ void redistribution::flux_redistribute_eb (Box const& bx, int ncomp, int scomp,
     Box const& bxg1 = amrex::grow(bx,1);
     Box const& bxg2 = amrex::grow(bx,2);
 
-    amrex::Print() << "doing redistribution::flux_redistribute_eb\n";
-
     // xxxxx TODO: more weight options
     amrex::ParallelFor(bxg2,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
         wgt(i,j,k) = (dbox.contains(IntVect(AMREX_D_DECL(i,j,k)))) ? 1.0 : 0.0;
     });
-
-
-
-
-    amrex::Print() << "doing redistribution::flux_redistribute_eb --- A\n";
 
     amrex::ParallelFor(bxg1, ncomp,
     [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
@@ -66,7 +59,6 @@ void redistribution::flux_redistribute_eb (Box const& bx, int ncomp, int scomp,
             tmp(i,j,k,n+scomp) = 0.0;
         }
     });
-    amrex::Print() << "doing redistribution::flux_redistribute_eb --- B\n";
 
     amrex::ParallelFor(bxg1 & dbox, ncomp,
     [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
@@ -97,7 +89,6 @@ void redistribution::flux_redistribute_eb (Box const& bx, int ncomp, int scomp,
             }}}
         }
     });
-    amrex::Print() << "doing redistribution::flux_redistribute_eb --- C\n";
 
     amrex::ParallelFor(bx, ncomp,
     [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
@@ -105,11 +96,7 @@ void redistribution::flux_redistribute_eb (Box const& bx, int ncomp, int scomp,
 
       Real org_div = dUdt(i,j,k,n+scomp);
       dUdt(i,j,k,n+scomp) = dUdt_in(i,j,k,n+scomp) + tmp(i,j,k,n+scomp);
-      if(i==0 and j==0 and k==0 and n==0)
-        amrex::Print() << "org div = " << org_div << "    new div = " << dUdt(i,j,k,n+scomp) << std::endl;
     });
-
-    amrex::Print() << "doing redistribution::flux_redistribute_eb --- D\n";
 
 }
 
@@ -134,8 +121,6 @@ void redistribution::apply_eb_redistribution ( const Box& bx,
   // Check that grid is uniform
   //
   const Real* dx = geom.CellSize();
-
-  amrex::Print() << "doing apply_eb_redistribution\n";
 
   if( ! amrex::almostEqual(dx[0],dx[1]) ||
       ! amrex::almostEqual(dx[0],dx[2]) ||

@@ -19,6 +19,11 @@ redistribution::state_redistribute_eb (
                        Array4<Real const> const& ccent,
                        Geometry& lev_geom)
 {
+
+  amrex::Abort("Not ready to use state redistribution.");
+
+
+#if 0
     const Box domain = lev_geom.Domain();
 
     const auto& is_periodic_x = lev_geom.isPeriodic(0);
@@ -342,4 +347,5 @@ redistribution::state_redistribute_eb (
         else
            amrex::Print() << " SUMS DO     MATCH " << sum1 << " " << sum2 << std::endl;
     } //  END:SUM OF FINAL DUDT
+#endif
 }

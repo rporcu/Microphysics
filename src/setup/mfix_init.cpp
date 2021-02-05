@@ -97,8 +97,8 @@ mfix::InitParams ()
     pp_nodal.query("mg_max_coarsening_level", nodal_mg_max_coarsening_level);
 
     // Is this a steady-state calculation
-    steady_state = 0;
-    pp.query("steady_state", steady_state);
+    m_steady_state = 0;
+    pp.query("steady_state", m_steady_state);
 
     // Tolerance to check for steady state
     steady_state_tol = -1.;
@@ -107,7 +107,7 @@ mfix::InitParams ()
     // Maximum number of iterations allowed to reach steady state
     pp.query("steady_state_maxiter", steady_state_maxiter);
 
-    if (steady_state > 0) {
+    if (m_steady_state > 0) {
       if (steady_state_tol < 0)
         amrex::Abort("Must set steady_state_tol if running to steady state!");
 

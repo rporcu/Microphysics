@@ -206,7 +206,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
         dt_new = amrex::min( dt_new, 1.01*old_dt );
 
     // Don't overshoot the final time if not running to steady state
-    if (steady_state == 0 && stop_time > 0.)
+    if (m_steady_state == 0 && stop_time > 0.)
        if (time+dt_new > stop_time)
            dt_new = stop_time - time;
 

@@ -103,13 +103,7 @@ class LevelData
     // Solution for MAC projection
     amrex::MultiFab* mac_phi;
 
-    // RHS for MAC solve
-    amrex::MultiFab* mac_rhs;
-
-    // MAC velocities
-    amrex::MultiFab* u_mac;
-    amrex::MultiFab* v_mac;
-    amrex::MultiFab* w_mac;
+    amrex::MultiFab* divtau_o;
 };
 
 #endif

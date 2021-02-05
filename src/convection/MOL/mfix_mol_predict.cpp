@@ -7,7 +7,7 @@ void
 mol::predict_vels_on_faces (int lev,
                             MultiFab& ep_u_mac,  MultiFab& ep_v_mac,  MultiFab& ep_w_mac,
                             MultiFab& ep_face_x, MultiFab& ep_face_y, MultiFab& ep_face_z,
-                            MultiFab& vel_in,
+                            const MultiFab& vel_in,
                             std::map<std::string, Gpu::DeviceVector<int>>& bc_types,
                             Array4<int const> const& bc_ilo,
                             Array4<int const> const& bc_ihi,

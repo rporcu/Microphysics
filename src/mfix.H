@@ -64,7 +64,7 @@ class mfix : public AmrCore
     void InitParams ();
 
     bool IsSteadyState ()
-    { return (steady_state > 0); }
+    { return (m_steady_state > 0); }
 
     void Init (Real time);
 
@@ -420,32 +420,20 @@ class mfix : public AmrCore
     ////////////////////////////////////////////////////////////////////////////
 
     void set_MAC_velocity_bcs (int lev,
-                               Vector< MultiFab* > const& u,
-                               Vector< MultiFab* > const& v,
-                               Vector< MultiFab* > const& w,
-                               Real time);
+                               amrex::Vector< amrex::MultiFab const*> const& mac_rhs,
+                               amrex::Vector< amrex::MultiFab* > const& u,
+                               amrex::Vector< amrex::MultiFab* > const& v,
+                               amrex::Vector< amrex::MultiFab* > const& w,
+                               amrex::Real time);
 
   void compute_MAC_projected_velocities (amrex::Real time,
-                                         amrex::Vector< amrex::MultiFab* > const& vel_in,
-                                         amrex::Vector< amrex::MultiFab* > const& ep_u_mac,
-                                         amrex::Vector< amrex::MultiFab* > const& ep_v_mac,
-                                         amrex::Vector< amrex::MultiFab* > const& ep_w_mac,
-                                         amrex::Vector< amrex::MultiFab* > const& ep_g_in,
-                                         amrex::Vector< amrex::MultiFab* > const& ro_g_in,
-                                         amrex::Vector< amrex::MultiFab* > const& MW_g_in,
-                                         amrex::Vector< amrex::MultiFab* > const& T_g_in,
-                                         amrex::Vector< amrex::MultiFab* > const& cp_g_in,
-                                         amrex::Vector< amrex::MultiFab* > const& k_g_in,
-                                         amrex::Vector< amrex::MultiFab* > const& T_g_on_eb_in,
-                                         amrex::Vector< amrex::MultiFab* > const& k_g_on_eb_in,
-                                         amrex::Vector< amrex::MultiFab* > const& X_gk_in,
-                                         amrex::Vector< amrex::MultiFab* > const& D_gk_in,
-                                         amrex::Vector< amrex::MultiFab* > const& h_gk_in,
-                                         amrex::Vector< amrex::MultiFab* > const& txfr_in,
-                                         amrex::Vector< amrex::MultiFab* > const& ro_gk_txfr_in,
-                                         const bool update_laplacians,
-                                         amrex::Vector< amrex::MultiFab* > const& lap_T,
-                                         amrex::Vector< amrex::MultiFab* > const& lap_X);
+                                         amrex::Vector< amrex::MultiFab const*> const& vel_in,
+                                         amrex::Vector< amrex::MultiFab*      > const& ep_u_mac,
+                                         amrex::Vector< amrex::MultiFab*      > const& ep_v_mac,
+                                         amrex::Vector< amrex::MultiFab*      > const& ep_w_mac,
+                                         amrex::Vector< amrex::MultiFab const*> const& ep_g_in,
+                                         amrex::Vector< amrex::MultiFab const*> const& ro_g_in,
+                                         amrex::Vector< amrex::MultiFab const*> const& rhs_mac);
 
 
     ////////////////////////////////////////////////////////////////////////////
@@ -570,6 +558,35 @@ class mfix : public AmrCore
                                       bool proj_2 );
 
   public:
+
+    void compute_tra_forces (amrex::Vector<amrex::MultiFab      *> const& tra_forces,
+                             amrex::Vector<amrex::MultiFab const*> const& density);
+
+    void compute_vel_forces (amrex::Vector<amrex::MultiFab*      > const& vel_forces,
+                             amrex::Vector<amrex::MultiFab const*> const& velocity,
+                             amrex::Vector<amrex::MultiFab const*> const& density,
+                             bool include_pressure_gradient = true);
+
+    void compute_vel_forces_on_level ( int lev,
+                                       amrex::MultiFab& vel_forces,
+                                       const amrex::MultiFab& velocity,
+                                       const amrex::MultiFab& density,
+                                       bool include_pressure_gradient = true);
+
+    void compute_laps (const bool update_lapT,
+                       const bool update_LapTrac,
+                       const bool update_LapX,
+                       amrex::Vector< amrex::MultiFab*      >& lapT,
+                       amrex::Vector< amrex::MultiFab*      >& lapS,
+                       amrex::Vector< amrex::MultiFab*      >& lapX,
+                       amrex::Vector< amrex::MultiFab*      > const& T_g_in,
+                       amrex::Vector< amrex::MultiFab*      > const& trac_in,
+                       amrex::Vector< amrex::MultiFab*      > const& X_gk_in,
+                       amrex::Vector< amrex::MultiFab const*> const& ep_g_in,
+                       amrex::Vector< amrex::MultiFab const*> const& ro_g_in);
+
+
+
     void apply_MAC_projection (const bool update_laplacians,
                                Vector< MultiFab* > const& lap_T,
                                Vector< MultiFab* > const& lap_X,
@@ -609,6 +626,9 @@ class mfix : public AmrCore
 
     void GetDataSpecies (int lev, Real time, Vector<MultiFab *> & data, int icomp,
                          Vector<Real> & datatime);
+
+
+    void fillpatch_force (amrex::Real time, amrex::Vector<amrex::MultiFab*> const& force, int ng);
 
     void mfix_calc_transfer_coeffs ();
 
@@ -678,53 +698,33 @@ class mfix : public AmrCore
 
     void check_for_nans (int lev);
 
-    void mfix_compute_convective_term (const bool update_laplacian,
-                                       Vector< MultiFab* >& conv_u,
-                                       Vector< MultiFab* >& conv_s,
-                                       Vector< MultiFab* >& conv_X,
-                                       Vector< MultiFab* >& lap_T,
-                                       Vector< MultiFab* >& lap_X,
-                                       Vector< MultiFab* > const& vel_in,
-                                       Vector< MultiFab* > const& ep_g_in,
-                                       Vector< MultiFab* > const& u_mac,
-                                       Vector< MultiFab* > const& v_mac,
-                                       Vector< MultiFab* > const& w_mac,
-                                       Vector< MultiFab* > const& ro_g_in,
-                                       Vector< MultiFab* > const& MW_g_in,
-                                       Vector< MultiFab* > const& T_g_in,
-                                       Vector< MultiFab* > const& cp_g_in,
-                                       Vector< MultiFab* > const& k_g_in,
-                                       Vector< MultiFab* > const& h_g_in,
-                                       Vector< MultiFab* > const& T_g_on_eb_in,
-                                       Vector< MultiFab* > const& k_g_on_eb_in,
-                                       Vector< MultiFab* > const& trac_in,
-                                       Vector< MultiFab* > const& X_gk_in,
-                                       Vector< MultiFab* > const& D_gk_in,
-                                       Vector< MultiFab* > const& h_gk_in,
-                                       Vector< MultiFab* > const& txfr_in,
-                                       Vector< MultiFab* > const& ro_gk_txfr_in,
+
+    void fillpatch_all (Vector< MultiFab* > const& vel_in,
+                        Vector< MultiFab* > const& ro_g_in,
+                        Vector< MultiFab* > const& h_g_in,
+                        Vector< MultiFab* > const& trac_in,
+                        Vector< MultiFab* > const& X_gk_in,
+                        Real time);
+
+
+    void mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,
+                                       Vector< MultiFab*      >& conv_s,
+                                       Vector< MultiFab*      >& conv_X,
+                                       Vector< MultiFab*      > const& vel_forces,
+                                       Vector< MultiFab*      > const& tra_forces,
+                                       Vector< MultiFab const*> const& vel_in,
+                                       Vector< MultiFab const*> const& ep_g_in,
+                                       Vector< MultiFab const*> const& ro_g_in,
+                                       Vector< MultiFab const*> const& h_g_in,
+                                       Vector< MultiFab const*> const& trac_in,
+                                       Vector< MultiFab const*> const& X_gk_in,
+                                       Vector< MultiFab*      > const& u_mac,
+                                       Vector< MultiFab*      > const& v_mac,
+                                       Vector< MultiFab*      > const& w_mac,
+                                       Vector< MultiFab const*> const& rhs_mac,
+                                       Vector< MultiFab      *> const& divtau_old,
                                        Real l_dt, Real time);
 
-void compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
-                              Array4<Real> const& dvdt, // velocity
-                              Array4<Real> const& dsdt, // density, enthalpy, tracer
-                              Array4<Real> const& dXdt, // tracer
-                              const bool l_advect_density,
-                              const bool l_advect_enthalpy,
-                              const bool l_advect_tracer,
-                              const bool l_advect_species,
-                              Array4<Real const> const& vel,
-                              Array4<Real const> const& ep_g,
-                              Array4<Real const> const& rho,
-                              Array4<Real const> const& hg,
-                              Array4<Real const> const& tra,
-                              Array4<Real const> const& Xgk,
-                              const int l_nspecies,
-                              Array4<Real const> const& divu,
-                              Array4<Real const> const& ep_umac,
-                              Array4<Real const> const& ep_vmac,
-                              Array4<Real const> const& ep_wmac,
-                              const Real l_dt);
 
 
 
@@ -748,21 +748,15 @@ void compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
                                Real prev_dt,
                                bool proj_2);
 
-    void mfix_density_rhs(Vector< MultiFab* > const& rhs,
-                          Vector< MultiFab* > const& ro_gk_txfr);
+    void mfix_density_rhs(Vector< MultiFab*      > const& rhs,
+                          Vector< MultiFab const*> const& ro_gk_txfr);
 
-    void mfix_enthalpy_rhs(const bool explicit_diffusion,
-                           Vector< MultiFab* > const& rhs,
-                           Vector< MultiFab* > const& lap_T,
-                           Vector< MultiFab* > const& T_g,
-                           Vector< MultiFab* > const& ep_g,
-                           Vector< MultiFab* > const& ro_g,
-                           Vector< MultiFab* > const& k_g,
-                           Vector< MultiFab* > const& T_g_on_eb,
-                           Vector< MultiFab* > const& k_g_on_eb,
-                           Vector< MultiFab* > const& X_gk,
-                           Vector< MultiFab* > const& D_gk,
-                           Vector< MultiFab* > const& h_gk);
+    void mfix_enthalpy_rhs(Vector< MultiFab*      > const& rhs,
+                           Vector< MultiFab const*> const& ep_g,
+                           Vector< MultiFab const*> const& ro_g,
+                           Vector< MultiFab const*> const& X_gk,
+                           Vector< MultiFab const*> const& D_gk,
+                           Vector< MultiFab const*> const& h_gk);
 
     void mfix_scalar_rhs(const bool explicit_diffusion,
                          Vector< MultiFab* > const& lap_trac,
@@ -771,14 +765,8 @@ void compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
                          Vector< MultiFab* > const& ro_g,
                          const Vector<Real>& mu_s);
 
-    void mfix_species_X_rhs(const bool explicit_diffusion,
-                            Vector< MultiFab* > const& rhs,
-                            Vector< MultiFab* > const& lap_X,
-                            Vector< MultiFab* > const& X_gk,
-                            Vector< MultiFab* > const& ep_g,
-                            Vector< MultiFab* > const& ro_g,
-                            Vector< MultiFab* > const& D_gk,
-                            Vector< MultiFab* > const& ro_gk_txfr);
+    void mfix_species_X_rhs(Vector< MultiFab*      > const& rhs,
+                            Vector< MultiFab const*> const& ro_gk_txfr);
 
     void mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                                Vector< MultiFab* >& conv_s_old,
@@ -811,23 +799,40 @@ void compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
                                         const Vector< MultiFab* >& T_g,
                                         const Vector< MultiFab* >& X_gk);
 
-    void mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
-                               const bool update_laplacians,
-                               Vector< MultiFab* > const& lap_T_star,
-                               Vector< MultiFab* > const& lap_X_star,
-                               Vector< MultiFab* > const& ep_g,
-                               Vector< MultiFab* > const& ro_g,
-                               Vector< MultiFab* > const& MW_g,
-                               Vector< MultiFab* > const& T_g,
-                               Vector< MultiFab* > const& cp_g,
-                               Vector< MultiFab* > const& k_g,
-                               Vector< MultiFab* > const& T_g_on_eb,
-                               Vector< MultiFab* > const& k_g_on_eb,
-                               Vector< MultiFab* > const& X_gk,
-                               Vector< MultiFab* > const& D_gk,
-                               Vector< MultiFab* > const& h_gk,
-                               Vector< MultiFab* > const& txfr,
-                               Vector< MultiFab* > const& ro_gk_txfr);
+    void mfix_open_system_rhs (Vector< MultiFab*       > const& rhs,
+                               Vector< MultiFab*       > const& lap_T_star,
+                               Vector< MultiFab*       > const& lap_X_star,
+                               Vector< MultiFab const* > const& ep_g,
+                               Vector< MultiFab const* > const& ro_g,
+                               Vector< MultiFab const* > const& MW_g,
+                               Vector< MultiFab const* > const& T_g,
+                               Vector< MultiFab const* > const& cp_g,
+                               Vector< MultiFab const* > const& X_gk,
+                               Vector< MultiFab const* > const& D_gk,
+                               Vector< MultiFab const* > const& h_gk,
+                               Vector< MultiFab const* > const& txfr,
+                               Vector< MultiFab const* > const& ro_gk_txfr);
+
+    void compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
+                                  Array4<Real> const& dvdt, // velocity
+                                  Array4<Real> const& dsdt, // density, enthalpy, tracer
+                                  Array4<Real> const& dXdt, // tracer
+                                  const bool l_advect_density,
+                                  const bool l_advect_enthalpy,
+                                  const bool l_advect_tracer,
+                                  const bool l_advect_species,
+                                  Array4<Real const> const& vel,
+                                  Array4<Real const> const& ep_g,
+                                  Array4<Real const> const& rho,
+                                  Array4<Real const> const& hg,
+                                  Array4<Real const> const& tra,
+                                  Array4<Real const> const& Xgk,
+                                  const int l_nspecies,
+                                  Array4<Real const> const& divu,
+                                  Array4<Real const> const& ep_umac,
+                                  Array4<Real const> const& ep_vmac,
+                                  Array4<Real const> const& ep_wmac,
+                                  const Real l_dt);
 
   private:
     void mfix_print_max_vel (int lev);
@@ -887,7 +892,39 @@ void compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
     Vector< MultiFab* > get_ro_gk_txfr () noexcept;
     Vector< MultiFab* > get_diveu () noexcept;
     Vector< MultiFab* > get_mac_phi () noexcept;
-    Vector< MultiFab* > get_mac_rhs () noexcept;
+    Vector< MultiFab* > get_divtau () noexcept;
+
+
+    amrex::Vector< amrex::MultiFab const* > get_ep_g_const () const noexcept;
+
+    amrex::Vector< amrex::MultiFab const* > get_ro_g_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_ro_g_old_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_trac_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_trac_old_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_vel_g_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_vel_g_old_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_T_g_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_T_g_old_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_h_g_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_h_g_old_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_X_gk_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_X_gk_old_const () const noexcept;
+
+    amrex::Vector< MultiFab const* > get_divtau_const () const noexcept;
+
+    amrex::Vector< amrex::MultiFab const* > get_MW_g_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_mu_g_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_cp_g_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_k_g_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_T_g_on_eb_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_k_g_on_eb_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_D_gk_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_cp_gk_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_h_gk_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_txfr_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_ro_gk_txfr_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_diveu_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_mac_phi_const () const noexcept;
 
     // used if load_balance_type == "KnapSack"
     amrex::Vector< amrex::MultiFab* > particle_cost;
@@ -898,7 +935,7 @@ void compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
     // levels: 0) fluid reconstruction, 1..N) particle-wall (refined) collisions
     Vector< std::unique_ptr<MultiFab> > level_sets;
 
-    int steady_state = 0;
+    int m_steady_state = 0;
 
     bool advect_enthalpy        = false;
     bool advect_density         = false;
@@ -911,7 +948,32 @@ void compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
 
     std::string m_advection_type = "MOL";
 
+    // include d(ep_g)/dt in contraint
+    bool m_use_depdt_constraint = false;
+
+    // If using Godunov, default to PPM (not PLM)
+    bool m_godunov_ppm         = true;
+
+    // If using Godunov, default to including viscous/diffusive
+    //    terms in the forcing terms
+    bool m_godunov_include_diff_in_forcing = true;
+
+    // If using Godunov, when to add the forcing terms in
+    //    the construction of the "trans" velocities
+    bool m_godunov_use_forces_in_trans = false;
+
+    // If using Godunov, if true then don't include the pressure gradient
+    //    in the forcing term passed into the godunov routine; instead
+    //    use gradient of mac phi which contains the full pressure
+    bool m_use_mac_phi_in_godunov = false;
+
+
+    enum struct DiffusionType {
+            Invalid, Explicit, Crank_Nicolson, Implicit
+    };
+
     amrex::Real enthalpy_source = 0;
+
 
     // Options to control mfix verbosity level
     int m_verbose = 0;
@@ -1125,6 +1187,8 @@ void compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
     Vector<BCRec> bcs_X; // For fluid species
     Vector<BCRec> bcs_f; // For generic first-order extrapolation
 
+
+
     /***************************************************************************
      *                                                                         *
      * EB Data (including level-set data)                                      *
@@ -1147,19 +1211,50 @@ void compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
     }
 
 
-
-
     //! EB factory that lives on the particle grids
     Vector<std::unique_ptr<EBFArrayBoxFactory> > particle_ebfactory;
 
     bool mfix_update_ebfactory (int a_lev);
 
-  // For Godunov, we need 1 ghost cell
-  // For MOL    , we need 0 ghost cells
+
+    // For Godunov, we need 1 ghost cell
+    // For MOL    , we need 0 ghost cells
+    int nghost_force () const { return (m_advection_type != "MOL") ? 3 : 0; }
 
     int nghost_mac () const {
       if (!EBFactory(0).isAllRegular()) return (m_advection_type != "MOL") ? 4 : 3;
       return (m_advection_type != "MOL") ? 1 : 0;
+    }
+
+    int nghost_eb_basic () const {
+     return (m_advection_type != "MOL") ? 5 : 4;
+    }
+
+    int nghost_eb_volume () const {
+      return (m_advection_type != "MOL") ? 5 : 4;
+    }
+
+    int nghost_eb_full () const {
+      return 4;
+    }
+
+
+   // Invalid, Explicit, Crank_Nicolson, Implicit
+    DiffusionType predictor_diff_type () const{
+      return (m_advection_type == "MOL") ?
+        DiffusionType::Explicit:
+        DiffusionType::Implicit;
+    }
+
+    DiffusionType corrector_diff_type () const{
+      return (m_advection_type == "MOL") ?
+        DiffusionType::Crank_Nicolson:
+        DiffusionType::Invalid;
+    }
+
+    bool need_divtau () const {
+      return ( (m_godunov_include_diff_in_forcing ||
+                predictor_diff_type() != DiffusionType::Implicit) );
     }
 
 

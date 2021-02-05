@@ -15,31 +15,22 @@
 // Compute the three components of the convection term
 //
 void
-mfix::mfix_compute_convective_term (const bool update_laplacians,
-                                    Vector< MultiFab* >& conv_u_in,
-                                    Vector< MultiFab* >& conv_s_in,
-                                    Vector< MultiFab* >& conv_X_in,
-                                    Vector< MultiFab* >& lap_T_out,
-                                    Vector< MultiFab* >& lap_X_out,
-                                    Vector< MultiFab* > const& vel_in,
-                                    Vector< MultiFab* > const& ep_g_in,
-                                    Vector< MultiFab* > const& ep_u_mac,
-                                    Vector< MultiFab* > const& ep_v_mac,
-                                    Vector< MultiFab* > const& ep_w_mac,
-                                    Vector< MultiFab* > const& ro_g_in,
-                                    Vector< MultiFab* > const& MW_g_in,
-                                    Vector< MultiFab* > const& T_g_in,
-                                    Vector< MultiFab* > const& cp_g_in,
-                                    Vector< MultiFab* > const& k_g_in,
-                                    Vector< MultiFab* > const& h_g_in,
-                                    Vector< MultiFab* > const& T_g_on_eb_in,
-                                    Vector< MultiFab* > const& k_g_on_eb_in,
-                                    Vector< MultiFab* > const& trac_in,
-                                    Vector< MultiFab* > const& X_gk_in,
-                                    Vector< MultiFab* > const& D_gk_in,
-                                    Vector< MultiFab* > const& h_gk_in,
-                                    Vector< MultiFab* > const& txfr_in,
-                                    Vector< MultiFab* > const& ro_gk_txfr_in,
+mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
+                                    Vector< MultiFab*      >& conv_s_in,
+                                    Vector< MultiFab*      >& conv_X_in,
+                                    Vector< MultiFab*      > const& vel_forces,
+                                    Vector< MultiFab*      > const& tra_forces,
+                                    Vector< MultiFab const*> const& vel_in,
+                                    Vector< MultiFab const*> const& ep_g_in,
+                                    Vector< MultiFab const*> const& ro_g_in,
+                                    Vector< MultiFab const*> const& h_g_in,
+                                    Vector< MultiFab const*> const& trac_in,
+                                    Vector< MultiFab const*> const& X_gk_in,
+                                    Vector< MultiFab*      > const& ep_u_mac,
+                                    Vector< MultiFab*      > const& ep_v_mac,
+                                    Vector< MultiFab*      > const& ep_w_mac,
+                                    Vector< MultiFab const*> const& rhs_mac,
+                                    Vector< MultiFab      *> const& divtau_old,
                                     Real l_dt, Real time)
 {
     BL_PROFILE("mfix::mfix_compute_convective_term");
@@ -48,80 +39,21 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
 
     const int l_nspecies = FLUID::nspecies;
 
-    // First do FillPatch of {velocity, density, tracer, enthalpy} so we know
-    // the ghost cells of these arrays are all filled
-    for (int lev = 0; lev < nlev; lev++) {
-
-      int state_comp, num_comp;
-
-      // State with ghost cells
-      MultiFab Sborder_u(grids[lev], dmap[lev], vel_in[lev]->nComp(), nghost,
-                         MFInfo(), *ebfactory[lev]);
-      FillPatchVel(lev, time, Sborder_u, 0, Sborder_u.nComp(), bcs_u);
-
-      // Copy each FAB back from Sborder_u into the vel array, complete with filled ghost cells
-      MultiFab::Copy(*vel_in[lev], Sborder_u, 0, 0, vel_in[lev]->nComp(), vel_in[lev]->nGrow());
-
-      MultiFab Sborder_s(grids[lev], dmap[lev], 1, nghost, MFInfo(), *ebfactory[lev]);
-
-      // We FillPatch density even if not advecting it because we need it in the projections
-      state_comp =  0; // comp = 0 --> density
-      num_comp = 1;
-      FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
-      MultiFab::Copy(*ro_g_in[lev], Sborder_s, 0, 0, num_comp, ro_g_in[lev]->nGrow());
-
-      if (advect_tracer) {
-        state_comp =  1; // comp = 1 --> tracer
-        num_comp = 1;
-        FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
-        MultiFab::Copy(*trac_in[lev], Sborder_s, 0, 0, num_comp, trac_in[lev]->nGrow());
-
-      }
-
-      if (advect_enthalpy) {
-        state_comp =  5; // comp = 1 --> enthalpy
-        num_comp = 1;
-        FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
-        MultiFab::Copy(*h_g_in[lev], Sborder_s, 0, 0, num_comp, h_g_in[lev]->nGrow());
-
-      }
-
-      if (advect_fluid_species) {
-        MultiFab Sborder_X(grids[lev], dmap[lev], FLUID::nspecies, nghost,
-                           MFInfo(), *ebfactory[lev]);
-
-        Sborder_X.setVal(0);
-
-        state_comp = 0;
-        num_comp = FLUID::nspecies;
-
-        FillPatchSpecies(lev, time, Sborder_X, state_comp, num_comp, bcs_X);
-
-        MultiFab::Copy(*X_gk_in[lev], Sborder_X, 0, 0, num_comp,
-                       X_gk_in[lev]->nGrow());
-
-      }
-    }
-
-
-
     // We first compute the velocity forcing terms to be used in predicting
     //    to faces before the MAC projection
     if (m_advection_type != "MOL") {
-#if 0
+
       bool include_pressure_gradient = !(m_use_mac_phi_in_godunov);
-      compute_vel_forces(vel_forces, vel, density, tracer, tracer, include_pressure_gradient);
+      compute_vel_forces(vel_forces, vel_in, ro_g_in, include_pressure_gradient);
 
       if (m_godunov_include_diff_in_forcing)
         for (int lev = 0; lev <= finest_level; ++lev)
-          MultiFab::Add(*vel_forces[lev], m_leveldata[lev]->divtau_o, 0, 0, AMREX_SPACEDIM, 0);
+          MultiFab::Add(*vel_forces[lev], *m_leveldata[lev]->divtau_o, 0, 0, 3, 0);
 
       if (nghost_force() > 0)
-        fillpatch_force(m_cur_time, vel_forces, nghost_force());
-#endif
+        fillpatch_force(time, vel_forces, nghost_force());
+
     }
-
-
 
 
 
@@ -129,37 +61,44 @@ mfix::mfix_compute_convective_term (const bool update_laplacians,
     //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
     //    on face CENTROIDS
     compute_MAC_projected_velocities(time, vel_in, ep_u_mac, ep_v_mac, ep_w_mac,
-       ep_g_in, ro_g_in, MW_g_in, T_g_in, cp_g_in, k_g_in, T_g_on_eb_in,
-       k_g_on_eb_in, X_gk_in, D_gk_in, h_gk_in, txfr_in, ro_gk_txfr_in,
-       update_laplacians, lap_T_out, lap_X_out);
-
-
-
+                                     ep_g_in, ro_g_in, rhs_mac);
 
 
     // We now re-compute the velocity forcing terms including the pressure gradient,
     //    and compute the tracer forcing terms for the first time
     if (m_advection_type != "MOL") {
-#if 0
-      compute_vel_forces(vel_forces, vel, density, tracer, tracer);
+
+      compute_vel_forces(vel_forces, vel_in, ro_g_in);
 
       if (m_godunov_include_diff_in_forcing)
         for (int lev = 0; lev <= finest_level; ++lev)
-          MultiFab::Add(*vel_forces[lev], m_leveldata[lev]->divtau_o, 0, 0, AMREX_SPACEDIM, 0);
+          MultiFab::Add(*vel_forces[lev], *m_leveldata[lev]->divtau_o, 0, 0, 3, 0);
 
       if (nghost_force() > 0)
-        fillpatch_force(m_cur_time, vel_forces, nghost_force());
+        fillpatch_force(time, vel_forces, nghost_force());
+
+      // TODO
+      if(advect_enthalpy){
+        amrex::Abort("Enthalpy forces are not broken out yet.");
+      }
+      if(advect_fluid_species){
+        amrex::Abort("Species forces are not broken out yet.");
+      }
 
       // Note this is forcing for (rho s), not for s
       if (advect_tracer) {
+#if 0
         compute_tra_forces(tra_forces, get_density_old_const());
         if (m_godunov_include_diff_in_forcing)
           for (int lev = 0; lev <= finest_level; ++lev)
             MultiFab::Add(*tra_forces[lev], m_leveldata[lev]->laps_o, 0, 0, ntrac, 0);
         if (nghost_force() > 0)
           fillpatch_force(m_cur_time, tra_forces, nghost_force());
-      }
 #endif
+      }
+
+
+
     }
 
 
