@@ -12,6 +12,7 @@ Bdirs 	+= src/des
 Bdirs 	+= src/io
 Bdirs 	+= src/convection
 Bdirs 	+= src/convection/MOL
+Bdirs 	+= src/convection/Godunov
 Bdirs   += src/convection/redistribute
 Bdirs 	+= src/diffusion
 Bdirs 	+= src/pic

@@ -6,3 +6,4 @@ CEXE_sources += mfix_diffuse_temperature.cpp
 CEXE_sources += mfix_diffuse_species.cpp
 CEXE_sources += mfix_diffuse_velocity.cpp
 CEXE_sources += mfix_diffuse_volfrac.cpp
+CEXE_sources += mfix_compute_laps.cpp
