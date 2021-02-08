@@ -233,18 +233,18 @@ mfix::InitParams ()
       amrex::Abort("advection type must be MOL or Godunov");
     }
 
-    if (m_advection_type == AdvectionType::MOL) m_godunov_include_diff_in_forcing = false;
+    if (advection_type() == AdvectionType::MOL) m_godunov_include_diff_in_forcing = false;
 
     // MOL: Explict predictor / Crank_Nicolson corrector
     // Godunov: Implicit
-    if (m_advection_type == AdvectionType::MOL) {
+    if (advection_type() == AdvectionType::MOL) {
       m_predictor_diff_type = DiffusionType::Explicit;
       m_corrector_diff_type = DiffusionType::Crank_Nicolson;
 
     }
 
     // The default for diffusion_type is 2, i.e. the default m_diff_type is DiffusionType::Implicit
-    int diffusion_type = (m_advection_type == AdvectionType::MOL) ? 3 : 1;
+    int diffusion_type = (advection_type() == AdvectionType::MOL) ? 3 : 1;
     pp.query("diffusion_type", diffusion_type);
     if (diffusion_type == 0) {
       m_predictor_diff_type = DiffusionType::Explicit;
@@ -279,10 +279,10 @@ mfix::InitParams ()
       amrex::Abort("We cannot have use_tensor_correction be true and diffusion type not Implicit");
     }
 
-    if (m_advection_type == AdvectionType::MOL && m_cfl > 0.5) {
+    if (advection_type() == AdvectionType::MOL && m_cfl > 0.5) {
       amrex::Abort("We currently require cfl <= 0.5 when using the MOL advection scheme");
     }
-    if (m_advection_type != AdvectionType::MOL && m_cfl > 1.0) {
+    if (advection_type() != AdvectionType::MOL && m_cfl > 1.0) {
       amrex::Abort("We currently require cfl <= 1.0 when using the Godunov advection scheme");
     }
 

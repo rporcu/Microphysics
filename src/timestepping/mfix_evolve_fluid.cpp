@@ -256,7 +256,7 @@ mfix::EvolveFluid (int nstep,
 
         bool proj_2_corr = true;
         // Corrector step
-        if (m_advection_type == AdvectionType::MOL && !m_steady_state) {
+        if (advection_type() == AdvectionType::MOL && !m_steady_state) {
            mfix_apply_corrector(conv_u_old, conv_s_old, conv_X_old, ro_RHS_old,
                divtau_old, lap_trac_old, lap_T_old, lap_T_star, enthalpy_RHS_old, species_RHS_old,
                lap_X_old, lap_X_star, time, dt, prev_dt, proj_2_corr);

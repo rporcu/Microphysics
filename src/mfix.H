@@ -70,6 +70,8 @@ class mfix : public AmrCore
 
     void InitLevelData (Real time);
 
+    void init_advection ();
+
     void mfix_init_solvers ();
 
     void mfix_setup_solvers ();
@@ -413,6 +415,9 @@ class mfix : public AmrCore
 
     void mfix_set_bc_type (int lev);
 
+    void set_bcrec_lo (const int lev, const int dir, const int l_type);
+    void set_bcrec_hi (const int lev, const int dir, const int l_type);
+
     ////////////////////////////////////////////////////////////////////////////
     //
     // Convection
@@ -426,13 +431,14 @@ class mfix : public AmrCore
                                amrex::Vector< amrex::MultiFab* > const& w,
                                amrex::Real time);
 
-  void compute_MAC_projected_velocities (amrex::Real time,
+  void compute_MAC_projected_velocities (amrex::Real time, const amrex::Real l_dt,
                                          amrex::Vector< amrex::MultiFab const*> const& vel_in,
                                          amrex::Vector< amrex::MultiFab*      > const& ep_u_mac,
                                          amrex::Vector< amrex::MultiFab*      > const& ep_v_mac,
                                          amrex::Vector< amrex::MultiFab*      > const& ep_w_mac,
                                          amrex::Vector< amrex::MultiFab const*> const& ep_g_in,
                                          amrex::Vector< amrex::MultiFab const*> const& ro_g_in,
+                                         amrex::Vector< amrex::MultiFab      *> const& vel_forces,
                                          amrex::Vector< amrex::MultiFab const*> const& rhs_mac);
 
 
@@ -813,7 +819,7 @@ class mfix : public AmrCore
                                Vector< MultiFab const* > const& txfr,
                                Vector< MultiFab const* > const& ro_gk_txfr);
 
-    void compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
+    void compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter const& mfi,
                                   Array4<Real> const& dvdt, // velocity
                                   Array4<Real> const& dsdt, // density, enthalpy, tracer
                                   Array4<Real> const& dXdt, // tracer
@@ -832,7 +838,8 @@ class mfix : public AmrCore
                                   Array4<Real const> const& ep_umac,
                                   Array4<Real const> const& ep_vmac,
                                   Array4<Real const> const& ep_wmac,
-                                  const Real l_dt);
+                                  Array4<Real const> const& fvel,
+                                  Array4<Real const> const& ftra);
 
   private:
     void mfix_print_max_vel (int lev);
@@ -925,6 +932,19 @@ class mfix : public AmrCore
     amrex::Vector< amrex::MultiFab const* > get_ro_gk_txfr_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_diveu_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_mac_phi_const () const noexcept;
+
+  amrex::Vector<int> const& get_velocity_iconserv () const noexcept { return m_iconserv_velocity; }
+  amrex::Vector<int> const& get_density_iconserv () const noexcept { return m_iconserv_density; }
+  amrex::Vector<int> const& get_tracer_iconserv () const noexcept { return m_iconserv_tracer; }
+  //
+  int const* get_velocity_iconserv_device_ptr () const noexcept {
+    return m_iconserv_velocity_d.data(); }
+  int const* get_density_iconserv_device_ptr () const noexcept {
+    return m_iconserv_density_d.data(); }
+  int const* get_tracer_iconserv_device_ptr () const noexcept {
+    return m_iconserv_tracer_d.data(); }
+
+
 
     // used if load_balance_type == "KnapSack"
     amrex::Vector< amrex::MultiFab* > particle_cost;
@@ -1201,6 +1221,15 @@ class mfix : public AmrCore
     Vector<BCRec> bcs_X; // For fluid species
     Vector<BCRec> bcs_f; // For generic first-order extrapolation
 
+    amrex::Vector<amrex::BCRec> m_bcrec_velocity;
+    amrex::Vector<amrex::BCRec> m_bcrec_scalars;
+    amrex::Vector<amrex::BCRec> m_bcrec_species;
+    amrex::Vector<amrex::BCRec> m_bcrec_force;
+
+    amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_velocity_d;
+    amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_scalars_d;
+    amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_species_d;
+    amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_force_d;
 
 
     /***************************************************************************
@@ -1233,19 +1262,19 @@ class mfix : public AmrCore
 
     // For Godunov, we need 1 ghost cell
     // For MOL    , we need 0 ghost cells
-    int nghost_force () const { return (m_advection_type != AdvectionType::MOL) ? 3 : 0; }
+    int nghost_force () const { return (advection_type() != AdvectionType::MOL) ? 3 : 0; }
 
     int nghost_mac () const {
-      if (!EBFactory(0).isAllRegular()) return (m_advection_type != AdvectionType::MOL) ? 4 : 3;
-      return (m_advection_type != AdvectionType::MOL) ? 1 : 0;
+      if (!EBFactory(0).isAllRegular()) return (advection_type() != AdvectionType::MOL) ? 4 : 3;
+      return (advection_type() != AdvectionType::MOL) ? 1 : 0;
     }
 
     int nghost_eb_basic () const {
-     return (m_advection_type != AdvectionType::MOL) ? 5 : 4;
+     return (advection_type() != AdvectionType::MOL) ? 5 : 4;
     }
 
     int nghost_eb_volume () const {
-      return (m_advection_type != AdvectionType::MOL) ? 5 : 4;
+      return (advection_type() != AdvectionType::MOL) ? 5 : 4;
     }
 
     int nghost_eb_full () const {
@@ -1253,23 +1282,35 @@ class mfix : public AmrCore
     }
 
 
+    AdvectionType advection_type () const{return m_advection_type;}
+
    // Invalid, Explicit, Crank_Nicolson, Implicit
     DiffusionType predictor_diff_type () const{
-      return (m_advection_type == AdvectionType::MOL) ?
+      return (advection_type() == AdvectionType::MOL) ?
         DiffusionType::Explicit:
         DiffusionType::Implicit;
     }
 
     DiffusionType corrector_diff_type () const{
-      return (m_advection_type == AdvectionType::MOL) ?
+      return (advection_type() == AdvectionType::MOL) ?
         DiffusionType::Crank_Nicolson:
         DiffusionType::Invalid;
     }
+
+
 
     bool need_divtau () const {
       return ( (m_godunov_include_diff_in_forcing ||
                 predictor_diff_type() != DiffusionType::Implicit) );
     }
+
+    amrex::Vector<int> m_iconserv_velocity;
+    amrex::Gpu::DeviceVector<int> m_iconserv_velocity_d;
+    amrex::Vector<int> m_iconserv_density;
+    amrex::Gpu::DeviceVector<int> m_iconserv_density_d;
+    amrex::Vector<int> m_iconserv_tracer;
+    amrex::Gpu::DeviceVector<int> m_iconserv_tracer_d;
+
 
 
 };

@@ -11,6 +11,27 @@
 #include <mfix_species_parms.H>
 
 #include <redistribution.H>
+
+
+
+void mfix::init_advection ()
+{
+  if (advection_type() == AdvectionType::Godunov) {
+    m_iconserv_velocity.resize(3, 1);
+    m_iconserv_velocity_d.resize(3, 1);
+  } else {
+    m_iconserv_velocity.resize(3, 0);
+    m_iconserv_velocity_d.resize(3, 0);
+  }
+
+  m_iconserv_density.resize(1, 1);
+  m_iconserv_density_d.resize(1, 1);
+
+  m_iconserv_tracer.resize(ntrac, 1);
+  m_iconserv_tracer_d.resize(ntrac, 1);
+}
+
+
 //
 // Compute the three components of the convection term
 //
@@ -41,7 +62,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
 
     // We first compute the velocity forcing terms to be used in predicting
     //    to faces before the MAC projection
-    if (m_advection_type != AdvectionType::MOL) {
+    if (advection_type() != AdvectionType::MOL) {
 
       bool include_pressure_gradient = !(m_use_mac_phi_in_godunov);
       compute_vel_forces(vel_forces, vel_in, ro_g_in, include_pressure_gradient);
@@ -60,13 +81,13 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
     // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
     //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
     //    on face CENTROIDS
-    compute_MAC_projected_velocities(time, vel_in, ep_u_mac, ep_v_mac, ep_w_mac,
-                                     ep_g_in, ro_g_in, rhs_mac);
+    compute_MAC_projected_velocities(time, l_dt, vel_in, ep_u_mac, ep_v_mac, ep_w_mac,
+                                     ep_g_in, ro_g_in, vel_forces, rhs_mac);
 
 
     // We now re-compute the velocity forcing terms including the pressure gradient,
     //    and compute the tracer forcing terms for the first time
-    if (m_advection_type != AdvectionType::MOL) {
+    if (advection_type() != AdvectionType::MOL) {
 
       compute_vel_forces(vel_forces, vel_in, ro_g_in);
 
@@ -131,7 +152,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
       for (MFIter mfi(*ep_g_in[lev],false); mfi.isValid(); ++mfi) {
 
         Box const& bx = mfi.tilebox();
-        mfix::compute_convective_term(bx, lev, mfi,
+        mfix::compute_convective_term(bx, lev, l_dt, mfi,
                                       conv_u_in[lev]->array(mfi),
                                       conv_s_in[lev]->array(mfi),
                                       (l_nspecies>0) ? conv_X_in[lev]->array(mfi) : Array4<Real>{},
@@ -147,7 +168,10 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
                                       ep_u_mac[lev]->const_array(mfi),
                                       ep_v_mac[lev]->const_array(mfi),
                                       ep_w_mac[lev]->const_array(mfi),
-                                      l_dt);
+                                      (!vel_forces.empty()) ? vel_forces[lev]->const_array(mfi)
+                                      : Array4<Real const>{},
+                                      (!tra_forces.empty()) ? tra_forces[lev]->const_array(mfi)
+                                      : Array4<Real const>{});
       } // mfi
 
     } // lev
@@ -158,26 +182,11 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void
-mfix::compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
-                               Array4<Real> const& dvdt, // velocity
-                               Array4<Real> const& dsdt, // density, enthalpy, tracer
-                               Array4<Real> const& dXdt, // tracer
+mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter const& mfi,
+                               Array4<Real> const& dvdt,      // velocity
+                               Array4<Real> const& dsdt,      // density, enthalpy, tracer
+                               Array4<Real> const& dXdt,      // tracer
                                const bool l_advect_density,
                                const bool l_advect_enthalpy,
                                const bool l_advect_tracer,
@@ -193,7 +202,8 @@ mfix::compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
                                Array4<Real const> const& ep_umac,
                                Array4<Real const> const& ep_vmac,
                                Array4<Real const> const& ep_wmac,
-                               const Real l_dt)
+                               Array4<Real const> const& fvel,
+                               Array4<Real const> const& ftra)
 {
 
   auto const& fact = EBFactory(lev);
@@ -239,7 +249,7 @@ mfix::compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
     }
 
     Box rho_box = amrex::grow(bx,2);
-    if (m_advection_type != AdvectionType::MOL)  rho_box.grow(1);
+    if (advection_type() != AdvectionType::MOL)  rho_box.grow(1);
     if (!regular) rho_box.grow(2);
 
     FArrayBox rhohgfab, rhotracfab, rhoXgkfab;
@@ -291,10 +301,70 @@ mfix::compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
     const GpuArray<int, 3> bc_types =
       {bc_list.get_minf(), bc_list.get_pout(), bc_list.get_pinf()};
 
-    if (m_advection_type == AdvectionType::Godunov) {
-      amrex::Abort("Godunov not implemented!");
+    if (advection_type() == AdvectionType::Godunov) {
 
-    } else if (m_advection_type == AdvectionType::MOL) {
+      int n_tmp_fac  = 14;
+      int n_tmp_grow = 4;
+
+      FArrayBox tmpfab(amrex::grow(bx,n_tmp_grow), nmaxcomp*n_tmp_fac+1);
+      Elixir eli = tmpfab.elixir();
+
+      Box gbx = bx;
+
+      if (!regular) {
+        gbx.grow(1);
+      }
+      // This one holds the convective term on a grown region so we can redistribute
+      FArrayBox dUdt_tmpfab(gbx,nmaxcomp);
+      Array4<Real> dUdt_tmp = dUdt_tmpfab.array();
+      Elixir eli_du = dUdt_tmpfab.elixir();
+
+      FArrayBox scratch_fab(gbx,3*nmaxcomp);
+      Array4<Real> scratch = scratch_fab.array();
+      Elixir eli_scratch = scratch_fab.elixir();
+
+
+
+      if (!regular) {
+
+
+        {// Velocity
+
+          const int scomp = 0; // starting component
+          const int ncomp = 3; // number of components
+          const int ccomp = 0; // convection (dsdt) component
+#if 0
+
+          amrex::Print() << "DOING VELOCITY " << std::endl;
+          ebgodunov::compute_godunov_advection(gbx, ncomp,
+                                               dUdt_tmp, vel,
+                                               ep_umac, ep_vmac, ep_wmac,
+                                               fvel, divu, l_dt,
+                                               get_velocity_bcrec(),
+                                               get_velocity_bcrec_device_ptr(),
+                                               get_velocity_iconserv_device_ptr(),
+                                               tmpfab.dataPtr(), flag,
+                                               apx, apy, apz, vfrac,
+                                               fcx, fcy, fcz, ccc,
+                                               geom[lev], true); // is_velocity
+
+          redistribution::redistribute_eb(bx, AMREX_SPACEDIM, dvdt, dUdt_tmp, vel, scratch,
+                                          AMREX_D_DECL(umac, vmac, wmac), flag,
+                                          AMREX_D_DECL(apx, apy, apz), vfrac,
+                                          AMREX_D_DECL(fcx, fcy, fcz), ccc, geom[lev], l_dt, m_redistribution_type);
+#endif
+        } //end velocity
+        Gpu::streamSynchronize();
+      }
+
+
+      /**************************************************************************
+       *                                                                        *
+       *                       Method of Lines (MOL)                            *
+       *                                                                        *
+       **************************************************************************/
+    } else if (advection_type() == AdvectionType::MOL) {
+
       Box tmpbox = amrex::surroundingNodes(bx);
       int tmpcomp = nmaxcomp*3; // fx, fy, fz
       Box gbx = bx;

@@ -1,4 +1,6 @@
 #include <MOL.H>
+#include <Godunov.H>
+
 #include <mfix_bc_parms.H>
 #include <mfix_mf_helpers.H>
 #include <mfix.H>
@@ -19,13 +21,14 @@
 //  This method returns the MAC velocity with up-to-date BCs in place
 //
 void
-mfix::compute_MAC_projected_velocities (amrex::Real time,
+mfix::compute_MAC_projected_velocities (amrex::Real time, const amrex::Real l_dt,
                                         amrex::Vector< amrex::MultiFab const*> const& vel_in,
                                         amrex::Vector< amrex::MultiFab*      > const& ep_u_mac,
                                         amrex::Vector< amrex::MultiFab*      > const& ep_v_mac,
                                         amrex::Vector< amrex::MultiFab*      > const& ep_w_mac,
                                         amrex::Vector< amrex::MultiFab const*> const& ep_g_in,
                                         amrex::Vector< amrex::MultiFab const*> const& ro_g_in,
+                                        amrex::Vector< amrex::MultiFab      *> const& vel_forces,
                                         amrex::Vector< amrex::MultiFab const*> const& rhs_mac_in)
 {
   BL_PROFILE("mfix::compute_MAC_projected_velocities()");
@@ -34,6 +37,7 @@ mfix::compute_MAC_projected_velocities (amrex::Real time,
     Print() << "MAC Projection:\n";
   }
 
+  auto mac_phi = get_mac_phi();
 
   // ro_face and ep_face are temporary, no need to keep it outside this routine
   Vector< Array<MultiFab*,3> > ro_face(finest_level+1);
@@ -100,11 +104,32 @@ mfix::compute_MAC_projected_velocities (amrex::Real time,
   }
 
 
+  Vector<Array<MultiFab,AMREX_SPACEDIM> > m_fluxes;
+  m_fluxes.resize(finest_level+1);
+  for (int lev=0; lev <= finest_level; ++lev) {
+    for (int idim = 0; idim < AMREX_SPACEDIM; ++idim) {
+      m_fluxes[lev][idim].define(
+         amrex::convert(grids[lev], IntVect::TheDimensionVector(idim)),
+         dmap[lev], 1, 0, MFInfo(), EBFactory(lev));
+    }
+  }
+
+  if (m_use_mac_phi_in_godunov) {
+    macproj->getFluxes(amrex::GetVecOfArrOfPtrs(m_fluxes), mac_phi, MLMG::Location::FaceCentroid);
+  } else {
+    for (int lev=0; lev <= finest_level; ++lev)
+      for (int idim = 0; idim < AMREX_SPACEDIM; ++idim)
+        m_fluxes[lev][idim].setVal(0.);
+  }
+
+
 
   // Predict normal velocity to faces -- note that the {u_mac, v_mac, w_mac}
   //    arrays returned from this call are on face CENTROIDS and have been
   //    multiplied by the phasic voluem fraction {ep * u_mac, ep * v_mac, ep * w_mac}
   for (int lev = 0; lev < nlev; ++lev) {
+
+    mac_phi[lev]->FillBoundary(geom[lev].periodicity());
 
     const EBFArrayBoxFactory* ebfact = &EBFactory(lev);
 
@@ -113,14 +138,44 @@ mfix::compute_MAC_projected_velocities (amrex::Real time,
     ep_v_mac[lev]->setVal(covered_val);
     ep_w_mac[lev]->setVal(covered_val);
 
-    mol::predict_vels_on_faces(lev,
-                               *ep_u_mac[lev],   *ep_v_mac[lev],   *ep_w_mac[lev],
-                               *ep_face[lev][0], *ep_face[lev][1], *ep_face[lev][2],
-                               *vel_in[lev], m_vel_g_bc_types,
-                               bc_ilo[lev]->array(), bc_ihi[lev]->array(),
-                               bc_jlo[lev]->array(), bc_jhi[lev]->array(),
-                               bc_klo[lev]->array(), bc_khi[lev]->array(),
-                               ebfact, geom);
+    if (advection_type() == AdvectionType::Godunov) {
+
+
+      if (ebfact->isAllRegular()) {
+#if 0
+        godunov::predict_godunov(time,
+                                 *ep_u_mac[lev], *ep_v_mac[lev], *ep_w_mac[lev],
+                                 *vel[lev], *vel_forces[lev],
+                                 get_velocity_bcrec(), get_velocity_bcrec_device_ptr(),
+                                 geom[lev], l_dt, m_godunov_ppm, m_godunov_use_forces_in_trans,
+                                 m_fluxes[lev][0], m_fluxes[lev][1], m_fluxes[lev][2],
+                                 m_use_mac_phi_in_godunov);
+#endif
+      } else {
+#if 0
+        ebgodunov::predict_godunov(time,
+                                   *ep_u_mac[lev], *ep_v_mac[lev], *ep_w_mac[lev],
+                                   *vel_in[lev], *vel_forces[lev],
+                                   get_velocity_bcrec(), get_velocity_bcrec_device_ptr(),
+                                   ebfact, geom[lev], l_dt,
+                                   m_fluxes[lev][0], m_fluxes[lev][1], m_fluxes[lev][2],
+                                   m_use_mac_phi_in_godunov);
+#endif
+
+      }
+
+
+    } else if (advection_type() == AdvectionType::MOL) {
+
+      mol::predict_vels_on_faces(lev,
+                                 *ep_u_mac[lev],   *ep_v_mac[lev],   *ep_w_mac[lev],
+                                 *ep_face[lev][0], *ep_face[lev][1], *ep_face[lev][2],
+                                 *vel_in[lev], m_vel_g_bc_types,
+                                 bc_ilo[lev]->array(), bc_ihi[lev]->array(),
+                                 bc_jlo[lev]->array(), bc_jhi[lev]->array(),
+                                 bc_klo[lev]->array(), bc_khi[lev]->array(),
+                                 ebfact, geom);
+    }
   }
 
 
@@ -181,7 +236,7 @@ mfix::compute_MAC_projected_velocities (amrex::Real time,
   {
     // Solve using mac_phi as an initial guess -- note that mac_phi is
     //       stored from iteration to iteration
-    macproj->project(get_mac_phi(),mac_mg_rtol, mac_mg_atol);
+    macproj->project(mac_phi,mac_mg_rtol, mac_mg_atol);
 
   }
   else
