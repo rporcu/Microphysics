@@ -6,4 +6,5 @@ target_sources( mfixcore
    mfix_compute_convective_term.cpp
    mfix_correct_small_cells.cpp
    mfix_compute_MAC_projected_velocities.cpp
+   mfix_compute_forces.cpp
    )

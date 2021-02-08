@@ -1,6 +1,4 @@
-#ifndef MFIX_MOL_CONVECTIVE_FLUXES_EB_K_H_
-#define MFIX_MOL_CONVECTIVE_FLUXES_EB_K_H_
-
+#include <MOL.H>
 #include <mfix_upwind.H>
 #include <mfix_algorithm.H>
 #include <AMReX_EB_slopes_K.H>
@@ -8,44 +6,45 @@
 using namespace aux;
 using namespace amrex;
 
-namespace mol {
-
 //
 // Compute the three components of the convection term when we have embedded
 // boundaries
 //
-void compute_convective_fluxes_eb (const int lev,
-                                   Box const& domain_box,
-                                   Box const& xbx,
-                                   Box const& ybx,
-                                   Box const& zbx,
-                                   const int ncomp,
-                                   const int state_comp,
-                                   Array4<Real const> const& state,
-                                   Array4<Real      > const& fx,
-                                   Array4<Real      > const& fy,
-                                   Array4<Real      > const& fz,
-                                   Array4<Real const> const& ep_u_mac,
-                                   Array4<Real const> const& ep_v_mac,
-                                   Array4<Real const> const& ep_w_mac,
-                                   Array4<EBCellFlag const> const& flag,
-                                   Array4<Real const> const& fcx,
-                                   Array4<Real const> const& fcy,
-                                   Array4<Real const> const& fcz,
-                                   Array4<Real const> const& ccc,
-                                   const GpuArray<int, 3> bc_types,
-                                   std::map<std::string, Gpu::DeviceVector<int>>& state_bcs,
-                                   Array4<int const> const& bct_ilo,
-                                   Array4<int const> const& bct_ihi,
-                                   Array4<int const> const& bct_jlo,
-                                   Array4<int const> const& bct_jhi,
-                                   Array4<int const> const& bct_klo,
-                                   Array4<int const> const& bct_khi)
+void mol::compute_convective_fluxes_eb (Box const& bx,
+                                        const int ncomp,
+                                        const int state_comp,
+                                        Array4<Real const> const& state,
+                                        Array4<Real      > const& fx,
+                                        Array4<Real      > const& fy,
+                                        Array4<Real      > const& fz,
+                                        Array4<Real const> const& ep_u_mac,
+                                        Array4<Real const> const& ep_v_mac,
+                                        Array4<Real const> const& ep_w_mac,
+                                        Array4<EBCellFlag const> const& flag,
+                                        Array4<Real const> const& fcx,
+                                        Array4<Real const> const& fcy,
+                                        Array4<Real const> const& fcz,
+                                        Array4<Real const> const& ccc,
+                                        const GpuArray<int, 3> bc_types,
+                                        std::map<std::string, Gpu::DeviceVector<int>>& state_bcs,
+                                        Array4<int const> const& bct_ilo,
+                                        Array4<int const> const& bct_ihi,
+                                        Array4<int const> const& bct_jlo,
+                                        Array4<int const> const& bct_jhi,
+                                        Array4<int const> const& bct_klo,
+                                        Array4<int const> const& bct_khi,
+                                        Geometry& geom)
 {
   constexpr Real my_huge = 1.e200;
 
   const int* dirichlet_bcs  = (state_bcs["Dirichlet"]).data();
   const int  dirichlet_size = (state_bcs["Dirichlet"]).size();
+
+  Box const& xbx = amrex::surroundingNodes(bx,0);
+  Box const& ybx = amrex::surroundingNodes(bx,1);
+  Box const& zbx = amrex::surroundingNodes(bx,2);
+
+  const Box& domain_box = geom.Domain();
 
   const int domain_ilo = domain_box.smallEnd(0);
   const int domain_ihi = domain_box.bigEnd(0);
@@ -64,6 +63,7 @@ void compute_convective_fluxes_eb (const int lev,
   const bool check_extdir = check_extdir_ilo or check_extdir_ihi or
                             check_extdir_jlo or check_extdir_jhi or
                             check_extdir_klo or check_extdir_khi;
+
   /*********************************************************************************
    *                                                                               *
    *                                  x-direction                                  *
@@ -207,7 +207,8 @@ void compute_convective_fluxes_eb (const int lev,
         Real delta_y = yf - ccc(i,j,k,1);
         Real delta_z = zf - ccc(i,j,k,2);
 
-        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i  ,j,k,comp, state, ccc, fcx, fcy, fcz, flag);
+        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i  ,j,k,comp,
+                                      state, ccc, fcx, fcy, fcz, flag);
 
         Real upls = state_pls - delta_x * slopes_eb_hi[0]
                               + delta_y * slopes_eb_hi[1]
@@ -219,7 +220,8 @@ void compute_convective_fluxes_eb (const int lev,
         delta_y = yf - ccc(i-1,j,k,1);
         delta_z = zf - ccc(i-1,j,k,2);
 
-        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i-1,j,k,comp, state, ccc, fcx, fcy, fcz, flag);
+        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i-1,j,k,comp,
+                                      state, ccc, fcx, fcy, fcz, flag);
 
         Real umns = state_mns + delta_x * slopes_eb_lo[0]
                               + delta_y * slopes_eb_lo[1]
@@ -386,7 +388,8 @@ void compute_convective_fluxes_eb (const int lev,
         Real delta_x = xf - ccc(i,j,k,0);
         Real delta_z = zf - ccc(i,j,k,2);
 
-        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j  ,k,comp, state, ccc, fcx, fcy, fcz, flag);
+        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j  ,k,comp,
+                                      state, ccc, fcx, fcy, fcz, flag);
 
         Real vpls = state_pls - delta_y * slopes_eb_hi[1]
                               + delta_x * slopes_eb_hi[0]
@@ -398,7 +401,8 @@ void compute_convective_fluxes_eb (const int lev,
         delta_x = xf - ccc(i,j-1,k,0);
         delta_z = zf - ccc(i,j-1,k,2);
 
-        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j-1,k,comp, state, ccc, fcx, fcy, fcz, flag);
+        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j-1,k,comp,
+                                      state, ccc, fcx, fcy, fcz, flag);
 
         Real vmns = state_mns + delta_y * slopes_eb_lo[1]
                               + delta_x * slopes_eb_lo[0]
@@ -560,7 +564,8 @@ void compute_convective_fluxes_eb (const int lev,
         Real delta_y = yf - ccc(i,j,k,1);
         Real delta_z = .5 + ccc(i,j,k,2);
 
-        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,k  ,comp, state, ccc, fcx, fcy, fcz, flag);
+        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,k  ,comp,
+                                      state, ccc, fcx, fcy, fcz, flag);
 
         Real wpls = state_pls - delta_z * slopes_eb_hi[2]
                               + delta_x * slopes_eb_hi[0]
@@ -572,7 +577,8 @@ void compute_convective_fluxes_eb (const int lev,
         delta_y = yf - ccc(i,j,k-1,1);
         delta_z = .5 - ccc(i,j,k-1,2);
 
-        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j,k-1,comp, state, ccc, fcx, fcy, fcz, flag);
+        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j,k-1,comp,
+                                      state, ccc, fcx, fcy, fcz, flag);
 
         Real wmns = state_mns + delta_z * slopes_eb_lo[2]
                               + delta_x * slopes_eb_lo[0]
@@ -593,6 +599,3 @@ void compute_convective_fluxes_eb (const int lev,
 
   }
 }
-
-}//end mol namespace
-#endif

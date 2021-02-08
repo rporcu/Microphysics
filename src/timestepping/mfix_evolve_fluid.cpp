@@ -161,7 +161,7 @@ mfix::EvolveFluid (int nstep,
             t_new[lev] = time+dt;
         }
 
-        if (steady_state)
+        if (m_steady_state)
         {
            amrex::Print() << "\n   Iteration " << iter << " with dt = " << dt << "\n" << std::endl;
         } else {
@@ -256,7 +256,7 @@ mfix::EvolveFluid (int nstep,
 
         bool proj_2_corr = true;
         // Corrector step
-        if (!steady_state) {
+        if (advection_type() == AdvectionType::MOL && !m_steady_state) {
            mfix_apply_corrector(conv_u_old, conv_s_old, conv_X_old, ro_RHS_old,
                divtau_old, lap_trac_old, lap_T_old, lap_T_star, enthalpy_RHS_old, species_RHS_old,
                lap_X_old, lap_X_star, time, dt, prev_dt, proj_2_corr);
@@ -265,7 +265,7 @@ mfix::EvolveFluid (int nstep,
         //
         // Check whether to exit the loop or not
         //
-        if (steady_state) {
+        if (m_steady_state) {
           keep_looping = !steady_state_reached ( dt, iter);
         } else {
           keep_looping = 0;

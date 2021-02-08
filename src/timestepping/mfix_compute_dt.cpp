@@ -192,7 +192,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
     ParallelDescriptor::ReduceRealMax(cfl_max);
 
     // New dt
-    dt_new = cfl * 2.0 / cfl_max;
+    dt_new = m_cfl * 2.0 / cfl_max;
 
     // Protect against cfl_max very small
     // This may happen, for example, when the initial velocity field
@@ -206,7 +206,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
         dt_new = amrex::min( dt_new, 1.01*old_dt );
 
     // Don't overshoot the final time if not running to steady state
-    if (steady_state == 0 && stop_time > 0.)
+    if (m_steady_state == 0 && stop_time > 0.)
        if (time+dt_new > stop_time)
            dt_new = stop_time - time;
 
@@ -224,7 +224,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
 
     if ( fixed_dt > 0.)
     {
-        if ( fixed_dt > dt_new*ope && cfl > 0)
+        if ( fixed_dt > dt_new*ope && m_cfl > 0)
         {
             amrex::Print() << "WARNING: fixed dt does not satisfy CFL condition: "
                            << " fixed dt = "  << fixed_dt

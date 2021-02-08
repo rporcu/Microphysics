@@ -19,23 +19,19 @@
 // Compute incompressibility constraint div(ep_g * u) for an open system
 //
 void
-mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
-                            const bool update_laplacians,
-                            Vector< MultiFab* > const& lap_T_star,
-                            Vector< MultiFab* > const& lap_X_star,
-                            Vector< MultiFab* > const& ep_g,
-                            Vector< MultiFab* > const& ro_g,
-                            Vector< MultiFab* > const& MW_g,
-                            Vector< MultiFab* > const& T_g,
-                            Vector< MultiFab* > const& cp_g,
-                            Vector< MultiFab* > const& k_g,
-                            Vector< MultiFab* > const& T_g_on_eb,
-                            Vector< MultiFab* > const& k_g_on_eb,
-                            Vector< MultiFab* > const& X_gk,
-                            Vector< MultiFab* > const& D_gk,
-                            Vector< MultiFab* > const& h_gk,
-                            Vector< MultiFab* > const& txfr,
-                            Vector< MultiFab* > const& ro_gk_txfr)
+mfix::mfix_open_system_rhs (Vector< MultiFab*      > const& rhs,
+                            Vector< MultiFab*      > const& lap_T_star,
+                            Vector< MultiFab*      > const& lap_X_star,
+                            Vector< MultiFab const*> const& ep_g,
+                            Vector< MultiFab const*> const& ro_g,
+                            Vector< MultiFab const*> const& MW_g,
+                            Vector< MultiFab const*> const& T_g,
+                            Vector< MultiFab const*> const& cp_g,
+                            Vector< MultiFab const*> const& X_gk,
+                            Vector< MultiFab const*> const& D_gk,
+                            Vector< MultiFab const*> const& h_gk,
+                            Vector< MultiFab const*> const& txfr,
+                            Vector< MultiFab const*> const& ro_gk_txfr)
 {
   Vector< MultiFab* > S_h(nlev, nullptr);
   Vector< MultiFab* > S_sk(nlev, nullptr);
@@ -50,8 +46,7 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
     }
 
     // Compute S_h, aka enthalpy RHS
-    mfix_enthalpy_rhs(update_laplacians, S_h, lap_T_star, T_g, ep_g, ro_g, k_g,
-        T_g_on_eb, k_g_on_eb, X_gk, D_gk, h_gk);
+    mfix_enthalpy_rhs(S_h, ep_g, ro_g, X_gk, D_gk, h_gk);
 
     for (int lev(0); lev <= finest_level; lev++) {
 #ifdef _OPENMP
@@ -119,8 +114,7 @@ mfix::mfix_open_system_rhs (Vector< MultiFab* > const& rhs,
     Real* p_MW_gk = MW_gk_d.data();
 
     // compute S_sk
-    mfix_species_X_rhs(update_laplacians, S_sk, lap_X_star, X_gk, ep_g, ro_g,
-        D_gk, ro_gk_txfr);
+    mfix_species_X_rhs(S_sk, ro_gk_txfr);
 
     for (int lev(0); lev <= finest_level; lev++)
     {

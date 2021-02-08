@@ -457,15 +457,6 @@ mfix::RegridArrays (int lev)
       delete ro_gk_txfr_new;
     }
 
-    // Array to store the rhs for cell-centered solves
-    MultiFab* mac_rhs_new = new MultiFab(grids[lev], dmap[lev],
-                                         m_leveldata[lev]->mac_rhs->nComp(),
-                                         m_leveldata[lev]->mac_rhs->nGrow(),
-                                         MFInfo(), *ebfactory[lev]);
-    mac_rhs_new->setVal(0);
-    std::swap(m_leveldata[lev]->mac_rhs, mac_rhs_new);
-    delete mac_rhs_new;
-
     // Arrays to store the solution for the MAC projection
     MultiFab* mac_phi_new = new MultiFab(grids[lev], dmap[lev],
                                          m_leveldata[lev]->mac_phi->nComp(),
@@ -474,6 +465,16 @@ mfix::RegridArrays (int lev)
     mac_phi_new->setVal(0);
     std::swap(m_leveldata[lev]->mac_phi, mac_phi_new);
     delete mac_phi_new;
+
+
+    // Arrays to store the diffusive term div(tau)
+    MultiFab* divtau_new = new MultiFab(grids[lev], dmap[lev],
+                                         m_leveldata[lev]->divtau_o->nComp(),
+                                         m_leveldata[lev]->divtau_o->nGrow(),
+                                         MFInfo(), *ebfactory[lev]);
+    divtau_new->setVal(0);
+    std::swap(m_leveldata[lev]->divtau_o, divtau_new);
+    delete divtau_new;
 
 
    /****************************************************************************
@@ -490,14 +491,6 @@ mfix::RegridArrays (int lev)
     std::swap(bcoeff[lev][0], bcx_mac_new);
     delete bcx_mac_new;
 
-    // x component of MAC velocity
-    MultiFab* u_mac_new = new MultiFab(x_ba, dmap[lev],
-                                       m_leveldata[lev]->u_mac->nComp(),
-                                       m_leveldata[lev]->u_mac->nGrow(),
-                                       MFInfo(), *ebfactory[lev]);
-    u_mac_new->setVal(0);
-    std::swap(m_leveldata[lev]->u_mac, u_mac_new);
-    delete u_mac_new;
 
    /****************************************************************************
     * y-face-based arrays                                                        *
@@ -513,14 +506,6 @@ mfix::RegridArrays (int lev)
     std::swap(bcoeff[lev][1], bcy_mac_new);
     delete bcy_mac_new;
 
-    // y component of MAC velocity
-    MultiFab* v_mac_new = new MultiFab(y_ba, dmap[lev],
-                                       m_leveldata[lev]->v_mac->nComp(),
-                                       m_leveldata[lev]->v_mac->nGrow(),
-                                       MFInfo(), *ebfactory[lev]);
-    v_mac_new->setVal(0);
-    std::swap(m_leveldata[lev]->v_mac, v_mac_new);
-    delete v_mac_new;
 
    /****************************************************************************
     * z-face-based arrays                                                        *
@@ -536,14 +521,6 @@ mfix::RegridArrays (int lev)
     std::swap(bcoeff[lev][2], bcz_mac_new);
     delete bcz_mac_new;
 
-    // z component of MAC velocity
-    MultiFab* w_mac_new = new MultiFab(z_ba, dmap[lev],
-                                       m_leveldata[lev]->w_mac->nComp(),
-                                       m_leveldata[lev]->w_mac->nGrow(),
-                                       MFInfo(), *ebfactory[lev]);
-    w_mac_new->setVal(0);
-    std::swap(m_leveldata[lev]->w_mac, w_mac_new);
-    delete w_mac_new;
 }
 
 

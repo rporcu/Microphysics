@@ -40,10 +40,7 @@ LevelData::LevelData (BoxArray const& ba,
   , ro_gk_txfr(nullptr)
   , diveu(new MultiFab(amrex::convert(ba, IntVect{1,1,1}), dmap, 1, nghost, MFInfo(), factory))
   , mac_phi(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
-  , mac_rhs(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
-  , u_mac(new MultiFab(BoxArray(ba).surroundingNodes(0), dmap, 1, 2, MFInfo(), factory))
-  , v_mac(new MultiFab(BoxArray(ba).surroundingNodes(1), dmap, 1, 2, MFInfo(), factory))
-  , w_mac(new MultiFab(BoxArray(ba).surroundingNodes(2), dmap, 1, 2, MFInfo(), factory))
+  , divtau_o(new MultiFab(ba, dmap, 3, 0, MFInfo(), factory))
 {
 
   if (FLUID::solve_enthalpy) {
@@ -95,11 +92,8 @@ void LevelData::resetValues (const amrex::Real covered_val)
   vort->setVal(0);
   txfr->setVal(0);
   diveu->setVal(0);
-  mac_rhs->setVal(0);
   mac_phi->setVal(0);
-  u_mac->setVal(covered_val);
-  v_mac->setVal(covered_val);
-  w_mac->setVal(covered_val);
+  divtau_o->setVal(0);
 
   if (FLUID::solve_enthalpy) {
     T_g->setVal(0);
@@ -151,10 +145,7 @@ LevelData::~LevelData ()
   delete txfr;
   delete diveu;
   delete mac_phi;
-  delete mac_rhs;
-  delete u_mac;
-  delete v_mac;
-  delete w_mac;
+  delete divtau_o;
 
   if (FLUID::solve_enthalpy) {
     delete T_g;

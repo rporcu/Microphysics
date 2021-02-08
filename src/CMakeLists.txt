@@ -23,6 +23,8 @@ add_subdirectory(io)
 # Convection
 add_subdirectory(convection)
 add_subdirectory(convection/MOL)
+add_subdirectory(convection/Godunov)
+add_subdirectory(convection/redistribute)
 
 # DES
 add_subdirectory(interpolation)

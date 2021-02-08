@@ -9,19 +9,36 @@ using namespace BC;
 void
 mfix::mfix_set_bc_type (int lev)
 {
+
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
     const GpuArray<Real, 3> plo = geom[lev].ProbLoArray();
 
-    // Extract the lower and upper boundaries of Box Domain
     const int und_  = bc_list.get_undefined();
     const int ig_   = bc_list.get_ig();
     const int minf_ = bc_list.get_minf();
     const int pinf_ = bc_list.get_pinf();
 
-    {
+    // Set the defaults for BCRecs
+    m_bcrec_velocity.resize(AMREX_SPACEDIM);
+
+    // Total number of scalars (less species)
+    // tracers + density + ep_g + mu_g + T_g + h_g
+    const int l_scalars = ntrac + 5;
+    m_bcrec_scalars.resize(l_scalars);
+
+    const int l_species = FLUID::nspecies;
+    m_bcrec_species.resize(l_species);
+
+    const int l_force = amrex::max(AMREX_SPACEDIM, l_scalars, l_species);
+    m_bcrec_force.resize(l_force);
+
+    { // begin x direction
+
+      const int dir = 0;
+
       Array4<int> const& bc_ilo_type = bc_ilo[lev]->array();
       Array4<int> const& bc_ihi_type = bc_ihi[lev]->array();
 
@@ -38,6 +55,8 @@ mfix::mfix_set_bc_type (int lev)
         IntVect ibx_lo(box_ilo.loVect());
         IntVect ibx_hi(box_ilo.hiVect());
 
+        int xlo_type = init_x;
+
         // Initialize x-lo domain extent.
         amrex::ParallelFor(box_ilo, [bc_ilo_type, init_x]
            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -48,6 +67,8 @@ mfix::mfix_set_bc_type (int lev)
 
           const int bcv  = bc_xlo[lc];
           const int type = bc[bcv].type;
+
+          xlo_type = type;
 
           if (lc > 0){
             ibx_lo[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(1)-plo[1])/dy + 0.5));
@@ -65,9 +86,11 @@ mfix::mfix_set_bc_type (int lev)
                bc_ilo_type(i,j,k,0) = type;
                bc_ilo_type(i,j,k,1) = bcv;
              });
-
         }
-      }
+
+        set_bcrec_lo(lev, dir, xlo_type);
+
+      } // end x-lo side of the domain
 
 
       { // x-hi side of the domain
@@ -76,6 +99,8 @@ mfix::mfix_set_bc_type (int lev)
 
         IntVect ibx_lo(box_ihi.loVect());
         IntVect ibx_hi(box_ihi.hiVect());
+
+        int xhi_type = init_x;
 
         // Initialize x-lo domain extent.
         amrex::ParallelFor(box_ihi, [bc_ihi_type, init_x]
@@ -87,6 +112,8 @@ mfix::mfix_set_bc_type (int lev)
 
           const int bcv  = bc_xhi[lc];
           const int type = bc[bcv].type;
+
+          xhi_type = type;
 
           if (lc > 0){
             ibx_lo[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(1)-plo[1])/dy + 0.5));
@@ -106,12 +133,16 @@ mfix::mfix_set_bc_type (int lev)
              });
 
         }
-      }
-    }
+
+        set_bcrec_hi(lev, dir, xhi_type);
+      } // end x-hi side of the domain
+    } // end x-direction
 
 
 
-    {
+    { // begin y-direction
+
+      const int dir = 1;
 
       const int init_y = geom[lev].isPeriodic(1) ? und_ : ig_;
 
@@ -129,6 +160,8 @@ mfix::mfix_set_bc_type (int lev)
         IntVect jbx_lo(box_jlo.loVect());
         IntVect jbx_hi(box_jlo.hiVect());
 
+        int ylo_type = init_y;
+
         // Initialize y-lo domain extent.
         amrex::ParallelFor(box_jlo, [bc_jlo_type, init_y]
            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -139,6 +172,8 @@ mfix::mfix_set_bc_type (int lev)
 
           const int bcv  = bc_ylo[lc];
           const int type = bc[bcv].type;
+
+          ylo_type = type;
 
           if (lc > 0){
             jbx_lo[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
@@ -158,7 +193,10 @@ mfix::mfix_set_bc_type (int lev)
              });
 
         }
-      }
+
+        set_bcrec_lo(lev, dir, ylo_type);
+
+      }// end y-lo side of the domain
 
 
       { // y-hi side of the domain
@@ -167,6 +205,8 @@ mfix::mfix_set_bc_type (int lev)
 
         IntVect jbx_lo(box_jhi.loVect());
         IntVect jbx_hi(box_jhi.hiVect());
+
+        int yhi_type = init_y;
 
         // Initialize x-lo domain extent.
         amrex::ParallelFor(box_jhi, [bc_jhi_type, init_y]
@@ -178,6 +218,8 @@ mfix::mfix_set_bc_type (int lev)
 
           const int bcv  = bc_yhi[lc];
           const int type = bc[bcv].type;
+
+          yhi_type = type;
 
           if (lc > 0){
             jbx_lo[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
@@ -195,15 +237,20 @@ mfix::mfix_set_bc_type (int lev)
                bc_jhi_type(i,j,k,0) = type;
                bc_jhi_type(i,j,k,1) = bcv;
              });
-
         }
-      }
-    }
+
+        set_bcrec_hi(lev, dir, yhi_type);
+
+      } // end y-hi side of the domain
+    } // end y-direction
 
 
 
 
-    {
+    { // begin z-direction
+
+      const int dir = 2;
+
       const int init_z = geom[lev].isPeriodic(2) ? und_ : ig_;
 
       Array4<int> const& bc_klo_type = bc_klo[lev]->array();
@@ -220,6 +267,8 @@ mfix::mfix_set_bc_type (int lev)
         IntVect kbx_lo(box_klo.loVect());
         IntVect kbx_hi(box_klo.hiVect());
 
+        int zlo_type = init_z;
+
         // Initialize y-lo domain extent.
         amrex::ParallelFor(box_klo, [bc_klo_type, init_z]
            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -230,6 +279,8 @@ mfix::mfix_set_bc_type (int lev)
 
           const int bcv  = bc_zlo[lc];
           const int type = bc[bcv].type;
+
+          zlo_type = type;
 
           if (lc > 0){
             kbx_lo[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
@@ -249,7 +300,10 @@ mfix::mfix_set_bc_type (int lev)
              });
 
         }
-      }
+
+        set_bcrec_lo(lev, dir, zlo_type);
+
+      } // end z-lo side of the domain
 
 
       { // z-hi side of the domain
@@ -258,6 +312,8 @@ mfix::mfix_set_bc_type (int lev)
 
         IntVect kbx_lo(box_khi.loVect());
         IntVect kbx_hi(box_khi.hiVect());
+
+        int zhi_type = init_z;
 
         // Initialize x-lo domain extent.
         amrex::ParallelFor(box_khi, [bc_khi_type, init_z]
@@ -269,6 +325,8 @@ mfix::mfix_set_bc_type (int lev)
 
           const int bcv  = bc_zhi[lc];
           const int type = bc[bcv].type;
+
+          zhi_type = type;
 
           if (lc > 0){
             kbx_lo[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
@@ -288,8 +346,56 @@ mfix::mfix_set_bc_type (int lev)
              });
 
         }
-      }
+
+        set_bcrec_hi(lev, dir, zhi_type);
+
+      } // end z-hi side of the domain
+    }// end z-direction
+
+
+    {
+      m_bcrec_velocity_d.resize(AMREX_SPACEDIM);
+#ifdef AMREX_USE_GPU
+      Gpu::htod_memcpy
+#else
+        std::memcpy
+#endif
+        (m_bcrec_velocity_d.data(), m_bcrec_velocity.data(), sizeof(BCRec)*AMREX_SPACEDIM);
     }
+
+
+    {
+      m_bcrec_scalars_d.resize(l_scalars);
+#ifdef AMREX_USE_GPU
+      Gpu::htod_memcpy
+#else
+        std::memcpy
+#endif
+        (m_bcrec_scalars_d.data(), m_bcrec_scalars.data(), sizeof(BCRec)*l_scalars);
+    }
+
+    {
+      m_bcrec_species_d.resize(l_species);
+#ifdef AMREX_USE_GPU
+      Gpu::htod_memcpy
+#else
+        std::memcpy
+#endif
+        (m_bcrec_species_d.data(), m_bcrec_species.data(), sizeof(BCRec)*l_species);
+    }
+
+    {
+      m_bcrec_force_d.resize(l_force);
+#ifdef AMREX_USE_GPU
+      Gpu::htod_memcpy
+#else
+        std::memcpy
+#endif
+        (m_bcrec_force_d.data(), m_bcrec_force.data(), sizeof(BCRec)*l_force);
+    }
+
+
+
 
     m_h_bc_u_g.resize(bc.size());
     m_h_bc_v_g.resize(bc.size());
@@ -365,4 +471,119 @@ mfix::mfix_set_bc_type (int lev)
         }
     }
     Gpu::synchronize();
+}
+
+
+void mfix::set_bcrec_lo(const int lev, const int dir, const int l_type)
+{
+
+  const int minf_ = bc_list.get_minf();
+  const int pinf_ = bc_list.get_pinf();
+  const int pout_ = bc_list.get_pout();
+  const int nsw_  = bc_list.get_nsw();
+
+  // Velocity BC Recs
+  if (l_type == pinf_ or l_type == pout_) {
+
+    m_bcrec_velocity[0].setLo(dir, BCType::foextrap);
+    m_bcrec_velocity[1].setLo(dir, BCType::foextrap);
+    m_bcrec_velocity[2].setLo(dir, BCType::foextrap);
+
+  } else if (l_type == minf_ or l_type == nsw_) {
+
+    m_bcrec_velocity[0].setLo(dir, BCType::ext_dir);
+    m_bcrec_velocity[1].setLo(dir, BCType::ext_dir);
+    m_bcrec_velocity[2].setLo(dir, BCType::ext_dir);
+
+  } else if (geom[lev].isPeriodic(dir)) {
+
+    m_bcrec_velocity[0].setLo(dir, BCType::int_dir);
+    m_bcrec_velocity[1].setLo(dir, BCType::int_dir);
+    m_bcrec_velocity[2].setLo(dir, BCType::int_dir);
+  }
+
+  // Scalar BC Recs
+  if (l_type == pinf_ or l_type == pout_ or l_type == nsw_) {
+
+    for (auto& b : m_bcrec_scalars) b.setLo(dir, BCType::foextrap);
+    for (auto& b : m_bcrec_species) b.setLo(dir, BCType::foextrap);
+
+  } else if (l_type == minf_) {
+
+    for (auto& b : m_bcrec_scalars) b.setLo(dir, BCType::ext_dir);
+    for (auto& b : m_bcrec_species) b.setLo(dir, BCType::ext_dir);
+
+  } else if (geom[lev].isPeriodic(dir)) {
+
+    for (auto& b : m_bcrec_scalars) b.setLo(dir, BCType::int_dir);
+    for (auto& b : m_bcrec_species) b.setLo(dir, BCType::int_dir);
+  }
+
+  // Force BC Recs
+  if (geom[lev].isPeriodic(dir)) {
+
+    for (auto& b : m_bcrec_force) b.setLo(dir, BCType::int_dir);
+
+  } else {
+
+    for (auto& b : m_bcrec_force) b.setLo(dir, BCType::foextrap);
+  }
+}
+
+
+
+void mfix::set_bcrec_hi(const int lev, const int dir, const int l_type)
+{
+
+  const int minf_ = bc_list.get_minf();
+  const int pinf_ = bc_list.get_pinf();
+  const int pout_ = bc_list.get_pout();
+  const int nsw_  = bc_list.get_nsw();
+
+  // Velocity BC Recs
+  if (l_type == pinf_ or l_type == pout_) {
+
+    m_bcrec_velocity[0].setHi(dir, BCType::foextrap);
+    m_bcrec_velocity[1].setHi(dir, BCType::foextrap);
+    m_bcrec_velocity[2].setHi(dir, BCType::foextrap);
+
+  } else if (l_type == minf_ or l_type == nsw_) {
+
+    m_bcrec_velocity[0].setHi(dir, BCType::ext_dir);
+    m_bcrec_velocity[1].setHi(dir, BCType::ext_dir);
+    m_bcrec_velocity[2].setHi(dir, BCType::ext_dir);
+
+  } else if (geom[lev].isPeriodic(dir)) {
+
+    m_bcrec_velocity[0].setHi(dir, BCType::int_dir);
+    m_bcrec_velocity[1].setHi(dir, BCType::int_dir);
+    m_bcrec_velocity[2].setHi(dir, BCType::int_dir);
+  }
+
+  // Scalar BC Recs
+  if (l_type == pinf_ or l_type == pout_ or l_type == nsw_) {
+
+    for (auto& b : m_bcrec_scalars) b.setHi(dir, BCType::foextrap);
+    for (auto& b : m_bcrec_species) b.setHi(dir, BCType::foextrap);
+
+  } else if (l_type == minf_) {
+
+    for (auto& b : m_bcrec_scalars) b.setHi(dir, BCType::ext_dir);
+    for (auto& b : m_bcrec_species) b.setHi(dir, BCType::ext_dir);
+
+  } else if (geom[lev].isPeriodic(dir)) {
+
+    for (auto& b : m_bcrec_scalars) b.setHi(dir, BCType::int_dir);
+    for (auto& b : m_bcrec_species) b.setHi(dir, BCType::int_dir);
+  }
+
+  // Force BC Recs
+  if (geom[lev].isPeriodic(dir)) {
+
+    for (auto& b : m_bcrec_force) b.setHi(dir, BCType::int_dir);
+
+  } else {
+
+    for (auto& b : m_bcrec_force) b.setHi(dir, BCType::foextrap);
+  }
 }

@@ -9,6 +9,7 @@ target_sources( mfixcore
    mfix_filcc.cpp
    mfix_util.cpp
    mfix_regrid.cpp
+   mfix_fillpatch_bc.H
    mfix_fillpatch.cpp
    mfix_set_velocity_bcs.cpp
    mfix_set_epg_bcs.cpp

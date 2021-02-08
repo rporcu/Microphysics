@@ -145,7 +145,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     // The solver's default order is 3 and this uses three points for the gradient.
     scal_matrix->setMaxOrder(2);
     temperature_matrix->setMaxOrder(2);
-    
+
     if (SPECIES::solve) {
       species_matrix->setMaxOrder(2);
     }
@@ -157,7 +157,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     if (SPECIES::solve)
     {
       species_matrix->setDomainBC(m_speciesbc_lo, m_speciesbc_hi);
-      
+
       species_b.resize(max_level + 1);
 
       for(int lev = 0; lev <= max_level; lev++)
@@ -274,23 +274,25 @@ void DiffusionOp::ComputeDivTau (const Vector< MultiFab* >& divtau_out,
                                                  geom[lev]);
 
        // Divide by density
-       for (int n = 0; n < 3; n++)
-       {
-           MultiFab::Divide( *divtau_out[lev], *ro_in[lev], 0, n, 1, 0 );
-           MultiFab::Divide( *divtau_out[lev], *ep_in[lev], 0, n, 1, 0 );
+       for (int n = 0; n < 3; n++) {
+         MultiFab::Divide( *divtau_out[lev], *ro_in[lev], 0, n, 1, 0 );
+         MultiFab::Divide( *divtau_out[lev], *ep_in[lev], 0, n, 1, 0 );
        }
+
+       EB_set_covered(*divtau_out[lev], 0, divtau_out[lev]->nComp(), divtau_out[lev]->nGrow(), 0.);
     }
 
     for(int lev = 0; lev <= finest_level; lev++)
-       delete divtau_aux[lev];
+      delete divtau_aux[lev];
+
 }
 
 void DiffusionOp::ComputeLapT (const Vector< MultiFab* >& lapT_out,
                                const Vector< MultiFab* >& T_g,
-                               const Vector< MultiFab* >& ep_g,
-                               const Vector< MultiFab* >& k_g,
-                               const Vector< MultiFab* >& T_g_on_eb,
-                               const Vector< MultiFab* >& k_g_on_eb)
+                               const Vector< MultiFab const*>& ep_g,
+                               const Vector< MultiFab const*>& k_g,
+                               const Vector< MultiFab const*>& T_g_on_eb,
+                               const Vector< MultiFab const*>& k_g_on_eb)
 {
   BL_PROFILE("DiffusionOp::ComputeLapT");
 
@@ -313,8 +315,8 @@ void DiffusionOp::ComputeLapT (const Vector< MultiFab* >& lapT_out,
   bcs_s.resize(3);
 
   // Compute the coefficients
-  for (int lev = 0; lev <= finest_level; lev++)
-  {
+  for (int lev = 0; lev <= finest_level; lev++) {
+
     MultiFab ep_g_k_g(ep_g[lev]->boxArray(), ep_g[lev]->DistributionMap(), 1, 1,
         MFInfo(), ep_g[lev]->Factory());
 
@@ -343,10 +345,9 @@ void DiffusionOp::ComputeLapT (const Vector< MultiFab* >& lapT_out,
 
   solver.apply(lapT_aux, T_g);
 
-  for(int lev = 0; lev <= finest_level; lev++)
-  {
-    amrex::single_level_redistribute(*lapT_aux[lev], *lapT_out[lev], 0, 1,
-        geom[lev]);
+  for(int lev = 0; lev <= finest_level; lev++) {
+    amrex::single_level_redistribute(*lapT_aux[lev], *lapT_out[lev], 0, 1, geom[lev]);
+    EB_set_covered(*lapT_out[lev], 0, lapT_out[lev]->nComp(), lapT_out[lev]->nGrow(), 0.);
   }
 
   for(int lev = 0; lev <= finest_level; lev++)
@@ -357,9 +358,9 @@ void DiffusionOp::ComputeLapT (const Vector< MultiFab* >& lapT_out,
 
 void DiffusionOp::ComputeLapS (const Vector< MultiFab* >& laps_out,
                                const Vector< MultiFab* >& scal_in,
-                               const Vector< MultiFab* >& ro_in,
-                               const Vector< MultiFab* >& ep_in,
-                               const Vector< Real      >& mu_s)
+                               const Vector< MultiFab const*>& ro_in,
+                               const Vector< MultiFab const*>& ep_in,
+                               const Vector< Real >& mu_s)
 {
     BL_PROFILE("DiffusionOp::ComputeLapS");
 
@@ -369,9 +370,9 @@ void DiffusionOp::ComputeLapS (const Vector< MultiFab* >& laps_out,
 
     Vector< MultiFab* >  laps_aux(finest_level+1);
     Vector< MultiFab* >    phi_eb(finest_level+1);
-    for(int lev = 0; lev <= finest_level; lev++)
-    {
-       laps_aux[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, nghost,
+    for(int lev = 0; lev <= finest_level; lev++) {
+
+      laps_aux[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, nghost,
                                     MFInfo(), *ebfactory[lev]);
        laps_aux[lev]->setVal(0.0);
 
@@ -387,9 +388,9 @@ void DiffusionOp::ComputeLapS (const Vector< MultiFab* >& laps_out,
     scal_matrix->setScalars(0.0, -1.0);
 
     // Compute the coefficients
-    for (int lev = 0; lev <= finest_level; lev++)
-    {
-        for(int dir = 0; dir < 3; dir++)
+    for (int lev = 0; lev <= finest_level; lev++) {
+
+      for(int dir = 0; dir < 3; dir++)
            for(int n = 0; n < ntrac; n++)
              b[lev][dir]->setVal(mu_s[n],n,1);
 
@@ -404,9 +405,9 @@ void DiffusionOp::ComputeLapS (const Vector< MultiFab* >& laps_out,
 
     solver.apply(laps_aux, scal_in);
 
-    for(int lev = 0; lev <= finest_level; lev++)
-    {
-       amrex::single_level_redistribute(*laps_aux[lev], *laps_out[lev], 0, ntrac, geom[lev]);
+    for(int lev = 0; lev <= finest_level; lev++) {
+      amrex::single_level_redistribute(*laps_aux[lev], *laps_out[lev], 0, ntrac, geom[lev]);
+      EB_set_covered(*laps_out[lev], 0, laps_out[lev]->nComp(), laps_out[lev]->nGrow(), 0.);
     }
 
     for(int lev = 0; lev <= finest_level; lev++)
@@ -418,9 +419,9 @@ void DiffusionOp::ComputeLapS (const Vector< MultiFab* >& laps_out,
 
 void DiffusionOp::ComputeLapX (const Vector< MultiFab* >& lapX_out,
                                const Vector< MultiFab* >& X_gk_in,
-                               const Vector< MultiFab* >& ro_g_in,
-                               const Vector< MultiFab* >& ep_g_in,
-                               const Vector< MultiFab* >& D_gk_in)
+                               const Vector< MultiFab const*>& ro_g_in,
+                               const Vector< MultiFab const*>& ep_g_in,
+                               const Vector< MultiFab const*>& D_gk_in)
 {
   BL_PROFILE("DiffusionOp::ComputeLapX");
 
@@ -491,9 +492,9 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab* >& lapX_out,
 
   solver.apply(lapX_aux, X_gk_in);
 
-  for(int lev = 0; lev <= finest_level; lev++)
-  {
+  for(int lev = 0; lev <= finest_level; lev++) {
     amrex::single_level_redistribute(*lapX_aux[lev], *lapX_out[lev], 0, nspecies_g, geom[lev]);
+    EB_set_covered(*lapX_out[lev], 0, lapX_out[lev]->nComp(), lapX_out[lev]->nGrow(), 0.);
   }
 
   for(int lev = 0; lev <= finest_level; lev++)

@@ -46,7 +46,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                             Vector< MultiFab* >& conv_s_old,
                             Vector< MultiFab* >& conv_X_old,
                             Vector< MultiFab* >& ro_RHS_old,
-                            Vector< MultiFab* >& divtau_old,
+                            Vector< MultiFab* >& /*divtau_old*/,
                             Vector< MultiFab* >& lap_trac_old,
                             Vector< MultiFab* >& enthalpy_RHS_old,
                             Vector< MultiFab* >& lap_T_old,
@@ -64,23 +64,30 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // We use the new-time value for things computed on the "*" state
     Real new_time = time + l_dt;
 
+    fillpatch_all(get_vel_g(), get_ro_g(), get_h_g(), get_trac(),
+                  get_X_gk(), new_time);
+
+    mfix_set_density_bcs(time, get_ro_g());
+
     // *************************************************************************************
-    // Allocate space for the MAC velocities
+    // Allocate space for the forcing terms
     // *************************************************************************************
-    Vector<MultiFab> ep_u_mac(finest_level+1), ep_v_mac(finest_level+1), ep_w_mac(finest_level+1);
-    int ngmac = nghost_mac();
+    // Forcing terms
+    Vector<MultiFab> vel_forces, tra_forces;
+    Vector<MultiFab> vel_eta, tra_eta;
 
     for (int lev = 0; lev <= finest_level; ++lev) {
-      ep_u_mac[lev].define(amrex::convert(grids[lev],IntVect::TheDimensionVector(0)), dmap[lev],
-                        1, ngmac, MFInfo(), *ebfactory[lev]);
-      ep_v_mac[lev].define(amrex::convert(grids[lev],IntVect::TheDimensionVector(1)), dmap[lev],
-                        1, ngmac, MFInfo(), *ebfactory[lev]);
-      ep_w_mac[lev].define(amrex::convert(grids[lev],IntVect::TheDimensionVector(2)), dmap[lev],
-                        1, ngmac, MFInfo(), *ebfactory[lev]);
-      if (ngmac > 0) {
-        ep_u_mac[lev].setBndry(0.0);
-        ep_v_mac[lev].setBndry(0.0);
-        ep_w_mac[lev].setBndry(0.0);
+
+      vel_forces.emplace_back(grids[lev], dmap[lev], AMREX_SPACEDIM, nghost_force(),
+                              MFInfo(), EBFactory(lev));
+
+      vel_eta.emplace_back(grids[lev], dmap[lev], 1, 1, MFInfo(), EBFactory(lev));
+
+      if (advect_tracer) {
+        tra_forces.emplace_back(grids[lev], dmap[lev], ntrac, nghost_force(),
+                                MFInfo(), EBFactory(lev));
+
+        tra_eta.emplace_back(grids[lev], dmap[lev], ntrac, 1, MFInfo(), EBFactory(lev));
       }
     }
 
@@ -126,44 +133,92 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       }
     }
 
+
+    // *************************************************************************************
+    // Allocate space for the MAC velocities
+    // *************************************************************************************
+    Vector<MultiFab> ep_u_mac(finest_level+1), ep_v_mac(finest_level+1), ep_w_mac(finest_level+1);
+    Vector<MultiFab> rhs_mac(finest_level+1);
+
+    int ngmac = nghost_mac();
+
+    for (int lev = 0; lev <= finest_level; ++lev) {
+      ep_u_mac[lev].define(amrex::convert(grids[lev],IntVect::TheDimensionVector(0)),
+                           dmap[lev], 1, ngmac, MFInfo(), *ebfactory[lev]);
+      ep_v_mac[lev].define(amrex::convert(grids[lev],IntVect::TheDimensionVector(1)),
+                           dmap[lev], 1, ngmac, MFInfo(), *ebfactory[lev]);
+      ep_w_mac[lev].define(amrex::convert(grids[lev],IntVect::TheDimensionVector(2)),
+                           dmap[lev], 1, ngmac, MFInfo(), *ebfactory[lev]);
+
+      rhs_mac[lev].define(grids[lev], dmap[lev], 1, ngmac, MFInfo(), EBFactory(lev));
+      rhs_mac[lev].setVal(0.);
+
+      if (ngmac > 0) {
+        ep_u_mac[lev].setBndry(0.0);
+        ep_v_mac[lev].setBndry(0.0);
+        ep_w_mac[lev].setBndry(0.0);
+      }
+    }
+
+
+    // *************************************************************************************
+    // Compute explicit diffusive terms
+    // *************************************************************************************
+
+    const bool explicit_diffusive_enthalpy = false;
+    const bool explicit_diffusive_trac     = false;
+    const bool explicit_diffusive_species  = false;
+
+    {
+      // We do not need to calculate the Laplacians if the open system constraint is used
+      // because it they were previously computed at the end of the predictor step,
+      // prior to the nodal projection.
+
+      const bool update_lapT = (advect_enthalpy      && (explicit_diffusive_enthalpy && !open_system_constraint));
+      const bool update_lapS = (advect_tracer        &&  explicit_diffusive_trac);
+      const bool update_lapX = (advect_fluid_species && (explicit_diffusive_species  && !open_system_constraint));
+
+      compute_laps(update_lapT, update_lapS, update_lapX, lap_T_old, lap_trac_old, lap_X_old,
+                   get_T_g_old(), get_trac_old(), get_X_gk_old(),
+                   get_ep_g_const(), get_ro_g_old_const());
+    }
+
+    // *************************************************************************************
+    // Compute RHS for the MAC projection
+    // *************************************************************************************
+
+    if (open_system_constraint) {
+      mfix_open_system_rhs(GetVecOfPtrs(rhs_mac), lap_T_star, lap_X_star,
+         get_ep_g_const(), get_ro_g_const(), get_MW_g_const(),
+         get_T_g_const(), get_cp_g_const(), get_X_gk_const(), get_D_gk_const(),
+         get_h_gk_const(), get_txfr_const(), get_ro_gk_txfr_const());
+    }
+
     // *************************************************************************************
     // Compute the explicit advective term R_u^*
     // *************************************************************************************
-    bool update_laplacians = not open_system_constraint;
 
-    mfix_compute_convective_term(update_laplacians, conv_u, conv_s, conv_X,
-        lap_T_star, lap_X_star, get_vel_g(), get_ep_g(),
+    mfix_compute_convective_term(conv_u, conv_s, conv_X,
+        GetVecOfPtrs(vel_forces), GetVecOfPtrs(tra_forces),
+        get_vel_g_const(), get_ep_g_const(), get_ro_g_const(),
+        get_h_g_const(), get_trac_const(), get_X_gk_const(),
         GetVecOfPtrs(ep_u_mac), GetVecOfPtrs(ep_v_mac), GetVecOfPtrs(ep_w_mac),
-        get_ro_g(), get_MW_g(), get_T_g(), get_cp_g(), get_k_g(),
-        get_h_g(), get_T_g_on_eb(), get_k_g_on_eb(), get_trac(),
-        get_X_gk(), get_D_gk(), get_h_gk(), get_txfr(), get_ro_gk_txfr(),
-        new_time);
+        GetVecOfConstPtrs(rhs_mac), get_divtau(), l_dt, new_time);
 
     // *************************************************************************************
     // Compute right hand side terms on the intermediate status
     // *************************************************************************************
 
     {
-      for (int lev = 0; lev <= finest_level; lev++)
-          ro_RHS[lev]->setVal(0.);
-
-      mfix_density_rhs(ro_RHS, get_ro_gk_txfr());
+      mfix_density_rhs(ro_RHS, get_ro_gk_txfr_const());
     }
 
-    bool explicit_diffusive_enthalpy = false;
     if (advect_enthalpy) {
-      for (int lev = 0; lev <= finest_level; lev++)
-          enthalpy_RHS[lev]->setVal(0.);
 
-      bool update_laplacian = explicit_diffusive_enthalpy and
-                              (not open_system_constraint);
-
-      mfix_enthalpy_rhs(update_laplacian, enthalpy_RHS, lap_T_star,
-          get_T_g(), get_ep_g(), get_ro_g(), get_k_g(), get_T_g_on_eb(),
-          get_k_g_on_eb(), get_X_gk(), get_D_gk(), get_h_gk());
+      mfix_enthalpy_rhs(enthalpy_RHS, get_ep_g_const(), get_ro_g_const(),
+           get_X_gk_const(), get_D_gk_const(), get_h_gk_const());
     }
 
-    bool explicit_diffusive_trac = false;
     if (advect_tracer) {
       for (int lev = 0; lev <= finest_level; lev++)
           lap_trac[lev]->setVal(0.);
@@ -172,16 +227,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
           get_ro_g(), mu_s);
     }
 
-    bool explicit_diffusive_species = false;
     if (advect_fluid_species) {
-      for (int lev = 0; lev <= finest_level; lev++)
-        species_RHS[lev]->setVal(0.);
 
-      bool update_laplacian = explicit_diffusive_species and
-                              (not open_system_constraint);
-
-      mfix_species_X_rhs(update_laplacian, species_RHS, lap_X_star,
-          get_X_gk(), get_ep_g(), get_ro_g(), get_D_gk(), get_ro_gk_txfr());
+      mfix_species_X_rhs(species_RHS, get_ro_gk_txfr_const());
     }
 
     // *************************************************************************************
@@ -404,7 +452,16 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       } // lev
     } // advect_fluid_species
 
-    // *************************************************************************
+
+
+    // *************************************************************************************
+    // Define (or if advection_type != "MOL", re-define) the forcing terms, without the
+    //    viscous terms and using the half-time density
+    // *************************************************************************************
+    compute_vel_forces(GetVecOfPtrs(vel_forces), get_vel_g_const(),
+                       GetVecOfConstPtrs(density_nph));
+
+
     // *************************************************************************************
     // Update velocity with convective update, diffusive update, gp and gravity source terms
     // *************************************************************************************
@@ -425,15 +482,15 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
          Array4<Real const> const& dudt_o   = conv_u_old[lev]->const_array(mfi);
          Array4<Real const> const& dudt     = conv_u[lev]->const_array(mfi);
          Array4<Real const> const& gp       = ld.gp->const_array(mfi);
-         Array4<Real const> const& rho_nph  = density_nph[lev].const_array(mfi);
          Array4<Real const> const& epg      = ld.ep_g->const_array(mfi);
-         Array4<Real const> const& divtau_o = divtau_old[lev]->const_array(mfi);
+         Array4<Real const> const& divtau_o = ld.divtau_o->const_array(mfi);
+         Array4<Real const> const& vel_f    = vel_forces[lev].const_array(mfi);
 
          // We need this until we remove static attribute from mfix::gravity
          const RealVect gp0_dev(gp0);
          const RealVect gravity_dev(gravity);
 
-         amrex::ParallelFor(bx, [vel_n,vel_o,dudt_o,dudt,gp,rho_nph,epg,divtau_o,
+         amrex::ParallelFor(bx, [vel_n,vel_o,dudt_o,dudt,gp,vel_f,epg,divtau_o,
              gp0_dev,gravity_dev,l_dt]
            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
@@ -454,10 +511,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
            vel_ny += l_dt * divtau_o(i,j,k,1);
            vel_nz += l_dt * divtau_o(i,j,k,2);
 
-           Real inv_dens = 1.0 / rho_nph(i,j,k);
-           vel_nx += l_dt * (gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
-           vel_ny += l_dt * (gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
-           vel_nz += l_dt * (gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
+           vel_nx += l_dt * vel_f(i,j,k,0);
+           vel_ny += l_dt * vel_f(i,j,k,1);
+           vel_nz += l_dt * vel_f(i,j,k,2);
 
            vel_n(i,j,k,0) = vel_nx;
            vel_n(i,j,k,1) = vel_ny;
@@ -506,7 +562,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
     for (int lev = 0; lev <= finest_level; lev++)
     {
-        MultiFab::Saxpy(*m_leveldata[lev]->vel_g, -l_dt/2.0, *divtau_old[lev], 0, 0, 3, 0);
+      MultiFab::Saxpy(*m_leveldata[lev]->vel_g, -l_dt/2.0, *m_leveldata[lev]->divtau_o, 0, 0, 3, 0);
     }
 
     // *************************************************************************************
@@ -561,40 +617,32 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // Apply projection
     // *************************************************************************************
     Vector< MultiFab* > depdt(finest_level+1);
-    Vector< MultiFab* > constraint_RHS(finest_level+1);
     Vector< MultiFab* > S_cc(finest_level+1);
 
     for (int lev(0); lev <= finest_level; ++lev) {
       depdt[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
-      constraint_RHS[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
       S_cc[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
     }
 
     if (open_system_constraint) {
-      bool update_laplacians = true;
 
-      mfix_open_system_rhs(constraint_RHS, update_laplacians, lap_T_star,
-          lap_X_star, get_ep_g(), get_ro_g(), get_MW_g(), get_T_g(), get_cp_g(),
-          get_k_g(), get_T_g_on_eb(), get_k_g_on_eb(), get_X_gk(), get_D_gk(),
-          get_h_gk(), get_txfr(), get_ro_gk_txfr());
+      const bool update_lapT = advect_enthalpy;
+      const bool update_lapS = false;
+      const bool update_lapX = advect_fluid_species;
+
+      compute_laps(update_lapT, update_lapS, update_lapX, lap_T_star, lap_trac, lap_X_star,
+         get_T_g(), get_trac_old(), get_X_gk_old(), get_ep_g_const(), get_ro_g_old_const());
+
+      mfix_open_system_rhs(S_cc, lap_T_star, lap_X_star, get_ep_g_const(), get_ro_g_const(),
+          get_MW_g_const(), get_T_g_const(), get_cp_g_const(), get_X_gk_const(),
+          get_D_gk_const(), get_h_gk_const(), get_txfr_const(), get_ro_gk_txfr_const());
+
     }
 
-    for (int lev(0); lev <= finest_level; ++lev) {
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-      for (MFIter mfi(*S_cc[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-        const Box& bx = mfi.tilebox();
 
-        Array4< Real > const& depdt_array = depdt[lev]->array(mfi);
-        Array4< Real > const& constraint_RHS_array = constraint_RHS[lev]->array(mfi);
-        Array4< Real > const& S_cc_array = S_cc[lev]->array(mfi);
-
-        amrex::ParallelFor(bx, [S_cc_array,depdt_array,constraint_RHS_array]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        {
-          S_cc_array(i,j,k) = constraint_RHS_array(i,j,k) - depdt_array(i,j,k);
-        });
+    if (m_use_depdt_constraint) {
+      for (int lev(0); lev <= finest_level; ++lev) {
+        MultiFab::Subtract(*S_cc[lev], *depdt[lev],0,0,1,0);
       }
     }
 
@@ -602,7 +650,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
     for (int lev(0); lev <= finest_level; ++lev) {
       delete depdt[lev];
-      delete constraint_RHS[lev];
       delete S_cc[lev];
     }
 

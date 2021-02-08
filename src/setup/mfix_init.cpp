@@ -73,7 +73,7 @@ mfix::InitParams ()
     ParmParse pp("mfix");
 
     // Options to control time stepping
-    pp.query("cfl", cfl);
+    pp.query("cfl", m_cfl);
 
     fixed_dt = -1.;
     pp.query("fixed_dt", fixed_dt);
@@ -97,8 +97,8 @@ mfix::InitParams ()
     pp_nodal.query("mg_max_coarsening_level", nodal_mg_max_coarsening_level);
 
     // Is this a steady-state calculation
-    steady_state = 0;
-    pp.query("steady_state", steady_state);
+    m_steady_state = 0;
+    pp.query("steady_state", m_steady_state);
 
     // Tolerance to check for steady state
     steady_state_tol = -1.;
@@ -107,7 +107,7 @@ mfix::InitParams ()
     // Maximum number of iterations allowed to reach steady state
     pp.query("steady_state_maxiter", steady_state_maxiter);
 
-    if (steady_state > 0) {
+    if (m_steady_state > 0) {
       if (steady_state_tol < 0)
         amrex::Abort("Must set steady_state_tol if running to steady state!");
 
@@ -203,6 +203,88 @@ mfix::InitParams ()
     pp.query("load_balance_type", load_balance_type);
     pp.query("knapsack_weight_type", knapsack_weight_type);
     pp.query("load_balance_fluid", load_balance_fluid);
+
+
+    // Are we using MOL or Godunov?
+    std::string l_advection_type = "MOL";
+    pp.query("advection_type"                   , l_advection_type);
+    pp.query("use_ppm"                          , m_godunov_ppm);
+    pp.query("godunov_use_forces_in_trans"      , m_godunov_use_forces_in_trans);
+    pp.query("godunov_include_diff_in_forcing"  , m_godunov_include_diff_in_forcing);
+    pp.query("use_mac_phi_in_godunov"           , m_use_mac_phi_in_godunov);
+
+
+    pp.query("redistribution_type"              , m_redistribution_type);
+    if (m_redistribution_type != "NoRedist" &&
+        m_redistribution_type != "FluxRedist" &&
+        m_redistribution_type != "MergeRedistUpdate" &&
+        m_redistribution_type != "MergeRedistFull" &&
+        m_redistribution_type != "StateRedistUpdate" &&
+        m_redistribution_type != "StateRedistFull")
+      amrex::Abort("redistribution type must be FluxRedist, MergeRedist, StateRedistUpdate or StateRedistFull");
+
+
+    // Default to MOL
+    if(amrex::toLower(l_advection_type).compare("mol") == 0) {
+      m_advection_type = AdvectionType::MOL;
+    } else if(amrex::toLower(l_advection_type).compare("godunov") == 0) {
+      m_advection_type = AdvectionType::Godunov;
+    } else {
+      amrex::Abort("advection type must be MOL or Godunov");
+    }
+
+    if (advection_type() == AdvectionType::MOL) m_godunov_include_diff_in_forcing = false;
+
+    // MOL: Explict predictor / Crank_Nicolson corrector
+    // Godunov: Implicit
+    if (advection_type() == AdvectionType::MOL) {
+      m_predictor_diff_type = DiffusionType::Explicit;
+      m_corrector_diff_type = DiffusionType::Crank_Nicolson;
+
+    }
+
+    // The default for diffusion_type is 2, i.e. the default m_diff_type is DiffusionType::Implicit
+    int diffusion_type = (advection_type() == AdvectionType::MOL) ? 3 : 1;
+    pp.query("diffusion_type", diffusion_type);
+    if (diffusion_type == 0) {
+      m_predictor_diff_type = DiffusionType::Explicit;
+      m_corrector_diff_type = DiffusionType::Explicit;
+    } else if (diffusion_type == 1) {
+      m_predictor_diff_type = DiffusionType::Crank_Nicolson;
+      m_corrector_diff_type = DiffusionType::Crank_Nicolson;
+    } else if (diffusion_type == 2) {
+      m_predictor_diff_type = DiffusionType::Implicit;
+      m_corrector_diff_type = DiffusionType::Implicit;
+    } else if (diffusion_type == 3) {
+      m_predictor_diff_type = DiffusionType::Explicit;
+      m_corrector_diff_type = DiffusionType::Crank_Nicolson;
+    } else {
+      amrex::Abort("We currently require diffusion_type be one of the following:\
+                   \n   0: explicit,\
+                   \n   1: Crank-Nicolson\
+                   \n   2: implicit\
+                   \n   3: explicit predictor/Crank-Nicolson corrector (MOL only)");
+    }
+
+
+    // Default is true; should we use tensor solve instead of separate solves for each component?
+    pp.query("use_tensor_solve",use_tensor_solve);
+    pp.query("use_tensor_correction",use_tensor_correction);
+
+    if (use_tensor_solve && use_tensor_correction) {
+      amrex::Abort("We cannot have both use_tensor_solve and use_tensor_correction be true");
+    }
+
+    if (m_predictor_diff_type != DiffusionType::Implicit && use_tensor_correction) {
+      amrex::Abort("We cannot have use_tensor_correction be true and diffusion type not Implicit");
+    }
+
+    if (advection_type() == AdvectionType::MOL && m_cfl > 0.5) {
+      amrex::Abort("We currently require cfl <= 0.5 when using the MOL advection scheme");
+    }
+    if (advection_type() != AdvectionType::MOL && m_cfl > 1.0) {
+      amrex::Abort("We currently require cfl <= 1.0 when using the Godunov advection scheme");
+    }
 
     // Verbosity and MLMG parameters are now ParmParse with "mac_proj" in the
     // inputs file

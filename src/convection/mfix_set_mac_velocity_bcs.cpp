@@ -3,12 +3,13 @@
 
 //
 // Set the BCs for face-centroid-based velocity components only
-// 
+//
 void
 mfix::set_MAC_velocity_bcs (int lev,
-                            Vector< MultiFab* > const& ep_u_mac,
-                            Vector< MultiFab* > const& ep_v_mac,
-                            Vector< MultiFab* > const& ep_w_mac,
+                            amrex::Vector< amrex::MultiFab const*> const& mac_rhs,
+                            amrex::Vector< amrex::MultiFab*      > const& ep_u_mac,
+                            amrex::Vector< amrex::MultiFab*      > const& ep_v_mac,
+                            amrex::Vector< amrex::MultiFab*      > const& ep_w_mac,
                             amrex::Real time)
 {
   BL_PROFILE("MacProjection::set_MAC_velocity_bcs()");
@@ -16,13 +17,13 @@ mfix::set_MAC_velocity_bcs (int lev,
   ep_u_mac[lev]->FillBoundary(geom[lev].periodicity());
   ep_v_mac[lev]->FillBoundary(geom[lev].periodicity());
   ep_w_mac[lev]->FillBoundary(geom[lev].periodicity());
-    
-  Box domain(geom[lev].Domain()); 
+
+  Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-  for (MFIter mfi((*m_leveldata[lev]->mac_rhs), false); mfi.isValid(); ++mfi)
+  for (MFIter mfi(*mac_rhs[lev], false); mfi.isValid(); ++mfi)
   {
     const Box& ubx = (*ep_u_mac[lev])[mfi].box();
     IntVect ubx_lo(ubx.loVect());
