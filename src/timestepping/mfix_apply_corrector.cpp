@@ -452,7 +452,16 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       } // lev
     } // advect_fluid_species
 
-    // *************************************************************************
+
+
+    // *************************************************************************************
+    // Define (or if advection_type != "MOL", re-define) the forcing terms, without the
+    //    viscous terms and using the half-time density
+    // *************************************************************************************
+    compute_vel_forces(GetVecOfPtrs(vel_forces), get_vel_g_const(),
+                       GetVecOfConstPtrs(density_nph));
+
+
     // *************************************************************************************
     // Update velocity with convective update, diffusive update, gp and gravity source terms
     // *************************************************************************************
@@ -473,15 +482,15 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
          Array4<Real const> const& dudt_o   = conv_u_old[lev]->const_array(mfi);
          Array4<Real const> const& dudt     = conv_u[lev]->const_array(mfi);
          Array4<Real const> const& gp       = ld.gp->const_array(mfi);
-         Array4<Real const> const& rho_nph  = density_nph[lev].const_array(mfi);
          Array4<Real const> const& epg      = ld.ep_g->const_array(mfi);
          Array4<Real const> const& divtau_o = ld.divtau_o->const_array(mfi);
+         Array4<Real const> const& vel_f    = vel_forces[lev].const_array(mfi);
 
          // We need this until we remove static attribute from mfix::gravity
          const RealVect gp0_dev(gp0);
          const RealVect gravity_dev(gravity);
 
-         amrex::ParallelFor(bx, [vel_n,vel_o,dudt_o,dudt,gp,rho_nph,epg,divtau_o,
+         amrex::ParallelFor(bx, [vel_n,vel_o,dudt_o,dudt,gp,vel_f,epg,divtau_o,
              gp0_dev,gravity_dev,l_dt]
            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
@@ -502,10 +511,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
            vel_ny += l_dt * divtau_o(i,j,k,1);
            vel_nz += l_dt * divtau_o(i,j,k,2);
 
-           Real inv_dens = 1.0 / rho_nph(i,j,k);
-           vel_nx += l_dt * (gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
-           vel_ny += l_dt * (gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
-           vel_nz += l_dt * (gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
+           vel_nx += l_dt * vel_f(i,j,k,0);
+           vel_ny += l_dt * vel_f(i,j,k,1);
+           vel_nz += l_dt * vel_f(i,j,k,2);
 
            vel_n(i,j,k,0) = vel_nx;
            vel_n(i,j,k,1) = vel_ny;

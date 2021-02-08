@@ -439,7 +439,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
          const RealVect gravity_dev(gravity);
 
          amrex::ParallelFor(bx, [epg,vel_o,dudt_o,divtau_o,gp0_dev,gravity_dev,
-         gp,l_dt,vel_n,rho_nph,vel_f,l_explicit_diff]
+         gp,l_dt,vel_n,vel_f,l_explicit_diff]
          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
            const Real epg_loc = epg(i,j,k);
@@ -459,14 +459,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
              vel_nz += l_dt * divtau_o(i,j,k,2);
            }
 
-           // Real inv_dens = 1.0 / rho_nph(i,j,k);
-           // vel_nx += l_dt * (gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
-           // vel_ny += l_dt * (gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
-           // vel_nz += l_dt * (gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
-
-           vel_nx += l_dt * vel_f(i,j,k,0);//(gravity_dev[0]-(gp(i,j,k,0)+gp0_dev[0])*inv_dens);
-           vel_ny += l_dt * vel_f(i,j,k,1);//(gravity_dev[1]-(gp(i,j,k,1)+gp0_dev[1])*inv_dens);
-           vel_nz += l_dt * vel_f(i,j,k,2);//(gravity_dev[2]-(gp(i,j,k,2)+gp0_dev[2])*inv_dens);
+           vel_nx += l_dt * vel_f(i,j,k,0);
+           vel_ny += l_dt * vel_f(i,j,k,1);
+           vel_nz += l_dt * vel_f(i,j,k,2);
 
            vel_n(i,j,k,0) = vel_nx;
            vel_n(i,j,k,1) = vel_ny;

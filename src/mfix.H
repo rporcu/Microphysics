@@ -946,7 +946,11 @@ class mfix : public AmrCore
 
     bool test_tracer_conservation = false;
 
-    std::string m_advection_type = "MOL";
+    enum struct AdvectionType {Invalid, MOL, Godunov};
+    AdvectionType m_advection_type = AdvectionType::Invalid;
+
+    //std::string m_advection_type = "MOL";
+    std::string m_redistribution_type = "FluxRedist";
 
     // include d(ep_g)/dt in contraint
     bool m_use_depdt_constraint = false;
@@ -971,6 +975,10 @@ class mfix : public AmrCore
     enum struct DiffusionType {
             Invalid, Explicit, Crank_Nicolson, Implicit
     };
+    // MOL: Explict predictor / Crank_Nicolson corrector
+    // Godunov: Implicit
+    DiffusionType m_predictor_diff_type = DiffusionType::Invalid;
+    DiffusionType m_corrector_diff_type = DiffusionType::Invalid;
 
     amrex::Real enthalpy_source = 0;
 
@@ -1058,7 +1066,7 @@ class mfix : public AmrCore
     static int knapsack_nmax;
 
     // Options to control time stepping
-    Real cfl = 0.5;
+    Real m_cfl = 0.5;
     Real fixed_dt;
     Real dt_min = 0.;    // Min dt allowed
     Real dt_max = 1.e14; // Max dt allowed
@@ -1149,7 +1157,13 @@ class mfix : public AmrCore
     bool do_initial_proj    = true;
     int  initial_iterations = 3;
 
-    /***************************************************************************
+    // Use tensor solve (as opposed to separate solves for each velocity component)
+    bool use_tensor_solve      = true;
+
+    // Use separate solves for each velocity component with lagged tensor terms
+    bool use_tensor_correction = false;
+
+     /***************************************************************************
      *                                                                         *
      * I/O stuff                                                               *
      *                                                                         *
@@ -1219,19 +1233,19 @@ class mfix : public AmrCore
 
     // For Godunov, we need 1 ghost cell
     // For MOL    , we need 0 ghost cells
-    int nghost_force () const { return (m_advection_type != "MOL") ? 3 : 0; }
+    int nghost_force () const { return (m_advection_type != AdvectionType::MOL) ? 3 : 0; }
 
     int nghost_mac () const {
-      if (!EBFactory(0).isAllRegular()) return (m_advection_type != "MOL") ? 4 : 3;
-      return (m_advection_type != "MOL") ? 1 : 0;
+      if (!EBFactory(0).isAllRegular()) return (m_advection_type != AdvectionType::MOL) ? 4 : 3;
+      return (m_advection_type != AdvectionType::MOL) ? 1 : 0;
     }
 
     int nghost_eb_basic () const {
-     return (m_advection_type != "MOL") ? 5 : 4;
+     return (m_advection_type != AdvectionType::MOL) ? 5 : 4;
     }
 
     int nghost_eb_volume () const {
-      return (m_advection_type != "MOL") ? 5 : 4;
+      return (m_advection_type != AdvectionType::MOL) ? 5 : 4;
     }
 
     int nghost_eb_full () const {
@@ -1241,13 +1255,13 @@ class mfix : public AmrCore
 
    // Invalid, Explicit, Crank_Nicolson, Implicit
     DiffusionType predictor_diff_type () const{
-      return (m_advection_type == "MOL") ?
+      return (m_advection_type == AdvectionType::MOL) ?
         DiffusionType::Explicit:
         DiffusionType::Implicit;
     }
 
     DiffusionType corrector_diff_type () const{
-      return (m_advection_type == "MOL") ?
+      return (m_advection_type == AdvectionType::MOL) ?
         DiffusionType::Crank_Nicolson:
         DiffusionType::Invalid;
     }

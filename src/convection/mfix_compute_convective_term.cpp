@@ -41,7 +41,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
 
     // We first compute the velocity forcing terms to be used in predicting
     //    to faces before the MAC projection
-    if (m_advection_type != "MOL") {
+    if (m_advection_type != AdvectionType::MOL) {
 
       bool include_pressure_gradient = !(m_use_mac_phi_in_godunov);
       compute_vel_forces(vel_forces, vel_in, ro_g_in, include_pressure_gradient);
@@ -66,7 +66,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
 
     // We now re-compute the velocity forcing terms including the pressure gradient,
     //    and compute the tracer forcing terms for the first time
-    if (m_advection_type != "MOL") {
+    if (m_advection_type != AdvectionType::MOL) {
 
       compute_vel_forces(vel_forces, vel_in, ro_g_in);
 
@@ -239,7 +239,7 @@ mfix::compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
     }
 
     Box rho_box = amrex::grow(bx,2);
-    if (m_advection_type != "MOL")  rho_box.grow(1);
+    if (m_advection_type != AdvectionType::MOL)  rho_box.grow(1);
     if (!regular) rho_box.grow(2);
 
     FArrayBox rhohgfab, rhotracfab, rhoXgkfab;
@@ -291,10 +291,10 @@ mfix::compute_convective_term (Box const& bx, int lev, MFIter const& mfi,
     const GpuArray<int, 3> bc_types =
       {bc_list.get_minf(), bc_list.get_pout(), bc_list.get_pinf()};
 
-    if (m_advection_type == "Godunov") {
+    if (m_advection_type == AdvectionType::Godunov) {
       amrex::Abort("Godunov not implemented!");
 
-    } else if (m_advection_type == "MOL") {
+    } else if (m_advection_type == AdvectionType::MOL) {
       Box tmpbox = amrex::surroundingNodes(bx);
       int tmpcomp = nmaxcomp*3; // fx, fy, fz
       Box gbx = bx;
