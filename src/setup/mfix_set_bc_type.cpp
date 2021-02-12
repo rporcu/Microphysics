@@ -21,18 +21,17 @@ mfix::mfix_set_bc_type (int lev)
     const int minf_ = bc_list.get_minf();
     const int pinf_ = bc_list.get_pinf();
 
-    // Set the defaults for BCRecs
-    m_bcrec_velocity.resize(AMREX_SPACEDIM);
-
-    // Total number of scalars (less species)
-    // tracers + density + ep_g + mu_g + T_g + h_g
-    const int l_scalars = ntrac + 5;
-    m_bcrec_scalars.resize(l_scalars);
 
     const int l_species = FLUID::nspecies;
-    m_bcrec_species.resize(l_species);
+    const int l_ntrac = ntrac;
+    const int l_force = amrex::max(AMREX_SPACEDIM, l_ntrac, l_species);
 
-    const int l_force = amrex::max(AMREX_SPACEDIM, l_scalars, l_species);
+    // Set the defaults for BCRecs
+    m_bcrec_velocity.resize(AMREX_SPACEDIM);
+    m_bcrec_density.resize(1);
+    m_bcrec_enthalpy.resize(1);
+    m_bcrec_tracer.resize(l_ntrac);
+    m_bcrec_species.resize(l_species);
     m_bcrec_force.resize(l_force);
 
     { // begin x direction
@@ -364,17 +363,37 @@ mfix::mfix_set_bc_type (int lev)
     }
 
 
-    {
-      m_bcrec_scalars_d.resize(l_scalars);
+    if (advect_density) {
+      m_bcrec_density_d.resize(1);
 #ifdef AMREX_USE_GPU
       Gpu::htod_memcpy
 #else
         std::memcpy
 #endif
-        (m_bcrec_scalars_d.data(), m_bcrec_scalars.data(), sizeof(BCRec)*l_scalars);
+        (m_bcrec_density_d.data(), m_bcrec_density.data(), sizeof(BCRec));
     }
 
-    {
+    if (advect_enthalpy) {
+      m_bcrec_enthalpy_d.resize(1);
+#ifdef AMREX_USE_GPU
+      Gpu::htod_memcpy
+#else
+        std::memcpy
+#endif
+        (m_bcrec_enthalpy_d.data(), m_bcrec_enthalpy.data(), sizeof(BCRec));
+    }
+
+    if (l_ntrac > 0) {
+      m_bcrec_tracer_d.resize(l_ntrac);
+#ifdef AMREX_USE_GPU
+      Gpu::htod_memcpy
+#else
+        std::memcpy
+#endif
+        (m_bcrec_tracer_d.data(), m_bcrec_tracer.data(), sizeof(BCRec)*l_ntrac);
+    }
+
+    if (l_species > 0) {
       m_bcrec_species_d.resize(l_species);
 #ifdef AMREX_USE_GPU
       Gpu::htod_memcpy
@@ -383,6 +402,7 @@ mfix::mfix_set_bc_type (int lev)
 #endif
         (m_bcrec_species_d.data(), m_bcrec_species.data(), sizeof(BCRec)*l_species);
     }
+
 
     {
       m_bcrec_force_d.resize(l_force);
@@ -505,17 +525,23 @@ void mfix::set_bcrec_lo(const int lev, const int dir, const int l_type)
   // Scalar BC Recs
   if (l_type == pinf_ or l_type == pout_ or l_type == nsw_) {
 
-    for (auto& b : m_bcrec_scalars) b.setLo(dir, BCType::foextrap);
+    m_bcrec_density[0].setLo(dir, BCType::foextrap);
+    m_bcrec_enthalpy[0].setLo(dir, BCType::foextrap);
+    for (auto& b : m_bcrec_tracer) b.setLo(dir, BCType::foextrap);
     for (auto& b : m_bcrec_species) b.setLo(dir, BCType::foextrap);
 
   } else if (l_type == minf_) {
 
-    for (auto& b : m_bcrec_scalars) b.setLo(dir, BCType::ext_dir);
+    m_bcrec_density[0].setLo(dir, BCType::ext_dir);
+    m_bcrec_enthalpy[0].setLo(dir, BCType::ext_dir);
+    for (auto& b : m_bcrec_tracer) b.setLo(dir, BCType::ext_dir);
     for (auto& b : m_bcrec_species) b.setLo(dir, BCType::ext_dir);
 
   } else if (geom[lev].isPeriodic(dir)) {
 
-    for (auto& b : m_bcrec_scalars) b.setLo(dir, BCType::int_dir);
+    m_bcrec_density[0].setLo(dir, BCType::int_dir);
+    m_bcrec_enthalpy[0].setLo(dir, BCType::int_dir);
+    for (auto& b : m_bcrec_tracer) b.setLo(dir, BCType::int_dir);
     for (auto& b : m_bcrec_species) b.setLo(dir, BCType::int_dir);
   }
 
@@ -563,17 +589,23 @@ void mfix::set_bcrec_hi(const int lev, const int dir, const int l_type)
   // Scalar BC Recs
   if (l_type == pinf_ or l_type == pout_ or l_type == nsw_) {
 
-    for (auto& b : m_bcrec_scalars) b.setHi(dir, BCType::foextrap);
+    m_bcrec_density[0].setHi(dir, BCType::foextrap);
+    m_bcrec_enthalpy[0].setHi(dir, BCType::foextrap);
+    for (auto& b : m_bcrec_tracer) b.setHi(dir, BCType::foextrap);
     for (auto& b : m_bcrec_species) b.setHi(dir, BCType::foextrap);
 
   } else if (l_type == minf_) {
 
-    for (auto& b : m_bcrec_scalars) b.setHi(dir, BCType::ext_dir);
+    m_bcrec_density[0].setHi(dir, BCType::ext_dir);
+    m_bcrec_enthalpy[0].setHi(dir, BCType::ext_dir);
+    for (auto& b : m_bcrec_tracer) b.setHi(dir, BCType::ext_dir);
     for (auto& b : m_bcrec_species) b.setHi(dir, BCType::ext_dir);
 
   } else if (geom[lev].isPeriodic(dir)) {
 
-    for (auto& b : m_bcrec_scalars) b.setHi(dir, BCType::int_dir);
+    m_bcrec_density[0].setHi(dir, BCType::int_dir);
+    m_bcrec_enthalpy[0].setHi(dir, BCType::int_dir);
+    for (auto& b : m_bcrec_tracer) b.setHi(dir, BCType::int_dir);
     for (auto& b : m_bcrec_species) b.setHi(dir, BCType::int_dir);
   }
 

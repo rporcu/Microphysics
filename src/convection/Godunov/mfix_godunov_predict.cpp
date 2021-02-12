@@ -67,36 +67,28 @@ void godunov::predict_godunov (Real /*time*/,
             p +=         w_ad.size();
 
             if (use_ppm) {
-#if 0
               godunov::predict_ppm (bxg1, Imx, Imy, Imz, Ipx, Ipy, Ipz, a_vel, a_vel,
                                       geom, l_dt, d_bcrec);
-#endif
 
             } else {
-#if 0
               godunov::predict_plm_x (bx, Imx, Ipx, a_vel, a_vel,
                                       geom, l_dt, h_bcrec, d_bcrec);
               godunov::predict_plm_y (bx, Imy, Ipy, a_vel, a_vel,
                                       geom, l_dt, h_bcrec, d_bcrec);
               godunov::predict_plm_z (bx, Imz, Ipz, a_vel, a_vel,
                                       geom, l_dt, h_bcrec, d_bcrec);
-#endif
             }
 
-#if 0
             make_trans_velocities(Box(u_ad), Box(v_ad), Box(w_ad),
                                   u_ad, v_ad, w_ad,
                                   Imx, Imy, Imz, Ipx, Ipy, Ipz, a_vel, a_f,
                                   domain, l_dt, d_bcrec, use_forces_in_trans);
-#endif
-#if 0
             predict_godunov_on_box(bx, ncomp, xbx, ybx, zbx, a_umac, a_vmac, a_wmac,
                                    a_vel, u_ad, v_ad, w_ad,
                                    Imx, Imy, Imz, Ipx, Ipy, Ipz, a_f,
                                    domain, dx, l_dt, d_bcrec, use_forces_in_trans,
                                    gmacphi_x_arr, gmacphi_y_arr, gmacphi_z_arr,
                                    use_mac_phi_in_godunov, p);
-#endif
 
             Gpu::streamSynchronize();  // otherwise we might be using too much memory
         }

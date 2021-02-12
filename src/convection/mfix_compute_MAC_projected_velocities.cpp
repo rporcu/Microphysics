@@ -1,5 +1,6 @@
 #include <MOL.H>
 #include <Godunov.H>
+#include <EBGodunov.H>
 
 #include <mfix_bc_parms.H>
 #include <mfix_mf_helpers.H>
@@ -141,18 +142,15 @@ mfix::compute_MAC_projected_velocities (amrex::Real time, const amrex::Real l_dt
     if (advection_type() == AdvectionType::Godunov) {
 
 
-      if (ebfact->isAllRegular()) {
-#if 0
+      if (ebfact->isAllRegular() ) {
         godunov::predict_godunov(time,
                                  *ep_u_mac[lev], *ep_v_mac[lev], *ep_w_mac[lev],
-                                 *vel[lev], *vel_forces[lev],
+                                 *vel_in[lev], *vel_forces[lev],
                                  get_velocity_bcrec(), get_velocity_bcrec_device_ptr(),
                                  geom[lev], l_dt, m_godunov_ppm, m_godunov_use_forces_in_trans,
                                  m_fluxes[lev][0], m_fluxes[lev][1], m_fluxes[lev][2],
                                  m_use_mac_phi_in_godunov);
-#endif
       } else {
-#if 0
         ebgodunov::predict_godunov(time,
                                    *ep_u_mac[lev], *ep_v_mac[lev], *ep_w_mac[lev],
                                    *vel_in[lev], *vel_forces[lev],
@@ -160,7 +158,6 @@ mfix::compute_MAC_projected_velocities (amrex::Real time, const amrex::Real l_dt
                                    ebfact, geom[lev], l_dt,
                                    m_fluxes[lev][0], m_fluxes[lev][1], m_fluxes[lev][2],
                                    m_use_mac_phi_in_godunov);
-#endif
 
       }
 
@@ -241,18 +238,31 @@ mfix::compute_MAC_projected_velocities (amrex::Real time, const amrex::Real l_dt
   }
   else
   {
-    // Solve with initial guess of zero
-    macproj->project(mac_mg_rtol, mac_mg_atol);
+
+    if (m_use_mac_phi_in_godunov) {
+      for (int lev=0; lev <= finest_level; ++lev)
+        mac_phi[lev]->mult(l_dt/2.,0,1,1);
+
+      macproj->project(mac_phi,mac_mg_rtol,mac_mg_atol);
+
+      for (int lev=0; lev <= finest_level; ++lev)
+        mac_phi[lev]->mult(2./l_dt,0,1,1);
+
+    } else {
+
+      // Solve with initial guess of zero
+      macproj->project(mac_mg_rtol, mac_mg_atol);
+    }
   }
 
   // Get MAC velocities at face CENTER by dividing solution by ep at faces
   if (m_verbose)
     Print() << " >> After projection\n" ;
 
-  for ( int lev=0; lev <= finest_level ; ++lev )
-  {
-    if (m_verbose)
-    {
+  for ( int lev=0; lev <= finest_level ; ++lev ) {
+
+    if (m_verbose) {
+
       mac_vec[lev][0]->FillBoundary(geom[lev].periodicity());
       mac_vec[lev][1]->FillBoundary(geom[lev].periodicity());
       mac_vec[lev][2]->FillBoundary(geom[lev].periodicity());

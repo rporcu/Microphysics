@@ -8,4 +8,5 @@ target_sources( mfixcore
    mfix_mol_convective_fluxes.cpp
    mfix_mol_convective_fluxes_eb.cpp
    mfix_mol_divergence.cpp
+   mfix_mol_flux_redistribute.cpp
    )
