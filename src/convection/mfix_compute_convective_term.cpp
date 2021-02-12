@@ -1,5 +1,8 @@
 #include <mfix.H>
 #include <MOL.H>
+#include <Godunov.H>
+#include <EBGodunov.H>
+#include <Redistribution.H>
 
 #include <AMReX_REAL.H>
 #include <AMReX_BLFort.H>
@@ -9,9 +12,6 @@
 
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
-
-#include <redistribution.H>
-
 
 
 void mfix::init_advection ()
@@ -27,8 +27,16 @@ void mfix::init_advection ()
   m_iconserv_density.resize(1, 1);
   m_iconserv_density_d.resize(1, 1);
 
+  m_iconserv_enthalpy.resize(1, 1);
+  m_iconserv_enthalpy_d.resize(1, 1);
+
   m_iconserv_tracer.resize(ntrac, 1);
   m_iconserv_tracer_d.resize(ntrac, 1);
+
+  const int l_nspecies = FLUID::nspecies;
+  m_iconserv_species.resize(l_nspecies, 1);
+  m_iconserv_species_d.resize(l_nspecies, 1);
+
 }
 
 
@@ -328,12 +336,13 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
       if (!regular) {
 
 
-        {// Velocity
+        // ***************************************************************************
+        // Compute div (ep_u_mac * (u)) -- the update for velocity
+        // ***************************************************************************
+        {
 
-          const int scomp = 0; // starting component
           const int ncomp = 3; // number of components
           const int ccomp = 0; // convection (dsdt) component
-#if 0
 
           amrex::Print() << "DOING VELOCITY " << std::endl;
           ebgodunov::compute_godunov_advection(gbx, ncomp,
@@ -348,12 +357,221 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
                                                fcx, fcy, fcz, ccc,
                                                geom[lev], true); // is_velocity
 
-          redistribution::redistribute_eb(bx, AMREX_SPACEDIM, dvdt, dUdt_tmp, vel, scratch,
-                                          AMREX_D_DECL(umac, vmac, wmac), flag,
-                                          AMREX_D_DECL(apx, apy, apz), vfrac,
-                                          AMREX_D_DECL(fcx, fcy, fcz), ccc, geom[lev], l_dt, m_redistribution_type);
-#endif
+          redistribution::redistribute_eb(bx, ncomp, ccomp, dvdt, dUdt_tmp, vel, scratch,
+                                          ep_umac, ep_vmac, ep_wmac, flag,
+                                          apx, apy, apz, vfrac,
+                                          fcx, fcy, fcz, ccc, geom[lev],
+                                          l_dt, m_redistribution_type);
         } //end velocity
+
+
+        // ***************************************************************************
+        // Compute div (ep_u_mac * (rho)) -- the update for density
+        // ***************************************************************************
+        if (l_advect_density) {
+
+          const int ncomp = 1; // number of components
+          const int ccomp = 0; // convection (dsdt) component
+
+          ebgodunov::compute_godunov_advection(gbx, ncomp,
+                                               dUdt_tmp, rho,
+                                               ep_umac, ep_vmac, ep_wmac,
+                                               {}, divu, l_dt,
+                                               get_density_bcrec(),
+                                               get_density_bcrec_device_ptr(),
+                                               get_density_iconserv_device_ptr(),
+                                               tmpfab.dataPtr(), flag,
+                                               apx, apy, apz, vfrac,
+                                               fcx, fcy, fcz, ccc,
+                                               geom[lev]);
+
+          redistribution::redistribute_eb(bx, ncomp, ccomp, dsdt, dUdt_tmp, rho, scratch,
+                                          ep_umac, ep_vmac, ep_wmac, flag,
+                                          apx, apy, apz, vfrac,
+                                          fcx, fcy, fcz, ccc, geom[lev],
+                                          l_dt, m_redistribution_type);
+        } // end density
+
+        // ***************************************************************************
+        // Compute div (ep_u_mac * (rho*h_g)) -- the update for enthalpy
+        // ***************************************************************************
+        if (l_advect_enthalpy) {
+
+          const int ncomp = 1; // number of components
+          const int ccomp = 1; // convection (dsdt) component
+
+          ebgodunov::compute_godunov_advection(gbx, ncomp,
+                                               dUdt_tmp, rhohg,
+                                               ep_umac, ep_vmac, ep_wmac,
+                                               {}, divu, l_dt,
+                                               get_enthalpy_bcrec(),
+                                               get_enthalpy_bcrec_device_ptr(),
+                                               get_enthalpy_iconserv_device_ptr(),
+                                               tmpfab.dataPtr(), flag,
+                                               apx, apy, apz, vfrac,
+                                               fcx, fcy, fcz, ccc,
+                                               geom[lev]);
+
+          redistribution::redistribute_eb(bx, ncomp, ccomp, dsdt, dUdt_tmp, rhohg, scratch,
+                                          ep_umac, ep_vmac, ep_wmac, flag,
+                                          apx, apy, apz, vfrac,
+                                          fcx, fcy, fcz, ccc, geom[lev],
+                                          l_dt, m_redistribution_type);
+        } // end enthalpy
+
+        // ***************************************************************************
+        // Compute div (ep_u_mac * (rho*trac)) -- the update for tracer
+        // ***************************************************************************
+        if (l_advect_tracer) {
+
+          const int ncomp = 1; // number of components
+          const int ccomp = 2; // convection (dsdt) component
+
+          ebgodunov::compute_godunov_advection(gbx, ncomp,
+                                               dUdt_tmp, rhotrac,
+                                               ep_umac, ep_vmac, ep_wmac,
+                                               {}, divu, l_dt,
+                                               get_tracer_bcrec(),
+                                               get_tracer_bcrec_device_ptr(),
+                                               get_tracer_iconserv_device_ptr(),
+                                               tmpfab.dataPtr(), flag,
+                                               apx, apy, apz, vfrac,
+                                               fcx, fcy, fcz, ccc,
+                                               geom[lev]);
+
+          redistribution::redistribute_eb(bx, ncomp, ccomp, dsdt, dUdt_tmp, rhotrac, scratch,
+                                          ep_umac, ep_vmac, ep_wmac, flag,
+                                          apx, apy, apz, vfrac,
+                                          fcx, fcy, fcz, ccc, geom[lev],
+                                          l_dt, m_redistribution_type);
+        } // end tracer
+
+        // ***************************************************************************
+        // Compute div (ep_u_mac * (rho*X_g)) -- the update for species mass fraction
+        // ***************************************************************************
+        if (l_advect_species) {
+
+          const int ncomp = l_nspecies; // number of components
+          const int ccomp = 0; // convection (dXdt) component
+
+          ebgodunov::compute_godunov_advection(gbx, ncomp,
+                                               dUdt_tmp, rhoXgk,
+                                               ep_umac, ep_vmac, ep_wmac,
+                                               {}, divu, l_dt,
+                                               get_species_bcrec(),
+                                               get_species_bcrec_device_ptr(),
+                                               get_species_iconserv_device_ptr(),
+                                               tmpfab.dataPtr(), flag,
+                                               apx, apy, apz, vfrac,
+                                               fcx, fcy, fcz, ccc,
+                                               geom[lev]);
+
+          redistribution::redistribute_eb(bx, ncomp, ccomp, dXdt, dUdt_tmp, rhoXgk, scratch,
+                                          ep_umac, ep_vmac, ep_wmac, flag,
+                                          apx, apy, apz, vfrac,
+                                          fcx, fcy, fcz, ccc, geom[lev],
+                                          l_dt, m_redistribution_type);
+        } // end species
+
+        Gpu::streamSynchronize();
+
+      } else {
+
+        // ***************************************************************************
+        // Compute div (ep_u_mac * (u)) -- the update for velocity
+        // ***************************************************************************
+        {
+
+          const int ncomp = 3; // number of components
+          const int ccomp = 0; // convection (dsdt) component
+
+          godunov::compute_godunov_advection(bx, ncomp, ccomp, dvdt, vel,
+                                             ep_umac, ep_vmac, ep_wmac,
+                                             fvel, divu, l_dt,
+                                             get_velocity_bcrec_device_ptr(),
+                                             get_velocity_iconserv_device_ptr(),
+                                             tmpfab.dataPtr(),m_godunov_ppm,
+                                             m_godunov_use_forces_in_trans,
+                                             geom[lev], true);
+
+        } //end velocity
+
+
+        // ***************************************************************************
+        // Compute div (ep_u_mac * (rho)) -- the update for density
+        // ***************************************************************************
+        if (l_advect_density) {
+
+          const int ncomp = 1; // number of components
+          const int ccomp = 0; // convection (dsdt) component
+
+          godunov::compute_godunov_advection(bx, ncomp, ccomp, dsdt, rho,
+                                             ep_umac, ep_vmac, ep_wmac,
+                                             fvel, divu, l_dt,
+                                             get_density_bcrec_device_ptr(),
+                                             get_density_iconserv_device_ptr(),
+                                             tmpfab.dataPtr(),m_godunov_ppm,
+                                             m_godunov_use_forces_in_trans,
+                                             geom[lev], true);
+
+
+        } // end density
+
+        // ***************************************************************************
+        // Compute div (ep_u_mac * (rho*h_g)) -- the update for enthalpy
+        // ***************************************************************************
+        if (l_advect_enthalpy) {
+
+          const int ncomp = 1; // number of components
+          const int ccomp = 1; // convection (dsdt) component
+
+          godunov::compute_godunov_advection(bx, ncomp, ccomp, dsdt, rhohg,
+                                             ep_umac, ep_vmac, ep_wmac,
+                                             fvel, divu, l_dt,
+                                             get_enthalpy_bcrec_device_ptr(),
+                                             get_enthalpy_iconserv_device_ptr(),
+                                             tmpfab.dataPtr(),m_godunov_ppm,
+                                             m_godunov_use_forces_in_trans,
+                                             geom[lev], true);
+
+        } // end enthalpy
+
+        // ***************************************************************************
+        // Compute div (ep_u_mac * (rho*trac)) -- the update for tracer
+        // ***************************************************************************
+        if (l_advect_tracer) {
+
+          const int ncomp = 1; // number of components
+          const int ccomp = 2; // convection (dsdt) component
+
+          godunov::compute_godunov_advection(bx, ncomp, ccomp, dsdt, rhotrac,
+                                             ep_umac, ep_vmac, ep_wmac,
+                                             fvel, divu, l_dt,
+                                             get_tracer_bcrec_device_ptr(),
+                                             get_tracer_iconserv_device_ptr(),
+                                             tmpfab.dataPtr(),m_godunov_ppm,
+                                             m_godunov_use_forces_in_trans,
+                                             geom[lev], true);
+        } // end tracer
+
+        // ***************************************************************************
+        // Compute div (ep_u_mac * (rho*X_g)) -- the update for species mass fraction
+        // ***************************************************************************
+        if (l_advect_species) {
+
+          const int ncomp = l_nspecies; // number of components
+          const int ccomp = 0; // convection (dXdt) component
+
+          godunov::compute_godunov_advection(bx, ncomp, ccomp, dXdt, rhoXgk,
+                                             ep_umac, ep_vmac, ep_wmac,
+                                             fvel, divu, l_dt,
+                                             get_species_bcrec_device_ptr(),
+                                             get_species_iconserv_device_ptr(),
+                                             tmpfab.dataPtr(),m_godunov_ppm,
+                                             m_godunov_use_forces_in_trans,
+                                             geom[lev], true);
+        } // end species
+
         Gpu::streamSynchronize();
       }
 
@@ -406,8 +624,8 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
           mol::compute_convective_rate_eb(gbx, ncomp, scomp, dUdt_tmp, fx, fy, fz,
                                           flag, vfrac, apx, apy, apz, geom[lev]);
 
-          redistribution::apply_eb_redistribution(bx, dvdt, dUdt_tmp, ep_g, mfi,
-                                                  ccomp, ncomp, flag, vfrac, geom[lev]);
+          mol::apply_eb_redistribution(bx, dvdt, dUdt_tmp, ep_g, mfi,
+                                       ccomp, ncomp, flag, vfrac, geom[lev]);
 
         } // end velocity
 
@@ -433,8 +651,8 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
           mol::compute_convective_rate_eb(gbx, ncomp, scomp, dUdt_tmp, fx, fy, fz,
                                           flag, vfrac, apx, apy, apz, geom[lev]);
 
-          redistribution::apply_eb_redistribution(bx, dsdt, dUdt_tmp, ep_g, mfi,
-                                                  ccomp, ncomp, flag, vfrac, geom[lev]);
+          mol::apply_eb_redistribution(bx, dsdt, dUdt_tmp, ep_g, mfi,
+                                       ccomp, ncomp, flag, vfrac, geom[lev]);
 
         } // end density
 
@@ -460,8 +678,8 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
           mol::compute_convective_rate_eb(gbx, ncomp, scomp, dUdt_tmp, fx, fy, fz,
                                           flag, vfrac, apx, apy, apz, geom[lev]);
 
-          redistribution::apply_eb_redistribution(bx, dsdt, dUdt_tmp, ep_g, mfi,
-                                                  ccomp, ncomp, flag, vfrac, geom[lev]);
+          mol::apply_eb_redistribution(bx, dsdt, dUdt_tmp, ep_g, mfi,
+                                       ccomp, ncomp, flag, vfrac, geom[lev]);
         } // end enthalpy
 
         // ***************************************************************************
@@ -486,8 +704,8 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
           mol::compute_convective_rate_eb(gbx, ncomp, scomp, dUdt_tmp, fx, fy, fz,
                                           flag, vfrac, apx, apy, apz, geom[lev]);
 
-          redistribution::apply_eb_redistribution(bx, dsdt, dUdt_tmp, ep_g, mfi,
-                                                  ccomp, ncomp, flag, vfrac, geom[lev]);
+          mol::apply_eb_redistribution(bx, dsdt, dUdt_tmp, ep_g, mfi,
+                                       ccomp, ncomp, flag, vfrac, geom[lev]);
         } // end tracer
 
         // ***************************************************************************
@@ -512,8 +730,8 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
           mol::compute_convective_rate_eb(gbx, ncomp, scomp, dUdt_tmp, fx, fy, fz,
                                           flag, vfrac, apx, apy, apz, geom[lev]);
 
-          redistribution::apply_eb_redistribution(bx, dXdt, dUdt_tmp, ep_g, mfi,
-                                                  ccomp, ncomp, flag, vfrac, geom[lev]);
+          mol::apply_eb_redistribution(bx, dXdt, dUdt_tmp, ep_g, mfi,
+                                       ccomp, ncomp, flag, vfrac, geom[lev]);
 
         } // end species
 
@@ -629,6 +847,9 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
         } // end species
 
       }
+
+      Gpu::streamSynchronize();
+
     }// end MOL advection type
 
 }

@@ -935,15 +935,48 @@ class mfix : public AmrCore
 
   amrex::Vector<int> const& get_velocity_iconserv () const noexcept { return m_iconserv_velocity; }
   amrex::Vector<int> const& get_density_iconserv () const noexcept { return m_iconserv_density; }
+  amrex::Vector<int> const& get_enthalpy_iconserv () const noexcept { return m_iconserv_enthalpy; }
   amrex::Vector<int> const& get_tracer_iconserv () const noexcept { return m_iconserv_tracer; }
+  amrex::Vector<int> const& get_species_iconserv () const noexcept { return m_iconserv_species; }
   //
   int const* get_velocity_iconserv_device_ptr () const noexcept {
     return m_iconserv_velocity_d.data(); }
   int const* get_density_iconserv_device_ptr () const noexcept {
     return m_iconserv_density_d.data(); }
+  int const* get_enthalpy_iconserv_device_ptr () const noexcept {
+    return m_iconserv_enthalpy_d.data(); }
   int const* get_tracer_iconserv_device_ptr () const noexcept {
     return m_iconserv_tracer_d.data(); }
+  int const* get_species_iconserv_device_ptr () const noexcept {
+    return m_iconserv_species_d.data(); }
 
+
+  amrex::Vector<amrex::BCRec> const& get_velocity_bcrec () const noexcept { return m_bcrec_velocity; }
+  amrex::Vector<amrex::BCRec> const& get_density_bcrec () const noexcept { return m_bcrec_density; }
+  amrex::Vector<amrex::BCRec> const& get_enthalpy_bcrec () const noexcept { return m_bcrec_enthalpy; }
+  amrex::Vector<amrex::BCRec> const& get_tracer_bcrec () const noexcept { return m_bcrec_tracer; }
+  amrex::Vector<amrex::BCRec> const& get_species_bcrec () const noexcept { return m_bcrec_species; }
+  amrex::Vector<amrex::BCRec> const& get_force_bcrec () const noexcept { return m_bcrec_force; }
+  //
+  amrex::BCRec const* get_velocity_bcrec_device_ptr () const noexcept {
+    return m_bcrec_velocity_d.data(); }
+  amrex::BCRec const* get_density_bcrec_device_ptr () const noexcept {
+    return m_bcrec_density_d.data(); }
+  amrex::BCRec const* get_enthalpy_bcrec_device_ptr () const noexcept {
+    return m_bcrec_enthalpy_d.data(); }
+  amrex::BCRec const* get_tracer_bcrec_device_ptr () const noexcept {
+    return m_bcrec_tracer_d.data(); }
+  amrex::BCRec const* get_species_bcrec_device_ptr () const noexcept {
+    return m_bcrec_species_d.data(); }
+  amrex::BCRec const* get_force_bcrec_device_ptr () const noexcept {
+    return m_bcrec_force_d.data(); }
+
+
+  // Although we do nothing special for different scalars,
+  // we assume they are stored in the following order:
+  // 0: density, 1: enthalpy, 2: tracers
+  // 3+ntrac: ep_g,  4+ntrac: mu_g
+  // 5+ntrac: T_g,   6+ntrac: h_g
 
 
     // used if load_balance_type == "KnapSack"
@@ -1222,12 +1255,16 @@ class mfix : public AmrCore
     Vector<BCRec> bcs_f; // For generic first-order extrapolation
 
     amrex::Vector<amrex::BCRec> m_bcrec_velocity;
-    amrex::Vector<amrex::BCRec> m_bcrec_scalars;
+    amrex::Vector<amrex::BCRec> m_bcrec_density;
+    amrex::Vector<amrex::BCRec> m_bcrec_enthalpy;
+    amrex::Vector<amrex::BCRec> m_bcrec_tracer;
     amrex::Vector<amrex::BCRec> m_bcrec_species;
     amrex::Vector<amrex::BCRec> m_bcrec_force;
 
     amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_velocity_d;
-    amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_scalars_d;
+    amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_density_d;
+    amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_enthalpy_d;
+    amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_tracer_d;
     amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_species_d;
     amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_force_d;
 
@@ -1308,9 +1345,12 @@ class mfix : public AmrCore
     amrex::Gpu::DeviceVector<int> m_iconserv_velocity_d;
     amrex::Vector<int> m_iconserv_density;
     amrex::Gpu::DeviceVector<int> m_iconserv_density_d;
+    amrex::Vector<int> m_iconserv_enthalpy;
+    amrex::Gpu::DeviceVector<int> m_iconserv_enthalpy_d;
     amrex::Vector<int> m_iconserv_tracer;
     amrex::Gpu::DeviceVector<int> m_iconserv_tracer_d;
-
+    amrex::Vector<int> m_iconserv_species;
+    amrex::Gpu::DeviceVector<int> m_iconserv_species_d;
 
 
 };

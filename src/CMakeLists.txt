@@ -24,7 +24,9 @@ add_subdirectory(io)
 add_subdirectory(convection)
 add_subdirectory(convection/MOL)
 add_subdirectory(convection/Godunov)
-add_subdirectory(convection/redistribute)
+add_subdirectory(convection/EBGodunov)
+add_subdirectory(convection/Redistribution)
+
 
 # DES
 add_subdirectory(interpolation)

@@ -1,10 +1,10 @@
-#include <redistribution.H>
+#include <Redistribution.H>
 #include <AMReX_EB_slopes_K.H>
 
 using namespace amrex;
 
-void
-redistribution::make_itracker (
+#if (AMREX_SPACEDIM == 3)
+void redistribution::make_itracker (
                        Box const& bx,
                        Array4<Real const> const& apx,
                        Array4<Real const> const& apy,
@@ -41,11 +41,17 @@ redistribution::make_itracker (
     const auto& is_periodic_y = lev_geom.isPeriodic(1);
     const auto& is_periodic_z = lev_geom.isPeriodic(2);
 
-
-#ifndef AMREX_USE_GPU
+#if 0
     if (debug_print)
         amrex::Print() << " IN MERGE_REDISTRIBUTE DOING BOX " << bx << std::endl;
 #endif
+
+    amrex::ParallelFor(bx,
+    [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+        itracker(i,j,k,0) = 0;
+    });
+
     amrex::ParallelFor(bx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
@@ -157,13 +163,14 @@ redistribution::make_itracker (
 
            Real sum_vol = vfrac(i,j,k) + vfrac(i+ioff,j+joff,k+koff);
 
-#ifndef AMREX_USE_GPU
+#if 0
            if (debug_print)
                amrex::Print() << "Cell " << IntVect(i,j,k) << " with volfrac " << vfrac(i,j,k) <<
                                  " trying to merge with " << IntVect(i+ioff,j+joff,k+koff) <<
                                  " with volfrac " << vfrac(i+ioff,j+joff,k+koff) <<
                                  " to get new sum_vol " <<  sum_vol << std::endl;
 #endif
+
            // If the merged cell isn't large enough, we can merge in one of the other directions
            if (sum_vol < 0.5)
            {
@@ -225,7 +232,7 @@ redistribution::make_itracker (
                int koff = kmap[itracker(i,j,k,2)];
 
                sum_vol += vfrac(i+ioff,j+joff,k+koff);
-#ifndef AMREX_USE_GPU
+#if 0
                if (debug_print)
                    amrex::Print() << "Cell " << IntVect(i,j,k) << " with volfrac " << vfrac(i,j,k) <<
                                      " trying to ALSO merge with " << IntVect(i+ioff,j+joff,k+koff) <<
@@ -281,8 +288,7 @@ redistribution::make_itracker (
                itracker(i,j,k,0) += 1;
 
                sum_vol += vfrac(i+ioff,j+joff,k+koff);
-
-#ifndef AMREX_USE_GPU
+#if 0
                if (debug_print)
                     amrex::Print() << "Cell " << IntVect(i,j,k) << " with volfrac " << vfrac(i,j,k) <<
                                       " trying to ALSO merge with " << IntVect(i+ioff,j+joff,k+koff) <<
@@ -325,8 +331,7 @@ redistribution::make_itracker (
                    // My neigbor didn't know about me so add me to my nbor's list of neighbors
                    itracker(i+ioff,j+joff,k+koff,0) += 1;
                    itracker(i+ioff,j+joff,k+koff,n_of_nbor+1) = inv_map[itracker(i,j,k,ipair)];
-
-#ifndef AMREX_USE_GPU
+#if 0
                    if (debug_print)
                        amrex::Print() << "Cell   " << IntVect(i,j,k) << " had nbor " << IntVect(i+ioff,j+joff,k+koff)
                                       << " in its nbor list by taking inverse of " << itracker(i,j,k,ipair)
@@ -357,7 +362,7 @@ redistribution::make_itracker (
                int j_n = j + jmap[itracker(i,j,k,ipair)];
                int k_n = k + kmap[itracker(i,j,k,ipair)];
 
-#ifndef AMREX_USE_GPU
+#if 0
                if (debug_print)
                    amrex::Print() << "WORKING ON CELL " << IntVect(i,j,k) << " and its nbor " << IntVect(i_n,j_n,k_n) << std::endl;
 #endif
@@ -387,8 +392,7 @@ redistribution::make_itracker (
                              (i_nn == i    && j_nn == j    && k_nn == k   ) )
                             found = true;
                     }
-
-#ifndef AMREX_USE_GPU
+#if 0
                     if (debug_print)
                     {
                         if (!found)
@@ -399,6 +403,7 @@ redistribution::make_itracker (
                                             " who has nbor " << IntVect(i_nn,j_nn,k_nn) << " which was found " << std::endl;
                     }
 #endif
+
                     if (!found)
                     {
                         // My neighbor had a neighbor I didn't know so adding it here
@@ -434,7 +439,7 @@ redistribution::make_itracker (
                                itracker(i,j,k,n_nbor) = (i_nn-i)+22; // short-cut for mapping onto 21, 22 or 23
                         }
 
-#ifndef AMREX_USE_GPU
+#if 0
                         if (debug_print)
                         {
                             amrex::Print() << "Adding " << IntVect(i_nn,j_nn,k_nn) << " to the nbor list of " << IntVect(i,j,k) <<
@@ -450,138 +455,4 @@ redistribution::make_itracker (
        }
     });
 }
-
-void
-redistribution::merge_redistribute_update (
-                                           Box const& bx, int ncomp, int scomp,
-                       Array4<Real>       const& dUdt_out,
-                       Array4<Real const> const& dUdt_in,
-                       Array4<Real const> const& apx,
-                       Array4<Real const> const& apy,
-                       Array4<Real const> const& apz,
-                       Array4<Real const> const& vfrac,
-                       Array4<int> const& itracker,
-                       Geometry& lev_geom)
-{
-    bool debug_print = true;
-
-    const Box domain = lev_geom.Domain();
-
-    // Note that itracker has 8 components and all are initialized to zero
-    // We will add to the first component every time this cell is included in a merged neighborhood,
-    //    either by merging or being merged
-    // We identify the cells in the remaining three components with the following ordering
-    //
-    //    at k-1   |   at k  |   at k+1
-    //
-    // ^  15 16 17 |  6 7 8  |  24 25 26
-    // |  12 13 14 |  4   5  |  21 22 23
-    // j  9  10 11 |  1 2 3  |  18 19 20
-    //   i --->
-    //
-    // Note the first component of each of these arrays should never be used
-    Array<int,27>    imap{0,-1, 0, 1,-1, 1,-1, 0, 1,-1, 0, 1,-1, 0, 1,-1, 0, 1,-1, 0, 1,-1, 0, 1,-1, 0, 1};
-    Array<int,27>    jmap{0,-1,-1,-1, 0, 0, 1, 1, 1,-1,-1,-1, 0, 0, 0, 1, 1, 1,-1,-1,-1, 0, 0, 0, 1, 1, 1};
-    Array<int,27>    kmap{0, 0, 0, 0, 0, 0, 0, 0, 0,-1,-1,-1,-1,-1,-1,-1,-1,-1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-
-    const Real small_norm = 1.e-8;
-
-    const auto& is_periodic_x = lev_geom.isPeriodic(0);
-    const auto& is_periodic_y = lev_geom.isPeriodic(1);
-    const auto& is_periodic_z = lev_geom.isPeriodic(2);
-
-#ifndef AMREX_USE_GPU
-    if (debug_print)
-        amrex::Print() << " IN MERGE_REDISTRIBUTE DOING BOX " << bx << " with ncomp " << ncomp << std::endl;
 #endif
-
-    amrex::ParallelFor(bx,
-    [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-    {
-        if (vfrac(i,j,k) > 0.0)
-        {
-            for (int n = scomp; n < ncomp+scomp; n++)
-                dUdt_out(i,j,k,n) = dUdt_in(i,j,k,n);
-        } else {
-            // We shouldn't need to do this but just in case ...
-            for (int n = scomp; n < ncomp+scomp; n++)
-                dUdt_out(i,j,k,n) = 1.e100;
-        }
-    });
-
-    amrex::ParallelFor(bx,
-    [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-    {
-       if (vfrac(i,j,k) > 0.0)
-       {
-           if (itracker(i,j,k,0) == 0)
-           {
-               for (int n = scomp; n < ncomp+scomp; n++)
-                   dUdt_out(i,j,k,n) = dUdt_in(i,j,k,n);
-           } else {
-               for (int n = scomp; n < ncomp+scomp; n++)
-               {
-                   Real sum_vol = vfrac(i,j,k);
-                   Real sum_upd = vfrac(i,j,k) * dUdt_in(i,j,k,n);
-                   for (int i_nbor = 1; i_nbor <= itracker(i,j,k,0); i_nbor++)
-                   {
-                       sum_upd +=   vfrac(i+imap[itracker(i,j,k,i_nbor)],
-                                          j+jmap[itracker(i,j,k,i_nbor)],
-                                          k+kmap[itracker(i,j,k,i_nbor)]) *
-                                  dUdt_in(i+imap[itracker(i,j,k,i_nbor)],
-                                          j+jmap[itracker(i,j,k,i_nbor)],
-                                          k+kmap[itracker(i,j,k,i_nbor)],n);
-                       sum_vol +=   vfrac(i+imap[itracker(i,j,k,i_nbor)],
-                                          j+jmap[itracker(i,j,k,i_nbor)],
-                                          k+kmap[itracker(i,j,k,i_nbor)]);
-                   }
-
-                   if (sum_vol < 0.5)
-                   {
-#ifndef AMREX_USE_GPU
-                      amrex::Print() << "SUM_VOL STILL TOO SMALL at " << IntVect(i,j,k) << " " << sum_vol << std::endl;
-                      amrex::Abort();
-#endif
-                   }
-
-                   Real avg_update = sum_upd / sum_vol;
-
-                   dUdt_out(i,j,k,n) = avg_update;
-               }
-           }
-       }
-    });
-
-    //
-    // This tests whether the redistribution procedure was conservative
-    //
-    { // STRT:SUM OF FINAL DUDT
-        for (int n = scomp; n < ncomp+scomp; n++)
-        {
-          Real sum1(0);
-          Real sum2(0);
-          for (int k = bx.smallEnd(2); k <= bx.bigEnd(2); k++)
-          {
-           for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); j++)
-           {
-            for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); i++)
-            {
-              if (vfrac(i,j,k) > 0.)
-              {
-                  sum1 += vfrac(i,j,k)*dUdt_in(i,j,k,n);
-                  sum2 += vfrac(i,j,k)*dUdt_out(i,j,k,n);
-              }
-            }
-          }
-         }
-         if (std::abs(sum1-sum2) > 1.e-8 * sum1 && std::abs(sum1-sum2) > 1.e-8)
-         {
-#ifndef AMREX_USE_GPU
-            amrex::Print() << " TESTING COMPONENT " << n << std::endl;
-            amrex::Print() << " SUMS DO NOT MATCH " << sum1 << " " << sum2 << std::endl;
-            amrex::Abort(0);
-#endif
-         }
-        }
-    } //  END:SUM OF FINAL DUDT
-}

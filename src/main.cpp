@@ -271,8 +271,10 @@ int main (int argc, char* argv[])
         mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
     }
 
-    if (FLUID::solve)
-       mfix.mfix_init_solvers();
+    if (FLUID::solve){
+      mfix.init_advection();
+      mfix.mfix_init_solvers();
+    }
 
     // This checks if we want to regrid
     if (!mfix.IsSteadyState() && regrid_int > -1 && nstep%regrid_int == 0)

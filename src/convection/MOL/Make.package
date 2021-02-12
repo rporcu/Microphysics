@@ -6,4 +6,4 @@ CEXE_sources += mfix_mol_predict.cpp
 CEXE_sources += mfix_mol_convective_fluxes.cpp
 CEXE_sources += mfix_mol_convective_fluxes_eb.cpp
 CEXE_sources += mfix_mol_divergence.cpp
-
+CEXE_sources += mfix_mol_flux_redistribute.cpp
