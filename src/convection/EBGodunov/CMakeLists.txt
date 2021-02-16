@@ -9,4 +9,5 @@ target_sources( mfixcore
    mfix_ebgodunov_plm_fpu.cpp
    mfix_ebgodunov_predict.cpp
    mfix_ebgodunov_transverse_K.H
+   mfix_ebgodunov_make_trans_vels.cpp
    )

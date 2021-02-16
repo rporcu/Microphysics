@@ -1005,7 +1005,7 @@ class mfix : public AmrCore
     //std::string m_advection_type = "MOL";
     std::string m_redistribution_type = "FluxRedist";
 
-    // include d(ep_g)/dt in contraint
+    // include d(ep_g)/dt in constraint
     bool m_use_depdt_constraint = false;
 
     // If using Godunov, default to PPM (not PLM)
@@ -1028,7 +1028,7 @@ class mfix : public AmrCore
     enum struct DiffusionType {
             Invalid, Explicit, Crank_Nicolson, Implicit
     };
-    // MOL: Explict predictor / Crank_Nicolson corrector
+    // MOL: Explicit predictor / Crank_Nicolson corrector
     // Godunov: Implicit
     DiffusionType m_predictor_diff_type = DiffusionType::Invalid;
     DiffusionType m_corrector_diff_type = DiffusionType::Invalid;

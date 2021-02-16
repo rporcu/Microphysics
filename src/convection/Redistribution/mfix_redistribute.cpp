@@ -154,7 +154,11 @@ void redistribution::redistribute_initial_data (Box const& bx, int ncomp, int ic
 
     FArrayBox U_out(grow(bx,2),ncomp);
     Array4<Real> uout_array = U_out.array();
-    U_out.setVal(0.);
+    amrex::ParallelFor(Box(uout_array),ncomp,
+    [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+    {
+        uout_array(i,j,k,n) = 0.;
+    });
 
     if (redistribution_type == "MergeRedistFull") {
         Array4<int> itr = itracker.array();
@@ -172,7 +176,7 @@ void redistribution::redistribute_initial_data (Box const& bx, int ncomp, int ic
                            AMREX_D_DECL(fcx, fcy, fcz), ccc, lev_geom);
 
     } else {
-       amrex::Error("Shouldnt be here with this redist type");
+       amrex::Error("Should not be here with this redist type");
     }
 
     // Return the new (redistributed) data in the same U_in that came in

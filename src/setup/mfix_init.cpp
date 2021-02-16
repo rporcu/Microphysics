@@ -239,7 +239,7 @@ mfix::InitParams ()
 
     if (advection_type() == AdvectionType::MOL) m_godunov_include_diff_in_forcing = false;
 
-    // MOL: Explict predictor / Crank_Nicolson corrector
+    // MOL: Explicit predictor / Crank_Nicolson corrector
     // Godunov: Implicit
     if (advection_type() == AdvectionType::MOL) {
       m_predictor_diff_type = DiffusionType::Explicit;
