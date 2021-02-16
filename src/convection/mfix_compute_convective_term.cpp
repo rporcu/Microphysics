@@ -135,7 +135,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
         ep_w_mac[lev]->FillBoundary(geom[lev].periodicity());
       }
 
-      MultiFab divu(vel_in[lev]->boxArray(),vel_in[lev]->DistributionMap(),1,2);
+      MultiFab divu(vel_in[lev]->boxArray(),vel_in[lev]->DistributionMap(),1,4);
       divu.setVal(0.);
       Array<MultiFab const*, AMREX_SPACEDIM> u;
       u[0] = ep_u_mac[lev];
@@ -153,8 +153,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-      // Turn off tiling -- HACK HACK HACK
-      for (MFIter mfi(*ep_g_in[lev],false); mfi.isValid(); ++mfi) {
+      for (MFIter mfi(*ep_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
         Box const& bx = mfi.tilebox();
         mfix::compute_convective_term(bx, lev, l_dt, mfi,

@@ -66,17 +66,17 @@ void godunov::predict_godunov (Real /*time*/,
             Array4<Real> w_ad = makeArray4(p,Box(bx).grow(0,1).grow(1,1).surroundingNodes(2),1);
             p +=         w_ad.size();
 
-            if (use_ppm) {
-              godunov::predict_ppm (bxg1, Imx, Imy, Imz, Ipx, Ipy, Ipz, a_vel, a_vel,
+            if (use_ppm)
+                godunov::predict_ppm (bxg1, Imx, Imy, Imz, Ipx, Ipy, Ipz, a_vel, a_vel,
                                       geom, l_dt, d_bcrec);
-
-            } else {
-              godunov::predict_plm_x (bx, Imx, Ipx, a_vel, a_vel,
-                                      geom, l_dt, h_bcrec, d_bcrec);
-              godunov::predict_plm_y (bx, Imy, Ipy, a_vel, a_vel,
-                                      geom, l_dt, h_bcrec, d_bcrec);
-              godunov::predict_plm_z (bx, Imz, Ipz, a_vel, a_vel,
-                                      geom, l_dt, h_bcrec, d_bcrec);
+            else
+            {
+                godunov::predict_plm_x (Box(u_ad), Imx, Ipx, a_vel, a_vel,
+                                        geom, l_dt, h_bcrec, d_bcrec);
+                godunov::predict_plm_y (Box(v_ad), Imy, Ipy, a_vel, a_vel,
+                                        geom, l_dt, h_bcrec, d_bcrec);
+                godunov::predict_plm_z (Box(w_ad), Imz, Ipz, a_vel, a_vel,
+                                        geom, l_dt, h_bcrec, d_bcrec);
             }
 
             make_trans_velocities(Box(u_ad), Box(v_ad), Box(w_ad),

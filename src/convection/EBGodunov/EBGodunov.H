@@ -12,17 +12,17 @@ namespace ebgodunov {
 
     constexpr amrex::Real small_vel = 1.e-8;
 
-    void predict_godunov (amrex::Real time, 
+    void predict_godunov (amrex::Real time,
                           AMREX_D_DECL(amrex::MultiFab& u_mac,
                                        amrex::MultiFab& v_mac,
                                        amrex::MultiFab& w_mac),
-                          amrex::MultiFab const& vel, 
+                          amrex::MultiFab const& vel,
                           amrex::MultiFab const& vel_forces,
                           amrex::Vector<amrex::BCRec> const& h_bcrec,
                                         amrex::BCRec  const* d_bcrec,
                           amrex::EBFArrayBoxFactory const* ebfact,
                           amrex::Geometry& geom,
-                          amrex::Real dt, 
+                          amrex::Real dt,
                           AMREX_D_DECL(amrex::MultiFab const& gmacphi_x,
                                        amrex::MultiFab const& gmacphi_y,
                                        amrex::MultiFab const& gmacphi_z),
@@ -122,7 +122,7 @@ namespace ebgodunov {
 #endif
 
     void make_trans_velocities (AMREX_D_DECL(amrex::Box const& xbx,
-                                             amrex::Box const& ybx, 
+                                             amrex::Box const& ybx,
                                              amrex::Box const& zbx),
                                 AMREX_D_DECL(amrex::Array4<amrex::Real> const& u_ad,
                                              amrex::Array4<amrex::Real> const& v_ad,
@@ -139,9 +139,12 @@ namespace ebgodunov {
                                 amrex::BCRec const* d_bcrec);
 
     void predict_godunov_on_box (amrex::Box const& bx, int ncomp,
-                                 AMREX_D_DECL(amrex::Box const& xbx, 
-                                              amrex::Box const& ybx, 
+                                 AMREX_D_DECL(amrex::Box const& xbx,
+                                              amrex::Box const& ybx,
                                               amrex::Box const& zbx),
+                                 AMREX_D_DECL(amrex::Box const& xebx,
+                                              amrex::Box const& yebx,
+                                              amrex::Box const& zebx),
                                  AMREX_D_DECL(amrex::Array4<amrex::Real> const& qx,
                                               amrex::Array4<amrex::Real> const& qy,
                                               amrex::Array4<amrex::Real> const& qz),
@@ -186,7 +189,7 @@ namespace ebgodunov {
                                     amrex::Vector<amrex::BCRec> const& h_bcrec,
                                                   amrex::BCRec  const* d_bcrec,
                                     int const* iconserv,
-                                    amrex::Real* p, 
+                                    amrex::Real* p,
                                     amrex::Array4<amrex::EBCellFlag const> const& flag,
                                     AMREX_D_DECL(amrex::Array4<amrex::Real const> const& apx,
                                                  amrex::Array4<amrex::Real const> const& apy,

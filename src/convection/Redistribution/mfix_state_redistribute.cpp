@@ -69,9 +69,6 @@ redistribution::state_redistribute ( Box const& bx, int ncomp, int icomp,
     // Centroid of my nbhd
     FArrayBox cent_hat_fab  (bxg2,AMREX_SPACEDIM);
 
-    // Slopes in my nbhd
-    FArrayBox slopes_hat_fab(bxg2,AMREX_SPACEDIM);
-
     // Solution at the centroid of my nbhd
     FArrayBox soln_hat_fab  (bxg2,ncomp);
 
@@ -80,7 +77,6 @@ redistribution::state_redistribute ( Box const& bx, int ncomp, int icomp,
     Array4<Real> nrs      = nrs_fab.array();
     Array4<Real> soln_hat = soln_hat_fab.array();
     Array4<Real> cent_hat = cent_hat_fab.array();
-    Array4<Real> slopes_hat = slopes_hat_fab.array();
 
     amrex::ParallelFor(bxg1,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -100,7 +96,6 @@ redistribution::state_redistribute ( Box const& bx, int ncomp, int icomp,
   for (int n = 0; n < AMREX_SPACEDIM; n++)
   {
             cent_hat(i,j,k,n) = 0.;
-            slopes_hat(i,j,k,n) = 0.;
   }
   for (int n = 0; n < ncomp; n++)
   {
@@ -219,15 +214,6 @@ redistribution::state_redistribute ( Box const& bx, int ncomp, int icomp,
                 nrs(r,s,t) += 1.;
             }
         }
-
-#if 0
-        for (int index = 0; index < 9; index++)
-        {
-            if (index != 4 and i > 120)
-                if (nbor(i,j,k,index) == 1) amrex::Print() << IntVect(i,j) << " HAS NBOR IN DIR " << index << " and vfrac " <<
-                     vfrac(i,j,k) << std::endl;
-        }
-#endif
       }
     });
 
@@ -266,7 +252,8 @@ redistribution::state_redistribute ( Box const& bx, int ncomp, int icomp,
             }
             if (unwted_vol < 0.5 && bx_per_grown.contains(IntVect(AMREX_D_DECL(i,j,k))))
             {
-                // amrex::Print() << "NBHD VOL STILL TOO LOW " << IntVect(AMREX_D_DECL(i,j,k)) << " " << nbhd_vol(i,j,k) << std::endl;
+//              amrex::Print() << "NBHD VOL STILL TOO LOW " << IntVect(AMREX_D_DECL(i,j,k)) << " " << nbhd_vol(i,j,k) << std::endl;
+                amrex::Abort();
             }
         }
     });

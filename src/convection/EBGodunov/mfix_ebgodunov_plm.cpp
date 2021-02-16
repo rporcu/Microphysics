@@ -19,7 +19,7 @@ namespace {
     }
 }
 
-void ebgodunov::predict_plm_x (Box const& bx_in,
+void ebgodunov::predict_plm_x (Box const& xebox,
                                Array4<Real> const& Imx, Array4<Real> const& Ipx,
                                Array4<Real const> const& q,
                                Array4<Real const> const& ccvel,
@@ -62,12 +62,6 @@ void ebgodunov::predict_plm_x (Box const& bx_in,
     bool has_extdir_or_ho_hi_z = extdir_lohi_z.second;
 #endif
 
-#if (AMREX_SPACEDIM == 3)
-    Box xebox = Box(bx_in).grow(1,1).grow(2,1).surroundingNodes(0);
-#else
-    Box xebox = Box(bx_in).grow(1,1).surroundingNodes(0);
-#endif
-
     if ( (has_extdir_or_ho_lo_x and domain_ilo >= xebox.smallEnd(0)-1) or
          (has_extdir_or_ho_hi_x and domain_ihi <= xebox.bigEnd(0)    ) or
 #if (AMREX_SPACEDIM == 3)
@@ -105,12 +99,12 @@ void ebgodunov::predict_plm_x (Box const& bx_in,
 #endif
 
                 // *************************************************
-                // Making qpls 
+                // Making qpls
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i,j,k) with all values at cell centers
                 if (vfrac(i,j,k) == 1. and vfrac(i-1,j,k) == 1. and vfrac(i-2,j,k) == 1. and
-                                           vfrac(i+1,j,k) == 1. and vfrac(i+2,j,k) == 1.) 
+                                           vfrac(i+1,j,k) == 1. and vfrac(i+2,j,k) == 1.)
                 {
                     int order = 4;
                     qpls = q(i  ,j,k,n) + 0.5 * (-1.0 - ccvel(i,j,k,0) * dtdx) *
@@ -133,10 +127,10 @@ void ebgodunov::predict_plm_x (Box const& bx_in,
                    AMREX_D_TERM(Real delta_x = -0.5 - ccc(i,j,k,0);,
                                 Real delta_y =  yf  - ccc(i,j,k,1);,
                                 Real delta_z =  zf  - ccc(i,j,k,2););
-    
+
                    Real qcc_max = amrex::max(q(i,j,k,n), q(i-1,j,k,n));
                    Real qcc_min = amrex::min(q(i,j,k,n), q(i-1,j,k,n));
-    
+
                    const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j,k,n,q,ccc,
                                               AMREX_D_DECL(fcx,fcy,fcz), flag,
                                               AMREX_D_DECL(extdir_or_ho_ilo, extdir_or_ho_jlo, extdir_or_ho_klo),
@@ -164,14 +158,14 @@ void ebgodunov::predict_plm_x (Box const& bx_in,
 
                 // We have enough cells to do 4th order slopes centered on (i-1,j,k) with all values at cell centers
                 if (vfrac(i-1,j,k) == 1. and vfrac(i-2,j,k) == 1. and vfrac(i-3,j,k) == 1. and
-                                             vfrac(i  ,j,k) == 1. and vfrac(i+1,j,k) == 1.) 
+                                             vfrac(i  ,j,k) == 1. and vfrac(i+1,j,k) == 1.)
                 {
                     int order = 4;
                     qmns = q(i-1,j,k,n) + 0.5 * ( 1.0 - ccvel(i-1,j,k,0) * dtdx) *
                         amrex_calc_xslope_extdir(i-1,j,k,n,order,q,extdir_or_ho_ilo,extdir_or_ho_ihi,domain_ilo,domain_ihi);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i-1,j,k) == 1. and vfrac(i-2,j,k) == 1. and vfrac(i  ,j,k) == 1.) 
+                } else if (vfrac(i-1,j,k) == 1. and vfrac(i-2,j,k) == 1. and vfrac(i  ,j,k) == 1.)
                 {
                     int order = 2;
                     qmns = q(i-1,j,k,n) + 0.5 * ( 1.0 - ccvel(i-1,j,k,0) * dtdx) *
@@ -190,7 +184,7 @@ void ebgodunov::predict_plm_x (Box const& bx_in,
 
                    Real qcc_max = amrex::max(q(i,j,k,n), q(i-1,j,k,n));
                    Real qcc_min = amrex::min(q(i,j,k,n), q(i-1,j,k,n));
-    
+
                    const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i-1,j,k,n,q,ccc,
                                               AMREX_D_DECL(fcx,fcy,fcz), flag,
                                               AMREX_D_DECL(extdir_or_ho_ilo, extdir_or_ho_jlo, extdir_or_ho_klo),
@@ -237,7 +231,7 @@ void ebgodunov::predict_plm_x (Box const& bx_in,
 
                 // We have enough cells to do 4th order slopes centered on (i,j,k) with all values at cell centers
                 if (vfrac(i,j,k) == 1. and vfrac(i-1,j,k) == 1. and vfrac(i-2,j,k) == 1. and
-                                           vfrac(i+1,j,k) == 1. and vfrac(i+2,j,k) == 1.) 
+                                           vfrac(i+1,j,k) == 1. and vfrac(i+2,j,k) == 1.)
                 {
                     int order = 4;
                     qpls = q(i  ,j,k,n) + 0.5 * (-1.0 - ccvel(i  ,j,k,0) * dtdx) *
@@ -263,7 +257,7 @@ void ebgodunov::predict_plm_x (Box const& bx_in,
 
                    Real qcc_max = amrex::max(q(i,j,k,n), q(i-1,j,k,n));
                    Real qcc_min = amrex::min(q(i,j,k,n), q(i-1,j,k,n));
-    
+
                    const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,k,n,q,ccc,
                                                                   AMREX_D_DECL(fcx,fcy,fcz), flag);
 
@@ -287,14 +281,14 @@ void ebgodunov::predict_plm_x (Box const& bx_in,
 
                 // We have enough cells to do 4th order slopes centered on (i-1,j,k) with all values at cell centers
                 if (vfrac(i-1,j,k) == 1. and vfrac(i-2,j,k) == 1. and vfrac(i-3,j,k) == 1. and
-                                             vfrac(i  ,j,k) == 1. and vfrac(i+1,j,k) == 1.) 
+                                             vfrac(i  ,j,k) == 1. and vfrac(i+1,j,k) == 1.)
                 {
                     int order = 4;
                     qmns = q(i-1,j,k,n) + 0.5 * ( 1.0 - ccvel(i-1,j,k,0) * dtdx) *
                         amrex_calc_xslope(i-1,j,k,n,order,q);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i-1,j,k) == 1. and vfrac(i-2,j,k) == 1. and vfrac(i  ,j,k) == 1.) 
+                } else if (vfrac(i-1,j,k) == 1. and vfrac(i-2,j,k) == 1. and vfrac(i  ,j,k) == 1.)
                 {
                     int order = 2;
                     qmns = q(i-1,j,k,n) + 0.5 * ( 1.0 - ccvel(i-1,j,k,0) * dtdx) *
@@ -313,7 +307,7 @@ void ebgodunov::predict_plm_x (Box const& bx_in,
 
                    Real qcc_max = amrex::max(q(i,j,k,n), q(i-1,j,k,n));
                    Real qcc_min = amrex::min(q(i,j,k,n), q(i-1,j,k,n));
-    
+
                    const auto& slopes_eb_lo = amrex_lim_slopes_eb(i-1,j,k,n,q,ccc,
                                                                   AMREX_D_DECL(fcx,fcy,fcz), flag);
 
@@ -338,7 +332,7 @@ void ebgodunov::predict_plm_x (Box const& bx_in,
     }
 }
 
-void ebgodunov::predict_plm_y (Box const& bx_in,
+void ebgodunov::predict_plm_y (Box const& yebox,
                                Array4<Real> const& Imy, Array4<Real> const& Ipy,
                                Array4<Real const> const& q,
                                Array4<Real const> const& ccvel,
@@ -380,12 +374,6 @@ void ebgodunov::predict_plm_y (Box const& bx_in,
     bool has_extdir_or_ho_hi_z = extdir_lohi_z.second;
 #endif
 
-#if (AMREX_SPACEDIM == 3)
-    Box yebox = Box(bx_in).grow(0,1).grow(2,1).surroundingNodes(1);
-#else
-    Box yebox = Box(bx_in).grow(0,1).surroundingNodes(1);
-#endif
-
     if ( (has_extdir_or_ho_lo_x and domain_ilo >= yebox.smallEnd(0)-1) or
          (has_extdir_or_ho_hi_x and domain_ihi <= yebox.bigEnd(0)    ) or
 #if (AMREX_SPACEDIM == 3)
@@ -423,12 +411,12 @@ void ebgodunov::predict_plm_y (Box const& bx_in,
 #endif
 
                 // *************************************************
-                // Making qpls 
+                // Making qpls
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i,j,k) with all values at cell centers
                 if (vfrac(i,j,k) == 1. and vfrac(i,j-1,k) == 1. and vfrac(i,j-2,k) == 1. and
-                                           vfrac(i,j+1,k) == 1. and vfrac(i,j+2,k) == 1.) 
+                                           vfrac(i,j+1,k) == 1. and vfrac(i,j+2,k) == 1.)
                 {
                     int order = 4;
                     qpls = q(i,j  ,k,n) + 0.5 * (-1.0 - ccvel(i  ,j,k,1) * dtdy) *
@@ -454,7 +442,7 @@ void ebgodunov::predict_plm_y (Box const& bx_in,
 
                    Real qcc_max = amrex::max(q(i,j,k,n), q(i,j-1,k,n));
                    Real qcc_min = amrex::min(q(i,j,k,n), q(i,j-1,k,n));
-    
+
                    const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j,k,n,q,ccc,
                                               AMREX_D_DECL(fcx,fcy,fcz), flag,
                                               AMREX_D_DECL(extdir_or_ho_ilo, extdir_or_ho_jlo, extdir_or_ho_klo),
@@ -482,14 +470,14 @@ void ebgodunov::predict_plm_y (Box const& bx_in,
 
                 // We have enough cells to do 4th order slopes centered on (i,j-1,k) with all values at cell centers
                 if (vfrac(i,j-1,k) == 1. and vfrac(i,j-2,k) == 1. and vfrac(i,j-3,k) == 1. and
-                                             vfrac(i,j  ,k) == 1. and vfrac(i,j+1,k) == 1.) 
+                                             vfrac(i,j  ,k) == 1. and vfrac(i,j+1,k) == 1.)
                 {
                     int order = 4;
                     qmns = q(i,j-1,k,n) + 0.5 * ( 1.0 - ccvel(i,j-1,k,1) * dtdy) *
                         amrex_calc_yslope_extdir(i,j-1,k,n,order,q,extdir_or_ho_jlo,extdir_or_ho_jhi,domain_jlo,domain_jhi);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i,j-1,k) == 1. and vfrac(i,j-2,k) == 1. and vfrac(i,j  ,k) == 1.) 
+                } else if (vfrac(i,j-1,k) == 1. and vfrac(i,j-2,k) == 1. and vfrac(i,j  ,k) == 1.)
                 {
                     int order = 2;
                     qmns = q(i,j-1,k,n) + 0.5 * ( 1.0 - ccvel(i,j-1,k,1) * dtdy) *
@@ -508,7 +496,7 @@ void ebgodunov::predict_plm_y (Box const& bx_in,
 
                    Real qcc_max = amrex::max(q(i,j,k,n), q(i,j-1,k,n));
                    Real qcc_min = amrex::min(q(i,j,k,n), q(i,j-1,k,n));
-    
+
                    const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i,j-1,k,n,q,ccc,
                                               AMREX_D_DECL(fcx,fcy,fcz), flag,
                                               AMREX_D_DECL(extdir_or_ho_ilo, extdir_or_ho_jlo, extdir_or_ho_klo),
@@ -555,7 +543,7 @@ void ebgodunov::predict_plm_y (Box const& bx_in,
 
                 // We have enough cells to do 4th order slopes centered on (i,j,k) with all values at cell centers
                 if (vfrac(i,j,k) == 1. and vfrac(i,j-1,k) == 1. and vfrac(i,j-2,k) == 1. and
-                                           vfrac(i,j+1,k) == 1. and vfrac(i,j+2,k) == 1.) 
+                                           vfrac(i,j+1,k) == 1. and vfrac(i,j+2,k) == 1.)
                 {
                     int order = 4;
                     qpls = q(i,j,k,n) + 0.5 * (-1.0 - ccvel(i,j,k,1) * dtdy) *
@@ -581,7 +569,7 @@ void ebgodunov::predict_plm_y (Box const& bx_in,
 
                    Real qcc_max = amrex::max(q(i,j,k,n), q(i,j-1,k,n));
                    Real qcc_min = amrex::min(q(i,j,k,n), q(i,j-1,k,n));
-    
+
                    const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,k,n,q,ccc,
                                                                   AMREX_D_DECL(fcx,fcy,fcz), flag);
 
@@ -605,14 +593,14 @@ void ebgodunov::predict_plm_y (Box const& bx_in,
 
                 // We have enough cells to do 4th order slopes centered on (i,j-1,k) with all values at cell centers
                 if (vfrac(i,j-1,k) == 1. and vfrac(i,j-2,k) == 1. and vfrac(i,j-3,k) == 1. and
-                                             vfrac(i,j  ,k) == 1. and vfrac(i,j+1,k) == 1.) 
+                                             vfrac(i,j  ,k) == 1. and vfrac(i,j+1,k) == 1.)
                 {
                     int order = 4;
                     qmns = q(i,j-1,k,n) + 0.5 * ( 1.0 - ccvel(i,j-1,k,1) * dtdy) *
                         amrex_calc_yslope(i,j-1,k,n,order,q);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i,j-1,k) == 1. and vfrac(i,j-2,k) == 1. and vfrac(i,j  ,k) == 1.) 
+                } else if (vfrac(i,j-1,k) == 1. and vfrac(i,j-2,k) == 1. and vfrac(i,j  ,k) == 1.)
                 {
                     int order = 2;
                     qmns = q(i,j-1,k,n) + 0.5 * ( 1.0 - ccvel(i,j-1,k,1) * dtdy) *
@@ -631,7 +619,7 @@ void ebgodunov::predict_plm_y (Box const& bx_in,
 
                    Real qcc_max = amrex::max(q(i,j,k,n), q(i,j-1,k,n));
                    Real qcc_min = amrex::min(q(i,j,k,n), q(i,j-1,k,n));
-    
+
                    const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j-1,k,n,q,ccc,
                                                                   AMREX_D_DECL(fcx,fcy,fcz), flag);
 
@@ -657,7 +645,7 @@ void ebgodunov::predict_plm_y (Box const& bx_in,
 }
 
 #if (AMREX_SPACEDIM == 3)
-void ebgodunov::predict_plm_z (Box const& bx_in,
+void ebgodunov::predict_plm_z (Box const& zebox,
                                Array4<Real> const& Imz, Array4<Real> const& Ipz,
                                Array4<Real const> const& q,
                                Array4<Real const> const& ccvel,
@@ -697,8 +685,6 @@ void ebgodunov::predict_plm_z (Box const& bx_in,
     bool has_extdir_or_ho_lo_z = extdir_lohi_z.first;
     bool has_extdir_or_ho_hi_z = extdir_lohi_z.second;
 
-    Box zebox = Box(bx_in).grow(0,1).grow(1,1).surroundingNodes(2);
-
     if ( (has_extdir_or_ho_lo_x and domain_ilo >= zebox.smallEnd(0)-1) or
          (has_extdir_or_ho_hi_x and domain_ihi <= zebox.bigEnd(0)    ) or
          (has_extdir_or_ho_lo_z and domain_klo >= zebox.smallEnd(2)-1) or
@@ -732,12 +718,12 @@ void ebgodunov::predict_plm_z (Box const& bx_in,
                                         (bc.hi(2) == BCType::hoextrap);
 
                 // *************************************************
-                // Making qpls 
+                // Making qpls
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i,j,k) with all values at cell centers
                 if (vfrac(i,j,k) == 1. and vfrac(i,j,k-1) == 1. and vfrac(i,j,k-2) == 1. and
-                                           vfrac(i,j,k+1) == 1. and vfrac(i,j,k+2) == 1.) 
+                                           vfrac(i,j,k+1) == 1. and vfrac(i,j,k+2) == 1.)
                 {
                     int order = 4;
                     qpls = q(i,j,k,n) + 0.5 * (-1.0 - ccvel(i,j,k,2) * dtdz) *
@@ -762,7 +748,7 @@ void ebgodunov::predict_plm_z (Box const& bx_in,
 
                    Real qcc_max = amrex::max(q(i,j,k,n), q(i,j,k-1,n));
                    Real qcc_min = amrex::min(q(i,j,k,n), q(i,j,k-1,n));
-    
+
                    const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j,k,n,q,ccc,
                                               AMREX_D_DECL(fcx,fcy,fcz), flag,
                                               AMREX_D_DECL(extdir_or_ho_ilo, extdir_or_ho_jlo, extdir_or_ho_klo),
@@ -786,14 +772,14 @@ void ebgodunov::predict_plm_z (Box const& bx_in,
 
                 // We have enough cells to do 4th order slopes centered on (i,j-1,k) with all values at cell centers
                 if (vfrac(i,j,k-1) == 1. and vfrac(i,j,k-2) == 1. and vfrac(i,j,k-3) == 1. and
-                                             vfrac(i,j,k  ) == 1. and vfrac(i,j,k+1) == 1.) 
+                                             vfrac(i,j,k  ) == 1. and vfrac(i,j,k+1) == 1.)
                 {
                     int order = 4;
                     qmns = q(i,j,k-1,n) + 0.5 * ( 1.0 - ccvel(i,j,k-1,2) * dtdz) *
                         amrex_calc_zslope_extdir(i,j,k-1,n,order,q,extdir_or_ho_klo,extdir_or_ho_khi,domain_klo,domain_khi);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i,j,k-1) == 1. and vfrac(i,j,k-2) == 1. and vfrac(i,j,k  ) == 1.) 
+                } else if (vfrac(i,j,k-1) == 1. and vfrac(i,j,k-2) == 1. and vfrac(i,j,k  ) == 1.)
                 {
                     int order = 2;
                     qmns = q(i,j,k-1,n) + 0.5 * ( 1.0 - ccvel(i,j,k-1,2) * dtdz) *
@@ -811,7 +797,7 @@ void ebgodunov::predict_plm_z (Box const& bx_in,
 
                    Real qcc_max = amrex::max(q(i,j,k,n), q(i,j,k-1,n));
                    Real qcc_min = amrex::min(q(i,j,k,n), q(i,j,k-1,n));
-    
+
                    const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i,j,k-1,n,q,ccc,
                                               AMREX_D_DECL(fcx,fcy,fcz), flag,
                                               AMREX_D_DECL(extdir_or_ho_ilo, extdir_or_ho_jlo, extdir_or_ho_klo),
@@ -846,15 +832,13 @@ void ebgodunov::predict_plm_z (Box const& bx_in,
             // This means apx(i,j,k) > 0 and we have un-covered cells on both sides
             if (flag(i,j,k).isConnected(0,0,-1))
             {
-                const auto& bc = pbc[n];
-
                 // *************************************************
                 // Making qpls
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i,j,k) with all values at cell centers
                 if (vfrac(i,j,k) == 1. and vfrac(i,j,k-1) == 1. and vfrac(i,j,k-2) == 1. and
-                                           vfrac(i,j,k+1) == 1. and vfrac(i,j,k+2) == 1.) 
+                                           vfrac(i,j,k+1) == 1. and vfrac(i,j,k+2) == 1.)
                 {
                     int order = 4;
                     qpls = q(i,j,k,n) + 0.5 * (-1.0 - ccvel(i,j,k,2) * dtdz) *
@@ -879,7 +863,7 @@ void ebgodunov::predict_plm_z (Box const& bx_in,
 
                    Real qcc_max = amrex::max(q(i,j,k,n), q(i,j,k-1,n));
                    Real qcc_min = amrex::min(q(i,j,k,n), q(i,j,k-1,n));
-    
+
                    const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,k,n,q,ccc,
                                                                   AMREX_D_DECL(fcx,fcy,fcz), flag);
 
@@ -899,14 +883,14 @@ void ebgodunov::predict_plm_z (Box const& bx_in,
 
                 // We have enough cells to do 4th order slopes centered on (i,j,k-1) with all values at cell centers
                 if (vfrac(i,j,k-1) == 1. and vfrac(i,j,k-2) == 1. and vfrac(i,j,k-3) == 1. and
-                                             vfrac(i,j,k  ) == 1. and vfrac(i,j,k+1) == 1.) 
+                                             vfrac(i,j,k  ) == 1. and vfrac(i,j,k+1) == 1.)
                 {
                     int order = 4;
                     qmns = q(i,j,k-1,n) + 0.5 * ( 1.0 - ccvel(i,j,k-1,2) * dtdz) *
                         amrex_calc_zslope(i,j,k-1,n,order,q);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i,j,k-1) == 1. and vfrac(i,j,k-2) == 1. and vfrac(i,j,k  ) == 1.) 
+                } else if (vfrac(i,j,k-1) == 1. and vfrac(i,j,k-2) == 1. and vfrac(i,j,k  ) == 1.)
                 {
                     int order = 2;
                     qmns = q(i,j,k-1,n) + 0.5 * ( 1.0 - ccvel(i,j,k-1,2) * dtdz) *
@@ -924,7 +908,7 @@ void ebgodunov::predict_plm_z (Box const& bx_in,
 
                    Real qcc_max = amrex::max(q(i,j,k,n), q(i,j,k-1,n));
                    Real qcc_min = amrex::min(q(i,j,k,n), q(i,j,k-1,n));
-    
+
                    const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j,k-1,n,q,ccc,
                                                                   AMREX_D_DECL(fcx,fcy,fcz), flag);
 

@@ -7,7 +7,7 @@
 using namespace amrex;
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void create_transverse_terms_for_xface(int ic, int j, int k, 
+void create_transverse_terms_for_xface(int ic, int j, int k,
                                        Array4<Real const> const& v_ad,
                                        Array4<Real const> const& w_ad,
                                        Array4<Real const> const& yzlo,
@@ -17,14 +17,12 @@ void create_transverse_terms_for_xface(int ic, int j, int k,
                                        Array4<Real const> const& fcy,
                                        Array4<Real const> const& fcz,
                                        Real& trans_y, Real& trans_z,
-                                       const Real l_dt, const Real dy, const Real dz)
+                                       const Real dy, const Real dz)
 {
     Real v_tmp_j, v_tmp_jp1;
     Real w_tmp_k, w_tmp_kp1;
     Real y_hat_j, y_hat_jp1;
     Real z_hat_k, z_hat_kp1;
-
-    int ii, jj, kk;
 
     // Tangential extrapolation in the x- and z-directions at j-1/2
     if (apy(ic,j,k) == 1.0)
@@ -185,7 +183,7 @@ void create_transverse_terms_for_xface(int ic, int j, int k,
 }
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void create_transverse_terms_for_yface(int i, int jc, int k, 
+void create_transverse_terms_for_yface(int i, int jc, int k,
                                        Array4<Real const> const& u_ad,
                                        Array4<Real const> const& w_ad,
                                        Array4<Real const> const& xzlo,
@@ -195,14 +193,12 @@ void create_transverse_terms_for_yface(int i, int jc, int k,
                                        Array4<Real const> const& fcx,
                                        Array4<Real const> const& fcz,
                                        Real& trans_x, Real& trans_z,
-                                       const Real l_dt, const Real dx, const Real dz)
+                                       const Real dx, const Real dz)
 {
     Real u_tmp_i, u_tmp_ip1;
     Real w_tmp_k, w_tmp_kp1;
     Real x_hat_i, x_hat_ip1;
     Real z_hat_k, z_hat_kp1;
-
-    int ii, jj, kk;
 
     // Tangential extrapolation in the y- and z-directions at i-1/2
     if (apx(i,jc,k) == 1.0)
@@ -363,7 +359,7 @@ void create_transverse_terms_for_yface(int i, int jc, int k,
 }
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void create_transverse_terms_for_zface(int i, int j, int kc, 
+void create_transverse_terms_for_zface(int i, int j, int kc,
                                        Array4<Real const> const& u_ad,
                                        Array4<Real const> const& v_ad,
                                        Array4<Real const> const& xylo,
@@ -373,14 +369,12 @@ void create_transverse_terms_for_zface(int i, int j, int kc,
                                        Array4<Real const> const& fcx,
                                        Array4<Real const> const& fcy,
                                        Real& trans_x, Real& trans_y,
-                                       const Real l_dt, const Real dx, const Real dy)
+                                       const Real dx, const Real dy)
 {
     Real u_tmp_i, u_tmp_ip1;
     Real v_tmp_j, v_tmp_jp1;
     Real x_hat_i, x_hat_ip1;
     Real y_hat_j, y_hat_jp1;
-
-    int ii, jj, kk;
 
     // Tangential extrapolation in the y- and z-directions at i-1/2
     if (apx(i,j,kc) == 1.0)
@@ -399,8 +393,8 @@ void create_transverse_terms_for_zface(int i, int j, int kc,
         Real yoff = (fcx(ic,jc,kc,0) <= 0.0) ? -1. : 1.;
         Real zoff = (fcx(ic,jc,kc,1) <= 0.0) ? -1. : 1.;
 
-        Real y0 =  fcx(ic,jc,kc,0); 
-        Real z0 =  fcx(ic,jc,kc,1); 
+        Real y0 =  fcx(ic,jc,kc,0);
+        Real z0 =  fcx(ic,jc,kc,1);
         Real v0 = u_ad(ic,jc,kc  ); Real h0 = xylo(ic,jc,kc  );
 
         Real y1 =  fcx(ic,jj,kc,0)+yoff;
@@ -436,8 +430,8 @@ void create_transverse_terms_for_zface(int i, int j, int kc,
         Real yoff = (fcx(ic,jc,kc,0) <= 0.0) ? -1. : 1.;
         Real zoff = (fcx(ic,jc,kc,1) <= 0.0) ? -1. : 1.;
 
-        Real y0 =  fcx(ic,jc,kc,0); 
-        Real z0 =  fcx(ic,jc,kc,1); 
+        Real y0 =  fcx(ic,jc,kc,0);
+        Real z0 =  fcx(ic,jc,kc,1);
         Real v0 = u_ad(ic,jc,kc  ); Real h0 = xylo(ic,jc,kc  );
 
         Real y1 =  fcx(ic,jj,kc,0)+yoff;
