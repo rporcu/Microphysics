@@ -155,17 +155,6 @@ namespace mol {
                                    amrex::Array4<amrex::Real const> const& apz,
                                    amrex::Geometry& geom);
 
-  void apply_eb_redistribution ( const amrex::Box& bx,
-                                 amrex::Array4<amrex::Real>       const& div,
-                                 amrex::Array4<amrex::Real const> const& divc,
-                                 amrex::Array4<amrex::Real const> const& weights,
-                                 amrex:: MFIter const& mfi,
-                                 const int icomp,
-                                 const int ncomp,
-                                 amrex::Array4<amrex::EBCellFlag const> const& flag,
-                                 amrex::Array4<amrex::Real const> const& vfrac,
-                                 const amrex::Geometry & geom);
-
 } // namespace mol
 
 #endif /* MOL_H */
