@@ -215,13 +215,17 @@ mfix::InitParams ()
 
 
     pp.query("redistribution_type"              , m_redistribution_type);
-    if (m_redistribution_type != "NoRedist" &&
-        m_redistribution_type != "FluxRedist" &&
-        m_redistribution_type != "MergeRedistUpdate" &&
-        m_redistribution_type != "MergeRedistFull" &&
-        m_redistribution_type != "StateRedistUpdate" &&
-        m_redistribution_type != "StateRedistFull")
-      amrex::Abort("redistribution type must be FluxRedist, MergeRedist, StateRedistUpdate or StateRedistFull");
+    // FOR NOW ONLY USE FLUXREDIST -- THE OTHERS ARE WORKS IN PROGRESS
+    //
+    // if (m_redistribution_type != "NoRedist" &&
+    //     m_redistribution_type != "FluxRedist" &&
+    //     m_redistribution_type != "MergeRedistUpdate" &&
+    //     m_redistribution_type != "MergeRedistFull" &&
+    //     m_redistribution_type != "StateRedistUpdate" &&
+    //     m_redistribution_type != "StateRedistFull")
+    //     amrex::Abort("redistribution type must be FluxRedist, MergeRedist, StateRedistUpdate or StateRedistFull");
+    if (m_redistribution_type != "FluxRedist" and m_redistribution_type != "NoRedist")
+      amrex::Abort("redistribution type must be NoRedist or FluxRedist");
 
 
     // Default to MOL

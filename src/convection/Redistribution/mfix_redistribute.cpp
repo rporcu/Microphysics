@@ -1,16 +1,18 @@
 #include <Redistribution.H>
+#include <AMReX_EB_utils.H>
 
 using namespace amrex;
 
-void redistribution::redistribute_eb (Box const& bx, int ncomp, int icomp,
-                                      Array4<Real      > const& dUdt_out,
-                                      Array4<Real      > const& dUdt_in,
-                                      Array4<Real const> const& U_in,
-                                      Array4<Real> const& scratch,
+void redistribution::redistribute_eb (amrex::Box const& bx, int ncomp, int icomp,
+                                      amrex::Array4<amrex::Real      > const& dUdt_out,
+                                      amrex::Array4<amrex::Real      > const& dUdt_in,
+                                      amrex::Array4<amrex::Real const> const& U_in,
+                                      amrex::Array4<amrex::Real      > const& scratch,
+                                      amrex::Array4<amrex::Real const> const& ep_g,
                                       amrex::Array4<amrex::Real const> const& umac,
                                       amrex::Array4<amrex::Real const> const& vmac,
                                       amrex::Array4<amrex::Real const> const& wmac,
-                                      Array4<EBCellFlag const> const& flag,
+                                      amrex::Array4<amrex::EBCellFlag const> const& flag,
                                       amrex::Array4<amrex::Real const> const& apx,
                                       amrex::Array4<amrex::Real const> const& apy,
                                       amrex::Array4<amrex::Real const> const& apz,
@@ -19,7 +21,8 @@ void redistribution::redistribute_eb (Box const& bx, int ncomp, int icomp,
                                       amrex::Array4<amrex::Real const> const& fcy,
                                       amrex::Array4<amrex::Real const> const& fcz,
                                       amrex::Array4<amrex::Real const> const& ccc,
-                                      Geometry& lev_geom, Real dt, std::string redistribution_type)
+                                      amrex::Geometry& lev_geom,
+                                      amrex::Real dt, std::string redistribution_type)
 {
 
     int redist_type;
@@ -44,7 +47,9 @@ void redistribution::redistribute_eb (Box const& bx, int ncomp, int icomp,
 
     if (redistribution_type == "FluxRedist")
     {
-      flux_redistribute_eb (bx, ncomp, icomp, dUdt_out, dUdt_in, scratch, flag, vfrac, lev_geom);
+
+      amrex::apply_flux_redistribution(bx, dUdt_out, dUdt_in, ep_g, icomp, ncomp,
+                                       flag, vfrac, lev_geom);
 
     } else if (redistribution_type == "MergeRedistUpdate" || redistribution_type == "MergeRedistFull") {
 
