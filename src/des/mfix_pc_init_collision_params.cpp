@@ -7,7 +7,7 @@ using namespace amrex;
 void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
 {
 
-   // amrex::Real max_dp[10], max_ro[10];
+   amrex::Real max_dp[10], max_ro[10];
    amrex::Real avg_dp[10], avg_ro[10];
 
    // The number of phases was previously hard set at 10, however lowering
@@ -118,15 +118,15 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
          avg_dp[phase-1] = 0.0;
          avg_ro[phase-1] = 0.0;
 
-         // max_dp[phase-1] = 0.0;
-         // max_ro[phase-1] = 0.0;
+         max_dp[phase-1] = 0.0;
+         max_ro[phase-1] = 0.0;
 
       } else {
          avg_dp[phase-1] = h_pdiam/h_pnum;
          avg_ro[phase-1] = h_pdens/h_pnum;
 
-         // max_dp[phase-1] = max_diam;
-         // max_ro[phase-1] = max_den;
+         max_dp[phase-1] = h_maxdiam;
+         max_ro[phase-1] = h_maxdens;
       }
    }
 
@@ -135,10 +135,14 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
    {
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(avg_dp[phase] > 0.0,
          "Average particle diameter cannot be zero");
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(max_dp[phase] > 0.0,
+         "Maximum particle diameter cannot be zero");
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(avg_ro[phase] > 0.0,
          "Average particle density cannot be zero");
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(max_ro[phase] > 0.0,
+         "Maximum particle density cannot be zero");
 
-      max_max_dp = amrex::max(max_max_dp, avg_dp[phase]);
+      max_max_dp = amrex::max(max_max_dp, max_dp[phase]);
    }
 
    // (3*max_dp/2)^2
@@ -230,6 +234,4 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
    pp.query("tcoll_ratio", tcoll_ratio);
 
    DEM::dtsolid = tcoll / tcoll_ratio;
-
-
 }
