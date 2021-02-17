@@ -105,7 +105,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
     for (int lev = 0; lev <= finest_level; ++lev)
     {
-        density_nph.emplace_back(grids[lev], dmap[lev], 1, 1, MFInfo(),  *ebfactory[lev]);
+        density_nph.emplace_back(grids[lev], dmap[lev], 1, nghost, MFInfo(),  *ebfactory[lev]);
 
         conv_u[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
         // 3 components: one for density, one for tracer and one for enthalpy
@@ -114,6 +114,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         ro_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
         lap_trac[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
         enthalpy_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+
+        density_nph[lev].setVal(0.0);
 
         conv_u[lev]->setVal(0.0);
         conv_s[lev]->setVal(0.0);
@@ -278,6 +280,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                 });
             } // mfi
         } // lev
+
+        Real half_time = time + 0.5*l_dt;
+        mfix_set_density_bcs(half_time, GetVecOfPtrs(density_nph));
 
     } // not constant density
 

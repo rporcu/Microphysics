@@ -93,8 +93,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // Allocate space for half-time density
     // *************************************************************************************
     Vector<MultiFab> density_nph;
-    for (int lev = 0; lev <= finest_level; ++lev)
-        density_nph.emplace_back(grids[lev], dmap[lev], 1, 1, MFInfo(),  *ebfactory[lev]);
+    for (int lev = 0; lev <= finest_level; ++lev) {
+        density_nph.emplace_back(grids[lev], dmap[lev], 1, nghost, MFInfo(),  *ebfactory[lev]);
+        density_nph[lev].setVal(0.0);
+    }
+
 
 
     // *************************************************************************************
@@ -252,6 +255,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 });
             } // mfi
         } // lev
+
+        Real half_time = time + 0.5*l_dt;
+        mfix_set_density_bcs(half_time, GetVecOfPtrs(density_nph));
 
     } // not constant density
 
@@ -430,7 +436,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
          Array4<Real const> const& divtau_o = ld.divtau_o->const_array(mfi);
          Array4<Real const> const& dudt_o   = conv_u_old[lev]->const_array(mfi);
          Array4<Real const> const& gp       = ld.gp->const_array(mfi);
-         Array4<Real const> const& rho_nph  = density_nph[lev].const_array(mfi);
          Array4<Real const> const& epg      = ld.ep_g->const_array(mfi);
          Array4<Real const> const& vel_f    = vel_forces[lev].const_array(mfi);
 
