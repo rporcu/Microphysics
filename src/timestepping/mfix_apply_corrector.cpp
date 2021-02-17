@@ -646,7 +646,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       }
     }
 
-    mfix_apply_nodal_projection(S_cc, new_time, l_dt, l_prev_dt, proj_2);
+    mfix_apply_nodal_projection(S_cc, new_time, l_dt, l_prev_dt, proj_2,
+                                GetVecOfConstPtrs(density_nph));
 
     for (int lev(0); lev <= finest_level; ++lev) {
       delete depdt[lev];

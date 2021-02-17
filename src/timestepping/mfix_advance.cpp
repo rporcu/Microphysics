@@ -29,7 +29,8 @@ mfix::mfix_project_velocity ()
     for (int lev(0); lev <= finest_level; ++lev)
       depdt[lev] = MFHelpers::createFrom(*(m_leveldata[lev]->ep_g), 0.0, 1).release();
 
-    mfix_apply_nodal_projection(depdt, time, dummy_dt, dummy_dt, proj_2);
+    mfix_apply_nodal_projection(depdt, time, dummy_dt, dummy_dt, proj_2,
+                                get_ro_g_const());
 
     for (int lev(0); lev <= finest_level; ++lev)
       delete depdt[lev];

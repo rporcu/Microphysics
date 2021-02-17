@@ -561,7 +561,8 @@ class mfix : public AmrCore
                                       amrex::Real a_time,
                                       amrex::Real a_dt,
                                       amrex::Real a_prev_dt,
-                                      bool proj_2 );
+                                      bool proj_2,
+                                      amrex::Vector<amrex::MultiFab const*> const& density);
 
   public:
 

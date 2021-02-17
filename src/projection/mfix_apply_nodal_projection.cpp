@@ -24,7 +24,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
                                    Real a_time,
                                    Real a_dt,
                                    Real a_prev_dt,
-                                   bool proj_2 )
+                                   bool proj_2,
+                                   amrex::Vector<amrex::MultiFab const*> const& density)
 {
     BL_PROFILE("mfix::mfix_apply_nodal_projection");
 
@@ -44,7 +45,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
             // Convert velocities to momenta
             for (int n(0); n < 3; ++n)
                 MultiFab::Multiply(*m_leveldata[lev]->vel_g,
-                                   *m_leveldata[lev]->ro_g,
+                                   *density[lev],
                                    0, n, 1, m_leveldata[lev]->vel_g->nGrow());
 
             MultiFab::Saxpy(*m_leveldata[lev]->vel_g, a_dt,
@@ -54,7 +55,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
             // Convert momenta back to velocities
             for (int n(0); n < 3; n++)
                 MultiFab::Divide(*m_leveldata[lev]->vel_g,
-                                 *m_leveldata[lev]->ro_g, 0, n, 1,
+                                 *density[lev], 0, n, 1,
                                  m_leveldata[lev]->vel_g->nGrow());
         }
 
@@ -138,7 +139,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     {
         sigma[lev].define(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
         MultiFab::Copy(sigma[lev], *m_leveldata[lev]->ep_g, 0, 0, 1, 0);
-        MultiFab::Divide(sigma[lev], *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
+        MultiFab::Divide(sigma[lev], *density[lev], 0, 0, 1, 0);
     }
 
     //
