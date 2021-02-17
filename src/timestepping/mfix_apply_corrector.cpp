@@ -240,7 +240,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     if (!advect_density)
     {
         for (int lev = 0; lev <= finest_level; lev++)
-            MultiFab::Copy(density_nph[lev], *(m_leveldata[lev]->ro_go), 0, 0, 1, 1);
+            MultiFab::Copy(density_nph[lev], *(m_leveldata[lev]->ro_go), 0, 0, 1, nghost);
 
     } else {
         for (int lev = 0; lev <= finest_level; lev++)
