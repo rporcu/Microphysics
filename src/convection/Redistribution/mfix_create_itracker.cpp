@@ -11,9 +11,10 @@ void redistribution::make_itracker (
                        Array4<Real const> const& apz,
                        Array4<Real const> const& vfrac,
                        Array4<int> const& itracker,
-                       Geometry& lev_geom)
+                       Geometry& lev_geom,
+                       std::string redist_type)
 {
-    bool debug_print = false;
+    // bool debug_print = false;
 
     const Box domain = lev_geom.Domain();
 
@@ -46,13 +47,15 @@ void redistribution::make_itracker (
         amrex::Print() << " IN MERGE_REDISTRIBUTE DOING BOX " << bx << std::endl;
 #endif
 
-    amrex::ParallelFor(bx,
+    amrex::ParallelFor(Box(itracker),
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
         itracker(i,j,k,0) = 0;
     });
 
-    amrex::ParallelFor(bx,
+    Box const& bxg4 = amrex::grow(bx,4);
+
+    amrex::ParallelFor(bxg4,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
        if (vfrac(i,j,k) > 0.0 && vfrac(i,j,k) < 0.5)
@@ -72,9 +75,12 @@ void redistribution::make_itracker (
            nz -= 2.*small_norm;
            ny -= small_norm;
 
-           bool xdir_ok = is_periodic_x || (i != domain.smallEnd(0) && i != domain.bigEnd(0)) ;
-           bool ydir_ok = is_periodic_y || (j != domain.smallEnd(1) && j != domain.bigEnd(1)) ;
-           bool zdir_ok = is_periodic_z || (k != domain.smallEnd(2) && k != domain.bigEnd(2)) ;
+           bool xdir_mns_ok = (is_periodic_x || (i != domain.smallEnd(0)));
+           bool xdir_pls_ok = (is_periodic_x || (i != domain.bigEnd(0)  ));
+           bool ydir_mns_ok = (is_periodic_y || (j != domain.smallEnd(1)));
+           bool ydir_pls_ok = (is_periodic_y || (j != domain.bigEnd(1)  ));
+           bool zdir_mns_ok = (is_periodic_z || (k != domain.smallEnd(2)));
+           bool zdir_pls_ok = (is_periodic_z || (k != domain.bigEnd(2)  ));
 
            // x-component of normal is greatest
            if ( (std::abs(nx) > std::abs(ny)) &&
@@ -102,51 +108,32 @@ void redistribution::make_itracker (
                    itracker(i,j,k,1) = 13;
            }
 
-           // Override above logic if at a domain boundary (and non-periodic)
-           if (!xdir_ok)
+           // Override above logic if trying to reach outside a domain boundary (and non-periodic)
+           if ( (!xdir_mns_ok && (itracker(i,j,k,1) == 4)) ||
+                (!xdir_pls_ok && (itracker(i,j,k,1) == 5)) )
            {
                if ( (std::abs(ny) > std::abs(nz)) )
-               {
-                   if (ny > 0)
-                       itracker(i,j,k,1) = 7;
-                   else
-                       itracker(i,j,k,1) = 2;
-               } else {
-                   if (nz > 0)
-                       itracker(i,j,k,1) = 22;
-                   else
-                       itracker(i,j,k,1) = 13;
-               }
+                   itracker(i,j,k,1) = (ny > 0) ? 7 : 2;
+               else
+                   itracker(i,j,k,1) = (nz > 0) ? 22 : 13;
            }
-           if (!ydir_ok)
+
+           if ( (!ydir_mns_ok && (itracker(i,j,k,1) == 2)) ||
+                (!ydir_pls_ok && (itracker(i,j,k,1) == 7)) )
            {
                if ( (std::abs(nx) > std::abs(nz)) )
-               {
-                   if (nx > 0)
-                       itracker(i,j,k,1) = 5;
-                   else
-                       itracker(i,j,k,1) = 4;
-               } else {
-                   if (nz > 0)
-                       itracker(i,j,k,1) = 22;
-                   else
-                       itracker(i,j,k,1) = 13;
-               }
+                   itracker(i,j,k,1) = (nx > 0) ? 5 : 4;
+               else
+                   itracker(i,j,k,1) = (nx > 0) ? 22 : 13;
            }
-           if (!zdir_ok)
+
+           if ( (!zdir_mns_ok && (itracker(i,j,k,1) == 13)) ||
+                (!zdir_pls_ok && (itracker(i,j,k,1) == 22)) )
            {
                if ( (std::abs(nx) > std::abs(ny)) )
-               {
-                   if (nx > 0)
-                       itracker(i,j,k,1) = 5;
-                   else
-                       itracker(i,j,k,1) = 4;
-               } else {
-                   if (ny > 0)
-                       itracker(i,j,k,1) = 7;
-                   else
-                       itracker(i,j,k,1) = 2;
-               }
+                   itracker(i,j,k,1) = (nx > 0) ? 5 : 4;
+               else
+                   itracker(i,j,k,1) = (nx > 0) ? 7 : 2;
            }
 
            // (i,j,k) merges with at least one cell now
@@ -177,49 +164,28 @@ void redistribution::make_itracker (
                // Original offset was in x-direction
                if (joff == 0 and koff == 0)
                {
-                   if ( (std::abs(ny) > std::abs(nz)) )
-                   {
-                       if (ny > 0)
-                           itracker(i,j,k,2) = 7;
-                       else
-                           itracker(i,j,k,2) = 2;
+                   if ( (std::abs(ny) > std::abs(nz)) ) {
+                       itracker(i,j,k,2) = (ny > 0) ? 7 : 2;
                    } else {
-                       if (nz > 0)
-                           itracker(i,j,k,2) = 22;
-                       else
-                           itracker(i,j,k,2) = 13;
+                       itracker(i,j,k,2) = (nz > 0) ? 22 : 13;
                    }
 
                // Original offset was in y-direction
                } else if (ioff == 0 and koff == 0)
                {
-                   if ( (std::abs(nx) > std::abs(nz)) )
-                   {
-                       if (nx > 0)
-                           itracker(i,j,k,2) = 5;
-                       else
-                           itracker(i,j,k,2) = 4;
+                   if ( (std::abs(nx) > std::abs(nz)) ) {
+                       itracker(i,j,k,2) = (nx > 0) ? 5 : 4;
                    } else {
-                       if (nz > 0)
-                           itracker(i,j,k,2) = 22;
-                       else
-                           itracker(i,j,k,2) = 13;
+                       itracker(i,j,k,2) = (nz > 0) ? 22 : 13;
                    }
 
                // Original offset was in z-direction
                } else if (ioff == 0 and joff == 0)
                {
-                   if ( (std::abs(nx) > std::abs(ny)) )
-                   {
-                       if (nx > 0)
-                           itracker(i,j,k,2) = 5;
-                       else
-                           itracker(i,j,k,2) = 4;
+                   if ( (std::abs(nx) > std::abs(ny)) ) {
+                       itracker(i,j,k,2) = (nx > 0) ? 5 : 4;
                    } else {
-                       if (ny > 0)
-                           itracker(i,j,k,2) = 7;
-                       else
-                           itracker(i,j,k,2) = 2;
+                       itracker(i,j,k,2) = (ny > 0) ? 7 : 2;
                    }
                }
 
@@ -299,11 +265,13 @@ void redistribution::make_itracker (
        }
     });
 
+    if (redist_type == "State") return;
+
     // At this point every cell knows who it wants to merge with, but
     //   (1) not who wants to merge with it
     //   (2) not who its neighbor also wants to merge with
     // In this loop we only address (1)
-    amrex::ParallelFor(bx,
+    amrex::ParallelFor(bxg4,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
        // Here we don't test on vfrac because some of the neighbors are full cells
@@ -317,20 +285,22 @@ void redistribution::make_itracker (
                int joff = jmap[itracker(i,j,k,ipair)];
                int koff = kmap[itracker(i,j,k,ipair)];
 
-               int n_of_nbor = itracker(i+ioff,j+joff,k+koff,0);
-               bool found = false;
-               for (int ipair_nbor = 1; ipair_nbor <= n_of_nbor; ipair_nbor++)
+               if (bxg4.contains(IntVect(i+ioff,j+joff,k+koff)))
                {
-                   if (imap[itracker(i+ioff,j+joff,k+koff,ipair_nbor)] + ioff == 0 &&
-                       jmap[itracker(i+ioff,j+joff,k+koff,ipair_nbor)] + joff == 0 &&
-                       kmap[itracker(i+ioff,j+joff,k+koff,ipair_nbor)] + koff == 0)
-                       found = true;
-               }
-               if  (!found)
-               {
-                   // My neighbor didn't know about me so add me to my nbor's list of neighbors
-                   itracker(i+ioff,j+joff,k+koff,0) += 1;
-                   itracker(i+ioff,j+joff,k+koff,n_of_nbor+1) = inv_map[itracker(i,j,k,ipair)];
+                   int n_of_nbor = itracker(i+ioff,j+joff,k+koff,0);
+                   bool found = false;
+                   for (int ipair_nbor = 1; ipair_nbor <= n_of_nbor; ipair_nbor++)
+                   {
+                       if (imap[itracker(i+ioff,j+joff,k+koff,ipair_nbor)] + ioff == 0 &&
+                           jmap[itracker(i+ioff,j+joff,k+koff,ipair_nbor)] + joff == 0 &&
+                           kmap[itracker(i+ioff,j+joff,k+koff,ipair_nbor)] + koff == 0)
+                           found = true;
+                   }
+                   if  (!found)
+                   {
+                       // My neigbor didn't know about me so add me to my nbor's list of neighbors
+                       itracker(i+ioff,j+joff,k+koff,0) += 1;
+                       itracker(i+ioff,j+joff,k+koff,n_of_nbor+1) = inv_map[itracker(i,j,k,ipair)];
 #if 0
                    if (debug_print)
                        amrex::Print() << "Cell   " << IntVect(i,j,k) << " had nbor " << IntVect(i+ioff,j+joff,k+koff)
@@ -342,13 +312,14 @@ void redistribution::make_itracker (
                                                                k+koff+kmap[itracker(i+ioff,j+joff,k+koff,n_of_nbor+1)])
                                        << " to the nbor list of " << IntVect(i+ioff,j+joff,k+koff) << std::endl;
 #endif
-               }
-          }
-       }
+                   } // found
+               } //bxg4 contains
+          } // ipair
+       } // itracker
     });
 
     // Here we address (2), i.e. we want the neighbor of my neighbor to be my neighbor
-    amrex::ParallelFor(bx,
+    amrex::ParallelFor(bxg4,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
        // Test on whether this cell has any neighbors and not already all seven neighbors
@@ -362,17 +333,13 @@ void redistribution::make_itracker (
                int j_n = j + jmap[itracker(i,j,k,ipair)];
                int k_n = k + kmap[itracker(i,j,k,ipair)];
 
-#if 0
-               if (debug_print)
-                   amrex::Print() << "WORKING ON CELL " << IntVect(i,j,k) << " and its nbor " << IntVect(i_n,j_n,k_n) << std::endl;
-#endif
-
-               // Loop over the neighbors of my neighbors
-               // If any of these aren't already my neighbor, make them my neighbor
-               int ipair_n = 1;
-               while (ipair_n <= itracker(i_n,j_n,k_n,0))
+               if (bxg4.contains(IntVect(i_n,j_n,k_n)))
                {
-                    // amrex::Print() << " IPAIR_N IS " << ipair_n << std::endl;
+                 // Loop over the neighbors of my neighbors
+                 // If any of these aren't already my neighbor, make them my neighbor
+                 int ipair_n = 1;
+                 while (ipair_n <= itracker(i_n,j_n,k_n,0))
+                 {
                     // (i_nn,j_nn,k_nn) is in the nbhd of (i_n,j_n,k_n)
                     int i_nn = i_n + imap[itracker(i_n,j_n,k_n,ipair_n)];
                     int j_nn = j_n + jmap[itracker(i_n,j_n,k_n,ipair_n)];
@@ -450,9 +417,11 @@ void redistribution::make_itracker (
 #endif
                     }
                     ipair_n++;
-               }
-          }
-       }
+
+               } // while
+            } // bxg4 contains
+          } // ipair
+       } // itracker
     });
 }
 #endif
