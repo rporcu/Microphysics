@@ -80,6 +80,8 @@ class mfix : public AmrCore
 
     void ResizeArrays ();
 
+    void InitialRedistribution (amrex::Real l_time);
+
     void WriteCheckPointFile (std::string & check_file_name,
                               int nstep = 0, Real dt = 0.0, Real time = 0.0);
 
@@ -1297,26 +1299,71 @@ class mfix : public AmrCore
 
     bool mfix_update_ebfactory (int a_lev);
 
+  // Number of ghost cells for field arrays.
+  int nghost_state () const {
+    if (!EBFactory(0).isAllRegular())
+      {
+        if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
+          return 6;
+        else if (advection_type() == AdvectionType::Godunov && m_redistribution_type != "StateRedist")
+          return 5;
+        else if (advection_type() == AdvectionType::MOL && m_redistribution_type == "StateRedist")
+          return 5;
+        else
+          return 4;
+      }
+    {
+      return (advection_type() != AdvectionType::MOL) ? 3 : 2;
+    }
+  }
 
-    // For Godunov, we need 1 ghost cell
+    // For Godunov, we need 1 ghost cell in addition to the Box we are filling
     // For MOL    , we need 0 ghost cells
-    int nghost_force () const { return (advection_type() != AdvectionType::MOL) ? 3 : 0; }
+    int nghost_force () const
+    {
+      if (advection_type() == AdvectionType::MOL)
+        return 0;
+      else if (m_redistribution_type == "StateRedist")
+        return 4;
+      else
+        return 3;
+    }
+
 
     int nghost_mac () const {
-      if (!EBFactory(0).isAllRegular()) return (advection_type() != AdvectionType::MOL) ? 4 : 3;
-      return (advection_type() != AdvectionType::MOL) ? 1 : 0;
+      if (!EBFactory(0).isAllRegular()) return (advection_type() == AdvectionType::Godunov) ? 4 : 3;
+      return (advection_type() == AdvectionType::Godunov) ? 1 : 0;
     }
 
-    int nghost_eb_basic () const {
-     return (advection_type() != AdvectionType::MOL) ? 5 : 4;
+    int nghost_eb_basic () const
+    {
+      if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
+        return 6;
+      else if (advection_type() == AdvectionType::Godunov && m_redistribution_type != "StateRedist")
+        return 5;
+      else if (advection_type() == AdvectionType::MOL && m_redistribution_type == "StateRedist")
+        return 5;
+      else
+        return 4;
     }
 
-    int nghost_eb_volume () const {
-      return (advection_type() != AdvectionType::MOL) ? 5 : 4;
+    int nghost_eb_volume () const
+    {
+      if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
+            return 6;
+      else if (advection_type() == AdvectionType::Godunov && m_redistribution_type != "StateRedist")
+            return 5;
+      else if (advection_type() == AdvectionType::MOL && m_redistribution_type == "StateRedist")
+        return 5;
+      else
+        return 4;
     }
 
     int nghost_eb_full () const {
-      return 4;
+      if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
+        return 5;
+      else
+        return 4;
     }
 
 

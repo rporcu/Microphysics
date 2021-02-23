@@ -252,19 +252,18 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
         vfrac = fact.getVolFrac().const_array(mfi);
     }
 
-    Box rho_box = amrex::grow(bx,2);
-    if (advection_type() != AdvectionType::MOL)  rho_box.grow(1);
-    if (!regular) rho_box.grow(2);
-
     FArrayBox rhohgfab, rhotracfab, rhoXgkfab;
     Elixir eli_rh, eli_rt, eli_rXgk;
     Array4<Real> rhohg, rhotrac, rhoXgk;
 
+    // Make FABs holding (rho * hg), (rho * tracer), and (rho * Xgk)
+    // that are the same size as the original FABs
     if (l_advect_enthalpy) {
-      rhohgfab.resize(rho_box, 1);
+      Box rhohg_box(hg);
+      rhohgfab.resize(rhohg_box, 1);
       eli_rh = rhohgfab.elixir();
       rhohg = rhohgfab.array();
-      amrex::ParallelFor(rho_box, [rho, hg, rhohg]
+      amrex::ParallelFor(rhohg_box, [rho, hg, rhohg]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         rhohg(i,j,k) = rho(i,j,k) * hg(i,j,k);
@@ -272,10 +271,11 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
     }
 
     if (l_advect_tracer) {
-      rhotracfab.resize(rho_box, ntrac);
+      Box rhotrac_box(tra);
+      rhotracfab.resize(rhotrac_box, ntrac);
       eli_rt = rhotracfab.elixir();
       rhotrac = rhotracfab.array();
-      amrex::ParallelFor(rho_box, ntrac, [rho, tra, rhotrac]
+      amrex::ParallelFor(rhotrac_box, ntrac, [rho, tra, rhotrac]
       AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
       {
         rhotrac(i,j,k,n) = rho(i,j,k) * tra(i,j,k,n);
@@ -283,10 +283,11 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
     }
 
     if (l_advect_species) {
-      rhoXgkfab.resize(rho_box, l_nspecies);
+      Box rhoXgk_box(Xgk);
+      rhoXgkfab.resize(rhoXgk_box, l_nspecies);
       eli_rXgk = rhoXgkfab.elixir();
       rhoXgk = rhoXgkfab.array();
-      amrex::ParallelFor(rho_box, l_nspecies, [rho, Xgk, rhoXgk]
+      amrex::ParallelFor(rhoXgk_box, l_nspecies, [rho, Xgk, rhoXgk]
       AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
       {
         rhoXgk(i,j,k,n) = rho(i,j,k) * Xgk(i,j,k,n);
@@ -308,15 +309,30 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
     if (advection_type() == AdvectionType::Godunov) {
 
       int n_tmp_fac  = 14;
-      int n_tmp_grow = 4;
+
+      // n_tmp_grow is used to create tmpfab which is passed in to compute_godunov_advection
+      // (both regular and EB) as pointer "p" and is used to hold Imx/Ipx etc ...
+      int n_tmp_grow;
+      if (m_redistribution_type == "StateRedist")
+        n_tmp_grow = 5;
+      else
+        n_tmp_grow = 4;
 
       FArrayBox tmpfab(amrex::grow(bx,n_tmp_grow), nmaxcomp*n_tmp_fac+1);
       Elixir eli = tmpfab.elixir();
 
       Box gbx = bx;
-
       if (!regular) {
-        gbx.grow(1);
+        // We need 3 if we are doing state redistribution
+        if (m_redistribution_type == "StateRedist" ||
+            m_redistribution_type == "MergeRedist")
+          gbx.grow(3);
+        else if (m_redistribution_type == "FluxRedist")
+          gbx.grow(2);
+        else if (m_redistribution_type == "NoRedist")
+          gbx.grow(1);
+        else
+          amrex::Abort("Dont know this redistribution type");
       }
       // This one holds the convective term on a grown region so we can redistribute
       FArrayBox dUdt_tmpfab(gbx,nmaxcomp);
@@ -327,10 +343,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
       Array4<Real> scratch = scratch_fab.array();
       Elixir eli_scratch = scratch_fab.elixir();
 
-
-
       if (!regular) {
-
 
         // ***************************************************************************
         // Compute div (ep_u_mac * (u)) -- the update for velocity
@@ -354,8 +367,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
                                                geom[lev], true); // is_velocity
 
           redistribution::redistribute_eb(bx, ncomp, ccomp, dvdt, dUdt_tmp, vel, scratch,
-                                          ep_g, ep_umac, ep_vmac, ep_wmac, flag,
-                                          apx, apy, apz, vfrac,
+                                          ep_g, flag, apx, apy, apz, vfrac,
                                           fcx, fcy, fcz, ccc, geom[lev],
                                           l_dt, m_redistribution_type);
         } //end velocity
@@ -382,8 +394,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
                                                geom[lev]);
 
           redistribution::redistribute_eb(bx, ncomp, ccomp, dsdt, dUdt_tmp, rho, scratch,
-                                          ep_g, ep_umac, ep_vmac, ep_wmac, flag,
-                                          apx, apy, apz, vfrac,
+                                          ep_g, flag, apx, apy, apz, vfrac,
                                           fcx, fcy, fcz, ccc, geom[lev],
                                           l_dt, m_redistribution_type);
         } // end density
@@ -409,8 +420,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
                                                geom[lev]);
 
           redistribution::redistribute_eb(bx, ncomp, ccomp, dsdt, dUdt_tmp, rhohg, scratch,
-                                          ep_g, ep_umac, ep_vmac, ep_wmac, flag,
-                                          apx, apy, apz, vfrac,
+                                          ep_g, flag, apx, apy, apz, vfrac,
                                           fcx, fcy, fcz, ccc, geom[lev],
                                           l_dt, m_redistribution_type);
         } // end enthalpy
@@ -436,8 +446,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
                                                geom[lev]);
 
           redistribution::redistribute_eb(bx, ncomp, ccomp, dsdt, dUdt_tmp, rhotrac, scratch,
-                                          ep_g, ep_umac, ep_vmac, ep_wmac, flag,
-                                          apx, apy, apz, vfrac,
+                                          ep_g, flag, apx, apy, apz, vfrac,
                                           fcx, fcy, fcz, ccc, geom[lev],
                                           l_dt, m_redistribution_type);
         } // end tracer
@@ -463,8 +472,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
                                                geom[lev]);
 
           redistribution::redistribute_eb(bx, ncomp, ccomp, dXdt, dUdt_tmp, rhoXgk, scratch,
-                                          ep_g, ep_umac, ep_vmac, ep_wmac, flag,
-                                          apx, apy, apz, vfrac,
+                                          ep_g, flag, apx, apy, apz, vfrac,
                                           fcx, fcy, fcz, ccc, geom[lev],
                                           l_dt, m_redistribution_type);
         } // end species
@@ -622,8 +630,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
                                           flag, vfrac, apx, apy, apz, geom[lev]);
 
           redistribution::redistribute_eb(bx, ncomp, ccomp, dvdt, dUdt_tmp, vel, scratch,
-                                          ep_g, ep_umac, ep_vmac, ep_wmac, flag,
-                                          apx, apy, apz, vfrac,
+                                          ep_g, flag, apx, apy, apz, vfrac,
                                           fcx, fcy, fcz, ccc, geom[lev],
                                           l_dt, m_redistribution_type);
 
@@ -653,8 +660,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
                                           flag, vfrac, apx, apy, apz, geom[lev]);
 
           redistribution::redistribute_eb(bx, ncomp, ccomp, dsdt, dUdt_tmp, rho, scratch,
-                                          ep_g, ep_umac, ep_vmac, ep_wmac, flag,
-                                          apx, apy, apz, vfrac,
+                                          ep_g, flag, apx, apy, apz, vfrac,
                                           fcx, fcy, fcz, ccc, geom[lev],
                                           l_dt, m_redistribution_type);
         } // end density
@@ -682,8 +688,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
                                           flag, vfrac, apx, apy, apz, geom[lev]);
 
           redistribution::redistribute_eb(bx, ncomp, ccomp, dsdt, dUdt_tmp, rhohg, scratch,
-                                          ep_g, ep_umac, ep_vmac, ep_wmac, flag,
-                                          apx, apy, apz, vfrac,
+                                          ep_g, flag, apx, apy, apz, vfrac,
                                           fcx, fcy, fcz, ccc, geom[lev],
                                           l_dt, m_redistribution_type);
         } // end enthalpy
@@ -711,8 +716,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
                                           flag, vfrac, apx, apy, apz, geom[lev]);
 
           redistribution::redistribute_eb(bx, ncomp, ccomp, dsdt, dUdt_tmp, rhotrac, scratch,
-                                          ep_g, ep_umac, ep_vmac, ep_wmac, flag,
-                                          apx, apy, apz, vfrac,
+                                          ep_g, flag, apx, apy, apz, vfrac,
                                           fcx, fcy, fcz, ccc, geom[lev],
                                           l_dt, m_redistribution_type);
         } // end tracer
@@ -740,8 +744,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
                                           flag, vfrac, apx, apy, apz, geom[lev]);
 
           redistribution::redistribute_eb(bx, ncomp, ccomp, dXdt, dUdt_tmp, rhoXgk, scratch,
-                                          ep_g, ep_umac, ep_vmac, ep_wmac, flag,
-                                          apx, apy, apz, vfrac,
+                                          ep_g, flag, apx, apy, apz, vfrac,
                                           fcx, fcy, fcz, ccc, geom[lev],
                                           l_dt, m_redistribution_type);
 
