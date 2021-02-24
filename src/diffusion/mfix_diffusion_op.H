@@ -89,7 +89,6 @@ class DiffusionOp
     // Explicit tensor viscous term
     void ComputeDivTau (const amrex::Vector< amrex::MultiFab* >& divtau_out,
                         const amrex::Vector< amrex::MultiFab* >& vel_in,
-                        const amrex::Vector< amrex::MultiFab* >& ro_in,
                         const amrex::Vector< amrex::MultiFab* >& ep_in,
                         const amrex::Vector< amrex::MultiFab* >& eta_in);
 

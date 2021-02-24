@@ -138,8 +138,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
 
     if (need_divtau()) {
-      diffusion_op->ComputeDivTau(get_divtau(), get_vel_g_old(), get_ro_g_old(),
-                                  get_ep_g(), get_mu_g());
+      diffusion_op->ComputeDivTau(get_divtau(), get_vel_g_old(), get_ep_g(), get_mu_g());
     }
 
     // *************************************************************************************
@@ -436,6 +435,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
          Array4<Real const> const& divtau_o = ld.divtau_o->const_array(mfi);
          Array4<Real const> const& dudt_o   = conv_u_old[lev]->const_array(mfi);
          Array4<Real const> const& gp       = ld.gp->const_array(mfi);
+         Array4<Real const> const& ro_g_o   = ld.ro_go->const_array(mfi);
          Array4<Real const> const& epg      = ld.ep_g->const_array(mfi);
          Array4<Real const> const& vel_f    = vel_forces[lev].const_array(mfi);
 
@@ -443,11 +443,13 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
          const RealVect gp0_dev(gp0);
          const RealVect gravity_dev(gravity);
 
-         amrex::ParallelFor(bx, [epg,vel_o,dudt_o,divtau_o,gp0_dev,gravity_dev,
-         gp,l_dt,vel_n,vel_f,l_explicit_diff]
+         amrex::ParallelFor(bx, [epg,ro_g_o,vel_o,dudt_o,divtau_o,gp0_dev,
+             gravity_dev,gp,l_dt,vel_n,vel_f,l_explicit_diff]
          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
            const Real epg_loc = epg(i,j,k);
+           const Real rog_loc = ro_g_o(i,j,k);
+           const Real denom = 1.0 / (epg_loc*rog_loc);
 
            Real vel_nx = epg_loc*vel_o(i,j,k,0) + l_dt*dudt_o(i,j,k,0);
            Real vel_ny = epg_loc*vel_o(i,j,k,1) + l_dt*dudt_o(i,j,k,1);
@@ -459,9 +461,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
            if (l_explicit_diff)
            {
-             vel_nx += l_dt * divtau_o(i,j,k,0);
-             vel_ny += l_dt * divtau_o(i,j,k,1);
-             vel_nz += l_dt * divtau_o(i,j,k,2);
+             vel_nx += l_dt * (divtau_o(i,j,k,0) * denom);
+             vel_ny += l_dt * (divtau_o(i,j,k,1) * denom);
+             vel_nz += l_dt * (divtau_o(i,j,k,2) * denom);
            }
 
            vel_nx += l_dt * vel_f(i,j,k,0);

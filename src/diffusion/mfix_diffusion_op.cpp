@@ -225,7 +225,6 @@ void DiffusionOp::setSolverSettings (MLMG& solver)
 
 void DiffusionOp::ComputeDivTau (const Vector< MultiFab* >& divtau_out,
                                  const Vector< MultiFab* >& vel_in,
-                                 const Vector< MultiFab* >& ro_in,
                                  const Vector< MultiFab* >& ep_in,
                                  const Vector< MultiFab* >& eta_in)
 {
@@ -272,12 +271,6 @@ void DiffusionOp::ComputeDivTau (const Vector< MultiFab* >& divtau_out,
                                                  0,
                                                  AMREX_SPACEDIM,
                                                  geom[lev]);
-
-       // Divide by density
-       for (int n = 0; n < 3; n++) {
-         MultiFab::Divide( *divtau_out[lev], *ro_in[lev], 0, n, 1, 0 );
-         MultiFab::Divide( *divtau_out[lev], *ep_in[lev], 0, n, 1, 0 );
-       }
 
        EB_set_covered(*divtau_out[lev], 0, divtau_out[lev]->nComp(), divtau_out[lev]->nGrow(), 0.);
     }

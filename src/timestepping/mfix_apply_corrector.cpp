@@ -488,6 +488,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
          Array4<Real const> const& dudt     = conv_u[lev]->const_array(mfi);
          Array4<Real const> const& gp       = ld.gp->const_array(mfi);
          Array4<Real const> const& epg      = ld.ep_g->const_array(mfi);
+         Array4<Real const> const& ro_g_o   = ld.ro_go->const_array(mfi);
          Array4<Real const> const& divtau_o = ld.divtau_o->const_array(mfi);
          Array4<Real const> const& vel_f    = vel_forces[lev].const_array(mfi);
 
@@ -495,11 +496,13 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
          const RealVect gp0_dev(gp0);
          const RealVect gravity_dev(gravity);
 
-         amrex::ParallelFor(bx, [vel_n,vel_o,dudt_o,dudt,gp,vel_f,epg,divtau_o,
-             gp0_dev,gravity_dev,l_dt]
+         amrex::ParallelFor(bx, [vel_n,vel_o,dudt_o,dudt,gp,vel_f,epg,ro_g_o,
+             divtau_o,gp0_dev,gravity_dev,l_dt]
            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
            const Real epg_loc = epg(i,j,k);
+           const Real rog_loc = ro_g_o(i,j,k);
+           const Real denom = 1.0 / (epg_loc*rog_loc);
 
            Real vel_nx = epg_loc*vel_o(i,j,k,0) + .5*l_dt*(dudt_o(i,j,k,0)+dudt(i,j,k,0));
            Real vel_ny = epg_loc*vel_o(i,j,k,1) + .5*l_dt*(dudt_o(i,j,k,1)+dudt(i,j,k,1));
@@ -512,9 +515,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
            // Crank-Nicolson so we should only add half of the explicit term here, but
            //     we go ahead and add all of it now before doing the implicit drag solve,
            //     then we will subtract half of it after the drag solve
-           vel_nx += l_dt * divtau_o(i,j,k,0);
-           vel_ny += l_dt * divtau_o(i,j,k,1);
-           vel_nz += l_dt * divtau_o(i,j,k,2);
+           vel_nx += l_dt * (divtau_o(i,j,k,0) * denom);
+           vel_ny += l_dt * (divtau_o(i,j,k,1) * denom);
+           vel_nz += l_dt * (divtau_o(i,j,k,2) * denom);
 
            vel_nx += l_dt * vel_f(i,j,k,0);
            vel_ny += l_dt * vel_f(i,j,k,1);
@@ -547,16 +550,20 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
           for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
           {
               Box const& bx = mfi.tilebox();
+              Array4<Real const> const& ep_g    = ld.ep_g->const_array(mfi);
+              Array4<Real const> const& ro_g_n  = ld.ro_g->const_array(mfi);
               Array4<Real      > const& h_g_n   = ld.h_g->array(mfi);
               Array4<Real      > const& T_g_n   = ld.T_g->array(mfi);
               Array4<Real const> const& cp_g    = ld.cp_g->array(mfi);
               Array4<Real const> const& lap_T_o = lap_T_old[lev]->const_array(mfi);
 
-              amrex::ParallelFor(bx, [h_g_n,T_g_n,cp_g,lap_T_o,l_dt]
+              amrex::ParallelFor(bx, [ep_g,ro_g_n,h_g_n,T_g_n,cp_g,lap_T_o,l_dt]
                 AMREX_GPU_DEVICE (int i, int j, int k) noexcept
               {
+                const Real denom = 1.0 / (ro_g_n(i,j,k) * ep_g(i,j,k));
+
                 Real h_g = h_g_n(i,j,k);
-                h_g -= .5 * l_dt * lap_T_o(i,j,k);
+                h_g -= .5 * l_dt * (lap_T_o(i,j,k) * denom);
 
                 h_g_n(i,j,k) = h_g;
                 T_g_n(i,j,k) = h_g / cp_g(i,j,k);
@@ -567,7 +574,33 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
     for (int lev = 0; lev <= finest_level; lev++)
     {
-      MultiFab::Saxpy(*m_leveldata[lev]->vel_g, -l_dt/2.0, *m_leveldata[lev]->divtau_o, 0, 0, 3, 0);
+       auto& ld = *m_leveldata[lev];
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+       for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+       {
+         // Tilebox
+         Box bx = mfi.tilebox ();
+
+         Array4<Real      > const& vel_n    = ld.vel_g->array(mfi);
+         Array4<Real const> const& epg      = ld.ep_g->const_array(mfi);
+         Array4<Real const> const& ro_g_o   = ld.ro_go->const_array(mfi);
+         Array4<Real const> const& divtau_o = ld.divtau_o->const_array(mfi);
+
+         amrex::ParallelFor(bx, [vel_n,epg,ro_g_o,divtau_o,l_dt]
+           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+         {
+           const Real epg_loc = epg(i,j,k);
+           const Real rog_loc = ro_g_o(i,j,k);
+           const Real denom = 1.0 / (epg_loc*rog_loc);
+
+           vel_n(i,j,k,0) -= (.5 * l_dt) * (divtau_o(i,j,k,0) * denom);
+           vel_n(i,j,k,1) -= (.5 * l_dt) * (divtau_o(i,j,k,1) * denom);
+           vel_n(i,j,k,2) -= (.5 * l_dt) * (divtau_o(i,j,k,2) * denom);
+         });
+       }
     }
 
     // *************************************************************************************
