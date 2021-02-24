@@ -54,10 +54,15 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
 
     pstate = 1;
 
+    int max_particle_phase(-1);
+
     for (int i = 0; i < np; i++)
     {
       // Read from input file
       ifs >> pphase;
+
+      max_particle_phase = amrex::max(max_particle_phase, pphase);
+
       ifs >> host_particles[i].pos(0);
       ifs >> host_particles[i].pos(1);
       ifs >> host_particles[i].pos(2);
@@ -103,6 +108,13 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
       if (!ifs.good())
           amrex::Abort("Error initializing particles from Ascii file. \n");
     }
+
+    // NOTE : No need to do a ParallelDescriptor::ReduceIntMax on
+    // max_particle_phase because we're reading the particle_input.dat only on
+    // the IO proc
+
+    if (max_particle_phase > DEM::NPHASE)
+      amrex::Abort("One or more particle in the particle_input.dat has a phase number that is not present in the inputs file");
 
     auto& aos = particles.GetArrayOfStructs();
     Gpu::DeviceVector<ParticleType>& gpu_particles = aos();
