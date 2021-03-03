@@ -298,7 +298,7 @@ void redistribution::make_itracker (
                    }
                    if  (!found)
                    {
-                       // My neigbor didn't know about me so add me to my nbor's list of neighbors
+                       // My neighbor didn't know about me so add me to my nbor's list of neighbors
                        itracker(i+ioff,j+joff,k+koff,0) += 1;
                        itracker(i+ioff,j+joff,k+koff,n_of_nbor+1) = inv_map[itracker(i,j,k,ipair)];
 #if 0

@@ -50,7 +50,7 @@ redistribution::merge_redistribute ( Box const& bx, int ncomp, int icomp,
 //  if (debug_print)
 //      amrex::Print() << " IN MERGE_REDISTRIBUTE DOING BOX " << bx << " with ncomp " << ncomp << std::endl;
 
-    const Real small_norm = 1.e-8;
+    // const Real small_norm = 1.e-8;
 
     // AMREX_D_TERM(const auto& is_periodic_x = lev_geom.isPeriodic(0);,
     //              const auto& is_periodic_y = lev_geom.isPeriodic(1);,

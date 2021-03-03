@@ -124,6 +124,7 @@ test:tiled-serial:
 test:multiple-parallel:
   variables:
     CTEST_CMD: srun ctest -R MGP
+    OMPI_MCA_rmaps_base_oversubscribe: 1
   <<: *ctest_template
 
 test:tiled-parallel-openmp:

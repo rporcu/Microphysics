@@ -1,38 +1,32 @@
 # Docker Image for running MfiX-Exa ctests
 
-FROM nvidia/cuda:11.0-devel-ubuntu18.04
+FROM ubuntu:20.04
 
-MAINTAINER Mark Meredith <mark.meredith@netl.doe.gov>
+LABEL maintainer="Mark Meredith <mark.meredith@netl.doe.gov>"
 
-ENV SHELLCHECK_VERSION v0.7.1
+ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get -qq update \
-  && apt-get -qq -y install \
-  ccache \
-  gfortran \
-  git \
-  libopenmpi-dev \
-  openmpi-bin \
-  python3 \
-  python3-setuptools \
-  python3-venv \
-  wget
+    && apt-get -qq -y install --no-install-recommends \
+    build-essential=12.8ubuntu1.1 \
+    ccache=3.7.7-1 \
+    git=1:2.25.1-1ubuntu3 \
+    libopenmpi-dev=4.0.3-0ubuntu1 \
+    openmpi-bin=4.0.3-0ubuntu1 \
+    python3-pip=20.0.2-5ubuntu1.1 \
+    python3-setuptools=45.2.0-1 \
+    python3-venv=3.8.2-0ubuntu2 \
+    shellcheck=0.7.0-2build2 \
+    && rm -rf /var/lib/apt
 
-RUN wget https://bootstrap.pypa.io/get-pip.py
-RUN python3 get-pip.py
-RUN python3 -m pip install cmake
-RUN python3 -m pip install codespell
-RUN python3 -m pip install conan
-RUN python3 -m pip install ninja
+RUN pip3 install --no-cache-dir \
+    cmake==3.18.4 \
+    codespell==2.0.0 \
+    conan==1.34.0 \
+    ninja==1.10.0.post2
 
 RUN printf '#!/bin/bash\nenv $@' > /usr/local/bin/srun
 RUN chmod +x /usr/local/bin/srun
-RUN ln -s /usr/bin/python3 /usr/local/bin/python
-
-RUN wget https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz \
-  && tar xf shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz \
-  && cp shellcheck-${SHELLCHECK_VERSION}/shellcheck /usr/local/bin/shellcheck \
-  && chmod a+x /usr/local/bin/shellcheck
 
 RUN useradd --create-home -s /bin/bash user
 WORKDIR /home/user
