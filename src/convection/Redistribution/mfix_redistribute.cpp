@@ -164,7 +164,7 @@ void redistribution::redistribute_initial_data (Box const& bx, int ncomp, int ic
                            fcx, fcy, fcz, ccc, itr, lev_geom);
 
     } else {
-       amrex::Error("Shouldnt be here with this redist type");
+       amrex::Error("Shouldn't be here with this redist type");
     }
 
 #endif
