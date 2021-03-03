@@ -448,16 +448,14 @@ void mfix::fillpatch_force (Real time, Vector<MultiFab*> const& force, int ng)
    * fault, because I have no idea what any of this means.              *
    * You're Welcome.                                                    */
   const int ncomp = force[0]->nComp();
-
-  amrex::Vector<amrex::BCRec> bcrec_force;
-  bcrec_force.resize(ncomp);
+  const auto& bcrec = get_force_bcrec();
 
   int l_probtype = -1;
   int lev = 0;
 
   {
     PhysBCFunct<GpuBndryFuncFab<MFIXForFill> > physbc
-          (geom[lev], bcrec_force, MFIXForFill{l_probtype});
+          (geom[lev], bcrec, MFIXForFill{l_probtype});
         FillPatchSingleLevel(*force[lev], IntVect(ng), time,
                              {force[lev]}, {time},
                              0, 0, ncomp, geom[lev],
@@ -466,16 +464,16 @@ void mfix::fillpatch_force (Real time, Vector<MultiFab*> const& force, int ng)
     for (lev = 1; lev <= finest_level; ++lev)
     {
         PhysBCFunct<GpuBndryFuncFab<MFIXForFill> > cphysbc
-            (geom[lev-1], bcrec_force, MFIXForFill{l_probtype});
+            (geom[lev-1], bcrec, MFIXForFill{l_probtype});
         PhysBCFunct<GpuBndryFuncFab<MFIXForFill> > fphysbc
-            (geom[lev  ], bcrec_force, MFIXForFill{l_probtype});
+            (geom[lev  ], bcrec, MFIXForFill{l_probtype});
         Interpolater* mapper = &pc_interp;
         FillPatchTwoLevels(*force[lev], IntVect(ng), time,
                            {force[lev-1]}, {time},
                            {force[lev  ]}, {time},
                            0, 0, ncomp, geom[lev-1], geom[lev],
                            cphysbc, 0, fphysbc, 0,
-                           refRatio(lev-1), mapper, bcrec_force, 0);
+                           refRatio(lev-1), mapper, bcrec, 0);
     }
 }
 
