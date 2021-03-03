@@ -31,7 +31,7 @@ mfix::mfix_set_temperature_bcs (Real time,
 }
 
 void
-mfix::set_temperature_bcs (Real time,
+mfix::set_temperature_bcs (Real /*time*/,
                            const int lev,
                            FArrayBox& T_g_fab,
                            const Box& domain)

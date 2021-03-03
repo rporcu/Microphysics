@@ -19,15 +19,15 @@ void set_ptr_to_mfix (mfix& mfix_for_fillpatching_in)
 // This interface must match the definition of the interface for
 //    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
 inline
-void VelFillBox (Box const& bx,
+void VelFillBox (Box const& /*bx*/,
                  Array4<amrex::Real> const& dest,
                  const int dcomp,
                  const int numcomp,
                  GeometryData const& geom,
                  const Real time_in,
-                 const BCRec* bcr,
-                 const int bcomp,
-                 const int orig_comp)
+                 const BCRec* /*bcr*/,
+                 const int /*bcomp*/,
+                 const int /*orig_comp*/)
 {
     if (dcomp != 0)
          amrex::Abort("Must have dcomp = 0 in VelFillBox");
@@ -65,14 +65,14 @@ void VelFillBox (Box const& bx,
 // This interface must match the definition of the interface for
 //    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
 inline
-void ScalarFillBox (Box const& bx,
+void ScalarFillBox (Box const& /*bx*/,
                     Array4<amrex::Real> const& dest,
                     const int dcomp,
                     const int numcomp,
                     GeometryData const& geom,
                     const Real time_in,
-                    const BCRec* bcr,
-                    const int bcomp,
+                    const BCRec* /*bcr*/,
+                    const int /*bcomp*/,
                     const int orig_comp)
 {
     if (dcomp != 0)
@@ -114,14 +114,14 @@ void ScalarFillBox (Box const& bx,
 // This interface must match the definition of the interface for
 //    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
 inline
-void SpeciesFillBox (Box const& bx,
+void SpeciesFillBox (Box const& /*bx*/,
                      Array4<amrex::Real> const& dest,
                      const int dcomp,
                      const int numcomp,
                      GeometryData const& geom,
                      const Real time_in,
-                     const BCRec* bcr,
-                     const int bcomp,
+                     const BCRec* /*bcr*/,
+                     const int /*bcomp*/,
                      const int orig_comp)
 {
     if (dcomp != 0)
@@ -501,14 +501,14 @@ mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
     int state_comp, num_comp;
 
     // State with ghost cells
-    MultiFab Sborder_u(grids[lev], dmap[lev], vel_in[lev]->nComp(), nghost,
+    MultiFab Sborder_u(grids[lev], dmap[lev], vel_in[lev]->nComp(), nghost_state(),
                        MFInfo(), *ebfactory[lev]);
     FillPatchVel(lev, time, Sborder_u, 0, Sborder_u.nComp(), bcs_u);
 
     // Copy each FAB back from Sborder_u into the vel array, complete with filled ghost cells
     MultiFab::Copy(*vel_in[lev], Sborder_u, 0, 0, vel_in[lev]->nComp(), vel_in[lev]->nGrow());
 
-    MultiFab Sborder_s(grids[lev], dmap[lev], 1, nghost, MFInfo(), *ebfactory[lev]);
+    MultiFab Sborder_s(grids[lev], dmap[lev], 1, nghost_state(), MFInfo(), *ebfactory[lev]);
 
     // We FillPatch density even if not advecting it because we need it in the projections
     state_comp =  0; // comp = 0 --> density
@@ -531,7 +531,7 @@ mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
     }
 
     if (advect_fluid_species) {
-      MultiFab Sborder_X(grids[lev], dmap[lev], FLUID::nspecies, nghost,
+      MultiFab Sborder_X(grids[lev], dmap[lev], FLUID::nspecies, nghost_state(),
                          MFInfo(), *ebfactory[lev]);
       Sborder_X.setVal(0);
       state_comp = 0;

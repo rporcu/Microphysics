@@ -225,10 +225,8 @@ mfix::mfix_calc_chem_txfr (const Real time,
         const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
         EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
-                                         {m_eb_basic_grow_cells,
-                                          m_eb_volume_grow_cells,
-                                          m_eb_full_grow_cells},
-                                         EBSupport::full);
+                                         {nghost_eb_basic(), nghost_eb_volume(),
+                                          nghost_eb_full()}, EBSupport::full);
 
         // Store gas velocity and volume fraction for interpolation
         interp_ptr = new MultiFab(pba, pdm, interp_comp, interp_ng, MFInfo(),

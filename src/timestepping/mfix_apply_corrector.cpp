@@ -105,7 +105,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
     for (int lev = 0; lev <= finest_level; ++lev)
     {
-        density_nph.emplace_back(grids[lev], dmap[lev], 1, nghost, MFInfo(),  *ebfactory[lev]);
+        density_nph.emplace_back(grids[lev], dmap[lev], 1, nghost_state(), MFInfo(),  *ebfactory[lev]);
 
         conv_u[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
         // 3 components: one for density, one for tracer and one for enthalpy
@@ -240,7 +240,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     if (!advect_density)
     {
         for (int lev = 0; lev <= finest_level; lev++)
-            MultiFab::Copy(density_nph[lev], *(m_leveldata[lev]->ro_go), 0, 0, 1, nghost);
+            MultiFab::Copy(density_nph[lev], *(m_leveldata[lev]->ro_go), 0, 0, 1, nghost_state());
 
     } else {
         for (int lev = 0; lev <= finest_level; lev++)

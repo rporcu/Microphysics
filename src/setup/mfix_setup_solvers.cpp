@@ -14,7 +14,7 @@ mfix::mfix_init_solvers ()
                                        BC::diff_scal_lobc,        BC::diff_scal_hibc,
                                        BC::diff_temperature_lobc, BC::diff_temperature_hibc,
                                        BC::diff_species_lobc,     BC::diff_species_hibc,
-                                       nghost));
+                                       nghost_state()));
 
     macproj.reset(new MacProjector(Geom(0,finest_level),
                                    MLMG::Location::FaceCentroid,  // Location of mac_vec

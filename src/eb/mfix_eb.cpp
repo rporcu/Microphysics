@@ -17,10 +17,13 @@ void mfix::make_eb_geometry ()
      *                                                                          *
      ***************************************************************************/
 
-    MakeBCArrays();
+    // nghost_tmp = 4 is enough to make the bc arrays for now; we will remake
+    // them later when we know what nghost_state() really is
+    const int nghost_tmp = 4;
+    MakeBCArrays(nghost_tmp);
 
     for (int lev = 0; lev < nlev; lev++)
-        mfix_set_bc_type(lev);
+        mfix_set_bc_type(lev,nghost_tmp);
 
     /****************************************************************************
      *                                                                          *
@@ -151,8 +154,8 @@ void mfix::make_eb_factories () {
     {
         ebfactory[lev].reset(
             new EBFArrayBoxFactory(*eb_levels[lev], geom[lev], grids[lev], dmap[lev],
-                                   {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                    m_eb_full_grow_cells}, m_eb_support_level));
+                                   {nghost_eb_basic(), nghost_eb_volume(),
+                                    nghost_eb_full()}, m_eb_support_level));
 
         // Grow EB factory by +2 in order to avoid edge cases. This is not
         // necessary for multi-level mfix.

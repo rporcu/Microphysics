@@ -415,7 +415,7 @@ class mfix : public AmrCore
 
     void ReportGridStats () const;
 
-    void mfix_set_bc_type (int lev);
+    void mfix_set_bc_type (int lev, int nghost_bc);
 
     void set_bcrec_lo (const int lev, const int dir, const int l_type);
     void set_bcrec_hi (const int lev, const int dir, const int l_type);
@@ -494,22 +494,21 @@ class mfix : public AmrCore
 
     //! Make a new level using provided BoxArray and DistributionMapping and
     //! fill with interpolated coarse level data. Called by AmrCore::regrid.
-    virtual void MakeNewLevelFromCoarse (int lev, Real time,
-                                         const BoxArray & ba,
-                                         const DistributionMapping & dm) override
+    virtual void MakeNewLevelFromCoarse (int /*lev*/, Real /*time*/,
+                                         const BoxArray & /*ba*/,
+                                         const DistributionMapping & /*dm*/) override
     { amrex::Abort("MakeNewLevelFromCoarse: To be implemented"); }
 
     //! Remake an existing level using provided BoxArray and
     //! DistributionMapping and fill with existing fine and coarse data. Called
     //! by AmrCore::regrid.
-    virtual void RemakeLevel (int lev,
-                              Real time,
-                              const BoxArray & ba,
-                              const DistributionMapping & dm) override
+    virtual void RemakeLevel (int /*lev*/, Real /*time*/,
+                              const BoxArray & /*ba*/,
+                              const DistributionMapping & /*dm*/) override
     { amrex::Abort("RemakeLevel: To be implemented"); }
 
     //! Delete level data.  Called by AmrCore::regrid.
-    virtual void ClearLevel (int lev) override
+    virtual void ClearLevel (int /*lev*/) override
     { amrex::Abort("ClearLevel: To be implemented"); }
 
     void mfix_init_fluid (int is_restarting, Real dt, Real stop_time);
@@ -689,7 +688,7 @@ class mfix : public AmrCore
   void make_eb_csg(std::string);
 #endif
 
-    void MakeBCArrays ();
+    void MakeBCArrays (int nghost_bc);
 
     void MakeNewLevelFromScratch (int lev, Real time, const BoxArray & new_grids,
                                   const DistributionMapping & new_dmap) override;
@@ -1202,11 +1201,41 @@ class mfix : public AmrCore
     //
 
     // Four ghost cells are required when using EB
-    const int nghost = 4;
+    // const int nghost = 4;
+    // const int m_eb_basic_grow_cells = nghost;
+    // const int m_eb_volume_grow_cells = nghost;
+    // const int m_eb_full_grow_cells = nghost;
 
-    const int m_eb_basic_grow_cells = nghost;
-    const int m_eb_volume_grow_cells = nghost;
-    const int m_eb_full_grow_cells = nghost;
+    int nghost_eb_basic () const
+    {
+        if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
+            return 6;
+        else if (advection_type() == AdvectionType::Godunov && m_redistribution_type != "StateRedist")
+            return 5;
+        else if (advection_type() == AdvectionType::MOL && m_redistribution_type == "StateRedist")
+            return 5;
+        else
+            return 4;
+    }
+
+    int nghost_eb_volume () const
+    {
+        if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
+            return 6;
+        else if (advection_type() == AdvectionType::Godunov && m_redistribution_type != "StateRedist")
+            return 5;
+        else if (advection_type() == AdvectionType::MOL && m_redistribution_type == "StateRedist")
+            return 5;
+        else
+            return 4;
+    }
+
+    int nghost_eb_full () const {
+        if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
+            return 5;
+        else
+            return 4;
+    }
 
     IntVect particle_sorting_bin = IntVect::TheZeroVector();
 
@@ -1301,7 +1330,7 @@ class mfix : public AmrCore
 
   // Number of ghost cells for field arrays.
   int nghost_state () const {
-    if (!EBFactory(0).isAllRegular())
+  //if (!EBFactory(0).isAllRegular())
       {
         if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
           return 6;
@@ -1312,9 +1341,9 @@ class mfix : public AmrCore
         else
           return 4;
       }
-    {
-      return (advection_type() != AdvectionType::MOL) ? 3 : 2;
-    }
+  //{
+  //  return (advection_type() != AdvectionType::MOL) ? 3 : 2;
+  //}
   }
 
     // For Godunov, we need 1 ghost cell in addition to the Box we are filling
@@ -1329,43 +1358,10 @@ class mfix : public AmrCore
         return 3;
     }
 
-
     int nghost_mac () const {
       if (!EBFactory(0).isAllRegular()) return (advection_type() == AdvectionType::Godunov) ? 4 : 3;
       return (advection_type() == AdvectionType::Godunov) ? 1 : 0;
     }
-
-    int nghost_eb_basic () const
-    {
-      if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
-        return 6;
-      else if (advection_type() == AdvectionType::Godunov && m_redistribution_type != "StateRedist")
-        return 5;
-      else if (advection_type() == AdvectionType::MOL && m_redistribution_type == "StateRedist")
-        return 5;
-      else
-        return 4;
-    }
-
-    int nghost_eb_volume () const
-    {
-      if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
-            return 6;
-      else if (advection_type() == AdvectionType::Godunov && m_redistribution_type != "StateRedist")
-            return 5;
-      else if (advection_type() == AdvectionType::MOL && m_redistribution_type == "StateRedist")
-        return 5;
-      else
-        return 4;
-    }
-
-    int nghost_eb_full () const {
-      if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
-        return 5;
-      else
-        return 4;
-    }
-
 
     AdvectionType advection_type () const{return m_advection_type;}
 

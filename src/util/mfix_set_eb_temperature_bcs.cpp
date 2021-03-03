@@ -65,7 +65,7 @@ mfix::mfix_set_eb_temperature_bcs (Vector< MultiFab* > const& eb_T_g_in,
 
 void
 mfix::set_eb_temperature_bcs (const Box& sbx,
-                              const Box& bx,
+                              const Box& /*bx*/,
                               const Box& domain,
                               const Real dx,
                               const Real dy,
@@ -73,7 +73,7 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
                               const GpuArray<Real, 3>& plo,
                               FArrayBox& eb_T_g_fab,
                               FArrayBox& eb_k_g_fab,
-                              FArrayBox& k_g_fab,
+                              FArrayBox& /*k_g_fab*/,
                               const EBCellFlagFab& flags_fab)
 {
   BL_PROFILE("mfix::set_eb_temperature_bcs()");
@@ -132,10 +132,10 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
         const int first = (slo[0] < dom_lo[0] and dom_lo[0] == istart) ? slo[0] : istart;
         const int last  = (shi[0] > dom_hi[0] and dom_hi[0] == iend)   ? shi[0] : iend;
 
-        const Box bx(IntVect(first, jstart, kstart),
-                     IntVect(last,  jend,   kend));
+        const Box local_bx(IntVect(first, jstart, kstart),
+                           IntVect(last,  jend,   kend));
 
-        ParallelFor(bx, [flags,eb_temperature,eb_T_g,k_g,eb_k_g]
+        ParallelFor(local_bx, [flags,eb_temperature,eb_T_g,k_g,eb_k_g]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           if (flags(i,j,k).isSingleValued()) {
@@ -150,10 +150,10 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
         const int first = (slo[1] < dom_lo[1] and dom_lo[1] == jstart) ? slo[1] : jstart;
         const int last  = (shi[1] > dom_hi[1] and dom_hi[1] == jend)   ? shi[1] : jend;
 
-        const Box bx(IntVect(istart, first, kstart),
-                     IntVect(iend,   last,  kend));
+        const Box local_bx(IntVect(istart, first, kstart),
+                           IntVect(iend,   last,  kend));
 
-        ParallelFor(bx, [flags,eb_temperature,eb_T_g,k_g,eb_k_g]
+        ParallelFor(local_bx, [flags,eb_temperature,eb_T_g,k_g,eb_k_g]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           if (flags(i,j,k).isSingleValued()) {
@@ -168,10 +168,10 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
         const int first = (slo[2] < dom_lo[2] and dom_lo[2] == kstart) ? slo[2] : kstart;
         const int last  = (shi[2] > dom_hi[2] and dom_hi[2] == kend)   ? shi[2] : kend;
 
-        const Box bx(IntVect(istart, jstart, first),
-                     IntVect(iend,   jend,   last));
+        const Box local_bx(IntVect(istart, jstart, first),
+                           IntVect(iend,   jend,   last));
 
-        ParallelFor(bx, [flags,eb_temperature,eb_T_g,k_g,eb_k_g]
+        ParallelFor(local_bx, [flags,eb_temperature,eb_T_g,k_g,eb_k_g]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           if (flags(i,j,k).isSingleValued()) {

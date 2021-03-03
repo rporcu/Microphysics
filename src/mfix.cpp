@@ -64,7 +64,7 @@ mfix::~mfix ()
     for (int n(0); n < REACTIONS::nreactions; n++)
       delete m_chemical_reactions[n];
   }
-};
+} 
 
 // Constructor
 mfix::mfix ()

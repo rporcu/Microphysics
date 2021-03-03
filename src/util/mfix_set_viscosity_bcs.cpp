@@ -5,7 +5,7 @@
 using namespace amrex;
 
 void
-mfix::set_viscosity_bcs (Real time,
+mfix::set_viscosity_bcs (Real /*time*/,
                          const int lev,
                          FArrayBox& scal_fab,
                          const Box& domain)

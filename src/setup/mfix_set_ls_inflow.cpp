@@ -24,7 +24,7 @@ void
 mfix::set_ls_inflow (const int lev,
                      FArrayBox& ls_phi_fab,
                      const Box& domain,
-                     const int* ng,
+                     const int* /*ng*/,
                      const int& nref,
                      const Real* dx)
 {

@@ -4,7 +4,7 @@
 using namespace amrex;
 
 void
-mfix::set_specific_heat_bcs (Real time,
+mfix::set_specific_heat_bcs (Real /*time*/,
                             const int lev,
                             FArrayBox& scal_fab,
                             const Box& domain)

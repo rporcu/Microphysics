@@ -3,7 +3,7 @@
 using namespace amrex;
 
 void
-mfix::set_gradp_bcs (const Box& bx,
+mfix::set_gradp_bcs (const Box& /*bx*/,
                      const int lev,
                      FArrayBox& gp_fab,
                      Box& domain)

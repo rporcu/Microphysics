@@ -208,7 +208,7 @@ mfix::set_p0 (const Box& bx,
       {
         compute_p0_bcs(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), pj,
             gravity, dx, dy, dz, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo,
-            bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup, nghost);
+            bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup, nghost_state());
         return;
       }
 
@@ -236,7 +236,7 @@ mfix::set_p0 (const Box& bx,
   if(amrex::Math::abs(delp_x) > tolerance)
   {
     const amrex::Real dpodx = delp_x / xlen;
-    pj -= dpodx * dx * (bx_hi[0] - dom_hi[0] + nghost + 2 + offset);
+    pj -= dpodx * dx * (bx_hi[0] - dom_hi[0] + nghost_state() + 2 + offset);
 
     amrex::ParallelFor(sbx, [pj,dpodx,dx,sbx_hi,array4_p0_g]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -250,7 +250,7 @@ mfix::set_p0 (const Box& bx,
   if(amrex::Math::abs(delp_y) > tolerance)
   {
     const Real dpody = delp_y / ylen;
-    pj -= dpody * dy * (bx_hi[1] - dom_hi[1] + nghost + 2 + offset);
+    pj -= dpody * dy * (bx_hi[1] - dom_hi[1] + nghost_state() + 2 + offset);
 
     amrex::ParallelFor(sbx, [pj,dpody,dy,sbx_hi,array4_p0_g]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -264,7 +264,7 @@ mfix::set_p0 (const Box& bx,
   if(amrex::Math::abs(delp_z) > tolerance)
   {
     const Real dpodz = delp_z / zlen;
-    pj -= dpodz * dz * (bx_hi[2] - dom_hi[2] + nghost + 2 + offset);
+    pj -= dpodz * dz * (bx_hi[2] - dom_hi[2] + nghost_state() + 2 + offset);
 
     amrex::ParallelFor(sbx, [pj,dpodz,dz,sbx_hi,array4_p0_g]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -278,7 +278,7 @@ mfix::set_p0 (const Box& bx,
   // pressure in all initial condition region cells was defined
   set_p0_bcs(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), bct_ilo, bct_ihi,
              bct_jlo, bct_jhi, bct_klo, bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup,
-             nghost);
+             nghost_state());
 
   return;
 }

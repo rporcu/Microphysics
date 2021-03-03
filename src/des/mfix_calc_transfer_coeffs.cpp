@@ -118,7 +118,7 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
       const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
       EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
-                                       {m_eb_basic_grow_cells, m_eb_volume_grow_cells, m_eb_full_grow_cells},
+                                      {nghost_eb_basic(), nghost_eb_volume(), nghost_eb_full()}, 
                                        EBSupport::full);
 
       // Temporary arrays  -- copies with no ghost cells

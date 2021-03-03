@@ -28,7 +28,7 @@ void
 mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
                          Vector< MultiFab const*> const& ep_g,
                          Vector< MultiFab const*> const& ro_g,
-                         Vector< MultiFab const*> const& X_gk,
+                         Vector< MultiFab const*> const& /*X_gk*/,
                          Vector< MultiFab const*> const& D_gk,
                          Vector< MultiFab const*> const& h_gk)
 {
@@ -54,13 +54,13 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
     for (int lev(0); lev <= finest_level; lev++) {
 
       X_gk_tmp[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
-                                   mfix::nghost, MFInfo(), *ebfactory[lev]);
+                                   nghost_state(), MFInfo(), *ebfactory[lev]);
 
       h_gk_D_gk[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
-                                    mfix::nghost, MFInfo(), *ebfactory[lev]);
+                                    nghost_state(), MFInfo(), *ebfactory[lev]);
 
       auxiliary[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
-                                    mfix::nghost, MFInfo(), *ebfactory[lev]);
+                                    nghost_state(), MFInfo(), *ebfactory[lev]);
 
     }
 
@@ -100,12 +100,12 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
 
 
 void
-mfix::mfix_scalar_rhs (const bool explicit_diffusion,
-                       Vector< MultiFab* > const& lap_trac,
-                       Vector< MultiFab* > const& trac,
-                       Vector< MultiFab* > const& ep_g,
-                       Vector< MultiFab* > const& ro_g,
-                       const Vector<Real>& mu_s_in)
+mfix::mfix_scalar_rhs (const bool /*explicit_diffusion*/,
+                       Vector< MultiFab* > const& /*lap_trac*/,
+                       Vector< MultiFab* > const& /*trac*/,
+                       Vector< MultiFab* > const& /*ep_g*/,
+                       Vector< MultiFab* > const& /*ro_g*/,
+                       const Vector<Real>& /*mu_s_in*/)
 {
 }
 

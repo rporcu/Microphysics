@@ -200,7 +200,7 @@ mfix::ReportGridStats () const
   const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
 
   // Count the number of regular cells
-  counts[0] = amrex::ReduceSum(*volfrac, *(m_leveldata[lev]->ep_g), 0,
+  counts[0] = static_cast<int>(amrex::ReduceSum(*volfrac, *(m_leveldata[lev]->ep_g), 0,
     [=] AMREX_GPU_HOST_DEVICE (Box const & bx,
                                Array4<const Real> const & vfrc,
                                Array4<const Real> const & ep) -> int
@@ -211,10 +211,10 @@ mfix::ReportGridStats () const
       {if(vfrc(i,j,k)==1.0) dm += 1;});
 
       return dm;
-    });
+    }));
 
   // Count the number of covered cells
-  counts[1] = amrex::ReduceSum( *volfrac, *(m_leveldata[lev]->ep_g), 0,
+  counts[1] = static_cast<int>(amrex::ReduceSum( *volfrac, *(m_leveldata[lev]->ep_g), 0,
     [=] AMREX_GPU_HOST_DEVICE (Box const & bx,
                                Array4<const Real> const & vfrc,
                                Array4<const Real> const & ep) -> int
@@ -225,10 +225,10 @@ mfix::ReportGridStats () const
       {if(vfrc(i,j,k)==0.0) dm += 1;});
 
       return dm;
-    });
+    }));
 
   // Count the number of cut cells
-  counts[2] = amrex::ReduceSum( *volfrac, *(m_leveldata[lev]->ep_g), 0,
+  counts[2] = static_cast<int>(amrex::ReduceSum( *volfrac, *(m_leveldata[lev]->ep_g), 0,
     [=] AMREX_GPU_HOST_DEVICE (Box const & bx,
                                Array4<const Real> const & vfrc,
                                Array4<const Real> const & ep) -> int
@@ -239,7 +239,7 @@ mfix::ReportGridStats () const
       {if(0.0 < vfrc(i,j,k) and vfrc(i,j,k) < 1.0) dm += 1;});
 
       return dm;
-    });
+    }));
 
   int regular(0), covered(0), cut(0);
 

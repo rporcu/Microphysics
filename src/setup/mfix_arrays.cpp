@@ -45,7 +45,7 @@ mfix::AllocateArrays (int lev)
     // Cell- or node-based arrays
     // ********************************************************************************
 
-    m_leveldata[lev].reset(new LevelData(grids[lev], dmap[lev], nghost,
+    m_leveldata[lev].reset(new LevelData(grids[lev], dmap[lev], nghost_state(),
                                          *ebfactory[lev]));
     m_leveldata[lev]->resetValues(covered_val);
 
@@ -62,7 +62,7 @@ mfix::AllocateArrays (int lev)
       delete bcoeff[lev][0];
 
     bcoeff[lev][0] = new MultiFab(BoxArray(ba).surroundingNodes(0), dmap[lev], 1,
-                                  nghost, MFInfo(), *ebfactory[lev]);
+                                  nghost_state(), MFInfo(), *ebfactory[lev]);
     bcoeff[lev][0]->setVal(0.);
 
     // Create a BoxArray on y-faces.
@@ -71,7 +71,7 @@ mfix::AllocateArrays (int lev)
       delete bcoeff[lev][1];
 
     bcoeff[lev][1] = new MultiFab(BoxArray(ba).surroundingNodes(1), dmap[lev], 1,
-                                  nghost, MFInfo(), *ebfactory[lev]);
+                                  nghost_state(), MFInfo(), *ebfactory[lev]);
     bcoeff[lev][1]->setVal(0.);
 
     // Create a BoxArray on z-faces.
@@ -80,7 +80,7 @@ mfix::AllocateArrays (int lev)
       delete bcoeff[lev][2];
 
     bcoeff[lev][2] = new MultiFab(BoxArray(ba).surroundingNodes(2), dmap[lev], 1,
-                                  nghost, MFInfo(), *ebfactory[lev]);
+                                  nghost_state(), MFInfo(), *ebfactory[lev]);
     bcoeff[lev][2]->setVal(0.);
 }
 
@@ -551,8 +551,8 @@ mfix::RegridLevelSetArray (int a_lev)
 
       particle_ebfactory[a_lev].reset(
         new EBFArrayBoxFactory(*particle_eb_levels[a_lev], geom[a_lev], ba, dm,
-                               {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                m_eb_full_grow_cells}, m_eb_support_level));
+                               {nghost_eb_basic(), nghost_eb_volume(),
+                                nghost_eb_full()}, m_eb_support_level));
 
       changed = true;
 
@@ -568,8 +568,8 @@ mfix::RegridLevelSetArray (int a_lev)
       {
           particle_ebfactory[a_lev].reset(
               new EBFArrayBoxFactory(*particle_eb_levels[a_lev], geom[a_lev], ba, dm,
-                                     {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                      m_eb_full_grow_cells}, m_eb_support_level));
+                                     {nghost_eb_basic(), nghost_eb_volume(),
+                                      nghost_eb_full()}, m_eb_support_level));
 
          changed = true;
       }
@@ -655,8 +655,8 @@ bool mfix::mfix_update_ebfactory (int a_lev)
 
       ebfactory[a_lev].reset(
           new EBFArrayBoxFactory(*eb_levels[a_lev], geom[a_lev], ba, dm,
-                                 {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                  m_eb_full_grow_cells}, m_eb_support_level));
+                                 {nghost_eb_basic(), nghost_eb_volume(),
+                                  nghost_eb_full()}, m_eb_support_level));
 
       is_updated = true;
    }
@@ -671,8 +671,8 @@ bool mfix::mfix_update_ebfactory (int a_lev)
 
           ebfactory[a_lev].reset(
               new EBFArrayBoxFactory(*eb_levels[a_lev], geom[a_lev], ba, dm,
-                                     {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                      m_eb_full_grow_cells}, m_eb_support_level));
+                                     {nghost_eb_basic(), nghost_eb_volume(),
+                                      nghost_eb_full()}, m_eb_support_level));
 
           is_updated = true;
       }
