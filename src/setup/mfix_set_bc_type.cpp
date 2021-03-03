@@ -7,7 +7,7 @@
 using namespace BC;
 
 void
-mfix::mfix_set_bc_type (int lev)
+mfix::mfix_set_bc_type (int lev, int nghost_bc)
 {
 
     Real dx = geom[lev].CellSize(0);
@@ -44,8 +44,8 @@ mfix::mfix_set_bc_type (int lev)
       const int init_x = geom[lev].isPeriodic(0) ? und_ : ig_;
 
       Box domainx(geom[lev].Domain());
-      domainx.grow(1,nghost);  // Add ghost cells to y
-      domainx.grow(2,nghost);  // Add ghost cells to z
+      domainx.grow(1,nghost_bc);  // Add ghost cells to y
+      domainx.grow(2,nghost_bc);  // Add ghost cells to z
 
       { // x-lo side of the domain
 
@@ -149,8 +149,8 @@ mfix::mfix_set_bc_type (int lev)
       Array4<int> const& bc_jhi_type = bc_jhi[lev]->array();
 
       Box domainy(geom[lev].Domain());
-      domainy.grow(0,nghost);  // Add ghost cells to x
-      domainy.grow(2,nghost);  // Add ghost cells to z
+      domainy.grow(0,nghost_bc);  // Add ghost cells to x
+      domainy.grow(2,nghost_bc);  // Add ghost cells to z
 
       { // y-lo side of the domain
 
@@ -243,9 +243,6 @@ mfix::mfix_set_bc_type (int lev)
       } // end y-hi side of the domain
     } // end y-direction
 
-
-
-
     { // begin z-direction
 
       const int dir = 2;
@@ -256,8 +253,8 @@ mfix::mfix_set_bc_type (int lev)
       Array4<int> const& bc_khi_type = bc_khi[lev]->array();
 
       Box domainz(geom[lev].Domain());
-      domainz.grow(0,nghost);  // Add ghost cells to x
-      domainz.grow(1,nghost);  // Add ghost cells to y
+      domainz.grow(0,nghost_bc);  // Add ghost cells to x
+      domainz.grow(1,nghost_bc);  // Add ghost cells to y
 
       { // z-lo side of the domain
 

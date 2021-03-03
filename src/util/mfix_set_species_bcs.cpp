@@ -58,7 +58,7 @@ mfix::mfix_set_species_bcs (Real time,
 }
 
 void 
-mfix::set_mass_fractions_g_bcs (Real time,
+mfix::set_mass_fractions_g_bcs (Real /*time*/,
                                 const int lev,
                                 FArrayBox& X_gk_fab,
                                 const Box& domain)
@@ -222,7 +222,7 @@ mfix::set_mass_fractions_g_bcs (Real time,
 
 
 void 
-mfix::set_species_diffusivities_g_bcs (Real time,
+mfix::set_species_diffusivities_g_bcs (Real /*time*/,
                                        const int lev,
                                        FArrayBox& scal_fab,
                                        const Box& domain)
@@ -393,7 +393,7 @@ mfix::set_species_diffusivities_g_bcs (Real time,
 
 
 void 
-mfix::set_species_specific_heat_g_bcs (Real time,
+mfix::set_species_specific_heat_g_bcs (Real /*time*/,
                                        const int lev,
                                        FArrayBox& scal_fab,
                                        const Box& domain)
@@ -564,7 +564,7 @@ mfix::set_species_specific_heat_g_bcs (Real time,
 
 
 void 
-mfix::set_species_enthalpy_g_bcs (Real time,
+mfix::set_species_enthalpy_g_bcs (Real /*time*/,
                                   const int lev,
                                   FArrayBox& scal_fab,
                                   const Box& domain)

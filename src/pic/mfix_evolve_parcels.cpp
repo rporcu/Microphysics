@@ -4,12 +4,12 @@
 using namespace amrex;
 
 void mfix::EvolveParcels (Real dt,
-                          Real time,
-                          RealVect& gravity,
+                          Real /*time*/,
+                          RealVect& gravity_in,
                           const int ls_refinement_in,
                           Vector< MultiFab* >& cost,
-                          std::string& knapsack_weight_type,
-                          const int advect_enthalpy)
+                          std::string& knapsack_weight_type_in,
+                          const int advect_enthalpy_in)
 {
   BL_PROFILE_REGION_START("MFIX_PIC::EvolveParcels()");
   BL_PROFILE("mfix::EvolveParcels()");
@@ -57,7 +57,7 @@ void mfix::EvolveParcels (Real dt,
   // Calculate the solids stress gradient using the local solids
   // volume fraction. The solids stress is a field variable that
   // we will later interpolate to the parcel's position.
-  MFIX_CalcSolidsStress(ep_s, avg_prop, cost, knapsack_weight_type);
+  MFIX_CalcSolidsStress(ep_s, avg_prop, cost, knapsack_weight_type_in);
 
   // Calculate the averaged solids velocity. This is used to assess how
   // a parcel is moving relative to the bulk solids motion.  A consequence
@@ -65,9 +65,9 @@ void mfix::EvolveParcels (Real dt,
   MFIX_CalcAvgSolidsVel(avg_prop);
 
   // Move the parcels.
-  pc->MFIX_PC_AdvanceParcels(dt, gravity, avg_prop,
-                             cost, knapsack_weight_type,
-                             advect_enthalpy);
+  pc->MFIX_PC_AdvanceParcels(dt, gravity_in, avg_prop,
+                             cost, knapsack_weight_type_in,
+                             advect_enthalpy_in);
 
   // Account for cross process movements.
   pc->Redistribute(0, 0, 0, 0);
@@ -81,7 +81,7 @@ void mfix::EvolveParcels (Real dt,
 
       pc->MFIX_PC_ImposeWalls(lev, particle_ebfactory[lev].get(),
                               ls_refinement, ls_data,
-                              cost[lev], knapsack_weight_type);
+                              cost[lev], knapsack_weight_type_in);
 
     } else {
 
@@ -90,7 +90,7 @@ void mfix::EvolveParcels (Real dt,
 
       pc->MFIX_PC_ImposeWalls(nlev, particle_ebfactory[lev].get(),
                               ls_refinement, ls_data,
-                              cost[lev], knapsack_weight_type);
+                              cost[lev], knapsack_weight_type_in);
     }
 
   }

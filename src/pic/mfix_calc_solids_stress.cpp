@@ -11,9 +11,9 @@
 #include <mfix_mf_helpers.H>
 
 void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
-                                  amrex::Vector< amrex::MultiFab* >& avg_prop_in,
+                                  amrex::Vector< amrex::MultiFab* >& /*avg_prop_in*/,
                                   amrex::Vector< amrex::MultiFab* >& cost,
-                                  std::string& knapsack_weight_type)
+                                  std::string& knapsack_weight_type_in)
 {
   BL_PROFILE("mfix::MFIX_CalcSolidsStress()");
 
@@ -49,7 +49,6 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
       Array4<const Real> const& ep_s_arr = ep_s_in[lev]->const_array(mfi);
       Array4<      Real> const& Ps_arr   = Ps.array(mfi);
-
 
       const auto& flagfab = flags[mfi];
 
@@ -718,11 +717,11 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
           //   * time spent
           //   * number of particles
           const Box& tbx = pti.tilebox();
-          if (knapsack_weight_type == "RunTimeCosts")
+          if (knapsack_weight_type_in == "RunTimeCosts")
           {
             wt = (ParallelDescriptor::second() - wt) / tbx.d_numPts();
           }
-          else if (knapsack_weight_type == "NumParticles")
+          else if (knapsack_weight_type_in == "NumParticles")
           {
             wt = np / tbx.d_numPts();
           }

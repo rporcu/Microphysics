@@ -31,7 +31,7 @@ mfix::mfix_set_enthalpy_bcs (Real time,
 }
 
 void
-mfix::set_enthalpy_bcs (Real time,
+mfix::set_enthalpy_bcs (Real /*time*/,
                         const int lev,
                         FArrayBox& h_g_fab,
                         const Box& domain)

@@ -353,7 +353,6 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
           const int ncomp = 3; // number of components
           const int ccomp = 0; // convection (dsdt) component
 
-          amrex::Print() << "DOING VELOCITY " << std::endl;
           ebgodunov::compute_godunov_advection(gbx, ncomp,
                                                dUdt_tmp, vel,
                                                ep_umac, ep_vmac, ep_wmac,

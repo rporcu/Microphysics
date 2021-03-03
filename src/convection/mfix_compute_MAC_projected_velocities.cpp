@@ -188,8 +188,7 @@ mfix::compute_MAC_projected_velocities (amrex::Real time, const amrex::Real l_dt
   if (m_verbose) {
     Print() << " >> Before projection\n" ;
     for (int lev = 0; lev <= finest_level; ++lev) {
-      tmp_div.emplace_back(grids[lev], dmap[lev], 1, mfix::nghost,
-                           MFInfo(), EBFactory(lev));
+      tmp_div.emplace_back(grids[lev], dmap[lev], 1, nghost_state(), MFInfo(), EBFactory(lev));
     }
   }
 

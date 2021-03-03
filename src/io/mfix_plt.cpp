@@ -643,8 +643,8 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
 
         if (ebfactory[lev]) {
             EBFArrayBoxFactory ebf(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
-                                   {m_eb_basic_grow_cells, m_eb_volume_grow_cells,
-                                    m_eb_full_grow_cells}, m_eb_support_level);
+                                   {nghost_eb_basic(), nghost_eb_volume(),
+                                    nghost_eb_full()}, m_eb_support_level);
 
             MultiFab::Copy(* mf[lev], ebf.getVolFrac(), 0, ncomp - 1, 1, ngrow);
 

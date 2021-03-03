@@ -32,7 +32,7 @@ mfix::mfix_set_density_bcs (Real time,
 }
 
 void
-mfix::set_density_bcs (Real time,
+mfix::set_density_bcs (Real /*time*/,
                        const int lev,
                        FArrayBox& scal_fab,
                        const Box& domain)

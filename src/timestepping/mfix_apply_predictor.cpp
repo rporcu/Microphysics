@@ -94,7 +94,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     Vector<MultiFab> density_nph;
     for (int lev = 0; lev <= finest_level; ++lev) {
-        density_nph.emplace_back(grids[lev], dmap[lev], 1, nghost, MFInfo(),  *ebfactory[lev]);
+        density_nph.emplace_back(grids[lev], dmap[lev], 1, nghost_state(), MFInfo(),  *ebfactory[lev]);
         density_nph[lev].setVal(0.0);
     }
 
@@ -105,7 +105,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     Vector<MultiFab> ep_u_mac(finest_level+1), ep_v_mac(finest_level+1), ep_w_mac(finest_level+1);
     Vector<MultiFab> rhs_mac(finest_level+1),  depdt(finest_level+1);
-
 
     int ngmac = nghost_mac();
 
@@ -219,7 +218,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     if (!advect_density)
     {
         for (int lev = 0; lev <= finest_level; lev++)
-            MultiFab::Copy(density_nph[lev], *(m_leveldata[lev]->ro_go), 0, 0, 1, nghost);
+            MultiFab::Copy(density_nph[lev], *(m_leveldata[lev]->ro_go), 0, 0, 1, nghost_state());
 
     } else {
         for (int lev = 0; lev <= finest_level; lev++)

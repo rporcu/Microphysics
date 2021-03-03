@@ -517,6 +517,7 @@ void mfix::Init (Real time)
     DistributionMapping dm(ba, ParallelDescriptor::NProcs());
     MakeNewLevelFromScratch(0, time, ba, dm);
 
+
     for (int lev = 1; lev <= finest_level; lev++)
     {
        if (m_verbose > 0)
@@ -548,7 +549,7 @@ void mfix::Init (Real time)
     // ******************************************************
 
     for (int lev = 0; lev < nlev; lev++)
-        mfix_set_bc_type(lev);
+        mfix_set_bc_type(lev,nghost_state());
 }
 
 
@@ -647,7 +648,7 @@ void mfix::MakeNewLevelFromScratch (int lev, Real time,
 
     // This is being done by mfix::make_eb_geometry,
     // otherwise it would be done here
-    if (lev == 0) MakeBCArrays();
+    if (lev == 0) MakeBCArrays(nghost_state());
 }
 
 
@@ -659,10 +660,10 @@ void mfix::ReMakeNewLevelFromScratch (int lev,
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
 
-    if (lev == 0) MakeBCArrays();
+    if (lev == 0) MakeBCArrays(nghost_state());
 
     // We need to re-fill these arrays for the larger domain (after replication).
-    mfix_set_bc_type(lev);
+    mfix_set_bc_type(lev,nghost_state());
 }
 
 
@@ -886,7 +887,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 }
 
 void
-mfix::MakeBCArrays ()
+mfix::MakeBCArrays (int nghost)
 {
     for (int lev = 0; lev < bc_ilo.size(); lev++)
     {
@@ -1193,7 +1194,7 @@ void mfix::mfix_set_ls_near_inflow ()
     if (ooo_debug) amrex::Print() << "mfix_ls_near_inflow" << std::endl;
     // This function is a bit Wonky... TODO: figure out why we need + nghost
     // (it's late at the moment, so I can't figure it it out right now...)
-    const int levelset_nghost = levelset_eb_pad + nghost;
+    const int levelset_nghost = levelset_eb_pad + nghost_state();
 
     if (nlev > 1)
     {

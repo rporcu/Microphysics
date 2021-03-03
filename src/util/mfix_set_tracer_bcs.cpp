@@ -36,7 +36,7 @@ mfix::mfix_set_tracer_bcs (Real time,
 
 
 void
-mfix::set_tracer_bcs (Real time,
+mfix::set_tracer_bcs (Real /*time*/,
                       const int lev,
                       FArrayBox& scal_fab,
                       const Box& domain)
