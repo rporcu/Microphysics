@@ -470,7 +470,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Fluid species specific heat
-        if( SPECIES::solve and advect_enthalpy and plt_cp_gk == 1 ) {
+        if(FLUID::solve_species and advect_enthalpy and plt_cp_gk == 1 ) {
           for(int n(0); n < FLUID::nspecies; n++) {
             MultiFab::Copy(*mf[lev], *m_leveldata[lev]->cp_gk, n, lc+n, 1, 0);
           }

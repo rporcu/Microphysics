@@ -26,15 +26,22 @@ void mfix::init_advection ()
   m_iconserv_density.resize(1, 1);
   m_iconserv_density_d.resize(1, 1);
 
-  m_iconserv_enthalpy.resize(1, 1);
-  m_iconserv_enthalpy_d.resize(1, 1);
+  if (advect_enthalpy) {
+    m_iconserv_enthalpy.resize(1, 1);
+    m_iconserv_enthalpy_d.resize(1, 1);
+  }
 
-  m_iconserv_tracer.resize(ntrac, 1);
-  m_iconserv_tracer_d.resize(ntrac, 1);
+  if (advect_tracer) {
+    m_iconserv_tracer.resize(ntrac, 1);
+    m_iconserv_tracer_d.resize(ntrac, 1);
+  }
 
   const int l_nspecies = FLUID::nspecies;
-  m_iconserv_species.resize(l_nspecies, 1);
-  m_iconserv_species_d.resize(l_nspecies, 1);
+
+  if (advect_fluid_species) {
+    m_iconserv_species.resize(l_nspecies, 1);
+    m_iconserv_species_d.resize(l_nspecies, 1);
+  }
 
 }
 
@@ -159,14 +166,14 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
         mfix::compute_convective_term(bx, lev, l_dt, mfi,
                                       conv_u_in[lev]->array(mfi),
                                       conv_s_in[lev]->array(mfi),
-                                      (l_nspecies>0) ? conv_X_in[lev]->array(mfi) : Array4<Real>{},
+                                      (advect_fluid_species) ? conv_X_in[lev]->array(mfi) : Array4<Real>{},
                                       advect_density, advect_enthalpy, advect_tracer, advect_fluid_species,
                                       vel_in[lev]->const_array(mfi),
                                       ep_g_in[lev]->const_array(mfi),
                                       ro_g_in[lev]->const_array(mfi),
                                       (advect_enthalpy) ?  h_g_in[lev]->const_array(mfi) : Array4<Real const>{},
                                       (advect_tracer) ? trac_in[lev]->const_array(mfi) : Array4<Real const>{},
-                                      (l_nspecies > 0)  ? X_gk_in[lev]->const_array(mfi) : Array4<Real const>{},
+                                      (advect_fluid_species) ? X_gk_in[lev]->const_array(mfi) : Array4<Real const>{},
                                       l_nspecies,
                                       divu.const_array(mfi),
                                       ep_u_mac[lev]->const_array(mfi),
