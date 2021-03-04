@@ -40,7 +40,7 @@ mfix.cfl      = 0.5
 
 mfix.gravity =  -9.81  0.0  0.0
 
-mfix.dt_min   = 1.e-7
+mfix.dt_min   = 1.e-10
 mfix.dt_max   = 5.e-5
 
 mfix.do_initial_proj    = 1
