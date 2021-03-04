@@ -478,10 +478,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     } // lev
 
     // *************************************************************************************
-    // Add the drag term implicitly
+    // Add the drag and convective heat transfer terms implicitly to vel_g and h_g
     // *************************************************************************************
     if (DEM::solve or PIC::solve)
-        mfix_add_txfr_implicit(l_dt);
+      mfix_add_txfr_implicit(l_dt, get_vel_g(), get_h_g(), get_T_g(),get_txfr_const(),
+                GetVecOfConstPtrs(density_nph), get_ep_g_const(), get_cp_g_const());
 
     // *************************************************************************************
     // If doing implicit diffusion, solve here for u^*

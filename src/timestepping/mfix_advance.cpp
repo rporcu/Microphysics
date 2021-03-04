@@ -293,7 +293,14 @@ mfix::mfix_add_txfr_explicit (Real dt)
 // momentum exchange
 //
 void
-mfix::mfix_add_txfr_implicit (Real dt)
+mfix::mfix_add_txfr_implicit (amrex::Real dt,
+                              amrex::Vector<amrex::MultiFab*      > const& vel_in,
+                              amrex::Vector<amrex::MultiFab*      > const& h_g_in,
+                              amrex::Vector<amrex::MultiFab*      > const& T_g_in,
+                              amrex::Vector<amrex::MultiFab const*> const& txfr_in,
+                              amrex::Vector<amrex::MultiFab const*> const& rho_in,
+                              amrex::Vector<amrex::MultiFab const*> const& ep_g_in,
+                              amrex::Vector<amrex::MultiFab const*> const& cp_g_in)
 {
   /*
      This adds both components of the drag term
@@ -313,10 +320,10 @@ mfix::mfix_add_txfr_implicit (Real dt)
       // Tilebox
       Box bx = mfi.tilebox();
 
-      Array4<Real      > const&  vel_fab = m_leveldata[lev]->vel_g->array(mfi);
-      Array4<Real const> const& txfr_fab = m_leveldata[lev]->txfr->array(mfi);
-      Array4<Real const> const&   ro_fab = m_leveldata[lev]->ro_g->array(mfi);
-      Array4<Real const> const&   ep_fab = m_leveldata[lev]->ep_g->array(mfi);
+      Array4<Real      > const&  vel_fab = vel_in[lev]->array(mfi);
+      Array4<Real const> const& txfr_fab = txfr_in[lev]->const_array(mfi);
+      Array4<Real const> const&   ro_fab = rho_in[lev]->const_array(mfi);
+      Array4<Real const> const&   ep_fab = ep_g_in[lev]->const_array(mfi);
 
       amrex::ParallelFor(bx,[dt,vel_fab,txfr_fab,ro_fab,ep_fab]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -331,9 +338,9 @@ mfix::mfix_add_txfr_implicit (Real dt)
 
       if(advect_enthalpy){
 
-        Array4<Real      > const& hg_fab = m_leveldata[lev]->h_g->array(mfi);
-        Array4<Real      > const& Tg_fab = m_leveldata[lev]->T_g->array(mfi);
-        Array4<Real const> const& cp_fab = m_leveldata[lev]->cp_g->array(mfi);
+        Array4<Real      > const& hg_fab = h_g_in[lev]->array(mfi);
+        Array4<Real      > const& Tg_fab = T_g_in[lev]->array(mfi);
+        Array4<Real const> const& cp_fab = cp_g_in[lev]->const_array(mfi);
 
         amrex::ParallelFor(bx,[dt,hg_fab,Tg_fab,cp_fab,txfr_fab,ro_fab,ep_fab]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
