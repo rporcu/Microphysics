@@ -77,7 +77,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     rhs.resize(max_level + 1);
     vel_eb.resize(max_level + 1);
 
-    if (SPECIES::solve)
+    if (FLUID::solve_species)
     {
       species_phi.resize(max_level + 1);
       species_rhs.resize(max_level + 1);
@@ -104,7 +104,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
                                        MFInfo(), *ebfactory[lev]));
         vel_eb[lev]->setVal(0.0);
 
-        if (SPECIES::solve)
+        if (FLUID::solve_species)
         {
           species_phi[lev].reset(new MultiFab(grids[lev], dmap[lev], nspecies_g, 1,
                                               MFInfo(), *ebfactory[lev]));
@@ -136,7 +136,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     scal_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory));
     temperature_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory));
 
-    if (SPECIES::solve) {
+    if (FLUID::solve_species) {
       species_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory, nspecies_g));
     }
 
@@ -146,7 +146,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     scal_matrix->setMaxOrder(2);
     temperature_matrix->setMaxOrder(2);
 
-    if (SPECIES::solve) {
+    if (FLUID::solve_species) {
       species_matrix->setMaxOrder(2);
     }
 
@@ -154,7 +154,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     scal_matrix->setDomainBC(m_scalbc_lo, m_scalbc_hi);
     temperature_matrix->setDomainBC(m_temperaturebc_lo, m_temperaturebc_hi);
 
-    if (SPECIES::solve)
+    if (FLUID::solve_species)
     {
       species_matrix->setDomainBC(m_speciesbc_lo, m_speciesbc_hi);
 

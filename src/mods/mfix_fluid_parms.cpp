@@ -170,6 +170,7 @@ namespace FLUID
 
       // Get fluid temperature inputs ----------------------------------//
       amrex::ParmParse ppMFIX("mfix");
+
       int advect_enthalpy(0);
       ppMFIX.query("advect_enthalpy", advect_enthalpy);
 
@@ -213,52 +214,57 @@ namespace FLUID
         }
       }
 
-      // Fluid species inputs
-      if (ppFluid.contains("species") or
-          MolecularWeightModel == MOLECULARWEIGHTMODEL::Mixture)
-      {
-        ppFluid.getarr("species", species);
+      int advect_fluid_species(0);
+      ppMFIX.query("advect_fluid_species", advect_fluid_species);
 
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.size() > 0, 
-            "No input provided for fluid.species");
-
-        // Disable the species solver if the species are defined as "None" (case
-        // insensitive) or 0
-        if (amrex::toLower(species[0]).compare("none") == 0 or
-            (species[0]).compare("0") == 0)
+      if (advect_fluid_species) {
+        // Fluid species inputs
+        if (ppFluid.contains("species") or
+            MolecularWeightModel == MOLECULARWEIGHTMODEL::Mixture)
         {
-          solve_species = 0;
-          nspecies = 0;
-        }
-        else {
-          solve_species = 1;
-          nspecies = species.size();
+          ppFluid.getarr("species", species);
 
-          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nspecies <= SPECIES::nspecies,
-              "Fluid species_g number is higher than species number");
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.size() > 0, 
+              "No input provided for fluid.species");
 
-          species_id.resize(nspecies);
-          MW_gk0.resize(nspecies);
-          D_gk0.resize(nspecies);
+          // Disable the species solver if the species are defined as "None" (case
+          // insensitive) or 0
+          if (amrex::toLower(species[0]).compare("none") == 0 or
+              (species[0]).compare("0") == 0)
+          {
+            solve_species = 0;
+            nspecies = 0;
+          }
+          else {
+            solve_species = 1;
+            nspecies = species.size();
 
-          if (solve_enthalpy)
-            cp_gk0.resize(nspecies);
+            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nspecies <= SPECIES::nspecies,
+                "Fluid species_g number is higher than species number");
 
-          for (int n(0); n < nspecies; n++) {
-            auto it = std::find(SPECIES::species.begin(), SPECIES::species.end(),
-                species[n]);
-
-            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != SPECIES::species.end(),
-                "Fluid species missing in input");
-
-            const auto pos = std::distance(SPECIES::species.begin(), it);
-
-            species_id[n] = SPECIES::species_id[pos];
-            MW_gk0[n] = SPECIES::MW_k0[pos];
-            D_gk0[n] = SPECIES::D_k0[pos];
+            species_id.resize(nspecies);
+            MW_gk0.resize(nspecies);
+            D_gk0.resize(nspecies);
 
             if (solve_enthalpy)
-              cp_gk0[n] = SPECIES::cp_k0[pos];
+              cp_gk0.resize(nspecies);
+
+            for (int n(0); n < nspecies; n++) {
+              auto it = std::find(SPECIES::species.begin(), SPECIES::species.end(),
+                  species[n]);
+
+              AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != SPECIES::species.end(),
+                  "Fluid species missing in input");
+
+              const auto pos = std::distance(SPECIES::species.begin(), it);
+
+              species_id[n] = SPECIES::species_id[pos];
+              MW_gk0[n] = SPECIES::MW_k0[pos];
+              D_gk0[n] = SPECIES::D_k0[pos];
+
+              if (solve_enthalpy)
+                cp_gk0[n] = SPECIES::cp_k0[pos];
+            }
           }
         }
       }
