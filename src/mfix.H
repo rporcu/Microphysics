@@ -1016,6 +1016,7 @@ class mfix : public AmrCore
 
     // include d(ep_g)/dt in constraint
     bool m_use_depdt_constraint = false;
+    bool m_use_drag_in_projection = false;
 
     // If using Godunov, default to PPM (not PLM)
     bool m_godunov_ppm         = true;

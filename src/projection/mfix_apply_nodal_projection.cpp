@@ -37,39 +37,85 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     if (a_time > 0 && a_dt < 0.1 * a_prev_dt)
        proj_for_small_dt      = true;
 
+    if(m_use_drag_in_projection)
+      amrex::Print() << "Adding drag to vel in nodal projection\n";
+    else
+      amrex::Print() << "NOT adding drag to vel in nodal projection\n";
+
+    // Create sigma
+    Vector<MultiFab> sigma_mf(nlev);
+
     for (int lev(0); lev < nlev; ++lev)
     {
-        // Here we add (dt * (1/rho gradp)) to ustar
-        if (proj_2)
-        {
-            // Convert velocities to momenta
-            for (int n(0); n < 3; ++n)
-                MultiFab::Multiply(*m_leveldata[lev]->vel_g,
-                                   *density[lev],
-                                   0, n, 1, m_leveldata[lev]->vel_g->nGrow());
+      sigma_mf[lev].define(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
 
-            MultiFab::Saxpy(*m_leveldata[lev]->vel_g, a_dt,
-                            *m_leveldata[lev]->gp, 0, 0, 3,
-                            m_leveldata[lev]->vel_g->nGrow());
 
-            // Convert momenta back to velocities
-            for (int n(0); n < 3; n++)
-                MultiFab::Divide(*m_leveldata[lev]->vel_g,
-                                 *density[lev], 0, n, 1,
-                                 m_leveldata[lev]->vel_g->nGrow());
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+      for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+
+        // Tilebox
+        Box bx = mfi.tilebox();
+
+        Array4<Real      > const&  vel_g = m_leveldata[lev]->vel_g->array(mfi);
+        Array4<Real      > const&  sigma = sigma_mf[lev].array(mfi);
+
+        Array4<Real const> const&  rho_g = density[lev]->const_array(mfi);
+        Array4<Real const> const&  ep_g  = m_leveldata[lev]->ep_g->const_array(mfi);
+        Array4<Real const> const&  gp    = m_leveldata[lev]->gp->const_array(mfi);
+        Array4<Real const> const&  txfr  = m_leveldata[lev]->txfr->const_array(mfi);
+
+        if(m_use_drag_in_projection) {
+          amrex::ParallelFor(bx,[a_dt, proj_2, vel_g, sigma, rho_g, ep_g, gp, txfr]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          {
+
+            Real const beta = txfr(i,j,k,3);
+
+            sigma(i,j,k) = ep_g(i,j,k)/(ep_g(i,j,k)*rho_g(i,j,k) + a_dt*beta);
+
+            if(proj_2) {
+              vel_g(i,j,k,0) += sigma(i,j,k)*a_dt*gp(i,j,k,0);
+              vel_g(i,j,k,1) += sigma(i,j,k)*a_dt*gp(i,j,k,1);
+              vel_g(i,j,k,2) += sigma(i,j,k)*a_dt*gp(i,j,k,2);
+            }
+
+            sigma(i,j,k) *= ep_g(i,j,k);
+
+          });
+
+        } else {
+          amrex::ParallelFor(bx,[a_dt, proj_2, vel_g, sigma, rho_g, ep_g, gp]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          {
+
+            sigma(i,j,k) = 1.0/rho_g(i,j,k);
+
+            if (proj_2) {
+              vel_g(i,j,k,0) += sigma(i,j,k)*a_dt*gp(i,j,k,0);
+              vel_g(i,j,k,1) += sigma(i,j,k)*a_dt*gp(i,j,k,1);
+              vel_g(i,j,k,2) += sigma(i,j,k)*a_dt*gp(i,j,k,2);
+            }
+
+            sigma(i,j,k) *= ep_g(i,j,k);
+
+          });
         }
 
-        // Print level infos
-        if (proj_for_small_dt)
-           amrex::Print() << "Before projection (with small dt modification):" << std::endl;
-        else
-           amrex::Print() << "Before projection:" << std::endl;
+     }
 
-        mfix_print_max_vel(lev);
-        mfix_print_max_gp(lev);
-        amrex::Print() << "Min and Max of ep_g "
-                       << m_leveldata[lev]->ep_g->min(0) << " "
-                       << m_leveldata[lev]->ep_g->max(0) << std::endl;
+      // Print level infos
+      if (proj_for_small_dt)
+        amrex::Print() << "Before projection (with small dt modification):" << std::endl;
+      else
+        amrex::Print() << "Before projection:" << std::endl;
+
+      mfix_print_max_vel(lev);
+      mfix_print_max_gp(lev);
+      amrex::Print() << "Min and Max of ep_g "
+                     << m_leveldata[lev]->ep_g->min(0) << " "
+                     << m_leveldata[lev]->ep_g->max(0) << std::endl;
     }
 
     // Set velocities BC before projection
@@ -131,18 +177,6 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     }
 
     //
-    // Create sigma
-    //
-    Vector<MultiFab> sigma(nlev);
-
-    for (int lev = 0; lev < nlev; ++lev )
-    {
-        sigma[lev].define(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-        MultiFab::Copy(sigma[lev], *m_leveldata[lev]->ep_g, 0, 0, 1, 0);
-        MultiFab::Divide(sigma[lev], *density[lev], 0, 0, 1, 0);
-    }
-
-    //
     // Setup the nodal projector
     //
 
@@ -150,7 +184,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
 
     nodal_projector.reset(new NodalProjector(get_vel_g(),
-                                             GetVecOfConstPtrs(sigma),
+                                             GetVecOfConstPtrs(sigma_mf),
                                              geom, info,
                                              a_S_cc));
 
