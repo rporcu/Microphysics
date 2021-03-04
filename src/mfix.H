@@ -565,14 +565,14 @@ class mfix : public AmrCore
 
     void mfix_initial_iterations (Real dt, Real stop_time);
 
+public:
+
     void mfix_apply_nodal_projection (Vector< amrex::MultiFab* >& a_depdt,
                                       amrex::Real a_time,
                                       amrex::Real a_dt,
                                       amrex::Real a_prev_dt,
                                       bool proj_2,
                                       amrex::Vector<amrex::MultiFab const*> const& density);
-
-  public:
 
     void compute_tra_forces (amrex::Vector<amrex::MultiFab      *> const& tra_forces,
                              amrex::Vector<amrex::MultiFab const*> const& density);
