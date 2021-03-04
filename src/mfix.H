@@ -214,7 +214,14 @@ class mfix : public AmrCore
 
     void mfix_add_txfr_explicit (Real dt);
 
-    void mfix_add_txfr_implicit (Real dt);
+    void mfix_add_txfr_implicit (amrex::Real dt,
+                                 amrex::Vector<amrex::MultiFab*      > const& vel_in,
+                                 amrex::Vector<amrex::MultiFab*      > const& h_g_in,
+                                 amrex::Vector<amrex::MultiFab*      > const& T_g_in,
+                                 amrex::Vector<amrex::MultiFab const*> const& txfr_in,
+                                 amrex::Vector<amrex::MultiFab const*> const& rho_in,
+                                 amrex::Vector<amrex::MultiFab const*> const& ep_g_in,
+                                 amrex::Vector<amrex::MultiFab const*> const& cp_g_in);
 
     void mfix_calc_txfr_particle (Real time);
 
