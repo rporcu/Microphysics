@@ -249,6 +249,36 @@ Vector< MultiFab* > mfix::get_vel_g_old () noexcept
   return r;
 }
 
+Vector< MultiFab* > mfix::get_gp () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->gp);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_p_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->p_g);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_p_g_old () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->p_go);
+  }
+  return r;
+}
+
 Vector< MultiFab* > mfix::get_mu_g () noexcept
 {
   Vector<MultiFab*> r;
@@ -536,6 +566,26 @@ Vector< MultiFab const*> mfix::get_vel_g_old_const () const noexcept
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
     r.push_back(m_leveldata[lev]->vel_go);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_p_g_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->p_g);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_p_g_old_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->p_go);
   }
   return r;
 }

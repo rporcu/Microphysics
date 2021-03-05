@@ -35,7 +35,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     {
        if (FLUID::solve)
        {
-          EvolveFluid(nstep,dt,prev_dt,time,stop_time, drag_timing);
+          EvolveFluid(nstep, dt, prev_dt, time, stop_time, drag_timing);
           prev_dt = dt;
        }
     }
@@ -50,7 +50,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     if ( (DEM::solve or PIC::solve) and FLUID::solve){
       Real start_coupling = ParallelDescriptor::second();
 
-      mfix_calc_txfr_particle(new_time);
+      mfix_calc_txfr_particle(new_time, get_vel_g(), get_gp(), get_T_g());
 
       if (REACTIONS::solve)
         mfix_calc_chem_txfr(time, get_ep_g(), get_ro_g(), get_X_gk());

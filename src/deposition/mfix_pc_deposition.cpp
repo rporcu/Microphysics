@@ -306,21 +306,16 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
 
                   amrex::Gpu::Atomic::Add(&volarr(i+ii,j+jj,k+kk), weight_vol*pvol);
 
-                  amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::velx),
-                                          weight_vol*pvx);
-                  amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::vely),
-                                          weight_vol*pvy);
-                  amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::velz),
-                                          weight_vol*pvz);
-                  amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::beta),
-                                          weight_vol*pbeta);
+                  amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::velx), weight_vol*pvx);
+                  amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::vely), weight_vol*pvy);
+                  amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::velz), weight_vol*pvz);
+
+                  amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::beta), weight_vol*pbeta);
 
                   if (advect_enthalpy)
                   {
-                    amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gammaTp),
-                                            weight_vol*pTp);
-                    amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gamma),
-                                            weight_vol*pgamma);
+                    amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gammaTp), weight_vol*pTp);
+                    amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gamma), weight_vol*pgamma);
                   }
                 }
               }

@@ -44,14 +44,17 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                             Vector< MultiFab* >& conv_s_old,
                             Vector< MultiFab* >& conv_X_old,
                             Vector< MultiFab* >& ro_RHS_old,
-                            Vector< MultiFab* >& /*divtau_old*/,
+                            Vector< MultiFab* >& ro_RHS,
                             Vector< MultiFab* >& lap_trac_old,
+                            Vector< MultiFab* >& lap_trac,
                             Vector< MultiFab* >& enthalpy_RHS_old,
+                            Vector< MultiFab* >& enthalpy_RHS,
                             Vector< MultiFab* >& lap_T_old,
-                            Vector< MultiFab* >& lap_T_star,
+                            Vector< MultiFab* >& lap_T,
                             Vector< MultiFab* >& species_RHS_old,
+                            Vector< MultiFab* >& species_RHS,
                             Vector< MultiFab* >& lap_X_old,
-                            Vector< MultiFab* >& lap_X_star,
+                            Vector< MultiFab* >& lap_X,
                             Real time,
                             Real l_dt,
                             Real l_prev_dt,
@@ -62,9 +65,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
     // Local flag for explicit diffusion
     bool l_explicit_diff = (predictor_diff_type() == DiffusionType::Explicit);
-
-    fillpatch_all(get_vel_g_old(), get_ro_g_old(), get_h_g_old(), get_trac_old(),
-                  get_X_gk_old(), new_time);
 
     mfix_set_density_bcs(time, get_ro_g_old());
 
@@ -412,7 +412,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                        GetVecOfConstPtrs(density_nph));
 
 
-
     // *************************************************************************************
     // Update velocity with convective update, diffusive update, gp and gravity source terms
     // *************************************************************************************
@@ -424,7 +423,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-       for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+       for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
        {
          // Tilebox
          Box bx = mfi.tilebox ();
@@ -481,7 +480,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // Add the drag and convective heat transfer terms implicitly to vel_g and h_g
     // *************************************************************************************
     if (DEM::solve or PIC::solve)
-      mfix_add_txfr_implicit(l_dt, get_vel_g(), get_h_g(), get_T_g(),get_txfr_const(),
+      mfix_add_txfr_implicit(l_dt, get_vel_g(), get_h_g(), get_T_g(), get_txfr_const(),
                 GetVecOfConstPtrs(density_nph), get_ep_g_const(), get_cp_g_const());
 
     // *************************************************************************************
@@ -517,6 +516,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
       // Set velocity boundary conditions
       mfix_set_velocity_bcs(new_time, get_vel_g(), 0);
+
       // Diffuse velocity
       diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_mu_g(), l_dt);
 
@@ -568,10 +568,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       const bool update_lapS = false;
       const bool update_lapX = advect_fluid_species;
 
-      compute_laps(update_lapT, update_lapS, update_lapX, lap_T_star, lap_trac_old, lap_X_star,
+      compute_laps(update_lapT, update_lapS, update_lapX, lap_T, lap_trac_old, lap_X,
                    get_T_g(), get_trac_old(), get_X_gk(), get_ep_g_const(), get_ro_g_const());
 
-      mfix_open_system_rhs(S_cc, lap_T_star, lap_X_star, get_ep_g_const(), get_ro_g_const(),
+      mfix_open_system_rhs(S_cc, lap_T, lap_X, get_ep_g_const(), get_ro_g_const(),
           get_MW_g_const(), get_T_g_const(), get_cp_g_const(), get_X_gk_const(),
           get_D_gk_const(), get_h_gk_const(), get_txfr_const(), get_ro_gk_txfr_const());
     }
@@ -583,7 +583,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     }
 
     mfix_apply_nodal_projection(S_cc, new_time, l_dt, l_prev_dt, proj_2,
-                                GetVecOfConstPtrs(density_nph));
+                                get_vel_g_old(), get_vel_g(), get_p_g(), get_gp(),
+                                get_ep_g(), get_txfr(), GetVecOfConstPtrs(density_nph));
 
     for (int lev(0); lev <= finest_level; ++lev) {
       delete S_cc[lev];
