@@ -91,16 +91,6 @@ test:csg:
   tags:
     - joule
 
-build:cuda-10.1:
-  variables:
-    CUDA_MODULE: cuda/10.1
-  <<: *build_gpu
-
-build:cuda-10.2:
-  variables:
-    CUDA_MODULE: cuda/10.2
-  <<: *build_gpu
-
 build:cuda-11.0:
   variables:
     CUDA_MODULE: cuda/11.0
