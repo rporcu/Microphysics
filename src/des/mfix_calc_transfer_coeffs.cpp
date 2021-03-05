@@ -6,19 +6,28 @@
 #include <mfix_des_conv_coeff_K.H>
 #include <mfix_mf_helpers.H>
 
-void mfix::mfix_calc_transfer_coeffs ()
+void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
+                                      Vector< MultiFab* > const& ro_g_in,
+                                      Vector< MultiFab* > const& vel_g_in,
+                                      Vector< MultiFab* > const& mu_g_in,
+                                      Vector< MultiFab* > const& cp_g_in,
+                                      Vector< MultiFab* > const& k_g_in)
 {
   if (m_drag_type == DragType::WenYu) {
-    mfix_calc_transfer_coeffs(ComputeDragWenYu(DEM::small_number,DEM::large_number,DEM::eps));
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in,
+                              ComputeDragWenYu(DEM::small_number, DEM::large_number, DEM::eps));
   }
   else if (m_drag_type == DragType::Gidaspow) {
-    mfix_calc_transfer_coeffs(ComputeDragGidaspow(DEM::small_number,DEM::large_number,DEM::eps));
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in,
+                              ComputeDragGidaspow(DEM::small_number,DEM::large_number,DEM::eps));
   }
   else if (m_drag_type == DragType::BVK2) {
-    mfix_calc_transfer_coeffs(ComputeDragBVK2(DEM::small_number,DEM::large_number,DEM::eps));
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in,
+                              ComputeDragBVK2(DEM::small_number,DEM::large_number,DEM::eps));
   }
   else if (m_drag_type == DragType::UserDrag) {
-    mfix_calc_transfer_coeffs(ComputeDragUser(DEM::small_number,DEM::large_number,DEM::eps));
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in,
+                              ComputeDragUser(DEM::small_number,DEM::large_number,DEM::eps));
   }
   else {
     amrex::Abort("Invalid Drag Type.");
@@ -26,27 +35,43 @@ void mfix::mfix_calc_transfer_coeffs ()
 }
 
 template <typename F1>
-void mfix::mfix_calc_transfer_coeffs (F1 DragFunc)
+void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
+                                      Vector< MultiFab* > const& ro_g_in,
+                                      Vector< MultiFab* > const& vel_g_in,
+                                      Vector< MultiFab* > const& mu_g_in,
+                                      Vector< MultiFab* > const& cp_g_in,
+                                      Vector< MultiFab* > const& k_g_in,
+                                      F1 DragFunc)
 {
   if (advect_enthalpy)
   {
     if (m_convection_type == ConvectionType::RanzMarshall) {
-        mfix_calc_transfer_coeffs(DragFunc, ComputeConvRanzMarshall(DEM::small_number,DEM::large_number,DEM::eps));
+        mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in, DragFunc,
+                                  ComputeConvRanzMarshall(DEM::small_number,DEM::large_number,DEM::eps));
     }
     else if (m_convection_type == ConvectionType::Gunn) {
-      mfix_calc_transfer_coeffs(DragFunc, ComputeConvGunn(DEM::small_number,DEM::large_number,DEM::eps));
+      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in, DragFunc,
+                                ComputeConvGunn(DEM::small_number,DEM::large_number,DEM::eps));
     }
     else {
       amrex::Abort("Invalid Convection Type.");
     }
   }
   else {
-    mfix_calc_transfer_coeffs(DragFunc, NullConvectionCoeff());
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in, DragFunc,
+                              NullConvectionCoeff());
   }
 }
 
 template <typename F1, typename F2>
-void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
+void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
+                                      Vector< MultiFab* > const& ro_g_in,
+                                      Vector< MultiFab* > const& vel_g_in,
+                                      Vector< MultiFab* > const& mu_g_in,
+                                      Vector< MultiFab* > const& cp_g_in,
+                                      Vector< MultiFab* > const& k_g_in,
+                                      F1 DragFunc,
+                                      F2 ConvectionCoeff)
 {
   using MFIXParIter = MFIXParticleContainer::MFIXParIter;
 
@@ -55,18 +80,18 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
   // We copy the value inside the domain to the outside to avoid
   // unphysical volume fractions.
   const int dir_bc_in = 2;
-  mfix_set_epg_bcs(get_ep_g(), dir_bc_in);
+  mfix_set_epg_bcs(ep_g_in, dir_bc_in);
 
   // This is just a sanity check to make sure we're not using covered values
   // We can remove these lines once we're confident in the algorithm
-  EB_set_covered(*m_leveldata[0]->vel_g, 0, 3, 1, covered_val);
-  EB_set_covered(*m_leveldata[0]->ep_g,  0, 1, 1, covered_val);
-  EB_set_covered(*m_leveldata[0]->mu_g,  0, 1, 1, covered_val);
-  EB_set_covered(*m_leveldata[0]->ro_g,  0, 1, 1, covered_val);
+  EB_set_covered(*vel_g_in[0], 0, 3, 1, covered_val);
+  EB_set_covered(*ep_g_in[0],  0, 1, 1, covered_val);
+  EB_set_covered(*mu_g_in[0],  0, 1, 1, covered_val);
+  EB_set_covered(*ro_g_in[0],  0, 1, 1, covered_val);
 
   if (advect_enthalpy) {
-    EB_set_covered(*m_leveldata[0]->cp_g,  0, 1, 1, covered_val);
-    EB_set_covered(*m_leveldata[0]->k_g,   0, 1, 1, covered_val);
+    EB_set_covered(*cp_g_in[0],  0, 1, 1, covered_val);
+    EB_set_covered(*k_g_in[0],   0, 1, 1, covered_val);
   }
 
   for (int lev = 0; lev < nlev; lev++)
@@ -85,12 +110,12 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
 
     if (OnSameGrids)
     {
-      ro_ptr = m_leveldata[lev]->ro_g;
-      mu_ptr = m_leveldata[lev]->mu_g;
+      ro_ptr = ro_g_in[lev];
+      mu_ptr = mu_g_in[lev];
 
       if (advect_enthalpy) {
-        kg_ptr = m_leveldata[lev]->k_g;
-        cp_ptr = m_leveldata[lev]->cp_g;
+        kg_ptr = k_g_in[lev];
+        cp_ptr = cp_g_in[lev];
       }
       else {
         kg_ptr = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
@@ -101,14 +126,10 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
       interp_ptr = new MultiFab(grids[lev], dmap[lev], interp_comp, interp_ng, MFInfo(), *ebfactory[lev]);
 
       // Copy fluid velocity
-      interp_ptr->copy(*m_leveldata[lev]->vel_g, 0, 0,
-                        m_leveldata[lev]->vel_g->nComp(),
-                        interp_ng, interp_ng);
+      interp_ptr->copy(*vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng, interp_ng);
 
       // Copy volume fraction
-      interp_ptr->copy(*m_leveldata[lev]->ep_g,  0, 3,
-                        m_leveldata[lev]->ep_g->nComp(),
-                        interp_ng, interp_ng);
+      interp_ptr->copy(*ep_g_in[lev],  0, 3, ep_g_in[lev]->nComp(), interp_ng, interp_ng);
 
       interp_ptr->FillBoundary(geom[lev].periodicity());
     }
@@ -124,18 +145,18 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
       // Temporary arrays  -- copies with no ghost cells
       const int ng_to_copy = 0;
 
-      ro_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->ro_g->nComp(), 1);
-      ro_ptr->copy(*m_leveldata[lev]->ro_g, 0, 0, 1, ng_to_copy, ng_to_copy);
+      ro_ptr = new MultiFab(pba, pdm, ro_g_in[lev]->nComp(), 1);
+      ro_ptr->copy(*ro_g_in[lev], 0, 0, 1, ng_to_copy, ng_to_copy);
 
-      mu_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->mu_g->nComp(), 1);
-      mu_ptr->copy(*m_leveldata[lev]->mu_g, 0, 0, 1, ng_to_copy, ng_to_copy);
+      mu_ptr = new MultiFab(pba, pdm, mu_g_in[lev]->nComp(), 1);
+      mu_ptr->copy(*mu_g_in[lev], 0, 0, 1, ng_to_copy, ng_to_copy);
 
       if (advect_enthalpy) {
-        kg_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->k_g->nComp(), 1);
-        kg_ptr->copy(*m_leveldata[lev]->k_g, 0, 0, 1, ng_to_copy, ng_to_copy);
+        kg_ptr = new MultiFab(pba, pdm, k_g_in[lev]->nComp(), 1);
+        kg_ptr->copy(*k_g_in[lev], 0, 0, 1, ng_to_copy, ng_to_copy);
 
-        cp_ptr = new MultiFab(pba, pdm, m_leveldata[lev]->cp_g->nComp(), 1);
-        cp_ptr->copy(*m_leveldata[lev]->cp_g, 0, 0, 1, ng_to_copy, ng_to_copy);
+        cp_ptr = new MultiFab(pba, pdm, cp_g_in[lev]->nComp(), 1);
+        cp_ptr->copy(*cp_g_in[lev], 0, 0, 1, ng_to_copy, ng_to_copy);
       }
       else {
         kg_ptr = new MultiFab(pba, pdm, 1, 0, MFInfo(), ebfactory_loc);
@@ -146,14 +167,10 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
       interp_ptr = new MultiFab(pba, pdm, interp_comp, interp_ng, MFInfo(), ebfactory_loc);
 
       // Copy fluid velocity
-      interp_ptr->copy(*m_leveldata[lev]->vel_g, 0, 0,
-                        m_leveldata[lev]->vel_g->nComp(),
-                        interp_ng, interp_ng);
+      interp_ptr->copy(*vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng, interp_ng);
 
       // Copy volume fraction
-      interp_ptr->copy(*m_leveldata[lev]->ep_g,  0, 3,
-                        m_leveldata[lev]->ep_g->nComp(),
-                        interp_ng, interp_ng);
+      interp_ptr->copy(*ep_g_in[lev],  0, 3, ep_g_in[lev]->nComp(), interp_ng, interp_ng);
 
       interp_ptr->FillBoundary(geom[lev].periodicity());
     }
@@ -206,8 +223,8 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
             amrex::ParallelFor(np,
-              [particles_ptr,p_realarray,interp_array,ro_array,mu_array,kg_array,cp_array,
-               DragFunc, ConvectionCoeff,plo,dxi,
+              [particles_ptr,p_realarray,interp_array,ro_array,mu_array,
+               kg_array,cp_array,DragFunc, ConvectionCoeff,plo,dxi,
                local_cg_dem=DEM::cg_dem, local_advect_enthalpy=advect_enthalpy]
               AMREX_GPU_DEVICE (int ip) noexcept
             {
@@ -409,6 +426,6 @@ void mfix::mfix_calc_transfer_coeffs (F1 DragFunc, F2 ConvectionCoeff)
   // Reset the volume fractions back to the correct values at
   // inflow faces.
   const int dir_bc_out = 1;
-  mfix_set_epg_bcs(get_ep_g(), dir_bc_out);
+  mfix_set_epg_bcs(ep_g_in, dir_bc_out);
 
 }

@@ -46,14 +46,17 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                             Vector< MultiFab* >& conv_s_old,
                             Vector< MultiFab* >& conv_X_old,
                             Vector< MultiFab* >& ro_RHS_old,
-                            Vector< MultiFab* >& /*divtau_old*/,
+                            Vector< MultiFab* >& ro_RHS,
                             Vector< MultiFab* >& lap_trac_old,
+                            Vector< MultiFab* >& lap_trac,
                             Vector< MultiFab* >& enthalpy_RHS_old,
+                            Vector< MultiFab* >& enthalpy_RHS,
                             Vector< MultiFab* >& lap_T_old,
-                            Vector< MultiFab* >& lap_T_star,
+                            Vector< MultiFab* >& lap_T,
                             Vector< MultiFab* >& species_RHS_old,
+                            Vector< MultiFab* >& species_RHS,
                             Vector< MultiFab* >& lap_X_old,
-                            Vector< MultiFab* >& lap_X_star,
+                            Vector< MultiFab* >& lap_X,
                             Real time,
                             Real l_dt,
                             Real l_prev_dt,
@@ -63,9 +66,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
     // We use the new-time value for things computed on the "*" state
     Real new_time = time + l_dt;
-
-    fillpatch_all(get_vel_g(), get_ro_g(), get_h_g(), get_trac(),
-                  get_X_gk(), new_time);
 
     mfix_set_density_bcs(time, get_ro_g());
 
@@ -98,10 +98,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     Vector<MultiFab*> conv_u(finest_level+1);
     Vector<MultiFab*> conv_s(finest_level+1);
     Vector<MultiFab*> conv_X(finest_level+1);
-    Vector<MultiFab*> ro_RHS(finest_level+1);
-    Vector<MultiFab*> lap_trac(finest_level+1);
-    Vector<MultiFab*> enthalpy_RHS(finest_level+1);
-    Vector<MultiFab*> species_RHS(finest_level+1);
 
     for (int lev = 0; lev <= finest_level; ++lev)
     {
@@ -111,27 +107,15 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         // 3 components: one for density, one for tracer and one for enthalpy
         conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
 
-        ro_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-        lap_trac[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
-        enthalpy_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-
         density_nph[lev].setVal(0.0);
 
         conv_u[lev]->setVal(0.0);
         conv_s[lev]->setVal(0.0);
 
-        ro_RHS[lev]->setVal(0.0);
-        lap_trac[lev]->setVal(0.0);
-        enthalpy_RHS[lev]->setVal(0.0);
+        if (advect_fluid_species) {
+          conv_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
 
-      if (advect_fluid_species) {
-        conv_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0,
-            MFInfo(), *ebfactory[lev]);
-        species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
-            0, MFInfo(), *ebfactory[lev]);
-
-        conv_X[lev]->setVal(0.0);
-        species_RHS[lev]->setVal(0.0);
+          conv_X[lev]->setVal(0.0);
       }
     }
 
@@ -190,7 +174,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
 
     if (open_system_constraint) {
-      mfix_open_system_rhs(GetVecOfPtrs(rhs_mac), lap_T_star, lap_X_star,
+      mfix_open_system_rhs(GetVecOfPtrs(rhs_mac), lap_T, lap_X,
          get_ep_g_const(), get_ro_g_const(), get_MW_g_const(),
          get_T_g_const(), get_cp_g_const(), get_X_gk_const(), get_D_gk_const(),
          get_h_gk_const(), get_txfr_const(), get_ro_gk_txfr_const());
@@ -312,10 +296,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                 Array4<Real const> const& h_rhs_o = enthalpy_RHS_old[lev]->const_array(mfi);
                 Array4<Real const> const& h_rhs   = enthalpy_RHS[lev]->const_array(mfi);
                 Array4<Real const> const& lap_T_o = lap_T_old[lev]->const_array(mfi);
-                Array4<Real const> const& lap_T   = lap_T_star[lev]->const_array(mfi);
+                Array4<Real const> const& lap_T_n = lap_T[lev]->const_array(mfi);
 
                 amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_n,rho_o,rho_n,epg,cp_g,
-                    dhdt_o,dhdt,h_rhs_o,h_rhs,l_dt,lap_T_o,lap_T,
+                    dhdt_o,dhdt,h_rhs_o,h_rhs,l_dt,lap_T_o,lap_T_n,
                     explicit_diffusive_enthalpy]
                   AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
@@ -329,7 +313,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                   h_g += .5*l_dt*(h_rhs_o(i,j,k)+h_rhs(i,j,k));
 
                   if (explicit_diffusive_enthalpy) {
-                    h_g += .5*l_dt*(lap_T_o(i,j,k)+lap_T(i,j,k));
+                    h_g += .5*l_dt*(lap_T_o(i,j,k)+lap_T_n(i,j,k));
                   }
                   else {
                     // Crank-Nicolson so we only add half of the diffusive term
@@ -425,12 +409,12 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
           Array4<Real const> const& dXdt_o  = conv_X_old[lev]->const_array(mfi);
           Array4<Real const> const& dXdt    = conv_X[lev]->const_array(mfi);
           Array4<Real const> const& lap_X_o = lap_X_old[lev]->const_array(mfi);
-          Array4<Real const> const& lap_X   = lap_X_star[lev]->const_array(mfi);
+          Array4<Real const> const& lap_X_n = lap_X[lev]->const_array(mfi);
           Array4<Real const> const& X_rhs_o = species_RHS_old[lev]->const_array(mfi);
           Array4<Real const> const& X_rhs   = species_RHS[lev]->const_array(mfi);
 
           ParallelFor(bx, [X_gk_o,X_gk_n,rho_o,rho_n,epg,dXdt_o,dXdt,X_rhs_o,
-              X_rhs,l_dt,nspecies_g,lap_X_o,lap_X,explicit_diffusive_species]
+              X_rhs,l_dt,nspecies_g,lap_X_o,lap_X_n,explicit_diffusive_species]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             const Real epg_loc = epg(i,j,k);
@@ -448,7 +432,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
               X_gk += .5*l_dt*lap_X_o(i,j,k,n);
 
               if (explicit_diffusive_species)
-                X_gk += .5*l_dt*lap_X(i,j,k,n);
+                X_gk += .5*l_dt*lap_X_n(i,j,k,n);
 
               X_gk_n(i,j,k,n) = X_gk * denom;
             }
@@ -669,10 +653,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       const bool update_lapS = false;
       const bool update_lapX = advect_fluid_species;
 
-      compute_laps(update_lapT, update_lapS, update_lapX, lap_T_star, lap_trac, lap_X_star,
+      compute_laps(update_lapT, update_lapS, update_lapX, lap_T, lap_trac, lap_X,
          get_T_g(), get_trac_old(), get_X_gk_old(), get_ep_g_const(), get_ro_g_old_const());
 
-      mfix_open_system_rhs(S_cc, lap_T_star, lap_X_star, get_ep_g_const(), get_ro_g_const(),
+      mfix_open_system_rhs(S_cc, lap_T, lap_X, get_ep_g_const(), get_ro_g_const(),
           get_MW_g_const(), get_T_g_const(), get_cp_g_const(), get_X_gk_const(),
           get_D_gk_const(), get_h_gk_const(), get_txfr_const(), get_ro_gk_txfr_const());
 
@@ -686,7 +670,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     }
 
     mfix_apply_nodal_projection(S_cc, new_time, l_dt, l_prev_dt, proj_2,
-                                GetVecOfConstPtrs(density_nph));
+                                get_vel_g_old(), get_vel_g(), get_p_g(), get_gp(),
+                                get_ep_g(), get_txfr(), GetVecOfConstPtrs(density_nph));
 
     for (int lev(0); lev <= finest_level; ++lev) {
       delete depdt[lev];
@@ -707,13 +692,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
        delete conv_u[lev];
        delete conv_s[lev];
 
-       delete ro_RHS[lev];
-       delete lap_trac[lev];
-       delete enthalpy_RHS[lev];
-
        if (advect_fluid_species) {
          delete conv_X[lev];
-         delete species_RHS[lev];
        }
     }
 }

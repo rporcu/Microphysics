@@ -115,15 +115,6 @@ mfix::RegridArrays (int lev)
     std::swap((m_leveldata[lev]->ep_g), ep_g_new);
     delete ep_g_new;
 
-    // Old void fraction
-    MultiFab& ep_go = *(m_leveldata[lev]->ep_go);
-    MultiFab* ep_go_new = new MultiFab(grids[lev], dmap[lev], ep_go.nComp(),
-                                      ep_go.nGrow(), MFInfo(), *ebfactory[lev]);
-    ep_go_new->setVal(1);
-    ep_go_new->ParallelCopy(ep_go, 0, 0, ep_go.nComp(), src_ngrow, ep_go.nGrow(), geom[lev].periodicity());
-    std::swap((m_leveldata[lev]->ep_go), ep_go_new);
-    delete ep_go_new;
-
     // Gas density
     MultiFab* ro_g_new = new MultiFab(grids[lev], dmap[lev],
                                       m_leveldata[lev]->ro_g->nComp(),

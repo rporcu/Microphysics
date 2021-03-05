@@ -11,18 +11,25 @@
 #include <mfix_dem_parms.H>
 
 void
-mfix::mfix_calc_txfr_fluid (Real time)
+mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
+                            Vector< MultiFab* > const& ep_g_in,
+                            Vector< MultiFab* > const& ro_g_in,
+                            Vector< MultiFab* > const& vel_g_in,
+                            Vector< MultiFab* > const& mu_g_in,
+                            Vector< MultiFab* > const& cp_g_in,
+                            Vector< MultiFab* > const& k_g_in,
+                            Real time)
 {
   const Real strttime = ParallelDescriptor::second();
 
-  mfix_calc_transfer_coeffs();
+  mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in);
 
   // ******************************************************************************
   // Now use the transfer coeffs of individual particles to create the
   // interphase transfer terms on the fluid
   // ******************************************************************************
   for (int lev = 0; lev < nlev; lev++)
-    m_leveldata[lev]->txfr->setVal(0);
+    txfr[lev]->setVal(0);
 
   if (nlev > 2)
     amrex::Abort("For right now"
@@ -40,22 +47,22 @@ mfix::mfix_calc_txfr_fluid (Real time)
 
       // If we are already working with the internal mf defined on the
       // particle_box_array, then we just work with this.
-      txfr_ptr[lev] = m_leveldata[lev]->txfr;
+      txfr_ptr[lev] = txfr[lev];
 
     } else if (lev == 0 and (not OnSameGrids)) {
 
       // If beta_mf is not defined on the particle_box_array, then we need
       // to make a temporary here and copy into beta_mf at the end.
       txfr_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                              pc->ParticleDistributionMap(lev),
-                                              m_leveldata[lev]->txfr->nComp(),
-                                              m_leveldata[lev]->txfr->nGrow());
+                                   pc->ParticleDistributionMap(lev),
+                                   txfr[lev]->nComp(),
+                                   txfr[lev]->nGrow());
 
     } else {
       // If lev > 0 we make a temporary at the coarse resolution
-      BoxArray ba_crse(amrex::coarsen(pc->ParticleBoxArray(lev),this->m_gdb->refRatio(0)));
+      BoxArray ba_crse(amrex::coarsen(pc->ParticleBoxArray(lev), this->m_gdb->refRatio(0)));
       txfr_ptr[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev),
-                                   m_leveldata[lev]->txfr->nComp(), 1);
+                                   txfr[lev]->nComp(), 1);
     }
 
     // We must have ghost cells for each FAB so that a particle in one grid can spread
@@ -65,7 +72,7 @@ mfix::mfix_calc_txfr_fluid (Real time)
     if (txfr_ptr[lev]->nGrow() < 1)
       amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
 
-    txfr_ptr[lev]->setVal(0.0, 0, m_leveldata[lev]->txfr->nComp(), txfr_ptr[lev]->nGrow());
+    txfr_ptr[lev]->setVal(0.0, 0, txfr[lev]->nComp(), txfr_ptr[lev]->nGrow());
   }
 
   const Geometry& gm = Geom(0);
@@ -167,8 +174,8 @@ mfix::mfix_calc_txfr_fluid (Real time)
 
       PhysBCFunct<BndryFuncArray> cphysbc(Geom(lev-1), bcs, bfunc);
       PhysBCFunct<BndryFuncArray> fphysbc(Geom(lev  ), bcs, bfunc);
-      m_leveldata[lev]->txfr->setVal(0);
-      amrex::InterpFromCoarseLevel(*m_leveldata[lev]->txfr, time, *txfr_ptr[lev-1],
+      txfr[lev]->setVal(0);
+      amrex::InterpFromCoarseLevel(*txfr[lev], time, *txfr_ptr[lev-1],
                                    0, 0, 1, Geom(lev-1), Geom(lev),
                                    cphysbc, 0, fphysbc, 0,
                                    ref_ratio[0], mapper,
@@ -180,12 +187,12 @@ mfix::mfix_calc_txfr_fluid (Real time)
   // to copy here from txfr_ptr into mf_to_be_filled. I believe that we don't
   // need any information in ghost cells so we don't copy those.
 
-  if (txfr_ptr[0] != m_leveldata[0]->txfr) {
-    m_leveldata[0]->txfr->copy(*txfr_ptr[0], 0, 0, m_leveldata[0]->txfr->nComp());
+  if (txfr_ptr[0] != txfr[0]) {
+    txfr[0]->copy(*txfr_ptr[0], 0, 0, txfr[0]->nComp());
   }
 
   for (int lev = 0; lev < nlev; lev++) {
-    if (txfr_ptr[lev] != m_leveldata[lev]->txfr)
+    if (txfr_ptr[lev] != txfr[lev])
       delete txfr_ptr[lev];
   }
 
@@ -199,16 +206,19 @@ mfix::mfix_calc_txfr_fluid (Real time)
 
   if(mfix::m_deposition_diffusion_coeff > 0.) {
     // Apply mean field diffusion to drag force
-    diffusion_op->diffuse_drag(get_txfr(), mfix::m_deposition_diffusion_coeff);
+    diffusion_op->diffuse_drag(txfr, mfix::m_deposition_diffusion_coeff);
   }
 
   // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
   for (int lev = 0; lev < nlev; lev++)
-    m_leveldata[lev]->txfr->FillBoundary(geom[lev].periodicity());
+    txfr[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
-mfix::mfix_calc_txfr_particle (Real time)
+mfix::mfix_calc_txfr_particle (Real time,
+                               Vector< MultiFab* > const& vel_g_in,
+                               Vector< MultiFab* > const& gp_in,
+                               Vector< MultiFab* > const& T_g_in)
 {
   using MFIXParIter = MFIXParticleContainer::MFIXParIter;
 
@@ -217,19 +227,19 @@ mfix::mfix_calc_txfr_particle (Real time)
   // Extrapolate velocity Dirichlet bc's to ghost cells
   int extrap_dir_bcs = 1;
 
-  mfix_set_velocity_bcs   (time, get_vel_g(), extrap_dir_bcs);
+  mfix_set_velocity_bcs(time, vel_g_in, extrap_dir_bcs);
 
   if (advect_enthalpy)
-      mfix_set_temperature_bcs(time, get_T_g());
+      mfix_set_temperature_bcs(time, T_g_in);
 
   for (int lev = 0; lev < nlev; lev++)
   {
     Box domain(geom[lev].Domain());
     MultiFab gp_tmp;
 
-    gp_tmp.define(grids[lev],dmap[lev],3,1,MFInfo(),*ebfactory[lev]);
+    gp_tmp.define(grids[lev], dmap[lev], 3, 1, MFInfo(), *ebfactory[lev]);
 
-    MultiFab::Copy(gp_tmp, *m_leveldata[lev]->gp, 0, 0, 3, 1);
+    MultiFab::Copy(gp_tmp, *gp_in[lev], 0, 0, 3, 1);
     gp_tmp.FillBoundary(geom[lev].periodicity());
 
     //
@@ -258,11 +268,11 @@ mfix::mfix_calc_txfr_particle (Real time)
 
     // This is just a sanity check to make sure we're not using covered values
     // We can remove these lines once we're confident in the algorithm
-    EB_set_covered(*m_leveldata[0]->vel_g, 0, 3, 1, covered_val);
+    EB_set_covered(*vel_g_in[0], 0, 3, 1, covered_val);
     EB_set_covered( gp_tmp  , 0, 3, 1, covered_val);
 
     if (advect_enthalpy)
-      EB_set_covered(*m_leveldata[0]->T_g, 0, 1, 1, covered_val);
+      EB_set_covered(*T_g_in[0], 0, 1, 1, covered_val);
 
     const int interp_ng = 1;    // Only one layer needed for interpolation
     const int interp_comp = 7;  // Four components (3 vel_g + 3 gp + temperature)
@@ -273,20 +283,14 @@ mfix::mfix_calc_txfr_particle (Real time)
       interp_ptr = new MultiFab(grids[lev], dmap[lev], interp_comp, interp_ng, MFInfo(), *ebfactory[lev]);
 
       // Copy fluid velocity
-      interp_ptr->copy(*m_leveldata[lev]->vel_g, 0, 0,
-                        m_leveldata[lev]->vel_g->nComp(),
-                        interp_ng, interp_ng);
+      interp_ptr->copy(*vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng, interp_ng);
 
       // Copy pressure gradient
-      interp_ptr->copy(gp_tmp, 0, 3,
-                       gp_tmp.nComp(),
-                       interp_ng, interp_ng);
+      interp_ptr->copy(gp_tmp, 0, 3, gp_tmp.nComp(), interp_ng, interp_ng);
 
       // Copy fluid temperature
       if(advect_enthalpy){
-        interp_ptr->copy(*m_leveldata[lev]->T_g, 0, 6,
-                          m_leveldata[lev]->T_g->nComp(),
-                          interp_ng, interp_ng);
+        interp_ptr->copy(*T_g_in[lev], 0, 6, T_g_in[lev]->nComp(), interp_ng, interp_ng);
       } else {
         interp_ptr->setVal(0.0, 6, 1, interp_ng);
       }
@@ -307,18 +311,14 @@ mfix::mfix_calc_txfr_particle (Real time)
       interp_ptr = new MultiFab(pba, pdm, interp_comp, interp_ng, MFInfo(), ebfactory_loc);
 
       // Copy fluid velocity
-      interp_ptr->copy(*m_leveldata[lev]->vel_g, 0, 0,
-                        m_leveldata[lev]->vel_g->nComp(),
-                        interp_ng, interp_ng);
+      interp_ptr->copy(*vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng, interp_ng);
 
       // Copy pressure gradient
       interp_ptr->copy(gp_tmp, 0, 3, gp_tmp.nComp(), interp_ng, interp_ng);
 
       // Copy fluid temperature
       if(advect_enthalpy) {
-        interp_ptr->copy(*m_leveldata[lev]->T_g, 0, 6,
-                          m_leveldata[lev]->T_g->nComp(),
-                          interp_ng, interp_ng);
+        interp_ptr->copy(*T_g_in[lev], 0, 6, T_g_in[lev]->nComp(), interp_ng, interp_ng);
       } else {
         interp_ptr->setVal(0.0, 6, 1, interp_ng);
       }
@@ -519,5 +519,5 @@ mfix::mfix_calc_txfr_particle (Real time)
 
   // Reset velocity Dirichlet bc's to face values
   extrap_dir_bcs = 0;
-  mfix_set_velocity_bcs(time, get_vel_g(), extrap_dir_bcs);
+  mfix_set_velocity_bcs(time, vel_g_in, extrap_dir_bcs);
 }

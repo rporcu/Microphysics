@@ -25,6 +25,12 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
                                    Real a_dt,
                                    Real a_prev_dt,
                                    bool proj_2,
+                                   amrex::Vector<amrex::MultiFab*      > const& vel_g_old_in,
+                                   amrex::Vector<amrex::MultiFab*      > const& vel_g_in,
+                                   amrex::Vector<amrex::MultiFab*      > const& p_g_in,
+                                   amrex::Vector<amrex::MultiFab*      > const& gp_in,
+                                   amrex::Vector<amrex::MultiFab*      > const& ep_g_in,
+                                   amrex::Vector<amrex::MultiFab*      > const& txfr_in,
                                    amrex::Vector<amrex::MultiFab const*> const& density)
 {
     BL_PROFILE("mfix::mfix_apply_nodal_projection");
@@ -49,22 +55,21 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     {
       sigma_mf[lev].define(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
 
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-      for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+      for (MFIter mfi(*vel_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
         // Tilebox
         Box bx = mfi.tilebox();
 
-        Array4<Real      > const&  vel_g = m_leveldata[lev]->vel_g->array(mfi);
+        Array4<Real      > const&  vel_g = vel_g_in[lev]->array(mfi);
         Array4<Real      > const&  sigma = sigma_mf[lev].array(mfi);
 
         Array4<Real const> const&  rho_g = density[lev]->const_array(mfi);
-        Array4<Real const> const&  ep_g  = m_leveldata[lev]->ep_g->const_array(mfi);
-        Array4<Real const> const&  gp    = m_leveldata[lev]->gp->const_array(mfi);
-        Array4<Real const> const&  txfr  = m_leveldata[lev]->txfr->const_array(mfi);
+        Array4<Real const> const&  ep_g  = ep_g_in[lev]->const_array(mfi);
+        Array4<Real const> const&  gp    = gp_in[lev]->const_array(mfi);
+        Array4<Real const> const&  txfr  = txfr_in[lev]->const_array(mfi);
 
         if(m_use_drag_in_projection) {
           amrex::ParallelFor(bx,[a_dt, proj_2, vel_g, sigma, rho_g, ep_g, gp, txfr]
@@ -114,22 +119,20 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
       mfix_print_max_vel(lev);
       mfix_print_max_gp(lev);
       amrex::Print() << "Min and Max of ep_g "
-                     << m_leveldata[lev]->ep_g->min(0) << " "
-                     << m_leveldata[lev]->ep_g->max(0) << std::endl;
+                     << ep_g_in[lev]->min(0) << " "
+                     << ep_g_in[lev]->max(0) << std::endl;
     }
 
     // Set velocities BC before projection
-    mfix_set_velocity_bcs(a_time, get_vel_g(), 0);
+    mfix_set_velocity_bcs(a_time, vel_g_in, 0);
 
     // Define "vel" to be U^* - U^n rather than U^*
     if (proj_for_small_dt)
     {
-       mfix_set_velocity_bcs(a_time, get_vel_g_old(), 0);
+       mfix_set_velocity_bcs(a_time, vel_g_old_in, 0);
 
        for(int lev = 0; lev <= finest_level; lev++)
-          MultiFab::Saxpy(*m_leveldata[lev]->vel_g, -1.0,
-                          *m_leveldata[lev]->vel_go, 0, 0, 3,
-                          m_leveldata[lev]->vel_g->nGrow());
+          MultiFab::Saxpy(*vel_g_in[lev], -1.0, *vel_g_old_in[lev], 0, 0, 3, vel_g_in[lev]->nGrow());
     }
 
     //
@@ -144,10 +147,10 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
 
         epu[lev]->setVal(1.e200);
 
-        MultiFab::Copy(*epu[lev], *m_leveldata[lev]->vel_g, 0, 0, 3, epu[lev]->nGrow());
+        MultiFab::Copy(*epu[lev], *vel_g_in[lev], 0, 0, 3, epu[lev]->nGrow());
 
         for (int n(0); n < 3; n++)
-            MultiFab::Multiply(*epu[lev], *(m_leveldata[lev]->ep_g), 0, n, 1, epu[lev]->nGrow());
+            MultiFab::Multiply(*epu[lev], *ep_g_in[lev], 0, n, 1, epu[lev]->nGrow());
 
         epu[lev]->FillBoundary(geom[lev].periodicity());
 
@@ -183,13 +186,13 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     LPInfo info;
     info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
 
-    nodal_projector.reset(new NodalProjector(get_vel_g(),
+    nodal_projector.reset(new NodalProjector(vel_g_in,
                                              GetVecOfConstPtrs(sigma_mf),
                                              geom, info,
                                              a_S_cc));
 
     nodal_projector->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
-    nodal_projector->setAlpha(GetVecOfConstPtrs(get_ep_g()));
+    nodal_projector->setAlpha(GetVecOfConstPtrs(ep_g_in));
 
     nodal_projector->computeRHS(get_diveu(), epu, a_S_cc);
     nodal_projector->setCustomRHS(GetVecOfConstPtrs(get_diveu()));
@@ -201,9 +204,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     if (proj_for_small_dt)
     {
        for(int lev = 0; lev <= finest_level; lev++)
-          MultiFab::Saxpy(*m_leveldata[lev]->vel_g, 1.0,
-                          *m_leveldata[lev]->vel_go, 0, 0, 3,
-                          m_leveldata[lev]->vel_g->nGrow());
+          MultiFab::Saxpy(*vel_g_in[lev], 1.0, *vel_g_old_in[lev], 0, 0, 3, vel_g_in[lev]->nGrow());
     }
 
     // Get phi and fluxes
@@ -223,20 +224,16 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
         if (proj_2)
         {
             // p := phi
-            MultiFab::Copy(*m_leveldata[lev]->p_g, *phi[lev], 0, 0, 1,
-                           phi[lev]->nGrow());
-            MultiFab::Copy(*m_leveldata[lev]->gp, *gradphi[lev], 0, 0, 3,
-                           gradphi[lev]->nGrow());
-            m_leveldata[lev]->p_g->mult(qdt);
-            m_leveldata[lev]->gp->mult(qdt);
+            MultiFab::Copy(*p_g_in[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+            MultiFab::Copy(*gp_in[lev], *gradphi[lev], 0, 0, 3, gradphi[lev]->nGrow());
+            p_g_in[lev]->mult(qdt);
+            gp_in[lev]->mult(qdt);
         }
         else
         {
             // p := p + phi/dt
-            MultiFab::Saxpy(*m_leveldata[lev]->p_g, qdt, *phi[lev], 0, 0, 1,
-                            phi[lev]->nGrow());
-            MultiFab::Saxpy(*m_leveldata[lev]->gp, qdt, *gradphi[lev], 0, 0, 3,
-                            gradphi[lev]->nGrow());
+            MultiFab::Saxpy(*p_g_in[lev], qdt, *phi[lev], 0, 0, 1, phi[lev]->nGrow());
+            MultiFab::Saxpy(*gp_in[lev], qdt, *gradphi[lev], 0, 0, 3, gradphi[lev]->nGrow());
         }
     }
 
@@ -244,16 +241,16 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     //
     // This part is just to plot diveu
     //
-    mfix_set_velocity_bcs(a_time, get_vel_g(), 0);
+    mfix_set_velocity_bcs(a_time, vel_g_in, 0);
 
     for (int lev(0); lev < nlev; ++lev)
     {
         epu[lev]->setVal(1.e200);
 
-        MultiFab::Copy(*epu[lev], *m_leveldata[lev]->vel_g, 0, 0, 3, epu[lev]->nGrow());
+        MultiFab::Copy(*epu[lev], *vel_g_in[lev], 0, 0, 3, epu[lev]->nGrow());
 
         for (int n(0); n < 3; n++)
-            MultiFab::Multiply(*epu[lev], *m_leveldata[lev]->ep_g, 0, n, 1, epu[lev]->nGrow());
+            MultiFab::Multiply(*epu[lev], *ep_g_in[lev], 0, n, 1, epu[lev]->nGrow());
 
         epu[lev]->FillBoundary(geom[lev].periodicity());
 
@@ -282,12 +279,12 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
 
     for (int lev = nlev-1; lev > 0; lev--)
     {
-        avgDown(lev-1, *m_leveldata[lev]->vel_g, *m_leveldata[lev-1]->vel_g);
-        avgDown(lev-1, *m_leveldata[lev]->gp, *m_leveldata[lev-1]->gp);
+        avgDown(lev-1, *vel_g_in[lev], *vel_g_in[lev-1]);
+        avgDown(lev-1, *gp_in[lev], *gp_in[lev-1]);
     }
 
     // Swap ghost cells and apply BCs to velocity
-    mfix_set_velocity_bcs(a_time, get_vel_g(), 0);
+    mfix_set_velocity_bcs(a_time, vel_g_in, 0);
 
     // Print level info after projection
     for (int lev(0); lev < nlev; lev++)

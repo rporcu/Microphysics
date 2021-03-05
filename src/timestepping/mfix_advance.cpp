@@ -30,7 +30,8 @@ mfix::mfix_project_velocity ()
       depdt[lev] = MFHelpers::createFrom(*(m_leveldata[lev]->ep_g), 0.0, 1).release();
 
     mfix_apply_nodal_projection(depdt, time, dummy_dt, dummy_dt, proj_2,
-                                get_ro_g_const());
+                                get_vel_g_old(), get_vel_g(), get_p_g(), get_gp(),
+                                get_ep_g(), get_txfr(), get_ro_g_const());
 
     for (int lev(0); lev <= finest_level; ++lev)
       delete depdt[lev];
@@ -75,7 +76,8 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
                    m_leveldata[lev]->vel_g->nComp(), m_leveldata[lev]->vel_go->nGrow());
 
   if (DEM::solve or PIC::solve) {
-    mfix_calc_txfr_fluid(time);
+    mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
+        get_mu_g(), get_cp_g(), get_k_g(), time);
 
     if (REACTIONS::solve) {
       mfix_calc_chem_txfr(time, get_ep_g(), get_ro_g_old(), get_X_gk_old());
@@ -86,12 +88,17 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   Vector< MultiFab* > conv_u(finest_level+1, nullptr);
   Vector< MultiFab* > conv_s(finest_level+1, nullptr);
   Vector< MultiFab* > conv_X(finest_level+1, nullptr);
+  Vector< MultiFab* > ro_RHS_old(finest_level+1, nullptr);
   Vector< MultiFab* > ro_RHS(finest_level+1, nullptr);
-  Vector< MultiFab* > divtau(finest_level+1, nullptr);
+  Vector< MultiFab* > lap_trac_old(finest_level+1, nullptr);
   Vector< MultiFab* > lap_trac(finest_level+1, nullptr);
+  Vector< MultiFab* > enthalpy_RHS_old(finest_level+1, nullptr);
   Vector< MultiFab* > enthalpy_RHS(finest_level+1, nullptr);
+  Vector< MultiFab* > lap_T_old(finest_level+1, nullptr);
   Vector< MultiFab* > lap_T(finest_level+1, nullptr);
+  Vector< MultiFab* > species_RHS_old(finest_level+1, nullptr);
   Vector< MultiFab* > species_RHS(finest_level+1, nullptr);
+  Vector< MultiFab* > lap_X_old(finest_level+1, nullptr);
   Vector< MultiFab* > lap_X(finest_level+1, nullptr);
 
   for (int lev = 0; lev <= finest_level; lev++)
@@ -99,30 +106,37 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     conv_u[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
     // density, one for tracer and one for enthalpy
     conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+    ro_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
     ro_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-    divtau[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+    lap_trac_old[lev]   = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
     lap_trac[lev]   = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
+    enthalpy_RHS_old[lev]   = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
     enthalpy_RHS[lev]   = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+    lap_T_old[lev]   = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
     lap_T[lev]   = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
 
     conv_u[lev]->setVal(0.0);
     conv_s[lev]->setVal(0.0);
+    ro_RHS_old[lev]->setVal(0.0);
     ro_RHS[lev]->setVal(0.0);
-    divtau[lev]->setVal(0.0);
+    lap_trac_old[lev]->setVal(0.0);
     lap_trac[lev]->setVal(0.0);
+    enthalpy_RHS_old[lev]->setVal(0.0);
     enthalpy_RHS[lev]->setVal(0.0);
+    lap_T_old[lev]->setVal(0.0);
     lap_T[lev]->setVal(0.0);
 
     if (advect_fluid_species) {
-      conv_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0,
-          MFInfo(), *ebfactory[lev]);
-      species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0,
-          MFInfo(), *ebfactory[lev]);
-      lap_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0,
-          MFInfo(), *ebfactory[lev]);
+      conv_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
+      species_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
+      species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
+      lap_X_old[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
+      lap_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
 
       conv_X[lev]->setVal(0.0);
+      species_RHS_old[lev]->setVal(0.0);
       species_RHS[lev]->setVal(0.0);
+      lap_X_old[lev]->setVal(0.0);
       lap_X[lev]->setVal(0.0);
     }
   }
@@ -134,13 +148,11 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     bool proj_2 = false;
 
-    auto& lap_T_star = lap_T;
-    auto& lap_X_star = lap_X;
-    auto& dt_star = dt;
+    auto dt_copy = dt;
 
-    mfix_apply_predictor(conv_u, conv_s, conv_X, ro_RHS, divtau, lap_trac,
-        enthalpy_RHS, lap_T, lap_T_star, species_RHS, lap_X, lap_X_star, time,
-        dt, dt_star, proj_2);
+    mfix_apply_predictor(conv_u, conv_s, conv_X, ro_RHS_old, ro_RHS, lap_trac_old,
+        lap_trac, enthalpy_RHS_old, enthalpy_RHS, lap_T_old, lap_T, species_RHS_old,
+        species_RHS, lap_X_old, lap_X, time, dt, dt_copy, proj_2);
 
     // Reset any quantities which might have been updated
     for (int lev = 0; lev <= finest_level; lev++)
@@ -197,15 +209,20 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   {
      delete conv_u[lev];
      delete conv_s[lev];
+     delete ro_RHS_old[lev];
      delete ro_RHS[lev];
-     delete divtau[lev];
+     delete lap_trac_old[lev];
      delete lap_trac[lev];
+     delete enthalpy_RHS_old[lev];
      delete enthalpy_RHS[lev];
+     delete lap_T_old[lev];
      delete lap_T[lev];
 
      if (advect_fluid_species) {
        delete conv_X[lev];
+       delete species_RHS_old[lev];
        delete species_RHS[lev];
+       delete lap_X_old[lev];
        delete lap_X[lev];
      }
   }
@@ -315,7 +332,7 @@ mfix::mfix_add_txfr_implicit (amrex::Real dt,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
       // Tilebox
       Box bx = mfi.tilebox();
