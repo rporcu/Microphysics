@@ -187,7 +187,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     mfix_compute_convective_term(conv_u, conv_s, conv_X,
         GetVecOfPtrs(vel_forces), GetVecOfPtrs(tra_forces),
         get_vel_g_const(), get_ep_g_const(), get_ro_g_const(),
-        get_h_g_const(), get_trac_const(), get_X_gk_const(),
+        get_h_g_const(), get_trac_const(), get_X_gk_const(), get_txfr_const(),
         GetVecOfPtrs(ep_u_mac), GetVecOfPtrs(ep_v_mac), GetVecOfPtrs(ep_w_mac),
         GetVecOfConstPtrs(rhs_mac), get_divtau(), l_dt, new_time);
 
@@ -448,7 +448,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     //    viscous terms and using the half-time density
     // *************************************************************************************
     compute_vel_forces(GetVecOfPtrs(vel_forces), get_vel_g_const(),
-                       GetVecOfConstPtrs(density_nph));
+                       GetVecOfConstPtrs(density_nph), get_txfr_const());
 
 
     // *************************************************************************************

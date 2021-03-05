@@ -61,6 +61,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
                                     Vector< MultiFab const*> const& h_g_in,
                                     Vector< MultiFab const*> const& trac_in,
                                     Vector< MultiFab const*> const& X_gk_in,
+                                    Vector< MultiFab const*> const& txfr_in,
                                     Vector< MultiFab*      > const& ep_u_mac,
                                     Vector< MultiFab*      > const& ep_v_mac,
                                     Vector< MultiFab*      > const& ep_w_mac,
@@ -79,7 +80,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
     if (advection_type() != AdvectionType::MOL) {
 
       bool include_pressure_gradient = !(m_use_mac_phi_in_godunov);
-      compute_vel_forces(vel_forces, vel_in, ro_g_in, include_pressure_gradient);
+      bool include_drag_force = include_pressure_gradient && m_use_drag_in_godunov;
+      compute_vel_forces(vel_forces, vel_in, ro_g_in, txfr_in,
+         include_pressure_gradient, include_drag_force);
 
       if (m_godunov_include_diff_in_forcing)
         for (int lev = 0; lev <= finest_level; ++lev)
@@ -101,7 +104,10 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
     //    and compute the tracer forcing terms for the first time
     if (advection_type() != AdvectionType::MOL) {
 
-      compute_vel_forces(vel_forces, vel_in, ro_g_in);
+      bool include_pressure_gradient = true;
+      bool include_drag_force = true;
+      compute_vel_forces(vel_forces, vel_in, ro_g_in, txfr_in,
+         include_pressure_gradient, include_drag_force);
 
       if (m_godunov_include_diff_in_forcing)
         for (int lev = 0; lev <= finest_level; ++lev)

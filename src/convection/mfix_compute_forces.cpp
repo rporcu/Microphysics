@@ -34,18 +34,23 @@ void mfix::compute_tra_forces (Vector<MultiFab*> const& tra_forces,
 void mfix::compute_vel_forces (amrex::Vector<amrex::MultiFab*      > const& vel_forces,
                                amrex::Vector<amrex::MultiFab const*> const& velocity,
                                amrex::Vector<amrex::MultiFab const*> const& density,
-                               bool include_pressure_gradient)
+                               amrex::Vector<amrex::MultiFab const*> const& txfr_in,
+                               bool include_pressure_gradient,
+                               bool include_drag_force)
 {
     for (int lev = 0; lev <= finest_level; ++lev)
        compute_vel_forces_on_level (lev, *vel_forces[lev], *velocity[lev], *density[lev],
-                                    include_pressure_gradient);
+                                    *txfr_in[lev], include_pressure_gradient,
+                                    include_drag_force);
 }
 
 void mfix::compute_vel_forces_on_level (int lev,
-                                          MultiFab& vel_forces,
-                                          const MultiFab& /*velocity*/,
-                                          const MultiFab& density,
-                                          bool include_pressure_gradient)
+                                        MultiFab& vel_forces,
+                                        const MultiFab& velocity,
+                                        const MultiFab& density,
+                                        const MultiFab& txfr_in,
+                                        bool include_pressure_gradient,
+                                        bool include_drag_force)
 {
     GpuArray<Real,3> l_gravity{gravity[0],gravity[1],gravity[2]};
     GpuArray<Real,3> l_gp0{gp0[0], gp0[1], gp0[2]};
@@ -60,19 +65,53 @@ void mfix::compute_vel_forces_on_level (int lev,
       Array4<Real const> const&   rho =     density.const_array(mfi);
       Array4<Real const> const& gradp = m_leveldata[lev]->gp->const_array(mfi);
 
-      amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-      {
-        Real rhoinv = 1.0/rho(i,j,k);
+      if(!include_pressure_gradient && !include_drag_force){
+        amrex::ParallelFor(bx, [vel_f, rho, l_gravity, gradp, l_gp0]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+          const Real rhoinv = 1.0/rho(i,j,k);
 
-        if (include_pressure_gradient) {
-          AMREX_D_TERM(vel_f(i,j,k,0) = l_gravity[0]-(gradp(i,j,k,0)+l_gp0[0])*rhoinv;,
-                       vel_f(i,j,k,1) = l_gravity[1]-(gradp(i,j,k,1)+l_gp0[1])*rhoinv;,
-                       vel_f(i,j,k,2) = l_gravity[2]-(gradp(i,j,k,2)+l_gp0[2])*rhoinv;);
-        } else {
-          AMREX_D_TERM(vel_f(i,j,k,0) = l_gravity[0]-(               l_gp0[0])*rhoinv;,
-                       vel_f(i,j,k,1) = l_gravity[1]-(               l_gp0[1])*rhoinv;,
-                       vel_f(i,j,k,2) = l_gravity[2]-(               l_gp0[2])*rhoinv;);
-        }
-      });
+          vel_f(i,j,k,0) = l_gravity[0]-(               l_gp0[0])*rhoinv;
+          vel_f(i,j,k,1) = l_gravity[1]-(               l_gp0[1])*rhoinv;
+          vel_f(i,j,k,2) = l_gravity[2]-(               l_gp0[2])*rhoinv;
+
+        });
+
+      } else if (include_pressure_gradient && !include_drag_force) {
+        amrex::ParallelFor(bx, [vel_f, rho, l_gravity, gradp, l_gp0]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+          const Real rhoinv = 1.0/rho(i,j,k);
+
+          vel_f(i,j,k,0) = l_gravity[0]-(gradp(i,j,k,0)+l_gp0[0])*rhoinv;
+          vel_f(i,j,k,1) = l_gravity[1]-(gradp(i,j,k,1)+l_gp0[1])*rhoinv;
+          vel_f(i,j,k,2) = l_gravity[2]-(gradp(i,j,k,2)+l_gp0[2])*rhoinv;
+        });
+
+      } else if (include_pressure_gradient && include_drag_force) {
+
+        Array4<Real const> const& vel_g = velocity.const_array(mfi);
+        Array4<Real const> const& txfr  = txfr_in.const_array(mfi);
+
+        amrex::ParallelFor(bx, [vel_f, rho, l_gravity, gradp, l_gp0, vel_g, txfr]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+          const Real rhoinv = 1.0/rho(i,j,k);
+
+          const Real beta = txfr(i,j,k,Transfer::beta);
+
+          const Real drag_x = txfr(i,j,k,Transfer::velx) - beta*vel_g(i,j,k,0);
+          const Real drag_y = txfr(i,j,k,Transfer::vely) - beta*vel_g(i,j,k,1);
+          const Real drag_z = txfr(i,j,k,Transfer::velz) - beta*vel_g(i,j,k,2);
+
+          vel_f(i,j,k,0) = l_gravity[0]-(gradp(i,j,k,0)+l_gp0[0]+drag_x)*rhoinv;
+          vel_f(i,j,k,1) = l_gravity[1]-(gradp(i,j,k,1)+l_gp0[1]+drag_y)*rhoinv;
+          vel_f(i,j,k,2) = l_gravity[2]-(gradp(i,j,k,2)+l_gp0[2]+drag_z)*rhoinv;
+        });
+
+      } else {
+        amrex::Abort("Bad combo of inputs in compute vel forces");
+      }
+
     }
 }

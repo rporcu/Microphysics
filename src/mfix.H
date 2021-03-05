@@ -602,13 +602,17 @@ public:
     void compute_vel_forces (amrex::Vector<amrex::MultiFab*      > const& vel_forces,
                              amrex::Vector<amrex::MultiFab const*> const& velocity,
                              amrex::Vector<amrex::MultiFab const*> const& density,
-                             bool include_pressure_gradient = true);
+                             amrex::Vector<amrex::MultiFab const*> const& txfr_in,
+                             bool include_pressure_gradient = true,
+                             bool include_drag_force = false);
 
     void compute_vel_forces_on_level ( int lev,
                                        amrex::MultiFab& vel_forces,
                                        const amrex::MultiFab& velocity,
                                        const amrex::MultiFab& density,
-                                       bool include_pressure_gradient = true);
+                                       const amrex::MultiFab& txfr_in,
+                                       bool include_pressure_gradient = true,
+                                       bool include_drag_force = false);
 
     void compute_laps (const bool update_lapT,
                        const bool update_LapTrac,
@@ -767,6 +771,7 @@ public:
                                        Vector< MultiFab const*> const& h_g_in,
                                        Vector< MultiFab const*> const& trac_in,
                                        Vector< MultiFab const*> const& X_gk_in,
+                                       Vector< MultiFab const*> const& txfr_in,
                                        Vector< MultiFab*      > const& u_mac,
                                        Vector< MultiFab*      > const& v_mac,
                                        Vector< MultiFab*      > const& w_mac,
@@ -1076,6 +1081,9 @@ public:
     //    use gradient of mac phi which contains the full pressure
     bool m_use_mac_phi_in_godunov = false;
 
+    // If using Godunov, if true then include the explicit fluid
+    // drag force, -beta(u_g - u_s), with the pressure term.
+    bool m_use_drag_in_godunov = false;
 
     enum struct DiffusionType {
             Invalid, Explicit, Crank_Nicolson, Implicit
