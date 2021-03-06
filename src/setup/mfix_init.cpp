@@ -215,6 +215,7 @@ mfix::InitParams ()
     pp.query("godunov_use_forces_in_trans"      , m_godunov_use_forces_in_trans);
     pp.query("godunov_include_diff_in_forcing"  , m_godunov_include_diff_in_forcing);
     pp.query("use_mac_phi_in_godunov"           , m_use_mac_phi_in_godunov);
+    pp.query("use_drag_in_godunov"              , m_use_drag_in_godunov);
 
 
     pp.query("redistribution_type"              , m_redistribution_type);
