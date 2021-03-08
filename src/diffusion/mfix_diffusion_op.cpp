@@ -418,13 +418,18 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab* >& lapX_out,
 {
   BL_PROFILE("DiffusionOp::ComputeLapX");
 
+  // TODO: check on this
+  const bool already_on_centroids = true;
+
   int finest_level = amrcore->finestLevel();
 
   // Number of fluid species
   const int nspecies_g = FLUID::nspecies;
 
+  // Auxiliary data where we store Div{ep_g ro_g D_gk Grad{X_gk}}
   Vector< MultiFab* > lapX_aux(finest_level+1);
 
+  // Allocate space for lapX_aux and set it to 0
   for(int lev = 0; lev <= finest_level; lev++)
   {
     lapX_aux[lev] = new MultiFab(grids[lev], dmap[lev], nspecies_g, nghost, MFInfo(),
@@ -447,52 +452,631 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab* >& lapX_out,
 
     b_coeffs.setVal(0.);
 
+    // b_coeffs  = ep_g ro_g D_gk
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
     for (MFIter mfi(*ep_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
-      Box const& bx = mfi.growntilebox(IntVect(1,1,1));
+      Box const& bx = mfi.tilebox();
 
-      if (bx.ok())
+      Array4<Real const> const& ep_g_arr     = ep_g_in[lev]->const_array(mfi);
+      Array4<Real const> const& ro_g_arr     = ro_g_in[lev]->const_array(mfi);
+      Array4<Real const> const& D_gk_arr     = D_gk_in[lev]->const_array(mfi);
+      Array4<Real      > const& b_coeffs_arr = b_coeffs.array(mfi);
+
+      amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,D_gk_arr,b_coeffs_arr,nspecies_g]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-        Array4<Real const> const& ep_g_arr     = ep_g_in[lev]->const_array(mfi);
-        Array4<Real const> const& ro_g_arr     = ro_g_in[lev]->const_array(mfi);
-        Array4<Real const> const& D_gk_arr     = D_gk_in[lev]->const_array(mfi);
-        Array4<Real      > const& b_coeffs_arr = b_coeffs.array(mfi);
+        const Real ep_g = ep_g_arr(i,j,k);
+        const Real ro_g = ro_g_arr(i,j,k);
 
-        amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,D_gk_arr,b_coeffs_arr,nspecies_g]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        {
-          const Real ep_g = ep_g_arr(i,j,k);
-          const Real ro_g = ro_g_arr(i,j,k);
-
-          for (int n(0); n < nspecies_g; ++n)
-            b_coeffs_arr(i,j,k,n) = ep_g*ro_g*D_gk_arr(i,j,k,n);
-        });
-      }
+        for (int n(0); n < nspecies_g; ++n) {
+          b_coeffs_arr(i,j,k,n) = ep_g*ro_g*D_gk_arr(i,j,k,n);
+        }
+      });
     }
 
+    // species_b = interp(b_coeffs)
     EB_interp_CellCentroid_to_FaceCentroid (b_coeffs, GetArrOfPtrs(species_b[lev]), 0,
         0, nspecies_g, geom[lev], bcs_X);
 
+    // Set BCoeffs
     species_matrix->setBCoeffs(lev, GetArrOfConstPtrs(species_b[lev]), MLMG::Location::FaceCentroid);
 
+    // Set LevelBC
     species_matrix->setLevelBC(lev, GetVecOfConstPtrs(X_gk_in)[lev]);
   }
 
   MLMG solver(*species_matrix);
 
+  // Compute div (ep_g ro_g D_gk grad)) phi
   solver.apply(lapX_aux, X_gk_in);
 
-  for(int lev = 0; lev <= finest_level; lev++) {
+#ifdef AMREX_DEBUG
+  {
+    for (int lev(0); lev <= finest_level; ++lev) {
+      MultiFab temp(grids[lev], dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+      temp.setVal(0.);
+
+      for(int n(0); n < nspecies_g; ++n)
+        MultiFab::Add(temp, *lapX_aux[lev], n, 0, 1, 0);
+
+      Print() << "lev = " << lev << std::endl;
+      Print() << "summed div fluxes max = " << temp.max(0, 0) << std::endl;
+      Print() << "summed div fluxes min = " << temp.min(0, 0) << std::endl;
+    }
+  }
+#endif
+
+  // CORRECT FLUXES
+  // Compute Fluxes for correcting the result
+  // div(ep_g ro_g D_gk grad(phi)) - div(phi sum(ep_g ro_g D_gk grad(phi)))
+  {
+    // Allocate fluxes
+    Vector<Array<MultiFab*, 3>> fluxes(finest_level+1);
+#ifdef AMREX_DEBUG
+    Vector<Array<MultiFab*, 3>> summed_fluxes(finest_level+1);
+#endif
+
+    for (int lev(0); lev <= finest_level; ++lev) {
+      for(int dir = 0; dir < 3; dir++) {
+        BoxArray edge_ba = amrex::convert(grids[lev], IntVect::TheDimensionVector(dir));
+        fluxes[lev][dir] = new MultiFab(edge_ba, dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+#ifdef AMREX_DEBUG
+        summed_fluxes[lev][dir] = new MultiFab(edge_ba, dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+        summed_fluxes[lev][dir]->setVal(0.);
+#endif
+      }
+    }
+
+    // Compute fluxes
+    solver.getFluxes(fluxes, X_gk_in, MLLinOp::Location::FaceCentroid);
+
+#ifdef AMREX_DEBUG
+    for (int lev(0); lev <= finest_level; ++lev) {
+      Print() << "lev = " << lev << std::endl;
+      for(int dir = 0; dir < 3; dir++) {
+        Print() << "dir = " << dir << std::endl;
+        for (int n(0); n < nspecies_g; ++n) {
+          MultiFab::Add(*summed_fluxes[lev][dir], *fluxes[lev][dir], n, 0, 1, 0);
+        }
+
+        Print() << "summed fluxes max = " << summed_fluxes[lev][dir]->max(0, 0) << std::endl;
+        Print() << "summed fluxes min = " << summed_fluxes[lev][dir]->min(0, 0) << std::endl;
+      }
+    }
+
+    for (int lev(0); lev <= finest_level; ++lev) {
+      for(int dir = 0; dir < 3; dir++) {
+        summed_fluxes[lev][dir]->setVal(0.);
+      }
+    }
+#endif
+
+    // Correct the first term computed
+    for (int lev(0); lev <= finest_level; ++lev) {
+      // Auxiliary data
+      Array<MultiFab*, 3> X_gk_faces;
+
+      for(int dir = 0; dir < 3; dir++) {
+        BoxArray edge_ba = amrex::convert(grids[lev], IntVect::TheDimensionVector(dir));
+        X_gk_faces[dir] = new MultiFab(edge_ba, dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+      }
+
+      // Interpolate
+      EB_interp_CellCentroid_to_FaceCentroid(*X_gk_in[lev], X_gk_faces, 0,
+          0, nspecies_g, geom[lev], bcs_X);
+
+      // Compute fluxes_gk = X_gk_faces sum{fluxes_gk}
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+      for (MFIter mfi(*X_gk_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        Box const& bx = mfi.tilebox();
+
+        Array4<Real const> const& x_X_gk_faces_arr = X_gk_faces[0]->const_array(mfi);
+        Array4<Real const> const& y_X_gk_faces_arr = X_gk_faces[1]->const_array(mfi);
+        Array4<Real const> const& z_X_gk_faces_arr = X_gk_faces[2]->const_array(mfi);
+        Array4<Real      > const& x_fluxes_arr     = fluxes[lev][0]->array(mfi);
+        Array4<Real      > const& y_fluxes_arr     = fluxes[lev][1]->array(mfi);
+        Array4<Real      > const& z_fluxes_arr     = fluxes[lev][2]->array(mfi);
+#ifdef AMREX_DEBUG
+        Array4<Real      > const& x_summed_fluxes_arr = summed_fluxes[lev][0]->array(mfi);
+        Array4<Real      > const& y_summed_fluxes_arr = summed_fluxes[lev][1]->array(mfi);
+        Array4<Real      > const& z_summed_fluxes_arr = summed_fluxes[lev][2]->array(mfi);
+#endif
+
+        amrex::ParallelFor(bx, [x_X_gk_faces_arr,y_X_gk_faces_arr,z_X_gk_faces_arr,
+#ifdef AMREX_DEBUG
+            x_summed_fluxes_arr,y_summed_fluxes_arr,z_summed_fluxes_arr,
+#endif
+            x_fluxes_arr,y_fluxes_arr,z_fluxes_arr,nspecies_g]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+          Real x_sum(0);
+          Real y_sum(0);
+          Real z_sum(0);
+
+          for (int n(0); n < nspecies_g; ++n) {
+            x_sum += x_fluxes_arr(i,j,k,n);
+            y_sum += y_fluxes_arr(i,j,k,n);
+            z_sum += z_fluxes_arr(i,j,k,n);
+          }
+
+#ifdef AMREX_DEBUG
+          for (int n(0); n < nspecies_g; ++n) {
+            x_summed_fluxes_arr(i,j,k) += x_fluxes_arr(i,j,k,n) - x_X_gk_faces_arr(i,j,k,n)*x_sum;
+            y_summed_fluxes_arr(i,j,k) += y_fluxes_arr(i,j,k,n) - y_X_gk_faces_arr(i,j,k,n)*y_sum;
+            z_summed_fluxes_arr(i,j,k) += z_fluxes_arr(i,j,k,n) - z_X_gk_faces_arr(i,j,k,n)*z_sum;
+          }
+#endif
+
+          for (int n(0); n < nspecies_g; ++n) {
+            x_fluxes_arr(i,j,k,n) = x_X_gk_faces_arr(i,j,k,n)*x_sum;
+            y_fluxes_arr(i,j,k,n) = y_X_gk_faces_arr(i,j,k,n)*y_sum;
+            z_fluxes_arr(i,j,k,n) = z_X_gk_faces_arr(i,j,k,n)*z_sum;
+          }
+        });
+      } // MFIter
+
+#ifdef AMREX_DEBUG
+      for (int dir(0); dir < 3; ++dir) {
+        Print() << "dir = " << dir << std::endl;
+        Print() << "summed fluxes corrected max = " << summed_fluxes[lev][dir]->max(0, 0) << std::endl;
+        Print() << "summed fluxes corrected min = " << summed_fluxes[lev][dir]->min(0, 0) << std::endl;
+      }
+#endif
+
+      // Data for storing the divergence of the auxiliary data
+      MultiFab divXJ(grids[lev], dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+
+      // Set the divXJ data to 0
+      divXJ.setVal(0.);
+
+      // Compute the divergence
+      EB_computeDivergence(divXJ, GetArrOfConstPtrs(fluxes[lev]), geom[lev],
+          already_on_centroids);
+
+      // Correction:  div(j_gk) - div(X_gk sum{j_gk})
+      MultiFab::Add(*lapX_aux[lev], divXJ, 0, 0, nspecies_g, 1);
+
+#ifdef AMREX_DEBUG
+      {
+        MultiFab temp(grids[lev], dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
+        temp.setVal(0.);
+
+        for(int n(0); n < nspecies_g; ++n)
+          MultiFab::Add(temp, *lapX_aux[lev], n, 0, 1, 0);
+
+        Print() << "lev = " << lev << std::endl;
+        Print() << "summed div fluxes corrected max = " << temp.max(0, 0) << std::endl;
+        Print() << "summed div fluxes corrected min = " << temp.min(0, 0) << std::endl;
+      }
+#endif
+
+      // Free up space
+      for(int dir = 0; dir < 3; dir++) {
+        delete fluxes[lev][dir];
+        delete X_gk_faces[dir];
+      }
+
+    } // lev
+  } // correct_fluxes
+
+  // Redistribute lapX_aux into lapX_out
+  for(int lev = 0; lev <= finest_level; lev++)
+  {
     amrex::single_level_redistribute(*lapX_aux[lev], *lapX_out[lev], 0, nspecies_g, geom[lev]);
     EB_set_covered(*lapX_out[lev], 0, lapX_out[lev]->nComp(), lapX_out[lev]->nGrow(), 0.);
   }
 
+  // Free lapX_aux memory
   for(int lev = 0; lev <= finest_level; lev++)
   {
     delete lapX_aux[lev];
   }
+}
 
+
+void DiffusionOp::SubtractDivXGX (const Vector< MultiFab* >& X_gk_in,
+                                  const Vector< MultiFab const*>& ro_g_in,
+                                  const Vector< MultiFab const*>& ep_g_in,
+                                  const Vector< MultiFab const*>& D_gk_in,
+                                  const Real& dt)
+{
+  BL_PROFILE("DiffusionOp::ComputeDivXGX");
+
+  // TODO: check on this
+  const bool already_on_centroids = true;
+
+  int finest_level = amrcore->finestLevel();
+
+  // Number of fluid species
+  const int nspecies_g = FLUID::nspecies;
+
+  // Weaset it up for Div{rho_g D_gk Grad{X_gk}}
+  species_matrix->setScalars(0.0, -1.0);
+
+  Vector<BCRec> bcs_X; // This is just to satisfy the call to EB_interp...
+  bcs_X.resize(3*nspecies_g);
+
+  // Compute the coefficients
+  for (int lev = 0; lev <= finest_level; lev++)
+  {
+    MultiFab b_coeffs(ep_g_in[lev]->boxArray(), ep_g_in[lev]->DistributionMap(),
+        nspecies_g, 1, MFInfo(), ep_g_in[lev]->Factory());
+
+    // FROM HERE
+    b_coeffs.setVal(0.);
+
+    // b_coeffs  = ep_g ro_g D_gk
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (MFIter mfi(*ep_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+    {
+      Box const& bx = mfi.tilebox();
+
+      Array4<Real const> const& ep_g_arr     = ep_g_in[lev]->const_array(mfi);
+      Array4<Real const> const& ro_g_arr     = ro_g_in[lev]->const_array(mfi);
+      Array4<Real const> const& D_gk_arr     = D_gk_in[lev]->const_array(mfi);
+      Array4<Real      > const& b_coeffs_arr = b_coeffs.array(mfi);
+
+      amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,D_gk_arr,b_coeffs_arr,nspecies_g]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const Real ep_g = ep_g_arr(i,j,k);
+        const Real ro_g = ro_g_arr(i,j,k);
+
+        for (int n(0); n < nspecies_g; ++n) {
+          b_coeffs_arr(i,j,k,n) = ep_g*ro_g*D_gk_arr(i,j,k,n);
+        }
+      });
+    }
+
+    // species_b = interp(b_coeffs)
+    EB_interp_CellCentroid_to_FaceCentroid (b_coeffs, GetArrOfPtrs(species_b[lev]), 0,
+        0, nspecies_g, geom[lev], bcs_X);
+
+    // Set BCoeffs
+    species_matrix->setBCoeffs(lev, GetArrOfConstPtrs(species_b[lev]), MLMG::Location::FaceCentroid);
+
+    // Set LevelBC
+    species_matrix->setLevelBC(lev, GetVecOfConstPtrs(X_gk_in)[lev]);
+  }
+
+  MLMG solver(*species_matrix);
+
+  // Allocate fluxes
+  Vector<Array<MultiFab*, 3>> fluxes(finest_level+1);
+
+  for (int lev(0); lev <= finest_level; ++lev) {
+    for(int dir = 0; dir < 3; dir++) {
+      BoxArray edge_ba = amrex::convert(grids[lev], IntVect::TheDimensionVector(dir));
+      fluxes[lev][dir] = new MultiFab(edge_ba, dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+    }
+  }
+
+  // Compute fluxes
+  solver.getFluxes(fluxes, X_gk_in, MLLinOp::Location::FaceCentroid);
+
+  // Correct the first term computed
+  for (int lev(0); lev <= finest_level; ++lev) {
+    // Auxiliary data
+    Array<MultiFab*, 3> X_gk_faces;
+
+    for(int dir = 0; dir < 3; dir++) {
+      BoxArray edge_ba = amrex::convert(grids[lev], IntVect::TheDimensionVector(dir));
+      X_gk_faces[dir] = new MultiFab(edge_ba, dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+    }
+
+    // Interpolate
+    EB_interp_CellCentroid_to_FaceCentroid(*X_gk_in[lev], X_gk_faces, 0,
+        0, nspecies_g, geom[lev], bcs_X);
+
+    // Compute fluxes_gk = X_gk_faces sum{fluxes_gk}
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (MFIter mfi(*X_gk_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+      Box const& bx = mfi.tilebox();
+
+      Array4<Real const> const& x_X_gk_faces_arr = X_gk_faces[0]->const_array(mfi);
+      Array4<Real const> const& y_X_gk_faces_arr = X_gk_faces[1]->const_array(mfi);
+      Array4<Real const> const& z_X_gk_faces_arr = X_gk_faces[2]->const_array(mfi);
+      Array4<Real      > const& x_fluxes_arr     = fluxes[lev][0]->array(mfi);
+      Array4<Real      > const& y_fluxes_arr     = fluxes[lev][1]->array(mfi);
+      Array4<Real      > const& z_fluxes_arr     = fluxes[lev][2]->array(mfi);
+
+      amrex::ParallelFor(bx, [x_X_gk_faces_arr,y_X_gk_faces_arr,z_X_gk_faces_arr,
+          x_fluxes_arr,y_fluxes_arr,z_fluxes_arr,nspecies_g]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        Real x_sum(0);
+        Real y_sum(0);
+        Real z_sum(0);
+
+        for (int n(0); n < nspecies_g; ++n) {
+          x_sum += x_fluxes_arr(i,j,k,n);
+          y_sum += y_fluxes_arr(i,j,k,n);
+          z_sum += z_fluxes_arr(i,j,k,n);
+        }
+
+        for (int n(0); n < nspecies_g; ++n) {
+          x_fluxes_arr(i,j,k,n) = x_X_gk_faces_arr(i,j,k,n)*x_sum;
+          y_fluxes_arr(i,j,k,n) = y_X_gk_faces_arr(i,j,k,n)*y_sum;
+          z_fluxes_arr(i,j,k,n) = z_X_gk_faces_arr(i,j,k,n)*z_sum;
+        }
+      });
+    } // MFIter
+
+    // Data for storing the divergence of the auxiliary data
+    MultiFab DivXGX_aux(grids[lev], dmap[lev], nspecies_g, nghost, MFInfo(), *ebfactory[lev]);
+
+    // Set the DivXGX_aux data to 0
+    DivXGX_aux.setVal(0.);
+
+    // Compute the divergence
+    EB_computeDivergence(DivXGX_aux, GetArrOfConstPtrs(fluxes[lev]), geom[lev],
+        already_on_centroids);
+
+    // Data for storing the divergence
+    MultiFab DivXGX(grids[lev], dmap[lev], nspecies_g, nghost, MFInfo(), *ebfactory[lev]);
+
+    // Set the DivXGX data to 0
+    DivXGX.setVal(0.);
+
+    // Redistribute the divergence
+    amrex::single_level_redistribute(DivXGX_aux, DivXGX, 0, nspecies_g, geom[lev]);
+
+    // Set divergence covered values
+    EB_set_covered(DivXGX, 0, nspecies_g, DivXGX.nGrow(), 0.);
+
+    // Correction: X_gk_in - div(X_gk_in sum{j_gk})
+    MultiFab::Saxpy(*X_gk_in[lev], dt, DivXGX, 0, 0, nspecies_g, 1);
+
+    // Free up space
+    for(int dir = 0; dir < 3; dir++) {
+      delete fluxes[lev][dir];
+      delete X_gk_faces[dir];
+    }
+  } // lev
+}
+
+
+void DiffusionOp::ComputeLaphX (const Vector< MultiFab* >& laphX_out,
+                                const Vector< MultiFab* >& X_gk_in,
+                                const Vector< MultiFab const* >& ro_g_in,
+                                const Vector< MultiFab const* >& ep_g_in,
+                                const Vector< MultiFab const* >& D_gk_in,
+                                const Vector< MultiFab const* >& h_gk_in)
+{
+  BL_PROFILE("DiffusionOp::ComputeLaphX");
+
+  // TODO: check on this
+  const bool already_on_centroids = true;
+
+  int finest_level = amrcore->finestLevel();
+
+  // Number of fluid species
+  const int nspecies_g = FLUID::nspecies;
+
+  // Auxiliary data where we store Div{ep_g ro_g h_gk D_gk Grad{X_gk}}
+  Vector< MultiFab* > laphX_aux(finest_level+1);
+
+  // Allocate space for laphX_aux and set it to 0
+  for(int lev = 0; lev <= finest_level; lev++)
+  {
+    laphX_aux[lev] = new MultiFab(grids[lev], dmap[lev], nspecies_g, nghost, MFInfo(),
+        *ebfactory[lev]);
+
+    laphX_aux[lev]->setVal(0.0);
+  }
+
+  // We want to return div (ep_g ro_g h_gk D_gk grad)) phi
+  species_matrix->setScalars(0.0, -1.0);
+
+  Vector<BCRec> bcs_X; // This is just to satisfy the call to EB_interp...
+  bcs_X.resize(3*nspecies_g);
+
+  // b coefficients
+  Vector<MultiFab*> b_coeffs(finest_level+1);
+
+  // Compute the coefficients
+  for (int lev = 0; lev <= finest_level; lev++)
+  {
+    b_coeffs[lev] = new MultiFab(ep_g_in[lev]->boxArray(), ep_g_in[lev]->DistributionMap(),
+        nspecies_g, 1, MFInfo(), ep_g_in[lev]->Factory());
+
+    b_coeffs[lev]->setVal(0.);
+
+    // Local temporary data in case h_gk is not null
+    MultiFab hb_coeffs(ep_g_in[lev]->boxArray(), ep_g_in[lev]->DistributionMap(),
+        nspecies_g, 1, MFInfo(), ep_g_in[lev]->Factory());
+
+    hb_coeffs.setVal(0.);
+
+    // b_coeffs  = ep_g ro_g D_gk
+    // hb_coeffs = ep_g ro_g h_gk D_gk
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (MFIter mfi(*ep_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+    {
+      Box const& bx = mfi.tilebox();
+
+      Array4<Real const> const& ep_g_arr      = ep_g_in[lev]->const_array(mfi);
+      Array4<Real const> const& ro_g_arr      = ro_g_in[lev]->const_array(mfi);
+      Array4<Real const> const& D_gk_arr      = D_gk_in[lev]->const_array(mfi);
+      Array4<Real const> const& h_gk_arr      = h_gk_in[lev]->const_array(mfi);
+      Array4<Real      > const& b_coeffs_arr  = b_coeffs[lev]->array(mfi);
+      Array4<Real      > const& hb_coeffs_arr = hb_coeffs.array(mfi);
+
+      amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,D_gk_arr,b_coeffs_arr,
+          h_gk_arr,hb_coeffs_arr,nspecies_g]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const Real ep_g = ep_g_arr(i,j,k);
+        const Real ro_g = ro_g_arr(i,j,k);
+
+        for (int n(0); n < nspecies_g; ++n) {
+          const Real val = ep_g*ro_g*D_gk_arr(i,j,k,n);
+          b_coeffs_arr(i,j,k,n) = val;
+          hb_coeffs_arr(i,j,k,n) = h_gk_arr(i,j,k,n)*val;
+        }
+      });
+    }
+
+    // if h_gk is nullptr  species_b = b_coeffs
+    // else                species_b = hb_coeffs
+    EB_interp_CellCentroid_to_FaceCentroid (hb_coeffs, GetArrOfPtrs(species_b[lev]), 0,
+        0, nspecies_g, geom[lev], bcs_X);
+
+    // Set BCoeffs
+    species_matrix->setBCoeffs(lev, GetArrOfConstPtrs(species_b[lev]), MLMG::Location::FaceCentroid);
+
+    // Set LevelBC
+    species_matrix->setLevelBC(lev, GetVecOfConstPtrs(X_gk_in)[lev]);
+  }
+
+  {
+    MLMG solver(*species_matrix);
+
+    // Compute div (ep_g ro_g [h_gk] D_gk grad)) phi
+    solver.apply(laphX_aux, X_gk_in);
+  }
+
+  // CORRECT FLUXES
+  // Compute Fluxes for correcting the result
+  // div(ep_g ro_g D_gk grad(phi)) - div(phi sum(ep_g ro_g D_gk grad(phi)))
+  {
+    // If h_gk is not nullptr pdate the solver BCoeffs
+    for (int lev(0); lev <= finest_level; ++lev) {
+      EB_interp_CellCentroid_to_FaceCentroid (*b_coeffs[lev], GetArrOfPtrs(species_b[lev]), 0,
+          0, nspecies_g, geom[lev], bcs_X);
+
+      species_matrix->setBCoeffs(lev, GetArrOfConstPtrs(species_b[lev]), MLMG::Location::FaceCentroid);
+    }
+
+    MLMG solver(*species_matrix);
+
+    // Allocate fluxes
+    Vector<Array<MultiFab*, 3>> fluxes(finest_level+1);
+
+    for (int lev(0); lev <= finest_level; ++lev) {
+      for(int dir = 0; dir < 3; dir++) {
+        BoxArray edge_ba = amrex::convert(grids[lev], IntVect::TheDimensionVector(dir));
+        fluxes[lev][dir] = new MultiFab(edge_ba, dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+      }
+    }
+
+    // Compute fluxes
+    solver.getFluxes(fluxes, X_gk_in, MLLinOp::Location::FaceCentroid);
+
+    // Correct the first term computed
+    for (int lev(0); lev <= finest_level; ++lev) {
+      // Data for interpolating h_gh X_gk on the faces
+      MultiFab h_X_gk(grids[lev], dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+      for (MFIter mfi(*X_gk_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        Box const& bx = mfi.tilebox();
+
+        Array4<Real      > const& h_X_gk_arr  = h_X_gk.array(mfi);
+        Array4<Real const> const& X_gk_arr = X_gk_in[lev]->const_array(mfi);
+        Array4<Real const> const& h_gk_arr = h_gk_in[lev]->const_array(mfi);
+
+        amrex::ParallelFor(bx, nspecies_g, [h_X_gk_arr,X_gk_arr,h_gk_arr]
+          AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+        {
+          h_X_gk_arr(i,j,k,n) = h_gk_arr(i,j,k,n)*X_gk_arr(i,j,k,n);
+        });
+      } // MFIter
+
+      // Auxiliary data
+      Array<MultiFab*, 3> h_X_gk_faces;
+
+      for(int dir = 0; dir < 3; dir++) {
+        BoxArray edge_ba = amrex::convert(grids[lev], IntVect::TheDimensionVector(dir));
+        h_X_gk_faces[dir] = new MultiFab(edge_ba, dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+      }
+
+      // Interpolate
+      EB_interp_CellCentroid_to_FaceCentroid(h_X_gk, h_X_gk_faces, 0,
+          0, nspecies_g, geom[lev], bcs_X);
+
+      // Compute fluxes_gk = h_gk X_gk sum{fluxes_gk}
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+      for (MFIter mfi(*fluxes[lev][0],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        Box const& bx = mfi.tilebox();
+
+        Array4<Real const> const& x_h_X_gk_arr = h_X_gk_faces[0]->const_array(mfi);
+        Array4<Real const> const& y_h_X_gk_arr = h_X_gk_faces[1]->const_array(mfi);
+        Array4<Real const> const& z_h_X_gk_arr = h_X_gk_faces[2]->const_array(mfi);
+        Array4<Real      > const& x_fluxes_arr = fluxes[lev][0]->array(mfi);
+        Array4<Real      > const& y_fluxes_arr = fluxes[lev][1]->array(mfi);
+        Array4<Real      > const& z_fluxes_arr = fluxes[lev][2]->array(mfi);
+
+        amrex::ParallelFor(bx, [x_h_X_gk_arr,y_h_X_gk_arr,z_h_X_gk_arr,
+            x_fluxes_arr,y_fluxes_arr,z_fluxes_arr,nspecies_g]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+          Real x_sum(0);
+          Real y_sum(0);
+          Real z_sum(0);
+
+          for (int n(0); n < nspecies_g; ++n) {
+            x_sum += x_fluxes_arr(i,j,k,n);
+            y_sum += y_fluxes_arr(i,j,k,n);
+            z_sum += z_fluxes_arr(i,j,k,n);
+          }
+
+          for (int n(0); n < nspecies_g; ++n) {
+            x_fluxes_arr(i,j,k,n) = x_h_X_gk_arr(i,j,k,n)*x_sum;
+            y_fluxes_arr(i,j,k,n) = y_h_X_gk_arr(i,j,k,n)*y_sum;
+            z_fluxes_arr(i,j,k,n) = z_h_X_gk_arr(i,j,k,n)*z_sum;
+          }
+        });
+      } // MFIter
+
+      // Data for storing the divergence of the auxiliary data
+      MultiFab divXJ(grids[lev], dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+
+      // Set the divXJ data to 0
+      divXJ.setVal(0.);
+
+      // Compute the divergence
+      EB_computeDivergence(divXJ, GetArrOfConstPtrs(fluxes[lev]), geom[lev],
+          already_on_centroids);
+
+      // Correction:  div([h_gk] j_gk) - div([h_gk] X_gk sum{j_gk})
+      MultiFab::Add(*laphX_aux[lev], divXJ, 0, 0, nspecies_g, 1);
+
+      // Free up space
+      for(int dir = 0; dir < 3; dir++) {
+        delete fluxes[lev][dir];
+        delete h_X_gk_faces[dir];
+      }
+
+    } // lev
+  } // correct_fluxes
+
+  // Redistribute laphX_aux into laphX_out
+  for(int lev = 0; lev <= finest_level; lev++)
+  {
+    amrex::single_level_redistribute(*laphX_aux[lev], *laphX_out[lev], 0, nspecies_g, geom[lev]);
+    EB_set_covered(*laphX_aux[lev], 0, laphX_aux[lev]->nComp(), laphX_aux[lev]->nGrow(), 0.);
+  }
+
+  // Free laphX_aux memory
+  for(int lev = 0; lev <= finest_level; lev++)
+  {
+    delete laphX_aux[lev];
+    delete b_coeffs[lev];
+  }
 }

@@ -28,7 +28,7 @@ void
 mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
                          Vector< MultiFab const*> const& ep_g,
                          Vector< MultiFab const*> const& ro_g,
-                         Vector< MultiFab const*> const& /*X_gk*/,
+                         Vector< MultiFab*      > const& X_gk,
                          Vector< MultiFab const*> const& D_gk,
                          Vector< MultiFab const*> const& h_gk)
 {
@@ -37,63 +37,29 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
 
   if (FLUID::is_a_mixture)
   {
+    const int nspecies_g = FLUID::nspecies;
 
     // Temporary for computing other terms of RHS
-    Vector< MultiFab* > X_gk_tmp(nlev, nullptr);
-    Vector< MultiFab* > h_gk_D_gk(nlev, nullptr);
-    Vector< MultiFab* > auxiliary(nlev, nullptr);
-#if 0
-    // Allocate memory for computing fluid species contribution
+    Vector<MultiFab*> lap_hX_gk(nlev, nullptr);
+
+    // Allocate memory for computing fluid species contributio
     for (int lev(0); lev <= finest_level; lev++) {
-      h_gk_D_gk[lev] = MFHelpers::createFrom(*D_gk[lev]).release();
-      auxiliary[lev] = MFHelpers::createFrom(*X_gk[lev], 0.).release();
-    }
-#endif
-
-    // Allocate memory for computing fluid species contribution
-    for (int lev(0); lev <= finest_level; lev++) {
-
-      X_gk_tmp[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
-                                   nghost_state(), MFInfo(), *ebfactory[lev]);
-
-      h_gk_D_gk[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
+      lap_hX_gk[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
                                     nghost_state(), MFInfo(), *ebfactory[lev]);
-
-      auxiliary[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
-                                    nghost_state(), MFInfo(), *ebfactory[lev]);
-
-    }
-
-    // Transform h_gk_D_gk into h_gk * D_gk
-    for (int lev(0); lev <= finest_level; lev++) {
-
-      MultiFab::Copy(*X_gk_tmp[lev], *D_gk[lev], 0, 0, FLUID::nspecies,
-                     X_gk_tmp[lev]->nGrow());
-
-      MultiFab::Copy(*h_gk_D_gk[lev], *D_gk[lev], 0, 0, FLUID::nspecies,
-                     h_gk_D_gk[lev]->nGrow());
-
-      MultiFab::Multiply(*h_gk_D_gk[lev], *h_gk[lev], 0, 0, FLUID::nspecies,
-                         h_gk_D_gk[lev]->nGrow());
     }
 
     // Compute the mixed enthalpy/species term
-    diffusion_op->ComputeLapX(auxiliary, X_gk_tmp, ro_g, ep_g, GetVecOfConstPtrs(h_gk_D_gk));
+    diffusion_op->ComputeLaphX(lap_hX_gk, X_gk, ro_g, ep_g, D_gk, h_gk);
 
     for (int lev(0); lev <= finest_level; lev++) {
       // Add the contribution due to the nth specie
-      for (int n(0); n < FLUID::nspecies; n++) {
-        MultiFab::Add(*rhs[lev], *auxiliary[lev], n, 0, 1, rhs[lev]->nGrow());
+      for (int n(0); n < nspecies_g; n++) {
+        MultiFab::Add(*rhs[lev], *lap_hX_gk[lev], n, 0, 1, rhs[lev]->nGrow());
       }
     }
 
-    for (int lev = 0; lev <= finest_level; lev++)
-      EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
-
-    for (int lev = 0; lev <= finest_level; lev++) {
-      delete X_gk_tmp[lev];
-      delete h_gk_D_gk[lev];
-      delete auxiliary[lev];
+    for (int lev = 0; lev <= finest_level; ++lev) {
+      delete lap_hX_gk[lev];
     }
   }
 }

@@ -6,9 +6,9 @@ using namespace amrex;
 //
 // Implicit solve for species mass fraction
 //
-void DiffusionOp::diffuse_species (      Vector< MultiFab* >    X_gk_in,
-                                   const Vector< MultiFab* > ep_ro_g_in,
-                                   const Vector< MultiFab* >    D_gk_in,
+void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
+                                   const Vector< MultiFab* >& ep_ro_g_in,
+                                   const Vector< MultiFab* >&    D_gk_in,
                                    Real dt)
 {
     BL_PROFILE("DiffusionOp::diffuse_species");

@@ -626,8 +626,6 @@ public:
                        amrex::Vector< amrex::MultiFab const*> const& ep_g_in,
                        amrex::Vector< amrex::MultiFab const*> const& ro_g_in);
 
-
-
     void apply_MAC_projection (const bool update_laplacians,
                                Vector< MultiFab* > const& lap_T,
                                Vector< MultiFab* > const& lap_X,
@@ -811,7 +809,7 @@ public:
     void mfix_enthalpy_rhs(Vector< MultiFab*      > const& rhs,
                            Vector< MultiFab const*> const& ep_g,
                            Vector< MultiFab const*> const& ro_g,
-                           Vector< MultiFab const*> const& X_gk,
+                           Vector< MultiFab*      > const& X_gk,
                            Vector< MultiFab const*> const& D_gk,
                            Vector< MultiFab const*> const& h_gk);
 
@@ -864,7 +862,7 @@ public:
                                Vector< MultiFab const* > const& MW_g,
                                Vector< MultiFab const* > const& T_g,
                                Vector< MultiFab const* > const& cp_g,
-                               Vector< MultiFab const* > const& X_gk,
+                               Vector< MultiFab*       > const& X_gk,
                                Vector< MultiFab const* > const& D_gk,
                                Vector< MultiFab const* > const& h_gk,
                                Vector< MultiFab const* > const& txfr,
