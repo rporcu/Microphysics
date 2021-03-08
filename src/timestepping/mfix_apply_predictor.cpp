@@ -60,6 +60,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                             Real l_prev_dt,
                             bool proj_2)
 {
+    BL_PROFILE("mfix::mfix_apply_predictor");
+
     // We use the new-time value for things computed on the "*" state
     Real new_time = time + l_dt;
 
@@ -150,8 +152,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       const bool update_lapX = (advect_fluid_species && (l_explicit_diff || open_system_constraint));
 
       compute_laps(update_lapT, update_lapS, update_lapX, lap_T_old, lap_trac_old, lap_X_old,
-                   get_T_g_old(), get_trac_old(), get_X_gk_old(),
-                   get_ep_g_const(), get_ro_g_old_const());
+                   get_T_g_old(), get_trac_old(), get_X_gk_old(), get_ep_g_const(),
+                   get_ro_g_old_const());
     }
 
 
@@ -163,7 +165,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
       mfix_open_system_rhs(GetVecOfPtrs(rhs_mac), lap_T_old, lap_X_old,
          get_ep_g_const(), get_ro_g_old_const(), get_MW_g_const(),
-         get_T_g_old_const(), get_cp_g_const(), get_X_gk_old_const(),
+         get_T_g_old_const(), get_cp_g_const(), get_X_gk_old(),
          get_D_gk_const(), get_h_gk_const(), get_txfr_const(), get_ro_gk_txfr_const());
     }
 
@@ -201,7 +203,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     if (advect_enthalpy) {
 
       mfix_enthalpy_rhs(enthalpy_RHS_old, get_ep_g_const(), get_ro_g_old_const(),
-          get_X_gk_old_const(), get_D_gk_const(), get_h_gk_const());
+          get_X_gk_old(), get_D_gk_const(), get_h_gk_const());
     }
 
 
@@ -572,7 +574,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                    get_T_g(), get_trac_old(), get_X_gk(), get_ep_g_const(), get_ro_g_const());
 
       mfix_open_system_rhs(S_cc, lap_T, lap_X, get_ep_g_const(), get_ro_g_const(),
-          get_MW_g_const(), get_T_g_const(), get_cp_g_const(), get_X_gk_const(),
+          get_MW_g_const(), get_T_g_const(), get_cp_g_const(), get_X_gk(),
           get_D_gk_const(), get_h_gk_const(), get_txfr_const(), get_ro_gk_txfr_const());
     }
 

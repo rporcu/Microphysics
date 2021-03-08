@@ -153,7 +153,11 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
     const bool explicit_diffusive_enthalpy = false;
     const bool explicit_diffusive_trac     = false;
-    const bool explicit_diffusive_species  = false;
+    // We should keep explicit species diffusion until we agree how to treat the
+    // implicit species-fluxes-correction term. In here it is currently
+    // implemented as the correction is computed at time t^{star,star} and added
+    // to the RHS before doing the implicit diffusion
+    const bool explicit_diffusive_species  = true;
 
     {
       // We do not need to calculate the Laplacians if the open system constraint is used
@@ -165,8 +169,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       const bool update_lapX = (advect_fluid_species && (explicit_diffusive_species  && !open_system_constraint));
 
       compute_laps(update_lapT, update_lapS, update_lapX, lap_T_old, lap_trac_old, lap_X_old,
-                   get_T_g_old(), get_trac_old(), get_X_gk_old(),
-                   get_ep_g_const(), get_ro_g_old_const());
+                   get_T_g_old(), get_trac_old(), get_X_gk_old(), get_ep_g_const(),
+                   get_ro_g_old_const());
     }
 
     // *************************************************************************************
@@ -176,7 +180,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     if (open_system_constraint) {
       mfix_open_system_rhs(GetVecOfPtrs(rhs_mac), lap_T, lap_X,
          get_ep_g_const(), get_ro_g_const(), get_MW_g_const(),
-         get_T_g_const(), get_cp_g_const(), get_X_gk_const(), get_D_gk_const(),
+         get_T_g_const(), get_cp_g_const(), get_X_gk(), get_D_gk_const(),
          get_h_gk_const(), get_txfr_const(), get_ro_gk_txfr_const());
     }
 
@@ -202,7 +206,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     if (advect_enthalpy) {
 
       mfix_enthalpy_rhs(enthalpy_RHS, get_ep_g_const(), get_ro_g_const(),
-           get_X_gk_const(), get_D_gk_const(), get_h_gk_const());
+           get_X_gk(), get_D_gk_const(), get_h_gk_const());
     }
 
     if (advect_tracer) {
@@ -428,17 +432,32 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
               X_gk += .5*l_dt*(dXdt_o(i,j,k,n)+dXdt(i,j,k,n));
               X_gk += .5*l_dt*(X_rhs_o(i,j,k,n)+X_rhs(i,j,k,n));
 
-              // Crank-Nicolson so we only add half of the diffusive term here
-              X_gk += .5*l_dt*lap_X_o(i,j,k,n);
-
-              if (explicit_diffusive_species)
-                X_gk += .5*l_dt*lap_X_n(i,j,k,n);
+              if (explicit_diffusive_species) {
+                X_gk += .5*l_dt*(lap_X_o(i,j,k,n)+lap_X_n(i,j,k,n));
+              } else {
+                // Crank-Nicolson so we only add half of the diffusive term
+                // here, but we go ahead and add all of it now, then we will
+                // subtract half of it
+                X_gk += l_dt * lap_X_o(i,j,k,n);
+              }
 
               X_gk_n(i,j,k,n) = X_gk * denom;
             }
           });
         } // mfi
       } // lev
+
+      // ***********************************************************************************
+      // Compute term for correcting species mass fractions fluxes to sum up to
+      // zero
+      // ***********************************************************************************
+      if (!explicit_diffusive_species) {
+        // When using implicit diffusion for species, we "Add" (subtract) the
+        // correction term computed at time t^{star,star} to the RHS before
+        // doing the implicit diffusion
+        diffusion_op->SubtractDivXGX(get_X_gk(), get_ro_g_const(), get_ep_g_const(),
+                       get_D_gk_const(), 0.5*l_dt);
+      }
     } // advect_fluid_species
 
 
@@ -657,7 +676,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
          get_T_g(), get_trac_old(), get_X_gk_old(), get_ep_g_const(), get_ro_g_old_const());
 
       mfix_open_system_rhs(S_cc, lap_T, lap_X, get_ep_g_const(), get_ro_g_const(),
-          get_MW_g_const(), get_T_g_const(), get_cp_g_const(), get_X_gk_const(),
+          get_MW_g_const(), get_T_g_const(), get_cp_g_const(), get_X_gk(),
           get_D_gk_const(), get_h_gk_const(), get_txfr_const(), get_ro_gk_txfr_const());
 
     }

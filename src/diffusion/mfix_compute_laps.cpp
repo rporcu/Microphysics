@@ -21,7 +21,6 @@ mfix::compute_laps (const bool update_lapT,
                     amrex::Vector< amrex::MultiFab*      > const& X_gk,
                     amrex::Vector< amrex::MultiFab const*> const& ep_g,
                     amrex::Vector< amrex::MultiFab const*> const& ro_g)
-
 {
   if (update_lapT) {
     diffusion_op->ComputeLapT(lapT, T_g, ep_g, get_k_g_const(),
