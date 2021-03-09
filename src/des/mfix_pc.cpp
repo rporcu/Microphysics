@@ -19,20 +19,33 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     this->SetVerbose(0);
 
     // turn off certain components for ghost particle communication
-    setRealCommComp(4, false);
-    setRealCommComp(5, false);
-    setRealCommComp(6, false);
-    setRealCommComp(7, false);
-    setRealCommComp(14, false);
-    setRealCommComp(15, false);
-    setRealCommComp(16, false);
-    setRealCommComp(17, false);
-    setRealCommComp(18, false);
-    setRealCommComp(19, false);
+    setRealCommComp(0, true);   // posx
+    setRealCommComp(1, true);   // posy
+    setRealCommComp(2, true);   // posz
+    setRealCommComp(3, true);   // radius
+    setRealCommComp(4, false);  // volume
+    setRealCommComp(5, false);  // mass
+    setRealCommComp(6, false);  // density
+    setRealCommComp(7, false);  // oneOverI
+    setRealCommComp(8, true);   // velx
+    setRealCommComp(9, true);   // vely
+    setRealCommComp(10, true);  // velz
+    setRealCommComp(11, true);  // omegax
+    setRealCommComp(12, true);  // omegay
+    setRealCommComp(13, true);  // omegaz
+    setRealCommComp(14, false); // statwt
+    setRealCommComp(15, false); // dragcoeff
+    setRealCommComp(16, false); // dragx
+    setRealCommComp(17, false); // dragy
+    setRealCommComp(18, false); // dragz
+    setRealCommComp(19, false); // c_ps
+    setRealCommComp(20, false); // temperature
+    setRealCommComp(21, false); // convection
 
-    setIntCommComp(0, false);
-    setIntCommComp(1, false);
-    setIntCommComp(3, false);
+    setIntCommComp(0, false); // id
+    setIntCommComp(1, false); // cpu
+    setIntCommComp(2, true);  // phase
+    setIntCommComp(3, false); // state
 
     nlev = amr_core->maxLevel() + 1;
 
@@ -41,7 +54,7 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     {
       // Add SOLIDS::nspecies copmonents for each of the new species vars
       for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
-        AddRealComp(true);
+        AddRealComp(false); // Turn off ghost particle communication
     }
 
     // Add real components for solid species
@@ -52,7 +65,7 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
       {
         for(int q(0); q < REACTIONS::nreactions; ++q)
         {
-          AddRealComp(true);
+          AddRealComp(false); // Turn off ghost particle communication
         }
       }
     }
