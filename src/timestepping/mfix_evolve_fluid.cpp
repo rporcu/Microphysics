@@ -119,6 +119,8 @@ mfix::EvolveFluid (int nstep,
     Vector< MultiFab* > enthalpy_RHS(finest_level+1);
     Vector< MultiFab* > species_RHS_old(finest_level+1);
     Vector< MultiFab* > species_RHS(finest_level+1);
+    Vector< Real > rhs_pressure_g_old(finest_level+1, 0.);
+    Vector< Real > rhs_pressure_g(finest_level+1, 0.);
 
     for (int lev = 0; lev <= finest_level; lev++)
     {
@@ -215,10 +217,13 @@ mfix::EvolveFluid (int nstep,
         if (DEM::solve or PIC::solve) {
           Real start_drag = ParallelDescriptor::second();
           mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g_old(),
-              get_vel_g_old(), get_mu_g(), get_cp_g(), get_k_g(), time);
+                               get_vel_g_old(), get_mu_g(), get_cp_g(),
+                               get_k_g(), time);
 
           if (REACTIONS::solve) {
-            mfix_calc_chem_txfr(time, get_ep_g(), get_ro_g_old(), get_X_gk_old());
+            mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g_old(),
+                                get_X_gk_old(), get_D_gk(), get_cp_gk(),
+                                get_h_gk(), time);
           }
 
           coupling_timing += ParallelDescriptor::second() - start_drag;
@@ -228,19 +233,23 @@ mfix::EvolveFluid (int nstep,
         bool proj_2_pred = true;
         mfix_apply_predictor(conv_u_old, conv_s_old, conv_X_old, ro_RHS_old,
             ro_RHS, lap_trac_old, lap_trac, lap_T_old, lap_T, enthalpy_RHS_old,
-            enthalpy_RHS, species_RHS_old, species_RHS, lap_X_old, lap_X, time,
-            dt, prev_dt, proj_2_pred);
+            enthalpy_RHS, species_RHS_old, species_RHS, lap_X_old, lap_X,
+            rhs_pressure_g_old, rhs_pressure_g, time, dt, prev_dt, proj_2_pred,
+            coupling_timing);
 
         // Calculate drag coefficient
-        if (DEM::solve or PIC::solve)
-        {
+        if (DEM::solve or PIC::solve) {
           Real start_drag = ParallelDescriptor::second();
           amrex::Print() << "\nRecalculating drag ..." << std::endl;
           mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-              get_mu_g(), get_cp_g(), get_k_g(), new_time);
+                               get_mu_g(), get_cp_g(), get_k_g(), new_time);
 
-          if (REACTIONS::solve) {
-            mfix_calc_chem_txfr(time, get_ep_g(), get_ro_g(), get_X_gk());
+          // If !m_idealgas_constraint == IdealGasConstraint::None, then we have already
+          // updated the chemical quantities
+          if (REACTIONS::solve and m_idealgas_constraint == IdealGasConstraint::None) {
+            mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(),
+                                get_X_gk(), get_D_gk(), get_cp_gk(),
+                                get_h_gk(), new_time);
           }
 
           coupling_timing += ParallelDescriptor::second() - start_drag;
@@ -255,9 +264,10 @@ mfix::EvolveFluid (int nstep,
                          get_X_gk(), new_time);
 
            mfix_apply_corrector(conv_u_old, conv_s_old, conv_X_old, ro_RHS_old,
-               ro_RHS, lap_trac_old, lap_trac, lap_T_old, lap_T, enthalpy_RHS_old,
-               enthalpy_RHS, species_RHS_old, species_RHS, lap_X_old, lap_X, time, 
-               dt, prev_dt, proj_2_corr);
+               ro_RHS, lap_trac_old, lap_trac, lap_T_old, lap_T,
+               enthalpy_RHS_old, enthalpy_RHS, species_RHS_old, species_RHS,
+               lap_X_old, lap_X, rhs_pressure_g_old, rhs_pressure_g, time, dt,
+               prev_dt, proj_2_corr, coupling_timing);
         }
 
         //

@@ -32,6 +32,8 @@ namespace FLUID
   
   extern int ThermalConductivityModel;
 
+  static constexpr amrex::Real R = 8.31446261815324;
+
   // Flag to solve fluid equations
   extern int solve;
 

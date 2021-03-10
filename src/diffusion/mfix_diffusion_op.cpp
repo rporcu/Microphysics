@@ -91,14 +91,17 @@ void DiffusionOp::setup (AmrCore* _amrcore,
             edge_ba.surroundingNodes(dir);
             b[lev][dir].reset(new MultiFab(edge_ba, dmap[lev], 1, nghost,
                                            MFInfo(), *ebfactory[lev]));
+            b[lev][dir]->setVal(0.);
         }
 
         phi[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 1,
                                     MFInfo(), *ebfactory[lev]));
+        phi[lev]->setVal(0.);
 
         // No ghost cells needed for rhs
         rhs[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0,
                                     MFInfo(), *ebfactory[lev]));
+        rhs[lev]->setVal(0.);
 
         vel_eb[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, nghost,
                                        MFInfo(), *ebfactory[lev]));
@@ -108,10 +111,12 @@ void DiffusionOp::setup (AmrCore* _amrcore,
         {
           species_phi[lev].reset(new MultiFab(grids[lev], dmap[lev], nspecies_g, 1,
                                               MFInfo(), *ebfactory[lev]));
+          species_phi[lev]->setVal(0.);
 
           // No ghost cells needed for rhs
           species_rhs[lev].reset(new MultiFab(grids[lev], dmap[lev], nspecies_g, 0,
                                               MFInfo(), *ebfactory[lev]));
+          species_rhs[lev]->setVal(0.);
         }
     }
 
@@ -168,6 +173,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
               edge_ba.surroundingNodes(dir);
               species_b[lev][dir].reset(new MultiFab(edge_ba, dmap[lev], nspecies_g, nghost,
                                                      MFInfo(), *ebfactory[lev]));
+              species_b[lev][dir]->setVal(0.);
           }
       }
     }
@@ -371,6 +377,7 @@ void DiffusionOp::ComputeLapS (const Vector< MultiFab* >& laps_out,
 
        phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0,
                                   MFInfo(), *ebfactory[lev]);
+       phi_eb[lev]->setVal(0.);
 
        // This value was just for testing
        // if (eb_is_dirichlet)
@@ -523,6 +530,8 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab* >& lapX_out,
       for(int dir = 0; dir < 3; dir++) {
         BoxArray edge_ba = amrex::convert(grids[lev], IntVect::TheDimensionVector(dir));
         fluxes[lev][dir] = new MultiFab(edge_ba, dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+        fluxes[lev][dir]->setVal(0.0);
+
 #ifdef AMREX_DEBUG
         summed_fluxes[lev][dir] = new MultiFab(edge_ba, dmap[lev], 1, 1, MFInfo(), *ebfactory[lev]);
         summed_fluxes[lev][dir]->setVal(0.);
@@ -532,6 +541,13 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab* >& lapX_out,
 
     // Compute fluxes
     solver.getFluxes(fluxes, X_gk_in, MLLinOp::Location::FaceCentroid);
+
+    for (int lev = 0; lev <= finest_level; lev++) {
+      for (int dir(0); dir < 3; ++dir) {
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(not fluxes[lev][dir]->contains_nan(), "NaN");
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(not fluxes[lev][dir]->contains_inf(), "Inf");
+      }
+    }
 
 #ifdef AMREX_DEBUG
     for (int lev(0); lev <= finest_level; ++lev) {
@@ -562,6 +578,7 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab* >& lapX_out,
       for(int dir = 0; dir < 3; dir++) {
         BoxArray edge_ba = amrex::convert(grids[lev], IntVect::TheDimensionVector(dir));
         X_gk_faces[dir] = new MultiFab(edge_ba, dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+        X_gk_faces[dir]->setVal(0.);
       }
 
       // Interpolate
@@ -755,6 +772,7 @@ void DiffusionOp::SubtractDivXGX (const Vector< MultiFab* >& X_gk_in,
     for(int dir = 0; dir < 3; dir++) {
       BoxArray edge_ba = amrex::convert(grids[lev], IntVect::TheDimensionVector(dir));
       fluxes[lev][dir] = new MultiFab(edge_ba, dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+      fluxes[lev][dir]->setVal(0.);
     }
   }
 
@@ -769,6 +787,7 @@ void DiffusionOp::SubtractDivXGX (const Vector< MultiFab* >& X_gk_in,
     for(int dir = 0; dir < 3; dir++) {
       BoxArray edge_ba = amrex::convert(grids[lev], IntVect::TheDimensionVector(dir));
       X_gk_faces[dir] = new MultiFab(edge_ba, dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+      X_gk_faces[dir]->setVal(0.);
     }
 
     // Interpolate
@@ -968,16 +987,25 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab* >& laphX_out,
       for(int dir = 0; dir < 3; dir++) {
         BoxArray edge_ba = amrex::convert(grids[lev], IntVect::TheDimensionVector(dir));
         fluxes[lev][dir] = new MultiFab(edge_ba, dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+        fluxes[lev][dir]->setVal(0.);
       }
     }
 
     // Compute fluxes
     solver.getFluxes(fluxes, X_gk_in, MLLinOp::Location::FaceCentroid);
 
+    for (int lev = 0; lev <= finest_level; lev++) {
+      for (int dir(0); dir < 3; ++dir) {
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(not fluxes[lev][dir]->contains_nan(), "NaN");
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(not fluxes[lev][dir]->contains_inf(), "Inf");
+      }
+    }
+
     // Correct the first term computed
     for (int lev(0); lev <= finest_level; ++lev) {
       // Data for interpolating h_gh X_gk on the faces
       MultiFab h_X_gk(grids[lev], dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+      h_X_gk.setVal(0.);
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -1002,6 +1030,7 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab* >& laphX_out,
       for(int dir = 0; dir < 3; dir++) {
         BoxArray edge_ba = amrex::convert(grids[lev], IntVect::TheDimensionVector(dir));
         h_X_gk_faces[dir] = new MultiFab(edge_ba, dmap[lev], nspecies_g, 1, MFInfo(), *ebfactory[lev]);
+        h_X_gk_faces[dir]->setVal(0.);
       }
 
       // Interpolate

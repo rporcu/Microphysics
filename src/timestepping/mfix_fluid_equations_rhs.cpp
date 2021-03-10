@@ -9,12 +9,12 @@
 
 void
 mfix::mfix_density_rhs (Vector< MultiFab*      > const& rhs,
-                        Vector< MultiFab const*> const& ro_gk_txfr)
+                        Vector< MultiFab const*> const& chem_txfr)
 {
   if (solve_reactions) {
     for (int lev = 0; lev <= finest_level; lev++) {
       for (int n_g(0); n_g < FLUID::nspecies; n_g++) {
-        MultiFab::Add(*rhs[lev], *ro_gk_txfr[lev], n_g, 0, 1, rhs[lev]->nGrow());
+        MultiFab::Add(*rhs[lev], *chem_txfr[lev], n_g, 0, 1, rhs[lev]->nGrow());
       }
     }
 
@@ -66,25 +66,24 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
 
 
 void
-mfix::mfix_scalar_rhs (const bool /*explicit_diffusion*/,
-                       Vector< MultiFab* > const& /*lap_trac*/,
-                       Vector< MultiFab* > const& /*trac*/,
-                       Vector< MultiFab* > const& /*ep_g*/,
-                       Vector< MultiFab* > const& /*ro_g*/,
-                       const Vector<Real>& /*mu_s_in*/)
+mfix::mfix_scalar_rhs (/*Vector< MultiFab* > const& rhs,*/
+                       Vector< MultiFab const* > const& /*trac*/,
+                       Vector< MultiFab const* > const& /*ep_g*/,
+                       Vector< MultiFab const* > const& /*ro_g*/,
+                       Vector<Real> const& /*mu_s_in*/)
 {
 }
 
 
 void
 mfix::mfix_species_X_rhs (Vector< MultiFab*      > const& rhs,
-                          Vector< MultiFab const*> const& ro_gk_txfr)
+                          Vector< MultiFab const*> const& chem_txfr)
 {
 
   if (solve_reactions) {
 
     for (int lev = 0; lev <= finest_level; lev++) {
-      rhs[lev]->plus(*ro_gk_txfr[lev], 0, FLUID::nspecies, rhs[lev]->nGrow());
+      rhs[lev]->plus(*chem_txfr[lev], 0, FLUID::nspecies, rhs[lev]->nGrow());
       EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
     }
 

@@ -55,15 +55,22 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                             Vector< MultiFab* >& species_RHS,
                             Vector< MultiFab* >& lap_X_old,
                             Vector< MultiFab* >& lap_X,
+                            Vector< Real >& rhs_pressure_g_old,
+                            Vector< Real >& rhs_pressure_g,
                             Real time,
                             Real l_dt,
                             Real l_prev_dt,
-                            bool proj_2)
+                            bool proj_2,
+                            Real& coupling_timing)
 {
     BL_PROFILE("mfix::mfix_apply_predictor");
 
     // We use the new-time value for things computed on the "*" state
     Real new_time = time + l_dt;
+
+    // Averaged quantities for closed system constraint computations
+    Vector<Real> avgSigma(finest_level+1, 0);
+    Vector<Real> avgTheta(finest_level+1, 0);
 
     // Local flag for explicit diffusion
     bool l_explicit_diff = (predictor_diff_type() == DiffusionType::Explicit);
@@ -80,14 +87,20 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     for (int lev = 0; lev <= finest_level; ++lev) {
       vel_forces.emplace_back(grids[lev], dmap[lev], AMREX_SPACEDIM, nghost_force(),
                               MFInfo(), EBFactory(lev));
+      vel_forces[lev].setVal(0.);
 
       if (advect_tracer) {
         tra_forces.emplace_back(grids[lev], dmap[lev], ntrac, nghost_force(),
                                 MFInfo(), EBFactory(lev));
+        tra_forces[lev].setVal(0.);
       }
+
       vel_eta.emplace_back(grids[lev], dmap[lev], 1, 1, MFInfo(), EBFactory(lev));
+      vel_eta[lev].setVal(0.);
+
       if (advect_tracer) {
         tra_eta.emplace_back(grids[lev], dmap[lev], ntrac, 1, MFInfo(), EBFactory(lev));
+        tra_eta[lev].setVal(0.);
       }
     }
 
@@ -113,10 +126,15 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     for (int lev = 0; lev <= finest_level; ++lev) {
       ep_u_mac[lev].define(amrex::convert(grids[lev],IntVect::TheDimensionVector(0)),
                            dmap[lev], 1, ngmac, MFInfo(), EBFactory(lev));
+      ep_u_mac[lev].setVal(0.);
+
       ep_v_mac[lev].define(amrex::convert(grids[lev],IntVect::TheDimensionVector(1)),
                            dmap[lev], 1, ngmac, MFInfo(), EBFactory(lev));
+      ep_v_mac[lev].setVal(0.);
+
       ep_w_mac[lev].define(amrex::convert(grids[lev],IntVect::TheDimensionVector(2)),
                            dmap[lev], 1, ngmac, MFInfo(), EBFactory(lev));
+      ep_w_mac[lev].setVal(0.);
 
       if (ngmac > 0) {
         ep_u_mac[lev].setBndry(0.0);
@@ -142,14 +160,12 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       diffusion_op->ComputeDivTau(get_divtau(), get_vel_g_old(), get_ep_g(), get_mu_g());
     }
 
-    // *************************************************************************************
-    // Compute explicit diffusive terms
-    // *************************************************************************************
-
     {
-      const bool update_lapT = (advect_enthalpy      && (l_explicit_diff || open_system_constraint));
+      const bool constraint = !(m_idealgas_constraint == IdealGasConstraint::None);
+
+      const bool update_lapT = (advect_enthalpy      && (l_explicit_diff || constraint));
       const bool update_lapS = (advect_tracer        &&  l_explicit_diff);
-      const bool update_lapX = (advect_fluid_species && (l_explicit_diff || open_system_constraint));
+      const bool update_lapX = (advect_fluid_species && (l_explicit_diff || constraint));
 
       compute_laps(update_lapT, update_lapS, update_lapX, lap_T_old, lap_trac_old, lap_X_old,
                    get_T_g_old(), get_trac_old(), get_X_gk_old(), get_ep_g_const(),
@@ -158,20 +174,57 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
 
     // *************************************************************************************
+    // Compute right hand side terms on the old status
+    // *************************************************************************************
+
+    if (advect_density) {
+      mfix_density_rhs(ro_RHS_old, get_chem_txfr_const());
+    }
+
+
+    if (advect_enthalpy) {
+      mfix_enthalpy_rhs(enthalpy_RHS_old, get_ep_g_const(), get_ro_g_old_const(),
+          get_X_gk_old(), get_D_gk_const(), get_h_gk_const());
+    }
+
+    if (advect_tracer) {
+      mfix_scalar_rhs(/*trac_RHS_old,*/ get_trac_old_const(), get_ep_g_const(),
+          get_ro_g_old_const(), mu_s);
+    }
+
+    // Species
+    if (advect_fluid_species) {
+      mfix_species_X_rhs(species_RHS_old, get_chem_txfr_const());
+    }
+
+
+    // *************************************************************************************
     // Compute RHS for the MAC projection
     // *************************************************************************************
 
-    if (open_system_constraint) {
+    if (m_idealgas_constraint == IdealGasConstraint::OpenSystem) {
 
-      mfix_open_system_rhs(GetVecOfPtrs(rhs_mac), lap_T_old, lap_X_old,
-         get_ep_g_const(), get_ro_g_old_const(), get_MW_g_const(),
-         get_T_g_old_const(), get_cp_g_const(), get_X_gk_old(),
-         get_D_gk_const(), get_h_gk_const(), get_txfr_const(), get_ro_gk_txfr_const());
+      mfix_open_system_rhs(GetVecOfPtrs(rhs_mac), GetVecOfConstPtrs(lap_T_old),
+          GetVecOfConstPtrs(enthalpy_RHS_old), GetVecOfConstPtrs(lap_X_old),
+          GetVecOfConstPtrs(species_RHS_old), get_ro_g_old_const(),
+          get_MW_g_const(), get_T_g_old_const(), get_cp_g_const(),
+          get_X_gk_old(), get_D_gk_const(), get_h_gk_const(),
+          get_txfr_const(), get_chem_txfr_const());
+
+    } else if (m_idealgas_constraint == IdealGasConstraint::ClosedSystem) {
+
+      mfix_closed_system_rhs(GetVecOfPtrs(rhs_mac), GetVecOfConstPtrs(lap_T_old),
+          GetVecOfConstPtrs(enthalpy_RHS_old), GetVecOfConstPtrs(lap_X_old),
+          GetVecOfConstPtrs(species_RHS_old), get_ep_g_const(),
+          get_ro_g_old_const(), get_MW_g_const(), get_T_g_old_const(),
+          get_cp_g_const(), get_X_gk_old(), get_D_gk_const(),
+          get_h_gk_const(), get_txfr_const(), get_chem_txfr_const(),
+          get_pressure_g_old_const(), avgSigma, avgTheta);
     }
 
     if (m_use_depdt_constraint) {
       for (int lev(0); lev <= finest_level; ++lev) {
-        MultiFab::Subtract(rhs_mac[lev], depdt[lev],0,0,1,0);
+        MultiFab::Subtract(rhs_mac[lev], depdt[lev], 0, 0, 1, 0);
       }
     }
 
@@ -188,29 +241,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         get_h_g_old_const(), get_trac_old_const(), get_X_gk_old_const(), get_txfr_const(),
         GetVecOfPtrs(ep_u_mac), GetVecOfPtrs(ep_v_mac), GetVecOfPtrs(ep_w_mac),
         GetVecOfConstPtrs(rhs_mac), get_divtau(), l_dt, time);
-
-
-
-    // *************************************************************************************
-    // Compute right hand side terms on the old status
-    // *************************************************************************************
-
-    if (advect_density) {
-      mfix_density_rhs(ro_RHS_old, get_ro_gk_txfr_const());
-    }
-
-
-    if (advect_enthalpy) {
-
-      mfix_enthalpy_rhs(enthalpy_RHS_old, get_ep_g_const(), get_ro_g_old_const(),
-          get_X_gk_old(), get_D_gk_const(), get_h_gk_const());
-    }
-
-
-    // Species
-    if (advect_fluid_species) {
-      mfix_species_X_rhs(species_RHS_old, get_ro_gk_txfr_const());
-    }
 
 
 
@@ -261,6 +291,37 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
     } // not constant density
 
+
+    // **************************************************************************
+    // Update thermodynamic pressure
+    // **************************************************************************
+    if (advect_enthalpy and (m_idealgas_constraint == IdealGasConstraint::ClosedSystem))
+    {
+      for (int lev = 0; lev <= finest_level; ++lev) {
+        rhs_pressure_g_old[lev] = avgSigma[lev] / avgTheta[lev];
+
+        auto& ld = *m_leveldata[lev];
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+        for (MFIter mfi(*(ld.pressure_g),TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        {
+          Box const& bx = mfi.tilebox();
+
+          Array4<Real      > const& p_g     = ld.pressure_g->array(mfi);
+          Array4<Real const> const& p_g_old = ld.pressure_go->const_array(mfi);
+          const Real Dpressure_Dt           = rhs_pressure_g_old[lev];
+
+          amrex::ParallelFor(bx, [p_g,p_g_old,Dpressure_Dt,l_dt]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          {
+            p_g(i,j,k) = p_g_old(i,j,k) + l_dt*Dpressure_Dt;
+          });
+        } // mfi
+      }
+    }
+
+
     // *************************************************************************************
     // Update enthalpy and temperature
     // *************************************************************************************
@@ -286,8 +347,12 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 Array4<Real const> const& cp_g    = ld.cp_g->const_array(mfi);
                 Array4<Real const> const& dhdt_o  = conv_s_old[lev]->const_array(mfi);
 
+                const Real Dpressure_Dt           = rhs_pressure_g_old[lev];
+                const int closed_system = (m_idealgas_constraint == IdealGasConstraint::ClosedSystem);
+
                 amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_n,rho_o,rho_n,h_RHS_o,
-                    epg,cp_g,dhdt_o,l_dt,lap_T_o,l_explicit_diff]
+                    epg,cp_g,dhdt_o,l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,
+                    closed_system]
                   AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
                     int conv_comp = 1;
@@ -297,6 +362,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
                     Real h_g = num * h_g_o(i,j,k) + l_dt * dhdt_o(i,j,k,conv_comp)
                                                   + l_dt * h_RHS_o(i,j,k);
+
+                    if (closed_system)
+                      h_g += l_dt * epg(i,j,k) * Dpressure_Dt;
 
                     if (l_explicit_diff)
                       h_g += l_dt * lap_T_o(i,j,k);
@@ -308,6 +376,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
             } // mfi
         } // lev
     } // advect_enthalpy
+
 
     // *************************************************************************************
     // Update tracer(s)
@@ -356,6 +425,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
             } // mfi
         } // lev
     } // advect_tracer
+
 
     // *************************************************************************
     // Update species mass fractions
@@ -412,7 +482,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     compute_vel_forces(GetVecOfPtrs(vel_forces), get_vel_g_old_const(),
                        GetVecOfConstPtrs(density_nph), get_txfr_const());
-
 
     // *************************************************************************************
     // Update velocity with convective update, diffusive update, gp and gravity source terms
@@ -484,6 +553,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     if (DEM::solve or PIC::solve)
       mfix_add_txfr_implicit(l_dt, get_vel_g(), get_h_g(), get_T_g(), get_txfr_const(),
                 GetVecOfConstPtrs(density_nph), get_ep_g_const(), get_cp_g_const());
+
 
     // *************************************************************************************
     // If doing implicit diffusion, solve here for u^*
@@ -564,26 +634,84 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       S_cc[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
     }
 
-    if (open_system_constraint) {
+    if (!(m_idealgas_constraint == IdealGasConstraint::None)) {
+
+      // Calculate drag coefficient
+      if (DEM::solve or PIC::solve) {
+
+        Real start_drag = ParallelDescriptor::second();
+        amrex::Print() << "\nRecalculating drag ..." << std::endl;
+        mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
+                             get_mu_g(), get_cp_g(), get_k_g(), new_time);
+
+        if (REACTIONS::solve) {
+          mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(),
+                              get_X_gk(), get_D_gk(), get_cp_gk(), get_h_gk(),
+                              new_time);
+        }
+
+        coupling_timing += ParallelDescriptor::second() - start_drag;
+      }
 
       const bool update_lapT = advect_enthalpy;
-      const bool update_lapS = false;
+      const bool update_lapS = advect_tracer;
       const bool update_lapX = advect_fluid_species;
 
-      compute_laps(update_lapT, update_lapS, update_lapX, lap_T, lap_trac_old, lap_X,
-                   get_T_g(), get_trac_old(), get_X_gk(), get_ep_g_const(), get_ro_g_const());
+      compute_laps(update_lapT, update_lapS, update_lapX, lap_T, lap_trac, lap_X,
+                   get_T_g(), get_trac(), get_X_gk(), get_ep_g_const(), get_ro_g_const());
 
-      mfix_open_system_rhs(S_cc, lap_T, lap_X, get_ep_g_const(), get_ro_g_const(),
-          get_MW_g_const(), get_T_g_const(), get_cp_g_const(), get_X_gk(),
-          get_D_gk_const(), get_h_gk_const(), get_txfr_const(), get_ro_gk_txfr_const());
-    }
+      if (advect_density) {
+        mfix_density_rhs(ro_RHS, get_chem_txfr_const());
+      }
 
-    if (m_use_depdt_constraint) {
-      for (int lev(0); lev <= finest_level; ++lev) {
-        MultiFab::Subtract(*S_cc[lev], depdt[lev],0,0,1,0);
+      if (advect_enthalpy) {
+        mfix_enthalpy_rhs(enthalpy_RHS, get_ep_g_const(), get_ro_g_const(),
+            get_X_gk(), get_D_gk_const(), get_h_gk_const());
+      }
+
+      if (advect_tracer) {
+        mfix_scalar_rhs(/*trac_RHS,*/ get_trac_const(), get_ep_g_const(),
+                        get_ro_g_const(), mu_s);
+      }
+
+      // Species
+      if (advect_fluid_species) {
+        mfix_species_X_rhs(species_RHS, get_chem_txfr_const());
+      }
+  
+      if (m_idealgas_constraint == IdealGasConstraint::OpenSystem) {
+  
+        mfix_open_system_rhs(S_cc, GetVecOfConstPtrs(lap_T),
+            GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
+            GetVecOfConstPtrs(species_RHS), get_ro_g_const(), get_MW_g_const(),
+            get_T_g_const(), get_cp_g_const(), get_X_gk(),
+            get_D_gk_const(), get_h_gk_const(), get_txfr_const(),
+            get_chem_txfr_const());
+  
+      } else if (m_idealgas_constraint == IdealGasConstraint::ClosedSystem) {
+  
+        mfix_closed_system_rhs(S_cc, GetVecOfConstPtrs(lap_T),
+            GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
+            GetVecOfConstPtrs(species_RHS), get_ep_g_const(), get_ro_g_const(),
+            get_MW_g_const(), get_T_g_const(), get_cp_g_const(),
+            get_X_gk(), get_D_gk_const(), get_h_gk_const(),
+            get_txfr_const(), get_chem_txfr_const(), get_pressure_g_const(),
+            avgSigma, avgTheta);
+  
+        // Update the thermodynamic pressure rhs in here so we do not have to call
+        // the closed_system_rhs again in the corrector
+        for (int lev = 0; lev <= finest_level; ++lev) {
+          rhs_pressure_g[lev] = avgSigma[lev] / avgTheta[lev];
+        }
       }
     }
-
+  
+    if (m_use_depdt_constraint) {
+      for (int lev(0); lev <= finest_level; ++lev) {
+        MultiFab::Subtract(*S_cc[lev], depdt[lev], 0, 0, 1, 0);
+      }
+    }
+  
     mfix_apply_nodal_projection(S_cc, new_time, l_dt, l_prev_dt, proj_2,
                                 get_vel_g_old(), get_vel_g(), get_p_g(), get_gp(),
                                 get_ep_g(), get_txfr(), GetVecOfConstPtrs(density_nph));
