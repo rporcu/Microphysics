@@ -53,7 +53,8 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
       mfix_calc_txfr_particle(new_time, get_vel_g(), get_gp(), get_T_g());
 
       if (REACTIONS::solve)
-        mfix_calc_chem_txfr(time, get_ep_g(), get_ro_g(), get_X_gk());
+        mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_X_gk(),
+                            get_D_gk(), get_cp_gk(), get_h_gk(), new_time);
 
       coupling_timing += ParallelDescriptor::second() - start_coupling + drag_timing;
 

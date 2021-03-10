@@ -172,6 +172,7 @@ mfix::RegridArrays (int lev)
 
     const BoxArray & nd_grids = amrex::convert(grids[lev], IntVect{1,1,1});
 
+    // Gas perturbational pressure
     MultiFab* p_g_new = new MultiFab(nd_grids, dmap[lev],
                                      m_leveldata[lev]->p_g->nComp(),
                                      m_leveldata[lev]->p_g->nGrow(),
@@ -182,6 +183,7 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->p_g, p_g_new);
     delete p_g_new;
 
+    // Old gas perturbational pressure
     MultiFab* p_go_new = new MultiFab(nd_grids, dmap[lev],
                                       m_leveldata[lev]->p_go->nComp(),
                                       m_leveldata[lev]->p_go->nGrow(),
@@ -192,6 +194,7 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->p_go, p_go_new);
     delete p_go_new;
 
+    // 
     MultiFab* p0_g_new = new MultiFab(nd_grids, dmap[lev],
                                       m_leveldata[lev]->p0_g->nComp(),
                                       m_leveldata[lev]->p0_g->nGrow(),
@@ -222,6 +225,32 @@ mfix::RegridArrays (int lev)
     delete mu_g_new;
 
     if (advect_enthalpy) {
+      // Gas thermodynamic pressure
+      MultiFab* pressure_g_new = new MultiFab(grids[lev], dmap[lev],
+                                              m_leveldata[lev]->pressure_g->nComp(),
+                                              m_leveldata[lev]->pressure_g->nGrow(),
+                                              MFInfo(), *ebfactory[lev]);
+      pressure_g_new->setVal(0);
+      pressure_g_new->ParallelCopy(*m_leveldata[lev]->pressure_g, 0, 0,
+                                   m_leveldata[lev]->pressure_g->nComp(),
+                                   src_ngrow, m_leveldata[lev]->pressure_g->nGrow(),
+                                   geom[lev].periodicity());
+      std::swap(m_leveldata[lev]->pressure_g, pressure_g_new);
+      delete pressure_g_new;
+
+      // Old gas thermodynamic pressure
+      MultiFab* pressure_go_new = new MultiFab(grids[lev], dmap[lev],
+                                               m_leveldata[lev]->pressure_go->nComp(),
+                                               m_leveldata[lev]->pressure_go->nGrow(),
+                                               MFInfo(), *ebfactory[lev]);
+      pressure_go_new->setVal(0);
+      pressure_go_new->ParallelCopy(*m_leveldata[lev]->pressure_go, 0, 0,
+                                    m_leveldata[lev]->pressure_go->nComp(),
+                                    src_ngrow, m_leveldata[lev]->pressure_go->nGrow(),
+                                    geom[lev].periodicity());
+      std::swap(m_leveldata[lev]->pressure_go, pressure_go_new);
+      delete pressure_go_new;
+
       // Gas temperature
       MultiFab* T_g_new = new MultiFab(grids[lev], dmap[lev],
                                        m_leveldata[lev]->T_g->nComp(),
@@ -437,15 +466,15 @@ mfix::RegridArrays (int lev)
 
     if (advect_fluid_species and solve_reactions) {
       // Species mass transfer rates
-      MultiFab* ro_gk_txfr_new = new MultiFab(grids[lev], dmap[lev],
-                                        m_leveldata[lev]->ro_gk_txfr->nComp(),
-                                        m_leveldata[lev]->ro_gk_txfr->nGrow(),
+      MultiFab* chem_txfr_new = new MultiFab(grids[lev], dmap[lev],
+                                        m_leveldata[lev]->chem_txfr->nComp(),
+                                        m_leveldata[lev]->chem_txfr->nGrow(),
                                         MFInfo(), *ebfactory[lev]);
-      ro_gk_txfr_new->setVal(0.);
-      ro_gk_txfr_new->ParallelCopy(*m_leveldata[lev]->ro_gk_txfr, 0, 0, m_leveldata[lev]->ro_gk_txfr->nComp(),
-                     src_ngrow, m_leveldata[lev]->ro_gk_txfr->nGrow(), geom[lev].periodicity());
-      std::swap(m_leveldata[lev]->ro_gk_txfr, ro_gk_txfr_new);
-      delete ro_gk_txfr_new;
+      chem_txfr_new->setVal(0.);
+      chem_txfr_new->ParallelCopy(*m_leveldata[lev]->chem_txfr, 0, 0, m_leveldata[lev]->chem_txfr->nComp(),
+                     src_ngrow, m_leveldata[lev]->chem_txfr->nGrow(), geom[lev].periodicity());
+      std::swap(m_leveldata[lev]->chem_txfr, chem_txfr_new);
+      delete chem_txfr_new;
     }
 
     // Arrays to store the solution for the MAC projection

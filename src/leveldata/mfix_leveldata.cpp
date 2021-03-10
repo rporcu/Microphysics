@@ -23,6 +23,8 @@ LevelData::LevelData (BoxArray const& ba,
   , p0_g(new MultiFab(amrex::convert(ba, IntVect{1,1,1}), dmap, 1, nghost, MFInfo(), factory))
   , gp(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))
   , mu_g(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
+  , pressure_g(nullptr)
+  , pressure_go(nullptr)
   , T_g(nullptr)
   , T_go(nullptr)
   , cp_g(nullptr)
@@ -36,13 +38,15 @@ LevelData::LevelData (BoxArray const& ba,
   , h_gk(nullptr)
   , vort(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , txfr(new MultiFab(ba, dmap, Transfer::count, nghost, MFInfo(), factory))
-  , ro_gk_txfr(nullptr)
+  , chem_txfr(nullptr)
   , diveu(new MultiFab(amrex::convert(ba, IntVect{1,1,1}), dmap, 1, nghost, MFInfo(), factory))
   , mac_phi(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , divtau_o(new MultiFab(ba, dmap, 3, 0, MFInfo(), factory))
 {
 
   if (FLUID::solve_enthalpy) {
+    pressure_g  = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
+    pressure_go = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
     T_g  = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
     T_go = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
     cp_g = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
@@ -68,7 +72,7 @@ LevelData::LevelData (BoxArray const& ba,
   }
 
   if (REACTIONS::solve and FLUID::solve_species) {
-    ro_gk_txfr = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
+    chem_txfr = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
   }
 }
 
@@ -94,6 +98,8 @@ void LevelData::resetValues (const amrex::Real covered_val)
   divtau_o->setVal(0);
 
   if (FLUID::solve_enthalpy) {
+    pressure_g->setVal(0);
+    pressure_go->setVal(0);
     T_g->setVal(0);
     T_go->setVal(0);
     cp_g->setVal(0);
@@ -119,7 +125,7 @@ void LevelData::resetValues (const amrex::Real covered_val)
   }
 
   if (REACTIONS::solve and FLUID::solve_species) {
-    ro_gk_txfr->setVal(0);
+    chem_txfr->setVal(0);
   }
 }
 
@@ -145,6 +151,8 @@ LevelData::~LevelData ()
   delete divtau_o;
 
   if (FLUID::solve_enthalpy) {
+    delete pressure_g;
+    delete pressure_go;
     delete T_g;
     delete T_go;
     delete cp_g;
@@ -170,6 +178,6 @@ LevelData::~LevelData ()
   }
 
   if (REACTIONS::solve and FLUID::solve_species) {
-    delete ro_gk_txfr;
+    delete chem_txfr;
   }
 }
