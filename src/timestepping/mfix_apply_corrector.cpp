@@ -168,9 +168,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       const bool update_lapS = (advect_tracer        &&  explicit_diffusive_trac);
       const bool update_lapX = (advect_fluid_species && (explicit_diffusive_species  && !open_system_constraint));
 
-      compute_laps(update_lapT, update_lapS, update_lapX, lap_T_old, lap_trac_old, lap_X_old,
-                   get_T_g_old(), get_trac_old(), get_X_gk_old(), get_ep_g_const(),
-                   get_ro_g_old_const());
+      compute_laps(update_lapT, update_lapS, update_lapX, lap_T, lap_trac, lap_X,
+                   get_T_g(), get_trac(), get_X_gk(), get_ep_g_const(), get_ro_g_const());
     }
 
     // *************************************************************************************
