@@ -42,6 +42,9 @@ mfix::mfix_project_velocity ()
       m_leveldata[lev]->p_g->setVal(0);
       m_leveldata[lev]->gp->setVal(0);
     }
+
+    // Call the initial redistribution after the initial projection.
+    InitialRedistribution(time);
 }
 
 void

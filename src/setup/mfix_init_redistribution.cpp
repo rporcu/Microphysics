@@ -6,11 +6,9 @@ void
 mfix::InitialRedistribution (amrex::Real l_time)
 {
     // Next we must redistribute the initial solution if we are going to use
-    // MergeRedist or StateRedist  redistribution schemes
-    if ( m_redistribution_type == "StateRedist" ||
-         m_redistribution_type == "MergeRedist")
+    // StateRedist redistribution scheme
+    if ( m_redistribution_type == "StateRedist")
     {
-
       // We use the "old" data as the input here
       // We must fill internal ghost values before calling redistribution
       // We also need any physical boundary conditions imposed if we are

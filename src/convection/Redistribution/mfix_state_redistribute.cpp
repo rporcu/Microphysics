@@ -54,9 +54,9 @@ redistribution::state_redistribute ( Box const& bx, int ncomp, int icomp,
                  const auto& is_periodic_y = lev_geom.isPeriodic(1);,
                  const auto& is_periodic_z = lev_geom.isPeriodic(2););
 
-    // amrex::Print() << " IN STATE_REDISTRIBUTE DOING BOX " << bx << " with ncomp " << ncomp << std::endl;
-    // amrex::Print() << " Box(U_in) " << Box(U_in) << std::endl;
-    // amrex::Print() << " Box(U_out) " << Box(U_out) << std::endl;
+//  amrex::Print() << " IN STATE_REDISTRIBUTE DOING BOX " << bx << " with ncomp " << ncomp << std::endl;
+//  amrex::Print() << " Box(U_in) " << Box(U_in) << std::endl;
+//  amrex::Print() << " Box(U_out) " << Box(U_out) << std::endl;
 
     Box const& bxg1 = amrex::grow(bx,1);
     Box const& bxg2 = amrex::grow(bx,2);
@@ -95,10 +95,8 @@ redistribution::state_redistribute ( Box const& bx, int ncomp, int icomp,
     amrex::ParallelFor(bxg2,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-  for (int n = 0; n < AMREX_SPACEDIM; n++)
-            cent_hat(i,j,k,n) = 0.;
-  for (int n = 0; n < ncomp; n++)
-            soln_hat(i,j,k,n) = 0.;
+      for (int n = 0; n < AMREX_SPACEDIM; n++) cent_hat(i,j,k,n) = 0.;
+      for (int n = 0; n < ncomp         ; n++) soln_hat(i,j,k,n) = 0.;
     });
 
     amrex::ParallelFor(bxg3,
@@ -239,9 +237,9 @@ redistribution::state_redistribute ( Box const& bx, int ncomp, int icomp,
                                                             AMREX_D_DECL(fcx,fcy,fcz), flag);
 
                 U_out(i,j,k,n+icomp) +=soln_hat(i,j,k,n);
-                AMREX_D_TERM(U_out(i,j,k,n+icomp) += slopes_eb[0] * (ccent(i,j,k,0)-cent_hat(i,j,k,0));,
-                             U_out(i,j,k,n+icomp) += slopes_eb[1] * (ccent(i,j,k,1)-cent_hat(i,j,k,1));,
-                             U_out(i,j,k,n+icomp) += slopes_eb[2] * (ccent(i,j,k,2)-cent_hat(i,j,k,2)););
+                                     + slopes_eb[0] * (ccent(i,j,k,0)-cent_hat(i,j,k,0))
+                                     + slopes_eb[1] * (ccent(i,j,k,1)-cent_hat(i,j,k,1))
+                                     + slopes_eb[2] * (ccent(i,j,k,2)-cent_hat(i,j,k,2));
             } // n
         } // vfrac
     });
@@ -265,12 +263,10 @@ redistribution::state_redistribute ( Box const& bx, int ncomp, int icomp,
 
                     if (bx.contains(IntVect(AMREX_D_DECL(r,s,t))))
                     {
-                        U_out(r,s,t,n+icomp) += soln_hat(i,j,k,n);
-
-                        AMREX_D_TERM(U_out(r,s,t,n+icomp) += slopes_eb[0] * (ccent(r,s,t,0)-cent_hat(i,j,k,0));,
-                                     U_out(r,s,t,n+icomp) += slopes_eb[1] * (ccent(r,s,t,1)-cent_hat(i,j,k,1));,
-                                     U_out(r,s,t,n+icomp) += slopes_eb[2] * (ccent(r,s,t,2)-cent_hat(i,j,k,2)););
-
+                        U_out(r,s,t,n+icomp) += soln_hat(i,j,k,n) 
+                                             + slopes_eb[0] * (ccent(r,s,t,0)-cent_hat(i,j,k,0))
+                                             + slopes_eb[1] * (ccent(r,s,t,1)-cent_hat(i,j,k,1))
+                                             + slopes_eb[2] * (ccent(r,s,t,2)-cent_hat(i,j,k,2));
                     } // if bx contains
                 } // i_nbor
             } // n
