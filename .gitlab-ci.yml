@@ -78,22 +78,23 @@ test:csg:
   stage: test
   needs: []
   script:
-    - module load cmake/3.19.1 ccache/3.7.9 gnu/8.4.0 openmpi/4.0.3_gnu8.4 $CUDA_MODULE
+    - module load anaconda/3.8 cmake/3.19.1 ccache/3.7.9 gnu/8.4.0 openmpi/4.0.3_gnu8.4 $CUDA_MODULE
     - git submodule update --init --force
     - cmake -S .
             -B build
             -DAMReX_CUDA_ARCH=Volta
+            -DCMAKE_CUDA_ARCHITECTURES=70
             -DMFIX_CSG=yes
             -DMFIX_GPU_BACKEND=CUDA
             -DMFIX_MPI=$ENABLE_MPI
             -DMFIX_OMP=$ENABLE_OMP
-    - cmake --build build --target build_tests
+    - srun -p gpu cmake --build build --target build_tests -j
   tags:
     - joule
 
-build:cuda-11.0:
+build:cuda-11.1:
   variables:
-    CUDA_MODULE: cuda/11.0
+    CUDA_MODULE: cuda/11.1
   <<: *build_gpu
 
 test:single-serial:
