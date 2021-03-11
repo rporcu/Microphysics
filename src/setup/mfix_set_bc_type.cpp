@@ -411,33 +411,30 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
         (m_bcrec_force_d.data(), m_bcrec_force.data(), sizeof(BCRec)*l_force);
     }
 
-
-
-
     m_h_bc_u_g.resize(bc.size());
     m_h_bc_v_g.resize(bc.size());
     m_h_bc_w_g.resize(bc.size());
+
+    m_h_bc_t_g.resize(bc.size());
+
+    if ( FLUID::solve ) {
+      amrex::Real ltime(0.);
+
+      set_velocity_bc_values (ltime);
+
+      if ( advect_enthalpy ) {
+        set_temperature_bc_values (ltime);
+      }
+
+    }
+
+
     m_h_bc_ep_g.resize(bc.size());
     m_h_bc_p_g.resize(bc.size());
-    m_h_bc_t_g.resize(bc.size());
     m_h_bc_X_gk.resize(FLUID::nspecies, Vector<Real>(bc.size()));
 
     for(unsigned bcv(0); bcv < bc.size(); ++bcv)
     {
-
-      if ( FLUID::solve and bc[bcv].type == minf_ ) {
-
-        m_h_bc_u_g[bcv] = bc[bcv].fluid.velocity[0];
-        m_h_bc_v_g[bcv] = bc[bcv].fluid.velocity[1];
-        m_h_bc_w_g[bcv] = bc[bcv].fluid.velocity[2];
-
-      } else {
-
-        m_h_bc_u_g[bcv] = 1e50;
-        m_h_bc_v_g[bcv] = 1e50;
-        m_h_bc_w_g[bcv] = 1e50;
-
-      }
 
       if ( FLUID::solve ) {
         m_h_bc_ep_g[bcv] = bc[bcv].fluid.volfrac;
@@ -448,15 +445,6 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
         m_h_bc_p_g[bcv]  = 1e50;
       }
 
-      // Fluid temperature
-      if ( FLUID::solve and advect_enthalpy ) {
-        if ( bc[bcv].type == minf_ or bc[bcv].type == pinf_ ) {
-          m_h_bc_t_g[bcv]  = bc[bcv].fluid.temperature;
-
-        } else {
-          m_h_bc_t_g[bcv]  = 1e50;
-        }
-      }
 
       // Fluid species mass fractions
       if ( FLUID::solve and advect_fluid_species) {
@@ -473,14 +461,8 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
     }
 
-    Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_u_g.begin(), m_h_bc_u_g.end(), m_bc_u_g.begin());
-    Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_v_g.begin(), m_h_bc_v_g.end(), m_bc_v_g.begin());
-    Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_w_g.begin(), m_h_bc_w_g.end(), m_bc_w_g.begin());
     Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_p_g.begin(), m_h_bc_p_g.end(), m_bc_p_g.begin());
     Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_ep_g.begin(), m_h_bc_ep_g.end(), m_bc_ep_g.begin());
-    if ( FLUID::solve and advect_enthalpy ) {
-        Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_t_g.begin(), m_h_bc_t_g.end(), m_bc_t_g.begin());
-    }
     if ( FLUID::solve and advect_fluid_species) {
         for (int n = 0; n < FLUID::nspecies; ++n) {
             Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk[n].begin(), m_h_bc_X_gk[n].end(),
@@ -615,4 +597,55 @@ void mfix::set_bcrec_hi(const int lev, const int dir, const int l_type)
 
     for (auto& b : m_bcrec_force) b.setHi(dir, BCType::foextrap);
   }
+}
+
+void
+mfix::set_velocity_bc_values (amrex::Real time_in) const
+{
+
+  const int minf_ = bc_list.get_minf();
+  for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
+
+    if ( bc[bcv].type == minf_ ) {
+
+      const auto& bc_vels = BC::bc[bcv].fluid.get_velocity(time_in);
+      m_h_bc_u_g[bcv] = bc_vels[0];
+      m_h_bc_v_g[bcv] = bc_vels[1];
+      m_h_bc_w_g[bcv] = bc_vels[2];
+
+    } else {
+
+      m_h_bc_u_g[bcv] = 1e50;
+      m_h_bc_v_g[bcv] = 1e50;
+      m_h_bc_w_g[bcv] = 1e50;
+
+    }
+
+  }
+
+  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_u_g.begin(), m_h_bc_u_g.end(), m_bc_u_g.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_v_g.begin(), m_h_bc_v_g.end(), m_bc_v_g.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_w_g.begin(), m_h_bc_w_g.end(), m_bc_w_g.begin());
+
+  Gpu::synchronize();
+}
+
+void
+mfix::set_temperature_bc_values (amrex::Real time_in) const
+{
+
+  const int minf_ = bc_list.get_minf();
+  const int pinf_ = bc_list.get_pinf();
+
+  for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
+    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
+      m_h_bc_t_g[bcv] = BC::bc[bcv].fluid.get_temperature(time_in);
+    } else {
+      m_h_bc_t_g[bcv] = 1e50;
+    }
+  }
+
+  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_t_g.begin(), m_h_bc_t_g.end(), m_bc_t_g.begin());
+
+  Gpu::synchronize();
 }

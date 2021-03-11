@@ -58,7 +58,7 @@ mfix::mfix_set_species_bcs (Real time,
 }
 
 void 
-mfix::set_mass_fractions_g_bcs (Real /*time*/,
+mfix::set_mass_fractions_g_bcs (Real time,
                                 const int lev,
                                 FArrayBox& X_gk_fab,
                                 const Box& domain)
@@ -564,7 +564,7 @@ mfix::set_species_specific_heat_g_bcs (Real /*time*/,
 
 
 void 
-mfix::set_species_enthalpy_g_bcs (Real /*time*/,
+mfix::set_species_enthalpy_g_bcs (Real time,
                                   const int lev,
                                   FArrayBox& scal_fab,
                                   const Box& domain)
@@ -588,6 +588,8 @@ mfix::set_species_enthalpy_g_bcs (Real /*time*/,
 
   Real* p_cp_gk0 = cp_gk0_d.data();
 
+  // Update temperature before using to update enthalpy
+  set_temperature_bc_values (time);
   amrex::Real* p_bc_t_g = m_bc_t_g.data();
 
   IntVect scal_lo(scal_fab.loVect());

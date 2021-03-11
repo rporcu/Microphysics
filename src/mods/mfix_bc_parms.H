@@ -70,6 +70,9 @@ namespace BC
 
   void Initialize (amrex::Geometry& geom);
 
+  void read_bc_velocity (amrex::ParmParse pp, FLUID::FLUID_t* fluid);
+  void read_bc_temperature (amrex::ParmParse pp, FLUID::FLUID_t* fluid);
+
 }
 
 #endif
