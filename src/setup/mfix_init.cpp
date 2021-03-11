@@ -219,9 +219,8 @@ mfix::InitParams ()
     pp.query("redistribution_type"              , m_redistribution_type);
     if (m_redistribution_type != "NoRedist" &&
         m_redistribution_type != "FluxRedist" &&
-        m_redistribution_type != "MergeRedist" &&
         m_redistribution_type != "StateRedist")
-      amrex::Abort("redistribution type must be FluxRedist, MergeRedist, or StateRedist");
+      amrex::Abort("redistribution type must be FluxRedist, NoRedist or StateRedist");
 
 
     // Default to MOL

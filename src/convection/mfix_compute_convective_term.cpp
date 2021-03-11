@@ -337,8 +337,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
       Box gbx = bx;
       if (!regular) {
         // We need 3 if we are doing state redistribution
-        if (m_redistribution_type == "StateRedist" ||
-            m_redistribution_type == "MergeRedist")
+        if (m_redistribution_type == "StateRedist")
           gbx.grow(3);
         else if (m_redistribution_type == "FluxRedist")
           gbx.grow(2);

@@ -23,7 +23,6 @@ void redistribution::redistribute_eb (amrex::Box const& bx, int ncomp, int icomp
 {
     // redistribution_type = "NoRedist";      // no redistribution
     // redistribution_type = "FluxRedist"     // flux_redistribute
-    // redistribution_type = "MergeRedist";   // merge redistribute
     // redistribution_type = "StateRedist";   // state redistribute
 
 #if (AMREX_SPACEDIM == 2)
@@ -49,24 +48,6 @@ void redistribution::redistribute_eb (amrex::Box const& bx, int ncomp, int icomp
 
       amrex::apply_flux_redistribution(bx, dUdt_out, dUdt_in, ep_g, icomp, ncomp,
                                        flag, vfrac, lev_geom);
-
-    } else if (redistribution_type == "MergeRedist") {
-
-      amrex::ParallelFor(Box(dUdt_in), ncomp, [=]
-      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-      {
-        dUdt_in(i,j,k,n) = U_in(i,j,k,n) + dt * dUdt_in(i,j,k,n);
-      });
-
-      make_itracker(bx, AMREX_D_DECL(apx, apy, apz), vfrac, itr, lev_geom, "Merge");
-
-      merge_redistribute(bx, ncomp, icomp, dUdt_out, dUdt_in, vfrac, itr, lev_geom);
-
-      amrex::ParallelFor(bx, ncomp, [=]
-      AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-      {
-        dUdt_out(i,j,k,n+icomp) = (dUdt_out(i,j,k,n+icomp) - U_in(i,j,k,n)) / dt;
-      });
 
     } else if (redistribution_type == "StateRedist") {
 
@@ -134,8 +115,6 @@ void redistribution::redistribute_initial_data (Box const& bx, int ncomp, int ic
                                                 amrex::Array4<amrex::Real const> const& ccc,
                                                 Geometry& lev_geom, std::string redistribution_type)
 {
-#if 0
-    // redistribution_type = "MergeRedist";   // merge redistribute
     // redistribution_type = "StateRedist";   // state redistribute
 
     // We assume that in 3D a cell will only need at most 7 neighbors to merge with, and we
@@ -150,13 +129,7 @@ void redistribution::redistribute_initial_data (Box const& bx, int ncomp, int ic
 
     Array4<int> itr = itracker.array();
 
-    if (redistribution_type == "MergeRedist") {
-
-        make_itracker(bx, apx, apy, apz, vfrac, itr, lev_geom, "Merge");
-
-        merge_redistribute(bx, ncomp, icomp, U_out, U_in, vfrac, itr, lev_geom);
-
-    } else if (redistribution_type == "StateRedist") {
+    if (redistribution_type == "StateRedist") {
 
         make_itracker(bx, apx, apy, apz, vfrac, itr, lev_geom, "State");
 
@@ -166,6 +139,4 @@ void redistribution::redistribute_initial_data (Box const& bx, int ncomp, int ic
     } else {
        amrex::Error("Shouldn't be here with this redist type");
     }
-
-#endif
 }
