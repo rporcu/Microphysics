@@ -147,8 +147,6 @@ mfix::InitParams ()
     pp.query("initial_iterations", initial_iterations);
     pp.query("do_initial_proj", do_initial_proj);
 
-    pp.query("open_system_constraint", open_system_constraint);
-
     pp.query("advect_density", advect_density);
     pp.query("advect_tracer" , advect_tracer);
     pp.query("advect_enthalpy", advect_enthalpy);
@@ -161,7 +159,7 @@ mfix::InitParams ()
     pp.query("advect_fluid_species", advect_fluid_species);
 
     // Set the mfix class flag equal to the REACTIONS parameter
-    solve_reactions = REACTIONS::solve and SPECIES::solve; //TODO check this
+    solve_reactions = REACTIONS::solve and SPECIES::solve;
 
     // We can still turn it off explicitly even if we passed stoichiometry inputs
     pp.query("solve_reactions", solve_reactions);
@@ -381,6 +379,7 @@ mfix::InitParams ()
       amrex::Abort("Don't know this drag_type!");
     }
 
+    // Convection model type
     if (advect_enthalpy)
     {
       std::string convection_type = "None";
@@ -405,6 +404,28 @@ mfix::InitParams ()
       }
       else {
         amrex::Abort("Don't know this convection_type!");
+      }
+    }
+
+    // Constraint type
+    {
+      std::string constraint_type = "none";
+      pp.query("constraint_type", constraint_type);
+      constraint_type = amrex::toLower(constraint_type);
+
+      if (constraint_type.compare("none") == 0) {
+        m_idealgas_constraint = IdealGasConstraint::None;
+      }
+      else if (constraint_type.compare("opensystem") == 0 or
+               constraint_type.compare("open_system") == 0) {
+        m_idealgas_constraint = IdealGasConstraint::OpenSystem;
+      }
+      else if (constraint_type.compare("closedsystem") == 0 or
+               constraint_type.compare("closed_system") == 0) {
+        m_idealgas_constraint = IdealGasConstraint::ClosedSystem;
+      }
+      else {
+        amrex::Abort("Don't know this constraint_type!");
       }
     }
 
@@ -978,9 +999,13 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
             init_fluid_parameters(bx, mfi, ld, advect_enthalpy, advect_fluid_species);
           } else {
             init_fluid(sbx, bx, domain, mfi, ld, dx, dy, dz, xlen, ylen, zlen, plo,
-                test_tracer_conservation, advect_enthalpy, advect_fluid_species);
+                test_tracer_conservation, advect_enthalpy, advect_fluid_species,
+                m_idealgas_constraint);
           }
        }
+
+       // TODO TODO TODO check this
+       //MultiFab::Copy(*m_leveldata[lev]->vel_go,  *m_leveldata[lev]->vel_g, 0, 0, 3, 0);
 
        // Make sure to fill the "old state" before we start ...
        MultiFab::Copy(*m_leveldata[lev]->ro_go,  *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
@@ -992,8 +1017,11 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        }
 
        if (advect_fluid_species) {
-         MultiFab::Copy(*m_leveldata[lev]->X_gko, *m_leveldata[lev]->X_gk, 0, 0,
-             m_leveldata[lev]->X_gk->nComp(), 0);
+         MultiFab::Copy(*m_leveldata[lev]->X_gko, *m_leveldata[lev]->X_gk, 0, 0, FLUID::nspecies, 0);
+       }
+
+       if (m_idealgas_constraint == IdealGasConstraint::ClosedSystem) {
+         MultiFab::Copy(*m_leveldata[lev]->pressure_go, *m_leveldata[lev]->pressure_g, 0, 0, 1, 0);
        }
     }
 

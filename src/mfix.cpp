@@ -13,6 +13,7 @@ int              mfix::load_balance_fluid   = 1;
 int              mfix::knapsack_nmax        = 128;
 int              mfix::m_drag_type          = DragType::Invalid;
 int              mfix::m_convection_type    = ConvectionType::Invalid;
+int              mfix::m_idealgas_constraint    = IdealGasConstraint::None;
 DepositionScheme mfix::m_deposition_scheme;
 int              mfix::m_reaction_rates_type = ReactionRatesType::RRatesUser;
 amrex::Real      mfix::m_deposition_diffusion_coeff = -1.0;
@@ -289,6 +290,26 @@ Vector< MultiFab* > mfix::get_mu_g () noexcept
   return r;
 }
 
+Vector< MultiFab* > mfix::get_pressure_g () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->pressure_g);
+  }
+  return r;
+}
+
+Vector< MultiFab* > mfix::get_pressure_g_old () noexcept
+{
+  Vector<MultiFab*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->pressure_go);
+  }
+  return r;
+}
+
 Vector< MultiFab* > mfix::get_T_g () noexcept
 {
   Vector<MultiFab*> r;
@@ -429,12 +450,12 @@ Vector< MultiFab* > mfix::get_txfr () noexcept
   return r;
 }
 
-Vector< MultiFab* > mfix::get_ro_gk_txfr () noexcept
+Vector< MultiFab* > mfix::get_chem_txfr () noexcept
 {
   Vector<MultiFab*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->ro_gk_txfr);
+    r.push_back(m_leveldata[lev]->chem_txfr);
   }
   return r;
 }
@@ -660,6 +681,26 @@ Vector< MultiFab const*> mfix::get_h_g_old_const () const noexcept
   return r;
 }
 
+Vector< MultiFab const*> mfix::get_pressure_g_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->pressure_g);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_pressure_g_old_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->pressure_go);
+  }
+  return r;
+}
+
 Vector< MultiFab const*> mfix::get_T_g_on_eb_const () const noexcept
 {
   Vector<MultiFab const*> r;
@@ -740,12 +781,12 @@ Vector< MultiFab const*> mfix::get_txfr_const () const noexcept
   return r;
 }
 
-Vector< MultiFab const*> mfix::get_ro_gk_txfr_const () const noexcept
+Vector< MultiFab const*> mfix::get_chem_txfr_const () const noexcept
 {
   Vector<MultiFab const*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->ro_gk_txfr);
+    r.push_back(m_leveldata[lev]->chem_txfr);
   }
   return r;
 }

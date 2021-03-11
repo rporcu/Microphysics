@@ -6,5 +6,5 @@ target_include_directories(mfixcore
 target_sources( mfixcore
     PRIVATE
     mfix_apply_nodal_projection.cpp
-    mfix_compute_diveu.cpp
+    mfix_constraints.cpp
     )

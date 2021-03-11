@@ -487,7 +487,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 
         if (FLUID::solve_species and REACTIONS::solve and plt_ro_txfr == 1) {
           for(int n(0); n < FLUID::nspecies; n++) {
-            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->ro_gk_txfr, n, lc+n, 1, 0);
+            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->chem_txfr, n, lc+n, 1, 0);
           }
           lc += FLUID::nspecies;
         }

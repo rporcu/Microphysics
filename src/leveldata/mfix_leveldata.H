@@ -30,7 +30,7 @@ class LevelData
     // Void fraction
     amrex::MultiFab* ep_g;
 
-    // Gas pressure fraction
+    // Gas perturbational pressure
     amrex::MultiFab* p_g;
     amrex::MultiFab* p_go;
 
@@ -58,6 +58,10 @@ class LevelData
     // Molecular viscosity
     amrex::MultiFab* mu_g;
 
+    // Gas thermodynamic pressure
+    amrex::MultiFab* pressure_g;
+    amrex::MultiFab* pressure_go;
+
     // Gas temperature
     amrex::MultiFab* T_g;
     amrex::MultiFab* T_go;
@@ -74,7 +78,7 @@ class LevelData
     amrex::MultiFab* h_g;
     amrex::MultiFab* h_go;
 
-    // Gas species
+    // Gas species mass fractions
     amrex::MultiFab* X_gk;
     amrex::MultiFab* X_gko;
 
@@ -94,7 +98,7 @@ class LevelData
     amrex::MultiFab* txfr;
 
     // Fluid species density rates of change due to heterogeneous reactions
-    amrex::MultiFab* ro_gk_txfr;
+    amrex::MultiFab* chem_txfr;
 
     // div (ep_g * u)
     amrex::MultiFab* diveu;

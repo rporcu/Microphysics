@@ -216,13 +216,13 @@ mfix::mfix_update_fluid_and_species(const Vector< MultiFab* >& cp_gk,
   // Set covered values
   for (int lev(0); lev <= finest_level; lev++) {
     if (FLUID::is_a_mixture)
-      EB_set_covered(*MW_g[lev], 0, 1, 0, 0.0);
+      EB_set_covered(*MW_g[lev], 0, 1, 0, covered_val);
 
     if (advect_enthalpy) {
-      EB_set_covered(*cp_g[lev], 0, 1, 0, 0.0);
-      EB_set_covered(*h_g[lev], 0, 1, 0, 0.0);
-      EB_set_covered(*cp_gk[lev], 0, nspecies_g, 0, 0.0);
-      EB_set_covered(*h_gk[lev], 0, nspecies_g, 0, 0.0);
+      EB_set_covered(*cp_g[lev], 0, 1, 0, covered_val);
+      EB_set_covered(*h_g[lev], 0, 1, 0, covered_val);
+      EB_set_covered(*cp_gk[lev], 0, nspecies_g, 0, covered_val);
+      EB_set_covered(*h_gk[lev], 0, nspecies_g, 0, covered_val);
     }
   }
 

@@ -46,6 +46,9 @@ struct ConvectionType { enum {Invalid=-1, RanzMarshall, Gunn}; };
 // Deposition scheme enumeration
 enum DepositionScheme {trilinear, square_dpvm, true_dpvm, centroid};
 
+// Projection constraint type
+struct IdealGasConstraint { enum {None, OpenSystem, ClosedSystem}; };
+
 // Reaction rates type enumeration
 struct ReactionRatesType { enum {RRatesUser}; };
 
@@ -394,6 +397,8 @@ class mfix : public AmrCore
 
     static DepositionScheme m_deposition_scheme;
 
+    static int m_idealgas_constraint;
+
     static int m_reaction_rates_type;
 
     static amrex::Real m_deposition_diffusion_coeff;
@@ -644,7 +649,8 @@ public:
                                Vector< MultiFab* > const& D_gk_in,
                                Vector< MultiFab* > const& h_gk_in,
                                Vector< MultiFab* > const& txfr_in,
-                               Vector< MultiFab* > const& ro_gk_txfr_in,
+                               Vector< MultiFab* > const& chem_txfr_in,
+                               Vector< MultiFab* > const& pressure_g_in,
                                Real time);
 
   protected:
@@ -693,16 +699,24 @@ public:
     // Initialization: read input parameters and set up reactions
     void initialize_chem_reactions ();
 
-    void mfix_calc_chem_txfr (const Real time,
-                              const Vector< MultiFab* >& ep_g_in,
-                              const Vector< MultiFab* >& ro_g_in,
-                              const Vector< MultiFab* >& X_gk_in);
-
-    template <typename F1>
-    void mfix_calc_chem_txfr (const Real time,
+    void mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                               const Vector< MultiFab* >& ep_g_in,
                               const Vector< MultiFab* >& ro_g_in,
                               const Vector< MultiFab* >& X_gk_in,
+                              const Vector< MultiFab* >& D_gk_in,
+                              const Vector< MultiFab* >& cp_gk_in,
+                              const Vector< MultiFab* >& h_gk_in,
+                              const Real time);
+
+    template <typename F1>
+    void mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
+                              const Vector< MultiFab* >& ep_g_in,
+                              const Vector< MultiFab* >& ro_g_in,
+                              const Vector< MultiFab* >& X_gk_in,
+                              const Vector< MultiFab* >& D_gk_in,
+                              const Vector< MultiFab* >& cp_gk_in,
+                              const Vector< MultiFab* >& h_gk_in,
+                              const Real time,
                               F1 RRatesFunc);
 
   protected:
@@ -798,13 +812,16 @@ public:
                                Vector< MultiFab* >& species_RHS,
                                Vector< MultiFab* >& lap_X_old,
                                Vector< MultiFab* >& lap_X,
+                               Vector< Real >& rhs_pressure_g_old,
+                               Vector< Real >& rhs_pressure_g,
                                Real time,
                                Real dt,
                                Real prev_dt,
-                               bool proj_2);
+                               bool proj_2,
+                               Real& coupling_timing);
 
-    void mfix_density_rhs(Vector< MultiFab*      > const& rhs,
-                          Vector< MultiFab const*> const& ro_gk_txfr);
+    void mfix_density_rhs(Vector< MultiFab*       > const& rhs,
+                          Vector< MultiFab const* > const& chem_txfr);
 
     void mfix_enthalpy_rhs(Vector< MultiFab*      > const& rhs,
                            Vector< MultiFab const*> const& ep_g,
@@ -813,15 +830,14 @@ public:
                            Vector< MultiFab const*> const& D_gk,
                            Vector< MultiFab const*> const& h_gk);
 
-    void mfix_scalar_rhs(const bool explicit_diffusion,
-                         Vector< MultiFab* > const& lap_trac,
-                         Vector< MultiFab* > const& trac,
-                         Vector< MultiFab* > const& ep_g,
-                         Vector< MultiFab* > const& ro_g,
-                         const Vector<Real>& mu_s);
+    void mfix_scalar_rhs(/*Vector< MultiFab* > const& rhs,*/
+                         Vector< MultiFab const* > const& trac,
+                         Vector< MultiFab const* > const& ep_g,
+                         Vector< MultiFab const* > const& ro_g,
+                         Vector<Real> const& mu_s);
 
-    void mfix_species_X_rhs(Vector< MultiFab*      > const& rhs,
-                            Vector< MultiFab const*> const& ro_gk_txfr);
+    void mfix_species_X_rhs(Vector< MultiFab*       > const& rhs,
+                            Vector< MultiFab const* > const& chem_txfr);
 
     void mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                                Vector< MultiFab* >& conv_s_old,
@@ -838,10 +854,13 @@ public:
                                Vector< MultiFab* >& species_RHS,
                                Vector< MultiFab* >& lap_X_old,
                                Vector< MultiFab* >& lap_X,
+                               Vector< Real >& rhs_pressure_g_old,
+                               Vector< Real >& rhs_pressure_g,
                                Real time,
                                Real dt,
                                Real prev_dt,
-                               bool proj_2);
+                               bool proj_2,
+                               Real& coupling_timing);
 
   public:
     void mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk);
@@ -855,9 +874,10 @@ public:
                                         const Vector< MultiFab* >& X_gk);
 
     void mfix_open_system_rhs (Vector< MultiFab*       > const& rhs,
-                               Vector< MultiFab*       > const& lap_T_star,
-                               Vector< MultiFab*       > const& lap_X_star,
-                               Vector< MultiFab const* > const& ep_g,
+                               Vector< MultiFab const* > const& lap_T,
+                               Vector< MultiFab const* > const& enthalpy_rhs,
+                               Vector< MultiFab const* > const& lap_X,
+                               Vector< MultiFab const* > const& species_rhs,
                                Vector< MultiFab const* > const& ro_g,
                                Vector< MultiFab const* > const& MW_g,
                                Vector< MultiFab const* > const& T_g,
@@ -866,7 +886,26 @@ public:
                                Vector< MultiFab const* > const& D_gk,
                                Vector< MultiFab const* > const& h_gk,
                                Vector< MultiFab const* > const& txfr,
-                               Vector< MultiFab const* > const& ro_gk_txfr);
+                               Vector< MultiFab const* > const& chem_txfr);
+
+    void mfix_closed_system_rhs (Vector< MultiFab*       > const& rhs,
+                                 Vector< MultiFab const* > const& lap_T,
+                                 Vector< MultiFab const* > const& enthalpy_rhs,
+                                 Vector< MultiFab const* > const& lap_X,
+                                 Vector< MultiFab const* > const& species_rhs,
+                                 Vector< MultiFab const* > const& ep_g,
+                                 Vector< MultiFab const* > const& ro_g,
+                                 Vector< MultiFab const* > const& MW_g,
+                                 Vector< MultiFab const* > const& T_g,
+                                 Vector< MultiFab const* > const& cp_g,
+                                 Vector< MultiFab*       > const& X_gk,
+                                 Vector< MultiFab const* > const& D_gk,
+                                 Vector< MultiFab const* > const& h_gk,
+                                 Vector< MultiFab const* > const& txfr,
+                                 Vector< MultiFab const* > const& chem_txfr,
+                                 Vector< MultiFab const* > const& pressure_g,
+                                 Vector< Real >& avgSigma,
+                                 Vector< Real >& avgTheta);
 
     void compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter const& mfi,
                                   Array4<Real> const& dvdt, // velocity
@@ -934,6 +973,8 @@ public:
     Vector< MultiFab* > get_p_g () noexcept;
     Vector< MultiFab* > get_p_g_old () noexcept;
     Vector< MultiFab* > get_mu_g () noexcept;
+    Vector< MultiFab* > get_pressure_g () noexcept;
+    Vector< MultiFab* > get_pressure_g_old () noexcept;
     Vector< MultiFab* > get_T_g () noexcept;
     Vector< MultiFab* > get_T_g_old () noexcept;
     Vector< MultiFab* > get_cp_g () noexcept;
@@ -948,7 +989,7 @@ public:
     Vector< MultiFab* > get_cp_gk () noexcept;
     Vector< MultiFab* > get_h_gk () noexcept;
     Vector< MultiFab* > get_txfr () noexcept;
-    Vector< MultiFab* > get_ro_gk_txfr () noexcept;
+    Vector< MultiFab* > get_chem_txfr () noexcept;
     Vector< MultiFab* > get_diveu () noexcept;
     Vector< MultiFab* > get_mac_phi () noexcept;
     Vector< MultiFab* > get_divtau () noexcept;
@@ -971,6 +1012,9 @@ public:
     amrex::Vector< amrex::MultiFab const* > get_X_gk_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_X_gk_old_const () const noexcept;
 
+    amrex::Vector< amrex::MultiFab const* > get_pressure_g_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_pressure_g_old_const () const noexcept;
+
     amrex::Vector< MultiFab const* > get_divtau_const () const noexcept;
 
     amrex::Vector< amrex::MultiFab const* > get_MW_g_const () const noexcept;
@@ -983,7 +1027,7 @@ public:
     amrex::Vector< amrex::MultiFab const* > get_cp_gk_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_h_gk_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_txfr_const () const noexcept;
-    amrex::Vector< amrex::MultiFab const* > get_ro_gk_txfr_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_chem_txfr_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_diveu_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_mac_phi_const () const noexcept;
 
@@ -1044,12 +1088,11 @@ public:
 
     int m_steady_state = 0;
 
-    bool advect_enthalpy        = false;
-    bool advect_density         = false;
-    bool advect_tracer          = false;
-    bool advect_fluid_species   = false;
-    bool solve_reactions        = false;
-    bool open_system_constraint = false; // by default use cold-flow constraint
+    bool advect_enthalpy      = false;
+    bool advect_density       = false;
+    bool advect_tracer        = false;
+    bool advect_fluid_species = false;
+    bool solve_reactions      = false;
 
     bool test_tracer_conservation = false;
 

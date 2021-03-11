@@ -16,13 +16,18 @@
 
 
 void 
-mfix::mfix_calc_chem_txfr (const Real time,
+mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                            const Vector< MultiFab* >& ep_g_in,
                            const Vector< MultiFab* >& ro_g_in,
-                           const Vector< MultiFab* >& X_gk_in)
+                           const Vector< MultiFab* >& X_gk_in,
+                           const Vector< MultiFab* >& D_gk_in,
+                           const Vector< MultiFab* >& cp_gk_in,
+                           const Vector< MultiFab* >& h_gk_in,
+                           const Real time)
 {
   if (m_reaction_rates_type == ReactionRatesType::RRatesUser) {
-    mfix_calc_chem_txfr(time, ep_g_in, ro_g_in, X_gk_in, ComputeRRateUser());
+    mfix_calc_chem_txfr(chem_txfr, ep_g_in, ro_g_in, X_gk_in, D_gk_in, cp_gk_in,
+                        h_gk_in, time, ComputeRRateUser());
   }
   else {
     amrex::Abort("Invalid Reaction Rates Type.");
@@ -32,10 +37,14 @@ mfix::mfix_calc_chem_txfr (const Real time,
 
 template <typename F1>
 void 
-mfix::mfix_calc_chem_txfr (const Real time,
+mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                            const Vector< MultiFab* >& ep_g_in,
                            const Vector< MultiFab* >& ro_g_in,
                            const Vector< MultiFab* >& X_gk_in,
+                           const Vector< MultiFab* >& D_gk_in,
+                           const Vector< MultiFab* >& cp_gk_in,
+                           const Vector< MultiFab* >& h_gk_in,
+                           const Real time,
                            F1 RRatesFunc)
 {
   using PairIndex = MFIXParticleContainer::PairIndex;
@@ -184,7 +193,7 @@ mfix::mfix_calc_chem_txfr (const Real time,
     mfix_set_density_bcs(time, ro_g_in);
 
     // TODO: we only need to do this on X_gk
-    mfix_set_species_bcs(time, X_gk_in, get_D_gk(), get_cp_gk(), get_h_gk());
+    mfix_set_species_bcs(time, X_gk_in, D_gk_in, cp_gk_in, h_gk_in);
 
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -593,14 +602,14 @@ mfix::mfix_calc_chem_txfr (const Real time,
     // interphase transfer terms on the fluid
     // ***************************************************************************
     for (int lev = 0; lev < nlev; lev++)
-      m_leveldata[lev]->ro_gk_txfr->setVal(0);
+      chem_txfr[lev]->setVal(0);
 
     if (nlev > 2)
       amrex::Abort("For right now"
           " MFIXParticleContainer::TrilinearDepositionFluidRRates can only"
           " handle up to 2 levels");
 
-    Vector< MultiFab* > ro_gk_txfr_ptr(nlev, nullptr);
+    Vector< MultiFab* > chem_txfr_ptr(nlev, nullptr);
 
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -611,16 +620,16 @@ mfix::mfix_calc_chem_txfr (const Real time,
       {
         // If we are already working with the internal mf defined on the
         // particle_box_array, then we just work with this.
-        ro_gk_txfr_ptr[lev] = m_leveldata[lev]->ro_gk_txfr;
+        chem_txfr_ptr[lev] = chem_txfr[lev];
       }
       else if (lev == 0 and (not OnSameGrids))
       {
         // If beta_mf is not defined on the particle_box_array, then we need
         // to make a temporary here and copy into beta_mf at the end.
-        ro_gk_txfr_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+        chem_txfr_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                            pc->ParticleDistributionMap(lev),
-                                           m_leveldata[lev]->ro_gk_txfr->nComp(),
-                                           m_leveldata[lev]->ro_gk_txfr->nGrow());
+                                           chem_txfr[lev]->nComp(),
+                                           chem_txfr[lev]->nGrow());
       }
       else
       {
@@ -628,19 +637,18 @@ mfix::mfix_calc_chem_txfr (const Real time,
         BoxArray ba_crse(amrex::coarsen(pc->ParticleBoxArray(lev),
               this->m_gdb->refRatio(0)));
 
-        ro_gk_txfr_ptr[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev),
-                                           m_leveldata[lev]->ro_gk_txfr->nComp(), 1);
+        chem_txfr_ptr[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev),
+                                          chem_txfr[lev]->nComp(), 1);
       }
 
       // We must have ghost cells for each FAB so that a particle in one grid can
       // spread its effect to an adjacent grid by first putting the value into
       // ghost cells of its own grid.  The mf->sumBoundary call then adds the
       // value from one grid's ghost cell to another grid's valid region.
-      if (ro_gk_txfr_ptr[lev]->nGrow() < 1)
+      if (chem_txfr_ptr[lev]->nGrow() < 1)
         amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
 
-      ro_gk_txfr_ptr[lev]->setVal(0.0, 0, m_leveldata[lev]->ro_gk_txfr->nComp(),
-          ro_gk_txfr_ptr[lev]->nGrow());
+      chem_txfr_ptr[lev]->setVal(0.0, 0, chem_txfr[lev]->nComp(), chem_txfr_ptr[lev]->nGrow());
     }
 
     const Geometry& gm = Geom(0);
@@ -651,7 +659,7 @@ mfix::mfix_calc_chem_txfr (const Real time,
 
     for (int lev = 0; lev < nlev; lev++)
     {
-      tmp_eps[lev] = (MFHelpers::createFrom(*ro_gk_txfr_ptr[lev], 0.0)).release();
+      tmp_eps[lev] = (MFHelpers::createFrom(*chem_txfr_ptr[lev], 0.0)).release();
 
       // Use level 0 to define the EB factory. If we are not on level 0
       // then create a copy of the coarse factory to use.
@@ -666,8 +674,8 @@ mfix::mfix_calc_chem_txfr (const Real time,
         Vector<int> ngrow = {1,1,1};
         EBFArrayBoxFactory* crse_factory;
 
-        crse_factory = (makeEBFabFactory(gm, ro_gk_txfr_ptr[lev]->boxArray(),
-                                         ro_gk_txfr_ptr[lev]->DistributionMap(),
+        crse_factory = (makeEBFabFactory(gm, chem_txfr_ptr[lev]->boxArray(),
+                                         chem_txfr_ptr[lev]->DistributionMap(),
                                          ngrow, EBSupport::volume)).release();
 
         flags   = &(crse_factory->getMultiEBCellFlagFab());
@@ -679,7 +687,7 @@ mfix::mfix_calc_chem_txfr (const Real time,
       // Deposit the interphase transfer forces to the grid
       // Drag force: (beta and beta*particle_vel)
       // Heat transfer: gamma and gamma*particle temperature
-      pc->InterphaseChemDeposition(lev, *tmp_eps[lev], *ro_gk_txfr_ptr[lev],
+      pc->InterphaseChemDeposition(lev, *tmp_eps[lev], *chem_txfr_ptr[lev],
           volfrac, flags, m_chemical_reactions);
     }
 
@@ -690,12 +698,12 @@ mfix::mfix_calc_chem_txfr (const Real time,
 
       // Move any volume deposited outside the domain back into the domain
       // when BC is either a pressure inlet or mass inflow.
-      mfix_deposition_bcs(lev, *ro_gk_txfr_ptr[lev]);
+      mfix_deposition_bcs(lev, *chem_txfr_ptr[lev]);
 
       // Sum grid boundaries to capture any material that was deposited into
       // your grid from an adjacent grid.
-      ro_gk_txfr_ptr[lev]->SumBoundary(gm.periodicity());
-      ro_gk_txfr_ptr[lev]->setBndry(0.0);
+      chem_txfr_ptr[lev]->SumBoundary(gm.periodicity());
+      chem_txfr_ptr[lev]->setBndry(0.0);
 
       // Sum grid boundaries then fill with correct ghost values.
       tmp_eps[lev]->SumBoundary(gm.periodicity());
@@ -704,14 +712,14 @@ mfix::mfix_calc_chem_txfr (const Real time,
       // Move excessive solids volume from small cells to neighboring cells.
       // Note that we don't change tmp_eps but use the redistribution of
       // particle volume to determine how to redistribute the drag forces.
-      mfix_redistribute_deposition(lev, *tmp_eps[lev], *ro_gk_txfr_ptr[lev],
+      mfix_redistribute_deposition(lev, *tmp_eps[lev], *chem_txfr_ptr[lev],
                                    volfrac, flags,
                                    mfix::m_max_solids_volume_fraction);
 
       // Sum the boundaries again to recapture any solids moved across
       // grid boundaries during the redistribute
-      ro_gk_txfr_ptr[lev]->SumBoundary(gm.periodicity());
-      ro_gk_txfr_ptr[lev]->FillBoundary(gm.periodicity());
+      chem_txfr_ptr[lev]->SumBoundary(gm.periodicity());
+      chem_txfr_ptr[lev]->FillBoundary(gm.periodicity());
     }
 
     // This might not need to exist on all levels. Maybe only level 0.
@@ -723,7 +731,7 @@ mfix::mfix_calc_chem_txfr (const Real time,
     int ng_to_copy = amrex::min(src_nghost, dest_nghost);
 
     for (int lev = 1; lev < nlev; lev++) {
-      ro_gk_txfr_ptr[0]->copy(*ro_gk_txfr_ptr[lev], 0, 0, ro_gk_txfr_ptr[0]->nComp(),
+      chem_txfr_ptr[0]->copy(*chem_txfr_ptr[lev], 0, 0, chem_txfr_ptr[0]->nComp(),
           ng_to_copy, ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
     }
 
@@ -744,10 +752,10 @@ mfix::mfix_calc_chem_txfr (const Real time,
         PhysBCFunct<BndryFuncArray> cphysbc(Geom(lev-1), bcs, bfunc);
         PhysBCFunct<BndryFuncArray> fphysbc(Geom(lev  ), bcs, bfunc);
 
-        m_leveldata[lev]->ro_gk_txfr->setVal(0);
+        chem_txfr[lev]->setVal(0);
 
-        amrex::InterpFromCoarseLevel(*m_leveldata[lev]->ro_gk_txfr, time,
-                                     *ro_gk_txfr_ptr[lev-1],
+        amrex::InterpFromCoarseLevel(*chem_txfr[lev], time,
+                                     *chem_txfr_ptr[lev-1],
                                      0, 0, 1, Geom(lev-1), Geom(lev),
                                      cphysbc, 0, fphysbc, 0,
                                      ref_ratio[0], mapper,
@@ -759,14 +767,13 @@ mfix::mfix_calc_chem_txfr (const Real time,
     // to copy here from txfr_ptr into mf_to_be_filled. I believe that we don't
     // need any information in ghost cells so we don't copy those.
 
-    if (ro_gk_txfr_ptr[0] != m_leveldata[0]->ro_gk_txfr) {
-      m_leveldata[0]->ro_gk_txfr->copy(*ro_gk_txfr_ptr[0], 0, 0,
-          m_leveldata[0]->ro_gk_txfr->nComp());
+    if (chem_txfr_ptr[0] != chem_txfr[0]) {
+      chem_txfr[0]->copy(*chem_txfr_ptr[0], 0, 0, chem_txfr[0]->nComp());
     }
 
     for (int lev = 0; lev < nlev; lev++) {
-      if (ro_gk_txfr_ptr[lev] != m_leveldata[lev]->ro_gk_txfr)
-        delete ro_gk_txfr_ptr[lev];
+      if (chem_txfr_ptr[lev] != chem_txfr[lev])
+        delete chem_txfr_ptr[lev];
     }
 
     if (m_verbose > 1) {
@@ -781,6 +788,6 @@ mfix::mfix_calc_chem_txfr (const Real time,
 
     // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
     for (int lev = 0; lev < nlev; lev++)
-      m_leveldata[lev]->ro_gk_txfr->FillBoundary(geom[lev].periodicity());
+      chem_txfr[lev]->FillBoundary(geom[lev].periodicity());
   }
 }
