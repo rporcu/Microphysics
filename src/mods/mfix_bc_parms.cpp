@@ -324,7 +324,9 @@ namespace BC
         if( new_bc.type == minf_) {
           ppFluid.get("volfrac", new_bc.fluid.volfrac);
           volfrac_total += new_bc.fluid.volfrac;
-          ppFluid.getarr("velocity", new_bc.fluid.velocity, 0, 3);
+
+          read_bc_velocity(ppFluid, &new_bc.fluid);
+
         }
 
         // Read in fluid pressure
@@ -338,7 +340,7 @@ namespace BC
 
         if( new_bc.type == minf_ or new_bc.type == pinf_ ) {
           if (FLUID::solve_enthalpy) {
-            ppFluid.get("temperature", new_bc.fluid.temperature);
+            read_bc_temperature(ppFluid, &new_bc.fluid);
           }
 
           // Get species data.
@@ -536,5 +538,135 @@ namespace BC
     }  // END loop over BCs to print output
 #endif
   }// END Initialize
+
+
+void
+read_bc_velocity (amrex::ParmParse pp, FLUID::FLUID_t *fluid)
+{
+  amrex::Vector<amrex::Real> vel_in;
+  pp.getarr("velocity", vel_in);
+
+  fluid->constant_velocity = (vel_in.size() == 3);
+  if (fluid->constant_velocity) {
+    fluid->velocity= vel_in;
+
+  } else {
+
+    int found;
+    int k=0;
+    do {
+      amrex::Vector<amrex::Real> kth_input;
+      found = pp.queryktharr("velocity", k, kth_input);
+      if (found){
+        // Assert that it has the correct length.
+        if ( kth_input.size() != 4 ) {
+          amrex::Print() << "Bad velocity inputs specification:\n";
+          for( int lc=0; lc<kth_input.size(); lc++)
+            amrex::Print()  << "  " << kth_input[lc];
+          amrex::Print() << std::endl;
+          amrex::Abort("Fix input deck.");
+        }
+        const amrex::Real new_time = kth_input[0];
+        const int len = fluid->vel_table.size();
+        if (len == 0){
+          fluid->vel_table.push_back(kth_input);
+        } else {
+          for (int lc=0; lc<len; lc++) {
+            if ( new_time <= fluid->vel_table[lc][0]){
+              fluid->vel_table.insert(fluid->vel_table.begin()+lc, kth_input);
+            } else if (lc == len-1){
+              fluid->vel_table.push_back(kth_input);
+            }
+          }
+        }
+      }
+      k++;
+    } while(found);
+  }
+  if ( fluid->velocity.size() == 0 &&
+       fluid->vel_table.size() == 0){
+    amrex::Print() << "No velocity inputs found for fluid\n";
+    amrex::Abort("No velocity inputs found for fluid");
+  }
+
+}// end read_velocity
+
+
+void
+read_bc_temperature (amrex::ParmParse pp, FLUID::FLUID_t *fluid)
+{
+
+  amrex::Print() << "\n\nI am looking for the fluid temperature BC!\n";
+  // ppFluid.get("temperature", new_bc.fluid.temperature);
+
+  amrex::Vector<amrex::Real> tg_in;
+  pp.getarr("temperature", tg_in);
+
+  fluid->constant_temperature = (tg_in.size() == 1);
+  if (fluid->constant_temperature) {
+
+    fluid->temperature = tg_in[0];
+
+  } else {
+
+    amrex::Print() << "Parsing the velocity input table.\n";
+
+    int found;
+    int k=0;
+    do {
+
+      amrex::Vector<amrex::Real> kth_input;
+      found = pp.queryktharr("temperature", k, kth_input);
+
+      if (found){
+        // Assert that it has the correct length.
+        if ( kth_input.size() != 2 ) {
+          amrex::Print() << "Bad temperature inputs specification:\n";
+          for( int lc=0; lc<kth_input.size(); lc++)
+            amrex::Print()  << "  " << kth_input[lc];
+          amrex::Print() << std::endl;
+          amrex::Abort("Fix input deck.");
+        }
+
+        // Temp print for debugging -- REMOVE ME
+        for (int lc=0; lc<kth_input.size(); lc++)
+          amrex::Print()  << "  " << kth_input[lc];
+        amrex::Print() << std::endl;
+
+
+        const amrex::Real new_time = kth_input[0];
+        const int len = fluid->tg_table.size();
+        if (len == 0){
+          fluid->tg_table.push_back(kth_input);
+        } else {
+          for (int lc=0; lc<len; lc++) {
+            if ( new_time <= fluid->tg_table[lc][0]){
+              fluid->tg_table.insert(fluid->tg_table.begin()+lc, kth_input);
+            } else if (lc == len-1){
+              fluid->tg_table.push_back(kth_input);
+            }
+          }
+        }
+
+
+      }
+
+      k++;
+    } while(found);
+
+    amrex::Print() << "Print temperature table\n";
+    for( int lc0=0; lc0<fluid->tg_table.size(); lc0++) {
+      const auto& tg = fluid->tg_table[lc0];
+      amrex::Print()  << "  " << tg[0] << "  " << tg[1] << "\n";
+    }
+
+  }
+
+}// end read_bc_temperature
+
+
+
+
+
 
 }

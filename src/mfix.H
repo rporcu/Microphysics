@@ -448,6 +448,9 @@ class mfix : public AmrCore
     void set_bcrec_lo (const int lev, const int dir, const int l_type);
     void set_bcrec_hi (const int lev, const int dir, const int l_type);
 
+    void set_velocity_bc_values (amrex::Real time_in) const;
+    void set_temperature_bc_values (amrex::Real time_in) const;
+
     ////////////////////////////////////////////////////////////////////////////
     //
     // Convection
@@ -555,20 +558,24 @@ class mfix : public AmrCore
 
     BCList bc_list;
 
-    Gpu::DeviceVector<Real> m_bc_u_g;
-    Gpu::DeviceVector<Real> m_bc_v_g;
-    Gpu::DeviceVector<Real> m_bc_w_g;
-    Gpu::DeviceVector<Real> m_bc_t_g;
+    mutable Gpu::DeviceVector<Real> m_bc_u_g;
+    mutable Gpu::DeviceVector<Real> m_bc_v_g;
+    mutable Gpu::DeviceVector<Real> m_bc_w_g;
+    mutable Gpu::DeviceVector<Real> m_bc_t_g;
+
+    mutable Vector<Real> m_h_bc_u_g;
+    mutable Vector<Real> m_h_bc_v_g;
+    mutable Vector<Real> m_h_bc_w_g;
+    mutable Vector<Real> m_h_bc_t_g;
+
     Gpu::DeviceVector<Real> m_bc_ep_g;
     Gpu::DeviceVector<Real> m_bc_p_g;
     Vector< Gpu::DeviceVector<Real> > m_bc_X_gk;
     Gpu::DeviceVector<Real*> m_bc_X_gk_ptr;
-    Vector<Real> m_h_bc_u_g;
-    Vector<Real> m_h_bc_v_g;
-    Vector<Real> m_h_bc_w_g;
-    Vector<Real> m_h_bc_t_g;
+
     Vector<Real> m_h_bc_ep_g;
     Vector<Real> m_h_bc_p_g;
+
     Vector<Vector<Real> > m_h_bc_X_gk;
 
     std::map< std::string, Gpu::DeviceVector<int> > m_vel_g_bc_types;

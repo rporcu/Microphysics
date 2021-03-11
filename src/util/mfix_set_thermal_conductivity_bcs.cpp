@@ -66,6 +66,7 @@ mfix::set_thermal_conductivity_bcs (Real /*time*/,
   const int pout = bc_list.get_pout();
 
   // This will be useful when k_g = k_g(T_g)
+  // set_temperature_bc_values (time);
   // amrex::Real* p_bc_t_g = m_bc_t_g.data();
 
   if (nlft > 0)

@@ -31,7 +31,7 @@ mfix::mfix_set_enthalpy_bcs (Real time,
 }
 
 void
-mfix::set_enthalpy_bcs (Real /*time*/,
+mfix::set_enthalpy_bcs (Real time,
                         const int lev,
                         FArrayBox& h_g_fab,
                         const Box& domain)
@@ -102,6 +102,8 @@ mfix::set_enthalpy_bcs (Real /*time*/,
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
 
+  // Update temperature before using to update enthalpy
+  set_temperature_bc_values (time);
   amrex::Real* p_bc_t_g = m_bc_t_g.data();
 
   if (nlft > 0)

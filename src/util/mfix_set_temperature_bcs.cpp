@@ -31,7 +31,7 @@ mfix::mfix_set_temperature_bcs (Real time,
 }
 
 void
-mfix::set_temperature_bcs (Real /*time*/,
+mfix::set_temperature_bcs (Real time,
                            const int lev,
                            FArrayBox& T_g_fab,
                            const Box& domain)
@@ -89,6 +89,7 @@ mfix::set_temperature_bcs (Real /*time*/,
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
 
+  set_temperature_bc_values (time);
   amrex::Real* p_bc_t_g = m_bc_t_g.data();
 
   if (nlft > 0)
