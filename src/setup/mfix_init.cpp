@@ -1133,7 +1133,6 @@ mfix::mfix_set_bc0 ()
     if (ooo_debug) amrex::Print() << "mfix_set_bc0" << std::endl;
     for (int lev = 0; lev < nlev; lev++)
     {
-
      Box domain(geom[lev].Domain());
 
      MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
@@ -1143,8 +1142,6 @@ mfix::mfix_set_bc0 ()
      {
        const Box& sbx = ep_g[mfi].box();
 
-       set_bc0(sbx, &mfi, lev, domain);
-
        if (advect_enthalpy)
          set_temperature_bc0(sbx, &mfi, lev, domain);
 
@@ -1152,7 +1149,7 @@ mfix::mfix_set_bc0 ()
          set_species_bc0(sbx, &mfi, lev, domain);
      }
 
-     ep_g.FillBoundary(geom[lev].periodicity());
+     m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
      m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
 
      if (advect_enthalpy) {
@@ -1169,7 +1166,6 @@ mfix::mfix_set_bc0 ()
        if (advect_enthalpy)
          m_leveldata[lev]->h_gk->FillBoundary(geom[lev].periodicity());
      }
-
    }
 
    // Put velocity Dirichlet bc's on faces

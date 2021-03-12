@@ -368,11 +368,6 @@ class mfix : public AmrCore
                         const int& nref,
                         const Real* dx);
 
-    void set_bc0 (const Box& sbx,
-                  MFIter* mfi,
-                  const int lev,
-                  const Box& domain);
-
     void set_temperature_bc0 (const Box& sbx,
                               MFIter* mfi,
                               const int lev,
