@@ -2,7 +2,6 @@ CEXE_headers += mfix_calc_cell.H
 CEXE_headers += mfix_calc_fluid_coeffs.H
 CEXE_headers += mfix_init_fluid.H
 
-CEXE_sources += mfix_set_bc0.cpp
 CEXE_sources += mfix_set_temperature_bc0.cpp
 CEXE_sources += mfix_set_species_bc0.cpp
 CEXE_sources += mfix_set_ls_inflow.cpp
