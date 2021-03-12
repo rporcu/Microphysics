@@ -5,10 +5,12 @@
 #include <mfix_deposition_K.H>
 #include <mfix.H>
 
+using namespace amrex;
+
 void MFIXParticleContainer::
 MFIX_PC_SolidsVelocityDeposition (int lev,
-                                  amrex::MultiFab & vel_s_mf,
-                                  const amrex::FabArray<EBCellFlagFab>* flags)
+                                  MultiFab & vel_s_mf,
+                                  const FabArray<EBCellFlagFab>* flags)
 {
   BL_PROFILE("(MFIXParticleContainer::MFIX_PC_SolidsVelocityDeposition)");
 
@@ -59,35 +61,35 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
           {
             const ParticleType& p = pstruct[ip];
 
-            const amrex::Real lx = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
-            const amrex::Real ly = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
-            const amrex::Real lz = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
+            const Real lx = (p.pos(0) - plo[0]) * dxi[0] + 0.5;
+            const Real ly = (p.pos(1) - plo[1]) * dxi[1] + 0.5;
+            const Real lz = (p.pos(2) - plo[2]) * dxi[2] + 0.5;
 
             const int i = static_cast<int>(amrex::Math::floor(lx));
             const int j = static_cast<int>(amrex::Math::floor(ly));
             const int k = static_cast<int>(amrex::Math::floor(lz));
 
-            const amrex::Real wx_hi(lx - static_cast<amrex::Real>(i));
-            const amrex::Real wy_hi(ly - static_cast<amrex::Real>(j));
-            const amrex::Real wz_hi(lz - static_cast<amrex::Real>(k));
+            const Real wx_hi(lx - static_cast<Real>(i));
+            const Real wy_hi(ly - static_cast<Real>(j));
+            const Real wz_hi(lz - static_cast<Real>(k));
 
-            const amrex::Real wx_lo(1.0 - wx_hi);
-            const amrex::Real wy_lo(1.0 - wy_hi);
-            const amrex::Real wz_lo(1.0 - wz_hi);
+            const Real wx_lo(1.0 - wx_hi);
+            const Real wy_lo(1.0 - wy_hi);
+            const Real wz_lo(1.0 - wz_hi);
 
-            const amrex::Real pmass = p_realarray[SoArealData::statwt][ip] *
+            const Real pmass = p_realarray[SoArealData::statwt][ip] *
               p_realarray[SoArealData::mass][ip];
 
             {// Deposition of x velocity -- x-face deposition
 
-              const amrex::Real pvelx = pmass*p_realarray[SoArealData::velx][ip];
+              const Real pvelx = pmass*p_realarray[SoArealData::velx][ip];
 
-              const amrex::Real lxc = (p.pos(0) - plo[0]) * dxi[0];
+              const Real lxc = (p.pos(0) - plo[0]) * dxi[0];
 
               const int ii = static_cast<int>(amrex::Math::floor(lxc));
 
-              const amrex::Real wu_hi(lxc - static_cast<amrex::Real>(ii));
-              const amrex::Real wu_lo(1.0 - wu_hi);
+              const Real wu_hi(lxc - static_cast<Real>(ii));
+              const Real wu_lo(1.0 - wu_hi);
 
               amrex::Gpu::Atomic::Add(&vel_s_arr(ii,   j-1, k-1, 0),wu_lo*wy_lo*wz_lo*pvelx);
               amrex::Gpu::Atomic::Add(&vel_s_arr(ii,   j-1, k  , 0),wu_lo*wy_lo*wz_hi*pvelx);
@@ -111,14 +113,14 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
 
             {// Deposition of y velocity -- y-face deposition
 
-              const amrex::Real pvely = pmass*p_realarray[SoArealData::vely][ip];
+              const Real pvely = pmass*p_realarray[SoArealData::vely][ip];
 
-              const amrex::Real lyc = (p.pos(1) - plo[1]) * dxi[1];
+              const Real lyc = (p.pos(1) - plo[1]) * dxi[1];
 
               const int jj = static_cast<int>(amrex::Math::floor(lyc));
 
-              const amrex::Real wv_hi(lyc - static_cast<amrex::Real>(jj));
-              const amrex::Real wv_lo(1.0 - wv_hi);
+              const Real wv_hi(lyc - static_cast<Real>(jj));
+              const Real wv_lo(1.0 - wv_hi);
 
               amrex::Gpu::Atomic::Add(&vel_s_arr(i-1, jj,   k-1, 1),wx_lo*wv_lo*wz_lo*pvely);
               amrex::Gpu::Atomic::Add(&vel_s_arr(i-1, jj,   k  , 1),wx_lo*wv_lo*wz_hi*pvely);
@@ -142,13 +144,13 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
 
             {// Deposition of z velocity -- z-face deposition
 
-              const amrex::Real pvelz = pmass*p_realarray[SoArealData::velz][ip];
-              const amrex::Real lzc = (p.pos(2) - plo[2]) * dxi[2];
+              const Real pvelz = pmass*p_realarray[SoArealData::velz][ip];
+              const Real lzc = (p.pos(2) - plo[2]) * dxi[2];
 
               const int kk = static_cast<int>(amrex::Math::floor(lzc));
 
-              const amrex::Real ww_hi(lzc - static_cast<amrex::Real>(kk));
-              const amrex::Real ww_lo(1.0 - ww_hi);
+              const Real ww_hi(lzc - static_cast<Real>(kk));
+              const Real ww_lo(1.0 - ww_hi);
 
               amrex::Gpu::Atomic::Add(&vel_s_arr(i-1, j-1, kk  , 2),wx_lo*wy_lo*ww_lo*pvelz);
               amrex::Gpu::Atomic::Add(&vel_s_arr(i-1, j-1, kk+1, 2),wx_lo*wy_lo*ww_hi*pvelz);

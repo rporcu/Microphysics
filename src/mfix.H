@@ -84,6 +84,15 @@ class mfix : public AmrCore
     void ResizeArrays ();
 
     void InitialRedistribution (amrex::Real l_time);
+    void PostProjectionRedistribution (amrex::Real l_time, amrex::Real l_dt,
+                                       const amrex::Vector<amrex::MultiFab*>& a_sigma);
+    void PostProjectionDiagnostics (amrex::Real l_time,
+                                    amrex::Vector< amrex::MultiFab*> const& epu,
+                                    amrex::Vector< amrex::MultiFab*> const& vel_g_in,
+                                    amrex::Vector< amrex::MultiFab*> const& gp_in,
+                                    amrex::Vector< amrex::MultiFab*> const& ep_g_in,
+                                    amrex::Vector< amrex::MultiFab*> const& S_cc,
+                                    bool proj_for_small_dt);
 
     void WriteCheckPointFile (std::string & check_file_name,
                               int nstep = 0, Real dt = 0.0, Real time = 0.0);

@@ -129,7 +129,7 @@ mfix::set_gp0 (const int lev,
 
     } else {
 
-      const amrex::Real gravity_square_module =
+      const Real gravity_square_module =
         gravity[0]*gravity[0] + gravity[1]*gravity[1] + gravity[2]*gravity[2];
 
       if( not IC::ic[icv].fluid.pressure_defined or gravity_square_module > tolerance)

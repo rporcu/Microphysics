@@ -6,11 +6,11 @@
 //
 void
 mfix::set_MAC_velocity_bcs (int lev,
-                            amrex::Vector< amrex::MultiFab const*> const& mac_rhs,
-                            amrex::Vector< amrex::MultiFab*      > const& ep_u_mac,
-                            amrex::Vector< amrex::MultiFab*      > const& ep_v_mac,
-                            amrex::Vector< amrex::MultiFab*      > const& ep_w_mac,
-                            amrex::Real time)
+                            Vector< MultiFab const*> const& mac_rhs,
+                            Vector< MultiFab*      > const& ep_u_mac,
+                            Vector< MultiFab*      > const& ep_v_mac,
+                            Vector< MultiFab*      > const& ep_w_mac,
+                            Real time)
 {
   BL_PROFILE("MacProjection::set_MAC_velocity_bcs()");
 

@@ -29,17 +29,17 @@ void mfix::EvolveParcels (Real dt,
 
   for (int lev(0); lev < nlev; lev ++ ){
 
-    const amrex::BoxArray&            pba = pc->ParticleBoxArray(lev);
-    const amrex::DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
+    const BoxArray&            pba = pc->ParticleBoxArray(lev);
+    const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
     // Averaged particle properties
     // 0-2: Mass-averaged solids velocity
     //   3: Volume-averaged solids mass (macroscopic density)
-    avg_prop[lev] = new amrex::MultiFab(pba, pdm, pic_ncomp, pic_nghost, MFInfo(), *particle_ebfactory[lev]);
+    avg_prop[lev] = new MultiFab(pba, pdm, pic_ncomp, pic_nghost, MFInfo(), *particle_ebfactory[lev]);
     avg_prop[lev]->setVal(0.0, 0, pic_ncomp, avg_prop[lev]->nGrow());
 
     // Solids volume fraction.
-    ep_s[lev] = new amrex::MultiFab(pba, pdm, 1, pic_nghost, MFInfo(), *particle_ebfactory[lev]);
+    ep_s[lev] = new MultiFab(pba, pdm, 1, pic_nghost, MFInfo(), *particle_ebfactory[lev]);
 
     // Copy gas phase volume fraction
     ep_s[lev]->copy(*m_leveldata[lev]->ep_g,  0, 0,

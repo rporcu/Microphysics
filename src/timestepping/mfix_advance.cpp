@@ -317,14 +317,14 @@ mfix::mfix_add_txfr_explicit (Real dt)
 // momentum exchange
 //
 void
-mfix::mfix_add_txfr_implicit (amrex::Real dt,
-                              amrex::Vector<amrex::MultiFab*      > const& vel_in,
-                              amrex::Vector<amrex::MultiFab*      > const& h_g_in,
-                              amrex::Vector<amrex::MultiFab*      > const& T_g_in,
-                              amrex::Vector<amrex::MultiFab const*> const& txfr_in,
-                              amrex::Vector<amrex::MultiFab const*> const& rho_in,
-                              amrex::Vector<amrex::MultiFab const*> const& ep_g_in,
-                              amrex::Vector<amrex::MultiFab const*> const& cp_g_in)
+mfix::mfix_add_txfr_implicit (Real dt,
+                              Vector<MultiFab*      > const& vel_in,
+                              Vector<MultiFab*      > const& h_g_in,
+                              Vector<MultiFab*      > const& T_g_in,
+                              Vector<MultiFab const*> const& txfr_in,
+                              Vector<MultiFab const*> const& rho_in,
+                              Vector<MultiFab const*> const& ep_g_in,
+                              Vector<MultiFab const*> const& cp_g_in)
 {
   /*
      This adds both components of the drag term

@@ -97,7 +97,7 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                                             + phi_fab(i+1, j,   k+1) * wx_hi * wy_lo * wz_hi
                                             + phi_fab(i+1, j+1, k+1) * wx_hi * wy_hi * wz_hi;
 
-                            amrex::Real radius = p_realarray[SoArealData::radius][ip] *
+                            Real radius = p_realarray[SoArealData::radius][ip] *
                                 std::cbrt(p_realarray[SoArealData::statwt][ip]);
 
                             if (cg_dem)

@@ -125,7 +125,7 @@ mfix::set_epg_bcs (const int lev,
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
 
-  const amrex::Real* p_bc_ep_g = m_bc_ep_g.data();
+  const Real* p_bc_ep_g = m_bc_ep_g.data();
 
   if (nlft > 0)
   {

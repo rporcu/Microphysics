@@ -4,6 +4,8 @@
 
 #include <AMReX_FillPatchUtil.H>
 
+using namespace amrex;
+
 namespace
 {
   mfix* mfix_for_fillpatching;
@@ -20,7 +22,7 @@ void set_ptr_to_mfix (mfix& mfix_for_fillpatching_in)
 //    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
 inline
 void VelFillBox (Box const& /*bx*/,
-                 Array4<amrex::Real> const& dest,
+                 Array4<Real> const& dest,
                  const int dcomp,
                  const int numcomp,
                  GeometryData const& geom,
@@ -66,7 +68,7 @@ void VelFillBox (Box const& /*bx*/,
 //    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
 inline
 void ScalarFillBox (Box const& /*bx*/,
-                    Array4<amrex::Real> const& dest,
+                    Array4<Real> const& dest,
                     const int dcomp,
                     const int numcomp,
                     GeometryData const& geom,
@@ -115,7 +117,7 @@ void ScalarFillBox (Box const& /*bx*/,
 //    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
 inline
 void SpeciesFillBox (Box const& /*bx*/,
-                     Array4<amrex::Real> const& dest,
+                     Array4<Real> const& dest,
                      const int dcomp,
                      const int numcomp,
                      GeometryData const& geom,

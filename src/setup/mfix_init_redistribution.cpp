@@ -3,7 +3,7 @@
 
 #include <mfix_fluid_parms.H>
 void
-mfix::InitialRedistribution (amrex::Real l_time)
+mfix::InitialRedistribution (Real l_time)
 {
     // Next we must redistribute the initial solution if we are going to use
     // StateRedist redistribution scheme
@@ -22,7 +22,6 @@ mfix::InitialRedistribution (amrex::Real l_time)
       {
         auto& ld = *m_leveldata[lev];
 
-
         for (MFIter mfi(*ld.ro_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const Box& bx = mfi.validbox();
@@ -34,7 +33,7 @@ mfix::InitialRedistribution (amrex::Real l_time)
             if ( (flagfab.getType(amrex::grow(bx,1)) != FabType::covered) &&
                  (flagfab.getType(amrex::grow(bx,1)) != FabType::regular) )
             {
-                Array4<Real const> AMREX_D_DECL(fcx, fcy, fcz), ccc, vfrac, AMREX_D_DECL(apx, apy, apz);
+                Array4<Real const> fcx, fcy, fcz, ccc, vfrac, apx, apy, apz;
                 fcx = fact.getFaceCent()[0]->const_array(mfi);
                 fcy = fact.getFaceCent()[1]->const_array(mfi);
                 fcz = fact.getFaceCent()[2]->const_array(mfi);
@@ -46,7 +45,7 @@ mfix::InitialRedistribution (amrex::Real l_time)
 
                 int ncomp = AMREX_SPACEDIM;
                 int icomp = 0;
-                redistribution::redistribute_initial_data( bx,ncomp, icomp,
+                redistribution::redistribute_data( bx,ncomp, icomp,
                                           ld.vel_g->array(mfi), ld.vel_go->array(mfi),
                                           flag, apx, apy, apz, vfrac, fcx, fcy, fcz,
                                           ccc,geom[lev],m_redistribution_type);
@@ -54,7 +53,7 @@ mfix::InitialRedistribution (amrex::Real l_time)
                 if (advect_density) {
 
                   ncomp = 1;
-                  redistribution::redistribute_initial_data( bx,ncomp, icomp,
+                  redistribution::redistribute_data( bx,ncomp, icomp,
                                            ld.ro_g->array(mfi), ld.ro_go->array(mfi),
                                            flag, apx, apy, apz, vfrac, fcx, fcy, fcz,
                                            ccc,geom[lev],m_redistribution_type);
@@ -62,7 +61,7 @@ mfix::InitialRedistribution (amrex::Real l_time)
                 if (advect_enthalpy) {
 
                   ncomp = 1;
-                  redistribution::redistribute_initial_data( bx,ncomp, icomp,
+                  redistribution::redistribute_data( bx,ncomp, icomp,
                                            ld.h_g->array(mfi), ld.h_go->array(mfi),
                                            flag, apx, apy, apz, vfrac, fcx, fcy, fcz,
                                            ccc,geom[lev],m_redistribution_type);
@@ -70,7 +69,7 @@ mfix::InitialRedistribution (amrex::Real l_time)
                 if (advect_tracer) {
 
                   ncomp = ntrac;
-                  redistribution::redistribute_initial_data( bx,ncomp, icomp,
+                  redistribution::redistribute_data( bx,ncomp, icomp,
                                            ld.trac->array(mfi), ld.trac_o->array(mfi),
                                            flag, apx, apy, apz, vfrac, fcx, fcy, fcz,
                                            ccc,geom[lev],m_redistribution_type);
@@ -78,7 +77,7 @@ mfix::InitialRedistribution (amrex::Real l_time)
                 if (advect_fluid_species) {
 
                   ncomp = FLUID::nspecies;
-                  redistribution::redistribute_initial_data( bx,ncomp, icomp,
+                  redistribution::redistribute_data( bx,ncomp, icomp,
                                            ld.X_gk->array(mfi), ld.X_gko->array(mfi),
                                            flag, apx, apy, apz, vfrac, fcx, fcy, fcz,
                                            ccc,geom[lev],m_redistribution_type);
@@ -100,7 +99,6 @@ mfix::InitialRedistribution (amrex::Real l_time)
 
         if(advect_fluid_species)
           ld.X_gk->FillBoundary();
-
     }
   }
 }

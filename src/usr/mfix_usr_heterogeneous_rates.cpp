@@ -10,31 +10,32 @@
 #include <mfix_reactions_parms.H>
 #include <mfix_algorithm.H>
 
+using namespace amrex;
 
 AMREX_GPU_HOST_DEVICE
 void
-ComputeRRateUser::operator() (amrex::Real* R_q,
+ComputeRRateUser::operator() (Real* R_q,
                               const int nreactions,
                               const int* nreactants,
                               const int* nproducts,
                               const int** reactants_id,
-                              const amrex::Real** reactants_coeffs,
+                              const Real** reactants_coeffs,
                               const int** reactants_phases,
                               const int** products_id,
-                              const amrex::Real** products_coeffs,
+                              const Real** products_coeffs,
                               const int** products_phases,
                               const int* species_id_s,
-                              const amrex::Real* X_sn,
-                              const amrex::Real* MW_sn,
+                              const Real* X_sn,
+                              const Real* MW_sn,
                               const int nspecies_s,
-                              const amrex::Real ro_s,
-                              const amrex::Real ep_s,
+                              const Real ro_s,
+                              const Real ep_s,
                               const int* species_id_g,
-                              const amrex::Real* X_gk,
-                              const amrex::Real* MW_gk,
+                              const Real* X_gk,
+                              const Real* MW_gk,
                               const int nspecies_g,
-                              const amrex::Real ro_g,
-                              const amrex::Real ep_g) const
+                              const Real ro_g,
+                              const Real ep_g) const
 {
   // Loop over reactions
   for (int q(0); q < nreactions; q++)

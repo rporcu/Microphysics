@@ -13,8 +13,8 @@ using namespace amrex;
 
 void MFIXParticleContainer::
 SolidsVolumeDeposition (int lev,
-                  amrex::MultiFab & mf_to_be_filled,
-                  const amrex::MultiFab * volfrac,
+                  MultiFab & mf_to_be_filled,
+                  const MultiFab * volfrac,
                   const amrex::FabArray<EBCellFlagFab>* flags)
 {
 
@@ -51,8 +51,8 @@ SolidsVolumeDeposition (int lev,
 template <typename F>
 void MFIXParticleContainer::
 SolidsVolumeDeposition (F WeightFunc, int lev,
-                        amrex::MultiFab & mf_to_be_filled,
-                        const amrex::MultiFab * volfrac,
+                        MultiFab & mf_to_be_filled,
+                        const MultiFab * volfrac,
                         const amrex::FabArray<EBCellFlagFab>* flags)
 {
   BL_PROFILE("MFIXParticleContainer::SolidsVolumeDeposition()");
@@ -103,7 +103,7 @@ SolidsVolumeDeposition (F WeightFunc, int lev,
         }
 #endif
 
-        const amrex::Real deposition_scale_factor =
+        const Real deposition_scale_factor =
           mfix::m_deposition_scale_factor;
 
         amrex::ParallelFor(nrp,
@@ -122,7 +122,7 @@ SolidsVolumeDeposition (F WeightFunc, int lev,
             WeightFunc(plo, dx, dxi, flagsarr, p.pos(), p_realarray[SoArealData::radius][ip], i, j, k, weights,
                 deposition_scale_factor);
 
-            amrex::Real pvol = p_realarray[SoArealData::statwt][ip] * p_realarray[SoArealData::volume][ip] / reg_cell_vol;
+            Real pvol = p_realarray[SoArealData::statwt][ip] * p_realarray[SoArealData::volume][ip] / reg_cell_vol;
 
             if (local_cg_dem){
                pvol = pvol / p_realarray[SoArealData::statwt][ip];
@@ -134,7 +134,7 @@ SolidsVolumeDeposition (F WeightFunc, int lev,
                   if (flagsarr(i+ii,j+jj,k+kk).isCovered())
                     continue;
 
-                  amrex::Real weight_vol = weights[ii+1][jj+1][kk+1] / vfrac(i+ii,j+jj,k+kk);
+                  Real weight_vol = weights[ii+1][jj+1][kk+1] / vfrac(i+ii,j+jj,k+kk);
 
                   amrex::Gpu::Atomic::Add(&volarr(i+ii,j+jj,k+kk), weight_vol*pvol);
                 }
@@ -159,9 +159,9 @@ SolidsVolumeDeposition (F WeightFunc, int lev,
 
 void MFIXParticleContainer::
 InterphaseTxfrDeposition (int lev,
-                          amrex::MultiFab & mf_tmp_eps,
-                          amrex::MultiFab & txfr_mf,
-                          const amrex::MultiFab * volfrac,
+                          MultiFab & mf_tmp_eps,
+                          MultiFab & txfr_mf,
+                          const MultiFab * volfrac,
                           const amrex::FabArray<EBCellFlagFab>* flags,
                           const int advect_enthalpy)
 {
@@ -199,9 +199,9 @@ InterphaseTxfrDeposition (int lev,
 template <typename F>
 void MFIXParticleContainer::
 InterphaseTxfrDeposition (F WeightFunc, int lev,
-                          amrex::MultiFab & mf_tmp_eps,
-                          amrex::MultiFab & txfr_mf,
-                          const amrex::MultiFab * volfrac,
+                          MultiFab & mf_tmp_eps,
+                          MultiFab & txfr_mf,
+                          const MultiFab * volfrac,
                           const amrex::FabArray<EBCellFlagFab>* flags,
                           const int advect_enthalpy)
 {
@@ -243,7 +243,7 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
         const auto& flagsarr = (*flags)[pti].array();
         const auto&    vfrac = (*volfrac)[pti].array();
 
-        const amrex::Real deposition_scale_factor =
+        const Real deposition_scale_factor =
           mfix::m_deposition_scale_factor;
 
 #ifdef _OPENMP
@@ -277,11 +277,11 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
             WeightFunc(plo, dx, dxi, flagsarr, p.pos(), p_realarray[SoArealData::radius][ip], i, j, k, weights,
                        deposition_scale_factor);
 
-            amrex::Real pvol = statwt * p_realarray[SoArealData::volume][ip] / reg_cell_vol;
+            Real pvol = statwt * p_realarray[SoArealData::volume][ip] / reg_cell_vol;
 
-            amrex::Real pbeta = statwt * p_realarray[SoArealData::dragcoeff][ip] / reg_cell_vol;
+            Real pbeta = statwt * p_realarray[SoArealData::dragcoeff][ip] / reg_cell_vol;
 
-            amrex::Real pgamma = advect_enthalpy ?
+            Real pgamma = advect_enthalpy ?
               statwt * p_realarray[SoArealData::convection][ip] / reg_cell_vol : 0;
 
             if (local_cg_dem){
@@ -289,11 +289,11 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
                pbeta = pbeta / statwt;
             }
 
-            amrex::Real pvx   = p_realarray[SoArealData::velx][ip] * pbeta;
-            amrex::Real pvy   = p_realarray[SoArealData::vely][ip] * pbeta;
-            amrex::Real pvz   = p_realarray[SoArealData::velz][ip] * pbeta;
+            Real pvx   = p_realarray[SoArealData::velx][ip] * pbeta;
+            Real pvy   = p_realarray[SoArealData::vely][ip] * pbeta;
+            Real pvz   = p_realarray[SoArealData::velz][ip] * pbeta;
 
-            amrex::Real pTp   = advect_enthalpy ?
+            Real pTp   = advect_enthalpy ?
               p_realarray[SoArealData::temperature][ip] * pgamma : 0;
 
             for (int ii = -1; ii <= 0; ++ii) {
@@ -302,7 +302,7 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
                   if (flagsarr(i+ii,j+jj,k+kk).isCovered())
                     continue;
 
-                  amrex::Real weight_vol = weights[ii+1][jj+1][kk+1] / vfrac(i+ii,j+jj,k+kk);
+                  Real weight_vol = weights[ii+1][jj+1][kk+1] / vfrac(i+ii,j+jj,k+kk);
 
                   amrex::Gpu::Atomic::Add(&volarr(i+ii,j+jj,k+kk), weight_vol*pvol);
 
@@ -337,11 +337,11 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
 
 void MFIXParticleContainer::
 InterphaseChemDeposition (int lev,
-                            amrex::MultiFab & mf_tmp_eps,
-                            amrex::MultiFab & Rrates,
-                            const amrex::MultiFab * volfrac,
-                            const amrex::FabArray<EBCellFlagFab>* flags,
-                            const amrex::Vector< REACTIONS::ChemicalReaction* >& chemical_reactions)
+                          MultiFab & mf_tmp_eps,
+                          MultiFab & Rrates,
+                          const MultiFab * volfrac,
+                          const FabArray<EBCellFlagFab>* flags,
+                          const Vector< REACTIONS::ChemicalReaction* >& chemical_reactions)
 {
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear)
   {
@@ -374,11 +374,11 @@ template <typename F>
 void MFIXParticleContainer::
 InterphaseChemDeposition (F WeightFunc,
                           int lev,
-                          amrex::MultiFab& mf_tmp_eps,
-                          amrex::MultiFab& mf_G_gk_fp,
-                          const amrex::MultiFab* volfrac,
-                          const amrex::FabArray<EBCellFlagFab>* flags,
-                          const amrex::Vector< REACTIONS::ChemicalReaction* >& chemical_reactions)
+                          MultiFab& mf_tmp_eps,
+                          MultiFab& mf_G_gk_fp,
+                          const MultiFab* volfrac,
+                          const FabArray<EBCellFlagFab>* flags,
+                          const Vector< REACTIONS::ChemicalReaction* >& chemical_reactions)
 {
   BL_PROFILE("MFIXParticleContainer::InterphaseChemDeposition()");
 
@@ -548,7 +548,7 @@ InterphaseChemDeposition (F WeightFunc,
         const auto& flagsarr = (*flags)[pti].array();
         const auto&    vfrac = (*volfrac)[pti].array();
 
-        const amrex::Real deposition_scale_factor =
+        const Real deposition_scale_factor =
           mfix::m_deposition_scale_factor;
 
 #ifdef _OPENMP
@@ -721,7 +721,7 @@ InterphaseChemDeposition (F WeightFunc,
                 if (flagsarr(i+ii,j+jj,k+kk).isCovered())
                   continue;
 
-                amrex::Real weight_vol = weights[ii+1][jj+1][kk+1] /
+                Real weight_vol = weights[ii+1][jj+1][kk+1] /
                                          vfrac(i+ii,j+jj,k+kk);
 
                 for (int n_g(0); n_g < nspecies_g; n_g++)

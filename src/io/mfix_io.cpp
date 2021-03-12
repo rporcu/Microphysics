@@ -209,12 +209,12 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
   MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
 
   // New multiFab to hold the cell center pressure.
-  amrex::MultiFab* pg_cc(new MultiFab(
+  MultiFab* pg_cc(new MultiFab(
              ep_g.boxArray(), ep_g.DistributionMap(),
              ep_g.nComp(),    ep_g.nGrow(), MFInfo(), *ebfactory[lev]));
 
   // New multiFab to hold the cell center pressure.
-  amrex::MultiFab* one(new MultiFab(
+  MultiFab* one(new MultiFab(
              ep_g.boxArray(), ep_g.DistributionMap(),
              1, 0, MFInfo(), *ebfactory[lev]));
 

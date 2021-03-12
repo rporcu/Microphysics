@@ -25,13 +25,13 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
                                    Real a_dt,
                                    Real a_prev_dt,
                                    bool proj_2,
-                                   amrex::Vector<amrex::MultiFab*      > const& vel_g_old_in,
-                                   amrex::Vector<amrex::MultiFab*      > const& vel_g_in,
-                                   amrex::Vector<amrex::MultiFab*      > const& p_g_in,
-                                   amrex::Vector<amrex::MultiFab*      > const& gp_in,
-                                   amrex::Vector<amrex::MultiFab*      > const& ep_g_in,
-                                   amrex::Vector<amrex::MultiFab*      > const& txfr_in,
-                                   amrex::Vector<amrex::MultiFab const*> const& density)
+                                   Vector<MultiFab*      > const& vel_g_old_in,
+                                   Vector<MultiFab*      > const& vel_g_in,
+                                   Vector<MultiFab*      > const& p_g_in,
+                                   Vector<MultiFab*      > const& gp_in,
+                                   Vector<MultiFab*      > const& ep_g_in,
+                                   Vector<MultiFab*      > const& txfr_in,
+                                   Vector<MultiFab const*> const& density)
 {
     BL_PROFILE("mfix::mfix_apply_nodal_projection");
 
@@ -75,7 +75,6 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
           amrex::ParallelFor(bx,[a_dt, proj_2, vel_g, sigma, rho_g, ep_g, gp, txfr]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-
             Real const beta = txfr(i,j,k,3);
 
             sigma(i,j,k) = ep_g(i,j,k)/(ep_g(i,j,k)*rho_g(i,j,k) + a_dt*beta);
@@ -107,7 +106,6 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
 
           });
         }
-
      }
 
       // Print level infos
@@ -192,13 +190,15 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
                                              a_S_cc));
 
     nodal_projector->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
+
+    // By setting alpha = ep_g, the nodal projection will correct the velocity by 
+    // (sigma / alpha) grad(phi) rather than sigma grad phi
     nodal_projector->setAlpha(GetVecOfConstPtrs(ep_g_in));
 
     nodal_projector->computeRHS(get_diveu(), epu, a_S_cc);
     nodal_projector->setCustomRHS(GetVecOfConstPtrs(get_diveu()));
 
     nodal_projector->project(nodal_mg_rtol, nodal_mg_atol);
-
 
     // Define "vel" to be U^{n+1} rather than (U^{n+1}-U^n)
     if (proj_for_small_dt)
@@ -208,14 +208,11 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     }
 
     // Get phi and fluxes
-    Vector< const amrex::MultiFab* > phi(nlev);
-    Vector< const amrex::MultiFab* > gradphi(nlev);
+    Vector< const MultiFab* > phi(nlev);
+    Vector< const MultiFab* > gradphi(nlev);
 
     phi     = nodal_projector->getPhi();
     gradphi = nodal_projector->getGradPhi();
-
-    // Compute diveu to print it out
-    nodal_projector->computeRHS(get_diveu(), epu, a_S_cc);
 
     // Since I did not pass dt, I have to normalize here
     Real qdt(1.0/a_dt);
@@ -223,7 +220,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     {
         if (proj_2)
         {
-            // p := phi
+            // p := phi/dt
             MultiFab::Copy(*p_g_in[lev], *phi[lev], 0, 0, 1, phi[lev]->nGrow());
             MultiFab::Copy(*gp_in[lev], *gradphi[lev], 0, 0, 3, gradphi[lev]->nGrow());
             p_g_in[lev]->mult(qdt);
@@ -237,7 +234,26 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
         }
     }
 
+    // Perform the redistribution operation on the updated (projected) velocity field -- and
+    //     update gp to maintain consistency
+    // PostProjectionRedistribution(a_time, a_dt, GetVecOfPtrs(sigma_mf));
 
+    // Compute diveu for diagnostics only
+    PostProjectionDiagnostics(a_time, epu, vel_g_in, gp_in, ep_g_in, a_S_cc, proj_for_small_dt);
+
+    for (int lev(0); lev < nlev; lev++)
+      delete epu[lev];
+}
+
+void
+mfix::PostProjectionDiagnostics(Real a_time,
+                                Vector<MultiFab*> const& epu,
+                                Vector<MultiFab*> const& vel_g_in,
+                                Vector<MultiFab*> const& gp_in,
+                                Vector<MultiFab*> const&  ep_g_in,
+                                Vector<MultiFab*> const&  a_S_cc,
+                                bool proj_for_small_dt)
+{
     //
     // This part is just to plot diveu
     //
@@ -296,7 +312,4 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
 
         mfix_print_max_vel(lev);
     }
-
-    for (int lev(0); lev < nlev; lev++)
-      delete epu[lev];
 }

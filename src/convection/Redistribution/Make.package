@@ -1,6 +1,4 @@
 CEXE_sources += mfix_create_itracker.cpp
-CEXE_sources += mfix_flux_redistribute.cpp
-CEXE_sources += mfix_merge_redistribute.cpp
 CEXE_sources += mfix_state_redistribute.cpp
 CEXE_sources += mfix_redistribute.cpp
 

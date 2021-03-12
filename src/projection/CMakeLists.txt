@@ -6,5 +6,6 @@ target_include_directories(mfixcore
 target_sources( mfixcore
     PRIVATE
     mfix_apply_nodal_projection.cpp
+    mfix_proj_redistribution.cpp
     mfix_constraints.cpp
     )

@@ -104,7 +104,7 @@ mfix::set_enthalpy_bcs (Real time,
 
   // Update temperature before using to update enthalpy
   set_temperature_bc_values (time);
-  amrex::Real* p_bc_t_g = m_bc_t_g.data();
+  Real* p_bc_t_g = m_bc_t_g.data();
 
   if (nlft > 0)
   {

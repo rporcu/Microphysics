@@ -4,12 +4,12 @@
 using namespace amrex;
 
 void godunov::predict_ppm (Box const& bx,
-                           AMREX_D_DECL(amrex::Array4<amrex::Real> const& Imx,
-                                        amrex::Array4<amrex::Real> const& Imy,
-                                        amrex::Array4<amrex::Real> const& Imz),
-                           AMREX_D_DECL(amrex::Array4<amrex::Real> const& Ipx,
-                                        amrex::Array4<amrex::Real> const& Ipy,
-                                        amrex::Array4<amrex::Real> const& Ipz),
+                           AMREX_D_DECL(Array4<Real> const& Imx,
+                                        Array4<Real> const& Imy,
+                                        Array4<Real> const& Imz),
+                           AMREX_D_DECL(Array4<Real> const& Ipx,
+                                        Array4<Real> const& Ipy,
+                                        Array4<Real> const& Ipz),
                            Array4<Real const> const& q,
                            Array4<Real const> const& vel,
                            Geometry& geom,

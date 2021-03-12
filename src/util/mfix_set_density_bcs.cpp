@@ -71,7 +71,7 @@ mfix::set_density_bcs (Real /*time*/,
 
   // The temperature will be useful in the future
   // set_temperature_bc_values (time);
-  // amrex::Real* p_bc_t_g  = m_bc_t_g.data();
+  // Real* p_bc_t_g  = m_bc_t_g.data();
 
   if (nlft > 0)
   {

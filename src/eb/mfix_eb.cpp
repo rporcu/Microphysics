@@ -375,7 +375,7 @@ void mfix::fill_eb_levelsets ()
             eb_levels[lev]->fillLevelSet(impfunc_lev, geom[lev]);
             impfunc_lev.FillBoundary(geom[lev].periodicity());
 
-            IntVect ebt_size{AMREX_D_DECL(32, 32, 32)}; // Fudge factors...
+            IntVect ebt_size{32, 32, 32}; // Fudge factors...
             LSCoreBase::FillLevelSet(* level_sets[lev], * level_sets[lev], eb_factory_lev, impfunc_lev,
                                      ebt_size, levelset_eb_pad, geom[lev]);
         }
