@@ -75,7 +75,7 @@ mfix::mfix_closed_system_rhs (Vector< MultiFab*       > const& rhs,
 
       const Real R = FLUID::R;
 
-      amrex::ParallelFor(bx, [theta_arr,ep_g_arr,pres_g_arr,MW_g_arr,cp_g_arr,R,
+      ParallelFor(bx, [theta_arr,ep_g_arr,pres_g_arr,MW_g_arr,cp_g_arr,R,
           flags_arr]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
@@ -220,7 +220,7 @@ mfix::mfix_open_system_rhs (Vector< MultiFab*      > const& rhs,
             const Real MWg_loc = MW_g_arr(i,j,k);
 
             for (int n(0); n < nspecies_g; ++n) {
-              amrex::Real coeff = MWg_loc / p_MW_gk[n];
+              Real coeff = MWg_loc / p_MW_gk[n];
 
               if (adv_enthalpy)
                 coeff -= h_gk_arr(i,j,k,n) / (cpg_loc*Tg_loc);

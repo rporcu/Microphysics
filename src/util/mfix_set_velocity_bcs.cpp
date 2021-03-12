@@ -130,9 +130,9 @@ mfix::set_velocity_bcs (Real time,
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
 
-  const amrex::Real* p_bc_u_g = m_bc_u_g.data();
-  const amrex::Real* p_bc_v_g = m_bc_v_g.data();
-  const amrex::Real* p_bc_w_g = m_bc_w_g.data();
+  const Real* p_bc_u_g = m_bc_u_g.data();
+  const Real* p_bc_v_g = m_bc_v_g.data();
+  const Real* p_bc_w_g = m_bc_w_g.data();
 
   if (nlft > 0)
   {
@@ -429,11 +429,11 @@ mfix::set_vec_bcs (const int lev,
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
 
-  const amrex::Real* p_bc_u_g = m_bc_u_g.data();
-  const amrex::Real* p_bc_v_g = m_bc_v_g.data();
-  const amrex::Real* p_bc_w_g = m_bc_w_g.data();
+  const Real* p_bc_u_g = m_bc_u_g.data();
+  const Real* p_bc_v_g = m_bc_v_g.data();
+  const Real* p_bc_w_g = m_bc_w_g.data();
 
-  const amrex::Real* p_bc_ep_g = m_bc_ep_g.data();
+  const Real* p_bc_ep_g = m_bc_ep_g.data();
 
   if (nlft > 0)
   {

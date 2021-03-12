@@ -183,9 +183,9 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       const auto dx_array  = geom[lev].CellSizeArray();
       const auto plo_array = geom[lev].ProbLoArray();
 
-      const amrex::RealVect  dx( dx_array[0],  dx_array[1],  dx_array[2]);
-      const amrex::RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
-      const amrex::RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
+      const RealVect  dx( dx_array[0],  dx_array[1],  dx_array[2]);
+      const RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
+      const RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
 
       const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(interp_ptr->Factory());
 

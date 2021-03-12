@@ -26,7 +26,7 @@ namespace redistribution {
                         amrex::Array4<amrex::Real const> const& ccent,
                         amrex::Geometry& geom, amrex::Real dt, std::string redistribution_type);
 
-  void redistribute_initial_data (amrex::Box const& bx, int ncomp, int icomp,
+  void redistribute_data (amrex::Box const& bx, int ncomp, int icomp,
                         amrex::Array4<amrex::Real> const& U_out,
                         amrex::Array4<amrex::Real> const& U_in,
                         amrex::Array4<amrex::EBCellFlag const> const& flag,
@@ -39,14 +39,6 @@ namespace redistribution {
                         amrex::Array4<amrex::Real const> const& fcz,
                         amrex::Array4<amrex::Real const> const& ccent,
                         amrex::Geometry& geom, std::string redistribution_type);
-
-  void flux_redistribute_eb ( amrex::Box const& bx, int ncomp, int icomp,
-                              amrex::Array4<amrex::Real>       const& dUdt_out,
-                              amrex::Array4<amrex::Real const> const& dUdt_in,
-                              amrex::Array4<amrex::Real> const& scratch,
-                              amrex::Array4<amrex::EBCellFlag const> const& flag,
-                              amrex::Array4<amrex::Real const> const& vfrac,
-                              amrex::Geometry& geom);
 
   void state_redistribute( amrex::Box const& bx, int ncomp, int icomp,
                            amrex::Array4<amrex::Real> const& dUdt_out,
@@ -66,15 +58,7 @@ namespace redistribution {
                        amrex::Array4<amrex::Real const> const& apz,
                        amrex::Array4<amrex::Real const> const& vfrac,
                        amrex::Array4<int> const& itracker,
-                       amrex::Geometry& geom,
-                       std::string redist_type);
-
-  void merge_redistribute( amrex::Box const& bx, int ncomp, int icomp,
-                           amrex::Array4<amrex::Real> const& dUdt_out,
-                           amrex::Array4<amrex::Real> const& dUdt_in,
-                           amrex::Array4<amrex::Real const> const& vfrac,
-                           amrex::Array4<int> const& itracker,
-                           amrex::Geometry& geom);
+                       amrex::Geometry& geom);
 
 } // namespace redistribution
 

@@ -8,19 +8,20 @@
 #include <mfix_species_parms.H>
 #include <mfix_calc_fluid_coeffs.H>
 
+using namespace amrex;
 
 void
 mfix::compute_laps (const bool update_lapT,
                     const bool update_lapTrac,
                     const bool update_lapX,
-                    amrex::Vector< amrex::MultiFab*      >& lapT,
-                    amrex::Vector< amrex::MultiFab*      >& lapTrac,
-                    amrex::Vector< amrex::MultiFab*      >& lapX,
-                    amrex::Vector< amrex::MultiFab*      > const& T_g,
-                    amrex::Vector< amrex::MultiFab*      > const& trac,
-                    amrex::Vector< amrex::MultiFab*      > const& X_gk,
-                    amrex::Vector< amrex::MultiFab const*> const& ep_g,
-                    amrex::Vector< amrex::MultiFab const*> const& ro_g)
+                    Vector< MultiFab*      >& lapT,
+                    Vector< MultiFab*      >& lapTrac,
+                    Vector< MultiFab*      >& lapX,
+                    Vector< MultiFab*      > const& T_g,
+                    Vector< MultiFab*      > const& trac,
+                    Vector< MultiFab*      > const& X_gk,
+                    Vector< MultiFab const*> const& ep_g,
+                    Vector< MultiFab const*> const& ro_g)
 {
   if (update_lapT) {
     diffusion_op->ComputeLapT(lapT, T_g, ep_g, get_k_g_const(),

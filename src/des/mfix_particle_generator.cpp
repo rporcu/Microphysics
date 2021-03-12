@@ -38,14 +38,14 @@ void
 ParticlesGenerator::generate (int& pc,
                               const IntVect& lo,
                               const IntVect& hi,
-                              const amrex::Real dx,
-                              const amrex::Real dy,
-                              const amrex::Real dz,
+                              const Real dx,
+                              const Real dy,
+                              const Real dz,
                               const amrex::GpuArray<Real, 3>& plo)
 {
   const int init_pc(pc);
 
-  const amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
+  const Real tolerance = std::numeric_limits<Real>::epsilon();
 
   int np(0);
   int icv(0);
@@ -119,11 +119,11 @@ ParticlesGenerator::generate (int& pc,
   if(np == 0)
     return;
 
-  amrex::Gpu::DeviceVector<amrex::Real> dp(np, 0);
-  amrex::Gpu::DeviceVector<amrex::Real> ro_s(np, 0);
+  amrex::Gpu::DeviceVector<Real> dp(np, 0);
+  amrex::Gpu::DeviceVector<Real> ro_s(np, 0);
 
-  amrex::Real* p_dp = dp.data();
-  amrex::Real* p_ro_s = ro_s.data();
+  Real* p_dp = dp.data();
+  Real* p_ro_s = ro_s.data();
 
   SOLIDS::SOLIDS_t solid;
   solid = IC::ic[icv].solids[type];
@@ -142,7 +142,7 @@ ParticlesGenerator::generate (int& pc,
   }
   else
   {
-    const amrex::Real ic_dp_mean = solid.diameter.mean;
+    const Real ic_dp_mean = solid.diameter.mean;
 
     amrex::ParallelFor(np, [p_dp,ic_dp_mean]
       AMREX_GPU_DEVICE (int p) noexcept { p_dp[p] = ic_dp_mean; });
@@ -161,7 +161,7 @@ ParticlesGenerator::generate (int& pc,
   }
   else
   {
-    const amrex::Real ic_ro_s_mean = solid.density.mean;
+    const Real ic_ro_s_mean = solid.density.mean;
 
     amrex::ParallelFor(np, [p_ro_s,ic_ro_s_mean]
       AMREX_GPU_DEVICE (int p) noexcept { p_ro_s[p] = ic_ro_s_mean; });
@@ -169,13 +169,13 @@ ParticlesGenerator::generate (int& pc,
 
   pc = init_pc;
 
-  const amrex::Real ic_u_s = solid.velocity[0];
-  const amrex::Real ic_v_s = solid.velocity[1];
-  const amrex::Real ic_w_s = solid.velocity[2];
+  const Real ic_u_s = solid.velocity[0];
+  const Real ic_v_s = solid.velocity[1];
+  const Real ic_w_s = solid.velocity[2];
 
-  const amrex::Real statwt = solid.statwt;
+  const Real statwt = solid.statwt;
 
-  amrex::Real* p_rdata = m_rdata.data();
+  Real* p_rdata = m_rdata.data();
   int* p_idata = m_idata.data();
 
   const int local_nr = this->nr;
@@ -186,7 +186,7 @@ ParticlesGenerator::generate (int& pc,
      local_cg_dem=DEM::cg_dem]
     AMREX_GPU_DEVICE (int p) noexcept
   {
-    // amrex::Real pvol = (M_PI/6.0) * (dp[p]*dp[p]*dp[p]); // UNUSED_VARIABLE
+    // Real pvol = (M_PI/6.0) * (dp[p]*dp[p]*dp[p]); // UNUSED_VARIABLE
     // If coarse-grain DEM is activated
     if (local_cg_dem)
     {
@@ -236,16 +236,16 @@ ParticlesGenerator::hex_close_pack (const int icv,
                                     const IntVect& hi,
                                     int& np,
                                     int& pc,
-                                    const amrex::Real dx,
-                                    const amrex::Real dy,
-                                    const amrex::Real dz,
+                                    const Real dx,
+                                    const Real dy,
+                                    const Real dz,
                                     const amrex::GpuArray<Real, 3>& plo)
 {
   // indices
   int i_w, i_e, j_s, j_n, k_b, k_t;
 
-  amrex::RealVect ic_dlo, ic_dhi;
-  amrex::Real max_dp, max_rp;
+  RealVect ic_dlo, ic_dhi;
+  Real max_dp, max_rp;
 
   const Real sqrt3 = std::sqrt(3.0);
   const Real sqrt6o3x2 = 2.0*std::sqrt(6.0)/3.0;
@@ -273,9 +273,9 @@ ParticlesGenerator::hex_close_pack (const int icv,
   ic_dhi[2] = (amrex::min(hi[2], k_t)+1) * dz;
 
   // physical volume of IC region
-  const amrex::Real ic_vol = IC::ic[icv].region->volume();
+  const Real ic_vol = IC::ic[icv].region->volume();
 
-  const amrex::Real mean = IC::ic[icv].solids[type].diameter.mean;
+  const Real mean = IC::ic[icv].solids[type].diameter.mean;
 
   // Spacing is based on maximum particle size
   if(IC::ic[icv].solids[type].diameter.max > 0.0)
@@ -316,7 +316,7 @@ ParticlesGenerator::hex_close_pack (const int icv,
   np = delta_bx[0] * delta_bx[1] * delta_bx[2];
   grow_pdata(pc + np);
 
-  amrex::Real* p_rdata = m_rdata.data();
+  Real* p_rdata = m_rdata.data();
 
   const int local_nr = this->nr;
 
@@ -358,9 +358,9 @@ ParticlesGenerator::one_per_fill (const int icv,
                                   const IntVect& hi,
                                   int& np,
                                   int& pc,
-                                  const amrex::Real dx,
-                                  const amrex::Real dy,
-                                  const amrex::Real dz,
+                                  const Real dx,
+                                  const Real dy,
+                                  const Real dz,
                                   const amrex::GpuArray<Real, 3>& plo)
 {
   // indices
@@ -400,7 +400,7 @@ ParticlesGenerator::one_per_fill (const int icv,
   np = delta_bx[0] * delta_bx[1] * delta_bx[2];
   grow_pdata(pc + np);
 
-  amrex::Real* p_rdata = m_rdata.data();
+  Real* p_rdata = m_rdata.data();
 
   const int local_nr = this->nr;
 
@@ -441,9 +441,9 @@ ParticlesGenerator::eight_per_fill (const int icv,
                                     const IntVect& hi,
                                     int& np,
                                     int& pc,
-                                    const amrex::Real dx,
-                                    const amrex::Real dy,
-                                    const amrex::Real dz,
+                                    const Real dx,
+                                    const Real dy,
+                                    const Real dz,
                                     const amrex::GpuArray<Real, 3>& plo)
 {
   // indices
@@ -473,7 +473,7 @@ ParticlesGenerator::eight_per_fill (const int icv,
   np = delta_bx[0] * delta_bx[1] * delta_bx[2];
   grow_pdata(pc + np);
 
-  amrex::Real* p_rdata = m_rdata.data();
+  Real* p_rdata = m_rdata.data();
 
   const int local_nr = this->nr;
 
@@ -514,9 +514,9 @@ ParticlesGenerator::random_fill_dem (const int icv,
                                      const IntVect& hi,
                                      int& np,
                                      int& pc,
-                                     const amrex::Real dx,
-                                     const amrex::Real dy,
-                                     const amrex::Real dz,
+                                     const Real dx,
+                                     const Real dy,
+                                     const Real dz,
                                      const amrex::GpuArray<Real, 3>& plo,
                                      const bool fix_seed)
 {
@@ -525,8 +525,8 @@ ParticlesGenerator::random_fill_dem (const int icv,
 
   const int maxfails = 1000;
 
-  amrex::RealVect ic_dlo, ic_dhi, ic_len;
-  amrex::Real max_dp, max_rp;
+  RealVect ic_dlo, ic_dhi, ic_len;
+  Real max_dp, max_rp;
 
   calc_cell_ic(dx, dy, dz,
                IC::ic[icv].region->lo(),
@@ -544,11 +544,11 @@ ParticlesGenerator::random_fill_dem (const int icv,
   ic_dhi[2] = (amrex::min(hi[2], k_t)+1) * dz;
 
   // physical volume of IC region intersecting this grid
-  const amrex::Real ic_vol = (ic_dhi[0] - ic_dlo[0]) *
+  const Real ic_vol = (ic_dhi[0] - ic_dlo[0]) *
                              (ic_dhi[1] - ic_dlo[1]) *
                              (ic_dhi[2] - ic_dlo[2]);
 
-  amrex::Real mean = IC::ic[icv].solids[type].diameter.mean;
+  Real mean = IC::ic[icv].solids[type].diameter.mean;
 
   // Spacing is based on maximum particle size
   if(IC::ic[icv].solids[type].diameter.max > 0.)
@@ -559,7 +559,7 @@ ParticlesGenerator::random_fill_dem (const int icv,
   // If coarse-grain DEM is activated
   if (DEM::cg_dem)
   {
-     amrex::Real statwt = IC::ic[icv].solids[type].statwt;
+     Real statwt = IC::ic[icv].solids[type].statwt;
      mean = std::cbrt(statwt) * mean;
      max_dp = std::cbrt(statwt) * max_dp;
   }
@@ -578,7 +578,7 @@ ParticlesGenerator::random_fill_dem (const int icv,
   ic_dlo[1] += max_rp;
   ic_dlo[2] += max_rp;
 
-  const amrex::Real mindist = (1.01*max_dp)*(1.01*max_dp);
+  const Real mindist = (1.01*max_dp)*(1.01*max_dp);
 
   const RealVect Oodx = {1/dx, 1/dy, 1/dz};
 
@@ -589,8 +589,8 @@ ParticlesGenerator::random_fill_dem (const int icv,
   delta_bx[1] = hi[1] - lo[1] + 1;
   delta_bx[2] = hi[2] - lo[2] + 1;
 
-  amrex::Vector<int> pinc(delta_bx[0]*delta_bx[1]*delta_bx[2], 0);
-  amrex::Vector<int> pbin(delta_bx[0]*delta_bx[1]*delta_bx[2]*nb, 0);
+  Vector<int> pinc(delta_bx[0]*delta_bx[1]*delta_bx[2], 0);
+  Vector<int> pbin(delta_bx[0]*delta_bx[1]*delta_bx[2]*nb, 0);
 
   IntVect max_fitting_parts;
   max_fitting_parts[0] = static_cast<int>(amrex::Math::ceil(ic_len[0]/max_dp));
@@ -602,10 +602,10 @@ ParticlesGenerator::random_fill_dem (const int icv,
 
   amrex::ResetRandomSeed(ParallelDescriptor::MyProc()+1);
 
-  amrex::Gpu::HostVector<amrex::Real> h_rdata(m_rdata.size());
+  amrex::Gpu::HostVector<Real> h_rdata(m_rdata.size());
   Gpu::copyAsync(Gpu::deviceToHost, m_rdata.begin(), m_rdata.end(), h_rdata.begin());
   Gpu::synchronize();
-  amrex::Real* p_rdata = h_rdata.data();
+  Real* p_rdata = h_rdata.data();
 
   np = 0;
   int iterations(0);
@@ -662,7 +662,7 @@ ParticlesGenerator::random_fill_dem (const int icv,
               const Real dist_y = p_rdata[local_pc*nr + 1] - pos[1] - plo_ptr[1];
               const Real dist_z = p_rdata[local_pc*nr + 2] - pos[2] - plo_ptr[2];
 
-              const amrex::Real dist = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
+              const Real dist = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
 
               if(dist < mindist)
                 overlaps++;
@@ -732,15 +732,15 @@ ParticlesGenerator::random_fill_pic (const int icv,
                                      const IntVect& hi,
                                      int& np,
                                      int& pc,
-                                     const amrex::Real dx,
-                                     const amrex::Real dy,
-                                     const amrex::Real dz,
+                                     const Real dx,
+                                     const Real dy,
+                                     const Real dz,
                                      const amrex::GpuArray<Real, 3>& plo,
                                      const bool fix_seed)
 {
 
-  const amrex::Real* ic_rlo = IC::ic[icv].region->lo();
-  const amrex::Real* ic_rhi = IC::ic[icv].region->hi();
+  const Real* ic_rlo = IC::ic[icv].region->lo();
+  const Real* ic_rhi = IC::ic[icv].region->hi();
 
   amrex::IntVect seed_lo, seed_hi;
 
@@ -761,15 +761,15 @@ ParticlesGenerator::random_fill_pic (const int icv,
   delta_bx[2] = amrex::max(0, seed_hi[2] - seed_lo[2] + 1);
 
   // Number of cells in IC region
-  const amrex::Real ic_cells = delta_bx[0] * delta_bx[1] * delta_bx[2];
+  const Real ic_cells = delta_bx[0] * delta_bx[1] * delta_bx[2];
 
   // Particle properties: Mean diameter, stat weight, volume
-  const amrex::Real mean = IC::ic[icv].solids[type].diameter.mean;
-  const amrex::Real statwt(IC::ic[icv].solids[type].statwt);
-  const amrex::Real parcel_volume = statwt*((M_PI/6.0)*mean*mean*mean);
+  const Real mean = IC::ic[icv].solids[type].diameter.mean;
+  const Real statwt(IC::ic[icv].solids[type].statwt);
+  const Real parcel_volume = statwt*((M_PI/6.0)*mean*mean*mean);
 
   // Parcels per cell to satisfy the IC condition
-  const amrex::Real parcels_per_cell =
+  const Real parcels_per_cell =
       (dx * dy * dz * IC::ic[icv].solids[type].volfrac / parcel_volume);
 
   const int whole_parcels_per_cell = amrex::Math::floor(parcels_per_cell);
@@ -778,7 +778,7 @@ ParticlesGenerator::random_fill_pic (const int icv,
   np = static_cast<int>(ic_cells) * whole_parcels_per_cell;
   grow_pdata(pc + np);
 
-  amrex::Real* p_rdata = m_rdata.data();
+  Real* p_rdata = m_rdata.data();
   const int local_nr = this->nr;
 
   amrex::ResetRandomSeed(ParallelDescriptor::MyProc()+1);
@@ -796,9 +796,9 @@ ParticlesGenerator::random_fill_pic (const int icv,
       const int local_pc = pc + whole_parcels_per_cell *
         (local_i + local_k*delta_bx[0] + local_j*delta_bx[0]*delta_bx[2]);
 
-      const amrex::Real xlo = plo_ptr[0] + (i * dx);
-      const amrex::Real ylo = plo_ptr[1] + (j * dy);
-      const amrex::Real zlo = plo_ptr[2] + (k * dz);
+      const Real xlo = plo_ptr[0] + (i * dx);
+      const Real ylo = plo_ptr[1] + (j * dy);
+      const Real zlo = plo_ptr[2] + (k * dz);
 
       for(int pseed(0); pseed < whole_parcels_per_cell; pseed++){
 
@@ -843,13 +843,13 @@ ParticlesGenerator::generate_prop (const int nrp, ParticleTileType& particles)
   auto p_realarray = soa.realarray();
   auto p_intarray = soa.intarray();
 
-  amrex::Real* p_rdata = m_rdata.data();
+  Real* p_rdata = m_rdata.data();
   int* p_idata = m_idata.data();
 
   const int local_nr = this->nr;
   const int local_ni = this->ni;
 
-  const amrex::Real picmulti = (DEM::solve) ? 1.0 : 0.0;
+  const Real picmulti = (DEM::solve) ? 1.0 : 0.0;
 
   amrex::ParallelFor(nrp, [pstruct,p_realarray,p_intarray,p_rdata,p_idata,
       local_nr,local_ni,picmulti]
@@ -861,12 +861,12 @@ ParticlesGenerator::generate_prop (const int nrp, ParticleTileType& particles)
     part.pos(1) = p_rdata[p*local_nr + 1];
     part.pos(2) = p_rdata[p*local_nr + 2];
 
-    amrex::Real rad = p_rdata[p*local_nr + 3];
-    amrex::Real rho = p_rdata[p*local_nr + 4];
+    Real rad = p_rdata[p*local_nr + 3];
+    Real rho = p_rdata[p*local_nr + 4];
 
-    amrex::Real vol  = (4.0/3.0)*M_PI*rad*rad*rad;
-    amrex::Real mass = vol * rho;
-    amrex::Real omoi = 2.5/(mass * rad*rad);
+    Real vol  = (4.0/3.0)*M_PI*rad*rad*rad;
+    Real mass = vol * rho;
+    Real omoi = 2.5/(mass * rad*rad);
 
     p_intarray[SoAintData::phase][p] = p_idata[p*local_ni + 0];
     p_intarray[SoAintData::state][p] = 1;
@@ -912,11 +912,11 @@ ParticlesGenerator::generate_prop (const int nrp, ParticleTileType& particles)
 //                                                                     !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 void
-ParticlesGenerator::nor_rno (amrex::Gpu::DeviceVector<amrex::Real>& dp,
-                             const amrex::Real mean,
-                             const amrex::Real sigma,
-                             const amrex::Real dp_min,
-                             const amrex::Real dp_max)
+ParticlesGenerator::nor_rno (amrex::Gpu::DeviceVector<Real>& dp,
+                             const Real mean,
+                             const Real sigma,
+                             const Real dp_min,
+                             const Real dp_max)
 {
   // Local variables
   //-----------------------------------------------
@@ -927,10 +927,10 @@ ParticlesGenerator::nor_rno (amrex::Gpu::DeviceVector<amrex::Real>& dp,
 
   const int nsize_half = static_cast<int>(amrex::Math::ceil(nsize/2.));
 
-  const amrex::Real tolerance =
-    std::numeric_limits<amrex::Real>::epsilon();
+  const Real tolerance =
+    std::numeric_limits<Real>::epsilon();
 
-  amrex::Real* p_dp = dp.data();
+  Real* p_dp = dp.data();
 
   const int maxfails = 10000;
   int fails(0);
@@ -949,18 +949,18 @@ ParticlesGenerator::nor_rno (amrex::Gpu::DeviceVector<amrex::Real>& dp,
 #endif
     AMREX_GPU_DEVICE (int i, RandomEngine const& engine) noexcept
     {
-      amrex::Real x(0);
-      amrex::Real y(0);
+      Real x(0);
+      Real y(0);
 
-      amrex::Real dp1 = dp_min - 1;
-      amrex::Real dp2 = dp_min - 1;
+      Real dp1 = dp_min - 1;
+      Real dp2 = dp_min - 1;
 
       int iterations(0);
 
       while(not(dp1 >= dp_min and dp1 <= dp_max and dp2 >= dp_min and dp2 <= dp_max) and
             iterations < maxfails)
       {
-        amrex::Real w(1.1);
+        Real w(1.1);
         while(w > 1 or amrex::Math::abs(w-1) < tolerance)
         {
           x = 2*amrex::Random(engine) - 1;
@@ -1002,7 +1002,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::DeviceVector<amrex::Real>& dp,
 
   if(debug)
   {
-    amrex::Real lmean(0), lvariance(0), lsigma(0);
+    Real lmean(0), lvariance(0), lsigma(0);
     std::accumulate(dp.begin(), dp.end(), lmean);
 
     lmean /= nsize;
@@ -1052,15 +1052,15 @@ ParticlesGenerator::nor_rno (amrex::Gpu::DeviceVector<amrex::Real>& dp,
 //                                                                     !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 void
-ParticlesGenerator::uni_rno (amrex::Gpu::DeviceVector<amrex::Real>& dp,
-                             const amrex::Real dp_min,
-                             const amrex::Real dp_max)
+ParticlesGenerator::uni_rno (amrex::Gpu::DeviceVector<Real>& dp,
+                             const Real dp_min,
+                             const Real dp_max)
 {
-  amrex::Real lscale = dp_max - dp_min;
+  Real lscale = dp_max - dp_min;
 
   const unsigned int nsize = dp.size();
 
-  amrex::Real* p_dp = dp.data();
+  Real* p_dp = dp.data();
 
   amrex::ParallelForRNG(nsize, [p_dp,dp_min,lscale]
     AMREX_GPU_DEVICE (int lc, amrex::RandomEngine const& engine) noexcept { p_dp[lc] = dp_min + lscale*amrex::Random(engine); });
@@ -1157,7 +1157,7 @@ ParticlesGenerator::write (const int nrp,
   {
     output_file << "               "
                 << std::scientific << std::setw(13) << std::setprecision(6)
-                << std::setfill(' ') << amrex::Real(p_realarray[SoArealData::radius][lc1]) << std::endl;
+                << std::setfill(' ') << Real(p_realarray[SoArealData::radius][lc1]) << std::endl;
   }
 
   output_file << "            " << "</DataArray>" << std::endl;
@@ -1170,7 +1170,7 @@ ParticlesGenerator::write (const int nrp,
   {
     output_file << "               "
                 << std::scientific << std::setw(13) << std::setprecision(6)
-                << amrex::Real(p_realarray[SoArealData::density][lc1]) << std::endl;
+                << Real(p_realarray[SoArealData::density][lc1]) << std::endl;
   }
 
   output_file << "            " << "</DataArray>" << std::endl;
@@ -1189,9 +1189,9 @@ ParticlesGenerator::write (const int nrp,
 
     output_file << "               "
                 << std::scientific << std::setw(13) << std::setprecision(6)
-                << amrex::Real(part.pos(0)) << "    "
-                << amrex::Real(part.pos(1)) << "    "
-                << amrex::Real(part.pos(2)) << std::endl;
+                << Real(part.pos(0)) << "    "
+                << Real(part.pos(1)) << "    "
+                << Real(part.pos(2)) << std::endl;
   }
 
   output_file << "            " << "</DataArray>" << std::endl;

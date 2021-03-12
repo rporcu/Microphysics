@@ -13,11 +13,11 @@
 //
 void
 mfix::mfix_redistribute_deposition (int lev,
-                                    amrex::MultiFab & mf_eps,
-                                    amrex::MultiFab & mf_to_redistribute,
-                                    const amrex::MultiFab * volfrac,
-                                    const amrex::FabArray<EBCellFlagFab>* flags_fab,
-                                    amrex::Real max_eps)
+                                    MultiFab & mf_eps,
+                                    MultiFab & mf_to_redistribute,
+                                    const MultiFab * volfrac,
+                                    const FabArray<EBCellFlagFab>* flags_fab,
+                                    Real max_eps)
 {
    BL_PROFILE("mfix::mfix_redistribute_solids_volume");
 
@@ -99,8 +99,8 @@ mfix::mfix_redistribute_deposition (int lev,
        {
          if(flags(i,j,k).isSingleValued() and ep_s(i,j,k) > max_eps)
          {
-           amrex::Real sum_vfrac_eps = 0.0;
-           amrex::Real sum_vfrac     = 0.0;
+           Real sum_vfrac_eps = 0.0;
+           Real sum_vfrac     = 0.0;
 
            for(int ii(-1); ii <= 1; ii++)
            for(int jj(-1); jj <= 1; jj++)
@@ -118,17 +118,17 @@ mfix::mfix_redistribute_deposition (int lev,
 
            // Average volume fraction in the neighborhood around of the packed
            // cell. This value is capped by the user-defined max pack value.
-           amrex::Real avg_eps = amrex::min(max_eps, sum_vfrac_eps / sum_vfrac);
+           Real avg_eps = amrex::min(max_eps, sum_vfrac_eps / sum_vfrac);
 
            // Fraction of material we want to redistribute
-           amrex::Real scale = amrex::max(0.0, ep_s(i,j,k) - avg_eps) / ep_s(i,j,k);
+           Real scale = amrex::max(0.0, ep_s(i,j,k) - avg_eps) / ep_s(i,j,k);
            scale_array(i,j,k) = scale;
 
            for(int n(0); n < ncomp; n++) {
 
              // This is the amount of the multifab we are redistributing
              // that we are moving into the packed cell's neighborhood.
-             amrex::Real overflow =
+             Real overflow =
                duplicate(i,j,k,n) * scale * vfrac(i,j,k) / sum_vfrac;
 
              for(int kk(-1); kk <= 1; kk++)
@@ -161,7 +161,7 @@ mfix::mfix_redistribute_deposition (int lev,
             Real redist_val = mf_redist(i,j,k,n);
 
             // Account for the change in material in the source cell
-            amrex::Real delta = -scale*redist_val;
+            Real delta = -scale*redist_val;
             redist_val += delta;
             mf_redist(i,j,k,n) = redist_val;
           }

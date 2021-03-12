@@ -3,37 +3,31 @@
 
 using namespace amrex;
 
-void redistribution::redistribute_eb (amrex::Box const& bx, int ncomp, int icomp,
-                                      amrex::Array4<amrex::Real      > const& dUdt_out,
-                                      amrex::Array4<amrex::Real      > const& dUdt_in,
-                                      amrex::Array4<amrex::Real const> const& U_in,
-                                      amrex::Array4<amrex::Real      > const& scratch,
-                                      amrex::Array4<amrex::Real const> const& ep_g,
-                                      amrex::Array4<amrex::EBCellFlag const> const& flag,
-                                      amrex::Array4<amrex::Real const> const& apx,
-                                      amrex::Array4<amrex::Real const> const& apy,
-                                      amrex::Array4<amrex::Real const> const& apz,
-                                      amrex::Array4<amrex::Real const> const& vfrac,
-                                      amrex::Array4<amrex::Real const> const& fcx,
-                                      amrex::Array4<amrex::Real const> const& fcy,
-                                      amrex::Array4<amrex::Real const> const& fcz,
-                                      amrex::Array4<amrex::Real const> const& ccc,
-                                      amrex::Geometry& lev_geom,
-                                      amrex::Real dt, std::string redistribution_type)
+void redistribution::redistribute_eb (Box const& bx, int ncomp, int icomp,
+                                      Array4<Real      > const& dUdt_out,
+                                      Array4<Real      > const& dUdt_in,
+                                      Array4<Real const> const& U_in,
+                                      Array4<Real      > const& scratch,
+                                      Array4<Real const> const& ep_g,
+                                      Array4<EBCellFlag const> const& flag,
+                                      Array4<Real const> const& apx,
+                                      Array4<Real const> const& apy,
+                                      Array4<Real const> const& apz,
+                                      Array4<Real const> const& vfrac,
+                                      Array4<Real const> const& fcx,
+                                      Array4<Real const> const& fcy,
+                                      Array4<Real const> const& fcz,
+                                      Array4<Real const> const& ccc,
+                                      Geometry& lev_geom,
+                                      Real dt, std::string redistribution_type)
 {
     // redistribution_type = "NoRedist";      // no redistribution
     // redistribution_type = "FluxRedist"     // flux_redistribute
     // redistribution_type = "StateRedist";   // state redistribute
 
-#if (AMREX_SPACEDIM == 2)
-    // We assume that in 2D a cell will only need at most 3 neighbors to merge with, and we
-    //    use the first component of this for the number of neighbors
-    IArrayBox itracker(grow(bx,4),4);
-#else
     // We assume that in 3D a cell will only need at most 7 neighbors to merge with, and we
     //    use the first component of this for the number of neighbors
     IArrayBox itracker(grow(bx,4),8);
-#endif
 
     Array4<int> itr = itracker.array();
 
@@ -66,7 +60,7 @@ void redistribution::redistribute_eb (amrex::Box const& bx, int ncomp, int icomp
             amrex::ParallelFor(bxg1,ncomp, [=]
             AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
             {
-                if (!domain_per_grown.contains(IntVect(AMREX_D_DECL(i,j,k))))
+                if (!domain_per_grown.contains(IntVect(i,j,k)))
                     dUdt_in(i,j,k,n) = 0.;
             });
         }
@@ -77,7 +71,7 @@ void redistribution::redistribute_eb (amrex::Box const& bx, int ncomp, int icomp
             dUdt_in(i,j,k,n) = U_in(i,j,k,n) + dt * dUdt_in(i,j,k,n);
         });
 
-        make_itracker(bx, apx, apy, apz, vfrac, itr, lev_geom, "State");
+        make_itracker(bx, apx, apy, apz, vfrac, itr, lev_geom);
 
         state_redistribute(bx, ncomp, icomp, dUdt_out, dUdt_in, flag, vfrac,
                            fcx, fcy, fcz, ccc, itr, lev_geom);
@@ -101,22 +95,20 @@ void redistribution::redistribute_eb (amrex::Box const& bx, int ncomp, int icomp
     }
 }
 
-void redistribution::redistribute_initial_data (Box const& bx, int ncomp, int icomp,
-                                                Array4<Real      > const& U_out,
-                                                Array4<Real      > const& U_in,
-                                                Array4<EBCellFlag const> const& flag,
-                                                AMREX_D_DECL(amrex::Array4<amrex::Real const> const& apx,
-                                                             amrex::Array4<amrex::Real const> const& apy,
-                                                             amrex::Array4<amrex::Real const> const& apz),
-                                                amrex::Array4<amrex::Real const> const& vfrac,
-                                                AMREX_D_DECL(amrex::Array4<amrex::Real const> const& fcx,
-                                                             amrex::Array4<amrex::Real const> const& fcy,
-                                                             amrex::Array4<amrex::Real const> const& fcz),
-                                                amrex::Array4<amrex::Real const> const& ccc,
-                                                Geometry& lev_geom, std::string redistribution_type)
+void redistribution::redistribute_data (Box const& bx, int ncomp, int icomp,
+                                        Array4<Real      > const& U_out,
+                                        Array4<Real      > const& U_in,
+                                        Array4<EBCellFlag const> const& flag,
+                                        Array4<Real const> const& apx,
+                                        Array4<Real const> const& apy,
+                                        Array4<Real const> const& apz,
+                                        Array4<Real const> const& vfrac,
+                                        Array4<Real const> const& fcx,
+                                        Array4<Real const> const& fcy,
+                                        Array4<Real const> const& fcz,
+                                        Array4<Real const> const& ccc,
+                                        Geometry& lev_geom, std::string redistribution_type)
 {
-    // redistribution_type = "StateRedist";   // state redistribute
-
     // We assume that in 3D a cell will only need at most 7 neighbors to merge with, and we
     //    use the first component of this for the number of neighbors
     IArrayBox itracker(grow(bx,4),8);
@@ -131,7 +123,7 @@ void redistribution::redistribute_initial_data (Box const& bx, int ncomp, int ic
 
     if (redistribution_type == "StateRedist") {
 
-        make_itracker(bx, apx, apy, apz, vfrac, itr, lev_geom, "State");
+        make_itracker(bx, apx, apy, apz, vfrac, itr, lev_geom);
 
         state_redistribute(bx, ncomp, icomp, U_out, U_in, flag, vfrac,
                            fcx, fcy, fcz, ccc, itr, lev_geom);

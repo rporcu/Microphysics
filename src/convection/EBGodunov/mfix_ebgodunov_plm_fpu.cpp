@@ -54,20 +54,16 @@ void ebgodunov::plm_fpu_x (Box const& xebox, int ncomp,
     bool has_extdir_or_ho_lo_y = extdir_lohi_y.first;
     bool has_extdir_or_ho_hi_y = extdir_lohi_y.second;
 
-#if (AMREX_SPACEDIM == 3)
     const int domain_klo = domain_box.smallEnd(2);
     const int domain_khi = domain_box.bigEnd(2);
     auto extdir_lohi_z = has_extdir_or_ho(h_bcrec.data(), ncomp, static_cast<int>(Direction::z));
     bool has_extdir_or_ho_lo_z = extdir_lohi_z.first;
     bool has_extdir_or_ho_hi_z = extdir_lohi_z.second;
-#endif
 
     if ( (has_extdir_or_ho_lo_x and domain_ilo >= xebox.smallEnd(0)-1) or
          (has_extdir_or_ho_hi_x and domain_ihi <= xebox.bigEnd(0)    ) or
-#if (AMREX_SPACEDIM == 3)
          (has_extdir_or_ho_lo_z and domain_klo >= xebox.smallEnd(2)-1) or
          (has_extdir_or_ho_hi_z and domain_khi <= xebox.bigEnd(2)    ) or
-#endif
          (has_extdir_or_ho_lo_y and domain_jlo >= xebox.smallEnd(1)-1) or
          (has_extdir_or_ho_hi_y and domain_jhi <= xebox.bigEnd(1)    )  )
     {
@@ -92,12 +88,10 @@ void ebgodunov::plm_fpu_x (Box const& xebox, int ncomp,
                                         (bc.lo(1) == BCType::hoextrap);
                 bool extdir_or_ho_jhi = (bc.hi(1) == BCType::ext_dir) or
                                         (bc.hi(1) == BCType::hoextrap);
-#if (AMREX_SPACEDIM == 3)
                 bool extdir_or_ho_klo = (bc.lo(2) == BCType::ext_dir) or
                                         (bc.lo(2) == BCType::hoextrap);
                 bool extdir_or_ho_khi = (bc.hi(2) == BCType::ext_dir) or
                                         (bc.hi(2) == BCType::hoextrap);
-#endif
 
                 // *************************************************
                 // Making qpls
@@ -122,9 +116,7 @@ void ebgodunov::plm_fpu_x (Box const& xebox, int ncomp,
                 } else {
 
                    Real yf = fcx(i,j,k,0); // local (y,z) of centroid of x-face we are extrapolating to
-#if (AMREX_SPACEDIM == 3)
                    Real zf = fcx(i,j,k,1);
-#endif
                    AMREX_D_TERM(Real delta_x = 0.5 + ccc(i,j,k,0);,
                                 Real delta_y = yf  - ccc(i,j,k,1);,
                                 Real delta_z = zf  - ccc(i,j,k,2););
@@ -136,14 +128,9 @@ void ebgodunov::plm_fpu_x (Box const& xebox, int ncomp,
                                               AMREX_D_DECL(domain_ilo, domain_jlo, domain_klo),
                                               AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi));
 
-#if (AMREX_SPACEDIM == 3)
                    qpls = q(i,j,k,n) - delta_x * slopes_eb_hi[0]
                                      + delta_y * slopes_eb_hi[1]
                                      + delta_z * slopes_eb_hi[2];
-#else
-                   qpls = q(i,j,k,n) - delta_x * slopes_eb_hi[0]
-                                     + delta_y * slopes_eb_hi[1];
-#endif
                    qpls -= 0.5 * dtdx * umac(i,j,k) * slopes_eb_hi[0];
 
                 }  // end of making qpls
@@ -179,9 +166,7 @@ void ebgodunov::plm_fpu_x (Box const& xebox, int ncomp,
                 } else {
 
                    Real yf = fcx(i,j,k,0); // local (y,z) of centroid of x-face we are extrapolating to
-#if (AMREX_SPACEDIM == 3)
                    Real zf = fcx(i,j,k,1);
-#endif
                    AMREX_D_TERM(Real delta_x = 0.5 - ccc(i-1,j,k,0);,
                                 Real delta_y = yf  - ccc(i-1,j,k,1);,
                                 Real delta_z = zf  - ccc(i-1,j,k,2););
@@ -194,14 +179,9 @@ void ebgodunov::plm_fpu_x (Box const& xebox, int ncomp,
                                               AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi));
 
 
-#if (AMREX_SPACEDIM == 3)
                    qmns = q(i-1,j,k,n) + delta_x * slopes_eb_lo[0]
                                        + delta_y * slopes_eb_lo[1]
                                        + delta_z * slopes_eb_lo[2];
-#else
-                   qmns = q(i-1,j,k,n) + delta_x * slopes_eb_lo[0]
-                                       + delta_y * slopes_eb_lo[1];
-#endif
                    qmns -= 0.5 * dtdx * umac(i,j,k) * slopes_eb_lo[0];
                 }  // end of making qmns
 
@@ -255,9 +235,7 @@ void ebgodunov::plm_fpu_x (Box const& xebox, int ncomp,
                 } else {
 
                    Real yf = fcx(i,j,k,0); // local (y,z) of centroid of x-face we are extrapolating to
-#if (AMREX_SPACEDIM == 3)
                    Real zf = fcx(i,j,k,1);
-#endif
                    AMREX_D_TERM(Real delta_x = 0.5 + ccc(i,j,k,0);,
                                 Real delta_y = yf  - ccc(i,j,k,1);,
                                 Real delta_z = zf  - ccc(i,j,k,2););
@@ -265,14 +243,9 @@ void ebgodunov::plm_fpu_x (Box const& xebox, int ncomp,
                    const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,k,n,q,ccc,
                                                                   AMREX_D_DECL(fcx,fcy,fcz), flag);
 
-#if (AMREX_SPACEDIM == 3)
                    qpls = q(i,j,k,n) - delta_x * slopes_eb_hi[0]
                                      + delta_y * slopes_eb_hi[1]
                                      + delta_z * slopes_eb_hi[2];
-#else
-                   qpls = q(i,j,k,n) - delta_x * slopes_eb_hi[0]
-                                     + delta_y * slopes_eb_hi[1];
-#endif
                    qpls -= 0.5 * dtdx * umac(i,j,k) * slopes_eb_hi[0];
                 }  // end of making qpls
 
@@ -299,9 +272,7 @@ void ebgodunov::plm_fpu_x (Box const& xebox, int ncomp,
                 } else {
 
                    Real yf = fcx(i,j,k,0); // local (y,z) of centroid of x-face we are extrapolating to
-#if (AMREX_SPACEDIM == 3)
                    Real zf = fcx(i,j,k,1);
-#endif
                    AMREX_D_TERM(Real delta_x = 0.5 - ccc(i-1,j,k,0);,
                                 Real delta_y = yf  - ccc(i-1,j,k,1);,
                                 Real delta_z = zf  - ccc(i-1,j,k,2););
@@ -309,14 +280,9 @@ void ebgodunov::plm_fpu_x (Box const& xebox, int ncomp,
                    const auto& slopes_eb_lo = amrex_lim_slopes_eb(i-1,j,k,n,q,ccc,
                                                                   AMREX_D_DECL(fcx,fcy,fcz), flag);
 
-#if (AMREX_SPACEDIM == 3)
                    qmns = q(i-1,j,k,n) + delta_x * slopes_eb_lo[0]
                                        + delta_y * slopes_eb_lo[1]
                                        + delta_z * slopes_eb_lo[2];
-#else
-                   qmns = q(i-1,j,k,n) + delta_x * slopes_eb_lo[0]
-                                       + delta_y * slopes_eb_lo[1];
-#endif
                    qmns -= 0.5 * dtdx * umac(i,j,k) * slopes_eb_lo[0];
 
                 }  // end of making qmns
@@ -352,30 +318,27 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
     const int domain_ihi = domain_box.bigEnd(0);
     const int domain_jlo = domain_box.smallEnd(1);
     const int domain_jhi = domain_box.bigEnd(1);
+    const int domain_klo = domain_box.smallEnd(2);
+    const int domain_khi = domain_box.bigEnd(2);
 
     // At an ext_dir boundary, the boundary value is on the face, not cell center.
     auto extdir_lohi_x = has_extdir_or_ho(h_bcrec.data(), ncomp, static_cast<int>(Direction::x));
     auto extdir_lohi_y = has_extdir_or_ho(h_bcrec.data(), ncomp, static_cast<int>(Direction::y));
+    auto extdir_lohi_z = has_extdir_or_ho(h_bcrec.data(), ncomp, static_cast<int>(Direction::z));
 
     bool has_extdir_or_ho_lo_x = extdir_lohi_x.first;
     bool has_extdir_or_ho_hi_x = extdir_lohi_x.second;
+
     bool has_extdir_or_ho_lo_y = extdir_lohi_y.first;
     bool has_extdir_or_ho_hi_y = extdir_lohi_y.second;
 
-#if (AMREX_SPACEDIM == 3)
-    const int domain_klo = domain_box.smallEnd(2);
-    const int domain_khi = domain_box.bigEnd(2);
-    auto extdir_lohi_z = has_extdir_or_ho(h_bcrec.data(), ncomp, static_cast<int>(Direction::z));
     bool has_extdir_or_ho_lo_z = extdir_lohi_z.first;
     bool has_extdir_or_ho_hi_z = extdir_lohi_z.second;
-#endif
 
     if ( (has_extdir_or_ho_lo_x and domain_ilo >= yebox.smallEnd(0)-1) or
          (has_extdir_or_ho_hi_x and domain_ihi <= yebox.bigEnd(0)    ) or
-#if (AMREX_SPACEDIM == 3)
          (has_extdir_or_ho_lo_z and domain_klo >= yebox.smallEnd(2)-1) or
          (has_extdir_or_ho_hi_z and domain_khi <= yebox.bigEnd(2)    ) or
-#endif
          (has_extdir_or_ho_lo_y and domain_jlo >= yebox.smallEnd(1)-1) or
          (has_extdir_or_ho_hi_y and domain_jhi <= yebox.bigEnd(1)    )  )
     {
@@ -400,12 +363,10 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
                                         (bc.lo(1) == BCType::hoextrap);
                 bool extdir_or_ho_jhi = (bc.hi(1) == BCType::ext_dir) or
                                         (bc.hi(1) == BCType::hoextrap);
-#if (AMREX_SPACEDIM == 3)
                 bool extdir_or_ho_klo = (bc.lo(2) == BCType::ext_dir) or
                                         (bc.lo(2) == BCType::hoextrap);
                 bool extdir_or_ho_khi = (bc.hi(2) == BCType::ext_dir) or
                                         (bc.hi(2) == BCType::hoextrap);
-#endif
 
                 // *************************************************
                 // Making qpls
@@ -430,9 +391,7 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
                 } else {
 
                    Real xf = fcy(i,j,k,0); // local (x,z) of centroid of y-face we are extrapolating to
-#if (AMREX_SPACEDIM == 3)
                    Real zf = fcy(i,j,k,1);
-#endif
                    AMREX_D_TERM(Real delta_y = 0.5 + ccc(i,j,k,1);,
                                 Real delta_x = xf  - ccc(i,j,k,0);,
                                 Real delta_z = zf  - ccc(i,j,k,2););
@@ -444,14 +403,9 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
                                               AMREX_D_DECL(domain_ilo, domain_jlo, domain_klo),
                                               AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi));
 
-#if (AMREX_SPACEDIM == 3)
                    qpls = q(i,j,k,n) - delta_y * slopes_eb_hi[1]
                                      + delta_x * slopes_eb_hi[0]
                                      + delta_z * slopes_eb_hi[2];
-#else
-                   qpls = q(i,j,k,n) - delta_y * slopes_eb_hi[1]
-                                     + delta_x * slopes_eb_hi[0];
-#endif
                    qpls -= 0.5 * dtdy * vmac(i,j,k) * slopes_eb_hi[1];
 
                 }  // end of making qpls
@@ -487,9 +441,7 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
                 } else {
 
                    Real xf = fcy(i,j,k,0); // local (x,z) of centroid of y-face we are extrapolating to
-#if (AMREX_SPACEDIM == 3)
                    Real zf = fcy(i,j,k,1);
-#endif
                    AMREX_D_TERM(Real delta_y = 0.5 - ccc(i,j-1,k,1);,
                                 Real delta_x = xf  - ccc(i,j-1,k,0);,
                                 Real delta_z = zf  - ccc(i,j-1,k,2););
@@ -502,14 +454,9 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
                                               AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi));
 
 
-#if (AMREX_SPACEDIM == 3)
                    qmns = q(i,j-1,k,n) + delta_x * slopes_eb_lo[0]
                                        + delta_y * slopes_eb_lo[1]
                                        + delta_z * slopes_eb_lo[2];
-#else
-                   qmns = q(i,j-1,k,n) + delta_x * slopes_eb_lo[0]
-                                       + delta_y * slopes_eb_lo[1];
-#endif
                    qmns -= 0.5 * dtdy * vmac(i,j,k) * slopes_eb_lo[1];
 
                 }  // end of making qmns
@@ -564,9 +511,7 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
                 } else {
 
                    Real xf = fcy(i,j,k,0); // local (x,z) of centroid of y-face we are extrapolating to
-#if (AMREX_SPACEDIM == 3)
                    Real zf = fcy(i,j,k,1);
-#endif
                    AMREX_D_TERM(Real delta_y = 0.5 + ccc(i,j,k,1);,
                                 Real delta_x = xf  - ccc(i,j,k,0);,
                                 Real delta_z = zf  - ccc(i,j,k,2););
@@ -574,14 +519,9 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
                    const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,k,n,q,ccc,
                                                                   AMREX_D_DECL(fcx,fcy,fcz), flag);
 
-#if (AMREX_SPACEDIM == 3)
                    qpls = q(i,j,k,n) - delta_y * slopes_eb_hi[1]
                                      + delta_x * slopes_eb_hi[0]
                                      + delta_z * slopes_eb_hi[2];
-#else
-                   qpls = q(i,j,k,n) - delta_y * slopes_eb_hi[1]
-                                     + delta_x * slopes_eb_hi[0];
-#endif
                    qpls -= 0.5 * dtdy * vmac(i,j,k) * slopes_eb_hi[1];
 
                 }  // end of making qpls
@@ -609,9 +549,7 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
                 } else {
 
                    Real xf = fcy(i,j,k,0); // local (x,z) of centroid of y-face we are extrapolating to
-#if (AMREX_SPACEDIM == 3)
                    Real zf = fcy(i,j,k,1);
-#endif
                    AMREX_D_TERM(Real delta_y = 0.5 - ccc(i,j-1,k,1);,
                                 Real delta_x = xf  - ccc(i,j-1,k,0);,
                                 Real delta_z = zf  - ccc(i,j-1,k,2););
@@ -619,14 +557,9 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
                    const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j-1,k,n,q,ccc,
                                                                   AMREX_D_DECL(fcx,fcy,fcz), flag);
 
-#if (AMREX_SPACEDIM == 3)
                    qmns = q(i,j-1,k,n) + delta_x * slopes_eb_lo[0]
                                        + delta_y * slopes_eb_lo[1]
                                        + delta_z * slopes_eb_lo[2];
-#else
-                   qmns = q(i,j-1,k,n) + delta_x * slopes_eb_lo[0]
-                                       + delta_y * slopes_eb_lo[1];
-#endif
                    qmns -= 0.5 * dtdy * vmac(i,j,k) * slopes_eb_lo[1];
 
                 }  // end of making qmns
@@ -638,7 +571,6 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
     }
 }
 
-#if (AMREX_SPACEDIM == 3)
 // This version is called after the MAC projection
 void ebgodunov::plm_fpu_z (Box const& zebox, int ncomp,
                            Array4<Real> const& Imz, Array4<Real> const& Ipz,
@@ -921,4 +853,3 @@ void ebgodunov::plm_fpu_z (Box const& zebox, int ncomp,
         });
     }
 }
-#endif

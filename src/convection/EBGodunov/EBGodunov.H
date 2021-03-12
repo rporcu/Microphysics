@@ -57,7 +57,6 @@ namespace ebgodunov {
                         amrex::Real dt,
                         amrex::Vector<amrex::BCRec> const& h_bcrec,
                         amrex::BCRec const* d_bcrec);
-#if (AMREX_SPACEDIM == 3)
     void predict_plm_z (amrex::Box const& bx,
                         amrex::Array4<amrex::Real> const& Imz, amrex::Array4<amrex::Real> const& Ipz,
                         amrex::Array4<amrex::Real const> const& q,
@@ -72,7 +71,6 @@ namespace ebgodunov {
                         amrex::Real dt,
                         amrex::Vector<amrex::BCRec> const& h_bcrec,
                         amrex::BCRec const* d_bcrec);
-#endif
 
     void plm_fpu_x (amrex::Box const& bx, int ncomp,
                     amrex::Array4<amrex::Real> const& Imx, amrex::Array4<amrex::Real> const& Ipx,
@@ -104,7 +102,6 @@ namespace ebgodunov {
                     amrex::Vector<amrex::BCRec> const& h_bcrec,
                     amrex::BCRec const* d_bcrec, bool is_velocity);
 
-#if (AMREX_SPACEDIM == 3)
     void plm_fpu_z (amrex::Box const& bx, int ncomp,
                     amrex::Array4<amrex::Real> const& Imz, amrex::Array4<amrex::Real> const& Ipz,
                     amrex::Array4<amrex::Real const> const& q,
@@ -119,7 +116,6 @@ namespace ebgodunov {
                     amrex::Real dt,
                     amrex::Vector<amrex::BCRec> const& h_bcrec,
                     amrex::BCRec const* d_bcrec, bool is_velocity);
-#endif
 
     void make_trans_velocities (AMREX_D_DECL(amrex::Box const& xbx,
                                              amrex::Box const& ybx,

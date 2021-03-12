@@ -10,14 +10,14 @@
 #include <mfix_eb_interp_K.H>
 #include <mfix_mf_helpers.H>
 
-void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
-                                  amrex::Vector< amrex::MultiFab* >& /*avg_prop_in*/,
-                                  amrex::Vector< amrex::MultiFab* >& cost,
+void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
+                                  Vector< MultiFab* >& /*avg_prop_in*/,
+                                  Vector< MultiFab* >& cost,
                                   std::string& knapsack_weight_type_in)
 {
   BL_PROFILE("mfix::MFIX_CalcSolidsStress()");
 
-  //const amrex::Real covered_val = 9.8765e300; UNUSED
+  //const Real covered_val = 9.8765e300; UNUSED
 
   for( int lev(0); lev < nlev; lev ++)
   {
@@ -177,7 +177,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
           if((bct == pinf) or (bct == pout) or (bct == minf)){
 
-            const amrex::Real ep_s_extrap = 2.0*ep_s_arr(dom_lo[0],j,k) - ep_s_arr(dom_lo[0]+1,j,k);
+            const Real ep_s_extrap = 2.0*ep_s_arr(dom_lo[0],j,k) - ep_s_arr(dom_lo[0]+1,j,k);
 
             ep_s_arr(i,j,k) = amrex::max(0.0,
                               amrex::min(ep_s_extrap,
@@ -200,7 +200,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
           const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
           if((bct == pinf) or (bct == pout) or (bct == minf)){
-            const amrex::Real ep_s_extrap = 2.0*ep_s_arr(dom_hi[0],j,k) - ep_s_arr(dom_hi[0]-1,j,k);
+            const Real ep_s_extrap = 2.0*ep_s_arr(dom_hi[0],j,k) - ep_s_arr(dom_hi[0]-1,j,k);
 
             ep_s_arr(i,j,k) = amrex::max(0.0,
                               amrex::min(ep_s_extrap,
@@ -223,7 +223,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
           if((bct == pinf) or (bct == pout) or (bct == minf)){
 
-            const amrex::Real ep_s_extrap = 2.0*ep_s_arr(i,dom_lo[1],k) - ep_s_arr(i,dom_lo[1]+1,k);
+            const Real ep_s_extrap = 2.0*ep_s_arr(i,dom_lo[1],k) - ep_s_arr(i,dom_lo[1]+1,k);
 
             ep_s_arr(i,j,k) = amrex::max(0.0,
                               amrex::min(ep_s_extrap,
@@ -246,7 +246,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
           const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
           if((bct == pinf) or (bct == pout) or (bct == minf)){
-            const amrex::Real ep_s_extrap = 2.0*ep_s_arr(i,dom_hi[1],k) - ep_s_arr(i,dom_hi[1]-1,k);
+            const Real ep_s_extrap = 2.0*ep_s_arr(i,dom_hi[1],k) - ep_s_arr(i,dom_hi[1]-1,k);
 
             ep_s_arr(i,j,k) = amrex::max(0.0,
                               amrex::min(ep_s_extrap,
@@ -269,7 +269,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
           if((bct == pinf) or (bct == pout) or (bct == minf)){
 
-            const amrex::Real ep_s_extrap = 2.0*ep_s_arr(i,j,dom_lo[2]) - ep_s_arr(i,j,dom_lo[2]+1);
+            const Real ep_s_extrap = 2.0*ep_s_arr(i,j,dom_lo[2]) - ep_s_arr(i,j,dom_lo[2]+1);
 
             ep_s_arr(i,j,k) = amrex::max(0.0,
                               amrex::min(ep_s_extrap,
@@ -292,7 +292,7 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
           const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
           if((bct == pinf) or (bct == pout) or (bct == minf)){
-            const amrex::Real ep_s_extrap = 2.0*ep_s_arr(i,j,dom_hi[2]) - ep_s_arr(i,j,dom_hi[2]-1);
+            const Real ep_s_extrap = 2.0*ep_s_arr(i,j,dom_hi[2]) - ep_s_arr(i,j,dom_hi[2]-1);
 
             ep_s_arr(i,j,k) = amrex::max(0.0,
                               amrex::min(ep_s_extrap,
@@ -323,14 +323,14 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
       const auto dxi_array = geom[lev].InvCellSizeArray();
       const auto plo_array = geom[lev].ProbLoArray();
 
-      const amrex::RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
-      const amrex::RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
+      const RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
+      const RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
 
 
       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
       {
         // Timer used for load-balancing
-        amrex::Real wt = ParallelDescriptor::second();
+        Real wt = ParallelDescriptor::second();
 
         auto& particles = pti.GetArrayOfStructs();
         MFIXParticleContainer::ParticleType* pstruct = particles().dataPtr();
@@ -371,21 +371,21 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
             MFIXParticleContainer::ParticleType& particle = pstruct[ip];
 
-            const amrex::Real lx = (particle.pos(0) - plo[0]) * dxi[0] + 0.5;
-            const amrex::Real ly = (particle.pos(1) - plo[1]) * dxi[1] + 0.5;
-            const amrex::Real lz = (particle.pos(2) - plo[2]) * dxi[2] + 0.5;
+            const Real lx = (particle.pos(0) - plo[0]) * dxi[0] + 0.5;
+            const Real ly = (particle.pos(1) - plo[1]) * dxi[1] + 0.5;
+            const Real lz = (particle.pos(2) - plo[2]) * dxi[2] + 0.5;
 
             const int i = static_cast<int>(amrex::Math::floor(lx));
             const int j = static_cast<int>(amrex::Math::floor(ly));
             const int k = static_cast<int>(amrex::Math::floor(lz));
 
-            const amrex::Real wx_hi(lx - static_cast<amrex::Real>(i));
-            const amrex::Real wy_hi(ly - static_cast<amrex::Real>(j));
-            const amrex::Real wz_hi(lz - static_cast<amrex::Real>(k));
+            const Real wx_hi(lx - static_cast<Real>(i));
+            const Real wy_hi(ly - static_cast<Real>(j));
+            const Real wz_hi(lz - static_cast<Real>(k));
 
-            const amrex::Real wx_lo(1.0 - wx_hi);
-            const amrex::Real wy_lo(1.0 - wy_hi);
-            const amrex::Real wz_lo(1.0 - wz_hi);
+            const Real wx_lo(1.0 - wx_hi);
+            const Real wy_lo(1.0 - wy_hi);
+            const Real wz_lo(1.0 - wz_hi);
 
             AMREX_ASSERT(ep_s_arr(i-1,j-1, k-1) >= 0.);
             AMREX_ASSERT(ep_s_arr(i-1,j-1, k  ) >= 0.);
@@ -482,9 +482,9 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
             //      because of the diagonal case)
             } else {
 
-              const amrex::Real lx = (particle.pos(0) - plo[0]) * dxi[0] + 0.5;
-              const amrex::Real ly = (particle.pos(1) - plo[1]) * dxi[1] + 0.5;
-              const amrex::Real lz = (particle.pos(2) - plo[2]) * dxi[2] + 0.5;
+              const Real lx = (particle.pos(0) - plo[0]) * dxi[0] + 0.5;
+              const Real ly = (particle.pos(1) - plo[1]) * dxi[1] + 0.5;
+              const Real lz = (particle.pos(2) - plo[2]) * dxi[2] + 0.5;
 
               // Upper cell in trilinear stencil
               const int i = static_cast<int>(amrex::Math::floor(lx));
@@ -495,11 +495,11 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
               const int dj = j - jp; // 0 or 1
               const int dk = k - kp; // 0 or 1
 
-              amrex::Real ep_s_loc;
+              Real ep_s_loc;
 
-              amrex::Real dPsdx;
-              amrex::Real dPsdy;
-              amrex::Real dPsdz;
+              Real dPsdx;
+              Real dPsdy;
+              Real dPsdz;
 
               // Check that all the cells in the stencil are connected to the
               // that contains the parcels centroid. We don't need to check
@@ -534,13 +534,13 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
                 AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i  ,j  , k-1) >= 0.,"Check valid Ps G");
                 AMREX_ALWAYS_ASSERT_WITH_MESSAGE(Ps_arr(i  ,j  , k  ) >= 0.,"Check valid Ps H");
 
-                const amrex::Real wx_hi(lx - static_cast<amrex::Real>(i));
-                const amrex::Real wy_hi(ly - static_cast<amrex::Real>(j));
-                const amrex::Real wz_hi(lz - static_cast<amrex::Real>(k));
+                const Real wx_hi(lx - static_cast<Real>(i));
+                const Real wy_hi(ly - static_cast<Real>(j));
+                const Real wz_hi(lz - static_cast<Real>(k));
 
-                const amrex::Real wx_lo(1.0 - wx_hi);
-                const amrex::Real wy_lo(1.0 - wy_hi);
-                const amrex::Real wz_lo(1.0 - wz_hi);
+                const Real wx_lo(1.0 - wx_hi);
+                const Real wy_lo(1.0 - wy_hi);
+                const Real wz_lo(1.0 - wz_hi);
 
                 ep_s_loc =
                   + wx_lo*wy_lo*wz_lo*ep_s_arr(i-1,j-1, k-1)
@@ -600,11 +600,11 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
                     // Don't use the low side Ps because i==ip and ip is not covered.
 
-                    const amrex::Real ep_s_extrap = amrex::max(0.0,
+                    const Real ep_s_extrap = amrex::max(0.0,
                       amrex::min(2.0*ep_s_arr(i,jp,kp) - ep_s_arr(i+1,jp,kp),
                       amrex::max(ep_cp, ep_s_arr(ip,jp,kp))));
 
-                    const amrex::Real Ps_lo = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
+                    const Real Ps_lo = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
 
                     dPsdx = dxi[0]*(Ps_arr(ip,jp,kp) - Ps_lo);
 
@@ -612,11 +612,11 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
                     // Don't use the high side Ps because i==ip+1 and ip is not covered.
 
-                    const amrex::Real ep_s_extrap = amrex::max(0.0,
+                    const Real ep_s_extrap = amrex::max(0.0,
                       amrex::min(2.0*ep_s_arr(ip,jp,kp) - ep_s_arr(ip-1,jp,kp),
                       amrex::max(ep_cp, ep_s_arr(ip,jp,kp))));
 
-                    const amrex::Real Ps_hi = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
+                    const Real Ps_hi = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
 
                     dPsdx = dxi[0]*(Ps_hi - Ps_arr(ip,jp,kp));
 
@@ -635,11 +635,11 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
                   if(dj == 0){ // Low side is NOT connected
 
-                    const amrex::Real ep_s_extrap = amrex::max(0.0,
+                    const Real ep_s_extrap = amrex::max(0.0,
                       amrex::min(2.0*ep_s_arr(ip,j,kp) - ep_s_arr(ip,j+1,kp),
                       amrex::max(ep_cp, ep_s_arr(ip,jp,kp))));
 
-                    const amrex::Real Ps_lo = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
+                    const Real Ps_lo = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
 
                     dPsdy = dxi[1]*(Ps_arr(ip,jp,kp) - Ps_lo);
 
@@ -647,11 +647,11 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
                     // Don't use the high side Ps because i==ip+1 and ip is not covered.
 
-                    const amrex::Real ep_s_extrap = amrex::max(0.0,
+                    const Real ep_s_extrap = amrex::max(0.0,
                       amrex::min(2.0*ep_s_arr(ip,jp,kp) - ep_s_arr(ip,jp-1,kp),
                       amrex::max(ep_cp, ep_s_arr(ip,jp,kp))));
 
-                    const amrex::Real Ps_hi = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
+                    const Real Ps_hi = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
 
                     dPsdy = dxi[1]*(Ps_hi - Ps_arr(ip,jp,kp));
 
@@ -670,21 +670,21 @@ void mfix::MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
 
                   if(dk == 0){ // Low side is NOT connected
 
-                    const amrex::Real ep_s_extrap = amrex::max(0.0,
+                    const Real ep_s_extrap = amrex::max(0.0,
                       amrex::min(2.0*ep_s_arr(ip,jp,k) - ep_s_arr(ip,jp,k+1),
                       amrex::max(ep_cp, ep_s_arr(ip,jp,kp))));
 
-                    const amrex::Real Ps_lo = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
+                    const Real Ps_lo = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
 
                     dPsdz = dxi[2]*(Ps_arr(ip,jp,kp) - Ps_lo);
 
                   } else { // High side is NOT connected
 
-                    const amrex::Real ep_s_extrap = amrex::max(0.0,
+                    const Real ep_s_extrap = amrex::max(0.0,
                       amrex::min(2.0*ep_s_arr(ip,jp,kp) - ep_s_arr(ip,jp,kp-1),
                       amrex::max(ep_cp, ep_s_arr(ip,jp,kp))));
 
-                    const amrex::Real Ps_hi = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
+                    const Real Ps_hi = solids_pressure(Ps0, beta, ep_cp, small_number, ep_s_extrap);
 
                     dPsdz = dxi[2]*(Ps_hi - Ps_arr(ip,jp,kp));
 

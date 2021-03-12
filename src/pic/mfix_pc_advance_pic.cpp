@@ -2,19 +2,19 @@
 #include <mfix_bc_parms.H>
 
 
-void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealVect& gravity,
-                                                    amrex::Vector< amrex::MultiFab* >& avg_prop_in,
-                                                    amrex::Vector< amrex::MultiFab* >& cost,
+void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt, RealVect& gravity,
+                                                    Vector< MultiFab* >& avg_prop_in,
+                                                    Vector< MultiFab* >& cost,
                                                     std::string& knapsack_weight_type,
                                                     const int advect_enthalpy)
 {
 
   BL_PROFILE("MFIXParticleContainer::MFIX_PC_AdvanceParcels()");
 
-  const amrex::Real en = (PIC::damping_factor + 1.0);
-  const amrex::Real velfac = PIC::velfac;
+  const Real en = (PIC::damping_factor + 1.0);
+  const Real velfac = PIC::velfac;
 
-  const amrex::Real three_sqrt_two(3.0*std::sqrt(2.0));
+  const Real three_sqrt_two(3.0*std::sqrt(2.0));
 
   const int x_lo_bc = BC::domain_bc[0];
   const int x_hi_bc = BC::domain_bc[1];
@@ -34,7 +34,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
     {
 
       // Timer used for load-balancing
-      amrex::Real wt = ParallelDescriptor::second();
+      Real wt = ParallelDescriptor::second();
 
       PairIndex index(pti.index(), pti.LocalTileIndex());
 
@@ -71,52 +71,52 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
           ParticleType& p = pstruct[lp];
 
           // position
-          const amrex::RealVect pos = p.pos();
+          const RealVect pos = p.pos();
 
           // solids volume fraction
-          const amrex::Real eps_p = amrex::max(1.0e-8, p_realarray[SoArealData::oneOverI][lp]);
+          const Real eps_p = amrex::max(1.0e-8, p_realarray[SoArealData::oneOverI][lp]);
 
           // inverse of particle mass
-          const amrex::Real inv_mass = 1.0 / p_realarray[SoArealData::mass][lp];
+          const Real inv_mass = 1.0 / p_realarray[SoArealData::mass][lp];
 
           // scale wrt drag coefficient and step size
-          const amrex::Real scale = 1.0 / (1.0 + dt*p_realarray[SoArealData::dragcoeff][lp]*inv_mass);
+          const Real scale = 1.0 / (1.0 + dt*p_realarray[SoArealData::dragcoeff][lp]*inv_mass);
 
           // solids stress gradient:
           // grad_tau_p = (volume * grad_tau_p) / (mass * ep_s))
-          amrex::RealVect grad_tau_p;
+          RealVect grad_tau_p;
           grad_tau_p[0] = p_realarray[SoArealData::omegax][lp];
           grad_tau_p[1] = p_realarray[SoArealData::omegay][lp];
           grad_tau_p[2] = p_realarray[SoArealData::omegaz][lp];
 
           // updated parcel velocity devoid of the particle normal stress
-          amrex::RealVect vel;
+          RealVect vel;
           vel[0] = scale*(p_realarray[SoArealData::velx][lp] + dt*(p_realarray[SoArealData::dragx][lp]*inv_mass + gravity[0]));
           vel[1] = scale*(p_realarray[SoArealData::vely][lp] + dt*(p_realarray[SoArealData::dragy][lp]*inv_mass + gravity[1]));
           vel[2] = scale*(p_realarray[SoArealData::velz][lp] + dt*(p_realarray[SoArealData::dragz][lp]*inv_mass + gravity[2]));
 
-          const amrex::Real lx = (pos[0] - p_lo[0])*dxi[0] + 0.5;
-          const amrex::Real ly = (pos[1] - p_lo[1])*dxi[1] + 0.5;
-          const amrex::Real lz = (pos[2] - p_lo[2])*dxi[2] + 0.5;
+          const Real lx = (pos[0] - p_lo[0])*dxi[0] + 0.5;
+          const Real ly = (pos[1] - p_lo[1])*dxi[1] + 0.5;
+          const Real lz = (pos[2] - p_lo[2])*dxi[2] + 0.5;
 
           const int i = static_cast<int>(amrex::Math::floor(lx));
           const int j = static_cast<int>(amrex::Math::floor(ly));
           const int k = static_cast<int>(amrex::Math::floor(lz));
 
-          const amrex::Real wx_hi(lx - static_cast<amrex::Real>(i));
-          const amrex::Real wy_hi(ly - static_cast<amrex::Real>(j));
-          const amrex::Real wz_hi(lz - static_cast<amrex::Real>(k));
+          const Real wx_hi(lx - static_cast<Real>(i));
+          const Real wy_hi(ly - static_cast<Real>(j));
+          const Real wz_hi(lz - static_cast<Real>(k));
 
-          const amrex::Real wx_lo(1.0 - wx_hi);
-          const amrex::Real wy_lo(1.0 - wy_hi);
-          const amrex::Real wz_lo(1.0 - wz_hi);
+          const Real wx_lo(1.0 - wx_hi);
+          const Real wy_lo(1.0 - wy_hi);
+          const Real wz_lo(1.0 - wz_hi);
 
           int ii = i;
           if(vel[0]*grad_tau_p[0] > 0.) {
             ii = (vel[0]>0.) ? i+1 : i-1;
           }
 
-          const amrex::Real u_face =
+          const Real u_face =
             wy_lo*wz_lo*avg_prop_array(ii,j-1,k-1,0) +
             wy_hi*wz_lo*avg_prop_array(ii,j  ,k-1,0) +
             wy_lo*wz_hi*avg_prop_array(ii,j-1,k  ,0) +
@@ -128,7 +128,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
             jj = ( vel[1] > 0.0 ) ? j+1 : j-1;
           }
 
-          const amrex::Real v_face =
+          const Real v_face =
             wx_lo*wz_lo*avg_prop_array(i-1,jj,k-1,1) +
             wx_hi*wz_lo*avg_prop_array(i  ,jj,k-1,1) +
             wx_lo*wz_hi*avg_prop_array(i-1,jj,k  ,1) +
@@ -140,22 +140,22 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
             kk = ( vel[2] > 0.0 ) ? k+1 : k-1;
           }
 
-          const amrex::Real w_face =
+          const Real w_face =
             wx_lo*wy_lo*avg_prop_array(i-1,j-1,kk,2) +
             wx_hi*wy_lo*avg_prop_array(i  ,j-1,kk,2) +
             wx_lo*wy_hi*avg_prop_array(i-1,j  ,kk,2) +
             wx_hi*wy_hi*avg_prop_array(i  ,j  ,kk,2);
 
-          const amrex::RealVect avg_vel  = {u_face, v_face, w_face};
+          const RealVect avg_vel  = {u_face, v_face, w_face};
 
-          const amrex::Real inv_rops = 1.0 / (eps_p*p_realarray[SoArealData::density][lp]);
+          const Real inv_rops = 1.0 / (eps_p*p_realarray[SoArealData::density][lp]);
 
-          const amrex::Real vel_limit = p_realarray[SoArealData::radius][lp] / (dt * three_sqrt_two * eps_p);
+          const Real vel_limit = p_realarray[SoArealData::radius][lp] / (dt * three_sqrt_two * eps_p);
 
           for( int dir(0); dir<3; dir++)
           {
 
-            amrex::Real bulk_vel;
+            Real bulk_vel;
 
             if( amrex::Math::abs(avg_vel[dir]) > tolerance and
                 amrex::Math::abs(    vel[dir]) > tolerance ){
@@ -166,11 +166,11 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
 
             // Slip velocity between the parcel and the bulk. This needs to be the
             // tentative new velocity, not the current velocity.
-            const amrex::Real slip_vel = velfac*bulk_vel - vel[dir];
+            const Real slip_vel = velfac*bulk_vel - vel[dir];
 
             // solids stress velocity contribution:
             // -dt*( grad_tau_p / (density * ep_s)) / (1 + dt*beta/mass)
-            const amrex::Real del_up = -dt*scale*grad_tau_p[dir] * inv_rops;
+            const Real del_up = -dt*scale*grad_tau_p[dir] * inv_rops;
 
             // Add in contribution from stress gradient.
             // 1) Negative gradient. Push parcel in positive direction.
@@ -209,7 +209,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealV
           // Take the particle radius as the offset. This should be (much) smaller
           // than the effective parcel radius. We only want to move the parcel a
           // little but it needs to be enough to keep it inside the domain.
-          const amrex::Real offset = p_realarray[SoArealData::radius][lp];
+          const Real offset = p_realarray[SoArealData::radius][lp];
 
           if (x_lo_bc && p.pos(0) < p_lo[0]+offset)
               p.pos(0) = p_lo[0] + offset;

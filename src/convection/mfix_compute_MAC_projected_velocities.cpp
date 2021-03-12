@@ -22,15 +22,15 @@
 //  This method returns the MAC velocity with up-to-date BCs in place
 //
 void
-mfix::compute_MAC_projected_velocities (amrex::Real time, const amrex::Real l_dt,
-                                        amrex::Vector< amrex::MultiFab const*> const& vel_in,
-                                        amrex::Vector< amrex::MultiFab*      > const& ep_u_mac,
-                                        amrex::Vector< amrex::MultiFab*      > const& ep_v_mac,
-                                        amrex::Vector< amrex::MultiFab*      > const& ep_w_mac,
-                                        amrex::Vector< amrex::MultiFab const*> const& ep_g_in,
-                                        amrex::Vector< amrex::MultiFab const*> const& ro_g_in,
-                                        amrex::Vector< amrex::MultiFab      *> const& vel_forces,
-                                        amrex::Vector< amrex::MultiFab const*> const& rhs_mac_in)
+mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
+                                        Vector< MultiFab const*> const& vel_in,
+                                        Vector< MultiFab*      > const& ep_u_mac,
+                                        Vector< MultiFab*      > const& ep_v_mac,
+                                        Vector< MultiFab*      > const& ep_w_mac,
+                                        Vector< MultiFab const*> const& ep_g_in,
+                                        Vector< MultiFab const*> const& ro_g_in,
+                                        Vector< MultiFab      *> const& vel_forces,
+                                        Vector< MultiFab const*> const& rhs_mac_in)
 {
   BL_PROFILE("mfix::compute_MAC_projected_velocities()");
 

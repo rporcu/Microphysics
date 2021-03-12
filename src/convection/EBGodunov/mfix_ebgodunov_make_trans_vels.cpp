@@ -65,7 +65,6 @@ void ebgodunov::make_trans_velocities (AMREX_D_DECL(Box const& xbx,
         } else {
             v_ad(i,j,k) = 0.;
         }
-#if (AMREX_SPACEDIM == 3)
     },
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
@@ -86,6 +85,5 @@ void ebgodunov::make_trans_velocities (AMREX_D_DECL(Box const& xbx,
         } else {
             w_ad(i,j,k) = 0.;
         } 
-#endif
     });
 }

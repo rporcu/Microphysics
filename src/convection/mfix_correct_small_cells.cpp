@@ -42,7 +42,7 @@ mfix::mfix_correct_small_cells (Vector<MultiFab*      > const& vel_in,
       // Cut cells in this FAB
       else
       {
-        const amrex::MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
+        const MultiFab* volfrac = &(ebfactory[lev] -> getVolFrac());
 
         // Face-centered areas
         const auto& apx_fab = areafrac[0]->array(mfi);

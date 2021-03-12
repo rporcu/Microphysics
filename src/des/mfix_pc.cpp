@@ -1463,15 +1463,15 @@ Vector<RealVect> MFIXParticleContainer::GetMaxForces ()
 
 void MFIXParticleContainer::
 ComputeAverageVelocities (const int lev,
-                          const amrex::Real time,
+                          const Real time,
                           const std::string&  basename,
-                          const amrex::Vector<Real>& avg_vel_p,
-                          const amrex::Vector<Real>& avg_region_x_w,
-                          const amrex::Vector<Real>& avg_region_x_e,
-                          const amrex::Vector<Real>& avg_region_y_s,
-                          const amrex::Vector<Real>& avg_region_y_n,
-                          const amrex::Vector<Real>& avg_region_z_b,
-                          const amrex::Vector<Real>& avg_region_z_t )
+                          const Vector<Real>& avg_vel_p,
+                          const Vector<Real>& avg_region_x_w,
+                          const Vector<Real>& avg_region_x_e,
+                          const Vector<Real>& avg_region_y_s,
+                          const Vector<Real>& avg_region_y_n,
+                          const Vector<Real>& avg_region_z_b,
+                          const Vector<Real>& avg_region_z_t )
 {
   // Count number of calls -- Used to determine when to create file from scratch
   static int ncalls = 0;
@@ -1710,15 +1710,15 @@ ComputeAverageVelocities (const int lev,
 
 void MFIXParticleContainer::
 ComputeAverageTemperatures (const int lev,
-                            const amrex::Real time,
+                            const Real time,
                             const std::string&  basename,
-                            const amrex::Vector<Real>& avg_T_p,
-                            const amrex::Vector<Real>& avg_region_x_w,
-                            const amrex::Vector<Real>& avg_region_x_e,
-                            const amrex::Vector<Real>& avg_region_y_s,
-                            const amrex::Vector<Real>& avg_region_y_n,
-                            const amrex::Vector<Real>& avg_region_z_b,
-                            const amrex::Vector<Real>& avg_region_z_t )
+                            const Vector<Real>& avg_T_p,
+                            const Vector<Real>& avg_region_x_w,
+                            const Vector<Real>& avg_region_x_e,
+                            const Vector<Real>& avg_region_y_s,
+                            const Vector<Real>& avg_region_y_n,
+                            const Vector<Real>& avg_region_z_b,
+                            const Vector<Real>& avg_region_z_t )
 {
   // Count number of calls -- Used to determine when to create file from scratch
   static int ncalls = 0;

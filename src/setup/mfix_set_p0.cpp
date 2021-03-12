@@ -201,7 +201,7 @@ mfix::set_p0 (const Box& bx,
     }
     else
     {
-      const amrex::Real gravity_square_module =
+      const Real gravity_square_module =
         gravity[0]*gravity[0] + gravity[1]*gravity[1] + gravity[2]*gravity[2];
 
       if( not IC::ic[icv].fluid.pressure or gravity_square_module > tolerance)
@@ -235,7 +235,7 @@ mfix::set_p0 (const Box& bx,
 
   if(amrex::Math::abs(delp_x) > tolerance)
   {
-    const amrex::Real dpodx = delp_x / xlen;
+    const Real dpodx = delp_x / xlen;
     pj -= dpodx * dx * (bx_hi[0] - dom_hi[0] + nghost_state() + 2 + offset);
 
     amrex::ParallelFor(sbx, [pj,dpodx,dx,sbx_hi,array4_p0_g]

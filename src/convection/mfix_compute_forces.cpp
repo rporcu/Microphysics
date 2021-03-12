@@ -31,10 +31,10 @@ void mfix::compute_tra_forces (Vector<MultiFab*> const& tra_forces,
     }
 }
 
-void mfix::compute_vel_forces (amrex::Vector<amrex::MultiFab*      > const& vel_forces,
-                               amrex::Vector<amrex::MultiFab const*> const& velocity,
-                               amrex::Vector<amrex::MultiFab const*> const& density,
-                               amrex::Vector<amrex::MultiFab const*> const& txfr_in,
+void mfix::compute_vel_forces (Vector<MultiFab*      > const& vel_forces,
+                               Vector<MultiFab const*> const& velocity,
+                               Vector<MultiFab const*> const& density,
+                               Vector<MultiFab const*> const& txfr_in,
                                bool include_pressure_gradient,
                                bool include_drag_force)
 {

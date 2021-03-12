@@ -7,8 +7,8 @@ using namespace amrex;
 void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
 {
 
-   amrex::Real max_dp[10], max_ro[10];
-   amrex::Real avg_dp[10], avg_ro[10];
+   Real max_dp[10], max_ro[10];
+   Real avg_dp[10], avg_ro[10];
 
    // The number of phases was previously hard set at 10, however lowering
    //  this number would make this code faster.
@@ -130,7 +130,7 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
       }
    }
 
-   amrex::Real max_max_dp(0.);
+   Real max_max_dp(0.);
    for (int phase = 0; phase < num_of_phases_in_use; ++phase)
    {
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(avg_dp[phase] > 0.0,
@@ -148,7 +148,7 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
    // (3*max_dp/2)^2
    DEM::neighborhood = 2.25*max_max_dp*max_max_dp;
 
-   amrex::Real tcoll(1.0);
+   Real tcoll(1.0);
 
    DEM::A2D::array_type host_etan, host_etat, host_en;
    DEM::A1D::array_type host_etan_w, host_etat_w, host_en_w;
@@ -163,22 +163,22 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
 
    for (int m(0); m < num_of_phases_in_use; ++m)
    {
-      const amrex::Real dp_m = avg_dp[m];
-      const amrex::Real mass_m = (M_PI/6.0)*(dp_m*dp_m*dp_m) * avg_ro[m];
+      const Real dp_m = avg_dp[m];
+      const Real mass_m = (M_PI/6.0)*(dp_m*dp_m*dp_m) * avg_ro[m];
 
       // Collision parameters between type M and all other types
       for (int l(m); l < num_of_phases_in_use; ++l)
       {
 
-         const amrex::Real dp_l = avg_dp[l];
-         const amrex::Real mass_l = (M_PI/6.0)*(dp_l*dp_l*dp_l) * avg_ro[l];
+         const Real dp_l = avg_dp[l];
+         const Real mass_l = (M_PI/6.0)*(dp_l*dp_l*dp_l) * avg_ro[l];
 
-         const amrex::Real mass_eff = (mass_m * mass_l) / (mass_m + mass_l);
+         const Real mass_eff = (mass_m * mass_l) / (mass_m + mass_l);
 
          //Calculate the M-L normal and tangential damping coefficients
          host_etan(m,l) = 2.0*std::sqrt(DEM::kn*mass_eff);
          if(amrex::Math::abs(host_en(m,l)) > 0.0){
-            const amrex::Real log_en = std::log(host_en(m,l));
+            const Real log_en = std::log(host_en(m,l));
             host_etan(m,l) *= amrex::Math::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
          }
          host_etat(m,l) = DEM::eta_fac * host_etan(m,l);
@@ -188,7 +188,7 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
          host_etat(l,m) = host_etat(m,l);
 
          // Collision time scale for M-L interactions
-         amrex::Real tcoll_ml = M_PI/sqrt(DEM::kn/mass_eff -
+         Real tcoll_ml = M_PI/sqrt(DEM::kn/mass_eff -
             0.25*(host_etan(m,l)/mass_eff)*(host_etan(m,l)/mass_eff));
 
          tcoll = amrex::min(tcoll, tcoll_ml);
@@ -196,18 +196,18 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
 
       // Collision parameters between type M and wall
       {
-         const amrex::Real mass_eff = mass_m;
+         const Real mass_eff = mass_m;
 
          //Calculate the M-L normal and tangential damping coefficients
          host_etan_w(m) = 2.0*std::sqrt(DEM::kn_w*mass_eff);
          if(amrex::Math::abs(host_en_w(m)) > 0.0){
-            const amrex::Real log_en = std::log(host_en_w(m));
+            const Real log_en = std::log(host_en_w(m));
             host_etan_w(m) *= amrex::Math::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
          }
          host_etat_w(m) = DEM::eta_w_fac * host_etan_w(m);
 
         // Calculate the collision time scale.
-        amrex::Real tcoll_w = M_PI/std::sqrt(DEM::kn_w/mass_eff -
+        Real tcoll_w = M_PI/std::sqrt(DEM::kn_w/mass_eff -
            0.25*(host_etan_w(m)/mass_eff)*(host_etan_w(m)/mass_eff));
 
         tcoll = amrex::min(tcoll, tcoll_w);
@@ -230,7 +230,7 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
 #endif
 
    ParmParse pp("mfix");
-   amrex::Real tcoll_ratio = 50.;
+   Real tcoll_ratio = 50.;
    pp.query("tcoll_ratio", tcoll_ratio);
 
    DEM::dtsolid = tcoll / tcoll_ratio;

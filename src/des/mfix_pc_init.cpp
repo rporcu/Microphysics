@@ -282,7 +282,7 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
     }
 
     Gpu::AsyncArray<Real> d_dcp0_loc(h_cp0_loc.data(), h_cp0_loc.size());
-    amrex::Real* p_cp0_loc = d_dcp0_loc.data();
+    Real* p_cp0_loc = d_dcp0_loc.data();
 
     // Set the initial conditions.
     for(int icv(0); icv < IC::ic.size(); ++icv)
@@ -303,11 +303,11 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
                           amrex::Math::floor((ic.region->hi(2)-plo[2])*idx[0] + 0.5));
 
       // Start/end of IC domain bounds
-      const amrex::RealVect ic_lo = {plo[0]+bx_lo[0]*dx[0],
+      const RealVect ic_lo = {plo[0]+bx_lo[0]*dx[0],
                                      plo[1]+bx_lo[1]*dx[1],
                                      plo[2]+bx_lo[2]*dx[2]};
 
-      const amrex::RealVect ic_hi = {plo[0]+bx_hi[0]*dx[0],
+      const RealVect ic_hi = {plo[0]+bx_hi[0]*dx[0],
                                      plo[1]+bx_hi[1]*dx[1],
                                      plo[2]+bx_hi[2]*dx[2]};
 
@@ -332,7 +332,7 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
         int np = pti.numParticles();
 
         Gpu::AsyncArray<Real> d_temperature_loc(h_temperature_loc.data(), h_temperature_loc.size());
-        amrex::Real* p_temperature_loc = d_temperature_loc.data();
+        Real* p_temperature_loc = d_temperature_loc.data();
 
         auto& soa = pti.GetStructOfArrays();
         auto p_realarray = soa.realarray();
@@ -408,11 +408,11 @@ void MFIXParticleContainer::InitParticlesSpecies ()
                           amrex::Math::floor((ic.region->hi(2)-plo[2])*idx[0] + 0.5));
 
       // Start/end of IC domain bounds
-      const amrex::RealVect ic_lo = {plo[0]+bx_lo[0]*dx[0],
+      const RealVect ic_lo = {plo[0]+bx_lo[0]*dx[0],
                                      plo[1]+bx_lo[1]*dx[1],
                                      plo[2]+bx_lo[2]*dx[2]};
 
-      const amrex::RealVect ic_hi = {plo[0]+bx_hi[0]*dx[0],
+      const RealVect ic_hi = {plo[0]+bx_hi[0]*dx[0],
                                      plo[1]+bx_hi[1]*dx[1],
                                      plo[2]+bx_hi[2]*dx[2]};
 

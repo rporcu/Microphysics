@@ -418,7 +418,7 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
     m_h_bc_t_g.resize(bc.size());
 
     if ( FLUID::solve ) {
-      amrex::Real ltime(0.);
+      Real ltime(0.);
 
       set_velocity_bc_values (ltime);
 
@@ -600,7 +600,7 @@ void mfix::set_bcrec_hi(const int lev, const int dir, const int l_type)
 }
 
 void
-mfix::set_velocity_bc_values (amrex::Real time_in) const
+mfix::set_velocity_bc_values (Real time_in) const
 {
 
   const int minf_ = bc_list.get_minf();
@@ -631,7 +631,7 @@ mfix::set_velocity_bc_values (amrex::Real time_in) const
 }
 
 void
-mfix::set_temperature_bc_values (amrex::Real time_in) const
+mfix::set_temperature_bc_values (Real time_in) const
 {
 
   const int minf_ = bc_list.get_minf();

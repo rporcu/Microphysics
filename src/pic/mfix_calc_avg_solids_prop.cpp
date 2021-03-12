@@ -4,7 +4,7 @@
 
 using namespace amrex;
 
-void mfix::MFIX_CalcAvgSolidsVel (amrex::Vector< amrex::MultiFab* >& avg_prop_in)
+void mfix::MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in)
 {
   BL_PROFILE("MFIX_CalcAvgSolidsProp()");
 
@@ -23,8 +23,8 @@ void mfix::MFIX_CalcAvgSolidsVel (amrex::Vector< amrex::MultiFab* >& avg_prop_in
 
     } else {
 
-      amrex::Vector<int> ngrow = {1,1,1};
-      amrex::EBFArrayBoxFactory* crse_factory;
+      Vector<int> ngrow = {1,1,1};
+      EBFArrayBoxFactory* crse_factory;
 
       crse_factory = (amrex::makeEBFabFactory(geom[0], pba, pdm, ngrow, EBSupport::volume)).release();
 

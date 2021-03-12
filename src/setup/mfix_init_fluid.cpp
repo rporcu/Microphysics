@@ -114,7 +114,7 @@ void init_helix (const Box& bx,
 
   const int plane = 3;
 
-  const amrex::Real fac = 0.01;
+  const Real fac = 0.01;
 
   switch (plane)
   {
@@ -173,7 +173,7 @@ void init_periodic_vortices (const Box& bx,
                              const Real dy,
                              const Real dz)
 {
-  const amrex::Real twopi = 2. * M_PI;
+  const Real twopi = 2. * M_PI;
 
   Array4<Real> const& velocity = vel_g_fab.array();
 
@@ -237,16 +237,16 @@ void init_periodic_tracer (const Box& bx,
                            const Real dy,
                            const Real dz)
 {
-    const amrex::Real twopi(2. * M_PI);
+    const Real twopi(2. * M_PI);
 
     Array4<Real> const& trac = trac_fab.array();
     Array4<Real> const&  vel = vel_g_fab.array();
 
     int dir(0);
-    const amrex::Real A(1.0);
+    const Real A(1.0);
 
-    amrex::Real L(0); // domain size
-    amrex::Real C(0); // sin coefficient
+    Real L(0); // domain size
+    Real C(0); // sin coefficient
 
     dir += (domain.bigEnd(1) == domain.bigEnd(2)) ? 1 : 0;
     dir += (domain.bigEnd(0) == domain.bigEnd(2)) ? 2 : 0;

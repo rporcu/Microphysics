@@ -13,7 +13,7 @@ mfix::set_temperature_bc0 (const Box& sbx,
   const Real cp_g0  = FLUID::cp_g0;
   const Real k_g0   = FLUID::k_g0;
 
-  amrex::Real* p_bc_t_g = m_bc_t_g.data();
+  Real* p_bc_t_g = m_bc_t_g.data();
  
   const int nspecies_g = FLUID::nspecies;
 

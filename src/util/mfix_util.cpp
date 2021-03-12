@@ -294,9 +294,9 @@ mfix::mfix_print_min_epg ()
 
   for (int lev = 0; lev <= finest_level; lev++) {
 
-    const amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
+    const Real tolerance = std::numeric_limits<Real>::epsilon();
     auto& ld = *m_leveldata[lev];
-    const amrex::Real min_epg = ld.ep_g->min(0);
+    const Real min_epg = ld.ep_g->min(0);
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
