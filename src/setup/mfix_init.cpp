@@ -229,8 +229,8 @@ mfix::InitParams ()
     } else if(amrex::toLower(l_advection_type).compare("godunov") == 0) {
       m_advection_type = AdvectionType::Godunov;
     } else {
-      amrex::Print("advection type must be MOL or Godunov");
-      amrex::Abort("advection type must be MOL or Godunov");
+      amrex::Print() << "Advection type must be MOL or Godunov" << std::endl;
+      amrex::Abort("Advection type must be MOL or Godunov");
     }
 
     if (advection_type() == AdvectionType::MOL) m_godunov_include_diff_in_forcing = false;
