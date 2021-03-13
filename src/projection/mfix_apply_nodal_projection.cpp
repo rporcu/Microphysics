@@ -236,7 +236,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
 
     // Perform the redistribution operation on the updated (projected) velocity field -- and
     //     update gp to maintain consistency
-    // PostProjectionRedistribution(a_time, a_dt, GetVecOfPtrs(sigma_mf));
+    PostProjectionRedistribution(a_time, a_dt, GetVecOfPtrs(sigma_mf));
 
     // Compute diveu for diagnostics only
     PostProjectionDiagnostics(a_time, epu, vel_g_in, gp_in, ep_g_in, a_S_cc, proj_for_small_dt);
