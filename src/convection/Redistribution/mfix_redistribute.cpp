@@ -28,8 +28,8 @@ void redistribution::redistribute_eb (Box const& bx, int ncomp, int icomp,
     // We assume that in 3D a cell will only need at most 7 neighbors to merge with, and we
     //    use the first component of this for the number of neighbors
     IArrayBox itracker(grow(bx,4),8);
-
     Array4<int> itr = itracker.array();
+    Elixir eli_itr = itracker.elixir();
 
     amrex::ParallelFor(bx,ncomp, [=]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
