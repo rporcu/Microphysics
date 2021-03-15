@@ -431,7 +431,16 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
     m_h_bc_ep_g.resize(bc.size());
     m_h_bc_p_g.resize(bc.size());
-    m_h_bc_X_gk.resize(FLUID::nspecies, Vector<Real>(bc.size()));
+
+    if (FLUID::solve and advect_fluid_species) {
+      m_h_bc_X_gk.resize(FLUID::nspecies, Gpu::HostVector<Real>(bc.size()));
+
+      // Important! Resize the bc vector for the fluid species mass fractions
+      // We have to do it here because the size has to match the number of fluid
+      // species
+      m_bc_X_gk.resize(FLUID::nspecies, Gpu::DeviceVector<Real>(bc.size()));
+      m_bc_X_gk_ptr.resize(FLUID::nspecies, nullptr);
+    }
 
     for(unsigned bcv(0); bcv < bc.size(); ++bcv)
     {
@@ -447,8 +456,8 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
 
       // Fluid species mass fractions
-      if ( FLUID::solve and advect_fluid_species) {
-        if ( bc[bcv].type == minf_ or bc[bcv].type == pinf_ ) {
+      if (FLUID::solve and advect_fluid_species) {
+        if (bc[bcv].type == minf_ or bc[bcv].type == pinf_ ) {
           for (int n(0); n < FLUID::nspecies; n++) {
             m_h_bc_X_gk[n][bcv] = bc[bcv].fluid.species[n].mass_fraction;
           }
@@ -463,12 +472,14 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
     Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_p_g.begin(), m_h_bc_p_g.end(), m_bc_p_g.begin());
     Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_ep_g.begin(), m_h_bc_ep_g.end(), m_bc_ep_g.begin());
-    if ( FLUID::solve and advect_fluid_species) {
+
+    if (FLUID::solve and advect_fluid_species) {
         for (int n = 0; n < FLUID::nspecies; ++n) {
-            Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk[n].begin(), m_h_bc_X_gk[n].end(),
-                           m_bc_X_gk[n].begin());
+            Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk[n].begin(), m_h_bc_X_gk[n].end(), m_bc_X_gk[n].begin());
+            m_bc_X_gk_ptr[n] = m_bc_X_gk[n].dataPtr();
         }
     }
+
     Gpu::synchronize();
 }
 

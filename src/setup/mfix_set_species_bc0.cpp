@@ -22,8 +22,7 @@ mfix::set_species_bc0 (const Box& sbx,
   Gpu::DeviceVector< Real > cp_gk0_d;
   if (advect_enthalpy) {
       cp_gk0_d.resize(nspecies_g);
-      Gpu::copyAsync(Gpu::hostToDevice, FLUID::cp_gk0.begin(), FLUID::cp_gk0.end(),
-                     cp_gk0_d.begin());
+      Gpu::copyAsync(Gpu::hostToDevice, FLUID::cp_gk0.begin(), FLUID::cp_gk0.end(), cp_gk0_d.begin());
   }
 
   const int loc_advect_enthalpy = advect_enthalpy;

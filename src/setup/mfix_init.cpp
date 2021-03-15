@@ -42,20 +42,8 @@ mfix::InitParams ()
   DEM::Initialize();
   PIC::Initialize();
 
-  // Important! Resize the bc vector for the fluid species mass fractions
-  // We have to do it here because the size has to match the number of fluid
-  // species
-  // NOTE: once we will have a class for BCs this won't be needed anymore
-  m_bc_X_gk.resize(FLUID::nspecies, Gpu::DeviceVector<Real>(50, 0));
-  m_bc_X_gk_ptr.resize(FLUID::nspecies, nullptr);
-  {
-      Vector<Real*> tmp(FLUID::nspecies);
-      for (int i = 0; i < FLUID::nspecies; ++i) {
-          tmp[i] = m_bc_X_gk[i].data();
-      }
-      Gpu::copyAsync(Gpu::hostToDevice, tmp.begin(), tmp.end(), m_bc_X_gk_ptr.begin());
-      Gpu::synchronize();
-  }
+  // Need to do this -- We might want to move this to a BC class once we have
+  // one
   bcs_X.resize(2*FLUID::nspecies);
 
   // Read in regions, initial and boundary conditions. Note that

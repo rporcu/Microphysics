@@ -39,8 +39,8 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
 
     Gpu::HostVector<ParticleType> host_particles(np);
 
-    std::array<RealVector, SoArealData::count> host_realarrays;
-    std::array<IntVector, SoAintData::count> host_intarrays;
+    std::array<Gpu::HostVector<Real>, SoArealData::count> host_realarrays;
+    std::array<Gpu::HostVector<int>, SoAintData::count> host_intarrays;
 
     for (int comp(0); comp < SoArealData::count; ++comp)
       host_realarrays[comp].resize(np);
