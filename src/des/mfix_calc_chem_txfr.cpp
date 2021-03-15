@@ -59,10 +59,8 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
   Gpu::DeviceVector< int > d_species_id_s(nspecies_s);
   Gpu::DeviceVector< Real > d_MW_sn(nspecies_s);
-  Gpu::copyAsync(Gpu::hostToDevice, SOLIDS::species_id.begin(), SOLIDS::species_id.end(),
-                 d_species_id_s.begin());
-  Gpu::copyAsync(Gpu::hostToDevice, SOLIDS::MW_sn0.begin(), SOLIDS::MW_sn0.end(),
-                 d_MW_sn.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, SOLIDS::species_id.begin(), SOLIDS::species_id.end(), d_species_id_s.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, SOLIDS::MW_sn0.begin(), SOLIDS::MW_sn0.end(), d_MW_sn.begin());
   int* p_species_id_s = d_species_id_s.data();
   Real* p_MW_sn = d_MW_sn.data();
 
@@ -71,10 +69,8 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
   Gpu::DeviceVector< int > d_species_id_g(nspecies_g);
   Gpu::DeviceVector< Real > d_MW_gk(nspecies_g);
-  Gpu::copyAsync(Gpu::hostToDevice, FLUID::species_id.begin(), FLUID::species_id.end(),
-                 d_species_id_g.begin());
-  Gpu::copyAsync(Gpu::hostToDevice, FLUID::MW_gk0.begin(), FLUID::MW_gk0.end(),
-                 d_MW_gk.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, FLUID::species_id.begin(), FLUID::species_id.end(), d_species_id_g.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, FLUID::MW_gk0.begin(), FLUID::MW_gk0.end(), d_MW_gk.begin());
   int* p_species_id_g = d_species_id_g.data();
   Real* p_MW_gk = d_MW_gk.data();
 
@@ -118,18 +114,10 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
     h_reactants_phases[q] = m_chemical_reactions[q]->m_reactants_phases.data();
   }
 
-  Gpu::copyAsync(Gpu::hostToDevice,
-                 h_nreactants.begin(), h_nreactants.end(),
-                 d_nreactants.begin());
-  Gpu::copyAsync(Gpu::hostToDevice,
-                 h_reactants_id.begin(), h_reactants_id.end(),
-                 d_reactants_id.begin());
-  Gpu::copyAsync(Gpu::hostToDevice,
-                 h_reactants_coeffs.begin(), h_reactants_coeffs.end(),
-                 d_reactants_coeffs.begin());
-  Gpu::copyAsync(Gpu::hostToDevice,
-                 h_reactants_phases.begin(), h_reactants_phases.end(),
-                 d_reactants_phases.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, h_nreactants.begin(), h_nreactants.end(), d_nreactants.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, h_reactants_id.begin(), h_reactants_id.end(), d_reactants_id.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, h_reactants_coeffs.begin(), h_reactants_coeffs.end(), d_reactants_coeffs.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, h_reactants_phases.begin(), h_reactants_phases.end(), d_reactants_phases.begin());
 
   int* p_nreactants = d_nreactants.data();
   const int** p_reactants_id = d_reactants_id.data();
@@ -152,18 +140,10 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
     h_products_phases[q] = m_chemical_reactions[q]->m_products_phases.data();
   }
 
-  Gpu::copyAsync(Gpu::hostToDevice,
-                 h_nproducts.begin(), h_nproducts.end(),
-                 d_nproducts.begin());
-  Gpu::copyAsync(Gpu::hostToDevice,
-                 h_products_id.begin(), h_products_id.end(),
-                 d_products_id.begin());
-  Gpu::copyAsync(Gpu::hostToDevice,
-                 h_products_coeffs.begin(), h_products_coeffs.end(),
-                 d_products_coeffs.begin());
-  Gpu::copyAsync(Gpu::hostToDevice,
-                 h_products_phases.begin(), h_products_phases.end(),
-                 d_products_phases.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, h_nproducts.begin(), h_nproducts.end(), d_nproducts.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, h_products_id.begin(), h_products_id.end(), d_products_id.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, h_products_coeffs.begin(), h_products_coeffs.end(), d_products_coeffs.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, h_products_phases.begin(), h_products_phases.end(), d_products_phases.begin());
 
   int* p_nproducts = d_nproducts.data();
   const int** p_products_id = d_products_id.data();

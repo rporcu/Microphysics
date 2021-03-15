@@ -567,20 +567,21 @@ class mfix : public AmrCore
     mutable Gpu::DeviceVector<Real> m_bc_w_g;
     mutable Gpu::DeviceVector<Real> m_bc_t_g;
 
-    mutable Vector<Real> m_h_bc_u_g;
-    mutable Vector<Real> m_h_bc_v_g;
-    mutable Vector<Real> m_h_bc_w_g;
-    mutable Vector<Real> m_h_bc_t_g;
+    mutable Gpu::HostVector<Real>   m_h_bc_u_g;
+    mutable Gpu::HostVector<Real>   m_h_bc_v_g;
+    mutable Gpu::HostVector<Real>   m_h_bc_w_g;
+    mutable Gpu::HostVector<Real>   m_h_bc_t_g;
 
     Gpu::DeviceVector<Real> m_bc_ep_g;
     Gpu::DeviceVector<Real> m_bc_p_g;
-    Vector< Gpu::DeviceVector<Real> > m_bc_X_gk;
+
+    Gpu::HostVector<Real>   m_h_bc_ep_g;
+    Gpu::HostVector<Real>   m_h_bc_p_g;
+
+    amrex::Vector< Gpu::DeviceVector<Real> > m_bc_X_gk;
     Gpu::DeviceVector<Real*> m_bc_X_gk_ptr;
 
-    Vector<Real> m_h_bc_ep_g;
-    Vector<Real> m_h_bc_p_g;
-
-    Vector<Vector<Real> > m_h_bc_X_gk;
+    amrex::Vector< Gpu::HostVector<Real> >   m_h_bc_X_gk;
 
     std::map< std::string, Gpu::DeviceVector<int> > m_vel_g_bc_types;
     std::map< std::string, Gpu::DeviceVector<int> > m_ro_g_bc_types;

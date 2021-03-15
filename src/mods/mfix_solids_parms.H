@@ -40,7 +40,7 @@ namespace SOLIDS
   extern int solve_species;
 
   // Species unique identifying code
-  extern std::vector<int> species_id;
+  extern amrex::Gpu::HostVector<int> species_id;
 
   // Total number of dem species
   extern int nspecies;
@@ -49,10 +49,10 @@ namespace SOLIDS
   extern amrex::Vector<std::string> species;
 
   // Specified constant solid phase species molecular weight
-  extern amrex::Vector<amrex::Real> MW_sn0;
+  extern amrex::Gpu::HostVector<amrex::Real> MW_sn0;
 
   // Specified constant specific heat
-  extern amrex::Vector<amrex::Real> cp_p0;
+  extern amrex::Gpu::HostVector<amrex::Real> cp_p0;
 
   extern amrex::Real enthalpy_source;
 

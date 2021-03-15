@@ -322,28 +322,22 @@ namespace REACTIONS
     Gpu::copyAsync(Gpu::hostToDevice, h_phases.begin(), h_phases.end(), m_phases.begin());
 
     m_reactants_id.resize(h_reactants_id.size());
-    Gpu::copyAsync(Gpu::hostToDevice, h_reactants_id.begin(), h_reactants_id.end(),
-                   m_reactants_id.begin());
+    Gpu::copyAsync(Gpu::hostToDevice, h_reactants_id.begin(), h_reactants_id.end(), m_reactants_id.begin());
 
     m_reactants_coeffs.resize(h_reactants_coeffs.size());
-    Gpu::copyAsync(Gpu::hostToDevice, h_reactants_coeffs.begin(), h_reactants_coeffs.end(),
-                   m_reactants_coeffs.begin());
+    Gpu::copyAsync(Gpu::hostToDevice, h_reactants_coeffs.begin(), h_reactants_coeffs.end(), m_reactants_coeffs.begin());
 
     m_reactants_phases.resize(h_reactants_phases.size());
-    Gpu::copyAsync(Gpu::hostToDevice, h_reactants_phases.begin(), h_reactants_phases.end(),
-                   m_reactants_phases.begin());
+    Gpu::copyAsync(Gpu::hostToDevice, h_reactants_phases.begin(), h_reactants_phases.end(), m_reactants_phases.begin());
 
     m_products_id.resize(h_products_id.size());
-    Gpu::copyAsync(Gpu::hostToDevice, h_products_id.begin(), h_products_id.end(),
-                   m_products_id.begin());
+    Gpu::copyAsync(Gpu::hostToDevice, h_products_id.begin(), h_products_id.end(), m_products_id.begin());
 
     m_products_coeffs.resize(h_products_coeffs.size());
-    Gpu::copyAsync(Gpu::hostToDevice, h_products_coeffs.begin(), h_products_coeffs.end(),
-                   m_products_coeffs.begin());
+    Gpu::copyAsync(Gpu::hostToDevice, h_products_coeffs.begin(), h_products_coeffs.end(), m_products_coeffs.begin());
 
     m_products_phases.resize(h_products_phases.size());
-    Gpu::copyAsync(Gpu::hostToDevice, h_products_phases.begin(), h_products_phases.end(),
-                   m_products_phases.begin());
+    Gpu::copyAsync(Gpu::hostToDevice, h_products_phases.begin(), h_products_phases.end(), m_products_phases.begin());
 
     Gpu::synchronize();
   }
