@@ -97,3 +97,6 @@ doc/UsersGuide/*.toc
 CMakeFiles
 CMakeCache.txt
 subprojects/mfix-parser
+benchmarks/01-HCS/Size0001/newchk00000_for_replicate
+git.exa.HEAD
+benchmarks/01-HCS/Size0008/particle_input.dat

@@ -217,12 +217,12 @@ namespace FLUID
     }
 
     FLUID_t() :
+      volfrac(-1.0),
+      pressure(-1.0),
+      species(0),
       constant_velocity(true),
       constant_temperature(true),
-      volfrac(-1.0),
-      temperature(0.0),
-      pressure(-1.0),
-      species(0)
+      temperature(0.0)
     {}
 
   };
