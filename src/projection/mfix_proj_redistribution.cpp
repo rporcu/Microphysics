@@ -30,7 +30,7 @@ mfix::PostProjectionRedistribution (Real l_time, Real l_dt,
 
         for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
-            const Box& bx = mfi.validbox();
+            const Box& bx = mfi.tilebox();
             auto const& fact = EBFactory(lev);
 
             EBCellFlagFab const& flagfab = fact.getMultiEBCellFlagFab()[mfi];
