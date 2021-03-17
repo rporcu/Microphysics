@@ -65,15 +65,15 @@ void redistribution::redistribute_eb (Box const& bx, int ncomp, int icomp,
             });
         }
 
-        amrex::ParallelFor(Box(dUdt_in), ncomp, [=]
+        amrex::ParallelFor(Box(scratch), ncomp, [=]
         AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
         {
-            dUdt_in(i,j,k,n) = U_in(i,j,k,n) + dt * dUdt_in(i,j,k,n);
+            scratch(i,j,k,n) = U_in(i,j,k,n) + dt * dUdt_in(i,j,k,n);
         });
 
         make_itracker(bx, apx, apy, apz, vfrac, itr, lev_geom);
 
-        state_redistribute(bx, ncomp, icomp, dUdt_out, dUdt_in, flag, vfrac,
+        state_redistribute(bx, ncomp, icomp, dUdt_out, scratch, flag, vfrac,
                            fcx, fcy, fcz, ccc, itr, lev_geom);
 
         amrex::ParallelFor(bx, ncomp, [=]
