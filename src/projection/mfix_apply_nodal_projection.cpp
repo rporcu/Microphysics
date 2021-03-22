@@ -43,11 +43,6 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     if (a_time > 0 && a_dt < 0.1 * a_prev_dt)
        proj_for_small_dt      = true;
 
-    if(m_use_drag_in_projection)
-      amrex::Print() << "Adding drag to vel in nodal projection\n";
-    else
-      amrex::Print() << "NOT adding drag to vel in nodal projection\n";
-
     // Create sigma
     Vector<MultiFab> sigma_mf(nlev);
 
@@ -71,40 +66,33 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
         Array4<Real const> const&  gp    = gp_in[lev]->const_array(mfi);
         Array4<Real const> const&  txfr  = txfr_in[lev]->const_array(mfi);
 
-        if(m_use_drag_in_projection) {
-          amrex::ParallelFor(bx,[a_dt, proj_2, vel_g, sigma, rho_g, ep_g, gp, txfr]
+        if(proj_2) {
+
+          amrex::ParallelFor(bx,[a_dt, vel_g, sigma, rho_g, ep_g, gp, txfr]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             Real const beta = txfr(i,j,k,3);
 
             sigma(i,j,k) = ep_g(i,j,k)/(ep_g(i,j,k)*rho_g(i,j,k) + a_dt*beta);
 
-            if(proj_2) {
-              vel_g(i,j,k,0) += sigma(i,j,k)*a_dt*gp(i,j,k,0);
-              vel_g(i,j,k,1) += sigma(i,j,k)*a_dt*gp(i,j,k,1);
-              vel_g(i,j,k,2) += sigma(i,j,k)*a_dt*gp(i,j,k,2);
-            }
+            vel_g(i,j,k,0) += sigma(i,j,k)*a_dt*gp(i,j,k,0);
+            vel_g(i,j,k,1) += sigma(i,j,k)*a_dt*gp(i,j,k,1);
+            vel_g(i,j,k,2) += sigma(i,j,k)*a_dt*gp(i,j,k,2);
 
             sigma(i,j,k) *= ep_g(i,j,k);
-
           });
 
         } else {
-          amrex::ParallelFor(bx,[a_dt, proj_2, vel_g, sigma, rho_g, ep_g, gp]
+
+          amrex::ParallelFor(bx,[a_dt, sigma, rho_g, ep_g, txfr]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
+            Real const beta = txfr(i,j,k,3);
 
-            sigma(i,j,k) = 1.0/rho_g(i,j,k);
-
-            if (proj_2) {
-              vel_g(i,j,k,0) += sigma(i,j,k)*a_dt*gp(i,j,k,0);
-              vel_g(i,j,k,1) += sigma(i,j,k)*a_dt*gp(i,j,k,1);
-              vel_g(i,j,k,2) += sigma(i,j,k)*a_dt*gp(i,j,k,2);
-            }
-
-            sigma(i,j,k) *= ep_g(i,j,k);
-
+            sigma(i,j,k) = ep_g(i,j,k)*ep_g(i,j,k) /
+                (ep_g(i,j,k)*rho_g(i,j,k) + a_dt*beta);
           });
+
         }
      }
 
@@ -191,7 +179,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
 
     nodal_projector->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
 
-    // By setting alpha = ep_g, the nodal projection will correct the velocity by 
+    // By setting alpha = ep_g, the nodal projection will correct the velocity by
     // (sigma / alpha) grad(phi) rather than sigma grad phi
     nodal_projector->setAlpha(GetVecOfConstPtrs(ep_g_in));
 
