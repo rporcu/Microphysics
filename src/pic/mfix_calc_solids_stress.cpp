@@ -352,24 +352,25 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
 
         if (flags.getType(amrex::grow(bx,1)) == FabType::covered)
         {
+
           // We shouldn't have this case but if we do -- zero the stress.
           amrex::ParallelFor(np, [p_realarray]
-            AMREX_GPU_DEVICE (int ip) noexcept
+            AMREX_GPU_DEVICE (int pid) noexcept
             {
-              p_realarray[SoArealData::oneOverI][ip] = 0.0;
+              p_realarray[SoArealData::oneOverI][pid] = 0.0;
 
-              p_realarray[SoArealData::omegax][ip] = 0.0;
-              p_realarray[SoArealData::omegay][ip] = 0.0;
-              p_realarray[SoArealData::omegaz][ip] = 0.0;
+              p_realarray[SoArealData::omegax][pid] = 0.0;
+              p_realarray[SoArealData::omegay][pid] = 0.0;
+              p_realarray[SoArealData::omegaz][pid] = 0.0;
             });
         }
         else if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
         {
           amrex::ParallelFor(np, [pstruct,p_realarray,ep_s_arr,Ps_arr,plo,dxi]
-            AMREX_GPU_DEVICE (int ip) noexcept
+            AMREX_GPU_DEVICE (int pid) noexcept
           {
 
-            MFIXParticleContainer::ParticleType& particle = pstruct[ip];
+            MFIXParticleContainer::ParticleType& particle = pstruct[pid];
 
             const Real lx = (particle.pos(0) - plo[0]) * dxi[0] + 0.5;
             const Real ly = (particle.pos(1) - plo[1]) * dxi[1] + 0.5;
@@ -447,18 +448,17 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
 
 
             // Store local solids volume fraction in unused array location.
-            p_realarray[SoArealData::oneOverI][ip] = ep_s_loc;
+            p_realarray[SoArealData::oneOverI][pid] = ep_s_loc;
 
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_loc >= 0.,"Check valid ep_s_loc");
 
-            p_realarray[SoArealData::omegax][ip] = dPsdx;
-            p_realarray[SoArealData::omegay][ip] = dPsdy;
-            p_realarray[SoArealData::omegaz][ip] = dPsdz;
+            p_realarray[SoArealData::omegax][pid] = dPsdx;
+            p_realarray[SoArealData::omegay][pid] = dPsdy;
+            p_realarray[SoArealData::omegaz][pid] = dPsdz;
           });
         }
         else // FAB not all regular
         {
-
           amrex::ParallelFor(np,
           [pstruct,p_realarray,flags_array,ep_s_arr,Ps_arr,plo,dxi,
            Ps0,beta,ep_cp,small_number]
@@ -473,10 +473,9 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
 
             if(flags_array(ip,jp,kp).isCovered())
             {
-              p_realarray[SoArealData::omegax][ip] = 0.0;
-              p_realarray[SoArealData::omegay][ip] = 0.0;
-              p_realarray[SoArealData::omegaz][ip] = 0.0;
-
+              p_realarray[SoArealData::omegax][pid] = 0.0;
+              p_realarray[SoArealData::omegay][pid] = 0.0;
+              p_realarray[SoArealData::omegaz][pid] = 0.0;
             // Cut or regular cell and none of the cells in the stencil is covered
             // (Note we can't assume regular cell has no covered cells in the stencil
             //      because of the diagonal case)
@@ -695,13 +694,13 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
               } // Cut cell
 
               // Store local solids volume fraction in unused array location.
-              p_realarray[SoArealData::oneOverI][ip] = ep_s_loc;
+              p_realarray[SoArealData::oneOverI][pid] = ep_s_loc;
 
               AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_loc >= 0.,"Check valid ep_s_loc");
 
-              p_realarray[SoArealData::omegax][ip] = dPsdx;
-              p_realarray[SoArealData::omegay][ip] = dPsdy;
-              p_realarray[SoArealData::omegaz][ip] = dPsdz;
+              p_realarray[SoArealData::omegax][pid] = dPsdx;
+              p_realarray[SoArealData::omegay][pid] = dPsdy;
+              p_realarray[SoArealData::omegaz][pid] = dPsdz;
             }
 
           }); // part loop
