@@ -191,9 +191,6 @@ mfix::InitParams ()
     pp.query("load_balance_fluid", load_balance_fluid);
 
 
-    // Include drag multiplier in projection. (False by default)
-    pp.query("use_drag_coeff_in_proj_gp"        , m_use_drag_in_projection);
-
     // Are we using MOL or Godunov?
     std::string l_advection_type = "MOL";
     pp.query("advection_type"                   , l_advection_type);
