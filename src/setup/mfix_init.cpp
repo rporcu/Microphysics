@@ -993,25 +993,6 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
           }
        }
 
-       // TODO TODO TODO check this
-       //MultiFab::Copy(*m_leveldata[lev]->vel_go,  *m_leveldata[lev]->vel_g, 0, 0, 3, 0);
-
-       // Make sure to fill the "old state" before we start ...
-       MultiFab::Copy(*m_leveldata[lev]->ro_go,  *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
-       MultiFab::Copy(*m_leveldata[lev]->trac_o, *m_leveldata[lev]->trac, 0, 0, 1, 0);
-
-       if (advect_enthalpy) {
-         MultiFab::Copy(*m_leveldata[lev]->T_go, *m_leveldata[lev]->T_g, 0, 0, 1, 0);
-         MultiFab::Copy(*m_leveldata[lev]->h_go, *m_leveldata[lev]->h_g, 0, 0, 1, 0);
-       }
-
-       if (advect_fluid_species) {
-         MultiFab::Copy(*m_leveldata[lev]->X_gko, *m_leveldata[lev]->X_gk, 0, 0, FLUID::nspecies, 0);
-       }
-
-       if (m_idealgas_constraint == IdealGasConstraint::ClosedSystem) {
-         MultiFab::Copy(*m_leveldata[lev]->pressure_go, *m_leveldata[lev]->pressure_g, 0, 0, 1, 0);
-       }
     }
 
     mfix_set_p0();
@@ -1050,6 +1031,33 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
       m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
     }
+
+
+    // Make sure to fill the "old state" before we start.
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       LevelData& ld = *m_leveldata[lev];
+
+       // TODO TODO TODO check this
+       //MultiFab::Copy(*m_leveldata[lev]->vel_go,  *m_leveldata[lev]->vel_g, 0, 0, 3, 0);
+
+       MultiFab::Copy(*ld.ro_go,  *ld.ro_g, 0, 0, 1, ld.ro_g->nGrow());
+       MultiFab::Copy(*ld.trac_o, *ld.trac, 0, 0, 1, ld.trac->nGrow());
+
+       if (advect_enthalpy) {
+         MultiFab::Copy(*ld.T_go, *ld.T_g, 0, 0, 1, ld.T_g->nGrow());
+         MultiFab::Copy(*ld.h_go, *ld.h_g, 0, 0, 1, ld.h_g->nGrow());
+       }
+
+       if (advect_fluid_species) {
+         MultiFab::Copy(*ld.X_gko, *ld.X_gk, 0, 0, FLUID::nspecies, ld.X_gk->nGrow());
+       }
+
+       if (m_idealgas_constraint == IdealGasConstraint::ClosedSystem) {
+         MultiFab::Copy(*ld.pressure_go, *ld.pressure_g, 0, 0, 1, ld.pressure_g->nGrow());
+       }
+    }
+
 
     if (is_restarting == 0)
     {
