@@ -16,9 +16,6 @@ void predict_vels_on_faces (Box const& domain_box,
                             Array4<Real> const& v,
                             Array4<Real> const& w,
                             Array4<Real const> const& vcc,
-                            Array4<Real const> const& ep_x,
-                            Array4<Real const> const& ep_y,
-                            Array4<Real const> const& ep_z,
                             std::map<std::string, Gpu::DeviceVector<int>>& bc_types,
                             Array4<int const> const& bc_ilo,
                             Array4<int const> const& bc_ihi,
@@ -47,7 +44,7 @@ void predict_vels_on_faces (Box const& domain_box,
 
   if (check_extdir_ilo or check_extdir_ihi)
   {
-    amrex::ParallelFor(ubx, [vcc, small_vel, u, ep_x, order,
+    amrex::ParallelFor(ubx, [vcc, small_vel, u, order,
       check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi,
       bc_ilo, bc_ihi, bct_Dirichlet, bct_size]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -80,8 +77,6 @@ void predict_vels_on_faces (Box const& domain_box,
         else if(avg <= -small_vel) {
           umac = upls;
         }
-
-        umac *= ep_x(i,j,k);
       }
 
       u(i,j,k) = umac;
@@ -91,7 +86,7 @@ void predict_vels_on_faces (Box const& domain_box,
   }
   else
   {
-    amrex::ParallelFor(ubx, [vcc, small_vel, u, ep_x, order]
+    amrex::ParallelFor(ubx, [vcc, small_vel, u, order]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const Real vcc_pls = vcc(i  ,j,k,0);
@@ -111,8 +106,6 @@ void predict_vels_on_faces (Box const& domain_box,
         else if(avg <= -small_vel) {
           umac = upls;
         }
-
-        umac *= ep_x(i,j,k);
       }
 
       u(i,j,k) = umac;
@@ -137,7 +130,7 @@ void predict_vels_on_faces (Box const& domain_box,
   if(check_extdir_jlo or check_extdir_jhi)
   {
 
-    amrex::ParallelFor(vbx, [vcc, small_vel, v, ep_y, order,
+    amrex::ParallelFor(vbx, [vcc, small_vel, v, order,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi,
     bc_jlo, bc_jhi, bct_Dirichlet, bct_size]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -170,8 +163,6 @@ void predict_vels_on_faces (Box const& domain_box,
         else if (avg <= -small_vel) {
           vmac = vpls;
         }
-
-        vmac *= ep_y(i,j,k);
       }
 
       v(i,j,k) = vmac;
@@ -182,7 +173,7 @@ void predict_vels_on_faces (Box const& domain_box,
   else
   {
 
-    amrex::ParallelFor(vbx, [vcc, small_vel, v, ep_y, order]
+    amrex::ParallelFor(vbx, [vcc, small_vel, v, order]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const Real vcc_pls = vcc(i,j  ,k,1);
@@ -202,8 +193,6 @@ void predict_vels_on_faces (Box const& domain_box,
         else if (avg <= -small_vel) {
           vmac = vpls;
         }
-
-        vmac *= ep_y(i,j,k);
       }
 
       v(i,j,k) = vmac;
@@ -228,7 +217,7 @@ void predict_vels_on_faces (Box const& domain_box,
 
   if(check_extdir_klo or check_extdir_khi)
   {
-    amrex::ParallelFor(wbx, [vcc,small_vel, w, ep_z, order,
+    amrex::ParallelFor(wbx, [vcc,small_vel, w, order,
     check_extdir_klo, check_extdir_khi, domain_klo, domain_khi,
     bc_klo, bc_khi, bct_Dirichlet, bct_size]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -261,8 +250,6 @@ void predict_vels_on_faces (Box const& domain_box,
         else if (avg <= -small_vel) {
           wmac = wpls;
         }
-
-        wmac *= ep_z(i,j,k);
       }
 
       w(i,j,k) = wmac;
@@ -271,7 +258,7 @@ void predict_vels_on_faces (Box const& domain_box,
   }
   else
   {
-    amrex::ParallelFor(wbx, [vcc,small_vel,w,ep_z, order]
+    amrex::ParallelFor(wbx, [vcc,small_vel,w,order]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const Real vcc_pls = vcc(i,j,k  ,2);
@@ -291,8 +278,6 @@ void predict_vels_on_faces (Box const& domain_box,
         else if (avg <= -small_vel) {
           wmac = wpls;
         }
-
-        wmac *= ep_z(i,j,k);
       }
 
       w(i,j,k) = wmac;

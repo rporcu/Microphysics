@@ -135,11 +135,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
           fillpatch_force(m_cur_time, tra_forces, nghost_force());
       }
 #endif
-
-
-
     }
-
 
     for (int lev=0; lev < nlev; ++lev) {
       if (ngmac > 0) {
