@@ -16,9 +16,6 @@ void predict_vels_on_faces_eb (Box const& domain_box,
                                Array4<Real      > const& v,
                                Array4<Real      > const& w,
                                Array4<Real const> const& vcc,
-                               Array4<Real const> const& ep_x,
-                               Array4<Real const> const& ep_y,
-                               Array4<Real const> const& ep_z,
                                Array4<EBCellFlag const> const& flag,
                                Array4<Real const> const& fcx,
                                Array4<Real const> const& fcy,
@@ -66,7 +63,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
 
     // This FAB has cut cells -- we predict from cell centroids to face
     // centroids
-    ParallelFor(ubx, [u,ep_x,vcc,ccc,fcx,fcy,fcz,flag,small_vel,bct_Dirichlet, bct_size,
+    ParallelFor(ubx, [u,vcc,ccc,fcx,fcy,fcz,flag,small_vel,bct_Dirichlet, bct_size,
     check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi, bc_ilo, bc_ihi,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi, bc_jlo, bc_jhi,
     check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bc_klo, bc_khi]
@@ -159,8 +156,6 @@ void predict_vels_on_faces_eb (Box const& domain_box,
           else if (avg <= -small_vel) {
             umac = upls;
           }
-
-          umac *= ep_x(i,j,k);
         }
       }
 
@@ -174,7 +169,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
 
     // This FAB has cut cells -- we predict from cell centroids to face
     // centroids
-    ParallelFor(ubx, [u,ep_x,vcc,ccc,fcx,fcy,fcz,flag,small_vel]
+    ParallelFor(ubx, [u,vcc,ccc,fcx,fcy,fcz,flag,small_vel]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -230,8 +225,6 @@ void predict_vels_on_faces_eb (Box const& domain_box,
           else if (avg <= -small_vel) {
             umac = upls;
           }
-
-          umac *= ep_x(i,j,k);
         }
       }
 
@@ -253,7 +246,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
 
     // This FAB has cut cells -- we predict from cell centroids to face
     // centroids
-    ParallelFor(vbx, [v,ep_y,vcc,ccc,fcx,fcy,fcz,flag,small_vel,bct_Dirichlet, bct_size,
+    ParallelFor(vbx, [v,vcc,ccc,fcx,fcy,fcz,flag,small_vel,bct_Dirichlet, bct_size,
     check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi, bc_ilo, bc_ihi,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi, bc_jlo, bc_jhi,
     check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bc_klo, bc_khi]
@@ -342,8 +335,6 @@ void predict_vels_on_faces_eb (Box const& domain_box,
           else if (avg <= -small_vel) {
             vmac = vpls;
           }
-
-          vmac *= ep_y(i,j,k);
         }
       }
 
@@ -357,7 +348,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
 
     // This FAB has cut cells -- we predict from cell centroids to face
     // centroids
-    ParallelFor(vbx, [v,ep_y,vcc,ccc,fcx,fcy,fcz,flag,small_vel]
+    ParallelFor(vbx, [v,vcc,ccc,fcx,fcy,fcz,flag,small_vel]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -410,8 +401,6 @@ void predict_vels_on_faces_eb (Box const& domain_box,
           else if (avg <= -small_vel) {
             vmac = vpls;
           }
-
-          vmac *= ep_y(i,j,k);
         }
       }
 
@@ -431,7 +420,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
 
     // This FAB has cut cells -- we predict from cell centroids to face
     // centroids
-    ParallelFor(wbx, [w,ep_z,vcc,ccc,fcx,fcy,fcz,flag,small_vel,bct_Dirichlet, bct_size,
+    ParallelFor(wbx, [w,vcc,ccc,fcx,fcy,fcz,flag,small_vel,bct_Dirichlet, bct_size,
     check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi, bc_ilo, bc_ihi,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi, bc_jlo, bc_jhi,
     check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bc_klo, bc_khi]
@@ -520,8 +509,6 @@ void predict_vels_on_faces_eb (Box const& domain_box,
           else if (avg <= -small_vel) {
             wmac = wpls;
           }
-
-          wmac *= ep_z(i,j,k);
         }
       }
 
@@ -537,7 +524,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
   {
     // This FAB has cut cells -- we predict from cell centroids to face
     // centroids
-    ParallelFor(wbx, [w,ep_z,vcc,ccc,fcx,fcy,fcz,flag,small_vel]
+    ParallelFor(wbx, [w,vcc,ccc,fcx,fcy,fcz,flag,small_vel]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -590,8 +577,6 @@ void predict_vels_on_faces_eb (Box const& domain_box,
           else if (avg <= -small_vel) {
             wmac = wpls;
           }
-
-          wmac *= ep_z(i,j,k);
         }
       }
 
