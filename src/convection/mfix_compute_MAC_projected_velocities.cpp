@@ -179,7 +179,6 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
     }
 
     for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-      const Box& domain_bx = geom[lev].Domain();
 
       const Box& ubx = mfi.nodaltilebox(0);
       const Box& vbx = mfi.nodaltilebox(1);
@@ -192,8 +191,8 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
 
       // Face-centroid volume fractions
       Array4<Real const> const& epx_arr = ep_face[lev][0]->const_array(mfi);
-      Array4<Real const> const& epy_arr = ep_face[lev][1]->array(mfi);
-      Array4<Real const> const& epz_arr = ep_face[lev][2]->array(mfi);
+      Array4<Real const> const& epy_arr = ep_face[lev][1]->const_array(mfi);
+      Array4<Real const> const& epz_arr = ep_face[lev][2]->const_array(mfi);
 
       // Now we multiply the face velocities by the phasic volume fraction
       // so we have {ep * u_mac, ep * v_mac, ep * w_mac}.
