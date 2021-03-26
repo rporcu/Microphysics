@@ -1065,17 +1065,20 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       // there were no particles)
       m_leveldata[0]->ep_g->setVal(1.0);
 
+      const Real* dx = geom[0].CellSize();
+      const Real cell_volume = dx[0] * dx[1] * dx[2];
+
       sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
 
-      Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
+      Print() << "Enclosed domain volume is   " << cell_volume * sum_vol_orig << std::endl;
 
       Real domain_vol = sum_vol_orig;
 
       // Now initialize the volume fraction ep_g before the first projection
       mfix_calc_volume_fraction(sum_vol_orig);
-      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+      Print() << "Setting original sum_vol to " << cell_volume * sum_vol_orig << std::endl;
 
-      Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
+      Print() << "Difference is   " << cell_volume * (domain_vol - sum_vol_orig) << std::endl;
 
       // This sets bcs for ep_g, cp_g, mu_g and D_gk
       Real time = 0.0;
@@ -1116,10 +1119,13 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       const int dir_bc = 1;
       mfix_set_epg_bcs(get_ep_g(), dir_bc);
 
+      const Real* dx = geom[0].CellSize();
+      const Real cell_volume = dx[0] * dx[1] * dx[2];
+
       //Calculation of sum_vol_orig for a restarting point
       sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
 
-      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+      Print() << "Setting original sum_vol to " << cell_volume * sum_vol_orig << std::endl;
     }
 }
 
