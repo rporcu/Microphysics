@@ -132,8 +132,7 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
 
 
   // Predict normal velocity to faces -- note that the {u_mac, v_mac, w_mac}
-  //    arrays returned from this call are on face CENTROIDS and have been
-  //    multiplied by the phasic voluem fraction {ep * u_mac, ep * v_mac, ep * w_mac}
+  //    arrays returned from this call are on face CENTROIDS.
   for (int lev = 0; lev < nlev; ++lev) {
 
     mac_phi[lev]->FillBoundary(geom[lev].periodicity());
@@ -172,12 +171,35 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
 
       mol::predict_vels_on_faces(lev,
                                  *ep_u_mac[lev],   *ep_v_mac[lev],   *ep_w_mac[lev],
-                                 *ep_face[lev][0], *ep_face[lev][1], *ep_face[lev][2],
                                  *vel_in[lev], m_vel_g_bc_types,
                                  bc_ilo[lev]->array(), bc_ihi[lev]->array(),
                                  bc_jlo[lev]->array(), bc_jhi[lev]->array(),
                                  bc_klo[lev]->array(), bc_khi[lev]->array(),
                                  ebfact, geom);
+    }
+
+    for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+
+      const Box& ubx = mfi.nodaltilebox(0);
+      const Box& vbx = mfi.nodaltilebox(1);
+      const Box& wbx = mfi.nodaltilebox(2);
+
+      // Face-centered velocity components
+      Array4<Real      > const& umac_arr = ep_u_mac[lev]->array(mfi);
+      Array4<Real      > const& vmac_arr = ep_v_mac[lev]->array(mfi);
+      Array4<Real      > const& wmac_arr = ep_w_mac[lev]->array(mfi);
+
+      // Face-centroid volume fractions
+      Array4<Real const> const& epx_arr = ep_face[lev][0]->const_array(mfi);
+      Array4<Real const> const& epy_arr = ep_face[lev][1]->const_array(mfi);
+      Array4<Real const> const& epz_arr = ep_face[lev][2]->const_array(mfi);
+
+      // Now we multiply the face velocities by the phasic volume fraction
+      // so we have {ep * u_mac, ep * v_mac, ep * w_mac}.
+      amrex::ParallelFor(ubx, vbx, wbx,
+      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept { umac_arr(i,j,k) *= epx_arr(i,j,k); },
+      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept { vmac_arr(i,j,k) *= epy_arr(i,j,k); },
+      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept { wmac_arr(i,j,k) *= epz_arr(i,j,k); });
     }
   }
 

@@ -38,18 +38,19 @@ void mfix::compute_vel_forces (Vector<MultiFab*      > const& vel_forces,
                                bool include_pressure_gradient,
                                bool include_drag_force)
 {
-  if( include_pressure_gradient ) {
-    amrex::Print() << "\nIncluding pressure gradient in vel forces\n";
-  } else {
-    amrex::Print() << "\nNOT including pressure gradient in vel forces\n";
-  }
+  if ( m_verbose > 1 ) {
+    if ( include_pressure_gradient ) {
+      amrex::Print() << "\nIncluding pressure gradient in vel forces\n";
+    } else {
+      amrex::Print() << "\nNOT including pressure gradient in vel forces\n";
+    }
 
-  if( include_drag_force ) {
-    amrex::Print() << "Including drag force in vel forces\n\n";
-  } else {
-    amrex::Print() << "NOT Including drag force in vel forces\n\n";
+    if ( include_drag_force ) {
+      amrex::Print() << "Including drag force in vel forces\n\n";
+    } else {
+      amrex::Print() << "NOT Including drag force in vel forces\n\n";
+    }
   }
-
   for (int lev = 0; lev <= finest_level; ++lev) {
      compute_vel_forces_on_level (lev, *vel_forces[lev], *velocity[lev], *density[lev],
                                   *txfr_in[lev], include_pressure_gradient,

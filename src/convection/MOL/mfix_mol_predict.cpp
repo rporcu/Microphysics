@@ -6,7 +6,6 @@
 void
 mol::predict_vels_on_faces (int lev,
                             MultiFab& ep_u_mac,  MultiFab& ep_v_mac,  MultiFab& ep_w_mac,
-                            MultiFab& ep_face_x, MultiFab& ep_face_y, MultiFab& ep_face_z,
                             const MultiFab& vel_in,
                             std::map<std::string, Gpu::DeviceVector<int>>& bc_types,
                             Array4<int const> const& bc_ilo,
@@ -45,11 +44,6 @@ mol::predict_vels_on_faces (int lev,
     // Cell-centered velocity
     const auto& ccvel_fab = vel_in.const_array(mfi);
 
-    // Face-centered ep
-    const auto& epx_fab = ep_face_x.const_array(mfi);
-    const auto& epy_fab = ep_face_y.const_array(mfi);
-    const auto& epz_fab = ep_face_z.const_array(mfi);
-
     EBCellFlagFab const& flagfab = flags[mfi];
     Array4<EBCellFlag const> const& flagarr = flagfab.const_array();
     const Box& bx = mfi.tilebox();
@@ -77,7 +71,6 @@ mol::predict_vels_on_faces (int lev,
 
       mol::predict_vels_on_faces_eb(domain_bx, ubx, vbx, wbx,
                                     umac_fab, vmac_fab, wmac_fab, ccvel_fab,
-                                    epx_fab, epy_fab, epz_fab,
                                     flagarr, fcx_fab, fcy_fab,  fcz_fab,
                                     ccc_fab, bc_types,
                                     bc_ilo, bc_ihi,
@@ -90,7 +83,6 @@ mol::predict_vels_on_faces (int lev,
 
         mol::predict_vels_on_faces(domain_bx, ubx, vbx, wbx,
                                    umac_fab, vmac_fab, wmac_fab, ccvel_fab,
-                                   epx_fab,  epy_fab,  epz_fab,
                                    bc_types,
                                    bc_ilo, bc_ihi,
                                    bc_jlo, bc_jhi,

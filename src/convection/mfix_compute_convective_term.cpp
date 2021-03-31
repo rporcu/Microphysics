@@ -116,6 +116,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
       if (nghost_force() > 0)
         fillpatch_force(time, vel_forces, nghost_force());
 
+#if 0
       // TODO
       if(advect_enthalpy){
         amrex::Abort("Enthalpy forces are not broken out yet.");
@@ -126,20 +127,15 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
 
       // Note this is forcing for (rho s), not for s
       if (advect_tracer) {
-#if 0
         compute_tra_forces(tra_forces, get_density_old_const());
         if (m_godunov_include_diff_in_forcing)
           for (int lev = 0; lev <= finest_level; ++lev)
             MultiFab::Add(*tra_forces[lev], m_leveldata[lev]->laps_o, 0, 0, ntrac, 0);
         if (nghost_force() > 0)
           fillpatch_force(m_cur_time, tra_forces, nghost_force());
-#endif
       }
-
-
-
+#endif
     }
-
 
     for (int lev=0; lev < nlev; ++lev) {
       if (ngmac > 0) {

@@ -1032,25 +1032,6 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
           }
        }
 
-       // TODO TODO TODO check this
-       //MultiFab::Copy(*m_leveldata[lev]->vel_go,  *m_leveldata[lev]->vel_g, 0, 0, 3, 0);
-
-       // Make sure to fill the "old state" before we start ...
-       MultiFab::Copy(*m_leveldata[lev]->ro_go,  *m_leveldata[lev]->ro_g, 0, 0, 1, 0);
-       MultiFab::Copy(*m_leveldata[lev]->trac_o, *m_leveldata[lev]->trac, 0, 0, 1, 0);
-
-       if (advect_enthalpy) {
-         MultiFab::Copy(*m_leveldata[lev]->T_go, *m_leveldata[lev]->T_g, 0, 0, 1, 0);
-         MultiFab::Copy(*m_leveldata[lev]->h_go, *m_leveldata[lev]->h_g, 0, 0, 1, 0);
-       }
-
-       if (advect_fluid_species) {
-         MultiFab::Copy(*m_leveldata[lev]->X_gko, *m_leveldata[lev]->X_gk, 0, 0, FLUID::nspecies, 0);
-       }
-
-       if (m_idealgas_constraint == IdealGasConstraint::ClosedSystem) {
-         MultiFab::Copy(*m_leveldata[lev]->pressure_go, *m_leveldata[lev]->pressure_g, 0, 0, 1, 0);
-       }
     }
 
     mfix_set_p0();
@@ -1090,23 +1071,53 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
     }
 
+
+    // Make sure to fill the "old state" before we start.
+    for (int lev = 0; lev < nlev; lev++)
+    {
+       LevelData& ld = *m_leveldata[lev];
+
+       // TODO TODO TODO check this
+       //MultiFab::Copy(*m_leveldata[lev]->vel_go,  *m_leveldata[lev]->vel_g, 0, 0, 3, 0);
+
+       MultiFab::Copy(*ld.ro_go,  *ld.ro_g, 0, 0, 1, ld.ro_g->nGrow());
+       MultiFab::Copy(*ld.trac_o, *ld.trac, 0, 0, 1, ld.trac->nGrow());
+
+       if (advect_enthalpy) {
+         MultiFab::Copy(*ld.T_go, *ld.T_g, 0, 0, 1, ld.T_g->nGrow());
+         MultiFab::Copy(*ld.h_go, *ld.h_g, 0, 0, 1, ld.h_g->nGrow());
+       }
+
+       if (advect_fluid_species) {
+         MultiFab::Copy(*ld.X_gko, *ld.X_gk, 0, 0, FLUID::nspecies, ld.X_gk->nGrow());
+       }
+
+       if (m_idealgas_constraint == IdealGasConstraint::ClosedSystem) {
+         MultiFab::Copy(*ld.pressure_go, *ld.pressure_g, 0, 0, 1, ld.pressure_g->nGrow());
+       }
+    }
+
+
     if (is_restarting == 0)
     {
       // Just for reference, we compute the volume inside the EB walls (as if
       // there were no particles)
       m_leveldata[0]->ep_g->setVal(1.0);
 
+      const Real* dx = geom[0].CellSize();
+      const Real cell_volume = dx[0] * dx[1] * dx[2];
+
       sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
 
-      Print() << "Enclosed domain volume is   " << sum_vol_orig << std::endl;
+      Print() << "Enclosed domain volume is   " << cell_volume * sum_vol_orig << std::endl;
 
       Real domain_vol = sum_vol_orig;
 
       // Now initialize the volume fraction ep_g before the first projection
       mfix_calc_volume_fraction(sum_vol_orig);
-      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+      Print() << "Setting original sum_vol to " << cell_volume * sum_vol_orig << std::endl;
 
-      Print() << "Difference is   " << (domain_vol - sum_vol_orig) << std::endl;
+      Print() << "Difference is   " << cell_volume * (domain_vol - sum_vol_orig) << std::endl;
 
       // This sets bcs for ep_g, cp_g, mu_g and D_gk
       Real time = 0.0;
@@ -1147,10 +1158,13 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       const int dir_bc = 1;
       mfix_set_epg_bcs(get_ep_g(), dir_bc);
 
+      const Real* dx = geom[0].CellSize();
+      const Real cell_volume = dx[0] * dx[1] * dx[2];
+
       //Calculation of sum_vol_orig for a restarting point
       sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
 
-      Print() << "Setting original sum_vol to " << sum_vol_orig << std::endl;
+      Print() << "Setting original sum_vol to " << cell_volume * sum_vol_orig << std::endl;
     }
 }
 
