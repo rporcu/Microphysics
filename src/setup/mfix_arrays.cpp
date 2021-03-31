@@ -224,6 +224,22 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->mu_g, mu_g_new);
     delete mu_g_new;
 
+    // rank of fluid grids
+    MultiFab* ba_proc_new = new MultiFab(grids[lev], dmap[lev],
+                                         m_leveldata[lev]->ba_proc->nComp(),
+                                         m_leveldata[lev]->ba_proc->nGrow(),
+                                         MFInfo(), *ebfactory[lev]);
+    const Real proc = Real(ParallelDescriptor::MyProc());
+    for (MFIter mfi(*ba_proc_new, false); mfi.isValid(); ++mfi)
+    {
+      amrex::Array4<Real> const& bx_proc = ba_proc_new->array(mfi);
+      ParallelFor(mfi.validbox(), [bx_proc, proc] 
+                  AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                  { bx_proc(i,j,k) = proc; });
+    }
+    std::swap(m_leveldata[lev]->ba_proc, ba_proc_new);
+    delete ba_proc_new;
+
     if (advect_enthalpy) {
       // Gas thermodynamic pressure
       MultiFab* pressure_g_new = new MultiFab(grids[lev], dmap[lev],

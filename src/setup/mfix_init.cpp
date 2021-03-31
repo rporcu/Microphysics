@@ -774,6 +774,28 @@ void mfix::InitLevelData (Real time)
                                           pc->ParticleDistributionMap(lev), 1, 0);
         particle_cost[lev]->setVal(0.0);
       }
+
+      // initailize the rank of each particle grid
+      for (int lev(0); lev < particle_ba_proc.size(); lev++)
+        if (particle_ba_proc[lev] != nullptr)
+          delete particle_ba_proc[lev];
+      //
+      particle_ba_proc.clear();
+      particle_ba_proc.resize(nlev, nullptr);
+      //
+      amrex::Real proc = amrex::Real(ParallelDescriptor::MyProc());
+      //
+      for (int lev = 0; lev < nlev; lev++)
+      {
+        particle_ba_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                             pc->ParticleDistributionMap(lev), 1, 0);
+        for (MFIter mfi(*(particle_ba_proc[lev]), false); mfi.isValid(); ++mfi)
+        {
+          amrex::Array4<Real> const& par_bx_proc = particle_ba_proc[lev]->array(mfi);
+          ParallelFor(mfi.validbox(), [par_bx_proc, proc] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          { par_bx_proc(i,j,k) = proc; });
+        }
+      }
     }
 
     // Used in load balancing
@@ -866,6 +888,23 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
             particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                               pc->ParticleDistributionMap(lev), 1, 0);
             particle_cost[lev]->setVal(0.0);
+
+            // intialize the ranks of particle grids
+            if (particle_ba_proc[lev] != nullptr)
+              delete particle_ba_proc[lev];
+            //
+            const Real proc = Real(ParallelDescriptor::MyProc());
+            particle_ba_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                                 pc->ParticleDistributionMap(lev), 1, 0);
+
+            for (MFIter mfi(*(particle_ba_proc[lev]), false); mfi.isValid(); ++mfi)
+            {
+              amrex::Array4<Real> const& par_bx_proc = particle_ba_proc[lev]->array(mfi);
+              ParallelFor(mfi.validbox(), [par_bx_proc, proc] 
+                          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                          { par_bx_proc(i,j,k) = proc; });
+            }
+
 
             // This calls re-creates a proper particle_ebfactories
             //  and regrids all the multifabs that depend on it
