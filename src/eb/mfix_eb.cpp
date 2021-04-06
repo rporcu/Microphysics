@@ -17,13 +17,10 @@ void mfix::make_eb_geometry ()
      *                                                                          *
      ***************************************************************************/
 
-    // nghost_tmp = 4 is enough to make the bc arrays for now; we will remake
-    // them later when we know what nghost_state() really is
-    const int nghost_tmp = 4;
-    MakeBCArrays(nghost_tmp);
+    MakeBCArrays(nghost_state());
 
     for (int lev = 0; lev < nlev; lev++)
-        mfix_set_bc_type(lev,nghost_tmp);
+        mfix_set_bc_type(lev,nghost_state());
 
     /****************************************************************************
      *                                                                          *
