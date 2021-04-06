@@ -582,6 +582,7 @@ class mfix : public AmrCore
     Gpu::DeviceVector<Real*> m_bc_X_gk_ptr;
 
     amrex::Vector< Gpu::HostVector<Real> >   m_h_bc_X_gk;
+    Gpu::HostVector<Real*> m_h_bc_X_gk_ptr;
 
     std::map< std::string, Gpu::DeviceVector<int> > m_vel_g_bc_types;
     std::map< std::string, Gpu::DeviceVector<int> > m_ro_g_bc_types;

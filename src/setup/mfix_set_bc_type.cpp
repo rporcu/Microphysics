@@ -440,6 +440,7 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
       // species
       m_bc_X_gk.resize(FLUID::nspecies, Gpu::DeviceVector<Real>(bc.size()));
       m_bc_X_gk_ptr.resize(FLUID::nspecies, nullptr);
+      m_h_bc_X_gk_ptr.resize(FLUID::nspecies, nullptr);
     }
 
     for(unsigned bcv(0); bcv < bc.size(); ++bcv)
@@ -476,8 +477,9 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
     if (FLUID::solve and advect_fluid_species) {
         for (int n = 0; n < FLUID::nspecies; ++n) {
             Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk[n].begin(), m_h_bc_X_gk[n].end(), m_bc_X_gk[n].begin());
-            m_bc_X_gk_ptr[n] = m_bc_X_gk[n].dataPtr();
+            m_h_bc_X_gk_ptr[n] = m_bc_X_gk[n].dataPtr();
         }
+        Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk_ptr.begin(), m_h_bc_X_gk_ptr.end(), m_bc_X_gk_ptr.begin());
     }
 
     Gpu::synchronize();
