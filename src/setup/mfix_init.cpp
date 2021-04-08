@@ -775,7 +775,7 @@ void mfix::InitLevelData (Real time)
         particle_cost[lev]->setVal(0.0);
       }
 
-      // initailize the rank of each particle grid
+      // initialize the rank of each particle grid
       for (int lev(0); lev < particle_ba_proc.size(); lev++)
         if (particle_ba_proc[lev] != nullptr)
           delete particle_ba_proc[lev];
