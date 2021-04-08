@@ -775,7 +775,7 @@ void mfix::InitLevelData (Real time)
         particle_cost[lev]->setVal(0.0);
       }
 
-      // initailize the rank of each particle grid
+      // initialize the rank of each particle grid
       for (int lev(0); lev < particle_ba_proc.size(); lev++)
         if (particle_ba_proc[lev] != nullptr)
           delete particle_ba_proc[lev];
@@ -790,7 +790,7 @@ void mfix::InitLevelData (Real time)
         particle_ba_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                              pc->ParticleDistributionMap(lev), 1, 0);
         for (MFIter mfi(*(particle_ba_proc[lev]), false); mfi.isValid(); ++mfi)
-        {
+        the {
           amrex::Array4<Real> const& par_bx_proc = particle_ba_proc[lev]->array(mfi);
           ParallelFor(mfi.validbox(), [par_bx_proc, proc] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           { par_bx_proc(i,j,k) = proc; });
@@ -889,7 +889,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
                                               pc->ParticleDistributionMap(lev), 1, 0);
             particle_cost[lev]->setVal(0.0);
 
-            // intialize the ranks of particle grids
+            // initialize the ranks of particle grids
             if (particle_ba_proc[lev] != nullptr)
               delete particle_ba_proc[lev];
             //
