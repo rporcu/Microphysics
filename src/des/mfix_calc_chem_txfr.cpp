@@ -198,13 +198,13 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
             MFInfo(), *ebfactory[lev]);
 
         // Copy fluid species mass fractions
-        interp_ptr->copy(*X_gk_in[lev], 0, 0, FLUID::nspecies, interp_ng, interp_ng);
+        MultiFab::Copy(*interp_ptr, *X_gk_in[lev], 0, 0, FLUID::nspecies, interp_ng);
 
         // Copy volume fraction
-        interp_ptr->copy(*ep_g_in[lev], 0, interp_comp-2, 1, interp_ng, interp_ng);
+        MultiFab::Copy(*interp_ptr, *ep_g_in[lev], 0, interp_comp-2, 1, interp_ng);
 
         // Copy density
-        interp_ptr->copy(*ro_g_in[lev], 0, interp_comp-1, 1, interp_ng, interp_ng);
+        MultiFab::Copy(*interp_ptr, *ro_g_in[lev], 0, interp_comp-1, 1, interp_ng);
 
         interp_ptr->FillBoundary(geom[lev].periodicity());
       }

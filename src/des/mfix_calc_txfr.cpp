@@ -283,14 +283,14 @@ mfix::mfix_calc_txfr_particle (Real time,
       interp_ptr = new MultiFab(grids[lev], dmap[lev], interp_comp, interp_ng, MFInfo(), *ebfactory[lev]);
 
       // Copy fluid velocity
-      interp_ptr->copy(*vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng, interp_ng);
+      MultiFab::Copy(*interp_ptr, *vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng);
 
       // Copy pressure gradient
-      interp_ptr->copy(gp_tmp, 0, 3, gp_tmp.nComp(), interp_ng, interp_ng);
+      MultiFab::Copy(*interp_ptr, gp_tmp, 0, 3, gp_tmp.nComp(), interp_ng);
 
       // Copy fluid temperature
       if(advect_enthalpy){
-        interp_ptr->copy(*T_g_in[lev], 0, 6, T_g_in[lev]->nComp(), interp_ng, interp_ng);
+        MultiFab::Copy(*interp_ptr, *T_g_in[lev], 0, 6, T_g_in[lev]->nComp(), interp_ng);
       } else {
         interp_ptr->setVal(0.0, 6, 1, interp_ng);
       }
