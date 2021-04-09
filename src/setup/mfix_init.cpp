@@ -790,7 +790,7 @@ void mfix::InitLevelData (Real time)
         particle_ba_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                              pc->ParticleDistributionMap(lev), 1, 0);
         for (MFIter mfi(*(particle_ba_proc[lev]), false); mfi.isValid(); ++mfi)
-        the {
+        {
           amrex::Array4<Real> const& par_bx_proc = particle_ba_proc[lev]->array(mfi);
           ParallelFor(mfi.validbox(), [par_bx_proc, proc] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           { par_bx_proc(i,j,k) = proc; });
