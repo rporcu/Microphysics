@@ -32,7 +32,7 @@ namespace SOLIDS
   int solve_species(0);
 
   // Species unique identifying code
-  amrex::Gpu::HostVector<int> species_id;
+  amrex::Vector<int> species_id;
 
   // Particle species
   amrex::Vector<std::string> species;
@@ -41,10 +41,10 @@ namespace SOLIDS
   int nspecies;
 
   // Specified constant gas phase species molecular weight
-  amrex::Gpu::HostVector<amrex::Real> MW_sn0(0);
+  amrex::Vector<amrex::Real> MW_sn0(0);
 
   // Specified constant specific heat
-  amrex::Gpu::HostVector<amrex::Real> cp_p0(0);
+  amrex::Vector<amrex::Real> cp_p0(0);
 
   amrex::Real enthalpy_source(0);
 

@@ -64,22 +64,22 @@ namespace FLUID
   amrex::Vector<std::string> species;
 
   // Species unique identifying code
-  amrex::Gpu::HostVector<int> species_id;
+  amrex::Vector<int> species_id;
 
   // Total number of fluid species
   int nspecies(0);
 
   // Specified constant gas phase species molecular weight
-  amrex::Gpu::HostVector<amrex::Real> MW_gk0(0);
+  amrex::Vector<amrex::Real> MW_gk0(0);
 
   // Specified constant gas phase species diffusion coefficients
-  amrex::Gpu::HostVector<amrex::Real> D_gk0(0);
+  amrex::Vector<amrex::Real> D_gk0(0);
 
   // Flag to understand if fluid is a mixture of fluid species
   int is_a_mixture(0);
 
   // Specified constant gas phase species specific heat
-  amrex::Gpu::HostVector<amrex::Real> cp_gk0(0);
+  amrex::Vector<amrex::Real> cp_gk0(0);
 
   // Name to later reference when building inputs for IC/BC regions
   std::string name;
