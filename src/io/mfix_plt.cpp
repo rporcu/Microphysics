@@ -347,7 +347,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
       {
         // Multifab to hold all the variables -- there can be only one!!!!
         const int ncomp = pltVarCount;
-        mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow,  MFInfo(), *ebfactory[lev]));
+        mf[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], ncomp, ngrow,  MFInfo(), *ebfactory[lev]);
 
         int lc=0;
 
@@ -522,7 +522,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
       // Create empty MultiFab containing the right BoxArray (NOTE: setting
       // nComp = 1 here to avoid assertion fail in debug build).
       for (int lev = 0; lev <= finest_level; ++lev)
-        mf[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 0));
+        mf[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], 1, 0);
 
       Vector<const MultiFab*> mf2(finest_level+1);
 
@@ -630,8 +630,8 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow, MFInfo(),
-                                   * particle_ebfactory[lev]));
+        mf[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], ncomp, ngrow, MFInfo(),
+                                   * particle_ebfactory[lev]);
 
         // Don't iterate over all ncomp => last component is for volfrac
         for (int dcomp = 0; dcomp < ncomp - 1; dcomp++)
