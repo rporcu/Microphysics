@@ -163,7 +163,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             // Particle data is loaded into the MFIXParticleContainer's base
             // class using amrex::NeighborParticleContainer::Restart
 
-            if ( (DEM::solve or PIC::solve) and lev == 0)
+            if ( (DEM::solve || PIC::solve) && lev == 0)
               pc->Restart(restart_file, "particles");
 
             amrex::Print() << "  Finished reading particle data" << std::endl;
@@ -276,13 +276,13 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
        {
           for (int i = 0; i < chkTVars.size(); i++ )
           {
-             if ( restart_from_cold_flow and chkscaVarsName[i] == "T_g")
+             if ( restart_from_cold_flow && chkscaVarsName[i] == "T_g")
              {
                  amrex::Print() << "  Setting T_g to T_g0 = " << FLUID::T_g0 << std::endl;
                  m_leveldata[lev]->T_g->setVal(FLUID::T_g0);
                  continue;
 
-             } else if ( restart_from_cold_flow and chkscaVarsName[i] == "h_g") {
+             } else if ( restart_from_cold_flow && chkscaVarsName[i] == "h_g") {
 
                  amrex::Print() << "  Setting h_g to Cp_g0 T_g0 = " <<
                    FLUID::cp_g0 * FLUID::T_g0 << std::endl;
@@ -372,7 +372,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           }
        }
 
-       if (advect_fluid_species and advect_enthalpy)
+       if (advect_fluid_species && advect_enthalpy)
        {
           for (int i = 0; i < chkSpeciesTVars.size(); i++ )
           {
@@ -421,7 +421,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
     // Make sure that the particle BoxArray is the same as the mesh data -- we can
     //      create a dual grid decomposition in the regrid operation
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve || PIC::solve)
     {
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
@@ -448,7 +448,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     * (compared to the rest of the checkpoint data) => the level-set data is   *
     * stored in separate ls_raw MultiFab.                                      *
     ****************************************************************************/
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve || PIC::solve)
     {
         if (levelset_restart) {
            // Load level-set Multifab
@@ -532,7 +532,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           }
 
           // Fill the bc's just in case
-          if (advect_fluid_species and advect_enthalpy) {
+          if (advect_fluid_species && advect_enthalpy) {
             m_leveldata[lev]->cp_gk->FillBoundary(geom[lev].periodicity());
             m_leveldata[lev]->h_gk->FillBoundary(geom[lev].periodicity());
           }
@@ -541,7 +541,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
     if (load_balance_type == "KnapSack" or load_balance_type == "SFC")
     {
-      if (DEM::solve or PIC::solve) {
+      if (DEM::solve || PIC::solve) {
         for (int lev(0); lev < particle_cost.size(); ++lev)
           if (particle_cost[lev] != nullptr)
             delete particle_cost[lev];

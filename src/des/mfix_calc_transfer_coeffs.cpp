@@ -96,7 +96,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
   for (int lev = 0; lev < nlev; lev++)
   {
-    bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) and
+    bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                          (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
     MultiFab* ro_ptr;
@@ -333,13 +333,13 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
                 // All cells in the stencil are regular. Use
                 // traditional trilinear interpolation
-                if (flags_array(i-1,j-1,k-1).isRegular() and
-                    flags_array(i  ,j-1,k-1).isRegular() and
-                    flags_array(i-1,j  ,k-1).isRegular() and
-                    flags_array(i  ,j  ,k-1).isRegular() and
-                    flags_array(i-1,j-1,k  ).isRegular() and
-                    flags_array(i  ,j-1,k  ).isRegular() and
-                    flags_array(i-1,j  ,k  ).isRegular() and
+                if (flags_array(i-1,j-1,k-1).isRegular() &&
+                    flags_array(i  ,j-1,k-1).isRegular() &&
+                    flags_array(i-1,j  ,k-1).isRegular() &&
+                    flags_array(i  ,j  ,k-1).isRegular() &&
+                    flags_array(i-1,j-1,k  ).isRegular() &&
+                    flags_array(i  ,j-1,k  ).isRegular() &&
+                    flags_array(i-1,j  ,k  ).isRegular() &&
                     flags_array(i  ,j  ,k  ).isRegular()) {
 
                   trilinear_interp(particle.pos(), interp_loc.data(),
@@ -408,13 +408,13 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       } // pti
     } // GPU region
 
-    if (not OnSameGrids) {
+    if (!OnSameGrids) {
       delete ro_ptr;
       delete mu_ptr;
       delete kg_ptr;
       delete cp_ptr;
     }
-    else if (not advect_enthalpy) {
+    else if (!advect_enthalpy) {
       delete kg_ptr;
       delete cp_ptr;
     }

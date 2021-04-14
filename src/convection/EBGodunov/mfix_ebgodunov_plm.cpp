@@ -9,11 +9,11 @@ namespace {
         std::pair<bool,bool> r{false,false};
         for (int n = 0; n < ncomp; ++n) {
             r.first = r.first
-                 or (bcrec[n].lo(dir) == BCType::ext_dir)
-                 or (bcrec[n].lo(dir) == BCType::hoextrap);
+                 || (bcrec[n].lo(dir) == BCType::ext_dir)
+                 || (bcrec[n].lo(dir) == BCType::hoextrap);
             r.second = r.second
-                 or (bcrec[n].hi(dir) == BCType::ext_dir)
-                 or (bcrec[n].hi(dir) == BCType::hoextrap);
+                 || (bcrec[n].hi(dir) == BCType::ext_dir)
+                 || (bcrec[n].hi(dir) == BCType::hoextrap);
         }
         return r;
     }
@@ -60,12 +60,12 @@ void ebgodunov::predict_plm_x (Box const& xebox,
     bool has_extdir_or_ho_lo_z = extdir_lohi_z.first;
     bool has_extdir_or_ho_hi_z = extdir_lohi_z.second;
 
-    if ( (has_extdir_or_ho_lo_x and domain_ilo >= xebox.smallEnd(0)-1) or
-         (has_extdir_or_ho_hi_x and domain_ihi <= xebox.bigEnd(0)    ) or
-         (has_extdir_or_ho_lo_z and domain_klo >= xebox.smallEnd(2)-1) or
-         (has_extdir_or_ho_hi_z and domain_khi <= xebox.bigEnd(2)    ) or
-         (has_extdir_or_ho_lo_y and domain_jlo >= xebox.smallEnd(1)-1) or
-         (has_extdir_or_ho_hi_y and domain_jhi <= xebox.bigEnd(1)    ) )
+    if ( (has_extdir_or_ho_lo_x && domain_ilo >= xebox.smallEnd(0)-1) ||
+         (has_extdir_or_ho_hi_x && domain_ihi <= xebox.bigEnd(0)    ) ||
+         (has_extdir_or_ho_lo_z && domain_klo >= xebox.smallEnd(2)-1) ||
+         (has_extdir_or_ho_hi_z && domain_khi <= xebox.bigEnd(2)    ) ||
+         (has_extdir_or_ho_lo_y && domain_jlo >= xebox.smallEnd(1)-1) ||
+         (has_extdir_or_ho_hi_y && domain_jhi <= xebox.bigEnd(1)    ) )
     {
         amrex::ParallelFor(xebox, ncomp, [q,ccvel,AMREX_D_DECL(domain_ilo,domain_jlo,domain_klo),
                                                   AMREX_D_DECL(domain_ihi,domain_jhi,domain_khi),
@@ -79,17 +79,17 @@ void ebgodunov::predict_plm_x (Box const& xebox,
             if (flag(i,j,k).isConnected(-1,0,0))
             {
                 const auto& bc = pbc[n];
-                bool extdir_or_ho_ilo = (bc.lo(0) == BCType::ext_dir) or
+                bool extdir_or_ho_ilo = (bc.lo(0) == BCType::ext_dir) ||
                                         (bc.lo(0) == BCType::hoextrap);
-                bool extdir_or_ho_ihi = (bc.hi(0) == BCType::ext_dir) or
+                bool extdir_or_ho_ihi = (bc.hi(0) == BCType::ext_dir) ||
                                         (bc.hi(0) == BCType::hoextrap);
-                bool extdir_or_ho_jlo = (bc.lo(1) == BCType::ext_dir) or
+                bool extdir_or_ho_jlo = (bc.lo(1) == BCType::ext_dir) ||
                                         (bc.lo(1) == BCType::hoextrap);
-                bool extdir_or_ho_jhi = (bc.hi(1) == BCType::ext_dir) or
+                bool extdir_or_ho_jhi = (bc.hi(1) == BCType::ext_dir) ||
                                         (bc.hi(1) == BCType::hoextrap);
-                bool extdir_or_ho_klo = (bc.lo(2) == BCType::ext_dir) or
+                bool extdir_or_ho_klo = (bc.lo(2) == BCType::ext_dir) ||
                                         (bc.lo(2) == BCType::hoextrap);
-                bool extdir_or_ho_khi = (bc.hi(2) == BCType::ext_dir) or
+                bool extdir_or_ho_khi = (bc.hi(2) == BCType::ext_dir) ||
                                         (bc.hi(2) == BCType::hoextrap);
 
                 // *************************************************
@@ -97,15 +97,15 @@ void ebgodunov::predict_plm_x (Box const& xebox,
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i,j,k) with all values at cell centers
-                if (vfrac(i,j,k) == 1. and vfrac(i-1,j,k) == 1. and vfrac(i-2,j,k) == 1. and
-                                           vfrac(i+1,j,k) == 1. and vfrac(i+2,j,k) == 1.)
+                if (vfrac(i,j,k) == 1. && vfrac(i-1,j,k) == 1. && vfrac(i-2,j,k) == 1. &&
+                                           vfrac(i+1,j,k) == 1. && vfrac(i+2,j,k) == 1.)
                 {
                     int order = 4;
                     qpls = q(i  ,j,k,n) + 0.5 * (-1.0 - ccvel(i,j,k,0) * dtdx) *
                         amrex_calc_xslope_extdir(i,j,k,n,order,q,extdir_or_ho_ilo,extdir_or_ho_ihi,domain_ilo,domain_ihi);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i,j,k) == 1. and vfrac(i-1,j,k) == 1. and vfrac(i+1,j,k) == 1.) {
+                } else if (vfrac(i,j,k) == 1. && vfrac(i-1,j,k) == 1. && vfrac(i+1,j,k) == 1.) {
 
                     int order = 2;
                     qpls = q(i  ,j,k,n) + 0.5 * (-1.0 - ccvel(i,j,k,0) * dtdx) *
@@ -144,15 +144,15 @@ void ebgodunov::predict_plm_x (Box const& xebox,
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i-1,j,k) with all values at cell centers
-                if (vfrac(i-1,j,k) == 1. and vfrac(i-2,j,k) == 1. and vfrac(i-3,j,k) == 1. and
-                                             vfrac(i  ,j,k) == 1. and vfrac(i+1,j,k) == 1.)
+                if (vfrac(i-1,j,k) == 1. && vfrac(i-2,j,k) == 1. && vfrac(i-3,j,k) == 1. &&
+                                             vfrac(i  ,j,k) == 1. && vfrac(i+1,j,k) == 1.)
                 {
                     int order = 4;
                     qmns = q(i-1,j,k,n) + 0.5 * ( 1.0 - ccvel(i-1,j,k,0) * dtdx) *
                         amrex_calc_xslope_extdir(i-1,j,k,n,order,q,extdir_or_ho_ilo,extdir_or_ho_ihi,domain_ilo,domain_ihi);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i-1,j,k) == 1. and vfrac(i-2,j,k) == 1. and vfrac(i  ,j,k) == 1.)
+                } else if (vfrac(i-1,j,k) == 1. && vfrac(i-2,j,k) == 1. && vfrac(i  ,j,k) == 1.)
                 {
                     int order = 2;
                     qmns = q(i-1,j,k,n) + 0.5 * ( 1.0 - ccvel(i-1,j,k,0) * dtdx) *
@@ -210,15 +210,15 @@ void ebgodunov::predict_plm_x (Box const& xebox,
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i,j,k) with all values at cell centers
-                if (vfrac(i,j,k) == 1. and vfrac(i-1,j,k) == 1. and vfrac(i-2,j,k) == 1. and
-                                           vfrac(i+1,j,k) == 1. and vfrac(i+2,j,k) == 1.)
+                if (vfrac(i,j,k) == 1. && vfrac(i-1,j,k) == 1. && vfrac(i-2,j,k) == 1. &&
+                                           vfrac(i+1,j,k) == 1. && vfrac(i+2,j,k) == 1.)
                 {
                     int order = 4;
                     qpls = q(i  ,j,k,n) + 0.5 * (-1.0 - ccvel(i  ,j,k,0) * dtdx) *
                         amrex_calc_xslope(i,j,k,n,order,q);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i,j,k) == 1. and vfrac(i-1,j,k) == 1. and vfrac(i+1,j,k) == 1.) {
+                } else if (vfrac(i,j,k) == 1. && vfrac(i-1,j,k) == 1. && vfrac(i+1,j,k) == 1.) {
 
                     int order = 2;
                     qpls = q(i  ,j,k,n) + 0.5 * (-1.0 - ccvel(i  ,j,k,0) * dtdx) *
@@ -253,15 +253,15 @@ void ebgodunov::predict_plm_x (Box const& xebox,
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i-1,j,k) with all values at cell centers
-                if (vfrac(i-1,j,k) == 1. and vfrac(i-2,j,k) == 1. and vfrac(i-3,j,k) == 1. and
-                                             vfrac(i  ,j,k) == 1. and vfrac(i+1,j,k) == 1.)
+                if (vfrac(i-1,j,k) == 1. && vfrac(i-2,j,k) == 1. && vfrac(i-3,j,k) == 1. &&
+                                             vfrac(i  ,j,k) == 1. && vfrac(i+1,j,k) == 1.)
                 {
                     int order = 4;
                     qmns = q(i-1,j,k,n) + 0.5 * ( 1.0 - ccvel(i-1,j,k,0) * dtdx) *
                         amrex_calc_xslope(i-1,j,k,n,order,q);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i-1,j,k) == 1. and vfrac(i-2,j,k) == 1. and vfrac(i  ,j,k) == 1.)
+                } else if (vfrac(i-1,j,k) == 1. && vfrac(i-2,j,k) == 1. && vfrac(i  ,j,k) == 1.)
                 {
                     int order = 2;
                     qmns = q(i-1,j,k,n) + 0.5 * ( 1.0 - ccvel(i-1,j,k,0) * dtdx) *
@@ -338,12 +338,12 @@ void ebgodunov::predict_plm_y (Box const& yebox,
     bool has_extdir_or_ho_lo_z = extdir_lohi_z.first;
     bool has_extdir_or_ho_hi_z = extdir_lohi_z.second;
 
-    if ( (has_extdir_or_ho_lo_x and domain_ilo >= yebox.smallEnd(0)-1) or
-         (has_extdir_or_ho_hi_x and domain_ihi <= yebox.bigEnd(0)    ) or
-         (has_extdir_or_ho_lo_z and domain_klo >= yebox.smallEnd(2)-1) or
-         (has_extdir_or_ho_hi_z and domain_khi <= yebox.bigEnd(2)    ) or
-         (has_extdir_or_ho_lo_y and domain_jlo >= yebox.smallEnd(1)-1) or
-         (has_extdir_or_ho_hi_y and domain_jhi <= yebox.bigEnd(1)    ) )
+    if ( (has_extdir_or_ho_lo_x && domain_ilo >= yebox.smallEnd(0)-1) ||
+         (has_extdir_or_ho_hi_x && domain_ihi <= yebox.bigEnd(0)    ) ||
+         (has_extdir_or_ho_lo_z && domain_klo >= yebox.smallEnd(2)-1) ||
+         (has_extdir_or_ho_hi_z && domain_khi <= yebox.bigEnd(2)    ) ||
+         (has_extdir_or_ho_lo_y && domain_jlo >= yebox.smallEnd(1)-1) ||
+         (has_extdir_or_ho_hi_y && domain_jhi <= yebox.bigEnd(1)    ) )
     {
         amrex::ParallelFor(yebox, ncomp, [q,ccvel,AMREX_D_DECL(domain_ilo,domain_jlo,domain_klo),
                                                   AMREX_D_DECL(domain_ihi,domain_jhi,domain_khi),
@@ -357,17 +357,17 @@ void ebgodunov::predict_plm_y (Box const& yebox,
             if (flag(i,j,k).isConnected(0,-1,0))
             {
                 const auto& bc = pbc[n];
-                bool extdir_or_ho_ilo = (bc.lo(0) == BCType::ext_dir) or
+                bool extdir_or_ho_ilo = (bc.lo(0) == BCType::ext_dir) ||
                                         (bc.lo(0) == BCType::hoextrap);
-                bool extdir_or_ho_ihi = (bc.hi(0) == BCType::ext_dir) or
+                bool extdir_or_ho_ihi = (bc.hi(0) == BCType::ext_dir) ||
                                         (bc.hi(0) == BCType::hoextrap);
-                bool extdir_or_ho_jlo = (bc.lo(1) == BCType::ext_dir) or
+                bool extdir_or_ho_jlo = (bc.lo(1) == BCType::ext_dir) ||
                                         (bc.lo(1) == BCType::hoextrap);
-                bool extdir_or_ho_jhi = (bc.hi(1) == BCType::ext_dir) or
+                bool extdir_or_ho_jhi = (bc.hi(1) == BCType::ext_dir) ||
                                         (bc.hi(1) == BCType::hoextrap);
-                bool extdir_or_ho_klo = (bc.lo(2) == BCType::ext_dir) or
+                bool extdir_or_ho_klo = (bc.lo(2) == BCType::ext_dir) ||
                                         (bc.lo(2) == BCType::hoextrap);
-                bool extdir_or_ho_khi = (bc.hi(2) == BCType::ext_dir) or
+                bool extdir_or_ho_khi = (bc.hi(2) == BCType::ext_dir) ||
                                         (bc.hi(2) == BCType::hoextrap);
 
                 // *************************************************
@@ -375,15 +375,15 @@ void ebgodunov::predict_plm_y (Box const& yebox,
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i,j,k) with all values at cell centers
-                if (vfrac(i,j,k) == 1. and vfrac(i,j-1,k) == 1. and vfrac(i,j-2,k) == 1. and
-                                           vfrac(i,j+1,k) == 1. and vfrac(i,j+2,k) == 1.)
+                if (vfrac(i,j,k) == 1. && vfrac(i,j-1,k) == 1. && vfrac(i,j-2,k) == 1. &&
+                                           vfrac(i,j+1,k) == 1. && vfrac(i,j+2,k) == 1.)
                 {
                     int order = 4;
                     qpls = q(i,j  ,k,n) + 0.5 * (-1.0 - ccvel(i  ,j,k,1) * dtdy) *
                         amrex_calc_yslope_extdir(i,j,k,n,order,q,extdir_or_ho_jlo,extdir_or_ho_jhi,domain_jlo,domain_jhi);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i,j,k) == 1. and vfrac(i,j-1,k) == 1. and vfrac(i,j+1,k) == 1.) {
+                } else if (vfrac(i,j,k) == 1. && vfrac(i,j-1,k) == 1. && vfrac(i,j+1,k) == 1.) {
 
                     int order = 2;
                     qpls = q(i,j  ,k,n) + 0.5 * (-1.0 - ccvel(i  ,j,k,1) * dtdy) *
@@ -422,15 +422,15 @@ void ebgodunov::predict_plm_y (Box const& yebox,
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i,j-1,k) with all values at cell centers
-                if (vfrac(i,j-1,k) == 1. and vfrac(i,j-2,k) == 1. and vfrac(i,j-3,k) == 1. and
-                                             vfrac(i,j  ,k) == 1. and vfrac(i,j+1,k) == 1.)
+                if (vfrac(i,j-1,k) == 1. && vfrac(i,j-2,k) == 1. && vfrac(i,j-3,k) == 1. &&
+                                             vfrac(i,j  ,k) == 1. && vfrac(i,j+1,k) == 1.)
                 {
                     int order = 4;
                     qmns = q(i,j-1,k,n) + 0.5 * ( 1.0 - ccvel(i,j-1,k,1) * dtdy) *
                         amrex_calc_yslope_extdir(i,j-1,k,n,order,q,extdir_or_ho_jlo,extdir_or_ho_jhi,domain_jlo,domain_jhi);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i,j-1,k) == 1. and vfrac(i,j-2,k) == 1. and vfrac(i,j  ,k) == 1.)
+                } else if (vfrac(i,j-1,k) == 1. && vfrac(i,j-2,k) == 1. && vfrac(i,j  ,k) == 1.)
                 {
                     int order = 2;
                     qmns = q(i,j-1,k,n) + 0.5 * ( 1.0 - ccvel(i,j-1,k,1) * dtdy) *
@@ -488,15 +488,15 @@ void ebgodunov::predict_plm_y (Box const& yebox,
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i,j,k) with all values at cell centers
-                if (vfrac(i,j,k) == 1. and vfrac(i,j-1,k) == 1. and vfrac(i,j-2,k) == 1. and
-                                           vfrac(i,j+1,k) == 1. and vfrac(i,j+2,k) == 1.)
+                if (vfrac(i,j,k) == 1. && vfrac(i,j-1,k) == 1. && vfrac(i,j-2,k) == 1. &&
+                                           vfrac(i,j+1,k) == 1. && vfrac(i,j+2,k) == 1.)
                 {
                     int order = 4;
                     qpls = q(i,j,k,n) + 0.5 * (-1.0 - ccvel(i,j,k,1) * dtdy) *
                         amrex_calc_yslope(i,j,k,n,order,q);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i,j,k) == 1. and vfrac(i,j-1,k) == 1. and vfrac(i,j+1,k) == 1.) {
+                } else if (vfrac(i,j,k) == 1. && vfrac(i,j-1,k) == 1. && vfrac(i,j+1,k) == 1.) {
 
                     int order = 2;
                     qpls = q(i,j,k,n) + 0.5 * (-1.0 - ccvel(i,j,k,1) * dtdy) *
@@ -531,15 +531,15 @@ void ebgodunov::predict_plm_y (Box const& yebox,
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i,j-1,k) with all values at cell centers
-                if (vfrac(i,j-1,k) == 1. and vfrac(i,j-2,k) == 1. and vfrac(i,j-3,k) == 1. and
-                                             vfrac(i,j  ,k) == 1. and vfrac(i,j+1,k) == 1.)
+                if (vfrac(i,j-1,k) == 1. && vfrac(i,j-2,k) == 1. && vfrac(i,j-3,k) == 1. &&
+                                             vfrac(i,j  ,k) == 1. && vfrac(i,j+1,k) == 1.)
                 {
                     int order = 4;
                     qmns = q(i,j-1,k,n) + 0.5 * ( 1.0 - ccvel(i,j-1,k,1) * dtdy) *
                         amrex_calc_yslope(i,j-1,k,n,order,q);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i,j-1,k) == 1. and vfrac(i,j-2,k) == 1. and vfrac(i,j  ,k) == 1.)
+                } else if (vfrac(i,j-1,k) == 1. && vfrac(i,j-2,k) == 1. && vfrac(i,j  ,k) == 1.)
                 {
                     int order = 2;
                     qmns = q(i,j-1,k,n) + 0.5 * ( 1.0 - ccvel(i,j-1,k,1) * dtdy) *
@@ -616,12 +616,12 @@ void ebgodunov::predict_plm_z (Box const& zebox,
     bool has_extdir_or_ho_lo_z = extdir_lohi_z.first;
     bool has_extdir_or_ho_hi_z = extdir_lohi_z.second;
 
-    if ( (has_extdir_or_ho_lo_x and domain_ilo >= zebox.smallEnd(0)-1) or
-         (has_extdir_or_ho_hi_x and domain_ihi <= zebox.bigEnd(0)    ) or
-         (has_extdir_or_ho_lo_z and domain_klo >= zebox.smallEnd(2)-1) or
-         (has_extdir_or_ho_hi_z and domain_khi <= zebox.bigEnd(2)    ) or
-         (has_extdir_or_ho_lo_y and domain_jlo >= zebox.smallEnd(1)-1) or
-         (has_extdir_or_ho_hi_y and domain_jhi <= zebox.bigEnd(1)    ) )
+    if ( (has_extdir_or_ho_lo_x && domain_ilo >= zebox.smallEnd(0)-1) ||
+         (has_extdir_or_ho_hi_x && domain_ihi <= zebox.bigEnd(0)    ) ||
+         (has_extdir_or_ho_lo_z && domain_klo >= zebox.smallEnd(2)-1) ||
+         (has_extdir_or_ho_hi_z && domain_khi <= zebox.bigEnd(2)    ) ||
+         (has_extdir_or_ho_lo_y && domain_jlo >= zebox.smallEnd(1)-1) ||
+         (has_extdir_or_ho_hi_y && domain_jhi <= zebox.bigEnd(1)    ) )
     {
         amrex::ParallelFor(zebox, ncomp, [q,ccvel,AMREX_D_DECL(domain_ilo,domain_jlo,domain_klo),
                                                   AMREX_D_DECL(domain_ihi,domain_jhi,domain_khi),
@@ -635,17 +635,17 @@ void ebgodunov::predict_plm_z (Box const& zebox,
             if (flag(i,j,k).isConnected(0,0,-1))
             {
                 const auto& bc = pbc[n];
-                bool extdir_or_ho_ilo = (bc.lo(0) == BCType::ext_dir) or
+                bool extdir_or_ho_ilo = (bc.lo(0) == BCType::ext_dir) ||
                                         (bc.lo(0) == BCType::hoextrap);
-                bool extdir_or_ho_ihi = (bc.hi(0) == BCType::ext_dir) or
+                bool extdir_or_ho_ihi = (bc.hi(0) == BCType::ext_dir) ||
                                         (bc.hi(0) == BCType::hoextrap);
-                bool extdir_or_ho_jlo = (bc.lo(1) == BCType::ext_dir) or
+                bool extdir_or_ho_jlo = (bc.lo(1) == BCType::ext_dir) ||
                                         (bc.lo(1) == BCType::hoextrap);
-                bool extdir_or_ho_jhi = (bc.hi(1) == BCType::ext_dir) or
+                bool extdir_or_ho_jhi = (bc.hi(1) == BCType::ext_dir) ||
                                         (bc.hi(1) == BCType::hoextrap);
-                bool extdir_or_ho_klo = (bc.lo(2) == BCType::ext_dir) or
+                bool extdir_or_ho_klo = (bc.lo(2) == BCType::ext_dir) ||
                                         (bc.lo(2) == BCType::hoextrap);
-                bool extdir_or_ho_khi = (bc.hi(2) == BCType::ext_dir) or
+                bool extdir_or_ho_khi = (bc.hi(2) == BCType::ext_dir) ||
                                         (bc.hi(2) == BCType::hoextrap);
 
                 // *************************************************
@@ -653,15 +653,15 @@ void ebgodunov::predict_plm_z (Box const& zebox,
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i,j,k) with all values at cell centers
-                if (vfrac(i,j,k) == 1. and vfrac(i,j,k-1) == 1. and vfrac(i,j,k-2) == 1. and
-                                           vfrac(i,j,k+1) == 1. and vfrac(i,j,k+2) == 1.)
+                if (vfrac(i,j,k) == 1. && vfrac(i,j,k-1) == 1. && vfrac(i,j,k-2) == 1. &&
+                                           vfrac(i,j,k+1) == 1. && vfrac(i,j,k+2) == 1.)
                 {
                     int order = 4;
                     qpls = q(i,j,k,n) + 0.5 * (-1.0 - ccvel(i,j,k,2) * dtdz) *
                         amrex_calc_zslope_extdir(i,j,k,n,order,q,extdir_or_ho_klo,extdir_or_ho_khi,domain_klo,domain_khi);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i,j,k) == 1. and vfrac(i,j,k-1) == 1. and vfrac(i,j,k+1) == 1.) {
+                } else if (vfrac(i,j,k) == 1. && vfrac(i,j,k-1) == 1. && vfrac(i,j,k+1) == 1.) {
 
                     int order = 2;
                     qpls = q(i,j,k,n) + 0.5 * (-1.0 - ccvel(i,j,k,2) * dtdz) *
@@ -702,15 +702,15 @@ void ebgodunov::predict_plm_z (Box const& zebox,
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i,j-1,k) with all values at cell centers
-                if (vfrac(i,j,k-1) == 1. and vfrac(i,j,k-2) == 1. and vfrac(i,j,k-3) == 1. and
-                                             vfrac(i,j,k  ) == 1. and vfrac(i,j,k+1) == 1.)
+                if (vfrac(i,j,k-1) == 1. && vfrac(i,j,k-2) == 1. && vfrac(i,j,k-3) == 1. &&
+                                             vfrac(i,j,k  ) == 1. && vfrac(i,j,k+1) == 1.)
                 {
                     int order = 4;
                     qmns = q(i,j,k-1,n) + 0.5 * ( 1.0 - ccvel(i,j,k-1,2) * dtdz) *
                         amrex_calc_zslope_extdir(i,j,k-1,n,order,q,extdir_or_ho_klo,extdir_or_ho_khi,domain_klo,domain_khi);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i,j,k-1) == 1. and vfrac(i,j,k-2) == 1. and vfrac(i,j,k  ) == 1.)
+                } else if (vfrac(i,j,k-1) == 1. && vfrac(i,j,k-2) == 1. && vfrac(i,j,k  ) == 1.)
                 {
                     int order = 2;
                     qmns = q(i,j,k-1,n) + 0.5 * ( 1.0 - ccvel(i,j,k-1,2) * dtdz) *
@@ -768,15 +768,15 @@ void ebgodunov::predict_plm_z (Box const& zebox,
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i,j,k) with all values at cell centers
-                if (vfrac(i,j,k) == 1. and vfrac(i,j,k-1) == 1. and vfrac(i,j,k-2) == 1. and
-                                           vfrac(i,j,k+1) == 1. and vfrac(i,j,k+2) == 1.)
+                if (vfrac(i,j,k) == 1. && vfrac(i,j,k-1) == 1. && vfrac(i,j,k-2) == 1. &&
+                                           vfrac(i,j,k+1) == 1. && vfrac(i,j,k+2) == 1.)
                 {
                     int order = 4;
                     qpls = q(i,j,k,n) + 0.5 * (-1.0 - ccvel(i,j,k,2) * dtdz) *
                         amrex_calc_zslope(i,j,k,n,order,q);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i,j,k) == 1. and vfrac(i,j,k-1) == 1. and vfrac(i,j,k+1) == 1.) {
+                } else if (vfrac(i,j,k) == 1. && vfrac(i,j,k-1) == 1. && vfrac(i,j,k+1) == 1.) {
 
                     int order = 2;
                     qpls = q(i,j,k,n) + 0.5 * (-1.0 - ccvel(i,j,k,2) * dtdz) *
@@ -813,15 +813,15 @@ void ebgodunov::predict_plm_z (Box const& zebox,
                 // *************************************************
 
                 // We have enough cells to do 4th order slopes centered on (i,j,k-1) with all values at cell centers
-                if (vfrac(i,j,k-1) == 1. and vfrac(i,j,k-2) == 1. and vfrac(i,j,k-3) == 1. and
-                                             vfrac(i,j,k  ) == 1. and vfrac(i,j,k+1) == 1.)
+                if (vfrac(i,j,k-1) == 1. && vfrac(i,j,k-2) == 1. && vfrac(i,j,k-3) == 1. &&
+                                             vfrac(i,j,k  ) == 1. && vfrac(i,j,k+1) == 1.)
                 {
                     int order = 4;
                     qmns = q(i,j,k-1,n) + 0.5 * ( 1.0 - ccvel(i,j,k-1,2) * dtdz) *
                         amrex_calc_zslope(i,j,k-1,n,order,q);
 
                 // We have enough cells to do 2nd order slopes with all values at cell centers
-                } else if (vfrac(i,j,k-1) == 1. and vfrac(i,j,k-2) == 1. and vfrac(i,j,k  ) == 1.)
+                } else if (vfrac(i,j,k-1) == 1. && vfrac(i,j,k-2) == 1. && vfrac(i,j,k  ) == 1.)
                 {
                     int order = 2;
                     qmns = q(i,j,k-1,n) + 0.5 * ( 1.0 - ccvel(i,j,k-1,2) * dtdz) *

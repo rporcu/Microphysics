@@ -58,7 +58,7 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     }
 
     // Add real components for solid species
-    if (SOLIDS::solve_species and REACTIONS::solve)
+    if (SOLIDS::solve_species && REACTIONS::solve)
     {
       // Add SOLIDS::nspecies components for each of the reactions
       for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
@@ -616,7 +616,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                       Real r_lm = p1radius + p2radius;
 
                       AMREX_ASSERT_WITH_MESSAGE(
-                          not (particle.id() == p2.id() and
+                          !(particle.id() == p2.id() &&
                                particle.cpu() == p2.cpu()),
                         "A particle should not be its own neighbor!");
 
@@ -815,32 +815,32 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 ppos[1] += subdt * p_realarray[SoArealData::vely][i];
                 ppos[2] += subdt * p_realarray[SoArealData::velz][i];
 
-                if (x_lo_bc and ppos[0] < p_lo[0])
+                if (x_lo_bc && ppos[0] < p_lo[0])
                 {
                   ppos[0] = p_lo[0] + eps;
                   p_realarray[SoArealData::velx][i] = -p_realarray[SoArealData::velx][i];
                 }
-                else if (x_hi_bc and ppos[0] > p_hi[0])
+                else if (x_hi_bc && ppos[0] > p_hi[0])
                 {
                   ppos[0] = p_hi[0] - eps;
                   p_realarray[SoArealData::velx][i] = -p_realarray[SoArealData::velx][i];
                 }
-                else if (y_lo_bc and ppos[1] < p_lo[1])
+                else if (y_lo_bc && ppos[1] < p_lo[1])
                 {
                   ppos[1] = p_lo[1] + eps;
                   p_realarray[SoArealData::vely][i] = -p_realarray[SoArealData::vely][i];
                 }
-                else if (y_hi_bc and ppos[1] > p_hi[1])
+                else if (y_hi_bc && ppos[1] > p_hi[1])
                 {
                   ppos[1] = p_hi[1] - eps;
                   p_realarray[SoArealData::vely][i] = -p_realarray[SoArealData::vely][i];
                 }
-                else if (z_lo_bc and ppos[2] < p_lo[2])
+                else if (z_lo_bc && ppos[2] < p_lo[2])
                 {
                   ppos[2] = p_lo[2] + eps;
                   p_realarray[SoArealData::velz][i] = -p_realarray[SoArealData::velz][i];
                 }
-                else if (z_hi_bc and ppos[2] > p_hi[2])
+                else if (z_hi_bc && ppos[2] > p_hi[2])
                 {
                   ppos[2] = p_hi[2] - eps;
                   p_realarray[SoArealData::velz][i] = -p_realarray[SoArealData::velz][i];
@@ -870,7 +870,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               BL_PROFILE_VAR_STOP(des_update_enthalpy);
             }
 
-            if (SOLIDS::solve_species and REACTIONS::solve)
+            if (SOLIDS::solve_species && REACTIONS::solve)
             {
               BL_PROFILE_VAR("des::update_particle_species()", des_update_species);
 
@@ -1484,10 +1484,10 @@ ComputeAverageVelocities (const int lev,
     //
     // Check the regions are defined correctly
     //
-    if ( ( avg_region_x_e.size() != nregions ) or
-         ( avg_region_y_s.size() != nregions ) or
-         ( avg_region_y_n.size() != nregions ) or
-         ( avg_region_z_b.size() != nregions ) or
+    if ( ( avg_region_x_e.size() != nregions ) ||
+         ( avg_region_y_s.size() != nregions ) ||
+         ( avg_region_y_n.size() != nregions ) ||
+         ( avg_region_z_b.size() != nregions ) ||
          ( avg_region_z_t.size() != nregions ) )
     {
       amrex::Print() << "ComputeAverageVelocities: some regions are not properly"
@@ -1731,10 +1731,10 @@ ComputeAverageTemperatures (const int lev,
     //
     // Check the regions are defined correctly
     //
-    if ( ( avg_region_x_e.size() != nregions ) or
-         ( avg_region_y_s.size() != nregions ) or
-         ( avg_region_y_n.size() != nregions ) or
-         ( avg_region_z_b.size() != nregions ) or
+    if ( ( avg_region_x_e.size() != nregions ) ||
+         ( avg_region_y_s.size() != nregions ) ||
+         ( avg_region_y_n.size() != nregions ) ||
+         ( avg_region_z_b.size() != nregions ) ||
          ( avg_region_z_t.size() != nregions ) )
     {
       amrex::Print() << "ComputeAverageTemperatures: some regions are not properly"

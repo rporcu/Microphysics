@@ -81,7 +81,7 @@ mfix::set_species_bc0 (const Box& sbx,
       const int bcv = a_bc_ilo(dom_lo[0]-1,j,k,1);
       const int bct = a_bc_ilo(dom_lo[0]-1,j,k,0);
 
-      if((bct == pinf) or (bct == pout) or (bct == minf))
+      if((bct == pinf) || (bct == pout) || (bct == minf))
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
@@ -112,7 +112,7 @@ mfix::set_species_bc0 (const Box& sbx,
       const int bcv = a_bc_ihi(dom_hi[0]+1,j,k,1);
       const int bct = a_bc_ihi(dom_hi[0]+1,j,k,0);
 
-      if((bct == pinf) or (bct == pout) or (bct == minf))
+      if((bct == pinf) || (bct == pout) || (bct == minf))
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
@@ -143,7 +143,7 @@ mfix::set_species_bc0 (const Box& sbx,
       const int bcv = a_bc_jlo(i,dom_lo[1]-1,k,1);
       const int bct = a_bc_jlo(i,dom_lo[1]-1,k,0);
 
-      if((bct == pinf) or (bct == pout) or (bct == minf))
+      if((bct == pinf) || (bct == pout) || (bct == minf))
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
@@ -174,7 +174,7 @@ mfix::set_species_bc0 (const Box& sbx,
       const int bcv = a_bc_jhi(i,dom_hi[1]+1,k,1);
       const int bct = a_bc_jhi(i,dom_hi[1]+1,k,0);
 
-      if((bct == pinf) or (bct == pout) or (bct == minf))
+      if((bct == pinf) || (bct == pout) || (bct == minf))
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
@@ -205,7 +205,7 @@ mfix::set_species_bc0 (const Box& sbx,
       const int bcv = a_bc_klo(i,j,dom_lo[2]-1,1);
       const int bct = a_bc_klo(i,j,dom_lo[2]-1,0);
 
-      if((bct == pinf) or (bct == pout) or (bct == minf))
+      if((bct == pinf) || (bct == pout) || (bct == minf))
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
@@ -236,7 +236,7 @@ mfix::set_species_bc0 (const Box& sbx,
       const int bcv = a_bc_khi(i,j,dom_hi[2]+1,1);
       const int bct = a_bc_khi(i,j,dom_hi[2]+1,0);
 
-      if((bct == pinf) or (bct == pout) or (bct == minf))
+      if((bct == pinf) || (bct == pout) || (bct == minf))
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];

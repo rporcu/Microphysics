@@ -15,7 +15,7 @@ mfix::Regrid ()
   {
     amrex::Print() << "Load balancing using " << load_balance_type << std::endl;
 
-    if (DEM::solve  or PIC::solve)
+    if (DEM::solve  || PIC::solve)
        AMREX_ALWAYS_ASSERT(particle_cost[0] != nullptr);
 
     if (FLUID::solve)
@@ -119,7 +119,7 @@ mfix::Regrid ()
 
         // This calls re-creates a proper particle_ebfactories
         //  and regrids all the multifabs that depend on it
-        if (DEM::solve or PIC::solve)
+        if (DEM::solve || PIC::solve)
           RegridLevelSetArray(lev);
       }
 
@@ -193,7 +193,7 @@ mfix::Regrid ()
         particle_cost[base_lev]->setVal(0.0);
       }
 
-      if (DEM::solve or PIC::solve){
+      if (DEM::solve || PIC::solve){
         pc->Regrid(dmap[base_lev], grids[base_lev], base_lev);
       }
 
@@ -201,7 +201,7 @@ mfix::Regrid ()
 
       // This calls re-creates a proper particles_ebfactory and regrids
       // all the multifab that depend on it
-      if (DEM::solve or PIC::solve)
+      if (DEM::solve || PIC::solve)
         RegridLevelSetArray(base_lev);
       }
   } else {

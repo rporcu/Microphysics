@@ -113,12 +113,12 @@ void mfix::make_eb_general () {
             //     build_eb_levels(gshop);
             // }
 
-            if (has_walls and use_divider) { // ........................... poly2 + walls + divider
+            if (has_walls && use_divider) { // ........................... poly2 + walls + divider
 #ifdef AMREX_USE_DPCPP
                 amrex::Abort("DPD++: make_eb_general poly2 not supported");
 #else
 
-                if (DEM::solve or PIC::solve) {
+                if (DEM::solve || PIC::solve) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
 
                     auto eb_if = EB2::makeUnion(* impfunc_poly2, * impfunc_walls_part,
@@ -157,7 +157,7 @@ void mfix::make_eb_general () {
                 amrex::Abort("DPD++: make_eb_general poly2 not supported");
 #else
 
-                if (DEM::solve or PIC::solve) {
+                if (DEM::solve || PIC::solve) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
 
                     auto eb_if = EB2::makeUnion(* impfunc_poly2, * impfunc_walls_part);
@@ -222,9 +222,9 @@ void mfix::make_eb_general () {
             }
 
         } else {
-            if (has_walls and use_divider) { // ........................... ! poly2 + walls + divider
+            if (has_walls && use_divider) { // ........................... ! poly2 + walls + divider
 
-                if (DEM::solve or PIC::solve) {
+                if (DEM::solve || PIC::solve) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
 
                     auto eb_if = EB2::makeUnion(* impfunc_walls_part, * impfunc_divider);
@@ -256,7 +256,7 @@ void mfix::make_eb_general () {
 
             } else if (has_walls) { // ................................... ! poly2 + walls + ! divider
 
-                if (DEM::solve or PIC::solve) {
+                if (DEM::solve || PIC::solve) {
                     auto gshop = EB2::makeShop(* impfunc_walls_part);
 
                     build_eb_levels(gshop);

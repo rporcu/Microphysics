@@ -16,7 +16,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   // Start the timers ...
   const Real strttime = ParallelDescriptor::second();
 
-  if (DEM::solve or PIC::solve)
+  if (DEM::solve || PIC::solve)
   {
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain
@@ -28,16 +28,16 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 
     for (int lev = 0; lev < nlev; lev++) {
 
-      bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) and
+      bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                            (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
-      if (lev == 0 and OnSameGrids) {
+      if (lev == 0 && OnSameGrids) {
 
         // If we are already working with the internal mf defined on the
         // particle_box_array, then we just work with this.
         mf_pointer[lev] = m_leveldata[lev]->ep_g;
 
-      } else if (lev == 0 and (not OnSameGrids))  {
+      } else if (lev == 0 && (!OnSameGrids))  {
         // If ep_g is not defined on the particle_box_array, then we need
         // to make a temporary here and copy into ep_g at the end.
         mf_pointer[lev] = new MultiFab(pc->ParticleBoxArray(lev),

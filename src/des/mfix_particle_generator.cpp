@@ -615,7 +615,7 @@ ParticlesGenerator::random_fill_dem (const int icv,
     bool stop = false;
     int fails(0);
 
-    while(fails < maxfails and (not stop)) {
+    while(fails < maxfails && (!stop)) {
       RealVect pos;
       pos[0] = ic_dlo[0] + ic_len[0]*amrex::Random();
       pos[1] = ic_dlo[1] + ic_len[1]*amrex::Random();
@@ -957,11 +957,11 @@ ParticlesGenerator::nor_rno (amrex::Gpu::DeviceVector<Real>& dp,
 
       int iterations(0);
 
-      while(not(dp1 >= dp_min and dp1 <= dp_max and dp2 >= dp_min and dp2 <= dp_max) and
+      while(!(dp1 >= dp_min && dp1 <= dp_max && dp2 >= dp_min && dp2 <= dp_max) &&
             iterations < maxfails)
       {
         Real w(1.1);
-        while(w > 1 or amrex::Math::abs(w-1) < tolerance)
+        while(w > 1 || amrex::Math::abs(w-1) < tolerance)
         {
           x = 2*amrex::Random(engine) - 1;
           y = 2*amrex::Random(engine) - 1;
@@ -981,7 +981,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::DeviceVector<Real>& dp,
         iterations++;
       }
 
-      if(not(iterations < maxfails))
+      if(!(iterations < maxfails))
       {
 #ifdef AMREX_USE_GPU
         Gpu::Atomic::Add(p_fails, 1);

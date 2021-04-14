@@ -39,21 +39,21 @@ void predict_vels_on_faces (Box const& domain_box,
   const int domain_ilo = domain_box.smallEnd(0);
   const int domain_ihi = domain_box.bigEnd(0);
 
-  bool check_extdir_ilo = (domain_ilo >= ubx.smallEnd(0) and domain_ilo <= ubx.bigEnd(0));
-  bool check_extdir_ihi = (domain_ihi >= ubx.smallEnd(0) and domain_ihi <= ubx.bigEnd(0));
+  bool check_extdir_ilo = (domain_ilo >= ubx.smallEnd(0) && domain_ilo <= ubx.bigEnd(0));
+  bool check_extdir_ihi = (domain_ihi >= ubx.smallEnd(0) && domain_ihi <= ubx.bigEnd(0));
 
-  if (check_extdir_ilo or check_extdir_ihi)
+  if (check_extdir_ilo || check_extdir_ihi)
   {
     amrex::ParallelFor(ubx, [vcc, small_vel, u, order,
       check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi,
       bc_ilo, bc_ihi, bct_Dirichlet, bct_size]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      bool extdir_ilo = check_extdir_ilo and (i-1 <= domain_ilo) and
+      bool extdir_ilo = check_extdir_ilo && (i-1 <= domain_ilo) &&
         (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                      aux::is_equal<int>(bc_ilo(domain_ilo-1,j,k,0))));
 
-      bool extdir_ihi = check_extdir_ihi and (i   >= domain_ihi) and
+      bool extdir_ihi = check_extdir_ihi && (i   >= domain_ihi) &&
         (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                      aux::is_equal<int>(bc_ihi(domain_ihi+1,j,k,0))));
 
@@ -68,7 +68,7 @@ void predict_vels_on_faces (Box const& domain_box,
 
       Real umac(0);
 
-      if (umns >= 0 or upls <= 0) {
+      if (umns >= 0 || upls <= 0) {
         Real avg = .5 * ( upls + umns );
 
         if (avg >= small_vel) {
@@ -97,7 +97,7 @@ void predict_vels_on_faces (Box const& domain_box,
 
       Real umac(0);
 
-      if (umns >= 0 or upls <= 0) {
+      if (umns >= 0 || upls <= 0) {
         Real avg = .5 * ( upls + umns );
 
         if (avg >= small_vel) {
@@ -123,11 +123,11 @@ void predict_vels_on_faces (Box const& domain_box,
   const int domain_jlo = domain_box.smallEnd(1);
   const int domain_jhi = domain_box.bigEnd(1);
 
-  bool check_extdir_jlo = (domain_jlo >= vbx.smallEnd(1) and domain_jlo <= vbx.bigEnd(1));
-  bool check_extdir_jhi = (domain_jhi >= vbx.smallEnd(1) and domain_jhi <= vbx.bigEnd(1));
+  bool check_extdir_jlo = (domain_jlo >= vbx.smallEnd(1) && domain_jlo <= vbx.bigEnd(1));
+  bool check_extdir_jhi = (domain_jhi >= vbx.smallEnd(1) && domain_jhi <= vbx.bigEnd(1));
 
 
-  if(check_extdir_jlo or check_extdir_jhi)
+  if(check_extdir_jlo || check_extdir_jhi)
   {
 
     amrex::ParallelFor(vbx, [vcc, small_vel, v, order,
@@ -135,11 +135,11 @@ void predict_vels_on_faces (Box const& domain_box,
     bc_jlo, bc_jhi, bct_Dirichlet, bct_size]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      bool extdir_jlo = check_extdir_jlo and (j-1 <= domain_jlo) and
+      bool extdir_jlo = check_extdir_jlo && (j-1 <= domain_jlo) &&
         (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                      aux::is_equal<int>(bc_jlo(i,domain_jlo-1,k,0))));
 
-      bool extdir_jhi = check_extdir_jhi and (j   >= domain_jhi) and
+      bool extdir_jhi = check_extdir_jhi && (j   >= domain_jhi) &&
         (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                      aux::is_equal<int>(bc_jhi(i,domain_jhi+1,k,0))));
 
@@ -154,7 +154,7 @@ void predict_vels_on_faces (Box const& domain_box,
 
       Real vmac(0);
 
-      if (vmns >= 0 or vpls <= 0) {
+      if (vmns >= 0 || vpls <= 0) {
         Real avg = .5 * (vpls + vmns);
 
         if (avg >= small_vel) {
@@ -184,7 +184,7 @@ void predict_vels_on_faces (Box const& domain_box,
 
       Real vmac(0);
 
-      if (vmns >= 0 or vpls <= 0) {
+      if (vmns >= 0 || vpls <= 0) {
         Real avg = .5 * (vpls + vmns);
 
         if (avg >= small_vel) {
@@ -212,21 +212,21 @@ void predict_vels_on_faces (Box const& domain_box,
   const int domain_klo = domain_box.smallEnd(2);
   const int domain_khi = domain_box.bigEnd(2);
 
-  bool check_extdir_klo = (domain_klo >= wbx.smallEnd(2) and domain_klo <= wbx.bigEnd(2));
-  bool check_extdir_khi = (domain_khi >= wbx.smallEnd(2) and domain_khi <= wbx.bigEnd(2));
+  bool check_extdir_klo = (domain_klo >= wbx.smallEnd(2) && domain_klo <= wbx.bigEnd(2));
+  bool check_extdir_khi = (domain_khi >= wbx.smallEnd(2) && domain_khi <= wbx.bigEnd(2));
 
-  if(check_extdir_klo or check_extdir_khi)
+  if(check_extdir_klo || check_extdir_khi)
   {
     amrex::ParallelFor(wbx, [vcc,small_vel, w, order,
     check_extdir_klo, check_extdir_khi, domain_klo, domain_khi,
     bc_klo, bc_khi, bct_Dirichlet, bct_size]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      bool extdir_klo = check_extdir_klo and (k-1 <= domain_klo) and
+      bool extdir_klo = check_extdir_klo && (k-1 <= domain_klo) &&
         (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                      aux::is_equal<int>(bc_klo(i,j,domain_klo-1,0))));
 
-      bool extdir_khi = check_extdir_khi and (k   >= domain_khi) and
+      bool extdir_khi = check_extdir_khi && (k   >= domain_khi) &&
         (aux::any_of(&bct_Dirichlet[0], &bct_Dirichlet[bct_size],
                      aux::is_equal<int>(bc_khi(i,j,domain_khi+1,0))));
 
@@ -241,7 +241,7 @@ void predict_vels_on_faces (Box const& domain_box,
 
       Real wmac(0);
 
-      if (wmns >= 0 or wpls <= 0) {
+      if (wmns >= 0 || wpls <= 0) {
         Real avg = .5 * (wpls + wmns);
 
         if (avg >= small_vel) {
@@ -269,7 +269,7 @@ void predict_vels_on_faces (Box const& domain_box,
 
       Real wmac(0);
 
-      if (wmns >= 0 or wpls <= 0) {
+      if (wmns >= 0 || wpls <= 0) {
         Real avg = .5 * (wpls + wmns);
 
         if (avg >= small_vel) {

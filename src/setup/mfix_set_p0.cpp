@@ -117,10 +117,10 @@ mfix::set_p0 (const Box& bx,
   //     If the bc's are pressure inflow/outflow then be sure to capture that in p0andgp0
   // ---------------------------------------------------------------->>>
 
-  if(((bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],0) == bc_list.get_pinf()) and
+  if(((bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],0) == bc_list.get_pinf()) &&
      (bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],0) == bc_list.get_pout()))
-    or
-     ((bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],0) == bc_list.get_pinf()) and
+    ||
+     ((bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],0) == bc_list.get_pinf()) &&
      (bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],0) == bc_list.get_pout())))
   {
     delp_dir_loc = 0;
@@ -136,10 +136,10 @@ mfix::set_p0 (const Box& bx,
 
     pj = p_hi;
   }
-  else if(((bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],0) == bc_list.get_pinf()) and
+  else if(((bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],0) == bc_list.get_pinf()) &&
           (bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],0) == bc_list.get_pout()))
-         or
-          ((bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],0) == bc_list.get_pinf()) and
+         ||
+          ((bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],0) == bc_list.get_pinf()) &&
           (bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],0) == bc_list.get_pout())))
   {
     delp_dir_loc = 1;
@@ -155,10 +155,10 @@ mfix::set_p0 (const Box& bx,
 
     pj = p_hi;
   }
-  else if(((bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,0) == bc_list.get_pinf()) and
+  else if(((bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,0) == bc_list.get_pinf()) &&
           (bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,0) == bc_list.get_pout()))
-         or
-          ((bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,0) == bc_list.get_pinf()) and
+         ||
+          ((bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,0) == bc_list.get_pinf()) &&
           (bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,0) == bc_list.get_pout())))
   {
     delp_dir_loc = 2;
@@ -182,16 +182,16 @@ mfix::set_p0 (const Box& bx,
   //  Make sure that ic_p_g is set if using delp pressure conditions
   for(int icv(0); icv < IC::ic.size(); ++icv)
   {
-    if((delp_dir_loc >= 0) and (delp_dir_loc == BC::delp_dir))
+    if((delp_dir_loc >= 0) && (delp_dir_loc == BC::delp_dir))
     {
-      if (not IC::ic[icv].fluid.pressure_defined)
+      if (!IC::ic[icv].fluid.pressure_defined)
       {
         std::cout << "MUST DEFINE ic_p_g if using the DELP pressure condition" << std::endl;
         exit(0);
       }
       pj = IC::ic[icv].fluid.pressure;
     }
-    else if((delp_dir_loc >= 0) and (delp_dir_loc != BC::delp_dir))
+    else if((delp_dir_loc >= 0) && (delp_dir_loc != BC::delp_dir))
     {
       if( IC::ic[icv].fluid.pressure_defined)
       {
@@ -204,7 +204,7 @@ mfix::set_p0 (const Box& bx,
       const Real gravity_square_module =
         gravity[0]*gravity[0] + gravity[1]*gravity[1] + gravity[2]*gravity[2];
 
-      if( not IC::ic[icv].fluid.pressure or gravity_square_module > tolerance)
+      if( !IC::ic[icv].fluid.pressure || gravity_square_module > tolerance)
       {
         compute_p0_bcs(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), pj,
             gravity, dx, dy, dz, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo,
@@ -516,7 +516,7 @@ void set_p0_bcs (const Box& sbx,
 
           const int bct = bct_ilo(dom_lo[0]-1, jbc, kbc, 0);
 
-          if(bct == bc_list.get_pinf() or bct == bc_list.get_pout())
+          if(bct == bc_list.get_pinf() || bct == bc_list.get_pout())
           {
             const int bcv = bct_ilo(dom_lo[0]-1, jbc, kbc, 1);
             p0_g(i,j,k) = m_bc_p_g[bcv];
@@ -537,7 +537,7 @@ void set_p0_bcs (const Box& sbx,
 
           const int bct = bct_ihi(dom_hi[0]+1, jbc, kbc, 0);
 
-          if(bct == bc_list.get_pinf() or bct == bc_list.get_pout())
+          if(bct == bc_list.get_pinf() || bct == bc_list.get_pout())
           {
             const int bcv = bct_ihi(dom_hi[0]+1, jbc, kbc, 1);
             p0_g(i,j,k) = m_bc_p_g[bcv];
@@ -558,7 +558,7 @@ void set_p0_bcs (const Box& sbx,
 
           const int bct = bct_jlo(ibc, dom_lo[1]-1, kbc, 0);
 
-          if(bct == bc_list.get_pinf() or bct == bc_list.get_pout())
+          if(bct == bc_list.get_pinf() || bct == bc_list.get_pout())
           {
             const int bcv = bct_jlo(ibc, dom_lo[1]-1, kbc, 1);
             p0_g(i,j,k) = m_bc_p_g[bcv];
@@ -579,7 +579,7 @@ void set_p0_bcs (const Box& sbx,
 
           const int bct = bct_jhi(ibc, dom_hi[1]+1, kbc, 0);
 
-          if(bct == bc_list.get_pinf() or bct == bc_list.get_pout())
+          if(bct == bc_list.get_pinf() || bct == bc_list.get_pout())
           {
             const int bcv = bct_jhi(ibc, dom_hi[1]+1, kbc, 1);
             p0_g(i,j,k) = m_bc_p_g[bcv];
@@ -600,7 +600,7 @@ void set_p0_bcs (const Box& sbx,
 
           const int bct = bct_klo(ibc, jbc, dom_lo[2]-1, 0);
 
-          if(bct == bc_list.get_pinf() or bct == bc_list.get_pout())
+          if(bct == bc_list.get_pinf() || bct == bc_list.get_pout())
           {
             const int bcv = bct_klo(ibc, jbc, dom_lo[2]-1, 1);
             p0_g(i,j,k) = m_bc_p_g[bcv];
@@ -621,7 +621,7 @@ void set_p0_bcs (const Box& sbx,
 
           const int bct = bct_khi(ibc, jbc, dom_hi[2]+1, 0);
 
-          if(bct == bc_list.get_pinf() or bct == bc_list.get_pout())
+          if(bct == bc_list.get_pinf() || bct == bc_list.get_pout())
           {
             const int bcv = bct_khi(ibc, jbc, dom_hi[2]+1, 1);
             p0_g(i,j,k) = m_bc_p_g[bcv];

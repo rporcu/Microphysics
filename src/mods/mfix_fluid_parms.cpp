@@ -270,7 +270,7 @@ namespace FLUID
       }
 
       // Flag to determine if we want to solve the fluid as a mixture
-      is_a_mixture = solve_species and
+      is_a_mixture = solve_species &&
         (FLUID::MolecularWeightModel == FLUID::MOLECULARWEIGHTMODEL::Mixture);
 
       pp.query("T_g0",  T_g0 );

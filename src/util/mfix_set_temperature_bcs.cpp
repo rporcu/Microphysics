@@ -103,7 +103,7 @@ mfix::set_temperature_bcs (Real time,
       if(bct == pout) {
         T_g(i,j,k) = T_g(dom_lo[0],j,k);
       }
-      else if (bct == minf or bct == pinf) {
+      else if (bct == minf || bct == pinf) {
         T_g(i,j,k) = p_bc_t_g[bcv];
       }
     });
@@ -120,7 +120,7 @@ mfix::set_temperature_bcs (Real time,
       if(bct == pout) {
         T_g(i,j,k) = T_g(dom_hi[0],j,k);
       }
-      else if (bct == minf or bct == pinf) {
+      else if (bct == minf || bct == pinf) {
         T_g(i,j,k) = p_bc_t_g[bcv];
       }
     });
@@ -137,7 +137,7 @@ mfix::set_temperature_bcs (Real time,
       if(bct == pout) {
         T_g(i,j,k) = T_g(i,dom_lo[1],k);
       }
-      else if (bct == minf or bct == pinf) {
+      else if (bct == minf || bct == pinf) {
         T_g(i,j,k) = p_bc_t_g[bcv];
       }
     });
@@ -154,7 +154,7 @@ mfix::set_temperature_bcs (Real time,
       if(bct == pout) {
         T_g(i,j,k) = T_g(i,dom_hi[1],k);
       }
-      else if (bct == minf or bct == pinf) {
+      else if (bct == minf || bct == pinf) {
         T_g(i,j,k) = p_bc_t_g[bcv];
       }
     });
@@ -171,7 +171,7 @@ mfix::set_temperature_bcs (Real time,
       if(bct == pout) {
         T_g(i,j,k) = T_g(i,j,dom_lo[2]);
       }
-      else if (bct == minf or bct == pinf) {
+      else if (bct == minf || bct == pinf) {
         T_g(i,j,k) = p_bc_t_g[bcv];
       }
     });
@@ -188,7 +188,7 @@ mfix::set_temperature_bcs (Real time,
       if(bct == pout) {
         T_g(i,j,k) = T_g(i,j,dom_hi[2]);
       }
-      else if (bct == minf or bct == pinf) {
+      else if (bct == minf || bct == pinf) {
         T_g(i,j,k) = p_bc_t_g[bcv];
       }
     });

@@ -389,12 +389,12 @@ void godunov::predict_godunov_on_box (Box const& bx, int ncomp,
         Godunov_cc_xbc_hi(i, j, k, n, q, stl, sth, bc.hi(0), dhi.x, true);
 
         // Prevent backflow
-        if ( (i==dlo.x) and (bc.lo(0) == BCType::foextrap || bc.lo(0) == BCType::hoextrap) )
+        if ( (i==dlo.x) && (bc.lo(0) == BCType::foextrap || bc.lo(0) == BCType::hoextrap) )
         {
             sth = amrex::min(sth,0.);
             stl = sth;
         }
-        if ( (i==dhi.x+1) and (bc.hi(0) == BCType::foextrap || bc.hi(0) == BCType::hoextrap) )
+        if ( (i==dhi.x+1) && (bc.hi(0) == BCType::foextrap || bc.hi(0) == BCType::hoextrap) )
         {
              stl = amrex::max(stl,0.);
              sth = stl;
@@ -488,12 +488,12 @@ void godunov::predict_godunov_on_box (Box const& bx, int ncomp,
         Godunov_cc_ybc_hi(i, j, k, n, q, stl, sth, bc.hi(1), dhi.y, true);
 
         // Prevent backflow
-        if ( (j==dlo.y) and (bc.lo(1) == BCType::foextrap || bc.lo(1) == BCType::hoextrap) )
+        if ( (j==dlo.y) && (bc.lo(1) == BCType::foextrap || bc.lo(1) == BCType::hoextrap) )
         {
             sth = amrex::min(sth,0.);
             stl = sth;
         }
-        if ( (j==dhi.y+1) and (bc.hi(1) == BCType::foextrap || bc.hi(1) == BCType::hoextrap) )
+        if ( (j==dhi.y+1) && (bc.hi(1) == BCType::foextrap || bc.hi(1) == BCType::hoextrap) )
         {
             stl = amrex::max(stl,0.);
             sth = stl;
@@ -591,12 +591,12 @@ void godunov::predict_godunov_on_box (Box const& bx, int ncomp,
         Godunov_cc_zbc_hi(i, j, k, n, q, stl, sth, bc.hi(2), dhi.z, true);
 
         // Prevent backflow
-        if ( (k==dlo.z) and (bc.lo(2) == BCType::foextrap || bc.lo(2) == BCType::hoextrap) )
+        if ( (k==dlo.z) && (bc.lo(2) == BCType::foextrap || bc.lo(2) == BCType::hoextrap) )
         {
             sth = amrex::min(sth,0.);
             stl = sth;
         }
-        if ( (k==dhi.z+1) and (bc.hi(2) == BCType::foextrap || bc.hi(2) == BCType::hoextrap) )
+        if ( (k==dhi.z+1) && (bc.hi(2) == BCType::foextrap || bc.hi(2) == BCType::hoextrap) )
         {
             stl = amrex::max(stl,0.);
             sth = stl;

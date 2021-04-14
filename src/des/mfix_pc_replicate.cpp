@@ -46,7 +46,7 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
 
             // Add runtime-added components for species mass rate transfer for
             // each reaction
-            if (SOLIDS::solve_species and REACTIONS::solve) {
+            if (SOLIDS::solve_species && REACTIONS::solve) {
               const int gap = SOLIDS::nspecies;
 
               for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)

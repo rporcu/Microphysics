@@ -221,7 +221,7 @@ namespace BC
 
               dir_int = 2*dir;
 
-              if( new_bc.type == pinf_ or new_bc.type == pout_) {
+              if( new_bc.type == pinf_ || new_bc.type == pout_) {
                 ppe_lobc[dir] = amrex::LinOpBCType::Dirichlet;
                 diff_vel_lobc[dir] = amrex::LinOpBCType::Neumann;
                 diff_scal_lobc[dir] = amrex::LinOpBCType::Neumann;
@@ -239,7 +239,7 @@ namespace BC
 
               dir_int = 2*dir+1;
 
-              if( new_bc.type == pinf_ or new_bc.type == pout_) {
+              if( new_bc.type == pinf_ || new_bc.type == pout_) {
                 ppe_hibc[dir] = amrex::LinOpBCType::Dirichlet;
                 diff_vel_hibc[dir] = amrex::LinOpBCType::Neumann;
                 diff_scal_hibc[dir] = amrex::LinOpBCType::Neumann;
@@ -332,13 +332,13 @@ namespace BC
         // Read in fluid pressure
         new_bc.fluid.pressure_defined =
           ppFluid.query("pressure", new_bc.fluid.pressure);
-        if(( new_bc.type == pinf_ or new_bc.type == pout_) and (not new_bc.fluid.pressure_defined)) {
+        if(( new_bc.type == pinf_ || new_bc.type == pout_) && (!new_bc.fluid.pressure_defined)) {
           amrex::Print() << "Pressure BCs must have pressure defined!" << std::endl;
           amrex::Print() << "BC region: " << regions[bcv] << std::endl;
           amrex::Abort("Fix the inputs file!");
         }
 
-        if( new_bc.type == minf_ or new_bc.type == pinf_ ) {
+        if( new_bc.type == minf_ || new_bc.type == pinf_ ) {
           if (FLUID::solve_enthalpy) {
             read_bc_temperature(ppFluid, &new_bc.fluid);
           }
@@ -364,7 +364,7 @@ namespace BC
             }
 
             // Sanity check that the input species mass fractions sum up to 1
-            if (not(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
+            if (!(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
               std::string message = "Error: FLUID species BCs mass fractions in region "
                 + regions[bcv] + " sum up to " + std::to_string(total_mass_fraction) + "\n";
 
@@ -375,7 +375,7 @@ namespace BC
       }
 
       // Get solid data.
-      if(DEM::solve or PIC::solve) {
+      if(DEM::solve || PIC::solve) {
 
         // Get the list of solids used in defining the BC region
         std::vector<std::string> solids_types;
@@ -448,7 +448,7 @@ namespace BC
             }
 
             // Sanity check that the input species mass fractions sum up to 1
-            if (not(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
+            if (!(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
               std::string message = "Error: SOLID type " + solids_types[lcs]
                 + " species BCs mass fractions in region " + regions[bcv]
                 + " sum up to " + std::to_string(total_mass_fraction) + "\n";
@@ -495,7 +495,7 @@ namespace BC
       }
 
 
-      if(DEM::solve or PIC::solve){
+      if(DEM::solve || PIC::solve){
 
         for(int lcs(0); lcs<bc[bcv].solids.size(); ++lcs){
           amrex::Print() << std::endl;

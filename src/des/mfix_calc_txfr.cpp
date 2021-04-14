@@ -43,13 +43,13 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
     bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                          (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
-    if (lev == 0 and OnSameGrids) {
+    if (lev == 0 && OnSameGrids) {
 
       // If we are already working with the internal mf defined on the
       // particle_box_array, then we just work with this.
       txfr_ptr[lev] = txfr[lev];
 
-    } else if (lev == 0 and (not OnSameGrids)) {
+    } else if (lev == 0 && (!OnSameGrids)) {
 
       // If beta_mf is not defined on the particle_box_array, then we need
       // to make a temporary here and copy into beta_mf at the end.
@@ -461,13 +461,13 @@ mfix::mfix_calc_txfr_particle (Real time,
 
                   // All cells in the stencil are regular. Use
                   // traditional trilinear interpolation
-                  if (flags_array(i-1,j-1,k-1).isRegular() and
-                      flags_array(i  ,j-1,k-1).isRegular() and
-                      flags_array(i-1,j  ,k-1).isRegular() and
-                      flags_array(i  ,j  ,k-1).isRegular() and
-                      flags_array(i-1,j-1,k  ).isRegular() and
-                      flags_array(i  ,j-1,k  ).isRegular() and
-                      flags_array(i-1,j  ,k  ).isRegular() and
+                  if (flags_array(i-1,j-1,k-1).isRegular() &&
+                      flags_array(i  ,j-1,k-1).isRegular() &&
+                      flags_array(i-1,j  ,k-1).isRegular() &&
+                      flags_array(i  ,j  ,k-1).isRegular() &&
+                      flags_array(i-1,j-1,k  ).isRegular() &&
+                      flags_array(i  ,j-1,k  ).isRegular() &&
+                      flags_array(i-1,j  ,k  ).isRegular() &&
                       flags_array(i  ,j  ,k  ).isRegular()) {
 
                     trilinear_interp(particle.pos(), &interp_loc[0],

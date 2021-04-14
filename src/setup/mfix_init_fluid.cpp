@@ -339,7 +339,7 @@ void init_fluid_parameters (const Box& bx,
                             const int advect_fluid_species)
 {
   const int fluid_is_a_mixture = FLUID::is_a_mixture;
-  const int advect_species_enthalpy = advect_fluid_species and advect_enthalpy;
+  const int advect_species_enthalpy = advect_fluid_species && advect_enthalpy;
 
   Array4<Real> nullArray4;
 
@@ -504,7 +504,7 @@ void set_ic_vel (const Box& sbx,
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           { velocity(i,j,k,0) = ugx; });
 
-      if(slo[0] < domlo[0] and domlo[0] == istart)
+      if(slo[0] < domlo[0] && domlo[0] == istart)
       {
         const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
         const Box box2(low2, hi2);
@@ -513,7 +513,7 @@ void set_ic_vel (const Box& sbx,
             { velocity(i,j,k,0) = ugx; });
       }
 
-      if(shi[0] > domhi[0] and domhi[0] == iend)
+      if(shi[0] > domhi[0] && domhi[0] == iend)
       {
         const IntVect low3(iend+1, jstart, kstart), hi3(shi[0], jend, kend);
         const Box box3(low3, hi3);
@@ -531,7 +531,7 @@ void set_ic_vel (const Box& sbx,
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           { velocity(i,j,k,1) = vgx; });
 
-      if (slo[1] < domlo[1] and domlo[1] == jstart)
+      if (slo[1] < domlo[1] && domlo[1] == jstart)
       {
         const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
         const Box box2(low2, hi2);
@@ -540,7 +540,7 @@ void set_ic_vel (const Box& sbx,
             { velocity(i,j,k,1) = vgx; });
       }
 
-      if (shi[1] > domhi[1] and domhi[1] == jend)
+      if (shi[1] > domhi[1] && domhi[1] == jend)
       {
         const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
         const Box box3(low3, hi3);
@@ -557,7 +557,7 @@ void set_ic_vel (const Box& sbx,
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           { velocity(i,j,k,2) = wgx; });
 
-      if (slo[2] < domlo[2] and domlo[2] == kstart)
+      if (slo[2] < domlo[2] && domlo[2] == kstart)
       {
         const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
         const Box box2(low2, hi2);
@@ -566,7 +566,7 @@ void set_ic_vel (const Box& sbx,
             { velocity(i,j,k,2) = wgx; });
       }
 
-      if (shi[2] > domhi[2] and domhi[2] == kend)
+      if (shi[2] > domhi[2] && domhi[2] == kend)
       {
         const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
         const Box box3(low3, hi3);
@@ -633,7 +633,7 @@ void set_ic_temp (const Box& sbx,
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         { T_g(i,j,k) = temperature; });
 
-        if(slo[0] < domlo[0] and domlo[0] == istart)
+        if(slo[0] < domlo[0] && domlo[0] == istart)
         {
           const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
           const Box box2(low2, hi2);
@@ -642,7 +642,7 @@ void set_ic_temp (const Box& sbx,
           { T_g(i,j,k) = temperature; });
         }
 
-        if(shi[0] > domhi[0] and domhi[0] == iend)
+        if(shi[0] > domhi[0] && domhi[0] == iend)
         {
           const IntVect low3(iend+1, jstart, kstart), hi3(shi[0], jend, kend);
           const Box box3(low3, hi3);
@@ -660,7 +660,7 @@ void set_ic_temp (const Box& sbx,
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         { T_g(i,j,k) = temperature; });
 
-        if (slo[1] < domlo[1] and domlo[1] == jstart)
+        if (slo[1] < domlo[1] && domlo[1] == jstart)
         {
           const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
           const Box box2(low2, hi2);
@@ -669,7 +669,7 @@ void set_ic_temp (const Box& sbx,
           { T_g(i,j,k) = temperature; });
         }
 
-        if (shi[1] > domhi[1] and domhi[1] == jend)
+        if (shi[1] > domhi[1] && domhi[1] == jend)
         {
           const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
           const Box box3(low3, hi3);
@@ -686,7 +686,7 @@ void set_ic_temp (const Box& sbx,
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         { T_g(i,j,k) = temperature; });
 
-        if (slo[2] < domlo[2] and domlo[2] == kstart)
+        if (slo[2] < domlo[2] && domlo[2] == kstart)
         {
           const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
           const Box box2(low2, hi2);
@@ -696,7 +696,7 @@ void set_ic_temp (const Box& sbx,
           { T_g(i,j,k) = temperature; });
         }
 
-        if (shi[2] > domhi[2] and domhi[2] == kend)
+        if (shi[2] > domhi[2] && domhi[2] == kend)
         {
           const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
           const Box box3(low3, hi3);
@@ -772,7 +772,7 @@ void set_ic_species_g (const Box& sbx,
         AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
       { X_gk(i,j,k,n) = p_mass_fractions[n]; });
 
-      if(slo[0] < domlo[0] and domlo[0] == istart)
+      if(slo[0] < domlo[0] && domlo[0] == istart)
       {
         const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
         const Box box2(low2, hi2);
@@ -781,7 +781,7 @@ void set_ic_species_g (const Box& sbx,
         { X_gk(i,j,k,n) = p_mass_fractions[n]; });
       }
 
-      if(shi[0] > domhi[0] and domhi[0] == iend)
+      if(shi[0] > domhi[0] && domhi[0] == iend)
       {
         const IntVect low3(iend+1, jstart, kstart), hi3(shi[0], jend, kend);
         const Box box3(low3, hi3);
@@ -799,7 +799,7 @@ void set_ic_species_g (const Box& sbx,
         AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
       { X_gk(i,j,k,n) = p_mass_fractions[n]; });
 
-      if (slo[1] < domlo[1] and domlo[1] == jstart)
+      if (slo[1] < domlo[1] && domlo[1] == jstart)
       {
         const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
         const Box box2(low2, hi2);
@@ -808,7 +808,7 @@ void set_ic_species_g (const Box& sbx,
         { X_gk(i,j,k,n) = p_mass_fractions[n]; });
       }
 
-      if (shi[1] > domhi[1] and domhi[1] == jend)
+      if (shi[1] > domhi[1] && domhi[1] == jend)
       {
         const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
         const Box box3(low3, hi3);
@@ -825,7 +825,7 @@ void set_ic_species_g (const Box& sbx,
         AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
       { X_gk(i,j,k,n) = p_mass_fractions[n]; });
 
-      if (slo[2] < domlo[2] and domlo[2] == kstart)
+      if (slo[2] < domlo[2] && domlo[2] == kstart)
       {
         const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
         const Box box2(low2, hi2);
@@ -835,7 +835,7 @@ void set_ic_species_g (const Box& sbx,
         { X_gk(i,j,k,n) = p_mass_fractions[n]; });
       }
 
-      if (shi[2] > domhi[2] and domhi[2] == kend)
+      if (shi[2] > domhi[2] && domhi[2] == kend)
       {
         const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
         const Box box3(low3, hi3);
@@ -907,7 +907,7 @@ void set_ic_pressure_g (const Box& sbx,
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       { pressure_g(i,j,k) = ro_g(i,j,k) * R * T_g(i,j,k) / MW_g(i,j,k); });
 
-      if(slo[0] < domlo[0] and domlo[0] == istart)
+      if(slo[0] < domlo[0] && domlo[0] == istart)
       {
         const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
         const Box box2(low2, hi2);
@@ -916,7 +916,7 @@ void set_ic_pressure_g (const Box& sbx,
         { pressure_g(i,j,k) = ro_g(i,j,k) * R * T_g(i,j,k) / MW_g(i,j,k); });
       }
 
-      if(shi[0] > domhi[0] and domhi[0] == iend)
+      if(shi[0] > domhi[0] && domhi[0] == iend)
       {
         const IntVect low3(iend+1, jstart, kstart), hi3(shi[0], jend, kend);
         const Box box3(low3, hi3);
@@ -934,7 +934,7 @@ void set_ic_pressure_g (const Box& sbx,
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       { pressure_g(i,j,k) = ro_g(i,j,k) * R * T_g(i,j,k) / MW_g(i,j,k); });
 
-      if (slo[1] < domlo[1] and domlo[1] == jstart)
+      if (slo[1] < domlo[1] && domlo[1] == jstart)
       {
         const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
         const Box box2(low2, hi2);
@@ -943,7 +943,7 @@ void set_ic_pressure_g (const Box& sbx,
         { pressure_g(i,j,k) = ro_g(i,j,k) * R * T_g(i,j,k) / MW_g(i,j,k); });
       }
 
-      if (shi[1] > domhi[1] and domhi[1] == jend)
+      if (shi[1] > domhi[1] && domhi[1] == jend)
       {
         const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
         const Box box3(low3, hi3);
@@ -960,7 +960,7 @@ void set_ic_pressure_g (const Box& sbx,
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       { pressure_g(i,j,k) = ro_g(i,j,k) * R * T_g(i,j,k) / MW_g(i,j,k); });
 
-      if (slo[2] < domlo[2] and domlo[2] == kstart)
+      if (slo[2] < domlo[2] && domlo[2] == kstart)
       {
         const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
         const Box box2(low2, hi2);
@@ -970,7 +970,7 @@ void set_ic_pressure_g (const Box& sbx,
         { pressure_g(i,j,k) = ro_g(i,j,k) * R * T_g(i,j,k) / MW_g(i,j,k); });
       }
 
-      if (shi[2] > domhi[2] and domhi[2] == kend)
+      if (shi[2] > domhi[2] && domhi[2] == kend)
       {
         const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
         const Box box3(low3, hi3);

@@ -165,7 +165,7 @@ void redistribution::make_itracker ( Box const& bx,
            if (sum_vol < 0.5)
            {
                // Original offset was in x-direction
-               if (joff == 0 and koff == 0)
+               if (joff == 0 && koff == 0)
                {
                    if ( (std::abs(ny) > std::abs(nz)) ) {
                        itracker(i,j,k,2) = (ny > 0) ? 7 : 2;
@@ -174,7 +174,7 @@ void redistribution::make_itracker ( Box const& bx,
                    }
 
                // Original offset was in y-direction
-               } else if (ioff == 0 and koff == 0)
+               } else if (ioff == 0 && koff == 0)
                {
                    if ( (std::abs(nx) > std::abs(nz)) ) {
                        itracker(i,j,k,2) = (nx > 0) ? 5 : 4;
@@ -183,7 +183,7 @@ void redistribution::make_itracker ( Box const& bx,
                    }
 
                // Original offset was in z-direction
-               } else if (ioff == 0 and joff == 0)
+               } else if (ioff == 0 && joff == 0)
                {
                    if ( (std::abs(nx) > std::abs(ny)) ) {
                        itracker(i,j,k,2) = (nx > 0) ? 5 : 4;
@@ -221,33 +221,33 @@ void redistribution::make_itracker ( Box const& bx,
                // Both nbors are in the koff=0 plane
                if (koff == 0)
                {
-                   if (ioff > 0 and joff > 0)
+                   if (ioff > 0 && joff > 0)
                        itracker(i,j,k,3) = 8;
-                   else if (ioff < 0 and joff > 0)
+                   else if (ioff < 0 && joff > 0)
                        itracker(i,j,k,3) = 6;
-                   else if (ioff > 0 and joff < 0)
+                   else if (ioff > 0 && joff < 0)
                        itracker(i,j,k,3) = 3;
                    else
                        itracker(i,j,k,3) = 1;
 
                // Both nbors are in the joff=0 plane
                } else if (joff == 0) {
-                   if (ioff > 0 and koff > 0)
+                   if (ioff > 0 && koff > 0)
                        itracker(i,j,k,3) = 23;
-                   else if (ioff < 0 and koff > 0)
+                   else if (ioff < 0 && koff > 0)
                        itracker(i,j,k,3) = 21;
-                   else if (ioff > 0 and koff < 0)
+                   else if (ioff > 0 && koff < 0)
                        itracker(i,j,k,3) = 14;
                    else
                        itracker(i,j,k,3) = 12;
 
                // Both nbors are in the ioff=0 plane
                } else {
-                   if (joff > 0 and koff > 0)
+                   if (joff > 0 && koff > 0)
                        itracker(i,j,k,3) = 25;
-                   else if (joff < 0 and koff > 0)
+                   else if (joff < 0 && koff > 0)
                        itracker(i,j,k,3) = 19;
-                   else if (joff > 0 and koff < 0)
+                   else if (joff > 0 && koff < 0)
                        itracker(i,j,k,3) = 16;
                    else
                        itracker(i,j,k,3) = 10;
@@ -292,11 +292,11 @@ void redistribution::make_itracker ( Box const& bx,
                            else
                                itracker(i,j,k,6) =  19;
 
-                           if (ioff > 0 and joff > 0) {
+                           if (ioff > 0 && joff > 0) {
                                itracker(i,j,k,7) = 26;
-                           } else if (ioff < 0 and joff > 0) {
+                           } else if (ioff < 0 && joff > 0) {
                                itracker(i,j,k,7) = 24;
-                           } else if (ioff > 0 and joff < 0) {
+                           } else if (ioff > 0 && joff < 0) {
                                itracker(i,j,k,7) = 20;
                            } else {
                                itracker(i,j,k,7) = 18;
@@ -314,11 +314,11 @@ void redistribution::make_itracker ( Box const& bx,
                            else
                                itracker(i,j,k,6) =  10;
 
-                           if (ioff > 0 and joff > 0) {
+                           if (ioff > 0 && joff > 0) {
                                itracker(i,j,k,7) = 17;
-                           } else if (ioff < 0 and joff > 0) {
+                           } else if (ioff < 0 && joff > 0) {
                                itracker(i,j,k,7) = 15;
-                           } else if (ioff > 0 and joff < 0) {
+                           } else if (ioff > 0 && joff < 0) {
                                itracker(i,j,k,7) = 11;
                            } else {
                                itracker(i,j,k,7) =  9;
@@ -338,11 +338,11 @@ void redistribution::make_itracker ( Box const& bx,
                            else
                                itracker(i,j,k,6) =  16;
 
-                           if (ioff > 0 and koff > 0) {
+                           if (ioff > 0 && koff > 0) {
                                itracker(i,j,k,7) = 26;
-                           } else if (ioff < 0 and koff > 0) {
+                           } else if (ioff < 0 && koff > 0) {
                                itracker(i,j,k,7) = 24;
-                           } else if (ioff > 0 and koff < 0) {
+                           } else if (ioff > 0 && koff < 0) {
                                itracker(i,j,k,7) = 17;
                            } else {
                                itracker(i,j,k,7) = 15;
@@ -361,11 +361,11 @@ void redistribution::make_itracker ( Box const& bx,
                            else
                                itracker(i,j,k,6) =  19;
 
-                           if (ioff > 0 and koff > 0) {
+                           if (ioff > 0 && koff > 0) {
                                itracker(i,j,k,7) = 26;
-                           } else if (ioff < 0 and koff > 0) {
+                           } else if (ioff < 0 && koff > 0) {
                                itracker(i,j,k,7) = 24;
-                           } else if (ioff > 0 and koff < 0) {
+                           } else if (ioff > 0 && koff < 0) {
                                itracker(i,j,k,7) = 20;
                            } else {
                                itracker(i,j,k,7) = 21;
@@ -386,11 +386,11 @@ void redistribution::make_itracker ( Box const& bx,
                            else
                                itracker(i,j,k,6) =  14;
 
-                           if (joff > 0 and koff > 0) {
+                           if (joff > 0 && koff > 0) {
                                itracker(i,j,k,7) = 26;
-                           } else if (joff < 0 and koff > 0) {
+                           } else if (joff < 0 && koff > 0) {
                                itracker(i,j,k,7) = 20;
-                           } else if (joff > 0 and koff < 0) {
+                           } else if (joff > 0 && koff < 0) {
                                itracker(i,j,k,7) = 17;
                            } else {
                                itracker(i,j,k,7) = 11;
@@ -408,11 +408,11 @@ void redistribution::make_itracker ( Box const& bx,
                            else
                                itracker(i,j,k,6) =  12;
 
-                           if (joff > 0 and koff > 0) {
+                           if (joff > 0 && koff > 0) {
                                itracker(i,j,k,7) = 24;
-                           } else if (joff < 0 and koff > 0) {
+                           } else if (joff < 0 && koff > 0) {
                                itracker(i,j,k,7) = 18;
-                           } else if (joff > 0 and koff < 0) {
+                           } else if (joff > 0 && koff < 0) {
                                itracker(i,j,k,7) = 15;
                            } else {
                                itracker(i,j,k,7) =  9;

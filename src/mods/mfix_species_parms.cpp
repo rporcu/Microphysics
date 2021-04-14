@@ -90,7 +90,7 @@ namespace SPECIES
           amrex::ParmParse ppSpecies(name.c_str());
           int exists = ppSpecies.query("molecular_weight", MW_k0[n]);
 
-          if (not exists) {
+          if (!exists) {
             if ( amrex::ParallelDescriptor::IOProcessor() )
               amrex::Warning(species[n] + "_MW not provided. Assuming " +
                              species[n] + "_MW = 0");

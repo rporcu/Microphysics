@@ -237,7 +237,7 @@ void get_input_arguments ( const int argc, char** argv,
 
       } else if ( !strcmp(argv[i],"--id") ) {
           a_id = atoi(argv[++i]);
-          if ( ( a_id < -1 ) or ( a_id == 0 ) ) {
+          if ( ( a_id < -1 ) || ( a_id == 0 ) ) {
             std::cout << "\nParticle ID must be positive! " << a_id << std::endl;
             help ();
             exit (EXIT_FAILURE);
