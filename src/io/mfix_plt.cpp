@@ -46,6 +46,9 @@ mfix::InitIOPltData ()
       pp.query("plt_cp_gk",   plt_cp_gk  );
       pp.query("plt_h_gk",    plt_h_gk   );
       pp.query("plt_ro_txfr", plt_ro_txfr);
+      pp.query("plt_proc",    plt_proc);
+      pp.query("plt_proc_p",  plt_proc_p);
+      pp.query("plt_cost_p",  plt_cost_p);
 
       // Special test for CCSE regression test. Override all individual
       // flags and save all data to plot file.
@@ -74,6 +77,9 @@ mfix::InitIOPltData ()
         plt_cp_gk   = 0;
         plt_h_gk    = 0;
         plt_ro_txfr = 0;
+        plt_proc    = 0;
+        plt_proc_p  = 0;
+        plt_cost_p  = 0;
       }
 
       // Count the number of variables to save.
@@ -88,6 +94,9 @@ mfix::InitIOPltData ()
       if( plt_vort    == 1) pltVarCount += 1;
       if( plt_diveu   == 1) pltVarCount += 1;
       if( plt_volfrac == 1) pltVarCount += 1;
+      if( plt_proc    == 1) pltVarCount += 1;
+      if( plt_proc_p  == 1) pltVarCount += 1;
+      if( plt_cost_p  == 1) pltVarCount += 1;
 
       if (advect_enthalpy) {
         if( plt_T_g  == 1) pltVarCount += 1;
@@ -318,6 +327,18 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
       if( plt_volfrac == 1 )
         pltFldNames.push_back("volfrac");
 
+      // rank of fluid grids
+      if ( plt_proc == 1 )
+        pltFldNames.push_back("proc");
+
+      // rank of particle grids
+      if ( plt_proc_p == 1 )
+        pltFldNames.push_back("proc_p");
+
+      // cost of particle cell
+      if ( plt_cost_p == 1 )
+        pltFldNames.push_back("cost_p");
+
       // Fluid species mass fractions
       if(FLUID::solve_species and plt_X_gk == 1)
         for(std::string specie: FLUID::species)
@@ -450,6 +471,24 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
           } else {
             mf[lev]->setVal(1.0,lc,1,0);
           }
+          lc += 1;
+        }
+
+        // rank of fluid grids
+        if( plt_proc == 1 ) {
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->ba_proc, 0, lc, 1, 0);
+          lc += 1;
+        }
+
+        // rank of particle grids
+        if ( plt_proc_p == 1 ) {
+          mf[lev]->ParallelCopy(*particle_ba_proc[lev], 0, lc, 1, 0, 0);
+          lc += 1;
+        }
+
+        // cost of particle cell
+        if ( plt_cost_p == 1 ) {
+          mf[lev]->ParallelCopy(*particle_cost[lev], 0, lc, 1, 0, 0);
           lc += 1;
         }
 

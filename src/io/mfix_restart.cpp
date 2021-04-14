@@ -549,10 +549,18 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         particle_cost.clear();
         particle_cost.resize(nlev, nullptr);
 
+        // clear and re-allocate the rank of particle grids
+        for (int lev(0); lev < particle_ba_proc.size(); ++lev)
+          if (particle_ba_proc[lev] != nullptr)
+            delete particle_ba_proc[lev];
+        //
+        particle_ba_proc.clear();
+        particle_ba_proc.resize(nlev, nullptr);
+
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
           particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                                         pc->ParticleDistributionMap(lev), 1, 0);
+                                            pc->ParticleDistributionMap(lev), 1, 0);
           particle_cost[lev]->setVal(0.0);
         }
       }

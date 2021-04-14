@@ -53,6 +53,21 @@ mfix::Regrid ()
 
           RegridArrays(lev);
 
+          // reset the ranks of fluid grids
+          if (m_leveldata[lev]->ba_proc != nullptr)
+            delete m_leveldata[lev]->ba_proc;
+
+          m_leveldata[lev]->ba_proc = new MultiFab(grids[lev], new_fluid_dm, 1, 0,
+                                                   MFInfo(), *ebfactory[lev]);
+          const Real proc = Real(ParallelDescriptor::MyProc());
+          for (MFIter mfi(*(m_leveldata[lev]->ba_proc), false); mfi.isValid(); ++mfi)
+          {
+            Array4<Real> const& bx_proc = m_leveldata[lev]->ba_proc->array(mfi);
+            ParallelFor(mfi.validbox(), [bx_proc, proc] 
+                        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                        { bx_proc(i,j,k) = proc; });
+          }
+
           if (fluid_cost[lev] != nullptr)
             delete fluid_cost[lev];
 
@@ -85,8 +100,22 @@ mfix::Regrid ()
           delete particle_cost[lev];
 
         particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                                       new_particle_dm, 1, 0);
+                                          new_particle_dm, 1, 0);
         particle_cost[lev]->setVal(0.0);
+
+        // reset rank of particle grids
+        if (particle_ba_proc[lev] != nullptr)
+          delete particle_ba_proc[lev];
+        particle_ba_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                             new_particle_dm, 1, 0);
+        const Real proc = Real(ParallelDescriptor::MyProc());
+        for (MFIter mfi(*(particle_ba_proc[lev]), false); mfi.isValid(); ++mfi)
+        {
+          amrex::Array4<Real> const& par_bx_proc = particle_ba_proc[lev]->array(mfi);
+          ParallelFor(mfi.validbox(), [par_bx_proc, proc]
+                      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                      { par_bx_proc(i,j,k) = proc; });
+        }
 
         // This calls re-creates a proper particle_ebfactories
         //  and regrids all the multifabs that depend on it

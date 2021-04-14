@@ -1092,6 +1092,7 @@ public:
 
     // used if load_balance_type == "KnapSack"
     amrex::Vector< amrex::MultiFab* > particle_cost;
+    amrex::Vector< amrex::MultiFab* > particle_ba_proc;
     amrex::Vector< amrex::MultiFab* > fluid_cost;
 
     // Level-Set Data => used for particle-wall collisions and fluid
@@ -1294,6 +1295,9 @@ public:
     int plt_gradp_g = 0;
     int plt_vort    = 0;
     int plt_ro_txfr = 0;
+    int plt_proc    = 0;
+    int plt_proc_p  = 0;
+    int plt_cost_p  = 0;
 
     // Total number of variables to write in plot file
     int pltVarCount = 0;
