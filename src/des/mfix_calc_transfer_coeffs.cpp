@@ -126,10 +126,10 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       interp_ptr = new MultiFab(grids[lev], dmap[lev], interp_comp, interp_ng, MFInfo(), *ebfactory[lev]);
 
       // Copy fluid velocity
-      interp_ptr->copy(*vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng, interp_ng);
+      MultiFab::Copy(*interp_ptr, *vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng);
 
       // Copy volume fraction
-      interp_ptr->copy(*ep_g_in[lev],  0, 3, ep_g_in[lev]->nComp(), interp_ng, interp_ng);
+      MultiFab::Copy(*interp_ptr, *ep_g_in[lev],  0, 3, ep_g_in[lev]->nComp(), interp_ng);
 
       interp_ptr->FillBoundary(geom[lev].periodicity());
     }
