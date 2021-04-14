@@ -18,6 +18,8 @@ variables:
   GIT_DEPTH: 100
   GIT_STRATEGY: fetch
   GIT_SUBMODULE_STRATEGY: none
+  SCCACHE_BUCKET: exa-sccache
+  SCCACHE_REGION: us-west-2
 
 build-test-env:
   stage: build-img
