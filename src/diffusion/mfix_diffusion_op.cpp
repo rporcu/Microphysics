@@ -89,33 +89,33 @@ void DiffusionOp::setup (AmrCore* _amrcore,
         {
             BoxArray edge_ba = grids[lev];
             edge_ba.surroundingNodes(dir);
-            b[lev][dir].reset(new MultiFab(edge_ba, dmap[lev], 1, nghost,
-                                           MFInfo(), *ebfactory[lev]));
+            b[lev][dir] = std::make_unique<MultiFab>(edge_ba, dmap[lev], 1, nghost,
+                                           MFInfo(), *ebfactory[lev]);
             b[lev][dir]->setVal(0.);
         }
 
-        phi[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 1,
-                                    MFInfo(), *ebfactory[lev]));
+        phi[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], 3, 1,
+                                    MFInfo(), *ebfactory[lev]);
         phi[lev]->setVal(0.);
 
         // No ghost cells needed for rhs
-        rhs[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, 0,
-                                    MFInfo(), *ebfactory[lev]));
+        rhs[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], 3, 0,
+                                    MFInfo(), *ebfactory[lev]);
         rhs[lev]->setVal(0.);
 
-        vel_eb[lev].reset(new MultiFab(grids[lev], dmap[lev], 3, nghost,
-                                       MFInfo(), *ebfactory[lev]));
+        vel_eb[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], 3, nghost,
+                                       MFInfo(), *ebfactory[lev]);
         vel_eb[lev]->setVal(0.0);
 
         if (FLUID::solve_species)
         {
-          species_phi[lev].reset(new MultiFab(grids[lev], dmap[lev], nspecies_g, 1,
-                                              MFInfo(), *ebfactory[lev]));
+          species_phi[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], nspecies_g, 1,
+                                              MFInfo(), *ebfactory[lev]);
           species_phi[lev]->setVal(0.);
 
           // No ghost cells needed for rhs
-          species_rhs[lev].reset(new MultiFab(grids[lev], dmap[lev], nspecies_g, 0,
-                                              MFInfo(), *ebfactory[lev]));
+          species_rhs[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], nspecies_g, 0,
+                                              MFInfo(), *ebfactory[lev]);
           species_rhs[lev]->setVal(0.);
         }
     }
@@ -125,7 +125,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     //
     LPInfo info;
     info.setMaxCoarseningLevel(mg_max_coarsening_level);
-    vel_matrix.reset(new MLEBTensorOp(geom, grids, dmap, info, ebfactory));
+    vel_matrix = std::make_unique<MLEBTensorOp>(geom, grids, dmap, info, ebfactory);
 
     // It is essential that we set MaxOrder to 2 if we want to use the standard
     // phi(i)-phi(i-1) approximation for the gradient at Dirichlet boundaries.
@@ -138,11 +138,11 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     //
     // Define the matrix for the scalar diffusion solve.
     //
-    scal_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory));
-    temperature_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory));
+    scal_matrix = std::make_unique<MLEBABecLap>(geom, grids, dmap, info, ebfactory);
+    temperature_matrix = std::make_unique<MLEBABecLap>(geom, grids, dmap, info, ebfactory);
 
     if (FLUID::solve_species) {
-      species_matrix.reset(new MLEBABecLap(geom, grids, dmap, info, ebfactory, nspecies_g));
+      species_matrix = std::make_unique<MLEBABecLap>(geom, grids, dmap, info, ebfactory, nspecies_g);
     }
 
     // It is essential that we set MaxOrder to 2 if we want to use the standard
@@ -171,8 +171,8 @@ void DiffusionOp::setup (AmrCore* _amrcore,
           {
               BoxArray edge_ba = grids[lev];
               edge_ba.surroundingNodes(dir);
-              species_b[lev][dir].reset(new MultiFab(edge_ba, dmap[lev], nspecies_g, nghost,
-                                                     MFInfo(), *ebfactory[lev]));
+              species_b[lev][dir] = std::make_unique<MultiFab>(edge_ba, dmap[lev], nspecies_g, nghost,
+                                                     MFInfo(), *ebfactory[lev]);
               species_b[lev][dir]->setVal(0.);
           }
       }
