@@ -137,7 +137,7 @@ test:nvcc:
     - $CTEST_CMD
   <<: *test_template
 
-build:cuda-11.1:
+.build:cuda-11.1:
   stage: test
   needs: []
   script:
