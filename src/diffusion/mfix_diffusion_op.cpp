@@ -544,8 +544,8 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab* >& lapX_out,
 
     for (int lev = 0; lev <= finest_level; lev++) {
       for (int dir(0); dir < 3; ++dir) {
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(not fluxes[lev][dir]->contains_nan(), "NaN");
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(not fluxes[lev][dir]->contains_inf(), "Inf");
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!fluxes[lev][dir]->contains_nan(), "NaN");
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!fluxes[lev][dir]->contains_inf(), "Inf");
       }
     }
 
@@ -996,8 +996,8 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab* >& laphX_out,
 
     for (int lev = 0; lev <= finest_level; lev++) {
       for (int dir(0); dir < 3; ++dir) {
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(not fluxes[lev][dir]->contains_nan(), "NaN");
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(not fluxes[lev][dir]->contains_inf(), "Inf");
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!fluxes[lev][dir]->contains_nan(), "NaN");
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!fluxes[lev][dir]->contains_inf(), "Inf");
       }
     }
 

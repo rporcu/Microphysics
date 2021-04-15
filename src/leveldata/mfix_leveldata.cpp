@@ -67,12 +67,12 @@ LevelData::LevelData (BoxArray const& ba,
     D_gk  = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
   }
 
-  if (FLUID::solve_enthalpy and FLUID::solve_species) {
+  if (FLUID::solve_enthalpy && FLUID::solve_species) {
     cp_gk  = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
     h_gk  = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
   }
 
-  if (REACTIONS::solve and FLUID::solve_species) {
+  if (REACTIONS::solve && FLUID::solve_species) {
     chem_txfr = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
   }
 }
@@ -121,12 +121,12 @@ void LevelData::resetValues (const amrex::Real covered_val)
     D_gk->setVal(0);
   }
 
-  if (FLUID::solve_enthalpy and FLUID::solve_species) {
+  if (FLUID::solve_enthalpy && FLUID::solve_species) {
     cp_gk->setVal(0);
     h_gk->setVal(0);
   }
 
-  if (REACTIONS::solve and FLUID::solve_species) {
+  if (REACTIONS::solve && FLUID::solve_species) {
     chem_txfr->setVal(0);
   }
 }
@@ -175,12 +175,12 @@ LevelData::~LevelData ()
     delete D_gk;
   }
 
-  if (FLUID::solve_enthalpy and FLUID::solve_species) {
+  if (FLUID::solve_enthalpy && FLUID::solve_species) {
     delete cp_gk;
     delete h_gk;
   }
 
-  if (REACTIONS::solve and FLUID::solve_species) {
+  if (REACTIONS::solve && FLUID::solve_species) {
     delete chem_txfr;
   }
 }

@@ -30,7 +30,7 @@ void Godunov_trans_xbc(const int i, const int j, const int k, const int n,
         if (bclo==BCType::ext_dir)
         {
             lo = s(domlo-1,j,k,n);
-            if( n == 0 and is_velocity ) hi=lo;
+            if( n == 0 && is_velocity ) hi=lo;
         }
         else if(bclo == BCType::foextrap || bclo == BCType::hoextrap || bclo == BCType::reflect_even)
             lo = hi;
@@ -48,7 +48,7 @@ void Godunov_trans_xbc(const int i, const int j, const int k, const int n,
         if (bchi==BCType::ext_dir)
         {
             hi = s(domhi+1,j,k,n) ;
-            if( n == 0 and is_velocity ) lo=hi;
+            if( n == 0 && is_velocity ) lo=hi;
         }
         else if (bchi == BCType::foextrap || bchi == BCType::hoextrap || bchi == BCType::reflect_even)
             hi = lo;
@@ -78,7 +78,7 @@ void Godunov_trans_ybc(const int i, const int j, const int k, const int n,
         if (bclo==BCType::ext_dir)
         {
             lo = s(i,domlo-1,k,n);
-            if( n == 1 and is_velocity ) hi = lo;
+            if( n == 1 && is_velocity ) hi = lo;
         }
 
         else if (bclo == BCType::foextrap || bclo == BCType::hoextrap || bclo == BCType::reflect_even)
@@ -97,7 +97,7 @@ void Godunov_trans_ybc(const int i, const int j, const int k, const int n,
         if (bchi==BCType::ext_dir)
         {
             hi = s(i,domhi+1,k,n);
-            if( n == 1 and is_velocity ) lo = hi ;
+            if( n == 1 && is_velocity ) lo = hi ;
         }
         else if (bchi == BCType::foextrap || bchi == BCType::hoextrap || bchi == BCType::reflect_even)
             hi = lo;
@@ -127,7 +127,7 @@ void Godunov_trans_zbc(const int i, const int j, const int k, const int n,
         if (bclo==BCType::ext_dir)
         {
             lo =s(i,j,domlo-1,n);
-            if( n == 2 and is_velocity ) hi = lo;
+            if( n == 2 && is_velocity ) hi = lo;
         }
         else if (bclo == BCType::foextrap || bclo == BCType::hoextrap || bclo == BCType::reflect_even)
             lo = hi;
@@ -145,7 +145,7 @@ void Godunov_trans_zbc(const int i, const int j, const int k, const int n,
         if (bchi==BCType::ext_dir)
         {
             hi = s(i,j,domhi+1,n);
-            if( n == 2 and is_velocity ) lo = hi ;
+            if( n == 2 && is_velocity ) lo = hi ;
         }
         else if (bchi == BCType::foextrap || bchi == BCType::hoextrap || bchi == BCType::reflect_even)
             hi = lo;
@@ -171,7 +171,7 @@ void Godunov_cc_xbc_lo(const int i, const int j, const int k, const int n,
         if (bclo == BCType::ext_dir )
         {
             lo = s(domlo-1, j, k, n);
-            if ( n==0 and is_velocity ) hi=lo;
+            if ( n==0 && is_velocity ) hi=lo;
         }
         else if ( bclo == BCType::foextrap || bclo == BCType::hoextrap ||
                   bclo == BCType::reflect_even )
@@ -198,7 +198,7 @@ void Godunov_cc_xbc_hi(const int i, const int j, const int k, const int n,
         if (bchi == BCType::ext_dir)
         {
             hi = s(domhi+1, j, k, n);
-            if ( n==0 and is_velocity ) lo = hi;
+            if ( n==0 && is_velocity ) lo = hi;
         }
         else if ( bchi == BCType::foextrap || bchi == BCType::hoextrap ||
                   bchi == BCType::reflect_even)
@@ -225,7 +225,7 @@ void Godunov_cc_ybc_lo(const int i, const int j, const int k, const int n,
         if (bclo == BCType::ext_dir)
         {
             lo = s(i, domlo-1, k, n);
-            if ( n==1 and is_velocity ) hi=lo;
+            if ( n==1 && is_velocity ) hi=lo;
         }
         else if ( bclo == BCType::foextrap || bclo == BCType::hoextrap ||
                   bclo == BCType::reflect_even)
@@ -251,7 +251,7 @@ void Godunov_cc_ybc_hi(const int i, const int j, const int k, const int n,
         if (bchi == BCType::ext_dir)
         {
             hi = s(i, domhi+1, k, n);
-            if ( n==1 and is_velocity ) lo=hi;
+            if ( n==1 && is_velocity ) lo=hi;
         }
         else if ( bchi == BCType::foextrap || bchi == BCType::hoextrap ||
                   bchi == BCType::reflect_even)
@@ -278,7 +278,7 @@ void Godunov_cc_zbc_lo(const int i, const int j, const int k, const int n,
         if (bclo == BCType::ext_dir)
         {
             lo = s(i, j, domlo-1, n);
-            if ( n==2 and is_velocity ) hi=lo;
+            if ( n==2 && is_velocity ) hi=lo;
         }
 
         else if ( bclo == BCType::foextrap || bclo == BCType::hoextrap ||
@@ -306,7 +306,7 @@ void Godunov_cc_zbc_hi(const int i, const int j, const int k, const int n,
         if (bchi == BCType::ext_dir)
         {
             hi = s(i,j,domhi+1, n);
-            if ( n==2 and is_velocity ) lo=hi;
+            if ( n==2 && is_velocity ) lo=hi;
         }
         else if ( bchi == BCType::foextrap || bchi == BCType::hoextrap ||
                   bchi == BCType::reflect_even)

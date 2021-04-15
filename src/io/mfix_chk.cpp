@@ -81,7 +81,7 @@ mfix::ResetIOChkData ()
       //chkSpeciesVars[2][lev] = m_leveldata[lev]->D_gk;
     }
 
-    if (advect_fluid_species and advect_enthalpy) {
+    if (advect_fluid_species && advect_enthalpy) {
       chkSpeciesTVars[0][lev] = m_leveldata[lev]->h_gk;
       //chkSpeciesTVars[1][lev] = m_leveldata[lev]->cp_gk;
     }
@@ -185,7 +185,7 @@ mfix::WriteCheckPointFile (std::string& check_file,
 
           // Write scalar variables
           for (int i = 0; i < chkScalarVars.size(); i++ ) {
-            if ( DEM::solve or PIC::solve or (chkscaVarsName[i] != "level_sets"))
+            if ( DEM::solve || PIC::solve || (chkscaVarsName[i] != "level_sets"))
                  VisMF::Write( *(chkScalarVars[i][lev]),
                    amrex::MultiFabFileFullPrefix(lev, checkpointname,
                          level_prefix, chkscaVarsName[i]));
@@ -209,7 +209,7 @@ mfix::WriteCheckPointFile (std::string& check_file,
              }
           }
 
-          if (advect_fluid_species and advect_enthalpy) {
+          if (advect_fluid_species && advect_enthalpy) {
              // Write species energy variables
              for (int i = 0; i < chkSpeciesTVars.size(); i++) {
                 VisMF::Write( *(chkSpeciesTVars[i][lev]),
@@ -220,13 +220,13 @@ mfix::WriteCheckPointFile (std::string& check_file,
        }
     }
 
-    if ( DEM::solve or PIC::solve )
+    if ( DEM::solve || PIC::solve )
     {
        pc->Checkpoint(checkpointname, "particles");
     }
 
 
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve || PIC::solve)
     {
         // The level set might have a higher refinement than the mfix level.
         //      => Current mechanism for saving checkpoint files requires the

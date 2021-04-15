@@ -593,7 +593,7 @@ InterphaseChemDeposition (F WeightFunc,
           {
             // Do something only if reaction is heterogeneous and contains
             // a solid compound
-            if (p_types[q] == Heterogeneous and
+            if (p_types[q] == Heterogeneous &&
                 MFIXfind(p_phases[q], p_nphases[q], Solid) != InvalidIdx)
             {
               Real stoc_coeff(0);
@@ -658,7 +658,7 @@ InterphaseChemDeposition (F WeightFunc,
             {
               // Do something only if reaction is heterogeneous and contains
               // a fluid compound
-              if (p_types[q] == Heterogeneous and
+              if (p_types[q] == Heterogeneous &&
                   MFIXfind(p_phases[q], p_nphases[q], Fluid) != InvalidIdx)
               {
                 Real stoc_coeff(0);

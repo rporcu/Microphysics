@@ -142,7 +142,7 @@ mfix::set_velocity_bcs (Real time,
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
          vel(i,j,k,0) = vel(dom_lo[0],j,k,0);
          vel(i,j,k,1) = vel(dom_lo[0],j,k,1);
@@ -181,7 +181,7 @@ mfix::set_velocity_bcs (Real time,
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
          vel(i,j,k,0) = vel(dom_hi[0],j,k,0);
          vel(i,j,k,1) = vel(dom_hi[0],j,k,1);
@@ -220,7 +220,7 @@ mfix::set_velocity_bcs (Real time,
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
          vel(i,j,k,0) = vel(i,dom_lo[1],k,0);
          vel(i,j,k,1) = vel(i,dom_lo[1],k,1);
@@ -260,7 +260,7 @@ mfix::set_velocity_bcs (Real time,
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
          vel(i,j,k,0) = vel(i,dom_hi[1],k,0);
          vel(i,j,k,1) = vel(i,dom_hi[1],k,1);
@@ -300,7 +300,7 @@ mfix::set_velocity_bcs (Real time,
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
          vel(i,j,k,0) = vel(i,j,dom_lo[2],0);
          vel(i,j,k,1) = vel(i,j,dom_lo[2],1);
@@ -340,7 +340,7 @@ mfix::set_velocity_bcs (Real time,
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
          vel(i,j,k,0) = vel(i,j,dom_hi[2],0);
          vel(i,j,k,1) = vel(i,j,dom_hi[2],1);
@@ -444,7 +444,7 @@ mfix::set_vec_bcs (const int lev,
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
          vec(i,j,k,0) = vec(dom_lo[0],j,k,0);
          vec(i,j,k,1) = vec(dom_lo[0],j,k,1);
@@ -468,7 +468,7 @@ mfix::set_vec_bcs (const int lev,
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
          vec(i,j,k,0) = vec(dom_hi[0],j,k,0);
          vec(i,j,k,1) = vec(dom_hi[0],j,k,1);
@@ -492,7 +492,7 @@ mfix::set_vec_bcs (const int lev,
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
         vec(i,j,k,0) = vec(i,dom_lo[1],k,0);
         vec(i,j,k,1) = vec(i,dom_lo[1],k,1);
@@ -516,7 +516,7 @@ mfix::set_vec_bcs (const int lev,
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
          vec(i,j,k,0) = vec(i,dom_hi[1],k,0);
          vec(i,j,k,1) = vec(i,dom_hi[1],k,1);
@@ -540,7 +540,7 @@ mfix::set_vec_bcs (const int lev,
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
          vec(i,j,k,0) = vec(i,j,dom_lo[2],0);
          vec(i,j,k,1) = vec(i,j,dom_lo[2],1);
@@ -564,7 +564,7 @@ mfix::set_vec_bcs (const int lev,
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
          vec(i,j,k,0) = vec(i,j,dom_hi[2],0);
          vec(i,j,k,1) = vec(i,j,dom_hi[2],1);

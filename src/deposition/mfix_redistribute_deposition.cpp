@@ -67,17 +67,17 @@ mfix::mfix_redistribute_deposition (int lev,
        IntVect mask_box_lo(grow_bx1.smallEnd());
        IntVect mask_box_hi(grow_bx1.bigEnd());
 
-       if(not cyclic_x) {
+       if(!cyclic_x) {
          mask_box_lo[0] = amrex::max(mask_box_lo[0], dom_low.x);
          mask_box_hi[0] = amrex::min(mask_box_hi[0], dom_high.x);
        }
 
-       if(not cyclic_y) {
+       if(!cyclic_y) {
          mask_box_lo[1] = amrex::max(mask_box_lo[1], dom_low.y);
          mask_box_hi[1] = amrex::min(mask_box_hi[1], dom_high.y);
        }
 
-       if(not cyclic_z) {
+       if(!cyclic_z) {
          mask_box_lo[2] = amrex::max(mask_box_lo[2], dom_low.z);
          mask_box_hi[2] = amrex::min(mask_box_hi[2], dom_high.z);
        }
@@ -97,7 +97,7 @@ mfix::mfix_redistribute_deposition (int lev,
          [flags,ep_s,mf_redist,vfrac,duplicate,scale_array,max_eps,ncomp,
           mask_box] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
        {
-         if(flags(i,j,k).isSingleValued() and ep_s(i,j,k) > max_eps)
+         if(flags(i,j,k).isSingleValued() && ep_s(i,j,k) > max_eps)
          {
            Real sum_vfrac_eps = 0.0;
            Real sum_vfrac     = 0.0;
@@ -105,10 +105,10 @@ mfix::mfix_redistribute_deposition (int lev,
            for(int ii(-1); ii <= 1; ii++)
            for(int jj(-1); jj <= 1; jj++)
            for(int kk(-1); kk <= 1; kk++) {
-             if((ii != 0 or jj != 0 or kk != 0 ) and
-                flags(i,j,k).isConnected({ii,jj,kk}) and
-                mask_box.contains(IntVect(i+ii,j+jj,k+kk)) and
-                ((not flags(i+ii,j+jj,k+kk).isSingleValued()) or
+             if((ii != 0 || jj != 0 || kk != 0 ) &&
+                flags(i,j,k).isConnected({ii,jj,kk}) &&
+                mask_box.contains(IntVect(i+ii,j+jj,k+kk)) &&
+                ((!flags(i+ii,j+jj,k+kk).isSingleValued()) ||
                  (ep_s(i+ii,j+jj,k+kk) <= max_eps)))
              {
                sum_vfrac     += vfrac(i+ii,j+jj,k+kk);
@@ -134,10 +134,10 @@ mfix::mfix_redistribute_deposition (int lev,
              for(int kk(-1); kk <= 1; kk++)
              for(int jj(-1); jj <= 1; jj++)
              for(int ii(-1); ii <= 1; ii++) {
-               if((ii != 0 or jj != 0 or kk != 0) and
-                  flags(i,j,k).isConnected({ii,jj,kk}) and
-                  mask_box.contains(IntVect(i+ii,j+jj,k+kk)) and
-                  ((not flags(i+ii,j+jj,k+kk).isSingleValued()) or
+               if((ii != 0 || jj != 0 || kk != 0) &&
+                  flags(i,j,k).isConnected({ii,jj,kk}) &&
+                  mask_box.contains(IntVect(i+ii,j+jj,k+kk)) &&
+                  ((!flags(i+ii,j+jj,k+kk).isSingleValued()) ||
                    (ep_s(i+ii,j+jj,k+kk) <= max_eps)))
                {
                  Gpu::Atomic::Add(&mf_redist(i+ii,j+jj,k+kk,n), overflow);
@@ -153,7 +153,7 @@ mfix::mfix_redistribute_deposition (int lev,
         [flags,ep_s,mf_redist,scale_array,max_eps,ncomp]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-        if(flags(i,j,k).isSingleValued() and ep_s(i,j,k) > max_eps)
+        if(flags(i,j,k).isSingleValued() && ep_s(i,j,k) > max_eps)
         {
           const Real scale = scale_array(i,j,k);
 

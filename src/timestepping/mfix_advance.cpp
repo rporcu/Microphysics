@@ -78,7 +78,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     MultiFab::Copy(*m_leveldata[lev]->vel_go, *m_leveldata[lev]->vel_g, 0, 0,
                    m_leveldata[lev]->vel_g->nComp(), m_leveldata[lev]->vel_go->nGrow());
 
-  if (DEM::solve or PIC::solve) {
+  if (DEM::solve || PIC::solve) {
     mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
                          get_mu_g(), get_cp_g(), get_k_g(), time);
 
@@ -437,7 +437,7 @@ mfix::steady_state_reached (Real dt, int iter)
 
        Real tol = steady_state_tol;
 
-       condition1[lev] = (delta_u < tol*dt) and (delta_v < tol*dt ) and (delta_w < tol*dt);
+       condition1[lev] = (delta_u < tol*dt) && (delta_v < tol*dt ) && (delta_w < tol*dt);
 
        //
        // Second stop condition
@@ -481,7 +481,7 @@ mfix::steady_state_reached (Real dt, int iter)
           tmp4 = dp_n1 / po_n1;
        };
 
-       condition2[lev] = (tmp1 < tol) and (tmp2 < tol) and (tmp3 < tol); // && (tmp4 < tol);
+       condition2[lev] = (tmp1 < tol) && (tmp2 < tol) && (tmp3 < tol); // && (tmp4 < tol);
 
        //
        // Print out info on steady state checks
@@ -496,10 +496,10 @@ mfix::steady_state_reached (Real dt, int iter)
     int reached = 1;
     for (int lev = 0; lev <= finest_level; lev++)
     {
-       reached = reached and (condition1[lev] or condition2[lev]);
+       reached = reached && (condition1[lev] || condition2[lev]);
     }
 
-    reached = reached or (iter >= steady_state_maxiter);
+    reached = reached || (iter >= steady_state_maxiter);
 
     // Count # access
     naccess++;

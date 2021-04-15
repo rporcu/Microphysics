@@ -295,7 +295,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // **************************************************************************
     // Update thermodynamic pressure
     // **************************************************************************
-    if (advect_enthalpy and (m_idealgas_constraint == IdealGasConstraint::ClosedSystem))
+    if (advect_enthalpy && (m_idealgas_constraint == IdealGasConstraint::ClosedSystem))
     {
       for (int lev = 0; lev <= finest_level; ++lev) {
         rhs_pressure_g_old[lev] = avgSigma[lev] / avgTheta[lev];
@@ -550,7 +550,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Add the drag and convective heat transfer terms implicitly to vel_g and h_g
     // *************************************************************************************
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve || PIC::solve)
       mfix_add_txfr_implicit(l_dt, get_vel_g(), get_h_g(), get_T_g(), get_txfr_const(),
                 GetVecOfConstPtrs(density_nph), get_ep_g_const(), get_cp_g_const());
 
@@ -559,7 +559,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // If doing implicit diffusion, solve here for u^*
     // Note we multiply ep_g by ro_g so that we pass in a single array holding (ro_g * ep_g)
     // *************************************************************************************
-    if (not l_explicit_diff) {
+    if (!l_explicit_diff) {
 
       mfix_set_density_bcs(time, get_ro_g());
 
@@ -637,7 +637,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     if (!(m_idealgas_constraint == IdealGasConstraint::None)) {
 
       // Calculate drag coefficient
-      if (DEM::solve or PIC::solve) {
+      if (DEM::solve || PIC::solve) {
 
         Real start_drag = ParallelDescriptor::second();
         amrex::Print() << "\nRecalculating drag ..." << std::endl;

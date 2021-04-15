@@ -80,7 +80,7 @@ namespace IC
           }
 
           // Sanity check that the input species mass fractions sum up to 1
-          if (not(Math::abs(total_mass_fraction-1) < 1.e-15)) {
+          if (!(Math::abs(total_mass_fraction-1) < 1.e-15)) {
             std::string message = "Error: species ICs mass fractions in region "
               + regions[icv] + " sum up to " + std::to_string(total_mass_fraction) + "\n";
 
@@ -89,10 +89,10 @@ namespace IC
         }
       }
 
-      if (DEM::solve or PIC::solve)
+      if (DEM::solve || PIC::solve)
       {
         // If we initialize particles with particle generator
-        if (FLUID::solve and new_ic.fluid.volfrac < 1.0)
+        if (FLUID::solve && new_ic.fluid.volfrac < 1.0)
         {
           // Get the list of solids used in defining the IC region
           std::vector<std::string> solids_types;
@@ -174,7 +174,7 @@ namespace IC
               }
 
               // Sanity check that the input species mass fractions sum up to 1
-              if (not(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
+              if (!(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
                 std::string message = "Error: SOLID type " + solids_types[lcs]
                   + " species ICs mass fractions in region " + regions[icv]
                   + " sum up to " + std::to_string(total_mass_fraction) + "\n";
@@ -261,7 +261,7 @@ namespace IC
       }
 
 
-      if((DEM::solve or PIC::solve) and ic[icv].solids.size()>0){
+      if((DEM::solve || PIC::solve) && ic[icv].solids.size()>0){
 
         amrex::Print() << "       Solids packing: " << ic[icv].packing << std::endl;
 

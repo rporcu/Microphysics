@@ -157,7 +157,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt, RealVect& gravity,
 
             Real bulk_vel;
 
-            if( amrex::Math::abs(avg_vel[dir]) > tolerance and
+            if( amrex::Math::abs(avg_vel[dir]) > tolerance &&
                 amrex::Math::abs(    vel[dir]) > tolerance ){
               bulk_vel = 2./(1./avg_vel[dir] + 1./vel[dir]);
             } else {

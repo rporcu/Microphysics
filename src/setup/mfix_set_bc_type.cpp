@@ -432,7 +432,7 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
     m_h_bc_ep_g.resize(bc.size());
     m_h_bc_p_g.resize(bc.size());
 
-    if (FLUID::solve and advect_fluid_species) {
+    if (FLUID::solve && advect_fluid_species) {
       m_h_bc_X_gk.resize(FLUID::nspecies, Gpu::HostVector<Real>(bc.size()));
 
       // Important! Resize the bc vector for the fluid species mass fractions
@@ -457,8 +457,8 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
 
       // Fluid species mass fractions
-      if (FLUID::solve and advect_fluid_species) {
-        if (bc[bcv].type == minf_ or bc[bcv].type == pinf_ ) {
+      if (FLUID::solve && advect_fluid_species) {
+        if (bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
           for (int n(0); n < FLUID::nspecies; n++) {
             m_h_bc_X_gk[n][bcv] = bc[bcv].fluid.species[n].mass_fraction;
           }
@@ -474,7 +474,7 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
     Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_p_g.begin(), m_h_bc_p_g.end(), m_bc_p_g.begin());
     Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_ep_g.begin(), m_h_bc_ep_g.end(), m_bc_ep_g.begin());
 
-    if (FLUID::solve and advect_fluid_species) {
+    if (FLUID::solve && advect_fluid_species) {
         for (int n = 0; n < FLUID::nspecies; ++n) {
             Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk[n].begin(), m_h_bc_X_gk[n].end(), m_bc_X_gk[n].begin());
             m_h_bc_X_gk_ptr[n] = m_bc_X_gk[n].dataPtr();
@@ -495,13 +495,13 @@ void mfix::set_bcrec_lo(const int lev, const int dir, const int l_type)
   const int nsw_  = bc_list.get_nsw();
 
   // Velocity BC Recs
-  if (l_type == pinf_ or l_type == pout_) {
+  if (l_type == pinf_ || l_type == pout_) {
 
     m_bcrec_velocity[0].setLo(dir, BCType::foextrap);
     m_bcrec_velocity[1].setLo(dir, BCType::foextrap);
     m_bcrec_velocity[2].setLo(dir, BCType::foextrap);
 
-  } else if (l_type == minf_ or l_type == nsw_) {
+  } else if (l_type == minf_ || l_type == nsw_) {
 
     m_bcrec_velocity[0].setLo(dir, BCType::ext_dir);
     m_bcrec_velocity[1].setLo(dir, BCType::ext_dir);
@@ -515,7 +515,7 @@ void mfix::set_bcrec_lo(const int lev, const int dir, const int l_type)
   }
 
   // Scalar BC Recs
-  if (l_type == pinf_ or l_type == pout_ or l_type == nsw_) {
+  if (l_type == pinf_ || l_type == pout_ || l_type == nsw_) {
 
     m_bcrec_density[0].setLo(dir, BCType::foextrap);
     m_bcrec_enthalpy[0].setLo(dir, BCType::foextrap);
@@ -559,13 +559,13 @@ void mfix::set_bcrec_hi(const int lev, const int dir, const int l_type)
   const int nsw_  = bc_list.get_nsw();
 
   // Velocity BC Recs
-  if (l_type == pinf_ or l_type == pout_) {
+  if (l_type == pinf_ || l_type == pout_) {
 
     m_bcrec_velocity[0].setHi(dir, BCType::foextrap);
     m_bcrec_velocity[1].setHi(dir, BCType::foextrap);
     m_bcrec_velocity[2].setHi(dir, BCType::foextrap);
 
-  } else if (l_type == minf_ or l_type == nsw_) {
+  } else if (l_type == minf_ || l_type == nsw_) {
 
     m_bcrec_velocity[0].setHi(dir, BCType::ext_dir);
     m_bcrec_velocity[1].setHi(dir, BCType::ext_dir);
@@ -579,7 +579,7 @@ void mfix::set_bcrec_hi(const int lev, const int dir, const int l_type)
   }
 
   // Scalar BC Recs
-  if (l_type == pinf_ or l_type == pout_ or l_type == nsw_) {
+  if (l_type == pinf_ || l_type == pout_ || l_type == nsw_) {
 
     m_bcrec_density[0].setHi(dir, BCType::foextrap);
     m_bcrec_enthalpy[0].setHi(dir, BCType::foextrap);

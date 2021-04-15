@@ -236,7 +236,7 @@ mfix::ReportGridStats () const
       int dm = 0;
 
       amrex::Loop(bx, [vfrc,ep,&dm] (int i, int j, int k) noexcept
-      {if(0.0 < vfrc(i,j,k) and vfrc(i,j,k) < 1.0) dm += 1;});
+      {if(0.0 < vfrc(i,j,k) && vfrc(i,j,k) < 1.0) dm += 1;});
 
       return dm;
     }));

@@ -22,9 +22,9 @@ void Godunov_plm_fpu_x (const int i, const int j, const int k, const int n,
 {
     using namespace amrex;
     {
-        bool extdir_or_ho_ilo = (bc.lo(0) == BCType::ext_dir) or
+        bool extdir_or_ho_ilo = (bc.lo(0) == BCType::ext_dir) ||
                                 (bc.lo(0) == BCType::hoextrap);
-        bool extdir_or_ho_ihi = (bc.hi(0) == BCType::ext_dir) or
+        bool extdir_or_ho_ihi = (bc.hi(0) == BCType::ext_dir) ||
                                 (bc.hi(0) == BCType::hoextrap);
 
         Real upls, umns;
@@ -33,7 +33,7 @@ void Godunov_plm_fpu_x (const int i, const int j, const int k, const int n,
 
         if (i == domain_ilo && (bc.lo(0) == BCType::ext_dir)) {
             umns = S(i-1,j,k,n);
-            if(n ==0 and is_velocity)
+            if(n ==0 && is_velocity)
             {
               upls = S(i-1,j,k,n);
             } else {
@@ -42,7 +42,7 @@ void Godunov_plm_fpu_x (const int i, const int j, const int k, const int n,
             }
         } else if (i == domain_ihi+1 && (bc.hi(0) == BCType::ext_dir)) {
             upls = S(i  ,j,k,n);
-            if (n ==0 and is_velocity)
+            if (n ==0 && is_velocity)
             {
               umns = S(i,j,k,n);
             } else {
@@ -75,9 +75,9 @@ void Godunov_plm_fpu_y (const int i, const int j, const int k, const int n,
 {
     using namespace amrex;
     {
-        bool extdir_or_ho_jlo = (bc.lo(1) == BCType::ext_dir) or
+        bool extdir_or_ho_jlo = (bc.lo(1) == BCType::ext_dir) ||
                                 (bc.lo(1) == BCType::hoextrap);
-        bool extdir_or_ho_jhi = (bc.hi(1) == BCType::ext_dir) or
+        bool extdir_or_ho_jhi = (bc.hi(1) == BCType::ext_dir) ||
                                 (bc.hi(1) == BCType::hoextrap);
 
         Real vpls, vmns;
@@ -86,7 +86,7 @@ void Godunov_plm_fpu_y (const int i, const int j, const int k, const int n,
 
         if (j == domain_jlo && (bc.lo(1) == BCType::ext_dir)) {
             vmns = S(i,j-1,k,n);
-            if(n==1 and is_velocity)
+            if(n==1 && is_velocity)
             {
                 vpls = S(i,j-1,k,n);
             } else {
@@ -95,7 +95,7 @@ void Godunov_plm_fpu_y (const int i, const int j, const int k, const int n,
             }
         } else if (j == domain_jhi+1 && (bc.hi(1) == BCType::ext_dir)) {
             vpls = S(i,j  ,k,n);
-            if(n==1 and is_velocity)
+            if(n==1 && is_velocity)
             {
                 vmns = S(i,j  ,k,n);
             } else {
@@ -130,9 +130,9 @@ void Godunov_plm_fpu_z (const int i, const int j, const int k, const int n,
 {
     using namespace amrex;
     {
-        bool extdir_or_ho_klo = (bc.lo(2) == BCType::ext_dir) or
+        bool extdir_or_ho_klo = (bc.lo(2) == BCType::ext_dir) ||
                                 (bc.lo(2) == BCType::hoextrap);
-        bool extdir_or_ho_khi = (bc.hi(2) == BCType::ext_dir) or
+        bool extdir_or_ho_khi = (bc.hi(2) == BCType::ext_dir) ||
                                 (bc.hi(2) == BCType::hoextrap);
 
         Real wpls, wmns;
@@ -141,7 +141,7 @@ void Godunov_plm_fpu_z (const int i, const int j, const int k, const int n,
 
         if (k == domain_klo && (bc.lo(2) == BCType::ext_dir)) {
             wmns = S(i,j,k-1,n);
-            if(n==2 and is_velocity)
+            if(n==2 && is_velocity)
             {
                wpls = S(i,j,k-1,n);
             } else {
@@ -150,7 +150,7 @@ void Godunov_plm_fpu_z (const int i, const int j, const int k, const int n,
             }
         } else if (k == domain_khi+1 && (bc.hi(2) == BCType::ext_dir)) {
             wpls = S(i,j,k  ,n);
-            if(n==2 and is_velocity)
+            if(n==2 && is_velocity)
             {
                 wmns = S(i,j,k  ,n);
             } else {

@@ -118,8 +118,8 @@ mfix::set_enthalpy_bcs (Real time,
       if(bct == pout) {
         h_g(i,j,k) = h_g(dom_lo[0],j,k);
       }
-      else if (bct == minf or bct == pinf) {
-        if (not fluid_is_a_mixture) {
+      else if (bct == minf || bct == pinf) {
+        if (!fluid_is_a_mixture) {
           h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
         }
         else {
@@ -147,8 +147,8 @@ mfix::set_enthalpy_bcs (Real time,
       if(bct == pout) {
         h_g(i,j,k) = h_g(dom_hi[0],j,k);
       }
-      else if (bct == minf or bct == pinf) {
-        if (not fluid_is_a_mixture) {
+      else if (bct == minf || bct == pinf) {
+        if (!fluid_is_a_mixture) {
           h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
         }
         else {
@@ -176,8 +176,8 @@ mfix::set_enthalpy_bcs (Real time,
       if(bct == pout) {
         h_g(i,j,k) = h_g(i,dom_lo[1],k);
       }
-      else if (bct == minf or bct == pinf) {
-        if (not fluid_is_a_mixture) {
+      else if (bct == minf || bct == pinf) {
+        if (!fluid_is_a_mixture) {
           h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
         }
         else {
@@ -205,8 +205,8 @@ mfix::set_enthalpy_bcs (Real time,
       if(bct == pout) {
         h_g(i,j,k) = h_g(i,dom_hi[1],k);
       }
-      else if (bct == minf or bct == pinf) {
-        if (not fluid_is_a_mixture) {
+      else if (bct == minf || bct == pinf) {
+        if (!fluid_is_a_mixture) {
           h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
         }
         else {
@@ -234,8 +234,8 @@ mfix::set_enthalpy_bcs (Real time,
       if(bct == pout) {
         h_g(i,j,k) = h_g(i,j,dom_lo[2]);
       }
-      else if (bct == minf or bct == pinf) {
-        if (not fluid_is_a_mixture) {
+      else if (bct == minf || bct == pinf) {
+        if (!fluid_is_a_mixture) {
           h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
         }
         else {
@@ -263,8 +263,8 @@ mfix::set_enthalpy_bcs (Real time,
       if(bct == pout) {
         h_g(i,j,k) = h_g(i,j,dom_hi[2]);
       }
-      else if (bct == minf or bct == pinf) {
-        if (not fluid_is_a_mixture) {
+      else if (bct == minf || bct == pinf) {
+        if (!fluid_is_a_mixture) {
           h_g(i,j,k) = cp_g0 * p_bc_t_g[bcv];
         }
         else {

@@ -147,7 +147,7 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
     }
 
     // Add real components for chemical reactions rates
-    if (SOLIDS::solve_species and REACTIONS::solve)
+    if (SOLIDS::solve_species && REACTIONS::solve)
     {
       // Add components after solid species
       const int gap = SOLIDS::nspecies;
@@ -231,7 +231,7 @@ void MFIXParticleContainer::InitParticlesAuto ()
         }
 
         // Add real components for solid species
-        if (SOLIDS::solve_species and REACTIONS::solve)
+        if (SOLIDS::solve_species && REACTIONS::solve)
         {
           const int gap = SOLIDS::nspecies;
 
@@ -346,9 +346,9 @@ void MFIXParticleContainer::InitParticlesEnthalpy ()
         {
           MFIXParticleContainer::ParticleType& p = particles_ptr[ip];
 
-          if(ic_lo[0] <= p.pos(0) and p.pos(0) <= ic_hi[0] and
-             ic_lo[1] <= p.pos(1) and p.pos(1) <= ic_hi[1] and
-             ic_lo[2] <= p.pos(2) and p.pos(2) <= ic_hi[2])
+          if(ic_lo[0] <= p.pos(0) && p.pos(0) <= ic_hi[0] &&
+             ic_lo[1] <= p.pos(1) && p.pos(1) <= ic_hi[1] &&
+             ic_lo[2] <= p.pos(2) && p.pos(2) <= ic_hi[2])
           {
             const int phase = p_intarray[SoAintData::phase][ip];
             p_realarray[SoArealData::temperature][ip] = p_temperature_loc[phase-1];
@@ -443,9 +443,9 @@ void MFIXParticleContainer::InitParticlesSpecies ()
           {
             MFIXParticleContainer::ParticleType& p = particles_ptr[ip];
 
-            if(ic_lo[0] <= p.pos(0) and p.pos(0) <= ic_hi[0] and
-               ic_lo[1] <= p.pos(1) and p.pos(1) <= ic_hi[1] and
-               ic_lo[2] <= p.pos(2) and p.pos(2) <= ic_hi[2])
+            if(ic_lo[0] <= p.pos(0) && p.pos(0) <= ic_hi[0] &&
+               ic_lo[1] <= p.pos(1) && p.pos(1) <= ic_hi[1] &&
+               ic_lo[2] <= p.pos(2) && p.pos(2) <= ic_hi[2])
             {
               for (int n_s(0); n_s < nspecies_s; n_s++)
                 ptile_data.m_runtime_rdata[n_s][ip] = p_mass_fractions[n_s];

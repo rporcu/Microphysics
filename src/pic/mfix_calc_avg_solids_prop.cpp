@@ -96,7 +96,7 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in)
           [tolerance, avg_prop_arr, flagsarr]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          if (not flagsarr(i,j,k).isCovered()) {
+          if (!flagsarr(i,j,k).isCovered()) {
 
             if(avg_prop_arr(i,j,k,3) > tolerance)
               avg_prop_arr(i,j,k,0) *= (1.0/avg_prop_arr(i,j,k,3));
@@ -194,7 +194,7 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in)
 
           const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-          if((bct == pinf) or (bct == minf))
+          if((bct == pinf) || (bct == minf))
             avg_prop_arr(dom_lo[0],j,k,0) = 0.0;
 
         });
@@ -207,7 +207,7 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in)
 
           const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-          if((bct == pinf) or (bct == minf))
+          if((bct == pinf) || (bct == minf))
             avg_prop_arr(dom_hi[0]+1,j,k,0) = 0.0;
 
         });
@@ -220,7 +220,7 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in)
 
           const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-          if((bct == pinf) or (bct == minf))
+          if((bct == pinf) || (bct == minf))
             avg_prop_arr(i,dom_lo[1],k,1) = 0.0;
 
         });
@@ -233,7 +233,7 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in)
 
           const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-          if((bct == pinf) or (bct == minf))
+          if((bct == pinf) || (bct == minf))
             avg_prop_arr(i,dom_hi[1]+1,k,1) = 0.0;
 
         });
@@ -246,7 +246,7 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in)
 
           const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-          if((bct == pinf) or (bct == minf))
+          if((bct == pinf) || (bct == minf))
             avg_prop_arr(i,j,dom_lo[2],2) = 0.0;
 
         });
@@ -259,7 +259,7 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in)
 
           const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-          if((bct == pinf) or (bct == minf))
+          if((bct == pinf) || (bct == minf))
             avg_prop_arr(i,j,dom_hi[2]+1,2) = 0.0;
 
         });

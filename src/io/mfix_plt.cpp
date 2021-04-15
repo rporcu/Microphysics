@@ -115,12 +115,12 @@ mfix::InitIOPltData ()
         }
       }
 
-      if (FLUID::solve_species and REACTIONS::solve) {
+      if (FLUID::solve_species && REACTIONS::solve) {
         if ( plt_ro_txfr == 1) pltVarCount += FLUID::nspecies;
       }
     }
 
-    if(DEM::solve or PIC::solve)
+    if(DEM::solve || PIC::solve)
     {
       int plt_ccse_regtest = 0;
       pp.query("plt_regtest", plt_ccse_regtest);
@@ -131,7 +131,7 @@ mfix::InitIOPltData ()
         write_real_comp.resize(size, 0);
       }
 
-      if (SOLIDS::solve_species and REACTIONS::solve) {
+      if (SOLIDS::solve_species && REACTIONS::solve) {
         const int size = AoSrealData::count + SoArealData::count +
                          SoAspeciesData::count*SOLIDS::nspecies +
                          SoAreactionsData::count*SOLIDS::nspecies*REACTIONS::nreactions;
@@ -213,7 +213,7 @@ mfix::InitIOPltData ()
 
         input_value = 0;
         pp.query("plt_ro_rates_p", input_value );
-        if (SOLIDS::solve_species and REACTIONS::solve)
+        if (SOLIDS::solve_species && REACTIONS::solve)
         {
           for(int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
             for(int q(0); q < REACTIONS::nreactions; ++q) {
@@ -292,11 +292,11 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         pltFldNames.push_back("MW_g");
 
       // Fluid enthalpy
-      if( advect_enthalpy and plt_h_g == 1 )
+      if( advect_enthalpy && plt_h_g == 1 )
         pltFldNames.push_back("h_g");
 
       // Temperature in fluid
-      if( advect_enthalpy and plt_T_g == 1 )
+      if( advect_enthalpy && plt_T_g == 1 )
         pltFldNames.push_back("T_g");
 
       // Tracer in fluid
@@ -304,11 +304,11 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         pltFldNames.push_back("trac");
 
       // Specific heat
-      if( advect_enthalpy and plt_cp_g == 1 )
+      if( advect_enthalpy && plt_cp_g == 1 )
         pltFldNames.push_back("cp_g");
 
       // Thermal conductivity
-      if( advect_enthalpy and plt_k_g == 1 )
+      if( advect_enthalpy && plt_k_g == 1 )
         pltFldNames.push_back("k_g");
 
       // Fluid viscosity
@@ -340,27 +340,27 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         pltFldNames.push_back("cost_p");
 
       // Fluid species mass fractions
-      if(FLUID::solve_species and plt_X_gk == 1)
+      if(FLUID::solve_species && plt_X_gk == 1)
         for(std::string specie: FLUID::species)
           pltFldNames.push_back("X_"+specie+"_g");
 
       // Fluid species mass diffusivities
-      if(FLUID::solve_species and plt_D_gk == 1)
+      if(FLUID::solve_species && plt_D_gk == 1)
         for(std::string specie: FLUID::species)
           pltFldNames.push_back("D_"+specie+"_g");
 
       // Fluid species specific heat
-      if(FLUID::solve_species and advect_enthalpy and plt_cp_gk == 1)
+      if(FLUID::solve_species && advect_enthalpy && plt_cp_gk == 1)
         for(std::string specie: FLUID::species)
           pltFldNames.push_back("cp_"+specie+"_g");
 
       // Fluid species enthalpy
-      if(FLUID::solve_species and advect_enthalpy and plt_h_gk == 1)
+      if(FLUID::solve_species && advect_enthalpy && plt_h_gk == 1)
         for(std::string specie: FLUID::species)
           pltFldNames.push_back("h_"+specie+"_g");
 
       // Fluid species density reaction rates
-      if (FLUID::solve_species and REACTIONS::solve and plt_ro_txfr == 1)
+      if (FLUID::solve_species && REACTIONS::solve && plt_ro_txfr == 1)
         for(std::string specie: FLUID::species)
           pltFldNames.push_back("ro_txfr_"+specie+"_g");
 
@@ -417,13 +417,13 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Fluid enthalpy
-        if( advect_enthalpy and plt_h_g == 1 ) {
+        if( advect_enthalpy && plt_h_g == 1 ) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->h_g), 0, lc, 1, 0);
           lc += 1;
         }
 
         // Fluid temperature
-        if( advect_enthalpy and plt_T_g == 1 ) {
+        if( advect_enthalpy && plt_T_g == 1 ) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->T_g), 0, lc, 1, 0);
           lc += 1;
         }
@@ -435,13 +435,13 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Specific heat
-        if( advect_enthalpy and plt_cp_g == 1 ) {
+        if( advect_enthalpy && plt_cp_g == 1 ) {
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->cp_g, 0, lc, 1, 0);
           lc += 1;
         }
 
         // Specific heat
-        if( advect_enthalpy and plt_k_g == 1 ) {
+        if( advect_enthalpy && plt_k_g == 1 ) {
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->k_g, 0, lc, 1, 0);
           lc += 1;
         }
@@ -493,7 +493,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Fluid species mass fractions
-        if(FLUID::solve_species and plt_X_gk == 1 ) {
+        if(FLUID::solve_species && plt_X_gk == 1 ) {
           for(int n(0); n < FLUID::nspecies; n++) {
             MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_gk, n, lc+n, 1, 0);
           }
@@ -501,7 +501,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Species mass fraction
-        if(FLUID::solve_species and plt_D_gk == 1 ) {
+        if(FLUID::solve_species && plt_D_gk == 1 ) {
           for(int n(0); n < FLUID::nspecies; n++) {
             MultiFab::Copy(*mf[lev], *m_leveldata[lev]->D_gk, n, lc+n, 1, 0);
           }
@@ -509,7 +509,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Fluid species specific heat
-        if(FLUID::solve_species and advect_enthalpy and plt_cp_gk == 1 ) {
+        if(FLUID::solve_species && advect_enthalpy && plt_cp_gk == 1 ) {
           for(int n(0); n < FLUID::nspecies; n++) {
             MultiFab::Copy(*mf[lev], *m_leveldata[lev]->cp_gk, n, lc+n, 1, 0);
           }
@@ -517,14 +517,14 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Fluid species enthalpy
-        if(FLUID::solve_species and plt_h_gk == 1 ) {
+        if(FLUID::solve_species && plt_h_gk == 1 ) {
           for(int n(0); n < FLUID::nspecies; n++) {
             MultiFab::Copy(*mf[lev], *m_leveldata[lev]->h_gk, n, lc+n, 1, 0);
           }
           lc += FLUID::nspecies;
         }
 
-        if (FLUID::solve_species and REACTIONS::solve and plt_ro_txfr == 1) {
+        if (FLUID::solve_species && REACTIONS::solve && plt_ro_txfr == 1) {
           for(int n(0); n < FLUID::nspecies; n++) {
             MultiFab::Copy(*mf[lev], *m_leveldata[lev]->chem_txfr, n, lc+n, 1, 0);
           }
@@ -578,7 +578,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 
     WriteJobInfo(plotfilename);
 
-    if ( DEM::solve or PIC::solve )
+    if ( DEM::solve || PIC::solve )
     {
         Vector<std::string> real_comp_names;
         Vector<std::string>  int_comp_names;
@@ -622,7 +622,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
           for(auto species: SOLIDS::species)
             real_comp_names.push_back("X_"+species+"_s");
 
-        if (SOLIDS::solve_species and REACTIONS::solve)
+        if (SOLIDS::solve_species && REACTIONS::solve)
           for(auto species: SOLIDS::species)
             for(auto reaction: REACTIONS::reactions)
               real_comp_names.push_back(reaction+"_"+species+"_txfr");

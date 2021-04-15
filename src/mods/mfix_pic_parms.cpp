@@ -60,12 +60,12 @@ namespace PIC
 
       // Read beta
       pp.get("beta", beta);
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(beta >= 2. and beta <= 5.,
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(beta >= 2. && beta <= 5.,
           "Invalid value: pic.beta must be in [2.0, 5.0]");
 
       // Read close_pack coefficient
       pp.get("close_pack", ep_cp);
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_cp > 0. and ep_cp < 1.,
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_cp > 0. && ep_cp < 1.,
           "Invalid value: pic.close_pack must be in [0.0, 1.0]");
 
       // Read small number
@@ -76,12 +76,12 @@ namespace PIC
       // Solids slip velocity factor
       velfac = 1.0;
       pp.query("velfac", velfac);
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(velfac >= 0. and velfac <= 1.,
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(velfac >= 0. && velfac <= 1.,
           "Invalid value: pic.velfac must be in [0.0, 1.0]");
 
       damping_factor = 0.85;
       pp.get("damping_factor", damping_factor);
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(damping_factor >= 0. and damping_factor <= 1.,
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(damping_factor >= 0. && damping_factor <= 1.,
            "Invalid value: pic.damping_factor must be in [0.0, 1.0]");
 
 

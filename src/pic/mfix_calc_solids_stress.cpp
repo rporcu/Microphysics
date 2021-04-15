@@ -175,7 +175,7 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
 
           const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-          if((bct == pinf) or (bct == pout) or (bct == minf)){
+          if((bct == pinf) || (bct == pout) || (bct == minf)){
 
             const Real ep_s_extrap = 2.0*ep_s_arr(dom_lo[0],j,k) - ep_s_arr(dom_lo[0]+1,j,k);
 
@@ -199,7 +199,7 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
 
           const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-          if((bct == pinf) or (bct == pout) or (bct == minf)){
+          if((bct == pinf) || (bct == pout) || (bct == minf)){
             const Real ep_s_extrap = 2.0*ep_s_arr(dom_hi[0],j,k) - ep_s_arr(dom_hi[0]-1,j,k);
 
             ep_s_arr(i,j,k) = amrex::max(0.0,
@@ -221,7 +221,7 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
 
           const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-          if((bct == pinf) or (bct == pout) or (bct == minf)){
+          if((bct == pinf) || (bct == pout) || (bct == minf)){
 
             const Real ep_s_extrap = 2.0*ep_s_arr(i,dom_lo[1],k) - ep_s_arr(i,dom_lo[1]+1,k);
 
@@ -245,7 +245,7 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
 
           const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-          if((bct == pinf) or (bct == pout) or (bct == minf)){
+          if((bct == pinf) || (bct == pout) || (bct == minf)){
             const Real ep_s_extrap = 2.0*ep_s_arr(i,dom_hi[1],k) - ep_s_arr(i,dom_hi[1]-1,k);
 
             ep_s_arr(i,j,k) = amrex::max(0.0,
@@ -267,7 +267,7 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
 
           const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-          if((bct == pinf) or (bct == pout) or (bct == minf)){
+          if((bct == pinf) || (bct == pout) || (bct == minf)){
 
             const Real ep_s_extrap = 2.0*ep_s_arr(i,j,dom_lo[2]) - ep_s_arr(i,j,dom_lo[2]+1);
 
@@ -291,7 +291,7 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
 
           const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-          if((bct == pinf) or (bct == pout) or (bct == minf)){
+          if((bct == pinf) || (bct == pout) || (bct == minf)){
             const Real ep_s_extrap = 2.0*ep_s_arr(i,j,dom_hi[2]) - ep_s_arr(i,j,dom_hi[2]-1);
 
             ep_s_arr(i,j,k) = amrex::max(0.0,
@@ -504,13 +504,13 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
               // that contains the parcels centroid. We don't need to check
               // cell (ip,jp,kp) as we've already tested if it is covered.
 
-              if (flags_array(ip,jp,kp).isConnected(di-1,dj-1,dk-1) and
-                  flags_array(ip,jp,kp).isConnected(di  ,dj-1,dk-1) and
-                  flags_array(ip,jp,kp).isConnected(di-1,dj  ,dk-1) and
-                  flags_array(ip,jp,kp).isConnected(di  ,dj  ,dk-1) and
-                  flags_array(ip,jp,kp).isConnected(di-1,dj-1,dk  ) and
-                  flags_array(ip,jp,kp).isConnected(di  ,dj-1,dk  ) and
-                  flags_array(ip,jp,kp).isConnected(di-1,dj  ,dk  ) and
+              if (flags_array(ip,jp,kp).isConnected(di-1,dj-1,dk-1) &&
+                  flags_array(ip,jp,kp).isConnected(di  ,dj-1,dk-1) &&
+                  flags_array(ip,jp,kp).isConnected(di-1,dj  ,dk-1) &&
+                  flags_array(ip,jp,kp).isConnected(di  ,dj  ,dk-1) &&
+                  flags_array(ip,jp,kp).isConnected(di-1,dj-1,dk  ) &&
+                  flags_array(ip,jp,kp).isConnected(di  ,dj-1,dk  ) &&
+                  flags_array(ip,jp,kp).isConnected(di-1,dj  ,dk  ) &&
                   flags_array(ip,jp,kp).isConnected(di  ,dj  ,dk  )) {
 
                 // After sufficient testing, these should be changed to
@@ -588,7 +588,7 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
 
                 // 1D approx of dPsdx
 
-                if (flags_array(ip,jp,kp).isConnected(di-1,0,0) and
+                if (flags_array(ip,jp,kp).isConnected(di-1,0,0) &&
                     flags_array(ip,jp,kp).isConnected(di  ,0,0)){
 
                   dPsdx = dxi[0]*(Ps_arr(i,jp,kp) - Ps_arr(i-1,jp,kp));
@@ -625,7 +625,7 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
 
                 // 1D approx of dPsdy
 
-                if (flags_array(ip,jp,kp).isConnected(0,dj-1,0) and
+                if (flags_array(ip,jp,kp).isConnected(0,dj-1,0) &&
                     flags_array(ip,jp,kp).isConnected(0,dj  ,0)){
 
                   dPsdy = dxi[1]*(Ps_arr(ip,j,kp) - Ps_arr(ip,j-1,kp));
@@ -660,7 +660,7 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
 
                 // 1D approx of dPsdz
 
-                if (flags_array(ip,jp,kp).isConnected(0,0,dk-1) and
+                if (flags_array(ip,jp,kp).isConnected(0,0,dk-1) &&
                     flags_array(ip,jp,kp).isConnected(0,0,dk  )){
 
                   dPsdz = dxi[2]*(Ps_arr(ip,jp,k) - Ps_arr(ip,jp,k-1));

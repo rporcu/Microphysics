@@ -588,14 +588,14 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Add the drag and enthalpy terms implicitly
     // *************************************************************************************
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve || PIC::solve)
       mfix_add_txfr_implicit(l_dt, get_vel_g(), get_h_g(), get_T_g(), get_txfr_const(),
              GetVecOfConstPtrs(density_nph), get_ep_g_const(), get_cp_g_const());
 
     // *************************************************************************************
     // Subtract off half of the explicit diffusion terms (see comment above)
     // *************************************************************************************
-    if (advect_enthalpy and (not explicit_diffusive_enthalpy))
+    if (advect_enthalpy && (!explicit_diffusive_enthalpy))
     {
       for (int lev = 0; lev <= finest_level; lev++)
       {
@@ -665,7 +665,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
 
     // NOTE: we do this call before multiplying ep_g by ro_g
-    if (advect_enthalpy and (not explicit_diffusive_enthalpy)) {
+    if (advect_enthalpy && (!explicit_diffusive_enthalpy)) {
       diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(), get_h_g(),
           get_cp_g(), get_k_g(), get_T_g_on_eb(), get_k_g_on_eb(), 0.5*l_dt);
     }
@@ -679,10 +679,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_mu_g(), 0.5*l_dt);
 
     // mfix_set_tracer_bcs (new_time, get_trac(), 0);
-    if (advect_tracer and (not explicit_diffusive_trac))
+    if (advect_tracer && (!explicit_diffusive_trac))
         diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, 0.5*l_dt);
 
-    if (advect_fluid_species and (not explicit_diffusive_species)) {
+    if (advect_fluid_species && (!explicit_diffusive_species)) {
       diffusion_op->diffuse_species(get_X_gk(), get_ep_g(), get_D_gk(), 0.5*l_dt);
     }
 
@@ -722,7 +722,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     if (!(m_idealgas_constraint == IdealGasConstraint::None)) {
 
       // Calculate drag coefficient
-      if (DEM::solve or PIC::solve) {
+      if (DEM::solve || PIC::solve) {
 
         Real start_drag = ParallelDescriptor::second();
         amrex::Print() << "\nRecalculating drag ..." << std::endl;

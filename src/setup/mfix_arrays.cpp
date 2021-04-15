@@ -385,7 +385,7 @@ mfix::RegridArrays (int lev)
       delete D_gk_new;
     }
 
-    if (advect_enthalpy and advect_fluid_species) {
+    if (advect_enthalpy && advect_fluid_species) {
       // Species specific heat
       MultiFab* cp_gk_new = new MultiFab(grids[lev], dmap[lev],
                                        m_leveldata[lev]->cp_gk->nComp(),
@@ -464,7 +464,7 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->txfr, txfr_new);
     delete txfr_new;
 
-    if (advect_fluid_species and solve_reactions) {
+    if (advect_fluid_species && solve_reactions) {
       // Species mass transfer rates
       MultiFab* chem_txfr_new = new MultiFab(grids[lev], dmap[lev],
                                         m_leveldata[lev]->chem_txfr->nComp(),
@@ -568,7 +568,7 @@ mfix::RegridLevelSetArray (int a_lev)
 
    // This assert is to verify that some kind of EB geometry has already been
    // defined
-   AMREX_ASSERT(not EB2::IndexSpace::empty());
+   AMREX_ASSERT(!EB2::IndexSpace::empty());
 
    const DistributionMapping&      dm = pc->ParticleDistributionMap(a_lev);
    const BoxArray&                 ba = pc->ParticleBoxArray(a_lev);
@@ -672,7 +672,7 @@ bool mfix::mfix_update_ebfactory (int a_lev)
     if (ooo_debug) amrex::Print() << "mfix_update_ebfactory" << std::endl;
    // This assert is to verify that some kind of EB geometry has already been
    // defined
-   AMREX_ASSERT(not EB2::IndexSpace::empty());
+   AMREX_ASSERT(!EB2::IndexSpace::empty());
 
    const DistributionMapping & dm = DistributionMap(a_lev);
    const BoxArray &            ba = boxArray(a_lev);

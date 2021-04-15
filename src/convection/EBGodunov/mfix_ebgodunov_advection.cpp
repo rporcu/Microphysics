@@ -470,7 +470,7 @@ ebgodunov::compute_godunov_advection (Box const& bx, int ncomp,
                 +           dxinv[2]*( apz(i,j,k  )*w_mac(i,j,k  )*qz(i,j,k  ,n) -
                                        apz(i,j,k+1)*w_mac(i,j,k+1)*qz(i,j,k+1,n) );
 #if 0
-            if (i == 192 and j == 13 and k == 38) 
+            if (i == 192 && j == 13 && k == 38) 
             {
                 std::cout << "DOING COMP N   " << n << std::endl;
                 std::cout << "LO: AX UMAC QX " << apx(i  ,j,k) << " " << u_mac(i  ,j,k) << " " << qx(i  ,j,k,n) << std::endl;

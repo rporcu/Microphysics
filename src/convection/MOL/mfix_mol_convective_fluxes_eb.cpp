@@ -53,16 +53,16 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
   const int domain_klo = domain_box.smallEnd(2);
   const int domain_khi = domain_box.bigEnd(2);
 
-  const bool check_extdir_ilo = (domain_ilo >= xbx.smallEnd(0) and domain_ilo <= xbx.bigEnd(0));
-  const bool check_extdir_ihi = (domain_ihi >= xbx.smallEnd(0) and domain_ihi <= xbx.bigEnd(0));
-  const bool check_extdir_jlo = (domain_jlo >= ybx.smallEnd(1) and domain_jlo <= ybx.bigEnd(1));
-  const bool check_extdir_jhi = (domain_jhi >= ybx.smallEnd(1) and domain_jhi <= ybx.bigEnd(1));
-  const bool check_extdir_klo = (domain_klo >= zbx.smallEnd(2) and domain_klo <= zbx.bigEnd(2));
-  const bool check_extdir_khi = (domain_khi >= zbx.smallEnd(2) and domain_khi <= zbx.bigEnd(2));
+  const bool check_extdir_ilo = (domain_ilo >= xbx.smallEnd(0) && domain_ilo <= xbx.bigEnd(0));
+  const bool check_extdir_ihi = (domain_ihi >= xbx.smallEnd(0) && domain_ihi <= xbx.bigEnd(0));
+  const bool check_extdir_jlo = (domain_jlo >= ybx.smallEnd(1) && domain_jlo <= ybx.bigEnd(1));
+  const bool check_extdir_jhi = (domain_jhi >= ybx.smallEnd(1) && domain_jhi <= ybx.bigEnd(1));
+  const bool check_extdir_klo = (domain_klo >= zbx.smallEnd(2) && domain_klo <= zbx.bigEnd(2));
+  const bool check_extdir_khi = (domain_khi >= zbx.smallEnd(2) && domain_khi <= zbx.bigEnd(2));
 
-  const bool check_extdir = check_extdir_ilo or check_extdir_ihi or
-                            check_extdir_jlo or check_extdir_jhi or
-                            check_extdir_klo or check_extdir_khi;
+  const bool check_extdir = check_extdir_ilo || check_extdir_ihi ||
+                            check_extdir_jlo || check_extdir_jhi ||
+                            check_extdir_klo || check_extdir_khi;
 
   /*********************************************************************************
    *                                                                               *

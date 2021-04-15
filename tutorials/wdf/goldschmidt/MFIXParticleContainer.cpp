@@ -433,7 +433,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                       Real r2 = dx*dx + dy*dy + dz*dz;
                       Real r_lm = p1.rdata(realData::radius) + p2.rdata(realData::radius);
 
-                      if ( r2 <= (r_lm - small_number)*(r_lm - small_number) and (p1.id() != p2.id()))
+                      if ( r2 <= (r_lm - small_number)*(r_lm - small_number) && (p1.id() != p2.id()))
                       {
                           if (debug_level > 0)
                              Gpu::Atomic::Add(pncoll, 1);

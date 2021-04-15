@@ -59,7 +59,7 @@ mfix::EvolveFluid (int nstep,
         m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
       }
 
-      if (advect_enthalpy and advect_fluid_species) {
+      if (advect_enthalpy && advect_fluid_species) {
         m_leveldata[lev]->cp_gk->FillBoundary(geom[lev].periodicity());
         m_leveldata[lev]->h_gk->FillBoundary(geom[lev].periodicity());
       }
@@ -214,7 +214,7 @@ mfix::EvolveFluid (int nstep,
         }
 
         // Calculate drag coefficient
-        if (DEM::solve or PIC::solve) {
+        if (DEM::solve || PIC::solve) {
           Real start_drag = ParallelDescriptor::second();
           mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g_old(),
                                get_vel_g_old(), get_mu_g(), get_cp_g(),
@@ -238,7 +238,7 @@ mfix::EvolveFluid (int nstep,
             coupling_timing);
 
         // Calculate drag coefficient
-        if (DEM::solve or PIC::solve) {
+        if (DEM::solve || PIC::solve) {
           Real start_drag = ParallelDescriptor::second();
           amrex::Print() << "\nRecalculating drag ..." << std::endl;
           mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
@@ -246,7 +246,7 @@ mfix::EvolveFluid (int nstep,
 
           // If !m_idealgas_constraint == IdealGasConstraint::None, then we have already
           // updated the chemical quantities
-          if (REACTIONS::solve and m_idealgas_constraint == IdealGasConstraint::None) {
+          if (REACTIONS::solve && m_idealgas_constraint == IdealGasConstraint::None) {
             mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(),
                                 get_X_gk(), get_D_gk(), get_cp_gk(),
                                 get_h_gk(), new_time);

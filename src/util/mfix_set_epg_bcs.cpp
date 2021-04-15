@@ -135,7 +135,7 @@ mfix::set_epg_bcs (const int lev,
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
         epg(i,j,k) = epg(dom_lo[0],j,k);
       else if (bct == minf)
         epg(i,j,k) = p_bc_ep_g[bcv];
@@ -174,7 +174,7 @@ mfix::set_epg_bcs (const int lev,
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
         epg(i,j,k) = epg(dom_hi[0],j,k);
       else if (bct == minf)
         epg(i,j,k) = p_bc_ep_g[bcv];
@@ -213,7 +213,7 @@ mfix::set_epg_bcs (const int lev,
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
         epg(i,j,k) = epg(i,dom_lo[1],k);
       else if (bct == minf)
         epg(i,j,k) = p_bc_ep_g[bcv];
@@ -253,7 +253,7 @@ mfix::set_epg_bcs (const int lev,
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
         epg(i,j,k) = epg(i,dom_hi[1],k);
       else if (bct == minf)
         epg(i,j,k) = p_bc_ep_g[bcv];
@@ -293,7 +293,7 @@ mfix::set_epg_bcs (const int lev,
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
         epg(i,j,k) = epg(i,j,dom_lo[2]);
       else if (bct == minf)
         epg(i,j,k) = p_bc_ep_g[bcv];
@@ -333,7 +333,7 @@ mfix::set_epg_bcs (const int lev,
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
         epg(i,j,k) = epg(i,j,dom_hi[2]);
       else if (bct == minf)
         epg(i,j,k) = p_bc_ep_g[bcv];

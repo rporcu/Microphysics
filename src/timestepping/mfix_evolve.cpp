@@ -15,7 +15,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     Real drag_timing(0.);
     Real sum_vol;
 
-    if ((DEM::solve or PIC::solve) and FLUID::solve)
+    if ((DEM::solve || PIC::solve) && FLUID::solve)
     {
       Real start_coupling = ParallelDescriptor::second();
       mfix_calc_volume_fraction(sum_vol);
@@ -47,7 +47,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     // This returns the drag force on the particle
     Real new_time = time+dt;
-    if ( (DEM::solve or PIC::solve) and FLUID::solve){
+    if ( (DEM::solve || PIC::solve) && FLUID::solve){
       Real start_coupling = ParallelDescriptor::second();
 
       mfix_calc_txfr_particle(new_time, get_vel_g(), get_gp(), get_T_g());
@@ -132,7 +132,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
       if(PIC::solve)
         std::cout << "   Time per parcel step " << end_particles << std::endl;
 
-      if((DEM::solve or PIC::solve) and FLUID::solve)
+      if((DEM::solve || PIC::solve) && FLUID::solve)
         std::cout << "   Coupling time per step   " << coupling_timing << std::endl;
     }
 
