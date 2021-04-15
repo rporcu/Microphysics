@@ -114,10 +114,13 @@ test:nvcc:
   image: $CI_REGISTRY_IMAGE/nvcc
   needs: ['build-nvcc-env']
   script:
+    - sccache -s
     - git submodule update --init --force
     - cmake -S .
             -B build
-            -DCMAKE_BUILD_TYPE=Debug
+            -DAMReX_CUDA_ARCH=Volta
+            -DCMAKE_BUILD_TYPE=NoOptimization
+            -DCMAKE_CUDA_ARCHITECTURES=70
             -DMFIX_GPU_BACKEND=CUDA
     - cmake --build build
   <<: *test_gpu
