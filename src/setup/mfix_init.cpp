@@ -147,7 +147,7 @@ mfix::InitParams ()
     pp.query("advect_fluid_species", advect_fluid_species);
 
     // Set the mfix class flag equal to the REACTIONS parameter
-    solve_reactions = REACTIONS::solve and SPECIES::solve;
+    solve_reactions = REACTIONS::solve && SPECIES::solve;
 
     // We can still turn it off explicitly even if we passed stoichiometry inputs
     pp.query("solve_reactions", solve_reactions);
@@ -326,7 +326,7 @@ mfix::InitParams ()
                    << "eb_pad        = " << levelset_eb_pad << std::endl;
   }
 
-  if (DEM::solve or PIC::solve)
+  if (DEM::solve || PIC::solve)
   {
     ParmParse pp("particles");
 
@@ -338,14 +338,14 @@ mfix::InitParams ()
     pp.query("removeOutOfRange", removeOutOfRange);
   }
 
-  if ((DEM::solve or PIC::solve) and (not FLUID::solve))
+  if ((DEM::solve || PIC::solve) && (!FLUID::solve))
   {
     if (fixed_dt <= 0.0)
       amrex::Abort("If running particle-only must specify a positive fixed_dt"
           " in the inputs file");
   }
 
-  if ((DEM::solve or PIC::solve) and FLUID::solve)
+  if ((DEM::solve || PIC::solve) && FLUID::solve)
   {
     ParmParse pp("mfix");
 
@@ -373,7 +373,7 @@ mfix::InitParams ()
     {
       std::string convection_type = "None";
 
-      if(not pp.contains("convection_type"))
+      if(!pp.contains("convection_type"))
       {
         if ( ParallelDescriptor::IOProcessor() )
           amrex::Warning("Convection type not specified in input file. "
@@ -457,9 +457,9 @@ mfix::InitParams ()
     amr_pp.query("plot_per_exact", plot_per_exact);
     amr_pp.query("plot_per_approx", plot_per_approx);
 
-    if ((plot_int       > 0 and plot_per_exact  > 0) or
-        (plot_int       > 0 and plot_per_approx > 0) or
-        (plot_per_exact > 0 and plot_per_approx > 0) )
+    if ((plot_int       > 0 && plot_per_exact  > 0) ||
+        (plot_int       > 0 && plot_per_approx > 0) ||
+        (plot_per_exact > 0 && plot_per_approx > 0) )
       amrex::Abort("Must choose only one of plot_int or plot_per_exact or plot_per_approx");
 
     amr_pp.queryarr("avg_p_g", avg_p_g);
@@ -546,7 +546,7 @@ void mfix::Init (Real time)
      *                                                                          *
      ***************************************************************************/
 
-    if (DEM::solve or PIC::solve) {
+    if (DEM::solve || PIC::solve) {
       pc = new MFIXParticleContainer(this);
       pc->setSortingBinSizes(IntVect(particle_sorting_bin));
     }
@@ -653,11 +653,11 @@ void mfix::MakeNewLevelFromScratch (int lev, Real time,
     amrex::Print() << "SETTING NEW GRIDS IN MAKE NEW LEVEL " << new_grids << std::endl;
     amrex::Print() << "SETTING NEW DMAP IN MAKE NEW LEVEL " << new_dmap << std::endl;
 
-    macproj.reset(new MacProjector(Geom(0,finest_level),
+    macproj = std::make_unique<MacProjector>(Geom(0,finest_level),
                                    MLMG::Location::FaceCentroid,  // Location of mac_vec
                                    MLMG::Location::FaceCentroid,  // Location of beta
                                    MLMG::Location::CellCenter,    // Location of solution variable phi
-                                   MLMG::Location::CellCentroid));// Location of MAC RHS
+                                   MLMG::Location::CellCentroid);// Location of MAC RHS
 
     // This is being done by mfix::make_eb_geometry,
     // otherwise it would be done here
@@ -690,7 +690,7 @@ void mfix::InitLevelData (Real time)
           AllocateArrays(lev);
 
     // Allocate the particle data
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve || PIC::solve)
     {
       Real strt_init_part = ParallelDescriptor::second();
 
@@ -759,7 +759,7 @@ void mfix::InitLevelData (Real time)
     }
 
     // Used in load balancing
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve || PIC::solve)
     {
       for (int lev(0); lev < particle_cost.size(); lev++)
         if (particle_cost[lev] != nullptr)
@@ -821,7 +821,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
 
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve || PIC::solve)
     {
         // Auto generated particles may be out of the domain. This call will
         // remove them. Note that this has to occur after the EB geometry is
@@ -908,7 +908,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 
             // This calls re-creates a proper particle_ebfactories
             //  and regrids all the multifabs that depend on it
-            if (DEM::solve or PIC::solve)
+            if (DEM::solve || PIC::solve)
                 RegridLevelSetArray(lev);
 
           }

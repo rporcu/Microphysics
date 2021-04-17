@@ -149,17 +149,17 @@ void mfix::make_eb_factories () {
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        ebfactory[lev].reset(
-            new EBFArrayBoxFactory(*eb_levels[lev], geom[lev], grids[lev], dmap[lev],
-                                   {nghost_eb_basic(), nghost_eb_volume(),
-                                    nghost_eb_full()}, m_eb_support_level));
+        ebfactory[lev] =
+            std::make_unique<EBFArrayBoxFactory>(*eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+                                   amrex::Vector<int>{nghost_eb_basic(), nghost_eb_volume(),
+                                    nghost_eb_full()}, m_eb_support_level);
 
         // Grow EB factory by +2 in order to avoid edge cases. This is not
         // necessary for multi-level mfix.
-        particle_ebfactory[lev].reset(
-            new EBFArrayBoxFactory(*particle_eb_levels[lev], geom[lev], grids[lev], dmap[lev],
-                                   {levelset_eb_pad + 2, levelset_eb_pad + 2,
-                                    levelset_eb_pad + 2}, m_eb_support_level));
+        particle_ebfactory[lev] =
+            std::make_unique<EBFArrayBoxFactory>(*particle_eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+                                   amrex::Vector<int>{levelset_eb_pad + 2, levelset_eb_pad + 2,
+                                    levelset_eb_pad + 2}, m_eb_support_level);
     }
 }
 
@@ -188,10 +188,10 @@ void mfix::fill_eb_levelsets ()
         const Geometry& ls_geom = amrex::refine(geom[0], levelset_refinement);
 
         BoxArray ls_ba = amrex::convert(part_ba, IntVect::TheNodeVector());
-        level_sets[0].reset(new MultiFab(ls_ba, ls_dm, 1, levelset_pad/levelset_refinement));
+        level_sets[0] = std::make_unique<MultiFab>(ls_ba, ls_dm, 1, levelset_pad/levelset_refinement);
 
         if (levelset_refinement != 1) ls_ba.refine(levelset_refinement);
-        level_sets[1].reset(new MultiFab(ls_ba, ls_dm, 1, levelset_pad));
+        level_sets[1] = std::make_unique<MultiFab>(ls_ba, ls_dm, 1, levelset_pad);
 
         //___________________________________________________________________________
         // NOTE: Boxes are different (since we're not refining, we need to treat
@@ -337,7 +337,7 @@ void mfix::fill_eb_levelsets ()
 
         // NOTE: reference BoxArray is not nodal
         BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
-        level_sets[0].reset(new MultiFab(ba, part_dm, 1, levelset_pad));
+        level_sets[0] = std::make_unique<MultiFab>(ba, part_dm, 1, levelset_pad);
         iMultiFab valid(ba, part_dm, 1, levelset_pad);
 
         MultiFab impfunc(ba, part_dm, 1, levelset_pad);

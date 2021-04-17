@@ -15,7 +15,7 @@ mfix::Regrid ()
   {
     amrex::Print() << "Load balancing using " << load_balance_type << std::endl;
 
-    if (DEM::solve  or PIC::solve)
+    if (DEM::solve  || PIC::solve)
        AMREX_ALWAYS_ASSERT(particle_cost[0] != nullptr);
 
     if (FLUID::solve)
@@ -45,11 +45,11 @@ mfix::Regrid ()
 
           SetDistributionMap(lev, new_fluid_dm);
 
-          macproj.reset(new MacProjector(Geom(0,finest_level),
+          macproj = std::make_unique<MacProjector>(Geom(0,finest_level),
                                          MLMG::Location::FaceCentroid,  // Location of mac_vec
                                          MLMG::Location::FaceCentroid,  // Location of beta
                                          MLMG::Location::CellCenter,    // Location of solution variable phi
-                                         MLMG::Location::CellCentroid));// Location of MAC RHS
+                                         MLMG::Location::CellCentroid);// Location of MAC RHS
 
           RegridArrays(lev);
 
@@ -119,7 +119,7 @@ mfix::Regrid ()
 
         // This calls re-creates a proper particle_ebfactories
         //  and regrids all the multifabs that depend on it
-        if (DEM::solve or PIC::solve)
+        if (DEM::solve || PIC::solve)
           RegridLevelSetArray(lev);
       }
 
@@ -166,11 +166,11 @@ mfix::Regrid ()
 
       SetDistributionMap(base_lev, newdm);
 
-      macproj.reset(new MacProjector(Geom(0,finest_level),
+      macproj = std::make_unique<MacProjector>(Geom(0,finest_level),
                                      MLMG::Location::FaceCentroid,  // Location of mac_vec
                                      MLMG::Location::FaceCentroid,  // Location of beta
                                      MLMG::Location::CellCenter,    // Location of solution variable phi
-                                     MLMG::Location::CellCentroid));// Location of MAC RHS
+                                     MLMG::Location::CellCentroid);// Location of MAC RHS
 
       if (FLUID::solve)
         RegridArrays(base_lev);
@@ -193,7 +193,7 @@ mfix::Regrid ()
         particle_cost[base_lev]->setVal(0.0);
       }
 
-      if (DEM::solve or PIC::solve){
+      if (DEM::solve || PIC::solve){
         pc->Regrid(dmap[base_lev], grids[base_lev], base_lev);
       }
 
@@ -201,7 +201,7 @@ mfix::Regrid ()
 
       // This calls re-creates a proper particles_ebfactory and regrids
       // all the multifab that depend on it
-      if (DEM::solve or PIC::solve)
+      if (DEM::solve || PIC::solve)
         RegridLevelSetArray(base_lev);
       }
   } else {

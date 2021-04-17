@@ -38,7 +38,11 @@ else ()
 endif()
 
 find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
+find_program(SCCACHE_FOUND sccache)
+if(SCCACHE_FOUND)
+  set( CMAKE_CXX_COMPILER_LAUNCHER sccache )
+  set( CMAKE_CUDA_COMPILER_LAUNCHER sccache )
+elseif(CCACHE_FOUND)
   set( CMAKE_CXX_COMPILER_LAUNCHER ccache )
   set( CMAKE_CUDA_COMPILER_LAUNCHER ccache )
 endif()
@@ -96,7 +100,12 @@ endif ()
 option( MFIX_CSG "Build with CSG support" OFF)
 
 if (MFIX_CUDA)
-    enable_language(CUDA)
+  # CMake 3.18+: CMAKE_CUDA_ARCHITECTURES
+  # https://cmake.org/cmake/help/latest/policy/CMP0104.html
+  if(POLICY CMP0104)
+    cmake_policy(SET CMP0104 OLD)
+  endif()
+  enable_language(CUDA)
 endif ()
 
 # Setup AMReX

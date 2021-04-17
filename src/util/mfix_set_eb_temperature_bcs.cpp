@@ -129,8 +129,8 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
       const int kend   = amrex::min(shi[2], k_t);
 
       {
-        const int first = (slo[0] < dom_lo[0] and dom_lo[0] == istart) ? slo[0] : istart;
-        const int last  = (shi[0] > dom_hi[0] and dom_hi[0] == iend)   ? shi[0] : iend;
+        const int first = (slo[0] < dom_lo[0] && dom_lo[0] == istart) ? slo[0] : istart;
+        const int last  = (shi[0] > dom_hi[0] && dom_hi[0] == iend)   ? shi[0] : iend;
 
         const Box local_bx(IntVect(first, jstart, kstart),
                            IntVect(last,  jend,   kend));
@@ -147,8 +147,8 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
       }
 
       {
-        const int first = (slo[1] < dom_lo[1] and dom_lo[1] == jstart) ? slo[1] : jstart;
-        const int last  = (shi[1] > dom_hi[1] and dom_hi[1] == jend)   ? shi[1] : jend;
+        const int first = (slo[1] < dom_lo[1] && dom_lo[1] == jstart) ? slo[1] : jstart;
+        const int last  = (shi[1] > dom_hi[1] && dom_hi[1] == jend)   ? shi[1] : jend;
 
         const Box local_bx(IntVect(istart, first, kstart),
                            IntVect(iend,   last,  kend));
@@ -165,8 +165,8 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
       }
 
       {
-        const int first = (slo[2] < dom_lo[2] and dom_lo[2] == kstart) ? slo[2] : kstart;
-        const int last  = (shi[2] > dom_hi[2] and dom_hi[2] == kend)   ? shi[2] : kend;
+        const int first = (slo[2] < dom_lo[2] && dom_lo[2] == kstart) ? slo[2] : kstart;
+        const int last  = (shi[2] > dom_hi[2] && dom_hi[2] == kend)   ? shi[2] : kend;
 
         const Box local_bx(IntVect(istart, jstart, first),
                            IntVect(iend,   jend,   last));

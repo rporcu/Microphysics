@@ -33,7 +33,7 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
         // Determine if this particle tile actually has any walls
         bool has_wall = false;
 
-        if ((ebfactory != NULL) and
+        if ((ebfactory != NULL) &&
            ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))  {
 
           has_wall = true;

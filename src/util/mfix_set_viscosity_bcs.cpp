@@ -76,7 +76,7 @@ mfix::set_viscosity_bcs (Real /*time*/,
       //const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-      if ((bct == pinf) or (bct == pout))
+      if ((bct == pinf) || (bct == pout))
       {
         scal_arr(i,j,k) = scal_arr(dom_lo[0],j,k);
       }
@@ -97,7 +97,7 @@ mfix::set_viscosity_bcs (Real /*time*/,
       //const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
         scal_arr(i,j,k) = scal_arr(dom_hi[0],j,k);
       }
@@ -118,7 +118,7 @@ mfix::set_viscosity_bcs (Real /*time*/,
       //const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
         scal_arr(i,j,k) = scal_arr(i,dom_lo[1],k);
       }
@@ -139,7 +139,7 @@ mfix::set_viscosity_bcs (Real /*time*/,
       //const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
         scal_arr(i,j,k) = scal_arr(i,dom_hi[1],k);
       }
@@ -160,7 +160,7 @@ mfix::set_viscosity_bcs (Real /*time*/,
       //const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
         scal_arr(i,j,k) = scal_arr(i,j,dom_lo[2]);
       }
@@ -181,7 +181,7 @@ mfix::set_viscosity_bcs (Real /*time*/,
       //const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-      if ((bct == pinf) or (bct == pout))
+      if ((bct == pinf) || (bct == pout))
       {
         scal_arr(i,j,k) = scal_arr(i,j,dom_hi[2]);
       }

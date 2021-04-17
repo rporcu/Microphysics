@@ -82,7 +82,7 @@ mfix::set_thermal_conductivity_bcs (Real /*time*/,
       {
         scal_arr(i,j,k) = scal_arr(dom_lo[0],j,k);
       }
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
       {
         scal_arr(i,j,k) = bc0;
       }
@@ -102,7 +102,7 @@ mfix::set_thermal_conductivity_bcs (Real /*time*/,
       {
         scal_arr(i,j,k) = scal_arr(dom_hi[0],j,k);
       }
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
       {
         scal_arr(i,j,k) = bc0;
       }
@@ -122,7 +122,7 @@ mfix::set_thermal_conductivity_bcs (Real /*time*/,
       {
         scal_arr(i,j,k) = scal_arr(i,dom_lo[1],k);
       }
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
       {
         scal_arr(i,j,k) = bc0;
       }
@@ -142,7 +142,7 @@ mfix::set_thermal_conductivity_bcs (Real /*time*/,
       {
         scal_arr(i,j,k) = scal_arr(i,dom_hi[1],k);
       }
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
       {
         scal_arr(i,j,k) = bc0;
       }
@@ -162,7 +162,7 @@ mfix::set_thermal_conductivity_bcs (Real /*time*/,
       {
         scal_arr(i,j,k) = scal_arr(i,j,dom_lo[2]);
       }
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
       {
         scal_arr(i,j,k) = bc0;
       }
@@ -182,7 +182,7 @@ mfix::set_thermal_conductivity_bcs (Real /*time*/,
       {
         scal_arr(i,j,k) = scal_arr(i,j,dom_hi[2]);
       }
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
       {
         scal_arr(i,j,k) = bc0;
       }

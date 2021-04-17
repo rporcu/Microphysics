@@ -53,7 +53,7 @@ void set_ptr_to_mfix (mfix& mfix);
 // only if its not already specified in the inputs file
 void add_par () {
    ParmParse pp("eb2");
-   if(not pp.contains("extend_domain_face")) {
+   if(!pp.contains("extend_domain_face")) {
       pp.add("extend_domain_face",true);
    }
 } 
@@ -244,7 +244,7 @@ int main (int argc, char* argv[])
     if(write_eb_surface)
       mfix.WriteMyEBSurface();
 
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve || PIC::solve)
     {
         // Fill level-sets on each level
         mfix.fill_eb_levelsets();
@@ -287,7 +287,7 @@ int main (int argc, char* argv[])
         mfix.Regrid();
     }
 
-    if ((DEM::solve or PIC::solve) and write_ls)
+    if ((DEM::solve || PIC::solve) && write_ls)
         mfix.WriteStaticPlotFile(static_plt_file);
 
     mfix.PostInit(dt, time, restart_flag, stop_time);

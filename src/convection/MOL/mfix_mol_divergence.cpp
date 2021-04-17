@@ -38,7 +38,7 @@ mol::compute_convective_rate_eb (Box const& bx, int ncomp, int icomp,
     amrex::ParallelFor(bx, ncomp,
     [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
-        if (!dbox.contains(IntVect(i,j,k)) or flag(i,j,k).isCovered()) {
+        if (!dbox.contains(IntVect(i,j,k)) || flag(i,j,k).isCovered()) {
             dUdt(i,j,k,n+icomp) = 0.0;
         } else if (flag(i,j,k).isRegular()) {
             dUdt(i,j,k,n+icomp) = dxinv[0] * (fx(i,j,k,n) - fx(i+1,j,k,n))

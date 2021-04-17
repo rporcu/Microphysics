@@ -123,7 +123,7 @@ get_stoichiometric_data(const std::string& s,
     std::string single_compound = stoichiometry[n];
 
     std::size_t pos(0);
-    while (std::isdigit(single_compound.at(pos)) or single_compound.at(pos) == '.')
+    while (std::isdigit(single_compound.at(pos)) || single_compound.at(pos) == '.')
       pos++;
 
     if(pos == 0)

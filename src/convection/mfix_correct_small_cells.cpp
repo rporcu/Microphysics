@@ -59,7 +59,7 @@ mfix::mfix_correct_small_cells (Vector<MultiFab*      > const& vel_in,
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           Real vfrac = vfrac_fab(i,j,k);
-          if (vfrac > 0.0 and vfrac < 1.e-4)
+          if (vfrac > 0.0 && vfrac < 1.e-4)
           {
             const Real apx_mns = apx_fab(i,j,k);
             const Real apx_pls = apx_fab(i+1,j,k);

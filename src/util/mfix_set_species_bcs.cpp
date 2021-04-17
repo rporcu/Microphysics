@@ -130,7 +130,7 @@ mfix::set_mass_fractions_g_bcs (Real time,
       if((bct == pout)) {
         X_gk(i,j,k,n) = X_gk(dom_lo[0],j,k,n);
       }
-      else if ((bct == minf) or (bct == pinf)) {
+      else if ((bct == minf) || (bct == pinf)) {
         X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
       }
     });
@@ -148,7 +148,7 @@ mfix::set_mass_fractions_g_bcs (Real time,
       if(bct == pout) {
         X_gk(i,j,k,n) = X_gk(dom_hi[0],j,k,n);
       }
-      else if ((bct == minf) or (bct == pinf)) {
+      else if ((bct == minf) || (bct == pinf)) {
         X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
       }
     });
@@ -166,7 +166,7 @@ mfix::set_mass_fractions_g_bcs (Real time,
       if(bct == pout) {
         X_gk(i,j,k,n) = X_gk(i,dom_lo[1],k,n);
         }
-      else if ((bct == minf) or (bct == pinf))
+      else if ((bct == minf) || (bct == pinf))
         X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
     });
   }
@@ -182,7 +182,7 @@ mfix::set_mass_fractions_g_bcs (Real time,
 
       if(bct == pout)
         X_gk(i,j,k,n) = X_gk(i,dom_hi[1],k,n);
-      else if ((bct == minf) or (bct == pinf))
+      else if ((bct == minf) || (bct == pinf))
         X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
     });
   }
@@ -198,7 +198,7 @@ mfix::set_mass_fractions_g_bcs (Real time,
 
       if(bct == pout)
         X_gk(i,j,k,n) = X_gk(i,j,dom_lo[2],n);
-      else if ((bct == minf) or (bct == pinf))
+      else if ((bct == minf) || (bct == pinf))
         X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
     });
   }
@@ -214,7 +214,7 @@ mfix::set_mass_fractions_g_bcs (Real time,
 
       if(bct == pout)
         X_gk(i,j,k,n) = X_gk(i,j,dom_hi[2],n);
-      else if ((bct == minf) or (bct == pinf))
+      else if ((bct == minf) || (bct == pinf))
         X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
     });
   }
@@ -277,7 +277,7 @@ mfix::set_species_diffusivities_g_bcs (Real /*time*/,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(ilo,j,k,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_D_gk0[n];
     });
   }
@@ -298,7 +298,7 @@ mfix::set_species_diffusivities_g_bcs (Real /*time*/,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(ihi,j,k,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_D_gk0[n];
     });
   }
@@ -319,7 +319,7 @@ mfix::set_species_diffusivities_g_bcs (Real /*time*/,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,jlo,k,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_D_gk0[n];
     });
   }
@@ -340,7 +340,7 @@ mfix::set_species_diffusivities_g_bcs (Real /*time*/,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,jhi,k,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_D_gk0[n];
     });
   }
@@ -361,7 +361,7 @@ mfix::set_species_diffusivities_g_bcs (Real /*time*/,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,j,klo,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_D_gk0[n];
     });
   }
@@ -382,7 +382,7 @@ mfix::set_species_diffusivities_g_bcs (Real /*time*/,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,j,khi,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_D_gk0[n];
     });
   }
@@ -448,7 +448,7 @@ mfix::set_species_specific_heat_g_bcs (Real /*time*/,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(ilo,j,k,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n];
     });
   }
@@ -469,7 +469,7 @@ mfix::set_species_specific_heat_g_bcs (Real /*time*/,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(ihi,j,k,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n];
     });
   }
@@ -490,7 +490,7 @@ mfix::set_species_specific_heat_g_bcs (Real /*time*/,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,jlo,k,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n];
     });
   }
@@ -511,7 +511,7 @@ mfix::set_species_specific_heat_g_bcs (Real /*time*/,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,jhi,k,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n];
     });
   }
@@ -532,7 +532,7 @@ mfix::set_species_specific_heat_g_bcs (Real /*time*/,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,j,klo,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n];
     });
   }
@@ -553,7 +553,7 @@ mfix::set_species_specific_heat_g_bcs (Real /*time*/,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,j,khi,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n];
     });
   }
@@ -624,7 +624,7 @@ mfix::set_species_enthalpy_g_bcs (Real time,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(ilo,j,k,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
     });
   }
@@ -646,7 +646,7 @@ mfix::set_species_enthalpy_g_bcs (Real time,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(ihi,j,k,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
     });
   }
@@ -668,7 +668,7 @@ mfix::set_species_enthalpy_g_bcs (Real time,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,jlo,k,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
     });
   }
@@ -690,7 +690,7 @@ mfix::set_species_enthalpy_g_bcs (Real time,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,jhi,k,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
     });
   }
@@ -712,7 +712,7 @@ mfix::set_species_enthalpy_g_bcs (Real time,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,j,klo,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
     });
   }
@@ -734,7 +734,7 @@ mfix::set_species_enthalpy_g_bcs (Real time,
 
       if (bct == pout)
          scal_arr(i,j,k,n) = scal_arr(i,j,khi,n);
-      else if (bct == minf or bct == pinf)
+      else if (bct == minf || bct == pinf)
          scal_arr(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
     });
   }

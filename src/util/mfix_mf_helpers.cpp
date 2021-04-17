@@ -15,9 +15,9 @@ MFHelpers::createFrom (MultiFab& mold)
 
     std::unique_ptr< MultiFab > mf;
 
-    mf.reset(new MultiFab(mold.boxArray(), mold.DistributionMap(),
+    mf = std::make_unique<MultiFab>(mold.boxArray(), mold.DistributionMap(),
                           mold.nComp(), mold.nGrow(), MFInfo(),
-                          mold.Factory() ) );
+                          mold.Factory() );
 
     MultiFab::Copy(*mf, mold, 0, 0, mold.nComp(), mold.nGrow());
 
@@ -35,9 +35,9 @@ MFHelpers::createFrom ( MultiFab& mold, Real val )
 
     std::unique_ptr< MultiFab > mf;
 
-    mf.reset(new MultiFab(mold.boxArray(), mold.DistributionMap(),
+    mf = std::make_unique<MultiFab>(mold.boxArray(), mold.DistributionMap(),
                           mold.nComp(), mold.nGrow(), MFInfo(),
-                          mold.Factory() ) );
+                          mold.Factory() );
     mf -> setVal(val);
 
     return mf;
@@ -53,9 +53,9 @@ MFHelpers::createFrom (MultiFab& mold, Real val, int nGrow )
 
     std::unique_ptr< MultiFab > mf;
 
-    mf.reset(new MultiFab(mold.boxArray(), mold.DistributionMap(),
+    mf = std::make_unique<MultiFab>(mold.boxArray(), mold.DistributionMap(),
                           mold.nComp(), nGrow, MFInfo(),
-                          mold.Factory() ) );
+                          mold.Factory() );
     mf -> setVal(val);
 
     return mf;
@@ -74,8 +74,8 @@ MFHelpers::createFrom (MultiFab& mold, Real val, int nGrow, int nComp)
 
     std::unique_ptr< MultiFab > mf;
 
-    mf.reset(new MultiFab(mold.boxArray(), mold.DistributionMap(),
-                          nComp, nGrow, MFInfo(), mold.Factory()));
+    mf = std::make_unique<MultiFab>(mold.boxArray(), mold.DistributionMap(),
+                          nComp, nGrow, MFInfo(), mold.Factory());
 
     mf->setVal(val);
 

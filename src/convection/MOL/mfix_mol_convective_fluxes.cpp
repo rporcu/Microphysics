@@ -47,10 +47,10 @@ void mol::compute_convective_fluxes (Box const& bx,
   const int domain_ilo = domain_box.smallEnd(0);
   const int domain_ihi = domain_box.bigEnd(0);
 
-  bool check_extdir_ilo = (domain_ilo >= xbx.smallEnd(0) and domain_ilo <= xbx.bigEnd(0));
-  bool check_extdir_ihi = (domain_ihi >= xbx.smallEnd(0) and domain_ihi <= xbx.bigEnd(0));
+  bool check_extdir_ilo = (domain_ilo >= xbx.smallEnd(0) && domain_ilo <= xbx.bigEnd(0));
+  bool check_extdir_ihi = (domain_ihi >= xbx.smallEnd(0) && domain_ihi <= xbx.bigEnd(0));
 
-  if (check_extdir_ilo or check_extdir_ihi)
+  if (check_extdir_ilo || check_extdir_ihi)
   {
     ParallelFor(xbx, ncomp, [fx, ep_u_mac, state, state_comp, order, small_vel,
     check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi,
@@ -133,10 +133,10 @@ void mol::compute_convective_fluxes (Box const& bx,
   const int domain_jlo = domain_box.smallEnd(1);
   const int domain_jhi = domain_box.bigEnd(1);
 
-  bool check_extdir_jlo = (domain_jlo >= ybx.smallEnd(1) and domain_jlo <= zbx.bigEnd(1));
-  bool check_extdir_jhi = (domain_jhi >= ybx.smallEnd(1) and domain_jhi <= zbx.bigEnd(1));
+  bool check_extdir_jlo = (domain_jlo >= ybx.smallEnd(1) && domain_jlo <= zbx.bigEnd(1));
+  bool check_extdir_jhi = (domain_jhi >= ybx.smallEnd(1) && domain_jhi <= zbx.bigEnd(1));
 
-  if (check_extdir_jlo or check_extdir_jhi)
+  if (check_extdir_jlo || check_extdir_jhi)
   {
     ParallelFor(ybx, ncomp, [fy, ep_v_mac, state, state_comp, order, small_vel,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi,
@@ -216,10 +216,10 @@ void mol::compute_convective_fluxes (Box const& bx,
   const int domain_klo = domain_box.smallEnd(2);
   const int domain_khi = domain_box.bigEnd(2);
 
-  bool check_extdir_klo = (domain_klo >= xbx.smallEnd(2) and domain_klo <= xbx.bigEnd(2));
-  bool check_extdir_khi = (domain_khi >= xbx.smallEnd(2) and domain_khi <= xbx.bigEnd(2));
+  bool check_extdir_klo = (domain_klo >= xbx.smallEnd(2) && domain_klo <= xbx.bigEnd(2));
+  bool check_extdir_khi = (domain_khi >= xbx.smallEnd(2) && domain_khi <= xbx.bigEnd(2));
 
-  if (check_extdir_klo or check_extdir_khi)
+  if (check_extdir_klo || check_extdir_khi)
   {
     ParallelFor(zbx, ncomp, [fz, ep_w_mac, state, state_comp, order, small_vel,
     check_extdir_klo, check_extdir_khi, domain_klo, domain_khi,

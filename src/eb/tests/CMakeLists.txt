@@ -25,6 +25,9 @@ target_compile_definitions(functional_tests
                            PRIVATE TUTORIAL_CLR_CSG="${TUTORIAL_CLR_CSG}")
 
 find_package(Git QUIET)
+if(GIT_FOUND AND NOT EXISTS "${PROJECT_SOURCE_DIR}/subprojects/csg-eb/.git")
+  message(FATAL_ERROR "CSG-EB not found.  Initialize the submodule by running:\n\n   git submodule update --init --recursive\n\n")
+endif()
 
 target_include_directories(functional_tests PRIVATE "${MFIXPARSER_CATCH2_INC}")
 target_link_libraries(functional_tests AMReX::amrex csg)

@@ -73,12 +73,12 @@ mfix::set_temperature_bc0 (const Box& sbx,
       const int bcv = a_bc_ilo(dom_lo[0]-1,j,k,1);
       const int bct = a_bc_ilo(dom_lo[0]-1,j,k,0);
 
-      if((bct == pinf) or (bct == pout) or (bct == minf))
+      if((bct == pinf) || (bct == pout) || (bct == minf))
       {
         a_T_g(i,j,k)  = p_bc_t_g[bcv];
         a_k_g(i,j,k)  = k_g0;
 
-        if (not fluid_is_a_mixture) {
+        if (!fluid_is_a_mixture) {
           a_cp_g(i,j,k) = cp_g0;
           a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
         }
@@ -113,12 +113,12 @@ mfix::set_temperature_bc0 (const Box& sbx,
       const int bcv = a_bc_ihi(dom_hi[0]+1,j,k,1);
       const int bct = a_bc_ihi(dom_hi[0]+1,j,k,0);
 
-      if((bct == pinf) or (bct == pout) or (bct == minf))
+      if((bct == pinf) || (bct == pout) || (bct == minf))
       {
         a_T_g(i,j,k)  = p_bc_t_g[bcv];
         a_k_g(i,j,k)  = k_g0;
 
-        if (not fluid_is_a_mixture) {
+        if (!fluid_is_a_mixture) {
           a_cp_g(i,j,k) = cp_g0;
           a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
         }
@@ -153,12 +153,12 @@ mfix::set_temperature_bc0 (const Box& sbx,
       const int bcv = a_bc_jlo(i,dom_lo[1]-1,k,1);
       const int bct = a_bc_jlo(i,dom_lo[1]-1,k,0);
 
-      if((bct == pinf) or (bct == pout) or (bct == minf))
+      if((bct == pinf) || (bct == pout) || (bct == minf))
       {
         a_T_g(i,j,k)  = p_bc_t_g[bcv];
         a_k_g(i,j,k)  = k_g0;
 
-        if (not fluid_is_a_mixture) {
+        if (!fluid_is_a_mixture) {
           a_cp_g(i,j,k) = cp_g0;
           a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
         }
@@ -193,12 +193,12 @@ mfix::set_temperature_bc0 (const Box& sbx,
       const int bcv = a_bc_jhi(i,dom_hi[1]+1,k,1);
       const int bct = a_bc_jhi(i,dom_hi[1]+1,k,0);
 
-      if((bct == pinf) or (bct == pout) or (bct == minf))
+      if((bct == pinf) || (bct == pout) || (bct == minf))
       {
         a_T_g(i,j,k)  = p_bc_t_g[bcv];
         a_k_g(i,j,k)  = k_g0;
 
-        if (not fluid_is_a_mixture) {
+        if (!fluid_is_a_mixture) {
           a_cp_g(i,j,k) = cp_g0;
           a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
         }
@@ -233,12 +233,12 @@ mfix::set_temperature_bc0 (const Box& sbx,
       const int bcv = a_bc_klo(i,j,dom_lo[2]-1,1);
       const int bct = a_bc_klo(i,j,dom_lo[2]-1,0);
 
-      if((bct == pinf) or (bct == pout) or (bct == minf))
+      if((bct == pinf) || (bct == pout) || (bct == minf))
       {
         a_T_g(i,j,k)  = p_bc_t_g[bcv];
         a_k_g(i,j,k)  = k_g0;
 
-        if (not fluid_is_a_mixture) {
+        if (!fluid_is_a_mixture) {
           a_cp_g(i,j,k) = cp_g0;
           a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
         }
@@ -273,12 +273,12 @@ mfix::set_temperature_bc0 (const Box& sbx,
       const int bcv = a_bc_khi(i,j,dom_hi[2]+1,1);
       const int bct = a_bc_khi(i,j,dom_hi[2]+1,0);
 
-      if((bct == pinf) or (bct == pout) or (bct == minf))
+      if((bct == pinf) || (bct == pout) || (bct == minf))
       {
         a_T_g(i,j,k)  = p_bc_t_g[bcv];
         a_k_g(i,j,k)  = k_g0;
 
-        if (not fluid_is_a_mixture) {
+        if (!fluid_is_a_mixture) {
           a_cp_g(i,j,k) = cp_g0;
           a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
         }

@@ -177,7 +177,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
     for (int lev = 0; lev < nlev; lev++)
     {
-      bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) and
+      bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                            (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
       MultiFab* interp_ptr;
@@ -198,13 +198,13 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
             MFInfo(), *ebfactory[lev]);
 
         // Copy fluid species mass fractions
-        interp_ptr->copy(*X_gk_in[lev], 0, 0, FLUID::nspecies, interp_ng, interp_ng);
+        MultiFab::Copy(*interp_ptr, *X_gk_in[lev], 0, 0, FLUID::nspecies, interp_ng);
 
         // Copy volume fraction
-        interp_ptr->copy(*ep_g_in[lev], 0, interp_comp-2, 1, interp_ng, interp_ng);
+        MultiFab::Copy(*interp_ptr, *ep_g_in[lev], 0, interp_comp-2, 1, interp_ng);
 
         // Copy density
-        interp_ptr->copy(*ro_g_in[lev], 0, interp_comp-1, 1, interp_ng, interp_ng);
+        MultiFab::Copy(*interp_ptr, *ro_g_in[lev], 0, interp_comp-1, 1, interp_ng);
 
         interp_ptr->FillBoundary(geom[lev].periodicity());
       }
@@ -351,7 +351,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                   {
                     // Do something only if reaction is heterogeneous and contains
                     // a solid compound
-                    if (p_types[q] == Heterogeneous and
+                    if (p_types[q] == Heterogeneous &&
                         MFIXfind(p_phases[q], p_nphases[q], Solid) != InvalidIdx)
                     {
                       Real stoc_coeff(0);
@@ -456,13 +456,13 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
                   // All cells in the stencil are regular. Use
                   // traditional trilinear interpolation
-                  if (flags_array(i-1,j-1,k-1).isRegular() and
-                      flags_array(i  ,j-1,k-1).isRegular() and
-                      flags_array(i-1,j  ,k-1).isRegular() and
-                      flags_array(i  ,j  ,k-1).isRegular() and
-                      flags_array(i-1,j-1,k  ).isRegular() and
-                      flags_array(i  ,j-1,k  ).isRegular() and
-                      flags_array(i-1,j  ,k  ).isRegular() and
+                  if (flags_array(i-1,j-1,k-1).isRegular() &&
+                      flags_array(i  ,j-1,k-1).isRegular() &&
+                      flags_array(i-1,j  ,k-1).isRegular() &&
+                      flags_array(i  ,j  ,k-1).isRegular() &&
+                      flags_array(i-1,j-1,k  ).isRegular() &&
+                      flags_array(i  ,j-1,k  ).isRegular() &&
+                      flags_array(i-1,j  ,k  ).isRegular() &&
                       flags_array(i  ,j  ,k  ).isRegular()) {
 
                     trilinear_interp(particle.pos(), interp_loc.data(),
@@ -516,7 +516,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                     {
                       // Do something only if reaction is heterogeneous and contains
                       // a solid compound
-                      if (p_types[q] == Heterogeneous and
+                      if (p_types[q] == Heterogeneous &&
                           MFIXfind(p_phases[q], p_nphases[q], Solid) != InvalidIdx)
                       {
                         Real stoc_coeff(0);
@@ -593,16 +593,16 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
     for (int lev = 0; lev < nlev; lev++)
     {
-      bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) and
+      bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                            (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
-      if (lev == 0 and OnSameGrids)
+      if (lev == 0 && OnSameGrids)
       {
         // If we are already working with the internal mf defined on the
         // particle_box_array, then we just work with this.
         chem_txfr_ptr[lev] = chem_txfr[lev];
       }
-      else if (lev == 0 and (not OnSameGrids))
+      else if (lev == 0 && (!OnSameGrids))
       {
         // If beta_mf is not defined on the particle_box_array, then we need
         // to make a temporary here and copy into beta_mf at the end.

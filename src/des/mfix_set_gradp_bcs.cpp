@@ -37,7 +37,7 @@ mfix::set_gradp_bcs (const Box& /*bx*/,
     {
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
         gp_arr(i,j,k,0) = gp_arr(i+1,j,k,0);
         gp_arr(i,j,k,1) = gp_arr(i+1,j,k,1);
@@ -64,7 +64,7 @@ mfix::set_gradp_bcs (const Box& /*bx*/,
     {
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
         gp_arr(i,j,k,0) = gp_arr(i-1,j,k,0);
         gp_arr(i,j,k,1) = gp_arr(i-1,j,k,1);
@@ -91,7 +91,7 @@ mfix::set_gradp_bcs (const Box& /*bx*/,
     {
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
         gp_arr(i,j,k,0) = gp_arr(i,j+1,k,0);
         gp_arr(i,j,k,1) = gp_arr(i,j+1,k,1);
@@ -118,7 +118,7 @@ mfix::set_gradp_bcs (const Box& /*bx*/,
     {
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
         gp_arr(i,j,k,0) = gp_arr(i,j-1,k,0);
         gp_arr(i,j,k,1) = gp_arr(i,j-1,k,1);
@@ -145,7 +145,7 @@ mfix::set_gradp_bcs (const Box& /*bx*/,
     {
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
         gp_arr(i,j,k,0) = gp_arr(i,j,k+1,0);
         gp_arr(i,j,k,1) = gp_arr(i,j,k+1,1);
@@ -172,7 +172,7 @@ mfix::set_gradp_bcs (const Box& /*bx*/,
     {
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
       {
         gp_arr(i,j,k,0) = gp_arr(i,j,k-1,0);
         gp_arr(i,j,k,1) = gp_arr(i,j,k-1,1);

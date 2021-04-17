@@ -16,9 +16,9 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
   const int nspecies_g = FLUID::nspecies;
 
   for (int lev = 0; lev <= finest_level; lev++) {
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(not X_gk[lev]->contains_nan(),
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!X_gk[lev]->contains_nan(),
         "The species computation contains NaN");
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(not X_gk[lev]->contains_inf(),
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!X_gk[lev]->contains_inf(),
         "The species computation contains Inf");
   }
 
@@ -68,7 +68,7 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
           X_gk_arr(i,j,k,n) = value > 1 ? 1 : (value < 0 ? 0 : value);
         }
 
-        if (not flags_arr(i,j,k).isCovered())
+        if (!flags_arr(i,j,k).isCovered())
         {
           Real sum(0);
 
@@ -107,7 +107,7 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
       amrex::Print() << "Max fluid species mass fraction AFTER normalization = " << X_gk_max[lev] << std::endl;
       amrex::Print() << "Min fluid species mass fraction AFTER normalization = " << X_gk_min[lev] << std::endl;
 
-      if (X_gk_max[lev] > 1 or X_gk_min[lev] < 0)
+      if (X_gk_max[lev] > 1 || X_gk_min[lev] < 0)
         amrex::Abort("Fluid mass fractions rescaling FAILED");
     }
   }

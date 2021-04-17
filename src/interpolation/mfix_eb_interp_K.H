@@ -109,7 +109,7 @@ void fe_interp(const amrex::RealVect& pos,
     for(int kk(-1); kk<1; kk++){
       for(int jj(-1); jj<1; jj++){
         for(int ii(-1); ii<1; ii++){
-          if(not flags(ip,jp,kp).isConnected(di+ii,dj+jj,dk+kk))
+          if(!flags(ip,jp,kp).isConnected(di+ii,dj+jj,dk+kk))
             covered += 1;
         }
       }
@@ -119,7 +119,7 @@ void fe_interp(const amrex::RealVect& pos,
     // therefore inside the wall). Although this shouldn't occur often, it could
     // for fast moving particles.  Set the fluid velocity to zero and use the
     // cell value for remaining items.
-    if( flags(ip,jp,kp).isSingleValued() and (par_dot_EB <= tolerance)){
+    if( flags(ip,jp,kp).isSingleValued() && (par_dot_EB <= tolerance)){
 
         // Set the velocity to zero
         for (int n(0); n < scomp; n++)
@@ -135,7 +135,7 @@ void fe_interp(const amrex::RealVect& pos,
     // Either way, interpolating to the particle is not straight forward so
     // (for now) we do a 1D interpolation to the EB.
 
-    } else if((covered > 0) or (par_dot_EB < cent_dot_EB)){
+    } else if((covered > 0) || (par_dot_EB < cent_dot_EB)){
 
         amrex::Real scale(1.);
 

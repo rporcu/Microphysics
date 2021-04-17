@@ -184,10 +184,10 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     LPInfo info;
     info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
 
-    nodal_projector.reset(new NodalProjector(vel_g_in,
+    nodal_projector = std::make_unique<NodalProjector>(vel_g_in,
                                              GetVecOfConstPtrs(sigma_mf),
                                              geom, info,
-                                             a_S_cc));
+                                             a_S_cc);
 
     nodal_projector->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
 

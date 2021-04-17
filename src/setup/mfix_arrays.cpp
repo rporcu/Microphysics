@@ -11,7 +11,7 @@ mfix::ResizeArrays ()
 
     m_leveldata.resize(nlevs_max);
     for (int lev(0); lev < nlevs_max; ++lev)
-      m_leveldata[lev].reset(new LevelData());
+      m_leveldata[lev] = std::make_unique<LevelData>();
 
     bcoeff.resize(nlevs_max);
 
@@ -45,8 +45,8 @@ mfix::AllocateArrays (int lev)
     // Cell- or node-based arrays
     // ********************************************************************************
 
-    m_leveldata[lev].reset(new LevelData(grids[lev], dmap[lev], nghost_state(),
-                                         *ebfactory[lev]));
+    m_leveldata[lev] = std::make_unique<LevelData>(grids[lev], dmap[lev], nghost_state(),
+                                         *ebfactory[lev]);
     m_leveldata[lev]->resetValues(covered_val);
 
     // ********************************************************************************
@@ -385,7 +385,7 @@ mfix::RegridArrays (int lev)
       delete D_gk_new;
     }
 
-    if (advect_enthalpy and advect_fluid_species) {
+    if (advect_enthalpy && advect_fluid_species) {
       // Species specific heat
       MultiFab* cp_gk_new = new MultiFab(grids[lev], dmap[lev],
                                        m_leveldata[lev]->cp_gk->nComp(),
@@ -464,7 +464,7 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->txfr, txfr_new);
     delete txfr_new;
 
-    if (advect_fluid_species and solve_reactions) {
+    if (advect_fluid_species && solve_reactions) {
       // Species mass transfer rates
       MultiFab* chem_txfr_new = new MultiFab(grids[lev], dmap[lev],
                                         m_leveldata[lev]->chem_txfr->nComp(),
@@ -495,6 +495,16 @@ mfix::RegridArrays (int lev)
     divtau_new->setVal(0);
     std::swap(m_leveldata[lev]->divtau_o, divtau_new);
     delete divtau_new;
+
+
+    // Processes
+    MultiFab* ba_proc_new = new MultiFab(grids[lev], dmap[lev],
+                                         m_leveldata[lev]->ba_proc->nComp(),
+                                         m_leveldata[lev]->ba_proc->nGrow(),
+                                         MFInfo(), *ebfactory[lev]);
+    ba_proc_new->setVal(0);
+    std::swap(m_leveldata[lev]->ba_proc, ba_proc_new);
+    delete ba_proc_new;
 
 
    /****************************************************************************
@@ -558,7 +568,7 @@ mfix::RegridLevelSetArray (int a_lev)
 
    // This assert is to verify that some kind of EB geometry has already been
    // defined
-   AMREX_ASSERT(not EB2::IndexSpace::empty());
+   AMREX_ASSERT(!EB2::IndexSpace::empty());
 
    const DistributionMapping&      dm = pc->ParticleDistributionMap(a_lev);
    const BoxArray&                 ba = pc->ParticleBoxArray(a_lev);
@@ -569,10 +579,10 @@ mfix::RegridLevelSetArray (int a_lev)
    {
       amrex::Print() << "Updating particle ebfactory 1" << std::endl;
 
-      particle_ebfactory[a_lev].reset(
-        new EBFArrayBoxFactory(*particle_eb_levels[a_lev], geom[a_lev], ba, dm,
-                               {nghost_eb_basic(), nghost_eb_volume(),
-                                nghost_eb_full()}, m_eb_support_level));
+      particle_ebfactory[a_lev] =
+        std::make_unique<EBFArrayBoxFactory>(*particle_eb_levels[a_lev], geom[a_lev], ba, dm,
+                               amrex::Vector<int>{nghost_eb_basic(), nghost_eb_volume(),
+                                nghost_eb_full()}, m_eb_support_level);
 
       changed = true;
 
@@ -586,10 +596,10 @@ mfix::RegridLevelSetArray (int a_lev)
 
       if ( (dm != eb_dm) || (ba != eb_ba) )
       {
-          particle_ebfactory[a_lev].reset(
-              new EBFArrayBoxFactory(*particle_eb_levels[a_lev], geom[a_lev], ba, dm,
-                                     {nghost_eb_basic(), nghost_eb_volume(),
-                                      nghost_eb_full()}, m_eb_support_level));
+          particle_ebfactory[a_lev] =
+              std::make_unique<EBFArrayBoxFactory>(*particle_eb_levels[a_lev], geom[a_lev], ba, dm,
+                                     amrex::Vector<int>{nghost_eb_basic(), nghost_eb_volume(),
+                                      nghost_eb_full()}, m_eb_support_level);
 
          changed = true;
       }
@@ -662,7 +672,7 @@ bool mfix::mfix_update_ebfactory (int a_lev)
     if (ooo_debug) amrex::Print() << "mfix_update_ebfactory" << std::endl;
    // This assert is to verify that some kind of EB geometry has already been
    // defined
-   AMREX_ASSERT(not EB2::IndexSpace::empty());
+   AMREX_ASSERT(!EB2::IndexSpace::empty());
 
    const DistributionMapping & dm = DistributionMap(a_lev);
    const BoxArray &            ba = boxArray(a_lev);
@@ -673,10 +683,10 @@ bool mfix::mfix_update_ebfactory (int a_lev)
    {
       Print() << "Updating ebfactory from nullptr" << std::endl;
 
-      ebfactory[a_lev].reset(
-          new EBFArrayBoxFactory(*eb_levels[a_lev], geom[a_lev], ba, dm,
-                                 {nghost_eb_basic(), nghost_eb_volume(),
-                                  nghost_eb_full()}, m_eb_support_level));
+      ebfactory[a_lev] =
+          std::make_unique<EBFArrayBoxFactory>(*eb_levels[a_lev], geom[a_lev], ba, dm,
+                                 amrex::Vector<int>{nghost_eb_basic(), nghost_eb_volume(),
+                                  nghost_eb_full()}, m_eb_support_level);
 
       is_updated = true;
    }
@@ -689,10 +699,10 @@ bool mfix::mfix_update_ebfactory (int a_lev)
       {
           Print() << "Updating ebfactory from existing" << std::endl;
 
-          ebfactory[a_lev].reset(
-              new EBFArrayBoxFactory(*eb_levels[a_lev], geom[a_lev], ba, dm,
-                                     {nghost_eb_basic(), nghost_eb_volume(),
-                                      nghost_eb_full()}, m_eb_support_level));
+          ebfactory[a_lev] =
+              std::make_unique<EBFArrayBoxFactory>(*eb_levels[a_lev], geom[a_lev], ba, dm,
+                                     amrex::Vector<int>{nghost_eb_basic(), nghost_eb_volume(),
+                                      nghost_eb_full()}, m_eb_support_level);
 
           is_updated = true;
       }
