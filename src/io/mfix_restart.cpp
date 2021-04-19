@@ -539,7 +539,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         }
     }
 
-    if (load_balance_type == "KnapSack" or load_balance_type == "SFC")
+    if (load_balance_type == "KnapSack" || load_balance_type == "SFC")
     {
       if (DEM::solve || PIC::solve) {
         for (int lev(0); lev < particle_cost.size(); ++lev)

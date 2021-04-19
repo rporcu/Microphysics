@@ -4,6 +4,7 @@
 #include <mfix_dem_parms.H>
 #include <mfix_reactions_parms.H>
 #include <mfix_bc_parms.H>
+#include <mfix_calc_species_coeffs_K.H>
 
 using namespace amrex;
 
@@ -11,8 +12,8 @@ int  MFIXParticleContainer::domain_bc[6] {0};
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     : NeighborParticleContainer<AoSrealData::count,AoSintData::count,
-                                SoArealData::count,SoAintData::count>
-      (amr_core->GetParGDB(), 1)
+                                SoArealData::count,SoAintData::count>(amr_core->GetParGDB(), 1)
+    , m_runtimeRealData(SOLIDS::nspecies, REACTIONS::nreactions)
 {
     ReadStaticParameters();
 
@@ -38,7 +39,7 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     setRealCommComp(16, false); // dragx
     setRealCommComp(17, false); // dragy
     setRealCommComp(18, false); // dragz
-    setRealCommComp(19, false); // c_ps
+    setRealCommComp(19, false); // cp_s
     setRealCommComp(20, false); // temperature
     setRealCommComp(21, false); // convection
 
@@ -49,27 +50,10 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
 
     nlev = amr_core->maxLevel() + 1;
 
-    // Add real components for solid species
-    if (SOLIDS::solve_species)
-    {
-      // Add SOLIDS::nspecies copmonents for each of the new species vars
-      for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
-        AddRealComp(false); // Turn off ghost particle communication
+    // Add SOLIDS::nspecies components
+    for (int n(0); n < m_runtimeRealData.count; ++n) {
+      AddRealComp(false); // Turn off ghost particle communication
     }
-
-    // Add real components for solid species
-    if (SOLIDS::solve_species && REACTIONS::solve)
-    {
-      // Add SOLIDS::nspecies components for each of the reactions
-      for (int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
-      {
-        for(int q(0); q < REACTIONS::nreactions; ++q)
-        {
-          AddRealComp(false); // Turn off ghost particle communication
-        }
-      }
-    }
-
 }
 
 void MFIXParticleContainer::AllocData ()
@@ -780,207 +764,242 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             int z_lo_bc = BC::domain_bc[4];
             int z_hi_bc = BC::domain_bc[5];
 
-            amrex::ParallelFor(nrp,
-              [pstruct,p_realarray,subdt,fc_ptr,ntot,gravity,tow_ptr,eps,p_hi,p_lo,
-               x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc]
+            //Access to added variables
+            auto ptile_data = ptile.getParticleTileData();
+
+            const int nspecies_s = SOLIDS::nspecies;
+            const int nreactions = REACTIONS::nreactions;
+
+            const int Solid = CHEMICALPHASE::Solid;
+
+            const int idx_X_sn = m_runtimeRealData.X_sn;
+            const int idx_ro_sn_txfr = m_runtimeRealData.ro_sn_txfr;
+            const int idx_vel_s_txfr = m_runtimeRealData.vel_s_txfr;
+            const int idx_h_s_txfr = m_runtimeRealData.h_s_txfr;
+
+            const int update_mass = static_cast<int>(SOLIDS::solve_species && REACTIONS::solve);
+            const int update_temperature = static_cast<int>(advect_enthalpy);
+            const int solve_reactions = REACTIONS::solve;
+
+            const int solid_is_mixture = SOLIDS::is_a_mixture;
+
+            Gpu::AsyncArray<Real> d_cp_sn0_loc(SOLIDS::cp_sn0.dataPtr(), SOLIDS::cp_sn0.size());
+            Real* p_cp_sn0_loc = d_cp_sn0_loc.data();
+
+            const Real T_ref = SOLIDS::T_ref;
+
+            amrex::ParallelFor(nrp, [nrp,pstruct,p_realarray,subdt,ptile_data,
+                nspecies_s,nreactions,idx_X_sn,idx_ro_sn_txfr,idx_vel_s_txfr,
+                idx_h_s_txfr,Solid,update_mass,fc_ptr,ntot,gravity,tow_ptr,eps,
+                p_hi,p_lo,x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc,T_ref,
+                enthalpy_source,update_temperature,solve_reactions,p_cp_sn0_loc,
+                solid_is_mixture]
               AMREX_GPU_DEVICE (int i) noexcept
-              {
-                auto& particle = pstruct[i];
-
-                RealVect ppos(particle.pos());
-
-                Real mass = p_realarray[SoArealData::mass][i];
-
-                p_realarray[SoArealData::velx][i] += subdt * (
-                    (p_realarray[SoArealData::dragx][i] + fc_ptr[i]) /
-                     mass + gravity[0]
-                );
-                p_realarray[SoArealData::vely][i] += subdt * (
-                    (p_realarray[SoArealData::dragy][i] + fc_ptr[i+ntot]) /
-                     mass + gravity[1]
-                );
-                p_realarray[SoArealData::velz][i] += subdt * (
-                    (p_realarray[SoArealData::dragz][i] + fc_ptr[i+2*ntot]) /
-                     mass + gravity[2]
-                );
-
-                p_realarray[SoArealData::omegax][i] +=
-                  subdt * p_realarray[SoArealData::oneOverI][i] * tow_ptr[i];
-                p_realarray[SoArealData::omegay][i] +=
-                  subdt * p_realarray[SoArealData::oneOverI][i] * tow_ptr[i+ntot];
-                p_realarray[SoArealData::omegaz][i] +=
-                  subdt * p_realarray[SoArealData::oneOverI][i] * tow_ptr[i+2*ntot];
-
-                ppos[0] += subdt * p_realarray[SoArealData::velx][i];
-                ppos[1] += subdt * p_realarray[SoArealData::vely][i];
-                ppos[2] += subdt * p_realarray[SoArealData::velz][i];
-
-                if (x_lo_bc && ppos[0] < p_lo[0])
-                {
-                  ppos[0] = p_lo[0] + eps;
-                  p_realarray[SoArealData::velx][i] = -p_realarray[SoArealData::velx][i];
-                }
-                else if (x_hi_bc && ppos[0] > p_hi[0])
-                {
-                  ppos[0] = p_hi[0] - eps;
-                  p_realarray[SoArealData::velx][i] = -p_realarray[SoArealData::velx][i];
-                }
-                else if (y_lo_bc && ppos[1] < p_lo[1])
-                {
-                  ppos[1] = p_lo[1] + eps;
-                  p_realarray[SoArealData::vely][i] = -p_realarray[SoArealData::vely][i];
-                }
-                else if (y_hi_bc && ppos[1] > p_hi[1])
-                {
-                  ppos[1] = p_hi[1] - eps;
-                  p_realarray[SoArealData::vely][i] = -p_realarray[SoArealData::vely][i];
-                }
-                else if (z_lo_bc && ppos[2] < p_lo[2])
-                {
-                  ppos[2] = p_lo[2] + eps;
-                  p_realarray[SoArealData::velz][i] = -p_realarray[SoArealData::velz][i];
-                }
-                else if (z_hi_bc && ppos[2] > p_hi[2])
-                {
-                  ppos[2] = p_hi[2] - eps;
-                  p_realarray[SoArealData::velz][i] = -p_realarray[SoArealData::velz][i];
-                }
-
-                particle.pos(0) = ppos[0];
-                particle.pos(1) = ppos[1];
-                particle.pos(2) = ppos[2];
-              });
-
-            BL_PROFILE_VAR_STOP(des_time_march);
-
-            if(advect_enthalpy)
             {
-              BL_PROFILE_VAR("des::update_particle_enthalpy()", des_update_enthalpy);
+              ParticleType& p = pstruct[i];
 
-              amrex::ParallelFor(nrp, [p_realarray,subdt,enthalpy_source]
-              AMREX_GPU_DEVICE (int i) noexcept
+              GpuArray<Real,SPECIES::NMAX> X_sn;
+
+              // Get current particle's mass
+              const Real p_mass_old = p_realarray[SoArealData::mass][i];
+              Real p_mass_new(p_mass_old);
+
+              // Get current particle's density
+              const Real p_density_old = p_realarray[SoArealData::density][i];
+              Real p_density_new(p_density_old);
+
+              // Get current particle's oneOverI
+              const Real p_oneOverI_old = p_realarray[SoArealData::oneOverI][i];
+              Real p_oneOverI_new(p_oneOverI_old);
+
+              // Get current particle's volume
+              const Real p_vol = p_realarray[SoArealData::volume][i];
+
+              int proceed = 1;
+
+              //***************************************************************
+              // First step: update particles' mass and density
+              //***************************************************************
+              if(update_mass)
               {
-                  AMREX_ASSERT(p_realarray[SoArealData::c_ps][i] > 0.);
-
-                  p_realarray[SoArealData::temperature][i] +=
-                    subdt * (p_realarray[SoArealData::convection][i] + enthalpy_source) /
-                    (p_realarray[SoArealData::mass][i] * p_realarray[SoArealData::c_ps][i]);
-              });
-
-              BL_PROFILE_VAR_STOP(des_update_enthalpy);
-            }
-
-            if (SOLIDS::solve_species && REACTIONS::solve)
-            {
-              BL_PROFILE_VAR("des::update_particle_species()", des_update_species);
-
-              //Access to added variables
-              auto ptile_data = ptile.getParticleTileData();
-
-              const int nspecies_s = SOLIDS::nspecies;
-              const int nreactions = REACTIONS::nreactions;
-
-              const int Solid = CHEMICALPHASE::Solid;
-
-              const int idx_X = SoAspeciesData::X_sn*nspecies_s;
-
-              const int idx_G = SoAspeciesData::count*nspecies_s +
-                                SoAreactionsData::G_sn_pg_q*nreactions;
-
-              amrex::ParallelFor(nrp, [nrp,p_realarray,subdt,ptile_data,
-                  nspecies_s,nreactions,idx_X,idx_G,Solid]
-              AMREX_GPU_DEVICE (int p_id) noexcept
-              {
-                Real p_mass_old = p_realarray[SoArealData::mass][p_id];
-                Real p_mass_new(p_mass_old);
-
-                Real p_oneOverI_old = p_realarray[SoArealData::oneOverI][p_id];
-                Real p_oneOverI_new(p_oneOverI_old);
-
-                Real p_vol = p_realarray[SoArealData::volume][p_id];
-
                 // Total particle density exchange rate
-                Real total_rho_txfr_rate(0);
+                Real total_ro_rate(0);
 
-                // Cumulative particle's species mass for normalization purposes
-                Real cumulative_mass(0);
-
-                // Update species mass fractions
                 for (int n_s(0); n_s < nspecies_s; ++n_s)
                 {
-                  // Total particle species n density exchange rate
-                  Real total_species_rho_txfr_rate(0);
-
-                  // Index for accessing species mass fractions data
-                  const int idx_species = idx_X + n_s;
-
                   // Current species mass fraction
-                  const Real X_sn = ptile_data.m_runtime_rdata[idx_species][p_id];
+                  X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s][i];
 
-                  // Current species mass
-                  Real p_species_mass = X_sn * p_mass_old;
+                  // Get the current reaction rate for species n_s
+                  const Real ro_sn_rate = ptile_data.m_runtime_rdata[idx_ro_sn_txfr+n_s][i];
 
-                  // Loop over reactions to sum up the total rate for current
-                  // species n_s
-                  for (int q(0); q < nreactions; q++)
-                  {
-                    // Index for accessing the correct rate of reaction q for
-                    // species n_s
-                    const int idx_reaction = idx_G + n_s*nreactions + q;
-
-                    // Get the current reaction rate for species n_s
-                    const Real reaction_rate = ptile_data.m_runtime_rdata[idx_reaction][p_id];
-
-                    // Sum up the reaction rate
-                    total_species_rho_txfr_rate += reaction_rate;
-                  }
-
-                  // Update specie mass with specie rate of formation
-                  p_species_mass += subdt * total_species_rho_txfr_rate * p_vol;
-
-                  if (p_species_mass < 0) {
-                    p_species_mass = 0;
-                  }
-
-                  // Currently saving mass in species mass fractions
-                  ptile_data.m_runtime_rdata[idx_species][p_id] = p_species_mass;
-
-                  // Sum up the species mass for normalization purposes
-                  cumulative_mass += p_species_mass;
+                  X_sn[n_s] = X_sn[n_s]*p_density_old + subdt*ro_sn_rate;
 
                   // Update the total mass exchange rate
-                  total_rho_txfr_rate += total_species_rho_txfr_rate;
+                  total_ro_rate += ro_sn_rate;
                 }
 
                 // Update the total mass of the particle
-                p_mass_new = p_mass_old + subdt * total_rho_txfr_rate * p_vol;
+                p_density_new = p_density_old + subdt * total_ro_rate;
 
-                if (p_mass_new <= 0) {
-                  amrex::Abort("Error: not yet implemented");
-                  // TODO: here we have to remove the current particle since it
-                  // disappeared
+                if (p_density_new > 0) {
+
+                  Real total_X(0.);
+
+                  // Normalize species mass fractions
+                  for (int n_s(0); n_s < nspecies_s; n_s++) {
+                    Real X_sn_new = X_sn[n_s] / p_density_new;
+
+                    if (X_sn_new < 0) X_sn_new = 0;
+                    if (X_sn_new > 1) X_sn_new = 1;
+
+                    total_X += X_sn_new;
+                    X_sn[n_s] = X_sn_new;
+                  }
+
+                  for (int n_s(0); n_s < nspecies_s; n_s++) {
+                    // Divide updated species mass fractions by total_X
+                    ptile_data.m_runtime_rdata[idx_X_sn+n_s][i] = X_sn[n_s] / total_X;
+                  }
+
+                  // Write out to global memory particle's mass and density
+                  p_realarray[SoArealData::density][i] = p_density_new;
+                  p_mass_new = p_density_new * p_vol;
+                  p_realarray[SoArealData::mass][i] = p_mass_new;
+
+                  // Write out to global memory particle's moment of inertia
+                  p_oneOverI_new = (p_mass_old/p_mass_new)*p_oneOverI_old;
+                  p_realarray[SoArealData::oneOverI][i] = p_oneOverI_new;
+
+                } else {
+                  p.id() = -1;
+                  proceed = 0;
+                }
+              }
+
+              if (proceed) {
+                //***************************************************************
+                // Second step: update particles' positions and velocities
+                //***************************************************************
+                const Real p_velx_old = p_realarray[SoArealData::velx][i];
+                const Real p_vely_old = p_realarray[SoArealData::vely][i];
+                const Real p_velz_old = p_realarray[SoArealData::velz][i];
+
+                const Real vel_coeff = update_mass ? p_mass_old/p_mass_new : 1.;
+
+                Real p_velx_new = vel_coeff*p_velx_old +
+                  subdt*((p_realarray[SoArealData::dragx][i]+fc_ptr[i]) / p_mass_new + vel_coeff*gravity[0]);
+                Real p_vely_new = vel_coeff*p_vely_old +
+                  subdt*((p_realarray[SoArealData::dragy][i]+fc_ptr[i+ntot]) / p_mass_new + vel_coeff*gravity[1]);
+                Real p_velz_new = vel_coeff*p_velz_old +
+                  subdt*((p_realarray[SoArealData::dragz][i]+fc_ptr[i+2*ntot]) / p_mass_new + vel_coeff*gravity[2]);
+
+                if (solve_reactions) {
+                  const Real inv_density = 1. / p_density_new;
+
+                  p_velx_new += subdt*inv_density*ptile_data.m_runtime_rdata[idx_vel_s_txfr+0][i];
+                  p_vely_new += subdt*inv_density*ptile_data.m_runtime_rdata[idx_vel_s_txfr+1][i];
+                  p_velz_new += subdt*inv_density*ptile_data.m_runtime_rdata[idx_vel_s_txfr+2][i];
                 }
 
-                // Update particle's mass
-                p_realarray[SoArealData::mass][p_id] = p_mass_new;
-                p_realarray[SoArealData::density][p_id] = p_mass_new / p_vol;
+                const Real p_omegax_old = p_realarray[SoArealData::omegax][i];
+                const Real p_omegay_old = p_realarray[SoArealData::omegay][i];
+                const Real p_omegaz_old = p_realarray[SoArealData::omegaz][i];
 
-                // Update particle's oneOverI
-                p_oneOverI_new = (p_mass_old/p_mass_new)*p_oneOverI_old;
-                p_realarray[SoArealData::oneOverI][p_id] = p_oneOverI_new;
+                const Real omega_coeff = update_mass ? p_oneOverI_new/p_oneOverI_old : 1.;
 
-                // Normalize species mass fractions
-                for (int n_s(0); n_s < nspecies_s; n_s++) {
-                  // Index for accessing species mass fractions data
-                  const int idx_species = idx_X + n_s;
+                Real p_omegax_new = omega_coeff*p_omegax_old + subdt * p_oneOverI_new * tow_ptr[i];
+                Real p_omegay_new = omega_coeff*p_omegay_old + subdt * p_oneOverI_new * tow_ptr[i+ntot];
+                Real p_omegaz_new = omega_coeff*p_omegaz_old + subdt * p_oneOverI_new * tow_ptr[i+2*ntot];
 
-                  // Divide updated species mass by particle's cumulative_mass
-                  ptile_data.m_runtime_rdata[idx_species][p_id] /= cumulative_mass;
+                const Real p_posx_old = p.pos(0);
+                const Real p_posy_old = p.pos(1);
+                const Real p_posz_old = p.pos(2);
+
+                Real p_posx_new = p_posx_old + subdt * p_velx_new;
+                Real p_posy_new = p_posy_old + subdt * p_vely_new;
+                Real p_posz_new = p_posz_old + subdt * p_velz_new;
+
+                if (x_lo_bc && p_posx_new < p_lo[0])
+                {
+                    p_posx_new = p_lo[0] + eps;
+                    p_velx_new = -p_velx_new;
                 }
-              });
+                if (x_hi_bc && p_posx_new > p_hi[0])
+                {
+                   p_posx_new = p_hi[0] - eps;
+                   p_velx_new = -p_velx_new;
+                }
+                if (y_lo_bc && p_posy_new < p_lo[1])
+                {
+                    p_posy_new = p_lo[1] + eps;
+                    p_vely_new = -p_vely_new;
+                }
+                if (y_hi_bc && p_posy_new > p_hi[1])
+                {
+                   p_posy_new = p_hi[1] - eps;
+                   p_vely_new = -p_vely_new;
+                }
+                if (z_lo_bc && p_posz_new < p_lo[2])
+                {
+                   p_posz_new = p_lo[2] + eps;
+                   p_velz_new = -p_velz_new;
+                }
+                if (z_hi_bc && p_posz_new > p_hi[2])
+                {
+                   p_posz_new = p_hi[2] - eps;
+                   p_velz_new = -p_velz_new;
+                }
 
-              BL_PROFILE_VAR_STOP(des_update_species);
-            }
+                // Update positions
+                p.pos(0) = p_posx_new;
+                p.pos(1) = p_posy_new;
+                p.pos(2) = p_posz_new;
+
+                // Update velocities
+                p_realarray[SoArealData::velx][i] = p_velx_new;
+                p_realarray[SoArealData::vely][i] = p_vely_new;
+                p_realarray[SoArealData::velz][i] = p_velz_new;
+
+                // Update angular velocities
+                p_realarray[SoArealData::omegax][i] = p_omegax_new;
+                p_realarray[SoArealData::omegay][i] = p_omegay_new;
+                p_realarray[SoArealData::omegaz][i] = p_omegaz_new;
+
+                //***************************************************************
+                // Third step: update particles' temperature
+                //***************************************************************
+                if (update_temperature) {
+                  const Real cp_s_old = p_realarray[SoArealData::cp_s][i];
+                  Real cp_s_new(0);
+
+                  if (solid_is_mixture) {
+                    for (int n_s(0); n_s < nspecies_s; ++n_s)
+                      cp_s_new += p_cp_sn0_loc[n_s] * ptile_data.m_runtime_rdata[idx_X_sn+n_s][i]; 
+
+                    p_realarray[SoArealData::cp_s][i] = cp_s_new;
+                  } else {
+                    cp_s_new = cp_s_old;
+                  }
+
+                  AMREX_ASSERT(cp_s_new > 0.);
+
+                  if (! update_mass) {
+                    p_realarray[SoArealData::temperature][i] +=
+                      subdt*(p_realarray[SoArealData::convection][i]+enthalpy_source) / (p_mass_new*cp_s_new);
+                  } else {
+                    Real p_enthalpy_new =
+                      p_mass_old*SOLIDS::calc_h_s(cp_s_old, p_realarray[SoArealData::temperature][i], 0, 0) +
+                      subdt*(p_realarray[SoArealData::convection][i]+enthalpy_source);
+
+                    p_enthalpy_new -= subdt*p_vol*ptile_data.m_runtime_rdata[idx_h_s_txfr][i];
+
+                    p_realarray[SoArealData::temperature][i] =
+                      SOLIDS::calc_T_s(cp_s_new, p_enthalpy_new, 0, 0) / p_mass_new;
+                  }
+                }
+              }
+            });
 
             Gpu::synchronize();
 

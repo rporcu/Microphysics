@@ -1,6 +1,7 @@
 #include <mfix.H>
 
 #include <mfix_fluid_parms.H>
+#include <mfix_calc_species_coeffs_K.H>
 
 using namespace amrex;
 
@@ -48,6 +49,11 @@ mfix::set_enthalpy_bcs (Real time,
   Array4<const int> const& bct_klo = bc_klo[lev]->array();
   Array4<const int> const& bct_khi = bc_khi[lev]->array();
 
+  // Flag to understand if fluid is a mixture
+  const int fluid_is_a_mixture = FLUID::is_a_mixture;
+
+  Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_ptr.data() : nullptr;
+
   Array4<Real> const& h_g = h_g_fab.array();
 
   Real cp_g0 = FLUID::cp_g0;
@@ -55,13 +61,12 @@ mfix::set_enthalpy_bcs (Real time,
   const int nspecies_g = FLUID::nspecies;
 
   Gpu::DeviceVector< Real > cp_gk0_d(nspecies_g);
+
   Gpu::copyAsync(Gpu::hostToDevice, FLUID::cp_gk0.begin(), FLUID::cp_gk0.end(), cp_gk0_d.begin());
-
-  // Flag to understand if fluid is a mixture
-  const int fluid_is_a_mixture = FLUID::is_a_mixture;
-
-  Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_ptr.data() : nullptr;
+  
   Real* p_cp_gk0 = fluid_is_a_mixture ? cp_gk0_d.data() : nullptr;
+
+  const Real T_ref = FLUID::T_ref;
 
   IntVect h_g_lo(h_g_fab.loVect());
   IntVect h_g_hi(h_g_fab.hiVect());
@@ -109,7 +114,7 @@ mfix::set_enthalpy_bcs (Real time,
   if (nlft > 0)
   {
     amrex::ParallelFor(bx_yz_lo_3D, [bct_ilo,dom_lo,pout,pinf,minf,h_g,p_bc_t_g,
-        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g]
+        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g,T_ref]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
@@ -126,7 +131,7 @@ mfix::set_enthalpy_bcs (Real time,
           Real h_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            h_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            h_g_sum += p_bc_X_gk[n][bcv] * FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], 0, 0);
           }
 
           h_g(i,j,k) = h_g_sum;
@@ -138,7 +143,7 @@ mfix::set_enthalpy_bcs (Real time,
   if (nrgt > 0)
   {
     amrex::ParallelFor(bx_yz_hi_3D, [bct_ihi,dom_hi,pout,pinf,minf,h_g,p_bc_t_g,
-        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g]
+        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g,T_ref]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
@@ -155,7 +160,7 @@ mfix::set_enthalpy_bcs (Real time,
           Real h_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            h_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            h_g_sum += p_bc_X_gk[n][bcv] * FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], 0, 0);
           }
 
           h_g(i,j,k) = h_g_sum;
@@ -167,7 +172,7 @@ mfix::set_enthalpy_bcs (Real time,
   if (nbot > 0)
   {
     amrex::ParallelFor(bx_xz_lo_3D, [bct_jlo,dom_lo,pout,pinf,minf,h_g,p_bc_t_g,
-        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g]
+        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g,T_ref]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
@@ -184,7 +189,7 @@ mfix::set_enthalpy_bcs (Real time,
           Real h_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            h_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            h_g_sum += p_bc_X_gk[n][bcv] * FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], 0, 0);
           }
 
           h_g(i,j,k) = h_g_sum;
@@ -196,7 +201,7 @@ mfix::set_enthalpy_bcs (Real time,
   if (ntop > 0)
   {
     amrex::ParallelFor(bx_xz_hi_3D, [bct_jhi,dom_hi,pout,pinf,minf,h_g,p_bc_t_g,
-        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g]
+        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g,T_ref]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
@@ -213,7 +218,7 @@ mfix::set_enthalpy_bcs (Real time,
           Real h_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            h_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            h_g_sum += p_bc_X_gk[n][bcv] * FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], 0, 0);
           }
 
           h_g(i,j,k) = h_g_sum;
@@ -225,7 +230,7 @@ mfix::set_enthalpy_bcs (Real time,
   if (ndwn > 0)
   {
     amrex::ParallelFor(bx_xy_lo_3D, [bct_klo,dom_lo,pout,pinf,minf,h_g,p_bc_t_g,
-        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g]
+        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g,T_ref]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
@@ -242,7 +247,7 @@ mfix::set_enthalpy_bcs (Real time,
           Real h_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            h_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            h_g_sum += p_bc_X_gk[n][bcv] * FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], 0, 0);
           }
 
           h_g(i,j,k) = h_g_sum;
@@ -254,7 +259,7 @@ mfix::set_enthalpy_bcs (Real time,
   if (nup > 0)
   {
     amrex::ParallelFor(bx_xy_hi_3D, [bct_khi,dom_hi,pout,pinf,minf,h_g,p_bc_t_g,
-        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g]
+        fluid_is_a_mixture,cp_g0,p_bc_X_gk,p_cp_gk0,nspecies_g,T_ref]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
@@ -271,7 +276,7 @@ mfix::set_enthalpy_bcs (Real time,
           Real h_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            h_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            h_g_sum += p_bc_X_gk[n][bcv] * FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], 0, 0);
           }
 
           h_g(i,j,k) = h_g_sum;

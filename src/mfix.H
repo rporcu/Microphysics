@@ -509,7 +509,8 @@ class mfix : public AmrCore
                       const int ls_refinement,
                       amrex::Vector< amrex::MultiFab* >& cost,
                       std::string& knapsack_weight_type,
-                      const int advect_enthalpy);
+                      const int advect_enthalpy,
+                      const amrex::Real enthalpy_source);
 
 
   void MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in);
@@ -715,22 +716,37 @@ public:
     void mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                               const Vector< MultiFab* >& ep_g_in,
                               const Vector< MultiFab* >& ro_g_in,
+                              const Vector< MultiFab* >& vel_g_in,
                               const Vector< MultiFab* >& X_gk_in,
                               const Vector< MultiFab* >& D_gk_in,
-                              const Vector< MultiFab* >& cp_gk_in,
                               const Vector< MultiFab* >& h_gk_in,
+                              const Vector< MultiFab* >& cp_gk_in,
                               const Real time);
 
     template <typename F1>
     void mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                               const Vector< MultiFab* >& ep_g_in,
                               const Vector< MultiFab* >& ro_g_in,
+                              const Vector< MultiFab* >& vel_g_in,
                               const Vector< MultiFab* >& X_gk_in,
                               const Vector< MultiFab* >& D_gk_in,
-                              const Vector< MultiFab* >& cp_gk_in,
                               const Vector< MultiFab* >& h_gk_in,
+                              const Vector< MultiFab* >& cp_gk_in,
                               const Real time,
-                              F1 RRatesFunc);
+                              F1 WeightFunc);
+
+    template <typename F1, typename F2>
+    void mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
+                              const Vector< MultiFab* >& ep_g_in,
+                              const Vector< MultiFab* >& ro_g_in,
+                              const Vector< MultiFab* >& vel_g_in,
+                              const Vector< MultiFab* >& X_gk_in,
+                              const Vector< MultiFab* >& D_gk_in,
+                              const Vector< MultiFab* >& h_gk_in,
+                              const Vector< MultiFab* >& cp_gk_in,
+                              const Real time,
+                              F1 WeightFunc,
+                              F2 RRatesFunc);
 
   protected:
     void AllocateArrays (int lev);
@@ -825,6 +841,7 @@ public:
                                Vector< MultiFab* >& species_RHS,
                                Vector< MultiFab* >& lap_X_old,
                                Vector< MultiFab* >& lap_X,
+                               Vector< MultiFab* >& vel_RHS_old,
                                Vector< Real >& rhs_pressure_g_old,
                                Vector< Real >& rhs_pressure_g,
                                Real time,
@@ -833,23 +850,30 @@ public:
                                bool proj_2,
                                Real& coupling_timing);
 
-    void mfix_density_rhs(Vector< MultiFab*       > const& rhs,
-                          Vector< MultiFab const* > const& chem_txfr);
+    void mfix_density_rhs (Vector< MultiFab*       > const& rhs,
+                           Vector< MultiFab const* > const& chem_txfr);
 
-    void mfix_enthalpy_rhs(Vector< MultiFab*      > const& rhs,
-                           Vector< MultiFab const*> const& ep_g,
-                           Vector< MultiFab const*> const& ro_g,
-                           Vector< MultiFab*      > const& X_gk,
-                           Vector< MultiFab const*> const& D_gk,
-                           Vector< MultiFab const*> const& h_gk);
+    void mfix_enthalpy_rhs (Vector< MultiFab*       > const& rhs,
+                            Vector< MultiFab const* > const& ep_g,
+                            Vector< MultiFab const* > const& ro_g,
+                            Vector< MultiFab*       > const& X_gk,
+                            Vector< MultiFab const* > const& D_gk,
+                            Vector< MultiFab const* > const& h_gk,
+                            Vector< MultiFab const* > const& chem_txfr);
 
-    void mfix_scalar_rhs(/*Vector< MultiFab* > const& rhs,*/
-                         Vector< MultiFab const* > const& trac,
-                         Vector< MultiFab const* > const& ep_g,
-                         Vector< MultiFab const* > const& ro_g,
-                         Vector<Real> const& mu_s);
+    void mfix_scalar_rhs (/*Vector< MultiFab* > const& rhs,*/
+                          Vector< MultiFab const* > const& trac,
+                          Vector< MultiFab const* > const& ep_g,
+                          Vector< MultiFab const* > const& ro_g,
+                          Vector<Real> const& mu_s);
 
-    void mfix_species_X_rhs(Vector< MultiFab*       > const& rhs,
+    void mfix_species_X_rhs (Vector< MultiFab*       > const& rhs,
+                             Vector< MultiFab const* > const& chem_txfr);
+
+    void mfix_momentum_rhs (Vector< MultiFab*       > const& rhs,
+                            Vector< MultiFab const* > const& ep_g,
+                            Vector< MultiFab const* > const& vel_g,
+                            Vector< MultiFab const* > const& ro_g_rhs,
                             Vector< MultiFab const* > const& chem_txfr);
 
     void mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
@@ -867,6 +891,7 @@ public:
                                Vector< MultiFab* >& species_RHS,
                                Vector< MultiFab* >& lap_X_old,
                                Vector< MultiFab* >& lap_X,
+                               Vector< MultiFab* >& vel_RHS_old,
                                Vector< Real >& rhs_pressure_g_old,
                                Vector< Real >& rhs_pressure_g,
                                Real time,
@@ -876,9 +901,9 @@ public:
                                Real& coupling_timing);
 
   public:
-    void mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk);
+    void mfix_normalize_fluid_species (const Vector< MultiFab* >& X_gk);
 
-    void mfix_update_fluid_and_species(const Vector< MultiFab* >& cp_gk,
+    void mfix_update_fluid_and_species (const Vector< MultiFab* >& cp_gk,
                                         const Vector< MultiFab* >& h_gk,
                                         const Vector< MultiFab* >& MW_g,
                                         const Vector< MultiFab* >& cp_g,
@@ -1275,29 +1300,30 @@ public:
     int last_plt = -1;
 
     // Flags for saving fluid data in plot files
-    int plt_vel_g   = 1;
-    int plt_ep_g    = 1;
-    int plt_p_g     = 0;
-    int plt_ro_g    = 0;
-    int plt_MW_g    = 0;
-    int plt_trac    = 0;
-    int plt_cp_g    = 0;
-    int plt_T_g     = 0;
-    int plt_h_g     = 0;
-    int plt_k_g     = 0;
-    int plt_mu_g    = 0;
-    int plt_X_gk    = 0;
-    int plt_D_gk    = 0;
-    int plt_cp_gk   = 0;
-    int plt_h_gk    = 0;
-    int plt_diveu   = 0;
-    int plt_volfrac = 0;
-    int plt_gradp_g = 0;
-    int plt_vort    = 0;
-    int plt_ro_txfr = 0;
-    int plt_proc    = 0;
-    int plt_proc_p  = 0;
-    int plt_cost_p  = 0;
+    int plt_vel_g     = 1;
+    int plt_ep_g      = 1;
+    int plt_p_g       = 0;
+    int plt_ro_g      = 0;
+    int plt_MW_g      = 0;
+    int plt_trac      = 0;
+    int plt_cp_g      = 0;
+    int plt_T_g       = 0;
+    int plt_h_g       = 0;
+    int plt_k_g       = 0;
+    int plt_mu_g      = 0;
+    int plt_X_gk      = 0;
+    int plt_D_gk      = 0;
+    int plt_cp_gk     = 0;
+    int plt_h_gk      = 0;
+    int plt_diveu     = 0;
+    int plt_volfrac   = 0;
+    int plt_gradp_g   = 0;
+    int plt_vort      = 0;
+    int plt_txfr      = 0;
+    int plt_chem_txfr = 0;
+    int plt_proc      = 0;
+    int plt_proc_p    = 0;
+    int plt_cost_p    = 0;
 
     // Total number of variables to write in plot file
     int pltVarCount = 0;

@@ -1,8 +1,8 @@
 #include <mfix_init_fluid.H>
 
-#include <mfix_calc_fluid_coeffs.H>
 #include <mfix_calc_cell.H>
 #include <mfix_fluid_parms.H>
+#include <mfix_calc_species_coeffs_K.H>
 #include <mfix_species_parms.H>
 #include <mfix_ic_parms.H>
 #include <Redistribution.H>
@@ -349,13 +349,13 @@ void init_fluid_parameters (const Box& bx,
   Array4<Real> const& X_gk = fluid_is_a_mixture ? (ld.X_gk)->array(mfi) : nullArray4;
   Array4<Real> const& D_gk = advect_fluid_species ? (ld.D_gk)->array(mfi) : nullArray4;
 
-  Array4<Real> const& k_g = advect_enthalpy ? (ld.k_g)->array(mfi) : nullArray4;
+  Array4<Real> const& k_g  = advect_enthalpy ? (ld.k_g)->array(mfi) : nullArray4;
   Array4<Real> const& cp_g = advect_enthalpy ? (ld.cp_g)->array(mfi) : nullArray4;
-  Array4<Real> const& T_g = advect_enthalpy ? (ld.T_g)->array(mfi) : nullArray4;
-  Array4<Real> const& h_g = advect_enthalpy ? (ld.h_g)->array(mfi) : nullArray4;
+  Array4<Real> const& T_g  = advect_enthalpy ? (ld.T_g)->array(mfi) : nullArray4;
+  Array4<Real> const& h_g  = advect_enthalpy ? (ld.h_g)->array(mfi) : nullArray4;
 
   Array4<Real> const& cp_gk = advect_species_enthalpy ? (ld.cp_gk)->array(mfi) : nullArray4;
-  Array4<Real> const& h_gk = advect_species_enthalpy ? (ld.h_gk)->array(mfi) : nullArray4;
+  Array4<Real> const& h_gk  = advect_species_enthalpy ? (ld.h_gk)->array(mfi) : nullArray4;
 
   const int nspecies_g = FLUID::nspecies;
 
@@ -383,14 +383,19 @@ void init_fluid_parameters (const Box& bx,
   const Real cp_g0 = FLUID::cp_g0;
 
   Gpu::DeviceVector<Real> cp_gk0(nspecies_g);
-  if (advect_species_enthalpy) 
+  
+  if (advect_species_enthalpy) {
     Gpu::copyAsync(Gpu::hostToDevice, FLUID::cp_gk0.begin(), FLUID::cp_gk0.end(), cp_gk0.begin());
+  }
+
   Real* p_cp_gk0 = advect_species_enthalpy ? cp_gk0.data() : nullptr;
+
+  const Real T_ref = FLUID::T_ref;
 
   // Set the IC values
   amrex::ParallelFor(bx, [nspecies_g,mu_g,mu_g0,D_gk,p_D_gk0,k_g,k_g0,cp_gk,
       p_cp_gk0,h_gk,T_g,MW_g,MW_g0,cp_g,cp_g0,h_g,X_gk,p_MW_gk0,advect_enthalpy,
-      advect_fluid_species,advect_species_enthalpy,fluid_is_a_mixture]
+      advect_fluid_species,advect_species_enthalpy,fluid_is_a_mixture,T_ref]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
   {
     // set initial fluid viscosity
@@ -399,12 +404,16 @@ void init_fluid_parameters (const Box& bx,
     // set initial fluid molecular weight
     if (fluid_is_a_mixture) {
       Real MW_g_sum(0);
-      for (int n(0); n < nspecies_g; n++)
+      
+      for (int n(0); n < nspecies_g; n++) {
         MW_g_sum += X_gk(i,j,k,n) / p_MW_gk0[n];
-      MW_g(i,j,k) = 1./MW_g_sum;
+      }
+
+      MW_g(i,j,k) = 1. / MW_g_sum;
     }
-    else
+    else {
       MW_g(i,j,k) = MW_g0;
+    }
 
     // set initial fluid species diffusivity
     if (advect_fluid_species)
@@ -419,7 +428,7 @@ void init_fluid_parameters (const Box& bx,
     if (advect_species_enthalpy) {
       for (int n(0); n < nspecies_g; ++n) {
         cp_gk(i,j,k,n) = p_cp_gk0[n];
-        h_gk(i,j,k,n) = cp_gk(i,j,k,n)*T_g(i,j,k);
+        h_gk(i,j,k,n) = FLUID::calc_h_g(p_cp_gk0[n], T_g(i,j,k), 0, 0);
       }
     }
 
@@ -439,7 +448,7 @@ void init_fluid_parameters (const Box& bx,
       }
       else {
         cp_g(i,j,k) = cp_g0;
-        h_g(i,j,k) = cp_g(i,j,k)*T_g(i,j,k);
+        h_g(i,j,k) = FLUID::calc_h_g(cp_g0, T_g(i,j,k), 0, 0);
       }
     }
 

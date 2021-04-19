@@ -6,7 +6,6 @@
 #include <mfix_pic_parms.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
-#include <mfix_calc_fluid_coeffs.H>
 
 using namespace amrex;
 

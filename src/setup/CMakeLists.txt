@@ -7,8 +7,6 @@ target_sources( mfixcore
    PRIVATE 
    mfix_calc_cell.H
    mfix_calc_cell.cpp
-   mfix_calc_fluid_coeffs.H
-   mfix_calc_fluid_coeffs.cpp
    mfix_init_fluid.H
    mfix_init_fluid.cpp
    mfix_init_redistribution.cpp

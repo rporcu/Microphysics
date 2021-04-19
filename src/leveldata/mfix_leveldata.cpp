@@ -73,7 +73,8 @@ LevelData::LevelData (BoxArray const& ba,
   }
 
   if (REACTIONS::solve && FLUID::solve_species) {
-    chem_txfr = new MultiFab(ba, dmap, FLUID::nspecies, nghost, MFInfo(), factory);
+    ChemTransfer chem_txfr_idxs(FLUID::nspecies, REACTIONS::nreactions);
+    chem_txfr = new MultiFab(ba, dmap, chem_txfr_idxs.count, nghost, MFInfo(), factory);
   }
 }
 
