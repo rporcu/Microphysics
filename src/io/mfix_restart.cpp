@@ -562,6 +562,9 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                             pc->ParticleDistributionMap(lev), 1, 0);
           particle_cost[lev]->setVal(0.0);
+          particle_ba_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                               pc->ParticleDistributionMap(lev), 1, 0);
+          particle_ba_proc[lev]->setVal(0.0);
         }
       }
       if (FLUID::solve) {

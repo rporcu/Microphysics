@@ -53,21 +53,6 @@ mfix::Regrid ()
 
           RegridArrays(lev);
 
-          // reset the ranks of fluid grids
-          if (m_leveldata[lev]->ba_proc != nullptr)
-            delete m_leveldata[lev]->ba_proc;
-
-          m_leveldata[lev]->ba_proc = new MultiFab(grids[lev], new_fluid_dm, 1, 0,
-                                                   MFInfo(), *ebfactory[lev]);
-          const Real proc = Real(ParallelDescriptor::MyProc());
-          for (MFIter mfi(*(m_leveldata[lev]->ba_proc), false); mfi.isValid(); ++mfi)
-          {
-            Array4<Real> const& bx_proc = m_leveldata[lev]->ba_proc->array(mfi);
-            ParallelFor(mfi.validbox(), [bx_proc, proc] 
-                        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-                        { bx_proc(i,j,k) = proc; });
-          }
-
           if (fluid_cost[lev] != nullptr)
             delete fluid_cost[lev];
 
@@ -206,6 +191,20 @@ mfix::Regrid ()
       }
   } else {
       amrex::Abort("load_balance_type must be KnapSack or SFC");
+  }
+
+  // set the ranks of fluid grids
+  if (FLUID::solve) {
+    const Real proc = static_cast<Real>(ParallelDescriptor::MyProc());
+    for (int lev = base_lev; lev <= finestLevel(); ++lev) {
+      for (MFIter mfi(*(m_leveldata[lev]->ba_proc), false); mfi.isValid(); ++mfi)
+      {
+        Array4<Real> const& bx_proc = m_leveldata[lev]->ba_proc->array(mfi);
+        ParallelFor(mfi.validbox(), [bx_proc, proc] 
+                    AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                    { bx_proc(i,j,k) = proc; });
+      }// end mfi
+    }// end lev
   }
 
   if (DEM::solve)
