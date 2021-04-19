@@ -60,7 +60,7 @@ ComputeRRateUser::operator() (Real* R_q,
             nreact += 1;
       }
     }
-  R_q[q] = (nreact == nreactants[q]) ? 1.e-5 : 0.0;
+  R_q[q] = (nreact == nreactants[q]) ? 1.e-3 : 0.0;
   }
 
 }

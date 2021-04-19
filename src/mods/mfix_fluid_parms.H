@@ -63,6 +63,12 @@ namespace FLUID
   // Specified constant gas specific heat
   extern amrex::Real cp_g0;
 
+  // Specified constant gas enthalpy of formation
+  extern amrex::Real H_f0;
+
+  // Specified constant gas reference temperature
+  extern amrex::Real T_ref;
+
   // Specified constant gas phase thermal conductivity coefficient
   extern amrex::Real k_g0;
 
@@ -84,11 +90,14 @@ namespace FLUID
   // Specified constant gas phase species diffusion coefficients
   extern amrex::Vector<amrex::Real> D_gk0;
 
-  // Flag to understand if fluid is a mixture of fluid species
+  // Flag to set fluid as a mixture of fluid species
   extern int is_a_mixture;
 
   // Specified constant gas phase species specific heat
   extern amrex::Vector<amrex::Real> cp_gk0;
+
+  // Specified constant species enthalpy of formation
+  extern amrex::Vector<amrex::Real> H_fk0;
 
   // Name to later reference when building input regions
   extern std::string name;

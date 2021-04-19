@@ -5,22 +5,49 @@
 #include <mfix_pic_parms.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
+#include <mfix_reactions_parms.H>
 
 
 void
 mfix::mfix_density_rhs (Vector< MultiFab*      > const& rhs,
                         Vector< MultiFab const*> const& chem_txfr)
 {
+  for (int lev = 0; lev <= finest_level; lev++)
+    rhs[lev]->setVal(0.);
+
   if (solve_reactions) {
+    ChemTransfer chem_txfr_idxs(FLUID::nspecies, REACTIONS::nreactions);
+
     for (int lev = 0; lev <= finest_level; lev++) {
-      for (int n_g(0); n_g < FLUID::nspecies; n_g++) {
-        MultiFab::Add(*rhs[lev], *chem_txfr[lev], n_g, 0, 1, rhs[lev]->nGrow());
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+      for (MFIter mfi(*rhs[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        // Tilebox
+        Box bx = mfi.tilebox();
+
+        const int nspecies_g = FLUID::nspecies;
+        const int start_idx  = chem_txfr_idxs.ro_gk_txfr;
+
+        Array4<Real      > const& rhs_arr        = rhs[lev]->array(mfi);
+        Array4<Real const> const& ro_gk_txfr_arr = chem_txfr[lev]->const_array(mfi,start_idx);
+
+        amrex::ParallelFor(bx, [nspecies_g,rhs_arr,ro_gk_txfr_arr]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+          Real rhs(0);
+
+          for (int n_g(0); n_g < nspecies_g; ++n_g)
+            rhs += ro_gk_txfr_arr(i,j,k,n_g);
+
+          rhs_arr(i,j,k) = rhs;
+        });
       }
     }
-
-    for (int lev = 0; lev <= finest_level; lev++)
-      EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
   }
+
+  for (int lev = 0; lev <= finest_level; lev++)
+    EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
 }
 
 
@@ -30,7 +57,8 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
                          Vector< MultiFab const*> const& ro_g,
                          Vector< MultiFab*      > const& X_gk,
                          Vector< MultiFab const*> const& D_gk,
-                         Vector< MultiFab const*> const& h_gk)
+                         Vector< MultiFab const*> const& h_gk,
+                         Vector< MultiFab const*> const& chem_txfr)
 {
   for (int lev = 0; lev <= finest_level; lev++)
     rhs[lev]->setVal(0.);
@@ -62,6 +90,34 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
       delete lap_hX_gk[lev];
     }
   }
+
+  if (solve_reactions) {
+    ChemTransfer chem_txfr_idxs(FLUID::nspecies, REACTIONS::nreactions);
+
+    const int start_idx = chem_txfr_idxs.h_g_txfr;
+
+    for (int lev(0); lev <= finest_level; lev++) {
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+      for (MFIter mfi(*ep_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        // Tilebox
+        Box bx = mfi.tilebox();
+
+        Array4<Real const> const& h_g_txfr_arr = chem_txfr[lev]->const_array(mfi,start_idx);
+        Array4<Real      > const& rhs_arr      = rhs[lev]->array(mfi);
+
+        amrex::ParallelFor(bx, [rhs_arr,h_g_txfr_arr]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+          rhs_arr(i,j,k) -= h_g_txfr_arr(i,j,k);
+        });
+      }
+    }
+  }
+
+  for (int lev = 0; lev <= finest_level; lev++)
+    EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
 }
 
 
@@ -79,18 +135,67 @@ void
 mfix::mfix_species_X_rhs (Vector< MultiFab*      > const& rhs,
                           Vector< MultiFab const*> const& chem_txfr)
 {
+  for (int lev = 0; lev <= finest_level; lev++)
+    rhs[lev]->setVal(0.);
 
   if (solve_reactions) {
+    ChemTransfer chem_txfr_idxs(FLUID::nspecies, REACTIONS::nreactions);
+
+    const int nspecies_g = FLUID::nspecies;
+    const int start_idx = chem_txfr_idxs.ro_gk_txfr;
 
     for (int lev = 0; lev <= finest_level; lev++) {
-      rhs[lev]->plus(*chem_txfr[lev], 0, FLUID::nspecies, rhs[lev]->nGrow());
-      EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
+      rhs[lev]->plus(*chem_txfr[lev], start_idx, nspecies_g, rhs[lev]->nGrow());
     }
-
-  } else {
-
-    for (int lev = 0; lev <= finest_level; lev++)
-      rhs[lev]->setVal(0.);
-
   }
+
+  for (int lev = 0; lev <= finest_level; lev++)
+    EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
+}
+
+
+void
+mfix::mfix_momentum_rhs (Vector< MultiFab* > const& rhs,
+                         Vector< MultiFab const* > const& ep_g,
+                         Vector< MultiFab const* > const& vel_g,
+                         Vector< MultiFab const* > const& ro_g_rhs,
+                         Vector< MultiFab const* > const& chem_txfr)
+{
+  for (int lev = 0; lev <= finest_level; lev++)
+    rhs[lev]->setVal(0.);
+
+  if (solve_reactions) {
+    ChemTransfer chem_txfr_idxs(FLUID::nspecies, REACTIONS::nreactions);
+
+    const int start_idx = chem_txfr_idxs.vel_g_txfr;
+
+    for (int lev = 0; lev <= finest_level; lev++) {
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+      for (MFIter mfi(*rhs[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        // Tilebox
+        Box bx = mfi.tilebox ();
+
+        Array4<Real const> const& epg_arr           = ep_g[lev]->const_array(mfi);
+        Array4<Real const> const& vel_arr           = vel_g[lev]->const_array(mfi);
+        Array4<Real const> const& rog_rhs_arr       = ro_g_rhs[lev]->const_array(mfi);
+        Array4<Real const> const& momentum_txfr_arr = chem_txfr[lev]->const_array(mfi,start_idx);
+        Array4<Real      > const& rhs_arr           = rhs[lev]->array(mfi);
+
+        amrex::ParallelFor(bx, [epg_arr,vel_arr,rog_rhs_arr,rhs_arr,momentum_txfr_arr]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+          const Real num = epg_arr(i,j,k) * rog_rhs_arr(i,j,k);
+
+          rhs_arr(i,j,k,0) += momentum_txfr_arr(i,j,k,0) - num*vel_arr(i,j,k,0);
+          rhs_arr(i,j,k,1) += momentum_txfr_arr(i,j,k,1) - num*vel_arr(i,j,k,1);
+          rhs_arr(i,j,k,2) += momentum_txfr_arr(i,j,k,2) - num*vel_arr(i,j,k,2);
+        });
+      }
+    }
+  }
+
+  for (int lev = 0; lev <= finest_level; lev++)
+    EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
 }

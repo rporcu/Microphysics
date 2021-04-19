@@ -10,7 +10,6 @@
 
 namespace SOLIDS
 {
-
   int NTYPES;
 
   // Fluid molecular weight model
@@ -25,8 +24,17 @@ namespace SOLIDS
   // Names of solids used in IC/BC setups
   amrex::Vector<std::string> names;
 
-  // Specified constant olid phase molecular weight
+  // Specified constant solid phase molecular weight
   amrex::Real MW_s0(0);
+
+  // Specified constant specific heat
+  amrex::Vector<amrex::Real> cp_s0(0);
+
+  // Specified constant solid enthalpy of formation
+  amrex::Real H_f0(0);
+
+  // Specified constant solid reference temperature
+  amrex::Real T_ref(0);
 
   // Flag to solve species solids equations
   int solve_species(0);
@@ -40,19 +48,25 @@ namespace SOLIDS
   // Total number of dem species
   int nspecies;
 
+  // Flag to set solids as a mixture of solids species
+  int is_a_mixture(0);
+
   // Specified constant gas phase species molecular weight
   amrex::Vector<amrex::Real> MW_sn0(0);
 
   // Specified constant specific heat
-  amrex::Vector<amrex::Real> cp_p0(0);
+  amrex::Vector<amrex::Real> cp_sn0(0);
+
+  // Specified constant specific heat
+  amrex::Vector<amrex::Real> H_fn0(0);
 
   amrex::Real enthalpy_source(0);
 
+
   void Initialize ()
   {
+    int check_energy  = 1;
 
-    int check_energy  = 0;
-    // int check_species = 0;
     {
       amrex::ParmParse pp_mfix("mfix");
       pp_mfix.query("advect_enthalpy", check_energy);
@@ -75,10 +89,10 @@ namespace SOLIDS
 
       if(check_energy)
       {
+        cp_s0.resize(NTYPES);
+
         if (ppSolid.contains("specific_heat"))
         {
-          cp_p0.resize(NTYPES);
-
           // Read in the specific heat model we are using
           std::string specific_heat_model;
           ppSolid.query("specific_heat", specific_heat_model );
@@ -96,7 +110,7 @@ namespace SOLIDS
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(cp0_in > 0.0,
                 "Invalid DEM constant specific heat.");
 
-            cp_p0[solid] = cp0_in;
+            cp_s0[solid] = cp0_in;
           }
           else if (amrex::toLower(specific_heat_model).compare("nasa9-poly") == 0)
           {
@@ -109,10 +123,37 @@ namespace SOLIDS
           }
         } // end specific heat
 
+        // Get molecular weight inputs ---------------------------//
+        std::string molecular_weight_model;
+        ppSolid.query("molecular_weight", molecular_weight_model);
+
+        if (amrex::toLower(molecular_weight_model).compare("constant") == 0)
+        {
+          MolecularWeightModel = MOLECULARWEIGHTMODEL::Constant;
+          ppSolid.get("molecular_weight.constant", MW_s0);
+        }
+        else if(amrex::toLower(molecular_weight_model).compare("mixture") == 0)
+        {
+          MolecularWeightModel = MOLECULARWEIGHTMODEL::Mixture;
+        }
+        else
+        {
+          MolecularWeightModel = MOLECULARWEIGHTMODEL::Constant;
+
+          if ( amrex::ParallelDescriptor::IOProcessor() )
+            amrex::Warning("Solid molecular weight model not provided. "
+              "Assuming constant model with MW_s = 0");
+        }
+
+        // Query the reference temperature
+        pp.query("reference_temperature", T_ref);
+
+        // Query the enthalpy_of_formation
+        ppSolid.query("enthalpy_of_formation", H_f0);
       } // check_energy
 
       // Solids species inputs
-      if (ppSolid.contains("species") or
+      if (ppSolid.contains("species") ||
           MolecularWeightModel == MOLECULARWEIGHTMODEL::Mixture)
       {
         ppSolid.getarr("species", species);
@@ -122,7 +163,7 @@ namespace SOLIDS
 
         // Disable the species solver if the species are defined as "None"
         // (caseinsensitive) or 0
-        if (amrex::toLower(species[0]).compare("none") == 0 or
+        if (amrex::toLower(species[0]).compare("none") == 0 ||
             (species[0]).compare("0") == 0)
         {
           solve_species = 0;
@@ -138,22 +179,36 @@ namespace SOLIDS
           species_id.resize(nspecies);
           MW_sn0.resize(nspecies);
 
+          if (check_energy) {
+            cp_sn0.resize(nspecies);
+            H_fn0.resize(nspecies);
+          }
+
           for (int n(0); n < nspecies; n++) {
             auto it = std::find(SPECIES::species.begin(), SPECIES::species.end(),
                 species[n]);
 
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != SPECIES::species.end(),
-                "Solid species " + species[n] + " missing in input");
+                "Solid species missing in input");
 
             const auto pos = std::distance(SPECIES::species.begin(), it);
 
             species_id[n] = SPECIES::species_id[pos];
             MW_sn0[n] = SPECIES::MW_k0[pos];
+
+            if (check_energy) {
+              cp_sn0[n]  = SPECIES::cp_k0[pos];
+              H_fn0[n]  = SPECIES::H_fk0[pos];
+            }
           }
         }
       }
-    }
 
-  };
+      // Flag to determine if we want to solve the solid as a mixture
+      is_a_mixture = solve_species &&
+        (MolecularWeightModel == MOLECULARWEIGHTMODEL::Mixture);
+
+    }
+  } // Initialize()
 
 }

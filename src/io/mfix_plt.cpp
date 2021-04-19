@@ -4,9 +4,12 @@
 #include <AMReX_ParmParse.H>
 
 #include <mfix.H>
+#include <mfix_pc.H>
 #include <mfix_fluid_parms.H>
+#include <mfix_solids_parms.H>
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
+#include <mfix_reactions_parms.H>
 
 namespace
 {
@@ -26,29 +29,30 @@ mfix::InitIOPltData ()
   if (FLUID::solve)
     {
 
-      pp.query("plt_vel_g",   plt_vel_g  );
-      pp.query("plt_ep_g",    plt_ep_g   );
-      pp.query("plt_p_g",     plt_p_g    );
-      pp.query("plt_ro_g",    plt_ro_g   );
-      pp.query("plt_MW_g",    plt_MW_g   );
-      pp.query("plt_h_g",     plt_h_g    );
-      pp.query("plt_T_g",     plt_T_g    );
-      pp.query("plt_trac",    plt_trac   );
-      pp.query("plt_cp_g",    plt_cp_g   );
-      pp.query("plt_k_g",     plt_k_g    );
-      pp.query("plt_mu_g",    plt_mu_g   );
-      pp.query("plt_diveu",   plt_diveu  );
-      pp.query("plt_vort",    plt_vort   );
-      pp.query("plt_volfrac", plt_volfrac);
-      pp.query("plt_gradp_g", plt_gradp_g);
-      pp.query("plt_X_g",     plt_X_gk   );
-      pp.query("plt_D_g",     plt_D_gk   );
-      pp.query("plt_cp_gk",   plt_cp_gk  );
-      pp.query("plt_h_gk",    plt_h_gk   );
-      pp.query("plt_ro_txfr", plt_ro_txfr);
-      pp.query("plt_proc",    plt_proc);
-      pp.query("plt_proc_p",  plt_proc_p);
-      pp.query("plt_cost_p",  plt_cost_p);
+      pp.query("plt_vel_g",     plt_vel_g    );
+      pp.query("plt_ep_g",      plt_ep_g     );
+      pp.query("plt_p_g",       plt_p_g      );
+      pp.query("plt_ro_g",      plt_ro_g     );
+      pp.query("plt_MW_g",      plt_MW_g     );
+      pp.query("plt_h_g",       plt_h_g      );
+      pp.query("plt_T_g",       plt_T_g      );
+      pp.query("plt_trac",      plt_trac     );
+      pp.query("plt_cp_g",      plt_cp_g     );
+      pp.query("plt_k_g",       plt_k_g      );
+      pp.query("plt_mu_g",      plt_mu_g     );
+      pp.query("plt_diveu",     plt_diveu    );
+      pp.query("plt_vort",      plt_vort     );
+      pp.query("plt_volfrac",   plt_volfrac  );
+      pp.query("plt_gradp_g",   plt_gradp_g  );
+      pp.query("plt_X_g",       plt_X_gk     );
+      pp.query("plt_D_g",       plt_D_gk     );
+      pp.query("plt_cp_gk",     plt_cp_gk    );
+      pp.query("plt_h_gk",      plt_h_gk     );
+      pp.query("plt_txfr",      plt_txfr     );
+      pp.query("plt_chem_txfr", plt_chem_txfr);
+      pp.query("plt_proc",      plt_proc     );
+      pp.query("plt_proc_p",    plt_proc_p   );
+      pp.query("plt_cost_p",    plt_cost_p   );
 
       // Special test for CCSE regression test. Override all individual
       // flags and save all data to plot file.
@@ -57,29 +61,30 @@ mfix::InitIOPltData ()
       pp.query("plt_regtest", plt_ccse_regtest);
 
       if (plt_ccse_regtest != 0) {
-        plt_vel_g   = 1;
-        plt_ep_g    = 1;
-        plt_p_g     = 0;
-        plt_ro_g    = 1;
-        plt_MW_g    = 0;
-        plt_h_g     = 1;
-        plt_T_g     = 1;
-        plt_trac    = 1;
-        plt_cp_g    = 1;
-        plt_k_g     = 1;
-        plt_mu_g    = 1;
-        plt_vort    = 1;
-        plt_diveu   = 1;
-        plt_volfrac = 1;
-        plt_gradp_g = 1;
-        plt_X_gk    = 1;
-        plt_D_gk    = 1;
-        plt_cp_gk   = 0;
-        plt_h_gk    = 0;
-        plt_ro_txfr = 0;
-        plt_proc    = 0;
-        plt_proc_p  = 0;
-        plt_cost_p  = 0;
+        plt_vel_g     = 1;
+        plt_ep_g      = 1;
+        plt_p_g       = 0;
+        plt_ro_g      = 1;
+        plt_MW_g      = 0;
+        plt_h_g       = 1;
+        plt_T_g       = 1;
+        plt_trac      = 1;
+        plt_cp_g      = 1;
+        plt_k_g       = 1;
+        plt_mu_g      = 1;
+        plt_vort      = 1;
+        plt_diveu     = 1;
+        plt_volfrac   = 1;
+        plt_gradp_g   = 1;
+        plt_X_gk      = 1;
+        plt_D_gk      = 1;
+        plt_cp_gk     = 0;
+        plt_h_gk      = 0;
+        plt_txfr      = 0;
+        plt_chem_txfr = 0;
+        plt_proc      = 0;
+        plt_proc_p    = 0;
+        plt_cost_p    = 0;
       }
 
       // Count the number of variables to save.
@@ -115,8 +120,13 @@ mfix::InitIOPltData ()
         }
       }
 
+      if (DEM::solve || PIC::solve) {
+        if ( plt_txfr == 1) pltVarCount += Transfer::count;
+      }
+
       if (FLUID::solve_species && REACTIONS::solve) {
-        if ( plt_ro_txfr == 1) pltVarCount += FLUID::nspecies;
+        ChemTransfer chem_txfr_idxs(FLUID::nspecies, REACTIONS::nreactions);
+        if ( plt_chem_txfr == 1) pltVarCount += chem_txfr_idxs.count;
       }
     }
 
@@ -125,18 +135,11 @@ mfix::InitIOPltData ()
       int plt_ccse_regtest = 0;
       pp.query("plt_regtest", plt_ccse_regtest);
 
-      if (SOLIDS::solve_species) {
-        const int size = AoSrealData::count + SoArealData::count +
-                         SoAspeciesData::count*SOLIDS::nspecies;
-        write_real_comp.resize(size, 0);
-      }
+      runtimeRealData rtData(SOLIDS::nspecies, REACTIONS::nreactions);
 
-      if (SOLIDS::solve_species && REACTIONS::solve) {
-        const int size = AoSrealData::count + SoArealData::count +
-                         SoAspeciesData::count*SOLIDS::nspecies +
-                         SoAreactionsData::count*SOLIDS::nspecies*REACTIONS::nreactions;
-        write_real_comp.resize(size, 0);
-      }
+      // Runtime-added variables
+      const int size = AoSrealData::count + SoArealData::count + rtData.count;
+      write_real_comp.resize(size, 0);
 
       // All flags are true by default so we only need to turn off the
       // variables we don't want if not doing CCSE regression tests.
@@ -189,7 +192,7 @@ mfix::InitIOPltData ()
 
         input_value = 0;
         pp.query("plt_cp_s",  input_value);
-        write_real_comp[gap+SoArealData::c_ps] = input_value;  // specific heat
+        write_real_comp[gap+SoArealData::cp_s] = input_value;  // specific heat
 
         input_value = 0;
         pp.query("plt_T_p",   input_value );
@@ -201,27 +204,47 @@ mfix::InitIOPltData ()
 
         gap = AoSrealData::count + SoArealData::count;
 
-        input_value = 0;
-        pp.query("plt_species_p",   input_value );
         if (SOLIDS::solve_species)
         {
+          input_value = 0;
+          pp.query("plt_species_p",   input_value );
+//          pp.query("plt_X_s",   input_value );
+
+          const int start = gap + pc->m_runtimeRealData.X_sn;
           for(int n(0); n < SOLIDS::nspecies; ++n)
-            write_real_comp[gap+n] = input_value;
+            write_real_comp[n+start] = input_value;
         }
 
-        gap = AoSrealData::count + SoArealData::count + SoAspeciesData::count*SOLIDS::nspecies;
-
-        input_value = 0;
-        pp.query("plt_ro_rates_p", input_value );
-        if (SOLIDS::solve_species && REACTIONS::solve)
+        if (REACTIONS::solve)
         {
-          for(int n_s(0); n_s < SOLIDS::nspecies; ++n_s)
-            for(int q(0); q < REACTIONS::nreactions; ++q) {
-              const int comp = gap + n_s*REACTIONS::nreactions + q;
-              write_real_comp[comp] = input_value;
-            }
+          input_value = 0;
+          pp.query("plt_ro_sn_txfr",   input_value );
+
+          const int start = gap + pc->m_runtimeRealData.ro_sn_txfr;
+          for(int n(0); n < SOLIDS::nspecies; ++n)
+            write_real_comp[n+start] = input_value;
         }
 
+        if (REACTIONS::solve)
+        {
+          input_value = 0;
+          pp.query("plt_vel_s_txfr",   input_value );
+
+          const int start = gap + pc->m_runtimeRealData.vel_s_txfr;
+          for(int n(0); n < 3; ++n)
+            write_real_comp[n+start] = input_value;
+        }
+
+        if (REACTIONS::solve)
+        {
+          input_value = 0;
+          pp.query("plt_h_s_txfr",   input_value );
+
+          const int start = gap + pc->m_runtimeRealData.h_s_txfr;
+          write_real_comp[start] = input_value;
+        }
+
+        // Int data
         gap = AoSintData::count;
 
         input_value = 0;
@@ -360,9 +383,26 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
           pltFldNames.push_back("h_"+specie+"_g");
 
       // Fluid species density reaction rates
-      if (FLUID::solve_species && REACTIONS::solve && plt_ro_txfr == 1)
+//      if (plt_txfr == 1) {
+//        pltFldNames.push_back("drag_x");
+//        pltFldNames.push_back("drag_y");
+//        pltFldNames.push_back("drag_z");
+//        pltFldNames.push_back("beta");
+//        pltFldNames.push_back("gammaTp");
+//        pltFldNames.push_back("gamma");
+//      }
+
+      // Fluid species density reaction rates
+      if (FLUID::solve_species && REACTIONS::solve && plt_chem_txfr == 1) {
         for(std::string specie: FLUID::species)
           pltFldNames.push_back("ro_txfr_"+specie+"_g");
+//          pltFldNames.push_back("chem_ro_txfr_"+specie);
+
+//        pltFldNames.push_back("chem_velx_txfr");
+//        pltFldNames.push_back("chem_vely_txfr");
+//        pltFldNames.push_back("chem_velz_txfr");
+//        pltFldNames.push_back("chem_h_txfr");
+      }
 
       for (int lev = 0; lev < nlev; ++lev)
       {
@@ -469,7 +509,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
           if (ebfactory[lev]) {
             MultiFab::Copy(*mf[lev], ebfactory[lev]->getVolFrac(), 0, lc, 1, 0);
           } else {
-            mf[lev]->setVal(1.0,lc,1,0);
+            mf[lev]->setVal(1.0, lc, 1, 0);
           }
           lc += 1;
         }
@@ -494,42 +534,39 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 
         // Fluid species mass fractions
         if(FLUID::solve_species && plt_X_gk == 1 ) {
-          for(int n(0); n < FLUID::nspecies; n++) {
-            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_gk, n, lc+n, 1, 0);
-          }
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_gk, 0, lc, FLUID::nspecies, 0);
           lc += FLUID::nspecies;
         }
 
         // Species mass fraction
         if(FLUID::solve_species && plt_D_gk == 1 ) {
-          for(int n(0); n < FLUID::nspecies; n++) {
-            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->D_gk, n, lc+n, 1, 0);
-          }
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->D_gk, 0, lc, FLUID::nspecies, 0);
           lc += FLUID::nspecies;
         }
 
         // Fluid species specific heat
         if(FLUID::solve_species && advect_enthalpy && plt_cp_gk == 1 ) {
-          for(int n(0); n < FLUID::nspecies; n++) {
-            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->cp_gk, n, lc+n, 1, 0);
-          }
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->cp_gk, 0, lc, FLUID::nspecies, 0);
           lc += FLUID::nspecies;
         }
 
         // Fluid species enthalpy
         if(FLUID::solve_species && plt_h_gk == 1 ) {
-          for(int n(0); n < FLUID::nspecies; n++) {
-            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->h_gk, n, lc+n, 1, 0);
-          }
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->h_gk, 0, lc, FLUID::nspecies, 0);
           lc += FLUID::nspecies;
         }
 
-        if (FLUID::solve_species && REACTIONS::solve && plt_ro_txfr == 1) {
-          for(int n(0); n < FLUID::nspecies; n++) {
-            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->chem_txfr, n, lc+n, 1, 0);
-          }
-          lc += FLUID::nspecies;
+        if (plt_txfr == 1) {
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->txfr, 0, lc, Transfer::count, 0);
+          lc += Transfer::count;
         }
+
+        if (FLUID::solve_species && REACTIONS::solve && plt_chem_txfr == 1) {
+          const int l_comps = m_leveldata[lev]->chem_txfr->nComp();
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->chem_txfr, 0, lc, l_comps, 0);
+          lc += l_comps;
+        }
+
       }
 
       // Cleanup places where we have no data.
@@ -620,12 +657,21 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 
         if (SOLIDS::solve_species)
           for(auto species: SOLIDS::species)
+//            real_comp_names.push_back("X_"+species);
             real_comp_names.push_back("X_"+species+"_s");
 
         if (SOLIDS::solve_species && REACTIONS::solve)
           for(auto species: SOLIDS::species)
-            for(auto reaction: REACTIONS::reactions)
-              real_comp_names.push_back(reaction+"_"+species+"_txfr");
+            real_comp_names.push_back("chem_ro_txfr_"+species);
+
+        if (REACTIONS::solve) {
+          real_comp_names.push_back("chem_velx_txfr");
+          real_comp_names.push_back("chem_vely_txfr");
+          real_comp_names.push_back("chem_velz_txfr");
+        }
+
+        if (REACTIONS::solve)
+          real_comp_names.push_back("chem_h_txfr");
 
         int_comp_names.push_back("phase");
         int_comp_names.push_back("state");

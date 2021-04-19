@@ -3,6 +3,7 @@
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
 #include <mfix_mf_helpers.H>
+#include <mfix_calc_species_coeffs_K.H>
 
 void
 mfix::set_temperature_bc0 (const Box& sbx,
@@ -12,6 +13,8 @@ mfix::set_temperature_bc0 (const Box& sbx,
 {
   const Real cp_g0  = FLUID::cp_g0;
   const Real k_g0   = FLUID::k_g0;
+  const Real T_ref  = FLUID::T_ref;
+  const Real H_f0   = FLUID::H_f0;
 
   Real* p_bc_t_g = m_bc_t_g.data();
  
@@ -20,11 +23,15 @@ mfix::set_temperature_bc0 (const Box& sbx,
   Gpu::DeviceVector< Real > cp_gk0_d(nspecies_g);
   Gpu::copyAsync(Gpu::hostToDevice, FLUID::cp_gk0.begin(), FLUID::cp_gk0.end(), cp_gk0_d.begin());
 
+  Gpu::DeviceVector< Real > H_fk0_d(nspecies_g);
+  Gpu::copyAsync(Gpu::hostToDevice, FLUID::H_fk0.begin(), FLUID::H_fk0.end(), H_fk0_d.begin());
+
   // Flag to understand if fluid is a mixture
   const int fluid_is_a_mixture = FLUID::is_a_mixture;
 
   Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_ptr.data() : nullptr;
-  Real* p_cp_gk0 = fluid_is_a_mixture ? cp_gk0_d.data() : nullptr;
+  Real* p_cp_gk0   = fluid_is_a_mixture ? cp_gk0_d.data() : nullptr;
+  Real* p_H_fk0    = fluid_is_a_mixture ? H_fk0_d.data() : nullptr;
 
   Array4<Real> const& a_T_g  = m_leveldata[lev]->T_g->array(*mfi);
   Array4<Real> const& a_cp_g = m_leveldata[lev]->cp_g->array(*mfi);
@@ -67,7 +74,7 @@ mfix::set_temperature_bc0 (const Box& sbx,
 
     ParallelFor(bx_yz_lo_3D, [a_bc_ilo,dom_lo,pinf,pout,minf,a_T_g,a_k_g,p_bc_t_g,
         k_g0,a_cp_g,a_h_g,cp_g0,fluid_is_a_mixture,nspecies_g,p_bc_X_gk,
-        p_cp_gk0]
+        p_cp_gk0,T_ref,H_f0,p_H_fk0]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_ilo(dom_lo[0]-1,j,k,1);
@@ -80,17 +87,22 @@ mfix::set_temperature_bc0 (const Box& sbx,
 
         if (!fluid_is_a_mixture) {
           a_cp_g(i,j,k) = cp_g0;
-          a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
+          //a_h_g(i,j,k)  = FLUID::calc_h_g(cp_g0, p_bc_t_g[bcv], T_ref, H_f0);
+          a_h_g(i,j,k)  = FLUID::calc_h_g(cp_g0, p_bc_t_g[bcv], 0, 0);
         }
         else {
           Real cp_g_sum(0);
+          Real h_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            cp_g_sum += p_bc_X_gk[n][bcv] * p_cp_gk0[n];
+            h_g_sum  += p_bc_X_gk[n][bcv] *
+              //FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], T_ref, p_H_fk0[n]);
+              FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], 0, 0);
           }
 
           a_cp_g(i,j,k) = cp_g_sum;
-          a_h_g(i,j,k)  = cp_g_sum * p_bc_t_g[bcv];
+          a_h_g(i,j,k)  = h_g_sum;
         }
       }
     });
@@ -107,7 +119,7 @@ mfix::set_temperature_bc0 (const Box& sbx,
 
     ParallelFor(bx_yz_hi_3D, [a_bc_ihi,dom_hi,pinf,pout,minf,a_T_g,a_k_g,p_bc_t_g,
         k_g0,a_cp_g,a_h_g,cp_g0,fluid_is_a_mixture,nspecies_g,p_bc_X_gk,
-        p_cp_gk0]
+        p_cp_gk0,T_ref,H_f0,p_H_fk0]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_ihi(dom_hi[0]+1,j,k,1);
@@ -120,17 +132,22 @@ mfix::set_temperature_bc0 (const Box& sbx,
 
         if (!fluid_is_a_mixture) {
           a_cp_g(i,j,k) = cp_g0;
-          a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
+          //a_h_g(i,j,k)  = FLUID::calc_h_g(cp_g0, p_bc_t_g[bcv], T_ref, H_f0);
+          a_h_g(i,j,k)  = FLUID::calc_h_g(cp_g0, p_bc_t_g[bcv], 0, 0);
         }
         else {
           Real cp_g_sum(0);
+          Real h_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            cp_g_sum += p_bc_X_gk[n][bcv] * p_cp_gk0[n];
+            h_g_sum  += p_bc_X_gk[n][bcv] *
+              //FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], T_ref, p_H_fk0[n]);
+              FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], 0, 0);
           }
 
           a_cp_g(i,j,k) = cp_g_sum;
-          a_h_g(i,j,k)  = cp_g_sum * p_bc_t_g[bcv];
+          a_h_g(i,j,k)  = h_g_sum;
         }
       }
     });
@@ -147,7 +164,7 @@ mfix::set_temperature_bc0 (const Box& sbx,
 
     ParallelFor(bx_xz_lo_3D, [a_bc_jlo,dom_lo,pinf,pout,minf,a_T_g,a_k_g,p_bc_t_g,
         k_g0,a_cp_g,a_h_g,cp_g0,fluid_is_a_mixture,nspecies_g,p_bc_X_gk,
-        p_cp_gk0]
+        p_cp_gk0,T_ref,H_f0,p_H_fk0]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_jlo(i,dom_lo[1]-1,k,1);
@@ -160,17 +177,22 @@ mfix::set_temperature_bc0 (const Box& sbx,
 
         if (!fluid_is_a_mixture) {
           a_cp_g(i,j,k) = cp_g0;
-          a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
+          //a_h_g(i,j,k)  = FLUID::calc_h_g(cp_g0, p_bc_t_g[bcv], T_ref, H_f0);
+          a_h_g(i,j,k)  = FLUID::calc_h_g(cp_g0, p_bc_t_g[bcv], 0, 0);
         }
         else {
           Real cp_g_sum(0);
+          Real h_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            cp_g_sum += p_bc_X_gk[n][bcv] * p_cp_gk0[n];
+            h_g_sum  += p_bc_X_gk[n][bcv] *
+              //FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], T_ref, p_H_fk0[n]);
+              FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], 0, 0);
           }
 
           a_cp_g(i,j,k) = cp_g_sum;
-          a_h_g(i,j,k)  = cp_g_sum * p_bc_t_g[bcv];
+          a_h_g(i,j,k)  = h_g_sum;
         }
       }
     });
@@ -187,7 +209,7 @@ mfix::set_temperature_bc0 (const Box& sbx,
 
     ParallelFor(bx_xz_hi_3D, [a_bc_jhi,dom_hi,pinf,pout,minf,a_T_g,a_k_g,p_bc_t_g,
         k_g0,a_cp_g,a_h_g,cp_g0,fluid_is_a_mixture,nspecies_g,p_bc_X_gk,
-        p_cp_gk0]
+        p_cp_gk0,T_ref,H_f0,p_H_fk0]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_jhi(i,dom_hi[1]+1,k,1);
@@ -200,17 +222,22 @@ mfix::set_temperature_bc0 (const Box& sbx,
 
         if (!fluid_is_a_mixture) {
           a_cp_g(i,j,k) = cp_g0;
-          a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
+          //a_h_g(i,j,k)  = FLUID::calc_h_g(cp_g0, p_bc_t_g[bcv], T_ref, H_f0);
+          a_h_g(i,j,k)  = FLUID::calc_h_g(cp_g0, p_bc_t_g[bcv], 0, 0);
         }
         else {
           Real cp_g_sum(0);
+          Real h_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            cp_g_sum += p_bc_X_gk[n][bcv] * p_cp_gk0[n];
+            h_g_sum  += p_bc_X_gk[n][bcv] *
+              //FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], T_ref, p_H_fk0[n]);
+              FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], 0, 0);
           }
 
           a_cp_g(i,j,k) = cp_g_sum;
-          a_h_g(i,j,k)  = cp_g_sum * p_bc_t_g[bcv];
+          a_h_g(i,j,k)  = h_g_sum;
         }
       }
     });
@@ -227,7 +254,7 @@ mfix::set_temperature_bc0 (const Box& sbx,
 
     ParallelFor(bx_xy_lo_3D, [a_bc_klo,dom_lo,pinf,pout,minf,a_T_g,a_k_g,p_bc_t_g,
         k_g0,a_cp_g,a_h_g,cp_g0,fluid_is_a_mixture,nspecies_g,p_bc_X_gk,
-        p_cp_gk0]
+        p_cp_gk0,T_ref,H_f0,p_H_fk0]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_klo(i,j,dom_lo[2]-1,1);
@@ -240,17 +267,22 @@ mfix::set_temperature_bc0 (const Box& sbx,
 
         if (!fluid_is_a_mixture) {
           a_cp_g(i,j,k) = cp_g0;
-          a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
+          //a_h_g(i,j,k)  = FLUID::calc_h_g(cp_g0, p_bc_t_g[bcv], T_ref, H_f0);
+          a_h_g(i,j,k)  = FLUID::calc_h_g(cp_g0, p_bc_t_g[bcv], 0, 0);
         }
         else {
           Real cp_g_sum(0);
+          Real h_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            cp_g_sum += p_bc_X_gk[n][bcv] * p_cp_gk0[n];
+            h_g_sum  += p_bc_X_gk[n][bcv] *
+              //FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], T_ref, p_H_fk0[n]);
+              FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], 0, 0);
           }
 
           a_cp_g(i,j,k) = cp_g_sum;
-          a_h_g(i,j,k)  = cp_g_sum * p_bc_t_g[bcv];
+          a_h_g(i,j,k)  = h_g_sum;
         }
       }
     });
@@ -267,7 +299,7 @@ mfix::set_temperature_bc0 (const Box& sbx,
 
     ParallelFor(bx_xy_hi_3D, [a_bc_khi,dom_hi,pinf,pout,minf,a_T_g,a_k_g,p_bc_t_g,
         k_g0,a_cp_g,a_h_g,cp_g0,fluid_is_a_mixture,nspecies_g,p_bc_X_gk,
-        p_cp_gk0]
+        p_cp_gk0,T_ref,H_f0,p_H_fk0]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_khi(i,j,dom_hi[2]+1,1);
@@ -280,17 +312,22 @@ mfix::set_temperature_bc0 (const Box& sbx,
 
         if (!fluid_is_a_mixture) {
           a_cp_g(i,j,k) = cp_g0;
-          a_h_g(i,j,k)  = cp_g0*p_bc_t_g[bcv];
+          //a_h_g(i,j,k)  = FLUID::calc_h_g(cp_g0, p_bc_t_g[bcv], T_ref, H_f0);
+          a_h_g(i,j,k)  = FLUID::calc_h_g(cp_g0, p_bc_t_g[bcv], 0, 0);
         }
         else {
           Real cp_g_sum(0);
+          Real h_g_sum(0);
 
           for (int n(0); n < nspecies_g; n++) {
-            cp_g_sum += p_bc_X_gk[n][bcv]*p_cp_gk0[n];
+            cp_g_sum += p_bc_X_gk[n][bcv] * p_cp_gk0[n];
+            h_g_sum  += p_bc_X_gk[n][bcv] *
+              //FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], T_ref, p_H_fk0[n]);
+              FLUID::calc_h_g(p_cp_gk0[n], p_bc_t_g[bcv], 0, 0);
           }
 
           a_cp_g(i,j,k) = cp_g_sum;
-          a_h_g(i,j,k)  = cp_g_sum * p_bc_t_g[bcv];
+          a_h_g(i,j,k)  = h_g_sum;
         }
       }
     });
