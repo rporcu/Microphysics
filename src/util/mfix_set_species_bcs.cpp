@@ -2,6 +2,7 @@
 
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
+#include <mfix_calc_species_coeffs_K.H>
 
 using namespace amrex;
 
@@ -584,9 +585,12 @@ mfix::set_species_enthalpy_g_bcs (Real time,
   const int nspecies_g = FLUID::nspecies;
 
   Gpu::DeviceVector< Real > cp_gk0_d(nspecies_g);
+
   Gpu::copyAsync(Gpu::hostToDevice, FLUID::cp_gk0.begin(), FLUID::cp_gk0.end(), cp_gk0_d.begin());
 
   Real* p_cp_gk0 = cp_gk0_d.data();
+
+  const Real T_ref = FLUID::T_ref;
 
   // Update temperature before using to update enthalpy
   set_temperature_bc_values (time);
@@ -616,7 +620,7 @@ mfix::set_species_enthalpy_g_bcs (Real time,
     int ilo = dom_lo[0];
 
     amrex::ParallelFor(bx_yz_lo_3D, nspecies_g, [bct_ilo,ilo,scal_arr,p_cp_gk0,
-        p_bc_t_g,pout,minf,pinf]
+        p_bc_t_g,pout,minf,pinf,T_ref]
       AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_ilo(ilo-1,j,k,0);
@@ -638,7 +642,7 @@ mfix::set_species_enthalpy_g_bcs (Real time,
     int ihi = dom_hi[0];
 
     amrex::ParallelFor(bx_yz_hi_3D, nspecies_g, [bct_ihi,ihi,scal_arr,p_cp_gk0,
-        p_bc_t_g,pout,minf,pinf]
+        p_bc_t_g,pout,minf,pinf,T_ref]
       AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_ihi(ihi+1,j,k,0);
@@ -660,7 +664,7 @@ mfix::set_species_enthalpy_g_bcs (Real time,
     int jlo = dom_lo[1];
 
     amrex::ParallelFor(bx_xz_lo_3D, nspecies_g, [bct_jlo,jlo,scal_arr,p_cp_gk0,
-        p_bc_t_g,pout,minf,pinf]
+        p_bc_t_g,pout,minf,pinf,T_ref]
       AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_jlo(i,jlo-1,k,0);
@@ -682,7 +686,7 @@ mfix::set_species_enthalpy_g_bcs (Real time,
     int jhi = dom_hi[1];
 
     amrex::ParallelFor(bx_xz_hi_3D, nspecies_g, [bct_jhi,jhi,scal_arr,p_cp_gk0,
-        p_bc_t_g,pout,minf,pinf]
+        p_bc_t_g,pout,minf,pinf,T_ref]
       AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_jhi(i,jhi+1,k,0);
@@ -704,7 +708,7 @@ mfix::set_species_enthalpy_g_bcs (Real time,
     int klo = dom_lo[2];
 
     amrex::ParallelFor(bx_xy_lo_3D, nspecies_g, [bct_klo,klo,scal_arr,p_cp_gk0,
-        p_bc_t_g,pout,minf,pinf]
+        p_bc_t_g,pout,minf,pinf,T_ref]
       AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_klo(i,j,klo-1,0);
@@ -726,7 +730,7 @@ mfix::set_species_enthalpy_g_bcs (Real time,
     int khi = dom_hi[2];
 
     amrex::ParallelFor(bx_xy_hi_3D, nspecies_g, [bct_khi,khi,scal_arr,p_cp_gk0,
-        p_bc_t_g,pout,minf,pinf]
+        p_bc_t_g,pout,minf,pinf,T_ref]
       AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_khi(i,j,khi+1,0);

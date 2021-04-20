@@ -14,6 +14,8 @@ namespace SPECIES
 
   int SpecificHeatModel = SPECIFICHEATMODEL::Invalid;
 
+  int EnthalpyOfFormationModel = ENTHALPYOFFORMATIONMODEL::Invalid;
+
   // Flag to solve species equations
   int solve;
 
@@ -21,24 +23,26 @@ namespace SPECIES
   int nspecies(0);
 
   // Species names
-  std::vector<std::string> species(0);
+  amrex::Vector<std::string> species(0);
 
   // Species unique identifying code (at the moment = their index in the input
   // entries)
-  std::vector<int> species_id(0);
+  amrex::Vector<int> species_id(0);
 
   // Specified species molecular weight
-  std::vector<amrex::Real> MW_k0(0);
+  amrex::Vector<amrex::Real> MW_k0(0);
 
   // Specified species diffusion coefficients
-  std::vector<amrex::Real> D_k0(0);
+  amrex::Vector<amrex::Real> D_k0(0);
 
   // Flag to solve enthalpy species equations
   int solve_enthalpy(0);
 
   // Specified constant species specific heat
-  std::vector<amrex::Real> cp_k0(0);
+  amrex::Vector<amrex::Real> cp_k0(0);
 
+  // Enthalpy of formation
+  amrex::Vector<amrex::Real> H_fk0(0);
 
   void Initialize ()
   {
@@ -53,7 +57,7 @@ namespace SPECIES
 
       // Disable the species solver if the species are defined as "None" (case
       // insensitive) or 0
-      if (amrex::toLower(species[0]).compare("none") == 0 or
+      if (amrex::toLower(species[0]).compare("none") == 0 ||
           (species[0]).compare("0") == 0)
       {
         solve = 0;
@@ -79,6 +83,7 @@ namespace SPECIES
         if (advect_enthalpy == 1) {
           solve_enthalpy = 1;
           cp_k0.resize(nspecies);
+          H_fk0.resize(nspecies);
         }
       }
 
@@ -88,12 +93,11 @@ namespace SPECIES
         for (int n(0); n < nspecies; n++) {
           std::string name = "species." + species[n];
           amrex::ParmParse ppSpecies(name.c_str());
-          int exists = ppSpecies.query("molecular_weight", MW_k0[n]);
 
-          if (!exists) {
-            if ( amrex::ParallelDescriptor::IOProcessor() )
-              amrex::Warning(species[n] + "_MW not provided. Assuming " +
-                             species[n] + "_MW = 0");
+          if (! ppSpecies.query("molecular_weight", MW_k0[n])) {
+            if (amrex::ParallelDescriptor::IOProcessor())
+              amrex::Warning(species[n] + " molecular weight not provided. Assuming " +
+                             "MW_" + species[n] + " = 0");
           }
         }
 
@@ -108,7 +112,7 @@ namespace SPECIES
           for (int n(0); n < nspecies; n++) {
             std::string name = "species." + species[n];
             amrex::ParmParse ppSpecies(name.c_str());
-            ppSpecies.get("diffusivity.constant", D_k0[n]);
+            ppSpecies.query("diffusivity.constant", D_k0[n]);
           }
         }
         else {
@@ -132,11 +136,27 @@ namespace SPECIES
             }
           }
           else {
-            SpecificHeatModel = SPECIFICHEATMODEL::Constant;
+            // TODO
+          }
 
-            if ( amrex::ParallelDescriptor::IOProcessor() )
-              amrex::Warning("Species specific heat model not provided."
-                             " Assuming constant model with cp_gk = 0");
+          // Get enthalpy of formation model input ------------------------//
+          std::string enthalpy_of_formation_model("constant");
+          pp.query("enthalpy_of_formation", enthalpy_of_formation_model);
+
+          if (amrex::toLower(enthalpy_of_formation_model).compare("constant") == 0)
+          {
+            EnthalpyOfFormationModel = ENTHALPYOFFORMATIONMODEL::Constant;
+
+            for (int n(0); n < nspecies; n++) {
+              std::string name = "species." + species[n];
+              amrex::ParmParse ppSpecies(name.c_str());
+              if(!ppSpecies.query("enthalpy_of_formation.constant", H_fk0[n]))
+                if (amrex::ParallelDescriptor::IOProcessor())
+                  amrex::Warning(species[n] + " enthalpy of formation not provided. Assuming " +
+                                 "Hf_" + species[n] + " = 0");
+            }
+          } else {
+            // TODO
           }
 
         }

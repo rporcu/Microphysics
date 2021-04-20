@@ -119,6 +119,7 @@ mfix::EvolveFluid (int nstep,
     Vector< MultiFab* > enthalpy_RHS(finest_level+1);
     Vector< MultiFab* > species_RHS_old(finest_level+1);
     Vector< MultiFab* > species_RHS(finest_level+1);
+    Vector< MultiFab* > vel_RHS_old(finest_level+1);
     Vector< Real > rhs_pressure_g_old(finest_level+1, 0.);
     Vector< Real > rhs_pressure_g(finest_level+1, 0.);
 
@@ -159,6 +160,11 @@ mfix::EvolveFluid (int nstep,
          lap_X[lev]->setVal(0.0);
          species_RHS_old[lev]->setVal(0.0);
          species_RHS[lev]->setVal(0.0);
+       }
+
+       if (solve_reactions) {
+         vel_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+         vel_RHS_old[lev]->setVal(0.0);
        }
     }
 
@@ -222,8 +228,8 @@ mfix::EvolveFluid (int nstep,
 
           if (REACTIONS::solve) {
             mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g_old(),
-                                get_X_gk_old(), get_D_gk(), get_cp_gk(),
-                                get_h_gk(), time);
+                                get_vel_g_old(), get_X_gk_old(), get_D_gk(),
+                                get_h_gk(), get_cp_gk(), time);
           }
 
           coupling_timing += ParallelDescriptor::second() - start_drag;
@@ -233,7 +239,7 @@ mfix::EvolveFluid (int nstep,
         bool proj_2_pred = true;
         mfix_apply_predictor(conv_u_old, conv_s_old, conv_X_old, ro_RHS_old,
             ro_RHS, lap_trac_old, lap_trac, lap_T_old, lap_T, enthalpy_RHS_old,
-            enthalpy_RHS, species_RHS_old, species_RHS, lap_X_old, lap_X,
+            enthalpy_RHS, species_RHS_old, species_RHS, lap_X_old, lap_X, vel_RHS_old,
             rhs_pressure_g_old, rhs_pressure_g, time, dt, prev_dt, proj_2_pred,
             coupling_timing);
 
@@ -247,9 +253,8 @@ mfix::EvolveFluid (int nstep,
           // If !m_idealgas_constraint == IdealGasConstraint::None, then we have already
           // updated the chemical quantities
           if (REACTIONS::solve && m_idealgas_constraint == IdealGasConstraint::None) {
-            mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(),
-                                get_X_gk(), get_D_gk(), get_cp_gk(),
-                                get_h_gk(), new_time);
+            mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
+                                get_X_gk(), get_D_gk(), get_h_gk(), get_cp_gk(), new_time);
           }
 
           coupling_timing += ParallelDescriptor::second() - start_drag;
@@ -266,7 +271,7 @@ mfix::EvolveFluid (int nstep,
            mfix_apply_corrector(conv_u_old, conv_s_old, conv_X_old, ro_RHS_old,
                ro_RHS, lap_trac_old, lap_trac, lap_T_old, lap_T,
                enthalpy_RHS_old, enthalpy_RHS, species_RHS_old, species_RHS,
-               lap_X_old, lap_X, rhs_pressure_g_old, rhs_pressure_g, time, dt,
+               lap_X_old, lap_X, vel_RHS_old, rhs_pressure_g_old, rhs_pressure_g, time, dt,
                prev_dt, proj_2_corr, coupling_timing);
         }
 
@@ -321,6 +326,9 @@ mfix::EvolveFluid (int nstep,
          delete species_RHS_old[lev];
          delete species_RHS[lev];
        }
+
+       if (solve_reactions)
+         delete vel_RHS_old[lev];
     }
 
     BL_PROFILE_REGION_STOP("mfix::EvolveFluid");

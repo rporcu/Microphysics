@@ -54,6 +54,13 @@ namespace FLUID
   // Specified constant gas specific heat
   amrex::Real cp_g0(1);
 
+  // Specified constant gas enthalpy of formation
+  amrex::Real H_f0(0);
+
+  // Specified constant gas reference temperature
+  // TODO TODO TODO
+  amrex::Real T_ref(0);
+
   // Specified constant gas phase thermal conductivity coefficient
   amrex::Real k_g0(0);
 
@@ -81,6 +88,9 @@ namespace FLUID
   // Specified constant gas phase species specific heat
   amrex::Vector<amrex::Real> cp_gk0(0);
 
+  // Enthalpy of formation
+  amrex::Vector<amrex::Real> H_fk0(0);
+
   // Name to later reference when building inputs for IC/BC regions
   std::string name;
 
@@ -96,7 +106,7 @@ namespace FLUID
        "Fluid solver not specified. fluid.sove = ? ");
 
     // Disable the fluid solver if the fluid is defined as "None"
-    if (amrex::toLower(fluid_name[0]).compare("none") == 0 or fluid_name[0] == "0" ) {
+    if (amrex::toLower(fluid_name[0]).compare("none") == 0 || fluid_name[0] == "0" ) {
       solve = 0;
     } else {
       solve = 1;
@@ -197,7 +207,13 @@ namespace FLUID
           {
             amrex::Abort("Unknown fluid specific heat model!");
           }
+
+          // Query the enthalpy_of_formation
+          ppFluid.query("enthalpy_of_formation", H_f0);
         }
+
+        // Query the reference temperature
+        ppFluid.query("reference_temperature", T_ref);
 
         // Get thermal conductivity inputs -----------------------------//
         std::string thermal_conductivity_model;
@@ -219,7 +235,7 @@ namespace FLUID
 
       if (advect_fluid_species) {
         // Fluid species inputs
-        if (ppFluid.contains("species") or
+        if (ppFluid.contains("species") ||
             MolecularWeightModel == MOLECULARWEIGHTMODEL::Mixture)
         {
           ppFluid.getarr("species", species);
@@ -229,7 +245,7 @@ namespace FLUID
 
           // Disable the species solver if the species are defined as "None" (case
           // insensitive) or 0
-          if (amrex::toLower(species[0]).compare("none") == 0 or
+          if (amrex::toLower(species[0]).compare("none") == 0 ||
               (species[0]).compare("0") == 0)
           {
             solve_species = 0;
@@ -246,8 +262,10 @@ namespace FLUID
             MW_gk0.resize(nspecies);
             D_gk0.resize(nspecies);
 
-            if (solve_enthalpy)
+            if (solve_enthalpy) {
               cp_gk0.resize(nspecies);
+              H_fk0.resize(nspecies);
+            }
 
             for (int n(0); n < nspecies; n++) {
               auto it = std::find(SPECIES::species.begin(), SPECIES::species.end(),
@@ -262,8 +280,10 @@ namespace FLUID
               MW_gk0[n] = SPECIES::MW_k0[pos];
               D_gk0[n] = SPECIES::D_k0[pos];
 
-              if (solve_enthalpy)
+              if (solve_enthalpy) {
                 cp_gk0[n] = SPECIES::cp_k0[pos];
+                H_fk0[n]  = SPECIES::H_fk0[pos];
+              }
             }
           }
         }
@@ -273,10 +293,10 @@ namespace FLUID
       is_a_mixture = solve_species &&
         (FLUID::MolecularWeightModel == FLUID::MOLECULARWEIGHTMODEL::Mixture);
 
-      pp.query("T_g0",  T_g0 );
-      pp.query("trac0",  trac_0 );
-      pp.query("mw_avg", mw_avg );
+      pp.query("T_g0", T_g0);
+      pp.query("trac0", trac_0);
+      pp.query("mw_avg", mw_avg);
 
     }
-  }
+  } // Initialize()
 }

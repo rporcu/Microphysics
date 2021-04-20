@@ -38,12 +38,12 @@ namespace PIC
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(solve >= 0, "pic.solve must be >= 0");
 
     for(int lc=0; lc < names.size(); ++lc){
-      if (amrex::toLower(names[0]).compare("none") == 0 or
+      if (amrex::toLower(names[0]).compare("none") == 0 ||
         (names[0]).compare("0") == 0) solve = 0;
     }
 
     // You can't name a solids "None" or "0" -- you just can't
-    if( solve == 0 && names.size() > 1 ){
+    if( solve == 0 && names.size() > 1 ) {
       amrex::Abort("Invalid input: One or more PIC solids defined"
                     "but, the solver is disabled!");
     }

@@ -15,6 +15,9 @@ namespace SPECIES
   // List of recognized species specific heat models
   struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant}; };
 
+  // List of recognized species heat of formation models
+  struct ENTHALPYOFFORMATIONMODEL { enum {Invalid=-1, Constant}; };
+
   extern int SpecificHeatModel;
 
   // Flag to solve species equations
@@ -24,23 +27,26 @@ namespace SPECIES
   extern int nspecies;
 
   // Specified species names
-  extern std::vector<std::string> species;
+  extern amrex::Vector<std::string> species;
 
   // Species unique identifying code (at the moment = their index in the input
   // entries)
-  extern std::vector<int> species_id;
+  extern amrex::Vector<int> species_id;
 
   // Specified species constant molecular weights
-  extern std::vector<amrex::Real> MW_k0;
+  extern amrex::Vector<amrex::Real> MW_k0;
 
   // Specified species constant diffusion coefficients
-  extern std::vector<amrex::Real> D_k0;
+  extern amrex::Vector<amrex::Real> D_k0;
 
   // Flag to solve enthalpy species equation
   extern int solve_enthalpy;
 
   // Specified constant species specific heat
-  extern std::vector<amrex::Real> cp_k0;
+  extern amrex::Vector<amrex::Real> cp_k0;
+
+  // Enthalpy of formation
+  extern amrex::Vector<amrex::Real> H_fk0;
 
   struct SPECIES_t {
     // Constructor

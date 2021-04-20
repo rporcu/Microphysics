@@ -83,8 +83,8 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
                          get_mu_g(), get_cp_g(), get_k_g(), time);
 
     if (REACTIONS::solve) {
-      mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g_old(),
-                          get_X_gk_old(), get_D_gk(), get_cp_gk(), get_h_gk(),
+      mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g_old(), get_vel_g_old(),
+                          get_X_gk_old(), get_D_gk(), get_h_gk(), get_cp_gk(),
                           time);
     }
   }
@@ -105,6 +105,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   Vector< MultiFab* > species_RHS(finest_level+1, nullptr);
   Vector< MultiFab* > lap_X_old(finest_level+1, nullptr);
   Vector< MultiFab* > lap_X(finest_level+1, nullptr);
+  Vector< MultiFab* > vel_RHS(finest_level+1, nullptr);
   Vector< Real > rhs_pressure_g_old(finest_level+1, 0.);
   Vector< Real > rhs_pressure_g(finest_level+1, 0.);
 
@@ -146,6 +147,11 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
       lap_X_old[lev]->setVal(0.0);
       lap_X[lev]->setVal(0.0);
     }
+
+    if (solve_reactions) {
+      vel_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+      vel_RHS[lev]->setVal(0.0);
+    }
   }
 
   for (int iter = 0; iter < initial_iterations; ++iter)
@@ -161,7 +167,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     mfix_apply_predictor(conv_u, conv_s, conv_X, ro_RHS_old, ro_RHS, lap_trac_old,
         lap_trac, enthalpy_RHS_old, enthalpy_RHS, lap_T_old, lap_T, species_RHS_old,
-        species_RHS, lap_X_old, lap_X, rhs_pressure_g_old, rhs_pressure_g, time,
+        species_RHS, lap_X_old, lap_X, vel_RHS, rhs_pressure_g_old, rhs_pressure_g, time,
         dt, dt_copy, proj_2, coupling_timing);
 
     // Reset any quantities which might have been updated
@@ -232,6 +238,9 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
        delete lap_X_old[lev];
        delete lap_X[lev];
      }
+
+     if (solve_reactions)
+       delete vel_RHS[lev];
   }
 }
 

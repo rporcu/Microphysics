@@ -290,10 +290,10 @@ mfix::InitParams ()
     pp_mac.query("mg_atol", mac_mg_atol);
     pp_mac.query("mg_max_coarsening_level", mac_mg_max_coarsening_level);
 
-    AMREX_ALWAYS_ASSERT(load_balance_type.compare("KnapSack") == 0  or
+    AMREX_ALWAYS_ASSERT(load_balance_type.compare("KnapSack") == 0  ||
                         load_balance_type.compare("SFC") == 0);
 
-    AMREX_ALWAYS_ASSERT(knapsack_weight_type.compare("RunTimeCosts") == 0 or
+    AMREX_ALWAYS_ASSERT(knapsack_weight_type.compare("RunTimeCosts") == 0 ||
                         knapsack_weight_type.compare("NumParticles") == 0);
 
     ParmParse amr_pp("amr");
@@ -398,23 +398,23 @@ mfix::InitParams ()
 
     // Constraint type
     {
-      std::string constraint_type = "none";
-      pp.query("constraint_type", constraint_type);
-      constraint_type = amrex::toLower(constraint_type);
+      std::string idealgas_constraint_type = "none";
+      pp.query("idealgas_constraint", idealgas_constraint_type);
+      idealgas_constraint_type = amrex::toLower(idealgas_constraint_type);
 
-      if (constraint_type.compare("none") == 0) {
+      if (idealgas_constraint_type.compare("none") == 0) {
         m_idealgas_constraint = IdealGasConstraint::None;
       }
-      else if (constraint_type.compare("opensystem") == 0 or
-               constraint_type.compare("open_system") == 0) {
+      else if (idealgas_constraint_type.compare("opensystem") == 0 ||
+               idealgas_constraint_type.compare("open_system") == 0) {
         m_idealgas_constraint = IdealGasConstraint::OpenSystem;
       }
-      else if (constraint_type.compare("closedsystem") == 0 or
-               constraint_type.compare("closed_system") == 0) {
+      else if (idealgas_constraint_type.compare("closedsystem") == 0 ||
+               idealgas_constraint_type.compare("closed_system") == 0) {
         m_idealgas_constraint = IdealGasConstraint::ClosedSystem;
       }
       else {
-        amrex::Abort("Don't know this constraint_type!");
+        amrex::Abort("Don't know this idealgas_constraint_type!");
       }
     }
 
@@ -725,7 +725,7 @@ void mfix::InitLevelData (Real time)
         Real      omegay = 0.0;
         Real      omegaz = 0.0;
         Real      statwt = 1.0;
-        Real        c_ps = 1.0;
+        Real        cp_s = 1.0;
         Real temperature = 0.0;
         Real  convection = 0.0;
         int        phase = 1;
@@ -733,7 +733,7 @@ void mfix::InitLevelData (Real time)
 
         MFIXParticleContainer::ParticleInitData pdata =
           {{}, {}, {radius,volume,mass,density,omoi,velx,vely,velz,
-            omegax,omegay,omegaz,dragx,dragy,dragz,dragcoeff,statwt,c_ps,
+            omegax,omegay,omegaz,dragx,dragy,dragz,dragcoeff,statwt,cp_s,
             temperature,convection}, {phase,state}};
 
         pc->InitNRandomPerCell(n_per_cell, pdata);
@@ -918,13 +918,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
             pc->MFIX_PC_InitCollisionParams();
         }
 
-        if(advect_enthalpy) {
-          pc->InitParticlesEnthalpy();
-        }
-
-        if (SOLIDS::solve_species) {
-          pc->InitParticlesSpecies();
-        }
+        pc->InitParticlesRuntimeVariables(advect_enthalpy, SOLIDS::solve_species);
 
         if (!FLUID::solve){
             dt = fixed_dt;
