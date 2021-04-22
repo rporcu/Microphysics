@@ -18,14 +18,14 @@ mfix::Regrid ()
     if (DEM::solve  || PIC::solve)
        AMREX_ALWAYS_ASSERT(particle_cost[0] != nullptr);
 
-    if (FLUID::solve)
+    if (fluid.solve)
        AMREX_ALWAYS_ASSERT(fluid_cost[0] != nullptr);
 
     if (ParallelDescriptor::NProcs() == 1) return;
 
     if (dual_grid)  //  Beginning of dual grid regridding
     {
-      AMREX_ALWAYS_ASSERT(FLUID::solve);
+      AMREX_ALWAYS_ASSERT(fluid.solve);
 
       if (load_balance_fluid > 0)
       {
@@ -150,7 +150,7 @@ mfix::Regrid ()
 
         costs.plus(particle_cost_loc, 0, 1, 0);
       }
-      if (FLUID::solve) {
+      if (fluid.solve) {
         // costs.plus(* fluid_cost[base_lev], 0, 1, 0);
 
         // MultiFab fluid_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
@@ -172,10 +172,10 @@ mfix::Regrid ()
                                      MLMG::Location::CellCenter,    // Location of solution variable phi
                                      MLMG::Location::CellCentroid);// Location of MAC RHS
 
-      if (FLUID::solve)
+      if (fluid.solve)
         RegridArrays(base_lev);
 
-      if (FLUID::solve)
+      if (fluid.solve)
       {
         if (fluid_cost[base_lev] != nullptr)
           delete fluid_cost[base_lev];
@@ -197,7 +197,7 @@ mfix::Regrid ()
         pc->Regrid(dmap[base_lev], grids[base_lev], base_lev);
       }
 
-      if (FLUID::solve) mfix_set_bc0();
+      if (fluid.solve) mfix_set_bc0();
 
       // This calls re-creates a proper particles_ebfactory and regrids
       // all the multifab that depend on it
@@ -217,7 +217,7 @@ mfix::Regrid ()
     }
 
   // This call resets both the nodal and the diffusion solvers
-  if (FLUID::solve)
+  if (fluid.solve)
     mfix_setup_solvers();
 
   BL_PROFILE_REGION_STOP("mfix::Regrid()");

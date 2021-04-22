@@ -15,7 +15,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     Real drag_timing(0.);
     Real sum_vol;
 
-    if ((DEM::solve || PIC::solve) && FLUID::solve)
+    if ((DEM::solve || PIC::solve) && fluid.solve)
     {
       Real start_coupling = ParallelDescriptor::second();
       mfix_calc_volume_fraction(sum_vol);
@@ -33,7 +33,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     BL_PROFILE_VAR("FLUID SOLVE",fluidSolve);
     for (int lev = 0; lev <= finest_level; lev++)
     {
-       if (FLUID::solve)
+       if (fluid.solve)
        {
           EvolveFluid(nstep, dt, prev_dt, time, stop_time, drag_timing);
           prev_dt = dt;
@@ -47,14 +47,14 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     // This returns the drag force on the particle
     Real new_time = time+dt;
-    if ( (DEM::solve || PIC::solve) && FLUID::solve){
+    if ( (DEM::solve || PIC::solve) && fluid.solve){
       Real start_coupling = ParallelDescriptor::second();
 
       mfix_calc_txfr_particle(new_time, get_vel_g(), get_gp(), get_T_g());
 
       if (REACTIONS::solve)
         mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                            get_X_gk(), get_D_gk(), get_h_gk(), get_cp_gk(), new_time);
+                            get_T_g(), get_X_gk(), new_time);
 
       coupling_timing += ParallelDescriptor::second() - start_coupling + drag_timing;
 
@@ -123,7 +123,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     ParallelDescriptor::ReduceRealMax(end_particles, ParallelDescriptor::IOProcessorNumber());
 
     if (ParallelDescriptor::IOProcessor()) {
-      if(FLUID::solve)
+      if(fluid.solve)
         std::cout << "   Time per fluid step      " << end_fluid << std::endl;
 
       if(DEM::solve)
@@ -133,7 +133,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
       if(PIC::solve)
         std::cout << "   Time per parcel step " << end_particles << std::endl;
 
-      if((DEM::solve || PIC::solve) && FLUID::solve)
+      if((DEM::solve || PIC::solve) && fluid.solve)
         std::cout << "   Coupling time per step   " << coupling_timing << std::endl;
     }
 

@@ -11,20 +11,14 @@ target_sources( mfixcore
    mfix_regrid.cpp
    mfix_fillpatch_bc.H
    mfix_fillpatch.cpp
-   mfix_calc_species_coeffs_K.H
    mfix_set_velocity_bcs.cpp
    mfix_set_epg_bcs.cpp
    mfix_set_enthalpy_bcs.cpp
    mfix_set_temperature_bcs.cpp
    mfix_set_eb_temperature_bcs.cpp
    mfix_set_density_bcs.cpp
-   mfix_set_scalar_bcs.cpp
    mfix_set_species_bcs.cpp
-   mfix_set_specific_heat_bcs.cpp
-   mfix_set_thermal_conductivity_bcs.cpp
-   mfix_set_molecular_weight_bcs.cpp
    mfix_set_tracer_bcs.cpp
-   mfix_set_viscosity_bcs.cpp
    mfix_normalize_species_g.cpp
    mfix_mf_helpers.H
    mfix_mf_helpers.cpp

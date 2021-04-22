@@ -23,8 +23,7 @@ mfix::compute_laps (const bool update_lapT,
                     Vector< MultiFab const*> const& ro_g)
 {
   if (update_lapT) {
-    diffusion_op->ComputeLapT(lapT, T_g, ep_g, get_k_g_const(),
-                              get_T_g_on_eb_const(), get_k_g_on_eb_const());
+    diffusion_op->ComputeLapT(lapT, T_g, ep_g, get_T_g_on_eb_const());
   }
 
   if (update_lapTrac) {
@@ -32,7 +31,7 @@ mfix::compute_laps (const bool update_lapT,
   }
 
   if (update_lapX) {
-    diffusion_op->ComputeLapX(lapX, X_gk, ro_g, ep_g, get_D_gk_const());
+    diffusion_op->ComputeLapX(lapX, X_gk, ro_g, ep_g, get_T_g_const());
   }
 
 }

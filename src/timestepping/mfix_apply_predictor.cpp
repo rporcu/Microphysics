@@ -6,7 +6,6 @@
 #include <mfix_pic_parms.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
-#include <mfix_calc_species_coeffs_K.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -65,6 +64,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                             Real& coupling_timing)
 {
     BL_PROFILE("mfix::mfix_apply_predictor");
+
+    auto& fluid_parms = *fluid.parameters;
 
     // We use the new-time value for things computed on the "*" state
     Real new_time = time + l_dt;
@@ -158,7 +159,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
 
     if (need_divtau()) {
-      diffusion_op->ComputeDivTau(get_divtau(), get_vel_g_old(), get_ep_g(), get_mu_g());
+      diffusion_op->ComputeDivTau(get_divtau(), get_vel_g_old(), get_ep_g(), get_T_g_old(), advect_enthalpy);
     }
 
     {
@@ -184,7 +185,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
     if (advect_enthalpy) {
       mfix_enthalpy_rhs(enthalpy_RHS_old, get_ep_g_const(), get_ro_g_old_const(),
-          get_X_gk_old(), get_D_gk_const(), get_h_gk_const(), get_chem_txfr_const());
+          get_X_gk_old(), get_T_g_old_const(), get_chem_txfr_const());
     }
 
     if (advect_tracer) {
@@ -213,8 +214,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       mfix_open_system_rhs(GetVecOfPtrs(rhs_mac), GetVecOfConstPtrs(lap_T_old),
           GetVecOfConstPtrs(enthalpy_RHS_old), GetVecOfConstPtrs(lap_X_old),
           GetVecOfConstPtrs(species_RHS_old), get_ro_g_old_const(),
-          get_MW_g_const(), get_T_g_old_const(), get_cp_g_const(),
-          get_X_gk_old(), get_D_gk_const(), get_h_gk_const(),
+          get_T_g_old_const(), get_X_gk_old(),
           get_txfr_const(), get_chem_txfr_const());
 
     } else if (m_idealgas_constraint == IdealGasConstraint::ClosedSystem) {
@@ -222,9 +222,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       mfix_closed_system_rhs(GetVecOfPtrs(rhs_mac), GetVecOfConstPtrs(lap_T_old),
           GetVecOfConstPtrs(enthalpy_RHS_old), GetVecOfConstPtrs(lap_X_old),
           GetVecOfConstPtrs(species_RHS_old), get_ep_g_const(),
-          get_ro_g_old_const(), get_MW_g_const(), get_T_g_old_const(),
-          get_cp_g_const(), get_X_gk_old(), get_D_gk_const(),
-          get_h_gk_const(), get_txfr_const(), get_chem_txfr_const(),
+          get_ro_g_old_const(), get_T_g_old_const(), get_X_gk_old(),
+          get_txfr_const(), get_chem_txfr_const(),
           get_pressure_g_old_const(), avgSigma, avgTheta);
 
     }
@@ -336,7 +335,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     if (advect_enthalpy)
     {
-        const Real T_ref = FLUID::T_ref;
+        const Real T_ref = fluid.T_ref;
 
         for (int lev = 0; lev <= finest_level; lev++)
         {
@@ -349,21 +348,21 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 Box const& bx = mfi.tilebox();
                 Array4<Real const> const& h_g_o   = ld.h_go->const_array(mfi);
                 Array4<Real      > const& h_g_n   = ld.h_g->array(mfi);
+                Array4<Real const> const& T_g_o   = ld.T_go->array(mfi);
                 Array4<Real      > const& T_g_n   = ld.T_g->array(mfi);
                 Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
                 Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
                 Array4<Real const> const& lap_T_o = lap_T_old[lev]->const_array(mfi);
                 Array4<Real const> const& h_RHS_o = enthalpy_RHS_old[lev]->const_array(mfi);
                 Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
-                Array4<Real const> const& cp_g    = ld.cp_g->const_array(mfi);
                 Array4<Real const> const& dhdt_o  = conv_s_old[lev]->const_array(mfi);
 
                 const Real Dpressure_Dt           = rhs_pressure_g_old[lev];
                 const int closed_system = (m_idealgas_constraint == IdealGasConstraint::ClosedSystem);
 
-                amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_n,rho_o,rho_n,h_RHS_o,
-                    epg,cp_g,T_ref,dhdt_o,l_dt,lap_T_o,l_explicit_diff,
-                    Dpressure_Dt,closed_system]
+                amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,h_RHS_o,
+                    epg,T_ref,dhdt_o,l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,
+                    closed_system,fluid_parms]
                   AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
                     int conv_comp = 1;
@@ -386,7 +385,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                     h_g *= denom;
 
                     h_g_n(i,j,k) = h_g;
-                    T_g_n(i,j,k) = FLUID::calc_T_g(cp_g(i,j,k), h_g, 0, 0);
+
+                    const Real Tg = T_g_o(i,j,k);
+                    T_g_n(i,j,k) = fluid_parms.calc_T_g(h_g, Tg);
                 });
             } // mfi
         } // lev
@@ -447,7 +448,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************
     if (advect_fluid_species)
     {
-      const int nspecies_g = FLUID::nspecies;
+      const int nspecies_g = fluid.nspecies;
 
       for (int lev = 0; lev <= finest_level; lev++)
       {
@@ -581,7 +582,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     if (DEM::solve || PIC::solve)
       mfix_add_txfr_implicit(l_dt, get_vel_g(), get_h_g(), get_T_g(), get_txfr_const(),
-                GetVecOfConstPtrs(density_nph), get_ep_g_const(), get_cp_g_const());
+                GetVecOfConstPtrs(density_nph), get_ep_g_const());
 
 
     // *************************************************************************************
@@ -595,19 +596,17 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       if (advect_enthalpy)
         mfix_set_temperature_bcs(time, get_T_g());
 
-      mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g(), get_MW_g());
-
       if (advect_enthalpy)
         mfix_set_enthalpy_bcs(time, get_h_g());
 
       if (advect_fluid_species)
-        mfix_set_species_bcs(time, get_X_gk(), get_D_gk(), get_cp_gk(), get_h_gk());
+        mfix_set_species_bcs(time, get_X_gk());
 
       // NOTE: we do this call before multiplying ep_g by ro_g
       // Diffuse enthalpy
       if (advect_enthalpy) {
         diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(), get_h_g(),
-            get_cp_g(), get_k_g(), get_T_g_on_eb(), get_k_g_on_eb(), l_dt);
+            get_T_g_on_eb(), l_dt);
       }
 
       // Convert "ep_g" into (rho * ep_g)
@@ -619,7 +618,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       mfix_set_velocity_bcs(new_time, get_vel_g(), 0);
 
       // Diffuse velocity
-      diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_mu_g(), l_dt);
+      diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_T_g(), advect_enthalpy, l_dt);
 
       // Diffuse tracer
       if (advect_tracer) {
@@ -629,7 +628,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
       // Diffuse species mass fractions
       if (advect_fluid_species) {
-        diffusion_op->diffuse_species(get_X_gk(), get_ep_g(), get_D_gk(), l_dt);
+        diffusion_op->diffuse_species(get_X_gk(), get_ep_g(), get_T_g(), l_dt);
       }
 
       // Convert (rho * ep_g) back into ep_g
@@ -650,8 +649,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // enthalpy and temperature
     // *************************************************************************************
     if (advect_fluid_species) {
-      mfix_update_fluid_and_species(get_cp_gk(), get_h_gk(), get_MW_g(),
-          get_cp_g(), get_h_g(), get_T_g(), get_X_gk());
+      mfix_update_fluid_and_species(get_h_g(), get_T_g(), get_X_gk());
     }
 
     // *************************************************************************************
@@ -671,12 +669,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         Real start_drag = ParallelDescriptor::second();
         amrex::Print() << "\nRecalculating drag ..." << std::endl;
         mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                             get_mu_g(), get_cp_g(), get_k_g(), new_time);
+                             get_T_g(), new_time);
 
         if (REACTIONS::solve) {
           mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                              get_X_gk(), get_D_gk(), get_h_gk(), get_cp_gk(),
-                              new_time);
+                              get_T_g(), get_X_gk(), new_time);
         }
 
         coupling_timing += ParallelDescriptor::second() - start_drag;
@@ -695,7 +692,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
       if (advect_enthalpy) {
         mfix_enthalpy_rhs(enthalpy_RHS, get_ep_g_const(), get_ro_g_const(),
-            get_X_gk(), get_D_gk_const(), get_h_gk_const(), get_chem_txfr_const());
+            get_X_gk(), get_T_g_const(), get_chem_txfr_const());
       }
 
       if (advect_tracer) {
@@ -712,9 +709,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
   
         mfix_open_system_rhs(S_cc, GetVecOfConstPtrs(lap_T),
             GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
-            GetVecOfConstPtrs(species_RHS), get_ro_g_const(), get_MW_g_const(),
-            get_T_g_const(), get_cp_g_const(), get_X_gk(),
-            get_D_gk_const(), get_h_gk_const(), get_txfr_const(),
+            GetVecOfConstPtrs(species_RHS), get_ro_g_const(),
+            get_T_g_const(), get_X_gk(), get_txfr_const(),
             get_chem_txfr_const());
   
       } else if (m_idealgas_constraint == IdealGasConstraint::ClosedSystem) {
@@ -722,8 +718,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         mfix_closed_system_rhs(S_cc, GetVecOfConstPtrs(lap_T),
             GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
             GetVecOfConstPtrs(species_RHS), get_ep_g_const(), get_ro_g_const(),
-            get_MW_g_const(), get_T_g_const(), get_cp_g_const(),
-            get_X_gk(), get_D_gk_const(), get_h_gk_const(),
+            get_T_g_const(), get_X_gk(),
             get_txfr_const(), get_chem_txfr_const(), get_pressure_g_const(),
             avgSigma, avgTheta);
   

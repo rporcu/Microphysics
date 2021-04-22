@@ -9,7 +9,7 @@ mfix::mfix_init_solvers ()
 {
     BL_PROFILE("mfix::mfix_init_solvers");
 
-    diffusion_op = std::make_unique<DiffusionOp>(this, amrex::GetVecOfConstPtrs(ebfactory),
+    diffusion_op = std::make_unique<DiffusionOp>(this, amrex::GetVecOfConstPtrs(ebfactory), fluid,
                                        BC::diff_vel_lobc,         BC::diff_vel_hibc,
                                        BC::diff_scal_lobc,        BC::diff_scal_hibc,
                                        BC::diff_temperature_lobc, BC::diff_temperature_hibc,

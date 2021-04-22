@@ -125,7 +125,7 @@ ParticlesGenerator::generate (int& pc,
   Real* p_dp = dp.data();
   Real* p_ro_s = ro_s.data();
 
-  SOLIDS::SOLIDS_t solid;
+  SolidsPhase::SOLIDS_t solid;
   solid = IC::ic[icv].solids[type];
 
   // Setup particle diameters

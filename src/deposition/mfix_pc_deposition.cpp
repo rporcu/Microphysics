@@ -13,30 +13,30 @@ using namespace amrex;
 
 void MFIXParticleContainer::
 SolidsVolumeDeposition (int lev,
-                  MultiFab & mf_to_be_filled,
-                  const MultiFab * volfrac,
-                  const amrex::FabArray<EBCellFlagFab>* flags)
+                        MultiFab & mf_to_be_filled,
+                        const MultiFab * volfrac,
+                        const amrex::FabArray<EBCellFlagFab>* flags)
 {
 
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
 
     SolidsVolumeDeposition(TrilinearDeposition(),
-                     lev, mf_to_be_filled, volfrac, flags);
+                           lev, mf_to_be_filled, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::square_dpvm) {
 
     SolidsVolumeDeposition(TrilinearDPVMSquareDeposition(),
-                     lev, mf_to_be_filled, volfrac, flags);
+                           lev, mf_to_be_filled, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::true_dpvm) {
 
     SolidsVolumeDeposition(TrueDPVMDeposition(),
-                     lev, mf_to_be_filled, volfrac, flags);
+                           lev, mf_to_be_filled, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::centroid) {
 
     SolidsVolumeDeposition(CentroidDeposition(),
-                     lev, mf_to_be_filled, volfrac, flags);
+                           lev, mf_to_be_filled, volfrac, flags);
 
   } else {
 

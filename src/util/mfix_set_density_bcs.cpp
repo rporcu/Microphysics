@@ -52,7 +52,7 @@ mfix::set_density_bcs (Real /*time*/,
 
   Array4<Real> const& scal_arr = scal_fab.array();
 
-  Real bc0 = FLUID::ro_g0;
+  Real bc0 = fluid.ro_g0;
 
   IntVect scal_lo(scal_fab.loVect());
   IntVect scal_hi(scal_fab.hiVect());

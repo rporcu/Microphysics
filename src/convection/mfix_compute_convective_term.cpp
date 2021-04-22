@@ -36,7 +36,7 @@ void mfix::init_advection ()
     m_iconserv_tracer_d.resize(ntrac, 1);
   }
 
-  const int l_nspecies = FLUID::nspecies;
+  const int l_nspecies = fluid.nspecies;
 
   if (advect_fluid_species) {
     m_iconserv_species.resize(l_nspecies, 1);
@@ -73,7 +73,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
 
     int ngmac = nghost_mac();
 
-    const int l_nspecies = FLUID::nspecies;
+    const int l_nspecies = fluid.nspecies;
 
     // We first compute the velocity forcing terms to be used in predicting
     //    to faces before the MAC projection

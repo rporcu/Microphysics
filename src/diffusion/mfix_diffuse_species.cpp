@@ -8,7 +8,7 @@ using namespace amrex;
 //
 void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
                                    const Vector< MultiFab* >& ep_ro_g_in,
-                                   const Vector< MultiFab* >&    D_gk_in,
+                                   const Vector< MultiFab* >&     T_g_in,
                                    Real dt)
 {
     BL_PROFILE("DiffusionOp::diffuse_species");
@@ -34,7 +34,7 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
     species_matrix->setScalars(1.0, dt);
 
     // Number of fluid species
-    const int nspecies_g = FLUID::nspecies;
+    const int nspecies_g = fluid.nspecies;
 
     Vector<BCRec> bcs_X; // This is just to satisfy the call to EB_interp...
     bcs_X.resize(3*nspecies_g);
@@ -47,6 +47,8 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
 
         ep_ro_D_gk.setVal(0.);
 
+        auto& fluid_parms = *fluid.parameters;
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -56,17 +58,19 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
 
           if (bx.ok())
           {
-            Array4<Real const> const& ep_ro_g_arr    = ep_ro_g_in[lev]->const_array(mfi);
-            Array4<Real const> const& D_gk_arr       = D_gk_in[lev]->const_array(mfi);
             Array4<Real      > const& ep_ro_D_gk_arr = ep_ro_D_gk.array(mfi);
+            Array4<Real const> const& ep_ro_g_arr    = ep_ro_g_in[lev]->const_array(mfi);
+            Array4<Real const> const& T_g_arr        = T_g_in[lev]->const_array(mfi);
 
-            amrex::ParallelFor(bx, [ep_ro_g_arr,D_gk_arr,ep_ro_D_gk_arr,nspecies_g]
+            amrex::ParallelFor(bx, [ep_ro_g_arr,ep_ro_D_gk_arr,T_g_arr,nspecies_g,
+                fluid_parms]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               const Real ep_ro_g = ep_ro_g_arr(i,j,k);
+              const Real T_g = T_g_arr(i,j,k);
 
               for (int n(0); n < nspecies_g; ++n)
-                ep_ro_D_gk_arr(i,j,k,n) = ep_ro_g*D_gk_arr(i,j,k,n);
+                ep_ro_D_gk_arr(i,j,k,n) = ep_ro_g*fluid_parms.calc_D_gk(T_g,n);
             });
           }
         }
