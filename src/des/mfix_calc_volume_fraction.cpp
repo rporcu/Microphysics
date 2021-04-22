@@ -65,6 +65,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
     const Geometry& gm  = Geom(0);
     const FabArray<EBCellFlagFab>* flags = nullptr;
     const MultiFab* volfrac = nullptr;
+    EBFArrayBoxFactory* crse_factory = nullptr;
 
     for (int lev = 0; lev < nlev; lev++) {
 
@@ -77,7 +78,9 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
       } else {
 
         Vector<int> ngrow = {1,1,1};
-        EBFArrayBoxFactory* crse_factory;
+
+        if (crse_factory != nullptr)
+          delete crse_factory;
 
         crse_factory = (makeEBFabFactory(gm, mf_pointer[lev]->boxArray(),
                                         mf_pointer[lev]->DistributionMap(),
@@ -85,8 +88,6 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 
         flags   = &(crse_factory->getMultiEBCellFlagFab());
         volfrac = &(crse_factory->getVolFrac());
-
-        delete crse_factory;
       }
 
       // Deposit particle volume to the grid
@@ -136,7 +137,9 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 
     }
 
-
+    if (crse_factory != nullptr)
+      delete crse_factory;
+      
     int  src_nghost = 1;
     int dest_nghost = 0;
     int ng_to_copy = amrex::min(src_nghost, dest_nghost);

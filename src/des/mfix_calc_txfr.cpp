@@ -76,6 +76,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
   const Geometry& gm = Geom(0);
   const FabArray<EBCellFlagFab>* flags = nullptr;
   const MultiFab* volfrac = nullptr;
+  EBFArrayBoxFactory* crse_factory = nullptr;
 
   Vector< MultiFab* > tmp_eps(nlev);
 
@@ -93,7 +94,10 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
     } else {
 
       Vector<int> ngrow = {1,1,1};
-      EBFArrayBoxFactory* crse_factory;
+
+      // Free memory in case crse_factory is not empty
+      if (crse_factory != nullptr)
+        delete crse_factory;
 
       crse_factory = (makeEBFabFactory(gm, txfr_ptr[lev]->boxArray(),
                                       txfr_ptr[lev]->DistributionMap(),
@@ -101,8 +105,6 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
 
       flags   = &(crse_factory->getMultiEBCellFlagFab());
       volfrac = &(crse_factory->getVolFrac());
-
-      delete crse_factory;
     }
 
     // Deposit the interphase transfer forces to the grid
@@ -142,6 +144,9 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
     txfr_ptr[lev]->SumBoundary(gm.periodicity());
     txfr_ptr[lev]->FillBoundary(gm.periodicity());
   }
+
+  if (crse_factory != nullptr)
+    delete crse_factory;
 
   // This might not need to exist on all levels. Maybe only level 0.
   for (int lev(0); lev < nlev; ++lev)
