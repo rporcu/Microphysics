@@ -36,7 +36,7 @@ mfix::EvolveFluid (int nstep,
 
     amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
 
-    // Extrapolate boundary values for ro_g, temperature tracer, ep_g and mu_g
+    // Extrapolate boundary values for ro_g, temperature tracer, ep_g
     // The subsequent call to mfix_set_scalar_bcs will only overwrite
     // ep_g ghost values for PINF and POUT
     for (int lev = 0; lev <= finest_level; lev++)
@@ -44,24 +44,14 @@ mfix::EvolveFluid (int nstep,
       m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->MW_g->FillBoundary(geom[lev].periodicity());
 
       if (advect_enthalpy) {
         m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
-        m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
-        m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
         m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
       }
 
       if (advect_fluid_species) {
-        m_leveldata[lev]->D_gk->FillBoundary(geom[lev].periodicity());
         m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
-      }
-
-      if (advect_enthalpy && advect_fluid_species) {
-        m_leveldata[lev]->cp_gk->FillBoundary(geom[lev].periodicity());
-        m_leveldata[lev]->h_gk->FillBoundary(geom[lev].periodicity());
       }
     }
 
@@ -71,7 +61,6 @@ mfix::EvolveFluid (int nstep,
     mfix_set_density_bcs(time, get_ro_g());
 
     // TODO: commenting the following makes BENCH03 GPU to pass
-    //mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g(), get_MW_g());
     //mfix_set_tracer_bcs(time, get_trac());
 
     if (advect_enthalpy) {
@@ -79,21 +68,12 @@ mfix::EvolveFluid (int nstep,
       mfix_set_enthalpy_bcs(time, get_h_g());
 
       if (EB::fix_temperature) {
-        const Vector< MultiFab* >& T_g_on_eb = get_T_g_on_eb();
-        const Vector< MultiFab* >& k_g = get_k_g();
-        const Vector< MultiFab* >& k_g_on_eb = get_k_g_on_eb();
-
-        for (int lev(0); lev <= finest_level; ++lev) {
-          T_g_on_eb[lev]->setVal(0);
-          MultiFab::Copy(*k_g_on_eb[lev], *k_g[lev], 0, 0, 1, k_g_on_eb[lev]->nGrow());
-        }
-
-        mfix_set_eb_temperature_bcs(get_T_g_on_eb(), get_k_g_on_eb());
+        mfix_set_eb_temperature_bcs(get_T_g_on_eb());
       }
     }
 
     if (advect_fluid_species)
-      mfix_set_species_bcs(time, get_X_gk(), get_D_gk(), get_cp_gk(), get_h_gk());
+      mfix_set_species_bcs(time, get_X_gk());
 
     //
     // Start loop: if we are not seeking a steady state solution,
@@ -149,11 +129,11 @@ mfix::EvolveFluid (int nstep,
        enthalpy_RHS[lev]->setVal(0.0);
 
        if (advect_fluid_species) {
-         conv_X_old[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
-         lap_X_old[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
-         lap_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
-         species_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
-         species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
+         conv_X_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+         lap_X_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+         lap_X[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+         species_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+         species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
 
          conv_X_old[lev]->setVal(0.0);
          lap_X_old[lev]->setVal(0.0);
@@ -223,13 +203,11 @@ mfix::EvolveFluid (int nstep,
         if (DEM::solve || PIC::solve) {
           Real start_drag = ParallelDescriptor::second();
           mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g_old(),
-                               get_vel_g_old(), get_mu_g(), get_cp_g(),
-                               get_k_g(), time);
+                               get_vel_g_old(), get_T_g(), time);
 
           if (REACTIONS::solve) {
             mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g_old(),
-                                get_vel_g_old(), get_X_gk_old(), get_D_gk(),
-                                get_h_gk(), get_cp_gk(), time);
+                                get_vel_g_old(), get_T_g_old(), get_X_gk_old(), time);
           }
 
           coupling_timing += ParallelDescriptor::second() - start_drag;
@@ -248,13 +226,13 @@ mfix::EvolveFluid (int nstep,
           Real start_drag = ParallelDescriptor::second();
           amrex::Print() << "\nRecalculating drag ..." << std::endl;
           mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                               get_mu_g(), get_cp_g(), get_k_g(), new_time);
+                               get_T_g(), new_time);
 
           // If !m_idealgas_constraint == IdealGasConstraint::None, then we have already
           // updated the chemical quantities
           if (REACTIONS::solve && m_idealgas_constraint == IdealGasConstraint::None) {
             mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                                get_X_gk(), get_D_gk(), get_h_gk(), get_cp_gk(), new_time);
+                                get_T_g(), get_X_gk(), new_time);
           }
 
           coupling_timing += ParallelDescriptor::second() - start_drag;

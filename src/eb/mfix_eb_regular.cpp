@@ -38,7 +38,7 @@ mfix::make_eb_regular ()
     
     //MultiFab* mf_impfunc;
 
-    // if (FLUID::solve)
+    // if (fluid.solve)
     {
         bool has_walls = false;
         std::shared_ptr<UnionListIF<EB2::PlaneIF>> impfunc_walls = get_real_walls(has_walls);

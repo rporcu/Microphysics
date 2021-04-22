@@ -8,14 +8,14 @@ using namespace amrex;
 
 namespace
 {
-  mfix* mfix_for_fillpatching;
+  mfix* mfix_ptr;
 }
 
 // This interface must match the definition of the interface for
 //    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
-void set_ptr_to_mfix (mfix& mfix_for_fillpatching_in)
+void set_ptr_to_mfix (mfix& mfix_ptr_in)
 {
-   mfix_for_fillpatching = &mfix_for_fillpatching_in;
+   mfix_ptr = &mfix_ptr_in;
 }
 
 // This interface must match the definition of the interface for
@@ -42,8 +42,8 @@ void VelFillBox (Box const& /*bx*/,
     int lev = 0;
     for (int ilev = 0; ilev < 10; ilev++)
     {
-//     const Geometry& lev_geom = mfix_for_fillpatching->GetParGDB()->Geom(ilev);
-       const Geometry& lev_geom = mfix_for_fillpatching->get_geom_ref(ilev);
+//     const Geometry& lev_geom = mfix_ptr->GetParGDB()->Geom(ilev);
+       const Geometry& lev_geom = mfix_ptr->get_geom_ref(ilev);
        if (domain.length()[0] == (lev_geom.Domain()).length()[0])
        {
          lev = ilev;
@@ -61,7 +61,7 @@ void VelFillBox (Box const& /*bx*/,
     FArrayBox dest_fab(dest);
     Elixir eli_dest_fab = dest_fab.elixir();
 
-    mfix_for_fillpatching->set_velocity_bcs(time, lev, dest_fab, domain, &extrap_dir_bcs);
+    mfix_ptr->set_velocity_bcs(time, lev, dest_fab, domain, &extrap_dir_bcs);
 }
 
 // This interface must match the definition of the interface for
@@ -88,7 +88,7 @@ void ScalarFillBox (Box const& /*bx*/,
     int lev = 0;
     for (int ilev = 0; ilev < 10; ilev++)
     {
-       const Geometry& lev_geom = mfix_for_fillpatching->GetParGDB()->Geom(ilev);
+       const Geometry& lev_geom = mfix_ptr->GetParGDB()->Geom(ilev);
        if (domain.length()[0] == (lev_geom.Domain()).length()[0])
        {
          lev = ilev;
@@ -103,11 +103,11 @@ void ScalarFillBox (Box const& /*bx*/,
     Elixir eli_dest_fab = dest_fab.elixir();
 
    if( orig_comp == 0 )
-      mfix_for_fillpatching->set_density_bcs(time, lev, dest_fab, domain);
+      mfix_ptr->set_density_bcs(time, lev, dest_fab, domain);
    else if(orig_comp == 1)
-      mfix_for_fillpatching->set_tracer_bcs(time, lev, dest_fab, domain);
-   else if(orig_comp == 5 && FLUID::solve_enthalpy)
-      mfix_for_fillpatching->set_enthalpy_bcs(time, lev, dest_fab, domain);
+      mfix_ptr->set_tracer_bcs(time, lev, dest_fab, domain);
+   else if(orig_comp == 4 && mfix_ptr->fluid.solve_enthalpy)
+      mfix_ptr->set_enthalpy_bcs(time, lev, dest_fab, domain);
    else
       amrex::Abort("Unknown component in ScalarFillBox!");
 
@@ -128,7 +128,7 @@ void SpeciesFillBox (Box const& /*bx*/,
 {
     if (dcomp != 0)
          amrex::Abort("Must have dcomp = 0 in SpeciesFillBox");
-    if (numcomp != FLUID::nspecies)
+    if (numcomp != mfix_ptr->fluid.nspecies)
          amrex::Abort("Must have numcomp = nspecies_g in SpeciesFillBox");
 
     const Box& domain = geom.Domain();
@@ -137,7 +137,7 @@ void SpeciesFillBox (Box const& /*bx*/,
     int lev = 0;
     for (int ilev = 0; ilev < 10; ilev++)
     {
-       const Geometry& lev_geom = mfix_for_fillpatching->GetParGDB()->Geom(ilev);
+       const Geometry& lev_geom = mfix_ptr->GetParGDB()->Geom(ilev);
        if (domain.length()[0] == (lev_geom.Domain()).length()[0])
        {
          lev = ilev;
@@ -152,9 +152,7 @@ void SpeciesFillBox (Box const& /*bx*/,
     Elixir eli_dest_fab = dest_fab.elixir();
 
    if( orig_comp == 0 )
-      mfix_for_fillpatching->set_mass_fractions_g_bcs(time, lev, dest_fab, domain);
-   else if(orig_comp == 1)
-      mfix_for_fillpatching->set_species_diffusivities_g_bcs(time, lev, dest_fab, domain);
+      mfix_ptr->set_mass_fractions_g_bcs(time, lev, dest_fab, domain);
    else
       amrex::Abort("Unknown component in ScalarFillBox!");
 
@@ -206,7 +204,7 @@ mfix::FillPatchVel (int lev,
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
 // works for single level and 2-level cases (fill fine grid ghost by interpolating from coarse)
-// NOTE: icomp here refers to whether we are filling 0: density, 1: tracer, 2: ep_g, 3: mu_g, 4: temperature, 5: enthalpy
+// NOTE: icomp here refers to whether we are filling 0: density, 1: tracer, 2: ep_g, 4: temperature, 5: enthalpy
 void
 mfix::FillPatchScalar (int lev,
                        Real time,
@@ -346,10 +344,6 @@ mfix::GetDataScalar (int lev,
 
     const Real teps = (t_new[lev] - t_old[lev]) * 1.e-3;
 
-    if (icomp == 3)
-       data.push_back(m_leveldata[lev]->mu_g);
-    // TODO cp_g, k_g
-
     if (time > t_new[lev] - teps && time < t_new[lev] + teps)
     {
         if (icomp == 0) {
@@ -358,9 +352,9 @@ mfix::GetDataScalar (int lev,
            data.push_back(m_leveldata[lev]->trac);
         } else if (icomp == 2) {
            data.push_back(m_leveldata[lev]->ep_g);
-        } else if (icomp == 4) {
+        } else if (icomp == 3) {
            data.push_back(m_leveldata[lev]->T_g);
-        } else if (icomp == 5) {
+        } else if (icomp == 4) {
            data.push_back(m_leveldata[lev]->h_g);
         }
         datatime.push_back(t_new[lev]);
@@ -373,9 +367,9 @@ mfix::GetDataScalar (int lev,
            data.push_back(m_leveldata[lev]->trac_o);
         } else if (icomp == 2) {
            data.push_back(m_leveldata[lev]->ep_g);
-        } else if (icomp == 4) {
+        } else if (icomp == 3) {
            data.push_back(m_leveldata[lev]->T_go);
-        } else if (icomp == 5) {
+        } else if (icomp == 4) {
            data.push_back(m_leveldata[lev]->h_go);
         }
         datatime.push_back(t_old[lev]);
@@ -391,10 +385,10 @@ mfix::GetDataScalar (int lev,
         } else if (icomp == 2) {
            data.push_back(m_leveldata[lev]->ep_g);
            data.push_back(m_leveldata[lev]->ep_g);
-        } else if (icomp == 4) {
+        } else if (icomp == 3) {
            data.push_back(m_leveldata[lev]->T_go);
            data.push_back(m_leveldata[lev]->T_g);
-        } else if (icomp == 5) {
+        } else if (icomp == 4) {
            data.push_back(m_leveldata[lev]->h_go);
            data.push_back(m_leveldata[lev]->h_g);
         }
@@ -491,8 +485,7 @@ mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
                      Vector< MultiFab* > const& X_gk_in,
                      Real time)
 {
-
-  const int l_nspecies = FLUID::nspecies;
+  const int l_nspecies = mfix_ptr->fluid.nspecies;
 
   // First do FillPatch of {velocity, density, tracer, enthalpy} so we know
   // the ghost cells of these arrays are all filled
@@ -524,14 +517,14 @@ mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
     }
 
     if (advect_enthalpy) {
-      state_comp =  5; // comp = 1 --> enthalpy
+      state_comp =  4; // comp = 1 --> enthalpy
       num_comp = 1;
       FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
       MultiFab::Copy(*h_g_in[lev], Sborder_s, 0, 0, num_comp, h_g_in[lev]->nGrow());
     }
 
     if (advect_fluid_species) {
-      MultiFab Sborder_X(grids[lev], dmap[lev], FLUID::nspecies, nghost_state(),
+      MultiFab Sborder_X(grids[lev], dmap[lev], mfix_ptr->fluid.nspecies, nghost_state(),
                          MFInfo(), *ebfactory[lev]);
       Sborder_X.setVal(0);
       state_comp = 0;

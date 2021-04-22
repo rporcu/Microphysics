@@ -27,9 +27,9 @@ namespace BC
 
     EB::EB_t eb;
 
-    FLUID::FLUID_t fluid;
+    FluidPhase::FLUID_t fluid;
 
-    amrex::Vector<SOLIDS::SOLIDS_t> solids;
+    amrex::Vector<SolidsPhase::SOLIDS_t> solids;
 
   };
 
@@ -68,10 +68,12 @@ namespace BC
   // Data structure for BC data
   extern amrex::Vector<BC_t> bc;
 
-  void Initialize (amrex::Geometry& geom);
+  void Initialize (amrex::Geometry& geom,
+                   const FluidPhase& fluid,
+                   const SolidsPhase& solids);
 
-  void read_bc_velocity (amrex::ParmParse pp, FLUID::FLUID_t* fluid);
-  void read_bc_temperature (amrex::ParmParse pp, FLUID::FLUID_t* fluid);
+  void read_bc_velocity (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
+  void read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
 
 }
 

@@ -3,7 +3,6 @@
 #include <AMReX_VisMF.H>
 #include <mfix_mf_helpers.H>
 #include <mfix_fluid_parms.H>
-#include <mfix_calc_species_coeffs_K.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -13,7 +12,7 @@
 void
 mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
 {
-  const int nspecies_g = FLUID::nspecies;
+  const int nspecies_g = fluid.nspecies;
 
   for (int lev = 0; lev <= finest_level; lev++) {
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!X_gk[lev]->contains_nan(),
@@ -117,57 +116,16 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
 
 
 void
-mfix::mfix_update_fluid_and_species(const Vector< MultiFab* >& cp_gk,
-                                    const Vector< MultiFab* >& h_gk,
-                                    const Vector< MultiFab* >& MW_g,
-                                    const Vector< MultiFab* >& cp_g,
-                                    const Vector< MultiFab* >& h_g,
+mfix::mfix_update_fluid_and_species(const Vector< MultiFab* >& h_g,
                                     const Vector< MultiFab* >& T_g,
                                     const Vector< MultiFab* >& X_gk)
 {
-  const int nspecies_g = FLUID::nspecies;
+  const int nspecies_g = fluid.nspecies;
 
-  if (advect_enthalpy)
+  auto& fluid_parms = *fluid.parameters;
+
+  if (fluid.is_a_mixture)
   {
-    Gpu::DeviceVector< Real > cp_gk0(nspecies_g);
-
-    Gpu::copyAsync(Gpu::hostToDevice, FLUID::cp_gk0.begin(), FLUID::cp_gk0.end(), cp_gk0.begin());
-
-    Real* p_cp_gk0 = cp_gk0.data();
-
-    const Real T_ref = FLUID::T_ref;
-
-    for (int lev(0); lev <= finest_level; lev++) {
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-      for(MFIter mfi(*MW_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
-      {
-        const Box& bx = mfi.tilebox();
-
-        Array4<Real      > const& cp_gk_arr = cp_gk[lev]->array(mfi);
-        Array4<Real      > const& h_gk_arr  = h_gk[lev]->array(mfi);
-        Array4<Real const> const& T_g_arr   = T_g[lev]->const_array(mfi);
-
-        // Update species specific heat and species enthalpy
-        amrex::ParallelFor(bx, nspecies_g, [cp_gk_arr,p_cp_gk0,h_gk_arr,T_g_arr,T_ref]
-          AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
-        {
-          // TODO: the following will be necessary when cp_g = cp_g(T_g)
-          // cp_gk_arr(i,j,k,n) = p_cp_gk0[n];
-          h_gk_arr(i,j,k,n)  = FLUID::calc_h_g(cp_gk_arr(i,j,k,n), T_g_arr(i,j,k), 0, 0);
-        });
-      }
-    }
-  }
-
-  if (FLUID::is_a_mixture)
-  {
-    Gpu::DeviceVector< Real > MW_gk_d(nspecies_g);
-    Gpu::copyAsync(Gpu::hostToDevice, FLUID::MW_gk0.begin(), FLUID::MW_gk0.end(), MW_gk_d.begin());
-
-    Real* p_MW_gk = MW_gk_d.data();
-
     // Set covered values
     for (int lev(0); lev <= finest_level; lev++) {
       EB_set_covered(*X_gk[lev], 0, nspecies_g, 0, covered_val);
@@ -177,50 +135,28 @@ mfix::mfix_update_fluid_and_species(const Vector< MultiFab* >& cp_gk,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-      for(MFIter mfi(*MW_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
+      for(MFIter mfi(*T_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
       {
         const Box& bx = mfi.tilebox();
 
-        Array4< Real       > const& MW_g_arr = MW_g[lev]->array(mfi);
-        Array4< Real const > const& X_gk_arr = X_gk[lev]->const_array(mfi);
-
-        ParallelFor(bx, [nspecies_g,X_gk_arr,p_MW_gk,MW_g_arr]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        {
-          Real MW_g_sum(0);
-
-          for (int n(0); n < nspecies_g; n++) {
-            MW_g_sum += X_gk_arr(i,j,k,n) / p_MW_gk[n];
-          }
-
-          MW_g_arr(i,j,k) = 1. / MW_g_sum;
-        });
-
         if (advect_enthalpy)
         {
-          Array4< Real const > const& cp_gk_arr = cp_gk[lev]->const_array(mfi);
-          Array4< Real const > const& h_gk_arr  = h_gk[lev]->const_array(mfi);
-          Array4< Real       > const& cp_g_arr  = cp_g[lev]->array(mfi);
-          Array4< Real       > const& h_g_arr   = h_g[lev]->array(mfi);
-          Array4< Real       > const& T_g_arr   = T_g[lev]->array(mfi);
+          Array4< Real       > const& h_g_arr  = h_g[lev]->array(mfi);
+          Array4< Real const > const& X_gk_arr = X_gk[lev]->array(mfi);
+          Array4< Real const > const& T_g_arr  = T_g[lev]->array(mfi);
 
-          const Real T_ref = FLUID::T_ref;
-
-          ParallelFor(bx, [cp_gk_arr,h_gk_arr,cp_g_arr,h_g_arr,nspecies_g,
-              X_gk_arr,T_g_arr,T_ref]
+          ParallelFor(bx, [h_g_arr,nspecies_g,X_gk_arr,T_g_arr,fluid_parms]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-            Real cp_g_sum(0);
             Real h_g_sum(0);
 
+            const Real Tg_loc = T_g_arr(i,j,k);
+
             for (int n(0); n < nspecies_g; n++) {
-              cp_g_sum += X_gk_arr(i,j,k,n)*cp_gk_arr(i,j,k,n);
-              h_g_sum += X_gk_arr(i,j,k,n)*h_gk_arr(i,j,k,n);
+              h_g_sum += X_gk_arr(i,j,k,n) * fluid_parms.calc_h_gk(Tg_loc,n);
             }
 
-            cp_g_arr(i,j,k) = cp_g_sum;
             h_g_arr(i,j,k) = h_g_sum;
-            T_g_arr(i,j,k) = FLUID::calc_T_g(cp_g_sum, h_g_sum, 0, 0);
           });
         }
       }
@@ -229,27 +165,15 @@ mfix::mfix_update_fluid_and_species(const Vector< MultiFab* >& cp_gk,
 
   // Set covered values
   for (int lev(0); lev <= finest_level; lev++) {
-    if (FLUID::is_a_mixture)
-      EB_set_covered(*MW_g[lev], 0, 1, 0, covered_val);
-
     if (advect_enthalpy) {
-      EB_set_covered(*cp_g[lev], 0, 1, 0, covered_val);
       EB_set_covered(*h_g[lev], 0, 1, 0, covered_val);
-      EB_set_covered(*cp_gk[lev], 0, nspecies_g, 0, covered_val);
-      EB_set_covered(*h_gk[lev], 0, nspecies_g, 0, covered_val);
     }
   }
 
   // Fill boundary values
   for (int lev(0); lev <= finest_level; lev++) {
-    if (FLUID::is_a_mixture)
-      MW_g[lev]->FillBoundary(geom[lev].periodicity());
-
     if (advect_enthalpy) {
-      cp_g[lev]->FillBoundary(geom[lev].periodicity());
       h_g[lev]->FillBoundary(geom[lev].periodicity());
-      cp_gk[lev]->FillBoundary(geom[lev].periodicity());
-      h_gk[lev]->FillBoundary(geom[lev].periodicity());
     }
   }
 }

@@ -76,7 +76,7 @@ mfix::InitialRedistribution (Real l_time)
                 }
                 if (advect_fluid_species) {
 
-                  ncomp = FLUID::nspecies;
+                  ncomp = fluid.nspecies;
                   redistribution::redistribute_data( bx,ncomp, icomp,
                                            ld.X_gk->array(mfi), ld.X_gko->array(mfi),
                                            flag, apx, apy, apz, vfrac, fcx, fcy, fcz,

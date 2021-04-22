@@ -22,7 +22,7 @@ void compute_p0_bcs (const Box& sbx, const Box& domain, const BCList& bc_list,
                      Array4<const int> const& bct_khi,
                      const int nlft, const int nrgt, const int nbot,
                      const int ntop, const int ndwn, const int nup,
-                     const int nghost);
+                     const int nghost, const FluidPhase& fluid);
 
 void set_p0_bcs (const Box& sbx, const Box& domain, const BCList& bc_list,
                  Array4<Real> const& p0_g, Real const* m_bc_p_g,
@@ -208,7 +208,7 @@ mfix::set_p0 (const Box& bx,
       {
         compute_p0_bcs(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), pj,
             gravity, dx, dy, dz, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo,
-            bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup, nghost_state());
+            bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup, nghost_state(), fluid);
         return;
       }
 
@@ -308,7 +308,8 @@ void compute_p0_bcs (const Box& sbx,
                      const int ntop,
                      const int ndwn,
                      const int nup,
-                     const int nghost)
+                     const int nghost,
+                     const FluidPhase& fluid)
 {
   const Real tolerance = std::numeric_limits<Real>::epsilon();
 
@@ -347,7 +348,7 @@ void compute_p0_bcs (const Box& sbx,
   // balances the weight of the bed, if the initial pressure-field is not
   // specified
 
-  const Real ro_g0 = FLUID::ro_g0;
+  const Real ro_g0 = fluid.ro_g0;
 
   if(amrex::Math::abs(gravity[0]) > tolerance)
   {

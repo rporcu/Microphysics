@@ -16,7 +16,7 @@ mfix::mfix_density_rhs (Vector< MultiFab*      > const& rhs,
     rhs[lev]->setVal(0.);
 
   if (solve_reactions) {
-    ChemTransfer chem_txfr_idxs(FLUID::nspecies, REACTIONS::nreactions);
+    ChemTransfer chem_txfr_idxs(fluid.nspecies, REACTIONS::nreactions);
 
     for (int lev = 0; lev <= finest_level; lev++) {
 #ifdef _OPENMP
@@ -26,7 +26,7 @@ mfix::mfix_density_rhs (Vector< MultiFab*      > const& rhs,
         // Tilebox
         Box bx = mfi.tilebox();
 
-        const int nspecies_g = FLUID::nspecies;
+        const int nspecies_g = fluid.nspecies;
         const int start_idx  = chem_txfr_idxs.ro_gk_txfr;
 
         Array4<Real      > const& rhs_arr        = rhs[lev]->array(mfi);
@@ -56,28 +56,27 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
                          Vector< MultiFab const*> const& ep_g,
                          Vector< MultiFab const*> const& ro_g,
                          Vector< MultiFab*      > const& X_gk,
-                         Vector< MultiFab const*> const& D_gk,
-                         Vector< MultiFab const*> const& h_gk,
+                         Vector< MultiFab const*> const& T_g,
                          Vector< MultiFab const*> const& chem_txfr)
 {
   for (int lev = 0; lev <= finest_level; lev++)
     rhs[lev]->setVal(0.);
 
-  if (FLUID::is_a_mixture)
+  if (fluid.is_a_mixture)
   {
-    const int nspecies_g = FLUID::nspecies;
+    const int nspecies_g = fluid.nspecies;
 
     // Temporary for computing other terms of RHS
     Vector<MultiFab*> lap_hX_gk(nlev, nullptr);
 
     // Allocate memory for computing fluid species contributio
     for (int lev(0); lev <= finest_level; lev++) {
-      lap_hX_gk[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies,
+      lap_hX_gk[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies,
                                     nghost_state(), MFInfo(), *ebfactory[lev]);
     }
 
     // Compute the mixed enthalpy/species term
-    diffusion_op->ComputeLaphX(lap_hX_gk, X_gk, ro_g, ep_g, D_gk, h_gk);
+    diffusion_op->ComputeLaphX(lap_hX_gk, X_gk, ro_g, ep_g, T_g);
 
     for (int lev(0); lev <= finest_level; lev++) {
       // Add the contribution due to the nth specie
@@ -92,7 +91,7 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
   }
 
   if (solve_reactions) {
-    ChemTransfer chem_txfr_idxs(FLUID::nspecies, REACTIONS::nreactions);
+    ChemTransfer chem_txfr_idxs(fluid.nspecies, REACTIONS::nreactions);
 
     const int start_idx = chem_txfr_idxs.h_g_txfr;
 
@@ -139,9 +138,10 @@ mfix::mfix_species_X_rhs (Vector< MultiFab*      > const& rhs,
     rhs[lev]->setVal(0.);
 
   if (solve_reactions) {
-    ChemTransfer chem_txfr_idxs(FLUID::nspecies, REACTIONS::nreactions);
+    const int nspecies_g = fluid.nspecies;
 
-    const int nspecies_g = FLUID::nspecies;
+    ChemTransfer chem_txfr_idxs(nspecies_g, REACTIONS::nreactions);
+
     const int start_idx = chem_txfr_idxs.ro_gk_txfr;
 
     for (int lev = 0; lev <= finest_level; lev++) {
@@ -165,7 +165,7 @@ mfix::mfix_momentum_rhs (Vector< MultiFab* > const& rhs,
     rhs[lev]->setVal(0.);
 
   if (solve_reactions) {
-    ChemTransfer chem_txfr_idxs(FLUID::nspecies, REACTIONS::nreactions);
+    ChemTransfer chem_txfr_idxs(fluid.nspecies, REACTIONS::nreactions);
 
     const int start_idx = chem_txfr_idxs.vel_g_txfr;
 

@@ -1,9 +1,5 @@
 #include <mfix.H>
 #include <mfix_bc_parms.H>
-#include <mfix_solids_parms.H>
-#include <mfix_dem_parms.H>
-#include <mfix_reactions_parms.H>
-#include <mfix_calc_species_coeffs_K.H>
 
 using namespace amrex;
 
@@ -56,6 +52,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
       auto& soa = ptile.GetStructOfArrays();
       auto p_realarray = soa.realarray();
+      auto p_intarray  = soa.intarray();
 
 #ifndef AMREX_USE_GPU
       BL_PROFILE_VAR("pic_time_march()", pic_time_march);
@@ -69,7 +66,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
       const auto& avg_prop_array = avg_prop_in[lev]->array(pti);
 
-      const int nspecies_s = SOLIDS::nspecies;
+      const int nspecies_s = solids.nspecies;
       const int nreactions = REACTIONS::nreactions;
 
       // Particles SoA starting indexes for mass fractions and rate of
@@ -79,26 +76,29 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
       const int idx_vel_s_txfr = m_runtimeRealData.vel_s_txfr;
       const int idx_h_s_txfr   = m_runtimeRealData.h_s_txfr;
 
-      const int update_mass           = SOLIDS::solve_species && REACTIONS::solve;
+      const int update_mass           = solids.solve_species && REACTIONS::solve;
       const int update_temperature    = advect_enthalpy;
       const int local_advect_enthalpy = advect_enthalpy;
       const int local_solve_reactions = REACTIONS::solve;
 
-      const int solid_is_mixture = SOLIDS::is_a_mixture;
+      const int solid_is_mixture = solids.is_a_mixture;
 
-      Gpu::AsyncArray<Real> d_cp_sn0_loc(SOLIDS::cp_sn0.dataPtr(), SOLIDS::cp_sn0.size());
+      Gpu::AsyncArray<Real> d_cp_sn0_loc(solids.cp_sn0.dataPtr(), solids.cp_sn0.size());
       Real* p_cp_sn0_loc = d_cp_sn0_loc.data();
 
-      const Real T_ref = SOLIDS::T_ref;
+      const Real T_ref = solids.T_ref;
 
       const Real tolerance = std::numeric_limits<Real>::epsilon();
 
+      auto& solids_parms = *solids.parameters;
+
       amrex::ParallelFor(nrp,
-        [pstruct,p_realarray,ptile_data,dt,gravity,p_hi,p_lo,dxi,tolerance,
-         avg_prop_array,velfac,en,three_sqrt_two,x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,
-         z_lo_bc,z_hi_bc,nspecies_s,nreactions,idx_X_sn,idx_ro_sn_txfr,idx_vel_s_txfr,
-         update_mass,update_temperature,local_solve_reactions,idx_h_s_txfr,T_ref,
-         p_cp_sn0_loc,solid_is_mixture,local_advect_enthalpy,enthalpy_source]
+        [pstruct,p_realarray,p_intarray,ptile_data,dt,gravity,p_hi,p_lo,dxi,
+         tolerance,avg_prop_array,velfac,en,three_sqrt_two,x_lo_bc,x_hi_bc,
+         y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc,nspecies_s,nreactions,idx_X_sn,
+         idx_ro_sn_txfr,idx_vel_s_txfr,update_mass,update_temperature,
+         local_solve_reactions,idx_h_s_txfr,T_ref,p_cp_sn0_loc,solid_is_mixture,
+         local_advect_enthalpy,enthalpy_source,solids_parms]
         AMREX_GPU_DEVICE (int lp) noexcept
       {
         auto& p = pstruct[lp];
@@ -359,12 +359,16 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
           // Third step: update parcels' temperature
           //*********************************************************************
           if(local_advect_enthalpy) {
-            const Real cp_s_old = p_realarray[SoArealData::cp_s][lp];
+            const int phase = p_intarray[SoAintData::phase][lp];
+
+            const Real Tp_loc = p_realarray[SoArealData::temperature][lp];
+
+            const Real cp_s_old = solids_parms.calc_cp_s(phase,Tp_loc);
             Real cp_s_new(0);
 
             if (solid_is_mixture) {
               for (int n_s(0); n_s < nspecies_s; ++n_s)
-                cp_s_new += p_cp_sn0_loc[n_s] * ptile_data.m_runtime_rdata[idx_X_sn+n_s][lp];
+                cp_s_new += solids_parms.calc_cp_s(phase,Tp_loc) * ptile_data.m_runtime_rdata[idx_X_sn+n_s][lp];
 
               p_realarray[SoArealData::cp_s][lp] = cp_s_new;
             } else {
@@ -374,17 +378,17 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
             AMREX_ASSERT(cp_s_new > 0.);
 
             if (! update_mass) {
-              p_realarray[SoArealData::temperature][lp] +=
+              p_realarray[SoArealData::temperature][lp] = Tp_loc +
                 dt*(p_realarray[SoArealData::convection][lp]+enthalpy_source) / (p_mass_new*cp_s_new);
             } else {
               Real p_enthalpy_new =
-                p_mass_old*SOLIDS::calc_h_s(cp_s_old, p_realarray[SoArealData::temperature][i], 0, 0) +
+                p_mass_old*solids_parms.calc_h_s(phase,Tp_loc) +
                 dt*(p_realarray[SoArealData::convection][i]+enthalpy_source);
 
               p_enthalpy_new -= dt*p_vol*ptile_data.m_runtime_rdata[idx_h_s_txfr][i];
+              p_enthalpy_new /= p_mass_new;
 
-              p_realarray[SoArealData::temperature][i] =
-                SOLIDS::calc_T_s(cp_s_new, p_enthalpy_new, 0, 0) / p_mass_new;
+              p_realarray[SoArealData::temperature][i] = solids_parms.calc_T_s(phase,p_enthalpy_new,Tp_loc);
             }
           }
         }

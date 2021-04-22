@@ -11,12 +11,9 @@ using namespace amrex;
 // Set the BCs for temperature only
 //
 void
-mfix::mfix_set_eb_temperature_bcs (Vector< MultiFab* > const& eb_T_g_in,
-                                   Vector< MultiFab* > const& eb_k_g_in)
+mfix::mfix_set_eb_temperature_bcs (Vector< MultiFab* > const& eb_T_g_in)
 {
   BL_PROFILE("mfix::mfix_set_eb_temperature_bcs()");
-
-  Vector< MultiFab* > k_g = get_k_g();
 
   for (int lev = 0; lev < nlev; lev++)
   {
@@ -26,7 +23,6 @@ mfix::mfix_set_eb_temperature_bcs (Vector< MultiFab* > const& eb_T_g_in,
      // equivalent to homogeneous Neumann. To set inhomogeneous Dirichlet we
      // need to call set_eb_temperature_dirichlet_values
      eb_T_g_in[lev]->setVal(0.);
-     eb_k_g_in[lev]->setVal(0.);
 
      const auto& factory =
        dynamic_cast<EBFArrayBoxFactory const&>(eb_T_g_in[lev]->Factory());
@@ -50,16 +46,13 @@ mfix::mfix_set_eb_temperature_bcs (Vector< MultiFab* > const& eb_T_g_in,
 
        // We update only cut-cells values
        if (t == FabType::singlevalued) {
-         set_eb_temperature_bcs(sbx, bx, domain, dx, dy, dz, plo,
-             (*eb_T_g_in[lev])[mfi], (*eb_k_g_in[lev])[mfi], (*k_g[lev])[mfi],
-             flags[mfi]);
+         set_eb_temperature_bcs(sbx, bx, domain, dx, dy, dz, plo, (*eb_T_g_in[lev])[mfi], flags[mfi]);
        }
      }
 
      // Do this after as well as before to pick up terms that got updated in the
      // call above
      eb_T_g_in[lev]->FillBoundary(geom[lev].periodicity());
-     eb_k_g_in[lev]->FillBoundary(geom[lev].periodicity());
   }
 }
 
@@ -72,8 +65,6 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
                               const Real dz,
                               const GpuArray<Real, 3>& plo,
                               FArrayBox& eb_T_g_fab,
-                              FArrayBox& eb_k_g_fab,
-                              FArrayBox& /*k_g_fab*/,
                               const EBCellFlagFab& flags_fab)
 {
   BL_PROFILE("mfix::set_eb_temperature_bcs()");
@@ -83,13 +74,6 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
 
   // EB arrays
   Array4<Real> const& eb_T_g = eb_T_g_fab.array();
-  Array4<Real> const& eb_k_g = eb_k_g_fab.array();
-
-  //// Problem variable
-  //Array4<const Real> const& k_g = k_g_fab.array();
-
-  // TODO this has to be replaced by the above k_g
-  const Real k_g = FLUID::k_g0;
 
   // Flags
   Array4<const EBCellFlag> const& flags = flags_fab.array();
@@ -135,13 +119,11 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
         const Box local_bx(IntVect(first, jstart, kstart),
                            IntVect(last,  jend,   kend));
 
-        ParallelFor(local_bx, [flags,eb_temperature,eb_T_g,k_g,eb_k_g]
+        ParallelFor(local_bx, [flags,eb_temperature,eb_T_g]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           if (flags(i,j,k).isSingleValued()) {
             eb_T_g(i,j,k) = eb_temperature;
-            //eb_k_g(i,j,k) = k_g(i,j,k);
-            eb_k_g(i,j,k) = k_g;
           }
         });
       }
@@ -153,13 +135,11 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
         const Box local_bx(IntVect(istart, first, kstart),
                            IntVect(iend,   last,  kend));
 
-        ParallelFor(local_bx, [flags,eb_temperature,eb_T_g,k_g,eb_k_g]
+        ParallelFor(local_bx, [flags,eb_temperature,eb_T_g]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           if (flags(i,j,k).isSingleValued()) {
             eb_T_g(i,j,k) = eb_temperature;
-            //eb_k_g(i,j,k) = k_g(i,j,k);
-            eb_k_g(i,j,k) = k_g;
           }
         });
       }
@@ -171,13 +151,11 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
         const Box local_bx(IntVect(istart, jstart, first),
                            IntVect(iend,   jend,   last));
 
-        ParallelFor(local_bx, [flags,eb_temperature,eb_T_g,k_g,eb_k_g]
+        ParallelFor(local_bx, [flags,eb_temperature,eb_T_g]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           if (flags(i,j,k).isSingleValued()) {
             eb_T_g(i,j,k) = eb_temperature;
-            //eb_k_g(i,j,k) = k_g(i,j,k);
-            eb_k_g(i,j,k) = k_g;
           }
         });
       }

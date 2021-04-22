@@ -9,7 +9,6 @@
 #include <mfix_solids_parms.H>
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
-#include <mfix_reactions_parms.H>
 
 namespace
 {
@@ -26,7 +25,7 @@ mfix::InitIOPltData ()
   pltVarCount = 0;
 
   ParmParse pp("amr");
-  if (FLUID::solve)
+  if (fluid.solve)
     {
 
       pp.query("plt_vel_g",     plt_vel_g    );
@@ -110,13 +109,13 @@ mfix::InitIOPltData ()
         if( plt_h_g  == 1) pltVarCount += 1;
       }
 
-      if (FLUID::solve_species) {
-        if( plt_X_gk == 1)  pltVarCount += FLUID::nspecies;
-        if( plt_D_gk == 1)  pltVarCount += FLUID::nspecies;
+      if (fluid.solve_species) {
+        if( plt_X_gk == 1)  pltVarCount += fluid.nspecies;
+        if( plt_D_gk == 1)  pltVarCount += fluid.nspecies;
 
         if (advect_enthalpy) {
-        if( plt_cp_gk == 1) pltVarCount += FLUID::nspecies;
-        if( plt_h_gk == 1)  pltVarCount += FLUID::nspecies;
+        if( plt_cp_gk == 1) pltVarCount += fluid.nspecies;
+        if( plt_h_gk == 1)  pltVarCount += fluid.nspecies;
         }
       }
 
@@ -124,8 +123,8 @@ mfix::InitIOPltData ()
         if ( plt_txfr == 1) pltVarCount += Transfer::count;
       }
 
-      if (FLUID::solve_species && REACTIONS::solve) {
-        ChemTransfer chem_txfr_idxs(FLUID::nspecies, REACTIONS::nreactions);
+      if (fluid.solve_species && REACTIONS::solve) {
+        ChemTransfer chem_txfr_idxs(fluid.nspecies, REACTIONS::nreactions);
         if ( plt_chem_txfr == 1) pltVarCount += chem_txfr_idxs.count;
       }
     }
@@ -135,7 +134,7 @@ mfix::InitIOPltData ()
       int plt_ccse_regtest = 0;
       pp.query("plt_regtest", plt_ccse_regtest);
 
-      runtimeRealData rtData(SOLIDS::nspecies, REACTIONS::nreactions);
+      runtimeRealData rtData(solids.nspecies, REACTIONS::nreactions);
 
       // Runtime-added variables
       const int size = AoSrealData::count + SoArealData::count + rtData.count;
@@ -204,14 +203,14 @@ mfix::InitIOPltData ()
 
         gap = AoSrealData::count + SoArealData::count;
 
-        if (SOLIDS::solve_species)
+        if (solids.solve_species)
         {
           input_value = 0;
           pp.query("plt_species_p",   input_value );
 //          pp.query("plt_X_s",   input_value );
 
           const int start = gap + pc->m_runtimeRealData.X_sn;
-          for(int n(0); n < SOLIDS::nspecies; ++n)
+          for(int n(0); n < solids.nspecies; ++n)
             write_real_comp[n+start] = input_value;
         }
 
@@ -221,7 +220,7 @@ mfix::InitIOPltData ()
           pp.query("plt_ro_sn_txfr",   input_value );
 
           const int start = gap + pc->m_runtimeRealData.ro_sn_txfr;
-          for(int n(0); n < SOLIDS::nspecies; ++n)
+          for(int n(0); n < solids.nspecies; ++n)
             write_real_comp[n+start] = input_value;
         }
 
@@ -276,6 +275,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 
     amrex::Print() << "  Writing plotfile " << plotfilename <<  " at time " << time << std::endl;
 
+    auto& fluid_params = *fluid.parameters;
 
     if (pltVarCount > 0) {
 
@@ -363,23 +363,23 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         pltFldNames.push_back("cost_p");
 
       // Fluid species mass fractions
-      if(FLUID::solve_species && plt_X_gk == 1)
-        for(std::string specie: FLUID::species)
+      if(fluid.solve_species && plt_X_gk == 1)
+        for(std::string specie: fluid.species)
           pltFldNames.push_back("X_"+specie+"_g");
 
       // Fluid species mass diffusivities
-      if(FLUID::solve_species && plt_D_gk == 1)
-        for(std::string specie: FLUID::species)
+      if(fluid.solve_species && plt_D_gk == 1)
+        for(std::string specie: fluid.species)
           pltFldNames.push_back("D_"+specie+"_g");
 
       // Fluid species specific heat
-      if(FLUID::solve_species && advect_enthalpy && plt_cp_gk == 1)
-        for(std::string specie: FLUID::species)
+      if(fluid.solve_species && advect_enthalpy && plt_cp_gk == 1)
+        for(std::string specie: fluid.species)
           pltFldNames.push_back("cp_"+specie+"_g");
 
       // Fluid species enthalpy
-      if(FLUID::solve_species && advect_enthalpy && plt_h_gk == 1)
-        for(std::string specie: FLUID::species)
+      if(fluid.solve_species && advect_enthalpy && plt_h_gk == 1)
+        for(std::string specie: fluid.species)
           pltFldNames.push_back("h_"+specie+"_g");
 
       // Fluid species density reaction rates
@@ -393,8 +393,8 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 //      }
 
       // Fluid species density reaction rates
-      if (FLUID::solve_species && REACTIONS::solve && plt_chem_txfr == 1) {
-        for(std::string specie: FLUID::species)
+      if (fluid.solve_species && REACTIONS::solve && plt_chem_txfr == 1) {
+        for(std::string specie: fluid.species)
           pltFldNames.push_back("ro_txfr_"+specie+"_g");
 //          pltFldNames.push_back("chem_ro_txfr_"+specie);
 
@@ -452,7 +452,57 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 
         // Fluid molecular weight
         if( plt_MW_g == 1 ) {
-          MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->MW_g), 0, lc, 1, 0);
+
+          const int nspecies_g = fluid.nspecies;
+
+          MultiFab& T_g = *(m_leveldata[lev]->T_g);
+
+          MultiFab MW_g(T_g.boxArray(), T_g.DistributionMap(), T_g.nComp(),
+                        T_g.nGrow(), MFInfo(), T_g.Factory());
+
+          const int is_mixture = fluid.is_a_mixture;
+
+          const Real MW_g0 = fluid.MW_g0;
+
+          Gpu::DeviceVector<Real> MW_gk0_d(nspecies_g);
+          if (is_mixture)
+            Gpu::copyAsync(Gpu::hostToDevice, fluid.MW_gk0.begin(), fluid.MW_gk0.end(), MW_gk0_d.begin());
+          Real* p_MW_gk0 = is_mixture ? MW_gk0_d.data() : nullptr;
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+          for (MFIter mfi(T_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+          {
+            Box const& bx = mfi.tilebox();
+
+            Array4<Real      > const& MW_g_array = MW_g.array(mfi);
+            Array4<Real const> const& X_gk_array = is_mixture ?
+              m_leveldata[lev]->X_gk->const_array(mfi) : Array4<const Real>();
+
+            ParallelFor(bx, [MW_g_array,X_gk_array,nspecies_g,is_mixture,p_MW_gk0,MW_g0]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            {
+              if (is_mixture) {
+                Real MW_g(0);
+
+                for (int n(0); n < nspecies_g; ++n) {
+                  MW_g += X_gk_array(i,j,k,n) / p_MW_gk0[n];
+                }
+
+                MW_g_array(i,j,k) = 1. / MW_g;
+              } else {
+                MW_g_array(i,j,k) = MW_g0;
+              }
+            });
+          }
+
+          MW_g.FillBoundary(geom[lev].periodicity());
+
+          EB_set_covered(MW_g, 0, MW_g.nComp(), MW_g.nGrow(), covered_val);
+
+          MultiFab::Copy(*mf[lev], MW_g, 0, lc, 1, 0);
+
           lc += 1;
         }
 
@@ -476,19 +526,108 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 
         // Specific heat
         if( advect_enthalpy && plt_cp_g == 1 ) {
-          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->cp_g, 0, lc, 1, 0);
+
+          MultiFab& T_g = *(m_leveldata[lev]->T_g);
+
+          MultiFab cp_g(T_g.boxArray(), T_g.DistributionMap(), T_g.nComp(),
+                        T_g.nGrow(), MFInfo(), T_g.Factory());
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+          for (MFIter mfi(T_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+          {
+            Box const& bx = mfi.tilebox();
+
+            Array4<Real      > const& cp_g_array = cp_g.array(mfi);
+            Array4<Real const> const& T_g_array  = T_g.const_array(mfi);
+
+            ParallelFor(bx, [cp_g_array,T_g_array,fluid_params]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            {
+              cp_g_array(i,j,k) = fluid_params.calc_cp_g(T_g_array(i,j,k));
+            });
+          }
+
+          cp_g.FillBoundary(geom[lev].periodicity());
+
+          EB_set_covered(cp_g, 0, cp_g.nComp(), cp_g.nGrow(), covered_val);
+
+          MultiFab::Copy(*mf[lev], cp_g, 0, lc, 1, 0);
           lc += 1;
         }
 
-        // Specific heat
+        // Thermal conductivity
         if( advect_enthalpy && plt_k_g == 1 ) {
-          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->k_g, 0, lc, 1, 0);
+
+          MultiFab& T_g = *(m_leveldata[lev]->T_g);
+
+          MultiFab k_g(T_g.boxArray(), T_g.DistributionMap(), T_g.nComp(),
+                        T_g.nGrow(), MFInfo(), T_g.Factory());
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+          for (MFIter mfi(T_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+          {
+            Box const& bx = mfi.tilebox();
+
+            Array4<Real      > const& k_g_array = k_g.array(mfi);
+            Array4<Real const> const& T_g_array  = T_g.const_array(mfi);
+
+            ParallelFor(bx, [k_g_array,T_g_array,fluid_params]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            {
+              k_g_array(i,j,k) = fluid_params.calc_k_g(T_g_array(i,j,k));
+            });
+          }
+
+          k_g.FillBoundary(geom[lev].periodicity());
+
+          EB_set_covered(k_g, 0, k_g.nComp(), k_g.nGrow(), covered_val);
+
+          MultiFab::Copy(*mf[lev], k_g, 0, lc, 1, 0);
           lc += 1;
         }
 
         // Fluid viscosity
         if( plt_mu_g == 1 ) {
-          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->mu_g, 0, lc, 1, 0);
+
+          MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
+
+          MultiFab mu_g(ep_g.boxArray(), ep_g.DistributionMap(), ep_g.nComp(),
+                        ep_g.nGrow(), MFInfo(), ep_g.Factory());
+
+          const Real mu_g0 = fluid.mu_g0;
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+          for (MFIter mfi(ep_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+          {
+            Box const& bx = mfi.tilebox();
+
+            Array4<Real      > const& mu_g_array = mu_g.array(mfi);
+            Array4<Real const> const& T_g_array  = advect_enthalpy ?
+              m_leveldata[lev]->T_g->const_array(mfi) : Array4<Real const>();
+
+            const int adv_enthalpy = advect_enthalpy;
+
+            ParallelFor(bx, [mu_g_array,T_g_array,adv_enthalpy,mu_g0,fluid_params]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            {
+              if (adv_enthalpy)
+                mu_g_array(i,j,k) = fluid_params.calc_mu_g(T_g_array(i,j,k));
+              else
+                mu_g_array(i,j,k) = mu_g0;
+            });
+          }
+
+          mu_g.FillBoundary(geom[lev].periodicity());
+
+          EB_set_covered(mu_g, 0, mu_g.nComp(), mu_g.nGrow(), covered_val);
+
+          MultiFab::Copy(*mf[lev], mu_g, 0, lc, 1, 0);
           lc += 1;
         }
 
@@ -533,27 +672,137 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         }
 
         // Fluid species mass fractions
-        if(FLUID::solve_species && plt_X_gk == 1 ) {
-          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_gk, 0, lc, FLUID::nspecies, 0);
-          lc += FLUID::nspecies;
+        if(fluid.solve_species && plt_X_gk == 1 ) {
+          for(int n(0); n < fluid.nspecies; n++) {
+            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_gk, n, lc+n, 1, 0);
+          }
+          lc += fluid.nspecies;
         }
 
         // Species mass fraction
-        if(FLUID::solve_species && plt_D_gk == 1 ) {
-          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->D_gk, 0, lc, FLUID::nspecies, 0);
-          lc += FLUID::nspecies;
+        if(fluid.solve_species && plt_D_gk == 1 ) {
+
+          const int nspecies_g = fluid.nspecies;
+
+          MultiFab& X_gk = *(m_leveldata[lev]->X_gk);
+
+          MultiFab D_gk(X_gk.boxArray(), X_gk.DistributionMap(), X_gk.nComp(),
+                        X_gk.nGrow(), MFInfo(), X_gk.Factory());
+
+          const int adv_enthalpy = advect_enthalpy;
+
+          Gpu::DeviceVector< Real > d_D_gk0(nspecies_g);
+          Gpu::copyAsync(Gpu::hostToDevice, fluid.D_gk0.begin(), fluid.D_gk0.end(), d_D_gk0.begin());
+          Real* p_D_gk0 = d_D_gk0.data();
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+          for (MFIter mfi(X_gk,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+          {
+            Box const& bx = mfi.tilebox();
+
+            Array4<Real      > const& D_gk_array = D_gk.array(mfi);
+            Array4<Real const> const& T_g_array  = advect_enthalpy ?
+              m_leveldata[lev]->T_g->const_array(mfi) : Array4<const Real>();
+
+            ParallelFor(bx, [D_gk_array,T_g_array,nspecies_g,adv_enthalpy,p_D_gk0,
+                fluid_params]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            {
+              for (int n(0); n < nspecies_g; ++n)
+                if (adv_enthalpy)
+                  D_gk_array(i,j,k,n) = fluid_params.calc_D_gk(T_g_array(i,j,k), n);
+                else
+                  D_gk_array(i,j,k,n) = p_D_gk0[n];
+            });
+          }
+
+          D_gk.FillBoundary(geom[lev].periodicity());
+
+          EB_set_covered(D_gk, 0, D_gk.nComp(), D_gk.nGrow(), covered_val);
+
+          MultiFab::Copy(*mf[lev], D_gk, 0, lc, nspecies_g, 0);
+
+          lc += nspecies_g;
         }
 
         // Fluid species specific heat
-        if(FLUID::solve_species && advect_enthalpy && plt_cp_gk == 1 ) {
-          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->cp_gk, 0, lc, FLUID::nspecies, 0);
-          lc += FLUID::nspecies;
+        if(fluid.solve_species && advect_enthalpy && plt_cp_gk == 1 ) {
+
+          const int nspecies_g = fluid.nspecies;
+
+          MultiFab& X_gk = *(m_leveldata[lev]->X_gk);
+
+          MultiFab cp_gk(X_gk.boxArray(), X_gk.DistributionMap(), X_gk.nComp(),
+                        X_gk.nGrow(), MFInfo(), X_gk.Factory());
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+          for (MFIter mfi(X_gk,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+          {
+            Box const& bx = mfi.tilebox();
+
+            Array4<Real      > const& cp_gk_array = cp_gk.array(mfi);
+            Array4<Real const> const& T_g_array  = advect_enthalpy ?
+              m_leveldata[lev]->T_g->const_array(mfi) : Array4<const Real>();
+
+            ParallelFor(bx, [cp_gk_array,T_g_array,nspecies_g,fluid_params]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            {
+              for (int n(0); n < nspecies_g; ++n)
+                cp_gk_array(i,j,k,n) = fluid_params.calc_cp_gk(T_g_array(i,j,k),n);
+            });
+          }
+
+          cp_gk.FillBoundary(geom[lev].periodicity());
+
+          EB_set_covered(cp_gk, 0, cp_gk.nComp(), cp_gk.nGrow(), covered_val);
+
+          MultiFab::Copy(*mf[lev], cp_gk, 0, lc, nspecies_g, 0);
+
+          lc += nspecies_g;
         }
 
         // Fluid species enthalpy
-        if(FLUID::solve_species && plt_h_gk == 1 ) {
-          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->h_gk, 0, lc, FLUID::nspecies, 0);
-          lc += FLUID::nspecies;
+        if(fluid.solve_species && plt_h_gk == 1 ) {
+
+          const int nspecies_g = fluid.nspecies;
+
+          MultiFab& X_gk = *(m_leveldata[lev]->X_gk);
+
+          MultiFab h_gk(X_gk.boxArray(), X_gk.DistributionMap(), X_gk.nComp(),
+                        X_gk.nGrow(), MFInfo(), X_gk.Factory());
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+          for (MFIter mfi(X_gk,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+          {
+            Box const& bx = mfi.tilebox();
+
+            Array4<Real      > const& h_gk_array = h_gk.array(mfi);
+            Array4<Real const> const& T_g_array  = advect_enthalpy ?
+              m_leveldata[lev]->T_g->const_array(mfi) : Array4<const Real>();
+
+            ParallelFor(bx, [h_gk_array,T_g_array,nspecies_g,fluid_params]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            {
+              const Real Tg_loc = T_g_array(i,j,k);
+
+              for (int n(0); n < nspecies_g; ++n)
+                h_gk_array(i,j,k,n) = fluid_params.calc_h_gk(Tg_loc,n);
+            });
+          }
+
+          h_gk.FillBoundary(geom[lev].periodicity());
+
+          EB_set_covered(h_gk, 0, h_gk.nComp(), h_gk.nGrow(), covered_val);
+
+          MultiFab::Copy(*mf[lev], h_gk, 0, lc, nspecies_g, 0);
+
+          lc += nspecies_g;
         }
 
         if (plt_txfr == 1) {
@@ -561,10 +810,9 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
           lc += Transfer::count;
         }
 
-        if (FLUID::solve_species && REACTIONS::solve && plt_chem_txfr == 1) {
-          const int l_comps = m_leveldata[lev]->chem_txfr->nComp();
-          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->chem_txfr, 0, lc, l_comps, 0);
-          lc += l_comps;
+        if (fluid.solve_species && REACTIONS::solve && plt_chem_txfr == 1) {
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->chem_txfr, 0, lc, fluid.nspecies, 0);
+          lc += fluid.nspecies;
         }
 
       }
@@ -655,13 +903,13 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
         real_comp_names.push_back("temperature");
         real_comp_names.push_back("convection");
 
-        if (SOLIDS::solve_species)
-          for(auto species: SOLIDS::species)
+        if (solids.solve_species)
+          for(auto species: solids.species)
 //            real_comp_names.push_back("X_"+species);
             real_comp_names.push_back("X_"+species+"_s");
 
-        if (SOLIDS::solve_species && REACTIONS::solve)
-          for(auto species: SOLIDS::species)
+        if (solids.solve_species && REACTIONS::solve)
+          for(auto species: solids.species)
             real_comp_names.push_back("chem_ro_txfr_"+species);
 
         if (REACTIONS::solve) {

@@ -130,7 +130,7 @@ void mfix::make_eb_general () {
                     amrex::Print() << "Done making the particle eb levels." << std::endl;
                 }
 
-                if (FLUID::solve) {
+                if (fluid.solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -168,7 +168,7 @@ void mfix::make_eb_general () {
                     amrex::Print() << "Done making the particle eb levels." << std::endl;
                 }
 
-                if (FLUID::solve) {
+                if (fluid.solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -235,7 +235,7 @@ void mfix::make_eb_general () {
                     amrex::Print() << "Done making the particle eb levels." << std::endl;
                 }
 
-                if (FLUID::solve) {
+                if (fluid.solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -263,7 +263,7 @@ void mfix::make_eb_general () {
 
                 }
 
-                if (FLUID::solve) {
+                if (fluid.solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
