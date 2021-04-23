@@ -121,16 +121,26 @@ void ebgodunov::plm_fpu_x (Box const& xebox, int ncomp,
                                 Real delta_y = yf  - ccc(i,j,k,1);,
                                 Real delta_z = zf  - ccc(i,j,k,2););
 
-                   const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j,k,n,q,ccc,
+                   Real qcc_max = amrex::max(q(i,j,k,n), q(i-1,j,k,n));
+                   Real qcc_min = amrex::min(q(i,j,k,n), q(i-1,j,k,n));
+
+                   // This will be used in the EB slope routine only if the slope can be computed without LS
+                   int max_order = 2;
+
+                   const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j,k,n,q,ccc,vfrac,
                                               AMREX_D_DECL(fcx,fcy,fcz), flag,
                                               AMREX_D_DECL(extdir_or_ho_ilo, extdir_or_ho_jlo, extdir_or_ho_klo),
                                               AMREX_D_DECL(extdir_or_ho_ihi, extdir_or_ho_jhi, extdir_or_ho_khi),
                                               AMREX_D_DECL(domain_ilo, domain_jlo, domain_klo),
-                                              AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi));
+                                              AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi),
+                                              max_order);
 
                    qpls = q(i,j,k,n) - delta_x * slopes_eb_hi[0]
                                      + delta_y * slopes_eb_hi[1]
                                      + delta_z * slopes_eb_hi[2];
+
+                   qpls = amrex::max(amrex::min(qpls, qcc_max), qcc_min);
+
                    qpls -= 0.5 * dtdx * umac(i,j,k) * slopes_eb_hi[0];
 
                 }  // end of making qpls
@@ -171,17 +181,27 @@ void ebgodunov::plm_fpu_x (Box const& xebox, int ncomp,
                                 Real delta_y = yf  - ccc(i-1,j,k,1);,
                                 Real delta_z = zf  - ccc(i-1,j,k,2););
 
-                   const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i-1,j,k,n,q,ccc,
+                   Real qcc_max = amrex::max(q(i,j,k,n), q(i-1,j,k,n));
+                   Real qcc_min = amrex::min(q(i,j,k,n), q(i-1,j,k,n));
+
+                   // This will be used in the EB slope routine only if the slope can be computed without LS
+                   int max_order = 2;
+
+                   const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i-1,j,k,n,q,ccc,vfrac,
                                               AMREX_D_DECL(fcx,fcy,fcz), flag,
                                               AMREX_D_DECL(extdir_or_ho_ilo, extdir_or_ho_jlo, extdir_or_ho_klo),
                                               AMREX_D_DECL(extdir_or_ho_ihi, extdir_or_ho_jhi, extdir_or_ho_khi),
                                               AMREX_D_DECL(domain_ilo, domain_jlo, domain_klo),
-                                              AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi));
+                                              AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi),
+                                              max_order);
 
 
                    qmns = q(i-1,j,k,n) + delta_x * slopes_eb_lo[0]
                                        + delta_y * slopes_eb_lo[1]
                                        + delta_z * slopes_eb_lo[2];
+
+                   qmns = amrex::max(amrex::min(qmns, qcc_max), qcc_min);
+
                    qmns -= 0.5 * dtdx * umac(i,j,k) * slopes_eb_lo[0];
                 }  // end of making qmns
 
@@ -240,12 +260,21 @@ void ebgodunov::plm_fpu_x (Box const& xebox, int ncomp,
                                 Real delta_y = yf  - ccc(i,j,k,1);,
                                 Real delta_z = zf  - ccc(i,j,k,2););
 
-                   const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,k,n,q,ccc,
-                                                                  AMREX_D_DECL(fcx,fcy,fcz), flag);
+                   Real qcc_max = amrex::max(q(i,j,k,n), q(i-1,j,k,n));
+                   Real qcc_min = amrex::min(q(i,j,k,n), q(i-1,j,k,n));
+
+                   // This will be used in the EB slope routine only if the slope can be computed without LS
+                   int max_order = 2;
+
+                   const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,k,n,q,ccc,vfrac,
+                                                                  AMREX_D_DECL(fcx,fcy,fcz),flag,max_order);
 
                    qpls = q(i,j,k,n) - delta_x * slopes_eb_hi[0]
                                      + delta_y * slopes_eb_hi[1]
                                      + delta_z * slopes_eb_hi[2];
+
+                   qpls = amrex::max(amrex::min(qpls, qcc_max), qcc_min);
+
                    qpls -= 0.5 * dtdx * umac(i,j,k) * slopes_eb_hi[0];
                 }  // end of making qpls
 
@@ -277,12 +306,21 @@ void ebgodunov::plm_fpu_x (Box const& xebox, int ncomp,
                                 Real delta_y = yf  - ccc(i-1,j,k,1);,
                                 Real delta_z = zf  - ccc(i-1,j,k,2););
 
-                   const auto& slopes_eb_lo = amrex_lim_slopes_eb(i-1,j,k,n,q,ccc,
-                                                                  AMREX_D_DECL(fcx,fcy,fcz), flag);
+                   Real qcc_max = amrex::max(q(i,j,k,n), q(i-1,j,k,n));
+                   Real qcc_min = amrex::min(q(i,j,k,n), q(i-1,j,k,n));
+
+                   // This will be used in the EB slope routine only if the slope can be computed without LS
+                   int max_order = 2;
+
+                   const auto& slopes_eb_lo = amrex_lim_slopes_eb(i-1,j,k,n,q,ccc,vfrac,
+                                                                  AMREX_D_DECL(fcx,fcy,fcz),flag,max_order);
 
                    qmns = q(i-1,j,k,n) + delta_x * slopes_eb_lo[0]
                                        + delta_y * slopes_eb_lo[1]
                                        + delta_z * slopes_eb_lo[2];
+
+                   qmns = amrex::max(amrex::min(qmns, qcc_max), qcc_min);
+
                    qmns -= 0.5 * dtdx * umac(i,j,k) * slopes_eb_lo[0];
 
                 }  // end of making qmns
@@ -374,7 +412,7 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
 
                 // We have enough cells to do 4th order slopes centered on (i,j,k) with all values at cell centers
                 if (vfrac(i,j,k) == 1. && vfrac(i,j-1,k) == 1. && vfrac(i,j-2,k) == 1. &&
-                                           vfrac(i,j+1,k) == 1. && vfrac(i,j+2,k) == 1.)
+                                          vfrac(i,j+1,k) == 1. && vfrac(i,j+2,k) == 1.)
                 {
                     int order = 4;
                     qpls = q(i,j  ,k,n) + 0.5 * (-1.0 - vmac(i,j,k) * dtdy) *
@@ -396,16 +434,26 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
                                 Real delta_x = xf  - ccc(i,j,k,0);,
                                 Real delta_z = zf  - ccc(i,j,k,2););
 
-                   const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j,k,n,q,ccc,
+                   Real qcc_max = amrex::max(q(i,j,k,n), q(i,j-1,k,n));
+                   Real qcc_min = amrex::min(q(i,j,k,n), q(i,j-1,k,n));
+
+                   // This will be used in the EB slope routine only if the slope can be computed without LS
+                   int max_order = 2;
+
+                   const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j,k,n,q,ccc,vfrac,
                                               AMREX_D_DECL(fcx,fcy,fcz), flag,
                                               AMREX_D_DECL(extdir_or_ho_ilo, extdir_or_ho_jlo, extdir_or_ho_klo),
                                               AMREX_D_DECL(extdir_or_ho_ihi, extdir_or_ho_jhi, extdir_or_ho_khi),
                                               AMREX_D_DECL(domain_ilo, domain_jlo, domain_klo),
-                                              AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi));
+                                              AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi),
+                                              max_order);
 
                    qpls = q(i,j,k,n) - delta_y * slopes_eb_hi[1]
                                      + delta_x * slopes_eb_hi[0]
                                      + delta_z * slopes_eb_hi[2];
+
+                   qpls = amrex::max(amrex::min(qpls, qcc_max), qcc_min);
+
                    qpls -= 0.5 * dtdy * vmac(i,j,k) * slopes_eb_hi[1];
 
                 }  // end of making qpls
@@ -446,17 +494,26 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
                                 Real delta_x = xf  - ccc(i,j-1,k,0);,
                                 Real delta_z = zf  - ccc(i,j-1,k,2););
 
-                   const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i,j-1,k,n,q,ccc,
+                   Real qcc_max = amrex::max(q(i,j,k,n), q(i,j-1,k,n));
+                   Real qcc_min = amrex::min(q(i,j,k,n), q(i,j-1,k,n));
+
+                   // This will be used in the EB slope routine only if the slope can be computed without LS
+                   int max_order = 2;
+
+                   const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i,j-1,k,n,q,ccc,vfrac,
                                               AMREX_D_DECL(fcx,fcy,fcz), flag,
                                               AMREX_D_DECL(extdir_or_ho_ilo, extdir_or_ho_jlo, extdir_or_ho_klo),
                                               AMREX_D_DECL(extdir_or_ho_ihi, extdir_or_ho_jhi, extdir_or_ho_khi),
                                               AMREX_D_DECL(domain_ilo, domain_jlo, domain_klo),
-                                              AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi));
-
+                                              AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi),
+                                              max_order);
 
                    qmns = q(i,j-1,k,n) + delta_x * slopes_eb_lo[0]
                                        + delta_y * slopes_eb_lo[1]
                                        + delta_z * slopes_eb_lo[2];
+ 
+                   qmns = amrex::max(amrex::min(qmns, qcc_max), qcc_min);
+
                    qmns -= 0.5 * dtdy * vmac(i,j,k) * slopes_eb_lo[1];
 
                 }  // end of making qmns
@@ -516,12 +573,21 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
                                 Real delta_x = xf  - ccc(i,j,k,0);,
                                 Real delta_z = zf  - ccc(i,j,k,2););
 
-                   const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,k,n,q,ccc,
-                                                                  AMREX_D_DECL(fcx,fcy,fcz), flag);
+                   Real qcc_max = amrex::max(q(i,j,k,n), q(i,j-1,k,n));
+                   Real qcc_min = amrex::min(q(i,j,k,n), q(i,j-1,k,n));
+
+                   // This will be used in the EB slope routine only if the slope can be computed without LS
+                   int max_order = 2;
+
+                   const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,k,n,q,ccc,vfrac,
+                                                                  AMREX_D_DECL(fcx,fcy,fcz),flag,max_order);
 
                    qpls = q(i,j,k,n) - delta_y * slopes_eb_hi[1]
                                      + delta_x * slopes_eb_hi[0]
                                      + delta_z * slopes_eb_hi[2];
+
+                   qpls = amrex::max(amrex::min(qpls, qcc_max), qcc_min);
+
                    qpls -= 0.5 * dtdy * vmac(i,j,k) * slopes_eb_hi[1];
 
                 }  // end of making qpls
@@ -554,12 +620,21 @@ void ebgodunov::plm_fpu_y (Box const& yebox, int ncomp,
                                 Real delta_x = xf  - ccc(i,j-1,k,0);,
                                 Real delta_z = zf  - ccc(i,j-1,k,2););
 
-                   const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j-1,k,n,q,ccc,
-                                                                  AMREX_D_DECL(fcx,fcy,fcz), flag);
+                   Real qcc_max = amrex::max(q(i,j,k,n), q(i,j-1,k,n));
+                   Real qcc_min = amrex::min(q(i,j,k,n), q(i,j-1,k,n));
+
+                   // This will be used in the EB slope routine only if the slope can be computed without LS
+                   int max_order = 2;
+
+                   const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j-1,k,n,q,ccc,vfrac,
+                                                                  AMREX_D_DECL(fcx,fcy,fcz),flag,max_order);
 
                    qmns = q(i,j-1,k,n) + delta_x * slopes_eb_lo[0]
                                        + delta_y * slopes_eb_lo[1]
                                        + delta_z * slopes_eb_lo[2];
+
+                   qmns = amrex::max(amrex::min(qmns, qcc_max), qcc_min);
+
                    qmns -= 0.5 * dtdy * vmac(i,j,k) * slopes_eb_lo[1];
 
                 }  // end of making qmns
@@ -672,16 +747,25 @@ void ebgodunov::plm_fpu_z (Box const& zebox, int ncomp,
                                 Real delta_x = xf  - ccc(i,j,k,0);,
                                 Real delta_y = yf  - ccc(i,j,k,1););
 
-                   const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j,k,n,q,ccc,
+                   Real qcc_max = amrex::max(q(i,j,k,n), q(i,j,k-1,n));
+                   Real qcc_min = amrex::min(q(i,j,k,n), q(i,j,k-1,n));
+
+                   // This will be used in the EB slope routine only if the slope can be computed without LS
+                   int max_order = 2;
+
+                   const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j,k,n,q,ccc,vfrac,
                                               AMREX_D_DECL(fcx,fcy,fcz), flag,
                                               AMREX_D_DECL(extdir_or_ho_ilo, extdir_or_ho_jlo, extdir_or_ho_klo),
                                               AMREX_D_DECL(extdir_or_ho_ihi, extdir_or_ho_jhi, extdir_or_ho_khi),
                                               AMREX_D_DECL(domain_ilo, domain_jlo, domain_klo),
-                                              AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi));
+                                              AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi),
+                                              max_order);
 
                    qpls = q(i,j,k,n) - delta_z * slopes_eb_hi[2]
                                      + delta_x * slopes_eb_hi[0]
                                      + delta_y * slopes_eb_hi[1];
+
+                   qpls = amrex::max(amrex::min(qpls, qcc_max), qcc_min);
 
                    qpls -= 0.5 * dtdz * wmac(i,j,k) * slopes_eb_hi[2];
 
@@ -724,17 +808,25 @@ void ebgodunov::plm_fpu_z (Box const& zebox, int ncomp,
                                 Real delta_x = xf  - ccc(i,j,k-1,0);,
                                 Real delta_y = yf  - ccc(i,j,k-1,1););
 
-                   const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i,j,k-1,n,q,ccc,
+                   Real qcc_max = amrex::max(q(i,j,k,n), q(i,j,k-1,n));
+                   Real qcc_min = amrex::min(q(i,j,k,n), q(i,j,k-1,n));
+
+                   // This will be used in the EB slope routine only if the slope can be computed without LS
+                   int max_order = 2;
+
+                   const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i,j,k-1,n,q,ccc,vfrac,
                                               AMREX_D_DECL(fcx,fcy,fcz), flag,
                                               AMREX_D_DECL(extdir_or_ho_ilo, extdir_or_ho_jlo, extdir_or_ho_klo),
                                               AMREX_D_DECL(extdir_or_ho_ihi, extdir_or_ho_jhi, extdir_or_ho_khi),
                                               AMREX_D_DECL(domain_ilo, domain_jlo, domain_klo),
-                                              AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi));
-
+                                              AMREX_D_DECL(domain_ihi, domain_jhi, domain_khi),
+                                              max_order);
 
                    qmns = q(i,j,k-1,n) + delta_x * slopes_eb_lo[0]
                                        + delta_y * slopes_eb_lo[1]
                                        + delta_z * slopes_eb_lo[2];
+
+                   qmns = amrex::max(amrex::min(qmns, qcc_max), qcc_min);
 
                    qmns -= 0.5 * dtdz * wmac(i,j,k) * slopes_eb_lo[2];
 
@@ -796,12 +888,20 @@ void ebgodunov::plm_fpu_z (Box const& zebox, int ncomp,
                                 Real delta_x = xf  - ccc(i,j,k,0);,
                                 Real delta_y = yf  - ccc(i,j,k,1););
 
-                   const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,k,n,q,ccc,
-                                                                  AMREX_D_DECL(fcx,fcy,fcz), flag);
+                   Real qcc_max = amrex::max(q(i,j,k,n), q(i,j,k-1,n));
+                   Real qcc_min = amrex::min(q(i,j,k,n), q(i,j,k-1,n));
+
+                   // This will be used in the EB slope routine only if the slope can be computed without LS
+                   int max_order = 2;
+
+                   const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,k,n,q,ccc,vfrac,
+                                                                  AMREX_D_DECL(fcx,fcy,fcz),flag,max_order);
 
                    qpls = q(i,j,k,n) - delta_z * slopes_eb_hi[2]
                                      + delta_x * slopes_eb_hi[0]
                                      + delta_y * slopes_eb_hi[1];
+
+                   qpls = amrex::max(amrex::min(qpls, qcc_max), qcc_min);
 
                    qpls -= 0.5 * dtdz * wmac(i,j,k) * slopes_eb_hi[2];
 
@@ -836,12 +936,20 @@ void ebgodunov::plm_fpu_z (Box const& zebox, int ncomp,
                                 Real delta_x = xf  - ccc(i,j,k-1,0);,
                                 Real delta_y = yf  - ccc(i,j,k-1,1););
 
-                   const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j,k-1,n,q,ccc,
-                                                                  AMREX_D_DECL(fcx,fcy,fcz), flag);
+                   Real qcc_max = amrex::max(q(i,j,k,n), q(i,j,k-1,n));
+                   Real qcc_min = amrex::min(q(i,j,k,n), q(i,j,k-1,n));
+
+                   // This will be used in the EB slope routine only if the slope can be computed without LS
+                   int max_order = 2;
+
+                   const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j,k-1,n,q,ccc,vfrac,
+                                                                  AMREX_D_DECL(fcx,fcy,fcz),flag,max_order);
 
                    qmns = q(i,j,k-1,n) + delta_x * slopes_eb_lo[0]
                                        + delta_y * slopes_eb_lo[1]
                                        + delta_z * slopes_eb_lo[2];
+
+                   qmns = amrex::max(amrex::min(qmns, qcc_max), qcc_min);
 
                    qmns -= 0.5 * dtdz * wmac(i,j,k) * slopes_eb_lo[2];
 

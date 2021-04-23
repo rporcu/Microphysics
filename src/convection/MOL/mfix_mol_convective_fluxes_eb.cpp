@@ -25,6 +25,7 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
                                         Array4<Real const> const& fcy,
                                         Array4<Real const> const& fcz,
                                         Array4<Real const> const& ccc,
+                                        Array4<Real const> const& vfrac,
                                         const GpuArray<int, 3> bc_types,
                                         std::map<std::string, Gpu::DeviceVector<int>>& state_bcs,
                                         Array4<int const> const& bct_ilo,
@@ -36,6 +37,8 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
                                         Geometry& geom)
 {
   constexpr Real my_huge = 1.e200;
+
+  int order = 2;
 
   const int* dirichlet_bcs  = (state_bcs["Dirichlet"]).data();
   const int  dirichlet_size = (state_bcs["Dirichlet"]).size();
@@ -72,11 +75,11 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
 
   if (check_extdir)
   {
-    ParallelFor(xbx,ncomp,[fx,ep_u_mac,state,state_comp,ccc,fcx,fcy,fcz,flag,
+    ParallelFor(xbx,ncomp,[fx,ep_u_mac,state,state_comp,ccc,vfrac,fcx,fcy,fcz,flag,
     check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi, bct_ilo, bct_ihi,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi, bct_jlo, bct_jhi,
     check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bct_klo, bct_khi,
-    bc_types, dirichlet_bcs, dirichlet_size]
+    bc_types, dirichlet_bcs, dirichlet_size, order]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       Real sx;
@@ -140,11 +143,12 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
           Real delta_z = zf - ccc(i,j,k,2);
 
           const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i  ,j,k,comp,
-                                        state, ccc, fcx, fcy, fcz, flag,
+                                        state, ccc, vfrac, fcx, fcy, fcz, flag,
                                         extdir_ilo, extdir_jlo, extdir_klo,
                                         extdir_ihi, extdir_jhi, extdir_khi,
                                         domain_ilo, domain_jlo, domain_klo,
-                                        domain_ihi, domain_jhi, domain_khi);
+                                        domain_ihi, domain_jhi, domain_khi,
+                                        order);
 
           Real upls = state_pls - delta_x * slopes_eb_hi[0]
                                 + delta_y * slopes_eb_hi[1]
@@ -157,11 +161,12 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
           delta_z = zf - ccc(i-1,j,k,2);
 
           const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i-1,j,k,comp,
-                                        state, ccc, fcx, fcy, fcz, flag,
+                                        state, ccc, vfrac, fcx, fcy, fcz, flag,
                                         extdir_ilo, extdir_jlo, extdir_klo,
                                         extdir_ihi, extdir_jhi, extdir_khi,
                                         domain_ilo, domain_jlo, domain_klo,
-                                        domain_ihi, domain_jhi, domain_khi);
+                                        domain_ihi, domain_jhi, domain_khi,
+                                        order);
 
           Real umns = state_mns + delta_x * slopes_eb_lo[0]
                                 + delta_y * slopes_eb_lo[1]
@@ -184,7 +189,7 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
   }
   else
   {
-    ParallelFor(xbx,ncomp,[fx,ep_u_mac,state,state_comp,ccc,fcx,fcy,fcz,flag]
+    ParallelFor(xbx,ncomp,[fx,ep_u_mac,state,state_comp,ccc,vfrac,fcx,fcy,fcz,flag,order]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       Real sx;
@@ -208,7 +213,7 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
         Real delta_z = zf - ccc(i,j,k,2);
 
         const auto& slopes_eb_hi = amrex_lim_slopes_eb(i  ,j,k,comp,
-                                      state, ccc, fcx, fcy, fcz, flag);
+                                      state, ccc, vfrac, fcx, fcy, fcz, flag, order);
 
         Real upls = state_pls - delta_x * slopes_eb_hi[0]
                               + delta_y * slopes_eb_hi[1]
@@ -221,7 +226,7 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
         delta_z = zf - ccc(i-1,j,k,2);
 
         const auto& slopes_eb_lo = amrex_lim_slopes_eb(i-1,j,k,comp,
-                                      state, ccc, fcx, fcy, fcz, flag);
+                                      state, ccc, vfrac, fcx, fcy, fcz, flag, order);
 
         Real umns = state_mns + delta_x * slopes_eb_lo[0]
                               + delta_y * slopes_eb_lo[1]
@@ -253,11 +258,11 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
 
   if (check_extdir)
   {
-    ParallelFor(ybx,ncomp,[fy,ep_v_mac,state,state_comp,ccc,fcx,fcy,fcz,flag,
+    ParallelFor(ybx,ncomp,[fy,ep_v_mac,state,state_comp,ccc,vfrac,fcx,fcy,fcz,flag,
     check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi, bct_ilo, bct_ihi,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi, bct_jlo, bct_jhi,
     check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bct_klo, bct_khi,
-    bc_types, dirichlet_bcs, dirichlet_size]
+    bc_types, dirichlet_bcs, dirichlet_size,order]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
 
@@ -322,11 +327,12 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
           Real delta_z = zf - ccc(i,j,k,2);
 
           const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j  ,k,comp,
-                                        state, ccc, fcx, fcy, fcz, flag,
+                                        state, ccc, vfrac, fcx, fcy, fcz, flag,
                                         extdir_ilo, extdir_jlo, extdir_klo,
                                         extdir_ihi, extdir_jhi, extdir_khi,
                                         domain_ilo, domain_jlo, domain_klo,
-                                        domain_ihi, domain_jhi, domain_khi);
+                                        domain_ihi, domain_jhi, domain_khi,
+                                        order);
 
           Real vpls = state_pls - delta_y * slopes_eb_hi[1]
                                 + delta_x * slopes_eb_hi[0]
@@ -339,11 +345,12 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
           delta_z = zf - ccc(i,j-1,k,2);
 
           const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i,j-1,k,comp,
-                                        state, ccc, fcx, fcy, fcz, flag,
+                                        state, ccc, vfrac, fcx, fcy, fcz, flag,
                                         extdir_ilo, extdir_jlo, extdir_klo,
                                         extdir_ihi, extdir_jhi, extdir_khi,
                                         domain_ilo, domain_jlo, domain_klo,
-                                        domain_ihi, domain_jhi, domain_khi);
+                                        domain_ihi, domain_jhi, domain_khi,
+                                        order);
 
           Real vmns = state_mns + delta_y * slopes_eb_lo[1]
                                 + delta_x * slopes_eb_lo[0]
@@ -352,6 +359,7 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
           vmns = amrex::max( amrex::min(vmns, cc_umax), cc_umin );
 
           sy = upwind(vmns, vpls, ep_v_mac(i,j,k));
+
         }
       }
       else {
@@ -365,7 +373,7 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
   }
   else
   {
-    ParallelFor(ybx,ncomp,[fy,ep_v_mac,state,state_comp,ccc,fcx,fcy,fcz,flag,my_huge]
+    ParallelFor(ybx,ncomp,[fy,ep_v_mac,state,state_comp,ccc,vfrac,fcx,fcy,fcz,flag,my_huge,order]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
 
@@ -389,7 +397,7 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
         Real delta_z = zf - ccc(i,j,k,2);
 
         const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j  ,k,comp,
-                                      state, ccc, fcx, fcy, fcz, flag);
+                                      state, ccc, vfrac, fcx, fcy, fcz, flag, order);
 
         Real vpls = state_pls - delta_y * slopes_eb_hi[1]
                               + delta_x * slopes_eb_hi[0]
@@ -402,7 +410,7 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
         delta_z = zf - ccc(i,j-1,k,2);
 
         const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j-1,k,comp,
-                                      state, ccc, fcx, fcy, fcz, flag);
+                                      state, ccc, vfrac, fcx, fcy, fcz, flag, order);
 
         Real vmns = state_mns + delta_y * slopes_eb_lo[1]
                               + delta_x * slopes_eb_lo[0]
@@ -430,11 +438,11 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
   if (check_extdir)
   {
 
-    ParallelFor(zbx,ncomp,[fz,ep_w_mac,state,state_comp,ccc,fcx,fcy,fcz,flag,
+    ParallelFor(zbx,ncomp,[fz,ep_w_mac,state,state_comp,ccc,vfrac,fcx,fcy,fcz,flag,
     check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi, bct_ilo, bct_ihi,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi, bct_jlo, bct_jhi,
     check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bct_klo, bct_khi,
-    bc_types, dirichlet_bcs, dirichlet_size]
+    bc_types, dirichlet_bcs, dirichlet_size,order]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
 
@@ -499,11 +507,12 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
           Real delta_z = .5 + ccc(i,j,k,2);
 
           const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j,k  ,comp,
-                                        state, ccc, fcx, fcy, fcz, flag,
+                                        state, ccc, vfrac, fcx, fcy, fcz, flag,
                                         extdir_ilo, extdir_jlo, extdir_klo,
                                         extdir_ihi, extdir_jhi, extdir_khi,
                                         domain_ilo, domain_jlo, domain_klo,
-                                        domain_ihi, domain_jhi, domain_khi);
+                                        domain_ihi, domain_jhi, domain_khi,
+                                        order);
 
           Real wpls = state_pls - delta_z * slopes_eb_hi[2]
                                 + delta_x * slopes_eb_hi[0]
@@ -516,11 +525,12 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
           delta_z = .5 - ccc(i,j,k-1,2);
 
           const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i,j,k-1,comp,
-                                        state, ccc, fcx, fcy, fcz, flag,
+                                        state, ccc, vfrac, fcx, fcy, fcz, flag,
                                         extdir_ilo, extdir_jlo, extdir_klo,
                                         extdir_ihi, extdir_jhi, extdir_khi,
                                         domain_ilo, domain_jlo, domain_klo,
-                                        domain_ihi, domain_jhi, domain_khi);
+                                        domain_ihi, domain_jhi, domain_khi,
+                                        order);
 
           Real wmns = state_mns + delta_z * slopes_eb_lo[2]
                                 + delta_x * slopes_eb_lo[0]
@@ -541,7 +551,7 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
   }
   else
   {
-    ParallelFor(zbx,ncomp,[fz,ep_w_mac,state,state_comp,ccc,fcx,fcy,fcz,flag]
+    ParallelFor(zbx,ncomp,[fz,ep_w_mac,state,state_comp,ccc,vfrac,fcx,fcy,fcz,flag,order]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
 
@@ -565,7 +575,7 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
         Real delta_z = .5 + ccc(i,j,k,2);
 
         const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,k  ,comp,
-                                      state, ccc, fcx, fcy, fcz, flag);
+                                      state, ccc, vfrac, fcx, fcy, fcz, flag, order);
 
         Real wpls = state_pls - delta_z * slopes_eb_hi[2]
                               + delta_x * slopes_eb_hi[0]
@@ -578,7 +588,7 @@ void mol::compute_convective_fluxes_eb (Box const& bx,
         delta_z = .5 - ccc(i,j,k-1,2);
 
         const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j,k-1,comp,
-                                      state, ccc, fcx, fcy, fcz, flag);
+                                      state, ccc, vfrac, fcx, fcy, fcz, flag, order);
 
         Real wmns = state_mns + delta_z * slopes_eb_lo[2]
                               + delta_x * slopes_eb_lo[0]
