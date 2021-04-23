@@ -1405,15 +1405,11 @@ public:
 
    // Invalid, Explicit, Crank_Nicolson, Implicit
     DiffusionType predictor_diff_type () const{
-      return (advection_type() == AdvectionType::MOL) ?
-        DiffusionType::Explicit:
-        DiffusionType::Implicit;
+      return m_predictor_diff_type;
     }
 
     DiffusionType corrector_diff_type () const{
-      return (advection_type() == AdvectionType::MOL) ?
-        DiffusionType::Crank_Nicolson:
-        DiffusionType::Invalid;
+      return m_corrector_diff_type;
     }
 
 

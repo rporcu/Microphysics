@@ -224,36 +224,14 @@ mfix::InitParams ()
     if (advection_type() == AdvectionType::MOL) m_godunov_include_diff_in_forcing = false;
 
     // MOL: Explicit predictor / Crank_Nicolson corrector
-    // Godunov: Implicit
+    // Godunov: Crank_Nicolson
     if (advection_type() == AdvectionType::MOL) {
       m_predictor_diff_type = DiffusionType::Explicit;
       m_corrector_diff_type = DiffusionType::Crank_Nicolson;
-
-    }
-
-    // The default for diffusion_type is 2, i.e. the default m_diff_type is DiffusionType::Implicit
-    int diffusion_type = (advection_type() == AdvectionType::MOL) ? 3 : 1;
-    pp.query("diffusion_type", diffusion_type);
-    if (diffusion_type == 0) {
-      m_predictor_diff_type = DiffusionType::Explicit;
-      m_corrector_diff_type = DiffusionType::Explicit;
-    } else if (diffusion_type == 1) {
+    } else {
       m_predictor_diff_type = DiffusionType::Crank_Nicolson;
       m_corrector_diff_type = DiffusionType::Crank_Nicolson;
-    } else if (diffusion_type == 2) {
-      m_predictor_diff_type = DiffusionType::Implicit;
-      m_corrector_diff_type = DiffusionType::Implicit;
-    } else if (diffusion_type == 3) {
-      m_predictor_diff_type = DiffusionType::Explicit;
-      m_corrector_diff_type = DiffusionType::Crank_Nicolson;
-    } else {
-      amrex::Abort("We currently require diffusion_type be one of the following:\
-                   \n   0: explicit,\
-                   \n   1: Crank-Nicolson\
-                   \n   2: implicit\
-                   \n   3: explicit predictor/Crank-Nicolson corrector (MOL only)");
     }
-
 
     // Default is true; should we use tensor solve instead of separate solves for each component?
     pp.query("use_tensor_solve",use_tensor_solve);
