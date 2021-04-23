@@ -23,6 +23,7 @@ mol::predict_vels_on_faces (int lev,
   auto const& flags = ebfact->getMultiEBCellFlagFab();
   auto const& facecent = ebfact->getFaceCent();
   auto const& cellcent = ebfact->getCentroid();
+  auto const& vfrac    = ebfact->getVolFrac();
 
   // ****************************************************************************
   // Then predict to face centers
@@ -37,12 +38,12 @@ mol::predict_vels_on_faces (int lev,
     const Box& wbx = mfi.nodaltilebox(2);
 
     // Face-centered velocity components
-    const auto& umac_fab = ep_u_mac.array(mfi);
-    const auto& vmac_fab = ep_v_mac.array(mfi);
-    const auto& wmac_fab = ep_w_mac.array(mfi);
+    const auto& umac_arr = ep_u_mac.array(mfi);
+    const auto& vmac_arr = ep_v_mac.array(mfi);
+    const auto& wmac_arr = ep_w_mac.array(mfi);
 
     // Cell-centered velocity
-    const auto& ccvel_fab = vel_in.const_array(mfi);
+    const auto& ccvel_arr = vel_in.const_array(mfi);
 
     EBCellFlagFab const& flagfab = flags[mfi];
     Array4<EBCellFlag const> const& flagarr = flagfab.const_array();
@@ -52,9 +53,9 @@ mol::predict_vels_on_faces (int lev,
     if (typ == FabType::covered )
     {
       amrex::ParallelFor(ubx, vbx, wbx,
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept { umac_fab(i,j,k) = 0.0; },
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept { vmac_fab(i,j,k) = 0.0; },
-      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept { wmac_fab(i,j,k) = 0.0; });
+      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept { umac_arr(i,j,k) = 0.0; },
+      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept { vmac_arr(i,j,k) = 0.0; },
+      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept { wmac_arr(i,j,k) = 0.0; });
     }
     // Cut cells in this FAB
 
@@ -62,17 +63,19 @@ mol::predict_vels_on_faces (int lev,
     {
 
       // Face centroids
-      const auto& fcx_fab = facecent[0]->const_array(mfi);
-      const auto& fcy_fab = facecent[1]->const_array(mfi);
-      const auto& fcz_fab = facecent[2]->const_array(mfi);
+      const auto& fcx_arr = facecent[0]->const_array(mfi);
+      const auto& fcy_arr = facecent[1]->const_array(mfi);
+      const auto& fcz_arr = facecent[2]->const_array(mfi);
 
       // Cell centroids
-      const auto& ccc_fab = cellcent.const_array(mfi);
+      const auto& ccc_arr = cellcent.const_array(mfi);
+
+      const auto& vfrac_arr = vfrac.const_array(mfi);
 
       mol::predict_vels_on_faces_eb(domain_bx, ubx, vbx, wbx,
-                                    umac_fab, vmac_fab, wmac_fab, ccvel_fab,
-                                    flagarr, fcx_fab, fcy_fab,  fcz_fab,
-                                    ccc_fab, bc_types,
+                                    umac_arr, vmac_arr, wmac_arr, ccvel_arr,
+                                    flagarr, fcx_arr, fcy_arr,  fcz_arr,
+                                    ccc_arr, vfrac_arr, bc_types,
                                     bc_ilo, bc_ihi,
                                     bc_jlo, bc_jhi,
                                     bc_klo, bc_khi);
@@ -82,7 +85,7 @@ mol::predict_vels_on_faces (int lev,
       {
 
         mol::predict_vels_on_faces(domain_bx, ubx, vbx, wbx,
-                                   umac_fab, vmac_fab, wmac_fab, ccvel_fab,
+                                   umac_arr, vmac_arr, wmac_arr, ccvel_arr,
                                    bc_types,
                                    bc_ilo, bc_ihi,
                                    bc_jlo, bc_jhi,

@@ -463,23 +463,26 @@ ebgodunov::compute_godunov_advection (Box const& bx, int ncomp,
     {
         if (vfrac_arr(i,j,k) > 0.)
         {
-            dqdt(i,j,k,n) = dxinv[0]*( apx(i  ,j,k)*u_mac(i  ,j,k)*qx(i  ,j,k,n) -
+            dqdt(i,j,k,n) = (1.0/vfrac_arr(i,j,k)) * (
+                            dxinv[0]*( apx(i  ,j,k)*u_mac(i  ,j,k)*qx(i  ,j,k,n) -
                                        apx(i+1,j,k)*u_mac(i+1,j,k)*qx(i+1,j,k,n) )
                 +           dxinv[1]*( apy(i,j  ,k)*v_mac(i,j  ,k)*qy(i,j  ,k,n) -
                                            apy(i,j+1,k)*v_mac(i,j+1,k)*qy(i,j+1,k,n) )
                 +           dxinv[2]*( apz(i,j,k  )*w_mac(i,j,k  )*qz(i,j,k  ,n) -
-                                       apz(i,j,k+1)*w_mac(i,j,k+1)*qz(i,j,k+1,n) );
+                                       apz(i,j,k+1)*w_mac(i,j,k+1)*qz(i,j,k+1,n) ) );
 #if 0
-            if (i == 192 && j == 13 && k == 38) 
+            if (i == 1 && j == 11 && k == 4) 
             {
+                if (j == 6 and k == 4) amrex::Print() << "FLUX " << v_mac(i,j,k) << " " << qy(i,j,k,n) << std::endl;
+
                 std::cout << "DOING COMP N   " << n << std::endl;
-                std::cout << "LO: AX UMAC QX " << apx(i  ,j,k) << " " << u_mac(i  ,j,k) << " " << qx(i  ,j,k,n) << std::endl;
-                std::cout << "HI: AY UMAC QX " << apx(i+1,j,k) << " " << u_mac(i+1,j,k) << " " << qx(i+1,j,k,n) << std::endl;
-                std::cout << "LO: AY VMAC QY " << apy(i,j  ,k) << " " << v_mac(i,j  ,k) << " " << qy(i,j  ,k,n) << std::endl;
-                std::cout << "HI: AX VMAC QY " << apy(i,j+1,k) << " " << v_mac(i,j+1,k) << " " << qy(i,j+1,k,n) << std::endl;
-                std::cout << "LO: AZ WMAC QZ " << apz(i,j,k  ) << " " << w_mac(i,j,k  ) << " " << qz(i,j,k  ,n) << std::endl;
-                std::cout << "HI: AZ WMAC QZ " << apz(i,j,k+1) << " " << w_mac(i,j,k+1) << " " << qz(i,j,k+1,n) << std::endl;
-                std::cout << "UPDATE IS      " << dqdt(i,j,k,n) << std::endl;
+                std::cout << "LO: AX UMAC QX " << apx(i  ,j,k) << " " << u_mac(i  ,j,k)* qx(i  ,j,k,n) << std::endl;
+                std::cout << "HI: AY UMAC QX " << apx(i+1,j,k) << " " << u_mac(i+1,j,k)* qx(i+1,j,k,n) << std::endl;
+                std::cout << "LO: AY VMAC QY " << apy(i,j  ,k) << " " << v_mac(i,j  ,k)* qy(i,j  ,k,n) << std::endl;
+                std::cout << "HI: AX VMAC QY " << apy(i,j+1,k) << " " << v_mac(i,j+1,k)* qy(i,j+1,k,n) << std::endl;
+                std::cout << "LO: AZ WMAC QZ " << apz(i,j,k  ) << " " << w_mac(i,j,k  )* qz(i,j,k  ,n) << std::endl;
+                std::cout << "HI: AZ WMAC QZ " << apz(i,j,k+1) << " " << w_mac(i,j,k+1)* qz(i,j,k+1,n) << std::endl;
+                std::cout << "UPDATE IS      " << IntVect(i,j,k) << " " << dqdt(i,j,k,n) << std::endl;
             }
 #endif
         } else {
