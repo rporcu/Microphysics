@@ -68,46 +68,46 @@ LevelData::LevelData (BoxArray const& ba,
   }
 }
 
-void LevelData::resetValues (const amrex::Real covered_val)
+void LevelData::resetValues (const amrex::Real init_value)
 {
   ep_g->setVal(1);
-  p_g->setVal(0);
-  p_go->setVal(0);
-  ro_g->setVal(0);
-  ro_go->setVal(0);
+  p_g->setVal(init_value);
+  p_go->setVal(init_value);
+  ro_g->setVal(init_value);
+  ro_go->setVal(init_value);
   trac->setVal(0);
-  trac_o->setVal(0);
-  vel_g->setVal(0);
-  vel_go->setVal(0);
-  p0_g->setVal(0);
+  trac_o->setVal(init_value);
+  vel_g->setVal(init_value);
+  vel_go->setVal(init_value);
+  p0_g->setVal(init_value);
   gp->setVal(0);
-  vort->setVal(0);
+  vort->setVal(init_value);
   txfr->setVal(0);
-  diveu->setVal(0);
-  mac_phi->setVal(0);
-  divtau_o->setVal(0);
-  ba_proc->setVal(0);
+  diveu->setVal(init_value);
+  mac_phi->setVal(init_value);
+  divtau_o->setVal(init_value);
+  ba_proc->setVal(init_value);
 
   if (solve_enthalpy) {
-    pressure_g->setVal(0);
-    pressure_go->setVal(0);
-    T_g->setVal(0);
-    T_go->setVal(0);
-    h_g->setVal(0);
-    h_go->setVal(0);
+    pressure_g->setVal(init_value);
+    pressure_go->setVal(init_value);
+    T_g->setVal(init_value);
+    T_go->setVal(init_value);
+    h_g->setVal(init_value);
+    h_go->setVal(init_value);
 
     if (EB::fix_temperature) {
-      T_g_on_eb->setVal(0);
+      T_g_on_eb->setVal(init_value);
     }
   }
 
   if (solve_species) {
-    X_gk->setVal(0);
-    X_gko->setVal(0);
+    X_gk->setVal(init_value);
+    X_gko->setVal(init_value);
   }
 
   if (REACTIONS::solve && solve_species) {
-    chem_txfr->setVal(0);
+    chem_txfr->setVal(init_value);
   }
 }
 
