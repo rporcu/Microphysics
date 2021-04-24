@@ -1176,6 +1176,7 @@ public:
     Real sum_vol_orig;
 
     Real covered_val = 1.e40;
+    Real init_value = 9.87654321e32;
 
     //
     // Options to control the computing of particle eulerian velocities
