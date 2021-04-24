@@ -10,7 +10,7 @@ amrex.fpe_trap_invalid = 1
 
 mfix.steady_state     = 1
 mfix.steady_state_tol = 1.0e-5
-mfix.steady_state_maxiter =500
+mfix.steady_state_maxiter =1000
 
 amr.blocking_factor = 8
 
