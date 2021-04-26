@@ -17,7 +17,7 @@ variables:
   FC: gfortran
   GIT_DEPTH: "100"
   GIT_STRATEGY: fetch
-  GIT_SUBMODULE_STRATEGY: none
+  GIT_SUBMODULE_STRATEGY: recursive
   SCCACHE_BUCKET: exa-sccache
   SCCACHE_REGION: us-west-2
 
@@ -119,9 +119,21 @@ test:nvcc:
     - cmake -S .
             -B build
             -DAMReX_CUDA_ARCH=Volta
-            -DCMAKE_BUILD_TYPE=NoOptimization
+            -DCMAKE_BUILD_TYPE=None
             -DCMAKE_CUDA_ARCHITECTURES=70
             -DMFIX_GPU_BACKEND=CUDA
+    - cmake --build build
+  <<: *test_gpu
+
+test:csg:
+  image: $CI_REGISTRY_IMAGE/nvcc
+  needs: ['build-nvcc-env']
+  script:
+    - sccache -s
+    - cmake -S .
+            -B build
+            -DCMAKE_BUILD_TYPE=Debug
+            -DMFIX_CSG=ON
     - cmake --build build
   <<: *test_gpu
 
@@ -139,25 +151,6 @@ test:nvcc:
     - cd build
     - $CTEST_CMD
   <<: *test_template
-
-.build:cuda-11.1:
-  stage: test
-  needs: []
-  script:
-    - module load anaconda/3.8 cmake/3.19.1 ccache/3.7.9 gnu/8.4.0 openmpi/4.0.3_gnu8.4 cuda/11.1
-    - git submodule update --init --force
-    - cmake -S .
-            -B build
-            -DAMReX_CUDA_ARCH=Volta
-            -DCMAKE_CUDA_ARCHITECTURES=70
-            -DMFIX_CSG=yes
-            -DMFIX_GPU_BACKEND=CUDA
-            -DMFIX_MPI=$ENABLE_MPI
-            -DMFIX_OMP=$ENABLE_OMP
-    - srun -p gpu cmake --build build --target build_tests -j
-  tags:
-    - joule
-  allow_failure: true
 
 test:single-serial:
   variables:
