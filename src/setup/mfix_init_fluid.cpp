@@ -77,14 +77,6 @@ void init_fluid (const Box& sbx,
   ParallelFor(sbx, [trac,trac_0] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
   { trac(i,j,k) = trac_0; });
 
-  // Set the rank of the box
-  Array4<Real> const& bx_proc = ld.ba_proc->array(mfi);
-
-  const Real proc = Real(ParallelDescriptor::MyProc());
-
-  ParallelFor(bx, [bx_proc, proc] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-  { bx_proc(i,j,k) = proc; });
-
   // Set the initial fluid temperature
   if (advect_enthalpy) {
     set_ic_temp(sbx, domain, dx, dy, dz, plo, (*ld.T_g)[mfi]);

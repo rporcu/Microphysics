@@ -1117,8 +1117,10 @@ public:
 
     // used if load_balance_type == "KnapSack"
     amrex::Vector< amrex::MultiFab* > particle_cost;
-    amrex::Vector< amrex::MultiFab* > particle_ba_proc;
+    amrex::Vector< amrex::MultiFab* > particle_proc;
     amrex::Vector< amrex::MultiFab* > fluid_cost;
+    amrex::Vector< amrex::MultiFab* > fluid_proc;
+
 
     // Level-Set Data => used for particle-wall collisions and fluid
     // reconstruction in particle drag calculation. NOTE: this has at least 2

@@ -58,11 +58,14 @@ mfix::~mfix ()
   for (int lev = 0; lev < particle_cost.size(); ++lev)
     delete particle_cost[lev];
 
-  for (int lev = 0; lev < particle_ba_proc.size(); ++lev)
-    delete particle_ba_proc[lev];
+  for (int lev = 0; lev < particle_proc.size(); ++lev)
+    delete particle_proc[lev];
 
   for (int lev = 0; lev < fluid_cost.size(); ++lev)
     delete fluid_cost[lev];
+
+  for (int lev = 0; lev < fluid_proc.size(); ++lev)
+    delete fluid_proc[lev];
 
   if (REACTIONS::solve) {
     for (int n(0); n < REACTIONS::nreactions; n++)

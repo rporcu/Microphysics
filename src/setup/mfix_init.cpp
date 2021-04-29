@@ -761,57 +761,50 @@ void mfix::InitLevelData (Real time)
     // Used in load balancing
     if (DEM::solve || PIC::solve)
     {
-      for (int lev(0); lev < particle_cost.size(); lev++)
-        if (particle_cost[lev] != nullptr)
-          delete particle_cost[lev];
+      for (int lev(0); lev < particle_cost.size(); lev++) {
+        if (particle_cost[lev] != nullptr)  delete particle_cost[lev];
+        if (particle_proc[lev] != nullptr)  delete particle_proc[lev];
+      }
 
       particle_cost.clear();
       particle_cost.resize(nlev, nullptr);
+      particle_proc.clear();
+      particle_proc.resize(nlev, nullptr);
+
+      const Real proc = static_cast<Real>(ParallelDescriptor::MyProc());
 
       for (int lev = 0; lev < nlev; lev++)
       {
         particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                           pc->ParticleDistributionMap(lev), 1, 0);
         particle_cost[lev]->setVal(0.0);
-      }
-
-      // initialize the rank of each particle grid
-      for (int lev(0); lev < particle_ba_proc.size(); lev++)
-        if (particle_ba_proc[lev] != nullptr)
-          delete particle_ba_proc[lev];
-      //
-      particle_ba_proc.clear();
-      particle_ba_proc.resize(nlev, nullptr);
-      //
-      amrex::Real proc = amrex::Real(ParallelDescriptor::MyProc());
-      //
-      for (int lev = 0; lev < nlev; lev++)
-      {
-        particle_ba_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                             pc->ParticleDistributionMap(lev), 1, 0);
-        for (MFIter mfi(*(particle_ba_proc[lev]), false); mfi.isValid(); ++mfi)
-        {
-          amrex::Array4<Real> const& par_bx_proc = particle_ba_proc[lev]->array(mfi);
-          ParallelFor(mfi.validbox(), [par_bx_proc, proc] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-          { par_bx_proc(i,j,k) = proc; });
-        }
+        particle_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                          pc->ParticleDistributionMap(lev), 1, 0);
+        particle_proc[lev]->setVal(proc);
       }
     }
 
     // Used in load balancing
     if (FLUID::solve)
     {
-      for (int lev(0); lev < fluid_cost.size(); lev++)
-        if (fluid_cost[lev] != nullptr)
-          delete fluid_cost[lev];
+      for (int lev(0); lev < fluid_cost.size(); lev++) {
+        if (fluid_cost[lev] != nullptr)  delete fluid_cost[lev];
+        if (fluid_proc[lev] != nullptr)  delete fluid_proc[lev];
+      }
 
       fluid_cost.clear();
       fluid_cost.resize(nlev, nullptr);
+      fluid_proc.clear();
+      fluid_proc.resize(nlev, nullptr);
+
+      const Real proc = static_cast<Real>(ParallelDescriptor::MyProc());
 
       for (int lev = 0; lev < nlev; lev++)
       {
         fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
         fluid_cost[lev]->setVal(0.0);
+        fluid_proc[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
+        fluid_proc[lev]->setVal(proc);
       }
     }
 }
@@ -890,20 +883,13 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
             particle_cost[lev]->setVal(0.0);
 
             // initialize the ranks of particle grids
-            if (particle_ba_proc[lev] != nullptr)
-              delete particle_ba_proc[lev];
+            if (particle_proc[lev] != nullptr)
+              delete particle_proc[lev];
             //
             const Real proc = Real(ParallelDescriptor::MyProc());
-            particle_ba_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                                 pc->ParticleDistributionMap(lev), 1, 0);
-
-            for (MFIter mfi(*(particle_ba_proc[lev]), false); mfi.isValid(); ++mfi)
-            {
-              amrex::Array4<Real> const& par_bx_proc = particle_ba_proc[lev]->array(mfi);
-              ParallelFor(mfi.validbox(), [par_bx_proc, proc] 
-                          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-                          { par_bx_proc(i,j,k) = proc; });
-            }
+            particle_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                              pc->ParticleDistributionMap(lev), 1, 0);
+            particle_proc[lev]->setVal(proc);
 
 
             // This calls re-creates a proper particle_ebfactories

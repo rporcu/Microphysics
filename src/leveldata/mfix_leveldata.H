@@ -134,9 +134,6 @@ class LevelData
     amrex::MultiFab* mac_phi;
 
     amrex::MultiFab* divtau_o;
-
-    // rank of each box
-    amrex::MultiFab* ba_proc;
 };
 
 #endif

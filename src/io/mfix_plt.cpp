@@ -516,13 +516,13 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 
         // rank of fluid grids
         if( plt_proc == 1 ) {
-          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->ba_proc, 0, lc, 1, 0);
+          MultiFab::Copy(*mf[lev], *fluid_proc[lev], 0, lc, 1, 0);
           lc += 1;
         }
 
         // rank of particle grids
         if ( plt_proc_p == 1 ) {
-          mf[lev]->ParallelCopy(*particle_ba_proc[lev], 0, lc, 1, 0, 0);
+          mf[lev]->ParallelCopy(*particle_proc[lev], 0, lc, 1, 0, 0);
           lc += 1;
         }
 

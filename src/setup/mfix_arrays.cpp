@@ -496,17 +496,6 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->divtau_o, divtau_new);
     delete divtau_new;
 
-
-    // Processes
-    MultiFab* ba_proc_new = new MultiFab(grids[lev], dmap[lev],
-                                         m_leveldata[lev]->ba_proc->nComp(),
-                                         m_leveldata[lev]->ba_proc->nGrow(),
-                                         MFInfo(), *ebfactory[lev]);
-    ba_proc_new->setVal(0);
-    std::swap(m_leveldata[lev]->ba_proc, ba_proc_new);
-    delete ba_proc_new;
-
-
    /****************************************************************************
     * x-face-based arrays                                                        *
     ****************************************************************************/
