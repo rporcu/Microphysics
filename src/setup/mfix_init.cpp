@@ -302,6 +302,9 @@ mfix::InitParams ()
     if (load_balance_type.compare("KnapSack") == 0)
       pp.query("knapsack_nmax", knapsack_nmax);
 
+    // fluid grids' distribution map 
+    pp.queryarr("pmap", pmap);
+
     // Parameters used be the level-set algorithm. Refer to LSFactory (or
     // mfix.H) for more details:
     //   -> refinement: how well resolved (fine) the (level-set/EB-facet)
@@ -336,6 +339,9 @@ mfix::InitParams ()
 
     // Keep particles that are initially touching the wall. Used by DEM tests.
     pp.query("removeOutOfRange", removeOutOfRange);
+    
+    // distribution map for particle grids
+    pp.queryarr("pmap", particle_pmap);
   }
 
   if ((DEM::solve || PIC::solve) && (!FLUID::solve))
@@ -527,7 +533,12 @@ void mfix::Init (Real time)
 
     // Define coarse level BoxArray and DistributionMap
     const BoxArray& ba = MakeBaseGrids();
-    DistributionMapping dm(ba, ParallelDescriptor::NProcs());
+    DistributionMapping dm;
+    if (pmap.empty())
+      dm.define(ba, ParallelDescriptor::NProcs());
+    else
+      dm.define(pmap);
+    // DistributionMapping dm(ba, ParallelDescriptor::NProcs());
     MakeNewLevelFromScratch(0, time, ba, dm);
 
 
@@ -872,7 +883,13 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
           {
             BoxArray particle_ba(geom[lev].Domain());
             particle_ba.maxSize(particle_max_grid_size);
-            DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
+
+            DistributionMapping particle_dm; 
+            if (particle_pmap.empty())
+              particle_dm.define(particle_ba, ParallelDescriptor::NProcs());
+            else
+              particle_dm.define(particle_pmap);
+
             pc->Regrid(particle_dm, particle_ba);
 
             if (particle_cost[lev] != nullptr)

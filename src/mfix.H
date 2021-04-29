@@ -1121,6 +1121,9 @@ public:
     amrex::Vector< amrex::MultiFab* > fluid_cost;
     amrex::Vector< amrex::MultiFab* > fluid_proc;
 
+    // set distribution map manually, used for profiling
+    amrex::Vector<int> pmap;
+    amrex::Vector<int> particle_pmap;
 
     // Level-Set Data => used for particle-wall collisions and fluid
     // reconstruction in particle drag calculation. NOTE: this has at least 2
