@@ -2,6 +2,7 @@
 #define __MFIX_INIT_FLUID_HPP_
 
 #include <mfix.H>
+#include <mfix_fluid_parms.H>
 
 #include <AMReX_REAL.H>
 #include <AMReX_BLFort.H>
@@ -23,7 +24,8 @@ void init_fluid (const amrex::Box& sbx,
                  bool test_tracer_conservation,
                  const int advect_enthalpy,
                  const int advect_fluid_species,
-                 const int& constraint_type);
+                 const int& constraint_type,
+                 FluidPhase& fluid);
 
 void init_periodic_vortices (const Box& bx,
                              const Box& domain,
@@ -44,7 +46,8 @@ void init_fluid_parameters (const Box& bx,
                             const MFIter& mfi,
                             LevelData& ld,
                             const int advect_enthalpy,
-                            const int advect_fluid_species);
+                            const int advect_fluid_species,
+                            FluidPhase& fluid);
 
 void set_ic (const Box& sbx,
              const Box& domain,

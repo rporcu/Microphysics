@@ -16,6 +16,8 @@
 #include <AMReX_NeighborParticles.H>
 
 #include <mfix_pic_parms.H>
+#include <mfix_fluid_parms.H>
+#include <mfix_solids_parms.H>
 #include <mfix_reactions_parms.H>
 #include <mfix_bc_list.H>
 #include <mfix_leveldata.H>
@@ -127,7 +129,8 @@ public:
     int NumberOfParticles (MFIXParIter& pti)
     { return pti.numParticles(); }
 
-    MFIXParticleContainer (amrex::AmrCore* amr_core);
+    MFIXParticleContainer (amrex::AmrCore* amr_core,
+                           SolidsPhase& solids);
 
     virtual ~MFIXParticleContainer () {};
 
@@ -327,6 +330,8 @@ public:
     void usr2_des (int np, ParticleTileType& particles);
 
     void usr3_des (int np,void*&);
+
+    SolidsPhase& solids;
 };
 
 #endif

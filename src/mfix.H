@@ -32,6 +32,7 @@
 #include <mfix_eb_if.H>
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
+#include <mfix_fluid_parms.H>
 #include <mfix_reactions_parms.H>
 #include <mfix_leveldata.H>
 #include <mfix_des_heterogeneous_rates_K.H>
@@ -60,6 +61,12 @@ class mfix : public AmrCore
 
     // Destructor
     ~mfix ();
+
+    // Fluid phase
+    FluidPhase fluid;
+
+    // Fluid phase
+    SolidsPhase solids;
 
     // Face-based coefficients b in MAC projection and implicit diffusion solve
     Vector< Array<MultiFab*,3> > bcoeff;
@@ -237,8 +244,7 @@ class mfix : public AmrCore
                                  amrex::Vector<amrex::MultiFab*      > const& T_g_in,
                                  amrex::Vector<amrex::MultiFab const*> const& txfr_in,
                                  amrex::Vector<amrex::MultiFab const*> const& rho_in,
-                                 amrex::Vector<amrex::MultiFab const*> const& ep_g_in,
-                                 amrex::Vector<amrex::MultiFab const*> const& cp_g_in);
+                                 amrex::Vector<amrex::MultiFab const*> const& ep_g_in);
 
     void mfix_correct_small_cells (Vector< MultiFab*     > const& vel_in,
                                    Vector<MultiFab const*> const& ep_u_mac,
@@ -257,8 +263,7 @@ class mfix : public AmrCore
     void mfix_set_temperature_bcs (Real time,
                                    Vector< MultiFab* > const& T_g);
 
-    void mfix_set_eb_temperature_bcs (Vector< MultiFab* > const& eb_T_g_in,
-                                      Vector< MultiFab* > const& eb_k_g_in);
+    void mfix_set_eb_temperature_bcs (Vector< MultiFab* > const& eb_T_g_in);
 
     void mfix_set_density_bcs (Real time,
                                Vector< MultiFab* > const& ro_g);
@@ -266,17 +271,8 @@ class mfix : public AmrCore
     void mfix_set_tracer_bcs (Real time,
                               Vector< MultiFab* > const& trac);
 
-    void mfix_set_scalar_bcs (Real time,
-                              Vector< MultiFab* > const& mu_g,
-                              Vector< MultiFab* > const& cp_g,
-                              Vector< MultiFab* > const& k_g,
-                              Vector< MultiFab* > const& MW_g);
-
     void mfix_set_species_bcs (Real time,
-                               Vector< MultiFab* > const& X_gk,
-                               Vector< MultiFab* > const& D_gk,
-                               Vector< MultiFab* > const& cp_gk,
-                               Vector< MultiFab* > const& h_gk);
+                               Vector< MultiFab* > const& X_gk);
 
     void set_velocity_bcs (Real time,
                            const int lev,
@@ -307,8 +303,6 @@ class mfix : public AmrCore
                                  const Real dz,
                                  const GpuArray<Real, AMREX_SPACEDIM>& plo,
                                  FArrayBox& eb_T_g_fab,
-                                 FArrayBox& eb_k_g_fab,
-                                 FArrayBox& k_g_fab,
                                  const EBCellFlagFab& flags_fab);
 
     void set_density_bcs (Real time,
@@ -321,21 +315,6 @@ class mfix : public AmrCore
                          FArrayBox& trac_fab,
                          const Box& domain);
 
-    void set_viscosity_bcs (Real time,
-                            const int lev,
-                            FArrayBox& scal_fab,
-                            const Box& domain);
-
-    void set_specific_heat_bcs (Real time,
-                                const int lev,
-                                FArrayBox& scal_fab,
-                                const Box& domain);
-
-    void set_thermal_conductivity_bcs (Real time,
-                                       const int lev,
-                                       FArrayBox& scal_fab,
-                                       const Box& domain);
-
     void set_molecular_weight_bcs (Real time,
                                    const int lev,
                                    FArrayBox& scal_fab,
@@ -345,21 +324,6 @@ class mfix : public AmrCore
                                    const int lev,
                                    FArrayBox& X_gk_fab,
                                    const Box& domain);
-
-    void set_species_diffusivities_g_bcs (Real time,
-                                          const int lev,
-                                          FArrayBox& D_gk_fab,
-                                          const Box& domain);
-
-    void set_species_specific_heat_g_bcs (Real time,
-                                          const int lev,
-                                          FArrayBox& cp_gk_fab,
-                                          const Box& domain);
-
-    void set_species_enthalpy_g_bcs (Real time,
-                                     const int lev,
-                                     FArrayBox& h_gk_fab,
-                                     const Box& domain);
 
     void set_vec_bcs (const int lev,
                       FArrayBox& vec_fab,
@@ -413,18 +377,14 @@ class mfix : public AmrCore
     void mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                     Vector< MultiFab* > const& ro_g_in,
                                     Vector< MultiFab* > const& vel_g_in,
-                                    Vector< MultiFab* > const& mu_g_in,
-                                    Vector< MultiFab* > const& cp_g_in,
-                                    Vector< MultiFab* > const& k_g_in,
+                                    Vector< MultiFab* > const& T_g_in,
                                     F1 DragFunc);
 
     template <typename F1, typename F2>
     void mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                     Vector< MultiFab* > const& ro_g_in,
                                     Vector< MultiFab* > const& vel_g_in,
-                                    Vector< MultiFab* > const& mu_g_in,
-                                    Vector< MultiFab* > const& cp_g_in,
-                                    Vector< MultiFab* > const& k_g_in,
+                                    Vector< MultiFab* > const& T_g_in,
                                     F1 DragFunc,
                                     F2 ConvectionCoeff);
 
@@ -645,28 +605,6 @@ public:
                        amrex::Vector< amrex::MultiFab const*> const& ep_g_in,
                        amrex::Vector< amrex::MultiFab const*> const& ro_g_in);
 
-    void apply_MAC_projection (const bool update_laplacians,
-                               Vector< MultiFab* > const& lap_T,
-                               Vector< MultiFab* > const& lap_X,
-                               Vector< MultiFab* > const& ep_u_mac,
-                               Vector< MultiFab* > const& ep_v_mac,
-                               Vector< MultiFab* > const& ep_w_mac,
-                               Vector< MultiFab* > const& ep_g_in,
-                               Vector< MultiFab* > const& ro_g_in,
-                               Vector< MultiFab* > const& MW_g_in,
-                               Vector< MultiFab* > const& T_g_in,
-                               Vector< MultiFab* > const& cp_g_in,
-                               Vector< MultiFab* > const& k_g_in,
-                               Vector< MultiFab* > const& T_g_on_eb_in,
-                               Vector< MultiFab* > const& k_g_on_eb_in,
-                               Vector< MultiFab* > const& X_gk_in,
-                               Vector< MultiFab* > const& D_gk_in,
-                               Vector< MultiFab* > const& h_gk_in,
-                               Vector< MultiFab* > const& txfr_in,
-                               Vector< MultiFab* > const& chem_txfr_in,
-                               Vector< MultiFab* > const& pressure_g_in,
-                               Real time);
-
   protected:
     void FillPatchVel (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
                        const Vector<BCRec> & bcr);
@@ -692,17 +630,13 @@ public:
     void mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                     Vector< MultiFab* > const& ro_g_in,
                                     Vector< MultiFab* > const& vel_g_in,
-                                    Vector< MultiFab* > const& mu_g_in,
-                                    Vector< MultiFab* > const& cp_g_in,
-                                    Vector< MultiFab* > const& k_g_in);
+                                    Vector< MultiFab* > const& T_g_in);
 
     void mfix_calc_txfr_fluid (Vector<MultiFab*> const& txfr,
                                Vector< MultiFab* > const& ep_g_in,
                                Vector< MultiFab* > const& ro_g_in,
                                Vector< MultiFab* > const& vel_g_in,
-                               Vector< MultiFab* > const& mu_g_in,
-                               Vector< MultiFab* > const& cp_g_in,
-                               Vector< MultiFab* > const& k_g_in,
+                               Vector< MultiFab* > const& T_g_in,
                                Real time);
 
   protected:
@@ -717,10 +651,8 @@ public:
                               const Vector< MultiFab* >& ep_g_in,
                               const Vector< MultiFab* >& ro_g_in,
                               const Vector< MultiFab* >& vel_g_in,
+                              const Vector< MultiFab* >& T_g_in,
                               const Vector< MultiFab* >& X_gk_in,
-                              const Vector< MultiFab* >& D_gk_in,
-                              const Vector< MultiFab* >& h_gk_in,
-                              const Vector< MultiFab* >& cp_gk_in,
                               const Real time);
 
     template <typename F1>
@@ -728,10 +660,8 @@ public:
                               const Vector< MultiFab* >& ep_g_in,
                               const Vector< MultiFab* >& ro_g_in,
                               const Vector< MultiFab* >& vel_g_in,
+                              const Vector< MultiFab* >& T_g_in,
                               const Vector< MultiFab* >& X_gk_in,
-                              const Vector< MultiFab* >& D_gk_in,
-                              const Vector< MultiFab* >& h_gk_in,
-                              const Vector< MultiFab* >& cp_gk_in,
                               const Real time,
                               F1 WeightFunc);
 
@@ -740,10 +670,8 @@ public:
                               const Vector< MultiFab* >& ep_g_in,
                               const Vector< MultiFab* >& ro_g_in,
                               const Vector< MultiFab* >& vel_g_in,
+                              const Vector< MultiFab* >& T_g_in,
                               const Vector< MultiFab* >& X_gk_in,
-                              const Vector< MultiFab* >& D_gk_in,
-                              const Vector< MultiFab* >& h_gk_in,
-                              const Vector< MultiFab* >& cp_gk_in,
                               const Real time,
                               F1 WeightFunc,
                               F2 RRatesFunc);
@@ -853,13 +781,12 @@ public:
     void mfix_density_rhs (Vector< MultiFab*       > const& rhs,
                            Vector< MultiFab const* > const& chem_txfr);
 
-    void mfix_enthalpy_rhs (Vector< MultiFab*       > const& rhs,
-                            Vector< MultiFab const* > const& ep_g,
-                            Vector< MultiFab const* > const& ro_g,
-                            Vector< MultiFab*       > const& X_gk,
-                            Vector< MultiFab const* > const& D_gk,
-                            Vector< MultiFab const* > const& h_gk,
-                            Vector< MultiFab const* > const& chem_txfr);
+    void mfix_enthalpy_rhs(Vector< MultiFab*      > const& rhs,
+                           Vector< MultiFab const*> const& ep_g,
+                           Vector< MultiFab const*> const& ro_g,
+                           Vector< MultiFab*      > const& X_gk,
+                           Vector< MultiFab const*> const& T_g,
+                           Vector< MultiFab const* > const& chem_txfr);
 
     void mfix_scalar_rhs (/*Vector< MultiFab* > const& rhs,*/
                           Vector< MultiFab const* > const& trac,
@@ -903,13 +830,9 @@ public:
   public:
     void mfix_normalize_fluid_species (const Vector< MultiFab* >& X_gk);
 
-    void mfix_update_fluid_and_species (const Vector< MultiFab* >& cp_gk,
-                                        const Vector< MultiFab* >& h_gk,
-                                        const Vector< MultiFab* >& MW_g,
-                                        const Vector< MultiFab* >& cp_g,
-                                        const Vector< MultiFab* >& h_g,
-                                        const Vector< MultiFab* >& T_g,
-                                        const Vector< MultiFab* >& X_gk);
+    void mfix_update_fluid_and_species(const Vector< MultiFab* >& h_g,
+                                       const Vector< MultiFab* >& T_g,
+                                       const Vector< MultiFab* >& X_gk);
 
     void mfix_open_system_rhs (Vector< MultiFab*       > const& rhs,
                                Vector< MultiFab const* > const& lap_T,
@@ -917,12 +840,8 @@ public:
                                Vector< MultiFab const* > const& lap_X,
                                Vector< MultiFab const* > const& species_rhs,
                                Vector< MultiFab const* > const& ro_g,
-                               Vector< MultiFab const* > const& MW_g,
                                Vector< MultiFab const* > const& T_g,
-                               Vector< MultiFab const* > const& cp_g,
                                Vector< MultiFab*       > const& X_gk,
-                               Vector< MultiFab const* > const& D_gk,
-                               Vector< MultiFab const* > const& h_gk,
                                Vector< MultiFab const* > const& txfr,
                                Vector< MultiFab const* > const& chem_txfr);
 
@@ -933,12 +852,8 @@ public:
                                  Vector< MultiFab const* > const& species_rhs,
                                  Vector< MultiFab const* > const& ep_g,
                                  Vector< MultiFab const* > const& ro_g,
-                                 Vector< MultiFab const* > const& MW_g,
                                  Vector< MultiFab const* > const& T_g,
-                                 Vector< MultiFab const* > const& cp_g,
                                  Vector< MultiFab*       > const& X_gk,
-                                 Vector< MultiFab const* > const& D_gk,
-                                 Vector< MultiFab const* > const& h_gk,
                                  Vector< MultiFab const* > const& txfr,
                                  Vector< MultiFab const* > const& chem_txfr,
                                  Vector< MultiFab const* > const& pressure_g,
@@ -1002,7 +917,6 @@ public:
     Vector< MultiFab* > get_ep_g () noexcept;
     Vector< MultiFab* > get_ro_g () noexcept;
     Vector< MultiFab* > get_ro_g_old () noexcept;
-    Vector< MultiFab* > get_MW_g () noexcept;
     Vector< MultiFab* > get_trac () noexcept;
     Vector< MultiFab* > get_trac_old () noexcept;
     Vector< MultiFab* > get_vel_g () noexcept;
@@ -1010,22 +924,15 @@ public:
     Vector< MultiFab* > get_gp () noexcept;
     Vector< MultiFab* > get_p_g () noexcept;
     Vector< MultiFab* > get_p_g_old () noexcept;
-    Vector< MultiFab* > get_mu_g () noexcept;
     Vector< MultiFab* > get_pressure_g () noexcept;
     Vector< MultiFab* > get_pressure_g_old () noexcept;
     Vector< MultiFab* > get_T_g () noexcept;
     Vector< MultiFab* > get_T_g_old () noexcept;
-    Vector< MultiFab* > get_cp_g () noexcept;
-    Vector< MultiFab* > get_k_g () noexcept;
     Vector< MultiFab* > get_h_g () noexcept;
     Vector< MultiFab* > get_h_g_old () noexcept;
     Vector< MultiFab* > get_T_g_on_eb () noexcept;
-    Vector< MultiFab* > get_k_g_on_eb () noexcept;
     Vector< MultiFab* > get_X_gk () noexcept;
     Vector< MultiFab* > get_X_gk_old () noexcept;
-    Vector< MultiFab* > get_D_gk () noexcept;
-    Vector< MultiFab* > get_cp_gk () noexcept;
-    Vector< MultiFab* > get_h_gk () noexcept;
     Vector< MultiFab* > get_txfr () noexcept;
     Vector< MultiFab* > get_chem_txfr () noexcept;
     Vector< MultiFab* > get_diveu () noexcept;
@@ -1055,15 +962,7 @@ public:
 
     amrex::Vector< MultiFab const* > get_divtau_const () const noexcept;
 
-    amrex::Vector< amrex::MultiFab const* > get_MW_g_const () const noexcept;
-    amrex::Vector< amrex::MultiFab const* > get_mu_g_const () const noexcept;
-    amrex::Vector< amrex::MultiFab const* > get_cp_g_const () const noexcept;
-    amrex::Vector< amrex::MultiFab const* > get_k_g_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_T_g_on_eb_const () const noexcept;
-    amrex::Vector< amrex::MultiFab const* > get_k_g_on_eb_const () const noexcept;
-    amrex::Vector< amrex::MultiFab const* > get_D_gk_const () const noexcept;
-    amrex::Vector< amrex::MultiFab const* > get_cp_gk_const () const noexcept;
-    amrex::Vector< amrex::MultiFab const* > get_h_gk_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_txfr_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_chem_txfr_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_diveu_const () const noexcept;
@@ -1282,6 +1181,7 @@ public:
     Real sum_vol_orig;
 
     Real covered_val = 1.e40;
+    Real init_value = 9.87654321e32;
 
     //
     // Options to control the computing of particle eulerian velocities
@@ -1414,9 +1314,6 @@ public:
     Vector< Vector< MultiFab* > > chkSpeciesVars;
     Vector< std::string > chkSpeciesVarsName;
 
-    Vector< Vector< MultiFab* > > chkSpeciesTVars;
-    Vector< std::string > chkSpeciesTVarsName;
-
     /***************************************************************************
      *                                                                         *
      * Used for fillpatching ...                                               *
@@ -1514,15 +1411,11 @@ public:
 
    // Invalid, Explicit, Crank_Nicolson, Implicit
     DiffusionType predictor_diff_type () const{
-      return (advection_type() == AdvectionType::MOL) ?
-        DiffusionType::Explicit:
-        DiffusionType::Implicit;
+      return m_predictor_diff_type;
     }
 
     DiffusionType corrector_diff_type () const{
-      return (advection_type() == AdvectionType::MOL) ?
-        DiffusionType::Crank_Nicolson:
-        DiffusionType::Invalid;
+      return m_corrector_diff_type;
     }
 
 

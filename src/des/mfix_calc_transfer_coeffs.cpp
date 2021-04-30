@@ -9,24 +9,22 @@
 void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& ro_g_in,
                                       Vector< MultiFab* > const& vel_g_in,
-                                      Vector< MultiFab* > const& mu_g_in,
-                                      Vector< MultiFab* > const& cp_g_in,
-                                      Vector< MultiFab* > const& k_g_in)
+                                      Vector< MultiFab* > const& T_g_in)
 {
   if (m_drag_type == DragType::WenYu) {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in,
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in,
                               ComputeDragWenYu(DEM::small_number, DEM::large_number, DEM::eps));
   }
   else if (m_drag_type == DragType::Gidaspow) {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in,
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in,
                               ComputeDragGidaspow(DEM::small_number,DEM::large_number,DEM::eps));
   }
   else if (m_drag_type == DragType::BVK2) {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in,
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in,
                               ComputeDragBVK2(DEM::small_number,DEM::large_number,DEM::eps));
   }
   else if (m_drag_type == DragType::UserDrag) {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in,
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in,
                               ComputeDragUser(DEM::small_number,DEM::large_number,DEM::eps));
   }
   else {
@@ -38,19 +36,17 @@ template <typename F1>
 void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& ro_g_in,
                                       Vector< MultiFab* > const& vel_g_in,
-                                      Vector< MultiFab* > const& mu_g_in,
-                                      Vector< MultiFab* > const& cp_g_in,
-                                      Vector< MultiFab* > const& k_g_in,
+                                      Vector< MultiFab* > const& T_g_in,
                                       F1 DragFunc)
 {
   if (advect_enthalpy)
   {
     if (m_convection_type == ConvectionType::RanzMarshall) {
-        mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in, DragFunc,
+        mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, DragFunc,
                                   ComputeConvRanzMarshall(DEM::small_number,DEM::large_number,DEM::eps));
     }
     else if (m_convection_type == ConvectionType::Gunn) {
-      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in, DragFunc,
+      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, DragFunc,
                                 ComputeConvGunn(DEM::small_number,DEM::large_number,DEM::eps));
     }
     else {
@@ -58,7 +54,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
     }
   }
   else {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in, DragFunc,
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, DragFunc,
                               NullConvectionCoeff());
   }
 }
@@ -67,9 +63,7 @@ template <typename F1, typename F2>
 void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& ro_g_in,
                                       Vector< MultiFab* > const& vel_g_in,
-                                      Vector< MultiFab* > const& mu_g_in,
-                                      Vector< MultiFab* > const& cp_g_in,
-                                      Vector< MultiFab* > const& k_g_in,
+                                      Vector< MultiFab* > const& T_g_in,
                                       F1 DragFunc,
                                       F2 ConvectionCoeff)
 {
@@ -86,12 +80,10 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   // We can remove these lines once we're confident in the algorithm
   EB_set_covered(*vel_g_in[0], 0, 3, 1, covered_val);
   EB_set_covered(*ep_g_in[0],  0, 1, 1, covered_val);
-  EB_set_covered(*mu_g_in[0],  0, 1, 1, covered_val);
   EB_set_covered(*ro_g_in[0],  0, 1, 1, covered_val);
 
   if (advect_enthalpy) {
-    EB_set_covered(*cp_g_in[0],  0, 1, 1, covered_val);
-    EB_set_covered(*k_g_in[0],   0, 1, 1, covered_val);
+    EB_set_covered(*T_g_in[0],  0, 1, 1, covered_val);
   }
 
   for (int lev = 0; lev < nlev; lev++)
@@ -100,9 +92,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                          (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
     MultiFab* ro_ptr;
-    MultiFab* mu_ptr;
-    MultiFab* cp_ptr;
-    MultiFab* kg_ptr;
+    MultiFab* T_ptr;
     MultiFab* interp_ptr;
 
     const int interp_ng = 1;    // Only one layer needed for interpolation
@@ -111,15 +101,12 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
     if (OnSameGrids)
     {
       ro_ptr = ro_g_in[lev];
-      mu_ptr = mu_g_in[lev];
 
       if (advect_enthalpy) {
-        kg_ptr = k_g_in[lev];
-        cp_ptr = cp_g_in[lev];
+        T_ptr = T_g_in[lev];
       }
       else {
-        kg_ptr = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-        cp_ptr = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+        T_ptr = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
       }
 
       // Store gas velocity and volume fraction for interpolation
@@ -148,19 +135,12 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       ro_ptr = new MultiFab(pba, pdm, ro_g_in[lev]->nComp(), 1);
       ro_ptr->copy(*ro_g_in[lev], 0, 0, 1, ng_to_copy, ng_to_copy);
 
-      mu_ptr = new MultiFab(pba, pdm, mu_g_in[lev]->nComp(), 1);
-      mu_ptr->copy(*mu_g_in[lev], 0, 0, 1, ng_to_copy, ng_to_copy);
-
       if (advect_enthalpy) {
-        kg_ptr = new MultiFab(pba, pdm, k_g_in[lev]->nComp(), 1);
-        kg_ptr->copy(*k_g_in[lev], 0, 0, 1, ng_to_copy, ng_to_copy);
-
-        cp_ptr = new MultiFab(pba, pdm, cp_g_in[lev]->nComp(), 1);
-        cp_ptr->copy(*cp_g_in[lev], 0, 0, 1, ng_to_copy, ng_to_copy);
+        T_ptr = new MultiFab(pba, pdm, T_g_in[lev]->nComp(), 1);
+        T_ptr->copy(*T_g_in[lev], 0, 0, 1, ng_to_copy, ng_to_copy);
       }
       else {
-        kg_ptr = new MultiFab(pba, pdm, 1, 0, MFInfo(), ebfactory_loc);
-        cp_ptr = new MultiFab(pba, pdm, 1, 0, MFInfo(), ebfactory_loc);
+        T_ptr = new MultiFab(pba, pdm, 1, 0, MFInfo(), ebfactory_loc);
       }
 
       // Store gas velocity and volume fraction for interpolation
@@ -193,6 +173,8 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       const auto bndrycent = &(factory.getBndryCent());
       const auto areafrac = factory.getAreaFrac();
 
+      auto& fluid_parms = *fluid.parameters;
+
       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
       {
         auto& particles = pti.GetArrayOfStructs();
@@ -212,20 +194,21 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
         {
           const auto& interp_array = interp_ptr->array(pti);
           const auto& ro_array     = ro_ptr->array(pti);
-          const auto& mu_array     = mu_ptr->array(pti);
-          const auto& kg_array     = kg_ptr->array(pti);
-          const auto& cp_array     = cp_ptr->array(pti);
+          const auto& T_array      = advect_enthalpy ? T_ptr->array(pti) : Array4<const Real>();
 
           const auto& flags_array  = flags.array();
 
           auto particles_ptr = particles().dataPtr();
 
+          const int adv_enthalpy = advect_enthalpy;
+          const Real mu_g0 = fluid.mu_g0;
+
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
             amrex::ParallelFor(np,
-              [particles_ptr,p_realarray,interp_array,ro_array,mu_array,
-               kg_array,cp_array,DragFunc, ConvectionCoeff,plo,dxi,
-               local_cg_dem=DEM::cg_dem, local_advect_enthalpy=advect_enthalpy]
+              [particles_ptr,p_realarray,interp_array,ro_array,T_array,
+               DragFunc,ConvectionCoeff,plo,dxi,adv_enthalpy,mu_g0,fluid_parms,
+               local_cg_dem=DEM::cg_dem]
               AMREX_GPU_DEVICE (int ip) noexcept
             {
               MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
@@ -248,7 +231,12 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
               int kloc = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2]));
 
               Real  ro = ro_array(iloc,jloc,kloc);
-              Real  mu = mu_array(iloc,jloc,kloc);
+              Real  mu(0);
+
+              if (adv_enthalpy)
+                mu = fluid_parms.calc_mu_g(T_array(iloc,jloc,kloc));
+              else
+                mu = mu_g0;
 
               Real rad = p_realarray[SoArealData::radius][ip];
               Real vol = p_realarray[SoArealData::volume][ip];
@@ -279,9 +267,9 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
               p_realarray[SoArealData::dragcoeff][ip] = beta;
 
-              if(local_advect_enthalpy){
-                Real kg = kg_array(iloc,jloc,kloc);
-                Real cp = cp_array(iloc,jloc,kloc);
+              if(adv_enthalpy){
+                Real kg = fluid_parms.calc_k_g(T_array(iloc,jloc,kloc));
+                Real cp = fluid_parms.calc_cp_g(T_array(iloc,jloc,kloc));
                 Real gamma = ConvectionCoeff(ep, mu, kg, cp, rop_g, vrel, dp, iloc, jloc, kloc, p_id);
                 p_realarray[SoArealData::convection][ip] = 4.0*M_PI*rad*rad*gamma;
               }
@@ -299,11 +287,14 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
             const auto& apy_fab = areafrac[1]->array(pti);
             const auto& apz_fab = areafrac[2]->array(pti);
 
+            const int adv_enthalpy = advect_enthalpy;
+            const Real mu_g0 = fluid.mu_g0;
+
             amrex::ParallelFor(np,
-              [particles_ptr,p_realarray,interp_array,ro_array,mu_array,kg_array,cp_array,
-               DragFunc, ConvectionCoeff,
-               plo,dx,dxi,flags_array,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-               local_cg_dem=DEM::cg_dem,local_advect_enthalpy=advect_enthalpy]
+              [particles_ptr,p_realarray,interp_array,ro_array,T_array,
+               DragFunc,ConvectionCoeff,adv_enthalpy,mu_g0,fluid_parms,
+               plo,dx,dxi,flags_array,ccent_fab, bcent_fab,apx_fab,apy_fab,apz_fab,
+               local_cg_dem=DEM::cg_dem]
               AMREX_GPU_DEVICE (int pid) noexcept
             {
               MFIXParticleContainer::ParticleType& particle = particles_ptr[pid];
@@ -363,7 +354,13 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
                 // Using i/j/k of centroid cell
                 Real  ro = ro_array(ip,jp,kp);
-                Real  mu = mu_array(ip,jp,kp);
+
+                Real mu(0);
+
+                if (adv_enthalpy)
+                  mu = fluid_parms.calc_mu_g(T_array(ip,jp,kp));
+                else
+                  mu = mu_g0;
 
                 Real rad = p_realarray[SoArealData::radius][pid];
                 Real vol = p_realarray[SoArealData::volume][pid];
@@ -394,9 +391,9 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
                 p_realarray[SoArealData::dragcoeff][pid] = beta;
 
-              if(local_advect_enthalpy){
-                Real kg = kg_array(ip,jp,kp);
-                Real cp = cp_array(ip,jp,kp);
+              if(adv_enthalpy) {
+                Real kg = fluid_parms.calc_k_g(T_array(ip,jp,kp));
+                Real cp = fluid_parms.calc_cp_g(T_array(ip,jp,kp));
                 Real gamma = ConvectionCoeff(ep, mu, kg, cp, rop_g, vrel, dp, ip, jp, kp, p_id);
                 p_realarray[SoArealData::convection][pid] = 4.0*M_PI*rad*rad*gamma;
               }
@@ -410,13 +407,12 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
     if (!OnSameGrids) {
       delete ro_ptr;
-      delete mu_ptr;
-      delete kg_ptr;
-      delete cp_ptr;
+
+      if (!advect_enthalpy)
+      delete T_ptr;
     }
     else if (!advect_enthalpy) {
-      delete kg_ptr;
-      delete cp_ptr;
+      delete T_ptr;
     }
 
     delete interp_ptr;

@@ -6,10 +6,11 @@
 #include <AMReX_FabFactory.H>
 #include <AMReX_MultiFab.H>
 
-struct Transfer
-{
+#include <mfix_fluid_parms.H>
+
+struct Transfer {
   enum {
-    velx=0,
+    velx = 0,
     vely,
     velz,
     beta,
@@ -34,18 +35,25 @@ struct ChemTransfer
   const int count;
 };
 
-
 class LevelData
 {
   public:
     // Default Constructor
-    LevelData () = default;
+    LevelData ()
+      : level_allocated(0)
+      , solve_enthalpy(0)
+      , solve_species(0)
+      , nspecies_g(0)
+    {}
 
     // Constructor
     LevelData (amrex::BoxArray const& ba,
                amrex::DistributionMapping const& dm,
                const int nghost,
-               amrex::FabFactory<amrex::FArrayBox> const& fact);
+               amrex::FabFactory<amrex::FArrayBox> const& fact,
+               const int _solve_enthalpy,
+               const int _solve_species,
+               const int _nspecies_g);
 
     // Reset initial values
     void resetValues (const amrex::Real covered_val);
@@ -65,9 +73,6 @@ class LevelData
     amrex::MultiFab* ro_g;
     amrex::MultiFab* ro_go;
 
-    // Gas molecular weight
-    amrex::MultiFab* MW_g;
-
     // Tracer in gas
     amrex::MultiFab* trac;
     amrex::MultiFab* trac_o;
@@ -82,9 +87,6 @@ class LevelData
     // Pressure gradients
     amrex::MultiFab* gp;
 
-    // Molecular viscosity
-    amrex::MultiFab* mu_g;
-
     // Gas thermodynamic pressure
     amrex::MultiFab* pressure_g;
     amrex::MultiFab* pressure_go;
@@ -94,13 +96,6 @@ class LevelData
     amrex::MultiFab* T_go;
     amrex::MultiFab* T_g_on_eb;
 
-    // Specific heat
-    amrex::MultiFab* cp_g;
-
-    // Thermal conductivity
-    amrex::MultiFab* k_g;
-    amrex::MultiFab* k_g_on_eb;
-
     // Gas enthalpy
     amrex::MultiFab* h_g;
     amrex::MultiFab* h_go;
@@ -108,15 +103,6 @@ class LevelData
     // Gas species mass fractions
     amrex::MultiFab* X_gk;
     amrex::MultiFab* X_gko;
-
-    // Species diffusion coefficients
-    amrex::MultiFab* D_gk;
-
-    // Gas species enthalpy
-    amrex::MultiFab* cp_gk;
-
-    // Gas species enthalpy
-    amrex::MultiFab* h_gk;
 
     // Cell-based
     amrex::MultiFab* vort;
@@ -134,6 +120,12 @@ class LevelData
     amrex::MultiFab* mac_phi;
 
     amrex::MultiFab* divtau_o;
+
+    const int level_allocated;
+
+    const int solve_enthalpy;
+    const int solve_species;
+    const int nspecies_g;
 };
 
 #endif

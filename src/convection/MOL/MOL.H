@@ -123,6 +123,7 @@ namespace mol {
                                      amrex::Array4<amrex::Real const> const& fcy,
                                      amrex::Array4<amrex::Real const> const& fcz,
                                      amrex::Array4<amrex::Real const> const& ccc,
+                                     amrex::Array4<amrex::Real const> const& vfrac,
                                      const amrex::GpuArray<int, 3> bc_types,
                                      std::map<std::string, amrex::Gpu::DeviceVector<int>>& state_bcs,
                                      amrex::Array4<int const> const& bct_ilo,

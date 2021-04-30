@@ -18,7 +18,7 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
 
     const int myProc = ParallelDescriptor::MyProc();
 
-    const int nspecies_s = SOLIDS::nspecies;
+    const int nspecies_s = solids.nspecies;
     const int nreactions = REACTIONS::nreactions;
 
     const int idx_X_sn = m_runtimeRealData.X_sn;

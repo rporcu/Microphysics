@@ -22,7 +22,7 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
     const int pinf_ = bc_list.get_pinf();
 
 
-    const int l_species = FLUID::nspecies;
+    const int l_species = fluid.nspecies;
     const int l_ntrac = ntrac;
     const int l_force = amrex::max(AMREX_SPACEDIM, l_ntrac, l_species);
 
@@ -417,7 +417,7 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
     m_h_bc_t_g.resize(bc.size());
 
-    if ( FLUID::solve ) {
+    if ( fluid.solve ) {
       Real ltime(0.);
 
       set_velocity_bc_values (ltime);
@@ -432,21 +432,21 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
     m_h_bc_ep_g.resize(bc.size());
     m_h_bc_p_g.resize(bc.size());
 
-    if (FLUID::solve && advect_fluid_species) {
-      m_h_bc_X_gk.resize(FLUID::nspecies, Gpu::HostVector<Real>(bc.size()));
+    if (fluid.solve && advect_fluid_species) {
+      m_h_bc_X_gk.resize(fluid.nspecies, Gpu::HostVector<Real>(bc.size()));
 
       // Important! Resize the bc vector for the fluid species mass fractions
       // We have to do it here because the size has to match the number of fluid
       // species
-      m_bc_X_gk.resize(FLUID::nspecies, Gpu::DeviceVector<Real>(bc.size()));
-      m_bc_X_gk_ptr.resize(FLUID::nspecies, nullptr);
-      m_h_bc_X_gk_ptr.resize(FLUID::nspecies, nullptr);
+      m_bc_X_gk.resize(fluid.nspecies, Gpu::DeviceVector<Real>(bc.size()));
+      m_bc_X_gk_ptr.resize(fluid.nspecies, nullptr);
+      m_h_bc_X_gk_ptr.resize(fluid.nspecies, nullptr);
     }
 
     for(unsigned bcv(0); bcv < bc.size(); ++bcv)
     {
 
-      if ( FLUID::solve ) {
+      if ( fluid.solve ) {
         m_h_bc_ep_g[bcv] = bc[bcv].fluid.volfrac;
         m_h_bc_p_g[bcv]  = bc[bcv].fluid.pressure;
 
@@ -457,14 +457,14 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
 
       // Fluid species mass fractions
-      if (FLUID::solve && advect_fluid_species) {
+      if (fluid.solve && advect_fluid_species) {
         if (bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
-          for (int n(0); n < FLUID::nspecies; n++) {
+          for (int n(0); n < fluid.nspecies; n++) {
             m_h_bc_X_gk[n][bcv] = bc[bcv].fluid.species[n].mass_fraction;
           }
         }
         else {
-          for (int n(0); n < FLUID::nspecies; n++)
+          for (int n(0); n < fluid.nspecies; n++)
             m_h_bc_X_gk[n][bcv] = 1e50;
         }
       }
@@ -474,8 +474,8 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
     Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_p_g.begin(), m_h_bc_p_g.end(), m_bc_p_g.begin());
     Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_ep_g.begin(), m_h_bc_ep_g.end(), m_bc_ep_g.begin());
 
-    if (FLUID::solve && advect_fluid_species) {
-        for (int n = 0; n < FLUID::nspecies; ++n) {
+    if (fluid.solve && advect_fluid_species) {
+        for (int n = 0; n < fluid.nspecies; ++n) {
             Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk[n].begin(), m_h_bc_X_gk[n].end(), m_bc_X_gk[n].begin());
             m_h_bc_X_gk_ptr[n] = m_bc_X_gk[n].dataPtr();
         }

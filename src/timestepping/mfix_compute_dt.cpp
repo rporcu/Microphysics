@@ -35,6 +35,8 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
     // Max CFL factor for all levels
     Real cfl_max(0.0);
 
+    auto& fluid_parms = *fluid.parameters;
+
     for (int lev(0); lev <= finest_level; ++lev)
     {
       const Real* dx = geom[lev].CellSize();
@@ -53,17 +55,18 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
 
         for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
-          const auto& vel       = m_leveldata[lev]->vel_g->array(mfi);
-          const auto& ep        = m_leveldata[lev]->ep_g->array(mfi);
-          const auto& ro        = m_leveldata[lev]->ro_g->array(mfi);
-          const auto& mu        = m_leveldata[lev]->mu_g->array(mfi);
-          const auto& gradp     = m_leveldata[lev]->gp->array(mfi);
-          const auto& txfr_fab  = m_leveldata[lev]->txfr->array(mfi);
+          const auto& ld = *m_leveldata[lev];
+
+          const auto& vel       = ld.vel_g->array(mfi);
+          const auto& ep        = ld.ep_g->array(mfi);
+          const auto& ro        = ld.ro_g->array(mfi);
+          const auto& T_g       = advect_enthalpy ? ld.T_g->array(mfi) : Array4<const Real>();
+          const auto& gradp     = ld.gp->array(mfi);
+          const auto& txfr_fab  = ld.txfr->array(mfi);
 
           Box bx(mfi.tilebox());
 
-          const auto& vel_fab   =
-            static_cast<EBFArrayBox const&>((*m_leveldata[lev]->vel_g)[mfi]);
+          const auto& vel_fab   = static_cast<EBFArrayBox const&>((*ld.vel_g)[mfi]);
 
           const auto& flags     = vel_fab.getEBCellFlagFab();
           const auto& flags_fab = flags.array();
@@ -72,12 +75,17 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
           const RealVect gp0_dev(gp0);
           const RealVect gravity_dev(gravity);
 
+          const int adv_enthalpy = advect_enthalpy;
+
+          const Real mu_g0 = fluid.mu_g0;
+
           // Compute CFL on a per cell basis
           if (flags.getType(bx) != FabType::covered)
           {
             reduce_op.eval(bx, reduce_data,
               [ro,ep,gp0_dev,gradp,txfr_fab,gravity_dev,vel,odx,ody,odz,
-               flags_fab,mu] AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+               flags_fab,T_g,adv_enthalpy,mu_g0,fluid_parms]
+              AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
             {
               Real l_cfl_max = 0._rt;
 
@@ -101,7 +109,15 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
                 Real c_cfl   = amrex::Math::abs(vel(i,j,k,0))*odx +
                                amrex::Math::abs(vel(i,j,k,1))*ody +
                                amrex::Math::abs(vel(i,j,k,2))*odz;
-                Real v_cfl   = 2.0 * mu(i,j,k) * qro * (odx*odx + ody*ody + odz*odz);
+
+                Real mu_g(0);
+
+                if (adv_enthalpy)
+                  mu_g = fluid_parms.calc_mu_g(T_g(i,j,k));
+                else
+                  mu_g = mu_g0;
+
+                Real v_cfl   = 2.0 * mu_g * qro * (odx*odx + ody*ody + odz*odz);
                 Real cpv_cfl = c_cfl + v_cfl;
 
                 // MAX CFL factor on cell (i,j,k)
@@ -128,17 +144,19 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
 #endif
         for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
-          const auto& vel       = m_leveldata[lev]->vel_g->array(mfi);
-          const auto& ep        = m_leveldata[lev]->ep_g->array(mfi);
-          const auto& ro        = m_leveldata[lev]->ro_g->array(mfi);
-          const auto& mu        = m_leveldata[lev]->mu_g->array(mfi);
-          const auto& gradp     = m_leveldata[lev]->gp->array(mfi);
-          const auto& txfr_fab  = m_leveldata[lev]->txfr->array(mfi);
+          const auto& ld = *m_leveldata[lev];
+
+          const auto& vel       = ld.vel_g->const_array(mfi);
+          const auto& ep        = ld.ep_g->const_array(mfi);
+          const auto& ro        = ld.ro_g->const_array(mfi);
+          const auto& T_g       = advect_enthalpy ? ld.T_g->const_array(mfi) : Array4<const Real>();
+          const auto& gradp     = ld.gp->const_array(mfi);
+          const auto& txfr_fab  = ld.txfr->const_array(mfi);
 
           Box bx(mfi.tilebox());
 
           const auto& vel_fab   =
-            static_cast<EBFArrayBox const&>((*m_leveldata[lev]->vel_g)[mfi]);
+            static_cast<EBFArrayBox const&>((*ld.vel_g)[mfi]);
 
           const auto& flags     = vel_fab.getEBCellFlagFab();
           const auto& flags_fab = flags.array();
@@ -146,6 +164,10 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
           // ew need this until we remove static attribute from mfix::gp0
           const RealVect gp0_dev(gp0);
           const RealVect gravity_dev(gravity);
+
+          const int adv_enthalpy = advect_enthalpy;
+
+          const Real mu_g0 = fluid.mu_g0;
 
           // Compute CFL on a per cell basis
           if (flags.getType(bx) != FabType::covered)
@@ -172,7 +194,15 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
                 Real c_cfl   = amrex::Math::abs(vel(i,j,k,0))*odx +
                                amrex::Math::abs(vel(i,j,k,1))*ody +
                                amrex::Math::abs(vel(i,j,k,2))*odz;
-                Real v_cfl   = 2.0 * mu(i,j,k) * qro * (odx*odx + ody*ody + odz*odz);
+
+                Real mu_g(0);
+
+                if (adv_enthalpy)
+                  mu_g = fluid_parms.calc_mu_g(T_g(i,j,k));
+                else
+                  mu_g = mu_g0;
+
+                Real v_cfl   = 2.0 * mu_g * qro * (odx*odx + ody*ody + odz*odz);
                 Real cpv_cfl = c_cfl + v_cfl;
 
                 // MAX CFL factor on cell (i,j,k)

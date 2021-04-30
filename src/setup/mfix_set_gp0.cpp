@@ -137,7 +137,7 @@ mfix::set_gp0 (const int lev,
 
           // HACK: This should probably take into consideration
           // variable fluid density.
-          const Real ro_g0 = FLUID::ro_g0;
+          const Real ro_g0 = fluid.ro_g0;
 
           for (int dim=0; dim<3; dim++){
             if (gravity[dim]*gravity[dim] > tolerance ) {

@@ -65,13 +65,11 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   if (advect_enthalpy)
     mfix_set_temperature_bcs(time, get_T_g());
 
-  mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g(), get_MW_g());
-
   if (advect_enthalpy)
     mfix_set_enthalpy_bcs(time, get_h_g());
 
   if (advect_fluid_species)
-    mfix_set_species_bcs(time, get_X_gk(), get_D_gk(), get_cp_gk(), get_h_gk());
+    mfix_set_species_bcs(time, get_X_gk());
 
   // Copy vel_g into vel_go
   for (int lev = 0; lev <= finest_level; lev++)
@@ -79,13 +77,11 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
                    m_leveldata[lev]->vel_g->nComp(), m_leveldata[lev]->vel_go->nGrow());
 
   if (DEM::solve || PIC::solve) {
-    mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                         get_mu_g(), get_cp_g(), get_k_g(), time);
+    mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(), get_T_g(), time);
 
     if (REACTIONS::solve) {
       mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g_old(), get_vel_g_old(),
-                          get_X_gk_old(), get_D_gk(), get_h_gk(), get_cp_gk(),
-                          time);
+                          get_T_g_old(), get_X_gk_old(), time);
     }
   }
 
@@ -135,11 +131,11 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     lap_T[lev]->setVal(0.0);
 
     if (advect_fluid_species) {
-      conv_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
-      species_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
-      species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
-      lap_X_old[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
-      lap_X[lev] = new MultiFab(grids[lev], dmap[lev], FLUID::nspecies, 0, MFInfo(), *ebfactory[lev]);
+      conv_X[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+      species_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+      species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+      lap_X_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+      lap_X[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
 
       conv_X[lev]->setVal(0.0);
       species_RHS_old[lev]->setVal(0.0);
@@ -209,13 +205,8 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     if (advect_enthalpy)
       mfix_set_temperature_bcs(time, get_T_g());
 
-    mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g(), get_MW_g());
-
     if (advect_enthalpy)
       mfix_set_enthalpy_bcs(time, get_h_g());
-
-    if (advect_fluid_species)
-      mfix_set_species_bcs(time, get_X_gk(), get_D_gk(), get_cp_gk(), get_h_gk());
   }
 
   for (int lev = 0; lev <= finest_level; lev++)
@@ -260,6 +251,8 @@ mfix::mfix_add_txfr_explicit (Real dt)
 
   BL_PROFILE("mfix::mfix_add_txfr_explicit");
 
+  auto& fluid_parms = *fluid.parameters;
+
   for (int lev = 0; lev <= finest_level; lev++)
   {
 #ifdef _OPENMP
@@ -270,49 +263,48 @@ mfix::mfix_add_txfr_explicit (Real dt)
       // Tilebox
       Box bx = mfi.tilebox();
 
-      Array4<Real      > const&  vel_fab = m_leveldata[lev]->vel_g->array(mfi);
-      Array4<Real const> const& txfr_fab = m_leveldata[lev]->txfr->array(mfi);
-      Array4<Real const> const&   ro_fab = m_leveldata[lev]->ro_g->array(mfi);
-      Array4<Real const> const&   ep_fab = m_leveldata[lev]->ep_g->array(mfi);
+      Array4<Real      > const&  vel_array = m_leveldata[lev]->vel_g->array(mfi);
+      Array4<Real const> const& txfr_array = m_leveldata[lev]->txfr->array(mfi);
+      Array4<Real const> const&   ro_array = m_leveldata[lev]->ro_g->array(mfi);
+      Array4<Real const> const&   ep_array = m_leveldata[lev]->ep_g->array(mfi);
 
-      amrex::ParallelFor(bx,[dt,vel_fab,txfr_fab,ro_fab,ep_fab]
+      amrex::ParallelFor(bx,[dt,vel_array,txfr_array,ro_array,ep_array]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-        const Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
+        const Real orop  = dt / (ro_array(i,j,k) * ep_array(i,j,k));
 
-        const Real beta = txfr_fab(i,j,k,Transfer::beta);
+        const Real beta = txfr_array(i,j,k,Transfer::beta);
 
-        const Real vel_x = vel_fab(i,j,k,0);
-        const Real vel_y = vel_fab(i,j,k,1);
-        const Real vel_z = vel_fab(i,j,k,2);
+        const Real vel_x = vel_array(i,j,k,0);
+        const Real vel_y = vel_array(i,j,k,1);
+        const Real vel_z = vel_array(i,j,k,2);
 
-        const Real drag_0 = (txfr_fab(i,j,k,Transfer::velx) - beta*vel_x) * orop;
-        const Real drag_1 = (txfr_fab(i,j,k,Transfer::vely) - beta*vel_y) * orop;
-        const Real drag_2 = (txfr_fab(i,j,k,Transfer::velz) - beta*vel_z) * orop;
+        const Real drag_0 = (txfr_array(i,j,k,Transfer::velx) - beta*vel_x) * orop;
+        const Real drag_1 = (txfr_array(i,j,k,Transfer::vely) - beta*vel_y) * orop;
+        const Real drag_2 = (txfr_array(i,j,k,Transfer::velz) - beta*vel_z) * orop;
 
-        vel_fab(i,j,k,0) = vel_x + drag_0;
-        vel_fab(i,j,k,1) = vel_y + drag_1;
-        vel_fab(i,j,k,2) = vel_z + drag_2;
+        vel_array(i,j,k,0) = vel_x + drag_0;
+        vel_array(i,j,k,1) = vel_y + drag_1;
+        vel_array(i,j,k,2) = vel_z + drag_2;
       });
 
-      if(advect_enthalpy){
+      if(advect_enthalpy) {
+        Array4<Real      > const& hg_array = m_leveldata[lev]->h_g->array(mfi);
+        Array4<Real      > const& Tg_array = m_leveldata[lev]->T_g->array(mfi);
 
-        Array4<Real      > const& hg_fab = m_leveldata[lev]->h_g->array(mfi);
-        Array4<Real      > const& Tg_fab = m_leveldata[lev]->T_g->array(mfi);
-        Array4<Real const> const& cp_fab = m_leveldata[lev]->cp_g->array(mfi);
-
-        amrex::ParallelFor(bx,[dt,hg_fab,Tg_fab,cp_fab,txfr_fab,ro_fab,ep_fab]
+        amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
+            fluid_parms]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
 
-          const Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
+          const Real orop  = dt / (ro_array(i,j,k) * ep_array(i,j,k));
 
-          const Real Tg    = hg_fab(i,j,k) / cp_fab(i,j,k);
-          const Real Ts    = txfr_fab(i,j,k,Transfer::gammaTp);
-          const Real gamma = txfr_fab(i,j,k,Transfer::gamma);
+          const Real Tg    = Tg_array(i,j,k);
+          const Real Ts    = txfr_array(i,j,k,Transfer::gammaTp);
+          const Real gamma = txfr_array(i,j,k,Transfer::gamma);
 
-          hg_fab(i,j,k) += (Ts - gamma * Tg) * orop;
-          Tg_fab(i,j,k) = hg_fab(i,j,k) / cp_fab(i,j,k);
+          hg_array(i,j,k) += (Ts - gamma * Tg) * orop;
+          Tg_array(i,j,k) = fluid_parms.calc_T_g(hg_array(i,j,k),Tg);
 
         });
       }
@@ -332,8 +324,7 @@ mfix::mfix_add_txfr_implicit (Real dt,
                               Vector<MultiFab*      > const& T_g_in,
                               Vector<MultiFab const*> const& txfr_in,
                               Vector<MultiFab const*> const& rho_in,
-                              Vector<MultiFab const*> const& ep_g_in,
-                              Vector<MultiFab const*> const& cp_g_in)
+                              Vector<MultiFab const*> const& ep_g_in)
 {
   /*
      This adds both components of the drag term
@@ -342,6 +333,8 @@ mfix::mfix_add_txfr_implicit (Real dt,
   */
 
   BL_PROFILE("mfix::mfix_add_txfr_implicit");
+
+  auto& fluid_parms = *fluid.parameters;
 
   for (int lev = 0; lev <= finest_level; lev++)
   {
@@ -353,39 +346,40 @@ mfix::mfix_add_txfr_implicit (Real dt,
       // Tilebox
       Box bx = mfi.tilebox();
 
-      Array4<Real      > const&  vel_fab = vel_in[lev]->array(mfi);
-      Array4<Real const> const& txfr_fab = txfr_in[lev]->const_array(mfi);
-      Array4<Real const> const&   ro_fab = rho_in[lev]->const_array(mfi);
-      Array4<Real const> const&   ep_fab = ep_g_in[lev]->const_array(mfi);
+      Array4<Real      > const&  vel_array = vel_in[lev]->array(mfi);
+      Array4<Real const> const& txfr_array = txfr_in[lev]->const_array(mfi);
+      Array4<Real const> const&   ro_array = rho_in[lev]->const_array(mfi);
+      Array4<Real const> const&   ep_array = ep_g_in[lev]->const_array(mfi);
 
-      amrex::ParallelFor(bx,[dt,vel_fab,txfr_fab,ro_fab,ep_fab]
+      amrex::ParallelFor(bx,[dt,vel_array,txfr_array,ro_array,ep_array]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-          Real orop  = dt / (ro_fab(i,j,k) * ep_fab(i,j,k));
-          Real denom = 1.0 / (1.0 + txfr_fab(i,j,k,3) * orop);
+          Real orop  = dt / (ro_array(i,j,k) * ep_array(i,j,k));
+          Real denom = 1.0 / (1.0 + txfr_array(i,j,k,3) * orop);
 
-          vel_fab(i,j,k,0) = (vel_fab(i,j,k,0) + txfr_fab(i,j,k,0) * orop) * denom;
-          vel_fab(i,j,k,1) = (vel_fab(i,j,k,1) + txfr_fab(i,j,k,1) * orop) * denom;
-          vel_fab(i,j,k,2) = (vel_fab(i,j,k,2) + txfr_fab(i,j,k,2) * orop) * denom;
+          vel_array(i,j,k,0) = (vel_array(i,j,k,0) + txfr_array(i,j,k,0) * orop) * denom;
+          vel_array(i,j,k,1) = (vel_array(i,j,k,1) + txfr_array(i,j,k,1) * orop) * denom;
+          vel_array(i,j,k,2) = (vel_array(i,j,k,2) + txfr_array(i,j,k,2) * orop) * denom;
       });
 
       if(advect_enthalpy){
 
-        Array4<Real      > const& hg_fab = h_g_in[lev]->array(mfi);
-        Array4<Real      > const& Tg_fab = T_g_in[lev]->array(mfi);
-        Array4<Real const> const& cp_fab = cp_g_in[lev]->const_array(mfi);
+        Array4<Real      > const& hg_array = h_g_in[lev]->array(mfi);
+        Array4<Real      > const& Tg_array = T_g_in[lev]->array(mfi);
 
-        amrex::ParallelFor(bx,[dt,hg_fab,Tg_fab,cp_fab,txfr_fab,ro_fab,ep_fab]
+        amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
+            fluid_parms]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          const Real Ts = txfr_fab(i,j,k,4);
-          const Real dt_gamma = dt * txfr_fab(i,j,k,5);
+          const Real Tg = Tg_array(i,j,k);
+          const Real Ts = txfr_array(i,j,k,4);
+          const Real dt_gamma = dt * txfr_array(i,j,k,5);
 
-          Real rop_g  = ro_fab(i,j,k) * ep_fab(i,j,k);
-          Real denom = 1.0 / (rop_g + dt_gamma/cp_fab(i,j,k));
+          Real rop_g  = ro_array(i,j,k) * ep_array(i,j,k);
+          Real denom = 1.0 / (rop_g + dt_gamma/fluid_parms.calc_cp_g(Tg));
 
-          hg_fab(i,j,k) = (rop_g * hg_fab(i,j,k) + dt * Ts) * denom;
-          Tg_fab(i,j,k) = hg_fab(i,j,k) / cp_fab(i,j,k);
+          hg_array(i,j,k) = (rop_g * hg_array(i,j,k) + dt * Ts) * denom;
+          Tg_array(i,j,k) = fluid_parms.calc_T_g(hg_array(i,j,k),Tg);
 
         });
       }

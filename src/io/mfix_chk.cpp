@@ -31,16 +31,10 @@ mfix::InitIOChkData ()
     vecVarsName = {"u_g", "v_g", "w_g", "gpx", "gpy", "gpz"};
 
     chkscaVarsName = {"ep_g", "p_g", "ro_g", "level_sets"};
-    //chkscaVarsName = {"ep_g", "p_g", "ro_g", "level_sets", "MW_g", "mu_g"};
     
     chkTVarsName = {"T_g"};
-    //chkTVarsName = {"T_g", "h_g", "cp_g", "k_g"};
 
     chkSpeciesVarsName = {"X_gk"};
-    //chkSpeciesVarsName = {"X_gk", "D_gk"};
-
-    chkSpeciesTVarsName = {"h_gk"};
-    //chkSpeciesTVarsName = {"h_gk", "cp_gk"};
 
     ResetIOChkData();
 }
@@ -58,32 +52,19 @@ mfix::ResetIOChkData ()
   chkSpeciesVars.clear();
   chkSpeciesVars.resize(chkSpeciesVarsName.size(), Vector< MultiFab*>(nlev));
 
-  chkSpeciesTVars.clear();
-  chkSpeciesTVars.resize(chkSpeciesTVarsName.size(), Vector< MultiFab*>(nlev));
-
   for (int lev(0); lev < nlev; ++lev) {
     chkScalarVars[0][lev] = m_leveldata[lev]->ep_g;
     chkScalarVars[1][lev] = m_leveldata[lev]->p_g;
     chkScalarVars[2][lev] = m_leveldata[lev]->ro_g;
     chkScalarVars[3][lev] = level_sets[lev].get();
-    //chkScalarVars[4][lev] = m_leveldata[lev]->MW_g;
-    //chkScalarVars[5][lev] = m_leveldata[lev]->mu_g;
     
     if (advect_enthalpy) {
       chkTVars[0][lev] = m_leveldata[lev]->T_g;
       //chkTVars[1][lev] = m_leveldata[lev]->h_g;
-      //chkTVars[2][lev] = m_leveldata[lev]->cp_g;
-      //chkTVars[3][lev] = m_leveldata[lev]->k_g;
     }
 
     if (advect_fluid_species) {
       chkSpeciesVars[0][lev] = m_leveldata[lev]->X_gk;
-      //chkSpeciesVars[2][lev] = m_leveldata[lev]->D_gk;
-    }
-
-    if (advect_fluid_species && advect_enthalpy) {
-      chkSpeciesTVars[0][lev] = m_leveldata[lev]->h_gk;
-      //chkSpeciesTVars[1][lev] = m_leveldata[lev]->cp_gk;
     }
   }
 }
@@ -167,7 +148,7 @@ mfix::WriteCheckPointFile (std::string& check_file,
     WriteCheckHeader(checkpointname, nstep, dt, time);
 
     WriteJobInfo(checkpointname);
-    if (FLUID::solve)
+    if (fluid.solve)
     {
        ResetIOChkData();
 
@@ -206,15 +187,6 @@ mfix::WriteCheckPointFile (std::string& check_file,
                 VisMF::Write( *(chkSpeciesVars[i][lev]),
                   amrex::MultiFabFileFullPrefix(lev, checkpointname,
                         level_prefix, chkSpeciesVarsName[i]));
-             }
-          }
-
-          if (advect_fluid_species && advect_enthalpy) {
-             // Write species energy variables
-             for (int i = 0; i < chkSpeciesTVars.size(); i++) {
-                VisMF::Write( *(chkSpeciesTVars[i][lev]),
-                  amrex::MultiFabFileFullPrefix(lev, checkpointname,
-                        level_prefix, chkSpeciesTVarsName[i]));
              }
           }
        }

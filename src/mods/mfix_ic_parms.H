@@ -15,16 +15,17 @@ namespace IC
 
     const amrex::RealBox* region;
 
-    FLUID::FLUID_t fluid;
+    FluidPhase::FLUID_t fluid;
 
-    amrex::Vector<SOLIDS::SOLIDS_t> solids;
+    amrex::Vector<SolidsPhase::SOLIDS_t> solids;
     std::string packing;
 
   };
 
   extern amrex::Vector<IC_t> ic;
 
-  void Initialize ();
+  void Initialize (const FluidPhase& fluid,
+                   const SolidsPhase& solids);
 
 }
 

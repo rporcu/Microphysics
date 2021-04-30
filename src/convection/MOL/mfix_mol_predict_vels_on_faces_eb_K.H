@@ -21,6 +21,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
                                Array4<Real const> const& fcy,
                                Array4<Real const> const& fcz,
                                Array4<Real const> const& ccc,
+                               Array4<Real const> const& vfrac,
                                std::map<std::string, Gpu::DeviceVector<int>>& bc_types,
                                Array4<int const> const& bc_ilo,
                                Array4<int const> const& bc_ihi,
@@ -52,6 +53,8 @@ void predict_vels_on_faces_eb (Box const& domain_box,
                             check_extdir_jlo || check_extdir_jhi ||
                             check_extdir_klo || check_extdir_khi;
 
+  int order = 2;
+
   /*********************************************************************************
    *                                                                               *
    *                                  x-direction                                  *
@@ -60,13 +63,13 @@ void predict_vels_on_faces_eb (Box const& domain_box,
 
   if (check_extdir)
   {
-
     // This FAB has cut cells -- we predict from cell centroids to face
     // centroids
-    ParallelFor(ubx, [u,vcc,ccc,fcx,fcy,fcz,flag,small_vel,bct_Dirichlet, bct_size,
+    ParallelFor(ubx, [u,vcc,ccc,vfrac,fcx,fcy,fcz,flag,small_vel,bct_Dirichlet,bct_size,
     check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi, bc_ilo, bc_ihi,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi, bc_jlo, bc_jhi,
-    check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bc_klo, bc_khi]
+    check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bc_klo, bc_khi,
+    order]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -115,37 +118,36 @@ void predict_vels_on_faces_eb (Box const& domain_box,
 
         // Compute slopes of component "0" of vcc
         const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i  ,j,k,0,
-                                      vcc, ccc, fcx, fcy, fcz, flag,
+                                      vcc, ccc, vfrac, fcx, fcy, fcz, flag,
                                       extdir_ilo, extdir_jlo, extdir_klo,
                                       extdir_ihi, extdir_jhi, extdir_khi,
                                       domain_ilo, domain_jlo, domain_klo,
-                                      domain_ihi, domain_jhi, domain_khi);
+                                      domain_ihi, domain_jhi, domain_khi,
+                                      order);
 
         Real upls = vcc_pls - delta_x * slopes_eb_hi[0]
                             + delta_y * slopes_eb_hi[1]
                             + delta_z * slopes_eb_hi[2];
 
-        upls = amrex::min(upls, cc_umax);
-        upls = amrex::max(upls, cc_umin);
+        upls = amrex::max( amrex::min(upls, cc_umax), cc_umin );
 
         delta_x = .5 - ccc(i-1,j,k,0);
         delta_y = yf - ccc(i-1,j,k,1);
         delta_z = zf - ccc(i-1,j,k,2);
 
         const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i-1,j,k,0,
-                                      vcc, ccc, fcx, fcy, fcz, flag,
+                                      vcc, ccc, vfrac, fcx, fcy, fcz, flag,
                                       extdir_ilo, extdir_jlo, extdir_klo,
                                       extdir_ihi, extdir_jhi, extdir_khi,
                                       domain_ilo, domain_jlo, domain_klo,
-                                      domain_ihi, domain_jhi, domain_khi);
+                                      domain_ihi, domain_jhi, domain_khi,
+                                      order);
 
         Real umns = vcc_mns + delta_x * slopes_eb_lo[0]
                             + delta_y * slopes_eb_lo[1]
                             + delta_z * slopes_eb_lo[2];
 
-        umns = amrex::min(umns, cc_umax);
-        umns = amrex::max(umns, cc_umin);
-
+        umns = amrex::max( amrex::min(umns, cc_umax), cc_umin );
 
         if (umns >= 0 || upls <= 0) {
           Real avg = .5 * (upls + umns);
@@ -160,7 +162,6 @@ void predict_vels_on_faces_eb (Box const& domain_box,
       }
 
       u(i,j,k) = umac;
-
     });
 
   }
@@ -169,7 +170,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
 
     // This FAB has cut cells -- we predict from cell centroids to face
     // centroids
-    ParallelFor(ubx, [u,vcc,ccc,fcx,fcy,fcz,flag,small_vel]
+    ParallelFor(ubx, [u,vcc,ccc,vfrac,fcx,fcy,fcz,flag,small_vel,order]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -193,28 +194,25 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         Real cc_umin = amrex::min(vcc_pls, vcc_mns);
 
         // Compute slopes of component "0" of vcc
-        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i  ,j,k,0,vcc,ccc,fcx,fcy,fcz,flag);
+        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i  ,j,k,0,vcc,ccc,vfrac,fcx,fcy,fcz,flag,order);
 
         Real upls = vcc_pls - delta_x * slopes_eb_hi[0]
                             + delta_y * slopes_eb_hi[1]
                             + delta_z * slopes_eb_hi[2];
 
-        upls = amrex::min(upls, cc_umax);
-        upls = amrex::max(upls, cc_umin);
+        upls = amrex::max( amrex::min(upls, cc_umax), cc_umin );
 
         delta_x = .5 - ccc(i-1,j,k,0);
         delta_y = yf - ccc(i-1,j,k,1);
         delta_z = zf - ccc(i-1,j,k,2);
 
-        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i-1,j,k,0,vcc,ccc,fcx,fcy,fcz,flag);
+        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i-1,j,k,0,vcc,ccc,vfrac,fcx,fcy,fcz,flag,order);
 
         Real umns = vcc_mns + delta_x * slopes_eb_lo[0]
                             + delta_y * slopes_eb_lo[1]
                             + delta_z * slopes_eb_lo[2];
 
-        umns = amrex::min(umns, cc_umax);
-        umns = amrex::max(umns, cc_umin);
-
+        umns = amrex::max( amrex::min(umns, cc_umax), cc_umin );
 
         if (umns >= 0 || upls <= 0) {
           Real avg = .5 * (upls + umns);
@@ -229,7 +227,6 @@ void predict_vels_on_faces_eb (Box const& domain_box,
       }
 
       u(i,j,k) = umac;
-
     });
   }
 
@@ -246,10 +243,11 @@ void predict_vels_on_faces_eb (Box const& domain_box,
 
     // This FAB has cut cells -- we predict from cell centroids to face
     // centroids
-    ParallelFor(vbx, [v,vcc,ccc,fcx,fcy,fcz,flag,small_vel,bct_Dirichlet, bct_size,
+    ParallelFor(vbx, [v,vcc,ccc,vfrac,fcx,fcy,fcz,flag,small_vel,bct_Dirichlet, bct_size,
     check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi, bc_ilo, bc_ihi,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi, bc_jlo, bc_jhi,
-    check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bc_klo, bc_khi]
+    check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bc_klo, bc_khi,
+    order]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -295,36 +293,36 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         Real cc_vmin = amrex::min(vcc_pls, vcc_mns);
 
         const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j  ,k,1,
-                                      vcc, ccc, fcx, fcy, fcz, flag,
+                                      vcc, ccc, vfrac, fcx, fcy, fcz, flag,
                                       extdir_ilo, extdir_jlo, extdir_klo,
                                       extdir_ihi, extdir_jhi, extdir_khi,
                                       domain_ilo, domain_jlo, domain_klo,
-                                      domain_ihi, domain_jhi, domain_khi);
+                                      domain_ihi, domain_jhi, domain_khi,
+                                      order);
 
         Real vpls = vcc_pls - delta_y * slopes_eb_hi[1]
                             + delta_x * slopes_eb_hi[0]
                             + delta_z * slopes_eb_hi[2];
 
-        vpls = amrex::min(vpls, cc_vmax);
-        vpls = amrex::max(vpls, cc_vmin);
+        vpls = amrex::max( amrex::min(vpls, cc_vmax), cc_vmin );
 
         delta_x = xf - ccc(i,j-1,k,0);
         delta_y = .5 - ccc(i,j-1,k,1);
         delta_z = zf - ccc(i,j-1,k,2);
 
         const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i,j-1,k,1,
-                                      vcc, ccc, fcx, fcy, fcz, flag,
+                                      vcc, ccc, vfrac, fcx, fcy, fcz, flag,
                                       extdir_ilo, extdir_jlo, extdir_klo,
                                       extdir_ihi, extdir_jhi, extdir_khi,
                                       domain_ilo, domain_jlo, domain_klo,
-                                      domain_ihi, domain_jhi, domain_khi);
+                                      domain_ihi, domain_jhi, domain_khi,
+                                      order);
 
         Real vmns = vcc_mns + delta_y * slopes_eb_lo[1]
                             + delta_x * slopes_eb_lo[0]
                             + delta_z * slopes_eb_lo[2];
 
-        vmns = amrex::min(vmns, cc_vmax);
-        vmns = amrex::max(vmns, cc_vmin);
+        vmns = amrex::max( amrex::min(vmns, cc_vmax), cc_vmin );
 
         if (vmns >= 0 || vpls <= 0) {
           Real avg = .5 * (vpls + vmns);
@@ -339,7 +337,6 @@ void predict_vels_on_faces_eb (Box const& domain_box,
       }
 
       v(i,j,k) = vmac;
-
     });
 
   }
@@ -348,7 +345,7 @@ void predict_vels_on_faces_eb (Box const& domain_box,
 
     // This FAB has cut cells -- we predict from cell centroids to face
     // centroids
-    ParallelFor(vbx, [v,vcc,ccc,fcx,fcy,fcz,flag,small_vel]
+    ParallelFor(vbx, [v,vcc,ccc,vfrac,fcx,fcy,fcz,flag,small_vel,order]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -370,27 +367,25 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         Real cc_vmax = amrex::max(vcc_pls, vcc_mns);
         Real cc_vmin = amrex::min(vcc_pls, vcc_mns);
 
-        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j  ,k,1,vcc,ccc,fcx,fcy,fcz,flag);
+        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j  ,k,1,vcc,ccc,vfrac,fcx,fcy,fcz,flag,order);
 
         Real vpls = vcc_pls - delta_y * slopes_eb_hi[1]
                             + delta_x * slopes_eb_hi[0]
                             + delta_z * slopes_eb_hi[2];
 
-        vpls = amrex::min(vpls, cc_vmax);
-        vpls = amrex::max(vpls, cc_vmin);
+        vpls = amrex::max( amrex::min(vpls, cc_vmax), cc_vmin );
 
         delta_x = xf - ccc(i,j-1,k,0);
         delta_y = .5 - ccc(i,j-1,k,1);
         delta_z = zf - ccc(i,j-1,k,2);
 
-        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j-1,k,1,vcc,ccc,fcx,fcy,fcz,flag);
+        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j-1,k,1,vcc,ccc,vfrac,fcx,fcy,fcz,flag,order);
 
         Real vmns = vcc_mns + delta_y * slopes_eb_lo[1]
                             + delta_x * slopes_eb_lo[0]
                             + delta_z * slopes_eb_lo[2];
 
-        vmns = amrex::min(vmns, cc_vmax);
-        vmns = amrex::max(vmns, cc_vmin);
+        vmns = amrex::max( amrex::min(vmns, cc_vmax), cc_vmin );
 
         if (vmns >= 0 || vpls <= 0) {
           Real avg = .5 * (vpls + vmns);
@@ -405,7 +400,6 @@ void predict_vels_on_faces_eb (Box const& domain_box,
       }
 
       v(i,j,k) = vmac;
-
     });
   }
 
@@ -420,10 +414,11 @@ void predict_vels_on_faces_eb (Box const& domain_box,
 
     // This FAB has cut cells -- we predict from cell centroids to face
     // centroids
-    ParallelFor(wbx, [w,vcc,ccc,fcx,fcy,fcz,flag,small_vel,bct_Dirichlet, bct_size,
+    ParallelFor(wbx, [w,vcc,ccc,vfrac,fcx,fcy,fcz,flag,small_vel,bct_Dirichlet,bct_size,
     check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi, bc_ilo, bc_ihi,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi, bc_jlo, bc_jhi,
-    check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bc_klo, bc_khi]
+    check_extdir_klo, check_extdir_khi, domain_klo, domain_khi, bc_klo, bc_khi,
+    order]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -469,36 +464,36 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         Real cc_wmin = amrex::min(vcc_pls, vcc_mns);
 
         const auto& slopes_eb_hi = amrex_lim_slopes_extdir_eb(i,j,k  ,2,
-                                      vcc, ccc, fcx, fcy, fcz, flag,
+                                      vcc, ccc, vfrac, fcx, fcy, fcz, flag,
                                       extdir_ilo, extdir_jlo, extdir_klo,
                                       extdir_ihi, extdir_jhi, extdir_khi,
                                       domain_ilo, domain_jlo, domain_klo,
-                                      domain_ihi, domain_jhi, domain_khi);
+                                      domain_ihi, domain_jhi, domain_khi,
+                                      order);
 
         Real wpls = vcc_pls - delta_z * slopes_eb_hi[2]
                             + delta_x * slopes_eb_hi[0]
                             + delta_y * slopes_eb_hi[1];
 
-        wpls = amrex::min(wpls, cc_wmax);
-        wpls = amrex::max(wpls, cc_wmin);
+        wpls = amrex::max( amrex::min(wpls, cc_wmax), cc_wmin );
 
         delta_x = xf - ccc(i,j,k-1,0);
         delta_y = yf - ccc(i,j,k-1,1);
         delta_z = 0.5 - ccc(i,j,k-1,2);
 
         const auto& slopes_eb_lo = amrex_lim_slopes_extdir_eb(i,j,k-1,2,
-                                      vcc, ccc, fcx, fcy, fcz, flag,
+                                      vcc, ccc, vfrac, fcx, fcy, fcz, flag,
                                       extdir_ilo, extdir_jlo, extdir_klo,
                                       extdir_ihi, extdir_jhi, extdir_khi,
                                       domain_ilo, domain_jlo, domain_klo,
-                                      domain_ihi, domain_jhi, domain_khi);
+                                      domain_ihi, domain_jhi, domain_khi,
+                                      order);
 
         Real wmns = vcc_mns + delta_z * slopes_eb_lo[2]
                             + delta_x * slopes_eb_lo[0]
                             + delta_y * slopes_eb_lo[1];
 
-        wmns = amrex::min(wmns, cc_wmax);
-        wmns = amrex::max(wmns, cc_wmin);
+        wmns = amrex::max( amrex::min(wmns, cc_wmax), cc_wmin );
 
         if ( wmns >= 0 || wpls <= 0) {
           Real avg = .5 * (wpls + wmns);
@@ -513,18 +508,13 @@ void predict_vels_on_faces_eb (Box const& domain_box,
       }
 
       w(i,j,k) = wmac;
-
     });
-
-
-
-
   }
   else
   {
     // This FAB has cut cells -- we predict from cell centroids to face
     // centroids
-    ParallelFor(wbx, [w,vcc,ccc,fcx,fcy,fcz,flag,small_vel]
+    ParallelFor(wbx, [w,vcc,ccc,vfrac,fcx,fcy,fcz,flag,small_vel,order]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
@@ -546,27 +536,25 @@ void predict_vels_on_faces_eb (Box const& domain_box,
         Real cc_wmax = amrex::max(vcc_pls, vcc_mns);
         Real cc_wmin = amrex::min(vcc_pls, vcc_mns);
 
-        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,  k,2,vcc,ccc,fcx,fcy,fcz,flag);
+        const auto& slopes_eb_hi = amrex_lim_slopes_eb(i,j,  k,2,vcc,ccc,vfrac,fcx,fcy,fcz,flag,order);
 
         Real wpls = vcc_pls - delta_z * slopes_eb_hi[2]
                             + delta_x * slopes_eb_hi[0]
                             + delta_y * slopes_eb_hi[1];
 
-        wpls = amrex::min(wpls, cc_wmax);
-        wpls = amrex::max(wpls, cc_wmin);
+        wpls = amrex::max( amrex::min(wpls, cc_wmax), cc_wmin );
 
         delta_x = xf - ccc(i,j,k-1,0);
         delta_y = yf - ccc(i,j,k-1,1);
         delta_z = 0.5 - ccc(i,j,k-1,2);
 
-        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j,k-1,2,vcc,ccc,fcx,fcy,fcz,flag);
+        const auto& slopes_eb_lo = amrex_lim_slopes_eb(i,j,k-1,2,vcc,ccc,vfrac,fcx,fcy,fcz,flag,order);
 
         Real wmns = vcc_mns + delta_z * slopes_eb_lo[2]
                             + delta_x * slopes_eb_lo[0]
                             + delta_y * slopes_eb_lo[1];
 
-        wmns = amrex::min(wmns, cc_wmax);
-        wmns = amrex::max(wmns, cc_wmin);
+        wmns = amrex::max( amrex::min(wmns, cc_wmax), cc_wmin );
 
         if ( wmns >= 0 || wpls <= 0) {
           Real avg = .5 * (wpls + wmns);
@@ -581,11 +569,9 @@ void predict_vels_on_faces_eb (Box const& domain_box,
       }
 
       w(i,j,k) = wmac;
-
     });
     }
 }
-
 
 }// end mol namespace
 #endif

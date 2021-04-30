@@ -25,13 +25,13 @@ mfix::InitParams ()
 
   // Read and process species, fluid and DEM particle model options.
   SPECIES::Initialize();
-  FLUID::Initialize();
-  SOLIDS::Initialize();
+  fluid.Initialize();
+  solids.Initialize();
 
-  enthalpy_source = SOLIDS::enthalpy_source;
+  enthalpy_source = solids.enthalpy_source;
 
-  BL_ASSERT(FLUID::nspecies <= SPECIES::NMAX);
-  BL_ASSERT(SOLIDS::nspecies <= SPECIES::NMAX);
+  BL_ASSERT(fluid.nspecies <= SPECIES::NMAX);
+  BL_ASSERT(solids.nspecies <= SPECIES::NMAX);
 
   // Read and process chemical reactions inputs.
   REACTIONS::Initialize();
@@ -44,14 +44,14 @@ mfix::InitParams ()
 
   // Need to do this -- We might want to move this to a BC class once we have
   // one
-  bcs_X.resize(2*FLUID::nspecies);
+  bcs_X.resize(fluid.nspecies);
 
   // Read in regions, initial and boundary conditions. Note that
   // regions need to be processed first as they define the
   // physical extents of ICs and BCs.
   REGIONS::Initialize();
-  IC::Initialize();
-  BC::Initialize(geom[0]);
+  IC::Initialize(fluid, solids);
+  BC::Initialize(geom[0], fluid, solids);
 
   // set n_error_buf (used in AmrMesh) to default (can overwrite later)
   for (int i = 0; i < n_error_buf.size(); i++)
@@ -141,7 +141,7 @@ mfix::InitParams ()
     pp.query("test_tracer_conservation", test_tracer_conservation);
 
     // Set the mfix class flag equal to the FLUID parameter
-    advect_fluid_species = FLUID::solve_species;
+    advect_fluid_species = fluid.solve_species;
 
     // We can still turn it off explicitly even if we passed species inputs
     pp.query("advect_fluid_species", advect_fluid_species);
@@ -153,7 +153,7 @@ mfix::InitParams ()
     pp.query("solve_reactions", solve_reactions);
 
     if (advect_fluid_species)
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(FLUID::solve_species,
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.solve_species,
           "Advect fluid species flag is on but no fluid species were provided");
 
     pp.query("ntrac", ntrac);
@@ -224,36 +224,14 @@ mfix::InitParams ()
     if (advection_type() == AdvectionType::MOL) m_godunov_include_diff_in_forcing = false;
 
     // MOL: Explicit predictor / Crank_Nicolson corrector
-    // Godunov: Implicit
+    // Godunov: Crank_Nicolson
     if (advection_type() == AdvectionType::MOL) {
       m_predictor_diff_type = DiffusionType::Explicit;
       m_corrector_diff_type = DiffusionType::Crank_Nicolson;
-
-    }
-
-    // The default for diffusion_type is 2, i.e. the default m_diff_type is DiffusionType::Implicit
-    int diffusion_type = (advection_type() == AdvectionType::MOL) ? 3 : 1;
-    pp.query("diffusion_type", diffusion_type);
-    if (diffusion_type == 0) {
-      m_predictor_diff_type = DiffusionType::Explicit;
-      m_corrector_diff_type = DiffusionType::Explicit;
-    } else if (diffusion_type == 1) {
+    } else {
       m_predictor_diff_type = DiffusionType::Crank_Nicolson;
       m_corrector_diff_type = DiffusionType::Crank_Nicolson;
-    } else if (diffusion_type == 2) {
-      m_predictor_diff_type = DiffusionType::Implicit;
-      m_corrector_diff_type = DiffusionType::Implicit;
-    } else if (diffusion_type == 3) {
-      m_predictor_diff_type = DiffusionType::Explicit;
-      m_corrector_diff_type = DiffusionType::Crank_Nicolson;
-    } else {
-      amrex::Abort("We currently require diffusion_type be one of the following:\
-                   \n   0: explicit,\
-                   \n   1: Crank-Nicolson\
-                   \n   2: implicit\
-                   \n   3: explicit predictor/Crank-Nicolson corrector (MOL only)");
     }
-
 
     // Default is true; should we use tensor solve instead of separate solves for each component?
     pp.query("use_tensor_solve",use_tensor_solve);
@@ -344,14 +322,14 @@ mfix::InitParams ()
     pp.queryarr("pmap", particle_pmap);
   }
 
-  if ((DEM::solve || PIC::solve) && (!FLUID::solve))
+  if ((DEM::solve || PIC::solve) && (!fluid.solve))
   {
     if (fixed_dt <= 0.0)
       amrex::Abort("If running particle-only must specify a positive fixed_dt"
           " in the inputs file");
   }
 
-  if ((DEM::solve || PIC::solve) && FLUID::solve)
+  if ((DEM::solve || PIC::solve) && fluid.solve)
   {
     ParmParse pp("mfix");
 
@@ -558,7 +536,7 @@ void mfix::Init (Real time)
      ***************************************************************************/
 
     if (DEM::solve || PIC::solve) {
-      pc = new MFIXParticleContainer(this);
+      pc = new MFIXParticleContainer(this, solids);
       pc->setSortingBinSizes(IntVect(particle_sorting_bin));
     }
 
@@ -696,7 +674,7 @@ void mfix::InitLevelData (Real time)
 {
     if (ooo_debug) amrex::Print() << "InitLevelData" << std::endl;
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
-    if (FLUID::solve)
+    if (fluid.solve)
        for (int lev = 0; lev < nlev; lev++)
           AllocateArrays(lev);
 
@@ -796,7 +774,7 @@ void mfix::InitLevelData (Real time)
     }
 
     // Used in load balancing
-    if (FLUID::solve)
+    if (fluid.solve)
     {
       for (int lev(0); lev < fluid_cost.size(); lev++) {
         if (fluid_cost[lev] != nullptr)  delete fluid_cost[lev];
@@ -921,14 +899,14 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
             pc->MFIX_PC_InitCollisionParams();
         }
 
-        pc->InitParticlesRuntimeVariables(advect_enthalpy, SOLIDS::solve_species);
+        pc->InitParticlesRuntimeVariables(advect_enthalpy, solids.solve_species);
 
-        if (!FLUID::solve){
+        if (!fluid.solve){
             dt = fixed_dt;
         }
     }
 
-    if (FLUID::solve)
+    if (fluid.solve)
         mfix_init_fluid(restart_flag, dt, stop_time);
 
     // Call user-defined subroutine to set constants, check data, etc.
@@ -1021,11 +999,11 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
           const Box& sbx = ep_g[mfi].box();
 
           if ( is_restarting ) {
-            init_fluid_parameters(bx, mfi, ld, advect_enthalpy, advect_fluid_species);
+            init_fluid_parameters(bx, mfi, ld, advect_enthalpy, advect_fluid_species, fluid);
           } else {
             init_fluid(sbx, bx, domain, mfi, ld, dx, dy, dz, xlen, ylen, zlen, plo,
                 test_tracer_conservation, advect_enthalpy, advect_fluid_species,
-                m_idealgas_constraint);
+                m_idealgas_constraint, fluid);
           }
        }
 
@@ -1041,14 +1019,11 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
     {
       m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
       m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
 
       if (advect_enthalpy)
       {
         m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
         m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
-        m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
-        m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
       }
 
       if (advect_tracer)
@@ -1057,12 +1032,6 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       if (advect_fluid_species)
       {
         m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
-        m_leveldata[lev]->D_gk->FillBoundary(geom[lev].periodicity());
-
-        if (advect_enthalpy) {
-          m_leveldata[lev]->cp_gk->FillBoundary(geom[lev].periodicity());
-          m_leveldata[lev]->h_gk->FillBoundary(geom[lev].periodicity());
-        }
       }
 
       m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
@@ -1074,7 +1043,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
     {
        LevelData& ld = *m_leveldata[lev];
 
-       // TODO TODO TODO check this
+       // TODO check if commenting the following is correct
        //MultiFab::Copy(*m_leveldata[lev]->vel_go,  *m_leveldata[lev]->vel_g, 0, 0, 3, 0);
 
        MultiFab::Copy(*ld.ro_go,  *ld.ro_g, 0, 0, 1, ld.ro_g->nGrow());
@@ -1086,7 +1055,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        }
 
        if (advect_fluid_species) {
-         MultiFab::Copy(*ld.X_gko, *ld.X_gk, 0, 0, FLUID::nspecies, ld.X_gk->nGrow());
+         MultiFab::Copy(*ld.X_gko, *ld.X_gk, 0, 0, fluid.nspecies, ld.X_gk->nGrow());
        }
 
        if (m_idealgas_constraint == IdealGasConstraint::ClosedSystem) {
@@ -1116,7 +1085,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
       Print() << "Difference is   " << cell_volume * (domain_vol - sum_vol_orig) << std::endl;
 
-      // This sets bcs for ep_g, cp_g, mu_g and D_gk
+      // This sets bcs for ep_g
       Real time = 0.0;
 
       mfix_set_density_bcs(time, get_ro_g());
@@ -1130,16 +1099,14 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
         mfix_set_temperature_bcs(time, get_T_g_old());
       }
 
-      mfix_set_scalar_bcs(time, get_mu_g(), get_cp_g(), get_k_g(), get_MW_g());
-
       if (advect_enthalpy) {
         mfix_set_enthalpy_bcs(time, get_h_g());
         mfix_set_enthalpy_bcs(time, get_h_g_old());
       }
 
       if (advect_fluid_species) {
-        mfix_set_species_bcs(time, get_X_gk(), get_D_gk(), get_cp_gk(), get_h_gk());
-        mfix_set_species_bcs(time, get_X_gk_old(), get_D_gk(), get_cp_gk(), get_h_gk());
+        mfix_set_species_bcs(time, get_X_gk());
+        mfix_set_species_bcs(time, get_X_gk_old());
       }
 
       // Project the initial velocity field
@@ -1198,12 +1165,8 @@ mfix::mfix_set_bc0 ()
      if (advect_tracer)
        m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
 
-     if (advect_fluid_species) {
+     if (advect_fluid_species)
        m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
-
-       if (advect_enthalpy)
-         m_leveldata[lev]->h_gk->FillBoundary(geom[lev].periodicity());
-     }
    }
 
    // Put velocity Dirichlet bc's on faces

@@ -36,7 +36,7 @@ void mfix::init_advection ()
     m_iconserv_tracer_d.resize(ntrac, 1);
   }
 
-  const int l_nspecies = FLUID::nspecies;
+  const int l_nspecies = fluid.nspecies;
 
   if (advect_fluid_species) {
     m_iconserv_species.resize(l_nspecies, 1);
@@ -73,11 +73,12 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
 
     int ngmac = nghost_mac();
 
-    const int l_nspecies = FLUID::nspecies;
+    const int l_nspecies = fluid.nspecies;
 
     // We first compute the velocity forcing terms to be used in predicting
     //    to faces before the MAC projection
-    if (advection_type() != AdvectionType::MOL) {
+    if (advection_type() != AdvectionType::MOL) 
+    {
 
       bool include_pressure_gradient = !(m_use_mac_phi_in_godunov);
       bool include_drag_force = include_pressure_gradient && m_use_drag_in_godunov;
@@ -90,7 +91,6 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
 
       if (nghost_force() > 0)
         fillpatch_force(time, vel_forces, nghost_force());
-
     }
 
     // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
@@ -626,7 +626,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
           mol::compute_convective_fluxes_eb(gbx, ncomp, scomp, vel,
                                             fx, fy, fz,
                                             ep_umac, ep_vmac, ep_wmac,
-                                            flag, fcx, fcy, fcz, ccc,
+                                            flag, fcx, fcy, fcz, ccc, vfrac,
                                             bc_types, m_vel_g_bc_types,
                                             bc_ilo[lev]->array(), bc_ihi[lev]->array(),
                                             bc_jlo[lev]->array(), bc_jhi[lev]->array(),
@@ -656,7 +656,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
           mol::compute_convective_fluxes_eb(gbx, ncomp, scomp, rho,
                                             fx, fy, fz,
                                             ep_umac, ep_vmac, ep_wmac,
-                                            flag, fcx, fcy, fcz, ccc,
+                                            flag, fcx, fcy, fcz, ccc, vfrac,
                                             bc_types, m_ro_g_bc_types,
                                             bc_ilo[lev]->array(), bc_ihi[lev]->array(),
                                             bc_jlo[lev]->array(), bc_jhi[lev]->array(),
@@ -684,7 +684,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
           mol::compute_convective_fluxes_eb(gbx, ncomp, scomp, rhohg,
                                             fx, fy, fz,
                                             ep_umac, ep_vmac, ep_wmac,
-                                            flag, fcx, fcy, fcz, ccc,
+                                            flag, fcx, fcy, fcz, ccc, vfrac,
                                             bc_types, m_T_g_bc_types,
                                             bc_ilo[lev]->array(), bc_ihi[lev]->array(),
                                             bc_jlo[lev]->array(), bc_jhi[lev]->array(),
@@ -712,7 +712,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
           mol::compute_convective_fluxes_eb(gbx, ncomp, scomp, rhotrac,
                                             fx, fy, fz,
                                             ep_umac, ep_vmac, ep_wmac,
-                                            flag, fcx, fcy, fcz, ccc,
+                                            flag, fcx, fcy, fcz, ccc, vfrac,
                                             bc_types, m_trac_g_bc_types,
                                             bc_ilo[lev]->array(), bc_ihi[lev]->array(),
                                             bc_jlo[lev]->array(), bc_jhi[lev]->array(),
@@ -740,7 +740,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
           mol::compute_convective_fluxes_eb(gbx, ncomp, scomp, rhoXgk,
                                             fx, fy, fz,
                                             ep_umac, ep_vmac, ep_wmac,
-                                            flag, fcx, fcy, fcz, ccc,
+                                            flag, fcx, fcy, fcz, ccc, vfrac,
                                             bc_types, m_X_gk_bc_types,
                                             bc_ilo[lev]->array(), bc_ihi[lev]->array(),
                                             bc_jlo[lev]->array(), bc_jhi[lev]->array(),

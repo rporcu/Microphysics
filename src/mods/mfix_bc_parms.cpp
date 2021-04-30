@@ -54,9 +54,10 @@ namespace BC
   amrex::Vector<BC_t> bc;
 
 
-  void Initialize (amrex::Geometry& geom)
+  void Initialize (amrex::Geometry& geom,
+                   const FluidPhase& fluid,
+                   const SolidsPhase& solids)
   {
-
     BCList bc_mask;
 
     // Integer ids for BCs
@@ -315,9 +316,9 @@ namespace BC
       }
 
       // Get fluid data.
-      if(FLUID::solve) {
+      if(fluid.solve) {
 
-        std::string field = "bc."+regions[bcv]+"."+FLUID::name;
+        std::string field = "bc."+regions[bcv]+"."+fluid.name;
         amrex::ParmParse ppFluid(field.c_str());
 
         // Mass inflows need fluid velocity and volume fraction.
@@ -339,14 +340,14 @@ namespace BC
         }
 
         if( new_bc.type == minf_ || new_bc.type == pinf_ ) {
-          if (FLUID::solve_enthalpy) {
+          if (fluid.solve_enthalpy) {
             read_bc_temperature(ppFluid, &new_bc.fluid);
           }
 
           // Get species data.
-          if (FLUID::solve_species) {
+          if (fluid.solve_species) {
 
-            const int nspecies_g = FLUID::nspecies;
+            const int nspecies_g = fluid.nspecies;
             new_bc.fluid.species.resize(nspecies_g);
 
             std::string species_field = field+".species";
@@ -354,9 +355,9 @@ namespace BC
 
             amrex::Real total_mass_fraction(0);
 
-            for (int n(0); n < FLUID::nspecies; n++) {
+            for (int n(0); n < fluid.nspecies; n++) {
               // Get the name of the fluid species we want to get the IC
-              std::string fluid_specie = FLUID::species[n];
+              std::string fluid_specie = fluid.species[n];
               // Get the BC mass fraction for the current species
               ppSpecies.get(fluid_specie.c_str(), new_bc.fluid.species[n].mass_fraction);
 
@@ -385,7 +386,7 @@ namespace BC
 
         for(size_t lcs(0); lcs < solids_types.size(); ++ lcs){
 
-          SOLIDS::SOLIDS_t new_solid;
+          SolidsPhase::SOLIDS_t new_solid;
 
           std::string field = "bc."+regions[bcv]+"."+solids_types[lcs];
           amrex::ParmParse ppSolid(field.c_str());
@@ -428,9 +429,9 @@ namespace BC
             ppSolidRho.get("max" , new_solid.density.max );
           }
 
-          if (SOLIDS::solve_species) {
+          if (solids.solve_species) {
 
-            const int nspecies_s = SOLIDS::nspecies;
+            const int nspecies_s = solids.nspecies;
             new_solid.species.resize(nspecies_s);
 
             std::string species_field = field+".species";
@@ -438,9 +439,9 @@ namespace BC
 
             amrex::Real total_mass_fraction(0);
 
-            for (int n(0); n < SOLIDS::nspecies; n++) {
+            for (int n(0); n < solids.nspecies; n++) {
               // Get the name of the solid species we want to get the BC
-              std::string dem_specie = SOLIDS::species[n];
+              std::string dem_specie = solids.species[n];
               // Get the BC mass fraction for the current species
               ppSpecies.query(dem_specie.c_str(), new_solid.species[n].mass_fraction);
 
@@ -479,7 +480,7 @@ namespace BC
                      << bc[bcv].region->hi(1) << "  "
                      << bc[bcv].region->hi(2) << std::endl;
 
-      if(FLUID::solve){
+      if(fluid.solve){
 
         amrex::Print() << std::endl;
         amrex::Print() << "   Fluid:     volfrac: " << bc[bcv].fluid.volfrac     << std::endl;
@@ -541,7 +542,7 @@ namespace BC
 
 
 void
-read_bc_velocity (amrex::ParmParse pp, FLUID::FLUID_t *fluid)
+read_bc_velocity (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
 {
   amrex::Vector<amrex::Real> vel_in;
   pp.getarr("velocity", vel_in);
@@ -593,7 +594,7 @@ read_bc_velocity (amrex::ParmParse pp, FLUID::FLUID_t *fluid)
 
 
 void
-read_bc_temperature (amrex::ParmParse pp, FLUID::FLUID_t *fluid)
+read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
 {
 
   amrex::Print() << "\n\nI am looking for the fluid temperature BC!\n";

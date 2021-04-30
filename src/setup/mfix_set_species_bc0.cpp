@@ -10,35 +10,16 @@ mfix::set_species_bc0 (const Box& sbx,
                        const int lev,
                        const Box& domain)
 {
-  const int nspecies_g = FLUID::nspecies;
-
-  Gpu::DeviceVector< Real > D_gk0_d(nspecies_g);
-  Gpu::copyAsync(Gpu::hostToDevice, FLUID::D_gk0.begin(), FLUID::D_gk0.end(), D_gk0_d.begin());
+  const int nspecies_g = fluid.nspecies;
 
   Real** p_bc_X_gk = m_bc_X_gk_ptr.data();
-  Real* p_D_gk0 = D_gk0_d.data();
-
-  // In case of advect_enthalpy
-  Gpu::DeviceVector< Real > cp_gk0_d;
-  if (advect_enthalpy) {
-      cp_gk0_d.resize(nspecies_g);
-      Gpu::copyAsync(Gpu::hostToDevice, FLUID::cp_gk0.begin(), FLUID::cp_gk0.end(), cp_gk0_d.begin());
-  }
 
   const int loc_advect_enthalpy = advect_enthalpy;
 
-  Real* p_cp_gk0 = loc_advect_enthalpy ? cp_gk0_d.data() : nullptr;
   Real* p_bc_t_g = loc_advect_enthalpy ? m_bc_t_g.data() : nullptr;
 
   // Get data
   Array4<Real> const& a_X_gk = m_leveldata[lev]->X_gk->array(*mfi);
-  Array4<Real> const& a_D_gk = m_leveldata[lev]->D_gk->array(*mfi);
-
-  Array4<Real> const& a_cp_gk = loc_advect_enthalpy ?
-    m_leveldata[lev]->cp_gk->array(*mfi) : Array4<Real>();
-
-  Array4<Real> const& a_h_gk = loc_advect_enthalpy ?
-    m_leveldata[lev]->h_gk->array(*mfi) : Array4<Real>();
 
   const IntVect sbx_lo(sbx.loVect());
   const IntVect sbx_hi(sbx.hiVect());
@@ -75,7 +56,7 @@ mfix::set_species_bc0 (const Box& sbx,
     const Box bx_yz_lo_3D(sbx_lo, bx_yz_lo_hi_3D);
 
     ParallelFor(bx_yz_lo_3D, [a_bc_ilo,dom_lo,pinf,pout,minf,nspecies_g,a_X_gk,
-        a_D_gk,a_cp_gk,a_h_gk,p_bc_X_gk,p_D_gk0,p_cp_gk0,p_bc_t_g,loc_advect_enthalpy]
+        p_bc_X_gk,p_bc_t_g,loc_advect_enthalpy]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_ilo(dom_lo[0]-1,j,k,1);
@@ -85,12 +66,6 @@ mfix::set_species_bc0 (const Box& sbx,
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
-          a_D_gk(i,j,k,n) = p_D_gk0[n];
-
-          if (loc_advect_enthalpy) {
-            a_cp_gk(i,j,k,n) = p_cp_gk0[n];
-            a_h_gk(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
-          }
         }
       }
     });
@@ -106,7 +81,7 @@ mfix::set_species_bc0 (const Box& sbx,
     const Box bx_yz_hi_3D(bx_yz_hi_lo_3D, sbx_hi);
 
     ParallelFor(bx_yz_hi_3D, [a_bc_ihi,dom_hi,pinf,pout,minf,nspecies_g,a_X_gk,
-        a_D_gk,a_cp_gk,a_h_gk,p_bc_X_gk,p_D_gk0,p_cp_gk0,p_bc_t_g,loc_advect_enthalpy]
+        p_bc_X_gk,p_bc_t_g,loc_advect_enthalpy]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_ihi(dom_hi[0]+1,j,k,1);
@@ -116,12 +91,6 @@ mfix::set_species_bc0 (const Box& sbx,
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
-          a_D_gk(i,j,k,n) = p_D_gk0[n];
-
-          if (loc_advect_enthalpy) {
-            a_cp_gk(i,j,k,n) = p_cp_gk0[n];
-            a_h_gk(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
-          }
         }
       }
     });
@@ -137,7 +106,7 @@ mfix::set_species_bc0 (const Box& sbx,
     const Box bx_xz_lo_3D(sbx_lo, bx_xz_lo_hi_3D);
 
     ParallelFor(bx_xz_lo_3D, [a_bc_jlo,dom_lo,pinf,pout,minf,nspecies_g,a_X_gk,
-        a_D_gk,a_cp_gk,a_h_gk,p_bc_X_gk,p_D_gk0,p_cp_gk0,p_bc_t_g,loc_advect_enthalpy]
+        p_bc_X_gk,p_bc_t_g,loc_advect_enthalpy]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_jlo(i,dom_lo[1]-1,k,1);
@@ -147,12 +116,6 @@ mfix::set_species_bc0 (const Box& sbx,
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
-          a_D_gk(i,j,k,n) = p_D_gk0[n];
-
-          if (loc_advect_enthalpy) {
-            a_cp_gk(i,j,k,n) = p_cp_gk0[n];
-            a_h_gk(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
-          }
         }
       }
     });
@@ -168,7 +131,7 @@ mfix::set_species_bc0 (const Box& sbx,
     const Box bx_xz_hi_3D(bx_xz_hi_lo_3D, sbx_hi);
 
     ParallelFor(bx_xz_hi_3D, [a_bc_jhi,dom_hi,pinf,pout,minf,nspecies_g,a_X_gk,
-        a_D_gk,a_cp_gk,a_h_gk,p_bc_X_gk,p_D_gk0,p_cp_gk0,p_bc_t_g,loc_advect_enthalpy]
+        p_bc_X_gk,p_bc_t_g,loc_advect_enthalpy]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_jhi(i,dom_hi[1]+1,k,1);
@@ -178,12 +141,6 @@ mfix::set_species_bc0 (const Box& sbx,
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
-          a_D_gk(i,j,k,n) = p_D_gk0[n];
-
-          if (loc_advect_enthalpy) {
-            a_cp_gk(i,j,k,n) = p_cp_gk0[n];
-            a_h_gk(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
-          }
         }
       }
     });
@@ -199,7 +156,7 @@ mfix::set_species_bc0 (const Box& sbx,
     const Box bx_xy_lo_3D(sbx_lo, bx_xy_lo_hi_3D);
 
     ParallelFor(bx_xy_lo_3D, [a_bc_klo,dom_lo,pinf,pout,minf,nspecies_g,a_X_gk,
-        a_D_gk,a_cp_gk,a_h_gk,p_bc_X_gk,p_D_gk0,p_cp_gk0,p_bc_t_g,loc_advect_enthalpy]
+        p_bc_X_gk,p_bc_t_g,loc_advect_enthalpy]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_klo(i,j,dom_lo[2]-1,1);
@@ -209,12 +166,6 @@ mfix::set_species_bc0 (const Box& sbx,
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
-          a_D_gk(i,j,k,n) = p_D_gk0[n];
-
-          if (loc_advect_enthalpy) {
-            a_cp_gk(i,j,k,n) = p_cp_gk0[n];
-            a_h_gk(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
-          }
         }
       }
     });
@@ -230,7 +181,7 @@ mfix::set_species_bc0 (const Box& sbx,
     const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, sbx_hi);
 
     ParallelFor(bx_xy_hi_3D, [a_bc_khi,dom_hi,pinf,pout,minf,nspecies_g,a_X_gk,
-        a_D_gk,a_cp_gk,a_h_gk,p_bc_X_gk,p_D_gk0,p_cp_gk0,p_bc_t_g,loc_advect_enthalpy]
+        p_bc_X_gk,p_bc_t_g,loc_advect_enthalpy]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_khi(i,j,dom_hi[2]+1,1);
@@ -240,12 +191,6 @@ mfix::set_species_bc0 (const Box& sbx,
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
-          a_D_gk(i,j,k,n) = p_D_gk0[n];
-
-          if (loc_advect_enthalpy) {
-            a_cp_gk(i,j,k,n) = p_cp_gk0[n];
-            a_h_gk(i,j,k,n) = p_cp_gk0[n] * p_bc_t_g[bcv];
-          }
         }
       }
     });
