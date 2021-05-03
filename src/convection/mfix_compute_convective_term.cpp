@@ -77,7 +77,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
 
     // We first compute the velocity forcing terms to be used in predicting
     //    to faces before the MAC projection
-    if (advection_type() != AdvectionType::MOL) 
+    if (advection_type() != AdvectionType::MOL)
     {
 
       bool include_pressure_gradient = !(m_use_mac_phi_in_godunov);
@@ -515,14 +515,15 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
 
           const int ncomp = 1; // number of components
           const int ccomp = 0; // convection (dsdt) component
+          const bool l_godunov_use_forces_in_trans = false;
 
           godunov::compute_godunov_advection(bx, ncomp, ccomp, dsdt, rho,
                                              ep_umac, ep_vmac, ep_wmac,
-                                             fvel, divu, l_dt,
+                                             Array4<Real const>{}, divu, l_dt,
                                              get_density_bcrec_device_ptr(),
                                              get_density_iconserv_device_ptr(),
                                              tmpfab.dataPtr(),m_godunov_ppm,
-                                             m_godunov_use_forces_in_trans,
+                                             l_godunov_use_forces_in_trans,
                                              geom[lev], true);
 
 
@@ -535,14 +536,15 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
 
           const int ncomp = 1; // number of components
           const int ccomp = 1; // convection (dsdt) component
+          const bool l_godunov_use_forces_in_trans = false;
 
           godunov::compute_godunov_advection(bx, ncomp, ccomp, dsdt, rhohg,
                                              ep_umac, ep_vmac, ep_wmac,
-                                             fvel, divu, l_dt,
+                                             Array4<Real const>{}, divu, l_dt,
                                              get_enthalpy_bcrec_device_ptr(),
                                              get_enthalpy_iconserv_device_ptr(),
                                              tmpfab.dataPtr(),m_godunov_ppm,
-                                             m_godunov_use_forces_in_trans,
+                                             l_godunov_use_forces_in_trans,
                                              geom[lev], true);
 
         } // end enthalpy
@@ -557,7 +559,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
 
           godunov::compute_godunov_advection(bx, ncomp, ccomp, dsdt, rhotrac,
                                              ep_umac, ep_vmac, ep_wmac,
-                                             fvel, divu, l_dt,
+                                             ftra, divu, l_dt,
                                              get_tracer_bcrec_device_ptr(),
                                              get_tracer_iconserv_device_ptr(),
                                              tmpfab.dataPtr(),m_godunov_ppm,
@@ -572,14 +574,15 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
 
           const int ncomp = l_nspecies; // number of components
           const int ccomp = 0; // convection (dXdt) component
+          const bool l_godunov_use_forces_in_trans = false;
 
           godunov::compute_godunov_advection(bx, ncomp, ccomp, dXdt, rhoXgk,
                                              ep_umac, ep_vmac, ep_wmac,
-                                             fvel, divu, l_dt,
+                                             Array4<Real const>{}, divu, l_dt,
                                              get_species_bcrec_device_ptr(),
                                              get_species_iconserv_device_ptr(),
                                              tmpfab.dataPtr(),m_godunov_ppm,
-                                             m_godunov_use_forces_in_trans,
+                                             l_godunov_use_forces_in_trans,
                                              geom[lev], true);
         } // end species
 
