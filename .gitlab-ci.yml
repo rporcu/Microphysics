@@ -134,7 +134,8 @@ test:csg:
             -B build
             -DCMAKE_BUILD_TYPE=Debug
             -DMFIX_CSG=ON
-    - cmake --build build
+    - cmake --build build --target functional_tests
+    - ./build/src/eb/tests/functional_tests
   <<: *test_gpu
 
 .ctest: &ctest_template
