@@ -142,7 +142,7 @@ test:csg:
   image: $CI_REGISTRY_IMAGE/nvcc
   script:
     - sccache -s
-    - git submodule update --init --force subprojects/amrex
+    - git submodule update --init --force
     - cmake -S .
             -B build
             -DMFIX_MPI=$ENABLE_MPI
