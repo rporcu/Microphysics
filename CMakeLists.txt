@@ -111,7 +111,8 @@ endif ()
 # Setup AMReX
 include(MFIXSetupAMReX)
 
-add_subdirectory(subprojects/AMReX-Hydro)
+# Setup AMReX-Hydro
+include(MFIXSetupAMReXHydro)
 
 get_git_info( )
 

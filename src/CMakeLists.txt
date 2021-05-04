@@ -67,6 +67,12 @@ add_subdirectory(timestepping)
 target_link_libraries( mfixcore PUBLIC AMReX::amrex )
 
 #
+# Link to AMReX-Hydro
+#
+target_sources(mfixcore PRIVATE $<TARGET_OBJECTS:amrex_hydro>)
+#target_link_libraries( mfixcore PUBLIC amrex-hydro ) # This does not work with cmake 3.14
+
+#
 # Require C++14 or newer and no compiler extensions.
 #
 set_target_properties(mfixcore PROPERTIES CXX_EXTENSIONS OFF)
