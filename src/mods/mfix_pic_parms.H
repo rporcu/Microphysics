@@ -13,9 +13,15 @@ namespace PIC
   extern amrex::Real ep_cp;
 
   extern amrex::Real velfac;
+  extern amrex::Real velfac_alpha;
+  extern amrex::Real velfac_intercept;
 
   extern amrex::Real small_number;
   extern amrex::Real damping_factor;
+
+  extern amrex::Real sigmoidal_offset;
+
+  extern amrex::Real advance_eps_step;
 
   void Initialize ();
 }
