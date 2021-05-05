@@ -19,6 +19,9 @@ namespace PIC
   extern amrex::Real small_number;
   extern amrex::Real damping_factor;
 
+  extern amrex::Real damping_factor_wall_normal;
+  extern amrex::Real damping_factor_wall_tangent;
+
   extern amrex::Real sigmoidal_offset;
 
   extern amrex::Real advance_eps_step;
