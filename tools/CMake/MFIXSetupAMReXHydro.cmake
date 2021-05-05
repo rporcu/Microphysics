@@ -30,6 +30,10 @@ endif ()
 
 # Options
 set(HYDRO_SPACEDIM              3)
+set(HYDRO_MPI                   ${MFIX_MPI})
+set(HYDRO_OMP                   ${MFIX_OMP})
+set(HYDRO_GPU_BACKEND           ${MFIX_GPU_BACKEND} CACHE STRING "" FORCE)
+set(HYDRO_EB                    ON)
 
 # Add subdirectory to the build
 add_subdirectory(${AMREX_HYDRO_SRC_DIR})
