@@ -340,7 +340,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
         else if (m_redistribution_type == "NoRedist")
           gbx.grow(1);
         else
-          amrex::Abort("Dont know this redistribution type");
+          amrex::Abort("Do not know this redistribution type");
       }
       // This one holds the convective term on a grown region so we can redistribute
       FArrayBox dUdt_tmpfab(gbx,nmaxcomp);

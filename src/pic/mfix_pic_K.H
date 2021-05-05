@@ -1,11 +1,11 @@
 #include "mfix_pc.H"
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-amrex::Real solids_pressure (const amrex::Real Ps,
-                             const amrex::Real beta,
-                             const amrex::Real ep_cp,
-                             const amrex::Real small_number,
-                             const amrex::Real eps)
+amrex::Real solids_stress (const amrex::Real Ps,
+                           const amrex::Real beta,
+                           const amrex::Real ep_cp,
+                           const amrex::Real small_number,
+                           const amrex::Real eps)
 {
 
   return Ps*std::pow(eps,beta) /

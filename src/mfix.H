@@ -472,15 +472,25 @@ class mfix : public AmrCore
                       const int advect_enthalpy,
                       const amrex::Real enthalpy_source);
 
+  void mfix_predict_volume_fraction (amrex::Real dt,
+                                     amrex::RealVect& gravity,
+                                     EBFArrayBoxFactory* ebfactory,
+                                     const int ls_refinement,
+                                     const MultiFab* ls_phi,
+                                     amrex::Vector< amrex::MultiFab* >& ep_s_out);
 
-  void MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in);
+  void MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s);
 
   void MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
-                              amrex::Vector< amrex::MultiFab* >& avg_prop_in,
                               amrex::Vector< amrex::MultiFab* >& cost,
                               std::string& knapsack_weight_type);
 
 
+  void mfix_set_pic_velocity_bcs (Vector< MultiFab* > const& vel) const;
+
+  void set_pic_velocity_bcs (const int lev,
+                             FArrayBox& vel_fab,
+                             const Box& domain) const;
   protected:
     //! Tagging cells for refinement
     virtual void ErrorEst (int lev,
@@ -887,7 +897,7 @@ public:
 
     void mfix_print_max_gp (int lev);
 
-    void mfix_print_min_epg ();
+    IntVect mfix_print_min_epg ();
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
@@ -1364,6 +1374,12 @@ public:
 
     //! EB factory that lives on the particle grids
     Vector<std::unique_ptr<EBFArrayBoxFactory> > particle_ebfactory;
+
+    amrex::EBFArrayBoxFactory const&
+    ParticleEBFactory (int lev) const noexcept {
+        return static_cast<amrex::EBFArrayBoxFactory const&>(*particle_ebfactory[lev]);
+    }
+
 
     bool mfix_update_ebfactory (int a_lev);
 

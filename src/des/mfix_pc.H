@@ -109,7 +109,7 @@ struct MFIXCheckPair
 
     if (i < j)
       if ((p1.pos() - p2.pos()).radSquared() <= neighborhood)
-        return true;  
+        return true;
 
     return false;
   }
@@ -278,12 +278,20 @@ public:
     /// Deposit parcel velocity to the grid
     ///
     void MFIX_PC_SolidsVelocityDeposition (int lev,
-                                           amrex::MultiFab& vel_s_mf,
+                                           amrex::Array<amrex::MultiFab*,3>& vel_s_mf,
                                            const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
+    void PredictPICVolumeDeposition (int lev,
+                            amrex::Real dt, amrex::RealVect& gravity,
+                            amrex::EBFArrayBoxFactory* ebfactory,
+                            const int ls_refinement,
+                            const amrex::MultiFab* ls_phi,
+                            amrex::MultiFab & mf_to_be_filled,
+                            const amrex::MultiFab * volfrac,
+                            const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
     void MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealVect& gravity,
-                                 amrex::Vector< amrex::MultiFab*> & avg_prop_in,
+                                 amrex::Vector< amrex::Array<amrex::MultiFab*,3> >& vel_s_in,
                                  amrex::Vector< amrex::MultiFab*> & cost,
                                  std::string& knapsack_weight_type,
                                  const int advect_enthalpy,

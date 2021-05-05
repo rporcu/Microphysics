@@ -5,17 +5,29 @@ using namespace amrex;
 
 void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
                                                     RealVect& gravity,
-                                                    Vector< MultiFab* >& avg_prop_in,
+                                                    Vector< Array<MultiFab*,3> >& vel_s_in,
                                                     Vector< MultiFab* >& cost,
                                                     std::string& knapsack_weight_type,
                                                     const int advect_enthalpy,
                                                     const Real enthalpy_source)
 {
 
+#define SCALE_MFP_FALSE 0
+#define SCALE_MFP_DISABLED 1
+#define SCALE_MFP_CHAPMAN 0
+
   BL_PROFILE("MFIXParticleContainer::MFIX_PC_AdvanceParcels()");
 
   const Real en = (PIC::damping_factor + 1.0);
   const Real velfac = PIC::velfac;
+  const Real velfac_alpha = PIC::velfac_alpha;
+
+  const Real inv_alpha = 1.0/PIC::velfac_alpha;
+
+  const Real ep_cp = PIC::ep_cp;
+  const Real small_number = PIC::small_number;
+
+  const Real sigmoidal_offset = PIC::sigmoidal_offset;
 
   const Real three_sqrt_two(3.0*std::sqrt(2.0));
 
@@ -25,6 +37,21 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
   const int y_hi_bc = BC::domain_bc[3];
   const int z_lo_bc = BC::domain_bc[4];
   const int z_hi_bc = BC::domain_bc[5];
+
+#if SCALE_MFP_FALSE
+  amrex::Print() << "  NOT scaling the mean free path\n";
+#elif SCALE_MFP_DISABLED
+  amrex::Print() << "  Mean free path limiting has been disabled.\n";
+#elif SCALE_MFP_CHAPMAN
+  amrex::Print() << "  Scaling the mean free path with Chapman correction\n";
+#else
+  amrex::Abort("Unknown MFP scaling option");
+#endif
+
+  amrex::Print() << "  Velocity frame of reference:"
+                  << "\n    velocity fraction at packing: " << velfac
+                  << "\n    sigmodial parameter- alpha:   " << velfac_alpha
+                  << "\n    sigmodial parameter- offset:  " << sigmoidal_offset << "\n";
 
   for (int lev = 0; lev < nlev; lev ++ )
   {
@@ -64,7 +91,11 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
       const auto p_lo = Geom(lev).ProbLoArray();
       const auto p_hi = Geom(lev).ProbHiArray();
 
-      const auto& avg_prop_array = avg_prop_in[lev]->array(pti);
+      //const auto& avg_prop_array = avg_prop_in[lev]->array(pti);
+      const auto& u_s = (*vel_s_in[lev][0]).const_array(pti);
+      const auto& v_s = (*vel_s_in[lev][1]).const_array(pti);
+      const auto& w_s = (*vel_s_in[lev][2]).const_array(pti);
+
 
       const int nspecies_s = solids.nspecies;
       const int nreactions = REACTIONS::nreactions;
@@ -94,7 +125,8 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
       amrex::ParallelFor(nrp,
         [pstruct,p_realarray,p_intarray,ptile_data,dt,gravity,p_hi,p_lo,dxi,
-         tolerance,avg_prop_array,velfac,en,three_sqrt_two,x_lo_bc,x_hi_bc,
+        ep_cp, small_number, u_s, v_s, w_s, inv_alpha,sigmoidal_offset,
+         tolerance,velfac,en,three_sqrt_two,x_lo_bc,x_hi_bc,
          y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc,nspecies_s,nreactions,idx_X_sn,
          idx_ro_sn_txfr,idx_vel_s_txfr,update_mass,update_temperature,
          local_solve_reactions,idx_h_s_txfr,T_ref,p_cp_sn0_loc,solid_is_mixture,
@@ -238,62 +270,73 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
           const Real wz_lo(1 - wz_hi);
 
           int ii = i;
-          if(vel[0]*grad_tau_p[0] > 0.) {
-            ii = (vel[0]>0.) ? i+1 : i-1;
-          }
+          int jj = j;
+          int kk = k;
+
+          // This is what the doe does now.
+          if(vel[0]*grad_tau_p[0] > 0.0) { ii = ( vel[0] > 0.0 ) ? i+1 : i-1; }
+          if(vel[1]*grad_tau_p[1] > 0.0) { jj = ( vel[1] > 0.0 ) ? j+1 : j-1; }
+          if(vel[2]*grad_tau_p[2] > 0.0) { kk = ( vel[2] > 0.0 ) ? k+1 : k-1; }
 
           const Real u_face =
-            wy_lo*wz_lo*avg_prop_array(ii,j-1,k-1,0) +
-            wy_hi*wz_lo*avg_prop_array(ii,j  ,k-1,0) +
-            wy_lo*wz_hi*avg_prop_array(ii,j-1,k  ,0) +
-            wy_hi*wz_hi*avg_prop_array(ii,j  ,k  ,0);
-
-          int jj = j;
-          if(vel[1]*grad_tau_p[1] > 0.0) {
-            jj = ( vel[1] > 0.0 ) ? j+1 : j-1;
-          }
+            wy_lo*wz_lo*u_s(ii,j-1,k-1,0) +
+            wy_hi*wz_lo*u_s(ii,j  ,k-1,0) +
+            wy_lo*wz_hi*u_s(ii,j-1,k  ,0) +
+            wy_hi*wz_hi*u_s(ii,j  ,k  ,0);
 
           const Real v_face =
-            wx_lo*wz_lo*avg_prop_array(i-1,jj,k-1,1) +
-            wx_hi*wz_lo*avg_prop_array(i  ,jj,k-1,1) +
-            wx_lo*wz_hi*avg_prop_array(i-1,jj,k  ,1) +
-            wx_hi*wz_hi*avg_prop_array(i  ,jj,k  ,1);
-
-          int kk = k;
-          if(vel[2]*grad_tau_p[2] > 0.0) {
-            kk = ( vel[2] > 0.0 ) ? k+1 : k-1;
-          }
+            wx_lo*wz_lo*v_s(i-1,jj,k-1,0) +
+            wx_hi*wz_lo*v_s(i  ,jj,k-1,0) +
+            wx_lo*wz_hi*v_s(i-1,jj,k  ,0) +
+            wx_hi*wz_hi*v_s(i  ,jj,k  ,0);
 
           const Real w_face =
-            wx_lo*wy_lo*avg_prop_array(i-1,j-1,kk,2) +
-            wx_hi*wy_lo*avg_prop_array(i  ,j-1,kk,2) +
-            wx_lo*wy_hi*avg_prop_array(i-1,j  ,kk,2) +
-            wx_hi*wy_hi*avg_prop_array(i  ,j  ,kk,2);
+            wx_lo*wy_lo*w_s(i-1,j-1,kk,0) +
+            wx_hi*wy_lo*w_s(i  ,j-1,kk,0) +
+            wx_lo*wy_hi*w_s(i-1,j  ,kk,0) +
+            wx_hi*wy_hi*w_s(i  ,j  ,kk,0);
+
 
           const RealVect avg_vel = {u_face, v_face, w_face};
 
           const amrex::Real inv_rops = 1.0 / (eps_p*p_density_new);
 
-          const amrex::Real vel_limit = p_realarray[SoArealData::radius][lp] / (dt * three_sqrt_two * eps_p);
+#if SCALE_MFP_FALSE
+          const Real inv_X =  1.0;
+
+#elif SCALE_MFP_DISABLED
+          const Real inv_X =  1.0e8;
+
+#elif SCALE_MFP_CHAPMAN
+
+          const Real inv_X =  1.0 / (1.0 + 2.5*eps_p);
+#endif
+
+          const Real vel_limit = (p_realarray[SoArealData::radius][lp] /
+                        (dt * three_sqrt_two * eps_p)) * inv_X;
 
           for (int dir(0); dir < 3; dir++)
           {
-            Real bulk_vel;
-
-            if( Math::abs(avg_vel[dir]) > tolerance &&
-                Math::abs(    vel[dir]) > tolerance ) {
-              bulk_vel = 2./(1./avg_vel[dir] + 1./vel[dir]);
-            } else {
-              bulk_vel = 0.0;
-            }
-
-            // Slip velocity between the parcel and the bulk. This needs to be the
-            // tentative new velocity, not the current velocity.
-            const Real slip_vel = velfac*bulk_vel - vel[dir];
 
             // solids stress velocity contribution:
             // -dt*( grad_tau_p / (density * ep_s)) / (1 + dt*beta/mass)
             const Real del_up = -dt*scale*grad_tau_p[dir] * inv_rops;
+
+            Real bulk_vel = avg_vel[dir];
+
+            // If the parcel is moving against the solids stress and
+            // into a region of higher concentration, limit the bluk velocity.
+            if(vel[dir]*grad_tau_p[dir] > 0.0 && vel[dir]*bulk_vel > 0.0) {
+
+              const Real x = 3.0*amrex::max(-1.0, amrex::min(1.0, inv_alpha*(ep_cp-eps_p)+sigmoidal_offset));
+              const Real Sx = x*(27.0 + x*x)/(27.0 + 9.0*x*x);
+
+              bulk_vel *= 0.5*(Sx + 1.0);
+            }
+
+            // Slip velocity between the parcel and the bulk. This needs to be the
+            // tentative new velocity, not the current velocity.
+            const Real slip_vel = bulk_vel - vel[dir];
 
             // Add in contribution from stress gradient.
             // 1) Negative gradient. Push parcel in positive direction.
@@ -306,11 +349,11 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
               vel[dir] += amrex::min(0.0, amrex::max(del_up, en*slip_vel));
             }
 
-            // Limit parcel velocity based on the mean free path
-            vel[dir] = ( vel[dir] > 0.0 ) ?
-              amrex::min(vel[dir], vel_limit):
-              amrex::max(vel[dir],-vel_limit);
-
+            // If a parcel is moving in the direction of the solids stress,
+            // limit the velocity by the mean free path. If the parcel is
+            // moving against the force, do not impose the limiter.
+            if ( del_up > 0.0 ) vel[dir] = amrex::min( vel[dir], vel_limit);
+            if ( del_up < 0.0 ) vel[dir] = amrex::max( vel[dir],-vel_limit);
           }
 
           // move the parcels

@@ -4,11 +4,12 @@
 
 using namespace amrex;
 
-void mfix::MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in)
+void mfix::MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s)
 {
   BL_PROFILE("MFIX_CalcAvgSolidsProp()");
 
   const amrex::FabArray<EBCellFlagFab>* flags = nullptr;
+  Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
 
   for (int lev = 0; lev < nlev; lev ++ )
   {
@@ -20,6 +21,7 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in)
     // then create a copy of the coarse factory to use.
    if (lev == 0) {
       flags   = &(particle_ebfactory[lev]->getMultiEBCellFlagFab());
+      areafrac = particle_ebfactory[lev]->getAreaFrac();
 
     } else {
 
@@ -29,13 +31,14 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in)
       crse_factory = (amrex::makeEBFabFactory(geom[0], pba, pdm, ngrow, EBSupport::volume)).release();
 
       flags   = &(crse_factory->getMultiEBCellFlagFab());
+      areafrac = crse_factory->getAreaFrac();
 
       delete crse_factory;
     }
 
     // We deposit vel*pmass and pmass. Later on we need to divide out
     // the accumulated mass to get the mass-averaged grid velocities.
-    pc->MFIX_PC_SolidsVelocityDeposition(lev, *avg_prop_in[lev], flags);
+    pc->MFIX_PC_SolidsVelocityDeposition(lev, vel_s[lev], flags);
   }
 
 
@@ -46,239 +49,250 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in)
 
     // Sum grid boundaries to capture any material that was deposited into
     // your grid from an adjacent grid.
-    avg_prop_in[lev]->SumBoundary(geom[lev].periodicity());
+    vel_s[lev][0]->SumBoundary(geom[lev].periodicity());
+    vel_s[lev][1]->SumBoundary(geom[lev].periodicity());
+    vel_s[lev][2]->SumBoundary(geom[lev].periodicity());
 
   // Compute the mass-averaged velocity.
-    const Real tolerance = std::numeric_limits<Real>::epsilon();
-
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-    for (MFIter mfi(*avg_prop_in[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
-    {
-      // Tilebox
-      const Box& bx = mfi.tilebox();
-
-      Array4<Real> const& avg_prop_arr = avg_prop_in[lev]->array(mfi);
-
-      if ( (*flags)[mfi].getType(amrex::grow(bx,0)) == FabType::regular)
-      {
-        amrex::ParallelFor(bx, [tolerance, avg_prop_arr]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        {
-
-          if(avg_prop_arr(i,j,k,3) > tolerance)
-            avg_prop_arr(i,j,k,0) *= (1.0/avg_prop_arr(i,j,k,3));
-          else
-            avg_prop_arr(i,j,k,0) = 0.0;
-
-          if(avg_prop_arr(i,j,k,4) > tolerance)
-            avg_prop_arr(i,j,k,1) *= (1.0/avg_prop_arr(i,j,k,4));
-          else
-            avg_prop_arr(i,j,k,1) = 0.0;
-
-          if(avg_prop_arr(i,j,k,5) > tolerance)
-            avg_prop_arr(i,j,k,2) *= (1.0/avg_prop_arr(i,j,k,5));
-          else
-            avg_prop_arr(i,j,k,2) = 0.0;
-
-
-        });
-      }
-
-      // A mix of regular and cut-cells.
-      else if ( (*flags)[mfi].getType(amrex::grow(bx,0)) != FabType::covered)
-      {
-
-        const auto& flagsarr = (*flags)[mfi].array();
-
-        amrex::ParallelFor(bx,
-          [tolerance, avg_prop_arr, flagsarr]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        {
-          if (!flagsarr(i,j,k).isCovered()) {
-
-            if(avg_prop_arr(i,j,k,3) > tolerance)
-              avg_prop_arr(i,j,k,0) *= (1.0/avg_prop_arr(i,j,k,3));
-            else
-              avg_prop_arr(i,j,k,0) = 0.0;
-
-            if(avg_prop_arr(i,j,k,4) > tolerance)
-              avg_prop_arr(i,j,k,1) *= (1.0/avg_prop_arr(i,j,k,4));
-            else
-              avg_prop_arr(i,j,k,1) = 0.0;
-
-            if(avg_prop_arr(i,j,k,5) > tolerance)
-              avg_prop_arr(i,j,k,2) *= (1.0/avg_prop_arr(i,j,k,5));
-            else
-              avg_prop_arr(i,j,k,2) = 0.0;
-          }
-        });
-      }
-    }
+    constexpr Real tolerance = std::numeric_limits<Real>::epsilon();
 
     Box domain(geom[lev].Domain());
 
     IntVect dom_lo(domain.loVect());
     IntVect dom_hi(domain.hiVect());
 
-    // Set the face velocities for mass and pressure inflows to zero
-    // so that if used in calculating the average solids velocity, the
-    // result is zero (a non-moving wall).
-    for (MFIter mfi(*avg_prop_in[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+    const int minf = bc_list.get_minf();
+    const int pinf = bc_list.get_pinf();
 
-      Array4<Real> const& avg_prop_arr = avg_prop_in[lev]->array(mfi);
+    Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
+    Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
+    Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
+    Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
+    Array4<const int> const& bct_klo = bc_klo[lev]->array();
+    Array4<const int> const& bct_khi = bc_khi[lev]->array();
 
-      IntVect arr_lo((*avg_prop_in[lev])[mfi].loVect());
-      IntVect arr_hi((*avg_prop_in[lev])[mfi].hiVect());
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (MFIter mfi(*vel_s[lev][0], TilingIfNotGPU()); mfi.isValid(); ++mfi)
+    {
 
-      const Box arr_bx(arr_lo, arr_hi);
+      {
+        const Box& xbx = mfi.nodaltilebox(0);
+        Array4<Real> const& u_s = vel_s[lev][0]->array(mfi);
+        if ( (*flags)[mfi].getType(amrex::grow(xbx,0)) == FabType::regular)
+        {
+          amrex::ParallelFor(xbx, [u_s] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          {
+            if(u_s(i,j,k,1) > tolerance) {
+              u_s(i,j,k,0) *= (1.0/u_s(i,j,k,1));
+            } else {
+              u_s(i,j,k,0) = 0.0;
+            }
+          });
+        }
+        // A mix of regular and cut-cells.
+        else if ( (*flags)[mfi].getType(amrex::grow(xbx,0)) != FabType::covered)
+        {
+          const auto& apx = areafrac[0]->array(mfi);
+          amrex::ParallelFor(xbx, [u_s, apx] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          {
+            if ( apx(i,j,k) > tolerance && u_s(i,j,k,1) > tolerance ) {
+                u_s(i,j,k,0) *= (1.0/u_s(i,j,k,1));
+            } else {
+              u_s(i,j,k,0) = 0.0;
+            }
+          });
+        }
+        else
+        {
+          amrex::ParallelFor(xbx, [u_s] AMREX_GPU_DEVICE (int i, int j, int k) noexcept { u_s(i,j,k,0) = 0.0; });
+        }
 
-      Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
-      Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
-      Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
-      Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
-      Array4<const int> const& bct_klo = bc_klo[lev]->array();
-      Array4<const int> const& bct_khi = bc_khi[lev]->array();
+        IntVect u_lo((*vel_s[lev][0])[mfi].loVect());
+        IntVect u_hi((*vel_s[lev][0])[mfi].hiVect());
 
-      const int nlft = amrex::max(0, dom_lo[0]-arr_lo[0]);
-      const int nbot = amrex::max(0, dom_lo[1]-arr_lo[1]);
-      const int ndwn = amrex::max(0, dom_lo[2]-arr_lo[2]);
+        const int nlft = amrex::max(0, dom_lo[0]-u_lo[0]);
+        const int nrgt = amrex::max(0, u_hi[0]-dom_hi[0]);
 
-      const int nrgt = amrex::max(0, arr_hi[0]-dom_hi[0]);
-      const int ntop = amrex::max(0, arr_hi[1]-dom_hi[1]);
-      const int nup  = amrex::max(0, arr_hi[2]-dom_hi[2]);
+        if (nlft > 0) {
 
-      // Create InVects for following 2D Boxes
-      IntVect bx_yz_lo_lo_2D(arr_lo), bx_yz_lo_hi_2D(arr_hi);
-      IntVect bx_yz_hi_lo_2D(arr_lo), bx_yz_hi_hi_2D(arr_hi);
-      IntVect bx_xz_lo_lo_2D(arr_lo), bx_xz_lo_hi_2D(arr_hi);
-      IntVect bx_xz_hi_lo_2D(arr_lo), bx_xz_hi_hi_2D(arr_hi);
-      IntVect bx_xy_lo_lo_2D(arr_lo), bx_xy_lo_hi_2D(arr_hi);
-      IntVect bx_xy_hi_lo_2D(arr_lo), bx_xy_hi_hi_2D(arr_hi);
+          IntVect bx_yz_lo_lo_2D(u_lo), bx_yz_lo_hi_2D(u_hi);
+          bx_yz_lo_hi_2D[0] = dom_lo[0];
+          const Box bx_yz_lo_2D(bx_yz_lo_lo_2D, bx_yz_lo_hi_2D);
 
-      // Fix lo and hi limits
-      bx_yz_lo_lo_2D[0] = dom_lo[0]-1;
-      bx_yz_lo_hi_2D[0] = dom_lo[0]-1;
-      bx_yz_hi_lo_2D[0] = dom_hi[0]+1;
-      bx_yz_hi_hi_2D[0] = dom_hi[0]+1;
+          amrex::ParallelFor(bx_yz_lo_2D, [bct_ilo,dom_lo,minf,pinf,u_s]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+            const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
+            if((bct == pinf) || (bct == minf)) u_s(i,j,k,0) = 0.0;
 
-      bx_xz_lo_lo_2D[1] = dom_lo[1]-1;
-      bx_xz_lo_hi_2D[1] = dom_lo[1]-1;
-      bx_xz_hi_lo_2D[1] = dom_hi[1]+1;
-      bx_xz_hi_hi_2D[1] = dom_hi[1]+1;
-
-      bx_xy_lo_lo_2D[2] = dom_lo[2]-1;
-      bx_xy_lo_hi_2D[2] = dom_lo[2]-1;
-      bx_xy_hi_lo_2D[2] = dom_hi[2]+1;
-      bx_xy_hi_hi_2D[2] = dom_hi[2]+1;
-
-      // Create 2D boxes for GPU loops
-      const Box bx_yz_lo_2D(bx_yz_lo_lo_2D, bx_yz_lo_hi_2D);
-      const Box bx_yz_hi_2D(bx_yz_hi_lo_2D, bx_yz_hi_hi_2D);
-
-      const Box bx_xz_lo_2D(bx_xz_lo_lo_2D, bx_xz_lo_hi_2D);
-      const Box bx_xz_hi_2D(bx_xz_hi_lo_2D, bx_xz_hi_hi_2D);
-
-      const Box bx_xy_lo_2D(bx_xy_lo_lo_2D, bx_xy_lo_hi_2D);
-      const Box bx_xy_hi_2D(bx_xy_hi_lo_2D, bx_xy_hi_hi_2D);
-
-      const int minf = bc_list.get_minf();
-      const int pinf = bc_list.get_pinf();
-      //const int pout = bc_list.get_pout(); UNUSED
-
-      if (nlft > 0) {
-        amrex::ParallelFor(bx_yz_lo_2D,
-        [bct_ilo,dom_lo,minf,pinf,avg_prop_arr]
-        AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
-
-          const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
-
-          if((bct == pinf) || (bct == minf))
-            avg_prop_arr(dom_lo[0],j,k,0) = 0.0;
-
-        });
-      } // nlft
-
-      if (nrgt > 0 ) {
-        amrex::ParallelFor(bx_yz_hi_2D,
-        [bct_ihi,dom_hi,minf,pinf,avg_prop_arr]
-        AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
-
-          const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
-
-          if((bct == pinf) || (bct == minf))
-            avg_prop_arr(dom_hi[0]+1,j,k,0) = 0.0;
-
-        });
-      } // nrgt
-
-      if (nbot > 0) {
-        amrex::ParallelFor(bx_xz_lo_2D,
-        [bct_jlo,dom_lo,minf,pinf,avg_prop_arr]
-        AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
-
-          const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
-
-          if((bct == pinf) || (bct == minf))
-            avg_prop_arr(i,dom_lo[1],k,1) = 0.0;
-
-        });
-      } // nbot
-
-      if (ntop > 0 ) {
-        amrex::ParallelFor(bx_xz_hi_2D,
-        [bct_jhi,dom_hi,minf,pinf,avg_prop_arr]
-        AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
-
-          const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
-
-          if((bct == pinf) || (bct == minf))
-            avg_prop_arr(i,dom_hi[1]+1,k,1) = 0.0;
-
-        });
-      } // ntop
-
-      if (ndwn > 0) {
-        amrex::ParallelFor(bx_xy_lo_2D,
-        [bct_klo,dom_lo,minf,pinf,avg_prop_arr]
-        AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
-
-          const int bct = bct_klo(i,j,dom_lo[2]-1,0);
-
-          if((bct == pinf) || (bct == minf))
-            avg_prop_arr(i,j,dom_lo[2],2) = 0.0;
-
-        });
-      } // ndwn
-
-      if (nup  > 0 ) {
-        amrex::ParallelFor(bx_xy_hi_2D,
-        [bct_khi,dom_hi,minf,pinf,avg_prop_arr]
-        AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
-
-          const int bct = bct_khi(i,j,dom_hi[2]+1,0);
-
-          if((bct == pinf) || (bct == minf))
-            avg_prop_arr(i,j,dom_hi[2]+1,2) = 0.0;
-
-        });
-      } // nup
+          });
+        } // nlft
 
 
-    }
+        if (nrgt > 0 ) {
+
+          IntVect bx_yz_hi_lo_2D(u_lo), bx_yz_hi_hi_2D(u_hi);
+          bx_yz_hi_lo_2D[0] = dom_hi[0]+1;
+          const Box bx_yz_hi_2D(bx_yz_hi_lo_2D, bx_yz_hi_hi_2D);
+
+          amrex::ParallelFor(bx_yz_hi_2D, [bct_ihi,dom_hi,minf,pinf,u_s]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+            const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
+            if((bct == pinf) || (bct == minf)) u_s(i,j,k,0) = 0.0;
+
+          });
+        } // nrgt
+
+
+      }
+
+      {
+        const Box& ybx = mfi.nodaltilebox(1);
+        Array4<Real> const& v_s = vel_s[lev][1]->array(mfi);
+        if ( (*flags)[mfi].getType(amrex::grow(ybx,0)) == FabType::regular)
+        {
+          amrex::ParallelFor(ybx, [v_s] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          {
+            if(v_s(i,j,k,1) > tolerance) {
+              v_s(i,j,k,0) *= (1.0/v_s(i,j,k,1));
+            } else {
+              v_s(i,j,k,0) = 0.0;
+            }
+          });
+        }
+        // A mix of regular and cut-cells.
+        else if ( (*flags)[mfi].getType(amrex::grow(ybx,0)) != FabType::covered)
+        {
+          const auto& apy = areafrac[1]->array(mfi);
+          amrex::ParallelFor(ybx, [v_s, apy] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          {
+            if ( apy(i,j,k) > tolerance && v_s(i,j,k,1) > tolerance ) {
+                v_s(i,j,k,0) *= (1.0/v_s(i,j,k,1));
+            } else {
+              v_s(i,j,k,0) = 0.0;
+            }
+          });
+        }
+        else
+        {
+          amrex::ParallelFor(ybx, [v_s] AMREX_GPU_DEVICE (int i, int j, int k) noexcept { v_s(i,j,k,0) = 0.0; });
+        }
+
+        IntVect v_lo((*vel_s[lev][1])[mfi].loVect());
+        IntVect v_hi((*vel_s[lev][1])[mfi].hiVect());
+
+        const int nbot = amrex::max(0, dom_lo[1]-v_lo[1]);
+        const int ntop = amrex::max(0, v_hi[1]-dom_hi[1]);
+
+        if (nbot > 0) {
+
+          IntVect bx_xz_lo_lo_2D(v_lo), bx_xz_lo_hi_2D(v_hi);
+          bx_xz_lo_hi_2D[1] = dom_lo[1];
+          const Box bx_xz_lo_2D(bx_xz_lo_lo_2D, bx_xz_lo_hi_2D);
+
+          amrex::ParallelFor(bx_xz_lo_2D, [bct_jlo,dom_lo,minf,pinf,v_s]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+            const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
+            if((bct == pinf) || (bct == minf)) v_s(i,j,k,0) = 0.0;
+          });
+        } // nbot
+
+        if (ntop > 0 ) {
+
+          IntVect bx_xz_hi_lo_2D(v_lo), bx_xz_hi_hi_2D(v_hi);
+          bx_xz_hi_lo_2D[1] = dom_hi[1]+1;
+          const Box bx_xz_hi_2D(bx_xz_hi_lo_2D, bx_xz_hi_hi_2D);
+
+          amrex::ParallelFor(bx_xz_hi_2D, [bct_jhi,dom_hi,minf,pinf,v_s]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+            const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
+            if((bct == pinf) || (bct == minf)) v_s(i,j,k,0) = 0.0;
+          });
+        } // ntop
+
+      }
+
+      {
+        const Box& zbx = mfi.nodaltilebox(2);
+        Array4<Real> const& w_s = vel_s[lev][2]->array(mfi);
+        if ( (*flags)[mfi].getType(amrex::grow(zbx,0)) == FabType::regular)
+        {
+          amrex::ParallelFor(zbx, [w_s] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          {
+            if(w_s(i,j,k,1) > tolerance) {
+              w_s(i,j,k,0) *= (1.0/w_s(i,j,k,1));
+            } else {
+              w_s(i,j,k,0) = 0.0;
+            }
+          });
+        }
+        // A mix of regular and cut-cells.
+        else if ( (*flags)[mfi].getType(amrex::grow(zbx,0)) != FabType::covered)
+        {
+          const auto& apz = areafrac[2]->array(mfi);
+          amrex::ParallelFor(zbx, [w_s, apz] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          {
+            if ( apz(i,j,k) > tolerance && w_s(i,j,k,1) > tolerance ) {
+                w_s(i,j,k,0) *= (1.0/w_s(i,j,k,1));
+            } else {
+              w_s(i,j,k,0) = 0.0;
+            }
+          });
+        }
+        else
+        {
+          amrex::ParallelFor(zbx, [w_s] AMREX_GPU_DEVICE (int i, int j, int k) noexcept { w_s(i,j,k,0) = 0.0; });
+        }
+
+        IntVect w_lo((*vel_s[lev][2])[mfi].loVect());
+        IntVect w_hi((*vel_s[lev][2])[mfi].hiVect());
+
+        const int ndwn = amrex::max(0, dom_lo[2]-w_lo[2]);
+        const int nup  = amrex::max(0, w_hi[2]-dom_hi[2]);
+
+        if (ndwn > 0) {
+
+          IntVect bx_xy_lo_lo_2D(w_lo), bx_xy_lo_hi_2D(w_hi);
+          bx_xy_lo_hi_2D[2] = dom_lo[2];
+          const Box bx_xy_lo_2D(bx_xy_lo_lo_2D, bx_xy_lo_hi_2D);
+
+          amrex::ParallelFor(bx_xy_lo_2D,
+          [bct_klo,dom_lo,minf,pinf,w_s]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+            const int bct = bct_klo(i,j,dom_lo[2]-1,0);
+            if((bct == pinf) || (bct == minf)) w_s(i,j,k,0) = 0.0;
+
+          });
+        } // ndwn
+
+        if (nup  > 0 ) {
+
+          IntVect bx_xy_hi_lo_2D(w_lo), bx_xy_hi_hi_2D(w_hi);
+          bx_xy_hi_lo_2D[2] = dom_hi[2]+1;
+          const Box bx_xy_hi_2D(bx_xy_hi_lo_2D, bx_xy_hi_hi_2D);
+
+          amrex::ParallelFor(bx_xy_hi_2D, [bct_khi,dom_hi,minf,pinf,w_s]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+            const int bct = bct_khi(i,j,dom_hi[2]+1,0);
+            if((bct == pinf) || (bct == minf)) w_s(i,j,k,0) = 0.0;
+
+          });
+        } // nup
+
+      }
+
+    }//end MFIter loop
 
     // Set covered cells and any remaining domain boundary cells to zero.
     // By setting these cells to zero, a parcel will not "see" any motion
     // in walls cells.
 
-    const Real avg_covered_val = 0.0;
-    EB_set_covered(*avg_prop_in[lev], 0, 3, 1, avg_covered_val);
-    avg_prop_in[lev]->setDomainBndry(avg_covered_val,geom[lev]);
-
-    // Impose periodic BC's at domain boundaries and fine-fine copies in the interior
-    avg_prop_in[lev]->FillBoundary(geom[lev].periodicity());
-
+    for (int idim = 0; idim < AMREX_SPACEDIM; ++idim) {
+      //EB_set_covered(*vel_s[lev][idim], 0, vel_s[lev][idim]->nComp(), 0, 0.0);
+      vel_s[lev][idim]->setDomainBndry(0.0, geom[lev]);
+      vel_s[lev][idim]->FillBoundary(geom[lev].periodicity());
+    }
   }
 
   // Interpolate from the coarse grid to define the fine grid arrays
