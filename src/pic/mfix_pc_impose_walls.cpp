@@ -3,6 +3,7 @@
 
 #include <mfix.H>
 #include <mfix_des_K.H>
+#include <mfix_pic_parms.H>
 
 using namespace amrex;
 
@@ -72,8 +73,8 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
             const auto plo = geom.ProbLoArray();
             const auto& phiarr = ls_phi->array(pti);
 
-            const Real En = 0.30;
-            const Real Et = 0.99;
+            const Real En = PIC::damping_factor_wall_normal;
+            const Real Et = PIC::damping_factor_wall_tangent;
 
             amrex::ParallelFor(nrp,
                 [pstruct,p_realarray,ls_refinement,phiarr,plo,dxi,En,Et]

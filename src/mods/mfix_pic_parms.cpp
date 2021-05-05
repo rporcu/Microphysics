@@ -24,7 +24,9 @@ namespace PIC
 
   amrex::Real small_number = 1.e-7;
 
-  amrex::Real damping_factor;
+  amrex::Real damping_factor = 0.4;
+  amrex::Real damping_factor_wall_normal  = 0.30;
+  amrex::Real damping_factor_wall_tangent = 0.99;
 
   amrex::Real sigmoidal_offset;
 
@@ -75,10 +77,17 @@ namespace PIC
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_cp > 0. && ep_cp < 1.,
           "Invalid value: pic.close_pack must be in [0.0, 1.0]");
 
-      damping_factor = 0.85;
       pp.get("damping_factor", damping_factor);
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(damping_factor >= 0. && damping_factor <= 1.,
            "Invalid value: pic.damping_factor must be in [0.0, 1.0]");
+
+      pp.get("damping_factor_wall_normal", damping_factor_wall_normal);
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(damping_factor_wall_normal >= 0. && damping_factor_wall_normal <= 1.,
+           "Invalid value: pic.damping_factor_wall_normal must be in [0.0, 1.0]");
+
+      pp.get("damping_factor_wall_tangent", damping_factor_wall_tangent);
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(damping_factor_wall_tangent >= 0. && damping_factor_wall_tangent <= 1.,
+           "Invalid value: pic.damping_factor_wall_tangent must be in [0.0, 1.0]");
 
       // Read small number
       pp.query("small_number", small_number);
