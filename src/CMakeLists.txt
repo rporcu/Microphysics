@@ -68,8 +68,12 @@ target_link_libraries( mfixcore PUBLIC AMReX::amrex )
 
 #
 # Link to AMReX-Hydro
+# Must include in sources too to enable propagation
+# This is due to the fact that we are dealing with
+# OBJECT libraries
 #
-target_link_libraries( mfixcore PUBLIC amrex_hydro )
+target_sources(mfixcore PUBLIC $<TARGET_OBJECTS:amrex_hydro>) # Propagates objs
+target_link_libraries( mfixcore PUBLIC amrex_hydro ) # Propagates includes
 
 #
 # Require C++14 or newer and no compiler extensions.
