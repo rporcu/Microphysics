@@ -435,6 +435,7 @@ class mfix : public AmrCore
                                          amrex::Vector< amrex::MultiFab*      > const& ep_w_mac,
                                          amrex::Vector< amrex::MultiFab const*> const& ep_g_in,
                                          amrex::Vector< amrex::MultiFab const*> const& ro_g_in,
+                                         amrex::Vector< amrex::MultiFab const*> const& txfr_in,
                                          amrex::Vector< amrex::MultiFab      *> const& vel_forces,
                                          amrex::Vector< amrex::MultiFab const*> const& rhs_mac);
 

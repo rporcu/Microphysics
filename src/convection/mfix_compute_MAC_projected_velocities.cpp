@@ -26,6 +26,7 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
                                         Vector< MultiFab*      > const& ep_w_mac,
                                         Vector< MultiFab const*> const& ep_g_in,
                                         Vector< MultiFab const*> const& ro_g_in,
+                                        Vector< MultiFab const*> const& txfr_in,
                                         Vector< MultiFab      *> const& vel_forces,
                                         Vector< MultiFab const*> const& rhs_mac_in)
 {
@@ -33,6 +34,22 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
 
   if (m_verbose) {
     Print() << "MAC Projection:\n";
+  }
+
+  // We first compute the velocity forcing terms to be used in predicting
+  //    to faces before the MAC projection
+  if (advection_type() != AdvectionType::MOL)
+  {
+    bool include_pressure_gradient = !(m_use_mac_phi_in_godunov);
+    bool include_drag_force = include_pressure_gradient && m_use_drag_in_godunov;
+    compute_vel_forces(vel_forces, vel_in, ro_g_in, txfr_in, include_pressure_gradient, include_drag_force);
+
+    if (m_godunov_include_diff_in_forcing)
+      for (int lev = 0; lev <= finest_level; ++lev)
+        MultiFab::Add(*vel_forces[lev], *m_leveldata[lev]->divtau_o, 0, 0, 3, 0);
+
+    if (nghost_force() > 0)
+      fillpatch_force(time, vel_forces, nghost_force());
   }
 
   auto mac_phi = get_mac_phi();
