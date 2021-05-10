@@ -28,6 +28,7 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
     // Set the defaults for BCRecs
     m_bcrec_velocity.resize(AMREX_SPACEDIM);
+    m_bcrec_hydro_velocity.resize(AMREX_SPACEDIM);
     m_bcrec_density.resize(1);
     m_bcrec_enthalpy.resize(1);
     m_bcrec_tracer.resize(l_ntrac);
@@ -351,12 +352,19 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
     {
       m_bcrec_velocity_d.resize(AMREX_SPACEDIM);
+      m_bcrec_hydro_velocity_d.resize(AMREX_SPACEDIM);
 #ifdef AMREX_USE_GPU
       Gpu::htod_memcpy
 #else
         std::memcpy
 #endif
         (m_bcrec_velocity_d.data(), m_bcrec_velocity.data(), sizeof(BCRec)*AMREX_SPACEDIM);
+#ifdef AMREX_USE_GPU
+      Gpu::htod_memcpy
+#else
+        std::memcpy
+#endif
+        (m_bcrec_hydro_velocity_d.data(), m_bcrec_hydro_velocity.data(), sizeof(BCRec)*AMREX_SPACEDIM);
     }
 
 
@@ -495,11 +503,27 @@ void mfix::set_bcrec_lo(const int lev, const int dir, const int l_type)
   const int nsw_  = bc_list.get_nsw();
 
   // Velocity BC Recs
-  if (l_type == pinf_ || l_type == pout_) {
+  if (l_type == pinf_) {
 
     m_bcrec_velocity[0].setLo(dir, BCType::foextrap);
     m_bcrec_velocity[1].setLo(dir, BCType::foextrap);
     m_bcrec_velocity[2].setLo(dir, BCType::foextrap);
+
+    m_bcrec_hydro_velocity[0].setLo(dir, BCType::foextrap);
+    m_bcrec_hydro_velocity[1].setLo(dir, BCType::foextrap);
+    m_bcrec_hydro_velocity[2].setLo(dir, BCType::foextrap);
+
+    m_bcrec_hydro_velocity[dir].setLo(dir, BCType::ext_dir);
+
+  } else if (l_type == pout_) {
+
+    m_bcrec_velocity[0].setLo(dir, BCType::foextrap);
+    m_bcrec_velocity[1].setLo(dir, BCType::foextrap);
+    m_bcrec_velocity[2].setLo(dir, BCType::foextrap);
+
+    m_bcrec_hydro_velocity[0].setLo(dir, BCType::foextrap);
+    m_bcrec_hydro_velocity[1].setLo(dir, BCType::foextrap);
+    m_bcrec_hydro_velocity[2].setLo(dir, BCType::foextrap);
 
   } else if (l_type == minf_ || l_type == nsw_) {
 
@@ -507,11 +531,19 @@ void mfix::set_bcrec_lo(const int lev, const int dir, const int l_type)
     m_bcrec_velocity[1].setLo(dir, BCType::ext_dir);
     m_bcrec_velocity[2].setLo(dir, BCType::ext_dir);
 
+    m_bcrec_hydro_velocity[0].setLo(dir, BCType::ext_dir);
+    m_bcrec_hydro_velocity[1].setLo(dir, BCType::ext_dir);
+    m_bcrec_hydro_velocity[2].setLo(dir, BCType::ext_dir);
+
   } else if (geom[lev].isPeriodic(dir)) {
 
     m_bcrec_velocity[0].setLo(dir, BCType::int_dir);
     m_bcrec_velocity[1].setLo(dir, BCType::int_dir);
     m_bcrec_velocity[2].setLo(dir, BCType::int_dir);
+
+    m_bcrec_hydro_velocity[0].setLo(dir, BCType::int_dir);
+    m_bcrec_hydro_velocity[1].setLo(dir, BCType::int_dir);
+    m_bcrec_hydro_velocity[2].setLo(dir, BCType::int_dir);
   }
 
   // Scalar BC Recs
@@ -559,11 +591,27 @@ void mfix::set_bcrec_hi(const int lev, const int dir, const int l_type)
   const int nsw_  = bc_list.get_nsw();
 
   // Velocity BC Recs
-  if (l_type == pinf_ || l_type == pout_) {
+  if (l_type == pinf_) {
 
     m_bcrec_velocity[0].setHi(dir, BCType::foextrap);
     m_bcrec_velocity[1].setHi(dir, BCType::foextrap);
     m_bcrec_velocity[2].setHi(dir, BCType::foextrap);
+
+    m_bcrec_hydro_velocity[0].setHi(dir, BCType::foextrap);
+    m_bcrec_hydro_velocity[1].setHi(dir, BCType::foextrap);
+    m_bcrec_hydro_velocity[2].setHi(dir, BCType::foextrap);
+
+    m_bcrec_hydro_velocity[dir].setHi(dir, BCType::ext_dir);
+
+  } else if (l_type == pout_) {
+
+    m_bcrec_velocity[0].setHi(dir, BCType::foextrap);
+    m_bcrec_velocity[1].setHi(dir, BCType::foextrap);
+    m_bcrec_velocity[2].setHi(dir, BCType::foextrap);
+
+    m_bcrec_hydro_velocity[0].setHi(dir, BCType::foextrap);
+    m_bcrec_hydro_velocity[1].setHi(dir, BCType::foextrap);
+    m_bcrec_hydro_velocity[2].setHi(dir, BCType::foextrap);
 
   } else if (l_type == minf_ || l_type == nsw_) {
 
@@ -571,11 +619,19 @@ void mfix::set_bcrec_hi(const int lev, const int dir, const int l_type)
     m_bcrec_velocity[1].setHi(dir, BCType::ext_dir);
     m_bcrec_velocity[2].setHi(dir, BCType::ext_dir);
 
+    m_bcrec_hydro_velocity[0].setHi(dir, BCType::ext_dir);
+    m_bcrec_hydro_velocity[1].setHi(dir, BCType::ext_dir);
+    m_bcrec_hydro_velocity[2].setHi(dir, BCType::ext_dir);
+
   } else if (geom[lev].isPeriodic(dir)) {
 
     m_bcrec_velocity[0].setHi(dir, BCType::int_dir);
     m_bcrec_velocity[1].setHi(dir, BCType::int_dir);
     m_bcrec_velocity[2].setHi(dir, BCType::int_dir);
+
+    m_bcrec_hydro_velocity[0].setHi(dir, BCType::int_dir);
+    m_bcrec_hydro_velocity[1].setHi(dir, BCType::int_dir);
+    m_bcrec_hydro_velocity[2].setHi(dir, BCType::int_dir);
   }
 
   // Scalar BC Recs

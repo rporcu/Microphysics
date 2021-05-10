@@ -995,8 +995,8 @@ public:
   int const* get_species_iconserv_device_ptr () const noexcept {
     return m_iconserv_species_d.data(); }
 
-
   amrex::Vector<amrex::BCRec> const& get_velocity_bcrec () const noexcept { return m_bcrec_velocity; }
+  amrex::Vector<amrex::BCRec> const& get_hydro_velocity_bcrec () const noexcept { return m_bcrec_hydro_velocity; }
   amrex::Vector<amrex::BCRec> const& get_density_bcrec () const noexcept { return m_bcrec_density; }
   amrex::Vector<amrex::BCRec> const& get_enthalpy_bcrec () const noexcept { return m_bcrec_enthalpy; }
   amrex::Vector<amrex::BCRec> const& get_tracer_bcrec () const noexcept { return m_bcrec_tracer; }
@@ -1005,6 +1005,8 @@ public:
   //
   amrex::BCRec const* get_velocity_bcrec_device_ptr () const noexcept {
     return m_bcrec_velocity_d.data(); }
+  amrex::BCRec const* get_hydro_velocity_bcrec_device_ptr () const noexcept {
+    return m_bcrec_hydro_velocity_d.data(); }
   amrex::BCRec const* get_density_bcrec_device_ptr () const noexcept {
     return m_bcrec_density_d.data(); }
   amrex::BCRec const* get_enthalpy_bcrec_device_ptr () const noexcept {
@@ -1015,7 +1017,6 @@ public:
     return m_bcrec_species_d.data(); }
   amrex::BCRec const* get_force_bcrec_device_ptr () const noexcept {
     return m_bcrec_force_d.data(); }
-
 
   // Although we do nothing special for different scalars,
   // we assume they are stored in the following order:
@@ -1349,6 +1350,13 @@ public:
     amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_species_d;
     amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_force_d;
 
+    // This is a special set of bc's that replace foextrap by extdir 
+    // for *normal* velocity only at faces that are identified as 
+    // pressure inflow (pinf_).   We need this because otherwise the 
+    // hydro routines will enforce "no backflow at outflow" and will
+    // zero the inflow velocity at a pressure inflow
+    amrex::Vector<amrex::BCRec> m_bcrec_hydro_velocity;
+    amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_hydro_velocity_d;
 
     /***************************************************************************
      *                                                                         *
