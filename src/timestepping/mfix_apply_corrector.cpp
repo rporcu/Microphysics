@@ -248,6 +248,11 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // Compute the explicit advective term R_u^*
     // *************************************************************************************
 
+    compute_MAC_projected_velocities(time, l_dt, get_vel_g_const(), 
+        GetVecOfPtrs(ep_u_mac), GetVecOfPtrs(ep_v_mac), GetVecOfPtrs(ep_w_mac),
+        get_ep_g_const(), get_ro_g_const(), get_txfr_const(),
+        GetVecOfPtrs(vel_forces), GetVecOfConstPtrs(rhs_mac));
+
     mfix_compute_convective_term(conv_u, conv_s, conv_X,
         GetVecOfPtrs(vel_forces), GetVecOfPtrs(tra_forces),
         get_vel_g_const(), get_ep_g_const(), get_ro_g_const(),

@@ -240,6 +240,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // Note that "conv_u_old" returns update to (ep_g u)
     // Note that "conv_s_old" returns update to (ep_g rho), (ep_g rho h_g) and (ep_g rho tracer)
     // *************************************************************************************
+    compute_MAC_projected_velocities(time, l_dt, get_vel_g_old_const(), 
+        GetVecOfPtrs(ep_u_mac), GetVecOfPtrs(ep_v_mac), GetVecOfPtrs(ep_w_mac),
+        get_ep_g_const(), get_ro_g_old_const(), get_txfr_const(),
+        GetVecOfPtrs(vel_forces), GetVecOfConstPtrs(rhs_mac));
 
     mfix_compute_convective_term(conv_u_old, conv_s_old, conv_X_old,
         GetVecOfPtrs(vel_forces), GetVecOfPtrs(tra_forces),
@@ -247,8 +251,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         get_h_g_old_const(), get_trac_old_const(), get_X_gk_old_const(), get_txfr_const(),
         GetVecOfPtrs(ep_u_mac), GetVecOfPtrs(ep_v_mac), GetVecOfPtrs(ep_w_mac),
         GetVecOfConstPtrs(rhs_mac), get_divtau(), l_dt, time);
-
-
 
     // *************************************************************************************
     // Update density first
