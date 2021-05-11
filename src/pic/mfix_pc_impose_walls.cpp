@@ -3,6 +3,7 @@
 
 #include <mfix.H>
 #include <mfix_des_K.H>
+#include <mfix_pic_parms.H>
 
 using namespace amrex;
 
@@ -72,8 +73,8 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
             const auto plo = geom.ProbLoArray();
             const auto& phiarr = ls_phi->array(pti);
 
-            const Real En = 0.85;
-            const Real Et = 1.00;
+            const Real En = PIC::damping_factor_wall_normal;
+            const Real Et = PIC::damping_factor_wall_tangent;
 
             amrex::ParallelFor(nrp,
                 [pstruct,p_realarray,ls_refinement,phiarr,plo,dxi,En,Et]
@@ -100,18 +101,18 @@ void MFIXParticleContainer::MFIX_PC_ImposeWalls (int lev,
 
                         // Plane ref point
                         const Real Nw_Vp = normal[0]*p_realarray[SoArealData::velx][pid]
-                                                + normal[1]*p_realarray[SoArealData::vely][pid]
-                                                + normal[2]*p_realarray[SoArealData::velz][pid];
+                                         + normal[1]*p_realarray[SoArealData::vely][pid]
+                                         + normal[2]*p_realarray[SoArealData::velz][pid];
 
                         // Parcel normal velocity
                         const RealVect Vpn = {Nw_Vp*normal[0],
-                                                     Nw_Vp*normal[1],
-                                                     Nw_Vp*normal[2]};
+                                              Nw_Vp*normal[1],
+                                              Nw_Vp*normal[2]};
 
                         // Parcel tangential velocity
                         const RealVect Vpt = {p_realarray[SoArealData::velx][pid] - Vpn[0],
-                                                     p_realarray[SoArealData::vely][pid] - Vpn[1],
-                                                     p_realarray[SoArealData::velz][pid] - Vpn[2]};
+                                              p_realarray[SoArealData::vely][pid] - Vpn[1],
+                                              p_realarray[SoArealData::velz][pid] - Vpn[2]};
 
                         // Rebound parcel if moving towards wall.
                         if(Nw_Vp < 0.) {

@@ -552,7 +552,7 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
 #endif
     for (MFIter mfi(*ep_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
-      Box const& bx = mfi.tilebox();
+      Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
       Array4<Real      > const& b_coeffs_arr = b_coeffs.array(mfi);
       Array4<Real const> const& ep_g_arr     = ep_g_in[lev]->const_array(mfi);
@@ -679,7 +679,7 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
       for (MFIter mfi(*X_gk_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-        Box const& bx = mfi.tilebox();
+        Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
         Array4<Real const> const& x_X_gk_faces_arr = X_gk_faces[0]->const_array(mfi);
         Array4<Real const> const& y_X_gk_faces_arr = X_gk_faces[1]->const_array(mfi);
@@ -824,7 +824,7 @@ void DiffusionOp::SubtractDivXGX (const Vector< MultiFab*      >& X_gk_in,
 #endif
     for (MFIter mfi(*ep_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
-      Box const& bx = mfi.tilebox();
+      Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
       Array4<Real      > const& b_coeffs_arr = b_coeffs.array(mfi);
       Array4<Real const> const& ep_g_arr     = ep_g_in[lev]->const_array(mfi);
@@ -892,7 +892,7 @@ void DiffusionOp::SubtractDivXGX (const Vector< MultiFab*      >& X_gk_in,
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
     for (MFIter mfi(*X_gk_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-      Box const& bx = mfi.tilebox();
+      Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
       Array4<Real const> const& x_X_gk_faces_arr = X_gk_faces[0]->const_array(mfi);
       Array4<Real const> const& y_X_gk_faces_arr = X_gk_faces[1]->const_array(mfi);
@@ -1017,7 +1017,7 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
 #endif
     for (MFIter mfi(*ep_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
-      Box const& bx = mfi.tilebox();
+      Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
       Array4<Real      > const& b_coeffs_arr  = b_coeffs[lev]->array(mfi);
       Array4<Real      > const& hb_coeffs_arr = hb_coeffs.array(mfi);
@@ -1108,7 +1108,7 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
       for (MFIter mfi(*X_gk_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-        Box const& bx = mfi.tilebox();
+        Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
         Array4<Real      > const& h_X_gk_arr = h_X_gk.array(mfi);
         Array4<Real const> const& X_gk_arr   = X_gk_in[lev]->const_array(mfi);
@@ -1140,7 +1140,7 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
       for (MFIter mfi(*fluxes[lev][0],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-        Box const& bx = mfi.tilebox();
+        Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
         Array4<Real const> const& x_h_X_gk_arr = h_X_gk_faces[0]->const_array(mfi);
         Array4<Real const> const& y_h_X_gk_arr = h_X_gk_faces[1]->const_array(mfi);

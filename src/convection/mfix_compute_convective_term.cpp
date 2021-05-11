@@ -71,34 +71,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u_in,
 {
     BL_PROFILE("mfix::mfix_compute_convective_term");
 
-    int ngmac = nghost_mac();
+    const int ngmac = nghost_mac();
 
     const int l_nspecies = fluid.nspecies;
-
-    // We first compute the velocity forcing terms to be used in predicting
-    //    to faces before the MAC projection
-    if (advection_type() != AdvectionType::MOL) 
-    {
-
-      bool include_pressure_gradient = !(m_use_mac_phi_in_godunov);
-      bool include_drag_force = include_pressure_gradient && m_use_drag_in_godunov;
-      compute_vel_forces(vel_forces, vel_in, ro_g_in, txfr_in,
-         include_pressure_gradient, include_drag_force);
-
-      if (m_godunov_include_diff_in_forcing)
-        for (int lev = 0; lev <= finest_level; ++lev)
-          MultiFab::Add(*vel_forces[lev], *m_leveldata[lev]->divtau_o, 0, 0, 3, 0);
-
-      if (nghost_force() > 0)
-        fillpatch_force(time, vel_forces, nghost_force());
-    }
-
-    // Do projection on all AMR levels in one shot -- note that the {u_mac, v_mac, w_mac}
-    //    arrays returned from this call are in fact {ep * u_mac, ep * v_mac, ep * w_mac}
-    //    on face CENTROIDS
-    compute_MAC_projected_velocities(time, l_dt, vel_in, ep_u_mac, ep_v_mac, ep_w_mac,
-                                     ep_g_in, ro_g_in, vel_forces, rhs_mac);
-
 
     // We now re-compute the velocity forcing terms including the pressure gradient,
     //    and compute the tracer forcing terms for the first time
@@ -340,7 +315,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
         else if (m_redistribution_type == "NoRedist")
           gbx.grow(1);
         else
-          amrex::Abort("Dont know this redistribution type");
+          amrex::Abort("Do not know this redistribution type");
       }
       // This one holds the convective term on a grown region so we can redistribute
       FArrayBox dUdt_tmpfab(gbx,nmaxcomp);
@@ -515,14 +490,15 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
 
           const int ncomp = 1; // number of components
           const int ccomp = 0; // convection (dsdt) component
+          const bool l_godunov_use_forces_in_trans = false;
 
           godunov::compute_godunov_advection(bx, ncomp, ccomp, dsdt, rho,
                                              ep_umac, ep_vmac, ep_wmac,
-                                             fvel, divu, l_dt,
+                                             Array4<Real const>{}, divu, l_dt,
                                              get_density_bcrec_device_ptr(),
                                              get_density_iconserv_device_ptr(),
                                              tmpfab.dataPtr(),m_godunov_ppm,
-                                             m_godunov_use_forces_in_trans,
+                                             l_godunov_use_forces_in_trans,
                                              geom[lev], true);
 
 
@@ -535,14 +511,15 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
 
           const int ncomp = 1; // number of components
           const int ccomp = 1; // convection (dsdt) component
+          const bool l_godunov_use_forces_in_trans = false;
 
           godunov::compute_godunov_advection(bx, ncomp, ccomp, dsdt, rhohg,
                                              ep_umac, ep_vmac, ep_wmac,
-                                             fvel, divu, l_dt,
+                                             Array4<Real const>{}, divu, l_dt,
                                              get_enthalpy_bcrec_device_ptr(),
                                              get_enthalpy_iconserv_device_ptr(),
                                              tmpfab.dataPtr(),m_godunov_ppm,
-                                             m_godunov_use_forces_in_trans,
+                                             l_godunov_use_forces_in_trans,
                                              geom[lev], true);
 
         } // end enthalpy
@@ -557,7 +534,7 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
 
           godunov::compute_godunov_advection(bx, ncomp, ccomp, dsdt, rhotrac,
                                              ep_umac, ep_vmac, ep_wmac,
-                                             fvel, divu, l_dt,
+                                             ftra, divu, l_dt,
                                              get_tracer_bcrec_device_ptr(),
                                              get_tracer_iconserv_device_ptr(),
                                              tmpfab.dataPtr(),m_godunov_ppm,
@@ -572,14 +549,15 @@ mfix::compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter c
 
           const int ncomp = l_nspecies; // number of components
           const int ccomp = 0; // convection (dXdt) component
+          const bool l_godunov_use_forces_in_trans = false;
 
           godunov::compute_godunov_advection(bx, ncomp, ccomp, dXdt, rhoXgk,
                                              ep_umac, ep_vmac, ep_wmac,
-                                             fvel, divu, l_dt,
+                                             Array4<Real const>{}, divu, l_dt,
                                              get_species_bcrec_device_ptr(),
                                              get_species_iconserv_device_ptr(),
                                              tmpfab.dataPtr(),m_godunov_ppm,
-                                             m_godunov_use_forces_in_trans,
+                                             l_godunov_use_forces_in_trans,
                                              geom[lev], true);
         } // end species
 

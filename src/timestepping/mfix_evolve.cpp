@@ -19,13 +19,13 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     {
       Real start_coupling = ParallelDescriptor::second();
       mfix_calc_volume_fraction(sum_vol);
+      //const IntVect min_epg_cell = mfix_print_min_epg();
 
       if (amrex::Math::abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
         {
           amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
           amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
         }
-      //mfix_print_min_epg();
       coupling_timing = ParallelDescriptor::second() - start_coupling;
     }
 
@@ -112,6 +112,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     }
 
     if (PIC::solve) {
+        //const IntVect min_epg_cell = mfix_print_min_epg();
         EvolveParcels(dt, time, mfix::gravity, levelset_refinement,
                       particle_cost, knapsack_weight_type, advect_enthalpy,
                       enthalpy_source);

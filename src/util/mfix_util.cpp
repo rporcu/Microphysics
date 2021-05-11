@@ -286,7 +286,7 @@ mfix::ReportGridStats () const
 //
 // Print the minimum volume fraction and cell location.
 //
-void
+IntVect
 mfix::mfix_print_min_epg ()
 {
 
@@ -298,10 +298,7 @@ mfix::mfix_print_min_epg ()
     auto& ld = *m_leveldata[lev];
     const Real min_epg = ld.ep_g->min(0);
 
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-    for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+    for (MFIter mfi(*ld.vel_g,false); mfi.isValid(); ++mfi) {
       Box const& bx = mfi.tilebox();
       Array4<Real const> const& epg = ld.ep_g->const_array(mfi);
 
@@ -325,11 +322,17 @@ mfix::mfix_print_min_epg ()
           << std::endl << std::endl << "min epg "  << min_epg
           << "  at " << epg_cell[0] << "  " << epg_cell[1] << "  " << epg_cell[2]
           << "   total found " << found << std::endl << std::endl;
+
+        return epg_cell;
+
       }
 
-      AMREX_ALWAYS_ASSERT(min_epg > 0.275);
+      //AMREX_ALWAYS_ASSERT(min_epg > 0.275);
 
     } // mfi
   } // lev
 #endif
+  IntVect fake = {0,0,0};
+  return fake;
+
 }
