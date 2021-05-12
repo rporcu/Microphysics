@@ -6,6 +6,7 @@
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
 #include <mfix_reactions_parms.H>
+#include <mfix_eb_parms.H>
 #include <mfix_pic_parms.H>
 #include <mfix_des_heterogeneous_rates_K.H>
 
@@ -64,6 +65,9 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
   if (advect_enthalpy)
     mfix_set_temperature_bcs(time, get_T_g());
+
+  if (advect_enthalpy && EB::fix_temperature)
+    mfix_set_eb_temperature_bcs(get_T_g_on_eb());
 
   if (advect_enthalpy)
     mfix_set_enthalpy_bcs(time, get_h_g());

@@ -45,8 +45,8 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   for(int lev = 0; lev <= finest_level; lev++)
   {
     MultiFab ep_k_g(ep_g[lev]->boxArray(), ep_g[lev]->DistributionMap(),
-                    ep_g[lev]->nComp(), ep_g[lev]->nGrow(), MFInfo(),
-                    ep_g[lev]->Factory());
+                    ep_g[lev]->nComp(), 1, //ep_g[lev]->nGrow(),
+                    MFInfo(), ep_g[lev]->Factory());
 
     // Initialize to 0
     ep_k_g.setVal(0.);
@@ -105,7 +105,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
     rhs[lev]->setVal(0.0);
 
     // Set the right hand side to equal rhs
-    MultiFab::Copy((*rhs[lev]),(*T_g[lev]), 0, 0, 1, 0);
+    MultiFab::Copy((*rhs[lev]), (*T_g[lev]), 0, 0, 1, 0);
 
     // Multiply rhs by (rho * ep_g * cp_g) -- we are solving
     //

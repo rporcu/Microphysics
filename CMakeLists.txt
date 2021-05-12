@@ -111,6 +111,9 @@ endif ()
 # Setup AMReX
 include(MFIXSetupAMReX)
 
+# Setup AMReX-Hydro
+include(MFIXSetupAMReXHydro)
+
 get_git_info( )
 
 # Set some cache variable for the whole project

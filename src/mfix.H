@@ -435,6 +435,7 @@ class mfix : public AmrCore
                                          amrex::Vector< amrex::MultiFab*      > const& ep_w_mac,
                                          amrex::Vector< amrex::MultiFab const*> const& ep_g_in,
                                          amrex::Vector< amrex::MultiFab const*> const& ro_g_in,
+                                         amrex::Vector< amrex::MultiFab const*> const& txfr_in,
                                          amrex::Vector< amrex::MultiFab      *> const& vel_forces,
                                          amrex::Vector< amrex::MultiFab const*> const& rhs_mac);
 
@@ -472,15 +473,25 @@ class mfix : public AmrCore
                       const int advect_enthalpy,
                       const amrex::Real enthalpy_source);
 
+  void mfix_predict_volume_fraction (amrex::Real dt,
+                                     amrex::RealVect& gravity,
+                                     EBFArrayBoxFactory* ebfactory,
+                                     const int ls_refinement,
+                                     const MultiFab* ls_phi,
+                                     amrex::Vector< amrex::MultiFab* >& ep_s_out);
 
-  void MFIX_CalcAvgSolidsVel (Vector< MultiFab* >& avg_prop_in);
+  void MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s);
 
   void MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
-                              amrex::Vector< amrex::MultiFab* >& avg_prop_in,
                               amrex::Vector< amrex::MultiFab* >& cost,
                               std::string& knapsack_weight_type);
 
 
+  void mfix_set_pic_velocity_bcs (Vector< MultiFab* > const& vel) const;
+
+  void set_pic_velocity_bcs (const int lev,
+                             FArrayBox& vel_fab,
+                             const Box& domain) const;
   protected:
     //! Tagging cells for refinement
     virtual void ErrorEst (int lev,
@@ -887,7 +898,7 @@ public:
 
     void mfix_print_max_gp (int lev);
 
-    void mfix_print_min_epg ();
+    IntVect mfix_print_min_epg ();
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
@@ -985,8 +996,8 @@ public:
   int const* get_species_iconserv_device_ptr () const noexcept {
     return m_iconserv_species_d.data(); }
 
-
   amrex::Vector<amrex::BCRec> const& get_velocity_bcrec () const noexcept { return m_bcrec_velocity; }
+  amrex::Vector<amrex::BCRec> const& get_hydro_velocity_bcrec () const noexcept { return m_bcrec_hydro_velocity; }
   amrex::Vector<amrex::BCRec> const& get_density_bcrec () const noexcept { return m_bcrec_density; }
   amrex::Vector<amrex::BCRec> const& get_enthalpy_bcrec () const noexcept { return m_bcrec_enthalpy; }
   amrex::Vector<amrex::BCRec> const& get_tracer_bcrec () const noexcept { return m_bcrec_tracer; }
@@ -995,6 +1006,8 @@ public:
   //
   amrex::BCRec const* get_velocity_bcrec_device_ptr () const noexcept {
     return m_bcrec_velocity_d.data(); }
+  amrex::BCRec const* get_hydro_velocity_bcrec_device_ptr () const noexcept {
+    return m_bcrec_hydro_velocity_d.data(); }
   amrex::BCRec const* get_density_bcrec_device_ptr () const noexcept {
     return m_bcrec_density_d.data(); }
   amrex::BCRec const* get_enthalpy_bcrec_device_ptr () const noexcept {
@@ -1005,7 +1018,6 @@ public:
     return m_bcrec_species_d.data(); }
   amrex::BCRec const* get_force_bcrec_device_ptr () const noexcept {
     return m_bcrec_force_d.data(); }
-
 
   // Although we do nothing special for different scalars,
   // we assume they are stored in the following order:
@@ -1344,6 +1356,13 @@ public:
     amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_species_d;
     amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_force_d;
 
+    // This is a special set of bc's that replace foextrap by extdir 
+    // for *normal* velocity only at faces that are identified as 
+    // pressure inflow (pinf_).   We need this because otherwise the 
+    // hydro routines will enforce "no backflow at outflow" and will
+    // zero the inflow velocity at a pressure inflow
+    amrex::Vector<amrex::BCRec> m_bcrec_hydro_velocity;
+    amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_hydro_velocity_d;
 
     /***************************************************************************
      *                                                                         *
@@ -1369,6 +1388,12 @@ public:
 
     //! EB factory that lives on the particle grids
     Vector<std::unique_ptr<EBFArrayBoxFactory> > particle_ebfactory;
+
+    amrex::EBFArrayBoxFactory const&
+    ParticleEBFactory (int lev) const noexcept {
+        return static_cast<amrex::EBFArrayBoxFactory const&>(*particle_ebfactory[lev]);
+    }
+
 
     bool mfix_update_ebfactory (int a_lev);
 

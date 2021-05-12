@@ -1529,7 +1529,7 @@ ComputeAverageVelocities (const int lev,
 
     for ( int nr = 0; nr < nregions; ++nr )
     {
-      amrex::Print() << "size of avg_vel_p " << avg_vel_p[nr] << "\n";
+      //amrex::Print() << "size of avg_vel_p " << avg_vel_p[nr] << "\n";
 
       // This region isn't needed for particle data.
       if( avg_vel_p[nr] == 0) continue;
@@ -1773,7 +1773,7 @@ ComputeAverageTemperatures (const int lev,
 
     for ( int nr = 0; nr < nregions; ++nr )
     {
-      amrex::Print() << "size of avg_T_p " << avg_T_p[nr] << "\n";
+      //amrex::Print() << "size of avg_T_p " << avg_T_p[nr] << "\n";
 
       // This region isn't needed for particle data.
       if( avg_T_p[nr] == 0) continue;
