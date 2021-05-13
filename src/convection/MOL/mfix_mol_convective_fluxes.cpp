@@ -27,7 +27,6 @@ void mol::compute_convective_fluxes (Box const& bx,
                                      Geometry& geom)
 {
   constexpr int order = 2;
-  constexpr Real small_vel = 1.e-10;
 
   Box const& xbx = amrex::surroundingNodes(bx,0);
   Box const& ybx = amrex::surroundingNodes(bx,1);
@@ -52,7 +51,7 @@ void mol::compute_convective_fluxes (Box const& bx,
 
   if (check_extdir_ilo || check_extdir_ihi)
   {
-    ParallelFor(xbx, ncomp, [fx, ep_u_mac, state, state_comp, order, small_vel,
+    ParallelFor(xbx, ncomp, [fx, ep_u_mac, state, state_comp, order,
     check_extdir_ilo, check_extdir_ihi, domain_ilo, domain_ihi,
     bc_types, dirichlet_bcs, dirichlet_size, bct_ilo, bct_ihi]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
@@ -138,7 +137,7 @@ void mol::compute_convective_fluxes (Box const& bx,
 
   if (check_extdir_jlo || check_extdir_jhi)
   {
-    ParallelFor(ybx, ncomp, [fy, ep_v_mac, state, state_comp, order, small_vel,
+    ParallelFor(ybx, ncomp, [fy, ep_v_mac, state, state_comp, order,
     check_extdir_jlo, check_extdir_jhi, domain_jlo, domain_jhi,
     bc_types, dirichlet_bcs, dirichlet_size, bct_jlo, bct_jhi]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
@@ -192,7 +191,7 @@ void mol::compute_convective_fluxes (Box const& bx,
   }
   else
   {
-    ParallelFor(ybx, ncomp, [fy, ep_v_mac, state, state_comp, order, small_vel]
+    ParallelFor(ybx, ncomp, [fy, ep_v_mac, state, state_comp, order]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       int comp = n+state_comp;
@@ -221,7 +220,7 @@ void mol::compute_convective_fluxes (Box const& bx,
 
   if (check_extdir_klo || check_extdir_khi)
   {
-    ParallelFor(zbx, ncomp, [fz, ep_w_mac, state, state_comp, order, small_vel,
+    ParallelFor(zbx, ncomp, [fz, ep_w_mac, state, state_comp, order,
     check_extdir_klo, check_extdir_khi, domain_klo, domain_khi,
     bc_types, dirichlet_bcs, dirichlet_size, bct_klo, bct_khi]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
@@ -276,7 +275,7 @@ void mol::compute_convective_fluxes (Box const& bx,
   }
   else
   {
-    ParallelFor(zbx, ncomp, [fz, ep_w_mac, state, state_comp, order, small_vel]
+    ParallelFor(zbx, ncomp, [fz, ep_w_mac, state, state_comp, order]
     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       int comp = n+state_comp;

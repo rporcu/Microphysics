@@ -6,3 +6,4 @@ CEXE_sources += mfix_calc_solids_stress.cpp
 CEXE_sources += mfix_pc_advance_pic.cpp
 CEXE_sources += mfix_pc_deposit_pic.cpp
 CEXE_sources += mfix_pc_impose_walls.cpp
+CEXE_sources += mfix_predict_volume_fraction.cpp

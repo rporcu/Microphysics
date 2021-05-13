@@ -25,7 +25,7 @@ void predict_vels_on_faces (Box const& domain_box,
                             Array4<int const> const& bc_khi)
 {
   constexpr int order = 2;
-  constexpr Real small_vel = 1.e-10;
+  constexpr Real small_vel = 1.e-8;
 
   const int* bct_Dirichlet = (bc_types["Dirichlet"]).data();
   const int  bct_size = (bc_types["Dirichlet"]).size();
