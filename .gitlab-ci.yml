@@ -74,7 +74,6 @@ build-nvcc-env:
       - build/Testing/
   tags:
     - docker
-  allow_failure: true
 
 .test:dpcpp:
   variables:
