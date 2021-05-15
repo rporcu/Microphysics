@@ -1,5 +1,5 @@
 #include <mfix.H>
-#include <Redistribution.H>
+#include <hydro_redistribution.H>
 
 #include <mfix_fluid_parms.H>
 void
@@ -28,6 +28,14 @@ mfix::PostProjectionRedistribution (Real l_time, Real l_dt,
         MultiFab new_vel(grids[lev], dmap[lev], ncomp, 0);
         new_vel.setVal(0.);
 
+        auto& bc_vel = get_hydro_velocity_bcrec();
+        bool extdir_ilo = (bc_vel[0].lo(0) == amrex::BCType::ext_dir);
+        bool extdir_ihi = (bc_vel[0].hi(0) == amrex::BCType::ext_dir);
+        bool extdir_jlo = (bc_vel[0].lo(1) == amrex::BCType::ext_dir);
+        bool extdir_jhi = (bc_vel[0].hi(1) == amrex::BCType::ext_dir);
+        bool extdir_klo = (bc_vel[0].lo(2) == amrex::BCType::ext_dir);
+        bool extdir_khi = (bc_vel[0].hi(2) == amrex::BCType::ext_dir);
+
         for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const Box& bx = mfi.tilebox();
@@ -55,9 +63,12 @@ mfix::PostProjectionRedistribution (Real l_time, Real l_dt,
                 apz = fact.getAreaFrac()[2]->const_array(mfi);
                 vfrac = fact.getVolFrac().const_array(mfi);
 
-                redistribution::redistribute_data( bx,ncomp, icomp, vel_redist, vel_orig,
-                                                   flag, apx, apy, apz, vfrac, fcx, fcy, fcz,
-                                                   ccc,geom[lev],m_redistribution_type);
+                Redistribution::ApplyToInitialData( bx, ncomp, vel_redist, vel_orig,
+                                                    flag, apx, apy, apz, vfrac,
+                                                    fcx, fcy, fcz, ccc,
+                                                    extdir_ilo, extdir_jlo, extdir_klo,
+                                                    extdir_ihi, extdir_jhi, extdir_khi,
+                                                    geom[lev],m_redistribution_type);
 
                 // We update gradp so that (vel_redist + dt gradp_redistnew/rho) == (vel_orig + dt gradp_orig/rho)
                 // Note that we do not change rho in the redistribution

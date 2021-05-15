@@ -3,6 +3,7 @@ CEXE_headers += mfix_pic_K.H
 CEXE_sources += mfix_evolve_parcels.cpp
 CEXE_sources += mfix_calc_avg_solids_prop.cpp
 CEXE_sources += mfix_calc_solids_stress.cpp
+CEXE_sources += mfix_predict_volume_fraction.cpp
 CEXE_sources += mfix_pc_advance_pic.cpp
 CEXE_sources += mfix_pc_deposit_pic.cpp
 CEXE_sources += mfix_pc_impose_walls.cpp

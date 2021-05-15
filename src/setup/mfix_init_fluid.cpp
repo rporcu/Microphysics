@@ -5,8 +5,6 @@
 #include <mfix_species_parms.H>
 #include <mfix_ic_parms.H>
 
-#include <Redistribution.H>
-
 using namespace amrex;
 
 // Forward declarations

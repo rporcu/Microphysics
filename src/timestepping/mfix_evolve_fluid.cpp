@@ -105,8 +105,8 @@ mfix::EvolveFluid (int nstep,
 
     for (int lev = 0; lev <= finest_level; lev++)
     {
-       // 3 components since we have density, tracer and enthalpy
-       conv_s_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+       // 2+ntrac components since we have density, tracers and enthalpy
+       conv_s_old[lev] = new MultiFab(grids[lev], dmap[lev], 2+ntrac, 0, MFInfo(), *ebfactory[lev]);
        conv_u_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
        lap_T_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
        lap_T[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);

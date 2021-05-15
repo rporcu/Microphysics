@@ -1,5 +1,0 @@
-CEXE_sources += mfix_create_itracker.cpp
-CEXE_sources += mfix_state_redistribute.cpp
-CEXE_sources += mfix_redistribute.cpp
-
-CEXE_headers += Redistribution.H

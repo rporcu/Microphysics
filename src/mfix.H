@@ -739,14 +739,16 @@ public:
                         Vector< MultiFab* > const& X_gk_in,
                         Real time);
 
+    int steady_state_reached (Real dt, int iter);
 
+  public:
     void mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,
                                        Vector< MultiFab*      >& conv_s,
                                        Vector< MultiFab*      >& conv_X,
                                        Vector< MultiFab*      > const& vel_forces,
                                        Vector< MultiFab*      > const& tra_forces,
                                        Vector< MultiFab const*> const& vel_in,
-                                       Vector< MultiFab const*> const& ep_g_in,
+                                       Vector< MultiFab*      > const& ep_g_in,
                                        Vector< MultiFab const*> const& ro_g_in,
                                        Vector< MultiFab const*> const& h_g_in,
                                        Vector< MultiFab const*> const& trac_in,
@@ -755,16 +757,8 @@ public:
                                        Vector< MultiFab*      > const& u_mac,
                                        Vector< MultiFab*      > const& v_mac,
                                        Vector< MultiFab*      > const& w_mac,
-                                       Vector< MultiFab const*> const& rhs_mac,
-                                       Vector< MultiFab      *> const& divtau_old,
                                        Real l_dt, Real time);
 
-
-
-
-    int steady_state_reached (Real dt, int iter);
-
-  public:
     void mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                                Vector< MultiFab* >& conv_s_old,
                                Vector< MultiFab* >& conv_X_old,
@@ -1260,36 +1254,11 @@ public:
     // const int m_eb_volume_grow_cells = nghost;
     // const int m_eb_full_grow_cells = nghost;
 
-    int nghost_eb_basic () const
-    {
-        if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
-            return 6;
-        else if (advection_type() == AdvectionType::Godunov && m_redistribution_type != "StateRedist")
-            return 5;
-        else if (advection_type() == AdvectionType::MOL && m_redistribution_type == "StateRedist")
-            return 5;
-        else
-            return 4;
-    }
+    int nghost_eb_basic () const  { return 4; }
 
-    int nghost_eb_volume () const
-    {
-        if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
-            return 6;
-        else if (advection_type() == AdvectionType::Godunov && m_redistribution_type != "StateRedist")
-            return 5;
-        else if (advection_type() == AdvectionType::MOL && m_redistribution_type == "StateRedist")
-            return 5;
-        else
-            return 4;
-    }
+    int nghost_eb_volume () const { return 4; }
 
-    int nghost_eb_full () const {
-        if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
-            return 5;
-        else
-            return 4;
-    }
+    int nghost_eb_full () const   { return 4; }
 
     IntVect particle_sorting_bin = IntVect::TheZeroVector();
 
@@ -1389,37 +1358,18 @@ public:
         return static_cast<amrex::EBFArrayBoxFactory const&>(*particle_ebfactory[lev]);
     }
 
-
     bool mfix_update_ebfactory (int a_lev);
 
-  // Number of ghost cells for field arrays.
-  int nghost_state () const {
-  //if (!EBFactory(0).isAllRegular())
-      {
-        if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
-          return 6;
-        else if (advection_type() == AdvectionType::Godunov && m_redistribution_type != "StateRedist")
-          return 5;
-        else if (advection_type() == AdvectionType::MOL && m_redistribution_type == "StateRedist")
-          return 5;
-        else
-          return 4;
-      }
-  //{
-  //  return (advection_type() != AdvectionType::MOL) ? 3 : 2;
-  //}
-  }
+    // Number of ghost cells for field arrays.
+    int nghost_state () const { return 4; }
 
     // For Godunov, we need 1 ghost cell in addition to the Box we are filling
     // For MOL    , we need 0 ghost cells
-    int nghost_force () const
-    {
-      if (advection_type() == AdvectionType::MOL)
-        return 0;
-      else if (m_redistribution_type == "StateRedist")
-        return 4;
-      else
-        return 3;
+    int nghost_force () const {
+       if (advection_type() == AdvectionType::MOL)
+           return 0;
+       else
+           return 1;
     }
 
     int nghost_mac () const {
