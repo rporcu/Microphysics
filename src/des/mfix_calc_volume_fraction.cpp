@@ -145,7 +145,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
     int ng_to_copy = amrex::min(src_nghost, dest_nghost);
 
     for (int lev = 1; lev < nlev; lev++)
-      mf_pointer[0]->copy(*mf_pointer[lev],0,0, m_leveldata[lev]->ep_g->nComp(),
+      mf_pointer[0]->ParallelCopy(*mf_pointer[lev],0,0, m_leveldata[lev]->ep_g->nComp(),
           ng_to_copy, ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
 
     if (nlev > 1)
@@ -179,7 +179,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
     // need any information in ghost cells so we don't copy those.
 
     if (mf_pointer[0] != m_leveldata[0]->ep_g)
-      m_leveldata[0]->ep_g->copy(*mf_pointer[0], 0, 0, m_leveldata[0]->ep_g->nComp());
+      m_leveldata[0]->ep_g->ParallelCopy(*mf_pointer[0], 0, 0, m_leveldata[0]->ep_g->nComp());
 
     for (int lev = 0; lev < nlev; lev++)
        if (mf_pointer[lev] != m_leveldata[lev]->ep_g)

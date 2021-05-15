@@ -133,11 +133,11 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       const int ng_to_copy = 0;
 
       ro_ptr = new MultiFab(pba, pdm, ro_g_in[lev]->nComp(), 1);
-      ro_ptr->copy(*ro_g_in[lev], 0, 0, 1, ng_to_copy, ng_to_copy);
+      ro_ptr->ParallelCopy(*ro_g_in[lev], 0, 0, 1, ng_to_copy, ng_to_copy);
 
       if (advect_enthalpy) {
         T_ptr = new MultiFab(pba, pdm, T_g_in[lev]->nComp(), 1);
-        T_ptr->copy(*T_g_in[lev], 0, 0, 1, ng_to_copy, ng_to_copy);
+        T_ptr->ParallelCopy(*T_g_in[lev], 0, 0, 1, ng_to_copy, ng_to_copy);
       }
       else {
         T_ptr = new MultiFab(pba, pdm, 1, 0, MFInfo(), ebfactory_loc);
@@ -147,10 +147,10 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       interp_ptr = new MultiFab(pba, pdm, interp_comp, interp_ng, MFInfo(), ebfactory_loc);
 
       // Copy fluid velocity
-      interp_ptr->copy(*vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng, interp_ng);
+      interp_ptr->ParallelCopy(*vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng, interp_ng);
 
       // Copy volume fraction
-      interp_ptr->copy(*ep_g_in[lev],  0, 3, ep_g_in[lev]->nComp(), interp_ng, interp_ng);
+      interp_ptr->ParallelCopy(*ep_g_in[lev],  0, 3, ep_g_in[lev]->nComp(), interp_ng, interp_ng);
 
       interp_ptr->FillBoundary(geom[lev].periodicity());
     }

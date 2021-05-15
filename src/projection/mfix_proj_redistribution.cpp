@@ -28,13 +28,7 @@ mfix::PostProjectionRedistribution (Real l_time, Real l_dt,
         MultiFab new_vel(grids[lev], dmap[lev], ncomp, 0);
         new_vel.setVal(0.);
 
-        auto& bc_vel = get_hydro_velocity_bcrec();
-        bool extdir_ilo = (bc_vel[0].lo(0) == amrex::BCType::ext_dir);
-        bool extdir_ihi = (bc_vel[0].hi(0) == amrex::BCType::ext_dir);
-        bool extdir_jlo = (bc_vel[0].lo(1) == amrex::BCType::ext_dir);
-        bool extdir_jhi = (bc_vel[0].hi(1) == amrex::BCType::ext_dir);
-        bool extdir_klo = (bc_vel[0].lo(2) == amrex::BCType::ext_dir);
-        bool extdir_khi = (bc_vel[0].hi(2) == amrex::BCType::ext_dir);
+        auto const& bc_vel = get_hydro_velocity_bcrec_device_ptr();
 
         for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
@@ -65,9 +59,7 @@ mfix::PostProjectionRedistribution (Real l_time, Real l_dt,
 
                 Redistribution::ApplyToInitialData( bx, ncomp, vel_redist, vel_orig,
                                                     flag, apx, apy, apz, vfrac,
-                                                    fcx, fcy, fcz, ccc,
-                                                    extdir_ilo, extdir_jlo, extdir_klo,
-                                                    extdir_ihi, extdir_jhi, extdir_khi,
+                                                    fcx, fcy, fcz, ccc, bc_vel,
                                                     geom[lev],m_redistribution_type);
 
                 // We update gradp so that (vel_redist + dt gradp_redistnew/rho) == (vel_orig + dt gradp_orig/rho)

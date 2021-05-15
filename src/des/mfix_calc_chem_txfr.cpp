@@ -362,19 +362,19 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
           ebfactory_loc);
 
       // Copy velocity
-      interp_ptr->copy(*vel_g_in[lev], 0, 0, 3, interp_ng, interp_ng);
+      interp_ptr->ParallelCopy(*vel_g_in[lev], 0, 0, 3, interp_ng, interp_ng);
 
       // Copy volume fraction
-      interp_ptr->copy(*ep_g_in[lev], 0, 3, 1, interp_ng, interp_ng);
+      interp_ptr->ParallelCopy(*ep_g_in[lev], 0, 3, 1, interp_ng, interp_ng);
 
       // Copy density
-      interp_ptr->copy(*ro_g_in[lev], 0, 4, 1, interp_ng, interp_ng);
+      interp_ptr->ParallelCopy(*ro_g_in[lev], 0, 4, 1, interp_ng, interp_ng);
 
       // Copy temperature
-      interp_ptr->copy(*T_g_in[lev], 0, 5, 1, interp_ng, interp_ng);
+      interp_ptr->ParallelCopy(*T_g_in[lev], 0, 5, 1, interp_ng, interp_ng);
 
       // Copy X_gk
-      interp_ptr->copy(*X_gk_in[lev], 0, 6, fluid.nspecies, interp_ng, interp_ng);
+      interp_ptr->ParallelCopy(*X_gk_in[lev], 0, 6, fluid.nspecies, interp_ng, interp_ng);
     }
 
     // FillBoundary on interpolation MultiFab
@@ -1107,7 +1107,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
   int ng_to_copy = amrex::min(src_nghost, dest_nghost);
 
   for (int lev = 1; lev < nlev; lev++) {
-    chem_txfr_ptr[0]->copy(*chem_txfr_ptr[lev], 0, 0, chem_txfr_ptr[0]->nComp(),
+    chem_txfr_ptr[0]->ParallelCopy(*chem_txfr_ptr[lev], 0, 0, chem_txfr_ptr[0]->nComp(),
         ng_to_copy, ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
   }
 
@@ -1144,7 +1144,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
   // need any information in ghost cells so we don't copy those.
 
   if (chem_txfr_ptr[0] != m_leveldata[0]->chem_txfr) {
-    m_leveldata[0]->chem_txfr->copy(*chem_txfr_ptr[0], 0, 0,
+    m_leveldata[0]->chem_txfr->ParallelCopy(*chem_txfr_ptr[0], 0, 0,
         m_leveldata[0]->chem_txfr->nComp());
   }
 
