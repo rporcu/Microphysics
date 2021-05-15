@@ -1,5 +1,5 @@
 #include <mfix.H>
-#include <Redistribution.H>
+#include <hydro_redistribution.H>
 
 #include <mfix_fluid_parms.H>
 void
@@ -44,43 +44,92 @@ mfix::InitialRedistribution (Real l_time)
                 vfrac = fact.getVolFrac().const_array(mfi);
 
                 int ncomp = AMREX_SPACEDIM;
-                int icomp = 0;
-                redistribution::redistribute_data( bx,ncomp, icomp,
+
+                auto& bc_vel = get_hydro_velocity_bcrec();
+                bool extdir_ilo = (bc_vel[0].lo(0) == amrex::BCType::ext_dir);
+                bool extdir_ihi = (bc_vel[0].hi(0) == amrex::BCType::ext_dir);
+                bool extdir_jlo = (bc_vel[0].lo(1) == amrex::BCType::ext_dir);
+                bool extdir_jhi = (bc_vel[0].hi(1) == amrex::BCType::ext_dir);
+                bool extdir_klo = (bc_vel[0].lo(2) == amrex::BCType::ext_dir);
+                bool extdir_khi = (bc_vel[0].hi(2) == amrex::BCType::ext_dir);
+                Redistribution::ApplyToInitialData( bx,ncomp,
                                           ld.vel_g->array(mfi), ld.vel_go->array(mfi),
-                                          flag, apx, apy, apz, vfrac, fcx, fcy, fcz,
-                                          ccc,geom[lev],m_redistribution_type);
+                                          flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
+                                          extdir_ilo, extdir_jlo, extdir_klo,
+                                          extdir_ihi, extdir_jhi, extdir_khi,
+                                          geom[lev],m_redistribution_type);
 
                 if (advect_density) {
 
                   ncomp = 1;
-                  redistribution::redistribute_data( bx,ncomp, icomp,
+
+                  auto& bc_den = get_density_bcrec();
+                  bool extdir_ilo = (bc_den[0].lo(0) == amrex::BCType::ext_dir);
+                  bool extdir_ihi = (bc_den[0].hi(0) == amrex::BCType::ext_dir);
+                  bool extdir_jlo = (bc_den[0].lo(1) == amrex::BCType::ext_dir);
+                  bool extdir_jhi = (bc_den[0].hi(1) == amrex::BCType::ext_dir);
+                  bool extdir_klo = (bc_den[0].lo(2) == amrex::BCType::ext_dir);
+                  bool extdir_khi = (bc_den[0].hi(2) == amrex::BCType::ext_dir);
+                  Redistribution::ApplyToInitialData( bx,ncomp,
                                            ld.ro_g->array(mfi), ld.ro_go->array(mfi),
-                                           flag, apx, apy, apz, vfrac, fcx, fcy, fcz,
-                                           ccc,geom[lev],m_redistribution_type);
+                                           flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
+                                           extdir_ilo, extdir_jlo, extdir_klo,
+                                           extdir_ihi, extdir_jhi, extdir_khi,
+                                           geom[lev],m_redistribution_type);
                 }
                 if (advect_enthalpy) {
 
                   ncomp = 1;
-                  redistribution::redistribute_data( bx,ncomp, icomp,
+
+                  auto& bc_h = get_enthalpy_bcrec();
+                  bool extdir_ilo = (bc_h[0].lo(0) == amrex::BCType::ext_dir);
+                  bool extdir_ihi = (bc_h[0].hi(0) == amrex::BCType::ext_dir);
+                  bool extdir_jlo = (bc_h[0].lo(1) == amrex::BCType::ext_dir);
+                  bool extdir_jhi = (bc_h[0].hi(1) == amrex::BCType::ext_dir);
+                  bool extdir_klo = (bc_h[0].lo(2) == amrex::BCType::ext_dir);
+                  bool extdir_khi = (bc_h[0].hi(2) == amrex::BCType::ext_dir);
+                  Redistribution::ApplyToInitialData( bx,ncomp,
                                            ld.h_g->array(mfi), ld.h_go->array(mfi),
-                                           flag, apx, apy, apz, vfrac, fcx, fcy, fcz,
-                                           ccc,geom[lev],m_redistribution_type);
+                                           flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
+                                           extdir_ilo, extdir_jlo, extdir_klo,
+                                           extdir_ihi, extdir_jhi, extdir_khi,
+                                           geom[lev],m_redistribution_type);
                 }
                 if (advect_tracer) {
 
                   ncomp = ntrac;
-                  redistribution::redistribute_data( bx,ncomp, icomp,
+
+                  auto& bc_t = get_tracer_bcrec();
+                  bool extdir_ilo = (bc_t[0].lo(0) == amrex::BCType::ext_dir);
+                  bool extdir_ihi = (bc_t[0].hi(0) == amrex::BCType::ext_dir);
+                  bool extdir_jlo = (bc_t[0].lo(1) == amrex::BCType::ext_dir);
+                  bool extdir_jhi = (bc_t[0].hi(1) == amrex::BCType::ext_dir);
+                  bool extdir_klo = (bc_t[0].lo(2) == amrex::BCType::ext_dir);
+                  bool extdir_khi = (bc_t[0].hi(2) == amrex::BCType::ext_dir);
+                  Redistribution::ApplyToInitialData( bx,ncomp,
                                            ld.trac->array(mfi), ld.trac_o->array(mfi),
-                                           flag, apx, apy, apz, vfrac, fcx, fcy, fcz,
-                                           ccc,geom[lev],m_redistribution_type);
+                                           flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
+                                           extdir_ilo, extdir_jlo, extdir_klo,
+                                           extdir_ihi, extdir_jhi, extdir_khi,
+                                           geom[lev],m_redistribution_type);
                 }
                 if (advect_fluid_species) {
 
                   ncomp = fluid.nspecies;
-                  redistribution::redistribute_data( bx,ncomp, icomp,
+
+                  auto& bc_X = get_species_bcrec();
+                  bool extdir_ilo = (bc_X[0].lo(0) == amrex::BCType::ext_dir);
+                  bool extdir_ihi = (bc_X[0].hi(0) == amrex::BCType::ext_dir);
+                  bool extdir_jlo = (bc_X[0].lo(1) == amrex::BCType::ext_dir);
+                  bool extdir_jhi = (bc_X[0].hi(1) == amrex::BCType::ext_dir);
+                  bool extdir_klo = (bc_X[0].lo(2) == amrex::BCType::ext_dir);
+                  bool extdir_khi = (bc_X[0].hi(2) == amrex::BCType::ext_dir);
+                  Redistribution::ApplyToInitialData( bx,ncomp,
                                            ld.X_gk->array(mfi), ld.X_gko->array(mfi),
-                                           flag, apx, apy, apz, vfrac, fcx, fcy, fcz,
-                                           ccc,geom[lev],m_redistribution_type);
+                                           flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
+                                           extdir_ilo, extdir_jlo, extdir_klo,
+                                           extdir_ihi, extdir_jhi, extdir_khi,
+                                           geom[lev],m_redistribution_type);
                 }
 
             }

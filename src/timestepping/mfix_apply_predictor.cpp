@@ -172,8 +172,18 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       compute_laps(update_lapT, update_lapS, update_lapX, lap_T_old, lap_trac_old, lap_X_old,
                    get_T_g_old(), get_trac_old(), get_X_gk_old(), get_ep_g_const(),
                    get_ro_g_old_const());
-    }
 
+      // We call the bc routines again to enforce the ext_dir condition
+      // on the faces (the diffusion operator may move those to ghost cell centers)
+      if (advect_enthalpy)
+      {
+        mfix_set_temperature_bcs(time, get_T_g_old());
+        mfix_set_enthalpy_bcs(time, get_h_g_old());
+      }
+
+      if (advect_fluid_species)
+        mfix_set_species_bcs(time, get_X_gk_old());
+    }
 
     // *************************************************************************************
     // Compute right hand side terms on the old status
@@ -247,10 +257,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
     mfix_compute_convective_term(conv_u_old, conv_s_old, conv_X_old,
         GetVecOfPtrs(vel_forces), GetVecOfPtrs(tra_forces),
-        get_vel_g_old_const(), get_ep_g_const(), get_ro_g_old_const(),
+        get_vel_g_old_const(), get_ep_g(), get_ro_g_old_const(),
         get_h_g_old_const(), get_trac_old_const(), get_X_gk_old_const(), get_txfr_const(),
         GetVecOfPtrs(ep_u_mac), GetVecOfPtrs(ep_v_mac), GetVecOfPtrs(ep_w_mac),
-        GetVecOfConstPtrs(rhs_mac), get_divtau(), l_dt, time);
+        l_dt, time);
 
     // *************************************************************************************
     // Update density first
@@ -596,10 +606,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       mfix_set_density_bcs(time, get_ro_g());
 
       if (advect_enthalpy)
+      {
         mfix_set_temperature_bcs(time, get_T_g());
-
-      if (advect_enthalpy)
         mfix_set_enthalpy_bcs(time, get_h_g());
+      }
 
       if (advect_fluid_species)
         mfix_set_species_bcs(time, get_X_gk());
@@ -609,6 +619,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       if (advect_enthalpy) {
         diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(), get_h_g(),
             get_T_g_on_eb(), l_dt);
+
+        // Note we need to call the bc routines again to enforce the ext_dir condition
+        // on the faces (the diffusion operator moved those to ghost cell centers)
+        mfix_set_temperature_bcs(time, get_T_g());
+        mfix_set_enthalpy_bcs(time, get_h_g());
       }
 
       // Convert "ep_g" into (rho * ep_g)
@@ -626,11 +641,19 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       if (advect_tracer) {
         mfix_set_tracer_bcs(time, get_trac());
         diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, l_dt);
+
+        // Note we need to call the bc routines again to enforce the ext_dir condition
+        // on the faces (the diffusion operator moved those to ghost cell centers)
+        mfix_set_tracer_bcs(time, get_trac());
       }
 
       // Diffuse species mass fractions
       if (advect_fluid_species) {
         diffusion_op->diffuse_species(get_X_gk(), get_ep_g(), get_T_g(), l_dt);
+
+        // Note we need to call the bc routines again to enforce the ext_dir condition
+        // on the faces (the diffusion operator moved those to ghost cell centers)
+        mfix_set_species_bcs(time, get_X_gk());
       }
 
       // Convert (rho * ep_g) back into ep_g
