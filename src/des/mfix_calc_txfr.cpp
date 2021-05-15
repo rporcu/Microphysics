@@ -157,7 +157,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
   int ng_to_copy = amrex::min(src_nghost, dest_nghost);
 
   for (int lev = 1; lev < nlev; lev++) {
-    txfr_ptr[0]->copy(*txfr_ptr[lev], 0, 0, txfr_ptr[0]->nComp(), ng_to_copy,
+    txfr_ptr[0]->ParallelCopy(*txfr_ptr[lev], 0, 0, txfr_ptr[0]->nComp(), ng_to_copy,
         ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
   }
 
@@ -191,7 +191,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
   // need any information in ghost cells so we don't copy those.
 
   if (txfr_ptr[0] != txfr[0]) {
-    txfr[0]->copy(*txfr_ptr[0], 0, 0, txfr[0]->nComp());
+    txfr[0]->ParallelCopy(*txfr_ptr[0], 0, 0, txfr[0]->nComp());
   }
 
   for (int lev = 0; lev < nlev; lev++) {
@@ -314,14 +314,14 @@ mfix::mfix_calc_txfr_particle (Real time,
       interp_ptr = new MultiFab(pba, pdm, interp_comp, interp_ng, MFInfo(), ebfactory_loc);
 
       // Copy fluid velocity
-      interp_ptr->copy(*vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng, interp_ng);
+      interp_ptr->ParallelCopy(*vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng, interp_ng);
 
       // Copy pressure gradient
-      interp_ptr->copy(gp_tmp, 0, 3, gp_tmp.nComp(), interp_ng, interp_ng);
+      interp_ptr->ParallelCopy(gp_tmp, 0, 3, gp_tmp.nComp(), interp_ng, interp_ng);
 
       // Copy fluid temperature
       if(advect_enthalpy) {
-        interp_ptr->copy(*T_g_in[lev], 0, 6, T_g_in[lev]->nComp(), interp_ng, interp_ng);
+        interp_ptr->ParallelCopy(*T_g_in[lev], 0, 6, T_g_in[lev]->nComp(), interp_ng, interp_ng);
       } else {
         interp_ptr->setVal(0.0, 6, 1, interp_ng);
       }

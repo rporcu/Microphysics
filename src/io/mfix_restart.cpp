@@ -194,8 +194,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             // Simply copy mf_vel into vel_g, mf_gp into gp
             const int ng_to_copy = 0;
 
-            m_leveldata[lev]->vel_g->copy(mf_vel, 0, 0, 3, ng_to_copy, ng_to_copy);
-            m_leveldata[lev]->gp->copy(mf_gp, 0, 0, 3, ng_to_copy, ng_to_copy);
+            m_leveldata[lev]->vel_g->ParallelCopy(mf_vel, 0, 0, 3, ng_to_copy, ng_to_copy);
+            m_leveldata[lev]->gp->ParallelCopy(mf_gp, 0, 0, 3, ng_to_copy, ng_to_copy);
 
           } else {
 
@@ -250,7 +250,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                  // Copy from the mf we used to read in to the mf we will use going forward
                  const int ng_to_copy = 0;
 
-                 (*(chkScalarVars[i][lev])).copy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
+                 (*(chkScalarVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
               } else {
 
@@ -307,7 +307,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 // going forward
                 const int ng_to_copy = 0;
 
-                (*(chkTVars[i][lev])).copy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
+                (*(chkTVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
              } else {
 
@@ -348,7 +348,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 // Copy from the mf we used to read in to the mf we will use going forward
                 const int ng_to_copy = 0;
 
-                (*(chkSpeciesVars[i][lev])).copy(mf, 0, 0, fluid.nspecies,
+                (*(chkSpeciesVars[i][lev])).ParallelCopy(mf, 0, 0, fluid.nspecies,
                     ng_to_copy, ng_to_copy);
 
              } else {

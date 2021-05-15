@@ -26,12 +26,6 @@ namespace MFHelpers
                                                  amrex::Real val,
                                                  int nGrow,
                                                  int nComp);
-
-    // Copies src to dst including all components and ghost cells
-    void copy (amrex::MultiFab& dst, amrex::MultiFab& src);
-
-    // Copies src to dst including all components and nGrow ghost cells
-    void copy (amrex::MultiFab& dst, amrex::MultiFab& src, int nGrow);
 }
 
 #endif

@@ -589,13 +589,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
             // Velocity
             int ncomp = 3;
 
-            auto& bc_vel = get_hydro_velocity_bcrec();
-            bool extdir_ilo = (bc_vel[0].lo(0) == amrex::BCType::ext_dir);
-            bool extdir_ihi = (bc_vel[0].hi(0) == amrex::BCType::ext_dir);
-            bool extdir_jlo = (bc_vel[0].lo(1) == amrex::BCType::ext_dir);
-            bool extdir_jhi = (bc_vel[0].hi(1) == amrex::BCType::ext_dir);
-            bool extdir_klo = (bc_vel[0].lo(2) == amrex::BCType::ext_dir);
-            bool extdir_khi = (bc_vel[0].hi(2) == amrex::BCType::ext_dir);
+            auto const& bc_vel = get_hydro_velocity_bcrec_device_ptr();
 
             Redistribution::Apply( bx, ncomp, conv_u[lev]->array(mfi), dvdt_tmp.array(mfi),
                                    vel_in[lev]->const_array(mfi),
@@ -603,22 +597,14 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                                                             : ep_g_in[lev]->array(mfi), 
                                    flagfab.const_array(), 
                                    apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                   extdir_ilo, extdir_jlo, extdir_klo,
-                                   extdir_ihi, extdir_jhi, extdir_khi,
-                                   geom[lev], l_dt, m_redistribution_type);
+                                   bc_vel, geom[lev], l_dt, m_redistribution_type);
 
             // Density
             if (advect_density)
             {
                 ncomp = 1;
 
-                auto& bc_den = get_density_bcrec();
-                bool extdir_ilo = (bc_den[0].lo(0) == amrex::BCType::ext_dir);
-                bool extdir_ihi = (bc_den[0].hi(0) == amrex::BCType::ext_dir);
-                bool extdir_jlo = (bc_den[0].lo(1) == amrex::BCType::ext_dir);
-                bool extdir_jhi = (bc_den[0].hi(1) == amrex::BCType::ext_dir);
-                bool extdir_klo = (bc_den[0].lo(2) == amrex::BCType::ext_dir);
-                bool extdir_khi = (bc_den[0].hi(2) == amrex::BCType::ext_dir);
+                auto const& bc_den = get_density_bcrec_device_ptr();
 
                 Redistribution::Apply( bx, ncomp, conv_s[lev]->array(mfi,0), dsdt_tmp.array(mfi,0),
                                        ro_g_in[lev]->const_array(mfi),
@@ -626,9 +612,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                                                                 : ep_g_in[lev]->array(mfi), 
                                        flagfab.const_array(), 
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                       extdir_ilo, extdir_jlo, extdir_klo,
-                                       extdir_ihi, extdir_jhi, extdir_khi,
-                                       geom[lev], l_dt, m_redistribution_type);
+                                       bc_den, geom[lev], l_dt, m_redistribution_type);
             }
 
 
@@ -646,22 +630,14 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                     rhoh(i,j,k,n) = rho(i,j,k) * h(i,j,k,n);
                 });
 
-                auto& bc_rh = get_enthalpy_bcrec();
-                bool extdir_ilo = (bc_rh[0].lo(0) == amrex::BCType::ext_dir);
-                bool extdir_ihi = (bc_rh[0].hi(0) == amrex::BCType::ext_dir);
-                bool extdir_jlo = (bc_rh[0].lo(1) == amrex::BCType::ext_dir);
-                bool extdir_jhi = (bc_rh[0].hi(1) == amrex::BCType::ext_dir);
-                bool extdir_klo = (bc_rh[0].lo(2) == amrex::BCType::ext_dir);
-                bool extdir_khi = (bc_rh[0].hi(2) == amrex::BCType::ext_dir);
+                auto const& bc_rh = get_enthalpy_bcrec_device_ptr();
 
                 Redistribution::Apply( bx, ncomp, conv_s[lev]->array(mfi,1), dsdt_tmp.array(mfi,1), rhoh, 
                                        (m_redistribution_type == "StateRedist") ? scratchfab.array() 
                                                                                 : ep_g_in[lev]->array(mfi), 
                                        flagfab.const_array(), 
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                       extdir_ilo, extdir_jlo, extdir_klo,
-                                       extdir_ihi, extdir_jhi, extdir_khi,
-                                       geom[lev], l_dt, m_redistribution_type);
+                                       bc_rh, geom[lev], l_dt, m_redistribution_type);
             }
 
             // Tracers
@@ -678,22 +654,14 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                     rhotrac(i,j,k,n) = rho(i,j,k) * tra(i,j,k,n);
                 });
 
-                auto& bc_rt = get_tracer_bcrec();
-                bool extdir_ilo = (bc_rt[0].lo(0) == amrex::BCType::ext_dir);
-                bool extdir_ihi = (bc_rt[0].hi(0) == amrex::BCType::ext_dir);
-                bool extdir_jlo = (bc_rt[0].lo(1) == amrex::BCType::ext_dir);
-                bool extdir_jhi = (bc_rt[0].hi(1) == amrex::BCType::ext_dir);
-                bool extdir_klo = (bc_rt[0].lo(2) == amrex::BCType::ext_dir);
-                bool extdir_khi = (bc_rt[0].hi(2) == amrex::BCType::ext_dir);
+                auto const& bc_rt = get_tracer_bcrec_device_ptr();
 
                 Redistribution::Apply( bx, ncomp, conv_s[lev]->array(mfi,2), dsdt_tmp.array(mfi,2), rhotrac, 
                                        (m_redistribution_type == "StateRedist") ? scratchfab.array() 
                                                                                 : ep_g_in[lev]->array(mfi), 
                                        flagfab.const_array(), 
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                       extdir_ilo, extdir_jlo, extdir_klo,
-                                       extdir_ihi, extdir_jhi, extdir_khi,
-                                       geom[lev], l_dt, m_redistribution_type);
+                                       bc_rt, geom[lev], l_dt, m_redistribution_type);
             }
 
             if (advect_fluid_species && (l_nspecies > 0)) 
@@ -710,22 +678,14 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                     rhoX(i,j,k,n) = rho(i,j,k) * X(i,j,k,n);
                 });
 
-                auto& bc_rX = get_species_bcrec();
-                bool extdir_ilo = (bc_rX[0].lo(0) == amrex::BCType::ext_dir);
-                bool extdir_ihi = (bc_rX[0].hi(0) == amrex::BCType::ext_dir);
-                bool extdir_jlo = (bc_rX[0].lo(1) == amrex::BCType::ext_dir);
-                bool extdir_jhi = (bc_rX[0].hi(1) == amrex::BCType::ext_dir);
-                bool extdir_klo = (bc_rX[0].lo(2) == amrex::BCType::ext_dir);
-                bool extdir_khi = (bc_rX[0].hi(2) == amrex::BCType::ext_dir);
+                auto const& bc_rX = get_species_bcrec_device_ptr();
 
                 Redistribution::Apply( bx, ncomp, conv_X[lev]->array(mfi), dXdt_tmp.array(mfi), rhoX, 
                                        (m_redistribution_type == "StateRedist") ? scratchfab.array() 
                                                                                 : ep_g_in[lev]->array(mfi), 
                                        flagfab.const_array(), 
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                       extdir_ilo, extdir_jlo, extdir_klo,
-                                       extdir_ihi, extdir_jhi, extdir_khi,
-                                       geom[lev], l_dt, m_redistribution_type);
+                                       bc_rX, geom[lev], l_dt, m_redistribution_type);
             }
 
          } // test on if regular
