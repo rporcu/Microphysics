@@ -158,8 +158,6 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 #endif
     }
 
-    Array4<Real const> fcx, fcy, fcz, ccc, vfrac, apx, apy, apz;
-
     for (int lev = 0; lev <= finest_level; ++lev)
     {
         if (ngmac > 0) {
@@ -192,23 +190,6 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
             Box const& bx = mfi.tilebox();
 
             Array4<Real const> const& divu_arr = divu.const_array(mfi);
-
-            EBCellFlagFab const& flagfab = ebfact.getMultiEBCellFlagFab()[mfi];
-            bool regular = (flagfab.getType(amrex::grow(bx,2)) == FabType::regular);
-
-            if (!regular)
-            {
-                vfrac = ebfact.getVolFrac().const_array(mfi);
-                ccc   = ebfact.getCentroid().const_array(mfi);
-
-                apx = ebfact.getAreaFrac()[0]->const_array(mfi);
-                apy = ebfact.getAreaFrac()[1]->const_array(mfi);
-                apz = ebfact.getAreaFrac()[2]->const_array(mfi);
-
-                fcx = ebfact.getFaceCent()[0]->const_array(mfi);
-                fcy = ebfact.getFaceCent()[1]->const_array(mfi);
-                fcz = ebfact.getFaceCent()[2]->const_array(mfi);
-            }
 
             // ************************************************************************
             // Velocity
@@ -366,7 +347,6 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
             FArrayBox rhoXfab;
             if (advect_fluid_species && (l_nspecies>0)) 
             {
-
                 Box rhoX_box = Box((*X_gk_in[lev])[mfi].box());
                 Array4<Real const>   X = X_gk_in[lev]->const_array(mfi);
                 Array4<Real const> rho = ro_g_in[lev]->const_array(mfi);
@@ -448,10 +428,11 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
             Box const& bx = mfi.tilebox();
 
             Real mult = -1.0;  
+
             EBCellFlagFab const& flagfab = ebfact.getMultiEBCellFlagFab()[mfi];
             bool regular = (flagfab.getType(amrex::grow(bx,2)) == FabType::regular);
 
-            vfrac = ebfact.getVolFrac().const_array(mfi);
+            auto const& vfrac = ebfact.getVolFrac().const_array(mfi);
 
             if (flagfab.getType(bx) != FabType::covered)
             {
@@ -554,9 +535,6 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
         int max_ncomp = std::max(std::max(AMREX_SPACEDIM,l_nspecies),2+ntrac);
 
-        FArrayBox rhohfab, rhoXfab, rhotracfab;
-        Array4<Real> rhoh, rhotrac, rhoX;
-
         for (MFIter mfi(*ro_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
           Box const& bx = mfi.tilebox();
@@ -575,16 +553,16 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
             FArrayBox scratchfab(amrex::grow(bx,ngrow), max_ncomp);
             Elixir eli_scratch = scratchfab.elixir();
 
-            vfrac = ebfact.getVolFrac().const_array(mfi);
-            ccc   = ebfact.getCentroid().const_array(mfi);
+            auto const& vfrac = ebfact.getVolFrac().const_array(mfi);
+            auto const& ccc   = ebfact.getCentroid().const_array(mfi);
 
-            apx = ebfact.getAreaFrac()[0]->const_array(mfi);
-            apy = ebfact.getAreaFrac()[1]->const_array(mfi);
-            apz = ebfact.getAreaFrac()[2]->const_array(mfi);
+            auto const& apx = ebfact.getAreaFrac()[0]->const_array(mfi);
+            auto const& apy = ebfact.getAreaFrac()[1]->const_array(mfi);
+            auto const& apz = ebfact.getAreaFrac()[2]->const_array(mfi);
 
-            fcx = ebfact.getFaceCent()[0]->const_array(mfi);
-            fcy = ebfact.getFaceCent()[1]->const_array(mfi);
-            fcz = ebfact.getFaceCent()[2]->const_array(mfi);
+            auto const& fcx = ebfact.getFaceCent()[0]->const_array(mfi);
+            auto const& fcy = ebfact.getFaceCent()[1]->const_array(mfi);
+            auto const& fcz = ebfact.getFaceCent()[2]->const_array(mfi);
 
             // Velocity
             int ncomp = 3;
@@ -621,9 +599,10 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
             {
                 ncomp = 1;
                 Array4<Real const>   h =  h_g_in[lev]->const_array(mfi);
+                FArrayBox rhohfab;
                 rhohfab.resize(tmp_box, 1);
                 Elixir eli_rh  = rhohfab.elixir();
-                rhoh = rhohfab.array();
+                Array4<Real> rhoh = rhohfab.array();
                 amrex::ParallelFor(tmp_box, ncomp,
                     [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                 {
@@ -645,9 +624,10 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                 ncomp = ntrac;
 
                 Array4<Real const> tra = trac_in[lev]->const_array(mfi);
+                FArrayBox rhotracfab;
                 rhotracfab.resize(tmp_box, ntrac);
                 Elixir eli_rt  = rhotracfab.elixir();
-                rhotrac = rhotracfab.array();
+                Array4<Real> rhotrac = rhotracfab.array();
                 amrex::ParallelFor(tmp_box, ncomp, 
                     [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                 {
@@ -669,9 +649,10 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                 ncomp = l_nspecies;
 
                 Array4<Real const>   X = X_gk_in[lev]->const_array(mfi);
+                FArrayBox rhoXfab;
                 rhoXfab.resize(tmp_box, l_nspecies);
                 Elixir eli_rX  = rhoXfab.elixir();
-                rhoX = rhoXfab.array();
+                Array4<Real> rhoX = rhoXfab.array();
                 amrex::ParallelFor(tmp_box, ncomp,
                     [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                 {
