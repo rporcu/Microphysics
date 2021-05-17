@@ -22,6 +22,9 @@ mfix::InitialRedistribution (Real l_time)
       {
         auto& ld = *m_leveldata[lev];
 
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
         for (MFIter mfi(*ld.ro_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const Box& bx = mfi.validbox();
