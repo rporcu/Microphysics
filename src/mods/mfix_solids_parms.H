@@ -24,9 +24,6 @@ struct SolidParms {
     , cp_sn0(cp_sn)
   {}
 
-  AMREX_GPU_HOST_DEVICE
-  ~SolidParms() {}
-
   // Compute fluid specific heat
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   amrex::Real calc_cp_s (const int phase,

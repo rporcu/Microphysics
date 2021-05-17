@@ -31,9 +31,6 @@ struct FluidParms {
     , cp_gk0(cp_gk)
   {}
 
-  AMREX_GPU_HOST_DEVICE
-  ~FluidParms() {}
-
   // Compute fluid molecular viscosity
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   amrex::Real calc_mu_g (const amrex::Real /*T_g*/) const

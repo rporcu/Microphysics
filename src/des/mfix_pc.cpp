@@ -791,11 +791,11 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
             auto& solids_parms = *solids.parameters;
 
-            amrex::ParallelFor(nrp, [nrp,pstruct,p_realarray,p_intarray,subdt,
+            amrex::ParallelFor(nrp, [pstruct,p_realarray,p_intarray,subdt,
                 ptile_data,nspecies_s,nreactions,idx_X_sn,idx_ro_sn_txfr,
                 idx_vel_s_txfr,idx_h_s_txfr,Solid,update_mass,fc_ptr,ntot,
                 gravity,tow_ptr,eps,p_hi,p_lo,x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,
-                z_lo_bc,z_hi_bc,T_ref,enthalpy_source,update_temperature,
+                z_lo_bc,z_hi_bc,enthalpy_source,update_temperature,
                 solve_reactions,p_cp_sn0_loc,solid_is_mixture,solids_parms]
               AMREX_GPU_DEVICE (int i) noexcept
             {
