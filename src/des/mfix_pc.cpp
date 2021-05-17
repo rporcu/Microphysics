@@ -375,6 +375,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
+        BL_PROFILE_VAR("particles_computation", particles_computation);
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
             // Timer used for load-balancing
@@ -422,7 +423,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             if (tile_has_walls[index])
             {
                 // Calculate forces and torques from particle-wall collisions
-                BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
+            //    BL_PROFILE_VAR("calc_wall_collisions()", calc_wall_collisions);
 
                 auto& geom = this->Geom(lev);
                 const auto dxi = geom.InvCellSizeArray();
@@ -554,14 +555,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                         wfor[index][i] = fc[index][i];
                     }
                 }
-                BL_PROFILE_VAR_STOP(calc_wall_collisions);
+                //BL_PROFILE_VAR_STOP(calc_wall_collisions);
             }
 
             /********************************************************************
              * Particle-Particle collision forces (and torques)                 *
              *******************************************************************/
 
-            BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
+            //BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
 
             auto nbor_data = m_neighbor_list[lev][index].data();
 
@@ -748,9 +749,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 }
             }
 
-            BL_PROFILE_VAR_STOP(calc_particle_collisions);
+            //BL_PROFILE_VAR_STOP(calc_particle_collisions);
 
-            BL_PROFILE_VAR("des::update_particle_velocity_and_position()", des_time_march);
+            //BL_PROFILE_VAR("des::update_particle_velocity_and_position()", des_time_march);
             /********************************************************************
              * Move particles based on collision forces and torques             *
              *******************************************************************/
@@ -1033,6 +1034,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 (*cost)[pti].plus<RunOn::Device>(wt, tbx);
             }
         }
+        BL_PROFILE_VAR_STOP(particles_computation);
 
         // Update substep count
         n += 1;
