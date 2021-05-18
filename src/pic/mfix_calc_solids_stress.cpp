@@ -728,7 +728,10 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
                       + mij_11*mij_10*(wz_lo*dtau_arr[1][0] + wz_hi*dtau_arr[1][1])
                       + mij_11*mij_01*(wy_lo*dtau_arr[0][1] + wy_hi*dtau_arr[1][1]));
 
-                  } else if ( count == 1 ) {
+                  } else {
+
+                    AMREX_ALWAYS_ASSERT( count == 1);
+
                     dtaudx = dxi[0]*(
                       + mij_00*dtau_arr[0][0]
                       + mij_01*dtau_arr[0][1]
@@ -839,7 +842,10 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
                       + mij_11*mij_10*(wz_lo*dtau_arr[1][0] + wz_hi*dtau_arr[1][1])
                       + mij_11*mij_01*(wx_lo*dtau_arr[0][1] + wx_hi*dtau_arr[1][1]));
 
-                  } else if ( count == 1 ) {
+                  } else {
+
+                    AMREX_ALWAYS_ASSERT( count == 1);
+
                     dtaudy = dxi[1]*(
                       + mij_00*dtau_arr[0][0]
                       + mij_01*dtau_arr[0][1]
@@ -949,7 +955,10 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
                       + mij_11*mij_10*(wy_lo*dtau_arr[1][0] + wy_hi*dtau_arr[1][1])
                       + mij_11*mij_01*(wx_lo*dtau_arr[0][1] + wx_hi*dtau_arr[1][1]));
 
-                  } else if ( count == 1 ) {
+                  } else {
+
+                    AMREX_ALWAYS_ASSERT( count == 1);
+
                     dtaudz = dxi[2]*(
                       + mij_00*dtau_arr[0][0]
                       + mij_01*dtau_arr[0][1]

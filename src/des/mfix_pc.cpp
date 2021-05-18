@@ -787,8 +787,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             Gpu::AsyncArray<Real> d_cp_sn0_loc(solids.cp_sn0.dataPtr(), solids.cp_sn0.size());
             Real* p_cp_sn0_loc = d_cp_sn0_loc.data();
 
-            const Real T_ref = solids.T_ref;
-
             auto& solids_parms = *solids.parameters;
 
             amrex::ParallelFor(nrp, [pstruct,p_realarray,p_intarray,subdt,
