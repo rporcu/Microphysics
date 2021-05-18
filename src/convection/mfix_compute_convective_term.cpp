@@ -183,7 +183,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
         divu.FillBoundary(geom[lev].periodicity());
 
 #ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
+#pragma omp parallel private (flux_comp, num_comp) if (Gpu::notInLaunchRegion())
 #endif
         for (MFIter mfi(*ro_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
@@ -421,7 +421,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
         const auto& ebfact = EBFactory(lev);
 
 #ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
+#pragma omp parallel private (flux_comp, num_comp) if (Gpu::notInLaunchRegion())
 #endif
         for (MFIter mfi(*conv_u[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
