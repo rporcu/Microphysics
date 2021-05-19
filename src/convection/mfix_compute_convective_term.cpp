@@ -82,7 +82,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
         advection_string = "MOL";
 
     // Make one flux MF at each level to hold all the fluxes (velocity, density, tracers)
-    // Note that we allocate data for all the possible variables but don't necessarily 
+    // Note that we allocate data for all the possible variables but don't necessarily
     //      use that space if advect_density, etc not true
     int n_flux_comp = AMREX_SPACEDIM + 2 + ntrac + l_nspecies;
 
@@ -99,7 +99,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
     Vector<Array<MultiFab*,AMREX_SPACEDIM> > fluxes(finest_level+1);
     Vector<Array<MultiFab*,AMREX_SPACEDIM> >  faces(finest_level+1);
 
-    for (int lev = 0; lev <= finest_level; ++lev) 
+    Vector<MultiFab> divu(finest_level+1);
+
+    for (int lev = 0; lev <= finest_level; ++lev)
     {
        face_x[lev].define(ep_u_mac[lev]->boxArray(),dmap[lev],n_flux_comp,0,MFInfo(),EBFactory(lev));
        face_y[lev].define(ep_v_mac[lev]->boxArray(),dmap[lev],n_flux_comp,0,MFInfo(),EBFactory(lev));
@@ -108,6 +110,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
        flux_x[lev].define(ep_u_mac[lev]->boxArray(),dmap[lev],n_flux_comp,0,MFInfo(),EBFactory(lev));
        flux_y[lev].define(ep_v_mac[lev]->boxArray(),dmap[lev],n_flux_comp,0,MFInfo(),EBFactory(lev));
        flux_z[lev].define(ep_w_mac[lev]->boxArray(),dmap[lev],n_flux_comp,0,MFInfo(),EBFactory(lev));
+
+       divu[lev].define(vel_in[lev]->boxArray(),dmap[lev],1,4,MFInfo(),EBFactory(lev));
 
        faces[lev][0] = &face_x[lev];
        faces[lev][1] = &face_y[lev];
@@ -166,8 +170,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                          ep_w_mac[lev]->FillBoundary(geom[lev].periodicity()););
         }
 
-        MultiFab divu(vel_in[lev]->boxArray(),vel_in[lev]->DistributionMap(),1,4);
-        divu.setVal(0.);
+        divu[lev].setVal(0.);
         Array<MultiFab const*, AMREX_SPACEDIM> u;
         AMREX_D_TERM(u[0] = ep_u_mac[lev];,
                      u[1] = ep_v_mac[lev];,
@@ -176,11 +179,11 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
         const auto& ebfact = EBFactory(lev);
 
         if (!ebfact.isAllRegular())
-            amrex::EB_computeDivergence(divu,u,geom[lev],true);
+            amrex::EB_computeDivergence(divu[lev],u,geom[lev],true);
         else
-            amrex::computeDivergence(divu,u,geom[lev]);
+            amrex::computeDivergence(divu[lev],u,geom[lev]);
 
-        divu.FillBoundary(geom[lev].periodicity());
+        divu[lev].FillBoundary(geom[lev].periodicity());
 
 #ifdef _OPENMP
 #pragma omp parallel private (flux_comp, num_comp) if (Gpu::notInLaunchRegion())
@@ -189,12 +192,12 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
         {
             Box const& bx = mfi.tilebox();
 
-            Array4<Real const> const& divu_arr = divu.const_array(mfi);
+            Array4<Real const> const& divu_arr = divu[lev].const_array(mfi);
 
             // ************************************************************************
             // Velocity
             // ************************************************************************
-            int face_comp = 0;  
+            int face_comp = 0;
             int ncomp = AMREX_SPACEDIM;
             bool is_velocity = true;
             HydroUtils::ComputeFluxesOnBoxFromState( bx, ncomp, mfi, vel_in[lev]->const_array(mfi),
@@ -209,8 +212,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                                   ep_w_mac[lev]->const_array(mfi)),
                                      divu_arr,
                                      (!vel_forces.empty()) ? vel_forces[lev]->const_array(mfi) : Array4<Real const>{},
-                                     geom[lev], l_dt, 
-                                     get_hydro_velocity_bcrec(), 
+                                     geom[lev], l_dt,
+                                     get_hydro_velocity_bcrec(),
                                      get_hydro_velocity_bcrec_device_ptr(),
                                      get_velocity_iconserv_device_ptr(),
                                      ebfact,
@@ -227,7 +230,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                 face_comp = AMREX_SPACEDIM;
                 ncomp = 1;
                 is_velocity = false;
-                HydroUtils::ComputeFluxesOnBoxFromState( bx, ncomp, mfi, 
+                HydroUtils::ComputeFluxesOnBoxFromState( bx, ncomp, mfi,
                                                         ro_g_in[lev]->const_array(mfi),
                                           AMREX_D_DECL(flux_x[lev].array(mfi,face_comp),
                                                        flux_y[lev].array(mfi,face_comp),
@@ -239,8 +242,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                                        ep_v_mac[lev]->const_array(mfi),
                                                        ep_w_mac[lev]->const_array(mfi)),
                                           divu_arr, Array4<Real const>{},
-                                          geom[lev], l_dt, 
-                                          get_density_bcrec(), 
+                                          geom[lev], l_dt,
+                                          get_density_bcrec(),
                                           get_density_bcrec_device_ptr(),
                                           get_density_iconserv_device_ptr(),
                                           ebfact,
@@ -263,7 +266,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                 rhohfab.resize(rhoh_box, 1);
                 Elixir eli_rh = rhohfab.elixir();
                 rhoh   = rhohfab.array();
-                amrex::ParallelFor(rhoh_box, 
+                amrex::ParallelFor(rhoh_box,
                 [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
                     rhoh(i,j,k) = rho(i,j,k) * h(i,j,k);
@@ -285,8 +288,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                                        ep_w_mac[lev]->const_array(mfi)),
                                           divu_arr,
                                           Array4<Real const>{}, // enthalpy forces not defined
-                                          geom[lev], l_dt, 
-                                          get_enthalpy_bcrec(), 
+                                          geom[lev], l_dt,
+                                          get_enthalpy_bcrec(),
                                           get_enthalpy_bcrec_device_ptr(),
                                           get_enthalpy_iconserv_device_ptr(),
                                           ebfact,
@@ -330,8 +333,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                                        ep_w_mac[lev]->const_array(mfi)),
                                           divu_arr,
                                           (!tra_forces.empty()) ? tra_forces[lev]->const_array(mfi) : Array4<Real const>{},
-                                          geom[lev], l_dt, 
-                                          get_tracer_bcrec(), 
+                                          geom[lev], l_dt,
+                                          get_tracer_bcrec(),
                                           get_tracer_bcrec_device_ptr(),
                                           get_tracer_iconserv_device_ptr(),
                                           ebfact,
@@ -345,7 +348,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
             // ************************************************************************
             // Make a FAB holding (rho * species) that is the same size as the original tracer FAB
             FArrayBox rhoXfab;
-            if (advect_fluid_species && (l_nspecies>0)) 
+            if (advect_fluid_species && (l_nspecies>0))
             {
                 Box rhoX_box = Box((*X_gk_in[lev])[mfi].box());
                 Array4<Real const>   X = X_gk_in[lev]->const_array(mfi);
@@ -375,8 +378,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                                        ep_w_mac[lev]->const_array(mfi)),
                                           divu_arr,
                                           Array4<Real const>{}, // species forces not defined
-                                          geom[lev], l_dt, 
-                                          get_species_bcrec(), 
+                                          geom[lev], l_dt,
+                                          get_species_bcrec(),
                                           get_species_bcrec_device_ptr(),
                                           get_species_iconserv_device_ptr(),
                                           ebfact,
@@ -399,14 +402,14 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
     MultiFab dXdt_tmp;
 
-    int ngrow = 4; 
+    int ngrow = 4;
 
     for (int lev = 0; lev <= finest_level; ++lev)
     {
-        MultiFab dvdt_tmp(vel_in[lev]->boxArray(),dmap[lev],AMREX_SPACEDIM,ngrow,MFInfo(),EBFactory(lev)); 
-        MultiFab dsdt_tmp(vel_in[lev]->boxArray(),dmap[lev],2+ntrac       ,ngrow,MFInfo(),EBFactory(lev)); 
+        MultiFab dvdt_tmp(vel_in[lev]->boxArray(),dmap[lev],AMREX_SPACEDIM,ngrow,MFInfo(),EBFactory(lev));
+        MultiFab dsdt_tmp(vel_in[lev]->boxArray(),dmap[lev],2+ntrac       ,ngrow,MFInfo(),EBFactory(lev));
         if (advect_fluid_species && l_nspecies > 0)
-            dXdt_tmp.define(vel_in[lev]->boxArray(),dmap[lev],l_nspecies  ,ngrow,MFInfo(),EBFactory(lev)); 
+            dXdt_tmp.define(vel_in[lev]->boxArray(),dmap[lev],l_nspecies  ,ngrow,MFInfo(),EBFactory(lev));
 
         // Must initialize to zero because not all values may be set, e.g. outside the domain.
         dvdt_tmp.setVal(0.);
@@ -427,7 +430,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
         {
             Box const& bx = mfi.tilebox();
 
-            Real mult = -1.0;  
+            Real mult = -1.0;
 
             EBCellFlagFab const& flagfab = ebfact.getMultiEBCellFlagFab()[mfi];
             bool regular = (flagfab.getType(amrex::grow(bx,2)) == FabType::regular);
@@ -474,18 +477,11 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                               AMREX_D_DECL(flux_x[lev].const_array(mfi,flux_comp),
                                                            flux_y[lev].const_array(mfi,flux_comp),
                                                            flux_z[lev].const_array(mfi,flux_comp)),
-                                              AMREX_D_DECL(face_x[lev].const_array(mfi,flux_comp),
-                                                           face_y[lev].const_array(mfi,flux_comp),
-                                                           face_z[lev].const_array(mfi,flux_comp)),
-                                              AMREX_D_DECL(ep_u_mac[lev]->const_array(mfi),
-                                                           ep_v_mac[lev]->const_array(mfi),
-                                                           ep_w_mac[lev]->const_array(mfi)),
-                                              num_comp, geom[lev],
-                                              get_velocity_iconserv_device_ptr(), mult,
+                                              num_comp, geom[lev], mult,
                                               fluxes_are_area_weighted);
 
                     // Density, enthalpy, tracers
-                    // NOTE: this isn't fully general because we pass in the density "iconserv" 
+                    // NOTE: this isn't fully general because we pass in the density "iconserv"
                     //       flag but in this case density, (rho h) and (rho T) are all viewed as conservative
                     flux_comp = 3;
                      num_comp = 2 + ntrac;
@@ -493,14 +489,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                               AMREX_D_DECL(flux_x[lev].const_array(mfi,flux_comp),
                                                            flux_y[lev].const_array(mfi,flux_comp),
                                                            flux_z[lev].const_array(mfi,flux_comp)),
-                                              AMREX_D_DECL(face_x[lev].const_array(mfi,flux_comp),
-                                                           face_y[lev].const_array(mfi,flux_comp),
-                                                           face_z[lev].const_array(mfi,flux_comp)),
-                                              AMREX_D_DECL(ep_u_mac[lev]->const_array(mfi),
-                                                           ep_v_mac[lev]->const_array(mfi),
-                                                           ep_w_mac[lev]->const_array(mfi)),
-                                              num_comp, geom[lev],
-                                              get_density_iconserv_device_ptr(), mult,
+                                              num_comp, geom[lev], mult,
                                               fluxes_are_area_weighted);
 
                     // Species
@@ -512,21 +501,82 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                                   AMREX_D_DECL(flux_x[lev].const_array(mfi,flux_comp),
                                                                flux_y[lev].const_array(mfi,flux_comp),
                                                                flux_z[lev].const_array(mfi,flux_comp)),
-                                                  AMREX_D_DECL(face_x[lev].const_array(mfi,flux_comp),
-                                                               face_y[lev].const_array(mfi,flux_comp),
-                                                               face_z[lev].const_array(mfi,flux_comp)),
-                                                  AMREX_D_DECL(ep_u_mac[lev]->const_array(mfi),
-                                                               ep_v_mac[lev]->const_array(mfi),
-                                                               ep_w_mac[lev]->const_array(mfi)),
-                                                  num_comp, geom[lev],
-                                                  get_species_iconserv_device_ptr(), mult,
+                                                  num_comp, geom[lev], mult,
                                                   fluxes_are_area_weighted);
                     } // species
-                }
-            }
+                } // regular
+
+                // ***************************************************************
+                // If convective, we define u dot grad u = div (u u) - u div(u)
+                // ***************************************************************
+                auto const& q           = vel_in[lev]->const_array(mfi,0);
+                auto const& divu_arr    =   divu[lev].const_array(mfi);
+                auto        upd_arr     = dvdt_tmp.array(mfi);
+                AMREX_D_TERM(auto const& q_on_face_x  = face_x[lev].const_array(mfi);,
+                             auto const& q_on_face_y  = face_y[lev].const_array(mfi);,
+                             auto const& q_on_face_z  = face_z[lev].const_array(mfi););
+
+                int const* iconserv_ptr = get_velocity_iconserv_device_ptr();
+                if (advection_type() == AdvectionType::MOL)
+                {
+                    // Here we use q at the same time as the velocity
+                    amrex::ParallelFor(bx, num_comp, [=]
+                    AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+                    {
+                        if (!iconserv_ptr[n])
+                        {
+                            // Note that because we define upd_arr as MINUS div(u u), here we add u div (u)
+                            upd_arr(i,j,k,n) += q(i,j,k,n)*divu_arr(i,j,k);
+                        }
+                    });
+
+                } else if (advection_type() == AdvectionType::Godunov) {
+
+                    // Here we want to use q predicted to t^{n+1/2}
+                    bool regular = (flagfab.getType(bx) == FabType::regular);
+                    if (regular)
+                    {
+                        amrex::ParallelFor(bx, num_comp, [=]
+                        AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+                        {
+                            if (!iconserv_ptr[n])
+                            {
+                                Real qavg  = (q_on_face_x(i,j,k,n) + q_on_face_x(i+1,j,k,n) +
+                                              q_on_face_y(i,j,k,n) + q_on_face_y(i,j+1,k,n) +
+                                              q_on_face_z(i,j,k,n) + q_on_face_z(i,j,k+1,n) ) * 0.125;
+
+                                // Note that because we define upd_arr as MINUS div(u u), here we add u div (u)
+                                upd_arr(i,j,k,n) += qavg*divu_arr(i,j,k);
+                            }
+                        });
+                    }
+                    else
+                    {
+                        auto const& apx_arr = ebfact.getAreaFrac()[0]->const_array(mfi);
+                        auto const& apy_arr = ebfact.getAreaFrac()[1]->const_array(mfi);
+                        auto const& apz_arr = ebfact.getAreaFrac()[2]->const_array(mfi);
+
+                        amrex::ParallelFor(bx, num_comp, [=]
+                        AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+                        {
+                            if (!iconserv_ptr[n])
+                            {
+                                Real qavg  = ( apx_arr(i,j,k)*q_on_face_x(i,j,k,n) + apx_arr(i+1,j,k)*q_on_face_x(i+1,j,k,n) +
+                                               apy_arr(i,j,k)*q_on_face_y(i,j,k,n) + apy_arr(i,j+1,k)*q_on_face_y(i,j+1,k,n) +
+                                               apz_arr(i,j,k)*q_on_face_z(i,j,k,n) + apz_arr(i,j,k+1)*q_on_face_z(i,j,k+1,n) ) /
+                                             ( apx_arr(i,j,k) + apx_arr(i+1,j,k) + apy_arr(i,j,k) + apy_arr(i,j+1,k)
+                                              +apz_arr(i,j,k) + apz_arr(i,j,k+1) );
+
+                                // Note that because we define upd_arr as MINUS div(u u), here we add u div (u)
+                                upd_arr(i,j,k,n) += qavg*divu_arr(i,j,k);
+                            }
+                        });
+                    } // regular?
+                } // Godunov
+            } // not covered
         } // mfi
 
-        // We only filled these on the valid cells so we fill same-level interior ghost cells here. 
+        // We only filled these on the valid cells so we fill same-level interior ghost cells here.
         // (We don't need values outside the domain or at a coarser level so we can call just FillBoundary)
         dvdt_tmp.FillBoundary(geom[lev].periodicity());
         dsdt_tmp.FillBoundary(geom[lev].periodicity());
@@ -571,9 +621,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
             Redistribution::Apply( bx, ncomp, conv_u[lev]->array(mfi), dvdt_tmp.array(mfi),
                                    vel_in[lev]->const_array(mfi),
-                                   (m_redistribution_type == "StateRedist") ? scratchfab.array() 
-                                                                            : ep_g_in[lev]->array(mfi), 
-                                   flagfab.const_array(), 
+                                   (m_redistribution_type == "StateRedist") ? scratchfab.array()
+                                                                            : ep_g_in[lev]->array(mfi),
+                                   flagfab.const_array(),
                                    apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
                                    bc_vel, geom[lev], l_dt, m_redistribution_type);
 
@@ -586,9 +636,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
                 Redistribution::Apply( bx, ncomp, conv_s[lev]->array(mfi,0), dsdt_tmp.array(mfi,0),
                                        ro_g_in[lev]->const_array(mfi),
-                                       (m_redistribution_type == "StateRedist") ? scratchfab.array() 
-                                                                                : ep_g_in[lev]->array(mfi), 
-                                       flagfab.const_array(), 
+                                       (m_redistribution_type == "StateRedist") ? scratchfab.array()
+                                                                                : ep_g_in[lev]->array(mfi),
+                                       flagfab.const_array(),
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
                                        bc_den, geom[lev], l_dt, m_redistribution_type);
             }
@@ -611,10 +661,10 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
                 auto const& bc_rh = get_enthalpy_bcrec_device_ptr();
 
-                Redistribution::Apply( bx, ncomp, conv_s[lev]->array(mfi,1), dsdt_tmp.array(mfi,1), rhoh, 
-                                       (m_redistribution_type == "StateRedist") ? scratchfab.array() 
-                                                                                : ep_g_in[lev]->array(mfi), 
-                                       flagfab.const_array(), 
+                Redistribution::Apply( bx, ncomp, conv_s[lev]->array(mfi,1), dsdt_tmp.array(mfi,1), rhoh,
+                                       (m_redistribution_type == "StateRedist") ? scratchfab.array()
+                                                                                : ep_g_in[lev]->array(mfi),
+                                       flagfab.const_array(),
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
                                        bc_rh, geom[lev], l_dt, m_redistribution_type);
             }
@@ -628,7 +678,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                 rhotracfab.resize(tmp_box, ntrac);
                 Elixir eli_rt  = rhotracfab.elixir();
                 Array4<Real> rhotrac = rhotracfab.array();
-                amrex::ParallelFor(tmp_box, ncomp, 
+                amrex::ParallelFor(tmp_box, ncomp,
                     [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                 {
                     rhotrac(i,j,k,n) = rho(i,j,k) * tra(i,j,k,n);
@@ -636,15 +686,15 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
                 auto const& bc_rt = get_tracer_bcrec_device_ptr();
 
-                Redistribution::Apply( bx, ncomp, conv_s[lev]->array(mfi,2), dsdt_tmp.array(mfi,2), rhotrac, 
-                                       (m_redistribution_type == "StateRedist") ? scratchfab.array() 
-                                                                                : ep_g_in[lev]->array(mfi), 
-                                       flagfab.const_array(), 
+                Redistribution::Apply( bx, ncomp, conv_s[lev]->array(mfi,2), dsdt_tmp.array(mfi,2), rhotrac,
+                                       (m_redistribution_type == "StateRedist") ? scratchfab.array()
+                                                                                : ep_g_in[lev]->array(mfi),
+                                       flagfab.const_array(),
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
                                        bc_rt, geom[lev], l_dt, m_redistribution_type);
             }
 
-            if (advect_fluid_species && (l_nspecies > 0)) 
+            if (advect_fluid_species && (l_nspecies > 0))
             {
                 ncomp = l_nspecies;
 
@@ -661,10 +711,10 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
                 auto const& bc_rX = get_species_bcrec_device_ptr();
 
-                Redistribution::Apply( bx, ncomp, conv_X[lev]->array(mfi), dXdt_tmp.array(mfi), rhoX, 
-                                       (m_redistribution_type == "StateRedist") ? scratchfab.array() 
-                                                                                : ep_g_in[lev]->array(mfi), 
-                                       flagfab.const_array(), 
+                Redistribution::Apply( bx, ncomp, conv_X[lev]->array(mfi), dXdt_tmp.array(mfi), rhoX,
+                                       (m_redistribution_type == "StateRedist") ? scratchfab.array()
+                                                                                : ep_g_in[lev]->array(mfi),
+                                       flagfab.const_array(),
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
                                        bc_rX, geom[lev], l_dt, m_redistribution_type);
             }
@@ -690,7 +740,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                  conv_s_arr(i,j,k,n) = dsdt_arr(i,j,k,n);
              });
 
-             if (advect_fluid_species && (l_nspecies > 0)) 
+             if (advect_fluid_species && (l_nspecies > 0))
              {
                  Array4<Real      > conv_X_arr = conv_X[lev]->array(mfi);
                  Array4<Real const>   dXdt_arr = dXdt_tmp.array(mfi);
