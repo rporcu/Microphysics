@@ -1256,7 +1256,7 @@ public:
 
     int nghost_eb_basic () const  { return 4; }
 
-    int nghost_eb_volume () const { return 4; }
+    int nghost_eb_volume () const { return 5; }
 
     int nghost_eb_full () const   { return 4; }
 
