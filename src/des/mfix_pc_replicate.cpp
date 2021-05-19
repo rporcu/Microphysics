@@ -7,8 +7,8 @@ using namespace amrex;
 
 void MFIXParticleContainer::Replicate (IntVect& Nrep,
                                        Geometry& geom,
-                                       DistributionMapping& dmap,
-                                       BoxArray& ba)
+                                       DistributionMapping& /*dmap*/,
+                                       BoxArray& /*ba*/)
 {
     int lev = 0;
 

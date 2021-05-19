@@ -287,8 +287,8 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
             const auto& apy_fab = areafrac[1]->array(pti);
             const auto& apz_fab = areafrac[2]->array(pti);
 
-            const int adv_enthalpy = advect_enthalpy;
-            const Real mu_g0 = fluid.mu_g0;
+            //const int adv_enthalpy = advect_enthalpy;
+            //const Real mu_g0 = fluid.mu_g0;
 
             amrex::ParallelFor(np,
               [particles_ptr,p_realarray,interp_array,ro_array,T_array,

@@ -10,7 +10,7 @@
 
 void mfix::mfix_predict_volume_fraction (Real dt_in,
                                          RealVect& gravity_in,
-                                         EBFArrayBoxFactory* ebfactory,
+                                         EBFArrayBoxFactory* ebfactory_in,
                                          const int ls_refinement,
                                          const MultiFab* ls_phi,
                                          Vector< MultiFab* >& ep_s_out)
@@ -61,7 +61,7 @@ void mfix::mfix_predict_volume_fraction (Real dt_in,
 
     // Deposit particle volume to the grid
     pc->PredictPICVolumeDeposition(lev, dt_in, gravity_in,
-            ebfactory, ls_refinement, ls_phi,
+            ebfactory_in, ls_refinement, ls_phi,
             *ep_s_out[lev], volfrac, flags);
   }
 

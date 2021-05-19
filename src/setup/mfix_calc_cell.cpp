@@ -24,12 +24,12 @@ void calc_cell_ic(const Real dx,
                   int& k_b,
                   int& k_t)
 {
-  i_w = amrex::Math::floor((lo[0]-plo[0])/dx + .5);
-  i_e = amrex::Math::floor((hi[0]-plo[0])/dx + .5) - 1;
+  i_w = static_cast<int>(amrex::Math::floor((lo[0]-plo[0])/dx + .5));
+  i_e = static_cast<int>(amrex::Math::floor((hi[0]-plo[0])/dx + .5)) - 1;
 
-  j_s = amrex::Math::floor((lo[1]-plo[1])/dy + .5);
-  j_n = amrex::Math::floor((hi[1]-plo[1])/dy + .5) - 1;
+  j_s = static_cast<int>(amrex::Math::floor((lo[1]-plo[1])/dy + .5));
+  j_n = static_cast<int>(amrex::Math::floor((hi[1]-plo[1])/dy + .5)) - 1;
 
-  k_b = amrex::Math::floor((lo[2]-plo[2])/dz + .5);
-  k_t = amrex::Math::floor((hi[2]-plo[2])/dz + .5) - 1;
+  k_b = static_cast<int>(amrex::Math::floor((lo[2]-plo[2])/dz + .5));
+  k_t = static_cast<int>(amrex::Math::floor((hi[2]-plo[2])/dz + .5)) - 1;
 }

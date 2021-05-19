@@ -8,13 +8,13 @@
 *----------------------------------------------------------------------------------*/
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::IntVect Node0_EB(const int covered,
-                        const amrex::IntVect Node0, const int Node0_isNotConnected,
+                        const amrex::IntVect Node0, const int /*Node0_isNotConnected*/,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
                         const amrex::IntVect Node2, const int Node2_isNotConnected,
                         const amrex::IntVect Node3, const int Node3_isNotConnected,
                         const amrex::IntVect Node4, const int Node4_isNotConnected,
                         const amrex::IntVect Node5, const int Node5_isNotConnected,
-                        const amrex::IntVect Node6, const int Node6_isNotConnected,
+                        const amrex::IntVect Node6, const int /*Node6_isNotConnected*/,
                         const amrex::IntVect Node7, const int Node7_isNotConnected)
 {
 
@@ -85,13 +85,13 @@ amrex::IntVect Node0_EB(const int covered,
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::IntVect Node1_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
-                        const amrex::IntVect Node1, const int Node1_isNotConnected,
+                        const amrex::IntVect Node1, const int /*Node1_isNotConnected*/,
                         const amrex::IntVect Node2, const int Node2_isNotConnected,
                         const amrex::IntVect Node3, const int Node3_isNotConnected,
                         const amrex::IntVect Node4, const int Node4_isNotConnected,
                         const amrex::IntVect Node5, const int Node5_isNotConnected,
                         const amrex::IntVect Node6, const int Node6_isNotConnected,
-                        const amrex::IntVect Node7, const int Node7_isNotConnected)
+                        const amrex::IntVect Node7, const int /*Node7_isNotConnected*/)
 {
 
     if(covered == 1){
@@ -162,9 +162,9 @@ AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::IntVect Node2_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
-                        const amrex::IntVect Node2, const int Node2_isNotConnected,
+                        const amrex::IntVect Node2, const int /*Node2_isNotConnected*/,
                         const amrex::IntVect Node3, const int Node3_isNotConnected,
-                        const amrex::IntVect Node4, const int Node4_isNotConnected,
+                        const amrex::IntVect Node4, const int /*Node4_isNotConnected*/,
                         const amrex::IntVect Node5, const int Node5_isNotConnected,
                         const amrex::IntVect Node6, const int Node6_isNotConnected,
                         const amrex::IntVect Node7, const int Node7_isNotConnected)
@@ -240,9 +240,9 @@ amrex::IntVect Node3_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
                         const amrex::IntVect Node2, const int Node2_isNotConnected,
-                        const amrex::IntVect Node3, const int Node3_isNotConnected,
+                        const amrex::IntVect Node3, const int /*Node3_isNotConnected*/,
                         const amrex::IntVect Node4, const int Node4_isNotConnected,
-                        const amrex::IntVect Node5, const int Node5_isNotConnected,
+                        const amrex::IntVect Node5, const int /*Node5_isNotConnected*/,
                         const amrex::IntVect Node6, const int Node6_isNotConnected,
                         const amrex::IntVect Node7, const int Node7_isNotConnected)
 {
@@ -316,9 +316,9 @@ AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::IntVect Node4_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
-                        const amrex::IntVect Node2, const int Node2_isNotConnected,
+                        const amrex::IntVect Node2, const int /*Node2_isNotConnected*/,
                         const amrex::IntVect Node3, const int Node3_isNotConnected,
-                        const amrex::IntVect Node4, const int Node4_isNotConnected,
+                        const amrex::IntVect Node4, const int /*Node4_isNotConnected*/,
                         const amrex::IntVect Node5, const int Node5_isNotConnected,
                         const amrex::IntVect Node6, const int Node6_isNotConnected,
                         const amrex::IntVect Node7, const int Node7_isNotConnected)
@@ -394,9 +394,9 @@ amrex::IntVect Node5_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
                         const amrex::IntVect Node2, const int Node2_isNotConnected,
-                        const amrex::IntVect Node3, const int Node3_isNotConnected,
+                        const amrex::IntVect Node3, const int /*Node3_isNotConnected*/,
                         const amrex::IntVect Node4, const int Node4_isNotConnected,
-                        const amrex::IntVect Node5, const int Node5_isNotConnected,
+                        const amrex::IntVect Node5, const int /*Node5_isNotConnected*/,
                         const amrex::IntVect Node6, const int Node6_isNotConnected,
                         const amrex::IntVect Node7, const int Node7_isNotConnected)
 {
@@ -467,13 +467,13 @@ amrex::IntVect Node5_EB(const int covered,
 *----------------------------------------------------------------------------------*/
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::IntVect Node6_EB(const int covered,
-                        const amrex::IntVect Node0, const int Node0_isNotConnected,
+                        const amrex::IntVect Node0, const int /*Node0_isNotConnected*/,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
                         const amrex::IntVect Node2, const int Node2_isNotConnected,
                         const amrex::IntVect Node3, const int Node3_isNotConnected,
                         const amrex::IntVect Node4, const int Node4_isNotConnected,
                         const amrex::IntVect Node5, const int Node5_isNotConnected,
-                        const amrex::IntVect Node6, const int Node6_isNotConnected,
+                        const amrex::IntVect Node6, const int /*Node6_isNotConnected*/,
                         const amrex::IntVect Node7, const int Node7_isNotConnected)
 {
 
@@ -545,13 +545,13 @@ amrex::IntVect Node6_EB(const int covered,
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::IntVect Node7_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
-                        const amrex::IntVect Node1, const int Node1_isNotConnected,
+                        const amrex::IntVect Node1, const int /*Node1_isNotConnected*/,
                         const amrex::IntVect Node2, const int Node2_isNotConnected,
                         const amrex::IntVect Node3, const int Node3_isNotConnected,
                         const amrex::IntVect Node4, const int Node4_isNotConnected,
                         const amrex::IntVect Node5, const int Node5_isNotConnected,
                         const amrex::IntVect Node6, const int Node6_isNotConnected,
-                        const amrex::IntVect Node7, const int Node7_isNotConnected)
+                        const amrex::IntVect Node7, const int /*Node7_isNotConnected*/)
 {
 
     if(covered == 1) {

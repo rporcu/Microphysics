@@ -132,7 +132,7 @@ mfix::WriteParticleAscii ( std::string& par_ascii_file, int nstep ) const
 
 
 void
-mfix::WriteAverageRegions ( std::string& avg_file, int nstep, Real time ) const
+mfix::WriteAverageRegions ( std::string& avg_file, int /*nstep*/, Real time ) const
 {
   BL_PROFILE("mfix::WriteAverageRegions()");
 

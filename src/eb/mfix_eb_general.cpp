@@ -346,7 +346,10 @@ mfix::get_poly (int max_order, std::string field_prefix)
             IntVect powers = IntVect::Zero;
             powers[idir] = lc;
 
-            EB2::PolyTerm mono = {.coef = coef, .powers = powers};
+            EB2::PolyTerm mono;
+            mono.coef = coef;
+            mono.powers = powers;
+
             poly.push_back(mono);
         }
     }

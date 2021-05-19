@@ -34,7 +34,7 @@ mfix::mfix_set_species_bcs (Real time,
 }
 
 void 
-mfix::set_mass_fractions_g_bcs (Real time,
+mfix::set_mass_fractions_g_bcs (Real /*time*/,
                                 const int lev,
                                 FArrayBox& X_gk_fab,
                                 const Box& domain)

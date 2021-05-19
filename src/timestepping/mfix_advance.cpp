@@ -407,8 +407,8 @@ mfix::steady_state_reached (Real dt, int iter)
     //
     static int naccess = 0;
 
-    int condition1[finest_level+1];
-    int condition2[finest_level+1];
+    amrex::Vector<int> condition1(finest_level+1);
+    amrex::Vector<int> condition2(finest_level+1);
 
     Real time = 0.;
 
