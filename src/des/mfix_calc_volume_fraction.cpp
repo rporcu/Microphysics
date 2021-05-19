@@ -21,7 +21,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain
 
-    MultiFab* mf_pointer[nlev];
+    amrex::Vector<MultiFab*> mf_pointer(nlev, nullptr);
 
     if (nlev > 2)
       amrex::Abort("For right now mfix::mfix_calc_volume_fraction can only handle up to 2 levels");

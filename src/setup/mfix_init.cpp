@@ -462,7 +462,7 @@ mfix::InitParams ()
 
 //! Tag using each EB level's volfrac. This requires that the `eb_levels` have
 //! already been build.
-void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow)
+void mfix::ErrorEst (int lev, TagBoxArray & tags, Real /*time*/, int /*ngrow*/)
 {
     if (ooo_debug) amrex::Print() << "ErrorEst" << std::endl;
     //___________________________________________________________________________
@@ -615,7 +615,7 @@ void mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 }
 
 
-void mfix::MakeNewLevelFromScratch (int lev, Real time,
+void mfix::MakeNewLevelFromScratch (int lev, Real /*time*/,
                                     const BoxArray& new_grids,
                                     const DistributionMapping& new_dmap)
 {
@@ -659,7 +659,7 @@ void mfix::ReMakeNewLevelFromScratch (int lev,
 
 
 
-void mfix::InitLevelData (Real time)
+void mfix::InitLevelData (Real /*time*/)
 {
     if (ooo_debug) amrex::Print() << "InitLevelData" << std::endl;
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
@@ -795,7 +795,7 @@ void mfix::InitLevelData (Real time)
 }
 
 void
-mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
+mfix::PostInit (Real& dt, Real /*time*/, int restart_flag, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
 

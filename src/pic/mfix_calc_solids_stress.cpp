@@ -387,13 +387,13 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
 
         // This is to check efficiently if this tile contains any eb stuff
         const EBFArrayBox&  ep_s_fab = static_cast<EBFArrayBox const&>((*ep_s_in[lev])[pti]);
-        const EBCellFlagFab&  flags = ep_s_fab.getEBCellFlagFab();
+        const EBCellFlagFab&  flags_loc = ep_s_fab.getEBCellFlagFab();
 
         Array4<const Real> const& ep_s_arr = ep_s_in[lev]->const_array(pti);
         Array4<const Real> const& tau_arr   = tau.array(pti);
-        const auto& flags_array = flags.array();
+        const auto& flags_array = flags_loc.array();
 
-        if (flags.getType(amrex::grow(bx,1)) == FabType::covered)
+        if (flags_loc.getType(amrex::grow(bx,1)) == FabType::covered)
         {
 
           // We shouldn't have this case but if we do -- zero the stress.
@@ -407,7 +407,7 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
               p_realarray[SoArealData::omegaz][pid] = 0.0;
             });
         }
-        else if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
+        else if (flags_loc.getType(amrex::grow(bx,1)) == FabType::regular)
         {
           amrex::ParallelFor(np, [pstruct,p_realarray,ep_s_arr,tau_arr,plo,dxi]
             AMREX_GPU_DEVICE (int pid) noexcept

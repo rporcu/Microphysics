@@ -11,8 +11,8 @@ void filcc (Real* data,
             const int* hi,
             const int* dom_lo,
             const int* dom_hi,
-            const Real* dx,
-            const Real* grd_lo,
+            const Real* /*dx*/,
+            const Real* /*grd_lo*/,
             const Real* time,
             const int* bc)
 {

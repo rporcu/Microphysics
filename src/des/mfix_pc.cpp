@@ -10,11 +10,11 @@ using namespace amrex;
 int  MFIXParticleContainer::domain_bc[6] {0};
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
-                                              SolidsPhase& solids)
+                                              SolidsPhase& arg_solids)
     : NeighborParticleContainer<AoSrealData::count,AoSintData::count,
                                 SoArealData::count,SoAintData::count>(amr_core->GetParGDB(), 1)
-    , m_runtimeRealData(solids.nspecies, REACTIONS::nreactions)
-    , solids(solids)
+    , m_runtimeRealData(arg_solids.nspecies, REACTIONS::nreactions)
+    , solids(arg_solids)
 {
     ReadStaticParameters();
 
@@ -116,9 +116,9 @@ void MFIXParticleContainer::ReadStaticParameters ()
 }
 
 void MFIXParticleContainer::EvolveParticles (int lev,
-                                             int nstep,
+                                             int /*nstep*/,
                                              Real dt,
-                                             Real time,
+                                             Real /*time*/,
                                              RealVect& gravity,
                                              EBFArrayBoxFactory* ebfactory,
                                              const MultiFab* ls_phi,
@@ -164,8 +164,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     // des_init_time_loop(&dt, &nsubsteps, &subdt);
     if ( dt >= DEM::dtsolid )
     {
-       nsubsteps = amrex::Math::ceil (  dt / DEM::dtsolid );
-       subdt     =  dt / nsubsteps;
+       nsubsteps = static_cast<int>(amrex::Math::ceil(dt / static_cast<amrex::Real>(DEM::dtsolid)));
+       subdt     = dt / nsubsteps;
     } else {
        nsubsteps = 1;
        subdt     = dt;
@@ -1466,7 +1466,7 @@ RealVect MFIXParticleContainer::GetMaxVelocity ()
     RealVect max_vel(max_vel_x, max_vel_y, max_vel_z);
 
     return max_vel;
-};
+}
 
 Vector<RealVect> MFIXParticleContainer::GetMaxForces ()
 {
@@ -1936,7 +1936,7 @@ ComputeAverageTemperatures (const int lev,
   }
 }
 
-void MFIXParticleContainer::set_particle_properties (int pstate,
+void MFIXParticleContainer::set_particle_properties (int /*pstate*/,
                                                      Real pradius,
                                                      Real pdensity,
                                                      Real& pvol,

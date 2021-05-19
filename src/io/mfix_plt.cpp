@@ -484,13 +484,13 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               if (is_mixture) {
-                Real MW_g(0);
+                Real MW_g_loc(0);
 
                 for (int n(0); n < nspecies_g; ++n) {
-                  MW_g += X_gk_array(i,j,k,n) / p_MW_gk0[n];
+                  MW_g_loc += X_gk_array(i,j,k,n) / p_MW_gk0[n];
                 }
 
-                MW_g_array(i,j,k) = 1. / MW_g;
+                MW_g_array(i,j,k) = 1. / MW_g_loc;
               } else {
                 MW_g_array(i,j,k) = MW_g0;
               }

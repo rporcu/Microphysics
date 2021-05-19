@@ -442,8 +442,8 @@ void DiffusionOp::ComputeLapT (const Vector< MultiFab*      >& lapT_out,
 
 void DiffusionOp::ComputeLapS (const Vector< MultiFab* >& laps_out,
                                const Vector< MultiFab* >& scal_in,
-                               const Vector< MultiFab const*>& ro_in,
-                               const Vector< MultiFab const*>& ep_in,
+                               const Vector< MultiFab const*>& /*ro_in*/,
+                               const Vector< MultiFab const*>& /*ep_in*/,
                                const Vector< Real >& mu_s)
 {
     BL_PROFILE("DiffusionOp::ComputeLapS");

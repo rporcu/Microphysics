@@ -32,9 +32,9 @@ struct ComputeDragWenYu
      */
     AMREX_GPU_HOST_DEVICE AMREX_INLINE
     amrex::Real operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel,
-                            amrex::Real DPM, amrex::Real DPA, amrex::Real PHIS,
-                            amrex::Real fvelx, amrex::Real fvely, amrex::Real fvelz,
-                            int i, int j, int k, int pid) const
+                            amrex::Real DPM, amrex::Real /*DPA*/, amrex::Real /*PHIS*/,
+                            amrex::Real /*fvelx*/, amrex::Real /*fvely*/, amrex::Real /*fvelz*/,
+                            int /*i*/, int /*j*/, int /*k*/, int /*pid*/) const
     {
         amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROPg/Mug : large_number;
 
@@ -85,9 +85,9 @@ struct ComputeDragGidaspow
      */
     AMREX_GPU_HOST_DEVICE AMREX_INLINE
     amrex::Real operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel,
-                            amrex::Real DPM, amrex::Real DPA, amrex::Real PHIS,
-              amrex::Real fvelx, amrex::Real fvely, amrex::Real fvelz,
-              int i, int j, int k, int pid) const
+                            amrex::Real DPM, amrex::Real /*DPA*/, amrex::Real /*PHIS*/,
+                            amrex::Real /*fvelx*/, amrex::Real /*fvely*/, amrex::Real /*fvelz*/,
+                            int /*i*/, int /*j*/, int /*k*/, int /*pid*/) const
     {
   amrex::Real ROg = ROPg / EPg;
 
@@ -163,8 +163,8 @@ struct ComputeDragBVK2
     AMREX_GPU_HOST_DEVICE AMREX_INLINE
     amrex::Real operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel,
                             amrex::Real DPM, amrex::Real DPA, amrex::Real PHIS,
-              amrex::Real fvelx, amrex::Real fvely, amrex::Real fvelz,
-              int i, int j, int k, int pid) const
+                            amrex::Real /*fvelx*/, amrex::Real /*fvely*/, amrex::Real /*fvelz*/,
+                            int /*i*/, int /*j*/, int /*k*/, int /*pid*/) const
     {
         amrex::Real RE = (Mug > 0.0) ? DPA*vrel*ROPg/Mug : large_number;
 

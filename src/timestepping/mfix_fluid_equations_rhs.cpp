@@ -35,12 +35,12 @@ mfix::mfix_density_rhs (Vector< MultiFab*      > const& rhs,
         amrex::ParallelFor(bx, [nspecies_g,rhs_arr,ro_gk_txfr_arr]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          Real rhs(0);
+          Real rhs_loc(0);
 
           for (int n_g(0); n_g < nspecies_g; ++n_g)
-            rhs += ro_gk_txfr_arr(i,j,k,n_g);
+            rhs_loc += ro_gk_txfr_arr(i,j,k,n_g);
 
-          rhs_arr(i,j,k) = rhs;
+          rhs_arr(i,j,k) = rhs_loc;
         });
       }
     }

@@ -533,8 +533,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                 } else if (advection_type() == AdvectionType::Godunov) {
 
                     // Here we want to use q predicted to t^{n+1/2}
-                    bool regular = (flagfab.getType(bx) == FabType::regular);
-                    if (regular)
+                    //bool regular = (flagfab.getType(bx) == FabType::regular);
+                    if (flagfab.getType(bx) == FabType::regular)
                     {
                         amrex::ParallelFor(bx, AMREX_SPACEDIM, [=]
                         AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept

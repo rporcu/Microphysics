@@ -273,20 +273,20 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
     // Set the initial conditions.
     for(int icv(0); icv < IC::ic.size(); ++icv)
     {
-      IC::IC_t ic = IC::ic[icv];
+      IC::IC_t& loc_ic = IC::ic[icv];
 
       // This is a round about way to address what is likely overly complex
       // logic in the particle generator. We take the region specified by
       // a user and convert it index space (i,j,k). That in turn is turned
       // back into a physical region that may be a little larger than what
       // was actually defined to account for spatial discretization.
-      const IntVect bx_lo(amrex::Math::floor((ic.region->lo(0)-plo[0])*idx[0] + 0.5),
-                          amrex::Math::floor((ic.region->lo(1)-plo[1])*idx[1] + 0.5),
-                          amrex::Math::floor((ic.region->lo(2)-plo[2])*idx[0] + 0.5));
+      const IntVect bx_lo(static_cast<int>(amrex::Math::floor((loc_ic.region->lo(0)-plo[0])*idx[0] + 0.5)),
+                          static_cast<int>(amrex::Math::floor((loc_ic.region->lo(1)-plo[1])*idx[1] + 0.5)),
+                          static_cast<int>(amrex::Math::floor((loc_ic.region->lo(2)-plo[2])*idx[0] + 0.5)));
 
-      const IntVect bx_hi(amrex::Math::floor((ic.region->hi(0)-plo[0])*idx[0] + 0.5),
-                          amrex::Math::floor((ic.region->hi(1)-plo[1])*idx[1] + 0.5),
-                          amrex::Math::floor((ic.region->hi(2)-plo[2])*idx[0] + 0.5));
+      const IntVect bx_hi(static_cast<int>(amrex::Math::floor((loc_ic.region->hi(0)-plo[0])*idx[0] + 0.5)),
+                          static_cast<int>(amrex::Math::floor((loc_ic.region->hi(1)-plo[1])*idx[1] + 0.5)),
+                          static_cast<int>(amrex::Math::floor((loc_ic.region->hi(2)-plo[2])*idx[0] + 0.5)));
 
       // Start/end of IC domain bounds
       const RealVect ic_lo = {plo[0]+bx_lo[0]*dx[0],
@@ -306,8 +306,8 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
           h_temperature_loc[solid_type] = 0.0;
 
           // Loop through IC solids looking for match.
-          for(int ics(0); ics < IC::ic[icv].solids.size(); ics++) {
-            auto& ic_solid = IC::ic[icv].solids[ics];
+          for(int ics(0); ics < loc_ic.solids.size(); ics++) {
+            auto& ic_solid = loc_ic.solids[ics];
             if(solids.names[solid_type] == ic_solid.name) {
               if(adv_enthalpy)
                 h_temperature_loc[solid_type] = ic_solid.temperature;

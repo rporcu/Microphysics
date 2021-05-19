@@ -66,7 +66,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
 template <typename F1, typename F2>
 void 
-mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
+mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& /*chem_txfr*/,
                            const Vector< MultiFab* >& ep_g_in,
                            const Vector< MultiFab* >& ro_g_in,
                            const Vector< MultiFab* >& vel_g_in,
@@ -504,7 +504,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
               Real G_s_pg(0);
               Real G_s_gp(0);
 
-              Real G_h_pg(0);
+              Real G_h_pg_loc(0);
               Real G_h_gp(0);
 
 
@@ -594,7 +594,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
               // Loop over fluid species for computing fluid txfr rates
               //***************************************************************
               for (int n_g(0); n_g < nspecies_g; n_g++) {
-                Real G_sk_pg(0.);
+                Real G_sk_pg_loc(0.);
 
                 // Get the ID of the current species n_g
                 const int current_species_id = p_species_id_g[n_g];
@@ -631,7 +631,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                     // Compute particle's species n_s transfer rate for reaction q
                     Real G_sk_pg_q = stoc_coeff * p_MW_gk[n_g] * R_q[q];
 
-                    G_sk_pg += G_sk_pg_q;
+                    G_sk_pg_loc += G_sk_pg_q;
 
                     // Contribution to the particle
                     const Real h_gk_T_p = p_H_fk0[n_g] + fluid_parms.calc_h_gk(T_p,n_g);
@@ -641,14 +641,14 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                     G_h_gp += amrex::min(0., G_sk_pg_q) * (h_gk_T_g - h_gk_T_p);
 
                     // Contribution to fluid energy transfer
-                    G_h_pg += amrex::max(0., G_sk_pg_q) * (h_gk_T_g - h_gk_T_p);
+                    G_h_pg_loc += amrex::max(0., G_sk_pg_q) * (h_gk_T_g - h_gk_T_p);
                   }
                 }
 
-                G_s_pg += G_sk_pg;
+                G_s_pg += G_sk_pg_loc;
 
                 // Update global variable
-                G_sk_pg_ptr[n_g*np + p_id] = G_sk_pg;
+                G_sk_pg_ptr[n_g*np + p_id] = G_sk_pg_loc;
               }
 
               // Check that (total_ro_g_txfr + total_ro_p_txfr) = 0
@@ -667,7 +667,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
               // Write the result in the enthalpy transfer space
               ptile_data.m_runtime_rdata[idx_h_s_txfr][p_id] = G_h_gp;
-              G_h_pg_ptr[p_id] = G_h_pg;
+              G_h_pg_ptr[p_id] = G_h_pg_loc;
             });
           } else { // FAB not all regular
 
@@ -789,7 +789,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                 Real G_s_pg(0);
                 Real G_s_gp(0);
 
-                Real G_h_pg(0);
+                Real G_h_pg_loc(0);
                 Real G_h_gp(0);
 
 
@@ -879,7 +879,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                 // Loop over fluid species for computing fluid txfr rates
                 //***************************************************************
                 for (int n_g(0); n_g < nspecies_g; n_g++) {
-                  Real G_sk_pg(0.);
+                  Real G_sk_pg_loc(0.);
 
                   // Get the ID of the current species n_g
                   const int current_species_id = p_species_id_g[n_g];
@@ -916,7 +916,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                       // Compute particle's species n_s transfer rate for reaction q
                       Real G_sk_pg_q = stoc_coeff * p_MW_gk[n_g] * R_q[q];
 
-                      G_sk_pg += G_sk_pg_q;
+                      G_sk_pg_loc += G_sk_pg_q;
 
                       // Contribution to the particle
                       const Real h_gk_T_p = p_H_fk0[n_g] + fluid_parms.calc_h_gk(T_p,n_g);
@@ -926,14 +926,14 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                       G_h_gp += amrex::min(0., G_sk_pg_q) * (h_gk_T_g - h_gk_T_p);
 
                       // Contribution to fluid energy transfer
-                      G_h_pg += amrex::max(0., G_sk_pg_q) * (h_gk_T_g - h_gk_T_p);
+                      G_h_pg_loc += amrex::max(0., G_sk_pg_q) * (h_gk_T_g - h_gk_T_p);
                     }
                   }
 
-                  G_s_pg += G_sk_pg;
+                  G_s_pg += G_sk_pg_loc;
 
                   // Update global variable
-                  G_sk_pg_ptr[n_g*np + p_id] = G_sk_pg;
+                  G_sk_pg_ptr[n_g*np + p_id] = G_sk_pg_loc;
                 }
 
                 // Check that (total_ro_g_txfr + total_ro_p_txfr) = 0
@@ -954,7 +954,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
                 // Write the result in the enthalpy transfer space
                 ptile_data.m_runtime_rdata[idx_h_s_txfr][p_id] = G_h_gp;
-                G_h_pg_ptr[p_id] = G_h_pg;
+                G_h_pg_ptr[p_id] = G_h_pg_loc;
               } // Not covered
             }); // p_id
 
@@ -1008,17 +1008,17 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
           {
             const auto& p = pstruct[p_id];
 
-            GpuArray<Real,SPECIES::NMAX> G_sk_pg;
-            G_sk_pg.fill(0.);
+            GpuArray<Real,SPECIES::NMAX> G_sk_pg_loc;
+            G_sk_pg_loc.fill(0.);
 
             Real G_s_pg(0.);
 
             for (int n_g(0); n_g < nspecies_g; ++n_g) {
-              G_sk_pg[n_g] = G_sk_pg_ptr[n_g*nrp + p_id];
-              G_s_pg += G_sk_pg[n_g];
+              G_sk_pg_loc[n_g] = G_sk_pg_ptr[n_g*nrp + p_id];
+              G_s_pg += G_sk_pg_loc[n_g];
             }
 
-            const Real G_h_pg = G_h_pg_ptr[p_id];
+            const Real G_h_pg_loc = G_h_pg_ptr[p_id];
 
             const Real coeff = amrex::max(0., G_s_pg);
 
@@ -1046,7 +1046,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
                     for (int n_g(0); n_g < nspecies_g; n_g++) {
                       // Deposition of Rrates
-                      Gpu::Atomic::Add(&arr_chem_txfr(i+ii,j+jj,k+kk,idx_ro_gk_txfr+n_g), weight_vol*G_sk_pg[n_g]);
+                      Gpu::Atomic::Add(&arr_chem_txfr(i+ii,j+jj,k+kk,idx_ro_gk_txfr+n_g), weight_vol*G_sk_pg_loc[n_g]);
                     }
 
                     if (coeff > 0.) {
@@ -1056,7 +1056,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                       Gpu::Atomic::Add(&arr_chem_txfr(i+ii,j+jj,k+kk,idx_vel_g_txfr+2), weight_vol*coeff*vel_p[2]);
                     }
 
-                    Gpu::Atomic::Add(&arr_chem_txfr(i+ii,j+jj,k+kk,idx_h_g_txfr), weight_vol*G_h_pg);
+                    Gpu::Atomic::Add(&arr_chem_txfr(i+ii,j+jj,k+kk,idx_h_g_txfr), weight_vol*G_h_pg_loc);
                   }
                 }
               }

@@ -177,8 +177,8 @@ mfix::mfix_open_system_rhs (Vector< MultiFab*      > const& rhs,
                             Vector< MultiFab const*> const& ro_g,
                             Vector< MultiFab const*> const& T_g,
                             Vector< MultiFab*      > const& X_gk,
-                            Vector< MultiFab const*> const& txfr,
-                            Vector< MultiFab const*> const& chem_txfr)
+                            Vector< MultiFab const*> const& /*txfr*/,
+                            Vector< MultiFab const*> const& /*chem_txfr*/)
 {
   for (int lev(0); lev <= finest_level; ++lev)
     rhs[lev]->setVal(0.);
