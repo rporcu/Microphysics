@@ -520,7 +520,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                 if (advection_type() == AdvectionType::MOL)
                 {
                     // Here we use q at the same time as the velocity
-                    amrex::ParallelFor(bx, num_comp, [=]
+                    amrex::ParallelFor(bx, AMREX_SPACEDIM, [=]
                     AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                     {
                         if (!iconserv_ptr[n])
@@ -536,7 +536,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                     bool regular = (flagfab.getType(bx) == FabType::regular);
                     if (regular)
                     {
-                        amrex::ParallelFor(bx, num_comp, [=]
+                        amrex::ParallelFor(bx, AMREX_SPACEDIM, [=]
                         AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                         {
                             if (!iconserv_ptr[n])
@@ -556,7 +556,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                         auto const& apy_arr = ebfact.getAreaFrac()[1]->const_array(mfi);
                         auto const& apz_arr = ebfact.getAreaFrac()[2]->const_array(mfi);
 
-                        amrex::ParallelFor(bx, num_comp, [=]
+                        amrex::ParallelFor(bx, AMREX_SPACEDIM, [=]
                         AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                         {
                             if (!iconserv_ptr[n])
