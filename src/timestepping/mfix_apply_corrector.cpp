@@ -745,7 +745,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // mfix_set_tracer_bcs (new_time, get_trac(), 0);
     if (advect_tracer && (!explicit_diffusive_trac))
     {
-        diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, 0.5*l_dt);
+        diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, get_tracer_bcrec(), 0.5*l_dt);
 
         // We call the bc routines again to enforce the ext_dir condition
         // on the faces (the diffusion operator can move those to ghost cell centers)
@@ -753,7 +753,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     }
 
     if (advect_fluid_species && (!explicit_diffusive_species)) {
-      diffusion_op->diffuse_species(get_X_gk(), get_ep_g(), get_T_g(), 0.5*l_dt);
+      diffusion_op->diffuse_species(get_X_gk(), get_ep_g(), get_T_g(), get_species_bcrec(), 0.5*l_dt);
 
         // We call the bc routines again to enforce the ext_dir condition
         // on the faces (the diffusion operator can move those to ghost cell centers)

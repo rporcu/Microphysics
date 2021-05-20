@@ -42,10 +42,6 @@ mfix::InitParams ()
   DEM::Initialize();
   PIC::Initialize();
 
-  // Need to do this -- We might want to move this to a BC class once we have
-  // one
-  bcs_X.resize(fluid.nspecies);
-
   // Read in regions, initial and boundary conditions. Note that
   // regions need to be processed first as they define the
   // physical extents of ICs and BCs.

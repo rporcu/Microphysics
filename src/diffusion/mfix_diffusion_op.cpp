@@ -518,6 +518,9 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
   // Number of fluid species
   const int nspecies_g = fluid.nspecies;
 
+  Vector<BCRec> bcs_dummy; // This is just to satisfy the call to EB_interp...
+  bcs_dummy.resize(3*nspecies_g);
+
   // Auxiliary data where we store Div{ep_g ro_g D_gk Grad{X_gk}}
   Vector< MultiFab* > lapX_aux(finest_level+1);
 
@@ -532,9 +535,6 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
 
   // We want to return div (ep_g ro_g D_gk grad)) phi
   species_matrix->setScalars(0.0, -1.0);
-
-  Vector<BCRec> bcs_X; // This is just to satisfy the call to EB_interp...
-  bcs_X.resize(3*nspecies_g);
 
   // Compute the coefficients
   for (int lev = 0; lev <= finest_level; lev++)
@@ -574,8 +574,8 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
     }
 
     // species_b = interp(b_coeffs)
-    EB_interp_CellCentroid_to_FaceCentroid (b_coeffs, GetArrOfPtrs(species_b[lev]), 0,
-        0, nspecies_g, geom[lev], bcs_X);
+    EB_interp_CellCentroid_to_FaceCentroid (b_coeffs, GetArrOfPtrs(species_b[lev]), 0, 0,
+                                            nspecies_g, geom[lev], bcs_dummy);
 
     // Set BCoeffs
     species_matrix->setBCoeffs(lev, GetArrOfConstPtrs(species_b[lev]), MLMG::Location::FaceCentroid);
@@ -671,8 +671,8 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
       }
 
       // Interpolate
-      EB_interp_CellCentroid_to_FaceCentroid(*X_gk_in[lev], X_gk_faces, 0,
-          0, nspecies_g, geom[lev], bcs_X);
+      EB_interp_CellCentroid_to_FaceCentroid(*X_gk_in[lev], X_gk_faces, 0, 0,
+                                             nspecies_g, geom[lev], bcs_dummy);
 
       // Compute fluxes_gk = X_gk_faces sum{fluxes_gk}
 #ifdef _OPENMP
@@ -801,11 +801,11 @@ void DiffusionOp::SubtractDivXGX (const Vector< MultiFab*      >& X_gk_in,
   // Number of fluid species
   const int nspecies_g = fluid.nspecies;
 
+  Vector<BCRec> bcs_dummy; // This is just to satisfy the call to EB_interp...
+  bcs_dummy.resize(3*nspecies_g);
+
   // Weaset it up for Div{rho_g D_gk Grad{X_gk}}
   species_matrix->setScalars(0.0, -1.0);
-
-  Vector<BCRec> bcs_X; // This is just to satisfy the call to EB_interp...
-  bcs_X.resize(3*nspecies_g);
 
   // Compute the coefficients
   for (int lev = 0; lev <= finest_level; lev++)
@@ -846,8 +846,8 @@ void DiffusionOp::SubtractDivXGX (const Vector< MultiFab*      >& X_gk_in,
     }
 
     // species_b = interp(b_coeffs)
-    EB_interp_CellCentroid_to_FaceCentroid (b_coeffs, GetArrOfPtrs(species_b[lev]), 0,
-        0, nspecies_g, geom[lev], bcs_X);
+    EB_interp_CellCentroid_to_FaceCentroid (b_coeffs, GetArrOfPtrs(species_b[lev]), 0, 0,
+                                            nspecies_g, geom[lev], bcs_dummy);
 
     // Set BCoeffs
     species_matrix->setBCoeffs(lev, GetArrOfConstPtrs(species_b[lev]), MLMG::Location::FaceCentroid);
@@ -884,8 +884,8 @@ void DiffusionOp::SubtractDivXGX (const Vector< MultiFab*      >& X_gk_in,
     }
 
     // Interpolate
-    EB_interp_CellCentroid_to_FaceCentroid(*X_gk_in[lev], X_gk_faces, 0,
-        0, nspecies_g, geom[lev], bcs_X);
+    EB_interp_CellCentroid_to_FaceCentroid(*X_gk_in[lev], X_gk_faces, 0, 0,
+                                           nspecies_g, geom[lev], bcs_dummy);
 
     // Compute fluxes_gk = X_gk_faces sum{fluxes_gk}
 #ifdef _OPENMP
@@ -988,8 +988,8 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
   // We want to return div (ep_g ro_g h_gk D_gk grad)) phi
   species_matrix->setScalars(0.0, -1.0);
 
-  Vector<BCRec> bcs_X; // This is just to satisfy the call to EB_interp...
-  bcs_X.resize(3*nspecies_g);
+  Vector<BCRec> bcs_dummy; // This is just to satisfy the call to EB_interp...
+  bcs_dummy.resize(3*nspecies_g);
 
   // b coefficients
   Vector<MultiFab*> b_coeffs(finest_level+1);
@@ -1044,8 +1044,8 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
 
     // if h_gk is nullptr  species_b = b_coeffs
     // else                species_b = hb_coeffs
-    EB_interp_CellCentroid_to_FaceCentroid (hb_coeffs, GetArrOfPtrs(species_b[lev]), 0,
-        0, nspecies_g, geom[lev], bcs_X);
+    EB_interp_CellCentroid_to_FaceCentroid (hb_coeffs, GetArrOfPtrs(species_b[lev]), 0, 0,
+                                            nspecies_g, geom[lev], bcs_dummy);
 
     // Set BCoeffs
     species_matrix->setBCoeffs(lev, GetArrOfConstPtrs(species_b[lev]), MLMG::Location::FaceCentroid);
@@ -1067,8 +1067,8 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
   {
     // If h_gk is not nullptr pdate the solver BCoeffs
     for (int lev(0); lev <= finest_level; ++lev) {
-      EB_interp_CellCentroid_to_FaceCentroid (*b_coeffs[lev], GetArrOfPtrs(species_b[lev]), 0,
-          0, nspecies_g, geom[lev], bcs_X);
+      EB_interp_CellCentroid_to_FaceCentroid (*b_coeffs[lev], GetArrOfPtrs(species_b[lev]), 0, 0,
+                                              nspecies_g, geom[lev], bcs_dummy);
 
       species_matrix->setBCoeffs(lev, GetArrOfConstPtrs(species_b[lev]), MLMG::Location::FaceCentroid);
     }
@@ -1132,8 +1132,8 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
       }
 
       // Interpolate
-      EB_interp_CellCentroid_to_FaceCentroid(h_X_gk, h_X_gk_faces, 0,
-          0, nspecies_g, geom[lev], bcs_X);
+      EB_interp_CellCentroid_to_FaceCentroid(h_X_gk, h_X_gk_faces, 0, 0,
+                                             nspecies_g, geom[lev], bcs_dummy);
 
       // Compute fluxes_gk = h_gk X_gk sum{fluxes_gk}
 #ifdef _OPENMP

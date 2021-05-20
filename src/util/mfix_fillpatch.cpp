@@ -473,10 +473,6 @@ void mfix::fillpatch_force (Real time, Vector<MultiFab*> const& force, int ng)
     }
 }
 
-
-
-
-
 void
 mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
                      Vector< MultiFab* > const& ro_g_in,
@@ -487,6 +483,9 @@ mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
 {
   const int l_nspecies = mfix_ptr->fluid.nspecies;
 
+  Vector<BCRec> bcrec_scalars;
+  bcrec_scalars.resize(5);
+
   // First do FillPatch of {velocity, density, tracer, enthalpy} so we know
   // the ghost cells of these arrays are all filled
   for (int lev = 0; lev < nlev; lev++) {
@@ -496,7 +495,7 @@ mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
     // State with ghost cells
     MultiFab Sborder_u(grids[lev], dmap[lev], vel_in[lev]->nComp(), nghost_state(),
                        MFInfo(), *ebfactory[lev]);
-    FillPatchVel(lev, time, Sborder_u, 0, Sborder_u.nComp(), bcs_u);
+    FillPatchVel(lev, time, Sborder_u, 0, Sborder_u.nComp(), get_velocity_bcrec());
 
     // Copy each FAB back from Sborder_u into the vel array, complete with filled ghost cells
     MultiFab::Copy(*vel_in[lev], Sborder_u, 0, 0, vel_in[lev]->nComp(), vel_in[lev]->nGrow());
@@ -506,20 +505,33 @@ mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
     // We FillPatch density even if not advecting it because we need it in the projections
     state_comp =  0; // comp = 0 --> density
     num_comp = 1;
-    FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
+
+    const auto density_bcrec = get_density_bcrec();
+    for (int n=0; n<num_comp; n++) {
+      bcrec_scalars[state_comp+n] = density_bcrec[n];
+    }
+    FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcrec_scalars);
     MultiFab::Copy(*ro_g_in[lev], Sborder_s, 0, 0, num_comp, ro_g_in[lev]->nGrow());
 
     if (advect_tracer) {
       state_comp =  1; // comp = 1 --> tracer
       num_comp = 1;
-      FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
+      const auto tracer_bcrec = get_tracer_bcrec();
+      for (int n=0; n<num_comp; n++) {
+        bcrec_scalars[state_comp+n] = tracer_bcrec[n];
+      }
+      FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcrec_scalars);
       MultiFab::Copy(*trac_in[lev], Sborder_s, 0, 0, num_comp, trac_in[lev]->nGrow());
     }
 
     if (advect_enthalpy) {
       state_comp =  4; // comp = 1 --> enthalpy
       num_comp = 1;
-      FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
+      const auto enthalpy_bcrec = get_enthalpy_bcrec();
+      for (int n=0; n<num_comp; n++) {
+        bcrec_scalars[state_comp+n] = enthalpy_bcrec[n];
+      }
+      FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcrec_scalars);
       MultiFab::Copy(*h_g_in[lev], Sborder_s, 0, 0, num_comp, h_g_in[lev]->nGrow());
     }
 
@@ -529,7 +541,7 @@ mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
       Sborder_X.setVal(0);
       state_comp = 0;
       num_comp = l_nspecies;
-      FillPatchSpecies(lev, time, Sborder_X, state_comp, num_comp, bcs_X);
+      FillPatchSpecies(lev, time, Sborder_X, state_comp, num_comp, get_species_bcrec());
       MultiFab::Copy(*X_gk_in[lev], Sborder_X, 0, 0, num_comp,
                      X_gk_in[lev]->nGrow());
     }

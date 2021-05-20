@@ -1300,10 +1300,6 @@ public:
     Vector<Real> t_new;
 
     Vector<BCRec> bcs_ls; // used by the level-set fill-patch
-
-    Vector<BCRec> bcs_u; // For velocity components
-    Vector<BCRec> bcs_s; // For scalars
-    Vector<BCRec> bcs_X; // For fluid species
     Vector<BCRec> bcs_f; // For generic first-order extrapolation
 
     amrex::Vector<amrex::BCRec> m_bcrec_velocity;
