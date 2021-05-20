@@ -61,6 +61,8 @@ build-nvcc-env:
     when: on_failure
     paths:
       - build/Testing/
+  only:
+    - schedules
   tags:
     - docker
 
