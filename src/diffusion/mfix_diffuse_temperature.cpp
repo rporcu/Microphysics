@@ -37,10 +37,10 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   // Set alpha and beta
   temperature_matrix->setScalars(1.0, dt);
 
-  Vector<BCRec> bcs_s; // This is just to satisfy the call to EBterp...
-  bcs_s.resize(3);
-
   auto& fluid_parms = *fluid.parameters;
+
+  Vector<BCRec> bcs_dummy; // This is just to satisfy the call to EB_interp...
+  bcs_dummy.resize(1);
 
   for(int lev = 0; lev <= finest_level; lev++)
   {
@@ -72,7 +72,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
       }
     }
 
-    EB_interp_CellCentroid_to_FaceCentroid (ep_k_g, GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
+    EB_interp_CellCentroid_to_FaceCentroid (ep_k_g, GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_dummy);
 
     // Turn "ep_g" into (rho * ep_g * cp_g)
 #ifdef _OPENMP

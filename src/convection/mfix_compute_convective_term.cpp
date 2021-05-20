@@ -433,13 +433,13 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
             Real mult = -1.0;
 
             EBCellFlagFab const& flagfab = ebfact.getMultiEBCellFlagFab()[mfi];
-            bool regular = (flagfab.getType(amrex::grow(bx,2)) == FabType::regular);
+            bool regular_bxg2 = (flagfab.getType(amrex::grow(bx,2)) == FabType::regular);
 
             auto const& vfrac = ebfact.getVolFrac().const_array(mfi);
 
             if (flagfab.getType(bx) != FabType::covered)
             {
-                if (!regular)
+                if (!regular_bxg2)
                 {
                     flux_comp = 0;
                     num_comp = 3;

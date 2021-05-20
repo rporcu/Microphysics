@@ -640,7 +640,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       // Diffuse tracer
       if (advect_tracer) {
         mfix_set_tracer_bcs(time, get_trac());
-        diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, l_dt);
+        diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, get_tracer_bcrec(), l_dt);
 
         // Note we need to call the bc routines again to enforce the ext_dir condition
         // on the faces (the diffusion operator moved those to ghost cell centers)
@@ -649,7 +649,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
       // Diffuse species mass fractions
       if (advect_fluid_species) {
-        diffusion_op->diffuse_species(get_X_gk(), get_ep_g(), get_T_g(), l_dt);
+        diffusion_op->diffuse_species(get_X_gk(), get_ep_g(), get_T_g(), get_species_bcrec(), l_dt);
 
         // Note we need to call the bc routines again to enforce the ext_dir condition
         // on the faces (the diffusion operator moved those to ghost cell centers)

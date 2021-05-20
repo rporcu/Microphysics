@@ -73,12 +73,14 @@ class DiffusionOp
     void diffuse_species (const amrex::Vector< amrex::MultiFab* >& X_gk,
                           const amrex::Vector< amrex::MultiFab* >& ep_ro_g,
                           const amrex::Vector< amrex::MultiFab* >& T_g,
+                                amrex::Vector<amrex::BCRec> const& h_bcrec,
                           const amrex::Real dt);
 
     // Scalar diffusion
     void diffuse_scalar (const amrex::Vector< amrex::MultiFab* >& scal,
                          const amrex::Vector< amrex::MultiFab* >& ep_ro_g,
                          const amrex::Vector< amrex::Real > mu_s,
+                               amrex::Vector<amrex::BCRec> const& h_bcrec,
                          amrex::Real dt);
 
     void diffuse_drag (const amrex::Vector< amrex::MultiFab* >& drag,
