@@ -14,22 +14,21 @@
 
 void mfix::init_advection ()
 {
-  if (advection_type() == AdvectionType::Godunov) {
-    m_iconserv_velocity.resize(3, 1);
-    m_iconserv_velocity_d.resize(3, 1);
-  } else {
-    m_iconserv_velocity.resize(3, 1);
-    m_iconserv_velocity_d.resize(3, 1);
-  }
+  // Update velocity with convective differencing
+  m_iconserv_velocity.resize(3, 0);
+  m_iconserv_velocity_d.resize(3, 0);
 
+  // Update density with conservative differencing
   m_iconserv_density.resize(1, 1);
   m_iconserv_density_d.resize(1, 1);
 
+  // Update (rho h) with conservative differencing
   if (advect_enthalpy) {
     m_iconserv_enthalpy.resize(1, 1);
     m_iconserv_enthalpy_d.resize(1, 1);
   }
 
+  // Update (rho T) with conservative differencing
   if (advect_tracer) {
     m_iconserv_tracer.resize(ntrac, 1);
     m_iconserv_tracer_d.resize(ntrac, 1);
@@ -37,6 +36,7 @@ void mfix::init_advection ()
 
   const int l_nspecies = fluid.nspecies;
 
+  // Update (rho X) with conservative differencing
   if (advect_fluid_species) {
     m_iconserv_species.resize(l_nspecies, 1);
     m_iconserv_species_d.resize(l_nspecies, 1);
