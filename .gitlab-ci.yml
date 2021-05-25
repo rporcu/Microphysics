@@ -63,8 +63,6 @@ build-nvcc-env:
       - build/Testing/
   only:
     - schedules
-  tags:
-    - docker
 
 .testcsg: &test_gpu
   stage: test
@@ -74,42 +72,46 @@ build-nvcc-env:
     when: on_failure
     paths:
       - build/Testing/
+  only:
+    - develop
   tags:
     - docker
 
-.test:dpcpp:
+test:dpcpp:
+  allow_failure: true
   variables:
     CC: clang
     CXX: dpcpp
-  image: intel/oneapi-hpckit:2021.1-devel-ubuntu18.04
-  # needs: ['build-dpcpp-env']
   script:
-    - ls /
-    - ls /opt
     - source /opt/intel/oneapi/setvars.sh
     - git submodule update --init --force
     - cmake -S .
             -B build
-            -DCMAKE_BUILD_TYPE=Debug
-            -DMFIX_GPU_BACKEND=SYSCL
+            -DCMAKE_BUILD_TYPE=None
+            -DMFIX_GPU_BACKEND=SYCL
+            -G Ninja
     - cmake --build build
   <<: *test_gpu
+  tags:
+    - ubuntu-shell
 
-.test:hip:
+test:hip:
+  allow_failure: true
   variables:
-    CC: hipcc
     CXX: hipcc
-  image: $CI_REGISTRY_IMAGE:hip
-#   needs: ['build-hip-env']
   script:
     - source /etc/profile.d/rocm.sh
     - git submodule update --init --force
     - cmake -S .
             -B build
-            -DCMAKE_BUILD_TYPE=Debug
+            -DCMAKE_BUILD_TYPE=None
             -DMFIX_GPU_BACKEND=HIP
+            -DAMReX_AMD_ARCH=gfx908
+            -G Ninja
     - cmake --build build
   <<: *test_gpu
+  tags:
+    - ubuntu-shell
 
 test:nvcc:
   image: $CI_REGISTRY_IMAGE/nvcc
@@ -125,6 +127,8 @@ test:nvcc:
             -DMFIX_GPU_BACKEND=CUDA
     - cmake --build build
   <<: *test_gpu
+  tags:
+    - docker
 
 test:csg:
   image: $CI_REGISTRY_IMAGE/nvcc
@@ -138,6 +142,8 @@ test:csg:
     - cmake --build build --target functional_tests
     - ./build/src/eb/tests/functional_tests
   <<: *test_gpu
+  tags:
+    - docker
 
 .ctest: &ctest_template
   image: $CI_REGISTRY_IMAGE/nvcc
