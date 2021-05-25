@@ -543,7 +543,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                             {
                                 Real qavg  = (q_on_face_x(i,j,k,n) + q_on_face_x(i+1,j,k,n) +
                                               q_on_face_y(i,j,k,n) + q_on_face_y(i,j+1,k,n) +
-                                              q_on_face_z(i,j,k,n) + q_on_face_z(i,j,k+1,n) ) * 0.125;
+                                              q_on_face_z(i,j,k,n) + q_on_face_z(i,j,k+1,n) ) / 6.;
 
                                 // Note that because we define upd_arr as MINUS div(u u), here we add u div (u)
                                 upd_arr(i,j,k,n) += qavg*divu_arr(i,j,k);
@@ -559,7 +559,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                         amrex::ParallelFor(bx, AMREX_SPACEDIM, [=]
                         AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                         {
-                            if (!iconserv_ptr[n])
+                            if (!iconserv_ptr[n] && vfrac(i,j,k) > 0.)
                             {
                                 Real qavg  = ( apx_arr(i,j,k)*q_on_face_x(i,j,k,n) + apx_arr(i+1,j,k)*q_on_face_x(i+1,j,k,n) +
                                                apy_arr(i,j,k)*q_on_face_y(i,j,k,n) + apy_arr(i,j+1,k)*q_on_face_y(i,j+1,k,n) +
