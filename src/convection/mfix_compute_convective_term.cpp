@@ -14,22 +14,21 @@
 
 void mfix::init_advection ()
 {
-  if (advection_type() == AdvectionType::Godunov) {
-    m_iconserv_velocity.resize(3, 1);
-    m_iconserv_velocity_d.resize(3, 1);
-  } else {
-    m_iconserv_velocity.resize(3, 1);
-    m_iconserv_velocity_d.resize(3, 1);
-  }
+  // Update velocity with convective differencing
+  m_iconserv_velocity.resize(3, 0);
+  m_iconserv_velocity_d.resize(3, 0);
 
+  // Update density with conservative differencing
   m_iconserv_density.resize(1, 1);
   m_iconserv_density_d.resize(1, 1);
 
+  // Update (rho h) with conservative differencing
   if (advect_enthalpy) {
     m_iconserv_enthalpy.resize(1, 1);
     m_iconserv_enthalpy_d.resize(1, 1);
   }
 
+  // Update (rho T) with conservative differencing
   if (advect_tracer) {
     m_iconserv_tracer.resize(ntrac, 1);
     m_iconserv_tracer_d.resize(ntrac, 1);
@@ -37,6 +36,7 @@ void mfix::init_advection ()
 
   const int l_nspecies = fluid.nspecies;
 
+  // Update (rho X) with conservative differencing
   if (advect_fluid_species) {
     m_iconserv_species.resize(l_nspecies, 1);
     m_iconserv_species_d.resize(l_nspecies, 1);
@@ -543,7 +543,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                             {
                                 Real qavg  = (q_on_face_x(i,j,k,n) + q_on_face_x(i+1,j,k,n) +
                                               q_on_face_y(i,j,k,n) + q_on_face_y(i,j+1,k,n) +
-                                              q_on_face_z(i,j,k,n) + q_on_face_z(i,j,k+1,n) ) * 0.125;
+                                              q_on_face_z(i,j,k,n) + q_on_face_z(i,j,k+1,n) ) / 6.;
 
                                 // Note that because we define upd_arr as MINUS div(u u), here we add u div (u)
                                 upd_arr(i,j,k,n) += qavg*divu_arr(i,j,k);
@@ -559,7 +559,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                         amrex::ParallelFor(bx, AMREX_SPACEDIM, [=]
                         AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
                         {
-                            if (!iconserv_ptr[n])
+                            if (!iconserv_ptr[n] && vfrac(i,j,k) > 0.)
                             {
                                 Real qavg  = ( apx_arr(i,j,k)*q_on_face_x(i,j,k,n) + apx_arr(i+1,j,k)*q_on_face_x(i+1,j,k,n) +
                                                apy_arr(i,j,k)*q_on_face_y(i,j,k,n) + apy_arr(i,j+1,k)*q_on_face_y(i,j+1,k,n) +
