@@ -590,7 +590,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
           Box const& bx = mfi.tilebox();
 
           EBCellFlagFab const& flagfab = ebfact.getMultiEBCellFlagFab()[mfi];
-          bool regular = (flagfab.getType(amrex::grow(bx,2)) == FabType::regular);
+          bool regular = (flagfab.getType(amrex::grow(bx,4)) == FabType::regular);
 
           if (flagfab.getType(bx) != FabType::covered)
           {
