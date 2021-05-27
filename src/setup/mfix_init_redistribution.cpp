@@ -33,8 +33,8 @@ mfix::InitialRedistribution (Real l_time)
             EBCellFlagFab const& flagfab = fact.getMultiEBCellFlagFab()[mfi];
             Array4<EBCellFlag const> const& flag = flagfab.const_array();
 
-            if ( (flagfab.getType(amrex::grow(bx,1)) != FabType::covered) &&
-                 (flagfab.getType(amrex::grow(bx,1)) != FabType::regular) )
+            if ( (flagfab.getType(bx)                != FabType::covered) &&
+                 (flagfab.getType(amrex::grow(bx,4)) != FabType::regular) )
             {
                 Array4<Real const> fcx, fcy, fcz, ccc, vfrac, apx, apy, apz;
                 fcx = fact.getFaceCent()[0]->const_array(mfi);
