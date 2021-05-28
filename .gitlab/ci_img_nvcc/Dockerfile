@@ -34,7 +34,7 @@ RUN apt-get -qq update \
     libopenmpi-dev=4.0.3-0ubuntu1 \
     openmpi-bin=4.0.3-0ubuntu1 \
     pkg-config=0.29.1-0ubuntu4 \
-    python3-pip=20.0.2-5ubuntu1.4 \
+    python3-pip=20.0.2-5ubuntu1.5 \
     python3-setuptools=45.2.0-1 \
     python3-venv=3.8.2-0ubuntu2 \
     shellcheck=0.7.0-2build2 \
