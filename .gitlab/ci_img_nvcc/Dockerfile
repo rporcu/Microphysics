@@ -10,6 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN apt-get -qq update \
+    && apt-get -qq upgrade \
     && apt-get -qq -y install --no-install-recommends \
     ca-certificates=20210119~20.04.1 \
     curl=7.68.0-1ubuntu2.5 \
@@ -40,9 +41,9 @@ RUN apt-get -qq update \
     shellcheck=0.7.0-2build2 \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
     && pip3 install --no-cache-dir \
-    cmake==3.18.4 \
+    cmake==3.20.2 \
     codespell==2.0.0 \
-    conan==1.36.0 \
+    conan==1.37.0 \
     ninja==1.10.0.post2 \
     && curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz -- \
     | tar xz \
