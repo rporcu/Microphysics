@@ -4,6 +4,7 @@
 #include <mfix_dem_parms.H>
 #include <mfix_reactions_parms.H>
 #include <mfix_bc_parms.H>
+#include <mfix_algorithm.H>
 
 using namespace amrex;
 
@@ -769,9 +770,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             auto ptile_data = ptile.getParticleTileData();
 
             const int nspecies_s = solids.nspecies;
-            const int nreactions = REACTIONS::nreactions;
-
-            const int Solid = CHEMICALPHASE::Solid;
 
             const int idx_X_sn = m_runtimeRealData.X_sn;
             const int idx_ro_sn_txfr = m_runtimeRealData.ro_sn_txfr;
@@ -782,19 +780,16 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             const int update_temperature = static_cast<int>(advect_enthalpy);
             const int solve_reactions = REACTIONS::solve;
 
-            const int solid_is_mixture = solids.is_a_mixture;
-
-            Gpu::AsyncArray<Real> d_cp_sn0_loc(solids.cp_sn0.dataPtr(), solids.cp_sn0.size());
-            Real* p_cp_sn0_loc = d_cp_sn0_loc.data();
+            const int solid_is_a_mixture = solids.is_a_mixture;
 
             auto& solids_parms = *solids.parameters;
 
             amrex::ParallelFor(nrp, [pstruct,p_realarray,p_intarray,subdt,
-                ptile_data,nspecies_s,nreactions,idx_X_sn,idx_ro_sn_txfr,
-                idx_vel_s_txfr,idx_h_s_txfr,Solid,update_mass,fc_ptr,ntot,
+                ptile_data,nspecies_s,idx_X_sn,idx_ro_sn_txfr,
+                idx_vel_s_txfr,idx_h_s_txfr,update_mass,fc_ptr,ntot,
                 gravity,tow_ptr,eps,p_hi,p_lo,x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,
                 z_lo_bc,z_hi_bc,enthalpy_source,update_temperature,
-                solve_reactions,p_cp_sn0_loc,solid_is_mixture,solids_parms]
+                solve_reactions,solid_is_a_mixture,solids_parms]
               AMREX_GPU_DEVICE (int i) noexcept
             {
               ParticleType& p = pstruct[i];
@@ -975,12 +970,13 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                   const Real Tp_loc = p_realarray[SoArealData::temperature][i];
 
-                  const Real cp_s_old = solids_parms.calc_cp_s(phase,Tp_loc);
+                  const Real cp_s_old = solids_parms.calc_cp_s(phase-1,Tp_loc);
                   Real cp_s_new(0);
 
-                  if (solid_is_mixture) {
+                  if (solid_is_a_mixture) {
                     for (int n_s(0); n_s < nspecies_s; ++n_s)
-                      cp_s_new += solids_parms.calc_cp_s(phase,Tp_loc) * ptile_data.m_runtime_rdata[idx_X_sn+n_s][i]; 
+                      cp_s_new += solids_parms.calc_cp_s(phase-1,Tp_loc) *
+                                  ptile_data.m_runtime_rdata[idx_X_sn+n_s][i]; 
 
                     p_realarray[SoArealData::cp_s][i] = cp_s_new;
                   } else {
@@ -989,19 +985,60 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                   AMREX_ASSERT(cp_s_new > 0.);
 
-                  if (! update_mass) {
-                    p_realarray[SoArealData::temperature][i] = Tp_loc +
-                      subdt*(p_realarray[SoArealData::convection][i]+enthalpy_source) / (p_mass_new*cp_s_new);
-                  } else {
-                    Real p_enthalpy_new =
-                      p_mass_old*solids_parms.calc_h_s(phase,Tp_loc) +
-                      subdt*(p_realarray[SoArealData::convection][i]+enthalpy_source);
+                  const Real coeff = update_mass ? (p_mass_old/p_mass_new) : 1.;
 
-                    p_enthalpy_new -= subdt*p_vol*ptile_data.m_runtime_rdata[idx_h_s_txfr][i];
-                    p_enthalpy_new /= p_mass_new;
+                  Real p_enthalpy_new =
+                    coeff*solids_parms.calc_h_s(phase-1,Tp_loc) +
+                    subdt*((p_realarray[SoArealData::convection][i]+enthalpy_source)/p_mass_new);
 
-                    p_realarray[SoArealData::temperature][i] = solids_parms.calc_T_s(phase,p_enthalpy_new,Tp_loc);
-                  }
+                  if (solve_reactions)
+                    p_enthalpy_new -= subdt*p_density_new*ptile_data.m_runtime_rdata[idx_h_s_txfr][i];
+
+                  // ************************************************************
+                  // Newton-Raphson solver for solving implicit equation for
+                  // temperature
+                  // ************************************************************
+                  // Residual computation
+                  auto R = [&] AMREX_GPU_DEVICE (Real Tp_arg)
+                  {
+                    Real hp_loc(0);
+
+                    if (!solid_is_a_mixture) {
+
+                      hp_loc = solids_parms.calc_h_s(phase-1,Tp_arg);
+                    } else {
+
+                      for (int n_s(0); n_s < nspecies_s; ++n_s)
+                        // TODO TODO TODO TODO check if we use X_sn_old or X_sn_new
+                        hp_loc += X_sn[n_s]*solids_parms.calc_h_sn(Tp_arg,n_s);
+                    }
+
+                    return hp_loc - p_enthalpy_new;
+                  };
+
+                  // Partial derivative computation
+                  auto partial_R = [&] AMREX_GPU_DEVICE (Real Tp_arg)
+                  {
+                    Real gradient(0);
+
+                    if (!solid_is_a_mixture) {
+
+                      gradient = solids_parms.calc_partial_h_s(phase-1,Tp_arg);
+                    } else {
+
+                      for (int n_s(0); n_s < nspecies_s; ++n_s)
+                        gradient += X_sn[n_s]*solids_parms.calc_partial_h_sn(Tp_arg,n_s);
+                    }
+
+                    return gradient;
+                  };
+
+                  Real Tp_old = Tp_loc;
+                  Real Tp_new(0.);
+
+                  Solvers::NewtonRaphson(Tp_new, Tp_old, R, partial_R);
+
+                  p_realarray[SoArealData::temperature][i] = Tp_new;
                 }
               }
             });

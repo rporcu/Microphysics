@@ -242,6 +242,7 @@ class mfix : public AmrCore
                                  amrex::Vector<amrex::MultiFab*      > const& vel_in,
                                  amrex::Vector<amrex::MultiFab*      > const& h_g_in,
                                  amrex::Vector<amrex::MultiFab*      > const& T_g_in,
+                                 amrex::Vector<amrex::MultiFab const*> const& X_gk_in,
                                  amrex::Vector<amrex::MultiFab const*> const& txfr_in,
                                  amrex::Vector<amrex::MultiFab const*> const& rho_in,
                                  amrex::Vector<amrex::MultiFab const*> const& ep_g_in);
@@ -833,11 +834,9 @@ public:
                                Real& coupling_timing);
 
   public:
-    void mfix_normalize_fluid_species (const Vector< MultiFab* >& X_gk);
-
-    void mfix_update_fluid_and_species(const Vector< MultiFab* >& h_g,
+    void mfix_normalize_fluid_species (const Vector< MultiFab* >& X_gk,
                                        const Vector< MultiFab* >& T_g,
-                                       const Vector< MultiFab* >& X_gk);
+                                       const Vector< MultiFab* >& h_g);
 
     void mfix_open_system_rhs (Vector< MultiFab*       > const& rhs,
                                Vector< MultiFab const* > const& lap_T,

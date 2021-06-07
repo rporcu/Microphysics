@@ -192,7 +192,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 #endif
     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
-      Box const& bx = mfi.tilebox();
+      Box const& bx = mfi.growntilebox({1,1,1});
 
       Array4<Real      > const& h_g_array  = h_g[lev]->array(mfi);
       Array4<Real const> const& T_g_array  = T_g[lev]->const_array(mfi);

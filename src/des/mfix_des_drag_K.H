@@ -1,3 +1,6 @@
+#ifndef MFIX_DES_DRAG_K_H_
+#define MFIX_DES_DRAG_K_H_
+
 #include <AMReX_REAL.H>
 #include <AMReX_GpuQualifiers.H>
 
@@ -224,3 +227,5 @@ struct ComputeDragUser
                             amrex::Real fvelx, amrex::Real fvely, amrex::Real fvelz,
                             int i, int j, int k, int pid) const;
 };
+
+#endif

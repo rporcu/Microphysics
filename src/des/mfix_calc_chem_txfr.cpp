@@ -104,7 +104,6 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& /*chem_txfr*/,
   Real* p_MW_gk = d_MW_gk.data();
 
   // Fluid enthalpy data
-  const Real T_ref = fluid.T_ref;
   Gpu::DeviceVector< Real > d_H_fk0(nspecies_g);
   Gpu::copyAsync(Gpu::hostToDevice, fluid.H_fk0.begin(), fluid.H_fk0.end(), d_H_fk0.begin());
   Real* p_H_fk0 = d_H_fk0.data();
@@ -205,8 +204,6 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& /*chem_txfr*/,
   Gpu::DeviceVector< Real > d_H_fn0(nspecies_s);
   Gpu::copyAsync(Gpu::hostToDevice, solids.H_fn0.begin(), solids.H_fn0.end(), d_H_fn0.begin());
   Real* p_H_fn0 = d_H_fn0.data();
-
-  const int solid_is_mixture = solids.is_a_mixture;
 
   // ************************************************************************
   // Setup data structures for PC deposition
@@ -451,8 +448,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& /*chem_txfr*/,
                idx_h_s_txfr,p_MW_gk,p_species_id_s,p_species_id_g,p_reactants_id,
                p_reactants_coeffs,p_reactants_phases,p_products_id,p_products_coeffs,
                p_products_phases,p_nreactants,p_nproducts,InvalidIdx,p_phases,
-               p_nphases,p_types,Heterogeneous,T_ref,solid_is_mixture,
-               p_H_fk0,p_H_fn0,fluid_parms,solids_parms]
+               p_nphases,p_types,Heterogeneous,p_H_fk0,p_H_fn0,fluid_parms,solids_parms]
               AMREX_GPU_DEVICE (int p_id) noexcept
             {
               auto& particle = pstruct[p_id];
@@ -687,8 +683,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& /*chem_txfr*/,
                p_species_id_g,p_types,p_phases,p_nphases,p_products_id,p_products_coeffs,
                p_products_phases,p_reactants_id,p_reactants_coeffs,p_reactants_phases,
                InvalidIdx,p_MW_sn,idx_X_sn,idx_ro_sn_txfr,idx_vel_s_txfr,idx_h_s_txfr,p_MW_gk,Solid,
-               p_nreactants,p_nproducts,Heterogeneous,T_ref,solid_is_mixture,
-               p_H_fk0,p_H_fn0,fluid_parms,solids_parms]
+               p_nreactants,p_nproducts,Heterogeneous,p_H_fk0,p_H_fn0,fluid_parms,solids_parms]
               AMREX_GPU_DEVICE (int p_id) noexcept
             {
               auto& particle = pstruct[p_id];

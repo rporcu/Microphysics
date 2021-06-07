@@ -1,5 +1,5 @@
-#ifndef _PARTICLES_GENERATOR_HPP_
-#define _PARTICLES_GENERATOR_HPP_
+#ifndef MFIX_PARTICLES_GENERATOR_H_
+#define MFIX_PARTICLES_GENERATOR_H_
 
 #include <AMReX_REAL.H>
 #include <AMReX_Vector.H>

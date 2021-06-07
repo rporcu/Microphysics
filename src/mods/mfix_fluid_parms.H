@@ -9,22 +9,30 @@
 
 struct FluidParms {
 
+  static constexpr amrex::Real R =  8.31446261815324;
+
+  amrex::Real  MW_g0;
+  amrex::Real* MW_gk0;
   amrex::Real  mu_g0;
   amrex::Real  k_g0;
   amrex::Real* D_gk0;
   amrex::Real  cp_g0;
   amrex::Real* cp_gk0;
 
-  AMREX_GPU_HOST_DEVICE
-  FluidParms () noexcept : D_gk0(nullptr), cp_gk0(nullptr) {}
+  //AMREX_GPU_HOST_DEVICE
+  //FluidParms () noexcept : D_gk0(nullptr), cp_gk0(nullptr) {}
 
   AMREX_GPU_HOST_DEVICE
-  FluidParms (amrex::Real mu_g,
+  FluidParms (amrex::Real MW_g,
+              amrex::Real* MW_gk,
+              amrex::Real mu_g,
               amrex::Real k_g,
               amrex::Real* D_gk,
               amrex::Real cp_g,
               amrex::Real* cp_gk)
-    : mu_g0(mu_g)
+    : MW_g0(MW_g)
+    , MW_gk0(MW_gk)
+    , mu_g0(mu_g)
     , k_g0(k_g)
     , D_gk0(D_gk)
     , cp_g0(cp_g)
@@ -53,29 +61,30 @@ struct FluidParms {
     return D_gk0[n];
   }
 
-  // Compute fluid specific heat
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   amrex::Real calc_cp_g (const amrex::Real /*T_g*/) const
   {
     return cp_g0;
   }
 
-  // Compute fluid specific heat
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_partial_cp_g (const amrex::Real /*T_g*/) const
+  {
+    return 0;
+  }
+
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   amrex::Real calc_h_g (const amrex::Real T_g) const
   {
     return calc_cp_g(T_g) * T_g;
   }
 
-  // Compute fluid specific heat
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real calc_T_g (const amrex::Real h_g,
-                        const amrex::Real T_g) const
+  amrex::Real calc_partial_h_g (const amrex::Real T_g) const
   {
-    return h_g / calc_cp_g(T_g); // TODO different if fluid is mixture
+    return calc_partial_cp_g(T_g) * T_g + calc_cp_g(T_g);
   }
 
-  // Compute fluid specific heat
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   amrex::Real calc_cp_gk (const amrex::Real /*T_g*/,
                           const int n) const
@@ -83,12 +92,25 @@ struct FluidParms {
     return cp_gk0[n];
   }
 
-  // Compute fluid specific heat
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_partial_cp_gk (const amrex::Real /*T_g*/,
+                                  const int /*n*/) const
+  {
+    return 0;
+  }
+
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   amrex::Real calc_h_gk (const amrex::Real T_g,
                          const int n) const
   {
     return calc_cp_gk(T_g,n) * T_g;
+  }
+
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_partial_h_gk (const amrex::Real T_g,
+                                 const int n) const
+  {
+    return calc_partial_cp_gk(T_g,n) * T_g + calc_cp_gk(T_g,n);
   }
 };
 
@@ -106,11 +128,6 @@ class FluidPhase
     struct DENSITYMODEL { enum {Invalid=-1, Constant, IdealGas}; };
 
     int DensityModel;
-
-    // List of recognized fluid molecular weight models
-    struct MOLECULARWEIGHTMODEL { enum {Invalid=-1, Constant, Mixture}; };
-
-    int MolecularWeightModel;
 
     // List of recognized fluid viscosity models
     struct VISCOSITYMODEL { enum {Invalid=-1, Constant, Sutherland}; };

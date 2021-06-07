@@ -14,7 +14,6 @@ using namespace amrex;
 
 FluidPhase::FluidPhase()
   : DensityModel(DENSITYMODEL::Invalid)
-  , MolecularWeightModel(MOLECULARWEIGHTMODEL::Invalid)
   , ViscosityModel(VISCOSITYMODEL::Invalid)
   , SpecificHeatModel(SPECIFICHEATMODEL::Invalid)
   , ThermalConductivityModel(THERMALCONDUCTIVITYMODEL::Invalid)
@@ -96,28 +95,6 @@ FluidPhase::Initialize ()
       amrex::Abort("Unknown fluid density model!");
     }
 
-    // Get molecular weight inputs ---------------------------//
-    std::string molecular_weight_model;
-    ppFluid.query("molecular_weight", molecular_weight_model);
-
-    if (amrex::toLower(molecular_weight_model).compare("constant") == 0)
-    {
-      MolecularWeightModel = MOLECULARWEIGHTMODEL::Constant;
-      ppFluid.get("molecular_weight.constant", MW_g0);
-    }
-    else if(amrex::toLower(molecular_weight_model).compare("mixture") == 0)
-    {
-      MolecularWeightModel = MOLECULARWEIGHTMODEL::Mixture;
-    }
-    else
-    {
-      MolecularWeightModel = MOLECULARWEIGHTMODEL::Constant;
-
-      if ( amrex::ParallelDescriptor::IOProcessor() )
-        amrex::Warning("Fluid molecular weight model not provided. "
-          "Assuming constant model with MW_g = 0");
-    }
-
     // Get viscosity inputs ----------------------------------//
     std::string viscosity_model;
     ppFluid.get("viscosity", viscosity_model );
@@ -147,30 +124,27 @@ FluidPhase::Initialize ()
     if (advect_enthalpy == 1) {
       solve_enthalpy = 1;
 
-      if (MolecularWeightModel != MOLECULARWEIGHTMODEL::Mixture)
+      // Get specific heat inputs ------------------------------------//
+      std::string specific_heat_model;
+      ppFluid.get("specific_heat", specific_heat_model);
+
+      if (amrex::toLower(specific_heat_model).compare("constant") == 0)
       {
-        // Get specific heat inputs ------------------------------------//
-        std::string specific_heat_model;
-        ppFluid.get("specific_heat", specific_heat_model);
-
-        if (amrex::toLower(specific_heat_model).compare("constant") == 0)
-        {
-          SpecificHeatModel = SPECIFICHEATMODEL::Constant;
-          ppFluid.get("specific_heat.constant", cp_g0);
-        }
-        else if (amrex::toLower(specific_heat_model).compare("nasa9-poly") == 0)
-        {
-          SpecificHeatModel = SPECIFICHEATMODEL::NASA9Polynomials;
-          amrex::Abort("Not yet implemented.");
-        }
-        else 
-        {
-          amrex::Abort("Unknown fluid specific heat model!");
-        }
-
-        // Query the enthalpy_of_formation
-        ppFluid.query("enthalpy_of_formation", H_f0);
+        SpecificHeatModel = SPECIFICHEATMODEL::Constant;
+        ppFluid.get("specific_heat.constant", cp_g0);
       }
+      else if (amrex::toLower(specific_heat_model).compare("nasa9-poly") == 0)
+      {
+        SpecificHeatModel = SPECIFICHEATMODEL::NASA9Polynomials;
+        amrex::Abort("Not yet implemented.");
+      }
+      else 
+      {
+        amrex::Abort("Unknown fluid specific heat model!");
+      }
+
+      // Query the enthalpy_of_formation
+      ppFluid.query("enthalpy_of_formation", H_f0);
 
       // Query the reference temperature
       ppFluid.query("reference_temperature", T_ref);
@@ -195,9 +169,7 @@ FluidPhase::Initialize ()
 
     if (advect_fluid_species) {
       // Fluid species inputs
-      if (ppFluid.contains("species") ||
-          MolecularWeightModel == MOLECULARWEIGHTMODEL::Mixture)
-      {
+      if (ppFluid.contains("species")) {
         ppFluid.getarr("species", species);
 
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.size() > 0, 
@@ -241,7 +213,12 @@ FluidPhase::Initialize ()
             D_gk0[n] = SPECIES::D_k0[pos];
 
             if (solve_enthalpy) {
-              cp_gk0[n] = SPECIES::cp_k0[pos];
+
+              if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::Invalid)
+                cp_gk0[n] = cp_g0;
+              else
+                cp_gk0[n] = SPECIES::cp_k0[pos];
+
               H_fk0[n]  = SPECIES::H_fk0[pos];
             }
           }
@@ -250,8 +227,7 @@ FluidPhase::Initialize ()
     }
 
     // Flag to determine if we want to solve the fluid as a mixture
-    is_a_mixture = solve_species &&
-      (MolecularWeightModel == MOLECULARWEIGHTMODEL::Mixture);
+    is_a_mixture = static_cast<int>(nspecies > 1);
 
     pp.query("T_g0",  T_g0 );
     pp.query("trac0",  trac_0 );
@@ -263,6 +239,7 @@ FluidPhase::Initialize ()
 
   d_MW_gk0.resize(MW_gk0.size());
   Gpu::copyAsync(Gpu::hostToDevice, MW_gk0.begin(), MW_gk0.end(), d_MW_gk0.begin());
+  Real* p_MW_gk0 = d_MW_gk0.data();
 
   d_D_gk0.resize(D_gk0.size());
   Gpu::copyAsync(Gpu::hostToDevice, D_gk0.begin(), D_gk0.end(), d_D_gk0.begin());
@@ -275,5 +252,5 @@ FluidPhase::Initialize ()
   Gpu::copyAsync(Gpu::hostToDevice, cp_gk0.begin(), cp_gk0.end(), d_cp_gk0.begin());
   Real* p_cp_gk0 = d_cp_gk0.data();
 
-  parameters = new FluidParms(mu_g0, k_g0, p_D_gk0, cp_g0, p_cp_gk0);
+  parameters = new FluidParms(MW_g0, p_MW_gk0, mu_g0, k_g0, p_D_gk0, cp_g0, p_cp_gk0);
 }

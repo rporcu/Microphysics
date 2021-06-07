@@ -129,8 +129,8 @@ ic.O2-region.fluid.species.He  =  0.0
 ic.O2-region.fluid.volfrac     =  1.0
 ic.O2-region.fluid.velocity    =  0.0  0.0  0.0
 ic.O2-region.fluid.temperature =  300
-ic.02-region.solids = solid0
-ic.02-region.solid0.temperature = 350
+ic.O2-region.solids = solid0
+ic.O2-region.solid0.temperature = 350
 
 ic.CO-region.fluid.species.O2  =  0.0
 ic.CO-region.fluid.species.CO  =  1.0

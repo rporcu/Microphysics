@@ -6,6 +6,7 @@
 #include <mfix_pic_parms.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
+#include <mfix_algorithm.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -64,8 +65,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                             Real& coupling_timing)
 {
     BL_PROFILE("mfix::mfix_apply_predictor");
-
-    auto& fluid_parms = *fluid.parameters;
 
     // We use the new-time value for things computed on the "*" state
     Real new_time = time + l_dt;
@@ -345,23 +344,29 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Update enthalpy and temperature
     // *************************************************************************************
-    if (advect_enthalpy)
-    {
-        const Real T_ref = fluid.T_ref;
+    if (advect_enthalpy) {
 
-        for (int lev = 0; lev <= finest_level; lev++)
-        {
+        auto& fluid_parms = *fluid.parameters;
+        const int fluid_is_a_mixture = fluid.is_a_mixture;
+        const int nspecies_g = fluid.nspecies;
+
+        const int closed_system = (m_idealgas_constraint == IdealGasConstraint::ClosedSystem);
+
+        for (int lev = 0; lev <= finest_level; lev++) {
+
             auto& ld = *m_leveldata[lev];
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-            for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
-            {
+            for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+
                 Box const& bx = mfi.tilebox();
+
                 Array4<Real const> const& h_g_o   = ld.h_go->const_array(mfi);
                 Array4<Real      > const& h_g_n   = ld.h_g->array(mfi);
                 Array4<Real const> const& T_g_o   = ld.T_go->array(mfi);
                 Array4<Real      > const& T_g_n   = ld.T_g->array(mfi);
+                Array4<Real const> const& X_gk_o  = ld.X_gko->array(mfi);
                 Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
                 Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
                 Array4<Real const> const& lap_T_o = lap_T_old[lev]->const_array(mfi);
@@ -369,12 +374,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
                 Array4<Real const> const& dhdt_o  = conv_s_old[lev]->const_array(mfi);
 
-                const Real Dpressure_Dt           = rhs_pressure_g_old[lev];
-                const int closed_system = (m_idealgas_constraint == IdealGasConstraint::ClosedSystem);
+                const Real Dpressure_Dt = rhs_pressure_g_old[lev];
 
                 amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,h_RHS_o,
-                    epg,T_ref,dhdt_o,l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,
-                    closed_system,fluid_parms]
+                    epg,dhdt_o,l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,
+                    closed_system,fluid_parms,fluid_is_a_mixture,X_gk_o,nspecies_g]
                   AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
                     int conv_comp = 1;
@@ -398,8 +402,49 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
                     h_g_n(i,j,k) = h_g;
 
-                    const Real Tg = T_g_o(i,j,k);
-                    T_g_n(i,j,k) = fluid_parms.calc_T_g(h_g, Tg);
+                    // Newton-Raphson solver for solving implicit equation for
+                    // temperature
+
+                    // Residual computation
+                    auto R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+                    {
+                      Real hg_loc(0);
+
+                      if (!fluid_is_a_mixture) {
+
+                        hg_loc = fluid_parms.calc_h_g(Tg_arg);
+                      } else {
+
+                        for (int n(0); n < nspecies_g; ++n)
+                          hg_loc += X_gk_o(i,j,k,n)*fluid_parms.calc_h_gk(Tg_arg,n);
+                      }
+
+                      return hg_loc - h_g;
+                    };
+
+                    // Partial derivative computation
+                    auto partial_R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+                    {
+                      Real gradient(0);
+
+                      if (!fluid_is_a_mixture) {
+
+                        gradient = fluid_parms.calc_partial_h_g(Tg_arg);
+                      } else {
+
+                        for (int n(0); n < nspecies_g; ++n)
+                          gradient += X_gk_o(i,j,k,n)*fluid_parms.calc_partial_h_gk(Tg_arg,n);
+                      }
+
+                      return gradient;
+                    };
+
+                    Real Tg_old = T_g_o(i,j,k);
+                    Real Tg_new(0.);
+
+                    Solvers::NewtonRaphson(Tg_new, Tg_old, R, partial_R);
+
+                    T_g_n(i,j,k) = Tg_new;
                 });
             } // mfi
         } // lev
@@ -593,8 +638,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // Add the drag and convective heat transfer terms implicitly to vel_g and h_g
     // *************************************************************************************
     if (DEM::solve || PIC::solve)
-      mfix_add_txfr_implicit(l_dt, get_vel_g(), get_h_g(), get_T_g(), get_txfr_const(),
-                GetVecOfConstPtrs(density_nph), get_ep_g_const());
+      mfix_add_txfr_implicit(l_dt, get_vel_g(), get_h_g(), get_T_g(), get_X_gk_const(),
+                get_txfr_const(), GetVecOfConstPtrs(density_nph), get_ep_g_const());
 
 
     // *************************************************************************************
@@ -665,16 +710,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Rescale species in order to respect sum = 1
     // *************************************************************************************
-    if (advect_fluid_species) {
-      mfix_normalize_fluid_species(get_X_gk());
-    }
-
-    // *************************************************************************************
-    // Update fluid (if fluid is a mixture) and fluid species specific heat,
-    // enthalpy and temperature
-    // *************************************************************************************
-    if (advect_fluid_species) {
-      mfix_update_fluid_and_species(get_h_g(), get_T_g(), get_X_gk());
+    if (fluid.is_a_mixture) {
+      mfix_normalize_fluid_species(get_X_gk(), get_T_g(), get_h_g());
     }
 
     // *************************************************************************************

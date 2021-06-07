@@ -13,7 +13,6 @@ using namespace amrex;
 
 SolidsPhase::SolidsPhase()
   : NTYPES(0)
-  , MolecularWeightModel(MOLECULARWEIGHTMODEL::Invalid)
   , SpecificHeatModel(SPECIFICHEATMODEL::Invalid)
   , ThermalConductivityModel(THERMALCONDUCTIVITYMODEL::Invalid)
   , names(0)
@@ -104,28 +103,6 @@ SolidsPhase::Initialize ()
         }
       } // end specific heat
 
-      // Get molecular weight inputs ---------------------------//
-      std::string molecular_weight_model;
-      ppSolid.query("molecular_weight", molecular_weight_model);
-
-      if (amrex::toLower(molecular_weight_model).compare("constant") == 0)
-      {
-        MolecularWeightModel = MOLECULARWEIGHTMODEL::Constant;
-        ppSolid.get("molecular_weight.constant", MW_s0);
-      }
-      else if(amrex::toLower(molecular_weight_model).compare("mixture") == 0)
-      {
-        MolecularWeightModel = MOLECULARWEIGHTMODEL::Mixture;
-      }
-      else
-      {
-        MolecularWeightModel = MOLECULARWEIGHTMODEL::Constant;
-
-        if ( amrex::ParallelDescriptor::IOProcessor() )
-          amrex::Warning("Solid molecular weight model not provided. "
-            "Assuming constant model with MW_s = 0");
-      }
-
       // Query the reference temperature
       pp.query("reference_temperature", T_ref);
 
@@ -134,9 +111,7 @@ SolidsPhase::Initialize ()
     } // check_energy
 
     // Solids species inputs
-    if (ppSolid.contains("species") ||
-        MolecularWeightModel == MOLECULARWEIGHTMODEL::Mixture)
-    {
+    if (ppSolid.contains("species")) {
       ppSolid.getarr("species", species);
 
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.size() > 0,
@@ -178,7 +153,11 @@ SolidsPhase::Initialize ()
           MW_sn0[n] = SPECIES::MW_k0[pos];
 
           if (check_energy) {
-            cp_sn0[n]  = SPECIES::cp_k0[pos];
+            if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::Invalid)
+              cp_sn0[n] = cp_s0[solid];
+            else
+              cp_sn0[n] = SPECIES::cp_k0[pos];
+
             H_fn0[n]  = SPECIES::H_fk0[pos];
           }
         }
@@ -186,8 +165,7 @@ SolidsPhase::Initialize ()
     }
 
     // Flag to determine if we want to solve the solid as a mixture
-    is_a_mixture = solve_species &&
-      (MolecularWeightModel == MOLECULARWEIGHTMODEL::Mixture);
+    is_a_mixture = static_cast<int>(nspecies > 1);
   }
 
   d_cp_s0.resize(cp_s0.size());
