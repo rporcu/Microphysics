@@ -9,6 +9,7 @@ using namespace BC;
 void
 mfix::mfix_set_bc_type (int lev, int nghost_bc)
 {
+    if (ooo_debug) amrex::Print() << "mfix_set_bc_type" << std::endl;
 
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
@@ -18,9 +19,6 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
     const int und_  = bc_list.get_undefined();
     const int ig_   = bc_list.get_ig();
-    const int minf_ = bc_list.get_minf();
-    const int pinf_ = bc_list.get_pinf();
-
 
     const int l_species = fluid.nspecies;
     const int l_ntrac = ntrac;
@@ -419,18 +417,23 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
         (m_bcrec_force_d.data(), m_bcrec_force.data(), sizeof(BCRec)*l_force);
     }
 
-    m_h_bc_u_g.resize(bc.size());
-    m_h_bc_v_g.resize(bc.size());
-    m_h_bc_w_g.resize(bc.size());
-
-    m_h_bc_t_g.resize(bc.size());
 
     if ( fluid.solve ) {
       Real ltime(0.);
 
       set_velocity_bc_values (ltime);
+      set_density_bc_values (ltime);
 
-      if ( advect_enthalpy ) {
+      if (advect_tracer ) {
+        set_tracer_bc_values (ltime);
+      }
+
+      if (advect_fluid_species) {
+        set_species_bc_values (ltime);
+      }
+
+      // Species
+      if (advect_enthalpy ) {
         set_temperature_bc_values (ltime);
       }
 
@@ -440,16 +443,6 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
     m_h_bc_ep_g.resize(bc.size());
     m_h_bc_p_g.resize(bc.size());
 
-    if (fluid.solve && advect_fluid_species) {
-      m_h_bc_X_gk.resize(fluid.nspecies, Gpu::HostVector<Real>(bc.size()));
-
-      // Important! Resize the bc vector for the fluid species mass fractions
-      // We have to do it here because the size has to match the number of fluid
-      // species
-      m_bc_X_gk.resize(fluid.nspecies, Gpu::DeviceVector<Real>(bc.size()));
-      m_bc_X_gk_ptr.resize(fluid.nspecies, nullptr);
-      m_h_bc_X_gk_ptr.resize(fluid.nspecies, nullptr);
-    }
 
     for(unsigned bcv(0); bcv < bc.size(); ++bcv)
     {
@@ -463,32 +456,11 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
         m_h_bc_p_g[bcv]  = 1e50;
       }
 
-
-      // Fluid species mass fractions
-      if (fluid.solve && advect_fluid_species) {
-        if (bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
-          for (int n(0); n < fluid.nspecies; n++) {
-            m_h_bc_X_gk[n][bcv] = bc[bcv].fluid.species[n].mass_fraction;
-          }
-        }
-        else {
-          for (int n(0); n < fluid.nspecies; n++)
-            m_h_bc_X_gk[n][bcv] = 1e50;
-        }
-      }
-
     }
 
     Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_p_g.begin(), m_h_bc_p_g.end(), m_bc_p_g.begin());
     Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_ep_g.begin(), m_h_bc_ep_g.end(), m_bc_ep_g.begin());
 
-    if (fluid.solve && advect_fluid_species) {
-        for (int n = 0; n < fluid.nspecies; ++n) {
-            Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk[n].begin(), m_h_bc_X_gk[n].end(), m_bc_X_gk[n].begin());
-            m_h_bc_X_gk_ptr[n] = m_bc_X_gk[n].dataPtr();
-        }
-        Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk_ptr.begin(), m_h_bc_X_gk_ptr.end(), m_bc_X_gk_ptr.begin());
-    }
 
     Gpu::synchronize();
 }
@@ -672,7 +644,12 @@ void
 mfix::set_velocity_bc_values (Real time_in) const
 {
 
+  m_h_bc_u_g.resize(bc.size());
+  m_h_bc_v_g.resize(bc.size());
+  m_h_bc_w_g.resize(bc.size());
+
   const int minf_ = bc_list.get_minf();
+
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
 
     if ( bc[bcv].type == minf_ ) {
@@ -702,19 +679,126 @@ mfix::set_velocity_bc_values (Real time_in) const
 void
 mfix::set_temperature_bc_values (Real time_in) const
 {
+  m_h_bc_t_g.resize(bc.size());
+  m_h_bc_h_g.resize(bc.size());
+
+  const int minf_ = bc_list.get_minf();
+  const int pinf_ = bc_list.get_pinf();
+
+  // Flag to understand if fluid is a mixture
+  const int fluid_is_a_mixture = fluid.is_a_mixture;
+
+  auto& fluid_parms = *fluid.parameters;
+
+  for(unsigned bcv(0); bcv < bc.size(); ++bcv) {
+    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
+      const Real Tg = bc[bcv].fluid.get_temperature(time_in);
+      m_h_bc_t_g[bcv] = Tg;
+      if (!fluid_is_a_mixture) {
+        m_h_bc_h_g[bcv] = fluid_parms.calc_h_g(m_h_bc_t_g[bcv]);
+      } else {
+        m_h_bc_h_g[bcv] = 0.0;
+        for (int n(0); n < fluid.nspecies; n++) {
+          const Real X_gk = bc[bcv].fluid.species[n].mass_fraction;
+          m_h_bc_h_g[bcv] += X_gk*fluid_parms.calc_h_gk(Tg,n);
+        }
+      }
+
+    } else {
+      m_h_bc_t_g[bcv] = 1e50;
+      m_h_bc_h_g[bcv] = 1e50;
+    }
+  }
+
+  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_t_g.begin(), m_h_bc_t_g.end(), m_bc_t_g.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_h_g.begin(), m_h_bc_h_g.end(), m_bc_h_g.begin());
+
+  Gpu::synchronize();
+}
+
+void
+mfix::set_density_bc_values (Real /*time_in*/) const
+{
+
+  m_h_bc_ro_g.resize(bc.size());
+
+  const int minf_ = bc_list.get_minf();
+  const int pinf_ = bc_list.get_pinf();
+
+  // HACK -- BC density is constant given current implementation.
+  // This was copied over from the mfix_set_density_bcs routine.
+  const Real ro_g0 = fluid.ro_g0;
+
+  for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
+    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
+      m_h_bc_ro_g[bcv] = ro_g0;
+    } else {
+      m_h_bc_ro_g[bcv] = 1e50;
+    }
+  }
+
+  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_ro_g.begin(), m_h_bc_ro_g.end(), m_bc_ro_g.begin());
+
+  Gpu::synchronize();
+}
+
+void
+mfix::set_tracer_bc_values (Real /*time_in*/) const
+{
+  m_h_bc_tracer.resize(bc.size());
+
+  const int minf_ = bc_list.get_minf();
+  const int pinf_ = bc_list.get_pinf();
+
+  // HACK -- BC tracer is constant given current implementation.
+  // This was copied over from the mfix_set_tracer_bcs routine.
+  const Real trac0 = fluid.trac_0;
+
+  for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
+    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
+      m_h_bc_tracer[bcv] = trac0;
+    } else {
+      m_h_bc_tracer[bcv] = 1e50;
+    }
+  }
+
+  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_tracer.begin(), m_h_bc_tracer.end(), m_bc_tracer.begin());
+
+  Gpu::synchronize();
+}
+
+void
+mfix::set_species_bc_values (Real /*time_in*/) const
+{
+  m_h_bc_X_gk.resize(fluid.nspecies, Gpu::HostVector<Real>(bc.size()));
+  m_bc_X_gk.resize(fluid.nspecies, Gpu::DeviceVector<Real>(bc.size()));
+
+  // Important! Resize the bc vector for the fluid species mass fractions
+  // We have to do it here because the size has to match the number of fluid
+  // species
+  m_bc_X_gk_ptr.resize(fluid.nspecies, nullptr);
+  m_h_bc_X_gk_ptr.resize(fluid.nspecies, nullptr);
 
   const int minf_ = bc_list.get_minf();
   const int pinf_ = bc_list.get_pinf();
 
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
     if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
-      m_h_bc_t_g[bcv] = BC::bc[bcv].fluid.get_temperature(time_in);
+      for (int n(0); n < fluid.nspecies; n++) {
+        m_h_bc_X_gk[n][bcv] = bc[bcv].fluid.species[n].mass_fraction;
+      }
     } else {
-      m_h_bc_t_g[bcv] = 1e50;
+      for (int n(0); n < fluid.nspecies; n++) {
+        m_h_bc_X_gk[n][bcv] = 1e50;
+      }
     }
   }
 
-  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_t_g.begin(), m_h_bc_t_g.end(), m_bc_t_g.begin());
+  for (int n = 0; n < fluid.nspecies; ++n) {
+    Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk[n].begin(), m_h_bc_X_gk[n].end(), m_bc_X_gk[n].begin());
+    m_h_bc_X_gk_ptr[n] = m_bc_X_gk[n].dataPtr();
+  }
+  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk_ptr.begin(), m_h_bc_X_gk_ptr.end(), m_bc_X_gk_ptr.begin());
 
   Gpu::synchronize();
 }

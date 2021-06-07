@@ -53,6 +53,8 @@ struct IdealGasConstraint { enum {None, OpenSystem, ClosedSystem}; };
 // Reaction rates type enumeration
 struct ReactionRatesType { enum {RRatesUser}; };
 
+enum struct ScalarToFill { Density, Tracer, Enthalpy, VolFrac, Temperature};
+
 class mfix : public AmrCore
 {
   public:
@@ -415,6 +417,9 @@ class mfix : public AmrCore
 
     void set_velocity_bc_values (amrex::Real time_in) const;
     void set_temperature_bc_values (amrex::Real time_in) const;
+    void set_density_bc_values (amrex::Real time_in) const;
+    void set_tracer_bc_values (amrex::Real time_in) const;
+    void set_species_bc_values (amrex::Real time_in) const;
 
     ////////////////////////////////////////////////////////////////////////////
     //
@@ -539,11 +544,17 @@ class mfix : public AmrCore
     mutable Gpu::DeviceVector<Real> m_bc_v_g;
     mutable Gpu::DeviceVector<Real> m_bc_w_g;
     mutable Gpu::DeviceVector<Real> m_bc_t_g;
+    mutable Gpu::DeviceVector<Real> m_bc_h_g;
+    mutable Gpu::DeviceVector<Real> m_bc_ro_g;
+    mutable Gpu::DeviceVector<Real> m_bc_tracer;
 
     mutable Gpu::HostVector<Real>   m_h_bc_u_g;
     mutable Gpu::HostVector<Real>   m_h_bc_v_g;
     mutable Gpu::HostVector<Real>   m_h_bc_w_g;
     mutable Gpu::HostVector<Real>   m_h_bc_t_g;
+    mutable Gpu::HostVector<Real>   m_h_bc_h_g;
+    mutable Gpu::HostVector<Real>   m_h_bc_ro_g;
+    mutable Gpu::HostVector<Real>   m_h_bc_tracer;
 
     Gpu::DeviceVector<Real> m_bc_ep_g;
     Gpu::DeviceVector<Real> m_bc_p_g;
@@ -551,11 +562,11 @@ class mfix : public AmrCore
     Gpu::HostVector<Real>   m_h_bc_ep_g;
     Gpu::HostVector<Real>   m_h_bc_p_g;
 
-    amrex::Vector< Gpu::DeviceVector<Real> > m_bc_X_gk;
-    Gpu::DeviceVector<Real*> m_bc_X_gk_ptr;
+    mutable amrex::Vector< Gpu::DeviceVector<Real> > m_bc_X_gk;
+    mutable Gpu::DeviceVector<Real*> m_bc_X_gk_ptr;
 
-    amrex::Vector< Gpu::HostVector<Real> >   m_h_bc_X_gk;
-    Gpu::HostVector<Real*> m_h_bc_X_gk_ptr;
+    mutable amrex::Vector< Gpu::HostVector<Real> >   m_h_bc_X_gk;
+    mutable Gpu::HostVector<Real*> m_h_bc_X_gk_ptr;
 
     std::map< std::string, Gpu::DeviceVector<int> > m_vel_g_bc_types;
     std::map< std::string, Gpu::DeviceVector<int> > m_ro_g_bc_types;
@@ -624,14 +635,14 @@ public:
     void GetDataVel (int lev, Real time, Vector<MultiFab *> & data,
                      Vector<Real> & datatime);
 
-    void FillPatchScalar (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
-                          const Vector<BCRec> & bcr);
+    void FillPatchScalar (int lev, Real time, MultiFab & mf, ScalarToFill scalar,
+                        const Real* bc_scalar, const Vector<BCRec> & bcr);
 
     void FillPatchSpecies (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
                            const Vector<BCRec> & bcr);
 
-    void GetDataScalar (int lev, Real time, Vector<MultiFab *> & data, int icomp,
-                        Vector<Real> & datatime);
+    void GetDataScalar (int lev, Real time, Vector<MultiFab *> & data,
+                        ScalarToFill scalar_id, Vector<Real> & datatime);
 
     void GetDataSpecies (int lev, Real time, Vector<MultiFab *> & data, int icomp,
                          Vector<Real> & datatime);

@@ -46,8 +46,6 @@ std::string avg_file {"avg_region"};
 
 std::string mfix_dat {"mfix.dat"};
 
-void set_ptr_to_mfix (mfix& mfix);
-
 // Set the extend domain flag by default, since the mfix default
 // is different (true) from the amrex default (false)
 // only if its not already specified in the inputs file
@@ -220,9 +218,6 @@ int main (int argc, char* argv[])
     mfix mfix;
 
     ReadParameters();
-
-    // Set global static pointer to mfix object. Used by fill-patch utility
-    set_ptr_to_mfix(mfix);
 
     // Initialize internals from ParamParse database
     mfix.InitParams();
