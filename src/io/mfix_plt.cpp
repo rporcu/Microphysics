@@ -460,14 +460,9 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
           MultiFab MW_g(T_g.boxArray(), T_g.DistributionMap(), T_g.nComp(),
                         T_g.nGrow(), MFInfo(), T_g.Factory());
 
-          const int is_mixture = fluid.is_a_mixture;
+          const int fluid_is_a_mixture = fluid.is_a_mixture;
 
-          const Real MW_g0 = fluid.MW_g0;
-
-          Gpu::DeviceVector<Real> MW_gk0_d(nspecies_g);
-          if (is_mixture)
-            Gpu::copyAsync(Gpu::hostToDevice, fluid.MW_gk0.begin(), fluid.MW_gk0.end(), MW_gk0_d.begin());
-          Real* p_MW_gk0 = is_mixture ? MW_gk0_d.data() : nullptr;
+          auto& fluid_parms = *fluid.parameters;
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -477,22 +472,23 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
             Box const& bx = mfi.tilebox();
 
             Array4<Real      > const& MW_g_array = MW_g.array(mfi);
-            Array4<Real const> const& X_gk_array = is_mixture ?
+            Array4<Real const> const& X_gk_array = fluid_is_a_mixture ?
               m_leveldata[lev]->X_gk->const_array(mfi) : Array4<const Real>();
 
-            ParallelFor(bx, [MW_g_array,X_gk_array,nspecies_g,is_mixture,p_MW_gk0,MW_g0]
+            ParallelFor(bx, [MW_g_array,X_gk_array,nspecies_g,fluid_is_a_mixture,
+                fluid_parms]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
-              if (is_mixture) {
+              if (fluid_is_a_mixture) {
                 Real MW_g_loc(0);
 
                 for (int n(0); n < nspecies_g; ++n) {
-                  MW_g_loc += X_gk_array(i,j,k,n) / p_MW_gk0[n];
+                  MW_g_loc += X_gk_array(i,j,k,n) / fluid_parms.MW_gk0[n];
                 }
 
                 MW_g_array(i,j,k) = 1. / MW_g_loc;
               } else {
-                MW_g_array(i,j,k) = MW_g0;
+                MW_g_array(i,j,k) = fluid_parms.MW_g0;
               }
             });
           }

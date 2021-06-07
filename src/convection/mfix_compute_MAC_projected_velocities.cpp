@@ -130,7 +130,18 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
   }
 
   if (m_use_mac_phi_in_godunov) {
-    macproj->getFluxes(amrex::GetVecOfArrOfPtrs(m_fluxes), mac_phi, MLMG::Location::FaceCentroid);
+
+    // Copy mac_phi MultiFabs into temporary variables
+    Vector<MultiFab*> mac_phi_copy(finest_level+1);
+    for (int lev(0); lev <= finest_level; ++lev) {
+      mac_phi_copy[lev] = (MFHelpers::createFrom(*mac_phi[lev])).release();
+    }
+
+    macproj->getFluxes(amrex::GetVecOfArrOfPtrs(m_fluxes), mac_phi_copy, MLMG::Location::FaceCentroid);
+
+    for (int lev(0); lev <= finest_level; ++lev) {
+      delete mac_phi_copy[lev];
+    }
 
     if( m_use_drag_in_godunov) {
       amrex::Print() << "WARNING: using mac_phi in Godunov MAC velocities.\n"

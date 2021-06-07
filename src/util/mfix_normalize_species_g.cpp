@@ -8,9 +8,10 @@
 #include <AMReX_MemProfiler.H>
 #endif
 
-
 void
-mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
+mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk,
+                                   const Vector< MultiFab* >& T_g,
+                                   const Vector< MultiFab* >& h_g)
 {
   const int nspecies_g = fluid.nspecies;
 
@@ -56,10 +57,19 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
     {
       const Box& bx = mfi.tilebox();
 
+      Array4<Real> dummy_array4;
+
+      Array4<Real> const& T_g_arr  = advect_enthalpy ? T_g[lev]->array(mfi) : dummy_array4;
       Array4<Real> const& X_gk_arr = X_gk[lev]->array(mfi);
+      Array4<Real> const& h_g_arr  = advect_enthalpy ? h_g[lev]->array(mfi) : dummy_array4;
+
       auto const& flags_arr = flags.const_array(mfi);
 
-      amrex::ParallelFor(bx, [flags_arr,X_gk_arr,nspecies_g]
+      auto& fluid_parms = *fluid.parameters;
+      const int adv_enthalpy = advect_enthalpy;
+
+      amrex::ParallelFor(bx, [flags_arr,T_g_arr,X_gk_arr,h_g_arr,nspecies_g,
+          adv_enthalpy,fluid_parms]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         for (int n(0); n < nspecies_g; ++n) {
@@ -67,15 +77,25 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
           X_gk_arr(i,j,k,n) = value > 1 ? 1 : (value < 0 ? 0 : value);
         }
 
-        if (!flags_arr(i,j,k).isCovered())
-        {
-          Real sum(0);
+        if (!flags_arr(i,j,k).isCovered()) {
+          Real X_gk_sum(0);
 
           for (int n(0); n < nspecies_g; ++n)
-            sum += X_gk_arr(i,j,k,n);
+            X_gk_sum += X_gk_arr(i,j,k,n);
 
           for (int n(0); n < nspecies_g; ++n)
-            X_gk_arr(i,j,k,n) /= sum;
+            X_gk_arr(i,j,k,n) /= X_gk_sum;
+
+          if (adv_enthalpy) {
+            Real h_g_sum(0);
+            const Real Tg_loc = T_g_arr(i,j,k);
+
+            for (int n(0); n < nspecies_g; n++) {
+              h_g_sum += X_gk_arr(i,j,k,n) * fluid_parms.calc_h_gk(Tg_loc,n);
+            }
+
+            h_g_arr(i,j,k) = h_g_sum;
+          }
         }
       });
     }
@@ -84,6 +104,10 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
   // Update ghost cells
   for (int lev = 0; lev <= finest_level; lev++) {
     X_gk[lev]->FillBoundary(geom[lev].periodicity());
+
+    if (advect_enthalpy) {
+      h_g[lev]->FillBoundary(geom[lev].periodicity());
+    }
   }
 
 #if defined(AMREX_DEBUG)
@@ -112,68 +136,4 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
   }
 #endif
 
-}
-
-
-void
-mfix::mfix_update_fluid_and_species(const Vector< MultiFab* >& h_g,
-                                    const Vector< MultiFab* >& T_g,
-                                    const Vector< MultiFab* >& X_gk)
-{
-  const int nspecies_g = fluid.nspecies;
-
-  auto& fluid_parms = *fluid.parameters;
-
-  if (fluid.is_a_mixture)
-  {
-    // Set covered values
-    for (int lev(0); lev <= finest_level; lev++) {
-      EB_set_covered(*X_gk[lev], 0, nspecies_g, 0, covered_val);
-    }
-
-    for (int lev(0); lev <= finest_level; lev++) {
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-      for(MFIter mfi(*T_g[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
-      {
-        const Box& bx = mfi.tilebox();
-
-        if (advect_enthalpy)
-        {
-          Array4< Real       > const& h_g_arr  = h_g[lev]->array(mfi);
-          Array4< Real const > const& X_gk_arr = X_gk[lev]->array(mfi);
-          Array4< Real const > const& T_g_arr  = T_g[lev]->array(mfi);
-
-          ParallelFor(bx, [h_g_arr,nspecies_g,X_gk_arr,T_g_arr,fluid_parms]
-            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-          {
-            Real h_g_sum(0);
-
-            const Real Tg_loc = T_g_arr(i,j,k);
-
-            for (int n(0); n < nspecies_g; n++) {
-              h_g_sum += X_gk_arr(i,j,k,n) * fluid_parms.calc_h_gk(Tg_loc,n);
-            }
-
-            h_g_arr(i,j,k) = h_g_sum;
-          });
-        }
-      }
-    }
-  }
-
-  // Set covered values
-  for (int lev(0); lev <= finest_level; lev++) {
-    if (advect_enthalpy) {
-      EB_set_covered(*h_g[lev], 0, 1, 0, covered_val);
-    }
-  }
-
-  // Fill boundary values
-  for (int lev(0); lev <= finest_level; lev++) {
-    if (advect_enthalpy) {
-      h_g[lev]->FillBoundary(geom[lev].periodicity());
-    }
-  }
 }

@@ -33,7 +33,7 @@ namespace IC
     ppMFIX.query("advect_enthalpy", advect_enthalpy);
 
     // Loop over ICs
-    for(size_t icv=0; icv < regions.size(); icv++){
+    for(size_t icv=0; icv < regions.size(); icv++) {
 
       amrex::Real volfrac_total(0.0);
 
@@ -90,11 +90,11 @@ namespace IC
         }
       }
 
-      if (DEM::solve || PIC::solve)
-      {
+      if (DEM::solve || PIC::solve) {
+
         // If we initialize particles with particle generator
-        if (fluid.solve && new_ic.fluid.volfrac < 1.0)
-        {
+        if (fluid.solve && new_ic.fluid.volfrac < 1.0) {
+
           // Get the list of solids used in defining the IC region
           std::vector<std::string> solids_types;
           {
@@ -190,6 +190,7 @@ namespace IC
         }
         // If we initialize particles through particle_input.dat
         else {
+
           // Get the list of solids used in defining the IC region
           std::vector<std::string> solids_types(0);
           {

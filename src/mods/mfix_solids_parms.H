@@ -24,15 +24,20 @@ struct SolidParms {
     , cp_sn0(cp_sn)
   {}
 
-  // Compute fluid specific heat
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   amrex::Real calc_cp_s (const int phase,
                          const amrex::Real /*T_s*/) const
   {
-    return cp_s0[phase-1];
+    return cp_s0[phase];
   }
 
-  // Compute fluid specific heat
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_partial_cp_s (const int /*phase*/,
+                                 const amrex::Real /*T_s*/) const
+  {
+    return 0;
+  }
+
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   amrex::Real calc_h_s (const int phase,
                         const amrex::Real T_s) const
@@ -40,16 +45,13 @@ struct SolidParms {
     return calc_cp_s(phase,T_s) * T_s;
   }
 
-  // Compute fluid specific heat
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real calc_T_s (const int phase,
-                        const amrex::Real h_s,
-                        const amrex::Real T_s) const
+  amrex::Real calc_partial_h_s (const int phase,
+                                const amrex::Real T_s) const
   {
-    return h_s / calc_cp_s(phase,T_s); // TODO in case of mixture
+    return calc_partial_cp_s(phase,T_s) * T_s + calc_cp_s(phase,T_s);
   }
 
-  // Compute fluid specific heat
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   amrex::Real calc_cp_sn (const amrex::Real /*T_s*/,
                           const int n) const
@@ -57,12 +59,25 @@ struct SolidParms {
     return cp_sn0[n];
   }
 
-  // Compute fluid specific heat
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_partial_cp_sn (const amrex::Real /*T_s*/,
+                                  const int /*n*/) const
+  {
+    return 0;
+  }
+
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   amrex::Real calc_h_sn (const amrex::Real T_s,
                          const int n) const
   {
     return calc_cp_sn(T_s,n) * T_s;
+  }
+
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_partial_h_sn (const amrex::Real T_s,
+                                 const int n) const
+  {
+    return calc_partial_cp_sn(T_s,n) * T_s + calc_cp_sn(T_s,n);
   }
 };
 
@@ -79,11 +94,6 @@ class SolidsPhase
     static constexpr int NMAX = 10;
 
     int NTYPES;
-
-    // List of recognized fluid molecular weight models
-    struct MOLECULARWEIGHTMODEL { enum {Invalid=-1, Constant, Mixture}; };
-
-    int MolecularWeightModel;
 
     // List of recognized fluid specific heat models
     struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA9Polynomials}; };
