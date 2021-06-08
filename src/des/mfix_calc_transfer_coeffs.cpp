@@ -269,7 +269,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
               if(adv_enthalpy){
                 Real kg = fluid_parms.calc_k_g(T_array(iloc,jloc,kloc));
-                Real cp = fluid_parms.calc_cp_g(T_array(iloc,jloc,kloc));
+                Real cp = fluid_parms.calc_cp_g<RunOn::Gpu>(T_array(iloc,jloc,kloc));
                 Real gamma = ConvectionCoeff(ep, mu, kg, cp, rop_g, vrel, dp, iloc, jloc, kloc, p_id);
                 p_realarray[SoArealData::convection][ip] = 4.0*M_PI*rad*rad*gamma;
               }
@@ -393,7 +393,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
               if(adv_enthalpy) {
                 Real kg = fluid_parms.calc_k_g(T_array(ip,jp,kp));
-                Real cp = fluid_parms.calc_cp_g(T_array(ip,jp,kp));
+                Real cp = fluid_parms.calc_cp_g<RunOn::Gpu>(T_array(ip,jp,kp));
                 Real gamma = ConvectionCoeff(ep, mu, kg, cp, rop_g, vrel, dp, ip, jp, kp, p_id);
                 p_realarray[SoArealData::convection][pid] = 4.0*M_PI*rad*rad*gamma;
               }

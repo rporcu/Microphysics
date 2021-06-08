@@ -339,13 +339,13 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
 
             if(adv_enthalpy) {
               if(!solid_is_a_mixture) {
-                p_realarray[SoArealData::cp_s][ip] = solids_parms.calc_cp_s(phase-1,
+                p_realarray[SoArealData::cp_s][ip] = solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,
                                                                             p_temperature_loc[phase-1]);
               }
               else {
                 Real cp_s_sum(0);
                 for (int n_s(0); n_s < nspecies_s; n_s++)
-                  cp_s_sum += p_mass_fractions[n_s]* solids_parms.calc_cp_sn(p_temperature_loc[phase-1],n_s);
+                  cp_s_sum += p_mass_fractions[n_s]* solids_parms.calc_cp_sn<RunOn::Gpu>(p_temperature_loc[phase-1],n_s);
 
                 p_realarray[SoArealData::cp_s][ip] = cp_s_sum;
               }

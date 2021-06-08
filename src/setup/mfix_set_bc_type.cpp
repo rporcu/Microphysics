@@ -695,12 +695,12 @@ mfix::set_temperature_bc_values (Real time_in) const
       const Real Tg = bc[bcv].fluid.get_temperature(time_in);
       m_h_bc_t_g[bcv] = Tg;
       if (!fluid_is_a_mixture) {
-        m_h_bc_h_g[bcv] = fluid_parms.calc_h_g(m_h_bc_t_g[bcv]);
+        m_h_bc_h_g[bcv] = fluid_parms.calc_h_g<RunOn::Host>(m_h_bc_t_g[bcv]);
       } else {
         m_h_bc_h_g[bcv] = 0.0;
         for (int n(0); n < fluid.nspecies; n++) {
           const Real X_gk = bc[bcv].fluid.species[n].mass_fraction;
-          m_h_bc_h_g[bcv] += X_gk*fluid_parms.calc_h_gk(Tg,n);
+          m_h_bc_h_g[bcv] += X_gk*fluid_parms.calc_h_gk<RunOn::Host>(Tg,n);
         }
       }
 

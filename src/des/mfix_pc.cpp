@@ -970,12 +970,12 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                   const Real Tp_loc = p_realarray[SoArealData::temperature][i];
 
-                  const Real cp_s_old = solids_parms.calc_cp_s(phase-1,Tp_loc);
+                  const Real cp_s_old = solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,Tp_loc);
                   Real cp_s_new(0);
 
                   if (solid_is_a_mixture) {
                     for (int n_s(0); n_s < nspecies_s; ++n_s)
-                      cp_s_new += solids_parms.calc_cp_s(phase-1,Tp_loc) *
+                      cp_s_new += solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,Tp_loc) *
                                   ptile_data.m_runtime_rdata[idx_X_sn+n_s][i]; 
 
                     p_realarray[SoArealData::cp_s][i] = cp_s_new;
@@ -988,7 +988,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                   const Real coeff = update_mass ? (p_mass_old/p_mass_new) : 1.;
 
                   Real p_enthalpy_new =
-                    coeff*solids_parms.calc_h_s(phase-1,Tp_loc) +
+                    coeff*solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_loc) +
                     subdt*((p_realarray[SoArealData::convection][i]+enthalpy_source)/p_mass_new);
 
                   if (solve_reactions)
@@ -1005,12 +1005,12 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                     if (!solid_is_a_mixture) {
 
-                      hp_loc = solids_parms.calc_h_s(phase-1,Tp_arg);
+                      hp_loc = solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_arg);
                     } else {
 
                       for (int n_s(0); n_s < nspecies_s; ++n_s)
                         // TODO TODO TODO TODO check if we use X_sn_old or X_sn_new
-                        hp_loc += X_sn[n_s]*solids_parms.calc_h_sn(Tp_arg,n_s);
+                        hp_loc += X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Gpu>(Tp_arg,n_s);
                     }
 
                     return hp_loc - p_enthalpy_new;
@@ -1023,11 +1023,11 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                     if (!solid_is_a_mixture) {
 
-                      gradient = solids_parms.calc_partial_h_s(phase-1,Tp_arg);
+                      gradient = solids_parms.calc_partial_h_s<RunOn::Gpu>(phase-1,Tp_arg);
                     } else {
 
                       for (int n_s(0); n_s < nspecies_s; ++n_s)
-                        gradient += X_sn[n_s]*solids_parms.calc_partial_h_sn(Tp_arg,n_s);
+                        gradient += X_sn[n_s]*solids_parms.calc_partial_h_sn<RunOn::Gpu>(Tp_arg,n_s);
                     }
 
                     return gradient;

@@ -68,7 +68,7 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
               const Real T_g = T_g_arr(i,j,k);
 
               for (int n(0); n < nspecies_g; ++n)
-                ep_ro_D_gk_arr(i,j,k,n) = ep_ro_g*fluid_parms.calc_D_gk(T_g,n);
+                ep_ro_D_gk_arr(i,j,k,n) = ep_ro_g*fluid_parms.calc_D_gk<RunOn::Gpu>(T_g,n);
             });
           }
         }

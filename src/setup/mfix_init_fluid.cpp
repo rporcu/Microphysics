@@ -370,14 +370,14 @@ void init_fluid_parameters (const Box& bx,
       {
         Real h_g_sum(0);
         for (int n(0); n < nspecies_g; n++) {
-          const Real h_gk = fluid_parms.calc_h_gk(Tg_loc,n);
+          const Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_loc,n);
           h_g_sum += X_gk(i,j,k,n) * h_gk;
         }
 
         h_g(i,j,k) = h_g_sum;
       }
       else {
-        h_g(i,j,k) = fluid_parms.calc_h_g(Tg_loc);
+        h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_loc);
       }
     }
 
@@ -582,12 +582,12 @@ void set_ic_temp (const Box& sbx,
           if (fluid_is_a_mixture) {
             Real h_g_sum(0);
             for (int n(0); n < nspecies_g; n++) {
-              Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+              Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
               h_g_sum += X_gk(i,j,k,n) * h_gk;
             }
             h_g(i,j,k) = h_g_sum;
           } else {
-            h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+            h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
           }
         });
 
@@ -603,12 +603,12 @@ void set_ic_temp (const Box& sbx,
             if (fluid_is_a_mixture) {
               Real h_g_sum(0);
               for (int n(0); n < nspecies_g; n++) {
-                Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+                Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
                 h_g_sum += X_gk(i,j,k,n) * h_gk;
               }
               h_g(i,j,k) = h_g_sum;
             } else {
-              h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+              h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
             }
           });
         }
@@ -625,12 +625,12 @@ void set_ic_temp (const Box& sbx,
             if (fluid_is_a_mixture) {
               Real h_g_sum(0);
               for (int n(0); n < nspecies_g; n++) {
-                Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+                Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
                 h_g_sum += X_gk(i,j,k,n) * h_gk;
               }
               h_g(i,j,k) = h_g_sum;
             } else {
-              h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+              h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
             }
           });
         }
@@ -648,12 +648,12 @@ void set_ic_temp (const Box& sbx,
           if (fluid_is_a_mixture) {
             Real h_g_sum(0);
             for (int n(0); n < nspecies_g; n++) {
-              Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+              Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
               h_g_sum += X_gk(i,j,k,n) * h_gk;
             }
             h_g(i,j,k) = h_g_sum;
           } else {
-            h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+            h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
           }
         });
 
@@ -669,12 +669,12 @@ void set_ic_temp (const Box& sbx,
             if (fluid_is_a_mixture) {
               Real h_g_sum(0);
               for (int n(0); n < nspecies_g; n++) {
-                Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+                Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
                 h_g_sum += X_gk(i,j,k,n) * h_gk;
               }
               h_g(i,j,k) = h_g_sum;
             } else {
-              h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+              h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
             }
           });
         }
@@ -691,12 +691,12 @@ void set_ic_temp (const Box& sbx,
             if (fluid_is_a_mixture) {
               Real h_g_sum(0);
               for (int n(0); n < nspecies_g; n++) {
-                Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+                Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
                 h_g_sum += X_gk(i,j,k,n) * h_gk;
               }
               h_g(i,j,k) = h_g_sum;
             } else {
-              h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+              h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
             }
           });
         }
@@ -713,12 +713,12 @@ void set_ic_temp (const Box& sbx,
           if (fluid_is_a_mixture) {
             Real h_g_sum(0);
             for (int n(0); n < nspecies_g; n++) {
-              Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+              Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
               h_g_sum += X_gk(i,j,k,n) * h_gk;
             }
             h_g(i,j,k) = h_g_sum;
           } else {
-            h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+            h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
           }
         });
 
@@ -735,12 +735,12 @@ void set_ic_temp (const Box& sbx,
             if (fluid_is_a_mixture) {
               Real h_g_sum(0);
               for (int n(0); n < nspecies_g; n++) {
-                Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+                Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
                 h_g_sum += X_gk(i,j,k,n) * h_gk;
               }
               h_g(i,j,k) = h_g_sum;
             } else {
-              h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+              h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
             }
           });
         }
@@ -758,12 +758,12 @@ void set_ic_temp (const Box& sbx,
             if (fluid_is_a_mixture) {
               Real h_g_sum(0);
               for (int n(0); n < nspecies_g; n++) {
-                Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+                Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
                 h_g_sum += X_gk(i,j,k,n) * h_gk;
               }
               h_g(i,j,k) = h_g_sum;
             } else {
-              h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+              h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
             }
           });
         }
@@ -978,7 +978,7 @@ void set_ic_pressure_g (const Box& sbx,
         // set initial fluid molecular weight
         if (fluid_is_a_mixture) {
           for (int n(0); n < nspecies_g; n++)
-            MW_g_loc += X_gk(i,j,k,n) / fluid_parms.MW_gk0[n];
+            MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
           MW_g_loc = 1. / MW_g_loc;
         }
@@ -1001,7 +1001,7 @@ void set_ic_pressure_g (const Box& sbx,
           // set initial fluid molecular weight
           if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++)
-              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.MW_gk0[n];
+              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
             MW_g_loc = 1. / MW_g_loc;
           }
@@ -1025,7 +1025,7 @@ void set_ic_pressure_g (const Box& sbx,
           // set initial fluid molecular weight
           if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++)
-              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.MW_gk0[n];
+              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
             MW_g_loc = 1. / MW_g_loc;
           }
@@ -1050,7 +1050,7 @@ void set_ic_pressure_g (const Box& sbx,
         // set initial fluid molecular weight
         if (fluid_is_a_mixture) {
           for (int n(0); n < nspecies_g; n++)
-            MW_g_loc += X_gk(i,j,k,n) / fluid_parms.MW_gk0[n];
+            MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
           MW_g_loc = 1. / MW_g_loc;
         }
@@ -1073,7 +1073,7 @@ void set_ic_pressure_g (const Box& sbx,
           // set initial fluid molecular weight
           if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++)
-              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.MW_gk0[n];
+              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
             MW_g_loc = 1. / MW_g_loc;
           }
@@ -1097,7 +1097,7 @@ void set_ic_pressure_g (const Box& sbx,
           // set initial fluid molecular weight
           if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++)
-              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.MW_gk0[n];
+              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
             MW_g_loc = 1. / MW_g_loc;
           }
@@ -1121,7 +1121,7 @@ void set_ic_pressure_g (const Box& sbx,
         // set initial fluid molecular weight
         if (fluid_is_a_mixture) {
           for (int n(0); n < nspecies_g; n++)
-            MW_g_loc += X_gk(i,j,k,n) / fluid_parms.MW_gk0[n];
+            MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
           MW_g_loc = 1. / MW_g_loc;
         }
@@ -1145,7 +1145,7 @@ void set_ic_pressure_g (const Box& sbx,
           // set initial fluid molecular weight
           if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++)
-              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.MW_gk0[n];
+              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
             MW_g_loc = 1. / MW_g_loc;
           }
@@ -1170,7 +1170,7 @@ void set_ic_pressure_g (const Box& sbx,
           // set initial fluid molecular weight
           if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++)
-              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.MW_gk0[n];
+              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
             MW_g_loc = 1. / MW_g_loc;
           }

@@ -483,7 +483,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
                 Real MW_g_loc(0);
 
                 for (int n(0); n < nspecies_g; ++n) {
-                  MW_g_loc += X_gk_array(i,j,k,n) / fluid_parms.MW_gk0[n];
+                  MW_g_loc += X_gk_array(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
                 }
 
                 MW_g_array(i,j,k) = 1. / MW_g_loc;
@@ -541,7 +541,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
             ParallelFor(bx, [cp_g_array,T_g_array,fluid_params]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
-              cp_g_array(i,j,k) = fluid_params.calc_cp_g(T_g_array(i,j,k));
+              cp_g_array(i,j,k) = fluid_params.calc_cp_g<RunOn::Gpu>(T_g_array(i,j,k));
             });
           }
 
@@ -708,7 +708,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
             {
               for (int n(0); n < nspecies_g; ++n)
                 if (adv_enthalpy)
-                  D_gk_array(i,j,k,n) = fluid_params.calc_D_gk(T_g_array(i,j,k), n);
+                  D_gk_array(i,j,k,n) = fluid_params.calc_D_gk<RunOn::Gpu>(T_g_array(i,j,k), n);
                 else
                   D_gk_array(i,j,k,n) = p_D_gk0[n];
             });
@@ -748,7 +748,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               for (int n(0); n < nspecies_g; ++n)
-                cp_gk_array(i,j,k,n) = fluid_params.calc_cp_gk(T_g_array(i,j,k),n);
+                cp_gk_array(i,j,k,n) = fluid_params.calc_cp_gk<RunOn::Gpu>(T_g_array(i,j,k),n);
             });
           }
 
@@ -788,7 +788,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
               const Real Tg_loc = T_g_array(i,j,k);
 
               for (int n(0); n < nspecies_g; ++n)
-                h_gk_array(i,j,k,n) = fluid_params.calc_h_gk(Tg_loc,n);
+                h_gk_array(i,j,k,n) = fluid_params.calc_h_gk<RunOn::Gpu>(Tg_loc,n);
             });
           }
 

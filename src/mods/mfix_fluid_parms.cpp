@@ -239,18 +239,22 @@ FluidPhase::Initialize ()
 
   d_MW_gk0.resize(MW_gk0.size());
   Gpu::copyAsync(Gpu::hostToDevice, MW_gk0.begin(), MW_gk0.end(), d_MW_gk0.begin());
-  Real* p_MW_gk0 = d_MW_gk0.data();
+  Real* p_h_MW_gk0 = MW_gk0.data();
+  Real* p_d_MW_gk0 = d_MW_gk0.data();
 
   d_D_gk0.resize(D_gk0.size());
   Gpu::copyAsync(Gpu::hostToDevice, D_gk0.begin(), D_gk0.end(), d_D_gk0.begin());
-  Real* p_D_gk0 = d_D_gk0.data();
+  Real* p_h_D_gk0 = D_gk0.data();
+  Real* p_d_D_gk0 = d_D_gk0.data();
 
   d_H_fk0.resize(H_fk0.size());
   Gpu::copyAsync(Gpu::hostToDevice, H_fk0.begin(), H_fk0.end(), d_H_fk0.begin());
 
   d_cp_gk0.resize(cp_gk0.size());
   Gpu::copyAsync(Gpu::hostToDevice, cp_gk0.begin(), cp_gk0.end(), d_cp_gk0.begin());
-  Real* p_cp_gk0 = d_cp_gk0.data();
+  Real* p_h_cp_gk0 = cp_gk0.data();
+  Real* p_d_cp_gk0 = d_cp_gk0.data();
 
-  parameters = new FluidParms(MW_g0, p_MW_gk0, mu_g0, k_g0, p_D_gk0, cp_g0, p_cp_gk0);
+  parameters = new FluidParms(MW_g0, p_h_MW_gk0, p_d_MW_gk0, mu_g0, k_g0,
+      p_h_D_gk0, p_d_D_gk0, cp_g0, p_h_cp_gk0, p_d_cp_gk0);
 }

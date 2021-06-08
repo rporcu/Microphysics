@@ -85,15 +85,15 @@ mfix::mfix_closed_system_rhs (Vector< MultiFab*       > const& rhs,
         // set initial fluid molecular weight
         if (fluid_is_a_mixture) {
           for (int n(0); n < nspecies_g; n++) {
-            MW_g_loc += X_gk_arr(i,j,k,n) / fluid_parms.MW_gk0[n];
-            cp_g_loc += X_gk_arr(i,j,k,n) * fluid_parms.calc_cp_gk(Tg_loc,n);
+            MW_g_loc += X_gk_arr(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
+            cp_g_loc += X_gk_arr(i,j,k,n) * fluid_parms.calc_cp_gk<RunOn::Gpu>(Tg_loc,n);
           }
 
           MW_g_loc = 1. / MW_g_loc;
         }
         else {
           MW_g_loc = fluid_parms.MW_g0;
-          cp_g_loc = fluid_parms.calc_cp_g(Tg_loc);
+          cp_g_loc = fluid_parms.calc_cp_g<RunOn::Gpu>(Tg_loc);
         }
 
         if (!flags_arr(i,j,k).isCovered()) {
@@ -219,14 +219,14 @@ mfix::mfix_open_system_rhs (Vector< MultiFab*      > const& rhs,
         // set initial fluid molecular weight
         if (fluid_is_a_mixture) {
           for (int n(0); n < nspecies_g; n++) {
-            MW_g_loc += X_gk_arr(i,j,k,n) / fluid_parms.MW_gk0[n];
-            cp_g_loc += X_gk_arr(i,j,k,n) * fluid_parms.calc_cp_gk(Tg_loc,n);
+            MW_g_loc += X_gk_arr(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
+            cp_g_loc += X_gk_arr(i,j,k,n) * fluid_parms.calc_cp_gk<RunOn::Gpu>(Tg_loc,n);
           }
           MW_g_loc = 1. / MW_g_loc;
         }
         else {
           MW_g_loc = fluid_parms.MW_g0;
-          cp_g_loc = fluid_parms.calc_cp_g(Tg_loc);
+          cp_g_loc = fluid_parms.calc_cp_g<RunOn::Gpu>(Tg_loc);
         }
 
         if (!flags_arr(i,j,k).isCovered()) {
@@ -236,10 +236,10 @@ mfix::mfix_open_system_rhs (Vector< MultiFab*      > const& rhs,
 
           if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; ++n) {
-              Real coeff = MW_g_loc / fluid_parms.MW_gk0[n];
+              Real coeff = MW_g_loc / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
               if (adv_enthalpy) {
-                const Real h_gk = fluid_parms.calc_h_gk(Tg_loc,n);
+                const Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_loc,n);
                 coeff -= h_gk / (cp_g_loc*Tg_loc);
               }
 
@@ -249,7 +249,7 @@ mfix::mfix_open_system_rhs (Vector< MultiFab*      > const& rhs,
             Real coeff = 1.;
 
             if (adv_enthalpy) {
-              const Real h_g_loc = fluid_parms.calc_h_g(Tg_loc);
+              const Real h_g_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_loc);
               coeff -= h_g_loc / (cp_g_loc*Tg_loc);
             }
 
