@@ -402,12 +402,12 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
             const Real Tp_loc = p_realarray[SoArealData::temperature][lp];
 
-            const Real cp_s_old = solids_parms.calc_cp_s(phase-1,Tp_loc);
+            const Real cp_s_old = solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,Tp_loc);
             Real cp_s_new(0);
 
             if (solid_is_a_mixture) {
               for (int n_s(0); n_s < nspecies_s; ++n_s)
-                cp_s_new += solids_parms.calc_cp_sn(Tp_loc,n_s) *
+                cp_s_new += solids_parms.calc_cp_sn<RunOn::Gpu>(Tp_loc,n_s) *
                             ptile_data.m_runtime_rdata[idx_X_sn+n_s][lp];
 
               p_realarray[SoArealData::cp_s][lp] = cp_s_new;
@@ -420,7 +420,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
             const Real coeff = update_mass ? (p_mass_old/p_mass_new) : 1.;
 
             Real p_enthalpy_new =
-              coeff*solids_parms.calc_h_s(phase-1,Tp_loc) +
+              coeff*solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_loc) +
               dt*((p_realarray[SoArealData::convection][i]+enthalpy_source)/p_mass_new);
 
             if (solve_reactions)
@@ -437,12 +437,12 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
               if (!solid_is_a_mixture) {
 
-                hp_loc = solids_parms.calc_h_s(phase-1,Tp_arg);
+                hp_loc = solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_arg);
               } else {
 
                 for (int n(0); n < nspecies_s; ++n)
                   // TODO TODO TODO TODO check if we use X_sn_old or X_sn_new
-                  hp_loc += X_sn[n]*solids_parms.calc_h_sn(Tp_arg,n);
+                  hp_loc += X_sn[n]*solids_parms.calc_h_sn<RunOn::Gpu>(Tp_arg,n);
               }
 
               return hp_loc - p_enthalpy_new;
@@ -455,11 +455,11 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
               if (!solid_is_a_mixture) {
 
-                gradient = solids_parms.calc_partial_h_s(phase-1,Tp_arg);
+                gradient = solids_parms.calc_partial_h_s<RunOn::Gpu>(phase-1,Tp_arg);
               } else {
 
                 for (int n(0); n < nspecies_s; ++n)
-                  gradient += X_sn[n]*solids_parms.calc_partial_h_sn(Tp_arg,n);
+                  gradient += X_sn[n]*solids_parms.calc_partial_h_sn<RunOn::Gpu>(Tp_arg,n);
               }
 
               return gradient;

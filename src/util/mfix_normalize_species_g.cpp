@@ -91,7 +91,7 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk,
             const Real Tg_loc = T_g_arr(i,j,k);
 
             for (int n(0); n < nspecies_g; n++) {
-              h_g_sum += X_gk_arr(i,j,k,n) * fluid_parms.calc_h_gk(Tg_loc,n);
+              h_g_sum += X_gk_arr(i,j,k,n) * fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_loc,n);
             }
 
             h_g_arr(i,j,k) = h_g_sum;

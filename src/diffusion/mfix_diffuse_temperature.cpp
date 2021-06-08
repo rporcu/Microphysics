@@ -89,7 +89,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
       amrex::ParallelFor(bx, [ep_g_array,T_g_array,ro_g_array,fluid_parms]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-        ep_g_array(i,j,k) *= ro_g_array(i,j,k)*fluid_parms.calc_cp_g(T_g_array(i,j,k));
+        ep_g_array(i,j,k) *= ro_g_array(i,j,k)*fluid_parms.calc_cp_g<RunOn::Gpu>(T_g_array(i,j,k));
       });
     }
 
@@ -129,7 +129,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
       amrex::ParallelFor(bx, [ep_g_array,T_g_array,ro_g_array,fluid_parms]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-        ep_g_array(i,j,k) /= ro_g_array(i,j,k)*fluid_parms.calc_cp_g(T_g_array(i,j,k));
+        ep_g_array(i,j,k) /= ro_g_array(i,j,k)*fluid_parms.calc_cp_g<RunOn::Gpu>(T_g_array(i,j,k));
       });
     }
 
@@ -200,7 +200,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
       amrex::ParallelFor(bx, [h_g_array,T_g_array,fluid_parms]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-        h_g_array(i,j,k) = fluid_parms.calc_h_g(T_g_array(i,j,k));
+        h_g_array(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(T_g_array(i,j,k));
       });
     }
   }

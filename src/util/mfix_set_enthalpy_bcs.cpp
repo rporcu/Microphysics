@@ -111,13 +111,13 @@ mfix::set_enthalpy_bcs (Real time,
     }
     else if (bct == minf || bct == pinf) {
       if (!fluid_is_a_mixture) {
-        h_g(i,j,k) = fluid_parms.calc_h_g(p_bc_t_g[bcv]);
+        h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(p_bc_t_g[bcv]);
       }
       else {
         Real h_g_sum(0);
 
         for (int n(0); n < nspecies_g; n++) {
-          h_g_sum += p_bc_X_gk[n][bcv]*fluid_parms.calc_h_gk(p_bc_t_g[bcv],n);
+          h_g_sum += p_bc_X_gk[n][bcv]*fluid_parms.calc_h_gk<RunOn::Gpu>(p_bc_t_g[bcv],n);
         }
 
         h_g(i,j,k) = h_g_sum;
@@ -135,23 +135,6 @@ mfix::set_enthalpy_bcs (Real time,
       const IntVect dom_ijk(dom_lo[0],j,k);
 
       set_enthalpy_bcs_in_box(bct, bcv, dom_ijk, i, j, k);
-      //if(bct == pout) {
-      //  h_g(i,j,k) = h_g(dom_lo[0],j,k);
-      //}
-      //else if (bct == minf || bct == pinf) {
-      //  if (!fluid_is_a_mixture) {
-      //    h_g(i,j,k) = fluid_parms.calc_h_g(p_bc_t_g[bcv]);
-      //  }
-      //  else {
-      //    Real h_g_sum(0);
-
-      //    for (int n(0); n < nspecies_g; n++) {
-      //      h_g_sum += p_bc_X_gk[n][bcv]*fluid_parms.calc_h_gk(p_bc_t_g[bcv],n);
-      //    }
-
-      //    h_g(i,j,k) = h_g_sum;
-      //  }
-      //}
     });
   }
 
@@ -165,23 +148,6 @@ mfix::set_enthalpy_bcs (Real time,
       const IntVect dom_ijk(dom_hi[0],j,k);
 
       set_enthalpy_bcs_in_box(bct, bcv, dom_ijk, i, j, k);
-      //if(bct == pout) {
-      //  h_g(i,j,k) = h_g(dom_hi[0],j,k);
-      //}
-      //else if (bct == minf || bct == pinf) {
-      //  if (!fluid_is_a_mixture) {
-      //    h_g(i,j,k) = fluid_parms.calc_h_g(p_bc_t_g[bcv]);
-      //  }
-      //  else {
-      //    Real h_g_sum(0);
-
-      //    for (int n(0); n < nspecies_g; n++) {
-      //      h_g_sum += p_bc_X_gk[n][bcv]*fluid_parms.calc_h_gk(p_bc_t_g[bcv],n);
-      //    }
-
-      //    h_g(i,j,k) = h_g_sum;
-      //  }
-      //}
     });
   }
 
@@ -195,23 +161,6 @@ mfix::set_enthalpy_bcs (Real time,
       const IntVect dom_ijk(i,dom_lo[1],k);
 
       set_enthalpy_bcs_in_box(bct, bcv, dom_ijk, i, j, k);
-      //if(bct == pout) {
-      //  h_g(i,j,k) = h_g(i,dom_lo[1],k);
-      //}
-      //else if (bct == minf || bct == pinf) {
-      //  if (!fluid_is_a_mixture) {
-      //    h_g(i,j,k) = fluid_parms.calc_h_g(p_bc_t_g[bcv]);
-      //  }
-      //  else {
-      //    Real h_g_sum(0);
-
-      //    for (int n(0); n < nspecies_g; n++) {
-      //      h_g_sum += p_bc_X_gk[n][bcv]*fluid_parms.calc_h_gk(p_bc_t_g[bcv],n);
-      //    }
-
-      //    h_g(i,j,k) = h_g_sum;
-      //  }
-      //}
     });
   }
 
@@ -225,23 +174,6 @@ mfix::set_enthalpy_bcs (Real time,
       const IntVect dom_ijk(i,dom_hi[1],k);
 
       set_enthalpy_bcs_in_box(bct, bcv, dom_ijk, i, j, k);
-      //if(bct == pout) {
-      //  h_g(i,j,k) = h_g(i,dom_hi[1],k);
-      //}
-      //else if (bct == minf || bct == pinf) {
-      //  if (!fluid_is_a_mixture) {
-      //    h_g(i,j,k) = fluid_parms.calc_h_g(p_bc_t_g[bcv]);
-      //  }
-      //  else {
-      //    Real h_g_sum(0);
-
-      //    for (int n(0); n < nspecies_g; n++) {
-      //      h_g_sum += p_bc_X_gk[n][bcv]*fluid_parms.calc_h_gk(p_bc_t_g[bcv],n);
-      //    }
-
-      //    h_g(i,j,k) = h_g_sum;
-      //  }
-      //}
     });
   }
 
@@ -255,23 +187,6 @@ mfix::set_enthalpy_bcs (Real time,
       const IntVect dom_ijk(i,j,dom_lo[2]);
 
       set_enthalpy_bcs_in_box(bct, bcv, dom_ijk, i, j, k);
-      //if(bct == pout) {
-      //  h_g(i,j,k) = h_g(i,j,dom_lo[2]);
-      //}
-      //else if (bct == minf || bct == pinf) {
-      //  if (!fluid_is_a_mixture) {
-      //    h_g(i,j,k) = fluid_parms.calc_h_g(p_bc_t_g[bcv]);
-      //  }
-      //  else {
-      //    Real h_g_sum(0);
-
-      //    for (int n(0); n < nspecies_g; n++) {
-      //      h_g_sum += p_bc_X_gk[n][bcv]*fluid_parms.calc_h_gk(p_bc_t_g[bcv],n);
-      //    }
-
-      //    h_g(i,j,k) = h_g_sum;
-      //  }
-      //}
     });
   }
 
@@ -285,25 +200,8 @@ mfix::set_enthalpy_bcs (Real time,
       const IntVect dom_ijk(i,j,dom_hi[2]);
 
       set_enthalpy_bcs_in_box(bct, bcv, dom_ijk, i, j, k);
-      //if(bct == pout) {
-      //  h_g(i,j,k) = h_g(i,j,dom_hi[2]);
-      //}
-      //else if (bct == minf || bct == pinf) {
-      //  if (!fluid_is_a_mixture) {
-      //    h_g(i,j,k) = fluid_parms.calc_h_g(p_bc_t_g[bcv]);
-      //  }
-      //  else {
-      //    Real h_g_sum(0);
-
-      //    for (int n(0); n < nspecies_g; n++) {
-      //      h_g_sum += p_bc_X_gk[n][bcv]*fluid_parms.calc_h_gk(p_bc_t_g[bcv],n);
-      //    }
-
-      //    h_g(i,j,k) = h_g_sum;
-      //  }
-      //}
     });
   }
 
-  Gpu::synchronize();
+  //Gpu::synchronize();
 }

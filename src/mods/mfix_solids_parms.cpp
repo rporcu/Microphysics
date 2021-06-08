@@ -170,7 +170,8 @@ SolidsPhase::Initialize ()
 
   d_cp_s0.resize(cp_s0.size());
   Gpu::copyAsync(Gpu::hostToDevice, cp_s0.begin(), cp_s0.end(), d_cp_s0.begin());
-  Real* p_cp_s0 = d_cp_s0.data();
+  Real* p_h_cp_s0 = cp_s0.data();
+  Real* p_d_cp_s0 = d_cp_s0.data();
 
   d_species_id.resize(species_id.size());
   Gpu::copyAsync(Gpu::hostToDevice, species_id.begin(), species_id.end(), d_species_id.begin());
@@ -183,7 +184,8 @@ SolidsPhase::Initialize ()
 
   d_cp_sn0.resize(cp_sn0.size());
   Gpu::copyAsync(Gpu::hostToDevice, cp_sn0.begin(), cp_sn0.end(), d_cp_sn0.begin());
-  Real* p_cp_sn0 = d_cp_sn0.data();
+  Real* p_h_cp_sn0 = cp_sn0.data();
+  Real* p_d_cp_sn0 = d_cp_sn0.data();
 
-  parameters = new SolidParms(p_cp_s0, p_cp_sn0);
+  parameters = new SolidParms(p_h_cp_s0, p_d_cp_s0, p_h_cp_sn0, p_d_cp_sn0);
 }

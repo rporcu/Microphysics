@@ -567,7 +567,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& /*chem_txfr*/,
 
                 G_s_gp += G_sn_gp;
 
-                const Real h_sn_T_p = p_H_fn0[n_s] + solids_parms.calc_h_sn(T_p,n_s);
+                const Real h_sn_T_p = p_H_fn0[n_s] + solids_parms.calc_h_sn<RunOn::Gpu>(T_p,n_s);
                 G_h_gp += h_sn_T_p * G_sn_gp;
 
                 // Update global variable
@@ -630,8 +630,8 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& /*chem_txfr*/,
                     G_sk_pg_loc += G_sk_pg_q;
 
                     // Contribution to the particle
-                    const Real h_gk_T_p = p_H_fk0[n_g] + fluid_parms.calc_h_gk(T_p,n_g);
-                    const Real h_gk_T_g = p_H_fk0[n_g] + fluid_parms.calc_h_gk(T_g,n_g);
+                    const Real h_gk_T_p = p_H_fk0[n_g] + fluid_parms.calc_h_gk<RunOn::Gpu>(T_p,n_g);
+                    const Real h_gk_T_g = p_H_fk0[n_g] + fluid_parms.calc_h_gk<RunOn::Gpu>(T_g,n_g);
 
                     G_h_gp += h_gk_T_p * G_sk_pg_q;
                     G_h_gp += amrex::min(0., G_sk_pg_q) * (h_gk_T_g - h_gk_T_p);
@@ -851,7 +851,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& /*chem_txfr*/,
 
                   G_s_gp += G_sn_gp;
 
-                  const Real h_sn_T_p = p_H_fn0[n_s] + solids_parms.calc_h_sn(T_p,n_s);
+                  const Real h_sn_T_p = p_H_fn0[n_s] + solids_parms.calc_h_sn<RunOn::Gpu>(T_p,n_s);
                   G_h_gp += h_sn_T_p * G_sn_gp;
 
                   // Update global variable
@@ -914,8 +914,8 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& /*chem_txfr*/,
                       G_sk_pg_loc += G_sk_pg_q;
 
                       // Contribution to the particle
-                      const Real h_gk_T_p = p_H_fk0[n_g] + fluid_parms.calc_h_gk(T_p,n_g);
-                      const Real h_gk_T_g = p_H_fk0[n_g] + fluid_parms.calc_h_gk(T_g,n_g);
+                      const Real h_gk_T_p = p_H_fk0[n_g] + fluid_parms.calc_h_gk<RunOn::Gpu>(T_p,n_g);
+                      const Real h_gk_T_g = p_H_fk0[n_g] + fluid_parms.calc_h_gk<RunOn::Gpu>(T_g,n_g);
 
                       G_h_gp += h_gk_T_p * G_sk_pg_q;
                       G_h_gp += amrex::min(0., G_sk_pg_q) * (h_gk_T_g - h_gk_T_p);

@@ -412,11 +412,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
                       if (!fluid_is_a_mixture) {
 
-                        hg_loc = fluid_parms.calc_h_g(Tg_arg);
+                        hg_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_arg);
                       } else {
 
                         for (int n(0); n < nspecies_g; ++n)
-                          hg_loc += X_gk_o(i,j,k,n)*fluid_parms.calc_h_gk(Tg_arg,n);
+                          hg_loc += X_gk_o(i,j,k,n)*fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_arg,n);
                       }
 
                       return hg_loc - h_g;
@@ -429,11 +429,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
                       if (!fluid_is_a_mixture) {
 
-                        gradient = fluid_parms.calc_partial_h_g(Tg_arg);
+                        gradient = fluid_parms.calc_partial_h_g<RunOn::Gpu>(Tg_arg);
                       } else {
 
                         for (int n(0); n < nspecies_g; ++n)
-                          gradient += X_gk_o(i,j,k,n)*fluid_parms.calc_partial_h_gk(Tg_arg,n);
+                          gradient += X_gk_o(i,j,k,n)*fluid_parms.calc_partial_h_gk<RunOn::Gpu>(Tg_arg,n);
                       }
 
                       return gradient;

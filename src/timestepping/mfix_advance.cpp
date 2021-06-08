@@ -327,12 +327,12 @@ mfix::mfix_add_txfr_explicit (Real dt)
 
             if (!fluid_is_a_mixture) {
 
-              hg_loc = fluid_parms.calc_h_g(Tg_arg);
+              hg_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_arg);
             } else {
 
               for (int n(0); n < nspecies_g; ++n)
                 // TODO TODO TODO TODO check if we use X_gk_old or X_gk_new
-                hg_loc += Xgk_array(i,j,k,n)*fluid_parms.calc_h_gk(Tg_arg,n);
+                hg_loc += Xgk_array(i,j,k,n)*fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_arg,n);
             }
 
             return hg_loc - hg;
@@ -345,11 +345,11 @@ mfix::mfix_add_txfr_explicit (Real dt)
 
             if (!fluid_is_a_mixture) {
 
-              gradient = fluid_parms.calc_partial_h_g(Tg_arg);
+              gradient = fluid_parms.calc_partial_h_g<RunOn::Gpu>(Tg_arg);
             } else {
 
               for (int n(0); n < nspecies_g; ++n)
-                gradient += Xgk_array(i,j,k,n)*fluid_parms.calc_partial_h_gk(Tg_arg,n);
+                gradient += Xgk_array(i,j,k,n)*fluid_parms.calc_partial_h_gk<RunOn::Gpu>(Tg_arg,n);
             }
 
             return gradient;
@@ -436,7 +436,7 @@ mfix::mfix_add_txfr_implicit (Real dt,
           const Real dt_gamma = dt * txfr_array(i,j,k,5);
 
           Real rop_g  = ro_array(i,j,k) * ep_array(i,j,k);
-          Real denom = 1.0 / (rop_g + dt_gamma/fluid_parms.calc_cp_g(Tg));
+          Real denom = 1.0 / (rop_g + dt_gamma/fluid_parms.calc_cp_g<RunOn::Gpu>(Tg));
 
           const Real hg = (rop_g * hg_array(i,j,k) + dt * Ts) * denom;
           hg_array(i,j,k) = hg;
@@ -452,12 +452,12 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
             if (!fluid_is_a_mixture) {
 
-              hg_loc = fluid_parms.calc_h_g(Tg_arg);
+              hg_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_arg);
             } else {
 
               for (int n(0); n < nspecies_g; ++n)
                 // TODO TODO TODO TODO check if we use X_gk_old or X_gk_new
-                hg_loc += Xgk_array(i,j,k,n)*fluid_parms.calc_h_gk(Tg_arg,n);
+                hg_loc += Xgk_array(i,j,k,n)*fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_arg,n);
             }
 
             return hg_loc - hg;
@@ -470,11 +470,11 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
             if (!fluid_is_a_mixture) {
 
-              gradient = fluid_parms.calc_partial_h_g(Tg_arg);
+              gradient = fluid_parms.calc_partial_h_g<RunOn::Gpu>(Tg_arg);
             } else {
 
               for (int n(0); n < nspecies_g; ++n)
-                gradient += Xgk_array(i,j,k,n)*fluid_parms.calc_partial_h_gk(Tg_arg,n);
+                gradient += Xgk_array(i,j,k,n)*fluid_parms.calc_partial_h_gk<RunOn::Gpu>(Tg_arg,n);
             }
 
             return gradient;
