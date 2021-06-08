@@ -421,10 +421,10 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
             Real p_enthalpy_new =
               coeff*solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_loc) +
-              dt*((p_realarray[SoArealData::convection][i]+enthalpy_source)/p_mass_new);
+              dt*((p_realarray[SoArealData::convection][lp]+enthalpy_source)/p_mass_new);
 
             if (solve_reactions)
-              p_enthalpy_new -= dt*p_density_new*ptile_data.m_runtime_rdata[idx_h_s_txfr][i];
+              p_enthalpy_new -= dt*p_density_new*ptile_data.m_runtime_rdata[idx_h_s_txfr][lp];
 
             // ************************************************************
             // Newton-Raphson solver for solving implicit equation for
@@ -470,7 +470,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
             Solvers::NewtonRaphson(Tp_new, Tp_old, R, partial_R);
 
-            p_realarray[SoArealData::temperature][i] = Tp_new;
+            p_realarray[SoArealData::temperature][lp] = Tp_new;
           }
         }
       });
