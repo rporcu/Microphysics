@@ -29,6 +29,9 @@ mfix::InitParams ()
   solids.Initialize();
 
   enthalpy_source = solids.enthalpy_source;
+  update_mass     = solids.update_mass;
+  update_momentum = solids.update_momentum;
+  update_enthalpy = solids.update_enthalpy;
 
   BL_ASSERT(fluid.nspecies <= SPECIES::NMAX);
   BL_ASSERT(solids.nspecies <= SPECIES::NMAX);
