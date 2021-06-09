@@ -1060,8 +1060,8 @@ public:
     bool m_use_depdt_constraint = false;
     bool m_use_drag_in_projection = false;
 
-    // If using Godunov, default to PPM (not PLM)
-    bool m_godunov_ppm         = true;
+    // If using Godunov, default to PLM (not PPM)
+    bool m_godunov_ppm         = false;
 
     // If using Godunov, default to including viscous/diffusive
     //    terms in the forcing terms
