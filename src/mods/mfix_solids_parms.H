@@ -214,6 +214,12 @@ class SolidsPhase
 
     amrex::Real enthalpy_source;
 
+    int update_mass;
+
+    int update_momentum;
+
+    int update_enthalpy;
+
     struct INPUT_DIST_t {
       std::string distribution;
       amrex::Real mean; // Mean value of distriubtion (or constant value)

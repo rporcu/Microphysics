@@ -1089,6 +1089,9 @@ public:
     DiffusionType m_corrector_diff_type = DiffusionType::Invalid;
 
     amrex::Real enthalpy_source = 0;
+    int update_mass             = 1;
+    int update_momentum         = 1;
+    int update_enthalpy      = 1;
 
 
     // Options to control mfix verbosity level

@@ -34,6 +34,9 @@ SolidsPhase::SolidsPhase()
   , d_cp_sn0(0)
   , parameters(nullptr)
   , enthalpy_source(0)
+  , update_mass(1)
+  , update_momentum(1)
+  , update_enthalpy(1)
 {}
 
 SolidsPhase::~SolidsPhase()
@@ -54,6 +57,9 @@ SolidsPhase::Initialize ()
     {
       amrex::ParmParse pp_mfix_solids("mfix.particles");
       pp_mfix_solids.query("enthalpy_source", enthalpy_source);
+      pp_mfix_solids.query("update_mass", update_mass);
+      pp_mfix_solids.query("update_momentum", update_momentum);
+      pp_mfix_solids.query("update_enthalpy", update_enthalpy);
     }
   }
 
@@ -108,6 +114,7 @@ SolidsPhase::Initialize ()
 
       // Query the enthalpy_of_formation
       ppSolid.query("enthalpy_of_formation", H_f0);
+
     } // check_energy
 
     // Solids species inputs

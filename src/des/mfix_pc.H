@@ -171,7 +171,10 @@ public:
                           std::string & knapsack_weight_type,
                           int & nsubsteps,
                           const int advect_enthalpy,
-                          const amrex::Real enthalpy_source);
+                          const amrex::Real enthalpy_source,
+                          const int update_mass,
+                          const int update_momentum,
+                          const int update_enthalpy);
 
     void MFIX_PC_InitCollisionParams ();
 
