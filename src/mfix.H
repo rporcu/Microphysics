@@ -1053,8 +1053,7 @@ public:
     enum struct AdvectionType {Invalid, MOL, Godunov};
     AdvectionType m_advection_type = AdvectionType::Invalid;
 
-    //std::string m_advection_type = "MOL";
-    std::string m_redistribution_type = "FluxRedist";
+    std::string m_redistribution_type = "StateRedist";
 
     // include d(ep_g)/dt in constraint
     bool m_use_depdt_constraint = false;

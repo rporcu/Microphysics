@@ -59,8 +59,6 @@ mfix::InitParams ()
   {
     ParmParse pp("mfix");
 
-    // Options to control time stepping
-    pp.query("cfl", m_cfl);
 
     fixed_dt = -1.;
     pp.query("fixed_dt", fixed_dt);
@@ -194,7 +192,7 @@ mfix::InitParams ()
     pp.query("use_drag_coeff_in_proj_gp"        , m_use_drag_in_projection);
 
     // Are we using MOL or Godunov?
-    std::string l_advection_type = "MOL";
+    std::string l_advection_type = "Godunov";
     pp.query("advection_type"                   , l_advection_type);
     pp.query("use_ppm"                          , m_godunov_ppm);
     pp.query("godunov_use_forces_in_trans"      , m_godunov_use_forces_in_trans);
@@ -210,7 +208,7 @@ mfix::InitParams ()
       amrex::Abort("redistribution type must be FluxRedist, NoRedist or StateRedist");
 
 
-    // Default to MOL
+    // Default to Godunov
     if(amrex::toLower(l_advection_type).compare("mol") == 0) {
       m_advection_type = AdvectionType::MOL;
     } else if(amrex::toLower(l_advection_type).compare("godunov") == 0) {
@@ -243,6 +241,16 @@ mfix::InitParams ()
     if (m_predictor_diff_type != DiffusionType::Implicit && use_tensor_correction) {
       amrex::Abort("We cannot have use_tensor_correction be true and diffusion type not Implicit");
     }
+
+    // Options to control time stepping
+    // MOL: default CFl = 0.5
+    // Godunov: default CFL = 0.9
+    if (advection_type() == AdvectionType::MOL) {
+      m_cfl = 0.5;
+    } else {
+      m_cfl = 0.9;
+    }
+    pp.query("cfl", m_cfl);
 
     if (advection_type() == AdvectionType::MOL && m_cfl > 0.5) {
       amrex::Abort("We currently require cfl <= 0.5 when using the MOL advection scheme");
