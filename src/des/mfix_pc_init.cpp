@@ -182,31 +182,32 @@ void MFIXParticleContainer::InitParticlesAuto ()
       // grid and add the particles to it
       auto& particles = DefineAndReturnParticleTile(lev,mfi);
 
-      SuperParticleType p_new;
+      particles.resize(pcount);
 
-      // Set p_new.pos() to avoid warnings
-      p_new.m_pos[0] = 0;
-      p_new.m_pos[1] = 0;
-      p_new.m_pos[2] = 0;
-      // Set p_new.id() to avoid warnings
-      p_new.m_idata[0] = 0;
-      // Set p_new.cpu() to avoid warnings
-      p_new.m_idata[1] = 0;
+      auto& aos = particles.GetArrayOfStructs();
+      ParticleType* pstruct = aos().dataPtr();
 
-      // If possible Parallelize this
-      for (int i = 0; i < pcount; i++) {
-        // Set id and cpu for this particle
-        p_new.id()  = ParticleType::NextID();
-        p_new.cpu() = ParallelDescriptor::MyProc();
+      const int id = ParticleType::NextID();
+      const int cpu = ParallelDescriptor::MyProc();
 
-        // Add to the data structure
-        particles.push_back(p_new);
+      amrex::ParallelFor(pcount, [pstruct,id,cpu]
+        AMREX_GPU_DEVICE (int i) noexcept
+      {
+        ParticleType& part = pstruct[i];
 
-        // Add solids.nspecies components for each of the new species vars
-        const int start = AoSrealData::count + SoArealData::count;
-        for (int comp(0); comp < m_runtimeRealData.count; ++comp)
-          particles.push_back_real(start+comp, 0.);
-      }
+        part.id() = id+i;
+        part.cpu() = cpu;
+      });
+
+      // Update the particles NextID
+      ParticleType::NextID(id+pcount);
+
+      Gpu::synchronize();
+
+      // Add components for each of the runtime variables
+      const int start = AoSrealData::count + SoArealData::count;
+      for (int comp(0); comp < m_runtimeRealData.count; ++comp)
+        particles.push_back_real(start+comp, pcount, 0.);
 
       const int np = pcount;
       total_np += np;
