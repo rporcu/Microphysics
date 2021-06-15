@@ -29,6 +29,8 @@ namespace BC
   amrex::Vector<amrex::EB2::PlaneIF> flow_planes;
   amrex::Vector<amrex::EB2::PlaneIF> wall_planes;
 
+  std::bitset<6> flow_plane(std::string("000000"));
+
   // Lists of BCs applied to the domain extent
   amrex::Vector<int> bc_xlo, bc_xhi;
   amrex::Vector<int> bc_ylo, bc_yhi;
@@ -256,6 +258,14 @@ namespace BC
               amrex::Print() << "BC Name: " << regions[bcv] <<  std::endl;
               amrex::Print() << "  Invalid direction: " << dir << std::endl;
               amrex::Abort("Fix the inputs file!");
+            }
+
+            // Flag that the level set should see these domain extents
+            // as walls for particle collisions.
+            if( new_bc.type == minf_ || new_bc.type == pinf_ ||
+                (new_bc.type == pinf_ && po_noParOut == 1 )) {
+              amrex::Print() << "X> FLAGGING FLOW PLANE " << dir_int << std::endl;
+              flow_plane.flip(dir_int);
             }
           }
 
