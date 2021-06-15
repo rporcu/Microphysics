@@ -15,6 +15,8 @@
 #include <mfix_fluid_parms.H>
 #include <mfix_solids_parms.H>
 
+#include <bits/stdc++.h>
+
 namespace BC
 {
 
@@ -44,6 +46,8 @@ namespace BC
 
   // Flags for DEM domain extent reinforcement.
   extern int domain_bc[6];
+
+  extern std::bitset<6> flow_plane;
 
   // Vectors storing EB planes for level-set creation
   extern amrex::Vector<amrex::EB2::PlaneIF> flow_planes;

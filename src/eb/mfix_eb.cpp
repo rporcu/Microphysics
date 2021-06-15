@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <mfix.H>
+#include <mfix_bc_parms.H>
 #include <AMReX_EB2.H>
 #include <AMReX_EB_utils.H>
 #include <AMReX_EB2_IF_Cylinder.H>
@@ -387,12 +388,53 @@ void mfix::fill_eb_levelsets ()
 void mfix::intersect_ls_walls ()
 {
 
-    bool has_walls = false;
-    std::shared_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_walls);
-    auto gshop = EB2::makeShop(* walls);
+    bool has_walls = BC::flow_plane.any();
 
     if (has_walls == false)
-        return;
+      return;
+
+    amrex::Print() << "LS HAS WALLS\n";
+
+    const auto plo = geom[0].ProbLoArray();
+    const auto phi = geom[0].ProbHiArray();
+
+    Real xlo = BC::flow_plane.test(0) ? plo[0] + 1.0e-15 : 2.0*plo[0] - phi[0];
+    Real xhi = BC::flow_plane.test(1) ? phi[0] - 1.0e-15 : 2.0*phi[0] - plo[0];
+
+    Real ylo = BC::flow_plane.test(2) ? plo[1] + 1.0e-15 : 2.0*plo[1] - phi[1];
+    Real yhi = BC::flow_plane.test(3) ? phi[1] - 1.0e-15 : 2.0*phi[1] - plo[1];
+
+    Real zlo = BC::flow_plane.test(4) ? plo[2] + 1.0e-15 : 2.0*plo[2] - phi[2];
+    Real zhi = BC::flow_plane.test(5) ? phi[2] - 1.0e-15 : 2.0*phi[2] - plo[2];
+
+    Array<Real,3>  point_lox{ xlo, 0.0, 0.0};
+    Array<Real,3> normal_lox{-1.0, 0.0, 0.0};
+    Array<Real,3>  point_hix{ xhi, 0.0, 0.0};
+    Array<Real,3> normal_hix{ 1.0, 0.0, 0.0};
+
+    Array<Real,3>  point_loy{0.0, ylo, 0.0};
+    Array<Real,3> normal_loy{0.0,-1.0, 0.0};
+    Array<Real,3>  point_hiy{0.0, yhi, 0.0};
+    Array<Real,3> normal_hiy{0.0, 1.0, 0.0};
+
+    Array<Real,3>  point_loz{0.0, 0.0, zlo};
+    Array<Real,3> normal_loz{0.0, 0.0,-1.0};
+    Array<Real,3>  point_hiz{0.0, 0.0, zhi};
+    Array<Real,3> normal_hiz{0.0, 0.0, 1.0};
+
+    EB2::PlaneIF plane_lox(point_lox,normal_lox);
+    EB2::PlaneIF plane_hix(point_hix,normal_hix);
+
+    EB2::PlaneIF plane_loy(point_loy,normal_loy);
+    EB2::PlaneIF plane_hiy(point_hiy,normal_hiy);
+
+    EB2::PlaneIF plane_loz(point_loz,normal_loz);
+    EB2::PlaneIF plane_hiz(point_hiz,normal_hiz);
+
+    auto bounding_box = EB2::makeUnion(plane_lox, plane_hix, plane_loy,
+                                       plane_hiy, plane_loz, plane_hiz );
+
+    auto gshop = EB2::makeShop(bounding_box);
 
     if (nlev == 1)
     {
