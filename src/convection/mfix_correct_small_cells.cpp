@@ -70,12 +70,12 @@ mfix::mfix_correct_small_cells (Vector<MultiFab*      > const& vel_in,
             const Real apz_mns = apz_fab(i,j,k);
             const Real apz_pls = apz_fab(i,j,k+1);
 
-            ccvel_fab(i,j,k,0) =
-              (apx_mns*umac_fab(i,j,k)+apx_pls*umac_fab(i+1,j,k))/(apx_mns+apx_pls);
-            ccvel_fab(i,j,k,1) =
-              (apy_mns*vmac_fab(i,j,k)+apy_pls*vmac_fab(i,j+1,k))/(apy_mns+apy_pls);
-            ccvel_fab(i,j,k,2) =
-              (apz_mns*wmac_fab(i,j,k)+apz_pls*wmac_fab(i,j,k+1))/(apz_mns+apz_pls);
+            ccvel_fab(i,j,k,0) = (apx_mns == 0.0 && apx_pls == 0.0) ? 0.0 : 
+                                    (apx_mns*umac_fab(i,j,k)+apx_pls*umac_fab(i+1,j,k))/(apx_mns+apx_pls);
+            ccvel_fab(i,j,k,1) = (apy_mns == 0.0 && apy_pls == 0.0) ? 0.0 : 
+                                    (apy_mns*vmac_fab(i,j,k)+apy_pls*vmac_fab(i,j+1,k))/(apy_mns+apy_pls);
+            ccvel_fab(i,j,k,2) = (apz_mns == 0.0 && apz_pls == 0.0) ? 0.0:
+                                    (apz_mns*wmac_fab(i,j,k)+apz_pls*wmac_fab(i,j,k+1))/(apz_mns+apz_pls);
           }
         });
       }
