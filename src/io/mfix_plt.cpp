@@ -209,7 +209,7 @@ mfix::InitIOPltData ()
           pp.query("plt_species_p",   input_value );
 //          pp.query("plt_X_s",   input_value );
 
-          const int start = gap + pc->m_runtimeRealData.X_sn;
+          const int start = gap + rtData.X_sn;
           for(int n(0); n < solids.nspecies; ++n)
             write_real_comp[n+start] = input_value;
         }
@@ -219,7 +219,7 @@ mfix::InitIOPltData ()
           input_value = 0;
           pp.query("plt_ro_sn_txfr",   input_value );
 
-          const int start = gap + pc->m_runtimeRealData.ro_sn_txfr;
+          const int start = gap + rtData.ro_sn_txfr;
           for(int n(0); n < solids.nspecies; ++n)
             write_real_comp[n+start] = input_value;
         }
@@ -229,7 +229,7 @@ mfix::InitIOPltData ()
           input_value = 0;
           pp.query("plt_vel_s_txfr",   input_value );
 
-          const int start = gap + pc->m_runtimeRealData.vel_s_txfr;
+          const int start = gap + rtData.vel_s_txfr;
           for(int n(0); n < 3; ++n)
             write_real_comp[n+start] = input_value;
         }
@@ -239,7 +239,7 @@ mfix::InitIOPltData ()
           input_value = 0;
           pp.query("plt_h_s_txfr",   input_value );
 
-          const int start = gap + pc->m_runtimeRealData.h_s_txfr;
+          const int start = gap + rtData.h_s_txfr;
           write_real_comp[start] = input_value;
         }
 
