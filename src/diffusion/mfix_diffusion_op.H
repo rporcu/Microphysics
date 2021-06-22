@@ -190,6 +190,7 @@ class DiffusionOp
     int mg_bottom_maxiter = 100;
     int mg_max_fmg_iter = 0;
     int mg_max_coarsening_level = 100;
+    int mg_agg_grid_size = -1;
     amrex::Real mg_rtol = 1.0e-11;
     amrex::Real mg_atol = 1.0e-14;
     std::string bottom_solver_type = "bicgstab";

@@ -136,8 +136,9 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
             fin_np += np;
         }
 
-        ParallelDescriptor::ReduceLongSum(fin_np,ParallelDescriptor::IOProcessorNumber());
+        ParallelDescriptor::ReduceLongSum(fin_np);
         amrex::Print() << "Final number of particles on level "
                        << lev << ": " << fin_np << std::endl;
+        m_total_numparticle = fin_np;
     }
 }

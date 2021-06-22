@@ -185,10 +185,13 @@ mfix::InitParams ()
     if (advect_tracer && !advect_density)
       amrex::Abort("Can't advect tracer without advecting density");
 
+    // control load balance
     // The default type is "KnapSack"; alternative is "SFC"
-    pp.query("load_balance_type", load_balance_type);
-    pp.query("knapsack_weight_type", knapsack_weight_type);
-    pp.query("load_balance_fluid", load_balance_fluid);
+    pp.query("load_balance_type",      load_balance_type);
+    pp.query("knapsack_weight_type",   knapsack_weight_type);
+    pp.query("load_balance_fluid",     load_balance_fluid);
+    pp.query("downsize_particle_grid", downsize_particle_grid);
+    pp.query("downsize_factor",        downsize_factor);
 
 
     // Include drag multiplier in projection. (False by default)
@@ -203,6 +206,8 @@ mfix::InitParams ()
     pp.query("use_mac_phi_in_godunov"           , m_use_mac_phi_in_godunov);
     pp.query("use_drag_in_godunov"              , m_use_drag_in_godunov);
 
+    // agglomeration for GMG coarse levels
+    pp.query("agg_grid_size", agg_grid_size);
 
     pp.query("redistribution_type"              , m_redistribution_type);
     if (m_redistribution_type != "NoRedist" &&
@@ -430,6 +435,9 @@ mfix::InitParams ()
 
     m_deposition_diffusion_coeff = -1.;
     pp.query("deposition_diffusion_coeff", m_deposition_diffusion_coeff);
+
+    sort_particle_int = -1;
+    pp.query("sort_particle_int", sort_particle_int);
   }
 
   {
@@ -856,6 +864,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
           IntVect particle_max_grid_size(particle_max_grid_size_x,
                                          particle_max_grid_size_y,
                                          particle_max_grid_size_z);
+          pc->setMaxGridSize(particle_max_grid_size);
 
           for (int lev = 0; lev < nlev; lev++)
           {
@@ -897,6 +906,7 @@ mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
 
         if (DEM::solve) {
             pc->MFIX_PC_InitCollisionParams();
+            pc->setSortInt(sort_particle_int);
         }
 
         pc->InitParticlesRuntimeVariables(advect_enthalpy, solids.solve_species);

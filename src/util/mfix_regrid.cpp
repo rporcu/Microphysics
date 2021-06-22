@@ -73,8 +73,20 @@ mfix::Regrid ()
 
       for (int lev = base_lev; lev <= finestLevel(); ++lev)
       {
-        DistributionMapping new_particle_dm;
+        // update new particle grid size
+        IntVect max_grid_size = pc->MaxGridSize();
+        IntVect new_grid_size = max_grid_size;
+        pc->checkParticleBoxSize(lev, new_grid_size, 1.0);
 
+        // if new size is smaller, then downsize particle grids
+        // reset the particle cost by # particles
+        if (new_grid_size < max_grid_size) {
+          pc->downsizeParticleBoxes(lev, new_grid_size);
+          pc->resetCostByCount(lev, particle_cost);
+          pc->setMaxGridSize(new_grid_size);
+        }
+
+        DistributionMapping new_particle_dm;
         if ( load_balance_type == "KnapSack" )
         {
           new_particle_dm = DistributionMapping::makeKnapSack(*particle_cost[lev],
@@ -87,6 +99,7 @@ mfix::Regrid ()
         }
 
         pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev), lev);
+        pc->SortParticlesByCell();
 
         if (particle_cost[lev] != nullptr)
           delete particle_cost[lev];
