@@ -5,7 +5,6 @@
 #include <mfix_species_parms.H>
 #include <mfix_ic_parms.H>
 
-#include <Redistribution.H>
 
 using namespace amrex;
 
@@ -18,7 +17,6 @@ void set_ic_temp (const Box& sbx, const Box& domain,
                   const Real dx, const Real dy, const Real dz,
                   const GpuArray<Real, 3>& plo, FArrayBox& T_g_fab,
                   FArrayBox& h_g_fab, FArrayBox& X_gk_fab,
-                  const int nspecies_g, const int is_mixture,
                   FluidPhase& fluid);
 
 void set_ic_species_g (const Box& sbx, const Box& domain,
@@ -29,9 +27,7 @@ void set_ic_pressure_g (const Box& sbx, const Box& domain,
                         const Real dx, const Real dy, const Real dz,
                         const GpuArray<Real, 3>& plo, FArrayBox& pressure_g_fab,
                         FArrayBox& ro_g_fab, FArrayBox& T_g_fab,
-                        FArrayBox& X_gk_fab, const Real R,
-                        const int nspecies_g, const int is_mixture,
-                        FluidPhase& fluid);
+                        FArrayBox& X_gk_fab, FluidPhase& fluid);
 
 void init_helix (const Box& bx, const Box& domain, FArrayBox& vel_g_fab,
                  const Real dx, const Real dy, const Real dz);
@@ -50,9 +46,9 @@ void init_fluid (const Box& sbx,
                  const Real dx,
                  const Real dy,
                  const Real dz,
-                 const Real xlength,
-                 const Real ylength,
-                 const Real zlength,
+                 const Real /*xlength*/,
+                 const Real /*ylength*/,
+                 const Real /*zlength*/,
                  const GpuArray<Real, 3>& plo,
                  bool test_tracer_conservation,
                  const int advect_enthalpy,
@@ -91,14 +87,12 @@ void init_fluid (const Box& sbx,
 
   // Set the initial fluid temperature
   if (advect_enthalpy) {
-    if (fluid.is_a_mixture)
-      set_ic_temp(sbx, domain, dx, dy, dz, plo, (*ld.T_g)[mfi], (*ld.h_g)[mfi],
-          (*ld.X_gk)[mfi], fluid.nspecies, fluid.is_a_mixture, fluid);
-    else {
-      FArrayBox empty_fab;
-      set_ic_temp(sbx, domain, dx, dy, dz, plo, (*ld.T_g)[mfi], (*ld.h_g)[mfi],
-          empty_fab, fluid.nspecies, fluid.is_a_mixture, fluid);
-    }
+    FArrayBox empty_fab;
+    Elixir empty_elixir = empty_fab.elixir();
+
+    FArrayBox& X_gk_fab = fluid.is_a_mixture ? (*ld.X_gk)[mfi] : empty_fab;
+
+    set_ic_temp(sbx, domain, dx, dy, dz, plo, (*ld.T_g)[mfi], (*ld.h_g)[mfi], X_gk_fab, fluid);
   }
 
   if (test_tracer_conservation)
@@ -108,14 +102,13 @@ void init_fluid (const Box& sbx,
     // Set initial thermodynamic pressure according to the equation of state
     // p_g = ro_g * R * T_g / MW_g
     set_ic_pressure_g(sbx, domain, dx, dy, dz, plo, (*ld.pressure_g)[mfi],
-        (*ld.ro_g)[mfi], (*ld.T_g)[mfi], (*ld.X_gk)[mfi], fluid.R,
-        fluid.nspecies, fluid.is_a_mixture, fluid);
+        (*ld.ro_g)[mfi], (*ld.T_g)[mfi], (*ld.X_gk)[mfi], fluid);
   }
 
 }
 
 void init_helix (const Box& bx,
-                 const Box& domain,
+                 const Box& /*domain*/,
                  FArrayBox& vel_g_fab,
                  const Real dx,
                  const Real dy,
@@ -178,7 +171,7 @@ void init_helix (const Box& bx,
 }
 
 void init_periodic_vortices (const Box& bx,
-                             const Box& domain,
+                             const Box& /*domain*/,
                              FArrayBox& vel_g_fab,
                              const Real dx,
                              const Real dy,
@@ -353,13 +346,11 @@ void init_fluid_parameters (const Box& bx,
 
   const int nspecies_g = fluid.nspecies;
 
-  const Real T_ref = fluid.T_ref;
-
   auto& fluid_parms = *fluid.parameters;
 
   // Set the IC values
   amrex::ParallelFor(bx, [nspecies_g,T_g,h_g,X_gk,advect_enthalpy,fluid_parms,
-      advect_fluid_species,advect_species_enthalpy,fluid_is_a_mixture,T_ref]
+      advect_fluid_species,advect_species_enthalpy,fluid_is_a_mixture]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
   {
     // set initial fluid enthalpy and  specific enthalpy
@@ -371,14 +362,14 @@ void init_fluid_parameters (const Box& bx,
       {
         Real h_g_sum(0);
         for (int n(0); n < nspecies_g; n++) {
-          const Real h_gk = fluid_parms.calc_h_gk(Tg_loc,n);
+          const Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_loc,n);
           h_g_sum += X_gk(i,j,k,n) * h_gk;
         }
 
         h_g(i,j,k) = h_g_sum;
       }
       else {
-        h_g(i,j,k) = fluid_parms.calc_h_g(Tg_loc);
+        h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_loc);
       }
     }
 
@@ -531,8 +522,6 @@ void set_ic_temp (const Box& sbx,
                   FArrayBox& T_g_fab,
                   FArrayBox& h_g_fab,
                   FArrayBox& X_gk_fab,
-                  const int nspecies_g,
-                  const int is_mixture,
                   FluidPhase& fluid)
 {
   const IntVect slo(sbx.loVect());
@@ -541,10 +530,12 @@ void set_ic_temp (const Box& sbx,
   const IntVect domlo(domain.loVect());
   const IntVect domhi(domain.hiVect());
 
+  const int fluid_is_a_mixture = fluid.is_a_mixture;
+  const int nspecies_g = fluid.nspecies;
+
   Array4<Real      > const& T_g  = T_g_fab.array();
   Array4<Real      > const& h_g  = h_g_fab.array();
-  Array4<Real const> const& X_gk = is_mixture ?
-    X_gk_fab.array() : Array4<const Real>();
+  Array4<Real const> const& X_gk = fluid_is_a_mixture ? X_gk_fab.array() : Array4<const Real>();
 
   auto& fluid_parms = *fluid.parameters;
 
@@ -575,20 +566,20 @@ void set_ic_temp (const Box& sbx,
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
 
-        ParallelFor(box1, [T_g,h_g,X_gk,temperature,nspecies_g,is_mixture,fluid_parms]
+        ParallelFor(box1, [T_g,h_g,X_gk,temperature,nspecies_g,fluid_is_a_mixture,fluid_parms]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           T_g(i,j,k) = temperature;
 
-          if (is_mixture) {
+          if (fluid_is_a_mixture) {
             Real h_g_sum(0);
             for (int n(0); n < nspecies_g; n++) {
-              Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+              Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
               h_g_sum += X_gk(i,j,k,n) * h_gk;
             }
             h_g(i,j,k) = h_g_sum;
           } else {
-            h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+            h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
           }
         });
 
@@ -596,20 +587,20 @@ void set_ic_temp (const Box& sbx,
         {
           const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
           const Box box2(low2, hi2);
-          ParallelFor(box2, [T_g,h_g,X_gk,temperature,nspecies_g,is_mixture,fluid_parms]
+          ParallelFor(box2, [T_g,h_g,X_gk,temperature,nspecies_g,fluid_is_a_mixture,fluid_parms]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             T_g(i,j,k) = temperature;
 
-            if (is_mixture) {
+            if (fluid_is_a_mixture) {
               Real h_g_sum(0);
               for (int n(0); n < nspecies_g; n++) {
-                Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+                Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
                 h_g_sum += X_gk(i,j,k,n) * h_gk;
               }
               h_g(i,j,k) = h_g_sum;
             } else {
-              h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+              h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
             }
           });
         }
@@ -618,20 +609,20 @@ void set_ic_temp (const Box& sbx,
         {
           const IntVect low3(iend+1, jstart, kstart), hi3(shi[0], jend, kend);
           const Box box3(low3, hi3);
-          ParallelFor(box3, [T_g,h_g,X_gk,temperature,nspecies_g,is_mixture,fluid_parms]
+          ParallelFor(box3, [T_g,h_g,X_gk,temperature,nspecies_g,fluid_is_a_mixture,fluid_parms]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             T_g(i,j,k) = temperature;
 
-            if (is_mixture) {
+            if (fluid_is_a_mixture) {
               Real h_g_sum(0);
               for (int n(0); n < nspecies_g; n++) {
-                Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+                Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
                 h_g_sum += X_gk(i,j,k,n) * h_gk;
               }
               h_g(i,j,k) = h_g_sum;
             } else {
-              h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+              h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
             }
           });
         }
@@ -641,20 +632,20 @@ void set_ic_temp (const Box& sbx,
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
 
-        ParallelFor(box1, [T_g,h_g,X_gk,temperature,nspecies_g,is_mixture,fluid_parms]
+        ParallelFor(box1, [T_g,h_g,X_gk,temperature,nspecies_g,fluid_is_a_mixture,fluid_parms]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           T_g(i,j,k) = temperature;
 
-          if (is_mixture) {
+          if (fluid_is_a_mixture) {
             Real h_g_sum(0);
             for (int n(0); n < nspecies_g; n++) {
-              Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+              Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
               h_g_sum += X_gk(i,j,k,n) * h_gk;
             }
             h_g(i,j,k) = h_g_sum;
           } else {
-            h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+            h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
           }
         });
 
@@ -662,20 +653,20 @@ void set_ic_temp (const Box& sbx,
         {
           const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
           const Box box2(low2, hi2);
-          ParallelFor(box2, [T_g,h_g,X_gk,temperature,nspecies_g,is_mixture,fluid_parms]
+          ParallelFor(box2, [T_g,h_g,X_gk,temperature,nspecies_g,fluid_is_a_mixture,fluid_parms]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             T_g(i,j,k) = temperature;
 
-            if (is_mixture) {
+            if (fluid_is_a_mixture) {
               Real h_g_sum(0);
               for (int n(0); n < nspecies_g; n++) {
-                Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+                Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
                 h_g_sum += X_gk(i,j,k,n) * h_gk;
               }
               h_g(i,j,k) = h_g_sum;
             } else {
-              h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+              h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
             }
           });
         }
@@ -684,20 +675,20 @@ void set_ic_temp (const Box& sbx,
         {
           const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
           const Box box3(low3, hi3);
-          ParallelFor(box3, [T_g,h_g,X_gk,temperature,nspecies_g,is_mixture,fluid_parms]
+          ParallelFor(box3, [T_g,h_g,X_gk,temperature,nspecies_g,fluid_is_a_mixture,fluid_parms]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             T_g(i,j,k) = temperature;
 
-            if (is_mixture) {
+            if (fluid_is_a_mixture) {
               Real h_g_sum(0);
               for (int n(0); n < nspecies_g; n++) {
-                Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+                Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
                 h_g_sum += X_gk(i,j,k,n) * h_gk;
               }
               h_g(i,j,k) = h_g_sum;
             } else {
-              h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+              h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
             }
           });
         }
@@ -706,20 +697,20 @@ void set_ic_temp (const Box& sbx,
       {
         const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
         const Box box1(low1, hi1);
-        ParallelFor(box1, [T_g,h_g,X_gk,temperature,nspecies_g,is_mixture,fluid_parms]
+        ParallelFor(box1, [T_g,h_g,X_gk,temperature,nspecies_g,fluid_is_a_mixture,fluid_parms]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           T_g(i,j,k) = temperature;
 
-          if (is_mixture) {
+          if (fluid_is_a_mixture) {
             Real h_g_sum(0);
             for (int n(0); n < nspecies_g; n++) {
-              Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+              Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
               h_g_sum += X_gk(i,j,k,n) * h_gk;
             }
             h_g(i,j,k) = h_g_sum;
           } else {
-            h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+            h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
           }
         });
 
@@ -728,20 +719,20 @@ void set_ic_temp (const Box& sbx,
           const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
           const Box box2(low2, hi2);
 
-          ParallelFor(box2, [T_g,h_g,X_gk,temperature,nspecies_g,is_mixture,fluid_parms]
+          ParallelFor(box2, [T_g,h_g,X_gk,temperature,nspecies_g,fluid_is_a_mixture,fluid_parms]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             T_g(i,j,k) = temperature;
 
-            if (is_mixture) {
+            if (fluid_is_a_mixture) {
               Real h_g_sum(0);
               for (int n(0); n < nspecies_g; n++) {
-                Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+                Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
                 h_g_sum += X_gk(i,j,k,n) * h_gk;
               }
               h_g(i,j,k) = h_g_sum;
             } else {
-              h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+              h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
             }
           });
         }
@@ -751,20 +742,20 @@ void set_ic_temp (const Box& sbx,
           const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
           const Box box3(low3, hi3);
 
-          ParallelFor(box3, [T_g,h_g,X_gk,temperature,nspecies_g,is_mixture,fluid_parms]
+          ParallelFor(box3, [T_g,h_g,X_gk,temperature,nspecies_g,fluid_is_a_mixture,fluid_parms]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             T_g(i,j,k) = temperature;
 
-            if (is_mixture) {
+            if (fluid_is_a_mixture) {
               Real h_g_sum(0);
               for (int n(0); n < nspecies_g; n++) {
-                Real h_gk = fluid_parms.calc_h_gk(temperature,n);
+                Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
                 h_g_sum += X_gk(i,j,k,n) * h_gk;
               }
               h_g(i,j,k) = h_g_sum;
             } else {
-              h_g(i,j,k) = fluid_parms.calc_h_g(temperature);
+              h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
             }
           });
         }
@@ -931,9 +922,6 @@ void set_ic_pressure_g (const Box& sbx,
                         FArrayBox& ro_g_fab,
                         FArrayBox& T_g_fab,
                         FArrayBox& X_gk_fab,
-                        const Real R,
-                        const int nspecies_g,
-                        const int is_mixture,
                         FluidPhase& fluid)
 {
   const IntVect slo(sbx.loVect());
@@ -942,18 +930,15 @@ void set_ic_pressure_g (const Box& sbx,
   const IntVect domlo(domain.loVect());
   const IntVect domhi(domain.hiVect());
 
+  const int fluid_is_a_mixture = fluid.is_a_mixture;
+  const int nspecies_g = fluid.nspecies;
+
   Array4<Real      > const& pressure_g = pressure_g_fab.array();
   Array4<Real const> const& ro_g       = ro_g_fab.array();
   Array4<Real const> const& T_g        = T_g_fab.array();
   Array4<Real const> const& X_gk       = X_gk_fab.array();
 
-  // IC values for MW_g
-  const Real MW_g0 = fluid.MW_g0;
-
-  Gpu::DeviceVector<Real> MW_gk0_d(nspecies_g);
-  if (is_mixture)
-    Gpu::copyAsync(Gpu::hostToDevice, fluid.MW_gk0.begin(), fluid.MW_gk0.end(), MW_gk0_d.begin());
-  Real* p_MW_gk0 = is_mixture ? MW_gk0_d.data() : nullptr;
+  auto& fluid_parms = *fluid.parameters;
 
   // Set the initial conditions.
   for(int icv(0); icv < IC::ic.size(); ++icv)
@@ -977,42 +962,46 @@ void set_ic_pressure_g (const Box& sbx,
       const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
       const Box box1(low1, hi1);
 
-      ParallelFor(box1, [pressure_g,ro_g,T_g,X_gk,MW_g0,p_MW_gk0,R,is_mixture,nspecies_g]
+      ParallelFor(box1, [pressure_g,ro_g,T_g,X_gk,fluid_is_a_mixture,nspecies_g,fluid_parms]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-        Real MW_g(0);
+        Real MW_g_loc(0);
 
         // set initial fluid molecular weight
-        if (is_mixture) {
+        if (fluid_is_a_mixture) {
           for (int n(0); n < nspecies_g; n++)
-            MW_g += X_gk(i,j,k,n) / p_MW_gk0[n];
-          MW_g = 1. / MW_g;
-        }
-        else
-          MW_g = MW_g0;
+            MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
-        pressure_g(i,j,k) = ro_g(i,j,k) * R * T_g(i,j,k) / MW_g;
+          MW_g_loc = 1. / MW_g_loc;
+        }
+        else {
+          MW_g_loc = fluid_parms.MW_g0;
+        }
+
+        pressure_g(i,j,k) = ro_g(i,j,k) * fluid_parms.R * T_g(i,j,k) / MW_g_loc;
       });
 
       if(slo[0] < domlo[0] && domlo[0] == istart)
       {
         const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
         const Box box2(low2, hi2);
-        ParallelFor(box2, [pressure_g,ro_g,T_g,X_gk,MW_g0,p_MW_gk0,R,is_mixture,nspecies_g]
+        ParallelFor(box2, [pressure_g,ro_g,T_g,X_gk,fluid_is_a_mixture,nspecies_g,fluid_parms]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          Real MW_g(0);
+          Real MW_g_loc(0);
 
           // set initial fluid molecular weight
-          if (is_mixture) {
+          if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++)
-              MW_g += X_gk(i,j,k,n) / p_MW_gk0[n];
-            MW_g = 1. / MW_g;
-          }
-          else
-            MW_g = MW_g0;
+              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
-          pressure_g(i,j,k) = ro_g(i,j,k) * R * T_g(i,j,k) / MW_g;
+            MW_g_loc = 1. / MW_g_loc;
+          }
+          else {
+            MW_g_loc = fluid_parms.MW_g0;
+          }
+
+          pressure_g(i,j,k) = ro_g(i,j,k) * fluid_parms.R * T_g(i,j,k) / MW_g_loc;
         });
       }
 
@@ -1020,21 +1009,23 @@ void set_ic_pressure_g (const Box& sbx,
       {
         const IntVect low3(iend+1, jstart, kstart), hi3(shi[0], jend, kend);
         const Box box3(low3, hi3);
-        ParallelFor(box3, [pressure_g,ro_g,T_g,X_gk,MW_g0,p_MW_gk0,R,is_mixture,nspecies_g]
+        ParallelFor(box3, [pressure_g,ro_g,T_g,X_gk,fluid_is_a_mixture,nspecies_g,fluid_parms]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          Real MW_g(0);
+          Real MW_g_loc(0);
 
           // set initial fluid molecular weight
-          if (is_mixture) {
+          if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++)
-              MW_g += X_gk(i,j,k,n) / p_MW_gk0[n];
-            MW_g = 1. / MW_g;
-          }
-          else
-            MW_g = MW_g0;
+              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
-          pressure_g(i,j,k) = ro_g(i,j,k) * R * T_g(i,j,k) / MW_g;
+            MW_g_loc = 1. / MW_g_loc;
+          }
+          else {
+            MW_g_loc = fluid_parms.MW_g0;
+          }
+
+          pressure_g(i,j,k) = ro_g(i,j,k) * fluid_parms.R * T_g(i,j,k) / MW_g_loc;
         });
       }
     }
@@ -1043,42 +1034,46 @@ void set_ic_pressure_g (const Box& sbx,
       const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
       const Box box1(low1, hi1);
 
-      ParallelFor(box1, [pressure_g,ro_g,T_g,X_gk,MW_g0,p_MW_gk0,R,is_mixture,nspecies_g]
+      ParallelFor(box1, [pressure_g,ro_g,T_g,X_gk,fluid_is_a_mixture,nspecies_g,fluid_parms]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-        Real MW_g(0);
+        Real MW_g_loc(0);
 
         // set initial fluid molecular weight
-        if (is_mixture) {
+        if (fluid_is_a_mixture) {
           for (int n(0); n < nspecies_g; n++)
-            MW_g += X_gk(i,j,k,n) / p_MW_gk0[n];
-          MW_g = 1. / MW_g;
-        }
-        else
-          MW_g = MW_g0;
+            MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
-        pressure_g(i,j,k) = ro_g(i,j,k) * R * T_g(i,j,k) / MW_g;
+          MW_g_loc = 1. / MW_g_loc;
+        }
+        else {
+          MW_g_loc = fluid_parms.MW_g0;
+        }
+
+        pressure_g(i,j,k) = ro_g(i,j,k) * fluid_parms.R * T_g(i,j,k) / MW_g_loc;
       });
 
       if (slo[1] < domlo[1] && domlo[1] == jstart)
       {
         const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
         const Box box2(low2, hi2);
-        ParallelFor(box2, [pressure_g,ro_g,T_g,X_gk,MW_g0,p_MW_gk0,R,is_mixture,nspecies_g]
+        ParallelFor(box2, [pressure_g,ro_g,T_g,X_gk,fluid_is_a_mixture,nspecies_g,fluid_parms]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          Real MW_g(0);
+          Real MW_g_loc(0);
 
           // set initial fluid molecular weight
-          if (is_mixture) {
+          if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++)
-              MW_g += X_gk(i,j,k,n) / p_MW_gk0[n];
-            MW_g = 1. / MW_g;
-          }
-          else
-            MW_g = MW_g0;
+              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
-          pressure_g(i,j,k) = ro_g(i,j,k) * R * T_g(i,j,k) / MW_g;
+            MW_g_loc = 1. / MW_g_loc;
+          }
+          else {
+            MW_g_loc = fluid_parms.MW_g0;
+          }
+
+          pressure_g(i,j,k) = ro_g(i,j,k) * fluid_parms.R * T_g(i,j,k) / MW_g_loc;
         });
       }
 
@@ -1086,21 +1081,23 @@ void set_ic_pressure_g (const Box& sbx,
       {
         const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
         const Box box3(low3, hi3);
-        ParallelFor(box3, [pressure_g,ro_g,T_g,X_gk,MW_g0,p_MW_gk0,R,is_mixture,nspecies_g]
+        ParallelFor(box3, [pressure_g,ro_g,T_g,X_gk,fluid_is_a_mixture,nspecies_g,fluid_parms]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          Real MW_g(0);
+          Real MW_g_loc(0);
 
           // set initial fluid molecular weight
-          if (is_mixture) {
+          if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++)
-              MW_g += X_gk(i,j,k,n) / p_MW_gk0[n];
-            MW_g = 1. / MW_g;
-          }
-          else
-            MW_g = MW_g0;
+              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
-          pressure_g(i,j,k) = ro_g(i,j,k) * R * T_g(i,j,k) / MW_g;
+            MW_g_loc = 1. / MW_g_loc;
+          }
+          else {
+            MW_g_loc = fluid_parms.MW_g0;
+          }
+
+          pressure_g(i,j,k) = ro_g(i,j,k) * fluid_parms.R * T_g(i,j,k) / MW_g_loc;
         });
       }
     }
@@ -1108,21 +1105,23 @@ void set_ic_pressure_g (const Box& sbx,
     {
       const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
       const Box box1(low1, hi1);
-      ParallelFor(box1, [pressure_g,ro_g,T_g,X_gk,MW_g0,p_MW_gk0,R,is_mixture,nspecies_g]
+      ParallelFor(box1, [pressure_g,ro_g,T_g,X_gk,fluid_is_a_mixture,nspecies_g,fluid_parms]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-        Real MW_g(0);
+        Real MW_g_loc(0);
 
         // set initial fluid molecular weight
-        if (is_mixture) {
+        if (fluid_is_a_mixture) {
           for (int n(0); n < nspecies_g; n++)
-            MW_g += X_gk(i,j,k,n) / p_MW_gk0[n];
-          MW_g = 1. / MW_g;
-        }
-        else
-          MW_g = MW_g0;
+            MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
-        pressure_g(i,j,k) = ro_g(i,j,k) * R * T_g(i,j,k) / MW_g;
+          MW_g_loc = 1. / MW_g_loc;
+        }
+        else {
+          MW_g_loc = fluid_parms.MW_g0;
+        }
+
+        pressure_g(i,j,k) = ro_g(i,j,k) * fluid_parms.R * T_g(i,j,k) / MW_g_loc;
       });
 
       if (slo[2] < domlo[2] && domlo[2] == kstart)
@@ -1130,21 +1129,23 @@ void set_ic_pressure_g (const Box& sbx,
         const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
         const Box box2(low2, hi2);
 
-        ParallelFor(box2, [pressure_g,ro_g,T_g,X_gk,MW_g0,p_MW_gk0,R,is_mixture,nspecies_g]
+        ParallelFor(box2, [pressure_g,ro_g,T_g,X_gk,fluid_is_a_mixture,nspecies_g,fluid_parms]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          Real MW_g(0);
+          Real MW_g_loc(0);
 
           // set initial fluid molecular weight
-          if (is_mixture) {
+          if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++)
-              MW_g += X_gk(i,j,k,n) / p_MW_gk0[n];
-            MW_g = 1. / MW_g;
-          }
-          else
-            MW_g = MW_g0;
+              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
-          pressure_g(i,j,k) = ro_g(i,j,k) * R * T_g(i,j,k) / MW_g;
+            MW_g_loc = 1. / MW_g_loc;
+          }
+          else {
+            MW_g_loc = fluid_parms.MW_g0;
+          }
+
+          pressure_g(i,j,k) = ro_g(i,j,k) * fluid_parms.R * T_g(i,j,k) / MW_g_loc;
         });
       }
 
@@ -1153,21 +1154,23 @@ void set_ic_pressure_g (const Box& sbx,
         const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
         const Box box3(low3, hi3);
 
-        ParallelFor(box3, [pressure_g,ro_g,T_g,X_gk,MW_g0,p_MW_gk0,R,is_mixture,nspecies_g]
+        ParallelFor(box3, [pressure_g,ro_g,T_g,X_gk,fluid_is_a_mixture,nspecies_g,fluid_parms]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          Real MW_g(0);
+          Real MW_g_loc(0);
 
           // set initial fluid molecular weight
-          if (is_mixture) {
+          if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++)
-              MW_g += X_gk(i,j,k,n) / p_MW_gk0[n];
-            MW_g = 1. / MW_g;
-          }
-          else
-            MW_g = MW_g0;
+              MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
-          pressure_g(i,j,k) = ro_g(i,j,k) * R * T_g(i,j,k) / MW_g;
+            MW_g_loc = 1. / MW_g_loc;
+          }
+          else {
+            MW_g_loc = fluid_parms.MW_g0;
+          }
+
+          pressure_g(i,j,k) = ro_g(i,j,k) * fluid_parms.R * T_g(i,j,k) / MW_g_loc;
         });
       }
     }

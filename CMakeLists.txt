@@ -153,17 +153,6 @@ add_subdirectory( tests )
 include(MFIX_Tags)
 add_tags_targets()
 
-# Add a target to generate API documentation with Doxygen
-find_package(Doxygen)
-if (DOXYGEN_FOUND)
-   set(DOC_DIR ${CMAKE_SOURCE_DIR}/doc)
-   configure_file(${DOC_DIR}/Doxyfile.in ${DOC_DIR}/Doxyfile)
-   add_custom_target(doc ${DOXYGEN_EXECUTABLE} ${DOC_DIR}/Doxyfile
-      WORKING_DIRECTORY ${DOC_DIR}
-      COMMENT "Generating API documentation with Doxygen" VERBATIM
-      )
-endif (DOXYGEN_FOUND)
-
 # Copy compile_commands.json from the build directory to the project root directory
 if ( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
     execute_process( COMMAND ${CMAKE_COMMAND} -E copy_if_different

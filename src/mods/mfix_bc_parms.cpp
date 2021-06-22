@@ -29,6 +29,8 @@ namespace BC
   amrex::Vector<amrex::EB2::PlaneIF> flow_planes;
   amrex::Vector<amrex::EB2::PlaneIF> wall_planes;
 
+  std::bitset<6> flow_plane(std::string("000000"));
+
   // Lists of BCs applied to the domain extent
   amrex::Vector<int> bc_xlo, bc_xhi;
   amrex::Vector<int> bc_ylo, bc_yhi;
@@ -256,6 +258,14 @@ namespace BC
               amrex::Print() << "BC Name: " << regions[bcv] <<  std::endl;
               amrex::Print() << "  Invalid direction: " << dir << std::endl;
               amrex::Abort("Fix the inputs file!");
+            }
+
+            // Flag that the level set should see these domain extents
+            // as walls for particle collisions.
+            if( new_bc.type == minf_ || new_bc.type == pinf_ ||
+                (new_bc.type == pinf_ && po_noParOut == 1 )) {
+              amrex::Print() << "X> FLAGGING FLOW PLANE " << dir_int << std::endl;
+              flow_plane.flip(dir_int);
             }
           }
 
@@ -597,9 +607,6 @@ void
 read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
 {
 
-  amrex::Print() << "\n\nI am looking for the fluid temperature BC!\n";
-  // ppFluid.get("temperature", new_bc.fluid.temperature);
-
   amrex::Vector<amrex::Real> tg_in;
   pp.getarr("temperature", tg_in);
 
@@ -609,8 +616,6 @@ read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
     fluid->temperature = tg_in[0];
 
   } else {
-
-    amrex::Print() << "Parsing the velocity input table.\n";
 
     int found;
     int k=0;
@@ -628,12 +633,6 @@ read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
           amrex::Print() << std::endl;
           amrex::Abort("Fix input deck.");
         }
-
-        // Temp print for debugging -- REMOVE ME
-        for (int lc=0; lc<kth_input.size(); lc++)
-          amrex::Print()  << "  " << kth_input[lc];
-        amrex::Print() << std::endl;
-
 
         const amrex::Real new_time = kth_input[0];
         const int len = fluid->tg_table.size();
@@ -654,12 +653,6 @@ read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
 
       k++;
     } while(found);
-
-    amrex::Print() << "Print temperature table\n";
-    for( int lc0=0; lc0<fluid->tg_table.size(); lc0++) {
-      const auto& tg = fluid->tg_table[lc0];
-      amrex::Print()  << "  " << tg[0] << "  " << tg[1] << "\n";
-    }
 
   }
 

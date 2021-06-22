@@ -53,6 +53,8 @@ struct IdealGasConstraint { enum {None, OpenSystem, ClosedSystem}; };
 // Reaction rates type enumeration
 struct ReactionRatesType { enum {RRatesUser}; };
 
+enum struct ScalarToFill { Density, Tracer, Enthalpy, VolFrac, Temperature};
+
 class mfix : public AmrCore
 {
   public:
@@ -242,6 +244,7 @@ class mfix : public AmrCore
                                  amrex::Vector<amrex::MultiFab*      > const& vel_in,
                                  amrex::Vector<amrex::MultiFab*      > const& h_g_in,
                                  amrex::Vector<amrex::MultiFab*      > const& T_g_in,
+                                 amrex::Vector<amrex::MultiFab const*> const& X_gk_in,
                                  amrex::Vector<amrex::MultiFab const*> const& txfr_in,
                                  amrex::Vector<amrex::MultiFab const*> const& rho_in,
                                  amrex::Vector<amrex::MultiFab const*> const& ep_g_in);
@@ -414,6 +417,9 @@ class mfix : public AmrCore
 
     void set_velocity_bc_values (amrex::Real time_in) const;
     void set_temperature_bc_values (amrex::Real time_in) const;
+    void set_density_bc_values (amrex::Real time_in) const;
+    void set_tracer_bc_values (amrex::Real time_in) const;
+    void set_species_bc_values (amrex::Real time_in) const;
 
     ////////////////////////////////////////////////////////////////////////////
     //
@@ -538,11 +544,17 @@ class mfix : public AmrCore
     mutable Gpu::DeviceVector<Real> m_bc_v_g;
     mutable Gpu::DeviceVector<Real> m_bc_w_g;
     mutable Gpu::DeviceVector<Real> m_bc_t_g;
+    mutable Gpu::DeviceVector<Real> m_bc_h_g;
+    mutable Gpu::DeviceVector<Real> m_bc_ro_g;
+    mutable Gpu::DeviceVector<Real> m_bc_tracer;
 
     mutable Gpu::HostVector<Real>   m_h_bc_u_g;
     mutable Gpu::HostVector<Real>   m_h_bc_v_g;
     mutable Gpu::HostVector<Real>   m_h_bc_w_g;
     mutable Gpu::HostVector<Real>   m_h_bc_t_g;
+    mutable Gpu::HostVector<Real>   m_h_bc_h_g;
+    mutable Gpu::HostVector<Real>   m_h_bc_ro_g;
+    mutable Gpu::HostVector<Real>   m_h_bc_tracer;
 
     Gpu::DeviceVector<Real> m_bc_ep_g;
     Gpu::DeviceVector<Real> m_bc_p_g;
@@ -550,11 +562,11 @@ class mfix : public AmrCore
     Gpu::HostVector<Real>   m_h_bc_ep_g;
     Gpu::HostVector<Real>   m_h_bc_p_g;
 
-    amrex::Vector< Gpu::DeviceVector<Real> > m_bc_X_gk;
-    Gpu::DeviceVector<Real*> m_bc_X_gk_ptr;
+    mutable amrex::Vector< Gpu::DeviceVector<Real> > m_bc_X_gk;
+    mutable Gpu::DeviceVector<Real*> m_bc_X_gk_ptr;
 
-    amrex::Vector< Gpu::HostVector<Real> >   m_h_bc_X_gk;
-    Gpu::HostVector<Real*> m_h_bc_X_gk_ptr;
+    mutable amrex::Vector< Gpu::HostVector<Real> >   m_h_bc_X_gk;
+    mutable Gpu::HostVector<Real*> m_h_bc_X_gk_ptr;
 
     std::map< std::string, Gpu::DeviceVector<int> > m_vel_g_bc_types;
     std::map< std::string, Gpu::DeviceVector<int> > m_ro_g_bc_types;
@@ -623,14 +635,14 @@ public:
     void GetDataVel (int lev, Real time, Vector<MultiFab *> & data,
                      Vector<Real> & datatime);
 
-    void FillPatchScalar (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
-                          const Vector<BCRec> & bcr);
+    void FillPatchScalar (int lev, Real time, MultiFab & mf, ScalarToFill scalar,
+                        const Real* bc_scalar, const Vector<BCRec> & bcr);
 
     void FillPatchSpecies (int lev, Real time, MultiFab & mf, int icomp, int ncomp,
                            const Vector<BCRec> & bcr);
 
-    void GetDataScalar (int lev, Real time, Vector<MultiFab *> & data, int icomp,
-                        Vector<Real> & datatime);
+    void GetDataScalar (int lev, Real time, Vector<MultiFab *> & data,
+                        ScalarToFill scalar_id, Vector<Real> & datatime);
 
     void GetDataSpecies (int lev, Real time, Vector<MultiFab *> & data, int icomp,
                          Vector<Real> & datatime);
@@ -739,14 +751,16 @@ public:
                         Vector< MultiFab* > const& X_gk_in,
                         Real time);
 
+    int steady_state_reached (Real dt, int iter);
 
+  public:
     void mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,
                                        Vector< MultiFab*      >& conv_s,
                                        Vector< MultiFab*      >& conv_X,
                                        Vector< MultiFab*      > const& vel_forces,
                                        Vector< MultiFab*      > const& tra_forces,
                                        Vector< MultiFab const*> const& vel_in,
-                                       Vector< MultiFab const*> const& ep_g_in,
+                                       Vector< MultiFab*      > const& ep_g_in,
                                        Vector< MultiFab const*> const& ro_g_in,
                                        Vector< MultiFab const*> const& h_g_in,
                                        Vector< MultiFab const*> const& trac_in,
@@ -755,16 +769,8 @@ public:
                                        Vector< MultiFab*      > const& u_mac,
                                        Vector< MultiFab*      > const& v_mac,
                                        Vector< MultiFab*      > const& w_mac,
-                                       Vector< MultiFab const*> const& rhs_mac,
-                                       Vector< MultiFab      *> const& divtau_old,
                                        Real l_dt, Real time);
 
-
-
-
-    int steady_state_reached (Real dt, int iter);
-
-  public:
     void mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                                Vector< MultiFab* >& conv_s_old,
                                Vector< MultiFab* >& conv_X_old,
@@ -839,11 +845,9 @@ public:
                                Real& coupling_timing);
 
   public:
-    void mfix_normalize_fluid_species (const Vector< MultiFab* >& X_gk);
-
-    void mfix_update_fluid_and_species(const Vector< MultiFab* >& h_g,
+    void mfix_normalize_fluid_species (const Vector< MultiFab* >& X_gk,
                                        const Vector< MultiFab* >& T_g,
-                                       const Vector< MultiFab* >& X_gk);
+                                       const Vector< MultiFab* >& h_g);
 
     void mfix_open_system_rhs (Vector< MultiFab*       > const& rhs,
                                Vector< MultiFab const* > const& lap_T,
@@ -1054,15 +1058,14 @@ public:
     enum struct AdvectionType {Invalid, MOL, Godunov};
     AdvectionType m_advection_type = AdvectionType::Invalid;
 
-    //std::string m_advection_type = "MOL";
-    std::string m_redistribution_type = "FluxRedist";
+    std::string m_redistribution_type = "StateRedist";
 
     // include d(ep_g)/dt in constraint
     bool m_use_depdt_constraint = false;
     bool m_use_drag_in_projection = false;
 
-    // If using Godunov, default to PPM (not PLM)
-    bool m_godunov_ppm         = true;
+    // If using Godunov, default to PLM (not PPM)
+    bool m_godunov_ppm         = false;
 
     // If using Godunov, default to including viscous/diffusive
     //    terms in the forcing terms
@@ -1090,6 +1093,9 @@ public:
     DiffusionType m_corrector_diff_type = DiffusionType::Invalid;
 
     amrex::Real enthalpy_source = 0;
+    int update_mass             = 1;
+    int update_momentum         = 1;
+    int update_enthalpy      = 1;
 
 
     // Options to control mfix verbosity level
@@ -1271,36 +1277,11 @@ public:
     // const int m_eb_volume_grow_cells = nghost;
     // const int m_eb_full_grow_cells = nghost;
 
-    int nghost_eb_basic () const
-    {
-        if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
-            return 6;
-        else if (advection_type() == AdvectionType::Godunov && m_redistribution_type != "StateRedist")
-            return 5;
-        else if (advection_type() == AdvectionType::MOL && m_redistribution_type == "StateRedist")
-            return 5;
-        else
-            return 4;
-    }
+    int nghost_eb_basic () const  { return 4; }
 
-    int nghost_eb_volume () const
-    {
-        if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
-            return 6;
-        else if (advection_type() == AdvectionType::Godunov && m_redistribution_type != "StateRedist")
-            return 5;
-        else if (advection_type() == AdvectionType::MOL && m_redistribution_type == "StateRedist")
-            return 5;
-        else
-            return 4;
-    }
+    int nghost_eb_volume () const { return 5; }
 
-    int nghost_eb_full () const {
-        if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
-            return 5;
-        else
-            return 4;
-    }
+    int nghost_eb_full () const   { return 4; }
 
     IntVect particle_sorting_bin = IntVect::TheZeroVector();
 
@@ -1342,10 +1323,6 @@ public:
     Vector<Real> t_new;
 
     Vector<BCRec> bcs_ls; // used by the level-set fill-patch
-
-    Vector<BCRec> bcs_u; // For velocity components
-    Vector<BCRec> bcs_s; // For scalars
-    Vector<BCRec> bcs_X; // For fluid species
     Vector<BCRec> bcs_f; // For generic first-order extrapolation
 
     amrex::Vector<amrex::BCRec> m_bcrec_velocity;
@@ -1400,37 +1377,18 @@ public:
         return static_cast<amrex::EBFArrayBoxFactory const&>(*particle_ebfactory[lev]);
     }
 
-
     bool mfix_update_ebfactory (int a_lev);
 
-  // Number of ghost cells for field arrays.
-  int nghost_state () const {
-  //if (!EBFactory(0).isAllRegular())
-      {
-        if (advection_type() == AdvectionType::Godunov && m_redistribution_type == "StateRedist")
-          return 6;
-        else if (advection_type() == AdvectionType::Godunov && m_redistribution_type != "StateRedist")
-          return 5;
-        else if (advection_type() == AdvectionType::MOL && m_redistribution_type == "StateRedist")
-          return 5;
-        else
-          return 4;
-      }
-  //{
-  //  return (advection_type() != AdvectionType::MOL) ? 3 : 2;
-  //}
-  }
+    // Number of ghost cells for field arrays.
+    int nghost_state () const { return 4; }
 
     // For Godunov, we need 1 ghost cell in addition to the Box we are filling
     // For MOL    , we need 0 ghost cells
-    int nghost_force () const
-    {
-      if (advection_type() == AdvectionType::MOL)
-        return 0;
-      else if (m_redistribution_type == "StateRedist")
-        return 4;
-      else
-        return 3;
+    int nghost_force () const {
+       if (advection_type() == AdvectionType::MOL)
+           return 0;
+       else
+           return 1;
     }
 
     int nghost_mac () const {

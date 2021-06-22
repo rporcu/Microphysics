@@ -523,8 +523,7 @@ mfix::RegridLevelSetArray (int a_lev)
            new_level_set->define(nd_ba, dm, nc, ng);
            new_level_set->setVal(0.);
 
-           new_level_set->copy(*level_sets[a_lev], 0, 0, nc, ng,
-               ng, period);
+           new_level_set->ParallelCopy(*level_sets[a_lev], 0, 0, nc, ng, ng, period);
        }
 
        std::swap(level_sets[a_lev], new_level_set);
@@ -553,8 +552,7 @@ mfix::RegridLevelSetArray (int a_lev)
                new_level_set_lev->define(ref_nd_ba, dm, nc, ng);
                new_level_set_lev->setVal(0.0);
 
-               new_level_set_lev->copy(*level_sets[a_lev+1], 0, 0, nc,
-                   ng, ng, period);
+               new_level_set_lev->ParallelCopy(*level_sets[a_lev+1], 0, 0, nc, ng, ng, period);
            }
 
            std::swap(level_sets[a_lev+1], new_level_set_lev);

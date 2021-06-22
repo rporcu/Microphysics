@@ -11,10 +11,6 @@ Bdirs 	:= src
 Bdirs 	+= src/des
 Bdirs 	+= src/io
 Bdirs 	+= src/convection
-Bdirs 	+= src/convection/MOL
-Bdirs 	+= src/convection/Godunov
-Bdirs 	+= src/convection/EBGodunov
-Bdirs   += src/convection/Redistribution
 Bdirs 	+= src/diffusion
 Bdirs 	+= src/pic
 Bdirs 	+= src/projection
@@ -30,6 +26,26 @@ Bdirs 	+= src/timestepping
 
 Bpack	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir)/Make.package)
 Blocs	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir))
+
+Bpack += $(AMREX_HYDRO_HOME)/Godunov/Make.package
+Blocs += $(AMREX_HYDRO_HOME)/Godunov
+
+Bpack += $(AMREX_HYDRO_HOME)/MOL/Make.package
+Blocs += $(AMREX_HYDRO_HOME)/MOL
+
+Bpack += $(AMREX_HYDRO_HOME)/Utils/Make.package
+Blocs += $(AMREX_HYDRO_HOME)/Utils
+
+ifeq ($(USE_EB), TRUE)
+Bpack += $(AMREX_HYDRO_HOME)/EBMOL/Make.package
+Blocs += $(AMREX_HYDRO_HOME)/EBMOL
+
+Bpack += $(AMREX_HYDRO_HOME)/EBGodunov/Make.package
+Blocs += $(AMREX_HYDRO_HOME)/EBGodunov
+
+Bpack += $(AMREX_HYDRO_HOME)/Redistribution/Make.package
+Blocs += $(AMREX_HYDRO_HOME)/Redistribution
+endif
 
 include $(Bpack)
 INCLUDE_LOCATIONS += $(Blocs)

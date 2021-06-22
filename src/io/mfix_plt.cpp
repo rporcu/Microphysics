@@ -209,7 +209,7 @@ mfix::InitIOPltData ()
           pp.query("plt_species_p",   input_value );
 //          pp.query("plt_X_s",   input_value );
 
-          const int start = gap + pc->m_runtimeRealData.X_sn;
+          const int start = gap + rtData.X_sn;
           for(int n(0); n < solids.nspecies; ++n)
             write_real_comp[n+start] = input_value;
         }
@@ -219,7 +219,7 @@ mfix::InitIOPltData ()
           input_value = 0;
           pp.query("plt_ro_sn_txfr",   input_value );
 
-          const int start = gap + pc->m_runtimeRealData.ro_sn_txfr;
+          const int start = gap + rtData.ro_sn_txfr;
           for(int n(0); n < solids.nspecies; ++n)
             write_real_comp[n+start] = input_value;
         }
@@ -229,7 +229,7 @@ mfix::InitIOPltData ()
           input_value = 0;
           pp.query("plt_vel_s_txfr",   input_value );
 
-          const int start = gap + pc->m_runtimeRealData.vel_s_txfr;
+          const int start = gap + rtData.vel_s_txfr;
           for(int n(0); n < 3; ++n)
             write_real_comp[n+start] = input_value;
         }
@@ -239,7 +239,7 @@ mfix::InitIOPltData ()
           input_value = 0;
           pp.query("plt_h_s_txfr",   input_value );
 
-          const int start = gap + pc->m_runtimeRealData.h_s_txfr;
+          const int start = gap + rtData.h_s_txfr;
           write_real_comp[start] = input_value;
         }
 
@@ -460,14 +460,9 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
           MultiFab MW_g(T_g.boxArray(), T_g.DistributionMap(), T_g.nComp(),
                         T_g.nGrow(), MFInfo(), T_g.Factory());
 
-          const int is_mixture = fluid.is_a_mixture;
+          const int fluid_is_a_mixture = fluid.is_a_mixture;
 
-          const Real MW_g0 = fluid.MW_g0;
-
-          Gpu::DeviceVector<Real> MW_gk0_d(nspecies_g);
-          if (is_mixture)
-            Gpu::copyAsync(Gpu::hostToDevice, fluid.MW_gk0.begin(), fluid.MW_gk0.end(), MW_gk0_d.begin());
-          Real* p_MW_gk0 = is_mixture ? MW_gk0_d.data() : nullptr;
+          auto& fluid_parms = *fluid.parameters;
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -477,22 +472,23 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
             Box const& bx = mfi.tilebox();
 
             Array4<Real      > const& MW_g_array = MW_g.array(mfi);
-            Array4<Real const> const& X_gk_array = is_mixture ?
+            Array4<Real const> const& X_gk_array = fluid_is_a_mixture ?
               m_leveldata[lev]->X_gk->const_array(mfi) : Array4<const Real>();
 
-            ParallelFor(bx, [MW_g_array,X_gk_array,nspecies_g,is_mixture,p_MW_gk0,MW_g0]
+            ParallelFor(bx, [MW_g_array,X_gk_array,nspecies_g,fluid_is_a_mixture,
+                fluid_parms]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
-              if (is_mixture) {
-                Real MW_g(0);
+              if (fluid_is_a_mixture) {
+                Real MW_g_loc(0);
 
                 for (int n(0); n < nspecies_g; ++n) {
-                  MW_g += X_gk_array(i,j,k,n) / p_MW_gk0[n];
+                  MW_g_loc += X_gk_array(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
                 }
 
-                MW_g_array(i,j,k) = 1. / MW_g;
+                MW_g_array(i,j,k) = 1. / MW_g_loc;
               } else {
-                MW_g_array(i,j,k) = MW_g0;
+                MW_g_array(i,j,k) = fluid_parms.MW_g0;
               }
             });
           }
@@ -545,7 +541,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
             ParallelFor(bx, [cp_g_array,T_g_array,fluid_params]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
-              cp_g_array(i,j,k) = fluid_params.calc_cp_g(T_g_array(i,j,k));
+              cp_g_array(i,j,k) = fluid_params.calc_cp_g<RunOn::Gpu>(T_g_array(i,j,k));
             });
           }
 
@@ -712,7 +708,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
             {
               for (int n(0); n < nspecies_g; ++n)
                 if (adv_enthalpy)
-                  D_gk_array(i,j,k,n) = fluid_params.calc_D_gk(T_g_array(i,j,k), n);
+                  D_gk_array(i,j,k,n) = fluid_params.calc_D_gk<RunOn::Gpu>(T_g_array(i,j,k), n);
                 else
                   D_gk_array(i,j,k,n) = p_D_gk0[n];
             });
@@ -752,7 +748,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               for (int n(0); n < nspecies_g; ++n)
-                cp_gk_array(i,j,k,n) = fluid_params.calc_cp_gk(T_g_array(i,j,k),n);
+                cp_gk_array(i,j,k,n) = fluid_params.calc_cp_gk<RunOn::Gpu>(T_g_array(i,j,k),n);
             });
           }
 
@@ -792,7 +788,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
               const Real Tg_loc = T_g_array(i,j,k);
 
               for (int n(0); n < nspecies_g; ++n)
-                h_gk_array(i,j,k,n) = fluid_params.calc_h_gk(Tg_loc,n);
+                h_gk_array(i,j,k,n) = fluid_params.calc_h_gk<RunOn::Gpu>(Tg_loc,n);
             });
           }
 

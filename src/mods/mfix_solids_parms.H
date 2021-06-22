@@ -11,61 +11,133 @@
 
 struct SolidParms {
 
-  amrex::Real* cp_s0;
-  amrex::Real* cp_sn0;
+  amrex::Real* h_cp_s0;
+  amrex::Real* d_cp_s0;
+  amrex::Real* h_cp_sn0;
+  amrex::Real* d_cp_sn0;
+
+  //AMREX_GPU_HOST_DEVICE
+  //SolidParms () noexcept : cp_s0(nullptr), cp_sn0(nullptr) {}
 
   AMREX_GPU_HOST_DEVICE
-  SolidParms () noexcept : cp_s0(nullptr), cp_sn0(nullptr) {}
-
-  AMREX_GPU_HOST_DEVICE
-  SolidParms (amrex::Real* cp_s,
-              amrex::Real* cp_sn)
-    : cp_s0(cp_s)
-    , cp_sn0(cp_sn)
+  SolidParms (amrex::Real* h_cp_s,
+              amrex::Real* d_cp_s,
+              amrex::Real* h_cp_sn,
+              amrex::Real* d_cp_sn)
+    : h_cp_s0(h_cp_s)
+    , d_cp_s0(d_cp_s)
+    , h_cp_sn0(h_cp_sn)
+    , d_cp_sn0(d_cp_sn)
   {}
 
-  AMREX_GPU_HOST_DEVICE
-  ~SolidParms() {}
-
-  // Compute fluid specific heat
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   amrex::Real calc_cp_s (const int phase,
                          const amrex::Real /*T_s*/) const
   {
-    return cp_s0[phase-1];
+    if (run_on == amrex::RunOn::Gpu)
+      return d_cp_s0[phase];
+    else if (run_on == amrex::RunOn::Cpu)
+      return h_cp_s0[phase];
+    else
+      amrex::Abort("Unrecongized RunOn option");
+
+    return 0;
   }
 
-  // Compute fluid specific heat
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_partial_cp_s (const int /*phase*/,
+                                 const amrex::Real /*T_s*/) const
+  {
+    return 0;
+  }
+
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   amrex::Real calc_h_s (const int phase,
                         const amrex::Real T_s) const
   {
-    return calc_cp_s(phase,T_s) * T_s;
+    return calc_cp_s<run_on>(phase,T_s) * T_s;
   }
 
-  // Compute fluid specific heat
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real calc_T_s (const int phase,
-                        const amrex::Real h_s,
-                        const amrex::Real T_s) const
+  amrex::Real calc_partial_h_s (const int phase,
+                                const amrex::Real T_s) const
   {
-    return h_s / calc_cp_s(phase,T_s); // TODO in case of mixture
+    return calc_partial_cp_s<run_on>(phase,T_s) * T_s + calc_cp_s<run_on>(phase,T_s);
   }
 
-  // Compute fluid specific heat
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   amrex::Real calc_cp_sn (const amrex::Real /*T_s*/,
                           const int n) const
   {
-    return cp_sn0[n];
+    if (run_on == amrex::RunOn::Gpu)
+      return d_cp_sn0[n];
+    else if (run_on == amrex::RunOn::Cpu)
+      return h_cp_sn0[n];
+    else
+      amrex::Abort("Unrecongized RunOn option");
+
+    return 0;
   }
 
-  // Compute fluid specific heat
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_partial_cp_sn (const amrex::Real /*T_s*/,
+                                  const int /*n*/) const
+  {
+    return 0;
+  }
+
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   amrex::Real calc_h_sn (const amrex::Real T_s,
                          const int n) const
   {
-    return calc_cp_sn(T_s,n) * T_s;
+    return calc_cp_sn<run_on>(T_s,n) * T_s;
+  }
+
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_partial_h_sn (const amrex::Real T_s,
+                                 const int n) const
+  {
+    return calc_partial_cp_sn<run_on>(T_s,n) * T_s + calc_cp_sn<run_on>(T_s,n);
   }
 };
 
@@ -82,11 +154,6 @@ class SolidsPhase
     static constexpr int NMAX = 10;
 
     int NTYPES;
-
-    // List of recognized fluid molecular weight models
-    struct MOLECULARWEIGHTMODEL { enum {Invalid=-1, Constant, Mixture}; };
-
-    int MolecularWeightModel;
 
     // List of recognized fluid specific heat models
     struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA9Polynomials}; };
@@ -146,6 +213,12 @@ class SolidsPhase
     SolidParms* parameters;
 
     amrex::Real enthalpy_source;
+
+    int update_mass;
+
+    int update_momentum;
+
+    int update_enthalpy;
 
     struct INPUT_DIST_t {
       std::string distribution;

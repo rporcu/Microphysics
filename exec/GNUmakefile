@@ -1,5 +1,6 @@
 # AMREX_HOME defines the directory in which we will find all the AMReX code
-AMREX_HOME ?= ../../amrex
+AMREX_HOME ?= ../subprojects/amrex
+AMREX_HYDRO_HOME ?= ../subprojects/AMReX-Hydro
 
 # TOP defines the directory in which we will find Source, Exec, etc
 TOP = ..
@@ -8,6 +9,10 @@ TOP = ..
 COMP    = gnu
 USE_MPI = TRUE
 USE_OMP = FALSE
+
+USE_CUDA  = FALSE
+USE_HIP   = FALSE
+USE_DPCPP = FALSE
 
 USE_HYPRE = FALSE
 

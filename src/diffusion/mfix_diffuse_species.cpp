@@ -9,6 +9,7 @@ using namespace amrex;
 void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
                                    const Vector< MultiFab* >& ep_ro_g_in,
                                    const Vector< MultiFab* >&     T_g_in,
+                                         Vector<BCRec> const& species_h_bcrec,
                                    Real dt)
 {
     BL_PROFILE("DiffusionOp::diffuse_species");
@@ -35,9 +36,6 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
 
     // Number of fluid species
     const int nspecies_g = fluid.nspecies;
-
-    Vector<BCRec> bcs_X; // This is just to satisfy the call to EB_interp...
-    bcs_X.resize(3*nspecies_g);
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
@@ -70,13 +68,13 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
               const Real T_g = T_g_arr(i,j,k);
 
               for (int n(0); n < nspecies_g; ++n)
-                ep_ro_D_gk_arr(i,j,k,n) = ep_ro_g*fluid_parms.calc_D_gk(T_g,n);
+                ep_ro_D_gk_arr(i,j,k,n) = ep_ro_g*fluid_parms.calc_D_gk<RunOn::Gpu>(T_g,n);
             });
           }
         }
 
         EB_interp_CellCentroid_to_FaceCentroid (ep_ro_D_gk, GetArrOfPtrs(species_b[lev]),
-                                                0, 0, nspecies_g, geom[lev], bcs_X);
+                                                0, 0, nspecies_g, geom[lev], species_h_bcrec);
 
         // This sets the coefficients
         species_matrix->setACoeffs (lev, (*ep_ro_g_in[lev]));

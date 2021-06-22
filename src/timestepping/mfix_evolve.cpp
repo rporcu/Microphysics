@@ -90,7 +90,9 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                   levelset_refinement,
                                   particle_cost[ilev],
                                   knapsack_weight_type, nsubsteps,
-                                  advect_enthalpy,enthalpy_source);
+                                  advect_enthalpy, enthalpy_source,
+                                  update_mass, update_momentum,
+                                  update_enthalpy);
         }
         else
         {
@@ -106,7 +108,9 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                     particle_ebfactory[lev].get(), ls_data, 1,
                                     particle_cost[lev],
                                     knapsack_weight_type, nsubsteps,
-                                    advect_enthalpy,enthalpy_source);
+                                    advect_enthalpy, enthalpy_source,
+                                    update_mass, update_momentum,
+                                    update_enthalpy);
             }
         }
     }

@@ -61,11 +61,11 @@ struct TrilinearDeposition
 {
   AMREX_GPU_HOST_DEVICE AMREX_INLINE
   void operator() (amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
-                   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
+                   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& /*dx*/,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
                    amrex::Array4<const EBCellFlag> const& flags,
                    const amrex::RealVect& pos,
-                   const amrex::Real radius,
+                   const amrex::Real /*radius*/,
                    int& i,
                    int& j,
                    int& k,
@@ -228,7 +228,7 @@ struct TrueDPVMDeposition
   void operator() (amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
-                   amrex::Array4<const EBCellFlag> const& flags,
+                   amrex::Array4<const EBCellFlag> const& /*flags*/,
                    const amrex::RealVect& pos,
                    const amrex::Real radius,
                    int& i,
@@ -432,16 +432,16 @@ struct CentroidDeposition
 {
   AMREX_GPU_HOST_DEVICE AMREX_INLINE
   void operator() (amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
-                   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
+                   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& /*dx*/,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
-                   amrex::Array4<const EBCellFlag> const& flags,
+                   amrex::Array4<const EBCellFlag> const& /*flags*/,
                    const amrex::RealVect& pos,
-                   const amrex::Real radius,
+                   const amrex::Real /*radius*/,
                    int& i,
                    int& j,
                    int& k,
                    amrex::GpuArray<amrex::GpuArray<amrex::GpuArray<amrex::Real,2>,2>,2>& weights,
-                   const amrex::Real deposition_scale_factor) const
+                   const amrex::Real /*deposition_scale_factor*/) const
   {
     amrex::Real x = (pos[0] - plo[0]) * dxi[0] + 0.5;
     amrex::Real y = (pos[1] - plo[1]) * dxi[1] + 0.5;

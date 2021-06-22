@@ -6,7 +6,7 @@
 
 void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
 {
-  BL_PROFILE("mfix::mfix_deposition_bcs_scalar()");
+  BL_PROFILE("mfix::mfix_deposition_bcs()");
 
   Box domain(Geom(lev).Domain());
 

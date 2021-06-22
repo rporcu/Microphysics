@@ -69,7 +69,7 @@ void mfix::make_eb_general () {
     // IMPORTANT NOTE: has_real_walls => has_walls <=> ! has_walls => ! has_real_walls
     bool has_walls = false, has_real_walls = false;
     if (use_walls) {
-        amrex::Print() << "Using wall geometry from mfix.dat" << std::endl;
+        amrex::Print() << "Using wall geometry from inputs file" << std::endl;
 
         impfunc_walls_part  = get_walls(has_walls);
         impfunc_walls_fluid = get_real_walls(has_real_walls);
@@ -346,7 +346,10 @@ mfix::get_poly (int max_order, std::string field_prefix)
             IntVect powers = IntVect::Zero;
             powers[idir] = lc;
 
-            EB2::PolyTerm mono = {.coef = coef, .powers = powers};
+            EB2::PolyTerm mono;
+            mono.coef = coef;
+            mono.powers = powers;
+
             poly.push_back(mono);
         }
     }

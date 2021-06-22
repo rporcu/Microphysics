@@ -81,6 +81,9 @@ mfix::mfix ()
   , m_bc_v_g(50, 0)
   , m_bc_w_g(50, 0)
   , m_bc_t_g(50, 0)
+  , m_bc_h_g(50, 0)
+  , m_bc_ro_g(50, 0)
+  , m_bc_tracer(50, 0)
   , m_bc_ep_g(50, 0)
   , m_bc_p_g(50, 0)
 {
@@ -114,11 +117,7 @@ mfix::mfix ()
      *                                                                          *
      ***************************************************************************/
 
-    bcs_u.resize(3); // one for each velocity component
-    // This needs to be one bigger than the highest index scalar in mfix_set_scalar_bcs
-    bcs_s.resize(5); // density, tracer, ep_g, T_g, h_g
-    bcs_X.resize(0); // X_gk, TODO this has to be resized on the basis of
-                     // fluid.nspecies. So we do it after parameter parsing
+    // Generic first-order extrapolation
     bcs_f.resize(1); // just one
 
     //___________________________________________________________________________

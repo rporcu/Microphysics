@@ -29,6 +29,9 @@ mfix::InitParams ()
   solids.Initialize();
 
   enthalpy_source = solids.enthalpy_source;
+  update_mass     = solids.update_mass;
+  update_momentum = solids.update_momentum;
+  update_enthalpy = solids.update_enthalpy;
 
   BL_ASSERT(fluid.nspecies <= SPECIES::NMAX);
   BL_ASSERT(solids.nspecies <= SPECIES::NMAX);
@@ -41,10 +44,6 @@ mfix::InitParams ()
 
   DEM::Initialize();
   PIC::Initialize();
-
-  // Need to do this -- We might want to move this to a BC class once we have
-  // one
-  bcs_X.resize(fluid.nspecies);
 
   // Read in regions, initial and boundary conditions. Note that
   // regions need to be processed first as they define the
@@ -60,8 +59,6 @@ mfix::InitParams ()
   {
     ParmParse pp("mfix");
 
-    // Options to control time stepping
-    pp.query("cfl", m_cfl);
 
     fixed_dt = -1.;
     pp.query("fixed_dt", fixed_dt);
@@ -198,7 +195,7 @@ mfix::InitParams ()
     pp.query("use_drag_coeff_in_proj_gp"        , m_use_drag_in_projection);
 
     // Are we using MOL or Godunov?
-    std::string l_advection_type = "MOL";
+    std::string l_advection_type = "Godunov";
     pp.query("advection_type"                   , l_advection_type);
     pp.query("use_ppm"                          , m_godunov_ppm);
     pp.query("godunov_use_forces_in_trans"      , m_godunov_use_forces_in_trans);
@@ -216,7 +213,7 @@ mfix::InitParams ()
       amrex::Abort("redistribution type must be FluxRedist, NoRedist or StateRedist");
 
 
-    // Default to MOL
+    // Default to Godunov
     if(amrex::toLower(l_advection_type).compare("mol") == 0) {
       m_advection_type = AdvectionType::MOL;
     } else if(amrex::toLower(l_advection_type).compare("godunov") == 0) {
@@ -249,6 +246,16 @@ mfix::InitParams ()
     if (m_predictor_diff_type != DiffusionType::Implicit && use_tensor_correction) {
       amrex::Abort("We cannot have use_tensor_correction be true and diffusion type not Implicit");
     }
+
+    // Options to control time stepping
+    // MOL: default CFl = 0.5
+    // Godunov: default CFL = 0.9
+    if (advection_type() == AdvectionType::MOL) {
+      m_cfl = 0.5;
+    } else {
+      m_cfl = 0.9;
+    }
+    pp.query("cfl", m_cfl);
 
     if (advection_type() == AdvectionType::MOL && m_cfl > 0.5) {
       amrex::Abort("We currently require cfl <= 0.5 when using the MOL advection scheme");
@@ -476,7 +483,7 @@ mfix::InitParams ()
 
 //! Tag using each EB level's volfrac. This requires that the `eb_levels` have
 //! already been build.
-void mfix::ErrorEst (int lev, TagBoxArray & tags, Real time, int ngrow)
+void mfix::ErrorEst (int lev, TagBoxArray & tags, Real /*time*/, int /*ngrow*/)
 {
     if (ooo_debug) amrex::Print() << "ErrorEst" << std::endl;
     //___________________________________________________________________________
@@ -634,7 +641,7 @@ void mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
 }
 
 
-void mfix::MakeNewLevelFromScratch (int lev, Real time,
+void mfix::MakeNewLevelFromScratch (int lev, Real /*time*/,
                                     const BoxArray& new_grids,
                                     const DistributionMapping& new_dmap)
 {
@@ -678,7 +685,7 @@ void mfix::ReMakeNewLevelFromScratch (int lev,
 
 
 
-void mfix::InitLevelData (Real time)
+void mfix::InitLevelData (Real /*time*/)
 {
     if (ooo_debug) amrex::Print() << "InitLevelData" << std::endl;
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
@@ -807,7 +814,7 @@ void mfix::InitLevelData (Real time)
 }
 
 void
-mfix::PostInit (Real& dt, Real time, int restart_flag, Real stop_time)
+mfix::PostInit (Real& dt, Real /*time*/, int restart_flag, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
 

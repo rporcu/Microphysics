@@ -353,7 +353,7 @@ ParticlesGenerator::hex_close_pack (const int icv,
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 void
 ParticlesGenerator::one_per_fill (const int icv,
-                                  const int type,
+                                  const int /*type*/,
                                   const IntVect& lo,
                                   const IntVect& hi,
                                   int& np,
@@ -436,7 +436,7 @@ ParticlesGenerator::one_per_fill (const int icv,
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 void
 ParticlesGenerator::eight_per_fill (const int icv,
-                                    const int type,
+                                    const int /*type*/,
                                     const IntVect& lo,
                                     const IntVect& hi,
                                     int& np,
@@ -518,7 +518,7 @@ ParticlesGenerator::random_fill_dem (const int icv,
                                      const Real dy,
                                      const Real dz,
                                      const amrex::GpuArray<Real, 3>& plo,
-                                     const bool fix_seed)
+                                     const bool /*fix_seed*/)
 {
     // indices
   int i_w, i_e, j_s, j_n, k_b, k_t;
@@ -736,7 +736,7 @@ ParticlesGenerator::random_fill_pic (const int icv,
                                      const Real dy,
                                      const Real dz,
                                      const amrex::GpuArray<Real, 3>& plo,
-                                     const bool fix_seed)
+                                     const bool /*fix_seed*/)
 {
 
   const Real* ic_rlo = IC::ic[icv].region->lo();
@@ -772,7 +772,7 @@ ParticlesGenerator::random_fill_pic (const int icv,
   const Real parcels_per_cell =
       (dx * dy * dz * IC::ic[icv].solids[type].volfrac / parcel_volume);
 
-  const int whole_parcels_per_cell = amrex::Math::floor(parcels_per_cell);
+  const int whole_parcels_per_cell = static_cast<int>(amrex::Math::floor(parcels_per_cell));
 
   // This is the total number of particles that will be generated.
   np = static_cast<int>(ic_cells) * whole_parcels_per_cell;

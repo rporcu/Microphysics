@@ -79,8 +79,8 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
     // The only use of bcs in this call is to test on whether a domain boundary is ext_dir
     // average_cellcenter_to_face(ro_face[lev], *ro_g_in[lev], geom[lev]);
     // average_cellcenter_to_face(ep_face[lev], *ep_g_in[lev], geom[lev]);
-    EB_interp_CellCentroid_to_FaceCentroid (*ro_g_in[lev], ro_face[lev], 0, 0, 1, geom[lev], bcs_s);
-    EB_interp_CellCentroid_to_FaceCentroid (*ep_g_in[lev], ep_face[lev], 0, 0, 1, geom[lev], bcs_s);
+    EB_interp_CellCentroid_to_FaceCentroid (*ro_g_in[lev], ro_face[lev], 0, 0, 1, geom[lev], get_density_bcrec());
+    EB_interp_CellCentroid_to_FaceCentroid (*ep_g_in[lev], ep_face[lev], 0, 0, 1, geom[lev], bcs_f);
 
     // These will be reused to predict velocites (ep*u) on faces
     ep_face[lev][0]->FillBoundary();
@@ -132,7 +132,18 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
   }
 
   if (m_use_mac_phi_in_godunov) {
-    macproj->getFluxes(amrex::GetVecOfArrOfPtrs(m_fluxes), mac_phi, MLMG::Location::FaceCentroid);
+
+    // Copy mac_phi MultiFabs into temporary variables
+    Vector<MultiFab*> mac_phi_copy(finest_level+1);
+    for (int lev(0); lev <= finest_level; ++lev) {
+      mac_phi_copy[lev] = (MFHelpers::createFrom(*mac_phi[lev])).release();
+    }
+
+    macproj->getFluxes(amrex::GetVecOfArrOfPtrs(m_fluxes), mac_phi_copy, MLMG::Location::FaceCentroid);
+
+    for (int lev(0); lev <= finest_level; ++lev) {
+      delete mac_phi_copy[lev];
+    }
 
     if( m_use_drag_in_godunov) {
       amrex::Print() << "WARNING: using mac_phi in Godunov MAC velocities.\n"
