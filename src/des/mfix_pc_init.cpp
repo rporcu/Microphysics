@@ -216,8 +216,9 @@ void MFIXParticleContainer::InitParticlesAuto ()
         particles_generator.generate_prop(np, particles);
   }
 
-  ParallelDescriptor::ReduceIntSum(total_np,ParallelDescriptor::IOProcessorNumber());
+  ParallelDescriptor::ReduceIntSum(total_np);
   amrex::Print() << "Total number of generated particles: " << total_np << std::endl;
+  m_total_numparticle = total_np;
 
   // We shouldn't need this if the particles are tiled with one tile per grid, but otherwise
   // we do need this to move particles from tile 0 to the correct tile.

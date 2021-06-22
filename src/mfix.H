@@ -1172,6 +1172,8 @@ public:
     static std::string load_balance_type;
     static std::string knapsack_weight_type;
     static int load_balance_fluid;
+    static int downsize_particle_grid;
+    static Real downsize_factor;
     static int knapsack_nmax;
 
     // Options to control time stepping
@@ -1185,6 +1187,8 @@ public:
     int particle_max_grid_size_z = -1;
 
     int removeOutOfRange = 1; // Flag to remove out-of-range particles
+
+    int sort_particle_int = -1; // # steps to sort particles
 
     static EBSupport m_eb_support_level;
 
