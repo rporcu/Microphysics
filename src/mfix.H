@@ -1186,6 +1186,8 @@ public:
     int particle_max_grid_size_y = -1;
     int particle_max_grid_size_z = -1;
 
+    int agg_grid_size = -1; // agglomeration for GMG
+
     int removeOutOfRange = 1; // Flag to remove out-of-range particles
 
     int sort_particle_int = -1; // # steps to sort particles

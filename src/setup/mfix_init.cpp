@@ -206,6 +206,8 @@ mfix::InitParams ()
     pp.query("use_mac_phi_in_godunov"           , m_use_mac_phi_in_godunov);
     pp.query("use_drag_in_godunov"              , m_use_drag_in_godunov);
 
+    // agglomeration for GMG coarse levels
+    pp.query("agg_grid_size", agg_grid_size);
 
     pp.query("redistribution_type"              , m_redistribution_type);
     if (m_redistribution_type != "NoRedist" &&
