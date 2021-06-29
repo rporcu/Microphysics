@@ -358,7 +358,7 @@ mfix::mfix_add_txfr_explicit (Real dt)
           Real Tg_old = Tg;
           Real Tg_new(0.);
 
-          Solvers::NewtonRaphson(Tg_new, Tg_old, R, partial_R);
+          Solvers::NewtonStabilized(Tg_new, Tg_old, R, partial_R);
 
           Tg_array(i,j,k) = Tg_new;
         });
@@ -483,7 +483,7 @@ mfix::mfix_add_txfr_implicit (Real dt,
           Real Tg_old = Tg;
           Real Tg_new(0.);
 
-          Solvers::NewtonRaphson(Tg_new, Tg_old, R, partial_R);
+          Solvers::NewtonStabilized(Tg_new, Tg_old, R, partial_R);
 
           Tg_array(i,j,k) = Tg_new;
         });

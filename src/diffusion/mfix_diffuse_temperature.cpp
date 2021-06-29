@@ -99,13 +99,31 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
     temperature_matrix->setBCoeffs (lev, GetArrOfConstPtrs(b[lev]),
         MLMG::Location::FaceCentroid);
 
+    // Turn "ep_g" back into (rho * ep_g)
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+    {
+      Box const& bx = mfi.tilebox();
+
+      Array4<Real      > const& ep_g_array  = ep_g[lev]->array(mfi);
+      Array4<Real const> const& T_g_array   = T_g[lev]->const_array(mfi);
+
+      amrex::ParallelFor(bx, [ep_g_array,T_g_array,fluid_parms]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        ep_g_array(i,j,k) /= fluid_parms.calc_cp_g<RunOn::Gpu>(T_g_array(i,j,k));
+      });
+    }
+
     // Zero these out just to have a clean start because they have 3 components
     //      (due to re-use with velocity solve)
     phi[lev]->setVal(0.0);
     rhs[lev]->setVal(0.0);
 
     // Set the right hand side to equal rhs
-    MultiFab::Copy((*rhs[lev]), (*T_g[lev]), 0, 0, 1, 0);
+    MultiFab::Copy((*rhs[lev]), (*h_g[lev]), 0, 0, 1, 0);
 
     // Multiply rhs by (rho * ep_g * cp_g) -- we are solving
     //
@@ -129,7 +147,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
       amrex::ParallelFor(bx, [ep_g_array,T_g_array,ro_g_array,fluid_parms]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-        ep_g_array(i,j,k) /= ro_g_array(i,j,k)*fluid_parms.calc_cp_g<RunOn::Gpu>(T_g_array(i,j,k));
+        ep_g_array(i,j,k) /= ro_g_array(i,j,k);
       });
     }
 

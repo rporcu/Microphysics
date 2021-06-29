@@ -442,7 +442,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                     Real Tg_old = T_g_o(i,j,k);
                     Real Tg_new(0.);
 
-                    Solvers::NewtonRaphson(Tg_new, Tg_old, R, partial_R);
+                    Solvers::NewtonStabilized(Tg_new, Tg_old, R, partial_R);
 
                     T_g_n(i,j,k) = Tg_new;
                 });
