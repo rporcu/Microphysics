@@ -125,7 +125,6 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     //
     LPInfo info;
     info.setMaxCoarseningLevel(mg_max_coarsening_level);
-    info.setAgglomeration((mg_agg_grid_size >= 0));
     info.setAgglomerationGridSize(mg_agg_grid_size);
     vel_matrix = std::make_unique<MLEBTensorOp>(geom, grids, dmap, info, ebfactory);
 
