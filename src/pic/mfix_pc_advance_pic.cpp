@@ -468,7 +468,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
             Real Tp_old = Tp_loc;
             Real Tp_new(0.);
 
-            Solvers::NewtonRaphson(Tp_new, Tp_old, R, partial_R);
+            Solvers::NewtonStabilized(Tp_new, Tp_old, R, partial_R);
 
             p_realarray[SoArealData::temperature][lp] = Tp_new;
           }

@@ -1056,7 +1056,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                   Real Tp_old = Tp_loc;
                   Real Tp_new(0.);
 
-                  Solvers::NewtonRaphson(Tp_new, Tp_old, R, partial_R);
+                  Solvers::NewtonStabilized(Tp_new, Tp_old, R, partial_R);
 
                   p_realarray[SoArealData::temperature][i] = Tp_new;
                 }
