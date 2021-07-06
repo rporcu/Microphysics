@@ -74,16 +74,17 @@ mfix::Regrid ()
       for (int lev = base_lev; lev <= finestLevel(); ++lev)
       {
         // update new particle grid size
-        IntVect max_grid_size = pc->MaxGridSize();
-        IntVect new_grid_size = max_grid_size;
-        pc->checkParticleBoxSize(lev, new_grid_size, 1.0);
-
-        // if new size is smaller, then downsize particle grids
-        // reset the particle cost by # particles
-        if (new_grid_size < max_grid_size) {
-          pc->downsizeParticleBoxes(lev, new_grid_size);
-          pc->resetCostByCount(lev, particle_cost);
-          pc->setMaxGridSize(new_grid_size);
+        if (downsize_particle_grid) {
+          IntVect max_grid_size = pc->MaxGridSize();
+          IntVect new_grid_size = max_grid_size;
+          pc->checkParticleBoxSize(lev, new_grid_size, downsize_factor);
+          // if new size is smaller, then downsize particle grids
+          // reset the particle cost by # particles
+          if (new_grid_size < max_grid_size) {
+            pc->downsizeParticleBoxes(lev, new_grid_size);
+            pc->resetCostByCount(lev, particle_cost);
+            pc->setMaxGridSize(new_grid_size);
+          }
         }
 
         DistributionMapping new_particle_dm;
@@ -99,7 +100,7 @@ mfix::Regrid ()
         }
 
         pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev), lev);
-        pc->SortParticlesByCell();
+        if (sort_particle_int > 0)  pc->SortParticlesByCell();
 
         if (particle_cost[lev] != nullptr)
           delete particle_cost[lev];
