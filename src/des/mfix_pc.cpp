@@ -293,7 +293,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                 constexpr Real small_number = 1.0e-15;
 
-                reduce_op.eval(nrp, reduce_data, [pstruct,p_realarray,
+                reduce_op.eval(nrp, reduce_data, [nrp, pstruct,p_realarray,
                     nbor_data,small_number]
                   AMREX_GPU_DEVICE (int i) -> ReduceTuple
                 {
