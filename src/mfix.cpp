@@ -10,6 +10,8 @@ std::string      mfix::particle_init_type   = "AsciiFile";
 std::string      mfix::load_balance_type    = "KnapSack";
 std::string      mfix::knapsack_weight_type = "RunTimeCosts";
 int              mfix::load_balance_fluid   = 1;
+int              mfix::downsize_particle_grid = 0;
+Real             mfix::downsize_factor        = 1.0;
 int              mfix::knapsack_nmax        = 128;
 int              mfix::m_drag_type          = DragType::Invalid;
 int              mfix::m_convection_type    = ConvectionType::Invalid;
@@ -58,11 +60,14 @@ mfix::~mfix ()
   for (int lev = 0; lev < particle_cost.size(); ++lev)
     delete particle_cost[lev];
 
-  for (int lev = 0; lev < particle_ba_proc.size(); ++lev)
-    delete particle_ba_proc[lev];
+  for (int lev = 0; lev < particle_proc.size(); ++lev)
+    delete particle_proc[lev];
 
   for (int lev = 0; lev < fluid_cost.size(); ++lev)
     delete fluid_cost[lev];
+
+  for (int lev = 0; lev < fluid_proc.size(); ++lev)
+    delete fluid_proc[lev];
 
   if (REACTIONS::solve) {
     for (int n(0); n < REACTIONS::nreactions; n++)

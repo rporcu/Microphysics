@@ -112,6 +112,7 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
       LPInfo lp_info;
       // If we want to set max_coarsening_level we have to send it in to the constructor
       lp_info.setMaxCoarseningLevel(mac_mg_max_coarsening_level);
+      lp_info.setAgglomerationGridSize(agg_grid_size);
       macproj->initProjector(lp_info, const_bcoeff);
       macproj->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
     } else {

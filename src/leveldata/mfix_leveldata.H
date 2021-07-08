@@ -121,9 +121,6 @@ class LevelData
 
     amrex::MultiFab* divtau_o;
 
-    // rank of each box
-    amrex::MultiFab* ba_proc;
-
     const int level_allocated;
 
     const int solve_enthalpy;

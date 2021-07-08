@@ -311,12 +311,41 @@ public:
 
     void setSortingBinSizes (amrex::IntVect sorting_bin) { m_sorting_bin = sorting_bin;  }
 
+    void checkParticleBoxSize(int lev, 
+                              amrex::IntVect& max_grid_size,
+                              amrex::Real frac_particle_bin);
+
+    void downsizeParticleBoxes(int lev, const amrex::IntVect& new_grid_size);
+
+    void resetCostByCount(int lev, amrex::Vector<amrex::MultiFab*>& cost);
+
+    void setMaxGridSize(const amrex::IntVect& rhs)
+    { max_grid_size = rhs;}
+
+    void setMaxGridSize(int size_x, int size_y, int size_z)
+    { max_grid_size = amrex::IntVect(AMREX_D_DECL(size_x, size_y, size_z));}
+
+    void setSortInt(int sort_particle_int)
+    { sort_int = sort_particle_int; }
+
+    const amrex::IntVect& MaxGridSize() const noexcept
+    { return max_grid_size; }
+
+    // return the average/max particle count on IO process
+    amrex::Real particleImbalance();
+
   private:
     int nlev;
+
+    int sort_int = -1; // # steps to sort particles
+
+    amrex::IntVect max_grid_size{-1};
 
     amrex::IntVect m_sorting_bin = amrex::IntVect::TheZeroVector();
 
     static int domain_bc[6];
+
+    int m_total_numparticle = 0;
 
     static void ReadStaticParameters ();
 

@@ -38,7 +38,6 @@ LevelData::LevelData (BoxArray const& ba,
   , diveu(new MultiFab(amrex::convert(ba, IntVect{1,1,1}), dmap, 1, nghost, MFInfo(), factory))
   , mac_phi(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , divtau_o(new MultiFab(ba, dmap, 3, 0, MFInfo(), factory))
-  , ba_proc(new MultiFab(ba, dmap, 1, 0, MFInfo(), factory))
   , level_allocated(1)
   , solve_enthalpy(_solve_enthalpy)
   , solve_species(_solve_species)
@@ -86,7 +85,6 @@ void LevelData::resetValues (const amrex::Real init_value)
   diveu->setVal(init_value);
   mac_phi->setVal(init_value);
   divtau_o->setVal(init_value);
-  ba_proc->setVal(init_value);
 
   if (solve_enthalpy) {
     pressure_g->setVal(init_value);
@@ -130,7 +128,6 @@ LevelData::~LevelData ()
     delete diveu;
     delete mac_phi;
     delete divtau_o;
-    delete ba_proc;
 
     if (solve_enthalpy) {
       delete pressure_g;

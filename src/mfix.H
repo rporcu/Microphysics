@@ -1032,8 +1032,13 @@ public:
 
     // used if load_balance_type == "KnapSack"
     amrex::Vector< amrex::MultiFab* > particle_cost;
-    amrex::Vector< amrex::MultiFab* > particle_ba_proc;
+    amrex::Vector< amrex::MultiFab* > particle_proc;
     amrex::Vector< amrex::MultiFab* > fluid_cost;
+    amrex::Vector< amrex::MultiFab* > fluid_proc;
+
+    // set distribution map manually, used for profiling
+    amrex::Vector<int> pmap;
+    amrex::Vector<int> particle_pmap;
 
     // Level-Set Data => used for particle-wall collisions and fluid
     // reconstruction in particle drag calculation. NOTE: this has at least 2
@@ -1173,6 +1178,8 @@ public:
     static std::string load_balance_type;
     static std::string knapsack_weight_type;
     static int load_balance_fluid;
+    static int downsize_particle_grid;
+    static Real downsize_factor;
     static int knapsack_nmax;
 
     // Options to control time stepping
@@ -1185,7 +1192,11 @@ public:
     int particle_max_grid_size_y = -1;
     int particle_max_grid_size_z = -1;
 
+    int agg_grid_size = -1; // agglomeration for GMG
+
     int removeOutOfRange = 1; // Flag to remove out-of-range particles
+
+    int sort_particle_int = -1; // # steps to sort particles
 
     static EBSupport m_eb_support_level;
 

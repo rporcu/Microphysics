@@ -183,6 +183,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
 
     LPInfo info;
     info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
+    info.setAgglomerationGridSize(agg_grid_size);
 
     nodal_projector = std::make_unique<NodalProjector>(vel_g_in,
                                              GetVecOfConstPtrs(sigma_mf),

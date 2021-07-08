@@ -117,7 +117,7 @@ void MFIXParticleContainer::ReadStaticParameters ()
 }
 
 void MFIXParticleContainer::EvolveParticles (int lev,
-                                             int /*nstep*/,
+                                             int nstep,
                                              Real dt,
                                              Real /*time*/,
                                              RealVect& gravity,
@@ -237,6 +237,12 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     loc_maxwfor = RealVect(0., 0., 0.);  // Tracks max particle-wall force
     int n = 0; // Counts sub-steps
 
+    // sort particles by cell, this can significantly improve the locality
+    if (sort_int > 0 && nstep % sort_int == 0) {
+      SortParticlesByCell();
+      Print() << "   Sort particles by cell at step " << nstep+1 << "\n";
+    }
+
     while (n < nsubsteps)
     {
         int ncoll = 0;  // Counts number of collisions (over sub-steps)
@@ -287,7 +293,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                 constexpr Real small_number = 1.0e-15;
 
-                reduce_op.eval(nrp, reduce_data, [pstruct,p_realarray,
+                reduce_op.eval(nrp, reduce_data, [nrp, pstruct,p_realarray,
                     nbor_data,small_number]
                   AMREX_GPU_DEVICE (int i) -> ReduceTuple
                 {
@@ -307,11 +313,10 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                     const Real radius2 = p_realarray[SoArealData::radius][j];
 
                     Real r2 = (pos1 - pos2).radSquared();
-
                     Real r_lm = radius1 + radius2;
 
                     if (r2 <= (r_lm-small_number)*(r_lm-small_number))
-                      l_ncoll = 1;
+                      l_ncoll += (j < nrp ? 2 : 1);
                   }
 
                   return {l_ncoll};
@@ -381,6 +386,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
+        BL_PROFILE_VAR("particles_computation", particles_computation);
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
             // Timer used for load-balancing
@@ -570,7 +576,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                * Particle-Particle collision forces (and torques)                 *
                *******************************************************************/
 
-              BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
+              // BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
 
               auto nbor_data = m_neighbor_list[lev][index].data();
 
@@ -757,9 +763,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                   }
               }
 
-              BL_PROFILE_VAR_STOP(calc_particle_collisions);
+              // BL_PROFILE_VAR_STOP(calc_particle_collisions);
 
-              BL_PROFILE_VAR("des::update_particle_velocity_and_position()", des_time_march);
+              // BL_PROFILE_VAR("des::update_particle_velocity_and_position()", des_time_march);
 
             }
 
@@ -1082,6 +1088,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 (*cost)[pti].plus<RunOn::Device>(wt, tbx);
             }
         }
+        BL_PROFILE_VAR_STOP(particles_computation);
 
         // Update substep count
         n += 1;
@@ -2001,4 +2008,311 @@ void MFIXParticleContainer::set_particle_properties (int /*pstate*/,
     pmass = pvol * pdensity;
     omoi  = 2.5/(pmass * (pradius*pradius));
     omega = 0.0;
+}
+
+
+void MFIXParticleContainer::checkParticleBoxSize(int      lev, 
+                                                 IntVect& max_grid_size, 
+                                                 Real     frac_particle_bin)
+{
+  // count total # particles
+  if (m_total_numparticle <= 0) {
+    m_total_numparticle = 0;
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+      m_total_numparticle += pti.numRealParticles();
+    ParallelDescriptor::ReduceIntSum(m_total_numparticle);
+  }
+
+  // average # particles per process
+  Real avg_np = static_cast<Real>(m_total_numparticle)
+              / ParallelDescriptor::NProcs()
+              * frac_particle_bin;
+  // Print() << "total # particles " << m_total_numparticle 
+          // << " average # particles " << avg_np << std::endl;
+
+  // 
+  IntVect ncut(AMREX_D_DECL(4, 4, 4));
+  IntVect bin_size(AMREX_D_DECL(
+            amrex::max(max_grid_size[0]/ncut[0], 1), 
+            amrex::max(max_grid_size[1]/ncut[1], 1),
+            amrex::max(max_grid_size[2]/ncut[2], 1)));
+
+  // dictoinary for # particles per bin
+  std::map<PairIndex, Gpu::DeviceVector<int> > np_bin;
+  std::map<PairIndex, IntVect> tile_max_bin_size;
+
+  // particle tiles and geometry of this level
+  const auto& geom = Geom(lev);
+  const auto  dx_inv = geom.InvCellSizeArray();
+  const auto  prob_lo = geom.ProbLoArray();
+
+  auto& plev = GetParticles(lev);
+
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+    PairIndex   index(pti.index(), pti.LocalTileIndex());
+
+    // particle box, range
+    const auto& pbox  = pti.tilebox();
+    const auto  lo    = lbound(pbox);
+    Real nx  = static_cast<Real>(pbox.length(0));
+    Real ny  = static_cast<Real>(pbox.length(1));
+    Real nz  = static_cast<Real>(pbox.length(2));
+    IntVect nbin(AMREX_D_DECL(
+              static_cast<int>(Math::ceil(nx/bin_size[0])),
+              static_cast<int>(Math::ceil(ny/bin_size[1])),
+              static_cast<int>(Math::ceil(nz/bin_size[2]))));
+
+    const auto& ptile = plev[index];
+    int np = ptile.numRealParticles();
+    auto& aos = ptile.GetArrayOfStructs();
+    const auto* pstruct = aos().dataPtr();
+
+    np_bin[index].clear();
+    np_bin[index].resize(nbin[0]*nbin[1]*nbin[2], 0);
+    auto np_bin_ptr = np_bin[index].dataPtr();
+
+    ParallelFor(np, [pstruct, prob_lo, dx_inv, lo, np_bin_ptr, bin_size, nbin]
+      AMREX_GPU_DEVICE (int i) noexcept
+      {
+        const auto p = pstruct[i];
+        int bin_i = ( static_cast<int>(Math::floor((p.pos(0) - prob_lo[0]) * dx_inv[0])) 
+                    - lo.x) / bin_size[0];
+        int bin_j = ( static_cast<int>(Math::floor((p.pos(1) - prob_lo[1]) * dx_inv[1])) 
+                    - lo.y) / bin_size[1];
+        int bin_k = ( static_cast<int>(Math::floor((p.pos(2) - prob_lo[2]) * dx_inv[2])) 
+                    - lo.z) / bin_size[2];
+        Gpu::Atomic::Add(np_bin_ptr + bin_i + bin_j*nbin[0] + bin_k*nbin[0]*nbin[1], 1);
+      });// end parallel for
+
+    Gpu::streamSynchronize();
+
+    IntVect incr(IntVect::TheUnitVector());
+    int nincr = 0;            // # increments done
+    int nfail = 0;            // # fails to increment bin size
+    while (incr[0] < nbin[0] || incr[1] < nbin[1] || incr[2] < nbin[2]) {
+      // max # particles among merged bins
+      int max_np_bin_merge = 0; 
+      for (int bin_i=0; bin_i<nbin[0]; bin_i+=incr[0]) {
+        for (int bin_j=0; bin_j<nbin[1]; bin_j+=incr[1]) {
+          for (int bin_k=0; bin_k<nbin[2]; bin_k+=incr[2]) {
+            // # particles in merged bins
+            int np_bin_merge = 0;
+            for (int ii=bin_i; ii<min(bin_i+incr[0], nbin[0]); ++ii)
+              for (int jj=bin_j; jj<min(bin_j+incr[1], nbin[1]); ++jj)
+                for (int kk=bin_k; kk<min(bin_k+incr[2], nbin[2]); ++kk)
+                  np_bin_merge += np_bin_ptr[ii+jj*nbin[0]+kk*nbin[0]*nbin[1]];
+            max_np_bin_merge = max(max_np_bin_merge, np_bin_merge);
+          }
+        }
+      } // end for bin_i
+
+      // if exceeds the allowed average, then undo the increment 
+      // and try it in another direction
+      if (max_np_bin_merge > avg_np) {
+        nfail += 1;
+        incr[2-(nincr-1)%3] /= 2;
+      }
+
+      if (nfail == 3)  break;
+
+      // increment by 2x, exclude incr[idim] == nbin[idim]
+      int idim = 2 - nincr % 3;
+      if (incr[idim] < nbin[idim])  incr[idim] *= 2;
+      ++nincr;
+    } // end while
+
+    for (int i=0; i<AMREX_SPACEDIM; ++i)
+      tile_max_bin_size[index][i] = bin_size[i] * min(incr[i], nbin[i]);
+
+  }// end for
+
+  IntVect max_bin_size(AMREX_D_DECL(1024, 1024, 1024));
+  for (auto key_val: tile_max_bin_size)
+    max_bin_size.min(key_val.second);
+
+  ParallelDescriptor::ReduceIntMin(max_bin_size.begin(), AMREX_SPACEDIM);
+
+  //for (auto key_val: np_bin) {
+    //Print() << "index pair " << key_val.first << " # particles per bin ";
+    //for (auto n: key_val.second)  Print() << n << " ";
+    //Print() << "\n";
+  //}
+  // Print() << "new max grid size " << max_bin_size << std::endl;
+}
+
+
+void MFIXParticleContainer::downsizeParticleBoxes(int lev, 
+                                                  const IntVect& new_grid_size)
+{
+  const auto         ba   = ParticleBoxArray(lev);
+  const auto         dmap = ParticleDistributionMap(lev);
+  const Vector<int>& pmap = dmap.ProcessorMap();
+
+  // create boxarray with input sizes
+  const auto& geom   = Geom(lev);
+  const auto& domain = geom.Domain();
+  IntVect domainlen(domain.size());
+  BoxArray new_ba(domain);
+  new_ba.maxSize(new_grid_size);
+
+  // number of new boxes in each dimension
+  IntVect new_nbox(1);
+  for (int i=0; i<AMREX_SPACEDIM; ++i)
+    new_nbox[i] = domainlen[i] % new_grid_size[i] == 0 ? \
+                  domainlen[i] / new_grid_size[i] : 
+                  domainlen[i] / new_grid_size[i] + 1;
+
+  // decomposition of current grids
+  IntVect nbox(1);
+  for (int i=0; i<AMREX_SPACEDIM; ++i)
+    nbox[i] = domainlen[i] % max_grid_size[i] == 0 ? \
+              domainlen[i] / max_grid_size[i] : 
+              domainlen[i] / max_grid_size[i] + 1;
+
+  // property of first box and first new box
+  int new_box_idx = 0;
+  Box     new_box    = new_ba[new_box_idx];
+  Dim3    new_boxhi  = ubound(new_box);
+  IntVect new_boxlen = new_box.size();
+  int box_idx = 0, box_k = 0, box_j = 0;
+  Dim3    boxhi      = ubound(ba[box_idx]);
+
+  // set the mapping of new boxes 
+  // note that the boxes are stored following i->j->k order
+  Vector<int> new_pmap;
+  for (int k=0; k<new_nbox[2]; ++k) {
+    if (new_boxhi.z >= boxhi.z + new_boxlen[2]/2)  
+      ++box_k;
+    for (int j=0; j<new_nbox[1]; ++j) {
+      if (new_boxhi.y >= boxhi.y + new_boxlen[1]/2)  
+        ++box_j;
+      box_idx = box_j*nbox[0] + box_k*nbox[0]*nbox[1]; 
+      boxhi = ubound(ba[box_idx]);
+      for (int i=0; i<new_nbox[0]; ++i) {
+        if (new_boxhi.x >= boxhi.x + new_boxlen[0]/2) {
+          ++box_idx;
+          boxhi = ubound(ba[box_idx]);
+        }
+        new_pmap.push_back(pmap[box_idx]);
+        ++new_box_idx;
+        new_box    = new_ba[new_box_idx];
+        new_boxhi  = ubound(new_box);
+        new_boxlen = new_box.size();
+      }// end new box i
+    }// end new box j
+  }// end new box k
+
+  // new distribtion mapping
+  DistributionMapping new_dmap(new_pmap);
+
+  // ba and dmap to particle container
+  SetParticleBoxArray(lev, new_ba);
+  SetParticleDistributionMap(lev, new_dmap);
+
+  max_grid_size = new_grid_size;
+}
+
+
+void MFIXParticleContainer::resetCostByCount(int lev, 
+                                             Vector<MultiFab*>& cost)
+{
+  // properties of current particle boxes
+  // domain length
+  const auto&  geom   = Geom(lev); 
+  const auto&  domain = geom.Domain();
+  IntVect domainlen(domain.size());
+  // # boxes in each dimension
+  IntVect nbox(1);
+  for (int i=0; i<AMREX_SPACEDIM; ++i)
+    nbox[i] = domainlen[i] % max_grid_size[i] == 0 ? \
+              domainlen[i] / max_grid_size[i] : 
+              domainlen[i] / max_grid_size[i] + 1;
+  // box sizes in each dimension
+  // Each sizes has two values, nlarge large values followed by 
+  // small values
+  const auto&  ba = ParticleBoxArray(lev);
+  IntVect  nlarge(1);
+  IntVect  boxlenlarge = ba[0].size();
+  IntVect  boxlensmall(boxlenlarge);
+  IntVect  stride(AMREX_D_DECL(1, nbox[0], nbox[0]*nbox[1]));
+  // find nlarge in each dimension
+  for (int idim=0; idim<AMREX_SPACEDIM; ++idim) {
+    for (int i=1; i<nbox[idim]; ++i) {
+      IntVect next_boxlen = ba[i*stride[idim]].size();
+      if (next_boxlen[idim] < boxlenlarge[idim]) {
+        boxlensmall[idim] = next_boxlen[idim];
+        break;
+      }
+      boxlenlarge = next_boxlen;
+      ++nlarge[idim];
+    }
+  }
+  // offset for small box, i.e., total length of large boxes
+  // IntVect offset_boxsmall(nlarge * boxlenlarge);
+  
+  // vector to hold # particles per box
+  Gpu::DeviceVector<int> np_box(ba.size(), 0);
+  auto np_box_ptr = np_box.dataPtr();
+
+  // find # particles for each box
+  const auto  dx_inv  = geom.InvCellSizeArray();
+  const auto  prob_lo = geom.ProbLoArray();
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+    const auto& aos     = pti.GetArrayOfStructs();
+    const auto* pstruct = aos().dataPtr();
+    const int   np      = pti.numRealParticles();
+    ParallelFor(np, [pstruct, prob_lo, dx_inv, nbox, boxlenlarge, boxlensmall, 
+                     nlarge, np_box_ptr]
+      AMREX_GPU_DEVICE (int i) noexcept
+      {
+        const auto p = pstruct[i];
+        IntVect cell_ijk(0), box_ijk(0);
+        for (int idim=0; idim<AMREX_SPACEDIM; ++idim) {
+          int offset_boxsmall = nlarge[idim] * boxlenlarge[idim];
+          cell_ijk[idim] = static_cast<int>(Math::floor((p.pos(idim) - prob_lo[idim]) * dx_inv[idim]));
+          box_ijk[idim]  = cell_ijk[idim] > offset_boxsmall ?
+                           nlarge[idim] + (cell_ijk[idim] - offset_boxsmall) / boxlensmall[idim] :
+                           cell_ijk[idim] / boxlenlarge[idim];
+        }
+        int box_idx = box_ijk[0] + box_ijk[1]*nbox[0] + box_ijk[2]*nbox[0]*nbox[1];
+        Gpu::Atomic::Add(np_box_ptr + box_idx, 1);
+      });// end parallel for
+  }// end pariter for
+
+  // collect # particle per box from all processes
+  ParallelDescriptor::ReduceIntSum(np_box_ptr, np_box.size());
+
+  // free current cost and construst new
+  if (cost[lev] != nullptr)  
+    delete cost[lev];
+  cost[lev] = new MultiFab(ParticleBoxArray(lev), 
+                           ParticleDistributionMap(lev), 1, 0);
+  
+  // set value by particle counts
+  for (MFIter mfi(*cost[lev], false); mfi.isValid(); ++mfi) {
+    Real wt = np_box_ptr[mfi.index()] / ba[mfi.index()].d_numPts();
+    (*cost[lev])[mfi].setVal<RunOn::Device>(wt);
+  }
+
+}
+
+
+Real MFIXParticleContainer::particleImbalance()
+{
+  // # paricles on this process
+  int local_count = 0;
+  for (MFIXParIter pti(*this, 0); pti.isValid(); ++pti)
+      local_count += pti.numParticles();
+  // count total # particles if not counted
+  if (m_total_numparticle <= 0) {
+    m_total_numparticle = local_count;
+    ParallelDescriptor::ReduceIntSum(m_total_numparticle);
+  }
+  // max # particles per process
+  ParallelDescriptor::ReduceIntMax(local_count,
+                                   ParallelDescriptor::IOProcessorNumber());
+
+  return ( static_cast<Real>(m_total_numparticle)
+         / ParallelDescriptor::NProcs()
+         / (static_cast<Real>(local_count) + 1e-10));
 }

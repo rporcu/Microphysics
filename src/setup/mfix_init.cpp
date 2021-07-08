@@ -182,10 +182,13 @@ mfix::InitParams ()
     if (advect_tracer && !advect_density)
       amrex::Abort("Can't advect tracer without advecting density");
 
+    // control load balance
     // The default type is "KnapSack"; alternative is "SFC"
-    pp.query("load_balance_type", load_balance_type);
-    pp.query("knapsack_weight_type", knapsack_weight_type);
-    pp.query("load_balance_fluid", load_balance_fluid);
+    pp.query("load_balance_type",      load_balance_type);
+    pp.query("knapsack_weight_type",   knapsack_weight_type);
+    pp.query("load_balance_fluid",     load_balance_fluid);
+    pp.query("downsize_particle_grid", downsize_particle_grid);
+    pp.query("downsize_factor",        downsize_factor);
 
 
     // Include drag multiplier in projection. (False by default)
@@ -200,6 +203,8 @@ mfix::InitParams ()
     pp.query("use_mac_phi_in_godunov"           , m_use_mac_phi_in_godunov);
     pp.query("use_drag_in_godunov"              , m_use_drag_in_godunov);
 
+    // agglomeration for GMG coarse levels
+    pp.query("agg_grid_size", agg_grid_size);
 
     pp.query("redistribution_type"              , m_redistribution_type);
     if (m_redistribution_type != "NoRedist" &&
@@ -287,6 +292,9 @@ mfix::InitParams ()
     if (load_balance_type.compare("KnapSack") == 0)
       pp.query("knapsack_nmax", knapsack_nmax);
 
+    // fluid grids' distribution map 
+    pp.queryarr("pmap", pmap);
+
     // Parameters used be the level-set algorithm. Refer to LSFactory (or
     // mfix.H) for more details:
     //   -> refinement: how well resolved (fine) the (level-set/EB-facet)
@@ -321,6 +329,9 @@ mfix::InitParams ()
 
     // Keep particles that are initially touching the wall. Used by DEM tests.
     pp.query("removeOutOfRange", removeOutOfRange);
+    
+    // distribution map for particle grids
+    pp.queryarr("pmap", particle_pmap);
   }
 
   if ((DEM::solve || PIC::solve) && (!fluid.solve))
@@ -431,6 +442,9 @@ mfix::InitParams ()
 
     m_deposition_diffusion_coeff = -1.;
     pp.query("deposition_diffusion_coeff", m_deposition_diffusion_coeff);
+
+    sort_particle_int = -1;
+    pp.query("sort_particle_int", sort_particle_int);
   }
 
   {
@@ -512,7 +526,12 @@ void mfix::Init (Real time)
 
     // Define coarse level BoxArray and DistributionMap
     const BoxArray& ba = MakeBaseGrids();
-    DistributionMapping dm(ba, ParallelDescriptor::NProcs());
+    DistributionMapping dm;
+    if (pmap.empty())
+      dm.define(ba, ParallelDescriptor::NProcs());
+    else
+      dm.define(pmap);
+    // DistributionMapping dm(ba, ParallelDescriptor::NProcs());
     MakeNewLevelFromScratch(0, time, ba, dm);
 
 
@@ -746,57 +765,50 @@ void mfix::InitLevelData (Real /*time*/)
     // Used in load balancing
     if (DEM::solve || PIC::solve)
     {
-      for (int lev(0); lev < particle_cost.size(); lev++)
-        if (particle_cost[lev] != nullptr)
-          delete particle_cost[lev];
+      for (int lev(0); lev < particle_cost.size(); lev++) {
+        if (particle_cost[lev] != nullptr)  delete particle_cost[lev];
+        if (particle_proc[lev] != nullptr)  delete particle_proc[lev];
+      }
 
       particle_cost.clear();
       particle_cost.resize(nlev, nullptr);
+      particle_proc.clear();
+      particle_proc.resize(nlev, nullptr);
+
+      const Real proc = static_cast<Real>(ParallelDescriptor::MyProc());
 
       for (int lev = 0; lev < nlev; lev++)
       {
         particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                           pc->ParticleDistributionMap(lev), 1, 0);
         particle_cost[lev]->setVal(0.0);
-      }
-
-      // initialize the rank of each particle grid
-      for (int lev(0); lev < particle_ba_proc.size(); lev++)
-        if (particle_ba_proc[lev] != nullptr)
-          delete particle_ba_proc[lev];
-      //
-      particle_ba_proc.clear();
-      particle_ba_proc.resize(nlev, nullptr);
-      //
-      amrex::Real proc = amrex::Real(ParallelDescriptor::MyProc());
-      //
-      for (int lev = 0; lev < nlev; lev++)
-      {
-        particle_ba_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                             pc->ParticleDistributionMap(lev), 1, 0);
-        for (MFIter mfi(*(particle_ba_proc[lev]), false); mfi.isValid(); ++mfi)
-        {
-          amrex::Array4<Real> const& par_bx_proc = particle_ba_proc[lev]->array(mfi);
-          ParallelFor(mfi.validbox(), [par_bx_proc, proc] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-          { par_bx_proc(i,j,k) = proc; });
-        }
+        particle_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                          pc->ParticleDistributionMap(lev), 1, 0);
+        particle_proc[lev]->setVal(proc);
       }
     }
 
     // Used in load balancing
     if (fluid.solve)
     {
-      for (int lev(0); lev < fluid_cost.size(); lev++)
-        if (fluid_cost[lev] != nullptr)
-          delete fluid_cost[lev];
+      for (int lev(0); lev < fluid_cost.size(); lev++) {
+        if (fluid_cost[lev] != nullptr)  delete fluid_cost[lev];
+        if (fluid_proc[lev] != nullptr)  delete fluid_proc[lev];
+      }
 
       fluid_cost.clear();
       fluid_cost.resize(nlev, nullptr);
+      fluid_proc.clear();
+      fluid_proc.resize(nlev, nullptr);
+
+      const Real proc = static_cast<Real>(ParallelDescriptor::MyProc());
 
       for (int lev = 0; lev < nlev; lev++)
       {
         fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
         fluid_cost[lev]->setVal(0.0);
+        fluid_proc[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
+        fluid_proc[lev]->setVal(proc);
       }
     }
 }
@@ -859,12 +871,19 @@ mfix::PostInit (Real& dt, Real /*time*/, int restart_flag, Real stop_time)
           IntVect particle_max_grid_size(particle_max_grid_size_x,
                                          particle_max_grid_size_y,
                                          particle_max_grid_size_z);
+          pc->setMaxGridSize(particle_max_grid_size);
 
           for (int lev = 0; lev < nlev; lev++)
           {
             BoxArray particle_ba(geom[lev].Domain());
             particle_ba.maxSize(particle_max_grid_size);
-            DistributionMapping particle_dm(particle_ba, ParallelDescriptor::NProcs());
+
+            DistributionMapping particle_dm; 
+            if (particle_pmap.empty())
+              particle_dm.define(particle_ba, ParallelDescriptor::NProcs());
+            else
+              particle_dm.define(particle_pmap);
+
             pc->Regrid(particle_dm, particle_ba);
 
             if (particle_cost[lev] != nullptr)
@@ -875,20 +894,13 @@ mfix::PostInit (Real& dt, Real /*time*/, int restart_flag, Real stop_time)
             particle_cost[lev]->setVal(0.0);
 
             // initialize the ranks of particle grids
-            if (particle_ba_proc[lev] != nullptr)
-              delete particle_ba_proc[lev];
+            if (particle_proc[lev] != nullptr)
+              delete particle_proc[lev];
             //
             const Real proc = Real(ParallelDescriptor::MyProc());
-            particle_ba_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                                 pc->ParticleDistributionMap(lev), 1, 0);
-
-            for (MFIter mfi(*(particle_ba_proc[lev]), false); mfi.isValid(); ++mfi)
-            {
-              amrex::Array4<Real> const& par_bx_proc = particle_ba_proc[lev]->array(mfi);
-              ParallelFor(mfi.validbox(), [par_bx_proc, proc] 
-                          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-                          { par_bx_proc(i,j,k) = proc; });
-            }
+            particle_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                              pc->ParticleDistributionMap(lev), 1, 0);
+            particle_proc[lev]->setVal(proc);
 
 
             // This calls re-creates a proper particle_ebfactories
@@ -901,6 +913,7 @@ mfix::PostInit (Real& dt, Real /*time*/, int restart_flag, Real stop_time)
 
         if (DEM::solve) {
             pc->MFIX_PC_InitCollisionParams();
+            pc->setSortInt(sort_particle_int);
         }
 
         pc->InitParticlesRuntimeVariables(advect_enthalpy, solids.solve_species);

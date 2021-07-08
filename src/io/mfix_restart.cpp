@@ -486,40 +486,48 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     if (load_balance_type == "KnapSack" || load_balance_type == "SFC")
     {
       if (DEM::solve || PIC::solve) {
-        for (int lev(0); lev < particle_cost.size(); ++lev)
-          if (particle_cost[lev] != nullptr)
-            delete particle_cost[lev];
+        for (int lev(0); lev < particle_cost.size(); ++lev) {
+          if (particle_cost[lev] != nullptr)  delete particle_cost[lev];
+          if (particle_proc[lev] != nullptr)  delete particle_proc[lev];
+        }
 
         particle_cost.clear();
         particle_cost.resize(nlev, nullptr);
-
-        // clear and re-allocate the rank of particle grids
-        for (int lev(0); lev < particle_ba_proc.size(); ++lev)
-          if (particle_ba_proc[lev] != nullptr)
-            delete particle_ba_proc[lev];
-        //
-        particle_ba_proc.clear();
-        particle_ba_proc.resize(nlev, nullptr);
+        particle_proc.clear();
+        particle_proc.resize(nlev, nullptr);
 
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
           particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                             pc->ParticleDistributionMap(lev), 1, 0);
           particle_cost[lev]->setVal(0.0);
+
+          const Real proc = static_cast<Real>(ParallelDescriptor::MyProc());
+          particle_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                            pc->ParticleDistributionMap(lev), 1, 0);
+          particle_proc[lev]->setVal(proc);
         }
       }
+
       if (fluid.solve) {
-        for (int lev(0); lev < fluid_cost.size(); ++lev)
-          if (fluid_cost[lev] != nullptr)
-            delete fluid_cost[lev];
+        for (int lev(0); lev < fluid_cost.size(); ++lev) {
+          if (fluid_cost[lev] != nullptr)  delete fluid_cost[lev];
+          if (fluid_proc[lev] != nullptr)  delete fluid_proc[lev];
+        }
 
         fluid_cost.clear();
         fluid_cost.resize(nlev, nullptr);
+        fluid_proc.clear();
+        fluid_proc.resize(nlev, nullptr);
 
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
           fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
           fluid_cost[lev]->setVal(0.0);
+
+          const Real proc = static_cast<Real>(ParallelDescriptor::MyProc());
+          fluid_proc[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
+          fluid_proc[lev]->setVal(proc);
         }
       }
     }

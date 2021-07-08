@@ -125,6 +125,7 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     //
     LPInfo info;
     info.setMaxCoarseningLevel(mg_max_coarsening_level);
+    info.setAgglomerationGridSize(mg_agg_grid_size);
     vel_matrix = std::make_unique<MLEBTensorOp>(geom, grids, dmap, info, ebfactory);
 
     // It is essential that we set MaxOrder to 2 if we want to use the standard
@@ -197,6 +198,7 @@ void DiffusionOp::readParameters ()
     pp.query("rtol", mg_rtol);
     pp.query("atol", mg_atol);
     pp.query("bottom_solver", bottom_solver_type);
+    pp.query("agg_grid_size", mg_agg_grid_size);
 }
 
 
