@@ -891,7 +891,15 @@ mfix::PostInit (Real& dt, Real /*time*/, int restart_flag, Real stop_time)
 
             particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                               pc->ParticleDistributionMap(lev), 1, 0);
-            particle_cost[lev]->setVal(0.0);
+            if (knapsack_weight_type == "NumParticles") {
+              int local_count = 0;
+              for (MFIXParIter pti(*(this->pc), 0); pti.isValid(); ++pti)
+                  local_count += pti.numParticles();
+              particle_cost[lev]->setVal(static_cast<Real>(local_count));
+            }
+            else if (knapsack_weight_type == "RunTimeCosts") {
+              particle_cost[lev]->setVal(0.0);
+            }
 
             // initialize the ranks of particle grids
             if (particle_proc[lev] != nullptr)
