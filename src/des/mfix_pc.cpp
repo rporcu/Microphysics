@@ -239,8 +239,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
     // sort particles by cell, this can significantly improve the locality
     if (sort_int > 0 && nstep % sort_int == 0) {
-      SortParticlesByCell();
-      Print() << "   Sort particles by cell at step " << nstep+1 << "\n";
+      SortParticlesByBin(m_sorting_bin);
+      Print() << "   Sort particles at step " << nstep+1 << "\n";
     }
 
     while (n < nsubsteps)
