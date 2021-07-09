@@ -332,6 +332,10 @@ mfix::InitParams ()
     
     // distribution map for particle grids
     pp.queryarr("pmap", particle_pmap);
+
+    // frequency to sort particles 
+    sort_particle_int = -1;
+    pp.query("sort_particle_int", sort_particle_int);
   }
 
   if ((DEM::solve || PIC::solve) && (!fluid.solve))
@@ -442,9 +446,6 @@ mfix::InitParams ()
 
     m_deposition_diffusion_coeff = -1.;
     pp.query("deposition_diffusion_coeff", m_deposition_diffusion_coeff);
-
-    sort_particle_int = -1;
-    pp.query("sort_particle_int", sort_particle_int);
   }
 
   {

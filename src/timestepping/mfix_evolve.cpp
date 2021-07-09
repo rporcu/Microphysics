@@ -72,6 +72,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     BL_PROFILE_VAR("PARTICLES SOLVE", particlesSolve);
 
     int nsubsteps;
+    Real load_eff = 1.0;
 
     if (DEM::solve)
     {
@@ -113,6 +114,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                     update_enthalpy);
             }
         }
+        load_eff = pc->particleImbalance();
     }
 
     if (PIC::solve) {
@@ -126,7 +128,6 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     Real end_particles = ParallelDescriptor::second() - start_particles;
     ParallelDescriptor::ReduceRealMax(end_particles, ParallelDescriptor::IOProcessorNumber());
-    Real load_eff = pc->particleImbalance();
 
     if (ParallelDescriptor::IOProcessor()) {
       if(fluid.solve)
