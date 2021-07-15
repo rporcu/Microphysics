@@ -239,8 +239,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
     // sort particles by cell, this can significantly improve the locality
     if (sort_int > 0 && nstep % sort_int == 0) {
-      SortParticlesByCell();
-      Print() << "   Sort particles by cell at step " << nstep+1 << "\n";
+      SortParticlesByBin(m_sorting_bin);
+      Print() << "   Sort particles at step " << nstep+1 << "\n";
     }
 
     while (n < nsubsteps)
@@ -2202,7 +2202,7 @@ void MFIXParticleContainer::downsizeParticleBoxes(int lev,
     }// end new box j
   }// end new box k
 
-  // new distribtion mapping
+  // new distribution mapping
   DistributionMapping new_dmap(new_pmap);
 
   // ba and dmap to particle container

@@ -120,7 +120,7 @@ mfix::Regrid ()
         print_process_boxes(new_particle_dm);
 
         pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev), lev);
-        if (sort_particle_int > 0)  pc->SortParticlesByCell();
+        if (sort_particle_int > 0)  pc->SortParticlesByBin(particle_sorting_bin);
 
         if (particle_cost[lev] != nullptr)
           delete particle_cost[lev];
