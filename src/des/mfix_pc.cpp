@@ -2202,7 +2202,7 @@ void MFIXParticleContainer::downsizeParticleBoxes(int lev,
     }// end new box j
   }// end new box k
 
-  // new distribtion mapping
+  // new distribution mapping
   DistributionMapping new_dmap(new_pmap);
 
   // ba and dmap to particle container
