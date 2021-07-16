@@ -6,11 +6,15 @@
 #include <mfix_pic_parms.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
-#include <mfix_algorithm.H>
+#include <mfix_solvers.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
 #endif
+
+
+using namespace Solvers;
+
 
 //
 // Compute predictor:
@@ -346,108 +350,146 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     if (advect_enthalpy) {
 
-        auto& fluid_parms = *fluid.parameters;
-        const int fluid_is_a_mixture = fluid.is_a_mixture;
-        const int nspecies_g = fluid.nspecies;
+      auto& fluid_parms = *fluid.parameters;
+      const int fluid_is_a_mixture = fluid.is_a_mixture;
+      const int nspecies_g = fluid.nspecies;
 
-        const int closed_system = (m_idealgas_constraint == IdealGasConstraint::ClosedSystem);
+      const int closed_system = (m_idealgas_constraint == IdealGasConstraint::ClosedSystem);
 
-        for (int lev = 0; lev <= finest_level; lev++) {
+      for (int lev = 0; lev <= finest_level; lev++) {
 
-            auto& ld = *m_leveldata[lev];
+        auto& ld = *m_leveldata[lev];
+
+        const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ld.T_g->Factory());
+        const auto& flags = factory.getMultiEBCellFlagFab();
+        const auto& volfrac = factory.getVolFrac();
+          
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-            for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
-                Box const& bx = mfi.tilebox();
+          Box const& bx = mfi.tilebox();
 
-                Array4<Real const> const& h_g_o   = ld.h_go->const_array(mfi);
-                Array4<Real      > const& h_g_n   = ld.h_g->array(mfi);
-                Array4<Real const> const& T_g_o   = ld.T_go->array(mfi);
-                Array4<Real      > const& T_g_n   = ld.T_g->array(mfi);
-                Array4<Real const> const& X_gk_o  = ld.X_gko->array(mfi);
-                Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
-                Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
-                Array4<Real const> const& lap_T_o = lap_T_old[lev]->const_array(mfi);
-                Array4<Real const> const& h_RHS_o = enthalpy_RHS_old[lev]->const_array(mfi);
-                Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
-                Array4<Real const> const& dhdt_o  = conv_s_old[lev]->const_array(mfi);
+          Array4<Real const> const& h_g_o   = ld.h_go->const_array(mfi);
+          Array4<Real      > const& h_g_n   = ld.h_g->array(mfi);
+          Array4<Real const> const& T_g_o   = ld.T_go->array(mfi);
+          Array4<Real      > const& T_g_n   = ld.T_g->array(mfi);
+          Array4<Real const> const& X_gk_o  = ld.X_gko->array(mfi);
+          Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
+          Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
+          Array4<Real const> const& lap_T_o = lap_T_old[lev]->const_array(mfi);
+          Array4<Real const> const& h_RHS_o = enthalpy_RHS_old[lev]->const_array(mfi);
+          Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
+          Array4<Real const> const& dhdt_o  = conv_s_old[lev]->const_array(mfi);
 
-                const Real Dpressure_Dt = rhs_pressure_g_old[lev];
+          const Real Dpressure_Dt = rhs_pressure_g_old[lev];
 
-                amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,h_RHS_o,
-                    epg,dhdt_o,l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,
-                    closed_system,fluid_parms,fluid_is_a_mixture,X_gk_o,nspecies_g]
-                  AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-                {
-                    int conv_comp = 1;
+          auto const& flags_arr = flags.const_array(mfi);
+          auto const& volfrac_arr = volfrac.const_array(mfi);
 
-                    const Real epg_loc = epg(i,j,k);
+          amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,h_RHS_o,
+              epg,dhdt_o,l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,
+              closed_system,fluid_parms,fluid_is_a_mixture,X_gk_o,nspecies_g,
+              flags_arr,volfrac_arr]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          {
+            if (!flags_arr(i,j,k).isCovered()) {
+              int conv_comp = 1;
 
-                    const Real num =         (rho_o(i,j,k) * epg_loc);
-                    const Real denom = 1.0 / (rho_n(i,j,k) * epg_loc);
+              const Real epg_loc = epg(i,j,k);
+              const Real vfrac = volfrac_arr(i,j,k);
 
-                    Real h_g = num * h_g_o(i,j,k);
-                    h_g += l_dt * dhdt_o(i,j,k,conv_comp);
-                    h_g += l_dt * h_RHS_o(i,j,k);
+              const Real num =         (rho_o(i,j,k) * epg_loc);
+              const Real denom = 1.0 / (rho_n(i,j,k) * epg_loc);
 
-                    if (closed_system)
-                      h_g += l_dt * epg(i,j,k) * Dpressure_Dt;
+              Real h_g = num * h_g_o(i,j,k);
+              h_g += l_dt * dhdt_o(i,j,k,conv_comp);
+              h_g += l_dt * h_RHS_o(i,j,k);
 
-                    if (l_explicit_diff)
-                      h_g += l_dt * lap_T_o(i,j,k);
+              if (closed_system)
+                h_g += l_dt * epg(i,j,k) * Dpressure_Dt;
 
-                    h_g *= denom;
+              if (l_explicit_diff)
+                h_g += l_dt * lap_T_o(i,j,k);
 
-                    h_g_n(i,j,k) = h_g;
+              h_g *= denom;
 
-                    // Newton-Raphson solver for solving implicit equation for
-                    // temperature
+              h_g_n(i,j,k) = h_g;
 
-                    // Residual computation
-                    auto R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
-                    {
-                      Real hg_loc(0);
+              // Newton-Raphson solver for solving implicit equation for
+              // temperature
 
-                      if (!fluid_is_a_mixture) {
+              // Residual computation
+              auto R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+              {
+                Real hg_loc(0);
 
-                        hg_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_arg);
-                      } else {
+                if (!fluid_is_a_mixture) {
 
-                        for (int n(0); n < nspecies_g; ++n)
-                          hg_loc += X_gk_o(i,j,k,n)*fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_arg,n);
-                      }
+                  hg_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_arg);
+                } else {
 
-                      return hg_loc - h_g;
-                    };
+                  for (int n(0); n < nspecies_g; ++n)
+                    hg_loc += X_gk_o(i,j,k,n)*fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_arg,n);
+                }
 
-                    // Partial derivative computation
-                    auto partial_R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
-                    {
-                      Real gradient(0);
+                return hg_loc - h_g;
+              };
 
-                      if (!fluid_is_a_mixture) {
+              // Partial derivative computation
+              auto partial_R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+              {
+                Real gradient(0);
 
-                        gradient = fluid_parms.calc_partial_h_g<RunOn::Gpu>(Tg_arg);
-                      } else {
+                if (!fluid_is_a_mixture) {
 
-                        for (int n(0); n < nspecies_g; ++n)
-                          gradient += X_gk_o(i,j,k,n)*fluid_parms.calc_partial_h_gk<RunOn::Gpu>(Tg_arg,n);
-                      }
+                  gradient = fluid_parms.calc_partial_h_g<RunOn::Gpu>(Tg_arg);
+                } else {
 
-                      return gradient;
-                    };
+                  for (int n(0); n < nspecies_g; ++n)
+                    gradient += X_gk_o(i,j,k,n)*fluid_parms.calc_partial_h_gk<RunOn::Gpu>(Tg_arg,n);
+                }
 
-                    Real Tg_old = T_g_o(i,j,k);
-                    Real Tg_new(0.);
+                return gradient;
+              };
 
-                    Solvers::NewtonStabilized(Tg_new, Tg_old, R, partial_R);
+              Real Tg_old = T_g_o(i,j,k);
 
-                    T_g_n(i,j,k) = Tg_new;
-                });
-            } // mfi
-        } // lev
+              Real Tg_new(Tg_old);
+
+              int solver_iterations(0);
+
+              {
+                DumpedNewton::DumpingFactor dumping_factor(0., 0.);
+                solver_iterations = 
+                  DumpedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                                      1.e-8, 1.e-8, 500);
+
+              } if (solver_iterations == 500) {
+
+                DumpedNewton::DumpingFactor dumping_factor(1., 0.);
+                solver_iterations =
+                  DumpedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                                      1.e-7, 1.e-7, 500);
+
+              } if (solver_iterations == 500) {
+
+                DumpedNewton::DumpingFactor dumping_factor(1., 1.);
+                solver_iterations =
+                  DumpedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                                      1.e-6, 1.e-6, 500);
+
+              } if (solver_iterations == 500) {
+                amrex::Abort("DumpedNewton solver did not converge");
+              }
+
+
+              T_g_n(i,j,k) = Tg_new;
+            }
+          });
+        } // mfi
+      } // lev
     } // advect_enthalpy
 
 

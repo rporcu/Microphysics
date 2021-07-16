@@ -4,11 +4,14 @@
 #include <mfix_dem_parms.H>
 #include <mfix_reactions_parms.H>
 #include <mfix_bc_parms.H>
-#include <mfix_algorithm.H>
+#include <mfix_solvers.H>
 
 using namespace amrex;
+using namespace Solvers;
+
 
 int  MFIXParticleContainer::domain_bc[6] {0};
+
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
                                               SolidsPhase& arg_solids)
@@ -988,14 +991,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                   const int phase = p_intarray[SoAintData::phase][i];
 
-                  const Real Tp_loc = p_realarray[SoArealData::temperature][i];
+                  const Real Tp_old = p_realarray[SoArealData::temperature][i];
 
-                  const Real cp_s_old = solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,Tp_loc);
+                  const Real cp_s_old = solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,Tp_old);
                   Real cp_s_new(0);
 
                   if (solid_is_a_mixture) {
                     for (int n_s(0); n_s < nspecies_s; ++n_s)
-                      cp_s_new += solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,Tp_loc) *
+                      cp_s_new += solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,Tp_old) *
                                   ptile_data.m_runtime_rdata[idx_X_sn+n_s][i]; 
 
                     p_realarray[SoArealData::cp_s][i] = cp_s_new;
@@ -1008,7 +1011,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                   const Real coeff = local_update_mass ? (p_mass_old/p_mass_new) : 1.;
 
                   Real p_enthalpy_new =
-                    coeff*solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_loc) +
+                    coeff*solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_old) +
                     subdt*((p_realarray[SoArealData::convection][i]+enthalpy_source)/p_mass_new);
 
                   if (local_solve_reactions)
@@ -1029,7 +1032,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                     } else {
 
                       for (int n_s(0); n_s < nspecies_s; ++n_s)
-                        // TODO TODO TODO TODO check if we use X_sn_old or X_sn_new
                         hp_loc += X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Gpu>(Tp_arg,n_s);
                     }
 
@@ -1053,10 +1055,11 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                     return gradient;
                   };
 
-                  Real Tp_old = Tp_loc;
-                  Real Tp_new(0.);
+                  Real Tp_new(Tp_old);
 
-                  Solvers::NewtonStabilized(Tp_new, Tp_old, R, partial_R);
+                  const Real dumping_factor = 1.;
+
+                  DumpedNewton::solve(Tp_new, R, partial_R, dumping_factor, 1.e-5, 1.e-5);
 
                   p_realarray[SoArealData::temperature][i] = Tp_new;
                 }
@@ -2012,7 +2015,7 @@ void MFIXParticleContainer::set_particle_properties (int /*pstate*/,
 
 
 void MFIXParticleContainer::checkParticleBoxSize(int      lev, 
-                                                 IntVect& max_grid_size, 
+                                                 IntVect& loc_max_grid_size, 
                                                  Real     frac_particle_bin)
 {
   // count total # particles
@@ -2033,9 +2036,9 @@ void MFIXParticleContainer::checkParticleBoxSize(int      lev,
   // 
   IntVect ncut(AMREX_D_DECL(4, 4, 4));
   IntVect bin_size(AMREX_D_DECL(
-            amrex::max(max_grid_size[0]/ncut[0], 1), 
-            amrex::max(max_grid_size[1]/ncut[1], 1),
-            amrex::max(max_grid_size[2]/ncut[2], 1)));
+            amrex::max(loc_max_grid_size[0]/ncut[0], 1), 
+            amrex::max(loc_max_grid_size[1]/ncut[1], 1),
+            amrex::max(loc_max_grid_size[2]/ncut[2], 1)));
 
   // dictoinary for # particles per bin
   std::map<PairIndex, Gpu::DeviceVector<int> > np_bin;

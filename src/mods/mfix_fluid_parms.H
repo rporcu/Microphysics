@@ -81,6 +81,13 @@ struct FluidParms {
     return k_g0;
   }
 
+  // Compute fluid thermal conductivity
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_partial_k_g (const amrex::Real /*T_g*/) const
+  {
+    return 0;
+  }
+
   // Compute fluid species diffusivity
 #if defined(AMREX_USE_GPU)
   template <amrex::RunOn run_on>
