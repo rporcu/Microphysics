@@ -385,7 +385,13 @@ void DiffusionOp::ComputeLapT (const Vector< MultiFab*      >& lapT_out,
       }
     }
 
+//    ep_k_g.FillBoundary(geom[lev].periodicity());
+
     EB_interp_CellCentroid_to_FaceCentroid (ep_k_g, GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
+
+//    b[lev][0]->FillBoundary(geom[lev].periodicity());
+//    b[lev][1]->FillBoundary(geom[lev].periodicity());
+//    b[lev][2]->FillBoundary(geom[lev].periodicity());
 
     if (EB::fix_temperature) {
       // The following is a WIP in AMReX
@@ -588,6 +594,11 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
   }
 
   MLMG solver(*species_matrix);
+//  setSolverSettings(solver);
+//
+//  // This ensures that ghost cells of sol are correctly filled when returned
+//  // from the solver
+//  solver.setFinalFillBC(true);
 
   // Compute div (ep_g ro_g D_gk grad)) phi
   solver.apply(lapX_aux, X_gk_in);
@@ -630,6 +641,12 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
 #endif
       }
     }
+
+//    setSolverSettings(solver);
+//
+//    // This ensures that ghost cells of sol are correctly filled when returned
+//    // from the solver
+//    solver.setFinalFillBC(true);
 
     // Copy X_gk MultiFabs into temporary variables
     Vector<MultiFab*> X_gk_copy(finest_level+1);
@@ -870,6 +887,11 @@ void DiffusionOp::SubtractDivXGX (const Vector< MultiFab*      >& X_gk_in,
   }
 
   MLMG solver(*species_matrix);
+//  setSolverSettings(solver);
+//
+//  // This ensures that ghost cells of sol are correctly filled when returned
+//  // from the solver
+//  solver.setFinalFillBC(true);
 
   // Allocate fluxes
   Vector<Array<MultiFab*, 3>> fluxes(finest_level+1);
@@ -881,6 +903,12 @@ void DiffusionOp::SubtractDivXGX (const Vector< MultiFab*      >& X_gk_in,
       fluxes[lev][dir]->setVal(0.);
     }
   }
+
+//  setSolverSettings(solver);
+//
+//  // This ensures that ghost cells of sol are correctly filled when returned
+//  // from the solver
+//  solver.setFinalFillBC(true);
 
   // Copy X_gk MultiFabs into temporary variables
   Vector<MultiFab*> X_gk_copy(finest_level+1);

@@ -1,8 +1,11 @@
 #include <mfix.H>
 #include <mfix_bc_parms.H>
-#include <mfix_algorithm.H>
+#include <mfix_solvers.H>
+
 
 using namespace amrex;
+using namespace Solvers;
+
 
 void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
                                                     RealVect& gravity,
@@ -400,14 +403,14 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
           if(local_advect_enthalpy) {
             const int phase = p_intarray[SoAintData::phase][lp];
 
-            const Real Tp_loc = p_realarray[SoArealData::temperature][lp];
+            const Real Tp_old = p_realarray[SoArealData::temperature][lp];
 
-            const Real cp_s_old = solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,Tp_loc);
+            const Real cp_s_old = solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,Tp_old);
             Real cp_s_new(0);
 
             if (solid_is_a_mixture) {
               for (int n_s(0); n_s < nspecies_s; ++n_s)
-                cp_s_new += solids_parms.calc_cp_sn<RunOn::Gpu>(Tp_loc,n_s) *
+                cp_s_new += solids_parms.calc_cp_sn<RunOn::Gpu>(Tp_old,n_s) *
                             ptile_data.m_runtime_rdata[idx_X_sn+n_s][lp];
 
               p_realarray[SoArealData::cp_s][lp] = cp_s_new;
@@ -420,7 +423,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
             const Real coeff = update_mass ? (p_mass_old/p_mass_new) : 1.;
 
             Real p_enthalpy_new =
-              coeff*solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_loc) +
+              coeff*solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_old) +
               dt*((p_realarray[SoArealData::convection][lp]+enthalpy_source)/p_mass_new);
 
             if (solve_reactions)
@@ -441,7 +444,6 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
               } else {
 
                 for (int n(0); n < nspecies_s; ++n)
-                  // TODO TODO TODO TODO check if we use X_sn_old or X_sn_new
                   hp_loc += X_sn[n]*solids_parms.calc_h_sn<RunOn::Gpu>(Tp_arg,n);
               }
 
@@ -465,10 +467,11 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
               return gradient;
             };
 
-            Real Tp_old = Tp_loc;
-            Real Tp_new(0.);
+            Real Tp_new(Tp_old);
 
-            Solvers::NewtonStabilized(Tp_new, Tp_old, R, partial_R);
+            const Real dumping_factor = 1.;
+
+            DumpedNewton::solve(Tp_new, R, partial_R, dumping_factor, 1.e-5, 1.e-5);
 
             p_realarray[SoArealData::temperature][lp] = Tp_new;
           }

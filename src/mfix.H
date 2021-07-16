@@ -44,6 +44,9 @@ struct DragType { enum {Invalid=-1, WenYu, Gidaspow, BVK2, UserDrag}; };
 // Convection type enumeration
 struct ConvectionType { enum {Invalid=-1, RanzMarshall, Gunn}; };
 
+// Advection Type
+struct AdvectionType { enum {Invalid=-1, MOL, Godunov}; };
+
 // Deposition scheme enumeration
 enum DepositionScheme {trilinear, square_dpvm, true_dpvm, centroid};
 
@@ -1055,8 +1058,7 @@ public:
 
     bool test_tracer_conservation = false;
 
-    enum struct AdvectionType {Invalid, MOL, Godunov};
-    AdvectionType m_advection_type = AdvectionType::Invalid;
+    static int m_advection_type;
 
     std::string m_redistribution_type = "StateRedist";
 
@@ -1396,7 +1398,7 @@ public:
       return (advection_type() == AdvectionType::Godunov) ? 1 : 0;
     }
 
-    AdvectionType advection_type () const{return m_advection_type;}
+    int advection_type () const{return m_advection_type;}
 
    // Invalid, Explicit, Crank_Nicolson, Implicit
     DiffusionType predictor_diff_type () const{

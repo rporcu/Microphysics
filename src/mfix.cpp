@@ -15,6 +15,7 @@ Real             mfix::downsize_factor        = 1.0;
 int              mfix::knapsack_nmax        = 128;
 int              mfix::m_drag_type          = DragType::Invalid;
 int              mfix::m_convection_type    = ConvectionType::Invalid;
+int              mfix::m_advection_type     = AdvectionType::Invalid;
 int              mfix::m_idealgas_constraint    = IdealGasConstraint::None;
 DepositionScheme mfix::m_deposition_scheme;
 int              mfix::m_reaction_rates_type = ReactionRatesType::RRatesUser;

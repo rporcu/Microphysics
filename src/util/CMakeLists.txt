@@ -5,6 +5,8 @@ target_include_directories(mfixcore
 target_sources( mfixcore
    PRIVATE
    mfix_algorithm.H
+   mfix_solvers.H
+   mfix_solvers.cpp
    mfix_filcc.H
    mfix_filcc.cpp
    mfix_util.cpp
