@@ -5,6 +5,7 @@
 #include <AMReX_GpuQualifiers.H>
 #include <AMReX_Vector.H>
 #include <AMReX_MultiFab.H>
+#include <AMReX_GpuPrint.H>
 
 #include <cmath>
 #include <functional>
@@ -37,12 +38,11 @@ class DumpedNewton {
 
         virtual const char* what() const throw()
         {
-          std::string message =
-            "DumpedNewton total iterations = " + std::to_string(m_iter) + "\n" +
-            "DumpedNewton update norm = " + std::to_string(m_update_norm) + "\n" +
-            "DumpedNewton residue norm = " + std::to_string(m_residue_norm) + "\n";
+          std::printf("DumpedNewton total iterations = %d\n", m_iter);
+          std::printf("DumpedNewton update norm = %e\n", m_update_norm);
+          std::printf("DumpedNewton residue norm = %e\n", m_residue_norm);
 
-          return message.c_str();
+          return "Dumped-Newton solver did not converge";
         }
 
       private:
@@ -124,9 +124,15 @@ class DumpedNewton {
         if(iter > max_iterations) {
           solution_new = original_solution;
 
-          printf("DumpedNewton total iterations = %d\n", iter);
-          printf("DumpedNewton update norm = %e\n", std::abs(update));
-          printf("DumpedNewton residue norm = %e\n", std::abs(residue));
+#ifdef AMREX_USE_GPU
+          AMREX_DEVICE_PRINTF("DumpedNewton total iterations = %d\n", iter);
+          AMREX_DEVICE_PRINTF("DumpedNewton update norm = %e\n", std::abs(update));
+          AMREX_DEVICE_PRINTF("DumpedNewton residue norm = %e\n", std::abs(residue));
+#else
+          std::printf("DumpedNewton total iterations = %d\n", iter);
+          std::printf("DumpedNewton update norm = %e\n", std::abs(update));
+          std::printf("DumpedNewton residue norm = %e\n", std::abs(residue));
+#endif
 
           return max_iterations;
         }
