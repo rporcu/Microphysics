@@ -336,3 +336,38 @@ mfix::mfix_print_min_epg ()
   return fake;
 
 }
+
+
+IntVect
+mfix::mfix_locate_max_eps (Vector< MultiFab* >& ep_s_in, const Real max_eps)
+{
+
+  int imax(-100), jmax(-100), kmax(-100);
+
+#ifndef AMREX_USE_GPU
+
+  for (int lev = 0; lev <= finest_level; lev++) {
+
+    constexpr Real tolerance = std::numeric_limits<Real>::epsilon();
+
+    for (MFIter mfi(*ep_s_in[lev],false); mfi.isValid(); ++mfi) {
+      Box const& bx = mfi.tilebox();
+      // Array4<Real const> const& epg = ld.ep_g->const_array(mfi);
+      Array4<const Real> const& eps = ep_s_in[lev]->const_array(mfi);
+
+      amrex::ParallelFor(bx, [eps, max_eps, &imax, &jmax, &kmax]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        if( amrex::Math::abs(eps(i,j,k) - max_eps) < tolerance ){
+          imax = i;
+          jmax = j;
+          kmax = k;
+        }
+      });
+    } // mfi
+  } // lev
+
+  ParallelDescriptor::ReduceIntMax({imax, jmax, kmax});
+#endif
+  return {imax, jmax, kmax};
+}

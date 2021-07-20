@@ -404,6 +404,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time )
 //        pltFldNames.push_back("chem_h_txfr");
       }
 
+
       for (int lev = 0; lev < nlev; ++lev)
       {
         // Multifab to hold all the variables -- there can be only one!!!!
