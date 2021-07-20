@@ -482,16 +482,23 @@ class mfix : public AmrCore
                       const int advect_enthalpy,
                       const amrex::Real enthalpy_source);
 
-  void mfix_predict_volume_fraction (amrex::Real dt,
-                                     amrex::RealVect& gravity,
-                                     EBFArrayBoxFactory* ebfactory,
-                                     const int ls_refinement,
-                                     const MultiFab* ls_phi,
-                                     amrex::Vector< amrex::MultiFab* >& ep_s_out);
+  void pic_iteration (const bool apply_forces,
+                      const bool update_parcels,
+                      const bool use_taylor_approx,
+                      const Real advance_vel_p,
+                      amrex::Real dt,
+                      amrex::RealVect& gravity,
+                      amrex::Vector< amrex::Array<amrex::MultiFab*,3> >& vel_s_in,
+                      amrex::Vector< amrex::MultiFab* >& ep_s_out,
+                      amrex::EBFArrayBoxFactory* ebfactory,
+                      const int ls_refinement,
+                      const MultiFab* ls_phi);
 
-  void MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s);
+  void MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s,
+                              const bool do_deposition=false);
 
   void MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
+                              amrex::RealVect& gravity_in,
                               amrex::Vector< amrex::MultiFab* >& cost,
                               std::string& knapsack_weight_type);
 
@@ -906,6 +913,7 @@ public:
     void mfix_print_max_gp (int lev);
 
     IntVect mfix_print_min_epg ();
+  IntVect mfix_locate_max_eps ( Vector< MultiFab*>& ep_s_in, const Real max_eps );
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
