@@ -6,160 +6,6 @@
 
 using namespace amrex;
 
-namespace
-{
-  mfix* mfix_for_fillpatching;
-}
-
-// This interface must match the definition of the interface for
-//    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
-void set_ptr_to_mfix (mfix& mfix_for_fillpatching_in)
-{
-   mfix_for_fillpatching = &mfix_for_fillpatching_in;
-}
-
-// This interface must match the definition of the interface for
-//    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
-inline
-void VelFillBox (Box const& /*bx*/,
-                 Array4<Real> const& dest,
-                 const int dcomp,
-                 const int numcomp,
-                 GeometryData const& geom,
-                 const Real time_in,
-                 const BCRec* /*bcr*/,
-                 const int /*bcomp*/,
-                 const int /*orig_comp*/)
-{
-    if (dcomp != 0)
-         amrex::Abort("Must have dcomp = 0 in VelFillBox");
-    if (numcomp != 3)
-         amrex::Abort("Must have numcomp = 3 in VelFillBox");
-
-    const Box& domain = geom.Domain();
-
-    // This is a bit hack-y but does get us the right level
-    int lev = 0;
-    for (int ilev = 0; ilev < 10; ilev++)
-    {
-//     const Geometry& lev_geom = mfix_for_fillpatching->GetParGDB()->Geom(ilev);
-       const Geometry& lev_geom = mfix_for_fillpatching->get_geom_ref(ilev);
-       if (domain.length()[0] == (lev_geom.Domain()).length()[0])
-       {
-         lev = ilev;
-         break;
-       }
-    }
-
-    // We are hard-wiring this fillpatch routine to define the Dirichlet values
-    //    at the faces (not the ghost cell center)
-    int extrap_dir_bcs = 0;
-
-    // We only do this to make it not const
-    Real time = time_in;
-
-    FArrayBox dest_fab(dest);
-    Elixir eli_dest_fab = dest_fab.elixir();
-
-    mfix_for_fillpatching->set_velocity_bcs(time, lev, dest_fab, domain, &extrap_dir_bcs);
-}
-
-// This interface must match the definition of the interface for
-//    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
-inline
-void ScalarFillBox (Box const& /*bx*/,
-                    Array4<Real> const& dest,
-                    const int dcomp,
-                    const int numcomp,
-                    GeometryData const& geom,
-                    const Real time_in,
-                    const BCRec* /*bcr*/,
-                    const int /*bcomp*/,
-                    const int orig_comp)
-{
-    if (dcomp != 0)
-         amrex::Abort("Must have dcomp = 0 in ScalarFillBox");
-    if (numcomp != 1)
-         amrex::Abort("Must have numcomp = 1 in ScalarFillBox");
-
-    const Box& domain = geom.Domain();
-
-    // This is a bit hack-y but does get us the right level
-    int lev = 0;
-    for (int ilev = 0; ilev < 10; ilev++)
-    {
-       const Geometry& lev_geom = mfix_for_fillpatching->GetParGDB()->Geom(ilev);
-       if (domain.length()[0] == (lev_geom.Domain()).length()[0])
-       {
-         lev = ilev;
-         break;
-       }
-    }
-
-    // We only do this to make it not const
-    Real time = time_in;
-
-    FArrayBox dest_fab(dest);
-    Elixir eli_dest_fab = dest_fab.elixir();
-
-   if( orig_comp == 0 )
-      mfix_for_fillpatching->set_density_bcs(time, lev, dest_fab, domain);
-   else if(orig_comp == 1)
-      mfix_for_fillpatching->set_tracer_bcs(time, lev, dest_fab, domain);
-   else if(orig_comp == 5 and FLUID::solve_enthalpy)
-      mfix_for_fillpatching->set_enthalpy_bcs(time, lev, dest_fab, domain);
-   else
-      amrex::Abort("Unknown component in ScalarFillBox!");
-
-}
-
-// This interface must match the definition of the interface for
-//    CpuBndryFuncFab in amrex/Src/Base/AMReX_PhysBCFunct.H
-inline
-void SpeciesFillBox (Box const& /*bx*/,
-                     Array4<Real> const& dest,
-                     const int dcomp,
-                     const int numcomp,
-                     GeometryData const& geom,
-                     const Real time_in,
-                     const BCRec* /*bcr*/,
-                     const int /*bcomp*/,
-                     const int orig_comp)
-{
-    if (dcomp != 0)
-         amrex::Abort("Must have dcomp = 0 in SpeciesFillBox");
-    if (numcomp != FLUID::nspecies)
-         amrex::Abort("Must have numcomp = nspecies_g in SpeciesFillBox");
-
-    const Box& domain = geom.Domain();
-
-    // This is a bit hack-y but does get us the right level
-    int lev = 0;
-    for (int ilev = 0; ilev < 10; ilev++)
-    {
-       const Geometry& lev_geom = mfix_for_fillpatching->GetParGDB()->Geom(ilev);
-       if (domain.length()[0] == (lev_geom.Domain()).length()[0])
-       {
-         lev = ilev;
-         break;
-       }
-    }
-
-    // We only do this to make it not const
-    Real time = time_in;
-
-    FArrayBox dest_fab(dest);
-    Elixir eli_dest_fab = dest_fab.elixir();
-
-   if( orig_comp == 0 )
-      mfix_for_fillpatching->set_mass_fractions_g_bcs(time, lev, dest_fab, domain);
-   else if(orig_comp == 1)
-      mfix_for_fillpatching->set_species_diffusivities_g_bcs(time, lev, dest_fab, domain);
-   else
-      amrex::Abort("Unknown component in ScalarFillBox!");
-
-}
-
 // Compute a new multifab by copying array from valid region and filling ghost cells
 // works for single level and 2-level cases (fill fine grid ghost by interpolating from coarse)
 void
@@ -168,68 +14,94 @@ mfix::FillPatchVel (int lev,
                     MultiFab& mf,
                     int icomp,
                     int ncomp,
-                    const Vector<BCRec>& bcs)
+                    const Vector<BCRec>& bcrec)
 {
     // Hack so that ghost cells are not undefined
     mf.setVal(covered_val);
 
-    if (lev == 0)
-    {
-        Vector<MultiFab*> smf;
-        Vector<Real> stime;
-        GetDataVel(0, time, smf, stime);
+    set_velocity_bc_values(time);
 
-        CpuBndryFuncFab bfunc(VelFillBox);
-        PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev], bcs, bfunc);
-        amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, icomp, ncomp,
-                                    geom[lev], physbc, 0);
+    const int minf = bc_list.get_minf();
+
+    if (lev == 0) {
+
+      Vector<MultiFab*> smf;
+      Vector<Real> stime;
+      GetDataVel(0, time, smf, stime);
+
+      PhysBCFunct<GpuBndryFuncFab<MFIXVelFill> > physbc
+        (geom[lev], bcrec, MFIXVelFill{minf,
+            m_bc_u_g.data(), m_bc_v_g.data(), m_bc_w_g.data(),
+            bc_ilo[lev]->array(), bc_ihi[lev]->array(),
+            bc_jlo[lev]->array(), bc_jhi[lev]->array(),
+            bc_klo[lev]->array(), bc_khi[lev]->array()
+            });
+
+      amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, icomp, ncomp,
+                                  geom[lev], physbc, 0);
     }
     else
     {
-        Vector<MultiFab*> cmf, fmf;
-        Vector<Real> ctime, ftime;
-        GetDataVel(lev-1, time, cmf, ctime);
-        GetDataVel(lev  , time, fmf, ftime);
+      Vector<MultiFab*> cmf, fmf;
+      Vector<Real> ctime, ftime;
+      GetDataVel(lev-1, time, cmf, ctime);
+      GetDataVel(lev  , time, fmf, ftime);
 
-        CpuBndryFuncFab bfunc(VelFillBox);
-        PhysBCFunct<CpuBndryFuncFab> cphysbc(geom[lev-1],bcs,bfunc);
-        PhysBCFunct<CpuBndryFuncFab> fphysbc(geom[lev  ],bcs,bfunc);
+      PhysBCFunct<GpuBndryFuncFab<MFIXVelFill> > cphysbc
+        (geom[lev-1], bcrec, MFIXVelFill{minf,
+            m_bc_u_g.data(), m_bc_v_g.data(), m_bc_w_g.data(),
+            bc_ilo[lev-1]->array(), bc_ihi[lev-1]->array(),
+            bc_jlo[lev-1]->array(), bc_jhi[lev-1]->array(),
+            bc_klo[lev-1]->array(), bc_khi[lev-1]->array()
+            });
 
-        Interpolater* mapper = &cell_cons_interp;
+      PhysBCFunct<GpuBndryFuncFab<MFIXVelFill> > fphysbc
+        (geom[lev], bcrec, MFIXVelFill{minf,
+            m_bc_u_g.data(), m_bc_v_g.data(), m_bc_w_g.data(),
+            bc_ilo[lev]->array(), bc_ihi[lev]->array(),
+            bc_jlo[lev]->array(), bc_jhi[lev]->array(),
+            bc_klo[lev]->array(), bc_khi[lev]->array()
+            });
 
-        amrex::FillPatchTwoLevels(mf, time, cmf, ctime, fmf, ftime,
-                                  0, icomp, ncomp, geom[lev-1], geom[lev],
-                                  cphysbc, 0, fphysbc, 0,
-                                  refRatio(lev-1), mapper, bcs, 0);
+      Interpolater* mapper = &cell_cons_interp;
+
+      amrex::FillPatchTwoLevels(mf, time, cmf, ctime, fmf, ftime,
+                                0, icomp, ncomp, geom[lev-1], geom[lev],
+                                cphysbc, 0, fphysbc, 0,
+                                  refRatio(lev-1), mapper, bcrec, 0);
     }
 }
 
 // Compute a new multifab by copying array from valid region and filling ghost cells
 // works for single level and 2-level cases (fill fine grid ghost by interpolating from coarse)
-// NOTE: icomp here refers to whether we are filling 0: density, 1: tracer, 2: ep_g, 3: mu_g, 4: temperature, 5: enthalpy
 void
-mfix::FillPatchScalar (int lev,
-                       Real time,
-                       MultiFab& mf,
-                       int icomp,
-                       int ncomp,
-                       const Vector<BCRec>& bcs)
+mfix::FillPatchScalar (int lev, Real time, MultiFab& mf,
+                       ScalarToFill scalar_id,
+                       const Real* bc_scalar,
+                       const Vector<BCRec>& bcrec)
 {
     // Hack so that ghost cells are not undefined
     mf.setVal(covered_val);
 
-    // icomp tells us which scalar we are fill-patching
-    // But we send "0) into FillPatch since each scalar is stored in its own array
+    const int minf = bc_list.get_minf();
+
+    const int icomp = 0;
+    const int ncomp = 1;
 
     if (lev == 0)
     {
         Vector<MultiFab*> smf;
         Vector<Real> stime;
 
-        GetDataScalar(0, time, smf, icomp, stime);
+        GetDataScalar(0, time, smf, scalar_id, stime);
 
-        CpuBndryFuncFab bfunc(ScalarFillBox);
-        PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev], bcs, bfunc);
+        PhysBCFunct<GpuBndryFuncFab<MFIXScalarFill> > physbc
+          (geom[lev], bcrec, MFIXScalarFill{minf, bc_scalar,
+              bc_ilo[lev]->array(), bc_ihi[lev]->array(),
+              bc_jlo[lev]->array(), bc_jhi[lev]->array(),
+              bc_klo[lev]->array(), bc_khi[lev]->array()
+              });
+
         amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, 0, ncomp,
                                     geom[lev], physbc, icomp);
     }
@@ -237,19 +109,28 @@ mfix::FillPatchScalar (int lev,
     {
         Vector<MultiFab*> cmf, fmf;
         Vector<Real> ctime, ftime;
-        GetDataScalar(lev-1, time, cmf, icomp, ctime);
-        GetDataScalar(lev  , time, fmf, icomp, ftime);
+        GetDataScalar(lev-1, time, cmf, scalar_id, ctime);
+        GetDataScalar(lev  , time, fmf, scalar_id, ftime);
 
-        CpuBndryFuncFab bfunc(ScalarFillBox);
-        PhysBCFunct<CpuBndryFuncFab> cphysbc(geom[lev-1],bcs,bfunc);
-        PhysBCFunct<CpuBndryFuncFab> fphysbc(geom[lev  ],bcs,bfunc);
+        PhysBCFunct<GpuBndryFuncFab<MFIXScalarFill> > cphysbc
+          (geom[lev-1], bcrec, MFIXScalarFill{minf, bc_scalar,
+              bc_ilo[lev-1]->array(), bc_ihi[lev-1]->array(),
+              bc_jlo[lev-1]->array(), bc_jhi[lev-1]->array(),
+              bc_klo[lev-1]->array(), bc_khi[lev-1]->array()
+              });
 
+        PhysBCFunct<GpuBndryFuncFab<MFIXScalarFill> > fphysbc
+          (geom[lev], bcrec, MFIXScalarFill{minf, bc_scalar,
+              bc_ilo[lev]->array(), bc_ihi[lev]->array(),
+              bc_jlo[lev]->array(), bc_jhi[lev]->array(),
+              bc_klo[lev]->array(), bc_khi[lev]->array()
+              });
         Interpolater* mapper = &cell_cons_interp;
 
         amrex::FillPatchTwoLevels(mf, time, cmf, ctime, fmf, ftime,
                                   0, 0, ncomp, geom[lev-1], geom[lev],
                                   cphysbc, 0, fphysbc, 0,
-                                  refRatio(lev-1), mapper, bcs, icomp);
+                                  refRatio(lev-1), mapper, bcrec, icomp);
     }
 }
 
@@ -262,10 +143,12 @@ mfix::FillPatchSpecies (int lev,
                         MultiFab& mf,
                         int icomp,
                         int ncomp,
-                        const Vector<BCRec>& bcs)
+                        const Vector<BCRec>& bcrec)
 {
     // Hack so that ghost cells are not undefined
     mf.setVal(covered_val);
+
+    const int minf = bc_list.get_minf();
 
     // icomp tells us which scalar we are fill-patching
     // But we send "0) into FillPatch since each scalar is stored in its own array
@@ -277,8 +160,13 @@ mfix::FillPatchSpecies (int lev,
 
         GetDataSpecies(0, time, smf, icomp, stime);
 
-        CpuBndryFuncFab bfunc(SpeciesFillBox);
-        PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev], bcs, bfunc);
+        PhysBCFunct<GpuBndryFuncFab<MFIXSpeciesFill> > physbc
+          (geom[lev], bcrec, MFIXSpeciesFill{minf, m_bc_X_gk_ptr.data(),
+              bc_ilo[lev]->array(), bc_ihi[lev]->array(),
+              bc_jlo[lev]->array(), bc_jhi[lev]->array(),
+              bc_klo[lev]->array(), bc_khi[lev]->array()
+              });
+
         amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, 0, ncomp,
                                     geom[lev], physbc, icomp);
     }
@@ -289,16 +177,26 @@ mfix::FillPatchSpecies (int lev,
         GetDataSpecies(lev-1, time, cmf, icomp, ctime);
         GetDataSpecies(lev  , time, fmf, icomp, ftime);
 
-        CpuBndryFuncFab bfunc(SpeciesFillBox);
-        PhysBCFunct<CpuBndryFuncFab> cphysbc(geom[lev-1],bcs,bfunc);
-        PhysBCFunct<CpuBndryFuncFab> fphysbc(geom[lev  ],bcs,bfunc);
+        PhysBCFunct<GpuBndryFuncFab<MFIXSpeciesFill> > cphysbc
+          (geom[lev-1], bcrec, MFIXSpeciesFill{minf, m_bc_X_gk_ptr.data(),
+              bc_ilo[lev-1]->array(), bc_ihi[lev-1]->array(),
+              bc_jlo[lev-1]->array(), bc_jhi[lev-1]->array(),
+              bc_klo[lev-1]->array(), bc_khi[lev-1]->array()
+              });
+
+        PhysBCFunct<GpuBndryFuncFab<MFIXSpeciesFill> > fphysbc
+          (geom[lev], bcrec, MFIXSpeciesFill{minf, m_bc_X_gk_ptr.data(),
+              bc_ilo[lev]->array(), bc_ihi[lev]->array(),
+              bc_jlo[lev]->array(), bc_jhi[lev]->array(),
+              bc_klo[lev]->array(), bc_khi[lev]->array()
+              });
 
         Interpolater* mapper = &cell_cons_interp;
 
         amrex::FillPatchTwoLevels(mf, time, cmf, ctime, fmf, ftime,
                                   0, 0, ncomp, geom[lev-1], geom[lev],
                                   cphysbc, 0, fphysbc, 0,
-                                  refRatio(lev-1), mapper, bcs, icomp);
+                                  refRatio(lev-1), mapper, bcrec, icomp);
     }
 }
 
@@ -338,7 +236,7 @@ void
 mfix::GetDataScalar (int lev,
                      Real time,
                      Vector<MultiFab*>& data,
-                     int icomp,
+                     ScalarToFill scalar_id,
                      Vector<Real>& datatime)
 {
     data.clear();
@@ -346,60 +244,88 @@ mfix::GetDataScalar (int lev,
 
     const Real teps = (t_new[lev] - t_old[lev]) * 1.e-3;
 
-    if (icomp == 3)
-       data.push_back(m_leveldata[lev]->mu_g);
-    // TODO cp_g, k_g
-
-    if (time > t_new[lev] - teps && time < t_new[lev] + teps)
-    {
-        if (icomp == 0) {
-           data.push_back(m_leveldata[lev]->ro_g);
-        } else if (icomp == 1) {
-           data.push_back(m_leveldata[lev]->trac);
-        } else if (icomp == 2) {
-           data.push_back(m_leveldata[lev]->ep_g);
-        } else if (icomp == 4) {
-           data.push_back(m_leveldata[lev]->T_g);
-        } else if (icomp == 5) {
-           data.push_back(m_leveldata[lev]->h_g);
+    if (time > t_new[lev] - teps && time < t_new[lev] + teps) {
+      switch (scalar_id) {
+        case (ScalarToFill::Density ): {
+          data.push_back(m_leveldata[lev]->ro_g);
+          break;
         }
-        datatime.push_back(t_new[lev]);
+        case (ScalarToFill::Tracer): {
+          data.push_back(m_leveldata[lev]->trac);
+          break;
+        }
+        case (ScalarToFill::Enthalpy): {
+          data.push_back(m_leveldata[lev]->h_g);
+          break;
+        }
+        case (ScalarToFill::VolFrac): {
+          data.push_back(m_leveldata[lev]->ep_g);
+          break;
+        }
+        case (ScalarToFill::Temperature): {
+          data.push_back(m_leveldata[lev]->T_g);
+          break;
+        }
+      }
+      datatime.push_back(t_new[lev]);
     }
-    else if (time > t_old[lev] - teps && time < t_old[lev] + teps)
-    {
-        if (icomp == 0) {
-           data.push_back(m_leveldata[lev]->ro_go);
-        } else if (icomp == 1) {
-           data.push_back(m_leveldata[lev]->trac_o);
-        } else if (icomp == 2) {
-           data.push_back(m_leveldata[lev]->ep_g);
-        } else if (icomp == 4) {
-           data.push_back(m_leveldata[lev]->T_go);
-        } else if (icomp == 5) {
-           data.push_back(m_leveldata[lev]->h_go);
+    else if (time > t_old[lev] - teps && time < t_old[lev] + teps) {
+
+      switch (scalar_id) {
+        case (ScalarToFill::Density ): {
+          data.push_back(m_leveldata[lev]->ro_go);
+          break;
         }
-        datatime.push_back(t_old[lev]);
+        case (ScalarToFill::Tracer): {
+          data.push_back(m_leveldata[lev]->trac_o);
+          break;
+        }
+        case (ScalarToFill::Enthalpy): {
+          data.push_back(m_leveldata[lev]->h_go);
+          break;
+        }
+        case (ScalarToFill::VolFrac): {
+          data.push_back(m_leveldata[lev]->ep_g);
+          break;
+        }
+        case (ScalarToFill::Temperature): {
+          data.push_back(m_leveldata[lev]->T_go);
+          break;
+        }
+      }
+      datatime.push_back(t_old[lev]);
     }
     else
     {
-        if (icomp == 0) {
-           data.push_back(m_leveldata[lev]->ro_go);
-           data.push_back(m_leveldata[lev]->ro_g);
-        } else if (icomp == 1) {
-           data.push_back(m_leveldata[lev]->trac_o);
-           data.push_back(m_leveldata[lev]->trac);
-        } else if (icomp == 2) {
-           data.push_back(m_leveldata[lev]->ep_g);
-           data.push_back(m_leveldata[lev]->ep_g);
-        } else if (icomp == 4) {
-           data.push_back(m_leveldata[lev]->T_go);
-           data.push_back(m_leveldata[lev]->T_g);
-        } else if (icomp == 5) {
-           data.push_back(m_leveldata[lev]->h_go);
-           data.push_back(m_leveldata[lev]->h_g);
+      switch (scalar_id) {
+        case (ScalarToFill::Density ): {
+          data.push_back(m_leveldata[lev]->ro_go);
+          data.push_back(m_leveldata[lev]->ro_g);
+          break;
         }
-        datatime.push_back(t_old[lev]);
-        datatime.push_back(t_new[lev]);
+        case (ScalarToFill::Tracer): {
+          data.push_back(m_leveldata[lev]->trac_o);
+          data.push_back(m_leveldata[lev]->trac);
+          break;
+        }
+        case (ScalarToFill::Enthalpy): {
+          data.push_back(m_leveldata[lev]->h_go);
+          data.push_back(m_leveldata[lev]->h_g);
+          break;
+        }
+        case (ScalarToFill::VolFrac): {
+          data.push_back(m_leveldata[lev]->ep_g);
+          data.push_back(m_leveldata[lev]->ep_g);
+          break;
+        }
+        case (ScalarToFill::Temperature): {
+          data.push_back(m_leveldata[lev]->T_go);
+          data.push_back(m_leveldata[lev]->T_g);
+          break;
+        }
+      }
+      datatime.push_back(t_old[lev]);
+      datatime.push_back(t_new[lev]);
     }
 }
 
@@ -458,10 +384,11 @@ void mfix::fillpatch_force (Real time, Vector<MultiFab*> const& force, int ng)
   {
     PhysBCFunct<GpuBndryFuncFab<MFIXForFill> > physbc
           (geom[lev], bcrec, MFIXForFill{l_probtype});
-        FillPatchSingleLevel(*force[lev], IntVect(ng), time,
-                             {force[lev]}, {time},
-                             0, 0, ncomp, geom[lev],
-                             physbc, 0);
+
+    FillPatchSingleLevel(*force[lev], IntVect(ng), time,
+                         {force[lev]}, {time},
+                         0, 0, ncomp, geom[lev],
+                         physbc, 0);
     }
     for (lev = 1; lev <= finest_level; ++lev)
     {
@@ -479,10 +406,6 @@ void mfix::fillpatch_force (Real time, Vector<MultiFab*> const& force, int ng)
     }
 }
 
-
-
-
-
 void
 mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
                      Vector< MultiFab* > const& ro_g_in,
@@ -492,53 +415,48 @@ mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
                      Real time)
 {
 
-  const int l_nspecies = FLUID::nspecies;
-
   // First do FillPatch of {velocity, density, tracer, enthalpy} so we know
   // the ghost cells of these arrays are all filled
   for (int lev = 0; lev < nlev; lev++) {
 
-    int state_comp, num_comp;
-
     // State with ghost cells
     MultiFab Sborder_u(grids[lev], dmap[lev], vel_in[lev]->nComp(), nghost_state(),
                        MFInfo(), *ebfactory[lev]);
-    FillPatchVel(lev, time, Sborder_u, 0, Sborder_u.nComp(), bcs_u);
+    FillPatchVel(lev, time, Sborder_u, 0, Sborder_u.nComp(), get_velocity_bcrec());
 
     // Copy each FAB back from Sborder_u into the vel array, complete with filled ghost cells
     MultiFab::Copy(*vel_in[lev], Sborder_u, 0, 0, vel_in[lev]->nComp(), vel_in[lev]->nGrow());
 
+
     MultiFab Sborder_s(grids[lev], dmap[lev], 1, nghost_state(), MFInfo(), *ebfactory[lev]);
 
+
     // We FillPatch density even if not advecting it because we need it in the projections
-    state_comp =  0; // comp = 0 --> density
-    num_comp = 1;
-    FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
-    MultiFab::Copy(*ro_g_in[lev], Sborder_s, 0, 0, num_comp, ro_g_in[lev]->nGrow());
+    FillPatchScalar(lev, time, Sborder_s, ScalarToFill::Density,
+                    m_bc_ro_g.data(), get_density_bcrec());
+    MultiFab::Copy(*ro_g_in[lev], Sborder_s, 0, 0, 1, ro_g_in[lev]->nGrow());
+
 
     if (advect_tracer) {
-      state_comp =  1; // comp = 1 --> tracer
-      num_comp = 1;
-      FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
-      MultiFab::Copy(*trac_in[lev], Sborder_s, 0, 0, num_comp, trac_in[lev]->nGrow());
+      FillPatchScalar(lev, time, Sborder_s, ScalarToFill::Tracer,
+                      m_bc_tracer.data(), get_tracer_bcrec());
+      MultiFab::Copy(*trac_in[lev], Sborder_s, 0, 0, 1, trac_in[lev]->nGrow());
     }
 
     if (advect_enthalpy) {
-      state_comp =  5; // comp = 1 --> enthalpy
-      num_comp = 1;
-      FillPatchScalar(lev, time, Sborder_s, state_comp, num_comp, bcs_s);
-      MultiFab::Copy(*h_g_in[lev], Sborder_s, 0, 0, num_comp, h_g_in[lev]->nGrow());
+      FillPatchScalar(lev, time, Sborder_s, ScalarToFill::Enthalpy,
+                      m_bc_h_g.data(), get_enthalpy_bcrec());
+      MultiFab::Copy(*h_g_in[lev], Sborder_s, 0, 0, 1, h_g_in[lev]->nGrow());
     }
 
     if (advect_fluid_species) {
-      MultiFab Sborder_X(grids[lev], dmap[lev], FLUID::nspecies, nghost_state(),
-                         MFInfo(), *ebfactory[lev]);
+      MultiFab Sborder_X(grids[lev], dmap[lev], X_gk_in[lev]->nComp(),
+                         nghost_state(), MFInfo(), *ebfactory[lev]);
       Sborder_X.setVal(0);
-      state_comp = 0;
-      num_comp = l_nspecies;
-      FillPatchSpecies(lev, time, Sborder_X, state_comp, num_comp, bcs_X);
-      MultiFab::Copy(*X_gk_in[lev], Sborder_X, 0, 0, num_comp,
-                     X_gk_in[lev]->nGrow());
+
+      FillPatchSpecies(lev, time, Sborder_X, 0, Sborder_X.nComp(), get_species_bcrec());
+      MultiFab::Copy(*X_gk_in[lev], Sborder_X, 0, 0,
+                     X_gk_in[lev]->nComp(), X_gk_in[lev]->nGrow());
     }
   }
 }

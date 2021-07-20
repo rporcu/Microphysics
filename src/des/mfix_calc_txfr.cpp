@@ -15,14 +15,14 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
                             Vector< MultiFab* > const& ep_g_in,
                             Vector< MultiFab* > const& ro_g_in,
                             Vector< MultiFab* > const& vel_g_in,
-                            Vector< MultiFab* > const& mu_g_in,
-                            Vector< MultiFab* > const& cp_g_in,
-                            Vector< MultiFab* > const& k_g_in,
+                            Vector< MultiFab* > const& T_g_in,
                             Real time)
 {
+  BL_PROFILE("mfix::mfix_calc_txfr_fluid()");
+
   const Real strttime = ParallelDescriptor::second();
 
-  mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, mu_g_in, cp_g_in, k_g_in);
+  mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in);
 
   // ******************************************************************************
   // Now use the transfer coeffs of individual particles to create the
@@ -43,13 +43,13 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
     bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                          (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
-    if (lev == 0 and OnSameGrids) {
+    if (lev == 0 && OnSameGrids) {
 
       // If we are already working with the internal mf defined on the
       // particle_box_array, then we just work with this.
       txfr_ptr[lev] = txfr[lev];
 
-    } else if (lev == 0 and (not OnSameGrids)) {
+    } else if (lev == 0 && (!OnSameGrids)) {
 
       // If beta_mf is not defined on the particle_box_array, then we need
       // to make a temporary here and copy into beta_mf at the end.
@@ -78,6 +78,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
   const Geometry& gm = Geom(0);
   const FabArray<EBCellFlagFab>* flags = nullptr;
   const MultiFab* volfrac = nullptr;
+  EBFArrayBoxFactory* crse_factory = nullptr;
 
   Vector< MultiFab* > tmp_eps(nlev);
 
@@ -95,7 +96,10 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
     } else {
 
       Vector<int> ngrow = {1,1,1};
-      EBFArrayBoxFactory* crse_factory;
+
+      // Free memory in case crse_factory is not empty
+      if (crse_factory != nullptr)
+        delete crse_factory;
 
       crse_factory = (makeEBFabFactory(gm, txfr_ptr[lev]->boxArray(),
                                       txfr_ptr[lev]->DistributionMap(),
@@ -103,8 +107,6 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
 
       flags   = &(crse_factory->getMultiEBCellFlagFab());
       volfrac = &(crse_factory->getVolFrac());
-
-      delete crse_factory;
     }
 
     // Deposit the interphase transfer forces to the grid
@@ -145,6 +147,9 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
     txfr_ptr[lev]->FillBoundary(gm.periodicity());
   }
 
+  if (crse_factory != nullptr)
+    delete crse_factory;
+
   // This might not need to exist on all levels. Maybe only level 0.
   for (int lev(0); lev < nlev; ++lev)
     delete tmp_eps[lev];
@@ -154,7 +159,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
   int ng_to_copy = amrex::min(src_nghost, dest_nghost);
 
   for (int lev = 1; lev < nlev; lev++) {
-    txfr_ptr[0]->copy(*txfr_ptr[lev], 0, 0, txfr_ptr[0]->nComp(), ng_to_copy,
+    txfr_ptr[0]->ParallelCopy(*txfr_ptr[lev], 0, 0, txfr_ptr[0]->nComp(), ng_to_copy,
         ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
   }
 
@@ -188,7 +193,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
   // need any information in ghost cells so we don't copy those.
 
   if (txfr_ptr[0] != txfr[0]) {
-    txfr[0]->copy(*txfr_ptr[0], 0, 0, txfr[0]->nComp());
+    txfr[0]->ParallelCopy(*txfr_ptr[0], 0, 0, txfr[0]->nComp());
   }
 
   for (int lev = 0; lev < nlev; lev++) {
@@ -283,14 +288,14 @@ mfix::mfix_calc_txfr_particle (Real time,
       interp_ptr = new MultiFab(grids[lev], dmap[lev], interp_comp, interp_ng, MFInfo(), *ebfactory[lev]);
 
       // Copy fluid velocity
-      interp_ptr->copy(*vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng, interp_ng);
+      MultiFab::Copy(*interp_ptr, *vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng);
 
       // Copy pressure gradient
-      interp_ptr->copy(gp_tmp, 0, 3, gp_tmp.nComp(), interp_ng, interp_ng);
+      MultiFab::Copy(*interp_ptr, gp_tmp, 0, 3, gp_tmp.nComp(), interp_ng);
 
       // Copy fluid temperature
       if(advect_enthalpy){
-        interp_ptr->copy(*T_g_in[lev], 0, 6, T_g_in[lev]->nComp(), interp_ng, interp_ng);
+        MultiFab::Copy(*interp_ptr, *T_g_in[lev], 0, 6, T_g_in[lev]->nComp(), interp_ng);
       } else {
         interp_ptr->setVal(0.0, 6, 1, interp_ng);
       }
@@ -311,14 +316,14 @@ mfix::mfix_calc_txfr_particle (Real time,
       interp_ptr = new MultiFab(pba, pdm, interp_comp, interp_ng, MFInfo(), ebfactory_loc);
 
       // Copy fluid velocity
-      interp_ptr->copy(*vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng, interp_ng);
+      interp_ptr->ParallelCopy(*vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng, interp_ng);
 
       // Copy pressure gradient
-      interp_ptr->copy(gp_tmp, 0, 3, gp_tmp.nComp(), interp_ng, interp_ng);
+      interp_ptr->ParallelCopy(gp_tmp, 0, 3, gp_tmp.nComp(), interp_ng, interp_ng);
 
       // Copy fluid temperature
       if(advect_enthalpy) {
-        interp_ptr->copy(*T_g_in[lev], 0, 6, T_g_in[lev]->nComp(), interp_ng, interp_ng);
+        interp_ptr->ParallelCopy(*T_g_in[lev], 0, 6, T_g_in[lev]->nComp(), interp_ng, interp_ng);
       } else {
         interp_ptr->setVal(0.0, 6, 1, interp_ng);
       }
@@ -461,13 +466,13 @@ mfix::mfix_calc_txfr_particle (Real time,
 
                   // All cells in the stencil are regular. Use
                   // traditional trilinear interpolation
-                  if (flags_array(i-1,j-1,k-1).isRegular() and
-                      flags_array(i  ,j-1,k-1).isRegular() and
-                      flags_array(i-1,j  ,k-1).isRegular() and
-                      flags_array(i  ,j  ,k-1).isRegular() and
-                      flags_array(i-1,j-1,k  ).isRegular() and
-                      flags_array(i  ,j-1,k  ).isRegular() and
-                      flags_array(i-1,j  ,k  ).isRegular() and
+                  if (flags_array(i-1,j-1,k-1).isRegular() &&
+                      flags_array(i  ,j-1,k-1).isRegular() &&
+                      flags_array(i-1,j  ,k-1).isRegular() &&
+                      flags_array(i  ,j  ,k-1).isRegular() &&
+                      flags_array(i-1,j-1,k  ).isRegular() &&
+                      flags_array(i  ,j-1,k  ).isRegular() &&
+                      flags_array(i-1,j  ,k  ).isRegular() &&
                       flags_array(i  ,j  ,k  ).isRegular()) {
 
                     trilinear_interp(particle.pos(), &interp_loc[0],

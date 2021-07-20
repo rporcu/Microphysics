@@ -16,28 +16,28 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   // Start the timers ...
   const Real strttime = ParallelDescriptor::second();
 
-  if (DEM::solve or PIC::solve)
+  if (DEM::solve || PIC::solve)
   {
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain
 
-    MultiFab* mf_pointer[nlev];
+    amrex::Vector<MultiFab*> mf_pointer(nlev, nullptr);
 
     if (nlev > 2)
       amrex::Abort("For right now mfix::mfix_calc_volume_fraction can only handle up to 2 levels");
 
     for (int lev = 0; lev < nlev; lev++) {
 
-      bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) and
+      bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                            (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
-      if (lev == 0 and OnSameGrids) {
+      if (lev == 0 && OnSameGrids) {
 
         // If we are already working with the internal mf defined on the
         // particle_box_array, then we just work with this.
         mf_pointer[lev] = m_leveldata[lev]->ep_g;
 
-      } else if (lev == 0 and (not OnSameGrids))  {
+      } else if (lev == 0 && (!OnSameGrids))  {
         // If ep_g is not defined on the particle_box_array, then we need
         // to make a temporary here and copy into ep_g at the end.
         mf_pointer[lev] = new MultiFab(pc->ParticleBoxArray(lev),
@@ -65,6 +65,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
     const Geometry& gm  = Geom(0);
     const FabArray<EBCellFlagFab>* flags = nullptr;
     const MultiFab* volfrac = nullptr;
+    EBFArrayBoxFactory* crse_factory = nullptr;
 
     for (int lev = 0; lev < nlev; lev++) {
 
@@ -77,7 +78,9 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
       } else {
 
         Vector<int> ngrow = {1,1,1};
-        EBFArrayBoxFactory* crse_factory;
+
+        if (crse_factory != nullptr)
+          delete crse_factory;
 
         crse_factory = (makeEBFabFactory(gm, mf_pointer[lev]->boxArray(),
                                         mf_pointer[lev]->DistributionMap(),
@@ -85,8 +88,6 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 
         flags   = &(crse_factory->getMultiEBCellFlagFab());
         volfrac = &(crse_factory->getVolFrac());
-
-        delete crse_factory;
       }
 
       // Deposit particle volume to the grid
@@ -136,13 +137,15 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 
     }
 
-
+    if (crse_factory != nullptr)
+      delete crse_factory;
+      
     int  src_nghost = 1;
     int dest_nghost = 0;
     int ng_to_copy = amrex::min(src_nghost, dest_nghost);
 
     for (int lev = 1; lev < nlev; lev++)
-      mf_pointer[0]->copy(*mf_pointer[lev],0,0, m_leveldata[lev]->ep_g->nComp(),
+      mf_pointer[0]->ParallelCopy(*mf_pointer[lev],0,0, m_leveldata[lev]->ep_g->nComp(),
           ng_to_copy, ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
 
     if (nlev > 1)
@@ -176,7 +179,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
     // need any information in ghost cells so we don't copy those.
 
     if (mf_pointer[0] != m_leveldata[0]->ep_g)
-      m_leveldata[0]->ep_g->copy(*mf_pointer[0], 0, 0, m_leveldata[0]->ep_g->nComp());
+      m_leveldata[0]->ep_g->ParallelCopy(*mf_pointer[0], 0, 0, m_leveldata[0]->ep_g->nComp());
 
     for (int lev = 0; lev < nlev; lev++)
        if (mf_pointer[lev] != m_leveldata[lev]->ep_g)

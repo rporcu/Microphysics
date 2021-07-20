@@ -11,10 +11,10 @@ void MFIXParticleContainer::usr1_des ()
 {
 }
 
-void MFIXParticleContainer::usr2_des (int np, ParticleTileType& particles)
+void MFIXParticleContainer::usr2_des (int /*np*/, ParticleTileType& /*particles*/)
 {
 }
 
-void MFIXParticleContainer::usr3_des (int np, void*&)
+void MFIXParticleContainer::usr3_des (int /*np*/, void*&)
 {
 }

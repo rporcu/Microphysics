@@ -16,8 +16,12 @@
 #include <AMReX_NeighborParticles.H>
 
 #include <mfix_pic_parms.H>
+#include <mfix_fluid_parms.H>
+#include <mfix_solids_parms.H>
 #include <mfix_reactions_parms.H>
 #include <mfix_bc_list.H>
+#include <mfix_leveldata.H>
+
 
 struct AoSrealData
 {
@@ -52,28 +56,32 @@ struct SoArealData
     dragx,
     dragy,
     dragz,
-    c_ps,
+    cp_s,
     temperature,
     convection,
     count
   };
 };
 
-struct SoAspeciesData
+// Particle real data stored at runtime in a SoA style
+struct runtimeRealData
 {
-  enum { // Added Particle data stored in p.m_runtime_data
-    X_sn = 0,
-    count
-  };
+  runtimeRealData (const int nspecies_s,
+                   const int nreactions)
+    : X_sn(0)                                            // nb of components = nspecies
+    , ro_sn_txfr(X_sn + nspecies_s*(nreactions>0))       // nb of components = nspecies
+    , vel_s_txfr(ro_sn_txfr + nspecies_s*(nreactions>0)) // nb of components = 3
+    , h_s_txfr(vel_s_txfr + 3*(nreactions>0))            // nb of components = 1
+    , count(h_s_txfr + 1*(nreactions>0))
+  {}
+
+  const int X_sn;
+  const int ro_sn_txfr;
+  const int vel_s_txfr;
+  const int h_s_txfr;
+  const int count;
 };
 
-struct SoAreactionsData
-{
-  enum { // Added Particle data stored in p.m_runtime_data
-    G_sn_pg_q = 0,
-    count
-  };
-};
 
 struct SoAintData
 {
@@ -101,7 +109,7 @@ struct MFIXCheckPair
 
     if (i < j)
       if ((p1.pos() - p2.pos()).radSquared() <= neighborhood)
-        return true;  
+        return true;
 
     return false;
   }
@@ -121,7 +129,8 @@ public:
     int NumberOfParticles (MFIXParIter& pti)
     { return pti.numParticles(); }
 
-    MFIXParticleContainer (amrex::AmrCore* amr_core);
+    MFIXParticleContainer (amrex::AmrCore* amr_core,
+                           SolidsPhase& solids);
 
     virtual ~MFIXParticleContainer () {};
 
@@ -131,9 +140,8 @@ public:
 
     void InitParticlesAuto ();
 
-    void InitParticlesEnthalpy ();
-
-    void InitParticlesSpecies ();
+    void InitParticlesRuntimeVariables (const int adv_enthalpy,
+                                        const int solve_species);
 
     void RemoveOutOfRange (int lev,
                            const amrex::EBFArrayBoxFactory * ebfactory,
@@ -163,7 +171,10 @@ public:
                           std::string & knapsack_weight_type,
                           int & nsubsteps,
                           const int advect_enthalpy,
-                          const amrex::Real enthalpy_source);
+                          const amrex::Real enthalpy_source,
+                          const int update_mass,
+                          const int update_momentum,
+                          const int update_enthalpy);
 
     void MFIX_PC_InitCollisionParams ();
 
@@ -227,24 +238,6 @@ public:
                                    const amrex::FabArray<amrex::EBCellFlagFab>* flags,
                                    const int advect_enthalpy);
 
-    ///
-    /// Do the actual PIC deposition for CalcDragOnFluid
-    ///
-    void InterphaseChemDeposition (int lev,
-                                   amrex::MultiFab& mf_tmp_eps,
-                                   amrex::MultiFab& Rrates,
-                                   const amrex::MultiFab* volfrac,
-                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags,
-                                   const amrex::Vector< REACTIONS::ChemicalReaction* >&);
-
-    template <typename F>
-    void InterphaseChemDeposition (F WeightFunc,
-                                   int lev,
-                                   amrex::MultiFab& mf_tmp_eps,
-                                   amrex::MultiFab& chem_txfr_mf,
-                                   const amrex::MultiFab* volfrac,
-                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags,
-                                   const amrex::Vector< REACTIONS::ChemicalReaction* >&);
 
     //
     // Postprocessing utilities to compute spatially-averaged particle velocities
@@ -288,15 +281,24 @@ public:
     /// Deposit parcel velocity to the grid
     ///
     void MFIX_PC_SolidsVelocityDeposition (int lev,
-                                           amrex::MultiFab& vel_s_mf,
+                                           amrex::Array<amrex::MultiFab*,3>& vel_s_mf,
                                            const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
+    void PredictPICVolumeDeposition (int lev,
+                            amrex::Real dt, amrex::RealVect& gravity,
+                            amrex::EBFArrayBoxFactory* ebfactory,
+                            const int ls_refinement,
+                            const amrex::MultiFab* ls_phi,
+                            amrex::MultiFab & mf_to_be_filled,
+                            const amrex::MultiFab * volfrac,
+                            const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
     void MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealVect& gravity,
-                                 amrex::Vector< amrex::MultiFab*> & avg_prop_in,
+                                 amrex::Vector< amrex::Array<amrex::MultiFab*,3> >& vel_s_in,
                                  amrex::Vector< amrex::MultiFab*> & cost,
                                  std::string& knapsack_weight_type,
-                                 const int advect_enthalpy);
+                                 const int advect_enthalpy,
+                                 const amrex::Real enthalpy_source);
 
     void MFIX_PC_ImposeWalls (int lev,
                               amrex::EBFArrayBoxFactory * ebfactory,
@@ -305,14 +307,45 @@ public:
                               amrex::MultiFab* cost,
                               std::string& knapsack_weight_type);
 
+    const runtimeRealData m_runtimeRealData;
+
     void setSortingBinSizes (amrex::IntVect sorting_bin) { m_sorting_bin = sorting_bin;  }
+
+    void checkParticleBoxSize(int lev, 
+                              amrex::IntVect& max_grid_size,
+                              amrex::Real frac_particle_bin);
+
+    void downsizeParticleBoxes(int lev, const amrex::IntVect& new_grid_size);
+
+    void resetCostByCount(int lev, amrex::Vector<amrex::MultiFab*>& cost);
+
+    void setMaxGridSize(const amrex::IntVect& rhs)
+    { max_grid_size = rhs;}
+
+    void setMaxGridSize(int size_x, int size_y, int size_z)
+    { max_grid_size = amrex::IntVect(AMREX_D_DECL(size_x, size_y, size_z));}
+
+    void setSortInt(int sort_particle_int)
+    { sort_int = sort_particle_int; }
+
+    const amrex::IntVect& MaxGridSize() const noexcept
+    { return max_grid_size; }
+
+    // return the average/max particle count on IO process
+    amrex::Real particleImbalance();
 
   private:
     int nlev;
 
+    int sort_int = -1; // # steps to sort particles
+
+    amrex::IntVect max_grid_size{-1};
+
     amrex::IntVect m_sorting_bin = amrex::IntVect::TheZeroVector();
 
     static int domain_bc[6];
+
+    int m_total_numparticle = 0;
 
     static void ReadStaticParameters ();
 
@@ -337,6 +370,8 @@ public:
     void usr2_des (int np, ParticleTileType& particles);
 
     void usr3_des (int np,void*&);
+
+    SolidsPhase& solids;
 };
 
 #endif

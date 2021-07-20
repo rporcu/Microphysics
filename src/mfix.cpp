@@ -10,6 +10,8 @@ std::string      mfix::particle_init_type   = "AsciiFile";
 std::string      mfix::load_balance_type    = "KnapSack";
 std::string      mfix::knapsack_weight_type = "RunTimeCosts";
 int              mfix::load_balance_fluid   = 1;
+int              mfix::downsize_particle_grid = 0;
+Real             mfix::downsize_factor        = 1.0;
 int              mfix::knapsack_nmax        = 128;
 int              mfix::m_drag_type          = DragType::Invalid;
 int              mfix::m_convection_type    = ConvectionType::Invalid;
@@ -58,11 +60,14 @@ mfix::~mfix ()
   for (int lev = 0; lev < particle_cost.size(); ++lev)
     delete particle_cost[lev];
 
-  for (int lev = 0; lev < particle_ba_proc.size(); ++lev)
-    delete particle_ba_proc[lev];
+  for (int lev = 0; lev < particle_proc.size(); ++lev)
+    delete particle_proc[lev];
 
   for (int lev = 0; lev < fluid_cost.size(); ++lev)
     delete fluid_cost[lev];
+
+  for (int lev = 0; lev < fluid_proc.size(); ++lev)
+    delete fluid_proc[lev];
 
   if (REACTIONS::solve) {
     for (int n(0); n < REACTIONS::nreactions; n++)
@@ -76,6 +81,9 @@ mfix::mfix ()
   , m_bc_v_g(50, 0)
   , m_bc_w_g(50, 0)
   , m_bc_t_g(50, 0)
+  , m_bc_h_g(50, 0)
+  , m_bc_ro_g(50, 0)
+  , m_bc_tracer(50, 0)
   , m_bc_ep_g(50, 0)
   , m_bc_p_g(50, 0)
 {
@@ -109,11 +117,7 @@ mfix::mfix ()
      *                                                                          *
      ***************************************************************************/
 
-    bcs_u.resize(3); // one for each velocity component
-    // This needs to be one bigger than the highest index scalar in mfix_set_scalar_bcs
-    bcs_s.resize(6); // density, tracer, ep_g, mu_g, T_g, h_g --> TODO cp_g, k_g
-    bcs_X.resize(0); // X_gk, D_gk. TODO this has to be resized on the basis of
-                     // FLUID::nspecies. So we do it after parameter parsing
+    // Generic first-order extrapolation
     bcs_f.resize(1); // just one
 
     //___________________________________________________________________________
@@ -203,16 +207,6 @@ Vector< MultiFab* > mfix::get_ro_g_old () noexcept
   return r;
 }
 
-Vector< MultiFab* > mfix::get_MW_g () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->MW_g);
-  }
-  return r;
-}
-
 Vector< MultiFab* > mfix::get_trac () noexcept
 {
   Vector<MultiFab*> r;
@@ -283,16 +277,6 @@ Vector< MultiFab* > mfix::get_p_g_old () noexcept
   return r;
 }
 
-Vector< MultiFab* > mfix::get_mu_g () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->mu_g);
-  }
-  return r;
-}
-
 Vector< MultiFab* > mfix::get_pressure_g () noexcept
 {
   Vector<MultiFab*> r;
@@ -333,26 +317,6 @@ Vector< MultiFab* > mfix::get_T_g_old () noexcept
   return r;
 }
 
-Vector< MultiFab* > mfix::get_cp_g () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->cp_g);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_k_g () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->k_g);
-  }
-  return r;
-}
-
 Vector< MultiFab* > mfix::get_h_g () noexcept
 {
   Vector<MultiFab*> r;
@@ -383,16 +347,6 @@ Vector< MultiFab* > mfix::get_T_g_on_eb () noexcept
   return r;
 }
 
-Vector< MultiFab* > mfix::get_k_g_on_eb () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->k_g_on_eb);
-  }
-  return r;
-}
-
 Vector< MultiFab* > mfix::get_X_gk () noexcept
 {
   Vector<MultiFab*> r;
@@ -409,36 +363,6 @@ Vector< MultiFab* > mfix::get_X_gk_old () noexcept
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
     r.push_back(m_leveldata[lev]->X_gko);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_D_gk () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->D_gk);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_cp_gk () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->cp_gk);
-  }
-  return r;
-}
-
-Vector< MultiFab* > mfix::get_h_gk () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->h_gk);
   }
   return r;
 }
@@ -544,16 +468,6 @@ Vector< MultiFab const*> mfix::get_ro_g_old_const () const noexcept
   return r;
 }
 
-Vector< MultiFab const*> mfix::get_MW_g_const () const noexcept
-{
-  Vector<MultiFab const*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->MW_g);
-  }
-  return r;
-}
-
 Vector< MultiFab const*> mfix::get_trac_const () const noexcept
 {
   Vector<MultiFab const*> r;
@@ -614,16 +528,6 @@ Vector< MultiFab const*> mfix::get_p_g_old_const () const noexcept
   return r;
 }
 
-Vector< MultiFab const*> mfix::get_mu_g_const () const noexcept
-{
-  Vector<MultiFab const*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->mu_g);
-  }
-  return r;
-}
-
 Vector< MultiFab const*> mfix::get_T_g_const () const noexcept
 {
   Vector<MultiFab const*> r;
@@ -640,26 +544,6 @@ Vector< MultiFab const*> mfix::get_T_g_old_const () const noexcept
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
     r.push_back(m_leveldata[lev]->T_go);
-  }
-  return r;
-}
-
-Vector< MultiFab const*> mfix::get_cp_g_const () const noexcept
-{
-  Vector<MultiFab const*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->cp_g);
-  }
-  return r;
-}
-
-Vector< MultiFab const*> mfix::get_k_g_const () const noexcept
-{
-  Vector<MultiFab const*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->k_g);
   }
   return r;
 }
@@ -714,16 +598,6 @@ Vector< MultiFab const*> mfix::get_T_g_on_eb_const () const noexcept
   return r;
 }
 
-Vector< MultiFab const*> mfix::get_k_g_on_eb_const () const noexcept
-{
-  Vector<MultiFab const*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->k_g_on_eb);
-  }
-  return r;
-}
-
 Vector< MultiFab const*> mfix::get_X_gk_const () const noexcept
 {
   Vector<MultiFab const*> r;
@@ -740,36 +614,6 @@ Vector< MultiFab const*> mfix::get_X_gk_old_const () const noexcept
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
     r.push_back(m_leveldata[lev]->X_gko);
-  }
-  return r;
-}
-
-Vector< MultiFab const*> mfix::get_D_gk_const () const noexcept
-{
-  Vector<MultiFab const*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->D_gk);
-  }
-  return r;
-}
-
-Vector< MultiFab const*> mfix::get_cp_gk_const () const noexcept
-{
-  Vector<MultiFab const*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->cp_gk);
-  }
-  return r;
-}
-
-Vector< MultiFab const*> mfix::get_h_gk_const () const noexcept
-{
-  Vector<MultiFab const*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->h_gk);
   }
   return r;
 }

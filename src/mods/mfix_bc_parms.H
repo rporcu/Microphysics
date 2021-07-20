@@ -15,6 +15,8 @@
 #include <mfix_fluid_parms.H>
 #include <mfix_solids_parms.H>
 
+#include <bits/stdc++.h>
+
 namespace BC
 {
 
@@ -27,9 +29,9 @@ namespace BC
 
     EB::EB_t eb;
 
-    FLUID::FLUID_t fluid;
+    FluidPhase::FLUID_t fluid;
 
-    amrex::Vector<SOLIDS::SOLIDS_t> solids;
+    amrex::Vector<SolidsPhase::SOLIDS_t> solids;
 
   };
 
@@ -44,6 +46,8 @@ namespace BC
 
   // Flags for DEM domain extent reinforcement.
   extern int domain_bc[6];
+
+  extern std::bitset<6> flow_plane;
 
   // Vectors storing EB planes for level-set creation
   extern amrex::Vector<amrex::EB2::PlaneIF> flow_planes;
@@ -68,10 +72,12 @@ namespace BC
   // Data structure for BC data
   extern amrex::Vector<BC_t> bc;
 
-  void Initialize (amrex::Geometry& geom);
+  void Initialize (amrex::Geometry& geom,
+                   const FluidPhase& fluid,
+                   const SolidsPhase& solids);
 
-  void read_bc_velocity (amrex::ParmParse pp, FLUID::FLUID_t* fluid);
-  void read_bc_temperature (amrex::ParmParse pp, FLUID::FLUID_t* fluid);
+  void read_bc_velocity (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
+  void read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
 
 }
 

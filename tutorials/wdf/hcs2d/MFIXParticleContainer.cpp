@@ -1011,7 +1011,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
            const int ilo = dom_lo.x;
            AMREX_HOST_DEVICE_FOR_3D(sbx_yz, i, j, k,
            {
-             if(bc_ilo_type(dom_lo.x-1,j,k,0) == pinf or
+             if(bc_ilo_type(dom_lo.x-1,j,k,0) == pinf ||
                 bc_ilo_type(dom_lo.x-1,j,k,0) == minf)
              {
                vol(ilo,j,k) += vol(ilo-1,j,k);
@@ -1025,7 +1025,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
            const int ihi = dom_hi.x;
            AMREX_HOST_DEVICE_FOR_3D(sbx_yz, i, j, k,
            {
-             if(bc_ihi_type(dom_hi.x+1,j,k,0) == pinf or
+             if(bc_ihi_type(dom_hi.x+1,j,k,0) == pinf ||
                 bc_ihi_type(dom_hi.x+1,j,k,0) == minf)
              {
                vol(ihi,j,k) += vol(ihi+1,j,k);
@@ -1043,7 +1043,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
            const int jlo = dom_lo.y;
            AMREX_HOST_DEVICE_FOR_3D(sbx_xz, i, j, k,
            {
-             if(bc_jlo_type(i,dom_lo.y-1,k,0) == pinf or
+             if(bc_jlo_type(i,dom_lo.y-1,k,0) == pinf ||
                 bc_jlo_type(i,dom_lo.y-1,k,0) == minf)
              {
                vol(i,jlo,k) += vol(i,jlo-1,k);
@@ -1057,7 +1057,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
            const int jhi = dom_hi.y;
            AMREX_HOST_DEVICE_FOR_3D(sbx_xz, i, j, k,
            {
-             if(bc_jhi_type(i,dom_hi.y+1,k,0) == pinf or
+             if(bc_jhi_type(i,dom_hi.y+1,k,0) == pinf ||
                 bc_jhi_type(i,dom_hi.y+1,k,0) == minf)
              {
                vol(i,jhi,k) += vol(i,jhi+1,k);
@@ -1075,7 +1075,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
            const int klo = dom_lo.z;
            AMREX_HOST_DEVICE_FOR_3D(sbx_xy, i, j, k,
            {
-             if(bc_klo_type(i,j,dom_lo.z-1,0) == pinf or
+             if(bc_klo_type(i,j,dom_lo.z-1,0) == pinf ||
                 bc_klo_type(i,j,dom_lo.z-1,0) == minf)
              {
                vol(i,j,klo) += vol(i,j,klo-1);
@@ -1089,7 +1089,7 @@ PICDeposition(const amrex::Vector< std::unique_ptr<MultiFab> >& mf_to_be_filled,
            const int khi = dom_hi.z;
            AMREX_HOST_DEVICE_FOR_3D(sbx_xy, i, j, k,
            {
-             if(bc_khi_type(i,j,dom_hi.z+1,0) == pinf or
+             if(bc_khi_type(i,j,dom_hi.z+1,0) == pinf ||
                 bc_khi_type(i,j,dom_hi.z+1,0) == minf)
              {
                vol(i,j,khi) += vol(i,j,khi+1);

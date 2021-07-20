@@ -123,7 +123,7 @@ get_stoichiometric_data(const std::string& s,
     std::string single_compound = stoichiometry[n];
 
     std::size_t pos(0);
-    while (std::isdigit(single_compound.at(pos)) or single_compound.at(pos) == '.')
+    while (std::isdigit(single_compound.at(pos)) || single_compound.at(pos) == '.')
       pos++;
 
     if(pos == 0)
@@ -267,7 +267,7 @@ namespace REACTIONS
 
       // Disable the species solver if the species are defined as "None" (case
       // insensitive) or 0
-      if (amrex::toLower(reactions[0]).compare("none") == 0 or
+      if (amrex::toLower(reactions[0]).compare("none") == 0 ||
           (reactions[0]).compare("0") == 0) {
         solve = false;
         reactions.clear();

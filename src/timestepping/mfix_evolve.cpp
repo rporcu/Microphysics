@@ -15,17 +15,17 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     Real drag_timing(0.);
     Real sum_vol;
 
-    if ((DEM::solve or PIC::solve) and FLUID::solve)
+    if ((DEM::solve || PIC::solve) && fluid.solve)
     {
       Real start_coupling = ParallelDescriptor::second();
       mfix_calc_volume_fraction(sum_vol);
+      //const IntVect min_epg_cell = mfix_print_min_epg();
 
       if (amrex::Math::abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig)
         {
           amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
           amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
         }
-      //mfix_print_min_epg();
       coupling_timing = ParallelDescriptor::second() - start_coupling;
     }
 
@@ -33,7 +33,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     BL_PROFILE_VAR("FLUID SOLVE",fluidSolve);
     for (int lev = 0; lev <= finest_level; lev++)
     {
-       if (FLUID::solve)
+       if (fluid.solve)
        {
           EvolveFluid(nstep, dt, prev_dt, time, stop_time, drag_timing);
           prev_dt = dt;
@@ -47,14 +47,14 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     // This returns the drag force on the particle
     Real new_time = time+dt;
-    if ( (DEM::solve or PIC::solve) and FLUID::solve){
+    if ( (DEM::solve || PIC::solve) && fluid.solve){
       Real start_coupling = ParallelDescriptor::second();
 
       mfix_calc_txfr_particle(new_time, get_vel_g(), get_gp(), get_T_g());
 
       if (REACTIONS::solve)
-        mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_X_gk(),
-                            get_D_gk(), get_cp_gk(), get_h_gk(), new_time);
+        mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
+                            get_T_g(), get_X_gk(), new_time);
 
       coupling_timing += ParallelDescriptor::second() - start_coupling + drag_timing;
 
@@ -72,6 +72,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     BL_PROFILE_VAR("PARTICLES SOLVE", particlesSolve);
 
     int nsubsteps;
+    Real load_eff = 1.0;
 
     if (DEM::solve)
     {
@@ -90,7 +91,9 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                   levelset_refinement,
                                   particle_cost[ilev],
                                   knapsack_weight_type, nsubsteps,
-                                  advect_enthalpy,enthalpy_source);
+                                  advect_enthalpy, enthalpy_source,
+                                  update_mass, update_momentum,
+                                  update_enthalpy);
         }
         else
         {
@@ -106,14 +109,19 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                     particle_ebfactory[lev].get(), ls_data, 1,
                                     particle_cost[lev],
                                     knapsack_weight_type, nsubsteps,
-                                    advect_enthalpy,enthalpy_source);
+                                    advect_enthalpy, enthalpy_source,
+                                    update_mass, update_momentum,
+                                    update_enthalpy);
             }
         }
+        load_eff = pc->particleImbalance();
     }
 
     if (PIC::solve) {
+        //const IntVect min_epg_cell = mfix_print_min_epg();
         EvolveParcels(dt, time, mfix::gravity, levelset_refinement,
-                      particle_cost, knapsack_weight_type, advect_enthalpy);
+                      particle_cost, knapsack_weight_type, advect_enthalpy,
+                      enthalpy_source);
     }
 
     BL_PROFILE_VAR_STOP(particlesSolve);
@@ -122,7 +130,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     ParallelDescriptor::ReduceRealMax(end_particles, ParallelDescriptor::IOProcessorNumber());
 
     if (ParallelDescriptor::IOProcessor()) {
-      if(FLUID::solve)
+      if(fluid.solve)
         std::cout << "   Time per fluid step      " << end_fluid << std::endl;
 
       if(DEM::solve)
@@ -132,8 +140,10 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
       if(PIC::solve)
         std::cout << "   Time per parcel step " << end_particles << std::endl;
 
-      if((DEM::solve or PIC::solve) and FLUID::solve)
+      if((DEM::solve || PIC::solve) && fluid.solve) {
         std::cout << "   Coupling time per step   " << coupling_timing << std::endl;
+        std::cout << "   Particle load efficiency " <<  load_eff << std::endl;
+      }
     }
 
     BL_PROFILE_REGION_STOP("mfix::Evolve");

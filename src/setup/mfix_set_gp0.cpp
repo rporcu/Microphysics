@@ -55,10 +55,10 @@ mfix::set_gp0 (const int lev,
   //     capture that in p0 and gp0.
   // ---------------------------------------------------------------->>>
 
-  if ( ( (bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],0) == bc_list.get_pinf()) and
+  if ( ( (bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],0) == bc_list.get_pinf()) &&
          (bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],0) == bc_list.get_pout()) )
-       or
-       ( (bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],0) == bc_list.get_pinf()) and
+       ||
+       ( (bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],0) == bc_list.get_pinf()) &&
          (bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],0) == bc_list.get_pout()) ) )
     {
 
@@ -73,10 +73,10 @@ mfix::set_gp0 (const int lev,
     }
 
 
-  else if( ( (bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],0) == bc_list.get_pinf()) and
+  else if( ( (bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],0) == bc_list.get_pinf()) &&
              (bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],0) == bc_list.get_pout()) )
-           or
-           ( (bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],0) == bc_list.get_pinf()) and
+           ||
+           ( (bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],0) == bc_list.get_pinf()) &&
              (bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],0) == bc_list.get_pout()) ) )
     {
 
@@ -90,10 +90,10 @@ mfix::set_gp0 (const int lev,
       delp_y = p_lo - p_hi;
     }
 
-  else if( ( (bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,0) == bc_list.get_pinf()) and
+  else if( ( (bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,0) == bc_list.get_pinf()) &&
              (bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,0) == bc_list.get_pout()) )
-           or
-           ( (bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,0) == bc_list.get_pinf()) and
+           ||
+           ( (bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,0) == bc_list.get_pinf()) &&
              (bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,0) == bc_list.get_pout()) ) )
     {
 
@@ -113,15 +113,15 @@ mfix::set_gp0 (const int lev,
   for(int icv(0); icv < IC::ic.size(); ++icv)
   {
 
-    if((delp_dir_loc >= 0) and (delp_dir_loc == BC::delp_dir)) {
+    if((delp_dir_loc >= 0) && (delp_dir_loc == BC::delp_dir)) {
 
-      if (not IC::ic[icv].fluid.pressure_defined) {
+      if (!IC::ic[icv].fluid.pressure_defined) {
         std::cout << "MUST DEFINE ic_p_g if using the DELP pressure condition" << std::endl;
         exit(0);
       }
 
     }
-    else if((delp_dir_loc >= 0) and (delp_dir_loc != BC::delp_dir)) {
+    else if((delp_dir_loc >= 0) && (delp_dir_loc != BC::delp_dir)) {
       if( IC::ic[icv].fluid.pressure_defined ) {
         std::cout << "MUST not define ic_p_g if setting p_inflowandp_outflow" << std::endl;
         exit(0);
@@ -132,12 +132,12 @@ mfix::set_gp0 (const int lev,
       const Real gravity_square_module =
         gravity[0]*gravity[0] + gravity[1]*gravity[1] + gravity[2]*gravity[2];
 
-      if( not IC::ic[icv].fluid.pressure_defined or gravity_square_module > tolerance)
+      if( !IC::ic[icv].fluid.pressure_defined || gravity_square_module > tolerance)
         {
 
           // HACK: This should probably take into consideration
           // variable fluid density.
-          const Real ro_g0 = FLUID::ro_g0;
+          const Real ro_g0 = fluid.ro_g0;
 
           for (int dim=0; dim<3; dim++){
             if (gravity[dim]*gravity[dim] > tolerance ) {

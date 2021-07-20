@@ -38,7 +38,11 @@ else ()
 endif()
 
 find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
+find_program(SCCACHE_FOUND sccache)
+if(SCCACHE_FOUND)
+  set( CMAKE_CXX_COMPILER_LAUNCHER sccache )
+  set( CMAKE_CUDA_COMPILER_LAUNCHER sccache )
+elseif(CCACHE_FOUND)
   set( CMAKE_CXX_COMPILER_LAUNCHER ccache )
   set( CMAKE_CUDA_COMPILER_LAUNCHER ccache )
 endif()
@@ -96,11 +100,19 @@ endif ()
 option( MFIX_CSG "Build with CSG support" OFF)
 
 if (MFIX_CUDA)
-    enable_language(CUDA)
+  # CMake 3.18+: CMAKE_CUDA_ARCHITECTURES
+  # https://cmake.org/cmake/help/latest/policy/CMP0104.html
+  if(POLICY CMP0104)
+    cmake_policy(SET CMP0104 OLD)
+  endif()
+  enable_language(CUDA)
 endif ()
 
 # Setup AMReX
 include(MFIXSetupAMReX)
+
+# Setup AMReX-Hydro
+include(MFIXSetupAMReXHydro)
 
 get_git_info( )
 
@@ -140,17 +152,6 @@ add_subdirectory( tests )
 # Tags
 include(MFIX_Tags)
 add_tags_targets()
-
-# Add a target to generate API documentation with Doxygen
-find_package(Doxygen)
-if (DOXYGEN_FOUND)
-   set(DOC_DIR ${CMAKE_SOURCE_DIR}/doc)
-   configure_file(${DOC_DIR}/Doxyfile.in ${DOC_DIR}/Doxyfile)
-   add_custom_target(doc ${DOXYGEN_EXECUTABLE} ${DOC_DIR}/Doxyfile
-      WORKING_DIRECTORY ${DOC_DIR}
-      COMMENT "Generating API documentation with Doxygen" VERBATIM
-      )
-endif (DOXYGEN_FOUND)
 
 # Copy compile_commands.json from the build directory to the project root directory
 if ( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )

@@ -102,11 +102,21 @@ int main ( int argc, char* argv[] )
       ifs >> SoA_nr;
       ifs >> SoA_ni;
 
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE((AoS_nr + SoA_nr) == 19,
+#if 0
+    std::cout << "\n\nDEBUG summary: **"
+              << "\n   np " << np
+              << "\n   AoS_nr    " << AoS_nr
+              << "\n   AoS_ni    " << AoS_ni
+              << "\n   SoA_nr    " << SoA_nr
+              << "\n   SoA_ni    " << SoA_ni
+              << "\n\n";
+
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE((AoS_nr + SoA_nr) == 25,
           "Number of reals does not equal 20. Need to update fjoin par.");
 
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE((AoS_ni + SoA_ni) ==  2,
           "Number of ints does not equal 2. Need to update fjoin par.");
+#endif
 
       if(lc2 == 0){
         npo = np;
@@ -175,7 +185,7 @@ int main ( int argc, char* argv[] )
         {
           outfile << setw(24) << cleaned_value(calc_granular_temperature(particles));
         }
-        else 
+        else
         {
           if( id == -1 )
           {
@@ -193,7 +203,7 @@ int main ( int argc, char* argv[] )
           }
         }
 
-        if(last) 
+        if(last)
           outfile << std::endl;
       }
 
@@ -237,7 +247,7 @@ void get_input_arguments ( const int argc, char** argv,
 
       } else if ( !strcmp(argv[i],"--id") ) {
           a_id = atoi(argv[++i]);
-          if ( ( a_id < -1 ) or ( a_id == 0 ) ) {
+          if ( ( a_id < -1 ) || ( a_id == 0 ) ) {
             std::cout << "\nParticle ID must be positive! " << a_id << std::endl;
             help ();
             exit (EXIT_FAILURE);
@@ -320,9 +330,14 @@ void help ()
         << "\n                     12 - omega-x"
         << "\n                     13 - omega-y"
         << "\n                     14 - omega-z"
-        << "\n                     15 - drag-x"
-        << "\n                     16 - drag-y"
-        << "\n                     17 - drag-z"
+        << "\n                     15 - statwt"
+        << "\n                     16 - dragcoeff"
+        << "\n                     17 - drag-x"
+        << "\n                     18 - drag-y"
+        << "\n                     19 - drag-z"
+        << "\n                     20 - cp_s"
+        << "\n                     21 - temperature"
+        << "\n                     22 - convection"
         << "\n "
         << "\n                    100 - kinetic energy"
         << "\n\n";

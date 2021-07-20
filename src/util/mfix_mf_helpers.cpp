@@ -15,9 +15,9 @@ MFHelpers::createFrom (MultiFab& mold)
 
     std::unique_ptr< MultiFab > mf;
 
-    mf.reset(new MultiFab(mold.boxArray(), mold.DistributionMap(),
+    mf = std::make_unique<MultiFab>(mold.boxArray(), mold.DistributionMap(),
                           mold.nComp(), mold.nGrow(), MFInfo(),
-                          mold.Factory() ) );
+                          mold.Factory() );
 
     MultiFab::Copy(*mf, mold, 0, 0, mold.nComp(), mold.nGrow());
 
@@ -35,9 +35,9 @@ MFHelpers::createFrom ( MultiFab& mold, Real val )
 
     std::unique_ptr< MultiFab > mf;
 
-    mf.reset(new MultiFab(mold.boxArray(), mold.DistributionMap(),
+    mf = std::make_unique<MultiFab>(mold.boxArray(), mold.DistributionMap(),
                           mold.nComp(), mold.nGrow(), MFInfo(),
-                          mold.Factory() ) );
+                          mold.Factory() );
     mf -> setVal(val);
 
     return mf;
@@ -53,9 +53,9 @@ MFHelpers::createFrom (MultiFab& mold, Real val, int nGrow )
 
     std::unique_ptr< MultiFab > mf;
 
-    mf.reset(new MultiFab(mold.boxArray(), mold.DistributionMap(),
+    mf = std::make_unique<MultiFab>(mold.boxArray(), mold.DistributionMap(),
                           mold.nComp(), nGrow, MFInfo(),
-                          mold.Factory() ) );
+                          mold.Factory() );
     mf -> setVal(val);
 
     return mf;
@@ -74,41 +74,10 @@ MFHelpers::createFrom (MultiFab& mold, Real val, int nGrow, int nComp)
 
     std::unique_ptr< MultiFab > mf;
 
-    mf.reset(new MultiFab(mold.boxArray(), mold.DistributionMap(),
-                          nComp, nGrow, MFInfo(), mold.Factory()));
+    mf = std::make_unique<MultiFab>(mold.boxArray(), mold.DistributionMap(),
+                          nComp, nGrow, MFInfo(), mold.Factory());
 
     mf->setVal(val);
 
     return mf;
-}
-
-
-//
-// Copies src to dst including all components and ghost cells
-//
-void
-MFHelpers::copy (MultiFab& dst, MultiFab& src)
-{
-    AMREX_ASSERT(dst.ok());
-    AMREX_ASSERT(src.ok());
-    AMREX_ASSERT(dst.nComp()==src.nComp());
-    AMREX_ASSERT(dst.nGrow()==src.nGrow());
-
-    MultiFab::Copy(dst, src, 0, 0,  dst.nComp(), dst.nGrow());
-}
-
-//
-// Copies src to dst including all components and nGrow ghost cells
-//
-void
-MFHelpers::copy (MultiFab& dst, MultiFab& src, int nGrow)
-{
-    AMREX_ASSERT(dst.ok());
-    AMREX_ASSERT(src.ok());
-    AMREX_ASSERT(dst.nComp()==src.nComp());
-    AMREX_ASSERT(nGrow >= 0);
-    AMREX_ASSERT(dst.nGrow()>=nGrow);
-    AMREX_ASSERT(src.nGrow()>=nGrow);
-
-    MultiFab::Copy(dst, src, 0, 0,  dst.nComp(), nGrow);
 }

@@ -17,7 +17,8 @@ namespace IC
 
   amrex::Vector<IC_t> ic;
 
-  void Initialize ()
+  void Initialize (const FluidPhase& fluid,
+                   const SolidsPhase& solids)
   {
 
     amrex::ParmParse pp("ic");
@@ -32,7 +33,7 @@ namespace IC
     ppMFIX.query("advect_enthalpy", advect_enthalpy);
 
     // Loop over ICs
-    for(size_t icv=0; icv < regions.size(); icv++){
+    for(size_t icv=0; icv < regions.size(); icv++) {
 
       amrex::Real volfrac_total(0.0);
 
@@ -44,9 +45,9 @@ namespace IC
 
       // Get fluid data.
 
-      if(FLUID::solve) {
+      if(fluid.solve) {
 
-        std::string field = "ic."+regions[icv]+"."+FLUID::name;
+        std::string field = "ic."+regions[icv]+"."+fluid.name;
         amrex::ParmParse ppFluid(field.c_str());
 
         ppFluid.get("volfrac", new_ic.fluid.volfrac);
@@ -60,9 +61,9 @@ namespace IC
 
         new_ic.fluid.pressure_defined = ppFluid.query("pressure", new_ic.fluid.pressure);
 
-        if (FLUID::solve_species) {
+        if (fluid.solve_species) {
 
-          const int nspecies_g = FLUID::nspecies;
+          const int nspecies_g = fluid.nspecies;
           new_ic.fluid.species.resize(nspecies_g);
 
           std::string species_field = field+".species";
@@ -73,14 +74,14 @@ namespace IC
 
           for (int n(0); n < nspecies_g; n++) {
             // Get the name of the fluid species we want to get the IC
-            std::string fluid_specie = FLUID::species[n];
+            std::string fluid_specie = fluid.species[n];
             // Get the IC mass fraction for the current species
             ppSpecies.query(fluid_specie.c_str(), new_ic.fluid.species[n].mass_fraction);
             total_mass_fraction += new_ic.fluid.species[n].mass_fraction;
           }
 
           // Sanity check that the input species mass fractions sum up to 1
-          if (not(Math::abs(total_mass_fraction-1) < 1.e-15)) {
+          if (!(Math::abs(total_mass_fraction-1) < 1.e-15)) {
             std::string message = "Error: species ICs mass fractions in region "
               + regions[icv] + " sum up to " + std::to_string(total_mass_fraction) + "\n";
 
@@ -89,11 +90,11 @@ namespace IC
         }
       }
 
-      if (DEM::solve or PIC::solve)
-      {
+      if (DEM::solve || PIC::solve) {
+
         // If we initialize particles with particle generator
-        if (FLUID::solve and new_ic.fluid.volfrac < 1.0)
-        {
+        if (fluid.solve && new_ic.fluid.volfrac < 1.0) {
+
           // Get the list of solids used in defining the IC region
           std::vector<std::string> solids_types;
           {
@@ -105,7 +106,7 @@ namespace IC
 
           for(size_t lcs(0); lcs < solids_types.size(); ++ lcs) {
 
-            SOLIDS::SOLIDS_t new_solid;
+            SolidsPhase::SOLIDS_t new_solid;
 
             std::string field = "ic."+regions[icv]+"."+solids_types[lcs];
             amrex::ParmParse ppSolid(field.c_str());
@@ -156,25 +157,25 @@ namespace IC
               ppSolidRho.get("max" , new_solid.density.max );
             }
 
-            if (SOLIDS::solve_species)
+            if (solids.solve_species)
             {
               std::string species_field = field+".species";
               amrex::ParmParse ppSpecies(species_field.c_str());
 
               // TODO: check this when nb of solids > 1
-              new_solid.species.resize(SOLIDS::nspecies);
+              new_solid.species.resize(solids.nspecies);
 
               amrex::Real total_mass_fraction(0);
 
-              for (int n(0); n < SOLIDS::nspecies; n++) {
-                std::string current_species = SOLIDS::species[n];
+              for (int n(0); n < solids.nspecies; n++) {
+                std::string current_species = solids.species[n];
                 ppSpecies.get(current_species.c_str(), new_solid.species[n].mass_fraction);
 
                 total_mass_fraction += new_solid.species[n].mass_fraction;
               }
 
               // Sanity check that the input species mass fractions sum up to 1
-              if (not(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
+              if (!(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
                 std::string message = "Error: SOLID type " + solids_types[lcs]
                   + " species ICs mass fractions in region " + regions[icv]
                   + " sum up to " + std::to_string(total_mass_fraction) + "\n";
@@ -189,6 +190,7 @@ namespace IC
         }
         // If we initialize particles through particle_input.dat
         else {
+
           // Get the list of solids used in defining the IC region
           std::vector<std::string> solids_types(0);
           {
@@ -199,7 +201,7 @@ namespace IC
 
           for(size_t lcs(0); lcs < solids_types.size(); ++ lcs) {
 
-            SOLIDS::SOLIDS_t new_solid;
+            SolidsPhase::SOLIDS_t new_solid;
 
             std::string field = "ic."+regions[icv]+"."+solids_types[lcs];
             amrex::ParmParse ppSolid(field.c_str());
@@ -210,16 +212,16 @@ namespace IC
               ppSolid.get("temperature", new_solid.temperature); 
             }
 
-            if (SOLIDS::solve_species) {
+            if (solids.solve_species) {
 
               std::string species_field = field+".species";
               amrex::ParmParse ppSpecies(species_field.c_str());
 
               // TODO: check this when nb of solids > 1
-              new_solid.species.resize(SOLIDS::nspecies);
+              new_solid.species.resize(solids.nspecies);
 
-              for (int n(0); n < SOLIDS::nspecies; n++) {
-                std::string current_species = SOLIDS::species[n];
+              for (int n(0); n < solids.nspecies; n++) {
+                std::string current_species = solids.species[n];
                 ppSpecies.query(current_species.c_str(), new_solid.species[n].mass_fraction);
               }
             }
@@ -247,7 +249,7 @@ namespace IC
                      << ic[icv].region->hi(1) << "  "
                      << ic[icv].region->hi(2) << std::endl;
 
-      if(FLUID::solve){
+      if(fluid.solve){
 
         amrex::Print() << std::endl;
         amrex::Print() << "   Fluid:     volfrac: " << ic[icv].fluid.volfrac     << std::endl;
@@ -261,7 +263,7 @@ namespace IC
       }
 
 
-      if((DEM::solve or PIC::solve) and ic[icv].solids.size()>0){
+      if((DEM::solve || PIC::solve) && ic[icv].solids.size()>0){
 
         amrex::Print() << "       Solids packing: " << ic[icv].packing << std::endl;
 

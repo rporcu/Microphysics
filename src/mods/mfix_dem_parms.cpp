@@ -78,7 +78,7 @@ namespace DEM
 
       solve = 1;
       for(int lc=0; lc < names.size(); ++lc){
-        if (amrex::toLower(names[0]).compare("none") == 0 or
+        if (amrex::toLower(names[0]).compare("none") == 0 ||
           (names[0]).compare("0") == 0) solve = 0;
       }
 

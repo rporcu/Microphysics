@@ -6,7 +6,7 @@
 
 void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
 {
-  BL_PROFILE("mfix::mfix_deposition_bcs_scalar()");
+  BL_PROFILE("mfix::mfix_deposition_bcs()");
 
   Box domain(Geom(lev).Domain());
 
@@ -48,9 +48,9 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
 
     Array4<Real> const& vol = filled_mf.array(mfi);
 
-    if(sbx_lo[0] < dom_lo.x or sbx_hi[0] > dom_hi.x or
-       sbx_lo[1] < dom_lo.y or sbx_hi[1] > dom_hi.y or
-       sbx_lo[2] < dom_lo.z or sbx_hi[2] > dom_hi.z) {
+    if(sbx_lo[0] < dom_lo.x || sbx_hi[0] > dom_hi.x ||
+       sbx_lo[1] < dom_lo.y || sbx_hi[1] > dom_hi.y ||
+       sbx_lo[2] < dom_lo.z || sbx_hi[2] > dom_hi.z) {
 
       const int sbx_yz_npoints = sbx_yz.numPts();
       const auto sbx_yz_lo = amrex::lbound(sbx_yz);
@@ -84,7 +84,7 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
             int i = dom_lo.x;
 
             const int bct_ilo = bc_ilo_type(i-1,j,k,0);
-            if(bct_ilo == pinf or bct_ilo == minf)
+            if(bct_ilo == pinf || bct_ilo == minf)
             {
               for(int n(0); n < ncomp; n++) {
                 vol(i,  j,k,n) += vol(i-1,j,k,n);
@@ -96,7 +96,7 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
             int i = dom_hi.x;
 
             const int bct_ihi = bc_ihi_type(i+1,j,k,0);
-            if(bct_ihi == pinf or bct_ihi == minf)
+            if(bct_ihi == pinf || bct_ihi == minf)
             {
               for(int n(0); n < ncomp; n++) {
                 vol(i,  j,k,n) += vol(i+1,j,k,n);
@@ -118,7 +118,7 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
             int j = dom_lo.y;
 
             const int bct_jlo = bc_jlo_type(i,j-1,k,0);
-            if(bct_jlo == pinf or bct_jlo == minf)
+            if(bct_jlo == pinf || bct_jlo == minf)
             {
               for(int n(0); n < ncomp; n++) {
                 vol(i,j  ,k,n) += vol(i,j-1,k,n);
@@ -130,7 +130,7 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
             int j = dom_hi.y;
 
             const int bct_jhi = bc_jhi_type(i,j+1,k,0);
-            if(bct_jhi == pinf or bct_jhi == minf)
+            if(bct_jhi == pinf || bct_jhi == minf)
             {
               for(int n(0); n < ncomp; n++) {
                 vol(i,j  ,k,n) += vol(i,j+1,k,n);
@@ -152,7 +152,7 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
             int k = dom_lo.z;
 
             const int bct_klo = bc_klo_type(i,j,k-1,0);
-            if(bct_klo == pinf or bct_klo == minf)
+            if(bct_klo == pinf || bct_klo == minf)
             {
               for(int n(0); n < ncomp; n++) {
                 vol(i,j,k  ,n) += vol(i,j,k-1,n);
@@ -164,7 +164,7 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
             int k = dom_hi.z;
 
             const int bct_khi = bc_khi_type(i,j,k+1,0);
-            if(bct_khi == pinf or bct_khi == minf)
+            if(bct_khi == pinf || bct_khi == minf)
             {
               for(int n(0); n < ncomp; n++) {
                 vol(i,j,k  ,n) += vol(i,j,k+1,n);

@@ -12,14 +12,16 @@ workflow:
 variables:
   CC: gcc
   CXX: g++
-  ENABLE_MPI: 1
-  ENABLE_OMP: 0
+  ENABLE_MPI: "1"
+  ENABLE_OMP: "0"
   FC: gfortran
-  GIT_DEPTH: 100
+  GIT_DEPTH: "100"
   GIT_STRATEGY: fetch
-  GIT_SUBMODULE_STRATEGY: none
+  GIT_SUBMODULE_STRATEGY: recursive
+  SCCACHE_BUCKET: exa-sccache
+  SCCACHE_REGION: us-west-2
 
-build-test-env:
+.build-test-env: &build_test_env_template
   stage: build-img
   image:
     name: gcr.io/kaniko-project/executor:debug
@@ -27,43 +29,111 @@ build-test-env:
   script:
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR --dockerfile ./Dockerfile --destination $CI_REGISTRY_IMAGE:latest
+    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR --dockerfile $DOCKERFILE --destination $CI_REGISTRY_IMAGE/$IMGTAG:$CI_COMMIT_TAG
   tags:
     - docker
 
+build-nvcc-env:
+  variables:
+    DOCKERFILE: .gitlab/ci_img_nvcc/Dockerfile
+    IMGTAG: nvcc
+  <<: *build_test_env_template
 
 ###### Test jobs #####
 
 .test: &test_template
   stage: test
-  image: $CI_REGISTRY_IMAGE:latest
-  needs: ['build-test-env']
   artifacts:
     name: $CI_JOB_NAME
     expire_in: 1 week
     when: on_failure
     paths:
       - build/Testing/
-  tags:
-    - docker
+  only:
+    - schedules
 
-test:csg:
-  <<: *test_template
+.build_gpu: &build_gpu
+  stage: test
+  artifacts:
+    name: $CI_JOB_NAME
+    expire_in: 1 week
+    when: on_failure
+    paths:
+      - build/Testing/
+  only:
+    - develop
+
+build:dpcpp:
+  variables:
+    CC: clang
+    CXX: dpcpp
   script:
+    - source /opt/intel/oneapi/setvars.sh
     - git submodule update --init --force
     - cmake -S .
             -B build
+            -DCMAKE_BUILD_TYPE=None
+            -DMFIX_GPU_BACKEND=SYCL
             -G Ninja
+    - cmake --build build
+  <<: *build_gpu
+  tags:
+    - ubuntu-shell
+
+build:hip:
+  variables:
+    CXX: hipcc
+  script:
+    - source /etc/profile.d/rocm.sh
+    - git submodule update --init --force
+    - cmake -S .
+            -B build
+            -DCMAKE_BUILD_TYPE=None
+            -DMFIX_GPU_BACKEND=HIP
+            -DAMReX_AMD_ARCH=gfx908
+            -G Ninja
+    - cmake --build build
+  <<: *build_gpu
+  tags:
+    - ubuntu-shell
+
+build:nvcc:
+  image: $CI_REGISTRY_IMAGE/nvcc
+  needs: ['build-nvcc-env']
+  script:
+    - sccache -s
+    - git submodule update --init --force
+    - cmake -S .
+            -B build
+            -DAMReX_CUDA_ARCH=Volta
+            -DCMAKE_BUILD_TYPE=None
+            -DCMAKE_CUDA_ARCHITECTURES=70
+            -DMFIX_GPU_BACKEND=CUDA
+    - cmake --build build
+  <<: *build_gpu
+  tags:
+    - docker
+
+build:csg:
+  image: $CI_REGISTRY_IMAGE/nvcc
+  needs: ['build-nvcc-env']
+  script:
+    - sccache -s
+    - cmake -S .
+            -B build
             -DCMAKE_BUILD_TYPE=Debug
-            -DMFIX_CSG=yes
+            -DMFIX_CSG=ON
     - cmake --build build --target functional_tests
     - ./build/src/eb/tests/functional_tests
-  allow_failure: true
+  <<: *build_gpu
+  tags:
+    - docker
 
 .ctest: &ctest_template
-  image: $CI_REGISTRY_IMAGE:latest
+  image: $CI_REGISTRY_IMAGE/nvcc
   script:
-    - git submodule update --init --force subprojects/amrex
+    - sccache -s
+    - git submodule update --init --force
     - cmake -S .
             -B build
             -DMFIX_MPI=$ENABLE_MPI
@@ -71,50 +141,29 @@ test:csg:
             -G Ninja
     - cmake --build build --target build_tests
     - cd build
-    - $CTEST_CMD
-  <<: *test_template
-
-.build:gpu: &build_gpu
-  stage: test
-  needs: []
-  script:
-    - module load anaconda/3.8 cmake/3.19.1 ccache/3.7.9 gnu/8.4.0 openmpi/4.0.3_gnu8.4 $CUDA_MODULE
-    - git submodule update --init --force
-    - cmake -S .
-            -B build
-            -DAMReX_CUDA_ARCH=Volta
-            -DCMAKE_CUDA_ARCHITECTURES=70
-            -DMFIX_CSG=yes
-            -DMFIX_GPU_BACKEND=CUDA
-            -DMFIX_MPI=$ENABLE_MPI
-            -DMFIX_OMP=$ENABLE_OMP
-    - srun -p gpu cmake --build build --target build_tests -j
+    - srun ctest -R $CTEST_LABEL
   tags:
-    - joule
-
-build:cuda-11.1:
-  variables:
-    CUDA_MODULE: cuda/11.1
-  <<: *build_gpu
+    - docker
+  <<: *test_template
 
 test:single-serial:
   variables:
-    CTEST_CMD: srun ctest -R SGS
+    CTEST_LABEL: SGS
   <<: *ctest_template
 
 test:multiple-serial:
   variables:
-    CTEST_CMD: srun ctest -R MGS
+    CTEST_LABEL: MGS
   <<: *ctest_template
 
 test:tiled-serial:
   variables:
-    CTEST_CMD: srun ctest -R TGS
+    CTEST_LABEL: TGS
   <<: *ctest_template
 
 test:multiple-parallel:
   variables:
-    CTEST_CMD: srun ctest -R MGP
+    CTEST_LABEL: MGP
     OMPI_MCA_rmaps_base_oversubscribe: 1
   <<: *ctest_template
 
@@ -122,39 +171,35 @@ test:tiled-parallel-openmp:
   variables:
     ENABLE_MPI: 0
     ENABLE_OMP: 1
-    CTEST_CMD: srun ctest -R TGP
+    CTEST_LABEL: TGP
   <<: *ctest_template
 
 
-linter:shellcheck:
+.lint: &lint_template
   stage: test
-  image: $CI_REGISTRY_IMAGE:latest
+  needs: ['build-nvcc-env']
+  image: $CI_REGISTRY_IMAGE/nvcc
+  tags:
+    - docker
+  allow_failure: true
+
+lint:shellcheck:
+  <<: *lint_template
   script:
     - find . -name "*.sh" -not -path "./subprojects/*" | xargs shellcheck -e SC2086,SC2125,SC2046,SC2129,SC2044
-  tags:
-    - docker
-  allow_failure: true
 
-linter:warnings:
-  stage: test
-  image: $CI_REGISTRY_IMAGE:latest
-  needs: ['build-test-env']
+lint:warnings:
+  <<: *lint_template
   script:
-    - cmake -S . -B build -DCMAKE_CXX_FLAGS="-Wall -Werror" -GNinja
+    - cmake -S .
+            -B build
+            -DCMAKE_BUILD_TYPE=Debug
+            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror"
+            -GNinja
     - cmake --build build -- -k0
-  tags:
-    - docker
-  allow_failure: true
 
-linter:spelling:
-  stage: test
-  image: $CI_REGISTRY_IMAGE:latest
-  needs: ['build-test-env']
+lint:spelling:
+  <<: *lint_template
   script:
     - rm -rf subprojects
     - codespell --ignore-words-list ba,blocs,inout,ith,od,wen --enable-colors --quiet-level 2
-  allow_failure: true
-  except:
-    - schedules
-  tags:
-    - docker

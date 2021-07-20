@@ -9,94 +9,257 @@
 
 #include <mfix_species_parms.H>
 
-namespace SOLIDS
+struct SolidParms {
+
+  amrex::Real* h_cp_s0;
+  amrex::Real* d_cp_s0;
+  amrex::Real* h_cp_sn0;
+  amrex::Real* d_cp_sn0;
+
+  //AMREX_GPU_HOST_DEVICE
+  //SolidParms () noexcept : cp_s0(nullptr), cp_sn0(nullptr) {}
+
+  AMREX_GPU_HOST_DEVICE
+  SolidParms (amrex::Real* h_cp_s,
+              amrex::Real* d_cp_s,
+              amrex::Real* h_cp_sn,
+              amrex::Real* d_cp_sn)
+    : h_cp_s0(h_cp_s)
+    , d_cp_s0(d_cp_s)
+    , h_cp_sn0(h_cp_sn)
+    , d_cp_sn0(d_cp_sn)
+  {}
+
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_cp_s (const int phase,
+                         const amrex::Real /*T_s*/) const
+  {
+    if (run_on == amrex::RunOn::Gpu)
+      return d_cp_s0[phase];
+    else if (run_on == amrex::RunOn::Cpu)
+      return h_cp_s0[phase];
+    else
+      amrex::Abort("Unrecongized RunOn option");
+
+    return 0;
+  }
+
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_partial_cp_s (const int /*phase*/,
+                                 const amrex::Real /*T_s*/) const
+  {
+    return 0;
+  }
+
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_h_s (const int phase,
+                        const amrex::Real T_s) const
+  {
+    return calc_cp_s<run_on>(phase,T_s) * T_s;
+  }
+
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_partial_h_s (const int phase,
+                                const amrex::Real T_s) const
+  {
+    return calc_partial_cp_s<run_on>(phase,T_s) * T_s + calc_cp_s<run_on>(phase,T_s);
+  }
+
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_cp_sn (const amrex::Real /*T_s*/,
+                          const int n) const
+  {
+    if (run_on == amrex::RunOn::Gpu)
+      return d_cp_sn0[n];
+    else if (run_on == amrex::RunOn::Cpu)
+      return h_cp_sn0[n];
+    else
+      amrex::Abort("Unrecongized RunOn option");
+
+    return 0;
+  }
+
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_partial_cp_sn (const amrex::Real /*T_s*/,
+                                  const int /*n*/) const
+  {
+    return 0;
+  }
+
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_h_sn (const amrex::Real T_s,
+                         const int n) const
+  {
+    return calc_cp_sn<run_on>(T_s,n) * T_s;
+  }
+
+#if defined(AMREX_USE_GPU)
+  template <amrex::RunOn run_on>
+#else
+  template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real calc_partial_h_sn (const amrex::Real T_s,
+                                 const int n) const
+  {
+    return calc_partial_cp_sn<run_on>(T_s,n) * T_s + calc_cp_sn<run_on>(T_s,n);
+  }
+};
+
+
+class SolidsPhase
 {
-  constexpr int NMAX = 10;
+  public:
+    // Constructor
+    SolidsPhase();
 
-  extern int NPHASE;
+    // Destructor
+    ~SolidsPhase();
 
-  // List of recognized fluid molecular weight models
-  struct MOLECULARWEIGHTMODEL { enum {Invalid=-1, Constant, Mixture}; };
+    static constexpr int NMAX = 10;
 
-  extern int MolecularWeightModel;
+    int NTYPES;
 
-  // List of recognized fluid specific heat models
-  struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA9Polynomials}; };
+    // List of recognized fluid specific heat models
+    struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA9Polynomials}; };
 
-  extern int SpecificHeatModel;
+    int SpecificHeatModel;
 
-  // List of recognized fluid thermal conductivity models
-  struct THERMALCONDUCTIVITYMODEL{ enum {Invalid=-1, Constant}; };
+    // List of recognized fluid thermal conductivity models
+    struct THERMALCONDUCTIVITYMODEL{ enum {Invalid=-1, Constant}; };
 
-  extern int ThermalConductivityModel;
+    int ThermalConductivityModel;
 
-  // Specified constant molecular weight of solids
-  extern amrex::Real MW_s0;
+    // Names of solids used in IC/BC setups
+    amrex::Vector<std::string> names;
 
-  // Names of solids used in IC/BC setups
-  extern amrex::Vector<std::string> names;
+    // Specified constant molecular weight of solids
+    amrex::Real MW_s0;
 
-  // Flag to solve species solids equations
-  extern int solve_species;
+    // Specified constant specific heat of solids
+    amrex::Gpu::HostVector<amrex::Real> cp_s0;
+    amrex::Gpu::DeviceVector<amrex::Real> d_cp_s0;
 
-  // Species unique identifying code
-  extern amrex::Gpu::HostVector<int> species_id;
+    // Specified constant enthalpy of formation of solids
+    amrex::Real H_f0;
 
-  // Total number of dem species
-  extern int nspecies;
+    // Specified constant gas reference temperature
+    amrex::Real T_ref;
 
-  // Particle species
-  extern amrex::Vector<std::string> species;
+    // Flag to solve species solids equations
+    int solve_species;
 
-  // Specified constant solid phase species molecular weight
-  extern amrex::Gpu::HostVector<amrex::Real> MW_sn0;
+    // Particle species
+    amrex::Vector<std::string> species;
 
-  // Specified constant specific heat
-  extern amrex::Gpu::HostVector<amrex::Real> cp_p0;
+    // Species unique identifying code
+    amrex::Gpu::HostVector<int> species_id;
+    amrex::Gpu::DeviceVector<int> d_species_id;
 
-  extern amrex::Real enthalpy_source;
+    // Total number of dem species
+    int nspecies;
 
-  struct INPUT_DIST_t {
-    std::string distribution;
-    amrex::Real mean; // Mean value of distriubtion (or constant value)
-    amrex::Real std;  // Standard deviation
-    amrex::Real min;  // Minimum value of distribution
-    amrex::Real max;  // Max value of distribution
+    // Specified constant solid phase species molecular weight
+    amrex::Gpu::HostVector<amrex::Real> MW_sn0;
+    amrex::Gpu::DeviceVector<amrex::Real> d_MW_sn0;
 
-    INPUT_DIST_t() :
-      mean(-1.0),
-      std(-1.0),
-      min(-1.0),
-      max(-1.0) { }
+    // Flag to set solids as a mixture of solids species
+    int is_a_mixture;
 
-  };
+    // Specified constant species enthalpy of formation
+    amrex::Gpu::HostVector<amrex::Real> H_fn0;
+    amrex::Gpu::DeviceVector<amrex::Real> d_H_fn0;
 
-  struct SOLIDS_t {
+    // Specified constant specific heat
+    amrex::Gpu::HostVector<amrex::Real> cp_sn0;
+    amrex::Gpu::DeviceVector<amrex::Real> d_cp_sn0;
 
-    std::string name;
-    amrex::Real volfrac;
-    amrex::Real statwt;
-    amrex::Real temperature;
-    amrex::Vector<amrex::Real> velocity;
+    // Solids parameters for GPU access
+    SolidParms* parameters;
 
-    amrex::Vector<SPECIES::SPECIES_t> species;
+    amrex::Real enthalpy_source;
 
-    INPUT_DIST_t diameter;
-    INPUT_DIST_t density;
+    int update_mass;
 
-    SOLIDS_t() :
-      volfrac(0.0),
-      statwt(0.0),
-      temperature(0.0),
-      velocity(0),
-      species(0),
-      diameter(),
-      density()
-    {}
-  };
+    int update_momentum;
 
-  void Initialize ();
+    int update_enthalpy;
 
-}
+    struct INPUT_DIST_t {
+      std::string distribution;
+      amrex::Real mean; // Mean value of distriubtion (or constant value)
+      amrex::Real std;  // Standard deviation
+      amrex::Real min;  // Minimum value of distribution
+      amrex::Real max;  // Max value of distribution
+
+      INPUT_DIST_t() :
+        mean(-1.0),
+        std(-1.0),
+        min(-1.0),
+        max(-1.0) { }
+
+    };
+
+    struct SOLIDS_t {
+
+      std::string name;
+      amrex::Real volfrac;
+      amrex::Real statwt;
+      amrex::Real temperature;
+      amrex::Vector<amrex::Real> velocity;
+
+      amrex::Vector<SPECIES::SPECIES_t> species;
+
+      INPUT_DIST_t diameter;
+      INPUT_DIST_t density;
+
+      SOLIDS_t() :
+        volfrac(0.0),
+        statwt(0.0),
+        temperature(0.0),
+        velocity(0),
+        species(0),
+        diameter(),
+        density()
+      {}
+    };
+
+    void Initialize ();
+};
 
 #endif

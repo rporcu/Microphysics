@@ -8,13 +8,13 @@
 *----------------------------------------------------------------------------------*/
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::IntVect Node0_EB(const int covered,
-                        const amrex::IntVect Node0, const int Node0_isNotConnected,
+                        const amrex::IntVect Node0, const int /*Node0_isNotConnected*/,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
                         const amrex::IntVect Node2, const int Node2_isNotConnected,
                         const amrex::IntVect Node3, const int Node3_isNotConnected,
                         const amrex::IntVect Node4, const int Node4_isNotConnected,
                         const amrex::IntVect Node5, const int Node5_isNotConnected,
-                        const amrex::IntVect Node6, const int Node6_isNotConnected,
+                        const amrex::IntVect Node6, const int /*Node6_isNotConnected*/,
                         const amrex::IntVect Node7, const int Node7_isNotConnected)
 {
 
@@ -46,13 +46,13 @@ amrex::IntVect Node0_EB(const int covered,
         } else if(Node5_isNotConnected) {
         //amrex::Print() << "Using EB in Node 3." << std::endl;
         return Node3;
-        } else if(Node1_isNotConnected and Node3_isNotConnected) {
+        } else if(Node1_isNotConnected && Node3_isNotConnected) {
         //amrex::Print() << "Using EB in Node 2." << std::endl;
         return Node2;
-        } else if(Node1_isNotConnected and Node4_isNotConnected) {
+        } else if(Node1_isNotConnected && Node4_isNotConnected) {
         //amrex::Print() << "Using EB in Node 5." << std::endl;
         return Node5;
-        } else if(Node3_isNotConnected and Node4_isNotConnected) {
+        } else if(Node3_isNotConnected && Node4_isNotConnected) {
         //amrex::Print() << "Using EB in Node 7." << std::endl;
         return Node7;
         } else {
@@ -60,13 +60,13 @@ amrex::IntVect Node0_EB(const int covered,
         }
 
     } else if(covered == 4){
-        if(Node1_isNotConnected and Node3_isNotConnected) {
+        if(Node1_isNotConnected && Node3_isNotConnected) {
         //amrex::Print() << "Using EB in Node 4." << std::endl;
         return Node4;
-        } else if(Node1_isNotConnected and Node4_isNotConnected) {
+        } else if(Node1_isNotConnected && Node4_isNotConnected) {
         //amrex::Print() << "Using EB in Node 3." << std::endl;
         return Node3;
-        } else if(Node3_isNotConnected and Node4_isNotConnected) {
+        } else if(Node3_isNotConnected && Node4_isNotConnected) {
         //amrex::Print() << "Using EB in Node 1." << std::endl;
         return Node1;
         } else {
@@ -85,13 +85,13 @@ amrex::IntVect Node0_EB(const int covered,
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::IntVect Node1_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
-                        const amrex::IntVect Node1, const int Node1_isNotConnected,
+                        const amrex::IntVect Node1, const int /*Node1_isNotConnected*/,
                         const amrex::IntVect Node2, const int Node2_isNotConnected,
                         const amrex::IntVect Node3, const int Node3_isNotConnected,
                         const amrex::IntVect Node4, const int Node4_isNotConnected,
                         const amrex::IntVect Node5, const int Node5_isNotConnected,
                         const amrex::IntVect Node6, const int Node6_isNotConnected,
-                        const amrex::IntVect Node7, const int Node7_isNotConnected)
+                        const amrex::IntVect Node7, const int /*Node7_isNotConnected*/)
 {
 
     if(covered == 1){
@@ -122,13 +122,13 @@ amrex::IntVect Node1_EB(const int covered,
         } else if(Node6_isNotConnected) {
         //amrex::Print() << "Using EB in Node 0." << std::endl;
         return Node0;
-        } else if(Node0_isNotConnected and Node2_isNotConnected) {
+        } else if(Node0_isNotConnected && Node2_isNotConnected) {
         //amrex::Print() << "Using EB in Node 3." << std::endl;
         return Node3;
-        } else if(Node0_isNotConnected and Node5_isNotConnected) {
+        } else if(Node0_isNotConnected && Node5_isNotConnected) {
         //amrex::Print() << "Using EB in Node 4." << std::endl;
         return Node4;
-        } else if(Node2_isNotConnected and Node5_isNotConnected) {
+        } else if(Node2_isNotConnected && Node5_isNotConnected) {
         //amrex::Print() << "Using EB in Node 6." << std::endl;
         return Node6;
         } else {
@@ -136,13 +136,13 @@ amrex::IntVect Node1_EB(const int covered,
         }
 
     } else if(covered == 4){
-        if(Node0_isNotConnected and Node2_isNotConnected) {
+        if(Node0_isNotConnected && Node2_isNotConnected) {
         //amrex::Print() << "Using EB in Node 5." << std::endl;
         return Node5;
-        } else if(Node0_isNotConnected and Node5_isNotConnected) {
+        } else if(Node0_isNotConnected && Node5_isNotConnected) {
         //amrex::Print() << "Using EB in Node 2." << std::endl;
         return Node2;
-        } else if(Node2_isNotConnected and Node5_isNotConnected) {
+        } else if(Node2_isNotConnected && Node5_isNotConnected) {
         //amrex::Print() << "Using EB in Node 0." << std::endl;
         return Node0;
         } else {
@@ -162,9 +162,9 @@ AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::IntVect Node2_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
-                        const amrex::IntVect Node2, const int Node2_isNotConnected,
+                        const amrex::IntVect Node2, const int /*Node2_isNotConnected*/,
                         const amrex::IntVect Node3, const int Node3_isNotConnected,
-                        const amrex::IntVect Node4, const int Node4_isNotConnected,
+                        const amrex::IntVect Node4, const int /*Node4_isNotConnected*/,
                         const amrex::IntVect Node5, const int Node5_isNotConnected,
                         const amrex::IntVect Node6, const int Node6_isNotConnected,
                         const amrex::IntVect Node7, const int Node7_isNotConnected)
@@ -198,13 +198,13 @@ amrex::IntVect Node2_EB(const int covered,
         } else if(Node7_isNotConnected) {
         //amrex::Print() << "Using EB in Node 1." << std::endl;
         return Node1;
-        } else if(Node1_isNotConnected and Node3_isNotConnected) {
+        } else if(Node1_isNotConnected && Node3_isNotConnected) {
         //amrex::Print() << "Using EB in Node 0." << std::endl;
         return Node0;
-        } else if(Node1_isNotConnected and Node6_isNotConnected) {
+        } else if(Node1_isNotConnected && Node6_isNotConnected) {
         //amrex::Print() << "Using EB in Node 5." << std::endl;
         return Node5;
-        } else if(Node3_isNotConnected and Node6_isNotConnected) {
+        } else if(Node3_isNotConnected && Node6_isNotConnected) {
         //amrex::Print() << "Using EB in Node 7." << std::endl;
         return Node7;
         } else {
@@ -212,13 +212,13 @@ amrex::IntVect Node2_EB(const int covered,
         }
 
     } else if(covered == 4){
-        if(Node1_isNotConnected and Node3_isNotConnected) {
+        if(Node1_isNotConnected && Node3_isNotConnected) {
         //amrex::Print() << "Using EB in Node 6." << std::endl;
         return Node6;
-        } else if(Node1_isNotConnected and Node6_isNotConnected) {
+        } else if(Node1_isNotConnected && Node6_isNotConnected) {
         //amrex::Print() << "Using EB in Node 3." << std::endl;
         return Node3;
-        } else if(Node3_isNotConnected and Node6_isNotConnected) {
+        } else if(Node3_isNotConnected && Node6_isNotConnected) {
         //amrex::Print() << "Using EB in Node 1." << std::endl;
         return Node1;
         } else {
@@ -240,9 +240,9 @@ amrex::IntVect Node3_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
                         const amrex::IntVect Node2, const int Node2_isNotConnected,
-                        const amrex::IntVect Node3, const int Node3_isNotConnected,
+                        const amrex::IntVect Node3, const int /*Node3_isNotConnected*/,
                         const amrex::IntVect Node4, const int Node4_isNotConnected,
-                        const amrex::IntVect Node5, const int Node5_isNotConnected,
+                        const amrex::IntVect Node5, const int /*Node5_isNotConnected*/,
                         const amrex::IntVect Node6, const int Node6_isNotConnected,
                         const amrex::IntVect Node7, const int Node7_isNotConnected)
 {
@@ -275,13 +275,13 @@ amrex::IntVect Node3_EB(const int covered,
         } else if(Node6_isNotConnected) {
         //amrex::Print() << "Using EB in Node 0." << std::endl;
         return Node0;
-        } else if(Node0_isNotConnected and Node2_isNotConnected) {
+        } else if(Node0_isNotConnected && Node2_isNotConnected) {
         //amrex::Print() << "Using EB in Node 1." << std::endl;
         return Node1;
-        } else if(Node0_isNotConnected and Node7_isNotConnected) {
+        } else if(Node0_isNotConnected && Node7_isNotConnected) {
         //amrex::Print() << "Using EB in Node 4." << std::endl;
         return Node4;
-        } else if(Node2_isNotConnected and Node7_isNotConnected) {
+        } else if(Node2_isNotConnected && Node7_isNotConnected) {
         //amrex::Print() << "Using EB in Node 6." << std::endl;
         return Node6;
         } else {
@@ -289,13 +289,13 @@ amrex::IntVect Node3_EB(const int covered,
         }
 
     } else if(covered == 4){
-        if(Node0_isNotConnected and Node2_isNotConnected) {
+        if(Node0_isNotConnected && Node2_isNotConnected) {
         //amrex::Print() << "Using EB in Node 7." << std::endl;
         return Node7;
-        } else if(Node0_isNotConnected and Node7_isNotConnected) {
+        } else if(Node0_isNotConnected && Node7_isNotConnected) {
         //amrex::Print() << "Using EB in Node 2." << std::endl;
         return Node2;
-        } else if(Node2_isNotConnected and Node7_isNotConnected) {
+        } else if(Node2_isNotConnected && Node7_isNotConnected) {
         //amrex::Print() << "Using EB in Node 0." << std::endl;
         return Node0;
         } else {
@@ -316,9 +316,9 @@ AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::IntVect Node4_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
-                        const amrex::IntVect Node2, const int Node2_isNotConnected,
+                        const amrex::IntVect Node2, const int /*Node2_isNotConnected*/,
                         const amrex::IntVect Node3, const int Node3_isNotConnected,
-                        const amrex::IntVect Node4, const int Node4_isNotConnected,
+                        const amrex::IntVect Node4, const int /*Node4_isNotConnected*/,
                         const amrex::IntVect Node5, const int Node5_isNotConnected,
                         const amrex::IntVect Node6, const int Node6_isNotConnected,
                         const amrex::IntVect Node7, const int Node7_isNotConnected)
@@ -352,13 +352,13 @@ amrex::IntVect Node4_EB(const int covered,
         } else if(Node1_isNotConnected) {
         //amrex::Print() << "Using EB in Node 7." << std::endl;
         return Node7;
-        } else if(Node0_isNotConnected and Node5_isNotConnected) {
+        } else if(Node0_isNotConnected && Node5_isNotConnected) {
         //amrex::Print() << "Using EB in Node 1." << std::endl;
         return Node1;
-        } else if(Node0_isNotConnected and Node7_isNotConnected) {
+        } else if(Node0_isNotConnected && Node7_isNotConnected) {
         //amrex::Print() << "Using EB in Node 3." << std::endl;
         return Node3;
-        } else if(Node5_isNotConnected and Node7_isNotConnected) {
+        } else if(Node5_isNotConnected && Node7_isNotConnected) {
         //amrex::Print() << "Using EB in Node 6." << std::endl;
         return Node6;
         } else {
@@ -366,13 +366,13 @@ amrex::IntVect Node4_EB(const int covered,
         }
 
     } else if(covered == 4){
-        if(Node0_isNotConnected and Node5_isNotConnected) {
+        if(Node0_isNotConnected && Node5_isNotConnected) {
         //amrex::Print() << "Using EB in Node 7." << std::endl;
         return Node7;
-        } else if(Node0_isNotConnected and Node7_isNotConnected) {
+        } else if(Node0_isNotConnected && Node7_isNotConnected) {
         //amrex::Print() << "Using EB in Node 5." << std::endl;
         return Node5;
-        } else if(Node5_isNotConnected and Node7_isNotConnected) {
+        } else if(Node5_isNotConnected && Node7_isNotConnected) {
         //amrex::Print() << "Using EB in Node 0." << std::endl;
         return Node0;
         } else {
@@ -394,9 +394,9 @@ amrex::IntVect Node5_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
                         const amrex::IntVect Node2, const int Node2_isNotConnected,
-                        const amrex::IntVect Node3, const int Node3_isNotConnected,
+                        const amrex::IntVect Node3, const int /*Node3_isNotConnected*/,
                         const amrex::IntVect Node4, const int Node4_isNotConnected,
-                        const amrex::IntVect Node5, const int Node5_isNotConnected,
+                        const amrex::IntVect Node5, const int /*Node5_isNotConnected*/,
                         const amrex::IntVect Node6, const int Node6_isNotConnected,
                         const amrex::IntVect Node7, const int Node7_isNotConnected)
 {
@@ -429,13 +429,13 @@ amrex::IntVect Node5_EB(const int covered,
         } else if(Node7_isNotConnected) {
         //amrex::Print() << "Using EB in Node 1." << std::endl;
         return Node1;
-        } else if(Node1_isNotConnected and Node4_isNotConnected) {
+        } else if(Node1_isNotConnected && Node4_isNotConnected) {
         //amrex::Print() << "Using EB in Node 0." << std::endl;
         return Node0;
-        } else if(Node1_isNotConnected and Node6_isNotConnected) {
+        } else if(Node1_isNotConnected && Node6_isNotConnected) {
         //amrex::Print() << "Using EB in Node 2." << std::endl;
         return Node2;
-        } else if(Node4_isNotConnected and Node6_isNotConnected) {
+        } else if(Node4_isNotConnected && Node6_isNotConnected) {
         //amrex::Print() << "Using EB in Node 7." << std::endl;
         return Node7;
         } else {
@@ -443,13 +443,13 @@ amrex::IntVect Node5_EB(const int covered,
         }
 
     } else if(covered == 4){
-        if(Node1_isNotConnected and Node4_isNotConnected) {
+        if(Node1_isNotConnected && Node4_isNotConnected) {
         //amrex::Print() << "Using EB in Node 6." << std::endl;
         return Node6;
-        } else if(Node1_isNotConnected and Node6_isNotConnected) {
+        } else if(Node1_isNotConnected && Node6_isNotConnected) {
         //amrex::Print() << "Using EB in Node 4." << std::endl;
         return Node4;
-        } else if(Node4_isNotConnected and Node6_isNotConnected) {
+        } else if(Node4_isNotConnected && Node6_isNotConnected) {
         //amrex::Print() << "Using EB in Node 1." << std::endl;
         return Node1;
         } else {
@@ -467,13 +467,13 @@ amrex::IntVect Node5_EB(const int covered,
 *----------------------------------------------------------------------------------*/
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::IntVect Node6_EB(const int covered,
-                        const amrex::IntVect Node0, const int Node0_isNotConnected,
+                        const amrex::IntVect Node0, const int /*Node0_isNotConnected*/,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
                         const amrex::IntVect Node2, const int Node2_isNotConnected,
                         const amrex::IntVect Node3, const int Node3_isNotConnected,
                         const amrex::IntVect Node4, const int Node4_isNotConnected,
                         const amrex::IntVect Node5, const int Node5_isNotConnected,
-                        const amrex::IntVect Node6, const int Node6_isNotConnected,
+                        const amrex::IntVect Node6, const int /*Node6_isNotConnected*/,
                         const amrex::IntVect Node7, const int Node7_isNotConnected)
 {
 
@@ -505,13 +505,13 @@ amrex::IntVect Node6_EB(const int covered,
         } else if(Node4_isNotConnected) {
         //amrex::Print() << "Using EB in Node 2." << std::endl;
         return Node2;
-        } else if(Node2_isNotConnected and Node5_isNotConnected) {
+        } else if(Node2_isNotConnected && Node5_isNotConnected) {
         //amrex::Print() << "Using EB in Node 1." << std::endl;
         return Node1;
-        } else if(Node2_isNotConnected and Node7_isNotConnected) {
+        } else if(Node2_isNotConnected && Node7_isNotConnected) {
         //amrex::Print() << "Using EB in Node 3." << std::endl;
         return Node3;
-        } else if(Node5_isNotConnected and Node7_isNotConnected) {
+        } else if(Node5_isNotConnected && Node7_isNotConnected) {
         //amrex::Print() << "Using EB in Node 4." << std::endl;
         return Node4;
         } else {
@@ -519,13 +519,13 @@ amrex::IntVect Node6_EB(const int covered,
         }
 
     } else if(covered == 4){
-        if(Node2_isNotConnected and Node5_isNotConnected) {
+        if(Node2_isNotConnected && Node5_isNotConnected) {
         //amrex::Print() << "Using EB in Node 7." << std::endl;
         return Node7;
-        } else if(Node2_isNotConnected and Node7_isNotConnected) {
+        } else if(Node2_isNotConnected && Node7_isNotConnected) {
         //amrex::Print() << "Using EB in Node 5." << std::endl;
         return Node5;
-        } else if(Node5_isNotConnected and Node7_isNotConnected) {
+        } else if(Node5_isNotConnected && Node7_isNotConnected) {
         //amrex::Print() << "Using EB in Node 2." << std::endl;
         return Node2;
         } else {
@@ -545,13 +545,13 @@ amrex::IntVect Node6_EB(const int covered,
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::IntVect Node7_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
-                        const amrex::IntVect Node1, const int Node1_isNotConnected,
+                        const amrex::IntVect Node1, const int /*Node1_isNotConnected*/,
                         const amrex::IntVect Node2, const int Node2_isNotConnected,
                         const amrex::IntVect Node3, const int Node3_isNotConnected,
                         const amrex::IntVect Node4, const int Node4_isNotConnected,
                         const amrex::IntVect Node5, const int Node5_isNotConnected,
                         const amrex::IntVect Node6, const int Node6_isNotConnected,
-                        const amrex::IntVect Node7, const int Node7_isNotConnected)
+                        const amrex::IntVect Node7, const int /*Node7_isNotConnected*/)
 {
 
     if(covered == 1) {
@@ -582,13 +582,13 @@ amrex::IntVect Node7_EB(const int covered,
         } else if(Node5_isNotConnected) {
         //amrex::Print() << "Using EB in Node 3." << std::endl;
         return Node3;
-        } else if(Node3_isNotConnected and Node4_isNotConnected) {
+        } else if(Node3_isNotConnected && Node4_isNotConnected) {
         //amrex::Print() << "Using EB in Node 0." << std::endl;
         return Node0;
-        } else if(Node3_isNotConnected and Node6_isNotConnected) {
+        } else if(Node3_isNotConnected && Node6_isNotConnected) {
         //amrex::Print() << "Using EB in Node 2." << std::endl;
         return Node2;
-        } else if(Node4_isNotConnected and Node6_isNotConnected) {
+        } else if(Node4_isNotConnected && Node6_isNotConnected) {
         //amrex::Print() << "Using EB in Node 5." << std::endl;
         return Node5;
         } else {
@@ -596,13 +596,13 @@ amrex::IntVect Node7_EB(const int covered,
         }
 
     } else if(covered == 4){
-        if(Node3_isNotConnected and Node4_isNotConnected) {
+        if(Node3_isNotConnected && Node4_isNotConnected) {
         //amrex::Print() << "Using EB in Node 6." << std::endl;
         return Node6;
-        } else if(Node3_isNotConnected and Node6_isNotConnected) {
+        } else if(Node3_isNotConnected && Node6_isNotConnected) {
         //amrex::Print() << "Using EB in Node 4." << std::endl;
         return Node4;
-        } else if(Node4_isNotConnected and Node6_isNotConnected) {
+        } else if(Node4_isNotConnected && Node6_isNotConnected) {
         //amrex::Print() << "Using EB in Node 3." << std::endl;
         return Node3;
         } else {

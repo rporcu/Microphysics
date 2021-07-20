@@ -125,7 +125,7 @@ ParticlesGenerator::generate (int& pc,
   Real* p_dp = dp.data();
   Real* p_ro_s = ro_s.data();
 
-  SOLIDS::SOLIDS_t solid;
+  SolidsPhase::SOLIDS_t solid;
   solid = IC::ic[icv].solids[type];
 
   // Setup particle diameters
@@ -353,7 +353,7 @@ ParticlesGenerator::hex_close_pack (const int icv,
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 void
 ParticlesGenerator::one_per_fill (const int icv,
-                                  const int type,
+                                  const int /*type*/,
                                   const IntVect& lo,
                                   const IntVect& hi,
                                   int& np,
@@ -436,7 +436,7 @@ ParticlesGenerator::one_per_fill (const int icv,
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 void
 ParticlesGenerator::eight_per_fill (const int icv,
-                                    const int type,
+                                    const int /*type*/,
                                     const IntVect& lo,
                                     const IntVect& hi,
                                     int& np,
@@ -518,7 +518,7 @@ ParticlesGenerator::random_fill_dem (const int icv,
                                      const Real dy,
                                      const Real dz,
                                      const amrex::GpuArray<Real, 3>& plo,
-                                     const bool fix_seed)
+                                     const bool /*fix_seed*/)
 {
     // indices
   int i_w, i_e, j_s, j_n, k_b, k_t;
@@ -615,7 +615,7 @@ ParticlesGenerator::random_fill_dem (const int icv,
     bool stop = false;
     int fails(0);
 
-    while(fails < maxfails and (not stop)) {
+    while(fails < maxfails && (!stop)) {
       RealVect pos;
       pos[0] = ic_dlo[0] + ic_len[0]*amrex::Random();
       pos[1] = ic_dlo[1] + ic_len[1]*amrex::Random();
@@ -736,7 +736,7 @@ ParticlesGenerator::random_fill_pic (const int icv,
                                      const Real dy,
                                      const Real dz,
                                      const amrex::GpuArray<Real, 3>& plo,
-                                     const bool fix_seed)
+                                     const bool /*fix_seed*/)
 {
 
   const Real* ic_rlo = IC::ic[icv].region->lo();
@@ -772,7 +772,7 @@ ParticlesGenerator::random_fill_pic (const int icv,
   const Real parcels_per_cell =
       (dx * dy * dz * IC::ic[icv].solids[type].volfrac / parcel_volume);
 
-  const int whole_parcels_per_cell = amrex::Math::floor(parcels_per_cell);
+  const int whole_parcels_per_cell = static_cast<int>(amrex::Math::floor(parcels_per_cell));
 
   // This is the total number of particles that will be generated.
   np = static_cast<int>(ic_cells) * whole_parcels_per_cell;
@@ -957,11 +957,11 @@ ParticlesGenerator::nor_rno (amrex::Gpu::DeviceVector<Real>& dp,
 
       int iterations(0);
 
-      while(not(dp1 >= dp_min and dp1 <= dp_max and dp2 >= dp_min and dp2 <= dp_max) and
+      while(!(dp1 >= dp_min && dp1 <= dp_max && dp2 >= dp_min && dp2 <= dp_max) &&
             iterations < maxfails)
       {
         Real w(1.1);
-        while(w > 1 or amrex::Math::abs(w-1) < tolerance)
+        while(w > 1 || amrex::Math::abs(w-1) < tolerance)
         {
           x = 2*amrex::Random(engine) - 1;
           y = 2*amrex::Random(engine) - 1;
@@ -981,7 +981,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::DeviceVector<Real>& dp,
         iterations++;
       }
 
-      if(not(iterations < maxfails))
+      if(!(iterations < maxfails))
       {
 #ifdef AMREX_USE_GPU
         Gpu::Atomic::Add(p_fails, 1);

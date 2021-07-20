@@ -11,6 +11,8 @@
 
 namespace DEM
 {
+    const int NMAX = SolidsPhase::NMAX;
+
     extern int NPHASE;
 
     enum COLLISIONMODEL {
@@ -83,8 +85,8 @@ namespace DEM
         ARRAY_TYPE * a = nullptr;
     };
 
-    using A2D = DeviceArray<amrex::Array2D<amrex::Real,0,SOLIDS::NMAX-1,0,SOLIDS::NMAX-1,amrex::Order::C> >;
-    using A1D = DeviceArray<amrex::Array1D<amrex::Real,0,SOLIDS::NMAX-1> >;
+    using A2D = DeviceArray<amrex::Array2D<amrex::Real,0,NMAX-1,0,NMAX-1,amrex::Order::C> >;
+    using A1D = DeviceArray<amrex::Array1D<amrex::Real,0,NMAX-1> >;
 
     // normal and tangential components of the damping coefficients
     extern A2D etan;

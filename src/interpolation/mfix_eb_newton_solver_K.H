@@ -32,7 +32,7 @@ amrex::Real f (const int dir,
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::Real dfdxi (const int dir,
                    const amrex::GpuArray<amrex::GpuArray<amrex::Real,3>,8>& nodes,
-                   const amrex::Real& xi,
+                   const amrex::Real& /*xi*/,
                    const amrex::Real& eta,
                    const amrex::Real& zeta)
 {
@@ -49,7 +49,7 @@ AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::Real dfdeta (const int dir,
                     const amrex::GpuArray<amrex::GpuArray<amrex::Real,3>,8>& nodes,
                     const amrex::Real& xi,
-                    const amrex::Real& eta,
+                    const amrex::Real& /*eta*/,
                     const amrex::Real& zeta)
 {
 
@@ -66,7 +66,7 @@ amrex::Real dfdzeta (const int dir,
                      const amrex::GpuArray<amrex::GpuArray<amrex::Real,3>,8>& nodes,
                      const amrex::Real& xi,
                      const amrex::Real& eta,
-                     const amrex::Real& zeta)
+                     const amrex::Real& /*zeta*/)
 {
 
     amrex::Real a3 = (nodes[4][dir] - nodes[0][dir]);

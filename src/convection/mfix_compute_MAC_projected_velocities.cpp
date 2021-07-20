@@ -1,7 +1,4 @@
-#include <MOL.H>
-#include <Godunov.H>
-#include <EBGodunov.H>
-
+#include <hydro_utils.H>
 #include <mfix_bc_parms.H>
 #include <mfix_mf_helpers.H>
 #include <mfix.H>
@@ -29,6 +26,7 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
                                         Vector< MultiFab*      > const& ep_w_mac,
                                         Vector< MultiFab const*> const& ep_g_in,
                                         Vector< MultiFab const*> const& ro_g_in,
+                                        Vector< MultiFab const*> const& txfr_in,
                                         Vector< MultiFab      *> const& vel_forces,
                                         Vector< MultiFab const*> const& rhs_mac_in)
 {
@@ -36,6 +34,22 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
 
   if (m_verbose) {
     Print() << "MAC Projection:\n";
+  }
+
+  // We first compute the velocity forcing terms to be used in predicting
+  //    to faces before the MAC projection
+  if (advection_type() != AdvectionType::MOL)
+  {
+    bool include_pressure_gradient = !(m_use_mac_phi_in_godunov);
+    bool include_drag_force = include_pressure_gradient && m_use_drag_in_godunov;
+    compute_vel_forces(vel_forces, vel_in, ro_g_in, txfr_in, include_pressure_gradient, include_drag_force);
+
+    if (m_godunov_include_diff_in_forcing)
+      for (int lev = 0; lev <= finest_level; ++lev)
+        MultiFab::Add(*vel_forces[lev], *m_leveldata[lev]->divtau_o, 0, 0, 3, 0);
+
+    if (nghost_force() > 0)
+      fillpatch_force(time, vel_forces, nghost_force());
   }
 
   auto mac_phi = get_mac_phi();
@@ -65,8 +79,8 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
     // The only use of bcs in this call is to test on whether a domain boundary is ext_dir
     // average_cellcenter_to_face(ro_face[lev], *ro_g_in[lev], geom[lev]);
     // average_cellcenter_to_face(ep_face[lev], *ep_g_in[lev], geom[lev]);
-    EB_interp_CellCentroid_to_FaceCentroid (*ro_g_in[lev], ro_face[lev], 0, 0, 1, geom[lev], bcs_s);
-    EB_interp_CellCentroid_to_FaceCentroid (*ep_g_in[lev], ep_face[lev], 0, 0, 1, geom[lev], bcs_s);
+    EB_interp_CellCentroid_to_FaceCentroid (*ro_g_in[lev], ro_face[lev], 0, 0, 1, geom[lev], get_density_bcrec());
+    EB_interp_CellCentroid_to_FaceCentroid (*ep_g_in[lev], ep_face[lev], 0, 0, 1, geom[lev], bcs_f);
 
     // These will be reused to predict velocites (ep*u) on faces
     ep_face[lev][0]->FillBoundary();
@@ -98,6 +112,7 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
       LPInfo lp_info;
       // If we want to set max_coarsening_level we have to send it in to the constructor
       lp_info.setMaxCoarseningLevel(mac_mg_max_coarsening_level);
+      lp_info.setAgglomerationGridSize(agg_grid_size);
       macproj->initProjector(lp_info, const_bcoeff);
       macproj->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
     } else {
@@ -116,7 +131,18 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
   }
 
   if (m_use_mac_phi_in_godunov) {
-    macproj->getFluxes(amrex::GetVecOfArrOfPtrs(m_fluxes), mac_phi, MLMG::Location::FaceCentroid);
+
+    // Copy mac_phi MultiFabs into temporary variables
+    Vector<MultiFab*> mac_phi_copy(finest_level+1);
+    for (int lev(0); lev <= finest_level; ++lev) {
+      mac_phi_copy[lev] = (MFHelpers::createFrom(*mac_phi[lev])).release();
+    }
+
+    macproj->getFluxes(amrex::GetVecOfArrOfPtrs(m_fluxes), mac_phi_copy, MLMG::Location::FaceCentroid);
+
+    for (int lev(0); lev <= finest_level; ++lev) {
+      delete mac_phi_copy[lev];
+    }
 
     if( m_use_drag_in_godunov) {
       amrex::Print() << "WARNING: using mac_phi in Godunov MAC velocities.\n"
@@ -144,39 +170,18 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
     ep_v_mac[lev]->setVal(covered_val);
     ep_w_mac[lev]->setVal(covered_val);
 
-    if (advection_type() == AdvectionType::Godunov) {
+    std::string advection_string;
+    if (advection_type() == AdvectionType::Godunov) 
+        advection_string = "Godunov";
+    else
+        advection_string = "MOL";
 
-
-      if (ebfact->isAllRegular() ) {
-        godunov::predict_godunov(time,
+    HydroUtils::ExtrapVelToFaces(*vel_in[lev], *vel_forces[lev],
                                  *ep_u_mac[lev], *ep_v_mac[lev], *ep_w_mac[lev],
-                                 *vel_in[lev], *vel_forces[lev],
-                                 get_velocity_bcrec(), get_velocity_bcrec_device_ptr(),
-                                 geom[lev], l_dt, m_godunov_ppm, m_godunov_use_forces_in_trans,
-                                 m_fluxes[lev][0], m_fluxes[lev][1], m_fluxes[lev][2],
-                                 m_use_mac_phi_in_godunov);
-      } else {
-        ebgodunov::predict_godunov(time,
-                                   *ep_u_mac[lev], *ep_v_mac[lev], *ep_w_mac[lev],
-                                   *vel_in[lev], *vel_forces[lev],
-                                   get_velocity_bcrec(), get_velocity_bcrec_device_ptr(),
-                                   ebfact, geom[lev], l_dt,
-                                   m_fluxes[lev][0], m_fluxes[lev][1], m_fluxes[lev][2],
-                                   m_use_mac_phi_in_godunov);
-
-      }
-
-
-    } else if (advection_type() == AdvectionType::MOL) {
-
-      mol::predict_vels_on_faces(lev,
-                                 *ep_u_mac[lev],   *ep_v_mac[lev],   *ep_w_mac[lev],
-                                 *vel_in[lev], m_vel_g_bc_types,
-                                 bc_ilo[lev]->array(), bc_ihi[lev]->array(),
-                                 bc_jlo[lev]->array(), bc_jhi[lev]->array(),
-                                 bc_klo[lev]->array(), bc_khi[lev]->array(),
-                                 ebfact, geom);
-    }
+                                  get_hydro_velocity_bcrec(), get_hydro_velocity_bcrec_device_ptr(),
+                                  geom[lev], l_dt, *ebfact,
+                                  m_godunov_ppm, m_godunov_use_forces_in_trans,
+                                  advection_string);
 
     for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 

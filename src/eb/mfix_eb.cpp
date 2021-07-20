@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <mfix.H>
+#include <mfix_bc_parms.H>
 #include <AMReX_EB2.H>
 #include <AMReX_EB_utils.H>
 #include <AMReX_EB2_IF_Cylinder.H>
@@ -17,13 +18,10 @@ void mfix::make_eb_geometry ()
      *                                                                          *
      ***************************************************************************/
 
-    // nghost_tmp = 4 is enough to make the bc arrays for now; we will remake
-    // them later when we know what nghost_state() really is
-    const int nghost_tmp = 4;
-    MakeBCArrays(nghost_tmp);
+    MakeBCArrays(nghost_state());
 
     for (int lev = 0; lev < nlev; lev++)
-        mfix_set_bc_type(lev,nghost_tmp);
+        mfix_set_bc_type(lev,nghost_state());
 
     /****************************************************************************
      *                                                                          *
@@ -152,17 +150,17 @@ void mfix::make_eb_factories () {
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        ebfactory[lev].reset(
-            new EBFArrayBoxFactory(*eb_levels[lev], geom[lev], grids[lev], dmap[lev],
-                                   {nghost_eb_basic(), nghost_eb_volume(),
-                                    nghost_eb_full()}, m_eb_support_level));
+        ebfactory[lev] =
+            std::make_unique<EBFArrayBoxFactory>(*eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+                                   amrex::Vector<int>{nghost_eb_basic(), nghost_eb_volume(),
+                                    nghost_eb_full()}, m_eb_support_level);
 
         // Grow EB factory by +2 in order to avoid edge cases. This is not
         // necessary for multi-level mfix.
-        particle_ebfactory[lev].reset(
-            new EBFArrayBoxFactory(*particle_eb_levels[lev], geom[lev], grids[lev], dmap[lev],
-                                   {levelset_eb_pad + 2, levelset_eb_pad + 2,
-                                    levelset_eb_pad + 2}, m_eb_support_level));
+        particle_ebfactory[lev] =
+            std::make_unique<EBFArrayBoxFactory>(*particle_eb_levels[lev], geom[lev], grids[lev], dmap[lev],
+                                   amrex::Vector<int>{levelset_eb_pad + 2, levelset_eb_pad + 2,
+                                    levelset_eb_pad + 2}, m_eb_support_level);
     }
 }
 
@@ -191,10 +189,10 @@ void mfix::fill_eb_levelsets ()
         const Geometry& ls_geom = amrex::refine(geom[0], levelset_refinement);
 
         BoxArray ls_ba = amrex::convert(part_ba, IntVect::TheNodeVector());
-        level_sets[0].reset(new MultiFab(ls_ba, ls_dm, 1, levelset_pad/levelset_refinement));
+        level_sets[0] = std::make_unique<MultiFab>(ls_ba, ls_dm, 1, levelset_pad/levelset_refinement);
 
         if (levelset_refinement != 1) ls_ba.refine(levelset_refinement);
-        level_sets[1].reset(new MultiFab(ls_ba, ls_dm, 1, levelset_pad));
+        level_sets[1] = std::make_unique<MultiFab>(ls_ba, ls_dm, 1, levelset_pad);
 
         //___________________________________________________________________________
         // NOTE: Boxes are different (since we're not refining, we need to treat
@@ -340,7 +338,7 @@ void mfix::fill_eb_levelsets ()
 
         // NOTE: reference BoxArray is not nodal
         BoxArray ba = amrex::convert(part_ba, IntVect::TheNodeVector());
-        level_sets[0].reset(new MultiFab(ba, part_dm, 1, levelset_pad));
+        level_sets[0] = std::make_unique<MultiFab>(ba, part_dm, 1, levelset_pad);
         iMultiFab valid(ba, part_dm, 1, levelset_pad);
 
         MultiFab impfunc(ba, part_dm, 1, levelset_pad);
@@ -390,12 +388,53 @@ void mfix::fill_eb_levelsets ()
 void mfix::intersect_ls_walls ()
 {
 
-    bool has_walls = false;
-    std::shared_ptr<UnionListIF<EB2::PlaneIF>> walls = get_walls(has_walls);
-    auto gshop = EB2::makeShop(* walls);
+    bool has_walls = BC::flow_plane.any();
 
     if (has_walls == false)
-        return;
+      return;
+
+    amrex::Print() << "LS HAS WALLS\n";
+
+    const auto plo = geom[0].ProbLoArray();
+    const auto phi = geom[0].ProbHiArray();
+
+    Real xlo = BC::flow_plane.test(0) ? plo[0] + 1.0e-15 : 2.0*plo[0] - phi[0];
+    Real xhi = BC::flow_plane.test(1) ? phi[0] - 1.0e-15 : 2.0*phi[0] - plo[0];
+
+    Real ylo = BC::flow_plane.test(2) ? plo[1] + 1.0e-15 : 2.0*plo[1] - phi[1];
+    Real yhi = BC::flow_plane.test(3) ? phi[1] - 1.0e-15 : 2.0*phi[1] - plo[1];
+
+    Real zlo = BC::flow_plane.test(4) ? plo[2] + 1.0e-15 : 2.0*plo[2] - phi[2];
+    Real zhi = BC::flow_plane.test(5) ? phi[2] - 1.0e-15 : 2.0*phi[2] - plo[2];
+
+    Array<Real,3>  point_lox{ xlo, 0.0, 0.0};
+    Array<Real,3> normal_lox{-1.0, 0.0, 0.0};
+    Array<Real,3>  point_hix{ xhi, 0.0, 0.0};
+    Array<Real,3> normal_hix{ 1.0, 0.0, 0.0};
+
+    Array<Real,3>  point_loy{0.0, ylo, 0.0};
+    Array<Real,3> normal_loy{0.0,-1.0, 0.0};
+    Array<Real,3>  point_hiy{0.0, yhi, 0.0};
+    Array<Real,3> normal_hiy{0.0, 1.0, 0.0};
+
+    Array<Real,3>  point_loz{0.0, 0.0, zlo};
+    Array<Real,3> normal_loz{0.0, 0.0,-1.0};
+    Array<Real,3>  point_hiz{0.0, 0.0, zhi};
+    Array<Real,3> normal_hiz{0.0, 0.0, 1.0};
+
+    EB2::PlaneIF plane_lox(point_lox,normal_lox);
+    EB2::PlaneIF plane_hix(point_hix,normal_hix);
+
+    EB2::PlaneIF plane_loy(point_loy,normal_loy);
+    EB2::PlaneIF plane_hiy(point_hiy,normal_hiy);
+
+    EB2::PlaneIF plane_loz(point_loz,normal_loz);
+    EB2::PlaneIF plane_hiz(point_hiz,normal_hiz);
+
+    auto bounding_box = EB2::makeUnion(plane_lox, plane_hix, plane_loy,
+                                       plane_hiy, plane_loz, plane_hiz );
+
+    auto gshop = EB2::makeShop(bounding_box);
 
     if (nlev == 1)
     {

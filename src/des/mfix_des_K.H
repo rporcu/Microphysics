@@ -1,3 +1,6 @@
+#ifndef MFIX_DES_K_H_
+#define MFIX_DES_K_H_
+
 #include "mfix_pc.H"
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
@@ -169,3 +172,5 @@ void level_set_normal (const amrex::RealVect& pos,
     normal[1] *= inv_norm;
     normal[2] *= inv_norm;
 }
+
+#endif

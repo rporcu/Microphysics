@@ -52,7 +52,7 @@ mfix::set_density_bcs (Real /*time*/,
 
   Array4<Real> const& scal_arr = scal_fab.array();
 
-  Real bc0 = FLUID::ro_g0;
+  Real bc0 = fluid.ro_g0;
 
   IntVect scal_lo(scal_fab.loVect());
   IntVect scal_hi(scal_fab.hiVect());
@@ -86,7 +86,7 @@ mfix::set_density_bcs (Real /*time*/,
     {
       const int bct = bct_ilo(ilo-1,j,k,0);
 
-      if ((bct == pinf) or (bct == pout))
+      if ((bct == pinf) || (bct == pout))
          scal_arr(i,j,k) = scal_arr(ilo,j,k);
       else if (bct == minf)
          scal_arr(i,j,k) = bc0;
@@ -106,7 +106,7 @@ mfix::set_density_bcs (Real /*time*/,
     {
       const int bct = bct_ihi(ihi+1,j,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
          scal_arr(i,j,k) = scal_arr(ihi,j,k);
       else if(bct == minf)
          scal_arr(i,j,k) = bc0;
@@ -126,7 +126,7 @@ mfix::set_density_bcs (Real /*time*/,
     {
       const int bct = bct_jlo(i,jlo-1,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
          scal_arr(i,j,k) = scal_arr(i,jlo,k);
       else if(bct == minf)
          scal_arr(i,j,k) = bc0;
@@ -146,7 +146,7 @@ mfix::set_density_bcs (Real /*time*/,
     {
       const int bct = bct_jhi(i,jhi+1,k,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
          scal_arr(i,j,k) = scal_arr(i,jhi,k);
       else if(bct == minf)
          scal_arr(i,j,k) = bc0;
@@ -166,7 +166,7 @@ mfix::set_density_bcs (Real /*time*/,
     {
       const int bct = bct_klo(i,j,klo-1,0);
 
-      if((bct == pinf) or (bct == pout))
+      if((bct == pinf) || (bct == pout))
          scal_arr(i,j,k) = scal_arr(i,j,klo);
       else if(bct == minf)
          scal_arr(i,j,k) = bc0;
@@ -186,7 +186,7 @@ mfix::set_density_bcs (Real /*time*/,
     {
       const int bct = bct_khi(i,j,khi+1,0);
 
-      if ((bct == pinf) or (bct == pout))
+      if ((bct == pinf) || (bct == pout))
          scal_arr(i,j,k) = scal_arr(i,j,khi);
       else if (bct == minf)
          scal_arr(i,j,k) = bc0;

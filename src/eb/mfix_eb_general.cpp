@@ -69,7 +69,7 @@ void mfix::make_eb_general () {
     // IMPORTANT NOTE: has_real_walls => has_walls <=> ! has_walls => ! has_real_walls
     bool has_walls = false, has_real_walls = false;
     if (use_walls) {
-        amrex::Print() << "Using wall geometry from mfix.dat" << std::endl;
+        amrex::Print() << "Using wall geometry from inputs file" << std::endl;
 
         impfunc_walls_part  = get_walls(has_walls);
         impfunc_walls_fluid = get_real_walls(has_real_walls);
@@ -113,12 +113,12 @@ void mfix::make_eb_general () {
             //     build_eb_levels(gshop);
             // }
 
-            if (has_walls and use_divider) { // ........................... poly2 + walls + divider
+            if (has_walls && use_divider) { // ........................... poly2 + walls + divider
 #ifdef AMREX_USE_DPCPP
                 amrex::Abort("DPD++: make_eb_general poly2 not supported");
 #else
 
-                if (DEM::solve or PIC::solve) {
+                if (DEM::solve || PIC::solve) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
 
                     auto eb_if = EB2::makeUnion(* impfunc_poly2, * impfunc_walls_part,
@@ -130,7 +130,7 @@ void mfix::make_eb_general () {
                     amrex::Print() << "Done making the particle eb levels." << std::endl;
                 }
 
-                if (FLUID::solve) {
+                if (fluid.solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -157,7 +157,7 @@ void mfix::make_eb_general () {
                 amrex::Abort("DPD++: make_eb_general poly2 not supported");
 #else
 
-                if (DEM::solve or PIC::solve) {
+                if (DEM::solve || PIC::solve) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
 
                     auto eb_if = EB2::makeUnion(* impfunc_poly2, * impfunc_walls_part);
@@ -168,7 +168,7 @@ void mfix::make_eb_general () {
                     amrex::Print() << "Done making the particle eb levels." << std::endl;
                 }
 
-                if (FLUID::solve) {
+                if (fluid.solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -222,9 +222,9 @@ void mfix::make_eb_general () {
             }
 
         } else {
-            if (has_walls and use_divider) { // ........................... ! poly2 + walls + divider
+            if (has_walls && use_divider) { // ........................... ! poly2 + walls + divider
 
-                if (DEM::solve or PIC::solve) {
+                if (DEM::solve || PIC::solve) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
 
                     auto eb_if = EB2::makeUnion(* impfunc_walls_part, * impfunc_divider);
@@ -235,7 +235,7 @@ void mfix::make_eb_general () {
                     amrex::Print() << "Done making the particle eb levels." << std::endl;
                 }
 
-                if (FLUID::solve) {
+                if (fluid.solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -256,14 +256,14 @@ void mfix::make_eb_general () {
 
             } else if (has_walls) { // ................................... ! poly2 + walls + ! divider
 
-                if (DEM::solve or PIC::solve) {
+                if (DEM::solve || PIC::solve) {
                     auto gshop = EB2::makeShop(* impfunc_walls_part);
 
                     build_eb_levels(gshop);
 
                 }
 
-                if (FLUID::solve) {
+                if (fluid.solve) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -346,7 +346,10 @@ mfix::get_poly (int max_order, std::string field_prefix)
             IntVect powers = IntVect::Zero;
             powers[idir] = lc;
 
-            EB2::PolyTerm mono = {.coef = coef, .powers = powers};
+            EB2::PolyTerm mono;
+            mono.coef = coef;
+            mono.powers = powers;
+
             poly.push_back(mono);
         }
     }

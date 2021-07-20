@@ -1,6 +1,5 @@
 #include <mfix.H>
 #include <mfix_bc_parms.H>
-#include <mfix_fluid_parms.H>
 #include <mfix_mf_helpers.H>
 
 #include <AMReX_BC_TYPES.H>
@@ -26,12 +25,8 @@ mfix::mfix_closed_system_rhs (Vector< MultiFab*       > const& rhs,
                               Vector< MultiFab const* > const& species_rhs,
                               Vector< MultiFab const* > const& ep_g,
                               Vector< MultiFab const* > const& ro_g,
-                              Vector< MultiFab const* > const& MW_g,
                               Vector< MultiFab const* > const& T_g,
-                              Vector< MultiFab const* > const& cp_g,
                               Vector< MultiFab*       > const& X_gk,
-                              Vector< MultiFab const* > const& D_gk,
-                              Vector< MultiFab const* > const& h_gk,
                               Vector< MultiFab const* > const& txfr,
                               Vector< MultiFab const* > const& chem_txfr,
                               Vector< MultiFab const* > const& pressure_g,
@@ -50,7 +45,12 @@ mfix::mfix_closed_system_rhs (Vector< MultiFab*       > const& rhs,
   }
 
   mfix_open_system_rhs(Sigma, lap_T, enthalpy_rhs, lap_X, species_rhs, ro_g,
-                       MW_g, T_g, cp_g, X_gk, D_gk, h_gk, txfr, chem_txfr);
+                       T_g, X_gk, txfr, chem_txfr);
+
+  const int nspecies_g = fluid.nspecies;
+  const int fluid_is_a_mixture = fluid.is_a_mixture;
+
+  auto& fluid_parms = *fluid.parameters;
 
   // Compute Theta
   for (int lev(0); lev <= finest_level; ++lev)
@@ -67,21 +67,38 @@ mfix::mfix_closed_system_rhs (Vector< MultiFab*       > const& rhs,
 
       Array4< Real       > const& theta_arr  = Theta[lev]->array(mfi);
       Array4< Real const > const& ep_g_arr   = ep_g[lev]->const_array(mfi);
+      Array4< Real const > const& X_gk_arr   = X_gk[lev]->const_array(mfi);
+      Array4< Real const > const& T_g_arr    = T_g[lev]->const_array(mfi);
       Array4< Real const > const& pres_g_arr = pressure_g[lev]->const_array(mfi);
-      Array4< Real const > const& MW_g_arr   = MW_g[lev]->const_array(mfi);
-      Array4< Real const > const& cp_g_arr   = cp_g[lev]->const_array(mfi);
 
       auto const& flags_arr = flags.const_array(mfi);
 
-      const Real R = FLUID::R;
-
-      ParallelFor(bx, [theta_arr,ep_g_arr,pres_g_arr,MW_g_arr,cp_g_arr,R,
-          flags_arr]
+      ParallelFor(bx, [theta_arr,ep_g_arr,T_g_arr,X_gk_arr,pres_g_arr,
+          flags_arr,fluid_is_a_mixture,nspecies_g,fluid_parms]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
+        const Real Tg_loc = T_g_arr(i,j,k);
+
+        Real MW_g_loc(0);
+        Real cp_g_loc(0);
+
+        // set initial fluid molecular weight
+        if (fluid_is_a_mixture) {
+          for (int n(0); n < nspecies_g; n++) {
+            MW_g_loc += X_gk_arr(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
+            cp_g_loc += X_gk_arr(i,j,k,n) * fluid_parms.calc_cp_gk<RunOn::Gpu>(Tg_loc,n);
+          }
+
+          MW_g_loc = 1. / MW_g_loc;
+        }
+        else {
+          MW_g_loc = fluid_parms.MW_g0;
+          cp_g_loc = fluid_parms.calc_cp_g<RunOn::Gpu>(Tg_loc);
+        }
+
         if (!flags_arr(i,j,k).isCovered()) {
           const Real coeff = ep_g_arr(i,j,k) / pres_g_arr(i,j,k);
-          theta_arr(i,j,k) = coeff * (1 - R/(MW_g_arr(i,j,k) * cp_g_arr(i,j,k)));
+          theta_arr(i,j,k) = coeff * (1 - fluid_parms.R/(MW_g_loc * cp_g_loc));
         } else {
           theta_arr(i,j,k) = 0.;
         }
@@ -148,32 +165,20 @@ mfix::mfix_open_system_rhs (Vector< MultiFab*      > const& rhs,
                             Vector< MultiFab const*> const& lap_X,
                             Vector< MultiFab const*> const& species_rhs,
                             Vector< MultiFab const*> const& ro_g,
-                            Vector< MultiFab const*> const& MW_g,
                             Vector< MultiFab const*> const& T_g,
-                            Vector< MultiFab const*> const& cp_g,
                             Vector< MultiFab*      > const& X_gk,
-                            Vector< MultiFab const*> const& D_gk,
-                            Vector< MultiFab const*> const& h_gk,
-                            Vector< MultiFab const*> const& txfr,
-                            Vector< MultiFab const*> const& chem_txfr)
+                            Vector< MultiFab const*> const& /*txfr*/,
+                            Vector< MultiFab const*> const& /*chem_txfr*/)
 {
   for (int lev(0); lev <= finest_level; ++lev)
     rhs[lev]->setVal(0.);
 
   const int adv_enthalpy = advect_enthalpy;
-  const int fluid_is_mixture = FLUID::is_a_mixture;
-  const int nspecies_g = FLUID::nspecies;
+  const int adv_fluid_species = advect_fluid_species;
+  const int fluid_is_a_mixture = fluid.is_a_mixture;
+  const int nspecies_g = fluid.nspecies;
 
-  Gpu::DeviceVector< Real > MW_gk_d;
-
-  if (fluid_is_mixture) {
-    MW_gk_d.resize(nspecies_g);
-    Gpu::copyAsync(Gpu::hostToDevice, FLUID::MW_gk0.begin(), FLUID::MW_gk0.end(), MW_gk_d.begin());
-  }
-
-  Real* p_MW_gk = fluid_is_mixture ? MW_gk_d.data() : nullptr;
-
-  Gpu::synchronize();
+  auto& fluid_parms = *fluid.parameters;
 
   for (int lev(0); lev <= finest_level; lev++) {
     const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ro_g[lev]->Factory());
@@ -192,41 +197,63 @@ mfix::mfix_open_system_rhs (Vector< MultiFab*      > const& rhs,
       auto const& h_RHS_arr = adv_enthalpy ? enthalpy_rhs[lev]->const_array(mfi) : empty_arr;
       auto const& ro_g_arr  = adv_enthalpy ? ro_g[lev]->const_array(mfi) : empty_arr;
       auto const& T_g_arr   = adv_enthalpy ? T_g[lev]->const_array(mfi) : empty_arr;
-      auto const& cp_g_arr  = adv_enthalpy ? cp_g[lev]->const_array(mfi) : empty_arr;
-      auto const& h_gk_arr  = adv_enthalpy ? h_gk[lev]->const_array(mfi) : empty_arr;
-      auto const& lap_X_arr = fluid_is_mixture ? lap_X[lev]->const_array(mfi) : empty_arr;
-      auto const& X_RHS_arr = fluid_is_mixture ? species_rhs[lev]->const_array(mfi) : empty_arr;
-      auto const& MW_g_arr  = fluid_is_mixture ? MW_g[lev]->const_array(mfi) : empty_arr;
+      auto const& X_gk_arr  = fluid_is_a_mixture ? X_gk[lev]->const_array(mfi) : empty_arr;
+      auto const& lap_X_arr = fluid_is_a_mixture ? lap_X[lev]->const_array(mfi) : empty_arr;
+      auto const& X_RHS_arr = fluid_is_a_mixture ? species_rhs[lev]->const_array(mfi) : empty_arr;
 
       auto const& flags_arr = flags.const_array(mfi);
 
-      amrex::ParallelFor(bx, [rhs_arr,lap_T_arr,h_RHS_arr,ro_g_arr,T_g_arr,cp_g_arr,
-          h_gk_arr,lap_X_arr,X_RHS_arr,MW_g_arr,flags_arr,adv_enthalpy,fluid_is_mixture,
-          nspecies_g,p_MW_gk]
+      amrex::ParallelFor(bx, [rhs_arr,lap_T_arr,h_RHS_arr,ro_g_arr,T_g_arr,
+          X_gk_arr,lap_X_arr,X_RHS_arr,flags_arr,adv_enthalpy,fluid_is_a_mixture,
+          nspecies_g,fluid_parms,adv_fluid_species]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         Real rhs_value(0);
 
         const Real rog_loc = ro_g_arr(i,j,k);
         const Real Tg_loc  = adv_enthalpy ? T_g_arr(i,j,k) : 0.;
-        const Real cpg_loc = adv_enthalpy ? cp_g_arr(i,j,k) : 0.;
+
+        Real MW_g_loc(0);
+        Real cp_g_loc(0);
+
+        // set initial fluid molecular weight
+        if (fluid_is_a_mixture) {
+          for (int n(0); n < nspecies_g; n++) {
+            MW_g_loc += X_gk_arr(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
+            cp_g_loc += X_gk_arr(i,j,k,n) * fluid_parms.calc_cp_gk<RunOn::Gpu>(Tg_loc,n);
+          }
+          MW_g_loc = 1. / MW_g_loc;
+        }
+        else {
+          MW_g_loc = fluid_parms.MW_g0;
+          cp_g_loc = fluid_parms.calc_cp_g<RunOn::Gpu>(Tg_loc);
+        }
 
         if (!flags_arr(i,j,k).isCovered()) {
           if (adv_enthalpy) {
-            rhs_value += (h_RHS_arr(i,j,k) + lap_T_arr(i,j,k)) / (rog_loc*cpg_loc*Tg_loc);
+            rhs_value += (h_RHS_arr(i,j,k) + lap_T_arr(i,j,k)) / (rog_loc*cp_g_loc*Tg_loc);
           }
 
-          if (fluid_is_mixture) {
-            const Real MWg_loc = MW_g_arr(i,j,k);
-
+          if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; ++n) {
-              Real coeff = MWg_loc / p_MW_gk[n];
+              Real coeff = MW_g_loc / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
 
-              if (adv_enthalpy)
-                coeff -= h_gk_arr(i,j,k,n) / (cpg_loc*Tg_loc);
+              if (adv_enthalpy) {
+                const Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_loc,n);
+                coeff -= h_gk / (cp_g_loc*Tg_loc);
+              }
 
               rhs_value += (coeff / rog_loc) * (X_RHS_arr(i,j,k,n) + lap_X_arr(i,j,k,n));
             }
+          } else if (adv_fluid_species) {
+            Real coeff = 1.;
+
+            if (adv_enthalpy) {
+              const Real h_g_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_loc);
+              coeff -= h_g_loc / (cp_g_loc*Tg_loc);
+            }
+
+            rhs_value += (coeff / rog_loc) * (X_RHS_arr(i,j,k,0) + lap_X_arr(i,j,k,0));
           }
         }
 

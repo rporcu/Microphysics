@@ -46,14 +46,12 @@ std::string avg_file {"avg_region"};
 
 std::string mfix_dat {"mfix.dat"};
 
-void set_ptr_to_mfix (mfix& mfix);
-
 // Set the extend domain flag by default, since the mfix default
 // is different (true) from the amrex default (false)
 // only if its not already specified in the inputs file
 void add_par () {
    ParmParse pp("eb2");
-   if(not pp.contains("extend_domain_face")) {
+   if(!pp.contains("extend_domain_face")) {
       pp.add("extend_domain_face",true);
    }
 } 
@@ -145,7 +143,7 @@ void writeNow (int nstep, Real time, Real dt, mfix& mfix)
 
     if ( (plot_test == 1) || ( ( mfix::plot_int > 0) && ( nstep %  mfix::plot_int == 0 ) ) )
     {
-      if (FLUID::solve)
+      if (mfix.fluid.solve)
            mfix.mfix_compute_vort();
         mfix.WritePlotFile( plot_file, nstep, time );
     }
@@ -221,9 +219,6 @@ int main (int argc, char* argv[])
 
     ReadParameters();
 
-    // Set global static pointer to mfix object. Used by fill-patch utility
-    set_ptr_to_mfix(mfix);
-
     // Initialize internals from ParamParse database
     mfix.InitParams();
 
@@ -244,7 +239,7 @@ int main (int argc, char* argv[])
     if(write_eb_surface)
       mfix.WriteMyEBSurface();
 
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve || PIC::solve)
     {
         // Fill level-sets on each level
         mfix.fill_eb_levelsets();
@@ -255,7 +250,7 @@ int main (int argc, char* argv[])
     if (restart_file.empty())
     {
         mfix.InitLevelData(time);
-        mfix.InitialRedistribution(time);
+        if (mfix.fluid.solve) mfix.InitialRedistribution(time);
     }
     else
     {
@@ -272,7 +267,7 @@ int main (int argc, char* argv[])
         mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
     }
 
-    if (FLUID::solve){
+    if (mfix.fluid.solve){
       mfix.init_advection();
     
       //amrex::Abort("111");
@@ -287,12 +282,12 @@ int main (int argc, char* argv[])
         mfix.Regrid();
     }
 
-    if ((DEM::solve or PIC::solve) and write_ls)
+    if ((DEM::solve || PIC::solve) && write_ls)
         mfix.WriteStaticPlotFile(static_plt_file);
 
     mfix.PostInit(dt, time, restart_flag, stop_time);
 
-    if (FLUID::solve)
+    if (mfix.fluid.solve)
       mfix.ReportGridStats();
 
     Real end_init = ParallelDescriptor::second() - strt_time;
@@ -304,14 +299,14 @@ int main (int argc, char* argv[])
     int finish  = 0;
 
     // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
-    // only if FLUID::solve = T
+    // only if fluid.solve = T
     Real prev_dt = dt;
 
     // Write checkpoint and plotfiles with the initial data
     if ( (restart_file.empty() || plotfile_on_restart) &&
          (mfix::plot_int > 0 || mfix::plot_per_exact > 0 || mfix::plot_per_approx > 0) )
     {
-      if (FLUID::solve)
+      if (mfix.fluid.solve)
           mfix.mfix_compute_vort();
        mfix.WritePlotFile(plot_file, nstep, time);
     }

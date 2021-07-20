@@ -123,7 +123,7 @@ mfix::WriteParticleAscii ( std::string& par_ascii_file, int nstep ) const
 {
     BL_PROFILE("mfix::WriteParticleASCII()");
 
-    if(DEM::solve or PIC::solve) {
+    if(DEM::solve || PIC::solve) {
 
         const std::string& par_filename = amrex::Concatenate(par_ascii_file,nstep);
         pc->WriteAsciiFile(par_filename);
@@ -132,20 +132,20 @@ mfix::WriteParticleAscii ( std::string& par_ascii_file, int nstep ) const
 
 
 void
-mfix::WriteAverageRegions ( std::string& avg_file, int nstep, Real time ) const
+mfix::WriteAverageRegions ( std::string& avg_file, int /*nstep*/, Real time ) const
 {
   BL_PROFILE("mfix::WriteAverageRegions()");
 
   for (int lev = 0; lev < nlev; lev++)
     {
-      if (FLUID::solve) {
+      if (fluid.solve) {
         ComputeAverageFluidVars( lev,
                                  time,
                                  avg_file);
       }
 
       //  Compute Eulerian velocities in selected regions
-      if(DEM::solve or PIC::solve) {
+      if(DEM::solve || PIC::solve) {
         pc->ComputeAverageVelocities ( lev,
                                        time,
                                        avg_file,
@@ -187,10 +187,10 @@ mfix::ComputeAverageFluidVars ( const int lev, const Real time,
   //
   // Check the regions are defined correctly
   //
-  if ( ( avg_region_x_e.size() != nregions ) or
-       ( avg_region_y_s.size() != nregions ) or
-       ( avg_region_y_n.size() != nregions ) or
-       ( avg_region_z_b.size() != nregions ) or
+  if ( ( avg_region_x_e.size() != nregions ) ||
+       ( avg_region_y_s.size() != nregions ) ||
+       ( avg_region_y_n.size() != nregions ) ||
+       ( avg_region_z_b.size() != nregions ) ||
        ( avg_region_z_t.size() != nregions )  )
   {
     amrex::Print() << "ComputeAverageVelocities: some regions are not properly"

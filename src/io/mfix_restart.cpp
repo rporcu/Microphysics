@@ -163,12 +163,12 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             // Particle data is loaded into the MFIXParticleContainer's base
             // class using amrex::NeighborParticleContainer::Restart
 
-            if ( (DEM::solve or PIC::solve) and lev == 0)
+            if ( (DEM::solve || PIC::solve) && lev == 0)
               pc->Restart(restart_file, "particles");
 
             amrex::Print() << "  Finished reading particle data" << std::endl;
 
-            if (FLUID::solve) AllocateArrays(lev);
+            if (fluid.solve) AllocateArrays(lev);
         }
     }
 
@@ -177,7 +177,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     /***************************************************************************
      * Load fluid data                                                         *
      ***************************************************************************/
-    if (FLUID::solve)
+    if (fluid.solve)
     {
        // Load the field data
        for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
@@ -194,8 +194,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             // Simply copy mf_vel into vel_g, mf_gp into gp
             const int ng_to_copy = 0;
 
-            m_leveldata[lev]->vel_g->copy(mf_vel, 0, 0, 3, ng_to_copy, ng_to_copy);
-            m_leveldata[lev]->gp->copy(mf_gp, 0, 0, 3, ng_to_copy, ng_to_copy);
+            m_leveldata[lev]->vel_g->ParallelCopy(mf_vel, 0, 0, 3, ng_to_copy, ng_to_copy);
+            m_leveldata[lev]->gp->ParallelCopy(mf_gp, 0, 0, 3, ng_to_copy, ng_to_copy);
 
           } else {
 
@@ -250,7 +250,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                  // Copy from the mf we used to read in to the mf we will use going forward
                  const int ng_to_copy = 0;
 
-                 (*(chkScalarVars[i][lev])).copy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
+                 (*(chkScalarVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
               } else {
 
@@ -276,18 +276,18 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
        {
           for (int i = 0; i < chkTVars.size(); i++ )
           {
-             if ( restart_from_cold_flow and chkscaVarsName[i] == "T_g")
+             if ( restart_from_cold_flow && chkscaVarsName[i] == "T_g")
              {
-                 amrex::Print() << "  Setting T_g to T_g0 = " << FLUID::T_g0 << std::endl;
-                 m_leveldata[lev]->T_g->setVal(FLUID::T_g0);
+                 amrex::Print() << "  Setting T_g to T_g0 = " << fluid.T_g0 << std::endl;
+                 m_leveldata[lev]->T_g->setVal(fluid.T_g0);
                  continue;
 
-             } else if ( restart_from_cold_flow and chkscaVarsName[i] == "h_g") {
+             } else if ( restart_from_cold_flow && chkscaVarsName[i] == "h_g") {
 
                  amrex::Print() << "  Setting h_g to Cp_g0 T_g0 = " <<
-                   FLUID::cp_g0 * FLUID::T_g0 << std::endl;
+                   fluid.cp_g0 * fluid.T_g0 << std::endl;
 
-                 m_leveldata[lev]->h_g->setVal(FLUID::T_g0*FLUID::cp_g0);
+                 m_leveldata[lev]->h_g->setVal(fluid.T_g0*fluid.cp_g0);
                  continue;
              }
 
@@ -307,7 +307,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 // going forward
                 const int ng_to_copy = 0;
 
-                (*(chkTVars[i][lev])).copy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
+                (*(chkTVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
              } else {
 
@@ -348,7 +348,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                 // Copy from the mf we used to read in to the mf we will use going forward
                 const int ng_to_copy = 0;
 
-                (*(chkSpeciesVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies,
+                (*(chkSpeciesVars[i][lev])).ParallelCopy(mf, 0, 0, fluid.nspecies,
                     ng_to_copy, ng_to_copy);
 
              } else {
@@ -358,7 +358,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
                 mf.FillBoundary(geom[lev].periodicity());
 
-                FArrayBox single_fab(mf.boxArray()[0], FLUID::nspecies);
+                FArrayBox single_fab(mf.boxArray()[0], fluid.nspecies);
                 mf.copyTo(single_fab);
 
                 // Copy and replicate mf into chkScalarVars
@@ -366,54 +366,11 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                     int ib = mfi.index();
                     (*(chkSpeciesVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
                         single_fab.box(), 0, mfi.validbox(), 0,
-                        FLUID::nspecies);
+                        fluid.nspecies);
                 }
              }
-          }
-       }
-
-       if (advect_fluid_species and advect_enthalpy)
-       {
-          for (int i = 0; i < chkSpeciesTVars.size(); i++ )
-          {
-             amrex::Print() << "  Loading " << chkSpeciesTVarsName[i] << std::endl;
-
-             MultiFab mf;
-             VisMF::Read(mf,
-                     amrex::MultiFabFileFullPrefix(lev,
-                                                   restart_file, level_prefix,
-                                                   chkSpeciesTVarsName[i]),
-                                                   nullptr,
-                                                   ParallelDescriptor::IOProcessorNumber());
-
-             if (Nrep == IntVect::TheUnitVector()) {
-
-                // Copy from the mf we used to read in to the mf we will use going forward
-                const int ng_to_copy = 0;
-
-                (*(chkSpeciesTVars[i][lev])).copy(mf, 0, 0, FLUID::nspecies,
-                    ng_to_copy, ng_to_copy);
-
-             } else {
-
-                if (mf.boxArray().size() > 1)
-                    amrex::Abort("Replication only works if one initial grid");
-
-                mf.FillBoundary(geom[lev].periodicity());
-
-                FArrayBox single_fab(mf.boxArray()[0], FLUID::nspecies);
-                mf.copyTo(single_fab);
-
-                 // Copy and replicate mf into chkScalarVars
-                 for (MFIter mfi(*(chkSpeciesTVars[i][lev]), false); mfi.isValid(); ++mfi) {
-                     int ib = mfi.index();
-                     (*(chkSpeciesTVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
-                         single_fab.box(), 0, mfi.validbox(), 0,
-                         FLUID::nspecies);
-                 }
-               }
-             }
-          }
+           }
+         }
        }
 
        amrex::Print() << "  Finished reading fluid data" << std::endl;
@@ -421,7 +378,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
     // Make sure that the particle BoxArray is the same as the mesh data -- we can
     //      create a dual grid decomposition in the regrid operation
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve || PIC::solve)
     {
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
@@ -448,7 +405,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
     * (compared to the rest of the checkpoint data) => the level-set data is   *
     * stored in separate ls_raw MultiFab.                                      *
     ****************************************************************************/
-    if (DEM::solve or PIC::solve)
+    if (DEM::solve || PIC::solve)
     {
         if (levelset_restart) {
            // Load level-set Multifab
@@ -499,7 +456,7 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
            fill_eb_levelsets();
         }
     }
-    if (FLUID::solve)
+    if (fluid.solve)
     {
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
@@ -508,14 +465,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->ro_go->FillBoundary(geom[lev].periodicity());
 
-          m_leveldata[lev]->MW_g->FillBoundary(geom[lev].periodicity());
-
-          m_leveldata[lev]->mu_g->FillBoundary(geom[lev].periodicity());
-
           if (advect_enthalpy) {
             m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
-            m_leveldata[lev]->cp_g->FillBoundary(geom[lev].periodicity());
-            m_leveldata[lev]->k_g->FillBoundary(geom[lev].periodicity());
             m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
           }
 
@@ -528,32 +479,33 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
           // Fill the bc's just in case
           if (advect_fluid_species) {
             m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
-            m_leveldata[lev]->D_gk->FillBoundary(geom[lev].periodicity());
-          }
-
-          // Fill the bc's just in case
-          if (advect_fluid_species and advect_enthalpy) {
-            m_leveldata[lev]->cp_gk->FillBoundary(geom[lev].periodicity());
-            m_leveldata[lev]->h_gk->FillBoundary(geom[lev].periodicity());
           }
         }
     }
 
-    if (load_balance_type == "KnapSack" or load_balance_type == "SFC")
+    if (load_balance_type == "KnapSack" || load_balance_type == "SFC")
     {
-      if (DEM::solve or PIC::solve) {
-        for (int lev(0); lev < particle_cost.size(); ++lev)
-          if (particle_cost[lev] != nullptr)
-            delete particle_cost[lev];
+      if (DEM::solve || PIC::solve) {
+        for (int lev(0); lev < particle_cost.size(); ++lev) {
+          if (particle_cost[lev] != nullptr)  delete particle_cost[lev];
+          if (particle_proc[lev] != nullptr)  delete particle_proc[lev];
+        }
 
         particle_cost.clear();
         particle_cost.resize(nlev, nullptr);
+        particle_proc.clear();
+        particle_proc.resize(nlev, nullptr);
 
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
           particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                                         pc->ParticleDistributionMap(lev), 1, 0);
+                                            pc->ParticleDistributionMap(lev), 1, 0);
           particle_cost[lev]->setVal(0.0);
+
+          const Real proc = static_cast<Real>(ParallelDescriptor::MyProc());
+          particle_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                            pc->ParticleDistributionMap(lev), 1, 0);
+          particle_proc[lev]->setVal(proc);
         }
 
         // re-allocate ranks of particle grids
@@ -563,18 +515,26 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         particle_ba_proc.clear();
         particle_ba_proc.resize(nlev, nullptr);
       }
-      if (FLUID::solve) {
-        for (int lev(0); lev < fluid_cost.size(); ++lev)
-          if (fluid_cost[lev] != nullptr)
-            delete fluid_cost[lev];
+
+      if (fluid.solve) {
+        for (int lev(0); lev < fluid_cost.size(); ++lev) {
+          if (fluid_cost[lev] != nullptr)  delete fluid_cost[lev];
+          if (fluid_proc[lev] != nullptr)  delete fluid_proc[lev];
+        }
 
         fluid_cost.clear();
         fluid_cost.resize(nlev, nullptr);
+        fluid_proc.clear();
+        fluid_proc.resize(nlev, nullptr);
 
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
           fluid_cost[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
           fluid_cost[lev]->setVal(0.0);
+
+          const Real proc = static_cast<Real>(ParallelDescriptor::MyProc());
+          fluid_proc[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0);
+          fluid_proc[lev]->setVal(proc);
         }
       }
     }

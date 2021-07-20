@@ -5,9 +5,10 @@ using namespace amrex;
 //
 // Implicit solve for scalar diffusion
 //
-void DiffusionOp::diffuse_scalar (Vector< MultiFab* > scal_in,
-                                  const Vector< MultiFab* > ep_ro_in,
+void DiffusionOp::diffuse_scalar (const Vector< MultiFab* >& scal_in,
+                                  const Vector< MultiFab* >& ep_ro_in,
                                   const Vector< Real > mu_s,
+                                  Vector<BCRec> const& /*h_tracer_bcrec*/,
                                   Real dt)
 {
     BL_PROFILE("DiffusionOp::diffuse_scalar");
