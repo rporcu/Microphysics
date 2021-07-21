@@ -776,6 +776,8 @@ PICHydroStep (int lev,
 
           });
 
+        Gpu::synchronize();
+
 #ifdef _OPENMP
         if(Gpu::notInLaunchRegion())
         {

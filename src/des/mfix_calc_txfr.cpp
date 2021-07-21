@@ -1,7 +1,7 @@
 #include <mfix.H>
 #include <mfix_des_K.H>
 #include <mfix_interp_K.H>
-#include <mfix_eb_interp_K.H>
+#include <mfix_eb_interp_shepard_K.H>
 #include <mfix_filcc.H>
 
 #include <AMReX_BC_TYPES.H>
@@ -481,11 +481,24 @@ mfix::mfix_calc_txfr_particle (Real time,
                   // At least one of the cells in the stencil is cut or covered
                   } else {
 
-                  const int scomp = 3;
-                  fe_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
-                            flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-                            interp_array, &interp_loc[0], interp_comp, scomp);
+                    {
+                      const int srccomp = 0;
+                      const int dstcomp = 0;
+                      const int numcomp = 3;
 
+                      shepard_interp_eb(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                                        flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                                        interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+                    }
+                    {
+                      const int srccomp = 3;
+                      const int dstcomp = 3;
+                      const int numcomp = 4;
+
+                      shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                                     flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                                     interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+                    }
 
                   } // Cut cell
 

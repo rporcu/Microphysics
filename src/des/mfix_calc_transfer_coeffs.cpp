@@ -1,7 +1,7 @@
 #include <mfix.H>
 #include <mfix_des_K.H>
 #include <mfix_interp_K.H>
-#include <mfix_eb_interp_K.H>
+#include <mfix_eb_interp_shepard_K.H>
 #include <mfix_des_drag_K.H>
 #include <mfix_des_conv_coeff_K.H>
 #include <mfix_mf_helpers.H>
@@ -338,10 +338,25 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                 // At least one of the cells in the stencil is cut or covered
                 } else {
 
-                  const int scomp = 3;
-                  fe_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
-                            flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-                            interp_array, interp_loc.data(), interp_comp, scomp);
+                  {
+                    const int srccomp = 0;
+                    const int dstcomp = 0;
+                    const int numcomp = 3;
+
+                    shepard_interp_eb(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                                      flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                                      interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+                  }
+                  {
+                    const int srccomp = 3;
+                    const int dstcomp = 3;
+                    const int numcomp = 1;
+
+                    shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                                   flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                                   interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+                  }
+
                 } // Cut cell
 
                 RealVect velfp(0.);
