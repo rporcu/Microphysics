@@ -48,8 +48,13 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
     setRealCommComp(20, false); // temperature
     setRealCommComp(21, false); // convection
 
+#if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
+    setIntCommComp(0, true); // id
+    setIntCommComp(1, true); // cpu
+#else
     setIntCommComp(0, false); // id
     setIntCommComp(1, false); // cpu
+#endif
     setIntCommComp(2, true);  // phase
     setIntCommComp(3, false); // state
 
