@@ -74,6 +74,7 @@ build:dpcpp:
             -B build
             -DCMAKE_BUILD_TYPE=None
             -DMFIX_GPU_BACKEND=SYCL
+            -DSKIP_LAUNCHER=1
             -G Ninja
     - cmake --build build
   <<: *build_gpu
@@ -98,21 +99,23 @@ build:hip:
     - ubuntu-shell
 
 build:nvcc:
-  image: $CI_REGISTRY_IMAGE/nvcc
-  needs: ['build-nvcc-env']
+  variables:
+    CC: gcc-9
+    CXX: g++-9
   script:
     - sccache -s
     - git submodule update --init --force
-    - cmake -S .
-            -B build
+    - cmake -S .  -B build
             -DAMReX_CUDA_ARCH=Volta
             -DCMAKE_BUILD_TYPE=None
             -DCMAKE_CUDA_ARCHITECTURES=70
+            -DMFIX_CSG=ON
             -DMFIX_GPU_BACKEND=CUDA
+            -GNinja
     - cmake --build build
   <<: *build_gpu
   tags:
-    - docker
+    - ubuntu-shell
 
 build:csg:
   image: $CI_REGISTRY_IMAGE/nvcc
