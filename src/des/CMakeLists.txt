@@ -7,7 +7,7 @@ target_sources( mfixcore
    mfix_particle_generator.H
    mfix_particle_generator.cpp
    mfix_des_drag_K.H
-   mfix_des_heterogeneous_rates_K.H
+   mfix_reactions_rates_K.H
    mfix_set_gradp_bcs.cpp
    mfix_des_K.H
    mfix_pc.cpp

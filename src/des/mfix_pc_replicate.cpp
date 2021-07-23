@@ -19,10 +19,10 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
     const int myProc = ParallelDescriptor::MyProc();
 
     const int nspecies_s = solids.nspecies;
-    const int nreactions = REACTIONS::nreactions;
+    const int nreactions = reactions.nreactions;
 
     const int idx_X_sn = m_runtimeRealData.X_sn;
-    const int idx_ro_sn_txfr = m_runtimeRealData.ro_sn_txfr;
+    const int idx_mass_sn_txfr = m_runtimeRealData.mass_sn_txfr;
     const int idx_vel_s_txfr = m_runtimeRealData.vel_s_txfr;
     const int idx_h_s_txfr = m_runtimeRealData.h_s_txfr;
     const int idx_count = m_runtimeRealData.count;
@@ -65,7 +65,7 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
 
                 amrex::ParallelFor(np, [np,pstruct,p_realarray,p_intarray,
                     ptile_data,nextID,myProc,nspecies_s,nreactions,idx_X_sn,
-                    idx_ro_sn_txfr,idx_vel_s_txfr,idx_h_s_txfr,
+                    idx_mass_sn_txfr,idx_vel_s_txfr,idx_h_s_txfr,
                     idx_count,shift,i]
                   AMREX_GPU_DEVICE (int n) noexcept
                 {
@@ -108,7 +108,7 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                     p_rep.cpu() = myProc;
 
                     int start_idx = idx_X_sn;
-                    int end_idx   = idx_ro_sn_txfr;
+                    int end_idx   = idx_mass_sn_txfr;
 
                     // Runtime added variables -- species mass fractions
                     for (int idx(start_idx); idx < end_idx; ++idx) {

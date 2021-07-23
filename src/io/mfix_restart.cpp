@@ -274,6 +274,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
        if (advect_enthalpy)
        {
+          auto& fluid_parms = *fluid.parameters;
+
           for (int i = 0; i < chkTVars.size(); i++ )
           {
              if ( restart_from_cold_flow && chkscaVarsName[i] == "T_g")
@@ -284,10 +286,12 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
 
              } else if ( restart_from_cold_flow && chkscaVarsName[i] == "h_g") {
 
-                 amrex::Print() << "  Setting h_g to Cp_g0 T_g0 = " <<
-                   fluid.cp_g0 * fluid.T_g0 << std::endl;
+                 const Real h_g0 = fluid_parms.calc_h_g<RunOn::Cpu>(fluid.T_g0);
 
-                 m_leveldata[lev]->h_g->setVal(fluid.T_g0*fluid.cp_g0);
+                 amrex::Print() << "  Setting h_g to h_g(T_g0) = " << h_g0 << std::endl;
+
+                 const Real cp_g0 = fluid_parms.calc_cp_g<RunOn::Cpu>(fluid.T_g0);
+                 m_leveldata[lev]->h_g->setVal(fluid.T_g0*cp_g0);
                  continue;
              }
 

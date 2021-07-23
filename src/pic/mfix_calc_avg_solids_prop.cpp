@@ -10,7 +10,7 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s,
   BL_PROFILE("MFIX_CalcAvgSolidsProp()");
 
   const amrex::FabArray<EBCellFlagFab>* flags = nullptr;
-  Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
+  //Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac; UNUSED
 
   for (int lev = 0; lev < nlev; lev ++ )
   {
@@ -22,7 +22,7 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s,
     // then create a copy of the coarse factory to use.
    if (lev == 0) {
       flags  = &(particle_ebfactory[lev]->getMultiEBCellFlagFab());
-      areafrac = particle_ebfactory[lev]->getAreaFrac();
+      // areafrac = particle_ebfactory[lev]->getAreaFrac(); UNUSED
 
     } else {
 

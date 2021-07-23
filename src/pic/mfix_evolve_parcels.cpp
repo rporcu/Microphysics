@@ -165,7 +165,7 @@ void mfix::EvolveParcels (Real dt,
   }
 
 
-  if ((solids.solve_species && REACTIONS::solve) || advect_enthalpy_in) {
+  if ((solids.solve_species && reactions.solve) || advect_enthalpy_in) {
 
     pc->MFIX_PC_AdvanceParcels(dt, advect_enthalpy_in, enthalpy_source_in,
                                cost, knapsack_weight_type_in);

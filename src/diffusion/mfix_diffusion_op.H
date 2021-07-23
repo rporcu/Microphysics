@@ -66,6 +66,7 @@ class DiffusionOp
                               const amrex::Vector< amrex::MultiFab* >& ep_g,
                               const amrex::Vector< amrex::MultiFab* >& ro_g,
                               const amrex::Vector< amrex::MultiFab* >& h_g,
+                              const amrex::Vector< amrex::MultiFab* >& X_gk,
                               const amrex::Vector< amrex::MultiFab* >& T_g_on_eb,
                               amrex::Real dt);
 

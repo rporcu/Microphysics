@@ -17,7 +17,7 @@ namespace SPECIES
   int EnthalpyOfFormationModel = ENTHALPYOFFORMATIONMODEL::Invalid;
 
   // Flag to solve species equations
-  int solve;
+  int solve(0);
 
   // Total number of species
   int nspecies(0);
@@ -39,31 +39,29 @@ namespace SPECIES
   int solve_enthalpy(0);
 
   // Specified constant species specific heat
-  amrex::Vector<amrex::Real> cp_k0(0);
+  amrex::Vector<amrex::Vector<amrex::Real>> cp_k0(0);
 
   // Enthalpy of formation
   amrex::Vector<amrex::Real> H_fk0(0);
+
 
   void Initialize ()
   {
     amrex::ParmParse pp("species");
 
-    if (pp.contains("solve"))
-    {
+    if (pp.contains("solve")) {
+
       pp.getarr("solve", species);
 
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.size() > 0,
-          "No input provided for species.solve");
+                                       "No input provided for species.solve");
 
       // Disable the species solver if the species are defined as "None" (case
       // insensitive) or 0
-      if (amrex::toLower(species[0]).compare("none") == 0 ||
-          (species[0]).compare("0") == 0)
-      {
+      if (amrex::toLower(species[0]).compare("none") == 0) {
         solve = 0;
-      }
-      else
-      {
+
+      } else {
         solve = 1;
         nspecies = species.size();
 
@@ -87,17 +85,18 @@ namespace SPECIES
         }
       }
 
-      if(solve)
-      {
+      if(solve) {
         // Get molecular weights input --------------------------------//
         for (int n(0); n < nspecies; n++) {
           std::string name = "species." + species[n];
           amrex::ParmParse ppSpecies(name.c_str());
 
-          if (! ppSpecies.query("molecular_weight", MW_k0[n])) {
-            if (amrex::ParallelDescriptor::IOProcessor())
-              amrex::Warning(species[n] + " molecular weight not provided. Assuming " +
-                             "MW_" + species[n] + " = 0");
+          if (!ppSpecies.query("molecular_weight", MW_k0[n])) {
+
+            if (amrex::ParallelDescriptor::IOProcessor()) {
+              std::string message = "Input not provided. Assuming MW_" + species[n] + " = 0";
+              amrex::Warning(message.c_str());
+            }
           }
         }
 
@@ -105,8 +104,7 @@ namespace SPECIES
         std::string diffusivity_model;
         pp.get("diffusivity", diffusivity_model);
 
-        if (amrex::toLower(diffusivity_model).compare("constant") == 0)
-        {
+        if (amrex::toLower(diffusivity_model).compare("constant") == 0) {
           DiffusivityModel = DIFFUSIVITYMODEL::Constant;
 
           for (int n(0); n < nspecies; n++) {
@@ -114,49 +112,67 @@ namespace SPECIES
             amrex::ParmParse ppSpecies(name.c_str());
             ppSpecies.query("diffusivity.constant", D_k0[n]);
           }
-        }
-        else {
+
+        } else {
           amrex::Abort("Unknown species mass diffusivity model!");
         }
 
-        if (solve_enthalpy)
-        {
+        if (solve_enthalpy) {
           // Get specific heat model input ------------------------//
           std::string specific_heat_model;
           pp.query("specific_heat", specific_heat_model);
 
-          if (amrex::toLower(specific_heat_model).compare("constant") == 0)
-          {
+          if (amrex::toLower(specific_heat_model).compare("constant") == 0) {
+
             SpecificHeatModel = SPECIFICHEATMODEL::Constant;
 
             for (int n(0); n < nspecies; n++) {
               std::string name = "species." + species[n];
               amrex::ParmParse ppSpecies(name.c_str());
-              ppSpecies.get("specific_heat.constant", cp_k0[n]);
+              cp_k0[n].resize(1);
+              ppSpecies.get("specific_heat.constant", cp_k0[n][0]);
             }
-          }
-          else {
-            // TODO
+          } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
+
+            SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
+
+            for (int n(0); n < nspecies; n++) {
+              cp_k0[n].resize(5);
+
+              std::string name = "species." + species[n];
+              amrex::ParmParse ppSpecies(name.c_str());
+              ppSpecies.get("specific_heat.NASA7.a1", cp_k0[n][0]);
+              ppSpecies.get("specific_heat.NASA7.a2", cp_k0[n][1]);
+              ppSpecies.get("specific_heat.NASA7.a3", cp_k0[n][2]);
+              ppSpecies.get("specific_heat.NASA7.a4", cp_k0[n][3]);
+              ppSpecies.get("specific_heat.NASA7.a5", cp_k0[n][4]);
+            }
+          } else {
+            amrex::Abort("Don't know this specific heat model!");
           }
 
           // Get enthalpy of formation model input ------------------------//
           std::string enthalpy_of_formation_model("constant");
           pp.query("enthalpy_of_formation", enthalpy_of_formation_model);
 
-          if (amrex::toLower(enthalpy_of_formation_model).compare("constant") == 0)
-          {
+          if (amrex::toLower(enthalpy_of_formation_model).compare("constant") == 0) {
+
             EnthalpyOfFormationModel = ENTHALPYOFFORMATIONMODEL::Constant;
 
             for (int n(0); n < nspecies; n++) {
               std::string name = "species." + species[n];
               amrex::ParmParse ppSpecies(name.c_str());
-              if(!ppSpecies.query("enthalpy_of_formation.constant", H_fk0[n]))
-                if (amrex::ParallelDescriptor::IOProcessor())
-                  amrex::Warning(species[n] + " enthalpy of formation not provided. Assuming " +
-                                 "Hf_" + species[n] + " = 0");
+
+              if(!ppSpecies.query("enthalpy_of_formation.constant", H_fk0[n])) {
+
+                if (amrex::ParallelDescriptor::IOProcessor()) {
+                  std::string message = "Input not provided. Assuming Hf_" + species[n] + " = 0";
+                  amrex::Warning(message.c_str());
+                }
+              }
             }
           } else {
-            // TODO
+            amrex::Abort("Don't know this enthalpy of formation model!");
           }
 
         }

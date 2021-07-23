@@ -144,9 +144,12 @@ cylinder.center    =  0.5  1.5   1.5
 species.solve  =  O2  CO
 
 species.diffusivity = constant
-
 species.O2.diffusivity.constant  = 1.9e-5
 species.CO.diffusivity.constant  = 1.9e-5
+
+species.specific_heat = constant
+species.O2.specific_heat.constant  = 918
+species.CO.specific_heat.constant  = 918
 
 
 #_______________________________________________________________________
