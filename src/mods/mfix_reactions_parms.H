@@ -19,39 +19,49 @@ class ChemicalReaction;
 class ReactionsParms {
 
   public:
-    const int nreactions;
-    const int* nreactants;
-    const int** reactants_id;
-    const amrex::Real** reactants_coeffs;
-    const int** reactants_phases;
-    const int* nproducts;
-    const int** products_id;
-    const amrex::Real** products_coeffs;
-    const int** products_phases;
+    const int m_nreactions;
+    const int* m_nreactants;
+    const int** m_reactants_id;
+    const amrex::Real** m_reactants_coeffs;
+    const int** m_reactants_phases;
+    const int* m_nproducts;
+    const int** m_products_id;
+    const amrex::Real** m_products_coeffs;
+    const int** m_products_phases;
 
   public:
     AMREX_GPU_HOST_DEVICE
-    explicit ReactionsParms () = default;
+    ReactionsParms ()
+      : m_nreactions(0)
+      , m_nreactants(nullptr)
+      , m_reactants_id(nullptr)
+      , m_reactants_coeffs(nullptr)
+      , m_reactants_phases(nullptr)
+      , m_nproducts(nullptr)
+      , m_products_id(nullptr)
+      , m_products_coeffs(nullptr)
+      , m_products_phases(nullptr)
+    {}
 
     AMREX_GPU_HOST_DEVICE
-    ReactionsParms (const int nreactions_,
-                    const int* nreactants_,
-                    const int** reactants_id_,
-                    const amrex::Real** reactants_coeffs_,
-                    const int** reactants_phases_,
-                    const int* nproducts_,
-                    const int** products_id_,
-                    const amrex::Real** products_coeffs_,
-                    const int** products_phases_)
-      : nreactions(nreactions_)
-      , nreactants(nreactants_)
-      , reactants_id(reactants_id_)
-      , reactants_coeffs(reactants_coeffs_)
-      , reactants_phases(reactants_phases_)
-      , nproducts(nproducts_)
-      , products_id(products_id_)
-      , products_coeffs(products_coeffs_)
-      , products_phases(products_phases_)
+    ReactionsParms (const int nreactions,
+                    const int* nreactants,
+                    const int** reactants_id,
+                    const amrex::Real** reactants_coeffs,
+                    const int** reactants_phases,
+                    const int* nproducts,
+                    const int** products_id,
+                    const amrex::Real** products_coeffs,
+                    const int** products_phases)
+      : m_nreactions(nreactions)
+      , m_nreactants(nreactants)
+      , m_reactants_id(reactants_id)
+      , m_reactants_coeffs(reactants_coeffs)
+      , m_reactants_phases(reactants_phases)
+      , m_nproducts(nproducts)
+      , m_products_id(products_id)
+      , m_products_coeffs(products_coeffs)
+      , m_products_phases(products_phases)
     {}
 
     AMREX_GPU_HOST_DEVICE
