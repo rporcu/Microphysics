@@ -38,9 +38,9 @@ class DumpedNewton {
 
         virtual const char* what() const throw()
         {
-          std::printf("DumpedNewton total iterations = %d\n", m_iter);
-          std::printf("DumpedNewton update norm = %e\n", m_update_norm);
-          std::printf("DumpedNewton residue norm = %e\n", m_residue_norm);
+          std::printf("Dumped-Newton total iterations = %d\n", m_iter);
+          std::printf("Dumped-Newton update norm = %e\n", m_update_norm);
+          std::printf("Dumped-Newton residue norm = %e\n\n", m_residue_norm);
 
           return "Dumped-Newton solver did not converge";
         }
@@ -125,13 +125,13 @@ class DumpedNewton {
           solution_new = original_solution;
 
 #ifdef AMREX_USE_GPU
-          AMREX_DEVICE_PRINTF("DumpedNewton total iterations = %d\n", iter);
-          AMREX_DEVICE_PRINTF("DumpedNewton update norm = %e\n", std::abs(update));
-          AMREX_DEVICE_PRINTF("DumpedNewton residue norm = %e\n", std::abs(residue));
+          AMREX_DEVICE_PRINTF("Dumped-Newton total iterations = %d\n", iter);
+          AMREX_DEVICE_PRINTF("Dumped-Newton update norm = %e\n", std::abs(update));
+          AMREX_DEVICE_PRINTF("Dumped-Newton residue norm = %e\n", std::abs(residue));
 #else
-          std::printf("DumpedNewton total iterations = %d\n", iter);
-          std::printf("DumpedNewton update norm = %e\n", std::abs(update));
-          std::printf("DumpedNewton residue norm = %e\n", std::abs(residue));
+          std::printf("Dumped-Newton total iterations = %d\n", iter);
+          std::printf("Dumped-Newton update norm = %e\n", std::abs(update));
+          std::printf("Dumped-Newton residue norm = %e\n", std::abs(residue));
 #endif
 
           return max_iterations;

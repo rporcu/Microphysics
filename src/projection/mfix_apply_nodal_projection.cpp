@@ -41,7 +41,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     // projection that projects (U^*-U^n + dt Gp) rather than (U^* + dt Gp)
 
     if (a_time > 0 && a_dt < 0.1 * a_prev_dt)
-       proj_for_small_dt      = true;
+       proj_for_small_dt = true;
 
     if(m_use_drag_in_projection)
       amrex::Print() << "Adding drag to vel in nodal projection\n";
@@ -114,8 +114,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
       else
         amrex::Print() << "Before projection:" << std::endl;
 
-      mfix_print_max_vel(lev);
-      mfix_print_max_gp(lev);
+      mfix_print_max_vel(lev, vel_g_in, p_g_in);
+      mfix_print_max_gp(lev, gp_in);
       amrex::Print() << "Min and Max of ep_g "
                      << ep_g_in[lev]->min(0) << " "
                      << ep_g_in[lev]->max(0) << std::endl;
@@ -186,9 +186,10 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     info.setAgglomerationGridSize(agg_grid_size);
 
     nodal_projector = std::make_unique<NodalProjector>(vel_g_in,
-                                             GetVecOfConstPtrs(sigma_mf),
-                                             geom, info,
-                                             a_S_cc);
+                                                       GetVecOfConstPtrs(sigma_mf),
+                                                       geom,
+                                                       info,
+                                                       a_S_cc);
 
     nodal_projector->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
 
@@ -240,7 +241,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     PostProjectionRedistribution(a_time, a_dt, GetVecOfPtrs(sigma_mf));
 
     // Compute diveu for diagnostics only
-    PostProjectionDiagnostics(a_time, epu, vel_g_in, gp_in, ep_g_in, a_S_cc, proj_for_small_dt);
+    PostProjectionDiagnostics(a_time, epu, vel_g_in, p_g_in, gp_in, ep_g_in, a_S_cc, proj_for_small_dt);
 
     for (int lev(0); lev < nlev; lev++)
       delete epu[lev];
@@ -250,9 +251,10 @@ void
 mfix::PostProjectionDiagnostics(Real a_time,
                                 Vector<MultiFab*> const& epu,
                                 Vector<MultiFab*> const& vel_g_in,
+                                Vector<MultiFab*> const& p_g_in,
                                 Vector<MultiFab*> const& gp_in,
-                                Vector<MultiFab*> const&  ep_g_in,
-                                Vector<MultiFab*> const&  a_S_cc,
+                                Vector<MultiFab*> const& ep_g_in,
+                                Vector<MultiFab*> const& a_S_cc,
                                 bool proj_for_small_dt)
 {
     //
@@ -311,6 +313,6 @@ mfix::PostProjectionDiagnostics(Real a_time,
         else
            amrex::Print() << "After  projection:" << std::endl;
 
-        mfix_print_max_vel(lev);
+        mfix_print_max_vel(lev, vel_g_in, p_g_in);
     }
 }

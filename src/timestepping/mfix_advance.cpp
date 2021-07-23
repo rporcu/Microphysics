@@ -8,7 +8,6 @@
 #include <mfix_reactions_parms.H>
 #include <mfix_eb_parms.H>
 #include <mfix_pic_parms.H>
-#include <mfix_des_heterogeneous_rates_K.H>
 #include <mfix_solvers.H>
 
 #ifdef AMREX_MEM_PROFILING
@@ -43,8 +42,7 @@ mfix::mfix_project_velocity ()
       delete depdt[lev];
 
     // We initialize p_g and gp back to zero (p0_g may still be still non-zero)
-    for (int lev = 0; lev <= finest_level; lev++)
-    {
+    for (int lev = 0; lev <= finest_level; lev++) {
       m_leveldata[lev]->p_g->setVal(0);
       m_leveldata[lev]->gp->setVal(0);
     }
@@ -59,7 +57,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   Real time = 0.0;
   int nstep = 0;
 
-  mfix_compute_dt(nstep,time,stop_time,dt,dt);
+  mfix_compute_dt(nstep, time, stop_time, dt, dt);
 
   amrex::Print() << "Doing initial pressure iterations with dt = " << dt << "\n";
 
@@ -80,17 +78,22 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   if (advect_fluid_species)
     mfix_set_species_bcs(time, get_X_gk());
 
-  // Copy vel_g into vel_go
-  for (int lev = 0; lev <= finest_level; lev++)
+  // Copy vel_g and p_g into vel_go and p_go
+  for (int lev = 0; lev <= finest_level; lev++) {
     MultiFab::Copy(*m_leveldata[lev]->vel_go, *m_leveldata[lev]->vel_g, 0, 0,
-                   m_leveldata[lev]->vel_g->nComp(), m_leveldata[lev]->vel_go->nGrow());
+                   m_leveldata[lev]->vel_g->nComp(), m_leveldata[lev]->vel_g->nGrow());
+
+    MultiFab::Copy(*m_leveldata[lev]->p_go, *m_leveldata[lev]->p_g, 0, 0,
+                   m_leveldata[lev]->p_g->nComp(), m_leveldata[lev]->p_g->nGrow());
+  }
 
   if (DEM::solve || PIC::solve) {
-    mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(), get_T_g(), time);
+    mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
+                         get_T_g(), get_X_gk(), time);
 
-    if (REACTIONS::solve) {
-      mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g_old(), get_vel_g_old(),
-                          get_T_g_old(), get_X_gk_old(), time);
+    if (reactions.solve) {
+      mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
+                          get_T_g(), get_X_gk(), time);
     }
   }
 
@@ -200,7 +203,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
                         m_leveldata[lev]->X_gk->nComp(), m_leveldata[lev]->X_gk->nGrow());
       }
 
-      if (m_idealgas_constraint == IdealGasConstraint::ClosedSystem) {
+      if (m_constraint_type == ConstraintType::IdealGasClosedSystem) {
         MultiFab::Copy(*m_leveldata[lev]->pressure_g, *m_leveldata[lev]->pressure_go, 0, 0,
                         m_leveldata[lev]->pressure_g->nComp(), m_leveldata[lev]->pressure_g->nGrow());
       }
@@ -216,6 +219,9 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     if (advect_enthalpy)
       mfix_set_enthalpy_bcs(time, get_h_g());
+
+    if (advect_fluid_species)
+      mfix_set_species_bcs(time, get_X_gk());
   }
 
   for (int lev = 0; lev <= finest_level; lev++)
@@ -250,7 +256,14 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 // momentum exchange
 //
 void
-mfix::mfix_add_txfr_explicit (Real dt)
+mfix::mfix_add_txfr_explicit (Real dt,
+                              Vector<MultiFab*      > const& vel_in,
+                              Vector<MultiFab*      > const& h_g_in,
+                              Vector<MultiFab*      > const& T_g_in,
+                              Vector<MultiFab const*> const& X_gk_in,
+                              Vector<MultiFab const*> const& txfr_in,
+                              Vector<MultiFab const*> const& rho_in,
+                              Vector<MultiFab const*> const& ep_g_in)
 {
   /*
      This adds both components of the drag term
@@ -264,24 +277,21 @@ mfix::mfix_add_txfr_explicit (Real dt)
 
   for (int lev = 0; lev <= finest_level; lev++) {
 
-    auto& ld = *m_leveldata[lev];
-
-    const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ld.ep_g->Factory());
+    const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ep_g_in[lev]->Factory());
     const auto& flags = factory.getMultiEBCellFlagFab();
     const auto& volfrac = factory.getVolFrac();
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-    for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-
+    for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
       // Tilebox
       Box bx = mfi.tilebox();
 
-      Array4<Real      > const&  vel_array = ld.vel_g->array(mfi);
-      Array4<Real const> const& txfr_array = ld.txfr->array(mfi);
-      Array4<Real const> const&   ro_array = ld.ro_g->array(mfi);
-      Array4<Real const> const&   ep_array = ld.ep_g->array(mfi);
+      Array4<Real      > const&  vel_array = vel_in[lev]->array(mfi);
+      Array4<Real const> const& txfr_array = txfr_in[lev]->array(mfi);
+      Array4<Real const> const&   ro_array = rho_in[lev]->array(mfi);
+      Array4<Real const> const&   ep_array = ep_g_in[lev]->array(mfi);
 
       amrex::ParallelFor(bx,[dt,vel_array,txfr_array,ro_array,ep_array]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -305,9 +315,9 @@ mfix::mfix_add_txfr_explicit (Real dt)
 
       if(advect_enthalpy) {
 
-        Array4<Real      > const& hg_array  = ld.h_g->array(mfi);
-        Array4<Real      > const& Tg_array  = ld.T_g->array(mfi);
-        Array4<Real const> const& Xgk_array = ld.X_gk->const_array(mfi);
+        Array4<Real      > const& hg_array  = h_g_in[lev]->array(mfi);
+        Array4<Real      > const& Tg_array  = T_g_in[lev]->array(mfi);
+        Array4<Real const> const& Xgk_array = X_gk_in[lev]->const_array(mfi);
 
         auto const& flags_arr = flags.const_array(mfi);
         auto const& volfrac_arr = volfrac.const_array(mfi);
@@ -434,9 +444,9 @@ mfix::mfix_add_txfr_implicit (Real dt,
   auto& fluid_parms = *fluid.parameters;
 
   for (int lev = 0; lev <= finest_level; lev++) {
-
     const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ep_g_in[lev]->Factory());
     const auto& flags = factory.getMultiEBCellFlagFab();
+
     const auto& volfrac = factory.getVolFrac();
 
 #ifdef _OPENMP
@@ -447,10 +457,10 @@ mfix::mfix_add_txfr_implicit (Real dt,
       // Tilebox
       Box bx = mfi.tilebox();
 
-      Array4<Real      > const&  vel_array = vel_in[lev]->array(mfi);
+      Array4<Real      > const& vel_array  = vel_in[lev]->array(mfi);
       Array4<Real const> const& txfr_array = txfr_in[lev]->const_array(mfi);
-      Array4<Real const> const&   ro_array = rho_in[lev]->const_array(mfi);
-      Array4<Real const> const&   ep_array = ep_g_in[lev]->const_array(mfi);
+      Array4<Real const> const& ro_array   = rho_in[lev]->const_array(mfi);
+      Array4<Real const> const& ep_array   = ep_g_in[lev]->const_array(mfi);
 
       amrex::ParallelFor(bx,[dt,vel_array,txfr_array,ro_array,ep_array]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -465,9 +475,9 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
       if (advect_enthalpy) {
 
-        Array4<Real      > const& hg_array  = h_g_in[lev]->array(mfi);
-        Array4<Real      > const& Tg_array  = T_g_in[lev]->array(mfi);
-        Array4<Real const> const& Xgk_array = X_gk_in[lev]->const_array(mfi);
+        Array4<Real      > const& hg_array    = h_g_in[lev]->array(mfi);
+        Array4<Real      > const& Tg_array    = T_g_in[lev]->array(mfi);
+        Array4<Real const> const& Xgk_array   = X_gk_in[lev]->const_array(mfi);
 
         auto const& flags_arr = flags.const_array(mfi);
         auto const& volfrac_arr = volfrac.const_array(mfi);

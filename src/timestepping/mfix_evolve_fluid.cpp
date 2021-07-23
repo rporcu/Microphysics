@@ -9,7 +9,6 @@
 #include <mfix_species_parms.H>
 #include <mfix_reactions_parms.H>
 #include <mfix_pic_parms.H>
-#include <mfix_des_heterogeneous_rates_K.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -203,9 +202,9 @@ mfix::EvolveFluid (int nstep,
         if (DEM::solve || PIC::solve) {
           Real start_drag = ParallelDescriptor::second();
           mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g_old(),
-                               get_vel_g_old(), get_T_g(), time);
+                               get_vel_g_old(), get_T_g_old(), get_X_gk_old(), time);
 
-          if (REACTIONS::solve) {
+          if (reactions.solve) {
             mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g_old(),
                                 get_vel_g_old(), get_T_g_old(), get_X_gk_old(), time);
           }
@@ -226,11 +225,11 @@ mfix::EvolveFluid (int nstep,
           Real start_drag = ParallelDescriptor::second();
           amrex::Print() << "\nRecalculating drag ..." << std::endl;
           mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                               get_T_g(), new_time);
+                               get_T_g(), get_X_gk(), new_time);
 
-          // If !m_idealgas_constraint == IdealGasConstraint::None, then we have already
+          // If !m_constraint_type == ConstraintType::IncompressibleFluid, then we have already
           // updated the chemical quantities
-          if (REACTIONS::solve && m_idealgas_constraint == IdealGasConstraint::None) {
+          if (reactions.solve && m_constraint_type == ConstraintType::IncompressibleFluid) {
             mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
                                 get_T_g(), get_X_gk(), new_time);
           }

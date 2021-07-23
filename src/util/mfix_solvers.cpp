@@ -172,9 +172,9 @@ void DumpedNewton::solve(const amrex::Vector<amrex::MultiFab*>& solution,
   } while(//(norm(residue) > residue_rel_tol) ||
           (norm(update) > update_rel_tol));
 
-  amrex::Print() << "DumpedNewton converged after iterations nb. = " << iter << "\n";
-  amrex::Print() << "DumpedNewton final update norm = " << norm(update) << "\n";
-  amrex::Print() << "DumpedNewton final residue norm = " << norm(residue) << "\n";
+  amrex::Print() << "Dumped-Newton converged after iterations nb. = " << iter << "\n";
+  amrex::Print() << "Dumped-Newton final update norm = " << norm(update) << "\n";
+  amrex::Print() << "Dumped-Newton final residue norm = " << norm(residue) << "\n\n";
 
   for (int lev(0); lev <= finest_level; ++lev) {
     delete residue[lev];

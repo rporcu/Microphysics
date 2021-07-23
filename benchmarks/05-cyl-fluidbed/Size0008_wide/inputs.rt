@@ -108,6 +108,12 @@ species.O2.diffusivity.constant  = 1.9e-5
 species.H2O.diffusivity.constant = 2.4e-5
 species.He.diffusivity.constant  = 7.1e-5
 
+species.specific_heat = constant
+
+species.O2.specific_heat.constant  = 918
+species.H2O.specific_heat.constant = 918
+species.He.specific_heat.constant  = 918
+
 
 #_______________________________________________________________________
 # Fluid model settings

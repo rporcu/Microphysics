@@ -47,7 +47,8 @@ mfix::AllocateArrays (int lev)
 
     m_leveldata[lev] = std::make_unique<LevelData>(grids[lev], dmap[lev], nghost_state(),
                                          *ebfactory[lev], fluid.solve_enthalpy,
-                                         fluid.solve_species, fluid.nspecies);
+                                         fluid.solve_species, fluid.nspecies,
+                                         reactions.solve, reactions.nreactions);
     m_leveldata[lev]->resetValues(init_value);
 
     // ********************************************************************************

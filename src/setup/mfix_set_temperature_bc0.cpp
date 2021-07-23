@@ -186,5 +186,4 @@ mfix::set_temperature_bc0 (const Box& sbx,
   }
 
   //Gpu::synchronize();
-
 }

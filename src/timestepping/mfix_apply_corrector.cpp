@@ -79,8 +79,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // We use the new-time value for things computed on the "*" state
     Real new_time = time + l_dt;
 
-    mfix_set_density_bcs(time, get_ro_g());
-
     // *************************************************************************************
     // Allocate space for the forcing terms
     // *************************************************************************************
@@ -179,7 +177,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // to the RHS before doing the implicit diffusion
     const bool explicit_diffusive_species  = true;
 
-    if (m_idealgas_constraint == IdealGasConstraint::None) {
+    mfix_set_density_bcs(time, get_ro_g());
+
+    if (m_constraint_type == ConstraintType::IncompressibleFluid) {
       // We do not need to calculate the laplacians nor the right-hand-side
       // terms if the open or closed system constraint is used because they were
       // previously computed at the end of the predictor step, prior to the
@@ -212,19 +212,14 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
              get_X_gk(), get_T_g_const(), get_chem_txfr_const());
       }
 
-      if (advect_tracer) {
-        mfix_scalar_rhs(/*trac_RHS,*/ get_trac_const(), get_ep_g_const(),
-                        get_ro_g_const(), mu_s);
-      }
-
       if (advect_fluid_species) {
         mfix_species_X_rhs(species_RHS, get_chem_txfr_const());
       }
+    } else {
 
-    } // end if (m_idealgas_constraint == IdealGasConstraint::None)
-
-    if (advect_density) {
-      mfix_density_rhs(ro_RHS, get_chem_txfr_const());
+      if (advect_density) {
+        mfix_density_rhs(ro_RHS, get_chem_txfr_const());
+      }
     }
 
     if (advect_tracer) {
@@ -234,28 +229,34 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
     // Linear momentum RHS
     if (solve_reactions) {
-      mfix_momentum_rhs(vel_RHS, get_ep_g_const(), get_vel_g_const(),
-                        GetVecOfConstPtrs(ro_RHS), get_chem_txfr_const());
+      mfix_momentum_rhs(vel_RHS, get_ep_g_const(), get_chem_txfr_const());
     }
 
     // *************************************************************************************
     // Compute RHS for the MAC projection
     // *************************************************************************************
 
-    if (m_idealgas_constraint == IdealGasConstraint::OpenSystem) {
+    if (m_constraint_type == ConstraintType::IncompressibleFluid) {
 
-      mfix_open_system_rhs(GetVecOfPtrs(rhs_mac), GetVecOfConstPtrs(lap_T),
-          GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
-          GetVecOfConstPtrs(species_RHS), get_ro_g_const(), get_T_g_const(),
-          get_X_gk(), get_txfr_const(), get_chem_txfr_const());
+      mfix_incompressible_fluid_rhs(GetVecOfPtrs(rhs_mac), GetVecOfConstPtrs(ro_RHS),
+          get_ro_g_const());
+    } else {
 
-    } else if (m_idealgas_constraint == IdealGasConstraint::ClosedSystem) {
+      if (m_constraint_type == ConstraintType::IdealGasOpenSystem) {
 
-      mfix_closed_system_rhs(GetVecOfPtrs(rhs_mac), GetVecOfConstPtrs(lap_T),
-          GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
-          GetVecOfConstPtrs(species_RHS), get_ep_g_const(), get_ro_g_const(),
-          get_T_g_const(), get_X_gk(), get_txfr_const(),
-          get_chem_txfr_const(), get_pressure_g_const(), avgSigma, avgTheta);
+        mfix_idealgas_opensystem_rhs(GetVecOfPtrs(rhs_mac), GetVecOfConstPtrs(lap_T),
+            GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
+            GetVecOfConstPtrs(species_RHS), get_ro_g_const(), get_T_g_const(),
+            get_X_gk(), get_txfr_const(), get_chem_txfr_const());
+
+      } else if (m_constraint_type == ConstraintType::IdealGasClosedSystem) {
+
+        mfix_idealgas_closedsystem_rhs(GetVecOfPtrs(rhs_mac), GetVecOfConstPtrs(lap_T),
+            GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
+            GetVecOfConstPtrs(species_RHS), get_ep_g_const(), get_ro_g_const(),
+            get_T_g_const(), get_X_gk(), get_txfr_const(),
+            get_chem_txfr_const(), get_pressure_g_const(), avgSigma, avgTheta);
+      }
     }
 
     // *************************************************************************************
@@ -330,7 +331,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // **************************************************************************
     // Update thermodynamic pressure
     // **************************************************************************
-    if (m_idealgas_constraint == IdealGasConstraint::ClosedSystem)
+    if (m_constraint_type == ConstraintType::IdealGasClosedSystem)
     {
       for (int lev = 0; lev <= finest_level; ++lev) {
         auto& ld = *m_leveldata[lev];
@@ -366,9 +367,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       const int fluid_is_a_mixture = fluid.is_a_mixture;
       const int nspecies_g = fluid.nspecies;
 
-      const int closed_system = (m_idealgas_constraint == IdealGasConstraint::ClosedSystem);
+      const int closed_system = (m_constraint_type == ConstraintType::IdealGasClosedSystem);
 
-      for (int lev = 0; lev <= finest_level; lev++) {
+      for (int lev(0); lev < nlev; ++lev) {
 
         auto& ld = *m_leveldata[lev];
 
@@ -405,11 +406,11 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
           auto const& volfrac_arr = volfrac.const_array(mfi);
 
           amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,epg,
-              dhdt_o,dhdt,h_rhs_o,h_rhs,l_dt,lap_T_o,lap_T_n,Dpressure_Dt,
-              Dpressure_Dt_old,closed_system,explicit_diffusive_enthalpy,
-              fluid_parms,X_gk_o,nspecies_g,fluid_is_a_mixture,flags_arr,
-              volfrac_arr]
-            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            dhdt_o,dhdt,h_rhs_o,h_rhs,l_dt,lap_T_o,lap_T_n,Dpressure_Dt,
+            Dpressure_Dt_old,closed_system,explicit_diffusive_enthalpy,
+            fluid_parms,X_gk_o,nspecies_g,fluid_is_a_mixture,flags_arr,
+            volfrac_arr]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             if (!flags_arr(i,j,k).isCovered()) {
               int conv_comp = 1;
@@ -899,8 +900,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
     // NOTE: we do this call before multiplying ep_g by ro_g
     if (advect_enthalpy && (!explicit_diffusive_enthalpy)) {
-      diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(), get_h_g(),
-          get_T_g_on_eb(), 0.5*l_dt);
+      diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
+                                        get_h_g(), get_X_gk(), get_T_g_on_eb(), 0.5*l_dt);
 
       // We call the bc routines again to enforce the ext_dir condition
       // on the faces (the diffusion operator can move those to ghost cell centers)
@@ -958,7 +959,28 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       S_cc[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
     }
 
-    if (!(m_idealgas_constraint == IdealGasConstraint::None)) {
+    if (m_constraint_type == ConstraintType::IncompressibleFluid) {
+
+      // Calculate chem_txfr coefficient
+      if (DEM::solve || PIC::solve) {
+
+        Real start_drag = ParallelDescriptor::second();
+
+        if (reactions.solve) {
+          mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
+                              get_T_g(), get_X_gk(), new_time);
+        }
+
+        coupling_timing += ParallelDescriptor::second() - start_drag;
+      }
+
+      if (advect_density) {
+        mfix_density_rhs(ro_RHS, get_chem_txfr_const());
+      }
+
+      mfix_incompressible_fluid_rhs(S_cc, GetVecOfConstPtrs(ro_RHS), get_ro_g_const());
+
+    } else {
 
       // Calculate drag coefficient
       if (DEM::solve || PIC::solve) {
@@ -966,9 +988,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         Real start_drag = ParallelDescriptor::second();
         amrex::Print() << "\nRecalculating drag ..." << std::endl;
         mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                             get_T_g(), new_time);
+                             get_T_g(), get_X_gk(), new_time);
 
-        if (REACTIONS::solve) {
+        if (reactions.solve) {
           mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
                               get_T_g(), get_X_gk(), new_time);
         }
@@ -1003,16 +1025,16 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         mfix_species_X_rhs(species_RHS, get_chem_txfr_const());
       }
 
-      if (m_idealgas_constraint == IdealGasConstraint::OpenSystem) {
+      if (m_constraint_type == ConstraintType::IdealGasOpenSystem) {
 
-        mfix_open_system_rhs(S_cc, GetVecOfConstPtrs(lap_T),
+        mfix_idealgas_opensystem_rhs(S_cc, GetVecOfConstPtrs(lap_T),
             GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
             GetVecOfConstPtrs(species_RHS), get_ro_g_const(), get_T_g_const(),
             get_X_gk(), get_txfr_const(), get_chem_txfr_const());
 
-      } else if (m_idealgas_constraint == IdealGasConstraint::ClosedSystem) {
+      } else if (m_constraint_type == ConstraintType::IdealGasClosedSystem) {
 
-        mfix_closed_system_rhs(S_cc, GetVecOfConstPtrs(lap_T),
+        mfix_idealgas_closedsystem_rhs(S_cc, GetVecOfConstPtrs(lap_T),
             GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
             GetVecOfConstPtrs(species_RHS), get_ep_g_const(), get_ro_g_const(),
             get_T_g_const(), get_X_gk(), get_txfr_const(),

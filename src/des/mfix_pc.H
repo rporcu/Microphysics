@@ -69,14 +69,14 @@ struct runtimeRealData
   runtimeRealData (const int nspecies_s,
                    const int nreactions)
     : X_sn(0)                                            // nb of components = nspecies
-    , ro_sn_txfr(X_sn + nspecies_s*(nreactions>0))       // nb of components = nspecies
-    , vel_s_txfr(ro_sn_txfr + nspecies_s*(nreactions>0)) // nb of components = 3
+    , mass_sn_txfr(X_sn + nspecies_s*(nreactions>0))       // nb of components = nspecies
+    , vel_s_txfr(mass_sn_txfr + nspecies_s*(nreactions>0)) // nb of components = 3
     , h_s_txfr(vel_s_txfr + 3*(nreactions>0))            // nb of components = 1
     , count(h_s_txfr + 1*(nreactions>0))
   {}
 
   const int X_sn;
-  const int ro_sn_txfr;
+  const int mass_sn_txfr;
   const int vel_s_txfr;
   const int h_s_txfr;
   const int count;
@@ -130,7 +130,8 @@ public:
     { return pti.numParticles(); }
 
     MFIXParticleContainer (amrex::AmrCore* amr_core,
-                           SolidsPhase& solids);
+                           SolidsPhase& solids,
+                           Reactions& reactions);
 
     virtual ~MFIXParticleContainer () {};
 
@@ -140,8 +141,7 @@ public:
 
     void InitParticlesAuto ();
 
-    void InitParticlesRuntimeVariables (const int adv_enthalpy,
-                                        const int solve_species);
+    void InitParticlesRuntimeVariables (const int adv_enthalpy);
 
     void RemoveOutOfRange (int lev,
                            const amrex::EBFArrayBoxFactory * ebfactory,
@@ -362,6 +362,8 @@ public:
     void usr3_des (int np,void*&);
 
     SolidsPhase& solids;
+
+    Reactions& reactions;
 };
 
 #endif
