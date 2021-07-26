@@ -64,11 +64,8 @@ class ReactionsParms {
       , m_products_phases(products_phases)
     {}
 
-    AMREX_GPU_HOST_DEVICE
-    ~ReactionsParms() {}
-
     // Compute heterogeneous reactions
-    template <class HeterogeneousRatesFunc>
+    template <typename HeterogeneousRatesFunc>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     void heterogeneous_rates(amrex::Real* R_q,
                              const SolidsParms& solids_parms,
@@ -79,29 +76,29 @@ class ReactionsParms {
                              const amrex::Real* X_gk,
                              const amrex::Real ro_g,
                              const amrex::Real ep_g,
-                             const HeterogeneousRatesFunc& heterogeneous_rates_func) const
+                             HeterogeneousRatesFunc& heterogeneous_rates_func) const
     { heterogeneous_rates_func(R_q, *this, solids_parms, X_sn, ro_s, ep_s, fluid_parms, X_gk, ro_g, ep_g); }
     
     // Compute heterogeneous reactions
-    template <class HomogeneousRatesFunc>
+    template <typename HomogeneousRatesFunc>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     void homogeneous_rates(amrex::Real* R_q,
                            const SolidsParms& solids_parms,
                            const amrex::Real* X_sn,
                            const amrex::Real ro_s,
                            const amrex::Real ep_s,
-                           const HomogeneousRatesFunc& homogeneous_rates_func) const
+                           HomogeneousRatesFunc& homogeneous_rates_func) const
     { homogeneous_rates_func(R_q, *this, solids_parms, X_sn, ro_s, ep_s); }
     
     // Compute heterogeneous reactions
-    template <class HomogeneousRatesFunc>
+    template <typename HomogeneousRatesFunc>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     void homogeneous_rates(amrex::Real* R_q,
                            const FluidParms& fluid_parms,
                            const amrex::Real* X_sn,
                            const amrex::Real ro_s,
                            const amrex::Real ep_s,
-                           const HomogeneousRatesFunc& homogeneous_rates_func) const
+                           HomogeneousRatesFunc& homogeneous_rates_func) const
     { homogeneous_rates_func(R_q, *this, fluid_parms, X_sn, ro_s, ep_s); }
 };
 

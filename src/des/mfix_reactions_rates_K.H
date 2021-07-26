@@ -13,31 +13,36 @@
 #include <mfix_reactions_parms.H>
 
 
-struct HeterogeneousRatesUser
+class HeterogeneousRatesUser
 {
-    HeterogeneousRatesUser () {};
+  public:
+    AMREX_GPU_HOST_DEVICE
+    HeterogeneousRatesUser () = default;
 
     /**
      *  \brief Returns: the calculated heterogeneous chemical reactions rates
      *
      *  Inputs: // TODO
      */
-    AMREX_GPU_HOST_DEVICE
-    void operator() (amrex::Real* R_q,
-                     const ReactionsParms& reactions_parms,
-                     const SolidsParms& solids_parms,
-                     const amrex::Real* X_sn,
-                     const amrex::Real ro_s,
-                     const amrex::Real ep_s,
-                     const FluidParms& fluid_parms,
-                     const amrex::Real* X_gk,
-                     const amrex::Real ro_g,
-                     const amrex::Real ep_g) const;
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    void operator() (amrex::Real*, // R_q,
+                     const ReactionsParms&, // reactions_parms,
+                     const SolidsParms&, // solids_parms,
+                     const amrex::Real*, // X_sn,
+                     const amrex::Real, // ro_s,
+                     const amrex::Real, // ep_s,
+                     const FluidParms&, // fluid_parms,
+                     const amrex::Real*, // X_gk,
+                     const amrex::Real, // ro_g,
+                     const amrex::Real /*ep_g*/) const
+    {}
 };
 
-struct HomogeneousRatesUser
+class HomogeneousRatesUser
 {
-    HomogeneousRatesUser () {};
+  public:
+    AMREX_GPU_HOST_DEVICE
+    HomogeneousRatesUser () = default;
 
     /**
      *  \brief Returns: the calculated homogeneous solids-phase chemical
@@ -45,13 +50,14 @@ struct HomogeneousRatesUser
      *
      *  Inputs: // TODO
      */
-    AMREX_GPU_HOST_DEVICE
-    void operator() (amrex::Real* R_q,
-                     const ReactionsParms& reactions_parms,
-                     const SolidsParms& solids_parms,
-                     const amrex::Real* X_sn,
-                     const amrex::Real ro_s,
-                     const amrex::Real ep_s) const;
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    void operator() (amrex::Real*, // R_q,
+                     const ReactionsParms&, // reactions_parms,
+                     const SolidsParms&, // solids_parms,
+                     const amrex::Real*, // X_sn,
+                     const amrex::Real, // ro_s,
+                     const amrex::Real /*ep_s*/) const
+    {}
 
     /**
      *  \brief Returns: the calculated homogeneous fluid-phase chemical
@@ -59,13 +65,14 @@ struct HomogeneousRatesUser
      *
      *  Inputs: // TODO
      */
-    AMREX_GPU_HOST_DEVICE
-    void operator() (amrex::Real* R_q,
-                     const ReactionsParms& reactions_parms,
-                     const FluidParms& fluid_parms,
-                     const amrex::Real* X_gk,
-                     const amrex::Real ro_g,
-                     const amrex::Real ep_g) const;
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    void operator() (amrex::Real*, // R_q,
+                     const ReactionsParms&, // reactions_parms,
+                     const FluidParms&, // fluid_parms,
+                     const amrex::Real*, // X_gk,
+                     const amrex::Real, // ro_g,
+                     const amrex::Real /*ep_g*/) const
+    {}
 };
 
 #endif
