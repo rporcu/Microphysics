@@ -39,7 +39,7 @@ namespace SPECIES
   int solve_enthalpy(0);
 
   // Specified constant species specific heat
-  amrex::Vector<amrex::Vector<amrex::Real>> cp_k0(0);
+  amrex::Vector<amrex::Real> cp_k0(0);
 
   // Enthalpy of formation
   amrex::Vector<amrex::Real> H_fk0(0);
@@ -80,7 +80,20 @@ namespace SPECIES
 
         if (advect_enthalpy == 1) {
           solve_enthalpy = 1;
-          cp_k0.resize(nspecies);
+
+          std::string specific_heat_model;
+          pp.query("specific_heat", specific_heat_model);
+
+          if (amrex::toLower(specific_heat_model).compare("constant") == 0) {
+            SpecificHeatModel = SPECIFICHEATMODEL::Constant;
+            cp_k0.resize(nspecies);
+          } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
+            SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
+            cp_k0.resize(nspecies*5);
+          } else {
+            amrex::Abort("Don't know this specific heat model!");
+          }
+
           H_fk0.resize(nspecies);
         }
       }
@@ -119,36 +132,24 @@ namespace SPECIES
 
         if (solve_enthalpy) {
           // Get specific heat model input ------------------------//
-          std::string specific_heat_model;
-          pp.query("specific_heat", specific_heat_model);
-
-          if (amrex::toLower(specific_heat_model).compare("constant") == 0) {
-
-            SpecificHeatModel = SPECIFICHEATMODEL::Constant;
+          if (SpecificHeatModel == SPECIFICHEATMODEL::Constant) {
 
             for (int n(0); n < nspecies; n++) {
               std::string name = "species." + species[n];
               amrex::ParmParse ppSpecies(name.c_str());
-              cp_k0[n].resize(1);
-              ppSpecies.get("specific_heat.constant", cp_k0[n][0]);
+              ppSpecies.get("specific_heat.constant", cp_k0[n]);
             }
-          } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
-
-            SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
+          } else if (SpecificHeatModel == SPECIFICHEATMODEL::NASA7Polynomials) {
 
             for (int n(0); n < nspecies; n++) {
-              cp_k0[n].resize(5);
-
               std::string name = "species." + species[n];
               amrex::ParmParse ppSpecies(name.c_str());
-              ppSpecies.get("specific_heat.NASA7.a1", cp_k0[n][0]);
-              ppSpecies.get("specific_heat.NASA7.a2", cp_k0[n][1]);
-              ppSpecies.get("specific_heat.NASA7.a3", cp_k0[n][2]);
-              ppSpecies.get("specific_heat.NASA7.a4", cp_k0[n][3]);
-              ppSpecies.get("specific_heat.NASA7.a5", cp_k0[n][4]);
+              ppSpecies.get("specific_heat.NASA7.a1", cp_k0[n*5 + 0]);
+              ppSpecies.get("specific_heat.NASA7.a2", cp_k0[n*5 + 1]);
+              ppSpecies.get("specific_heat.NASA7.a3", cp_k0[n*5 + 2]);
+              ppSpecies.get("specific_heat.NASA7.a4", cp_k0[n*5 + 3]);
+              ppSpecies.get("specific_heat.NASA7.a5", cp_k0[n*5 + 4]);
             }
-          } else {
-            amrex::Abort("Don't know this specific heat model!");
           }
 
           // Get enthalpy of formation model input ------------------------//

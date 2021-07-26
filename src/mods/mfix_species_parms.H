@@ -45,7 +45,7 @@ namespace SPECIES
   extern int solve_enthalpy;
 
   // Specified parameters species specific heat
-  extern amrex::Vector<amrex::Vector<amrex::Real>> cp_k0;
+  extern amrex::Vector<amrex::Real> cp_k0;
 
   // Enthalpy of formation
   extern amrex::Vector<amrex::Real> H_fk0;

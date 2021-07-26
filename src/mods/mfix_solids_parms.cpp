@@ -83,7 +83,24 @@ SolidsPhase::Initialize ()
       MW_sn0.resize(NTYPES);
 
       if(solve_energy) {
-        cp_sn0.resize(NTYPES);
+
+        // Read in the specific heat model we are using
+        std::string specific_heat_model;
+        pp.get("specific_heat", specific_heat_model);
+
+        if (amrex::toLower(specific_heat_model).compare("constant") == 0) {
+          SpecificHeatModel = SPECIFICHEATMODEL::Constant;
+          cp_sn0.resize(NTYPES);
+        } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
+          SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
+          cp_sn0.resize(NTYPES*5);
+        } else if (amrex::toLower(specific_heat_model).compare("nasa9-poly") == 0) {
+          SpecificHeatModel = SPECIFICHEATMODEL::NASA9Polynomials;
+          amrex::Abort("Not yet implemented.");
+        } else {
+          amrex::Abort("Unknown fluid specific heat model!");
+        }
+
         H_fn0.resize(NTYPES);
       }
 
@@ -93,37 +110,21 @@ SolidsPhase::Initialize ()
 
         if(solve_energy) {
 
-          // Read in the specific heat model we are using
-          std::string specific_heat_model;
-          ppSolid.get("specific_heat", specific_heat_model);
-
           // Set up ParmParse to read in specific heat inputs
           std::string cp_str = names[solid]+".specific_heat";
           amrex::ParmParse pSOLIDS_CP(cp_str.c_str());
 
-          if (amrex::toLower(specific_heat_model).compare("constant") == 0) {
-            SpecificHeatModel = SPECIFICHEATMODEL::Constant;
-            cp_sn0[solid].resize(1);
-            pSOLIDS_CP.get("constant", cp_sn0[solid][0]);
-            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(cp_sn0[solid][0] > 0,
-                                             "Invalid DEM constant specific heat.");
+          if (SpecificHeatModel == SPECIFICHEATMODEL::Constant) {
+            pSOLIDS_CP.get("constant", cp_sn0[solid]);
+            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(cp_sn0[solid] > 0, "Invalid DEM constant specific heat.");
 
-          } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
-            SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
-            cp_sn0[solid].resize(5);
-            pSOLIDS_CP.get("NASA7.a1", cp_sn0[solid][0]);
-            pSOLIDS_CP.get("NASA7.a2", cp_sn0[solid][1]);
-            pSOLIDS_CP.get("NASA7.a3", cp_sn0[solid][2]);
-            pSOLIDS_CP.get("NASA7.a4", cp_sn0[solid][3]);
-            pSOLIDS_CP.get("NASA7.a5", cp_sn0[solid][4]);
-
-          } else if (amrex::toLower(specific_heat_model).compare("nasa9-poly") == 0) {
-            SpecificHeatModel = SPECIFICHEATMODEL::NASA9Polynomials;
-            amrex::Abort("Not yet implemented.");
-
-          } else {
-            amrex::Abort("Unknown fluid specific heat model!");
-          }
+          } else if (SpecificHeatModel == SPECIFICHEATMODEL::NASA7Polynomials) {
+            pSOLIDS_CP.get("NASA7.a1", cp_sn0[solid*5 + 0]);
+            pSOLIDS_CP.get("NASA7.a2", cp_sn0[solid*5 + 1]);
+            pSOLIDS_CP.get("NASA7.a3", cp_sn0[solid*5 + 2]);
+            pSOLIDS_CP.get("NASA7.a4", cp_sn0[solid*5 + 3]);
+            pSOLIDS_CP.get("NASA7.a5", cp_sn0[solid*5 + 4]);
+          } 
 
           // Query the enthalpy_of_formation
           ppSolid.query("enthalpy_of_formation", H_fn0[solid]);
@@ -169,7 +170,13 @@ SolidsPhase::Initialize ()
         MW_sn0.resize(nspecies);
 
         if (solve_energy) {
-          cp_sn0.resize(nspecies);
+
+          if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::Constant) {
+            cp_sn0.resize(nspecies);
+          } else if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::NASA7Polynomials) {
+            cp_sn0.resize(nspecies*5);
+          }
+
           H_fn0.resize(nspecies);
         }
 
@@ -186,11 +193,9 @@ SolidsPhase::Initialize ()
 
           if (solve_energy) {
             if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::Constant) {
-              cp_sn0[n].resize(1);
-              cp_sn0[n][0] = SPECIES::cp_k0[pos][0];
+              cp_sn0[n] = SPECIES::cp_k0[pos];
             } else if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::NASA7Polynomials) {
-              cp_sn0[n].resize(5);
-              std::copy(SPECIES::cp_k0[pos].begin(), SPECIES::cp_k0[pos].end(), cp_sn0[n].begin());
+              std::copy(&SPECIES::cp_k0[pos], &SPECIES::cp_k0[pos] + 5, &cp_sn0[n]);
             }
 
             H_fn0[n] = SPECIES::H_fk0[pos];
@@ -203,7 +208,6 @@ SolidsPhase::Initialize ()
         ppSolid.query("molecular_weight", MW_sn0[0]);
 
         if (solve_energy) {
-          cp_sn0.resize(1);
           H_fn0.resize(1);
 
           // Get specific heat model input ------------------------//
@@ -212,17 +216,17 @@ SolidsPhase::Initialize ()
 
           if (amrex::toLower(specific_heat_model).compare("constant") == 0) {
             SpecificHeatModel = SPECIFICHEATMODEL::Constant;
-            cp_sn0[0].resize(1);
-            ppSolid.get("specific_heat.constant", cp_sn0[0][0]);
+            cp_sn0.resize(1);
+            ppSolid.get("specific_heat.constant", cp_sn0[0]);
 
           } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
             SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
-            cp_sn0[0].resize(5);
-            ppSolid.get("specific_heat.NASA7.a1", cp_sn0[0][0]);
-            ppSolid.get("specific_heat.NASA7.a2", cp_sn0[0][1]);
-            ppSolid.get("specific_heat.NASA7.a3", cp_sn0[0][2]);
-            ppSolid.get("specific_heat.NASA7.a4", cp_sn0[0][3]);
-            ppSolid.get("specific_heat.NASA7.a5", cp_sn0[0][4]);
+            cp_sn0.resize(5);
+            ppSolid.get("specific_heat.NASA7.a1", cp_sn0[0]);
+            ppSolid.get("specific_heat.NASA7.a2", cp_sn0[1]);
+            ppSolid.get("specific_heat.NASA7.a3", cp_sn0[2]);
+            ppSolid.get("specific_heat.NASA7.a4", cp_sn0[3]);
+            ppSolid.get("specific_heat.NASA7.a5", cp_sn0[4]);
           } else {
             amrex::Abort("Don't know this specific heat model!");
           }
@@ -262,22 +266,11 @@ SolidsPhase::Initialize ()
 
     if (solve_energy) {
       d_cp_sn0.resize(cp_sn0.size());
-      for (int n(0); n < cp_sn0.size(); ++n) {
-        d_cp_sn0[n].resize(cp_sn0[n].size());
-        Gpu::copyAsync(Gpu::hostToDevice, cp_sn0[n].begin(), cp_sn0[n].end(), d_cp_sn0[n].begin());
-      }
-
-      ptr_cp_sn0.resize(cp_sn0.size());
-      d_ptr_cp_sn0.resize(cp_sn0.size());
-
-      for (int n(0); n < cp_sn0.size(); ++n) {
-        ptr_cp_sn0[n] = cp_sn0[n].data();
-        d_ptr_cp_sn0[n] = d_cp_sn0[n].data();
-      }
+      Gpu::copyAsync(Gpu::hostToDevice, cp_sn0.begin(), cp_sn0.end(), d_cp_sn0.begin());
     }
 
-    const Real** p_h_cp_sn0 = solve_energy ? ptr_cp_sn0.data() : nullptr;
-    const Real** p_d_cp_sn0 = solve_energy ? d_ptr_cp_sn0.data() : nullptr;
+    const Real* p_h_cp_sn0 = solve_energy ? cp_sn0.data() : nullptr;
+    const Real* p_d_cp_sn0 = solve_energy ? d_cp_sn0.data() : nullptr;
 
     int ncoefficients = 0;
     if (SpecificHeatModel == SPECIFICHEATMODEL::Constant)

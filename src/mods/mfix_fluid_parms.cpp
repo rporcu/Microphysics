@@ -126,7 +126,6 @@ FluidPhase::Initialize ()
 
       if (!SPECIES::solve) {
 
-        cp_gk0.resize(1);
         H_fk0.resize(1);
 
         // Get specific heat inputs ------------------------------------//
@@ -135,17 +134,17 @@ FluidPhase::Initialize ()
 
         if (amrex::toLower(specific_heat_model).compare("constant") == 0) {
           SpecificHeatModel = SPECIFICHEATMODEL::Constant;
-          cp_gk0[0].resize(1);
-          ppFluid.get("specific_heat.constant", cp_gk0[0][0]);
+          cp_gk0.resize(1);
+          ppFluid.get("specific_heat.constant", cp_gk0[0]);
 
         } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
           SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
-          cp_gk0[0].resize(5);
-          ppFluid.get("specific_heat.NASA7.a1", cp_gk0[0][0]);
-          ppFluid.get("specific_heat.NASA7.a2", cp_gk0[0][1]);
-          ppFluid.get("specific_heat.NASA7.a3", cp_gk0[0][2]);
-          ppFluid.get("specific_heat.NASA7.a4", cp_gk0[0][3]);
-          ppFluid.get("specific_heat.NASA7.a5", cp_gk0[0][4]);
+          cp_gk0.resize(5);
+          ppFluid.get("specific_heat.NASA7.a1", cp_gk0[0]);
+          ppFluid.get("specific_heat.NASA7.a2", cp_gk0[1]);
+          ppFluid.get("specific_heat.NASA7.a3", cp_gk0[2]);
+          ppFluid.get("specific_heat.NASA7.a4", cp_gk0[3]);
+          ppFluid.get("specific_heat.NASA7.a5", cp_gk0[4]);
 
         } else if (amrex::toLower(specific_heat_model).compare("nasa9-poly") == 0) {
           SpecificHeatModel = SPECIFICHEATMODEL::NASA9Polynomials;
@@ -205,7 +204,14 @@ FluidPhase::Initialize ()
         D_gk0.resize(nspecies);
 
         if (solve_enthalpy) {
-          cp_gk0.resize(nspecies);
+
+          if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::Constant) {
+            cp_gk0.resize(nspecies);
+
+          } else if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::NASA7Polynomials) {
+            cp_gk0.resize(nspecies*5);
+          }
+
           H_fk0.resize(nspecies);
         }
 
@@ -229,12 +235,10 @@ FluidPhase::Initialize ()
             EnthalpyOfFormationModel = SPECIES::EnthalpyOfFormationModel;
 
             if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::Constant) {
-              cp_gk0[n].resize(1);
-              cp_gk0[n][0] = SPECIES::cp_k0[pos][0];
+              cp_gk0[n] = SPECIES::cp_k0[pos];
 
             } else if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::NASA7Polynomials) {
-              cp_gk0[n].resize(5);
-              std::copy(SPECIES::cp_k0[pos].begin(), SPECIES::cp_k0[pos].end(), cp_gk0[n].begin());
+              std::copy(&SPECIES::cp_k0[pos], &SPECIES::cp_k0[pos] + 5, &cp_gk0[n]);
             }
 
             H_fk0[n]  = SPECIES::H_fk0[pos];
@@ -259,7 +263,6 @@ FluidPhase::Initialize ()
         }
 
         if (solve_enthalpy) {
-          cp_gk0.resize(1);
           H_fk0.resize(1);
 
           // Get specific heat model input ------------------------//
@@ -268,17 +271,17 @@ FluidPhase::Initialize ()
 
           if (amrex::toLower(specific_heat_model).compare("constant") == 0) {
             SpecificHeatModel = SPECIFICHEATMODEL::Constant;
-            cp_gk0[0].resize(1);
-            ppFluid.get("specific_heat.constant", cp_gk0[0][0]);
+            cp_gk0.resize(1);
+            ppFluid.get("specific_heat.constant", cp_gk0[0]);
 
           } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
             SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
-            cp_gk0[0].resize(5);
-            ppFluid.get("specific_heat.NASA7.a1", cp_gk0[0][0]);
-            ppFluid.get("specific_heat.NASA7.a2", cp_gk0[0][1]);
-            ppFluid.get("specific_heat.NASA7.a3", cp_gk0[0][2]);
-            ppFluid.get("specific_heat.NASA7.a4", cp_gk0[0][3]);
-            ppFluid.get("specific_heat.NASA7.a5", cp_gk0[0][4]);
+            cp_gk0.resize(5);
+            ppFluid.get("specific_heat.NASA7.a1", cp_gk0[0]);
+            ppFluid.get("specific_heat.NASA7.a2", cp_gk0[1]);
+            ppFluid.get("specific_heat.NASA7.a3", cp_gk0[2]);
+            ppFluid.get("specific_heat.NASA7.a4", cp_gk0[3]);
+            ppFluid.get("specific_heat.NASA7.a5", cp_gk0[4]);
           } else {
             amrex::Abort("Don't know this specific heat model!");
           }
@@ -323,23 +326,12 @@ FluidPhase::Initialize ()
   const Real* p_d_H_fk0 = solve_enthalpy ? d_H_fk0.data() : nullptr;
 
   if (solve_enthalpy) {
-    d_cp_gk0.resize(nspecies);
-    for (int n(0); n < nspecies; ++n) {
-      d_cp_gk0[n].resize(cp_gk0[n].size());
-      Gpu::copyAsync(Gpu::hostToDevice, cp_gk0[n].begin(), cp_gk0[n].end(), d_cp_gk0[n].begin());
-    }
-
-    ptr_cp_gk0.resize(nspecies);
-    d_ptr_cp_gk0.resize(nspecies);
-
-    for (int n(0); n < nspecies; ++n) {
-      ptr_cp_gk0[n] = cp_gk0[n].data();
-      d_ptr_cp_gk0[n] = d_cp_gk0[n].data();
-    }
+    d_cp_gk0.resize(cp_gk0.size());
+    Gpu::copyAsync(Gpu::hostToDevice, cp_gk0.begin(), cp_gk0.end(), d_cp_gk0.begin());
   }
 
-  const Real** p_h_cp_gk0 = solve_enthalpy ? ptr_cp_gk0.data() : nullptr;
-  const Real** p_d_cp_gk0 = solve_enthalpy ? d_ptr_cp_gk0.data() : nullptr;
+  const Real* p_h_cp_gk0 = solve_enthalpy ? cp_gk0.data() : nullptr;
+  const Real* p_d_cp_gk0 = solve_enthalpy ? d_cp_gk0.data() : nullptr;
 
   int ncoefficients = 0;
   if (SpecificHeatModel == SPECIFICHEATMODEL::Constant)

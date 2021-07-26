@@ -14,34 +14,34 @@ class SolidsParms {
   public:
     static constexpr amrex::Real R =  8.31446261815324;
 
-    const amrex::Real  T_ref0;
-    const int          nspecies0;
-    const int*         h_species_id0;
-    const int*         d_species_id0;
+    const amrex::Real  m_T_ref;
+    const int          m_nspecies;
+    const int*         m_h_species_id;
+    const int*         m_d_species_id;
 
   private:
-    const amrex::Real* h_MW_sn0;
-    const amrex::Real* d_MW_sn0;
-    const int ncoefficients0;
-    const amrex::Real** h_cp_sn0;
-    const amrex::Real** d_cp_sn0;
-    const amrex::Real* h_H_fn0;
-    const amrex::Real* d_H_fn0;
+    const amrex::Real* m_h_MW_sn;
+    const amrex::Real* m_d_MW_sn;
+    const int m_ncoefficients;
+    const amrex::Real* m_h_cp_sn;
+    const amrex::Real* m_d_cp_sn;
+    const amrex::Real* m_h_H_fn;
+    const amrex::Real* m_d_H_fn;
 
   public:
     AMREX_GPU_HOST_DEVICE
     SolidsParms ()
-      : T_ref0(0)
-      , nspecies0(0)
-      , h_species_id0(nullptr)
-      , d_species_id0(nullptr)
-      , h_MW_sn0(nullptr)
-      , d_MW_sn0(nullptr)
-      , ncoefficients0(0)
-      , h_cp_sn0(nullptr)
-      , d_cp_sn0(nullptr)
-      , h_H_fn0(nullptr)
-      , d_H_fn0(nullptr)
+      : m_T_ref(0)
+      , m_nspecies(0)
+      , m_h_species_id(nullptr)
+      , m_d_species_id(nullptr)
+      , m_h_MW_sn(nullptr)
+      , m_d_MW_sn(nullptr)
+      , m_ncoefficients(0)
+      , m_h_cp_sn(nullptr)
+      , m_d_cp_sn(nullptr)
+      , m_h_H_fn(nullptr)
+      , m_d_H_fn(nullptr)
     {}
 
     AMREX_GPU_HOST_DEVICE
@@ -52,21 +52,21 @@ class SolidsParms {
                  const amrex::Real* h_MW_sn,
                  const amrex::Real* d_MW_sn,
                  const int ncoefficients,
-                 const amrex::Real** h_cp_sn,
-                 const amrex::Real** d_cp_sn,
+                 const amrex::Real* h_cp_sn,
+                 const amrex::Real* d_cp_sn,
                  const amrex::Real* h_H_fn,
                  const amrex::Real* d_H_fn)
-      : T_ref0(T_ref)
-      , nspecies0(nspecies)
-      , h_species_id0(h_species_id)
-      , d_species_id0(d_species_id)
-      , h_MW_sn0(h_MW_sn)
-      , d_MW_sn0(d_MW_sn)
-      , ncoefficients0(ncoefficients)
-      , h_cp_sn0(h_cp_sn)
-      , d_cp_sn0(d_cp_sn)
-      , h_H_fn0(h_H_fn)
-      , d_H_fn0(d_H_fn)
+      : m_T_ref(T_ref)
+      , m_nspecies(nspecies)
+      , m_h_species_id(h_species_id)
+      , m_d_species_id(d_species_id)
+      , m_h_MW_sn(h_MW_sn)
+      , m_d_MW_sn(d_MW_sn)
+      , m_ncoefficients(ncoefficients)
+      , m_h_cp_sn(h_cp_sn)
+      , m_d_cp_sn(d_cp_sn)
+      , m_h_H_fn(h_H_fn)
+      , m_d_H_fn(d_H_fn)
     {}
 
 #if defined(AMREX_USE_GPU)
@@ -82,20 +82,22 @@ class SolidsParms {
       amrex::Real coeff(1);
 
       if (run_on == amrex::RunOn::Gpu) {
-        for (int m(0); m < ncoefficients0; ++m) {
-          result += d_cp_sn0[phase][m]*coeff;
+        for (int m(0); m < m_ncoefficients; ++m) {
+          const int idx = phase*m_ncoefficients + m;
+          result += m_d_cp_sn[idx]*coeff;
           coeff *= T_s;
         }
 
-        //result *= (R/d_MW_sn0[phase]);
+        //result *= (R/m_d_MW_sn[phase]);
 
       } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(0); m < ncoefficients0; ++m) {
-          result += h_cp_sn0[phase][m]*coeff;
+        for (int m(0); m < m_ncoefficients; ++m) {
+          const int idx = phase*m_ncoefficients + m;
+          result += m_h_cp_sn[idx]*coeff;
           coeff *= T_s;
         }
 
-        //result *= (R/h_MW_sn0[phase]);
+        //result *= (R/m_h_MW_sn[phase]);
 
       } else {
         amrex::Abort("Unrecongized RunOn option");
@@ -117,20 +119,22 @@ class SolidsParms {
       amrex::Real coeff(T_s);
 
       if (run_on == amrex::RunOn::Gpu) {
-        for (int m(0); m < ncoefficients0; ++m) {
-          result += (1./(m+1))*d_cp_sn0[phase][m]*coeff;
+        for (int m(0); m < m_ncoefficients; ++m) {
+          const int idx = phase*m_ncoefficients + m;
+          result += (1./(m+1))*m_d_cp_sn[idx]*coeff;
           coeff *= T_s;
         }
 
-        //result *= (R/d_MW_sn0[phase]);
+        //result *= (R/m_d_MW_sn[phase]);
 
       } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(0); m < ncoefficients0; ++m) {
-          result += (1./(m+1))*h_cp_sn0[phase][m]*coeff;
+        for (int m(0); m < m_ncoefficients; ++m) {
+          const int idx = phase*m_ncoefficients + m;
+          result += (1./(m+1))*m_h_cp_sn[idx]*coeff;
           coeff *= T_s;
         }
 
-        //result *= (R/h_MW_sn0[phase]);
+        //result *= (R/m_h_MW_sn[phase]);
 
       } else {
         amrex::Abort("Unrecongized RunOn option");
@@ -152,20 +156,22 @@ class SolidsParms {
       amrex::Real coeff(1);
 
       if (run_on == amrex::RunOn::Gpu) {
-        for (int m(1); m < ncoefficients0; ++m) {
-          result += m*d_cp_sn0[phase][m]*coeff;
+        for (int m(1); m < m_ncoefficients; ++m) {
+          const int idx = phase*m_ncoefficients + m;
+          result += m*m_d_cp_sn[idx]*coeff;
           coeff *= T_s;
         }
 
-        //result *= (R/d_MW_sn0[phase]);
+        //result *= (R/m_d_MW_sn[phase]);
 
       } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(1); m < ncoefficients0; ++m) {
-          result += m*h_cp_sn0[phase][m]*coeff;
+        for (int m(1); m < m_ncoefficients; ++m) {
+          const int idx = phase*m_ncoefficients + m;
+          result += m*m_h_cp_sn[idx]*coeff;
           coeff *= T_s;
         }
 
-        //result *= (R/h_MW_sn0[phase]);
+        //result *= (R/m_h_MW_sn[phase]);
 
       } else {
         amrex::Abort("Unrecongized RunOn option");
@@ -183,7 +189,7 @@ class SolidsParms {
     amrex::Real calc_h_s (const int phase,
                           const amrex::Real T_s) const
     {
-      return calc_integral_cp_s<run_on>(phase,T_s) - calc_integral_cp_s<run_on>(phase,T_ref0);
+      return calc_integral_cp_s<run_on>(phase,T_s) - calc_integral_cp_s<run_on>(phase,m_T_ref);
     }
 
 #if defined(AMREX_USE_GPU)
@@ -211,20 +217,22 @@ class SolidsParms {
       amrex::Real coeff(1);
 
       if (run_on == amrex::RunOn::Gpu) {
-        for (int m(0); m < ncoefficients0; ++m) {
-          result += d_cp_sn0[n][m]*coeff;
+        for (int m(0); m < m_ncoefficients; ++m) {
+          const int idx = n*m_ncoefficients + m;
+          result += m_d_cp_sn[idx]*coeff;
           coeff *= T_s;
         }
 
-        //result *= (R/d_MW_sn0[n]);
+        //result *= (R/m_d_MW_sn[n]);
 
       } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(0); m < ncoefficients0; ++m) {
-          result += h_cp_sn0[n][m]*coeff;
+        for (int m(0); m < m_ncoefficients; ++m) {
+          const int idx = n*m_ncoefficients + m;
+          result += m_h_cp_sn[idx]*coeff;
           coeff *= T_s;
         }
 
-        //result *= (R/h_MW_sn0[n]);
+        //result *= (R/m_h_MW_sn[n]);
 
       } else {
         amrex::Abort("Unrecongized RunOn option");
@@ -246,20 +254,22 @@ class SolidsParms {
       amrex::Real coeff(T_s);
 
       if (run_on == amrex::RunOn::Gpu) {
-        for (int m(0); m < ncoefficients0; ++m) {
-          result += (1./(m+1))*d_cp_sn0[n][m]*coeff;
+        for (int m(0); m < m_ncoefficients; ++m) {
+          const int idx = n*m_ncoefficients + m;
+          result += (1./(m+1))*m_d_cp_sn[idx]*coeff;
           coeff *= T_s;
         }
 
-        //result *= (R/d_MW_sn0[n]);
+        //result *= (R/m_d_MW_sn[n]);
 
       } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(0); m < ncoefficients0; ++m) {
-          result += (1./(m+1))*h_cp_sn0[n][m]*coeff;
+        for (int m(0); m < m_ncoefficients; ++m) {
+          const int idx = n*m_ncoefficients + m;
+          result += (1./(m+1))*m_h_cp_sn[idx]*coeff;
           coeff *= T_s;
         }
 
-        //result *= (R/h_MW_sn0[n]);
+        //result *= (R/m_h_MW_sn[n]);
 
       } else {
         amrex::Abort("Unrecongized RunOn option");
@@ -281,20 +291,22 @@ class SolidsParms {
       amrex::Real coeff(1);
 
       if (run_on == amrex::RunOn::Gpu) {
-        for (int m(1); m < ncoefficients0; ++m) {
-          result += m*d_cp_sn0[n][m]*coeff;
+        for (int m(1); m < m_ncoefficients; ++m) {
+          const int idx = n*m_ncoefficients + m;
+          result += m*m_d_cp_sn[idx]*coeff;
           coeff *= T_s;
         }
 
-        //result *= (R/d_MW_sn0[n]);
+        //result *= (R/m_d_MW_sn[n]);
 
       } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(1); m < ncoefficients0; ++m) {
-          result += m*h_cp_sn0[n][m]*coeff;
+        for (int m(1); m < m_ncoefficients; ++m) {
+          const int idx = n*m_ncoefficients + m;
+          result += m*m_h_cp_sn[idx]*coeff;
           coeff *= T_s;
         }
 
-        //result *= (R/h_MW_sn0[n]);
+        //result *= (R/m_h_MW_sn[n]);
 
       } else {
         amrex::Abort("Unrecongized RunOn option");
@@ -312,7 +324,7 @@ class SolidsParms {
     amrex::Real calc_h_sn (const amrex::Real T_s,
                            const int n) const
     {
-      return calc_integral_cp_sn<run_on>(T_s,n) - calc_integral_cp_sn<run_on>(T_ref0,n);
+      return calc_integral_cp_sn<run_on>(T_s,n) - calc_integral_cp_sn<run_on>(m_T_ref,n);
     }
 
 #if defined(AMREX_USE_GPU)
@@ -388,10 +400,8 @@ class SolidsPhase
     amrex::Gpu::DeviceVector<amrex::Real> d_H_fn0;
 
     // Specified constant specific heat
-    amrex::Vector<amrex::Gpu::HostVector<amrex::Real>> cp_sn0;
-    amrex::Vector<amrex::Gpu::DeviceVector<amrex::Real>> d_cp_sn0;
-    amrex::Gpu::HostVector<const amrex::Real*> ptr_cp_sn0;
-    amrex::Gpu::DeviceVector<const amrex::Real*> d_ptr_cp_sn0;
+    amrex::Gpu::HostVector<amrex::Real> cp_sn0;
+    amrex::Gpu::DeviceVector<amrex::Real> d_cp_sn0;
 
     // Solids parameters for GPU access
     SolidsParms* parameters;
