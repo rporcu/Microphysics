@@ -220,7 +220,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
             const Real dumping_factor = 1.;
 
-            DumpedNewton::solve(Tp_new, R, partial_R, dumping_factor, 1.e-6, 1.e-6);
+            DampedNewton::solve(Tp_new, R, partial_R, dumping_factor, 1.e-6, 1.e-6);
 
             p_realarray[SoArealData::temperature][lp] = Tp_new;
 

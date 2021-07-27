@@ -44,7 +44,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   const int fluid_is_a_mixture = fluid.is_a_mixture;
   const int nspecies_g = fluid.nspecies;
 
-  DumpedNewton::ResidueMF R = [&] (const Vector< MultiFab* >& residue,
+  DampedNewton::ResidueMF R = [&] (const Vector< MultiFab* >& residue,
                                    const Vector< MultiFab* >& Tg_arg) -> void
   {
     for(int lev = 0; lev <= finest_level; lev++) {
@@ -206,7 +206,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
     return;
   };
 
-  DumpedNewton::GradientMF partial_R = [&] (const Vector< MultiFab* >& gradient,
+  DampedNewton::GradientMF partial_R = [&] (const Vector< MultiFab* >& gradient,
                                             const Vector< MultiFab* >& Tg_arg) -> void
   {
     for(int lev = 0; lev <= finest_level; lev++) {
@@ -367,7 +367,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   // Solve the nonlinear equation
   // **************************************************************************
 
-  DumpedNewton::NormMF norm0 = [&] (const Vector<MultiFab*>& vec_of_MFs) -> Real
+  DampedNewton::NormMF norm0 = [&] (const Vector<MultiFab*>& vec_of_MFs) -> Real
   {
     Vector<Real> vec_of_norms(vec_of_MFs.size(), 0.);
     std::transform(vec_of_MFs.begin(), vec_of_MFs.end(), vec_of_norms.begin(),
@@ -384,31 +384,31 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   // **************************************************************************
   // **************************************************************************
 
-  // Dumped Newton solution
+  // Damped Newton solution
   try {
-    DumpedNewton::DumpingFactor dumping_factor(0., .25);
-    DumpedNewton::solve(T_g, R, partial_R, norm0, dumping_factor, 1.e-8, 1.e-8, 500);
+    DampedNewton::DumpingFactor dumping_factor(0., .25);
+    DampedNewton::solve(T_g, R, partial_R, norm0, dumping_factor, 1.e-8, 1.e-8, 500);
 
   } catch (std::exception& first_exc) {
 
     first_exc.what();
 
     try {
-      DumpedNewton::DumpingFactor dumping_factor(0., .5);
-      DumpedNewton::solve(T_g, R, partial_R, norm0, dumping_factor, 1.e-7, 1.e-7, 500);
+      DampedNewton::DumpingFactor dumping_factor(0., .5);
+      DampedNewton::solve(T_g, R, partial_R, norm0, dumping_factor, 1.e-7, 1.e-7, 500);
 
     } catch (std::exception& second_exc) {
 
       second_exc.what();
 
       try {
-        DumpedNewton::DumpingFactor dumping_factor(1., .5);
-        DumpedNewton::solve(T_g, R, partial_R, norm0, dumping_factor, 1.e-7, 1.e-7, 500);
+        DampedNewton::DumpingFactor dumping_factor(1., .5);
+        DampedNewton::solve(T_g, R, partial_R, norm0, dumping_factor, 1.e-7, 1.e-7, 500);
       } catch (std::exception& third_exc) {
 
         third_exc.what();
 
-        amrex::Abort("DumpedNewton solver did not converge");
+        amrex::Abort("Damped-Newton solver did not converge");
       }
     }
   }
