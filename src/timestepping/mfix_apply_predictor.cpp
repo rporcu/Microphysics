@@ -460,27 +460,27 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
               int solver_iterations(0);
 
               {
-                DumpedNewton::DumpingFactor dumping_factor(0., 0.);
+                DampedNewton::DumpingFactor dumping_factor(0., 0.);
                 solver_iterations = 
-                  DumpedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                  DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
                                       1.e-8, 1.e-8, 500);
 
               } if (solver_iterations == 500) {
 
-                DumpedNewton::DumpingFactor dumping_factor(1., 0.);
+                DampedNewton::DumpingFactor dumping_factor(1., 0.);
                 solver_iterations =
-                  DumpedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                  DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
                                       1.e-7, 1.e-7, 500);
 
               } if (solver_iterations == 500) {
 
-                DumpedNewton::DumpingFactor dumping_factor(1., 1.);
+                DampedNewton::DumpingFactor dumping_factor(1., 1.);
                 solver_iterations =
-                  DumpedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                  DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
                                       1.e-6, 1.e-6, 500);
 
               } if (solver_iterations == 500) {
-                amrex::Abort("DumpedNewton solver did not converge");
+                amrex::Abort("Damped-Newton solver did not converge");
               }
 
 

@@ -16,13 +16,13 @@
 namespace Solvers {
 
 
-class DumpedNewton {
+class DampedNewton {
 
   public:
 
     // Constructor
     AMREX_GPU_HOST_DEVICE
-    DumpedNewton() = default;
+    DampedNewton() = default;
 
 
     // TODO description
@@ -38,11 +38,11 @@ class DumpedNewton {
 
         virtual const char* what() const throw()
         {
-          std::printf("Dumped-Newton total iterations = %d\n", m_iter);
-          std::printf("Dumped-Newton update norm = %e\n", m_update_norm);
-          std::printf("Dumped-Newton residue norm = %e\n\n", m_residue_norm);
+          std::printf("Damped-Newton total iterations = %d\n", m_iter);
+          std::printf("Damped-Newton update norm = %e\n", m_update_norm);
+          std::printf("Damped-Newton residue norm = %e\n", m_residue_norm);
 
-          return "Dumped-Newton solver did not converge";
+          return "Damped-Newton solver did not converge";
         }
 
       private:
@@ -125,13 +125,13 @@ class DumpedNewton {
           solution_new = original_solution;
 
 #ifdef AMREX_USE_GPU
-          AMREX_DEVICE_PRINTF("Dumped-Newton total iterations = %d\n", iter);
-          AMREX_DEVICE_PRINTF("Dumped-Newton update norm = %e\n", std::abs(update));
-          AMREX_DEVICE_PRINTF("Dumped-Newton residue norm = %e\n", std::abs(residue));
+          AMREX_DEVICE_PRINTF("Damped-Newton total iterations = %d\n", iter);
+          AMREX_DEVICE_PRINTF("Damped-Newton update norm = %e\n", std::abs(update));
+          AMREX_DEVICE_PRINTF("Damped-Newton residue norm = %e\n", std::abs(residue));
 #else
-          std::printf("Dumped-Newton total iterations = %d\n", iter);
-          std::printf("Dumped-Newton update norm = %e\n", std::abs(update));
-          std::printf("Dumped-Newton residue norm = %e\n", std::abs(residue));
+          std::printf("Damped-Newton total iterations = %d\n", iter);
+          std::printf("Damped-Newton update norm = %e\n", std::abs(update));
+          std::printf("Damped-Newton residue norm = %e\n", std::abs(residue));
 #endif
 
           return max_iterations;
