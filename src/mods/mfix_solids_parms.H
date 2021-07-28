@@ -100,7 +100,7 @@ class SolidsParms {
         //result *= (R/m_h_MW_sn[phase]);
 
       } else {
-        amrex::Abort("Unrecongized RunOn option");
+        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;
@@ -137,7 +137,7 @@ class SolidsParms {
         //result *= (R/m_h_MW_sn[phase]);
 
       } else {
-        amrex::Abort("Unrecongized RunOn option");
+        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;
@@ -174,7 +174,7 @@ class SolidsParms {
         //result *= (R/m_h_MW_sn[phase]);
 
       } else {
-        amrex::Abort("Unrecongized RunOn option");
+        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;
@@ -235,7 +235,7 @@ class SolidsParms {
         //result *= (R/m_h_MW_sn[n]);
 
       } else {
-        amrex::Abort("Unrecongized RunOn option");
+        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;
@@ -272,7 +272,7 @@ class SolidsParms {
         //result *= (R/m_h_MW_sn[n]);
 
       } else {
-        amrex::Abort("Unrecongized RunOn option");
+        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;
@@ -309,7 +309,7 @@ class SolidsParms {
         //result *= (R/m_h_MW_sn[n]);
 
       } else {
-        amrex::Abort("Unrecongized RunOn option");
+        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;

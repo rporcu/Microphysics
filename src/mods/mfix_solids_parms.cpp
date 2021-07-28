@@ -143,62 +143,65 @@ SolidsPhase::Initialize ()
       solve_species = ppSolid.queryarr("species", species);
 
       if (!solve_species) {
-        species.resize(1);
-        species[0] = "None";
-      }
-
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.size() > 0,
-                                       "No input provided for solids.species");
-
-      // Disable the species solver if the species are defined as "None"
-      // (caseinsensitive) or 0
-      if (amrex::toLower(species[0]).compare("none") == 0) {
-        solve_species = 0;
-        nspecies = 1; // anonymous species
-
+        species.clear();
+        nspecies = 0;
       } else {
-        solve_species = 1;
-        nspecies = species.size();
-
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nspecies <= SPECIES::nspecies,
-            "Solids species number is higher than total species number");
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.size() > 0,
+                                         "No input provided for solids.species");
       }
 
       // Solids species inputs
       if (solve_species) {
-        species_id.resize(nspecies);
-        MW_sn0.resize(nspecies);
 
-        if (solve_energy) {
+        // Disable the species solver if the species are defined as "None"
+        // (caseinsensitive) or 0
+        if (amrex::toLower(species[0]).compare("none") == 0) {
+          solve_species = 0;
+          nspecies = 0;
 
-          if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::Constant) {
-            cp_sn0.resize(nspecies);
-          } else if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::NASA7Polynomials) {
-            cp_sn0.resize(nspecies*5);
-          }
+        } else {
+          solve_species = 1;
+          nspecies = species.size();
 
-          H_fn0.resize(nspecies);
-        }
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nspecies <= SPECIES::nspecies,
+              "Solids species number is higher than total species number");
 
-        for (int n(0); n < nspecies; n++) {
-          auto it = std::find(SPECIES::species.begin(), SPECIES::species.end(), species[n]);
-
-          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != SPECIES::species.end(),
-                                           "Solid species missing in input");
-
-          const auto pos = std::distance(SPECIES::species.begin(), it);
-
-          species_id[n] = SPECIES::species_id[pos];
-          MW_sn0[n] = SPECIES::MW_k0[pos];
+          species_id.resize(nspecies);
+          MW_sn0.resize(nspecies);
 
           if (solve_energy) {
+
             if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::Constant) {
-              cp_sn0[n] = SPECIES::cp_k0[pos];
+              SpecificHeatModel = SPECIFICHEATMODEL::Constant;
+              cp_sn0.resize(nspecies);
             } else if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::NASA7Polynomials) {
-              std::copy(&SPECIES::cp_k0[pos], &SPECIES::cp_k0[pos] + 5, &cp_sn0[n]);
+              SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
+              cp_sn0.resize(nspecies*5);
             }
 
-            H_fn0[n] = SPECIES::H_fk0[pos];
+            H_fn0.resize(nspecies);
+          }
+
+          for (int n(0); n < nspecies; n++) {
+            auto it = std::find(SPECIES::species.begin(), SPECIES::species.end(), species[n]);
+
+            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != SPECIES::species.end(),
+                                             "Solid species missing in input");
+
+            const auto pos = std::distance(SPECIES::species.begin(), it);
+
+            species_id[n] = SPECIES::species_id[pos];
+            MW_sn0[n] = SPECIES::MW_k0[pos];
+
+            if (solve_energy) {
+              if (SpecificHeatModel == SPECIFICHEATMODEL::Constant) {
+                cp_sn0[n] = SPECIES::cp_k0[pos];
+              } else if (SpecificHeatModel == SPECIFICHEATMODEL::NASA7Polynomials) {
+                std::copy(&SPECIES::cp_k0[pos*5], &SPECIES::cp_k0[pos*5] + 5, &cp_sn0[n*5]);
+              }
+
+              H_fn0[n] = SPECIES::H_fk0[pos];
+            }
           }
         }
       } else {

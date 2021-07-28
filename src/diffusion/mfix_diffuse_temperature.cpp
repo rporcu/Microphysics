@@ -165,12 +165,15 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
         Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
         if (bx.ok()) {
+
+          Array4<Real const> dummy_arr;
+
           Array4<Real      > const& residue_array = residue[lev]->array(mfi);
           Array4<Real const> const& ep_g_array    = ep_g[lev]->const_array(mfi);
           Array4<Real const> const& ro_g_array    = ro_g[lev]->const_array(mfi);
           Array4<Real const> const& T_g_array     = Tg_arg[lev]->const_array(mfi);
           Array4<Real const> const& h_g_array     = h_g[lev]->const_array(mfi);
-          Array4<Real const> const& X_gk_array    = X_gk[lev]->const_array(mfi);
+          Array4<Real const> const& X_gk_array    = fluid_is_a_mixture ? X_gk[lev]->const_array(mfi) : dummy_arr;
 
           amrex::ParallelFor(bx, [residue_array,ep_g_array,T_g_array,ro_g_array,
               h_g_array,X_gk_array,fluid_parms,fluid_is_a_mixture,nspecies_g]
@@ -327,11 +330,14 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
         Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
         if (bx.ok()) {
+
+          Array4<Real const> dummy_arr;
+
           Array4<Real      > const& gradient_array = gradient[lev]->array(mfi);
           Array4<Real const> const& ep_g_array     = ep_g[lev]->const_array(mfi);
           Array4<Real const> const& ro_g_array     = ro_g[lev]->const_array(mfi);
           Array4<Real const> const& T_g_array      = Tg_arg[lev]->const_array(mfi);
-          Array4<Real const> const& X_gk_array     = X_gk[lev]->const_array(mfi);
+          Array4<Real const> const& X_gk_array     = fluid_is_a_mixture ? X_gk[lev]->const_array(mfi) : dummy_arr;
 
           amrex::ParallelFor(bx, [gradient_array,ep_g_array,T_g_array,ro_g_array,
               X_gk_array,fluid_is_a_mixture,nspecies_g,fluid_parms]
@@ -426,9 +432,10 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
       Box const& bx = mfi.growntilebox({1,1,1});
 
+      Array4<Real const> dummy_arr;
       Array4<Real      > const& h_g_array  = h_g[lev]->array(mfi);
       Array4<Real const> const& T_g_array  = T_g[lev]->const_array(mfi);
-      Array4<Real const> const& X_gk_array = X_gk[lev]->const_array(mfi);
+      Array4<Real const> const& X_gk_array = fluid_is_a_mixture ? X_gk[lev]->const_array(mfi) : dummy_arr;
 
       amrex::ParallelFor(bx, [h_g_array,T_g_array,X_gk_array,fluid_parms,
           fluid_is_a_mixture,nspecies_g]

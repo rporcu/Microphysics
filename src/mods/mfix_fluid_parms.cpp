@@ -15,7 +15,6 @@ using namespace amrex;
 FluidPhase::FluidPhase()
   : DensityModel(DENSITYMODEL::Invalid)
   , ViscosityModel(VISCOSITYMODEL::Invalid)
-  , DiffusivityModel(DIFFUSIVITYMODEL::Invalid)
   , SpecificHeatModel(SPECIFICHEATMODEL::Invalid)
   , ThermalConductivityModel(THERMALCONDUCTIVITYMODEL::Invalid)
   , solve(0)
@@ -97,7 +96,7 @@ FluidPhase::Initialize ()
 
     // Get viscosity inputs ----------------------------------//
     std::string viscosity_model;
-    ppFluid.get("viscosity", viscosity_model );
+    ppFluid.get("viscosity", viscosity_model);
 
     if (amrex::toLower(viscosity_model).compare("constant") == 0) {
       ViscosityModel = VISCOSITYMODEL::Constant;
@@ -118,45 +117,34 @@ FluidPhase::Initialize ()
     int advect_enthalpy(0);
     ppMFIX.query("advect_enthalpy", advect_enthalpy);
 
+    solve_species = ppFluid.queryarr("species", species);
+
+    if (!solve_species) {
+      species.clear();
+      nspecies = 0;
+    } else {
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.size() > 0, 
+                                       "No input provided for fluid.species");
+    }
+
+    // Disable the species solver if the species are defined as "None" (case
+    // insensitive) or 0
+    if (amrex::toLower(species[0]).compare("none") == 0) {
+      solve_species = 0;
+      nspecies = 0;
+    } else {
+      solve_species = 1;
+      nspecies = species.size();
+
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nspecies <= SPECIES::nspecies,
+          "Fluid species number is higher than total species number");
+    }
+
     if (advect_enthalpy == 1) {
       solve_enthalpy = 1;
 
       // Query the reference temperature
       ppFluid.query("reference_temperature", T_ref);
-
-      if (!SPECIES::solve) {
-
-        H_fk0.resize(1);
-
-        // Get specific heat inputs ------------------------------------//
-        std::string specific_heat_model;
-        ppFluid.get("specific_heat", specific_heat_model);
-
-        if (amrex::toLower(specific_heat_model).compare("constant") == 0) {
-          SpecificHeatModel = SPECIFICHEATMODEL::Constant;
-          cp_gk0.resize(1);
-          ppFluid.get("specific_heat.constant", cp_gk0[0]);
-
-        } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
-          SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
-          cp_gk0.resize(5);
-          ppFluid.get("specific_heat.NASA7.a1", cp_gk0[0]);
-          ppFluid.get("specific_heat.NASA7.a2", cp_gk0[1]);
-          ppFluid.get("specific_heat.NASA7.a3", cp_gk0[2]);
-          ppFluid.get("specific_heat.NASA7.a4", cp_gk0[3]);
-          ppFluid.get("specific_heat.NASA7.a5", cp_gk0[4]);
-
-        } else if (amrex::toLower(specific_heat_model).compare("nasa9-poly") == 0) {
-          SpecificHeatModel = SPECIFICHEATMODEL::NASA9Polynomials;
-          amrex::Abort("Not yet implemented.");
-
-        } else {
-          amrex::Abort("Unknown fluid specific heat model!");
-        }
-
-        // Query the enthalpy_of_formation
-        ppFluid.query("enthalpy_of_formation", H_fk0[0]);
-      }
 
       // Get thermal conductivity inputs -----------------------------//
       std::string thermal_conductivity_model;
@@ -171,130 +159,124 @@ FluidPhase::Initialize ()
       }
     }
 
-    if (SPECIES::solve) {
+    if (advect_enthalpy && !solve_species) {
 
-      solve_species = ppFluid.queryarr("species", species);
+      H_fk0.resize(1);
 
-      if (!solve_species) {
-        species.resize(1);
-        species[0] = "None";
-      }
+      // Get specific heat inputs ------------------------------------//
+      std::string specific_heat_model;
+      ppFluid.get("specific_heat", specific_heat_model);
 
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.size() > 0, 
-                                       "No input provided for fluid.species");
+      if (amrex::toLower(specific_heat_model).compare("constant") == 0) {
+        SpecificHeatModel = SPECIFICHEATMODEL::Constant;
+        cp_gk0.resize(1);
+        ppFluid.get("specific_heat.constant", cp_gk0[0]);
 
-      // Disable the species solver if the species are defined as "None" (case
-      // insensitive) or 0
-      if (amrex::toLower(species[0]).compare("none") == 0) {
-        solve_species = 0;
-        nspecies = 1; // anonymous species
-      }
-      else {
-        solve_species = 1;
-        nspecies = species.size();
+      } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
+        SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
+        cp_gk0.resize(5);
+        ppFluid.get("specific_heat.NASA7.a1", cp_gk0[0]);
+        ppFluid.get("specific_heat.NASA7.a2", cp_gk0[1]);
+        ppFluid.get("specific_heat.NASA7.a3", cp_gk0[2]);
+        ppFluid.get("specific_heat.NASA7.a4", cp_gk0[3]);
+        ppFluid.get("specific_heat.NASA7.a5", cp_gk0[4]);
 
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nspecies <= SPECIES::nspecies,
-            "Fluid species number is higher than total species number");
-      }
+      } else if (amrex::toLower(specific_heat_model).compare("nasa9-poly") == 0) {
+        SpecificHeatModel = SPECIFICHEATMODEL::NASA9Polynomials;
+        amrex::Abort("Not yet implemented.");
 
-      if (solve_species) {
-
-        species_id.resize(nspecies);
-        MW_gk0.resize(nspecies);
-        D_gk0.resize(nspecies);
-
-        if (solve_enthalpy) {
-
-          if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::Constant) {
-            cp_gk0.resize(nspecies);
-
-          } else if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::NASA7Polynomials) {
-            cp_gk0.resize(nspecies*5);
-          }
-
-          H_fk0.resize(nspecies);
-        }
-
-        for (int n(0); n < nspecies; n++) {
-          auto it = std::find(SPECIES::species.begin(), SPECIES::species.end(), species[n]);
-
-          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != SPECIES::species.end(),
-                                           "Fluid species missing in input");
-
-          const auto pos = std::distance(SPECIES::species.begin(), it);
-
-          DiffusivityModel = SPECIES::DiffusivityModel;
-
-          species_id[n] = SPECIES::species_id[pos];
-          MW_gk0[n] = SPECIES::MW_k0[pos];
-          D_gk0[n] = SPECIES::D_k0[pos];
-
-          if (solve_enthalpy) {
-
-            SpecificHeatModel = SPECIES::SpecificHeatModel;
-            EnthalpyOfFormationModel = SPECIES::EnthalpyOfFormationModel;
-
-            if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::Constant) {
-              cp_gk0[n] = SPECIES::cp_k0[pos];
-
-            } else if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::NASA7Polynomials) {
-              std::copy(&SPECIES::cp_k0[pos], &SPECIES::cp_k0[pos] + 5, &cp_gk0[n]);
-            }
-
-            H_fk0[n]  = SPECIES::H_fk0[pos];
-          }
-        }
       } else {
-        MW_gk0.resize(1);
-        D_gk0.resize(1);
+        amrex::Abort("Unknown fluid specific heat model!");
+      }
 
-        ppFluid.query("molecular_weight", MW_gk0[0]);
+      // Query the enthalpy_of_formation
+      ppFluid.query("enthalpy_of_formation", H_fk0[0]);
+    }
 
-        // Get diffusivity model input --------------------------------//
-        std::string diffusivity_model;
-        ppFluid.get("diffusivity", diffusivity_model);
+    if (solve_species) {
 
-        if (amrex::toLower(diffusivity_model).compare("constant") == 0) {
-          DiffusivityModel = DIFFUSIVITYMODEL::Constant;
-          ppFluid.query("diffusivity.constant", D_gk0[0]);
+      species_id.resize(nspecies);
+      MW_gk0.resize(nspecies);
+      D_gk0.resize(nspecies);
 
-        } else {
-          amrex::Abort("Unknown species mass diffusivity model!");
+      if (solve_enthalpy) {
+
+        SpecificHeatModel = SPECIES::SpecificHeatModel;
+
+        if (SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::Constant) {
+          cp_gk0.resize(nspecies);
+
+        } else if (SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::NASA7Polynomials) {
+          cp_gk0.resize(nspecies*5);
         }
 
+        EnthalpyOfFormationModel = SPECIES::EnthalpyOfFormationModel;
+
+        H_fk0.resize(nspecies);
+      }
+
+      for (int n(0); n < nspecies; n++) {
+        auto it = std::find(SPECIES::species.begin(), SPECIES::species.end(), species[n]);
+
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != SPECIES::species.end(),
+                                         "Fluid species missing in input");
+
+        const auto pos = std::distance(SPECIES::species.begin(), it);
+
+        species_id[n] = SPECIES::species_id[pos];
+        MW_gk0[n] = SPECIES::MW_k0[pos];
+        D_gk0[n] = SPECIES::D_k0[pos];
+
         if (solve_enthalpy) {
-          H_fk0.resize(1);
 
-          // Get specific heat model input ------------------------//
-          std::string specific_heat_model;
-          ppFluid.query("specific_heat", specific_heat_model);
+          if (SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::Constant) {
+            cp_gk0[n] = SPECIES::cp_k0[pos];
 
-          if (amrex::toLower(specific_heat_model).compare("constant") == 0) {
-            SpecificHeatModel = SPECIFICHEATMODEL::Constant;
-            cp_gk0.resize(1);
-            ppFluid.get("specific_heat.constant", cp_gk0[0]);
-
-          } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
-            SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
-            cp_gk0.resize(5);
-            ppFluid.get("specific_heat.NASA7.a1", cp_gk0[0]);
-            ppFluid.get("specific_heat.NASA7.a2", cp_gk0[1]);
-            ppFluid.get("specific_heat.NASA7.a3", cp_gk0[2]);
-            ppFluid.get("specific_heat.NASA7.a4", cp_gk0[3]);
-            ppFluid.get("specific_heat.NASA7.a5", cp_gk0[4]);
-          } else {
-            amrex::Abort("Don't know this specific heat model!");
+          } else if (SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::NASA7Polynomials) {
+            std::copy(&SPECIES::cp_k0[pos*5], &SPECIES::cp_k0[pos*5] + 5, &cp_gk0[n*5]);
           }
 
-          // Get enthalpy of formation model input ------------------------//
-          std::string enthalpy_of_formation_model("constant");
-          pp.query("enthalpy_of_formation", enthalpy_of_formation_model);
+          H_fk0[n]  = SPECIES::H_fk0[pos];
+        }
+      }
+    } else {
+      MW_gk0.resize(1);
+      D_gk0.resize(1);
 
-          if (amrex::toLower(enthalpy_of_formation_model).compare("constant") == 0) {
+      ppFluid.query("molecular_weight", MW_gk0[0]);
 
-            EnthalpyOfFormationModel = ENTHALPYOFFORMATIONMODEL::Constant;
-            ppFluid.query("enthalpy_of_formation.constant", H_fk0[0]);
-          }
+      if (solve_enthalpy) {
+        H_fk0.resize(1);
+
+        // Get specific heat model input ------------------------//
+        std::string specific_heat_model;
+        ppFluid.query("specific_heat", specific_heat_model);
+
+        if (amrex::toLower(specific_heat_model).compare("constant") == 0) {
+          SpecificHeatModel = SPECIFICHEATMODEL::Constant;
+          cp_gk0.resize(1);
+          ppFluid.get("specific_heat.constant", cp_gk0[0]);
+
+        } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
+          SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
+          cp_gk0.resize(5);
+          ppFluid.get("specific_heat.NASA7.a1", cp_gk0[0]);
+          ppFluid.get("specific_heat.NASA7.a2", cp_gk0[1]);
+          ppFluid.get("specific_heat.NASA7.a3", cp_gk0[2]);
+          ppFluid.get("specific_heat.NASA7.a4", cp_gk0[3]);
+          ppFluid.get("specific_heat.NASA7.a5", cp_gk0[4]);
+        } else {
+          amrex::Abort("Don't know this specific heat model!");
+        }
+
+        // Get enthalpy of formation model input ------------------------//
+        std::string enthalpy_of_formation_model("constant");
+        pp.query("enthalpy_of_formation", enthalpy_of_formation_model);
+
+        if (amrex::toLower(enthalpy_of_formation_model).compare("constant") == 0) {
+
+          EnthalpyOfFormationModel = ENTHALPYOFFORMATIONMODEL::Constant;
+          ppFluid.query("enthalpy_of_formation.constant", H_fk0[0]);
         }
       }
     }

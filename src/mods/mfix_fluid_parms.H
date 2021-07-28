@@ -97,7 +97,7 @@ class FluidParms {
       else if (run_on == amrex::RunOn::Cpu)
         return m_h_MW_gk[n];
       else
-        amrex::Abort("Unrecongized RunOn option");
+        amrex::Abort("Unrecognized RunOn option");
 
       return 0;
     }
@@ -149,7 +149,7 @@ class FluidParms {
       else if (run_on == amrex::RunOn::Cpu)
         return m_h_D_gk[n];
       else
-        amrex::Abort("Unrecongized RunOn option");
+        amrex::Abort("Unrecognized RunOn option");
 
       return 0;
     }
@@ -160,16 +160,30 @@ class FluidParms {
     template <amrex::RunOn run_on=amrex::RunOn::Host>
 #endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_cp_g (const amrex::Real /*T_g*/) const
+    amrex::Real calc_cp_g (const amrex::Real T_g) const
     {
-      if (run_on == amrex::RunOn::Gpu)
-        return m_d_cp_gk[0];
-      else if (run_on == amrex::RunOn::Cpu)
-        return m_h_cp_gk[0];
-      else
-        amrex::Abort("Unrecongized RunOn option");
+      amrex::Real result(0);
+      amrex::Real coeff(1);
 
-      return 0;
+      if (run_on == amrex::RunOn::Gpu) {
+        for (int m(0); m < m_ncoefficients; ++m) {
+          result += m_d_cp_gk[m]*coeff;
+          coeff *= T_g;
+        }
+
+        //result *= (R/m_d_MW_gk[0]);
+
+      } else if (run_on == amrex::RunOn::Cpu) {
+        for (int m(0); m < m_ncoefficients; ++m) {
+          result += m_h_cp_gk[m]*coeff;
+          coeff *= T_g;
+        }
+
+      } else {
+        amrex::Abort("Unrecognized RunOn option");
+      }
+
+      return result;
     }
 
 #if defined(AMREX_USE_GPU)
@@ -178,9 +192,66 @@ class FluidParms {
     template <amrex::RunOn run_on=amrex::RunOn::Host>
 #endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_partial_cp_g (const amrex::Real /*T_g*/) const
+    amrex::Real calc_integral_cp_g (const amrex::Real T_g) const
     {
-      return 0;
+      amrex::Real result(0);
+      amrex::Real coeff(T_g);
+
+      if (run_on == amrex::RunOn::Gpu) {
+        for (int m(0); m < m_ncoefficients; ++m) {
+          result += (1./(m+1))*m_d_cp_gk[m]*coeff;
+          coeff *= T_g;
+        }
+
+        //result *= (R/m_d_MW_gk[0]);
+
+      } else if (run_on == amrex::RunOn::Cpu) {
+        for (int m(0); m < m_ncoefficients; ++m) {
+          result += (1./(m+1))*m_h_cp_gk[m]*coeff;
+          coeff *= T_g;
+        }
+
+        //result *= (R/m_h_MW_gk[0]);
+
+      } else {
+        amrex::Abort("Unrecognized RunOn option");
+      }
+
+      return result;
+    }
+
+#if defined(AMREX_USE_GPU)
+    template <amrex::RunOn run_on>
+#else
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_partial_cp_g (const amrex::Real T_g) const
+    {
+      amrex::Real result(0);
+      amrex::Real coeff(1);
+
+      if (run_on == amrex::RunOn::Gpu) {
+        for (int m(1); m < m_ncoefficients; ++m) {
+          result += m*m_d_cp_gk[m]*coeff;
+          coeff *= T_g;
+        }
+
+        //result *= (R/m_d_MW_gk[0]);
+
+      } else if (run_on == amrex::RunOn::Cpu) {
+        for (int m(1); m < m_ncoefficients; ++m) {
+          result += m*m_h_cp_gk[m]*coeff;
+          coeff *= T_g;
+        }
+
+        //result *= (R/m_h_MW_gk[0]);
+
+      } else {
+        amrex::Abort("Unrecognized RunOn option");
+      }
+
+      return result;
     }
 
 #if defined(AMREX_USE_GPU)
@@ -191,7 +262,7 @@ class FluidParms {
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_h_g (const amrex::Real T_g) const
     {
-      return calc_cp_g<run_on>(T_g) * T_g - calc_cp_g<run_on>(m_T_ref) * m_T_ref;
+      return calc_integral_cp_g<run_on>(T_g) - calc_integral_cp_g<run_on>(m_T_ref);
     }
 
 #if defined(AMREX_USE_GPU)
@@ -202,7 +273,7 @@ class FluidParms {
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_partial_h_g (const amrex::Real T_g) const
     {
-      return calc_partial_cp_g<run_on>(T_g) * T_g + calc_cp_g<run_on>(T_g);
+      return calc_cp_g<run_on>(T_g);
     }
 
 #if defined(AMREX_USE_GPU)
@@ -236,7 +307,7 @@ class FluidParms {
         //result *= (R/m_h_MW_gk[n]);
 
       } else {
-        amrex::Abort("Unrecongized RunOn option");
+        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;
@@ -273,7 +344,7 @@ class FluidParms {
         //result *= (R/m_h_MW_gk[n]);
 
       } else {
-        amrex::Abort("Unrecongized RunOn option");
+        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;
@@ -310,7 +381,7 @@ class FluidParms {
         //result *= (R/m_h_MW_gk[n]);
 
       } else {
-        amrex::Abort("Unrecongized RunOn option");
+        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;

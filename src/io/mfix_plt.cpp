@@ -533,9 +533,13 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
           {
             Box const& bx = mfi.tilebox();
 
+            Array4<Real const> dummy_arr;
+
             Array4<Real      > const& cp_g_array = cp_g.array(mfi);
             Array4<Real const> const& T_g_array  = T_g.const_array(mfi);
-            Array4<Real const> const& X_gk_array = m_leveldata[lev]->X_gk->const_array(mfi);
+
+            Array4<Real const> const& X_gk_array = fluid_is_a_mixture ? 
+              m_leveldata[lev]->X_gk->const_array(mfi) : dummy_arr;
 
             ParallelFor(bx, [cp_g_array,T_g_array,X_gk_array,fluid_parms,
                 fluid_is_a_mixture,nspecies_g]

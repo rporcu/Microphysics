@@ -384,11 +384,13 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
           Box const& bx = mfi.tilebox();
 
+          Array4<Real const> dummy_arr;
+
           Array4<Real const> const& h_g_o   = ld.h_go->const_array(mfi);
           Array4<Real      > const& h_g_n   = ld.h_g->array(mfi);
           Array4<Real const> const& T_g_o   = ld.T_go->array(mfi);
           Array4<Real      > const& T_g_n   = ld.T_g->array(mfi);
-          Array4<Real const> const& X_gk_o  = ld.X_gko->array(mfi);
+          Array4<Real const> const& X_gk_o  = fluid_is_a_mixture ? ld.X_gko->array(mfi) : dummy_arr;
           Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
           Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
           Array4<Real const> const& epg     = ld.ep_g->array(mfi);
