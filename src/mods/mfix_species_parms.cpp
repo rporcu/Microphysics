@@ -123,7 +123,12 @@ namespace SPECIES
           for (int n(0); n < nspecies; n++) {
             std::string name = "species." + species[n];
             amrex::ParmParse ppSpecies(name.c_str());
-            ppSpecies.query("diffusivity.constant", D_k0[n]);
+            int value_is_present = ppSpecies.query("diffusivity.constant", D_k0[n]);
+
+            if (!value_is_present) {
+              std::string message = "Assuming diffusivity D_" + species[n] + " = 0";
+              amrex::Warning(message.c_str());
+            }
           }
 
         } else {

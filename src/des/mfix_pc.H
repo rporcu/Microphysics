@@ -68,10 +68,10 @@ struct runtimeRealData
 {
   runtimeRealData (const int nspecies_s,
                    const int nreactions)
-    : X_sn(0)                                            // nb of components = nspecies
-    , mass_sn_txfr(X_sn + nspecies_s*(nreactions>0))       // nb of components = nspecies
+    : X_sn(0)                                              // nb of components = nspecies
+    , mass_sn_txfr(X_sn + nspecies_s)                      // nb of components = nspecies
     , vel_s_txfr(mass_sn_txfr + nspecies_s*(nreactions>0)) // nb of components = 3
-    , h_s_txfr(vel_s_txfr + 3*(nreactions>0))            // nb of components = 1
+    , h_s_txfr(vel_s_txfr + 3*(nreactions>0))              // nb of components = 1
     , count(h_s_txfr + 1*(nreactions>0))
   {}
 

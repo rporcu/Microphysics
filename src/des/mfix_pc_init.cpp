@@ -236,18 +236,14 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
   const GpuArray<Real, 3> plo = Geom(lev).ProbLoArray();
 
   const int solve_species = solids.solve_species;
+
   const int nspecies_s = solids.nspecies;
   const int solid_is_a_mixture = solids.is_a_mixture;
 
   auto& solids_parms = *solids.parameters;
 
-  // Create a temporary copy of IC particle temperatures mapped
-  // to the particle type.
-  Gpu::HostVector<Real> h_temperature_loc(SolidsPhase::NMAX);
-  Gpu::HostVector<Real> h_mass_fractions(nspecies_s);
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
-  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-  {
     auto& particles = pti.GetArrayOfStructs();
     int np = pti.numParticles();
 
@@ -263,8 +259,8 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
     auto ptile_data = ptile.getParticleTileData();
 
     // Set the initial conditions.
-    for(int icv(0); icv < IC::ic.size(); ++icv)
-    {
+    for(int icv(0); icv < IC::ic.size(); ++icv) {
+
       IC::IC_t& loc_ic = IC::ic[icv];
 
       // This is a round about way to address what is likely overly complex
@@ -293,9 +289,16 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
 
       if (pti.tilebox().intersects(ic_box)) {
 
+        // Create a temporary copy of IC particle temperatures mapped
+        // to the particle type.
+        const int solids_size = solids.names.size();
+        Gpu::HostVector<Real> h_temperature_loc(solids_size);
+        Gpu::HostVector<Real> h_mass_fractions(solids_size*nspecies_s);
+
         for (int solid_type(0); solid_type < solids.names.size(); solid_type++) {
           // Initialize to zero
-          h_temperature_loc[solid_type] = 0.0;
+          h_temperature_loc[solid_type] = 0.;
+          std::fill(&h_mass_fractions[solid_type*nspecies_s], &h_mass_fractions[(solid_type+1)*nspecies_s], 0.);
 
           // Loop through IC solids looking for match.
           for (int ics(0); ics < loc_ic.solids.size(); ics++) {
@@ -304,61 +307,71 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
 
             if (solids.names[solid_type] == ic_solid.name) {
 
-              if (adv_enthalpy)
+              if (adv_enthalpy) {
                 h_temperature_loc[solid_type] = ic_solid.temperature;
+              }
 
-              if (solve_species)
+              if (solve_species) {
                 for (int n_s(0); n_s < nspecies_s; n_s++) {
-                  h_mass_fractions[n_s] = ic_solid.species[n_s].mass_fraction;
+                  const int idx = solid_type*nspecies_s + n_s;
+                  h_mass_fractions[idx] = ic_solid.species[n_s].mass_fraction;
+                }
               }
-            }
-          }
-        }
 
-        Gpu::AsyncArray<Real> d_temperature_loc(h_temperature_loc.data(), h_temperature_loc.size());
-        Real* p_temperature_loc = adv_enthalpy ? d_temperature_loc.data() : nullptr;
+              Gpu::AsyncArray<Real> d_temperature_loc(h_temperature_loc.data(), h_temperature_loc.size());
+              Real* p_temperature_loc = adv_enthalpy ? d_temperature_loc.data() : nullptr;
 
-        Gpu::AsyncArray<Real> d_mass_fractions(h_mass_fractions.data(), h_mass_fractions.size());
-        Real* p_mass_fractions = solve_species ? d_mass_fractions.data() : nullptr;
+              Gpu::AsyncArray<Real> d_mass_fractions(h_mass_fractions.data(), h_mass_fractions.size());
+              Real* p_mass_fractions = solve_species ? d_mass_fractions.data() : nullptr;
 
-        amrex::ParallelFor(np,
-          [particles_ptr,p_realarray,p_intarray,ptile_data,p_temperature_loc,
-           p_mass_fractions,ic_lo,ic_hi,nspecies_s,solid_is_a_mixture,adv_enthalpy,
-           solids_parms,solve_species]
-          AMREX_GPU_DEVICE (int ip) noexcept
-        {
-          MFIXParticleContainer::ParticleType& p = particles_ptr[ip];
+              const int idx_X_sn = m_runtimeRealData.X_sn;
 
-          if(ic_lo[0] <= p.pos(0) && p.pos(0) <= ic_hi[0] &&
-             ic_lo[1] <= p.pos(1) && p.pos(1) <= ic_hi[1] &&
-             ic_lo[2] <= p.pos(2) && p.pos(2) <= ic_hi[2])
-          {
-            const int phase = p_intarray[SoAintData::phase][ip];
+              amrex::ParallelFor(np,
+                [particles_ptr,p_realarray,p_intarray,ptile_data,p_temperature_loc,
+                 p_mass_fractions,ic_lo,ic_hi,nspecies_s,solid_is_a_mixture,adv_enthalpy,
+                 solids_parms,solve_species,idx_X_sn]
+                AMREX_GPU_DEVICE (int ip) noexcept
+              {
+                MFIXParticleContainer::ParticleType& p = particles_ptr[ip];
 
-            if(adv_enthalpy) {
-              p_realarray[SoArealData::temperature][ip] = p_temperature_loc[phase-1];
-            }
+                if(ic_lo[0] <= p.pos(0) && p.pos(0) <= ic_hi[0] &&
+                   ic_lo[1] <= p.pos(1) && p.pos(1) <= ic_hi[1] &&
+                   ic_lo[2] <= p.pos(2) && p.pos(2) <= ic_hi[2])
+                {
+                  const int phase = p_intarray[SoAintData::phase][ip];
 
-            if(adv_enthalpy) {
-              if(!solid_is_a_mixture) {
-                p_realarray[SoArealData::cp_s][ip] =
-                  solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,p_temperature_loc[phase-1]);
-              }
-              else {
-                Real cp_s_sum(0);
-                for (int n_s(0); n_s < nspecies_s; n_s++)
-                  cp_s_sum += p_mass_fractions[n_s]*
-                              solids_parms.calc_cp_sn<RunOn::Gpu>(p_temperature_loc[phase-1],n_s);
+                  if(adv_enthalpy) {
+                    p_realarray[SoArealData::temperature][ip] = p_temperature_loc[phase-1];
+                  }
 
-                p_realarray[SoArealData::cp_s][ip] = cp_s_sum;
-              }
-            }
+                  if(adv_enthalpy) {
+                    if(!solid_is_a_mixture) {
+                      p_realarray[SoArealData::cp_s][ip] =
+                        solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,p_temperature_loc[phase-1]);
+                    }
+                    else {
+                      Real cp_s_sum(0);
+                      for (int n_s(0); n_s < nspecies_s; n_s++)
+                        cp_s_sum += p_mass_fractions[n_s]*
+                                    solids_parms.calc_cp_sn<RunOn::Gpu>(p_temperature_loc[phase-1],n_s);
 
-            if(solve_species)
-              for (int n_s(0); n_s < nspecies_s; n_s++)
-                ptile_data.m_runtime_rdata[n_s][ip] = p_mass_fractions[n_s];
-          }
-        });
+                      p_realarray[SoArealData::cp_s][ip] = cp_s_sum;
+                    }
+                  }
+
+                  if(solve_species) {
+                    for (int n_s(0); n_s < nspecies_s; n_s++) {
+                      const int idx = (phase-1)*nspecies_s + n_s;
+                      ptile_data.m_runtime_rdata[idx_X_sn+n_s][ip] = p_mass_fractions[idx];
+                    }
+                  }
+                }
+              });
+
+            } // if  solids.names[solid_type] == ic_solid.name
+          } // for ic_loc.solids.size()
+        } // for solids.name.size()
+
 
       } // Intersecting Boxes
     } // IC regions

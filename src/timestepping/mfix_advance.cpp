@@ -475,14 +475,17 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
       if (advect_enthalpy) {
 
-        Array4<Real      > const& hg_array    = h_g_in[lev]->array(mfi);
-        Array4<Real      > const& Tg_array    = T_g_in[lev]->array(mfi);
-        Array4<Real const> const& Xgk_array   = X_gk_in[lev]->const_array(mfi);
+        const int fluid_is_a_mixture = fluid.is_a_mixture;
+
+        Array4<Real const> dummy_arr;
+
+        Array4<Real      > const& hg_array  = h_g_in[lev]->array(mfi);
+        Array4<Real      > const& Tg_array  = T_g_in[lev]->array(mfi);
+        Array4<Real const> const& Xgk_array = fluid_is_a_mixture ? X_gk_in[lev]->const_array(mfi) : dummy_arr;
 
         auto const& flags_arr = flags.const_array(mfi);
         auto const& volfrac_arr = volfrac.const_array(mfi);
 
-        const int fluid_is_a_mixture = fluid.is_a_mixture;
         const int nspecies_g = fluid.nspecies;
 
         amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,

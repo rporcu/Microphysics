@@ -823,6 +823,11 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
               GpuArray<Real,SPECIES::NMAX> X_sn;
 
+              // Get current particle's species mass fractions
+              for (int n_s(0); n_s < nspecies_s; ++n_s) {
+                X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s][i];
+              }
+
               // Get current particle's mass
               const Real p_mass_old = p_realarray[SoArealData::mass][i];
               Real p_mass_new(p_mass_old);
@@ -851,9 +856,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 Real total_mass_rate(0);
 
                 for (int n_s(0); n_s < nspecies_s; ++n_s) {
-
-                  // Current species mass fraction
-                  X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s][i];
 
                   // Get the current reaction rate for species n_s
                   const Real mass_sn_rate = ptile_data.m_runtime_rdata[idx_mass_sn_txfr+n_s][i];
@@ -1051,8 +1053,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                       gradient = solids_parms.calc_partial_h_s<RunOn::Gpu>(phase-1,Tp_arg);
                     } else {
 
-                      for (int n_s(0); n_s < nspecies_s; ++n_s)
+                      for (int n_s(0); n_s < nspecies_s; ++n_s) {
                         gradient += X_sn[n_s]*solids_parms.calc_partial_h_sn<RunOn::Gpu>(Tp_arg,n_s);
+                      }
                     }
 
                     return gradient;
