@@ -121,20 +121,18 @@ FluidPhase::Initialize ()
 
     if (!solve_species) {
       species.clear();
+      solve_species = 0;
       nspecies = 0;
-    } else {
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.size() > 0, 
-                                       "No input provided for fluid.species");
-    }
-
-    // Disable the species solver if the species are defined as "None" (case
-    // insensitive) or 0
-    if (amrex::toLower(species[0]).compare("none") == 0) {
+    } else if (amrex::toLower(species[0]).compare("none") == 0) {
+      species.clear();
       solve_species = 0;
       nspecies = 0;
     } else {
       solve_species = 1;
       nspecies = species.size();
+
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.size() > 0, 
+                                       "No input provided for fluid.species");
 
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nspecies <= SPECIES::nspecies,
           "Fluid species number is higher than total species number");
