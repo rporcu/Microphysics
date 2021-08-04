@@ -157,11 +157,11 @@ struct ComputeDragBVK2
      *    DPM     - particle diameter of solids phase M
      *    DPA     - average particle diameter
      *    PHIS    - solids volume fraction of solids phases
-   *    fvelx   - x component of the fluid velocity at the particle position
-   *    fvely   - y component of the fluid velocity at the particle position
-   *    fvelz   - z component of the fluid velocity at the particle position
-   *    i, j, k - particle cell indices
-   *    pid     - particle id number
+     *    fvelx   - x component of the fluid velocity at the particle position
+     *    fvely   - y component of the fluid velocity at the particle position
+     *    fvelz   - z component of the fluid velocity at the particle position
+     *    i, j, k - particle cell indices
+     *    pid     - particle id number
      */
     AMREX_GPU_HOST_DEVICE AMREX_INLINE
     amrex::Real operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel,
@@ -173,16 +173,16 @@ struct ComputeDragBVK2
 
         if (RE > eps)
         {
-      amrex::Real oEPgfour = 1.0/EPg/EPg/EPg/EPg;
+            amrex::Real oEPgfour = 1.0/EPg/EPg/EPg/EPg;
 
-      // eq(9) BVK J. fluid. Mech. 528, 2005
-      // (this F_Stokes is /= of Koch_Hill by a factor of ep_g)
+            // eq(9) BVK J. fluid. Mech. 528, 2005
+            // (this F_Stokes is /= of Koch_Hill by a factor of ep_g)
             amrex::Real F_Stokes = 18.0*Mug*EPg/DPM/DPM;
 
             amrex::Real F = 10.0*PHIS/EPg/EPg + EPg*EPg*(1.0 + 1.5*sqrt(PHIS));
 
-      F += RE*(0.11*PHIS*(1.0+PHIS) - 4.56e-3*oEPgfour +
-           std::pow(RE, -0.343)*(0.169*EPg + 6.44e-2*oEPgfour));
+            F += RE*(0.11*PHIS*(1.0+PHIS) - 4.56e-3*oEPgfour +
+                 std::pow(RE, -0.343)*(0.169*EPg + 6.44e-2*oEPgfour));
 
             // F += 0.413*RE/(24.0*EPg*EPg) *
             //     (1.0/EPg + 3.0*EPg*PHIS + 8.4/std::pow(RE, 0.343)) /

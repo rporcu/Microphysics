@@ -37,10 +37,9 @@ mfix::InitParams ()
   BL_ASSERT(solids.nspecies <= SPECIES::NMAX);
 
   // Read and process chemical reactions inputs.
-  REACTIONS::Initialize();
-  initialize_chem_reactions();
+  reactions.Initialize();
 
-  BL_ASSERT(REACTIONS::nreactions <= REACTIONS::NMAX);
+  BL_ASSERT(reactions.nreactions <= reactions.NMAX);
 
   DEM::Initialize();
   PIC::Initialize();
@@ -149,7 +148,7 @@ mfix::InitParams ()
     pp.query("advect_fluid_species", advect_fluid_species);
 
     // Set the mfix class flag equal to the REACTIONS parameter
-    solve_reactions = REACTIONS::solve && SPECIES::solve;
+    solve_reactions = reactions.solve && SPECIES::solve;
 
     // We can still turn it off explicitly even if we passed stoichiometry inputs
     pp.query("solve_reactions", solve_reactions);
@@ -400,23 +399,21 @@ mfix::InitParams ()
 
     // Constraint type
     {
-      std::string idealgas_constraint_type = "none";
-      pp.query("idealgas_constraint", idealgas_constraint_type);
-      idealgas_constraint_type = amrex::toLower(idealgas_constraint_type);
+      std::string constraint_type = "IncompressibleFluid";
+      pp.query("constraint_type", constraint_type);
+      constraint_type = amrex::toLower(constraint_type);
 
-      if (idealgas_constraint_type.compare("none") == 0) {
-        m_idealgas_constraint = IdealGasConstraint::None;
+      if (constraint_type.compare("incompressiblefluid") == 0) {
+        m_constraint_type = ConstraintType::IncompressibleFluid;
       }
-      else if (idealgas_constraint_type.compare("opensystem") == 0 ||
-               idealgas_constraint_type.compare("open_system") == 0) {
-        m_idealgas_constraint = IdealGasConstraint::OpenSystem;
+      else if (constraint_type.compare("idealgasopensystem") == 0) {
+        m_constraint_type = ConstraintType::IdealGasOpenSystem;
       }
-      else if (idealgas_constraint_type.compare("closedsystem") == 0 ||
-               idealgas_constraint_type.compare("closed_system") == 0) {
-        m_idealgas_constraint = IdealGasConstraint::ClosedSystem;
+      else if (constraint_type.compare("idealgasclosedsystem") == 0) {
+        m_constraint_type = ConstraintType::IdealGasClosedSystem;
       }
       else {
-        amrex::Abort("Don't know this idealgas_constraint_type!");
+        amrex::Abort("Don't know this constraint type!");
       }
     }
 
@@ -554,7 +551,7 @@ void mfix::Init (Real time)
      ***************************************************************************/
 
     if (DEM::solve || PIC::solve) {
-      pc = new MFIXParticleContainer(this, solids);
+      pc = new MFIXParticleContainer(this, solids, reactions);
       pc->setSortingBinSizes(IntVect(particle_sorting_bin));
     }
 
@@ -817,7 +814,7 @@ void mfix::InitLevelData (Real /*time*/)
 }
 
 void
-mfix::PostInit (Real& dt, Real /*time*/, int restart_flag, Real stop_time)
+mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
 
@@ -825,13 +822,13 @@ mfix::PostInit (Real& dt, Real /*time*/, int restart_flag, Real stop_time)
     {
         // Auto generated particles may be out of the domain. This call will
         // remove them. Note that this has to occur after the EB geometry is
-        // created. if (particle_init_type == "Auto" && !restart_flag &&
+        // created. if (particle_init_type == "Auto" && !is_restarting &&
         // particle_ebfactory[finest_level])
 
       if (removeOutOfRange)
         {
 
-          if ((nlev == 1) && (!restart_flag && particle_ebfactory[finest_level]))
+          if ((nlev == 1) && (!is_restarting && particle_ebfactory[finest_level]))
           {
             //___________________________________________________________________
             // Only 1 refined level-set
@@ -845,7 +842,7 @@ mfix::PostInit (Real& dt, Real /*time*/, int restart_flag, Real stop_time)
             pc->RemoveOutOfRange(finest_level, particle_ebfactory[finest_level].get(),
                                  ls_data, levelset_refinement);
           }
-          else if (!restart_flag && particle_ebfactory[finest_level])
+          else if (!is_restarting && particle_ebfactory[finest_level])
           {
             //___________________________________________________________________
             // Multi-level everything
@@ -927,7 +924,8 @@ mfix::PostInit (Real& dt, Real /*time*/, int restart_flag, Real stop_time)
             pc->setSortInt(sort_particle_int);
         }
 
-        pc->InitParticlesRuntimeVariables(advect_enthalpy, solids.solve_species);
+        if (!is_restarting)
+          pc->InitParticlesRuntimeVariables(advect_enthalpy);
 
         if (!fluid.solve){
             dt = fixed_dt;
@@ -935,7 +933,7 @@ mfix::PostInit (Real& dt, Real /*time*/, int restart_flag, Real stop_time)
     }
 
     if (fluid.solve)
-        mfix_init_fluid(restart_flag, dt, stop_time);
+        mfix_init_fluid(is_restarting, dt, stop_time);
 
     // Call user-defined subroutine to set constants, check data, etc.
     if (call_udf) mfix_usr0();
@@ -1026,12 +1024,12 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
           const Box& bx = mfi.validbox();
           const Box& sbx = ep_g[mfi].box();
 
-          if ( is_restarting ) {
+          if (is_restarting) {
             init_fluid_parameters(bx, mfi, ld, advect_enthalpy, advect_fluid_species, fluid);
           } else {
             init_fluid(sbx, bx, domain, mfi, ld, dx, dy, dz, xlen, ylen, zlen, plo,
                 test_tracer_conservation, advect_enthalpy, advect_fluid_species,
-                m_idealgas_constraint, fluid);
+                m_constraint_type, fluid);
           }
        }
 
@@ -1086,7 +1084,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
          MultiFab::Copy(*ld.X_gko, *ld.X_gk, 0, 0, fluid.nspecies, ld.X_gk->nGrow());
        }
 
-       if (m_idealgas_constraint == IdealGasConstraint::ClosedSystem) {
+       if (m_constraint_type == ConstraintType::IdealGasClosedSystem) {
          MultiFab::Copy(*ld.pressure_go, *ld.pressure_g, 0, 0, 1, ld.pressure_g->nGrow());
        }
     }

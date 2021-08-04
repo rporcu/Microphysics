@@ -68,15 +68,15 @@ struct runtimeRealData
 {
   runtimeRealData (const int nspecies_s,
                    const int nreactions)
-    : X_sn(0)                                            // nb of components = nspecies
-    , ro_sn_txfr(X_sn + nspecies_s*(nreactions>0))       // nb of components = nspecies
-    , vel_s_txfr(ro_sn_txfr + nspecies_s*(nreactions>0)) // nb of components = 3
-    , h_s_txfr(vel_s_txfr + 3*(nreactions>0))            // nb of components = 1
+    : X_sn(0)                                              // nb of components = nspecies
+    , mass_sn_txfr(X_sn + nspecies_s)                      // nb of components = nspecies
+    , vel_s_txfr(mass_sn_txfr + nspecies_s*(nreactions>0)) // nb of components = 3
+    , h_s_txfr(vel_s_txfr + 3*(nreactions>0))              // nb of components = 1
     , count(h_s_txfr + 1*(nreactions>0))
   {}
 
   const int X_sn;
-  const int ro_sn_txfr;
+  const int mass_sn_txfr;
   const int vel_s_txfr;
   const int h_s_txfr;
   const int count;
@@ -130,7 +130,8 @@ public:
     { return pti.numParticles(); }
 
     MFIXParticleContainer (amrex::AmrCore* amr_core,
-                           SolidsPhase& solids);
+                           SolidsPhase& solids,
+                           Reactions& reactions);
 
     virtual ~MFIXParticleContainer () {};
 
@@ -140,8 +141,7 @@ public:
 
     void InitParticlesAuto ();
 
-    void InitParticlesRuntimeVariables (const int adv_enthalpy,
-                                        const int solve_species);
+    void InitParticlesRuntimeVariables (const int adv_enthalpy);
 
     void RemoveOutOfRange (int lev,
                            const amrex::EBFArrayBoxFactory * ebfactory,
@@ -268,15 +268,6 @@ public:
                                      const amrex::Vector<amrex::Real>& avg_region_z_b,
                                      const amrex::Vector<amrex::Real>& avg_region_z_t);
 
-
-
-    void MFIX_PC_CalcSolidsStressGrad (int lev,
-                                       amrex::EBFArrayBoxFactory* ebfactory,
-                                       amrex::MultiFab & ep_g_in,
-                                       amrex::MultiFab & grad_tau_in,
-                                       amrex::Vector< amrex::MultiFab* >& cost,
-                                       std::string& knapsack_weight_type);
-
     ///
     /// Deposit parcel velocity to the grid
     ///
@@ -284,28 +275,27 @@ public:
                                            amrex::Array<amrex::MultiFab*,3>& vel_s_mf,
                                            const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
-    void PredictPICVolumeDeposition (int lev,
-                            amrex::Real dt, amrex::RealVect& gravity,
-                            amrex::EBFArrayBoxFactory* ebfactory,
-                            const int ls_refinement,
-                            const amrex::MultiFab* ls_phi,
-                            amrex::MultiFab & mf_to_be_filled,
-                            const amrex::MultiFab * volfrac,
-                            const amrex::FabArray<amrex::EBCellFlagFab>* flags);
+    void PICHydroStep (int lev,
+                       const bool apply_forces,
+                       const bool update_parcels,
+                       const bool use_taylor_approx,
+                       const amrex::Real advance_vel_p,
+                       amrex::Real dt,
+                       amrex::RealVect& gravity,
+                       amrex::Vector< amrex::Array<amrex::MultiFab*,3> >& vel_s_in,
+                       amrex::MultiFab & ep_s_out,
+                       amrex::Array<amrex::MultiFab*,3>& vel_s_out,
+                       const amrex::MultiFab * volfrac,
+                       const amrex::FabArray<amrex::EBCellFlagFab>* flags,
+                       amrex::EBFArrayBoxFactory* ebfactory,
+                       const int ls_refinement,
+                       const amrex::MultiFab* ls_phi);
 
-    void MFIX_PC_AdvanceParcels (amrex::Real dt, amrex::RealVect& gravity,
-                                 amrex::Vector< amrex::Array<amrex::MultiFab*,3> >& vel_s_in,
-                                 amrex::Vector< amrex::MultiFab*> & cost,
-                                 std::string& knapsack_weight_type,
+    void MFIX_PC_AdvanceParcels (amrex::Real dt,
                                  const int advect_enthalpy,
-                                 const amrex::Real enthalpy_source);
-
-    void MFIX_PC_ImposeWalls (int lev,
-                              amrex::EBFArrayBoxFactory * ebfactory,
-                              const int ls_refinement,
-                              const amrex::MultiFab * ls_phi,
-                              amrex::MultiFab* cost,
-                              std::string& knapsack_weight_type);
+                                 const amrex::Real enthalpy_source,
+                                 amrex::Vector< amrex::MultiFab*> & cost,
+                                 std::string& knapsack_weight_type);
 
     const runtimeRealData m_runtimeRealData;
 
@@ -378,6 +368,8 @@ public:
     void usr3_des (int np,void*&);
 
     SolidsPhase& solids;
+
+    Reactions& reactions;
 };
 
 #endif

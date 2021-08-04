@@ -47,9 +47,13 @@ mfix.advect_fluid_species = 1
 species.solve  =  CO  He
 
 species.diffusivity = constant
-
 species.CO.diffusivity.constant  = 1.9e-5
 species.He.diffusivity.constant  = 7.1e-5
+
+species.specific_heat = constant
+species.CO.specific_heat.constant  = 918
+species.He.specific_heat.constant  = 918
+
 
 #_______________________________________________________________________
 # Fluid model settings

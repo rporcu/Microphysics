@@ -13,12 +13,14 @@ namespace SPECIES
   extern int DiffusivityModel;
 
   // List of recognized species specific heat models
-  struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant}; };
+  struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA7Polynomials}; };
+
+  extern int SpecificHeatModel;
 
   // List of recognized species heat of formation models
   struct ENTHALPYOFFORMATIONMODEL { enum {Invalid=-1, Constant}; };
 
-  extern int SpecificHeatModel;
+  extern int EnthalpyOfFormationModel;
 
   // Flag to solve species equations
   extern int solve;
@@ -42,7 +44,7 @@ namespace SPECIES
   // Flag to solve enthalpy species equation
   extern int solve_enthalpy;
 
-  // Specified constant species specific heat
+  // Specified parameters species specific heat
   extern amrex::Vector<amrex::Real> cp_k0;
 
   // Enthalpy of formation

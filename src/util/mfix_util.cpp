@@ -25,13 +25,15 @@ mfix::check_for_nans (int lev)
 // Print the maximum values of the velocity components
 //
 void
-mfix::mfix_print_max_vel (int lev)
+mfix::mfix_print_max_vel (int lev,
+                          const Vector<MultiFab*>& vel_g_in,
+                          const Vector<MultiFab*>& p_g_in)
 {
     amrex::Print() << "   max(abs(u/v/w/p))  = "
-                   << m_leveldata[lev]->vel_g->norm0(0,0,false,true) << "  "
-                   << m_leveldata[lev]->vel_g->norm0(1,0,false,true) << "  "
-                   << m_leveldata[lev]->vel_g->norm0(2,0,false,true) << "  "
-                   << m_leveldata[lev]->p_g->norm0(0,0,false,true) << std::endl;
+                   << vel_g_in[lev]->norm0(0,0,false,true) << "  "
+                   << vel_g_in[lev]->norm0(1,0,false,true) << "  "
+                   << vel_g_in[lev]->norm0(2,0,false,true) << "  "
+                   << p_g_in[lev]->norm0(0,0,false,true) << std::endl;
 }
 
 
@@ -39,12 +41,13 @@ mfix::mfix_print_max_vel (int lev)
 // Print the maximum values of the pressure gradient components
 //
 void
-mfix::mfix_print_max_gp (int lev)
+mfix::mfix_print_max_gp (int lev,
+                         const Vector<MultiFab*>& gp_g_in)
 {
     amrex::Print() << "   max(abs(gpx/gpy/gpz))  = "
-                   << m_leveldata[lev]->gp->norm0(0,0,false,true) << "  "
-                   << m_leveldata[lev]->gp->norm0(1,0,false,true) << "  "
-                   << m_leveldata[lev]->gp->norm0(2,0,false,true) <<  std::endl;
+                   << gp_g_in[lev]->norm0(0,0,false,true) << "  "
+                   << gp_g_in[lev]->norm0(1,0,false,true) << "  "
+                   << gp_g_in[lev]->norm0(2,0,false,true) <<  std::endl;
 }
 
 
@@ -335,4 +338,39 @@ mfix::mfix_print_min_epg ()
   IntVect fake = {0,0,0};
   return fake;
 
+}
+
+
+IntVect
+mfix::mfix_locate_max_eps (Vector< MultiFab* >& ep_s_in, const Real max_eps)
+{
+
+  int imax(-100), jmax(-100), kmax(-100);
+
+#ifndef AMREX_USE_GPU
+
+  for (int lev = 0; lev <= finest_level; lev++) {
+
+    constexpr Real tolerance = std::numeric_limits<Real>::epsilon();
+
+    for (MFIter mfi(*ep_s_in[lev],false); mfi.isValid(); ++mfi) {
+      Box const& bx = mfi.tilebox();
+      // Array4<Real const> const& epg = ld.ep_g->const_array(mfi);
+      Array4<const Real> const& eps = ep_s_in[lev]->const_array(mfi);
+
+      amrex::ParallelFor(bx, [eps, max_eps, &imax, &jmax, &kmax]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        if( amrex::Math::abs(eps(i,j,k) - max_eps) < tolerance ){
+          imax = i;
+          jmax = j;
+          kmax = k;
+        }
+      });
+    } // mfi
+  } // lev
+
+  ParallelDescriptor::ReduceIntMax({imax, jmax, kmax});
+#endif
+  return {imax, jmax, kmax};
 }

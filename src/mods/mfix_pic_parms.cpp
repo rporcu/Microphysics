@@ -14,23 +14,24 @@ namespace PIC
 //  COLLISIONMODEL CollisionModel = LSD;
   int NPHASE;
 
+  int verbose(0);
+
   amrex::Real Ps;
   amrex::Real beta;
   amrex::Real ep_cp;
 
-  amrex::Real velfac = 0.8;
-  amrex::Real velfac_alpha = 0.0625;
-  amrex::Real velfac_intercept = 0.85;
+  amrex::Real vel_ref_frame(0.5);
 
-  amrex::Real small_number = 1.e-7;
+  amrex::Real small_number(1.e-7);
 
-  amrex::Real damping_factor = 0.4;
-  amrex::Real damping_factor_wall_normal  = 0.30;
-  amrex::Real damping_factor_wall_tangent = 0.99;
+  amrex::Real damping_factor(0.4);
+  amrex::Real damping_factor_wall_normal(0.3);
+  amrex::Real damping_factor_wall_tangent(0.99);
 
-  amrex::Real sigmoidal_offset;
+  amrex::Real advance_vel_p = 0.5;
 
-  amrex::Real advance_eps_step = 0.5;
+  int max_iter(3);
+  InitialStepType initial_step(InitialStepType::Invalid);
 
   // Names of the solids used to build input regions.
   amrex::Vector<std::string> names;
@@ -61,6 +62,8 @@ namespace PIC
 
     if(solve)
     {
+      // verbosity level
+      pp.query("verbose", verbose);
 
       // Read Ps
       pp.get("pressure_coefficient", Ps);
@@ -95,35 +98,29 @@ namespace PIC
           "Invalid value: pic.small_number must be > 0");
 
       // Solids slip velocity factor
-      pp.query("velfac", velfac);
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(velfac >= 0. && velfac <= 1.,
-          "Invalid value: pic.velfac must be in [0.0, 1.0]");
+      pp.query("velocity_reference_frame", vel_ref_frame);
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(vel_ref_frame >= 0. && vel_ref_frame <= 1.,
+          "Invalid value: pic.velocity_reference_frame must be in [0.0, 1.0]");
 
-      pp.query("velfac_alpha", velfac_alpha);
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(velfac_alpha > 0. and velfac_alpha <= 0.5,
-          "Invalid value: pic.velfac_alpha must be in (0.0, 0.5]");
+      pp.query("advance_vel_p", advance_vel_p);
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(advance_vel_p >= 0.0 && advance_vel_p <= 1.0,
+          "Invalid value: pic.advance_vel_p must be in [0.0, 1.0]");
 
-      pp.query("velfac_intercept", velfac_intercept);
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(velfac_intercept >= velfac && velfac_intercept < 1.0,
-          "Invalid value: pic.velfac_intercept must be in (velfac, 1.0)");
+      pp.query("max_iter", max_iter);
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(max_iter >= 1,
+               "Invalid value: pic.max_iter must be greater than or equal to 1");
 
-      {
-        const amrex::Real b = -9.0*(2.0*(velfac_intercept - velfac)/(1.0 - velfac) - 1.0);
-        const amrex::Real d =  3.0*b;
-
-        const amrex::Real p = -b/3.0;
-        const amrex::Real q = p*p*p + (27*b-3.0*d)/6.0;
-        const amrex::Real r = 9.0;
-
-        const amrex::Real qrp = std::sqrt(q*q + (r-p*p)*(r-p*p)*(r-p*p));
-
-        sigmoidal_offset = (std::cbrt(q + qrp) + std::cbrt(q - qrp) + p)/3.0;
+      std::string l_initial_step = "nth_eps";
+      pp.query("initial_step_type", l_initial_step);
+      if (l_initial_step == "nth_eps") {
+        initial_step = InitialStepType::nth_eps;
+      } else if (l_initial_step == "zero_eps") {
+        initial_step = InitialStepType::zero_eps;
+      } else if (l_initial_step == "taylor_approx") {
+        initial_step = InitialStepType::taylor_approx;
+      } else {
+        amrex::Abort("pic.initial_step_type must be nth_eps, zero_eps or taylor_approx");
       }
-
-      pp.query("advance_eps_step", advance_eps_step);
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(advance_eps_step >= 0.0 && advance_eps_step <= 1.0,
-          "Invalid value: pic.advance_eps_step must be in [0.0, 1.0]");
-
     }
-  }
+}
 }

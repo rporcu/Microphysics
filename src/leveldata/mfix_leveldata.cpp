@@ -10,9 +10,11 @@ LevelData::LevelData (BoxArray const& ba,
                       DistributionMapping const& dmap,
                       const int nghost,
                       FabFactory<FArrayBox> const& factory,
-                      const int _solve_enthalpy,
-                      const int _solve_species,
-                      const int _nspecies_g)
+                      const int solve_enthalpy_,
+                      const int solve_species_,
+                      const int nspecies_g_,
+                      const int solve_reactions_,
+                      const int nreactions_)
   : ep_g(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , p_g(new MultiFab(amrex::convert(ba, IntVect{1,1,1}), dmap, 1, nghost, MFInfo(), factory))
   , p_go(new MultiFab(amrex::convert(ba, IntVect{1,1,1}), dmap, 1, nghost, MFInfo(), factory))
@@ -39,9 +41,11 @@ LevelData::LevelData (BoxArray const& ba,
   , mac_phi(new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory))
   , divtau_o(new MultiFab(ba, dmap, 3, 0, MFInfo(), factory))
   , level_allocated(1)
-  , solve_enthalpy(_solve_enthalpy)
-  , solve_species(_solve_species)
-  , nspecies_g(_nspecies_g)
+  , solve_enthalpy(solve_enthalpy_)
+  , solve_species(solve_species_)
+  , nspecies_g(nspecies_g_)
+  , solve_reactions(solve_reactions_)
+  , nreactions(nreactions_)
 {
   if (solve_enthalpy) {
     pressure_g  = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
@@ -61,8 +65,8 @@ LevelData::LevelData (BoxArray const& ba,
     X_gko = new MultiFab(ba, dmap, nspecies_g, nghost, MFInfo(), factory);
   }
 
-  if (REACTIONS::solve && solve_species) {
-    ChemTransfer chem_txfr_idxs(nspecies_g, REACTIONS::nreactions);
+  if (solve_reactions && solve_species) {
+    ChemTransfer chem_txfr_idxs(nspecies_g, nreactions);
     chem_txfr = new MultiFab(ba, dmap, chem_txfr_idxs.count, nghost, MFInfo(), factory);
   }
 }
@@ -104,7 +108,7 @@ void LevelData::resetValues (const amrex::Real init_value)
     X_gko->setVal(init_value);
   }
 
-  if (REACTIONS::solve && solve_species) {
+  if (solve_reactions && solve_species) {
     chem_txfr->setVal(init_value);
   }
 }
@@ -147,7 +151,7 @@ LevelData::~LevelData ()
       delete X_gko;
     }
 
-    if (REACTIONS::solve && solve_species) {
+    if (solve_reactions && solve_species) {
       delete chem_txfr;
     }
   }
