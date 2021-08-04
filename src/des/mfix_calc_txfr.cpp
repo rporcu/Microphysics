@@ -331,6 +331,7 @@ mfix::mfix_calc_txfr_particle (Real time,
       interp_ptr->FillBoundary(geom[lev].periodicity());
     }
 
+    BL_PROFILE_VAR("particle_deposition", particle_deposition);
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -517,6 +518,8 @@ mfix::mfix_calc_txfr_particle (Real time,
         } // FAB not covered
       } // pti
     } // omp region
+
+    BL_PROFILE_VAR_STOP(particle_deposition);
 
     delete interp_ptr;
 
