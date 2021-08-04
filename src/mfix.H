@@ -1286,7 +1286,7 @@ public:
 
     int nghost_eb_full () const   { return 4; }
 
-    IntVect particle_sorting_bin = IntVect::TheZeroVector();
+    IntVect particle_sorting_bin = IntVect::TheUnitVector();
 
     bool do_initial_proj    = true;
     int  initial_iterations = 3;

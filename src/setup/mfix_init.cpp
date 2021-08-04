@@ -124,9 +124,7 @@ mfix::InitParams ()
     pp.query("particle_init_type", particle_init_type);
 
     // frequency and bin size for sorting particles 
-    Array<int,3> sorting_bin{0, 0, 0};
-    pp.query("particle_sorting_bin", sorting_bin);
-    particle_sorting_bin = IntVect(sorting_bin);
+    pp.query("particle_sorting_bin", particle_sorting_bin);
     sort_particle_int = -1;
     pp.query("sort_particle_int", sort_particle_int);
 
