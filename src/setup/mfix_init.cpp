@@ -130,6 +130,10 @@ mfix::InitParams ()
     sort_particle_int = -1;
     pp.query("sort_particle_int", sort_particle_int);
 
+    // options for load balance
+    pp.query("imbalance_tolerance", imbalance_toler);
+    pp.query("partition_factor",    partition_factor);
+
     // Options to control initial projections (mostly we use these for
     // debugging)
     pp.query("initial_iterations", initial_iterations);
@@ -284,7 +288,8 @@ mfix::InitParams ()
     pp_mac.query("mg_max_coarsening_level", mac_mg_max_coarsening_level);
 
     AMREX_ALWAYS_ASSERT(load_balance_type.compare("KnapSack") == 0  ||
-                        load_balance_type.compare("SFC") == 0);
+                        load_balance_type.compare("SFC") == 0 || 
+                        load_balance_type.compare("Greedy") == 0);
 
     AMREX_ALWAYS_ASSERT(knapsack_weight_type.compare("RunTimeCosts") == 0 ||
                         knapsack_weight_type.compare("NumParticles") == 0);

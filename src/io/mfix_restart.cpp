@@ -483,7 +483,8 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         }
     }
 
-    if (load_balance_type == "KnapSack" || load_balance_type == "SFC")
+    if (load_balance_type == "KnapSack" || load_balance_type == "SFC" ||
+        load_balance_type == "Greedy")
     {
       if (DEM::solve || PIC::solve) {
         for (int lev(0); lev < particle_cost.size(); ++lev) {
@@ -507,13 +508,6 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
                                             pc->ParticleDistributionMap(lev), 1, 0);
           particle_proc[lev]->setVal(proc);
         }
-
-        // re-allocate ranks of particle grids
-        for (int lev(0); lev < particle_ba_proc.size(); ++lev)
-          if (particle_ba_proc[lev] != nullptr)
-            delete particle_ba_proc[lev];
-        particle_ba_proc.clear();
-        particle_ba_proc.resize(nlev, nullptr);
       }
 
       if (fluid.solve) {

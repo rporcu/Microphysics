@@ -29,7 +29,9 @@ mfix::Regrid ()
 
   int base_lev = 0;
 
-  if (load_balance_type == "KnapSack" || load_balance_type == "SFC") // Knapsack and SFC
+  if (load_balance_type == "KnapSack" || 
+      load_balance_type == "SFC" || 
+      load_balance_type == "Greedy") // Knapsack and SFC
   {
     amrex::Print() << "Load balancing using " << load_balance_type << std::endl;
 
@@ -90,43 +92,33 @@ mfix::Regrid ()
       mfix_set_p0();
       mfix_set_bc0();
 
+
       for (int lev = base_lev; lev <= finestLevel(); ++lev)
       {
-        // update new particle grid size
-        if (downsize_particle_grid) {
-          IntVect max_grid_size = pc->MaxGridSize();
-          IntVect new_grid_size = max_grid_size;
-          pc->checkParticleBoxSize(lev, new_grid_size, downsize_factor);
-          // if new size is smaller, then downsize particle grids
-          // reset the particle cost by # particles
-          if (new_grid_size < max_grid_size) {
-            pc->downsizeParticleBoxes(lev, new_grid_size);
-            pc->resetCostByCount(lev, particle_cost);
-            pc->setMaxGridSize(new_grid_size);
-          }
-        }
-
         DistributionMapping new_particle_dm;
-        if ( load_balance_type == "KnapSack" )
+        if (load_balance_type == "KnapSack")
         {
-          new_particle_dm = DistributionMapping::makeKnapSack(*particle_cost[lev],
-                                                              knapsack_nmax);
+          new_particle_dm = DistributionMapping::makeKnapSack(*particle_cost[lev], knapsack_nmax);
         }
-        else
+        else if (load_balance_type == "SFC")
         {
-          new_particle_dm = DistributionMapping::makeSFC(*particle_cost[lev],
-                                                         false);
+          new_particle_dm = DistributionMapping::makeSFC(*particle_cost[lev], false);
         }
-        print_process_boxes(new_particle_dm);
+        else if (load_balance_type == "Greedy") {
+          pc->partitionParticleGrids(lev, this->boxArray(lev), this->DistributionMap(lev), 
+                                     imbalance_toler, partition_factor);
+          new_particle_dm = pc->ParticleDistributionMap(lev);
+        }
 
         pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev), lev);
         if (sort_particle_int > 0)  pc->SortParticlesByBin(particle_sorting_bin);
+        Print() << "Each process's particle grids: \n";
+        print_process_boxes(new_particle_dm);
 
         if (particle_cost[lev] != nullptr)
           delete particle_cost[lev];
 
-        particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                          new_particle_dm, 1, 0);
+        particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev), new_particle_dm, 1, 0);
         particle_cost[lev]->setVal(0.0);
 
         // reset rank of particle grids
@@ -239,7 +231,7 @@ mfix::Regrid ()
         RegridLevelSetArray(base_lev);
       }
   } else {
-      amrex::Abort("load_balance_type must be KnapSack or SFC");
+      amrex::Abort("load_balance_type must be KnapSack, SFC or Greedy");
   }
 
   if (DEM::solve)

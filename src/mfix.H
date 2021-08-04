@@ -1198,6 +1198,9 @@ public:
 
     int sort_particle_int = -1; // # steps to sort particles
 
+    Real imbalance_toler  = 2.0;
+    Real partition_factor = 2.0;
+
     static EBSupport m_eb_support_level;
 
     Periodicity p0_periodicity;
