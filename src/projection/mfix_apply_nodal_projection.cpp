@@ -213,8 +213,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     Vector< const MultiFab* > phi(nlev);
     Vector< const MultiFab* > gradphi(nlev);
 
-    phi     = nodal_projector->getPhi();
-    gradphi = nodal_projector->getGradPhi();
+    phi     = nodal_projector->getPhiConst();
+    gradphi = nodal_projector->getGradPhiConst();
 
     // Since I did not pass dt, I have to normalize here
     Real qdt(1.0/a_dt);
