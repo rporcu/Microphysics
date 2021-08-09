@@ -480,7 +480,10 @@ mfix::mfix_calc_txfr_particle (Real time,
 
                   // At least one of the cells in the stencil is cut or covered
                   } else {
-
+#if 0
+                    // TODO: This was initially split for variables that may have known
+                    // EB values (e.g., no-slip velocity). However, the results changed
+                    // more than expected so now EB values are not used.
                     {
                       const int srccomp = 0;
                       const int dstcomp = 0;
@@ -489,6 +492,11 @@ mfix::mfix_calc_txfr_particle (Real time,
                       shepard_interp_eb(particle.pos(), ip, jp, kp, dx, dxi, plo,
                                         flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                                         interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+
+                      shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                                     flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                                     interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+
                     }
                     {
                       const int srccomp = 3;
@@ -499,7 +507,15 @@ mfix::mfix_calc_txfr_particle (Real time,
                                      flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                                      interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
                     }
+#else
+                    const int srccomp = 0;
+                    const int dstcomp = 0;
+                    const int numcomp = 7;
 
+                    shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                                   flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                                   interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+#endif
                   } // Cut cell
 
                   Real pvol = p_realarray[SoArealData::volume][pid];
