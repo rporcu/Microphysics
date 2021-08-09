@@ -1,4 +1,3 @@
 CEXE_sources += mfix_usr.cpp
 CEXE_sources += mfix_pc_usr.cpp
 CEXE_sources += mfix_usr_drag.cpp
-CEXE_sources += mfix_usr_heterogeneous_rates.cpp

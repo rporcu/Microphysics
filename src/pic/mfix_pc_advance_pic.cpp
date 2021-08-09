@@ -47,30 +47,27 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
        *******************************************************************/
 
       const int nspecies_s = solids.nspecies;
-      const int nreactions = REACTIONS::nreactions;
+      const int nreactions = reactions.nreactions;
 
       // Particles SoA starting indexes for mass fractions and rate of
       // formations
-      const int idx_X_sn        = m_runtimeRealData.X_sn;
-      const int idx_ro_sn_txfr  = m_runtimeRealData.ro_sn_txfr;
-      const int idx_vel_s_txfr  = m_runtimeRealData.vel_s_txfr;
-      const int idx_h_s_txfr    = m_runtimeRealData.h_s_txfr;
+      const int idx_X_sn = m_runtimeRealData.X_sn;
+      const int idx_mass_sn_txfr = m_runtimeRealData.mass_sn_txfr;
+      const int idx_h_s_txfr = m_runtimeRealData.h_s_txfr;
 
-      const int update_mass           = solids.solve_species && REACTIONS::solve;
+      const int update_mass           = solids.solve_species && reactions.solve;
       const int update_temperature    = advect_enthalpy;
       const int local_advect_enthalpy = advect_enthalpy;
-      const int solve_reactions = REACTIONS::solve;
+      const int solve_reactions = reactions.solve;
 
       const int solid_is_a_mixture = solids.is_a_mixture;
 
       auto& solids_parms = *solids.parameters;
 
       amrex::ParallelFor(nrp,
-        [pstruct,p_realarray,p_intarray,ptile_data,dt,
-         nspecies_s,nreactions,idx_X_sn,
-         idx_ro_sn_txfr,idx_vel_s_txfr,update_mass,update_temperature,
-         solve_reactions,idx_h_s_txfr,solid_is_a_mixture,
-         local_advect_enthalpy,enthalpy_source,solids_parms]
+        [pstruct,p_realarray,p_intarray,ptile_data,dt,nspecies_s,nreactions,idx_X_sn,
+         idx_mass_sn_txfr,update_mass,update_temperature,solve_reactions,idx_h_s_txfr,
+         solid_is_a_mixture,local_advect_enthalpy,enthalpy_source,solids_parms]
         AMREX_GPU_DEVICE (int lp) noexcept
       {
         auto& p = pstruct[lp];
@@ -78,7 +75,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
         GpuArray<Real,SPECIES::NMAX> X_sn;
 
         // Get current particle's mass
-        Real p_mass_old = p_realarray[SoArealData::mass][lp];
+        const Real p_mass_old = p_realarray[SoArealData::mass][lp];
         Real p_mass_new(p_mass_old);
 
         // Get current particle's density
@@ -86,7 +83,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
         Real p_density_new(p_density_old);
 
         // Get current particle's volume
-        Real p_vol = p_realarray[SoArealData::volume][lp];
+        const Real p_vol = p_realarray[SoArealData::volume][lp];
 
         // Flag to stop computing particle's quantities if mass_new < 0, i.e.
         // the particle disappears because of chemical reactions
@@ -97,7 +94,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
         //*********************************************************************
         if (update_mass) {
           // Total particle density exchange rate
-          Real total_ro_rate(0);
+          Real total_mass_rate(0);
 
           // Loop over species
           for (int n_s(0); n_s < nspecies_s; n_s++)
@@ -106,24 +103,24 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
             X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s][lp];
 
             // Get the current reaction rate for species n_s
-            const Real ro_sn_rate = ptile_data.m_runtime_rdata[idx_ro_sn_txfr+n_s][lp];
+            const Real mass_sn_rate = ptile_data.m_runtime_rdata[idx_mass_sn_txfr+n_s][lp];
 
-            X_sn[n_s] = X_sn[n_s]*p_density_old + dt*ro_sn_rate;
+            X_sn[n_s] = X_sn[n_s]*p_mass_old + dt*mass_sn_rate;
 
             // Update the total mass exchange rate
-            total_ro_rate += ro_sn_rate;
+            total_mass_rate += mass_sn_rate;
           }
 
           // Update the total mass of the particle
-          p_density_new = p_density_old + dt * total_ro_rate;
+          p_mass_new = p_mass_old + dt * total_mass_rate;
 
-          if (p_density_new > 0) {
+          if (p_mass_new > 0) {
 
             Real total_X(0.);
 
             // Normalize species mass fractions
             for (int n_s(0); n_s < nspecies_s; n_s++) {
-              Real X_sn_new = X_sn[n_s] / p_density_new;
+              Real X_sn_new = X_sn[n_s] / p_mass_new;
 
               if (X_sn_new < 0) X_sn_new = 0;
               if (X_sn_new > 1) X_sn_new = 1;
@@ -134,13 +131,15 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
             for (int n_s(0); n_s < nspecies_s; n_s++) {
               // Divide updated species mass fractions by total_X
-              ptile_data.m_runtime_rdata[idx_X_sn+n_s][lp] = X_sn[n_s] / total_X;
+              X_sn[n_s] /= total_X;
+              ptile_data.m_runtime_rdata[idx_X_sn+n_s][lp] = X_sn[n_s];
             }
 
             // Write out to global memory particle's mass and density
-            p_realarray[SoArealData::density][lp] = p_density_new;
-            p_mass_new = p_density_new * p_vol;
             p_realarray[SoArealData::mass][lp] = p_mass_new;
+            p_density_new = p_mass_new / p_vol;
+            p_realarray[SoArealData::density][lp] = p_density_new;
+
           } else {
             p.id() = -1;
             proceed = 0;
@@ -155,30 +154,25 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
           //*********************************************************************
           // Third step: update parcels' temperature
           //*********************************************************************
-          if(local_advect_enthalpy) {
+          if(update_temperature) {
+
             const int phase = p_intarray[SoAintData::phase][lp];
 
             const Real Tp_old = p_realarray[SoArealData::temperature][lp];
 
-            const Real cp_s_old = solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,Tp_old);
-            Real cp_s_new(0);
-
-            if (solid_is_a_mixture) {
-              for (int n_s(0); n_s < nspecies_s; ++n_s)
-                cp_s_new += solids_parms.calc_cp_sn<RunOn::Gpu>(Tp_old,n_s) *
-                            ptile_data.m_runtime_rdata[idx_X_sn+n_s][lp];
-
-              p_realarray[SoArealData::cp_s][lp] = cp_s_new;
-            } else {
-              cp_s_new = cp_s_old;
-            }
-
-            AMREX_ASSERT(cp_s_new > 0.);
-
             const Real coeff = update_mass ? (p_mass_old/p_mass_new) : 1.;
 
-            Real p_enthalpy_new =
-              coeff*solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_old) +
+            Real p_enthalpy_old(0);
+
+            if (solid_is_a_mixture) {
+              for (int n_s(0); n_s < nspecies_s; ++n_s) {
+                p_enthalpy_old += X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Gpu>(Tp_old,n_s);
+              }
+            } else {
+              p_enthalpy_old = solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_old);
+            }
+
+            Real p_enthalpy_new = coeff*p_enthalpy_old +
               dt*((p_realarray[SoArealData::convection][lp]+enthalpy_source)/p_mass_new);
 
             if (solve_reactions)
@@ -226,10 +220,23 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
             const Real dumping_factor = 1.;
 
-            DumpedNewton::solve(Tp_new, R, partial_R, dumping_factor, 1.e-5, 1.e-5);
+            DampedNewton::solve(Tp_new, R, partial_R, dumping_factor, 1.e-6, 1.e-6);
 
             p_realarray[SoArealData::temperature][lp] = Tp_new;
 
+            // Update cp_s
+            Real cp_s_new(0);
+
+            if (solid_is_a_mixture) {
+              for (int n_s(0); n_s < nspecies_s; ++n_s)
+                cp_s_new += X_sn[n_s]*solids_parms.calc_cp_sn<RunOn::Gpu>(Tp_new,n_s);
+
+            } else {
+              cp_s_new = solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,Tp_new);
+            }
+
+            AMREX_ASSERT(cp_s_new > 0.);
+            p_realarray[SoArealData::cp_s][lp] = cp_s_new;
           }
         }
       });

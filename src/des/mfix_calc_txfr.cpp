@@ -16,13 +16,14 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
                             Vector< MultiFab* > const& ro_g_in,
                             Vector< MultiFab* > const& vel_g_in,
                             Vector< MultiFab* > const& T_g_in,
+                            Vector< MultiFab* > const& X_gk_in,
                             Real time)
 {
   BL_PROFILE("mfix::mfix_calc_txfr_fluid()");
 
   const Real strttime = ParallelDescriptor::second();
 
-  mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in);
+  mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in);
 
   // ******************************************************************************
   // Now use the transfer coeffs of individual particles to create the

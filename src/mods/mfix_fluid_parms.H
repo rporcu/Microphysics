@@ -8,209 +8,413 @@
 
 #include <mfix_species_parms.H>
 
-struct FluidParms {
+class FluidParms {
 
-  static constexpr amrex::Real R =  8.31446261815324;
+  public:
+    static constexpr amrex::Real R =  8.31446261815324;
 
-  amrex::Real  MW_g0;
-  amrex::Real* h_MW_gk0;
-  amrex::Real* d_MW_gk0;
-  amrex::Real  mu_g0;
-  amrex::Real  k_g0;
-  amrex::Real* h_D_gk0;
-  amrex::Real* d_D_gk0;
-  amrex::Real  cp_g0;
-  amrex::Real* h_cp_gk0;
-  amrex::Real* d_cp_gk0;
+    const amrex::Real  m_T_ref;
+    const amrex::Real  m_mu_g;
+    const amrex::Real  m_k_g;
+    const int          m_nspecies;
+    const int*         m_h_species_id;
+    const int*         m_d_species_id;
 
-  //AMREX_GPU_HOST_DEVICE
-  //FluidParms () noexcept : D_gk0(nullptr), cp_gk0(nullptr) {}
+  private:
+    const amrex::Real* m_h_MW_gk;
+    const amrex::Real* m_d_MW_gk;
+    const amrex::Real* m_h_D_gk;
+    const amrex::Real* m_d_D_gk;
+    const int m_ncoefficients;
+    const amrex::Real* m_h_cp_gk;
+    const amrex::Real* m_d_cp_gk;
+    const amrex::Real* m_h_H_fk;
+    const amrex::Real* m_d_H_fk;
 
-  AMREX_GPU_HOST_DEVICE
-  FluidParms (amrex::Real MW_g,
-              amrex::Real* h_MW_gk,
-              amrex::Real* d_MW_gk,
-              amrex::Real mu_g,
-              amrex::Real k_g,
-              amrex::Real* h_D_gk,
-              amrex::Real* d_D_gk,
-              amrex::Real cp_g,
-              amrex::Real* h_cp_gk,
-              amrex::Real* d_cp_gk)
-    : MW_g0(MW_g)
-    , h_MW_gk0(h_MW_gk)
-    , d_MW_gk0(d_MW_gk)
-    , mu_g0(mu_g)
-    , k_g0(k_g)
-    , h_D_gk0(h_D_gk)
-    , d_D_gk0(d_D_gk)
-    , cp_g0(cp_g)
-    , h_cp_gk0(h_cp_gk)
-    , d_cp_gk0(d_cp_gk)
-  {}
+  public:
+    AMREX_GPU_HOST_DEVICE
+    FluidParms ()
+      : m_T_ref(0.)
+      , m_mu_g(0.)
+      , m_k_g(0.)
+      , m_nspecies(0)
+      , m_h_species_id(nullptr)
+      , m_d_species_id(nullptr)
+      , m_h_MW_gk(nullptr)
+      , m_d_MW_gk(nullptr)
+      , m_h_D_gk(nullptr)
+      , m_d_D_gk(nullptr)
+      , m_ncoefficients(0)
+      , m_h_cp_gk(nullptr)
+      , m_d_cp_gk(nullptr)
+      , m_h_H_fk(nullptr)
+      , m_d_H_fk(nullptr)
+    {}
 
-#if defined(AMREX_USE_GPU)
-  template <amrex::RunOn run_on>
-#else
-  template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
-  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real get_MW_gk (const int n) const
-  {
-    if (run_on == amrex::RunOn::Gpu)
-      return d_MW_gk0[n];
-    else if (run_on == amrex::RunOn::Cpu)
-      return h_MW_gk0[n];
-    else
-      amrex::Abort("Unrecongized RunOn option");
-
-    return 0;
-  }
-
-  // Compute fluid molecular viscosity
-  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real calc_mu_g (const amrex::Real /*T_g*/) const
-  {
-    return mu_g0;
-  }
-
-  // Compute fluid thermal conductivity
-  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real calc_k_g (const amrex::Real /*T_g*/) const
-  {
-    return k_g0;
-  }
-
-  // Compute fluid thermal conductivity
-  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real calc_partial_k_g (const amrex::Real /*T_g*/) const
-  {
-    return 0;
-  }
-
-  // Compute fluid species diffusivity
-#if defined(AMREX_USE_GPU)
-  template <amrex::RunOn run_on>
-#else
-  template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
-  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real calc_D_gk (const amrex::Real /*T_g*/,
-                         const int n) const
-  {
-    if (run_on == amrex::RunOn::Gpu)
-      return d_D_gk0[n];
-    else if (run_on == amrex::RunOn::Cpu)
-      return h_D_gk0[n];
-    else
-      amrex::Abort("Unrecongized RunOn option");
-
-    return 0;
-  }
+    AMREX_GPU_HOST_DEVICE
+    FluidParms (const amrex::Real T_ref,
+                const amrex::Real mu_g,
+                const amrex::Real k_g,
+                const int nspecies,
+                const int* h_species_id,
+                const int* d_species_id,
+                const amrex::Real* h_MW_gk,
+                const amrex::Real* d_MW_gk,
+                const amrex::Real* h_D_gk,
+                const amrex::Real* d_D_gk,
+                const int ncoefficients,
+                const amrex::Real* h_cp_gk,
+                const amrex::Real* d_cp_gk,
+                const amrex::Real* h_H_fk,
+                const amrex::Real* d_H_fk)
+      : m_T_ref(T_ref)
+      , m_mu_g(mu_g)
+      , m_k_g(k_g)
+      , m_nspecies(nspecies)
+      , m_h_species_id(h_species_id)
+      , m_d_species_id(d_species_id)
+      , m_h_MW_gk(h_MW_gk)
+      , m_d_MW_gk(d_MW_gk)
+      , m_h_D_gk(h_D_gk)
+      , m_d_D_gk(d_D_gk)
+      , m_ncoefficients(ncoefficients)
+      , m_h_cp_gk(h_cp_gk)
+      , m_d_cp_gk(d_cp_gk)
+      , m_h_H_fk(h_H_fk)
+      , m_d_H_fk(d_H_fk)
+    {}
 
 #if defined(AMREX_USE_GPU)
-  template <amrex::RunOn run_on>
+    template <amrex::RunOn run_on>
 #else
-  template <amrex::RunOn run_on=amrex::RunOn::Host>
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
 #endif
-  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real calc_cp_g (const amrex::Real /*T_g*/) const
-  {
-    return cp_g0;
-  }
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real get_MW_gk (const int n) const
+    {
+      if (run_on == amrex::RunOn::Gpu)
+        return m_d_MW_gk[n];
+      else if (run_on == amrex::RunOn::Cpu)
+        return m_h_MW_gk[n];
+      else
+        amrex::Abort("Unrecognized RunOn option");
+
+      return 0;
+    }
 
 #if defined(AMREX_USE_GPU)
-  template <amrex::RunOn run_on>
+    template <amrex::RunOn run_on>
 #else
-  template <amrex::RunOn run_on=amrex::RunOn::Host>
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
 #endif
-  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real calc_partial_cp_g (const amrex::Real /*T_g*/) const
-  {
-    return 0;
-  }
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real get_MW_g () const
+    {
+      return get_MW_gk<run_on>(0);
+    }
+
+    // Compute fluid molecular viscosity
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_mu_g (const amrex::Real /*T_g*/) const
+    {
+      return m_mu_g;
+    }
+
+    // Compute fluid thermal conductivity
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_k_g (const amrex::Real /*T_g*/) const
+    {
+      return m_k_g;
+    }
+
+    // Compute fluid thermal conductivity
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_partial_k_g (const amrex::Real /*T_g*/) const
+    {
+      return 0;
+    }
+
+    // Compute fluid species diffusivity
+#if defined(AMREX_USE_GPU)
+    template <amrex::RunOn run_on>
+#else
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_D_gk (const amrex::Real /*T_g*/,
+                           const int n) const
+    {
+      if (run_on == amrex::RunOn::Gpu)
+        return m_d_D_gk[n];
+      else if (run_on == amrex::RunOn::Cpu)
+        return m_h_D_gk[n];
+      else
+        amrex::Abort("Unrecognized RunOn option");
+
+      return 0;
+    }
 
 #if defined(AMREX_USE_GPU)
-  template <amrex::RunOn run_on>
+    template <amrex::RunOn run_on>
 #else
-  template <amrex::RunOn run_on=amrex::RunOn::Host>
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
 #endif
-  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real calc_h_g (const amrex::Real T_g) const
-  {
-    return calc_cp_g<run_on>(T_g) * T_g;
-  }
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_cp_g (const amrex::Real T_g) const
+    {
+      amrex::Real result(0);
+      amrex::Real coeff(1);
+
+      if (run_on == amrex::RunOn::Gpu) {
+        for (int m(0); m < m_ncoefficients; ++m) {
+          result += m_d_cp_gk[m]*coeff;
+          coeff *= T_g;
+        }
+
+        //result *= (R/m_d_MW_gk[0]);
+
+      } else if (run_on == amrex::RunOn::Cpu) {
+        for (int m(0); m < m_ncoefficients; ++m) {
+          result += m_h_cp_gk[m]*coeff;
+          coeff *= T_g;
+        }
+
+      } else {
+        amrex::Abort("Unrecognized RunOn option");
+      }
+
+      return result;
+    }
 
 #if defined(AMREX_USE_GPU)
-  template <amrex::RunOn run_on>
+    template <amrex::RunOn run_on>
 #else
-  template <amrex::RunOn run_on=amrex::RunOn::Host>
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
 #endif
-  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real calc_partial_h_g (const amrex::Real T_g) const
-  {
-    return calc_partial_cp_g<run_on>(T_g) * T_g + calc_cp_g<run_on>(T_g);
-  }
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_integral_cp_g (const amrex::Real T_g) const
+    {
+      amrex::Real result(0);
+      amrex::Real coeff(T_g);
+
+      if (run_on == amrex::RunOn::Gpu) {
+        for (int m(0); m < m_ncoefficients; ++m) {
+          result += (1./(m+1))*m_d_cp_gk[m]*coeff;
+          coeff *= T_g;
+        }
+
+        //result *= (R/m_d_MW_gk[0]);
+
+      } else if (run_on == amrex::RunOn::Cpu) {
+        for (int m(0); m < m_ncoefficients; ++m) {
+          result += (1./(m+1))*m_h_cp_gk[m]*coeff;
+          coeff *= T_g;
+        }
+
+        //result *= (R/m_h_MW_gk[0]);
+
+      } else {
+        amrex::Abort("Unrecognized RunOn option");
+      }
+
+      return result;
+    }
 
 #if defined(AMREX_USE_GPU)
-  template <amrex::RunOn run_on>
+    template <amrex::RunOn run_on>
 #else
-  template <amrex::RunOn run_on=amrex::RunOn::Host>
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
 #endif
-  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real calc_cp_gk (const amrex::Real /*T_g*/,
-                          const int n) const
-  {
-    if (run_on == amrex::RunOn::Gpu)
-      return d_cp_gk0[n];
-    else if (run_on == amrex::RunOn::Cpu)
-      return h_cp_gk0[n];
-    else
-      amrex::Abort("Unrecongized RunOn option");
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_partial_cp_g (const amrex::Real T_g) const
+    {
+      amrex::Real result(0);
+      amrex::Real coeff(1);
 
-    return 0;
-  }
+      if (run_on == amrex::RunOn::Gpu) {
+        for (int m(1); m < m_ncoefficients; ++m) {
+          result += m*m_d_cp_gk[m]*coeff;
+          coeff *= T_g;
+        }
 
-#if defined(AMREX_USE_GPU)
-  template <amrex::RunOn run_on>
-#else
-  template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
-  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real calc_partial_cp_gk (const amrex::Real /*T_g*/,
-                                  const int /*n*/) const
-  {
-    return 0;
-  }
+        //result *= (R/m_d_MW_gk[0]);
 
-#if defined(AMREX_USE_GPU)
-  template <amrex::RunOn run_on>
-#else
-  template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
-  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real calc_h_gk (const amrex::Real T_g,
-                         const int n) const
-  {
-    return calc_cp_gk<run_on>(T_g,n) * T_g;
-  }
+      } else if (run_on == amrex::RunOn::Cpu) {
+        for (int m(1); m < m_ncoefficients; ++m) {
+          result += m*m_h_cp_gk[m]*coeff;
+          coeff *= T_g;
+        }
+
+        //result *= (R/m_h_MW_gk[0]);
+
+      } else {
+        amrex::Abort("Unrecognized RunOn option");
+      }
+
+      return result;
+    }
 
 #if defined(AMREX_USE_GPU)
-  template <amrex::RunOn run_on>
+    template <amrex::RunOn run_on>
 #else
-  template <amrex::RunOn run_on=amrex::RunOn::Host>
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
 #endif
-  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-  amrex::Real calc_partial_h_gk (const amrex::Real T_g,
-                                 const int n) const
-  {
-    return calc_partial_cp_gk<run_on>(T_g,n) * T_g + calc_cp_gk<run_on>(T_g,n);
-  }
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_h_g (const amrex::Real T_g) const
+    {
+      return calc_integral_cp_g<run_on>(T_g) - calc_integral_cp_g<run_on>(m_T_ref);
+    }
+
+#if defined(AMREX_USE_GPU)
+    template <amrex::RunOn run_on>
+#else
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_partial_h_g (const amrex::Real T_g) const
+    {
+      return calc_cp_g<run_on>(T_g);
+    }
+
+#if defined(AMREX_USE_GPU)
+    template <amrex::RunOn run_on>
+#else
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_cp_gk (const amrex::Real T_g,
+                            const int n) const
+    {
+      amrex::Real result(0);
+      amrex::Real coeff(1);
+
+      if (run_on == amrex::RunOn::Gpu) {
+        for (int m(0); m < m_ncoefficients; ++m) {
+          const int idx = n*m_ncoefficients + m;
+          result += m_d_cp_gk[idx]*coeff;
+          coeff *= T_g;
+        }
+
+        //result *= (R/m_d_MW_gk[n]);
+
+      } else if (run_on == amrex::RunOn::Cpu) {
+        for (int m(0); m < m_ncoefficients; ++m) {
+          const int idx = n*m_ncoefficients + m;
+          result += m_h_cp_gk[idx]*coeff;
+          coeff *= T_g;
+        }
+
+        //result *= (R/m_h_MW_gk[n]);
+
+      } else {
+        amrex::Abort("Unrecognized RunOn option");
+      }
+
+      return result;
+    }
+
+#if defined(AMREX_USE_GPU)
+    template <amrex::RunOn run_on>
+#else
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_integral_cp_gk (const amrex::Real T_g,
+                                     const int n) const
+    {
+      amrex::Real result(0);
+      amrex::Real coeff(T_g);
+
+      if (run_on == amrex::RunOn::Gpu) {
+        for (int m(0); m < m_ncoefficients; ++m) {
+          const int idx = n*m_ncoefficients + m;
+          result += (1./(m+1))*m_d_cp_gk[idx]*coeff;
+          coeff *= T_g;
+        }
+
+        //result *= (R/m_d_MW_gk[n]);
+
+      } else if (run_on == amrex::RunOn::Cpu) {
+        for (int m(0); m < m_ncoefficients; ++m) {
+          const int idx = n*m_ncoefficients + m;
+          result += (1./(m+1))*m_h_cp_gk[idx]*coeff;
+          coeff *= T_g;
+        }
+
+        //result *= (R/m_h_MW_gk[n]);
+
+      } else {
+        amrex::Abort("Unrecognized RunOn option");
+      }
+
+      return result;
+    }
+
+#if defined(AMREX_USE_GPU)
+    template <amrex::RunOn run_on>
+#else
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_partial_cp_gk (const amrex::Real T_g,
+                                    const int n) const
+    {
+      amrex::Real result(0);
+      amrex::Real coeff(1);
+
+      if (run_on == amrex::RunOn::Gpu) {
+        for (int m(1); m < m_ncoefficients; ++m) {
+          const int idx = n*m_ncoefficients + m;
+          result += m*m_d_cp_gk[idx]*coeff;
+          coeff *= T_g;
+        }
+
+        //result *= (R/m_d_MW_gk[n]);
+
+      } else if (run_on == amrex::RunOn::Cpu) {
+        for (int m(1); m < m_ncoefficients; ++m) {
+          const int idx = n*m_ncoefficients + m;
+          result += m*m_h_cp_gk[idx]*coeff;
+          coeff *= T_g;
+        }
+
+        //result *= (R/m_h_MW_gk[n]);
+
+      } else {
+        amrex::Abort("Unrecognized RunOn option");
+      }
+
+      return result;
+    }
+
+#if defined(AMREX_USE_GPU)
+    template <amrex::RunOn run_on>
+#else
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_h_gk (const amrex::Real T_g,
+                           const int n) const
+    {
+      return calc_integral_cp_gk<run_on>(T_g,n) - calc_integral_cp_gk<run_on>(m_T_ref,n);
+    }
+
+#if defined(AMREX_USE_GPU)
+    template <amrex::RunOn run_on>
+#else
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_partial_h_gk (const amrex::Real T_g,
+                                   const int n) const
+    {
+      return calc_cp_gk<run_on>(T_g,n);
+    }
 };
 
 
-class FluidPhase
-{
+class FluidPhase {
+
   public:
     // Constructor
     FluidPhase();
@@ -228,8 +432,13 @@ class FluidPhase
 
     int ViscosityModel;
 
+    // List of recognized species diffusivity models
+    struct DIFFUSIVITYMODEL { enum {Invalid=-1, Constant}; };
+
+    int DiffusivityModel;
+
     // List of recognized fluid specific heat models
-    struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA9Polynomials}; };
+    struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA7Polynomials, NASA9Polynomials}; };
 
     int SpecificHeatModel;
 
@@ -238,6 +447,12 @@ class FluidPhase
 
     int ThermalConductivityModel;
 
+    // List of recognized species heat of formation models
+    struct ENTHALPYOFFORMATIONMODEL { enum {Invalid=-1, Constant}; };
+
+    int EnthalpyOfFormationModel;
+
+    // Ideal gas constant
     static constexpr amrex::Real R = 8.31446261815324;
 
     // Flag to solve fluid equations
@@ -245,9 +460,6 @@ class FluidPhase
 
     // Specified constant gas density
     amrex::Real ro_g0;
-
-    // Specified constant molecular weight of gas
-    amrex::Real MW_g0;
 
     // Specified constant tracer value
     amrex::Real trac_0;
@@ -264,14 +476,8 @@ class FluidPhase
     // Specified constant gas temperature
     amrex::Real T_g0;
 
-    // Specified constant gas enthalpy of formation
-    amrex::Real H_f0;
-
     // Specified constant gas reference temperature
     amrex::Real T_ref;
-
-    // Specified constant gas specific heat
-    amrex::Real cp_g0;
 
     // Specified constant gas phase thermal conductivity coefficient
     amrex::Real k_g0;

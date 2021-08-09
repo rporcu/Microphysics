@@ -13,7 +13,7 @@ RUN apt-get -qq update \
     && apt-get -qq upgrade \
     && apt-get -qq -y install --no-install-recommends \
     ca-certificates=20210119~20.04.1 \
-    curl=7.68.0-1ubuntu2.5 \
+    curl=7.68.0-1ubuntu2.6 \
     gnupg=2.2.19-3ubuntu2.1 \
     && curl -L https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub > 7fa2af80.pub \
     && apt-key add 7fa2af80.pub \
@@ -35,16 +35,16 @@ RUN apt-get -qq update \
     libopenmpi-dev=4.0.3-0ubuntu1 \
     openmpi-bin=4.0.3-0ubuntu1 \
     pkg-config=0.29.1-0ubuntu4 \
-    python3-pip=20.0.2-5ubuntu1.5 \
+    python3-pip=20.0.2-5ubuntu1.6 \
     python3-setuptools=45.2.0-1 \
     python3-venv=3.8.2-0ubuntu2 \
     shellcheck=0.7.0-2build2 \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
     && pip3 install --no-cache-dir \
-    cmake==3.20.3 \
+    cmake==3.21.0 \
     codespell==2.1.0 \
-    conan==1.37.2 \
-    ninja==1.10.0.post2 \
+    conan==1.38.0 \
+    ninja==1.10.0.post3 \
     && curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz -- \
     | tar xz \
     && cp sccache-v0.2.15-x86_64-unknown-linux-musl/sccache /usr/local/bin/sccache \

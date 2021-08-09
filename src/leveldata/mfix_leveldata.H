@@ -44,6 +44,8 @@ class LevelData
       , solve_enthalpy(0)
       , solve_species(0)
       , nspecies_g(0)
+      , solve_reactions(0)
+      , nreactions(0)
     {}
 
     // Constructor
@@ -51,9 +53,11 @@ class LevelData
                amrex::DistributionMapping const& dm,
                const int nghost,
                amrex::FabFactory<amrex::FArrayBox> const& fact,
-               const int _solve_enthalpy,
-               const int _solve_species,
-               const int _nspecies_g);
+               const int solve_enthalpy,
+               const int solve_species,
+               const int nspecies_g,
+               const int solve_reactions,
+               const int nreactions);
 
     // Reset initial values
     void resetValues (const amrex::Real covered_val);
@@ -126,6 +130,8 @@ class LevelData
     const int solve_enthalpy;
     const int solve_species;
     const int nspecies_g;
+    const int solve_reactions;
+    const int nreactions;
 };
 
 #endif

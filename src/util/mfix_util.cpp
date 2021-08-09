@@ -25,13 +25,15 @@ mfix::check_for_nans (int lev)
 // Print the maximum values of the velocity components
 //
 void
-mfix::mfix_print_max_vel (int lev)
+mfix::mfix_print_max_vel (int lev,
+                          const Vector<MultiFab*>& vel_g_in,
+                          const Vector<MultiFab*>& p_g_in)
 {
     amrex::Print() << "   max(abs(u/v/w/p))  = "
-                   << m_leveldata[lev]->vel_g->norm0(0,0,false,true) << "  "
-                   << m_leveldata[lev]->vel_g->norm0(1,0,false,true) << "  "
-                   << m_leveldata[lev]->vel_g->norm0(2,0,false,true) << "  "
-                   << m_leveldata[lev]->p_g->norm0(0,0,false,true) << std::endl;
+                   << vel_g_in[lev]->norm0(0,0,false,true) << "  "
+                   << vel_g_in[lev]->norm0(1,0,false,true) << "  "
+                   << vel_g_in[lev]->norm0(2,0,false,true) << "  "
+                   << p_g_in[lev]->norm0(0,0,false,true) << std::endl;
 }
 
 
@@ -39,12 +41,13 @@ mfix::mfix_print_max_vel (int lev)
 // Print the maximum values of the pressure gradient components
 //
 void
-mfix::mfix_print_max_gp (int lev)
+mfix::mfix_print_max_gp (int lev,
+                         const Vector<MultiFab*>& gp_g_in)
 {
     amrex::Print() << "   max(abs(gpx/gpy/gpz))  = "
-                   << m_leveldata[lev]->gp->norm0(0,0,false,true) << "  "
-                   << m_leveldata[lev]->gp->norm0(1,0,false,true) << "  "
-                   << m_leveldata[lev]->gp->norm0(2,0,false,true) <<  std::endl;
+                   << gp_g_in[lev]->norm0(0,0,false,true) << "  "
+                   << gp_g_in[lev]->norm0(1,0,false,true) << "  "
+                   << gp_g_in[lev]->norm0(2,0,false,true) <<  std::endl;
 }
 
 

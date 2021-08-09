@@ -263,8 +263,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                 Array4<Real> rhoh;
                 Array4<Real const>   h =  h_g_in[lev]->const_array(mfi);
                 Array4<Real const> rho = ro_g_in[lev]->const_array(mfi);
-                rhohfab.resize(rhoh_box, 1);
-                Elixir eli_rh = rhohfab.elixir();
+                rhohfab.resize(rhoh_box, 1, The_Async_Arena());
                 rhoh   = rhohfab.array();
                 amrex::ParallelFor(rhoh_box,
                 [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -308,8 +307,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                 Box rhotrac_box = Box((*trac_in[lev])[mfi].box());
                 Array4<Real const> tra = trac_in[lev]->const_array(mfi);
                 Array4<Real const> rho = ro_g_in[lev]->const_array(mfi);
-                rhotracfab.resize(rhotrac_box, ntrac);
-                Elixir eli_rt  = rhotracfab.elixir();
+                rhotracfab.resize(rhotrac_box, ntrac, The_Async_Arena());
                 Array4<Real> rhotrac = rhotracfab.array();
                 amrex::ParallelFor(rhotrac_box, ntrac,
                 [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
@@ -353,8 +351,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                 Box rhoX_box = Box((*X_gk_in[lev])[mfi].box());
                 Array4<Real const>   X = X_gk_in[lev]->const_array(mfi);
                 Array4<Real const> rho = ro_g_in[lev]->const_array(mfi);
-                rhoXfab.resize(rhoX_box, l_nspecies);
-                Elixir eli_rX  = rhoXfab.elixir();
+                rhoXfab.resize(rhoX_box, l_nspecies, The_Async_Arena());
                 Array4<Real> rhoX = rhoXfab.array();
                 amrex::ParallelFor(rhoX_box, l_nspecies,
                 [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
@@ -600,8 +597,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
             Box tmp_box = Box((*ro_g_in[lev])[mfi].box());
             Array4<Real const> rho = ro_g_in[lev]->const_array(mfi);
 
-            FArrayBox scratchfab(amrex::grow(bx,ngrow), max_ncomp);
-            Elixir eli_scratch = scratchfab.elixir();
+            FArrayBox scratchfab(amrex::grow(bx,ngrow), max_ncomp, The_Async_Arena());
 
             auto const& vfrac = ebfact.getVolFrac().const_array(mfi);
             auto const& ccc   = ebfact.getCentroid().const_array(mfi);
@@ -650,8 +646,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                 ncomp = 1;
                 Array4<Real const>   h =  h_g_in[lev]->const_array(mfi);
                 FArrayBox rhohfab;
-                rhohfab.resize(tmp_box, 1);
-                Elixir eli_rh  = rhohfab.elixir();
+                rhohfab.resize(tmp_box, 1, The_Async_Arena());
                 Array4<Real> rhoh = rhohfab.array();
                 amrex::ParallelFor(tmp_box, ncomp,
                     [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
@@ -675,8 +670,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
                 Array4<Real const> tra = trac_in[lev]->const_array(mfi);
                 FArrayBox rhotracfab;
-                rhotracfab.resize(tmp_box, ntrac);
-                Elixir eli_rt  = rhotracfab.elixir();
+                rhotracfab.resize(tmp_box, ntrac, The_Async_Arena());
                 Array4<Real> rhotrac = rhotracfab.array();
                 amrex::ParallelFor(tmp_box, ncomp,
                     [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
@@ -700,8 +694,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
                 Array4<Real const>   X = X_gk_in[lev]->const_array(mfi);
                 FArrayBox rhoXfab;
-                rhoXfab.resize(tmp_box, l_nspecies);
-                Elixir eli_rX  = rhoXfab.elixir();
+                rhoXfab.resize(tmp_box, l_nspecies, The_Async_Arena());
                 Array4<Real> rhoX = rhoXfab.array();
                 amrex::ParallelFor(tmp_box, ncomp,
                     [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
