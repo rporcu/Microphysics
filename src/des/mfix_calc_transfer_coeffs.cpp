@@ -408,7 +408,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                   {
                     const int srccomp = 3;
                     const int dstcomp = 3;
-                    const int numcomp = 1;
+                    const int numcomp = interp_comp-3; // ep_g, ro_g, T_g, X_gk
 
                     shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
                                    flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
@@ -417,7 +417,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 #else
                   const int srccomp = 0;
                   const int dstcomp = 0;
-                  const int numcomp = 4;
+                  const int numcomp = interp_comp; // vel_g, ep_g, ro_g, T_g, X_gk
 
                   shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
                                  flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
