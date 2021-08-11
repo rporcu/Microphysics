@@ -1,7 +1,7 @@
 #include <mfix.H>
 #include <mfix_des_K.H>
 #include <mfix_interp_K.H>
-#include <mfix_eb_interp_K.H>
+#include <mfix_eb_interp_shepard_K.H>
 #include <mfix_des_drag_K.H>
 #include <mfix_des_conv_coeff_K.H>
 #include <mfix_mf_helpers.H>
@@ -391,11 +391,39 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                    interp_array, plo, dxi, interp_comp);
                 // At least one of the cells in the stencil is cut or covered
                 } else {
+#if 0
+                  // TODO: This was initially split for variables that may have known
+                  // EB values (e.g., no-slip velocity). However, the results changed
+                  // more than expected so now EB values are not used.
+                  {
+                    const int srccomp = 0;
+                    const int dstcomp = 0;
+                    const int numcomp = 3;
 
-                  const int scomp = 3;
-                  fe_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
-                            flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-                            interp_array, interp_loc.data(), interp_comp, scomp);
+                    shepard_interp_eb(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                                      flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                                      interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+
+                  }
+                  {
+                    const int srccomp = 3;
+                    const int dstcomp = 3;
+                    const int numcomp = interp_comp-3; // ep_g, ro_g, T_g, X_gk
+
+                    shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                                   flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                                   interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+                  }
+#else
+                  const int srccomp = 0;
+                  const int dstcomp = 0;
+                  const int numcomp = interp_comp; // vel_g, ep_g, ro_g, T_g, X_gk
+
+                  shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                                 flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                                 interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+
+#endif
                 } // Cut cell
 
                 RealVect vel_g(interp_loc[0], interp_loc[1], interp_loc[2]);
