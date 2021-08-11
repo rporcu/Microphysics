@@ -128,8 +128,8 @@ mfix::InitParams ()
     pp.query("sort_particle_int", sort_particle_int);
 
     // options for load balance
-    pp.query("imbalance_tolerance", imbalance_toler);
-    pp.query("partition_factor",    partition_factor);
+    pp.query("overload_tolerance",  overload_toler);
+    pp.query("underload_tolerance", underload_toler);
 
     // Options to control initial projections (mostly we use these for
     // debugging)
@@ -191,8 +191,6 @@ mfix::InitParams ()
     pp.query("load_balance_type",      load_balance_type);
     pp.query("knapsack_weight_type",   knapsack_weight_type);
     pp.query("load_balance_fluid",     load_balance_fluid);
-    pp.query("downsize_particle_grid", downsize_particle_grid);
-    pp.query("downsize_factor",        downsize_factor);
 
 
     // Include drag multiplier in projection. (False by default)

@@ -1203,8 +1203,6 @@ public:
     static std::string load_balance_type;
     static std::string knapsack_weight_type;
     static int load_balance_fluid;
-    static int downsize_particle_grid;
-    static Real downsize_factor;
     static int knapsack_nmax;
 
     // Options to control time stepping
@@ -1223,8 +1221,8 @@ public:
 
     int sort_particle_int = -1; // # steps to sort particles
 
-    Real imbalance_toler  = 2.0;
-    Real partition_factor = 2.0;
+    Real overload_toler  = 1.2;
+    Real underload_toler = 0.8;
 
     static EBSupport m_eb_support_level;
 

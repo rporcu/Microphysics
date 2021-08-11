@@ -71,7 +71,6 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     BL_PROFILE_VAR("PARTICLES SOLVE", particlesSolve);
 
     int nsubsteps;
-    Real load_eff = 1.0;
 
     if (DEM::solve)
     {
@@ -113,7 +112,6 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                     update_enthalpy);
             }
         }
-        load_eff = pc->particleImbalance();
     }
 
     if (PIC::solve) {
@@ -141,7 +139,6 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
       if((DEM::solve || PIC::solve) && fluid.solve) {
         std::cout << "   Coupling time per step   " << coupling_timing << std::endl;
-        std::cout << "   Particle load efficiency " <<  load_eff << std::endl;
       }
     }
 

@@ -322,9 +322,16 @@ public:
     // return the average/max particle count on IO process
     amrex::Real particleImbalance();
 
-    // count particles for each box in the box list
-    // the boxes may not be local to the proc's particle grids
-    amrex::Vector<int> countParticle(int lev, const amrex::BoxList& bl);
+    /* count particles for each box in the box list
+       The boxes are broken down into bins of the input size
+       output: pcounts  - # particles in each bin
+               poffsets - offsets for bins in each box 
+    */
+    void countParticle(int lev, 
+                       const amrex::BoxList& bl,
+                       const amrex::IntVect& binsize,
+                       amrex::Vector<int>& pcounts,
+                       amrex::Vector<int>& poffsets);
 
     // verify total # particles hasn't been changed, for debugging
     void verifyParticleCount();
