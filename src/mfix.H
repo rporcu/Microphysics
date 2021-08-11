@@ -117,6 +117,8 @@ class mfix : public AmrCore
     void WritePlotFile (std::string & plot_file_name,
                         int nstep = 0, Real time = 0.0);
 
+    void WriteAscentFile ( );
+
     //! Save variables that don't change to plot file. The idea is that they can
     //! be saved _once_ per simulations and not repeatedly every Nth time step.
     void WriteStaticPlotFile (const std::string & plot_file_name) const;
@@ -218,6 +220,15 @@ class mfix : public AmrCore
 
     // If > 0, dump plotfiles at exactcly the designated period by changing dt
     static Real plot_per_exact;
+
+
+  // If > 0, dump plotfiles every "plot_int" steps
+  static int ascent_int;
+
+  // If > 0, dump plotfiles at as close as possible to the designated period
+  // *without* changing dt
+  static Real ascent_per_approx;
+
 
     static inline std::string get_load_balance_type ()
     { return load_balance_type; }
@@ -954,6 +965,8 @@ public:
     Vector< IArrayBox* > bc_khi;
 
     Vector< std::unique_ptr<LevelData> > m_leveldata;
+
+    MFIXParticleContainer* getParticleContainer() const { return pc; };
 
     Vector< MultiFab* > get_ep_g () noexcept;
     Vector< MultiFab* > get_ro_g () noexcept;

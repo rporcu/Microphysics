@@ -35,6 +35,7 @@ std::string plot_file {"plt"};
 std::string static_plt_file {"plt_ls"};
 
 bool plotfile_on_restart = false;
+bool ascent_on_restart = false;
 
 int par_ascii_int = -1;
 int last_par_ascii  = -1;
@@ -69,6 +70,7 @@ void ReadParameters ()
      pp.query("plot_file", plot_file);
 
      pp.query("plotfile_on_restart", plotfile_on_restart);
+     pp.query("ascent_on_restart", ascent_on_restart);
 
      pp.query("avg_int", avg_int );
      pp.query("avg_file", avg_file);
@@ -147,7 +149,47 @@ void writeNow (int nstep, Real time, Real dt, mfix& mfix)
            mfix.mfix_compute_vort();
         mfix.WritePlotFile( plot_file, nstep, time );
     }
+#ifdef AMREX_USE_ASCENT
+    int ascent_test = 0;
+    if (mfix::ascent_per_approx > 0.0)
+    {
+        // Check to see if we've crossed a mfix::ascent_per_approx interval by comparing
+        // the number of intervals that have elapsed for both the current
+        // time and the time at the beginning of this timestep.
 
+        int num_per_old = static_cast<int>( (time-dt) / mfix::ascent_per_approx );
+        int num_per_new = static_cast<int>( (time   ) / mfix::ascent_per_approx );
+
+        // Before using these, however, we must test for the case where we're
+        // within machine epsilon of the next interval. In that case, increment
+        // the counter, because we have indeed reached the next mfix::ascent_per_approx interval
+        // at this point.
+
+        const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * amrex::Math::abs(time);
+        const Real next_ascent_time = (num_per_old + 1) * mfix::ascent_per_approx;
+
+        if ((num_per_new == num_per_old) && amrex::Math::abs(time - next_ascent_time) <= eps)
+        {
+            num_per_new += 1;
+        }
+
+        // Similarly, we have to account for the case where the old time is within
+        // machine epsilon of the beginning of this interval, so that we don't double
+        // count that time threshold -- we already plotted at that time on the last timestep.
+
+        if ((num_per_new != num_per_old) && amrex::Math::abs((time - dt) - next_ascent_time) <= eps)
+            num_per_old += 1;
+
+        if (num_per_old != num_per_new)
+            ascent_test = 1;
+
+    }
+
+    if ( (ascent_test == 1) || ( ( mfix::ascent_int > 0) && ( nstep %  mfix::ascent_int == 0 ) ) )
+    {
+        mfix.WriteAscentFile();
+    }
+#endif
 
     if ( ( check_int > 0) && ( nstep %  check_int == 0 ) )
     {
@@ -310,6 +352,13 @@ int main (int argc, char* argv[])
           mfix.mfix_compute_vort();
        mfix.WritePlotFile(plot_file, nstep, time);
     }
+
+#ifdef AMREX_USE_ASCENT
+    if ( (restart_file.empty() || ascent_on_restart) &&
+         (mfix::ascent_int > 0 || mfix::ascent_per_approx > 0) ) {
+      mfix.WriteAscentFile();
+    }
+#endif
 
     // We automatically write checkpoint files with the initial data
     //    if check_int > 0

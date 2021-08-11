@@ -459,6 +459,12 @@ mfix::InitParams ()
         (plot_per_exact > 0 && plot_per_approx > 0) )
       amrex::Abort("Must choose only one of plot_int or plot_per_exact or plot_per_approx");
 
+    amr_pp.query("ascent_int", ascent_int);
+    amr_pp.query("ascent_per_approx", ascent_per_approx);
+
+    if ((ascent_int       > 0 && ascent_per_approx > 0) )
+      amrex::Abort("Must choose only one of ascent_int or ascent_per_exact or ascent_per_approx");
+
     amr_pp.queryarr("avg_p_g", avg_p_g);
     amr_pp.queryarr("avg_ep_g", avg_ep_g);
     amr_pp.queryarr("avg_vel_g", avg_vel_g);
