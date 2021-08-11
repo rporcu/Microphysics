@@ -5,4 +5,5 @@ target_sources( mfixcore
    mfix_chk.cpp
    mfix_plt.cpp
    mfix_restart.cpp
+   mfix_ascent.cpp
    )
