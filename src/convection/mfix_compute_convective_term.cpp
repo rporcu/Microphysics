@@ -621,7 +621,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                                                             : ep_g_in[lev]->array(mfi),
                                    flagfab.const_array(),
                                    apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                   bc_vel, geom[lev], l_dt, m_redistribution_type);
+                                   bc_vel, geom[lev], l_dt,
+                                   (m_redistribution_type == "StateRedist") ? 
+                                         "NewStateRedist" : m_redistribution_type);                                       
 
             // Density
             if (advect_density)
@@ -636,7 +638,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                                                                 : ep_g_in[lev]->array(mfi),
                                        flagfab.const_array(),
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                       bc_den, geom[lev], l_dt, m_redistribution_type);
+                                       bc_den, geom[lev], l_dt,
+                                       (m_redistribution_type == "StateRedist") ? 
+                                             "NewStateRedist" : m_redistribution_type);                                       
             }
 
 
@@ -661,7 +665,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                                                                 : ep_g_in[lev]->array(mfi),
                                        flagfab.const_array(),
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                       bc_rh, geom[lev], l_dt, m_redistribution_type);
+                                       bc_rh, geom[lev], l_dt,
+                                       (m_redistribution_type == "StateRedist") ? 
+                                             "NewStateRedist" : m_redistribution_type);                                       
             }
 
             // Tracers
@@ -685,7 +691,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                                                                 : ep_g_in[lev]->array(mfi),
                                        flagfab.const_array(),
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                       bc_rt, geom[lev], l_dt, m_redistribution_type);
+                                       bc_rt, geom[lev], l_dt,
+                                       (m_redistribution_type == "StateRedist") ? 
+                                             "NewStateRedist" : m_redistribution_type);                                       
             }
 
             if (advect_fluid_species && (l_nspecies > 0))
@@ -709,7 +717,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                                                                 : ep_g_in[lev]->array(mfi),
                                        flagfab.const_array(),
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                       bc_rX, geom[lev], l_dt, m_redistribution_type);
+                                       bc_rX, geom[lev], l_dt,
+                                       (m_redistribution_type == "StateRedist") ? 
+                                             "NewStateRedist" : m_redistribution_type);                                       
             }
 
          } // test on if regular

@@ -52,7 +52,9 @@ mfix::InitialRedistribution (Real l_time)
                 Redistribution::ApplyToInitialData( bx,ncomp,
                                           ld.vel_g->array(mfi), ld.vel_go->array(mfi),
                                           flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                          bc_vel, geom[lev],m_redistribution_type);
+                                          bc_vel, geom[lev],
+                                          (m_redistribution_type == "StateRedist") ? 
+                                                "NewStateRedist" : m_redistribution_type);
 
                 if (advect_density) {
 
@@ -62,7 +64,9 @@ mfix::InitialRedistribution (Real l_time)
                   Redistribution::ApplyToInitialData( bx,ncomp,
                                            ld.ro_g->array(mfi), ld.ro_go->array(mfi),
                                            flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                           bc_den, geom[lev],m_redistribution_type);
+                                           bc_den, geom[lev],
+                                           (m_redistribution_type == "StateRedist") ? 
+                                                "NewStateRedist" : m_redistribution_type);
                 }
                 if (advect_enthalpy) {
 
@@ -72,7 +76,9 @@ mfix::InitialRedistribution (Real l_time)
                   Redistribution::ApplyToInitialData( bx,ncomp,
                                            ld.h_g->array(mfi), ld.h_go->array(mfi),
                                            flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                           bc_h, geom[lev],m_redistribution_type);
+                                           bc_h, geom[lev],
+                                           (m_redistribution_type == "StateRedist") ? 
+                                                "NewStateRedist" : m_redistribution_type);
                 }
                 if (advect_tracer) {
 
@@ -82,7 +88,9 @@ mfix::InitialRedistribution (Real l_time)
                   Redistribution::ApplyToInitialData( bx,ncomp,
                                            ld.trac->array(mfi), ld.trac_o->array(mfi),
                                            flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                           bc_t, geom[lev],m_redistribution_type);
+                                           bc_t, geom[lev],
+                                           (m_redistribution_type == "StateRedist") ? 
+                                                "NewStateRedist" : m_redistribution_type);
                 }
                 if (advect_fluid_species) {
 
@@ -92,7 +100,9 @@ mfix::InitialRedistribution (Real l_time)
                   Redistribution::ApplyToInitialData( bx,ncomp,
                                            ld.X_gk->array(mfi), ld.X_gko->array(mfi),
                                            flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                           bc_X, geom[lev],m_redistribution_type);
+                                           bc_X, geom[lev],
+                                           (m_redistribution_type == "StateRedist") ? 
+                                                "NewStateRedist" : m_redistribution_type);
                 }
 
             }
