@@ -292,7 +292,7 @@ PICHydroStep (int lev,
   const Real vel_ref_frame = PIC::vel_ref_frame;
 
   const Real ep_cp = PIC::ep_cp;
-
+  const Real inv_ep_cp = 1.0/ep_cp;
 
   const Real three_sqrt_two(3.0*std::sqrt(2.0));
 
@@ -410,7 +410,7 @@ PICHydroStep (int lev,
         amrex::ParallelFor(nrp,
            [pstruct,p_realarray,p_hi,p_lo,dx,dxi,vfrac,volarr, u_so, v_so, w_so, en, ep_cp,
             reg_cell_vol,flagsarr, dt, gravity, has_walls,ls_refinement,phiarr,
-            vel_ref_frame, three_sqrt_two, en_w, et_w, u_s, v_s, w_s,
+            vel_ref_frame, three_sqrt_two, en_w, et_w, u_s, v_s, w_s, inv_ep_cp,
             apply_forces, update_parcels, use_taylor_approx, advance_vel_p,
             x_lo_bc,x_hi_bc, y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc]
           AMREX_GPU_DEVICE (int ip) noexcept
@@ -465,7 +465,7 @@ PICHydroStep (int lev,
 
               // Effective radius of the parcel
               Real eff_radius = p_realarray[SoArealData::radius][ip] *
-                std::cbrt(p_realarray[SoArealData::statwt][ip]);
+                std::cbrt(p_realarray[SoArealData::statwt][ip] * inv_ep_cp);
 
               // If this FAB has EB, reflect any parcels overlapping the levelset
               // back into the domain.
