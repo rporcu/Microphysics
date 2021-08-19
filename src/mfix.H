@@ -930,6 +930,8 @@ public:
                                   Array4<Real const> const& fvel,
                                   Array4<Real const> const& ftra);
 
+    amrex::IntVect mfix_locate_max_eps ( Vector< MultiFab*>& ep_s_in, const Real max_eps );
+
   private:
     void mfix_print_max_vel (int lev,
                              const amrex::Vector<amrex::MultiFab*>& vel_g_in,
@@ -939,7 +941,6 @@ public:
                             const amrex::Vector<amrex::MultiFab*>& gp_g_in);
 
     IntVect mfix_print_min_epg ();
-  IntVect mfix_locate_max_eps ( Vector< MultiFab*>& ep_s_in, const Real max_eps );
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
