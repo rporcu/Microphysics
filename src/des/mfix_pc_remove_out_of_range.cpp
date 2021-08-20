@@ -1,4 +1,5 @@
 #include <AMReX.H>
+#include <mfix_des_K.H>
 
 #include <mfix_pc.H>
 #include <mfix_dem_parms.H>
@@ -18,11 +19,17 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
         const RealVect dx(cell_size[0], cell_size[1], cell_size[2]);
         const GpuArray<Real,3> plo = Geom(lev).ProbLoArray();
 
+        const Geometry& gm  = Geom(0);
+        const auto      p_lo = gm.ProbLoArray();
+        const auto      dxi = gm.InvCellSizeArray();
+
         // This holds the mesh spacing of the level set, which may be finer than
         // the local mesh spacing
         const GpuArray<Real,3> dx_ls{dx[0]/ls_refinement, dx[1]/ls_refinement, dx[2]/ls_refinement};
 
         const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
+
+        const Real inv_ep_cp = (PIC::solve) ? 1.0/PIC::ep_cp : 1.0;
 
         for (MFIXParIter pti(* this, lev); pti.isValid(); ++pti)
         {
@@ -52,11 +59,11 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                 else
                 {
                     const auto& flag_fab =  flags->array(pti);
-                    const auto&  phi_fab = ls_phi->array(pti);
+                    const auto&  phi_arr = ls_phi->array(pti);
 
-                    amrex::ParallelFor(np, [pstruct,p_realarray,plo,dx,flag_fab,
-                        dx_ls,phi_fab,cg_dem=DEM::cg_dem]
-                      AMREX_GPU_DEVICE (int ip) noexcept
+                    amrex::ParallelFor(np, [pstruct,p_realarray,plo,dx,flag_fab,inv_ep_cp,
+                    dx_ls,phi_arr, ls_refinement, p_lo, dxi, cg_dem=DEM::cg_dem]
+                    AMREX_GPU_DEVICE (int ip) noexcept
                     {
                         ParticleType& p = pstruct[ip];
 
@@ -72,56 +79,22 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                         else
                         { // Interpolates level-set from nodal phi to position pos
 
-                            Real x = ( p.pos(0) - plo_ptr[0] ) / dx_ls[0];
-                            Real y = ( p.pos(1) - plo_ptr[1] ) / dx_ls[1];
-                            Real z = ( p.pos(2) - plo_ptr[2] ) / dx_ls[2];
 
-                            int i = static_cast<int>(amrex::Math::floor(x));
-                            int j = static_cast<int>(amrex::Math::floor(y));
-                            int k = static_cast<int>(amrex::Math::floor(z));
+                          RealVect pos(p.pos());
+                          Real ls_value = interp_level_set(pos, ls_refinement, phi_arr, p_lo, dxi);
 
-                            Real wx_hi = x - i;
-                            Real wy_hi = y - j;
-                            Real wz_hi = z - k;
+                          Real radius = p_realarray[SoArealData::radius][ip] *
+                            std::cbrt(p_realarray[SoArealData::statwt][ip] * inv_ep_cp);
 
-                            Real wx_lo = 1.0 - wx_hi;
-                            Real wy_lo = 1.0 - wy_hi;
-                            Real wz_lo = 1.0 - wz_hi;
+                          if (cg_dem) {
+                            radius = radius/std::cbrt(p_realarray[SoArealData::statwt][ip]);
+                          }
 
-                            Real phi_interp = phi_fab(i,   j,   k  ) * wx_lo * wy_lo * wz_lo
-                                            + phi_fab(i+1, j,   k  ) * wx_hi * wy_lo * wz_lo
-                                            + phi_fab(i,   j+1, k  ) * wx_lo * wy_hi * wz_lo
-                                            + phi_fab(i,   j,   k+1) * wx_lo * wy_lo * wz_hi
-                                            + phi_fab(i+1, j+1, k  ) * wx_hi * wy_hi * wz_lo
-                                            + phi_fab(i,   j+1, k+1) * wx_lo * wy_hi * wz_hi
-                                            + phi_fab(i+1, j,   k+1) * wx_hi * wy_lo * wz_hi
-                                            + phi_fab(i+1, j+1, k+1) * wx_hi * wy_hi * wz_hi;
+                          const Real overlap = radius - ls_value;
 
-                            Real radius = p_realarray[SoArealData::radius][ip] *
-                                std::cbrt(p_realarray[SoArealData::statwt][ip]);
-
-                            if (cg_dem)
-                            {
-                               radius = radius/std::cbrt(p_realarray[SoArealData::statwt][ip]);
-                            }
-
-                            if (phi_interp < radius)
-                            {
-                                 p.id() = -1;
-                            }
-#if 0
-                            else {
-                                 std::cout << " 1 "
-                                           << p.pos(0) << " "
-                                           << p.pos(1) << " "
-                                           << p.pos(2) << " "
-                                           << p_realarray[SoArealData::radius][ip]  << " "
-                                           << p_realarray[SoArealData::density][ip] << " "
-                                           << p_realarray[SoArealData::velx][ip]    << " "
-                                           << p_realarray[SoArealData::vely][ip]    << " "
-                                           << p_realarray[SoArealData::velz][ip] << std::endl;
-                            }
-#endif
+                          if (overlap > 0.0) {
+                            p.id() = -1;
+                          }
                         }
                     });
                 }
