@@ -19,6 +19,10 @@ mfix.verbose = 1
 mac_proj.verbose   = 1
 nodal_proj.verbose = 0
 
+mac_proj.mg_rtol = 1e-12
+nodal_proj.mg_rtol = 1e-12
+diffusion.mg_rtol = 1e-12
+
 amr.blocking_factor = 8
 
 #_______________________________________________________________________
