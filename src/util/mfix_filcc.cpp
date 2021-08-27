@@ -13,7 +13,7 @@ void filcc (Real* data,
             const int* dom_hi,
             const Real* /*dx*/,
             const Real* /*grd_lo*/,
-            const Real* time,
+            const Real* /*time*/,
             const int* bc)
 {
   Box domain(IntVect(dom_lo[0], dom_lo[1], dom_lo[2]),
@@ -38,7 +38,6 @@ void filcc (Real* data,
   const int dcomp = 0;
   const int numcomp = 1;
   const int bcomp = 0;
-  const int orig_comp = 0;
 
   amrex::ParallelFor(bx,
     [q,domain,bcr]
