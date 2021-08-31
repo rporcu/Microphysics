@@ -292,7 +292,6 @@ int main (int argc, char* argv[])
     if (restart_file.empty())
     {
         mfix.InitLevelData(time);
-        if (mfix.fluid.solve) mfix.InitialRedistribution(time);
     }
     else
     {
