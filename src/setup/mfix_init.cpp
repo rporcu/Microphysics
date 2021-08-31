@@ -1138,6 +1138,8 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
         mfix_set_species_bcs(time, get_X_gk_old());
       }
 
+      InitialRedistribution(time);
+
       // Project the initial velocity field
       if (do_initial_proj)
         mfix_project_velocity();
