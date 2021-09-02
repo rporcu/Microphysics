@@ -454,8 +454,8 @@ int main (int argc, char* argv[])
 
     if (ParallelDescriptor::IOProcessor())
     {
+        std::cout << "Time spent in main (after init) " << end_time-end_init << std::endl;
         std::cout << "Time spent in main      " << end_time << std::endl;
-        std::cout << "Time spent in main-init " << end_time-end_init << std::endl;
     }
 
     amrex::Print() << " " << std::endl;
