@@ -28,6 +28,10 @@ class SolidsParms {
     const amrex::Real* m_h_H_fn;
     const amrex::Real* m_d_H_fn;
 
+    // List of recognized fluid specific heat models
+    struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA7Polynomials, NASA9Polynomials};  };
+    int m_specific_heat_model;
+
   public:
     AMREX_GPU_HOST_DEVICE
     SolidsParms ()
@@ -42,6 +46,7 @@ class SolidsParms {
       , m_d_cp_sn(nullptr)
       , m_h_H_fn(nullptr)
       , m_d_H_fn(nullptr)
+      , m_specific_heat_model(SPECIFICHEATMODEL::Invalid)
     {}
 
     AMREX_GPU_HOST_DEVICE
@@ -55,7 +60,8 @@ class SolidsParms {
                  const amrex::Real* h_cp_sn,
                  const amrex::Real* d_cp_sn,
                  const amrex::Real* h_H_fn,
-                 const amrex::Real* d_H_fn)
+                 const amrex::Real* d_H_fn,
+                 const int specific_heat_model)
       : m_T_ref(T_ref)
       , m_nspecies(nspecies)
       , m_h_species_id(h_species_id)
@@ -67,7 +73,40 @@ class SolidsParms {
       , m_d_cp_sn(d_cp_sn)
       , m_h_H_fn(h_H_fn)
       , m_d_H_fn(d_H_fn)
+      , m_specific_heat_model(specific_heat_model)
     {}
+
+
+#if defined(AMREX_USE_GPU)
+    template <amrex::RunOn run_on>
+#else
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real get_MW_sn (const int n) const
+    {
+      if (run_on == amrex::RunOn::Gpu)
+        return m_d_MW_sn[n];
+      else if (run_on == amrex::RunOn::Cpu)
+        return m_h_MW_sn[n];
+      else
+        amrex::Abort("Unrecognized RunOn option");
+
+      return 0;
+    }
+
+
+#if defined(AMREX_USE_GPU)
+    template <amrex::RunOn run_on>
+#else
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real get_MW_s () const
+    {
+      return get_MW_sn<run_on>(0);
+    }
+
 
 #if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
@@ -81,30 +120,42 @@ class SolidsParms {
       amrex::Real result(0);
       amrex::Real coeff(1);
 
-      if (run_on == amrex::RunOn::Gpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          const int idx = phase*m_ncoefficients + m;
-          result += m_d_cp_sn[idx]*coeff;
-          coeff *= T_s;
+      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
+
+        if (run_on == amrex::RunOn::Gpu) {
+          
+          result = m_d_cp_sn[0]*coeff;
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          result = m_h_cp_sn[0]*coeff;
         }
 
-        //result *= (R/m_d_MW_sn[phase]);
+      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
 
-      } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          const int idx = phase*m_ncoefficients + m;
-          result += m_h_cp_sn[idx]*coeff;
-          coeff *= T_s;
+        if (run_on == amrex::RunOn::Gpu) {
+          for (int m(0); m < 5; ++m) {
+            int idx = phase*10 + m;
+            idx += T_s < 1000 ? 0 : 5;
+            result += m_d_cp_sn[idx]*coeff;
+            coeff *= T_s;
+          }
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          for (int m(0); m < 5; ++m) {
+            int idx = phase*10 + m;
+            idx += T_s < 1000 ? 0 : 5;
+            result += m_h_cp_sn[idx]*coeff;
+            coeff *= T_s;
+          }
+
         }
-
-        //result *= (R/m_h_MW_sn[phase]);
-
-      } else {
-        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;
     }
+
 
 #if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
@@ -118,30 +169,42 @@ class SolidsParms {
       amrex::Real result(0);
       amrex::Real coeff(T_s);
 
-      if (run_on == amrex::RunOn::Gpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          const int idx = phase*m_ncoefficients + m;
-          result += (1./(m+1))*m_d_cp_sn[idx]*coeff;
-          coeff *= T_s;
+      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
+
+        if (run_on == amrex::RunOn::Gpu) {
+          
+          result = m_d_cp_sn[0]*coeff;
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          result = m_h_cp_sn[0]*coeff;
         }
 
-        //result *= (R/m_d_MW_sn[phase]);
+      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
 
-      } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          const int idx = phase*m_ncoefficients + m;
-          result += (1./(m+1))*m_h_cp_sn[idx]*coeff;
-          coeff *= T_s;
+        if (run_on == amrex::RunOn::Gpu) {
+          for (int m(0); m < 5; ++m) {
+            int idx = phase*10 + m;
+            idx += T_s < 1000 ? 0 : 5;
+            result += (1./(m+1))*m_d_cp_sn[idx]*coeff;
+            coeff *= T_s;
+          }
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          for (int m(0); m < 5; ++m) {
+            int idx = phase*10 + m;
+            idx += T_s < 1000 ? 0 : 5;
+            result += (1./(m+1))*m_h_cp_sn[idx]*coeff;
+            coeff *= T_s;
+          }
+
         }
-
-        //result *= (R/m_h_MW_sn[phase]);
-
-      } else {
-        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;
     }
+
 
 #if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
@@ -155,30 +218,35 @@ class SolidsParms {
       amrex::Real result(0);
       amrex::Real coeff(1);
 
-      if (run_on == amrex::RunOn::Gpu) {
-        for (int m(1); m < m_ncoefficients; ++m) {
-          const int idx = phase*m_ncoefficients + m;
-          result += m*m_d_cp_sn[idx]*coeff;
-          coeff *= T_s;
+      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
+
+        // Nothing to do here
+
+      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
+
+        if (run_on == amrex::RunOn::Gpu) {
+          for (int m(0); m < 5; ++m) {
+            int idx = phase*10 + m;
+            idx += T_s < 1000 ? 0 : 5;
+            result += m*m_d_cp_sn[idx]*coeff;
+            coeff *= T_s;
+          }
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          for (int m(0); m < 5; ++m) {
+            int idx = phase*10 + m;
+            idx += T_s < 1000 ? 0 : 5;
+            result += m*m_h_cp_sn[idx]*coeff;
+            coeff *= T_s;
+          }
+
         }
-
-        //result *= (R/m_d_MW_sn[phase]);
-
-      } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(1); m < m_ncoefficients; ++m) {
-          const int idx = phase*m_ncoefficients + m;
-          result += m*m_h_cp_sn[idx]*coeff;
-          coeff *= T_s;
-        }
-
-        //result *= (R/m_h_MW_sn[phase]);
-
-      } else {
-        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;
     }
+
 
 #if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
@@ -192,6 +260,7 @@ class SolidsParms {
       return calc_integral_cp_s<run_on>(phase,T_s) - calc_integral_cp_s<run_on>(phase,m_T_ref);
     }
 
+
 #if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
 #else
@@ -203,6 +272,7 @@ class SolidsParms {
     {
       return calc_cp_s<run_on>(phase,T_s);
     }
+
 
 #if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
@@ -216,30 +286,42 @@ class SolidsParms {
       amrex::Real result(0);
       amrex::Real coeff(1);
 
-      if (run_on == amrex::RunOn::Gpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          const int idx = n*m_ncoefficients + m;
-          result += m_d_cp_sn[idx]*coeff;
-          coeff *= T_s;
+      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
+
+        if (run_on == amrex::RunOn::Gpu) {
+          
+          result = m_d_cp_sn[0]*coeff;
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          result = m_h_cp_sn[0]*coeff;
         }
 
-        //result *= (R/m_d_MW_sn[n]);
+      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
 
-      } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          const int idx = n*m_ncoefficients + m;
-          result += m_h_cp_sn[idx]*coeff;
-          coeff *= T_s;
+        if (run_on == amrex::RunOn::Gpu) {
+          for (int m(0); m < 5; ++m) {
+            int idx = n*10 + m;
+            idx += T_s < 1000 ? 0 : 5;
+            result += m_d_cp_sn[idx]*coeff;
+            coeff *= T_s;
+          }
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          for (int m(0); m < 5; ++m) {
+            int idx = n*10 + m;
+            idx += T_s < 1000 ? 0 : 5;
+            result += m_h_cp_sn[idx]*coeff;
+            coeff *= T_s;
+          }
+
         }
-
-        //result *= (R/m_h_MW_sn[n]);
-
-      } else {
-        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;
     }
+
 
 #if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
@@ -253,30 +335,42 @@ class SolidsParms {
       amrex::Real result(0);
       amrex::Real coeff(T_s);
 
-      if (run_on == amrex::RunOn::Gpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          const int idx = n*m_ncoefficients + m;
-          result += (1./(m+1))*m_d_cp_sn[idx]*coeff;
-          coeff *= T_s;
+      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
+
+        if (run_on == amrex::RunOn::Gpu) {
+          
+          result = m_d_cp_sn[0]*coeff;
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          result = m_h_cp_sn[0]*coeff;
         }
 
-        //result *= (R/m_d_MW_sn[n]);
+      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
 
-      } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          const int idx = n*m_ncoefficients + m;
-          result += (1./(m+1))*m_h_cp_sn[idx]*coeff;
-          coeff *= T_s;
+        if (run_on == amrex::RunOn::Gpu) {
+          for (int m(0); m < 5; ++m) {
+            int idx = n*10 + m;
+            idx += T_s < 1000 ? 0 : 5;
+            result += (1./(m+1))*m_d_cp_sn[idx]*coeff;
+            coeff *= T_s;
+          }
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          for (int m(0); m < 5; ++m) {
+            int idx = n*10 + m;
+            idx += T_s < 1000 ? 0 : 5;
+            result += (1./(m+1))*m_h_cp_sn[idx]*coeff;
+            coeff *= T_s;
+          }
+
         }
-
-        //result *= (R/m_h_MW_sn[n]);
-
-      } else {
-        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;
     }
+
 
 #if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
@@ -290,30 +384,35 @@ class SolidsParms {
       amrex::Real result(0);
       amrex::Real coeff(1);
 
-      if (run_on == amrex::RunOn::Gpu) {
-        for (int m(1); m < m_ncoefficients; ++m) {
-          const int idx = n*m_ncoefficients + m;
-          result += m*m_d_cp_sn[idx]*coeff;
-          coeff *= T_s;
+      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
+
+        // Nothing to do in here
+
+      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
+
+        if (run_on == amrex::RunOn::Gpu) {
+          for (int m(0); m < 5; ++m) {
+            int idx = n*10 + m;
+            idx += T_s < 1000 ? 0 : 5;
+            result += m*m_d_cp_sn[idx]*coeff;
+            coeff *= T_s;
+          }
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          for (int m(0); m < 5; ++m) {
+            int idx = n*10 + m;
+            idx += T_s < 1000 ? 0 : 5;
+            result += m*m_h_cp_sn[idx]*coeff;
+            coeff *= T_s;
+          }
+
         }
-
-        //result *= (R/m_d_MW_sn[n]);
-
-      } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(1); m < m_ncoefficients; ++m) {
-          const int idx = n*m_ncoefficients + m;
-          result += m*m_h_cp_sn[idx]*coeff;
-          coeff *= T_s;
-        }
-
-        //result *= (R/m_h_MW_sn[n]);
-
-      } else {
-        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;
     }
+
 
 #if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
@@ -326,6 +425,7 @@ class SolidsParms {
     {
       return calc_integral_cp_sn<run_on>(T_s,n) - calc_integral_cp_sn<run_on>(m_T_ref,n);
     }
+
 
 #if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
@@ -363,11 +463,6 @@ class SolidsPhase
     struct THERMALCONDUCTIVITYMODEL{ enum {Invalid=-1, Constant}; };
 
     int ThermalConductivityModel;
-
-    // List of recognized species heat of formation models
-    struct ENTHALPYOFFORMATIONMODEL { enum {Invalid=-1, Constant}; };
-
-    int EnthalpyOfFormationModel;
 
     // Names of solids used in IC/BC setups
     amrex::Vector<std::string> names;
