@@ -64,7 +64,8 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
 
     // Add solids.nspecies components
     for (int n(0); n < m_runtimeRealData.count; ++n) {
-      AddRealComp(false); // Turn off ghost particle communication
+      AddRealComp(true); // Turn on comm for redistribute on ghosting
+      setRealCommComp(21+n, false); // turn off for ghosting
     }
 }
 
