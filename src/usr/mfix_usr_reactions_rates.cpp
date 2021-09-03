@@ -1,4 +1,5 @@
 #include <AMReX_GpuQualifiers.H>
+#include <AMReX_RealVect.H>
 
 #include <cmath>
 
@@ -21,10 +22,17 @@ HeterogeneousRatesUser::operator() (Real* /*R_q*/,
                                     const Real* /*X_sn*/,
                                     const Real /*ro_s*/,
                                     const Real /*ep_s*/,
+                                    const Real /*T_s*/,
+                                    const RealVect& /*vel_s*/,
                                     const FluidParms& /*fluid_parms*/,
                                     const Real* /*X_gk*/,
                                     const Real /*ro_g*/,
-                                    const Real /*ep_g*/) const
+                                    const Real /*ep_g*/,
+                                    const Real /*T_g*/,
+                                    const RealVect& /*vel_g*/,
+                                    const Real /*DP*/,
+                                    const Real /*p_g*/,
+                                    const RunOn& /*run_on*/) const
 {
 //  // Loop over reactions
 //  for (int q(0); q < reactions_parms.nreactions; q++)
@@ -49,7 +57,7 @@ HeterogeneousRatesUser::operator() (Real* /*R_q*/,
 //      }
 //    }
 //  
-//    R_q[q] = (nreact == reactions_parms.nreactants[q]) ? 1.e-3 : 0.0;
+//    R_q[q] = (nreact == reactions_parms.nreactants[q]) ? TODO -- reaction rate;
 //  }
 //
 }
@@ -80,7 +88,7 @@ HomogeneousRatesUser::operator() (Real* /*R_q*/,
 //      }
 //    }
 //  
-//    R_q[q] = (nreact == reactions_parms.nreactants[q]) ? 1.e-3 : 0.0;
+//    R_q[q] = (nreact == reactions_parms.nreactants[q]) ? TODO -- reaction rate;
 //  }
 //
 }
@@ -111,7 +119,7 @@ HomogeneousRatesUser::operator() (Real* /*R_q*/,
 //      }
 //    }
 //  
-//    R_q[q] = (nreact == reactions_parms.nreactants[q]) ? 1.e-3 : 0.0;
+//    R_q[q] = (nreact == reactions_parms.nreactants[q]) ? TODO -- reaction rate;
 //  }
 //
 }
