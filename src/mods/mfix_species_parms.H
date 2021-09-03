@@ -17,11 +17,6 @@ namespace SPECIES
 
   extern int SpecificHeatModel;
 
-  // List of recognized species heat of formation models
-  struct ENTHALPYOFFORMATIONMODEL { enum {Invalid=-1, Constant}; };
-
-  extern int EnthalpyOfFormationModel;
-
   // Flag to solve species equations
   extern int solve;
 
