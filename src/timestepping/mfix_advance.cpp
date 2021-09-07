@@ -93,7 +93,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     if (reactions.solve) {
       mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                          get_T_g(), get_X_gk(), time);
+                          get_p_g(), get_T_g(), get_X_gk(), time);
     }
   }
 
