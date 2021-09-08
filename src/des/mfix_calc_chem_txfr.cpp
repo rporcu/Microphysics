@@ -98,7 +98,6 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
   // Fluid enthalpy data
   const Real T_ref = fluid.T_ref;
-  Real* p_H_fk0 = fluid.d_H_fk0.data();
 
   // Reactions data
   const int nreactions = reactions.nreactions;
@@ -134,8 +133,6 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
   const int idx_ro_gk_txfr = chem_txfr_idxs.ro_gk_txfr;
   const int idx_vel_g_txfr = chem_txfr_idxs.vel_g_txfr;
   const int idx_h_g_txfr   = chem_txfr_idxs.h_g_txfr;
-
-  Real* p_H_fn0 = solids.d_H_fn0.data();
 
   auto& reactions_parms = *reactions.parameters;
 
@@ -275,7 +272,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
            HomogeneousRatesFunc,nspecies_g,nreactions,p_MW_gk,p_species_id_g,
            p_reactants_id,p_reactants_coeffs,p_reactants_phases,p_products_id,
            p_products_coeffs,p_products_phases,p_nreactants,p_nproducts,InvalidIdx,
-           p_phases,p_nphases,p_types,Homogeneous,T_ref,p_H_fk0,fluid_parms,
+           p_phases,p_nphases,p_types,Homogeneous,T_ref,fluid_parms,
            reactions_parms,reg_cell_vol,volfrac_arr]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
@@ -350,7 +347,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                 G_sk_gg_homogeneous += G_sk_gg_q;
 
                 // Contribution to the particle
-                const Real h_gk_T_g = p_H_fk0[n_g] + fluid_parms.calc_h_gk<RunOn::Gpu>(T_g,n_g);
+                const Real h_gk_T_g = fluid_parms.calc_h_gk<RunOn::Gpu>(T_g,n_g);
 
                 G_h_g_homogeneous += h_gk_T_g * G_sk_gg_q;
               }
@@ -524,7 +521,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
            p_species_id_g,p_reactants_id,p_reactants_coeffs,p_reactants_phases,
            p_products_id,p_products_coeffs,p_products_phases,p_nreactants,
            p_nproducts,InvalidIdx,p_phases,p_nphases,p_types,Heterogeneous,
-           Homogeneous,T_ref,p_H_fk0,p_H_fn0,fluid_parms,solids_parms,
+           Homogeneous,T_ref,fluid_parms,solids_parms,
            grown_bx_is_regular,ccent_fab,bcent_fab,apx_fab,apy_fab,apz_fab,
            flags_array,dx,reactions_parms,ep_g_array,reg_cell_vol,
            volfrac_arr,dem_solve]
@@ -752,7 +749,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
               G_mass_p_heterogeneous += G_sn_gp_heterogeneous;
               G_mass_p_homogeneous   += G_sn_pp_homogeneous;
 
-              const Real h_sn_T_p = p_H_fn0[n_s] + solids_parms.calc_h_sn<RunOn::Gpu>(T_p,n_s);
+              const Real h_sn_T_p = solids_parms.calc_h_sn<RunOn::Gpu>(T_p,n_s);
               G_h_p_heterogeneous += h_sn_T_p * G_sn_gp_heterogeneous;
               G_h_p_homogeneous   += h_sn_T_p * G_sn_pp_homogeneous;
 
@@ -817,8 +814,8 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                   G_sk_pg_heterogeneous += G_sk_pg_q;
 
                   // Contribution to the particle
-                  const Real h_gk_T_p = p_H_fk0[n_g] + fluid_parms.calc_h_gk<RunOn::Gpu>(T_p,n_g);
-                  const Real h_gk_T_g = p_H_fk0[n_g] + fluid_parms.calc_h_gk<RunOn::Gpu>(T_g,n_g);
+                  const Real h_gk_T_p = fluid_parms.calc_h_gk<RunOn::Gpu>(T_p,n_g);
+                  const Real h_gk_T_g = fluid_parms.calc_h_gk<RunOn::Gpu>(T_g,n_g);
 
                   G_h_p_heterogeneous += h_gk_T_p * G_sk_pg_q;
                   G_h_p_heterogeneous += amrex::min(0., G_sk_pg_q) * (h_gk_T_g - h_gk_T_p);

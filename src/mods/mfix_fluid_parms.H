@@ -175,126 +175,7 @@ class FluidParms {
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_cp_g (const amrex::Real T_g) const
     {
-      amrex::Real result(0);
-      amrex::Real coeff(1);
-
-      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
-
-        if (run_on == amrex::RunOn::Gpu) {
-          
-          result = m_d_cp_gk[0]*coeff;
-
-        } else if (run_on == amrex::RunOn::Cpu) {
-
-          result = m_h_cp_gk[0]*coeff;
-        }
-
-      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
-
-        if (run_on == amrex::RunOn::Gpu) {
-          for (int m(0); m < 5; ++m) {
-            amrex::Real cp_g_m = T_g < 1000 ? m_d_cp_gk[m] : m_d_cp_gk[m+5];
-            result += cp_g_m*coeff;
-            coeff *= T_g;
-          }
-
-        } else if (run_on == amrex::RunOn::Cpu) {
-
-          for (int m(0); m < 5; ++m) {
-            amrex::Real cp_g_m = T_g < 1000 ? m_h_cp_gk[m] : m_h_cp_gk[m+5];
-            result += cp_g_m*coeff;
-            coeff *= T_g;
-          }
-
-        }
-      }
-
-      return result;
-    }
-
-
-#if defined(AMREX_USE_GPU)
-    template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_integral_cp_g (const amrex::Real T_g) const
-    {
-      amrex::Real result(0);
-      amrex::Real coeff(T_g);
-
-      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
-
-        if (run_on == amrex::RunOn::Gpu) {
-          
-          result = m_d_cp_gk[0]*coeff;
-
-        } else if (run_on == amrex::RunOn::Cpu) {
-
-          result = m_h_cp_gk[0]*coeff;
-        }
-
-      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
-
-        if (run_on == amrex::RunOn::Gpu) {
-          for (int m(0); m < 5; ++m) {
-            amrex::Real cp_g_m = T_g < 1000 ? m_d_cp_gk[m] : m_d_cp_gk[m+5];
-            result += (1./(m+1))*cp_g_m*coeff;
-            coeff *= T_g;
-          }
-
-        } else if (run_on == amrex::RunOn::Cpu) {
-
-          for (int m(0); m < 5; ++m) {
-            amrex::Real cp_g_m = T_g < 1000 ? m_h_cp_gk[m] : m_h_cp_gk[m+5];
-            result += (1./(m+1))*cp_g_m*coeff;
-            coeff *= T_g;
-          }
-
-        }
-      }
-
-      return result;
-    }
-
-
-#if defined(AMREX_USE_GPU)
-    template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_partial_cp_g (const amrex::Real T_g) const
-    {
-      amrex::Real result(0);
-      amrex::Real coeff(1);
-
-      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
-
-        // Don't do anything, derivative is 0
-
-      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
-
-        if (run_on == amrex::RunOn::Gpu) {
-          for (int m(1); m < 5; ++m) {
-            amrex::Real cp_g_m = T_g < 1000 ? m_d_cp_gk[m] : m_d_cp_gk[m+5];
-            result += m*cp_g_m*coeff;
-            coeff *= T_g;
-          }
-
-        } else if (run_on == amrex::RunOn::Cpu) {
-
-          for (int m(1); m < 5; ++m) {
-            amrex::Real cp_g_m = T_g < 1000 ? m_h_cp_gk[m] : m_h_cp_gk[m+5];
-            result += m*cp_g_m*coeff;
-            coeff *= T_g;
-          }
-
-        }
-      }
-
-      return result;
+      return calc_cp_gk<run_on>(T_g, 0);
     }
 
 
@@ -306,7 +187,7 @@ class FluidParms {
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_h_g (const amrex::Real T_g) const
     {
-      return calc_integral_cp_g<run_on>(T_g) - calc_integral_cp_g<run_on>(m_T_ref);
+      return calc_h_gk<run_on>(T_g, 0);
     }
 
 
@@ -318,7 +199,7 @@ class FluidParms {
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_partial_h_g (const amrex::Real T_g) const
     {
-      return calc_cp_g<run_on>(T_g);
+      return calc_partial_h_gk<run_on>(T_g, 0);
     }
 
 
@@ -332,138 +213,37 @@ class FluidParms {
                             const int n) const
     {
       amrex::Real result(0);
-      amrex::Real coeff(1);
 
       if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
 
         if (run_on == amrex::RunOn::Gpu) {
           
-          result = m_d_cp_gk[n]*coeff;
+          result = m_d_cp_gk[n];
 
         } else if (run_on == amrex::RunOn::Cpu) {
 
-          result = m_h_cp_gk[n]*coeff;
+          result = m_h_cp_gk[n];
         }
 
       } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
 
-        if (run_on == amrex::RunOn::Gpu) {
+        amrex::Real coeff(1);
 
-          for (int m(0); m < 5; ++m) {
-            int idx = n*10 + m;
-            idx += T_g < 1000 ? 0 : 5;
+        for (int m(0); m < 5; ++m) {
+
+          int idx = T_g < 1000 ? n*12 + m : n*12 + m+6;
+
+          if (run_on == amrex::RunOn::Gpu) {
+
             result += m_d_cp_gk[idx]*coeff;
-            coeff *= T_g;
-          }
 
-        } else if (run_on == amrex::RunOn::Cpu) {
+          } else if (run_on == amrex::RunOn::Cpu) {
 
-          for (int m(0); m < 5; ++m) {
-            int idx = n*10 + m;
-            idx += T_g < 1000 ? 0 : 5;
             result += m_h_cp_gk[idx]*coeff;
-            coeff *= T_g;
+
           }
 
-        }
-      }
-
-      return result;
-    }
-
-
-#if defined(AMREX_USE_GPU)
-    template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_integral_cp_gk (const amrex::Real T_g,
-                                     const int n) const
-    {
-      amrex::Real result(0);
-      amrex::Real coeff(T_g);
-
-      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
-
-        if (run_on == amrex::RunOn::Gpu) {
-          
-          result = m_d_cp_gk[n]*coeff;
-
-        } else if (run_on == amrex::RunOn::Cpu) {
-
-          result = m_h_cp_gk[n]*coeff;
-        }
-
-      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
-
-        if (run_on == amrex::RunOn::Gpu) {
-
-          for (int m(0); m < 5; ++m) {
-            int idx = n*10 + m;
-            idx += T_g < 1000 ? 0 : 5;
-            result += (1./(m+1))*m_d_cp_gk[idx]*coeff;
-            coeff *= T_g;
-          }
-
-        } else if (run_on == amrex::RunOn::Cpu) {
-
-          for (int m(0); m < 5; ++m) {
-            int idx = n*10 + m;
-            idx += T_g < 1000 ? 0 : 5;
-            result += (1./(m+1))*m_h_cp_gk[idx]*coeff;
-            coeff *= T_g;
-          }
-
-        }
-      }
-
-      return result;
-    }
-
-
-#if defined(AMREX_USE_GPU)
-    template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_partial_cp_gk (const amrex::Real T_g,
-                                    const int n) const
-    {
-      amrex::Real result(0);
-      amrex::Real coeff(1);
-
-      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
-
-        if (run_on == amrex::RunOn::Gpu) {
-          
-          result = m_d_cp_gk[n]*coeff;
-
-        } else if (run_on == amrex::RunOn::Cpu) {
-
-          result = m_h_cp_gk[n]*coeff;
-        }
-
-      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
-
-        if (run_on == amrex::RunOn::Gpu) {
-
-          for (int m(0); m < 5; ++m) {
-            int idx = n*10 + m;
-            idx += T_g < 1000 ? 0 : 5;
-            result += m*m_d_cp_gk[idx]*coeff;
-            coeff *= T_g;
-          }
-
-        } else if (run_on == amrex::RunOn::Cpu) {
-
-          for (int m(0); m < 5; ++m) {
-            int idx = n*10 + m;
-            idx += T_g < 1000 ? 0 : 5;
-            result += m*m_h_cp_gk[idx]*coeff;
-            coeff *= T_g;
-          }
+          coeff *= T_g;
 
         }
       }
@@ -481,8 +261,57 @@ class FluidParms {
     amrex::Real calc_h_gk (const amrex::Real T_g,
                            const int n) const
     {
-      return calc_integral_cp_gk<run_on>(T_g,n) - calc_integral_cp_gk<run_on>(m_T_ref,n);
+      amrex::Real result(0);
+
+      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
+
+        if (run_on == amrex::RunOn::Gpu) {
+          
+          result = m_d_H_fk[n] + m_d_cp_gk[n]*(T_g - m_T_ref);
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          result = m_h_H_fk[n] + m_h_cp_gk[n]*(T_g - m_T_ref);
+        }
+
+      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
+
+        amrex::Real coeff(T_g);
+
+        for (int m(0); m < 5; ++m) {
+
+          int idx = T_g < 1000 ? n*12 + m : n*12 + m+6;
+
+          if (run_on == amrex::RunOn::Gpu) {
+
+            result += (1/(1+m))*m_d_cp_gk[idx]*coeff;
+
+          } else if (run_on == amrex::RunOn::Cpu) {
+
+            result += (1/(1+m))*m_h_cp_gk[idx]*coeff;
+
+          }
+
+          coeff *= T_g;
+        }
+
+        int idx = T_g < 1000 ? n*12 + 5 : n*12 + 11;
+
+        if (run_on == amrex::RunOn::Gpu) {
+
+          result += m_d_cp_gk[idx];
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          result += m_h_cp_gk[idx];
+
+        }
+
+      }
+
+      return result;
     }
+
 
 #if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
@@ -493,7 +322,7 @@ class FluidParms {
     amrex::Real calc_partial_h_gk (const amrex::Real T_g,
                                    const int n) const
     {
-      return calc_cp_gk<run_on>(T_g,n);
+      return calc_cp_gk<run_on>(T_g, n);
     }
 };
 
