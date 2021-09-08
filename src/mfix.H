@@ -704,6 +704,7 @@ public:
                               const Vector< MultiFab* >& ep_g_in,
                               const Vector< MultiFab* >& ro_g_in,
                               const Vector< MultiFab* >& vel_g_in,
+                              const Vector< MultiFab* >& p_g_in,
                               const Vector< MultiFab* >& T_g_in,
                               const Vector< MultiFab* >& X_gk_in,
                               const Real time);
@@ -713,6 +714,7 @@ public:
                               const Vector< MultiFab* >& ep_g_in,
                               const Vector< MultiFab* >& ro_g_in,
                               const Vector< MultiFab* >& vel_g_in,
+                              const Vector< MultiFab* >& p_g_in,
                               const Vector< MultiFab* >& T_g_in,
                               const Vector< MultiFab* >& X_gk_in,
                               const Real time,
@@ -723,6 +725,7 @@ public:
                               const Vector< MultiFab* >& ep_g_in,
                               const Vector< MultiFab* >& ro_g_in,
                               const Vector< MultiFab* >& vel_g_in,
+                              const Vector< MultiFab* >& p_g_in,
                               const Vector< MultiFab* >& T_g_in,
                               const Vector< MultiFab* >& X_gk_in,
                               const Real time,

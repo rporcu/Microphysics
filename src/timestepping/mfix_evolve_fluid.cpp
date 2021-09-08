@@ -206,7 +206,8 @@ mfix::EvolveFluid (int nstep,
 
           if (reactions.solve) {
             mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g_old(),
-                                get_vel_g_old(), get_T_g_old(), get_X_gk_old(), time);
+                                get_vel_g_old(), get_p_g_old(), get_T_g_old(),
+                                get_X_gk_old(), time);
           }
 
           coupling_timing += ParallelDescriptor::second() - start_drag;
@@ -231,7 +232,7 @@ mfix::EvolveFluid (int nstep,
           // updated the chemical quantities
           if (reactions.solve && m_constraint_type == ConstraintType::IncompressibleFluid) {
             mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                                get_T_g(), get_X_gk(), new_time);
+                                get_p_g(), get_T_g(), get_X_gk(), new_time);
           }
 
           coupling_timing += ParallelDescriptor::second() - start_drag;
