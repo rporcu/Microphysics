@@ -182,9 +182,9 @@ FluidPhase::Initialize ()
         const amrex::Real coeff = FluidPhase::R / MW_gk0[0];
 
         SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
-        cp_gk0.resize(10);
+        cp_gk0.resize(12);
 
-        for (int i(0); i < 5; ++i) {
+        for (int i(0); i < 6; ++i) {
           amrex::Vector<amrex::Real> aa(0);
           std::string field = "specific_heat.NASA7.a"+std::to_string(i);
           ppFluid.getarr(field.c_str(), aa);
@@ -192,21 +192,18 @@ FluidPhase::Initialize ()
           if (aa.size() == 1) {
 
             cp_gk0[i] = aa[0] * coeff;
-            cp_gk0[i+5] = 0.;
+            cp_gk0[i+6] = 0.;
 
           } else if (aa.size() == 2) {
 
             cp_gk0[i] = aa[0] * coeff;
-            cp_gk0[i+5] = aa[1] * coeff;
+            cp_gk0[i+6] = aa[1] * coeff;
 
           } else {
 
             amrex::Abort("Input error");
           }
         }
-
-        // Query the enthalpy_of_formation
-        ppFluid.query("specific_heat.NASA7.a5", H_fk0[0]);
 
       } else if (amrex::toLower(specific_heat_model).compare("nasa9-poly") == 0) {
         SpecificHeatModel = SPECIFICHEATMODEL::NASA9Polynomials;
@@ -231,7 +228,7 @@ FluidPhase::Initialize ()
           cp_gk0.resize(nspecies);
 
         } else if (SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::NASA7Polynomials) {
-          cp_gk0.resize(nspecies*10);
+          cp_gk0.resize(nspecies*12);
         }
 
         H_fk0.resize(nspecies);
@@ -255,7 +252,7 @@ FluidPhase::Initialize ()
             cp_gk0[n] = SPECIES::cp_k0[pos];
 
           } else if (SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::NASA7Polynomials) {
-            std::copy(&SPECIES::cp_k0[pos*10], &SPECIES::cp_k0[pos*10] + 10, &cp_gk0[n*10]);
+            std::copy(&SPECIES::cp_k0[pos*12], &SPECIES::cp_k0[pos*12] + 12, &cp_gk0[n*12]);
           }
 
           H_fk0[n]  = SPECIES::H_fk0[pos];
@@ -287,9 +284,9 @@ FluidPhase::Initialize ()
           const amrex::Real coeff = FluidPhase::R / MW_gk0[0];
 
           SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
-          cp_gk0.resize(10);
+          cp_gk0.resize(12);
 
-          for (int i(0); i < 5; ++i) {
+          for (int i(0); i < 6; ++i) {
             amrex::Vector<amrex::Real> aa(0);
             std::string field = "specific_heat.NASA7.a"+std::to_string(i);
             ppFluid.getarr(field.c_str(), aa);
@@ -297,20 +294,18 @@ FluidPhase::Initialize ()
             if (aa.size() == 1) {
 
               cp_gk0[i] = aa[0] * coeff;
-              cp_gk0[i+5] = 0.;
+              cp_gk0[i+6] = 0.;
 
             } else if (aa.size() == 2) {
 
               cp_gk0[i] = aa[0] * coeff;
-              cp_gk0[i+5] = aa[1] * coeff;
+              cp_gk0[i+6] = aa[1] * coeff;
 
             } else {
 
               amrex::Abort("Input error");
             }
           }
-
-          ppFluid.query("specific_heat.NASA7.a5", H_fk0[0]);
 
         } else {
           amrex::Abort("Don't know this specific heat model!");
@@ -356,7 +351,7 @@ FluidPhase::Initialize ()
   if (SpecificHeatModel == SPECIFICHEATMODEL::Constant)
     ncoefficients = 1;
   else if (SpecificHeatModel == SPECIFICHEATMODEL::NASA7Polynomials)
-    ncoefficients = 5;
+    ncoefficients = 6;
 
   parameters = new FluidParms(T_ref, mu_g0, k_g0, nspecies, p_h_species_id,
                               p_d_species_id, p_h_MW_gk0, p_d_MW_gk0, p_h_D_gk0,
