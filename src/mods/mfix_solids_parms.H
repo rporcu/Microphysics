@@ -162,11 +162,11 @@ class SolidsParms {
 
         if (run_on == amrex::RunOn::Gpu) {
           
-          result = m_d_cp_sn[0];
+          result = m_d_cp_sn[n];
 
         } else if (run_on == amrex::RunOn::Cpu) {
 
-          result = m_h_cp_sn[0];
+          result = m_h_cp_sn[n];
         }
 
       } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
@@ -210,16 +210,16 @@ class SolidsParms {
 
         if (run_on == amrex::RunOn::Gpu) {
           
-          result = m_d_H_fn[n] + m_d_cp_sn[0]*(T_s - m_T_ref);
+          result = m_d_H_fn[n] + m_d_cp_sn[n]*(T_s - m_T_ref);
 
         } else if (run_on == amrex::RunOn::Cpu) {
 
-          result = m_h_H_fn[n] + m_h_cp_sn[0]*(T_s - m_T_ref);
+          result = m_h_H_fn[n] + m_h_cp_sn[n]*(T_s - m_T_ref);
         }
 
       } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
 
-        amrex::Real coeff(1);
+        amrex::Real coeff(T_s);
 
         for (int m(0); m < 5; ++m) {
 

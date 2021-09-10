@@ -284,11 +284,11 @@ class FluidParms {
 
           if (run_on == amrex::RunOn::Gpu) {
 
-            result += (1/(1+m))*m_d_cp_gk[idx]*coeff;
+            result += (1./(1.+m))*m_d_cp_gk[idx]*coeff;
 
           } else if (run_on == amrex::RunOn::Cpu) {
 
-            result += (1/(1+m))*m_h_cp_gk[idx]*coeff;
+            result += (1./(1.+m))*m_h_cp_gk[idx]*coeff;
 
           }
 

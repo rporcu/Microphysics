@@ -186,7 +186,7 @@ namespace SPECIES
             }
 
           } else {
-            amrex::Abort("Unkown specific heat model");
+            amrex::Abort("Unknown specific heat model");
 
             // Get enthalpy of formation model input ------------------------//
             for (int n(0); n < nspecies; n++) {

@@ -766,8 +766,9 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
               G_mass_p_homogeneous   += G_sn_pp_homogeneous;
 
               const Real h_sn_T_p = solids_parms.calc_h_sn<RunOn::Gpu>(T_p,n_s);
-              G_h_p_heterogeneous += h_sn_T_p * G_sn_gp_heterogeneous;
-              G_h_p_homogeneous   += h_sn_T_p * G_sn_pp_homogeneous;
+
+              // G_h_p_heterogeneous += h_sn_T_p * G_sn_gp_heterogeneous;
+              // G_h_p_homogeneous   += h_sn_T_p * G_sn_pp_homogeneous;
 
               // Update global variable
               ptile_data.m_runtime_rdata[idx_mass_sn_txfr + n_s][p_id] =
