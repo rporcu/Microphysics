@@ -93,7 +93,7 @@ SolidsPhase::Initialize ()
           cp_sn0.resize(NTYPES);
         } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
           SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
-          cp_sn0.resize(NTYPES*10);
+          cp_sn0.resize(NTYPES*12);
         } else if (amrex::toLower(specific_heat_model).compare("nasa9-poly") == 0) {
           SpecificHeatModel = SPECIFICHEATMODEL::NASA9Polynomials;
           amrex::Abort("Not yet implemented.");
@@ -129,28 +129,25 @@ SolidsPhase::Initialize ()
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(cp_sn0[solid] > 0., "Wrong DEM molecular weight");
             const amrex::Real coeff = FluidParms::R / cp_sn0[solid];
 
-            for (int i(0); i < 5; ++i) {
+            for (int i(0); i < 6; ++i) {
               amrex::Vector<amrex::Real> aa(0);
               std::string field = "NASA7.a"+std::to_string(i);
               pSOLIDS_CP.getarr(field.c_str(), aa);
 
               if (aa.size() == 1) {
 
-                cp_sn0[solid*10 + i] = aa[0] * coeff;
-                cp_sn0[solid*10 + i+5] = 0.;
+                cp_sn0[solid*12 + i] = aa[0] * coeff;
+                cp_sn0[solid*12 + i+6] = 0.;
 
               } else if (aa.size() == 2) {
 
-                cp_sn0[solid*10 + i] = aa[0] * coeff;
-                cp_sn0[solid*10 + i+5] = aa[1] * coeff;
+                cp_sn0[solid*12 + i] = aa[0] * coeff;
+                cp_sn0[solid*12 + i+6] = aa[1] * coeff;
 
               } else {
 
                 amrex::Abort("Input error");
               }
-
-              // Query the enthalpy_of_formation
-              pSOLIDS_CP.query("NASA7.a5", H_fn0[solid]);
             }
           } 
 
@@ -201,7 +198,7 @@ SolidsPhase::Initialize ()
               cp_sn0.resize(nspecies);
             } else if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::NASA7Polynomials) {
               SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
-              cp_sn0.resize(nspecies*10);
+              cp_sn0.resize(nspecies*12);
             }
 
             H_fn0.resize(nspecies);
@@ -222,7 +219,7 @@ SolidsPhase::Initialize ()
               if (SpecificHeatModel == SPECIFICHEATMODEL::Constant) {
                 cp_sn0[n] = SPECIES::cp_k0[pos];
               } else if (SpecificHeatModel == SPECIFICHEATMODEL::NASA7Polynomials) {
-                std::copy(&SPECIES::cp_k0[pos*10], &SPECIES::cp_k0[pos*10] + 10, &cp_sn0[n*10]);
+                std::copy(&SPECIES::cp_k0[pos*12], &SPECIES::cp_k0[pos*12] + 12, &cp_sn0[n*12]);
               }
 
               H_fn0[n] = SPECIES::H_fk0[pos];
@@ -252,9 +249,9 @@ SolidsPhase::Initialize ()
 
           } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
             SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
-            cp_sn0.resize(10);
+            cp_sn0.resize(12);
 
-            for (int i(0); i < 5; ++i) {
+            for (int i(0); i < 6; ++i) {
 
               AMREX_ALWAYS_ASSERT_WITH_MESSAGE(MW_sn0[0] > 0., "Wrong solids molecular weight");
               const amrex::Real coeff = FluidParms::R / MW_sn0[0];
@@ -266,21 +263,18 @@ SolidsPhase::Initialize ()
               if (aa.size() == 1) {
 
                 cp_sn0[i] = aa[0] * coeff;
-                cp_sn0[i+5] = 0.;
+                cp_sn0[i+6] = 0.;
 
               } else if (aa.size() == 2) {
 
                 cp_sn0[i] = aa[0] * coeff;
-                cp_sn0[i+5] = aa[1] * coeff;
+                cp_sn0[i+6] = aa[1] * coeff;
 
               } else {
 
                 amrex::Abort("Input error");
               }
             }
-
-            // Get enthalpy of formation model input ------------------------//
-            ppSolid.query("specific_heat.NASA7.a5", H_fn0[0]);
 
           } else {
             amrex::Abort("Don't know this specific heat model!");
@@ -321,7 +315,7 @@ SolidsPhase::Initialize ()
     if (SpecificHeatModel == SPECIFICHEATMODEL::Constant)
       ncoefficients = 1;
     else if (SpecificHeatModel == SPECIFICHEATMODEL::NASA7Polynomials)
-      ncoefficients = 5;
+      ncoefficients = 6;
 
     parameters = new SolidsParms(T_ref, nspecies, p_h_species_id, p_d_species_id,
                                  p_h_MW_sn0, p_d_MW_sn0, ncoefficients,

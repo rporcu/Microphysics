@@ -88,7 +88,7 @@ namespace SPECIES
             cp_k0.resize(nspecies);
           } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
             SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
-            cp_k0.resize(nspecies*10);
+            cp_k0.resize(nspecies*12);
           } else {
             amrex::Abort("Don't know this specific heat model!");
           }
@@ -162,20 +162,20 @@ namespace SPECIES
               std::string name = "species." + species[n];
               amrex::ParmParse ppSpecies(name.c_str());
 
-              for (int i(0); i < 5; ++i) {
+              for (int i(0); i < 6; ++i) {
                 amrex::Vector<amrex::Real> aa(0);
                 std::string field = "specific_heat.NASA7.a"+std::to_string(i);
                 ppSpecies.getarr(field.c_str(), aa);
 
                 if (aa.size() == 1) {
 
-                  cp_k0[n*10 + i] = aa[0] * coeff;
-                  cp_k0[n*10 + i+5] = 0.;
+                  cp_k0[n*12 + i] = aa[0] * coeff;
+                  cp_k0[n*12 + i+6] = 0.;
 
                 } else if (aa.size() == 2) {
 
-                  cp_k0[n*10 + i] = aa[0] * coeff;
-                  cp_k0[n*10 + i+5] = aa[1] * coeff;
+                  cp_k0[n*12 + i] = aa[0] * coeff;
+                  cp_k0[n*12 + i+6] = aa[1] * coeff;
 
                 } else {
 
@@ -183,26 +183,22 @@ namespace SPECIES
                 }
               }
 
-              if(!ppSpecies.query("specific_heat.NASA7.a5", H_fk0[n])) {
+            }
+
+          } else {
+            amrex::Abort("Unknown specific heat model");
+
+            // Get enthalpy of formation model input ------------------------//
+            for (int n(0); n < nspecies; n++) {
+              std::string name = "species." + species[n];
+              amrex::ParmParse ppSpecies(name.c_str());
+
+              if(!ppSpecies.query("enthalpy_of_formation", H_fk0[n])) {
 
                 if (amrex::ParallelDescriptor::IOProcessor()) {
                   std::string message = "Input not provided. Assuming Hf_" + species[n] + " = 0";
                   amrex::Warning(message.c_str());
                 }
-              }
-            }
-          }
-
-          // Get enthalpy of formation model input ------------------------//
-          for (int n(0); n < nspecies; n++) {
-            std::string name = "species." + species[n];
-            amrex::ParmParse ppSpecies(name.c_str());
-
-            if(!ppSpecies.query("enthalpy_of_formation", H_fk0[n])) {
-
-              if (amrex::ParallelDescriptor::IOProcessor()) {
-                std::string message = "Input not provided. Assuming Hf_" + species[n] + " = 0";
-                amrex::Warning(message.c_str());
               }
             }
           }
