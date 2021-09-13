@@ -63,53 +63,6 @@ class ReactionsParms {
       , m_products_coeffs(products_coeffs)
       , m_products_phases(products_phases)
     {}
-
-    // Compute heterogeneous reactions
-    template <typename HeterogeneousRatesFunc>
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    void heterogeneous_rates(amrex::Real* R_q,
-                             const SolidsParms& solids_parms,
-                             const amrex::Real* X_sn,
-                             const amrex::Real ro_s,
-                             const amrex::Real ep_s,
-                             const amrex::Real T_s,
-                             const amrex::RealVect& vel_s,
-                             const FluidParms& fluid_parms,
-                             const amrex::Real* X_gk,
-                             const amrex::Real ro_g,
-                             const amrex::Real ep_g,
-                             const amrex::Real T_g,
-                             const amrex::RealVect& vel_g,
-                             const amrex::Real DP,
-                             const amrex::Real p_g,
-                             HeterogeneousRatesFunc& heterogeneous_rates_func,
-                             const amrex::RunOn& run_on) const
-    {
-      heterogeneous_rates_func(R_q, *this, solids_parms, X_sn, ro_s, ep_s, T_s, vel_s,
-                               fluid_parms, X_gk, ro_g, ep_g, T_g, vel_g, DP, p_g, run_on);
-    }
-    
-    // Compute heterogeneous reactions
-    template <typename HomogeneousRatesFunc>
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    void homogeneous_rates(amrex::Real* R_q,
-                           const SolidsParms& solids_parms,
-                           const amrex::Real* X_sn,
-                           const amrex::Real ro_s,
-                           const amrex::Real ep_s,
-                           HomogeneousRatesFunc& homogeneous_rates_func) const
-    { homogeneous_rates_func(R_q, *this, solids_parms, X_sn, ro_s, ep_s); }
-    
-    // Compute heterogeneous reactions
-    template <typename HomogeneousRatesFunc>
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    void homogeneous_rates(amrex::Real* R_q,
-                           const FluidParms& fluid_parms,
-                           const amrex::Real* X_sn,
-                           const amrex::Real ro_s,
-                           const amrex::Real ep_s,
-                           HomogeneousRatesFunc& homogeneous_rates_func) const
-    { homogeneous_rates_func(R_q, *this, fluid_parms, X_sn, ro_s, ep_s); }
 };
 
 

@@ -893,8 +893,7 @@ public:
                                        Vector< MultiFab const* > const& ro_g,
                                        Vector< MultiFab const* > const& T_g,
                                        Vector< MultiFab*       > const& X_gk,
-                                       Vector< MultiFab const* > const& txfr,
-                                       Vector< MultiFab const* > const& chem_txfr);
+                                       Vector< MultiFab const* > const& ro_rhs);
 
     void mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
                                          Vector< MultiFab const* > const& lap_T,
@@ -905,8 +904,7 @@ public:
                                          Vector< MultiFab const* > const& ro_g,
                                          Vector< MultiFab const* > const& T_g,
                                          Vector< MultiFab*       > const& X_gk,
-                                         Vector< MultiFab const* > const& txfr,
-                                         Vector< MultiFab const* > const& chem_txfr,
+                                         Vector< MultiFab const* > const& ro_rhs,
                                          Vector< MultiFab const* > const& pressure_g,
                                          Vector< Real >& avgSigma,
                                          Vector< Real >& avgTheta);
