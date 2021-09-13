@@ -247,15 +247,15 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         mfix_idealgas_opensystem_rhs(GetVecOfPtrs(rhs_mac), GetVecOfConstPtrs(lap_T),
             GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
             GetVecOfConstPtrs(species_RHS), get_ro_g_const(), get_T_g_const(),
-            get_X_gk(), get_txfr_const(), get_chem_txfr_const());
+            get_X_gk(), GetVecOfConstPtrs(ro_RHS));
 
       } else if (m_constraint_type == ConstraintType::IdealGasClosedSystem) {
 
         mfix_idealgas_closedsystem_rhs(GetVecOfPtrs(rhs_mac), GetVecOfConstPtrs(lap_T),
             GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
             GetVecOfConstPtrs(species_RHS), get_ep_g_const(), get_ro_g_const(),
-            get_T_g_const(), get_X_gk(), get_txfr_const(),
-            get_chem_txfr_const(), get_pressure_g_const(), avgSigma, avgTheta);
+            get_T_g_const(), get_X_gk(), GetVecOfConstPtrs(ro_RHS),
+            get_pressure_g_const(), avgSigma, avgTheta);
       }
     }
 
@@ -1013,6 +1013,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       // Compute right hand side terms on the intermediate status
       // *************************************************************************************
 
+      if (advect_density) {
+        mfix_density_rhs(ro_RHS, get_chem_txfr_const());
+      }
+
       if (advect_enthalpy) {
         mfix_enthalpy_rhs(enthalpy_RHS, get_ep_g_const(), get_ro_g_const(),
              get_X_gk(), get_T_g_const(), get_chem_txfr_const());
@@ -1032,15 +1036,15 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         mfix_idealgas_opensystem_rhs(S_cc, GetVecOfConstPtrs(lap_T),
             GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
             GetVecOfConstPtrs(species_RHS), get_ro_g_const(), get_T_g_const(),
-            get_X_gk(), get_txfr_const(), get_chem_txfr_const());
+            get_X_gk(), GetVecOfConstPtrs(ro_RHS));
 
       } else if (m_constraint_type == ConstraintType::IdealGasClosedSystem) {
 
         mfix_idealgas_closedsystem_rhs(S_cc, GetVecOfConstPtrs(lap_T),
             GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
             GetVecOfConstPtrs(species_RHS), get_ep_g_const(), get_ro_g_const(),
-            get_T_g_const(), get_X_gk(), get_txfr_const(),
-            get_chem_txfr_const(), get_pressure_g_const(), avgSigma, avgTheta);
+            get_T_g_const(), get_X_gk(), GetVecOfConstPtrs(ro_RHS),
+            get_pressure_g_const(), avgSigma, avgTheta);
 
       }
     }
