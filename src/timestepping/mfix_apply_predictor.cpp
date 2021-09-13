@@ -226,8 +226,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       mfix_idealgas_opensystem_rhs(GetVecOfPtrs(rhs_mac), GetVecOfConstPtrs(lap_T_old),
           GetVecOfConstPtrs(enthalpy_RHS_old), GetVecOfConstPtrs(lap_X_old),
           GetVecOfConstPtrs(species_RHS_old), get_ro_g_old_const(),
-          get_T_g_old_const(), get_X_gk_old(),
-          get_txfr_const(), get_chem_txfr_const());
+          get_T_g_old_const(), get_X_gk_old(), GetVecOfConstPtrs(ro_RHS_old));
 
     } else if (m_constraint_type == ConstraintType::IdealGasClosedSystem) {
 
@@ -235,8 +234,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
           GetVecOfConstPtrs(enthalpy_RHS_old), GetVecOfConstPtrs(lap_X_old),
           GetVecOfConstPtrs(species_RHS_old), get_ep_g_const(),
           get_ro_g_old_const(), get_T_g_old_const(), get_X_gk_old(),
-          get_txfr_const(), get_chem_txfr_const(),
-          get_pressure_g_old_const(), avgSigma, avgTheta);
+          GetVecOfConstPtrs(ro_RHS_old), get_pressure_g_old_const(),
+          avgSigma, avgTheta);
 
     }
 
@@ -812,6 +811,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       compute_laps(update_lapT, update_lapS, update_lapX, lap_T, lap_trac, lap_X,
                    get_T_g(), get_trac(), get_X_gk(), get_ep_g_const(), get_ro_g_const());
 
+      if (advect_density) {
+        mfix_density_rhs(ro_RHS, get_chem_txfr_const());
+      }
+
       if (advect_enthalpy) {
         mfix_enthalpy_rhs(enthalpy_RHS, get_ep_g_const(), get_ro_g_const(),
             get_X_gk(), get_T_g_const(), get_chem_txfr_const());
@@ -827,17 +830,15 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         mfix_idealgas_opensystem_rhs(S_cc, GetVecOfConstPtrs(lap_T),
             GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
             GetVecOfConstPtrs(species_RHS), get_ro_g_const(),
-            get_T_g_const(), get_X_gk(), get_txfr_const(),
-            get_chem_txfr_const());
+            get_T_g_const(), get_X_gk(), GetVecOfConstPtrs(ro_RHS));
 
       } else if (m_constraint_type == ConstraintType::IdealGasClosedSystem) {
 
         mfix_idealgas_closedsystem_rhs(S_cc, GetVecOfConstPtrs(lap_T),
             GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
             GetVecOfConstPtrs(species_RHS), get_ep_g_const(), get_ro_g_const(),
-            get_T_g_const(), get_X_gk(),
-            get_txfr_const(), get_chem_txfr_const(), get_pressure_g_const(),
-            avgSigma, avgTheta);
+            get_T_g_const(), get_X_gk(), GetVecOfConstPtrs(ro_RHS),
+            get_pressure_g_const(), avgSigma, avgTheta);
 
         // Update the thermodynamic pressure rhs in here so we do not have to call
         // the closed_system_rhs again in the corrector
