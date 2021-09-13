@@ -297,9 +297,8 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
           GpuArray<Real,Reactions::NMAX> R_q_homogeneous;
           R_q_homogeneous.fill(0.);
 
-          reactions_parms.homogeneous_rates(R_q_homogeneous.data(), fluid_parms,
-                                            X_gk.data(), ro_g, ep_g,
-                                            HomogeneousRatesFunc);
+          HomogeneousRatesFunc(R_q_homogeneous.data(), reactions_parms,
+                               fluid_parms, X_gk.data(), ro_g, ep_g);
 
           // Total transfer rates
           Real G_rho_g_homogeneous(0.);
@@ -642,17 +641,16 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                                  p_realarray[SoArealData::vely][p_id],
                                  p_realarray[SoArealData::velz][p_id]);
 
-            reactions_parms.heterogeneous_rates(R_q_heterogeneous.data(),
-                                                solids_parms, X_sn.data(), ro_s, ep_s, T_s, vel_s,
-                                                fluid_parms, X_gk, ro_g, ep_g, T_g, vel_g,
-                                                DP, p_g, HeterogeneousRatesFunc, RunOn::Gpu);
+            HeterogeneousRatesFunc(R_q_heterogeneous.data(), reactions_parms,
+                                   solids_parms, X_sn.data(), ro_s, ep_s, T_s,
+                                   vel_s, fluid_parms, X_gk, ro_g, ep_g, T_g,
+                                   vel_g, DP, p_g);
 
             GpuArray<Real,Reactions::NMAX> R_q_homogeneous;
             R_q_homogeneous.fill(0.);
 
-            reactions_parms.homogeneous_rates(R_q_homogeneous.data(), solids_parms,
-                                              X_sn.data(), ro_s, ep_s,
-                                              HomogeneousRatesFunc);
+            HomogeneousRatesFunc(R_q_homogeneous.data(), reactions_parms,
+                                 solids_parms, X_sn.data(), ro_s, ep_s);
 
             // Total transfer rates
             Real G_rho_g_heterogeneous(0.);
@@ -765,7 +763,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
               G_mass_p_heterogeneous += G_sn_gp_heterogeneous;
               G_mass_p_homogeneous   += G_sn_pp_homogeneous;
 
-              const Real h_sn_T_p = solids_parms.calc_h_sn<RunOn::Gpu>(T_p,n_s);
+              //const Real h_sn_T_p = solids_parms.calc_h_sn<RunOn::Gpu>(T_p,n_s);
 
               // G_h_p_heterogeneous += h_sn_T_p * G_sn_gp_heterogeneous;
               // G_h_p_homogeneous   += h_sn_T_p * G_sn_pp_homogeneous;

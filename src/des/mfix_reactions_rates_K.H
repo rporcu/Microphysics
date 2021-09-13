@@ -25,6 +25,9 @@ class HeterogeneousRatesUser
      *  Inputs: // TODO
      */
     AMREX_GPU_HOST_DEVICE
+#if defined(AMREX_USE_DPCPP)
+    SYCL_EXTERNAL
+#endif
     void operator() (amrex::Real* R_q,
                      const ReactionsParms& reactions_parms,
                      const SolidsParms& solids_parms,
@@ -40,8 +43,7 @@ class HeterogeneousRatesUser
                      const amrex::Real T_g,
                      const amrex::RealVect& vel_g,
                      const amrex::Real DP,
-                     const amrex::Real p_g,
-                     const amrex::RunOn& run_on) const;
+                     const amrex::Real p_g) const;
 };
 
 class HomogeneousRatesUser
@@ -57,6 +59,9 @@ class HomogeneousRatesUser
      *  Inputs: // TODO
      */
     AMREX_GPU_HOST_DEVICE
+#if defined(AMREX_USE_DPCPP)
+    SYCL_EXTERNAL
+#endif
     void operator() (amrex::Real*, // R_q,
                      const ReactionsParms&, // reactions_parms,
                      const SolidsParms&, // solids_parms,
@@ -71,6 +76,9 @@ class HomogeneousRatesUser
      *  Inputs: // TODO
      */
     AMREX_GPU_HOST_DEVICE
+#if defined(AMREX_USE_DPCPP)
+    SYCL_EXTERNAL
+#endif
     void operator() (amrex::Real*, // R_q,
                      const ReactionsParms&, // reactions_parms,
                      const FluidParms&, // fluid_parms,
