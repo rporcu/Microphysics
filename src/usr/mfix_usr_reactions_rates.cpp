@@ -14,6 +14,7 @@
 
 using namespace amrex;
 
+
 AMREX_GPU_HOST_DEVICE
 void
 HeterogeneousRatesUser::operator() (Real* /*R_q*/,
@@ -31,8 +32,7 @@ HeterogeneousRatesUser::operator() (Real* /*R_q*/,
                                     const Real /*T_g*/,
                                     const RealVect& /*vel_g*/,
                                     const Real /*DP*/,
-                                    const Real /*p_g*/,
-                                    const RunOn& /*run_on*/) const
+                                    const Real /*p_g*/) const
 {
 //  // Loop over reactions
 //  for (int q(0); q < reactions_parms.nreactions; q++)
