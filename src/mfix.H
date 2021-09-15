@@ -102,6 +102,8 @@ class mfix : public AmrCore
     void PostProjectionRedistribution (amrex::Real l_time, amrex::Real l_dt,
                                        const amrex::Vector<amrex::MultiFab*>& a_sigma);
 
+    void PreProjectionRedistribution (amrex::Real l_time);
+
     void PostProjectionDiagnostics (amrex::Real l_time,
                                     amrex::Vector< amrex::MultiFab*> const& epu,
                                     amrex::Vector< amrex::MultiFab*> const& vel_g_in,
