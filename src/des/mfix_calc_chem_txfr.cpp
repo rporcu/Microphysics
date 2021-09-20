@@ -297,8 +297,10 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
           GpuArray<Real,Reactions::NMAX> R_q_homogeneous;
           R_q_homogeneous.fill(0.);
 
-          HomogeneousRatesFunc(R_q_homogeneous.data(), reactions_parms,
-                               fluid_parms, X_gk.data(), ro_g, ep_g);
+          HomogeneousRatesFunc.template operator()<RunOn::Gpu>(R_q_homogeneous.data(),
+                                                               reactions_parms,
+                                                               fluid_parms, X_gk.data(),
+                                                               ro_g, ep_g);
 
           // Total transfer rates
           Real G_rho_g_homogeneous(0.);
@@ -641,16 +643,21 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                                  p_realarray[SoArealData::vely][p_id],
                                  p_realarray[SoArealData::velz][p_id]);
 
-            HeterogeneousRatesFunc(R_q_heterogeneous.data(), reactions_parms,
-                                   solids_parms, X_sn.data(), ro_s, ep_s, T_s,
-                                   vel_s, fluid_parms, X_gk, ro_g, ep_g, T_g,
-                                   vel_g, DP, p_g);
+            HeterogeneousRatesFunc.template operator()<RunOn::Gpu>(R_q_heterogeneous.data(),
+                                                                   reactions_parms,
+                                                                   solids_parms, X_sn.data(),
+                                                                   ro_s, ep_s, T_s,
+                                                                   vel_s, fluid_parms,
+                                                                   X_gk, ro_g, ep_g, T_g,
+                                                                   vel_g, DP, p_g);
 
             GpuArray<Real,Reactions::NMAX> R_q_homogeneous;
             R_q_homogeneous.fill(0.);
 
-            HomogeneousRatesFunc(R_q_homogeneous.data(), reactions_parms,
-                                 solids_parms, X_sn.data(), ro_s, ep_s);
+            HomogeneousRatesFunc.template operator()<RunOn::Gpu>(R_q_homogeneous.data(),
+                                                                 reactions_parms,
+                                                                 solids_parms, X_sn.data(),
+                                                                 ro_s, ep_s);
 
             // Total transfer rates
             Real G_rho_g_heterogeneous(0.);

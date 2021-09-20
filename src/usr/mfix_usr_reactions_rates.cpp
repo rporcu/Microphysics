@@ -15,6 +15,11 @@
 using namespace amrex;
 
 
+#if defined(AMREX_USE_GPU)
+template <amrex::RunOn run_on>
+#else
+template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
 AMREX_GPU_HOST_DEVICE
 void
 HeterogeneousRatesUser::operator() (Real* /*R_q*/,
@@ -63,6 +68,11 @@ HeterogeneousRatesUser::operator() (Real* /*R_q*/,
 }
 
 
+#if defined(AMREX_USE_GPU)
+template <amrex::RunOn run_on>
+#else
+template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
 AMREX_GPU_HOST_DEVICE
 void
 HomogeneousRatesUser::operator() (Real* /*R_q*/,
@@ -94,6 +104,11 @@ HomogeneousRatesUser::operator() (Real* /*R_q*/,
 }
 
 
+#if defined(AMREX_USE_GPU)
+template <amrex::RunOn run_on>
+#else
+template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
 AMREX_GPU_HOST_DEVICE
 void
 HomogeneousRatesUser::operator() (Real* /*R_q*/,
@@ -123,3 +138,89 @@ HomogeneousRatesUser::operator() (Real* /*R_q*/,
 //  }
 //
 }
+
+
+template
+AMREX_GPU_HOST_DEVICE
+void
+HeterogeneousRatesUser::operator()<RunOn::Host>(Real* /*R_q*/,
+                                                const ReactionsParms& /*reactions_parms*/,
+                                                const SolidsParms& /*solids_parms*/,
+                                                const Real* /*X_sn*/,
+                                                const Real /*ro_s*/,
+                                                const Real /*ep_s*/,
+                                                const Real /*T_s*/,
+                                                const RealVect& /*vel_s*/,
+                                                const FluidParms& /*fluid_parms*/,
+                                                const Real* /*X_gk*/,
+                                                const Real /*ro_g*/,
+                                                const Real /*ep_g*/,
+                                                const Real /*T_g*/,
+                                                const RealVect& /*vel_g*/,
+                                                const Real /*DP*/,
+                                                const Real /*p_g*/) const;
+
+
+template
+AMREX_GPU_HOST_DEVICE
+void
+HeterogeneousRatesUser::operator()<RunOn::Gpu>(Real* /*R_q*/,
+                                               const ReactionsParms& /*reactions_parms*/,
+                                               const SolidsParms& /*solids_parms*/,
+                                               const Real* /*X_sn*/,
+                                               const Real /*ro_s*/,
+                                               const Real /*ep_s*/,
+                                               const Real /*T_s*/,
+                                               const RealVect& /*vel_s*/,
+                                               const FluidParms& /*fluid_parms*/,
+                                               const Real* /*X_gk*/,
+                                               const Real /*ro_g*/,
+                                               const Real /*ep_g*/,
+                                               const Real /*T_g*/,
+                                               const RealVect& /*vel_g*/,
+                                               const Real /*DP*/,
+                                               const Real /*p_g*/) const;
+
+
+template
+AMREX_GPU_HOST_DEVICE
+void
+HomogeneousRatesUser::operator()<RunOn::Host>(Real* /*R_q*/,
+                                              const ReactionsParms& /*reactions_parms*/,
+                                              const SolidsParms& /*solids_parms*/,
+                                              const Real* /*X_sn*/,
+                                              const Real /*ro_s*/,
+                                              const Real /*ep_s*/) const;
+
+
+template
+AMREX_GPU_HOST_DEVICE
+void
+HomogeneousRatesUser::operator()<RunOn::Gpu>(Real* /*R_q*/,
+                                             const ReactionsParms& /*reactions_parms*/,
+                                             const SolidsParms& /*solids_parms*/,
+                                             const Real* /*X_sn*/,
+                                             const Real /*ro_s*/,
+                                             const Real /*ep_s*/) const;
+
+
+template
+AMREX_GPU_HOST_DEVICE
+void
+HomogeneousRatesUser::operator()<RunOn::Host>(Real* /*R_q*/,
+                                              const ReactionsParms& /*reactions_parms*/,
+                                              const FluidParms& /*fluid_parms*/,
+                                              const Real* /*X_gk*/,
+                                              const Real /*ro_s*/,
+                                              const Real /*ep_s*/) const;
+
+
+template
+AMREX_GPU_HOST_DEVICE
+void
+HomogeneousRatesUser::operator()<RunOn::Gpu>(Real* /*R_q*/,
+                                             const ReactionsParms& /*reactions_parms*/,
+                                             const FluidParms& /*fluid_parms*/,
+                                             const Real* /*X_gk*/,
+                                             const Real /*ro_s*/,
+                                             const Real /*ep_s*/) const;
