@@ -829,6 +829,21 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s][i];
               }
 
+              Real p_enthalpy_old(0);
+              if (local_update_enthalpy) {
+                const Real Tp = p_realarray[SoArealData::temperature][i];
+
+                if (solid_is_a_mixture) {
+                  for (int n_s(0); n_s < nspecies_s; ++n_s) {
+                    p_enthalpy_old += X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Gpu>(Tp,n_s);
+                  }
+                } else {
+                  const int phase = p_intarray[SoAintData::phase][i];
+                  p_enthalpy_old = solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp);
+                }
+              }
+
+
               // Get current particle's mass
               const Real p_mass_old = p_realarray[SoArealData::mass][i];
               Real p_mass_new(p_mass_old);
@@ -1002,19 +1017,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                   const int phase = p_intarray[SoAintData::phase][i];
 
-                  const Real Tp_old = p_realarray[SoArealData::temperature][i];
-
                   const Real coeff = local_update_mass ? (p_mass_old/p_mass_new) : 1.;
-
-                  Real p_enthalpy_old(0);
-
-                  if (solid_is_a_mixture) {
-                    for (int n_s(0); n_s < nspecies_s; ++n_s) {
-                      p_enthalpy_old += X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Gpu>(Tp_old,n_s);
-                    }
-                  } else {
-                    p_enthalpy_old = solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_old);
-                  }
 
                   Real p_enthalpy_new = coeff*p_enthalpy_old +
                     subdt*((p_realarray[SoArealData::convection][i]+enthalpy_source) / p_mass_new);
@@ -1062,7 +1065,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                     return gradient;
                   };
 
-                  Real Tp_new(Tp_old);
+                  //const Real Tp_old = p_realarray[SoArealData::temperature][i];
+                  //Real Tp_new(Tp_old);
+                  Real Tp_new(p_realarray[SoArealData::temperature][i]);
 
                   const Real dumping_factor = 1.;
 
