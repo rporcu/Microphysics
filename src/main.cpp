@@ -393,6 +393,19 @@ int main (int argc, char* argv[])
            amrex::Print() << "We should think about aborting here due to unused inputs" << std::endl;
     }
 
+
+    for (int lev = 0; lev <= mfix.finestLevel(); lev++)
+    {
+      if (DEM::restart_from_PIC) {
+
+        PIC::solve = false;
+        DEM::solve = true;
+
+        mfix.PIC_to_DEM(lev);
+      }
+    }
+
+
     { // Start profiling solve here
 
         BL_PROFILE("mfix_solve");

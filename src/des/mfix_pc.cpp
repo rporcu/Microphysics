@@ -607,6 +607,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                     RealVect pos1(particle.pos());
 
+                    int has_collisions(0);
+
                     const auto neighbs = nbor_data.getNeighbors(i);
                     for (auto mit = neighbs.begin(); mit != neighbs.end(); ++mit)
                     {
@@ -633,6 +635,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                         if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
                         {
+                          has_collisions = 1;
+
                             Real dist_mag = sqrt(r2);
 
                             AMREX_ASSERT(dist_mag >= eps);
@@ -644,7 +648,19 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                             normal[1] = dist_y * dist_mag_inv;
                             normal[2] = dist_z * dist_mag_inv;
 
-                            Real overlap_n = r_lm - dist_mag;
+                            Real overlap_n(0.);
+                            if (p_intarray[SoAintData::state][i] == 10 ||
+                                p_intarray[SoAintData::state][j] == 10) {
+
+                              // most of overlaps (99.99%) are in the range [0, 2.5e-8] m
+                              // which means [0, 5.e-4] radiuses
+                              // we set max overlap to   2.5e-4*radius
+                              overlap_n = amrex::min(r_lm - dist_mag, 2.5e-4*p1radius);
+                            } else {
+                              overlap_n = r_lm - dist_mag;
+                            }
+
+
                             Real vrel_trans_norm;
                             RealVect vrel_t(0.);
 
@@ -760,6 +776,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 #endif
                         }
                     }
+
+                    if ((p_intarray[SoAintData::state][i] == 10) && (!has_collisions))
+                      p_intarray[SoAintData::state][i] = 1;
               });
 
               Gpu::Device::synchronize();

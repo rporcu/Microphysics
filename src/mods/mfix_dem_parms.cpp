@@ -54,6 +54,8 @@ namespace DEM
     // Coarse-grain DEM
     int cg_dem = 0;
 
+    int restart_from_PIC = 0;
+
     void Initialize ()
     {
 
@@ -239,6 +241,21 @@ namespace DEM
         // Read coarse-grain DEM
         ppDEM.query("coarse_grain", cg_dem);
 
+        // Read PIC to DEM parameters
+        ppDEM.query("restart_from_PIC", restart_from_PIC);
+
+        if (restart_from_PIC) {
+
+          amrex::ParmParse ppAMR("amr");
+          std::string restart_file {""};
+
+          ppAMR.get("restart", restart_file);
+
+          const int is_restarting = !(restart_file.empty());
+
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(is_restarting,
+              "Invalid attempt to restart from PIC from an empty chk file");
+        }
       }
 
     }

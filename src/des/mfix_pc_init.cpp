@@ -113,7 +113,9 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
     // max_particle_phase because we're reading the particle_input.dat only on
     // the IO proc
 
-    if (max_particle_phase > DEM::NPHASE)
+    if (DEM::solve && max_particle_phase > DEM::NPHASE)
+      amrex::Abort("One or more particle in the particle_input.dat has a phase number that is not present in the inputs file");
+    else if (PIC::solve && max_particle_phase > PIC::NPHASE)
       amrex::Abort("One or more particle in the particle_input.dat has a phase number that is not present in the inputs file");
 
     auto& aos = particles.GetArrayOfStructs();

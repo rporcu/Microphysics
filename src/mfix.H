@@ -956,6 +956,14 @@ public:
     // Particle container
     MFIXParticleContainer* pc;
 
+  public:
+    void PIC_to_PIC(const int lev,
+                    std::string& restart_file,
+                    const int pic_factor);
+
+    void PIC_to_DEM(const int lev);
+
+  private:
     // Debug counter used for tracking number of level-set MultiFabs used in
     // intersection/union
     int ct_ls_mf;
