@@ -768,7 +768,7 @@ mfix::set_tracer_bc_values (Real /*time_in*/) const
 }
 
 void
-mfix::set_species_bc_values (Real /*time_in*/) const
+mfix::set_species_bc_values (Real time_in) const
 {
   m_h_bc_X_gk.resize(fluid.nspecies, Gpu::HostVector<Real>(bc.size()));
   m_bc_X_gk.resize(fluid.nspecies, Gpu::DeviceVector<Real>(bc.size()));
@@ -785,7 +785,7 @@ mfix::set_species_bc_values (Real /*time_in*/) const
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
     if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
       for (int n(0); n < fluid.nspecies; n++) {
-        m_h_bc_X_gk[n][bcv] = bc[bcv].fluid.species[n].mass_fraction;
+        m_h_bc_X_gk[n][bcv] = bc[bcv].fluid.get_species(n, time_in);
       }
     } else {
       for (int n(0); n < fluid.nspecies; n++) {
