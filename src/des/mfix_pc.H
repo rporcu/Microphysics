@@ -115,6 +115,25 @@ struct MFIXCheckPair
   }
 };
 
+struct MFIXCheckFullPair
+{
+  amrex::Real neighborhood;
+  MFIXCheckFullPair (amrex::Real neighborhood_) : neighborhood(neighborhood_) {}
+
+  template <class P>
+  AMREX_GPU_DEVICE AMREX_INLINE
+  bool operator() (const P* particles, const int i, const int j) const
+  {
+    const P& p1 = particles[i];
+    const P& p2 = particles[j];
+
+    if ((p1.pos() - p2.pos()).radSquared() <= neighborhood)
+      return true;
+
+    return false;
+  }
+};
+
 class MFIXParticleContainer final
     : public amrex::NeighborParticleContainer<AoSrealData::count,AoSintData::count,
                                               SoArealData::count,SoAintData::count>
@@ -128,6 +147,11 @@ public:
     // Get number of particles
     int NumberOfParticles (MFIXParIter& pti)
     { return pti.numParticles(); }
+
+    void setTotalNumParticles(const int num_particles)
+    {
+      this->m_total_numparticle = num_particles;
+    }
 
     MFIXParticleContainer (amrex::AmrCore* amr_core,
                            SolidsPhase& solids,
@@ -158,6 +182,9 @@ public:
     void AllocData ();
 
     void PrintParticleCounts ();
+
+    amrex::Vector<std::map<std::pair<int, int>, amrex::NeighborList<ParticleType> > > get_neighbor_list()
+    { return m_neighbor_list; }
 
     void EvolveParticles (int lev,
                           int nstep,

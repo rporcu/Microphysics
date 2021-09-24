@@ -282,7 +282,7 @@ def setup(argv):
         suite.log.log(obj.name)
     suite.log.outdent()
 
-    if not args.complete_report_from_crash == "":
+    if args.complete_report_from_crash:
 
         # make sure the web directory from the crash run exists
         suite.full_web_dir = "{}/{}/".format(suite.webTopDir, args.complete_report_from_crash)
@@ -415,6 +415,8 @@ def get_runners(args, test_list, suite, runtimes):
 
 async def test_suite(runners, args, suite):
     """main loop over tests"""
+    for runner in runners:
+        runner.check_post_test()
 
     if not suite.post_only:
         await TestRunner.compile_tests(suite, runners)
@@ -510,6 +512,15 @@ class TestRunner:
     async def run_test(self):
         await self.test.run_actual_test(self._suite, self._runtimes, self._args)
 
+    def check_post_test(self):
+        prefix = f"{self._suite.Label}." if self._suite.Label else ""
+        refdata = self._suite.refdataDir / self.test.name / f"{prefix}runningave.dat"
+        if not refdata.parent.is_dir():
+            self.test.log.fail(f"Check failed; refdata directory does not exist: {refdata.parent}")
+        if not refdata.is_file():
+            self.test.log.warn(f"refdata file {refdata} does not exist; creating it...")
+            refdata.touch()
+
     async def post_test(self):
         testname = Path(self.test.output_dir).name
         if self._suite.post_only and not self.test.output_dir.is_dir():
@@ -526,7 +537,9 @@ class TestRunner:
                 )
                 mod = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(mod)
-                mod.plot(self._suite.refdataDir)
+                prefix = f"{self._suite.Label}." if self._suite.Label else ""
+                refdata = self._suite.refdataDir / self.test.name / f"{prefix}runningave.dat"
+                mod.plot(refdata)
             except Exception:  # pylint: disable=broad-except
                 logging.exception("Error post processing %s", testname)
 

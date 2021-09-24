@@ -29,14 +29,12 @@ WEIGHT_OVER_AREA_PER_PARTICLE = DENSITY * PARTICLE_VOLUME * GRAVITY / CROSS_AREA
 PG_SCALING = 13.094
 
 
-def plot(refdata_base: Path) -> Path:
+def plot(refdata: Path) -> Path:
     """Generate plot image file with matplotlib
     Returns: Path of the newly created image plot file"""
 
-
-    testname = Path(__file__).parent.name
-    running_avg = refdata_base / testname / "runningave.dat"
-    refdata_dat = refdata_base / testname / "mfix.R2016.1.wdf.011619.dat"
+    running_avg = refdata
+    refdata_dat = refdata.parent / "mfix.R2016.1.wdf.011619.dat"
     refdata = read_historic_pressure(refdata_dat)
     pg_data = read_two_pressures(Path(PG_1_FNAME), Path(PG_2_FNAME))
     vel_data = read_velocity(Path(VEL_P_FNAME))

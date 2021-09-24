@@ -101,6 +101,8 @@ def load_params(args):
             elif opt == "refdataDir":
                 ref = Path(value)
                 mysuite.refdataDir = ref if ref.is_absolute() else Path.cwd() / ref
+            elif opt == "Label":
+                mysuite.Label = value
             elif opt == "reportCoverage":
                 mysuite.reportCoverage = mysuite.reportCoverage or value
             elif opt == "emailTo":

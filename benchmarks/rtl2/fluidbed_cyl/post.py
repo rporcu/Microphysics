@@ -30,10 +30,9 @@ def plot(refdata: Path) -> Path:
     """Generate plot image file with matplotlib
     Returns: Path of the newly created image plot file"""
 
-    testname = Path(__file__).parent.name
-    running_avg = refdata / testname / "runningave.dat"
-    stl_16 = refdata / testname / "mfix.R2016.1.stl16.wdf.011019.dat"
-    stl_24 = refdata / testname / "mfix.R2016.1.stl24.wdf.011019.dat"
+    running_avg = refdata
+    stl_16 = refdata.parent / "mfix.R2016.1.stl16.wdf.011019.dat"
+    stl_24 = refdata.parent / "mfix.R2016.1.stl24.wdf.011019.dat"
 
     hist_16 = read_historic_pressure(stl_16)
     hist_24 = read_historic_pressure(stl_24)
