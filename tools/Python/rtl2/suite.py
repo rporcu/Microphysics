@@ -484,6 +484,7 @@ class Suite:
         self.cmakeSetupOpts = ""
 
         self.refdataDir = None
+        self.Label = None
 
         self.MPIcommand = ""
         self.MPIhost = ""

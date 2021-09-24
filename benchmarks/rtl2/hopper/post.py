@@ -11,10 +11,10 @@ NUM_PARTICLES = 12359
 VEL_P_FNAME = "uio_vel_p_0.dat"
 
 
-def plot(refdata_base: Path) -> Path:
-    testname = Path(__file__).parent.name
-    hist_fname = refdata_base / testname / "mfix.R2016.1.gran.wdf.102219.dat"
-    avg_dat = refdata_base / testname / "runningave.dat"
+def plot(refdata: Path) -> Path:
+    running_avg = refdata
+    hist_fname = refdata.parent / "mfix.R2016.1.gran.wdf.102219.dat"
+    avg_dat = refdata.parent / "runningave.dat"
 
     refdata = read_historic_np(Path(hist_fname))
     tzero = t_zero()
