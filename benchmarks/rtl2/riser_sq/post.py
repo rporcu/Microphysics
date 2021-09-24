@@ -15,13 +15,12 @@ from rtl2.post import (
 VEL_P_FNAME = Path("uio_vel_p_0.dat")
 
 
-def plot(refdata_base: Path) -> Path:
+def plot(refdata: Path) -> Path:
     """Generate plot image file with matplotlib
     Returns: Path of the newly created image plot file"""
 
-    testname = Path(__file__).parent.name
-    running_avg = refdata_base / testname / "runningave.dat"
-    refdata_dat = refdata_base / testname / "mfix.R2016.1.wdf.011619.dat"
+    running_avg = refdata
+    refdata_dat = refdata.parent / "mfix.R2016.1.wdf.011619.dat"
 
     refdata = read_historic_velocity(refdata_dat, 0.01)
     meanvp = get_mean_vp(VEL_P_FNAME)

@@ -765,6 +765,9 @@ def report_this_test_run(suite, make_benchmarks, note, _update_time, test_list, 
     # always create the css (in case it changes)
     create_css()
 
+    with open("LABEL", "w") as label_f:
+        label_f.write(suite.Label)
+
     # create the master web page
     hf = open("index.html", "w")
 
@@ -1108,11 +1111,16 @@ def report_all_runs(suite, active_test_list, max_per_page=50):
         # loop over all the test runs
         for lvalid_dir in lvalid_dirs:
             tdir = lvalid_dir.relative_to(suite.webTopDir)
+            label = ""
+            label_path = lvalid_dir / "LABEL"
+            if label_path.is_file():
+                with open(label_path) as label_f:
+                    label = label_f.read().strip()
             # write out the directory (date)
             branch_mark = ""
             hf.write(
                 "<TR><TD class='date'><SPAN CLASS='nobreak'>"
-                f"<A class='main' HREF=\"{tdir}/index.html\">{tdir}&nbsp;</A>"
+                f"<A class='main' HREF=\"{tdir}/index.html\">{tdir}&nbsp;{label}&nbsp;</A>"
                 f"{branch_mark}</SPAN></TD>\n"
             )
 
@@ -1153,7 +1161,7 @@ def report_all_runs(suite, active_test_list, max_per_page=50):
 def get_result(suite: Suite, status_file: Path) -> Tuple[Optional[str], str]:
     if not status_file.is_file():
         suite.log.warn(f"Missing status file {status_file}")
-        return  None, "!&nbsp;"
+        return None, "!&nbsp;"
 
     with open(status_file, "r") as sf:
         for line in sf:
@@ -1164,7 +1172,7 @@ def get_result(suite: Suite, status_file: Path) -> Tuple[Optional[str], str]:
             elif line.find("CRASHED") >= 0:
                 return "crashed", "xx"
             elif line.find("FAILED") >= 0:
-                return  "failed", "!&nbsp;"
+                return "failed", "!&nbsp;"
             elif line.find("benchmarks updated") >= 0:
                 return "benchmade", "U"
 
