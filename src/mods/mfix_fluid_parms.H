@@ -435,7 +435,63 @@ class FluidPhase {
       amrex::Real pressure;
       amrex::Real pressure_defined; // Flag to check if pressure is defined
 
+
+      amrex::Vector< int > constant_species;
       amrex::Vector<SPECIES::SPECIES_t> species;
+      amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> species_table;
+
+      amrex::Real get_species (int n, amrex::Real time=0.0) {
+        //amrex::Print() << "\n\nLooking for the right BC fluid temperature!\n\n";
+        if (constant_species[n]){
+          // amrex::Print() << "* Use the constant temperature " << temperature << "\n";
+          return species[n].mass_fraction;
+        } else {
+          const int size = species_table[n].size();
+          if( size == 1 || time <= species_table[n][0][0] ) {
+            // There is only one entry (use it) OR the current time
+            // is less than the first entry so return the first entry.
+            // amrex::Print() << "Defaulting to the first entry " << species_table[0][1] << "\n";
+            return species_table[n][0][1];
+
+          } else {
+
+            constexpr amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
+            //amrex::Print() << "Interpolating from species table (maybe?)\n";
+            for (int lc=1; lc<size; lc++) {
+              // Time of current entry
+              const amrex::Real entry_time = species_table[n][lc][0];
+
+              if ( amrex::Math::abs(time - entry_time) <= tolerance ) {
+                // Too close for any calculations
+                // amrex::Print() << "Too close to tell using value form entry "
+                //                << lc << "  " << species_table[n][lc][1] << "\n";
+                return species_table[n][lc][1];
+
+                // The entries are sorted based on time, so if the current time is
+                // less than this entries time, then we need to interpolate between
+                // the previous time and this time.
+              } else if (time < entry_time) {
+                const amrex::Real prv_time = species_table[n][lc-1][0];
+                const amrex::Real delta_time = entry_time - prv_time;
+                if (amrex::Math::abs(delta_time) <= tolerance) {
+                  // amrex::Print() << "Delta time too small. Using value form entry "
+                  //                << lc << "  " << species_table[n][lc][1] << "\n";
+                  return species_table[n][lc][1];
+                } else {
+                  const amrex::Real whi = (time - prv_time) / delta_time;
+                  const amrex::Real wlo = 1.0 - whi;
+                  // amrex::Print() << "Interpolating from table entry " << lc << "\n";
+                  return (whi*species_table[n][lc][1] + wlo*species_table[n][lc-1][1]);
+                }
+              }
+            }
+            // If we made it here, time is larger than all the entries in the
+            // table, therefore, use the last value.
+            // amrex::Print() << "Using last table entry " << species_table[n][size-1][1];
+            return species_table[n][size-1][1];
+          }
+        }
+      }
 
       // Flags for constant
       bool constant_velocity;
