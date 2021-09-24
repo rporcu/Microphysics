@@ -13,6 +13,8 @@ namespace PIC
 {
   extern int solve;
 
+  extern int NPHASE;
+
   extern int verbose;
 
   // Coefficients for computing the solid stress
@@ -37,6 +39,8 @@ namespace PIC
   };
 
   extern InitialStepType initial_step;
+
+  extern int restart_refinement;
 
   void Initialize ();
 }

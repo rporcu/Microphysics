@@ -36,6 +36,7 @@ namespace PIC
   // Names of the solids used to build input regions.
   amrex::Vector<std::string> names;
 
+  int restart_refinement = 1;
 
   void Initialize ()
   {
@@ -58,7 +59,10 @@ namespace PIC
                     "but, the solver is disabled!");
     }
 
-    NPHASE = solve;
+    if (solve) {
+      // Store the total number of solids
+      NPHASE = names.size();
+    }
 
     if(solve)
     {
@@ -121,6 +125,21 @@ namespace PIC
       } else {
         amrex::Abort("pic.initial_step_type must be nth_eps, zero_eps or taylor_approx");
       }
+
+      pp.query("restart_refinement", restart_refinement);
+
+      if (restart_refinement > 1) {
+
+        amrex::ParmParse ppAMR("amr");
+        std::string restart_file {""};
+
+        ppAMR.get("restart", restart_file);
+
+        const int is_restarting = !(restart_file.empty());
+
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(is_restarting,
+            "Invalid attempt to set a PIC restart refinement without actually restarting from a chk file");
+      }
     }
-}
+  }
 }
