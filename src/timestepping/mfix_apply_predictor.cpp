@@ -119,7 +119,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     }
 
 
-
     // *************************************************************************************
     // Allocate space for the MAC velocities and RHS
     // *************************************************************************************
@@ -263,6 +262,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         GetVecOfPtrs(ep_u_mac), GetVecOfPtrs(ep_v_mac), GetVecOfPtrs(ep_w_mac),
         l_dt, time);
 
+
     // *************************************************************************************
     // Update density first
     // *************************************************************************************
@@ -313,9 +313,94 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     } // not constant density
 
 
-    // **************************************************************************
+    // *************************************************************************
+    // Update species mass fractions
+    // *************************************************************************
+    if (advect_fluid_species)
+    {
+      const int nspecies_g = fluid.nspecies;
+
+      for (int lev = 0; lev <= finest_level; lev++)
+      {
+        auto& ld = *m_leveldata[lev];
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+        for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        {
+          Box const& bx = mfi.tilebox();
+          Array4<Real      > const& X_gk_n  = ld.X_gk->array(mfi);
+          Array4<Real const> const& X_gk_o  = ld.X_gko->const_array(mfi);
+          Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
+          Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
+          Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
+          Array4<Real const> const& dXdt_o  = conv_X_old[lev]->const_array(mfi);
+          Array4<Real const> const& lap_X_o = lap_X_old[lev]->const_array(mfi);
+          Array4<Real const> const& X_RHS_o = species_RHS_old[lev]->const_array(mfi);
+
+          ParallelFor(bx, [nspecies_g,epg,rho_o,rho_n,X_gk_o,dXdt_o,lap_X_o,
+              l_dt,X_gk_n,X_RHS_o,l_explicit_diff]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          {
+            const Real epg_loc = epg(i,j,k);
+
+            const Real num =         (rho_o(i,j,k) * epg_loc);
+            const Real denom = 1.0 / (rho_n(i,j,k) * epg_loc);
+
+            for (int n = 0; n < nspecies_g; ++n)
+            {
+              Real X_gk = num * X_gk_o(i,j,k,n);
+              X_gk += l_dt * dXdt_o(i,j,k,n);
+              X_gk += l_dt * X_RHS_o(i,j,k,n);
+
+              if (l_explicit_diff)
+                X_gk += l_dt * lap_X_o(i,j,k,n);
+
+              X_gk_n(i,j,k,n) = X_gk * denom;
+            }
+          });
+        } // mfi
+      } // lev
+
+      if (!l_explicit_diff) {
+        // When using implicit diffusion for species, we "Add" (subtract) the
+        // correction term computed at time t^{star,star} to the RHS before
+        // doing the implicit diffusion
+        diffusion_op->SubtractDivXGX(get_X_gk(), get_ro_g_const(), get_ep_g_const(), get_T_g_old_const(), l_dt);
+
+        // Convert "ep_g" into (rho * ep_g)
+        for (int lev = 0; lev <= finest_level; lev++)
+          MultiFab::Multiply(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
+                             0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
+
+        mfix_set_species_bcs(time, get_X_gk());
+
+        // Diffuse species mass fractions
+        diffusion_op->diffuse_species(get_X_gk(), get_ep_g(), get_T_g_old(), get_species_bcrec(), l_dt);
+
+        // Note we need to call the bc routines again to enforce the ext_dir condition
+        // on the faces (the diffusion operator moved those to ghost cell centers)
+        mfix_set_species_bcs(time, get_X_gk());
+
+        // Convert (rho * ep_g) back into ep_g
+        for (int lev = 0; lev <= finest_level; lev++)
+            MultiFab::Divide(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
+                             0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
+      }
+
+      // ***********************************************************************
+      // Rescale species in order to respect sum = 1
+      // ***********************************************************************
+      if (fluid.is_a_mixture) {
+        mfix_normalize_fluid_species(get_X_gk(), get_T_g_old(), get_h_g_old());
+      }
+
+    } // advect_fluid_species
+
+
+    // *************************************************************************
     // Update thermodynamic pressure
-    // **************************************************************************
+    // *************************************************************************
     if (advect_enthalpy && (m_constraint_type == ConstraintType::IdealGasClosedSystem))
     {
       for (int lev = 0; lev <= finest_level; ++lev) {
@@ -376,6 +461,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
           Array4<Real const> const& T_g_o   = ld.T_go->array(mfi);
           Array4<Real      > const& T_g_n   = ld.T_g->array(mfi);
           Array4<Real const> const& X_gk_o  = fluid_is_a_mixture ? ld.X_gko->array(mfi) : dummy_arr;
+          Array4<Real const> const& X_gk_n  = fluid_is_a_mixture ? ld.X_gk->array(mfi) : dummy_arr;
           Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
           Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
           Array4<Real const> const& lap_T_o = lap_T_old[lev]->const_array(mfi);
@@ -389,7 +475,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
           auto const& volfrac_arr = volfrac.const_array(mfi);
 
           amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,h_RHS_o,
-              epg,dhdt_o,l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,
+              epg,dhdt_o,l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,X_gk_n,
               closed_system,fluid_parms,fluid_is_a_mixture,X_gk_o,nspecies_g,
               flags_arr,volfrac_arr]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -419,79 +505,96 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
               // Newton-Raphson solver for solving implicit equation for
               // temperature
-
-              // Residual computation
-              auto R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
-              {
-                Real hg_loc(0);
-
-                if (!fluid_is_a_mixture) {
-
-                  hg_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_arg);
-                } else {
-
-                  for (int n(0); n < nspecies_g; ++n)
-                    hg_loc += X_gk_o(i,j,k,n)*fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_arg,n);
+              if (l_explicit_diff) {
+                // Residual computation
+                auto R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+                {
+                  Real hg_loc(0);
+  
+                  if (!fluid_is_a_mixture) {
+  
+                    hg_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_arg);
+                  } else {
+  
+                    for (int n(0); n < nspecies_g; ++n)
+                      hg_loc += X_gk_n(i,j,k,n)*fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_arg,n);
+                  }
+  
+                  return hg_loc - h_g;
+                };
+  
+                // Partial derivative computation
+                auto partial_R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+                {
+                  Real gradient(0);
+  
+                  if (!fluid_is_a_mixture) {
+  
+                    gradient = fluid_parms.calc_partial_h_g<RunOn::Gpu>(Tg_arg);
+                  } else {
+  
+                    for (int n(0); n < nspecies_g; ++n)
+                      gradient += X_gk_n(i,j,k,n)*fluid_parms.calc_partial_h_gk<RunOn::Gpu>(Tg_arg,n);
+                  }
+  
+                  return gradient;
+                };
+  
+                Real Tg_old = T_g_o(i,j,k);
+  
+                Real Tg_new(Tg_old);
+  
+                int solver_iterations(0);
+  
+                {
+                  DampedNewton::DampingFactor damping_factor(0., 0.);
+                  solver_iterations = 
+                    DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
+                                        1.e-8, 1.e-8, 500);
+  
+                } if (solver_iterations == 500) {
+  
+                  DampedNewton::DampingFactor damping_factor(1., 0.);
+                  solver_iterations =
+                    DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
+                                        1.e-7, 1.e-7, 500);
+  
+                } if (solver_iterations == 500) {
+  
+                  DampedNewton::DampingFactor damping_factor(1., 1.);
+                  solver_iterations =
+                    DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
+                                        1.e-6, 1.e-6, 500);
+  
+                } if (solver_iterations == 500) {
+                  amrex::Abort("Damped-Newton solver did not converge");
                 }
-
-                return hg_loc - h_g;
-              };
-
-              // Partial derivative computation
-              auto partial_R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
-              {
-                Real gradient(0);
-
-                if (!fluid_is_a_mixture) {
-
-                  gradient = fluid_parms.calc_partial_h_g<RunOn::Gpu>(Tg_arg);
-                } else {
-
-                  for (int n(0); n < nspecies_g; ++n)
-                    gradient += X_gk_o(i,j,k,n)*fluid_parms.calc_partial_h_gk<RunOn::Gpu>(Tg_arg,n);
-                }
-
-                return gradient;
-              };
-
-              Real Tg_old = T_g_o(i,j,k);
-
-              Real Tg_new(Tg_old);
-
-              int solver_iterations(0);
-
-              {
-                DampedNewton::DumpingFactor dumping_factor(0., 0.);
-                solver_iterations = 
-                  DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
-                                      1.e-8, 1.e-8, 500);
-
-              } if (solver_iterations == 500) {
-
-                DampedNewton::DumpingFactor dumping_factor(1., 0.);
-                solver_iterations =
-                  DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
-                                      1.e-7, 1.e-7, 500);
-
-              } if (solver_iterations == 500) {
-
-                DampedNewton::DumpingFactor dumping_factor(1., 1.);
-                solver_iterations =
-                  DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
-                                      1.e-6, 1.e-6, 500);
-
-              } if (solver_iterations == 500) {
-                amrex::Abort("Damped-Newton solver did not converge");
+  
+  
+                T_g_n(i,j,k) = Tg_new;
               }
-
-
-              T_g_n(i,j,k) = Tg_new;
             }
           });
         } // mfi
       } // lev
-    } // advect_enthalpy
 
+      if (!l_explicit_diff) {
+
+        mfix_set_temperature_bcs(time, get_T_g());
+        mfix_set_enthalpy_bcs(time, get_h_g());
+
+        // NOTE: we do this call before multiplying ep_g by ro_g
+        // Diffuse enthalpy
+        diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
+                                          get_h_g(), get_X_gk(), get_T_g_on_eb(), l_dt);
+
+        // Note we need to call the bc routines again to enforce the ext_dir condition
+        // on the faces (the diffusion operator moved those to ghost cell centers)
+        mfix_set_temperature_bcs(time, get_T_g());
+        mfix_set_enthalpy_bcs(time, get_h_g());
+      }
+
+    } // advect_enthalpy
 
     // *************************************************************************************
     // Update tracer(s)
@@ -539,59 +642,29 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 });
             } // mfi
         } // lev
+
+        if (!l_explicit_diff) {
+
+          // Convert "ep_g" into (rho * ep_g)
+          for (int lev = 0; lev <= finest_level; lev++)
+            MultiFab::Multiply(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
+                               0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
+
+          // Diffuse tracer
+          mfix_set_tracer_bcs(time, get_trac());
+
+          diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, get_tracer_bcrec(), l_dt);
+
+          // Note we need to call the bc routines again to enforce the ext_dir condition
+          // on the faces (the diffusion operator moved those to ghost cell centers)
+          mfix_set_tracer_bcs(time, get_trac());
+
+          // Convert (rho * ep_g) back into ep_g
+          for (int lev = 0; lev <= finest_level; lev++)
+              MultiFab::Divide(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
+                               0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
+        }
     } // advect_tracer
-
-
-    // *************************************************************************
-    // Update species mass fractions
-    // *************************************************************************
-    if (advect_fluid_species)
-    {
-      const int nspecies_g = fluid.nspecies;
-
-      for (int lev = 0; lev <= finest_level; lev++)
-      {
-        auto& ld = *m_leveldata[lev];
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-        for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
-        {
-          Box const& bx = mfi.tilebox();
-          Array4<Real      > const& X_gk_n  = ld.X_gk->array(mfi);
-          Array4<Real const> const& X_gk_o  = ld.X_gko->const_array(mfi);
-          Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
-          Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
-          Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
-          Array4<Real const> const& dXdt_o  = conv_X_old[lev]->const_array(mfi);
-          Array4<Real const> const& lap_X_o = lap_X_old[lev]->const_array(mfi);
-          Array4<Real const> const& X_RHS_o = species_RHS_old[lev]->const_array(mfi);
-
-          ParallelFor(bx, [nspecies_g,epg,rho_o,rho_n,X_gk_o,dXdt_o,lap_X_o,
-              l_dt,X_gk_n,X_RHS_o,l_explicit_diff]
-            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-          {
-            const Real epg_loc = epg(i,j,k);
-
-            const Real num =         (rho_o(i,j,k) * epg_loc);
-            const Real denom = 1.0 / (rho_n(i,j,k) * epg_loc);
-
-            for (int n = 0; n < nspecies_g; ++n)
-            {
-              Real X_gk = num * X_gk_o(i,j,k,n);
-              X_gk += l_dt * dXdt_o(i,j,k,n);
-              X_gk += l_dt * X_RHS_o(i,j,k,n);
-
-              if (l_explicit_diff)
-                X_gk += l_dt * lap_X_o(i,j,k,n);
-
-              X_gk_n(i,j,k,n) = X_gk * denom;
-            }
-          });
-        } // mfi
-      } // lev
-    } // advect_fluid_species
-
 
 
     // *************************************************************************************
@@ -676,6 +749,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
        } // mfi
     } // lev
 
+
     // *************************************************************************************
     // Add the drag and convective heat transfer terms implicitly to vel_g and h_g
     // *************************************************************************************
@@ -692,27 +766,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
       mfix_set_density_bcs(time, get_ro_g());
 
-      if (advect_enthalpy)
-      {
-        mfix_set_temperature_bcs(time, get_T_g());
-        mfix_set_enthalpy_bcs(time, get_h_g());
-      }
-
-      if (advect_fluid_species)
-        mfix_set_species_bcs(time, get_X_gk());
-
-      // NOTE: we do this call before multiplying ep_g by ro_g
-      // Diffuse enthalpy
-      if (advect_enthalpy) {
-        diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
-                                          get_h_g(), get_X_gk(), get_T_g_on_eb(), l_dt);
-
-        // Note we need to call the bc routines again to enforce the ext_dir condition
-        // on the faces (the diffusion operator moved those to ghost cell centers)
-        mfix_set_temperature_bcs(time, get_T_g());
-        mfix_set_enthalpy_bcs(time, get_h_g());
-      }
-
       // Convert "ep_g" into (rho * ep_g)
       for (int lev = 0; lev <= finest_level; lev++)
         MultiFab::Multiply(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
@@ -724,37 +777,12 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       // Diffuse velocity
       diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_T_g(), advect_enthalpy, l_dt);
 
-      // Diffuse tracer
-      if (advect_tracer) {
-        mfix_set_tracer_bcs(time, get_trac());
-        diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, get_tracer_bcrec(), l_dt);
-
-        // Note we need to call the bc routines again to enforce the ext_dir condition
-        // on the faces (the diffusion operator moved those to ghost cell centers)
-        mfix_set_tracer_bcs(time, get_trac());
-      }
-
-      // Diffuse species mass fractions
-      if (advect_fluid_species) {
-        diffusion_op->diffuse_species(get_X_gk(), get_ep_g(), get_T_g(), get_species_bcrec(), l_dt);
-
-        // Note we need to call the bc routines again to enforce the ext_dir condition
-        // on the faces (the diffusion operator moved those to ghost cell centers)
-        mfix_set_species_bcs(time, get_X_gk());
-      }
-
       // Convert (rho * ep_g) back into ep_g
       for (int lev = 0; lev <= finest_level; lev++)
           MultiFab::Divide(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
                            0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
     }
 
-    // *************************************************************************************
-    // Rescale species in order to respect sum = 1
-    // *************************************************************************************
-    if (fluid.is_a_mixture) {
-      mfix_normalize_fluid_species(get_X_gk(), get_T_g(), get_h_g());
-    }
 
     // *************************************************************************************
     // Project velocity field -- depdt=0 for now

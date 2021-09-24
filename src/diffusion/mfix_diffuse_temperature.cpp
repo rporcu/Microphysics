@@ -392,24 +392,24 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
   // Damped Newton solution
   try {
-    DampedNewton::DumpingFactor dumping_factor(0., .25);
-    DampedNewton::solve(T_g, R, partial_R, norm0, dumping_factor, 1.e-8, 1.e-8, 500);
+    DampedNewton::DampingFactor damping_factor(0., .25);
+    DampedNewton::solve(T_g, R, partial_R, norm0, damping_factor, 1.e-8, 1.e-8, 500);
 
   } catch (std::exception& first_exc) {
 
     first_exc.what();
 
     try {
-      DampedNewton::DumpingFactor dumping_factor(0., .5);
-      DampedNewton::solve(T_g, R, partial_R, norm0, dumping_factor, 1.e-7, 1.e-7, 500);
+      DampedNewton::DampingFactor damping_factor(0., .5);
+      DampedNewton::solve(T_g, R, partial_R, norm0, damping_factor, 1.e-7, 1.e-7, 500);
 
     } catch (std::exception& second_exc) {
 
       second_exc.what();
 
       try {
-        DampedNewton::DumpingFactor dumping_factor(1., .5);
-        DampedNewton::solve(T_g, R, partial_R, norm0, dumping_factor, 1.e-7, 1.e-7, 500);
+        DampedNewton::DampingFactor damping_factor(1., .5);
+        DampedNewton::solve(T_g, R, partial_R, norm0, damping_factor, 1.e-7, 1.e-7, 500);
       } catch (std::exception& third_exc) {
 
         third_exc.what();
