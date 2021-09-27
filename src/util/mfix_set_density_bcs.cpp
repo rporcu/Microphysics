@@ -52,8 +52,6 @@ mfix::set_density_bcs (Real time,
 
   Array4<Real> const& scal_arr = scal_fab.array();
 
-  Real bc0 = fluid.ro_g0;
-
   IntVect scal_lo(scal_fab.loVect());
   IntVect scal_hi(scal_fab.hiVect());
 
@@ -117,6 +115,19 @@ mfix::set_density_bcs (Real time,
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const IntVect dom_ijk(dom_lo[0],j,k);
+
+      set_density_bcs_in_box(bct, bcv, dom_ijk, i, j, k);
+    });
+  }
+
+  if (nrgt > 0)
+  {
+    amrex::ParallelFor(bx_yz_hi_3D, [bct_ihi,dom_hi,set_density_bcs_in_box]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
+      const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
+      const IntVect dom_ijk(dom_hi[0],j,k);
 
       set_density_bcs_in_box(bct, bcv, dom_ijk, i, j, k);
     });

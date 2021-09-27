@@ -747,7 +747,7 @@ mfix::set_density_bc_values (Real time_in) const
           pp.queryarr("regions", regions);
           amrex::Print() << "\n\n";
           amrex::Print() << "**************************************************************\n";
-          amrex::Print() << "  Invalid or missing pressure for mass inflow boundry!\n";
+          amrex::Print() << "  Invalid or missing pressure for mass inflow boundary!\n";
           amrex::Print() << "  Boundary Condition Name: " << regions[bcv] << "\n";
           amrex::Print() << "  Fix the inputs file.\n";
           amrex::Print() << "**************************************************************\n";
