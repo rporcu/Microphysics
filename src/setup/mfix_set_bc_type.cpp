@@ -717,7 +717,7 @@ mfix::set_temperature_bc_values (Real time_in) const
 }
 
 void
-mfix::set_density_bc_values (Real /*time_in*/) const
+mfix::set_density_bc_values (Real time_in) const
 {
 
   m_h_bc_ro_g.resize(bc.size());
@@ -729,9 +729,39 @@ mfix::set_density_bc_values (Real /*time_in*/) const
   // This was copied over from the mfix_set_density_bcs routine.
   const Real ro_g0 = fluid.ro_g0;
 
+  const int nspecies_g = fluid.nspecies;
+  const int fluid_is_a_mixture = fluid.is_a_mixture;
+  auto& fluid_parms = *fluid.parameters;
+
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
     if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
-      m_h_bc_ro_g[bcv] = ro_g0;
+
+      if (m_constraint_type == ConstraintType::IdealGasOpenSystem ||
+          m_constraint_type == ConstraintType::IdealGasClosedSystem ) {
+
+        const Real pg = bc[bcv].fluid.pressure;
+        const Real Tg = bc[bcv].fluid.get_temperature(time_in);
+        Real MW_g_loc(0);
+
+        // set initial fluid molecular weight
+        if (fluid_is_a_mixture) {
+          for (int n(0); n < nspecies_g; n++) {
+            const Real Xgk = bc[bcv].fluid.get_species(n, time_in);
+            MW_g_loc += Xgk / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
+          }
+          MW_g_loc = 1. / MW_g_loc;
+        }
+        else {
+          MW_g_loc = fluid_parms.get_MW_g<RunOn::Gpu>();
+        }
+
+        m_h_bc_ro_g[bcv] = (pg * MW_g_loc) / (fluid_parms.R * Tg);
+
+      } else {
+
+        m_h_bc_ro_g[bcv] = ro_g0;
+      }
+
     } else {
       m_h_bc_ro_g[bcv] = 1e50;
     }

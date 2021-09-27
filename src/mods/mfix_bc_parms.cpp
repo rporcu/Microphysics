@@ -120,6 +120,11 @@ namespace BC
       }
     }
 
+    // Query if advect_enthalpy so we check if ic temperature inputs are correct
+    amrex::ParmParse ppMFIX("mfix");
+    int advect_density(0);
+
+    ppMFIX.query("advect_density", advect_density);
 
     // Initialize the periodic pressure drop to zero in all directions
     for (int dir=0; dir < 3; dir ++ )
@@ -340,11 +345,18 @@ namespace BC
 
         }
 
+        // Determine if we need puressure defined.
+        bool pressure_required =
+          // Pressure boundaries need it (duh!)
+          ( new_bc.type == pinf_ || new_bc.type == pout_) ||
+          // Mass inflows need it when advecting density (to compute density)
+          ( new_bc.type == minf_ && advect_density);
+
         // Read in fluid pressure
-        new_bc.fluid.pressure_defined =
-          ppFluid.query("pressure", new_bc.fluid.pressure);
-        if(( new_bc.type == pinf_ || new_bc.type == pout_) && (!new_bc.fluid.pressure_defined)) {
-          amrex::Print() << "Pressure BCs must have pressure defined!" << std::endl;
+        new_bc.fluid.pressure_defined = ppFluid.query("pressure", new_bc.fluid.pressure);
+
+        if( pressure_required && (!new_bc.fluid.pressure_defined)) {
+          amrex::Print() << "Pressure missing from BC specification!" << std::endl;
           amrex::Print() << "BC region: " << regions[bcv] << std::endl;
           amrex::Abort("Fix the inputs file!");
         }
