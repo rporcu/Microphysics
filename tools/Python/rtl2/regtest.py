@@ -663,7 +663,7 @@ class TestRunner:
                 for line in of.readlines():
                     if line.find(test.stSuccessString) >= 0:
                         try:
-                            wt = line.strip(test.stSuccessString)
+                            wt = line.split()[-1]
                             test.wall_time = float(wt)
                         except ValueError:
                             suite.log.warn(f"Unable to parse walltime from: {line.strip()}")

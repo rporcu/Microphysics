@@ -665,8 +665,6 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
             Real G_mass_p_heterogeneous(0.);
             Real G_mass_p_homogeneous(0.);
 
-            Real G_h_g_heterogeneous(0.);
-
             Real G_h_p_heterogeneous(0.);
             Real G_h_p_homogeneous(0.);
 
@@ -842,8 +840,6 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                   G_h_p_heterogeneous += h_gk_T_p * G_sk_pg_q;
                   G_h_p_heterogeneous += amrex::min(0., G_sk_pg_q) * (h_gk_T_g - h_gk_T_p);
 
-                  // Contribution to fluid energy transfer
-                  G_h_g_heterogeneous += amrex::max(0., G_sk_pg_q) * (h_gk_T_g - h_gk_T_p);
                 }
               }
 
@@ -872,7 +868,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
             // Write the result in the enthalpy transfer space
             ptile_data.m_runtime_rdata[idx_h_s_txfr][p_id] = G_h_p_heterogeneous + G_h_p_homogeneous;
-            G_h_pg_ptr[p_id] = G_h_g_heterogeneous / fluid_vol;
+            G_h_pg_ptr[p_id] = -G_h_p_heterogeneous / fluid_vol;
           }
         });
 

@@ -40,7 +40,20 @@ mfix::WriteAscentFile ( )
     pltFldNames.push_back("volfrac");
 
     const int ngrow = 0;
-    const int ncomp = 5;
+    int ncomp = 5;
+
+    // Temperature in fluid
+    if (advect_enthalpy ) {
+      pltFldNames.push_back("T_g");
+      ncomp += 1;
+    }
+
+    if ( fluid.solve_species ) {
+      for (std::string specie: fluid.species) {
+        pltFldNames.push_back("Xg_"+specie);
+        ncomp += 1;
+      }
+    }
 
     AMREX_ALWAYS_ASSERT(pltFldNames.size() == ncomp);
 
@@ -58,6 +71,18 @@ mfix::WriteAscentFile ( )
       MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->vel_g), 2, 2, 1, 0);
       MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->ep_g ), 0, 3, 1, 0);
       MultiFab::Copy(*mf[lev], ebfactory[lev]->getVolFrac(), 0, 4, 1, 0);
+
+      int lc=5;
+      if (advect_enthalpy) {
+        MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->T_g), 0, lc, 1, 0);
+        lc += 1;
+      }
+
+      // Fluid species mass fractions
+      if ( fluid.solve_species ) {
+        MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_gk, 0, lc, fluid.nspecies, 0);
+        lc += fluid.nspecies;
+      }
 
       amrex::EB_set_covered(*mf[lev], 0.0);
     }
