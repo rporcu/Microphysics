@@ -740,6 +740,21 @@ mfix::set_density_bc_values (Real time_in) const
           m_constraint_type == ConstraintType::IdealGasClosedSystem ) {
 
         const Real pg = bc[bcv].fluid.pressure;
+
+        if (pg <= 0.) {
+          std::vector<std::string> regions;
+          amrex::ParmParse pp("bc");
+          pp.queryarr("regions", regions);
+          amrex::Print() << "\n\n";
+          amrex::Print() << "**************************************************************\n";
+          amrex::Print() << "  Invalid or missing pressure for mass inflow boundry!\n";
+          amrex::Print() << "  Boundary Condition Name: " << regions[bcv] << "\n";
+          amrex::Print() << "  Fix the inputs file.\n";
+          amrex::Print() << "**************************************************************\n";
+          amrex::Print() << "\n\n";
+          amrex::Abort("Fix the inputs file.");
+        }
+
         const Real Tg = bc[bcv].fluid.get_temperature(time_in);
         Real MW_g_loc(0);
 
