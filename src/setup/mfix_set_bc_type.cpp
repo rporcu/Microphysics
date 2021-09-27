@@ -762,12 +762,12 @@ mfix::set_density_bc_values (Real time_in) const
         if (fluid_is_a_mixture) {
           for (int n(0); n < nspecies_g; n++) {
             const Real Xgk = bc[bcv].fluid.get_species(n, time_in);
-            MW_g_loc += Xgk / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
+            MW_g_loc += Xgk / fluid_parms.get_MW_gk<RunOn::Host>(n);
           }
           MW_g_loc = 1. / MW_g_loc;
         }
         else {
-          MW_g_loc = fluid_parms.get_MW_g<RunOn::Gpu>();
+          MW_g_loc = fluid_parms.get_MW_g<RunOn::Host>();
         }
 
         m_h_bc_ro_g[bcv] = (pg * MW_g_loc) / (fluid_parms.R * Tg);

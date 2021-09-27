@@ -976,6 +976,8 @@ void set_ic_ro_g (const Box& sbx,
                   FArrayBox& X_gk_fab,
                   FluidPhase& fluid)
 {
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
   const IntVect slo(sbx.loVect());
   const IntVect shi(sbx.hiVect());
 
@@ -1019,19 +1021,23 @@ void set_ic_ro_g (const Box& sbx,
 
     // Define the function
     auto set_density = [ro_g,ic_pg,T_g,X_gk,fluid_is_a_mixture,nspecies_g,
-         fluid_parms] AMREX_GPU_DEVICE (int i, int j, int k) -> void
+         fluid_parms,run_on_device] AMREX_GPU_DEVICE (int i, int j, int k) -> void
     {
       Real MW_g_loc(0);
 
       // set initial fluid molecular weight
       if (fluid_is_a_mixture) {
         for (int n(0); n < nspecies_g; n++)
-          MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
+          MW_g_loc += run_on_device ?
+            X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Device>(n) :
+            X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Host>(n);
 
         MW_g_loc = 1. / MW_g_loc;
       }
       else {
-        MW_g_loc = fluid_parms.get_MW_g<RunOn::Gpu>();
+        MW_g_loc = run_on_device ?
+          fluid_parms.get_MW_g<RunOn::Device>() :
+          fluid_parms.get_MW_g<RunOn::Host>();
       }
 
       ro_g(i,j,k) = (ic_pg * MW_g_loc) / (fluid_parms.R * T_g(i,j,k));
