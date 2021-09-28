@@ -13,6 +13,8 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk,
                                    const Vector< MultiFab* >& T_g,
                                    const Vector< MultiFab* >& h_g)
 {
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
   const int nspecies_g = fluid.nspecies;
 
   for (int lev = 0; lev <= finest_level; lev++) {
@@ -69,7 +71,7 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk,
       const int adv_enthalpy = advect_enthalpy;
 
       amrex::ParallelFor(bx, [flags_arr,T_g_arr,X_gk_arr,h_g_arr,nspecies_g,
-          adv_enthalpy,fluid_parms]
+          adv_enthalpy,fluid_parms,run_on_device]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         for (int n(0); n < nspecies_g; ++n) {
@@ -91,7 +93,11 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk,
             const Real Tg_loc = T_g_arr(i,j,k);
 
             for (int n(0); n < nspecies_g; n++) {
-              h_g_sum += X_gk_arr(i,j,k,n) * fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_loc,n);
+              const Real h_gk = run_on_device ?
+                fluid_parms.calc_h_gk<RunOn::Device>(Tg_loc,n) :
+                fluid_parms.calc_h_gk<RunOn::Host>(Tg_loc,n);
+
+              h_g_sum += X_gk_arr(i,j,k,n) * h_gk;
             }
 
             h_g_arr(i,j,k) = h_g_sum;

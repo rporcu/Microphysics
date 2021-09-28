@@ -77,11 +77,7 @@ class SolidsParms {
     {}
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real get_MW_sn (const int n) const
     {
@@ -96,11 +92,7 @@ class SolidsParms {
     }
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real get_MW_s () const
     {
@@ -108,11 +100,7 @@ class SolidsParms {
     }
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_cp_s (const int phase,
                            const amrex::Real T_s) const
@@ -121,11 +109,7 @@ class SolidsParms {
     }
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_h_s (const int phase,
                           const amrex::Real T_s) const
@@ -134,11 +118,7 @@ class SolidsParms {
     }
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_partial_h_s (const int phase,
                                   const amrex::Real T_s) const
@@ -147,11 +127,7 @@ class SolidsParms {
     }
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_cp_sn (const amrex::Real T_s,
                             const int n) const
@@ -195,11 +171,7 @@ class SolidsParms {
     }
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_h_sn (const amrex::Real T_s,
                            const int n) const
@@ -256,11 +228,7 @@ class SolidsParms {
     }
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_partial_h_sn (const amrex::Real T_s,
                                    const int n) const

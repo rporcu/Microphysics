@@ -73,6 +73,8 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*      > const& rhs,
                                     Vector< MultiFab*      > const& X_gk,
                                     Vector< MultiFab const*> const& ro_rhs)
 {
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
   const int adv_enthalpy = advect_enthalpy;
   const int adv_fluid_species = advect_fluid_species;
   const int fluid_is_a_mixture = fluid.is_a_mixture;
@@ -110,7 +112,7 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*      > const& rhs,
 
         amrex::ParallelFor(bx, [rhs_arr,lap_T_arr,h_RHS_arr,ro_g_arr,T_g_arr,
             X_gk_arr,lap_X_arr,X_RHS_arr,flags_arr,adv_enthalpy,fluid_is_a_mixture,
-            nspecies_g,fluid_parms,adv_fluid_species]
+            nspecies_g,fluid_parms,adv_fluid_species,run_on_device]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           Real rhs_value(0);
@@ -124,14 +126,27 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*      > const& rhs,
           // set initial fluid molecular weight
           if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++) {
-              MW_g_loc += X_gk_arr(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
-              cp_g_loc += X_gk_arr(i,j,k,n) * fluid_parms.calc_cp_gk<RunOn::Gpu>(Tg_loc,n);
+              const Real MW_gk = run_on_device ?
+                fluid_parms.get_MW_gk<RunOn::Device>(n) :
+                fluid_parms.get_MW_gk<RunOn::Host>(n);
+
+              const Real cp_gk = run_on_device ?
+                fluid_parms.calc_cp_gk<RunOn::Device>(Tg_loc,n) :
+                fluid_parms.calc_cp_gk<RunOn::Host>(Tg_loc,n);
+
+              MW_g_loc += X_gk_arr(i,j,k,n) / MW_gk;
+              cp_g_loc += X_gk_arr(i,j,k,n) * cp_gk;
             }
             MW_g_loc = 1. / MW_g_loc;
           }
           else {
-            MW_g_loc = fluid_parms.get_MW_g<RunOn::Gpu>();
-            cp_g_loc = fluid_parms.calc_cp_g<RunOn::Gpu>(Tg_loc);
+            MW_g_loc = run_on_device ?
+              fluid_parms.get_MW_g<RunOn::Device>() :
+              fluid_parms.get_MW_g<RunOn::Host>();
+
+            cp_g_loc = run_on_device ?
+              fluid_parms.calc_cp_g<RunOn::Device>(Tg_loc) :
+              fluid_parms.calc_cp_g<RunOn::Host>(Tg_loc);
           }
 
           if (!flags_arr(i,j,k).isCovered()) {
@@ -141,10 +156,17 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*      > const& rhs,
 
             if (fluid_is_a_mixture) {
               for (int n(0); n < nspecies_g; ++n) {
-                Real coeff = MW_g_loc / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
+                const Real MW_gk = run_on_device ?
+                  fluid_parms.get_MW_gk<RunOn::Device>(n) :
+                  fluid_parms.get_MW_gk<RunOn::Host>(n);
+
+                Real coeff = MW_g_loc / MW_gk;
 
                 if (adv_enthalpy) {
-                  const Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_loc,n);
+                  const Real h_gk = run_on_device ?
+                    fluid_parms.calc_h_gk<RunOn::Device>(Tg_loc,n) :
+                    fluid_parms.calc_h_gk<RunOn::Host>(Tg_loc,n);
+
                   coeff -= h_gk / (cp_g_loc*Tg_loc);
                 }
 
@@ -154,7 +176,10 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*      > const& rhs,
               Real coeff = 1.;
 
               if (adv_enthalpy) {
-                const Real h_g_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_loc);
+                const Real h_g_loc = run_on_device ?
+                  fluid_parms.calc_h_g<RunOn::Device>(Tg_loc) :
+                  fluid_parms.calc_h_g<RunOn::Host>(Tg_loc);
+
                 coeff -= h_g_loc / (cp_g_loc*Tg_loc);
               }
 
@@ -200,6 +225,8 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
                                       Vector< Real >& avgSigma,
                                       Vector< Real >& avgTheta)
 {
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
   Vector< MultiFab* > Sigma(finest_level+1);
   Vector< MultiFab* > Theta(finest_level+1);
 
@@ -245,7 +272,7 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
         auto const& flags_arr = flags.const_array(mfi);
 
         ParallelFor(bx, [theta_arr,ep_g_arr,T_g_arr,X_gk_arr,pres_g_arr,
-            flags_arr,fluid_is_a_mixture,nspecies_g,fluid_parms]
+            flags_arr,fluid_is_a_mixture,nspecies_g,fluid_parms,run_on_device]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const Real Tg_loc = T_g_arr(i,j,k);
@@ -256,15 +283,28 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
           // set initial fluid molecular weight
           if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++) {
-              MW_g_loc += X_gk_arr(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
-              cp_g_loc += X_gk_arr(i,j,k,n) * fluid_parms.calc_cp_gk<RunOn::Gpu>(Tg_loc,n);
+              const Real MW_gk = run_on_device ?
+                fluid_parms.get_MW_gk<RunOn::Device>(n) :
+                fluid_parms.get_MW_gk<RunOn::Host>(n);
+
+              const Real cp_gk = run_on_device ?
+                fluid_parms.calc_cp_gk<RunOn::Device>(Tg_loc,n) :
+                fluid_parms.calc_cp_gk<RunOn::Host>(Tg_loc,n);
+              
+              MW_g_loc += X_gk_arr(i,j,k,n) / MW_gk;
+              cp_g_loc += X_gk_arr(i,j,k,n) * cp_gk;
             }
 
             MW_g_loc = 1. / MW_g_loc;
           }
           else {
-            MW_g_loc = fluid_parms.get_MW_g<RunOn::Gpu>();
-            cp_g_loc = fluid_parms.calc_cp_g<RunOn::Gpu>(Tg_loc);
+            MW_g_loc = run_on_device ?
+              fluid_parms.get_MW_g<RunOn::Device>() :
+              fluid_parms.get_MW_g<RunOn::Host>();
+
+            cp_g_loc = run_on_device ?
+              fluid_parms.calc_cp_g<RunOn::Device>(Tg_loc) :
+              fluid_parms.calc_cp_g<RunOn::Host>(Tg_loc);
           }
 
           if (!flags_arr(i,j,k).isCovered()) {

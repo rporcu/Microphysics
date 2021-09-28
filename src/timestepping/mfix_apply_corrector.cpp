@@ -73,6 +73,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 {
     BL_PROFILE("mfix::mfix_apply_corrector");
 
+    const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
     Vector< Real > avgSigma(finest_level+1, 0.);
     Vector< Real > avgTheta(finest_level+1, 0.);
 
@@ -411,7 +413,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
             dhdt_o,dhdt,h_rhs_o,h_rhs,l_dt,lap_T_o,lap_T_n,Dpressure_Dt,
             Dpressure_Dt_old,closed_system,explicit_diffusive_enthalpy,
             fluid_parms,X_gk_o,nspecies_g,fluid_is_a_mixture,flags_arr,
-            volfrac_arr]
+            volfrac_arr,run_on_device]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             if (!flags_arr(i,j,k).isCovered()) {
@@ -456,11 +458,19 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
                 if (!fluid_is_a_mixture) {
 
-                  hg_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_arg);
+                  hg_loc = run_on_device ?
+                    fluid_parms.calc_h_g<RunOn::Device>(Tg_arg) :
+                    fluid_parms.calc_h_g<RunOn::Host>(Tg_arg);
+
                 } else {
 
-                  for (int n(0); n < nspecies_g; ++n)
-                    hg_loc += X_gk_o(i,j,k,n)*fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_arg,n);
+                  for (int n(0); n < nspecies_g; ++n) {
+                    const Real h_gk = run_on_device ?
+                      fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg,n) :
+                      fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg,n);
+
+                    hg_loc += X_gk_o(i,j,k,n)*h_gk;
+                  }
                 }
 
                 return hg_loc - h_g;
@@ -473,11 +483,18 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
                 if (!fluid_is_a_mixture) {
 
-                  gradient = fluid_parms.calc_partial_h_g<RunOn::Gpu>(Tg_arg);
+                  gradient = run_on_device ?
+                    fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
+                    fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
                 } else {
 
-                  for (int n(0); n < nspecies_g; ++n)
-                    gradient += X_gk_o(i,j,k,n)*fluid_parms.calc_partial_h_gk<RunOn::Gpu>(Tg_arg,n);
+                  for (int n(0); n < nspecies_g; ++n) {
+                    const Real h_gk = run_on_device ?
+                      fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
+                      fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
+
+                    gradient += X_gk_o(i,j,k,n)*h_gk;
+                  }
                 }
 
                 return gradient;
@@ -774,7 +791,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
           amrex::ParallelFor(bx, [ep_g,ro_g_n,h_g_n,T_g_o,T_g_n,lap_T_o,l_dt,
               fluid_parms,fluid_is_a_mixture,nspecies_g,X_gk_o,volfrac_arr,
-              flags_arr]
+              flags_arr,run_on_device]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             if (!flags_arr(i,j,k).isCovered()) {
@@ -799,11 +816,18 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
                 if (!fluid_is_a_mixture) {
 
-                  hg_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_arg);
+                  hg_loc = run_on_device ?
+                    fluid_parms.calc_h_g<RunOn::Device>(Tg_arg) :
+                    fluid_parms.calc_h_g<RunOn::Host>(Tg_arg);
                 } else {
 
-                  for (int n(0); n < nspecies_g; ++n)
-                    hg_loc += X_gk_o(i,j,k,n)*fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_arg,n);
+                  for (int n(0); n < nspecies_g; ++n) {
+                    const Real h_gk = run_on_device ?
+                      fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg,n) :
+                      fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg,n);
+
+                    hg_loc += X_gk_o(i,j,k,n)*h_gk;
+                  }
                 }
 
                 return hg_loc - h_g;
@@ -816,11 +840,18 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
                 if (!fluid_is_a_mixture) {
 
-                  gradient = fluid_parms.calc_partial_h_g<RunOn::Gpu>(Tg_arg);
+                  gradient = run_on_device ?
+                    fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
+                    fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
                 } else {
 
-                  for (int n(0); n < nspecies_g; ++n)
-                    gradient += X_gk_o(i,j,k,n)*fluid_parms.calc_partial_h_gk<RunOn::Gpu>(Tg_arg,n);
+                  for (int n(0); n < nspecies_g; ++n) {
+                    const Real h_gk = run_on_device ?
+                      fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
+                      fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
+
+                    gradient += X_gk_o(i,j,k,n)*h_gk;
+                  }
                 }
 
                 return gradient;
