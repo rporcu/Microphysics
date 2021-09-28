@@ -41,7 +41,13 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
     for (int lev(0); lev <= finest_level; lev++) {
       lap_hX_gk[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies,
                                     nghost_state(), MFInfo(), *ebfactory[lev]);
+
+      lap_hX_gk[lev]->setVal(0.);
     }
+
+    Print() << "old rhs and lap_hX_gk: \n";
+    print_state(*rhs[0], {4,4,4}, 0, rhs[0]->nGrowVect());
+    print_state(*lap_hX_gk[0], {4,4,4}, 0, lap_hX_gk[0]->nGrowVect());
 
     // Compute the mixed enthalpy/species term
     diffusion_op->ComputeLaphX(lap_hX_gk, X_gk, ro_g, ep_g, T_g);
@@ -52,6 +58,11 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
         MultiFab::Add(*rhs[lev], *lap_hX_gk[lev], n, 0, 1, rhs[lev]->nGrow());
       }
     }
+
+    Print() << "new rhs and lap_hX_gk: \n";
+    print_state(*rhs[0], {4,4,4}, 0, rhs[0]->nGrowVect());
+    print_state(*lap_hX_gk[0], {4,4,4}, 0, lap_hX_gk[0]->nGrowVect());
+    print_state(*lap_hX_gk[0], {4,4,4}, 1, lap_hX_gk[0]->nGrowVect());
 
     for (int lev = 0; lev <= finest_level; ++lev) {
       delete lap_hX_gk[lev];

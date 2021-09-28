@@ -1105,6 +1105,10 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
     solver.apply(laphX_aux, X_gk_in);
   }
 
+  Print() << "laphX_aux: \n";
+  print_state(*laphX_aux[0], {4,4,4}, 0, laphX_aux[0]->nGrowVect());
+  print_state(*laphX_aux[0], {4,4,4}, 1, laphX_aux[0]->nGrowVect());
+
   // CORRECT FLUXES
   // Compute Fluxes for correcting the result
   // div(ep_g ro_g D_gk grad(phi)) - div(phi sum(ep_g ro_g D_gk grad(phi)))
@@ -1245,6 +1249,10 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
     amrex::single_level_redistribute(*laphX_aux[lev], *laphX_out[lev], 0, nspecies_g, geom[lev]);
     EB_set_covered(*laphX_aux[lev], 0, laphX_aux[lev]->nComp(), laphX_aux[lev]->nGrow(), 0.);
   }
+
+  Print() << "laphX_out: \n";
+  print_state(*laphX_out[0], {4,4,4}, 0, laphX_out[0]->nGrowVect());
+  print_state(*laphX_out[0], {4,4,4}, 1, laphX_out[0]->nGrowVect());
 
   // Free laphX_aux memory
   for(int lev = 0; lev <= finest_level; lev++)

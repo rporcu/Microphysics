@@ -98,6 +98,44 @@ class FluidParms {
     template <amrex::RunOn run_on=amrex::RunOn::Host>
 #endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real get_H_f () const
+    {
+      if (run_on == amrex::RunOn::Gpu)
+        return m_d_H_fk[0];
+      else if (run_on == amrex::RunOn::Cpu)
+        return m_h_H_fk[0];
+      else
+        amrex::Abort("Unrecognized RunOn option");
+
+      return 0;
+    }
+
+
+#if defined(AMREX_USE_GPU)
+    template <amrex::RunOn run_on>
+#else
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real get_H_fk (const int n) const
+    {
+      if (run_on == amrex::RunOn::Gpu)
+        return m_d_H_fk[n];
+      else if (run_on == amrex::RunOn::Cpu)
+        return m_h_H_fk[n];
+      else
+        amrex::Abort("Unrecognized RunOn option");
+
+      return 0;
+    }
+
+
+#if defined(AMREX_USE_GPU)
+    template <amrex::RunOn run_on>
+#else
+    template <amrex::RunOn run_on=amrex::RunOn::Host>
+#endif
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real get_MW_gk (const int n) const
     {
       if (run_on == amrex::RunOn::Gpu)
