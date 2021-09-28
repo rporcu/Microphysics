@@ -497,40 +497,19 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
               const Real num =         (rho_o(i,j,k) * epg_loc);
               const Real denom = 1.0 / (rho_n(i,j,k) * epg_loc);
 
-              if (i == 4 && j == 4 && k == 4)
-                printf("1) h_g_o(i,j,k) = %e\n", h_g_o(i,j,k));
-
               Real h_g = num * h_g_o(i,j,k);
-
-              if (i == 4 && j == 4 && k == 4)
-                printf("2) num*h_g_o(i,j,k) = %e\n", h_g);
 
               h_g += l_dt * dhdt_o(i,j,k,conv_comp);
               
-              if (i == 4 && j == 4 && k == 4)
-                printf("3) h_g = %e\n", h_g);
-
               h_g += l_dt * h_RHS_o(i,j,k);
-
-              if (i == 4 && j == 4 && k == 4)
-                printf("4) h_g = %e\n", h_g);
 
               if (closed_system)
                 h_g += l_dt * epg(i,j,k) * Dpressure_Dt;
 
-              if (i == 4 && j == 4 && k == 4)
-                printf("5) h_g = %e\n", h_g);
-
               if (l_explicit_diff)
                 h_g += l_dt * lap_T_o(i,j,k);
 
-              if (i == 4 && j == 4 && k == 4)
-                printf("6) h_g = %e\n", h_g);
-
               h_g *= denom;
-
-              if (i == 4 && j == 4 && k == 4)
-                printf("7) h_g = %e\n", h_g);
 
               h_g_n(i,j,k) = h_g;
 
@@ -573,9 +552,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
   
                 Real Tg_old = T_g_o(i,j,k);
   
-                if (i == 4 && j == 4 && k == 4)
-                  printf("A) Tg_old = %e\n", Tg_old);
-
                 Real Tg_new(Tg_old);
   
                 int solver_iterations(0);
@@ -604,9 +580,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                   amrex::Abort("Damped-Newton solver did not converge");
                 }
   
-                if (i == 4 && j == 4 && k == 4)
-                  printf("B) Tg_old = %e\n", Tg_old);
-  
                 T_g_n(i,j,k) = Tg_new;
               }
             }
@@ -619,28 +592,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         mfix_set_temperature_bcs(time, get_T_g());
         mfix_set_enthalpy_bcs(time, get_h_g());
 
-        auto const& h_g_old = get_h_g_old();
-        auto const& T_g_old = get_T_g_old();
-
-        auto const& h_g = get_h_g();
-        auto const& T_g = get_T_g();
-
-        print_state(*T_g_old[0], {4,4,4}, 0, T_g_old[0]->nGrowVect());
-        print_state(*h_g_old[0], {4,4,4}, 0, h_g_old[0]->nGrowVect());
-
-        print_state(*T_g[0], {4,4,4}, 0, T_g[0]->nGrowVect());
-        print_state(*h_g[0], {4,4,4}, 0, h_g[0]->nGrowVect());
-
         // NOTE: we do this call before multiplying ep_g by ro_g
         // Diffuse enthalpy
         diffusion_op->diffuse_temperature(get_T_g_old(), get_T_g(), get_ep_g(), get_ro_g(),
                                           get_h_g(), get_X_gk(), get_T_g_on_eb(), l_dt);
-
-        print_state(*T_g_old[0], {4,4,4}, 0, T_g_old[0]->nGrowVect());
-        print_state(*h_g_old[0], {4,4,4}, 0, h_g_old[0]->nGrowVect());
-
-        print_state(*T_g[0], {4,4,4}, 0, T_g[0]->nGrowVect());
-        print_state(*h_g[0], {4,4,4}, 0, h_g[0]->nGrowVect());
 
         // Note we need to call the bc routines again to enforce the ext_dir condition
         // on the faces (the diffusion operator moved those to ghost cell centers)
