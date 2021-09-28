@@ -347,6 +347,8 @@ void init_fluid_parameters (const Box& bx,
                             const int advect_fluid_species,
                             FluidPhase& fluid)
 {
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
   const int fluid_is_a_mixture = fluid.is_a_mixture;
   const int advect_species_enthalpy = advect_fluid_species && advect_enthalpy;
 
@@ -362,7 +364,8 @@ void init_fluid_parameters (const Box& bx,
 
   // Set the IC values
   amrex::ParallelFor(bx, [nspecies_g,T_g,h_g,X_gk,advect_enthalpy,fluid_parms,
-      advect_fluid_species,advect_species_enthalpy,fluid_is_a_mixture]
+      advect_fluid_species,advect_species_enthalpy,fluid_is_a_mixture,
+      run_on_device]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
   {
     // set initial fluid enthalpy and  specific enthalpy
@@ -374,14 +377,19 @@ void init_fluid_parameters (const Box& bx,
       {
         Real h_g_sum(0);
         for (int n(0); n < nspecies_g; n++) {
-          const Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_loc,n);
+          const Real h_gk = run_on_device ?
+            fluid_parms.calc_h_gk<RunOn::Device>(Tg_loc,n) :
+            fluid_parms.calc_h_gk<RunOn::Host>(Tg_loc,n);
+
           h_g_sum += X_gk(i,j,k,n) * h_gk;
         }
 
         h_g(i,j,k) = h_g_sum;
       }
       else {
-        h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_loc);
+        h_g(i,j,k) = run_on_device ?
+          fluid_parms.calc_h_g<RunOn::Device>(Tg_loc) :
+          fluid_parms.calc_h_g<RunOn::Host>(Tg_loc);
       }
     }
 
@@ -536,6 +544,8 @@ void set_ic_temp (const Box& sbx,
                   FArrayBox* X_gk_fab,
                   FluidPhase& fluid)
 {
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
   const IntVect slo(sbx.loVect());
   const IntVect shi(sbx.hiVect());
 
@@ -575,19 +585,25 @@ void set_ic_temp (const Box& sbx,
 
     // Define the function to be used on the different Box-es
     auto set_quantities = [T_g,h_g,X_gk,temperature,nspecies_g,fluid_is_a_mixture,
-         fluid_parms] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+         fluid_parms,run_on_device]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       T_g(i,j,k) = temperature;
 
       if (fluid_is_a_mixture) {
         Real h_g_sum(0);
         for (int n(0); n < nspecies_g; n++) {
-          Real h_gk = fluid_parms.calc_h_gk<RunOn::Gpu>(temperature,n);
+          Real h_gk = run_on_device ?
+            fluid_parms.calc_h_gk<RunOn::Device>(temperature,n) :
+            fluid_parms.calc_h_gk<RunOn::Host>(temperature,n);
+
           h_g_sum += X_gk(i,j,k,n) * h_gk;
         }
         h_g(i,j,k) = h_g_sum;
       } else {
-        h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(temperature);
+        h_g(i,j,k) = run_on_device ?
+          fluid_parms.calc_h_g<RunOn::Device>(temperature) :
+          fluid_parms.calc_h_g<RunOn::Host>(temperature);
       }
     };
 
@@ -826,6 +842,8 @@ void set_ic_pressure_g (const Box& sbx,
                         FArrayBox& X_gk_fab,
                         FluidPhase& fluid)
 {
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
   const IntVect slo(sbx.loVect());
   const IntVect shi(sbx.hiVect());
 
@@ -862,19 +880,28 @@ void set_ic_pressure_g (const Box& sbx,
 
     // Define the function
     auto set_pressure = [pressure_g,ro_g,T_g,X_gk,fluid_is_a_mixture,nspecies_g,
-         fluid_parms] AMREX_GPU_DEVICE (int i, int j, int k) -> void
+         fluid_parms,run_on_device]
+      AMREX_GPU_DEVICE (int i, int j, int k) -> void
     {
       Real MW_g_loc(0);
 
       // set initial fluid molecular weight
       if (fluid_is_a_mixture) {
-        for (int n(0); n < nspecies_g; n++)
-          MW_g_loc += X_gk(i,j,k,n) / fluid_parms.get_MW_gk<RunOn::Gpu>(n);
+        for (int n(0); n < nspecies_g; n++) {
+          const Real MW_gk = run_on_device ?
+            fluid_parms.get_MW_gk<RunOn::Device>(n) :
+            fluid_parms.get_MW_gk<RunOn::Host>(n);
+
+          MW_g_loc += X_gk(i,j,k,n) / MW_gk;
+        }
 
         MW_g_loc = 1. / MW_g_loc;
       }
       else {
-        MW_g_loc = fluid_parms.get_MW_g<RunOn::Gpu>();
+        MW_g_loc = run_on_device ?
+          fluid_parms.get_MW_g<RunOn::Device>() :
+          fluid_parms.get_MW_g<RunOn::Host>();
+
       }
 
       pressure_g(i,j,k) = ro_g(i,j,k) * fluid_parms.R * T_g(i,j,k) / MW_g_loc;
