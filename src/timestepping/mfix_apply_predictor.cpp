@@ -70,6 +70,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 {
     BL_PROFILE("mfix::mfix_apply_predictor");
 
+    const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
     // We use the new-time value for things computed on the "*" state
     Real new_time = time + l_dt;
 
@@ -391,7 +393,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
           amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,h_RHS_o,
               epg,dhdt_o,l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,
               closed_system,fluid_parms,fluid_is_a_mixture,X_gk_o,nspecies_g,
-              flags_arr,volfrac_arr]
+              flags_arr,volfrac_arr,run_on_device]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             if (!flags_arr(i,j,k).isCovered()) {
@@ -427,11 +429,18 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
                 if (!fluid_is_a_mixture) {
 
-                  hg_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_arg);
+                  hg_loc = run_on_device ?
+                    fluid_parms.calc_h_g<RunOn::Device>(Tg_arg) :
+                    fluid_parms.calc_h_g<RunOn::Host>(Tg_arg);
                 } else {
 
-                  for (int n(0); n < nspecies_g; ++n)
-                    hg_loc += X_gk_o(i,j,k,n)*fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_arg,n);
+                  for (int n(0); n < nspecies_g; ++n) {
+                    const Real h_gk = run_on_device ?
+                      fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg,n) :
+                      fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg,n);
+
+                    hg_loc += X_gk_o(i,j,k,n)*h_gk;
+                  }
                 }
 
                 return hg_loc - h_g;
@@ -444,11 +453,19 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
                 if (!fluid_is_a_mixture) {
 
-                  gradient = fluid_parms.calc_partial_h_g<RunOn::Gpu>(Tg_arg);
+                  gradient = run_on_device ?
+                    fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
+                    fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
+
                 } else {
 
-                  for (int n(0); n < nspecies_g; ++n)
-                    gradient += X_gk_o(i,j,k,n)*fluid_parms.calc_partial_h_gk<RunOn::Gpu>(Tg_arg,n);
+                  for (int n(0); n < nspecies_g; ++n) {
+                    const Real h_gk = run_on_device ?
+                      fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
+                      fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
+
+                    gradient += X_gk_o(i,j,k,n)*h_gk;
+                  }
                 }
 
                 return gradient;

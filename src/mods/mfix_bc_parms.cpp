@@ -340,6 +340,8 @@ namespace BC
 
         }
 
+        new_bc.fluid.pressure = -1.0;
+
         // Read in fluid pressure
         new_bc.fluid.pressure_defined =
           ppFluid.query("pressure", new_bc.fluid.pressure);

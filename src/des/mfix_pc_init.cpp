@@ -231,6 +231,8 @@ void MFIXParticleContainer::InitParticlesAuto ()
 
 void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalpy)
 {
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
   int lev = 0;
   const auto dx  = Geom(lev).CellSizeArray();
   const auto idx = Geom(lev).InvCellSizeArray();
@@ -331,7 +333,7 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
               amrex::ParallelFor(np,
                 [particles_ptr,p_realarray,p_intarray,ptile_data,p_temperature_loc,
                  p_mass_fractions,ic_lo,ic_hi,nspecies_s,solid_is_a_mixture,adv_enthalpy,
-                 solids_parms,solve_species,idx_X_sn]
+                 solids_parms,solve_species,idx_X_sn,run_on_device]
                 AMREX_GPU_DEVICE (int ip) noexcept
               {
                 MFIXParticleContainer::ParticleType& p = particles_ptr[ip];
@@ -348,14 +350,19 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
 
                   if(adv_enthalpy) {
                     if(!solid_is_a_mixture) {
-                      p_realarray[SoArealData::cp_s][ip] =
-                        solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,p_temperature_loc[phase-1]);
+                      p_realarray[SoArealData::cp_s][ip] = run_on_device ?
+                        solids_parms.calc_cp_s<RunOn::Device>(phase-1,p_temperature_loc[phase-1]) :
+                        solids_parms.calc_cp_s<RunOn::Host>(phase-1,p_temperature_loc[phase-1]);
                     }
                     else {
                       Real cp_s_sum(0);
-                      for (int n_s(0); n_s < nspecies_s; n_s++)
-                        cp_s_sum += p_mass_fractions[n_s]*
-                                    solids_parms.calc_cp_sn<RunOn::Gpu>(p_temperature_loc[phase-1],n_s);
+                      for (int n_s(0); n_s < nspecies_s; n_s++) {
+                        const Real cp_sn = run_on_device ?
+                          solids_parms.calc_cp_sn<RunOn::Device>(p_temperature_loc[phase-1],n_s) :
+                          solids_parms.calc_cp_sn<RunOn::Host>(p_temperature_loc[phase-1],n_s);
+
+                        cp_s_sum += p_mass_fractions[n_s]*cp_sn;
+                      }
 
                       p_realarray[SoArealData::cp_s][ip] = cp_s_sum;
                     }

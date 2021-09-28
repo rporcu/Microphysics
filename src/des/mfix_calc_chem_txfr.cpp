@@ -83,6 +83,8 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
   using PairIndex = MFIXParticleContainer::PairIndex;
   using MFIXParIter = MFIXParticleContainer::MFIXParIter;
 
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
   const Real strttime = ParallelDescriptor::second();
 
   BL_PROFILE("mfix::mfix_calc_chem_txfr()");
@@ -276,7 +278,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
            p_reactants_id,p_reactants_coeffs,p_reactants_phases,p_products_id,
            p_products_coeffs,p_products_phases,p_nreactants,p_nproducts,InvalidIdx,
            p_phases,p_nphases,p_types,Homogeneous,T_ref,fluid_parms,
-           reactions_parms,reg_cell_vol,volfrac_arr]
+           reactions_parms,reg_cell_vol,volfrac_arr,run_on_device]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const Real ep_g  = ep_g_array(i,j,k);
@@ -297,10 +299,17 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
           GpuArray<Real,Reactions::NMAX> R_q_homogeneous;
           R_q_homogeneous.fill(0.);
 
-          HomogeneousRatesFunc.template operator()<RunOn::Gpu>(R_q_homogeneous.data(),
-                                                               reactions_parms,
-                                                               fluid_parms, X_gk.data(),
-                                                               ro_g, ep_g);
+          if (run_on_device) {
+            HomogeneousRatesFunc.template operator()<RunOn::Device>(R_q_homogeneous.data(),
+                                                                    reactions_parms,
+                                                                    fluid_parms, X_gk.data(),
+                                                                    ro_g, ep_g);
+          } else {
+            HomogeneousRatesFunc.template operator()<RunOn::Host>(R_q_homogeneous.data(),
+                                                                  reactions_parms,
+                                                                  fluid_parms, X_gk.data(),
+                                                                  ro_g, ep_g);
+          }
 
           // Total transfer rates
           Real G_rho_g_homogeneous(0.);
@@ -351,7 +360,9 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                 G_sk_gg_homogeneous += G_sk_gg_q;
 
                 // Contribution to the particle
-                const Real h_gk_T_g = fluid_parms.calc_h_gk<RunOn::Gpu>(T_g,n_g);
+                const Real h_gk_T_g = run_on_device ?
+                  fluid_parms.calc_h_gk<RunOn::Device>(T_g,n_g) :
+                  fluid_parms.calc_h_gk<RunOn::Host>(T_g,n_g);
 
                 G_h_g_homogeneous += h_gk_T_g * G_sk_gg_q;
               }
@@ -534,7 +545,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
            Homogeneous,T_ref,fluid_parms,solids_parms,
            grown_bx_is_regular,ccent_fab,bcent_fab,apx_fab,apy_fab,apz_fab,
            flags_array,dx,reactions_parms,ep_g_array,reg_cell_vol,
-           volfrac_arr,dem_solve]
+           volfrac_arr,dem_solve,run_on_device]
           AMREX_GPU_DEVICE (int p_id) noexcept
         {
           auto& particle = pstruct[p_id];
@@ -643,21 +654,38 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                                  p_realarray[SoArealData::vely][p_id],
                                  p_realarray[SoArealData::velz][p_id]);
 
-            HeterogeneousRatesFunc.template operator()<RunOn::Gpu>(R_q_heterogeneous.data(),
-                                                                   reactions_parms,
-                                                                   solids_parms, X_sn.data(),
-                                                                   ro_s, ep_s, T_s,
-                                                                   vel_s, fluid_parms,
-                                                                   X_gk, ro_g, ep_g, T_g,
-                                                                   vel_g, DP, p_g);
+            if (run_on_device) {
+              HeterogeneousRatesFunc.template operator()<RunOn::Device>(R_q_heterogeneous.data(),
+                                                                        reactions_parms,
+                                                                        solids_parms, X_sn.data(),
+                                                                        ro_s, ep_s, T_s,
+                                                                        vel_s, fluid_parms,
+                                                                        X_gk, ro_g, ep_g, T_g,
+                                                                        vel_g, DP, p_g);
+            } else {
+              HeterogeneousRatesFunc.template operator()<RunOn::Host>(R_q_heterogeneous.data(),
+                                                                      reactions_parms,
+                                                                      solids_parms, X_sn.data(),
+                                                                      ro_s, ep_s, T_s,
+                                                                      vel_s, fluid_parms,
+                                                                      X_gk, ro_g, ep_g, T_g,
+                                                                      vel_g, DP, p_g);
+            }
 
             GpuArray<Real,Reactions::NMAX> R_q_homogeneous;
             R_q_homogeneous.fill(0.);
 
-            HomogeneousRatesFunc.template operator()<RunOn::Gpu>(R_q_homogeneous.data(),
-                                                                 reactions_parms,
-                                                                 solids_parms, X_sn.data(),
-                                                                 ro_s, ep_s);
+            if (run_on_device) {
+              HomogeneousRatesFunc.template operator()<RunOn::Device>(R_q_homogeneous.data(),
+                                                                      reactions_parms,
+                                                                      solids_parms, X_sn.data(),
+                                                                      ro_s, ep_s);
+            } else {
+              HomogeneousRatesFunc.template operator()<RunOn::Host>(R_q_homogeneous.data(),
+                                                                    reactions_parms,
+                                                                    solids_parms, X_sn.data(),
+                                                                    ro_s, ep_s);
+            }
 
             // Total transfer rates
             Real G_rho_g_heterogeneous(0.);
@@ -768,7 +796,9 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
               G_mass_p_heterogeneous += G_sn_gp_heterogeneous;
               G_mass_p_homogeneous   += G_sn_pp_homogeneous;
 
-              //const Real h_sn_T_p = solids_parms.calc_h_sn<RunOn::Gpu>(T_p,n_s);
+              //const Real h_sn_T_p = run_on_device ?
+              //  solids_parms.calc_h_sn<RunOn::Device>(T_p,n_s) :
+              //  solids_parms.calc_h_sn<RunOn::Host>(T_p,n_s);
 
               // G_h_p_heterogeneous += h_sn_T_p * G_sn_gp_heterogeneous;
               // G_h_p_homogeneous   += h_sn_T_p * G_sn_pp_homogeneous;
@@ -834,8 +864,13 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                   G_sk_pg_heterogeneous += G_sk_pg_q;
 
                   // Contribution to the particle
-                  const Real h_gk_T_p = fluid_parms.calc_h_gk<RunOn::Gpu>(T_p,n_g);
-                  const Real h_gk_T_g = fluid_parms.calc_h_gk<RunOn::Gpu>(T_g,n_g);
+                  const Real h_gk_T_p = run_on_device ?
+                    fluid_parms.calc_h_gk<RunOn::Device>(T_p,n_g) :
+                    fluid_parms.calc_h_gk<RunOn::Host>(T_p,n_g);
+
+                  const Real h_gk_T_g = run_on_device ?
+                    fluid_parms.calc_h_gk<RunOn::Device>(T_g,n_g) :
+                    fluid_parms.calc_h_gk<RunOn::Host>(T_g,n_g);
 
                   G_h_p_heterogeneous += h_gk_T_p * G_sk_pg_q;
                   G_h_p_heterogeneous += amrex::min(0., G_sk_pg_q) * (h_gk_T_g - h_gk_T_p);
@@ -919,7 +954,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
           [nrp,pstruct,p_realarray,plo_array,dx_array,dxi_array,
            vfrac,flagsarr,deposition_scale_factor,WeightFunc,
            rho_gk_txfr_array,vel_g_txfr_array,h_g_txfr_array,idx_mass_sn_txfr,
-           G_sk_pg_ptr,G_h_pg_ptr,nspecies_g]
+           G_sk_pg_ptr,G_h_pg_ptr,nspecies_g,run_on_device]
           AMREX_GPU_DEVICE (int p_id) noexcept
         {
           const auto& p = pstruct[p_id];
