@@ -12,7 +12,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get -qq update \
     && apt-get -qq upgrade \
     && apt-get -qq -y install --no-install-recommends \
-    ca-certificates=20210119~20.04.1 \
+    ca-certificates=20210119~20.* \
     curl=7.* \
     gnupg=2.* \
     && curl -L https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub > 7fa2af80.pub \
@@ -23,27 +23,27 @@ RUN apt-get -qq update \
     && apt-get -qq -y install --no-install-recommends \
     build-essential=12.* \
     ccache=3.* \
-    cuda-command-line-tools-11-3=11.3.0-1 \
-    cuda-compiler-11-3=11.3.0-1 \
-    cuda-cupti-dev-11-3=11.3.58-1 \
-    cuda-minimal-build-11-3=11.3.0-1 \
-    cuda-nvml-dev-11-3=11.3.58-1 \
-    cuda-nvtx-11-3=11.3.58-1 \
+    cuda-command-line-tools-11-3=11.3.* \
+    cuda-compiler-11-3=11.3.* \
+    cuda-cupti-dev-11-3=11.3.* \
+    cuda-minimal-build-11-3=11.3.* \
+    cuda-nvml-dev-11-3=11.3.* \
+    cuda-nvtx-11-3=11.3.* \
     g++=4:9.* gfortran-9=9.* \
     git=1:2.* \
     libcurand-dev-11-3=10.* \
     libopenmpi-dev=4.* \
     openmpi-bin=4.* \
-    pkg-config=0.29.1-0ubuntu4 \
+    pkg-config=0.29.* \
     python3-pip=20.* \
     python3-setuptools=45.* \
     python3-venv=3.* \
     shellcheck=0.* \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
     && pip3 install --no-cache-dir \
-    cmake==3.21.2 \
+    cmake==3.21.3 \
     codespell==2.1.0 \
-    conan==1.39 \
+    conan==1.40.2 \
     ninja==1.10.2 \
     && curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz -- \
     | tar xz \
