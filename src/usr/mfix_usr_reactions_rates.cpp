@@ -15,11 +15,7 @@
 using namespace amrex;
 
 
-#if defined(AMREX_USE_GPU)
 template <amrex::RunOn run_on>
-#else
-template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
 AMREX_GPU_HOST_DEVICE
 void
 HeterogeneousRatesUser::operator() (Real* /*R_q*/,
@@ -68,11 +64,7 @@ HeterogeneousRatesUser::operator() (Real* /*R_q*/,
 }
 
 
-#if defined(AMREX_USE_GPU)
 template <amrex::RunOn run_on>
-#else
-template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
 AMREX_GPU_HOST_DEVICE
 void
 HomogeneousRatesUser::operator() (Real* /*R_q*/,
@@ -104,11 +96,7 @@ HomogeneousRatesUser::operator() (Real* /*R_q*/,
 }
 
 
-#if defined(AMREX_USE_GPU)
 template <amrex::RunOn run_on>
-#else
-template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
 AMREX_GPU_HOST_DEVICE
 void
 HomogeneousRatesUser::operator() (Real* /*R_q*/,

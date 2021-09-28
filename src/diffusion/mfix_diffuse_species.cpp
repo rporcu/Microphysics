@@ -14,6 +14,8 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
 {
     BL_PROFILE("DiffusionOp::diffuse_species");
 
+    const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
     int finest_level = amrcore->finestLevel();
 
     // Update the coefficients of the matrix going into the solve based on the current state of the
@@ -61,14 +63,17 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
             Array4<Real const> const& T_g_arr        = T_g_in[lev]->const_array(mfi);
 
             amrex::ParallelFor(bx, [ep_ro_g_arr,ep_ro_D_gk_arr,T_g_arr,nspecies_g,
-                fluid_parms]
+                fluid_parms,run_on_device]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               const Real ep_ro_g = ep_ro_g_arr(i,j,k);
               const Real T_g = T_g_arr(i,j,k);
 
-              for (int n(0); n < nspecies_g; ++n)
-                ep_ro_D_gk_arr(i,j,k,n) = ep_ro_g*fluid_parms.calc_D_gk<RunOn::Gpu>(T_g,n);
+              for (int n(0); n < nspecies_g; ++n) {
+                ep_ro_D_gk_arr(i,j,k,n) = run_on_device ?
+                  ep_ro_g*fluid_parms.calc_D_gk<RunOn::Device>(T_g,n) :
+                  ep_ro_g*fluid_parms.calc_D_gk<RunOn::Host>(T_g,n);
+              }
             });
           }
         }

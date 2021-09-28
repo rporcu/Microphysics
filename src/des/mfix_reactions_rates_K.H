@@ -24,11 +24,7 @@ class HeterogeneousRatesUser
      *
      *  Inputs: // TODO
      */
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE
 #if defined(AMREX_USE_DPCPP)
     SYCL_EXTERNAL
@@ -63,12 +59,7 @@ class HomogeneousRatesUser
      *
      *  Inputs: // TODO
      */
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
-
     AMREX_GPU_HOST_DEVICE
 #if defined(AMREX_USE_DPCPP)
     SYCL_EXTERNAL
@@ -86,12 +77,7 @@ class HomogeneousRatesUser
      *
      *  Inputs: // TODO
      */
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
-
     AMREX_GPU_HOST_DEVICE
 #if defined(AMREX_USE_DPCPP)
     SYCL_EXTERNAL
