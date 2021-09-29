@@ -858,7 +858,9 @@ def report_this_test_run(suite, make_benchmarks, note, _update_time, test_list, 
     # loop over the tests and add a line for each
     for test in test_list:
         if make_benchmarks is None:
-            status_file = "%s.status" % (test.name)
+            status_file = Path("%s.status" % (test.name)).resolve()
+            if not status_file.is_file():
+                suite.log.fail(f"Unable to find {status_file.as_posix()}")
             status = None
             with open(status_file, "r") as sf:
                 for line in sf:
@@ -1161,19 +1163,27 @@ def report_all_runs(suite, active_test_list, max_per_page=50):
 def get_result(suite: Suite, status_file: Path) -> Tuple[Optional[str], str]:
     if not status_file.is_file():
         suite.log.warn(f"Missing status file {status_file}")
-        return None, "!&nbsp;"
+        return (None, "!&nbsp;")
 
     with open(status_file, "r") as sf:
         for line in sf:
-            if line.find("PASSED") >= 0:
-                return ("passed-slowly", ":]") if "SLOWLY" in line else ("passed", ":)")
-            elif line.find("COMPILE FAILED") >= 0:
-                return "compfailed", ":("
-            elif line.find("CRASHED") >= 0:
-                return "crashed", "xx"
-            elif line.find("FAILED") >= 0:
-                return "failed", "!&nbsp;"
-            elif line.find("benchmarks updated") >= 0:
-                return "benchmade", "U"
+            result = get_line_result(line)
+            if result[0] is not None:
+                return result
+    return (None, "!&nbsp;")
 
-    return None, "!&nbsp;"
+
+def get_line_result(line: str) -> Tuple[Optional[str], str]:
+    return (
+        (("passed-slowly", ":]") if "SLOWLY" in line else ("passed", ":)"))
+        if "PASSED" in line
+        else ("compfailed", ":(")
+        if "COMPILE FAILED" in line
+        else ("crashed", "xx")
+        if "CRASHED" in line
+        else ("failed", "!&nbsp;")
+        if "FAILED" in line
+        else ("benchmade", "U")
+        if "benchmarks updated" in line
+        else (None, "!&nbsp;")
+    )
