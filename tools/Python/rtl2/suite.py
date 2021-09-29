@@ -503,7 +503,7 @@ class Suite:
         self.emailSubject = ""
         self.emailBody = ""
 
-        self.post_only = False
+        self.post_only = None
 
         self.plot_file_name = "amr.plot_file"
         self.check_file_name = "amr.check_file"
@@ -664,8 +664,6 @@ class Suite:
         for i in range(1, maxRuns):
             full_dir = base / "{}-{:03d}".format(today, i)
             next_dir = base / "{}-{:03d}".format(today, i + 1)
-            if self.args.post_only and not next_dir.is_dir():
-                return full_dir
             if not full_dir.is_dir():
                 return full_dir
 
@@ -679,6 +677,10 @@ class Suite:
 
         workTop = self.workTopDir if self.workTopDir is not None else self.testTopDir / "work"
         self.workDir = self._getFresh(workTop)
+        if self.post_only is not None:
+            self.workDir = workTop / self.post_only
+            if not self.workDir.is_dir():
+                self.log.fail(f"Missing --post_only directory {self.workDir}")
 
         webTop = self.webTopDir if self.webTopDir is not None else self.testTopDir / "web"
         self.webDir = webTop / self.workDir.name

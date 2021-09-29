@@ -13,7 +13,6 @@ This test framework understands source based out of the AMReX framework.
 
 from __future__ import print_function
 
-from pathlib import Path
 import asyncio
 import sys
 

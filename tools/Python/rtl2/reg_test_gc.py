@@ -119,7 +119,7 @@ def reg_test_gc(argv):
             tests = [t for t in os.listdir(d) if os.path.isdir(os.path.join(d, t))]
             found = False
             for t in tests:
-                if t in latestBMDate.keys() and latestBMDate[t] == d:
+                if latestBMDate.get(t, None) == d:
                     found = True
                     break
             if not found:
