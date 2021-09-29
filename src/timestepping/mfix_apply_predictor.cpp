@@ -169,8 +169,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
       const bool update_lapT = (advect_enthalpy      && (l_explicit_diff || constraint));
       const bool update_lapS = (advect_tracer        &&  l_explicit_diff);
-      const bool update_lapX = (advect_fluid_species && (l_explicit_diff || constraint));
-//      const bool update_lapX = (advect_fluid_species && (true || constraint));
+//      const bool update_lapX = (advect_fluid_species && (l_explicit_diff || constraint));
+      const bool update_lapX = (advect_fluid_species && (true || constraint));
 
       compute_laps(update_lapT, update_lapS, update_lapX, lap_T_old, lap_trac_old, lap_X_old,
                    get_T_g_old(), get_trac_old(), get_X_gk_old(), get_ep_g_const(),
@@ -273,6 +273,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
             MultiFab::Copy(density_nph[lev], *(m_leveldata[lev]->ro_go), 0, 0, 1, nghost_state());
 
     } else {
+
+        const int nspecies_g = fluid.nspecies;
+
         for (int lev = 0; lev <= finest_level; lev++)
         {
             auto& ld = *m_leveldata[lev];
@@ -288,16 +291,20 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
                 Array4<Real const> const& drdt_o  = conv_s_old[lev]->const_array(mfi);
                 Array4<Real const> const& rho_RHS = ro_RHS_old[lev]->const_array(mfi);
+                Array4<Real const> const& dXdt_o  = conv_X_old[lev]->const_array(mfi);
 
-                amrex::ParallelFor(bx, [rho_new,rho_nph,rho_o,epg,drdt_o,l_dt,rho_RHS]
+                amrex::ParallelFor(bx, [rho_new,rho_nph,rho_o,epg,drdt_o,l_dt,dXdt_o,nspecies_g,rho_RHS]
                   AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
-                  int conv_comp = 0;
+                  //int conv_comp = 0;
 
                   const Real epg_loc = epg(i,j,k);
 
                   Real rho = epg_loc*rho_o(i,j,k);
-                  rho += l_dt * drdt_o(i,j,k,conv_comp);
+                  //rho += l_dt * drdt_o(i,j,k,conv_comp);
+                  for (int n(0); n < nspecies_g; ++n)
+                    rho += l_dt * dXdt_o(i,j,k,n);
+
                   rho += l_dt * rho_RHS(i,j,k);
 
                   rho /= epg_loc;
@@ -354,8 +361,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
               X_gk += l_dt * dXdt_o(i,j,k,n);
               X_gk += l_dt * X_RHS_o(i,j,k,n);
 
-              if (l_explicit_diff)
-//              if (true)
+//              if (l_explicit_diff)
+              if (true)
                 X_gk += l_dt * lap_X_o(i,j,k,n);
 
               X_gk_n(i,j,k,n) = X_gk * denom;
@@ -364,8 +371,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         } // mfi
       } // lev
 
-      if (!l_explicit_diff) {
-//      if (false) {
+//      if (!l_explicit_diff) {
+      if (false) {
         // When using implicit diffusion for species, we "Add" (subtract) the
         // correction term computed at time t^{star,star} to the RHS before
         // doing the implicit diffusion
