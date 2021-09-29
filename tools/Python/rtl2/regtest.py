@@ -563,7 +563,8 @@ class TestRunner:
 
         # copy the build.out into the web directory
         for test in tests:
-            shutil.copy(coutfile, suite.full_web_dir / f"{test.name}.build.out")
+            (suite.full_web_dir / f"{test.name}.build.out").unlink(missing_ok=True)
+            (suite.full_web_dir / f"{test.name}.build.out").symlink_to(coutfile)
 
         for test in tests:
             test.comp_string = comp_string
@@ -696,18 +697,19 @@ class TestRunner:
 
         outfile = test.output_dir / test.outfile
         if outfile.is_file():
-            shutil.copy(outfile, suite.full_web_dir)
+            (suite.full_web_dir / test.outfile).unlink(missing_ok=True)
+            (suite.full_web_dir / test.outfile).symlink_to(outfile)
         else:
             self._suite.log.warn(f"Does not exist:  {outfile}")
         if os.path.isfile(test.errfile):
-            shutil.copy(test.errfile, suite.full_web_dir)
+            (suite.full_web_dir / test.errfile.name).unlink(missing_ok=True)
+            (suite.full_web_dir / test.errfile.name).symlink_to(test.errfile)
             test.has_stderr = True
         if test.doComparison:
             shutil.copy(test.comparison_outfile, suite.full_web_dir)
-        try:
-            shutil.copy("{}.analysis.out".format(test.name), suite.full_web_dir)
-        except:
-            pass
+        analysis = Path(f"{test.name}.analysis.out")
+        if analysis.is_file():
+            shutil.copy(analysis, suite.full_web_dir)
 
         inputs = test.inputFile
         if inputs:
