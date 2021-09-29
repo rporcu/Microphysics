@@ -92,11 +92,7 @@ class FluidParms {
     {}
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real get_H_f () const
     {
@@ -149,11 +145,7 @@ class FluidParms {
     }
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real get_MW_g () const
     {
@@ -185,11 +177,7 @@ class FluidParms {
 
 
     // Compute fluid species diffusivity
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_D_gk (const amrex::Real /*T_g*/,
                            const int n) const
@@ -205,11 +193,7 @@ class FluidParms {
     }
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_cp_g (const amrex::Real T_g) const
     {
@@ -217,11 +201,7 @@ class FluidParms {
     }
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_h_g (const amrex::Real T_g) const
     {
@@ -229,11 +209,7 @@ class FluidParms {
     }
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_partial_h_g (const amrex::Real T_g) const
     {
@@ -241,11 +217,7 @@ class FluidParms {
     }
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_cp_gk (const amrex::Real T_g,
                             const int n) const
@@ -290,11 +262,7 @@ class FluidParms {
     }
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_h_gk (const amrex::Real T_g,
                            const int n) const
@@ -351,11 +319,7 @@ class FluidParms {
     }
 
 
-#if defined(AMREX_USE_GPU)
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_partial_h_gk (const amrex::Real T_g,
                                    const int n) const

@@ -69,7 +69,7 @@ def read_avg_values(refdata_fname: Path) -> List[float]:
     if fewer than 10 data points in runningavg.dat, pad with zeroes"""
 
     with open(refdata_fname) as run_avg:
-        return [0] * 10 + [float(line.strip()) for line in run_avg if line.strip() != "N/A"]
+        return [0.0] * 10 + [float(line.strip()) for line in run_avg if line.strip() != "N/A"]
 
 
 def append_avg_dp_value(

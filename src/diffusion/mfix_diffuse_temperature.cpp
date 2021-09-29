@@ -19,6 +19,8 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g_old,
 {
   BL_PROFILE("DiffusionOp::diffuse_temperature");
 
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
   int finest_level = amrcore->finestLevel();
 
   // Update the coefficients of the matrix going into the solve based on the
@@ -69,16 +71,21 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g_old,
         Array4<Real const> const& T_g_array    = T_g[lev]->const_array(mfi);
         Array4<Real const> const& X_gk_array   = X_gk[lev]->const_array(mfi);
 
-        amrex::ParallelFor(bx, [ep_g_array,X_gk_array,T_g_array,ep_k_g_array,fluid_parms,fluid_is_mixture]
+        amrex::ParallelFor(bx, [ep_g_array,X_gk_array,T_g_array,ep_k_g_array,
+            fluid_parms,fluid_is_mixture,run_on_device]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           Real cp_g(0);
 
           if (!fluid_is_mixture)
-            cp_g = fluid_parms.calc_cp_g<RunOn::Gpu>(T_g_array(i,j,k));
+            cp_g = run_on_device ?
+              fluid_parms.calc_cp_g<RunOn::Device>(T_g_array(i,j,k)) :
+              fluid_parms.calc_cp_g<RunOn::Host>(T_g_array(i,j,k));
           else
             for(int n(0); n<fluid_parms.m_nspecies; ++n)
-              cp_g += X_gk_array(i,j,k,n)* fluid_parms.calc_cp_gk<RunOn::Gpu>(T_g_array(i,j,k),n);
+              cp_g += run_on_device ?
+                X_gk_array(i,j,k,n)*fluid_parms.calc_cp_gk<RunOn::Device>(T_g_array(i,j,k),n) :
+                X_gk_array(i,j,k,n)*fluid_parms.calc_cp_gk<RunOn::Host>(T_g_array(i,j,k),n);
 
           ep_k_g_array(i,j,k) = ep_g_array(i,j,k)*fluid_parms.calc_k_g(T_g_array(i,j,k)) / cp_g;
         });
@@ -272,20 +279,31 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g_old,
       Array4<Real      > const& T_g_array  = T_g[lev]->array(mfi);
       Array4<Real const> const& X_gk_array = X_gk[lev]->const_array(mfi);
 
-      amrex::ParallelFor(bx, [h_g_array,T_g_array,X_gk_array,fluid_parms,fluid_is_mixture]
+      amrex::ParallelFor(bx, [h_g_array,T_g_array,X_gk_array,fluid_parms,
+          fluid_is_mixture,run_on_device]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         Real cp_g(0);
         Real H_f(0);
 
         if (!fluid_is_mixture) {
-          cp_g = fluid_parms.calc_cp_g<RunOn::Gpu>(T_g_array(i,j,k));
-          H_f = fluid_parms.get_H_f<RunOn::Gpu>();
+          cp_g = run_on_device ?
+            fluid_parms.calc_cp_g<RunOn::Device>(T_g_array(i,j,k)) :
+            fluid_parms.calc_cp_g<RunOn::Host>(T_g_array(i,j,k));
+
+          H_f = run_on_device ?
+            fluid_parms.get_H_f<RunOn::Device>() :
+            fluid_parms.get_H_f<RunOn::Host>();
         }
         else
           for(int n(0); n<fluid_parms.m_nspecies; ++n) {
-            cp_g += X_gk_array(i,j,k,n)* fluid_parms.calc_cp_gk<RunOn::Gpu>(T_g_array(i,j,k),n);
-            H_f += X_gk_array(i,j,k,n)* fluid_parms.get_H_fk<RunOn::Gpu>(n);
+            cp_g += run_on_device ?
+              X_gk_array(i,j,k,n)*fluid_parms.calc_cp_gk<RunOn::Device>(T_g_array(i,j,k),n) :
+              X_gk_array(i,j,k,n)*fluid_parms.calc_cp_gk<RunOn::Host>(T_g_array(i,j,k),n);
+
+            H_f += run_on_device ?
+              X_gk_array(i,j,k,n)*fluid_parms.get_H_fk<RunOn::Device>(n) :
+              X_gk_array(i,j,k,n)*fluid_parms.get_H_fk<RunOn::Host>(n);
         }
 
         T_g_array(i,j,k) = (h_g_array(i,j,k) - H_f) / cp_g + fluid_parms.m_T_ref;

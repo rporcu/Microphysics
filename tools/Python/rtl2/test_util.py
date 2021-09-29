@@ -340,11 +340,14 @@ def get_args(arg_string=None):
     )
     run_group.add_argument(
         "--post_only",
-        action="store_true",
-        help="only post-process (regenerate web reports), without building or running anything."
-        " For use after editing post.py scripts."
-        "  Build time/cmd/output will be empty in regenerated web report.",
+        type=str,
+        default=None,
+        metavar="RUN_NAME",
+        help="post-process (regenerate web reports) for the specified run, without building or running"
+        " anything. For use after editing post.py scripts. Build time/cmd/output will"
+        " be empty in regenerated web report.",
     )
+
     run_group.add_argument("--with_valgrind", action="store_true", help="run with valgrind")
     run_group.add_argument(
         "--valgrind_options",

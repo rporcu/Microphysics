@@ -55,6 +55,7 @@ testpaths = [
 disable = [
     "attribute-defined-outside-init",
     "bare-except",
+    "consider-using-f-string",
     "consider-using-with",
     "duplicate-code",
     "import-error",

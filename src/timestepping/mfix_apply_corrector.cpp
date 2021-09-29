@@ -73,6 +73,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 {
     BL_PROFILE("mfix::mfix_apply_corrector");
 
+    const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
     Vector< Real > avgSigma(finest_level+1, 0.);
     Vector< Real > avgTheta(finest_level+1, 0.);
 
@@ -510,7 +512,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
             dhdt_o,dhdt,h_rhs_o,h_rhs,l_dt,lap_T_o,lap_T_n,Dpressure_Dt,
             Dpressure_Dt_old,closed_system,explicit_diffusive_enthalpy,
             fluid_parms,X_gk_o,X_gk_n,nspecies_g,fluid_is_a_mixture,flags_arr,
-            volfrac_arr]
+            volfrac_arr,run_on_device]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             if (!flags_arr(i,j,k).isCovered()) {
@@ -555,11 +557,19 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
                 if (!fluid_is_a_mixture) {
 
-                  hg_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_arg);
+                  hg_loc = run_on_device ?
+                    fluid_parms.calc_h_g<RunOn::Device>(Tg_arg) :
+                    fluid_parms.calc_h_g<RunOn::Host>(Tg_arg);
+
                 } else {
 
-                  for (int n(0); n < nspecies_g; ++n)
-                    hg_loc += X_gk_n(i,j,k,n)*fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_arg,n);
+                  for (int n(0); n < nspecies_g; ++n) {
+                    const Real h_gk = run_on_device ?
+                      fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg,n) :
+                      fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg,n);
+
+                    hg_loc += X_gk_n(i,j,k,n)*h_gk;
+                  }
                 }
 
                 return hg_loc - h_g;
@@ -572,11 +582,18 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
                 if (!fluid_is_a_mixture) {
 
-                  gradient = fluid_parms.calc_partial_h_g<RunOn::Gpu>(Tg_arg);
+                  gradient = run_on_device ?
+                    fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
+                    fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
                 } else {
 
-                  for (int n(0); n < nspecies_g; ++n)
-                    gradient += X_gk_n(i,j,k,n)*fluid_parms.calc_partial_h_gk<RunOn::Gpu>(Tg_arg,n);
+                  for (int n(0); n < nspecies_g; ++n) {
+                    const Real h_gk = run_on_device ?
+                      fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
+                      fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
+
+                    gradient += X_gk_n(i,j,k,n)*h_gk;
+                  }
                 }
 
                 return gradient;
@@ -619,10 +636,11 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         } // mfi
       } // lev
 
+
       // *************************************************************************************
       // Subtract off half of the explicit diffusion terms (see comment above)
       // *************************************************************************************
-      if (!explicit_diffusive_enthalpy) {
+      if (advect_enthalpy && (!explicit_diffusive_enthalpy)) {
 
         auto& fluid_parms = *fluid.parameters;
         const int fluid_is_a_mixture = fluid.is_a_mixture;
@@ -656,8 +674,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
             auto const& volfrac_arr = volfrac.const_array(mfi);
 
             amrex::ParallelFor(bx, [ep_g,ro_g_n,h_g_n,T_g_o,T_g_n,lap_T_o,l_dt,
-                fluid_parms,fluid_is_a_mixture,nspecies_g,X_gk_o,volfrac_arr,
-                flags_arr,X_gk_n]
+                fluid_parms,fluid_is_a_mixture,nspecies_g,X_gk_o,X_gk_n,volfrac_arr,
+                flags_arr,run_on_device]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               if (!flags_arr(i,j,k).isCovered()) {
@@ -682,11 +700,18 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
                   if (!fluid_is_a_mixture) {
 
-                    hg_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_arg);
+                    hg_loc = run_on_device ?
+                      fluid_parms.calc_h_g<RunOn::Device>(Tg_arg) :
+                      fluid_parms.calc_h_g<RunOn::Host>(Tg_arg);
                   } else {
 
-                    for (int n(0); n < nspecies_g; ++n)
-                      hg_loc += X_gk_n(i,j,k,n)*fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_arg,n);
+                    for (int n(0); n < nspecies_g; ++n) {
+                      const Real h_gk = run_on_device ?
+                        fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg,n) :
+                        fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg,n);
+
+                      hg_loc += X_gk_n(i,j,k,n)*h_gk;
+                    }
                   }
 
                   return hg_loc - h_g;
@@ -699,11 +724,18 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
                   if (!fluid_is_a_mixture) {
 
-                    gradient = fluid_parms.calc_partial_h_g<RunOn::Gpu>(Tg_arg);
+                    gradient = run_on_device ?
+                      fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
+                      fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
                   } else {
 
-                    for (int n(0); n < nspecies_g; ++n)
-                      gradient += X_gk_n(i,j,k,n)*fluid_parms.calc_partial_h_gk<RunOn::Gpu>(Tg_arg,n);
+                    for (int n(0); n < nspecies_g; ++n) {
+                      const Real h_gk = run_on_device ?
+                        fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
+                        fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
+
+                      gradient += X_gk_n(i,j,k,n)*h_gk;
+                    }
                   }
 
                   return gradient;
@@ -929,7 +961,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     if (DEM::solve || PIC::solve)
       mfix_add_txfr_implicit(l_dt, get_vel_g(), get_h_g(), get_T_g(), get_X_gk_const(),
              get_txfr_const(), GetVecOfConstPtrs(density_nph), get_ep_g_const());
-
 
     for (int lev = 0; lev <= finest_level; lev++)
     {
