@@ -30,7 +30,7 @@ MPIcommand = mpiexec -n @nprocs@ @command@ > @output@ 2> @error@""",
 
     (args, test_list, suite) = regtest.setup([test_ini.as_posix()])
     suite.workDir = tmp_path
-    runtimes = dict()
+    runtimes = {}
     runners = [regtest.TestRunner(test, args, test_list, suite, runtimes) for test in test_list]
     tasks, _srun_sh = regtest.srun_script(suite, runners, args)
 
