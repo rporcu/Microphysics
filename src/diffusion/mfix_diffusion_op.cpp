@@ -521,9 +521,6 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
 
   const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
-//  // TODO: check on this
-//  const bool already_on_centroids = true;
-
   int finest_level = amrcore->finestLevel();
 
   // Number of fluid species

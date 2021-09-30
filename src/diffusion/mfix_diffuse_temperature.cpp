@@ -2,8 +2,12 @@
 
 #include <mfix_eb_parms.H>
 #include <mfix_fluid_parms.H>
+#include <mfix_solvers.H>
+
 
 using namespace amrex;
+using namespace Solvers;
+
 
 //
 // Implicit solve for scalar diffusion
@@ -42,7 +46,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
   auto& fluid_parms = *fluid.parameters;
 
-  const auto fluid_is_mixture = fluid.is_a_mixture;
+  const auto fluid_is_a_mixture = fluid.is_a_mixture;
 
   Vector<BCRec> bcs_dummy; // This is just to satisfy the call to EB_interp...
   bcs_dummy.resize(1);
@@ -71,12 +75,12 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
         Array4<Real const> const& X_gk_array   = X_gk[lev]->const_array(mfi);
 
         amrex::ParallelFor(bx, [ep_g_array,X_gk_array,T_g_array,ep_k_g_array,
-            fluid_parms,fluid_is_mixture,run_on_device]
+            fluid_parms,fluid_is_a_mixture,run_on_device]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           Real cp_g(0);
 
-          if (!fluid_is_mixture)
+          if (!fluid_is_a_mixture)
             cp_g = run_on_device ?
               fluid_parms.calc_cp_g<RunOn::Device>(T_g_array(i,j,k)) :
               fluid_parms.calc_cp_g<RunOn::Host>(T_g_array(i,j,k));
@@ -105,7 +109,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
       Array4<Real const> const& ro_g_array  = ro_g[lev]->const_array(mfi);
       Array4<Real const> const& T_g_array   = T_g[lev]->const_array(mfi);
 
-      amrex::ParallelFor(bx, [ep_g_array,T_g_array,ro_g_array,fluid_parms,fluid_is_mixture]
+      amrex::ParallelFor(bx, [ep_g_array,T_g_array,ro_g_array,fluid_parms,fluid_is_a_mixture]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       { 
         ep_g_array(i,j,k) *= ro_g_array(i,j,k);
@@ -203,6 +207,10 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
   for(int lev = 0; lev <= finest_level; lev++)
   {
+    const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(T_g[lev]->Factory());
+    const auto& flags = factory.getMultiEBCellFlagFab();
+    const auto& volfrac = factory.getVolFrac();
+
     phi[lev]->FillBoundary(geom[lev].periodicity());
     MultiFab::Copy(*h_g[lev], *phi[lev], 0, 0, 1, 1);
 
@@ -216,35 +224,100 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
       Array4<Real const> const& h_g_array  = h_g[lev]->const_array(mfi);
       Array4<Real      > const& T_g_array  = T_g[lev]->array(mfi);
       Array4<Real const> const& X_gk_array = X_gk[lev]->const_array(mfi);
+      Array4<Real const> const& ep_g_array = ep_g[lev]->const_array(mfi);
+
+      auto const& flags_arr = flags.const_array(mfi);
+      auto const& volfrac_arr = volfrac.const_array(mfi);
 
       amrex::ParallelFor(bx, [h_g_array,T_g_array,X_gk_array,fluid_parms,
-          fluid_is_mixture,run_on_device]
+          fluid_is_a_mixture,run_on_device,ep_g_array,flags_arr,volfrac_arr]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-        Real cp_g(0);
-        Real H_f(0);
+        if (!flags_arr(i,j,k).isCovered()) {
 
-        if (!fluid_is_mixture) {
-          cp_g = run_on_device ?
-            fluid_parms.calc_cp_g<RunOn::Device>(T_g_array(i,j,k)) :
-            fluid_parms.calc_cp_g<RunOn::Host>(T_g_array(i,j,k));
+          const Real epg_loc = ep_g_array(i,j,k);
+          const Real vfrac = volfrac_arr(i,j,k);
 
-          H_f = run_on_device ?
-            fluid_parms.get_H_f<RunOn::Device>() :
-            fluid_parms.get_H_f<RunOn::Host>();
+          // Residual computation
+          auto R = [&] AMREX_GPU_DEVICE (Real Tg_arg) {
+            
+            Real hg_loc(0);
+
+            if (!fluid_is_a_mixture) {
+
+              hg_loc = run_on_device ?
+                fluid_parms.calc_h_g<RunOn::Device>(Tg_arg) :
+                fluid_parms.calc_h_g<RunOn::Host>(Tg_arg);
+
+            } else {
+
+              for (int n(0); n < fluid_parms.m_nspecies; ++n) {
+                const Real h_gk = run_on_device ?
+                  fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg,n) :
+                  fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg,n);
+
+                hg_loc += X_gk_array(i,j,k,n)*h_gk;
+              }
+            }
+
+            return hg_loc - h_g_array(i,j,k);
+          };
+
+          // Partial derivative computation
+          auto partial_R = [&] AMREX_GPU_DEVICE (Real Tg_arg) {
+            
+            Real gradient(0);
+
+            if (!fluid_is_a_mixture) {
+
+              gradient = run_on_device ?
+                fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
+                fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
+
+            } else {
+
+              for (int n(0); n < fluid_parms.m_nspecies; ++n) {
+                const Real h_gk = run_on_device ?
+                  fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
+                  fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
+
+                gradient += X_gk_array(i,j,k,n)*h_gk;
+              }
+            }
+
+            return gradient;
+          };
+
+          Real Tg(T_g_array(i,j,k));
+
+          int solver_iterations(0);
+
+          {
+            DampedNewton::DampingFactor damping_factor(0., 0.);
+            solver_iterations =
+              DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
+                  1.e-8, 1.e-8, 500);
+
+          } if (solver_iterations == 500) {
+
+            DampedNewton::DampingFactor damping_factor(1., 0.);
+            solver_iterations =
+              DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
+                  1.e-7, 1.e-7, 500);
+
+          } if (solver_iterations == 500) {
+
+            DampedNewton::DampingFactor damping_factor(1., 1.);
+            solver_iterations =
+              DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
+                  1.e-6, 1.e-6, 500);
+
+          } if (solver_iterations == 500) {
+            amrex::Abort("Damped-Newton solver did not converge");
+          }
+
+          T_g_array(i,j,k) = Tg;
         }
-        else
-          for(int n(0); n<fluid_parms.m_nspecies; ++n) {
-            cp_g += run_on_device ?
-              X_gk_array(i,j,k,n)*fluid_parms.calc_cp_gk<RunOn::Device>(T_g_array(i,j,k),n) :
-              X_gk_array(i,j,k,n)*fluid_parms.calc_cp_gk<RunOn::Host>(T_g_array(i,j,k),n);
-
-            H_f += run_on_device ?
-              X_gk_array(i,j,k,n)*fluid_parms.get_H_fk<RunOn::Device>(n) :
-              X_gk_array(i,j,k,n)*fluid_parms.get_H_fk<RunOn::Host>(n);
-        }
-
-        T_g_array(i,j,k) = (h_g_array(i,j,k) - H_f) / cp_g + fluid_parms.m_T_ref;
       });
     }
   }
