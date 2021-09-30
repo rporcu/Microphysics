@@ -55,8 +55,6 @@ mfix::set_enthalpy_bcs (Real time,
   // Flag to understand if fluid is a mixture
   const int fluid_is_a_mixture = fluid.is_a_mixture;
 
-  Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_ptr.data() : nullptr;
-
   Array4<Real> const& h_g = h_g_fab.array();
 
   IntVect h_g_lo(h_g_fab.loVect());
@@ -101,6 +99,12 @@ mfix::set_enthalpy_bcs (Real time,
   // Update temperature before using to update enthalpy
   set_temperature_bc_values (time);
   Real* p_bc_t_g = m_bc_t_g.data();
+
+  // Update species boundary values
+  if(fluid_is_a_mixture)
+    set_species_bc_values(time);
+
+  Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_ptr.data() : nullptr;
 
   auto& fluid_parms = *fluid.parameters;
 
