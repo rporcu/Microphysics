@@ -172,7 +172,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       const bool update_lapT = (advect_enthalpy      && (l_explicit_diff || constraint));
       const bool update_lapS = (advect_tracer        &&  l_explicit_diff);
       const bool update_lapX = (advect_fluid_species && (l_explicit_diff || constraint));
-//      const bool update_lapX = (advect_fluid_species && (true || constraint));
 
       compute_laps(update_lapT, update_lapS, update_lapX, lap_T_old, lap_trac_old, lap_X_old,
                    get_T_g_old(), get_trac_old(), get_X_gk_old(), get_ep_g_const(),
@@ -303,6 +302,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                   const Real epg_loc = epg(i,j,k);
 
                   Real rho = epg_loc*rho_o(i,j,k);
+
                   //rho += l_dt * drdt_o(i,j,k,conv_comp);
                   for (int n(0); n < nspecies_g; ++n)
                     rho += l_dt * dXdt_o(i,j,k,n);
@@ -364,7 +364,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
               X_gk += l_dt * X_RHS_o(i,j,k,n);
 
               if (l_explicit_diff)
-//              if (true)
                 X_gk += l_dt * lap_X_o(i,j,k,n);
 
               X_gk_n(i,j,k,n) = X_gk * denom;
@@ -374,7 +373,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       } // lev
 
       if (!l_explicit_diff) {
-//      if (false) {
         // When using implicit diffusion for species, we "Add" (subtract) the
         // correction term computed at time t^{star,star} to the RHS before
         // doing the implicit diffusion
@@ -478,7 +476,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
           Array4<Real      > const& h_g_n   = ld.h_g->array(mfi);
           Array4<Real const> const& T_g_o   = ld.T_go->array(mfi);
           Array4<Real      > const& T_g_n   = ld.T_g->array(mfi);
-          Array4<Real const> const& X_gk_o  = fluid_is_a_mixture ? ld.X_gko->array(mfi) : dummy_arr;
           Array4<Real const> const& X_gk_n  = fluid_is_a_mixture ? ld.X_gk->array(mfi) : dummy_arr;
           Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
           Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
@@ -494,7 +491,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
           amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,h_RHS_o,
               epg,dhdt_o,l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,X_gk_n,
-              closed_system,fluid_parms,fluid_is_a_mixture,X_gk_o,nspecies_g,
+              closed_system,fluid_parms,fluid_is_a_mixture,nspecies_g,
               flags_arr,volfrac_arr,run_on_device]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
@@ -544,7 +541,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                         fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg,n) :
                         fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg,n);
 
-                      hg_loc += X_gk_o(i,j,k,n)*h_gk;
+                      hg_loc += X_gk_n(i,j,k,n)*h_gk;
                     }
                   }
 
@@ -569,44 +566,42 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                         fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
                         fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
 
-                      gradient += X_gk_o(i,j,k,n)*h_gk;
+                      gradient += X_gk_n(i,j,k,n)*h_gk;
                     }
                   }
   
                   return gradient;
                 };
   
-                Real Tg_old = T_g_o(i,j,k);
-  
-                Real Tg_new(Tg_old);
+                Real Tg(T_g_o(i,j,k));
   
                 int solver_iterations(0);
   
                 {
                   DampedNewton::DampingFactor damping_factor(0., 0.);
                   solver_iterations = 
-                    DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
+                    DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
                                         1.e-8, 1.e-8, 500);
   
                 } if (solver_iterations == 500) {
   
                   DampedNewton::DampingFactor damping_factor(1., 0.);
                   solver_iterations =
-                    DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
+                    DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
                                         1.e-7, 1.e-7, 500);
   
                 } if (solver_iterations == 500) {
   
                   DampedNewton::DampingFactor damping_factor(1., 1.);
                   solver_iterations =
-                    DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
+                    DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
                                         1.e-6, 1.e-6, 500);
   
                 } if (solver_iterations == 500) {
                   amrex::Abort("Damped-Newton solver did not converge");
                 }
   
-                T_g_n(i,j,k) = Tg_new;
+                T_g_n(i,j,k) = Tg;
               }
             }
           });

@@ -702,6 +702,11 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
     }
 
     MLMG solver(*species_matrix);
+//    setSolverSettings(solver);
+//
+//    // This ensures that ghost cells of sol are correctly filled when returned
+//    // from the solver
+//    solver.setFinalFillBC(true);
 
     // Compute div (ep_g ro_g D_gk grad)) phi
     solver.apply(correction_aux, X_gk_in);
@@ -851,6 +856,11 @@ void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
     }
 
     MLMG solver(*species_matrix);
+//    setSolverSettings(solver);
+//
+//    // This ensures that ghost cells of sol are correctly filled when returned
+//    // from the solver
+//    solver.setFinalFillBC(true);
 
     // Compute div (ep_g ro_g X_gk D_gm grad(phi_gm))
     solver.apply(correction_aux, X_gk_in);
@@ -998,12 +1008,15 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
     species_matrix->setLevelBC(lev, GetVecOfConstPtrs(X_gk_in)[lev]);
   }
 
-  {
-    MLMG solver(*species_matrix);
+  MLMG solver(*species_matrix);
+//  setSolverSettings(solver);
+//
+//  // This ensures that ghost cells of sol are correctly filled when returned
+//  // from the solver
+//  solver.setFinalFillBC(true);
 
-    // Compute div (ep_g ro_g [h_gk] D_gk grad)) phi
-    solver.apply(laphX_aux, X_gk_in);
-  }
+  // Compute div (ep_g ro_g [h_gk] D_gk grad)) phi
+  solver.apply(laphX_aux, X_gk_in);
 
   // CORRECT FLUXES
   // Compute Fluxes for correcting the result
@@ -1094,6 +1107,11 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
     } // lev
 
     MLMG solver(*species_matrix);
+//    setSolverSettings(solver);
+//
+//    // This ensures that ghost cells of sol are correctly filled when returned
+//    // from the solver
+//    solver.setFinalFillBC(true);
 
     // Compute div (ep_g ro_g [h_gk] D_gk grad)) phi
     solver.apply(correction_aux, X_gk_in);

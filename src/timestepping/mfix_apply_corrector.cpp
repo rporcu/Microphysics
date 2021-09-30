@@ -286,6 +286,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
             MultiFab::Copy(density_nph[lev], *(m_leveldata[lev]->ro_go), 0, 0, 1, nghost_state());
 
     } else {
+
+        const int nspecies_g = fluid.nspecies;
+
         for (int lev = 0; lev <= finest_level; lev++)
         {
             auto& ld = *m_leveldata[lev];
@@ -301,23 +304,30 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                 Array4<Real      > const& epg       = ld.ep_g->array(mfi);
                 Array4<Real const> const& drdt_o    = conv_s_old[lev]->const_array(mfi);
                 Array4<Real const> const& drdt      = conv_s[lev]->const_array(mfi);
+                Array4<Real const> const& dXdt_o    = conv_X_old[lev]->const_array(mfi);
+                Array4<Real const> const& dXdt      = conv_X[lev]->const_array(mfi);
                 Array4<Real const> const& rho_rhs_o = ro_RHS_old[lev]->const_array(mfi);
                 Array4<Real const> const& rho_rhs   = ro_RHS[lev]->const_array(mfi);
 
                 amrex::ParallelFor(bx, [epg,rho_o,l_dt,drdt,drdt_o,rho_new,
-                    rho_nph,rho_rhs_o,rho_rhs]
+                    rho_nph,rho_rhs_o,rho_rhs,dXdt,dXdt_o,nspecies_g]
                   AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
-                  int conv_comp = 0;
+                  //int conv_comp = 0;
 
                   const Real epg_loc = epg(i,j,k);
                   const Real rho_o_loc = rho_o(i,j,k);
 
                   Real rho = epg_loc*rho_o_loc;
-                  rho += .5*l_dt*(drdt_o(i,j,k,conv_comp)+drdt(i,j,k,conv_comp));
+
+                  //rho += .5*l_dt*(drdt_o(i,j,k,conv_comp)+drdt(i,j,k,conv_comp));
+                  for (int n(0); n < nspecies_g; ++n)
+                    rho += .5*l_dt*(dXdt_o(i,j,k,n)+dXdt(i,j,k,n));
+
                   rho += .5*l_dt*(rho_rhs_o(i,j,k)+rho_rhs(i,j,k));
 
                   rho /= epg_loc;
+
                   rho_new(i,j,k) = rho;
                   rho_nph(i,j,k) = 0.5 * (rho_o_loc + rho);
                 });
@@ -463,6 +473,11 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // Update enthalpy and temperature
     // *************************************************************************************
     if (advect_enthalpy) {
+      mfix_enthalpy_rhs(enthalpy_RHS, get_ep_g_const(), get_ro_g_const(),
+           get_X_gk(), get_T_g_const(), get_chem_txfr_const());
+    }
+
+    if (advect_enthalpy) {
 
       auto& fluid_parms = *fluid.parameters;
       const int fluid_is_a_mixture = fluid.is_a_mixture;
@@ -491,7 +506,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
           Array4<Real      > const& h_g_n   = ld.h_g->array(mfi);
           Array4<Real const> const& T_g_o   = ld.T_go->array(mfi);
           Array4<Real      > const& T_g_n   = ld.T_g->array(mfi);
-          Array4<Real const> const& X_gk_o  = fluid_is_a_mixture ? ld.X_gko->array(mfi) : dummy_arr;
           Array4<Real const> const& X_gk_n  = fluid_is_a_mixture ? ld.X_gk->array(mfi) : dummy_arr;
           Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
           Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
@@ -512,7 +526,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
           amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,epg,
             dhdt_o,dhdt,h_rhs_o,h_rhs,l_dt,lap_T_o,lap_T_n,Dpressure_Dt,
             Dpressure_Dt_old,closed_system,explicit_diffusive_enthalpy,
-            fluid_parms,X_gk_o,X_gk_n,nspecies_g,fluid_is_a_mixture,flags_arr,
+            fluid_parms,X_gk_n,nspecies_g,fluid_is_a_mixture,flags_arr,
             volfrac_arr,run_on_device]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
@@ -600,30 +614,28 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                 return gradient;
               };
 
-              Real Tg_old = T_g_o(i,j,k);
-
-              Real Tg_new(Tg_old);
+              Real Tg(T_g_o(i,j,k));
 
               int solver_iterations(0);
 
               {
                 DampedNewton::DampingFactor damping_factor(0., 0.);
                 solver_iterations = 
-                  DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
+                  DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
                                       1.e-8, 1.e-8, 500);
 
               } if (solver_iterations == 500) {
 
                 DampedNewton::DampingFactor damping_factor(1., 0.);
                 solver_iterations =
-                  DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
+                  DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
                                       1.e-7, 1.e-7, 500);
 
               } if (solver_iterations == 500) {
 
                 DampedNewton::DampingFactor damping_factor(1., 1.);
                 solver_iterations =
-                  DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
+                  DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
                                       1.e-6, 1.e-6, 500);
 
               } if (solver_iterations == 500) {
@@ -631,7 +643,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
               }
 
 
-              T_g_n(i,j,k) = Tg_new;
+              T_g_n(i,j,k) = Tg;
             }
           });
         } // mfi
@@ -667,7 +679,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
             Array4<Real      > const& h_g_n   = ld.h_g->array(mfi);
             Array4<Real const> const& T_g_o   = ld.T_go->array(mfi);
             Array4<Real      > const& T_g_n   = ld.T_g->array(mfi);
-            Array4<Real const> const& X_gk_o  = ld.X_gko->array(mfi);
             Array4<Real const> const& X_gk_n  = ld.X_gk->array(mfi);
             Array4<Real const> const& lap_T_o = lap_T_old[lev]->const_array(mfi);
 
@@ -675,7 +686,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
             auto const& volfrac_arr = volfrac.const_array(mfi);
 
             amrex::ParallelFor(bx, [ep_g,ro_g_n,h_g_n,T_g_o,T_g_n,lap_T_o,l_dt,
-                fluid_parms,fluid_is_a_mixture,nspecies_g,X_gk_o,X_gk_n,volfrac_arr,
+                fluid_parms,fluid_is_a_mixture,nspecies_g,X_gk_n,volfrac_arr,
                 flags_arr,run_on_device]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
@@ -742,37 +753,35 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                   return gradient;
                 };
 
-                Real Tg_old = T_g_o(i,j,k);
-
-                Real Tg_new(Tg_old);
+                Real Tg(T_g_o(i,j,k));
 
                 int solver_iterations(0);
 
                 {
                   DampedNewton::DampingFactor damping_factor(0., 0.);
                   solver_iterations = 
-                    DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
+                    DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
                                         1.e-8, 1.e-8, 500);
 
                 } if (solver_iterations == 500) {
 
                   DampedNewton::DampingFactor damping_factor(1., 0.);
                   solver_iterations =
-                    DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
+                    DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
                                         1.e-7, 1.e-7, 500);
 
                 } if (solver_iterations == 500) {
 
                   DampedNewton::DampingFactor damping_factor(1., 1.);
                   solver_iterations =
-                    DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
+                    DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
                                         1.e-6, 1.e-6, 500);
 
                 } if (solver_iterations == 500) {
                   amrex::Abort("Damped-Newton solver did not converge");
                 }
 
-                T_g_n(i,j,k) = Tg_new;
+                T_g_n(i,j,k) = Tg;
               }
             });
           } // mfi
