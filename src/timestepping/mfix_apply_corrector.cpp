@@ -396,7 +396,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         // When using implicit diffusion for species, we "Add" (subtract) the
         // correction term computed at time t^{star,star} to the RHS before
         // doing the implicit diffusion
-        diffusion_op->SubtractDivXGX(get_X_gk(), get_ro_g_const(), get_ep_g_const(), get_T_g_const(), 0.5*l_dt);
+        diffusion_op->SubtractDiv_XGradX(get_X_gk(), get_ro_g_const(),
+                                         get_ep_g_const(), get_T_g_const(), 0.5*l_dt);
 
         // Convert "ep_g" into (rho * ep_g)
         for (int lev = 0; lev <= finest_level; lev++)

@@ -112,11 +112,11 @@ class DiffusionOp
                       const amrex::Vector< amrex::MultiFab const*>& T_g_in);
 
     // Explicit tensor species mass fractions term
-    void SubtractDivXGX (const amrex::Vector< amrex::MultiFab*      >& X_gk_in,
-                         const amrex::Vector< amrex::MultiFab const*>& ro_g_in,
-                         const amrex::Vector< amrex::MultiFab const*>& ep_g_in,
-                         const amrex::Vector< amrex::MultiFab const*>& T_g_in,
-                         const amrex::Real& dt);
+    void SubtractDiv_XGradX (const amrex::Vector< amrex::MultiFab*      >& X_gk_in,
+                             const amrex::Vector< amrex::MultiFab const*>& ro_g_in,
+                             const amrex::Vector< amrex::MultiFab const*>& ep_g_in,
+                             const amrex::Vector< amrex::MultiFab const*>& T_g_in,
+                             const amrex::Real& dt);
 
     // Enthalpy tensor due to species mass fractions fluxes
     void ComputeLaphX (const amrex::Vector< amrex::MultiFab*       >& lap_hX_out,

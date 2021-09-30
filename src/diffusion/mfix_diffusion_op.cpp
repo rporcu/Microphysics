@@ -658,7 +658,7 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
 
       auto& fluid_parms = *fluid.parameters;
 
-      // b_coeffs  = ep_g ro_g X_gk D_gm
+      // Xb_coeffs  = ep_g ro_g X_gk D_gm
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -689,6 +689,10 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
         });
       }
 
+      for(int dir = 0; dir < 3; dir++) {
+        species_b[lev][dir]->setVal(0);
+      }
+
       // species_b = interp(b_coeffs)
       EB_interp_CellCentroid_to_FaceCentroid (Xb_coeffs, GetArrOfPtrs(species_b[lev]), 0, 0,
                                               nspecies_g, geom[lev], loc_bcs_dummy);
@@ -701,11 +705,6 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
     }
 
     MLMG solver(*species_matrix);
-  //  setSolverSettings(solver);
-  //
-  //  // This ensures that ghost cells of sol are correctly filled when returned
-  //  // from the solver
-  //  solver.setFinalFillBC(true);
 
     // Compute div (ep_g ro_g D_gk grad)) phi
     solver.apply(correction_aux, X_gk_in);
@@ -754,13 +753,13 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
 }
 
 
-void DiffusionOp::SubtractDivXGX (const Vector< MultiFab*      >& X_gk_in,
-                                  const Vector< MultiFab const*>& ro_g_in,
-                                  const Vector< MultiFab const*>& ep_g_in,
-                                  const Vector< MultiFab const*>& T_g_in,
-                                  const Real& dt)
+void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
+                                      const Vector< MultiFab const*>& ro_g_in,
+                                      const Vector< MultiFab const*>& ep_g_in,
+                                      const Vector< MultiFab const*>& T_g_in,
+                                      const Real& dt)
 {
-  BL_PROFILE("DiffusionOp::ComputeDivXGX");
+  BL_PROFILE("DiffusionOp::SubtractDiv_XGradX");
 
   const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 

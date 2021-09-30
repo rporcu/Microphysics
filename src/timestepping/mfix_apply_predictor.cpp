@@ -171,8 +171,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
       const bool update_lapT = (advect_enthalpy      && (l_explicit_diff || constraint));
       const bool update_lapS = (advect_tracer        &&  l_explicit_diff);
-//      const bool update_lapX = (advect_fluid_species && (l_explicit_diff || constraint));
-      const bool update_lapX = (advect_fluid_species && (true || constraint));
+      const bool update_lapX = (advect_fluid_species && (l_explicit_diff || constraint));
+//      const bool update_lapX = (advect_fluid_species && (true || constraint));
 
       compute_laps(update_lapT, update_lapS, update_lapX, lap_T_old, lap_trac_old, lap_X_old,
                    get_T_g_old(), get_trac_old(), get_X_gk_old(), get_ep_g_const(),
@@ -363,8 +363,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
               X_gk += l_dt * dXdt_o(i,j,k,n);
               X_gk += l_dt * X_RHS_o(i,j,k,n);
 
-//              if (l_explicit_diff)
-              if (true)
+              if (l_explicit_diff)
+//              if (true)
                 X_gk += l_dt * lap_X_o(i,j,k,n);
 
               X_gk_n(i,j,k,n) = X_gk * denom;
@@ -373,12 +373,13 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         } // mfi
       } // lev
 
-//      if (!l_explicit_diff) {
-      if (false) {
+      if (!l_explicit_diff) {
+//      if (false) {
         // When using implicit diffusion for species, we "Add" (subtract) the
         // correction term computed at time t^{star,star} to the RHS before
         // doing the implicit diffusion
-        diffusion_op->SubtractDivXGX(get_X_gk(), get_ro_g_const(), get_ep_g_const(), get_T_g_old_const(), l_dt);
+        diffusion_op->SubtractDiv_XGradX(get_X_gk(), get_ro_g_const(),
+                                         get_ep_g_const(), get_T_g_old_const(), l_dt);
 
         // Convert "ep_g" into (rho * ep_g)
         for (int lev = 0; lev <= finest_level; lev++)

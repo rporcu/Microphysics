@@ -25,29 +25,29 @@ mfix::mfix_incompressible_fluid_rhs (Vector< MultiFab*       > const& rhs,
   for (int lev(0); lev <= finest_level; ++lev)
     rhs[lev]->setVal(0.);
 
-  for (int lev(0); lev <= finest_level; lev++) {
-    const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ro_g[lev]->Factory());
-    const auto& flags = factory.getMultiEBCellFlagFab();
-
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-    for (MFIter mfi(*rhs[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-      const Box& bx = mfi.tilebox();
-
-      auto const& rhs_arr    = rhs[lev]->array(mfi);
-      auto const& ro_RHS_arr = ro_rhs[lev]->const_array(mfi);
-      auto const& ro_g_arr   = ro_g[lev]->const_array(mfi);
-
-      auto const& flags_arr = flags.const_array(mfi);
-
-      amrex::ParallelFor(bx, [rhs_arr,ro_RHS_arr,ro_g_arr,flags_arr]
-        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-      {
-        rhs_arr(i,j,k) = ro_RHS_arr(i,j,k) / ro_g_arr(i,j,k);
-      });
-    }
-  }
+//  for (int lev(0); lev <= finest_level; lev++) {
+//    const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ro_g[lev]->Factory());
+//    const auto& flags = factory.getMultiEBCellFlagFab();
+//
+//#ifdef _OPENMP
+//#pragma omp parallel if (Gpu::notInLaunchRegion())
+//#endif
+//    for (MFIter mfi(*rhs[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+//      const Box& bx = mfi.tilebox();
+//
+//      auto const& rhs_arr    = rhs[lev]->array(mfi);
+//      auto const& ro_RHS_arr = ro_rhs[lev]->const_array(mfi);
+//      auto const& ro_g_arr   = ro_g[lev]->const_array(mfi);
+//
+//      auto const& flags_arr = flags.const_array(mfi);
+//
+//      amrex::ParallelFor(bx, [rhs_arr,ro_RHS_arr,ro_g_arr,flags_arr]
+//        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+//      {
+//        rhs_arr(i,j,k) = ro_RHS_arr(i,j,k) / ro_g_arr(i,j,k);
+//      });
+//    }
+//  }
 
   for (int lev(0); lev <= finest_level; lev++) {
     EB_set_covered(*rhs[lev], 0, 1, 0, 0.0);
