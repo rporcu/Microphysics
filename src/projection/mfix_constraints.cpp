@@ -19,8 +19,8 @@
 //
 void
 mfix::mfix_incompressible_fluid_rhs (Vector< MultiFab*       > const& rhs,
-                                     Vector< MultiFab const* > const& ro_rhs,
-                                     Vector< MultiFab const* > const& ro_g)
+                                     Vector< MultiFab const* > const& /*ro_rhs*/,
+                                     Vector< MultiFab const* > const& /*ro_g*/)
 {
   for (int lev(0); lev <= finest_level; ++lev)
     rhs[lev]->setVal(0.);

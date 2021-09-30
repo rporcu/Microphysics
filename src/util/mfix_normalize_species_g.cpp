@@ -9,12 +9,8 @@
 #endif
 
 void
-mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk,
-                                   const Vector< MultiFab* >& /*T_g*/,
-                                   const Vector< MultiFab* >& /*h_g*/)
+mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
 {
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
-
   const int nspecies_g = fluid.nspecies;
 
   for (int lev = 0; lev <= finest_level; lev++) {

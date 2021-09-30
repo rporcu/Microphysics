@@ -424,7 +424,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       // Normalize species mass fractions in order to respect sum = 1
       // *************************************************************************************
       if (fluid.is_a_mixture) {
-        mfix_normalize_fluid_species(get_X_gk(), get_T_g(), get_h_g());
+        mfix_normalize_fluid_species(get_X_gk());
       }
     } // advect_fluid_species
 
@@ -782,7 +782,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         mfix_set_enthalpy_bcs(time, get_h_g());
 
         // NOTE: we do this call before multiplying ep_g by ro_g
-        diffusion_op->diffuse_temperature(get_T_g_old(), get_T_g(), get_ep_g(), get_ro_g(),
+        diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
                                           get_h_g(), get_X_gk(), get_T_g_on_eb(), 0.5*l_dt);
 
         // We call the bc routines again to enforce the ext_dir condition

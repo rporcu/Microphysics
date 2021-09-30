@@ -820,7 +820,7 @@ void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
         Array4<Real const> const& X_gk_arr      = X_gk_in[lev]->const_array(mfi);
 
         amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,T_g_arr,Xb_coeffs_arr,
-            X_gk_arr,nspecies_g,fluid_parms,species_k]
+            X_gk_arr,nspecies_g,fluid_parms,species_k,run_on_device]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const Real ep_g = ep_g_arr(i,j,k);
@@ -831,7 +831,9 @@ void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
           const Real val = ep_g*ro_g*X_gk;
 
           for (int m(0); m < nspecies_g; ++m) {
-            Xb_coeffs_arr(i,j,k,m) = val*fluid_parms.calc_D_gk<RunOn::Gpu>(T_g,m);
+            Xb_coeffs_arr(i,j,k,m) = run_on_device ?
+              val*fluid_parms.calc_D_gk<RunOn::Device>(T_g,m) :
+              val*fluid_parms.calc_D_gk<RunOn::Host>(T_g,m);
           }
         });
       }
@@ -891,7 +893,7 @@ void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
             sum += correct_arr(i,j,k,m);
           }
 
-          X_gk_arr(i,j,k,species_k) -= (dt*sum) / (ep_g*ro_g);
+          X_gk_arr(i,j,k,species_k) -= dt * (sum / (ep_g*ro_g));
         });
       }
     }
