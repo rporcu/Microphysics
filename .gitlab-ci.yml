@@ -29,7 +29,7 @@ variables:
   script:
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR --dockerfile $DOCKERFILE --destination $CI_REGISTRY_IMAGE/$IMGTAG:$CI_COMMIT_TAG
+    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR --dockerfile $DOCKERFILE --destination $CI_REGISTRY_IMAGE/$IMGTAG:$CI_COMMIT_SHA
   tags:
     - docker
 
@@ -130,7 +130,7 @@ build:csg:
     - ./build/src/eb/tests/functional_tests
   <<: *build_gpu
   tags:
-    - docker
+    - ubuntu-shell
 
 .ctest: &ctest_template
   image: $CI_REGISTRY_IMAGE/nvcc
