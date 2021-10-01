@@ -23,8 +23,7 @@ class FluidParms {
   private:
     const amrex::Real* m_h_MW_gk;
     const amrex::Real* m_d_MW_gk;
-    const amrex::Real* m_h_D_gk;
-    const amrex::Real* m_d_D_gk;
+    const amrex::Real m_D_g;
     const int m_ncoefficients;
     const amrex::Real* m_h_cp_gk;
     const amrex::Real* m_d_cp_gk;
@@ -46,8 +45,7 @@ class FluidParms {
       , m_d_species_id(nullptr)
       , m_h_MW_gk(nullptr)
       , m_d_MW_gk(nullptr)
-      , m_h_D_gk(nullptr)
-      , m_d_D_gk(nullptr)
+      , m_D_g(0)
       , m_ncoefficients(0)
       , m_h_cp_gk(nullptr)
       , m_d_cp_gk(nullptr)
@@ -65,8 +63,7 @@ class FluidParms {
                 const int* d_species_id,
                 const amrex::Real* h_MW_gk,
                 const amrex::Real* d_MW_gk,
-                const amrex::Real* h_D_gk,
-                const amrex::Real* d_D_gk,
+                const amrex::Real D_g,
                 const int ncoefficients,
                 const amrex::Real* h_cp_gk,
                 const amrex::Real* d_cp_gk,
@@ -81,8 +78,7 @@ class FluidParms {
       , m_d_species_id(d_species_id)
       , m_h_MW_gk(h_MW_gk)
       , m_d_MW_gk(d_MW_gk)
-      , m_h_D_gk(h_D_gk)
-      , m_d_D_gk(d_D_gk)
+      , m_D_g(D_g)
       , m_ncoefficients(ncoefficients)
       , m_h_cp_gk(h_cp_gk)
       , m_d_cp_gk(d_cp_gk)
@@ -139,19 +135,10 @@ class FluidParms {
 
 
     // Compute fluid species diffusivity
-    template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_D_gk (const amrex::Real /*T_g*/,
-                           const int n) const
+    amrex::Real get_D_g (const amrex::Real /*T_g*/) const
     {
-      if (run_on == amrex::RunOn::Gpu)
-        return m_d_D_gk[n];
-      else if (run_on == amrex::RunOn::Cpu)
-        return m_h_D_gk[n];
-      else
-        amrex::Abort("Unrecognized RunOn option");
-
-      return 0;
+      return m_D_g;
     }
 
 
@@ -373,8 +360,7 @@ class FluidPhase {
     amrex::Gpu::DeviceVector<amrex::Real> d_MW_gk0;
 
     // Specified constant gas phase species diffusion coefficients
-    amrex::Gpu::HostVector<amrex::Real> D_gk0;
-    amrex::Gpu::DeviceVector<amrex::Real> d_D_gk0;
+    amrex::Real D_g0;
 
     // Flag to understand if fluid is a mixture of fluid species
     int is_a_mixture;

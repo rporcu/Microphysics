@@ -68,11 +68,10 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
             {
               const Real ep_ro_g = ep_ro_g_arr(i,j,k);
               const Real T_g = T_g_arr(i,j,k);
+              const Real val = ep_ro_g*fluid_parms.get_D_g(T_g);
 
               for (int n(0); n < nspecies_g; ++n) {
-                ep_ro_D_gk_arr(i,j,k,n) = run_on_device ?
-                  ep_ro_g*fluid_parms.calc_D_gk<RunOn::Device>(T_g,n) :
-                  ep_ro_g*fluid_parms.calc_D_gk<RunOn::Host>(T_g,n);
+                ep_ro_D_gk_arr(i,j,k,n) = val;
               }
             });
           }

@@ -554,7 +554,7 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
 
     auto& fluid_parms = *fluid.parameters;
 
-    // b_coeffs  = ep_g ro_g D_gk
+    // b_coeffs  = ep_g ro_g D_g
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -574,13 +574,10 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
         const Real ep_g = ep_g_arr(i,j,k);
         const Real ro_g = ro_g_arr(i,j,k);
         const Real T_g  = T_g_arr(i,j,k);
+        const Real D_g  = fluid_parms.get_D_g(T_g);
 
         for (int n(0); n < nspecies_g; ++n) {
-          const Real D_gk = run_on_device ?
-            fluid_parms.calc_D_gk<RunOn::Device>(T_g,n) :
-            fluid_parms.calc_D_gk<RunOn::Host>(T_g,n);
-
-          b_coeffs_arr(i,j,k,n) = ep_g*ro_g*D_gk;
+          b_coeffs_arr(i,j,k,n) = ep_g*ro_g*D_g;
         }
       });
     }
@@ -678,10 +675,10 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
           const Real T_g  = T_g_arr(i,j,k);
           const Real X_gk = X_gk_arr(i,j,k,species_k);
 
-          const Real val = ep_g*ro_g*X_gk;
+          const Real val = ep_g*ro_g*X_gk*fluid_parms.get_D_g(T_g);
 
           for (int m(0); m < nspecies_g; ++m) {
-            Xb_coeffs_arr(i,j,k,m) = val*fluid_parms.calc_D_gk<RunOn::Gpu>(T_g,m);
+            Xb_coeffs_arr(i,j,k,m) = val;
           }
         });
       }
@@ -830,12 +827,10 @@ void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
           const Real T_g  = T_g_arr(i,j,k);
           const Real X_gk = X_gk_arr(i,j,k,species_k);
 
-          const Real val = ep_g*ro_g*X_gk;
+          const Real val = ep_g*ro_g*X_gk*fluid_parms.get_D_g(T_g);
 
           for (int m(0); m < nspecies_g; ++m) {
-            Xb_coeffs_arr(i,j,k,m) = run_on_device ?
-              val*fluid_parms.calc_D_gk<RunOn::Device>(T_g,m) :
-              val*fluid_parms.calc_D_gk<RunOn::Host>(T_g,m);
+            Xb_coeffs_arr(i,j,k,m) = val;
           }
         });
       }
@@ -982,12 +977,9 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
         const Real ro_g = ro_g_arr(i,j,k);
         const Real T_g  = T_g_arr(i,j,k);
 
-        for (int n(0); n < nspecies_g; ++n) {
-          const Real D_gk = run_on_device ?
-            fluid_parms.calc_D_gk<RunOn::Device>(T_g,n) :
-            fluid_parms.calc_D_gk<RunOn::Host>(T_g,n);
+        const Real val = ep_g*ro_g*fluid_parms.get_D_g(T_g);
 
-          const Real val = ep_g*ro_g*D_gk;
+        for (int n(0); n < nspecies_g; ++n) {
 
           hb_coeffs_arr(i,j,k,n) = run_on_device ?
             fluid_parms.calc_h_gk<RunOn::Device>(T_g,n) * val :
@@ -1080,12 +1072,10 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
 
           const Real Xgk  = X_gk_arr(i,j,k,species_k);
 
-          for (int m(0); m < nspecies_g; ++m) {
-            const Real val = ep_g*ro_g*hgk*Xgk;
+          const Real val = ep_g*ro_g*hgk*Xgk*fluid_parms.get_D_g(T_g);
 
-            hXb_coeffs_arr(i,j,k,m) = run_on_device ?
-              val*fluid_parms.calc_D_gk<RunOn::Device>(T_g,m) :
-              val*fluid_parms.calc_D_gk<RunOn::Host>(T_g,m);
+          for (int m(0); m < nspecies_g; ++m) {
+            hXb_coeffs_arr(i,j,k,m) = val;
           }
         });
       }

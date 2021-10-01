@@ -32,7 +32,7 @@ namespace SPECIES
   amrex::Vector<amrex::Real> MW_k0(0);
 
   // Specified species diffusion coefficients
-  amrex::Vector<amrex::Real> D_k0(0);
+  amrex::Real D_0(0);
 
   // Flag to solve enthalpy species equations
   int solve_enthalpy(0);
@@ -70,7 +70,6 @@ namespace SPECIES
         }
 
         MW_k0.resize(nspecies);
-        D_k0.resize(nspecies);
 
         // Get species temperature inputs -----------------------------//
         amrex::ParmParse ppMFIX("mfix");
@@ -119,16 +118,7 @@ namespace SPECIES
         if (amrex::toLower(diffusivity_model).compare("constant") == 0) {
           DiffusivityModel = DIFFUSIVITYMODEL::Constant;
 
-          for (int n(0); n < nspecies; n++) {
-            std::string name = "species." + species[n];
-            amrex::ParmParse ppSpecies(name.c_str());
-            int value_is_present = ppSpecies.query("diffusivity.constant", D_k0[n]);
-
-            if (!value_is_present) {
-              std::string message = "Assuming diffusivity D_" + species[n] + " = 0";
-              amrex::Warning(message.c_str());
-            }
-          }
+          pp.get("diffusivity.constant", D_0);
 
         } else {
           amrex::Abort("Unknown species mass diffusivity model!");

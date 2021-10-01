@@ -41,9 +41,7 @@ mfix.advect_fluid_species = 1
 species.solve  =  O2  SO2  H2O
 
 species.diffusivity = constant
-species.O2.diffusivity.constant  = 1.9e-5
-species.SO2.diffusivity.constant = 1.3e-5
-species.H2O.diffusivity.constant = 2.4e-5
+species.diffusivity.constant  = 1.9e-5
 
 species.specific_heat = constant
 species.O2.specific_heat.constant  = 918

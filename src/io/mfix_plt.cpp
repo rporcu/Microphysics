@@ -713,12 +713,10 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
 
           MultiFab& X_gk = *(m_leveldata[lev]->X_gk);
 
-          MultiFab D_gk(X_gk.boxArray(), X_gk.DistributionMap(), X_gk.nComp(),
-                        X_gk.nGrow(), MFInfo(), X_gk.Factory());
+          MultiFab D_g(X_gk.boxArray(), X_gk.DistributionMap(), 1,
+                       X_gk.nGrow(), MFInfo(), X_gk.Factory());
 
           const int adv_enthalpy = advect_enthalpy;
-
-          Real* p_D_gk0 = fluid.d_D_gk0.data();
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -727,34 +725,28 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
           {
             Box const& bx = mfi.tilebox();
 
-            Array4<Real      > const& D_gk_array = D_gk.array(mfi);
-            Array4<Real const> const& T_g_array  = advect_enthalpy ?
+            Array4<Real      > const& D_g_array = D_g.array(mfi);
+            Array4<Real const> const& T_g_array = advect_enthalpy ?
               m_leveldata[lev]->T_g->const_array(mfi) : Array4<const Real>();
 
-            ParallelFor(bx, [D_gk_array,T_g_array,nspecies_g,adv_enthalpy,p_D_gk0,
+            ParallelFor(bx, [D_g_array,T_g_array,nspecies_g,adv_enthalpy,
                 fluid_params,run_on_device]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
-              for (int n(0); n < nspecies_g; ++n)
-                if (adv_enthalpy) {
-                  const Real T_g = T_g_array(i,j,k);
-                    
-                  D_gk_array(i,j,k,n) = run_on_device ?
-                    fluid_params.calc_D_gk<RunOn::Device>(T_g, n) :
-                    fluid_params.calc_D_gk<RunOn::Host>(T_g, n);
-                }
-                else
-                  D_gk_array(i,j,k,n) = p_D_gk0[n];
+              if (adv_enthalpy)
+                D_g_array(i,j,k) = fluid_params.get_D_g(T_g_array(i,j,k));
+              else
+                D_g_array(i,j,k) = fluid_params.get_D_g(0);
             });
           }
 
-          D_gk.FillBoundary(geom[lev].periodicity());
+          D_g.FillBoundary(geom[lev].periodicity());
 
-          EB_set_covered(D_gk, 0, D_gk.nComp(), D_gk.nGrow(), covered_val);
+          EB_set_covered(D_g, 0, D_g.nComp(), D_g.nGrow(), covered_val);
 
-          MultiFab::Copy(*mf[lev], D_gk, 0, lc, nspecies_g, 0);
+          MultiFab::Copy(*mf[lev], D_g, 0, lc, D_g.nComp(), 0);
 
-          lc += nspecies_g;
+          lc += D_g.nComp();
         }
 
         // Fluid species specific heat
