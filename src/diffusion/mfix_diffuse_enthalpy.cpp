@@ -186,7 +186,7 @@ void DiffusionOp::diffuse_enthalpy (const Vector< MultiFab* >& h_g,
           Array4<Real const> const& T_g_on_eb_array = T_g_on_eb[lev]->const_array(mfi);
 
           amrex::ParallelFor(bx, [k_Icp_g_array,h_g_on_eb_array,X_gk_array,
-              T_g_on_eb_array,fluid_parms,fluid_is_a_mixture]
+              T_g_on_eb_array,fluid_parms,fluid_is_a_mixture,run_on_device]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             const Real Tg = T_g_on_eb_array(i,j,k);
