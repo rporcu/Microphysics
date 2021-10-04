@@ -70,6 +70,15 @@ class DiffusionOp
                               const amrex::Vector< amrex::MultiFab* >& T_g_on_eb,
                               amrex::Real dt);
 
+    // Temperature diffusion
+    void diffuse_enthalpy (const amrex::Vector< amrex::MultiFab* >& h_g,
+                           const amrex::Vector< amrex::MultiFab* >& ep_g,
+                           const amrex::Vector< amrex::MultiFab* >& ro_g,
+                           const amrex::Vector< amrex::MultiFab* >& T_g,
+                           const amrex::Vector< amrex::MultiFab* >& X_gk,
+                           const amrex::Vector< amrex::MultiFab* >& T_g_on_eb,
+                           amrex::Real dt);
+
     // Species mass fraction diffusion
     void diffuse_species (const amrex::Vector< amrex::MultiFab* >& X_gk,
                           const amrex::Vector< amrex::MultiFab* >& ep_ro_g,

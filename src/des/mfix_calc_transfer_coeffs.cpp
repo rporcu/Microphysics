@@ -51,6 +51,9 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, DragFunc,
                                 ComputeConvGunn(DEM::small_number,DEM::large_number,DEM::eps));
     }
+    else if (m_convection_type == ConvectionType::NullConvection) {
+      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, DragFunc, NullConvectionCoeff());
+    }
     else {
       amrex::Abort("Invalid Convection Type.");
     }

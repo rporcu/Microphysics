@@ -615,8 +615,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
         // NOTE: we do this call before multiplying ep_g by ro_g
         // Diffuse enthalpy
-        diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
-                                          get_h_g(), get_X_gk(), get_T_g_on_eb(), l_dt);
+        diffusion_op->diffuse_enthalpy(get_h_g(), get_ep_g(), get_ro_g(),
+                                       get_T_g(), get_X_gk(), get_T_g_on_eb(), l_dt);
 
         // Note we need to call the bc routines again to enforce the ext_dir condition
         // on the faces (the diffusion operator moved those to ghost cell centers)

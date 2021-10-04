@@ -41,7 +41,7 @@
 struct DragType { enum {Invalid=-1, WenYu, Gidaspow, BVK2, UserDrag}; };
 
 // Convection type enumeration
-struct ConvectionType { enum {Invalid=-1, RanzMarshall, Gunn}; };
+struct ConvectionType { enum {Invalid=-1, RanzMarshall, Gunn, NullConvection}; };
 
 // Advection Type
 struct AdvectionType { enum {Invalid=-1, MOL, Godunov}; };

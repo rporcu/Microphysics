@@ -318,8 +318,14 @@ class FluidPhase {
     // Flag to solve fluid equations
     int solve;
 
+    // Flag to solve fluid density equation
+    int solve_density;
+
     // Specified constant gas density
     amrex::Real ro_g0;
+
+    // Flag to solve fluid tracer equation
+    int solve_tracer;
 
     // Specified constant tracer value
     amrex::Real trac_0;
@@ -330,7 +336,7 @@ class FluidPhase {
     // Average molecular weight of gas
     amrex::Real mw_avg;
 
-    // Flag to solve enthalpy fluid equation
+    // Flag to solve fluid enthalpy equation
     int solve_enthalpy;
 
     // Specified constant gas temperature

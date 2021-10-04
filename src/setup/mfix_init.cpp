@@ -389,6 +389,9 @@ mfix::InitParams ()
       else if (convection_type.compare("Gunn") == 0) {
         m_convection_type = ConvectionType::Gunn;
       }
+      else if (convection_type.compare("NullConvection") == 0) {
+        m_convection_type = ConvectionType::NullConvection;
+      }
       else {
         amrex::Abort("Don't know this convection_type!");
       }
