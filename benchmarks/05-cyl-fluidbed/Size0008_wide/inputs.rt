@@ -69,7 +69,7 @@ particles.tile_size = 1024 1024 1024
 mfix.levelset__refinement    = 4 # levelset resolution
 mfix.levelset__refinement    = 1 # levelset resolution
 
-#mfix.write_eb_surface = true  # Needed to output eb-surfaces
+#mfix.write_eb_surface = false # Needed to output eb-surfaces
 
 #_______________________________________________________________________
 # Load balancing
