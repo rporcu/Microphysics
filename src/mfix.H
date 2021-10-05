@@ -41,7 +41,7 @@
 struct DragType { enum {Invalid=-1, WenYu, Gidaspow, BVK2, UserDrag}; };
 
 // Convection type enumeration
-struct ConvectionType { enum {Invalid=-1, RanzMarshall, Gunn}; };
+struct ConvectionType { enum {Invalid=-1, RanzMarshall, Gunn, NullConvection}; };
 
 // Advection Type
 struct AdvectionType { enum {Invalid=-1, MOL, Godunov}; };
@@ -879,9 +879,7 @@ public:
                                Real& coupling_timing);
 
   public:
-    void mfix_normalize_fluid_species (const Vector< MultiFab* >& X_gk,
-                                       const Vector< MultiFab* >& T_g,
-                                       const Vector< MultiFab* >& h_g);
+    void mfix_normalize_fluid_species (const Vector< MultiFab* >& X_gk);
 
     void mfix_incompressible_fluid_rhs (Vector< MultiFab*       > const& rhs,
                                         Vector< MultiFab const* > const& ro_rhs,

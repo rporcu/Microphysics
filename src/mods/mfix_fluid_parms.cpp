@@ -18,7 +18,9 @@ FluidPhase::FluidPhase()
   , SpecificHeatModel(SPECIFICHEATMODEL::Invalid)
   , ThermalConductivityModel(THERMALCONDUCTIVITYMODEL::Invalid)
   , solve(0)
+  , solve_density(0)
   , ro_g0(0)
+  , solve_tracer(0)
   , trac_0(0)
   , mu_g0(0)
   , mw_avg(0)
@@ -34,8 +36,7 @@ FluidPhase::FluidPhase()
   , nspecies(0)
   , MW_gk0(0)
   , d_MW_gk0(0)
-  , D_gk0(0)
-  , d_D_gk0(0)
+  , D_g0(0)
   , is_a_mixture(0)
   , H_fk0(0)
   , d_H_fk0(0)
@@ -218,7 +219,7 @@ FluidPhase::Initialize ()
 
       species_id.resize(nspecies);
       MW_gk0.resize(nspecies);
-      D_gk0.resize(nspecies);
+      D_g0 = SPECIES::D_0;
 
       if (solve_enthalpy) {
 
@@ -244,7 +245,6 @@ FluidPhase::Initialize ()
 
         species_id[n] = SPECIES::species_id[pos];
         MW_gk0[n] = SPECIES::MW_k0[pos];
-        D_gk0[n] = SPECIES::D_k0[pos];
 
         if (solve_enthalpy) {
 
@@ -260,7 +260,6 @@ FluidPhase::Initialize ()
       }
     } else {
       MW_gk0.resize(1);
-      D_gk0.resize(1);
 
       ppFluid.query("molecular_weight", MW_gk0[0]);
 
@@ -327,11 +326,6 @@ FluidPhase::Initialize ()
   const Real* p_h_MW_gk0 = MW_gk0.data();
   const Real* p_d_MW_gk0 = d_MW_gk0.data();
 
-  d_D_gk0.resize(D_gk0.size());
-  Gpu::copyAsync(Gpu::hostToDevice, D_gk0.begin(), D_gk0.end(), d_D_gk0.begin());
-  const Real* p_h_D_gk0 = D_gk0.data();
-  const Real* p_d_D_gk0 = d_D_gk0.data();
-
   if (solve_enthalpy) {
     d_H_fk0.resize(H_fk0.size());
     Gpu::copyAsync(Gpu::hostToDevice, H_fk0.begin(), H_fk0.end(), d_H_fk0.begin());
@@ -354,8 +348,7 @@ FluidPhase::Initialize ()
     ncoefficients = 6;
 
   parameters = new FluidParms(T_ref, mu_g0, k_g0, nspecies, p_h_species_id,
-                              p_d_species_id, p_h_MW_gk0, p_d_MW_gk0, p_h_D_gk0,
-                              p_d_D_gk0, ncoefficients,
-                              p_h_cp_gk0, p_d_cp_gk0, p_h_H_fk0, p_d_H_fk0,
-                              SpecificHeatModel);
+                              p_d_species_id, p_h_MW_gk0, p_d_MW_gk0, D_g0,
+                              ncoefficients, p_h_cp_gk0, p_d_cp_gk0, p_h_H_fk0,
+                              p_d_H_fk0, SpecificHeatModel);
 }

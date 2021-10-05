@@ -389,28 +389,11 @@ mfix::InitParams ()
       else if (convection_type.compare("Gunn") == 0) {
         m_convection_type = ConvectionType::Gunn;
       }
+      else if (convection_type.compare("NullConvection") == 0) {
+        m_convection_type = ConvectionType::NullConvection;
+      }
       else {
         amrex::Abort("Don't know this convection_type!");
-      }
-    }
-
-    // Constraint type
-    {
-      std::string constraint_type = "IncompressibleFluid";
-      pp.query("constraint_type", constraint_type);
-      constraint_type = amrex::toLower(constraint_type);
-
-      if (constraint_type.compare("incompressiblefluid") == 0) {
-        m_constraint_type = ConstraintType::IncompressibleFluid;
-      }
-      else if (constraint_type.compare("idealgasopensystem") == 0) {
-        m_constraint_type = ConstraintType::IdealGasOpenSystem;
-      }
-      else if (constraint_type.compare("idealgasclosedsystem") == 0) {
-        m_constraint_type = ConstraintType::IdealGasClosedSystem;
-      }
-      else {
-        amrex::Abort("Don't know this constraint type!");
       }
     }
 
@@ -442,6 +425,31 @@ mfix::InitParams ()
 
     m_deposition_diffusion_coeff = -1.;
     pp.query("deposition_diffusion_coeff", m_deposition_diffusion_coeff);
+  }
+
+  if (fluid.solve)
+  {
+    ParmParse pp("mfix");
+
+    // Constraint type
+    {
+      std::string constraint_type = "IncompressibleFluid";
+      pp.query("constraint_type", constraint_type);
+      constraint_type = amrex::toLower(constraint_type);
+
+      if (constraint_type.compare("incompressiblefluid") == 0) {
+        m_constraint_type = ConstraintType::IncompressibleFluid;
+      }
+      else if (constraint_type.compare("idealgasopensystem") == 0) {
+        m_constraint_type = ConstraintType::IdealGasOpenSystem;
+      }
+      else if (constraint_type.compare("idealgasclosedsystem") == 0) {
+        m_constraint_type = ConstraintType::IdealGasClosedSystem;
+      }
+      else {
+        amrex::Abort("Don't know this constraint type!");
+      }
+    }
   }
 
   {

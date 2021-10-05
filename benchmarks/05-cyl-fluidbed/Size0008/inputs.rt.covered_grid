@@ -118,10 +118,7 @@ species.solve  =  O2  CO  H2O  He
 
 species.diffusivity = constant
 
-species.O2.diffusivity.constant  = 1.9e-5
-species.CO.diffusivity.constant  = 1.9e-5
-species.H2O.diffusivity.constant = 2.4e-5
-species.He.diffusivity.constant  = 7.1e-5
+species.diffusivity.constant  = 1.9e-5
 
 species.specific_heat = constant
 

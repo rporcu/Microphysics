@@ -9,12 +9,8 @@
 #endif
 
 void
-mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk,
-                                   const Vector< MultiFab* >& T_g,
-                                   const Vector< MultiFab* >& h_g)
+mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
 {
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
-
   const int nspecies_g = fluid.nspecies;
 
   for (int lev = 0; lev <= finest_level; lev++) {
@@ -61,17 +57,15 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk,
 
       Array4<Real> dummy_array4;
 
-      Array4<Real> const& T_g_arr  = advect_enthalpy ? T_g[lev]->array(mfi) : dummy_array4;
       Array4<Real> const& X_gk_arr = X_gk[lev]->array(mfi);
-      Array4<Real> const& h_g_arr  = advect_enthalpy ? h_g[lev]->array(mfi) : dummy_array4;
 
       auto const& flags_arr = flags.const_array(mfi);
 
       auto& fluid_parms = *fluid.parameters;
       const int adv_enthalpy = advect_enthalpy;
 
-      amrex::ParallelFor(bx, [flags_arr,T_g_arr,X_gk_arr,h_g_arr,nspecies_g,
-          adv_enthalpy,fluid_parms,run_on_device]
+      amrex::ParallelFor(bx, [flags_arr,X_gk_arr,nspecies_g,
+          adv_enthalpy,fluid_parms]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         for (int n(0); n < nspecies_g; ++n) {
@@ -87,21 +81,6 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk,
 
           for (int n(0); n < nspecies_g; ++n)
             X_gk_arr(i,j,k,n) /= X_gk_sum;
-
-          if (adv_enthalpy) {
-            Real h_g_sum(0);
-            const Real Tg_loc = T_g_arr(i,j,k);
-
-            for (int n(0); n < nspecies_g; n++) {
-              const Real h_gk = run_on_device ?
-                fluid_parms.calc_h_gk<RunOn::Device>(Tg_loc,n) :
-                fluid_parms.calc_h_gk<RunOn::Host>(Tg_loc,n);
-
-              h_g_sum += X_gk_arr(i,j,k,n) * h_gk;
-            }
-
-            h_g_arr(i,j,k) = h_g_sum;
-          }
         }
       });
     }
@@ -111,9 +90,6 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk,
   for (int lev = 0; lev <= finest_level; lev++) {
     X_gk[lev]->FillBoundary(geom[lev].periodicity());
 
-    if (advect_enthalpy) {
-      h_g[lev]->FillBoundary(geom[lev].periodicity());
-    }
   }
 
 #if defined(AMREX_DEBUG)

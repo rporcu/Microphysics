@@ -404,23 +404,23 @@ mfix::mfix_add_txfr_explicit (Real dt,
             int solver_iterations(0);
 
             {
-              DampedNewton::DumpingFactor dumping_factor(0., 0.);
+              DampedNewton::DampingFactor damping_factor(0., 0.);
               solver_iterations = 
-                DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
                                     1.e-8, 1.e-8, 500);
 
             } if (solver_iterations == 500) {
 
-              DampedNewton::DumpingFactor dumping_factor(1., 0.);
+              DampedNewton::DampingFactor damping_factor(1., 0.);
               solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
                                     1.e-7, 1.e-7, 500);
 
             } if (solver_iterations == 500) {
 
-              DampedNewton::DumpingFactor dumping_factor(1., 1.);
+              DampedNewton::DampingFactor damping_factor(1., 1.);
               solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
                                     1.e-6, 1.e-6, 500);
 
             } if (solver_iterations == 500) {
@@ -585,23 +585,23 @@ mfix::mfix_add_txfr_implicit (Real dt,
             int solver_iterations(0);
 
             {
-              DampedNewton::DumpingFactor dumping_factor(0., 0.);
+              DampedNewton::DampingFactor damping_factor(0., 0.);
               solver_iterations = 
-                DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
                                     1.e-8, 1.e-8, 500);
 
             } if (solver_iterations == 500) {
 
-              DampedNewton::DumpingFactor dumping_factor(1., 0.);
+              DampedNewton::DampingFactor damping_factor(1., 0.);
               solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
                                     1.e-7, 1.e-7, 500);
 
             } if (solver_iterations == 500) {
 
-              DampedNewton::DumpingFactor dumping_factor(1., 1.);
+              DampedNewton::DampingFactor damping_factor(1., 1.);
               solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
                                     1.e-6, 1.e-6, 500);
 
             } if (solver_iterations == 500) {
