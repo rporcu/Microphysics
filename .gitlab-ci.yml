@@ -95,6 +95,7 @@ build:hip:
             -G Ninja
     - cmake --build build
   <<: *build_gpu
+  allow_failure: true
   tags:
     - ubuntu-shell
 
