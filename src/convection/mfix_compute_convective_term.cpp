@@ -225,8 +225,11 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
             // ************************************************************************
             // Density
             // ************************************************************************
-            if (advect_density)
+            const int use_species_advection = fluid.is_a_mixture && advect_fluid_species;
+
+            if (advect_density && !use_species_advection)
             {
+
                 face_comp = AMREX_SPACEDIM;
                 ncomp = 1;
                 is_velocity = false;
@@ -626,7 +629,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                          "NewStateRedist" : m_redistribution_type);                                       
 
             // Density
-            if (advect_density)
+            const int use_species_advection = fluid.is_a_mixture && advect_fluid_species;
+
+            if (advect_density && !use_species_advection)
             {
                 ncomp = 1;
 

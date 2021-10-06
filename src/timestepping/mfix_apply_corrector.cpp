@@ -288,6 +288,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     } else {
 
         const int nspecies_g = fluid.nspecies;
+        const int use_species_advection = fluid.is_a_mixture && advect_fluid_species;
 
         for (int lev = 0; lev <= finest_level; lev++)
         {
@@ -309,20 +310,23 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                 Array4<Real const> const& rho_rhs_o = ro_RHS_old[lev]->const_array(mfi);
                 Array4<Real const> const& rho_rhs   = ro_RHS[lev]->const_array(mfi);
 
-                amrex::ParallelFor(bx, [epg,rho_o,l_dt,drdt,drdt_o,rho_new,
+                amrex::ParallelFor(bx, [epg,rho_o,l_dt,drdt,drdt_o,rho_new,use_species_advection,
                     rho_nph,rho_rhs_o,rho_rhs,dXdt,dXdt_o,nspecies_g]
                   AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
-                  //int conv_comp = 0;
 
                   const Real epg_loc = epg(i,j,k);
                   const Real rho_o_loc = rho_o(i,j,k);
 
                   Real rho = epg_loc*rho_o_loc;
 
-                  //rho += .5*l_dt*(drdt_o(i,j,k,conv_comp)+drdt(i,j,k,conv_comp));
-                  for (int n(0); n < nspecies_g; ++n)
-                    rho += .5*l_dt*(dXdt_o(i,j,k,n)+dXdt(i,j,k,n));
+                  if( use_species_advection) {
+                    for (int n(0); n < nspecies_g; ++n)
+                      rho += .5*l_dt*(dXdt_o(i,j,k,n)+dXdt(i,j,k,n));
+                  } else {
+                    constexpr int conv_comp = 0;
+                    rho += .5*l_dt*(drdt_o(i,j,k,conv_comp)+drdt(i,j,k,conv_comp));
+                  }
 
                   rho += .5*l_dt*(rho_rhs_o(i,j,k)+rho_rhs(i,j,k));
 
