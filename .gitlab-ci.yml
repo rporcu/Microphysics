@@ -81,17 +81,18 @@ build:dpcpp:
   tags:
     - ubuntu-shell
 
-.build:hip:
+build:hip:
   variables:
-    CXX: hipcc
+    CXX: /opt/rocm/llvm/bin/clang++
   script:
     - source /etc/profile.d/rocm.sh
     - git submodule update --init --force
     - cmake -S .
             -B build
+            -DAMReX_AMD_ARCH=gfx908
             -DCMAKE_BUILD_TYPE=None
             -DMFIX_GPU_BACKEND=HIP
-            -DAMReX_AMD_ARCH=gfx908
+            -DMFIX_MPI=0
             -G Ninja
     - cmake --build build
   <<: *build_gpu
