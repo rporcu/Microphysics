@@ -29,7 +29,7 @@ variables:
   script:
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR --dockerfile $DOCKERFILE --destination $CI_REGISTRY_IMAGE/$IMGTAG:$CI_COMMIT_SHA
+    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR --dockerfile $DOCKERFILE --destination $CI_REGISTRY_IMAGE/$IMGTAG:$CI_COMMIT_TAG
   tags:
     - docker
 
@@ -81,7 +81,7 @@ build:dpcpp:
   tags:
     - ubuntu-shell
 
-build:hip:
+.build:hip:
   variables:
     CXX: hipcc
   script:
@@ -95,7 +95,6 @@ build:hip:
             -G Ninja
     - cmake --build build
   <<: *build_gpu
-  allow_failure: true
   tags:
     - ubuntu-shell
 
@@ -192,13 +191,30 @@ lint:shellcheck:
   script:
     - find . -name "*.sh" -not -path "./subprojects/*" | xargs shellcheck -e SC2086,SC2125,SC2046,SC2129,SC2044
 
-lint:warnings:
+lint:gcc:warnings:
   <<: *lint_template
+  variables:
+    CC: gcc
+    CXX: g++
   script:
     - cmake -S .
             -B build
             -DCMAKE_BUILD_TYPE=Debug
             -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror"
+            -GNinja
+    - cmake --build build -- -k0
+
+lint:clang:warnings:
+  <<: *lint_template
+  variables:
+    CC: clang-12
+    CXX: clang-12
+  script:
+    - cmake -S .
+            -B build
+            -DCMAKE_BUILD_TYPE=Debug
+            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror"
+            -DMFIX_MPI=0
             -GNinja
     - cmake --build build -- -k0
 
