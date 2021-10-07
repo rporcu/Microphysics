@@ -209,7 +209,7 @@ lint:clang:warnings:
   <<: *lint_template
   variables:
     CC: clang-12
-    CXX: clang-12
+    CXX: clang++-12
   script:
     - cmake -S .
             -B build
