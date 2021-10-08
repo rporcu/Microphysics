@@ -1,7 +1,6 @@
 #_______________________________________________________________________
 # Testing tracer conservation
 
-mfix.advect_density           = true
 mfix.advect_tracer            = true
 mfix.test_tracer_conservation = true
 
