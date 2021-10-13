@@ -181,8 +181,9 @@ mfix::InitParams ()
     //if (advect_enthalpy && !advect_density)
     //  amrex::Abort("Can't advect enthalpy without advecting density");
 
-    if (advect_tracer && !advect_density)
-      amrex::Abort("Can't advect tracer without advecting density");
+    // At the moment, there is no relation between density and tracer
+    //if (advect_tracer && !advect_density)
+    //  amrex::Abort("Can't advect tracer without advecting density");
 
     // control load balance
     // The default type is "KnapSack"; alternative is "SFC"
