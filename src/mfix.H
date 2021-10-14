@@ -757,7 +757,7 @@ public:
     void make_eb_clr_riser ();
     void make_eb_regular ();
 
-#ifdef MFIX_GEOMETRY_CSG
+#ifdef CSG_EB
   void make_eb_csg(std::string);
 #endif
 
