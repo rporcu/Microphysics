@@ -108,7 +108,7 @@ build:nvcc:
     - git submodule update --init --force
     - cmake -S .  -B build
             -DAMReX_CUDA_ARCH=Volta
-            -DCMAKE_BUILD_TYPE=None
+            -DCMAKE_BUILD_TYPE=MinSizeRel
             -DCMAKE_CUDA_ARCHITECTURES=70
             -DMFIX_CSG=ON
             -DMFIX_GPU_BACKEND=CUDA
