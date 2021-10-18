@@ -30,7 +30,7 @@ def plot(refdata: Path) -> Path:
     with open(running_avg, "a") as run_avg:
         run_avg.write(mean_vp)
         run_avg.write("\n")
-    avg_vals = read_avg_values(running_avg)  # includes latest value that was just appended
+    x_avg_vals, y_avg_vals = read_avg_values(running_avg)  # includes latest value that was just appended
 
     plt.rc('text', usetex=True)
     plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{bm}')
@@ -56,11 +56,11 @@ def plot(refdata: Path) -> Path:
     ax1.set_xlim(0.0, 3.0)
     # ax1.set_xticks([0.,0.2,0.4,0.6,0.8,1.0,1.2])
 
-    ax2.plot(list(range(-10, 0)), avg_vals[-10:], color='r', linewidth=0.5, marker='.')
+    ax2.plot(x_avg_vals[-10:], y_avg_vals[-10:], color='r', linewidth=0.5, marker='.')
     ax2.set_title(r'Recent $\bar{V_p}$ over time')
     # ax2.set_xlabel("Previous runs")
 
-    ax3.plot(list(range(-len(avg_vals), 0)), avg_vals, color='r', linewidth=0.5, marker='.')
+    ax3.plot(x_avg_vals, y_avg_vals, color='r', linewidth=0.5, marker='.')
     ax3.set_title(r'All $\bar{V_p}$ over time')
     # ax3.set_xlabel("Previous runs")
 
