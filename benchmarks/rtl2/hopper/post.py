@@ -24,7 +24,7 @@ def plot(refdata: Path) -> Path:
     with open(avg_dat, "a") as run_avg:
         run_avg.write(tz)
         run_avg.write("\n")
-    avg_vals = read_avg_values(avg_dat)  # includes latest value that was just appended
+    x_avg_vals, y_avg_vals = read_avg_values(running_avg)  # includes latest value that was just appended
 
     plt.rc('text', usetex=True)
     plt.rc('text.latex', preamble=r'\usepackage{amsmath} \usepackage{bm}')
@@ -45,16 +45,16 @@ def plot(refdata: Path) -> Path:
     ax1.set_xlabel(r'$t(s)$')
     ax1.set_ylabel(r'$N_p$ (\#)')
 
-    avg_x = list(range(-len(avg_vals), 0))
-    avg_arr = numpy.asarray(avg_vals)
+    avg_x = list(range(-len(y_avg_vals), 0))
+    avg_arr = numpy.asarray(y_avg_vals)
     avg_masked = numpy.ma.masked_where(avg_arr > 0.2, avg_arr)
 
     ax2.plot([-10, 0], [0.117, 0.117], color='k', linewidth=0.5)
-    ax2.plot(list(range(-10, 0)), avg_masked[-10:], color='r', linewidth=0.5, marker='.')
+    ax2.plot(x_avg_vals, y_avg_vals, color='r', linewidth=0.5, marker='.')
     ax2.set_title(r'Recent $T_0$ over time')
     # ax2.set_xlabel("Previous runs")
 
-    ax3.plot([-len(avg_vals), 0], [0.117, 0.117], color='k', linewidth=0.5)
+    ax3.plot([-len(y_avg_vals), 0], [0.117, 0.117], color='k', linewidth=0.5)
     ax3.plot(avg_x, avg_masked, color='r', linewidth=0.5, marker='.')
     ax3.set_title(r'All $T_0$ over time')
     # ax3.set_xlabel("Previous runs")

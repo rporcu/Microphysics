@@ -36,7 +36,7 @@ def plot(refdata: Path) -> Path:
     vel_data = read_velocity(Path(VEL_P_FNAME))
 
     append_avg_dp_value(pg_data, vel_data, running_avg, WEIGHT_OVER_AREA_PER_PARTICLE)
-    avg_vals = read_avg_values(running_avg)  # includes latest value that was just appended
+    x_avg_vals, y_avg_vals = read_avg_values(running_avg)  # includes latest value that was just appended
 
     pressure_values = [(1.5 * datum['pg1'] - 0.5 * datum['pg2']) / 13.091 for datum in pg_data]
     pressure_times = [datum['t'] for datum in pg_data]
@@ -61,12 +61,12 @@ def plot(refdata: Path) -> Path:
     ax1.set_ylim(bottom=0)
 
     ax2.plot([-10, 0], [0.99761206, 0.99761206], color='k', linewidth=0.5)
-    ax2.plot(list(range(-10, 0)), avg_vals[-10:], color='r', linewidth=0.5, marker='.')
+    ax2.plot(x_avg_vals[-10:], y_avg_vals[-10:], color='r', linewidth=0.5, marker='.')
     ax2.set_title(r'Recent $\bar{dp}^\ast$ over time')
     # ax2.set_xlabel("Previous runs")
 
-    ax3.plot([-len(avg_vals), 0], [0.99761206, 0.99761206], color='k', linewidth=0.5)
-    ax3.plot(list(range(-len(avg_vals), 0)), avg_vals, color='r', linewidth=0.5, marker='.')
+    ax3.plot([-len(y_avg_vals), 0], [0.99761206, 0.99761206], color='k', linewidth=0.5)
+    ax3.plot(x_avg_vals, y_avg_vals, color='r', linewidth=0.5, marker='.')
     ax3.set_title(r'All $\bar{dp}^\ast$ over time')
     # ax3.set_xlabel("Previous runs")
 

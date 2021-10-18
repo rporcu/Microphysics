@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Mapping, Optional
+from typing import List, Mapping, Optional, Tuple
 
 import rtl2.params
 
@@ -64,12 +64,16 @@ def read_two_pressures(pg1_fname: Path, pg2_fname: Path) -> List[Mapping[str, fl
     return data
 
 
-def read_avg_values(refdata_fname: Path) -> List[float]:
+def read_avg_values(refdata_fname: Path) -> Tuple[List[float], List[float]]:
     """Returns: list of (at least 10) data points in refdata/runningavg.dat
     if fewer than 10 data points in runningavg.dat, pad with zeroes"""
 
     with open(refdata_fname) as run_avg:
-        return [0.0] * 10 + [float(line.strip()) for line in run_avg if line.strip() != "N/A"]
+        vals = [float(line.strip()) for line in run_avg if line.strip() != "N/A"]
+        points = list(enumerate(vals))
+        xs = [float(x) for x, _ in points]
+        ys = [y for _, y in points]
+        return (xs, ys)
 
 
 def append_avg_dp_value(
