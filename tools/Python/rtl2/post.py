@@ -1,7 +1,9 @@
+from datetime import datetime
 from pathlib import Path
 from typing import List, Mapping, Optional, Tuple
 
 import rtl2.params
+from rtl2.test_util import git_commit
 
 
 def read_historic_pressure(fname: Path) -> List[Mapping[str, float]]:
@@ -69,10 +71,14 @@ def read_avg_values(refdata_fname: Path) -> Tuple[List[float], List[float]]:
     if fewer than 10 data points in runningavg.dat, pad with zeroes"""
 
     with open(refdata_fname) as run_avg:
-        vals = [float(line.strip()) for line in run_avg if line.strip() != "N/A"]
+        vals = []
+        for line in run_avg:
+            val, *_ = line.split()
+            if val != "N/A":
+                vals.append(val)
         points = list(enumerate(vals))
         xs = [float(x) for x, _ in points]
-        ys = [y for _, y in points]
+        ys = [float(y) for _, y in points]
         return (xs, ys)
 
 
@@ -85,16 +91,17 @@ def append_avg_dp_value(
     """Append new weighted average value for drop in pressure to end of refdata/runningavg.dat
     Returns: list of data points in (updated) refdata/runningavg.dat"""
 
-    if rtl2.params.POST_ONLY:
+    if rtl2.suite.get_suite().post_only:
         return
 
     WoA = woa(vel_data, weight_over_area_per_particle)
     dp_rate = dp_per_t(pg_data)
     avg_dp = "{:16.8}".format(dp_rate / WoA) if WoA is not None and dp_rate is not None else "N/A"
+    branch, sha = git_commit(rtl2.suite.get_suite().sourceDir)
+    time = datetime.now().astimezone().isoformat()
     assert runningave_fname.is_file()
     with open(runningave_fname, "a") as run_avg:
-        run_avg.write(avg_dp)
-        run_avg.write("\n")
+        run_avg.write(f"{avg_dp}\t{time}\t{sha}\t{branch}\n")
 
 
 def read_velocity(vel_p_fname: Path) -> List[Mapping[str, float]]:

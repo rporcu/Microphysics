@@ -11,8 +11,6 @@ from rtl2 import repo
 from rtl2 import suite
 from rtl2 import test_util
 
-POST_ONLY = False
-
 
 def convert_type(string):
     """return an integer, float, or string from the input string"""
@@ -155,8 +153,9 @@ def load_params(args):
         mysuite.sendEmailWhenFail = 0
 
     if args.post_only:
-        global POST_ONLY  # pylint: disable=global-statement
-        POST_ONLY = mysuite.post_only = args.post_only
+        mysuite.post_only = args.post_only
+
+    suite.SUITE = mysuite
 
     if mysuite.sendEmailWhenFail:
         if mysuite.emailTo == [] or mysuite.emailBody == "":
