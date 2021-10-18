@@ -14,6 +14,15 @@ from rtl2 import test_util
 
 DO_TIMINGS_PLOTS = False
 
+SUITE: Optional["Suite"] = None
+
+
+def get_suite() -> "Suite":
+    if SUITE is None:
+        raise RuntimeError("global variable SUITE not initialized")
+    return SUITE
+
+
 try:
     import bokeh
     from bokeh.plotting import figure, save, ColumnDataSource
@@ -663,7 +672,6 @@ class Suite:
 
         for i in range(1, maxRuns):
             full_dir = base / "{}-{:03d}".format(today, i)
-            next_dir = base / "{}-{:03d}".format(today, i + 1)
             if not full_dir.is_dir():
                 return full_dir
 
