@@ -1246,6 +1246,9 @@ public:
 
     int sort_particle_int = -1; // # steps to sort particles
 
+    Real imbalance_toler  = 2.0;
+    Real partition_factor = 2.0;
+
     static EBSupport m_eb_support_level;
 
     Periodicity p0_periodicity;
@@ -1331,7 +1334,7 @@ public:
 
     int nghost_eb_full () const   { return 4; }
 
-    IntVect particle_sorting_bin = IntVect::TheZeroVector();
+    IntVect particle_sorting_bin = IntVect::TheUnitVector();
 
     bool do_initial_proj    = true;
     int  initial_iterations = 3;

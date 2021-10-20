@@ -328,13 +328,11 @@ public:
 
     void setSortingBinSizes (amrex::IntVect sorting_bin) { m_sorting_bin = sorting_bin;  }
 
-    void checkParticleBoxSize(int lev, 
-                              amrex::IntVect& max_grid_size,
-                              amrex::Real frac_particle_bin);
-
-    void downsizeParticleBoxes(int lev, const amrex::IntVect& new_grid_size);
-
-    void resetCostByCount(int lev, amrex::Vector<amrex::MultiFab*>& cost);
+    void partitionParticleGrids(int lev, 
+                                const amrex::BoxArray& fba,
+                                const amrex::DistributionMapping& fdmap,
+                                amrex::Real imbalance_toler,
+                                amrex::Real partition_factor);
 
     void setMaxGridSize(const amrex::IntVect& rhs)
     { max_grid_size = rhs;}
@@ -351,6 +349,13 @@ public:
     // return the average/max particle count on IO process
     amrex::Real particleImbalance();
 
+    // count particles for each box in the box list
+    // the boxes may not be local to the proc's particle grids
+    amrex::Vector<int> countParticle(int lev, const amrex::BoxList& bl);
+
+    // verify total # particles hasn't been changed, for debugging
+    void verifyParticleCount();
+
   private:
     int nlev;
 
@@ -363,6 +368,7 @@ public:
     static int domain_bc[6];
 
     int m_total_numparticle = 0;
+    amrex::Vector<int> m_pboxid_to_fboxid;
 
     static void ReadStaticParameters ();
 
