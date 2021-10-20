@@ -89,13 +89,6 @@ fluid.density.constant   = 1.0
 fluid.viscosity          = constant
 fluid.viscosity.constant = 1.0e-3
 
-fluid.specific_heat          = constant
-fluid.specific_heat.constant = 1.0
-
-fluid.thermal_conductivity          = constant
-fluid.thermal_conductivity.constant = 0.0
-
-
 # DEM model settings
 #----------------------------------------------------------------------
 dem.solve = None
@@ -107,8 +100,8 @@ mfix.geometry = "box"
 
 box.internal_flow = false
 
-box.Lo = 1.2 -1.0  1.2
-box.Hi = 2.0  1.0  2.0
+box.Lo = 1.18 -1.0  1.18
+box.Hi = 2.02  1.0  2.02
 
 
 #_______________________________________________________________________

@@ -10,6 +10,8 @@ mfix::set_temperature_bc0 (const Box& sbx,
                            const int lev,
                            const Box& domain)
 {
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
   const int nspecies_g = fluid.nspecies;
 
   // Flag to understand if fluid is a mixture
@@ -49,7 +51,7 @@ mfix::set_temperature_bc0 (const Box& sbx,
   auto& fluid_parms = *fluid.parameters;
 
   auto set_temperature_bc0_in_box = [pinf,pout,minf,a_T_g,p_bc_t_g,
-      a_h_g,fluid_is_a_mixture,nspecies_g,p_bc_X_gk,fluid_parms]
+      a_h_g,fluid_is_a_mixture,nspecies_g,p_bc_X_gk,fluid_parms,run_on_device]
   AMREX_GPU_DEVICE (int bct, int bcv, int i, int j, int k) noexcept
   {
     if((bct == pinf) || (bct == pout) || (bct == minf))
@@ -57,13 +59,19 @@ mfix::set_temperature_bc0 (const Box& sbx,
       a_T_g(i,j,k)  = p_bc_t_g[bcv];
 
       if (!fluid_is_a_mixture) {
-        a_h_g(i,j,k)  = fluid_parms.calc_h_g<RunOn::Gpu>(p_bc_t_g[bcv]);
+        a_h_g(i,j,k) = run_on_device ?
+          fluid_parms.calc_h_g<RunOn::Device>(p_bc_t_g[bcv]) :
+          fluid_parms.calc_h_g<RunOn::Host>(p_bc_t_g[bcv]);
       }
       else {
         Real h_g_sum(0);
 
         for (int n(0); n < nspecies_g; n++) {
-          h_g_sum += p_bc_X_gk[n][bcv]*fluid_parms.calc_h_gk<RunOn::Gpu>(p_bc_t_g[bcv],n);
+          const Real h_gk = run_on_device ?
+            fluid_parms.calc_h_gk<RunOn::Device>(p_bc_t_g[bcv],n) :
+            fluid_parms.calc_h_gk<RunOn::Host>(p_bc_t_g[bcv],n);
+
+          h_g_sum += p_bc_X_gk[n][bcv]*h_gk;
         }
 
         a_h_g(i,j,k)  = h_g_sum;
@@ -186,5 +194,4 @@ mfix::set_temperature_bc0 (const Box& sbx,
   }
 
   //Gpu::synchronize();
-
 }

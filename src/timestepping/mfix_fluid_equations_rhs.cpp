@@ -16,7 +16,7 @@ mfix::mfix_density_rhs (Vector< MultiFab*      > const& rhs,
     rhs[lev]->setVal(0.);
 
   if (solve_reactions) {
-    ChemTransfer chem_txfr_idxs(fluid.nspecies, REACTIONS::nreactions);
+    ChemTransfer chem_txfr_idxs(fluid.nspecies, reactions.nreactions);
 
     for (int lev = 0; lev <= finest_level; lev++) {
 #ifdef _OPENMP
@@ -62,8 +62,7 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
   for (int lev = 0; lev <= finest_level; lev++)
     rhs[lev]->setVal(0.);
 
-  if (fluid.is_a_mixture)
-  {
+  if (fluid.is_a_mixture) {
     const int nspecies_g = fluid.nspecies;
 
     // Temporary for computing other terms of RHS
@@ -73,6 +72,8 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
     for (int lev(0); lev <= finest_level; lev++) {
       lap_hX_gk[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies,
                                     nghost_state(), MFInfo(), *ebfactory[lev]);
+
+      lap_hX_gk[lev]->setVal(0.);
     }
 
     // Compute the mixed enthalpy/species term
@@ -91,7 +92,7 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
   }
 
   if (solve_reactions) {
-    ChemTransfer chem_txfr_idxs(fluid.nspecies, REACTIONS::nreactions);
+    ChemTransfer chem_txfr_idxs(fluid.nspecies, reactions.nreactions);
 
     const int start_idx = chem_txfr_idxs.h_g_txfr;
 
@@ -103,8 +104,8 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
         // Tilebox
         Box bx = mfi.tilebox();
 
-        Array4<Real const> const& h_g_txfr_arr = chem_txfr[lev]->const_array(mfi,start_idx);
         Array4<Real      > const& rhs_arr      = rhs[lev]->array(mfi);
+        Array4<Real const> const& h_g_txfr_arr = chem_txfr[lev]->const_array(mfi,start_idx);
 
         amrex::ParallelFor(bx, [rhs_arr,h_g_txfr_arr]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -140,12 +141,33 @@ mfix::mfix_species_X_rhs (Vector< MultiFab*      > const& rhs,
   if (solve_reactions) {
     const int nspecies_g = fluid.nspecies;
 
-    ChemTransfer chem_txfr_idxs(nspecies_g, REACTIONS::nreactions);
+    ChemTransfer chem_txfr_idxs(nspecies_g, reactions.nreactions);
 
     const int start_idx = chem_txfr_idxs.ro_gk_txfr;
 
+    //for (int lev = 0; lev <= finest_level; lev++) {
+    //  rhs[lev]->plus(*chem_txfr[lev], start_idx, nspecies_g, rhs[lev]->nGrow());
+    //}
+
     for (int lev = 0; lev <= finest_level; lev++) {
-      rhs[lev]->plus(*chem_txfr[lev], start_idx, nspecies_g, rhs[lev]->nGrow());
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+      for (MFIter mfi(*rhs[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+        // Tilebox
+        Box bx = mfi.tilebox ();
+
+        Array4<Real      > const& rhs_arr          = rhs[lev]->array(mfi);
+        Array4<Real const> const& species_txfr_arr = chem_txfr[lev]->const_array(mfi,start_idx);
+
+        amrex::ParallelFor(bx, [rhs_arr,species_txfr_arr,nspecies_g]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+          for (int n_g(0); n_g < nspecies_g; ++n_g) {
+            rhs_arr(i,j,k,n_g) = species_txfr_arr(i,j,k,n_g);
+          }
+        });
+      }
     }
   }
 
@@ -157,15 +179,13 @@ mfix::mfix_species_X_rhs (Vector< MultiFab*      > const& rhs,
 void
 mfix::mfix_momentum_rhs (Vector< MultiFab* > const& rhs,
                          Vector< MultiFab const* > const& ep_g,
-                         Vector< MultiFab const* > const& vel_g,
-                         Vector< MultiFab const* > const& ro_g_rhs,
                          Vector< MultiFab const* > const& chem_txfr)
 {
   for (int lev = 0; lev <= finest_level; lev++)
     rhs[lev]->setVal(0.);
 
   if (solve_reactions) {
-    ChemTransfer chem_txfr_idxs(fluid.nspecies, REACTIONS::nreactions);
+    ChemTransfer chem_txfr_idxs(fluid.nspecies, reactions.nreactions);
 
     const int start_idx = chem_txfr_idxs.vel_g_txfr;
 
@@ -177,20 +197,16 @@ mfix::mfix_momentum_rhs (Vector< MultiFab* > const& rhs,
         // Tilebox
         Box bx = mfi.tilebox ();
 
-        Array4<Real const> const& epg_arr           = ep_g[lev]->const_array(mfi);
-        Array4<Real const> const& vel_arr           = vel_g[lev]->const_array(mfi);
-        Array4<Real const> const& rog_rhs_arr       = ro_g_rhs[lev]->const_array(mfi);
-        Array4<Real const> const& momentum_txfr_arr = chem_txfr[lev]->const_array(mfi,start_idx);
         Array4<Real      > const& rhs_arr           = rhs[lev]->array(mfi);
+        Array4<Real const> const& epg_arr           = ep_g[lev]->const_array(mfi);
+        Array4<Real const> const& momentum_txfr_arr = chem_txfr[lev]->const_array(mfi,start_idx);
 
-        amrex::ParallelFor(bx, [epg_arr,vel_arr,rog_rhs_arr,rhs_arr,momentum_txfr_arr]
+        amrex::ParallelFor(bx, [epg_arr,rhs_arr,momentum_txfr_arr]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          const Real num = epg_arr(i,j,k) * rog_rhs_arr(i,j,k);
-
-          rhs_arr(i,j,k,0) += momentum_txfr_arr(i,j,k,0) - num*vel_arr(i,j,k,0);
-          rhs_arr(i,j,k,1) += momentum_txfr_arr(i,j,k,1) - num*vel_arr(i,j,k,1);
-          rhs_arr(i,j,k,2) += momentum_txfr_arr(i,j,k,2) - num*vel_arr(i,j,k,2);
+          rhs_arr(i,j,k,0) += momentum_txfr_arr(i,j,k,0);
+          rhs_arr(i,j,k,1) += momentum_txfr_arr(i,j,k,1);
+          rhs_arr(i,j,k,2) += momentum_txfr_arr(i,j,k,2);
         });
       }
     }

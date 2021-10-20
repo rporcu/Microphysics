@@ -74,6 +74,7 @@ build:dpcpp:
             -B build
             -DCMAKE_BUILD_TYPE=None
             -DMFIX_GPU_BACKEND=SYCL
+            -DSKIP_LAUNCHER=1
             -G Ninja
     - cmake --build build
   <<: *build_gpu
@@ -82,15 +83,16 @@ build:dpcpp:
 
 build:hip:
   variables:
-    CXX: hipcc
+    CXX: /opt/rocm/llvm/bin/clang++
   script:
     - source /etc/profile.d/rocm.sh
     - git submodule update --init --force
     - cmake -S .
             -B build
+            -DAMReX_AMD_ARCH=gfx908
             -DCMAKE_BUILD_TYPE=None
             -DMFIX_GPU_BACKEND=HIP
-            -DAMReX_AMD_ARCH=gfx908
+            -DMFIX_MPI=0
             -G Ninja
     - cmake --build build
   <<: *build_gpu
@@ -98,21 +100,23 @@ build:hip:
     - ubuntu-shell
 
 build:nvcc:
-  image: $CI_REGISTRY_IMAGE/nvcc
-  needs: ['build-nvcc-env']
+  variables:
+    CC: gcc-9
+    CXX: g++-9
   script:
     - sccache -s
     - git submodule update --init --force
-    - cmake -S .
-            -B build
+    - cmake -S .  -B build
             -DAMReX_CUDA_ARCH=Volta
-            -DCMAKE_BUILD_TYPE=None
+            -DCMAKE_BUILD_TYPE=MinSizeRel
             -DCMAKE_CUDA_ARCHITECTURES=70
+            -DMFIX_CSG=ON
             -DMFIX_GPU_BACKEND=CUDA
+            -GNinja
     - cmake --build build
   <<: *build_gpu
   tags:
-    - docker
+    - ubuntu-shell
 
 build:csg:
   image: $CI_REGISTRY_IMAGE/nvcc
@@ -127,7 +131,7 @@ build:csg:
     - ./build/src/eb/tests/functional_tests
   <<: *build_gpu
   tags:
-    - docker
+    - ubuntu-shell
 
 .ctest: &ctest_template
   image: $CI_REGISTRY_IMAGE/nvcc
@@ -188,13 +192,30 @@ lint:shellcheck:
   script:
     - find . -name "*.sh" -not -path "./subprojects/*" | xargs shellcheck -e SC2086,SC2125,SC2046,SC2129,SC2044
 
-lint:warnings:
+lint:gcc:warnings:
   <<: *lint_template
+  variables:
+    CC: gcc
+    CXX: g++
   script:
     - cmake -S .
             -B build
             -DCMAKE_BUILD_TYPE=Debug
             -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror"
+            -GNinja
+    - cmake --build build -- -k0
+
+lint:clang:warnings:
+  <<: *lint_template
+  variables:
+    CC: clang-12
+    CXX: clang++-12
+  script:
+    - cmake -S .
+            -B build
+            -DCMAKE_BUILD_TYPE=Debug
+            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror"
+            -DMFIX_MPI=0
             -GNinja
     - cmake --build build -- -k0
 

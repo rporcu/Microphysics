@@ -1,7 +1,7 @@
 #include <mfix.H>
 #include <mfix_des_K.H>
 #include <mfix_interp_K.H>
-#include <mfix_eb_interp_K.H>
+#include <mfix_eb_interp_shepard_K.H>
 #include <mfix_filcc.H>
 
 #include <AMReX_BC_TYPES.H>
@@ -16,13 +16,14 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
                             Vector< MultiFab* > const& ro_g_in,
                             Vector< MultiFab* > const& vel_g_in,
                             Vector< MultiFab* > const& T_g_in,
+                            Vector< MultiFab* > const& X_gk_in,
                             Real time)
 {
   BL_PROFILE("mfix::mfix_calc_txfr_fluid()");
 
   const Real strttime = ParallelDescriptor::second();
 
-  mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in);
+  mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in);
 
   // ******************************************************************************
   // Now use the transfer coeffs of individual particles to create the
@@ -480,13 +481,37 @@ mfix::mfix_calc_txfr_particle (Real time,
 
                   // At least one of the cells in the stencil is cut or covered
                   } else {
+#if 0
+                    // TODO: This was initially split for variables that may have known
+                    // EB values (e.g., no-slip velocity). However, the results changed
+                    // more than expected so now EB values are not used.
+                    {
+                      const int srccomp = 0;
+                      const int dstcomp = 0;
+                      const int numcomp = 3;
 
-                  const int scomp = 3;
-                  fe_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
-                            flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-                            interp_array, &interp_loc[0], interp_comp, scomp);
+                      shepard_interp_eb(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                                        flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                                        interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+                    }
+                    {
+                      const int srccomp = 3;
+                      const int dstcomp = 3;
+                      const int numcomp = interp_comp-3;
 
+                      shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                                     flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                                     interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+                    }
+#else
+                    const int srccomp = 0;
+                    const int dstcomp = 0;
+                    const int numcomp = interp_comp;
 
+                    shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                                   flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                                   interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+#endif
                   } // Cut cell
 
                   Real pvol = p_realarray[SoArealData::volume][pid];

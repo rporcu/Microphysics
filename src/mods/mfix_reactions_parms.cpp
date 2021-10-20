@@ -11,15 +11,17 @@
 #include <mfix_pic_parms.H>
 #include <mfix_regions_parms.H>
 #include <mfix_species_parms.H>
+#include <mfix_reactions_rates_K.H>
 
 #include <string>
 #include <sstream>
 #include <cctype>
 #include <iterator>
 #include <regex>
+#include <algorithm>
 
 
-namespace stoichiometry_aux {
+namespace chemistry_aux {
 
 std::string ltrim(const std::string& s) {
   return std::regex_replace(s, std::regex("^\\s+"), std::string(""));
@@ -35,18 +37,235 @@ std::string trim(const std::string& s) {
   return ltrim(rtrim(s));
 }
 
+} // end namespace chemistry_aux
 
-std::string get_reactants(const std::string& formula)
+
+Reactions::Reactions()
+  : solve(0)
+  , nreactions(0)
+  , reactions(0)
+  , reaction_equations(0)
+  , m_chemical_reactions(0)
+{}
+
+
+Reactions::~Reactions()
+{
+  if (solve)
+    for (int n(0); n < nreactions; n++)
+      delete m_chemical_reactions[n];
+}
+
+
+// Initialization: read input parameters and set up reactions
+void Reactions::Initialize () {
+
+  amrex::ParmParse pp("chemistry");
+
+  if (pp.contains("solve")) {
+
+    // Get the list of reactions names to define chem equations
+    pp.getarr("solve", reactions);
+
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(reactions.size() > 0,
+        "No input provided for chemistry.solve");
+
+    // Disable the species solver if the species are defined as "None" (case
+    // insensitive) or 0
+    if (amrex::toLower(reactions[0]).compare("none") == 0 || (reactions[0]).compare("0") == 0) {
+      solve = false;
+      reactions.clear();
+      nreactions = 0;
+      reaction_equations.clear();
+    } else {
+      solve = true;
+      nreactions = reactions.size();
+      reaction_equations.clear();
+      reaction_equations.resize(nreactions);
+    }
+
+    if (solve) {
+      for (int n(0); n < nreactions; n++) {
+        // Get the reation equation relative to given reaction name
+        pp.get((reactions[n]+".reaction").c_str(), reaction_equations[n]);
+      }
+    }
+  }
+
+  if (solve) {
+
+    m_chemical_reactions.resize(nreactions, nullptr);
+    
+    for (int n(0); n < nreactions; n++) {
+
+      const std::string& equation = reaction_equations[n];
+
+      m_chemical_reactions[n] = new ChemicalReaction(equation);
+    }
+  }
+
+  // Comment
+  Gpu::HostVector<int> h_types(nreactions);
+  std::transform(m_chemical_reactions.begin(), m_chemical_reactions.end(),
+                 h_types.begin(), [](auto reaction){ return reaction->m_reaction_type; });
+  d_types.resize(nreactions);
+  Gpu::copyAsync(Gpu::hostToDevice, h_types.begin(), h_types.end(), d_types.begin());
+  //const int* p_types = d_types.data();
+
+  // Comment
+  Gpu::HostVector<int> h_nphases(nreactions);
+  std::transform(m_chemical_reactions.begin(), m_chemical_reactions.end(),
+                 h_nphases.begin(), [](auto reaction){ return reaction->m_phases.size(); });
+  d_nphases.resize(nreactions);
+  Gpu::copyAsync(Gpu::hostToDevice, h_nphases.begin(), h_nphases.end(), d_nphases.begin());
+  //const int* p_nphases = d_nphases.data();
+
+  // Comment
+  Gpu::HostVector<const int*> h_phases(nreactions);
+  std::transform(m_chemical_reactions.begin(), m_chemical_reactions.end(),
+                 h_phases.begin(), [](auto reaction){ return reaction->m_phases.data(); });
+  d_phases.resize(nreactions);
+  Gpu::copyAsync(Gpu::hostToDevice, h_phases.begin(), h_phases.end(), d_phases.begin());
+  //const int** p_phases = d_phases.data();
+
+  // Comment
+  Gpu::HostVector<int> h_nreactants(nreactions);
+  std::transform(m_chemical_reactions.begin(), m_chemical_reactions.end(),
+                 h_nreactants.begin(), [](auto reaction){ return reaction->m_reactants.size(); });
+  d_nreactants.resize(nreactions);
+  Gpu::copyAsync(Gpu::hostToDevice, h_nreactants.begin(), h_nreactants.end(), d_nreactants.begin());
+  const int* p_nreactants = d_nreactants.data();
+
+  // Comment
+  Gpu::HostVector<const int*> h_reactants_id(nreactions);
+  std::transform(m_chemical_reactions.begin(), m_chemical_reactions.end(),
+                 h_reactants_id.begin(), [](auto reaction){ return reaction->m_reactants_id.data(); });
+  d_reactants_id.resize(nreactions);
+  Gpu::copyAsync(Gpu::hostToDevice, h_reactants_id.begin(), h_reactants_id.end(), d_reactants_id.begin());
+  const int** p_reactants_id = d_reactants_id.data();
+
+  // Comment
+  Gpu::HostVector<const Real*> h_reactants_coeffs(nreactions);
+  std::transform(m_chemical_reactions.begin(), m_chemical_reactions.end(),
+                 h_reactants_coeffs.begin(), [](auto reaction){ return reaction->m_reactants_coeffs.data(); });
+  d_reactants_coeffs.resize(nreactions);
+  Gpu::copyAsync(Gpu::hostToDevice, h_reactants_coeffs.begin(), h_reactants_coeffs.end(), d_reactants_coeffs.begin());
+  const Real** p_reactants_coeffs = d_reactants_coeffs.data();
+
+  // Comment
+  Gpu::HostVector<const int*> h_reactants_phases(nreactions);
+  std::transform(m_chemical_reactions.begin(), m_chemical_reactions.end(),
+                 h_reactants_phases.begin(), [](auto reaction){ return reaction->m_reactants_phases.data(); });
+  d_reactants_phases.resize(nreactions);
+  Gpu::copyAsync(Gpu::hostToDevice, h_reactants_phases.begin(), h_reactants_phases.end(), d_reactants_phases.begin());
+  const int** p_reactants_phases = d_reactants_phases.data();
+
+  // Comment
+  Gpu::HostVector<int> h_nproducts(nreactions);
+  std::transform(m_chemical_reactions.begin(), m_chemical_reactions.end(),
+                 h_nproducts.begin(), [](auto reaction){ return reaction->m_products.size(); });
+  d_nproducts.resize(nreactions);
+  Gpu::copyAsync(Gpu::hostToDevice, h_nproducts.begin(), h_nproducts.end(), d_nproducts.begin());
+  const int* p_nproducts = d_nproducts.data();
+
+  // Comment
+  Gpu::HostVector<const int*> h_products_id(nreactions);
+  std::transform(m_chemical_reactions.begin(), m_chemical_reactions.end(),
+                 h_products_id.begin(), [](auto reaction){ return reaction->m_products_id.data(); });
+  d_products_id.resize(nreactions);
+  Gpu::copyAsync(Gpu::hostToDevice, h_products_id.begin(), h_products_id.end(), d_products_id.begin());
+  const int** p_products_id = d_products_id.data();
+
+  // Comment
+  Gpu::HostVector<const Real*> h_products_coeffs(nreactions);
+  std::transform(m_chemical_reactions.begin(), m_chemical_reactions.end(),
+                 h_products_coeffs.begin(), [](auto reaction){ return reaction->m_products_coeffs.data(); });
+  d_products_coeffs.resize(nreactions);
+  Gpu::copyAsync(Gpu::hostToDevice, h_products_coeffs.begin(), h_products_coeffs.end(), d_products_coeffs.begin());
+  const Real** p_products_coeffs = d_products_coeffs.data();
+
+  // Comment
+  Gpu::HostVector<const int*> h_products_phases(nreactions);
+  std::transform(m_chemical_reactions.begin(), m_chemical_reactions.end(),
+                 h_products_phases.begin(), [](auto reaction){ return reaction->m_products_phases.data(); });
+  d_products_phases.resize(nreactions);
+  Gpu::copyAsync(Gpu::hostToDevice, h_products_phases.begin(), h_products_phases.end(), d_products_phases.begin());
+  const int** p_products_phases = d_products_phases.data();
+
+  parameters = new ReactionsParms(nreactions, p_nreactants, p_reactants_id,
+                                  p_reactants_coeffs, p_reactants_phases,
+                                  p_nproducts, p_products_id, p_products_coeffs,
+                                  p_products_phases);
+
+  Gpu::synchronize();
+}
+
+
+// REACTION_T Class Constructor
+ChemicalReaction::ChemicalReaction (const std::string& reaction)
+  : m_reaction_type(REACTIONTYPE::Invalid)
+  , m_phases(0)
+  , m_reaction(reaction)
+  , m_reactants(0)
+  , m_reactants_id(0)
+  , m_reactants_coeffs(0)
+  , m_reactants_phases(0)
+  , m_products(0)
+  , m_products_id(0)
+  , m_products_coeffs(0)
+  , m_products_phases(0)
+{
+  Gpu::HostVector<int> h_phases;
+
+  Gpu::HostVector<int> h_reactants_id;
+  Gpu::HostVector<Real> h_reactants_coeffs;
+  Gpu::HostVector<int> h_reactants_phases;
+
+  Gpu::HostVector<int> h_products_id;
+  Gpu::HostVector<Real> h_products_coeffs;
+  Gpu::HostVector<int> h_products_phases;
+
+  parse_reaction(m_reaction, h_phases, m_reaction_type, m_reactants,
+                 h_reactants_id, h_reactants_coeffs, h_reactants_phases, m_products,
+                 h_products_id, h_products_coeffs, h_products_phases);
+
+  m_phases.resize(h_phases.size());
+  Gpu::copyAsync(Gpu::hostToDevice, h_phases.begin(), h_phases.end(), m_phases.begin());
+
+  m_reactants_id.resize(h_reactants_id.size());
+  Gpu::copyAsync(Gpu::hostToDevice, h_reactants_id.begin(), h_reactants_id.end(), m_reactants_id.begin());
+
+  m_reactants_coeffs.resize(h_reactants_coeffs.size());
+  Gpu::copyAsync(Gpu::hostToDevice, h_reactants_coeffs.begin(), h_reactants_coeffs.end(), m_reactants_coeffs.begin());
+
+  m_reactants_phases.resize(h_reactants_phases.size());
+  Gpu::copyAsync(Gpu::hostToDevice, h_reactants_phases.begin(), h_reactants_phases.end(), m_reactants_phases.begin());
+
+  m_products_id.resize(h_products_id.size());
+  Gpu::copyAsync(Gpu::hostToDevice, h_products_id.begin(), h_products_id.end(), m_products_id.begin());
+
+  m_products_coeffs.resize(h_products_coeffs.size());
+  Gpu::copyAsync(Gpu::hostToDevice, h_products_coeffs.begin(), h_products_coeffs.end(), m_products_coeffs.begin());
+
+  m_products_phases.resize(h_products_phases.size());
+  Gpu::copyAsync(Gpu::hostToDevice, h_products_phases.begin(), h_products_phases.end(), m_products_phases.begin());
+
+  Gpu::synchronize();
+}
+
+
+std::string 
+ChemicalReaction::get_reactants(const std::string& formula)
 {
   {
     std::size_t pos = formula.find("-->");
     if(pos != std::string::npos)
-      return trim(formula.substr(0,pos));
+      return chemistry_aux::trim(formula.substr(0,pos));
   }
   {
     std::size_t pos = formula.find("<--");
     if(pos != std::string::npos)
-      return trim(formula.substr(pos+3, formula.size()-(pos+3)));
+      return chemistry_aux::trim(formula.substr(pos+3, formula.size()-(pos+3)));
   }
   {
     std::size_t pos = formula.find("<=>");
@@ -63,17 +282,18 @@ std::string get_reactants(const std::string& formula)
 }
 
 
-std::string get_products(const std::string& formula)
+std::string 
+ChemicalReaction::get_products(const std::string& formula)
 {
   {
     std::size_t pos = formula.find("<--");
     if(pos != std::string::npos)
-      return trim(formula.substr(0,pos));
+      return chemistry_aux::trim(formula.substr(0,pos));
   }
   {
     std::size_t pos = formula.find("-->");
     if(pos != std::string::npos)
-      return trim(formula.substr(pos+3, formula.size()-(pos+3)));
+      return chemistry_aux::trim(formula.substr(pos+3, formula.size()-(pos+3)));
   }
   {
     std::size_t pos = formula.find("<=>");
@@ -91,13 +311,13 @@ std::string get_products(const std::string& formula)
 
 
 void
-get_stoichiometric_data(const std::string& s,
-                        std::vector<std::string>& compounds,
-                        amrex::Gpu::HostVector<int>& compounds_id,
-                        amrex::Gpu::HostVector<amrex::Real>& coefficients,
-                        amrex::Gpu::HostVector<int>& phases)
+ChemicalReaction::get_stoichiometric_data(const std::string& s,
+                                          std::vector<std::string>& compounds,
+                                          amrex::Gpu::HostVector<int>& compounds_id,
+                                          amrex::Gpu::HostVector<amrex::Real>& coefficients,
+                                          amrex::Gpu::HostVector<int>& phases)
 {
-  std::string formula(trim(s));
+  std::string formula(chemistry_aux::trim(s));
   std::replace(formula.begin(), formula.end(), '+', ' ');
   
   std::istringstream iss(formula);
@@ -151,7 +371,7 @@ get_stoichiometric_data(const std::string& s,
       amrex::Abort("Error: wrong format for chemical equation");
     }
     
-    compounds[n] = trim(single_compound);
+    compounds[n] = chemistry_aux::trim(single_compound);
 
     auto it = std::find(SPECIES::species.begin(), SPECIES::species.end(),
         compounds[n]);
@@ -168,18 +388,24 @@ get_stoichiometric_data(const std::string& s,
 
 
 void
-parse_chemical_reaction(const std::string& equation,
-                        amrex::Gpu::HostVector<int>& phases,
-                        int& reaction_type,
-                        std::vector<std::string>& reactants,
-                        amrex::Gpu::HostVector<int>& reactants_id,
-                        amrex::Gpu::HostVector<amrex::Real>& reactants_coeffs,
-                        amrex::Gpu::HostVector<int>& reactants_phases,
-                        std::vector<std::string>& products,
-                        amrex::Gpu::HostVector<int>& products_id,
-                        amrex::Gpu::HostVector<amrex::Real>& products_coeffs,
-                        amrex::Gpu::HostVector<int>& products_phases)
+ChemicalReaction::parse_reaction(const std::string& equation,
+                                 amrex::Gpu::HostVector<int>& phases,
+                                 int& reaction_type,
+                                 std::vector<std::string>& reactants,
+                                 amrex::Gpu::HostVector<int>& reactants_id,
+                                 amrex::Gpu::HostVector<amrex::Real>& reactants_coeffs,
+                                 amrex::Gpu::HostVector<int>& reactants_phases,
+                                 std::vector<std::string>& products,
+                                 amrex::Gpu::HostVector<int>& products_id,
+                                 amrex::Gpu::HostVector<amrex::Real>& products_coeffs,
+                                 amrex::Gpu::HostVector<int>& products_phases)
 {
+  // remove spaces from reaction reaction_formula string
+  std::string reaction_formula(equation);
+  reaction_formula.erase(std::remove(reaction_formula.begin(),
+                                     reaction_formula.end(),
+                                     ' '), reaction_formula.end());
+
   // Clear reactants containers
   reactants.clear();
   reactants_coeffs.clear();
@@ -190,11 +416,11 @@ parse_chemical_reaction(const std::string& equation,
   products_coeffs.clear();
   products_phases.clear();
 
-  // Get the reaction part of the equation
-  std::string reaction_part = get_reactants(equation);
+  // Get the reaction part of the reaction_formula
+  std::string reaction_part = get_reactants(reaction_formula);
   
-  // Get the products part of the equation
-  std::string production_part = get_products(equation);
+  // Get the products part of the reaction_formula
+  std::string production_part = get_products(reaction_formula);
 
   // Get the reaction part stoichiometric coefficoents, elements and phases
   get_stoichiometric_data(reaction_part, reactants, reactants_id,
@@ -230,133 +456,4 @@ parse_chemical_reaction(const std::string& equation,
     amrex::Abort("Error: unrecognized reaction type");
 
   return;
-}
-
-} // end namespace stoichiometry_aux
-
-
-using namespace stoichiometry_aux;
-
-
-namespace REACTIONS
-{
-  // Switch for turning on/off chemical reactions modeling
-  bool solve = false;
-
-  // Names of chemical reactions allowed by the model
-  std::vector<std::string> reactions;
-
-  // Number of chemical reactions allowed by the model
-  int nreactions = 0;
-
-  // Chemical reactions equations
-  std::vector<std::string> reaction_equations;
-
-  // Initialization: read input parameters and set up reactions
-  void Initialize ()
-  {
-    amrex::ParmParse pp("chemistry");
-
-    if (pp.contains("solve"))
-    {
-      // Get the list of reactions names to define chem equations
-      pp.getarr("solve", reactions);
-
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(reactions.size() > 0,
-          "No input provided for chemistry.solve");
-
-      // Disable the species solver if the species are defined as "None" (case
-      // insensitive) or 0
-      if (amrex::toLower(reactions[0]).compare("none") == 0 ||
-          (reactions[0]).compare("0") == 0) {
-        solve = false;
-        reactions.clear();
-        nreactions = 0;
-        reaction_equations.clear();
-      }
-      else {
-        solve = true;
-        nreactions = reactions.size();
-        reaction_equations.clear();
-        reaction_equations.resize(nreactions);
-      }
-
-      if (solve) {
-        for (int n(0); n < nreactions; n++) {
-          // Get the reation equation relative to given reaction name
-          pp.get((reactions[n]+".reaction").c_str(), reaction_equations[n]);
-        }
-      }
-    }
-  }
-
-  // REACTION_T Class Constructor
-  ChemicalReaction::ChemicalReaction (const std::string& reaction)
-    : m_reaction(reaction)
-    , m_phases(0)
-    , m_reaction_type(REACTIONTYPE::Invalid)
-    , m_reactants(0)
-    , m_reactants_id(0)
-    , m_reactants_coeffs(0)
-    , m_reactants_phases(0)
-    , m_products(0)
-    , m_products_id(0)
-    , m_products_coeffs(0)
-    , m_products_phases(0)
-  {
-    Gpu::HostVector<int> h_phases;
-
-    Gpu::HostVector<int> h_reactants_id;
-    Gpu::HostVector<Real> h_reactants_coeffs;
-    Gpu::HostVector<int> h_reactants_phases;
-
-    Gpu::HostVector<int> h_products_id;
-    Gpu::HostVector<Real> h_products_coeffs;
-    Gpu::HostVector<int> h_products_phases;
-
-    parse_chemical_reaction(m_reaction, h_phases, m_reaction_type, m_reactants,
-        h_reactants_id, h_reactants_coeffs, h_reactants_phases, m_products,
-        h_products_id, h_products_coeffs, h_products_phases);
-
-    m_phases.resize(h_phases.size());
-    Gpu::copyAsync(Gpu::hostToDevice, h_phases.begin(), h_phases.end(), m_phases.begin());
-
-    m_reactants_id.resize(h_reactants_id.size());
-    Gpu::copyAsync(Gpu::hostToDevice, h_reactants_id.begin(), h_reactants_id.end(), m_reactants_id.begin());
-
-    m_reactants_coeffs.resize(h_reactants_coeffs.size());
-    Gpu::copyAsync(Gpu::hostToDevice, h_reactants_coeffs.begin(), h_reactants_coeffs.end(), m_reactants_coeffs.begin());
-
-    m_reactants_phases.resize(h_reactants_phases.size());
-    Gpu::copyAsync(Gpu::hostToDevice, h_reactants_phases.begin(), h_reactants_phases.end(), m_reactants_phases.begin());
-
-    m_products_id.resize(h_products_id.size());
-    Gpu::copyAsync(Gpu::hostToDevice, h_products_id.begin(), h_products_id.end(), m_products_id.begin());
-
-    m_products_coeffs.resize(h_products_coeffs.size());
-    Gpu::copyAsync(Gpu::hostToDevice, h_products_coeffs.begin(), h_products_coeffs.end(), m_products_coeffs.begin());
-
-    m_products_phases.resize(h_products_phases.size());
-    Gpu::copyAsync(Gpu::hostToDevice, h_products_phases.begin(), h_products_phases.end(), m_products_phases.begin());
-
-    Gpu::synchronize();
-  }
-}
-
-
-// Initialization: read input parameters and set up reactions
-void mfix::initialize_chem_reactions ()
-{
-  if (REACTIONS::solve)
-  {
-    const int nreactions = REACTIONS::nreactions;
-    m_chemical_reactions.resize(nreactions, nullptr);
-    
-    for (int n(0); n < nreactions; n++)
-    {
-      const std::string& equation = REACTIONS::reaction_equations[n];
-
-      m_chemical_reactions[n] = new REACTIONS::ChemicalReaction(equation);
-    }
-  }
 }

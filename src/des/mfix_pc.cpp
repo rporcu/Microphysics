@@ -4,18 +4,23 @@
 #include <mfix_dem_parms.H>
 #include <mfix_reactions_parms.H>
 #include <mfix_bc_parms.H>
-#include <mfix_algorithm.H>
+#include <mfix_solvers.H>
 
 using namespace amrex;
+using namespace Solvers;
+
 
 int  MFIXParticleContainer::domain_bc[6] {0};
 
+
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
-                                              SolidsPhase& arg_solids)
+                                              SolidsPhase& arg_solids,
+                                              Reactions& arg_reactions)
     : NeighborParticleContainer<AoSrealData::count,AoSintData::count,
                                 SoArealData::count,SoAintData::count>(amr_core->GetParGDB(), 1)
-    , m_runtimeRealData(arg_solids.nspecies, REACTIONS::nreactions)
+    , m_runtimeRealData(arg_solids.nspecies, arg_reactions.nreactions)
     , solids(arg_solids)
+    , reactions(arg_reactions)
 {
     ReadStaticParameters();
 
@@ -45,8 +50,13 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
     setRealCommComp(20, false); // temperature
     setRealCommComp(21, false); // convection
 
+#if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
+    setIntCommComp(0, true); // id
+    setIntCommComp(1, true); // cpu
+#else
     setIntCommComp(0, false); // id
     setIntCommComp(1, false); // cpu
+#endif
     setIntCommComp(2, true);  // phase
     setIntCommComp(3, false); // state
 
@@ -54,7 +64,8 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
 
     // Add solids.nspecies components
     for (int n(0); n < m_runtimeRealData.count; ++n) {
-      AddRealComp(false); // Turn off ghost particle communication
+      AddRealComp(true); // Turn on comm for redistribute on ghosting
+      setRealCommComp(21+n, false); // turn off for ghosting
     }
 }
 
@@ -119,7 +130,7 @@ void MFIXParticleContainer::ReadStaticParameters ()
 void MFIXParticleContainer::EvolveParticles (int lev,
                                              int nstep,
                                              Real dt,
-                                             Real /*time*/,
+                                             Real time,
                                              RealVect& gravity,
                                              EBFArrayBoxFactory* ebfactory,
                                              const MultiFab* ls_phi,
@@ -135,6 +146,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
+
+    const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
     Real eps = std::numeric_limits<Real>::epsilon();
 
@@ -596,6 +609,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                     RealVect pos1(particle.pos());
 
+                    int has_collisions(0);
+
                     const auto neighbs = nbor_data.getNeighbors(i);
                     for (auto mit = neighbs.begin(); mit != neighbs.end(); ++mit)
                     {
@@ -622,6 +637,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                         if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
                         {
+                          has_collisions = 1;
+
                             Real dist_mag = sqrt(r2);
 
                             AMREX_ASSERT(dist_mag >= eps);
@@ -633,7 +650,19 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                             normal[1] = dist_y * dist_mag_inv;
                             normal[2] = dist_z * dist_mag_inv;
 
-                            Real overlap_n = r_lm - dist_mag;
+                            Real overlap_n(0.);
+                            if (p_intarray[SoAintData::state][i] == 10 ||
+                                p_intarray[SoAintData::state][j] == 10) {
+
+                              // most of overlaps (99.99%) are in the range [0, 2.5e-8] m
+                              // which means [0, 5.e-4] radiuses
+                              // we set max overlap to   2.5e-4*radius
+                              overlap_n = amrex::min(r_lm - dist_mag, 2.5e-4*p1radius);
+                            } else {
+                              overlap_n = r_lm - dist_mag;
+                            }
+
+
                             Real vrel_trans_norm;
                             RealVect vrel_t(0.);
 
@@ -749,6 +778,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 #endif
                         }
                     }
+
+                    if ((p_intarray[SoAintData::state][i] == 10) && (!has_collisions))
+                      p_intarray[SoAintData::state][i] = 1;
               });
 
               Gpu::Device::synchronize();
@@ -789,29 +821,54 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             const int nspecies_s = solids.nspecies;
 
             const int idx_X_sn = m_runtimeRealData.X_sn;
-            const int idx_ro_sn_txfr = m_runtimeRealData.ro_sn_txfr;
+            const int idx_mass_sn_txfr = m_runtimeRealData.mass_sn_txfr;
             const int idx_vel_s_txfr = m_runtimeRealData.vel_s_txfr;
             const int idx_h_s_txfr = m_runtimeRealData.h_s_txfr;
 
-            const int local_update_mass = update_mass && static_cast<int>(solids.solve_species && REACTIONS::solve);
-            const int local_update_enthalpy = update_enthalpy && static_cast<int>(advect_enthalpy);
-            const int local_solve_reactions = REACTIONS::solve;
+            const int local_update_mass = update_mass && solids.solve_species && reactions.solve;
+            const int local_update_enthalpy = update_enthalpy && advect_enthalpy;
+            const int local_solve_reactions = reactions.solve;
 
             const int solid_is_a_mixture = solids.is_a_mixture;
 
             auto& solids_parms = *solids.parameters;
 
             amrex::ParallelFor(nrp, [pstruct,p_realarray,p_intarray,subdt,
-                ptile_data,nspecies_s,idx_X_sn,idx_ro_sn_txfr,idx_vel_s_txfr,
+                ptile_data,nspecies_s,idx_X_sn,idx_mass_sn_txfr,idx_vel_s_txfr,
                 idx_h_s_txfr,local_update_mass,fc_ptr,ntot,gravity,tow_ptr,eps,
                 p_hi,p_lo,x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc,
-                enthalpy_source,update_momentum,local_solve_reactions,
-                solid_is_a_mixture,solids_parms,local_update_enthalpy]
+                enthalpy_source,update_momentum,local_solve_reactions,time,
+                solid_is_a_mixture,solids_parms,local_update_enthalpy,run_on_device]
               AMREX_GPU_DEVICE (int i) noexcept
             {
               ParticleType& p = pstruct[i];
 
               GpuArray<Real,SPECIES::NMAX> X_sn;
+
+              // Get current particle's species mass fractions
+              for (int n_s(0); n_s < nspecies_s; ++n_s) {
+                X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s][i];
+              }
+
+              Real p_enthalpy_old(0);
+
+              if (local_update_enthalpy) {
+                const Real Tp = p_realarray[SoArealData::temperature][i];
+
+                if (solid_is_a_mixture) {
+                  for (int n_s(0); n_s < nspecies_s; ++n_s) {
+                    p_enthalpy_old += run_on_device ?
+                      X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Device>(Tp,n_s) :
+                      X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Host>(Tp,n_s);
+                  }
+                } else {
+                  const int phase = p_intarray[SoAintData::phase][i];
+
+                  p_enthalpy_old = run_on_device ?
+                    solids_parms.calc_h_s<RunOn::Device>(phase-1,Tp) :
+                    solids_parms.calc_h_s<RunOn::Host>(phase-1,Tp);
+                }
+              }
 
               // Get current particle's mass
               const Real p_mass_old = p_realarray[SoArealData::mass][i];
@@ -828,6 +885,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               // Get current particle's volume
               const Real p_vol = p_realarray[SoArealData::volume][i];
 
+              // Flag to stop computing particle's quantities if mass_new < 0,
+              // i.e. the particle disappears because of chemical reactions
               int proceed = 1;
 
               //***************************************************************
@@ -836,32 +895,29 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               if(local_update_mass)
               {
                 // Total particle density exchange rate
-                Real total_ro_rate(0);
+                Real total_mass_rate(0);
 
-                for (int n_s(0); n_s < nspecies_s; ++n_s)
-                {
-                  // Current species mass fraction
-                  X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s][i];
+                for (int n_s(0); n_s < nspecies_s; ++n_s) {
 
                   // Get the current reaction rate for species n_s
-                  const Real ro_sn_rate = ptile_data.m_runtime_rdata[idx_ro_sn_txfr+n_s][i];
+                  const Real mass_sn_rate = ptile_data.m_runtime_rdata[idx_mass_sn_txfr+n_s][i];
 
-                  X_sn[n_s] = X_sn[n_s]*p_density_old + subdt*ro_sn_rate;
+                  X_sn[n_s] = X_sn[n_s]*p_mass_old + subdt*mass_sn_rate;
 
                   // Update the total mass exchange rate
-                  total_ro_rate += ro_sn_rate;
+                  total_mass_rate += mass_sn_rate;
                 }
 
                 // Update the total mass of the particle
-                p_density_new = p_density_old + subdt * total_ro_rate;
+                p_mass_new = p_mass_old + subdt * total_mass_rate;
 
-                if (p_density_new > 0) {
+                if (p_mass_new > 0) {
 
                   Real total_X(0.);
 
                   // Normalize species mass fractions
                   for (int n_s(0); n_s < nspecies_s; n_s++) {
-                    Real X_sn_new = X_sn[n_s] / p_density_new;
+                    Real X_sn_new = X_sn[n_s] / p_mass_new;
 
                     if (X_sn_new < 0) X_sn_new = 0;
                     if (X_sn_new > 1) X_sn_new = 1;
@@ -872,16 +928,17 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                   for (int n_s(0); n_s < nspecies_s; n_s++) {
                     // Divide updated species mass fractions by total_X
-                    ptile_data.m_runtime_rdata[idx_X_sn+n_s][i] = X_sn[n_s] / total_X;
+                    X_sn[n_s] /= total_X;
+                    ptile_data.m_runtime_rdata[idx_X_sn+n_s][i] = X_sn[n_s];
                   }
 
                   // Write out to global memory particle's mass and density
-                  p_realarray[SoArealData::density][i] = p_density_new;
-                  p_mass_new = p_density_new * p_vol;
                   p_realarray[SoArealData::mass][i] = p_mass_new;
+                  p_density_new = p_mass_new / p_vol;
+                  p_realarray[SoArealData::density][i] = p_density_new;
 
                   // Write out to global memory particle's moment of inertia
-                  p_oneOverI_new = (p_mass_old/p_mass_new)*p_oneOverI_old;
+                  p_oneOverI_new = (p_density_old/p_density_new)*p_oneOverI_old;
                   p_realarray[SoArealData::oneOverI][i] = p_oneOverI_new;
 
                 } else {
@@ -909,11 +966,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                     subdt*((p_realarray[SoArealData::dragz][i]+fc_ptr[i+2*ntot]) / p_mass_new + vel_coeff*gravity[2]);
 
                   if (local_solve_reactions) {
-                    const Real inv_density = 1. / p_density_new;
-
-                    p_velx_new += subdt*inv_density*ptile_data.m_runtime_rdata[idx_vel_s_txfr+0][i];
-                    p_vely_new += subdt*inv_density*ptile_data.m_runtime_rdata[idx_vel_s_txfr+1][i];
-                    p_velz_new += subdt*inv_density*ptile_data.m_runtime_rdata[idx_vel_s_txfr+2][i];
+                    p_velx_new += subdt*(ptile_data.m_runtime_rdata[idx_vel_s_txfr+0][i] / p_mass_new);
+                    p_vely_new += subdt*(ptile_data.m_runtime_rdata[idx_vel_s_txfr+1][i] / p_mass_new);
+                    p_velz_new += subdt*(ptile_data.m_runtime_rdata[idx_vel_s_txfr+2][i] / p_mass_new);
                   }
 
                   const Real p_omegax_old = p_realarray[SoArealData::omegax][i];
@@ -941,8 +996,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                   }
                   if (x_hi_bc && p_posx_new > p_hi[0])
                   {
-                     p_posx_new = p_hi[0] - eps;
-                     p_velx_new = -p_velx_new;
+                      p_posx_new = p_hi[0] - eps;
+                      p_velx_new = -p_velx_new;
                   }
                   if (y_lo_bc && p_posy_new < p_lo[1])
                   {
@@ -951,18 +1006,18 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                   }
                   if (y_hi_bc && p_posy_new > p_hi[1])
                   {
-                     p_posy_new = p_hi[1] - eps;
-                     p_vely_new = -p_vely_new;
+                      p_posy_new = p_hi[1] - eps;
+                      p_vely_new = -p_vely_new;
                   }
                   if (z_lo_bc && p_posz_new < p_lo[2])
                   {
-                     p_posz_new = p_lo[2] + eps;
-                     p_velz_new = -p_velz_new;
+                      p_posz_new = p_lo[2] + eps;
+                      p_velz_new = -p_velz_new;
                   }
                   if (z_hi_bc && p_posz_new > p_hi[2])
                   {
-                     p_posz_new = p_hi[2] - eps;
-                     p_velz_new = -p_velz_new;
+                      p_posz_new = p_hi[2] - eps;
+                      p_velz_new = -p_velz_new;
                   }
 
                   // Update positions
@@ -988,31 +1043,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                   const int phase = p_intarray[SoAintData::phase][i];
 
-                  const Real Tp_loc = p_realarray[SoArealData::temperature][i];
-
-                  const Real cp_s_old = solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,Tp_loc);
-                  Real cp_s_new(0);
-
-                  if (solid_is_a_mixture) {
-                    for (int n_s(0); n_s < nspecies_s; ++n_s)
-                      cp_s_new += solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,Tp_loc) *
-                                  ptile_data.m_runtime_rdata[idx_X_sn+n_s][i]; 
-
-                    p_realarray[SoArealData::cp_s][i] = cp_s_new;
-                  } else {
-                    cp_s_new = cp_s_old;
-                  }
-
-                  AMREX_ASSERT(cp_s_new > 0.);
-
                   const Real coeff = local_update_mass ? (p_mass_old/p_mass_new) : 1.;
 
-                  Real p_enthalpy_new =
-                    coeff*solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_loc) +
-                    subdt*((p_realarray[SoArealData::convection][i]+enthalpy_source)/p_mass_new);
+                  Real p_enthalpy_new = coeff*p_enthalpy_old +
+                    subdt*((p_realarray[SoArealData::convection][i]+enthalpy_source) / p_mass_new);
 
-                  if (local_solve_reactions)
-                    p_enthalpy_new -= subdt*p_density_new*ptile_data.m_runtime_rdata[idx_h_s_txfr][i];
+                  if (local_solve_reactions) {
+                    p_enthalpy_new -= subdt*(ptile_data.m_runtime_rdata[idx_h_s_txfr][i] / p_mass_new);
+                  }
 
                   // ************************************************************
                   // Newton-Raphson solver for solving implicit equation for
@@ -1025,12 +1063,15 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                     if (!solid_is_a_mixture) {
 
-                      hp_loc = solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_arg);
+                      hp_loc = run_on_device ?
+                        solids_parms.calc_h_s<RunOn::Device>(phase-1,Tp_arg) :
+                        solids_parms.calc_h_s<RunOn::Host>(phase-1,Tp_arg);
                     } else {
 
                       for (int n_s(0); n_s < nspecies_s; ++n_s)
-                        // TODO TODO TODO TODO check if we use X_sn_old or X_sn_new
-                        hp_loc += X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Gpu>(Tp_arg,n_s);
+                        hp_loc += run_on_device ?
+                          X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Device>(Tp_arg,n_s) :
+                          X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Host>(Tp_arg,n_s);
                     }
 
                     return hp_loc - p_enthalpy_new;
@@ -1043,22 +1084,48 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                     if (!solid_is_a_mixture) {
 
-                      gradient = solids_parms.calc_partial_h_s<RunOn::Gpu>(phase-1,Tp_arg);
+                      gradient = run_on_device ?
+                        solids_parms.calc_partial_h_s<RunOn::Device>(phase-1,Tp_arg) :
+                        solids_parms.calc_partial_h_s<RunOn::Host>(phase-1,Tp_arg);
                     } else {
 
-                      for (int n_s(0); n_s < nspecies_s; ++n_s)
-                        gradient += X_sn[n_s]*solids_parms.calc_partial_h_sn<RunOn::Gpu>(Tp_arg,n_s);
+                      for (int n_s(0); n_s < nspecies_s; ++n_s) {
+                        gradient += run_on_device ?
+                          X_sn[n_s]*solids_parms.calc_partial_h_sn<RunOn::Device>(Tp_arg,n_s) :
+                          X_sn[n_s]*solids_parms.calc_partial_h_sn<RunOn::Host>(Tp_arg,n_s);
+                      }
                     }
 
                     return gradient;
                   };
 
-                  Real Tp_old = Tp_loc;
-                  Real Tp_new(0.);
+                  //const Real Tp_old = p_realarray[SoArealData::temperature][i];
+                  //Real Tp_new(Tp_old);
+                  Real Tp_new(p_realarray[SoArealData::temperature][i]);
 
-                  Solvers::NewtonStabilized(Tp_new, Tp_old, R, partial_R);
+                  const Real damping_factor = 1.;
+
+                  DampedNewton::solve(Tp_new, R, partial_R, damping_factor, 1.e-6, 1.e-6);
 
                   p_realarray[SoArealData::temperature][i] = Tp_new;
+
+                  // Update cp_s
+                  Real cp_s_new(0);
+
+                  if (solid_is_a_mixture) {
+                    for (int n_s(0); n_s < nspecies_s; ++n_s)
+                      cp_s_new += run_on_device ?
+                        X_sn[n_s]*solids_parms.calc_cp_sn<RunOn::Device>(Tp_new,n_s) :
+                        X_sn[n_s]*solids_parms.calc_cp_sn<RunOn::Host>(Tp_new,n_s);
+
+                  } else {
+                    cp_s_new = run_on_device ?
+                      solids_parms.calc_cp_s<RunOn::Device>(phase-1,Tp_new) :
+                      solids_parms.calc_cp_s<RunOn::Host>(phase-1,Tp_new);
+                  }
+
+                  AMREX_ASSERT(cp_s_new > 0.);
+                  p_realarray[SoArealData::cp_s][i] = cp_s_new;
                 }
               }
             });
@@ -2012,7 +2079,7 @@ void MFIXParticleContainer::set_particle_properties (int /*pstate*/,
 
 
 void MFIXParticleContainer::checkParticleBoxSize(int      lev, 
-                                                 IntVect& max_grid_size, 
+                                                 IntVect& loc_max_grid_size, 
                                                  Real     frac_particle_bin)
 {
   // count total # particles
@@ -2033,9 +2100,9 @@ void MFIXParticleContainer::checkParticleBoxSize(int      lev,
   // 
   IntVect ncut(AMREX_D_DECL(4, 4, 4));
   IntVect bin_size(AMREX_D_DECL(
-            amrex::max(max_grid_size[0]/ncut[0], 1), 
-            amrex::max(max_grid_size[1]/ncut[1], 1),
-            amrex::max(max_grid_size[2]/ncut[2], 1)));
+            amrex::max(loc_max_grid_size[0]/ncut[0], 1), 
+            amrex::max(loc_max_grid_size[1]/ncut[1], 1),
+            amrex::max(loc_max_grid_size[2]/ncut[2], 1)));
 
   // dictoinary for # particles per bin
   std::map<PairIndex, Gpu::DeviceVector<int> > np_bin;
@@ -2202,7 +2269,7 @@ void MFIXParticleContainer::downsizeParticleBoxes(int lev,
     }// end new box j
   }// end new box k
 
-  // new distribtion mapping
+  // new distribution mapping
   DistributionMapping new_dmap(new_pmap);
 
   // ba and dmap to particle container

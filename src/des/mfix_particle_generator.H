@@ -56,27 +56,17 @@ class ParticlesGenerator {
                          const amrex::Real dz,
                          const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo);
 
-    void one_per_fill (const int icv,
-                       const int type,
-                       const amrex::IntVect& lo,
-                       const amrex::IntVect& hi,
-                       int& np,
-                       int& pc,
-                       const amrex::Real dx,
-                       const amrex::Real dy,
-                       const amrex::Real dz,
-                       const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo);
-
-    void eight_per_fill (const int icv,
-                         const int type,
-                         const amrex::IntVect& lo,
-                         const amrex::IntVect& hi,
-                         int& np,
-                         int& pc,
-                         const amrex::Real dx,
-                         const amrex::Real dy,
-                         const amrex::Real dz,
-                         const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo);
+    void n_cube_per_fill (const int icv,
+                          const int type,
+                          const int base,
+                          const amrex::IntVect& lo,
+                          const amrex::IntVect& hi,
+                          int& np,
+                          int& pc,
+                          const amrex::Real dx,
+                          const amrex::Real dy,
+                          const amrex::Real dz,
+                          const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo);
 
     void random_fill_dem (const int icv,
                           const int type,

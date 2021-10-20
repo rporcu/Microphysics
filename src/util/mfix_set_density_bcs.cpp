@@ -32,7 +32,7 @@ mfix::mfix_set_density_bcs (Real time,
 }
 
 void
-mfix::set_density_bcs (Real /*time*/,
+mfix::set_density_bcs (Real time,
                        const int lev,
                        FArrayBox& scal_fab,
                        const Box& domain)
@@ -52,8 +52,6 @@ mfix::set_density_bcs (Real /*time*/,
 
   Array4<Real> const& scal_arr = scal_fab.array();
 
-  Real bc0 = fluid.ro_g0;
-
   IntVect scal_lo(scal_fab.loVect());
   IntVect scal_hi(scal_fab.hiVect());
 
@@ -65,6 +63,30 @@ mfix::set_density_bcs (Real /*time*/,
   const int ntop = amrex::max(0, scal_hi[1]-dom_hi[1]);
   const int nup  = amrex::max(0, scal_hi[2]-dom_hi[2]);
 
+  // Create InVects for following 3D Boxes
+  IntVect bx_yz_lo_hi_3D(scal_hi), bx_xz_lo_hi_3D(scal_hi), bx_xy_lo_hi_3D(scal_hi);
+  IntVect bx_yz_hi_lo_3D(scal_lo), bx_xz_hi_lo_3D(scal_lo), bx_xy_hi_lo_3D(scal_lo);
+
+  // Fix lo and hi limits
+  bx_yz_lo_hi_3D[0] = dom_lo[0]-1;
+  bx_yz_hi_lo_3D[0] = dom_hi[0]+1;
+
+  bx_xz_lo_hi_3D[1] = dom_lo[1]-1;
+  bx_xz_hi_lo_3D[1] = dom_hi[1]+1;
+
+  bx_xy_lo_hi_3D[2] = dom_lo[2]-1;
+  bx_xy_hi_lo_3D[2] = dom_hi[2]+1;
+
+  // Create 3D boxes for GPU loops
+  const Box bx_yz_lo_3D(scal_lo, bx_yz_lo_hi_3D);
+  const Box bx_yz_hi_3D(bx_yz_hi_lo_3D, scal_hi);
+
+  const Box bx_xz_lo_3D(scal_lo, bx_xz_lo_hi_3D);
+  const Box bx_xz_hi_3D(bx_xz_hi_lo_3D, scal_hi);
+
+  const Box bx_xy_lo_3D(scal_lo, bx_xy_lo_hi_3D);
+  const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, scal_hi);
+
   const int minf = bc_list.get_minf();
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
@@ -72,124 +94,97 @@ mfix::set_density_bcs (Real /*time*/,
   // The temperature will be useful in the future
   // set_temperature_bc_values (time);
   // Real* p_bc_t_g  = m_bc_t_g.data();
+  set_density_bc_values(time);
+  Real* p_bc_ro_g  = m_bc_ro_g.data();
+
+  auto set_density_bcs_in_box = [pout,pinf,minf,scal_arr,p_bc_ro_g]
+  AMREX_GPU_DEVICE (int bct, int bcv, IntVect dom_ijk, int i, int j, int k) noexcept
+  {
+    if ((bct == pinf) || (bct == pout))
+      scal_arr(i,j,k) = scal_arr(dom_ijk);
+    else if (bct == minf)
+      scal_arr(i,j,k) = p_bc_ro_g[bcv];
+  };
+
 
   if (nlft > 0)
   {
-    IntVect bx_yz_lo_hi_3D(scal_hi);
-    bx_yz_lo_hi_3D[0] = dom_lo[0]-1;
-    const Box bx_yz_lo_3D(scal_lo, bx_yz_lo_hi_3D);
-
-    int ilo = dom_lo[0];
-
-    amrex::ParallelFor(bx_yz_lo_3D, [bct_ilo,ilo,scal_arr,bc0,minf,pinf,pout]
-      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    amrex::ParallelFor(bx_yz_lo_3D, [bct_ilo,dom_lo,set_density_bcs_in_box]
+    AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      const int bct = bct_ilo(ilo-1,j,k,0);
+      const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
+      const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
+      const IntVect dom_ijk(dom_lo[0],j,k);
 
-      if ((bct == pinf) || (bct == pout))
-         scal_arr(i,j,k) = scal_arr(ilo,j,k);
-      else if (bct == minf)
-         scal_arr(i,j,k) = bc0;
+      set_density_bcs_in_box(bct, bcv, dom_ijk, i, j, k);
     });
   }
 
   if (nrgt > 0)
   {
-    IntVect bx_yz_hi_lo_3D(scal_lo);
-    bx_yz_hi_lo_3D[0] = dom_hi[0]+1;
-    const Box bx_yz_hi_3D(bx_yz_hi_lo_3D, scal_hi);
-
-    int ihi = dom_hi[0];
-
-    amrex::ParallelFor(bx_yz_hi_3D, [bct_ihi,ihi,scal_arr,bc0,minf,pinf,pout]
+    amrex::ParallelFor(bx_yz_hi_3D, [bct_ihi,dom_hi,set_density_bcs_in_box]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      const int bct = bct_ihi(ihi+1,j,k,0);
+      const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
+      const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
+      const IntVect dom_ijk(dom_hi[0],j,k);
 
-      if((bct == pinf) || (bct == pout))
-         scal_arr(i,j,k) = scal_arr(ihi,j,k);
-      else if(bct == minf)
-         scal_arr(i,j,k) = bc0;
+      set_density_bcs_in_box(bct, bcv, dom_ijk, i, j, k);
     });
   }
 
   if (nbot > 0)
   {
-    IntVect bx_xz_lo_hi_3D(scal_hi);
-    bx_xz_lo_hi_3D[1] = dom_lo[1]-1;
-    const Box bx_xz_lo_3D(scal_lo, bx_xz_lo_hi_3D);
-
-    int jlo = dom_lo[1];
-
-    amrex::ParallelFor(bx_xz_lo_3D, [bct_jlo,jlo,scal_arr,bc0,minf,pinf,pout]
+    amrex::ParallelFor(bx_xz_lo_3D, [bct_jlo,dom_lo,set_density_bcs_in_box]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      const int bct = bct_jlo(i,jlo-1,k,0);
+      const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
+      const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
+      const IntVect dom_ijk(i,dom_lo[1],k);
 
-      if((bct == pinf) || (bct == pout))
-         scal_arr(i,j,k) = scal_arr(i,jlo,k);
-      else if(bct == minf)
-         scal_arr(i,j,k) = bc0;
+      set_density_bcs_in_box(bct, bcv, dom_ijk, i, j, k);
     });
   }
 
   if (ntop > 0)
   {
-    IntVect bx_xz_hi_lo_3D(scal_lo);
-    bx_xz_hi_lo_3D[1] = dom_hi[1]+1;
-    const Box bx_xz_hi_3D(bx_xz_hi_lo_3D, scal_hi);
-
-    int jhi = dom_hi[1];
-
-    amrex::ParallelFor(bx_xz_hi_3D, [bct_jhi,jhi,scal_arr,bc0,minf,pinf,pout]
+    amrex::ParallelFor(bx_xz_hi_3D, [bct_jhi,dom_hi,set_density_bcs_in_box]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      const int bct = bct_jhi(i,jhi+1,k,0);
+      const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
+      const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
+      const IntVect dom_ijk(i,dom_hi[1],k);
 
-      if((bct == pinf) || (bct == pout))
-         scal_arr(i,j,k) = scal_arr(i,jhi,k);
-      else if(bct == minf)
-         scal_arr(i,j,k) = bc0;
+      set_density_bcs_in_box(bct, bcv, dom_ijk, i, j, k);
     });
   }
 
   if (ndwn > 0)
   {
-    IntVect bx_xy_lo_hi_3D(scal_hi);
-    bx_xy_lo_hi_3D[2] = dom_lo[2]-1;
-    const Box bx_xy_lo_3D(scal_lo, bx_xy_lo_hi_3D);
-
-    int klo = dom_lo[2];
-
-    amrex::ParallelFor(bx_xy_lo_3D, [bct_klo,klo,scal_arr,bc0,minf,pinf,pout]
+    amrex::ParallelFor(bx_xy_lo_3D, [bct_klo,dom_lo,set_density_bcs_in_box]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      const int bct = bct_klo(i,j,klo-1,0);
+      const int bct = bct_klo(i,j,dom_lo[2]-1,0);
+      const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
+      const IntVect dom_ijk(i,j,dom_lo[2]);
 
-      if((bct == pinf) || (bct == pout))
-         scal_arr(i,j,k) = scal_arr(i,j,klo);
-      else if(bct == minf)
-         scal_arr(i,j,k) = bc0;
+      set_density_bcs_in_box(bct, bcv, dom_ijk, i, j, k);
     });
   }
 
   if (nup > 0)
   {
-    IntVect bx_xy_hi_lo_3D(scal_lo);
-    bx_xy_hi_lo_3D[2] = dom_hi[2]+1;
-    const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, scal_hi);
-
-    int khi = dom_hi[2];
-
-    amrex::ParallelFor(bx_xy_hi_3D, [bct_khi,khi,scal_arr,bc0,minf,pinf,pout]
+    amrex::ParallelFor(bx_xy_hi_3D, [bct_khi,dom_hi,set_density_bcs_in_box]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      const int bct = bct_khi(i,j,khi+1,0);
+      const int bct = bct_khi(i,j,dom_hi[2]+1,0);
+      const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
+      const IntVect dom_ijk(i,j,dom_hi[2]);
 
-      if ((bct == pinf) || (bct == pout))
-         scal_arr(i,j,k) = scal_arr(i,j,khi);
-      else if (bct == minf)
-         scal_arr(i,j,k) = bc0;
+      set_density_bcs_in_box(bct, bcv, dom_ijk, i, j, k);
+
     });
   }
+
+
 }

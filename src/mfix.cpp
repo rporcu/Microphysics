@@ -15,7 +15,8 @@ Real             mfix::downsize_factor        = 1.0;
 int              mfix::knapsack_nmax        = 128;
 int              mfix::m_drag_type          = DragType::Invalid;
 int              mfix::m_convection_type    = ConvectionType::Invalid;
-int              mfix::m_idealgas_constraint    = IdealGasConstraint::None;
+int              mfix::m_constraint_type    = ConstraintType::IncompressibleFluid;
+int              mfix::m_advection_type     = AdvectionType::Invalid;
 DepositionScheme mfix::m_deposition_scheme;
 int              mfix::m_reaction_rates_type = ReactionRatesType::RRatesUser;
 amrex::Real      mfix::m_deposition_diffusion_coeff = -1.0;
@@ -28,6 +29,9 @@ int mfix::ntrac = 1;
 int  mfix::plot_int        = -1;
 Real mfix::plot_per_approx = -1.;
 Real mfix::plot_per_exact  = -1.;
+
+int  mfix::ascent_int        = -1;
+Real mfix::ascent_per_approx = -1.;
 
 EBSupport mfix::m_eb_support_level = EBSupport::full;
 
@@ -68,11 +72,6 @@ mfix::~mfix ()
 
   for (int lev = 0; lev < fluid_proc.size(); ++lev)
     delete fluid_proc[lev];
-
-  if (REACTIONS::solve) {
-    for (int n(0); n < REACTIONS::nreactions; n++)
-      delete m_chemical_reactions[n];
-  }
 } 
 
 // Constructor

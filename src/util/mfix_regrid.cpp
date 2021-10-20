@@ -94,12 +94,12 @@ mfix::Regrid ()
       {
         // update new particle grid size
         if (downsize_particle_grid) {
-          IntVect max_grid_size = pc->MaxGridSize();
-          IntVect new_grid_size = max_grid_size;
+          IntVect loc_max_grid_size = pc->MaxGridSize();
+          IntVect new_grid_size = loc_max_grid_size;
           pc->checkParticleBoxSize(lev, new_grid_size, downsize_factor);
           // if new size is smaller, then downsize particle grids
           // reset the particle cost by # particles
-          if (new_grid_size < max_grid_size) {
+          if (new_grid_size < loc_max_grid_size) {
             pc->downsizeParticleBoxes(lev, new_grid_size);
             pc->resetCostByCount(lev, particle_cost);
             pc->setMaxGridSize(new_grid_size);

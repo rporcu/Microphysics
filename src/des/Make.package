@@ -4,7 +4,7 @@ CEXE_headers += mfix_pc.H
 CEXE_headers += mfix_particle_generator.H
 CEXE_sources += mfix_particle_generator.cpp
 CEXE_headers += mfix_des_drag_K.H
-CEXE_headers += mfix_des_heterogeneous_rates_K.H
+CEXE_headers += mfix_reactions_rates_K.H
 
 CEXE_sources += mfix_pc.cpp
 CEXE_sources += mfix_pc_init.cpp

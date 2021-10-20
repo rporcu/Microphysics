@@ -38,7 +38,7 @@ void mfix::make_eb_geometry ()
     pp.query("geometry_filename", csg_file);
     amrex::Print() << "mfix.geometry_filename: " << csg_file;
 
-#ifndef MFIX_GEOMETRY_CSG
+#ifndef CSG_EB
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE( csg_file.empty(), "CSG Geometry defined in input deck but solver not built with CSG support!");
 #endif
 
@@ -120,7 +120,7 @@ void mfix::make_eb_geometry ()
       make_eb_general();
       contains_ebs = true;
 
-#ifdef MFIX_GEOMETRY_CSG
+#ifdef CSG_EB
     } else if(!csg_file.empty()) {
       amrex::Print() << "\n Building geometry from .csg file:  " << csg_file << std::endl;
       make_eb_csg(csg_file);

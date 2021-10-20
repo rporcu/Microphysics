@@ -1,7 +1,6 @@
 #_______________________________________________________________________
 # Testing tracer conservation
 
-mfix.advect_density           = true
 mfix.advect_tracer            = true
 mfix.test_tracer_conservation = true
 
@@ -25,14 +24,6 @@ amr.plt_regtest = 1
 mfix.particle_init_type = "AsciiFile"
 
 mfix.verbose            = 1
-
-mac.mg_verbose          = 1
-mac.mg_rtol             = 1.e-12
-mac.bottom_solver_type  = "smoother"
-
-mfix.mg_verbose         = 0
-mfix.mg_rtol            = 1.e-12
-mfix.bottom_solver_type = "smoother"
 
 amr.blocking_factor = 1
 
@@ -142,12 +133,6 @@ fluid.density.constant   = 1.0
 
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-2
-
-fluid.specific_heat          = constant
-fluid.specific_heat.constant = 1.0
-
-fluid.thermal_conductivity          = constant
-fluid.thermal_conductivity.constant = 0.0
 
 bc.delp     = 1000.
 bc.delp_dir =    1

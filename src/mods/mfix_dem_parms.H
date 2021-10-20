@@ -111,6 +111,8 @@ namespace DEM
     // Coarse-grain DEM
     extern int cg_dem;
 
+    extern int restart_from_PIC;
+
     void Initialize ();
     void Finalize ();
 

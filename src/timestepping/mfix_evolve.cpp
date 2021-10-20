@@ -3,7 +3,6 @@
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
 #include <mfix_reactions_parms.H>
-#include <mfix_des_heterogeneous_rates_K.H>
 
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
@@ -52,9 +51,9 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
       mfix_calc_txfr_particle(new_time, get_vel_g(), get_gp(), get_T_g());
 
-      if (REACTIONS::solve)
+      if (reactions.solve)
         mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                            get_T_g(), get_X_gk(), new_time);
+                            get_p_g(), get_T_g(), get_X_gk(), new_time);
 
       coupling_timing += ParallelDescriptor::second() - start_coupling + drag_timing;
 

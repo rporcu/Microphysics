@@ -340,6 +340,8 @@ namespace BC
 
         }
 
+        new_bc.fluid.pressure = -1.0;
+
         // Read in fluid pressure
         new_bc.fluid.pressure_defined =
           ppFluid.query("pressure", new_bc.fluid.pressure);
@@ -356,31 +358,7 @@ namespace BC
 
           // Get species data.
           if (fluid.solve_species) {
-
-            const int nspecies_g = fluid.nspecies;
-            new_bc.fluid.species.resize(nspecies_g);
-
-            std::string species_field = field+".species";
-            amrex::ParmParse ppSpecies(species_field.c_str());
-
-            amrex::Real total_mass_fraction(0);
-
-            for (int n(0); n < fluid.nspecies; n++) {
-              // Get the name of the fluid species we want to get the IC
-              std::string fluid_specie = fluid.species[n];
-              // Get the BC mass fraction for the current species
-              ppSpecies.get(fluid_specie.c_str(), new_bc.fluid.species[n].mass_fraction);
-
-              total_mass_fraction += new_bc.fluid.species[n].mass_fraction;
-            }
-
-            // Sanity check that the input species mass fractions sum up to 1
-            if (!(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
-              std::string message = "Error: FLUID species BCs mass fractions in region "
-                + regions[bcv] + " sum up to " + std::to_string(total_mass_fraction) + "\n";
-
-              amrex::Abort(message);
-            }
+            read_bc_species(ppFluid, fluid.species, &new_bc.fluid);
           }
         }
       }
@@ -659,6 +637,131 @@ read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
 }// end read_bc_temperature
 
 
+void
+read_bc_species (amrex::ParmParse pp,
+                 const amrex::Vector<std::string> species,
+                 FluidPhase::FLUID_t *fluid)
+{
+
+  const int nspecies = species.size();
+
+  fluid->species.resize(nspecies);
+  fluid->constant_species.resize(nspecies);
+  fluid->species_table.resize(nspecies);
+
+  for (int n(0); n < nspecies; n++) {
+
+    amrex::Vector<amrex::Real> species_in;
+
+    // Get the name of the fluid species we want to get the IC
+    std::string species_field = "species."+species[n];
+
+    pp.getarr(species_field.c_str(), species_in);
+
+    int constant_species = (species_in.size() == 1 ? 1 : 0);
+    fluid->constant_species[n] = constant_species;
+
+    if (constant_species) {
+      fluid->species[n].mass_fraction = species_in[0];
+    } else {
+
+      int found;
+      int k=0;
+
+      do {
+
+        amrex::Vector<amrex::Real> kth_input;
+        found = pp.queryktharr(species_field.c_str(), k, kth_input);
+
+        if (found){
+          // Assert that it has the correct length.
+          if ( kth_input.size() != 2 ) {
+            amrex::Print() << "Bad bc species inputs specification:\n";
+            for( int lc=0; lc<kth_input.size(); lc++)
+              amrex::Print()  << "  " << kth_input[lc];
+            amrex::Print() << std::endl;
+            amrex::Abort("Fix input deck.");
+          }
+
+          const amrex::Real new_time = kth_input[0];
+          const int len =  fluid->species_table[n].size();
+          if (len == 0){
+            fluid->species_table[n].push_back(kth_input);
+          } else {
+            for (int lc=0; lc<len; lc++) {
+              if ( new_time <= fluid->species_table[n][lc][0]) {
+                fluid->species_table[n].insert(fluid->species_table[n].begin()+lc, kth_input);
+              } else if (lc == len-1){
+                fluid->species_table[n].push_back(kth_input);
+              }
+            }
+          }
+        }
+        k++;
+      } while(found);
+    }
+  }
+
+
+  int sum_constant_species = 0;
+  for (int n(0); n < nspecies; n++) {
+    sum_constant_species += fluid->constant_species[n];
+  }
+
+  bool err_found = false;
+
+  // Verify that mass fractions sum to one.
+  if (sum_constant_species == nspecies) {
+
+    amrex::Real sum_xg = 0.0;
+    for (int n(0); n < nspecies; n++) {
+      sum_xg += fluid->species[n].mass_fraction;
+    }
+    err_found = (amrex::Math::abs(1.0 - sum_xg) > 1.e-15);
+
+  }else if (sum_constant_species == 0 ) {
+
+    // First verify that all species are given for all times
+    const int entries = fluid->species_table[0].size();
+
+    // Verify that all species have the same number
+    // of time entries.
+    for (int n(0); n < nspecies; n++) {
+      err_found = err_found || (fluid->species_table[n].size() != entries);
+      // amrex::Print() << " n: " << n << "  entries: "
+      // << fluid->species_table[n].size() << "   err: " << err_found << "\n";
+    }
+
+    // Verify that all time entries are the same and that the
+    // mass fractions sum to one.
+    if(!err_found){
+      for (int entry(0); entry<entries; entry++) {
+
+        const amrex::Real time = fluid->species_table[0][entry][0];
+        amrex::Real sum_xg = 0.0;
+        for (int n(0); n < nspecies; n++) {
+          sum_xg += fluid->species_table[n][entry][1];
+          err_found = err_found || (amrex::Math::abs(fluid->species_table[n][entry][0] - time) > 1.e-15);
+        }
+        err_found = (amrex::Math::abs(1.0 - sum_xg) > 1.e-15);
+        // amrex::Print() << " time " << time << "   sum_xg: " << sum_xg << "   err: " << err_found << "\n";
+      }
+    }
+
+  } else{
+    err_found = true;
+  }
+
+  if(err_found){
+    amrex::Print() << "\n\n"
+                   << " Bad species bc inputs specification. Check the inputs file:\n"
+                   << "  > all species mass fractions sum to one\n"
+                   << "  > all flow bcs for species are either constant or time dependent\n"
+                   << "  > time dependent bcs must all start/end at the same times\n";
+    amrex::Abort("Fix input deck.");
+  }
+
+}// end read_bc_species
 
 
 
