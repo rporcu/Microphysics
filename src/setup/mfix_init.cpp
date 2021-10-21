@@ -192,6 +192,7 @@ mfix::InitParams ()
     pp.query("load_balance_fluid",     load_balance_fluid);
     pp.query("downsize_particle_grid", downsize_particle_grid);
     pp.query("downsize_factor",        downsize_factor);
+    pp.query("grid_pruning",           m_grid_pruning);
 
 
     // Include drag multiplier in projection. (False by default)
@@ -581,6 +582,27 @@ void mfix::Init (Real time)
         mfix_set_bc_type(lev,nghost_state());
 }
 
+void mfix::PruneBaseGrids(BoxArray &ba) const 
+{
+    // Use 1 ghost layer
+    EBDataCollection ebdc(*eb_levels[0], geom[0], 
+          ba, DistributionMapping{ba}, {1}, EBSupport::basic);
+
+    const auto &cflag = ebdc.getMultiEBCellFlagFab();
+    Vector<Box> uncovered;
+
+    for (MFIter mfi(cflag); mfi.isValid(); ++mfi)
+    {
+        FabType t = cflag[mfi].getType();
+        const Box& vbx = mfi.validbox();
+        if (t != FabType::covered) {
+            uncovered.push_back(vbx);
+        }
+    }
+
+    amrex::AllGatherBoxes(uncovered);
+    ba = BoxArray(BoxList(std::move(uncovered)));
+}
 
 BoxArray mfix::MakeBaseGrids () const
 {
@@ -588,6 +610,10 @@ BoxArray mfix::MakeBaseGrids () const
     BoxArray ba(geom[0].Domain());
 
     ba.maxSize(max_grid_size[0]);
+
+    if (m_grid_pruning) {
+       PruneBaseGrids(ba);
+    }
 
     // We only call ChopGrids if dividing up the grid using max_grid_size didn't
     //    create enough grids to have at least one grid per processor.
@@ -599,6 +625,7 @@ BoxArray mfix::MakeBaseGrids () const
     if (ba == grids[0]) {
         ba = grids[0];  // to avoid duplicates
     }
+
     amrex::Print() << "In MakeBaseGrids: BA HAS " << ba.size() << " GRIDS " << std::endl;
     return ba;
 }

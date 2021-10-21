@@ -946,6 +946,8 @@ public:
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
 
+    void PruneBaseGrids(BoxArray &ba) const;
+
     void ChopGrids (const Box& domain, BoxArray& ba, int target_size) const;
 
     static int nlev;
@@ -1107,6 +1109,8 @@ public:
     static int m_advection_type;
 
     std::string m_redistribution_type = "StateRedist";
+
+    bool m_grid_pruning = false;
 
     // include d(ep_g)/dt in constraint
     bool m_use_depdt_constraint = false;
