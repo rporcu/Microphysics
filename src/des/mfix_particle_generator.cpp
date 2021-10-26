@@ -69,6 +69,15 @@ ParticlesGenerator::generate (int& pc,
 
       int np0(0);
 
+      int cube_base(-1);
+      const size_t cube_pos = ic_pack_type_str.find("-cube");
+      if(cube_pos != std::string::npos) {
+        const size_t cube_len = ic_pack_type_str.length();
+        std::string str_base = ic_pack_type_str.erase(cube_pos,cube_len-cube_pos);
+        cube_base = std::stoi( str_base );
+      }
+
+
       if(DEM::solve){
         if(ic_pack_type_str.compare("hcp") == 0)
           hex_close_pack(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
@@ -77,9 +86,11 @@ ParticlesGenerator::generate (int& pc,
         else if(ic_pack_type_str.compare("pseudo_random") == 0)
           random_fill_dem(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo, true);
         else if(ic_pack_type_str.compare("oneper") == 0)
-          one_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
+          n_cube_per_fill(icv0, type0, 1, lo, hi, np0, pc, dx, dy, dz, plo);
         else if(ic_pack_type_str.compare("eightper") == 0)
-          eight_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
+          n_cube_per_fill(icv0, type0, 2, lo, hi, np0, pc, dx, dy, dz, plo);
+        else if(cube_base > 0)
+          n_cube_per_fill(icv0, type0, cube_base, lo, hi, np0, pc, dx, dy, dz, plo);
         else
         {
           amrex::Print() << "Unknown particle generator fill type" << std::endl;
@@ -93,9 +104,11 @@ ParticlesGenerator::generate (int& pc,
         else if(ic_pack_type_str.compare("pseudo_random") == 0)
           random_fill_pic(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo, true);
         else if(ic_pack_type_str.compare("oneper") == 0)
-          one_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
+          n_cube_per_fill(icv0, type0, 1, lo, hi, np0, pc, dx, dy, dz, plo);
         else if(ic_pack_type_str.compare("eightper") == 0)
-          eight_per_fill(icv0, type0, lo, hi, np0, pc, dx, dy, dz, plo);
+          n_cube_per_fill(icv0, type0, 2, lo, hi, np0, pc, dx, dy, dz, plo);
+        else if(cube_base > 0)
+          n_cube_per_fill(icv0, type0, cube_base, lo, hi, np0, pc, dx, dy, dz, plo);
         else
         {
           amrex::Print() << "Unknown particle generator fill type" << std::endl;
@@ -345,124 +358,85 @@ ParticlesGenerator::hex_close_pack (const int icv,
 
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 //                                                                      !
-//  Subroutine: one_per_fill                                            !
+//  Subroutine: n_cube_per_fill                                         !
 //                                                                      !
 //  Purpose: Generate initial solids packing based on putting one       !
 //           per cell                                                   !
 //                                                                      !
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 void
-ParticlesGenerator::one_per_fill (const int icv,
-                                  const int /*type*/,
-                                  const IntVect& lo,
-                                  const IntVect& hi,
-                                  int& np,
-                                  int& pc,
-                                  const Real dx,
-                                  const Real dy,
-                                  const Real dz,
-                                  const amrex::GpuArray<Real, 3>& plo)
+ParticlesGenerator::n_cube_per_fill (const int icv,
+                                     const int type,
+                                     const int base,
+                                     const IntVect& lo,
+                                     const IntVect& hi,
+                                     int& np,
+                                     int& pc,
+                                     const Real dx,
+                                     const Real dy,
+                                     const Real dz,
+                                     const amrex::GpuArray<Real, 3>& plo)
 {
-  // indices
+  // This assertation should not be needed.
+  AMREX_ALWAYS_ASSERT(dx==dy);
+  AMREX_ALWAYS_ASSERT(dx==dz);
+
   int i_w, i_e, j_s, j_n, k_b, k_t;
-
-  amrex::IntVect seed_lo, seed_hi, delta_bx;
-
   calc_cell_ic(dx, dy, dz,
                IC::ic[icv].region->lo(),
                IC::ic[icv].region->hi(),
                plo.data(),
                i_w, i_e, j_s, j_n, k_b, k_t);
 
-  const Real x_w(IC::ic[icv].region->lo(0));
-  const Real y_s(IC::ic[icv].region->lo(1));
-  const Real z_b(IC::ic[icv].region->lo(2));
-  const Real x_e(IC::ic[icv].region->hi(0));
-  const Real y_n(IC::ic[icv].region->hi(1));
-  const Real z_t(IC::ic[icv].region->hi(2));
+  const IntVect ic_lo(AMREX_D_DECL(i_w, j_s, k_b));
+  const IntVect ic_hi(AMREX_D_DECL(i_e, j_n, k_t));
 
-  // local grid seed loop hi/lo
-  seed_lo[0] = amrex::max<int>(lo[0], static_cast<int>(amrex::Math::ceil((x_w-plo[0])/dx - .5)));
-  seed_lo[1] = amrex::max<int>(lo[1], static_cast<int>(amrex::Math::ceil((y_s-plo[1])/dy - .5)));
-  seed_lo[2] = amrex::max<int>(lo[2], static_cast<int>(amrex::Math::ceil((z_b-plo[2])/dz - .5)));
+  const Box mfi_bx(lo, hi);
+  const Box ic_bx(ic_lo, ic_hi);
 
-  seed_hi[0] = amrex::min<int>(hi[0], static_cast<int>(amrex::Math::floor((x_e-plo[0])/dx - .5)));
-  seed_hi[1] = amrex::min<int>(hi[1], static_cast<int>(amrex::Math::floor((y_n-plo[1])/dy - .5)));
-  seed_hi[2] = amrex::min<int>(hi[2], static_cast<int>(amrex::Math::floor((z_t-plo[2])/dz - .5)));
+  if(!ic_bx.intersects(mfi_bx)){
+    amrex::Print() << "Nothing to do. No intersection!\n";
+    return;
+  }
 
+  // Intersection of mfi box and ic box
+  const Box bx_int = mfi_bx&ic_bx;
 
-  const Box bx(seed_lo, seed_hi);
+  const Real mean = IC::ic[icv].solids[type].diameter.mean;
+  Real max_dp(mean);
 
-  delta_bx[0] = amrex::max(0, seed_hi[0] - seed_lo[0] + 1);
-  delta_bx[1] = amrex::max(0, seed_hi[1] - seed_lo[1] + 1);
-  delta_bx[2] = amrex::max(0, seed_hi[2] - seed_lo[2] + 1);
+  // Spacing is based on maximum particle size
+  if(IC::ic[icv].solids[type].diameter.max > 0.0)
+    max_dp = IC::ic[icv].solids[type].diameter.max;
 
-  np = delta_bx[0] * delta_bx[1] * delta_bx[2];
-  grow_pdata(pc + np);
+  // Scaled dx for particle spacing
+  const Real dxn = dx/static_cast<Real>(base);
 
-  Real* p_rdata = m_rdata.data();
+  if (max_dp > dxn) {
+    std::vector<std::string> regions;
+    amrex::ParmParse pp("ic");
+    pp.queryarr("regions", regions);
+    amrex::Print() << "\n\n";
+    amrex::Print() << "**************************************************************\n";
+    amrex::Print() << "  Invalid particle initialization. The spacing for " << base << "-cube\n";
+    amrex::Print() << "  packing is less than the maximum particle diameter. \n";
+    amrex::Print() << "  Initial Condition Name: " << regions[icv] << "\n";
+    amrex::Print() << "  Fix the inputs file.\n";
+    amrex::Print() << "**************************************************************\n";
+    amrex::Print() << "\n\n";
+    amrex::Abort("Fix the inputs file.");
+  }
 
-  const int local_nr = this->nr;
-
-  amrex::ParallelFor(bx, [p_rdata,seed_lo,delta_bx,local_nr,dx,dy,dz,plo,pc]
-    AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-    {
-      const Real* plo_ptr = plo.data();
-
-      const int local_i = i - seed_lo[0];
-      const int local_j = j - seed_lo[1];
-      const int local_k = k - seed_lo[2];
-
-      const int local_pc =
-        pc + (local_i + local_k*delta_bx[0] + local_j*delta_bx[0]*delta_bx[2]);
-
-      p_rdata[local_pc*local_nr + 0] = plo_ptr[0] + (i + 0.5) * dx;
-      p_rdata[local_pc*local_nr + 1] = plo_ptr[1] + (j + 0.5) * dy;
-      p_rdata[local_pc*local_nr + 2] = plo_ptr[2] + (k + 0.5) * dz;
-    });
-
-  pc += np;
-
-  return;
-}
-
-//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-//                                                                      !
-//  Subroutine: eight_per_fill                                          !
-//                                                                      !
-//  Purpose: Generate initial solids packing based on putting eight     !
-//           per cell                                                   !
-//                                                                      !
-//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-void
-ParticlesGenerator::eight_per_fill (const int icv,
-                                    const int /*type*/,
-                                    const IntVect& lo,
-                                    const IntVect& hi,
-                                    int& np,
-                                    int& pc,
-                                    const Real dx,
-                                    const Real dy,
-                                    const Real dz,
-                                    const amrex::GpuArray<Real, 3>& plo)
-{
   // indices
   amrex::IntVect seed_lo, seed_hi, delta_bx;
 
-  const Real x_w(IC::ic[icv].region->lo(0));
-  const Real y_s(IC::ic[icv].region->lo(1));
-  const Real z_b(IC::ic[icv].region->lo(2));
-  const Real x_e(IC::ic[icv].region->hi(0));
-  const Real y_n(IC::ic[icv].region->hi(1));
-  const Real z_t(IC::ic[icv].region->hi(2));
+  seed_lo[0] = bx_int.smallEnd(0)*base;
+  seed_lo[1] = bx_int.smallEnd(1)*base;
+  seed_lo[2] = bx_int.smallEnd(2)*base;
 
-  seed_lo[0] = amrex::max<int>(2*lo[0], static_cast<int>(amrex::Math::ceil((x_w-plo[0])*(2/dx) - .5)));
-  seed_lo[1] = amrex::max<int>(2*lo[1], static_cast<int>(amrex::Math::ceil((y_s-plo[1])*(2/dy) - .5)));
-  seed_lo[2] = amrex::max<int>(2*lo[2], static_cast<int>(amrex::Math::ceil((z_b-plo[2])*(2/dz) - .5)));
-
-  seed_hi[0] = amrex::min<int>(2*hi[0]+1, static_cast<int>(amrex::Math::floor((x_e-plo[0])*(2/dx) - .5)));
-  seed_hi[1] = amrex::min<int>(2*hi[1]+1, static_cast<int>(amrex::Math::floor((y_n-plo[1])*(2/dy) - .5)));
-  seed_hi[2] = amrex::min<int>(2*hi[2]+1, static_cast<int>(amrex::Math::floor((z_t-plo[2])*(2/dz) - .5)));
+  seed_hi[0] = (bx_int.bigEnd(0) + 1)*base - 1;
+  seed_hi[1] = (bx_int.bigEnd(1) + 1)*base - 1;
+  seed_hi[2] = (bx_int.bigEnd(2) + 1)*base - 1;
 
   const Box bx(seed_lo, seed_hi);
 
@@ -471,13 +445,14 @@ ParticlesGenerator::eight_per_fill (const int icv,
   delta_bx[2] = amrex::max(0, seed_hi[2] - seed_lo[2] + 1);
 
   np = delta_bx[0] * delta_bx[1] * delta_bx[2];
+
   grow_pdata(pc + np);
 
   Real* p_rdata = m_rdata.data();
 
   const int local_nr = this->nr;
 
-  amrex::ParallelFor(bx, [p_rdata,seed_lo,delta_bx,pc,dx,dy,dz,plo,local_nr]
+  amrex::ParallelFor(bx, [p_rdata,seed_lo,delta_bx,dxn,plo,pc,local_nr]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const Real* plo_ptr = plo.data();
@@ -489,15 +464,18 @@ ParticlesGenerator::eight_per_fill (const int icv,
       const int local_pc =
         pc + (local_i + local_k*delta_bx[0] + local_j*delta_bx[0]*delta_bx[2]);
 
-      p_rdata[local_pc*local_nr + 0] = plo_ptr[0] + (i + 0.5)*dx/2.;
-      p_rdata[local_pc*local_nr + 1] = plo_ptr[1] + (j + 0.5)*dy/2.;
-      p_rdata[local_pc*local_nr + 2] = plo_ptr[2] + (k + 0.5)*dz/2.;
+      p_rdata[local_pc*local_nr + 0] = plo_ptr[0] + (i + 0.5) * dxn;
+      p_rdata[local_pc*local_nr + 1] = plo_ptr[1] + (j + 0.5) * dxn;
+      p_rdata[local_pc*local_nr + 2] = plo_ptr[2] + (k + 0.5) * dxn;
     });
 
   pc += np;
 
   return;
 }
+
+
+
 
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 //                                                                      !

@@ -183,14 +183,16 @@ mfix::InitParams ()
     //if (advect_enthalpy && !advect_density)
     //  amrex::Abort("Can't advect enthalpy without advecting density");
 
-    if (advect_tracer && !advect_density)
-      amrex::Abort("Can't advect tracer without advecting density");
+    // At the moment, there is no relation between density and tracer
+    //if (advect_tracer && !advect_density)
+    //  amrex::Abort("Can't advect tracer without advecting density");
 
     // control load balance
     // The default type is "KnapSack"; alternative is "SFC"
     pp.query("load_balance_type",      load_balance_type);
     pp.query("knapsack_weight_type",   knapsack_weight_type);
     pp.query("load_balance_fluid",     load_balance_fluid);
+    pp.query("grid_pruning",           m_grid_pruning);
 
 
     // Include drag multiplier in projection. (False by default)
@@ -390,28 +392,11 @@ mfix::InitParams ()
       else if (convection_type.compare("Gunn") == 0) {
         m_convection_type = ConvectionType::Gunn;
       }
+      else if (convection_type.compare("NullConvection") == 0) {
+        m_convection_type = ConvectionType::NullConvection;
+      }
       else {
         amrex::Abort("Don't know this convection_type!");
-      }
-    }
-
-    // Constraint type
-    {
-      std::string constraint_type = "IncompressibleFluid";
-      pp.query("constraint_type", constraint_type);
-      constraint_type = amrex::toLower(constraint_type);
-
-      if (constraint_type.compare("incompressiblefluid") == 0) {
-        m_constraint_type = ConstraintType::IncompressibleFluid;
-      }
-      else if (constraint_type.compare("idealgasopensystem") == 0) {
-        m_constraint_type = ConstraintType::IdealGasOpenSystem;
-      }
-      else if (constraint_type.compare("idealgasclosedsystem") == 0) {
-        m_constraint_type = ConstraintType::IdealGasClosedSystem;
-      }
-      else {
-        amrex::Abort("Don't know this constraint type!");
       }
     }
 
@@ -443,6 +428,31 @@ mfix::InitParams ()
 
     m_deposition_diffusion_coeff = -1.;
     pp.query("deposition_diffusion_coeff", m_deposition_diffusion_coeff);
+  }
+
+  if (fluid.solve)
+  {
+    ParmParse pp("mfix");
+
+    // Constraint type
+    {
+      std::string constraint_type = "IncompressibleFluid";
+      pp.query("constraint_type", constraint_type);
+      constraint_type = amrex::toLower(constraint_type);
+
+      if (constraint_type.compare("incompressiblefluid") == 0) {
+        m_constraint_type = ConstraintType::IncompressibleFluid;
+      }
+      else if (constraint_type.compare("idealgasopensystem") == 0) {
+        m_constraint_type = ConstraintType::IdealGasOpenSystem;
+      }
+      else if (constraint_type.compare("idealgasclosedsystem") == 0) {
+        m_constraint_type = ConstraintType::IdealGasClosedSystem;
+      }
+      else {
+        amrex::Abort("Don't know this constraint type!");
+      }
+    }
   }
 
   {
@@ -573,6 +583,27 @@ void mfix::Init (Real time)
         mfix_set_bc_type(lev,nghost_state());
 }
 
+void mfix::PruneBaseGrids(BoxArray &ba) const 
+{
+    // Use 1 ghost layer
+    EBDataCollection ebdc(*eb_levels[0], geom[0], 
+          ba, DistributionMapping{ba}, {1}, EBSupport::basic);
+
+    const auto &cflag = ebdc.getMultiEBCellFlagFab();
+    Vector<Box> uncovered;
+
+    for (MFIter mfi(cflag); mfi.isValid(); ++mfi)
+    {
+        FabType t = cflag[mfi].getType();
+        const Box& vbx = mfi.validbox();
+        if (t != FabType::covered) {
+            uncovered.push_back(vbx);
+        }
+    }
+
+    amrex::AllGatherBoxes(uncovered);
+    ba = BoxArray(BoxList(std::move(uncovered)));
+}
 
 BoxArray mfix::MakeBaseGrids () const
 {
@@ -580,6 +611,10 @@ BoxArray mfix::MakeBaseGrids () const
     BoxArray ba(geom[0].Domain());
 
     ba.maxSize(max_grid_size[0]);
+
+    if (m_grid_pruning) {
+       PruneBaseGrids(ba);
+    }
 
     // We only call ChopGrids if dividing up the grid using max_grid_size didn't
     //    create enough grids to have at least one grid per processor.
@@ -591,6 +626,7 @@ BoxArray mfix::MakeBaseGrids () const
     if (ba == grids[0]) {
         ba = grids[0];  // to avoid duplicates
     }
+
     amrex::Print() << "In MakeBaseGrids: BA HAS " << ba.size() << " GRIDS " << std::endl;
     return ba;
 }
@@ -1138,6 +1174,8 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
         mfix_set_species_bcs(time, get_X_gk());
         mfix_set_species_bcs(time, get_X_gk_old());
       }
+
+      InitialRedistribution(time);
 
       // Project the initial velocity field
       if (do_initial_proj)

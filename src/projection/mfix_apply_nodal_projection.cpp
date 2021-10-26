@@ -177,6 +177,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
       EB_set_covered(*a_S_cc[lev], 0, a_S_cc[lev]->nComp(), 1, 0.0);
     }
 
+    PreProjectionRedistribution(a_time);
+
     //
     // Setup the nodal projector
     //
@@ -238,7 +240,9 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
 
     // Perform the redistribution operation on the updated (projected) velocity field -- and
     //     update gp to maintain consistency
-    PostProjectionRedistribution(a_time, a_dt, GetVecOfPtrs(sigma_mf));
+    // This has been currently disabled since it seems to cause magnification of differences on
+    // different grids. Needs to be revisted.
+    //PostProjectionRedistribution(a_time, a_dt, GetVecOfPtrs(sigma_mf));
 
     // Compute diveu for diagnostics only
     PostProjectionDiagnostics(a_time, epu, vel_g_in, p_g_in, gp_in, ep_g_in, a_S_cc, proj_for_small_dt);

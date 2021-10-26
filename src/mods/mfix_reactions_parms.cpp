@@ -18,6 +18,7 @@
 #include <cctype>
 #include <iterator>
 #include <regex>
+#include <algorithm>
 
 
 namespace chemistry_aux {
@@ -399,6 +400,12 @@ ChemicalReaction::parse_reaction(const std::string& equation,
                                  amrex::Gpu::HostVector<amrex::Real>& products_coeffs,
                                  amrex::Gpu::HostVector<int>& products_phases)
 {
+  // remove spaces from reaction reaction_formula string
+  std::string reaction_formula(equation);
+  reaction_formula.erase(std::remove(reaction_formula.begin(),
+                                     reaction_formula.end(),
+                                     ' '), reaction_formula.end());
+
   // Clear reactants containers
   reactants.clear();
   reactants_coeffs.clear();
@@ -409,11 +416,11 @@ ChemicalReaction::parse_reaction(const std::string& equation,
   products_coeffs.clear();
   products_phases.clear();
 
-  // Get the reaction part of the equation
-  std::string reaction_part = get_reactants(equation);
+  // Get the reaction part of the reaction_formula
+  std::string reaction_part = get_reactants(reaction_formula);
   
-  // Get the products part of the equation
-  std::string production_part = get_products(equation);
+  // Get the products part of the reaction_formula
+  std::string production_part = get_products(reaction_formula);
 
   // Get the reaction part stoichiometric coefficoents, elements and phases
   get_stoichiometric_data(reaction_part, reactants, reactants_id,

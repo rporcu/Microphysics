@@ -19,6 +19,9 @@ mfix.verbose = 1
 mac_proj.verbose   = 1
 nodal_proj.verbose = 0
 
+mac_proj.mg_rtol = 1e-12
+nodal_proj.mg_rtol = 1e-12
+
 amr.blocking_factor = 8
 
 #_______________________________________________________________________
@@ -74,12 +77,6 @@ fluid.density.constant   = 1.0
 
 fluid.viscosity          = constant
 fluid.viscosity.constant = 0.0
-
-fluid.specific_heat          = constant
-fluid.specific_heat.constant = 1.0
-
-fluid.thermal_conductivity          = constant
-fluid.thermal_conductivity.constant = 0.0
 
 #_______________________________________________________________________
 # DEM model settings

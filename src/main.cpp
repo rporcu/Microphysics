@@ -292,7 +292,6 @@ int main (int argc, char* argv[])
     if (restart_file.empty())
     {
         mfix.InitLevelData(time);
-        if (mfix.fluid.solve) mfix.InitialRedistribution(time);
     }
     else
     {
@@ -394,6 +393,19 @@ int main (int argc, char* argv[])
            amrex::Print() << "We should think about aborting here due to unused inputs" << std::endl;
     }
 
+
+    for (int lev = 0; lev <= mfix.finestLevel(); lev++)
+    {
+      if (DEM::restart_from_PIC) {
+
+        PIC::solve = false;
+        DEM::solve = true;
+
+        mfix.PIC_to_DEM(lev);
+      }
+    }
+
+
     { // Start profiling solve here
 
         BL_PROFILE("mfix_solve");
@@ -455,8 +467,8 @@ int main (int argc, char* argv[])
 
     if (ParallelDescriptor::IOProcessor())
     {
+        std::cout << "Time spent in main (after init) " << end_time-end_init << std::endl;
         std::cout << "Time spent in main      " << end_time << std::endl;
-        std::cout << "Time spent in main-init " << end_time-end_init << std::endl;
     }
 
     amrex::Print() << " " << std::endl;

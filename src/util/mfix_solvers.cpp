@@ -9,7 +9,7 @@ void DampedNewton::solve(const amrex::Vector<amrex::MultiFab*>& solution,
                          ResidueMF& R,
                          GradientMF& partial_R,
                          NormMF& norm,
-                         DumpingFactor dumping_factor,
+                         DampingFactor damping_factor,
                          const amrex::Real /*abs_tol*/,
                          const amrex::Real rel_tol,
                          const int max_iterations)
@@ -115,7 +115,7 @@ void DampedNewton::solve(const amrex::Vector<amrex::MultiFab*>& solution,
 
           amrex::ParallelFor(bx, [update_arr,residue_arr,/*residue_o_arr,*/
               solution_arr,/*epg_arr,*/gradient_arr,flags_arr,solution_oo_arr,iter,
-              volfrac_arr,dumping_factor]
+              volfrac_arr,damping_factor]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             if (!flags_arr(i,j,k).isCovered()) {
@@ -128,7 +128,7 @@ void DampedNewton::solve(const amrex::Vector<amrex::MultiFab*>& solution,
               const amrex::Real res = residue_arr(i,j,k);
               //const amrex::Real res_o = residue_o_arr(i,j,k);
 
-              const amrex::Real learning_rate = dumping_factor(1., vfrac);
+              const amrex::Real learning_rate = damping_factor(1., vfrac);
 
               amrex::Real sol = sol_o - learning_rate*(res/gradient_arr(i,j,k));
 

@@ -72,6 +72,8 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
     for (int lev(0); lev <= finest_level; lev++) {
       lap_hX_gk[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies,
                                     nghost_state(), MFInfo(), *ebfactory[lev]);
+
+      lap_hX_gk[lev]->setVal(0.);
     }
 
     // Compute the mixed enthalpy/species term

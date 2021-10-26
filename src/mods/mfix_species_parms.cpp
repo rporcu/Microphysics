@@ -6,6 +6,7 @@
 #include <AMReX_ParallelDescriptor.H>
 
 #include <mfix_species_parms.H>
+#include <mfix_fluid_parms.H>
 
 
 namespace SPECIES
@@ -13,8 +14,6 @@ namespace SPECIES
   int DiffusivityModel = DIFFUSIVITYMODEL::Invalid;
 
   int SpecificHeatModel = SPECIFICHEATMODEL::Invalid;
-
-  int EnthalpyOfFormationModel = ENTHALPYOFFORMATIONMODEL::Invalid;
 
   // Flag to solve species equations
   int solve(0);
@@ -33,7 +32,7 @@ namespace SPECIES
   amrex::Vector<amrex::Real> MW_k0(0);
 
   // Specified species diffusion coefficients
-  amrex::Vector<amrex::Real> D_k0(0);
+  amrex::Real D_0(0);
 
   // Flag to solve enthalpy species equations
   int solve_enthalpy(0);
@@ -71,7 +70,6 @@ namespace SPECIES
         }
 
         MW_k0.resize(nspecies);
-        D_k0.resize(nspecies);
 
         // Get species temperature inputs -----------------------------//
         amrex::ParmParse ppMFIX("mfix");
@@ -89,7 +87,7 @@ namespace SPECIES
             cp_k0.resize(nspecies);
           } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
             SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
-            cp_k0.resize(nspecies*5);
+            cp_k0.resize(nspecies*12);
           } else {
             amrex::Abort("Don't know this specific heat model!");
           }
@@ -120,16 +118,7 @@ namespace SPECIES
         if (amrex::toLower(diffusivity_model).compare("constant") == 0) {
           DiffusivityModel = DIFFUSIVITYMODEL::Constant;
 
-          for (int n(0); n < nspecies; n++) {
-            std::string name = "species." + species[n];
-            amrex::ParmParse ppSpecies(name.c_str());
-            int value_is_present = ppSpecies.query("diffusivity.constant", D_k0[n]);
-
-            if (!value_is_present) {
-              std::string message = "Assuming diffusivity D_" + species[n] + " = 0";
-              amrex::Warning(message.c_str());
-            }
-          }
+          pp.get("diffusivity.constant", D_0);
 
         } else {
           amrex::Abort("Unknown species mass diffusivity model!");
@@ -143,33 +132,8 @@ namespace SPECIES
               std::string name = "species." + species[n];
               amrex::ParmParse ppSpecies(name.c_str());
               ppSpecies.get("specific_heat.constant", cp_k0[n]);
-            }
-          } else if (SpecificHeatModel == SPECIFICHEATMODEL::NASA7Polynomials) {
 
-            for (int n(0); n < nspecies; n++) {
-              std::string name = "species." + species[n];
-              amrex::ParmParse ppSpecies(name.c_str());
-              ppSpecies.get("specific_heat.NASA7.a1", cp_k0[n*5 + 0]);
-              ppSpecies.get("specific_heat.NASA7.a2", cp_k0[n*5 + 1]);
-              ppSpecies.get("specific_heat.NASA7.a3", cp_k0[n*5 + 2]);
-              ppSpecies.get("specific_heat.NASA7.a4", cp_k0[n*5 + 3]);
-              ppSpecies.get("specific_heat.NASA7.a5", cp_k0[n*5 + 4]);
-            }
-          }
-
-          // Get enthalpy of formation model input ------------------------//
-          std::string enthalpy_of_formation_model("constant");
-          pp.query("enthalpy_of_formation", enthalpy_of_formation_model);
-
-          if (amrex::toLower(enthalpy_of_formation_model).compare("constant") == 0) {
-
-            EnthalpyOfFormationModel = ENTHALPYOFFORMATIONMODEL::Constant;
-
-            for (int n(0); n < nspecies; n++) {
-              std::string name = "species." + species[n];
-              amrex::ParmParse ppSpecies(name.c_str());
-
-              if(!ppSpecies.query("enthalpy_of_formation.constant", H_fk0[n])) {
+              if(!ppSpecies.query("enthalpy_of_formation", H_fk0[n])) {
 
                 if (amrex::ParallelDescriptor::IOProcessor()) {
                   std::string message = "Input not provided. Assuming Hf_" + species[n] + " = 0";
@@ -177,8 +141,56 @@ namespace SPECIES
                 }
               }
             }
+
+          } else if (SpecificHeatModel == SPECIFICHEATMODEL::NASA7Polynomials) {
+
+            for (int n(0); n < nspecies; n++) {
+              // Non-Normalization coefficient
+              AMREX_ALWAYS_ASSERT_WITH_MESSAGE(MW_k0[n] > 0., "Wrong molecular weight inputs");
+              const amrex::Real coeff = FluidPhase::R / MW_k0[n];
+
+              std::string name = "species." + species[n];
+              amrex::ParmParse ppSpecies(name.c_str());
+
+              for (int i(0); i < 6; ++i) {
+                amrex::Vector<amrex::Real> aa(0);
+                std::string field = "specific_heat.NASA7.a"+std::to_string(i);
+                ppSpecies.getarr(field.c_str(), aa);
+
+                if (aa.size() == 1) {
+
+                  cp_k0[n*12 + i] = aa[0] * coeff;
+                  cp_k0[n*12 + i+6] = 0.;
+
+                } else if (aa.size() == 2) {
+
+                  cp_k0[n*12 + i] = aa[0] * coeff;
+                  cp_k0[n*12 + i+6] = aa[1] * coeff;
+
+                } else {
+
+                  amrex::Abort("Input error");
+                }
+              }
+
+            }
+
           } else {
-            amrex::Abort("Don't know this enthalpy of formation model!");
+            amrex::Abort("Unknown specific heat model");
+
+            // Get enthalpy of formation model input ------------------------//
+            for (int n(0); n < nspecies; n++) {
+              std::string name = "species." + species[n];
+              amrex::ParmParse ppSpecies(name.c_str());
+
+              if(!ppSpecies.query("enthalpy_of_formation", H_fk0[n])) {
+
+                if (amrex::ParallelDescriptor::IOProcessor()) {
+                  std::string message = "Input not provided. Assuming Hf_" + species[n] + " = 0";
+                  amrex::Warning(message.c_str());
+                }
+              }
+            }
           }
 
         }

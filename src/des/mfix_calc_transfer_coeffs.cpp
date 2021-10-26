@@ -51,6 +51,9 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, DragFunc,
                                 ComputeConvGunn(DEM::small_number,DEM::large_number,DEM::eps));
     }
+    else if (m_convection_type == ConvectionType::NullConvection) {
+      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, DragFunc, NullConvectionCoeff());
+    }
     else {
       amrex::Abort("Invalid Convection Type.");
     }
@@ -73,6 +76,8 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   using MFIXParIter = MFIXParticleContainer::MFIXParIter;
 
   BL_PROFILE("mfix::mfix_calc_transfer_coeff()");
+
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
   // We copy the value inside the domain to the outside to avoid
   // unphysical volume fractions.
@@ -238,7 +243,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
             amrex::ParallelFor(np,
               [particles_ptr,p_realarray,interp_array,DragFunc,ConvectionCoeff,
                plo,dxi,adv_enthalpy,fluid_is_a_mixture,mu_g0,fluid_parms,nspecies_g,
-               interp_comp,local_cg_dem]
+               interp_comp,local_cg_dem,run_on_device]
               AMREX_GPU_DEVICE (int ip) noexcept
             {
               MFIXParticleContainer::ParticleType& particle = particles_ptr[ip];
@@ -314,10 +319,14 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
                 Real cp_g(0);
                 if (!fluid_is_a_mixture)
-                  cp_g = fluid_parms.calc_cp_g<RunOn::Gpu>(T_g);
+                  cp_g = run_on_device ?
+                    fluid_parms.calc_cp_g<RunOn::Device>(T_g) :
+                    fluid_parms.calc_cp_g<RunOn::Host>(T_g);
                 else {
                   for (int n_g(0); n_g < nspecies_g; ++n_g) {
-                    cp_g += X_gk[n_g]*fluid_parms.calc_cp_gk<RunOn::Gpu>(T_g,n_g);
+                    cp_g += run_on_device ?
+                      X_gk[n_g]*fluid_parms.calc_cp_gk<RunOn::Device>(T_g,n_g) :
+                      X_gk[n_g]*fluid_parms.calc_cp_gk<RunOn::Host>(T_g,n_g);
                   }
                 }
 
@@ -347,7 +356,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
               [particles_ptr,p_realarray,interp_array,DragFunc,ConvectionCoeff,
                adv_enthalpy,fluid_is_a_mixture,mu_g0,fluid_parms,plo,dx,dxi,flags_array,
                ccent_fab,bcent_fab,apx_fab,apy_fab,apz_fab,nspecies_g,interp_comp,
-               local_cg_dem]
+               local_cg_dem,run_on_device]
               AMREX_GPU_DEVICE (int pid) noexcept
             {
               MFIXParticleContainer::ParticleType& particle = particles_ptr[pid];
@@ -485,10 +494,14 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
                   Real cp_g(0.);
                   if (!fluid_is_a_mixture)
-                    cp_g = fluid_parms.calc_cp_g<RunOn::Gpu>(T_g);
+                    cp_g = run_on_device ?
+                      fluid_parms.calc_cp_g<RunOn::Device>(T_g) :
+                      fluid_parms.calc_cp_g<RunOn::Host>(T_g);
                   else {
                     for (int n_g(0); n_g < nspecies_g; ++n_g) {
-                      cp_g += X_gk[n_g]*fluid_parms.calc_cp_gk<RunOn::Gpu>(T_g,n_g);
+                      cp_g += run_on_device ?
+                        X_gk[n_g]*fluid_parms.calc_cp_gk<RunOn::Device>(T_g,n_g) :
+                        X_gk[n_g]*fluid_parms.calc_cp_gk<RunOn::Host>(T_g,n_g);
                     }
                   }
 

@@ -41,7 +41,7 @@
 struct DragType { enum {Invalid=-1, WenYu, Gidaspow, BVK2, UserDrag}; };
 
 // Convection type enumeration
-struct ConvectionType { enum {Invalid=-1, RanzMarshall, Gunn}; };
+struct ConvectionType { enum {Invalid=-1, RanzMarshall, Gunn, NullConvection}; };
 
 // Advection Type
 struct AdvectionType { enum {Invalid=-1, MOL, Godunov}; };
@@ -101,6 +101,8 @@ class mfix : public AmrCore
 
     void PostProjectionRedistribution (amrex::Real l_time, amrex::Real l_dt,
                                        const amrex::Vector<amrex::MultiFab*>& a_sigma);
+
+    void PreProjectionRedistribution (amrex::Real l_time);
 
     void PostProjectionDiagnostics (amrex::Real l_time,
                                     amrex::Vector< amrex::MultiFab*> const& epu,
@@ -704,6 +706,7 @@ public:
                               const Vector< MultiFab* >& ep_g_in,
                               const Vector< MultiFab* >& ro_g_in,
                               const Vector< MultiFab* >& vel_g_in,
+                              const Vector< MultiFab* >& p_g_in,
                               const Vector< MultiFab* >& T_g_in,
                               const Vector< MultiFab* >& X_gk_in,
                               const Real time);
@@ -713,6 +716,7 @@ public:
                               const Vector< MultiFab* >& ep_g_in,
                               const Vector< MultiFab* >& ro_g_in,
                               const Vector< MultiFab* >& vel_g_in,
+                              const Vector< MultiFab* >& p_g_in,
                               const Vector< MultiFab* >& T_g_in,
                               const Vector< MultiFab* >& X_gk_in,
                               const Real time,
@@ -723,6 +727,7 @@ public:
                               const Vector< MultiFab* >& ep_g_in,
                               const Vector< MultiFab* >& ro_g_in,
                               const Vector< MultiFab* >& vel_g_in,
+                              const Vector< MultiFab* >& p_g_in,
                               const Vector< MultiFab* >& T_g_in,
                               const Vector< MultiFab* >& X_gk_in,
                               const Real time,
@@ -752,7 +757,7 @@ public:
     void make_eb_clr_riser ();
     void make_eb_regular ();
 
-#ifdef MFIX_GEOMETRY_CSG
+#ifdef CSG_EB
   void make_eb_csg(std::string);
 #endif
 
@@ -874,9 +879,7 @@ public:
                                Real& coupling_timing);
 
   public:
-    void mfix_normalize_fluid_species (const Vector< MultiFab* >& X_gk,
-                                       const Vector< MultiFab* >& T_g,
-                                       const Vector< MultiFab* >& h_g);
+    void mfix_normalize_fluid_species (const Vector< MultiFab* >& X_gk);
 
     void mfix_incompressible_fluid_rhs (Vector< MultiFab*       > const& rhs,
                                         Vector< MultiFab const* > const& ro_rhs,
@@ -890,8 +893,7 @@ public:
                                        Vector< MultiFab const* > const& ro_g,
                                        Vector< MultiFab const* > const& T_g,
                                        Vector< MultiFab*       > const& X_gk,
-                                       Vector< MultiFab const* > const& txfr,
-                                       Vector< MultiFab const* > const& chem_txfr);
+                                       Vector< MultiFab const* > const& ro_rhs);
 
     void mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
                                          Vector< MultiFab const* > const& lap_T,
@@ -902,8 +904,7 @@ public:
                                          Vector< MultiFab const* > const& ro_g,
                                          Vector< MultiFab const* > const& T_g,
                                          Vector< MultiFab*       > const& X_gk,
-                                         Vector< MultiFab const* > const& txfr,
-                                         Vector< MultiFab const* > const& chem_txfr,
+                                         Vector< MultiFab const* > const& ro_rhs,
                                          Vector< MultiFab const* > const& pressure_g,
                                          Vector< Real >& avgSigma,
                                          Vector< Real >& avgTheta);
@@ -945,6 +946,8 @@ public:
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
 
+    void PruneBaseGrids(BoxArray &ba) const;
+
     void ChopGrids (const Box& domain, BoxArray& ba, int target_size) const;
 
     static int nlev;
@@ -953,6 +956,14 @@ public:
     // Particle container
     MFIXParticleContainer* pc;
 
+  public:
+    void PIC_to_PIC(const int lev,
+                    std::string& restart_file,
+                    const int pic_factor);
+
+    void PIC_to_DEM(const int lev);
+
+  private:
     // Debug counter used for tracking number of level-set MultiFabs used in
     // intersection/union
     int ct_ls_mf;
@@ -1098,6 +1109,8 @@ public:
     static int m_advection_type;
 
     std::string m_redistribution_type = "StateRedist";
+
+    bool m_grid_pruning = false;
 
     // include d(ep_g)/dt in constraint
     bool m_use_depdt_constraint = false;

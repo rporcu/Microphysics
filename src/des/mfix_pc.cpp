@@ -64,7 +64,8 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
 
     // Add solids.nspecies components
     for (int n(0); n < m_runtimeRealData.count; ++n) {
-      AddRealComp(false); // Turn off ghost particle communication
+      AddRealComp(true); // Turn on comm for redistribute on ghosting
+      setRealCommComp(21+n, false); // turn off for ghosting
     }
 }
 
@@ -159,6 +160,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
+
+    const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
     Real eps = std::numeric_limits<Real>::epsilon();
 
@@ -620,6 +623,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                     RealVect pos1(particle.pos());
 
+                    int has_collisions(0);
+
                     const auto neighbs = nbor_data.getNeighbors(i);
                     for (auto mit = neighbs.begin(); mit != neighbs.end(); ++mit)
                     {
@@ -646,6 +651,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                         if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
                         {
+                          has_collisions = 1;
+
                             Real dist_mag = sqrt(r2);
 
                             AMREX_ASSERT(dist_mag >= eps);
@@ -657,7 +664,19 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                             normal[1] = dist_y * dist_mag_inv;
                             normal[2] = dist_z * dist_mag_inv;
 
-                            Real overlap_n = r_lm - dist_mag;
+                            Real overlap_n(0.);
+                            if (p_intarray[SoAintData::state][i] == 10 ||
+                                p_intarray[SoAintData::state][j] == 10) {
+
+                              // most of overlaps (99.99%) are in the range [0, 2.5e-8] m
+                              // which means [0, 5.e-4] radiuses
+                              // we set max overlap to   2.5e-4*radius
+                              overlap_n = amrex::min(r_lm - dist_mag, 2.5e-4*p1radius);
+                            } else {
+                              overlap_n = r_lm - dist_mag;
+                            }
+
+
                             Real vrel_trans_norm;
                             RealVect vrel_t(0.);
 
@@ -773,6 +792,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 #endif
                         }
                     }
+
+                    if ((p_intarray[SoAintData::state][i] == 10) && (!has_collisions))
+                      p_intarray[SoAintData::state][i] = 1;
               });
 
               Gpu::Device::synchronize();
@@ -830,7 +852,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 idx_h_s_txfr,local_update_mass,fc_ptr,ntot,gravity,tow_ptr,eps,
                 p_hi,p_lo,x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc,
                 enthalpy_source,update_momentum,local_solve_reactions,time,
-                solid_is_a_mixture,solids_parms,local_update_enthalpy]
+                solid_is_a_mixture,solids_parms,local_update_enthalpy,run_on_device]
               AMREX_GPU_DEVICE (int i) noexcept
             {
               ParticleType& p = pstruct[i];
@@ -840,6 +862,26 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               // Get current particle's species mass fractions
               for (int n_s(0); n_s < nspecies_s; ++n_s) {
                 X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s][i];
+              }
+
+              Real p_enthalpy_old(0);
+
+              if (local_update_enthalpy) {
+                const Real Tp = p_realarray[SoArealData::temperature][i];
+
+                if (solid_is_a_mixture) {
+                  for (int n_s(0); n_s < nspecies_s; ++n_s) {
+                    p_enthalpy_old += run_on_device ?
+                      X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Device>(Tp,n_s) :
+                      X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Host>(Tp,n_s);
+                  }
+                } else {
+                  const int phase = p_intarray[SoAintData::phase][i];
+
+                  p_enthalpy_old = run_on_device ?
+                    solids_parms.calc_h_s<RunOn::Device>(phase-1,Tp) :
+                    solids_parms.calc_h_s<RunOn::Host>(phase-1,Tp);
+                }
               }
 
               // Get current particle's mass
@@ -1015,19 +1057,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                   const int phase = p_intarray[SoAintData::phase][i];
 
-                  const Real Tp_old = p_realarray[SoArealData::temperature][i];
-
                   const Real coeff = local_update_mass ? (p_mass_old/p_mass_new) : 1.;
-
-                  Real p_enthalpy_old(0);
-
-                  if (solid_is_a_mixture) {
-                    for (int n_s(0); n_s < nspecies_s; ++n_s) {
-                      p_enthalpy_old += X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Gpu>(Tp_old,n_s);
-                    }
-                  } else {
-                    p_enthalpy_old = solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_old);
-                  }
 
                   Real p_enthalpy_new = coeff*p_enthalpy_old +
                     subdt*((p_realarray[SoArealData::convection][i]+enthalpy_source) / p_mass_new);
@@ -1047,11 +1077,15 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                     if (!solid_is_a_mixture) {
 
-                      hp_loc = solids_parms.calc_h_s<RunOn::Gpu>(phase-1,Tp_arg);
+                      hp_loc = run_on_device ?
+                        solids_parms.calc_h_s<RunOn::Device>(phase-1,Tp_arg) :
+                        solids_parms.calc_h_s<RunOn::Host>(phase-1,Tp_arg);
                     } else {
 
                       for (int n_s(0); n_s < nspecies_s; ++n_s)
-                        hp_loc += X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Gpu>(Tp_arg,n_s);
+                        hp_loc += run_on_device ?
+                          X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Device>(Tp_arg,n_s) :
+                          X_sn[n_s]*solids_parms.calc_h_sn<RunOn::Host>(Tp_arg,n_s);
                     }
 
                     return hp_loc - p_enthalpy_new;
@@ -1064,22 +1098,28 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                     if (!solid_is_a_mixture) {
 
-                      gradient = solids_parms.calc_partial_h_s<RunOn::Gpu>(phase-1,Tp_arg);
+                      gradient = run_on_device ?
+                        solids_parms.calc_partial_h_s<RunOn::Device>(phase-1,Tp_arg) :
+                        solids_parms.calc_partial_h_s<RunOn::Host>(phase-1,Tp_arg);
                     } else {
 
                       for (int n_s(0); n_s < nspecies_s; ++n_s) {
-                        gradient += X_sn[n_s]*solids_parms.calc_partial_h_sn<RunOn::Gpu>(Tp_arg,n_s);
+                        gradient += run_on_device ?
+                          X_sn[n_s]*solids_parms.calc_partial_h_sn<RunOn::Device>(Tp_arg,n_s) :
+                          X_sn[n_s]*solids_parms.calc_partial_h_sn<RunOn::Host>(Tp_arg,n_s);
                       }
                     }
 
                     return gradient;
                   };
 
-                  Real Tp_new(Tp_old);
+                  //const Real Tp_old = p_realarray[SoArealData::temperature][i];
+                  //Real Tp_new(Tp_old);
+                  Real Tp_new(p_realarray[SoArealData::temperature][i]);
 
-                  const Real dumping_factor = 1.;
+                  const Real damping_factor = 1.;
 
-                  DampedNewton::solve(Tp_new, R, partial_R, dumping_factor, 1.e-6, 1.e-6);
+                  DampedNewton::solve(Tp_new, R, partial_R, damping_factor, 1.e-6, 1.e-6);
 
                   p_realarray[SoArealData::temperature][i] = Tp_new;
 
@@ -1088,10 +1128,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                   if (solid_is_a_mixture) {
                     for (int n_s(0); n_s < nspecies_s; ++n_s)
-                      cp_s_new += X_sn[n_s]*solids_parms.calc_cp_sn<RunOn::Gpu>(Tp_new,n_s);
+                      cp_s_new += run_on_device ?
+                        X_sn[n_s]*solids_parms.calc_cp_sn<RunOn::Device>(Tp_new,n_s) :
+                        X_sn[n_s]*solids_parms.calc_cp_sn<RunOn::Host>(Tp_new,n_s);
 
                   } else {
-                    cp_s_new = solids_parms.calc_cp_s<RunOn::Gpu>(phase-1,Tp_new);
+                    cp_s_new = run_on_device ?
+                      solids_parms.calc_cp_s<RunOn::Device>(phase-1,Tp_new) :
+                      solids_parms.calc_cp_s<RunOn::Host>(phase-1,Tp_new);
                   }
 
                   AMREX_ASSERT(cp_s_new > 0.);

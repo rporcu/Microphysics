@@ -23,13 +23,16 @@ class FluidParms {
   private:
     const amrex::Real* m_h_MW_gk;
     const amrex::Real* m_d_MW_gk;
-    const amrex::Real* m_h_D_gk;
-    const amrex::Real* m_d_D_gk;
+    const amrex::Real m_D_g;
     const int m_ncoefficients;
     const amrex::Real* m_h_cp_gk;
     const amrex::Real* m_d_cp_gk;
     const amrex::Real* m_h_H_fk;
     const amrex::Real* m_d_H_fk;
+
+    // List of recognized fluid specific heat models
+    struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA7Polynomials, NASA9Polynomials}; };
+    int m_specific_heat_model;
 
   public:
     AMREX_GPU_HOST_DEVICE
@@ -42,13 +45,13 @@ class FluidParms {
       , m_d_species_id(nullptr)
       , m_h_MW_gk(nullptr)
       , m_d_MW_gk(nullptr)
-      , m_h_D_gk(nullptr)
-      , m_d_D_gk(nullptr)
+      , m_D_g(0)
       , m_ncoefficients(0)
       , m_h_cp_gk(nullptr)
       , m_d_cp_gk(nullptr)
       , m_h_H_fk(nullptr)
       , m_d_H_fk(nullptr)
+      , m_specific_heat_model(SPECIFICHEATMODEL::Invalid)
     {}
 
     AMREX_GPU_HOST_DEVICE
@@ -60,13 +63,13 @@ class FluidParms {
                 const int* d_species_id,
                 const amrex::Real* h_MW_gk,
                 const amrex::Real* d_MW_gk,
-                const amrex::Real* h_D_gk,
-                const amrex::Real* d_D_gk,
+                const amrex::Real D_g,
                 const int ncoefficients,
                 const amrex::Real* h_cp_gk,
                 const amrex::Real* d_cp_gk,
                 const amrex::Real* h_H_fk,
-                const amrex::Real* d_H_fk)
+                const amrex::Real* d_H_fk,
+                const int specific_heat_model)
       : m_T_ref(T_ref)
       , m_mu_g(mu_g)
       , m_k_g(k_g)
@@ -75,20 +78,17 @@ class FluidParms {
       , m_d_species_id(d_species_id)
       , m_h_MW_gk(h_MW_gk)
       , m_d_MW_gk(d_MW_gk)
-      , m_h_D_gk(h_D_gk)
-      , m_d_D_gk(d_D_gk)
+      , m_D_g(D_g)
       , m_ncoefficients(ncoefficients)
       , m_h_cp_gk(h_cp_gk)
       , m_d_cp_gk(d_cp_gk)
       , m_h_H_fk(h_H_fk)
       , m_d_H_fk(d_H_fk)
+      , m_specific_heat_model(specific_heat_model)
     {}
 
-#if defined(AMREX_USE_GPU)
+
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real get_MW_gk (const int n) const
     {
@@ -102,16 +102,14 @@ class FluidParms {
       return 0;
     }
 
-#if defined(AMREX_USE_GPU)
+
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real get_MW_g () const
     {
       return get_MW_gk<run_on>(0);
     }
+
 
     // Compute fluid molecular viscosity
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
@@ -119,6 +117,7 @@ class FluidParms {
     {
       return m_mu_g;
     }
+
 
     // Compute fluid thermal conductivity
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
@@ -134,281 +133,147 @@ class FluidParms {
       return 0;
     }
 
-    // Compute fluid species diffusivity
-#if defined(AMREX_USE_GPU)
-    template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_D_gk (const amrex::Real /*T_g*/,
-                           const int n) const
-    {
-      if (run_on == amrex::RunOn::Gpu)
-        return m_d_D_gk[n];
-      else if (run_on == amrex::RunOn::Cpu)
-        return m_h_D_gk[n];
-      else
-        amrex::Abort("Unrecognized RunOn option");
 
-      return 0;
+    // Compute fluid species diffusivity
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real get_D_g (const amrex::Real /*T_g*/) const
+    {
+      return m_D_g;
     }
 
-#if defined(AMREX_USE_GPU)
+
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_cp_g (const amrex::Real T_g) const
     {
-      amrex::Real result(0);
-      amrex::Real coeff(1);
-
-      if (run_on == amrex::RunOn::Gpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          result += m_d_cp_gk[m]*coeff;
-          coeff *= T_g;
-        }
-
-        //result *= (R/m_d_MW_gk[0]);
-
-      } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          result += m_h_cp_gk[m]*coeff;
-          coeff *= T_g;
-        }
-
-      } else {
-        amrex::Abort("Unrecognized RunOn option");
-      }
-
-      return result;
+      return calc_cp_gk<run_on>(T_g, 0);
     }
 
-#if defined(AMREX_USE_GPU)
+
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_integral_cp_g (const amrex::Real T_g) const
-    {
-      amrex::Real result(0);
-      amrex::Real coeff(T_g);
-
-      if (run_on == amrex::RunOn::Gpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          result += (1./(m+1))*m_d_cp_gk[m]*coeff;
-          coeff *= T_g;
-        }
-
-        //result *= (R/m_d_MW_gk[0]);
-
-      } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          result += (1./(m+1))*m_h_cp_gk[m]*coeff;
-          coeff *= T_g;
-        }
-
-        //result *= (R/m_h_MW_gk[0]);
-
-      } else {
-        amrex::Abort("Unrecognized RunOn option");
-      }
-
-      return result;
-    }
-
-#if defined(AMREX_USE_GPU)
-    template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_partial_cp_g (const amrex::Real T_g) const
-    {
-      amrex::Real result(0);
-      amrex::Real coeff(1);
-
-      if (run_on == amrex::RunOn::Gpu) {
-        for (int m(1); m < m_ncoefficients; ++m) {
-          result += m*m_d_cp_gk[m]*coeff;
-          coeff *= T_g;
-        }
-
-        //result *= (R/m_d_MW_gk[0]);
-
-      } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(1); m < m_ncoefficients; ++m) {
-          result += m*m_h_cp_gk[m]*coeff;
-          coeff *= T_g;
-        }
-
-        //result *= (R/m_h_MW_gk[0]);
-
-      } else {
-        amrex::Abort("Unrecognized RunOn option");
-      }
-
-      return result;
-    }
-
-#if defined(AMREX_USE_GPU)
-    template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_h_g (const amrex::Real T_g) const
     {
-      return calc_integral_cp_g<run_on>(T_g) - calc_integral_cp_g<run_on>(m_T_ref);
+      return calc_h_gk<run_on>(T_g, 0);
     }
 
-#if defined(AMREX_USE_GPU)
+
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_partial_h_g (const amrex::Real T_g) const
     {
-      return calc_cp_g<run_on>(T_g);
+      return calc_partial_h_gk<run_on>(T_g, 0);
     }
 
-#if defined(AMREX_USE_GPU)
+
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_cp_gk (const amrex::Real T_g,
                             const int n) const
     {
       amrex::Real result(0);
-      amrex::Real coeff(1);
 
-      if (run_on == amrex::RunOn::Gpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          const int idx = n*m_ncoefficients + m;
-          result += m_d_cp_gk[idx]*coeff;
-          coeff *= T_g;
+      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
+
+        if (run_on == amrex::RunOn::Gpu) {
+          
+          result = m_d_cp_gk[n];
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          result = m_h_cp_gk[n];
         }
 
-        //result *= (R/m_d_MW_gk[n]);
+      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
 
-      } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          const int idx = n*m_ncoefficients + m;
-          result += m_h_cp_gk[idx]*coeff;
+        amrex::Real coeff(1);
+
+        for (int m(0); m < 5; ++m) {
+
+          int idx = T_g < 1000 ? n*12 + m : n*12 + m+6;
+
+          if (run_on == amrex::RunOn::Gpu) {
+
+            result += m_d_cp_gk[idx]*coeff;
+
+          } else if (run_on == amrex::RunOn::Cpu) {
+
+            result += m_h_cp_gk[idx]*coeff;
+
+          }
+
           coeff *= T_g;
+
         }
-
-        //result *= (R/m_h_MW_gk[n]);
-
-      } else {
-        amrex::Abort("Unrecognized RunOn option");
       }
 
       return result;
     }
 
-#if defined(AMREX_USE_GPU)
+
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_integral_cp_gk (const amrex::Real T_g,
-                                     const int n) const
-    {
-      amrex::Real result(0);
-      amrex::Real coeff(T_g);
-
-      if (run_on == amrex::RunOn::Gpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          const int idx = n*m_ncoefficients + m;
-          result += (1./(m+1))*m_d_cp_gk[idx]*coeff;
-          coeff *= T_g;
-        }
-
-        //result *= (R/m_d_MW_gk[n]);
-
-      } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(0); m < m_ncoefficients; ++m) {
-          const int idx = n*m_ncoefficients + m;
-          result += (1./(m+1))*m_h_cp_gk[idx]*coeff;
-          coeff *= T_g;
-        }
-
-        //result *= (R/m_h_MW_gk[n]);
-
-      } else {
-        amrex::Abort("Unrecognized RunOn option");
-      }
-
-      return result;
-    }
-
-#if defined(AMREX_USE_GPU)
-    template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_partial_cp_gk (const amrex::Real T_g,
-                                    const int n) const
-    {
-      amrex::Real result(0);
-      amrex::Real coeff(1);
-
-      if (run_on == amrex::RunOn::Gpu) {
-        for (int m(1); m < m_ncoefficients; ++m) {
-          const int idx = n*m_ncoefficients + m;
-          result += m*m_d_cp_gk[idx]*coeff;
-          coeff *= T_g;
-        }
-
-        //result *= (R/m_d_MW_gk[n]);
-
-      } else if (run_on == amrex::RunOn::Cpu) {
-        for (int m(1); m < m_ncoefficients; ++m) {
-          const int idx = n*m_ncoefficients + m;
-          result += m*m_h_cp_gk[idx]*coeff;
-          coeff *= T_g;
-        }
-
-        //result *= (R/m_h_MW_gk[n]);
-
-      } else {
-        amrex::Abort("Unrecognized RunOn option");
-      }
-
-      return result;
-    }
-
-#if defined(AMREX_USE_GPU)
-    template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_h_gk (const amrex::Real T_g,
                            const int n) const
     {
-      return calc_integral_cp_gk<run_on>(T_g,n) - calc_integral_cp_gk<run_on>(m_T_ref,n);
+      amrex::Real result(0);
+
+      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
+
+        if (run_on == amrex::RunOn::Gpu) {
+          
+          result = m_d_H_fk[n] + m_d_cp_gk[n]*(T_g - m_T_ref);
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          result = m_h_H_fk[n] + m_h_cp_gk[n]*(T_g - m_T_ref);
+        }
+
+      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
+
+        amrex::Real coeff(T_g);
+
+        for (int m(0); m < 5; ++m) {
+
+          int idx = T_g < 1000 ? n*12 + m : n*12 + m+6;
+
+          if (run_on == amrex::RunOn::Gpu) {
+
+            result += (1./(1.+m))*m_d_cp_gk[idx]*coeff;
+
+          } else if (run_on == amrex::RunOn::Cpu) {
+
+            result += (1./(1.+m))*m_h_cp_gk[idx]*coeff;
+
+          }
+
+          coeff *= T_g;
+        }
+
+        int idx = T_g < 1000 ? n*12 + 5 : n*12 + 11;
+
+        if (run_on == amrex::RunOn::Gpu) {
+
+          result += m_d_cp_gk[idx];
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          result += m_h_cp_gk[idx];
+
+        }
+
+      }
+
+      return result;
     }
 
-#if defined(AMREX_USE_GPU)
+
     template <amrex::RunOn run_on>
-#else
-    template <amrex::RunOn run_on=amrex::RunOn::Host>
-#endif
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_partial_h_gk (const amrex::Real T_g,
                                    const int n) const
     {
-      return calc_cp_gk<run_on>(T_g,n);
+      return calc_cp_gk<run_on>(T_g, n);
     }
 };
 
@@ -447,19 +312,20 @@ class FluidPhase {
 
     int ThermalConductivityModel;
 
-    // List of recognized species heat of formation models
-    struct ENTHALPYOFFORMATIONMODEL { enum {Invalid=-1, Constant}; };
-
-    int EnthalpyOfFormationModel;
-
     // Ideal gas constant
     static constexpr amrex::Real R = 8.31446261815324;
 
     // Flag to solve fluid equations
     int solve;
 
+    // Flag to solve fluid density equation
+    int solve_density;
+
     // Specified constant gas density
     amrex::Real ro_g0;
+
+    // Flag to solve fluid tracer equation
+    int solve_tracer;
 
     // Specified constant tracer value
     amrex::Real trac_0;
@@ -470,7 +336,7 @@ class FluidPhase {
     // Average molecular weight of gas
     amrex::Real mw_avg;
 
-    // Flag to solve enthalpy fluid equation
+    // Flag to solve fluid enthalpy equation
     int solve_enthalpy;
 
     // Specified constant gas temperature
@@ -500,8 +366,7 @@ class FluidPhase {
     amrex::Gpu::DeviceVector<amrex::Real> d_MW_gk0;
 
     // Specified constant gas phase species diffusion coefficients
-    amrex::Gpu::HostVector<amrex::Real> D_gk0;
-    amrex::Gpu::DeviceVector<amrex::Real> d_D_gk0;
+    amrex::Real D_g0;
 
     // Flag to understand if fluid is a mixture of fluid species
     int is_a_mixture;
@@ -526,7 +391,63 @@ class FluidPhase {
       amrex::Real pressure;
       amrex::Real pressure_defined; // Flag to check if pressure is defined
 
+
+      amrex::Vector< int > constant_species;
       amrex::Vector<SPECIES::SPECIES_t> species;
+      amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> species_table;
+
+      amrex::Real get_species (int n, amrex::Real time=0.0) {
+        //amrex::Print() << "\n\nLooking for the right BC fluid temperature!\n\n";
+        if (constant_species[n]){
+          // amrex::Print() << "* Use the constant temperature " << temperature << "\n";
+          return species[n].mass_fraction;
+        } else {
+          const int size = species_table[n].size();
+          if( size == 1 || time <= species_table[n][0][0] ) {
+            // There is only one entry (use it) OR the current time
+            // is less than the first entry so return the first entry.
+            // amrex::Print() << "Defaulting to the first entry " << species_table[0][1] << "\n";
+            return species_table[n][0][1];
+
+          } else {
+
+            constexpr amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
+            //amrex::Print() << "Interpolating from species table (maybe?)\n";
+            for (int lc=1; lc<size; lc++) {
+              // Time of current entry
+              const amrex::Real entry_time = species_table[n][lc][0];
+
+              if ( amrex::Math::abs(time - entry_time) <= tolerance ) {
+                // Too close for any calculations
+                // amrex::Print() << "Too close to tell using value form entry "
+                //                << lc << "  " << species_table[n][lc][1] << "\n";
+                return species_table[n][lc][1];
+
+                // The entries are sorted based on time, so if the current time is
+                // less than this entries time, then we need to interpolate between
+                // the previous time and this time.
+              } else if (time < entry_time) {
+                const amrex::Real prv_time = species_table[n][lc-1][0];
+                const amrex::Real delta_time = entry_time - prv_time;
+                if (amrex::Math::abs(delta_time) <= tolerance) {
+                  // amrex::Print() << "Delta time too small. Using value form entry "
+                  //                << lc << "  " << species_table[n][lc][1] << "\n";
+                  return species_table[n][lc][1];
+                } else {
+                  const amrex::Real whi = (time - prv_time) / delta_time;
+                  const amrex::Real wlo = 1.0 - whi;
+                  // amrex::Print() << "Interpolating from table entry " << lc << "\n";
+                  return (whi*species_table[n][lc][1] + wlo*species_table[n][lc-1][1]);
+                }
+              }
+            }
+            // If we made it here, time is larger than all the entries in the
+            // table, therefore, use the last value.
+            // amrex::Print() << "Using last table entry " << species_table[n][size-1][1];
+            return species_table[n][size-1][1];
+          }
+        }
+      }
 
       // Flags for constant
       bool constant_velocity;

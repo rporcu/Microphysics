@@ -12,13 +12,19 @@
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
 
-namespace
+
+namespace restart_aux
 {
     const std::string level_prefix {"Level_"};
 }
 
+using namespace restart_aux;
+
+
 void
-mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
+mfix::Restart (std::string& restart_file,
+               int *nstep, Real *dt,
+               Real *time,
                IntVect& Nrep)
 {
     if (ooo_debug) amrex::Print() << "Restart" << std::endl;
@@ -163,8 +169,24 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
             // Particle data is loaded into the MFIXParticleContainer's base
             // class using amrex::NeighborParticleContainer::Restart
 
-            if ( (DEM::solve || PIC::solve) && lev == 0)
+            if (DEM::solve && lev == 0) {
+
               pc->Restart(restart_file, "particles");
+
+            } else if (PIC::solve && lev == 0) {
+
+              const int PIC_restart_refinement = PIC::restart_refinement;
+
+              if (PIC_restart_refinement > 1) {
+
+                PIC_to_PIC(lev, restart_file, PIC_restart_refinement);
+
+              } else {
+
+                pc->Restart(restart_file, "particles");
+
+              }
+            }
 
             amrex::Print() << "  Finished reading particle data" << std::endl;
 
@@ -536,5 +558,6 @@ mfix::Restart (std::string& restart_file, int *nstep, Real *dt, Real *time,
         }
       }
     }
+
     amrex::Print() << "  Done with mfix::Restart " << std::endl;
 }

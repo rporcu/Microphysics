@@ -45,6 +45,9 @@ Blocs += $(AMREX_HYDRO_HOME)/EBGodunov
 
 Bpack += $(AMREX_HYDRO_HOME)/Redistribution/Make.package
 Blocs += $(AMREX_HYDRO_HOME)/Redistribution
+
+Bpack += $(AMREX_HYDRO_HOME)/Slopes/Make.package
+Blocs += $(AMREX_HYDRO_HOME)/Slopes
 endif
 
 include $(Bpack)

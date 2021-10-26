@@ -19,7 +19,6 @@ target_sources( mfixcore
    )
 
 if(MFIX_CSG)
-   target_compile_definitions(mfixcore PRIVATE MFIX_GEOMETRY_CSG)
    target_sources(mfixcore PRIVATE mfix_eb_csg.cpp)
    add_subdirectory(tests)
 endif()
