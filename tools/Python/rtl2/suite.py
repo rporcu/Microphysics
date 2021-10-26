@@ -12,7 +12,7 @@ from typing import List, Optional
 
 from rtl2 import test_util
 
-DO_TIMINGS_PLOTS = False
+DO_TIMINGS_PLOTS = True
 
 SUITE: Optional["Suite"] = None
 
