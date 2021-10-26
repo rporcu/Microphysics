@@ -3,6 +3,7 @@
 *.mic
 *.mod
 *.o
+__pycache__
 *~
 
 tmp.*

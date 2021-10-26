@@ -17,11 +17,6 @@ namespace SPECIES
 
   extern int SpecificHeatModel;
 
-  // List of recognized species heat of formation models
-  struct ENTHALPYOFFORMATIONMODEL { enum {Invalid=-1, Constant}; };
-
-  extern int EnthalpyOfFormationModel;
-
   // Flag to solve species equations
   extern int solve;
 
@@ -39,7 +34,7 @@ namespace SPECIES
   extern amrex::Vector<amrex::Real> MW_k0;
 
   // Specified species constant diffusion coefficients
-  extern amrex::Vector<amrex::Real> D_k0;
+  extern amrex::Real D_0;
 
   // Flag to solve enthalpy species equation
   extern int solve_enthalpy;

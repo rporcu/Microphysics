@@ -93,7 +93,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     if (reactions.solve) {
       mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                          get_T_g(), get_X_gk(), time);
+                          get_p_g(), get_T_g(), get_X_gk(), time);
     }
   }
 
@@ -273,6 +273,8 @@ mfix::mfix_add_txfr_explicit (Real dt,
 
   BL_PROFILE("mfix::mfix_add_txfr_explicit");
 
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
   auto& fluid_parms = *fluid.parameters;
 
   for (int lev = 0; lev <= finest_level; lev++) {
@@ -327,7 +329,7 @@ mfix::mfix_add_txfr_explicit (Real dt,
 
         amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
             fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-            volfrac_arr]
+            volfrac_arr,run_on_device]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           if (!flags_arr(i,j,k).isCovered()) {
@@ -354,11 +356,19 @@ mfix::mfix_add_txfr_explicit (Real dt,
 
               if (!fluid_is_a_mixture) {
 
-                hg_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_arg);
+                hg_loc = run_on_device ?
+                  fluid_parms.calc_h_g<RunOn::Device>(Tg_arg) :
+                  fluid_parms.calc_h_g<RunOn::Host>(Tg_arg);
+
               } else {
 
-                for (int n(0); n < nspecies_g; ++n)
-                  hg_loc += Xgk_array(i,j,k,n)*fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_arg,n);
+                for (int n(0); n < nspecies_g; ++n) {
+                  const Real h_gk = run_on_device ?
+                    fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg,n) :
+                    fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg,n);
+
+                  hg_loc += Xgk_array(i,j,k,n)*h_gk;
+                }
               }
 
               return hg_loc - hg;
@@ -371,11 +381,19 @@ mfix::mfix_add_txfr_explicit (Real dt,
 
               if (!fluid_is_a_mixture) {
 
-                gradient = fluid_parms.calc_partial_h_g<RunOn::Gpu>(Tg_arg);
+                gradient = run_on_device ?
+                  fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
+                  fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
+
               } else {
 
-                for (int n(0); n < nspecies_g; ++n)
-                  gradient += Xgk_array(i,j,k,n)*fluid_parms.calc_partial_h_gk<RunOn::Gpu>(Tg_arg,n);
+                for (int n(0); n < nspecies_g; ++n) {
+                  const Real h_gk = run_on_device ?
+                    fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
+                    fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
+
+                  gradient += Xgk_array(i,j,k,n)*h_gk;
+                }
               }
 
               return gradient;
@@ -386,23 +404,23 @@ mfix::mfix_add_txfr_explicit (Real dt,
             int solver_iterations(0);
 
             {
-              DampedNewton::DumpingFactor dumping_factor(0., 0.);
+              DampedNewton::DampingFactor damping_factor(0., 0.);
               solver_iterations = 
-                DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
                                     1.e-8, 1.e-8, 500);
 
             } if (solver_iterations == 500) {
 
-              DampedNewton::DumpingFactor dumping_factor(1., 0.);
+              DampedNewton::DampingFactor damping_factor(1., 0.);
               solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
                                     1.e-7, 1.e-7, 500);
 
             } if (solver_iterations == 500) {
 
-              DampedNewton::DumpingFactor dumping_factor(1., 1.);
+              DampedNewton::DampingFactor damping_factor(1., 1.);
               solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
                                     1.e-6, 1.e-6, 500);
 
             } if (solver_iterations == 500) {
@@ -440,6 +458,8 @@ mfix::mfix_add_txfr_implicit (Real dt,
   */
 
   BL_PROFILE("mfix::mfix_add_txfr_implicit");
+
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
   auto& fluid_parms = *fluid.parameters;
 
@@ -490,7 +510,7 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
         amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
             fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-            volfrac_arr]
+            volfrac_arr,run_on_device]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           if (!flags_arr(i,j,k).isCovered()) {
@@ -515,11 +535,18 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
               if (!fluid_is_a_mixture) {
 
-                hg_loc = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_arg);
+                hg_loc = run_on_device ?
+                  fluid_parms.calc_h_g<RunOn::Device>(Tg_arg) :
+                  fluid_parms.calc_h_g<RunOn::Host>(Tg_arg);
+
               } else {
 
                 for (int n(0); n < nspecies_g; ++n) {
-                  hg_loc += Xgk_array(i,j,k,n)*fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_arg,n);
+                  const Real h_gk = run_on_device ?
+                    fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg,n) :
+                    fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg,n);
+
+                  hg_loc += Xgk_array(i,j,k,n)*h_gk;
                 }
               }
 
@@ -533,11 +560,19 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
               if (!fluid_is_a_mixture) {
 
-                gradient = fluid_parms.calc_partial_h_g<RunOn::Gpu>(Tg_arg);
+                gradient = run_on_device ?
+                  fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
+                  fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
+
               } else {
 
-                for (int n(0); n < nspecies_g; ++n)
-                  gradient += Xgk_array(i,j,k,n)*fluid_parms.calc_partial_h_gk<RunOn::Gpu>(Tg_arg,n);
+                for (int n(0); n < nspecies_g; ++n) {
+                  const Real h_gk = run_on_device ?
+                    fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
+                    fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
+
+                  gradient += Xgk_array(i,j,k,n)*h_gk;
+                }
               }
 
               return ep_ro_g*gradient + dt*gamma;
@@ -550,23 +585,23 @@ mfix::mfix_add_txfr_implicit (Real dt,
             int solver_iterations(0);
 
             {
-              DampedNewton::DumpingFactor dumping_factor(0., 0.);
+              DampedNewton::DampingFactor damping_factor(0., 0.);
               solver_iterations = 
-                DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
                                     1.e-8, 1.e-8, 500);
 
             } if (solver_iterations == 500) {
 
-              DampedNewton::DumpingFactor dumping_factor(1., 0.);
+              DampedNewton::DampingFactor damping_factor(1., 0.);
               solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
                                     1.e-7, 1.e-7, 500);
 
             } if (solver_iterations == 500) {
 
-              DampedNewton::DumpingFactor dumping_factor(1., 1.);
+              DampedNewton::DampingFactor damping_factor(1., 1.);
               solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, dumping_factor(epg_loc, vfrac),
+                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
                                     1.e-6, 1.e-6, 500);
 
             } if (solver_iterations == 500) {
@@ -580,11 +615,18 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
             if (!fluid_is_a_mixture) {
 
-              hg_new = fluid_parms.calc_h_g<RunOn::Gpu>(Tg_new);
+              hg_new = run_on_device ?
+                fluid_parms.calc_h_g<RunOn::Device>(Tg_new) :
+                fluid_parms.calc_h_g<RunOn::Host>(Tg_new);
+
             } else {
 
               for (int n(0); n < nspecies_g; ++n) {
-                hg_new += Xgk_array(i,j,k,n)*fluid_parms.calc_h_gk<RunOn::Gpu>(Tg_new,n);
+                const Real h_gk = run_on_device ?
+                  fluid_parms.calc_h_gk<RunOn::Device>(Tg_new,n) :
+                  fluid_parms.calc_h_gk<RunOn::Host>(Tg_new,n);
+
+                hg_new += Xgk_array(i,j,k,n)*h_gk;
               }
             }
 

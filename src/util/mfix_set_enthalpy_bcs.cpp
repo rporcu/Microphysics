@@ -38,6 +38,8 @@ mfix::set_enthalpy_bcs (Real time,
 {
   BL_PROFILE("mfix::set_enthalpy_bcs()");
 
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
+
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
 
@@ -52,8 +54,6 @@ mfix::set_enthalpy_bcs (Real time,
 
   // Flag to understand if fluid is a mixture
   const int fluid_is_a_mixture = fluid.is_a_mixture;
-
-  Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_ptr.data() : nullptr;
 
   Array4<Real> const& h_g = h_g_fab.array();
 
@@ -100,10 +100,16 @@ mfix::set_enthalpy_bcs (Real time,
   set_temperature_bc_values (time);
   Real* p_bc_t_g = m_bc_t_g.data();
 
+  // Update species boundary values
+  if(fluid_is_a_mixture)
+    set_species_bc_values(time);
+
+  Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_ptr.data() : nullptr;
+
   auto& fluid_parms = *fluid.parameters;
 
   auto set_enthalpy_bcs_in_box = [pout,pinf,minf,h_g,p_bc_t_g,fluid_is_a_mixture,
-       p_bc_X_gk,nspecies_g,fluid_parms]
+       p_bc_X_gk,nspecies_g,fluid_parms,run_on_device]
     AMREX_GPU_DEVICE (int bct, int bcv, IntVect dom_ijk, int i, int j, int k) noexcept
   {
     if(bct == pout) {
@@ -111,13 +117,19 @@ mfix::set_enthalpy_bcs (Real time,
     }
     else if (bct == minf || bct == pinf) {
       if (!fluid_is_a_mixture) {
-        h_g(i,j,k) = fluid_parms.calc_h_g<RunOn::Gpu>(p_bc_t_g[bcv]);
+        h_g(i,j,k) = run_on_device ?
+          fluid_parms.calc_h_g<RunOn::Device>(p_bc_t_g[bcv]) :
+          fluid_parms.calc_h_g<RunOn::Host>(p_bc_t_g[bcv]);
       }
       else {
         Real h_g_sum(0);
 
         for (int n(0); n < nspecies_g; n++) {
-          h_g_sum += p_bc_X_gk[n][bcv]*fluid_parms.calc_h_gk<RunOn::Gpu>(p_bc_t_g[bcv],n);
+          const Real h_gk = run_on_device ?
+            fluid_parms.calc_h_gk<RunOn::Device>(p_bc_t_g[bcv],n) :
+            fluid_parms.calc_h_gk<RunOn::Host>(p_bc_t_g[bcv],n);
+
+          h_g_sum += p_bc_X_gk[n][bcv]*h_gk;
         }
 
         h_g(i,j,k) = h_g_sum;

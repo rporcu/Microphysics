@@ -6,4 +6,6 @@ target_sources( mfixcore
    mfix_plt.cpp
    mfix_restart.cpp
    mfix_ascent.cpp
+   mfix_pic2pic.cpp
+   mfix_pic2dem.cpp
    )

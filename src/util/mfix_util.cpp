@@ -254,12 +254,13 @@ mfix::ReportGridStats () const
     const auto& vel_fab   =
       static_cast<EBFArrayBox const&>((*m_leveldata[lev]->vel_g)[mfi]);
 
-    const auto& flags     = vel_fab.getEBCellFlagFab();
+    const Box& bx     = mfi.tilebox();
+    const auto& flags = vel_fab.getEBCellFlagFab();
 
     // Count number of regular grids
-    if (flags.getType() == FabType::regular ) {
+    if (flags.getType(amrex::grow(bx,0)) == FabType::regular ) {
       regular += 1;
-    } else if (flags.getType() == FabType::covered ) {
+    } else if (flags.getType(amrex::grow(bx,0)) == FabType::covered ) {
       covered += 1;
     } else {
       cut += 1;

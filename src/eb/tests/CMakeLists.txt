@@ -29,5 +29,13 @@ if(GIT_FOUND AND NOT EXISTS "${PROJECT_SOURCE_DIR}/subprojects/csg-eb/.git")
   message(FATAL_ERROR "CSG-EB not found.  Initialize the submodule by running:\n\n   git submodule update --init --recursive\n\n")
 endif()
 
-target_include_directories(functional_tests PRIVATE "${MFIXPARSER_CATCH2_INC}")
-target_link_libraries(functional_tests AMReX::amrex csg)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR}/subprojects/csg-eb)
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR}/subprojects/csg-eb)
+find_package(Catch2 REQUIRED)
+find_package(csg-eb REQUIRED)
+
+target_link_libraries(functional_tests
+  AMReX::amrex
+  Catch2::Catch2
+  csg-eb::csg-eb
+)

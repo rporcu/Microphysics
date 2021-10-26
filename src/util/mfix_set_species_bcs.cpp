@@ -34,7 +34,7 @@ mfix::mfix_set_species_bcs (Real time,
 }
 
 void 
-mfix::set_mass_fractions_g_bcs (Real /*time*/,
+mfix::set_mass_fractions_g_bcs (Real time,
                                 const int lev,
                                 FArrayBox& X_gk_fab,
                                 const Box& domain)
@@ -92,6 +92,7 @@ mfix::set_mass_fractions_g_bcs (Real /*time*/,
 
   const int nspecies_g = fluid.nspecies;
 
+  set_species_bc_values(time);
   Real** p_bc_X_gk = m_bc_X_gk_ptr.data();
 
   if (nlft > 0)

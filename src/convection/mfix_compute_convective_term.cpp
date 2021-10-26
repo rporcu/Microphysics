@@ -74,6 +74,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
     int flux_comp, num_comp;
 
     bool fluxes_are_area_weighted = false;
+    bool knownFaceStates          = false; // HydroUtils always recompute face states
 
     std::string advection_string;
     if (advection_type() == AdvectionType::Godunov)
@@ -207,6 +208,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                      AMREX_D_DECL(face_x[lev].array(mfi,face_comp),
                                                   face_y[lev].array(mfi,face_comp),
                                                   face_z[lev].array(mfi,face_comp)),
+                                     knownFaceStates,
                                      AMREX_D_DECL(ep_u_mac[lev]->const_array(mfi),
                                                   ep_v_mac[lev]->const_array(mfi),
                                                   ep_w_mac[lev]->const_array(mfi)),
@@ -225,8 +227,11 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
             // ************************************************************************
             // Density
             // ************************************************************************
-            if (advect_density)
+            const int use_species_advection = fluid.is_a_mixture && advect_fluid_species;
+
+            if (advect_density && !use_species_advection)
             {
+
                 face_comp = AMREX_SPACEDIM;
                 ncomp = 1;
                 is_velocity = false;
@@ -238,6 +243,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                           AMREX_D_DECL(face_x[lev].array(mfi,face_comp),
                                                        face_y[lev].array(mfi,face_comp),
                                                        face_z[lev].array(mfi,face_comp)),
+                                          knownFaceStates,
                                           AMREX_D_DECL(ep_u_mac[lev]->const_array(mfi),
                                                        ep_v_mac[lev]->const_array(mfi),
                                                        ep_w_mac[lev]->const_array(mfi)),
@@ -282,6 +288,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                           AMREX_D_DECL(face_x[lev].array(mfi,face_comp),
                                                        face_y[lev].array(mfi,face_comp),
                                                        face_z[lev].array(mfi,face_comp)),
+                                          knownFaceStates,
                                           AMREX_D_DECL(ep_u_mac[lev]->const_array(mfi),
                                                        ep_v_mac[lev]->const_array(mfi),
                                                        ep_w_mac[lev]->const_array(mfi)),
@@ -326,6 +333,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                           AMREX_D_DECL(face_x[lev].array(mfi,face_comp),
                                                        face_y[lev].array(mfi,face_comp),
                                                        face_z[lev].array(mfi,face_comp)),
+                                          knownFaceStates,
                                           AMREX_D_DECL(ep_u_mac[lev]->const_array(mfi),
                                                        ep_v_mac[lev]->const_array(mfi),
                                                        ep_w_mac[lev]->const_array(mfi)),
@@ -370,6 +378,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                           AMREX_D_DECL(face_x[lev].array(mfi,face_comp),
                                                        face_y[lev].array(mfi,face_comp),
                                                        face_z[lev].array(mfi,face_comp)),
+                                          knownFaceStates,
                                           AMREX_D_DECL(ep_u_mac[lev]->const_array(mfi),
                                                        ep_v_mac[lev]->const_array(mfi),
                                                        ep_w_mac[lev]->const_array(mfi)),
@@ -626,7 +635,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                          "NewStateRedist" : m_redistribution_type);                                       
 
             // Density
-            if (advect_density)
+            const int use_species_advection = fluid.is_a_mixture && advect_fluid_species;
+
+            if (advect_density && !use_species_advection)
             {
                 ncomp = 1;
 

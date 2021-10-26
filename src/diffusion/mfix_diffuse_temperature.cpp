@@ -392,24 +392,24 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
   // Damped Newton solution
   try {
-    DampedNewton::DumpingFactor dumping_factor(0., .25);
-    DampedNewton::solve(T_g, R, partial_R, norm0, dumping_factor, 1.e-8, 1.e-8, 500);
+    DampedNewton::DampingFactor damping_factor(0., .25);
+    DampedNewton::solve(T_g, R, partial_R, norm0, damping_factor, 1.e-8, 1.e-8, 500);
 
   } catch (std::exception& first_exc) {
 
     first_exc.what();
 
     try {
-      DampedNewton::DumpingFactor dumping_factor(0., .5);
-      DampedNewton::solve(T_g, R, partial_R, norm0, dumping_factor, 1.e-7, 1.e-7, 500);
+      DampedNewton::DampingFactor damping_factor(0., .5);
+      DampedNewton::solve(T_g, R, partial_R, norm0, damping_factor, 1.e-7, 1.e-7, 500);
 
     } catch (std::exception& second_exc) {
 
       second_exc.what();
 
       try {
-        DampedNewton::DumpingFactor dumping_factor(1., .5);
-        DampedNewton::solve(T_g, R, partial_R, norm0, dumping_factor, 1.e-7, 1.e-7, 500);
+        DampedNewton::DampingFactor damping_factor(1., .5);
+        DampedNewton::solve(T_g, R, partial_R, norm0, damping_factor, 1.e-7, 1.e-7, 500);
       } catch (std::exception& third_exc) {
 
         third_exc.what();
@@ -458,27 +458,5 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
     }
 
     h_g[lev]->FillBoundary(geom[lev].periodicity());
-  }
-
-  // NOTE: to reduce differences with develop
-  // Turn "ep_g" into (rho * ep_g * cp_g)
-  for (int lev(0); lev <= finest_level; ++lev) {
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
-      Box const& bx = mfi.tilebox();
-
-      Array4<Real      > const& ep_g_array  = ep_g[lev]->array(mfi);
-      Array4<Real const> const& ro_g_array  = ro_g[lev]->const_array(mfi);
-      Array4<Real const> const& T_g_array   = T_g[lev]->const_array(mfi);
-
-      amrex::ParallelFor(bx, [ep_g_array,T_g_array,ro_g_array,fluid_parms]
-        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-      {
-        ep_g_array(i,j,k) *= ro_g_array(i,j,k)*fluid_parms.calc_cp_g<RunOn::Gpu>(T_g_array(i,j,k));
-        ep_g_array(i,j,k) /= ro_g_array(i,j,k)*fluid_parms.calc_cp_g<RunOn::Gpu>(T_g_array(i,j,k));
-      });
-    }
   }
 }
