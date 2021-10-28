@@ -22,7 +22,7 @@ class SolidsParms {
   private:
     const amrex::Real* m_h_MW_sn;
     const amrex::Real* m_d_MW_sn;
-    const int m_ncoefficients;
+//    const int m_ncoefficients;
     const amrex::Real* m_h_cp_sn;
     const amrex::Real* m_d_cp_sn;
     const amrex::Real* m_h_H_fn;
@@ -41,7 +41,7 @@ class SolidsParms {
       , m_d_species_id(nullptr)
       , m_h_MW_sn(nullptr)
       , m_d_MW_sn(nullptr)
-      , m_ncoefficients(0)
+//      , m_ncoefficients(0)
       , m_h_cp_sn(nullptr)
       , m_d_cp_sn(nullptr)
       , m_h_H_fn(nullptr)
@@ -56,7 +56,7 @@ class SolidsParms {
                  const int* d_species_id,
                  const amrex::Real* h_MW_sn,
                  const amrex::Real* d_MW_sn,
-                 const int ncoefficients,
+                 const int /*ncoefficients*/,
                  const amrex::Real* h_cp_sn,
                  const amrex::Real* d_cp_sn,
                  const amrex::Real* h_H_fn,
@@ -68,7 +68,7 @@ class SolidsParms {
       , m_d_species_id(d_species_id)
       , m_h_MW_sn(h_MW_sn)
       , m_d_MW_sn(d_MW_sn)
-      , m_ncoefficients(ncoefficients)
+//      , m_ncoefficients(ncoefficients)
       , m_h_cp_sn(h_cp_sn)
       , m_d_cp_sn(d_cp_sn)
       , m_h_H_fn(h_H_fn)

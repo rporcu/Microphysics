@@ -141,7 +141,7 @@ mfix::EvolveFluid (int nstep,
          species_RHS[lev]->setVal(0.0);
        }
 
-       if (solve_reactions) {
+       if (reactions.solve) {
          vel_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
          vel_RHS_old[lev]->setVal(0.0);
        }
@@ -305,7 +305,7 @@ mfix::EvolveFluid (int nstep,
          delete species_RHS[lev];
        }
 
-       if (solve_reactions)
+       if (reactions.solve)
          delete vel_RHS_old[lev];
     }
 
