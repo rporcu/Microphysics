@@ -15,7 +15,7 @@ mfix::mfix_density_rhs (Vector< MultiFab*      > const& rhs,
   for (int lev = 0; lev <= finest_level; lev++)
     rhs[lev]->setVal(0.);
 
-  if (solve_reactions) {
+  if (reactions.solve) {
     ChemTransfer chem_txfr_idxs(fluid.nspecies, reactions.nreactions);
 
     for (int lev = 0; lev <= finest_level; lev++) {
@@ -91,7 +91,7 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
     }
   }
 
-  if (solve_reactions) {
+  if (reactions.solve) {
     ChemTransfer chem_txfr_idxs(fluid.nspecies, reactions.nreactions);
 
     const int start_idx = chem_txfr_idxs.h_g_txfr;
@@ -138,7 +138,7 @@ mfix::mfix_species_X_rhs (Vector< MultiFab*      > const& rhs,
   for (int lev = 0; lev <= finest_level; lev++)
     rhs[lev]->setVal(0.);
 
-  if (solve_reactions) {
+  if (reactions.solve) {
     const int nspecies_g = fluid.nspecies;
 
     ChemTransfer chem_txfr_idxs(nspecies_g, reactions.nreactions);
@@ -184,7 +184,7 @@ mfix::mfix_momentum_rhs (Vector< MultiFab* > const& rhs,
   for (int lev = 0; lev <= finest_level; lev++)
     rhs[lev]->setVal(0.);
 
-  if (solve_reactions) {
+  if (reactions.solve) {
     ChemTransfer chem_txfr_idxs(fluid.nspecies, reactions.nreactions);
 
     const int start_idx = chem_txfr_idxs.vel_g_txfr;

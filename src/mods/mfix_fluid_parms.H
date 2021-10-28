@@ -24,7 +24,7 @@ class FluidParms {
     const amrex::Real* m_h_MW_gk;
     const amrex::Real* m_d_MW_gk;
     const amrex::Real m_D_g;
-    const int m_ncoefficients;
+//    const int m_ncoefficients;
     const amrex::Real* m_h_cp_gk;
     const amrex::Real* m_d_cp_gk;
     const amrex::Real* m_h_H_fk;
@@ -46,7 +46,7 @@ class FluidParms {
       , m_h_MW_gk(nullptr)
       , m_d_MW_gk(nullptr)
       , m_D_g(0)
-      , m_ncoefficients(0)
+//      , m_ncoefficients(0)
       , m_h_cp_gk(nullptr)
       , m_d_cp_gk(nullptr)
       , m_h_H_fk(nullptr)
@@ -64,7 +64,7 @@ class FluidParms {
                 const amrex::Real* h_MW_gk,
                 const amrex::Real* d_MW_gk,
                 const amrex::Real D_g,
-                const int ncoefficients,
+                const int /*ncoefficients*/,
                 const amrex::Real* h_cp_gk,
                 const amrex::Real* d_cp_gk,
                 const amrex::Real* h_H_fk,
@@ -79,7 +79,7 @@ class FluidParms {
       , m_h_MW_gk(h_MW_gk)
       , m_d_MW_gk(d_MW_gk)
       , m_D_g(D_g)
-      , m_ncoefficients(ncoefficients)
+//      , m_ncoefficients(ncoefficients)
       , m_h_cp_gk(h_cp_gk)
       , m_d_cp_gk(d_cp_gk)
       , m_h_H_fk(h_H_fk)

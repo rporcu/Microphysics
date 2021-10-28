@@ -377,7 +377,7 @@ ParticlesGenerator::n_cube_per_fill (const int icv,
                                      const Real dz,
                                      const amrex::GpuArray<Real, 3>& plo)
 {
-  // This assertation should not be needed.
+  // This assertion should not be needed.
   AMREX_ALWAYS_ASSERT(dx==dy);
   AMREX_ALWAYS_ASSERT(dx==dz);
 
