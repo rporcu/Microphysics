@@ -114,14 +114,13 @@ include(MFIXSetupAMReX)
 # Setup AMReX-Hydro
 include(MFIXSetupAMReXHydro)
 
+# Setup CSG-EB
+include(MFIXSetupCsgeb)
+
 get_git_info( )
 
 # Set some cache variable for the whole project
 set( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp CACHE INTERNAL "Main source file")
-
-if(MFIX_CSG)
-  add_subdirectory(subprojects/csg-eb)
-endif()
 
 #
 # Core MFIX library
