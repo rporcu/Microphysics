@@ -73,12 +73,12 @@ void Reactions::Initialize () {
     // Disable the species solver if the species are defined as "None" (case
     // insensitive) or 0
     if (amrex::toLower(reactions[0]).compare("none") == 0 || (reactions[0]).compare("0") == 0) {
-      solve = false;
+      solve = 0;
       reactions.clear();
       nreactions = 0;
       reaction_equations.clear();
     } else {
-      solve = true;
+      solve = 1;
       nreactions = reactions.size();
       reaction_equations.clear();
       reaction_equations.resize(nreactions);

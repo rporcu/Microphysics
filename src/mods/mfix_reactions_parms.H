@@ -79,7 +79,7 @@ class Reactions {
     static constexpr int NMAX = 10;
 
     // Switch for turning on/off chemical reactions modeling
-    bool solve;
+    int solve;
 
     // Number of chemical reactions allowed by the model
     int nreactions;

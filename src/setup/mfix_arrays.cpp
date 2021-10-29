@@ -373,7 +373,7 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->txfr, txfr_new);
     delete txfr_new;
 
-    if (advect_fluid_species && solve_reactions) {
+    if (advect_fluid_species && reactions.solve) {
       // Species mass transfer rates
       MultiFab* chem_txfr_new = new MultiFab(grids[lev], dmap[lev],
                                         m_leveldata[lev]->chem_txfr->nComp(),

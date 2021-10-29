@@ -1102,7 +1102,6 @@ public:
     bool advect_density       = false;
     bool advect_tracer        = false;
     bool advect_fluid_species = false;
-    bool solve_reactions      = false;
 
     bool test_tracer_conservation = false;
 

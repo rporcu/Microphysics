@@ -147,12 +147,6 @@ mfix::InitParams ()
     // We can still turn it off explicitly even if we passed species inputs
     pp.query("advect_fluid_species", advect_fluid_species);
 
-    // Set the mfix class flag equal to the REACTIONS parameter
-    solve_reactions = reactions.solve && SPECIES::solve;
-
-    // We can still turn it off explicitly even if we passed stoichiometry inputs
-    pp.query("solve_reactions", solve_reactions);
-
     if (advect_fluid_species)
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.solve_species,
           "Advect fluid species flag is on but no fluid species were provided");
