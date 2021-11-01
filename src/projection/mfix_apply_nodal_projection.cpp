@@ -9,7 +9,7 @@
 #include <AMReX_MultiFab.H>
 #include <AMReX_Array.H>
 #include <AMReX_BLassert.H>
-#include <AMReX_NodalProjector.H>
+#include <hydro_NodalProjector.H>
 
 #include <mfix_mf_helpers.H>
 
