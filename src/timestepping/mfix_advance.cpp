@@ -156,7 +156,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
       lap_X[lev]->setVal(0.0);
     }
 
-    if (solve_reactions) {
+    if (reactions.solve) {
       vel_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
       vel_RHS[lev]->setVal(0.0);
     }
@@ -245,7 +245,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
        delete lap_X[lev];
      }
 
-     if (solve_reactions)
+     if (reactions.solve)
        delete vel_RHS[lev];
   }
 }

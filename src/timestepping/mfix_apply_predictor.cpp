@@ -213,7 +213,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     }
 
     // Linear momentum
-    if (solve_reactions) {
+    if (reactions.solve) {
       mfix_momentum_rhs(vel_RHS_old, get_ep_g_const(), get_chem_txfr_const());
     }
 
@@ -733,17 +733,12 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
          Array4<Real const> const& ro_g_o    = ld.ro_go->const_array(mfi);
          Array4<Real const> const& epg       = ld.ep_g->const_array(mfi);
          Array4<Real const> const& vel_f     = vel_forces[lev].const_array(mfi);
-         Array4<Real const> const& vel_RHS_o = solve_reactions ? vel_RHS_old[lev]->const_array(mfi) : empty_array;
+         Array4<Real const> const& vel_RHS_o = reactions.solve ? vel_RHS_old[lev]->const_array(mfi) : empty_array;
 
-         const int l_solve_reactions = solve_reactions;
+         const int l_solve_reactions = reactions.solve;
 
-         // We need this until we remove static attribute from mfix::gravity
-         const RealVect gp0_dev(gp0);
-         const RealVect gravity_dev(gravity);
-
-         amrex::ParallelFor(bx, [epg,ro_g_o,vel_o,dudt_o,divtau_o,gp0_dev,
-             gravity_dev,gp,l_dt,vel_n,vel_f,l_explicit_diff,vel_RHS_o,
-             l_solve_reactions]
+         amrex::ParallelFor(bx, [epg,ro_g_o,vel_o,dudt_o,divtau_o,
+             gp,l_dt,vel_n,vel_f,l_explicit_diff,vel_RHS_o,l_solve_reactions]
          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
            const Real epg_loc = epg(i,j,k);

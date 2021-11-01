@@ -242,6 +242,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
   const auto cell_dx = gm.CellSizeArray();
   const auto reg_cell_vol = cell_dx[0]*cell_dx[1]*cell_dx[2];
 
+#if 0
   for (int lev = 0; lev < nlev && fluid.solve; lev++) {
 
     auto& fluid_parms = *fluid.parameters;
@@ -380,7 +381,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
       } // if entire FAB not covered
     } // mfi
   } // lev
-
+#endif
 
   for (int lev = 0; lev < nlev && (DEM::solve || PIC::solve); lev++) {
     bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
@@ -396,6 +397,15 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
     const int interp_ng = 1;  // Only one layer needed for interpolation
     const int interp_comp = 7+nspecies_g; // 3 vel_g + ep_g + ro_g + p_g + T_g + X_gk
+
+    MultiFab p_nd(p_g_in[lev]->boxArray(), dmap[lev], 1, interp_ng);
+    p_nd.setVal(0.);
+
+    MultiFab::Copy(p_nd, *m_leveldata[lev]->p_g, 0, 0, 1, interp_ng);
+    MultiFab::Add (p_nd, *m_leveldata[lev]->p0_g, 0, 0, 1, interp_ng);
+
+    MultiFab p_cc(ep_g_in[lev]->boxArray(), dmap[lev], 1, interp_ng);
+    amrex::average_node_to_cellcenter(p_cc, 0, p_nd, 0, 1);
 
     if (OnSameGrids)
     {
@@ -413,7 +423,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
       MultiFab::Copy(*interp_ptr, *ro_g_in[lev], 0, 4, 1, interp_ng);
 
       // Copy perturbational pressure
-      MultiFab::Copy(*interp_ptr, *p_g_in[lev], 0, 5, 1, interp_ng);
+      MultiFab::Copy(*interp_ptr, p_cc, 0, 5, 1, interp_ng);
 
       // Copy temperature
       MultiFab::Copy(*interp_ptr, *T_g_in[lev], 0, 6, 1, interp_ng);
@@ -443,8 +453,8 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
       // Copy density
       interp_ptr->ParallelCopy(*ro_g_in[lev], 0, 4, 1, interp_ng, interp_ng);
 
-      // Copy temperature
-      interp_ptr->ParallelCopy(*p_g_in[lev], 0, 5, 1, interp_ng, interp_ng);
+      // Copy pressure
+      interp_ptr->ParallelCopy(p_cc, 0, 5, 1, interp_ng, interp_ng);
 
       // Copy temperature
       interp_ptr->ParallelCopy(*T_g_in[lev], 0, 6, 1, interp_ng, interp_ng);
@@ -514,8 +524,10 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
       if (flags.getType(amrex::grow(bx,0)) != FabType::covered) {
         // Get arrays
-        const auto& ep_g_array   = ep_g_in[lev]->const_array(pti);
+        // const auto& ep_g_array   = ep_g_in[lev]->const_array(pti);
         const auto& interp_array = interp_ptr->const_array(pti);
+
+        const auto& ep_g_array   = interp_ptr->const_array(pti,3);
         const auto& flags_array  = flags.const_array();
         auto const& volfrac_arr = volfrac.const_array(pti);
 

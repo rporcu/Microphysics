@@ -83,6 +83,7 @@ build:dpcpp:
 
 build:hip:
   variables:
+    CC: /opt/rocm/llvm/bin/clang
     CXX: /opt/rocm/llvm/bin/clang++
   script:
     - source /etc/profile.d/rocm.sh
@@ -90,7 +91,8 @@ build:hip:
     - cmake -S .
             -B build
             -DAMReX_AMD_ARCH=gfx908
-            -DCMAKE_BUILD_TYPE=None
+            -DCMAKE_BUILD_TYPE=Debug
+            -DMFIX_CSG=ON
             -DMFIX_GPU_BACKEND=HIP
             -DMFIX_MPI=0
             -G Ninja
@@ -214,7 +216,7 @@ lint:clang:warnings:
     - cmake -S .
             -B build
             -DCMAKE_BUILD_TYPE=Debug
-            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror"
+            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wno-unused-lambda-capture -Wnull-dereference -Werror"
             -DMFIX_MPI=0
             -GNinja
     - cmake --build build -- -k0

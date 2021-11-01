@@ -132,7 +132,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         conv_X[lev]->setVal(0.0);
       }
 
-      if (solve_reactions) {
+      if (reactions.solve) {
         vel_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
         vel_RHS[lev]->setVal(0.0);
       }
@@ -230,7 +230,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     }
 
     // Linear momentum RHS
-    if (solve_reactions) {
+    if (reactions.solve) {
       mfix_momentum_rhs(vel_RHS, get_ep_g_const(), get_chem_txfr_const());
     }
 
@@ -919,17 +919,13 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
          Array4<Real const> const& ro_g_o    = ld.ro_go->const_array(mfi);
          Array4<Real const> const& divtau_o  = ld.divtau_o->const_array(mfi);
          Array4<Real const> const& vel_f     = vel_forces[lev].const_array(mfi);
-         Array4<Real const> const& vel_rhs_o = solve_reactions ? vel_RHS_old[lev]->const_array(mfi) : empty_array;
-         Array4<Real const> const& vel_rhs   = solve_reactions ? vel_RHS[lev]->const_array(mfi) : empty_array;
+         Array4<Real const> const& vel_rhs_o = reactions.solve ? vel_RHS_old[lev]->const_array(mfi) : empty_array;
+         Array4<Real const> const& vel_rhs   = reactions.solve ? vel_RHS[lev]->const_array(mfi) : empty_array;
 
-         const int l_solve_reactions = solve_reactions;
-
-         // We need this until we remove static attribute from mfix::gravity
-         const RealVect gp0_dev(gp0);
-         const RealVect gravity_dev(gravity);
+         const int l_solve_reactions = reactions.solve;
 
          amrex::ParallelFor(bx, [vel_n,vel_o,dudt_o,dudt,gp,vel_f,epg,ro_g_o,
-             divtau_o,gp0_dev,gravity_dev,l_dt,vel_rhs_o,vel_rhs,l_solve_reactions]
+             divtau_o,l_dt,vel_rhs_o,vel_rhs,l_solve_reactions]
            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
            const Real epg_loc = epg(i,j,k);
