@@ -216,7 +216,7 @@ lint:clang:warnings:
     - cmake -S .
             -B build
             -DCMAKE_BUILD_TYPE=Debug
-            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror"
+            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wno-unused-lambda-capture -Wnull-dereference -Werror"
             -DMFIX_MPI=0
             -GNinja
     - cmake --build build -- -k0

@@ -2126,7 +2126,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
   }
 
   // count particles in fluid grid
-  Vector<int> pcount_fbox(fba.size(), 0);
+  Gpu::DeviceVector<int> pcount_fbox(fba.size(), 0);
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
     // index of corresponding fluid box
     int ifbox = m_pboxid_to_fboxid[pti.index()];
@@ -2311,30 +2311,43 @@ void MFIXParticleContainer:: countParticle(int lev,
   const auto  dx_inv = geom.InvCellSizeArray();
   const auto  prob_lo = geom.ProbLoArray();
 
-  int*       ptr_pcounts  = pcounts.data();
-  const int* ptr_poffsets = poffsets.data();
+  amrex::Gpu::DeviceVector<Box> d_boxes(nbox);
+  amrex::Gpu::DeviceVector<int> d_poffsets(poffsets.size());
+  amrex::Gpu::DeviceVector<int> d_pcounts(pcounts.size(), 0);
+
+  Gpu::copy(Gpu::hostToDevice, bl.data().begin(), bl.data().end(), d_boxes.begin());
+  Gpu::copy(Gpu::hostToDevice, poffsets.begin(), poffsets.end(), d_poffsets.begin());
+
+  Gpu::synchronize();
+
+  const auto* p_d_boxes = d_boxes.data();
+  const auto* p_d_poffsets = d_poffsets.data();
+
+  auto* p_d_pcounts  = d_pcounts.dataPtr();
 
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
     const auto& aos     = pti.GetArrayOfStructs();
     const auto* pstruct = aos().dataPtr();
     int         np      = pti.numParticles();
 
-    ParallelFor(np, [pstruct, prob_lo, dx_inv, domain, nbox, boxes, 
-                     binsize, ptr_pcounts, ptr_poffsets]
+    ParallelFor(np, [pstruct, prob_lo, dx_inv, domain, nbox, p_d_boxes,
+                     binsize, p_d_pcounts, p_d_poffsets]
       AMREX_GPU_DEVICE (int i) noexcept
       {
         IntVect cell_ijk = getParticleCell(pstruct[i], prob_lo, dx_inv, domain);
         Box     box_tmp;
         for (int ibox=0; ibox<nbox; ++ibox) {
-          if (boxes[ibox].contains(cell_ijk)) {
-            int ibin = getTileIndex(cell_ijk, boxes[ibox], true, binsize, box_tmp);
-            ibin += ptr_poffsets[ibox];
-            Gpu::Atomic::AddNoRet(ptr_pcounts + ibin, 1);
+          if (p_d_boxes[ibox].contains(cell_ijk)) {
+            int ibin = getTileIndex(cell_ijk, p_d_boxes[ibox], true, binsize, box_tmp);
+            ibin += p_d_poffsets[ibox];
+            Gpu::Atomic::AddNoRet(p_d_pcounts + ibin, 1);
           }
         }
       });// end parallel for
   }// end for pariter
 
+  Gpu::synchronize();
+  Gpu::copy(Gpu::deviceToHost, d_pcounts.begin(), d_pcounts.end(), pcounts.begin());
 }
 
 
