@@ -271,7 +271,7 @@ mfix::InitParams ()
     //           mac_proj.bottom_rtol
     //           mac_proj.bottom_atol
     //           mac_proj.bottom_solver
-    // More info at "AMReX-Hydro/Projections/hydro_MacProjector.cpp"
+    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp"
 
     ParmParse pp_mac("mac_proj");
     pp_mac.query("mg_rtol", mac_mg_rtol);

@@ -3,7 +3,7 @@
 #include <mfix_mf_helpers.H>
 #include <mfix.H>
 
-#include <hydro_MacProjector.H>
+#include <AMReX_MacProjector.H>
 
 //
 // Computes the following decomposition:

@@ -22,9 +22,9 @@
 #include <AMReX_iMultiFab.H>
 #include <AMReX_MLMG.H>
 #include <AMReX_MLNodeLaplacian.H>
-#include <hydro_NodalProjector.H>
+#include <AMReX_NodalProjector.H>
 #include <AMReX_PhysBCFunct.H>
-#include <hydro_MacProjector.H>
+#include <AMReX_MacProjector.H>
 
 #include <mfix_diffusion_op.H>
 #include <mfix_pc.H>
@@ -1165,7 +1165,7 @@ public:
     //           nodal_proj.bottom_rtol
     //           nodal_proj.bottom_atol
     //           nodal_proj.bottom_solver
-    // More info at "AMReX-Hydro/Projections/hydro_NodalProjector.cpp"
+    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_NodalProjector.cpp"
     // Verbosity
 
     // Control MLMG behavior
@@ -1193,7 +1193,7 @@ public:
     //           mac_proj.bottom_rtol
     //           mac_proj.bottom_atol
     //           mac_proj.bottom_solver
-    // More info at "AMReX-Hydro/Projections/hydro_MacProjector.cpp"
+    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp"
 
     std::unique_ptr<amrex::MacProjector> macproj;
 
