@@ -64,7 +64,7 @@ mfix::Regrid ()
           SetDistributionMap(lev, new_fluid_dm);
           print_process_boxes(new_fluid_dm);
 
-          macproj = std::make_unique<MacProjector>(Geom(0,finest_level),
+          macproj = std::make_unique<Hydro::MacProjector>(Geom(0,finest_level),
                                          MLMG::Location::FaceCentroid,  // Location of mac_vec
                                          MLMG::Location::FaceCentroid,  // Location of beta
                                          MLMG::Location::CellCenter,    // Location of solution variable phi
@@ -186,7 +186,7 @@ mfix::Regrid ()
 
       SetDistributionMap(base_lev, newdm);
 
-      macproj = std::make_unique<MacProjector>(Geom(0,finest_level),
+      macproj = std::make_unique<Hydro::MacProjector>(Geom(0,finest_level),
                                      MLMG::Location::FaceCentroid,  // Location of mac_vec
                                      MLMG::Location::FaceCentroid,  // Location of beta
                                      MLMG::Location::CellCenter,    // Location of solution variable phi

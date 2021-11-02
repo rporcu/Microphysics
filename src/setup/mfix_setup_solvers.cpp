@@ -1,6 +1,6 @@
 #include <mfix.H>
 
-#include <AMReX_NodalProjector.H>
+#include <hydro_NodalProjector.H>
 #include <mfix_diffusion_op.H>
 #include <mfix_bc_parms.H>
 
@@ -16,7 +16,7 @@ mfix::mfix_init_solvers ()
                                        BC::diff_species_lobc,     BC::diff_species_hibc,
                                        nghost_state());
 
-    macproj = std::make_unique<MacProjector>(Geom(0,finest_level),
+    macproj = std::make_unique<Hydro::MacProjector>(Geom(0,finest_level),
                                    MLMG::Location::FaceCentroid,  // Location of mac_vec
                                    MLMG::Location::FaceCentroid,  // Location of beta
                                    MLMG::Location::CellCenter,    // Location of solution variable phi
