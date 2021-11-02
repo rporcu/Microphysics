@@ -1,6 +1,6 @@
 #include <mfix.H>
 
-#include <hydro_NodalProjector.H>
+#include <AMReX_NodalProjector.H>
 #include <mfix_diffusion_op.H>
 #include <mfix_bc_parms.H>
 
