@@ -291,6 +291,9 @@ mfix::InitParams ()
     if (load_balance_type.compare("KnapSack") == 0)
       pp.query("knapsack_nmax", knapsack_nmax);
 
+    if (load_balance_type.compare("Greedy") == 0)
+      pp.query("greedy_dir", greedy_dir);
+
     // fluid grids' distribution map 
     pp.queryarr("pmap", pmap);
 

@@ -1230,6 +1230,7 @@ public:
     static std::string knapsack_weight_type;
     static int load_balance_fluid;
     static int knapsack_nmax;
+    static int greedy_dir;
 
     // Options to control time stepping
     Real m_cfl = 0.5;
