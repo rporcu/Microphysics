@@ -1049,7 +1049,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                     subdt*((p_realarray[SoArealData::convection][i]+enthalpy_source) / p_mass_new);
 
                   if (local_solve_reactions) {
-                    p_enthalpy_new -= subdt*(ptile_data.m_runtime_rdata[idx_h_s_txfr][i] / p_mass_new);
+                    p_enthalpy_new += subdt*(ptile_data.m_runtime_rdata[idx_h_s_txfr][i] / p_mass_new);
                   }
 
                   // ************************************************************
