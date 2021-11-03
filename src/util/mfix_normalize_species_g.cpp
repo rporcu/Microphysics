@@ -55,8 +55,6 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
     {
       const Box& bx = mfi.tilebox();
 
-      Array4<Real> dummy_array4;
-
       Array4<Real> const& X_gk_arr = X_gk[lev]->array(mfi);
 
       auto const& flags_arr = flags.const_array(mfi);

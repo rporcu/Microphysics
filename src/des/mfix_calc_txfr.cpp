@@ -77,9 +77,9 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
   }
 
   const Geometry& gm = Geom(0);
-  const FabArray<EBCellFlagFab>* flags = nullptr;
-  const MultiFab* volfrac = nullptr;
-  EBFArrayBoxFactory* crse_factory = nullptr;
+  Vector< const FabArray<EBCellFlagFab>* > flags(nlev, nullptr);
+  Vector< const MultiFab* > volfrac(nlev, nullptr);
+  Vector< EBFArrayBoxFactory* > crse_factory(nlev, nullptr);
 
   Vector< MultiFab* > tmp_eps(nlev);
 
@@ -91,30 +91,26 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
     // then create a copy of the coarse factory to use.
 
     if (lev == 0) {
-      flags   = &(particle_ebfactory[lev]->getMultiEBCellFlagFab());
-      volfrac = &(particle_ebfactory[lev]->getVolFrac());
+      flags[lev]   = &(particle_ebfactory[lev]->getMultiEBCellFlagFab());
+      volfrac[lev] = &(particle_ebfactory[lev]->getVolFrac());
 
     } else {
 
       Vector<int> ngrow = {1,1,1};
 
-      // Free memory in case crse_factory is not empty
-      if (crse_factory != nullptr)
-        delete crse_factory;
+      crse_factory[lev] = (makeEBFabFactory(gm, txfr_ptr[lev]->boxArray(),
+                                            txfr_ptr[lev]->DistributionMap(),
+                                            ngrow, EBSupport::volume)).release();
 
-      crse_factory = (makeEBFabFactory(gm, txfr_ptr[lev]->boxArray(),
-                                      txfr_ptr[lev]->DistributionMap(),
-                                      ngrow, EBSupport::volume)).release();
-
-      flags   = &(crse_factory->getMultiEBCellFlagFab());
-      volfrac = &(crse_factory->getVolFrac());
+      flags[lev]   = &(crse_factory[lev]->getMultiEBCellFlagFab());
+      volfrac[lev] = &(crse_factory[lev]->getVolFrac());
     }
 
     // Deposit the interphase transfer forces to the grid
     // Drag force: (beta and beta*particle_vel)
     // Heat transfer: gamma and gamma*particle temperature
-    pc->InterphaseTxfrDeposition(lev, *tmp_eps[lev], *txfr_ptr[lev], volfrac,
-        flags, advect_enthalpy);
+    pc->InterphaseTxfrDeposition(lev, *tmp_eps[lev], *txfr_ptr[lev], volfrac[lev],
+        flags[lev], advect_enthalpy);
   }
 
   {
@@ -139,7 +135,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
     // Move excessive solids volume from small cells to neighboring cells.
     // Note that we don't change tmp_eps but use the redistribution of
     // particle volume to determine how to redistribute the drag forces.
-    mfix_redistribute_deposition(lev, *tmp_eps[lev], *txfr_ptr[lev], volfrac, flags,
+    mfix_redistribute_deposition(lev, *tmp_eps[lev], *txfr_ptr[lev], volfrac[lev], flags[lev],
                                  mfix::m_max_solids_volume_fraction);
 
     // Sum the boundaries again to recapture any solids moved across
@@ -148,8 +144,10 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
     txfr_ptr[lev]->FillBoundary(gm.periodicity());
   }
 
-  if (crse_factory != nullptr)
-    delete crse_factory;
+  for (int lev(0); lev < nlev; ++lev) {
+    if (lev != 0 && crse_factory[lev] != nullptr)
+      delete crse_factory[lev];
+  }
 
   // This might not need to exist on all levels. Maybe only level 0.
   for (int lev(0); lev < nlev; ++lev)
@@ -308,10 +306,6 @@ mfix::mfix_calc_txfr_particle (Real time,
     {
       const BoxArray&            pba = pc->ParticleBoxArray(lev);
       const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
-
-      //EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
-      //{nghost_eb_basic(), nghost_eb_volume(), nghost_eb_full()}, 
-      //EBSupport::full);
 
       // Store gas velocity and volume fraction for interpolation
       interp_ptr = new MultiFab(pba, pdm, interp_comp, interp_ng, MFInfo(), *particle_ebfactory[lev]);

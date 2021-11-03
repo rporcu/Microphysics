@@ -73,7 +73,7 @@ mfix::InitParams ()
     //           nodal_proj.bottom_rtol
     //           nodal_proj.bottom_atol
     //           nodal_proj.bottom_solver
-    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_NodalProjector.cpp"
+    // More info at "AMReX-Hydro/Projections/hydro_NodalProjector.cpp"
     ParmParse pp_nodal("nodal_proj");
     // Options to control MLMG behavior
     pp_nodal.query("mg_rtol", nodal_mg_rtol);
@@ -271,7 +271,7 @@ mfix::InitParams ()
     //           mac_proj.bottom_rtol
     //           mac_proj.bottom_atol
     //           mac_proj.bottom_solver
-    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp"
+    // More info at "AMReX-Hydro/Projections/hydro_MacProjector.cpp"
 
     ParmParse pp_mac("mac_proj");
     pp_mac.query("mg_rtol", mac_mg_rtol);
@@ -694,7 +694,7 @@ void mfix::MakeNewLevelFromScratch (int lev, Real /*time*/,
     amrex::Print() << "SETTING NEW GRIDS IN MAKE NEW LEVEL " << new_grids << std::endl;
     amrex::Print() << "SETTING NEW DMAP IN MAKE NEW LEVEL " << new_dmap << std::endl;
 
-    macproj = std::make_unique<MacProjector>(Geom(0,finest_level),
+    macproj = std::make_unique<Hydro::MacProjector>(Geom(0,finest_level),
                                    MLMG::Location::FaceCentroid,  // Location of mac_vec
                                    MLMG::Location::FaceCentroid,  // Location of beta
                                    MLMG::Location::CellCenter,    // Location of solution variable phi

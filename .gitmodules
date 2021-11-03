@@ -7,3 +7,6 @@
 [submodule "subprojects/csg-eb"]
 	path = subprojects/csg-eb
 	url = ../../exa/csg-eb
+[submodule "subprojects/pic-vva"]
+	path = subprojects/pic-vva
+	url = ../../wfullmer/pic-vva

@@ -147,10 +147,6 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       const BoxArray&            pba = pc->ParticleBoxArray(lev);
       const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
-      //EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
-                                      //{nghost_eb_basic(), nghost_eb_volume(), nghost_eb_full()}, 
-                                       //EBSupport::full);
-
       // Temporary arrays  -- copies with no ghost cells
       //const int ng_to_copy = 0; UNUSED VARIABLE
 
