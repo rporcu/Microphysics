@@ -110,7 +110,7 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
         amrex::ParallelFor(bx, [rhs_arr,h_g_txfr_arr]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          rhs_arr(i,j,k) -= h_g_txfr_arr(i,j,k);
+          rhs_arr(i,j,k) += h_g_txfr_arr(i,j,k);
         });
       }
     }
