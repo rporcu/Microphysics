@@ -64,7 +64,6 @@ mfix::Regrid ()
           }
 
           SetDistributionMap(lev, new_fluid_dm);
-          print_process_boxes(new_fluid_dm);
 
           macproj = std::make_unique<MacProjector>(Geom(0,finest_level),
                                          MLMG::Location::FaceCentroid,  // Location of mac_vec
