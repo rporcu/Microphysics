@@ -11,6 +11,7 @@ std::string      mfix::load_balance_type    = "KnapSack";
 std::string      mfix::knapsack_weight_type = "RunTimeCosts";
 int              mfix::load_balance_fluid   = 1;
 int              mfix::knapsack_nmax        = 128;
+int              mfix::greedy_dir           = 0;
 int              mfix::m_drag_type          = DragType::Invalid;
 int              mfix::m_convection_type    = ConvectionType::Invalid;
 int              mfix::m_constraint_type    = ConstraintType::IncompressibleFluid;

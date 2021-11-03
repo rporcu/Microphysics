@@ -105,18 +105,27 @@ void MFIXParticleContainer::printParticles ()
        //auto& soa = kv.second.GetStructOfArrays();
        //auto p_realarray = soa.realarray();
        //auto p_intarray = soa.intarray();
-       AllPrintToFile("particles") << "----------------\n";
        AllPrintToFile("particles") << "pbox " << kv.first.first << " " << kv.first.second 
          << " nReal " << kv.second.numRealParticles()
          << " nGhost " << kv.second.numNeighborParticles() << "\n";
 
+      if (kv.second.numRealParticles() == 0) continue;
+
+      Box pbox = ParticleBoxArray(lev)[kv.first.first];
+      pbox.grow(1);
+      const auto lo = lbound(pbox);
+      AllPrintToFile("particles") << pbox << "\n";
 
        for (int i = 0; i < kv.second.numTotalParticles(); ++i)
        {
-         IntVect cell_ijk = getParticleCell(pstruct[i], prob_lo, dx_inv, domain);
-         AllPrintToFile("particles") << i << " " << pstruct[i].pos(0) << " "
-           << pstruct[i].pos(1) << " " << pstruct[i].pos(2) << " "
-           << cell_ijk[0] << " " << cell_ijk[1] << " " << cell_ijk[2] << "\n";
+        //  IntVect cell_ijk = getParticleCell(pstruct[i], prob_lo, dx_inv, domain);
+        if (!((pstruct[i].pos(0)-prob_lo[0])*dx_inv[0] - lo.x >= 0.0)) {
+         AllPrintToFile("particles") << i << " " << pstruct[i].id() << " " << pstruct[i].cpu() << " "
+            << pstruct[i].pos(0) << " " << pstruct[i].pos(1) << " " << pstruct[i].pos(2) << " "
+            << (pstruct[i].pos(0)-prob_lo[0])*dx_inv[0] - lo.x << "\n";
+            break;
+        }
+          //  << cell_ijk[0] << " " << cell_ijk[1] << " " << cell_ijk[2] << "\n";
           //std::cout << "Particle ID  = " << i << " " << std::endl;
           //std::cout << "X            = " << particles[i].pos(0) << " " << std::endl;
           //std::cout << "Y            = " << particles[i].pos(1) << " " << std::endl;
@@ -2112,6 +2121,7 @@ namespace {
 void MFIXParticleContainer::partitionParticleGrids(int lev, 
                                                    const BoxArray& fba,
                                                    const DistributionMapping& fdmap,
+                                                   const int chop_dir,
                                                    Real overload_toler,
                                                    Real underload_toler)
 {
@@ -2172,8 +2182,8 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
   Vector<int> pcount_bin;             // particle count of bins of overload fbox
   Vector<int> poffset_bin;            // offset of bins of overload fbox
   IntVect     binsize(1024);
-  int         chop_dir = 0;           // layer covers the other 2 direction
   binsize.setVal(chop_dir, 1);        // thickness of the layer
+                                      // layer covers the other 2 direction
   //
   countParticle(lev, overload_fbl, binsize, pcount_bin, poffset_bin);
   ParallelDescriptor::ReduceIntSum(pcount_bin.dataPtr(), pcount_bin.size());
