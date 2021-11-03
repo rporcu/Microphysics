@@ -32,10 +32,9 @@ endif()
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR}/subprojects/csg-eb)
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR}/subprojects/csg-eb)
 find_package(Catch2 REQUIRED)
-find_package(csg-eb REQUIRED)
 
 target_link_libraries(functional_tests
   AMReX::amrex
   Catch2::Catch2
-  csg-eb::csg-eb
+  csg-eb
 )
