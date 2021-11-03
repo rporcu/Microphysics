@@ -233,13 +233,9 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
       const BoxArray&            pba = pc->ParticleBoxArray(lev);
       const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
-      EBFArrayBoxFactory ebfactory_loc(*eb_levels[lev], geom[lev], pba, pdm,
-                                       {nghost_eb_basic(), nghost_eb_volume(),
-                                        nghost_eb_full()}, EBSupport::full);
-
       // Store gas velocity and volume fraction for interpolation
       interp_ptr = new MultiFab(pba, pdm, interp_comp, interp_ng, MFInfo(),
-                                ebfactory_loc);
+                                *particle_ebfactory[lev]);
 
       // Copy velocity
       interp_ptr->ParallelCopy(*vel_g_in[lev], 0, 0, 3, interp_ng, interp_ng);
@@ -260,7 +256,8 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
       interp_ptr->ParallelCopy(*X_gk_in[lev], 0, 7, fluid.nspecies, interp_ng, interp_ng);
 
       // Set chem_txfr_ptr
-      chem_txfr_ptr[lev] = new MultiFab(pba, pdm, interp_comp, interp_ng, MFInfo(), ebfactory_loc);
+      chem_txfr_ptr[lev] = new MultiFab(pba, pdm, interp_comp, interp_ng, MFInfo(),
+                                        *particle_ebfactory[lev]);
     }
 
     // FillBoundary on interpolation MultiFab
