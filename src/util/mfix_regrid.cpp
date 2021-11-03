@@ -4,7 +4,7 @@
 #include <mfix_pic_parms.H>
 
 namespace {
-  void print_process_boxes(amrex::DistributionMapping& dmap)
+  void print_process_boxes(const amrex::DistributionMapping& dmap, const amrex::BoxArray& ba)
   {
     const Vector<int>& pmap = dmap.ProcessorMap();
     Vector<Vector<int>> pbox(ParallelDescriptor::NProcs());
@@ -15,7 +15,7 @@ namespace {
     for (unsigned int i=0; i<pbox.size(); ++i) {
       Print() << "Process  " << i << ":";
       for (unsigned int j=0; j<pbox[i].size(); ++j)
-        Print() << " " << pbox[i][j];
+        Print() << " " << pbox[i][j] << " " << ba[pbox[i][j]];
       Print() << "\n";
     }
   }
@@ -64,7 +64,6 @@ mfix::Regrid ()
           }
 
           SetDistributionMap(lev, new_fluid_dm);
-          print_process_boxes(new_fluid_dm);
 
           macproj = std::make_unique<MacProjector>(Geom(0,finest_level),
                                          MLMG::Location::FaceCentroid,  // Location of mac_vec
@@ -110,7 +109,7 @@ mfix::Regrid ()
         }
         else if (load_balance_type == "Greedy") {
           pc->partitionParticleGrids(lev, this->boxArray(lev), this->DistributionMap(lev), 
-                                     overload_toler, underload_toler);
+                                     greedy_dir, overload_toler, underload_toler);
           new_particle_dm = pc->ParticleDistributionMap(lev);
         }
 

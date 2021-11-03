@@ -331,6 +331,7 @@ public:
     void partitionParticleGrids(int lev, 
                                 const amrex::BoxArray& fba,
                                 const amrex::DistributionMapping& fdmap,
+                                const int greedy_dir,
                                 amrex::Real imbalance_toler,
                                 amrex::Real partition_factor);
 
