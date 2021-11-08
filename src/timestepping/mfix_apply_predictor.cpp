@@ -379,6 +379,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         // When using implicit diffusion for species, we "Add" (subtract) the
         // correction term computed at time t^{star,star} to the RHS before
         // doing the implicit diffusion
+        mfix_set_epg_bcs(get_ep_g(), 0);
+        mfix_set_density_bcs(time, get_ro_g());
+        mfix_set_species_bcs(time, get_X_gk());
+
         diffusion_op->SubtractDiv_XGradX(get_X_gk(), get_ro_g_const(),
                                          get_ep_g_const(), get_T_g_old_const(), l_dt);
 
@@ -386,8 +390,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         for (int lev = 0; lev <= finest_level; lev++)
           MultiFab::Multiply(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
                              0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
-
-        mfix_set_species_bcs(time, get_X_gk());
 
         // Diffuse species mass fractions
         diffusion_op->diffuse_species(get_X_gk(), get_ep_g(), get_T_g_old(), get_species_bcrec(), l_dt);
