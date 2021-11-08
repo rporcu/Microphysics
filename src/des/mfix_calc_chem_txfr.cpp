@@ -150,79 +150,6 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
     chem_txfr[lev]->setVal(0);
   }
 
-
-  Vector< MultiFab* > chem_txfr_ptr(nlev, nullptr);
-
-  for (int lev = 0; lev < nlev; lev++)
-  {
-    bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
-                         (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
-
-    if (lev == 0 && OnSameGrids)
-    {
-      // If we are already working with the internal mf defined on the
-      // particle_box_array, then we just work with this.
-      chem_txfr_ptr[lev] = chem_txfr[lev];
-    }
-    else if (lev == 0 && (! OnSameGrids))
-    {
-      // If beta_mf is not defined on the particle_box_array, then we need
-      // to make a temporary here and copy into beta_mf at the end.
-      chem_txfr_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                        pc->ParticleDistributionMap(lev),
-                                        chem_txfr[lev]->nComp(),
-                                        chem_txfr[lev]->nGrow());
-    }
-    else
-    {
-      // If lev > 0 we make a temporary at the coarse resolution
-      BoxArray ba_crse(amrex::coarsen(pc->ParticleBoxArray(lev),
-                                      this->m_gdb->refRatio(0)));
-
-      chem_txfr_ptr[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev),
-                                        chem_txfr[lev]->nComp(), 1);
-    }
-
-    // We must have ghost cells for each FAB so that a particle in one grid can
-    // spread its effect to an adjacent grid by first putting the value into
-    // ghost cells of its own grid.  The mf->sumBoundary call then adds the
-    // value from one grid's ghost cell to another grid's valid region.
-    if (chem_txfr_ptr[lev]->nGrow() < 1)
-      amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
-
-    chem_txfr_ptr[lev]->setVal(0.0, 0, chem_txfr[lev]->nComp(), chem_txfr_ptr[lev]->nGrow());
-  }
-
-  const Geometry& gm = Geom(0);
-  const FabArray<EBCellFlagFab>* deposition_flags = nullptr;
-  const MultiFab* deposition_volfrac = nullptr;
-
-  for (int lev = 0; lev < nlev; lev++)
-  {
-    // Use level 0 to define the EB factory. If we are not on level 0
-    // then create a copy of the coarse factory to use.
-
-    if (lev == 0)
-    {
-      deposition_flags   = &(particle_ebfactory[lev]->getMultiEBCellFlagFab());
-      deposition_volfrac = &(particle_ebfactory[lev]->getVolFrac());
-    }
-    else
-    {
-      Vector<int> ngrow = {1,1,1};
-      EBFArrayBoxFactory* crse_factory;
-
-      crse_factory = (makeEBFabFactory(gm, chem_txfr_ptr[lev]->boxArray(),
-                                       chem_txfr_ptr[lev]->DistributionMap(),
-                                       ngrow, EBSupport::volume)).release();
-
-      deposition_flags   = &(crse_factory->getMultiEBCellFlagFab());
-      deposition_volfrac = &(crse_factory->getVolFrac());
-
-      delete crse_factory;
-    }
-  }
-
   // **************************************************************************
   // Compute particles densities transfer rates
   // **************************************************************************
@@ -241,10 +168,20 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
   mfix_set_temperature_bcs(time, T_g_in);
   mfix_set_species_bcs(time, X_gk_in);
 
+  const Geometry& gm = Geom(0);
   const auto cell_dx = gm.CellSizeArray();
   const auto reg_cell_vol = cell_dx[0]*cell_dx[1]*cell_dx[2];
 
+  Vector< MultiFab* > eps_ptr(nlev, nullptr);
+  Vector< MultiFab* > chem_txfr_ptr(nlev, nullptr);
+
+  Vector< const FabArray<EBCellFlagFab>* > deposition_flags(nlev, nullptr);
+  Vector< const MultiFab* > deposition_volfrac(nlev, nullptr);
+  Vector< EBFArrayBoxFactory* > crse_factory(nlev, nullptr);
+
+  // Start interpolation and deposition
   for (int lev = 0; lev < nlev && (DEM::solve || PIC::solve); lev++) {
+
     bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                          (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
@@ -297,6 +234,10 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
       // Copy X_gk
       MultiFab::Copy(*interp_ptr, *X_gk_in[lev], 0, 7, nspecies_g, interp_ng);
+
+      // If we are already working with the internal mf defined on the
+      // particle_box_array, then we just work with this.
+      chem_txfr_ptr[lev] = chem_txfr[lev];
     }
     else
     {
@@ -324,10 +265,47 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
       // Copy X_gk
       interp_ptr->ParallelCopy(*X_gk_in[lev], 0, 7, fluid.nspecies, interp_ng, interp_ng);
+
+      // If beta_mf is not defined on the particle_box_array, then we need
+      // to make a temporary here and copy into beta_mf at the end.
+      chem_txfr_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                        pc->ParticleDistributionMap(lev),
+                                        chem_txfr[lev]->nComp(),
+                                        chem_txfr[lev]->nGrow());
     }
 
     // FillBoundary on interpolation MultiFab
     interp_ptr->FillBoundary(geom[lev].periodicity());
+
+    eps_ptr[lev] = (MFHelpers::createFrom(*interp_ptr, 0.0)).release();
+
+    // We must have ghost cells for each FAB so that a particle in one grid can
+    // spread its effect to an adjacent grid by first putting the value into
+    // ghost cells of its own grid.  The mf->sumBoundary call then adds the
+    // value from one grid's ghost cell to another grid's valid region.
+    if (chem_txfr_ptr[lev]->nGrow() < 1)
+      amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
+
+    chem_txfr_ptr[lev]->setVal(0.0, 0, chem_txfr[lev]->nComp(), chem_txfr_ptr[lev]->nGrow());
+
+    // Use level 0 to define the EB factory. If we are not on level 0
+    // then create a copy of the coarse factory to use.
+    if (lev == 0)
+    {
+      deposition_flags[lev]   = &(particle_ebfactory[lev]->getMultiEBCellFlagFab());
+      deposition_volfrac[lev] = &(particle_ebfactory[lev]->getVolFrac());
+    }
+    else
+    {
+      Vector<int> ngrow = {1,1,1};
+
+      crse_factory[lev] = (makeEBFabFactory(gm, chem_txfr_ptr[lev]->boxArray(),
+                                            chem_txfr_ptr[lev]->DistributionMap(),
+                                            ngrow, EBSupport::volume)).release();
+
+      deposition_flags[lev]   = &(crse_factory[lev]->getMultiEBCellFlagFab());
+      deposition_volfrac[lev] = &(crse_factory[lev]->getVolFrac());
+    }
 
     // Do the interpolate
     const auto dxi_array = geom[lev].InvCellSizeArray();
@@ -344,8 +322,6 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
     const auto bndrycent = &(factory.getBndryCent());
     const auto areafrac = factory.getAreaFrac();
     const auto& volfrac = factory.getVolFrac();
-
-    FArrayBox local_fab_chem_txfr;
 
     auto& fluid_parms = *fluid.parameters;
     auto& solids_parms = *solids.parameters;
@@ -928,20 +904,26 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
       // Momentum transfer:
       // Energy transfer
       // ******************************************************************
+      FArrayBox& eps_fab  = (*eps_ptr[lev])[pti];
       FArrayBox& fab_chem_txfr = (*chem_txfr_ptr[lev])[pti];
 
       const Box& box = pti.tilebox(); // I need a box without ghosts
 
-      if ((*deposition_flags)[pti].getType(box) != FabType::covered) {
-        auto        rho_gk_txfr_array = fab_chem_txfr.array(idx_ro_gk_txfr);
-        auto        vel_g_txfr_array  = fab_chem_txfr.array(idx_vel_g_txfr);
-        auto        h_g_txfr_array    = fab_chem_txfr.array(idx_h_g_txfr);
-        const auto& flagsarr          = (*deposition_flags)[pti].const_array();
-        const auto& vfrac             = (*deposition_volfrac)[pti].const_array();
+      if ((*deposition_flags[lev])[pti].getType(box) != FabType::covered) {
+        auto rho_gk_txfr_array = fab_chem_txfr.array(idx_ro_gk_txfr);
+        auto vel_g_txfr_array  = fab_chem_txfr.array(idx_vel_g_txfr);
+        auto h_g_txfr_array    = fab_chem_txfr.array(idx_h_g_txfr);
+        auto vol_arr           = eps_fab.array();
+
+        const auto& flagsarr = (*deposition_flags[lev])[pti].const_array();
+        const auto& vfrac    = (*deposition_volfrac[lev])[pti].const_array();
 
         const amrex::Real deposition_scale_factor = m_deposition_scale_factor;
 
 #ifdef _OPENMP
+        FArrayBox local_fab_vol;
+        FArrayBox local_fab_chem_txfr;
+
         const int ncomp = chem_txfr_ptr[lev]->nComp();
         Box tile_box = box;
 
@@ -954,16 +936,20 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
           rho_gk_txfr_array = local_fab_chem_txfr.array(idx_ro_gk_txfr);
           vel_g_txfr_array  = local_fab_chem_txfr.array(idx_vel_g_txfr);
           h_g_txfr_array    = local_fab_chem_txfr.array(idx_h_g_txfr);
+
+          local_fab_vol.resize(tile_box, eps_ptr[lev]->nComp());
+          local_fab_vol.setVal<RunOn::Host>(0.0);
+          vol_arr = local_fab_vol.array();
         }
 #endif
 
         const long nrp = pti.numParticles();
 
         amrex::ParallelFor(nrp,
-          [nrp,pstruct,p_realarray,plo_array,dx_array,dxi_array,
-           vfrac,flagsarr,deposition_scale_factor,WeightFunc,
-           rho_gk_txfr_array,vel_g_txfr_array,h_g_txfr_array,idx_mass_sn_txfr,
-           G_sk_pg_ptr,G_h_pg_ptr,nspecies_g,run_on_device]
+          [nrp,pstruct,p_realarray,plo_array,dx_array,dxi_array,vfrac,flagsarr,
+           deposition_scale_factor,WeightFunc,rho_gk_txfr_array,vel_g_txfr_array,
+           h_g_txfr_array,idx_mass_sn_txfr,G_sk_pg_ptr,G_h_pg_ptr,nspecies_g,
+           run_on_device,vol_arr,reg_cell_vol,local_cg_dem=DEM::cg_dem]
           AMREX_GPU_DEVICE (int p_id) noexcept
         {
           const auto& p = pstruct[p_id];
@@ -971,6 +957,8 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
           int i(0);
           int j(0);
           int k(0);
+
+          const Real statwt = p_realarray[SoArealData::statwt][p_id];
 
           GpuArray<GpuArray<GpuArray<Real,2>,2>,2> weights;
 
@@ -992,6 +980,12 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
           const Real coeff = amrex::max(0., G_rho_g_heterogeneous);
 
+          Real pvol = statwt * p_realarray[SoArealData::volume][p_id] / reg_cell_vol;
+
+          if (local_cg_dem) {
+            pvol = pvol / p_realarray[SoArealData::statwt][p_id];
+          }
+
           const RealVect vel_p(p_realarray[SoArealData::velx][p_id],
                                p_realarray[SoArealData::vely][p_id],
                                p_realarray[SoArealData::velz][p_id]);
@@ -1003,6 +997,8 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                 if (! flagsarr(i+ii,j+jj,k+kk).isCovered()) {
 
                   amrex::Real weight_vol = weights[ii+1][jj+1][kk+1] / vfrac(i+ii,j+jj,k+kk);
+
+                  amrex::Gpu::Atomic::Add(&vol_arr(i+ii,j+jj,k+kk), weight_vol*pvol);
 
                   for (int n_g(0); n_g < nspecies_g; n_g++) {
                     // Deposition of Rrates
@@ -1026,8 +1022,8 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
 #ifdef _OPENMP
         if (Gpu::notInLaunchRegion()) {
-          fab_chem_txfr.atomicAdd<RunOn::Host>(local_fab_chem_txfr,
-              tile_box, tile_box, 0, 0, ncomp);
+          eps_fab.atomicAdd<RunOn::Host>(local_fab_vol, tile_box, tile_box, 0, 0, eps_ptr[lev]->nComp());
+          fab_chem_txfr.atomicAdd<RunOn::Host>(local_fab_chem_txfr, tile_box, tile_box, 0, 0, ncomp);
         }
 #endif
       }
@@ -1037,8 +1033,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
     delete interp_ptr;
   } // lev
 
-  // Reset the volume fractions back to the correct values at
-  // inflow faces.
+  // Reset the volume fractions back to the correct values at inflow faces.
   const int dir_bc_out = 1;
   mfix_set_epg_bcs(ep_g_in, dir_bc_out);
   // End compute particles density transfer rates
@@ -1059,7 +1054,25 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
     // Sum grid boundaries to capture any material that was deposited into
     // your grid from an adjacent grid.
     chem_txfr_ptr[lev]->SumBoundary(gm.periodicity());
-    chem_txfr_ptr[lev]->FillBoundary(gm.periodicity());
+    chem_txfr_ptr[lev]->setBndry(0.0);
+
+    // Sum grid boundaries then fill with correct ghost values.
+    eps_ptr[lev]->SumBoundary(gm.periodicity());
+    eps_ptr[lev]->FillBoundary(gm.periodicity());
+
+    // Move excessive solids volume from small cells to neighboring cells.
+    // Note that we don't change tmp_eps but use the redistribution of
+    // particle volume to determine how to redistribute the drag forces.
+    mfix_redistribute_deposition(lev, *eps_ptr[lev], *chem_txfr_ptr[lev],
+                                 deposition_volfrac[lev], deposition_flags[lev],
+                                 mfix::m_max_solids_volume_fraction);
+  }
+
+  for (int lev(0); lev < nlev; ++lev) {
+    if (lev != 0 && crse_factory[lev] != nullptr)
+      delete crse_factory[lev];
+
+    delete eps_ptr[lev];
   }
 
   int  src_nghost = 1;
@@ -1090,8 +1103,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
       chem_txfr[lev]->setVal(0);
 
-      amrex::InterpFromCoarseLevel(*chem_txfr[lev], time,
-                                   *chem_txfr_ptr[lev-1],
+      amrex::InterpFromCoarseLevel(*chem_txfr[lev], time, *chem_txfr_ptr[lev-1],
                                    0, 0, 1, Geom(lev-1), Geom(lev),
                                    cphysbc, 0, fphysbc, 0,
                                    ref_ratio[0], mapper,
@@ -1115,16 +1127,12 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
   if (m_verbose > 1) {
     Real stoptime = ParallelDescriptor::second() - strttime;
 
-    ParallelDescriptor::ReduceRealMax(stoptime,
-                                      ParallelDescriptor::IOProcessorNumber());
+    ParallelDescriptor::ReduceRealMax(stoptime, ParallelDescriptor::IOProcessorNumber());
 
-    amrex::Print() << "MFIXParticleContainer::TrilinearChemDepositionFluid"
-      " time: " << stoptime << '\n';
+    amrex::Print() << "MFIXParticleContainer::TrilinearChemDepositionFluid time: " << stoptime << '\n';
   }
 
   // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
   for (int lev = 0; lev < nlev; lev++)
-    m_leveldata[lev]->chem_txfr->FillBoundary(geom[lev].periodicity());
-  // End compute fluid density transfer rate from particles transfer rates
-  // deposition
+    chem_txfr[lev]->FillBoundary(geom[lev].periodicity());
 }
