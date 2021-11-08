@@ -10,10 +10,10 @@
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
 
-namespace
-{
-    const std::string level_prefix {"Level_"};
-}
+//namespace
+//{
+//    const std::string level_prefix {"Level_"};
+//}
 
 void
 mfix::InitIOPltData ()
@@ -799,7 +799,9 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
 
           const int nspecies_g = fluid.nspecies;
 
-          MultiFab& X_gk = *(m_leveldata[lev]->X_gk);
+          auto& ld = *m_leveldata[lev];
+
+          MultiFab& X_gk = *(ld.X_gk);
 
           MultiFab h_gk(X_gk.boxArray(), X_gk.DistributionMap(), X_gk.nComp(),
                         X_gk.nGrow(), MFInfo(), X_gk.Factory());
@@ -809,21 +811,30 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
 #endif
           for (MFIter mfi(X_gk,TilingIfNotGPU()); mfi.isValid(); ++mfi)
           {
+            const EBFArrayBox& Xgk_fab = static_cast<EBFArrayBox const&>(X_gk[mfi]);
+            const EBCellFlagFab& flags = Xgk_fab.getEBCellFlagFab();
+
             Box const& bx = mfi.tilebox();
 
-            Array4<Real      > const& h_gk_array = h_gk.array(mfi);
-            Array4<Real const> const& T_g_array  = advect_enthalpy ?
-              m_leveldata[lev]->T_g->const_array(mfi) : Array4<const Real>();
+            Array4<const Real> dummy_arr;
 
-            ParallelFor(bx, [h_gk_array,T_g_array,nspecies_g,fluid_params,run_on_device]
+            Array4<      Real> const& h_gk_array = h_gk.array(mfi);
+            Array4<const Real> const& T_g_array  = advect_enthalpy ? (ld.T_g)->const_array(mfi) : dummy_arr;
+
+            auto const& flags_arr = flags.const_array();
+
+            ParallelFor(bx, [h_gk_array,T_g_array,nspecies_g,fluid_params,
+                run_on_device,flags_arr]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
+              const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+
               const Real Tg_loc = T_g_array(i,j,k);
 
               for (int n(0); n < nspecies_g; ++n)
                 h_gk_array(i,j,k,n) = run_on_device ?
-                  fluid_params.calc_h_gk<RunOn::Device>(Tg_loc,n) :
-                  fluid_params.calc_h_gk<RunOn::Host>(Tg_loc,n);
+                  fluid_params.calc_h_gk<RunOn::Device>(Tg_loc, n, cell_is_covered) :
+                  fluid_params.calc_h_gk<RunOn::Host>(Tg_loc, n, cell_is_covered);
             });
           }
 

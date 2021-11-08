@@ -349,14 +349,19 @@ void init_fluid_parameters (const Box& bx,
 {
   const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
+  const EBFArrayBox& epg_fab = static_cast<EBFArrayBox const&>((*ld.ep_g)[mfi]);
+  const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
+
   const int fluid_is_a_mixture = fluid.is_a_mixture;
   const int advect_species_enthalpy = advect_fluid_species && advect_enthalpy;
 
-  Array4<Real> nullArray4;
+  Array4<Real> dummy_arr;
 
-  Array4<Real> const& X_gk = fluid_is_a_mixture ? (ld.X_gk)->array(mfi) : nullArray4;
-  Array4<Real> const& T_g  = advect_enthalpy ? (ld.T_g)->array(mfi) : nullArray4;
-  Array4<Real> const& h_g  = advect_enthalpy ? (ld.h_g)->array(mfi) : nullArray4;
+  Array4<Real> const& X_gk = fluid_is_a_mixture ? (ld.X_gk)->array(mfi) : dummy_arr;
+  Array4<Real> const& T_g  = advect_enthalpy ? (ld.T_g)->array(mfi) : dummy_arr;
+  Array4<Real> const& h_g  = advect_enthalpy ? (ld.h_g)->array(mfi) : dummy_arr;
+
+  auto const& flags_arr = flags.const_array();
 
   const int nspecies_g = fluid.nspecies;
 
@@ -365,9 +370,11 @@ void init_fluid_parameters (const Box& bx,
   // Set the IC values
   amrex::ParallelFor(bx, [nspecies_g,T_g,h_g,X_gk,advect_enthalpy,fluid_parms,
       advect_fluid_species,advect_species_enthalpy,fluid_is_a_mixture,
-      run_on_device]
+      run_on_device,flags_arr]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
   {
+    const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+
     // set initial fluid enthalpy and  specific enthalpy
     if (advect_enthalpy)
     {
@@ -378,8 +385,8 @@ void init_fluid_parameters (const Box& bx,
         Real h_g_sum(0);
         for (int n(0); n < nspecies_g; n++) {
           const Real h_gk = run_on_device ?
-            fluid_parms.calc_h_gk<RunOn::Device>(Tg_loc,n) :
-            fluid_parms.calc_h_gk<RunOn::Host>(Tg_loc,n);
+            fluid_parms.calc_h_gk<RunOn::Device>(Tg_loc, n, cell_is_covered) :
+            fluid_parms.calc_h_gk<RunOn::Host>(Tg_loc, n, cell_is_covered);
 
           h_g_sum += X_gk(i,j,k,n) * h_gk;
         }
@@ -388,8 +395,8 @@ void init_fluid_parameters (const Box& bx,
       }
       else {
         h_g(i,j,k) = run_on_device ?
-          fluid_parms.calc_h_g<RunOn::Device>(Tg_loc) :
-          fluid_parms.calc_h_g<RunOn::Host>(Tg_loc);
+          fluid_parms.calc_h_g<RunOn::Device>(Tg_loc, cell_is_covered) :
+          fluid_parms.calc_h_g<RunOn::Host>(Tg_loc, cell_is_covered);
       }
     }
 
@@ -546,6 +553,9 @@ void set_ic_temp (const Box& sbx,
 {
   const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
+  const EBFArrayBox& Tg_EB_fab = static_cast<EBFArrayBox const&>(T_g_fab);
+  const EBCellFlagFab& flags = Tg_EB_fab.getEBCellFlagFab();
+
   const IntVect slo(sbx.loVect());
   const IntVect shi(sbx.hiVect());
 
@@ -555,9 +565,13 @@ void set_ic_temp (const Box& sbx,
   const int fluid_is_a_mixture = fluid.is_a_mixture;
   const int nspecies_g = fluid.nspecies;
 
+  Array4<const Real> dummy_arr;
+
   Array4<Real      > const& T_g  = T_g_fab.array();
   Array4<Real      > const& h_g  = h_g_fab.array();
-  Array4<Real const> const& X_gk = fluid_is_a_mixture ? X_gk_fab->array() : Array4<const Real>();
+  Array4<Real const> const& X_gk = fluid_is_a_mixture ? X_gk_fab->array() : dummy_arr;
+
+  auto const& flags_arr = flags.const_array();
 
   auto& fluid_parms = *fluid.parameters;
 
@@ -585,25 +599,27 @@ void set_ic_temp (const Box& sbx,
 
     // Define the function to be used on the different Box-es
     auto set_quantities = [T_g,h_g,X_gk,temperature,nspecies_g,fluid_is_a_mixture,
-         fluid_parms,run_on_device]
+         fluid_parms,run_on_device,flags_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
+      const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+
       T_g(i,j,k) = temperature;
 
       if (fluid_is_a_mixture) {
         Real h_g_sum(0);
         for (int n(0); n < nspecies_g; n++) {
           Real h_gk = run_on_device ?
-            fluid_parms.calc_h_gk<RunOn::Device>(temperature,n) :
-            fluid_parms.calc_h_gk<RunOn::Host>(temperature,n);
+            fluid_parms.calc_h_gk<RunOn::Device>(temperature, n, cell_is_covered) :
+            fluid_parms.calc_h_gk<RunOn::Host>(temperature, n, cell_is_covered);
 
           h_g_sum += X_gk(i,j,k,n) * h_gk;
         }
         h_g(i,j,k) = h_g_sum;
       } else {
         h_g(i,j,k) = run_on_device ?
-          fluid_parms.calc_h_g<RunOn::Device>(temperature) :
-          fluid_parms.calc_h_g<RunOn::Host>(temperature);
+          fluid_parms.calc_h_g<RunOn::Device>(temperature, cell_is_covered) :
+          fluid_parms.calc_h_g<RunOn::Host>(temperature, cell_is_covered);
       }
     };
 

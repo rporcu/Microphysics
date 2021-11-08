@@ -115,6 +115,8 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*      > const& rhs,
             nspecies_g,fluid_parms,adv_fluid_species,run_on_device]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
+          const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+
           Real rhs_value(0);
 
           const Real rog_loc = ro_g_arr(i,j,k);
@@ -164,8 +166,8 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*      > const& rhs,
 
                 if (adv_enthalpy) {
                   const Real h_gk = run_on_device ?
-                    fluid_parms.calc_h_gk<RunOn::Device>(Tg_loc,n) :
-                    fluid_parms.calc_h_gk<RunOn::Host>(Tg_loc,n);
+                    fluid_parms.calc_h_gk<RunOn::Device>(Tg_loc, n, cell_is_covered) :
+                    fluid_parms.calc_h_gk<RunOn::Host>(Tg_loc, n, cell_is_covered);
 
                   coeff -= h_gk / (cp_g_loc*Tg_loc);
                 }
@@ -177,8 +179,8 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*      > const& rhs,
 
               if (adv_enthalpy) {
                 const Real h_g_loc = run_on_device ?
-                  fluid_parms.calc_h_g<RunOn::Device>(Tg_loc) :
-                  fluid_parms.calc_h_g<RunOn::Host>(Tg_loc);
+                  fluid_parms.calc_h_g<RunOn::Device>(Tg_loc, cell_is_covered) :
+                  fluid_parms.calc_h_g<RunOn::Host>(Tg_loc, cell_is_covered);
 
                 coeff -= h_g_loc / (cp_g_loc*Tg_loc);
               }

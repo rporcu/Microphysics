@@ -1,10 +1,10 @@
 #include "AMReX_buildInfo.H"
 #include <mfix.H>
 
-namespace
-{
-    const std::string level_prefix {"Level_"};
-}
+//namespace
+//{
+//    const std::string level_prefix {"Level_"};
+//}
 
 void writeBuildInfo ()
 {

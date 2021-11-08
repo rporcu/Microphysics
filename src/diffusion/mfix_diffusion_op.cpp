@@ -962,6 +962,9 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
 #endif
     for (MFIter mfi(*ep_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
+      const EBFArrayBox& epg_fab = static_cast<EBFArrayBox const&>((*ep_g_in[lev])[mfi]);
+      const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
+
       Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
       Array4<Real      > const& hb_coeffs_arr = hb_coeffs.array(mfi);
@@ -969,10 +972,14 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
       Array4<Real const> const& ro_g_arr      = ro_g_in[lev]->const_array(mfi);
       Array4<Real const> const& T_g_arr       = T_g_in[lev]->const_array(mfi);
 
+      auto const& flags_arr = flags.const_array();
+
       amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,T_g_arr,hb_coeffs_arr,
-          nspecies_g,fluid_parms,run_on_device]
+          nspecies_g,fluid_parms,run_on_device,flags_arr]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
+        const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+
         const Real ep_g = ep_g_arr(i,j,k);
         const Real ro_g = ro_g_arr(i,j,k);
         const Real T_g  = T_g_arr(i,j,k);
@@ -982,8 +989,8 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
         for (int n(0); n < nspecies_g; ++n) {
 
           hb_coeffs_arr(i,j,k,n) = run_on_device ?
-            fluid_parms.calc_h_gk<RunOn::Device>(T_g,n) * val :
-            fluid_parms.calc_h_gk<RunOn::Host>(T_g,n) * val;
+            fluid_parms.calc_h_gk<RunOn::Device>(T_g, n, cell_is_covered) * val :
+            fluid_parms.calc_h_gk<RunOn::Host>(T_g, n, cell_is_covered) * val;
         }
       });
     }
@@ -1050,6 +1057,9 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
 #endif
       for (MFIter mfi(*ep_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
       {
+        const EBFArrayBox& epg_fab = static_cast<EBFArrayBox const&>((*ep_g_in[lev])[mfi]);
+        const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
+
         Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
         Array4<Real      > const& hXb_coeffs_arr = hXb_coeffs.array(mfi);
@@ -1058,17 +1068,21 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
         Array4<Real const> const& T_g_arr        = T_g_in[lev]->const_array(mfi);
         Array4<Real const> const& X_gk_arr       = X_gk_in[lev]->const_array(mfi);
 
+        auto const& flags_arr = flags.const_array();
+
         amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,T_g_arr,hXb_coeffs_arr,X_gk_arr,
-            nspecies_g,fluid_parms,species_k,run_on_device]
+            nspecies_g,fluid_parms,species_k,run_on_device,flags_arr]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
+          const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+
           const Real ep_g = ep_g_arr(i,j,k);
           const Real ro_g = ro_g_arr(i,j,k);
           const Real T_g  = T_g_arr(i,j,k);
 
           const Real hgk  = run_on_device ?
-            fluid_parms.calc_h_gk<RunOn::Device>(T_g,species_k) :
-            fluid_parms.calc_h_gk<RunOn::Host>(T_g,species_k);
+            fluid_parms.calc_h_gk<RunOn::Device>(T_g, species_k, cell_is_covered) :
+            fluid_parms.calc_h_gk<RunOn::Host>(T_g, species_k, cell_is_covered);
 
           const Real Xgk  = X_gk_arr(i,j,k,species_k);
 

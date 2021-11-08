@@ -500,7 +500,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
               flags_arr,volfrac_arr,run_on_device]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-            if (!flags_arr(i,j,k).isCovered()) {
+            const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+
+            if (!cell_is_covered) {
               int conv_comp = 1;
 
               const Real epg_loc = epg(i,j,k);
@@ -537,14 +539,14 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                   if (!fluid_is_a_mixture) {
 
                     hg_loc = run_on_device ?
-                      fluid_parms.calc_h_g<RunOn::Device>(Tg_arg) :
-                      fluid_parms.calc_h_g<RunOn::Host>(Tg_arg);
+                      fluid_parms.calc_h_g<RunOn::Device>(Tg_arg, cell_is_covered) :
+                      fluid_parms.calc_h_g<RunOn::Host>(Tg_arg, cell_is_covered);
                   } else {
 
                     for (int n(0); n < nspecies_g; ++n) {
                       const Real h_gk = run_on_device ?
-                        fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg,n) :
-                        fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg,n);
+                        fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg, n, cell_is_covered) :
+                        fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg, n, cell_is_covered);
 
                       hg_loc += X_gk_n(i,j,k,n)*h_gk;
                     }

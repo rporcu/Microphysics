@@ -12,10 +12,10 @@
 #include <mfix_pic_parms.H>
 
 
-namespace
-{
-    const std::string level_prefix {"Level_"};
-}
+//namespace
+//{
+//    const std::string level_prefix {"Level_"};
+//}
 
 void
 mfix::GotoNextLine (std::istream& is)
