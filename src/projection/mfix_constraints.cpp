@@ -76,7 +76,7 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*      > const& rhs,
   const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
   const int adv_enthalpy = advect_enthalpy;
-  const int adv_fluid_species = advect_fluid_species;
+  const int adv_fluid_species = solve_species;
   const int fluid_is_a_mixture = fluid.is_a_mixture;
   const int nspecies_g = fluid.nspecies;
 
@@ -244,7 +244,7 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
                        T_g, X_gk, ro_rhs);
 
   const int adv_enthalpy = advect_enthalpy;
-  const int adv_fluid_species = advect_fluid_species;
+  const int adv_fluid_species = solve_species;
   const int nspecies_g = fluid.nspecies;
   const int fluid_is_a_mixture = fluid.is_a_mixture;
 

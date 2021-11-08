@@ -428,7 +428,7 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
         set_tracer_bc_values (ltime);
       }
 
-      if (advect_fluid_species) {
+      if (solve_species) {
         set_species_bc_values (ltime);
       }
 

@@ -26,8 +26,7 @@ void set_ic_species_g (const Box& sbx, const Box& domain,
 void set_ic_ro_g (const Box& sbx, const Box& domain,
                   const Real dx, const Real dy, const Real dz,
                   const GpuArray<Real, 3>& plo,
-                  FArrayBox& ro_g_fab, FArrayBox& T_g_fab,
-                  FArrayBox& X_gk_fab, FluidPhase& fluid);
+                  LevelData& ld, const MFIter& mfi, FluidPhase& fluid);
 
 void set_ic_pressure_g (const Box& sbx, const Box& domain,
                         const Real dx, const Real dy, const Real dz,
@@ -58,7 +57,7 @@ void init_fluid (const Box& sbx,
                  const GpuArray<Real, 3>& plo,
                  bool test_tracer_conservation,
                  const int advect_enthalpy,
-                 const int advect_fluid_species,
+                 const int solve_species,
                  const int& constraint_type,
                  FluidPhase& fluid)
 {
@@ -82,7 +81,7 @@ void init_fluid (const Box& sbx,
   { trac(i,j,k) = trac_0; });
 
   // Fluid SPECIES Initialization
-  if (advect_fluid_species) {
+  if (solve_species) {
     // Set the initial fluid species mass fractions
     set_ic_species_g(sbx, domain, dx, dy, dz, plo, (*ld.X_gk)[mfi]);
   }
@@ -102,12 +101,10 @@ void init_fluid (const Box& sbx,
       constraint_type == ConstraintType::IdealGasClosedSystem ) {
     // Set initial density according to the equation of state
     // ro_g = p_g * Mw_g / R * T_g
-    set_ic_ro_g(sbx, domain, dx, dy, dz, plo, (*ld.ro_g)[mfi],
-                (*ld.T_g)[mfi], (*ld.X_gk)[mfi], fluid);
+    set_ic_ro_g(sbx, domain, dx, dy, dz, plo, ld, mfi, fluid);
   } else {
     const Real ro_g0  = fluid.ro_g0;
-    ParallelFor(sbx, [ro_g,ro_g0] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-                     { ro_g(i,j,k) = ro_g0; });
+    ParallelFor(sbx, [ro_g,ro_g0] AMREX_GPU_DEVICE (int i, int j, int k) noexcept { ro_g(i,j,k) = ro_g0; });
   }
 
   if (constraint_type == ConstraintType::IdealGasClosedSystem) {
@@ -344,7 +341,7 @@ void init_fluid_parameters (const Box& bx,
                             const MFIter& mfi,
                             LevelData& ld,
                             const int advect_enthalpy,
-                            const int advect_fluid_species,
+                            const int solve_species,
                             FluidPhase& fluid)
 {
   const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
@@ -353,7 +350,7 @@ void init_fluid_parameters (const Box& bx,
   const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
 
   const int fluid_is_a_mixture = fluid.is_a_mixture;
-  const int advect_species_enthalpy = advect_fluid_species && advect_enthalpy;
+  const int advect_species_enthalpy = solve_species && advect_enthalpy;
 
   Array4<Real> dummy_arr;
 
@@ -369,7 +366,7 @@ void init_fluid_parameters (const Box& bx,
 
   // Set the IC values
   amrex::ParallelFor(bx, [nspecies_g,T_g,h_g,X_gk,advect_enthalpy,fluid_parms,
-      advect_fluid_species,advect_species_enthalpy,fluid_is_a_mixture,
+      solve_species,advect_species_enthalpy,fluid_is_a_mixture,
       run_on_device,flags_arr]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
   {
@@ -1014,9 +1011,8 @@ void set_ic_ro_g (const Box& sbx,
                   const Real dy,
                   const Real dz,
                   const GpuArray<Real, 3>& plo,
-                  FArrayBox& ro_g_fab,
-                  FArrayBox& T_g_fab,
-                  FArrayBox& X_gk_fab,
+                  LevelData& ld,
+                  const MFIter& mfi,
                   FluidPhase& fluid)
 {
   const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
@@ -1030,9 +1026,11 @@ void set_ic_ro_g (const Box& sbx,
   const int fluid_is_a_mixture = fluid.is_a_mixture;
   const int nspecies_g = fluid.nspecies;
 
-  Array4<Real      > const& ro_g  = ro_g_fab.array();
-  Array4<Real const> const& T_g   = T_g_fab.array();
-  Array4<Real const> const& X_gk  = X_gk_fab.array();
+  Array4<Real const> dummy_arr;
+
+  Array4<Real      > const& ro_g = ((*ld.ro_g)[mfi]).array();
+  Array4<Real const> const& T_g  = ((*ld.T_g)[mfi]).array();
+  Array4<Real const> const& X_gk = fluid_is_a_mixture ? ((*ld.X_gk)[mfi]).array() : dummy_arr;
 
   auto& fluid_parms = *fluid.parameters;
 

@@ -94,7 +94,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
     EB_set_covered(*T_g_in[0], 0, 1, 1, covered_val);
   }
 
-  if (advect_fluid_species) {
+  if (solve_species) {
     EB_set_covered(*X_gk_in[0], 0, fluid.nspecies, 1, covered_val);
   }
 
@@ -107,7 +107,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
     const int interp_ng = 1;    // Only one layer needed for interpolation
     const int interp_comp = 5 + // (3 vel_g + 1 ep_g + ro_g + T_g + X_gk)
                             1*int(advect_enthalpy) +
-                            fluid.nspecies*int(advect_fluid_species);
+                            fluid.nspecies*int(solve_species);
 
     if (OnSameGrids)
     {
@@ -134,7 +134,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
         components_count += 1;
       }
 
-      if (advect_fluid_species) {
+      if (solve_species) {
         // Copy volume fraction
         MultiFab::Copy(*interp_ptr, *X_gk_in[lev],  0, components_count, fluid.nspecies, interp_ng);
         components_count += fluid.nspecies;
@@ -173,7 +173,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
         components_count += 1;
       }
 
-      if (advect_fluid_species) {
+      if (solve_species) {
         // Copy fluid species
         interp_ptr->ParallelCopy(*X_gk_in[lev],  0, components_count, fluid.nspecies, interp_ng, interp_ng);
         components_count += fluid.nspecies;

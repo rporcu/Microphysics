@@ -75,7 +75,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   if (advect_enthalpy)
     mfix_set_enthalpy_bcs(time, get_h_g());
 
-  if (advect_fluid_species)
+  if (solve_species)
     mfix_set_species_bcs(time, get_X_gk());
 
   // Copy vel_g and p_g into vel_go and p_go
@@ -142,7 +142,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     lap_T_old[lev]->setVal(0.0);
     lap_T[lev]->setVal(0.0);
 
-    if (advect_fluid_species) {
+    if (solve_species) {
       conv_X[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
       species_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
       species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
@@ -198,7 +198,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
         MultiFab::Copy(*m_leveldata[lev]->trac, *m_leveldata[lev]->trac_o, 0, 0,
                        m_leveldata[lev]->trac->nComp(), m_leveldata[lev]->trac->nGrow());
 
-      if (advect_fluid_species) {
+      if (solve_species) {
         MultiFab::Copy(*m_leveldata[lev]->X_gk, *m_leveldata[lev]->X_gko, 0, 0,
                         m_leveldata[lev]->X_gk->nComp(), m_leveldata[lev]->X_gk->nGrow());
       }
@@ -220,7 +220,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     if (advect_enthalpy)
       mfix_set_enthalpy_bcs(time, get_h_g());
 
-    if (advect_fluid_species)
+    if (solve_species)
       mfix_set_species_bcs(time, get_X_gk());
   }
 
@@ -237,7 +237,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
      delete lap_T_old[lev];
      delete lap_T[lev];
 
-     if (advect_fluid_species) {
+     if (solve_species) {
        delete conv_X[lev];
        delete species_RHS_old[lev];
        delete species_RHS[lev];

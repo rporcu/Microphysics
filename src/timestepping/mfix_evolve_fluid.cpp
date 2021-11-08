@@ -49,7 +49,7 @@ mfix::EvolveFluid (int nstep,
         m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
       }
 
-      if (advect_fluid_species) {
+      if (solve_species) {
         m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
       }
     }
@@ -71,7 +71,7 @@ mfix::EvolveFluid (int nstep,
       }
     }
 
-    if (advect_fluid_species)
+    if (solve_species)
       mfix_set_species_bcs(time, get_X_gk());
 
     //
@@ -127,7 +127,7 @@ mfix::EvolveFluid (int nstep,
        enthalpy_RHS_old[lev]->setVal(0.0);
        enthalpy_RHS[lev]->setVal(0.0);
 
-       if (advect_fluid_species) {
+       if (solve_species) {
          conv_X_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
          lap_X_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
          lap_X[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
@@ -190,7 +190,7 @@ mfix::EvolveFluid (int nstep,
             std::swap(m_leveldata[lev]->h_g, m_leveldata[lev]->h_go);
           }
 
-          if (advect_fluid_species)
+          if (solve_species)
             std::swap(m_leveldata[lev]->X_gk, m_leveldata[lev]->X_gko);
 
           // User hooks
@@ -297,7 +297,7 @@ mfix::EvolveFluid (int nstep,
        delete lap_T_old[lev];
        delete lap_T[lev];
 
-       if (advect_fluid_species) {
+       if (solve_species) {
          delete conv_X_old[lev];
          delete lap_X_old[lev];
          delete lap_X[lev];

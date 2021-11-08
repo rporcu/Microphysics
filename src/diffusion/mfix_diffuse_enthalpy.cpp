@@ -70,10 +70,13 @@ void DiffusionOp::diffuse_enthalpy (const Vector< MultiFab* >& h_g,
 
       if (bx.ok())
       {
+        Array4<Real const> dummy_arr;
+
         Array4<Real      > const& ep_k_Icp_g_array = ep_k_Icp_g.array(mfi);
-        Array4<Real const> const& ep_g_array   = ep_g[lev]->const_array(mfi);
-        Array4<Real const> const& T_g_array    = T_g[lev]->const_array(mfi);
-        Array4<Real const> const& X_gk_array   = X_gk[lev]->const_array(mfi);
+        Array4<Real const> const& ep_g_array       = ep_g[lev]->const_array(mfi);
+        Array4<Real const> const& T_g_array        = T_g[lev]->const_array(mfi);
+        Array4<Real const> const& X_gk_array       = fluid_is_a_mixture ?
+          X_gk[lev]->const_array(mfi) : dummy_arr;
 
         amrex::ParallelFor(bx, [ep_g_array,X_gk_array,T_g_array,ep_k_Icp_g_array,
             fluid_parms,fluid_is_a_mixture,run_on_device]
@@ -184,9 +187,12 @@ void DiffusionOp::diffuse_enthalpy (const Vector< MultiFab* >& h_g,
         const EBCellFlagFab& flags = T_g_on_eb_fab.getEBCellFlagFab();
 
         if (bx.ok()) {
+          Array4<Real const> dummy_arr;
+
           Array4<Real      > const& k_Icp_g_array   = k_Icp_g.array(mfi);
           Array4<Real      > const& h_g_on_eb_array = h_g_on_eb.array(mfi);
-          Array4<Real const> const& X_gk_array      = X_gk[lev]->const_array(mfi);
+          Array4<Real const> const& X_gk_array      = fluid_is_a_mixture ?
+            X_gk[lev]->const_array(mfi) : dummy_arr;
           Array4<Real const> const& T_g_on_eb_array = T_g_on_eb[lev]->const_array(mfi);
 
           auto const& flags_arr = flags.const_array();
@@ -271,9 +277,12 @@ void DiffusionOp::diffuse_enthalpy (const Vector< MultiFab* >& h_g,
     {
       Box const& bx = mfi.growntilebox({1,1,1});
 
+      Array4<Real const> dummy_arr;
+
       Array4<Real const> const& h_g_array  = h_g[lev]->const_array(mfi);
       Array4<Real      > const& T_g_array  = T_g[lev]->array(mfi);
-      Array4<Real const> const& X_gk_array = X_gk[lev]->const_array(mfi);
+      Array4<Real const> const& X_gk_array = fluid_is_a_mixture ?
+        X_gk[lev]->const_array(mfi) : dummy_arr;
       Array4<Real const> const& ep_g_array = ep_g[lev]->const_array(mfi);
 
       auto const& flags_arr = flags.const_array(mfi);

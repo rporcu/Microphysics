@@ -126,7 +126,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       conv_u[lev]->setVal(0.0);
       conv_s[lev]->setVal(0.0);
 
-      if (advect_fluid_species) {
+      if (solve_species) {
         conv_X[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
 
         conv_X[lev]->setVal(0.0);
@@ -189,7 +189,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
       const bool update_lapT = (advect_enthalpy      && explicit_diffusive_enthalpy);
       const bool update_lapS = (advect_tracer        && explicit_diffusive_trac);
-      const bool update_lapX = (advect_fluid_species && explicit_diffusive_species);
+      const bool update_lapX = (solve_species && explicit_diffusive_species);
 
       compute_laps(update_lapT, update_lapS, update_lapX, lap_T, lap_trac, lap_X,
                    get_T_g(), get_trac(), get_X_gk(), get_ep_g_const(), get_ro_g_const());
@@ -202,7 +202,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         mfix_set_enthalpy_bcs(time, get_h_g());
       }
 
-      if (advect_fluid_species)
+      if (solve_species)
         mfix_set_species_bcs(time, get_X_gk());
 
       // *************************************************************************************
@@ -214,7 +214,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
              get_X_gk(), get_T_g_const(), get_chem_txfr_const());
       }
 
-      if (advect_fluid_species) {
+      if (solve_species) {
         mfix_species_X_rhs(species_RHS, get_chem_txfr_const());
       }
     } else {
@@ -288,7 +288,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     } else {
 
         const int nspecies_g = fluid.nspecies;
-        const int use_species_advection = fluid.is_a_mixture && advect_fluid_species;
+        const int use_species_advection = fluid.is_a_mixture && solve_species;
 
         for (int lev = 0; lev <= finest_level; lev++)
         {
@@ -347,7 +347,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************
     // Update species mass fraction
     // *************************************************************************
-    if (advect_fluid_species)
+    if (solve_species)
     {
       const int nspecies_g = fluid.nspecies;
 
@@ -444,7 +444,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       if (fluid.is_a_mixture) {
         mfix_normalize_fluid_species(get_X_gk());
       }
-    } // advect_fluid_species
+    } // solve_species
 
 
     // **************************************************************************
@@ -1085,7 +1085,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
       const bool update_lapT = advect_enthalpy;
       const bool update_lapS = advect_tracer;
-      const bool update_lapX = advect_fluid_species;
+      const bool update_lapX = solve_species;
 
       // NOTE: we could store the following laplacians and RHS so in the
       // predictor we do not need to compute them again
@@ -1110,7 +1110,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                         get_ro_g_const(), mu_s);
       }
 
-      if (advect_fluid_species) {
+      if (solve_species) {
         mfix_species_X_rhs(species_RHS, get_chem_txfr_const());
       }
 
@@ -1161,7 +1161,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
        delete conv_u[lev];
        delete conv_s[lev];
 
-       if (advect_fluid_species) {
+       if (solve_species) {
          delete conv_X[lev];
        }
     }

@@ -292,7 +292,7 @@ mfix::RegridArrays (int lev)
       }
     }
 
-    if (advect_fluid_species) {
+    if (solve_species) {
       // Gas species mass fraction
       MultiFab* X_gk_new = new MultiFab(grids[lev], dmap[lev],
                                        m_leveldata[lev]->X_gk->nComp(),
@@ -373,7 +373,7 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->txfr, txfr_new);
     delete txfr_new;
 
-    if (advect_fluid_species && reactions.solve) {
+    if (solve_species && reactions.solve) {
       // Species mass transfer rates
       MultiFab* chem_txfr_new = new MultiFab(grids[lev], dmap[lev],
                                         m_leveldata[lev]->chem_txfr->nComp(),
