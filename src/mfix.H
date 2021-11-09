@@ -35,6 +35,8 @@
 #include <mfix_fluid_parms.H>
 #include <mfix_reactions_parms.H>
 #include <mfix_leveldata.H>
+#include <mfix_mlmg_options.H>
+
 
 
 // Drag type enumeration
@@ -1166,20 +1168,8 @@ public:
     //           nodal_proj.bottom_atol
     //           nodal_proj.bottom_solver
     // More info at "AMReX-Hydro/Projections/hydro_NodalProjector.cpp"
-    // Verbosity
-
     // Control MLMG behavior
-    Real nodal_mg_rtol = 1.0e-11;
-    Real nodal_mg_atol = 1.0e-14;
-
-    // Max coarsening level
-    int nodal_mg_max_coarsening_level = 100;
-
-    // Linear operator
-    std::shared_ptr<MLNodeLaplacian> nodal_matrix;
-
-    // Solver
-    std::shared_ptr<MLMG> nodal_solver;
+    std::unique_ptr<MfixUtil::MLMGOptions> nodalproj_options;
 
     // ***************************************************************
     // MAC solve
@@ -1194,15 +1184,9 @@ public:
     //           mac_proj.bottom_atol
     //           mac_proj.bottom_solver
     // More info at "AMReX-Hydro/Projections/hydro_MacProjector.cpp"
-
     std::unique_ptr<Hydro::MacProjector> macproj;
-
     // Control MLMG behavior
-    Real mac_mg_rtol = 1.0e-11;
-    Real mac_mg_atol = 1.0e-14;
-
-    // Max coarsening level
-    int mac_mg_max_coarsening_level = 100;
+    std::unique_ptr<MfixUtil::MLMGOptions> macproj_options;
 
     // ***************************************************************
 

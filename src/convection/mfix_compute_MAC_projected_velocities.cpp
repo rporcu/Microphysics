@@ -111,9 +111,10 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
     {
       LPInfo lp_info;
       // If we want to set max_coarsening_level we have to send it in to the constructor
-      lp_info.setMaxCoarseningLevel(mac_mg_max_coarsening_level);
+      lp_info.setMaxCoarseningLevel(macproj_options->max_coarsening_level);
       lp_info.setAgglomerationGridSize(agg_grid_size);
       macproj->initProjector(lp_info, const_bcoeff);
+      macproj_options->apply(*macproj);
       macproj->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
     } else {
     macproj->updateBeta(const_bcoeff);
@@ -265,7 +266,7 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
   {
     // Solve using mac_phi as an initial guess -- note that mac_phi is
     //       stored from iteration to iteration
-    macproj->project(mac_phi,mac_mg_rtol, mac_mg_atol);
+    macproj->project(mac_phi,macproj_options->mg_rtol, macproj_options->mg_atol);
 
   }
   else
@@ -275,7 +276,7 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
       for (int lev=0; lev <= finest_level; ++lev)
         mac_phi[lev]->mult(l_dt/2.,0,1,1);
 
-      macproj->project(mac_phi,mac_mg_rtol,mac_mg_atol);
+      macproj->project(mac_phi,macproj_options->mg_rtol, macproj_options->mg_atol);
 
       for (int lev=0; lev <= finest_level; ++lev)
         mac_phi[lev]->mult(2./l_dt,0,1,1);
@@ -283,7 +284,7 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
     } else {
 
       // Solve with initial guess of zero
-      macproj->project(mac_mg_rtol, mac_mg_atol);
+      macproj->project(macproj_options->mg_rtol, macproj_options->mg_atol);
     }
   }
 
