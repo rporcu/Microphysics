@@ -756,7 +756,8 @@ mfix::set_density_bc_values (Real time_in) const
           amrex::Abort("Fix the inputs file.");
         }
 
-        const Real Tg = bc[bcv].fluid.get_temperature(time_in);
+        const Real Tg = advect_enthalpy ? bc[bcv].fluid.get_temperature(time_in) : fluid.T_g0;
+
         Real MW_g_loc(0);
 
         // set initial fluid molecular weight
@@ -771,9 +772,7 @@ mfix::set_density_bc_values (Real time_in) const
           MW_g_loc = fluid_parms.get_MW_g<RunOn::Host>();
         }
 
-        // TODO TODO TODO TODO
-//        m_h_bc_ro_g[bcv] = (pg * MW_g_loc) / (fluid_parms.R * Tg);
-        m_h_bc_ro_g[bcv] = ro_g0;
+        m_h_bc_ro_g[bcv] = (pg * MW_g_loc) / (fluid_parms.R * Tg);
 
       } else {
 
