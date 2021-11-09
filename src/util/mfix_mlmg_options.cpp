@@ -8,7 +8,7 @@ void MLMGOptions::parse_options(const std::string& prefix)
 {
    amrex::ParmParse pp(prefix);
 
-   pp.query("max_coarsening_level", max_coarsening_level);
+   pp.query("mg_max_coarsening_level", max_coarsening_level);
    pp.query("mg_rtol", mg_rtol);
    pp.query("mg_atol", mg_atol);
 
