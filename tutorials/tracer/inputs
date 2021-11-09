@@ -6,7 +6,7 @@ mfix.advect_tracer            = true
 mfix.test_tracer_conservation = true
 
 mfix.advect_enthalpy = 1
-mfix.advect_fluid_species = 1
+mfix.solve_species = 1
 
 #_______________________________________________________________________
 # Debugging settings
