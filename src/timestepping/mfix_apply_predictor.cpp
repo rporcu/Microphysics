@@ -907,7 +907,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         // Update the thermodynamic pressure rhs in here so we do not have to call
         // the closed_system_rhs again in the corrector
         for (int lev = 0; lev <= finest_level; ++lev) {
-          rhs_pressure_g[lev] = avgSigma[lev] / avgTheta[lev];
+          rhs_pressure_g[lev] = advect_enthalpy ? avgSigma[lev] / avgTheta[lev] : 0.;
         }
       }
     }

@@ -734,6 +734,7 @@ mfix::set_density_bc_values (Real time_in) const
   auto& fluid_parms = *fluid.parameters;
 
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
+
     if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
 
       if (m_constraint_type == ConstraintType::IdealGasOpenSystem ||
@@ -770,7 +771,9 @@ mfix::set_density_bc_values (Real time_in) const
           MW_g_loc = fluid_parms.get_MW_g<RunOn::Host>();
         }
 
-        m_h_bc_ro_g[bcv] = (pg * MW_g_loc) / (fluid_parms.R * Tg);
+        // TODO TODO TODO TODO
+//        m_h_bc_ro_g[bcv] = (pg * MW_g_loc) / (fluid_parms.R * Tg);
+        m_h_bc_ro_g[bcv] = ro_g0;
 
       } else {
 

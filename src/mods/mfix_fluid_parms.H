@@ -136,7 +136,7 @@ class FluidParms {
 
     // Compute fluid species diffusivity
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real get_D_g (const amrex::Real /*T_g*/) const
+    amrex::Real get_D_g () const
     {
       return m_D_g;
     }

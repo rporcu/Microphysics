@@ -515,7 +515,7 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
                                const Vector< MultiFab*      >& X_gk_in,
                                const Vector< MultiFab const*>& ro_g_in,
                                const Vector< MultiFab const*>& ep_g_in,
-                               const Vector< MultiFab const*>& T_g_in)
+                               const Vector< MultiFab const*>& /*T_g_in*/)
 {
   BL_PROFILE("DiffusionOp::ComputeLapX");
 
@@ -565,16 +565,14 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
       Array4<Real      > const& b_coeffs_arr = b_coeffs.array(mfi);
       Array4<Real const> const& ep_g_arr     = ep_g_in[lev]->const_array(mfi);
       Array4<Real const> const& ro_g_arr     = ro_g_in[lev]->const_array(mfi);
-      Array4<Real const> const& T_g_arr      = T_g_in[lev]->const_array(mfi);
 
-      amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,T_g_arr,b_coeffs_arr,nspecies_g,
+      amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,b_coeffs_arr,nspecies_g,
           fluid_parms,run_on_device]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const Real ep_g = ep_g_arr(i,j,k);
         const Real ro_g = ro_g_arr(i,j,k);
-        const Real T_g  = T_g_arr(i,j,k);
-        const Real D_g  = fluid_parms.get_D_g(T_g);
+        const Real D_g  = fluid_parms.get_D_g();
 
         for (int n(0); n < nspecies_g; ++n) {
           b_coeffs_arr(i,j,k,n) = ep_g*ro_g*D_g;
@@ -663,19 +661,17 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
         Array4<Real      > const& Xb_coeffs_arr = Xb_coeffs.array(mfi);
         Array4<Real const> const& ep_g_arr      = ep_g_in[lev]->const_array(mfi);
         Array4<Real const> const& ro_g_arr      = ro_g_in[lev]->const_array(mfi);
-        Array4<Real const> const& T_g_arr       = T_g_in[lev]->const_array(mfi);
         Array4<Real const> const& X_gk_arr      = X_gk_in[lev]->const_array(mfi);
 
-        amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,T_g_arr,Xb_coeffs_arr,
+        amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,Xb_coeffs_arr,
             X_gk_arr,nspecies_g,fluid_parms,species_k]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const Real ep_g = ep_g_arr(i,j,k);
           const Real ro_g = ro_g_arr(i,j,k);
-          const Real T_g  = T_g_arr(i,j,k);
           const Real X_gk = X_gk_arr(i,j,k,species_k);
 
-          const Real val = ep_g*ro_g*X_gk*fluid_parms.get_D_g(T_g);
+          const Real val = ep_g*ro_g*X_gk*fluid_parms.get_D_g();
 
           for (int m(0); m < nspecies_g; ++m) {
             Xb_coeffs_arr(i,j,k,m) = val;
@@ -755,7 +751,7 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
 void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
                                       const Vector< MultiFab const*>& ro_g_in,
                                       const Vector< MultiFab const*>& ep_g_in,
-                                      const Vector< MultiFab const*>& T_g_in,
+                                      const Vector< MultiFab const*>& /*T_g_in*/,
                                       const Real& dt)
 {
   BL_PROFILE("DiffusionOp::SubtractDiv_XGradX");
@@ -815,19 +811,17 @@ void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
         Array4<Real      > const& Xb_coeffs_arr = Xb_coeffs.array(mfi);
         Array4<Real const> const& ep_g_arr      = ep_g_in[lev]->const_array(mfi);
         Array4<Real const> const& ro_g_arr      = ro_g_in[lev]->const_array(mfi);
-        Array4<Real const> const& T_g_arr       = T_g_in[lev]->const_array(mfi);
         Array4<Real const> const& X_gk_arr      = X_gk_in[lev]->const_array(mfi);
 
-        amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,T_g_arr,Xb_coeffs_arr,
+        amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,Xb_coeffs_arr,
             X_gk_arr,nspecies_g,fluid_parms,species_k,run_on_device]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const Real ep_g = ep_g_arr(i,j,k);
           const Real ro_g = ro_g_arr(i,j,k);
-          const Real T_g  = T_g_arr(i,j,k);
           const Real X_gk = X_gk_arr(i,j,k,species_k);
 
-          const Real val = ep_g*ro_g*X_gk*fluid_parms.get_D_g(T_g);
+          const Real val = ep_g*ro_g*X_gk*fluid_parms.get_D_g();
 
           for (int m(0); m < nspecies_g; ++m) {
             Xb_coeffs_arr(i,j,k,m) = val;
@@ -984,7 +978,7 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
         const Real ro_g = ro_g_arr(i,j,k);
         const Real T_g  = T_g_arr(i,j,k);
 
-        const Real val = ep_g*ro_g*fluid_parms.get_D_g(T_g);
+        const Real val = ep_g*ro_g*fluid_parms.get_D_g();
 
         for (int n(0); n < nspecies_g; ++n) {
 
@@ -1086,7 +1080,7 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
 
           const Real Xgk  = X_gk_arr(i,j,k,species_k);
 
-          const Real val = ep_g*ro_g*hgk*Xgk*fluid_parms.get_D_g(T_g);
+          const Real val = ep_g*ro_g*hgk*Xgk*fluid_parms.get_D_g();
 
           for (int m(0); m < nspecies_g; ++m) {
             hXb_coeffs_arr(i,j,k,m) = val;

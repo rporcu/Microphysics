@@ -1133,7 +1133,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
          MultiFab::Copy(*ld.X_gko, *ld.X_gk, 0, 0, fluid.nspecies, ld.X_gk->nGrow());
        }
 
-       if (m_constraint_type == ConstraintType::IdealGasClosedSystem) {
+       if (m_constraint_type == ConstraintType::IdealGasClosedSystem && advect_enthalpy) {
          MultiFab::Copy(*ld.pressure_go, *ld.pressure_g, 0, 0, 1, ld.pressure_g->nGrow());
        }
     }
