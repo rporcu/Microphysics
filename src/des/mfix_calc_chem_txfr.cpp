@@ -893,8 +893,6 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
       auto& soa = pti.GetStructOfArrays();
       auto p_realarray = soa.realarray();
 
-      const int np = particles.size();
-
       // ******************************************************************
       // Deposit the interphase chemical transfer quantities to the grid
       // Density transfer:
