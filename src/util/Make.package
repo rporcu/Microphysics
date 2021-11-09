@@ -25,3 +25,6 @@ CEXE_sources += mfix_solvers.cpp
 CEXE_sources += mfix_set_epg_bcs.cpp
 
 CEXE_sources += mfix_normalize_species_g.cpp
+
+CEXE_headers += mfix_mlmg_options.H
+CEXE_sources += mfix_mlmg_options.cpp
