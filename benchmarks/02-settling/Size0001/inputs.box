@@ -38,7 +38,7 @@ mfix.drag_type = "BVK2"
 mfix.gravity   =  0.0  -9.80665  0.0
 
 mfix.advect_enthalpy      = 1
-mfix.advect_fluid_species = 1
+mfix.solve_species = 1
 
 #_______________________________________________________________________
 # Species model settings
