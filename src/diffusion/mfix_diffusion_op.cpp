@@ -198,6 +198,8 @@ void DiffusionOp::readParameters ()
     pp.query("rtol", mg_rtol);
     pp.query("atol", mg_atol);
     pp.query("bottom_solver", bottom_solver_type);
+    pp.query("hypre_namespace", hypre_namespace);
+    pp.query("hypre_interface", hypre_interface);
     pp.query("agg_grid_size", mg_agg_grid_size);
 }
 
@@ -216,6 +218,21 @@ void DiffusionOp::setSolverSettings (MLMG& solver)
     else if(bottom_solver_type == "hypre")
     {
         solver.setBottomSolver(MLMG::BottomSolver::hypre);
+#ifdef AMREX_USE_HYPRE
+        solver.setHypreOptionsNamespace(hypre_namespace);
+        if (hypre_interface == "ij")
+           solver.setHypreInterface(amrex::Hypre::Interface::ij);
+        else if (hypre_interface == "semi_structured")
+           solver.setHypreInterface(amrex::Hypre::Interface::semi_structed);
+        else if (hypre_interface == "structured")
+           solver.setHypreInterface(amrex::Hypre::Interface::structed);
+        else
+           amrex::Abort(
+                 "Invalid hypre interface. Valid options: ij semi_structured "
+                 "structured");
+#else
+        amrex::Abort("mfix was not built with hypre support");
+#endif
     }
         // Maximum iterations for MultiGrid / ConjugateGradients
         solver.setMaxIter(mg_maxiter);

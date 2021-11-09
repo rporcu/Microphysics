@@ -14,6 +14,7 @@
 #include <mfix_fluid_parms.H>
 #include <mfix_solids_parms.H>
 #include <mfix_species_parms.H>
+#include <mfix_mlmg_options.H>
 
 using MFIXParIter = MFIXParticleContainer::MFIXParIter;
 using PairIndex = MFIXParticleContainer::PairIndex;
@@ -74,11 +75,7 @@ mfix::InitParams ()
     //           nodal_proj.bottom_atol
     //           nodal_proj.bottom_solver
     // More info at "AMReX-Hydro/Projections/hydro_NodalProjector.cpp"
-    ParmParse pp_nodal("nodal_proj");
-    // Options to control MLMG behavior
-    pp_nodal.query("mg_rtol", nodal_mg_rtol);
-    pp_nodal.query("mg_atol", nodal_mg_atol);
-    pp_nodal.query("mg_max_coarsening_level", nodal_mg_max_coarsening_level);
+    nodalproj_options = std::make_unique<MfixUtil::MLMGOptions>("nodal_proj");
 
     // Is this a steady-state calculation
     m_steady_state = 0;
@@ -288,11 +285,7 @@ mfix::InitParams ()
     //           mac_proj.bottom_atol
     //           mac_proj.bottom_solver
     // More info at "AMReX-Hydro/Projections/hydro_MacProjector.cpp"
-
-    ParmParse pp_mac("mac_proj");
-    pp_mac.query("mg_rtol", mac_mg_rtol);
-    pp_mac.query("mg_atol", mac_mg_atol);
-    pp_mac.query("mg_max_coarsening_level", mac_mg_max_coarsening_level);
+    macproj_options = std::make_unique<MfixUtil::MLMGOptions>("mac_proj");
 
     AMREX_ALWAYS_ASSERT(load_balance_type.compare("KnapSack") == 0  ||
                         load_balance_type.compare("SFC") == 0);
