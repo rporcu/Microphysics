@@ -24,4 +24,6 @@ target_sources( mfixcore
    mfix_normalize_species_g.cpp
    mfix_mf_helpers.H
    mfix_mf_helpers.cpp
+   mfix_mlmg_options.H
+   mfix_mlmg_options.cpp
    )
