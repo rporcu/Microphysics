@@ -326,6 +326,8 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
     auto& fluid_parms = *fluid.parameters;
     auto& solids_parms = *solids.parameters;
 
+    const int fluid_is_a_mixture = fluid.is_a_mixture;
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -529,10 +531,10 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
            p_species_id_g,p_reactants_id,p_reactants_coeffs,p_reactants_phases,
            p_products_id,p_products_coeffs,p_products_phases,p_nreactants,
            p_nproducts,InvalidIdx,p_phases,p_nphases,p_types,Heterogeneous,
-           Homogeneous,T_ref,fluid_parms,solids_parms,
-           grown_bx_is_regular,ccent_fab,bcent_fab,apx_fab,apy_fab,apz_fab,
-           flags_array,dx,reactions_parms,ep_g_array,reg_cell_vol,
-           volfrac_arr,dem_solve,run_on_device]
+           Homogeneous,T_ref,fluid_parms,solids_parms,grown_bx_is_regular,
+           ccent_fab,bcent_fab,apx_fab,apy_fab,apz_fab,flags_array,dx,
+           reactions_parms,ep_g_array,reg_cell_vol,volfrac_arr,dem_solve,
+           run_on_device,fluid_is_a_mixture]
           AMREX_GPU_DEVICE (int p_id) noexcept
         {
           auto& particle = pstruct[p_id];
@@ -624,10 +626,30 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
             RealVect vel_g(interp_loc[0], interp_loc[1], interp_loc[2]);
             const Real ep_g = interp_loc[3];
             const Real ro_g = interp_loc[4];
-            const Real p_g  = interp_loc[5] + 101325;
             const Real T_g  = interp_loc[6];
 
             Real* X_gk = &interp_loc[7];
+
+            Real MW_g(0);
+
+            if (fluid_is_a_mixture) {
+
+              for (int n_g(0); n_g < nspecies_g; ++n_g) {
+                MW_g += run_on_device ? 
+                  X_gk[n_g] / fluid_parms.get_MW_gk<RunOn::Device>(n_g) :
+                  X_gk[n_g] / fluid_parms.get_MW_gk<RunOn::Host>(n_g);
+              }
+
+              MW_g = 1. / MW_g;
+
+            } else {
+              MW_g = run_on_device ?
+                fluid_parms.get_MW_g<RunOn::Device>() :
+                fluid_parms.get_MW_g<RunOn::Host>();
+            }
+
+            const Real thermodynamic_pressure = ro_g*fluid_parms.R*T_g / MW_g;
+            const Real p_g  = interp_loc[5] + thermodynamic_pressure;
 
             const Real ep_s = 1. - ep_g;
             const Real ro_s = p_realarray[SoArealData::density][p_id];
