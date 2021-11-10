@@ -940,6 +940,12 @@ def report_this_test_run(suite, make_benchmarks, note, _update_time, test_list, 
 
             ht.print_row(row_info)
 
+            hf.write(
+                "<tr><td colspan='100%'>"
+                f"<img src='{test.name}.png' alt='Comparison vs historical results'/>"
+                "</td></tr>"
+            )
+
         else:
             if test.restartTest:
                 continue
