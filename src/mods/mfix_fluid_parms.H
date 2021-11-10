@@ -136,7 +136,7 @@ class FluidParms {
 
     // Compute fluid species diffusivity
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real get_D_g (const amrex::Real /*T_g*/) const
+    amrex::Real get_D_g () const
     {
       return m_D_g;
     }
@@ -152,8 +152,12 @@ class FluidParms {
 
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_h_g (const amrex::Real T_g) const
+    amrex::Real calc_h_g (const amrex::Real T_g,
+                          const int cell_is_covered = 0) const
     {
+      if (cell_is_covered)
+        return 0;
+
       return calc_h_gk<run_on>(T_g, 0);
     }
 
@@ -214,8 +218,12 @@ class FluidParms {
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_h_gk (const amrex::Real T_g,
-                           const int n) const
+                           const int n,
+                           const int cell_is_covered = 0) const
     {
+      if (cell_is_covered)
+        return 0;
+
       amrex::Real result(0);
 
       if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {

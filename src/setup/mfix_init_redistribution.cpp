@@ -92,7 +92,7 @@ mfix::InitialRedistribution (Real l_time)
                                            (m_redistribution_type == "StateRedist") ? 
                                                 "NewStateRedist" : m_redistribution_type);
                 }
-                if (advect_fluid_species) {
+                if (solve_species) {
 
                   ncomp = fluid.nspecies;
 
@@ -119,7 +119,7 @@ mfix::InitialRedistribution (Real l_time)
         if(ntrac > 0)
           ld.trac->FillBoundary();
 
-        if(advect_fluid_species)
+        if(solve_species)
           ld.X_gk->FillBoundary();
     }
   }

@@ -134,17 +134,33 @@ mfix::InitParams ()
     pp.query("advect_density", advect_density);
     pp.query("advect_tracer" , advect_tracer);
     pp.query("advect_enthalpy", advect_enthalpy);
+    pp.query("solve_reactions", solve_reactions);
+    pp.query("solve_species", solve_species);
+
     pp.query("test_tracer_conservation", test_tracer_conservation);
 
-    // Set the mfix class flag equal to the FLUID parameter
-    advect_fluid_species = fluid.solve_species;
+    // Set the FLUID parameter equal to the mfix class flag
+    fluid.solve_species = solve_species;
+    solids.solve_species = solve_species;
 
-    // We can still turn it off explicitly even if we passed species inputs
-    pp.query("advect_fluid_species", advect_fluid_species);
-
-    if (advect_fluid_species)
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.solve_species,
+    if (solve_species)
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.nspecies > 0,
           "Advect fluid species flag is on but no fluid species were provided");
+
+    if (!solve_species) {
+      fluid.is_a_mixture = 0;
+      solids.is_a_mixture = 0;
+
+      fluid.nspecies = 0;
+      solids.nspecies = 0;
+    }
+
+    // Set the FLUID parameter equal to the mfix class flag
+    reactions.solve = solve_reactions;
+
+    if (solve_reactions)
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(reactions.nreactions > 0,
+          "Solve reactions flag is on but no reactions were provided");
 
     pp.query("ntrac", ntrac);
 
@@ -165,7 +181,7 @@ mfix::InitParams ()
           " = false");
 
     // At the moment, there is no relation between density and species
-    //if (advect_fluid_species && !advect_density)
+    //if (solve_species && !advect_density)
     //  amrex::Abort("Can't advect species mass fraction without advecting density");
 
     // At the moment, there is no relation between density and temperature
@@ -1051,10 +1067,10 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
           const Box& sbx = ep_g[mfi].box();
 
           if (is_restarting) {
-            init_fluid_parameters(bx, mfi, ld, advect_enthalpy, advect_fluid_species, fluid);
+            init_fluid_parameters(bx, mfi, ld, advect_enthalpy, solve_species, fluid);
           } else {
             init_fluid(sbx, bx, domain, mfi, ld, dx, dy, dz, xlen, ylen, zlen, plo,
-                test_tracer_conservation, advect_enthalpy, advect_fluid_species,
+                test_tracer_conservation, advect_enthalpy, solve_species,
                 m_constraint_type, fluid);
           }
        }
@@ -1081,7 +1097,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       if (advect_tracer)
         m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
 
-      if (advect_fluid_species)
+      if (solve_species)
       {
         m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
       }
@@ -1106,11 +1122,11 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
          MultiFab::Copy(*ld.h_go, *ld.h_g, 0, 0, 1, ld.h_g->nGrow());
        }
 
-       if (advect_fluid_species) {
+       if (solve_species) {
          MultiFab::Copy(*ld.X_gko, *ld.X_gk, 0, 0, fluid.nspecies, ld.X_gk->nGrow());
        }
 
-       if (m_constraint_type == ConstraintType::IdealGasClosedSystem) {
+       if (m_constraint_type == ConstraintType::IdealGasClosedSystem && advect_enthalpy) {
          MultiFab::Copy(*ld.pressure_go, *ld.pressure_g, 0, 0, 1, ld.pressure_g->nGrow());
        }
     }
@@ -1156,7 +1172,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
         mfix_set_enthalpy_bcs(time, get_h_g_old());
       }
 
-      if (advect_fluid_species) {
+      if (solve_species) {
         mfix_set_species_bcs(time, get_X_gk());
         mfix_set_species_bcs(time, get_X_gk_old());
       }
@@ -1204,7 +1220,7 @@ mfix::mfix_set_bc0 ()
        if (advect_enthalpy)
          set_temperature_bc0(sbx, &mfi, lev, domain);
 
-       if (advect_fluid_species)
+       if (solve_species)
          set_species_bc0(sbx, &mfi, lev, domain);
      }
 
@@ -1219,7 +1235,7 @@ mfix::mfix_set_bc0 ()
      if (advect_tracer)
        m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
 
-     if (advect_fluid_species)
+     if (solve_species)
        m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
    }
 

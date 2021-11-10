@@ -15,7 +15,7 @@ mfix.particle_init_type = "Auto"
 mfix.gravity = -9.81  0.0  0.0
 
 mfix.advect_enthalpy      = 1
-mfix.advect_fluid_species = 1
+mfix.solve_species = 1
 
 amr.blocking_factor = 2
 

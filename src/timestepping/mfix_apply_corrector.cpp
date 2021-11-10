@@ -126,7 +126,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       conv_u[lev]->setVal(0.0);
       conv_s[lev]->setVal(0.0);
 
-      if (advect_fluid_species) {
+      if (solve_species) {
         conv_X[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
 
         conv_X[lev]->setVal(0.0);
@@ -189,7 +189,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
       const bool update_lapT = (advect_enthalpy      && explicit_diffusive_enthalpy);
       const bool update_lapS = (advect_tracer        && explicit_diffusive_trac);
-      const bool update_lapX = (advect_fluid_species && explicit_diffusive_species);
+      const bool update_lapX = (solve_species && explicit_diffusive_species);
 
       compute_laps(update_lapT, update_lapS, update_lapX, lap_T, lap_trac, lap_X,
                    get_T_g(), get_trac(), get_X_gk(), get_ep_g_const(), get_ro_g_const());
@@ -202,7 +202,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         mfix_set_enthalpy_bcs(time, get_h_g());
       }
 
-      if (advect_fluid_species)
+      if (solve_species)
         mfix_set_species_bcs(time, get_X_gk());
 
       // *************************************************************************************
@@ -214,7 +214,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
              get_X_gk(), get_T_g_const(), get_chem_txfr_const());
       }
 
-      if (advect_fluid_species) {
+      if (solve_species) {
         mfix_species_X_rhs(species_RHS, get_chem_txfr_const());
       }
     } else {
@@ -288,7 +288,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     } else {
 
         const int nspecies_g = fluid.nspecies;
-        const int use_species_advection = fluid.is_a_mixture && advect_fluid_species;
+        const int use_species_advection = fluid.is_a_mixture && solve_species;
 
         for (int lev = 0; lev <= finest_level; lev++)
         {
@@ -347,7 +347,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************
     // Update species mass fraction
     // *************************************************************************
-    if (advect_fluid_species)
+    if (solve_species)
     {
       const int nspecies_g = fluid.nspecies;
 
@@ -410,6 +410,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         // When using implicit diffusion for species, we "Add" (subtract) the
         // correction term computed at time t^{star,star} to the RHS before
         // doing the implicit diffusion
+        mfix_set_epg_bcs(get_ep_g(), 0);
+        mfix_set_density_bcs(time, get_ro_g());
+        mfix_set_species_bcs(time, get_X_gk());
+
         diffusion_op->SubtractDiv_XGradX(get_X_gk(), get_ro_g_const(),
                                          get_ep_g_const(), get_T_g_const(), 0.5*l_dt);
 
@@ -440,7 +444,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       if (fluid.is_a_mixture) {
         mfix_normalize_fluid_species(get_X_gk());
       }
-    } // advect_fluid_species
+    } // solve_species
 
 
     // **************************************************************************
@@ -528,13 +532,15 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
           auto const& volfrac_arr = volfrac.const_array(mfi);
 
           amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,epg,
-            dhdt_o,dhdt,h_rhs_o,h_rhs,l_dt,lap_T_o,lap_T_n,Dpressure_Dt,
-            Dpressure_Dt_old,closed_system,explicit_diffusive_enthalpy,
-            fluid_parms,X_gk_n,nspecies_g,fluid_is_a_mixture,flags_arr,
-            volfrac_arr,run_on_device]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+              dhdt_o,dhdt,h_rhs_o,h_rhs,l_dt,lap_T_o,lap_T_n,Dpressure_Dt,
+              Dpressure_Dt_old,closed_system,explicit_diffusive_enthalpy,
+              fluid_parms,X_gk_n,nspecies_g,fluid_is_a_mixture,flags_arr,
+              volfrac_arr,run_on_device]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-            if (!flags_arr(i,j,k).isCovered()) {
+            const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+
+            if (!cell_is_covered) {
               int conv_comp = 1;
               const Real epg_loc = epg(i,j,k);
               const Real vfrac = volfrac_arr(i,j,k);
@@ -577,15 +583,15 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                 if (!fluid_is_a_mixture) {
 
                   hg_loc = run_on_device ?
-                    fluid_parms.calc_h_g<RunOn::Device>(Tg_arg) :
-                    fluid_parms.calc_h_g<RunOn::Host>(Tg_arg);
+                    fluid_parms.calc_h_g<RunOn::Device>(Tg_arg, cell_is_covered) :
+                    fluid_parms.calc_h_g<RunOn::Host>(Tg_arg, cell_is_covered);
 
                 } else {
 
                   for (int n(0); n < nspecies_g; ++n) {
                     const Real h_gk = run_on_device ?
-                      fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg,n) :
-                      fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg,n);
+                      fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg, n, cell_is_covered) :
+                      fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg, n, cell_is_covered);
 
                     hg_loc += X_gk_n(i,j,k,n)*h_gk;
                   }
@@ -694,7 +700,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                 flags_arr,run_on_device]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
-              if (!flags_arr(i,j,k).isCovered()) {
+              const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+
+              if (!cell_is_covered) {
+
                 const Real epg_loc = ep_g(i,j,k);
                 const Real vfrac = volfrac_arr(i,j,k);
 
@@ -717,14 +726,14 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                   if (!fluid_is_a_mixture) {
 
                     hg_loc = run_on_device ?
-                      fluid_parms.calc_h_g<RunOn::Device>(Tg_arg) :
-                      fluid_parms.calc_h_g<RunOn::Host>(Tg_arg);
+                      fluid_parms.calc_h_g<RunOn::Device>(Tg_arg, cell_is_covered) :
+                      fluid_parms.calc_h_g<RunOn::Host>(Tg_arg, cell_is_covered);
                   } else {
 
                     for (int n(0); n < nspecies_g; ++n) {
                       const Real h_gk = run_on_device ?
-                        fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg,n) :
-                        fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg,n);
+                        fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg, n, cell_is_covered) :
+                        fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg, n, cell_is_covered);
 
                       hg_loc += X_gk_n(i,j,k,n)*h_gk;
                     }
@@ -1076,7 +1085,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
       const bool update_lapT = advect_enthalpy;
       const bool update_lapS = advect_tracer;
-      const bool update_lapX = advect_fluid_species;
+      const bool update_lapX = solve_species;
 
       // NOTE: we could store the following laplacians and RHS so in the
       // predictor we do not need to compute them again
@@ -1101,7 +1110,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                         get_ro_g_const(), mu_s);
       }
 
-      if (advect_fluid_species) {
+      if (solve_species) {
         mfix_species_X_rhs(species_RHS, get_chem_txfr_const());
       }
 
@@ -1152,7 +1161,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
        delete conv_u[lev];
        delete conv_s[lev];
 
-       if (advect_fluid_species) {
+       if (solve_species) {
          delete conv_X[lev];
        }
     }

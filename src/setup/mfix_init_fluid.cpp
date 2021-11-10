@@ -25,15 +25,15 @@ void set_ic_species_g (const Box& sbx, const Box& domain,
 
 void set_ic_ro_g (const Box& sbx, const Box& domain,
                   const Real dx, const Real dy, const Real dz,
-                  const GpuArray<Real, 3>& plo,
-                  FArrayBox& ro_g_fab, FArrayBox& T_g_fab,
-                  FArrayBox& X_gk_fab, FluidPhase& fluid);
+                  const GpuArray<Real, 3>& plo, LevelData& ld,
+                  const MFIter& mfi, FluidPhase& fluid,
+                  const int advect_enthalpy);
 
 void set_ic_pressure_g (const Box& sbx, const Box& domain,
                         const Real dx, const Real dy, const Real dz,
-                        const GpuArray<Real, 3>& plo, FArrayBox& pressure_g_fab,
-                        FArrayBox& ro_g_fab, FArrayBox& T_g_fab,
-                        FArrayBox& X_gk_fab, FluidPhase& fluid);
+                        const GpuArray<Real, 3>& plo, LevelData& ld,
+                        const MFIter& mfi, FluidPhase& fluid,
+                        const int advect_enthalpy);
 
 void init_helix (const Box& bx, const Box& domain, FArrayBox& vel_g_fab,
                  const Real dx, const Real dy, const Real dz);
@@ -58,7 +58,7 @@ void init_fluid (const Box& sbx,
                  const GpuArray<Real, 3>& plo,
                  bool test_tracer_conservation,
                  const int advect_enthalpy,
-                 const int advect_fluid_species,
+                 const int solve_species,
                  const int& constraint_type,
                  FluidPhase& fluid)
 {
@@ -82,7 +82,7 @@ void init_fluid (const Box& sbx,
   { trac(i,j,k) = trac_0; });
 
   // Fluid SPECIES Initialization
-  if (advect_fluid_species) {
+  if (solve_species) {
     // Set the initial fluid species mass fractions
     set_ic_species_g(sbx, domain, dx, dy, dz, plo, (*ld.X_gk)[mfi]);
   }
@@ -102,19 +102,16 @@ void init_fluid (const Box& sbx,
       constraint_type == ConstraintType::IdealGasClosedSystem ) {
     // Set initial density according to the equation of state
     // ro_g = p_g * Mw_g / R * T_g
-    set_ic_ro_g(sbx, domain, dx, dy, dz, plo, (*ld.ro_g)[mfi],
-                (*ld.T_g)[mfi], (*ld.X_gk)[mfi], fluid);
+    set_ic_ro_g(sbx, domain, dx, dy, dz, plo, ld, mfi, fluid, advect_enthalpy);
   } else {
     const Real ro_g0  = fluid.ro_g0;
-    ParallelFor(sbx, [ro_g,ro_g0] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-                     { ro_g(i,j,k) = ro_g0; });
+    ParallelFor(sbx, [ro_g,ro_g0] AMREX_GPU_DEVICE (int i, int j, int k) noexcept { ro_g(i,j,k) = ro_g0; });
   }
 
   if (constraint_type == ConstraintType::IdealGasClosedSystem) {
     // Set initial thermodynamic pressure according to the equation of state
     // p_g = ro_g * R * T_g / MW_g
-    set_ic_pressure_g(sbx, domain, dx, dy, dz, plo, (*ld.pressure_g)[mfi],
-        (*ld.ro_g)[mfi], (*ld.T_g)[mfi], (*ld.X_gk)[mfi], fluid);
+    set_ic_pressure_g(sbx, domain, dx, dy, dz, plo, ld, mfi, fluid, advect_enthalpy);
   }
 
 }
@@ -344,19 +341,24 @@ void init_fluid_parameters (const Box& bx,
                             const MFIter& mfi,
                             LevelData& ld,
                             const int advect_enthalpy,
-                            const int advect_fluid_species,
+                            const int solve_species,
                             FluidPhase& fluid)
 {
   const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
+  const EBFArrayBox& epg_fab = static_cast<EBFArrayBox const&>((*ld.ep_g)[mfi]);
+  const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
+
   const int fluid_is_a_mixture = fluid.is_a_mixture;
-  const int advect_species_enthalpy = advect_fluid_species && advect_enthalpy;
+  const int advect_species_enthalpy = solve_species && advect_enthalpy;
 
-  Array4<Real> nullArray4;
+  Array4<Real> dummy_arr;
 
-  Array4<Real> const& X_gk = fluid_is_a_mixture ? (ld.X_gk)->array(mfi) : nullArray4;
-  Array4<Real> const& T_g  = advect_enthalpy ? (ld.T_g)->array(mfi) : nullArray4;
-  Array4<Real> const& h_g  = advect_enthalpy ? (ld.h_g)->array(mfi) : nullArray4;
+  Array4<Real> const& X_gk = fluid_is_a_mixture ? (ld.X_gk)->array(mfi) : dummy_arr;
+  Array4<Real> const& T_g  = advect_enthalpy ? (ld.T_g)->array(mfi) : dummy_arr;
+  Array4<Real> const& h_g  = advect_enthalpy ? (ld.h_g)->array(mfi) : dummy_arr;
+
+  auto const& flags_arr = flags.const_array();
 
   const int nspecies_g = fluid.nspecies;
 
@@ -364,10 +366,12 @@ void init_fluid_parameters (const Box& bx,
 
   // Set the IC values
   amrex::ParallelFor(bx, [nspecies_g,T_g,h_g,X_gk,advect_enthalpy,fluid_parms,
-      advect_fluid_species,advect_species_enthalpy,fluid_is_a_mixture,
-      run_on_device]
+      solve_species,advect_species_enthalpy,fluid_is_a_mixture,
+      run_on_device,flags_arr]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
   {
+    const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+
     // set initial fluid enthalpy and  specific enthalpy
     if (advect_enthalpy)
     {
@@ -378,8 +382,8 @@ void init_fluid_parameters (const Box& bx,
         Real h_g_sum(0);
         for (int n(0); n < nspecies_g; n++) {
           const Real h_gk = run_on_device ?
-            fluid_parms.calc_h_gk<RunOn::Device>(Tg_loc,n) :
-            fluid_parms.calc_h_gk<RunOn::Host>(Tg_loc,n);
+            fluid_parms.calc_h_gk<RunOn::Device>(Tg_loc, n, cell_is_covered) :
+            fluid_parms.calc_h_gk<RunOn::Host>(Tg_loc, n, cell_is_covered);
 
           h_g_sum += X_gk(i,j,k,n) * h_gk;
         }
@@ -388,8 +392,8 @@ void init_fluid_parameters (const Box& bx,
       }
       else {
         h_g(i,j,k) = run_on_device ?
-          fluid_parms.calc_h_g<RunOn::Device>(Tg_loc) :
-          fluid_parms.calc_h_g<RunOn::Host>(Tg_loc);
+          fluid_parms.calc_h_g<RunOn::Device>(Tg_loc, cell_is_covered) :
+          fluid_parms.calc_h_g<RunOn::Host>(Tg_loc, cell_is_covered);
       }
     }
 
@@ -546,6 +550,9 @@ void set_ic_temp (const Box& sbx,
 {
   const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
+  const EBFArrayBox& Tg_EB_fab = static_cast<EBFArrayBox const&>(T_g_fab);
+  const EBCellFlagFab& flags = Tg_EB_fab.getEBCellFlagFab();
+
   const IntVect slo(sbx.loVect());
   const IntVect shi(sbx.hiVect());
 
@@ -555,9 +562,13 @@ void set_ic_temp (const Box& sbx,
   const int fluid_is_a_mixture = fluid.is_a_mixture;
   const int nspecies_g = fluid.nspecies;
 
+  Array4<const Real> dummy_arr;
+
   Array4<Real      > const& T_g  = T_g_fab.array();
   Array4<Real      > const& h_g  = h_g_fab.array();
-  Array4<Real const> const& X_gk = fluid_is_a_mixture ? X_gk_fab->array() : Array4<const Real>();
+  Array4<Real const> const& X_gk = fluid_is_a_mixture ? X_gk_fab->array() : dummy_arr;
+
+  auto const& flags_arr = flags.const_array();
 
   auto& fluid_parms = *fluid.parameters;
 
@@ -585,25 +596,27 @@ void set_ic_temp (const Box& sbx,
 
     // Define the function to be used on the different Box-es
     auto set_quantities = [T_g,h_g,X_gk,temperature,nspecies_g,fluid_is_a_mixture,
-         fluid_parms,run_on_device]
+         fluid_parms,run_on_device,flags_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
+      const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+
       T_g(i,j,k) = temperature;
 
       if (fluid_is_a_mixture) {
         Real h_g_sum(0);
         for (int n(0); n < nspecies_g; n++) {
           Real h_gk = run_on_device ?
-            fluid_parms.calc_h_gk<RunOn::Device>(temperature,n) :
-            fluid_parms.calc_h_gk<RunOn::Host>(temperature,n);
+            fluid_parms.calc_h_gk<RunOn::Device>(temperature, n, cell_is_covered) :
+            fluid_parms.calc_h_gk<RunOn::Host>(temperature, n, cell_is_covered);
 
           h_g_sum += X_gk(i,j,k,n) * h_gk;
         }
         h_g(i,j,k) = h_g_sum;
       } else {
         h_g(i,j,k) = run_on_device ?
-          fluid_parms.calc_h_g<RunOn::Device>(temperature) :
-          fluid_parms.calc_h_g<RunOn::Host>(temperature);
+          fluid_parms.calc_h_g<RunOn::Device>(temperature, cell_is_covered) :
+          fluid_parms.calc_h_g<RunOn::Host>(temperature, cell_is_covered);
       }
     };
 
@@ -836,11 +849,10 @@ void set_ic_pressure_g (const Box& sbx,
                         const Real dy,
                         const Real dz,
                         const GpuArray<Real, 3>& plo,
-                        FArrayBox& pressure_g_fab,
-                        FArrayBox& ro_g_fab,
-                        FArrayBox& T_g_fab,
-                        FArrayBox& X_gk_fab,
-                        FluidPhase& fluid)
+                        LevelData& ld,
+                        const MFIter& mfi,
+                        FluidPhase& fluid,
+                        const int advect_enthalpy)
 {
   const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
@@ -853,10 +865,13 @@ void set_ic_pressure_g (const Box& sbx,
   const int fluid_is_a_mixture = fluid.is_a_mixture;
   const int nspecies_g = fluid.nspecies;
 
-  Array4<Real      > const& pressure_g = pressure_g_fab.array();
-  Array4<Real const> const& ro_g       = ro_g_fab.array();
-  Array4<Real const> const& T_g        = T_g_fab.array();
-  Array4<Real const> const& X_gk       = X_gk_fab.array();
+  Array4<Real      > dummy_arr;
+  Array4<Real const> dummy_const_arr;
+
+  Array4<Real      > const& pressure_g = advect_enthalpy ? ((*ld.pressure_g)[mfi]).array() : dummy_arr;
+  Array4<Real const> const& ro_g       = ((*ld.ro_g)[mfi]).const_array();
+  Array4<Real const> const& T_g        = advect_enthalpy ? ((*ld.T_g)[mfi]).const_array() : dummy_const_arr;
+  Array4<Real const> const& X_gk       = fluid_is_a_mixture ? ((*ld.X_gk)[mfi]).const_array() : dummy_const_arr;
 
   auto& fluid_parms = *fluid.parameters;
 
@@ -880,7 +895,7 @@ void set_ic_pressure_g (const Box& sbx,
 
     // Define the function
     auto set_pressure = [pressure_g,ro_g,T_g,X_gk,fluid_is_a_mixture,nspecies_g,
-         fluid_parms,run_on_device]
+         fluid_parms,run_on_device,advect_enthalpy]
       AMREX_GPU_DEVICE (int i, int j, int k) -> void
     {
       Real MW_g_loc(0);
@@ -904,9 +919,9 @@ void set_ic_pressure_g (const Box& sbx,
 
       }
 
-      pressure_g(i,j,k) = ro_g(i,j,k) * fluid_parms.R * T_g(i,j,k) / MW_g_loc;
+      if (advect_enthalpy)
+        pressure_g(i,j,k) = ro_g(i,j,k) * fluid_parms.R * T_g(i,j,k) / MW_g_loc;
     };
-
 
     {
       const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
@@ -998,10 +1013,10 @@ void set_ic_ro_g (const Box& sbx,
                   const Real dy,
                   const Real dz,
                   const GpuArray<Real, 3>& plo,
-                  FArrayBox& ro_g_fab,
-                  FArrayBox& T_g_fab,
-                  FArrayBox& X_gk_fab,
-                  FluidPhase& fluid)
+                  LevelData& ld,
+                  const MFIter& mfi,
+                  FluidPhase& fluid,
+                  const int advect_enthalpy)
 {
   const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
@@ -1014,9 +1029,11 @@ void set_ic_ro_g (const Box& sbx,
   const int fluid_is_a_mixture = fluid.is_a_mixture;
   const int nspecies_g = fluid.nspecies;
 
-  Array4<Real      > const& ro_g  = ro_g_fab.array();
-  Array4<Real const> const& T_g   = T_g_fab.array();
-  Array4<Real const> const& X_gk  = X_gk_fab.array();
+  Array4<Real const> dummy_arr;
+
+  Array4<Real      > const& ro_g = ((*ld.ro_g)[mfi]).array();
+  Array4<Real const> const& T_g  = advect_enthalpy ? ((*ld.T_g)[mfi]).array() : dummy_arr;
+  Array4<Real const> const& X_gk = fluid_is_a_mixture ? ((*ld.X_gk)[mfi]).array() : dummy_arr;
 
   auto& fluid_parms = *fluid.parameters;
 
@@ -1046,9 +1063,12 @@ void set_ic_ro_g (const Box& sbx,
       amrex::Abort("Fix inputs file.");
     }
 
+    const Real Tg0 = fluid.T_g0;
+
     // Define the function
     auto set_density = [ro_g,ic_pg,T_g,X_gk,fluid_is_a_mixture,nspecies_g,
-         fluid_parms,run_on_device] AMREX_GPU_DEVICE (int i, int j, int k) -> void
+         fluid_parms,run_on_device,advect_enthalpy,Tg0]
+      AMREX_GPU_DEVICE (int i, int j, int k) -> void
     {
       Real MW_g_loc(0);
 
@@ -1067,7 +1087,10 @@ void set_ic_ro_g (const Box& sbx,
           fluid_parms.get_MW_g<RunOn::Host>();
       }
 
-      ro_g(i,j,k) = (ic_pg * MW_g_loc) / (fluid_parms.R * T_g(i,j,k));
+      if (advect_enthalpy)
+        ro_g(i,j,k) = (ic_pg * MW_g_loc) / (fluid_parms.R * T_g(i,j,k));
+      else
+        ro_g(i,j,k) = (ic_pg * MW_g_loc) / (fluid_parms.R * Tg0);
     };
 
 
