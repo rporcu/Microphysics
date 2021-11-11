@@ -1,9 +1,12 @@
 from pathlib import Path
+from typing import List
 import contextlib
 import importlib
+import io
 import os
 
 import pytest
+from rtl2.post import avg_values_within_tolerance
 
 test_files = {
     "uio_p_g_1.dat": """#  Time   p_g  vol
@@ -46,6 +49,24 @@ def test_post(testname, tmp_path):
         mod = importlib.import_module(f"run.{testname}.post")
         new_png = mod.plot()
         assert new_png == Path("output.png")
+
+
+def in_tolerance(tmp_path: Path, values: List[float], tolerance: float) -> bool:
+    tmpfname = tmp_path / "tol_test"
+    with open(tmpfname, "w") as test_f:
+        for value in values:
+            test_f.write(f"{value}\n")
+
+    return avg_values_within_tolerance(tmpfname, tolerance)
+
+
+def test_avg_values_within_tolerance(tmp_path):
+    assert in_tolerance(tmp_path, [1.019, 1.018, 1.018, 1.088], 0.1)
+    assert in_tolerance(tmp_path, [1.019, 1.018, 1.018, 1.018], 0.01)
+    assert in_tolerance(tmp_path, [1.019, 1.018, 1.018, 1.318], 0.3)
+    assert not in_tolerance(tmp_path, [1.019, 1.018, 1.018, 1.118], 0.01)
+    assert not in_tolerance(tmp_path, [1.019, 1.018, 1.018, 2.018], 0.3)
+    assert not in_tolerance(tmp_path, [1.019, 1.018, 1.018, 1.318], 0.1)
 
 
 @contextlib.contextmanager

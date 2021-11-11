@@ -5,6 +5,7 @@ from typing import Optional, Tuple
 import rtl2.test_coverage as coverage
 from rtl2.suite import Suite
 from rtl2.test_util import git_commit
+from rtl2.post import avg_values_within_tolerance
 
 
 CSS_CONTENTS = r"""
@@ -347,16 +348,8 @@ def report_single_test(suite, test, tests, failure_msg=None):
     # in the comparison report for displaying
     if failure_msg is None:
         if not test.compileTest:
-            compare_successful = test.compare_successful
-
-            if test.doComparison:
-                compare_file = test.comparison_outfile
-                try:
-                    with open(compare_file, "r") as cf:
-                        diff_lines = cf.readlines()
-                except IOError:
-                    suite.log.warn("WARNING: no comparison file found")
-                    diff_lines = [""]
+            refdata = suite.refdata(test)
+            compare_successful = avg_values_within_tolerance(refdata, test.tolerance)
 
             # last check: did we produce any backtrace files?
             if test.crashed:
@@ -386,11 +379,7 @@ def report_single_test(suite, test, tests, failure_msg=None):
 
     else:
         # we came in already admitting we failed...
-        if not test.compile_successful:
-            msg = "COMPILE FAILED"
-        else:
-            msg = "FAILED"
-
+        msg = "FAILED" if test.compile_successful else "COMPILE FAILED"
         status_file = "{}.status".format(test.name)
         with open(status_file, "w") as sf:
             sf.write("{}\n".format(msg))
@@ -608,90 +597,6 @@ def report_single_test(suite, test, tests, failure_msg=None):
         variables_error = False
         no_bench_error = False
         particle_counts_differ_error = False
-
-        pcomp_line = get_particle_compare_command(diff_lines)
-
-        for line in diff_lines:
-            if "number of boxes do not match" in line:
-                box_error = True
-                break
-
-            if "grids do not match" in line:
-                grid_error = True
-                break
-
-            if "number of variables do not match" in line:
-                variables_error = True
-
-            if "no corresponding benchmark found" in line:
-                no_bench_error = True
-                break
-
-            if "Particle data headers do not agree" in line:
-                particle_counts_differ_error = True
-                break
-
-            if in_diff_region:
-                # diff region
-                hf.write(line)
-                continue
-
-            if line.find("fcompare") > 1:
-                hf.write("<tt>" + line + "</tt>\n")
-                if pcomp_line:
-                    hf.write("<tt>" + pcomp_line + "</tt>\n")
-
-                ht.start_table()
-                continue
-
-            if line.strip().startswith("diff "):
-                # this catches the start of a plain text diff --
-                # we need the space here to not match variables
-                # that start with diff
-                ht.end_table()
-                hf.write("<pre>\n")
-
-                hf.write(line)
-                in_diff_region = True
-                continue
-
-            if line.strip().startswith("level "):
-                ht.print_single_row(line.strip())
-                continue
-
-            if line.strip().startswith("-----"):
-                continue
-
-            if line.strip().startswith("<<<"):
-                ht.print_single_row(line.strip().replace("<", "&lt;").replace(">", "&gt;"))
-                continue
-
-            fields = [q.strip() for q in line.split("  ") if not q == ""]
-
-            if fields:
-                if fields[0].startswith("variable"):
-                    ht.header(fields)
-                    continue
-
-                if len(fields) == 2:
-                    if "NaN present" in line:
-                        ht.print_row([fields[0], (fields[1], "colspan='2'")])
-                        continue
-                    if "variable not present" in line:
-                        ht.print_row([fields[0], (fields[1], "colspan='2'")])
-                        continue
-                    ht.header([" "] + fields)
-                    continue
-
-                if len(fields) == 1:
-                    continue
-
-                abs_err = float(fields[1])
-                rel_err = float(fields[2])
-                if abs(rel_err) > 1.0e-6:
-                    ht.print_row([fields[0], abs_err, rel_err], highlight=True)
-                else:
-                    ht.print_row([fields[0], abs_err, rel_err])
 
         if in_diff_region:
             hf.write("</pre>\n")
