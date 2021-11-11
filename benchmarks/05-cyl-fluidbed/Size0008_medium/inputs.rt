@@ -271,3 +271,5 @@ bc.outflow.fluid.pressure =  0.0
 
 bc.hot-walls = eb
 bc.hot-walls.eb.temperature = 800
+
+mfix.stop_for_unused_inputs = true

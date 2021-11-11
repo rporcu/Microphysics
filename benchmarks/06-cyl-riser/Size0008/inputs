@@ -127,8 +127,8 @@ fluid.density.constant   = 1.0
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
-fluid.specific_heat          = constant
-fluid.specific_heat.constant = 1.0
+#fluid.specific_heat          = constant
+#fluid.specific_heat.constant = 1.0
 
 fluid.thermal_conductivity          = constant
 fluid.thermal_conductivity.constant = 0.0
@@ -205,3 +205,5 @@ ic.full-domain.solid0.density.constant  = 1000.0
 #
 bc.delp_dir =    0
 bc.delp     =    2.
+
+mfix.stop_for_unused_inputs = true

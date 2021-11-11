@@ -63,8 +63,8 @@ fluid.density.constant   = 1.0
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
-fluid.specific_heat          = constant
-fluid.specific_heat.constant = 918  ## Oxygen
+#fluid.specific_heat          = constant
+#fluid.specific_heat.constant = 918  ## Oxygen
 
 fluid.thermal_conductivity          = constant
 fluid.thermal_conductivity.constant = 0.024  ## Oxygen
@@ -145,3 +145,5 @@ ic.sub-domain.fluid.species.CO  = 0.6
 ic.sub-domain.fluid.species.H2O = 0.4
 ic.sub-domain.solids = solid0
 ic.sub-domain.solid0.temperature = 800
+
+mfix.stop_for_unused_inputs = true

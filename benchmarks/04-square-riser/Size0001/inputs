@@ -141,3 +141,5 @@ ic.inner-domain.solid0.temperature = 300
 #
 bc.delp_dir =    1
 bc.delp     =    2.
+
+mfix.stop_for_unused_inputs = true
