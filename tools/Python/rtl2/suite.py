@@ -492,7 +492,7 @@ class Suite:
         self._full_test_dir: Optional[Path] = None
         self.cmakeSetupOpts = ""
 
-        self.refdataDir = None
+        self.refdataDir = Path()
         self.Label = None
 
         self.MPIcommand = ""
@@ -552,6 +552,10 @@ class Suite:
         """Determines the format of the wallclock history JSON file"""
 
         return {"runtimes": [], "dates": []}
+
+    def refdata(self, test: "Test") -> Path:
+        prefix = f"{self.Label}." if self.Label else ""
+        return self.refdataDir / test.name / f"{prefix}runningave.dat"
 
     def get_test_dir(self, dir_name: str) -> Path:
         """given a string representing a directory, check if it points to

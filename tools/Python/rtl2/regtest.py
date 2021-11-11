@@ -537,8 +537,7 @@ class TestRunner:
                 )
                 mod = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(mod)
-                prefix = f"{self._suite.Label}." if self._suite.Label else ""
-                refdata = self._suite.refdataDir / self.test.name / f"{prefix}runningave.dat"
+                refdata = self._suite.refdata(self.test)
                 mod.plot(refdata)
             except Exception:  # pylint: disable=broad-except
                 logging.exception("Error post processing %s", testname)
