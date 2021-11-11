@@ -47,6 +47,9 @@ std::string avg_file {"avg_region"};
 
 std::string mfix_dat {"mfix.dat"};
 
+bool stop_for_unused_inputs = false;
+bool checkpoint_files_output = true;
+
 // Set the extend domain flag by default, since the mfix default
 // is different (true) from the amrex default (false)
 // only if its not already specified in the inputs file
@@ -64,6 +67,7 @@ void ReadParameters ()
   {
      ParmParse pp("amr");
 
+     pp.query("checkpoint_files_output", checkpoint_files_output);
      pp.query("check_file", check_file);
      pp.query("check_int", check_int);
 
@@ -98,6 +102,7 @@ void ReadParameters ()
      pp.query("input_deck", mfix_dat);
      pp.query("write_eb_surface", write_eb_surface);
      pp.query("write_ls", write_ls);
+     pp.query("stop_for_unused_inputs", stop_for_unused_inputs);
   }
 
 }
@@ -193,7 +198,7 @@ void writeNow (int nstep, Real time, Real dt, mfix& mfix)
 
     if ( ( check_int > 0) && ( nstep %  check_int == 0 ) )
     {
-        mfix.WriteCheckPointFile( check_file, nstep, dt, time );
+        if (checkpoint_files_output) mfix.WriteCheckPointFile( check_file, nstep, dt, time );
         last_chk = nstep;
     }
 
@@ -363,7 +368,7 @@ int main (int argc, char* argv[])
     //    if check_int > 0
     if ( restart_file.empty() && check_int > 0 )
     {
-       mfix.WriteCheckPointFile(check_file, nstep, dt, time);
+       if (checkpoint_files_output) mfix.WriteCheckPointFile(check_file, nstep, dt, time);
        last_chk = nstep;
     }
 
@@ -389,7 +394,9 @@ int main (int argc, char* argv[])
     {
         amrex::Print() << " " << std::endl;
         bool unused_inputs = ParmParse::QueryUnusedInputs();
-        if (unused_inputs)
+        if (stop_for_unused_inputs && unused_inputs)
+           amrex::Abort("Aborting here due to unused inputs");
+        else if (unused_inputs)
            amrex::Print() << "We should think about aborting here due to unused inputs" << std::endl;
     }
 
@@ -454,7 +461,7 @@ int main (int argc, char* argv[])
 
     // Dump plotfile at the final time
     if ( check_int > 0 && nstep != last_chk)
-        mfix.WriteCheckPointFile(check_file, nstep, dt, time);
+        if (checkpoint_files_output) mfix.WriteCheckPointFile(check_file, nstep, dt, time);
     if ( mfix::plot_int > 0)
         mfix.WritePlotFile(plot_file, nstep, time);
     if ( par_ascii_int > 0  && nstep != last_par_ascii)

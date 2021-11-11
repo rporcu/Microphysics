@@ -56,3 +56,5 @@ fluid.thermal_conductivity.constant = 0.0
 # DEM model settings
 
 dem.solve = None
+
+mfix.stop_for_unused_inputs = true
