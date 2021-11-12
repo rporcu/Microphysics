@@ -79,7 +79,7 @@ def read_avg_values(refdata_fname: Path) -> Tuple[List[int], List[float]]:
         return (xs, ys)
 
 
-def avg_values_within_tolerance(refdata_fname: Path, tolerance: float) -> bool:
+def avg_values_within_tolerance(refdata_fname: Path, tolerance: Optional[float]) -> bool:
     """Returns: whether the last data point is within tolerance of last 10 data points"""
 
     _, ys = read_avg_values(refdata_fname)
@@ -88,7 +88,7 @@ def avg_values_within_tolerance(refdata_fname: Path, tolerance: float) -> bool:
         return True
     recent = ys[-10:-1]
     avg = sum(recent) / len(recent)
-    return abs((avg - latest) / (avg + latest)) < tolerance
+    return abs((avg - latest) / (avg + latest)) < (0.1 if tolerance is None else tolerance)
 
 
 def append_avg_dp_value(

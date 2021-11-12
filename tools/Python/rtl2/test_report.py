@@ -34,9 +34,9 @@ a.failed:link {color: yellow; text-decoration: none;}
 a.failed:visited {color: yellow; text-decoration: none;}
 a.failed:hover {color: #00ffff; text-decoration: underline;}
 
-a.compfailed:link {color: yellow; text-decoration: none;}
-a.compfailed:visited {color: yellow; text-decoration: none;}
-a.compfailed:hover {color: #00ffff; text-decoration: underline;}
+a.postcrashed:link {color: yellow; text-decoration: none;}
+a.postcrashed:visited {color: yellow; text-decoration: none;}
+a.postcrashed:hover {color: #00ffff; text-decoration: underline;}
 
 a.crashed:link {color: yellow; text-decoration: none;}
 a.crashed:visited {color: yellow; text-decoration: none;}
@@ -65,7 +65,7 @@ td {border-width: 0px;
 td.passed {background-color: lime; opacity: 0.8;}
 td.passed-slowly {background-color: yellow; opacity: 0.8;}
 td.failed {background-color: red; color: yellow; opacity: 0.8;}
-td.compfailed {background-color: purple; color: yellow; opacity: 0.8;}
+td.postcrashed {background-color: purple; color: yellow; opacity: 0.8;}
 td.crashed {background-color: black; color: yellow; opacity: 0.8;}
 td.benchmade {background-color: orange; opacity: 0.8;}
 td.date {background-color: #666666; color: white; opacity: 0.8; font-weight: bold;}
@@ -125,7 +125,7 @@ div.verticaltext {text-align: center;
 #summary td.passed-slowly {background-color: yellow; }
 #summary td.failed {background-color: red; color: yellow;}
 #summary td.benchmade {background-color: orange;}
-#summary td.compfailed {background-color: purple; color: yellow;}
+#summary td.postcrashed {background-color: purple; color: yellow;}
 #summary td.crashed {background-color: black; color: yellow;}
 
 div.small {font-size: 75%;}
@@ -188,10 +188,9 @@ MAIN_HEADER = r"""
 <CENTER><H2>@SUBTITLE@</H2></CENTER>
 <P><TABLE class='maintable'>
 <CENTER>
-  <td align=center class="benchmade"><h3>Benchmark Updated</h3></td>
-  <td align=center class="failed"><h3>Comparison Failed</h3></td>
-  <td align=center class="compfailed"><h3>Compilation Failed</h3></td>
   <td align=center class="crashed"><h3>Crashed</h3></td>
+  <td align=center class="postcrashed"><h3>Post Processing Crashed</h3></td>
+  <td align=center class="failed"><h3>Comparison Failed</h3></td>
   <td align=center class="passed"><h3>Passed</h3></td>
   <td align=center class="passed-slowly"><h3>Performance Drop</h3></td>
 </CENTER>
@@ -337,9 +336,6 @@ def report_single_test(suite, test, tests, failure_msg=None):
     current_dir = os.getcwd()
     os.chdir(suite.full_web_dir)
 
-    # we stored compilation success in the test object
-    compile_successful = test.compile_successful
-
     analysis_successful = True
     if test.analysisRoutine != "":
         analysis_successful = test.analysis_successful
@@ -356,12 +352,12 @@ def report_single_test(suite, test, tests, failure_msg=None):
                 compare_successful = False
 
         # write out the status file for this problem, with either
-        # PASSED, PASSED SLOWLY, COMPILE FAILED, or FAILED
+        # PASSED, PASSED SLOWLY, POST CRASHED, or FAILED
         status_file = "{}.status".format(test.name)
         with open(status_file, "w") as sf:
-            if not compile_successful:
-                sf.write("COMPILE FAILED\n")
-                suite.log.testfail(f"{test.name} COMPILE FAILED")
+            if not test.post_successful:
+                sf.write("POST CRASHED\n")
+                suite.log.testfail(f"{test.name} POST CRASHED")
             elif test.compileTest or (compare_successful and analysis_successful):
                 string = "PASSED\n"
                 if test.check_performance:
@@ -379,7 +375,7 @@ def report_single_test(suite, test, tests, failure_msg=None):
 
     else:
         # we came in already admitting we failed...
-        msg = "FAILED" if test.compile_successful else "COMPILE FAILED"
+        msg = "FAILED" if test.post_successful else "POST CRASHED"
         status_file = "{}.status".format(test.name)
         with open(status_file, "w") as sf:
             sf.write("{}\n".format(msg))
@@ -504,7 +500,7 @@ def report_single_test(suite, test, tests, failure_msg=None):
     ll.item("Compilation:")
     ll.indent()
 
-    if compile_successful:
+    if test.post_successful:
         ll.item('<h3 class="passed">Successful</h3>')
     else:
         ll.item('<h3 class="failed">Failed</h3>')
@@ -619,12 +615,6 @@ def report_single_test(suite, test, tests, failure_msg=None):
             hf.write("<p>number of particles differ in files</p>\n")
 
     if (not test.compileTest) and failure_msg is None:
-        # show any visualizations
-        if test.doVis:
-            if test.png_file is not None:
-                hf.write("<P>&nbsp;\n")
-                hf.write("<P><IMG SRC='{}' BORDER=0>".format(test.png_file))
-
         # show any analysis
         if not test.analysisOutputImage == "":
             hf.write("<P>&nbsp;\n")
@@ -773,9 +763,9 @@ def report_this_test_run(suite, make_benchmarks, note, _update_time, test_list, 
                         status = "passed"
                         td_class = "passed-slowly" if "SLOWLY" in line else "passed"
                         num_passed += 1
-                    elif line.find("COMPILE FAILED") >= 0:
-                        status = "compile fail"
-                        td_class = "compfailed"
+                    elif line.find("POST CRASHED") >= 0:
+                        status = "post fail"
+                        td_class = "postcrashed"
                         num_failed += 1
                     elif line.find("CRASHED") >= 0:
                         status = "crashed"
@@ -1088,8 +1078,8 @@ def get_line_result(line: str) -> Tuple[Optional[str], str]:
     return (
         (("passed-slowly", ":]") if "SLOWLY" in line else ("passed", ":)"))
         if "PASSED" in line
-        else ("compfailed", ":(")
-        if "COMPILE FAILED" in line
+        else ("postcrashed", ":(")
+        if "POST CRASHED" in line
         else ("crashed", "xx")
         if "CRASHED" in line
         else ("failed", "!&nbsp;")
