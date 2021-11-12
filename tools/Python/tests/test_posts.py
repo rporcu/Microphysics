@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import List
 import contextlib
 import importlib
-import io
 import os
 
 import pytest
@@ -67,6 +66,9 @@ def test_avg_values_within_tolerance(tmp_path):
     assert not in_tolerance(tmp_path, [1.019, 1.018, 1.018, 1.118], 0.01)
     assert not in_tolerance(tmp_path, [1.019, 1.018, 1.018, 2.018], 0.3)
     assert not in_tolerance(tmp_path, [1.019, 1.018, 1.018, 1.318], 0.1)
+
+    # None tolerance defaults to 10%
+    assert in_tolerance(tmp_path, [1.019, 1.018, 1.018, 1.088], None)
 
 
 @contextlib.contextmanager
