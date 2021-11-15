@@ -2382,3 +2382,58 @@ void MFIXParticleContainer::verifyParticleCount()
               << " new " << total_numparticle << "\n";
   }
 }
+
+
+void MFIXParticleContainer::printGhostParticleCount()
+{
+  const int lev = 0;
+
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+  {
+    PairIndex  index(pti.index(), pti.LocalTileIndex());
+    auto  ptile = GetParticles(lev)[index];
+    auto& aos   = ptile.GetArrayOfStructs();
+    ParticleType* pstruct = aos().dataPtr();
+    const int  nrp = ptile.numRealParticles();
+    const int  ngp = ptile.numTotalParticles() - nrp; 
+
+    // create vector to mark if a ghost is a neighbor of some real particle.
+    Gpu::DeviceVector<int> nbrids(ngp, 0);
+    auto* pnbrids  = nbrids.dataPtr();
+    Print(2) << "nrp " << nrp << " ngp " << ngp << "\n";
+
+    const Box  box = pti.validbox();
+    const auto& geom     = Geom(lev);
+    const auto  domain   = geom.Domain();
+    const auto  dx_inv   = geom.InvCellSizeArray();
+    const auto  prob_lo  = geom.ProbLoArray();
+
+    auto  nbr_data = m_neighbor_list[lev][index].data();
+
+    amrex::ParallelFor(nrp, [pstruct, prob_lo, dx_inv, domain, nbr_data,
+                            pnbrids, box, nrp]
+                      AMREX_GPU_DEVICE (int i) noexcept {
+      const auto nbrs = nbr_data.getNeighbors(i);
+      for (auto mit = nbrs.begin(); mit != nbrs.end(); ++mit) {
+        IntVect cell_ijk = getParticleCell(*mit, prob_lo, dx_inv, domain);
+        int     pid      = mit.index();
+        if (!box.contains(cell_ijk)) {
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(pid >= nrp, "ghost particle has real index");
+          Gpu::Atomic::Add(pnbrids + (pid - nrp), 1);
+        }
+      }
+    });
+    Gpu::Device::synchronize();
+
+    int  nnbr  = 0;
+    int* pnnbr = &nnbr;
+    amrex::ParallelFor(ngp, [pnnbr, pnbrids] AMREX_GPU_DEVICE (int i) noexcept {
+      if (pnbrids[i] > 0)  Gpu::Atomic::Add(pnnbr, 1);
+    });
+    Gpu::Device::synchronize();
+
+    AllPrintToFile("nbr") << "pbox " << pti.index() << " "
+      << nnbr << " neighbors "
+      << ngp << " ghost particles\n";
+  }// end for pti
+}

@@ -364,6 +364,8 @@ public:
     // verify total # particles hasn't been changed, for debugging
     void verifyParticleCount();
 
+    void printGhostParticleCount();
+
   private:
     int nlev;
 
