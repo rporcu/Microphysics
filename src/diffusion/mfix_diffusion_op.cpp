@@ -198,6 +198,8 @@ void DiffusionOp::readParameters ()
     pp.query("rtol", mg_rtol);
     pp.query("atol", mg_atol);
     pp.query("bottom_solver", bottom_solver_type);
+    pp.query("hypre_namespace", hypre_namespace);
+    pp.query("hypre_interface", hypre_interface);
     pp.query("agg_grid_size", mg_agg_grid_size);
 }
 
@@ -216,6 +218,21 @@ void DiffusionOp::setSolverSettings (MLMG& solver)
     else if(bottom_solver_type == "hypre")
     {
         solver.setBottomSolver(MLMG::BottomSolver::hypre);
+#ifdef AMREX_USE_HYPRE
+        solver.setHypreOptionsNamespace(hypre_namespace);
+        if (hypre_interface == "ij")
+           solver.setHypreInterface(amrex::Hypre::Interface::ij);
+        else if (hypre_interface == "semi_structured")
+           solver.setHypreInterface(amrex::Hypre::Interface::semi_structed);
+        else if (hypre_interface == "structured")
+           solver.setHypreInterface(amrex::Hypre::Interface::structed);
+        else
+           amrex::Abort(
+                 "Invalid hypre interface. Valid options: ij semi_structured "
+                 "structured");
+#else
+        amrex::Abort("mfix was not built with hypre support");
+#endif
     }
         // Maximum iterations for MultiGrid / ConjugateGradients
         solver.setMaxIter(mg_maxiter);
@@ -515,7 +532,7 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
                                const Vector< MultiFab*      >& X_gk_in,
                                const Vector< MultiFab const*>& ro_g_in,
                                const Vector< MultiFab const*>& ep_g_in,
-                               const Vector< MultiFab const*>& T_g_in)
+                               const Vector< MultiFab const*>& /*T_g_in*/)
 {
   BL_PROFILE("DiffusionOp::ComputeLapX");
 
@@ -565,16 +582,14 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
       Array4<Real      > const& b_coeffs_arr = b_coeffs.array(mfi);
       Array4<Real const> const& ep_g_arr     = ep_g_in[lev]->const_array(mfi);
       Array4<Real const> const& ro_g_arr     = ro_g_in[lev]->const_array(mfi);
-      Array4<Real const> const& T_g_arr      = T_g_in[lev]->const_array(mfi);
 
-      amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,T_g_arr,b_coeffs_arr,nspecies_g,
+      amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,b_coeffs_arr,nspecies_g,
           fluid_parms,run_on_device]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const Real ep_g = ep_g_arr(i,j,k);
         const Real ro_g = ro_g_arr(i,j,k);
-        const Real T_g  = T_g_arr(i,j,k);
-        const Real D_g  = fluid_parms.get_D_g(T_g);
+        const Real D_g  = fluid_parms.get_D_g();
 
         for (int n(0); n < nspecies_g; ++n) {
           b_coeffs_arr(i,j,k,n) = ep_g*ro_g*D_g;
@@ -663,19 +678,17 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
         Array4<Real      > const& Xb_coeffs_arr = Xb_coeffs.array(mfi);
         Array4<Real const> const& ep_g_arr      = ep_g_in[lev]->const_array(mfi);
         Array4<Real const> const& ro_g_arr      = ro_g_in[lev]->const_array(mfi);
-        Array4<Real const> const& T_g_arr       = T_g_in[lev]->const_array(mfi);
         Array4<Real const> const& X_gk_arr      = X_gk_in[lev]->const_array(mfi);
 
-        amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,T_g_arr,Xb_coeffs_arr,
+        amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,Xb_coeffs_arr,
             X_gk_arr,nspecies_g,fluid_parms,species_k]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const Real ep_g = ep_g_arr(i,j,k);
           const Real ro_g = ro_g_arr(i,j,k);
-          const Real T_g  = T_g_arr(i,j,k);
           const Real X_gk = X_gk_arr(i,j,k,species_k);
 
-          const Real val = ep_g*ro_g*X_gk*fluid_parms.get_D_g(T_g);
+          const Real val = ep_g*ro_g*X_gk*fluid_parms.get_D_g();
 
           for (int m(0); m < nspecies_g; ++m) {
             Xb_coeffs_arr(i,j,k,m) = val;
@@ -755,7 +768,7 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
 void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
                                       const Vector< MultiFab const*>& ro_g_in,
                                       const Vector< MultiFab const*>& ep_g_in,
-                                      const Vector< MultiFab const*>& T_g_in,
+                                      const Vector< MultiFab const*>& /*T_g_in*/,
                                       const Real& dt)
 {
   BL_PROFILE("DiffusionOp::SubtractDiv_XGradX");
@@ -815,19 +828,17 @@ void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
         Array4<Real      > const& Xb_coeffs_arr = Xb_coeffs.array(mfi);
         Array4<Real const> const& ep_g_arr      = ep_g_in[lev]->const_array(mfi);
         Array4<Real const> const& ro_g_arr      = ro_g_in[lev]->const_array(mfi);
-        Array4<Real const> const& T_g_arr       = T_g_in[lev]->const_array(mfi);
         Array4<Real const> const& X_gk_arr      = X_gk_in[lev]->const_array(mfi);
 
-        amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,T_g_arr,Xb_coeffs_arr,
+        amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,Xb_coeffs_arr,
             X_gk_arr,nspecies_g,fluid_parms,species_k,run_on_device]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const Real ep_g = ep_g_arr(i,j,k);
           const Real ro_g = ro_g_arr(i,j,k);
-          const Real T_g  = T_g_arr(i,j,k);
           const Real X_gk = X_gk_arr(i,j,k,species_k);
 
-          const Real val = ep_g*ro_g*X_gk*fluid_parms.get_D_g(T_g);
+          const Real val = ep_g*ro_g*X_gk*fluid_parms.get_D_g();
 
           for (int m(0); m < nspecies_g; ++m) {
             Xb_coeffs_arr(i,j,k,m) = val;
@@ -962,6 +973,9 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
 #endif
     for (MFIter mfi(*ep_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
+      const EBFArrayBox& epg_fab = static_cast<EBFArrayBox const&>((*ep_g_in[lev])[mfi]);
+      const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
+
       Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
       Array4<Real      > const& hb_coeffs_arr = hb_coeffs.array(mfi);
@@ -969,21 +983,25 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
       Array4<Real const> const& ro_g_arr      = ro_g_in[lev]->const_array(mfi);
       Array4<Real const> const& T_g_arr       = T_g_in[lev]->const_array(mfi);
 
+      auto const& flags_arr = flags.const_array();
+
       amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,T_g_arr,hb_coeffs_arr,
-          nspecies_g,fluid_parms,run_on_device]
+          nspecies_g,fluid_parms,run_on_device,flags_arr]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
+        const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+
         const Real ep_g = ep_g_arr(i,j,k);
         const Real ro_g = ro_g_arr(i,j,k);
         const Real T_g  = T_g_arr(i,j,k);
 
-        const Real val = ep_g*ro_g*fluid_parms.get_D_g(T_g);
+        const Real val = ep_g*ro_g*fluid_parms.get_D_g();
 
         for (int n(0); n < nspecies_g; ++n) {
 
           hb_coeffs_arr(i,j,k,n) = run_on_device ?
-            fluid_parms.calc_h_gk<RunOn::Device>(T_g,n) * val :
-            fluid_parms.calc_h_gk<RunOn::Host>(T_g,n) * val;
+            fluid_parms.calc_h_gk<RunOn::Device>(T_g, n, cell_is_covered) * val :
+            fluid_parms.calc_h_gk<RunOn::Host>(T_g, n, cell_is_covered) * val;
         }
       });
     }
@@ -1050,6 +1068,9 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
 #endif
       for (MFIter mfi(*ep_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
       {
+        const EBFArrayBox& epg_fab = static_cast<EBFArrayBox const&>((*ep_g_in[lev])[mfi]);
+        const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
+
         Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
         Array4<Real      > const& hXb_coeffs_arr = hXb_coeffs.array(mfi);
@@ -1058,21 +1079,25 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
         Array4<Real const> const& T_g_arr        = T_g_in[lev]->const_array(mfi);
         Array4<Real const> const& X_gk_arr       = X_gk_in[lev]->const_array(mfi);
 
+        auto const& flags_arr = flags.const_array();
+
         amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,T_g_arr,hXb_coeffs_arr,X_gk_arr,
-            nspecies_g,fluid_parms,species_k,run_on_device]
+            nspecies_g,fluid_parms,species_k,run_on_device,flags_arr]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
+          const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+
           const Real ep_g = ep_g_arr(i,j,k);
           const Real ro_g = ro_g_arr(i,j,k);
           const Real T_g  = T_g_arr(i,j,k);
 
           const Real hgk  = run_on_device ?
-            fluid_parms.calc_h_gk<RunOn::Device>(T_g,species_k) :
-            fluid_parms.calc_h_gk<RunOn::Host>(T_g,species_k);
+            fluid_parms.calc_h_gk<RunOn::Device>(T_g, species_k, cell_is_covered) :
+            fluid_parms.calc_h_gk<RunOn::Host>(T_g, species_k, cell_is_covered);
 
           const Real Xgk  = X_gk_arr(i,j,k,species_k);
 
-          const Real val = ep_g*ro_g*hgk*Xgk*fluid_parms.get_D_g(T_g);
+          const Real val = ep_g*ro_g*hgk*Xgk*fluid_parms.get_D_g();
 
           for (int m(0); m < nspecies_g; ++m) {
             hXb_coeffs_arr(i,j,k,m) = val;

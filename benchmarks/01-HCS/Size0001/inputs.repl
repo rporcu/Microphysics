@@ -41,7 +41,7 @@ mfix.drag_type = "BVK2"
 mfix.gravity =  0.0  0.0  0.0
 
 mfix.advect_enthalpy      = 1
-mfix.advect_fluid_species = 1
+mfix.solve_species = 1
 
 #_______________________________________________________________________
 # Fluid model settings
@@ -171,3 +171,5 @@ ic.He-region.fluid.velocity    =  0.0  0.0  0.0
 ic.He-region.fluid.temperature =  400
 ic.He-region.solids = solid0
 ic.He-region.solid0.temperature =  350
+
+mfix.stop_for_unused_inputs = true

@@ -23,7 +23,7 @@ void init_fluid (const amrex::Box& sbx,
                  const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo,
                  bool test_tracer_conservation,
                  const int advect_enthalpy,
-                 const int advect_fluid_species,
+                 const int solve_species,
                  const int& constraint_type,
                  FluidPhase& fluid);
 
@@ -46,7 +46,7 @@ void init_fluid_parameters (const Box& bx,
                             const MFIter& mfi,
                             LevelData& ld,
                             const int advect_enthalpy,
-                            const int advect_fluid_species,
+                            const int solve_species,
                             FluidPhase& fluid);
 
 void set_ic (const Box& sbx,

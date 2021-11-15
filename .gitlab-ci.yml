@@ -92,7 +92,6 @@ build:hip:
             -B build
             -DAMReX_AMD_ARCH=gfx908
             -DCMAKE_BUILD_TYPE=Debug
-            -DMFIX_CSG=ON
             -DMFIX_GPU_BACKEND=HIP
             -DMFIX_MPI=0
             -G Ninja
@@ -112,7 +111,6 @@ build:nvcc:
             -DAMReX_CUDA_ARCH=Volta
             -DCMAKE_BUILD_TYPE=MinSizeRel
             -DCMAKE_CUDA_ARCHITECTURES=70
-            -DMFIX_CSG=ON
             -DMFIX_GPU_BACKEND=CUDA
             -GNinja
     - cmake --build build
@@ -120,7 +118,7 @@ build:nvcc:
   tags:
     - ubuntu-shell
 
-build:csg:
+.build:csg:
   image: $CI_REGISTRY_IMAGE/nvcc
   needs: ['build-nvcc-env']
   script:
@@ -225,4 +223,4 @@ lint:spelling:
   <<: *lint_template
   script:
     - rm -rf subprojects
-    - codespell --ignore-words-list ba,blocs,inout,ith,od,wen --enable-colors --quiet-level 2
+    - codespell --ignore-words-list ba,blocs,inout,ith,od,wen,structed --enable-colors --quiet-level 2

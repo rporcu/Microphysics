@@ -18,7 +18,8 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
                                               Reactions& arg_reactions)
     : NeighborParticleContainer<AoSrealData::count,AoSintData::count,
                                 SoArealData::count,SoAintData::count>(amr_core->GetParGDB(), 1)
-    , m_runtimeRealData(arg_solids.nspecies, arg_reactions.nreactions)
+    , m_runtimeRealData(arg_solids.nspecies*arg_solids.solve_species,
+                        arg_reactions.nreactions*arg_reactions.solve)
     , solids(arg_solids)
     , reactions(arg_reactions)
 {

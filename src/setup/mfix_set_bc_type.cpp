@@ -428,7 +428,7 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
         set_tracer_bc_values (ltime);
       }
 
-      if (advect_fluid_species) {
+      if (solve_species) {
         set_species_bc_values (ltime);
       }
 
@@ -734,6 +734,7 @@ mfix::set_density_bc_values (Real time_in) const
   auto& fluid_parms = *fluid.parameters;
 
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
+
     if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
 
       if (m_constraint_type == ConstraintType::IdealGasOpenSystem ||
@@ -755,7 +756,8 @@ mfix::set_density_bc_values (Real time_in) const
           amrex::Abort("Fix the inputs file.");
         }
 
-        const Real Tg = bc[bcv].fluid.get_temperature(time_in);
+        const Real Tg = advect_enthalpy ? bc[bcv].fluid.get_temperature(time_in) : fluid.T_g0;
+
         Real MW_g_loc(0);
 
         // set initial fluid molecular weight

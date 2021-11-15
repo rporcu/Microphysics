@@ -12,6 +12,11 @@ mfix::set_temperature_bc0 (const Box& sbx,
 {
   const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
+  auto& ld = *m_leveldata[lev];
+
+  const EBFArrayBox& epg_fab = static_cast<EBFArrayBox const&>((*ld.ep_g)[*mfi]);
+  const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
+
   const int nspecies_g = fluid.nspecies;
 
   // Flag to understand if fluid is a mixture
@@ -50,26 +55,31 @@ mfix::set_temperature_bc0 (const Box& sbx,
 
   auto& fluid_parms = *fluid.parameters;
 
+  auto const& flags_arr = flags.const_array();
+
   auto set_temperature_bc0_in_box = [pinf,pout,minf,a_T_g,p_bc_t_g,
-      a_h_g,fluid_is_a_mixture,nspecies_g,p_bc_X_gk,fluid_parms,run_on_device]
+      a_h_g,fluid_is_a_mixture,nspecies_g,p_bc_X_gk,fluid_parms,run_on_device,
+      flags_arr]
   AMREX_GPU_DEVICE (int bct, int bcv, int i, int j, int k) noexcept
   {
+    const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+
     if((bct == pinf) || (bct == pout) || (bct == minf))
     {
       a_T_g(i,j,k)  = p_bc_t_g[bcv];
 
       if (!fluid_is_a_mixture) {
         a_h_g(i,j,k) = run_on_device ?
-          fluid_parms.calc_h_g<RunOn::Device>(p_bc_t_g[bcv]) :
-          fluid_parms.calc_h_g<RunOn::Host>(p_bc_t_g[bcv]);
+          fluid_parms.calc_h_g<RunOn::Device>(p_bc_t_g[bcv], cell_is_covered) :
+          fluid_parms.calc_h_g<RunOn::Host>(p_bc_t_g[bcv], cell_is_covered);
       }
       else {
         Real h_g_sum(0);
 
         for (int n(0); n < nspecies_g; n++) {
           const Real h_gk = run_on_device ?
-            fluid_parms.calc_h_gk<RunOn::Device>(p_bc_t_g[bcv],n) :
-            fluid_parms.calc_h_gk<RunOn::Host>(p_bc_t_g[bcv],n);
+            fluid_parms.calc_h_gk<RunOn::Device>(p_bc_t_g[bcv], n, cell_is_covered) :
+            fluid_parms.calc_h_gk<RunOn::Host>(p_bc_t_g[bcv], n, cell_is_covered);
 
           h_g_sum += p_bc_X_gk[n][bcv]*h_gk;
         }

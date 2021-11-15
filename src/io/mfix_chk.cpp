@@ -63,7 +63,7 @@ mfix::ResetIOChkData ()
       //chkTVars[1][lev] = m_leveldata[lev]->h_g;
     }
 
-    if (advect_fluid_species) {
+    if (solve_species) {
       chkSpeciesVars[0][lev] = m_leveldata[lev]->X_gk;
     }
   }
@@ -181,7 +181,7 @@ mfix::WriteCheckPointFile (std::string& check_file,
              }
           }
 
-          if (advect_fluid_species) {
+          if (solve_species) {
              // Write species variables
              for (int i = 0; i < chkSpeciesVars.size(); i++) {
                 VisMF::Write( *(chkSpeciesVars[i][lev]),

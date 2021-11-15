@@ -15,7 +15,7 @@ mfix.particle_init_type = "Auto"
 mfix.gravity = -9.81  0.0  0.0
 
 mfix.advect_enthalpy      = 1
-mfix.advect_fluid_species = 1
+mfix.solve_species = 1
 
 amr.blocking_factor = 2
 
@@ -144,8 +144,8 @@ fluid.density.constant   = 1.0
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
-fluid.specific_heat          = constant
-fluid.specific_heat.constant = 918
+#fluid.specific_heat          = constant
+#fluid.specific_heat.constant = 918
 
 fluid.thermal_conductivity          = constant
 fluid.thermal_conductivity.constant = 0.024
@@ -246,3 +246,5 @@ bc.half-domain.eb.temperature = 1200
 
 bc.delp_dir =    0
 bc.delp     =    2.
+
+mfix.stop_for_unused_inputs = true

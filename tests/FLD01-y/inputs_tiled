@@ -125,3 +125,5 @@ bc.wall1.normal = 0.0  0.0  1.0
 
 bc.wall2 = nsw
 bc.wall2.normal = 0.0  0.0 -1.0
+
+mfix.stop_for_unused_inputs = true
