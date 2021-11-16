@@ -87,7 +87,11 @@ def avg_values_within_tolerance(refdata_fname: Path, tolerance: Optional[float])
         return True
     latest = ys[-1]
     recent = ys[-10:-1]
+    if not len(recent):
+        return True
     avg = sum(recent) / len(recent)
+    if not bool(avg + latest):
+        return True
     return abs((avg - latest) / (avg + latest)) < (0.1 if tolerance is None else tolerance)
 
 
