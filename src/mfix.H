@@ -123,6 +123,10 @@ class mfix : public AmrCore
 
     void WriteAscentFile ( );
 
+#ifdef MFIX_CATALYST
+    void RunCatalystAdaptor ( int nstep, Real time );
+#endif
+
     //! Save variables that don't change to plot file. The idea is that they can
     //! be saved _once_ per simulations and not repeatedly every Nth time step.
     void WriteStaticPlotFile (const std::string & plot_file_name) const;
@@ -1375,9 +1379,9 @@ public:
     amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_species_d;
     amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_force_d;
 
-    // This is a special set of bc's that replace foextrap by extdir 
-    // for *normal* velocity only at faces that are identified as 
-    // pressure inflow (pinf_).   We need this because otherwise the 
+    // This is a special set of bc's that replace foextrap by extdir
+    // for *normal* velocity only at faces that are identified as
+    // pressure inflow (pinf_).   We need this because otherwise the
     // hydro routines will enforce "no backflow at outflow" and will
     // zero the inflow velocity at a pressure inflow
     amrex::Vector<amrex::BCRec> m_bcrec_hydro_velocity;
