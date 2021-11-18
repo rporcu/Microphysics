@@ -258,9 +258,9 @@ mfix::ReportGridStats () const
     const auto& flags = vel_fab.getEBCellFlagFab();
 
     // Count number of regular grids
-    if (flags.getType(amrex::grow(bx,0)) == FabType::regular ) {
+    if (flags.getType(amrex::grow(bx,1)) == FabType::regular ) {
       regular += 1;
-    } else if (flags.getType(amrex::grow(bx,0)) == FabType::covered ) {
+    } else if (flags.getType(amrex::grow(bx,1)) == FabType::covered ) {
       covered += 1;
     } else {
       cut += 1;
