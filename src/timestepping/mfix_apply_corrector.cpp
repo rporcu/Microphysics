@@ -804,8 +804,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         mfix_set_enthalpy_bcs(time, get_h_g());
 
         // NOTE: we do this call before multiplying ep_g by ro_g
-        diffusion_op->diffuse_enthalpy(get_h_g(), get_ep_g(), get_ro_g(),
-                                       get_T_g(), get_X_gk(), get_T_g_on_eb(), 0.5*l_dt);
+        diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
+                                          get_h_g(), get_X_gk(), get_T_g_on_eb(), 0.5*l_dt);
 
         // We call the bc routines again to enforce the ext_dir condition
         // on the faces (the diffusion operator can move those to ghost cell centers)
