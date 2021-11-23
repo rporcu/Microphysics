@@ -8,7 +8,7 @@ project(MFIX-Exa
    )
 
 # Set the search path for cmake modules
-set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools/CMake )
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools/CMake)
 
 #
 # This sets CMAKE_CXX_FLAGS_<CONFIG> to a default value
