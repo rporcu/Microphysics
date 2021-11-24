@@ -473,7 +473,7 @@ def srun_script(suite: Suite, runners: List["TestRunner"], args: List[str]) -> T
         cmd = runner.test.command(suite, runner.test.base_command(suite, args))
         outdir = runner.test.output_dir
         lines.append(
-            f"{task_id}-{next_id}  bash -c '[[ $0 -eq 0 ]] && ( cd {outdir} && {cmd} ) || true' %o"
+            f"{task_id}-{next_id}  bash -c '[[ $0 -eq 0 ]] && (until [ -d {outdir} ]; do sleep 1; done; cd {outdir} && {cmd} ) || true' %o"
         )
         task_id = next_id + 1
 
