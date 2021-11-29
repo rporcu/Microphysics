@@ -83,11 +83,15 @@ def avg_values_within_tolerance(refdata_fname: Path, tolerance: Optional[float])
     """Returns: whether the last data point is within tolerance of last 10 data points"""
 
     _, ys = read_avg_values(refdata_fname)
-    latest = ys[-1]
     if not ys:
         return True
+    latest = ys[-1]
     recent = ys[-10:-1]
+    if not len(recent):
+        return True
     avg = sum(recent) / len(recent)
+    if not bool(avg + latest):
+        return True
     return abs((avg - latest) / (avg + latest)) < (0.1 if tolerance is None else tolerance)
 
 

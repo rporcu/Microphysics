@@ -300,7 +300,7 @@ class Test:
     @property
     def crashed(self) -> bool:
         """Whether the test crashed or not"""
-        return len(self.backtrace) > 0 or (self.return_code != 0)
+        return len(self.backtrace) > 0 or self.return_code
 
     @property
     def outfile(self):

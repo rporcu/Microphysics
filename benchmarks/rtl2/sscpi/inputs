@@ -1,0 +1,375 @@
+amrex.fpe_trap_invalid=0
+amrex.fpe_trap_zero=0
+amrex.fpe_trap_overflow=0
+
+#----------------------------------------------------------------------
+# Run settings
+#----------------------------------------------------------------------
+
+# Restart from checkpoint
+#amr.restart   ="chk20197"
+
+#mfix.max_step   = 1
+mfix.stop_time = 55.001
+
+
+#----------------------------------------------------------------------
+# Model settings
+#----------------------------------------------------------------------
+# Restart from checkpoint
+#amr.restart   ="chk20197"
+
+mfix.fixed_dt = 0
+mfix.cfl      = 0.9
+mfix.dt_min   = 1.0e-6
+mfix.dt_max   = 0.000318
+dem mfix.tcoll_ratio = 20.
+
+mfix.gravity =  -9.81  0.0  0.0
+
+mfix.advect_density         = 0
+mfix.advect_enthalpy        = 0
+mfix.advect_fluid_species   = 0
+mfix.solve_reactions        = 0
+mfix.open_system_constraint = 0
+
+#phase coupling 
+mfix.drag_type = "Gidaspow"
+
+#fluid discretization
+mfix.do_initial_proj    = true
+mfix.initial_iterations = 3
+
+mfix.use_drag_coeff_in_proj_gp = true
+
+mfix.advection_type = "Godunov"
+
+mfix.use_drag_in_godunov = false
+
+mfix.redistribution_type = "StateRedist"
+
+mfix.max_solids_volume_fraction = 0.78
+
+#----------------------------------------------------------------------
+# Solver settings
+#----------------------------------------------------------------------
+
+# MAC solver ..........................................................
+
+mac_proj.mg_max_coarsening_level = 3
+
+mac_proj.mg_rtol         = 1.0e-4  # 1.0e-11
+mac_proj.mg_atol         = 1.0e-7  # 1.0e-14
+
+mac_proj.verbose         =      0  #
+mac_proj.maxiter         =    200  # 200
+mac_proj.bottom_verbose  =    100  # default
+mac_proj.bottom_maxiter  =    200  # 200
+
+mac_proj.maxorder        =      3  # default
+mac_proj.bottom_rtol     = 1.0e-4  # default
+#mac_proj.bottom_atol    =   -1.0
+
+mac_proj.num_pre_smooth  =      2  # default
+mac_proj.num_post_smooth =      2  # default
+
+mac_proj.bottom_solver   =  hypre  # bicg default
+
+#mac_proj.hypre_namespace = "mac_proj.hypre"
+
+# Nodal solver ........................................................
+
+nodal_proj.mg_max_coarsening_level = 3
+
+nodal_proj.mg_rtol         = 1.0e-5  # 1.0e-11
+nodal_proj.mg_atol         = 1.0e-8  # 1.0e-14
+
+nodal_proj.verbose         =      0  # default
+nodal_proj.maxiter         =    100  # 100
+nodal_proj.bottom_verbose  =      0  # default
+nodal_proj.bottom_maxiter  =    100  # 100
+
+nodal_proj.bottom_rtol     = 1.0e-4  # default
+#nodal_proj.bottom_atol    =   -1.0
+
+nodal_proj.num_pre_smooth  =      2  # default 2
+nodal_proj.num_post_smooth =      2  # default 2
+
+nodal_proj.bottom_solver   =  hypre  # bicg default
+
+# HYPRE settings ......................................................
+
+hypre.hypre_preconditioner = BoomerAMG
+hypre.hypre_solver = GMRES
+
+hypre.verbose      = 0
+hypre.bamg_verbose = 0
+
+hypre.num_krylov        = 50 # (modify as needed)
+hypre.bamg_coarsen_type =  8 # (If on the CPU, use 10)
+
+hypre.bamg_interp_type = 6
+
+#hypre.bamg_relax_type = 11
+hypre.bamg_down_relax_type   =  11
+hypre.bamg_up_relax_type     =  11
+hypre.bamg_coarse_relax_type =  11  # or 9
+
+
+#hypre.bamg_num_sweeps = 2
+hypre.bamg_num_down_sweeps   = 1
+hypre.bamg_num_up_sweeps     = 2
+hypre.bamg_num_coarse_sweeps = 1
+
+
+hypre.bamg_cycle_type = 1
+hypre.bamg_relax_order = 0
+hypre.bamg_trunc_factor = 0.1
+hypre.bamg_max_levels = 5
+hypre.bamg_agg_num_levels = 1
+hypre.bamg_agg_interp_type = 5 #(Try 4 or 5)
+hypre.bamg_agg_pmax_elmts = 3
+hypre.bamg_pmax_elmts = 3
+hypre.bamg_keep_transpose = 1
+
+hypre.recompute_preconditioner = 0 # 1 if the mxtric changes
+
+hypre.write_matrix_files = 0
+
+
+#----------------------------------------------------------------------
+# Geometry / grids / tiles
+#----------------------------------------------------------------------
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 0
+
+# Geometry
+geometry.coord_sys   = 0                       # 0: Cartesian
+geometry.is_periodic = 0       0       0       # Is periodic in each direction?
+geometry.prob_lo     = 0.000   0.000   0.000   # lo corner of physical domain
+geometry.prob_hi     = 1.2192  0.2286  0.0762  # hi corner of physical domain
+
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell =  128  24  8
+
+amr.blocking_factor = 4
+
+# Fluid grids: maximum allowable size of each fluid subdomain
+amr.max_grid_size_x =  16
+amr.max_grid_size_y =   8
+amr.max_grid_size_z =   8
+
+# Particle grids (not with KDTree)
+#particles.max_grid_size_x =    4
+#particles.max_grid_size_y =    4
+#particles.max_grid_size_z =    4
+
+# Fluid tiles: Maximum tile size within each grid
+fabarray.mfiter_tile_size = 1024 1024 1024
+
+# Particle load balancing
+#mfix.load_balance_type = "KnapSack"
+amr.dual_grid          =  0
+amr.regrid_int         = -1
+
+#mfix.knapsack_weight_type = "NumParticles"
+#mfix.knapsack_weight_type = "RunTimeCosts"
+
+#----------------------------------------------------------------------
+# IO / Checkpointing
+#----------------------------------------------------------------------
+amr.check_int      = 50000
+amr.check_file     = "chk"
+
+amr.par_ascii_int  = -1
+amr.par_ascii_file = "vis"
+
+#amr.plot_int        = 100
+amr.plot_per_approx = 0.0625
+amr.plot_file       = "plt"
+
+amr.plt_regtest = 0
+amr.plt_vel_g   = 1
+
+amr.plt_vel_p = 1
+
+##amr.ascent_int        = 2
+amr.ascent_per_approx = 0.015625
+
+ascent.fluid_actions    = "ascent_actions_fluid.yaml"
+ascent.particle_actions = "ascent_actions_particles.yaml"
+
+
+#----------------------------------------------------------------------
+# User in situ data collection
+#----------------------------------------------------------------------
+# user data processing
+amr.avg_int = 10
+amr.avg_file = "/nfs/home/2/jmusser/projects/sscpi/dem/2Umf/0812/a/uio/uio"
+
+amr.avg_vel_p =        0       0       0       0       1        1        1        1        1
+amr.avg_p_g   =        1       1       1       1       0        0        0        0        0
+amr.avg_ep_g  =        0       0       0       0       0        0        0        0        0
+amr.avg_vel_g =        0       0       0       0       0        0        0        0        0
+amr.avg_region_x_w =   0.044   0.045   0.348   0.350   0.05334  0.05334  0.05334  0.05334  0.05334
+amr.avg_region_x_e =   0.044   0.045   0.348   0.350   0.09906  0.09906  0.09906  0.09906  0.09906
+amr.avg_region_y_s =   0.0     0.0     0.0     0.0     0.0      0.04572  0.09144  0.13716  0.18288
+amr.avg_region_y_n =   0.2286  0.2286  0.2286  0.2286  0.04572  0.09144  0.13716  0.18288  0.22860
+amr.avg_region_z_b =   0.0     0.0     0.0     0.0     0.0      0.0      0.0      0.0      0.0
+amr.avg_region_z_t =   0.0762  0.0762  0.0762  0.0762  0.003    0.003    0.003    0.003    0.003
+
+
+#----------------------------------------------------------------------
+# Fluid model 
+#----------------------------------------------------------------------
+fluid.solve = fluid
+
+fluid.density            = constant
+fluid.density.constant   = 1.2
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 1.8e-5
+
+#----------------------------------------------------------------------
+# DEM model settings
+#----------------------------------------------------------------------
+#dem.solve = None 
+dem.solve = solid0
+
+dem.friction_coeff.pp     =     0.35
+dem.friction_coeff.pw     =     0.35
+
+dem.spring_const.pp       =  2529.0
+dem.spring_const.pw       =  2529.0
+
+dem.restitution_coeff.solid0.solid0  =     0.84
+dem.restitution_coeff.solid0.wall    =     0.92
+
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+
+#----------------------------------------------------------------------
+# PIC model settings
+#----------------------------------------------------------------------
+pic.solve = None 
+#pic.solve = solid0
+#
+#pic.beta = 3.0
+#pic.pressure_coefficient = 100.0
+#
+#pic.close_pack = 0.64
+#
+#pic.small_number = 1.0e-8
+#
+#pic.velfac = 0.8
+#pic.velfac_intercept = 0.85
+#pic.velfac_alpha     = 0.0625
+#
+#pic.damping_factor = 0.40
+#pic.damping_factor_wall_tangent = 1.0
+#pic.damping_factor_wall_normal  = 0.8
+
+#----------------------------------------------------------------------
+# EB model settings
+#----------------------------------------------------------------------
+mfix.levelset__refinement = 1    # levelset resolution (to the particles)
+mfix.write_eb_surface = false    # Needed to output eb-surfaces
+
+# geometry 
+#none 
+#eb2.small_volfrac = 1.0e-6
+
+#----------------------------------------------------------------------
+# Regions 
+#----------------------------------------------------------------------
+mfix.regions = full-domain  init-bed  inflow  outflow  bottom-wall  top-wall  front-wall  back-wall
+
+regions.full-domain.lo = 0.0000    0.0000    0.0000
+regions.full-domain.hi = 1.2192    0.2286    0.0762
+
+regions.init-bed.lo    = 0.0000    0.0000    0.0000
+regions.init-bed.hi    = 0.6150    0.2286    0.0762
+
+regions.inflow.lo      = 0.0000    0.0000    0.0000
+regions.inflow.hi      = 0.0000    0.2286    0.0762
+
+regions.outflow.lo     = 1.2192    0.0000    0.0000
+regions.outflow.hi     = 1.2192    0.2286    0.0762
+
+regions.bottom-wall.lo = 0.0000    0.000001  0.0000
+regions.bottom-wall.hi = 1.2192    0.000001  0.0762
+
+regions.top-wall.lo    = 0.0000    0.228599  0.0000
+regions.top-wall.hi    = 1.2192    0.228599  0.0762
+
+regions.front-wall.lo  = 0.0000    0.0000    0.000001
+regions.front-wall.hi  = 1.2192    0.2286    0.000001
+
+regions.back-wall.lo   = 0.0000    0.0000    0.076199
+regions.back-wall.hi   = 1.2192    0.2286    0.076199
+
+#----------------------------------------------------------------------
+# Initial Conditions
+#----------------------------------------------------------------------
+ic.regions = full-domain  init-bed 
+
+mfix.particle_init_type = Auto
+
+# background fluid 
+ic.full-domain.fluid.volfrac  = 1.0
+ic.full-domain.fluid.velocity = 1.0  0.0  0.0
+
+# initial static bed 
+ic.init-bed.fluid.volfrac  = 0.84
+ic.init-bed.fluid.velocity = 1.20 0.00  0.00
+
+ic.init-bed.solids = solid0
+ic.init-bed.packing = pseudo_random
+
+ic.init-bed.solid0.volfrac  = 0.16
+ic.init-bed.solid0.velocity = 0.0  0.0  0.0
+
+ic.init-bed.solid0.diameter = constant
+ic.init-bed.solid0.diameter.constant = 0.003256
+
+ic.init-bed.solid0.density =  constant
+ic.init-bed.solid0.density.constant = 1131.0
+
+#----------------------------------------------------------------------
+# Boundary Conditions
+#
+# U/Umf  bc.ug
+#  2     2.19
+#  3     3.28
+#  4     4.38
+#
+#----------------------------------------------------------------------
+bc.regions = inflow  outflow  bottom-wall  top-wall  front-wall  back-wall
+
+#in
+bc.inflow = mi
+bc.inflow.fluid.volfrac  =  1.0
+bc.inflow.fluid.velocity =  0.0  1.0   0.0  0.0
+bc.inflow.fluid.velocity =  1.0  2.19  0.0  0.0
+#bc.inflow.fluid.velocity =  2.0  3.28  0.0  0.0
+#bc.inflow.fluid.velocity =  3.0  4.38  0.0  0.0
+
+#out
+bc.outflow = po
+bc.outflow.fluid.pressure =  101325.0
+
+# NSWs
+bc.bottom-wall = nsw
+bc.top-wall    = nsw
+bc.front-wall  = nsw
+bc.back-wall   = nsw
+
+bc.bottom-wall.normal =  0.0  1.0  0.0
+bc.top-wall.normal    =  0.0 -1.0  0.0
+bc.front-wall.normal  =  0.0  0.0  1.0
+bc.back-wall.normal   =  0.0  0.0 -1.0

@@ -353,14 +353,9 @@ void DiffusionOp::ComputeLapT (const Vector< MultiFab*      >& lapT_out,
 
   int finest_level = amrcore->finestLevel();
 
-  Vector< MultiFab* > lapT_aux(finest_level+1);
-
   for(int lev = 0; lev <= finest_level; lev++)
   {
-    lapT_aux[lev] = new MultiFab(grids[lev], dmap[lev], 1, nghost, MFInfo(),
-        *ebfactory[lev]);
-
-    lapT_aux[lev]->setVal(0.0);
+    lapT_out[lev]->setVal(0.0);
   }
 
   // We want to return div (ep_g k_g grad)) T_g
@@ -402,13 +397,7 @@ void DiffusionOp::ComputeLapT (const Vector< MultiFab*      >& lapT_out,
       }
     }
 
-//    ep_k_g.FillBoundary(geom[lev].periodicity());
-
     EB_interp_CellCentroid_to_FaceCentroid (ep_k_g, GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
-
-//    b[lev][0]->FillBoundary(geom[lev].periodicity());
-//    b[lev][1]->FillBoundary(geom[lev].periodicity());
-//    b[lev][2]->FillBoundary(geom[lev].periodicity());
 
     if (EB::fix_temperature) {
       // The following is a WIP in AMReX
@@ -453,16 +442,10 @@ void DiffusionOp::ComputeLapT (const Vector< MultiFab*      >& lapT_out,
 
   MLMG solver(*temperature_matrix);
 
-  solver.apply(lapT_aux, T_g);
+  solver.apply(lapT_out, T_g);
 
   for(int lev = 0; lev <= finest_level; lev++) {
-    amrex::single_level_redistribute(*lapT_aux[lev], *lapT_out[lev], 0, 1, geom[lev]);
     EB_set_covered(*lapT_out[lev], 0, lapT_out[lev]->nComp(), lapT_out[lev]->nGrow(), 0.);
-  }
-
-  for(int lev = 0; lev <= finest_level; lev++)
-  {
-    delete lapT_aux[lev];
   }
 }
 
@@ -478,13 +461,10 @@ void DiffusionOp::ComputeLapS (const Vector< MultiFab* >& laps_out,
 
     int ntrac = scal_in[0]->nComp();
 
-    Vector< MultiFab* >  laps_aux(finest_level+1);
     Vector< MultiFab* >    phi_eb(finest_level+1);
     for(int lev = 0; lev <= finest_level; lev++) {
 
-      laps_aux[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, nghost,
-                                    MFInfo(), *ebfactory[lev]);
-       laps_aux[lev]->setVal(0.0);
+       laps_out[lev]->setVal(0.0);
 
        phi_eb[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0,
                                   MFInfo(), *ebfactory[lev]);
@@ -514,16 +494,14 @@ void DiffusionOp::ComputeLapS (const Vector< MultiFab* >& laps_out,
 
     MLMG solver(*scal_matrix);
 
-    solver.apply(laps_aux, scal_in);
+    solver.apply(laps_out, scal_in);
 
     for(int lev = 0; lev <= finest_level; lev++) {
-      amrex::single_level_redistribute(*laps_aux[lev], *laps_out[lev], 0, ntrac, geom[lev]);
       EB_set_covered(*laps_out[lev], 0, laps_out[lev]->nComp(), laps_out[lev]->nGrow(), 0.);
     }
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
-       delete laps_aux[lev];
        delete   phi_eb[lev];
     }
 }
@@ -546,16 +524,10 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
   Vector<BCRec> bcs_dummy; // This is just to satisfy the call to EB_interp...
   bcs_dummy.resize(3*nspecies_g);
 
-  // Auxiliary data where we store Div{ep_g ro_g D_gk Grad{X_gk}}
-  Vector< MultiFab* > lapX_aux(finest_level+1);
-
-  // Allocate space for lapX_aux and set it to 0
+  // Set lapX_out to 0
   for(int lev = 0; lev <= finest_level; lev++)
   {
-    lapX_aux[lev] = new MultiFab(grids[lev], dmap[lev], nspecies_g, nghost, MFInfo(),
-        *ebfactory[lev]);
-
-    lapX_aux[lev]->setVal(0.0);
+    lapX_out[lev]->setVal(0.0);
   }
 
   // We want to return div (ep_g ro_g D_gk grad)) phi
@@ -609,14 +581,14 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
   }
 
   MLMG solver(*species_matrix);
-//  setSolverSettings(solver);
-//
-//  // This ensures that ghost cells of sol are correctly filled when returned
-//  // from the solver
-//  solver.setFinalFillBC(true);
+  setSolverSettings(solver);
+
+  // This ensures that ghost cells of sol are correctly filled when returned
+  // from the solver
+  solver.setFinalFillBC(true);
 
   // Compute div (ep_g ro_g D_gk grad)) phi
-  solver.apply(lapX_aux, X_gk_in);
+  solver.apply(lapX_out, X_gk_in);
 
 #ifdef AMREX_DEBUG
   {
@@ -625,7 +597,7 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
       temp.setVal(0.);
 
       for(int n(0); n < nspecies_g; ++n)
-        MultiFab::Add(temp, *lapX_aux[lev], n, 0, 1, 0);
+        MultiFab::Add(temp, *lapX_out[lev], n, 0, 1, 0);
 
       Print() << "lev = " << lev << std::endl;
       Print() << "summed div fluxes max = " << temp.max(0, 0) << std::endl;
@@ -645,7 +617,7 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
     // Auxiliary data where we store Div{ep_g ro_g D_gk Grad{X_gk}}
     Vector< MultiFab* > correction_aux(finest_level+1);
 
-    // Allocate space for lapX_aux and set it to 0
+    // Allocate space for correction_aux and set it to 0
     for(int lev = 0; lev <= finest_level; lev++)
     {
       correction_aux[lev] = new MultiFab(grids[lev], dmap[lev], nspecies_g, nghost, MFInfo(),
@@ -712,11 +684,11 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
     }
 
     MLMG solver(*species_matrix);
-//    setSolverSettings(solver);
-//
-//    // This ensures that ghost cells of sol are correctly filled when returned
-//    // from the solver
-//    solver.setFinalFillBC(true);
+    setSolverSettings(solver);
+
+    // This ensures that ghost cells of sol are correctly filled when returned
+    // from the solver
+    solver.setFinalFillBC(true);
 
     // Compute div (ep_g ro_g D_gk grad)) phi
     solver.apply(correction_aux, X_gk_in);
@@ -724,7 +696,7 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
     for (int lev(0); lev <= finest_level; ++lev) {
 
       for (int m(0); m < nspecies_g; ++m) {
-        MultiFab::Subtract(*lapX_aux[lev], *correction_aux[lev], m, species_k, 1, lapX_aux[lev]->nGrow());
+        MultiFab::Subtract(*lapX_out[lev], *correction_aux[lev], m, species_k, 1, lapX_out[lev]->nGrow());
       }
     }
 
@@ -741,7 +713,7 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
       temp.setVal(0.);
 
       for(int n(0); n < nspecies_g; ++n)
-        MultiFab::Add(temp, *lapX_aux[lev], n, 0, 1, 0);
+        MultiFab::Add(temp, *lapX_out[lev], n, 0, 1, 0);
 
       Print() << "lev = " << lev << std::endl;
       Print() << "summed div fluxes max = " << temp.max(0, 0) << std::endl;
@@ -753,14 +725,7 @@ void DiffusionOp::ComputeLapX (const Vector< MultiFab*      >& lapX_out,
   // Redistribute lapX_aux into lapX_out
   for(int lev = 0; lev <= finest_level; lev++)
   {
-    amrex::single_level_redistribute(*lapX_aux[lev], *lapX_out[lev], 0, nspecies_g, geom[lev]);
     EB_set_covered(*lapX_out[lev], 0, lapX_out[lev]->nComp(), lapX_out[lev]->nGrow(), 0.);
-  }
-
-  // Free lapX_aux memory
-  for(int lev = 0; lev <= finest_level; lev++)
-  {
-    delete lapX_aux[lev];
   }
 }
 
@@ -788,7 +753,6 @@ void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
 
     // Auxiliary data where we store Div{ep_g ro_g X_gk sum(D_gm Grad{X_gm})}
     Vector< MultiFab* > correction_aux(finest_level+1);
-    Vector< MultiFab* > correction_out(finest_level+1);
 
     // Allocate space for correction_aux and set it to 0
     for(int lev = 0; lev <= finest_level; lev++)
@@ -797,11 +761,6 @@ void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
                                          *ebfactory[lev]);
 
       correction_aux[lev]->setVal(0.0);
-
-      correction_out[lev] = new MultiFab(grids[lev], dmap[lev], nspecies_g, nghost, MFInfo(),
-                                         *ebfactory[lev]);
-
-      correction_out[lev]->setVal(0.0);
     }
 
     // We want to return div (ep_g ro_g X_gk sum(D_gm grad X_gm))
@@ -862,11 +821,11 @@ void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
     }
 
     MLMG solver(*species_matrix);
-//    setSolverSettings(solver);
-//
-//    // This ensures that ghost cells of sol are correctly filled when returned
-//    // from the solver
-//    solver.setFinalFillBC(true);
+    setSolverSettings(solver);
+
+    // This ensures that ghost cells of sol are correctly filled when returned
+    // from the solver
+    solver.setFinalFillBC(true);
 
     // Compute div (ep_g ro_g X_gk D_gm grad(phi_gm))
     solver.apply(correction_aux, X_gk_in);
@@ -874,8 +833,7 @@ void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
     // Redistribute lapX_aux into lapX_out
     for(int lev = 0; lev <= finest_level; lev++)
     {
-      amrex::single_level_redistribute(*correction_aux[lev], *correction_out[lev], 0, nspecies_g, geom[lev]);
-      EB_set_covered(*correction_out[lev], 0, correction_out[lev]->nComp(), correction_out[lev]->nGrow(), 0.);
+      EB_set_covered(*correction_aux[lev], 0, correction_aux[lev]->nComp(), correction_aux[lev]->nGrow(), 0.);
     }
 
     for (int lev(0); lev <= finest_level; ++lev) {
@@ -888,7 +846,7 @@ void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
       {
         Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
-        Array4<Real const> const& correct_arr = correction_out[lev]->const_array(mfi);
+        Array4<Real const> const& correct_arr = correction_aux[lev]->const_array(mfi);
         Array4<Real const> const& ep_g_arr    = ep_g_in[lev]->const_array(mfi);
         Array4<Real const> const& ro_g_arr    = ro_g_in[lev]->const_array(mfi);
         Array4<Real      > const& X_gk_arr    = X_gk_in[lev]->array(mfi);
@@ -913,7 +871,6 @@ void DiffusionOp::SubtractDiv_XGradX (const Vector< MultiFab*      >& X_gk_in,
 
     for (int lev(0); lev <= finest_level; ++lev) {
       delete correction_aux[lev];
-      delete correction_out[lev];
     }
 
   } // correct_fluxes
@@ -938,16 +895,10 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
   // Number of fluid species
   const int nspecies_g = fluid.nspecies;
 
-  // Auxiliary data where we store Div{ep_g ro_g h_gk D_gk Grad{X_gk}}
-  Vector< MultiFab* > laphX_aux(finest_level+1);
-
   // Allocate space for laphX_aux and set it to 0
   for(int lev = 0; lev <= finest_level; lev++)
   {
-    laphX_aux[lev] = new MultiFab(grids[lev], dmap[lev], nspecies_g, nghost, MFInfo(),
-        *ebfactory[lev]);
-
-    laphX_aux[lev]->setVal(0.0);
+    laphX_out[lev]->setVal(0.0);
   }
 
   // We want to return div (ep_g ro_g h_gk D_gk grad)) phi
@@ -1019,14 +970,14 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
   }
 
   MLMG solver(*species_matrix);
-//  setSolverSettings(solver);
-//
-//  // This ensures that ghost cells of sol are correctly filled when returned
-//  // from the solver
-//  solver.setFinalFillBC(true);
+  setSolverSettings(solver);
+
+  // This ensures that ghost cells of sol are correctly filled when returned
+  // from the solver
+  solver.setFinalFillBC(true);
 
   // Compute div (ep_g ro_g [h_gk] D_gk grad)) phi
-  solver.apply(laphX_aux, X_gk_in);
+  solver.apply(laphX_out, X_gk_in);
 
   // CORRECT FLUXES
   // Compute Fluxes for correcting the result
@@ -1036,7 +987,7 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
     // Auxiliary data where we store Div{ep_g ro_g h_gk D_gk Grad{X_gk}}
     Vector< MultiFab* > correction_aux(finest_level+1);
 
-    // Allocate space for laphX_aux and set it to 0
+    // Allocate space for correction_aux and set it to 0
     for(int lev = 0; lev <= finest_level; lev++)
     {
       correction_aux[lev] = new MultiFab(grids[lev], dmap[lev], nspecies_g, nghost, MFInfo(),
@@ -1122,11 +1073,11 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
     } // lev
 
     MLMG solver(*species_matrix);
-//    setSolverSettings(solver);
-//
-//    // This ensures that ghost cells of sol are correctly filled when returned
-//    // from the solver
-//    solver.setFinalFillBC(true);
+    setSolverSettings(solver);
+
+    // This ensures that ghost cells of sol are correctly filled when returned
+    // from the solver
+    solver.setFinalFillBC(true);
 
     // Compute div (ep_g ro_g [h_gk] D_gk grad)) phi
     solver.apply(correction_aux, X_gk_in);
@@ -1134,7 +1085,7 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
     for (int lev(0); lev <= finest_level; ++lev) {
 
       for (int m(0); m < nspecies_g; ++m) {
-        MultiFab::Subtract(*laphX_aux[lev], *correction_aux[lev], m, species_k, 1, laphX_aux[lev]->nGrow());
+        MultiFab::Subtract(*laphX_out[lev], *correction_aux[lev], m, species_k, 1, laphX_out[lev]->nGrow());
       }
     }
 
@@ -1147,13 +1098,6 @@ void DiffusionOp::ComputeLaphX (const Vector< MultiFab*       >& laphX_out,
   // Redistribute laphX_aux into laphX_out
   for(int lev = 0; lev <= finest_level; lev++)
   {
-    amrex::single_level_redistribute(*laphX_aux[lev], *laphX_out[lev], 0, nspecies_g, geom[lev]);
-    EB_set_covered(*laphX_aux[lev], 0, laphX_aux[lev]->nComp(), laphX_aux[lev]->nGrow(), 0.);
-  }
-
-  // Free laphX_aux memory
-  for(int lev = 0; lev <= finest_level; lev++)
-  {
-    delete laphX_aux[lev];
+    EB_set_covered(*laphX_out[lev], 0, laphX_out[lev]->nComp(), laphX_out[lev]->nGrow(), 0.);
   }
 }

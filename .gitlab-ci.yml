@@ -118,14 +118,18 @@ build:nvcc:
   tags:
     - ubuntu-shell
 
-.build:csg:
+build:csg:
   image: $CI_REGISTRY_IMAGE/nvcc
   needs: ['build-nvcc-env']
   script:
+    - conan install -if build -g cmake_find_package catch2/2.13.7@
+    - conan install -if build -g cmake_find_package cgal/5.2.1@
+    - conan install -if build -g cmake_find_package taocpp-pegtl/3.2.1@
     - sccache -s
     - cmake -S .
             -B build
             -DCMAKE_BUILD_TYPE=Debug
+            -DCMAKE_MODULE_PATH=$PWD/build
             -DMFIX_CSG=ON
     - cmake --build build --target functional_tests
     - ./build/src/eb/tests/functional_tests
@@ -223,4 +227,4 @@ lint:spelling:
   <<: *lint_template
   script:
     - rm -rf subprojects
-    - codespell --ignore-words-list ba,blocs,inout,ith,od,wen,structed --enable-colors --quiet-level 2
+    - codespell --ignore-words-list ba,blocs,inout,ith,od,wen,structed,te --enable-colors --quiet-level 2
