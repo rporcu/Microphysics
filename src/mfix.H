@@ -1218,9 +1218,8 @@ public:
     static std::string load_balance_type;
     static std::string knapsack_weight_type;
     static int load_balance_fluid;
-    static int downsize_particle_grid;
-    static Real downsize_factor;
     static int knapsack_nmax;
+    static int greedy_dir;
 
     // Options to control time stepping
     Real m_cfl = 0.5;
@@ -1237,6 +1236,9 @@ public:
     int removeOutOfRange = 1; // Flag to remove out-of-range particles
 
     int sort_particle_int = -1; // # steps to sort particles
+
+    Real overload_toler  = 1.2;
+    Real underload_toler = 0.8;
 
     static EBSupport m_eb_support_level;
 
@@ -1323,7 +1325,7 @@ public:
 
     int nghost_eb_full () const   { return 4; }
 
-    IntVect particle_sorting_bin = IntVect::TheZeroVector();
+    IntVect particle_sorting_bin = IntVect::TheUnitVector();
 
     bool do_initial_proj    = true;
     int  initial_iterations = 3;

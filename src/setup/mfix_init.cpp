@@ -120,11 +120,13 @@ mfix::InitParams ()
     pp.query("particle_init_type", particle_init_type);
 
     // frequency and bin size for sorting particles 
-    Array<int,3> sorting_bin{0, 0, 0};
-    pp.query("particle_sorting_bin", sorting_bin);
-    particle_sorting_bin = IntVect(sorting_bin);
+    pp.query("particle_sorting_bin", particle_sorting_bin);
     sort_particle_int = -1;
     pp.query("sort_particle_int", sort_particle_int);
+
+    // options for load balance
+    pp.query("overload_tolerance",  overload_toler);
+    pp.query("underload_tolerance", underload_toler);
 
     // Options to control initial projections (mostly we use these for
     // debugging)
@@ -197,8 +199,6 @@ mfix::InitParams ()
     pp.query("load_balance_type",      load_balance_type);
     pp.query("knapsack_weight_type",   knapsack_weight_type);
     pp.query("load_balance_fluid",     load_balance_fluid);
-    pp.query("downsize_particle_grid", downsize_particle_grid);
-    pp.query("downsize_factor",        downsize_factor);
     pp.query("grid_pruning",           m_grid_pruning);
 
 
@@ -288,7 +288,8 @@ mfix::InitParams ()
     macproj_options = std::make_unique<MfixUtil::MLMGOptions>("mac_proj");
 
     AMREX_ALWAYS_ASSERT(load_balance_type.compare("KnapSack") == 0  ||
-                        load_balance_type.compare("SFC") == 0);
+                        load_balance_type.compare("SFC") == 0 || 
+                        load_balance_type.compare("Greedy") == 0);
 
     AMREX_ALWAYS_ASSERT(knapsack_weight_type.compare("RunTimeCosts") == 0 ||
                         knapsack_weight_type.compare("NumParticles") == 0);
@@ -298,6 +299,9 @@ mfix::InitParams ()
 
     if (load_balance_type.compare("KnapSack") == 0)
       pp.query("knapsack_nmax", knapsack_nmax);
+
+    if (load_balance_type.compare("Greedy") == 0)
+      pp.query("greedy_dir", greedy_dir);
 
     // fluid grids' distribution map 
     pp.queryarr("pmap", pmap);
@@ -913,7 +917,6 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
           IntVect particle_max_grid_size(particle_max_grid_size_x,
                                          particle_max_grid_size_y,
                                          particle_max_grid_size_z);
-          pc->setMaxGridSize(particle_max_grid_size);
 
           for (int lev = 0; lev < nlev; lev++)
           {
