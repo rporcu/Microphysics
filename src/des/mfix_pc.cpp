@@ -94,51 +94,28 @@ void MFIXParticleContainer::printParticles ()
 {
     const int lev = 0;
     auto& plevel = GetParticles(lev);
-    const auto& geom = Geom(lev);
-    const auto  domain = geom.Domain();
-    const auto  dx_inv = geom.InvCellSizeArray();
-    const auto  prob_lo = geom.ProbLoArray();
 
     for (auto& kv : plevel)
     {
-       const auto& aos = kv.second.GetArrayOfStructs();
-       const auto* pstruct = aos().dataPtr();
-       //auto& soa = kv.second.GetStructOfArrays();
-       //auto p_realarray = soa.realarray();
-       //auto p_intarray = soa.intarray();
-       AllPrintToFile("particles") << "pbox " << kv.first.first << " " << kv.first.second 
-         << " nReal " << kv.second.numRealParticles()
-         << " nGhost " << kv.second.numNeighborParticles() << "\n";
+       const auto& particles = kv.second.GetArrayOfStructs();
+       auto& soa = kv.second.GetStructOfArrays();
+       auto p_realarray = soa.realarray();
+       auto p_intarray = soa.intarray();
 
-      if (kv.second.numRealParticles() == 0) continue;
-
-      Box pbox = ParticleBoxArray(lev)[kv.first.first];
-      pbox.grow(1);
-      const auto lo = lbound(pbox);
-      AllPrintToFile("particles") << pbox << "\n";
-
-       for (int i = 0; i < kv.second.numTotalParticles(); ++i)
+       for (int i = 0; i < particles.numParticles(); ++i)
        {
-        //  IntVect cell_ijk = getParticleCell(pstruct[i], prob_lo, dx_inv, domain);
-        if (!((pstruct[i].pos(0)-prob_lo[0])*dx_inv[0] - lo.x >= 0.0)) {
-         AllPrintToFile("particles") << i << " " << pstruct[i].id() << " " << pstruct[i].cpu() << " "
-            << pstruct[i].pos(0) << " " << pstruct[i].pos(1) << " " << pstruct[i].pos(2) << " "
-            << (pstruct[i].pos(0)-prob_lo[0])*dx_inv[0] - lo.x << "\n";
-            break;
-        }
-          //  << cell_ijk[0] << " " << cell_ijk[1] << " " << cell_ijk[2] << "\n";
-          //std::cout << "Particle ID  = " << i << " " << std::endl;
-          //std::cout << "X            = " << particles[i].pos(0) << " " << std::endl;
-          //std::cout << "Y            = " << particles[i].pos(1) << " " << std::endl;
-          //std::cout << "Z            = " << particles[i].pos(2) << " " << std::endl;
-          //std::cout << "state        = " << p_intarray[SoAintData::state][i] << " " << std::endl;
-          //std::cout << "phase        = " << p_intarray[SoAintData::phase][i] << " " << std::endl;
-          //std::cout << "Real properties = " << std::endl;
+          std::cout << "Particle ID  = " << i << " " << std::endl;
+          std::cout << "X            = " << particles[i].pos(0) << " " << std::endl;
+          std::cout << "Y            = " << particles[i].pos(1) << " " << std::endl;
+          std::cout << "Z            = " << particles[i].pos(2) << " " << std::endl;
+          std::cout << "state        = " << p_intarray[SoAintData::state][i] << " " << std::endl;
+          std::cout << "phase        = " << p_intarray[SoAintData::phase][i] << " " << std::endl;
+          std::cout << "Real properties = " << std::endl;
 
-          //for (int j = 0; j < SoArealData::count; j++)
-          //std::cout << "property " << j << "  = " << p_realarray[j][i] << " " << std::endl;
+          for (int j = 0; j < SoArealData::count; j++)
+            std::cout << "property " << j << "  = " << p_realarray[j][i] << " " << std::endl;
 
-          //std::cout << std::endl;
+          std::cout << std::endl;
        }
     }
 }

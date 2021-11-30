@@ -910,108 +910,59 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
 
         // We need to do this *after* restart (hence putting this here not
         // in Init) because we may want to change the particle_max_grid_size on restart.
-      if (dual_grid) {                                                                                                                                                                                                   // knapsack or sfc load balance
-        if (load_balance_type == "KnapSack" || load_balance_type == "SFC") {
-          // if given max particle grid size
-          if (particle_max_grid_size_x > 0 &&
-              particle_max_grid_size_y > 0 &&
-              particle_max_grid_size_z > 0) {
-            IntVect particle_max_grid_size(particle_max_grid_size_x,
-                                            particle_max_grid_size_y,
-                                            particle_max_grid_size_z);
+        if ( dual_grid && particle_max_grid_size_x > 0
+                       && particle_max_grid_size_y > 0
+                       && particle_max_grid_size_z > 0)
+        {
+          IntVect particle_max_grid_size(particle_max_grid_size_x,
+                                         particle_max_grid_size_y,
+                                         particle_max_grid_size_z);
 
-            for (int lev = 0; lev < nlev; lev++) {
-              // partition the particle grids
-              BoxArray particle_ba(geom[lev].Domain());
-              particle_ba.maxSize(particle_max_grid_size);
+          for (int lev = 0; lev < nlev; lev++)
+          {
+            BoxArray particle_ba(geom[lev].Domain());
+            particle_ba.maxSize(particle_max_grid_size);
 
-              // Reset distribution mapping for particle grids
-              DistributionMapping particle_dm;
-              if (particle_pmap.empty())
-                particle_dm.define(particle_ba, ParallelDescriptor::NProcs());
-              else
-                particle_dm.define(particle_pmap);
+            DistributionMapping particle_dm; 
+            if (particle_pmap.empty())
+              particle_dm.define(particle_ba, ParallelDescriptor::NProcs());
+            else
+              particle_dm.define(particle_pmap);
 
-              // Regrid with default distribution map
-              pc->Regrid(particle_dm, particle_ba);
+            pc->Regrid(particle_dm, particle_ba);
 
-              // Reset particle cost based on current grids
-              // The costs are defined for the previous regridding
-              if (particle_cost[lev] != nullptr) delete particle_cost[lev];
-              particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                                pc->ParticleDistributionMap(lev), 1, 0);
-              //
-              if (knapsack_weight_type == "NumParticles") {
-                int local_count = 0;
-                for (MFIXParIter pti(*(this->pc), 0); pti.isValid(); ++pti)
-                    local_count += pti.numParticles();
-                particle_cost[lev]->setVal(static_cast<Real>(local_count));
-              }
-              else if (knapsack_weight_type == "RunTimeCosts") {
-                particle_cost[lev]->setVal(0.0);
-              }
-            }// end for level
-          }// end if max particle grid size
-        }// end else knapsack and sfc
-        // regrid for load balance
-        Regrid();
-      }// end if dual_grid
+            if (particle_cost[lev] != nullptr)
+              delete particle_cost[lev];
+
+            particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                              pc->ParticleDistributionMap(lev), 1, 0);
+            if (knapsack_weight_type == "NumParticles") {
+              int local_count = 0;
+              for (MFIXParIter pti(*(this->pc), 0); pti.isValid(); ++pti)
+                  local_count += pti.numParticles();
+              particle_cost[lev]->setVal(static_cast<Real>(local_count));
+            }
+            else if (knapsack_weight_type == "RunTimeCosts") {
+              particle_cost[lev]->setVal(0.0);
+            }
+
+            // initialize the ranks of particle grids
+            if (particle_proc[lev] != nullptr)
+              delete particle_proc[lev];
+            //
+            const Real proc = Real(ParallelDescriptor::MyProc());
+            particle_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                              pc->ParticleDistributionMap(lev), 1, 0);
+            particle_proc[lev]->setVal(proc);
 
 
-        // if ( dual_grid && particle_max_grid_size_x > 0
-        //                && particle_max_grid_size_y > 0
-        //                && particle_max_grid_size_z > 0)
-        // {
-        //   IntVect particle_max_grid_size(particle_max_grid_size_x,
-        //                                  particle_max_grid_size_y,
-        //                                  particle_max_grid_size_z);
-        //   pc->setMaxGridSize(particle_max_grid_size);
+            // This calls re-creates a proper particle_ebfactories
+            //  and regrids all the multifabs that depend on it
+            if (DEM::solve || PIC::solve)
+                RegridLevelSetArray(lev);
 
-        //   for (int lev = 0; lev < nlev; lev++)
-        //   {
-        //     BoxArray particle_ba(geom[lev].Domain());
-        //     particle_ba.maxSize(particle_max_grid_size);
-
-        //     DistributionMapping particle_dm; 
-        //     if (particle_pmap.empty())
-        //       particle_dm.define(particle_ba, ParallelDescriptor::NProcs());
-        //     else
-        //       particle_dm.define(particle_pmap);
-
-        //     pc->Regrid(particle_dm, particle_ba);
-
-        //     if (particle_cost[lev] != nullptr)
-        //       delete particle_cost[lev];
-
-        //     particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-        //                                       pc->ParticleDistributionMap(lev), 1, 0);
-        //     if (knapsack_weight_type == "NumParticles") {
-        //       int local_count = 0;
-        //       for (MFIXParIter pti(*(this->pc), 0); pti.isValid(); ++pti)
-        //           local_count += pti.numParticles();
-        //       particle_cost[lev]->setVal(static_cast<Real>(local_count));
-        //     }
-        //     else if (knapsack_weight_type == "RunTimeCosts") {
-        //       particle_cost[lev]->setVal(0.0);
-        //     }
-
-        //     // initialize the ranks of particle grids
-        //     if (particle_proc[lev] != nullptr)
-        //       delete particle_proc[lev];
-        //     //
-        //     const Real proc = Real(ParallelDescriptor::MyProc());
-        //     particle_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-        //                                       pc->ParticleDistributionMap(lev), 1, 0);
-        //     particle_proc[lev]->setVal(proc);
-
-
-        //     // This calls re-creates a proper particle_ebfactories
-        //     //  and regrids all the multifabs that depend on it
-        //     if (DEM::solve || PIC::solve)
-        //         RegridLevelSetArray(lev);
-
-        //   }
-        // }
+          }
+        }
 
         if (DEM::solve) {
             pc->MFIX_PC_InitCollisionParams();
