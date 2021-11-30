@@ -55,6 +55,8 @@ endif()
 option( MFIX_OMP    "Enable OpenMP" NO )
 option( MFIX_MPI    "Enable MPI"   YES )
 
+option( MFIX_CATALYST "Enable Catalyst 2.0 support" NO )
+
 include(CMakeDependentOption)
 cmake_dependent_option( MFIX_MPI_THREAD_MULTIPLE
    "whether to initialize MPI so that multiple threads can make MPI calls at the same time"  OFF
@@ -164,4 +166,11 @@ if(MFIX_CSG)
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR}/subprojects/csg-eb)
   list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR}/subprojects/csg-eb)
   target_link_libraries(mfixcore PUBLIC csg-eb)
+endif()
+
+if(MFIX_CATALYST)
+message("adding catalyst")
+   find_package(catalyst 2.0 REQUIRED)
+   target_link_libraries(mfixcore PUBLIC catalyst::catalyst)
+   target_compile_definitions(mfixcore PUBLIC MFIX_CATALYST)
 endif()

@@ -279,7 +279,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
           /********************************************************************
            * Compute number of Particle-Particle collisions
            *******************************************************************/
-          if (debug_level > 0) 
+          if (debug_level > 0)
           {
 #ifdef AMREX_USE_GPU
             if (Gpu::inLaunchRegion())
@@ -390,7 +390,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                   }
                 }
               }
-            } 
+            }
           } // end if (debug_level > 0)
         }
 
@@ -1531,11 +1531,11 @@ void MFIXParticleContainer::UpdateMaxForces (std::map<PairIndex, Gpu::DeviceVect
       }
 
       ReduceTuple host_tuple = reduce_data.value();
-      
+
       max_pfor_x = amrex::max(max_pfor_x, Math::abs(amrex::get<0>(host_tuple)));
       max_pfor_y = amrex::max(max_pfor_y, Math::abs(amrex::get<1>(host_tuple)));
       max_pfor_z = amrex::max(max_pfor_z, Math::abs(amrex::get<2>(host_tuple)));
-      
+
       max_pfor_x = amrex::max(max_pfor_x, Math::abs(amrex::get<3>(host_tuple)));
       max_pfor_y = amrex::max(max_pfor_y, Math::abs(amrex::get<4>(host_tuple)));
       max_pfor_z = amrex::max(max_pfor_z, Math::abs(amrex::get<5>(host_tuple)));
@@ -1558,7 +1558,7 @@ void MFIXParticleContainer::UpdateMaxForces (std::map<PairIndex, Gpu::DeviceVect
         const int nrp = GetParticles(lev)[index].numRealParticles();
 
         int size_ng = neighbors[lev][index].size();
-        
+
         // Number of particles including neighbor particles
         const int ntot = nrp + size_ng;
 
@@ -1711,7 +1711,7 @@ ComputeAverageVelocities (const int lev,
               Real l_vely = 0._rt;
               Real l_velz = 0._rt;
               Real l_k_en = 0._rt;
-              
+
               if (avg_region.contains(p.pos()))
               {
                 const Real mass = p_realarray[SoArealData::mass][p_id];
