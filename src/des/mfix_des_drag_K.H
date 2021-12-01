@@ -40,6 +40,7 @@ struct ComputeDragWenYu
                             int /*i*/, int /*j*/, int /*k*/, int /*pid*/) const
     {
         amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROPg/Mug : large_number;
+        if (RE < eps) return 0.0;
 
         amrex::Real C_d;
         if (RE <= 1000.0)
@@ -51,7 +52,6 @@ struct ComputeDragWenYu
             C_d = 0.44;
         }
 
-        if (RE < eps) return 0.0;
         return 0.75 * C_d * vrel * ROPg * std::pow(EPg, -2.65) / DPM;
     }
 };
@@ -92,31 +92,31 @@ struct ComputeDragGidaspow
                             amrex::Real /*fvelx*/, amrex::Real /*fvely*/, amrex::Real /*fvelz*/,
                             int /*i*/, int /*j*/, int /*k*/, int /*pid*/) const
     {
-  amrex::Real ROg = ROPg / EPg;
+        amrex::Real ROg = ROPg / EPg;
 
         amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROPg/Mug : large_number;
+        if (RE < eps) return 0.0;
 
-  // Dense phase - EPg <= 0.8
-  amrex::Real Ergun = 150.0*(1.0 - EPg)*Mug / (EPg*DPM*DPM) + 1.75*ROg*vrel/DPM;
+        // Dense phase - EPg <= 0.8
+        amrex::Real Ergun = 150.0*(1.0 - EPg)*Mug / (EPg*DPM*DPM) + 1.75*ROg*vrel/DPM;
 
-  // Dilute phase - EPg > 0.8
-  amrex::Real C_d;
-  if (RE <= 1000.0)
-  {
-    C_d = (24.0/(RE+small_number)) * (1.0 + 0.15*std::pow(RE, 0.687));
-  }
-  else
-  {
-    C_d = 0.44;
-  }
-  amrex::Real WenYu = 0.75*C_d*vrel*ROPg*std::pow(EPg, -2.65) / DPM;
+        // Dilute phase - EPg > 0.8
+        amrex::Real C_d;
+        if (RE <= 1000.0)
+        {
+          C_d = (24.0/(RE+small_number)) * (1.0 + 0.15*std::pow(RE, 0.687));
+        }
+        else
+        {
+          C_d = 0.44;
+        }
+        amrex::Real WenYu = 0.75*C_d*vrel*ROPg*std::pow(EPg, -2.65) / DPM;
 
-  // switch function
-  amrex::Real PHI_gs = std::atan(150.0*1.75*(EPg - 0.8))/M_PI + 0.5;
+        // switch function
+        amrex::Real PHI_gs = std::atan(150.0*1.75*(EPg - 0.8))/M_PI + 0.5;
 
-  // blend the models
-  if (RE < eps) return 0.0;
-  return (1.0 - PHI_gs)*Ergun + PHI_gs*WenYu;
+        // blend the models
+        return (1.0 - PHI_gs)*Ergun + PHI_gs*WenYu;
     }
 };
 
@@ -170,30 +170,24 @@ struct ComputeDragBVK2
                             int /*i*/, int /*j*/, int /*k*/, int /*pid*/) const
     {
         amrex::Real RE = (Mug > 0.0) ? DPA*vrel*ROPg/Mug : large_number;
+        if (RE < eps) return 0.0;
 
-        if (RE > eps)
-        {
-            amrex::Real oEPgfour = 1.0/EPg/EPg/EPg/EPg;
+        amrex::Real oEPgfour = 1.0/EPg/EPg/EPg/EPg;
 
-            // eq(9) BVK J. fluid. Mech. 528, 2005
-            // (this F_Stokes is /= of Koch_Hill by a factor of ep_g)
-            amrex::Real F_Stokes = 18.0*Mug*EPg/DPM/DPM;
+        // eq(9) BVK J. fluid. Mech. 528, 2005
+        // (this F_Stokes is /= of Koch_Hill by a factor of ep_g)
+        amrex::Real F_Stokes = 18.0*Mug*EPg/DPM/DPM;
 
-            amrex::Real F = 10.0*PHIS/EPg/EPg + EPg*EPg*(1.0 + 1.5*sqrt(PHIS));
+        amrex::Real F = 10.0*PHIS/EPg/EPg + EPg*EPg*(1.0 + 1.5*sqrt(PHIS));
 
-            F += RE*(0.11*PHIS*(1.0+PHIS) - 4.56e-3*oEPgfour +
-                 std::pow(RE, -0.343)*(0.169*EPg + 6.44e-2*oEPgfour));
+        F += RE*(0.11*PHIS*(1.0+PHIS) - 4.56e-3*oEPgfour +
+             std::pow(RE, -0.343)*(0.169*EPg + 6.44e-2*oEPgfour));
 
-            // F += 0.413*RE/(24.0*EPg*EPg) *
-            //     (1.0/EPg + 3.0*EPg*PHIS + 8.4/std::pow(RE, 0.343)) /
-            //     (1.0 + std::pow(10.0, 3.0*PHIS)/std::pow(RE, 0.5 + 2.0*PHIS));
+        // F += 0.413*RE/(24.0*EPg*EPg) *
+        //     (1.0/EPg + 3.0*EPg*PHIS + 8.4/std::pow(RE, 0.343)) /
+        //     (1.0 + std::pow(10.0, 3.0*PHIS)/std::pow(RE, 0.5 + 2.0*PHIS));
 
-            return F*F_Stokes;
-        }
-        else
-        {
-            return 0.0;
-        }
+        return F*F_Stokes;
     }
 };
 
