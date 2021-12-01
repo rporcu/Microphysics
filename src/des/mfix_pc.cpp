@@ -546,14 +546,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                               ft[2] = 0.0;
                           }
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(AMREX_USE_GPU)
 #pragma omp critical
                           {
 #endif
                             Gpu::Atomic::Add(&fc_ptr[i         ], fn[0] + ft[0]);
                             Gpu::Atomic::Add(&fc_ptr[i + ntot  ], fn[1] + ft[1]);
                             Gpu::Atomic::Add(&fc_ptr[i + 2*ntot], fn[2] + ft[2]);
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(AMREX_USE_GPU)
                           }
 #endif
 
@@ -561,14 +561,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                           cross_product(normal, ft, tow_force);
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(AMREX_USE_GPU)
 #pragma omp critical
                           {
 #endif
                             Gpu::Atomic::Add(&tow_ptr[i         ], ls_value*tow_force[0]);
                             Gpu::Atomic::Add(&tow_ptr[i + ntot  ], ls_value*tow_force[1]);
                             Gpu::Atomic::Add(&tow_ptr[i + 2*ntot], ls_value*tow_force[2]);
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(AMREX_USE_GPU)
                           }
 #endif
                       }
@@ -731,8 +731,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                                 ft[2] = 0.0;
                             }
 
-
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(AMREX_USE_GPU)
 #pragma omp critical
                             {
 #endif
@@ -746,7 +745,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                                 Gpu::Atomic::Add(&fc_ptr[j + ntot  ], -(fn[1] + ft[1]));
                                 Gpu::Atomic::Add(&fc_ptr[j + 2*ntot], -(fn[2] + ft[2]));
                               }
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(AMREX_USE_GPU)
                             }
 #endif
 
@@ -760,7 +759,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                             cross_product(normal, ft, tow_force);
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(AMREX_USE_GPU)
 #pragma omp critical
                             {
 #endif
@@ -774,7 +773,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                                   Gpu::Atomic::Add(&tow_ptr[j + ntot  ], dist_cl2*tow_force[1]);
                                   Gpu::Atomic::Add(&tow_ptr[j + 2*ntot], dist_cl2*tow_force[2]);
                               }
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(AMREX_USE_GPU)
                             }
 #endif
                         }

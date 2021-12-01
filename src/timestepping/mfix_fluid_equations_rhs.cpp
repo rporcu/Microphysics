@@ -145,10 +145,6 @@ mfix::mfix_species_X_rhs (Vector< MultiFab*      > const& rhs,
 
     const int start_idx = chem_txfr_idxs.ro_gk_txfr;
 
-    //for (int lev = 0; lev <= finest_level; lev++) {
-    //  rhs[lev]->plus(*chem_txfr[lev], start_idx, nspecies_g, rhs[lev]->nGrow());
-    //}
-
     for (int lev = 0; lev <= finest_level; lev++) {
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())

@@ -87,7 +87,9 @@ void Reactions::Initialize () {
     if (solve) {
       for (int n(0); n < nreactions; n++) {
         // Get the reation equation relative to given reaction name
-        pp.get((reactions[n]+".reaction").c_str(), reaction_equations[n]);
+        Vector<std::string> equation(0);
+        pp.getarr((reactions[n]+".reaction").c_str(), equation);
+        for (auto elem: equation) reaction_equations[n] += elem;
       }
     }
   }

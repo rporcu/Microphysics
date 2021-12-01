@@ -175,6 +175,9 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
   Vector< MultiFab* > eps_ptr(nlev, nullptr);
   Vector< MultiFab* > chem_txfr_ptr(nlev, nullptr);
 
+  Vector<std::map<PairIndex, Gpu::DeviceVector<Real>>> G_ro_gk_deposition(nlev);
+  Vector<std::map<PairIndex, Gpu::DeviceVector<Real>>> G_h_g_deposition(nlev);
+
   Vector< const FabArray<EBCellFlagFab>* > deposition_flags(nlev, nullptr);
   Vector< const MultiFab* > deposition_volfrac(nlev, nullptr);
   Vector< EBFArrayBoxFactory* > crse_factory(nlev, nullptr);
@@ -486,12 +489,6 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
       // *******************************************************************
       // Reaction rates for each particle
       // *******************************************************************
-      Gpu::DeviceVector<Real> G_sk_pg(np*nspecies_g);
-      Real* G_sk_pg_ptr = G_sk_pg.dataPtr();
-
-      Gpu::DeviceVector<Real> G_h_pg(np);
-      Real* G_h_pg_ptr = G_h_pg.dataPtr();
-
       Box bx = pti.tilebox();
 
       // This is to check efficiently if this tile contains any eb stuff
@@ -500,6 +497,13 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
       const EBCellFlagFab& flags = interp_fab.getEBCellFlagFab();
 
       if (flags.getType(amrex::grow(bx,0)) != FabType::covered) {
+
+        G_ro_gk_deposition[lev][index] = Gpu::DeviceVector<Real>(np*nspecies_g);
+        Real* G_ro_gk_ptr = G_ro_gk_deposition[lev][index].dataPtr();
+
+        G_h_g_deposition[lev][index] = Gpu::DeviceVector<Real>(np);
+        Real* G_h_g_ptr = G_h_g_deposition[lev][index].dataPtr();
+
         // Get arrays
         // const auto& ep_g_array   = ep_g_in[lev]->const_array(pti);
         const auto& interp_array = interp_ptr->const_array(pti);
@@ -525,7 +529,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
         amrex::ParallelFor(np,
           [np,pstruct,p_realarray,interp_array,HeterogeneousRatesFunc,
-           HomogeneousRatesFunc,G_sk_pg_ptr,G_h_pg_ptr,plo,dxi,ptile_data,
+           HomogeneousRatesFunc,G_ro_gk_ptr,G_h_g_ptr,plo,dxi,ptile_data,
            nspecies_g,nspecies_s,nreactions,interp_comp,Solid,p_MW_sn,idx_X_sn,
            idx_mass_sn_txfr,idx_vel_s_txfr,idx_h_s_txfr,p_MW_gk,p_species_id_s,
            p_species_id_g,p_reactants_id,p_reactants_coeffs,p_reactants_phases,
@@ -699,14 +703,11 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
             }
 
             // Total transfer rates
-            Real G_ro_g_heterogeneous(0.);
+            Real G_m_g_heterogeneous(0.);
+            Real G_H_g_heterogeneous(0.);
 
-            Real G_mass_p_heterogeneous(0.);
-            Real G_mass_p_homogeneous(0.);
-
-            Real G_h_p_heterogeneous(0.);
-            Real G_h_p_homogeneous(0.);
-
+            Real G_m_p_heterogeneous(0.);
+            Real G_m_p_homogeneous(0.);
 
             //***************************************************************
             // Initialize to zero
@@ -729,8 +730,8 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
             // Loop over particle's species for computing particle txfr rates
             //***************************************************************
             for (int n_s(0); n_s < nspecies_s; n_s++) {
-              Real G_sn_gp_heterogeneous(0.);
-              Real G_sn_pp_homogeneous(0.);
+              Real G_m_pk_heterogeneous(0.);
+              Real G_m_pk_homogeneous(0.);
 
               // Get the ID of the current species n_s
               const int current_species_id = p_species_id_s[n_s];
@@ -765,9 +766,9 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                   }
 
                   // Compute particle's species n_s transfer rate for reaction q
-                  Real G_sn_gp_q = stoc_coeff * p_MW_sn[n_s] * R_q_heterogeneous[q];
+                  Real G_m_pk_q = stoc_coeff * p_MW_sn[n_s] * R_q_heterogeneous[q];
 
-                  G_sn_gp_heterogeneous += G_sn_gp_q;
+                  G_m_pk_heterogeneous += G_m_pk_q;
                 }
 
                 // Do something only if reaction is heterogeneous and contains
@@ -798,44 +799,36 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                   }
 
                   // Compute particle's species n_s transfer rate for reaction q
-                  Real G_sn_gp_q = stoc_coeff * p_MW_sn[n_s] * R_q_homogeneous[q];
+                  Real G_m_pk_q = stoc_coeff * p_MW_sn[n_s] * R_q_homogeneous[q];
 
-                  G_sn_pp_homogeneous += G_sn_gp_q;
+                  G_m_pk_homogeneous += G_m_pk_q;
                 }
               }
 
-              G_mass_p_heterogeneous += G_sn_gp_heterogeneous;
-              G_mass_p_homogeneous   += G_sn_pp_homogeneous;
-
-              //const Real h_sn_T_p = run_on_device ?
-              //  solids_parms.calc_h_sn<RunOn::Device>(T_p,n_s) :
-              //  solids_parms.calc_h_sn<RunOn::Host>(T_p,n_s);
-
-              // G_h_p_heterogeneous += h_sn_T_p * G_sn_gp_heterogeneous;
-              // G_h_p_homogeneous   += h_sn_T_p * G_sn_pp_homogeneous;
+              G_m_p_heterogeneous += G_m_pk_heterogeneous;
+              G_m_p_homogeneous   += G_m_pk_homogeneous;
 
               // Update global variable
               ptile_data.m_runtime_rdata[idx_mass_sn_txfr + n_s][p_id] =
-                G_sn_gp_heterogeneous + G_sn_pp_homogeneous;
+                G_m_pk_heterogeneous + G_m_pk_homogeneous;
             }
-
 
             //***************************************************************
             // Initialize to zero
             //***************************************************************
             for (int n_g(0); n_g < nspecies_g; n_g++) {
               // Initially set fluid species n_g density transfer rate to zero
-              G_sk_pg_ptr[n_g*np + p_id] = 0;
+              G_ro_gk_ptr[n_g*np + p_id] = 0;
             }
 
             // Initially set fluid energy transfer rate to zero
-            G_h_pg_ptr[p_id] = 0;
+            G_h_g_ptr[p_id] = 0;
 
             //***************************************************************
             // Loop over fluid species for computing fluid txfr rates
             //***************************************************************
             for (int n_g(0); n_g < nspecies_g; n_g++) {
-              Real G_sk_pg_heterogeneous(0.);
+              Real G_m_gk_heterogeneous(0.);
 
               // Get the ID of the current species n_g
               const int current_species_id = p_species_id_g[n_g];
@@ -870,9 +863,9 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                   }
 
                   // Compute fluid species n_g transfer rate for reaction q
-                  Real G_sk_pg_q = stoc_coeff * p_MW_gk[n_g] * R_q_heterogeneous[q];
+                  Real G_m_gk_q = stoc_coeff * p_MW_gk[n_g] * R_q_heterogeneous[q];
 
-                  G_sk_pg_heterogeneous += G_sk_pg_q;
+                  G_m_gk_heterogeneous += G_m_gk_q;
 
                   // Contribution to the particle
                   const Real h_gk_T_p = run_on_device ?
@@ -883,27 +876,28 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                     fluid_parms.calc_h_gk<RunOn::Device>(T_g, n_g, cell_is_covered) :
                     fluid_parms.calc_h_gk<RunOn::Host>(T_g, n_g, cell_is_covered);
 
-                  G_h_p_heterogeneous += h_gk_T_p * G_sk_pg_q;
-                  G_h_p_heterogeneous += amrex::min(0., G_sk_pg_q) * (h_gk_T_g - h_gk_T_p);
+                  const Real G_H_pk_q = h_gk_T_g * amrex::min(0., G_m_gk_q);
+                  const Real G_H_gk_q = h_gk_T_p * amrex::max(0., G_m_gk_q);
 
+                  G_H_g_heterogeneous += (G_H_pk_q + G_H_gk_q);
                 }
               }
 
-              G_ro_g_heterogeneous += G_sk_pg_heterogeneous;
+              G_m_g_heterogeneous += G_m_gk_heterogeneous;
 
               // Update global variable
-              G_sk_pg_ptr[n_g*np + p_id] = G_sk_pg_heterogeneous / fluid_vol;
+              G_ro_gk_ptr[n_g*np + p_id] = G_m_gk_heterogeneous / fluid_vol;
             }
 
             // Check that (total_ro_g_txfr + total_ro_p_txfr) = 0
-            //BL_ASSERT(std::abs(G_ro_p_heterogeneous + G_ro_g_heterogeneous) < 1.e-15);
-            //BL_ASSERT(std::abs(G_ro_p_homogeneous) < 1.e-15);
+            BL_ASSERT(std::abs(G_m_p_heterogeneous + G_m_g_heterogeneous) < 1.e-15);
+            BL_ASSERT(std::abs(G_m_p_homogeneous) < 1.e-15);
 
             //***************************************************************
             // Update particle linear momentum and energy transfer
             //***************************************************************
             if (dem_solve) {
-              const Real coeff = amrex::max(0., G_mass_p_heterogeneous);
+              const Real coeff = amrex::max(0., G_m_p_heterogeneous);
 
               // NOTE: total_ro_p_txfr is computed from interpolated quantities
               // and vel_g is also interpolated to particle position
@@ -913,8 +907,8 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
             }
 
             // Write the result in the enthalpy transfer space
-            ptile_data.m_runtime_rdata[idx_h_s_txfr][p_id] = G_h_p_heterogeneous + G_h_p_homogeneous;
-            G_h_pg_ptr[p_id] = -G_h_p_heterogeneous / fluid_vol;
+            ptile_data.m_runtime_rdata[idx_h_s_txfr][p_id] = -G_H_g_heterogeneous;
+            G_h_g_ptr[p_id] = G_H_g_heterogeneous / fluid_vol;
           }
         });
 
@@ -936,10 +930,14 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
       const Box& box = pti.tilebox(); // I need a box without ghosts
 
       if ((*deposition_flags[lev])[pti].getType(box) != FabType::covered) {
+
+        Real* G_ro_gk_ptr = G_ro_gk_deposition[lev][index].dataPtr();
+        Real* G_h_g_ptr = G_h_g_deposition[lev][index].dataPtr();
+
         auto ro_gk_txfr_array = fab_chem_txfr.array(idx_ro_gk_txfr);
-        auto vel_g_txfr_array  = fab_chem_txfr.array(idx_vel_g_txfr);
-        auto h_g_txfr_array    = fab_chem_txfr.array(idx_h_g_txfr);
-        auto vol_arr           = eps_fab.array();
+        auto vel_g_txfr_array = fab_chem_txfr.array(idx_vel_g_txfr);
+        auto h_g_txfr_array   = fab_chem_txfr.array(idx_h_g_txfr);
+        auto vol_arr          = eps_fab.array();
 
         const auto& flagsarr = (*deposition_flags[lev])[pti].const_array();
         const auto& vfrac    = (*deposition_volfrac[lev])[pti].const_array();
@@ -974,7 +972,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
         amrex::ParallelFor(nrp,
           [nrp,pstruct,p_realarray,plo_array,dx_array,dxi_array,vfrac,flagsarr,
            deposition_scale_factor,WeightFunc,ro_gk_txfr_array,vel_g_txfr_array,
-           h_g_txfr_array,idx_mass_sn_txfr,G_sk_pg_ptr,G_h_pg_ptr,nspecies_g,
+           h_g_txfr_array,idx_mass_sn_txfr,G_ro_gk_ptr,G_h_g_ptr,nspecies_g,
            run_on_device,vol_arr,reg_cell_vol,local_cg_dem=DEM::cg_dem]
           AMREX_GPU_DEVICE (int p_id) noexcept
         {
@@ -992,17 +990,17 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
             p_realarray[SoArealData::radius][p_id], i, j, k, weights,
             deposition_scale_factor);
 
-          GpuArray<Real,SPECIES::NMAX> G_sk_pg_heterogeneous;
-          G_sk_pg_heterogeneous.fill(0.);
+          GpuArray<Real,SPECIES::NMAX> G_ro_gk_heterogeneous;
+          G_ro_gk_heterogeneous.fill(0.);
 
           Real G_ro_g_heterogeneous(0.);
 
           for (int n_g(0); n_g < nspecies_g; ++n_g) {
-            G_sk_pg_heterogeneous[n_g] = G_sk_pg_ptr[n_g*nrp + p_id];
-            G_ro_g_heterogeneous += G_sk_pg_heterogeneous[n_g];
+            G_ro_gk_heterogeneous[n_g] = G_ro_gk_ptr[n_g*nrp + p_id];
+            G_ro_g_heterogeneous += G_ro_gk_heterogeneous[n_g];
           }
 
-          const Real G_h_g_heterogeneous = G_h_pg_ptr[p_id];
+          const Real G_h_g_heterogeneous = G_h_g_ptr[p_id];
 
           const Real coeff = amrex::max(0., G_ro_g_heterogeneous);
 
@@ -1029,7 +1027,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                   for (int n_g(0); n_g < nspecies_g; n_g++) {
                     // Deposition of Rrates
                     Gpu::Atomic::Add(&ro_gk_txfr_array(i+ii,j+jj,k+kk,n_g),
-                                     weight_vol*G_sk_pg_heterogeneous[n_g]);
+                                     weight_vol*G_ro_gk_heterogeneous[n_g]);
                   }
 
                   if (coeff > 0.) {
