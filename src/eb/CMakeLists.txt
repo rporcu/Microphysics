@@ -18,7 +18,10 @@ target_sources( mfixcore
    mfix_write_eb_surface.cpp
    )
 
-if(MFIX_CSG)
+if (MFIX_CSG)
    target_sources(mfixcore PRIVATE mfix_eb_csg.cpp)
-   add_subdirectory(tests)
+   if (BUILD_TESTING)
+      add_subdirectory(tests)
+   endif()
+   target_compile_definitions(mfixcore PRIVATE CSG_EB)
 endif()

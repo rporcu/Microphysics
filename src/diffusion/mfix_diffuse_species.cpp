@@ -8,7 +8,7 @@ using namespace amrex;
 //
 void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
                                    const Vector< MultiFab* >& ep_ro_g_in,
-                                   const Vector< MultiFab* >&     T_g_in,
+                                   const Vector< MultiFab* >& /*T_g_in*/,
                                          Vector<BCRec> const& species_h_bcrec,
                                    Real dt)
 {
@@ -60,15 +60,13 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
           {
             Array4<Real      > const& ep_ro_D_gk_arr = ep_ro_D_gk.array(mfi);
             Array4<Real const> const& ep_ro_g_arr    = ep_ro_g_in[lev]->const_array(mfi);
-            Array4<Real const> const& T_g_arr        = T_g_in[lev]->const_array(mfi);
 
-            amrex::ParallelFor(bx, [ep_ro_g_arr,ep_ro_D_gk_arr,T_g_arr,nspecies_g,
+            amrex::ParallelFor(bx, [ep_ro_g_arr,ep_ro_D_gk_arr,nspecies_g,
                 fluid_parms,run_on_device]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               const Real ep_ro_g = ep_ro_g_arr(i,j,k);
-              const Real T_g = T_g_arr(i,j,k);
-              const Real val = ep_ro_g*fluid_parms.get_D_g(T_g);
+              const Real val = ep_ro_g*fluid_parms.get_D_g();
 
               for (int n(0); n < nspecies_g; ++n) {
                 ep_ro_D_gk_arr(i,j,k,n) = val;

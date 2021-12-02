@@ -24,7 +24,7 @@ class FluidParms {
     const amrex::Real* m_h_MW_gk;
     const amrex::Real* m_d_MW_gk;
     const amrex::Real m_D_g;
-    const int m_ncoefficients;
+//    const int m_ncoefficients;
     const amrex::Real* m_h_cp_gk;
     const amrex::Real* m_d_cp_gk;
     const amrex::Real* m_h_H_fk;
@@ -46,7 +46,7 @@ class FluidParms {
       , m_h_MW_gk(nullptr)
       , m_d_MW_gk(nullptr)
       , m_D_g(0)
-      , m_ncoefficients(0)
+//      , m_ncoefficients(0)
       , m_h_cp_gk(nullptr)
       , m_d_cp_gk(nullptr)
       , m_h_H_fk(nullptr)
@@ -64,7 +64,7 @@ class FluidParms {
                 const amrex::Real* h_MW_gk,
                 const amrex::Real* d_MW_gk,
                 const amrex::Real D_g,
-                const int ncoefficients,
+                const int /*ncoefficients*/,
                 const amrex::Real* h_cp_gk,
                 const amrex::Real* d_cp_gk,
                 const amrex::Real* h_H_fk,
@@ -79,7 +79,7 @@ class FluidParms {
       , m_h_MW_gk(h_MW_gk)
       , m_d_MW_gk(d_MW_gk)
       , m_D_g(D_g)
-      , m_ncoefficients(ncoefficients)
+//      , m_ncoefficients(ncoefficients)
       , m_h_cp_gk(h_cp_gk)
       , m_d_cp_gk(d_cp_gk)
       , m_h_H_fk(h_H_fk)
@@ -136,7 +136,7 @@ class FluidParms {
 
     // Compute fluid species diffusivity
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real get_D_g (const amrex::Real /*T_g*/) const
+    amrex::Real get_D_g () const
     {
       return m_D_g;
     }
@@ -152,8 +152,12 @@ class FluidParms {
 
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_h_g (const amrex::Real T_g) const
+    amrex::Real calc_h_g (const amrex::Real T_g,
+                          const int cell_is_covered = 0) const
     {
+      if (cell_is_covered)
+        return 0;
+
       return calc_h_gk<run_on>(T_g, 0);
     }
 
@@ -214,8 +218,12 @@ class FluidParms {
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_h_gk (const amrex::Real T_g,
-                           const int n) const
+                           const int n,
+                           const int cell_is_covered = 0) const
     {
+      if (cell_is_covered)
+        return 0;
+
       amrex::Real result(0);
 
       if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {

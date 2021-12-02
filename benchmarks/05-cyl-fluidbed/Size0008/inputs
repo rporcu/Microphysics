@@ -111,8 +111,8 @@ fluid.density.constant   = 1.0
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
-fluid.specific_heat          = constant
-fluid.specific_heat.constant = 1.0
+#fluid.specific_heat          = constant
+#fluid.specific_heat.constant = 1.0
 
 fluid.thermal_conductivity          = constant
 fluid.thermal_conductivity.constant = 0.0
@@ -209,3 +209,5 @@ bc.inflow.fluid.velocity =  0.015  0.0  0.0
 
 bc.outflow = po
 bc.outflow.fluid.pressure =  0.0
+
+mfix.stop_for_unused_inputs = true

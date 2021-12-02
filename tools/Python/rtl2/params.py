@@ -231,7 +231,7 @@ def load_params(args):
 
         else:
 
-            input_file_invalid = mytest.inputFile == "" and not mytest.run_as_script
+            input_file_invalid = mytest.inputFile == ""
             if input_file_invalid or mytest.dim == -1:
                 warn_msg = [
                     "required params for test {} not set".format(sec),

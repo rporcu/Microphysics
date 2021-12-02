@@ -449,7 +449,7 @@ mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
       MultiFab::Copy(*h_g_in[lev], Sborder_s, 0, 0, 1, h_g_in[lev]->nGrow());
     }
 
-    if (advect_fluid_species) {
+    if (solve_species) {
       MultiFab Sborder_X(grids[lev], dmap[lev], X_gk_in[lev]->nComp(),
                          nghost_state(), MFInfo(), *ebfactory[lev]);
       Sborder_X.setVal(0);

@@ -9,7 +9,7 @@
 #include <AMReX_MultiFab.H>
 #include <AMReX_Array.H>
 #include <AMReX_BLassert.H>
-#include <AMReX_NodalProjector.H>
+#include <hydro_NodalProjector.H>
 
 #include <mfix_mf_helpers.H>
 
@@ -184,15 +184,16 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     //
 
     LPInfo info;
-    info.setMaxCoarseningLevel(nodal_mg_max_coarsening_level);
+    info.setMaxCoarseningLevel(nodalproj_options->max_coarsening_level);
     info.setAgglomerationGridSize(agg_grid_size);
 
-    nodal_projector = std::make_unique<NodalProjector>(vel_g_in,
+    nodal_projector = std::make_unique<Hydro::NodalProjector>(vel_g_in,
                                                        GetVecOfConstPtrs(sigma_mf),
                                                        geom,
                                                        info,
                                                        a_S_cc);
 
+    nodalproj_options->apply(*nodal_projector);
     nodal_projector->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
 
     // By setting alpha = ep_g, the nodal projection will correct the velocity by 
@@ -202,7 +203,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     nodal_projector->computeRHS(get_diveu(), epu, a_S_cc);
     nodal_projector->setCustomRHS(GetVecOfConstPtrs(get_diveu()));
 
-    nodal_projector->project(nodal_mg_rtol, nodal_mg_atol);
+    nodal_projector->project(nodalproj_options->mg_rtol, nodalproj_options->mg_atol);
 
     // Define "vel" to be U^{n+1} rather than (U^{n+1}-U^n)
     if (proj_for_small_dt)

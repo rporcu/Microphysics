@@ -14,6 +14,11 @@
 #include <mfix_pic_parms.H>
 #include <mfix_fluid_parms.H>
 
+#ifdef MFIX_CATALYST
+#include "catalyst.hpp"
+#include "AMReX_Conduit_Blueprint.H"
+#endif
+
 int  max_step   = -1;
 int  regrid_int = -1;
 Real stop_time  = -1.0;
@@ -47,6 +52,12 @@ std::string avg_file {"avg_region"};
 
 std::string mfix_dat {"mfix.dat"};
 
+bool stop_for_unused_inputs = false;
+bool checkpoint_files_output = true;
+
+#ifdef MFIX_CATALYST
+std::string catalyst_script {""};
+#endif
 // Set the extend domain flag by default, since the mfix default
 // is different (true) from the amrex default (false)
 // only if its not already specified in the inputs file
@@ -55,7 +66,7 @@ void add_par () {
    if(!pp.contains("extend_domain_face")) {
       pp.add("extend_domain_face",true);
    }
-} 
+}
 
 void writeBuildInfo ();
 
@@ -64,6 +75,7 @@ void ReadParameters ()
   {
      ParmParse pp("amr");
 
+     pp.query("checkpoint_files_output", checkpoint_files_output);
      pp.query("check_file", check_file);
      pp.query("check_int", check_int);
 
@@ -98,8 +110,15 @@ void ReadParameters ()
      pp.query("input_deck", mfix_dat);
      pp.query("write_eb_surface", write_eb_surface);
      pp.query("write_ls", write_ls);
+     pp.query("stop_for_unused_inputs", stop_for_unused_inputs);
   }
 
+#ifdef MFIX_CATALYST
+  {
+    ParmParse pp("catalyst");
+    pp.query("script", catalyst_script);
+  }
+#endif
 }
 
 void writeNow (int nstep, Real time, Real dt, mfix& mfix)
@@ -193,7 +212,7 @@ void writeNow (int nstep, Real time, Real dt, mfix& mfix)
 
     if ( ( check_int > 0) && ( nstep %  check_int == 0 ) )
     {
-        mfix.WriteCheckPointFile( check_file, nstep, dt, time );
+        if (checkpoint_files_output) mfix.WriteCheckPointFile( check_file, nstep, dt, time );
         last_chk = nstep;
     }
 
@@ -274,6 +293,19 @@ int main (int argc, char* argv[])
     // Initialize derived internals
     mfix.Init(time);
 
+#ifdef MFIX_CATALYST
+    conduit_cpp::Node params;
+    params["catalyst/scripts/script0"].set_string(catalyst_script);
+    params["catalyst_load/implementation"] = "paraview";
+    params["catalyst_load/search_paths/paraview"] = "/home/corey/Builds/pvsb-dev/install/lib/catalyst";
+    catalyst_status err = catalyst_initialize(conduit_cpp::c_node(&params));
+    if (err != catalyst_status_ok)
+    {
+        std::cerr << "Failed to initialize Catalyst: " << err << std::endl;
+        return 1;
+    }
+#endif
+
     // Create EB factories on new grids
     mfix.make_eb_factories();
 
@@ -310,7 +342,7 @@ int main (int argc, char* argv[])
 
     if (mfix.fluid.solve){
       mfix.init_advection();
-    
+
       //amrex::Abort("111");
 
       mfix.mfix_init_solvers();
@@ -363,7 +395,7 @@ int main (int argc, char* argv[])
     //    if check_int > 0
     if ( restart_file.empty() && check_int > 0 )
     {
-       mfix.WriteCheckPointFile(check_file, nstep, dt, time);
+       if (checkpoint_files_output) mfix.WriteCheckPointFile(check_file, nstep, dt, time);
        last_chk = nstep;
     }
 
@@ -389,7 +421,9 @@ int main (int argc, char* argv[])
     {
         amrex::Print() << " " << std::endl;
         bool unused_inputs = ParmParse::QueryUnusedInputs();
-        if (unused_inputs)
+        if (stop_for_unused_inputs && unused_inputs)
+           amrex::Abort("Aborting here due to unused inputs");
+        else if (unused_inputs)
            amrex::Print() << "We should think about aborting here due to unused inputs" << std::endl;
     }
 
@@ -438,6 +472,9 @@ int main (int argc, char* argv[])
                     nstep++;
 
                     writeNow(nstep, time, prev_dt, mfix);
+#ifdef MFIX_CATALYST
+                    mfix.RunCatalystAdaptor(nstep, time);
+#endif
                 }
 
                 // Mechanism to terminate MFIX normally.
@@ -454,7 +491,7 @@ int main (int argc, char* argv[])
 
     // Dump plotfile at the final time
     if ( check_int > 0 && nstep != last_chk)
-        mfix.WriteCheckPointFile(check_file, nstep, dt, time);
+        if (checkpoint_files_output) mfix.WriteCheckPointFile(check_file, nstep, dt, time);
     if ( mfix::plot_int > 0)
         mfix.WritePlotFile(plot_file, nstep, time);
     if ( par_ascii_int > 0  && nstep != last_par_ascii)
@@ -479,7 +516,10 @@ int main (int argc, char* argv[])
 
     } // This end bracket and the start bracket after Initialize are essential so
       // that the mfix object is deleted before Finalize
-
+#ifdef MFIX_CATALYST
+    conduit_node* f_params = conduit_node_create();
+    catalyst_finalize(f_params);
+#endif
     amrex::Finalize();
     return 0;
 }

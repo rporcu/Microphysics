@@ -151,3 +151,5 @@ bc.inlet.fluid.velocity =  0.0  0.1  0.0
 
 bc.outlet = po
 bc.outlet.fluid.pressure =  0.0
+
+mfix.stop_for_unused_inputs = true

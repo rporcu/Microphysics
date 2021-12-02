@@ -18,7 +18,7 @@ mfix.drag_type = "BVK2"
 
 mfix.advect_density       = 1
 mfix.advect_enthalpy      = 1
-mfix.advect_fluid_species = 1
+mfix.solve_species = 1
 mfix.open_system_constraint = 1
 mfix.solve_reactions      = 1
 
@@ -142,8 +142,8 @@ fluid.molecular_weight.constant = 18.01528
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.e-5
 
-fluid.specific_heat          = constant
-fluid.specific_heat.constant = 918
+#fluid.specific_heat          = constant
+#fluid.specific_heat.constant = 918
 
 fluid.thermal_conductivity          = constant
 fluid.thermal_conductivity.constant = 0.024
@@ -271,3 +271,5 @@ bc.inflow.fluid.species.H2O =  1.0
 
 bc.outflow = po
 bc.outflow.fluid.pressure =  101325.0
+
+mfix.stop_for_unused_inputs = true

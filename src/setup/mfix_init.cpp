@@ -14,6 +14,7 @@
 #include <mfix_fluid_parms.H>
 #include <mfix_solids_parms.H>
 #include <mfix_species_parms.H>
+#include <mfix_mlmg_options.H>
 
 using MFIXParIter = MFIXParticleContainer::MFIXParIter;
 using PairIndex = MFIXParticleContainer::PairIndex;
@@ -73,12 +74,8 @@ mfix::InitParams ()
     //           nodal_proj.bottom_rtol
     //           nodal_proj.bottom_atol
     //           nodal_proj.bottom_solver
-    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_NodalProjector.cpp"
-    ParmParse pp_nodal("nodal_proj");
-    // Options to control MLMG behavior
-    pp_nodal.query("mg_rtol", nodal_mg_rtol);
-    pp_nodal.query("mg_atol", nodal_mg_atol);
-    pp_nodal.query("mg_max_coarsening_level", nodal_mg_max_coarsening_level);
+    // More info at "AMReX-Hydro/Projections/hydro_NodalProjector.cpp"
+    nodalproj_options = std::make_unique<MfixUtil::MLMGOptions>("nodal_proj");
 
     // Is this a steady-state calculation
     m_steady_state = 0;
@@ -128,8 +125,8 @@ mfix::InitParams ()
     pp.query("sort_particle_int", sort_particle_int);
 
     // options for load balance
-    pp.query("imbalance_tolerance", imbalance_toler);
-    pp.query("partition_factor",    partition_factor);
+    pp.query("overload_tolerance",  overload_toler);
+    pp.query("underload_tolerance", underload_toler);
 
     // Options to control initial projections (mostly we use these for
     // debugging)
@@ -139,23 +136,33 @@ mfix::InitParams ()
     pp.query("advect_density", advect_density);
     pp.query("advect_tracer" , advect_tracer);
     pp.query("advect_enthalpy", advect_enthalpy);
+    pp.query("solve_reactions", solve_reactions);
+    pp.query("solve_species", solve_species);
+
     pp.query("test_tracer_conservation", test_tracer_conservation);
 
-    // Set the mfix class flag equal to the FLUID parameter
-    advect_fluid_species = fluid.solve_species;
+    // Set the FLUID parameter equal to the mfix class flag
+    fluid.solve_species = solve_species;
+    solids.solve_species = solve_species;
 
-    // We can still turn it off explicitly even if we passed species inputs
-    pp.query("advect_fluid_species", advect_fluid_species);
-
-    // Set the mfix class flag equal to the REACTIONS parameter
-    solve_reactions = reactions.solve && SPECIES::solve;
-
-    // We can still turn it off explicitly even if we passed stoichiometry inputs
-    pp.query("solve_reactions", solve_reactions);
-
-    if (advect_fluid_species)
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.solve_species,
+    if (solve_species)
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.nspecies > 0,
           "Advect fluid species flag is on but no fluid species were provided");
+
+    if (!solve_species) {
+      fluid.is_a_mixture = 0;
+      solids.is_a_mixture = 0;
+
+      fluid.nspecies = 0;
+      solids.nspecies = 0;
+    }
+
+    // Set the FLUID parameter equal to the mfix class flag
+    reactions.solve = solve_reactions;
+
+    if (solve_reactions)
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(reactions.nreactions > 0,
+          "Solve reactions flag is on but no reactions were provided");
 
     pp.query("ntrac", ntrac);
 
@@ -176,7 +183,7 @@ mfix::InitParams ()
           " = false");
 
     // At the moment, there is no relation between density and species
-    //if (advect_fluid_species && !advect_density)
+    //if (solve_species && !advect_density)
     //  amrex::Abort("Can't advect species mass fraction without advecting density");
 
     // At the moment, there is no relation between density and temperature
@@ -192,8 +199,7 @@ mfix::InitParams ()
     pp.query("load_balance_type",      load_balance_type);
     pp.query("knapsack_weight_type",   knapsack_weight_type);
     pp.query("load_balance_fluid",     load_balance_fluid);
-    pp.query("downsize_particle_grid", downsize_particle_grid);
-    pp.query("downsize_factor",        downsize_factor);
+    pp.query("grid_pruning",           m_grid_pruning);
 
 
     // Include drag multiplier in projection. (False by default)
@@ -278,12 +284,8 @@ mfix::InitParams ()
     //           mac_proj.bottom_rtol
     //           mac_proj.bottom_atol
     //           mac_proj.bottom_solver
-    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp"
-
-    ParmParse pp_mac("mac_proj");
-    pp_mac.query("mg_rtol", mac_mg_rtol);
-    pp_mac.query("mg_atol", mac_mg_atol);
-    pp_mac.query("mg_max_coarsening_level", mac_mg_max_coarsening_level);
+    // More info at "AMReX-Hydro/Projections/hydro_MacProjector.cpp"
+    macproj_options = std::make_unique<MfixUtil::MLMGOptions>("mac_proj");
 
     AMREX_ALWAYS_ASSERT(load_balance_type.compare("KnapSack") == 0  ||
                         load_balance_type.compare("SFC") == 0 || 
@@ -297,6 +299,9 @@ mfix::InitParams ()
 
     if (load_balance_type.compare("KnapSack") == 0)
       pp.query("knapsack_nmax", knapsack_nmax);
+
+    if (load_balance_type.compare("Greedy") == 0)
+      pp.query("greedy_dir", greedy_dir);
 
     // fluid grids' distribution map 
     pp.queryarr("pmap", pmap);
@@ -584,6 +589,27 @@ void mfix::Init (Real time)
         mfix_set_bc_type(lev,nghost_state());
 }
 
+void mfix::PruneBaseGrids(BoxArray &ba) const 
+{
+    // Use 1 ghost layer
+    EBDataCollection ebdc(*eb_levels[0], geom[0], 
+          ba, DistributionMapping{ba}, {1}, EBSupport::basic);
+
+    const auto &cflag = ebdc.getMultiEBCellFlagFab();
+    Vector<Box> uncovered;
+
+    for (MFIter mfi(cflag); mfi.isValid(); ++mfi)
+    {
+        FabType t = cflag[mfi].getType();
+        const Box& vbx = mfi.validbox();
+        if (t != FabType::covered) {
+            uncovered.push_back(vbx);
+        }
+    }
+
+    amrex::AllGatherBoxes(uncovered);
+    ba = BoxArray(BoxList(std::move(uncovered)));
+}
 
 BoxArray mfix::MakeBaseGrids () const
 {
@@ -591,6 +617,10 @@ BoxArray mfix::MakeBaseGrids () const
     BoxArray ba(geom[0].Domain());
 
     ba.maxSize(max_grid_size[0]);
+
+    if (m_grid_pruning) {
+       PruneBaseGrids(ba);
+    }
 
     // We only call ChopGrids if dividing up the grid using max_grid_size didn't
     //    create enough grids to have at least one grid per processor.
@@ -602,6 +632,7 @@ BoxArray mfix::MakeBaseGrids () const
     if (ba == grids[0]) {
         ba = grids[0];  // to avoid duplicates
     }
+
     amrex::Print() << "In MakeBaseGrids: BA HAS " << ba.size() << " GRIDS " << std::endl;
     return ba;
 }
@@ -672,7 +703,7 @@ void mfix::MakeNewLevelFromScratch (int lev, Real /*time*/,
     amrex::Print() << "SETTING NEW GRIDS IN MAKE NEW LEVEL " << new_grids << std::endl;
     amrex::Print() << "SETTING NEW DMAP IN MAKE NEW LEVEL " << new_dmap << std::endl;
 
-    macproj = std::make_unique<MacProjector>(Geom(0,finest_level),
+    macproj = std::make_unique<Hydro::MacProjector>(Geom(0,finest_level),
                                    MLMG::Location::FaceCentroid,  // Location of mac_vec
                                    MLMG::Location::FaceCentroid,  // Location of beta
                                    MLMG::Location::CellCenter,    // Location of solution variable phi
@@ -886,7 +917,6 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
           IntVect particle_max_grid_size(particle_max_grid_size_x,
                                          particle_max_grid_size_y,
                                          particle_max_grid_size_z);
-          pc->setMaxGridSize(particle_max_grid_size);
 
           for (int lev = 0; lev < nlev; lev++)
           {
@@ -1040,10 +1070,10 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
           const Box& sbx = ep_g[mfi].box();
 
           if (is_restarting) {
-            init_fluid_parameters(bx, mfi, ld, advect_enthalpy, advect_fluid_species, fluid);
+            init_fluid_parameters(bx, mfi, ld, advect_enthalpy, solve_species, fluid);
           } else {
             init_fluid(sbx, bx, domain, mfi, ld, dx, dy, dz, xlen, ylen, zlen, plo,
-                test_tracer_conservation, advect_enthalpy, advect_fluid_species,
+                test_tracer_conservation, advect_enthalpy, solve_species,
                 m_constraint_type, fluid);
           }
        }
@@ -1070,7 +1100,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       if (advect_tracer)
         m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
 
-      if (advect_fluid_species)
+      if (solve_species)
       {
         m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
       }
@@ -1095,11 +1125,11 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
          MultiFab::Copy(*ld.h_go, *ld.h_g, 0, 0, 1, ld.h_g->nGrow());
        }
 
-       if (advect_fluid_species) {
+       if (solve_species) {
          MultiFab::Copy(*ld.X_gko, *ld.X_gk, 0, 0, fluid.nspecies, ld.X_gk->nGrow());
        }
 
-       if (m_constraint_type == ConstraintType::IdealGasClosedSystem) {
+       if (m_constraint_type == ConstraintType::IdealGasClosedSystem && advect_enthalpy) {
          MultiFab::Copy(*ld.pressure_go, *ld.pressure_g, 0, 0, 1, ld.pressure_g->nGrow());
        }
     }
@@ -1145,7 +1175,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
         mfix_set_enthalpy_bcs(time, get_h_g_old());
       }
 
-      if (advect_fluid_species) {
+      if (solve_species) {
         mfix_set_species_bcs(time, get_X_gk());
         mfix_set_species_bcs(time, get_X_gk_old());
       }
@@ -1193,7 +1223,7 @@ mfix::mfix_set_bc0 ()
        if (advect_enthalpy)
          set_temperature_bc0(sbx, &mfi, lev, domain);
 
-       if (advect_fluid_species)
+       if (solve_species)
          set_species_bc0(sbx, &mfi, lev, domain);
      }
 
@@ -1208,7 +1238,7 @@ mfix::mfix_set_bc0 ()
      if (advect_tracer)
        m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
 
-     if (advect_fluid_species)
+     if (solve_species)
        m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
    }
 

@@ -66,3 +66,5 @@ dem.spring_tang_fac.pw    =    0.285714285
                               
 dem.damping_tang_fac.pp   =    1.0
 dem.damping_tang_fac.pw   =    1.0
+
+mfix.stop_for_unused_inputs = true

@@ -12,7 +12,7 @@ from typing import List, Optional
 
 from rtl2 import test_util
 
-DO_TIMINGS_PLOTS = False
+DO_TIMINGS_PLOTS = True
 
 SUITE: Optional["Suite"] = None
 
@@ -46,7 +46,7 @@ except:
 
 
 class Test:
-    def __init__(self, name):
+    def __init__(self, name: str):
 
         self.name = name
 
@@ -59,14 +59,13 @@ class Test:
 
         self.testSrcTree = ""
 
-        self.inputFile = ""
+        self.inputFile = Path()
         self.probinFile = ""
-        self.auxFiles = []
-        self.linkFiles = []
+        self.auxFiles: List[Path] = []
+        self.linkFiles: List[str] = []
 
         self.dim = -1
 
-        self.run_as_script = ""
         self.script_args = ""
         self.return_code = None
 
@@ -99,11 +98,9 @@ class Test:
         self.analysisMainArgs = ""
         self.analysisOutputImage = ""
 
-        self.png_file = None
-
         self.outputFile = ""
         self.compareFile = ""
-        self.output_dir = ""
+        self.output_dir = Path()
 
         self.compare_file_used = ""
 
@@ -134,11 +131,11 @@ class Test:
 
         self.has_jobinfo = 0  # filled automatically
 
-        self.backtrace = []  # filled automatically
+        self.backtrace: List[str] = []  # filled automatically
 
         self.has_stderr = False  # filled automatically
 
-        self.compile_successful = False  # filled automatically
+        self.post_successful = False  # filled automatically
         self.compare_successful = False  # filled automatically
         self.analysis_successful = False  # filled automatically
 
@@ -152,7 +149,7 @@ class Test:
         self._runs_to_average = 5
         self.past_average = None
 
-        self.keywords = []
+        self.keywords: List[str] = []
 
     def bdir(self, suite):
         return suite.testDir / self.buildDir
@@ -182,17 +179,6 @@ class Test:
 
         if output_dir is None:
             output_dir = self.output_dir  # not yet implemented
-
-        if self.run_as_script:
-
-            outfile = self.outfile
-            filepath = os.path.join(output_dir, outfile)
-
-            if not os.path.isfile(filepath) or self.crashed:
-                self.log.warn("test did not produce any output")
-                return ""
-
-            return outfile
 
         plts = [
             d
@@ -242,7 +228,7 @@ class Test:
         outfile = self.output_dir / self.outfile
         return (
             cmd_s
-            if self.run_as_script or not self.useMPI
+            if not self.useMPI
             else (
                 suite.MPIcommand.replace("@host@", suite.MPIhost)
                 .replace("@output@", str(outfile))
@@ -266,8 +252,6 @@ class Test:
         self.wall_time = time.time() - self.wall_time
 
     def base_command(self, suite, args):
-        if self.run_as_script:
-            return [f"./{self.run_as_script}", self.script_args]
 
         if self.customRunCmd is not None:
             return self.customRunCmd
@@ -306,19 +290,17 @@ class Test:
     def passed(self):
         """Whether the test passed or not"""
 
-        compile_ = self.compile_successful
-        if self.compileTest or not compile_:
-            return compile_
+        if self.compileTest or not self.post_successful:
+            return self.post_successful
 
         compare = not self.doComparison or self.compare_successful
         analysis = self.analysisRoutine == "" or self.analysis_successful
         return compare and analysis
 
     @property
-    def crashed(self):
+    def crashed(self) -> bool:
         """Whether the test crashed or not"""
-
-        return len(self.backtrace) > 0 or (self.run_as_script and self.return_code != 0)
+        return len(self.backtrace) > 0 or self.return_code
 
     @property
     def outfile(self):
@@ -327,7 +309,7 @@ class Test:
         return "{}.run.out".format(self.name)
 
     @property
-    def errfile(self):
+    def errfile(self) -> str:
         """The basename of this run's error file"""
 
         return "{}.err.out".format(self.name)
@@ -492,7 +474,7 @@ class Suite:
         self._full_test_dir: Optional[Path] = None
         self.cmakeSetupOpts = ""
 
-        self.refdataDir = None
+        self.refdataDir: Path = Path()
         self.Label = None
 
         self.MPIcommand = ""
@@ -552,6 +534,10 @@ class Suite:
         """Determines the format of the wallclock history JSON file"""
 
         return {"runtimes": [], "dates": []}
+
+    def refdata(self, test: "Test") -> Path:
+        prefix = f"{self.Label}." if self.Label else ""
+        return self.refdataDir / test.name / f"{prefix}runningave.dat"
 
     def get_test_dir(self, dir_name: str) -> Path:
         """given a string representing a directory, check if it points to
@@ -967,7 +953,7 @@ class Suite:
                 .replace("@nprocs@", str(test.numprocs))
                 .replace("@command@", base_command)
             )
-            if test.useMPI and not test.run_as_script
+            if test.useMPI
             else base_command
         )
 
@@ -980,7 +966,7 @@ class Suite:
             test.log,
             stdin=True,
             outfile=cwd / test.outfile,
-            errfile=(None if test.run_as_script else test.errfile),
+            errfile=test.errfile,
             cwd=cwd,
         )
         test.run_command = test_run_command

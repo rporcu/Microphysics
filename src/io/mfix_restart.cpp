@@ -355,7 +355,7 @@ mfix::Restart (std::string& restart_file,
              }
           }
 
-       if (advect_fluid_species)
+       if (solve_species)
        {
           for (int i = 0; i < chkSpeciesVars.size(); i++ )
           {
@@ -503,7 +503,7 @@ mfix::Restart (std::string& restart_file,
           m_leveldata[lev]->gp->FillBoundary(geom[lev].periodicity());
 
           // Fill the bc's just in case
-          if (advect_fluid_species) {
+          if (solve_species) {
             m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
           }
         }

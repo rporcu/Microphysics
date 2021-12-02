@@ -8,7 +8,7 @@ project(MFIX-Exa
    )
 
 # Set the search path for cmake modules
-set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools/CMake )
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/tools/CMake)
 
 #
 # This sets CMAKE_CXX_FLAGS_<CONFIG> to a default value
@@ -54,6 +54,8 @@ endif()
 # IN SUPERBUILD mode, These options will supersede AMReX options with the same name
 option( MFIX_OMP    "Enable OpenMP" NO )
 option( MFIX_MPI    "Enable MPI"   YES )
+
+option( MFIX_CATALYST "Enable Catalyst 2.0 support" NO )
 
 include(CMakeDependentOption)
 cmake_dependent_option( MFIX_MPI_THREAD_MULTIPLE
@@ -114,14 +116,13 @@ include(MFIXSetupAMReX)
 # Setup AMReX-Hydro
 include(MFIXSetupAMReXHydro)
 
+# Setup CSG-EB
+include(MFIXSetupCsgeb)
+
 get_git_info( )
 
 # Set some cache variable for the whole project
 set( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp CACHE INTERNAL "Main source file")
-
-if(MFIX_CSG)
-  add_subdirectory(subprojects/csg-eb)
-endif()
 
 #
 # Core MFIX library
@@ -164,6 +165,12 @@ endif ()
 if(MFIX_CSG)
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR}/subprojects/csg-eb)
   list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR}/subprojects/csg-eb)
-  find_package(csg-eb REQUIRED)
-  target_link_libraries(mfixcore PUBLIC csg-eb::csg-eb)
+  target_link_libraries(mfixcore PUBLIC csg-eb)
+endif()
+
+if(MFIX_CATALYST)
+message("adding catalyst")
+   find_package(catalyst 2.0 REQUIRED)
+   target_link_libraries(mfixcore PUBLIC catalyst::catalyst)
+   target_compile_definitions(mfixcore PUBLIC MFIX_CATALYST)
 endif()

@@ -22,9 +22,9 @@
 #include <AMReX_iMultiFab.H>
 #include <AMReX_MLMG.H>
 #include <AMReX_MLNodeLaplacian.H>
-#include <AMReX_NodalProjector.H>
+#include <hydro_NodalProjector.H>
 #include <AMReX_PhysBCFunct.H>
-#include <AMReX_MacProjector.H>
+#include <hydro_MacProjector.H>
 
 #include <mfix_diffusion_op.H>
 #include <mfix_pc.H>
@@ -35,6 +35,8 @@
 #include <mfix_fluid_parms.H>
 #include <mfix_reactions_parms.H>
 #include <mfix_leveldata.H>
+#include <mfix_mlmg_options.H>
+
 
 
 // Drag type enumeration
@@ -120,6 +122,10 @@ class mfix : public AmrCore
                         int nstep = 0, Real time = 0.0);
 
     void WriteAscentFile ( );
+
+#ifdef MFIX_CATALYST
+    void RunCatalystAdaptor ( int nstep, Real time );
+#endif
 
     //! Save variables that don't change to plot file. The idea is that they can
     //! be saved _once_ per simulations and not repeatedly every Nth time step.
@@ -490,7 +496,7 @@ class mfix : public AmrCore
     //
     ////////////////////////////////////////////////////////////////////////////
 
-    std::shared_ptr<NodalProjector> nodal_projector;
+    std::shared_ptr<Hydro::NodalProjector> nodal_projector;
 
 
 
@@ -946,6 +952,8 @@ public:
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
 
+    void PruneBaseGrids(BoxArray &ba) const;
+
     void ChopGrids (const Box& domain, BoxArray& ba, int target_size) const;
 
     static int nlev;
@@ -1099,7 +1107,7 @@ public:
     bool advect_enthalpy      = false;
     bool advect_density       = false;
     bool advect_tracer        = false;
-    bool advect_fluid_species = false;
+    bool solve_species = false;
     bool solve_reactions      = false;
 
     bool test_tracer_conservation = false;
@@ -1107,6 +1115,8 @@ public:
     static int m_advection_type;
 
     std::string m_redistribution_type = "StateRedist";
+
+    bool m_grid_pruning = false;
 
     // include d(ep_g)/dt in constraint
     bool m_use_depdt_constraint = false;
@@ -1162,21 +1172,9 @@ public:
     //           nodal_proj.bottom_rtol
     //           nodal_proj.bottom_atol
     //           nodal_proj.bottom_solver
-    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_NodalProjector.cpp"
-    // Verbosity
-
+    // More info at "AMReX-Hydro/Projections/hydro_NodalProjector.cpp"
     // Control MLMG behavior
-    Real nodal_mg_rtol = 1.0e-11;
-    Real nodal_mg_atol = 1.0e-14;
-
-    // Max coarsening level
-    int nodal_mg_max_coarsening_level = 100;
-
-    // Linear operator
-    std::shared_ptr<MLNodeLaplacian> nodal_matrix;
-
-    // Solver
-    std::shared_ptr<MLMG> nodal_solver;
+    std::unique_ptr<MfixUtil::MLMGOptions> nodalproj_options;
 
     // ***************************************************************
     // MAC solve
@@ -1190,16 +1188,10 @@ public:
     //           mac_proj.bottom_rtol
     //           mac_proj.bottom_atol
     //           mac_proj.bottom_solver
-    // More info at "amrex/Src/LinearSolvers/Projections/AMReX_MacProjector.cpp"
-
-    std::unique_ptr<amrex::MacProjector> macproj;
-
+    // More info at "AMReX-Hydro/Projections/hydro_MacProjector.cpp"
+    std::unique_ptr<Hydro::MacProjector> macproj;
     // Control MLMG behavior
-    Real mac_mg_rtol = 1.0e-11;
-    Real mac_mg_atol = 1.0e-14;
-
-    // Max coarsening level
-    int mac_mg_max_coarsening_level = 100;
+    std::unique_ptr<MfixUtil::MLMGOptions> macproj_options;
 
     // ***************************************************************
 
@@ -1226,9 +1218,8 @@ public:
     static std::string load_balance_type;
     static std::string knapsack_weight_type;
     static int load_balance_fluid;
-    static int downsize_particle_grid;
-    static Real downsize_factor;
     static int knapsack_nmax;
+    static int greedy_dir;
 
     // Options to control time stepping
     Real m_cfl = 0.5;
@@ -1246,8 +1237,8 @@ public:
 
     int sort_particle_int = -1; // # steps to sort particles
 
-    Real imbalance_toler  = 2.0;
-    Real partition_factor = 2.0;
+    Real overload_toler  = 1.2;
+    Real underload_toler = 0.8;
 
     static EBSupport m_eb_support_level;
 
@@ -1390,9 +1381,9 @@ public:
     amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_species_d;
     amrex::Gpu::DeviceVector<amrex::BCRec> m_bcrec_force_d;
 
-    // This is a special set of bc's that replace foextrap by extdir 
-    // for *normal* velocity only at faces that are identified as 
-    // pressure inflow (pinf_).   We need this because otherwise the 
+    // This is a special set of bc's that replace foextrap by extdir
+    // for *normal* velocity only at faces that are identified as
+    // pressure inflow (pinf_).   We need this because otherwise the
     // hydro routines will enforce "no backflow at outflow" and will
     // zero the inflow velocity at a pressure inflow
     amrex::Vector<amrex::BCRec> m_bcrec_hydro_velocity;

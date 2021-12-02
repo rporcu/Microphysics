@@ -331,6 +331,7 @@ public:
     void partitionParticleGrids(int lev, 
                                 const amrex::BoxArray& fba,
                                 const amrex::DistributionMapping& fdmap,
+                                const int greedy_dir,
                                 amrex::Real imbalance_toler,
                                 amrex::Real partition_factor);
 
@@ -349,12 +350,21 @@ public:
     // return the average/max particle count on IO process
     amrex::Real particleImbalance();
 
-    // count particles for each box in the box list
-    // the boxes may not be local to the proc's particle grids
-    amrex::Vector<int> countParticle(int lev, const amrex::BoxList& bl);
+    /* count particles for each box in the box list
+       The boxes are broken down into bins of the input size
+       output: pcounts  - # particles in each bin
+               poffsets - offsets for bins in each box 
+    */
+    void countParticle(int lev, 
+                       const amrex::BoxList& bl,
+                       const amrex::IntVect& binsize,
+                       amrex::Vector<int>& pcounts,
+                       amrex::Vector<int>& poffsets);
 
     // verify total # particles hasn't been changed, for debugging
     void verifyParticleCount();
+
+    void printGhostParticleCount();
 
   private:
     int nlev;
@@ -368,7 +378,7 @@ public:
     static int domain_bc[6];
 
     int m_total_numparticle = 0;
-    amrex::Vector<int> m_pboxid_to_fboxid;
+    amrex::Gpu::DeviceVector<int> m_pboxid_to_fboxid;
 
     static void ReadStaticParameters ();
 

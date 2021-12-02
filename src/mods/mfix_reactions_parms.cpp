@@ -73,12 +73,12 @@ void Reactions::Initialize () {
     // Disable the species solver if the species are defined as "None" (case
     // insensitive) or 0
     if (amrex::toLower(reactions[0]).compare("none") == 0 || (reactions[0]).compare("0") == 0) {
-      solve = false;
+      solve = 0;
       reactions.clear();
       nreactions = 0;
       reaction_equations.clear();
     } else {
-      solve = true;
+      solve = 1;
       nreactions = reactions.size();
       reaction_equations.clear();
       reaction_equations.resize(nreactions);
@@ -87,7 +87,9 @@ void Reactions::Initialize () {
     if (solve) {
       for (int n(0); n < nreactions; n++) {
         // Get the reation equation relative to given reaction name
-        pp.get((reactions[n]+".reaction").c_str(), reaction_equations[n]);
+        Vector<std::string> equation(0);
+        pp.getarr((reactions[n]+".reaction").c_str(), equation);
+        for (auto elem: equation) reaction_equations[n] += elem;
       }
     }
   }

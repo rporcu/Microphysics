@@ -4,7 +4,7 @@
 #include <mfix_pic_parms.H>
 
 namespace {
-  void print_process_boxes(amrex::DistributionMapping& dmap)
+  void print_process_boxes(const amrex::DistributionMapping& dmap, const amrex::BoxArray& ba)
   {
     const Vector<int>& pmap = dmap.ProcessorMap();
     Vector<Vector<int>> pbox(ParallelDescriptor::NProcs());
@@ -15,7 +15,7 @@ namespace {
     for (unsigned int i=0; i<pbox.size(); ++i) {
       Print() << "Process  " << i << ":";
       for (unsigned int j=0; j<pbox[i].size(); ++j)
-        Print() << " " << pbox[i][j];
+        Print() << " " << pbox[i][j] << " " << ba[pbox[i][j]];
       Print() << "\n";
     }
   }
@@ -31,7 +31,7 @@ mfix::Regrid ()
 
   if (load_balance_type == "KnapSack" || 
       load_balance_type == "SFC" || 
-      load_balance_type == "Greedy") // Knapsack and SFC
+      load_balance_type == "Greedy")
   {
     amrex::Print() << "Load balancing using " << load_balance_type << std::endl;
 
@@ -64,9 +64,8 @@ mfix::Regrid ()
           }
 
           SetDistributionMap(lev, new_fluid_dm);
-          print_process_boxes(new_fluid_dm);
 
-          macproj = std::make_unique<MacProjector>(Geom(0,finest_level),
+          macproj = std::make_unique<Hydro::MacProjector>(Geom(0,finest_level),
                                          MLMG::Location::FaceCentroid,  // Location of mac_vec
                                          MLMG::Location::FaceCentroid,  // Location of beta
                                          MLMG::Location::CellCenter,    // Location of solution variable phi
@@ -95,6 +94,10 @@ mfix::Regrid ()
 
       for (int lev = base_lev; lev <= finestLevel(); ++lev)
       {
+
+        Real load_eff = pc->particleImbalance();
+        Print() << "particle load efficiency before regridding " << load_eff << "\n";
+
         DistributionMapping new_particle_dm;
         if (load_balance_type == "KnapSack")
         {
@@ -106,14 +109,16 @@ mfix::Regrid ()
         }
         else if (load_balance_type == "Greedy") {
           pc->partitionParticleGrids(lev, this->boxArray(lev), this->DistributionMap(lev), 
-                                     imbalance_toler, partition_factor);
+                                     greedy_dir, overload_toler, underload_toler);
           new_particle_dm = pc->ParticleDistributionMap(lev);
         }
 
+        // Regrid. Note that particles need to be sorted because the re-distribution 
+        // will mess up their stride pattern in memory.
         pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev), lev);
         if (sort_particle_int > 0)  pc->SortParticlesByBin(particle_sorting_bin);
-        Print() << "Each process's particle grids: \n";
-        print_process_boxes(new_particle_dm);
+        load_eff = pc->particleImbalance();
+        Print() << "particle load efficiency after regridding " << load_eff << "\n";
 
         if (particle_cost[lev] != nullptr)
           delete particle_cost[lev];
@@ -178,7 +183,7 @@ mfix::Regrid ()
 
       SetDistributionMap(base_lev, newdm);
 
-      macproj = std::make_unique<MacProjector>(Geom(0,finest_level),
+      macproj = std::make_unique<Hydro::MacProjector>(Geom(0,finest_level),
                                      MLMG::Location::FaceCentroid,  // Location of mac_vec
                                      MLMG::Location::FaceCentroid,  // Location of beta
                                      MLMG::Location::CellCenter,    // Location of solution variable phi
@@ -238,7 +243,7 @@ mfix::Regrid ()
     for (int i_lev = base_lev; i_lev < nlev; i_lev++)
     {
       // This calls re-creates a proper particle_ebfactories and regrids
-      //  all the multifab that depend on it
+      // all the multifab that depend on it
       RegridLevelSetArray(i_lev);
     }
 

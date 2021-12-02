@@ -34,7 +34,7 @@ from rtl2 import params
 from rtl2 import test_util
 from rtl2 import test_report as report
 from rtl2 import test_coverage as coverage
-from rtl2.suite import Suite
+from rtl2.suite import Suite, Test
 
 safe_flags = ["TEST", "USE_CUDA", "USE_ACC", "USE_MPI", "USE_OMP", "DEBUG", "USE_GPU"]
 
@@ -428,9 +428,6 @@ async def test_suite(runners, args, suite):
             await run_local(runners)
         elif suite.job_manager == "slurm":
             await run_slurm(runners, args, suite)
-    else:
-        for runner in runners:
-            runner.test.compile_successful = True
 
     post_runners = [runner.post_test() for runner in runners]
     await asyncio.gather(*post_runners)
@@ -476,7 +473,7 @@ def srun_script(suite: Suite, runners: List["TestRunner"], args: List[str]) -> T
         cmd = runner.test.command(suite, runner.test.base_command(suite, args))
         outdir = runner.test.output_dir
         lines.append(
-            f"{task_id}-{next_id}  bash -c '[[ $0 -eq 0 ]] && ( cd {outdir} && {cmd} ) || true' %o"
+            f"{task_id}-{next_id}  bash -c '[[ $0 -eq 0 ]] && (until [ -d {outdir} ]; do sleep 1; done; cd {outdir} && {cmd} ) || true' %o"
         )
         task_id = next_id + 1
 
@@ -489,7 +486,9 @@ def toppath():
 
 
 class TestRunner:
-    def __init__(self, test, args, test_list, suite, runtimes):
+    def __init__(
+        self, test: Test, args: List[str], test_list: List[str], suite: Suite, runtimes: List[str]
+    ):
         self.test = test
         self._args = args
         self.test_list = test_list
@@ -537,11 +536,14 @@ class TestRunner:
                 )
                 mod = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(mod)
-                prefix = f"{self._suite.Label}." if self._suite.Label else ""
-                refdata = self._suite.refdataDir / self.test.name / f"{prefix}runningave.dat"
+                refdata = self._suite.refdata(self.test)
                 mod.plot(refdata)
+                self.test.post_successful = True
             except Exception:  # pylint: disable=broad-except
-                logging.exception("Error post processing %s", testname)
+                if self.test.crashed:
+                    self.test.log.warn(f"{self.test.name} crashed; couldn't post process")
+                else:
+                    logging.exception("Error post processing %s", testname)
 
         self.compare()
         self.move_output_to_webdir()
@@ -558,7 +560,8 @@ class TestRunner:
         coutfile = output_dir / f"{testnames}.build.out"
 
         prebuild_time = time.time()
-        comp_string, rc = await suite.build_tests_cmake(tests=tests, outfile=coutfile)
+        rc, comp_string = await suite.build_tests_cmake(tests=tests, outfile=coutfile)
+        assert rc
         build_time = time.time() - prebuild_time
 
         # copy the build.out into the web directory
@@ -569,12 +572,6 @@ class TestRunner:
         for test in tests:
             test.comp_string = comp_string
             test.build_time = build_time
-            test.compile_successful = not rc
-
-            if not test.compile_successful:
-                error_msg = "ERROR: compilation failed"
-                report.report_single_test(suite, test, tests, failure_msg=error_msg)
-                return
 
             if test.compileTest:
                 suite.log.log("creating problem test report ...")
@@ -595,9 +592,6 @@ class TestRunner:
         needed_files = []
         if self.executable is not None:
             needed_files.append(self.executable)
-
-        if test.run_as_script:
-            needed_files.append(test.run_as_script)
 
         if test.inputFile:
             needed_files.append(test.inputFile)
@@ -688,7 +682,7 @@ class TestRunner:
             test_dict["runtimes"].insert(0, test.wall_time)
             test_dict["dates"].insert(0, suite.full_test_dir.name)
 
-    def move_output_to_webdir(self):
+    def move_output_to_webdir(self) -> None:
         suite = self._suite
         test = self.test
         # ----------------------------------------------------------------------
@@ -702,8 +696,8 @@ class TestRunner:
         else:
             self._suite.log.warn(f"Does not exist:  {outfile}")
         if os.path.isfile(test.errfile):
-            (suite.full_web_dir / test.errfile.name).unlink(missing_ok=True)
-            (suite.full_web_dir / test.errfile.name).symlink_to(test.errfile)
+            (suite.full_web_dir / test.errfile).unlink(missing_ok=True)
+            (suite.full_web_dir / test.errfile).symlink_to(test.errfile)
             test.has_stderr = True
         if test.doComparison:
             shutil.copy(test.comparison_outfile, suite.full_web_dir)
@@ -720,13 +714,6 @@ class TestRunner:
 
         for af in test.auxFiles:
             shutil.copy(af, suite.full_web_dir / f"{test.name}.{af.name}")
-
-        if test.png_file is not None:
-            try:
-                shutil.copy(test.png_file, suite.full_web_dir)
-            except IOError:
-                # visualization was not successful.  Reset image
-                test.png_file = None
 
         if not test.analysisRoutine == "":
             try:

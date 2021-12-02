@@ -5,6 +5,7 @@ from typing import Optional, Tuple
 import rtl2.test_coverage as coverage
 from rtl2.suite import Suite
 from rtl2.test_util import git_commit
+from rtl2.post import avg_values_within_tolerance
 
 
 CSS_CONTENTS = r"""
@@ -33,9 +34,9 @@ a.failed:link {color: yellow; text-decoration: none;}
 a.failed:visited {color: yellow; text-decoration: none;}
 a.failed:hover {color: #00ffff; text-decoration: underline;}
 
-a.compfailed:link {color: yellow; text-decoration: none;}
-a.compfailed:visited {color: yellow; text-decoration: none;}
-a.compfailed:hover {color: #00ffff; text-decoration: underline;}
+a.postcrashed:link {color: yellow; text-decoration: none;}
+a.postcrashed:visited {color: yellow; text-decoration: none;}
+a.postcrashed:hover {color: #00ffff; text-decoration: underline;}
 
 a.crashed:link {color: yellow; text-decoration: none;}
 a.crashed:visited {color: yellow; text-decoration: none;}
@@ -64,7 +65,7 @@ td {border-width: 0px;
 td.passed {background-color: lime; opacity: 0.8;}
 td.passed-slowly {background-color: yellow; opacity: 0.8;}
 td.failed {background-color: red; color: yellow; opacity: 0.8;}
-td.compfailed {background-color: purple; color: yellow; opacity: 0.8;}
+td.postcrashed {background-color: purple; color: yellow; opacity: 0.8;}
 td.crashed {background-color: black; color: yellow; opacity: 0.8;}
 td.benchmade {background-color: orange; opacity: 0.8;}
 td.date {background-color: #666666; color: white; opacity: 0.8; font-weight: bold;}
@@ -124,7 +125,7 @@ div.verticaltext {text-align: center;
 #summary td.passed-slowly {background-color: yellow; }
 #summary td.failed {background-color: red; color: yellow;}
 #summary td.benchmade {background-color: orange;}
-#summary td.compfailed {background-color: purple; color: yellow;}
+#summary td.postcrashed {background-color: purple; color: yellow;}
 #summary td.crashed {background-color: black; color: yellow;}
 
 div.small {font-size: 75%;}
@@ -187,10 +188,9 @@ MAIN_HEADER = r"""
 <CENTER><H2>@SUBTITLE@</H2></CENTER>
 <P><TABLE class='maintable'>
 <CENTER>
-  <td align=center class="benchmade"><h3>Benchmark Updated</h3></td>
-  <td align=center class="failed"><h3>Comparison Failed</h3></td>
-  <td align=center class="compfailed"><h3>Compilation Failed</h3></td>
   <td align=center class="crashed"><h3>Crashed</h3></td>
+  <td align=center class="postcrashed"><h3>Post Processing Crashed</h3></td>
+  <td align=center class="failed"><h3>Comparison Failed</h3></td>
   <td align=center class="passed"><h3>Passed</h3></td>
   <td align=center class="passed-slowly"><h3>Performance Drop</h3></td>
 </CENTER>
@@ -336,9 +336,6 @@ def report_single_test(suite, test, tests, failure_msg=None):
     current_dir = os.getcwd()
     os.chdir(suite.full_web_dir)
 
-    # we stored compilation success in the test object
-    compile_successful = test.compile_successful
-
     analysis_successful = True
     if test.analysisRoutine != "":
         analysis_successful = test.analysis_successful
@@ -347,28 +344,20 @@ def report_single_test(suite, test, tests, failure_msg=None):
     # in the comparison report for displaying
     if failure_msg is None:
         if not test.compileTest:
-            compare_successful = test.compare_successful
-
-            if test.doComparison:
-                compare_file = test.comparison_outfile
-                try:
-                    with open(compare_file, "r") as cf:
-                        diff_lines = cf.readlines()
-                except IOError:
-                    suite.log.warn("WARNING: no comparison file found")
-                    diff_lines = [""]
+            refdata = suite.refdata(test)
+            compare_successful = avg_values_within_tolerance(refdata, test.tolerance)
 
             # last check: did we produce any backtrace files?
             if test.crashed:
                 compare_successful = False
 
         # write out the status file for this problem, with either
-        # PASSED, PASSED SLOWLY, COMPILE FAILED, or FAILED
+        # PASSED, PASSED SLOWLY, POST CRASHED, or FAILED
         status_file = "{}.status".format(test.name)
         with open(status_file, "w") as sf:
-            if not compile_successful:
-                sf.write("COMPILE FAILED\n")
-                suite.log.testfail(f"{test.name} COMPILE FAILED")
+            if not test.post_successful:
+                sf.write("POST CRASHED\n")
+                suite.log.testfail(f"{test.name} POST CRASHED")
             elif test.compileTest or (compare_successful and analysis_successful):
                 string = "PASSED\n"
                 if test.check_performance:
@@ -386,11 +375,7 @@ def report_single_test(suite, test, tests, failure_msg=None):
 
     else:
         # we came in already admitting we failed...
-        if not test.compile_successful:
-            msg = "COMPILE FAILED"
-        else:
-            msg = "FAILED"
-
+        msg = "FAILED" if test.post_successful else "POST CRASHED"
         status_file = "{}.status".format(test.name)
         with open(status_file, "w") as sf:
             sf.write("{}\n".format(msg))
@@ -515,7 +500,7 @@ def report_single_test(suite, test, tests, failure_msg=None):
     ll.item("Compilation:")
     ll.indent()
 
-    if compile_successful:
+    if test.post_successful:
         ll.item('<h3 class="passed">Successful</h3>')
     else:
         ll.item('<h3 class="failed">Failed</h3>')
@@ -609,90 +594,6 @@ def report_single_test(suite, test, tests, failure_msg=None):
         no_bench_error = False
         particle_counts_differ_error = False
 
-        pcomp_line = get_particle_compare_command(diff_lines)
-
-        for line in diff_lines:
-            if "number of boxes do not match" in line:
-                box_error = True
-                break
-
-            if "grids do not match" in line:
-                grid_error = True
-                break
-
-            if "number of variables do not match" in line:
-                variables_error = True
-
-            if "no corresponding benchmark found" in line:
-                no_bench_error = True
-                break
-
-            if "Particle data headers do not agree" in line:
-                particle_counts_differ_error = True
-                break
-
-            if in_diff_region:
-                # diff region
-                hf.write(line)
-                continue
-
-            if line.find("fcompare") > 1:
-                hf.write("<tt>" + line + "</tt>\n")
-                if pcomp_line:
-                    hf.write("<tt>" + pcomp_line + "</tt>\n")
-
-                ht.start_table()
-                continue
-
-            if line.strip().startswith("diff "):
-                # this catches the start of a plain text diff --
-                # we need the space here to not match variables
-                # that start with diff
-                ht.end_table()
-                hf.write("<pre>\n")
-
-                hf.write(line)
-                in_diff_region = True
-                continue
-
-            if line.strip().startswith("level "):
-                ht.print_single_row(line.strip())
-                continue
-
-            if line.strip().startswith("-----"):
-                continue
-
-            if line.strip().startswith("<<<"):
-                ht.print_single_row(line.strip().replace("<", "&lt;").replace(">", "&gt;"))
-                continue
-
-            fields = [q.strip() for q in line.split("  ") if not q == ""]
-
-            if fields:
-                if fields[0].startswith("variable"):
-                    ht.header(fields)
-                    continue
-
-                if len(fields) == 2:
-                    if "NaN present" in line:
-                        ht.print_row([fields[0], (fields[1], "colspan='2'")])
-                        continue
-                    if "variable not present" in line:
-                        ht.print_row([fields[0], (fields[1], "colspan='2'")])
-                        continue
-                    ht.header([" "] + fields)
-                    continue
-
-                if len(fields) == 1:
-                    continue
-
-                abs_err = float(fields[1])
-                rel_err = float(fields[2])
-                if abs(rel_err) > 1.0e-6:
-                    ht.print_row([fields[0], abs_err, rel_err], highlight=True)
-                else:
-                    ht.print_row([fields[0], abs_err, rel_err])
-
         if in_diff_region:
             hf.write("</pre>\n")
         else:
@@ -714,12 +615,6 @@ def report_single_test(suite, test, tests, failure_msg=None):
             hf.write("<p>number of particles differ in files</p>\n")
 
     if (not test.compileTest) and failure_msg is None:
-        # show any visualizations
-        if test.doVis:
-            if test.png_file is not None:
-                hf.write("<P>&nbsp;\n")
-                hf.write("<P><IMG SRC='{}' BORDER=0>".format(test.png_file))
-
         # show any analysis
         if not test.analysisOutputImage == "":
             hf.write("<P>&nbsp;\n")
@@ -868,9 +763,9 @@ def report_this_test_run(suite, make_benchmarks, note, _update_time, test_list, 
                         status = "passed"
                         td_class = "passed-slowly" if "SLOWLY" in line else "passed"
                         num_passed += 1
-                    elif line.find("COMPILE FAILED") >= 0:
-                        status = "compile fail"
-                        td_class = "compfailed"
+                    elif line.find("POST CRASHED") >= 0:
+                        status = "post fail"
+                        td_class = "postcrashed"
                         num_failed += 1
                     elif line.find("CRASHED") >= 0:
                         status = "crashed"
@@ -939,6 +834,12 @@ def report_this_test_run(suite, make_benchmarks, note, _update_time, test_list, 
             row_info.append((status.upper(), "class='{}'".format(td_class)))
 
             ht.print_row(row_info)
+
+            hf.write(
+                "<tr><td colspan='100%'>"
+                f"<img src='{test.name}.png' alt='Comparison vs historical results'/>"
+                "</td></tr>"
+            )
 
         else:
             if test.restartTest:
@@ -1177,8 +1078,8 @@ def get_line_result(line: str) -> Tuple[Optional[str], str]:
     return (
         (("passed-slowly", ":]") if "SLOWLY" in line else ("passed", ":)"))
         if "PASSED" in line
-        else ("compfailed", ":(")
-        if "COMPILE FAILED" in line
+        else ("postcrashed", ":(")
+        if "POST CRASHED" in line
         else ("crashed", "xx")
         if "CRASHED" in line
         else ("failed", "!&nbsp;")

@@ -33,7 +33,7 @@ geometry.is_periodic = 0        0       0        # Is periodic in each direction
 geometry.prob_lo     = 0.       0.      0.       # lo corner of physical domain
 geometry.prob_hi     = 0.0015   0.0015  0.0015   # hi corner of physical domain
 
-mfix.drag_type = "BVK2"
+#mfix.drag_type = "BVK2"
 
 mfix.gravity   =  0.0  -9.80665  0.0
 
@@ -73,3 +73,5 @@ box.Lo = 0.0      0.0     0.0
 box.Hi = 0.0015   0.0015  0.0015
 
 box.offset = 1.0e-15
+
+mfix.stop_for_unused_inputs = true

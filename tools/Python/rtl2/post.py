@@ -66,20 +66,33 @@ def read_two_pressures(pg1_fname: Path, pg2_fname: Path) -> List[Mapping[str, fl
     return data
 
 
-def read_avg_values(refdata_fname: Path) -> Tuple[List[float], List[float]]:
-    """Returns: list of (at least 10) data points in refdata/runningavg.dat
-    if fewer than 10 data points in runningavg.dat, pad with zeroes"""
+def read_avg_values(refdata_fname: Path) -> Tuple[List[int], List[float]]:
+    """Returns: list of data points in refdata/runningavg.dat"""
 
     with open(refdata_fname) as run_avg:
-        vals = []
+        ys = []
         for line in run_avg:
             val, *_ = line.split()
             if val != "N/A":
-                vals.append(val)
-        points = list(enumerate(vals))
-        xs = [float(x) for x, _ in points]
-        ys = [float(y) for _, y in points]
+                ys.append(float(val))
+        xs = list(range(-len(ys), 0))
         return (xs, ys)
+
+
+def avg_values_within_tolerance(refdata_fname: Path, tolerance: Optional[float]) -> bool:
+    """Returns: whether the last data point is within tolerance of last 10 data points"""
+
+    _, ys = read_avg_values(refdata_fname)
+    if not ys:
+        return True
+    latest = ys[-1]
+    recent = ys[-10:-1]
+    if not len(recent):
+        return True
+    avg = sum(recent) / len(recent)
+    if not bool(avg + latest):
+        return True
+    return abs((avg - latest) / (avg + latest)) < (0.1 if tolerance is None else tolerance)
 
 
 def append_avg_dp_value(

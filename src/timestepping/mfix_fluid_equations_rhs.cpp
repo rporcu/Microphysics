@@ -15,7 +15,7 @@ mfix::mfix_density_rhs (Vector< MultiFab*      > const& rhs,
   for (int lev = 0; lev <= finest_level; lev++)
     rhs[lev]->setVal(0.);
 
-  if (solve_reactions) {
+  if (reactions.solve) {
     ChemTransfer chem_txfr_idxs(fluid.nspecies, reactions.nreactions);
 
     for (int lev = 0; lev <= finest_level; lev++) {
@@ -91,7 +91,7 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
     }
   }
 
-  if (solve_reactions) {
+  if (reactions.solve) {
     ChemTransfer chem_txfr_idxs(fluid.nspecies, reactions.nreactions);
 
     const int start_idx = chem_txfr_idxs.h_g_txfr;
@@ -110,7 +110,7 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
         amrex::ParallelFor(bx, [rhs_arr,h_g_txfr_arr]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          rhs_arr(i,j,k) -= h_g_txfr_arr(i,j,k);
+          rhs_arr(i,j,k) += h_g_txfr_arr(i,j,k);
         });
       }
     }
@@ -138,16 +138,12 @@ mfix::mfix_species_X_rhs (Vector< MultiFab*      > const& rhs,
   for (int lev = 0; lev <= finest_level; lev++)
     rhs[lev]->setVal(0.);
 
-  if (solve_reactions) {
+  if (reactions.solve) {
     const int nspecies_g = fluid.nspecies;
 
     ChemTransfer chem_txfr_idxs(nspecies_g, reactions.nreactions);
 
     const int start_idx = chem_txfr_idxs.ro_gk_txfr;
-
-    //for (int lev = 0; lev <= finest_level; lev++) {
-    //  rhs[lev]->plus(*chem_txfr[lev], start_idx, nspecies_g, rhs[lev]->nGrow());
-    //}
 
     for (int lev = 0; lev <= finest_level; lev++) {
 #ifdef _OPENMP
@@ -184,7 +180,7 @@ mfix::mfix_momentum_rhs (Vector< MultiFab* > const& rhs,
   for (int lev = 0; lev <= finest_level; lev++)
     rhs[lev]->setVal(0.);
 
-  if (solve_reactions) {
+  if (reactions.solve) {
     ChemTransfer chem_txfr_idxs(fluid.nspecies, reactions.nreactions);
 
     const int start_idx = chem_txfr_idxs.vel_g_txfr;
