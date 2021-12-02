@@ -328,7 +328,7 @@ public:
 
     void setSortingBinSizes (amrex::IntVect sorting_bin) { m_sorting_bin = sorting_bin;  }
 
-    void partitionParticleGrids(int lev, 
+    void partitionParticleGrids(int lev,
                                 const amrex::BoxArray& fba,
                                 const amrex::DistributionMapping& fdmap,
                                 const int greedy_dir,
@@ -344,6 +344,9 @@ public:
     void setSortInt(int sort_particle_int)
     { sort_int = sort_particle_int; }
 
+    void setReduceGhostParticles(bool reduce)
+    { reduceGhostParticles = reduce; };
+
     const amrex::IntVect& MaxGridSize() const noexcept
     { return max_grid_size; }
 
@@ -353,9 +356,9 @@ public:
     /* count particles for each box in the box list
        The boxes are broken down into bins of the input size
        output: pcounts  - # particles in each bin
-               poffsets - offsets for bins in each box 
+               poffsets - offsets for bins in each box
     */
-    void countParticle(int lev, 
+    void countParticle(int lev,
                        const amrex::BoxList& bl,
                        const amrex::IntVect& binsize,
                        amrex::Vector<int>& pcounts,
@@ -370,6 +373,8 @@ public:
     int nlev;
 
     int sort_int = -1; // # steps to sort particles
+
+    bool reduceGhostParticles = false;
 
     amrex::IntVect max_grid_size{-1};
 
