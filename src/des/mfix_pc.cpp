@@ -2274,7 +2274,7 @@ void MFIXParticleContainer:: countParticle(int lev,
   pcounts.clear();
   poffsets.resize(1, 0);
 
-  // find the total number of bins and offests for each box's bins
+  // find the total number of bins and offsets for each box's bins
   int total_nbin = 0;
   for (int i=0; i<nbox; ++i) {
     IntVect boxsize = boxes[i].size();
