@@ -287,6 +287,23 @@ mfix::InitParams ()
     // More info at "AMReX-Hydro/Projections/hydro_MacProjector.cpp"
     macproj_options = std::make_unique<MfixUtil::MLMGOptions>("mac_proj");
 
+    // Checks for hypre namespace
+    if (nodalproj_options->bottom_solver_type == "hypre" && 
+          macproj_options->bottom_solver_type == "hypre") {
+       std::string nodal_ns = nodalproj_options->hypre_namespace; 
+       std::string mac_ns = macproj_options->hypre_namespace; 
+
+       if (nodal_ns == "hypre" && mac_ns != "hypre")
+          amrex::Abort("hypre namespace required for nodal projection");
+
+       if (nodal_ns != "hypre" && mac_ns == "hypre")
+          amrex::Abort("hypre namespace required for MAC projection");
+
+       if ((nodal_ns == mac_ns) && nodal_ns != "hypre")
+          amrex::Abort("same hypre namespace other than \"hypre\" not allowed for nodal and MAC projections");
+
+    }
+
     AMREX_ALWAYS_ASSERT(load_balance_type.compare("KnapSack") == 0  ||
                         load_balance_type.compare("SFC") == 0 ||
                         load_balance_type.compare("Greedy") == 0);

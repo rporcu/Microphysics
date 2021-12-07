@@ -28,14 +28,14 @@ class MLMGOptions {
       //! Max coarsening level
       int max_coarsening_level{100};
 
-   private:
-      void parse_options(const std::string &prefix);
-
       //! Bottom solver type bicgstab, cg, hypre, etc.
       std::string bottom_solver_type{"bicgstab"};
 
       //! Options namespace for hypre solvers
       std::string hypre_namespace{"hypre"};
+
+   private:
+      void parse_options(const std::string &prefix);
 
       //! Options of hypre interface
       std::string hypre_interface{"ij"};
