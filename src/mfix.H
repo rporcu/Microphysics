@@ -1237,6 +1237,8 @@ public:
 
     int sort_particle_int = -1; // # steps to sort particles
 
+    bool reduceGhostParticles = false;
+
     Real overload_toler  = 1.2;
     Real underload_toler = 0.8;
 

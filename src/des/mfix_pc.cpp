@@ -269,8 +269,12 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               clearNeighbors();
               Redistribute(0, 0, 0, 1);
               fillNeighbors();
-              // send in "false" for sort_neighbor_list option
-
+#ifdef AMREX_USE_GPU
+              if (reduceGhostParticles) {
+                selectActualNeighbors(MFIXCheckPair(DEM::neighborhood));
+                updateNeighbors(true);
+              }
+#endif
               buildNeighborList(MFIXCheckPair(DEM::neighborhood), false);
           } else {
               updateNeighbors();
@@ -2085,8 +2089,8 @@ namespace {
     bool inverse = false;
 
     PairCompare(const bool a_inverse=false) :inverse(a_inverse) {};
-    bool operator() (const BidNp& lhs, const BidNp& rhs) 
-    { 
+    bool operator() (const BidNp& lhs, const BidNp& rhs)
+    {
       return inverse ? lhs.second > rhs.second : lhs.second < rhs.second;
     };
   };
@@ -2095,7 +2099,7 @@ namespace {
 };
 
 
-void MFIXParticleContainer::partitionParticleGrids(int lev, 
+void MFIXParticleContainer::partitionParticleGrids(int lev,
                                                    const BoxArray& fba,
                                                    const DistributionMapping& fdmap,
                                                    const int chop_dir,
@@ -2148,7 +2152,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
   // debug
   Print() << "avg np: " << avg_np << " overload tolerance " << overload_toler
           << " underload tolerance " << underload_toler << "\n";
-  
+
   // initialize the map from particle box to fluid box using
   // current fluid box ids
   m_pboxid_to_fboxid.resize(fbl.size());
@@ -2167,18 +2171,18 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
 
   // construct queues for the greedy algorithm
   BidNpHeap o_q;
-  for (int i=0; i<overload_fboxid.size(); ++i) 
+  for (int i=0; i<overload_fboxid.size(); ++i)
     o_q.push(std::make_pair(i, pcount_fbox[overload_fboxid[i]]));
   //
   BidNpHeap u_q(PairCompare(true));
-  for (int i=0; i<underload_fboxid.size(); ++i)   
+  for (int i=0; i<underload_fboxid.size(); ++i)
     u_q.push(std::make_pair(i, pcount_fbox[underload_fboxid[i]]));
 
   int min_nbin = 4;
   Vector<int> new_ppmap(fpmap);
 
   Vector<int> left_nbin;              // bins left for an overload box
-  for (int i=0; i<poffset_bin.size()-1; ++i) 
+  for (int i=0; i<poffset_bin.size()-1; ++i)
     left_nbin.push_back(poffset_bin[i+1] - poffset_bin[i]);
 
   // greedy algorithm
@@ -2193,7 +2197,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
 
     // find # bins to chop off
     int   chop_np = 0, chop_nbin = 0;
-    for (int ibin = poffset_bin[o_pair.first] + left_nbin[o_pair.first] - 1; 
+    for (int ibin = poffset_bin[o_pair.first] + left_nbin[o_pair.first] - 1;
          ibin >= poffset_bin[o_pair.first]; --ibin) {
       int chop_np_tmp = chop_np + pcount_bin[ibin];
       if (  (chop_np_tmp < room && o_pair.second - chop_np_tmp > u_toler_np)
@@ -2205,10 +2209,10 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
         break;
       }
     }// end for ibin
-    //Print() << "overload box " << o_boxid << " " << o_pair.second 
-    //<< " chop " << chop_nbin << " " << chop_np 
+    //Print() << "overload box " << o_boxid << " " << o_pair.second
+    //<< " chop " << chop_nbin << " " << chop_np
     //<< " underload box " << u_boxid << " room " << room << "\n";
-    
+
     if (chop_np > room || (o_pair.second - chop_np) < u_toler_np)
     // if (chop_np > room)
       break;
@@ -2222,7 +2226,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
     m_pboxid_to_fboxid.push_back(o_boxid);
     new_ppmap.push_back(fpmap[u_boxid]);
     left_nbin[o_pair.first] -= chop_nbin;
-    //Print() << "assign " << chop_np << " from " << o_boxid << " to " 
+    //Print() << "assign " << chop_np << " from " << o_boxid << " to "
     //<< u_boxid << " at proc " << fpmap[u_boxid] << "\n";
 
     // update np and heap
@@ -2262,8 +2266,8 @@ Real MFIXParticleContainer::particleImbalance()
 }
 
 
-void MFIXParticleContainer:: countParticle(int lev, 
-                                           const BoxList& bl, 
+void MFIXParticleContainer:: countParticle(int lev,
+                                           const BoxList& bl,
                                            const IntVect& binsize,
                                            Vector<int>&   pcounts,
                                            Vector<int>&   poffsets)
@@ -2274,7 +2278,7 @@ void MFIXParticleContainer:: countParticle(int lev,
   pcounts.clear();
   poffsets.resize(1, 0);
 
-  // find the total number of bins and offests for each box's bins
+  // find the total number of bins and offsets for each box's bins
   int total_nbin = 0;
   for (int i=0; i<nbox; ++i) {
     IntVect boxsize = boxes[i].size();
@@ -2294,7 +2298,7 @@ void MFIXParticleContainer:: countParticle(int lev,
 
   // particle tiles and geometry of this level
   const auto& geom   = Geom(lev);
-  const auto  domain = geom.Domain(); 
+  const auto  domain = geom.Domain();
   const auto  dx_inv = geom.InvCellSizeArray();
   const auto  prob_lo = geom.ProbLoArray();
 
@@ -2372,7 +2376,7 @@ void MFIXParticleContainer::printGhostParticleCount()
     auto& aos   = ptile.GetArrayOfStructs();
     ParticleType* pstruct = aos().dataPtr();
     const int  nrp = ptile.numRealParticles();
-    const int  ngp = ptile.numTotalParticles() - nrp; 
+    const int  ngp = ptile.numTotalParticles() - nrp;
 
     // create vector to mark if a ghost is a neighbor of some real particle.
     Gpu::DeviceVector<int> nbrids(ngp, 0);

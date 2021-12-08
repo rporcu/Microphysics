@@ -119,7 +119,7 @@ mfix::InitParams ()
     // file with "Random"
     pp.query("particle_init_type", particle_init_type);
 
-    // frequency and bin size for sorting particles 
+    // frequency and bin size for sorting particles
     pp.query("particle_sorting_bin", particle_sorting_bin);
     sort_particle_int = -1;
     pp.query("sort_particle_int", sort_particle_int);
@@ -287,8 +287,25 @@ mfix::InitParams ()
     // More info at "AMReX-Hydro/Projections/hydro_MacProjector.cpp"
     macproj_options = std::make_unique<MfixUtil::MLMGOptions>("mac_proj");
 
+    // Checks for hypre namespace
+    if (nodalproj_options->bottom_solver_type == "hypre" && 
+          macproj_options->bottom_solver_type == "hypre") {
+       std::string nodal_ns = nodalproj_options->hypre_namespace; 
+       std::string mac_ns = macproj_options->hypre_namespace; 
+
+       if (nodal_ns == "hypre" && mac_ns != "hypre")
+          amrex::Abort("hypre namespace required for nodal projection");
+
+       if (nodal_ns != "hypre" && mac_ns == "hypre")
+          amrex::Abort("hypre namespace required for MAC projection");
+
+       if ((nodal_ns == mac_ns) && nodal_ns != "hypre")
+          amrex::Abort("same hypre namespace other than \"hypre\" not allowed for nodal and MAC projections");
+
+    }
+
     AMREX_ALWAYS_ASSERT(load_balance_type.compare("KnapSack") == 0  ||
-                        load_balance_type.compare("SFC") == 0 || 
+                        load_balance_type.compare("SFC") == 0 ||
                         load_balance_type.compare("Greedy") == 0);
 
     AMREX_ALWAYS_ASSERT(knapsack_weight_type.compare("RunTimeCosts") == 0 ||
@@ -303,7 +320,7 @@ mfix::InitParams ()
     if (load_balance_type.compare("Greedy") == 0)
       pp.query("greedy_dir", greedy_dir);
 
-    // fluid grids' distribution map 
+    // fluid grids' distribution map
     pp.queryarr("pmap", pmap);
 
     // Parameters used be the level-set algorithm. Refer to LSFactory (or
@@ -340,7 +357,8 @@ mfix::InitParams ()
 
     // Keep particles that are initially touching the wall. Used by DEM tests.
     pp.query("removeOutOfRange", removeOutOfRange);
-    
+    pp.query("reduceGhostParticles", reduceGhostParticles);
+
     // distribution map for particle grids
     pp.queryarr("pmap", particle_pmap);
   }
@@ -589,10 +607,10 @@ void mfix::Init (Real time)
         mfix_set_bc_type(lev,nghost_state());
 }
 
-void mfix::PruneBaseGrids(BoxArray &ba) const 
+void mfix::PruneBaseGrids(BoxArray &ba) const
 {
     // Use 1 ghost layer
-    EBDataCollection ebdc(*eb_levels[0], geom[0], 
+    EBDataCollection ebdc(*eb_levels[0], geom[0],
           ba, DistributionMapping{ba}, {1}, EBSupport::basic);
 
     const auto &cflag = ebdc.getMultiEBCellFlagFab();
@@ -923,7 +941,7 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
             BoxArray particle_ba(geom[lev].Domain());
             particle_ba.maxSize(particle_max_grid_size);
 
-            DistributionMapping particle_dm; 
+            DistributionMapping particle_dm;
             if (particle_pmap.empty())
               particle_dm.define(particle_ba, ParallelDescriptor::NProcs());
             else
@@ -967,6 +985,7 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
         if (DEM::solve) {
             pc->MFIX_PC_InitCollisionParams();
             pc->setSortInt(sort_particle_int);
+            pc->setReduceGhostParticles(reduceGhostParticles);
         }
 
         if (!is_restarting)
