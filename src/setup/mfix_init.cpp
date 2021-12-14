@@ -516,6 +516,19 @@ mfix::InitParams ()
     amr_pp.queryarr("avg_region_z_t", avg_region_z_t);
     amr_pp.queryarr("avg_region_z_b", avg_region_z_b);
   }
+
+  {
+    ParmParse reports("mfix.reports");
+    reports.query("mass_balance",report_mass_balance);
+
+    // Add check to turn off report if not solving species
+    // or if there are no species.
+    if (not solve_species || fluid.nspecies < 1) {
+      amrex::Print() << "No valid species -- disabling mass balance report\n";
+      report_mass_balance = 0;
+    }
+  }
+
 }
 
 

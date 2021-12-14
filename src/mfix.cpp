@@ -37,6 +37,10 @@ EBSupport mfix::m_eb_support_level = EBSupport::full;
 RealVect mfix::gravity {0.};
 RealVect mfix::gp0     {0.};
 
+amrex::GpuArray<amrex::Real,2*SPECIES::NMAX> mass_accum{0.};
+amrex::GpuArray<amrex::Real,2*SPECIES::NMAX> mass_inflow{0.};
+amrex::GpuArray<amrex::Real,2*SPECIES::NMAX> mass_outflow{0.};
+
 // Destructor
 mfix::~mfix ()
 {

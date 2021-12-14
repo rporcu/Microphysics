@@ -224,10 +224,10 @@ void writeNow (int nstep, Real time, Real dt, mfix& mfix)
 
 
     if ( ( avg_int > 0) && ( nstep %  avg_int == 0 ) )
-      {
-        mfix.WriteAverageRegions( avg_file, nstep, time );
-        last_avg = nstep;
-      }
+    {
+      mfix.WriteAverageRegions( avg_file, nstep, time );
+      last_avg = nstep;
+    }
 }
 
 int main (int argc, char* argv[])
@@ -417,6 +417,8 @@ int main (int argc, char* argv[])
                      ( (stop_time >= 0.) && (time >  stop_time) ) ||
                      ( (stop_time <= 0.) && (max_step <= 0) ) );
 
+    mfix.ComputeMassAccum(0);
+
     if (restart_file.empty())
     {
         amrex::Print() << " " << std::endl;
@@ -438,7 +440,6 @@ int main (int argc, char* argv[])
         mfix.PIC_to_DEM(lev);
       }
     }
-
 
     { // Start profiling solve here
 
@@ -475,6 +476,7 @@ int main (int argc, char* argv[])
 #ifdef MFIX_CATALYST
                     mfix.RunCatalystAdaptor(nstep, time);
 #endif
+                    mfix.WriteMassBalanceReport(prev_dt);
                 }
 
                 // Mechanism to terminate MFIX normally.

@@ -251,6 +251,12 @@ mfix::EvolveFluid (int nstep,
                enthalpy_RHS_old, enthalpy_RHS, species_RHS_old, species_RHS,
                lap_X_old, lap_X, vel_RHS_old, rhs_pressure_g_old, rhs_pressure_g, time, dt,
                prev_dt, proj_2_corr, coupling_timing);
+
+
+        }
+
+        if (report_mass_balance) {
+          ComputeMassAccum();
         }
 
         //
