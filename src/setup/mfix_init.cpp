@@ -136,7 +136,6 @@ mfix::InitParams ()
     pp.query("advect_density", advect_density);
     pp.query("advect_tracer" , advect_tracer);
     pp.query("advect_enthalpy", advect_enthalpy);
-    pp.query("solve_reactions", solve_reactions);
     pp.query("solve_species", solve_species);
 
     pp.query("test_tracer_conservation", test_tracer_conservation);
@@ -158,7 +157,7 @@ mfix::InitParams ()
     }
 
     // Set the FLUID parameter equal to the mfix class flag
-    reactions.solve = solve_reactions;
+    solve_reactions = reactions.solve;
 
     if (solve_reactions)
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(reactions.nreactions > 0,

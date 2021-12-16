@@ -221,30 +221,33 @@ mfix::EvolveFluid (int nstep,
             rhs_pressure_g_old, rhs_pressure_g, time, dt, prev_dt, proj_2_pred,
             coupling_timing);
 
-        // Calculate drag coefficient
-        if (DEM::solve || PIC::solve) {
-          Real start_drag = ParallelDescriptor::second();
-          amrex::Print() << "\nRecalculating drag ..." << std::endl;
-          mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                               get_T_g(), get_X_gk(), new_time);
 
-          // If !m_constraint_type == ConstraintType::IncompressibleFluid, then we have already
-          // updated the chemical quantities
-          if (reactions.solve && m_constraint_type == ConstraintType::IncompressibleFluid) {
-            mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                                get_p_g(), get_T_g(), get_X_gk(), new_time);
-          }
-
-          coupling_timing += ParallelDescriptor::second() - start_drag;
-        }
-
-        bool proj_2_corr = true;
         // Corrector step
         if (advection_type() == AdvectionType::MOL && !m_steady_state) {
+
+          // Calculate drag coefficient
+          if (DEM::solve || PIC::solve) {
+            Real start_drag = ParallelDescriptor::second();
+            amrex::Print() << "\nRecalculating drag ..." << std::endl;
+            mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
+                                 get_T_g(), get_X_gk(), new_time);
+
+            // If !m_constraint_type == ConstraintType::IncompressibleFluid, then we have already
+            // updated the chemical quantities
+            if (reactions.solve && m_constraint_type == ConstraintType::IncompressibleFluid) {
+              mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
+                                  get_p_g(), get_T_g(), get_X_gk(), new_time);
+            }
+
+            coupling_timing += ParallelDescriptor::second() - start_drag;
+          }
+
 
            //  Do fillpatch in here
            fillpatch_all(get_vel_g(), get_ro_g(), get_h_g(), get_trac(),
                          get_X_gk(), new_time);
+
+           bool proj_2_corr = true;
 
            mfix_apply_corrector(conv_u_old, conv_s_old, conv_X_old, ro_RHS_old,
                ro_RHS, lap_trac_old, lap_trac, lap_T_old, lap_T,

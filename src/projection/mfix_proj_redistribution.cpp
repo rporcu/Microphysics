@@ -60,8 +60,7 @@ mfix::PostProjectionRedistribution (Real l_time, Real l_dt,
                                                     flag, apx, apy, apz, vfrac,
                                                     fcx, fcy, fcz, ccc, bc_vel,
                                                     geom[lev],
-                                                    (m_redistribution_type == "StateRedist") ? 
-                                                         "NewStateRedist" : m_redistribution_type);
+                                                    m_redistribution_type);
 
                 // We update gradp so that (vel_redist + dt gradp_redistnew/rho) == (vel_orig + dt gradp_orig/rho)
                 // Note that we do not change rho in the redistribution
@@ -145,8 +144,7 @@ mfix::PreProjectionRedistribution (Real l_time)
                                                     flag, apx, apy, apz, vfrac,
                                                     fcx, fcy, fcz, ccc, bc_vel,
                                                     geom[lev],
-                                                    (m_redistribution_type == "StateRedist") ? 
-                                                         "NewStateRedist" : m_redistribution_type);
+                                                    m_redistribution_type);
 
             } else {
                 amrex::ParallelFor(bx, ncomp, [=]

@@ -31,7 +31,6 @@ mfix::WriteMassBalanceReport ( const Real new_time )
 
     mass_balance_report_time = new_time;
 
-
     Real tot_flux_in = 0.;
     std::vector<Real> error(nspecies_g, 100.);
     std::vector<Real> delta_accum(nspecies_g, 0.);
@@ -59,7 +58,7 @@ mfix::WriteMassBalanceReport ( const Real new_time )
       mass_accum[n] = mass_accum[n+offset];
       mass_inflow[n] = 0.;
       mass_outflow[n] = 0.;
-
+      mass_prod[n] = 0.;
     }
 
     printf("\n  net accu := mass(t+dt) - mass(t) - production\n");
@@ -134,19 +133,6 @@ mfix::ComputeMassAccum ( const int offset )
   for (int n=0; n < nspecies_g; ++n) {
     mass_accum[n + offset*SPECIES::NMAX] = accum[n];
   }
-
-  if( !offset ) {
-    amrex::Print() << "Computing initial mass for each species:\n";
-    if(ParallelDescriptor::IOProcessor()) {
-      printf("****************************************\n");
-      printf("  Species mass report:\n");
-      for (int n=0; n < nspecies_g; ++n){
-        printf("   %2d   %12.6e\n", n, mass_accum[n]);
-      }
-      printf("****************************************\n\n");
-    }
-  }
-
 }
 
 
