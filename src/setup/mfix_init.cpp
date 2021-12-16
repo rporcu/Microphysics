@@ -515,6 +515,24 @@ mfix::InitParams ()
     amr_pp.queryarr("avg_region_z_t", avg_region_z_t);
     amr_pp.queryarr("avg_region_z_b", avg_region_z_b);
   }
+
+  {
+    ParmParse reports_pp("mfix.reports");
+
+    reports_pp.query("mass_balance_int", mass_balance_report_int);
+    reports_pp.query("mass_balance_per_approx", mass_balance_report_per_approx);
+
+    if ((mass_balance_report_int > 0 && mass_balance_report_per_approx > 0) )
+      amrex::Abort("Must choose only one of mass_balance_int or mass_balance_report_per_approx");
+
+    // OnAdd check to turn off report if not solving species
+    if (solve_species && fluid.nspecies >= 1) {
+      report_mass_balance = (mass_balance_report_int > 0 || mass_balance_report_per_approx > 0);
+    } else {
+      report_mass_balance = 0;
+    }
+  }
+
 }
 
 
