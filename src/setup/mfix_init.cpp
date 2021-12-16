@@ -518,13 +518,18 @@ mfix::InitParams ()
   }
 
   {
-    ParmParse reports("mfix.reports");
-    reports.query("mass_balance",report_mass_balance);
+    ParmParse reports_pp("mfix.reports");
 
-    // Add check to turn off report if not solving species
-    // or if there are no species.
-    if (not solve_species || fluid.nspecies < 1) {
-      amrex::Print() << "No valid species -- disabling mass balance report\n";
+    reports_pp.query("mass_balance_int", mass_balance_report_int);
+    reports_pp.query("mass_balance_per_approx", mass_balance_report_per_approx);
+
+    if ((mass_balance_report_int > 0 && mass_balance_report_per_approx > 0) )
+      amrex::Abort("Must choose only one of mass_balance_int or mass_balance_report_per_approx");
+
+    // OnAdd check to turn off report if not solving species
+    if (solve_species && fluid.nspecies >= 1) {
+      report_mass_balance = (mass_balance_report_int > 0 || mass_balance_report_per_approx > 0);
+    } else {
       report_mass_balance = 0;
     }
   }

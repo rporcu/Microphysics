@@ -228,6 +228,49 @@ void writeNow (int nstep, Real time, Real dt, mfix& mfix)
       mfix.WriteAverageRegions( avg_file, nstep, time );
       last_avg = nstep;
     }
+
+    int mass_balance_report_test = 0;
+    if (mfix::mass_balance_report_per_approx > 0.0)
+      {
+        // Check to see if we've crossed a mfix::mass_balance_report_per_approx interval by comparing
+        // the number of intervals that have elapsed for both the current
+        // time and the time at the beginning of this timestep.
+
+        int num_per_old = static_cast<int>( (time-dt) / mfix::mass_balance_report_per_approx );
+        int num_per_new = static_cast<int>( (time   ) / mfix::mass_balance_report_per_approx );
+
+        // Before using these, however, we must test for the case where we're
+        // within machine epsilon of the next interval. In that case, increment
+        // the counter, because we have indeed reached the next mfix::mass_balance_report_per_approx interval
+        // at this point.
+
+        const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * amrex::Math::abs(time);
+        const Real next_mass_balance_report_time = (num_per_old + 1) * mfix::mass_balance_report_per_approx;
+
+        if ((num_per_new == num_per_old) && amrex::Math::abs(time - next_mass_balance_report_time) <= eps)
+        {
+            num_per_new += 1;
+        }
+
+        // Similarly, we have to account for the case where the old time is within
+        // machine epsilon of the beginning of this interval, so that we don't double
+        // count that time threshold -- we already plotted at that time on the last timestep.
+
+        if ((num_per_new != num_per_old) && amrex::Math::abs((time - dt) - next_mass_balance_report_time) <= eps)
+            num_per_old += 1;
+
+        if (num_per_old != num_per_new)
+            mass_balance_report_test = 1;
+
+    }
+
+    if ( (mass_balance_report_test == 1) ||
+         (( mfix::mass_balance_report_int > 0) &&
+          ( nstep %  mfix::mass_balance_report_int == 0 ) ) ) {
+      mfix.WriteMassBalanceReport(time);
+    }
+
+
 }
 
 int main (int argc, char* argv[])
@@ -476,7 +519,6 @@ int main (int argc, char* argv[])
 #ifdef MFIX_CATALYST
                     mfix.RunCatalystAdaptor(nstep, time);
 #endif
-                    mfix.WriteMassBalanceReport(prev_dt);
                 }
 
                 // Mechanism to terminate MFIX normally.

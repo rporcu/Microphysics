@@ -255,10 +255,6 @@ mfix::EvolveFluid (int nstep,
 
         }
 
-        if (report_mass_balance) {
-          ComputeMassAccum();
-        }
-
         //
         // Check whether to exit the loop or not
         //
