@@ -197,6 +197,8 @@ mfix::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
                        const bool fluxes_are_area_weighted,
                        const Real dt)
 {
+  amrex::ignore_unused(ncomp, fluxes_are_area_weighted);
+
   const int minf = bc_list.get_minf();
   const int pinf = bc_list.get_pinf();
   const int pout = bc_list.get_pout();
@@ -253,7 +255,6 @@ mfix::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
         Array4<Real const> const& flux_z_arr = flux_z[lev]->const_array(mfi);
 
         EBCellFlagFab const& flagfab = fact.getMultiEBCellFlagFab()[mfi];
-        Array4<EBCellFlag const> const& flag = flagfab.const_array();
 
         if (flagfab.getType() == FabType::regular ) {
 
