@@ -3,24 +3,6 @@
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
 
-namespace {
-  void print_process_boxes(const amrex::DistributionMapping& dmap, const amrex::BoxArray& ba)
-  {
-    const Vector<int>& pmap = dmap.ProcessorMap();
-    Vector<Vector<int>> pbox(ParallelDescriptor::NProcs());
-
-    for (unsigned int i=0; i<pmap.size(); ++i)
-      pbox[pmap[i]].push_back(i);
-
-    for (unsigned int i=0; i<pbox.size(); ++i) {
-      Print() << "Process  " << i << ":";
-      for (unsigned int j=0; j<pbox[i].size(); ++j)
-        Print() << " " << pbox[i][j] << " " << ba[pbox[i][j]];
-      Print() << "\n";
-    }
-  }
-}
-
 void
 mfix::Regrid ()
 {
