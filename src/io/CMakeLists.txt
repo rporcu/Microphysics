@@ -1,3 +1,7 @@
+target_include_directories( mfixcore
+   PUBLIC
+   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>)
+
 target_sources( mfixcore
    PRIVATE
    mfix_io.cpp
@@ -9,4 +13,6 @@ target_sources( mfixcore
    mfix_ascent.cpp
    mfix_pic2pic.cpp
    mfix_pic2dem.cpp
+   mfix_rw.H
+   mfix_rw.cpp
    )
