@@ -40,6 +40,10 @@ public:
    bool stop_for_unused_inputs = false;
    std::string restart_file {""};
 
+#ifdef MFIX_CATALYST
+   std::string catalyst_script {""};
+#endif
+
 private:
    void readParameters();
 
@@ -67,11 +71,6 @@ private:
    std::string mfix_dat {"mfix.dat"};
 
    bool checkpoint_files_output = true;
-
-#ifdef MFIX_CATALYST
-   std::string catalyst_script {""};
-#endif
-
 };
 
 } // end of namespace MfixIO
