@@ -96,7 +96,7 @@ int main (int argc, char* argv[])
 
 #ifdef MFIX_CATALYST
     conduit_cpp::Node params;
-    params["catalyst/scripts/script0"].set_string(catalyst_script);
+    params["catalyst/scripts/script0"].set_string(mfixRW.catalyst_script);
     params["catalyst_load/implementation"] = "paraview";
     params["catalyst_load/search_paths/paraview"] = "/home/corey/Builds/pvsb-dev/install/lib/catalyst";
     catalyst_status err = catalyst_initialize(conduit_cpp::c_node(&params));
