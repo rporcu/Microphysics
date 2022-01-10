@@ -197,7 +197,7 @@ ic.full-domain.solid0.diameter = constant
 ic.full-domain.solid0.density  = constant
 
 ic.full-domain.solid0.diameter.constant =  100.0e-6
-ic.full-domain.solid0.density.constant  = 1000.0
+ic.full-domain.solid0.density.constant  = 2000.0
 
 
 #_______________________________________________________________________
