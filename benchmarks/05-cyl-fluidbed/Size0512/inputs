@@ -191,7 +191,7 @@ ic.bed.solid0.diameter = constant
 ic.bed.solid0.density  = constant
 
 ic.bed.solid0.diameter.constant =  100.0e-6
-ic.bed.solid0.density.constant  = 1000.0
+ic.bed.solid0.density.constant  = 2000.0
 
 
 #_______________________________________________________________________
