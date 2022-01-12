@@ -19,13 +19,22 @@
 #include "AMReX_Conduit_Blueprint.H"
 #endif
 
-// Set the extend domain flag by default, since the mfix default
-// is different (true) from the amrex default (false)
-// only if its not already specified in the inputs file
+// Set defautls that are different that what ARMeX uses.  We only
+// add them if they are not already specified in the inputs file.
 void add_par () {
-   ParmParse pp("eb2");
-   if(!pp.contains("extend_domain_face")) {
-      pp.add("extend_domain_face",true);
+
+   {// Set the extend domain flag by default
+      ParmParse pp("eb2");
+      if(!pp.contains("extend_domain_face")) {
+         pp.add("extend_domain_face",true);
+      }
+   }
+   {
+      // Disable managed memory for GPUs
+      ParmParse pp("amrex");
+      if(!pp.contains("the_arena_is_managed")) {
+         pp.add("the_arena_is_managed",0);
+      }
    }
 }
 
