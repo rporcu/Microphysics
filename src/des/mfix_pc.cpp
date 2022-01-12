@@ -2114,7 +2114,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
   int u_toler_np = static_cast<int>(avg_np * underload_toler);
   Vector<int> overload_fboxid, underload_fboxid;
   BoxList     overload_fbl;
-  for (int i=0; i<pcount_fbox.size(); ++i) {
+  for (size_t i=0; i<pcount_fbox.size(); ++i) {
     if (pcount_fbox[i] > o_toler_np) {
       overload_fboxid.push_back(i);
       overload_fbl.push_back(fbl_vec[i]);

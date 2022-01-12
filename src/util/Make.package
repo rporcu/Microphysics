@@ -28,3 +28,5 @@ CEXE_sources += mfix_normalize_species_g.cpp
 
 CEXE_headers += mfix_mlmg_options.H
 CEXE_sources += mfix_mlmg_options.cpp
+
+CEXE_sources += mfix_mass_balance.cpp

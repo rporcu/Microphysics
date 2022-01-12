@@ -1,7 +1,6 @@
 #include <fstream>
 #include <iomanip>
 
-#include <AMReX_ParmParse.H>
 #include <AMReX_Geometry.H>
 #include <AMReX_VisMF.H>
 #include <AMReX_iMultiFab.H>
@@ -13,51 +12,13 @@
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
 #include <mfix_fluid_parms.H>
+#include <mfix_rw.H>
 
 #ifdef MFIX_CATALYST
 #include "catalyst.hpp"
 #include "AMReX_Conduit_Blueprint.H"
 #endif
 
-int  max_step   = -1;
-int  regrid_int = -1;
-Real stop_time  = -1.0;
-
-bool write_eb_surface = false;
-bool write_ls         = false;
-
-std::string restart_file {""};
-
-int repl_x = 1;
-int repl_y = 1;
-int repl_z = 1;
-
-int check_int = -1;
-int last_chk  = -1;
-std::string check_file {"chk"};
-
-std::string plot_file {"plt"};
-std::string static_plt_file {"plt_ls"};
-
-bool plotfile_on_restart = false;
-bool ascent_on_restart = false;
-
-int par_ascii_int = -1;
-int last_par_ascii  = -1;
-std::string par_ascii_file {"par"};
-
-int avg_int = -1;
-int last_avg = -1;
-std::string avg_file {"avg_region"};
-
-std::string mfix_dat {"mfix.dat"};
-
-bool stop_for_unused_inputs = false;
-bool checkpoint_files_output = true;
-
-#ifdef MFIX_CATALYST
-std::string catalyst_script {""};
-#endif
 // Set the extend domain flag by default, since the mfix default
 // is different (true) from the amrex default (false)
 // only if its not already specified in the inputs file
@@ -69,166 +30,6 @@ void add_par () {
 }
 
 void writeBuildInfo ();
-
-void ReadParameters ()
-{
-  {
-     ParmParse pp("amr");
-
-     pp.query("checkpoint_files_output", checkpoint_files_output);
-     pp.query("check_file", check_file);
-     pp.query("check_int", check_int);
-
-     pp.query("plot_file", plot_file);
-
-     pp.query("plotfile_on_restart", plotfile_on_restart);
-     pp.query("ascent_on_restart", ascent_on_restart);
-
-     pp.query("avg_int", avg_int );
-     pp.query("avg_file", avg_file);
-
-     pp.query("par_ascii_file", par_ascii_file);
-     pp.query("par_ascii_int", par_ascii_int);
-
-     pp.query("restart", restart_file);
-
-     pp.query("repl_x", repl_x);
-     pp.query("repl_y", repl_y);
-     pp.query("repl_z", repl_z);
-     pp.query("regrid_int",regrid_int);
-
-     if ( regrid_int == 0 )
-       amrex::Abort("regrid_int must be > 0 or < 0");
-  }
-
-  {
-     ParmParse pp("mfix");
-
-     pp.query("stop_time", stop_time);
-     pp.query("max_step", max_step);
-
-     pp.query("input_deck", mfix_dat);
-     pp.query("write_eb_surface", write_eb_surface);
-     pp.query("write_ls", write_ls);
-     pp.query("stop_for_unused_inputs", stop_for_unused_inputs);
-  }
-
-#ifdef MFIX_CATALYST
-  {
-    ParmParse pp("catalyst");
-    pp.query("script", catalyst_script);
-  }
-#endif
-}
-
-void writeNow (int nstep, Real time, Real dt, mfix& mfix)
-{
-    int plot_test = 0;
-    if (mfix::plot_per_approx > 0.0)
-    {
-        // Check to see if we've crossed a mfix::plot_per_approx interval by comparing
-        // the number of intervals that have elapsed for both the current
-        // time and the time at the beginning of this timestep.
-
-        int num_per_old = static_cast<int>( (time-dt) / mfix::plot_per_approx );
-        int num_per_new = static_cast<int>( (time   ) / mfix::plot_per_approx );
-
-        // Before using these, however, we must test for the case where we're
-        // within machine epsilon of the next interval. In that case, increment
-        // the counter, because we have indeed reached the next mfix::plot_per_approx interval
-        // at this point.
-
-        const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * amrex::Math::abs(time);
-        const Real next_plot_time = (num_per_old + 1) * mfix::plot_per_approx;
-
-        if ((num_per_new == num_per_old) && amrex::Math::abs(time - next_plot_time) <= eps)
-        {
-            num_per_new += 1;
-        }
-
-        // Similarly, we have to account for the case where the old time is within
-        // machine epsilon of the beginning of this interval, so that we don't double
-        // count that time threshold -- we already plotted at that time on the last timestep.
-
-        if ((num_per_new != num_per_old) && amrex::Math::abs((time - dt) - next_plot_time) <= eps)
-            num_per_old += 1;
-
-        if (num_per_old != num_per_new)
-            plot_test = 1;
-
-    }
-    else if ( mfix::plot_per_exact  > 0 && (amrex::Math::abs(remainder(time, mfix::plot_per_exact)) < 1.e-12) )
-    {
-        plot_test = 1;
-    }
-
-    if ( (plot_test == 1) || ( ( mfix::plot_int > 0) && ( nstep %  mfix::plot_int == 0 ) ) )
-    {
-      if (mfix.fluid.solve)
-           mfix.mfix_compute_vort();
-        mfix.WritePlotFile( plot_file, nstep, time );
-    }
-#ifdef AMREX_USE_ASCENT
-    int ascent_test = 0;
-    if (mfix::ascent_per_approx > 0.0)
-    {
-        // Check to see if we've crossed a mfix::ascent_per_approx interval by comparing
-        // the number of intervals that have elapsed for both the current
-        // time and the time at the beginning of this timestep.
-
-        int num_per_old = static_cast<int>( (time-dt) / mfix::ascent_per_approx );
-        int num_per_new = static_cast<int>( (time   ) / mfix::ascent_per_approx );
-
-        // Before using these, however, we must test for the case where we're
-        // within machine epsilon of the next interval. In that case, increment
-        // the counter, because we have indeed reached the next mfix::ascent_per_approx interval
-        // at this point.
-
-        const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * amrex::Math::abs(time);
-        const Real next_ascent_time = (num_per_old + 1) * mfix::ascent_per_approx;
-
-        if ((num_per_new == num_per_old) && amrex::Math::abs(time - next_ascent_time) <= eps)
-        {
-            num_per_new += 1;
-        }
-
-        // Similarly, we have to account for the case where the old time is within
-        // machine epsilon of the beginning of this interval, so that we don't double
-        // count that time threshold -- we already plotted at that time on the last timestep.
-
-        if ((num_per_new != num_per_old) && amrex::Math::abs((time - dt) - next_ascent_time) <= eps)
-            num_per_old += 1;
-
-        if (num_per_old != num_per_new)
-            ascent_test = 1;
-
-    }
-
-    if ( (ascent_test == 1) || ( ( mfix::ascent_int > 0) && ( nstep %  mfix::ascent_int == 0 ) ) )
-    {
-        mfix.WriteAscentFile();
-    }
-#endif
-
-    if ( ( check_int > 0) && ( nstep %  check_int == 0 ) )
-    {
-        if (checkpoint_files_output) mfix.WriteCheckPointFile( check_file, nstep, dt, time );
-        last_chk = nstep;
-    }
-
-    if ( ( par_ascii_int > 0) && ( nstep %  par_ascii_int == 0 ) )
-    {
-        mfix.WriteParticleAscii( par_ascii_file, nstep );
-        last_par_ascii = nstep;
-    }
-
-
-    if ( ( avg_int > 0) && ( nstep %  avg_int == 0 ) )
-      {
-        mfix.WriteAverageRegions( avg_file, nstep, time );
-        last_avg = nstep;
-      }
-}
 
 int main (int argc, char* argv[])
 {
@@ -278,7 +79,7 @@ int main (int argc, char* argv[])
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix mfix;
 
-    ReadParameters();
+    MfixIO::MfixRW mfixRW;
 
     // Initialize internals from ParamParse database
     mfix.InitParams();
@@ -295,7 +96,7 @@ int main (int argc, char* argv[])
 
 #ifdef MFIX_CATALYST
     conduit_cpp::Node params;
-    params["catalyst/scripts/script0"].set_string(catalyst_script);
+    params["catalyst/scripts/script0"].set_string(mfixRW.catalyst_script);
     params["catalyst_load/implementation"] = "paraview";
     params["catalyst_load/search_paths/paraview"] = "/home/corey/Builds/pvsb-dev/install/lib/catalyst";
     catalyst_status err = catalyst_initialize(conduit_cpp::c_node(&params));
@@ -310,8 +111,7 @@ int main (int argc, char* argv[])
     mfix.make_eb_factories();
 
     // Write out EB sruface
-    if(write_eb_surface)
-      mfix.WriteMyEBSurface();
+    mfixRW.writeEBSurface(mfix);
 
     if (DEM::solve || PIC::solve)
     {
@@ -321,7 +121,7 @@ int main (int argc, char* argv[])
 
     // Either init from scratch or from the checkpoint file
     int restart_flag = 0;
-    if (restart_file.empty())
+    if (mfixRW.restart_file.empty())
     {
         mfix.InitLevelData(time);
     }
@@ -336,8 +136,8 @@ int main (int argc, char* argv[])
 
         // NOTE: during replication 1) this also re-builds ebfactories and
         // level-set 2) this can change the grids
-        IntVect Nrep(repl_x,repl_y,repl_z);
-        mfix.Restart(restart_file, &nstep, &dt, &time, Nrep);
+        IntVect Nrep(mfixRW.repl_x, mfixRW.repl_y, mfixRW.repl_z);
+        mfix.Restart(mfixRW.restart_file, &nstep, &dt, &time, Nrep);
     }
 
     if (mfix.fluid.solve){
@@ -349,19 +149,17 @@ int main (int argc, char* argv[])
     }
 
     // This checks if we want to regrid
-    if (!mfix.IsSteadyState() && regrid_int > -1 && nstep%regrid_int == 0)
+    if (!mfix.IsSteadyState() && mfixRW.regrid_int > -1 && nstep%mfixRW.regrid_int == 0)
     {
         amrex::Print() << "Regridding at step " << nstep << std::endl;
         mfix.Regrid();
     }
 
-    if ((DEM::solve || PIC::solve) && write_ls)
-        mfix.WriteStaticPlotFile(static_plt_file);
+    mfixRW.writeStaticPlotFile(mfix);
 
-    mfix.PostInit(dt, time, restart_flag, stop_time);
+    mfix.PostInit(dt, time, restart_flag, mfixRW.stop_time);
 
-    if (mfix.fluid.solve)
-      mfix.ReportGridStats();
+    mfixRW.reportGridStats(mfix);
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
@@ -375,53 +173,22 @@ int main (int argc, char* argv[])
     // only if fluid.solve = T
     Real prev_dt = dt;
 
-    // Write checkpoint and plotfiles with the initial data
-    if ( (restart_file.empty() || plotfile_on_restart) &&
-         (mfix::plot_int > 0 || mfix::plot_per_exact > 0 || mfix::plot_per_approx > 0) )
-    {
-      if (mfix.fluid.solve)
-          mfix.mfix_compute_vort();
-       mfix.WritePlotFile(plot_file, nstep, time);
-    }
+    mfixRW.writePlotFileInitial(nstep, time, mfix);
+    mfixRW.writeCheckPointFile(nstep, dt, time, mfix);
+    mfixRW.writeParticleAscii(nstep, mfix);
+    mfixRW.writeAverageRegions(nstep, time, mfix);
 
-#ifdef AMREX_USE_ASCENT
-    if ( (restart_file.empty() || ascent_on_restart) &&
-         (mfix::ascent_int > 0 || mfix::ascent_per_approx > 0) ) {
-      mfix.WriteAscentFile();
-    }
-#endif
+    bool do_not_evolve = !mfix.IsSteadyState() && ( (mfixRW.max_step == 0) ||
+                     ( (mfixRW.stop_time >= 0.) && (time >  mfixRW.stop_time) ) ||
+                     ( (mfixRW.stop_time <= 0.) && (mfixRW.max_step <= 0) ) );
 
-    // We automatically write checkpoint files with the initial data
-    //    if check_int > 0
-    if ( restart_file.empty() && check_int > 0 )
-    {
-       if (checkpoint_files_output) mfix.WriteCheckPointFile(check_file, nstep, dt, time);
-       last_chk = nstep;
-    }
+    mfix.ComputeMassAccum(0);
 
-    // We automatically write ASCII files with the particle data
-    //    if par_ascii_int > 0
-    if ( par_ascii_int > 0 )
-    {
-       mfix.WriteParticleAscii(par_ascii_file, nstep);
-       last_par_ascii = nstep;
-    }
-
-    if ( avg_int > 0 )
-      {
-        mfix.WriteAverageRegions(avg_file, nstep, time);
-        last_avg = nstep;
-      }
-
-    bool do_not_evolve = !mfix.IsSteadyState() && ( (max_step == 0) ||
-                     ( (stop_time >= 0.) && (time >  stop_time) ) ||
-                     ( (stop_time <= 0.) && (max_step <= 0) ) );
-
-    if (restart_file.empty())
+    if (mfixRW.restart_file.empty())
     {
         amrex::Print() << " " << std::endl;
         bool unused_inputs = ParmParse::QueryUnusedInputs();
-        if (stop_for_unused_inputs && unused_inputs)
+        if (mfixRW.stop_for_unused_inputs && unused_inputs)
            amrex::Abort("Aborting here due to unused inputs");
         else if (unused_inputs)
            amrex::Print() << "We should think about aborting here due to unused inputs" << std::endl;
@@ -439,7 +206,6 @@ int main (int argc, char* argv[])
       }
     }
 
-
     { // Start profiling solve here
 
         BL_PROFILE("mfix_solve");
@@ -453,13 +219,13 @@ int main (int argc, char* argv[])
 
                 Real strt_step = ParallelDescriptor::second();
 
-                if (!mfix.IsSteadyState() && regrid_int > -1 && nstep%regrid_int == 0)
+                if (!mfix.IsSteadyState() && mfixRW.regrid_int > -1 && nstep%mfixRW.regrid_int == 0)
                 {
                    amrex::Print() << "Regridding at step " << nstep << std::endl;
                    mfix.Regrid();
                 }
 
-                mfix.Evolve(nstep, dt, prev_dt, time, stop_time);
+                mfix.Evolve(nstep, dt, prev_dt, time, mfixRW.stop_time);
 
                 Real end_step = ParallelDescriptor::second() - strt_step;
                 ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
@@ -471,7 +237,7 @@ int main (int argc, char* argv[])
                     time += prev_dt;
                     nstep++;
 
-                    writeNow(nstep, time, prev_dt, mfix);
+                    mfixRW.writeNow(nstep, time, prev_dt, mfix);
 #ifdef MFIX_CATALYST
                     mfix.RunCatalystAdaptor(nstep, time);
 #endif
@@ -479,8 +245,8 @@ int main (int argc, char* argv[])
 
                 // Mechanism to terminate MFIX normally.
                 do_not_evolve =  mfix.IsSteadyState() || (
-                     ( (stop_time >= 0.) && (time+0.1*dt >= stop_time) ) ||
-                     ( max_step >= 0 && nstep >= max_step ) );
+                     ( (mfixRW.stop_time >= 0.) && (time+0.1*dt >= mfixRW.stop_time) ) ||
+                     ( mfixRW.max_step >= 0 && nstep >= mfixRW.max_step ) );
                 if ( do_not_evolve ) finish = 1;
             }
         }
@@ -490,12 +256,9 @@ int main (int argc, char* argv[])
         nstep = 1;
 
     // Dump plotfile at the final time
-    if ( check_int > 0 && nstep != last_chk)
-        if (checkpoint_files_output) mfix.WriteCheckPointFile(check_file, nstep, dt, time);
-    if ( mfix::plot_int > 0)
-        mfix.WritePlotFile(plot_file, nstep, time);
-    if ( par_ascii_int > 0  && nstep != last_par_ascii)
-        mfix.WriteParticleAscii(par_ascii_file, nstep);
+    mfixRW.writeCheckPointFileFinal(nstep, dt, time, mfix);
+    mfixRW.writePlotFileFinal(nstep, time, mfix);
+    mfixRW.writeParticleAsciiFinal(nstep, mfix);
 
     mfix.mfix_usr3();
 

@@ -37,6 +37,15 @@ EBSupport mfix::m_eb_support_level = EBSupport::full;
 RealVect mfix::gravity {0.};
 RealVect mfix::gp0     {0.};
 
+int  mfix::report_mass_balance = 0;
+int  mfix::mass_balance_report_int        = -1;
+Real mfix::mass_balance_report_per_approx = -1.;
+Real mfix::mass_balance_report_time       =  0.;
+amrex::GpuArray<amrex::Real,2*SPECIES::NMAX> mfix::mass_accum{0.};
+amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mfix::mass_inflow{0.};
+amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mfix::mass_outflow{0.};
+amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mfix::mass_prod{0.};
+
 // Destructor
 mfix::~mfix ()
 {

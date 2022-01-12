@@ -136,7 +136,6 @@ mfix::InitParams ()
     pp.query("advect_density", advect_density);
     pp.query("advect_tracer" , advect_tracer);
     pp.query("advect_enthalpy", advect_enthalpy);
-    pp.query("solve_reactions", solve_reactions);
     pp.query("solve_species", solve_species);
 
     pp.query("test_tracer_conservation", test_tracer_conservation);
@@ -158,7 +157,7 @@ mfix::InitParams ()
     }
 
     // Set the FLUID parameter equal to the mfix class flag
-    reactions.solve = solve_reactions;
+    solve_reactions = reactions.solve;
 
     if (solve_reactions)
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(reactions.nreactions > 0,
@@ -516,6 +515,24 @@ mfix::InitParams ()
     amr_pp.queryarr("avg_region_z_t", avg_region_z_t);
     amr_pp.queryarr("avg_region_z_b", avg_region_z_b);
   }
+
+  {
+    ParmParse reports_pp("mfix.reports");
+
+    reports_pp.query("mass_balance_int", mass_balance_report_int);
+    reports_pp.query("mass_balance_per_approx", mass_balance_report_per_approx);
+
+    if ((mass_balance_report_int > 0 && mass_balance_report_per_approx > 0) )
+      amrex::Abort("Must choose only one of mass_balance_int or mass_balance_report_per_approx");
+
+    // OnAdd check to turn off report if not solving species
+    if (solve_species && fluid.nspecies >= 1) {
+      report_mass_balance = (mass_balance_report_int > 0 || mass_balance_report_per_approx > 0);
+    } else {
+      report_mass_balance = 0;
+    }
+  }
+
 }
 
 

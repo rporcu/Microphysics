@@ -26,4 +26,5 @@ target_sources( mfixcore
    mfix_mf_helpers.cpp
    mfix_mlmg_options.H
    mfix_mlmg_options.cpp
+   mfix_mass_balance.cpp
    )

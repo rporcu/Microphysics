@@ -37,8 +37,6 @@
 #include <mfix_leveldata.H>
 #include <mfix_mlmg_options.H>
 
-
-
 // Drag type enumeration
 struct DragType { enum {Invalid=-1, WenYu, Gidaspow, BVK2, UserDrag}; };
 
@@ -229,14 +227,16 @@ class mfix : public AmrCore
     // If > 0, dump plotfiles at exactcly the designated period by changing dt
     static Real plot_per_exact;
 
+    // If > 0, dump plotfiles every "plot_int" steps
+    static int ascent_int;
 
-  // If > 0, dump plotfiles every "plot_int" steps
-  static int ascent_int;
+    // If > 0, dump plotfiles at as close as possible to the designated period
+    // *without* changing dt
+    static Real ascent_per_approx;
 
-  // If > 0, dump plotfiles at as close as possible to the designated period
-  // *without* changing dt
-  static Real ascent_per_approx;
-
+    static int  mass_balance_report_int;
+    static Real mass_balance_report_per_approx;
+    static Real mass_balance_report_time;
 
     static inline std::string get_load_balance_type ()
     { return load_balance_type; }
@@ -446,6 +446,21 @@ class mfix : public AmrCore
 
     void ReportGridStats () const;
 
+    void WriteMassBalanceReport ( const Real time );
+
+    void ComputeMassAccum (const int offset = 1);
+
+    void ComputeMassFlux (amrex::Vector< amrex::MultiFab const*> const& flux_x,
+                          amrex::Vector< amrex::MultiFab const*> const& flux_y,
+                          amrex::Vector< amrex::MultiFab const*> const& flux_z,
+                          const int scomp,
+                          const int ncomp,
+                          const bool fluxes_are_area_weighted,
+                          const Real dt);
+
+    void ComputeMassProduction ( const Real dt,
+                                 Vector< MultiFab const*> const& chem_txfr );
+
     void mfix_set_bc_type (int lev, int nghost_bc);
 
     void set_bcrec_lo (const int lev, const int dir, const int l_type);
@@ -577,6 +592,13 @@ class mfix : public AmrCore
 
     static RealVect gp0;
     static RealVect gravity;
+
+    static int  report_mass_balance;
+
+    static amrex::GpuArray<amrex::Real,2*SPECIES::NMAX> mass_accum;
+    static amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mass_inflow;
+    static amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mass_outflow;
+    static amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mass_prod;
 
     // Scalar diffusive coefficient
     Vector<Real> mu_s;
@@ -1153,11 +1175,12 @@ public:
     amrex::Real enthalpy_source = 0;
     int update_mass             = 1;
     int update_momentum         = 1;
-    int update_enthalpy      = 1;
+    int update_enthalpy         = 1;
 
 
     // Options to control mfix verbosity level
     int m_verbose = 0;
+
 
     // ***************************************************************
     // Nodal solve
@@ -1307,7 +1330,6 @@ public:
     Vector<int> write_real_comp = Vector<int>(AoSrealData::count+SoArealData::count,1);
     Vector<int> write_int_comp = Vector<int>(AoSintData::count+SoAintData::count,1);
 
-    //
     // Here we set the number of ghost nodes of the field arrays.
     // Since this is  a class attribute, it will be propagated to
     // all the member functions.
