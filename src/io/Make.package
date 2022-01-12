@@ -6,3 +6,6 @@ CEXE_sources += mfix_restart.cpp
 CEXE_sources += mfix_ascent.cpp
 CEXE_sources += mfix_pic2pic.cpp
 CEXE_sources += mfix_pic2dem.cpp
+
+CEXE_headers += mfix_rw.H
+CEXE_sources += mfix_rw.cpp
