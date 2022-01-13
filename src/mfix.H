@@ -683,10 +683,10 @@ public:
 
     void compute_laps (const bool update_lapT,
                        const bool update_LapTrac,
-                       const bool update_LapX,
-                       amrex::Vector< amrex::MultiFab*      >& lapT,
-                       amrex::Vector< amrex::MultiFab*      >& lapS,
-                       amrex::Vector< amrex::MultiFab*      >& lapX,
+                       const bool update_flux,
+                       amrex::Vector< amrex::MultiFab*      > const& lapT,
+                       amrex::Vector< amrex::MultiFab*      > const& lapS,
+                       amrex::Vector< amrex::Array< amrex::MultiFab*, AMREX_SPACEDIM> > const& J_gk,
                        amrex::Vector< amrex::MultiFab*      > const& T_g_in,
                        amrex::Vector< amrex::MultiFab*      > const& trac_in,
                        amrex::Vector< amrex::MultiFab*      > const& X_gk_in,
@@ -839,18 +839,13 @@ public:
                                Vector< MultiFab* >& conv_s_old,
                                Vector< MultiFab* >& conv_X_old,
                                Vector< MultiFab* >& ro_RHS_old,
-                               Vector< MultiFab* >& ro_RHS,
                                Vector< MultiFab* >& lap_trac_old,
-                               Vector< MultiFab* >& lap_trac,
                                Vector< MultiFab* >& enthalpy_RHS_old,
-                               Vector< MultiFab* >& enthalpy_RHS,
                                Vector< MultiFab* >& lap_T_old,
-                               Vector< MultiFab* >& lap_T,
                                Vector< MultiFab* >& species_RHS_old,
-                               Vector< MultiFab* >& species_RHS,
-                               Vector< MultiFab* >& lap_X_old,
-                               Vector< MultiFab* >& lap_X,
                                Vector< MultiFab* >& vel_RHS_old,
+                               Vector< MultiFab* >& div_J_old,
+                               Vector< MultiFab* >& div_hJ_old,
                                Vector< Real >& rhs_pressure_g_old,
                                Vector< Real >& rhs_pressure_g,
                                Real time,
@@ -869,12 +864,6 @@ public:
                            Vector< MultiFab const*> const& T_g,
                            Vector< MultiFab const* > const& chem_txfr);
 
-    void mfix_scalar_rhs (/*Vector< MultiFab* > const& rhs,*/
-                          Vector< MultiFab const* > const& trac,
-                          Vector< MultiFab const* > const& ep_g,
-                          Vector< MultiFab const* > const& ro_g,
-                          Vector<Real> const& mu_s);
-
     void mfix_species_X_rhs (Vector< MultiFab*       > const& rhs,
                              Vector< MultiFab const* > const& chem_txfr);
 
@@ -886,18 +875,13 @@ public:
                                Vector< MultiFab* >& conv_s_old,
                                Vector< MultiFab* >& conv_X_old,
                                Vector< MultiFab* >& ro_RHS_old,
-                               Vector< MultiFab* >& ro_RHS,
                                Vector< MultiFab* >& lap_trac_old,
-                               Vector< MultiFab* >& lap_trac,
                                Vector< MultiFab* >& enthalpy_RHS_old,
-                               Vector< MultiFab* >& enthalpy_RHS,
                                Vector< MultiFab* >& lap_T_old,
-                               Vector< MultiFab* >& lap_T,
                                Vector< MultiFab* >& species_RHS_old,
-                               Vector< MultiFab* >& species_RHS,
-                               Vector< MultiFab* >& lap_X_old,
-                               Vector< MultiFab* >& lap_X,
                                Vector< MultiFab* >& vel_RHS_old,
+                               Vector< MultiFab* >& div_J_old,
+                               Vector< MultiFab* >& div_hJ_old,
                                Vector< Real >& rhs_pressure_g_old,
                                Vector< Real >& rhs_pressure_g,
                                Real time,
@@ -909,33 +893,25 @@ public:
   public:
     void mfix_normalize_fluid_species (const Vector< MultiFab* >& X_gk);
 
-    void mfix_incompressible_fluid_rhs (Vector< MultiFab*       > const& rhs,
-                                        Vector< MultiFab const* > const& ro_rhs,
-                                        Vector< MultiFab const* > const& ro_g);
+    void mfix_incompressible_fluid_rhs (Vector< MultiFab* > const& rhs);
 
     void mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
-                                       Vector< MultiFab const* > const& lap_T,
                                        Vector< MultiFab const* > const& enthalpy_rhs,
-                                       Vector< MultiFab const* > const& lap_X,
                                        Vector< MultiFab const* > const& species_rhs,
                                        Vector< MultiFab const* > const& ro_g,
                                        Vector< MultiFab const* > const& T_g,
-                                       Vector< MultiFab*       > const& X_gk,
-                                       Vector< MultiFab const* > const& ro_rhs);
+                                       Vector< MultiFab const* > const& X_gk);
 
     void mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
-                                         Vector< MultiFab const* > const& lap_T,
                                          Vector< MultiFab const* > const& enthalpy_rhs,
-                                         Vector< MultiFab const* > const& lap_X,
                                          Vector< MultiFab const* > const& species_rhs,
                                          Vector< MultiFab const* > const& ep_g,
                                          Vector< MultiFab const* > const& ro_g,
                                          Vector< MultiFab const* > const& T_g,
-                                         Vector< MultiFab*       > const& X_gk,
-                                         Vector< MultiFab const* > const& ro_rhs,
+                                         Vector< MultiFab const* > const& X_gk,
                                          Vector< MultiFab const* > const& pressure_g,
-                                         Vector< Real >& avgSigma,
-                                         Vector< Real >& avgTheta);
+                                         Vector< Real >&                  avgSigma,
+                                         Vector< Real >&                  avgTheta);
 
     void compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter const& mfi,
                                   Array4<Real> const& dvdt, // velocity

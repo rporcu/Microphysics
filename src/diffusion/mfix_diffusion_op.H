@@ -81,6 +81,7 @@ class DiffusionOp
 
     // Species mass fraction diffusion
     void diffuse_species (const amrex::Vector< amrex::MultiFab* >& X_gk,
+                          const amrex::Vector< amrex::Array< amrex::MultiFab*, AMREX_SPACEDIM>>& J_gk,
                           const amrex::Vector< amrex::MultiFab* >& ep_ro_g,
                           const amrex::Vector< amrex::MultiFab* >& T_g,
                                 amrex::Vector<amrex::BCRec> const& h_bcrec,
@@ -113,25 +114,24 @@ class DiffusionOp
                       const amrex::Vector< amrex::MultiFab const*>& T_g_on_eb);
 
     // Explicit tensor species mass fractions term
-    void ComputeLapX (const amrex::Vector< amrex::MultiFab*      >& lapX_out,
+    void ComputeFlux (const amrex::Vector< amrex::Array< amrex::MultiFab*, AMREX_SPACEDIM> >& J_gk,
                       const amrex::Vector< amrex::MultiFab*      >& X_gk_in,
                       const amrex::Vector< amrex::MultiFab const*>& ro_g_in,
-                      const amrex::Vector< amrex::MultiFab const*>& ep_g_in,
-                      const amrex::Vector< amrex::MultiFab const*>& T_g_in);
+                      const amrex::Vector< amrex::MultiFab const*>& ep_g_in);
 
-    // Explicit tensor species mass fractions term
-    void SubtractDiv_XGradX (const amrex::Vector< amrex::MultiFab*      >& X_gk_in,
-                             const amrex::Vector< amrex::MultiFab const*>& ro_g_in,
-                             const amrex::Vector< amrex::MultiFab const*>& ep_g_in,
-                             const amrex::Vector< amrex::MultiFab const*>& T_g_in,
-                             const amrex::Real& dt);
+    // TODO description
+    void ComputeDivJ (const amrex::Vector< amrex::MultiFab*      >& divJ_out,
+                      const amrex::Vector< amrex::MultiFab const*>& X_gk_in,
+                      const amrex::Vector< amrex::Array< amrex::MultiFab*, AMREX_SPACEDIM> >& J_gk,
+                      const amrex::Vector< std::unique_ptr< amrex::EBFArrayBoxFactory> >& ebfactory);
 
-    // Enthalpy tensor due to species mass fractions fluxes
-    void ComputeLaphX (const amrex::Vector< amrex::MultiFab*       >& lap_hX_out,
-                       const amrex::Vector< amrex::MultiFab*       >& X_gk_in,
-                       const amrex::Vector< amrex::MultiFab const* >& ro_in,
-                       const amrex::Vector< amrex::MultiFab const* >& ep_in,
-                       const amrex::Vector< amrex::MultiFab const* >& T_g_in);
+    // TODO description
+    void ComputeDivhJ (const amrex::Vector< amrex::MultiFab*      >& divhJ_out,
+                             amrex::Vector< amrex::Array< amrex::MultiFab, AMREX_SPACEDIM> >& h_gk_fc,
+                       const amrex::Vector< amrex::Array< amrex::MultiFab*, AMREX_SPACEDIM> >& J_gk,
+                       const amrex::Vector< amrex::MultiFab const*>& T_g_in,
+                       const int update_enthalpies,
+                       const amrex::Vector< std::unique_ptr< amrex::EBFArrayBoxFactory> >& ebfactory);
 
     // Explicit tensor viscous term // tracer
     void ComputeLapS (const amrex::Vector< amrex::MultiFab*      >& laps_out,

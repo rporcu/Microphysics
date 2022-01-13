@@ -48,25 +48,20 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                             Vector< MultiFab* >& conv_s_old,
                             Vector< MultiFab* >& conv_X_old,
                             Vector< MultiFab* >& ro_RHS_old,
-                            Vector< MultiFab* >& ro_RHS,
                             Vector< MultiFab* >& lap_trac_old,
-                            Vector< MultiFab* >& lap_trac,
                             Vector< MultiFab* >& enthalpy_RHS_old,
-                            Vector< MultiFab* >& enthalpy_RHS,
                             Vector< MultiFab* >& lap_T_old,
-                            Vector< MultiFab* >& lap_T,
                             Vector< MultiFab* >& species_RHS_old,
-                            Vector< MultiFab* >& species_RHS,
-                            Vector< MultiFab* >& lap_X_old,
-                            Vector< MultiFab* >& lap_X,
                             Vector< MultiFab* >& vel_RHS_old,
+                            Vector< MultiFab* >& div_J_old,
+                            Vector< MultiFab* >& div_hJ_old,
                             Vector< Real >& rhs_pressure_g_old,
                             Vector< Real >& rhs_pressure_g,
                             Real time,
                             Real l_dt,
                             Real l_prev_dt,
                             bool proj_2,
-                            Real& coupling_timing)
+                            Real& /*coupling_timing*/)
 {
     BL_PROFILE("mfix::mfix_apply_predictor");
 
@@ -74,6 +69,22 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
     // We use the new-time value for things computed on the "*" state
     Real new_time = time + l_dt;
+
+    Vector< MultiFab* > enthalpy_RHS(finest_level+1);
+    Vector< MultiFab* > species_RHS(finest_level+1);
+
+    for (int lev = 0; lev <= finest_level; lev++)
+    {
+       if (advect_enthalpy) {
+         enthalpy_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+         enthalpy_RHS[lev]->setVal(0.0);
+       }
+
+       if (solve_species) {
+         species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+         species_RHS[lev]->setVal(0.0);
+       }
+    }
 
     // Averaged quantities for closed system constraint computations
     Vector<Real> avgSigma(finest_level+1, 0);
@@ -116,7 +127,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     Vector<MultiFab> density_nph;
     for (int lev = 0; lev <= finest_level; ++lev) {
-        density_nph.emplace_back(grids[lev], dmap[lev], 1, nghost_state(), MFInfo(),  *ebfactory[lev]);
+        density_nph.emplace_back(grids[lev], dmap[lev], 1, nghost_state(), MFInfo(), *ebfactory[lev]);
         density_nph[lev].setVal(0.0);
     }
 
@@ -161,6 +172,19 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Compute explicit diffusive terms
     // *************************************************************************************
+    Vector<Array<MultiFab*, AMREX_SPACEDIM>> J_gk(finest_level+1);
+
+    if (solve_species) {
+      for (int lev = 0; lev <= finest_level; ++lev) {
+        const int nspecies_g = fluid.nspecies;
+
+        for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
+          J_gk[lev][dir] = new MultiFab(amrex::convert(grids[lev], IntVect::TheDimensionVector(dir)),
+                                        dmap[lev], nspecies_g, 1, MFInfo(), EBFactory(lev));
+          J_gk[lev][dir]->setVal(0.);
+        }
+      }
+    }
 
     if (need_divtau()) {
       diffusion_op->ComputeDivTau(get_divtau(), get_vel_g_old(), get_ep_g(), get_T_g_old(), advect_enthalpy);
@@ -169,12 +193,21 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     {
       const bool constraint = !(m_constraint_type == ConstraintType::IncompressibleFluid);
 
-      const bool update_lapT = (advect_enthalpy      && (l_explicit_diff || constraint));
-      const bool update_lapS = (advect_tracer        &&  l_explicit_diff);
-      const bool update_lapX = (solve_species && (l_explicit_diff || constraint));
+      const bool update_lapT = (advect_enthalpy && (l_explicit_diff || constraint));
+      const bool update_lapS = (advect_tracer   &&  l_explicit_diff);
+      const bool update_flux = (solve_species   && (l_explicit_diff || constraint));
 
-      compute_laps(update_lapT, update_lapS, update_lapX, lap_T_old, lap_trac_old, lap_X_old,
-                   get_T_g_old(), get_trac_old(), get_X_gk_old(), get_ep_g_const(),
+      if (advect_enthalpy)
+      {
+        mfix_set_temperature_bcs(time, get_T_g_old());
+        mfix_set_enthalpy_bcs(time, get_h_g_old());
+      }
+
+      if (solve_species)
+        mfix_set_species_bcs(time, get_X_gk_old());
+
+      compute_laps(update_lapT, update_lapS, update_flux, lap_T_old, lap_trac_old,
+                   J_gk, get_T_g_old(), get_trac_old(), get_X_gk_old(), get_ep_g_const(),
                    get_ro_g_old_const());
 
       // We call the bc routines again to enforce the ext_dir condition
@@ -189,27 +222,64 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         mfix_set_species_bcs(time, get_X_gk_old());
     }
 
+
+    // *************************************************************************************
+    // 
+    // *************************************************************************************
+    if (solve_species)
+      diffusion_op->ComputeDivJ(div_J_old, get_X_gk_old_const(), J_gk, ebfactory);
+
+
+    // *************************************************************************************
+    // 
+    // *************************************************************************************
+    Vector< Array<MultiFab, AMREX_SPACEDIM> > h_gk_fc(finest_level+1);
+
+    if (advect_enthalpy && solve_species) {
+      for (int lev = 0; lev <= finest_level; ++lev) {
+        for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
+          h_gk_fc[lev][dir].define(amrex::convert(grids[lev], IntVect::TheDimensionVector(dir)),
+                                   dmap[lev], fluid.nspecies, 1, MFInfo(), EBFactory(lev));
+          h_gk_fc[lev][dir].setVal(0.);
+        }
+      }
+
+      const int update_enthalpies = 1;
+      diffusion_op->ComputeDivhJ(div_hJ_old, h_gk_fc, J_gk, get_T_g_old_const(),
+                                 update_enthalpies, ebfactory);
+    }
+
+
     // *************************************************************************************
     // Compute right hand side terms on the old status
     // *************************************************************************************
-
     if (advect_density) {
       mfix_density_rhs(ro_RHS_old, get_chem_txfr_const());
     }
 
     if (advect_enthalpy) {
+
+      if (solve_species)
+        mfix_set_species_bcs(time, get_X_gk_old());
+
+      mfix_set_temperature_bcs(time, get_T_g_old());
+
       mfix_enthalpy_rhs(enthalpy_RHS_old, get_ep_g_const(), get_ro_g_old_const(),
           get_X_gk_old(), get_T_g_old_const(), get_chem_txfr_const());
-    }
 
-    if (advect_tracer) {
-      mfix_scalar_rhs(/*trac_RHS_old,*/ get_trac_old_const(), get_ep_g_const(),
-          get_ro_g_old_const(), mu_s);
+      if (solve_species)
+        mfix_set_species_bcs(time, get_X_gk_old());
+
+      mfix_set_temperature_bcs(time, get_T_g_old());
     }
 
     // Species
     if (solve_species) {
+      mfix_set_species_bcs(time, get_X_gk_old());
+
       mfix_species_X_rhs(species_RHS_old, get_chem_txfr_const());
+
+      mfix_set_species_bcs(time, get_X_gk_old());
     }
 
     // Linear momentum
@@ -221,23 +291,42 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Compute RHS for the MAC projection
     // *************************************************************************************
+    if (m_constraint_type == ConstraintType::IncompressibleFluid) {
 
-    if (m_constraint_type == ConstraintType::IdealGasOpenSystem) {
+      mfix_incompressible_fluid_rhs(GetVecOfPtrs(rhs_mac));
 
-      mfix_idealgas_opensystem_rhs(GetVecOfPtrs(rhs_mac), GetVecOfConstPtrs(lap_T_old),
-          GetVecOfConstPtrs(enthalpy_RHS_old), GetVecOfConstPtrs(lap_X_old),
-          GetVecOfConstPtrs(species_RHS_old), get_ro_g_old_const(),
-          get_T_g_old_const(), get_X_gk_old(), GetVecOfConstPtrs(ro_RHS_old));
+    } else {
 
-    } else if (m_constraint_type == ConstraintType::IdealGasClosedSystem) {
+      const int nspecies_g = fluid.nspecies;
 
-      mfix_idealgas_closedsystem_rhs(GetVecOfPtrs(rhs_mac), GetVecOfConstPtrs(lap_T_old),
-          GetVecOfConstPtrs(enthalpy_RHS_old), GetVecOfConstPtrs(lap_X_old),
-          GetVecOfConstPtrs(species_RHS_old), get_ep_g_const(),
-          get_ro_g_old_const(), get_T_g_old_const(), get_X_gk_old(),
-          GetVecOfConstPtrs(ro_RHS_old), get_pressure_g_old_const(),
-          avgSigma, avgTheta);
+      for (int lev(0); lev < nlev; ++lev) {
+        MultiFab::Add(*enthalpy_RHS_old[lev], *lap_T_old[lev], 0, 0, 1, 0);
+        MultiFab::Subtract(*enthalpy_RHS_old[lev], *div_hJ_old[lev], 0, 0, 1, 0);
 
+        MultiFab::Subtract(*species_RHS_old[lev], *div_J_old[lev], 0, 0, nspecies_g, 0);
+      }
+
+      if (m_constraint_type == ConstraintType::IdealGasOpenSystem) {
+
+        mfix_idealgas_opensystem_rhs(GetVecOfPtrs(rhs_mac),
+            GetVecOfConstPtrs(enthalpy_RHS_old), GetVecOfConstPtrs(species_RHS_old),
+            get_ro_g_old_const(), get_T_g_old_const(), get_X_gk_old_const());
+
+      } else if (m_constraint_type == ConstraintType::IdealGasClosedSystem) {
+
+        mfix_idealgas_closedsystem_rhs(GetVecOfPtrs(rhs_mac),
+            GetVecOfConstPtrs(enthalpy_RHS_old), GetVecOfConstPtrs(species_RHS_old),
+            get_ep_g_const(), get_ro_g_old_const(), get_T_g_old_const(),
+            get_X_gk_old_const(), get_pressure_g_old_const(), avgSigma, avgTheta);
+
+      }
+
+      for (int lev(0); lev < nlev; ++lev) {
+        MultiFab::Subtract(*enthalpy_RHS_old[lev], *lap_T_old[lev], 0, 0, 1, 0);
+        MultiFab::Add(*enthalpy_RHS_old[lev], *div_hJ_old[lev], 0, 0, 1, 0);
+
+        MultiFab::Add(*species_RHS_old[lev], *div_J_old[lev], 0, 0, nspecies_g, 0);
+      }
     }
 
     if (m_use_depdt_constraint) {
@@ -245,6 +334,14 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         MultiFab::Subtract(rhs_mac[lev], depdt[lev], 0, 0, 1, 0);
       }
     }
+
+    mfix_set_density_bcs(time, get_ro_g_old());
+
+    if (advect_enthalpy)
+      mfix_set_temperature_bcs(time, get_T_g_old());
+
+    if (solve_species)
+      mfix_set_species_bcs(time, get_X_gk_old());
 
 
     // *************************************************************************************
@@ -257,10 +354,13 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         get_ep_g_const(), get_ro_g_old_const(), get_txfr_const(),
         GetVecOfPtrs(vel_forces), GetVecOfConstPtrs(rhs_mac));
 
+    if (solve_species)
+      mfix_set_species_bcs(time, get_X_gk_old());
+
     mfix_compute_convective_term(conv_u_old, conv_s_old, conv_X_old,
-        GetVecOfPtrs(vel_forces), GetVecOfPtrs(tra_forces),
-        get_vel_g_old_const(), get_ep_g(), get_ro_g_old_const(),
-        get_h_g_old_const(), get_trac_old_const(), get_X_gk_old_const(), get_txfr_const(),
+        GetVecOfPtrs(vel_forces), GetVecOfPtrs(tra_forces), get_vel_g_old_const(),
+        get_ep_g(), get_ro_g_old_const(), get_h_g_old_const(),
+        get_trac_old_const(), get_X_gk_old_const(), get_txfr_const(),
         GetVecOfPtrs(ep_u_mac), GetVecOfPtrs(ep_v_mac), GetVecOfPtrs(ep_w_mac),
         l_dt, time);
 
@@ -295,12 +395,12 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
                 Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
                 Array4<Real const> const& drdt_o  = conv_s_old[lev]->const_array(mfi);
-                Array4<Real const> const& rho_RHS = ro_RHS_old[lev]->const_array(mfi);
                 Array4<Real const> const& dXdt_o  = use_species_advection ?
-                  conv_X_old[lev]->const_array(mfi) : dummy_arr;
+                                                    conv_X_old[lev]->const_array(mfi) : dummy_arr;
+                Array4<Real const> const& rho_rhs = ro_RHS_old[lev]->const_array(mfi);
 
-                amrex::ParallelFor(bx, [rho_new,rho_nph,rho_o,epg,drdt_o,l_dt,dXdt_o,
-                                   use_species_advection, nspecies_g,rho_RHS]
+                amrex::ParallelFor(bx, [rho_new,rho_nph,rho_o,epg,drdt_o,l_dt,
+                    dXdt_o,use_species_advection, nspecies_g,rho_rhs]
                   AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {
                   const Real epg_loc = epg(i,j,k);
@@ -314,7 +414,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                     rho += l_dt * drdt_o(i,j,k,conv_comp);
                   }
 
-                  rho += l_dt * rho_RHS(i,j,k);
+                  rho += l_dt * rho_rhs(i,j,k);
 
                   rho /= epg_loc;
 
@@ -346,17 +446,18 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
           Box const& bx = mfi.tilebox();
+
           Array4<Real      > const& X_gk_n  = ld.X_gk->array(mfi);
           Array4<Real const> const& X_gk_o  = ld.X_gko->const_array(mfi);
           Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
           Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
           Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
           Array4<Real const> const& dXdt_o  = conv_X_old[lev]->const_array(mfi);
-          Array4<Real const> const& lap_X_o = lap_X_old[lev]->const_array(mfi);
-          Array4<Real const> const& X_RHS_o = species_RHS_old[lev]->const_array(mfi);
+          Array4<Real const> const& div_J_o = div_J_old[lev]->const_array(mfi);
+          Array4<Real const> const& X_rhs_o = species_RHS_old[lev]->const_array(mfi);
 
-          ParallelFor(bx, [nspecies_g,epg,rho_o,rho_n,X_gk_o,dXdt_o,lap_X_o,
-              l_dt,X_gk_n,X_RHS_o,l_explicit_diff]
+          ParallelFor(bx, [nspecies_g,epg,rho_o,rho_n,X_gk_o,dXdt_o,l_dt,X_gk_n,
+              X_rhs_o,l_explicit_diff,div_J_o]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             const Real epg_loc = epg(i,j,k);
@@ -368,10 +469,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
             {
               Real X_gk = num * X_gk_o(i,j,k,n);
               X_gk += l_dt * dXdt_o(i,j,k,n);
-              X_gk += l_dt * X_RHS_o(i,j,k,n);
+              X_gk += l_dt * X_rhs_o(i,j,k,n);
 
-              if (l_explicit_diff)
-                X_gk += l_dt * lap_X_o(i,j,k,n);
+              if (l_explicit_diff) {
+                X_gk -= l_dt * div_J_o(i,j,k,n);
+              }
 
               X_gk_n(i,j,k,n) = X_gk * denom;
             }
@@ -387,25 +489,71 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         mfix_set_density_bcs(time, get_ro_g());
         mfix_set_species_bcs(time, get_X_gk());
 
-        diffusion_op->SubtractDiv_XGradX(get_X_gk(), get_ro_g_const(),
-                                         get_ep_g_const(), get_T_g_old_const(), l_dt);
-
         // Convert "ep_g" into (rho * ep_g)
         for (int lev = 0; lev <= finest_level; lev++)
           MultiFab::Multiply(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
                              0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
 
         // Diffuse species mass fractions
-        diffusion_op->diffuse_species(get_X_gk(), get_ep_g(), get_T_g_old(), get_species_bcrec(), l_dt);
-
-        // Note we need to call the bc routines again to enforce the ext_dir condition
-        // on the faces (the diffusion operator moved those to ghost cell centers)
-        mfix_set_species_bcs(time, get_X_gk());
+        diffusion_op->diffuse_species(get_X_gk(), J_gk, get_ep_g(), get_T_g_old(),
+                                      get_species_bcrec(), l_dt);
 
         // Convert (rho * ep_g) back into ep_g
         for (int lev = 0; lev <= finest_level; lev++)
             MultiFab::Divide(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
                              0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
+
+        mfix_set_species_bcs(time, get_X_gk());
+
+        // *********************************************************************
+        // Correction
+        // *********************************************************************
+        diffusion_op->ComputeDivJ(div_J_old, get_X_gk_const(), J_gk, ebfactory);
+
+        for (int lev = 0; lev <= finest_level; lev++) {
+          auto& ld = *m_leveldata[lev];
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+          for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+            
+            Box const& bx = mfi.tilebox();
+
+            Array4<Real      > const& X_gk_n  = ld.X_gk->array(mfi);
+            Array4<Real const> const& X_gk_o  = ld.X_gko->const_array(mfi);
+            Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
+            Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
+            Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
+            Array4<Real const> const& dXdt_o  = conv_X_old[lev]->const_array(mfi);
+            Array4<Real const> const& div_J_n = div_J_old[lev]->const_array(mfi);
+            Array4<Real const> const& X_RHS_o = species_RHS_old[lev]->const_array(mfi);
+
+            ParallelFor(bx, [nspecies_g,epg,rho_o,rho_n,X_gk_o,dXdt_o,l_dt,X_gk_n,
+                X_RHS_o,l_explicit_diff,div_J_n]
+              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            {
+              const Real epg_loc = epg(i,j,k);
+
+              const Real num =         (rho_o(i,j,k) * epg_loc);
+              const Real denom = 1.0 / (rho_n(i,j,k) * epg_loc);
+
+              for (int n = 0; n < nspecies_g; ++n) {
+                Real X_gk = num * X_gk_o(i,j,k,n);
+                X_gk += l_dt * dXdt_o(i,j,k,n);
+                X_gk += l_dt * X_RHS_o(i,j,k,n);
+
+                X_gk -= l_dt * div_J_n(i,j,k,n);
+
+                X_gk_n(i,j,k,n) = X_gk * denom;
+              }
+            });
+          }
+        }
+
+        // Note we need to call the bc routines again to enforce the ext_dir
+        // condition on the faces (the diffusion operator moved those to ghost
+        // cell centers)
+        mfix_set_species_bcs(time, get_X_gk());
       }
 
       // ***********************************************************************
@@ -418,44 +566,28 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     } // solve_species
 
 
-    // *************************************************************************
-    // Update thermodynamic pressure
-    // *************************************************************************
-    if (advect_enthalpy && (m_constraint_type == ConstraintType::IdealGasClosedSystem))
-    {
-      for (int lev = 0; lev <= finest_level; ++lev) {
-        rhs_pressure_g_old[lev] = avgSigma[lev] / avgTheta[lev];
-
-        auto& ld = *m_leveldata[lev];
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-        for (MFIter mfi(*(ld.pressure_g),TilingIfNotGPU()); mfi.isValid(); ++mfi)
-        {
-          Box const& bx = mfi.tilebox();
-
-          Array4<Real      > const& p_g     = ld.pressure_g->array(mfi);
-          Array4<Real const> const& p_g_old = ld.pressure_go->const_array(mfi);
-          const Real Dpressure_Dt           = rhs_pressure_g_old[lev];
-
-          amrex::ParallelFor(bx, [p_g,p_g_old,Dpressure_Dt,l_dt]
-            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-          {
-            p_g(i,j,k) = p_g_old(i,j,k) + l_dt*Dpressure_Dt;
-          });
-        } // mfi
-      }
-    }
+//    // *************************************************************************
+//    // Update thermodynamic pressure
+//    // *************************************************************************
+//    if (advect_enthalpy && (m_constraint_type == ConstraintType::IdealGasClosedSystem))
+//    {
+//      for (int lev = 0; lev <= finest_level; ++lev) {
+//        rhs_pressure_g_old[lev] = avgSigma[lev] / avgTheta[lev];
+//
+//        auto& ld = *m_leveldata[lev];
+//
+//        Real& p_g               = ld.pressure_g;
+//        Real const& p_g_old     = ld.pressure_go;
+//        const Real Dpressure_Dt = rhs_pressure_g_old[lev];
+//
+//        p_g = p_g_old + l_dt*Dpressure_Dt;
+//      }
+//    }
 
 
     // *************************************************************************************
     // Update enthalpy and temperature
     // *************************************************************************************
-    if (advect_enthalpy) {
-      mfix_enthalpy_rhs(enthalpy_RHS_old, get_ep_g_const(), get_ro_g_const(),
-          get_X_gk(), get_T_g_old_const(), get_chem_txfr_const());
-    }
-
     if (advect_enthalpy) {
 
       auto& fluid_parms = *fluid.parameters;
@@ -463,6 +595,12 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       const int nspecies_g = fluid.nspecies;
 
       const int closed_system = (m_constraint_type == ConstraintType::IdealGasClosedSystem);
+
+      if (!l_explicit_diff && solve_species) {
+        const int update_enthalpies = 0;
+        diffusion_op->ComputeDivhJ(div_hJ_old, h_gk_fc, J_gk, get_T_g_old_const(),
+                                   update_enthalpies, ebfactory);
+      }
 
       for (int lev = 0; lev <= finest_level; lev++) {
 
@@ -481,27 +619,30 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
           Array4<Real const> dummy_arr;
 
-          Array4<Real const> const& h_g_o   = ld.h_go->const_array(mfi);
-          Array4<Real      > const& h_g_n   = ld.h_g->array(mfi);
-          Array4<Real const> const& T_g_o   = ld.T_go->array(mfi);
-          Array4<Real      > const& T_g_n   = ld.T_g->array(mfi);
-          Array4<Real const> const& X_gk_n  = fluid_is_a_mixture ? ld.X_gk->array(mfi) : dummy_arr;
-          Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
-          Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
-          Array4<Real const> const& lap_T_o = lap_T_old[lev]->const_array(mfi);
-          Array4<Real const> const& h_RHS_o = enthalpy_RHS_old[lev]->const_array(mfi);
-          Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
-          Array4<Real const> const& dhdt_o  = conv_s_old[lev]->const_array(mfi);
+          Array4<Real      > const& h_g_n    = ld.h_g->array(mfi);
+          Array4<Real const> const& h_g_o    = ld.h_go->const_array(mfi);
+          Array4<Real      > const& T_g_n    = ld.T_g->array(mfi);
+          Array4<Real const> const& T_g_o    = ld.T_go->array(mfi);
+          Array4<Real const> const& X_gk_n   = fluid_is_a_mixture ? ld.X_gk->array(mfi) : dummy_arr;
+          Array4<Real const> const& rho_o    = ld.ro_go->const_array(mfi);
+          Array4<Real const> const& rho_n    = ld.ro_g->const_array(mfi);
+          Array4<Real const> const& epg      = ld.ep_g->const_array(mfi);
+          Array4<Real const> const& dhdt_o   = conv_s_old[lev]->const_array(mfi);
+          Array4<Real const> const& lap_T_o  = lap_T_old[lev]->const_array(mfi);
+          Array4<Real const> const& div_hJ_o = solve_species ?
+                                               div_hJ_old[lev]->const_array(mfi) : dummy_arr;
 
           const Real Dpressure_Dt = rhs_pressure_g_old[lev];
 
           auto const& flags_arr = flags.const_array(mfi);
           auto const& volfrac_arr = volfrac.const_array(mfi);
 
-          amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,h_RHS_o,
-              epg,dhdt_o,l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,X_gk_n,
-              closed_system,fluid_parms,fluid_is_a_mixture,nspecies_g,
-              flags_arr,volfrac_arr,run_on_device]
+          const int l_solve_species = solve_species;
+
+          amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,epg,dhdt_o,
+              l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,X_gk_n,closed_system,
+              fluid_parms,fluid_is_a_mixture,nspecies_g,div_hJ_o,flags_arr,
+              volfrac_arr,run_on_device,l_solve_species]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -519,7 +660,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
               h_g += l_dt * dhdt_o(i,j,k,conv_comp);
               
-              h_g += l_dt * h_RHS_o(i,j,k);
+              if (l_solve_species)
+                h_g -= l_dt * div_hJ_o(i,j,k);
 
               if (closed_system)
                 h_g += l_dt * epg(i,j,k) * Dpressure_Dt;
@@ -572,11 +714,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 } else {
 
                   for (int n(0); n < nspecies_g; ++n) {
-                    const Real h_gk = run_on_device ?
+                    const Real partial_h_gk = run_on_device ?
                       fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
                       fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
 
-                    gradient += X_gk_n(i,j,k,n)*h_gk;
+                    gradient += X_gk_n(i,j,k,n)*partial_h_gk;
                   }
                 }
 
@@ -631,15 +773,16 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         mfix_set_temperature_bcs(time, get_T_g());
         mfix_set_enthalpy_bcs(time, get_h_g());
       }
-
     } // advect_enthalpy
+
 
     // *************************************************************************************
     // Update tracer(s)
     // *************************************************************************************
-    int l_ntrac = ntrac;
     if (advect_tracer)
     {
+        int l_ntrac = ntrac;
+
         for (int lev = 0; lev <= finest_level; lev++)
         {
             auto& ld = *m_leveldata[lev];
@@ -649,6 +792,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
             for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 Box const& bx = mfi.tilebox();
+
                 Array4<Real      > const& tra_n     = ld.trac->array(mfi);
                 Array4<Real const> const& tra_o     = ld.trac_o->const_array(mfi);
                 Array4<Real const> const& rho_o     = ld.ro_go->const_array(mfi);
@@ -712,6 +856,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     compute_vel_forces(GetVecOfPtrs(vel_forces), get_vel_g_old_const(),
                        GetVecOfConstPtrs(density_nph), get_txfr_const());
 
+
     // *************************************************************************************
     // Update velocity with convective update, diffusive update, gp and gravity source terms
     // *************************************************************************************
@@ -732,18 +877,19 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
          Array4<Real      > const& vel_n     = ld.vel_g->array(mfi);
          Array4<Real const> const& vel_o     = ld.vel_go->const_array(mfi);
+         Array4<Real const> const& ro_g_o    = ld.ro_go->const_array(mfi);
+         Array4<Real const> const& epg       = ld.ep_g->const_array(mfi);
          Array4<Real const> const& divtau_o  = ld.divtau_o->const_array(mfi);
          Array4<Real const> const& dudt_o    = conv_u_old[lev]->const_array(mfi);
          Array4<Real const> const& gp        = ld.gp->const_array(mfi);
-         Array4<Real const> const& ro_g_o    = ld.ro_go->const_array(mfi);
-         Array4<Real const> const& epg       = ld.ep_g->const_array(mfi);
          Array4<Real const> const& vel_f     = vel_forces[lev].const_array(mfi);
-         Array4<Real const> const& vel_RHS_o = reactions.solve ? vel_RHS_old[lev]->const_array(mfi) : empty_array;
+         Array4<Real const> const& vel_rhs_o = reactions.solve ?
+                                               vel_RHS_old[lev]->const_array(mfi) : empty_array;
 
          const int l_solve_reactions = reactions.solve;
 
-         amrex::ParallelFor(bx, [epg,ro_g_o,vel_o,dudt_o,divtau_o,
-             gp,l_dt,vel_n,vel_f,l_explicit_diff,vel_RHS_o,l_solve_reactions]
+         amrex::ParallelFor(bx, [epg,ro_g_o,vel_o,dudt_o,divtau_o,gp,l_dt,vel_n,
+             vel_f,l_explicit_diff,vel_rhs_o,l_solve_reactions]
          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
            const Real epg_loc = epg(i,j,k);
@@ -765,9 +911,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
            }
 
            if (l_solve_reactions) {
-             vel_nx += l_dt * (vel_RHS_o(i,j,k,0) * denom);
-             vel_ny += l_dt * (vel_RHS_o(i,j,k,1) * denom);
-             vel_nz += l_dt * (vel_RHS_o(i,j,k,2) * denom);
+             vel_nx += l_dt * (vel_rhs_o(i,j,k,0) * denom);
+             vel_ny += l_dt * (vel_rhs_o(i,j,k,1) * denom);
+             vel_nz += l_dt * (vel_rhs_o(i,j,k,2) * denom);
            }
 
            vel_nx += l_dt * vel_f(i,j,k,0);
@@ -778,7 +924,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
            vel_n(i,j,k,1) = vel_ny;
            vel_n(i,j,k,2) = vel_nz;
          });
-
        } // mfi
     } // lev
 
@@ -828,78 +973,73 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
     if (m_constraint_type == ConstraintType::IncompressibleFluid) {
 
-      // Calculate chem_txfr coefficient
-      if (DEM::solve || PIC::solve) {
-
-        Real start_drag = ParallelDescriptor::second();
-
-        if (reactions.solve) {
-          mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                              get_p_g(), get_T_g(), get_X_gk(), new_time);
-        }
-
-        coupling_timing += ParallelDescriptor::second() - start_drag;
-      }
-
-      if (advect_density) {
-        mfix_density_rhs(ro_RHS, get_chem_txfr_const());
-      }
-
-      mfix_incompressible_fluid_rhs(S_cc, GetVecOfConstPtrs(ro_RHS), get_ro_g_const());
+      mfix_incompressible_fluid_rhs(S_cc);
 
     } else {
 
-      // Calculate drag coefficient
-      if (DEM::solve || PIC::solve) {
+      const int closed_system = int(m_constraint_type == ConstraintType::IdealGasClosedSystem);
 
-        Real start_drag = ParallelDescriptor::second();
-        amrex::Print() << "\nRecalculating drag ..." << std::endl;
-        mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                             get_T_g(), get_X_gk(), new_time);
+      const int nspecies_g = fluid.nspecies;
 
-        if (reactions.solve) {
-          mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                              get_p_g(), get_T_g(), get_X_gk(), new_time);
-        }
+      for (int lev = 0; lev <= finest_level; lev++)
+      {
+          auto& ld = *m_leveldata[lev];
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+          for (MFIter mfi(*ld.ep_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+          {
+              Box const& bx = mfi.tilebox();
 
-        coupling_timing += ParallelDescriptor::second() - start_drag;
-      }
+              Array4<Real      > const& species_RHS_arr  = species_RHS[lev]->array(mfi);
+              Array4<Real      > const& enthalpy_RHS_arr = enthalpy_RHS[lev]->array(mfi);
+              Array4<Real const> const& X_gk_n  = ld.X_gk->const_array(mfi);
+              Array4<Real const> const& X_gk_o  = ld.X_gko->const_array(mfi);
+              Array4<Real const> const& h_g_n   = ld.h_g->const_array(mfi);
+              Array4<Real const> const& h_g_o   = ld.h_go->const_array(mfi);
+              Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
+              Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
+              Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
+              Array4<Real const> const& dhdt_o  = conv_s_old[lev]->const_array(mfi);
+              Array4<Real const> const& dXdt_o  = conv_X_old[lev]->const_array(mfi);
 
-      const bool update_lapT = advect_enthalpy;
-      const bool update_lapS = advect_tracer;
-      const bool update_lapX = solve_species;
+              const Real Dpressure_Dt = rhs_pressure_g_old[lev];
 
-      compute_laps(update_lapT, update_lapS, update_lapX, lap_T, lap_trac, lap_X,
-                   get_T_g(), get_trac(), get_X_gk(), get_ep_g_const(), get_ro_g_const());
+              amrex::ParallelFor(bx, [species_RHS_arr,enthalpy_RHS_arr,X_gk_n,
+                  X_gk_o,h_g_n,h_g_o,rho_n,rho_o,epg,dhdt_o,dXdt_o,l_dt,nspecies_g,
+                  closed_system,Dpressure_Dt]
+                AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+              {
+                const Real epg_loc = epg(i,j,k);
+                const Real ro_g_n  = rho_n(i,j,k);
+                const Real ro_g_o  = rho_o(i,j,k);
 
-      if (advect_density) {
-        mfix_density_rhs(ro_RHS, get_chem_txfr_const());
-      }
+                enthalpy_RHS_arr(i,j,k) =
+                  epg_loc*(ro_g_n*h_g_n(i,j,k) - ro_g_o*h_g_o(i,j,k)) / l_dt - dhdt_o(i,j,k,1);
 
-      if (advect_enthalpy) {
-        mfix_enthalpy_rhs(enthalpy_RHS, get_ep_g_const(), get_ro_g_const(),
-            get_X_gk(), get_T_g_const(), get_chem_txfr_const());
-      }
+                if (closed_system)
+                  enthalpy_RHS_arr(i,j,k) -= epg_loc*Dpressure_Dt;
 
-      // Species
-      if (solve_species) {
-        mfix_species_X_rhs(species_RHS, get_chem_txfr_const());
-      }
-  
+                for (int n_g(0); n_g < nspecies_g; ++n_g) {
+                  species_RHS_arr(i,j,k,n_g) = 
+                    epg_loc*(ro_g_n*X_gk_n(i,j,k,n_g) - ro_g_o*X_gk_o(i,j,k,n_g)) / l_dt - dXdt_o(i,j,k,n_g);
+                }
+              });
+          } // mfi
+      } // lev
+
       if (m_constraint_type == ConstraintType::IdealGasOpenSystem) {
   
-        mfix_idealgas_opensystem_rhs(S_cc, GetVecOfConstPtrs(lap_T),
-            GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
+        mfix_idealgas_opensystem_rhs(S_cc, GetVecOfConstPtrs(enthalpy_RHS),
             GetVecOfConstPtrs(species_RHS), get_ro_g_const(),
-            get_T_g_const(), get_X_gk(), GetVecOfConstPtrs(ro_RHS));
+            get_T_g_const(), get_X_gk_const());
 
       } else if (m_constraint_type == ConstraintType::IdealGasClosedSystem) {
 
-        mfix_idealgas_closedsystem_rhs(S_cc, GetVecOfConstPtrs(lap_T),
-            GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(lap_X),
+        mfix_idealgas_closedsystem_rhs(S_cc, GetVecOfConstPtrs(enthalpy_RHS),
             GetVecOfConstPtrs(species_RHS), get_ep_g_const(), get_ro_g_const(),
-            get_T_g_const(), get_X_gk(), GetVecOfConstPtrs(ro_RHS),
-            get_pressure_g_const(), avgSigma, avgTheta);
+            get_T_g_const(), get_X_gk_const(), get_pressure_g_const(),
+            avgSigma, avgTheta);
 
         // Update the thermodynamic pressure rhs in here so we do not have to call
         // the closed_system_rhs again in the corrector
@@ -923,9 +1063,30 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       delete S_cc[lev];
     }
 
+
     // *************************************************************************************
     // Correct small cells
     // *************************************************************************************
     mfix_correct_small_cells (get_vel_g(), GetVecOfConstPtrs(ep_u_mac),
          GetVecOfConstPtrs(ep_v_mac), GetVecOfConstPtrs(ep_w_mac));
+
+
+    // *************************************************************************
+    // Free up memory from temporary data
+    // *************************************************************************
+    for (int lev = 0; lev <= finest_level; lev++)
+    {
+      if (advect_enthalpy)
+        delete enthalpy_RHS[lev];
+
+      if (solve_species) {
+         delete species_RHS[lev];
+      }
+    }
+
+    for (int lev = 0; lev <= finest_level; ++lev) {
+      for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
+        delete J_gk[lev][dir];
+      }
+    }
 }
