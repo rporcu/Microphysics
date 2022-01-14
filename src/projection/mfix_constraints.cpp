@@ -189,7 +189,7 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
                                       Vector< MultiFab const* > const& ro_g,
                                       Vector< MultiFab const* > const& T_g,
                                       Vector< MultiFab const* > const& X_gk,
-                                      Vector< MultiFab const* > const& pressure_g,
+                                      Vector< Real >                   pressure_g,
                                       Vector< Real >&                  avgSigma,
                                       Vector< Real >&                  avgTheta)
 {
@@ -237,13 +237,13 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
         Array4< Real const > const& X_gk_arr  = fluid_is_a_mixture ? X_gk[lev]->const_array(mfi) : dummy_arr;
         Array4< Real const > const& T_g_arr   = adv_enthalpy ? T_g[lev]->const_array(mfi) : dummy_arr;
 
-        //Real const pres_g = pressure_g[lev];
+        Real const pres_g = pressure_g[lev];
 
         auto const& flags_arr = flags.const_array(mfi);
 
         const Real Tg0 = fluid.T_g0;
 
-        ParallelFor(bx, [theta_arr,ep_g_arr,T_g_arr,X_gk_arr,//pres_g,
+        ParallelFor(bx, [theta_arr,ep_g_arr,T_g_arr,X_gk_arr,pres_g,
             flags_arr,fluid_is_a_mixture,nspecies_g,fluid_parms,run_on_device,
             adv_enthalpy,Tg0]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -281,7 +281,7 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
           }
 
           if (!flags_arr(i,j,k).isCovered() && adv_enthalpy) {
-            const Real coeff = ep_g_arr(i,j,k); //    / pres_g;
+            const Real coeff = ep_g_arr(i,j,k) / pres_g;
             theta_arr(i,j,k) = coeff * (1 - fluid_parms.R/(MW_g_loc * cp_g_loc));
           } else {
             theta_arr(i,j,k) = 0.;
@@ -306,15 +306,15 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
 
         Array4< Real       > const& theta_arr  = Theta[lev]->array(mfi);
         Array4< Real const > const& ep_g_arr   = ep_g[lev]->const_array(mfi);
-        //Real const pres_g = pressure_g[lev];
+        Real const pres_g = pressure_g[lev];
 
         auto const& flags_arr = flags.const_array(mfi);
 
-        ParallelFor(bx, [theta_arr,ep_g_arr,/*pres_g,*/flags_arr,adv_enthalpy]
+        ParallelFor(bx, [theta_arr,ep_g_arr,pres_g,flags_arr,adv_enthalpy]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           if (!flags_arr(i,j,k).isCovered() && adv_enthalpy) {
-            theta_arr(i,j,k) = ep_g_arr(i,j,k); //        / pres_g;
+            theta_arr(i,j,k) = ep_g_arr(i,j,k) / pres_g;
           } else {
             theta_arr(i,j,k) = 0.;
           }

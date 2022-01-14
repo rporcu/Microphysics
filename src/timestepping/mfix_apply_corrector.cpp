@@ -337,7 +337,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         mfix_idealgas_closedsystem_rhs(GetVecOfPtrs(rhs_mac),
             GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(species_RHS),
             get_ep_g_const(), get_ro_g_const(), get_T_g_const(), get_X_gk_const(),
-            get_pressure_g_const(), avgSigma, avgTheta);
+            get_pressure_g(), avgSigma, avgTheta);
       }
 
       for (int lev(0); lev < nlev; ++lev) {
@@ -586,22 +586,22 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     } // solve_species
 
 
-//    // **************************************************************************
-//    // Update thermodynamic pressure
-//    // **************************************************************************
-//    if (advect_enthalpy && (m_constraint_type == ConstraintType::IdealGasClosedSystem))
-//    {
-//      for (int lev = 0; lev <= finest_level; ++lev) {
-//        auto& ld = *m_leveldata[lev];
-//
-//        Real& p_g                   = ld.pressure_g;
-//        Real const& p_g_old         = ld.pressure_go;
-//        const Real Dpressure_Dt     = rhs_pressure_g[lev];
-//        const Real Dpressure_Dt_old = rhs_pressure_g_old[lev];
-//
-//        p_g = p_g_old + .5*l_dt*(Dpressure_Dt_old+Dpressure_Dt);
-//      }
-//    }
+    // **************************************************************************
+    // Update thermodynamic pressure
+    // **************************************************************************
+    if (advect_enthalpy && (m_constraint_type == ConstraintType::IdealGasClosedSystem))
+    {
+      for (int lev = 0; lev <= finest_level; ++lev) {
+        auto& ld = *m_leveldata[lev];
+
+        Real& p_g                   = ld.pressure_g;
+        Real const& p_g_old         = ld.pressure_go;
+        const Real Dpressure_Dt     = rhs_pressure_g[lev];
+        const Real Dpressure_Dt_old = rhs_pressure_g_old[lev];
+
+        p_g = p_g_old + .5*l_dt*(Dpressure_Dt_old+Dpressure_Dt);
+      }
+    }
 
 
     // *************************************************************************************
@@ -1262,7 +1262,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
         mfix_idealgas_closedsystem_rhs(S_cc, GetVecOfConstPtrs(enthalpy_RHS),
             GetVecOfConstPtrs(species_RHS), get_ep_g_const(), get_ro_g_const(),
-            get_T_g_const(), get_X_gk_const(), get_pressure_g_const(), avgSigma,
+            get_T_g_const(), get_X_gk_const(), get_pressure_g(), avgSigma,
             avgTheta);
       }
     }

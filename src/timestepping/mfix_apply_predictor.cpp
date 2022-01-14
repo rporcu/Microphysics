@@ -317,7 +317,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         mfix_idealgas_closedsystem_rhs(GetVecOfPtrs(rhs_mac),
             GetVecOfConstPtrs(enthalpy_RHS_old), GetVecOfConstPtrs(species_RHS_old),
             get_ep_g_const(), get_ro_g_old_const(), get_T_g_old_const(),
-            get_X_gk_old_const(), get_pressure_g_old_const(), avgSigma, avgTheta);
+            get_X_gk_old_const(), get_pressure_g_old(), avgSigma, avgTheta);
 
       }
 
@@ -566,23 +566,23 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     } // solve_species
 
 
-//    // *************************************************************************
-//    // Update thermodynamic pressure
-//    // *************************************************************************
-//    if (advect_enthalpy && (m_constraint_type == ConstraintType::IdealGasClosedSystem))
-//    {
-//      for (int lev = 0; lev <= finest_level; ++lev) {
-//        rhs_pressure_g_old[lev] = avgSigma[lev] / avgTheta[lev];
-//
-//        auto& ld = *m_leveldata[lev];
-//
-//        Real& p_g               = ld.pressure_g;
-//        Real const& p_g_old     = ld.pressure_go;
-//        const Real Dpressure_Dt = rhs_pressure_g_old[lev];
-//
-//        p_g = p_g_old + l_dt*Dpressure_Dt;
-//      }
-//    }
+    // *************************************************************************
+    // Update thermodynamic pressure
+    // *************************************************************************
+    if (advect_enthalpy && (m_constraint_type == ConstraintType::IdealGasClosedSystem))
+    {
+      for (int lev = 0; lev <= finest_level; ++lev) {
+        rhs_pressure_g_old[lev] = avgSigma[lev] / avgTheta[lev];
+
+        auto& ld = *m_leveldata[lev];
+
+        Real& p_g               = ld.pressure_g;
+        Real const& p_g_old     = ld.pressure_go;
+        const Real Dpressure_Dt = rhs_pressure_g_old[lev];
+
+        p_g = p_g_old + l_dt*Dpressure_Dt;
+      }
+    }
 
 
     // *************************************************************************************
@@ -1038,7 +1038,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
         mfix_idealgas_closedsystem_rhs(S_cc, GetVecOfConstPtrs(enthalpy_RHS),
             GetVecOfConstPtrs(species_RHS), get_ep_g_const(), get_ro_g_const(),
-            get_T_g_const(), get_X_gk_const(), get_pressure_g_const(),
+            get_T_g_const(), get_X_gk_const(), get_pressure_g(),
             avgSigma, avgTheta);
 
         // Update the thermodynamic pressure rhs in here so we do not have to call

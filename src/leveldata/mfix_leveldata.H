@@ -92,8 +92,8 @@ class LevelData
     amrex::MultiFab* gp;
 
     // Gas thermodynamic pressure
-    amrex::MultiFab* pressure_g;
-    amrex::MultiFab* pressure_go;
+    amrex::Real pressure_g;
+    amrex::Real pressure_go;
 
     // Gas temperature
     amrex::MultiFab* T_g;
