@@ -623,8 +623,7 @@ void DiffusionOp::ComputeDivJ (const Vector< MultiFab*      >& divJ_out,
 
     // Interpolate X_gk on the faces
     EB_interp_CellCentroid_to_FaceCentroid(*X_gk_in[lev], GetArrOfPtrs(X_gk_fc[lev]),
-//        0, 0, nspecies_g, geom[lev], get_species_bcrec());
-        0, 0, nspecies_g, geom[lev], bcs_dummy); // TODO TODO check this!
+                                           0, 0, nspecies_g, geom[lev], bcs_dummy);
 
     for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
 #ifdef _OPENMP
@@ -723,8 +722,7 @@ void DiffusionOp::ComputeDivhJ (const Vector< MultiFab* >& divhJ_out,
 
       // Interpolate X_gk on the faces
       EB_interp_CellCentroid_to_FaceCentroid(h_gk[lev], GetArrOfPtrs(h_gk_fc[lev]),
-//          0, 0, nspecies_g, geom[lev], get_species_bcrec());
-          0, 0, nspecies_g, geom[lev], bcs_dummy); // TODO TODO check this!
+                                             0, 0, nspecies_g, geom[lev], bcs_dummy);
     }
   }
 

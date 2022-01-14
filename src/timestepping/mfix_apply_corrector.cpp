@@ -210,7 +210,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
     const bool explicit_diffusive_enthalpy = false;
     const bool explicit_diffusive_trac     = false;
-    const bool explicit_diffusive_species  = false;
+//    const bool explicit_diffusive_species  = false;
+    const bool explicit_diffusive_species  = true;
 
     mfix_set_density_bcs(time, get_ro_g());
 
