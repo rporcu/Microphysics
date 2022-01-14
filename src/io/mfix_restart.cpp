@@ -214,7 +214,8 @@ mfix::Restart (std::string& restart_file,
 #ifdef AMREX_USE_GPU
             Gpu::dtoh_memcpy(single_fab_src.dataPtr(), src[0].dataPtr(), nbytes_src);
 #else
-            std::memcpy(single_fab_src.dataPtr(), src[0].dataPtr(), nbytes_src);
+//            std::memcpy(single_fab_src.dataPtr(), src[0].dataPtr(), nbytes_src);  // this doesn't work
+            src.copyTo(single_fab_src);  // this one works
 #endif
           }
 
