@@ -207,19 +207,30 @@ mfix::Restart (std::string& restart_file,
         auto replicate_data = [] (MultiFab& dst, MultiFab& src) -> void
         {
           if (src.boxArray().size() > 1)
-              amrex::Abort("Replication only works if one initial grid");
+            amrex::Abort("Replication only works if one initial grid");
 
           const int ncomp = src.nComp();
 
-          FArrayBox single_fab(src.boxArray()[0], ncomp);
+          FArrayBox single_fab(src.boxArray()[0], ncomp, The_Cpu_Arena());
           src.copyTo(single_fab);
+
+#ifdef AMREX_USE_GPU
+          const auto nreals = single_fab.size();
+          const auto nbytes = nreals*sizeof(Real);
+          FArrayBox single_fab_d(single_fab.box(), single_fab.nComp());
+          Gpu::htod_memcpy(single_fab_d.dataPtr(), single_fab.dataPtr(), nbytes);
+#endif
 
           // Copy and replicate mf into velocity
           for (MFIter mfi(dst, false); mfi.isValid(); ++mfi)
           {
             int ib = mfi.index();
 
+#ifdef AMREX_USE_GPU
+            dst[ib].copy<RunOn::Gpu>(single_fab_d, single_fab_d.box(), 0, mfi.validbox(), 0, ncomp);
+#else
             dst[ib].copy<RunOn::Host>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, ncomp);
+#endif
           }
         };
 
@@ -228,7 +239,9 @@ mfix::Restart (std::string& restart_file,
           auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
                                                       level_prefix, "u_g");
 
-          MultiFab mf_vel;
+          MFInfo info;
+          info.SetArena(The_Cpu_Arena());
+          MultiFab mf_vel(BoxArray(), DistributionMapping(), 0, 0, info);
           VisMF::Read(mf_vel, prefix);
 
           if (Nrep == IntVect::TheUnitVector())
@@ -251,7 +264,9 @@ mfix::Restart (std::string& restart_file,
           auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
                                                       level_prefix, "gpx");
 
-          MultiFab mf_gp;
+          MFInfo info;
+          info.SetArena(The_Cpu_Arena());
+          MultiFab mf_gp(BoxArray(), DistributionMapping(), 0, 0, info);
           VisMF::Read(mf_gp, prefix);
 
           if (Nrep == IntVect::TheUnitVector())
@@ -285,8 +300,10 @@ mfix::Restart (std::string& restart_file,
             auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
                                                         level_prefix, chkscaVarsName[i]);
 
-            MultiFab mf;
-            VisMF::Read(mf, prefix, nullptr, ParallelDescriptor::IOProcessorNumber());
+            MFInfo info;
+            info.SetArena(The_Cpu_Arena());
+            MultiFab mf(BoxArray(), DistributionMapping(), 0, 0, info);
+            VisMF::Read(mf, prefix);
 
             if (Nrep == IntVect::TheUnitVector()) {
 
@@ -310,19 +327,19 @@ mfix::Restart (std::string& restart_file,
 
           for (int i = 0; i < chkTVars.size(); i++ )
           {
-            if ( restart_from_cold_flow && chkscaVarsName[i] == "T_g")
+            if (restart_from_cold_flow && chkscaVarsName[i] == "T_g")
             {
               amrex::Print() << "  Setting T_g to T_g0 = " << fluid.T_g0 << std::endl;
               m_leveldata[lev]->T_g->setVal(fluid.T_g0);
               continue;
 
-            } else if ( restart_from_cold_flow && chkscaVarsName[i] == "h_g") {
+            } else if (restart_from_cold_flow && chkscaVarsName[i] == "h_g") {
 
-              const Real h_g0 = fluid_parms.calc_h_g<RunOn::Cpu>(fluid.T_g0);
+              const Real h_g0 = fluid_parms.calc_h_g<RunOn::Host>(fluid.T_g0);
 
               amrex::Print() << "  Setting h_g to h_g(T_g0) = " << h_g0 << std::endl;
 
-              const Real cp_g0 = fluid_parms.calc_cp_g<RunOn::Cpu>(fluid.T_g0);
+              const Real cp_g0 = fluid_parms.calc_cp_g<RunOn::Host>(fluid.T_g0);
               m_leveldata[lev]->h_g->setVal(fluid.T_g0*cp_g0);
               continue;
             }
@@ -332,8 +349,10 @@ mfix::Restart (std::string& restart_file,
             auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
                                                         level_prefix, chkTVarsName[i]);
 
-            MultiFab mf;
-            VisMF::Read(mf, prefix, nullptr, ParallelDescriptor::IOProcessorNumber());
+            MFInfo info;
+            info.SetArena(The_Cpu_Arena());
+            MultiFab mf(BoxArray(), DistributionMapping(), 0, 0, info);
+            VisMF::Read(mf, prefix);
 
             if (Nrep == IntVect::TheUnitVector()) {
 
@@ -361,8 +380,10 @@ mfix::Restart (std::string& restart_file,
             auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
                                                         level_prefix, chkSpeciesVarsName[i]);
 
-            MultiFab mf;
-            VisMF::Read(mf, prefix, nullptr, ParallelDescriptor::IOProcessorNumber());
+            MFInfo info;
+            info.SetArena(The_Cpu_Arena());
+            MultiFab mf(BoxArray(), DistributionMapping(), 0, 0, info);
+            VisMF::Read(mf, prefix);
 
             if (Nrep == IntVect::TheUnitVector()) {
 
@@ -370,7 +391,7 @@ mfix::Restart (std::string& restart_file,
               const int ng_to_copy = 0;
 
               (*(chkSpeciesVars[i][lev])).ParallelCopy(mf, 0, 0, fluid.nspecies,
-                  ng_to_copy, ng_to_copy);
+                                                       ng_to_copy, ng_to_copy);
 
             } else {
 
