@@ -50,7 +50,7 @@ exec/tmp_build_dir/*
 exec_cc/Make.local
 exec_cc/mfix3d.*
 exec_cc/tmp_build_dir/*
-exec_cc/AMReX_buildInfo.cpp
+AMReX_buildInfo.cpp
 
 
 # Error/Debug output
