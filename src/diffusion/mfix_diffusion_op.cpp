@@ -587,7 +587,7 @@ void DiffusionOp::ComputeFlux (const Vector< Array< MultiFab*, AMREX_SPACEDIM> >
   // from the solver
   solver.setFinalFillBC(true);
 
-  solver.getFluxes(J_gk, X_gk_in);
+  solver.getFluxes(J_gk, X_gk_in, MLMG::Location::FaceCentroid);
 }
 
 

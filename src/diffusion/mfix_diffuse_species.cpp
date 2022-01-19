@@ -130,7 +130,7 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
 
     solver.solve(GetVecOfPtrs(species_phi), GetVecOfConstPtrs(species_rhs), mg_rtol, mg_atol);
 
-    solver.getFluxes(J_gk);
+    solver.getFluxes(J_gk, GetVecOfPtrs(species_phi), MLMG::Location::FaceCentroid);
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
