@@ -211,7 +211,7 @@ mfix::Restart (std::string& restart_file,
 
           const int ncomp = src.nComp();
 
-          FArrayBox single_fab(src.boxArray()[0], ncomp, The_Cpu_Arena());
+          FArrayBox single_fab(src.boxArray()[0], ncomp, The_Pinned_Arena());
           src.copyTo(single_fab);
 
 #ifdef AMREX_USE_GPU
@@ -239,9 +239,7 @@ mfix::Restart (std::string& restart_file,
           auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
                                                       level_prefix, "u_g");
 
-          MFInfo info;
-          info.SetArena(The_Cpu_Arena());
-          MultiFab mf_vel(BoxArray(), DistributionMapping(), 0, 0, info);
+          MultiFab mf_vel(The_Pinned_Arena());
           VisMF::Read(mf_vel, prefix);
 
           if (Nrep == IntVect::TheUnitVector())
@@ -264,9 +262,7 @@ mfix::Restart (std::string& restart_file,
           auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
                                                       level_prefix, "gpx");
 
-          MFInfo info;
-          info.SetArena(The_Cpu_Arena());
-          MultiFab mf_gp(BoxArray(), DistributionMapping(), 0, 0, info);
+          MultiFab mf_gp(The_Pinned_Arena());
           VisMF::Read(mf_gp, prefix);
 
           if (Nrep == IntVect::TheUnitVector())
@@ -300,9 +296,7 @@ mfix::Restart (std::string& restart_file,
             auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
                                                         level_prefix, chkscaVarsName[i]);
 
-            MFInfo info;
-            info.SetArena(The_Cpu_Arena());
-            MultiFab mf(BoxArray(), DistributionMapping(), 0, 0, info);
+            MultiFab mf(The_Pinned_Arena());
             VisMF::Read(mf, prefix);
 
             if (Nrep == IntVect::TheUnitVector()) {
@@ -349,9 +343,7 @@ mfix::Restart (std::string& restart_file,
             auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
                                                         level_prefix, chkTVarsName[i]);
 
-            MFInfo info;
-            info.SetArena(The_Cpu_Arena());
-            MultiFab mf(BoxArray(), DistributionMapping(), 0, 0, info);
+            MultiFab mf(The_Pinned_Arena());
             VisMF::Read(mf, prefix);
 
             if (Nrep == IntVect::TheUnitVector()) {
@@ -380,9 +372,7 @@ mfix::Restart (std::string& restart_file,
             auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
                                                         level_prefix, chkSpeciesVarsName[i]);
 
-            MFInfo info;
-            info.SetArena(The_Cpu_Arena());
-            MultiFab mf(BoxArray(), DistributionMapping(), 0, 0, info);
+            MultiFab mf(The_Pinned_Arena());
             VisMF::Read(mf, prefix);
 
             if (Nrep == IntVect::TheUnitVector()) {
