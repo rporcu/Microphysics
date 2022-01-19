@@ -10,3 +10,7 @@ CEXE_sources += mfix_eb_regular.cpp
 CEXE_sources += mfix_eb_general.cpp
 CEXE_sources += mfix_get_walls.cpp
 CEXE_headers += mfix_eb_if.H
+
+ifeq ($(USE_CSG),TRUE)
+	CEXE_sources += mfix_eb_csg.cpp
+endif
