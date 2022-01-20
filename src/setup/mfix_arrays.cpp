@@ -205,31 +205,31 @@ mfix::RegridArrays (int lev)
     delete diveu_new;
 
     if (advect_enthalpy) {
-//      // Gas thermodynamic pressure
-//      MultiFab* pressure_g_new = new MultiFab(grids[lev], dmap[lev],
-//                                              m_leveldata[lev]->pressure_g->nComp(),
-//                                              m_leveldata[lev]->pressure_g->nGrow(),
-//                                              MFInfo(), *ebfactory[lev]);
-//      pressure_g_new->setVal(0);
-//      pressure_g_new->ParallelCopy(*m_leveldata[lev]->pressure_g, 0, 0,
-//                                   m_leveldata[lev]->pressure_g->nComp(),
-//                                   src_ngrow, m_leveldata[lev]->pressure_g->nGrow(),
-//                                   geom[lev].periodicity());
-//      std::swap(m_leveldata[lev]->pressure_g, pressure_g_new);
-//      delete pressure_g_new;
-//
-//      // Old gas thermodynamic pressure
-//      MultiFab* pressure_go_new = new MultiFab(grids[lev], dmap[lev],
-//                                               m_leveldata[lev]->pressure_go->nComp(),
-//                                               m_leveldata[lev]->pressure_go->nGrow(),
-//                                               MFInfo(), *ebfactory[lev]);
-//      pressure_go_new->setVal(0);
-//      pressure_go_new->ParallelCopy(*m_leveldata[lev]->pressure_go, 0, 0,
-//                                    m_leveldata[lev]->pressure_go->nComp(),
-//                                    src_ngrow, m_leveldata[lev]->pressure_go->nGrow(),
-//                                    geom[lev].periodicity());
-//      std::swap(m_leveldata[lev]->pressure_go, pressure_go_new);
-//      delete pressure_go_new;
+      // Gas thermodynamic pressure
+      MultiFab* pressure_g_new = new MultiFab(grids[lev], dmap[lev],
+                                              m_leveldata[lev]->pressure_g->nComp(),
+                                              m_leveldata[lev]->pressure_g->nGrow(),
+                                              MFInfo(), *ebfactory[lev]);
+      pressure_g_new->setVal(0);
+      pressure_g_new->ParallelCopy(*m_leveldata[lev]->pressure_g, 0, 0,
+                                   m_leveldata[lev]->pressure_g->nComp(),
+                                   src_ngrow, m_leveldata[lev]->pressure_g->nGrow(),
+                                   geom[lev].periodicity());
+      std::swap(m_leveldata[lev]->pressure_g, pressure_g_new);
+      delete pressure_g_new;
+
+      // Old gas thermodynamic pressure
+      MultiFab* pressure_go_new = new MultiFab(grids[lev], dmap[lev],
+                                               m_leveldata[lev]->pressure_go->nComp(),
+                                               m_leveldata[lev]->pressure_go->nGrow(),
+                                               MFInfo(), *ebfactory[lev]);
+      pressure_go_new->setVal(0);
+      pressure_go_new->ParallelCopy(*m_leveldata[lev]->pressure_go, 0, 0,
+                                    m_leveldata[lev]->pressure_go->nComp(),
+                                    src_ngrow, m_leveldata[lev]->pressure_go->nGrow(),
+                                    geom[lev].periodicity());
+      std::swap(m_leveldata[lev]->pressure_go, pressure_go_new);
+      delete pressure_go_new;
 
       // Gas temperature
       MultiFab* T_g_new = new MultiFab(grids[lev], dmap[lev],

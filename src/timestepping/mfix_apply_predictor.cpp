@@ -317,7 +317,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         mfix_idealgas_closedsystem_rhs(GetVecOfPtrs(rhs_mac),
             GetVecOfConstPtrs(enthalpy_RHS_old), GetVecOfConstPtrs(species_RHS_old),
             get_ep_g_const(), get_ro_g_old_const(), get_T_g_old_const(),
-            get_X_gk_old_const(), get_pressure_g_old(), avgSigma, avgTheta);
+            get_X_gk_old_const(), get_pressure_g_old_const(), avgSigma, avgTheta);
 
       }
 
@@ -575,12 +575,23 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         rhs_pressure_g_old[lev] = avgSigma[lev] / avgTheta[lev];
 
         auto& ld = *m_leveldata[lev];
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+        for (MFIter mfi(*(ld.pressure_g),TilingIfNotGPU()); mfi.isValid(); ++mfi)
+        {
+          Box const& bx = mfi.tilebox();
 
-        Real& p_g               = ld.pressure_g;
-        Real const& p_g_old     = ld.pressure_go;
-        const Real Dpressure_Dt = rhs_pressure_g_old[lev];
+          Array4<Real      > const& p_g     = ld.pressure_g->array(mfi);
+          Array4<Real const> const& p_g_old = ld.pressure_go->const_array(mfi);
+          const Real Dpressure_Dt           = rhs_pressure_g_old[lev];
 
-        p_g = p_g_old + l_dt*Dpressure_Dt;
+          amrex::ParallelFor(bx, [p_g,p_g_old,Dpressure_Dt,l_dt]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          {
+            p_g(i,j,k) = p_g_old(i,j,k) + l_dt*Dpressure_Dt;
+          });
+        } // mfi
       }
     }
 
@@ -1038,7 +1049,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
         mfix_idealgas_closedsystem_rhs(S_cc, GetVecOfConstPtrs(enthalpy_RHS),
             GetVecOfConstPtrs(species_RHS), get_ep_g_const(), get_ro_g_const(),
-            get_T_g_const(), get_X_gk_const(), get_pressure_g(),
+            get_T_g_const(), get_X_gk_const(), get_pressure_g_const(),
             avgSigma, avgTheta);
 
         // Update the thermodynamic pressure rhs in here so we do not have to call

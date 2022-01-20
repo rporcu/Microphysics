@@ -201,11 +201,10 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
                        m_leveldata[lev]->X_gk->nComp(), m_leveldata[lev]->X_gk->nGrow());
       }
 
-//      if ((m_constraint_type == ConstraintType::IdealGasOpenSystem ||
-//           m_constraint_type == ConstraintType::IdealGasClosedSystem) && advect_enthalpy) {
-//        MultiFab::Copy(*m_leveldata[lev]->pressure_g, *m_leveldata[lev]->pressure_go, 0, 0,
-//                        m_leveldata[lev]->pressure_g->nComp(), m_leveldata[lev]->pressure_g->nGrow());
-//      }
+      if (m_constraint_type == ConstraintType::IdealGasClosedSystem && advect_enthalpy) {
+        MultiFab::Copy(*m_leveldata[lev]->pressure_g, *m_leveldata[lev]->pressure_go, 0, 0,
+                        m_leveldata[lev]->pressure_g->nComp(), m_leveldata[lev]->pressure_g->nGrow());
+      }
     }
 
     // Reset the boundary values (necessary if they are time-dependent)

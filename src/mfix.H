@@ -909,9 +909,9 @@ public:
                                          Vector< MultiFab const* > const& ro_g,
                                          Vector< MultiFab const* > const& T_g,
                                          Vector< MultiFab const* > const& X_gk,
-                                         Vector< Real >                   pressure_g,
-                                         Vector< Real >&                  avgSigma,
-                                         Vector< Real >&                  avgTheta);
+                                         Vector< MultiFab const* > const& pressure_g,
+                                         Vector< Real >& avgSigma,
+                                         Vector< Real >& avgTheta);
 
     void compute_convective_term (Box const& bx, int lev, const Real l_dt, MFIter const& mfi,
                                   Array4<Real> const& dvdt, // velocity
@@ -994,8 +994,8 @@ public:
     Vector< MultiFab* > get_gp () noexcept;
     Vector< MultiFab* > get_p_g () noexcept;
     Vector< MultiFab* > get_p_g_old () noexcept;
-    Vector< Real >      get_pressure_g () noexcept;
-    Vector< Real >      get_pressure_g_old () noexcept;
+    Vector< MultiFab* > get_pressure_g () noexcept;
+    Vector< MultiFab* > get_pressure_g_old () noexcept;
     Vector< MultiFab* > get_T_g () noexcept;
     Vector< MultiFab* > get_T_g_old () noexcept;
     Vector< MultiFab* > get_h_g () noexcept;
@@ -1026,6 +1026,9 @@ public:
     amrex::Vector< amrex::MultiFab const* > get_h_g_old_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_X_gk_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_X_gk_old_const () const noexcept;
+
+    amrex::Vector< amrex::MultiFab const* > get_pressure_g_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_pressure_g_old_const () const noexcept;
 
     amrex::Vector< MultiFab const* > get_divtau_const () const noexcept;
 

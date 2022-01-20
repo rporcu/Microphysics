@@ -284,9 +284,9 @@ Vector< MultiFab* > mfix::get_p_g_old () noexcept
   return r;
 }
 
-Vector< Real > mfix::get_pressure_g () noexcept
+Vector< MultiFab* > mfix::get_pressure_g () noexcept
 {
-  Vector<Real> r;
+  Vector<MultiFab*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
     r.push_back(m_leveldata[lev]->pressure_g);
@@ -294,9 +294,9 @@ Vector< Real > mfix::get_pressure_g () noexcept
   return r;
 }
 
-Vector< Real > mfix::get_pressure_g_old () noexcept
+Vector< MultiFab* > mfix::get_pressure_g_old () noexcept
 {
-  Vector<Real> r;
+  Vector<MultiFab*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
     r.push_back(m_leveldata[lev]->pressure_go);
@@ -571,6 +571,26 @@ Vector< MultiFab const*> mfix::get_h_g_old_const () const noexcept
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
     r.push_back(m_leveldata[lev]->h_go);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_pressure_g_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->pressure_g);
+  }
+  return r;
+}
+
+Vector< MultiFab const*> mfix::get_pressure_g_old_const () const noexcept
+{
+  Vector<MultiFab const*> r;
+  r.reserve(m_leveldata.size());
+  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
+    r.push_back(m_leveldata[lev]->pressure_go);
   }
   return r;
 }
