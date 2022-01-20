@@ -227,7 +227,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // 
     // *************************************************************************************
     if (solve_species)
-      diffusion_op->ComputeDivJ(div_J_old, get_X_gk_old_const(), J_gk, ebfactory);
+      diffusion_op->ComputeDivJ(div_J_old, get_X_gk_old_const(), J_gk);
 
 
     // *************************************************************************************
@@ -245,8 +245,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       }
 
       const int update_enthalpies = 1;
-      diffusion_op->ComputeDivhJ(div_hJ_old, h_gk_fc, J_gk, get_T_g_old_const(),
-                                 update_enthalpies, ebfactory);
+      diffusion_op->ComputeDivhJ(div_hJ_old, h_gk_fc, J_gk, get_T_g_old_const(), update_enthalpies);
     }
 
 
@@ -508,7 +507,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         // *********************************************************************
         // Correction
         // *********************************************************************
-        diffusion_op->ComputeDivJ(div_J_old, get_X_gk_const(), J_gk, ebfactory);
+        diffusion_op->ComputeDivJ(div_J_old, get_X_gk_const(), J_gk);
 
         for (int lev = 0; lev <= finest_level; lev++) {
           auto& ld = *m_leveldata[lev];
@@ -609,8 +608,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
       if (!l_explicit_diff && solve_species) {
         const int update_enthalpies = 0;
-        diffusion_op->ComputeDivhJ(div_hJ_old, h_gk_fc, J_gk, get_T_g_old_const(),
-                                   update_enthalpies, ebfactory);
+        diffusion_op->ComputeDivhJ(div_hJ_old, h_gk_fc, J_gk, get_T_g_old_const(), update_enthalpies);
       }
 
       for (int lev = 0; lev <= finest_level; lev++) {

@@ -593,8 +593,7 @@ void DiffusionOp::ComputeFlux (const Vector< Array< MultiFab*, AMREX_SPACEDIM> >
 
 void DiffusionOp::ComputeDivJ (const Vector< MultiFab*      >& divJ_out,
                                const Vector< MultiFab const*>& X_gk_in,
-                               const Vector< Array< MultiFab*, AMREX_SPACEDIM> >& J_gk,
-                               const Vector< std::unique_ptr< EBFArrayBoxFactory> >& ebfactory)
+                               const Vector< Array< MultiFab*, AMREX_SPACEDIM> >& J_gk)
 {
   BL_PROFILE("DiffusionOp::ComputeDivJ");
 
@@ -676,8 +675,7 @@ void DiffusionOp::ComputeDivhJ (const Vector< MultiFab* >& divhJ_out,
                                       Vector< Array< MultiFab, AMREX_SPACEDIM> >& h_gk_fc,
                                 const Vector< Array< MultiFab*, AMREX_SPACEDIM> >& J_gk,
                                 const Vector< MultiFab const* >& T_g_in,
-                                const int update_enthalpies,
-                                const Vector< std::unique_ptr< EBFArrayBoxFactory> >& ebfactory)
+                                const int update_enthalpies)
 {
   BL_PROFILE("DiffusionOp::ComputeDivhJ");
 
