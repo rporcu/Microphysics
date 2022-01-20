@@ -6,6 +6,12 @@ USE_EB        = TRUE
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
+# This could be moved to AMReX Make.defs ☝
+ifeq ($(USE_CSG),TRUE)
+  $(info Loading $(TOP)/tools/GNUMake/packages/Make.csgeb...)
+  include        $(TOP)/tools/GNUMake/packages/Make.csgeb
+endif
+
 #These are the directories in mfix/src_cc
 Bdirs 	:= src
 Bdirs 	+= src/des

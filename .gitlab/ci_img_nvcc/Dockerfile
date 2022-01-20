@@ -36,6 +36,7 @@ RUN apt-get -qq update \
     libopenmpi-dev=4.* \
     openmpi-bin=4.* \
     pkg-config=0.29.* \
+    python-is-python3=3.* \
     python3-pip=20.* \
     python3-setuptools=45.* \
     python3-venv=3.* \
