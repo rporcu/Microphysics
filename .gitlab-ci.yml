@@ -41,6 +41,26 @@ build-nvcc-env:
 
 ###### Test jobs #####
 
+build:GNUMake:
+  stage: test
+  variables:
+    BUILD: ${CI_PROJECT_DIR}/build
+    BOOST_HOME: ${BUILD}/boost
+    CATCH2_HOME: ${BUILD}/catch2
+    CGAL_HOME: ${BUILD}/cgal
+    PEGTL_HOME: ${BUILD}/taocpp-pegtl
+    CSGEB_HOME: ${BUILD}/subprojects/csg-eb/csg_home
+  script:
+    - conan install -if build -g deploy catch2/2.13.7@
+    - conan install -if build -g deploy cgal/5.2.1@
+    - conan install -if build -g deploy taocpp-pegtl/3.2.1@
+    - make -C subprojects/csg-eb install DESTDIR=${CSGEB_HOME} ENABLE_CGAL=1 -j4
+    - make -C exec USE_CSG=TRUE -j4
+  only:
+    - schedules
+  tags:
+    - ubuntu-shell
+
 .test: &test_template
   stage: test
   artifacts:

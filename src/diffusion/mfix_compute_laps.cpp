@@ -12,10 +12,10 @@ using namespace amrex;
 void
 mfix::compute_laps (const bool update_lapT,
                     const bool update_lapTrac,
-                    const bool update_lapX,
-                    Vector< MultiFab*      >& lapT,
-                    Vector< MultiFab*      >& lapTrac,
-                    Vector< MultiFab*      >& lapX,
+                    const bool update_flux,
+                    Vector< MultiFab*      > const& lapT,
+                    Vector< MultiFab*      > const& lapTrac,
+                    Vector< Array< MultiFab*, AMREX_SPACEDIM> > const& J_gk,
                     Vector< MultiFab*      > const& T_g,
                     Vector< MultiFab*      > const& trac,
                     Vector< MultiFab*      > const& X_gk,
@@ -30,8 +30,8 @@ mfix::compute_laps (const bool update_lapT,
     diffusion_op->ComputeLapS(lapTrac, trac, ro_g, ep_g, mfix::mu_s);
   }
 
-  if (update_lapX) {
-    diffusion_op->ComputeLapX(lapX, X_gk, ro_g, ep_g, get_T_g_const());
+  if (update_flux) {
+    diffusion_op->ComputeFlux(J_gk, X_gk, ro_g, ep_g);
   }
 
 }
