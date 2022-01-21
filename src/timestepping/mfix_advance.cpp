@@ -66,14 +66,13 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   mfix_set_density_bcs(time, get_ro_g());
   mfix_set_tracer_bcs(time, get_trac());
 
-  if (advect_enthalpy)
+  if (advect_enthalpy) {
     mfix_set_temperature_bcs(time, get_T_g());
+    mfix_set_enthalpy_bcs(time, get_h_g());
+  }
 
   if (advect_enthalpy && EB::fix_temperature)
     mfix_set_eb_temperature_bcs(get_T_g_on_eb());
-
-  if (advect_enthalpy)
-    mfix_set_enthalpy_bcs(time, get_h_g());
 
   if (solve_species)
     mfix_set_species_bcs(time, get_X_gk());
@@ -102,63 +101,62 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   Vector< MultiFab* > conv_s(finest_level+1, nullptr);
   Vector< MultiFab* > conv_X(finest_level+1, nullptr);
   Vector< MultiFab* > ro_RHS_old(finest_level+1, nullptr);
-  Vector< MultiFab* > ro_RHS(finest_level+1, nullptr);
   Vector< MultiFab* > lap_trac_old(finest_level+1, nullptr);
-  Vector< MultiFab* > lap_trac(finest_level+1, nullptr);
   Vector< MultiFab* > enthalpy_RHS_old(finest_level+1, nullptr);
-  Vector< MultiFab* > enthalpy_RHS(finest_level+1, nullptr);
   Vector< MultiFab* > lap_T_old(finest_level+1, nullptr);
-  Vector< MultiFab* > lap_T(finest_level+1, nullptr);
   Vector< MultiFab* > species_RHS_old(finest_level+1, nullptr);
-  Vector< MultiFab* > species_RHS(finest_level+1, nullptr);
-  Vector< MultiFab* > lap_X_old(finest_level+1, nullptr);
-  Vector< MultiFab* > lap_X(finest_level+1, nullptr);
-  Vector< MultiFab* > vel_RHS(finest_level+1, nullptr);
+  Vector< MultiFab* > vel_RHS_old(finest_level+1, nullptr);
+  Vector< MultiFab* > div_J_old(finest_level+1, nullptr);
+  Vector< MultiFab* > div_hJ_old(finest_level+1, nullptr);
   Vector< Real > rhs_pressure_g_old(finest_level+1, 0.);
   Vector< Real > rhs_pressure_g(finest_level+1, 0.);
 
   for (int lev = 0; lev <= finest_level; lev++)
   {
     conv_u[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
+    conv_u[lev]->setVal(0.0);
+
     // 2+ntrac: one for density, ntrac for tracers and one for enthalpy
     conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 2+ntrac, 0, MFInfo(), *ebfactory[lev]);
-    ro_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-    ro_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-    lap_trac_old[lev]   = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
-    lap_trac[lev]   = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
-    enthalpy_RHS_old[lev]   = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-    enthalpy_RHS[lev]   = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-    lap_T_old[lev]   = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-    lap_T[lev]   = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
-
-    conv_u[lev]->setVal(0.0);
     conv_s[lev]->setVal(0.0);
-    ro_RHS_old[lev]->setVal(0.0);
-    ro_RHS[lev]->setVal(0.0);
-    lap_trac_old[lev]->setVal(0.0);
-    lap_trac[lev]->setVal(0.0);
-    enthalpy_RHS_old[lev]->setVal(0.0);
-    enthalpy_RHS[lev]->setVal(0.0);
-    lap_T_old[lev]->setVal(0.0);
-    lap_T[lev]->setVal(0.0);
+
+    if (advect_density) {
+      ro_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+      ro_RHS_old[lev]->setVal(0.0);
+    }
+
+    if (advect_tracer) {
+      lap_trac_old[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
+      lap_trac_old[lev]->setVal(0.0);
+    }
+
+    if (advect_enthalpy) {
+      enthalpy_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+      enthalpy_RHS_old[lev]->setVal(0.0);
+      lap_T_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+      lap_T_old[lev]->setVal(0.0);
+    }
+
+    if (solve_species) {
+      div_J_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+      div_J_old[lev]->setVal(0.0);
+    }
+
+    if (advect_enthalpy && solve_species) {
+      div_hJ_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
+      div_hJ_old[lev]->setVal(0.0);
+    }
 
     if (solve_species) {
       conv_X[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
-      species_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
-      species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
-      lap_X_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
-      lap_X[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
-
       conv_X[lev]->setVal(0.0);
+
+      species_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
       species_RHS_old[lev]->setVal(0.0);
-      species_RHS[lev]->setVal(0.0);
-      lap_X_old[lev]->setVal(0.0);
-      lap_X[lev]->setVal(0.0);
     }
 
     if (reactions.solve) {
-      vel_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
-      vel_RHS[lev]->setVal(0.0);
+      vel_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
     }
   }
 
@@ -173,10 +171,10 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     Real coupling_timing(0);
 
-    mfix_apply_predictor(conv_u, conv_s, conv_X, ro_RHS_old, ro_RHS, lap_trac_old,
-        lap_trac, enthalpy_RHS_old, enthalpy_RHS, lap_T_old, lap_T, species_RHS_old,
-        species_RHS, lap_X_old, lap_X, vel_RHS, rhs_pressure_g_old, rhs_pressure_g, time,
-        dt, dt_copy, proj_2, coupling_timing);
+    mfix_apply_predictor(conv_u, conv_s, conv_X, ro_RHS_old, lap_trac_old,
+        enthalpy_RHS_old, lap_T_old, species_RHS_old, vel_RHS_old,
+        div_J_old, div_hJ_old, rhs_pressure_g_old, rhs_pressure_g, time, dt,
+        dt_copy, proj_2, coupling_timing);
 
     // Reset any quantities which might have been updated
     for (int lev = 0; lev <= finest_level; lev++) {
@@ -185,13 +183,13 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
       if (advect_density)
         MultiFab::Copy(*m_leveldata[lev]->ro_g, *m_leveldata[lev]->ro_go, 0, 0,
-                        m_leveldata[lev]->ro_g->nComp(), m_leveldata[lev]->ro_g->nGrow());
+                       m_leveldata[lev]->ro_g->nComp(), m_leveldata[lev]->ro_g->nGrow());
 
       if (advect_enthalpy) {
         MultiFab::Copy(*m_leveldata[lev]->T_g, *m_leveldata[lev]->T_go, 0, 0,
-                        m_leveldata[lev]->T_g->nComp(), m_leveldata[lev]->T_g->nGrow());
+                       m_leveldata[lev]->T_g->nComp(), m_leveldata[lev]->T_g->nGrow());
         MultiFab::Copy(*m_leveldata[lev]->h_g, *m_leveldata[lev]->h_go, 0, 0,
-                        m_leveldata[lev]->h_g->nComp(), m_leveldata[lev]->h_g->nGrow());
+                       m_leveldata[lev]->h_g->nComp(), m_leveldata[lev]->h_g->nGrow());
       }
 
       if (advect_tracer)
@@ -200,7 +198,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
       if (solve_species) {
         MultiFab::Copy(*m_leveldata[lev]->X_gk, *m_leveldata[lev]->X_gko, 0, 0,
-                        m_leveldata[lev]->X_gk->nComp(), m_leveldata[lev]->X_gk->nGrow());
+                       m_leveldata[lev]->X_gk->nComp(), m_leveldata[lev]->X_gk->nGrow());
       }
 
       if (m_constraint_type == ConstraintType::IdealGasClosedSystem && advect_enthalpy) {
@@ -228,25 +226,30 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   {
      delete conv_u[lev];
      delete conv_s[lev];
-     delete ro_RHS_old[lev];
-     delete ro_RHS[lev];
-     delete lap_trac_old[lev];
-     delete lap_trac[lev];
-     delete enthalpy_RHS_old[lev];
-     delete enthalpy_RHS[lev];
-     delete lap_T_old[lev];
-     delete lap_T[lev];
+
+     if (advect_density)
+       delete ro_RHS_old[lev];
+
+     if (advect_tracer)
+       delete lap_trac_old[lev];
+
+     if (advect_enthalpy) {
+       delete enthalpy_RHS_old[lev];
+       delete lap_T_old[lev];
+     }
+
+     if (advect_enthalpy && solve_species) {
+       delete div_hJ_old[lev];
+     }
 
      if (solve_species) {
        delete conv_X[lev];
        delete species_RHS_old[lev];
-       delete species_RHS[lev];
-       delete lap_X_old[lev];
-       delete lap_X[lev];
+       delete div_J_old[lev];
      }
 
      if (reactions.solve)
-       delete vel_RHS[lev];
+       delete vel_RHS_old[lev];
   }
 }
 

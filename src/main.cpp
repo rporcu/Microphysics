@@ -19,7 +19,7 @@
 #include "AMReX_Conduit_Blueprint.H"
 #endif
 
-// Set defautls that are different that what ARMeX uses.  We only
+// Set defaults that are different that what ARMeX uses.  We only
 // add them if they are not already specified in the inputs file.
 void add_par () {
 
