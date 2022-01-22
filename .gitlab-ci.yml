@@ -150,6 +150,7 @@ build:csg:
             -B build
             -DCMAKE_BUILD_TYPE=Debug
             -DCMAKE_MODULE_PATH=$PWD/build
+            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror -pedantic -pedantic-errors"
             -DMFIX_CSG=ON
     - cmake --build build --target functional_tests
     - ./build/src/eb/tests/functional_tests
@@ -225,7 +226,7 @@ lint:gcc:warnings:
     - cmake -S .
             -B build
             -DCMAKE_BUILD_TYPE=Debug
-            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror"
+            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror -pedantic -pedantic-errors"
             -GNinja
     - cmake --build build -- -k0
 

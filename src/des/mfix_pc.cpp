@@ -2096,7 +2096,7 @@ namespace {
   };
 
   typedef std::priority_queue<BidNp, Vector<BidNp>, PairCompare> BidNpHeap;
-};
+}
 
 
 void MFIXParticleContainer::partitionParticleGrids(int lev,
