@@ -2,6 +2,16 @@ if(NOT MFIX_CSG)
   return()
 endif()
 
+find_package(CsgEb QUIET)
+if(CsgEb_FOUND)
+	message(STATUS "Found installation of CsgEb")
+	include(CMakePrintHelpers)
+	cmake_print_properties(TARGETS CsgEb::csg-eb PROPERTIES
+                       LOCATION INTERFACE_INCLUDE_DIRECTORIES)
+  return()
+endif()
+message(STATUS "Could not find CsgEb; building from submodule")
+
 if (NOT EXISTS  "${PROJECT_SOURCE_DIR}/.git")
    message(FATAL_ERROR
       "${PROJECT_SOURCE_DIR} is not a Git repo: missing .git")
