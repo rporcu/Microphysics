@@ -2,6 +2,10 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
+from rtl2 import suite
+from rtl2.test_util import git_commit
+from datetime import datetime
+
 from rtl2.post import (
     get_mean_vp,
     read_avg_values,
@@ -27,9 +31,12 @@ def plot(refdata: Path) -> Path:
 
     # append new mean_vp value to running_val file
     assert running_avg.is_file()
-    with open(running_avg, "a") as run_avg:
-        run_avg.write(mean_vp)
-        run_avg.write("\n")
+    if not suite.get_suite().post_only:
+        time = datetime.now().astimezone().isoformat()
+        branch, sha = git_commit(suite.get_suite().sourceDir)
+        with open(running_avg, "a") as run_avg:
+            run_avg.write(f"{mean_vp}\t{time}\t{sha}\t{branch}\n")
+
     x_avg_vals, y_avg_vals = read_avg_values(running_avg)  # includes latest value that was just appended
 
     plt.rc('text', usetex=True)
