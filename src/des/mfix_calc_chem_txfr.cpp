@@ -21,7 +21,7 @@
 
 
 
-void 
+void
 mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                            const Vector< MultiFab* >& ep_g_in,
                            const Vector< MultiFab* >& ro_g_in,
@@ -49,7 +49,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 }
 
 template <typename F1>
-void 
+void
 mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                            const Vector< MultiFab* >& ep_g_in,
                            const Vector< MultiFab* >& ro_g_in,
@@ -69,7 +69,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 }
 
 template <typename F1, typename F2, typename F3>
-void 
+void
 mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                            const Vector< MultiFab* >& ep_g_in,
                            const Vector< MultiFab* >& ro_g_in,
@@ -280,7 +280,13 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
     // FillBoundary on interpolation MultiFab
     interp_ptr->FillBoundary(geom[lev].periodicity());
 
-    eps_ptr[lev] = (MFHelpers::createFrom(*interp_ptr, 0.0)).release();
+    // At this point it's safe to use the pba and pdm to create the eps_ptr. However
+    // we need to use the same ghost cells that chem_txfr uses otherwise the local
+    // fabs created for OMP runs will be different.
+    eps_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                pc->ParticleDistributionMap(lev),
+                                1,
+                                chem_txfr[lev]->nGrow());
 
     // We must have ghost cells for each FAB so that a particle in one grid can
     // spread its effect to an adjacent grid by first putting the value into
@@ -290,6 +296,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
       amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
 
     chem_txfr_ptr[lev]->setVal(0.0, 0, chem_txfr[lev]->nComp(), chem_txfr_ptr[lev]->nGrow());
+    eps_ptr[lev]->setVal(0.0, 0, 1, eps_ptr[lev]->nGrow());
 
     // Use level 0 to define the EB factory. If we are not on level 0
     // then create a copy of the coarse factory to use.
@@ -343,7 +350,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
       const EBCellFlagFab& flags = flags_fab.getEBCellFlagFab();
 
       if (flags.getType(amrex::grow(bx,0)) != FabType::covered) {
-        
+
         // Get arrays
         const auto& ro_gk_txfr_array = chem_txfr_ptr[lev]->array(mfi,idx_ro_gk_txfr);
         const auto& h_g_txfr_array    = chem_txfr_ptr[lev]->array(mfi,idx_h_g_txfr);
@@ -639,7 +646,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
             if (fluid_is_a_mixture) {
 
               for (int n_g(0); n_g < nspecies_g; ++n_g) {
-                MW_g += run_on_device ? 
+                MW_g += run_on_device ?
                   X_gk[n_g] / fluid_parms.get_MW_gk<RunOn::Device>(n_g) :
                   X_gk[n_g] / fluid_parms.get_MW_gk<RunOn::Host>(n_g);
               }
@@ -1050,7 +1057,7 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
           fab_chem_txfr.atomicAdd<RunOn::Host>(local_fab_chem_txfr, tile_box, tile_box, 0, 0, ncomp);
         }
 #endif
-      }
+      } // Not covered
 
     } // pti
 
