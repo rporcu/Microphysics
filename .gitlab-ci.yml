@@ -88,6 +88,10 @@ build:dpcpp:
     CC: clang
     CXX: dpcpp
   script:
+    - source /home/ssm-user/spack/share/spack/setup-env.sh
+    - spack load catch2
+    - spack load cgal
+    - spack load pegtl
     - source /opt/intel/oneapi/setvars.sh
     - git submodule update --init --force
     - cmake -S .
@@ -95,6 +99,7 @@ build:dpcpp:
             -DCMAKE_BUILD_TYPE=None
             -DMFIX_GPU_BACKEND=SYCL
             -DSKIP_LAUNCHER=1
+            -DMFIX_CSG=1
             -G Ninja
     - cmake --build build
   <<: *build_gpu
