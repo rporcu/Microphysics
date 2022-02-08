@@ -134,6 +134,8 @@ print_mfix_configuration_summary(mfixcore)
 
 add_executable(mfix ${MAIN})
 target_link_libraries( mfix mfixcore )
+target_include_directories( mfix PRIVATE ${PROJECT_BINARY_DIR})
+target_include_directories( mfixcore PRIVATE ${PROJECT_BINARY_DIR})
 
 # We should check what this line does
 file( GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.cpp)
