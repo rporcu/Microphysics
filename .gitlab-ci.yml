@@ -97,9 +97,9 @@ build:dpcpp:
     - cmake -S .
             -B build
             -DCMAKE_BUILD_TYPE=None
+            -DMFIX_CSG=1
             -DMFIX_GPU_BACKEND=SYCL
             -DSKIP_LAUNCHER=1
-            -DMFIX_CSG=1
             -G Ninja
     - cmake --build build
   <<: *build_gpu
@@ -111,12 +111,17 @@ build:hip:
     CC: /opt/rocm/llvm/bin/clang
     CXX: /opt/rocm/llvm/bin/clang++
   script:
+    - source /home/ssm-user/spack/share/spack/setup-env.sh
+    - spack load catch2
+    - spack load cgal
+    - spack load pegtl
     - source /etc/profile.d/rocm.sh
     - git submodule update --init --force
     - cmake -S .
             -B build
             -DAMReX_AMD_ARCH=gfx908
             -DCMAKE_BUILD_TYPE=Debug
+            -DMFIX_CSG=1
             -DMFIX_GPU_BACKEND=HIP
             -DMFIX_MPI=0
             -G Ninja
