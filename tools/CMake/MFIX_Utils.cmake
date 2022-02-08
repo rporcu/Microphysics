@@ -23,27 +23,34 @@ macro( get_git_info ) # EXTRA ARGS: branch commit
     endif()
   endif()
 
-  # Find commit
-  execute_process(
-    COMMAND git rev-parse HEAD
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    OUTPUT_VARIABLE out
-    ERROR_VARIABLE  err
-    )
+  get_hash(${PROJECT_SOURCE_DIR}/subprojects/AMReX-Hydro)
+  set(HYDRO_GIT_HASH ${GIT_HASH})
 
-  if(err)
-    message(WARNING "Failing to retrieve MFIX Git commit")
-  else()
-    string(STRIP ${out} out)
-    message( STATUS "MFIX commit: ${out}" )
-    if( ${ARGC} EQUAL 2 ) # commit
-      set( ${ARGV1} ${out} )
-    endif()
-  endif()
+  get_hash(${PROJECT_SOURCE_DIR}/subprojects/csg-eb)
+  set(CSGEB_GIT_HASH ${GIT_HASH})
+
+  configure_file(
+	  tools/CMake/build_info.H.in
+	  ${PROJECT_BINARY_DIR}/build_info.H
+	  @ONLY)
 
   unset(out)
 
 endmacro()
+
+function( get_hash repo_path )
+  execute_process(
+    COMMAND git rev-parse HEAD
+    WORKING_DIRECTORY ${repo_path}
+    OUTPUT_VARIABLE out
+    ERROR_VARIABLE  err
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+  if(err)
+    message(WARNING "Failing to retrieve Git commit from repo: ${repo_path}")
+  endif()
+  set(GIT_HASH "${out}" PARENT_SCOPE)
+endfunction()
 
 #
 # Print Configuration Summary
