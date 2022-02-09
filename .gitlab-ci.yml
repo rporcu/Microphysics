@@ -238,7 +238,7 @@ lint:gcc:warnings:
             -DCMAKE_BUILD_TYPE=Debug
             -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror -pedantic -pedantic-errors"
             -GNinja
-    - cmake --build build -- -k0
+    - cmake --build build --target mfix build_tests -- -k0
 
 lint:clang:warnings:
   <<: *lint_template
@@ -252,7 +252,7 @@ lint:clang:warnings:
             -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wno-unused-lambda-capture -Wnull-dereference -Werror"
             -DMFIX_MPI=0
             -GNinja
-    - cmake --build build -- -k0
+    - cmake --build build --target mfix build_tests -- -k0
 
 lint:spelling:
   <<: *lint_template
