@@ -4,9 +4,9 @@
 AMREX_GPU_HOST_DEVICE
 amrex::Real
 ComputeDragUser::operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel,
-                             amrex::Real DPM, amrex::Real DPA, amrex::Real PHIS,
-                             amrex::Real fvelx, amrex::Real fvely, amrex::Real fvelz,
-                             int i, int j, int k, int pid) const
+                             amrex::Real DPM, amrex::Real, amrex::Real,
+                             amrex::Real, amrex::Real, amrex::Real,
+                             int, int, int, int) const
 {
     amrex::Real ROg = ROPg / EPg;
     amrex::Real RE = (Mug > 0.0) ? DPM*vrel*ROg/Mug : large_number;
