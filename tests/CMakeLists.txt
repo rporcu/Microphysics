@@ -19,20 +19,14 @@ macro (setup_test _test _suffix _env _input_file )
         # Copy file to binary dir
         file( COPY ${CMAKE_CURRENT_SOURCE_DIR}/${_test} DESTINATION ${CMAKE_BINARY_DIR}/tests/ )
 
-        set(_test_exe mfix)
-        set(_test_exe_path ${PROJECT_BINARY_DIR}/mfix)
-        file( GLOB _udfs  ${_src_dir}/*.cpp )
-        if (_udfs)
-          set(_test_exe mfix_${_test})
-          set(_test_exe_path ${_test_dir}/mfix_${_test})
-        endif ()
+        set(_test_exe mfix_${_test})
 
         # Create target if needed
         if (NOT TARGET ${_test_exe})
-            message(STATUS "Found UDFs for test ${_test}; adding target for executable ${_test_exe_path}")
             add_executable(${_test_exe} EXCLUDE_FROM_ALL ${MAIN} )
 
             # Find UDFs if any is present and add them to the build
+            file( GLOB _udfs  ${_src_dir}/*.cpp )
             add_udfs_to_target( ${_test_exe} ${_udfs} )
 
             target_include_directories(${_test_exe} PUBLIC ${_test_dir} )
@@ -67,7 +61,7 @@ macro (setup_test _test _suffix _env _input_file )
         # FEXTRACT AND FJOIN_PAR are defined as internal cache variables
         add_custom_target(${_test_run} DEPENDS ${_test_exe}
             COMMAND ${CMAKE_COMMAND} -E env ${_env};FEXTRACT=${FEXTRACT};FJOIN_PAR=${FJOIN_PAR}
-            ${_test_dir}/runtests.sh ${_test_exe_path} "\"\"" ${_input_file}
+            ${_test_dir}/runtests.sh ${_test_dir}/${_test_exe} "\"\"" ${_input_file}
             WORKING_DIRECTORY  ${_test_dir}
             )
 
