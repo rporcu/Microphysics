@@ -73,6 +73,7 @@ int main ( int argc, char* argv[] )
               << "\n\n";
   }
 
+  int fcount(0);
   int lc2(0);
   int err(0);
 
@@ -354,6 +355,7 @@ amrex::Real calc_granular_temperature (amrex::Vector<particle_t> a_particles)
          +  a_particles[lc].rdata[ 9]*a_particles[lc].rdata[ 9]
          +  a_particles[lc].rdata[10]*a_particles[lc].rdata[10];
   }
+  amrex::Real myval = gtmp / (3.0 *np);
   return gtmp / (3.0 * np);
 }
 
