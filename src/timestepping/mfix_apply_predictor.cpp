@@ -299,10 +299,17 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       const int nspecies_g = fluid.nspecies;
 
       for (int lev(0); lev < nlev; ++lev) {
-        MultiFab::Add(*enthalpy_RHS_old[lev], *lap_T_old[lev], 0, 0, 1, 0);
-        MultiFab::Subtract(*enthalpy_RHS_old[lev], *div_hJ_old[lev], 0, 0, 1, 0);
+        if (advect_enthalpy) {
+          MultiFab::Add(*enthalpy_RHS_old[lev], *lap_T_old[lev], 0, 0, 1, 0);
 
-        MultiFab::Subtract(*species_RHS_old[lev], *div_J_old[lev], 0, 0, nspecies_g, 0);
+          if (solve_species) {
+            MultiFab::Subtract(*enthalpy_RHS_old[lev], *div_hJ_old[lev], 0, 0, 1, 0);
+          }
+        }
+
+        if (solve_species) {
+          MultiFab::Subtract(*species_RHS_old[lev], *div_J_old[lev], 0, 0, nspecies_g, 0);
+        }
       }
 
       if (m_constraint_type == ConstraintType::IdealGasOpenSystem) {
@@ -321,10 +328,17 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       }
 
       for (int lev(0); lev < nlev; ++lev) {
-        MultiFab::Subtract(*enthalpy_RHS_old[lev], *lap_T_old[lev], 0, 0, 1, 0);
-        MultiFab::Add(*enthalpy_RHS_old[lev], *div_hJ_old[lev], 0, 0, 1, 0);
+        if (advect_enthalpy) {
+          MultiFab::Subtract(*enthalpy_RHS_old[lev], *lap_T_old[lev], 0, 0, 1, 0);
 
-        MultiFab::Add(*species_RHS_old[lev], *div_J_old[lev], 0, 0, nspecies_g, 0);
+          if (solve_species) {
+            MultiFab::Add(*enthalpy_RHS_old[lev], *div_hJ_old[lev], 0, 0, 1, 0);
+          }
+        }
+
+        if (solve_species) {
+          MultiFab::Add(*species_RHS_old[lev], *div_J_old[lev], 0, 0, nspecies_g, 0);
+        }
       }
     }
 
@@ -1000,38 +1014,50 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
           {
               Box const& bx = mfi.tilebox();
 
-              Array4<Real      > const& species_RHS_arr  = species_RHS[lev]->array(mfi);
-              Array4<Real      > const& enthalpy_RHS_arr = enthalpy_RHS[lev]->array(mfi);
-              Array4<Real const> const& X_gk_n  = ld.X_gk->const_array(mfi);
-              Array4<Real const> const& X_gk_o  = ld.X_gko->const_array(mfi);
-              Array4<Real const> const& h_g_n   = ld.h_g->const_array(mfi);
-              Array4<Real const> const& h_g_o   = ld.h_go->const_array(mfi);
+              Array4<Real      > dummy_arr;
+              Array4<Real const> const_dummy_arr;
+
+              Array4<Real> const& species_RHS_arr  = solve_species ? species_RHS[lev]->array(mfi) : dummy_arr;
+              Array4<Real> const& enthalpy_RHS_arr = advect_enthalpy ? enthalpy_RHS[lev]->array(mfi) : dummy_arr;
+
+              Array4<Real const> const& X_gk_n  = solve_species ? ld.X_gk->const_array(mfi) : const_dummy_arr;
+              Array4<Real const> const& X_gk_o  = solve_species ? ld.X_gko->const_array(mfi) : const_dummy_arr;
+              Array4<Real const> const& h_g_n   = advect_enthalpy ? ld.h_g->const_array(mfi) : const_dummy_arr;
+              Array4<Real const> const& h_g_o   = advect_enthalpy ? ld.h_go->const_array(mfi) : const_dummy_arr;
               Array4<Real const> const& rho_n   = ld.ro_g->const_array(mfi);
               Array4<Real const> const& rho_o   = ld.ro_go->const_array(mfi);
               Array4<Real const> const& epg     = ld.ep_g->const_array(mfi);
-              Array4<Real const> const& dhdt_o  = conv_s_old[lev]->const_array(mfi);
-              Array4<Real const> const& dXdt_o  = conv_X_old[lev]->const_array(mfi);
+
+              Array4<Real const> const& dhdt_o  = advect_enthalpy ? conv_s_old[lev]->const_array(mfi) : const_dummy_arr;
+              Array4<Real const> const& dXdt_o  = solve_species ? conv_X_old[lev]->const_array(mfi) : const_dummy_arr;
 
               const Real Dpressure_Dt = rhs_pressure_g_old[lev];
 
+              const int l_solve_species = solve_species;
+              const int l_advect_enthalpy = advect_enthalpy;
+
               amrex::ParallelFor(bx, [species_RHS_arr,enthalpy_RHS_arr,X_gk_n,
                   X_gk_o,h_g_n,h_g_o,rho_n,rho_o,epg,dhdt_o,dXdt_o,l_dt,nspecies_g,
-                  closed_system,Dpressure_Dt]
+                  closed_system,Dpressure_Dt,l_solve_species,l_advect_enthalpy]
                 AMREX_GPU_DEVICE (int i, int j, int k) noexcept
               {
                 const Real epg_loc = epg(i,j,k);
                 const Real ro_g_n  = rho_n(i,j,k);
                 const Real ro_g_o  = rho_o(i,j,k);
 
-                enthalpy_RHS_arr(i,j,k) =
-                  epg_loc*(ro_g_n*h_g_n(i,j,k) - ro_g_o*h_g_o(i,j,k)) / l_dt - dhdt_o(i,j,k,1);
+                if (l_advect_enthalpy) {
+                  enthalpy_RHS_arr(i,j,k) =
+                    epg_loc*(ro_g_n*h_g_n(i,j,k) - ro_g_o*h_g_o(i,j,k)) / l_dt - dhdt_o(i,j,k,1);
 
-                if (closed_system)
-                  enthalpy_RHS_arr(i,j,k) -= epg_loc*Dpressure_Dt;
+                  if (closed_system)
+                    enthalpy_RHS_arr(i,j,k) -= epg_loc*Dpressure_Dt;
+                }
 
-                for (int n_g(0); n_g < nspecies_g; ++n_g) {
-                  species_RHS_arr(i,j,k,n_g) = 
-                    epg_loc*(ro_g_n*X_gk_n(i,j,k,n_g) - ro_g_o*X_gk_o(i,j,k,n_g)) / l_dt - dXdt_o(i,j,k,n_g);
+                if (l_solve_species) {
+                  for (int n_g(0); n_g < nspecies_g; ++n_g) {
+                    species_RHS_arr(i,j,k,n_g) = 
+                      epg_loc*(ro_g_n*X_gk_n(i,j,k,n_g) - ro_g_o*X_gk_o(i,j,k,n_g)) / l_dt - dXdt_o(i,j,k,n_g);
+                  }
                 }
               });
           } // mfi
