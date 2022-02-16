@@ -8,27 +8,27 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
 # This could be moved to AMReX Make.defs ☝
 ifeq ($(USE_CSG),TRUE)
-  $(info Loading $(TOP)/tools/GNUMake/packages/Make.csgeb...)
-  include        $(TOP)/tools/GNUMake/packages/Make.csgeb
+$(info Loading $(TOP)/tools/GNUMake/packages/Make.csgeb...)
+include        $(TOP)/tools/GNUMake/packages/Make.csgeb
 endif
 
 #These are the directories in mfix/src_cc
-Bdirs 	:= src
-Bdirs 	+= src/des
-Bdirs 	+= src/io
-Bdirs 	+= src/convection
-Bdirs 	+= src/diffusion
-Bdirs 	+= src/pic
-Bdirs 	+= src/projection
-Bdirs 	+= src/leveldata
-Bdirs 	+= src/setup
-Bdirs 	+= src/util
-Bdirs 	+= src/interpolation
-Bdirs 	+= src/deposition
-Bdirs 	+= src/mods
-Bdirs 	+= src/eb
-Bdirs 	+= src/usr
-Bdirs 	+= src/timestepping
+Bdirs	:= src
+Bdirs	+= src/des
+Bdirs	+= src/io
+Bdirs	+= src/convection
+Bdirs	+= src/diffusion
+Bdirs	+= src/pic
+Bdirs	+= src/projection
+Bdirs	+= src/leveldata
+Bdirs	+= src/setup
+Bdirs	+= src/util
+Bdirs	+= src/interpolation
+Bdirs	+= src/deposition
+Bdirs	+= src/mods
+Bdirs	+= src/eb
+Bdirs	+= src/usr
+Bdirs	+= src/timestepping
 
 Bpack	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir)/Make.package)
 Blocs	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir))
@@ -93,12 +93,22 @@ INCLUDE_LOCATIONS +=  $(AMREX_HOME)/Tools/C_scripts
 
 AMReX_buildInfo.cpp:
 	$(AMREX_HOME)/Tools/C_scripts/makebuildinfo_C.py \
-          --amrex_home "$(AMREX_HOME)" \
-          --COMP "$(COMP)" --COMP_VERSION "$(COMP_VERSION)" \
-          --CXX_comp_name "$(CXX)" --CXX_flags "$(CXXFLAGS) $(CPPFLAGS) $(includes)" \
-          --F_comp_name "$(F90)" --F_flags "$(F90FLAGS)" \
-          --link_flags "$(LDFLAGS)" --libraries "$(libraries)" \
-          --GIT "$(TOP) $(AMREX_HOME)"
+	--amrex_home "$(AMREX_HOME)" \
+	--COMP "$(COMP)" --COMP_VERSION "$(COMP_VERSION)" \
+	--CXX_comp_name "$(CXX)" --CXX_flags "$(CXXFLAGS) $(CPPFLAGS) $(includes)" \
+	--F_comp_name "$(F90)" --F_flags "$(F90FLAGS)" \
+	--link_flags "$(LDFLAGS)" --libraries "$(libraries)" \
+	--GIT "$(TOP) $(AMREX_HOME)"
+
+CPPFLAGS += -I$(AMREX_INSTALL_DIR)
+$(TOP)/src/main.cpp: $(AMREX_INSTALL_DIR)/build_info.H
+$(AMREX_INSTALL_DIR)/build_info.H: $(TOP)/tools/CMake/build_info.H.in
+	cat $< \
+	| sed 's/@AMREX_GIT_HASH@/$(shell git -C $(TOP)/subprojects/amrex rev-parse HEAD)/g' \
+	| sed 's/@MFIX_GIT_HASH@/$(shell git -C $(TOP) rev-parse HEAD)/g' \
+	| sed 's/@HYDRO_GIT_HASH@/$(shell git -C $(TOP)/subprojects/AMReX-Hydro rev-parse HEAD)/g' \
+	| sed 's/@CSGEB_GIT_HASH@/$(shell git -C $(TOP)/subprojects/csg-eb rev-parse HEAD)/g' \
+	> $@
 
 vpath %.c   . $(VPATH_LOCATIONS)
 vpath %.cpp . $(VPATH_LOCATIONS)
@@ -113,4 +123,3 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.rules
 
 clean::
 	$(SILENT) $(RM) AMReX_buildInfo.cpp
-

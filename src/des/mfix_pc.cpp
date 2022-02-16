@@ -401,10 +401,10 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         /********************************************************************
          * Particles routines                                               *
          *******************************************************************/
+        BL_PROFILE_VAR("particles_computation", particles_computation);
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-        BL_PROFILE_VAR("particles_computation", particles_computation);
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
             // Timer used for load-balancing
@@ -2070,7 +2070,7 @@ namespace {
   };
 
   typedef std::priority_queue<BidNp, Vector<BidNp>, PairCompare> BidNpHeap;
-};
+}
 
 
 void MFIXParticleContainer::partitionParticleGrids(int lev,
