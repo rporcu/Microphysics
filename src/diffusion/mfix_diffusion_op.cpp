@@ -140,7 +140,12 @@ void DiffusionOp::setup (AmrCore* _amrcore,
     // Define the matrix for the scalar diffusion solve.
     //
     scal_matrix = std::make_unique<MLEBABecLap>(geom, grids, dmap, info, ebfactory);
-    temperature_matrix = std::make_unique<MLEBABecLap>(geom, grids, dmap, info, ebfactory);
+
+    // Turning off multigrid coarsening for temperature matrix
+    // since its only called with "apply" not "solve"
+    temperature_matrix = std::make_unique<MLEBABecLap>(geom, grids, dmap, 
+                                                       LPInfo().setMaxCoarseningLevel(0), 
+                                                       ebfactory);
 
     if (fluid.solve_species) {
       species_matrix = std::make_unique<MLEBABecLap>(geom, grids, dmap, info, ebfactory, nspecies_g);
