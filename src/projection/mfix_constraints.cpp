@@ -199,8 +199,8 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
   Vector< MultiFab* > Theta(finest_level+1);
 
   for (int lev = 0; lev <= finest_level; ++lev) {
-    Sigma[lev] = new MultiFab(grids[lev], dmap[lev], 1, nghost_state(), MFInfo(), *ebfactory[lev]);
-    Theta[lev] = new MultiFab(grids[lev], dmap[lev], 1, nghost_state(), MFInfo(), *ebfactory[lev]);
+    Sigma[lev] = new MultiFab(grids[lev], dmap[lev], 0, rhs[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
+    Theta[lev] = new MultiFab(grids[lev], dmap[lev], 0, rhs[lev]->nGrow(), MFInfo(), *ebfactory[lev]);
 
     Sigma[lev]->setVal(0.);
     Theta[lev]->setVal(0.);

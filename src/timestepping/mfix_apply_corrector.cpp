@@ -170,7 +170,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     Vector<MultiFab> ep_u_mac(finest_level+1), ep_v_mac(finest_level+1), ep_w_mac(finest_level+1);
     Vector<MultiFab> rhs_mac(finest_level+1);
 
-    int ngmac = nghost_mac();
+    int ngmac = 1; //nghost_mac();
 
     for (int lev = 0; lev <= finest_level; ++lev) {
       ep_u_mac[lev].define(amrex::convert(grids[lev],IntVect::TheDimensionVector(0)),
@@ -180,14 +180,14 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       ep_w_mac[lev].define(amrex::convert(grids[lev],IntVect::TheDimensionVector(2)),
                            dmap[lev], 1, ngmac, MFInfo(), *ebfactory[lev]);
 
-      rhs_mac[lev].define(grids[lev], dmap[lev], 1, ngmac, MFInfo(), EBFactory(lev));
-      rhs_mac[lev].setVal(0.);
-
       if (ngmac > 0) {
         ep_u_mac[lev].setBndry(0.0);
         ep_v_mac[lev].setBndry(0.0);
         ep_w_mac[lev].setBndry(0.0);
       }
+
+      rhs_mac[lev].define(grids[lev], dmap[lev], 1, ngmac, MFInfo(), EBFactory(lev));
+      rhs_mac[lev].setVal(0.);
     }
 
 
@@ -1209,8 +1209,11 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     Vector< MultiFab* > S_cc(finest_level+1);
 
     for (int lev(0); lev <= finest_level; ++lev) {
-      depdt[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
-      S_cc[lev] = MFHelpers::createFrom(*m_leveldata[lev]->ep_g, 0.0, 1).release();
+      depdt[lev] = new MultiFab(grids[lev], dmap[lev], 1, ngmac, MFInfo(), EBFactory(lev));
+      S_cc[lev] = new MultiFab(grids[lev], dmap[lev], 1, ngmac, MFInfo(), EBFactory(lev));
+
+      depdt[lev]->setVal(0.);
+      S_cc[lev]->setVal(0.);
     }
 
     if (m_constraint_type == ConstraintType::IncompressibleFluid) {
@@ -1229,7 +1232,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-          for (MFIter mfi(*ld.ep_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
+          for (MFIter mfi(*S_cc[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
           {
               Box const& bx = mfi.tilebox();
 
