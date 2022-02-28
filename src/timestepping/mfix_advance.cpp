@@ -31,8 +31,11 @@ mfix::mfix_project_velocity ()
 
     // Apply projection -- depdt=0 for now
     Vector< MultiFab* > depdt(finest_level+1);
-    for (int lev(0); lev <= finest_level; ++lev)
-      depdt[lev] = MFHelpers::createFrom(*(m_leveldata[lev]->ep_g), 0.0, 1).release();
+
+    for (int lev(0); lev <= finest_level; ++lev) {
+      depdt[lev] = new MultiFab(grids[lev], dmap[lev], 1, 1, MFInfo(), EBFactory(lev));
+      depdt[lev]->setVal(0.);
+    }
 
     mfix_apply_nodal_projection(depdt, time, dummy_dt, dummy_dt, proj_2,
                                 get_vel_g_old(), get_vel_g(), get_p_g(), get_gp(),
