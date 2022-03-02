@@ -1,0 +1,8 @@
+namespace {
+
+// const char* AmrexGitHash() { return "@AMREX_GIT_HASH@"; }
+// const char* MfixGitHash() { return "@MFIX_GIT_HASH@"; }
+const char* HydroGitHash() { return "@HYDRO_GIT_HASH@"; }
+const char* CsgEbGitHash() { return "@CSGEB_GIT_HASH@"; }
+
+}

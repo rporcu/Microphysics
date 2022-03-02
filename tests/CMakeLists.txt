@@ -30,6 +30,7 @@ macro (setup_test _test _suffix _env _input_file )
             add_udfs_to_target( ${_test_exe} ${_udfs} )
 
             target_include_directories(${_test_exe} PUBLIC ${_test_dir} )
+            target_include_directories(${_test_exe} PRIVATE ${PROJECT_BINARY_DIR} )
 
             set_target_properties( ${_test_exe}
                PROPERTIES

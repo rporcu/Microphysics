@@ -1,0 +1,13 @@
+## This file could be moved 👉 AMREX_HOME/Tools/GNUMake/packages/
+
+#######################################################
+# CSGEB (https://mfix.netl.doe.gov/gitlab/exa/csg-eb) #
+#######################################################
+
+CPPFLAGS += -DUSE_CSG
+
+ifdef CSGEB_HOME
+  INCLUDE_LOCATIONS += $(CSGEB_HOME)/include
+  CPPFLAGS += -DCSG_EB
+  LIBRARIES += -lcsgeb -L$(CSGEB_HOME)/lib
+endif

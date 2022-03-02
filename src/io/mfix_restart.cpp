@@ -201,15 +201,46 @@ mfix::Restart (std::string& restart_file,
      ***************************************************************************/
     if (fluid.solve)
     {
-       // Load the field data
-       for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
-       {
-          // Read velocity and pressure gradients
-          MultiFab mf_vel;
-          VisMF::Read(mf_vel, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix, "u_g"));
+      // Load the field data
+      for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
+      {
+        auto replicate_data = [] (MultiFab& dst, MultiFab& src) -> void
+        {
+          if (src.boxArray().size() > 1)
+            amrex::Abort("Replication only works if one initial grid");
 
-          MultiFab mf_gp;
-          VisMF::Read(mf_gp, amrex::MultiFabFileFullPrefix(lev, restart_file, level_prefix, "gpx"));
+          const int ncomp = src.nComp();
+
+          FArrayBox single_fab(src.boxArray()[0], ncomp, The_Pinned_Arena());
+          src.copyTo(single_fab);
+
+#ifdef AMREX_USE_GPU
+          const auto nreals = single_fab.size();
+          const auto nbytes = nreals*sizeof(Real);
+          FArrayBox single_fab_d(single_fab.box(), single_fab.nComp());
+          Gpu::htod_memcpy(single_fab_d.dataPtr(), single_fab.dataPtr(), nbytes);
+#endif
+
+          // Copy and replicate mf into velocity
+          for (MFIter mfi(dst, false); mfi.isValid(); ++mfi)
+          {
+            int ib = mfi.index();
+
+#ifdef AMREX_USE_GPU
+            dst[ib].copy<RunOn::Gpu>(single_fab_d, single_fab_d.box(), 0, mfi.validbox(), 0, ncomp);
+#else
+            dst[ib].copy<RunOn::Host>(single_fab, single_fab.box(), 0, mfi.validbox(), 0, ncomp);
+#endif
+          }
+        };
+
+        {
+          // Read velocity
+          auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
+                                                      level_prefix, "u_g");
+
+          MultiFab mf_vel(The_Pinned_Arena());
+          VisMF::Read(mf_vel, prefix);
 
           if (Nrep == IntVect::TheUnitVector())
           {
@@ -217,189 +248,152 @@ mfix::Restart (std::string& restart_file,
             const int ng_to_copy = 0;
 
             m_leveldata[lev]->vel_g->ParallelCopy(mf_vel, 0, 0, 3, ng_to_copy, ng_to_copy);
+
+          } else {
+
+            mf_vel.FillBoundary(geom[lev].periodicity());
+
+            replicate_data(*(m_leveldata[lev]->vel_g), mf_vel);
+          }
+        }
+
+        {
+          // Read pressure gradients
+          auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
+                                                      level_prefix, "gpx");
+
+          MultiFab mf_gp(The_Pinned_Arena());
+          VisMF::Read(mf_gp, prefix);
+
+          if (Nrep == IntVect::TheUnitVector())
+          {
+            // Simply copy mf_vel into vel_g, mf_gp into gp
+            const int ng_to_copy = 0;
+
             m_leveldata[lev]->gp->ParallelCopy(mf_gp, 0, 0, 3, ng_to_copy, ng_to_copy);
 
           } else {
 
-              if (mf_vel.boxArray().size() > 1)
-                  amrex::Abort("Replication only works if one initial grid");
+            mf_gp.FillBoundary(geom[lev].periodicity());
 
-              mf_vel.FillBoundary(geom[lev].periodicity());
-              mf_gp.FillBoundary(geom[lev].periodicity());
-
-              FArrayBox single_fab_vel(mf_vel.boxArray()[0],3);
-              mf_vel.copyTo(single_fab_vel);
-
-              FArrayBox single_fab_gp ( mf_gp.boxArray()[0],3);
-              mf_gp.copyTo(single_fab_gp);
-
-              // Copy and replicate mf into velocity
-              for (MFIter mfi(*m_leveldata[lev]->vel_g, false); mfi.isValid(); ++mfi)
-              {
-                int ib = mfi.index();
-
-                (*m_leveldata[lev]->vel_g)[ib].copy<RunOn::Host>(single_fab_vel,
-                    single_fab_vel.box(), 0, mfi.validbox(), 0, 3);
-
-                (*m_leveldata[lev]->gp)[ib].copy<RunOn::Host>(single_fab_gp,
-                    single_fab_gp.box(), 0, mfi.validbox(), 0, 3);
-              }
+            replicate_data(*(m_leveldata[lev]->gp), mf_gp);
           }
+        }
 
-       // Read scalar variables
-       ResetIOChkData();
+        // Read scalar variables
+        ResetIOChkData();
 
-       for (int i = 0; i < chkScalarVars.size(); i++ )
-       {
-           if (chkscaVarsName[i] == "level_sets") {
+        for (int i = 0; i < chkScalarVars.size(); i++ )
+        {
+          if (chkscaVarsName[i] == "level_sets") {
 
-               amrex::Print() << "  Skipping " << chkscaVarsName[i] << std::endl;
-               continue;
+            amrex::Print() << "  Skipping " << chkscaVarsName[i] << std::endl;
+            continue;
 
-           } else {
-              amrex::Print() << "  Loading " << chkscaVarsName[i] << std::endl;
+          } else {
+            amrex::Print() << "  Loading " << chkscaVarsName[i] << std::endl;
 
-              MultiFab mf;
-              VisMF::Read(mf,
-                      amrex::MultiFabFileFullPrefix(lev,
-                                                    restart_file, level_prefix,
-                                                    chkscaVarsName[i]),
-                                                    nullptr,
-                                                    ParallelDescriptor::IOProcessorNumber());
+            auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
+                                                        level_prefix, chkscaVarsName[i]);
 
-              if (Nrep == IntVect::TheUnitVector()) {
+            MultiFab mf(The_Pinned_Arena());
+            VisMF::Read(mf, prefix);
 
-                 // Copy from the mf we used to read in to the mf we will use going forward
-                 const int ng_to_copy = 0;
+            if (Nrep == IntVect::TheUnitVector()) {
 
-                 (*(chkScalarVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
+              // Copy from the mf we used to read in to the mf we will use going forward
+              const int ng_to_copy = 0;
 
-              } else {
+              (*(chkScalarVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
-                 if (mf.boxArray().size() > 1)
-                     amrex::Abort("Replication only works if one initial grid");
+            } else {
 
-                 mf.FillBoundary(geom[lev].periodicity());
+              mf.FillBoundary(geom[lev].periodicity());
 
-                 FArrayBox single_fab(mf.boxArray()[0],1);
-                 mf.copyTo(single_fab);
-
-                  // Copy and replicate mf into chkScalarVars
-                  for (MFIter mfi(*(chkScalarVars[i][lev]), false); mfi.isValid(); ++mfi) {
-                      int ib = mfi.index();
-                      (*(chkScalarVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
-                          single_fab.box(), 0, mfi.validbox(), 0, 1);
-                  }
-              }
+              replicate_data(*(chkScalarVars[i][lev]), mf);
+            }
           }
-       }
+        }
 
-       if (advect_enthalpy)
-       {
+        if (advect_enthalpy)
+        {
           auto& fluid_parms = *fluid.parameters;
 
           for (int i = 0; i < chkTVars.size(); i++ )
           {
-             if ( restart_from_cold_flow && chkscaVarsName[i] == "T_g")
-             {
-                 amrex::Print() << "  Setting T_g to T_g0 = " << fluid.T_g0 << std::endl;
-                 m_leveldata[lev]->T_g->setVal(fluid.T_g0);
-                 continue;
+            if (restart_from_cold_flow && chkscaVarsName[i] == "T_g")
+            {
+              amrex::Print() << "  Setting T_g to T_g0 = " << fluid.T_g0 << std::endl;
+              m_leveldata[lev]->T_g->setVal(fluid.T_g0);
+              continue;
 
-             } else if ( restart_from_cold_flow && chkscaVarsName[i] == "h_g") {
+            } else if (restart_from_cold_flow && chkscaVarsName[i] == "h_g") {
 
-                 const Real h_g0 = fluid_parms.calc_h_g<RunOn::Cpu>(fluid.T_g0);
+              const Real h_g0 = fluid_parms.calc_h_g<RunOn::Host>(fluid.T_g0);
 
-                 amrex::Print() << "  Setting h_g to h_g(T_g0) = " << h_g0 << std::endl;
+              amrex::Print() << "  Setting h_g to h_g(T_g0) = " << h_g0 << std::endl;
 
-                 const Real cp_g0 = fluid_parms.calc_cp_g<RunOn::Cpu>(fluid.T_g0);
-                 m_leveldata[lev]->h_g->setVal(fluid.T_g0*cp_g0);
-                 continue;
-             }
+              const Real cp_g0 = fluid_parms.calc_cp_g<RunOn::Host>(fluid.T_g0);
+              m_leveldata[lev]->h_g->setVal(fluid.T_g0*cp_g0);
+              continue;
+            }
 
-             amrex::Print() << "  Loading " << chkTVarsName[i] << std::endl;
+            amrex::Print() << "  Loading " << chkTVarsName[i] << std::endl;
 
-             MultiFab mf;
-             VisMF::Read(mf,
-                     amrex::MultiFabFileFullPrefix(lev,
-                                                   restart_file, level_prefix,
-                                                   chkTVarsName[i]),
-                                                   nullptr,
-                                                   ParallelDescriptor::IOProcessorNumber());
+            auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
+                                                        level_prefix, chkTVarsName[i]);
 
-             if (Nrep == IntVect::TheUnitVector()) {
+            MultiFab mf(The_Pinned_Arena());
+            VisMF::Read(mf, prefix);
 
-                // Copy from the mf we used to read in to the mf we will use
-                // going forward
-                const int ng_to_copy = 0;
+            if (Nrep == IntVect::TheUnitVector()) {
 
-                (*(chkTVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
+              // Copy from the mf we used to read in to the mf we will use
+              // going forward
+              const int ng_to_copy = 0;
 
-             } else {
+              (*(chkTVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
-                if (mf.boxArray().size() > 1)
-                    amrex::Abort("Replication only works if one initial grid");
+            } else {
 
-                mf.FillBoundary(geom[lev].periodicity());
+              mf.FillBoundary(geom[lev].periodicity());
 
-                FArrayBox single_fab(mf.boxArray()[0],1);
-                mf.copyTo(single_fab);
-
-                 // Copy and replicate mf into chkScalarVars
-                 for (MFIter mfi(*(chkTVars[i][lev]), false); mfi.isValid(); ++mfi) {
-                     int ib = mfi.index();
-                     (*(chkTVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
-                         single_fab.box(), 0, mfi.validbox(), 0, 1);
-                 }
-               }
-             }
+              replicate_data(*(chkTVars[i][lev]), mf);
+            }
           }
+        }
 
-       if (solve_species)
-       {
+        if (solve_species)
+        {
           for (int i = 0; i < chkSpeciesVars.size(); i++ )
           {
-             amrex::Print() << "  Loading " << chkSpeciesVarsName[i] << std::endl;
+            amrex::Print() << "  Loading " << chkSpeciesVarsName[i] << std::endl;
 
-             MultiFab mf;
-             VisMF::Read(mf,
-                     amrex::MultiFabFileFullPrefix(lev,
-                                                   restart_file, level_prefix,
-                                                   chkSpeciesVarsName[i]),
-                                                   nullptr,
-                                                   ParallelDescriptor::IOProcessorNumber());
+            auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
+                                                        level_prefix, chkSpeciesVarsName[i]);
 
-             if (Nrep == IntVect::TheUnitVector()) {
+            MultiFab mf(The_Pinned_Arena());
+            VisMF::Read(mf, prefix);
 
-                // Copy from the mf we used to read in to the mf we will use going forward
-                const int ng_to_copy = 0;
+            if (Nrep == IntVect::TheUnitVector()) {
 
-                (*(chkSpeciesVars[i][lev])).ParallelCopy(mf, 0, 0, fluid.nspecies,
-                    ng_to_copy, ng_to_copy);
+              // Copy from the mf we used to read in to the mf we will use going forward
+              const int ng_to_copy = 0;
 
-             } else {
+              (*(chkSpeciesVars[i][lev])).ParallelCopy(mf, 0, 0, fluid.nspecies,
+                                                       ng_to_copy, ng_to_copy);
 
-                if (mf.boxArray().size() > 1)
-                    amrex::Abort("Replication only works if one initial grid");
+            } else {
 
-                mf.FillBoundary(geom[lev].periodicity());
+              mf.FillBoundary(geom[lev].periodicity());
 
-                FArrayBox single_fab(mf.boxArray()[0], fluid.nspecies);
-                mf.copyTo(single_fab);
+              replicate_data(*(chkSpeciesVars[i][lev]), mf);
+            }
+          }
+        }
+      }
 
-                // Copy and replicate mf into chkScalarVars
-                for (MFIter mfi(*(chkSpeciesVars[i][lev]), false); mfi.isValid(); ++mfi) {
-                    int ib = mfi.index();
-                    (*(chkSpeciesVars[i][lev]))[ib].copy<RunOn::Gpu>(single_fab,
-                        single_fab.box(), 0, mfi.validbox(), 0,
-                        fluid.nspecies);
-                }
-             }
-           }
-         }
-       }
-
-       amrex::Print() << "  Finished reading fluid data" << std::endl;
+      amrex::Print() << "  Finished reading fluid data" << std::endl;
     }
 
     // Make sure that the particle BoxArray is the same as the mesh data -- we can

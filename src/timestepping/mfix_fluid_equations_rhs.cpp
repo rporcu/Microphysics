@@ -54,42 +54,13 @@ mfix::mfix_density_rhs (Vector< MultiFab*      > const& rhs,
 void
 mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
                          Vector< MultiFab const*> const& ep_g,
-                         Vector< MultiFab const*> const& ro_g,
-                         Vector< MultiFab*      > const& X_gk,
-                         Vector< MultiFab const*> const& T_g,
+                         Vector< MultiFab const*> const& /*ro_g*/,
+                         Vector< MultiFab*      > const& /*X_gk*/,
+                         Vector< MultiFab const*> const& /*T_g*/,
                          Vector< MultiFab const*> const& chem_txfr)
 {
   for (int lev = 0; lev <= finest_level; lev++)
     rhs[lev]->setVal(0.);
-
-  if (fluid.is_a_mixture) {
-    const int nspecies_g = fluid.nspecies;
-
-    // Temporary for computing other terms of RHS
-    Vector<MultiFab*> lap_hX_gk(nlev, nullptr);
-
-    // Allocate memory for computing fluid species contributio
-    for (int lev(0); lev <= finest_level; lev++) {
-      lap_hX_gk[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies,
-                                    nghost_state(), MFInfo(), *ebfactory[lev]);
-
-      lap_hX_gk[lev]->setVal(0.);
-    }
-
-    // Compute the mixed enthalpy/species term
-    diffusion_op->ComputeLaphX(lap_hX_gk, X_gk, ro_g, ep_g, T_g);
-
-    for (int lev(0); lev <= finest_level; lev++) {
-      // Add the contribution due to the nth specie
-      for (int n(0); n < nspecies_g; n++) {
-        MultiFab::Add(*rhs[lev], *lap_hX_gk[lev], n, 0, 1, rhs[lev]->nGrow());
-      }
-    }
-
-    for (int lev = 0; lev <= finest_level; ++lev) {
-      delete lap_hX_gk[lev];
-    }
-  }
 
   if (reactions.solve) {
     ChemTransfer chem_txfr_idxs(fluid.nspecies, reactions.nreactions);
@@ -118,16 +89,6 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
 
   for (int lev = 0; lev <= finest_level; lev++)
     EB_set_covered(*rhs[lev], 0, rhs[lev]->nComp(), rhs[lev]->nGrow(), 0.);
-}
-
-
-void
-mfix::mfix_scalar_rhs (/*Vector< MultiFab* > const& rhs,*/
-                       Vector< MultiFab const* > const& /*trac*/,
-                       Vector< MultiFab const* > const& /*ep_g*/,
-                       Vector< MultiFab const* > const& /*ro_g*/,
-                       Vector<Real> const& /*mu_s_in*/)
-{
 }
 
 

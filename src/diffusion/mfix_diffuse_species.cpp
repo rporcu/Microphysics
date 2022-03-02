@@ -7,6 +7,7 @@ using namespace amrex;
 // Implicit solve for species mass fraction
 //
 void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
+                                   const Vector< Array< MultiFab*, AMREX_SPACEDIM>>& J_gk,
                                    const Vector< MultiFab* >& ep_ro_g_in,
                                    const Vector< MultiFab* >& /*T_g_in*/,
                                          Vector<BCRec> const& species_h_bcrec,
@@ -128,6 +129,8 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
     solver.setFinalFillBC(true);
 
     solver.solve(GetVecOfPtrs(species_phi), GetVecOfConstPtrs(species_rhs), mg_rtol, mg_atol);
+
+    solver.getFluxes(J_gk, GetVecOfPtrs(species_phi), MLMG::Location::FaceCentroid);
 
     for(int lev = 0; lev <= finest_level; lev++)
     {

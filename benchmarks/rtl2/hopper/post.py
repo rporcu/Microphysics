@@ -7,6 +7,10 @@ import numpy
 
 from rtl2.post import read_avg_values, read_historic_np, read_velocity
 
+from rtl2 import suite
+from rtl2.test_util import git_commit
+from datetime import datetime
+
 NUM_PARTICLES = 12359
 VEL_P_FNAME = "uio_vel_p_0.dat"
 
@@ -14,16 +18,19 @@ VEL_P_FNAME = "uio_vel_p_0.dat"
 def plot(refdata: Path) -> Path:
     running_avg = refdata
     hist_fname = refdata.parent / "mfix.R2016.1.gran.wdf.102219.dat"
-    avg_dat = refdata.parent / "runningave.dat"
+    avg_dat = refdata
 
     refdata = read_historic_np(Path(hist_fname))
     tzero = t_zero()
     tz = "{:16.8}".format(tzero)
 
     assert avg_dat.is_file()
-    with open(avg_dat, "a") as run_avg:
-        run_avg.write(tz)
-        run_avg.write("\n")
+    if not suite.get_suite().post_only:
+        time = datetime.now().astimezone().isoformat()
+        branch, sha = git_commit(suite.get_suite().sourceDir)
+        with open(avg_dat, "a") as run_avg:
+            run_avg.write(f"{tz}\t{time}\t{sha}\t{branch}\n")
+
     x_avg_vals, y_avg_vals = read_avg_values(running_avg)  # includes latest value that was just appended
 
     plt.rc('text', usetex=True)
