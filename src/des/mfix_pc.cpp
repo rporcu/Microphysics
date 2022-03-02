@@ -2117,7 +2117,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
   }
 
   // count particles in fluid grid
-  Gpu::DeviceVector<int> pcount_fbox(fba.size(), 0);
+  Vector<int> pcount_fbox(fba.size(), 0);
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
     // index of corresponding fluid box
     int ifbox = m_pboxid_to_fboxid[pti.index()];

@@ -383,7 +383,7 @@ public:
     static int domain_bc[6];
 
     int m_total_numparticle = 0;
-    amrex::Gpu::DeviceVector<int> m_pboxid_to_fboxid;
+    amrex::Vector<int> m_pboxid_to_fboxid;
 
     static void ReadStaticParameters ();
 
