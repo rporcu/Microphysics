@@ -59,7 +59,11 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
     setIntCommComp(1, false); // cpu
 #endif
     setIntCommComp(2, true);  // phase
+#ifdef AMREX_USE_GPU
+    setIntCommComp(3, true); // state
+#else
     setIntCommComp(3, false); // state
+#endif
 
     nlev = amr_core->maxLevel() + 1;
 
