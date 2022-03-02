@@ -1,4 +1,5 @@
 #include "AMReX_buildInfo.H"
+#include "build_info.H"
 #include <mfix.H>
 
 //namespace
@@ -48,11 +49,14 @@ void writeBuildInfo ()
   const char* githash1 = buildInfoGetGitHash(1);
   const char* githash2 = buildInfoGetGitHash(2);
   if (strlen(githash1) > 0) {
-    std::cout << "MFIX-Exa     git describe: " << githash1 << "\n";
+    std::cout << "MFIX-Exa git describe: " << githash1 << "\n";
   }
   if (strlen(githash2) > 0) {
-    std::cout << "AMReX        git describe: " << githash2 << "\n";
+    std::cout << "AMReX    git describe: " << githash2 << "\n";
   }
+
+  std::cout << "AMReX-Hydro  git hash: " << HydroGitHash() << "\n";
+  std::cout << "CSG-EB       git hash: " << CsgEbGitHash() << "\n";
 
   const char* buildgithash = buildInfoGetBuildGitHash();
   const char* buildgitname = buildInfoGetBuildGitName();

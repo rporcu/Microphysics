@@ -2,6 +2,7 @@
 # Solver settings
 
 amrex.fpe_trap_invalid = 1
+amrex.the_arena_init_size=1073741824
 
 #! Fluid solver
 #!-----------------------------------------------------------//
@@ -191,7 +192,7 @@ regions.bed.hi         = 0.0064  0.0080  0.0080
 
 regions.inflow.lo      = 0.0000  0.0000  0.0000
 regions.inflow.hi      = 0.0000  0.0080  0.0080
-                        
+
 regions.outflow.lo     = 0.0080  0.0000  0.0000
 regions.outflow.hi     = 0.0080  0.0080  0.0080
 

@@ -9,6 +9,7 @@
 
 #include <mfix.H>
 
+#include "build_info.H"
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
 #include <mfix_fluid_parms.H>
@@ -19,13 +20,22 @@
 #include "AMReX_Conduit_Blueprint.H"
 #endif
 
-// Set the extend domain flag by default, since the mfix default
-// is different (true) from the amrex default (false)
-// only if its not already specified in the inputs file
+// Set defaults that are different that what ARMeX uses.  We only
+// add them if they are not already specified in the inputs file.
 void add_par () {
-   ParmParse pp("eb2");
-   if(!pp.contains("extend_domain_face")) {
-      pp.add("extend_domain_face",true);
+
+   {// Set the extend domain flag by default
+      ParmParse pp("eb2");
+      if(!pp.contains("extend_domain_face")) {
+         pp.add("extend_domain_face",true);
+      }
+   }
+   {
+      // Disable managed memory for GPUs
+      ParmParse pp("amrex");
+      if(!pp.contains("the_arena_is_managed")) {
+         pp.add("the_arena_is_managed",0);
+      }
    }
 }
 
@@ -62,7 +72,9 @@ int main (int argc, char* argv[])
 
     // Write out the MFIX git hash (the AMReX git hash is already written)
     const char* githash_mfix = buildInfoGetGitHash(1);
-    amrex::Print() << "MFiX git hash: " << githash_mfix<< "\n";
+    amrex::Print() << "   MFiX git describe: " << githash_mfix<< "\n";
+    amrex::Print() << "AMReX-Hydro git hash: " << HydroGitHash() << "\n";
+    amrex::Print() << "     CSG-EB git hash: " << CsgEbGitHash() << "\n";
 
     // Setting format to NATIVE rather than default of NATIVE_32
     FArrayBox::setFormat(FABio::FAB_NATIVE);

@@ -3,7 +3,7 @@
 using ParticleType = MFIXParticleContainer::ParticleType;
 using ParticleTileType = MFIXParticleContainer::ParticleTileType;
 
-void MFIXParticleContainer::usr2_des (int np,
+void MFIXParticleContainer::usr2_des (int,
                                       ParticleTileType& particles)
 {
 // Purpose: This routine is called within the discrete phase time loop
@@ -32,6 +32,6 @@ void MFIXParticleContainer::usr2_des (int np,
     }
 }
 
-void MFIXParticleContainer::usr3_des (int np, void*&)
+void MFIXParticleContainer::usr3_des (int, void*&)
 {
 }
