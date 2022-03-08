@@ -333,9 +333,12 @@ mfix::mfix_add_txfr_explicit (Real dt,
         const int nspecies_g = fluid.nspecies;
         const int fluid_is_a_mixture = fluid.is_a_mixture;
 
+        const int is_IOProc = int(ParallelDescriptor::IOProcessor());
+
         amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
             fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-            volfrac_arr,run_on_device]
+            volfrac_arr,run_on_device,is_IOProc,abstol=newton_abstol,
+            reltol=newton_reltol,maxiter=newton_maxiter]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -414,24 +417,27 @@ mfix::mfix_add_txfr_explicit (Real dt,
             {
               DampedNewton::DampingFactor damping_factor(0., 0.);
               solver_iterations = 
-                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
-                                    1.e-8, 1.e-8, 500);
+                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
+                                    damping_factor(epg_loc, vfrac),
+                                    abstol, reltol, maxiter);
 
-            } if (solver_iterations == 500) {
+            } if (solver_iterations >= maxiter) {
 
               DampedNewton::DampingFactor damping_factor(1., 0.);
               solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
-                                    1.e-7, 1.e-7, 500);
+                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
+                                    damping_factor(epg_loc, vfrac),
+                                    10*abstol, 10*reltol, maxiter);
 
-            } if (solver_iterations == 500) {
+            } if (solver_iterations >= maxiter) {
 
               DampedNewton::DampingFactor damping_factor(1., 1.);
               solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
-                                    1.e-6, 1.e-6, 500);
+                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
+                                    damping_factor(epg_loc, vfrac),
+                                    100*abstol, 100*reltol, maxiter);
 
-            } if (solver_iterations == 500) {
+            } if (solver_iterations >= maxiter) {
               amrex::Abort("Damped-Newton solver did not converge");
             }
 
@@ -516,9 +522,12 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
         const int nspecies_g = fluid.nspecies;
 
+        const int is_IOProc = int(ParallelDescriptor::IOProcessor());
+
         amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
             fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-            volfrac_arr,run_on_device]
+            volfrac_arr,run_on_device,is_IOProc,abstol=newton_abstol,
+            reltol=newton_reltol,maxiter=newton_maxiter]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -598,24 +607,27 @@ mfix::mfix_add_txfr_implicit (Real dt,
             {
               DampedNewton::DampingFactor damping_factor(0., 0.);
               solver_iterations = 
-                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
-                                    1.e-8, 1.e-8, 500);
+                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
+                                    damping_factor(epg_loc, vfrac),
+                                    abstol, reltol, maxiter);
 
-            } if (solver_iterations == 500) {
+            } if (solver_iterations >= maxiter) {
 
               DampedNewton::DampingFactor damping_factor(1., 0.);
               solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
-                                    1.e-7, 1.e-7, 500);
+                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
+                                    damping_factor(epg_loc, vfrac),
+                                    10*abstol, 10*reltol, maxiter);
 
-            } if (solver_iterations == 500) {
+            } if (solver_iterations >= maxiter) {
 
               DampedNewton::DampingFactor damping_factor(1., 1.);
               solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, damping_factor(epg_loc, vfrac),
-                                    1.e-6, 1.e-6, 500);
+                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
+                                    damping_factor(epg_loc, vfrac),
+                                    100*abstol, 100*reltol, maxiter);
 
-            } if (solver_iterations == 500) {
+            } if (solver_iterations >= maxiter) {
               amrex::Abort("Damped-Newton solver did not converge");
             }
 

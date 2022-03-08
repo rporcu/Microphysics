@@ -86,6 +86,8 @@ void DampedNewton::solve(const amrex::Vector<amrex::MultiFab*>& solution,
     update[lev]->setVal(0.);
   }
 
+  const int is_IOProc = int(ParallelDescriptor::IOProcessor());
+
   do {
     partial_R(gradient, solution);
 
@@ -166,7 +168,7 @@ void DampedNewton::solve(const amrex::Vector<amrex::MultiFab*>& solution,
                               solution[lev]->nComp(), solution[lev]->nGrow());
       }
 
-      NonConvergingExc exception(iter, norm(update), norm(residue));
+      NonConvergingExc exception(is_IOProc, iter, norm(update), norm(residue));
       throw exception;
     }
   } while(//(norm(residue) > residue_rel_tol) ||

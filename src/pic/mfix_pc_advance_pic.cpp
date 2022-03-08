@@ -17,6 +17,12 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
   const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
+  const int is_IOProc = int(ParallelDescriptor::IOProcessor());
+
+  const Real abstol = newton_abstol;
+  const Real reltol = newton_reltol;
+  const int maxiter = newton_maxiter;
+
   for (int lev = 0; lev < nlev; lev ++ )
   {
 
@@ -70,7 +76,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
         [pstruct,p_realarray,p_intarray,ptile_data,dt,nspecies_s,nreactions,idx_X_sn,
          idx_mass_sn_txfr,update_mass,update_temperature,solve_reactions,idx_h_s_txfr,
          solid_is_a_mixture,local_advect_enthalpy,enthalpy_source,solids_parms,
-         run_on_device]
+         run_on_device,is_IOProc,abstol,reltol,maxiter]
         AMREX_GPU_DEVICE (int lp) noexcept
       {
         auto& p = pstruct[lp];
@@ -244,7 +250,8 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
             const Real damping_factor = 1.;
 
-            DampedNewton::solve(Tp_new, R, partial_R, damping_factor, 1.e-6, 1.e-6);
+            DampedNewton::solve(Tp_new, R, partial_R, is_IOProc,
+                                damping_factor, abstol, reltol, maxiter);
 
             p_realarray[SoArealData::temperature][lp] = Tp_new;
 

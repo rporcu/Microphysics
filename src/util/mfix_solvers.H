@@ -28,24 +28,29 @@ class DampedNewton {
     // TODO description
     class NonConvergingExc : public std::exception {
       public:
-        NonConvergingExc(const int iter,
+        NonConvergingExc(const int is_IOProc,
+                         const int iter,
                          const amrex::Real update_norm,
                          const amrex::Real residue_norm)
-          : m_iter(iter)
+          : m_is_IOProc(is_IOProc)
+          , m_iter(iter)
           , m_update_norm(update_norm)
           , m_residue_norm(residue_norm)
         {}
 
         virtual const char* what() const throw()
         {
-          std::printf("Damped-Newton total iterations = %d\n", m_iter);
-          std::printf("Damped-Newton update norm = %e\n", m_update_norm);
-          std::printf("Damped-Newton residue norm = %e\n", m_residue_norm);
+          if (m_is_IOProc) {
+            std::printf("Damped-Newton total iterations = %d\n", m_iter);
+            std::printf("Damped-Newton update norm = %e\n", m_update_norm);
+            std::printf("Damped-Newton residue norm = %e\n", m_residue_norm);
+          }
 
           return "Damped-Newton solver did not converge";
         }
 
       private:
+        const int m_is_IOProc;
         const int m_iter;
         const amrex::Real m_update_norm;
         const amrex::Real m_residue_norm;
@@ -88,10 +93,11 @@ class DampedNewton {
     int solve(amrex::Real& solution_new,
               ResidueFunc& R,
               GradientFunc& partial_R,
-              amrex::Real damping_factor = 1.,
-              const amrex::Real /*abs_tol*/ = 1.e-8,
-              const amrex::Real rel_tol = 1.e-8,
-              const int max_iterations = 100)
+              const int is_IOProc,
+              amrex::Real damping_factor,
+              const amrex::Real /*abs_tol*/,
+              const amrex::Real rel_tol,
+              const int max_iterations)
     {
       amrex::Real solution_old = solution_new;
       const amrex::Real original_solution(solution_new);
@@ -124,15 +130,17 @@ class DampedNewton {
         if(iter > max_iterations) {
           solution_new = original_solution;
 
+          if (is_IOProc) {
 #ifdef AMREX_USE_GPU
-          AMREX_DEVICE_PRINTF("Damped-Newton total iterations = %d\n", iter);
-          AMREX_DEVICE_PRINTF("Damped-Newton update norm = %e\n", std::abs(update));
-          AMREX_DEVICE_PRINTF("Damped-Newton residue norm = %e\n", std::abs(residue));
+            AMREX_DEVICE_PRINTF("Damped-Newton total iterations = %d\n", iter);
+            AMREX_DEVICE_PRINTF("Damped-Newton update norm = %e\n", std::abs(update));
+            AMREX_DEVICE_PRINTF("Damped-Newton residue norm = %e\n", std::abs(residue));
 #else
-          std::printf("Damped-Newton total iterations = %d\n", iter);
-          std::printf("Damped-Newton update norm = %e\n", std::abs(update));
-          std::printf("Damped-Newton residue norm = %e\n", std::abs(residue));
+            std::printf("Damped-Newton total iterations = %d\n", iter);
+            std::printf("Damped-Newton update norm = %e\n", std::abs(update));
+            std::printf("Damped-Newton residue norm = %e\n", std::abs(residue));
 #endif
+          }
 
           return max_iterations;
         }
@@ -161,10 +169,10 @@ class DampedNewton {
                ResidueMF& R,
                GradientMF& partial_R,
                NormMF& norm,
-               DampingFactor lean_rate = DampingFactor(),
-               const amrex::Real /*abs_tol*/ = 1.e-8,
-               const amrex::Real rel_tol = 1.e-8,
-               const int max_iterations = 100);
+               DampingFactor lean_rate,
+               const amrex::Real abs_tol,
+               const amrex::Real rel_tol,
+               const int max_iterations);
 
 };
 
