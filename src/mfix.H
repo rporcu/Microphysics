@@ -1120,6 +1120,11 @@ public:
     bool m_use_depdt_constraint = false;
     bool m_use_drag_in_projection = false;
 
+    // Tolerances and max iterations for Damped-Newton solver
+    amrex::Real newton_reltol = 1.e-8;
+    amrex::Real newton_abstol = 1.e-8;
+    int newton_maxiter = 500;
+
     // If using Godunov, default to PLM (not PPM)
     bool m_godunov_ppm         = false;
 

@@ -19,7 +19,10 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
                                        const Vector< MultiFab* >& h_g,
                                        const Vector< MultiFab* >& X_gk,
                                        const Vector< MultiFab* >& T_g_on_eb,
-                                       Real dt)
+                                       Real dt,
+                                       const Real abstol,
+                                       const Real reltol,
+                                       const int maxiter)
 {
   BL_PROFILE("DiffusionOp::diffuse_temperature");
 
@@ -409,7 +412,8 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   // Damped Newton solution
   try {
     DampedNewton::DampingFactor damping_factor(0., .25);
-    DampedNewton::solve(T_g, R, partial_R, norm0, damping_factor, 1.e-8, 1.e-8, 500);
+    DampedNewton::solve(T_g, R, partial_R, norm0, damping_factor,
+                        abstol, reltol, maxiter);
 
   } catch (std::exception& first_exc) {
 
@@ -417,7 +421,8 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
     try {
       DampedNewton::DampingFactor damping_factor(0., .5);
-      DampedNewton::solve(T_g, R, partial_R, norm0, damping_factor, 1.e-7, 1.e-7, 500);
+      DampedNewton::solve(T_g, R, partial_R, norm0, damping_factor,
+                          10*abstol, 10*reltol, maxiter);
 
     } catch (std::exception& second_exc) {
 
@@ -425,10 +430,13 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
       try {
         DampedNewton::DampingFactor damping_factor(1., .5);
-        DampedNewton::solve(T_g, R, partial_R, norm0, damping_factor, 1.e-7, 1.e-7, 500);
+        DampedNewton::solve(T_g, R, partial_R, norm0, damping_factor,
+                            100*abstol, 100*reltol, maxiter);
       } catch (std::exception& third_exc) {
 
-        third_exc.what();
+        if (ParallelDescriptor::IOProcessor()) {
+          third_exc.what();
+        }
 
         amrex::Abort("Damped-Newton solver did not converge");
       }

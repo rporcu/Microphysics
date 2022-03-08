@@ -646,6 +646,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         diffusion_op->ComputeDivhJ(div_hJ, h_gk_fc, J_gk, get_T_g_const(), update_enthalpies);
       }
 
+      const int is_IOProc = int(ParallelDescriptor::IOProcessor());
+
       for (int lev(0); lev < nlev; ++lev) {
 
         auto& ld = *m_leveldata[lev];
@@ -694,7 +696,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
               dhdt_o,dhdt_n,h_rhs_o,h_rhs_n,l_dt,lap_T_o,lap_T_n,Dpressure_Dt,
               Dpressure_Dt_old,closed_system,explicit_diffusive_enthalpy,
               fluid_parms,X_gk_n,nspecies_g,fluid_is_a_mixture,flags_arr,
-              volfrac_arr,run_on_device,div_hJ_o,div_hJ_n,l_solve_species]
+              volfrac_arr,run_on_device,div_hJ_o,div_hJ_n,l_solve_species,
+              is_IOProc,abstol=newton_abstol,reltol=newton_reltol,
+              maxiter=newton_maxiter]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -793,24 +797,27 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
               {
                 DampedNewton::DampingFactor damping_factor(0., 0.);
                 solver_iterations = 
-                  DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
-                                      1.e-8, 1.e-8, 500);
+                  DampedNewton::solve(Tg, R, partial_R, is_IOProc,
+                                      damping_factor(epg_loc, vfrac),
+                                      abstol, reltol, maxiter);
 
-              } if (solver_iterations == 500) {
+              } if (solver_iterations >= maxiter) {
 
                 DampedNewton::DampingFactor damping_factor(1., 0.);
                 solver_iterations =
-                  DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
-                                      1.e-7, 1.e-7, 500);
+                  DampedNewton::solve(Tg, R, partial_R, is_IOProc,
+                                      damping_factor(epg_loc, vfrac),
+                                      10*abstol, 10*reltol, maxiter);
 
-              } if (solver_iterations == 500) {
+              } if (solver_iterations >= maxiter) {
 
                 DampedNewton::DampingFactor damping_factor(1., 1.);
                 solver_iterations =
-                  DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
-                                      1.e-6, 1.e-6, 500);
+                  DampedNewton::solve(Tg, R, partial_R, is_IOProc,
+                                      damping_factor(epg_loc, vfrac),
+                                      100*abstol, 100*reltol, maxiter);
 
-              } if (solver_iterations == 500) {
+              } if (solver_iterations >= maxiter) {
                 amrex::Abort("Damped-Newton solver did not converge");
               }
 
@@ -829,6 +836,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         auto& fluid_parms = *fluid.parameters;
         const int fluid_is_a_mixture = fluid.is_a_mixture;
         const int nspecies_g = fluid.nspecies;
+
+        const int is_IOProc = int(ParallelDescriptor::IOProcessor());
 
         for (int lev = 0; lev <= finest_level; lev++) {
 
@@ -860,7 +869,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
             amrex::ParallelFor(bx, [ep_g,ro_g_n,h_g_n,T_g_o,T_g_n,lap_T_o,l_dt,
                 fluid_parms,fluid_is_a_mixture,nspecies_g,X_gk_n,volfrac_arr,
-                flags_arr,run_on_device]
+                flags_arr,run_on_device,is_IOProc,abstol=newton_abstol,
+                reltol=newton_reltol,maxiter=newton_maxiter]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -936,24 +946,27 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                 {
                   DampedNewton::DampingFactor damping_factor(0., 0.);
                   solver_iterations = 
-                    DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
-                                        1.e-8, 1.e-8, 500);
+                    DampedNewton::solve(Tg, R, partial_R, is_IOProc,
+                                        damping_factor(epg_loc, vfrac),
+                                        abstol, reltol, maxiter);
 
-                } if (solver_iterations == 500) {
+                } if (solver_iterations >= maxiter) {
 
                   DampedNewton::DampingFactor damping_factor(1., 0.);
                   solver_iterations =
-                    DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
-                                        1.e-7, 1.e-7, 500);
+                    DampedNewton::solve(Tg, R, partial_R, is_IOProc,
+                                        damping_factor(epg_loc, vfrac),
+                                        10*abstol, 10*reltol, maxiter);
 
-                } if (solver_iterations == 500) {
+                } if (solver_iterations >= maxiter) {
 
                   DampedNewton::DampingFactor damping_factor(1., 1.);
                   solver_iterations =
-                    DampedNewton::solve(Tg, R, partial_R, damping_factor(epg_loc, vfrac),
-                                        1.e-6, 1.e-6, 500);
+                    DampedNewton::solve(Tg, R, partial_R, is_IOProc,
+                                        damping_factor(epg_loc, vfrac),
+                                        100*abstol, 100*reltol, maxiter);
 
-                } if (solver_iterations == 500) {
+                } if (solver_iterations >= maxiter) {
                   amrex::Abort("Damped-Newton solver did not converge");
                 }
 
@@ -968,7 +981,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
         // NOTE: we do this call before multiplying ep_g by ro_g
         diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
-                                          get_h_g(), get_X_gk(), get_T_g_on_eb(), 0.5*l_dt);
+                                          get_h_g(), get_X_gk(), get_T_g_on_eb(), 0.5*l_dt,
+                                          newton_abstol, newton_reltol, newton_maxiter);
 
         // We call the bc routines again to enforce the ext_dir condition
         // on the faces (the diffusion operator can move those to ghost cell centers)

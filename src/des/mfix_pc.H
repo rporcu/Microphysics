@@ -369,12 +369,18 @@ public:
 
     void printGhostParticleCount();
 
+    void ReadParameters();
+
   private:
     int nlev;
 
     int sort_int = -1; // # steps to sort particles
 
     bool reduceGhostParticles = false;
+
+    amrex::Real newton_abstol = 1.e-6;
+    amrex::Real newton_reltol = 1.e-6;
+    int newton_maxiter = 100;
 
     amrex::IntVect max_grid_size{-1};
 
