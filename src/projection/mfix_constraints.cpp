@@ -75,7 +75,7 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
         auto const& ro_g_arr  = adv_enthalpy ? ro_g[lev]->const_array(mfi) : empty_arr;
         auto const& T_g_arr   = adv_enthalpy ? T_g[lev]->const_array(mfi) : empty_arr;
         auto const& X_gk_arr  = fluid_is_a_mixture ? X_gk[lev]->const_array(mfi) : empty_arr;
-        auto const& X_RHS_arr = fluid_is_a_mixture ? species_rhs[lev]->const_array(mfi) : empty_arr;
+        auto const& X_RHS_arr = solve_species ? species_rhs[lev]->const_array(mfi) : empty_arr;
 
         auto const& flags_arr = flags.const_array(mfi);
 
@@ -262,7 +262,7 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
               const Real cp_gk = run_on_device ?
                 fluid_parms.calc_cp_gk<RunOn::Device>(Tg_loc,n) :
                 fluid_parms.calc_cp_gk<RunOn::Host>(Tg_loc,n);
-              
+
               MW_g_loc += X_gk_arr(i,j,k,n) / MW_gk;
               cp_g_loc += X_gk_arr(i,j,k,n) * cp_gk;
             }
