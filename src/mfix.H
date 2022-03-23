@@ -265,23 +265,33 @@ class mfix : public AmrCore
                                   Vector< MultiFab* > const& gp_in,
                                   Vector< MultiFab* > const& T_g_in);
 
-    void mfix_add_txfr_explicit (Real dt,
-                                 amrex::Vector<amrex::MultiFab*      > const& vel_in,
-                                 amrex::Vector<amrex::MultiFab*      > const& h_g_in,
-                                 amrex::Vector<amrex::MultiFab*      > const& T_g_in,
-                                 amrex::Vector<amrex::MultiFab const*> const& X_gk_in,
-                                 amrex::Vector<amrex::MultiFab const*> const& txfr_in,
-                                 amrex::Vector<amrex::MultiFab const*> const& rho_in,
-                                 amrex::Vector<amrex::MultiFab const*> const& ep_g_in);
+    void mfix_add_vel_txfr_explicit (Real dt,
+                                     amrex::Vector<amrex::MultiFab*      > const& vel_in,
+                                     amrex::Vector<amrex::MultiFab const*> const& txfr_in,
+                                     amrex::Vector<amrex::MultiFab const*> const& rho_in,
+                                     amrex::Vector<amrex::MultiFab const*> const& ep_g_in);
 
-    void mfix_add_txfr_implicit (amrex::Real dt,
-                                 amrex::Vector<amrex::MultiFab*      > const& vel_in,
-                                 amrex::Vector<amrex::MultiFab*      > const& h_g_in,
-                                 amrex::Vector<amrex::MultiFab*      > const& T_g_in,
-                                 amrex::Vector<amrex::MultiFab const*> const& X_gk_in,
-                                 amrex::Vector<amrex::MultiFab const*> const& txfr_in,
-                                 amrex::Vector<amrex::MultiFab const*> const& rho_in,
-                                 amrex::Vector<amrex::MultiFab const*> const& ep_g_in);
+    void mfix_add_energy_txfr_explicit (Real dt,
+                                        amrex::Vector<amrex::MultiFab*      > const& h_g_in,
+                                        amrex::Vector<amrex::MultiFab*      > const& T_g_in,
+                                        amrex::Vector<amrex::MultiFab const*> const& X_gk_in,
+                                        amrex::Vector<amrex::MultiFab const*> const& txfr_in,
+                                        amrex::Vector<amrex::MultiFab const*> const& rho_in,
+                                        amrex::Vector<amrex::MultiFab const*> const& ep_g_in);
+
+    void mfix_add_vel_txfr_implicit (amrex::Real dt,
+                                     amrex::Vector<amrex::MultiFab*      > const& vel_in,
+                                     amrex::Vector<amrex::MultiFab const*> const& txfr_in,
+                                     amrex::Vector<amrex::MultiFab const*> const& rho_in,
+                                     amrex::Vector<amrex::MultiFab const*> const& ep_g_in);
+
+    void mfix_add_energy_txfr_implicit (amrex::Real dt,
+                                        amrex::Vector<amrex::MultiFab*      > const& h_g_in,
+                                        amrex::Vector<amrex::MultiFab*      > const& T_g_in,
+                                        amrex::Vector<amrex::MultiFab const*> const& X_gk_in,
+                                        amrex::Vector<amrex::MultiFab const*> const& txfr_in,
+                                        amrex::Vector<amrex::MultiFab const*> const& rho_in,
+                                        amrex::Vector<amrex::MultiFab const*> const& ep_g_in);
 
     void mfix_correct_small_cells (Vector< MultiFab*     > const& vel_in,
                                    Vector<MultiFab const*> const& ep_u_mac,

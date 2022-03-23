@@ -788,6 +788,13 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         } // mfi
       } // lev
 
+      // ***********************************************************************
+      // Add the dconvective heat transfer terms implicitly to h_g
+      // ***********************************************************************
+      if (DEM::solve || PIC::solve)
+        mfix_add_energy_txfr_implicit(l_dt, get_h_g(), get_T_g(), get_X_gk_const(),
+            get_txfr_const(), get_ro_g_const(), get_ep_g_const());
+
       if (!l_explicit_diff) {
 
         mfix_set_temperature_bcs(time, get_T_g());
@@ -959,11 +966,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
 
     // *************************************************************************************
-    // Add the drag and convective heat transfer terms implicitly to vel_g and h_g
+    // Add the drag transfer terms implicitly to vel_g
     // *************************************************************************************
     if (DEM::solve || PIC::solve)
-      mfix_add_txfr_implicit(l_dt, get_vel_g(), get_h_g(), get_T_g(), get_X_gk_const(),
-                get_txfr_const(), GetVecOfConstPtrs(density_nph), get_ep_g_const());
+      mfix_add_vel_txfr_implicit(l_dt, get_vel_g(), get_txfr_const(),
+          GetVecOfConstPtrs(density_nph), get_ep_g_const());
 
 
     // *************************************************************************************

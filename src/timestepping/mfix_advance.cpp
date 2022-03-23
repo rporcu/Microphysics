@@ -262,14 +262,11 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 // momentum exchange
 //
 void
-mfix::mfix_add_txfr_explicit (Real dt,
-                              Vector<MultiFab*      > const& vel_in,
-                              Vector<MultiFab*      > const& h_g_in,
-                              Vector<MultiFab*      > const& T_g_in,
-                              Vector<MultiFab const*> const& X_gk_in,
-                              Vector<MultiFab const*> const& txfr_in,
-                              Vector<MultiFab const*> const& rho_in,
-                              Vector<MultiFab const*> const& ep_g_in)
+mfix::mfix_add_vel_txfr_explicit (Real dt,
+                                  Vector<MultiFab*      > const& vel_in,
+                                  Vector<MultiFab const*> const& txfr_in,
+                                  Vector<MultiFab const*> const& rho_in,
+                                  Vector<MultiFab const*> const& ep_g_in)
 {
   /*
      This adds both components of the drag term
@@ -320,132 +317,170 @@ mfix::mfix_add_txfr_explicit (Real dt,
         vel_array(i,j,k,1) = vel_y + drag_1;
         vel_array(i,j,k,2) = vel_z + drag_2;
       });
+    }
+  }
+}
 
-      if(advect_enthalpy) {
+void
+mfix::mfix_add_energy_txfr_explicit (Real dt,
+                                     Vector<MultiFab*      > const& h_g_in,
+                                     Vector<MultiFab*      > const& T_g_in,
+                                     Vector<MultiFab const*> const& X_gk_in,
+                                     Vector<MultiFab const*> const& txfr_in,
+                                     Vector<MultiFab const*> const& rho_in,
+                                     Vector<MultiFab const*> const& ep_g_in)
+{
+  /*
+     This adds both components of the drag term
+     So the drag term we add is beta * (particle_velocity - fluid_velocity)
+                              = drag(0:2) - drag(3) * fluid_velocity
+  */
 
-        Array4<Real      > const& hg_array  = h_g_in[lev]->array(mfi);
-        Array4<Real      > const& Tg_array  = T_g_in[lev]->array(mfi);
-        Array4<Real const> const& Xgk_array = X_gk_in[lev]->const_array(mfi);
+  BL_PROFILE("mfix::mfix_add_txfr_explicit");
 
-        auto const& flags_arr = flags.const_array(mfi);
-        auto const& volfrac_arr = volfrac.const_array(mfi);
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
-        const int nspecies_g = fluid.nspecies;
-        const int fluid_is_a_mixture = fluid.is_a_mixture;
+  auto& fluid_parms = *fluid.parameters;
 
-        const int is_IOProc = int(ParallelDescriptor::IOProcessor());
+  for (int lev = 0; lev <= finest_level; lev++) {
 
-        amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
-            fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-            volfrac_arr,run_on_device,is_IOProc,abstol=newton_abstol,
-            reltol=newton_reltol,maxiter=newton_maxiter]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        {
-          const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+    const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ep_g_in[lev]->Factory());
+    const auto& flags = factory.getMultiEBCellFlagFab();
+    const auto& volfrac = factory.getVolFrac();
 
-          if (!cell_is_covered) {
-            const Real epg_loc = ep_array(i,j,k);
-            const Real vfrac   = volfrac_arr(i,j,k);
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (MFIter mfi(*h_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+      // Tilebox
+      Box bx = mfi.tilebox();
 
-            const Real orop  = dt / (ro_array(i,j,k) * epg_loc);
+      Array4<Real const> const& txfr_array = txfr_in[lev]->array(mfi);
+      Array4<Real const> const&   ro_array = rho_in[lev]->array(mfi);
+      Array4<Real const> const&   ep_array = ep_g_in[lev]->array(mfi);
 
-            const Real Tg_old = Tg_array(i,j,k);
-            const Real Ts     = txfr_array(i,j,k,Transfer::gammaTp);
-            const Real gamma  = txfr_array(i,j,k,Transfer::gamma);
+      Array4<Real      > const& hg_array  = h_g_in[lev]->array(mfi);
+      Array4<Real      > const& Tg_array  = T_g_in[lev]->array(mfi);
+      Array4<Real const> const& Xgk_array = X_gk_in[lev]->const_array(mfi);
 
-            const Real hg = hg_array(i,j,k) + (Ts - gamma * Tg_old) * orop;
-            hg_array(i,j,k) = hg;
+      auto const& flags_arr = flags.const_array(mfi);
+      auto const& volfrac_arr = volfrac.const_array(mfi);
 
-            // ************************************************************
-            // Newton-Raphson solver for solving implicit equation for
-            // temperature
-            // ************************************************************
-            // Residual computation
-            auto R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
-            {
-              Real hg_loc(0);
+      const int nspecies_g = fluid.nspecies;
+      const int fluid_is_a_mixture = fluid.is_a_mixture;
 
-              if (!fluid_is_a_mixture) {
+      const int is_IOProc = int(ParallelDescriptor::IOProcessor());
 
-                hg_loc = run_on_device ?
-                  fluid_parms.calc_h_g<RunOn::Device>(Tg_arg, cell_is_covered) :
-                  fluid_parms.calc_h_g<RunOn::Host>(Tg_arg, cell_is_covered);
+      amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
+          fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
+          volfrac_arr,run_on_device,is_IOProc,abstol=newton_abstol,
+          reltol=newton_reltol,maxiter=newton_maxiter]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
 
-              } else {
+        if (!cell_is_covered) {
+          const Real epg_loc = ep_array(i,j,k);
+          const Real vfrac   = volfrac_arr(i,j,k);
 
-                for (int n(0); n < nspecies_g; ++n) {
-                  const Real h_gk = run_on_device ?
-                    fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg, n, cell_is_covered) :
-                    fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg, n, cell_is_covered);
+          const Real orop  = dt / (ro_array(i,j,k) * epg_loc);
 
-                  hg_loc += Xgk_array(i,j,k,n)*h_gk;
-                }
+          const Real Tg_old = Tg_array(i,j,k);
+          const Real Ts     = txfr_array(i,j,k,Transfer::gammaTp);
+          const Real gamma  = txfr_array(i,j,k,Transfer::gamma);
+
+          const Real hg = hg_array(i,j,k) + (Ts - gamma * Tg_old) * orop;
+          hg_array(i,j,k) = hg;
+
+          // ************************************************************
+          // Newton-Raphson solver for solving implicit equation for
+          // temperature
+          // ************************************************************
+          // Residual computation
+          auto R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+          {
+            Real hg_loc(0);
+
+            if (!fluid_is_a_mixture) {
+
+              hg_loc = run_on_device ?
+                fluid_parms.calc_h_g<RunOn::Device>(Tg_arg, cell_is_covered) :
+                fluid_parms.calc_h_g<RunOn::Host>(Tg_arg, cell_is_covered);
+
+            } else {
+
+              for (int n(0); n < nspecies_g; ++n) {
+                const Real h_gk = run_on_device ?
+                  fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg, n, cell_is_covered) :
+                  fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg, n, cell_is_covered);
+
+                hg_loc += Xgk_array(i,j,k,n)*h_gk;
               }
-
-              return hg_loc - hg;
-            };
-
-            // Partial derivative computation
-            auto partial_R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
-            {
-              Real gradient(0);
-
-              if (!fluid_is_a_mixture) {
-
-                gradient = run_on_device ?
-                  fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
-                  fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
-
-              } else {
-
-                for (int n(0); n < nspecies_g; ++n) {
-                  const Real h_gk = run_on_device ?
-                    fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
-                    fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
-
-                  gradient += Xgk_array(i,j,k,n)*h_gk;
-                }
-              }
-
-              return gradient;
-            };
-
-            Real Tg_new(Tg_old);
-
-            int solver_iterations(0);
-
-            {
-              DampedNewton::DampingFactor damping_factor(0., 0.);
-              solver_iterations = 
-                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
-                                    damping_factor(epg_loc, vfrac),
-                                    abstol, reltol, maxiter);
-
-            } if (solver_iterations >= maxiter) {
-
-              DampedNewton::DampingFactor damping_factor(1., 0.);
-              solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
-                                    damping_factor(epg_loc, vfrac),
-                                    10*abstol, 10*reltol, maxiter);
-
-            } if (solver_iterations >= maxiter) {
-
-              DampedNewton::DampingFactor damping_factor(1., 1.);
-              solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
-                                    damping_factor(epg_loc, vfrac),
-                                    100*abstol, 100*reltol, maxiter);
-
-            } if (solver_iterations >= maxiter) {
-              amrex::Abort("Damped-Newton solver did not converge");
             }
 
+            return hg_loc - hg;
+          };
 
-            Tg_array(i,j,k) = Tg_new;
+          // Partial derivative computation
+          auto partial_R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+          {
+            Real gradient(0);
+
+            if (!fluid_is_a_mixture) {
+
+              gradient = run_on_device ?
+                fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
+                fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
+
+            } else {
+
+              for (int n(0); n < nspecies_g; ++n) {
+                const Real h_gk = run_on_device ?
+                  fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
+                  fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
+
+                gradient += Xgk_array(i,j,k,n)*h_gk;
+              }
+            }
+
+            return gradient;
+          };
+
+          Real Tg_new(Tg_old);
+
+          int solver_iterations(0);
+
+          {
+            DampedNewton::DampingFactor damping_factor(0., 0.);
+            solver_iterations = 
+              DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
+                                  damping_factor(epg_loc, vfrac),
+                                  abstol, reltol, maxiter);
+
+          } if (solver_iterations >= maxiter) {
+
+            DampedNewton::DampingFactor damping_factor(1., 0.);
+            solver_iterations =
+              DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
+                                  damping_factor(epg_loc, vfrac),
+                                  10*abstol, 10*reltol, maxiter);
+
+          } if (solver_iterations >= maxiter) {
+
+            DampedNewton::DampingFactor damping_factor(1., 1.);
+            solver_iterations =
+              DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
+                                  damping_factor(epg_loc, vfrac),
+                                  100*abstol, 100*reltol, maxiter);
+
+          } if (solver_iterations >= maxiter) {
+            amrex::Abort("Damped-Newton solver did not converge");
           }
-        });
-      }
+
+
+          Tg_array(i,j,k) = Tg_new;
+        }
+      });
     }
   }
 }
@@ -456,14 +491,11 @@ mfix::mfix_add_txfr_explicit (Real dt,
 // momentum exchange
 //
 void
-mfix::mfix_add_txfr_implicit (Real dt,
-                              Vector<MultiFab*      > const& vel_in,
-                              Vector<MultiFab*      > const& h_g_in,
-                              Vector<MultiFab*      > const& T_g_in,
-                              Vector<MultiFab const*> const& X_gk_in,
-                              Vector<MultiFab const*> const& txfr_in,
-                              Vector<MultiFab const*> const& rho_in,
-                              Vector<MultiFab const*> const& ep_g_in)
+mfix::mfix_add_vel_txfr_implicit (Real dt,
+                                  Vector<MultiFab*      > const& vel_in,
+                                  Vector<MultiFab const*> const& txfr_in,
+                                  Vector<MultiFab const*> const& rho_in,
+                                  Vector<MultiFab const*> const& ep_g_in)
 {
   /*
      This adds both components of the drag term
@@ -471,7 +503,7 @@ mfix::mfix_add_txfr_implicit (Real dt,
                               = drag(0:2) - drag(3) * fluid_velocity
   */
 
-  BL_PROFILE("mfix::mfix_add_txfr_implicit");
+  BL_PROFILE("mfix::mfix_add_vel_txfr_implicit");
 
   const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
@@ -506,157 +538,196 @@ mfix::mfix_add_txfr_implicit (Real dt,
         vel_array(i,j,k,1) = (vel_array(i,j,k,1) + txfr_array(i,j,k,Transfer::vely) * orop) * denom;
         vel_array(i,j,k,2) = (vel_array(i,j,k,2) + txfr_array(i,j,k,Transfer::velz) * orop) * denom;
       });
+    }
+  }
+}
 
-      if (advect_enthalpy) {
+void
+mfix::mfix_add_energy_txfr_implicit (Real dt,
+                                     Vector<MultiFab*      > const& h_g_in,
+                                     Vector<MultiFab*      > const& T_g_in,
+                                     Vector<MultiFab const*> const& X_gk_in,
+                                     Vector<MultiFab const*> const& txfr_in,
+                                     Vector<MultiFab const*> const& rho_in,
+                                     Vector<MultiFab const*> const& ep_g_in)
+{
+  /*
+     This adds both components of the drag term
+     So the drag term we add is beta * (particle_velocity - fluid_velocity)
+                              = drag(0:2) - drag(3) * fluid_velocity
+  */
 
-        const int fluid_is_a_mixture = fluid.is_a_mixture;
+  BL_PROFILE("mfix::mfix_add_energy_txfr_implicit");
 
-        Array4<Real const> dummy_arr;
+  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
-        Array4<Real      > const& hg_array  = h_g_in[lev]->array(mfi);
-        Array4<Real      > const& Tg_array  = T_g_in[lev]->array(mfi);
-        Array4<Real const> const& Xgk_array = fluid_is_a_mixture ? X_gk_in[lev]->const_array(mfi) : dummy_arr;
+  auto& fluid_parms = *fluid.parameters;
 
-        auto const& flags_arr = flags.const_array(mfi);
-        auto const& volfrac_arr = volfrac.const_array(mfi);
+  for (int lev = 0; lev <= finest_level; lev++) {
+    const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ep_g_in[lev]->Factory());
+    const auto& flags = factory.getMultiEBCellFlagFab();
 
-        const int nspecies_g = fluid.nspecies;
+    const auto& volfrac = factory.getVolFrac();
 
-        const int is_IOProc = int(ParallelDescriptor::IOProcessor());
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+    for (MFIter mfi(*h_g_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
-        amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
-            fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-            volfrac_arr,run_on_device,is_IOProc,abstol=newton_abstol,
-            reltol=newton_reltol,maxiter=newton_maxiter]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        {
-          const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
+      // Tilebox
+      Box bx = mfi.tilebox();
 
-          if (!cell_is_covered) {
+      Array4<Real const> const& txfr_array = txfr_in[lev]->const_array(mfi);
+      Array4<Real const> const& ro_array   = rho_in[lev]->const_array(mfi);
+      Array4<Real const> const& ep_array   = ep_g_in[lev]->const_array(mfi);
 
-            const Real hg = hg_array(i,j,k);
+      const int fluid_is_a_mixture = fluid.is_a_mixture;
 
-            const Real gammaTp = txfr_array(i,j,k,Transfer::gammaTp);
-            const Real gamma = txfr_array(i,j,k,Transfer::gamma);
+      Array4<Real const> dummy_arr;
 
-            const Real epg_loc = ep_array(i,j,k);
-            const Real vfrac   = volfrac_arr(i,j,k);
+      Array4<Real      > const& hg_array  = h_g_in[lev]->array(mfi);
+      Array4<Real      > const& Tg_array  = T_g_in[lev]->array(mfi);
+      Array4<Real const> const& Xgk_array = fluid_is_a_mixture ? X_gk_in[lev]->const_array(mfi) : dummy_arr;
 
-            const Real ep_ro_g = epg_loc*ro_array(i,j,k);
+      auto const& flags_arr = flags.const_array(mfi);
+      auto const& volfrac_arr = volfrac.const_array(mfi);
 
-            // ************************************************************
-            // Newton-Raphson solver for solving implicit equation for
-            // temperature
-            // ************************************************************
-            // Residual computation
-            auto R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
-            {
-              Real hg_loc(0);
+      const int nspecies_g = fluid.nspecies;
 
-              if (!fluid_is_a_mixture) {
+      const int is_IOProc = int(ParallelDescriptor::IOProcessor());
 
-                hg_loc = run_on_device ?
-                  fluid_parms.calc_h_g<RunOn::Device>(Tg_arg, cell_is_covered) :
-                  fluid_parms.calc_h_g<RunOn::Host>(Tg_arg, cell_is_covered);
+      amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
+          fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
+          volfrac_arr,run_on_device,is_IOProc,abstol=newton_abstol,
+          reltol=newton_reltol,maxiter=newton_maxiter]
+        AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+        const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
 
-              } else {
+        if (!cell_is_covered) {
 
-                for (int n(0); n < nspecies_g; ++n) {
-                  const Real h_gk = run_on_device ?
-                    fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg, n, cell_is_covered) :
-                    fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg, n, cell_is_covered);
+          const Real hg = hg_array(i,j,k);
 
-                  hg_loc += Xgk_array(i,j,k,n)*h_gk;
-                }
-              }
+          const Real gammaTp = txfr_array(i,j,k,Transfer::gammaTp);
+          const Real gamma = txfr_array(i,j,k,Transfer::gamma);
 
-              return ep_ro_g*(hg_loc - hg) + dt*gamma*Tg_arg - dt*gammaTp;
-            };
+          const Real epg_loc = ep_array(i,j,k);
+          const Real vfrac   = volfrac_arr(i,j,k);
 
-            // Partial derivative computation
-            auto partial_R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
-            {
-              Real gradient(0);
+          const Real ep_ro_g = epg_loc*ro_array(i,j,k);
 
-              if (!fluid_is_a_mixture) {
-
-                gradient = run_on_device ?
-                  fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
-                  fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
-
-              } else {
-
-                for (int n(0); n < nspecies_g; ++n) {
-                  const Real h_gk = run_on_device ?
-                    fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
-                    fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
-
-                  gradient += Xgk_array(i,j,k,n)*h_gk;
-                }
-              }
-
-              return ep_ro_g*gradient + dt*gamma;
-            };
-
-            Real Tg_old = Tg_array(i,j,k);
-
-            Real Tg_new(Tg_old);
-
-            int solver_iterations(0);
-
-            {
-              DampedNewton::DampingFactor damping_factor(0., 0.);
-              solver_iterations = 
-                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
-                                    damping_factor(epg_loc, vfrac),
-                                    abstol, reltol, maxiter);
-
-            } if (solver_iterations >= maxiter) {
-
-              DampedNewton::DampingFactor damping_factor(1., 0.);
-              solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
-                                    damping_factor(epg_loc, vfrac),
-                                    10*abstol, 10*reltol, maxiter);
-
-            } if (solver_iterations >= maxiter) {
-
-              DampedNewton::DampingFactor damping_factor(1., 1.);
-              solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
-                                    damping_factor(epg_loc, vfrac),
-                                    100*abstol, 100*reltol, maxiter);
-
-            } if (solver_iterations >= maxiter) {
-              amrex::Abort("Damped-Newton solver did not converge");
-            }
-
-
-            Tg_array(i,j,k) = Tg_new;
-
-            Real hg_new(0.);
+          // ************************************************************
+          // Newton-Raphson solver for solving implicit equation for
+          // temperature
+          // ************************************************************
+          // Residual computation
+          auto R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+          {
+            Real hg_loc(0);
 
             if (!fluid_is_a_mixture) {
 
-              hg_new = run_on_device ?
-                fluid_parms.calc_h_g<RunOn::Device>(Tg_new, cell_is_covered) :
-                fluid_parms.calc_h_g<RunOn::Host>(Tg_new, cell_is_covered);
+              hg_loc = run_on_device ?
+                fluid_parms.calc_h_g<RunOn::Device>(Tg_arg, cell_is_covered) :
+                fluid_parms.calc_h_g<RunOn::Host>(Tg_arg, cell_is_covered);
 
             } else {
 
               for (int n(0); n < nspecies_g; ++n) {
                 const Real h_gk = run_on_device ?
-                  fluid_parms.calc_h_gk<RunOn::Device>(Tg_new, n, cell_is_covered) :
-                  fluid_parms.calc_h_gk<RunOn::Host>(Tg_new, n, cell_is_covered);
+                  fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg, n, cell_is_covered) :
+                  fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg, n, cell_is_covered);
 
-                hg_new += Xgk_array(i,j,k,n)*h_gk;
+                hg_loc += Xgk_array(i,j,k,n)*h_gk;
               }
             }
 
-            hg_array(i,j,k) = hg_new;
+            return ep_ro_g*(hg_loc - hg) + dt*gamma*Tg_arg - dt*gammaTp;
+          };
+
+          // Partial derivative computation
+          auto partial_R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+          {
+            Real gradient(0);
+
+            if (!fluid_is_a_mixture) {
+
+              gradient = run_on_device ?
+                fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
+                fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
+
+            } else {
+
+              for (int n(0); n < nspecies_g; ++n) {
+                const Real h_gk = run_on_device ?
+                  fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
+                  fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
+
+                gradient += Xgk_array(i,j,k,n)*h_gk;
+              }
+            }
+
+            return ep_ro_g*gradient + dt*gamma;
+          };
+
+          Real Tg_old = Tg_array(i,j,k);
+
+          Real Tg_new(Tg_old);
+
+          int solver_iterations(0);
+
+          {
+            DampedNewton::DampingFactor damping_factor(0., 0.);
+            solver_iterations = 
+              DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
+                                  damping_factor(epg_loc, vfrac),
+                                  abstol, reltol, maxiter);
+
+          } if (solver_iterations >= maxiter) {
+
+            DampedNewton::DampingFactor damping_factor(1., 0.);
+            solver_iterations =
+              DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
+                                  damping_factor(epg_loc, vfrac),
+                                  10*abstol, 10*reltol, maxiter);
+
+          } if (solver_iterations >= maxiter) {
+
+            DampedNewton::DampingFactor damping_factor(1., 1.);
+            solver_iterations =
+              DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
+                                  damping_factor(epg_loc, vfrac),
+                                  100*abstol, 100*reltol, maxiter);
+
+          } if (solver_iterations >= maxiter) {
+            amrex::Abort("Damped-Newton solver did not converge");
           }
-        });
-      }
+
+
+          Tg_array(i,j,k) = Tg_new;
+
+          Real hg_new(0.);
+
+          if (!fluid_is_a_mixture) {
+
+            hg_new = run_on_device ?
+              fluid_parms.calc_h_g<RunOn::Device>(Tg_new, cell_is_covered) :
+              fluid_parms.calc_h_g<RunOn::Host>(Tg_new, cell_is_covered);
+
+          } else {
+
+            for (int n(0); n < nspecies_g; ++n) {
+              const Real h_gk = run_on_device ?
+                fluid_parms.calc_h_gk<RunOn::Device>(Tg_new, n, cell_is_covered) :
+                fluid_parms.calc_h_gk<RunOn::Host>(Tg_new, n, cell_is_covered);
+
+              hg_new += Xgk_array(i,j,k,n)*h_gk;
+            }
+          }
+
+          hg_array(i,j,k) = hg_new;
+        }
+      });
     }
   }
 }

@@ -827,6 +827,12 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         } // mfi
       } // lev
 
+      // ***********************************************************************
+      // Add the drag and enthalpy terms implicitly
+      // ***********************************************************************
+      if (DEM::solve || PIC::solve)
+        mfix_add_energy_txfr_implicit(l_dt, get_h_g(), get_T_g(), get_X_gk_const(),
+            get_txfr_const(), get_ro_g_const(), get_ep_g_const());
 
       // *************************************************************************************
       // Subtract off half of the explicit diffusion terms (see comment above)
@@ -1156,11 +1162,11 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
 
     // *************************************************************************************
-    // Add the drag and enthalpy terms implicitly
+    // Add the drag terms implicitly
     // *************************************************************************************
     if (DEM::solve || PIC::solve)
-      mfix_add_txfr_implicit(l_dt, get_vel_g(), get_h_g(), get_T_g(), get_X_gk_const(),
-             get_txfr_const(), GetVecOfConstPtrs(density_nph), get_ep_g_const());
+      mfix_add_vel_txfr_implicit(l_dt, get_vel_g(), get_txfr_const(),
+          GetVecOfConstPtrs(density_nph), get_ep_g_const());
 
 
     // *************************************************************************
