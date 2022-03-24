@@ -484,6 +484,19 @@ mfix::InitParams ()
         amrex::Abort("Don't know this constraint type!");
       }
     }
+
+    // Check on inputs in case of Ideal Gas EOS
+    if (m_constraint_type == ConstraintType::IdealGasOpenSystem ||
+        m_constraint_type == ConstraintType::IdealGasClosedSystem) {
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.MW_gk0.size() > 0, "Inputs error: fluid molecular_weight not provided");
+
+      for (size_t i(0); i < fluid.MW_gk0.size(); ++i) {
+        if (fluid.MW_gk0[i] < 1.e-15) {
+          Print() << "Invalid molecular weight for species " << fluid.species[i] << "\n";
+          amrex::Abort("Inputs error");
+        }
+      }
+    }
   }
 
   {
