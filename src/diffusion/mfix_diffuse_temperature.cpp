@@ -52,7 +52,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   amrex::Vector<amrex::MultiFab*> T_g_old(finest_level+1, nullptr);
 
   for (int lev(0); lev <= finest_level; ++lev) {
-    T_g_old[lev] = new amrex::MultiFab(grids[lev], dmap[lev], 1, nghost, MFInfo(),
+    T_g_old[lev] = new amrex::MultiFab(grids[lev], dmap[lev], 1, 1/*nghost*/, MFInfo(),
                                        *ebfactory[lev]);
     MultiFab::Copy(*T_g_old[lev], *T_g[lev], 0, 0, 1, 1);
   }
@@ -60,7 +60,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   amrex::Vector<amrex::MultiFab*> A(finest_level+1, nullptr);
 
   for (int lev(0); lev <= finest_level; ++lev) {
-    A[lev] = new amrex::MultiFab(grids[lev], dmap[lev], 1, nghost, MFInfo(),
+    A[lev] = new amrex::MultiFab(grids[lev], dmap[lev], 1, 1/*nghost*/, MFInfo(),
                                  *ebfactory[lev]);
     A[lev]->setVal(0.);
   }
@@ -69,7 +69,6 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   // Define the norm function
   // **************************************************************************
 
-  // TODO: this probably needs MPI broadcasting and reduction
   DampedNewton::NormMF norm0 = [&] (const Vector<MultiFab*>& vec_of_MFs) -> Real
   {
     Vector<Real> vec_of_norms(vec_of_MFs.size(), 0.);
@@ -125,6 +124,9 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
       {
         Box const& bx = mfi.tilebox();
 
+        const EBFArrayBox& epg_fab = static_cast<EBFArrayBox const&>((*ep_g[lev])[mfi]);
+        const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
+
         if (bx.ok())
         {
           Array4<Real      > const& A_array       = A[lev]->array(mfi);
@@ -133,33 +135,41 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
           Array4<Real const> const& T_g_old_array = T_g_old[lev]->const_array(mfi);
           Array4<Real const> const& X_gk_array    = X_gk[lev]->const_array(mfi);
 
+          auto const& flags_arr = flags.const_array();
+
           amrex::ParallelFor(bx, [ep_g_array,T_g_old_array,ro_g_array,fluid_parms,
-              A_array,X_gk_array,run_on_device,dt,fluid_is_a_mixture,nspecies_g]
+              A_array,X_gk_array,run_on_device,dt,fluid_is_a_mixture,nspecies_g,
+              flags_arr]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-            const Real T_g_old_loc = T_g_old_array(i,j,k);
-            
-            Real cp_g_loc(0);
+            const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
 
-            if (!fluid_is_a_mixture) {
+            if (!cell_is_covered) {
 
-              cp_g_loc = run_on_device ?
-                fluid_parms.calc_cp_g<RunOn::Device>(T_g_old_loc) :
-                fluid_parms.calc_cp_g<RunOn::Host>(T_g_old_loc);
+              const Real T_g_old_loc = T_g_old_array(i,j,k);
+              
+              Real cp_g_loc(0);
 
-            } else {
+              if (!fluid_is_a_mixture) {
 
-              for (int n(0); n < nspecies_g; ++n) {
-                
-                const Real cp_gk = run_on_device ?
-                  fluid_parms.calc_cp_gk<RunOn::Device>(T_g_old_loc, n) :
-                  fluid_parms.calc_cp_gk<RunOn::Host>(T_g_old_loc, n);
+                cp_g_loc = run_on_device ?
+                  fluid_parms.calc_cp_g<RunOn::Device>(T_g_old_loc) :
+                  fluid_parms.calc_cp_g<RunOn::Host>(T_g_old_loc);
 
-                cp_g_loc += X_gk_array(i,j,k,n)*cp_gk;
+              } else {
+
+                for (int n(0); n < nspecies_g; ++n) {
+                  
+                  const Real cp_gk = run_on_device ?
+                    fluid_parms.calc_cp_gk<RunOn::Device>(T_g_old_loc, n) :
+                    fluid_parms.calc_cp_gk<RunOn::Host>(T_g_old_loc, n);
+
+                  cp_g_loc += X_gk_array(i,j,k,n)*cp_gk;
+                }
               }
-            }
 
-            A_array(i,j,k) = ep_g_array(i,j,k)*ro_g_array(i,j,k)*cp_g_loc;
+              A_array(i,j,k) = ep_g_array(i,j,k)*ro_g_array(i,j,k)*cp_g_loc;
+            }
           });
         }
       }
@@ -235,6 +245,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
       temperature_matrix->setBCoeffs(lev, GetArrOfConstPtrs(b[lev]),
                                      MLMG::Location::FaceCentroid);
 
+      phi[lev]->setVal(0.);
       rhs[lev]->setVal(0.);
 
 #ifdef _OPENMP
@@ -243,6 +254,9 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
       for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
       {
         Box const& bx = mfi.tilebox();
+
+        const EBFArrayBox& epg_fab = static_cast<EBFArrayBox const&>((*ep_g[lev])[mfi]);
+        const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
 
         if (bx.ok())
         {
@@ -253,52 +267,58 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
           Array4<Real const> const& h_g_array     = h_g[lev]->const_array(mfi);
           Array4<Real const> const& X_gk_array    = X_gk[lev]->const_array(mfi);
 
+          auto const& flags_arr = flags.const_array();
+
           amrex::ParallelFor(bx, [ep_g_array,T_g_old_array,ro_g_array,fluid_parms,
               X_gk_array,h_g_array,run_on_device,dt,fluid_is_a_mixture,
-              nspecies_g,rhs_array]
+              nspecies_g,rhs_array,flags_arr]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-            const Real T_g_old_loc = T_g_old_array(i,j,k);
-            const Real ep_ro_g_loc = ep_g_array(i,j,k)*ro_g_array(i,j,k);
-            
-            Real cp_g_loc(0);
-            Real h_g_loc(0);
+            const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
 
-            if (!fluid_is_a_mixture) {
+            if (!cell_is_covered) {
+              const Real T_g_old_loc = T_g_old_array(i,j,k);
+              const Real ep_ro_g_loc = ep_g_array(i,j,k)*ro_g_array(i,j,k);
+              
+              Real cp_g_loc(0);
+              Real h_g_loc(0);
 
-              cp_g_loc = run_on_device ?
-                fluid_parms.calc_cp_g<RunOn::Device>(T_g_old_loc) :
-                fluid_parms.calc_cp_g<RunOn::Host>(T_g_old_loc);
+              if (!fluid_is_a_mixture) {
 
-              h_g_loc = run_on_device ?
-                fluid_parms.calc_h_g<RunOn::Device>(T_g_old_loc) :
-                fluid_parms.calc_h_g<RunOn::Host>(T_g_old_loc);
+                cp_g_loc = run_on_device ?
+                  fluid_parms.calc_cp_g<RunOn::Device>(T_g_old_loc) :
+                  fluid_parms.calc_cp_g<RunOn::Host>(T_g_old_loc);
 
-            } else {
+                h_g_loc = run_on_device ?
+                  fluid_parms.calc_h_g<RunOn::Device>(T_g_old_loc) :
+                  fluid_parms.calc_h_g<RunOn::Host>(T_g_old_loc);
 
-              for (int n(0); n < nspecies_g; ++n) {
-                
-                const Real cp_gk = run_on_device ?
-                  fluid_parms.calc_cp_gk<RunOn::Device>(T_g_old_loc, n) :
-                  fluid_parms.calc_cp_gk<RunOn::Host>(T_g_old_loc, n);
+              } else {
 
-                const Real h_gk = run_on_device ?
-                  fluid_parms.calc_h_gk<RunOn::Device>(T_g_old_loc, n) :
-                  fluid_parms.calc_h_gk<RunOn::Host>(T_g_old_loc, n);
+                for (int n(0); n < nspecies_g; ++n) {
+                  
+                  const Real cp_gk = run_on_device ?
+                    fluid_parms.calc_cp_gk<RunOn::Device>(T_g_old_loc, n) :
+                    fluid_parms.calc_cp_gk<RunOn::Host>(T_g_old_loc, n);
 
-                cp_g_loc += X_gk_array(i,j,k,n)*cp_gk;
-                h_g_loc += X_gk_array(i,j,k,n)*h_gk;
+                  const Real h_gk = run_on_device ?
+                    fluid_parms.calc_h_gk<RunOn::Device>(T_g_old_loc, n) :
+                    fluid_parms.calc_h_gk<RunOn::Host>(T_g_old_loc, n);
+
+                  cp_g_loc += X_gk_array(i,j,k,n)*cp_gk;
+                  h_g_loc += X_gk_array(i,j,k,n)*h_gk;
+                }
               }
-            }
 
-            rhs_array(i,j,k) = ep_ro_g_loc*cp_g_loc*T_g_old_loc -
-                               ep_ro_g_loc*h_g_loc +
-                               ep_ro_g_loc*h_g_array(i,j,k);
+              rhs_array(i,j,k) = ep_ro_g_loc*cp_g_loc*T_g_old_loc -
+                                 ep_ro_g_loc*h_g_loc +
+                                 ep_ro_g_loc*h_g_array(i,j,k);
+            }
           });
         }
       }
 
-      MultiFab::Copy(*phi[lev], *T_g[lev], 0, 0, 1, 1);
+      MultiFab::Copy(*phi[lev], *T_g_old[lev], 0, 0, 1, 1);
       temperature_matrix->setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
     } // end of loop on lev
 
@@ -329,18 +349,27 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
         Box const& bx = mfi.tilebox();
 
+        const EBFArrayBox& epg_fab = static_cast<EBFArrayBox const&>((*ep_g[lev])[mfi]);
+        const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
+
         if (bx.ok())
         {
           Array4<Real      > const& update_array  = update[lev]->array(mfi);
           Array4<Real      > const& T_g_old_array = T_g_old[lev]->array(mfi);
           Array4<Real const> const& T_g_array     = T_g[lev]->const_array(mfi);
 
-          amrex::ParallelFor(bx, [update_array,T_g_old_array,T_g_array]
+          auto const& flags_arr = flags.const_array();
+
+          amrex::ParallelFor(bx, [update_array,T_g_old_array,T_g_array,flags_arr]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-            update_array(i,j,k) = T_g_array(i,j,k) - T_g_old_array(i,j,k);
+            const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
 
-            T_g_old_array(i,j,k) = T_g_array(i,j,k);
+            if (!cell_is_covered) {
+              update_array(i,j,k) = T_g_array(i,j,k) - T_g_old_array(i,j,k);
+
+              T_g_old_array(i,j,k) = T_g_array(i,j,k);
+            }
           });
         }
       }
@@ -371,6 +400,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
       const EBFArrayBox& epg_fab = static_cast<EBFArrayBox const&>((*ep_g[lev])[mfi]);
       const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
 
+      // TODO TODO TODO probably not needed to grow by 1
       Box const& bx = mfi.growntilebox({1,1,1});
 
       Array4<Real const> dummy_arr;
