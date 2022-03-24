@@ -26,6 +26,114 @@
 
 using namespace amrex;
 
+
+namespace{
+
+  int hcp_i(Real rad, Real xlen, int offset) {
+    int i(0);
+    while ((2*i+1+offset)*rad <= xlen-rad) {
+      i++;
+    }
+    return i;
+  }
+
+  int hcp_j(Real rad, Real ylen, int offset) {
+    int j(0);
+    const Real sqrt3 = std::sqrt(3.0);
+    while ((1+sqrt3*j)*rad <=ylen-rad) {
+      j++;
+    }
+    return j;
+  }
+
+  int hcp_k(Real rad, Real zlen) {
+    int k(0);
+    const Real sqrt6x2o3 = std::sqrt(6.0)*(2.0/3.0);
+    while ((1+k*sqrt6x2o3)*rad <= zlen-rad) {
+      k++;
+    }
+    return k;
+  }
+
+  long hcp_count(Real rad, Real xlen, Real ylen, Real zlen) {
+
+    const int a1 = hcp_i(rad, xlen, 0);
+    const int a2 = hcp_i(rad, xlen, 1);
+
+    const int b1 = hcp_j(rad, ylen, 0);
+    const int b2 = hcp_j(rad, ylen, 1);
+
+    const int b1r = b1%2;
+    const int b2r = b2%2;
+
+    const int c1 = hcp_k(rad, zlen);
+    const int c1r = c1%2;
+
+    return ((a1*((b1 - b1r)/2 + b1r)) + (a2*((b1 - b1r)/2)))*( (c1 - c1r)/2 + c1r) +
+           ((a2*((b2 - b2r)/2 + b1r)) + (a1*((b2 - b2r)/2)))*( (c1 - c1r)/2      );
+
+  }
+
+
+  Real hcp_rad(Real rad_in, Real xlen, Real ylen, Real zlen, long target) {
+
+    Real high = 2.0;
+    Real low  = 0.5;
+
+    Real scale=1.0;
+
+    Real radius(rad_in);
+
+    long pc0(0);
+
+    int keep_searching(1);
+
+    const int max_iter = 15;
+    int iter(0);
+
+    while (keep_searching) {
+
+
+      long pc = hcp_count(radius, xlen, ylen, zlen);
+      //amrex::Print() << "iter " << iter << "  target: " << target
+      //               << "   current: " << pc
+      //               << "   previous: " << pc0 << "\n";
+
+      if(pc == target || pc == pc0) {
+        //amrex::Print() << "We got exactly want we wanted! " << pc << "\n";
+        scale = 1.0;
+
+      } else if (pc < target) {
+        //amrex::Print() << "We need more particles!\n";
+        if( scale <= low)
+          low *= 0.5;
+
+        high  = scale;
+        scale = 0.5*(low + scale);
+        radius = scale*rad_in;
+
+      } else {
+        //amrex::Print() << "We need fewer particles!\n";
+        if( scale >= high)
+          high *= 2.;
+
+        low   = scale;
+        scale = 0.5*(high + scale);
+        radius = scale*rad_in;
+      }
+      pc0 = pc;
+      iter++;
+      keep_searching = ((scale != 1.0) && (iter < max_iter)) ? 1 : 0;
+    }
+
+    return radius;
+
+  }
+
+
+};
+
+
 ParticlesGenerator::ParticlesGenerator ()
   : m_rdata(0)
   , m_idata(0)
@@ -254,91 +362,123 @@ ParticlesGenerator::hex_close_pack (const int icv,
                                     const Real dz,
                                     const amrex::GpuArray<Real, 3>& plo)
 {
-  // indices
-  int i_w, i_e, j_s, j_n, k_b, k_t;
-
-  RealVect ic_dlo, ic_dhi;
-  Real max_dp, max_rp;
-
-  const Real sqrt3 = std::sqrt(3.0);
-  const Real sqrt6o3x2 = 2.0*std::sqrt(6.0)/3.0;
-
-  IntVect max_seed, seed_lo, seed_hi, delta_bx;
-
-  calc_cell_ic(dx, dy, dz,
-               IC::ic[icv].region->lo(),
-               IC::ic[icv].region->hi(),
-               plo.data(),
-               i_w, i_e, j_s, j_n, k_b, k_t);
-
-  const Real y_s(IC::ic[icv].region->lo(1));
-  const Real z_b(IC::ic[icv].region->lo(2));
-  const Real y_n(IC::ic[icv].region->hi(1));
-  const Real z_t(IC::ic[icv].region->hi(2));
-
-  // Start/end of IC domain bounds
-  ic_dlo[0] = (amrex::max(lo[0], i_w)) * dx;
-  ic_dlo[1] = (amrex::max(lo[1], j_s)) * dy;
-  ic_dlo[2] = (amrex::max(lo[2], k_b)) * dz;
-
-  ic_dhi[0] = (amrex::min(hi[0], i_e)+1) * dx;
-  ic_dhi[1] = (amrex::min(hi[1], j_n)+1) * dy;
-  ic_dhi[2] = (amrex::min(hi[2], k_t)+1) * dz;
-
   // physical volume of IC region
   const Real ic_vol = IC::ic[icv].region->volume();
 
   const Real mean = IC::ic[icv].solids[type].diameter.mean;
 
-  // Spacing is based on maximum particle size
-  if(IC::ic[icv].solids[type].diameter.max > 0.0)
-    max_dp = IC::ic[icv].solids[type].diameter.max;
-  else
-    max_dp = mean;
-
-  max_rp = 0.5 * max_dp;
-
-  // Particle count is based on mean particle size
+  // Total particle count is based on mean particle size
   const long seed =
     static_cast<long>(ic_vol * IC::ic[icv].solids[type].volfrac / ((M_PI/6.0)*mean*mean*mean));
 
-  // Total to seed over the whole IC region
-  max_seed[1] = static_cast<int>((y_n - y_s - max_dp) / max_dp);
-  max_seed[2] = static_cast<int>((z_t - z_b - max_dp) / (sqrt3*max_rp));
-  max_seed[0] = static_cast<int>(seed / (max_seed[1]*max_seed[2]));
+  const Real xlen = IC::ic[icv].region->hi(0) - IC::ic[icv].region->lo(0);
+  const Real ylen = IC::ic[icv].region->hi(1) - IC::ic[icv].region->lo(1);
+  const Real zlen = IC::ic[icv].region->hi(2) - IC::ic[icv].region->lo(2);
 
-  // local grid seed loop hi/lo
-  seed_lo[0] = static_cast<int>(std::round((ic_dlo[0] - i_w*dx) / ((sqrt6o3x2) * max_rp)));
-  seed_lo[1] = static_cast<int>(std::round((ic_dlo[1] - j_s*dy) / max_dp));
-  seed_lo[2] = static_cast<int>(std::round((ic_dlo[2] - k_b*dz) / (sqrt3 * max_rp)));
+  // This is the radius we need for spacing particles to get the
+  // desired volume fraction and particle count.
+  Real eff_rad = hcp_rad(0.5*mean, xlen, ylen, zlen, seed);
+  //printf ("\nPacking radius: %9.6f\n", eff_rad);
 
-  seed_hi[0] = static_cast<int>(std::round((ic_dhi[0] - i_w*dx) / ((sqrt6o3x2) * max_rp) - seed_lo[1]*max_dp));
-  seed_hi[1] = static_cast<int>(std::round((ic_dhi[1] - j_s*dy) /  max_dp - seed_lo[1]*max_dp));
-  seed_hi[2] = static_cast<int>(std::round((ic_dhi[2] - k_b*dz) / (sqrt3 * max_rp) - seed_lo[1]*max_dp));
+  RealVect rbx_lo( dx*static_cast<Real>(lo[0]),
+                   dy*static_cast<Real>(lo[1]),
+                   dz*static_cast<Real>(lo[2]));
 
-  seed_hi[0] = amrex::min(max_seed[0], seed_hi[0]-1);
-  seed_hi[1] = amrex::min(max_seed[1], seed_hi[1]-1);
-  seed_hi[2] = amrex::min(max_seed[2], seed_hi[2]-1);
+  RealVect rbx_hi( dx*static_cast<Real>(hi[0]+1),
+                   dy*static_cast<Real>(hi[1]+1),
+                   dz*static_cast<Real>(hi[2]+1));
+
+  RealVect ic_dlo ( IC::ic[icv].region->lo(0),
+                    IC::ic[icv].region->lo(1),
+                    IC::ic[icv].region->lo(2));
+
+  RealVect ic_dhi ( IC::ic[icv].region->hi(0),
+                    IC::ic[icv].region->hi(1),
+                    IC::ic[icv].region->hi(2));
+
+  // Verify that the IC region overlaps with the IC region.
+  if( ic_dhi[0] < rbx_lo[0] || rbx_hi[0] < ic_dlo[0] ||
+      ic_dhi[1] < rbx_lo[1] || rbx_hi[1] < ic_dlo[1] ||
+      ic_dhi[2] < rbx_lo[2] || rbx_hi[2] < ic_dlo[2] ) {
+    //amrex::Print() << "Nothing to do in this MFIter -- bail out\n";
+    return;
+  }
+
+
+  const int kmax = hcp_k(eff_rad, zlen);
+
+  int klo(0);
+  const Real sqrt6x2o3 = std::sqrt(6.0)*(2.0/3.0);
+  for(;klo<kmax;klo++) {
+    if(ic_dlo[2] + (1+klo*sqrt6x2o3)*eff_rad > rbx_lo[2])
+        break;
+  }
+
+  int khi(klo);
+  for(;khi<kmax;khi++) {
+    if(ic_dlo[2] + (1+khi*sqrt6x2o3)*eff_rad >= rbx_hi[2])
+        break;
+  }
+  khi--;
+
+  const int jmax = std::max(hcp_j(eff_rad, ylen, 0),
+                            hcp_j(eff_rad, ylen, 1));
+
+  int jlo(0);
+  const Real sqrt3 = std::sqrt(3.0);
+  for(; jlo<jmax; jlo++) {
+    if(ic_dlo[1] + (1+jlo*sqrt3)*eff_rad > rbx_lo[1])
+        break;
+  }
+
+  int jhi(jlo);
+  const Real third(1.0/3.0);
+  for(; jhi<jmax; jhi++) {
+    if(ic_dlo[1] + (1+(jhi + third)*sqrt3)*eff_rad >= rbx_hi[1])
+        break;
+  }
+  jhi--;
+
+
+  const int imax = std::max(hcp_i(eff_rad, xlen, 0),
+                            hcp_i(eff_rad, xlen, 1));
+
+  int ilo(0);
+  for(; ilo<imax; ilo++) {
+    if(ic_dlo[0] + (2*ilo+1)*eff_rad > rbx_lo[0])
+        break;
+  }
+
+  int ihi(ilo);
+  for(; ihi<imax; ihi++) {
+    if(ic_dlo[0] + (2*ilo+1)*eff_rad >= rbx_hi[0])
+        break;
+  }
+
+  amrex::IntVect seed_lo(ilo, jlo, klo);
+  amrex::IntVect seed_hi(ihi, jhi, khi);
+
+  amrex::IntVect delta_bx(amrex::max(0, seed_hi[0] - seed_lo[0] + 1),
+                          amrex::max(0, seed_hi[1] - seed_lo[1] + 1),
+                          amrex::max(0, seed_hi[2] - seed_lo[2] + 1));
 
   const Box bx(seed_lo, seed_hi);
-
-  delta_bx[0] = amrex::max(0, seed_hi[0] - seed_lo[0] + 1);
-  delta_bx[1] = amrex::max(0, seed_hi[1] - seed_lo[1] + 1);
-  delta_bx[2] = amrex::max(0, seed_hi[2] - seed_lo[2] + 1);
+  Real max_rp = eff_rad;
 
   np = delta_bx[0] * delta_bx[1] * delta_bx[2];
+
   grow_pdata(pc + np);
 
   Real* p_rdata = m_rdata.data();
 
   const int local_nr = this->nr;
 
+  const Real sqrt3o3 = std::sqrt(3.0)/3.0;
+
   amrex::ParallelFor(bx,
-    [p_rdata,seed_lo,delta_bx,max_rp,i_w,j_s,k_b,local_nr,pc,sqrt6o3x2,sqrt3,dx,dy,dz,plo]
+    [p_rdata,delta_bx,seed_lo,max_rp,local_nr,pc,sqrt6x2o3,sqrt3o3,dx,dy,dz,ic_dlo]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      const Real* plo_ptr = plo.data();
-
       const int local_i = i - seed_lo[0];
       const int local_j = j - seed_lo[1];
       const int local_k = k - seed_lo[2];
@@ -346,9 +486,9 @@ ParticlesGenerator::hex_close_pack (const int icv,
       const int local_pc =
         pc + (local_j + local_k*delta_bx[1] + local_i*delta_bx[1]*delta_bx[2]);
 
-      p_rdata[local_pc*local_nr + 0] = plo_ptr[0] + i_w*dx + max_rp*(1. + i*sqrt6o3x2);
-      p_rdata[local_pc*local_nr + 1] = plo_ptr[1] + j_s*dy + max_rp*(1. + 2.*j + ((i+k)%2));
-      p_rdata[local_pc*local_nr + 2] = plo_ptr[2] + k_b*dz + max_rp*(1. + sqrt3*(k+((i%2)/3.)));
+      p_rdata[local_pc*local_nr + 0] = ic_dlo[0] + max_rp * (1.0 + static_cast<Real>(2*i + (j+k)%2));
+      p_rdata[local_pc*local_nr + 1] = ic_dlo[1] + max_rp * (1.0 + sqrt3o3*(static_cast<Real>(3*j + k%2)));
+      p_rdata[local_pc*local_nr + 2] = ic_dlo[2] + max_rp * (1.0 + sqrt6x2o3*(static_cast<Real>(k)));
     });
 
   pc += np;
