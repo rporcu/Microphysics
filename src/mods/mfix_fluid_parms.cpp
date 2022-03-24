@@ -158,9 +158,6 @@ FluidPhase::Initialize ()
       }
     }
 
-    MW_gk0.resize(1);
-    ppFluid.query("molecular_weight", MW_gk0[0]);
-
     if (advect_enthalpy && !solve_species) {
 
       H_fk0.resize(1);
@@ -258,10 +255,13 @@ FluidPhase::Initialize ()
           H_fk0[n]  = SPECIES::H_fk0[pos];
         }
       }
-    } else {
-      MW_gk0.resize(1);
 
-      ppFluid.query("molecular_weight", MW_gk0[0]);
+    } else {
+
+      if (ppFluid.contains("molecular_weight")) {
+        MW_gk0.resize(1);
+        ppFluid.get("molecular_weight", MW_gk0[0]);
+      }
 
       if (solve_enthalpy) {
         H_fk0.resize(1);
@@ -279,7 +279,9 @@ FluidPhase::Initialize ()
 
         } else if (amrex::toLower(specific_heat_model).compare("nasa7-poly") == 0) {
 
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(MW_gk0.size() > 0, "No fluid molecular weight input");
           AMREX_ALWAYS_ASSERT_WITH_MESSAGE(MW_gk0[0] > 0., "Wrong fluid molecular weight");
+
           const amrex::Real coeff = FluidPhase::R / MW_gk0[0];
 
           SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
@@ -321,10 +323,13 @@ FluidPhase::Initialize ()
   const int* p_h_species_id = species_id.data();
   const int* p_d_species_id = d_species_id.data();
 
-  d_MW_gk0.resize(MW_gk0.size());
-  Gpu::copyAsync(Gpu::hostToDevice, MW_gk0.begin(), MW_gk0.end(), d_MW_gk0.begin());
-  const Real* p_h_MW_gk0 = MW_gk0.data();
-  const Real* p_d_MW_gk0 = d_MW_gk0.data();
+  const int MW_gk0_provided = static_cast<int>(MW_gk0.size() > 0);
+  if (MW_gk0_provided) {
+    d_MW_gk0.resize(MW_gk0.size());
+    Gpu::copyAsync(Gpu::hostToDevice, MW_gk0.begin(), MW_gk0.end(), d_MW_gk0.begin());
+  }
+  const Real* p_h_MW_gk0 = MW_gk0_provided ? MW_gk0.data() : nullptr;
+  const Real* p_d_MW_gk0 = MW_gk0_provided ? d_MW_gk0.data() : nullptr;
 
   if (solve_enthalpy) {
     d_H_fk0.resize(H_fk0.size());
