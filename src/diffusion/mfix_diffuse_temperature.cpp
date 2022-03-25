@@ -20,7 +20,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
                                        const Vector< MultiFab* >& X_gk,
                                        const Vector< MultiFab* >& T_g_on_eb,
                                        Real dt,
-                                       const Real abstol,
+                                       const Real /*abstol*/,
                                        const Real reltol,
                                        const int maxiter)
 {

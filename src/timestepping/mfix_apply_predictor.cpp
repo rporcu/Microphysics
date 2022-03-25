@@ -633,7 +633,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
         const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ld.T_g->Factory());
         const auto& flags = factory.getMultiEBCellFlagFab();
-        const auto& volfrac = factory.getVolFrac();
           
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -660,14 +659,13 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
           const Real Dpressure_Dt = rhs_pressure_g_old[lev];
 
           auto const& flags_arr = flags.const_array(mfi);
-          auto const& volfrac_arr = volfrac.const_array(mfi);
 
           const int l_solve_species = solve_species;
 
           amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,epg,dhdt_o,
               l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,X_gk_n,closed_system,
               fluid_parms,fluid_is_a_mixture,nspecies_g,div_hJ_o,flags_arr,
-              volfrac_arr,run_on_device,l_solve_species,is_IOProc,
+              run_on_device,l_solve_species,is_IOProc,
               abstol=newton_abstol,reltol=newton_reltol,maxiter=newton_maxiter]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
@@ -677,7 +675,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
               int conv_comp = 1;
 
               const Real epg_loc = epg(i,j,k);
-              const Real vfrac = volfrac_arr(i,j,k);
 
               const Real num =         (rho_o(i,j,k) * epg_loc);
               const Real denom = 1.0 / (rho_n(i,j,k) * epg_loc);
