@@ -69,7 +69,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   // Define the norm function
   // **************************************************************************
 
-  Newton::NormMF norm0 = [&] (const Vector<MultiFab*>& vec_of_MFs) -> Real
+  auto norm0 = [&] (const Vector<MultiFab*>& vec_of_MFs) -> Real
   {
     Vector<Real> vec_of_norms(vec_of_MFs.size(), 0.);
     std::transform(vec_of_MFs.begin(), vec_of_MFs.end(), vec_of_norms.begin(),
@@ -110,7 +110,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
     // Set alpha and beta
     temperature_matrix->setScalars(1.0, dt);
 
-    Vector<BCRec> bcs_dummy; // This is just to satisfy the call to EBterp...
+    Vector<BCRec> bcs_dummy; // This is just to satisfy the call to EB_interp...
     bcs_dummy.resize(3);
 
     for(int lev = 0; lev <= finest_level; lev++) {
@@ -367,7 +367,6 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
             if (!cell_is_covered) {
               update_array(i,j,k) = T_g_array(i,j,k) - T_g_old_array(i,j,k);
-
               T_g_old_array(i,j,k) = T_g_array(i,j,k);
             }
           });
@@ -407,10 +406,10 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
       const EBFArrayBox& epg_fab = static_cast<EBFArrayBox const&>((*ep_g[lev])[mfi]);
       const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
 
-      // TODO TODO TODO probably not needed to grow by 1
-      Box const& bx = mfi.growntilebox({1,1,1});
+      Box const& bx = mfi.tilebox();
 
       Array4<Real const> dummy_arr;
+
       Array4<Real      > const& h_g_array  = h_g[lev]->array(mfi);
       Array4<Real const> const& T_g_array  = T_g[lev]->const_array(mfi);
       Array4<Real const> const& X_gk_array = fluid_is_a_mixture ? X_gk[lev]->const_array(mfi) : dummy_arr;

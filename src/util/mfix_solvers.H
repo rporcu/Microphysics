@@ -24,39 +24,6 @@ class Newton {
     AMREX_GPU_HOST_DEVICE
     Newton() = default;
 
-
-    // TODO description
-    class NonConvergingExc : public std::exception {
-      public:
-        NonConvergingExc(const int is_IOProc,
-                         const int iter,
-                         const amrex::Real update_norm,
-                         const amrex::Real residue_norm)
-          : m_is_IOProc(is_IOProc)
-          , m_iter(iter)
-          , m_update_norm(update_norm)
-          , m_residue_norm(residue_norm)
-        {}
-
-        virtual const char* what() const throw()
-        {
-          if (m_is_IOProc) {
-            std::printf("Newton total iterations = %d\n", m_iter);
-            std::printf("Newton update norm = %e\n", m_update_norm);
-            std::printf("Newton residue norm = %e\n", m_residue_norm);
-          }
-
-          return "Newton solver did not converge";
-        }
-
-      private:
-        const int m_is_IOProc;
-        const int m_iter;
-        const amrex::Real m_update_norm;
-        const amrex::Real m_residue_norm;
-    };
-
-
     // Solve for scalars
     template<typename ResidueFunc, typename GradientFunc>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
@@ -103,16 +70,14 @@ class Newton {
 #endif
           }
 
-          return max_iterations;
+          amrex::Abort("Newton solver did not converge");
+
         }
       } while(//(std::abs(residue) > residue_rel_tol) ||
               (std::abs(update) > update_rel_tol));
 
       return iter;
     }
-
-
-    using NormMF = std::function<amrex::Real(const amrex::Vector<amrex::MultiFab*>&)>;
 };
 
 } // end namespace Solvers

@@ -792,14 +792,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
               Real Tg(T_g_o(i,j,k));
 
-              int solver_iterations(0);
-
-              solver_iterations = Newton::solve(Tg, R, partial_R,
-                  is_IOProc, abstol, reltol, maxiter);
-
-              if (solver_iterations >= maxiter) {
-                amrex::Abort("Newton solver did not converge");
-              }
+              Newton::solve(Tg, R, partial_R, is_IOProc, abstol, reltol, maxiter);
 
               T_g_n(i,j,k) = Tg;
             }
@@ -921,14 +914,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
                 Real Tg(T_g_o(i,j,k));
 
-                int solver_iterations(0);
-
-                solver_iterations = Newton::solve(Tg, R, partial_R,
-                    is_IOProc, abstol, reltol, maxiter);
-
-                if (solver_iterations >= maxiter) {
-                  amrex::Abort("Newton solver did not converge");
-                }
+                Newton::solve(Tg, R, partial_R, is_IOProc, abstol, reltol, maxiter);
 
                 T_g_n(i,j,k) = Tg;
               }

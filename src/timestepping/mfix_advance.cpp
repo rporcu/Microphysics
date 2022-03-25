@@ -412,14 +412,7 @@ mfix::mfix_add_txfr_explicit (Real dt,
 
             Real Tg_new(Tg_old);
 
-            int solver_iterations(0);
-
-            solver_iterations = Newton::solve(Tg_new, R, partial_R,
-                is_IOProc, abstol, reltol, maxiter);
-
-            if (solver_iterations >= maxiter) {
-              amrex::Abort("Newton solver did not converge");
-            }
+            Newton::solve(Tg_new, R, partial_R, is_IOProc, abstol, reltol, maxiter);
 
             Tg_array(i,j,k) = Tg_new;
           }
@@ -581,14 +574,7 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
             Real Tg_new(Tg_old);
 
-            int solver_iterations(0);
-
-            solver_iterations = Newton::solve(Tg_new, R, partial_R,
-                is_IOProc, abstol, reltol, maxiter);
-
-            if (solver_iterations >= maxiter) {
-              amrex::Abort("Newton solver did not converge");
-            }
+            Newton::solve(Tg_new, R, partial_R, is_IOProc, abstol, reltol, maxiter);
 
             Tg_array(i,j,k) = Tg_new;
 
