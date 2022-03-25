@@ -39,7 +39,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   //
   //      alpha: 0
   //      beta: dt
-  //      A: ro_g ep_g cp_g + dt Gamma
+  //      A: ro_g ep_g cp_g
   //      B: ep_g k_g
 
   if(verbose > 0)
@@ -52,7 +52,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   amrex::Vector<amrex::MultiFab*> T_g_old(finest_level+1, nullptr);
 
   for (int lev(0); lev <= finest_level; ++lev) {
-    T_g_old[lev] = new amrex::MultiFab(grids[lev], dmap[lev], 1, 1/*nghost*/, MFInfo(),
+    T_g_old[lev] = new amrex::MultiFab(grids[lev], dmap[lev], 1, 1, MFInfo(),
                                        *ebfactory[lev]);
     MultiFab::Copy(*T_g_old[lev], *T_g[lev], 0, 0, 1, 1);
   }
@@ -60,7 +60,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   amrex::Vector<amrex::MultiFab*> A(finest_level+1, nullptr);
 
   for (int lev(0); lev <= finest_level; ++lev) {
-    A[lev] = new amrex::MultiFab(grids[lev], dmap[lev], 1, 1/*nghost*/, MFInfo(),
+    A[lev] = new amrex::MultiFab(grids[lev], dmap[lev], 1, 1, MFInfo(),
                                  *ebfactory[lev]);
     A[lev]->setVal(0.);
   }
@@ -374,6 +374,13 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
         }
       }
     } // end of loop on lev
+
+    iter++;
+    if (iter > maxiter) {
+      Print() << "Newton solver iterations = " << iter << "\n";
+      Print() << "Newton solver update = " << norm0(update) << "\n";
+      amrex::Abort("Newton solver did not converge");
+    }
 
   } while (//(norm0(residue) > residue_rel_tol) ||
            (norm0(update) > update_rel_tol));
