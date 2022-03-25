@@ -77,49 +77,59 @@ namespace{
 
   Real hcp_rad(Real rad_in, Real xlen, Real ylen, Real zlen, long target) {
 
-    Real high = 2.0;
-    Real low  = 0.5;
-
-    Real scale=1.0;
+    Real high = 1.0;
+    Real low  = 1.0;
 
     Real radius(rad_in);
-
-    long pc0(0);
-
-    int keep_searching(1);
 
     const int max_iter = 15;
     int iter(0);
 
+    //amrex::Print() << "\nTarget particle count: " << target << "\n";
+
+    long pc0 = hcp_count(rad_in, xlen, ylen, zlen);
+    while ((pc0 > target) && (iter < max_iter)) {
+      low = high;
+      high *= 2.;
+      radius = high*rad_in;
+      pc0 = hcp_count(radius, xlen, ylen, zlen);
+
+      //amrex::Print() << "iter " << iter << "   low: " << low
+      //    << "   high: " << high << "   counts: " << pc0 << "\n";
+      iter++;
+    }
+
+    Real scale=0.5*(low + high);
+
+    iter = 0;
+    int keep_searching(1);
     while (keep_searching) {
 
-
+      radius = scale*rad_in;
       long pc = hcp_count(radius, xlen, ylen, zlen);
-      //amrex::Print() << "iter " << iter << "  target: " << target
-      //               << "   current: " << pc
-      //               << "   previous: " << pc0 << "\n";
 
-      if(pc == target || pc == pc0) {
+      //amrex::Print() << "iter " << iter << "   current: " << pc
+      //    << "   previous: " << pc0 << "  scale: " << scale << "\n";
+
+      if(pc == target || (pc == pc0 && iter > 0)) {
         //amrex::Print() << "We got exactly want we wanted! " << pc << "\n";
         scale = 1.0;
 
       } else if (pc < target) {
-        //amrex::Print() << "We need more particles!\n";
-        if( scale <= low)
-          low *= 0.5;
+        //amrex::Print() << "We need more particles!  scale: " << scale << "\n";
 
         high  = scale;
         scale = 0.5*(low + scale);
-        radius = scale*rad_in;
+        //scale = amrex::max(0.5*(low + scale),1.0);
 
       } else {
-        //amrex::Print() << "We need fewer particles!\n";
+        //amrex::Print() << "We need fewer particles!  scale: " << scale << "\n";
         if( scale >= high)
           high *= 2.;
 
-        low   = scale;
+        low   = amrex::max(scale, 1.0);
         scale = 0.5*(high + scale);
-        radius = scale*rad_in;
+
       }
       pc0 = pc;
       iter++;
@@ -380,13 +390,13 @@ ParticlesGenerator::hex_close_pack (const int icv,
   Real eff_rad = hcp_rad(0.5*mean, xlen, ylen, zlen, seed);
   //printf ("\nPacking radius: %9.6f\n", eff_rad);
 
-  RealVect rbx_lo( dx*static_cast<Real>(lo[0]),
-                   dy*static_cast<Real>(lo[1]),
-                   dz*static_cast<Real>(lo[2]));
+  RealVect rbx_lo( plo[0] + dx*static_cast<Real>(lo[0]),
+                   plo[1] + dy*static_cast<Real>(lo[1]),
+                   plo[2] + dz*static_cast<Real>(lo[2]));
 
-  RealVect rbx_hi( dx*static_cast<Real>(hi[0]+1),
-                   dy*static_cast<Real>(hi[1]+1),
-                   dz*static_cast<Real>(hi[2]+1));
+  RealVect rbx_hi( plo[0] + dx*static_cast<Real>(hi[0]+1),
+                   plo[1] + dy*static_cast<Real>(hi[1]+1),
+                   plo[2] + dz*static_cast<Real>(hi[2]+1));
 
   RealVect ic_dlo ( IC::ic[icv].region->lo(0),
                     IC::ic[icv].region->lo(1),
@@ -451,9 +461,10 @@ ParticlesGenerator::hex_close_pack (const int icv,
 
   int ihi(ilo);
   for(; ihi<imax; ihi++) {
-    if(ic_dlo[0] + (2*ilo+1)*eff_rad >= rbx_hi[0])
+    if(ic_dlo[0] + (2*ihi+1)*eff_rad >= rbx_hi[0])
         break;
   }
+  ihi--;
 
   amrex::IntVect seed_lo(ilo, jlo, klo);
   amrex::IntVect seed_hi(ihi, jhi, khi);
