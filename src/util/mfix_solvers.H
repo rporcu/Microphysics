@@ -36,17 +36,28 @@ class Newton {
               const amrex::Real rel_tol,
               const int max_iterations)
     {
-      amrex::Real residue = R(solution);
+      amrex::Real gradient = partial_R(solution);
+      amrex::Real residue  = R(solution);
       amrex::Real update(0.);
 
       int iter(0);
       const amrex::Real update_rel_tol = rel_tol*std::abs(solution);
-      //const amrex::Real residue_rel_tol = abs_tol*std::abs(residue);
+      //const amrex::Real residue_rel_tol = rel_tol*std::abs(residue);
+
+      // Do not do anything if we're already on the solution
+      if (std::abs(residue) < 1.e-15) {
+        return iter;
+      }
+
+      if (std::abs(gradient) < 1.e-15) {
+        amrex::Abort("Gradient in Newton solver is almost zero");
+      }
 
       do {
-        update = residue / partial_R(solution);
+        update = residue / gradient;
         solution -= update;
         residue = R(solution);
+        gradient = partial_R(solution);
 
         ++iter;
         if(iter > max_iterations) {
