@@ -2,9 +2,12 @@ CEXE_sources += mfix_set_velocity_bcs.cpp
 CEXE_sources += mfix_set_enthalpy_bcs.cpp
 CEXE_sources += mfix_set_temperature_bcs.cpp
 CEXE_sources += mfix_set_eb_temperature_bcs.cpp
+CEXE_sources += mfix_set_eb_velocity_bcs.cpp
 CEXE_sources += mfix_set_density_bcs.cpp
 CEXE_sources += mfix_set_species_bcs.cpp
 CEXE_sources += mfix_set_tracer_bcs.cpp
+CEXE_sources += mfix_calc_eb_bc_areas.cpp
+CEXE_sources += mfix_set_eb_scalar_bcs.cpp
 
 CEXE_sources += mfix_fillpatch.cpp
 CEXE_sources += mfix_util.cpp

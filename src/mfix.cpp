@@ -80,7 +80,7 @@ mfix::~mfix ()
 
   for (int lev = 0; lev < fluid_proc.size(); ++lev)
     delete fluid_proc[lev];
-} 
+}
 
 // Constructor
 mfix::mfix ()

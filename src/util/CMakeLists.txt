@@ -5,6 +5,7 @@ target_include_directories(mfixcore
 target_sources( mfixcore
    PRIVATE
    mfix_algorithm.H
+   mfix_calc_eb_bc_areas.cpp
    mfix_solvers.H
    mfix_filcc.H
    mfix_filcc.cpp
@@ -17,6 +18,8 @@ target_sources( mfixcore
    mfix_set_enthalpy_bcs.cpp
    mfix_set_temperature_bcs.cpp
    mfix_set_eb_temperature_bcs.cpp
+   mfix_set_eb_velocity_bcs.cpp
+   mfix_set_eb_scalar_bcs.cpp
    mfix_set_density_bcs.cpp
    mfix_set_species_bcs.cpp
    mfix_set_tracer_bcs.cpp

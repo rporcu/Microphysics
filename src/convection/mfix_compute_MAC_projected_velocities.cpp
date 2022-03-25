@@ -1,5 +1,6 @@
 #include <hydro_utils.H>
 #include <mfix_bc_parms.H>
+#include <mfix_eb_parms.H>
 #include <mfix_mf_helpers.H>
 #include <mfix.H>
 
@@ -27,6 +28,7 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
                                         Vector< MultiFab const*> const& ep_g_in,
                                         Vector< MultiFab const*> const& ro_g_in,
                                         Vector< MultiFab const*> const& txfr_in,
+                                        Vector< MultiFab const*> const& eb_flow_vel,
                                         Vector< MultiFab      *> const& vel_forces,
                                         Vector< MultiFab const*> const& rhs_mac_in)
 {
@@ -172,7 +174,7 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
     ep_w_mac[lev]->setVal(covered_val);
 
     std::string advection_string;
-    if (advection_type() == AdvectionType::Godunov) 
+    if (advection_type() == AdvectionType::Godunov)
         advection_string = "Godunov";
     else
         advection_string = "MOL";
@@ -261,6 +263,12 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
 
   macproj->setUMAC(mac_vec);
   macproj->setDivU(rhs_mac_in);
+
+  if (EB::has_flow) {
+     for (int lev = 0; lev <= finest_level; ++lev) {
+        macproj->setEBInflowVelocity(lev, *eb_flow_vel[lev]);
+     }
+  }
 
   if (m_steady_state)
   {

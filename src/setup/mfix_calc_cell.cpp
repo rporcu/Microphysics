@@ -33,3 +33,27 @@ void calc_cell_ic(const Real dx,
   k_b = static_cast<int>(amrex::Math::floor((lo[2]-plo[2])/dz + .5));
   k_t = static_cast<int>(amrex::Math::floor((hi[2]-plo[2])/dz + .5)) - 1;
 }
+
+
+const amrex::Box* calc_ic_box(Geometry& geom, const RealBox* region)
+{
+
+  const GpuArray<Real,3> dxi = geom.InvCellSizeArray();
+  const GpuArray<Real,3> plo = geom.ProbLoArray();
+
+  const Real* lo = region->lo();
+  const Real* hi = region->hi();
+
+  const amrex::IntVect ic_lo(AMREX_D_DECL(
+      static_cast<int>(amrex::Math::floor((lo[0]-plo[0])*dxi[0] + .5)),
+      static_cast<int>(amrex::Math::floor((lo[1]-plo[1])*dxi[1] + .5)),
+      static_cast<int>(amrex::Math::floor((lo[2]-plo[2])*dxi[2] + .5))));
+
+  const amrex::IntVect ic_hi(AMREX_D_DECL(
+      static_cast<int>(amrex::Math::floor((hi[0]-plo[0])*dxi[0] + .5)) - 1,
+      static_cast<int>(amrex::Math::floor((hi[1]-plo[1])*dxi[1] + .5)) - 1,
+      static_cast<int>(amrex::Math::floor((hi[2]-plo[2])*dxi[2] + .5)) - 1));
+
+  return new const amrex::Box(ic_lo, ic_hi);
+
+}

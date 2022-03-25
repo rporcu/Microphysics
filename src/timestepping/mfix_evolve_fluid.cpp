@@ -96,6 +96,9 @@ mfix::EvolveFluid (int nstep,
     Vector< MultiFab* > div_hJ_old(finest_level+1);
     Vector< Real > rhs_pressure_g_old(finest_level+1, 0.);
     Vector< Real > rhs_pressure_g(finest_level+1, 0.);
+    Vector< MultiFab* > eb_flow_vel(finest_level+1, nullptr);
+    Vector< MultiFab* > eb_flow_scalars(finest_level+1, nullptr);
+    Vector< MultiFab* > eb_flow_species(finest_level+1, nullptr);
 
     for (int lev = 0; lev <= finest_level; lev++)
     {
@@ -145,6 +148,26 @@ mfix::EvolveFluid (int nstep,
          vel_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
          vel_RHS_old[lev]->setVal(0.0);
        }
+
+       if (EB::has_flow) {
+
+         eb_flow_vel[lev] = new MultiFab(grids[lev], dmap[lev], 3, nghost_state(), MFInfo(), *ebfactory[lev]);
+         eb_flow_vel[lev]->setVal(0.0);
+
+         eb_flow_scalars[lev] = new MultiFab(grids[lev], dmap[lev], 2+ntrac, nghost_state(), MFInfo(), *ebfactory[lev]);
+         eb_flow_scalars[lev]->setVal(0.0);
+
+         if (solve_species) {
+           eb_flow_species[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, nghost_state(), MFInfo(), *ebfactory[lev]);
+           eb_flow_species[lev]->setVal(0.0);
+         }
+       }
+    }
+
+    // We do this call after the bc values have been set
+    if (EB::has_flow) {
+      mfix_set_eb_velocity_bcs(time, eb_flow_vel);
+      mfix_set_eb_scalar_bcs(eb_flow_scalars, eb_flow_species);
     }
 
     do
@@ -217,6 +240,7 @@ mfix::EvolveFluid (int nstep,
         mfix_apply_predictor(conv_u_old, conv_s_old, conv_X_old, ro_RHS_old,
             lap_trac_old, lap_T_old, enthalpy_RHS_old, species_RHS_old,
             vel_RHS_old, div_J_old, div_hJ_old, rhs_pressure_g_old, rhs_pressure_g,
+            eb_flow_vel, eb_flow_scalars, eb_flow_species,
             time, dt, prev_dt, proj_2_pred, coupling_timing);
 
         // Corrector step
@@ -248,7 +272,8 @@ mfix::EvolveFluid (int nstep,
           mfix_apply_corrector(conv_u_old, conv_s_old, conv_X_old, ro_RHS_old,
               lap_trac_old, lap_T_old, enthalpy_RHS_old, species_RHS_old,
               vel_RHS_old, div_J_old, div_hJ_old, rhs_pressure_g_old,
-              rhs_pressure_g, time, dt, prev_dt, proj_2_corr, coupling_timing);
+              rhs_pressure_g, eb_flow_vel, eb_flow_scalars, eb_flow_species,
+              time, dt, prev_dt, proj_2_corr, coupling_timing);
         }
 
         //
@@ -310,6 +335,15 @@ mfix::EvolveFluid (int nstep,
 
        if (reactions.solve)
          delete vel_RHS_old[lev];
+
+       if (EB::has_flow) {
+         delete eb_flow_vel[lev];
+         delete eb_flow_scalars[lev];
+         if (solve_species) {
+           delete eb_flow_species[lev];
+         }
+      }
+
     }
 
     BL_PROFILE_REGION_STOP("mfix::EvolveFluid");

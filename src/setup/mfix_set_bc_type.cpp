@@ -684,6 +684,7 @@ mfix::set_temperature_bc_values (Real time_in) const
 
   const int minf_ = bc_list.get_minf();
   const int pinf_ = bc_list.get_pinf();
+  const int eb_   = bc_list.get_eb();
 
   // Flag to understand if fluid is a mixture
   const int fluid_is_a_mixture = fluid.is_a_mixture;
@@ -691,7 +692,8 @@ mfix::set_temperature_bc_values (Real time_in) const
   auto& fluid_parms = *fluid.parameters;
 
   for(unsigned bcv(0); bcv < bc.size(); ++bcv) {
-    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
+    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ||
+         (bc[bcv].type == eb_  && bc[bcv].fluid.flow_thru_eb)) {
       const Real Tg = bc[bcv].fluid.get_temperature(time_in);
       m_h_bc_t_g[bcv] = Tg;
       if (!fluid_is_a_mixture) {
@@ -724,6 +726,7 @@ mfix::set_density_bc_values (Real time_in) const
 
   const int minf_ = bc_list.get_minf();
   const int pinf_ = bc_list.get_pinf();
+  const int eb_   = bc_list.get_eb();
 
   // HACK -- BC density is constant given current implementation.
   // This was copied over from the mfix_set_density_bcs routine.
@@ -735,7 +738,8 @@ mfix::set_density_bc_values (Real time_in) const
 
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
 
-    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
+    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ||
+        (bc[bcv].type == eb_  && bc[bcv].fluid.flow_thru_eb)) {
 
       if (m_constraint_type == ConstraintType::IdealGasOpenSystem ||
           m_constraint_type == ConstraintType::IdealGasClosedSystem ) {
@@ -796,13 +800,15 @@ mfix::set_tracer_bc_values (Real /*time_in*/) const
 
   const int minf_ = bc_list.get_minf();
   const int pinf_ = bc_list.get_pinf();
+  const int eb_   = bc_list.get_eb();
 
   // HACK -- BC tracer is constant given current implementation.
   // This was copied over from the mfix_set_tracer_bcs routine.
   const Real trac0 = fluid.trac_0;
 
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
-    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
+    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ||
+        (bc[bcv].type == eb_  && bc[bcv].fluid.flow_thru_eb) ) {
       m_h_bc_tracer[bcv] = trac0;
     } else {
       m_h_bc_tracer[bcv] = 1e50;
@@ -828,9 +834,11 @@ mfix::set_species_bc_values (Real time_in) const
 
   const int minf_ = bc_list.get_minf();
   const int pinf_ = bc_list.get_pinf();
+  const int eb_   = bc_list.get_eb();
 
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
-    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ) {
+    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ||
+        (bc[bcv].type == eb_  && bc[bcv].fluid.flow_thru_eb)) {
       for (int n(0); n < fluid.nspecies; n++) {
         m_h_bc_X_gk[n][bcv] = bc[bcv].fluid.get_species(n, time_in);
       }

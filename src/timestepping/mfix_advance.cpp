@@ -30,19 +30,30 @@ mfix::mfix_project_velocity ()
     Real time = 0.0;
 
     // Apply projection -- depdt=0 for now
+    Vector< MultiFab* > eb_flow_vel(finest_level+1, nullptr);
     Vector< MultiFab* > depdt(finest_level+1);
 
     for (int lev(0); lev <= finest_level; ++lev) {
       depdt[lev] = new MultiFab(grids[lev], dmap[lev], 1, 1, MFInfo(), EBFactory(lev));
       depdt[lev]->setVal(0.);
+
+      if (EB::has_flow) {
+        eb_flow_vel[lev] = new MultiFab(grids[lev], dmap[lev], 3, nghost_state(), MFInfo(), *ebfactory[lev]);
+        eb_flow_vel[lev]->setVal(0.0);
+      }
     }
 
     mfix_apply_nodal_projection(depdt, time, dummy_dt, dummy_dt, proj_2,
                                 get_vel_g_old(), get_vel_g(), get_p_g(), get_gp(),
-                                get_ep_g(), get_txfr(), get_ro_g_const());
+                                get_ep_g(), get_txfr(), get_ro_g_const(),
+                                GetVecOfConstPtrs(eb_flow_vel));
 
-    for (int lev(0); lev <= finest_level; ++lev)
+    for (int lev(0); lev <= finest_level; ++lev) {
       delete depdt[lev];
+      if (EB::has_flow) {
+        delete eb_flow_vel[lev];
+      }
+    }
 
     // We initialize p_g and gp back to zero (p0_g may still be still non-zero)
     for (int lev = 0; lev <= finest_level; lev++) {
@@ -114,6 +125,10 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   Vector< Real > rhs_pressure_g_old(finest_level+1, 0.);
   Vector< Real > rhs_pressure_g(finest_level+1, 0.);
 
+  Vector< MultiFab* > eb_flow_vel(finest_level+1, nullptr);
+  Vector< MultiFab* > eb_flow_scalars(finest_level+1, nullptr);
+  Vector< MultiFab* > eb_flow_species(finest_level+1, nullptr);
+
   for (int lev = 0; lev <= finest_level; lev++)
   {
     conv_u[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
@@ -161,6 +176,26 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     if (reactions.solve) {
       vel_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
     }
+
+    if (EB::has_flow) {
+
+      eb_flow_vel[lev] = new MultiFab(grids[lev], dmap[lev], 3, nghost_state(), MFInfo(), *ebfactory[lev]);
+      eb_flow_vel[lev]->setVal(0.0);
+
+      eb_flow_scalars[lev] = new MultiFab(grids[lev], dmap[lev], 2+ntrac, nghost_state(), MFInfo(), *ebfactory[lev]);
+      eb_flow_scalars[lev]->setVal(0.0);
+
+      if (solve_species) {
+        eb_flow_species[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, nghost_state(), MFInfo(), *ebfactory[lev]);
+        eb_flow_species[lev]->setVal(0.0);
+      }
+    }
+  }//nlev
+
+
+  if (EB::has_flow) {
+     mfix_set_eb_velocity_bcs(time, eb_flow_vel);
+     mfix_set_eb_scalar_bcs(eb_flow_scalars, eb_flow_species);
   }
 
   for (int iter = 0; iter < initial_iterations; ++iter)
@@ -176,7 +211,8 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     mfix_apply_predictor(conv_u, conv_s, conv_X, ro_RHS_old, lap_trac_old,
         enthalpy_RHS_old, lap_T_old, species_RHS_old, vel_RHS_old,
-        div_J_old, div_hJ_old, rhs_pressure_g_old, rhs_pressure_g, time, dt,
+        div_J_old, div_hJ_old, rhs_pressure_g_old, rhs_pressure_g,
+        eb_flow_vel, eb_flow_scalars, eb_flow_species, time, dt,
         dt_copy, proj_2, coupling_timing);
 
     // Reset any quantities which might have been updated
@@ -253,6 +289,14 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
      if (reactions.solve)
        delete vel_RHS_old[lev];
+
+     if (EB::has_flow) {
+       delete eb_flow_vel[lev];
+       delete eb_flow_scalars[lev];
+       if (solve_species) {
+         delete eb_flow_species[lev];
+       }
+    }
   }
 }
 
