@@ -180,7 +180,7 @@ class FluidParms {
       if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
 
         if (run_on == amrex::RunOn::Gpu) {
-          
+
           result = m_d_cp_gk[n];
 
         } else if (run_on == amrex::RunOn::Cpu) {
@@ -229,7 +229,7 @@ class FluidParms {
       if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
 
         if (run_on == amrex::RunOn::Gpu) {
-          
+
           result = m_d_H_fk[n] + m_d_cp_gk[n]*(T_g - m_T_ref);
 
         } else if (run_on == amrex::RunOn::Cpu) {
@@ -457,7 +457,7 @@ class FluidPhase {
         }
       }
 
-      // Flags for constant
+      // Flags for velocity
       bool constant_velocity;
       amrex::Vector<amrex::Real> velocity;
       amrex::Vector<amrex::Vector<amrex::Real>> vel_table;
@@ -514,6 +514,120 @@ class FluidPhase {
           }
         }
       }
+
+      bool flow_thru_eb;
+      bool eb_has_velocity;
+      bool eb_vel_is_mag;
+
+      amrex::Real get_velocity_mag (amrex::Real time=0.0) {
+         AMREX_ASSERT(flow_thru_eb);
+        //amrex::Print() << "\n\nLooking for the right BC fluid velocity!\n\n";
+        if (constant_velocity){
+          //amrex::Print() << "* Use the constant velocity!";
+          return velocity[0];
+        } else {
+          const int size = vel_table.size();
+          if( size == 1 || time <= vel_table[0][0] ) {
+            // There is only one entry (use it) OR the current time
+            // is less than the first entry so return the first entry.
+            //amrex::Print() << "Defaulting to the first entry!\n";
+            return vel_table[0][1];
+
+          } else {
+
+            constexpr amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
+            //amrex::Print() << "Interpolating from the velocity table (maybe?)\n";
+            for (int lc=1; lc<size; lc++) {
+              // Time of current entry
+              const amrex::Real entry_time = vel_table[lc][0];
+
+              if ( amrex::Math::abs(time - entry_time) <= tolerance ) {
+                // Too close for any calculations
+                // amrex::Print() << "Too close to tell using value form entry " << lc << "\n";
+                return vel_table[lc][1];
+
+                // The entries are sorted based on time, so if the current time is
+                // less than this entries time, then we need to interpolate between
+                // the previous time and this time.
+              } else if (time < entry_time) {
+                const amrex::Real prv_time = vel_table[lc-1][0];
+                const amrex::Real delta_time = entry_time - prv_time;
+                if (amrex::Math::abs(delta_time) <= tolerance) {
+                  //amrex::Print() << "Delta time too small. Using value form entry " << lc << "\n";
+                  return vel_table[lc][1];
+                } else {
+                  //amrex::Print() << "Interpolating from values at entry " << lc << "\n";
+                  const amrex::Real whi = (time - prv_time) / delta_time;
+                  const amrex::Real wlo = 1.0 - whi;
+                  return whi*vel_table[lc][1] + wlo*vel_table[lc-1][1];
+                }
+              }
+            }
+            // If we made it here, time is larger than all the entries in the
+            // table, therefore, use the last value.
+            //amrex::Print() << "Using last table entry\n";
+            return vel_table[size-1][1];
+          }
+        }
+      }
+
+      bool eb_has_volflow;
+      bool constant_volflow;
+      amrex::Real volflow;
+      amrex::Vector<amrex::Vector<amrex::Real>> volflow_table;
+
+      amrex::Real get_volflow (amrex::Real time=0.0) {
+         AMREX_ASSERT(flow_thru_eb);
+        //amrex::Print() << "\n\nLooking for the right BC fluid velocity!\n\n";
+        if (constant_volflow){
+          //amrex::Print() << "* Use the constant velocity!";
+          return volflow;
+        } else {
+          const int size = volflow_table.size();
+          if( size == 1 || time <= volflow_table[0][0] ) {
+            // There is only one entry (use it) OR the current time
+            // is less than the first entry so return the first entry.
+            //amrex::Print() << "Defaulting to the first entry!\n";
+            return volflow_table[0][1];
+
+          } else {
+
+            constexpr amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
+            //amrex::Print() << "Interpolating from the velocity table (maybe?)\n";
+            for (int lc=1; lc<size; lc++) {
+              // Time of current entry
+              const amrex::Real entry_time = volflow_table[lc][0];
+
+              if ( amrex::Math::abs(time - entry_time) <= tolerance ) {
+                // Too close for any calculations
+                // amrex::Print() << "Too close to tell using value form entry " << lc << "\n";
+                return volflow_table[lc][1];
+
+                // The entries are sorted based on time, so if the current time is
+                // less than this entries time, then we need to interpolate between
+                // the previous time and this time.
+              } else if (time < entry_time) {
+                const amrex::Real prv_time = volflow_table[lc-1][0];
+                const amrex::Real delta_time = entry_time - prv_time;
+                if (amrex::Math::abs(delta_time) <= tolerance) {
+                  //amrex::Print() << "Delta time too small. Using value form entry " << lc << "\n";
+                  return volflow_table[lc][1];
+                } else {
+                  //amrex::Print() << "Interpolating from values at entry " << lc << "\n";
+                  const amrex::Real whi = (time - prv_time) / delta_time;
+                  const amrex::Real wlo = 1.0 - whi;
+                  return whi*volflow_table[lc][1] + wlo*volflow_table[lc-1][1];
+                }
+              }
+            }
+            // If we made it here, time is larger than all the entries in the
+            // table, therefore, use the last value.
+            //amrex::Print() << "Using last table entry\n";
+            return volflow_table[size-1][1];
+          }
+        }
+      }
+
 
       bool constant_temperature;
       amrex::Real temperature;
@@ -577,6 +691,12 @@ class FluidPhase {
         pressure(-1.0),
         species(0),
         constant_velocity(true),
+        flow_thru_eb(false),
+        eb_has_velocity(false),
+        eb_vel_is_mag(false),
+        eb_has_volflow(false),
+        constant_volflow(true),
+        volflow(0.0),
         constant_temperature(true),
         temperature(0.0)
       {}

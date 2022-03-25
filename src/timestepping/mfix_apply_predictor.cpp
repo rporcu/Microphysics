@@ -57,6 +57,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                             Vector< MultiFab* >& div_hJ_old,
                             Vector< Real >& rhs_pressure_g_old,
                             Vector< Real >& rhs_pressure_g,
+                            Vector< MultiFab* > eb_flow_vel,
+                            Vector< MultiFab* > eb_flow_scalars,
+                            Vector< MultiFab* > eb_flow_species,
                             Real time,
                             Real l_dt,
                             Real l_prev_dt,
@@ -364,7 +367,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     compute_MAC_projected_velocities(time, l_dt, get_vel_g_old_const(), 
         GetVecOfPtrs(ep_u_mac), GetVecOfPtrs(ep_v_mac), GetVecOfPtrs(ep_w_mac),
-        get_ep_g_const(), get_ro_g_old_const(), get_txfr_const(),
+        get_ep_g_const(), get_ro_g_old_const(), get_txfr_const(), GetVecOfConstPtrs(eb_flow_vel),
         GetVecOfPtrs(vel_forces), GetVecOfConstPtrs(rhs_mac));
 
     if (solve_species)
@@ -374,6 +377,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         GetVecOfPtrs(vel_forces), GetVecOfPtrs(tra_forces), get_vel_g_old_const(),
         get_ep_g(), get_ro_g_old_const(), get_h_g_old_const(),
         get_trac_old_const(), get_X_gk_old_const(), get_txfr_const(),
+        GetVecOfConstPtrs(eb_flow_vel), GetVecOfConstPtrs(eb_flow_scalars), GetVecOfConstPtrs(eb_flow_species),
         GetVecOfPtrs(ep_u_mac), GetVecOfPtrs(ep_v_mac), GetVecOfPtrs(ep_w_mac),
         l_dt, time);
 
@@ -1107,7 +1111,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
     mfix_apply_nodal_projection(S_cc, new_time, l_dt, l_prev_dt, proj_2,
                                 get_vel_g_old(), get_vel_g(), get_p_g(), get_gp(),
-                                get_ep_g(), get_txfr(), GetVecOfConstPtrs(density_nph));
+                                get_ep_g(), get_txfr(), GetVecOfConstPtrs(density_nph),
+                                GetVecOfConstPtrs(eb_flow_vel));
 
     for (int lev(0); lev <= finest_level; ++lev) {
       delete S_cc[lev];
@@ -1118,7 +1123,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // Correct small cells
     // *************************************************************************************
     mfix_correct_small_cells (get_vel_g(), GetVecOfConstPtrs(ep_u_mac),
-         GetVecOfConstPtrs(ep_v_mac), GetVecOfConstPtrs(ep_w_mac));
+         GetVecOfConstPtrs(ep_v_mac), GetVecOfConstPtrs(ep_w_mac),
+         GetVecOfConstPtrs(eb_flow_vel));
 
 
     // *************************************************************************

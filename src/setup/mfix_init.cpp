@@ -295,10 +295,10 @@ mfix::InitParams ()
     macproj_options = std::make_unique<MfixUtil::MLMGOptions>("mac_proj");
 
     // Checks for hypre namespace
-    if (nodalproj_options->bottom_solver_type == "hypre" && 
+    if (nodalproj_options->bottom_solver_type == "hypre" &&
           macproj_options->bottom_solver_type == "hypre") {
-       std::string nodal_ns = nodalproj_options->hypre_namespace; 
-       std::string mac_ns = macproj_options->hypre_namespace; 
+       std::string nodal_ns = nodalproj_options->hypre_namespace;
+       std::string mac_ns = macproj_options->hypre_namespace;
 
        if (nodal_ns == "hypre" && mac_ns != "hypre")
           amrex::Abort("hypre namespace required for nodal projection");
@@ -482,6 +482,19 @@ mfix::InitParams ()
       }
       else {
         amrex::Abort("Don't know this constraint type!");
+      }
+    }
+
+    // Check on inputs in case of Ideal Gas EOS
+    if (m_constraint_type == ConstraintType::IdealGasOpenSystem ||
+        m_constraint_type == ConstraintType::IdealGasClosedSystem) {
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.MW_gk0.size() > 0, "Inputs error: fluid molecular_weight not provided");
+
+      for (size_t i(0); i < fluid.MW_gk0.size(); ++i) {
+        if (fluid.MW_gk0[i] < 1.e-15) {
+          Print() << "Invalid molecular weight for species " << fluid.species[i] << "\n";
+          amrex::Abort("Inputs error");
+        }
       }
     }
   }

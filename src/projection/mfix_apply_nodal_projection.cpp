@@ -1,5 +1,6 @@
 #include <mfix.H>
 #include <mfix_bc_parms.H>
+#include <mfix_eb_parms.H>
 
 #include <AMReX_REAL.H>
 #include <AMReX_BLFort.H>
@@ -31,7 +32,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
                                    Vector<MultiFab*      > const& gp_in,
                                    Vector<MultiFab*      > const& ep_g_in,
                                    Vector<MultiFab*      > const& txfr_in,
-                                   Vector<MultiFab const*> const& density)
+                                   Vector<MultiFab const*> const& density,
+                                   Vector<MultiFab const*> const& eb_vel)
 {
     BL_PROFILE("mfix::mfix_apply_nodal_projection");
 
@@ -196,9 +198,15 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     nodalproj_options->apply(*nodal_projector);
     nodal_projector->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
 
-    // By setting alpha = ep_g, the nodal projection will correct the velocity by 
+    // By setting alpha = ep_g, the nodal projection will correct the velocity by
     // (sigma / alpha) grad(phi) rather than sigma grad phi
     nodal_projector->setAlpha(GetVecOfConstPtrs(ep_g_in));
+
+    if (EB::has_flow) {
+       for (int lev(0); lev < nlev; ++lev) {
+          nodal_projector->getLinOp().setEBInflowVelocity(lev, *eb_vel[lev]);
+       }
+    }
 
     nodal_projector->computeRHS(get_diveu(), epu, a_S_cc);
     nodal_projector->setCustomRHS(GetVecOfConstPtrs(get_diveu()));
