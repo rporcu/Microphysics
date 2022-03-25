@@ -28,7 +28,7 @@ class Newton {
     template<typename ResidueFunc, typename GradientFunc>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     static
-    int solve(amrex::Real& solution_new,
+    int solve(amrex::Real& solution,
               ResidueFunc& R,
               GradientFunc& partial_R,
               const int is_IOProc,
@@ -36,27 +36,20 @@ class Newton {
               const amrex::Real rel_tol,
               const int max_iterations)
     {
-      amrex::Real solution_old = solution_new;
-      const amrex::Real original_solution(solution_new);
-
-      amrex::Real residue = R(solution_new);
+      amrex::Real residue = R(solution);
       amrex::Real update(0.);
 
       int iter(0);
-      const amrex::Real update_rel_tol = rel_tol*std::abs(solution_new);
+      const amrex::Real update_rel_tol = rel_tol*std::abs(solution);
       //const amrex::Real residue_rel_tol = abs_tol*std::abs(residue);
 
       do {
-        amrex::Real solution = solution_new;
-        solution_new = solution - (residue / partial_R(solution));
-
-        residue = R(solution_new);
-        update = solution_new - solution;
-        solution_old = solution;
+        update = residue / partial_R(solution);
+        solution -= update;
+        residue = R(solution);
 
         ++iter;
         if(iter > max_iterations) {
-          solution_new = original_solution;
 
           if (is_IOProc) {
 #ifdef AMREX_USE_GPU
