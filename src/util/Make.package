@@ -20,7 +20,6 @@ CEXE_headers += mfix_fillpatch_bc.H
 
 CEXE_headers += mfix_algorithm.H
 CEXE_headers += mfix_solvers.H
-CEXE_sources += mfix_solvers.cpp
 
 CEXE_sources += mfix_set_epg_bcs.cpp
 

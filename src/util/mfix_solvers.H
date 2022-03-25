@@ -151,29 +151,7 @@ class DampedNewton {
     }
 
 
-    using ResidueMF = std::function<void(const amrex::Vector<amrex::MultiFab*>&,
-                                         const amrex::Vector<amrex::MultiFab*>&)>;
-
-
-    using GradientMF = std::function<void(const amrex::Vector<amrex::MultiFab*>&,
-                                          const amrex::Vector<amrex::MultiFab*>&)>;
-
-
     using NormMF = std::function<amrex::Real(const amrex::Vector<amrex::MultiFab*>&)>;
-
-
-    // Solve for MultiFabs
-    static
-    void solve(const amrex::Vector<amrex::MultiFab*>& solution,
-               //const amrex::Vector<amrex::MultiFab*>& ep_g,
-               ResidueMF& R,
-               GradientMF& partial_R,
-               NormMF& norm,
-               DampingFactor lean_rate,
-               const amrex::Real abs_tol,
-               const amrex::Real rel_tol,
-               const int max_iterations);
-
 };
 
 } // end namespace Solvers
