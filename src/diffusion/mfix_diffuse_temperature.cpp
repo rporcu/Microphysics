@@ -69,7 +69,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   // Define the norm function
   // **************************************************************************
 
-  DampedNewton::NormMF norm0 = [&] (const Vector<MultiFab*>& vec_of_MFs) -> Real
+  Newton::NormMF norm0 = [&] (const Vector<MultiFab*>& vec_of_MFs) -> Real
   {
     Vector<Real> vec_of_norms(vec_of_MFs.size(), 0.);
     std::transform(vec_of_MFs.begin(), vec_of_MFs.end(), vec_of_norms.begin(),

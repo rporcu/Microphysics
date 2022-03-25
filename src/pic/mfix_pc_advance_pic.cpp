@@ -248,7 +248,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
             Real Tp_new(Tp_old);
 
-            DampedNewton::solve(Tp_new, R, partial_R, is_IOProc, abstol, reltol, maxiter);
+            Newton::solve(Tp_new, R, partial_R, is_IOProc, abstol, reltol, maxiter);
 
             p_realarray[SoArealData::temperature][lp] = Tp_new;
 

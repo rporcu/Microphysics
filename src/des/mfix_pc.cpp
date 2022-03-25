@@ -1102,7 +1102,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                   //Real Tp_new(Tp_old);
                   Real Tp_new(p_realarray[SoArealData::temperature][i]);
 
-                  DampedNewton::solve(Tp_new, R, partial_R, is_IOProc, abstol, reltol, maxiter);
+                  Newton::solve(Tp_new, R, partial_R, is_IOProc, abstol, reltol, maxiter);
 
                   p_realarray[SoArealData::temperature][i] = Tp_new;
 

@@ -414,11 +414,11 @@ mfix::mfix_add_txfr_explicit (Real dt,
 
             int solver_iterations(0);
 
-            solver_iterations = DampedNewton::solve(Tg_new, R, partial_R,
+            solver_iterations = Newton::solve(Tg_new, R, partial_R,
                 is_IOProc, abstol, reltol, maxiter);
 
             if (solver_iterations >= maxiter) {
-              amrex::Abort("Damped-Newton solver did not converge");
+              amrex::Abort("Newton solver did not converge");
             }
 
             Tg_array(i,j,k) = Tg_new;
@@ -583,11 +583,11 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
             int solver_iterations(0);
 
-            solver_iterations = DampedNewton::solve(Tg_new, R, partial_R,
+            solver_iterations = Newton::solve(Tg_new, R, partial_R,
                 is_IOProc, abstol, reltol, maxiter);
 
             if (solver_iterations >= maxiter) {
-              amrex::Abort("Damped-Newton solver did not converge");
+              amrex::Abort("Newton solver did not converge");
             }
 
             Tg_array(i,j,k) = Tg_new;

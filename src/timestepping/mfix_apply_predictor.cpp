@@ -755,11 +755,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
               int solver_iterations(0);
 
-              solver_iterations = DampedNewton::solve(Tg, R, partial_R,
+              solver_iterations = Newton::solve(Tg, R, partial_R,
                   is_IOProc, abstol, reltol, maxiter);
 
               if (solver_iterations >= maxiter) {
-                amrex::Abort("Damped-Newton solver did not converge");
+                amrex::Abort("Newton solver did not converge");
               }
 
               T_g_n(i,j,k) = Tg;

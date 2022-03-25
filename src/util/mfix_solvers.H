@@ -16,13 +16,13 @@
 namespace Solvers {
 
 
-class DampedNewton {
+class Newton {
 
   public:
 
     // Constructor
     AMREX_GPU_HOST_DEVICE
-    DampedNewton() = default;
+    Newton() = default;
 
 
     // TODO description
@@ -41,12 +41,12 @@ class DampedNewton {
         virtual const char* what() const throw()
         {
           if (m_is_IOProc) {
-            std::printf("Damped-Newton total iterations = %d\n", m_iter);
-            std::printf("Damped-Newton update norm = %e\n", m_update_norm);
-            std::printf("Damped-Newton residue norm = %e\n", m_residue_norm);
+            std::printf("Newton total iterations = %d\n", m_iter);
+            std::printf("Newton update norm = %e\n", m_update_norm);
+            std::printf("Newton residue norm = %e\n", m_residue_norm);
           }
 
-          return "Damped-Newton solver did not converge";
+          return "Newton solver did not converge";
         }
 
       private:
@@ -102,13 +102,13 @@ class DampedNewton {
 
           if (is_IOProc) {
 #ifdef AMREX_USE_GPU
-            AMREX_DEVICE_PRINTF("Damped-Newton total iterations = %d\n", iter);
-            AMREX_DEVICE_PRINTF("Damped-Newton update norm = %e\n", std::abs(update));
-            AMREX_DEVICE_PRINTF("Damped-Newton residue norm = %e\n", std::abs(residue));
+            AMREX_DEVICE_PRINTF("Newton total iterations = %d\n", iter);
+            AMREX_DEVICE_PRINTF("Newton update norm = %e\n", std::abs(update));
+            AMREX_DEVICE_PRINTF("Newton residue norm = %e\n", std::abs(residue));
 #else
-            std::printf("Damped-Newton total iterations = %d\n", iter);
-            std::printf("Damped-Newton update norm = %e\n", std::abs(update));
-            std::printf("Damped-Newton residue norm = %e\n", std::abs(residue));
+            std::printf("Newton total iterations = %d\n", iter);
+            std::printf("Newton update norm = %e\n", std::abs(update));
+            std::printf("Newton residue norm = %e\n", std::abs(residue));
 #endif
           }
 
