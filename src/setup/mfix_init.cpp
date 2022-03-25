@@ -295,10 +295,10 @@ mfix::InitParams ()
     macproj_options = std::make_unique<MfixUtil::MLMGOptions>("mac_proj");
 
     // Checks for hypre namespace
-    if (nodalproj_options->bottom_solver_type == "hypre" && 
+    if (nodalproj_options->bottom_solver_type == "hypre" &&
           macproj_options->bottom_solver_type == "hypre") {
-       std::string nodal_ns = nodalproj_options->hypre_namespace; 
-       std::string mac_ns = macproj_options->hypre_namespace; 
+       std::string nodal_ns = nodalproj_options->hypre_namespace;
+       std::string mac_ns = macproj_options->hypre_namespace;
 
        if (nodal_ns == "hypre" && mac_ns != "hypre")
           amrex::Abort("hypre namespace required for nodal projection");

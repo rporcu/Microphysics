@@ -185,7 +185,7 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->p_go, p_go_new);
     delete p_go_new;
 
-    // 
+    //
     MultiFab* p0_g_new = new MultiFab(nd_grids, dmap[lev],
                                       m_leveldata[lev]->p0_g->nComp(),
                                       m_leveldata[lev]->p0_g->nGrow(),
