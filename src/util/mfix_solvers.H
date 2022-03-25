@@ -83,15 +83,6 @@ class Newton {
         amrex::Real solution = solution_new;
         solution_new = solution - (residue / partial_R(solution));
 
-        if (iter != 0) {
-          if (std::abs(solution_new - solution_old) < std::abs(solution_new - solution)) {
-            solution_new = (solution + solution_old) / 2.;
-          }
-          else if (std::abs(solution - solution_old) < std::abs(solution_new - solution)) {
-            solution_new = (solution_new + solution_old) / 2.;
-          }
-        }
-
         residue = R(solution_new);
         update = solution_new - solution;
         solution_old = solution;
