@@ -414,33 +414,12 @@ mfix::mfix_add_txfr_explicit (Real dt,
 
             int solver_iterations(0);
 
-            {
-              DampedNewton::DampingFactor damping_factor(0., 0.);
-              solver_iterations = 
-                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
-                                    damping_factor(epg_loc, vfrac),
-                                    abstol, reltol, maxiter);
+            solver_iterations = DampedNewton::solve(Tg_new, R, partial_R,
+                is_IOProc, abstol, reltol, maxiter);
 
-            } if (solver_iterations >= maxiter) {
-
-              DampedNewton::DampingFactor damping_factor(1., 0.);
-              solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
-                                    damping_factor(epg_loc, vfrac),
-                                    10*abstol, 10*reltol, maxiter);
-
-            } if (solver_iterations >= maxiter) {
-
-              DampedNewton::DampingFactor damping_factor(1., 1.);
-              solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
-                                    damping_factor(epg_loc, vfrac),
-                                    100*abstol, 100*reltol, maxiter);
-
-            } if (solver_iterations >= maxiter) {
+            if (solver_iterations >= maxiter) {
               amrex::Abort("Damped-Newton solver did not converge");
             }
-
 
             Tg_array(i,j,k) = Tg_new;
           }
@@ -604,33 +583,12 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
             int solver_iterations(0);
 
-            {
-              DampedNewton::DampingFactor damping_factor(0., 0.);
-              solver_iterations = 
-                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
-                                    damping_factor(epg_loc, vfrac),
-                                    abstol, reltol, maxiter);
+            solver_iterations = DampedNewton::solve(Tg_new, R, partial_R,
+                is_IOProc, abstol, reltol, maxiter);
 
-            } if (solver_iterations >= maxiter) {
-
-              DampedNewton::DampingFactor damping_factor(1., 0.);
-              solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
-                                    damping_factor(epg_loc, vfrac),
-                                    10*abstol, 10*reltol, maxiter);
-
-            } if (solver_iterations >= maxiter) {
-
-              DampedNewton::DampingFactor damping_factor(1., 1.);
-              solver_iterations =
-                DampedNewton::solve(Tg_new, R, partial_R, is_IOProc,
-                                    damping_factor(epg_loc, vfrac),
-                                    100*abstol, 100*reltol, maxiter);
-
-            } if (solver_iterations >= maxiter) {
+            if (solver_iterations >= maxiter) {
               amrex::Abort("Damped-Newton solver did not converge");
             }
-
 
             Tg_array(i,j,k) = Tg_new;
 

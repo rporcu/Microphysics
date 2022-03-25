@@ -57,35 +57,6 @@ class DampedNewton {
     };
 
 
-    // TODO description
-    class DampingFactor {
-      public:
-        // Default Constructor
-        AMREX_GPU_HOST_DEVICE
-        DampingFactor() : m_epg_exp(0), m_vfrac_exp(0) {};
-
-        // Constructor
-        AMREX_GPU_HOST_DEVICE
-        DampingFactor(const amrex::Real epg_exp,
-                      const amrex::Real vfrac_exp)
-          : m_epg_exp(epg_exp)
-          , m_vfrac_exp(vfrac_exp)
-        {};
-
-        // Functor
-        AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-        amrex::Real operator() (const amrex::Real epg,
-                                const amrex::Real vfrac) const
-        {
-          return std::pow(epg, m_epg_exp)*std::pow(vfrac, m_vfrac_exp);
-        }
-
-      private:
-        amrex::Real m_epg_exp;
-        amrex::Real m_vfrac_exp;
-    };
-
-
     // Solve for scalars
     template<typename ResidueFunc, typename GradientFunc>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
@@ -94,7 +65,6 @@ class DampedNewton {
               ResidueFunc& R,
               GradientFunc& partial_R,
               const int is_IOProc,
-              amrex::Real damping_factor,
               const amrex::Real /*abs_tol*/,
               const amrex::Real rel_tol,
               const int max_iterations)
@@ -111,7 +81,7 @@ class DampedNewton {
 
       do {
         amrex::Real solution = solution_new;
-        solution_new = solution - damping_factor * (residue / partial_R(solution));
+        solution_new = solution - (residue / partial_R(solution));
 
         if (iter != 0) {
           if (std::abs(solution_new - solution_old) < std::abs(solution_new - solution)) {
