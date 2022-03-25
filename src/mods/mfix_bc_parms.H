@@ -77,6 +77,7 @@ namespace BC
                    const SolidsPhase& solids);
 
   void read_bc_velocity (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
+  void read_bc_volflow (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
   void read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
   void read_bc_species (amrex::ParmParse pp,
                         const amrex::Vector<std::string> species,

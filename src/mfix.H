@@ -283,10 +283,11 @@ class mfix : public AmrCore
                                  amrex::Vector<amrex::MultiFab const*> const& rho_in,
                                  amrex::Vector<amrex::MultiFab const*> const& ep_g_in);
 
-    void mfix_correct_small_cells (Vector< MultiFab*     > const& vel_in,
+    void mfix_correct_small_cells (Vector<MultiFab*      > const& vel_in,
                                    Vector<MultiFab const*> const& ep_u_mac,
                                    Vector<MultiFab const*> const& ep_v_mac,
-                                   Vector<MultiFab const*> const& ep_w_mac);
+                                   Vector<MultiFab const*> const& ep_w_mac,
+                                   Vector<MultiFab const*> const& eb_vel);
 
     void mfix_set_velocity_bcs (Real time,
                                 Vector< MultiFab* > const& vel,
@@ -300,7 +301,15 @@ class mfix : public AmrCore
     void mfix_set_temperature_bcs (Real time,
                                    Vector< MultiFab* > const& T_g);
 
+    void mfix_calc_eb_bc_areas();
+
     void mfix_set_eb_temperature_bcs (Vector< MultiFab* > const& eb_T_g_in);
+
+    void mfix_set_eb_velocity_bcs (Real time,
+                                   Vector< MultiFab* > const& eb_vel_g_in);
+
+    void mfix_set_eb_scalar_bcs (Vector< MultiFab* > const& eb_scalars,
+                                 Vector< MultiFab* > const& eb_species);
 
     void mfix_set_density_bcs (Real time,
                                Vector< MultiFab* > const& ro_g);
@@ -493,6 +502,7 @@ class mfix : public AmrCore
                                          amrex::Vector< amrex::MultiFab const*> const& ep_g_in,
                                          amrex::Vector< amrex::MultiFab const*> const& ro_g_in,
                                          amrex::Vector< amrex::MultiFab const*> const& txfr_in,
+                                         amrex::Vector< amrex::MultiFab const*> const& eb_vel,
                                          amrex::Vector< amrex::MultiFab      *> const& vel_forces,
                                          amrex::Vector< amrex::MultiFab const*> const& rhs_mac);
 
@@ -661,7 +671,8 @@ public:
                                       amrex::Vector<amrex::MultiFab*      > const& gp_in,
                                       amrex::Vector<amrex::MultiFab*      > const& ep_g_in,
                                       amrex::Vector<amrex::MultiFab*      > const& txfr_in,
-                                      amrex::Vector<amrex::MultiFab const*> const& density);
+                                      amrex::Vector<amrex::MultiFab const*> const& density,
+                                      amrex::Vector< amrex::MultiFab const*> const& eb_vel);
 
     void compute_tra_forces (amrex::Vector<amrex::MultiFab      *> const& tra_forces,
                              amrex::Vector<amrex::MultiFab const*> const& density);
@@ -830,6 +841,9 @@ public:
                                        Vector< MultiFab const*> const& trac_in,
                                        Vector< MultiFab const*> const& X_gk_in,
                                        Vector< MultiFab const*> const& txfr_in,
+                                       Vector< MultiFab const*> const& eb_vel,
+                                       Vector< MultiFab const*> const& eb_scalars,
+                                       Vector< MultiFab const*> const& eb_species,
                                        Vector< MultiFab*      > const& u_mac,
                                        Vector< MultiFab*      > const& v_mac,
                                        Vector< MultiFab*      > const& w_mac,
@@ -848,6 +862,9 @@ public:
                                Vector< MultiFab* >& div_hJ_old,
                                Vector< Real >& rhs_pressure_g_old,
                                Vector< Real >& rhs_pressure_g,
+                               Vector< MultiFab* > eb_flow_vel,
+                               Vector< MultiFab* > eb_flow_scalars,
+                               Vector< MultiFab* > eb_flow_species,
                                Real time,
                                Real dt,
                                Real prev_dt,
@@ -884,6 +901,9 @@ public:
                                Vector< MultiFab* >& div_hJ_old,
                                Vector< Real >& rhs_pressure_g_old,
                                Vector< Real >& rhs_pressure_g,
+                               Vector< MultiFab* > eb_flow_vel,
+                               Vector< MultiFab* > eb_flow_scalars,
+                               Vector< MultiFab* > eb_flow_species,
                                Real time,
                                Real dt,
                                Real prev_dt,

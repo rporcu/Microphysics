@@ -69,6 +69,7 @@ LevelData::LevelData (BoxArray const& ba,
     ChemTransfer chem_txfr_idxs(nspecies_g, nreactions);
     chem_txfr = new MultiFab(ba, dmap, chem_txfr_idxs.count, nghost, MFInfo(), factory);
   }
+
 }
 
 void LevelData::resetValues (const amrex::Real init_value)
@@ -111,6 +112,7 @@ void LevelData::resetValues (const amrex::Real init_value)
   if (solve_reactions && solve_species) {
     chem_txfr->setVal(init_value);
   }
+
 }
 
 LevelData::~LevelData ()

@@ -9,6 +9,7 @@
 #include <AMReX_Array.H>
 #include <AMReX_EB_utils.H>
 
+#include <mfix_eb_parms.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
 
@@ -60,6 +61,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                     Vector< MultiFab const*> const& trac_in,
                                     Vector< MultiFab const*> const& X_gk_in,
                                     Vector< MultiFab const*> const& txfr_in,
+                                    Vector< MultiFab const*> const& eb_vel,
+                                    Vector< MultiFab const*> const& eb_scalars,
+                                    Vector< MultiFab const*> const& eb_species,
                                     Vector< MultiFab*      > const& ep_u_mac,
                                     Vector< MultiFab*      > const& ep_v_mac,
                                     Vector< MultiFab*      > const& ep_w_mac,
@@ -179,10 +183,14 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
         const auto& ebfact = EBFactory(lev);
 
-        if (!ebfact.isAllRegular())
-            amrex::EB_computeDivergence(divu[lev],u,geom[lev],true);
-        else
+        if (!ebfact.isAllRegular()) {
+            if (EB::has_flow)
+               amrex::EB_computeDivergence(divu[lev],u,geom[lev],true, *eb_vel[lev] );
+            else
+               amrex::EB_computeDivergence(divu[lev],u,geom[lev],true);
+        } else {
             amrex::computeDivergence(divu[lev],u,geom[lev]);
+        }
 
         divu[lev].FillBoundary(geom[lev].periodicity());
 
@@ -219,6 +227,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                      get_hydro_velocity_bcrec_device_ptr(),
                                      get_velocity_iconserv_device_ptr(),
                                      ebfact,
+                                     (EB::has_flow) ? eb_vel[lev]->const_array(mfi) : Array4<Real const>{},
                                      m_godunov_ppm, m_godunov_use_forces_in_trans,
                                      is_velocity, fluxes_are_area_weighted,
                                      advection_string);
@@ -253,6 +262,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                           get_density_bcrec_device_ptr(),
                                           get_density_iconserv_device_ptr(),
                                           ebfact,
+                                          (EB::has_flow) ? eb_scalars[lev]->const_array(mfi,0) : Array4<Real const>{},
                                           m_godunov_ppm, m_godunov_use_forces_in_trans,
                                           is_velocity, fluxes_are_area_weighted,
                                           advection_string);
@@ -299,6 +309,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                           get_enthalpy_bcrec_device_ptr(),
                                           get_enthalpy_iconserv_device_ptr(),
                                           ebfact,
+                                          (EB::has_flow) ? eb_scalars[lev]->const_array(mfi,1) : Array4<Real const>{},
                                           m_godunov_ppm, m_godunov_use_forces_in_trans,
                                           is_velocity, fluxes_are_area_weighted,
                                           advection_string);
@@ -344,6 +355,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                           get_tracer_bcrec_device_ptr(),
                                           get_tracer_iconserv_device_ptr(),
                                           ebfact,
+                                          (EB::has_flow) ? eb_scalars[lev]->const_array(mfi,2) : Array4<Real const>{},
                                           m_godunov_ppm, m_godunov_use_forces_in_trans,
                                           is_velocity, fluxes_are_area_weighted,
                                           advection_string);
@@ -389,6 +401,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                           get_species_bcrec_device_ptr(),
                                           get_species_iconserv_device_ptr(),
                                           ebfact,
+                                          (EB::has_flow) ? eb_species[lev]->const_array(mfi) : Array4<Real const>{},
                                           m_godunov_ppm, m_godunov_use_forces_in_trans,
                                           is_velocity, fluxes_are_area_weighted,
                                           advection_string);
@@ -453,15 +466,26 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                                      AMREX_D_DECL(flux_x[lev].const_array(mfi,flux_comp),
                                                                   flux_y[lev].const_array(mfi,flux_comp),
                                                                   flux_z[lev].const_array(mfi,flux_comp)),
-                                                     vfrac, num_comp, geom[lev], mult, fluxes_are_area_weighted);
+                                                     vfrac, num_comp, geom[lev], mult, fluxes_are_area_weighted,
+                                                     (EB::has_flow) ? eb_vel[lev]->const_array(mfi) : Array4<Real const>{},
+                                                     (EB::has_flow) ? eb_vel[lev]->const_array(mfi) : Array4<Real const>{},
+                                                     flagfab.const_array(),
+                                                     ebfact.getBndryArea().const_array(mfi),
+                                                     ebfact.getBndryNormal().const_array(mfi));
+
 
                     flux_comp = 3;
-                     num_comp = 2+ntrac;
+                    num_comp = 2+ntrac;
                     HydroUtils::EB_ComputeDivergence(bx, dsdt_tmp.array(mfi),
                                                      AMREX_D_DECL(flux_x[lev].const_array(mfi,flux_comp),
                                                                   flux_y[lev].const_array(mfi,flux_comp),
                                                                   flux_z[lev].const_array(mfi,flux_comp)),
-                                                     vfrac, num_comp, geom[lev], mult, fluxes_are_area_weighted);
+                                                     vfrac, num_comp, geom[lev], mult, fluxes_are_area_weighted,
+                                                     (EB::has_flow) ? eb_vel[lev]->const_array(mfi) : Array4<Real const>{},
+                                                     (EB::has_flow) ? eb_scalars[lev]->const_array(mfi) : Array4<Real const>{},
+                                                     flagfab.const_array(),
+                                                     ebfact.getBndryArea().const_array(mfi),
+                                                     ebfact.getBndryNormal().const_array(mfi));
 
                     flux_comp = 5+ntrac;
                      num_comp = l_nspecies;
@@ -471,7 +495,12 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                                          AMREX_D_DECL(flux_x[lev].const_array(mfi,flux_comp),
                                                                       flux_y[lev].const_array(mfi,flux_comp),
                                                                       flux_z[lev].const_array(mfi,flux_comp)),
-                                                         vfrac, num_comp, geom[lev], mult, fluxes_are_area_weighted);
+                                                         vfrac, num_comp, geom[lev], mult, fluxes_are_area_weighted,
+                                                        (EB::has_flow) ? eb_vel[lev]->const_array(mfi) : Array4<Real const>{},
+                                                        (EB::has_flow) ? eb_species[lev]->const_array(mfi) : Array4<Real const>{},
+                                                        flagfab.const_array(),
+                                                        ebfact.getBndryArea().const_array(mfi),
+                                                        ebfact.getBndryNormal().const_array(mfi));
                     }
                 }
                 else

@@ -2,6 +2,9 @@
 #define _MFIX_CALCCELL_H_
 
 #include <AMReX_REAL.H>
+#include <AMReX_Box.H>
+#include <AMReX_Geometry.H>
+#include <AMReX_RealBox.H>
 
 void calc_cell_ic(const amrex::Real dx,
                   const amrex::Real dy,
@@ -15,5 +18,10 @@ void calc_cell_ic(const amrex::Real dx,
                   int& j_n,
                   int& k_b,
                   int& k_t);
+
+
+
+const amrex::Box* calc_ic_box(amrex::Geometry& geom, const amrex::RealBox* region);
+
 
 #endif

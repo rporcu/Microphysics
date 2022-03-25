@@ -157,7 +157,6 @@ namespace BC
 
       BC_t new_bc;
 
-
       // Set the region for the initial condition.
       new_bc.region = REGIONS::getRegion(regions[bcv]);
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE( new_bc.region != NULL, "Invalid bc region!");
@@ -314,6 +313,7 @@ namespace BC
 
       }
 
+
       // Get EB data.
       if (new_bc.type == eb_) {
         std::string field = "bc."+regions[bcv]+".eb";
@@ -323,6 +323,30 @@ namespace BC
           EB::fix_temperature = 1;
           ppEB.get("temperature", new_bc.eb.temperature);
         }
+
+        if (ppEB.contains("normal")) {
+          amrex::Print() << "------------------------------------------------------------ FOUND NORMAL\n";
+          new_bc.eb.has_normal = 1;
+
+          ppEB.getarr("normal", new_bc.eb.normal, 0, 3);
+          const amrex::Real nx = new_bc.eb.normal[0];
+          const amrex::Real ny = new_bc.eb.normal[1];
+          const amrex::Real nz = new_bc.eb.normal[2];
+
+          const amrex::Real nmag = std::sqrt(nx*nx+ny*ny+nz*nz);
+          AMREX_ALWAYS_ASSERT(nmag > 0.);
+
+          new_bc.eb.normal[0] = nx / nmag;
+          new_bc.eb.normal[1] = ny / nmag;
+          new_bc.eb.normal[2] = nz / nmag;
+
+          amrex::Real tol_deg(0.);
+          ppEB.query("normal_tol", tol_deg);
+
+          new_bc.eb.normal_tol = tol_deg*M_PI/amrex::Real(180.);
+
+        }
+
       }
 
       // Get fluid data.
@@ -332,11 +356,32 @@ namespace BC
         amrex::ParmParse ppFluid(field.c_str());
 
         // Mass inflows need fluid velocity and volume fraction.
-        if( new_bc.type == minf_) {
+        if( new_bc.type == minf_ ) {
           ppFluid.get("volfrac", new_bc.fluid.volfrac);
           volfrac_total += new_bc.fluid.volfrac;
 
           read_bc_velocity(ppFluid, &new_bc.fluid);
+
+        } else if ( new_bc.type == eb_ ) {
+
+          if (ppFluid.contains("velocity")) {
+             new_bc.fluid.flow_thru_eb    = 1;
+             new_bc.fluid.eb_has_velocity = 1;
+             read_bc_velocity(ppFluid, &new_bc.fluid);
+
+          } else if (ppFluid.contains("volflow")) {
+             new_bc.fluid.flow_thru_eb   = 1;
+             new_bc.fluid.eb_has_volflow = 1;
+             read_bc_volflow(ppFluid, &new_bc.fluid);
+          }
+
+          if ( new_bc.fluid.flow_thru_eb ) {
+            ppFluid.get("volfrac", new_bc.fluid.volfrac);
+            volfrac_total += new_bc.fluid.volfrac;
+
+            EB::has_flow = 1;
+            EB::compute_area = EB::compute_area || new_bc.fluid.eb_has_volflow;
+          }
 
         }
 
@@ -351,7 +396,8 @@ namespace BC
           amrex::Abort("Fix the inputs file!");
         }
 
-        if( new_bc.type == minf_ || new_bc.type == pinf_ ) {
+        if( new_bc.type == minf_ || new_bc.type == pinf_ ||
+              (new_bc.type == eb_ && new_bc.fluid.flow_thru_eb) ) {
           if (fluid.solve_enthalpy) {
             read_bc_temperature(ppFluid, &new_bc.fluid);
           }
@@ -535,7 +581,13 @@ read_bc_velocity (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
   amrex::Vector<amrex::Real> vel_in;
   pp.getarr("velocity", vel_in);
 
-  fluid->constant_velocity = (vel_in.size() == 3);
+
+  // Set flag indicating this is an EB boundary condition for fluid
+  const int is_eb = fluid->flow_thru_eb;
+
+  const int rcomps = vel_in.size();
+
+  fluid->constant_velocity = ((rcomps == 3) || (is_eb && rcomps == 1) );
   if (fluid->constant_velocity) {
     fluid->velocity= vel_in;
 
@@ -548,7 +600,7 @@ read_bc_velocity (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
       found = pp.queryktharr("velocity", k, kth_input);
       if (found){
         // Assert that it has the correct length.
-        if ( kth_input.size() != 4 ) {
+        if ( ( kth_input.size() != 4 ) || ( is_eb && kth_input.size() != 2 )) {
           amrex::Print() << "Bad velocity inputs specification:\n";
           for( int lc=0; lc<kth_input.size(); lc++)
             amrex::Print()  << "  " << kth_input[lc];
@@ -572,13 +624,83 @@ read_bc_velocity (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
       k++;
     } while(found);
   }
-  if ( fluid->velocity.size() == 0 &&
-       fluid->vel_table.size() == 0){
+
+  const int tsize = fluid->vel_table.size();
+  if ( fluid->velocity.size() == 0 && tsize == 0){
     amrex::Print() << "No velocity inputs found for fluid\n";
     amrex::Abort("No velocity inputs found for fluid");
   }
 
+  // Verify that all entries in the same are the same size
+  if( tsize > 0) {
+    const int ncomps = fluid->vel_table[0].size();
+    for (int lc=1; lc<tsize; lc++) {
+      if(fluid->vel_table[lc].size() != ncomps) {
+        amrex::Print() << "Velocity inputs must be the same dimensions\n";
+        amrex::Abort("Velocity inputs must be the same dimensions\n");
+      }
+    }
+    fluid->eb_vel_is_mag = (is_eb && ncomps == 2);
+  } else {
+    fluid->eb_vel_is_mag = (is_eb && (fluid->velocity.size() == 1));
+  }
+
 }// end read_velocity
+
+
+void
+read_bc_volflow (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
+{
+
+  amrex::Vector<amrex::Real> volflow_in;
+  pp.getarr("volflow", volflow_in);
+
+  fluid->constant_volflow = (volflow_in.size() == 1);
+  if (fluid->constant_volflow) {
+
+    fluid->volflow = volflow_in[0];
+
+  } else {
+
+    int found;
+    int k=0;
+    do {
+
+      amrex::Vector<amrex::Real> kth_input;
+      found = pp.queryktharr("volflow", k, kth_input);
+
+      if (found){
+        // Assert that it has the correct length.
+        if ( kth_input.size() != 2 ) {
+          amrex::Print() << "Bad volflow inputs specification:\n";
+          for( int lc=0; lc<kth_input.size(); lc++)
+            amrex::Print()  << "  " << kth_input[lc];
+          amrex::Print() << std::endl;
+          amrex::Abort("Fix input deck.");
+        }
+
+        const amrex::Real new_time = kth_input[0];
+        const int len = fluid->volflow_table.size();
+        if (len == 0){
+          fluid->volflow_table.push_back(kth_input);
+        } else {
+          for (int lc=0; lc<len; lc++) {
+            if ( new_time <= fluid->volflow_table[lc][0]){
+              fluid->volflow_table.insert(fluid->volflow_table.begin()+lc, kth_input);
+            } else if (lc == len-1){
+              fluid->volflow_table.push_back(kth_input);
+            }
+          }
+        }
+      }
+      k++;
+    } while(found);
+
+  }
+
+}// end read_bc_temperature
+
+
 
 
 void
