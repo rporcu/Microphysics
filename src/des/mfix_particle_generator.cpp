@@ -29,18 +29,21 @@ using namespace amrex;
 
 namespace{
 
-  int hcp_i(Real rad, Real xlen, int offset) {
+  int hcp_i(Real rad, Real xlen, int offset_int) {
     int i(0);
-    while ((2*i+1+offset)*rad <= xlen-rad) {
+    const Real offset = static_cast<Real>(offset_int);
+    while ((1.0 + 2.0*static_cast<Real>(i) + offset)*rad <= xlen-rad) {
       i++;
     }
     return i;
   }
 
-  int hcp_j(Real rad, Real ylen, int offset) {
+  int hcp_j(Real rad, Real ylen, int offset_int) {
     int j(0);
     const Real sqrt3 = std::sqrt(3.0);
-    while ((1+sqrt3*j)*rad <=ylen-rad) {
+    const Real third = Real(3.0);
+    const Real offset = static_cast<Real>(offset_int);
+    while ((1.0 + sqrt3*static_cast<Real>(j) + offset*third)*rad <=ylen-rad) {
       j++;
     }
     return j;
@@ -49,7 +52,7 @@ namespace{
   int hcp_k(Real rad, Real zlen) {
     int k(0);
     const Real sqrt6x2o3 = std::sqrt(6.0)*(2.0/3.0);
-    while ((1+k*sqrt6x2o3)*rad <= zlen-rad) {
+    while ((1.0 + sqrt6x2o3*static_cast<Real>(k))*rad <= zlen-rad) {
       k++;
     }
     return k;
@@ -140,8 +143,7 @@ namespace{
 
   }
 
-
-};
+}
 
 
 ParticlesGenerator::ParticlesGenerator ()
