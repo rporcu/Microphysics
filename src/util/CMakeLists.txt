@@ -7,7 +7,6 @@ target_sources( mfixcore
    mfix_algorithm.H
    mfix_calc_eb_bc_areas.cpp
    mfix_solvers.H
-   mfix_solvers.cpp
    mfix_filcc.H
    mfix_filcc.cpp
    mfix_util.cpp

@@ -658,7 +658,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
         const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ld.T_g->Factory());
         const auto& flags = factory.getMultiEBCellFlagFab();
-        const auto& volfrac = factory.getVolFrac();
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -692,7 +691,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
           const Real Dpressure_Dt_old       = rhs_pressure_g_old[lev];
 
           auto const& flags_arr = flags.const_array(mfi);
-          auto const& volfrac_arr = volfrac.const_array(mfi);
 
           const int l_solve_species = solve_species;
 
@@ -700,7 +698,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
               dhdt_o,dhdt_n,h_rhs_o,h_rhs_n,l_dt,lap_T_o,lap_T_n,Dpressure_Dt,
               Dpressure_Dt_old,closed_system,explicit_diffusive_enthalpy,
               fluid_parms,X_gk_n,nspecies_g,fluid_is_a_mixture,flags_arr,
-              volfrac_arr,run_on_device,div_hJ_o,div_hJ_n,l_solve_species,
+              run_on_device,div_hJ_o,div_hJ_n,l_solve_species,
               is_IOProc,abstol=newton_abstol,reltol=newton_reltol,
               maxiter=newton_maxiter]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -710,7 +708,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
             if (!cell_is_covered) {
               int conv_comp = 1;
               const Real epg_loc = epg(i,j,k);
-              const Real vfrac = volfrac_arr(i,j,k);
 
               const Real num =         (rho_o(i,j,k) * epg_loc);
               const Real denom = 1.0 / (rho_n(i,j,k) * epg_loc);
@@ -796,34 +793,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
               Real Tg(T_g_o(i,j,k));
 
-              int solver_iterations(0);
-
-              {
-                DampedNewton::DampingFactor damping_factor(0., 0.);
-                solver_iterations = 
-                  DampedNewton::solve(Tg, R, partial_R, is_IOProc,
-                                      damping_factor(epg_loc, vfrac),
-                                      abstol, reltol, maxiter);
-
-              } if (solver_iterations >= maxiter) {
-
-                DampedNewton::DampingFactor damping_factor(1., 0.);
-                solver_iterations =
-                  DampedNewton::solve(Tg, R, partial_R, is_IOProc,
-                                      damping_factor(epg_loc, vfrac),
-                                      10*abstol, 10*reltol, maxiter);
-
-              } if (solver_iterations >= maxiter) {
-
-                DampedNewton::DampingFactor damping_factor(1., 1.);
-                solver_iterations =
-                  DampedNewton::solve(Tg, R, partial_R, is_IOProc,
-                                      damping_factor(epg_loc, vfrac),
-                                      100*abstol, 100*reltol, maxiter);
-
-              } if (solver_iterations >= maxiter) {
-                amrex::Abort("Damped-Newton solver did not converge");
-              }
+              Newton::solve(Tg, R, partial_R, is_IOProc, abstol, reltol, maxiter);
 
               T_g_n(i,j,k) = Tg;
             }
@@ -849,7 +819,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
           const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ld.T_g->Factory());
           const auto& flags = factory.getMultiEBCellFlagFab();
-          const auto& volfrac = factory.getVolFrac();
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -869,10 +838,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
             Array4<Real const> const& lap_T_o = lap_T_old[lev]->const_array(mfi);
 
             auto const& flags_arr = flags.const_array(mfi);
-            auto const& volfrac_arr = volfrac.const_array(mfi);
 
             amrex::ParallelFor(bx, [ep_g,ro_g_n,h_g_n,T_g_o,T_g_n,lap_T_o,l_dt,
-                fluid_parms,fluid_is_a_mixture,nspecies_g,X_gk_n,volfrac_arr,
+                fluid_parms,fluid_is_a_mixture,nspecies_g,X_gk_n,
                 flags_arr,run_on_device,is_IOProc,abstol=newton_abstol,
                 reltol=newton_reltol,maxiter=newton_maxiter]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -882,7 +850,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
               if (!cell_is_covered) {
 
                 const Real epg_loc = ep_g(i,j,k);
-                const Real vfrac = volfrac_arr(i,j,k);
 
                 const Real denom = 1.0 / (ro_g_n(i,j,k) * epg_loc);
 
@@ -945,34 +912,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
                 Real Tg(T_g_o(i,j,k));
 
-                int solver_iterations(0);
-
-                {
-                  DampedNewton::DampingFactor damping_factor(0., 0.);
-                  solver_iterations = 
-                    DampedNewton::solve(Tg, R, partial_R, is_IOProc,
-                                        damping_factor(epg_loc, vfrac),
-                                        abstol, reltol, maxiter);
-
-                } if (solver_iterations >= maxiter) {
-
-                  DampedNewton::DampingFactor damping_factor(1., 0.);
-                  solver_iterations =
-                    DampedNewton::solve(Tg, R, partial_R, is_IOProc,
-                                        damping_factor(epg_loc, vfrac),
-                                        10*abstol, 10*reltol, maxiter);
-
-                } if (solver_iterations >= maxiter) {
-
-                  DampedNewton::DampingFactor damping_factor(1., 1.);
-                  solver_iterations =
-                    DampedNewton::solve(Tg, R, partial_R, is_IOProc,
-                                        damping_factor(epg_loc, vfrac),
-                                        100*abstol, 100*reltol, maxiter);
-
-                } if (solver_iterations >= maxiter) {
-                  amrex::Abort("Damped-Newton solver did not converge");
-                }
+                Newton::solve(Tg, R, partial_R, is_IOProc, abstol, reltol, maxiter);
 
                 T_g_n(i,j,k) = Tg;
               }
