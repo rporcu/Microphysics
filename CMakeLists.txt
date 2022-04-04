@@ -37,6 +37,11 @@ else ()
    message(STATUS "Build type set by user to '${CMAKE_BUILD_TYPE}'.")
 endif()
 
+find_program(LLD_FOUND lld)
+if(LLD_FOUND)
+  add_link_options("-fuse-ld=lld")
+endif()
+
 find_program(CCACHE_FOUND ccache)
 find_program(SCCACHE_FOUND sccache)
 if(SCCACHE_FOUND AND NOT SKIP_LAUNCHER)
