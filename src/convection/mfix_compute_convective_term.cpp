@@ -648,6 +648,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
             auto const& fcy = ebfact.getFaceCent()[1]->const_array(mfi);
             auto const& fcz = ebfact.getFaceCent()[2]->const_array(mfi);
 
+            Array4<const Real> epg = ep_g_in[lev]->array(mfi);
+
             // Velocity
             int ncomp = 3;
 
@@ -660,7 +662,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                    flagfab.const_array(),
                                    apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
                                    bc_vel, geom[lev], l_dt,
-                                   m_redistribution_type);
+                                   m_redistribution_type, 2, Real(0.5), epg);
 
             // Density
             const int use_species_advection = fluid.is_a_mixture && solve_species;
@@ -678,9 +680,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                        flagfab.const_array(),
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
                                        bc_den, geom[lev], l_dt,
-                                       m_redistribution_type);
+                                       m_redistribution_type, 2, Real(0.5), epg);
             }
-
 
             // Enthalpy
             if (advect_enthalpy)
@@ -704,7 +705,7 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                        flagfab.const_array(),
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
                                        bc_rh, geom[lev], l_dt,
-                                       m_redistribution_type);
+                                       m_redistribution_type, 2, Real(0.5), epg);
             }
 
             // Tracers
@@ -729,11 +730,12 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                        flagfab.const_array(),
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
                                        bc_rt, geom[lev], l_dt,
-                                       m_redistribution_type);
+                                       m_redistribution_type, 2, Real(0.5), epg);
             }
 
             if (solve_species && (l_nspecies > 0))
             {
+
                 ncomp = l_nspecies;
 
                 Array4<Real const>   X = X_gk_in[lev]->const_array(mfi);
@@ -754,7 +756,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
                                        flagfab.const_array(),
                                        apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
                                        bc_rX, geom[lev], l_dt,
-                                       m_redistribution_type);
+                                       m_redistribution_type, 2, Real(0.5), epg);
+
             }
 
          } // test on if regular
