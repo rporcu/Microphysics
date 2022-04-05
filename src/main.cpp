@@ -185,10 +185,7 @@ int main (int argc, char* argv[])
     // only if fluid.solve = T
     Real prev_dt = dt;
 
-    mfixRW.writePlotFileInitial(nstep, time, mfix);
-    mfixRW.writeCheckPointFile(nstep, dt, time, mfix);
-    mfixRW.writeParticleAscii(nstep, mfix);
-    mfixRW.writeAverageRegions(nstep, time, mfix);
+    mfixRW.writeNow(mfix, nstep, time, dt, /*first=*/true, /*last=*/false);
 
     bool do_not_evolve = !mfix.IsSteadyState() && ( (mfixRW.max_step == 0) ||
                      ( (mfixRW.stop_time >= 0.) && (time >  mfixRW.stop_time) ) ||
@@ -249,7 +246,7 @@ int main (int argc, char* argv[])
                     time += prev_dt;
                     nstep++;
 
-                    mfixRW.writeNow(nstep, time, prev_dt, mfix);
+                    mfixRW.writeNow(mfix, nstep, time, prev_dt);
 #ifdef MFIX_CATALYST
                     mfix.RunCatalystAdaptor(nstep, time);
 #endif
@@ -267,10 +264,7 @@ int main (int argc, char* argv[])
     if (mfix.IsSteadyState())
         nstep = 1;
 
-    // Dump plotfile at the final time
-    mfixRW.writeCheckPointFileFinal(nstep, dt, time, mfix);
-    mfixRW.writePlotFileFinal(nstep, time, mfix);
-    mfixRW.writeParticleAsciiFinal(nstep, mfix);
+    mfixRW.writeNow(mfix, nstep, time, dt, /*first=*/false, /*last=*/true);
 
     mfix.mfix_usr3();
 

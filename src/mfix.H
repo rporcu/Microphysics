@@ -119,7 +119,7 @@ class mfix : public AmrCore
     void WritePlotFile (std::string & plot_file_name,
                         int nstep = 0, Real time = 0.0);
 
-    void WriteAscentFile ( );
+    void WriteAscentFile (int nstep, amrex::Real time );
 
 #ifdef MFIX_CATALYST
     void RunCatalystAdaptor ( int nstep, Real time );
@@ -216,23 +216,6 @@ class mfix : public AmrCore
     void ResetIOChkData ();
 
     void InitIOPltData ();
-
-    // If > 0, dump plotfiles every "plot_int" steps
-    static int plot_int;
-
-    // If > 0, dump plotfiles at as close as possible to the designated period
-    // *without* changing dt
-    static Real plot_per_approx;
-
-    // If > 0, dump plotfiles at exactcly the designated period by changing dt
-    static Real plot_per_exact;
-
-    // If > 0, dump plotfiles every "plot_int" steps
-    static int ascent_int;
-
-    // If > 0, dump plotfiles at as close as possible to the designated period
-    // *without* changing dt
-    static Real ascent_per_approx;
 
     static int  mass_balance_report_int;
     static Real mass_balance_report_per_approx;

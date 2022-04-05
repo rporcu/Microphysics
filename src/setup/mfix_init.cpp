@@ -504,21 +504,6 @@ mfix::InitParams ()
 
     amr_pp.query("restart_from_cold_flow", restart_from_cold_flow);
 
-    amr_pp.query("plot_int", plot_int);
-    amr_pp.query("plot_per_exact", plot_per_exact);
-    amr_pp.query("plot_per_approx", plot_per_approx);
-
-    if ((plot_int       > 0 && plot_per_exact  > 0) ||
-        (plot_int       > 0 && plot_per_approx > 0) ||
-        (plot_per_exact > 0 && plot_per_approx > 0) )
-      amrex::Abort("Must choose only one of plot_int or plot_per_exact or plot_per_approx");
-
-    amr_pp.query("ascent_int", ascent_int);
-    amr_pp.query("ascent_per_approx", ascent_per_approx);
-
-    if ((ascent_int       > 0 && ascent_per_approx > 0) )
-      amrex::Abort("Must choose only one of ascent_int or ascent_per_exact or ascent_per_approx");
-
     amr_pp.queryarr("avg_p_g", avg_p_g);
     amr_pp.queryarr("avg_ep_g", avg_ep_g);
     amr_pp.queryarr("avg_vel_g", avg_vel_g);
@@ -756,8 +741,11 @@ void mfix::MakeNewLevelFromScratch (int lev, Real /*time*/,
 
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
-    amrex::Print() << "SETTING NEW GRIDS IN MAKE NEW LEVEL " << new_grids << std::endl;
-    amrex::Print() << "SETTING NEW DMAP IN MAKE NEW LEVEL " << new_dmap << std::endl;
+
+    if (m_verbose > 0) {
+      amrex::Print() << "SETTING NEW GRIDS IN MAKE NEW LEVEL " << new_grids << std::endl;
+      amrex::Print() << "SETTING NEW DMAP IN MAKE NEW LEVEL " << new_dmap << std::endl;
+    }
 
     macproj = std::make_unique<Hydro::MacProjector>(Geom(0,finest_level),
                                    MLMG::Location::FaceCentroid,  // Location of mac_vec
