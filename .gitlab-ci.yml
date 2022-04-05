@@ -18,6 +18,7 @@ variables:
   GIT_DEPTH: "100"
   GIT_STRATEGY: fetch
   GIT_SUBMODULE_STRATEGY: recursive
+  LDFLAGS: "-lopen-pal"
   SCCACHE_BUCKET: exa-sccache
   SCCACHE_REGION: us-west-2
 
@@ -96,7 +97,7 @@ build:dpcpp:
     - git submodule update --init --force
     - cmake -S .
             -B build
-            -DCMAKE_BUILD_TYPE=None
+            -DCMAKE_BUILD_TYPE=MinSizeRel
             -DMFIX_CSG=1
             -DMFIX_GPU_BACKEND=SYCL
             -DSKIP_LAUNCHER=1
@@ -120,7 +121,7 @@ build:hip:
     - cmake -S .
             -B build
             -DAMReX_AMD_ARCH=gfx908
-            -DCMAKE_BUILD_TYPE=Debug
+            -DCMAKE_BUILD_TYPE=MinSizeRel
             -DMFIX_CSG=1
             -DMFIX_GPU_BACKEND=HIP
             -DMFIX_MPI=0
@@ -135,7 +136,6 @@ build:nvcc:
     CC: gcc-9
     CXX: g++-9
   script:
-    - sccache -s
     - git submodule update --init --force
     - cmake -S .  -B build
             -DAMReX_CUDA_ARCH=Volta
@@ -155,10 +155,9 @@ build:csg:
     - conan install -if build -g cmake_find_package catch2/2.13.7@
     - conan install -if build -g cmake_find_package cgal/5.2.1@
     - conan install -if build -g cmake_find_package taocpp-pegtl/3.2.1@
-    - sccache -s
     - cmake -S .
             -B build
-            -DCMAKE_BUILD_TYPE=Debug
+            -DCMAKE_BUILD_TYPE=MinSizeRel
             -DCMAKE_MODULE_PATH=$PWD/build
             -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror -pedantic -pedantic-errors"
             -DMFIX_CSG=ON
@@ -171,7 +170,6 @@ build:csg:
 .ctest: &ctest_template
   image: $CI_REGISTRY_IMAGE/nvcc
   script:
-    - sccache -s
     - git submodule update --init --force
     - cmake -S .
             -B build
