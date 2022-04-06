@@ -25,13 +25,6 @@ amrex::Real      mfix::m_max_solids_volume_fraction = 0.64356;
 int mfix::nlev  = 1;
 int mfix::ntrac = 1;
 
-int  mfix::plot_int        = -1;
-Real mfix::plot_per_approx = -1.;
-Real mfix::plot_per_exact  = -1.;
-
-int  mfix::ascent_int        = -1;
-Real mfix::ascent_per_approx = -1.;
-
 EBSupport mfix::m_eb_support_level = EBSupport::full;
 
 RealVect mfix::gravity {0.};
