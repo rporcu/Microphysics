@@ -230,6 +230,10 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
     Real eps = std::numeric_limits<Real>::epsilon();
     if ( nstep > 1 && cfl_max <= eps ) dt_new = 0.5 * old_dt;
 
+    // Don't let the timestep grow by more than 1% per step.
+    if ( nstep > 1 )
+        dt_new = amrex::min( dt_new, 1.01*old_dt );
+
     // Don't overshoot the final time if not running to steady state
     if (m_steady_state == 0 && stop_time > 0.)
        if (time+dt_new > stop_time)
