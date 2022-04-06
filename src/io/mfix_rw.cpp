@@ -138,7 +138,7 @@ void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bo
 
     if ( (plot_test == 1) || ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) ) )
     {
-      if (mfix.fluid.solve)
+      if (mfix.fluid.solve && !last)
            mfix.mfix_compute_vort();
         mfix.WritePlotFile( plot_file, nstep, time );
     }
