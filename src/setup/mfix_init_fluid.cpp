@@ -316,8 +316,8 @@ void init_periodic_tracer (const Box& bx,
         {
             Real z = (Real(k) + .5) * dz - .00037;
 
-            Real x = (Real(i) + .5) * dx - .00123;
-            Real y = (Real(j) + .5) * dy - .00073;
+            Real x = (Real(i) + .5) * dx - .00073;
+            Real y = (Real(j) + .5) * dy - .00123;
 
             trac(i,j,k) = A*( std::sin(C*(x+y) - 0.00042) + 1.0) * exp(z);
 
