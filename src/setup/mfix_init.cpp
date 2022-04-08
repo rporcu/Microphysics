@@ -497,28 +497,6 @@ mfix::InitParams ()
     }
   }
 
-  {
-    ParmParse amr_pp("amr");
-
-    amr_pp.query("restart_from_cold_flow", restart_from_cold_flow);
-
-    amr_pp.queryarr("avg_p_g", avg_p_g);
-    amr_pp.queryarr("avg_ep_g", avg_ep_g);
-    amr_pp.queryarr("avg_vel_g", avg_vel_g);
-    amr_pp.queryarr("avg_T_g", avg_T_g);
-
-    amr_pp.queryarr("avg_vel_p", avg_vel_p);
-
-    amr_pp.queryarr("avg_T_p", avg_T_p);
-
-    // Regions geometry
-    amr_pp.queryarr("avg_region_x_e", avg_region_x_e);
-    amr_pp.queryarr("avg_region_x_w", avg_region_x_w);
-    amr_pp.queryarr("avg_region_y_n", avg_region_y_n);
-    amr_pp.queryarr("avg_region_y_s", avg_region_y_s);
-    amr_pp.queryarr("avg_region_z_t", avg_region_z_t);
-    amr_pp.queryarr("avg_region_z_b", avg_region_z_b);
-  }
 
   {
     ParmParse reports_pp("mfix.reports");

@@ -125,6 +125,12 @@ class LevelData
 
     amrex::MultiFab* divtau_o;
 
+    // used if load_balance_type == "KnapSack"
+    amrex::MultiFab* particle_cost;
+    amrex::MultiFab* particle_proc;
+    amrex::MultiFab* fluid_cost;
+    amrex::MultiFab* fluid_proc;
+
     const int level_allocated;
 
     const int solve_enthalpy;

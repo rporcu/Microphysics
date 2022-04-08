@@ -14,6 +14,92 @@ int  MfixRW::mass_balance_report_int = -1;
 Real MfixRW::mass_balance_report_per_approx = -1.;
 Real MfixRW::mass_balance_report_time       =  0.;
 
+MfixRW::MfixRW (int nlev_in,
+                amrex::Vector<amrex::BoxArray>& grids_in,
+                amrex::Vector<amrex::Geometry>& geom_in,
+                MFIXParticleContainer* pc_in,
+                FluidPhase& fluid_in,
+                bool advect_enthalpy_in,
+                amrex::Vector<std::unique_ptr<LevelData>>& m_leveldata_in,
+                amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory_in,
+                amrex::Vector<amrex::DistributionMapping>& dmap_in,
+                bool ooo_debug_in,
+                amrex::Vector<std::unique_ptr<amrex::MultiFab>>& level_sets_in,
+                bool solve_species_in,
+                const amrex::Vector<amrex::BoxArray>& box_array_in,
+                int levelset_refinement_in,
+                int levelset_pad_in,
+                int levelset_eb_refinement_in,
+                int levelset_eb_pad_in,
+                SolidsPhase solids_in,
+                Reactions& reactions_in,
+                amrex::Vector<amrex::MultiFab*> particle_cost_in,
+                amrex::Vector<amrex::MultiFab*> particle_proc_in,
+                amrex::Vector<amrex::MultiFab*> fluid_cost_in,
+                amrex::Vector<amrex::MultiFab*> fluid_proc_in,
+                amrex::Real covered_val_in,
+                const amrex::Vector<amrex::IntVect>& ref_ratio_in,
+                amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory_in,
+                amrex::Vector<const amrex::EB2::Level*>& eb_levels_in,
+                int nghost_eb_basic_in,
+                int nghost_eb_volume_in,
+                int nghost_eb_full_in,
+                amrex::EBSupport& m_eb_support_level_in,
+                bool& levelset_restart_in,
+                std::string load_balance_type_in,
+                BCList& bc_list_in,
+                amrex::Vector<amrex::IArrayBox*>& bc_ilo_in,
+                amrex::Vector<amrex::IArrayBox*>& bc_ihi_in,
+                amrex::Vector<amrex::IArrayBox*>& bc_jlo_in,
+                amrex::Vector<amrex::IArrayBox*>& bc_jhi_in,
+                amrex::Vector<amrex::IArrayBox*>& bc_klo_in,
+                amrex::Vector<amrex::IArrayBox*>& bc_khi_in)
+  : finest_level(nlev_in-1)
+  , nlev(nlev_in)
+  , grids(grids_in)
+  , geom(geom_in)
+  , pc(pc_in)
+  , fluid(fluid_in)
+  , advect_enthalpy(advect_enthalpy_in)
+  , m_leveldata(m_leveldata_in)
+  , ebfactory(ebfactory_in)
+  , dmap(dmap_in)
+  , ooo_debug(ooo_debug_in)
+  , level_sets(level_sets_in)
+  , solve_species(solve_species_in)
+  , box_array(box_array_in)
+  , levelset_refinement(levelset_refinement_in)
+  , levelset_pad(levelset_pad_in)
+  , levelset_eb_refinement(levelset_eb_refinement_in)
+  , levelset_eb_pad(levelset_eb_pad_in)
+  , solids(solids_in)
+  , reactions(reactions_in)
+  , particle_cost(particle_cost_in)
+  , particle_proc(particle_proc_in)
+  , fluid_cost(fluid_cost_in)
+  , fluid_proc(fluid_proc_in)
+  , covered_val(covered_val_in)
+  , ref_ratio(ref_ratio_in)
+  , particle_ebfactory(particle_ebfactory_in)
+  , eb_levels(eb_levels_in)
+  , nghost_eb_basic(nghost_eb_basic_in)
+  , nghost_eb_volume(nghost_eb_volume_in)
+  , nghost_eb_full(nghost_eb_full_in)
+  , m_eb_support_level(m_eb_support_level_in)
+  , levelset_restart(levelset_restart_in)
+  , load_balance_type(load_balance_type_in)
+  , bc_list(bc_list_in)
+  , bc_ilo(bc_ilo_in)
+  , bc_ihi(bc_ihi_in)
+  , bc_jlo(bc_jlo_in)
+  , bc_jhi(bc_jhi_in)
+  , bc_klo(bc_klo_in)
+  , bc_khi(bc_khi_in)
+{
+  readParameters();
+}
+
+
 void MfixRW::readParameters ()
 {
   {
@@ -63,6 +149,23 @@ void MfixRW::readParameters ()
 
      if ( regrid_int == 0 )
        amrex::Abort("regrid_int must be > 0 or < 0");
+
+     pp.queryarr("avg_p_g", avg_p_g);
+     pp.queryarr("avg_ep_g", avg_ep_g);
+     pp.queryarr("avg_vel_g", avg_vel_g);
+     pp.queryarr("avg_T_g", avg_T_g);
+
+     pp.queryarr("avg_vel_p", avg_vel_p);
+
+     pp.queryarr("avg_T_p", avg_T_p);
+
+     // Regions geometry
+     pp.queryarr("avg_region_x_e", avg_region_x_e);
+     pp.queryarr("avg_region_x_w", avg_region_x_w);
+     pp.queryarr("avg_region_y_n", avg_region_y_n);
+     pp.queryarr("avg_region_y_s", avg_region_y_s);
+     pp.queryarr("avg_region_z_t", avg_region_z_t);
+     pp.queryarr("avg_region_z_b", avg_region_z_b);
   }
 
   {

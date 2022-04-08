@@ -535,11 +535,6 @@ class mfix : public AmrCore
     static RealVect gp0;
     static RealVect gravity;
 
-    static amrex::GpuArray<amrex::Real,2*SPECIES::NMAX> mass_accum;
-    static amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mass_inflow;
-    static amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mass_outflow;
-    static amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mass_prod;
-
     // Scalar diffusive coefficient
     Vector<Real> mu_s;
 
@@ -1022,13 +1017,6 @@ public:
     amrex::BCRec const* get_force_bcrec_device_ptr () const noexcept {
       return m_bcrec_force_d.data(); }
 
-    // Although we do nothing special for different scalars,
-    // we assume they are stored in the following order:
-    // 0: density, 1: enthalpy, 2: tracers
-    // 3+ntrac: ep_g,  4+ntrac: mu_g
-    // 5+ntrac: T_g,   6+ntrac: h_g
-
-
     // used if load_balance_type == "KnapSack"
     amrex::Vector< amrex::MultiFab* > particle_cost;
     amrex::Vector< amrex::MultiFab* > particle_proc;
@@ -1198,24 +1186,6 @@ public:
 
     Real covered_val = 1.e40;
     Real init_value = 9.87654321e32;
-
-    //
-    // Options to control the computing of particle eulerian velocities
-    //
-    amrex::Vector<Real> avg_p_g;
-    amrex::Vector<Real> avg_ep_g;
-    amrex::Vector<Real> avg_vel_g;
-    amrex::Vector<Real> avg_T_g;
-
-    amrex::Vector<Real> avg_vel_p;
-    amrex::Vector<Real> avg_T_p;
-
-    amrex::Vector<Real> avg_region_x_e;
-    amrex::Vector<Real> avg_region_x_w;
-    amrex::Vector<Real> avg_region_y_s;
-    amrex::Vector<Real> avg_region_y_n;
-    amrex::Vector<Real> avg_region_z_b;
-    amrex::Vector<Real> avg_region_z_t;
 
 
     // Here we set the number of ghost nodes of the field arrays.
