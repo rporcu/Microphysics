@@ -37,12 +37,12 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
     sbx_xy_hi[2] = sbx_lo[2];
     const Box sbx_xy(sbx_lo, sbx_xy_hi);
 
-    Array4<int> const& bc_ilo_type = bc_ilo[lev]->array();
-    Array4<int> const& bc_ihi_type = bc_ihi[lev]->array();
-    Array4<int> const& bc_jlo_type = bc_jlo[lev]->array();
-    Array4<int> const& bc_jhi_type = bc_jhi[lev]->array();
-    Array4<int> const& bc_klo_type = bc_klo[lev]->array();
-    Array4<int> const& bc_khi_type = bc_khi[lev]->array();
+    Array4<int> const& bc_ilo_type = bc_list.bc_ilo[lev]->array();
+    Array4<int> const& bc_ihi_type = bc_list.bc_ihi[lev]->array();
+    Array4<int> const& bc_jlo_type = bc_list.bc_jlo[lev]->array();
+    Array4<int> const& bc_jhi_type = bc_list.bc_jhi[lev]->array();
+    Array4<int> const& bc_klo_type = bc_list.bc_klo[lev]->array();
+    Array4<int> const& bc_khi_type = bc_list.bc_khi[lev]->array();
 
     const int ncomp = filled_mf.nComp();
 

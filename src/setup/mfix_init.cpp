@@ -48,7 +48,7 @@ mfix::InitParams ()
   // physical extents of ICs and BCs.
   REGIONS::Initialize();
   IC::Initialize(fluid, solids);
-  BC::Initialize(geom[0], fluid, solids);
+  BC::Initialize(bc_list, geom[0], fluid, solids);
 
   // set n_error_buf (used in AmrMesh) to default (can overwrite later)
   for (int i = 0; i < n_error_buf.size(); i++)
@@ -732,7 +732,8 @@ void mfix::MakeNewLevelFromScratch (int lev, Real /*time*/,
 
     // This is being done by mfix::make_eb_geometry,
     // otherwise it would be done here
-    if (lev == 0) MakeBCArrays(nghost_state());
+    if (lev == 0)
+      bc_list.MakeBCArrays(nghost_state(), ooo_debug, geom);
 }
 
 
@@ -744,7 +745,8 @@ void mfix::ReMakeNewLevelFromScratch (int lev,
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
 
-    if (lev == 0) MakeBCArrays(nghost_state());
+    if (lev == 0)
+      bc_list.MakeBCArrays(nghost_state(), ooo_debug, geom);
 
     // We need to re-fill these arrays for the larger domain (after replication).
     mfix_set_bc_type(lev,nghost_state());
@@ -1006,58 +1008,6 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
     if (call_udf) mfix_usr0();
 }
 
-void
-mfix::MakeBCArrays (int nghost)
-{
-    for (int lev = 0; lev < bc_ilo.size(); lev++)
-    {
-      if (bc_ilo[lev] != nullptr) delete bc_ilo[lev];
-      if (bc_ihi[lev] != nullptr) delete bc_ihi[lev];
-      if (bc_jlo[lev] != nullptr) delete bc_jlo[lev];
-      if (bc_jhi[lev] != nullptr) delete bc_jhi[lev];
-      if (bc_klo[lev] != nullptr) delete bc_klo[lev];
-      if (bc_khi[lev] != nullptr) delete bc_khi[lev];
-    }
-
-    if (ooo_debug) amrex::Print() << "MakeBCArrays" << std::endl;
-    bc_ilo.clear(); bc_ilo.resize(nlev, nullptr);
-    bc_ihi.clear(); bc_ihi.resize(nlev, nullptr);
-    bc_jlo.clear(); bc_jlo.resize(nlev, nullptr);
-    bc_jhi.clear(); bc_jhi.resize(nlev, nullptr);
-    bc_klo.clear(); bc_klo.resize(nlev, nullptr);
-    bc_khi.clear(); bc_khi.resize(nlev, nullptr);
-
-    for (int lev = 0; lev < nlev; lev++)
-    {
-       // Define and allocate the integer MultiFab that is the outside adjacent
-       // cells of the problem domain.
-       Box domainx(geom[lev].Domain());
-       domainx.grow(1,nghost);
-       domainx.grow(2,nghost);
-       Box box_ilo = amrex::adjCellLo(domainx,0,1);
-       Box box_ihi = amrex::adjCellHi(domainx,0,1);
-
-       Box domainy(geom[lev].Domain());
-       domainy.grow(0,nghost);
-       domainy.grow(2,nghost);
-       Box box_jlo = amrex::adjCellLo(domainy,1,1);
-       Box box_jhi = amrex::adjCellHi(domainy,1,1);
-
-       Box domainz(geom[lev].Domain());
-       domainz.grow(0,nghost);
-       domainz.grow(1,nghost);
-       Box box_klo = amrex::adjCellLo(domainz,2,1);
-       Box box_khi = amrex::adjCellHi(domainz,2,1);
-
-       // Note that each of these is a single IArrayBox so every process has a copy of them
-       bc_ilo[lev] = new IArrayBox(box_ilo,2);
-       bc_ihi[lev] = new IArrayBox(box_ihi,2);
-       bc_jlo[lev] = new IArrayBox(box_jlo,2);
-       bc_jhi[lev] = new IArrayBox(box_jhi,2);
-       bc_klo[lev] = new IArrayBox(box_klo,2);
-       bc_khi[lev] = new IArrayBox(box_khi,2);
-   }
-}
 
 void
 mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)

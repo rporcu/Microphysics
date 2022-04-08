@@ -43,12 +43,12 @@ mfix::set_density_bcs (Real time,
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
 
-  Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
-  Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
-  Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
-  Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
-  Array4<const int> const& bct_klo = bc_klo[lev]->array();
-  Array4<const int> const& bct_khi = bc_khi[lev]->array();
+  Array4<const int> const& bct_ilo = bc_list.bc_ilo[lev]->array();
+  Array4<const int> const& bct_ihi = bc_list.bc_ihi[lev]->array();
+  Array4<const int> const& bct_jlo = bc_list.bc_jlo[lev]->array();
+  Array4<const int> const& bct_jhi = bc_list.bc_jhi[lev]->array();
+  Array4<const int> const& bct_klo = bc_list.bc_klo[lev]->array();
+  Array4<const int> const& bct_khi = bc_list.bc_khi[lev]->array();
 
   Array4<Real> const& scal_arr = scal_fab.array();
 

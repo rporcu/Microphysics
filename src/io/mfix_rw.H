@@ -49,13 +49,7 @@ public:
            amrex::EBSupport& m_eb_support_level_in,
            bool& levelset_restart_in,
            std::string load_balance_type_in,
-           BCList& bc_list_in,
-           amrex::Vector<amrex::IArrayBox*>& bc_ilo_in,
-           amrex::Vector<amrex::IArrayBox*>& bc_ihi_in,
-           amrex::Vector<amrex::IArrayBox*>& bc_jlo_in,
-           amrex::Vector<amrex::IArrayBox*>& bc_jhi_in,
-           amrex::Vector<amrex::IArrayBox*>& bc_klo_in,
-           amrex::Vector<amrex::IArrayBox*>& bc_khi_in);
+           BCList& bc_list_in);
 
    void InitIOChkData ();
 
@@ -221,14 +215,6 @@ private:
    std::string load_balance_type;
 
    BCList& bc_list;
-
-   // Boundary conditions types
-   amrex::Vector<amrex::IArrayBox*>& bc_ilo;
-   amrex::Vector<amrex::IArrayBox*>& bc_ihi;
-   amrex::Vector<amrex::IArrayBox*>& bc_jlo;
-   amrex::Vector<amrex::IArrayBox*>& bc_jhi;
-   amrex::Vector<amrex::IArrayBox*>& bc_klo;
-   amrex::Vector<amrex::IArrayBox*>& bc_khi;
 
    amrex::GpuArray<amrex::Real,2*SPECIES::NMAX> mass_accum = {0.};
    amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mass_inflow = {0.};

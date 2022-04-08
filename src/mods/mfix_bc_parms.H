@@ -11,6 +11,7 @@
 #include <AMReX_EB2.H>
 #include <AMReX_EB2_IF_Plane.H>
 
+#include <mfix_bc_list.H>
 #include <mfix_eb_parms.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_solids_parms.H>
@@ -72,7 +73,8 @@ namespace BC
   // Data structure for BC data
   extern amrex::Vector<BC_t> bc;
 
-  void Initialize (amrex::Geometry& geom,
+  void Initialize (const BCList& bc_mask,
+                   amrex::Geometry& geom,
                    const FluidPhase& fluid,
                    const SolidsPhase& solids);
 

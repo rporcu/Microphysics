@@ -37,8 +37,8 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
       const int dir = 0;
 
-      Array4<int> const& bc_ilo_type = bc_ilo[lev]->array();
-      Array4<int> const& bc_ihi_type = bc_ihi[lev]->array();
+      Array4<int> const& bc_ilo_type = bc_list.bc_ilo[lev]->array();
+      Array4<int> const& bc_ihi_type = bc_list.bc_ihi[lev]->array();
 
       const int init_x = geom[lev].isPeriodic(0) ? und_ : ig_;
 
@@ -144,8 +144,8 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
       const int init_y = geom[lev].isPeriodic(1) ? und_ : ig_;
 
-      Array4<int> const& bc_jlo_type = bc_jlo[lev]->array();
-      Array4<int> const& bc_jhi_type = bc_jhi[lev]->array();
+      Array4<int> const& bc_jlo_type = bc_list.bc_jlo[lev]->array();
+      Array4<int> const& bc_jhi_type = bc_list.bc_jhi[lev]->array();
 
       Box domainy(geom[lev].Domain());
       domainy.grow(0,nghost_bc);  // Add ghost cells to x
@@ -248,8 +248,8 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
       const int init_z = geom[lev].isPeriodic(2) ? und_ : ig_;
 
-      Array4<int> const& bc_klo_type = bc_klo[lev]->array();
-      Array4<int> const& bc_khi_type = bc_khi[lev]->array();
+      Array4<int> const& bc_klo_type = bc_list.bc_klo[lev]->array();
+      Array4<int> const& bc_khi_type = bc_list.bc_khi[lev]->array();
 
       Box domainz(geom[lev].Domain());
       domainz.grow(0,nghost_bc);  // Add ghost cells to x

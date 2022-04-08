@@ -56,12 +56,11 @@ namespace BC
   amrex::Vector<BC_t> bc;
 
 
-  void Initialize (amrex::Geometry& geom,
+  void Initialize (const BCList& bc_mask,
+                   amrex::Geometry& geom,
                    const FluidPhase& fluid,
                    const SolidsPhase& solids)
   {
-    BCList bc_mask;
-
     // Integer ids for BCs
     const int pout_ = bc_mask.get_pout();
     const int pinf_ = bc_mask.get_pinf();

@@ -47,13 +47,7 @@ MfixRW::MfixRW (int nlev_in,
                 amrex::EBSupport& m_eb_support_level_in,
                 bool& levelset_restart_in,
                 std::string load_balance_type_in,
-                BCList& bc_list_in,
-                amrex::Vector<amrex::IArrayBox*>& bc_ilo_in,
-                amrex::Vector<amrex::IArrayBox*>& bc_ihi_in,
-                amrex::Vector<amrex::IArrayBox*>& bc_jlo_in,
-                amrex::Vector<amrex::IArrayBox*>& bc_jhi_in,
-                amrex::Vector<amrex::IArrayBox*>& bc_klo_in,
-                amrex::Vector<amrex::IArrayBox*>& bc_khi_in)
+                BCList& bc_list_in)
   : finest_level(nlev_in-1)
   , nlev(nlev_in)
   , grids(grids_in)
@@ -89,12 +83,6 @@ MfixRW::MfixRW (int nlev_in,
   , levelset_restart(levelset_restart_in)
   , load_balance_type(load_balance_type_in)
   , bc_list(bc_list_in)
-  , bc_ilo(bc_ilo_in)
-  , bc_ihi(bc_ihi_in)
-  , bc_jlo(bc_jlo_in)
-  , bc_jhi(bc_jhi_in)
-  , bc_klo(bc_klo_in)
-  , bc_khi(bc_khi_in)
 {
   readParameters();
 }

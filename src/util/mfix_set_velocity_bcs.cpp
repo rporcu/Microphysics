@@ -49,12 +49,12 @@ mfix::set_velocity_bcs (Real time,
   IntVect vel_lo(vel_fab.loVect());
   IntVect vel_hi(vel_fab.hiVect());
 
-  Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
-  Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
-  Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
-  Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
-  Array4<const int> const& bct_klo = bc_klo[lev]->array();
-  Array4<const int> const& bct_khi = bc_khi[lev]->array();
+  Array4<const int> const& bct_ilo = bc_list.bc_ilo[lev]->array();
+  Array4<const int> const& bct_ihi = bc_list.bc_ihi[lev]->array();
+  Array4<const int> const& bct_jlo = bc_list.bc_jlo[lev]->array();
+  Array4<const int> const& bct_jhi = bc_list.bc_jhi[lev]->array();
+  Array4<const int> const& bct_klo = bc_list.bc_klo[lev]->array();
+  Array4<const int> const& bct_khi = bc_list.bc_khi[lev]->array();
 
   const int nlft = amrex::max(0, dom_lo[0]-vel_lo[0]);
   const int nbot = amrex::max(0, dom_lo[1]-vel_lo[1]);
@@ -386,12 +386,12 @@ mfix::set_vec_bcs (const int lev,
   IntVect vec_lo(vec_fab.loVect());
   IntVect vec_hi(vec_fab.hiVect());
 
-  Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
-  Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
-  Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
-  Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
-  Array4<const int> const& bct_klo = bc_klo[lev]->array();
-  Array4<const int> const& bct_khi = bc_khi[lev]->array();
+  Array4<const int> const& bct_ilo = bc_list.bc_ilo[lev]->array();
+  Array4<const int> const& bct_ihi = bc_list.bc_ihi[lev]->array();
+  Array4<const int> const& bct_jlo = bc_list.bc_jlo[lev]->array();
+  Array4<const int> const& bct_jhi = bc_list.bc_jhi[lev]->array();
+  Array4<const int> const& bct_klo = bc_list.bc_klo[lev]->array();
+  Array4<const int> const& bct_khi = bc_list.bc_khi[lev]->array();
 
   const int nlft = amrex::max(0, dom_lo[0]-vec_lo[0]);
   const int nbot = amrex::max(0, dom_lo[1]-vec_lo[1]);

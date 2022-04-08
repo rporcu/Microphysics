@@ -42,14 +42,6 @@ mfix::~mfix ()
     delete bcoeff[lev][0];
     delete bcoeff[lev][1];
     delete bcoeff[lev][2];
-
-    // Boundary conditions types
-    delete bc_ilo[lev];
-    delete bc_ihi[lev];
-    delete bc_jlo[lev];
-    delete bc_jhi[lev];
-    delete bc_klo[lev];
-    delete bc_khi[lev];
   }
 
   // used if load_balance_type == "KnapSack"
@@ -70,7 +62,8 @@ mfix::~mfix ()
 
 // Constructor
 mfix::mfix ()
-  : m_bc_u_g(50, 0)
+  : bc_list(maxLevel() + 1)
+  , m_bc_u_g(50, 0)
   , m_bc_v_g(50, 0)
   , m_bc_w_g(50, 0)
   , m_bc_t_g(50, 0)
@@ -170,9 +163,7 @@ mfix::mfix ()
                                 fluid_cost, fluid_proc, covered_val, refRatio(),
                                 particle_ebfactory, eb_levels, nghost_eb_basic(),
                                 nghost_eb_volume(), nghost_eb_full(), m_eb_support_level,
-                                levelset_restart,
-                                load_balance_type,bc_list, bc_ilo, bc_ihi, bc_jlo,
-                                bc_jhi, bc_klo, bc_khi);
+                                levelset_restart, load_balance_type,bc_list);
 }
 
 void

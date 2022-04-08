@@ -725,8 +725,6 @@ public:
   void make_eb_csg(std::string);
 #endif
 
-    void MakeBCArrays (int nghost_bc);
-
     void MakeNewLevelFromScratch (int lev, Real time, const BoxArray & new_grids,
                                   const DistributionMapping & new_dmap) override;
 
@@ -910,14 +908,6 @@ public:
     // Debug counter used for tracking number of level-set MultiFabs used in
     // intersection/union
     int ct_ls_mf;
-
-    // Boundary conditions types
-    Vector< IArrayBox* > bc_ilo;
-    Vector< IArrayBox* > bc_ihi;
-    Vector< IArrayBox* > bc_jlo;
-    Vector< IArrayBox* > bc_jhi;
-    Vector< IArrayBox* > bc_klo;
-    Vector< IArrayBox* > bc_khi;
 
     Vector< std::unique_ptr<LevelData> > m_leveldata;
 

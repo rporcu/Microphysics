@@ -82,12 +82,12 @@ mfix::set_p0 (const Box& bx,
       return ifab_host;
   };
 
-  IArrayBox const& bc_ilo_host = make_ifab_host(bc_ilo[lev]);
-  IArrayBox const& bc_ihi_host = make_ifab_host(bc_ihi[lev]);
-  IArrayBox const& bc_jlo_host = make_ifab_host(bc_jlo[lev]);
-  IArrayBox const& bc_jhi_host = make_ifab_host(bc_jhi[lev]);
-  IArrayBox const& bc_klo_host = make_ifab_host(bc_klo[lev]);
-  IArrayBox const& bc_khi_host = make_ifab_host(bc_khi[lev]);
+  IArrayBox const& bc_ilo_host = make_ifab_host(bc_list.bc_ilo[lev]);
+  IArrayBox const& bc_ihi_host = make_ifab_host(bc_list.bc_ihi[lev]);
+  IArrayBox const& bc_jlo_host = make_ifab_host(bc_list.bc_jlo[lev]);
+  IArrayBox const& bc_jhi_host = make_ifab_host(bc_list.bc_jhi[lev]);
+  IArrayBox const& bc_klo_host = make_ifab_host(bc_list.bc_klo[lev]);
+  IArrayBox const& bc_khi_host = make_ifab_host(bc_list.bc_khi[lev]);
   Gpu::synchronize();
 
   Array4<const int> const& bct_ilo = bc_ilo_host.const_array();
