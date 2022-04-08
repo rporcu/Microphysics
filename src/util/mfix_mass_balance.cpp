@@ -1,11 +1,17 @@
-#include <mfix.H>
+#include <mfix_rw.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
 #include <mfix_reactions_parms.H>
 
+#include <AMReX_MultiCutFab.H>
+
+using namespace amrex;
+
+
+namespace MfixIO {
 
 void
-mfix::WriteMassBalanceReport ( const Real new_time )
+MfixRW::WriteMassBalanceReport (const Real new_time)
 {
 
   if (not report_mass_balance) {
@@ -71,13 +77,11 @@ mfix::WriteMassBalanceReport ( const Real new_time )
     }
     printf("****************\n\n");
   }
-
 }
 
 
-
 void
-mfix::ComputeMassAccum ( const int offset )
+MfixRW::ComputeMassAccum (const int offset)
 {
   BL_PROFILE("mfix::ComputeMassAccum()");
 
@@ -137,8 +141,8 @@ mfix::ComputeMassAccum ( const int offset )
 
 
 void
-mfix::ComputeMassProduction ( const Real dt,
-                             Vector< MultiFab const*> const& chem_txfr )
+MfixRW::ComputeMassProduction (const Real dt,
+                               Vector< MultiFab const*> const& chem_txfr)
 {
   BL_PROFILE("mfix::ComputeMassProduction()");
 
@@ -182,20 +186,19 @@ mfix::ComputeMassProduction ( const Real dt,
   // Global sum and copy to global variable
   ParallelDescriptor::ReduceRealSum(prod.data(), nspecies_g);
   for (int n=0; n < nspecies_g; ++n) {
-    mass_prod[n] += dt*prod[n];
+//    mass_prod[n] += dt*prod[n];
   }
 }
 
 
-
 void
-mfix::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
-                       Vector< MultiFab const*> const& flux_y,
-                       Vector< MultiFab const*> const& flux_z,
-                       const int scomp,
-                       const int ncomp,
-                       const bool fluxes_are_area_weighted,
-                       const Real dt)
+MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
+                         Vector< MultiFab const*> const& flux_y,
+                         Vector< MultiFab const*> const& flux_z,
+                         const int scomp,
+                         const int ncomp,
+                         const bool fluxes_are_area_weighted,
+                         const Real dt)
 {
   amrex::ignore_unused(ncomp, fluxes_are_area_weighted);
 
@@ -214,7 +217,8 @@ mfix::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
     const Real dxdz = dx[0]*dx[2];
     const Real dydz = dx[1]*dx[2];
 
-    auto const& fact = EBFactory(lev);
+    amrex::EBFArrayBoxFactory const& fact =
+      static_cast<amrex::EBFArrayBoxFactory const&>(*ebfactory[lev]);
 
     Box domain(geom[lev].Domain());
 
@@ -666,3 +670,5 @@ mfix::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
     mass_outflow[n] += dt*mass_flow[n+nspecies_g];
   }
 }
+
+} // end namespace MfixIO

@@ -798,15 +798,15 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
     } // lev
 
 
-  if ( report_mass_balance ) {
+  if (mfixRW->report_mass_balance) {
 
     const int flux_comp = 5+ntrac;
     const int num_comp = l_nspecies;
 
-    ComputeMassFlux(GetVecOfConstPtrs(flux_x),
-                    GetVecOfConstPtrs(flux_y),
-                    GetVecOfConstPtrs(flux_z),
-                    flux_comp, num_comp, fluxes_are_area_weighted, l_dt);
+    mfixRW->ComputeMassFlux(GetVecOfConstPtrs(flux_x),
+                            GetVecOfConstPtrs(flux_y),
+                            GetVecOfConstPtrs(flux_z),
+                            flux_comp, num_comp, fluxes_are_area_weighted, l_dt);
   }
 
 }

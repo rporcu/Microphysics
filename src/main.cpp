@@ -91,7 +91,7 @@ int main (int argc, char* argv[])
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix mfix;
 
-    MfixIO::MfixRW mfixRW;
+    MfixIO::MfixRW& mfixRW = *(mfix.mfixRW);
 
     // Initialize internals from ParamParse database
     mfix.InitParams();
@@ -123,7 +123,7 @@ int main (int argc, char* argv[])
     mfix.make_eb_factories();
 
     // Write out EB sruface
-    mfixRW.writeEBSurface(mfix);
+    mfixRW.writeEBSurface();
 
     if (DEM::solve || PIC::solve)
     {
@@ -167,11 +167,11 @@ int main (int argc, char* argv[])
         mfix.Regrid();
     }
 
-    mfixRW.writeStaticPlotFile(mfix);
+    mfixRW.writeStaticPlotFile();
 
     mfix.PostInit(dt, time, restart_flag, mfixRW.stop_time);
 
-    mfixRW.reportGridStats(mfix);
+    mfixRW.reportGridStats();
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
@@ -185,13 +185,13 @@ int main (int argc, char* argv[])
     // only if fluid.solve = T
     Real prev_dt = dt;
 
-    mfixRW.writeNow(mfix, nstep, time, dt, /*first=*/true, /*last=*/false);
+    mfixRW.writeNow(nstep, time, dt, /*first=*/true, /*last=*/false);
 
     bool do_not_evolve = !mfix.IsSteadyState() && ( (mfixRW.max_step == 0) ||
                      ( (mfixRW.stop_time >= 0.) && (time >  mfixRW.stop_time) ) ||
                      ( (mfixRW.stop_time <= 0.) && (mfixRW.max_step <= 0) ) );
 
-    mfix.ComputeMassAccum(0);
+    mfixRW.ComputeMassAccum(0);
 
     if (mfixRW.restart_file.empty())
     {
@@ -246,7 +246,7 @@ int main (int argc, char* argv[])
                     time += prev_dt;
                     nstep++;
 
-                    mfixRW.writeNow(mfix, nstep, time, prev_dt);
+                    mfixRW.writeNow(nstep, time, prev_dt);
 #ifdef MFIX_CATALYST
                     mfix.RunCatalystAdaptor(nstep, time);
 #endif
@@ -264,7 +264,7 @@ int main (int argc, char* argv[])
     if (mfix.IsSteadyState())
         nstep = 1;
 
-    mfixRW.writeNow(mfix, nstep, time, dt, /*first=*/false, /*last=*/true);
+    mfixRW.writeNow(nstep, time, dt, /*first=*/false, /*last=*/true);
 
     mfix.mfix_usr3();
 

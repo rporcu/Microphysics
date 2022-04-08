@@ -1,11 +1,8 @@
 #include <AMReX_ParmParse.H>
-
-#include <mfix.H>
-
-#include <mfix_init_fluid.H>
-
 #include <AMReX_EBAmrUtil.H>
 
+#include <mfix.H>
+#include <mfix_init_fluid.H>
 #include <mfix_regions_parms.H>
 #include <mfix_bc_parms.H>
 #include <mfix_ic_parms.H>
@@ -15,6 +12,7 @@
 #include <mfix_solids_parms.H>
 #include <mfix_species_parms.H>
 #include <mfix_mlmg_options.H>
+#include <mfix_utils.H>
 
 using MFIXParIter = MFIXParticleContainer::MFIXParIter;
 using PairIndex = MFIXParticleContainer::PairIndex;
@@ -525,17 +523,18 @@ mfix::InitParams ()
   {
     ParmParse reports_pp("mfix.reports");
 
-    reports_pp.query("mass_balance_int", mass_balance_report_int);
-    reports_pp.query("mass_balance_per_approx", mass_balance_report_per_approx);
+    reports_pp.query("mass_balance_int", mfixRW->mass_balance_report_int);
+    reports_pp.query("mass_balance_per_approx", mfixRW->mass_balance_report_per_approx);
 
-    if ((mass_balance_report_int > 0 && mass_balance_report_per_approx > 0) )
+    if ((mfixRW->mass_balance_report_int > 0 && mfixRW->mass_balance_report_per_approx > 0) )
       amrex::Abort("Must choose only one of mass_balance_int or mass_balance_report_per_approx");
 
     // OnAdd check to turn off report if not solving species
     if (solve_species && fluid.nspecies >= 1) {
-      report_mass_balance = (mass_balance_report_int > 0 || mass_balance_report_per_approx > 0);
+      mfixRW->report_mass_balance = (mfixRW->mass_balance_report_int > 0 ||
+                                     mfixRW->mass_balance_report_per_approx > 0);
     } else {
-      report_mass_balance = 0;
+      mfixRW->report_mass_balance = 0;
     }
   }
 
@@ -559,8 +558,8 @@ void mfix::ErrorEst (int lev, TagBoxArray & tags, Real /*time*/, int /*ngrow*/)
 void mfix::Init (Real time)
 {
     if (ooo_debug) amrex::Print() << "Init" << std::endl;
-    InitIOChkData();
-    InitIOPltData();
+    mfixRW->InitIOChkData();
+    mfixRW->InitIOPltData();
 
     // Note that finest_level = last level
     finest_level = nlev-1;
@@ -1189,7 +1188,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       const Real* dx = geom[0].CellSize();
       const Real cell_volume = dx[0] * dx[1] * dx[2];
 
-      sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
+      sum_vol_orig = Utils::volWgtSum(0, *(m_leveldata[0]->ep_g), 0, ebfactory);
 
       Print() << "Enclosed domain volume is   " << cell_volume * sum_vol_orig << std::endl;
 
@@ -1244,7 +1243,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       const Real cell_volume = dx[0] * dx[1] * dx[2];
 
       //Calculation of sum_vol_orig for a restarting point
-      sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
+      sum_vol_orig = Utils::volWgtSum(0, *(m_leveldata[0]->ep_g), 0, ebfactory);
 
       Print() << "Setting original sum_vol to " << cell_volume * sum_vol_orig << std::endl;
     }

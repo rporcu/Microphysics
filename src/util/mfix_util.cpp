@@ -101,98 +101,14 @@ mfix::mfix_compute_vort ()
     }
 }
 
-Real
-mfix::volWgtSum (int lev, const MultiFab& mf, int comp, bool local) const
-{
-    BL_PROFILE("mfix::volWgtSum()");
 
-    const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
-
-    Real sum = amrex::ReduceSum(mf, *volfrac, 0,
-        [comp] AMREX_GPU_HOST_DEVICE (Box const & bx,
-                                      Array4<const Real> const & rho,
-                                      Array4<const Real> const & vfrc)
-        {
-          Real dm = 0.0;
-
-          amrex::Loop(bx, [rho,vfrc,comp,&dm] (int i, int j, int k) noexcept
-              { dm += rho(i,j,k,comp) * vfrc(i,j,k); });
-
-          return dm;
-        });
-
-    if (!local)
-        ParallelDescriptor::ReduceRealSum(sum);
-
-    return sum;
-}
-
-Real
-mfix::volEpsWgtSum (int lev, const MultiFab& mf, int comp, bool local) const
-{
-    BL_PROFILE("mfix::volEpsWgtSum()");
-
-    const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
-
-    Real sum = amrex::ReduceSum(mf, *volfrac, *(m_leveldata[lev]->ep_g), 0,
-        [comp] AMREX_GPU_HOST_DEVICE (Box const & bx,
-                                      Array4<const Real> const & rho,
-                                      Array4<const Real> const & vfrc,
-                                      Array4<const Real> const & ep)
-        {
-          Real dm = 0.0;
-
-          amrex::Loop(bx, [rho,vfrc,ep,comp,&dm] (int i, int j, int k) noexcept
-              { dm += rho(i,j,k,comp) * vfrc(i,j,k) * ep(i,j,k); });
-
-          return dm;
-        });
-
-    if (!local)
-        ParallelDescriptor::ReduceRealSum(sum);
-
-    return sum;
-}
-
-
-
-Real
-mfix::volWgtSumBox (int lev, const MultiFab& mf, int comp, const Box a_bx, bool local) const
-{
-    BL_PROFILE("mfix::volWgtSumBox()");
-
-    const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
-
-    Real sum = amrex::ReduceSum(mf, *volfrac, 0, [comp, a_bx]
-      AMREX_GPU_HOST_DEVICE (Box const & bx,
-                             Array4<const Real> const & rho,
-                             Array4<const Real> const & vfrc)
-        {
-
-          // We want the intersection of this box (bx) and the box
-          // provided in the function call.
-          const Box insect_bx = bx&a_bx;
-
-          Real dm = 0.0;
-          amrex::Loop(insect_bx, [rho,vfrc,comp,&dm] (int i, int j, int k) noexcept
-              { dm += rho(i,j,k,comp) * vfrc(i,j,k); });
-
-          return dm;
-        });
-
-    if (!local)
-        ParallelDescriptor::ReduceRealSum(sum);
-
-    return sum;
-}
-
-
+namespace MfixIO {
 
 //
 //
 //
 void
-mfix::ReportGridStats () const
+MfixRW::ReportGridStats () const
 {
   BL_PROFILE("mfix::volEpsWgtSum()");
 
@@ -284,7 +200,7 @@ mfix::ReportGridStats () const
 
 }
 
-
+}
 
 
 //

@@ -4,7 +4,15 @@
 
 #include <AMReX_ParmParse.H>
 
+using namespace amrex;
+
+
 namespace MfixIO {
+
+int  MfixRW::report_mass_balance = 0;
+int  MfixRW::mass_balance_report_int = -1;
+Real MfixRW::mass_balance_report_per_approx = -1.;
+Real MfixRW::mass_balance_report_time       =  0.;
 
 void MfixRW::readParameters ()
 {
@@ -76,7 +84,8 @@ void MfixRW::readParameters ()
 #endif
 }
 
-void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bool last)
+
+void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 {
 
 
@@ -138,9 +147,10 @@ void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bo
 
     if ( (plot_test == 1) || ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) ) )
     {
-      if (mfix.fluid.solve)
-           mfix.mfix_compute_vort();
-        mfix.WritePlotFile( plot_file, nstep, time );
+      if (fluid.solve)
+        // TODO
+//           mfix_compute_vort();
+        WritePlotFile( plot_file, nstep, time );
     }
 
 
@@ -196,7 +206,7 @@ void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bo
     if ( (ascent_test == 1) || ( ( ascent_int > 0) && ( nstep %  ascent_int == 0 ) ) )
     {
         const int myProc = ParallelDescriptor::MyProc();
-        mfix.WriteAscentFile(nstep, time);
+        WriteAscentFile(nstep, time);
     }
 #endif
 
@@ -212,19 +222,19 @@ void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bo
         // We automatically write checkpoint files with the initial data
         if ( first ) {
             if ( restart_file.empty() ) {
-                mfix.WriteCheckPointFile(check_file, nstep, dt, time);
+                WriteCheckPointFile(check_file, nstep, dt, time);
                 last_chk = nstep;
             }
         }
         // We automatically write checkpoint files with the final data
         else if (last) {
             if ( nstep != last_chk) {
-                mfix.WriteCheckPointFile(check_file, nstep, dt, time);
+                WriteCheckPointFile(check_file, nstep, dt, time);
                 last_chk = nstep;
             }
         }
         else if ( nstep %  check_int == 0 ) {
-            mfix.WriteCheckPointFile( check_file, nstep, dt, time );
+            WriteCheckPointFile( check_file, nstep, dt, time );
             last_chk = nstep;
         }
     }
@@ -236,11 +246,11 @@ void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bo
  *------------------------------------------------------------------------------------------------*/
     if ( par_ascii_int > 0) {
         if ( first || last ) {
-            mfix.WriteParticleAscii(par_ascii_file, nstep);
+            WriteParticleAscii(par_ascii_file, nstep);
             last_par_ascii = nstep;
         }
         else if ( nstep %  par_ascii_int == 0 ) {
-            mfix.WriteParticleAscii( par_ascii_file, nstep );
+            WriteParticleAscii( par_ascii_file, nstep );
             last_par_ascii = nstep;
         }
     }
@@ -254,11 +264,11 @@ void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bo
 
     if ( avg_int > 0 ) {
         if ( first || last ) {
-            mfix.WriteAverageRegions(avg_file, nstep, time);
+            WriteAverageRegions(avg_file, nstep, time);
             last_avg = nstep;
         }
         else if ( nstep %  avg_int == 0 ) {
-            mfix.WriteAverageRegions( avg_file, nstep, time );
+            WriteAverageRegions( avg_file, nstep, time );
             last_avg = nstep;
         }
     }
@@ -270,22 +280,22 @@ void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bo
  *
  *------------------------------------------------------------------------------------------------*/
     int mass_balance_report_test = 0;
-    if (mfix::mass_balance_report_per_approx > 0.0)
+    if (mass_balance_report_per_approx > 0.0)
       {
-        // Check to see if we've crossed a mfix::mass_balance_report_per_approx interval by comparing
+        // Check to see if we've crossed a mass_balance_report_per_approx interval by comparing
         // the number of intervals that have elapsed for both the current
         // time and the time at the beginning of this timestep.
 
-        int num_per_old = static_cast<int>( (time-dt) / mfix::mass_balance_report_per_approx );
-        int num_per_new = static_cast<int>( (time   ) / mfix::mass_balance_report_per_approx );
+        int num_per_old = static_cast<int>( (time-dt) / mass_balance_report_per_approx);
+        int num_per_new = static_cast<int>( (time   ) / mass_balance_report_per_approx);
 
         // Before using these, however, we must test for the case where we're
         // within machine epsilon of the next interval. In that case, increment
-        // the counter, because we have indeed reached the next mfix::mass_balance_report_per_approx interval
-        // at this point.
+        // the counter, because we have indeed reached the next 
+        // mass_balance_report_per_approx interval at this point.
 
         const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * amrex::Math::abs(time);
-        const Real next_mass_balance_report_time = (num_per_old + 1) * mfix::mass_balance_report_per_approx;
+        const Real next_mass_balance_report_time = (num_per_old + 1) * mass_balance_report_per_approx;
 
         if ((num_per_new == num_per_old) && amrex::Math::abs(time - next_mass_balance_report_time) <= eps)
         {
@@ -305,29 +315,31 @@ void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bo
     }
 
     if ( (mass_balance_report_test == 1) ||
-         (( mfix::mass_balance_report_int > 0) &&
-          ( nstep %  mfix::mass_balance_report_int == 0 ) ) ) {
-      mfix.WriteMassBalanceReport(time);
+         (( mass_balance_report_int > 0) &&
+          ( nstep %  mass_balance_report_int == 0 ) ) ) {
+      WriteMassBalanceReport(time);
     }
 
 
 }
 
-void MfixRW::writeEBSurface(mfix &mfix) const
+void MfixRW::writeEBSurface() const
 {
-   if(write_eb_surface) mfix.WriteMyEBSurface();
+   if(write_eb_surface)
+     WriteMyEBSurface();
 }
 
 
-void MfixRW::writeStaticPlotFile(const mfix &mfix) const
+void MfixRW::writeStaticPlotFile() const
 {
    if ((DEM::solve || PIC::solve) && write_ls)
-      mfix.WriteStaticPlotFile(static_plt_file);
+      WriteStaticPlotFile(static_plt_file);
 }
 
-void MfixRW::reportGridStats(const mfix &mfix) const
+void MfixRW::reportGridStats() const
 {
-   if (mfix.fluid.solve) mfix.ReportGridStats();
+   if (fluid.solve)
+     ReportGridStats();
 }
 
 } // end of namespace MfixIO

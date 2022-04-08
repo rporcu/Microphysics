@@ -2,21 +2,26 @@
 #include <AMReX_VisMF.H>    // amrex::VisMF::Write(MultiFab)
 #include <AMReX_VectorIO.H> // amrex::[read,write]IntData(array_of_ints)
 #include <AMReX_ParmParse.H>
+#include <AMReX_EBFArrayBox.H>
 
-#include <mfix.H>
+#include <mfix_rw.H>
 #include <mfix_pc.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_solids_parms.H>
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
 
+using namespace amrex;
+
 //namespace
 //{
 //    const std::string level_prefix {"Level_"};
 //}
 
+namespace MfixIO {
+
 void
-mfix::InitIOPltData ()
+MfixRW::InitIOPltData ()
 {
   if (ooo_debug) amrex::Print() << "InitIOPltData" << std::endl;
 
@@ -259,8 +264,9 @@ mfix::InitIOPltData ()
 
 }
 
+
 void
-mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
+MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
 {
     const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
@@ -863,7 +869,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
       Vector<int> istep;
       istep.resize(nlev,nstep);
       amrex::WriteMultiLevelPlotfile(plotfilename, nlev, mf2, pltFldNames,
-                                     Geom(), time, istep, refRatio());
+                                     geom, time, istep, ref_ratio);
 
 
       // no fluid
@@ -893,7 +899,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
       Vector<int> istep;
       istep.resize(nlev,nstep);
       amrex::WriteMultiLevelPlotfileHeaders(plotfilename, finest_level+1, mf2, names,
-                                            Geom(), time, istep, refRatio());
+                                            geom, time, istep, ref_ratio);
 
     }
 
@@ -966,7 +972,9 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
 
 }
 
-void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
+
+void
+MfixRW::WriteStaticPlotFile (const std::string & plotfilename) const
 {
     BL_PROFILE("mfix::WriteStaticPlotFile()");
 
@@ -1011,8 +1019,8 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
 
         if (ebfactory[lev]) {
             EBFArrayBoxFactory ebf(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
-                                   {nghost_eb_basic(), nghost_eb_volume(),
-                                    nghost_eb_full()}, m_eb_support_level);
+                                   {nghost_eb_basic, nghost_eb_volume,
+                                    nghost_eb_full}, m_eb_support_level);
 
             MultiFab::Copy(* mf[lev], ebf.getVolFrac(), 0, ncomp - 1, 1, ngrow);
 
@@ -1033,9 +1041,11 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
     Vector<int> istep;
     istep.resize(nlev,0);
     amrex::WriteMultiLevelPlotfile(plotfilename, nlev, mf_ptr, static_names,
-                                   Geom(), time, istep, refRatio());
+                                   geom, time, istep, ref_ratio);
 
     WriteJobInfo(plotfilename);
 
     Print() << "  Done writing static quantities " << plotfilename << std::endl;
 }
+
+} // end namespace MfixIO

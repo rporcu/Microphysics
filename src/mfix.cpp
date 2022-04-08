@@ -30,10 +30,6 @@ EBSupport mfix::m_eb_support_level = EBSupport::full;
 RealVect mfix::gravity {0.};
 RealVect mfix::gp0     {0.};
 
-int  mfix::report_mass_balance = 0;
-int  mfix::mass_balance_report_int        = -1;
-Real mfix::mass_balance_report_per_approx = -1.;
-Real mfix::mass_balance_report_time       =  0.;
 amrex::GpuArray<amrex::Real,2*SPECIES::NMAX> mfix::mass_accum{0.};
 amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mfix::mass_inflow{0.};
 amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mfix::mass_outflow{0.};
@@ -73,6 +69,8 @@ mfix::~mfix ()
 
   for (int lev = 0; lev < fluid_proc.size(); ++lev)
     delete fluid_proc[lev];
+
+  delete mfixRW;
 }
 
 // Constructor
@@ -167,6 +165,23 @@ mfix::mfix ()
     m_X_gk_bc_types["Neumann"] = {bc_list.get_pout()};
 
     Gpu::synchronize();
+
+    mfixRW = new MfixIO::MfixRW(nlev, grids, geom, pc, fluid, avg_p_g, avg_ep_g,
+                                avg_vel_g, avg_T_g, avg_vel_p, avg_T_p,
+                                avg_region_x_e, avg_region_x_w, avg_region_y_s,
+                                avg_region_y_n, avg_region_z_b, avg_region_z_t,
+                                advect_enthalpy, m_leveldata, ebfactory, dmap,
+                                ooo_debug, level_sets, solve_species, boxArray(),
+                                levelset_refinement, levelset_pad,
+                                levelset_eb_refinement, levelset_eb_pad,
+                                solids, reactions, particle_cost, particle_proc,
+                                fluid_cost, fluid_proc, covered_val, refRatio(),
+                                particle_ebfactory, eb_levels, nghost_eb_basic(),
+                                nghost_eb_volume(), nghost_eb_full(), m_eb_support_level,
+                                levelset_restart, restart_from_cold_flow,
+                                load_balance_type,bc_list, bc_ilo, bc_ihi, bc_jlo,
+                                bc_jhi, bc_klo, bc_khi, mass_accum, mass_inflow,
+                                mass_outflow, mass_prod);
 }
 
 void
