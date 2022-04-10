@@ -137,20 +137,20 @@ mfix::mfix ()
         }
     }
 
-    m_vel_g_bc_types["Dirichlet"] = {bc_list.get_minf()};
-    m_vel_g_bc_types["Neumann"] = {bc_list.get_pinf(), bc_list.get_pout()};
+    m_vel_g_bc_types["Dirichlet"] = {BCList::minf};
+    m_vel_g_bc_types["Neumann"] = {BCList::pinf, BCList::pout};
 
-    m_ro_g_bc_types["Dirichlet"] = {bc_list.get_minf()};
-    m_ro_g_bc_types["Neumann"] = {bc_list.get_pinf(), bc_list.get_pout()};
+    m_ro_g_bc_types["Dirichlet"] = {BCList::minf};
+    m_ro_g_bc_types["Neumann"] = {BCList::pinf, BCList::pout};
 
-    m_T_g_bc_types["Dirichlet"] = {bc_list.get_minf(), bc_list.get_pinf()};
-    m_T_g_bc_types["Neumann"] = {bc_list.get_pout()};
+    m_T_g_bc_types["Dirichlet"] = {BCList::minf, BCList::pinf};
+    m_T_g_bc_types["Neumann"] = {BCList::pout};
 
-    m_trac_g_bc_types["Dirichlet"] = {bc_list.get_minf()};
-    m_trac_g_bc_types["Neumann"] = {bc_list.get_pinf(), bc_list.get_pout()};
+    m_trac_g_bc_types["Dirichlet"] = {BCList::minf};
+    m_trac_g_bc_types["Neumann"] = {BCList::pinf, BCList::pout};
 
-    m_X_gk_bc_types["Dirichlet"] = {bc_list.get_minf(), bc_list.get_pinf()};
-    m_X_gk_bc_types["Neumann"] = {bc_list.get_pout()};
+    m_X_gk_bc_types["Dirichlet"] = {BCList::minf, BCList::pinf};
+    m_X_gk_bc_types["Neumann"] = {BCList::pout};
 
     Gpu::synchronize();
 

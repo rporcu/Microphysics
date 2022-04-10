@@ -21,7 +21,7 @@ mfix::FillPatchVel (int lev,
 
     set_velocity_bc_values(time);
 
-    const int minf = bc_list.get_minf();
+    const int minf = BCList::minf;
 
     if (lev == 0) {
 
@@ -83,7 +83,7 @@ mfix::FillPatchScalar (int lev, Real time, MultiFab& mf,
     // Hack so that ghost cells are not undefined
     mf.setVal(covered_val);
 
-    const int minf = bc_list.get_minf();
+    const int minf = BCList::minf;
 
     const int icomp = 0;
     const int ncomp = 1;
@@ -148,7 +148,7 @@ mfix::FillPatchSpecies (int lev,
     // Hack so that ghost cells are not undefined
     mf.setVal(covered_val);
 
-    const int minf = bc_list.get_minf();
+    const int minf = BCList::minf;
 
     // icomp tells us which scalar we are fill-patching
     // But we send "0) into FillPatch since each scalar is stored in its own array

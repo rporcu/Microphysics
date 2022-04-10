@@ -5,22 +5,8 @@ using namespace amrex;
 
 
 // Constructor
-BCList::BCList (const int nlev_in,
-                const int undefined,
-                const int ig,
-                const int pinf,
-                const int pout,
-                const int minf,
-                const int nsw,
-                const int eb)
+BCList::BCList (const int nlev_in)
   : nlev(nlev_in)
-  , und_(undefined)
-  , ig_(ig)
-  , pinf_(pinf)
-  , pout_(pout)
-  , minf_(minf)
-  , nsw_(nsw)
-  , eb_(eb)
 {}
 
 

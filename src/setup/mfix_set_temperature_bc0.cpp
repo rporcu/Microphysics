@@ -49,22 +49,18 @@ mfix::set_temperature_bc0 (const Box& sbx,
   const int ntop = amrex::max(0,sbx_hi[1]-dom_hi[1]);
   const int nup  = amrex::max(0,sbx_hi[2]-dom_hi[2]);
 
-  const int minf = bc_list.get_minf();
-  const int pinf = bc_list.get_pinf();
-  const int pout = bc_list.get_pout();
-
   auto& fluid_parms = *fluid.parameters;
 
   auto const& flags_arr = flags.const_array();
 
-  auto set_temperature_bc0_in_box = [pinf,pout,minf,a_T_g,p_bc_t_g,
+  auto set_temperature_bc0_in_box = [a_T_g,p_bc_t_g,
       a_h_g,fluid_is_a_mixture,nspecies_g,p_bc_X_gk,fluid_parms,run_on_device,
       flags_arr]
   AMREX_GPU_DEVICE (int bct, int bcv, int i, int j, int k) noexcept
   {
     const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
 
-    if((bct == pinf) || (bct == pout) || (bct == minf))
+    if((bct == BCList::pinf) || (bct == BCList::pout) || (bct == BCList::minf))
     {
       a_T_g(i,j,k)  = p_bc_t_g[bcv];
 

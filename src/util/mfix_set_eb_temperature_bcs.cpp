@@ -87,12 +87,10 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
   const IntVect domlo(domain.loVect());
   const IntVect domhi(domain.hiVect());
 
-  const int eb = bc_list.get_eb();
-
   // Set the initial conditions.
   for(int bcv(0); bcv < BC::bc.size(); ++bcv)
   {
-    if ( BC::bc[bcv].type == eb ) {
+    if (BC::bc[bcv].type == BCList::eb) {
       int i_w(0), j_s(0), k_b(0);
       int i_e(0), j_n(0), k_t(0);
 

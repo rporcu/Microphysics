@@ -148,6 +148,7 @@ mfix::InitParams ()
 
     // Set the FLUID parameter equal to the mfix class flag
     fluid.solve_species = solve_species;
+    fluid.solve_enthalpy = advect_enthalpy;
     solids.solve_species = solve_species;
 
     if (solve_species)

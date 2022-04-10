@@ -202,10 +202,6 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 {
   amrex::ignore_unused(ncomp, fluxes_are_area_weighted);
 
-  const int minf = bc_list.get_minf();
-  const int pinf = bc_list.get_pinf();
-  const int pout = bc_list.get_pout();
-
   const int nspecies_g = fluid.nspecies;
 
   std::vector<Real> mass_flow(2*nspecies_g, 0.);
@@ -275,7 +271,7 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
             const Box ulo_bx_yz(ulo_bx_yz_lo, ulo_bx_yz_hi);
 
             reduce_op.eval(ulo_bx_yz, reduce_data,
-              [bct_ilo, dom_lo, dydz, minf, pinf, pout, flux_x_arr, n, scomp]
+              [bct_ilo, dom_lo, dydz,  flux_x_arr, n, scomp]
               AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
               {
                 Real m_in  = 0.;
@@ -283,10 +279,10 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
                 const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-                if(bct == pout) {
+                if(bct == BCList::pout) {
                   m_out -= flux_x_arr(i,j,k,n+scomp)*dydz;
                 }
-                else if ((bct == minf) || (bct == pinf)) {
+                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
                   m_in  += flux_x_arr(i,j,k,n+scomp)*dydz;
                 }
                 return {m_in, m_out};
@@ -306,7 +302,7 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
             const Box uhi_bx_yz(uhi_bx_yz_lo, uhi_bx_yz_hi);
 
             reduce_op.eval(uhi_bx_yz, reduce_data,
-              [bct_ihi, dom_hi, dydz, minf, pinf, pout, flux_x_arr, n, scomp]
+              [bct_ihi, dom_hi, dydz,  flux_x_arr, n, scomp]
               AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
               {
                 Real m_in  = 0.;
@@ -314,10 +310,10 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
                 const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-                if(bct == pout) {
+                if(bct == BCList::pout) {
                   m_out += flux_x_arr(i,j,k,n+scomp)*dydz;
                 }
-                else if ((bct == minf) || (bct == pinf)) {
+                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
                   m_in  -= flux_x_arr(i,j,k,n+scomp)*dydz;
                 }
                 return {m_in, m_out};
@@ -338,7 +334,7 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
               const Box vlo_bx_xz(vlo_bx_xz_lo, vlo_bx_xz_hi);
               reduce_op.eval(vlo_bx_xz, reduce_data,
-                [bct_jlo, dom_lo, dxdz, minf, pinf, pout, flux_y_arr, n, scomp]
+                [bct_jlo, dom_lo, dxdz,  flux_y_arr, n, scomp]
                 AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
                 {
 
@@ -347,10 +343,10 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
                   const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-                  if(bct == pout) {
+                  if(bct == BCList::pout) {
                     m_out -= flux_y_arr(i,j,k,n+scomp)*dxdz;
                   }
-                  else if ((bct == minf) || (bct == pinf)) {
+                  else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
                     m_in  += flux_y_arr(i,j,k,n+scomp)*dxdz;
                   }
                   return {m_in, m_out};
@@ -371,7 +367,7 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
             const Box vhi_bx_xz(vhi_bx_xz_lo, vhi_bx_xz_hi);
 
             reduce_op.eval(vhi_bx_xz, reduce_data,
-              [bct_jhi, dom_hi, dxdz, minf, pinf, pout, flux_y_arr, n, scomp]
+              [bct_jhi, dom_hi, dxdz,  flux_y_arr, n, scomp]
               AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
               {
 
@@ -380,10 +376,10 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
                 const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-                if(bct == pout) {
+                if(bct == BCList::pout) {
                   m_out += flux_y_arr(i,j,k,n+scomp)*dxdz;
                 }
-                else if ((bct == minf) || (bct == pinf)) {
+                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
                   m_in  -= flux_y_arr(i,j,k,n+scomp)*dxdz;
                 }
                 return {m_in, m_out};
@@ -404,7 +400,7 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
             const Box wlo_bx_xy(wlo_bx_xy_lo, wlo_bx_xy_hi);
 
             reduce_op.eval(wlo_bx_xy, reduce_data,
-              [bct_klo, dom_lo, dxdy, minf, pinf, pout, flux_z_arr, n, scomp]
+              [bct_klo, dom_lo, dxdy,  flux_z_arr, n, scomp]
               AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
               {
                 Real m_in  = 0.;
@@ -412,10 +408,10 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
                 const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-                if(bct == pout) {
+                if(bct == BCList::pout) {
                   m_out -= flux_z_arr(i,j,k,n+scomp)*dxdy;
                 }
-                else if ((bct == minf) || (bct == pinf)) {
+                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
                   m_in  += flux_z_arr(i,j,k,n+scomp)*dxdy;
                 }
                 return {m_in, m_out};
@@ -435,7 +431,7 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
             const Box whi_bx_xy(whi_bx_xy_lo, whi_bx_xy_hi);
 
             reduce_op.eval(whi_bx_xy, reduce_data,
-               [bct_khi, dom_hi, dxdy, minf, pinf, pout, flux_z_arr, n, scomp]
+               [bct_khi, dom_hi, dxdy,  flux_z_arr, n, scomp]
                AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
                {
                  Real m_in  = 0.;
@@ -443,10 +439,10 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
                  const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-                 if(bct == pout) {
+                 if(bct == BCList::pout) {
                    m_out += flux_z_arr(i,j,k,n+scomp)*dxdy;
                  }
-                 else if ((bct == minf) || (bct == pinf)) {
+                 else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
                    m_in  -= flux_z_arr(i,j,k,n+scomp)*dxdy;
                  }
                  return {m_in, m_out};
@@ -472,7 +468,7 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
             const Box ulo_bx_yz(ulo_bx_yz_lo, ulo_bx_yz_hi);
 
             reduce_op.eval(ulo_bx_yz, reduce_data,
-              [bct_ilo, dom_lo, dydz, apx, minf, pinf, pout, flux_x_arr, n, scomp]
+              [bct_ilo, dom_lo, dydz, apx,  flux_x_arr, n, scomp]
               AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
               {
 
@@ -481,10 +477,10 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
                 const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-                if(bct == pout) {
+                if(bct == BCList::pout) {
                   m_out -= apx(i,j,k)*flux_x_arr(i,j,k,n+scomp)*dydz;
                 }
-                else if ((bct == minf) || (bct == pinf)) {
+                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
                   m_in  += apx(i,j,k)*flux_x_arr(i,j,k,n+scomp)*dydz;
                 }
                 return {m_in, m_out};
@@ -505,7 +501,7 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
             const Box uhi_bx_yz(uhi_bx_yz_lo, uhi_bx_yz_hi);
 
             reduce_op.eval(uhi_bx_yz, reduce_data,
-              [bct_ihi, dom_hi, dydz, minf, pinf, pout, flux_x_arr, apx, n, scomp]
+              [bct_ihi, dom_hi, dydz,  flux_x_arr, apx, n, scomp]
               AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
               {
                 Real m_in  = 0.;
@@ -513,10 +509,10 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
                 const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-                if(bct == pout) {
+                if(bct == BCList::pout) {
                   m_out += apx(i,j,k)*flux_x_arr(i,j,k,n+scomp)*dydz;
                 }
-                else if ((bct == minf) || (bct == pinf)) {
+                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
                   m_in  -= apx(i,j,k)*flux_x_arr(i,j,k,n+scomp)*dydz;
                 }
                 return {m_in, m_out};
@@ -537,7 +533,7 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
               const Box vlo_bx_xz(vlo_bx_xz_lo, vlo_bx_xz_hi);
               reduce_op.eval(vlo_bx_xz, reduce_data,
-                [bct_jlo, dom_lo, dxdz, minf, pinf, pout, flux_y_arr, apy, n, scomp]
+                [bct_jlo, dom_lo, dxdz,  flux_y_arr, apy, n, scomp]
                 AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
                 {
 
@@ -546,10 +542,10 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
                   const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-                  if(bct == pout) {
+                  if(bct == BCList::pout) {
                     m_out -= apy(i,j,k)*flux_y_arr(i,j,k,n+scomp)*dxdz;
                   }
-                  else if ((bct == minf) || (bct == pinf)) {
+                  else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
                     m_in  += apy(i,j,k)*flux_y_arr(i,j,k,n+scomp)*dxdz;
                   }
                   return {m_in, m_out};
@@ -570,7 +566,7 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
             const Box vhi_bx_xz(vhi_bx_xz_lo, vhi_bx_xz_hi);
 
             reduce_op.eval(vhi_bx_xz, reduce_data,
-              [bct_jhi, dom_hi, dxdz, minf, pinf, pout, flux_y_arr, apy, n, scomp]
+              [bct_jhi, dom_hi, dxdz,  flux_y_arr, apy, n, scomp]
               AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
               {
 
@@ -579,10 +575,10 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
                 const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-                if(bct == pout) {
+                if(bct == BCList::pout) {
                   m_out += apy(i,j,k)*flux_y_arr(i,j,k,n+scomp)*dxdz;
                 }
-                else if ((bct == minf) || (bct == pinf)) {
+                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
                   m_in  -= apy(i,j,k)*flux_y_arr(i,j,k,n+scomp)*dxdz;
                 }
                 return {m_in, m_out};
@@ -603,7 +599,7 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
             const Box wlo_bx_xy(wlo_bx_xy_lo, wlo_bx_xy_hi);
 
             reduce_op.eval(wlo_bx_xy, reduce_data,
-              [bct_klo, dom_lo, dxdy, minf, pinf, pout, flux_z_arr, apz, n, scomp]
+              [bct_klo, dom_lo, dxdy,  flux_z_arr, apz, n, scomp]
               AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
               {
                 Real m_in  = 0.;
@@ -611,10 +607,10 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
                 const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-                if(bct == pout) {
+                if(bct == BCList::pout) {
                   m_out -= apz(i,j,k)*flux_z_arr(i,j,k,n+scomp)*dxdy;
                 }
-                else if ((bct == minf) || (bct == pinf)) {
+                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
                   m_in  += apz(i,j,k)*flux_z_arr(i,j,k,n+scomp)*dxdy;
                 }
                 return {m_in, m_out};
@@ -634,7 +630,7 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
             const Box whi_bx_xy(whi_bx_xy_lo, whi_bx_xy_hi);
 
             reduce_op.eval(whi_bx_xy, reduce_data,
-               [bct_khi, dom_hi, dxdy, minf, pinf, pout, flux_z_arr, apz, n, scomp]
+               [bct_khi, dom_hi, dxdy,  flux_z_arr, apz, n, scomp]
                AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
                {
                  Real m_in  = 0.;
@@ -642,10 +638,10 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
                  const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-                 if(bct == pout) {
+                 if(bct == BCList::pout) {
                    m_out += apz(i,j,k)*flux_z_arr(i,j,k,n+scomp)*dxdy;
                  }
-                 else if ((bct == minf) || (bct == pinf)) {
+                 else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
                    m_in  -= apz(i,j,k)*flux_z_arr(i,j,k,n+scomp)*dxdy;
                  }
                  return {m_in, m_out};

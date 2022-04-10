@@ -42,10 +42,6 @@ mfix::set_species_bc0 (const Box& sbx,
   const int ntop = amrex::max(0,sbx_hi[1]-dom_hi[1]);
   const int nup  = amrex::max(0,sbx_hi[2]-dom_hi[2]);
 
-  const int minf = bc_list.get_minf();
-  const int pinf = bc_list.get_pinf();
-  const int pout = bc_list.get_pout();
-
   if (nlft > 0)
   {
     IntVect bx_yz_lo_hi_3D(sbx_hi);
@@ -55,14 +51,14 @@ mfix::set_species_bc0 (const Box& sbx,
 
     const Box bx_yz_lo_3D(sbx_lo, bx_yz_lo_hi_3D);
 
-    ParallelFor(bx_yz_lo_3D, [a_bc_ilo,dom_lo,pinf,pout,minf,nspecies_g,a_X_gk,
+    ParallelFor(bx_yz_lo_3D, [a_bc_ilo,dom_lo,nspecies_g,a_X_gk,
         p_bc_X_gk,p_bc_t_g,loc_advect_enthalpy]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_ilo(dom_lo[0]-1,j,k,1);
       const int bct = a_bc_ilo(dom_lo[0]-1,j,k,0);
 
-      if((bct == pinf) || (bct == pout) || (bct == minf))
+      if((bct == BCList::pinf) || (bct == BCList::pout) || (bct == BCList::minf))
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
@@ -80,14 +76,14 @@ mfix::set_species_bc0 (const Box& sbx,
 
     const Box bx_yz_hi_3D(bx_yz_hi_lo_3D, sbx_hi);
 
-    ParallelFor(bx_yz_hi_3D, [a_bc_ihi,dom_hi,pinf,pout,minf,nspecies_g,a_X_gk,
+    ParallelFor(bx_yz_hi_3D, [a_bc_ihi,dom_hi,nspecies_g,a_X_gk,
         p_bc_X_gk,p_bc_t_g,loc_advect_enthalpy]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_ihi(dom_hi[0]+1,j,k,1);
       const int bct = a_bc_ihi(dom_hi[0]+1,j,k,0);
 
-      if((bct == pinf) || (bct == pout) || (bct == minf))
+      if((bct == BCList::pinf) || (bct == BCList::pout) || (bct == BCList::minf))
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
@@ -105,14 +101,14 @@ mfix::set_species_bc0 (const Box& sbx,
 
     const Box bx_xz_lo_3D(sbx_lo, bx_xz_lo_hi_3D);
 
-    ParallelFor(bx_xz_lo_3D, [a_bc_jlo,dom_lo,pinf,pout,minf,nspecies_g,a_X_gk,
+    ParallelFor(bx_xz_lo_3D, [a_bc_jlo,dom_lo,nspecies_g,a_X_gk,
         p_bc_X_gk,p_bc_t_g,loc_advect_enthalpy]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_jlo(i,dom_lo[1]-1,k,1);
       const int bct = a_bc_jlo(i,dom_lo[1]-1,k,0);
 
-      if((bct == pinf) || (bct == pout) || (bct == minf))
+      if((bct == BCList::pinf) || (bct == BCList::pout) || (bct == BCList::minf))
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
@@ -130,14 +126,14 @@ mfix::set_species_bc0 (const Box& sbx,
 
     const Box bx_xz_hi_3D(bx_xz_hi_lo_3D, sbx_hi);
 
-    ParallelFor(bx_xz_hi_3D, [a_bc_jhi,dom_hi,pinf,pout,minf,nspecies_g,a_X_gk,
+    ParallelFor(bx_xz_hi_3D, [a_bc_jhi,dom_hi,nspecies_g,a_X_gk,
         p_bc_X_gk,p_bc_t_g,loc_advect_enthalpy]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_jhi(i,dom_hi[1]+1,k,1);
       const int bct = a_bc_jhi(i,dom_hi[1]+1,k,0);
 
-      if((bct == pinf) || (bct == pout) || (bct == minf))
+      if((bct == BCList::pinf) || (bct == BCList::pout) || (bct == BCList::minf))
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
@@ -155,14 +151,14 @@ mfix::set_species_bc0 (const Box& sbx,
 
     const Box bx_xy_lo_3D(sbx_lo, bx_xy_lo_hi_3D);
 
-    ParallelFor(bx_xy_lo_3D, [a_bc_klo,dom_lo,pinf,pout,minf,nspecies_g,a_X_gk,
+    ParallelFor(bx_xy_lo_3D, [a_bc_klo,dom_lo,nspecies_g,a_X_gk,
         p_bc_X_gk,p_bc_t_g,loc_advect_enthalpy]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_klo(i,j,dom_lo[2]-1,1);
       const int bct = a_bc_klo(i,j,dom_lo[2]-1,0);
 
-      if((bct == pinf) || (bct == pout) || (bct == minf))
+      if((bct == BCList::pinf) || (bct == BCList::pout) || (bct == BCList::minf))
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
@@ -180,14 +176,14 @@ mfix::set_species_bc0 (const Box& sbx,
 
     const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, sbx_hi);
 
-    ParallelFor(bx_xy_hi_3D, [a_bc_khi,dom_hi,pinf,pout,minf,nspecies_g,a_X_gk,
+    ParallelFor(bx_xy_hi_3D, [a_bc_khi,dom_hi,nspecies_g,a_X_gk,
         p_bc_X_gk,p_bc_t_g,loc_advect_enthalpy]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int bcv = a_bc_khi(i,j,dom_hi[2]+1,1);
       const int bct = a_bc_khi(i,j,dom_hi[2]+1,0);
 
-      if((bct == pinf) || (bct == pout) || (bct == minf))
+      if((bct == BCList::pinf) || (bct == BCList::pout) || (bct == BCList::minf))
       {
         for (int n(0); n < nspecies_g; n++) {
           a_X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];

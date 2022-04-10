@@ -86,10 +86,6 @@ mfix::set_mass_fractions_g_bcs (Real time,
   const Box bx_xy_lo_3D(X_gk_lo, bx_xy_lo_hi_3D);
   const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, X_gk_hi);
 
-  const int minf = bc_list.get_minf();
-  const int pinf = bc_list.get_pinf();
-  const int pout = bc_list.get_pout();
-
   const int nspecies_g = fluid.nspecies;
 
   set_species_bc_values(time);
@@ -97,17 +93,17 @@ mfix::set_mass_fractions_g_bcs (Real time,
 
   if (nlft > 0)
   {
-    amrex::ParallelFor(bx_yz_lo_3D, nspecies_g, [bct_ilo,dom_lo,pout,minf,pinf,
+    amrex::ParallelFor(bx_yz_lo_3D, nspecies_g, [bct_ilo,dom_lo,
         X_gk,p_bc_X_gk]
       AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
       const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
 
-      if((bct == pout)) {
+      if((bct == BCList::pout)) {
         X_gk(i,j,k,n) = X_gk(dom_lo[0],j,k,n);
       }
-      else if ((bct == minf) || (bct == pinf)) {
+      else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
         X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
       }
     });
@@ -115,17 +111,17 @@ mfix::set_mass_fractions_g_bcs (Real time,
 
   if (nrgt > 0)
   {
-    amrex::ParallelFor(bx_yz_hi_3D, nspecies_g, [bct_ihi,dom_hi,pout,minf,pinf,
+    amrex::ParallelFor(bx_yz_hi_3D, nspecies_g, [bct_ihi,dom_hi,
         X_gk,p_bc_X_gk]
       AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
       const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
 
-      if(bct == pout) {
+      if(bct == BCList::pout) {
         X_gk(i,j,k,n) = X_gk(dom_hi[0],j,k,n);
       }
-      else if ((bct == minf) || (bct == pinf)) {
+      else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
         X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
       }
     });
@@ -133,65 +129,65 @@ mfix::set_mass_fractions_g_bcs (Real time,
 
   if (nbot > 0)
   {
-    amrex::ParallelFor(bx_xz_lo_3D, nspecies_g, [bct_jlo,dom_lo,pout,minf,pinf,
+    amrex::ParallelFor(bx_xz_lo_3D, nspecies_g, [bct_jlo,dom_lo,
         X_gk,p_bc_X_gk]
       AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
       const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
 
-      if(bct == pout) {
+      if(bct == BCList::pout) {
         X_gk(i,j,k,n) = X_gk(i,dom_lo[1],k,n);
         }
-      else if ((bct == minf) || (bct == pinf))
+      else if ((bct == BCList::minf) || (bct == BCList::pinf))
         X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
     });
   }
 
   if (ntop > 0)
   {
-    amrex::ParallelFor(bx_xz_hi_3D, nspecies_g, [bct_jhi,dom_hi,pout,minf,pinf,
+    amrex::ParallelFor(bx_xz_hi_3D, nspecies_g, [bct_jhi,dom_hi,
         X_gk,p_bc_X_gk]
       AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
       const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
 
-      if(bct == pout)
+      if(bct == BCList::pout)
         X_gk(i,j,k,n) = X_gk(i,dom_hi[1],k,n);
-      else if ((bct == minf) || (bct == pinf))
+      else if ((bct == BCList::minf) || (bct == BCList::pinf))
         X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
     });
   }
 
   if (ndwn > 0)
   {
-    amrex::ParallelFor(bx_xy_lo_3D, nspecies_g, [bct_klo,dom_lo,pout,minf,pinf,
+    amrex::ParallelFor(bx_xy_lo_3D, nspecies_g, [bct_klo,dom_lo,
         X_gk,p_bc_X_gk]
       AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
       const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
 
-      if(bct == pout)
+      if(bct == BCList::pout)
         X_gk(i,j,k,n) = X_gk(i,j,dom_lo[2],n);
-      else if ((bct == minf) || (bct == pinf))
+      else if ((bct == BCList::minf) || (bct == BCList::pinf))
         X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
     });
   }
 
   if (nup > 0)
   {
-    amrex::ParallelFor(bx_xy_hi_3D, nspecies_g, [bct_khi,dom_hi,pout,minf,pinf,
+    amrex::ParallelFor(bx_xy_hi_3D, nspecies_g, [bct_khi,dom_hi,
         X_gk,p_bc_X_gk]
       AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
     {
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
       const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
 
-      if(bct == pout)
+      if(bct == BCList::pout)
         X_gk(i,j,k,n) = X_gk(i,j,dom_hi[2],n);
-      else if ((bct == minf) || (bct == pinf))
+      else if ((bct == BCList::minf) || (bct == BCList::pinf))
         X_gk(i,j,k,n) = p_bc_X_gk[n][bcv];
     });
   }

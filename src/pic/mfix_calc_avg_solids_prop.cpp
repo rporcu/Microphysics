@@ -61,9 +61,6 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s,
     IntVect dom_lo(domain.loVect());
     IntVect dom_hi(domain.hiVect());
 
-    const int minf = bc_list.get_minf();
-    const int pinf = bc_list.get_pinf();
-
     Array4<const int> const& bct_ilo = bc_list.bc_ilo[lev]->array();
     Array4<const int> const& bct_ihi = bc_list.bc_ihi[lev]->array();
     Array4<const int> const& bct_jlo = bc_list.bc_jlo[lev]->array();
@@ -107,10 +104,10 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s,
         bx_yz_lo_hi_2D[0] = dom_lo[0];
         const Box bx_yz_lo_2D(bx_yz_lo_lo_2D, bx_yz_lo_hi_2D);
 
-        amrex::ParallelFor(bx_yz_lo_2D, [bct_ilo,dom_lo,minf,pinf,u_s]
+        amrex::ParallelFor(bx_yz_lo_2D, [bct_ilo,dom_lo,u_s]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
           const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
-          if((bct == pinf) || (bct == minf)) u_s(i,j,k,0) = 0.0;
+          if((bct == BCList::pinf) || (bct == BCList::minf)) u_s(i,j,k,0) = 0.0;
         });
       } // nlft
 
@@ -121,10 +118,10 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s,
         bx_yz_hi_lo_2D[0] = dom_hi[0]+1;
         const Box bx_yz_hi_2D(bx_yz_hi_lo_2D, bx_yz_hi_hi_2D);
 
-        amrex::ParallelFor(bx_yz_hi_2D, [bct_ihi,dom_hi,minf,pinf,u_s]
+        amrex::ParallelFor(bx_yz_hi_2D, [bct_ihi,dom_hi,u_s]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
           const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
-          if((bct == pinf) || (bct == minf)) u_s(i,j,k,0) = 0.0;
+          if((bct == BCList::pinf) || (bct == BCList::minf)) u_s(i,j,k,0) = 0.0;
         });
       } // nrgt
     }// end vel[0] MFIter loop
@@ -163,10 +160,10 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s,
         bx_xz_lo_hi_2D[1] = dom_lo[1];
         const Box bx_xz_lo_2D(bx_xz_lo_lo_2D, bx_xz_lo_hi_2D);
 
-        amrex::ParallelFor(bx_xz_lo_2D, [bct_jlo,dom_lo,minf,pinf,v_s]
+        amrex::ParallelFor(bx_xz_lo_2D, [bct_jlo,dom_lo,v_s]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
           const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
-          if((bct == pinf) || (bct == minf)) v_s(i,j,k,0) = 0.0;
+          if((bct == BCList::pinf) || (bct == BCList::minf)) v_s(i,j,k,0) = 0.0;
         });
       } // nbot
 
@@ -176,10 +173,10 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s,
         bx_xz_hi_lo_2D[1] = dom_hi[1]+1;
         const Box bx_xz_hi_2D(bx_xz_hi_lo_2D, bx_xz_hi_hi_2D);
 
-        amrex::ParallelFor(bx_xz_hi_2D, [bct_jhi,dom_hi,minf,pinf,v_s]
+        amrex::ParallelFor(bx_xz_hi_2D, [bct_jhi,dom_hi,v_s]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
           const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
-          if((bct == pinf) || (bct == minf)) v_s(i,j,k,0) = 0.0;
+          if((bct == BCList::pinf) || (bct == BCList::minf)) v_s(i,j,k,0) = 0.0;
         });
       } // ntop
     }// end vel[1] MFIter loop
@@ -217,11 +214,10 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s,
         bx_xy_lo_hi_2D[2] = dom_lo[2];
         const Box bx_xy_lo_2D(bx_xy_lo_lo_2D, bx_xy_lo_hi_2D);
 
-        amrex::ParallelFor(bx_xy_lo_2D,
-        [bct_klo,dom_lo,minf,pinf,w_s]
+        amrex::ParallelFor(bx_xy_lo_2D, [bct_klo,dom_lo,w_s]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
           const int bct = bct_klo(i,j,dom_lo[2]-1,0);
-          if((bct == pinf) || (bct == minf)) w_s(i,j,k,0) = 0.0;
+          if((bct == BCList::pinf) || (bct == BCList::minf)) w_s(i,j,k,0) = 0.0;
 
         });
       } // ndwn
@@ -232,10 +228,10 @@ void mfix::MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s,
         bx_xy_hi_lo_2D[2] = dom_hi[2]+1;
         const Box bx_xy_hi_2D(bx_xy_hi_lo_2D, bx_xy_hi_hi_2D);
 
-        amrex::ParallelFor(bx_xy_hi_2D, [bct_khi,dom_hi,minf,pinf,w_s]
+        amrex::ParallelFor(bx_xy_hi_2D, [bct_khi,dom_hi,w_s]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
           const int bct = bct_khi(i,j,dom_hi[2]+1,0);
-          if((bct == pinf) || (bct == minf)) w_s(i,j,k,0) = 0.0;
+          if((bct == BCList::pinf) || (bct == BCList::minf)) w_s(i,j,k,0) = 0.0;
 
         });
       } // nup

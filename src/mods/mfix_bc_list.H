@@ -1,35 +1,23 @@
-#ifndef _MFIX_BCLIST_H_
-#define _MFIX_BCLIST_H_
+#ifndef _MFIX_BC_LIST_H_
+#define _MFIX_BC_LIST_H_
 
 #include <AMReX_Vector.H>
 #include <AMReX_IArrayBox.H>
 
+
 // Boundary conditions list auxiliary structure
 //
-class BCList {
+struct BCList {
 
   public:
+    // Types
+    enum {undefined=0, ig=9, pinf=10, pout=11, minf=20, nsw=100, eb=111};
+
     // Constructor
-    BCList (const int nlev_in,
-            const int undefined = 0,
-            const int ig = 9,
-            const int pinf = 10,
-            const int pout = 11,
-            const int minf = 20,
-            const int nsw = 100,
-            const int eb  = 111);
+    BCList (const int nlev_in);
 
     // Destructor
     ~BCList();
-
-    int get_undefined () const {return und_;};
-    int get_ig () const {return ig_;};
-
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_pinf () const {return pinf_;};
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_pout () const {return pout_;};
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_minf () const {return minf_;};
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_nsw  () const {return nsw_ ;};
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE int get_eb   () const {return eb_  ;};
 
     void MakeBCArrays (int nghost,
                        bool ooo_debug,
@@ -37,13 +25,6 @@ class BCList {
 
   private:
     const int nlev;
-    const int und_;
-    const int ig_;
-    const int pinf_;
-    const int pout_;
-    const int minf_;
-    const int nsw_;
-    const int eb_;
 
   public:
     // Boundary conditions types

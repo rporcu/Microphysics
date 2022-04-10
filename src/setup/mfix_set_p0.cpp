@@ -12,7 +12,7 @@
 namespace set_p0_aux {
 
 void compute_p0_bcs (const Box& sbx, const Box& domain, const BCList& bc_list,
-                     Array4<Real> const& p0_g, Real const* m_bc_p_g, Real& pj,
+                     Array4<Real> const& p0_g, Gpu::DeviceVector<Real>& m_bc_p_g, Real& pj,
                      const RealVect& gravity, const Real dx, const Real dy, const Real dz,
                      Array4<const int> const& bct_ilo,
                      Array4<const int> const& bct_ihi,
@@ -24,8 +24,10 @@ void compute_p0_bcs (const Box& sbx, const Box& domain, const BCList& bc_list,
                      const int ntop, const int ndwn, const int nup,
                      const int nghost, const FluidPhase& fluid);
 
-void set_p0_bcs (const Box& sbx, const Box& domain, const BCList& bc_list,
-                 Array4<Real> const& p0_g, Real const* m_bc_p_g,
+void set_p0_bcs (const Box& sbx, const Box& domain,
+                 const BCList& bc_list,
+                 Array4<Real> const& p0_g,
+                 Gpu::DeviceVector<Real>& m_bc_p_g,
                  Array4<const int> const& bct_ilo,
                  Array4<const int> const& bct_ihi,
                  Array4<const int> const& bct_jlo,
@@ -117,11 +119,11 @@ mfix::set_p0 (const Box& bx,
   //     If the bc's are pressure inflow/outflow then be sure to capture that in p0andgp0
   // ---------------------------------------------------------------->>>
 
-  if(((bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],0) == bc_list.get_pinf()) &&
-     (bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],0) == bc_list.get_pout()))
+  if(((bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],0) == BCList::pinf) &&
+     (bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],0) == BCList::pout))
     ||
-     ((bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],0) == bc_list.get_pinf()) &&
-     (bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],0) == bc_list.get_pout())))
+     ((bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],0) == BCList::pinf) &&
+     (bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],0) == BCList::pout)))
   {
     delp_dir_loc = 0;
 
@@ -136,11 +138,11 @@ mfix::set_p0 (const Box& bx,
 
     pj = p_hi;
   }
-  else if(((bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],0) == bc_list.get_pinf()) &&
-          (bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],0) == bc_list.get_pout()))
+  else if(((bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],0) == BCList::pinf) &&
+          (bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],0) == BCList::pout))
          ||
-          ((bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],0) == bc_list.get_pinf()) &&
-          (bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],0) == bc_list.get_pout())))
+          ((bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],0) == BCList::pinf) &&
+          (bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],0) == BCList::pout)))
   {
     delp_dir_loc = 1;
 
@@ -155,11 +157,11 @@ mfix::set_p0 (const Box& bx,
 
     pj = p_hi;
   }
-  else if(((bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,0) == bc_list.get_pinf()) &&
-          (bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,0) == bc_list.get_pout()))
+  else if(((bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,0) == BCList::pinf) &&
+          (bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,0) == BCList::pout))
          ||
-          ((bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,0) == bc_list.get_pinf()) &&
-          (bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,0) == bc_list.get_pout())))
+          ((bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,0) == BCList::pinf) &&
+          (bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,0) == BCList::pout)))
   {
     delp_dir_loc = 2;
 
@@ -206,7 +208,7 @@ mfix::set_p0 (const Box& bx,
 
       if( !IC::ic[icv].fluid.pressure || gravity_square_module > tolerance)
       {
-        compute_p0_bcs(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), pj,
+        compute_p0_bcs(sbx, domain, bc_list, array4_p0_g, m_bc_p_g, pj,
             gravity, dx, dy, dz, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo,
             bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup, nghost_state(), fluid);
         return;
@@ -276,7 +278,7 @@ mfix::set_p0 (const Box& bx,
   }
 
   // pressure in all initial condition region cells was defined
-  set_p0_bcs(sbx, domain, bc_list, array4_p0_g, m_bc_p_g.data(), bct_ilo, bct_ihi,
+  set_p0_bcs(sbx, domain, bc_list, array4_p0_g, m_bc_p_g, bct_ilo, bct_ihi,
              bct_jlo, bct_jhi, bct_klo, bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup,
              nghost_state());
 
@@ -290,7 +292,7 @@ void compute_p0_bcs (const Box& sbx,
                      const Box& domain,
                      const BCList& bc_list,
                      Array4<Real> const& p0_g,
-                     Real const* m_bc_p_g,
+                     Gpu::DeviceVector<Real>& m_bc_p_g,
                      Real& pj,
                      const RealVect& gravity,
                      const Real dx,
@@ -323,7 +325,7 @@ void compute_p0_bcs (const Box& sbx,
   const Real undefined = 9.87654321e31;
   pj = undefined;
 
-  const int pout_ = bc_list.get_pout();
+  const int pout_ = BCList::pout;
 
   for(int bcv(0); bcv < BC::bc.size(); ++bcv)
   {
@@ -483,7 +485,7 @@ void set_p0_bcs (const Box& sbx,
                  const Box& domain,
                  const BCList& bc_list,
                  Array4<Real> const& p0_g,
-                 Real const* m_bc_p_g,
+                 Gpu::DeviceVector<Real>& m_bc_p_g,
                  Array4<const int> const& bct_ilo,
                  Array4<const int> const& bct_ihi,
                  Array4<const int> const& bct_jlo,
@@ -504,12 +506,14 @@ void set_p0_bcs (const Box& sbx,
   const IntVect dom_lo(domain.loVect());
   const IntVect dom_hi(domain.hiVect());
 
+  Real* m_bc_p_g_ptr = m_bc_p_g.data();
+
   if (nlft > 0)
   {
     const Box sbx_lo_x(sbx_lo, {dom_lo[0], sbx_hi[1], sbx_hi[2]});
 
     amrex::ParallelFor(sbx_lo_x,
-        [dom_hi,nghost,bct_ilo,bc_list,dom_lo,m_bc_p_g,p0_g]
+        [dom_hi,nghost,bct_ilo,dom_lo,m_bc_p_g_ptr,p0_g]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const int jbc = (j > dom_hi[1]+nghost) ? j-1 : j;
@@ -517,10 +521,10 @@ void set_p0_bcs (const Box& sbx,
 
           const int bct = bct_ilo(dom_lo[0]-1, jbc, kbc, 0);
 
-          if(bct == bc_list.get_pinf() || bct == bc_list.get_pout())
+          if(bct == BCList::pinf || bct == BCList::pout)
           {
             const int bcv = bct_ilo(dom_lo[0]-1, jbc, kbc, 1);
-            p0_g(i,j,k) = m_bc_p_g[bcv];
+            p0_g(i,j,k) = m_bc_p_g_ptr[bcv];
           }
         });
   }
@@ -530,7 +534,7 @@ void set_p0_bcs (const Box& sbx,
     const Box sbx_hi_x({dom_hi[0]+1, sbx_lo[1], sbx_lo[2]}, sbx_hi);
 
     amrex::ParallelFor(sbx_hi_x,
-        [dom_hi,nghost,bct_ihi,bc_list,m_bc_p_g,p0_g]
+        [dom_hi,nghost,bct_ihi,m_bc_p_g_ptr,p0_g]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const int jbc = (j > dom_hi[1]+nghost) ? j-1 : j;
@@ -538,10 +542,10 @@ void set_p0_bcs (const Box& sbx,
 
           const int bct = bct_ihi(dom_hi[0]+1, jbc, kbc, 0);
 
-          if(bct == bc_list.get_pinf() || bct == bc_list.get_pout())
+          if(bct == BCList::pinf || bct == BCList::pout)
           {
             const int bcv = bct_ihi(dom_hi[0]+1, jbc, kbc, 1);
-            p0_g(i,j,k) = m_bc_p_g[bcv];
+            p0_g(i,j,k) = m_bc_p_g_ptr[bcv];
           }
         });
   }
@@ -551,7 +555,7 @@ void set_p0_bcs (const Box& sbx,
     const Box sbx_lo_y(sbx_lo, {sbx_hi[0], dom_lo[1], sbx_hi[2]});
 
     amrex::ParallelFor(sbx_lo_y,
-        [dom_hi,nghost,bct_jlo,bc_list,dom_lo,m_bc_p_g,p0_g]
+        [dom_hi,nghost,bct_jlo,dom_lo,m_bc_p_g_ptr,p0_g]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const int ibc = (i > dom_hi[0]+nghost) ? i-1 : i;
@@ -559,10 +563,10 @@ void set_p0_bcs (const Box& sbx,
 
           const int bct = bct_jlo(ibc, dom_lo[1]-1, kbc, 0);
 
-          if(bct == bc_list.get_pinf() || bct == bc_list.get_pout())
+          if(bct == BCList::pinf || bct == BCList::pout)
           {
             const int bcv = bct_jlo(ibc, dom_lo[1]-1, kbc, 1);
-            p0_g(i,j,k) = m_bc_p_g[bcv];
+            p0_g(i,j,k) = m_bc_p_g_ptr[bcv];
           }
         });
   }
@@ -572,7 +576,7 @@ void set_p0_bcs (const Box& sbx,
     const Box sbx_hi_y({sbx_lo[0], dom_hi[1]+1, sbx_lo[2]}, sbx_hi);
 
     amrex::ParallelFor(sbx_hi_y,
-        [dom_hi,nghost,bct_jhi,bc_list,m_bc_p_g,p0_g]
+        [dom_hi,nghost,bct_jhi,m_bc_p_g_ptr,p0_g]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const int ibc = (i > dom_hi[0]+nghost) ? i-1 : i;
@@ -580,10 +584,10 @@ void set_p0_bcs (const Box& sbx,
 
           const int bct = bct_jhi(ibc, dom_hi[1]+1, kbc, 0);
 
-          if(bct == bc_list.get_pinf() || bct == bc_list.get_pout())
+          if(bct == BCList::pinf || bct == BCList::pout)
           {
             const int bcv = bct_jhi(ibc, dom_hi[1]+1, kbc, 1);
-            p0_g(i,j,k) = m_bc_p_g[bcv];
+            p0_g(i,j,k) = m_bc_p_g_ptr[bcv];
           }
         });
   }
@@ -593,7 +597,7 @@ void set_p0_bcs (const Box& sbx,
     const Box sbx_lo_z(sbx_lo, {sbx_hi[0], sbx_hi[1], dom_lo[2]});
 
     amrex::ParallelFor(sbx_lo_z,
-        [dom_hi,nghost,bct_klo,bc_list,dom_lo,m_bc_p_g,p0_g]
+        [dom_hi,nghost,bct_klo,dom_lo,m_bc_p_g_ptr,p0_g]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const int ibc = (i > dom_hi[0]+nghost) ? i-1 : i;
@@ -601,10 +605,10 @@ void set_p0_bcs (const Box& sbx,
 
           const int bct = bct_klo(ibc, jbc, dom_lo[2]-1, 0);
 
-          if(bct == bc_list.get_pinf() || bct == bc_list.get_pout())
+          if(bct == BCList::pinf || bct == BCList::pout)
           {
             const int bcv = bct_klo(ibc, jbc, dom_lo[2]-1, 1);
-            p0_g(i,j,k) = m_bc_p_g[bcv];
+            p0_g(i,j,k) = m_bc_p_g_ptr[bcv];
           }
         });
   }
@@ -614,7 +618,7 @@ void set_p0_bcs (const Box& sbx,
     const Box sbx_hi_z({sbx_lo[0], sbx_lo[1], dom_hi[2]+1}, sbx_hi);
 
     amrex::ParallelFor(sbx_hi_z,
-        [dom_hi,nghost,bct_khi,bc_list,m_bc_p_g,p0_g]
+        [dom_hi,nghost,bct_khi,m_bc_p_g_ptr,p0_g]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const int ibc = (i > dom_hi[0]+nghost) ? i-1 : i;
@@ -622,10 +626,10 @@ void set_p0_bcs (const Box& sbx,
 
           const int bct = bct_khi(ibc, jbc, dom_hi[2]+1, 0);
 
-          if(bct == bc_list.get_pinf() || bct == bc_list.get_pout())
+          if(bct == BCList::pinf || bct == BCList::pout)
           {
             const int bcv = bct_khi(ibc, jbc, dom_hi[2]+1, 1);
-            p0_g(i,j,k) = m_bc_p_g[bcv];
+            p0_g(i,j,k) = m_bc_p_g_ptr[bcv];
           }
         });
   }
