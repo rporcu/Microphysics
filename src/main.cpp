@@ -155,8 +155,6 @@ int main (int argc, char* argv[])
     if (mfix.fluid.solve){
       mfix.init_advection();
 
-      //amrex::Abort("111");
-
       mfix.mfix_init_solvers();
     }
 

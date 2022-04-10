@@ -8,7 +8,7 @@
 #include <AMReX_EBFabFactory.H>
 
 
-namespace Utils {
+struct Utils {
 
   static amrex::Real volWgtSum (int lev,
                                 const amrex::MultiFab & mf,

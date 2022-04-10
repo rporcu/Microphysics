@@ -33,7 +33,7 @@ public:
            int levelset_pad_in,
            int levelset_eb_refinement_in,
            int levelset_eb_pad_in,
-           SolidsPhase solids_in,
+           SolidsPhase& solids_in,
            Reactions& reactions_in,
            amrex::Vector<amrex::MultiFab*> particle_cost_in,
            amrex::Vector<amrex::MultiFab*> particle_proc_in,
