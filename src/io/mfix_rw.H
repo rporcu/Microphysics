@@ -21,13 +21,11 @@ public:
            amrex::Vector<amrex::Geometry>& geom_in,
            MFIXParticleContainer* pc_in,
            FluidPhase& fluid_in,
-           bool advect_enthalpy_in,
            amrex::Vector<std::unique_ptr<LevelData>>& m_leveldata_in,
            amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory_in,
            amrex::Vector<amrex::DistributionMapping>& dmap_in,
            bool ooo_debug_in,
            amrex::Vector<std::unique_ptr<amrex::MultiFab>>& level_sets_in,
-           bool solve_species_in,
            const amrex::Vector<amrex::BoxArray>& box_array_in,
            int levelset_refinement_in,
            int levelset_pad_in,
@@ -37,19 +35,17 @@ public:
            Reactions& reactions_in,
            amrex::Vector<amrex::MultiFab*> particle_cost_in,
            amrex::Vector<amrex::MultiFab*> particle_proc_in,
-           amrex::Vector<amrex::MultiFab*> fluid_cost_in,
            amrex::Vector<amrex::MultiFab*> fluid_proc_in,
            amrex::Real covered_val_in,
            const amrex::Vector<amrex::IntVect>& ref_ratio_in,
-           amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory_in,
            amrex::Vector<const amrex::EB2::Level*>& eb_levels_in,
            int nghost_eb_basic_in,
            int nghost_eb_volume_in,
            int nghost_eb_full_in,
            amrex::EBSupport& m_eb_support_level_in,
-           bool& levelset_restart_in,
            std::string load_balance_type_in,
-           BCList& bc_list_in);
+           BCList& bc_list_in,
+           amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory_in);
 
    void InitIOChkData ();
 
@@ -168,8 +164,6 @@ private:
    amrex::Vector<amrex::Real> avg_region_z_b;
    amrex::Vector<amrex::Real> avg_region_z_t;
 
-   bool advect_enthalpy;
-
    amrex::Vector<std::unique_ptr<LevelData>>& m_leveldata;
    amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory;
    amrex::Vector<amrex::DistributionMapping>& dmap;
@@ -177,8 +171,6 @@ private:
    bool ooo_debug;
 
    amrex::Vector<std::unique_ptr<amrex::MultiFab>>& level_sets;
-
-   bool solve_species;
 
    const amrex::Vector<amrex::BoxArray>& box_array;
 
@@ -192,15 +184,11 @@ private:
 
    amrex::Vector<amrex::MultiFab*>& particle_cost;
    amrex::Vector<amrex::MultiFab*>& particle_proc;
-   amrex::Vector<amrex::MultiFab*>& fluid_cost;
    amrex::Vector<amrex::MultiFab*>& fluid_proc;
 
    amrex::Real covered_val;
 
    const amrex::Vector<amrex::IntVect>& ref_ratio;
-
-   //! EB factory that lives on the particle grids
-   amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory;
 
    //! EB levels representing fluid boundary conditions
    amrex::Vector<const amrex::EB2::Level*> eb_levels;
@@ -210,11 +198,11 @@ private:
    int nghost_eb_full;
    amrex::EBSupport& m_eb_support_level;
 
-   bool& levelset_restart;
-
    std::string load_balance_type;
 
    BCList& bc_list;
+
+   amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory;
 
    amrex::GpuArray<amrex::Real,2*SPECIES::NMAX> mass_accum = {0.};
    amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mass_inflow = {0.};

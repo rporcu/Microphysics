@@ -107,7 +107,7 @@ MfixRW::InitIOPltData ()
       if (plt_proc_p  == 1) pltVarCount += 1;
       if (plt_cost_p  == 1) pltVarCount += 1;
 
-      if (advect_enthalpy) {
+      if (fluid.solve_enthalpy) {
         if (plt_T_g  == 1) pltVarCount += 1;
         if (plt_cp_g == 1) pltVarCount += 1;
         if (plt_k_g  == 1) pltVarCount += 1;
@@ -118,7 +118,7 @@ MfixRW::InitIOPltData ()
         if (plt_X_gk == 1)  pltVarCount += fluid.nspecies;
         if (plt_D_gk == 1)  pltVarCount += fluid.nspecies;
 
-        if (advect_enthalpy) {
+        if (fluid.solve_enthalpy) {
           if (plt_cp_gk == 1) pltVarCount += fluid.nspecies;
           if (plt_h_gk == 1)  pltVarCount += fluid.nspecies;
         }
@@ -322,11 +322,11 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
         pltFldNames.push_back("MW_g");
 
       // Fluid enthalpy
-      if (advect_enthalpy && plt_h_g == 1)
+      if (fluid.solve_enthalpy && plt_h_g == 1)
         pltFldNames.push_back("h_g");
 
       // Temperature in fluid
-      if (advect_enthalpy && plt_T_g == 1)
+      if (fluid.solve_enthalpy && plt_T_g == 1)
         pltFldNames.push_back("T_g");
 
       // Tracer in fluid
@@ -334,11 +334,11 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
         pltFldNames.push_back("trac");
 
       // Specific heat
-      if (advect_enthalpy && plt_cp_g == 1)
+      if (fluid.solve_enthalpy && plt_cp_g == 1)
         pltFldNames.push_back("cp_g");
 
       // Thermal conductivity
-      if (advect_enthalpy && plt_k_g == 1)
+      if (fluid.solve_enthalpy && plt_k_g == 1)
         pltFldNames.push_back("k_g");
 
       // Fluid viscosity
@@ -380,12 +380,12 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
           pltFldNames.push_back("D_"+specie+"_g");
 
       // Fluid species specific heat
-      if (fluid.solve_species && advect_enthalpy && plt_cp_gk == 1)
+      if (fluid.solve_species && fluid.solve_enthalpy && plt_cp_gk == 1)
         for (std::string specie: fluid.species)
           pltFldNames.push_back("cp_"+specie+"_g");
 
       // Fluid species enthalpy
-      if (fluid.solve_species && advect_enthalpy && plt_h_gk == 1)
+      if (fluid.solve_species && fluid.solve_enthalpy && plt_h_gk == 1)
         for (std::string specie: fluid.species)
           pltFldNames.push_back("h_"+specie+"_g");
 
@@ -512,13 +512,13 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
         }
 
         // Fluid enthalpy
-        if (advect_enthalpy && plt_h_g == 1) {
+        if (fluid.solve_enthalpy && plt_h_g == 1) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->h_g), 0, lc, 1, 0);
           lc += 1;
         }
 
         // Fluid temperature
-        if (advect_enthalpy && plt_T_g == 1) {
+        if (fluid.solve_enthalpy && plt_T_g == 1) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->T_g), 0, lc, 1, 0);
           lc += 1;
         }
@@ -530,7 +530,7 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
         }
 
         // Specific heat
-        if (advect_enthalpy && plt_cp_g == 1) {
+        if (fluid.solve_enthalpy && plt_cp_g == 1) {
 
           MultiFab& T_g = *(m_leveldata[lev]->T_g);
 
@@ -592,7 +592,7 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
         }
 
         // Thermal conductivity
-        if (advect_enthalpy && plt_k_g == 1) {
+        if (fluid.solve_enthalpy && plt_k_g == 1) {
 
           MultiFab& T_g = *(m_leveldata[lev]->T_g);
 
@@ -644,10 +644,10 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
             Box const& bx = mfi.tilebox();
 
             Array4<Real      > const& mu_g_array = mu_g.array(mfi);
-            Array4<Real const> const& T_g_array  = advect_enthalpy ?
+            Array4<Real const> const& T_g_array  = fluid.solve_enthalpy ?
               m_leveldata[lev]->T_g->const_array(mfi) : Array4<Real const>();
 
-            const int adv_enthalpy = advect_enthalpy;
+            const int adv_enthalpy = fluid.solve_enthalpy;
 
             ParallelFor(bx, [mu_g_array,T_g_array,adv_enthalpy,mu_g0,fluid_params]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -751,7 +751,7 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
         }
 
         // Fluid species specific heat
-        if (fluid.solve_species && advect_enthalpy && plt_cp_gk == 1) {
+        if (fluid.solve_species && fluid.solve_enthalpy && plt_cp_gk == 1) {
 
           const int nspecies_g = fluid.nspecies;
 
@@ -768,7 +768,7 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
             Box const& bx = mfi.tilebox();
 
             Array4<Real      > const& cp_gk_array = cp_gk.array(mfi);
-            Array4<Real const> const& T_g_array  = advect_enthalpy ?
+            Array4<Real const> const& T_g_array  = fluid.solve_enthalpy ?
               m_leveldata[lev]->T_g->const_array(mfi) : Array4<const Real>();
 
             ParallelFor(bx, [cp_gk_array,T_g_array,nspecies_g,fluid_params,run_on_device]
@@ -818,7 +818,7 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
             Array4<const Real> dummy_arr;
 
             Array4<      Real> const& h_gk_array = h_gk.array(mfi);
-            Array4<const Real> const& T_g_array  = advect_enthalpy ? (ld.T_g)->const_array(mfi) : dummy_arr;
+            Array4<const Real> const& T_g_array  = fluid.solve_enthalpy ? (ld.T_g)->const_array(mfi) : dummy_arr;
 
             auto const& flags_arr = flags.const_array();
 
@@ -1006,8 +1006,8 @@ MfixRW::WriteStaticPlotFile (const std::string & plotfilename) const
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        mf[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], ncomp, ngrow, MFInfo(),
-                                             *particle_ebfactory[lev]);
+        mf[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], ncomp, ngrow,
+                                             MFInfo(), *particle_ebfactory[lev]);
 
         // Don't iterate over all ncomp => last component is for volfrac
         for (int dcomp = 0; dcomp < ncomp - 1; dcomp++)

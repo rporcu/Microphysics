@@ -154,16 +154,15 @@ mfix::mfix ()
 
     Gpu::synchronize();
 
-    mfixRW = new MfixIO::MfixRW(nlev, grids, geom, pc, fluid,
-                                advect_enthalpy, m_leveldata, ebfactory, dmap,
-                                ooo_debug, level_sets, solve_species, boxArray(),
+    mfixRW = new MfixIO::MfixRW(nlev, grids, geom, pc, fluid, m_leveldata,
+                                ebfactory, dmap, ooo_debug, level_sets, boxArray(),
                                 levelset_refinement, levelset_pad,
                                 levelset_eb_refinement, levelset_eb_pad,
                                 solids, reactions, particle_cost, particle_proc,
-                                fluid_cost, fluid_proc, covered_val, refRatio(),
-                                particle_ebfactory, eb_levels, nghost_eb_basic(),
+                                fluid_proc, covered_val, refRatio(),
+                                eb_levels, nghost_eb_basic(),
                                 nghost_eb_volume(), nghost_eb_full(), m_eb_support_level,
-                                levelset_restart, load_balance_type,bc_list);
+                                load_balance_type, bc_list, particle_ebfactory);
 }
 
 void

@@ -62,12 +62,12 @@ MfixRW::ResetIOChkData ()
     chkScalarVars[2][lev] = m_leveldata[lev]->ro_g;
     chkScalarVars[3][lev] = level_sets[lev].get();
     
-    if (advect_enthalpy) {
+    if (fluid.solve_enthalpy) {
       chkTVars[0][lev] = m_leveldata[lev]->T_g;
       //chkTVars[1][lev] = m_leveldata[lev]->h_g;
     }
 
-    if (solve_species) {
+    if (fluid.solve_species) {
       chkSpeciesVars[0][lev] = m_leveldata[lev]->X_gk;
     }
   }
@@ -177,7 +177,7 @@ MfixRW::WriteCheckPointFile (std::string& check_file,
                          level_prefix, chkscaVarsName[i]));
           }
 
-          if (advect_enthalpy) {
+          if (fluid.solve_enthalpy) {
              // Write temperature variables
              for (int i = 0; i < chkTVars.size(); i++) {
                 VisMF::Write( *(chkTVars[i][lev]),
@@ -186,7 +186,7 @@ MfixRW::WriteCheckPointFile (std::string& check_file,
              }
           }
 
-          if (solve_species) {
+          if (fluid.solve_species) {
              // Write species variables
              for (int i = 0; i < chkSpeciesVars.size(); i++) {
                 VisMF::Write( *(chkSpeciesVars[i][lev]),

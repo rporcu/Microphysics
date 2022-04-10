@@ -19,13 +19,11 @@ MfixRW::MfixRW (int nlev_in,
                 amrex::Vector<amrex::Geometry>& geom_in,
                 MFIXParticleContainer* pc_in,
                 FluidPhase& fluid_in,
-                bool advect_enthalpy_in,
                 amrex::Vector<std::unique_ptr<LevelData>>& m_leveldata_in,
                 amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory_in,
                 amrex::Vector<amrex::DistributionMapping>& dmap_in,
                 bool ooo_debug_in,
                 amrex::Vector<std::unique_ptr<amrex::MultiFab>>& level_sets_in,
-                bool solve_species_in,
                 const amrex::Vector<amrex::BoxArray>& box_array_in,
                 int levelset_refinement_in,
                 int levelset_pad_in,
@@ -35,32 +33,28 @@ MfixRW::MfixRW (int nlev_in,
                 Reactions& reactions_in,
                 amrex::Vector<amrex::MultiFab*> particle_cost_in,
                 amrex::Vector<amrex::MultiFab*> particle_proc_in,
-                amrex::Vector<amrex::MultiFab*> fluid_cost_in,
                 amrex::Vector<amrex::MultiFab*> fluid_proc_in,
                 amrex::Real covered_val_in,
                 const amrex::Vector<amrex::IntVect>& ref_ratio_in,
-                amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory_in,
                 amrex::Vector<const amrex::EB2::Level*>& eb_levels_in,
                 int nghost_eb_basic_in,
                 int nghost_eb_volume_in,
                 int nghost_eb_full_in,
                 amrex::EBSupport& m_eb_support_level_in,
-                bool& levelset_restart_in,
                 std::string load_balance_type_in,
-                BCList& bc_list_in)
+                BCList& bc_list_in,
+                Vector<std::unique_ptr<EBFArrayBoxFactory>>& particle_ebfactory_in)
   : finest_level(nlev_in-1)
   , nlev(nlev_in)
   , grids(grids_in)
   , geom(geom_in)
   , pc(pc_in)
   , fluid(fluid_in)
-  , advect_enthalpy(advect_enthalpy_in)
   , m_leveldata(m_leveldata_in)
   , ebfactory(ebfactory_in)
   , dmap(dmap_in)
   , ooo_debug(ooo_debug_in)
   , level_sets(level_sets_in)
-  , solve_species(solve_species_in)
   , box_array(box_array_in)
   , levelset_refinement(levelset_refinement_in)
   , levelset_pad(levelset_pad_in)
@@ -70,19 +64,17 @@ MfixRW::MfixRW (int nlev_in,
   , reactions(reactions_in)
   , particle_cost(particle_cost_in)
   , particle_proc(particle_proc_in)
-  , fluid_cost(fluid_cost_in)
   , fluid_proc(fluid_proc_in)
   , covered_val(covered_val_in)
   , ref_ratio(ref_ratio_in)
-  , particle_ebfactory(particle_ebfactory_in)
   , eb_levels(eb_levels_in)
   , nghost_eb_basic(nghost_eb_basic_in)
   , nghost_eb_volume(nghost_eb_volume_in)
   , nghost_eb_full(nghost_eb_full_in)
   , m_eb_support_level(m_eb_support_level_in)
-  , levelset_restart(levelset_restart_in)
   , load_balance_type(load_balance_type_in)
   , bc_list(bc_list_in)
+  , particle_ebfactory(particle_ebfactory_in)
 {
   readParameters();
 }
