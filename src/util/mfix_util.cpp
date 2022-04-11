@@ -51,8 +51,10 @@ mfix::mfix_print_max_gp (int lev,
 }
 
 
+namespace MfixIO {
+
 void
-mfix::mfix_compute_vort ()
+MfixRW::ComputeVort ()
 {
     BL_PROFILE("mfix::mfix_compute_vort");
 
@@ -101,8 +103,6 @@ mfix::mfix_compute_vort ()
     }
 }
 
-
-namespace MfixIO {
 
 //
 //

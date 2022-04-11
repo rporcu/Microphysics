@@ -200,8 +200,6 @@ class mfix : public AmrCore
     // the level-set data).
     bool levelset_restart = false;
 
-    void mfix_compute_vort ();
-
     void mfix_compute_dt (int nstep, Real time, Real stop_time, Real & dt, Real & prev_dt);
 
     ///

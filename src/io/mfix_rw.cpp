@@ -230,10 +230,10 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 
     if ( (plot_test == 1) || ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) ) )
     {
-      if (fluid.solve)
-        // TODO
-//           mfix_compute_vort();
-        WritePlotFile( plot_file, nstep, time );
+        if (fluid.solve)
+          ComputeVort();
+
+        WritePlotFile(plot_file, nstep, time);
     }
 
 

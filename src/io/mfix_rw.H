@@ -93,11 +93,7 @@ public:
                              int nstep,
                              amrex::Real time = 0.) const;
 
-   void Restart (std::string& restart_chkfile,
-                 int* nstep,
-                 amrex::Real* dt,
-                 amrex::Real* time,
-                 amrex::IntVect& Nrep);
+   void ComputeVort ();
 
    void ComputeAverageFluidVars (const int lev,
                                  const amrex::Real time,
