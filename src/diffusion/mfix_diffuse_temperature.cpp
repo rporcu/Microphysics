@@ -129,11 +129,14 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
         if (bx.ok())
         {
+          Array4<Real const> dummy_arr;
+
           Array4<Real      > const& A_array       = A[lev]->array(mfi);
           Array4<Real const> const& ep_g_array    = ep_g[lev]->const_array(mfi);
           Array4<Real const> const& ro_g_array    = ro_g[lev]->const_array(mfi);
           Array4<Real const> const& T_g_old_array = T_g_old[lev]->const_array(mfi);
-          Array4<Real const> const& X_gk_array    = X_gk[lev]->const_array(mfi);
+          Array4<Real const> const& X_gk_array    = fluid_is_a_mixture ?
+            X_gk[lev]->const_array(mfi) : dummy_arr;
 
           auto const& flags_arr = flags.const_array();
 
@@ -260,12 +263,15 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
         if (bx.ok())
         {
+          Array4<Real const> dummy_arr;
+
           Array4<Real      > const& rhs_array     = rhs[lev]->array(mfi);
           Array4<Real const> const& ep_g_array    = ep_g[lev]->const_array(mfi);
           Array4<Real const> const& ro_g_array    = ro_g[lev]->const_array(mfi);
           Array4<Real const> const& T_g_old_array = T_g_old[lev]->const_array(mfi);
           Array4<Real const> const& h_g_array     = h_g[lev]->const_array(mfi);
-          Array4<Real const> const& X_gk_array    = X_gk[lev]->const_array(mfi);
+          Array4<Real const> const& X_gk_array    = fluid_is_a_mixture ?
+            X_gk[lev]->const_array(mfi) : dummy_arr;
 
           auto const& flags_arr = flags.const_array();
 
@@ -412,7 +418,8 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
       Array4<Real      > const& h_g_array  = h_g[lev]->array(mfi);
       Array4<Real const> const& T_g_array  = T_g[lev]->const_array(mfi);
-      Array4<Real const> const& X_gk_array = fluid_is_a_mixture ? X_gk[lev]->const_array(mfi) : dummy_arr;
+      Array4<Real const> const& X_gk_array = fluid_is_a_mixture ?
+        X_gk[lev]->const_array(mfi) : dummy_arr;
 
       auto const& flags_arr = flags.const_array();
 
