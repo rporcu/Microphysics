@@ -11,21 +11,31 @@
 
 namespace set_p0_aux {
 
-void compute_p0_bcs (const Box& sbx, const Box& domain, const BCList& bc_list,
-                     Array4<Real> const& p0_g, Gpu::DeviceVector<Real>& m_bc_p_g, Real& pj,
-                     const RealVect& gravity, const Real dx, const Real dy, const Real dz,
+void compute_p0_bcs (const Box& sbx,
+                     const Box& domain,
+                     Array4<Real> const& p0_g,
+                     Gpu::DeviceVector<Real>& m_bc_p_g, Real& pj,
+                     const RealVect& gravity,
+                     const Real dx,
+                     const Real dy,
+                     const Real dz,
                      Array4<const int> const& bct_ilo,
                      Array4<const int> const& bct_ihi,
                      Array4<const int> const& bct_jlo,
                      Array4<const int> const& bct_jhi,
                      Array4<const int> const& bct_klo,
                      Array4<const int> const& bct_khi,
-                     const int nlft, const int nrgt, const int nbot,
-                     const int ntop, const int ndwn, const int nup,
-                     const int nghost, const FluidPhase& fluid);
+                     const int nlft,
+                     const int nrgt,
+                     const int nbot,
+                     const int ntop,
+                     const int ndwn,
+                     const int nup,
+                     const int nghost,
+                     const FluidPhase& fluid);
 
-void set_p0_bcs (const Box& sbx, const Box& domain,
-                 const BCList& bc_list,
+void set_p0_bcs (const Box& sbx,
+                 const Box& domain,
                  Array4<Real> const& p0_g,
                  Gpu::DeviceVector<Real>& m_bc_p_g,
                  Array4<const int> const& bct_ilo,
@@ -34,8 +44,12 @@ void set_p0_bcs (const Box& sbx, const Box& domain,
                  Array4<const int> const& bct_jhi,
                  Array4<const int> const& bct_klo,
                  Array4<const int> const& bct_khi,
-                 const int nlft, const int nrgt, const int nbot,
-                 const int ntop, const int ndwn, const int nup,
+                 const int nlft,
+                 const int nrgt,
+                 const int nbot,
+                 const int ntop,
+                 const int ndwn,
+                 const int nup,
                  const int nghost);
 
 } // end namespace set_p0_aux
@@ -208,9 +222,9 @@ mfix::set_p0 (const Box& bx,
 
       if( !IC::ic[icv].fluid.pressure || gravity_square_module > tolerance)
       {
-        compute_p0_bcs(sbx, domain, bc_list, array4_p0_g, m_bc_p_g, pj,
-            gravity, dx, dy, dz, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo,
-            bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup, nghost_state(), fluid);
+        compute_p0_bcs(sbx, domain, array4_p0_g, m_bc_p_g, pj, gravity, dx, dy,
+                       dz, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi,
+                       nlft, nrgt, nbot, ntop, ndwn, nup, nghost_state(), fluid);
         return;
       }
 
@@ -278,9 +292,8 @@ mfix::set_p0 (const Box& bx,
   }
 
   // pressure in all initial condition region cells was defined
-  set_p0_bcs(sbx, domain, bc_list, array4_p0_g, m_bc_p_g, bct_ilo, bct_ihi,
-             bct_jlo, bct_jhi, bct_klo, bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup,
-             nghost_state());
+  set_p0_bcs(sbx, domain, array4_p0_g, m_bc_p_g, bct_ilo, bct_ihi, bct_jlo,
+             bct_jhi, bct_klo, bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup, nghost_state());
 
   return;
 }
@@ -290,7 +303,6 @@ namespace set_p0_aux {
 
 void compute_p0_bcs (const Box& sbx,
                      const Box& domain,
-                     const BCList& bc_list,
                      Array4<Real> const& p0_g,
                      Gpu::DeviceVector<Real>& m_bc_p_g,
                      Real& pj,
@@ -325,11 +337,9 @@ void compute_p0_bcs (const Box& sbx,
   const Real undefined = 9.87654321e31;
   pj = undefined;
 
-  const int pout_ = BCList::pout;
-
   for(int bcv(0); bcv < BC::bc.size(); ++bcv)
   {
-    if (BC::bc[bcv].type == pout_)
+    if (BC::bc[bcv].type == BCList::pout)
       pj = BC::bc[bcv].fluid.pressure;
   }
 
@@ -474,16 +484,14 @@ void compute_p0_bcs (const Box& sbx,
     }
   }
 
-  set_p0_bcs(sbx, domain, bc_list, p0_g, m_bc_p_g, bct_ilo, bct_ihi,
-           bct_jlo, bct_jhi, bct_klo, bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup,
-           nghost);
+  set_p0_bcs(sbx, domain, p0_g, m_bc_p_g, bct_ilo, bct_ihi, bct_jlo, bct_jhi,
+             bct_klo, bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup, nghost);
 
   return;
 }
 
 void set_p0_bcs (const Box& sbx,
                  const Box& domain,
-                 const BCList& bc_list,
                  Array4<Real> const& p0_g,
                  Gpu::DeviceVector<Real>& m_bc_p_g,
                  Array4<const int> const& bct_ilo,
