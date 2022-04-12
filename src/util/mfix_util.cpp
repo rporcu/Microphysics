@@ -21,13 +21,16 @@ mfix::check_for_nans (int lev)
     amrex::Print() << "WARNING: p_g contains NaNs!!!";
 }
 
+
+namespace MfixIO {
+
 //
 // Print the maximum values of the velocity components
 //
 void
-mfix::mfix_print_max_vel (int lev,
-                          const Vector<MultiFab*>& vel_g_in,
-                          const Vector<MultiFab*>& p_g_in)
+MfixRW::mfix_print_max_vel (int lev,
+                            const Vector<MultiFab*>& vel_g_in,
+                            const Vector<MultiFab*>& p_g_in)
 {
     amrex::Print() << "   max(abs(u/v/w/p))  = "
                    << vel_g_in[lev]->norm0(0,0,false,true) << "  "
@@ -41,8 +44,8 @@ mfix::mfix_print_max_vel (int lev,
 // Print the maximum values of the pressure gradient components
 //
 void
-mfix::mfix_print_max_gp (int lev,
-                         const Vector<MultiFab*>& gp_g_in)
+MfixRW::mfix_print_max_gp (int lev,
+                           const Vector<MultiFab*>& gp_g_in)
 {
     amrex::Print() << "   max(abs(gpx/gpy/gpz))  = "
                    << gp_g_in[lev]->norm0(0,0,false,true) << "  "
@@ -50,8 +53,6 @@ mfix::mfix_print_max_gp (int lev,
                    << gp_g_in[lev]->norm0(2,0,false,true) <<  std::endl;
 }
 
-
-namespace MfixIO {
 
 void
 MfixRW::ComputeVort ()
@@ -200,14 +201,12 @@ MfixRW::ReportGridStats () const
 
 }
 
-}
-
 
 //
 // Print the minimum volume fraction and cell location.
 //
 IntVect
-mfix::mfix_print_min_epg ()
+MfixRW::mfix_print_min_epg ()
 {
 
 #ifndef AMREX_USE_GPU
@@ -256,6 +255,8 @@ mfix::mfix_print_min_epg ()
   return fake;
 
 }
+
+} // end namespace MfixIO
 
 
 IntVect

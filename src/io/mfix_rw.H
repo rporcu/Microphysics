@@ -49,6 +49,13 @@ public:
 
    void set_pc (MFIXParticleContainer* pc) { this->pc = pc; };
 
+   void output (int estatus,
+                int finish,
+                int nstep,
+                amrex::Real dt,
+                amrex::Real time)
+   { pc->output(estatus, finish, nstep, dt, time); };
+
    void InitIOChkData ();
 
    void ResetIOChkData ();
@@ -71,7 +78,7 @@ public:
 
    void WriteMyEBSurface () const;
 
-   void reportGridStats() const;
+   void reportGridStats () const;
 
    void WriteCheckPointFile (std::string& check_file_name,
                              int nstep = 0,
@@ -115,6 +122,17 @@ public:
 
    void WriteMassBalanceReport (const amrex::Real time);
 
+   void mfix_print_max_vel (int lev,
+                            const amrex::Vector<amrex::MultiFab*>& vel_g_in,
+                            const amrex::Vector<amrex::MultiFab*>& p_g_in);
+
+   void mfix_print_max_gp (int lev,
+                           const amrex::Vector<amrex::MultiFab*>& gp_g_in);
+
+   amrex::IntVect mfix_print_min_epg ();
+
+   void GotoNextLine (std::istream& is);
+
    int repl_x = 1;
    int repl_y = 1;
    int repl_z = 1;
@@ -124,14 +142,27 @@ public:
    bool stop_for_unused_inputs = false;
    std::string restart_file {""};
 
-   static int report_mass_balance;
-   static int mass_balance_report_int;
-   static amrex::Real mass_balance_report_per_approx;
-   static amrex::Real mass_balance_report_time;
+   int report_mass_balance = 0;
+   int mass_balance_report_int = -1;
+   amrex::Real mass_balance_report_per_approx = -1;
+   amrex::Real mass_balance_report_time = 0;
 
 #ifdef MFIX_CATALYST
    std::string catalyst_script {""};
 #endif
+
+   // Variables to simplify checkpoint IO
+   // amrex::Vector< amrex::Vector< amrex::MultiFab* > > vectorVars;
+   amrex::Vector<std::string> vecVarsName;
+
+   amrex::Vector<amrex::Vector<amrex::MultiFab*>> chkScalarVars;
+   amrex::Vector<std::string> chkscaVarsName;
+
+   amrex::Vector<amrex::Vector<amrex::MultiFab*>> chkTVars;
+   amrex::Vector<std::string> chkTVarsName;
+
+   amrex::Vector<amrex::Vector<amrex::MultiFab*>> chkSpeciesVars;
+   amrex::Vector<std::string> chkSpeciesVarsName;
 
 private:
    // Private members
@@ -208,12 +239,12 @@ private:
    amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mass_prod = {0.};
 
 
-   void readParameters();
+   void readParameters ();
 
    bool write_eb_surface = false;
 
    // Flag for writing static levelset function in plot file
-   bool write_ls         = false;
+   bool write_ls = false;
    std::string static_plt_file {"plt_ls"};
 
 
@@ -228,7 +259,7 @@ private:
    std::string plot_file {"plt"};
    bool plotfile_on_restart = false;
 
-   int  plot_int = -1;
+   int plot_int = -1;
    amrex::Real plot_per_approx = -1.;
    amrex::Real plot_per_exact  = -1.;
 
@@ -290,30 +321,13 @@ private:
    amrex::Vector<int> write_real_comp = amrex::Vector<int>(AoSrealData::count+SoArealData::count,1);
    amrex::Vector<int> write_int_comp = amrex::Vector<int>(AoSintData::count+SoAintData::count,1);
 
-public:
-   // Variables to simplify checkpoint IO
-   // amrex::Vector< amrex::Vector< amrex::MultiFab* > > vectorVars;
-   amrex::Vector< std::string > vecVarsName;
 
-   amrex::Vector< amrex::Vector< amrex::MultiFab* > > chkScalarVars;
-   amrex::Vector< std::string > chkscaVarsName;
-
-   amrex::Vector< amrex::Vector< amrex::MultiFab* > > chkTVars;
-   amrex::Vector< std::string > chkTVarsName;
-
-   amrex::Vector< amrex::Vector< amrex::MultiFab* > > chkSpeciesVars;
-   amrex::Vector< std::string > chkSpeciesVarsName;
-
-private:
    void WriteCheckHeader (const std::string& name,
                           int nstep,
                           amrex::Real dt,
                           amrex::Real time) const;
 
    void WriteJobInfo (const std::string& dir) const;
-
-public:
-   static void GotoNextLine (std::istream& is);
 };
 
 } // end of namespace MfixIO

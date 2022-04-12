@@ -133,9 +133,6 @@ class mfix : public AmrCore
     void mfix_usr2 () const;
     void mfix_usr3 () const;
 
-    void output (int estatus, int finish, int nstep, Real dt, Real time)
-    { pc->output(estatus, finish, nstep, dt, time); };
-
     void make_mg_bc (int mg_bc[]);
 
     void make_eb_geometry ();
@@ -873,15 +870,6 @@ public:
     amrex::IntVect mfix_locate_max_eps ( Vector< MultiFab*>& ep_s_in, const Real max_eps );
 
   private:
-    void mfix_print_max_vel (int lev,
-                             const amrex::Vector<amrex::MultiFab*>& vel_g_in,
-                             const amrex::Vector<amrex::MultiFab*>& p_g_in);
-
-    void mfix_print_max_gp (int lev,
-                            const amrex::Vector<amrex::MultiFab*>& gp_g_in);
-
-    IntVect mfix_print_min_epg ();
-
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
 

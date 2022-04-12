@@ -9,11 +9,6 @@ using namespace amrex;
 
 namespace MfixIO {
 
-int  MfixRW::report_mass_balance = 0;
-int  MfixRW::mass_balance_report_int = -1;
-Real MfixRW::mass_balance_report_per_approx = -1.;
-Real MfixRW::mass_balance_report_time       =  0.;
-
 MfixRW::MfixRW (int nlev_in,
                 amrex::Vector<amrex::BoxArray>& grids_in,
                 amrex::Vector<amrex::Geometry>& geom_in,
