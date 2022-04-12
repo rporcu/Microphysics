@@ -47,7 +47,6 @@ public:
            BCList& bc_list_in,
            amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory_in);
 
-   // TODO TODO TODO
    void set_pc (MFIXParticleContainer* pc) { this->pc = pc; };
 
    void InitIOChkData ();

@@ -592,7 +592,8 @@ void mfix::Init (Real time)
     if (DEM::solve || PIC::solve) {
       pc = new MFIXParticleContainer(this, solids, reactions);
       pc->setSortingBinSizes(IntVect(particle_sorting_bin));
-      //TODO TODO TODO
+      
+      // Updating mfixRW pc pointer is needed since mfix pc has changed
       mfixRW->set_pc(pc);
     }
 
