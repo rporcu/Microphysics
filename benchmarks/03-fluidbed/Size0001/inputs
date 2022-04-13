@@ -33,13 +33,13 @@ geometry.is_periodic = 1        0     1      # Is periodic in each direction?
 geometry.prob_lo     = 0.       0.    0.       # lo corner of physical domain
 geometry.prob_hi     = 0.0008   0.01  0.0008   # hi corner of physical domain
 
-
-
 mfix.drag_type = "BVK2"
 mfix.gravity   =  0.0  -9.80665  0.0
 
-mfix.advect_enthalpy      = 1
-mfix.solve_species = 1
+mfix.advect_enthalpy = 1
+mfix.solve_species   = 1
+mfix.constraint_type = IncompressibleFluid
+
 
 #_______________________________________________________________________
 # Fluid model settings
@@ -59,14 +59,10 @@ species.He.specific_heat.constant  = 918
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
-#fluid.specific_heat          = constant
-#fluid.specific_heat.constant = 918  ##  Oxygen
+fluid.specific_heat = mixture
 
 fluid.thermal_conductivity          = constant
 fluid.thermal_conductivity.constant = 0.024  ## Oxygen
@@ -124,11 +120,12 @@ regions.outflow.hi      = 0.0008  0.0100  0.0008
 #
 ic.regions = full-domain
 
-ic.full-domain.fluid.volfrac    =  1.0
-ic.full-domain.fluid.velocity   = 0.0  0.0  0.0
-ic.full-domain.fluid.temperature   = 400
-ic.full-domain.fluid.species.CO =  1.0
-ic.full-domain.fluid.species.He =  0.0
+ic.full-domain.fluid.volfrac     =  1.0
+ic.full-domain.fluid.velocity    =  0.0  0.0  0.0
+ic.full-domain.fluid.temperature =  400
+ic.full-domain.fluid.density     =  1.0
+ic.full-domain.fluid.species.CO  =  1.0
+ic.full-domain.fluid.species.He  =  0.0
 ic.full-domain.solids =  solid0
 ic.full-domain.solid0.temperature = 300
 
@@ -139,11 +136,12 @@ ic.full-domain.solid0.temperature = 300
 bc.regions = inflow  outflow
 
 bc.inflow = mi
-bc.inflow.fluid.volfrac    =  1.0
-bc.inflow.fluid.velocity   =  0.0  0.015  0.0
-bc.inflow.fluid.temperature   =  1000
-bc.inflow.fluid.species.CO =  0.0
-bc.inflow.fluid.species.He =  1.0
+bc.inflow.fluid.volfrac     =  1.0
+bc.inflow.fluid.velocity    =  0.0  0.015  0.0
+bc.inflow.fluid.temperature =  1000
+bc.inflow.fluid.density     =  1.0
+bc.inflow.fluid.species.CO  =  0.0
+bc.inflow.fluid.species.He  =  1.0
 
 
 bc.outflow = po

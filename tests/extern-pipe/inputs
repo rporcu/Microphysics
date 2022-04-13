@@ -79,9 +79,6 @@ amr.plt_volfrac = 1
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 0.0
 
@@ -127,6 +124,7 @@ ic.regions = full-domain
 
 ic.full-domain.fluid.volfrac   = 1.0
 ic.full-domain.fluid.velocity  = 0.0  0.0  0.0
+ic.full-domain.fluid.density   = 1.0
 
 
 #_______________________________________________________________________
@@ -137,6 +135,7 @@ bc.regions = inflow  outflow
 bc.inflow = mi
 bc.inflow.fluid.volfrac  =  1.0
 bc.inflow.fluid.velocity = 10.0  0.0  0.0
+bc.inflow.fluid.density  =  1.0
 
 
 bc.outflow = po

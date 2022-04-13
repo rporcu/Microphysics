@@ -188,7 +188,7 @@ ic.full-domain.fluid.velocity  = 0.015  0.0  0.0
 # Define the initial bed of solids
 #---------------------------------------------------------------------//
 ic.bed.fluid.volfrac   =  0.725
-
+ic.bed.fluid.density   =  1.000
 ic.bed.fluid.velocity  =  0.015  0.00  0.00
 
 ic.bed.solids  = solid0

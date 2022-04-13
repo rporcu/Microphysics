@@ -1,12 +1,13 @@
 #_______________________________________________________________________
 # Testing tracer conservation
 
-mfix.advect_density           = true
-mfix.advect_tracer            = true
-mfix.test_tracer_conservation = true
-
+mfix.advect_density  = 1
 mfix.advect_enthalpy = 1
-mfix.solve_species = 1
+mfix.solve_species   = 1
+mfix.advect_tracer   = 1
+mfix.test_tracer_conservation = true
+mfix.constraint_type = IncompressibleFluid
+
 
 #_______________________________________________________________________
 # Debugging settings
@@ -156,14 +157,10 @@ species.CO.specific_heat.constant  = 918
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-2
 
-#fluid.specific_heat          = constant
-#fluid.specific_heat.constant = 918
+fluid.specific_heat = mixture
 
 fluid.thermal_conductivity          = constant
 fluid.thermal_conductivity.constant = 0.024
@@ -222,22 +219,24 @@ ic.regions = fluid-only  bed
 
 # Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
-ic.fluid-only.fluid.volfrac   = 1.0
-ic.fluid-only.fluid.pressure  = 0.0
-ic.fluid-only.fluid.velocity  = 0.0  0.0  0.0
+ic.fluid-only.fluid.volfrac     = 1.0
+ic.fluid-only.fluid.pressure    = 0.0
+ic.fluid-only.fluid.density     = 1.0
+ic.fluid-only.fluid.velocity    = 0.0  0.0  0.0
 ic.fluid-only.fluid.temperature = 300
-ic.fluid-only.fluid.species.O2  =  0.6
-ic.fluid-only.fluid.species.CO  =  0.4
+ic.fluid-only.fluid.species.O2  = 0.6
+ic.fluid-only.fluid.species.CO  = 0.4
 
 
 # Define the initial bed of solids
 #---------------------------------------------------------------------//
-ic.bed.fluid.volfrac   =  0.75
-ic.bed.fluid.pressure  = 0.0
-ic.bed.fluid.velocity  =  0.0  0.0  0.0
+ic.bed.fluid.volfrac     = 0.75
+ic.bed.fluid.pressure    = 0.0
+ic.bed.fluid.density     = 1.0
+ic.bed.fluid.velocity    = 0.0  0.0  0.0
 ic.bed.fluid.temperature = 300
-ic.bed.fluid.species.O2  =  0.6
-ic.bed.fluid.species.CO  =  0.4
+ic.bed.fluid.species.O2  = 0.6
+ic.bed.fluid.species.CO  = 0.4
 
 ic.bed.solids  = solid0
 ic.bed.packing = pseudo_random

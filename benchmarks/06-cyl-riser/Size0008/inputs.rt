@@ -15,8 +15,9 @@ mfix.particle_init_type = "Auto"
 
 mfix.gravity = -9.81  0.0  0.0
 
-mfix.advect_enthalpy      = 1
-mfix.solve_species = 1
+mfix.advect_enthalpy = 1
+mfix.solve_species   = 1
+mfix.constraint_type = IncompressibleFluid
 
 amr.blocking_factor = 2
 
@@ -25,6 +26,7 @@ diffusion.verbose = 0
 
 nodal_proj.verbose = 1
 nodal_proj.bottom_verbose = 0
+
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -139,14 +141,10 @@ species.He.specific_heat.constant  = 918
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
-#fluid.specific_heat          = constant
-#fluid.specific_heat.constant = 918
+fluid.specific_heat = mixture
 
 fluid.thermal_conductivity          = constant
 fluid.thermal_conductivity.constant = 0.024
@@ -217,6 +215,7 @@ ic.regions = full-domain
 
 ic.full-domain.fluid.volfrac     = 0.983
 ic.full-domain.fluid.pressure    = 0.0
+ic.full-domain.fluid.density     = 1.0
 ic.full-domain.fluid.velocity    = 0.00  0.00  0.00
 ic.full-domain.fluid.temperature = 300
 ic.full-domain.fluid.species.H2O = 0.25

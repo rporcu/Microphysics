@@ -16,11 +16,10 @@ mfix.gravity = 0.0  0.0  0.0
 
 mfix.drag_type = "BVK2"
 
-mfix.advect_density       = 1
-mfix.advect_enthalpy      = 1
-mfix.solve_species = 1
-mfix.open_system_constraint = 1
-mfix.solve_reactions      = 1
+mfix.advect_density  = 1
+mfix.advect_enthalpy = 1
+mfix.solve_species   = 1
+mfix.constraint_type = IdealGasOpenSystem
 
 amr.blocking_factor = 2
 
@@ -133,17 +132,11 @@ species.H2O.specific_heat.constant = 918
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.0
-
 fluid.molecular_weight          = constant
 fluid.molecular_weight.constant = 18.01528
 
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.e-5
-
-#fluid.specific_heat          = constant
-#fluid.specific_heat.constant = 918
 
 fluid.thermal_conductivity          = constant
 fluid.thermal_conductivity.constant = 0.024
@@ -235,11 +228,13 @@ ic.regions = full-domain  bed
 ic.full-domain.fluid.volfrac     = 1.0
 ic.full-domain.fluid.velocity    = 0.0  0.0  0.0
 ic.full-domain.fluid.temperature = 383
+ic.full-domain.fluid.density     = 1.0
 ic.full-domain.fluid.species.H2O = 1.0
 
 ic.bed.fluid.volfrac     = 0.725
 ic.bed.fluid.velocity    = 0.0  0.00  0.00
 ic.bed.fluid.temperature = 383
+ic.bed.fluid.density     = 1.0
 ic.bed.fluid.species.H2O = 1.0
 
 ic.bed.solids  = solid0
@@ -267,6 +262,7 @@ bc.inflow = mi
 bc.inflow.fluid.volfrac     =  1.0
 bc.inflow.fluid.velocity    =  0.0  0.0  0.0
 bc.inflow.fluid.temperature =  383
+bc.inflow.fluid.density     =  1.0
 bc.inflow.fluid.species.H2O =  1.0
 
 bc.outflow = po

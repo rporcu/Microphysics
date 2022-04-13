@@ -121,17 +121,8 @@ amr.check_file     ="chk"
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
-
-fluid.specific_heat          = constant
-fluid.specific_heat.constant = 1.0
-
-fluid.thermal_conductivity          = constant
-fluid.thermal_conductivity.constant = 0.0
 
 
 #_______________________________________________________________________
@@ -187,9 +178,7 @@ ic.regions = full-domain
 # Define the initial solids
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   =  0.983
-
-ic.full-domain.fluid.pressure  =  0.0
-
+ic.full-domain.fluid.density   =  1.0
 ic.full-domain.fluid.velocity  =  0.0  0.00  0.00
 
 ic.full-domain.solids  = solid0
