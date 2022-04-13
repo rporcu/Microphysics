@@ -141,7 +141,7 @@ MfixRW::ComputeMassAccum (const int offset)
 
 
 void
-MfixRW::ComputeMassProduction (const Real dt,
+MfixRW::ComputeMassProduction (const Real /*dt*/,
                                Vector< MultiFab const*> const& chem_txfr)
 {
   BL_PROFILE("mfix::ComputeMassProduction()");

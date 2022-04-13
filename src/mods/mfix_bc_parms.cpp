@@ -56,8 +56,7 @@ namespace BC
   amrex::Vector<BC_t> bc;
 
 
-  void Initialize (const BCList& bc_mask,
-                   amrex::Geometry& geom,
+  void Initialize (amrex::Geometry& geom,
                    const FluidPhase& fluid,
                    const SolidsPhase& solids)
   {

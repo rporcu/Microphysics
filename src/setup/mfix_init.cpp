@@ -48,7 +48,7 @@ mfix::InitParams ()
   // physical extents of ICs and BCs.
   REGIONS::Initialize();
   IC::Initialize(fluid, solids);
-  BC::Initialize(bc_list, geom[0], fluid, solids);
+  BC::Initialize(geom[0], fluid, solids);
 
   // set n_error_buf (used in AmrMesh) to default (can overwrite later)
   for (int i = 0; i < n_error_buf.size(); i++)
