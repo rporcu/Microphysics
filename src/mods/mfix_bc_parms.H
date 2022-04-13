@@ -76,6 +76,8 @@ namespace BC
                    const FluidPhase& fluid,
                    const SolidsPhase& solids);
 
+  void read_bc_density (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
+  void read_bc_thermodynamic_pressure (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
   void read_bc_velocity (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
   void read_bc_volflow (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
   void read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);

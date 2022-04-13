@@ -8,6 +8,9 @@
 
 #include <mfix_species_parms.H>
 
+// Projection constraint type
+struct ConstraintType { enum {IncompressibleFluid, IdealGasOpenSystem, IdealGasClosedSystem}; };
+
 class FluidParms {
 
   public:
@@ -295,11 +298,6 @@ class FluidPhase {
     // Destructor
     ~FluidPhase();
 
-    // List of recognized fluid density models
-    struct DENSITYMODEL { enum {Invalid=-1, Constant, IdealGas}; };
-
-    int DensityModel;
-
     // List of recognized fluid viscosity models
     struct VISCOSITYMODEL { enum {Invalid=-1, Constant, Sutherland}; };
 
@@ -323,14 +321,14 @@ class FluidPhase {
     // Ideal gas constant
     static constexpr amrex::Real R = 8.31446261815324;
 
+    // Constraint type
+    int constraint_type;
+
     // Flag to solve fluid equations
     int solve;
 
     // Flag to solve fluid density equation
     int solve_density;
-
-    // Specified constant gas density
-    amrex::Real ro_g0;
 
     // Flag to solve fluid tracer equation
     int solve_tracer;
@@ -397,8 +395,123 @@ class FluidPhase {
 
       amrex::Real volfrac;
       amrex::Real pressure;
-      amrex::Real pressure_defined; // Flag to check if pressure is defined
+      int pressure_defined; // Flag to check if pressure is defined
 
+      bool constant_density;
+      amrex::Real density;
+      int density_defined; // Flag to check if density is defined
+      amrex::Vector<amrex::Vector<amrex::Real>> density_table;
+
+      amrex::Real get_density (amrex::Real time=0.0) {
+        //amrex::Print() << "\n\nLooking for the right BC fluid temperature!\n\n";
+        if (constant_density){
+          // amrex::Print() << "* Use the constant temperature " << temperature << "\n";
+          return density;
+        } else {
+          const int size = density_table.size();
+          if( size == 1 || time <= density_table[0][0] ) {
+            // There is only one entry (use it) OR the current time
+            // is less than the first entry so return the first entry.
+            // amrex::Print() << "Defaulting to the first entry " << density_table[0][1] << "\n";
+            return density_table[0][1];
+
+          } else {
+
+            constexpr amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
+            //amrex::Print() << "Interpolating from the temperature table (maybe?)\n";
+            for (int lc=1; lc<size; lc++) {
+              // Time of current entry
+              const amrex::Real entry_time = density_table[lc][0];
+
+              if ( amrex::Math::abs(time - entry_time) <= tolerance ) {
+                // Too close for any calculations
+                // amrex::Print() << "Too close to tell using value form entry "
+                //                << lc << "  " << density_table[lc][1] << "\n";
+                return density_table[lc][1];
+
+                // The entries are sorted based on time, so if the current time is
+                // less than this entries time, then we need to interpolate between
+                // the previous time and this time.
+              } else if (time < entry_time) {
+                const amrex::Real prv_time = density_table[lc-1][0];
+                const amrex::Real delta_time = entry_time - prv_time;
+                if (amrex::Math::abs(delta_time) <= tolerance) {
+                  // amrex::Print() << "Delta time too small. Using value form entry "
+                  //                << lc << "  " << density_table[lc][1] << "\n";
+                  return density_table[lc][1];
+                } else {
+                  const amrex::Real whi = (time - prv_time) / delta_time;
+                  const amrex::Real wlo = 1.0 - whi;
+                  // amrex::Print() << "Interpolating from table entry " << lc << "\n";
+                  return (whi*density_table[lc][1] + wlo*density_table[lc-1][1]);
+                }
+              }
+            }
+            // If we made it here, time is larger than all the entries in the
+            // table, therefore, use the last value.
+            // amrex::Print() << "Using last table entry " << density_table[size-1][1];
+            return density_table[size-1][1];
+          }
+        }
+      }
+
+      bool constant_thermodynamic_pressure;
+      amrex::Real thermodynamic_pressure;
+      int thermodynamic_pressure_defined; // Flag to check if pressure is defined
+      amrex::Vector<amrex::Vector<amrex::Real>> thermodynamic_pressure_table;
+
+      amrex::Real get_thermodynamic_pressure (amrex::Real time=0.0) {
+        //amrex::Print() << "\n\nLooking for the right BC fluid temperature!\n\n";
+        if (constant_thermodynamic_pressure){
+          // amrex::Print() << "* Use the constant thermodynamic pressure  " << thermodynamic_pressure << "\n";
+          return thermodynamic_pressure;
+        } else {
+          const int size = thermodynamic_pressure_table.size();
+          if( size == 1 || time <= thermodynamic_pressure_table[0][0] ) {
+            // There is only one entry (use it) OR the current time
+            // is less than the first entry so return the first entry.
+            // amrex::Print() << "Defaulting to the first entry " << thermodynamic_pressure_table[0][1] << "\n";
+            return thermodynamic_pressure_table[0][1];
+
+          } else {
+
+            constexpr amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
+            //amrex::Print() << "Interpolating from the temperature table (maybe?)\n";
+            for (int lc=1; lc<size; lc++) {
+              // Time of current entry
+              const amrex::Real entry_time = thermodynamic_pressure_table[lc][0];
+
+              if ( amrex::Math::abs(time - entry_time) <= tolerance ) {
+                // Too close for any calculations
+                // amrex::Print() << "Too close to tell using value form entry "
+                //                << lc << "  " << thermodynamic_pressure_table[lc][1] << "\n";
+                return thermodynamic_pressure_table[lc][1];
+
+                // The entries are sorted based on time, so if the current time is
+                // less than this entries time, then we need to interpolate between
+                // the previous time and this time.
+              } else if (time < entry_time) {
+                const amrex::Real prv_time = thermodynamic_pressure_table[lc-1][0];
+                const amrex::Real delta_time = entry_time - prv_time;
+                if (amrex::Math::abs(delta_time) <= tolerance) {
+                  // amrex::Print() << "Delta time too small. Using value form entry "
+                  //                << lc << "  " << thermodynamic_pressure_table[lc][1] << "\n";
+                  return thermodynamic_pressure_table[lc][1];
+                } else {
+                  const amrex::Real whi = (time - prv_time) / delta_time;
+                  const amrex::Real wlo = 1.0 - whi;
+                  // amrex::Print() << "Interpolating from table entry " << lc << "\n";
+                  return (whi*thermodynamic_pressure_table[lc][1] + wlo*thermodynamic_pressure_table[lc-1][1]);
+                }
+              }
+            }
+            // If we made it here, time is larger than all the entries in the
+            // table, therefore, use the last value.
+            // amrex::Print() << "Using last table entry " << thermodynamic_pressure_table[size-1][1];
+            return thermodynamic_pressure_table[size-1][1];
+          }
+        }
+      }
 
       amrex::Vector< int > constant_species;
       amrex::Vector<SPECIES::SPECIES_t> species;
@@ -631,6 +744,7 @@ class FluidPhase {
 
       bool constant_temperature;
       amrex::Real temperature;
+      int temperature_defined;
       amrex::Vector<amrex::Vector<amrex::Real>> tg_table;
 
       amrex::Real get_temperature (amrex::Real time=0.0) {
@@ -689,6 +803,12 @@ class FluidPhase {
       FLUID_t() :
         volfrac(-1.0),
         pressure(-1.0),
+        constant_density(true),
+        density(-1.0),
+        density_defined(0),
+        constant_thermodynamic_pressure(true),
+        thermodynamic_pressure(-1.0),
+        thermodynamic_pressure_defined(0),
         species(0),
         constant_velocity(true),
         flow_thru_eb(false),
@@ -698,7 +818,8 @@ class FluidPhase {
         constant_volflow(true),
         volflow(0.0),
         constant_temperature(true),
-        temperature(0.0)
+        temperature(0.0),
+        temperature_defined(0)
       {}
 
     };

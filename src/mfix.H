@@ -49,9 +49,6 @@ struct AdvectionType { enum {Invalid=-1, MOL, Godunov}; };
 // Deposition scheme enumeration
 enum DepositionScheme {trilinear, square_dpvm, true_dpvm, centroid};
 
-// Projection constraint type
-struct ConstraintType { enum {IncompressibleFluid, IdealGasOpenSystem, IdealGasClosedSystem}; };
-
 // Reaction rates type enumeration
 struct ReactionRatesType { enum {RRatesUser}; };
 
@@ -394,8 +391,6 @@ class mfix : public AmrCore
 
     static DepositionScheme m_deposition_scheme;
 
-    static int m_constraint_type;
-
     static int m_reaction_rates_type;
 
     static amrex::Real m_deposition_diffusion_coeff;
@@ -463,6 +458,7 @@ class mfix : public AmrCore
     void set_density_bc_values (amrex::Real time_in) const;
     void set_tracer_bc_values (amrex::Real time_in) const;
     void set_species_bc_values (amrex::Real time_in) const;
+    void set_thermodynamic_pressure_bc_values (amrex::Real /*time_in*/) const;
 
     ////////////////////////////////////////////////////////////////////////////
     //
@@ -604,6 +600,7 @@ class mfix : public AmrCore
     mutable Gpu::DeviceVector<Real> m_bc_t_g;
     mutable Gpu::DeviceVector<Real> m_bc_h_g;
     mutable Gpu::DeviceVector<Real> m_bc_ro_g;
+    mutable Gpu::DeviceVector<Real> m_bc_thermodynamic_p_g;
     mutable Gpu::DeviceVector<Real> m_bc_tracer;
 
     mutable Gpu::HostVector<Real>   m_h_bc_u_g;
@@ -612,6 +609,7 @@ class mfix : public AmrCore
     mutable Gpu::HostVector<Real>   m_h_bc_t_g;
     mutable Gpu::HostVector<Real>   m_h_bc_h_g;
     mutable Gpu::HostVector<Real>   m_h_bc_ro_g;
+    mutable Gpu::HostVector<Real>   m_h_bc_thermodynamic_p_g;
     mutable Gpu::HostVector<Real>   m_h_bc_tracer;
 
     Gpu::DeviceVector<Real> m_bc_ep_g;
@@ -997,8 +995,8 @@ public:
     Vector< MultiFab* > get_gp () noexcept;
     Vector< MultiFab* > get_p_g () noexcept;
     Vector< MultiFab* > get_p_g_old () noexcept;
-    Vector< MultiFab* > get_pressure_g () noexcept;
-    Vector< MultiFab* > get_pressure_g_old () noexcept;
+    Vector< MultiFab* > get_thermodynamic_p_g () noexcept;
+    Vector< MultiFab* > get_thermodynamic_p_g_old () noexcept;
     Vector< MultiFab* > get_T_g () noexcept;
     Vector< MultiFab* > get_T_g_old () noexcept;
     Vector< MultiFab* > get_h_g () noexcept;
@@ -1030,8 +1028,8 @@ public:
     amrex::Vector< amrex::MultiFab const* > get_X_gk_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_X_gk_old_const () const noexcept;
 
-    amrex::Vector< amrex::MultiFab const* > get_pressure_g_const () const noexcept;
-    amrex::Vector< amrex::MultiFab const* > get_pressure_g_old_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_thermodynamic_p_g_const () const noexcept;
+    amrex::Vector< amrex::MultiFab const* > get_thermodynamic_p_g_old_const () const noexcept;
 
     amrex::Vector< MultiFab const* > get_divtau_const () const noexcept;
 
@@ -1065,21 +1063,14 @@ public:
   amrex::Vector<amrex::BCRec> const& get_tracer_bcrec () const noexcept { return m_bcrec_tracer; }
   amrex::Vector<amrex::BCRec> const& get_species_bcrec () const noexcept { return m_bcrec_species; }
   amrex::Vector<amrex::BCRec> const& get_force_bcrec () const noexcept { return m_bcrec_force; }
-  //
-  amrex::BCRec const* get_velocity_bcrec_device_ptr () const noexcept {
-    return m_bcrec_velocity_d.data(); }
-  amrex::BCRec const* get_hydro_velocity_bcrec_device_ptr () const noexcept {
-    return m_bcrec_hydro_velocity_d.data(); }
-  amrex::BCRec const* get_density_bcrec_device_ptr () const noexcept {
-    return m_bcrec_density_d.data(); }
-  amrex::BCRec const* get_enthalpy_bcrec_device_ptr () const noexcept {
-    return m_bcrec_enthalpy_d.data(); }
-  amrex::BCRec const* get_tracer_bcrec_device_ptr () const noexcept {
-    return m_bcrec_tracer_d.data(); }
-  amrex::BCRec const* get_species_bcrec_device_ptr () const noexcept {
-    return m_bcrec_species_d.data(); }
-  amrex::BCRec const* get_force_bcrec_device_ptr () const noexcept {
-    return m_bcrec_force_d.data(); }
+
+  amrex::BCRec const* get_velocity_bcrec_device_ptr () const noexcept { return m_bcrec_velocity_d.data(); }
+  amrex::BCRec const* get_hydro_velocity_bcrec_device_ptr () const noexcept { return m_bcrec_hydro_velocity_d.data(); }
+  amrex::BCRec const* get_density_bcrec_device_ptr () const noexcept { return m_bcrec_density_d.data(); }
+  amrex::BCRec const* get_enthalpy_bcrec_device_ptr () const noexcept { return m_bcrec_enthalpy_d.data(); }
+  amrex::BCRec const* get_tracer_bcrec_device_ptr () const noexcept { return m_bcrec_tracer_d.data(); }
+  amrex::BCRec const* get_species_bcrec_device_ptr () const noexcept { return m_bcrec_species_d.data(); }
+  amrex::BCRec const* get_force_bcrec_device_ptr () const noexcept { return m_bcrec_force_d.data(); }
 
   // Although we do nothing special for different scalars,
   // we assume they are stored in the following order:

@@ -26,8 +26,8 @@ LevelData::LevelData (BoxArray const& ba,
   , vel_go(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))
   , p0_g(new MultiFab(amrex::convert(ba, IntVect{1,1,1}), dmap, 1, nghost, MFInfo(), factory))
   , gp(new MultiFab(ba, dmap, 3, nghost, MFInfo(), factory))
-  , pressure_g(nullptr)
-  , pressure_go(nullptr)
+  , thermodynamic_p_g(nullptr)
+  , thermodynamic_p_go(nullptr)
   , T_g(nullptr)
   , T_go(nullptr)
   , h_g(nullptr)
@@ -48,8 +48,8 @@ LevelData::LevelData (BoxArray const& ba,
   , nreactions(nreactions_)
 {
   if (solve_enthalpy) {
-    pressure_g  = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
-    pressure_go = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
+    thermodynamic_p_g  = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
+    thermodynamic_p_go = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
     T_g  = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
     T_go = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
     h_g  = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
@@ -92,8 +92,8 @@ void LevelData::resetValues (const amrex::Real init_value)
   divtau_o->setVal(init_value);
 
   if (solve_enthalpy) {
-    pressure_g->setVal(init_value);
-    pressure_go->setVal(init_value);
+    thermodynamic_p_g->setVal(init_value);
+    thermodynamic_p_go->setVal(init_value);
     T_g->setVal(init_value);
     T_go->setVal(init_value);
     h_g->setVal(init_value);
@@ -136,8 +136,8 @@ LevelData::~LevelData ()
     delete divtau_o;
 
     if (solve_enthalpy) {
-      delete pressure_g;
-      delete pressure_go;
+      delete thermodynamic_p_g;
+      delete thermodynamic_p_go;
       delete T_g;
       delete T_go;
       delete h_g;

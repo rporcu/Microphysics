@@ -33,8 +33,9 @@ mfix.drag_type = "BVK2"
 
 mfix.gravity =  0.0  0.0  0.0
 
-mfix.advect_enthalpy      = 1
-mfix.solve_species = 1
+mfix.advect_enthalpy = 1
+mfix.solve_species   = 1
+mfix.constraint_type = IncompressibleFluid
 
 #_______________________________________________________________________
 # Species model settings
@@ -56,14 +57,10 @@ species.He.specific_heat.constant  = 918
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
-#fluid.specific_heat          = constant
-#fluid.specific_heat.constant = 918  ## Oxygen
+fluid.specific_heat      = mixture
 
 fluid.thermal_conductivity          = constant
 fluid.thermal_conductivity.constant = 0.024  ## Oxygen
@@ -130,6 +127,7 @@ ic.O2-region.fluid.species.He  =  0.0
 ic.O2-region.fluid.volfrac     =  1.0
 ic.O2-region.fluid.velocity    =  0.0  0.0  0.0
 ic.O2-region.fluid.temperature =  300
+ic.O2-region.fluid.density     =  1.0
 ic.O2-region.solids = solid0
 ic.O2-region.solid0.temperature =  350
 
@@ -140,6 +138,7 @@ ic.CO-region.fluid.species.He  =  0.0
 ic.CO-region.fluid.volfrac     =  1.0
 ic.CO-region.fluid.velocity    =  0.0  0.0  0.0
 ic.CO-region.fluid.temperature =  500
+ic.CO-region.fluid.density     =  1.0
 ic.CO-region.solids = solid0
 ic.CO-region.solid0.temperature =  350
 
@@ -150,6 +149,7 @@ ic.H2O-region.fluid.species.He  =  0.0
 ic.H2O-region.fluid.volfrac     =  1.0
 ic.H2O-region.fluid.velocity    =  0.0  0.0  0.0
 ic.H2O-region.fluid.temperature =  900
+ic.H2O-region.fluid.density     =  1.0
 ic.H2O-region.solids = solid0
 ic.H2O-region.solid0.temperature =  350
 
@@ -160,6 +160,7 @@ ic.He-region.fluid.species.He  =  1.0
 ic.He-region.fluid.volfrac     =  1.0
 ic.He-region.fluid.velocity    =  0.0  0.0  0.0
 ic.He-region.fluid.temperature =  400
+ic.He-region.fluid.density     =  1.0
 ic.He-region.solids = solid0
 ic.He-region.solid0.temperature =  350
 

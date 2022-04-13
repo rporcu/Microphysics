@@ -27,11 +27,11 @@ dem mfix.tcoll_ratio = 20.
 
 mfix.gravity =  -9.81  0.0  0.0
 
-mfix.advect_density         = 0
-mfix.advect_enthalpy        = 0
-mfix.advect_fluid_species   = 0
-mfix.solve_reactions        = 0
-mfix.open_system_constraint = 0
+mfix.advect_density  = 0
+mfix.advect_enthalpy = 0
+mfix.solve_species   = 0
+mfix.solve_reactions = 0
+mfix.constraint_type = IncompressibleFluid
 
 #phase coupling 
 mfix.drag_type = "Gidaspow"
@@ -188,9 +188,6 @@ amr.avg_region_z_t =	=	0.010500	0.010500	0.010500	0.010500	0.010500	0.010500	0.0
 #----------------------------------------------------------------------
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.2
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 1.8e-5
 
@@ -285,10 +282,12 @@ mfix.particle_init_type = AsciiFile
 # background fluid 
 ic.full-domain.fluid.volfrac  = 1.0
 ic.full-domain.fluid.velocity = 0.3  0.0  0.0
+ic.full-domain.fluid.density  = 1.2
 
 # initial static bed 
 ic.init-bed.fluid.volfrac  = 1.0
 ic.init-bed.fluid.velocity = 0.60 0.00  0.00
+ic.init-bed.fluid.density  = 1.2
 
 
 #----------------------------------------------------------------------
@@ -307,6 +306,7 @@ bc.inflow.fluid.volfrac  =  1.0
 bc.inflow.fluid.velocity =  0.0  0.30  0.0  0.0
 bc.inflow.fluid.velocity =  1.0  0.60  0.0  0.0
 #bc.inflow.fluid.velocity =  2.0  0.90  0.0  0.0
+bc.inflow.fluid.density  =  1.2
 
 #out
 bc.outflow = po
