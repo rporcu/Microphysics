@@ -208,7 +208,9 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
     ParallelDescriptor::Barrier();
     ascent.close();
   }
-
+#else
+  amrex::ignore_unused(nstep);
+  amrex::ignore_unused(time);
 #endif
 }
 
