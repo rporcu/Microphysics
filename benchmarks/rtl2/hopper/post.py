@@ -11,7 +11,8 @@ from rtl2 import suite
 from rtl2.test_util import git_commit
 from datetime import datetime
 
-NUM_PARTICLES = 12359
+#NUM_PARTICLES = 12359 # Number of particles in original classic run
+NUM_PARTICLES = 12469
 VEL_P_FNAME = "uio_vel_p_0.dat"
 
 

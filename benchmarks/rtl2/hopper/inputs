@@ -204,7 +204,7 @@ ic.bed.fluid.velocity  =  0.0  0.00  0.00
 ic.bed.solids  = solid0
 ic.bed.packing = hcp
 
-ic.bed.solid0.volfrac  =  0.5
+ic.bed.solid0.volfrac  =  0.53
 
 ic.bed.solid0.velocity =  0.00  0.00  0.00
 

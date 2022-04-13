@@ -13,12 +13,12 @@
 #endif
 
 void
-mfix::WriteAscentFile ( )
+mfix::WriteAscentFile (int nstep, const Real time)
 {
 #ifdef AMREX_USE_ASCENT
   BL_PROFILE("mfix::WriteAscentFile()");
-  const int nstep =   0;
-  const int time  = 0.0;
+
+  //amrex::Print() << "Writing Ascent output\n";
 
   ParmParse pp("ascent");
 
@@ -27,6 +27,7 @@ mfix::WriteAscentFile ( )
 
   std::string ascent_particle_actions_yaml {""};
   pp.query("particle_actions", ascent_particle_actions_yaml);
+
 
   if (fluid.solve && !ascent_fluid_actions_yaml.empty()) {
 
@@ -87,35 +88,33 @@ mfix::WriteAscentFile ( )
       amrex::EB_set_covered(*mf[lev], 0.0);
     }
 
-    // for the MPI case, provide the mpi comm
-    ascent::Ascent ascent;
-    conduit::Node opts;
-
-    opts["actions_file"] = ascent_fluid_actions_yaml;
-    opts["exceptions"] = "catch";
-
-#ifdef BL_USE_MPI
-    opts["mpi_comm"] = MPI_Comm_c2f(ParallelDescriptor::Communicator());
-#endif
-
-    ascent.open(opts);
-
     conduit::Node bp_mesh;
 
     amrex::MultiLevelToBlueprint(nlev, amrex::GetVecOfConstPtrs(mf),
         pltFldNames, geom, time, level_steps, refRatio(), bp_mesh);
 
 
-    ascent.publish(bp_mesh);
 
+    // for the MPI case, provide the mpi comm
+    ascent::Ascent ascent;
+    conduit::Node opts;
+    opts["exceptions"] = "catch";
+    opts["actions_file"] = ascent_fluid_actions_yaml;
+#ifdef BL_USE_MPI
+    opts["mpi_comm"] = MPI_Comm_c2f(ParallelDescriptor::Communicator());
+#endif
+    ascent.open(opts);
+    ascent.publish(bp_mesh);
     conduit::Node actions;
     ascent.execute(actions);
+    ParallelDescriptor::Barrier();
     ascent.close();
 
     for (int lev = 0; lev < nlev; ++lev) {
       delete mf[lev];
     }
   }
+
 
   if (( DEM::solve || PIC::solve ) && !ascent_particle_actions_yaml.empty()) {
 
@@ -201,8 +200,9 @@ mfix::WriteAscentFile ( )
 
     conduit::Node actions;
     ascent.execute(actions);
+    ParallelDescriptor::Barrier();
     ascent.close();
-
   }
+
 #endif
 }
