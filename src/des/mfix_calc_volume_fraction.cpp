@@ -219,10 +219,6 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
       m_leveldata[lev]->ep_g->setVal(1.);
   }
 
-  // This sets the values outside walls or periodic boundaries
-  for (int lev = 0; lev < nlev; lev++)
-    m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
-
   const int dir_bc = 1;
   mfix_set_epg_bcs(get_ep_g(), dir_bc);
 

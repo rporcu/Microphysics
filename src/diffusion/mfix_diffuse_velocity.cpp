@@ -57,8 +57,6 @@ void DiffusionOp::diffuse_velocity (const Vector< MultiFab* >& vel_in,
         }
       }
 
-      mu_g[lev]->FillBoundary(geom[lev].periodicity());
-
 //      EB_set_covered(*mu_g[lev], 0, mu_g[lev]->nComp(), mu_g[lev]->nGrow(), covered_val);
       EB_set_covered(*mu_g[lev], 0, mu_g[lev]->nComp(), mu_g[lev]->nGrow(), 1.e40);
     }
@@ -109,7 +107,6 @@ void DiffusionOp::diffuse_velocity (const Vector< MultiFab* >& vel_in,
 
         // By this point we must have filled the Dirichlet values of phi stored in ghost cells
         MultiFab::Copy(*phi[lev],*vel_in[lev], 0, 0, 3, 1);
-        phi[lev]->FillBoundary(geom[lev].periodicity());
         vel_matrix->setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
 
         // matrix->setEBHomogDirichlet(lev, *mu_g[lev]);
@@ -125,7 +122,6 @@ void DiffusionOp::diffuse_velocity (const Vector< MultiFab* >& vel_in,
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
-        phi[lev]->FillBoundary(geom[lev].periodicity());
         MultiFab::Copy(*vel_in[lev], *phi[lev], 0, 0, AMREX_SPACEDIM, 1);
     }
 
