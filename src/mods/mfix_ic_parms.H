@@ -13,6 +13,11 @@ namespace IC
 
   struct IC_t {
 
+    // Constructor
+    IC_t (const FluidPhase& fluid_phase) :
+      fluid(fluid_phase.constraint_type, fluid_phase.nspecies, fluid_phase.parameters)
+    {}
+
     const amrex::RealBox* region;
 
     FluidPhase::FLUID_t fluid;

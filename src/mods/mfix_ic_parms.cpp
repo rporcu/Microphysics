@@ -37,7 +37,7 @@ namespace IC
 
       amrex::Real volfrac_total(0.0);
 
-      IC_t new_ic;
+      IC_t new_ic(fluid);
 
       // Set the region for the initial condition.
       new_ic.region = REGIONS::getRegion(regions[icv]);
@@ -98,19 +98,20 @@ namespace IC
 
           // Get density
           const int density_defined = ppFluid.query("density", new_ic.fluid.density);
+          new_ic.fluid.density_defined = density_defined;
 
           // Get temperature
           const int temperature_defined = ppFluid.query("temperature", new_ic.fluid.temperature);
+          new_ic.fluid.temperature_defined = temperature_defined;
 
           // Get thermodynamic pressure
-          new_ic.fluid.thermodynamic_pressure_defined =
-            ppFluid.query("thermodynamic_pressure", new_ic.fluid.thermodynamic_pressure);
-          const int thermodynamic_pressure_defined = new_ic.fluid.thermodynamic_pressure_defined;
+          const int thermodynamic_p_defined = ppFluid.query("thermodynamic_pressure",
+                                                            new_ic.fluid.thermodynamic_pressure);
+          new_ic.fluid.thermodynamic_pressure_defined = thermodynamic_p_defined;
 
-          const int sum_defined = density_defined + temperature_defined + thermodynamic_pressure_defined;
-          const int prod_defined = density_defined * temperature_defined * thermodynamic_pressure_defined;
+          const int sum_defined = density_defined + temperature_defined + thermodynamic_p_defined;
 
-          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(sum_defined == 2 && prod_defined == 0,
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(sum_defined == 2,
               "Initial conditions inputs must provide exactly two quantities"
               " among fluid temperature, density, and thermodynamic pressure");
 
@@ -123,17 +124,20 @@ namespace IC
 
           MW_g = 1./MW_g;
 
-          if (density_defined && temperature_defined) {
+          if (!thermodynamic_p_defined) {
 
-            new_ic.fluid.thermodynamic_pressure = (new_ic.fluid.density * fluid_parms.R * new_ic.fluid.temperature) / MW_g;
+            new_ic.fluid.thermodynamic_pressure = (new_ic.fluid.density *
+                fluid_parms.R * new_ic.fluid.temperature) / MW_g;
 
-          } else if (density_defined && thermodynamic_pressure_defined) {
+          } else if (!temperature_defined) {
 
-            new_ic.fluid.temperature = (new_ic.fluid.thermodynamic_pressure * MW_g) / (fluid_parms.R * new_ic.fluid.density);
+            new_ic.fluid.temperature = (new_ic.fluid.thermodynamic_pressure *
+                MW_g) / (fluid_parms.R * new_ic.fluid.density);
 
-          } else if (temperature_defined && thermodynamic_pressure_defined) {
+          } else if (!density_defined) {
 
-            new_ic.fluid.density = (new_ic.fluid.thermodynamic_pressure * MW_g) / (fluid_parms.R * new_ic.fluid.temperature);
+            new_ic.fluid.density = (new_ic.fluid.thermodynamic_pressure *
+                MW_g) / (fluid_parms.R * new_ic.fluid.temperature);
 
           } else {
             amrex::Abort("How did we arrive here?");
