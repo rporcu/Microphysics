@@ -313,16 +313,11 @@ void DiffusionOp::ComputeDivTau (const Vector< MultiFab* >& divtau_out,
           }
         }
 
-        mu_g.FillBoundary(geom[lev].periodicity());
-
         //EB_set_covered(mu_g, 0, mu_g.nComp(), mu_g.nGrow(), covered_val);
         EB_set_covered(mu_g, 0, mu_g.nComp(), mu_g.nGrow(), 1.e40);
 
         // average_cellcenter_to_face( GetArrOfPtrs(b[lev]), *eta_in[lev], geom[lev] );
         EB_interp_CellCentroid_to_FaceCentroid (mu_g, GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
-
-        for(int dir = 0; dir < AMREX_SPACEDIM; dir++)
-             b[lev][dir]->FillBoundary(geom[lev].periodicity());
 
         vel_matrix->setShearViscosity(lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
         vel_matrix->setEBShearViscosity(lev, mu_g);
@@ -433,8 +428,6 @@ void DiffusionOp::ComputeLapT (const Vector< MultiFab*      >& lapT_out,
           });
         }
       }
-
-      k_g_on_eb.FillBoundary(geom[lev].periodicity());
 
       temperature_matrix->setEBDirichlet(lev, *T_g_on_eb[lev], k_g_on_eb);
     }

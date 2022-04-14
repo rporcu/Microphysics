@@ -1122,29 +1122,6 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
     //      over-wrote some of the bc values with ic values
     mfix_set_bc0();
 
-    for (int lev = 0; lev < nlev; lev++)
-    {
-      m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
-
-      if (advect_enthalpy)
-      {
-        m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
-        m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
-      }
-
-      if (advect_tracer)
-        m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
-
-      if (solve_species)
-      {
-        m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
-      }
-
-      m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
-    }
-
-
     // Make sure to fill the "old state" before we start.
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -1257,30 +1234,10 @@ mfix::mfix_set_bc0 ()
     if (solve_species)
       mfix_set_species_bcs(time, get_X_gk());
 
-    for (int lev = 0; lev < nlev; lev++)
-    {
-     m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
-     m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
-
-     if (advect_enthalpy) {
-       m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
-       m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
-     }
-
-     if (advect_tracer)
-       m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
-
-     if (solve_species)
-       m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
-   }
-
    // Put velocity Dirichlet bc's on faces
    int extrap_dir_bcs = 0;
 
    mfix_set_velocity_bcs(time, get_vel_g(), extrap_dir_bcs);
-
-   for (int lev = 0; lev < nlev; lev++)
-     m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -1317,8 +1274,6 @@ mfix::mfix_set_p0 ()
 
        set_p0 (bx, &mfi, lev, domain );
      }
-
-     m_leveldata[lev]->p0_g->FillBoundary(p0_periodicity);
    }
 }
 

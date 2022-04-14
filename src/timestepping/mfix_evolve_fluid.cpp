@@ -35,25 +35,6 @@ mfix::EvolveFluid (int nstep,
 
     amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
 
-    // Extrapolate boundary values for ro_g, temperature tracer, ep_g
-    // The subsequent call to mfix_set_scalar_bcs will only overwrite
-    // ep_g ghost values for PINF and POUT
-    for (int lev = 0; lev <= finest_level; lev++)
-    {
-      m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
-
-      if (advect_enthalpy) {
-        m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
-        m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
-      }
-
-      if (solve_species) {
-        m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
-      }
-    }
-
     // Fill ghost nodes and reimpose boundary conditions
     //mfix_set_velocity_bcs(time, vel_g, 0);
 

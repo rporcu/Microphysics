@@ -82,10 +82,6 @@ mfix::PostProjectionRedistribution (Real l_time, Real l_dt,
 
         // Copy back into the original MultiFab
         MultiFab::Copy(*ld.vel_g, new_vel, 0,0, AMREX_SPACEDIM, 0);
-
-        // We fill internal ghost values after calling redistribution
-        ld.vel_g->FillBoundary();
-        ld.gp->FillBoundary();
       }
     }
 }
@@ -157,9 +153,6 @@ mfix::PreProjectionRedistribution (Real l_time)
 
         // Copy back into the original MultiFab
         MultiFab::Copy(*ld.vel_g, new_vel, 0,0, AMREX_SPACEDIM, 0);
-
-        // We fill internal ghost values after calling redistribution
-        ld.vel_g->FillBoundary();
       }
     }
 }

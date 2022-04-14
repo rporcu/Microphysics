@@ -277,9 +277,6 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                                         chem_txfr[lev]->nGrow());
     }
 
-    // FillBoundary on interpolation MultiFab
-    interp_ptr->FillBoundary(geom[lev].periodicity());
-
     // At this point it's safe to use the pba and pdm to create the eps_ptr. However
     // we need to use the same ghost cells that chem_txfr uses otherwise the local
     // fabs created for OMP runs will be different.
@@ -1162,8 +1159,4 @@ mfix::mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
 
     amrex::Print() << "MFIXParticleContainer::TrilinearChemDepositionFluid time: " << stoptime << '\n';
   }
-
-  // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
-  for (int lev = 0; lev < nlev; lev++)
-    chem_txfr[lev]->FillBoundary(geom[lev].periodicity());
 }
