@@ -67,10 +67,12 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
                                    txfr_out[lev]->nComp(),
                                    txfr_out[lev]->nGrow());
 
-      chem_txfr_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                        pc->ParticleDistributionMap(lev),
-                                        chem_txfr_out[lev]->nComp(),
-                                        chem_txfr_out[lev]->nGrow());
+      if (reactions.solve) {
+        chem_txfr_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                          pc->ParticleDistributionMap(lev),
+                                          chem_txfr_out[lev]->nComp(),
+                                          chem_txfr_out[lev]->nGrow());
+      } 
 
     } else {
       // If lev > 0 we make a temporary at the coarse resolution
