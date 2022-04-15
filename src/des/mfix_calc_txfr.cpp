@@ -450,48 +450,47 @@ mfix::mfix_calc_txfr_particle (Real time,
                flags_array,grown_bx_is_regular]
             AMREX_GPU_DEVICE (int p_id) noexcept
           {
-            auto& particle = pstruct[p_id];
+            MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
 
-            // Cell containing particle centroid
-            int ip = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0]));
-            int jp = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1]));
-            int kp = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2]));
+            // Local array storing interpolated values
+            GpuArray<Real, interp_comp> interp_loc;
+            interp_loc.fill(0.);
 
-            const int cell_is_covered = static_cast<int>(flags_array(ip,jp,kp).isCovered());
+            if (grown_bx_is_regular) {
 
-            if (cell_is_covered) {
+              trilinear_interp(particle.pos(), &interp_loc[0],
+                               interp_array, plo, dxi, interp_comp);
 
-              p_realarray[SoArealData::dragx][p_id] = 0.0;
-              p_realarray[SoArealData::dragy][p_id] = 0.0;
-              p_realarray[SoArealData::dragz][p_id] = 0.0;
+            } else { // FAB not all regular
 
-              p_realarray[SoArealData::convection][p_id] = 0.0;
+              // Cell containing particle centroid
+              const int iloc = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0]));
+              const int jloc = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1]));
+              const int kloc = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2]));
 
-            } else {
+              // The particle is in a covered cell.
+              if (flags_array(iloc,jloc,kloc).isCovered())
+              {
+                p_realarray[SoArealData::dragx][p_id] = 0.0;
+                p_realarray[SoArealData::dragy][p_id] = 0.0;
+                p_realarray[SoArealData::dragz][p_id] = 0.0;
 
-              // Local array storing interpolated values
-              GpuArray<Real, interp_comp> interp_loc;
+                p_realarray[SoArealData::convection][p_id] = 0.0;
 
-              MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
+                return;
 
-              if (grown_bx_is_regular) {
-
-                trilinear_interp(particle.pos(), &interp_loc[0],
-                                 interp_array, plo, dxi, interp_comp);
-
+              // Cut or regular cell and none of the cells in the stencil is covered
+              // (Note we can't assume regular cell has no covered cells in the stencil
+              //      because of the diagonal case)
               } else {
 
-                // Cut or regular cell and none of the cells in the stencil is
-                // covered (Note we can't assume regular cell has no covered
-                // cells in the stencil because of the diagonal case)
+                // Upper cell in trilinear stencil
+                const int i = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0] + 0.5));
+                const int j = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1] + 0.5));
+                const int k = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5));
 
-                // Upper cell in stencil
-                int i = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0] + 0.5));
-                int j = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1] + 0.5));
-                int k = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5));
-
-                // All cells in the stencil are regular. Use traditional
-                // trilinear interpolation
+                // All cells in the stencil are regular. Use
+                // traditional trilinear interpolation
                 if (flags_array(i-1,j-1,k-1).isRegular() &&
                     flags_array(i  ,j-1,k-1).isRegular() &&
                     flags_array(i-1,j  ,k-1).isRegular() &&
@@ -515,7 +514,7 @@ mfix::mfix_calc_txfr_particle (Real time,
                     const int dstcomp = 0;
                     const int numcomp = 3;
 
-                    shepard_interp_eb(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                    shepard_interp_eb(particle.pos(), iloc, jloc, kloc, dx, dxi, plo,
                                       flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                                       interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
                   }
@@ -524,7 +523,7 @@ mfix::mfix_calc_txfr_particle (Real time,
                     const int dstcomp = 3;
                     const int numcomp = interp_comp-3;
 
-                    shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                    shepard_interp(particle.pos(), iloc, jloc, kloc, dx, dxi, plo,
                                    flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                                    interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
                   }
@@ -533,39 +532,42 @@ mfix::mfix_calc_txfr_particle (Real time,
                   const int dstcomp = 0;
                   const int numcomp = interp_comp;
 
-                  shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                  shepard_interp(particle.pos(), iloc, jloc, kloc, dx, dxi, plo,
                                  flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                                  interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
 #endif
                 } // Cut cell
-              }
+              } // Not covered
+            } // if box not all regular
 
-              Real pbeta = p_realarray[SoArealData::dragcoeff][p_id];
-              Real pvol = p_realarray[SoArealData::volume][p_id];
+            Real pbeta = p_realarray[SoArealData::dragcoeff][p_id];
+            Real pvol = p_realarray[SoArealData::volume][p_id];
 
-              // Particle drag calculation.  We multiply the particle velocity
-              // by "pmult" so that DEM uses the slip velocity. For PIC we
-              // only want the fluid velocity as it uses a pseudo implicit
-              // slip velocity for parcels.
-              p_realarray[SoArealData::dragx][p_id] =
-                pbeta * ( interp_loc[0] - pmult*p_realarray[SoArealData::velx][p_id] ) -
-                (interp_loc[3] + gp0_dev[0]) * pvol;
+            // Particle drag calculation.  We multiply the particle velocity
+            // by "pmult" so that DEM uses the slip velocity. For PIC we
+            // only want the fluid velocity as it uses a pseudo implicit
+            // slip velocity for parcels.
+            p_realarray[SoArealData::dragx][p_id] =
+              pbeta * ( interp_loc[0] - pmult*p_realarray[SoArealData::velx][p_id] ) -
+              (interp_loc[3] + gp0_dev[0]) * pvol;
 
-              p_realarray[SoArealData::dragy][p_id] =
-                pbeta * ( interp_loc[1] - pmult*p_realarray[SoArealData::vely][p_id] ) -
-                (interp_loc[4] + gp0_dev[1]) * pvol;
+            p_realarray[SoArealData::dragy][p_id] =
+              pbeta * ( interp_loc[1] - pmult*p_realarray[SoArealData::vely][p_id] ) -
+              (interp_loc[4] + gp0_dev[1]) * pvol;
 
-              p_realarray[SoArealData::dragz][p_id] =
-                pbeta * ( interp_loc[2] - pmult*p_realarray[SoArealData::velz][p_id] ) -
-                (interp_loc[5] + gp0_dev[2]) * pvol;
+            p_realarray[SoArealData::dragz][p_id] =
+              pbeta * ( interp_loc[2] - pmult*p_realarray[SoArealData::velz][p_id] ) -
+              (interp_loc[5] + gp0_dev[2]) * pvol;
 
-              if(l_advect_enthalpy) {
-                Real pgamma = p_realarray[SoArealData::convection][p_id];
-                p_realarray[SoArealData::convection][p_id] =
-                  pgamma * ( interp_loc[6] - p_realarray[SoArealData::temperature][p_id] );
-              }
+            if(l_advect_enthalpy) {
+              // gamma == (heat transfer coeff) * (particle surface area)
+              Real pgamma = p_realarray[SoArealData::convection][p_id];
+
+              p_realarray[SoArealData::convection][p_id] =
+                pgamma * ( interp_loc[6] - p_realarray[SoArealData::temperature][p_id] );
             }
-          });
+
+          }); // particle loop
         } // FAB not covered
       } // pti
     } // omp region

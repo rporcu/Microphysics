@@ -398,66 +398,62 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                apy_fab,apz_fab,solve_reactions]
             AMREX_GPU_DEVICE (int p_id) noexcept
           {
-            auto& particle = pstruct[p_id];
+            MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
 
-            // Cell containing particle centroid
-            int ip = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0]));
-            int jp = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1]));
-            int kp = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2]));
+            GpuArray<Real,6+SPECIES::NMAX> interp_loc; // vel_g, ep_g, ro_g, T_g, X_gk
+            interp_loc.fill(0.);
 
-            const int cell_is_covered = static_cast<int>(flags_array(ip,jp,kp).isCovered());
-
-            if (cell_is_covered) {
-
-              p_realarray[SoArealData::dragcoeff][p_id] = 0.;
-
-//              // Particle mass calculation
-//              for (int n_s(0); n_s < nspecies_s; n_s++) {
-//                // Update specie mass formation rate
-//                ptile_data.m_runtime_rdata[idx_mass_sn_txfr + n_s][p_id] = 0;
-//              }
+//            GpuArray<Real,SPECIES::NMAX> X_sn;
 //
-//              if (dem_solve) {
-//                ptile_data.m_runtime_rdata[idx_vel_s_txfr + 0][p_id] = 0;
-//                ptile_data.m_runtime_rdata[idx_vel_s_txfr + 1][p_id] = 0;
-//                ptile_data.m_runtime_rdata[idx_vel_s_txfr + 2][p_id] = 0;
-//              }
+//            for (int n_s(0); n_s < nspecies_s; n_s++) {
+//              const int idx = idx_X_sn + n_s;
+//              X_sn[n_s] = ptile_data.m_runtime_rdata[idx][p_id];
+//            }
+
+            // Indices of cell where particle is located
+            const int iloc = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0]));
+            const int jloc = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1]));
+            const int kloc = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2]));
+
+            if (grown_bx_is_regular) {
+              trilinear_interp(particle.pos(), interp_loc.data(), interp_array,
+                               plo, dxi, interp_comp);
+
+            } else { // FAB not all regular
+
+              // No drag force for particles in covered cells.
+              if (flags_array(iloc,jloc,kloc).isCovered()) {
+
+                p_realarray[SoArealData::dragcoeff][p_id] = 0.;
+
+//                // Particle mass calculation
+//                for (int n_s(0); n_s < nspecies_s; n_s++) {
+//                  // Update specie mass formation rate
+//                  ptile_data.m_runtime_rdata[idx_mass_sn_txfr + n_s][p_id] = 0;
+//                }
 //
-//              ptile_data.m_runtime_rdata[idx_h_s_txfr][p_id] = 0;
-
-            } else {
-
-//              GpuArray<Real,SPECIES::NMAX> X_sn;
+//                if (dem_solve) {
+//                  ptile_data.m_runtime_rdata[idx_vel_s_txfr + 0][p_id] = 0;
+//                  ptile_data.m_runtime_rdata[idx_vel_s_txfr + 1][p_id] = 0;
+//                  ptile_data.m_runtime_rdata[idx_vel_s_txfr + 2][p_id] = 0;
+//                }
 //
-//              for (int n_s(0); n_s < nspecies_s; n_s++) {
-//                const int idx = idx_X_sn + n_s;
-//                X_sn[n_s] = ptile_data.m_runtime_rdata[idx][p_id];
-//              }
+//                ptile_data.m_runtime_rdata[idx_h_s_txfr][p_id] = 0;
 
-              GpuArray<Real,6+SPECIES::NMAX> interp_loc; // vel_g, ep_g, ro_g, T_g, X_gk
-              interp_loc.fill(0.);
+                return;
 
-              GpuArray<GpuArray<GpuArray<Real,2>,2>,2> weights;
-
-              if (grown_bx_is_regular) {
-
-                trilinear_interp(particle.pos(), ip, jp, kp, weights,
-                                 interp_loc.data(), interp_array, plo, dxi,
-                                 interp_comp);
-
+              // Cut or regular cell and none of the cells in the stencil is
+              // covered (Note we can't assume regular cell has no covered
+              // cells in the stencil because of the diagonal case)
               } else {
 
-                // Cut or regular cell and none of the cells in the stencil is
-                // covered (Note we can't assume regular cell has no covered
-                // cells in the stencil because of the diagonal case)
-
-                // Upper cell in stencil
+                // Upper cell in trilinear stencil
                 int i = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0] + 0.5));
                 int j = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1] + 0.5));
                 int k = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5));
 
-                // All cells in the stencil are regular. Use traditional
-                // trilinear interpolation
+                // All cells in the stencil are regular. Use
+                // traditional trilinear interpolation
                 if (flags_array(i-1,j-1,k-1).isRegular() &&
                     flags_array(i  ,j-1,k-1).isRegular() &&
                     flags_array(i-1,j  ,k-1).isRegular() &&
@@ -467,12 +463,10 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                     flags_array(i-1,j  ,k  ).isRegular() &&
                     flags_array(i  ,j  ,k  ).isRegular()) {
 
-                  trilinear_interp(particle.pos(), ip, jp, kp, weights,
-                                   interp_loc.data(), interp_array, plo, dxi,
-                                   interp_comp);
-
-                } else { // At least one of the cells in the stencil is cut or covered
-
+                  trilinear_interp(particle.pos(), interp_loc.data(),
+                                   interp_array, plo, dxi, interp_comp);
+                // At least one of the cells in the stencil is cut or covered
+                } else {
 #if 0
                   // TODO: This was initially split for variables that may have known
                   // EB values (e.g., no-slip velocity). However, the results changed
@@ -482,7 +476,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                     const int dstcomp = 0;
                     const int numcomp = 3;
 
-                    shepard_interp_eb(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                    shepard_interp_eb(particle.pos(), iloc, jloc, kloc, dx, dxi, plo,
                                       flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                                       interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
 
@@ -492,7 +486,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                     const int dstcomp = 3;
                     const int numcomp = interp_comp-3; // ep_g, ro_g, T_g, X_gk
 
-                    shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                    shepard_interp(particle.pos(), iloc, jloc, kloc, dx, dxi, plo,
                                    flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                                    interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
                   }
@@ -501,313 +495,308 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                   const int dstcomp = 0;
                   const int numcomp = interp_comp; // vel_g, ep_g, ro_g, T_g, X_gk
 
-                  shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                  shepard_interp(particle.pos(), iloc, jloc, kloc, dx, dxi, plo,
                                  flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                                  interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
 
 #endif
                 } // Cut cell
-              }
+              } // Not covered
+            } // type of FAB
 
-              RealVect vel_g(interp_loc[0], interp_loc[1], interp_loc[2]);
-              const Real ep_g = interp_loc[3];
-              const Real ro_g = interp_loc[4];
+            RealVect vel_g(interp_loc[0], interp_loc[1], interp_loc[2]);
+            const Real ep_g = interp_loc[3];
+            const Real ro_g = interp_loc[4];
 
-              int comp_count = 5;
+            int comp_count(5);
 
-              Real T_g(0);
-              if (adv_enthalpy) {
-                T_g = interp_loc[comp_count];
-                comp_count += 1;
-              }
+            Real T_g(0);
+            if (adv_enthalpy) {
+              T_g = interp_loc[comp_count];
+              comp_count += 1;
+            }
 
-              Real* X_gk;
-              if (fluid_is_a_mixture) {
-                X_gk = &interp_loc[comp_count];
-                comp_count += nspecies_g;
-              }
+            Real* X_gk;
+            if (fluid_is_a_mixture) {
+              X_gk = &interp_loc[comp_count];
+              comp_count += nspecies_g;
+            }
 
-              // Indices of cell where particle is located
-              int iloc = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0]));
-              int jloc = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1]));
-              int kloc = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2]));
+            Real mu_g(0);
 
-              Real  mu_g(0);
+            if (adv_enthalpy)
+              mu_g = fluid_parms.calc_mu_g(T_g);
+            else
+              mu_g = mu_g0;
 
-              if (adv_enthalpy)
-                mu_g = fluid_parms.calc_mu_g(T_g);
-              else
-                mu_g = mu_g0;
+            Real rad = p_realarray[SoArealData::radius][p_id];
+            Real vol = p_realarray[SoArealData::volume][p_id];
 
-              Real rad = p_realarray[SoArealData::radius][p_id];
-              Real vol = p_realarray[SoArealData::volume][p_id];
+            int pID = particle.id();
 
-              int ip = particle.id();
+            RealVect pvel(0.);
+            pvel[0] = p_realarray[SoArealData::velx][p_id];
+            pvel[1] = p_realarray[SoArealData::vely][p_id];
+            pvel[2] = p_realarray[SoArealData::velz][p_id];
 
-              RealVect pvel(0.);
-              pvel[0] = p_realarray[SoArealData::velx][p_id];
-              pvel[1] = p_realarray[SoArealData::vely][p_id];
-              pvel[2] = p_realarray[SoArealData::velz][p_id];
+            Real rop_g = ro_g * ep_g;
+            RealVect vslp(0.);
+            vslp[0] = vel_g[0] - pvel[0];
+            vslp[1] = vel_g[1] - pvel[1];
+            vslp[2] = vel_g[2] - pvel[2];
 
-              Real rop_g = ro_g * ep_g;
+            Real vrel = sqrt(dot_product(vslp, vslp));
+            Real dp = 2.0*rad;
 
-              RealVect vslp(0.);
-              vslp[0] = vel_g[0] - pvel[0];
-              vslp[1] = vel_g[1] - pvel[1];
-              vslp[2] = vel_g[2] - pvel[2];
+            if (local_cg_dem) {
+               dp = dp/std::cbrt(p_realarray[SoArealData::statwt][p_id]);
+            }
 
-              Real vrel = sqrt(dot_product(vslp, vslp));
-              Real dp = 2.0*rad;
+            Real ep_s = 1.0 - ep_g;
+            Real beta = vol*DragFunc(ep_g, mu_g, rop_g, vrel, dp, dp, ep_s,
+                                     vel_g[0], vel_g[1], vel_g[2],
+                                     iloc, jloc, kloc, pID);
 
-              if (local_cg_dem) {
-                 dp = dp/std::cbrt(p_realarray[SoArealData::statwt][p_id]);
-              }
+            p_realarray[SoArealData::dragcoeff][p_id] = beta;
 
-              Real ep_s = 1.0 - ep_g;
+            if(adv_enthalpy) {
+              Real k_g = fluid_parms.calc_k_g(T_g);
 
-              Real beta = vol*DragFunc(ep_g, mu_g, rop_g, vrel, dp, dp, ep_s,
-                 vel_g[0], vel_g[1], vel_g[2], iloc, jloc, kloc, ip);
-
-              p_realarray[SoArealData::dragcoeff][p_id] = beta;
-
-              if(adv_enthalpy){
-                Real k_g = fluid_parms.calc_k_g(T_g);
-
-                Real cp_g(0);
-                if (!fluid_is_a_mixture)
-                  cp_g = run_on_device ?
-                    fluid_parms.calc_cp_g<RunOn::Device>(T_g) :
-                    fluid_parms.calc_cp_g<RunOn::Host>(T_g);
-                else {
-                  for (int n_g(0); n_g < nspecies_g; ++n_g) {
-                    cp_g += run_on_device ?
-                      X_gk[n_g]*fluid_parms.calc_cp_gk<RunOn::Device>(T_g,n_g) :
-                      X_gk[n_g]*fluid_parms.calc_cp_gk<RunOn::Host>(T_g,n_g);
-                  }
+              Real cp_g(0.);
+              if (!fluid_is_a_mixture)
+                cp_g = run_on_device ?
+                  fluid_parms.calc_cp_g<RunOn::Device>(T_g) :
+                  fluid_parms.calc_cp_g<RunOn::Host>(T_g);
+              else {
+                for (int n_g(0); n_g < nspecies_g; ++n_g) {
+                  cp_g += run_on_device ?
+                    X_gk[n_g]*fluid_parms.calc_cp_gk<RunOn::Device>(T_g,n_g) :
+                    X_gk[n_g]*fluid_parms.calc_cp_gk<RunOn::Host>(T_g,n_g);
                 }
-
-                Real gamma = ConvectionCoeff(ep_g, mu_g, k_g, cp_g, rop_g, vrel,
-                                             dp, iloc, jloc, kloc, ip);
-
-                p_realarray[SoArealData::convection][p_id] = 4.0*M_PI*rad*rad*gamma;
               }
 
-//              if (solve_reactions) {
-////                // Compute fluid molecular weight
-////                Real MW_g(0);
+              Real gamma = ConvectionCoeff(ep_g, mu_g, k_g, cp_g, rop_g, vrel,
+                                           dp, iloc, jloc, kloc, pID);
+
+              p_realarray[SoArealData::convection][p_id] = 4.0*M_PI*rad*rad*gamma;
+            }
+
+//            if (solve_reactions) {
+////              // Compute fluid molecular weight
+////              Real MW_g(0);
 ////
-////                if (fluid_is_a_mixture) {
-////                  for (int n_g(0); n_g < nspecies_g; ++n_g) {
-////                    MW_g += run_on_device ?
-////                      X_gk[n_g] / fluid_parms.get_MW_gk<RunOn::Device>(n_g) :
-////                      X_gk[n_g] / fluid_parms.get_MW_gk<RunOn::Host>(n_g);
-////                  }
-////
-////                  MW_g = 1. / MW_g;
-////                } else {
-////                  MW_g = run_on_device ?
-////                    fluid_parms.get_MW_g<RunOn::Device>() :
-////                    fluid_parms.get_MW_g<RunOn::Host>();
+////              if (fluid_is_a_mixture) {
+////                for (int n_g(0); n_g < nspecies_g; ++n_g) {
+////                  MW_g += run_on_device ?
+////                    X_gk[n_g] / fluid_parms.get_MW_gk<RunOn::Device>(n_g) :
+////                    X_gk[n_g] / fluid_parms.get_MW_gk<RunOn::Host>(n_g);
 ////                }
 ////
-////                const Real p_g = ro_g*fluid_parms.R*T_g / MW_g;
+////                MW_g = 1. / MW_g;
+////              } else {
+////                MW_g = run_on_device ?
+////                  fluid_parms.get_MW_g<RunOn::Device>() :
+////                  fluid_parms.get_MW_g<RunOn::Host>();
+////              }
 ////
-//                // Extract interpolated thermodynamic pressure
-//                const Real p_g = interp_loc[comp_count];
+////              const Real p_g = ro_g*fluid_parms.R*T_g / MW_g;
+////
+//              // Extract interpolated thermodynamic pressure
+//              const Real p_g = interp_loc[comp_count];
 //
-//                const Real ep_s = 1. - ep_g;
-//                const Real ro_p = p_realarray[SoArealData::density][p_id];
+//              const Real ep_s = 1. - ep_g;
+//              const Real ro_p = p_realarray[SoArealData::density][p_id];
 //
-//                GpuArray<Real,Reactions::NMAX> R_q_heterogeneous;
-//                R_q_heterogeneous.fill(0.);
+//              GpuArray<Real,Reactions::NMAX> R_q_heterogeneous;
+//              R_q_heterogeneous.fill(0.);
 //
-//                const Real T_p = p_realarray[SoArealData::temperature][p_id];
-//                const Real DP  = 2. * p_realarray[SoArealData::radius][p_id];
-//                const RealVect vel_p(p_realarray[SoArealData::velx][p_id],
-//                                     p_realarray[SoArealData::vely][p_id],
-//                                     p_realarray[SoArealData::velz][p_id]);
+//              const Real T_p = p_realarray[SoArealData::temperature][p_id];
+//              const Real DP  = 2. * p_realarray[SoArealData::radius][p_id];
+//              const RealVect vel_p(p_realarray[SoArealData::velx][p_id],
+//                                   p_realarray[SoArealData::vely][p_id],
+//                                   p_realarray[SoArealData::velz][p_id]);
 //
-//                if (run_on_device) {
-//                  HeterogeneousRRates.template operator()<RunOn::Device>(R_q_heterogeneous.data(),
-//                                                                         reactions_parms,
-//                                                                         solids_parms, X_sn.data(),
-//                                                                         ro_p, ep_s, T_p,
-//                                                                         vel_p, fluid_parms,
-//                                                                         X_gk, ro_g, ep_g, T_g,
-//                                                                         vel_g, DP, p_g);
-//                } else {
-//                  HeterogeneousRRates.template operator()<RunOn::Host>(R_q_heterogeneous.data(),
+//              if (run_on_device) {
+//                HeterogeneousRRates.template operator()<RunOn::Device>(R_q_heterogeneous.data(),
 //                                                                       reactions_parms,
 //                                                                       solids_parms, X_sn.data(),
 //                                                                       ro_p, ep_s, T_p,
 //                                                                       vel_p, fluid_parms,
 //                                                                       X_gk, ro_g, ep_g, T_g,
 //                                                                       vel_g, DP, p_g);
-//                }
-//
-//                // Total transfer rates
-//                Real G_m_g_heterogeneous(0.);
-//                Real G_H_g_heterogeneous(0.);
-//
-//                Real G_m_p_heterogeneous(0.);
-//
-//                //*************************************************************
-//                // Initialize to zero
-//                //*************************************************************
-//                for (int n_s(0); n_s < nspecies_s; n_s++) {
-//                  // Initially set species n_s density transfer rate to zero
-//                  ptile_data.m_runtime_rdata[idx_mass_sn_txfr + n_s][p_id] = 0;
-//                }
-//
-//                if (dem_solve) {
-//                  ptile_data.m_runtime_rdata[idx_vel_s_txfr + 0][p_id] = 0.;
-//                  ptile_data.m_runtime_rdata[idx_vel_s_txfr + 1][p_id] = 0.;
-//                  ptile_data.m_runtime_rdata[idx_vel_s_txfr + 2][p_id] = 0.;
-//                }
-//
-//                // Initially set particle energy transfer rate to zero
-//                ptile_data.m_runtime_rdata[idx_h_s_txfr][p_id] = 0.;
-//
-//                //*************************************************************
-//                // Loop over particle's species for computing particle txfr
-//                // rates
-//                //*************************************************************
-//                for (int n_s(0); n_s < nspecies_s; n_s++) {
-//                  Real G_m_pk_heterogeneous(0.);
-//
-//                  // Get the ID of the current species n_s
-//                  const int current_species_id = p_species_id_s[n_s];
-//
-//                  // Loop over reactions to compute each contribution
-//                  for (int q(0); q < nreactions; q++) {
-//                    // Do something only if reaction is heterogeneous and
-//                    // contains a solid compound
-//                    if (p_types[q] == Heterogeneous &&
-//                        MFIXfind(p_phases[q], p_nphases[q], Solid) != InvalidIdx) {
-//                      
-//                      Real stoc_coeff(0);
-//
-//                      // Add reactant contribution (if any)
-//                      {
-//                        const int pos = MFIXfind(p_reactants_id[q], p_nreactants[q], current_species_id);
-//
-//                        if (pos != InvalidIdx) {
-//                          if (p_reactants_phases[q][pos] == Solid)
-//                            stoc_coeff += p_reactants_coeffs[q][pos];
-//                        }
-//                      }
-//
-//                      // Add products contribution (if any)
-//                      {
-//                        const int pos = MFIXfind(p_products_id[q], p_nproducts[q], current_species_id);
-//
-//                        if (pos != InvalidIdx) {
-//                          if (p_products_phases[q][pos] == Solid)
-//                            stoc_coeff += p_products_coeffs[q][pos];
-//                        }
-//                      }
-//
-//                      // Compute particle's species n_s transfer rate for reaction q
-//                      Real G_m_pk_q = stoc_coeff * p_MW_sn[n_s] * R_q_heterogeneous[q];
-//
-//                      G_m_pk_heterogeneous += G_m_pk_q;
-//                    }
-//                  }
-//
-//                  G_m_p_heterogeneous += G_m_pk_heterogeneous;
-//
-//                  // Update global variable
-//                  ptile_data.m_runtime_rdata[idx_mass_sn_txfr + n_s][p_id] = G_m_pk_heterogeneous;
-//                }
-//
-//                //***************************************************************
-//                // Loop over fluid species for computing fluid txfr rates
-//                //***************************************************************
-//                for (int n_g(0); n_g < nspecies_g; n_g++) {
-//                  Real G_m_gk_heterogeneous(0.);
-//
-//                  // Get the ID of the current species n_g
-//                  const int current_species_id = p_species_id_g[n_g];
-//
-//                  // Loop over reactions to compute each contribution
-//                  for (int q(0); q < nreactions; q++) {
-//                    // Do something only if reaction is heterogeneous and contains
-//                    // a solid compound
-//                    if (p_types[q] == Heterogeneous &&
-//                        MFIXfind(p_phases[q], p_nphases[q], Fluid) != InvalidIdx) {
-//
-//                      Real stoc_coeff(0);
-//
-//                      // Add reactant contribution (if any)
-//                      {
-//                        const int pos = MFIXfind(p_reactants_id[q], p_nreactants[q], current_species_id);
-//
-//                        if (pos != InvalidIdx) {
-//                          if (p_reactants_phases[q][pos] == Fluid)
-//                            stoc_coeff += p_reactants_coeffs[q][pos];
-//                        }
-//                      }
-//
-//                      // Add products contribution (if any)
-//                      {
-//                        const int pos = MFIXfind(p_products_id[q], p_nproducts[q], current_species_id);
-//
-//                        if (pos != InvalidIdx) {
-//                          if (p_products_phases[q][pos] == Fluid)
-//                            stoc_coeff += p_products_coeffs[q][pos];
-//                        }
-//                      }
-//
-//                      // Compute fluid species n_g transfer rate for reaction q
-//                      Real G_m_gk_q = stoc_coeff * p_MW_gk[n_g] * R_q_heterogeneous[q];
-//
-//                      G_m_gk_heterogeneous += G_m_gk_q;
-//
-//                      // Contribution to the particle
-//                      const Real h_gk_T_p = run_on_device ?
-//                        fluid_parms.calc_h_gk<RunOn::Device>(T_p, n_g, cell_is_covered) :
-//                        fluid_parms.calc_h_gk<RunOn::Host>(T_p, n_g, cell_is_covered);
-//
-//                      const Real h_gk_T_g = run_on_device ?
-//                        fluid_parms.calc_h_gk<RunOn::Device>(T_g, n_g, cell_is_covered) :
-//                        fluid_parms.calc_h_gk<RunOn::Host>(T_g, n_g, cell_is_covered);
-//
-//                      const Real G_H_pk_q = h_gk_T_g * amrex::min(0., G_m_gk_q);
-//                      const Real G_H_gk_q = h_gk_T_p * amrex::max(0., G_m_gk_q);
-//
-//                      G_H_g_heterogeneous += (G_H_pk_q + G_H_gk_q);
-//                    }
-//                  }
-//
-//                  G_m_g_heterogeneous += G_m_gk_heterogeneous;
-//
-//                  // Update global variable
-////                  G_ro_gk_ptr[n_g*np + ip] = G_m_gk_heterogeneous / fluid_vol;
-//                }
-//
-//                // Check that (total_ro_g_txfr + total_ro_p_txfr) = 0
-//                BL_ASSERT(std::abs(G_m_p_heterogeneous + G_m_g_heterogeneous) < 1.e-15);
-//                BL_ASSERT(std::abs(G_m_p_homogeneous) < 1.e-15);
-//
-//                //***************************************************************
-//                // Update particle linear momentum and energy transfer
-//                //***************************************************************
-//                if (dem_solve) {
-//                  const Real coeff = amrex::max(0., G_m_p_heterogeneous);
-//
-//                  // NOTE: total_ro_p_txfr is computed from interpolated quantities
-//                  // and vel_g is also interpolated to particle position
-//                  ptile_data.m_runtime_rdata[idx_vel_s_txfr+0][p_id] = coeff*vel_g[0];
-//                  ptile_data.m_runtime_rdata[idx_vel_s_txfr+1][p_id] = coeff*vel_g[1];
-//                  ptile_data.m_runtime_rdata[idx_vel_s_txfr+2][p_id] = coeff*vel_g[2];
-//                }
-//
-//                // Write the result in the enthalpy transfer space
-//                ptile_data.m_runtime_rdata[idx_h_s_txfr][p_id] = -G_H_g_heterogeneous;
-////                G_h_g_ptr[p_id] = G_H_g_heterogeneous / fluid_vol;
+//              } else {
+//                HeterogeneousRRates.template operator()<RunOn::Host>(R_q_heterogeneous.data(),
+//                                                                     reactions_parms,
+//                                                                     solids_parms, X_sn.data(),
+//                                                                     ro_p, ep_s, T_p,
+//                                                                     vel_p, fluid_parms,
+//                                                                     X_gk, ro_g, ep_g, T_g,
+//                                                                     vel_g, DP, p_g);
 //              }
-            }
-          });
+//
+//              // Total transfer rates
+//              Real G_m_g_heterogeneous(0.);
+//              Real G_H_g_heterogeneous(0.);
+//
+//              Real G_m_p_heterogeneous(0.);
+//
+//              //*************************************************************
+//              // Initialize to zero
+//              //*************************************************************
+//              for (int n_s(0); n_s < nspecies_s; n_s++) {
+//                // Initially set species n_s density transfer rate to zero
+//                ptile_data.m_runtime_rdata[idx_mass_sn_txfr + n_s][p_id] = 0;
+//              }
+//
+//              if (dem_solve) {
+//                ptile_data.m_runtime_rdata[idx_vel_s_txfr + 0][p_id] = 0.;
+//                ptile_data.m_runtime_rdata[idx_vel_s_txfr + 1][p_id] = 0.;
+//                ptile_data.m_runtime_rdata[idx_vel_s_txfr + 2][p_id] = 0.;
+//              }
+//
+//              // Initially set particle energy transfer rate to zero
+//              ptile_data.m_runtime_rdata[idx_h_s_txfr][p_id] = 0.;
+//
+//              //*************************************************************
+//              // Loop over particle's species for computing particle txfr
+//              // rates
+//              //*************************************************************
+//              for (int n_s(0); n_s < nspecies_s; n_s++) {
+//                Real G_m_pk_heterogeneous(0.);
+//
+//                // Get the ID of the current species n_s
+//                const int current_species_id = p_species_id_s[n_s];
+//
+//                // Loop over reactions to compute each contribution
+//                for (int q(0); q < nreactions; q++) {
+//                  // Do something only if reaction is heterogeneous and
+//                  // contains a solid compound
+//                  if (p_types[q] == Heterogeneous &&
+//                      MFIXfind(p_phases[q], p_nphases[q], Solid) != InvalidIdx) {
+//                    
+//                    Real stoc_coeff(0);
+//
+//                    // Add reactant contribution (if any)
+//                    {
+//                      const int pos = MFIXfind(p_reactants_id[q], p_nreactants[q], current_species_id);
+//
+//                      if (pos != InvalidIdx) {
+//                        if (p_reactants_phases[q][pos] == Solid)
+//                          stoc_coeff += p_reactants_coeffs[q][pos];
+//                      }
+//                    }
+//
+//                    // Add products contribution (if any)
+//                    {
+//                      const int pos = MFIXfind(p_products_id[q], p_nproducts[q], current_species_id);
+//
+//                      if (pos != InvalidIdx) {
+//                        if (p_products_phases[q][pos] == Solid)
+//                          stoc_coeff += p_products_coeffs[q][pos];
+//                      }
+//                    }
+//
+//                    // Compute particle's species n_s transfer rate for reaction q
+//                    Real G_m_pk_q = stoc_coeff * p_MW_sn[n_s] * R_q_heterogeneous[q];
+//
+//                    G_m_pk_heterogeneous += G_m_pk_q;
+//                  }
+//                }
+//
+//                G_m_p_heterogeneous += G_m_pk_heterogeneous;
+//
+//                // Update global variable
+//                ptile_data.m_runtime_rdata[idx_mass_sn_txfr + n_s][p_id] = G_m_pk_heterogeneous;
+//              }
+//
+//              //***************************************************************
+//              // Loop over fluid species for computing fluid txfr rates
+//              //***************************************************************
+//              for (int n_g(0); n_g < nspecies_g; n_g++) {
+//                Real G_m_gk_heterogeneous(0.);
+//
+//                // Get the ID of the current species n_g
+//                const int current_species_id = p_species_id_g[n_g];
+//
+//                // Loop over reactions to compute each contribution
+//                for (int q(0); q < nreactions; q++) {
+//                  // Do something only if reaction is heterogeneous and contains
+//                  // a solid compound
+//                  if (p_types[q] == Heterogeneous &&
+//                      MFIXfind(p_phases[q], p_nphases[q], Fluid) != InvalidIdx) {
+//
+//                    Real stoc_coeff(0);
+//
+//                    // Add reactant contribution (if any)
+//                    {
+//                      const int pos = MFIXfind(p_reactants_id[q], p_nreactants[q], current_species_id);
+//
+//                      if (pos != InvalidIdx) {
+//                        if (p_reactants_phases[q][pos] == Fluid)
+//                          stoc_coeff += p_reactants_coeffs[q][pos];
+//                      }
+//                    }
+//
+//                    // Add products contribution (if any)
+//                    {
+//                      const int pos = MFIXfind(p_products_id[q], p_nproducts[q], current_species_id);
+//
+//                      if (pos != InvalidIdx) {
+//                        if (p_products_phases[q][pos] == Fluid)
+//                          stoc_coeff += p_products_coeffs[q][pos];
+//                      }
+//                    }
+//
+//                    // Compute fluid species n_g transfer rate for reaction q
+//                    Real G_m_gk_q = stoc_coeff * p_MW_gk[n_g] * R_q_heterogeneous[q];
+//
+//                    G_m_gk_heterogeneous += G_m_gk_q;
+//
+//                    // Contribution to the particle
+//                    const Real h_gk_T_p = run_on_device ?
+//                      fluid_parms.calc_h_gk<RunOn::Device>(T_p, n_g, cell_is_covered) :
+//                      fluid_parms.calc_h_gk<RunOn::Host>(T_p, n_g, cell_is_covered);
+//
+//                    const Real h_gk_T_g = run_on_device ?
+//                      fluid_parms.calc_h_gk<RunOn::Device>(T_g, n_g, cell_is_covered) :
+//                      fluid_parms.calc_h_gk<RunOn::Host>(T_g, n_g, cell_is_covered);
+//
+//                    const Real G_H_pk_q = h_gk_T_g * amrex::min(0., G_m_gk_q);
+//                    const Real G_H_gk_q = h_gk_T_p * amrex::max(0., G_m_gk_q);
+//
+//                    G_H_g_heterogeneous += (G_H_pk_q + G_H_gk_q);
+//                  }
+//                }
+//
+//                G_m_g_heterogeneous += G_m_gk_heterogeneous;
+//
+//                // Update global variable
+////                G_ro_gk_ptr[n_g*np + ip] = G_m_gk_heterogeneous / fluid_vol;
+//              }
+//
+//              // Check that (total_ro_g_txfr + total_ro_p_txfr) = 0
+//              BL_ASSERT(std::abs(G_m_p_heterogeneous + G_m_g_heterogeneous) < 1.e-15);
+//              BL_ASSERT(std::abs(G_m_p_homogeneous) < 1.e-15);
+//
+//              //***************************************************************
+//              // Update particle linear momentum and energy transfer
+//              //***************************************************************
+//              if (dem_solve) {
+//                const Real coeff = amrex::max(0., G_m_p_heterogeneous);
+//
+//                // NOTE: total_ro_p_txfr is computed from interpolated quantities
+//                // and vel_g is also interpolated to particle position
+//                ptile_data.m_runtime_rdata[idx_vel_s_txfr+0][p_id] = coeff*vel_g[0];
+//                ptile_data.m_runtime_rdata[idx_vel_s_txfr+1][p_id] = coeff*vel_g[1];
+//                ptile_data.m_runtime_rdata[idx_vel_s_txfr+2][p_id] = coeff*vel_g[2];
+//              }
+//
+//              // Write the result in the enthalpy transfer space
+//              ptile_data.m_runtime_rdata[idx_h_s_txfr][p_id] = -G_H_g_heterogeneous;
+////              G_h_g_ptr[p_id] = G_H_g_heterogeneous / fluid_vol;
+//            }
+
+          }); // pid
         } // if entire FAB not covered
       } // pti
     } // GPU region
