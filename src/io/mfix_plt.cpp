@@ -134,7 +134,9 @@ mfix::InitIOPltData ()
       int plt_ccse_regtest = 0;
       pp.query("plt_regtest", plt_ccse_regtest);
 
-      const runtimeRealData& rtData = pc->m_runtimeRealData;
+      const runtimeRealData rtData(solids.nspecies*solids.solve_species,
+                                   fluid.nspecies*fluid.solve_species,
+                                   reactions.nreactions*reactions.solve);
 
       // Runtime-added variables
       const int size = AoSrealData::count + SoArealData::count + rtData.count;
