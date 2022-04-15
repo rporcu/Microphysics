@@ -15,8 +15,6 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
   BL_PROFILE("MFIXParticleContainer::MFIX_PC_AdvanceParcels()");
 
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
-
   const int is_IOProc = int(ParallelDescriptor::IOProcessor());
 
   const Real abstol = newton_abstol;
@@ -76,7 +74,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
         [pstruct,p_realarray,p_intarray,ptile_data,dt,nspecies_s,nreactions,idx_X_sn,
          idx_mass_sn_txfr,update_mass,update_temperature,solve_reactions,idx_h_s_txfr,
          solid_is_a_mixture,local_advect_enthalpy,enthalpy_source,solids_parms,
-         run_on_device,is_IOProc,abstol,reltol,maxiter]
+         is_IOProc,abstol,reltol,maxiter]
         AMREX_GPU_DEVICE (int lp) noexcept
       {
         auto& p = pstruct[lp];
@@ -175,16 +173,12 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
             if (solid_is_a_mixture) {
               for (int n_s(0); n_s < nspecies_s; ++n_s) {
-                const Real h_sn = run_on_device ?
-                  solids_parms.calc_h_sn<RunOn::Device>(Tp_old,n_s) :
-                  solids_parms.calc_h_sn<RunOn::Host>(Tp_old,n_s);
+                const Real h_sn = solids_parms.calc_h_sn<run_on>(Tp_old,n_s);
 
                 p_enthalpy_old += X_sn[n_s]*h_sn;
               }
             } else {
-              p_enthalpy_old = run_on_device ?
-                solids_parms.calc_h_s<RunOn::Device>(phase-1,Tp_old) :
-                solids_parms.calc_h_s<RunOn::Host>(phase-1,Tp_old);
+              p_enthalpy_old = solids_parms.calc_h_s<run_on>(phase-1,Tp_old);
             }
 
             Real p_enthalpy_new = coeff*p_enthalpy_old +
@@ -204,15 +198,11 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
               if (!solid_is_a_mixture) {
 
-                hp_loc = run_on_device ?
-                  solids_parms.calc_h_s<RunOn::Device>(phase-1,Tp_arg) :
-                  solids_parms.calc_h_s<RunOn::Host>(phase-1,Tp_arg);
+                hp_loc = solids_parms.calc_h_s<run_on>(phase-1,Tp_arg);
               } else {
 
                 for (int n(0); n < nspecies_s; ++n) {
-                  const Real h_sn = run_on_device ?
-                    solids_parms.calc_h_sn<RunOn::Device>(Tp_arg,n) :
-                    solids_parms.calc_h_sn<RunOn::Host>(Tp_arg,n);
+                  const Real h_sn = solids_parms.calc_h_sn<run_on>(Tp_arg,n);
 
                   hp_loc += X_sn[n]*h_sn;
                 }
@@ -228,16 +218,12 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
               if (!solid_is_a_mixture) {
 
-                gradient = run_on_device ?
-                  solids_parms.calc_partial_h_s<RunOn::Device>(phase-1,Tp_arg) :
-                  solids_parms.calc_partial_h_s<RunOn::Host>(phase-1,Tp_arg);
+                gradient = solids_parms.calc_partial_h_s<run_on>(phase-1,Tp_arg);
 
               } else {
 
                 for (int n(0); n < nspecies_s; ++n) {
-                  const Real h_sn = run_on_device ?
-                    solids_parms.calc_partial_h_sn<RunOn::Device>(Tp_arg,n) :
-                    solids_parms.calc_partial_h_sn<RunOn::Host>(Tp_arg,n);
+                  const Real h_sn = solids_parms.calc_partial_h_sn<run_on>(Tp_arg,n);
 
                   gradient += X_sn[n]*h_sn;
                 }
@@ -257,17 +243,13 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
             if (solid_is_a_mixture) {
               for (int n_s(0); n_s < nspecies_s; ++n_s) {
-                const Real cp_sn = run_on_device ?
-                  solids_parms.calc_cp_sn<RunOn::Device>(Tp_new,n_s) :
-                  solids_parms.calc_cp_sn<RunOn::Host>(Tp_new,n_s);
+                const Real cp_sn = solids_parms.calc_cp_sn<run_on>(Tp_new,n_s);
 
                 cp_s_new += X_sn[n_s]*cp_sn;
               }
 
             } else {
-              cp_s_new = run_on_device ?
-                solids_parms.calc_cp_s<RunOn::Device>(phase-1,Tp_new) :
-                solids_parms.calc_cp_s<RunOn::Host>(phase-1,Tp_new);
+              cp_s_new = solids_parms.calc_cp_s<run_on>(phase-1,Tp_new);
             }
 
             AMREX_ASSERT(cp_s_new > 0.);

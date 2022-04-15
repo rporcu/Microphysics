@@ -21,6 +21,7 @@ CEXE_sources += mfix_mf_helpers.cpp
 
 CEXE_headers += mfix_fillpatch_bc.H
 
+CEXE_headers += mfix_run_on.H
 CEXE_headers += mfix_algorithm.H
 CEXE_headers += mfix_solvers.H
 

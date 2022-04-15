@@ -319,8 +319,6 @@ mfix::mfix_add_txfr_explicit (Real dt,
 
   BL_PROFILE("mfix::mfix_add_txfr_explicit");
 
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
-
   auto& fluid_parms = *fluid.parameters;
 
   for (int lev = 0; lev <= finest_level; lev++) {
@@ -375,7 +373,7 @@ mfix::mfix_add_txfr_explicit (Real dt,
 
         amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
             fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-            run_on_device,is_IOProc,abstol=newton_abstol,
+            is_IOProc,abstol=newton_abstol,
             reltol=newton_reltol,maxiter=newton_maxiter]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
@@ -404,16 +402,12 @@ mfix::mfix_add_txfr_explicit (Real dt,
 
               if (!fluid_is_a_mixture) {
 
-                hg_loc = run_on_device ?
-                  fluid_parms.calc_h_g<RunOn::Device>(Tg_arg, cell_is_covered) :
-                  fluid_parms.calc_h_g<RunOn::Host>(Tg_arg, cell_is_covered);
+                hg_loc = fluid_parms.calc_h_g<run_on>(Tg_arg, cell_is_covered);
 
               } else {
 
                 for (int n(0); n < nspecies_g; ++n) {
-                  const Real h_gk = run_on_device ?
-                    fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg, n, cell_is_covered) :
-                    fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg, n, cell_is_covered);
+                  const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_arg, n, cell_is_covered);
 
                   hg_loc += Xgk_array(i,j,k,n)*h_gk;
                 }
@@ -429,16 +423,12 @@ mfix::mfix_add_txfr_explicit (Real dt,
 
               if (!fluid_is_a_mixture) {
 
-                gradient = run_on_device ?
-                  fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
-                  fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
+                gradient = fluid_parms.calc_partial_h_g<run_on>(Tg_arg);
 
               } else {
 
                 for (int n(0); n < nspecies_g; ++n) {
-                  const Real h_gk = run_on_device ?
-                    fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
-                    fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
+                  const Real h_gk = fluid_parms.calc_partial_h_gk<run_on>(Tg_arg,n);
 
                   gradient += Xgk_array(i,j,k,n)*h_gk;
                 }
@@ -481,8 +471,6 @@ mfix::mfix_add_txfr_implicit (Real dt,
   */
 
   BL_PROFILE("mfix::mfix_add_txfr_implicit");
-
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
   auto& fluid_parms = *fluid.parameters;
 
@@ -532,7 +520,7 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
         amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
             fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-            run_on_device,is_IOProc,abstol=newton_abstol,
+            is_IOProc,abstol=newton_abstol,
             reltol=newton_reltol,maxiter=newton_maxiter]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
@@ -560,16 +548,12 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
               if (!fluid_is_a_mixture) {
 
-                hg_loc = run_on_device ?
-                  fluid_parms.calc_h_g<RunOn::Device>(Tg_arg, cell_is_covered) :
-                  fluid_parms.calc_h_g<RunOn::Host>(Tg_arg, cell_is_covered);
+                hg_loc = fluid_parms.calc_h_g<run_on>(Tg_arg, cell_is_covered);
 
               } else {
 
                 for (int n(0); n < nspecies_g; ++n) {
-                  const Real h_gk = run_on_device ?
-                    fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg, n, cell_is_covered) :
-                    fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg, n, cell_is_covered);
+                  const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_arg, n, cell_is_covered);
 
                   hg_loc += Xgk_array(i,j,k,n)*h_gk;
                 }
@@ -585,16 +569,12 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
               if (!fluid_is_a_mixture) {
 
-                gradient = run_on_device ?
-                  fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
-                  fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
+                gradient = fluid_parms.calc_partial_h_g<run_on>(Tg_arg);
 
               } else {
 
                 for (int n(0); n < nspecies_g; ++n) {
-                  const Real h_gk = run_on_device ?
-                    fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
-                    fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
+                  const Real h_gk = fluid_parms.calc_partial_h_gk<run_on>(Tg_arg,n);
 
                   gradient += Xgk_array(i,j,k,n)*h_gk;
                 }
@@ -615,16 +595,12 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
             if (!fluid_is_a_mixture) {
 
-              hg_new = run_on_device ?
-                fluid_parms.calc_h_g<RunOn::Device>(Tg_new, cell_is_covered) :
-                fluid_parms.calc_h_g<RunOn::Host>(Tg_new, cell_is_covered);
+              hg_new = fluid_parms.calc_h_g<run_on>(Tg_new, cell_is_covered);
 
             } else {
 
               for (int n(0); n < nspecies_g; ++n) {
-                const Real h_gk = run_on_device ?
-                  fluid_parms.calc_h_gk<RunOn::Device>(Tg_new, n, cell_is_covered) :
-                  fluid_parms.calc_h_gk<RunOn::Host>(Tg_new, n, cell_is_covered);
+                const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_new, n, cell_is_covered);
 
                 hg_new += Xgk_array(i,j,k,n)*h_gk;
               }

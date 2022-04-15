@@ -520,8 +520,6 @@ void DiffusionOp::ComputeFlux (const Vector< Array< MultiFab*, AMREX_SPACEDIM> >
     }
   }
 
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
-
   // Number of fluid species
   const int nspecies_g = fluid.nspecies;
 
@@ -554,7 +552,7 @@ void DiffusionOp::ComputeFlux (const Vector< Array< MultiFab*, AMREX_SPACEDIM> >
       Array4<Real const> const& ro_g_arr     = ro_g_in[lev]->const_array(mfi);
 
       amrex::ParallelFor(bx, [ep_g_arr,ro_g_arr,b_coeffs_arr,nspecies_g,
-          fluid_parms,run_on_device]
+          fluid_parms]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const Real ep_g = ep_g_arr(i,j,k);

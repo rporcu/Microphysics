@@ -21,6 +21,7 @@
 #include <mfix_reactions_parms.H>
 #include <mfix_bc_list.H>
 #include <mfix_leveldata.H>
+#include <mfix_run_on.H>
 
 
 struct AoSrealData

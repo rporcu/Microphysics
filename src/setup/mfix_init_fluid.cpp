@@ -340,8 +340,6 @@ void init_fluid_parameters (const Box& bx,
                             const int solve_species,
                             FluidPhase& fluid)
 {
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
-
   const EBFArrayBox& epg_fab = static_cast<EBFArrayBox const&>((*ld.ep_g)[mfi]);
   const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
 
@@ -362,8 +360,7 @@ void init_fluid_parameters (const Box& bx,
 
   // Set the IC values
   amrex::ParallelFor(bx, [nspecies_g,T_g,h_g,X_gk,advect_enthalpy,fluid_parms,
-      solve_species,advect_species_enthalpy,fluid_is_a_mixture,
-      run_on_device,flags_arr]
+      solve_species,advect_species_enthalpy,fluid_is_a_mixture,flags_arr]
     AMREX_GPU_DEVICE (int i, int j, int k) noexcept
   {
     const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -377,9 +374,7 @@ void init_fluid_parameters (const Box& bx,
       {
         Real h_g_sum(0);
         for (int n(0); n < nspecies_g; n++) {
-          const Real h_gk = run_on_device ?
-            fluid_parms.calc_h_gk<RunOn::Device>(Tg_loc, n, cell_is_covered) :
-            fluid_parms.calc_h_gk<RunOn::Host>(Tg_loc, n, cell_is_covered);
+          const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_loc, n, cell_is_covered);
 
           h_g_sum += X_gk(i,j,k,n) * h_gk;
         }
@@ -387,9 +382,7 @@ void init_fluid_parameters (const Box& bx,
         h_g(i,j,k) = h_g_sum;
       }
       else {
-        h_g(i,j,k) = run_on_device ?
-          fluid_parms.calc_h_g<RunOn::Device>(Tg_loc, cell_is_covered) :
-          fluid_parms.calc_h_g<RunOn::Host>(Tg_loc, cell_is_covered);
+        h_g(i,j,k) = fluid_parms.calc_h_g<run_on>(Tg_loc, cell_is_covered);
       }
     }
 
@@ -540,8 +533,6 @@ void set_ic_temp (const Box& sbx,
                   FArrayBox* X_gk_fab,
                   FluidPhase& fluid)
 {
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
-
   const EBFArrayBox& Tg_EB_fab = static_cast<EBFArrayBox const&>(T_g_fab);
   const EBCellFlagFab& flags = Tg_EB_fab.getEBCellFlagFab();
 
@@ -587,7 +578,7 @@ void set_ic_temp (const Box& sbx,
 
     // Define the function to be used on the different Box-es
     auto set_quantities = [T_g,h_g,X_gk,temperature,nspecies_g,fluid_is_a_mixture,
-         fluid_parms,run_on_device,flags_arr]
+         fluid_parms,flags_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -597,17 +588,13 @@ void set_ic_temp (const Box& sbx,
       if (fluid_is_a_mixture) {
         Real h_g_sum(0);
         for (int n(0); n < nspecies_g; n++) {
-          Real h_gk = run_on_device ?
-            fluid_parms.calc_h_gk<RunOn::Device>(temperature, n, cell_is_covered) :
-            fluid_parms.calc_h_gk<RunOn::Host>(temperature, n, cell_is_covered);
+          Real h_gk = fluid_parms.calc_h_gk<run_on>(temperature, n, cell_is_covered);
 
           h_g_sum += X_gk(i,j,k,n) * h_gk;
         }
         h_g(i,j,k) = h_g_sum;
       } else {
-        h_g(i,j,k) = run_on_device ?
-          fluid_parms.calc_h_g<RunOn::Device>(temperature, cell_is_covered) :
-          fluid_parms.calc_h_g<RunOn::Host>(temperature, cell_is_covered);
+        h_g(i,j,k) = fluid_parms.calc_h_g<run_on>(temperature, cell_is_covered);
       }
     };
 

@@ -263,8 +263,6 @@ mfix::InitIOPltData ()
 void
 mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
 {
-    const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
-
     // If we've already written this plotfile, don't do it again!
     if (nstep == last_plt) return;
 
@@ -474,25 +472,21 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
               m_leveldata[lev]->X_gk->const_array(mfi) : Array4<const Real>();
 
             ParallelFor(bx, [MW_g_array,X_gk_array,nspecies_g,fluid_is_a_mixture,
-                fluid_parms,run_on_device]
+                fluid_parms]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               if (fluid_is_a_mixture) {
                 Real MW_g_loc(0);
 
                 for (int n(0); n < nspecies_g; ++n) {
-                  const Real MW_gk = run_on_device ?
-                    fluid_parms.get_MW_gk<RunOn::Device>(n) :
-                    fluid_parms.get_MW_gk<RunOn::Host>(n);
+                  const Real MW_gk = fluid_parms.get_MW_gk<run_on>(n);
 
                   MW_g_loc += X_gk_array(i,j,k,n) / MW_gk;
                 }
 
                 MW_g_array(i,j,k) = 1. / MW_g_loc;
               } else {
-                MW_g_array(i,j,k) = run_on_device ?
-                  fluid_parms.get_MW_g<RunOn::Device>() :
-                  fluid_parms.get_MW_g<RunOn::Host>();
+                MW_g_array(i,j,k) = fluid_parms.get_MW_g<run_on>();
               }
             });
           }
@@ -550,23 +544,19 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
               m_leveldata[lev]->X_gk->const_array(mfi) : dummy_arr;
 
             ParallelFor(bx, [cp_g_array,T_g_array,X_gk_array,fluid_parms,
-                fluid_is_a_mixture,nspecies_g,run_on_device]
+                fluid_is_a_mixture,nspecies_g]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               const Real Tg = T_g_array(i,j,k);
 
               if (!fluid_is_a_mixture) {
-                cp_g_array(i,j,k) = run_on_device ?
-                  fluid_parms.calc_cp_g<RunOn::Device>(Tg) :
-                  fluid_parms.calc_cp_g<RunOn::Host>(Tg);
+                cp_g_array(i,j,k) = fluid_parms.calc_cp_g<run_on>(Tg);
 
               } else {
                 Real cp_g_loc = 0;
 
                 for (int n_g(0); n_g < nspecies_g; ++n_g) {
-                  const Real cp_gk = run_on_device ?
-                    fluid_parms.calc_cp_gk<RunOn::Device>(Tg,n_g) :
-                    fluid_parms.calc_cp_gk<RunOn::Host>(Tg,n_g);
+                  const Real cp_gk = fluid_parms.calc_cp_gk<run_on>(Tg,n_g);
 
                   cp_g_loc += X_gk_array(i,j,k,n_g)*cp_gk;
                 }
@@ -756,15 +746,13 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
             Array4<Real const> const& T_g_array  = advect_enthalpy ?
               m_leveldata[lev]->T_g->const_array(mfi) : Array4<const Real>();
 
-            ParallelFor(bx, [cp_gk_array,T_g_array,nspecies_g,fluid_params,run_on_device]
+            ParallelFor(bx, [cp_gk_array,T_g_array,nspecies_g,fluid_params]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               for (int n(0); n < nspecies_g; ++n) {
                 const Real T_g = T_g_array(i,j,k);
 
-                cp_gk_array(i,j,k,n) = run_on_device ?
-                  fluid_params.calc_cp_gk<RunOn::Device>(T_g,n) :
-                  fluid_params.calc_cp_gk<RunOn::Host>(T_g,n);
+                cp_gk_array(i,j,k,n) = fluid_params.calc_cp_gk<run_on>(T_g,n);
               }
             });
           }
@@ -805,8 +793,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
 
             auto const& flags_arr = flags.const_array();
 
-            ParallelFor(bx, [h_gk_array,T_g_array,nspecies_g,fluid_params,
-                run_on_device,flags_arr]
+            ParallelFor(bx, [h_gk_array,T_g_array,nspecies_g,fluid_params,flags_arr]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -814,9 +801,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
               const Real Tg_loc = T_g_array(i,j,k);
 
               for (int n(0); n < nspecies_g; ++n)
-                h_gk_array(i,j,k,n) = run_on_device ?
-                  fluid_params.calc_h_gk<RunOn::Device>(Tg_loc, n, cell_is_covered) :
-                  fluid_params.calc_h_gk<RunOn::Host>(Tg_loc, n, cell_is_covered);
+                h_gk_array(i,j,k,n) = fluid_params.calc_h_gk<run_on>(Tg_loc, n, cell_is_covered);
             });
           }
 

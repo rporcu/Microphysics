@@ -36,13 +36,7 @@
 #include <mfix_reactions_parms.H>
 #include <mfix_leveldata.H>
 #include <mfix_mlmg_options.H>
-
-
-#ifdef AMREX_USE_GPU
-  static constexpr amrex::RunOn run_on = RunOn::Device;
-#else
-  static constexpr amrex::RunOn run_on = RunOn::Host;
-#endif
+#include <mfix_run_on.H>
 
 
 // Drag type enumeration

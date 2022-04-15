@@ -40,8 +40,6 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
                                     Vector< MultiFab const* > const& T_g,
                                     Vector< MultiFab const* > const& X_gk)
 {
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
-
   const int adv_enthalpy = advect_enthalpy;
   const int adv_fluid_species = solve_species;
   const int fluid_is_a_mixture = fluid.is_a_mixture;
@@ -77,7 +75,7 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
 
         amrex::ParallelFor(bx, [rhs_arr,h_RHS_arr,ro_g_arr,T_g_arr,X_gk_arr,
             X_RHS_arr,flags_arr,adv_enthalpy,fluid_is_a_mixture,nspecies_g,
-            fluid_parms,adv_fluid_species,run_on_device]
+            fluid_parms,adv_fluid_species]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -93,13 +91,9 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
           // set initial fluid molecular weight
           if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++) {
-              const Real MW_gk = run_on_device ?
-                fluid_parms.get_MW_gk<RunOn::Device>(n) :
-                fluid_parms.get_MW_gk<RunOn::Host>(n);
+              const Real MW_gk = fluid_parms.get_MW_gk<run_on>(n);
 
-              const Real cp_gk = run_on_device ?
-                fluid_parms.calc_cp_gk<RunOn::Device>(Tg_loc,n) :
-                fluid_parms.calc_cp_gk<RunOn::Host>(Tg_loc,n);
+              const Real cp_gk = fluid_parms.calc_cp_gk<run_on>(Tg_loc,n);
 
               MW_g_loc += X_gk_arr(i,j,k,n) / MW_gk;
               cp_g_loc += X_gk_arr(i,j,k,n) * cp_gk;
@@ -107,13 +101,9 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
             MW_g_loc = 1. / MW_g_loc;
           }
           else {
-            MW_g_loc = run_on_device ?
-              fluid_parms.get_MW_g<RunOn::Device>() :
-              fluid_parms.get_MW_g<RunOn::Host>();
+            MW_g_loc = fluid_parms.get_MW_g<run_on>();
 
-            cp_g_loc = run_on_device ?
-              fluid_parms.calc_cp_g<RunOn::Device>(Tg_loc) :
-              fluid_parms.calc_cp_g<RunOn::Host>(Tg_loc);
+            cp_g_loc = fluid_parms.calc_cp_g<run_on>(Tg_loc);
           }
 
           if (!flags_arr(i,j,k).isCovered()) {
@@ -123,16 +113,12 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
 
             if (fluid_is_a_mixture) {
               for (int n(0); n < nspecies_g; ++n) {
-                const Real MW_gk = run_on_device ?
-                  fluid_parms.get_MW_gk<RunOn::Device>(n) :
-                  fluid_parms.get_MW_gk<RunOn::Host>(n);
+                const Real MW_gk = fluid_parms.get_MW_gk<run_on>(n);
 
                 Real coeff = MW_g_loc / MW_gk;
 
                 if (adv_enthalpy) {
-                  const Real h_gk = run_on_device ?
-                    fluid_parms.calc_h_gk<RunOn::Device>(Tg_loc, n, cell_is_covered) :
-                    fluid_parms.calc_h_gk<RunOn::Host>(Tg_loc, n, cell_is_covered);
+                  const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_loc, n, cell_is_covered);
 
                   coeff -= h_gk / (cp_g_loc*Tg_loc);
                 }
@@ -143,9 +129,7 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
               Real coeff = 1.;
 
               if (adv_enthalpy) {
-                const Real h_g_loc = run_on_device ?
-                  fluid_parms.calc_h_g<RunOn::Device>(Tg_loc, cell_is_covered) :
-                  fluid_parms.calc_h_g<RunOn::Host>(Tg_loc, cell_is_covered);
+                const Real h_g_loc = fluid_parms.calc_h_g<run_on>(Tg_loc, cell_is_covered);
 
                 coeff -= h_g_loc / (cp_g_loc*Tg_loc);
               }
@@ -185,8 +169,6 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
                                       Vector< Real >& avgSigma,
                                       Vector< Real >& avgTheta)
 {
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
-
   Vector< MultiFab* > Sigma(finest_level+1);
   Vector< MultiFab* > Theta(finest_level+1);
 
@@ -235,7 +217,7 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
         const Real Tg0 = fluid.T_g0;
 
         ParallelFor(bx, [theta_arr,ep_g_arr,T_g_arr,X_gk_arr,pres_g_arr,
-            flags_arr,fluid_is_a_mixture,nspecies_g,fluid_parms,run_on_device,
+            flags_arr,fluid_is_a_mixture,nspecies_g,fluid_parms,
             adv_enthalpy,Tg0]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
@@ -247,13 +229,9 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
           // set initial fluid molecular weight
           if (fluid_is_a_mixture) {
             for (int n(0); n < nspecies_g; n++) {
-              const Real MW_gk = run_on_device ?
-                fluid_parms.get_MW_gk<RunOn::Device>(n) :
-                fluid_parms.get_MW_gk<RunOn::Host>(n);
+              const Real MW_gk = fluid_parms.get_MW_gk<run_on>(n);
 
-              const Real cp_gk = run_on_device ?
-                fluid_parms.calc_cp_gk<RunOn::Device>(Tg_loc,n) :
-                fluid_parms.calc_cp_gk<RunOn::Host>(Tg_loc,n);
+              const Real cp_gk = fluid_parms.calc_cp_gk<run_on>(Tg_loc,n);
 
               MW_g_loc += X_gk_arr(i,j,k,n) / MW_gk;
               cp_g_loc += X_gk_arr(i,j,k,n) * cp_gk;
@@ -262,13 +240,9 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
             MW_g_loc = 1. / MW_g_loc;
           }
           else {
-            MW_g_loc = run_on_device ?
-              fluid_parms.get_MW_g<RunOn::Device>() :
-              fluid_parms.get_MW_g<RunOn::Host>();
+            MW_g_loc = fluid_parms.get_MW_g<run_on>();
 
-            cp_g_loc = run_on_device ?
-              fluid_parms.calc_cp_g<RunOn::Device>(Tg_loc) :
-              fluid_parms.calc_cp_g<RunOn::Host>(Tg_loc);
+            cp_g_loc = fluid_parms.calc_cp_g<run_on>(Tg_loc);
           }
 
           if (!flags_arr(i,j,k).isCovered() && adv_enthalpy) {
