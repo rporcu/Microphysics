@@ -67,18 +67,19 @@ struct SoArealData
 struct runtimeRealData
 {
   runtimeRealData (const int nspecies_s,
+                   const int nspecies_g,
                    const int nreactions)
-    : X_sn(0)                                              // nb of components = nspecies
-    , mass_sn_txfr(X_sn + nspecies_s)                      // nb of components = nspecies
-    , vel_s_txfr(mass_sn_txfr + nspecies_s*(nreactions>0)) // nb of components = 3
-    , h_s_txfr(vel_s_txfr + 3*(nreactions>0))              // nb of components = 1
-    , count(h_s_txfr + 1*(nreactions>0))
+    : X_sn(0)                                                     // nb of components = nspecies
+    , species_txfr(X_sn + nspecies_s)                             // nb of components = nspecies
+    , vel_txfr(species_txfr + amrex::max(nspecies_s, nspecies_g)*(nreactions>0)) // nb of components = 3
+    , h_txfr(vel_txfr + 3*(nreactions>0))                         // nb of components = 1
+    , count(h_txfr + 1*(nreactions>0))
   {}
 
   const int X_sn;
-  const int mass_sn_txfr;
-  const int vel_s_txfr;
-  const int h_s_txfr;
+  const int species_txfr;
+  const int vel_txfr;
+  const int h_txfr;
   const int count;
 };
 
@@ -155,6 +156,7 @@ public:
 
     MFIXParticleContainer (amrex::AmrCore* amr_core,
                            SolidsPhase& solids,
+                           FluidPhase& fluid,
                            Reactions& reactions);
 
     virtual ~MFIXParticleContainer () {};

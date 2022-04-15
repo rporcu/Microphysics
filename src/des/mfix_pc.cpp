@@ -15,10 +15,12 @@ int  MFIXParticleContainer::domain_bc[6] {0};
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
                                               SolidsPhase& arg_solids,
+                                              FluidPhase& arg_fluid,
                                               Reactions& arg_reactions)
     : NeighborParticleContainer<AoSrealData::count,AoSintData::count,
                                 SoArealData::count,SoAintData::count>(amr_core->GetParGDB(), 1)
     , m_runtimeRealData(arg_solids.nspecies*arg_solids.solve_species,
+                        arg_fluid.nspecies*arg_fluid.solve_species,
                         arg_reactions.nreactions*arg_reactions.solve)
     , solids(arg_solids)
     , reactions(arg_reactions)
@@ -801,9 +803,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             const int nspecies_s = solids.nspecies;
 
             const int idx_X_sn = m_runtimeRealData.X_sn;
-            const int idx_mass_sn_txfr = m_runtimeRealData.mass_sn_txfr;
-            const int idx_vel_s_txfr = m_runtimeRealData.vel_s_txfr;
-            const int idx_h_s_txfr = m_runtimeRealData.h_s_txfr;
+            const int idx_mass_sn_txfr = m_runtimeRealData.species_txfr;
+            const int idx_vel_s_txfr = m_runtimeRealData.vel_txfr;
+            const int idx_h_s_txfr = m_runtimeRealData.h_txfr;
 
             const int local_update_mass = update_mass && solids.solve_species && reactions.solve;
             const int local_update_enthalpy = update_enthalpy && advect_enthalpy;

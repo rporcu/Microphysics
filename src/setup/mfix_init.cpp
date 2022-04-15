@@ -604,7 +604,7 @@ void mfix::Init (Real time)
      ***************************************************************************/
 
     if (DEM::solve || PIC::solve) {
-      pc = new MFIXParticleContainer(this, solids, reactions);
+      pc = new MFIXParticleContainer(this, solids, fluid, reactions);
       pc->setSortingBinSizes(IntVect(particle_sorting_bin));
     }
 

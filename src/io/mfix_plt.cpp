@@ -134,8 +134,7 @@ mfix::InitIOPltData ()
       int plt_ccse_regtest = 0;
       pp.query("plt_regtest", plt_ccse_regtest);
 
-      runtimeRealData rtData(solids.nspecies*solids.solve_species,
-                             reactions.nreactions*reactions.solve);
+      const runtimeRealData& rtData = pc->m_runtimeRealData;
 
       // Runtime-added variables
       const int size = AoSrealData::count + SoArealData::count + rtData.count;
@@ -218,7 +217,7 @@ mfix::InitIOPltData ()
           input_value = 0;
           pp.query("plt_mass_sn_txfr",   input_value );
 
-          const int start = gap + rtData.mass_sn_txfr;
+          const int start = gap + rtData.species_txfr;
           for(int n(0); n < solids.nspecies; ++n)
             write_real_comp[n+start] = input_value;
         }
@@ -228,7 +227,7 @@ mfix::InitIOPltData ()
           input_value = 0;
           pp.query("plt_vel_s_txfr",   input_value );
 
-          const int start = gap + rtData.vel_s_txfr;
+          const int start = gap + rtData.vel_txfr;
           for(int n(0); n < 3; ++n)
             write_real_comp[n+start] = input_value;
         }
@@ -238,7 +237,7 @@ mfix::InitIOPltData ()
           input_value = 0;
           pp.query("plt_h_s_txfr",   input_value );
 
-          const int start = gap + rtData.h_s_txfr;
+          const int start = gap + rtData.h_txfr;
           write_real_comp[start] = input_value;
         }
 

@@ -22,9 +22,9 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
     const int nreactions = reactions.nreactions;
 
     const int idx_X_sn = m_runtimeRealData.X_sn;
-    const int idx_mass_sn_txfr = m_runtimeRealData.mass_sn_txfr;
-    const int idx_vel_s_txfr = m_runtimeRealData.vel_s_txfr;
-    const int idx_h_s_txfr = m_runtimeRealData.h_s_txfr;
+    const int idx_mass_sn_txfr = m_runtimeRealData.species_txfr;
+    const int idx_vel_s_txfr = m_runtimeRealData.vel_txfr;
+    const int idx_h_s_txfr = m_runtimeRealData.h_txfr;
     const int idx_count = m_runtimeRealData.count;
 
     for (int idim = 0; idim < 3; ++idim)
