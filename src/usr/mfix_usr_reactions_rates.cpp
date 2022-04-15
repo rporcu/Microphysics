@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include <mfix_reactions_rates_K.H>
+#include <mfix_des_rrates_K.H>
 #include <mfix_species_parms.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_dem_parms.H>

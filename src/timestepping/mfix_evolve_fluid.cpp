@@ -215,6 +215,9 @@ mfix::EvolveFluid (int nstep,
           if (solve_species)
             std::swap(m_leveldata[lev]->X_gk, m_leveldata[lev]->X_gko);
 
+          if (reactions.solve)
+            std::swap(m_leveldata[lev]->pressure_g, m_leveldata[lev]->pressure_go);
+
           // User hooks
           for (MFIter mfi(*m_leveldata[lev]->ep_g, false); mfi.isValid(); ++mfi)
              mfix_usr2();
@@ -223,14 +226,9 @@ mfix::EvolveFluid (int nstep,
         // Calculate drag coefficient
         if (DEM::solve || PIC::solve) {
           Real start_drag = ParallelDescriptor::second();
-          mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g_old(),
-                               get_vel_g_old(), get_T_g_old(), get_X_gk_old(), time);
-
-          if (reactions.solve) {
-            mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g_old(),
-                                get_vel_g_old(), get_p_g_old(), get_T_g_old(),
-                                get_X_gk_old(), time);
-          }
+          mfix_calc_txfr_fluid(get_txfr(), get_chem_txfr(), get_ep_g(),
+                               get_ro_g_old(), get_vel_g_old(), get_T_g_old(),
+                               get_X_gk_old(), get_pressure_g_old(), time);
 
           coupling_timing += ParallelDescriptor::second() - start_drag;
         }
@@ -251,15 +249,9 @@ mfix::EvolveFluid (int nstep,
 
             Real start_drag = ParallelDescriptor::second();
             amrex::Print() << "\nRecalculating drag ..." << std::endl;
-            mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                                 get_T_g(), get_X_gk(), new_time);
-
-            // If !m_constraint_type == ConstraintType::IncompressibleFluid, then we have already
-            // updated the chemical quantities
-            if (reactions.solve && m_constraint_type == ConstraintType::IncompressibleFluid) {
-              mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                                  get_p_g(), get_T_g(), get_X_gk(), new_time);
-            }
+            mfix_calc_txfr_fluid(get_txfr(), get_chem_txfr(), get_ep_g(),
+                                 get_ro_g(), get_vel_g(), get_T_g(), get_X_gk(),
+                                 get_pressure_g(), new_time);
 
             coupling_timing += ParallelDescriptor::second() - start_drag;
           }

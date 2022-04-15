@@ -17,40 +17,34 @@ SolidsVolumeDeposition (int lev,
                         const MultiFab * volfrac,
                         const amrex::FabArray<EBCellFlagFab>* flags)
 {
-
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
 
-    SolidsVolumeDeposition(TrilinearDeposition(),
-                           lev, mf_to_be_filled, volfrac, flags);
+    SolidsVolumeDeposition(TrilinearDeposition(), lev, mf_to_be_filled, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::square_dpvm) {
 
-    SolidsVolumeDeposition(TrilinearDPVMSquareDeposition(),
-                           lev, mf_to_be_filled, volfrac, flags);
+    SolidsVolumeDeposition(TrilinearDPVMSquareDeposition(), lev, mf_to_be_filled, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::true_dpvm) {
 
-    SolidsVolumeDeposition(TrueDPVMDeposition(),
-                           lev, mf_to_be_filled, volfrac, flags);
+    SolidsVolumeDeposition(TrueDPVMDeposition(), lev, mf_to_be_filled, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::centroid) {
 
-    SolidsVolumeDeposition(CentroidDeposition(),
-                           lev, mf_to_be_filled, volfrac, flags);
+    SolidsVolumeDeposition(CentroidDeposition(), lev, mf_to_be_filled, volfrac, flags);
 
   } else {
 
     amrex::Abort("Don't know this deposition_scheme!");
 
   }
-
-
 }
 
 
 template <typename F>
 void MFIXParticleContainer::
-SolidsVolumeDeposition (F WeightFunc, int lev,
+SolidsVolumeDeposition (F WeightFunc,
+                        int lev,
                         MultiFab & mf_to_be_filled,
                         const MultiFab * volfrac,
                         const amrex::FabArray<EBCellFlagFab>* flags)
@@ -161,46 +155,46 @@ void MFIXParticleContainer::
 InterphaseTxfrDeposition (int lev,
                           MultiFab & mf_tmp_eps,
                           MultiFab & txfr_mf,
+                          MultiFab & chem_txfr_mf,
                           const MultiFab * volfrac,
                           const amrex::FabArray<EBCellFlagFab>* flags,
                           const int advect_enthalpy)
 {
-
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
 
     InterphaseTxfrDeposition(TrilinearDeposition(), lev, mf_tmp_eps, txfr_mf,
-        volfrac, flags, advect_enthalpy);
+                             chem_txfr_mf, volfrac, flags, advect_enthalpy);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::square_dpvm) {
 
     InterphaseTxfrDeposition(TrilinearDPVMSquareDeposition(), lev, mf_tmp_eps,
-        txfr_mf, volfrac, flags, advect_enthalpy);
+                             txfr_mf, chem_txfr_mf, volfrac, flags, advect_enthalpy);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::true_dpvm) {
 
     InterphaseTxfrDeposition(TrueDPVMDeposition(), lev, mf_tmp_eps, txfr_mf,
-        volfrac, flags, advect_enthalpy);
+                             chem_txfr_mf, volfrac, flags, advect_enthalpy);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::centroid) {
 
     InterphaseTxfrDeposition(CentroidDeposition(), lev, mf_tmp_eps, txfr_mf,
-        volfrac, flags, advect_enthalpy);
+                             chem_txfr_mf, volfrac, flags, advect_enthalpy);
 
   } else {
 
     amrex::Abort("Don't know this deposition_scheme!");
 
   }
-
 }
-
 
 
 template <typename F>
 void MFIXParticleContainer::
-InterphaseTxfrDeposition (F WeightFunc, int lev,
+InterphaseTxfrDeposition (F WeightFunc,
+                          int lev,
                           MultiFab & mf_tmp_eps,
                           MultiFab & txfr_mf,
+                          MultiFab & chem_txfr_mf,
                           const MultiFab * volfrac,
                           const amrex::FabArray<EBCellFlagFab>* flags,
                           const int advect_enthalpy)

@@ -101,13 +101,9 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   }
 
   if (DEM::solve || PIC::solve) {
-    mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                         get_T_g(), get_X_gk(), time);
-
-    if (reactions.solve) {
-      mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                          get_p_g(), get_T_g(), get_X_gk(), time);
-    }
+    mfix_calc_txfr_fluid(get_txfr(), get_chem_txfr(), get_ep_g(), get_ro_g(),
+                         get_vel_g(), get_T_g(), get_X_gk(), get_pressure_g(),
+                         time);
   }
 
   // Create temporary multifabs to hold conv and vel_RHS

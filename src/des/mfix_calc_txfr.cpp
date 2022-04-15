@@ -11,26 +11,30 @@
 #include <mfix_dem_parms.H>
 
 void
-mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
+mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
+                            Vector< MultiFab* > const& chem_txfr_out,
                             Vector< MultiFab* > const& ep_g_in,
                             Vector< MultiFab* > const& ro_g_in,
                             Vector< MultiFab* > const& vel_g_in,
                             Vector< MultiFab* > const& T_g_in,
                             Vector< MultiFab* > const& X_gk_in,
-                            Real time)
+                            Vector< MultiFab* > const& pressure_g_in,
+                            const Real time)
 {
   BL_PROFILE("mfix::mfix_calc_txfr_fluid()");
 
   const Real strttime = ParallelDescriptor::second();
 
-  mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in);
+  mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in);
 
   // ******************************************************************************
   // Now use the transfer coeffs of individual particles to create the
   // interphase transfer terms on the fluid
   // ******************************************************************************
-  for (int lev = 0; lev < nlev; lev++)
-    txfr[lev]->setVal(0);
+  for (int lev = 0; lev < nlev; lev++) {
+    txfr_out[lev]->setVal(0);
+    chem_txfr_out[lev]->setVal(0);
+  }
 
   if (nlev > 2)
     amrex::Abort("For right now"
@@ -38,6 +42,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
         " handle up to 2 levels");
 
   Vector< MultiFab* > txfr_ptr(nlev, nullptr);
+  Vector< MultiFab* > chem_txfr_ptr(nlev, nullptr);
 
   for (int lev = 0; lev < nlev; lev++) {
 
@@ -48,7 +53,8 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
 
       // If we are already working with the internal mf defined on the
       // particle_box_array, then we just work with this.
-      txfr_ptr[lev] = txfr[lev];
+      txfr_ptr[lev] = txfr_out[lev];
+      chem_txfr_ptr[lev] = chem_txfr_out[lev];
 
     } else if (lev == 0 && (!OnSameGrids)) {
 
@@ -56,24 +62,32 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
       // to make a temporary here and copy into beta_mf at the end.
       txfr_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                    pc->ParticleDistributionMap(lev),
-                                   txfr[lev]->nComp(),
-                                   txfr[lev]->nGrow());
+                                   txfr_out[lev]->nComp(),
+                                   txfr_out[lev]->nGrow());
+
+      chem_txfr_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                        pc->ParticleDistributionMap(lev),
+                                        chem_txfr_out[lev]->nComp(),
+                                        chem_txfr_out[lev]->nGrow());
 
     } else {
       // If lev > 0 we make a temporary at the coarse resolution
       BoxArray ba_crse(amrex::coarsen(pc->ParticleBoxArray(lev), this->m_gdb->refRatio(0)));
       txfr_ptr[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev),
-                                   txfr[lev]->nComp(), 1);
+                                   txfr_out[lev]->nComp(), 1);
+      chem_txfr_ptr[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev),
+                                        chem_txfr_out[lev]->nComp(), 1);
     }
 
     // We must have ghost cells for each FAB so that a particle in one grid can spread
     // its effect to an adjacent grid by first putting the value into ghost cells of its
     // own grid.  The mf->sumBoundary call then adds the value from one grid's ghost cell
     // to another grid's valid region.
-    if (txfr_ptr[lev]->nGrow() < 1)
+    if (txfr_ptr[lev]->nGrow() < 1 || chem_txfr_ptr[lev]->nGrow() < 1)
       amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
 
-    txfr_ptr[lev]->setVal(0.0, 0, txfr[lev]->nComp(), txfr_ptr[lev]->nGrow());
+    txfr_ptr[lev]->setVal(0.0, 0, txfr_out[lev]->nComp(), txfr_ptr[lev]->nGrow());
+    chem_txfr_ptr[lev]->setVal(0.0, 0, chem_txfr_out[lev]->nComp(), chem_txfr_ptr[lev]->nGrow());
   }
 
   const Geometry& gm = Geom(0);
@@ -109,8 +123,9 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
     // Deposit the interphase transfer forces to the grid
     // Drag force: (beta and beta*particle_vel)
     // Heat transfer: gamma and gamma*particle temperature
-    pc->InterphaseTxfrDeposition(lev, *tmp_eps[lev], *txfr_ptr[lev], volfrac[lev],
-        flags[lev], advect_enthalpy);
+    pc->InterphaseTxfrDeposition(lev, *tmp_eps[lev], *txfr_ptr[lev],
+                                 *chem_txfr_ptr[lev], volfrac[lev],
+                                 flags[lev], advect_enthalpy);
   }
 
   {
@@ -122,11 +137,15 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
     // Move any volume deposited outside the domain back into the domain
     // when BC is either a pressure inlet or mass inflow.
     mfix_deposition_bcs(lev, *txfr_ptr[lev]);
+    mfix_deposition_bcs(lev, *chem_txfr_ptr[lev]);
 
     // Sum grid boundaries to capture any material that was deposited into
     // your grid from an adjacent grid.
     txfr_ptr[lev]->SumBoundary(gm.periodicity());
     txfr_ptr[lev]->setBndry(0.0);
+
+    chem_txfr_ptr[lev]->SumBoundary(gm.periodicity());
+    chem_txfr_ptr[lev]->setBndry(0.0);
 
     // Sum grid boundaries then fill with correct ghost values.
     tmp_eps[lev]->SumBoundary(gm.periodicity());
@@ -138,10 +157,16 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
     mfix_redistribute_deposition(lev, *tmp_eps[lev], *txfr_ptr[lev], volfrac[lev], flags[lev],
                                  mfix::m_max_solids_volume_fraction);
 
+    mfix_redistribute_deposition(lev, *tmp_eps[lev], *chem_txfr_ptr[lev], volfrac[lev], flags[lev],
+                                 mfix::m_max_solids_volume_fraction);
+
     // Sum the boundaries again to recapture any solids moved across
     // grid boundaries during the redistribute
     txfr_ptr[lev]->SumBoundary(gm.periodicity());
     txfr_ptr[lev]->FillBoundary(gm.periodicity());
+
+    chem_txfr_ptr[lev]->SumBoundary(gm.periodicity());
+    chem_txfr_ptr[lev]->FillBoundary(gm.periodicity());
   }
 
   for (int lev(0); lev < nlev; ++lev) {
@@ -159,6 +184,9 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
 
   for (int lev = 1; lev < nlev; lev++) {
     txfr_ptr[0]->ParallelCopy(*txfr_ptr[lev], 0, 0, txfr_ptr[0]->nComp(), ng_to_copy,
+        ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
+    
+    chem_txfr_ptr[0]->ParallelCopy(*chem_txfr_ptr[lev], 0, 0, chem_txfr_ptr[0]->nComp(), ng_to_copy,
         ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
   }
 
@@ -178,8 +206,16 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
 
       PhysBCFunct<BndryFuncArray> cphysbc(Geom(lev-1), bcs, bfunc);
       PhysBCFunct<BndryFuncArray> fphysbc(Geom(lev  ), bcs, bfunc);
-      txfr[lev]->setVal(0);
-      amrex::InterpFromCoarseLevel(*txfr[lev], time, *txfr_ptr[lev-1],
+
+      txfr_out[lev]->setVal(0);
+      amrex::InterpFromCoarseLevel(*txfr_out[lev], time, *txfr_ptr[lev-1],
+                                   0, 0, 1, Geom(lev-1), Geom(lev),
+                                   cphysbc, 0, fphysbc, 0,
+                                   ref_ratio[0], mapper,
+                                   bcs, 0);
+
+      chem_txfr_out[lev]->setVal(0);
+      amrex::InterpFromCoarseLevel(*chem_txfr_out[lev], time, *chem_txfr_ptr[lev-1],
                                    0, 0, 1, Geom(lev-1), Geom(lev),
                                    cphysbc, 0, fphysbc, 0,
                                    ref_ratio[0], mapper,
@@ -191,13 +227,19 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
   // to copy here from txfr_ptr into mf_to_be_filled. I believe that we don't
   // need any information in ghost cells so we don't copy those.
 
-  if (txfr_ptr[0] != txfr[0]) {
-    txfr[0]->ParallelCopy(*txfr_ptr[0], 0, 0, txfr[0]->nComp());
+  if (txfr_ptr[0] != txfr_out[0]) {
+    txfr_out[0]->ParallelCopy(*txfr_ptr[0], 0, 0, txfr_out[0]->nComp());
+  }
+
+  if (chem_txfr_ptr[0] != chem_txfr_out[0]) {
+    chem_txfr_out[0]->ParallelCopy(*chem_txfr_ptr[0], 0, 0, chem_txfr_out[0]->nComp());
   }
 
   for (int lev = 0; lev < nlev; lev++) {
-    if (txfr_ptr[lev] != txfr[lev])
+    if (txfr_ptr[lev] != txfr_out[lev]) {
       delete txfr_ptr[lev];
+      delete chem_txfr_ptr[lev];
+    }
   }
 
   if (m_verbose > 1) {
@@ -210,13 +252,16 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
 
   if(mfix::m_deposition_diffusion_coeff > 0.) {
     // Apply mean field diffusion to drag force
-    diffusion_op->diffuse_drag(txfr, mfix::m_deposition_diffusion_coeff);
+    diffusion_op->diffuse_drag(txfr_out, mfix::m_deposition_diffusion_coeff);
   }
 
   // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
-  for (int lev = 0; lev < nlev; lev++)
-    txfr[lev]->FillBoundary(geom[lev].periodicity());
+  for (int lev = 0; lev < nlev; lev++) {
+    txfr_out[lev]->FillBoundary(geom[lev].periodicity());
+    chem_txfr_out[lev]->FillBoundary(geom[lev].periodicity());
+  }
 }
+
 
 void
 mfix::mfix_calc_txfr_particle (Real time,
@@ -361,179 +406,156 @@ mfix::mfix_calc_txfr_particle (Real time,
         const EBFArrayBox&  interp_fab = static_cast<EBFArrayBox const&>((*interp_ptr)[pti]);
         const EBCellFlagFab&  flags = interp_fab.getEBCellFlagFab();
 
-        if (flags.getType(amrex::grow(bx,0)) != FabType::covered)
-        {
+        if (flags.getType(amrex::grow(bx,0)) != FabType::covered) {
+
           const auto& interp_array = interp_ptr->array(pti);
 
           const auto& flags_array = flags.array();
+
+          const int grown_bx_is_regular = (flags.getType(amrex::grow(bx,1)) == FabType::regular);
+
+          const Array4<const Real> empty_array;
+
+          // Cell centroids
+          const auto& ccent_fab = grown_bx_is_regular ? empty_array : cellcent->const_array(pti);
+          // Centroid of EB
+          const auto& bcent_fab = grown_bx_is_regular ? empty_array : bndrycent->const_array(pti);
+          // Area fractions
+          const auto& apx_fab = grown_bx_is_regular ? empty_array : areafrac[0]->const_array(pti);
+          const auto& apy_fab = grown_bx_is_regular ? empty_array : areafrac[1]->const_array(pti);
+          const auto& apz_fab = grown_bx_is_regular ? empty_array : areafrac[2]->const_array(pti);
+
+          const int dem_solve = DEM::solve;
+
+          const int l_advect_enthalpy = advect_enthalpy;
 
           // We need this until we remove static attribute from mfix::gp0;
           const RealVect gp0_dev(gp0);
 
           const Real pmult = DEM::solve ? 1.0 : 0.0;
 
-          if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
+          amrex::ParallelFor(np,
+              [pstruct,p_realarray,interp_array,gp0_dev,plo,dxi,pmult,dx,
+               l_advect_enthalpy,ccent_fab,bcent_fab,apx_fab,apy_fab,apz_fab,
+               flags_array,grown_bx_is_regular]
+            AMREX_GPU_DEVICE (int p_id) noexcept
           {
-            amrex::ParallelFor(np,
-              [pstruct,p_realarray,interp_array,gp0_dev,plo,dxi,pmult,
-              local_advect_enthalpy=advect_enthalpy]
-              AMREX_GPU_DEVICE (int pid) noexcept
-              {
-                // Local array storing interpolated values
-                GpuArray<Real, interp_comp> interp_loc;
+            auto& particle = pstruct[p_id];
 
-                MFIXParticleContainer::ParticleType& particle = pstruct[pid];
+            // Cell containing particle centroid
+            int ip = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0]));
+            int jp = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1]));
+            int kp = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2]));
+
+            const int cell_is_covered = static_cast<int>(flags_array(ip,jp,kp).isCovered());
+
+            if (cell_is_covered) {
+
+              p_realarray[SoArealData::dragx][p_id] = 0.0;
+              p_realarray[SoArealData::dragy][p_id] = 0.0;
+              p_realarray[SoArealData::dragz][p_id] = 0.0;
+
+              p_realarray[SoArealData::convection][p_id] = 0.0;
+
+            } else {
+
+              // Local array storing interpolated values
+              GpuArray<Real, interp_comp> interp_loc;
+
+              MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
+
+              if (grown_bx_is_regular) {
 
                 trilinear_interp(particle.pos(), &interp_loc[0],
                                  interp_array, plo, dxi, interp_comp);
 
-                Real pbeta = p_realarray[SoArealData::dragcoeff][pid];
-                Real pvol = p_realarray[SoArealData::volume][pid];
+              } else {
 
-                // Particle drag calculation.  We multiply the particle velocity
-                // by "pmult" so that DEM uses the slip velocity. For PIC we
-                // only want the fluid velocity as it uses a pseudo implicit
-                // slip velocity for parcels.
-                p_realarray[SoArealData::dragx][pid] =
-                  pbeta * ( interp_loc[0] - pmult*p_realarray[SoArealData::velx][pid] ) -
-                  (interp_loc[3] + gp0_dev[0]) * pvol;
+                // Cut or regular cell and none of the cells in the stencil is
+                // covered (Note we can't assume regular cell has no covered
+                // cells in the stencil because of the diagonal case)
 
-                p_realarray[SoArealData::dragy][pid] =
-                  pbeta * ( interp_loc[1] - pmult*p_realarray[SoArealData::vely][pid] ) -
-                  (interp_loc[4] + gp0_dev[1]) * pvol;
+                // Upper cell in stencil
+                int i = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0] + 0.5));
+                int j = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1] + 0.5));
+                int k = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5));
 
-                p_realarray[SoArealData::dragz][pid] =
-                  pbeta * ( interp_loc[2] - pmult*p_realarray[SoArealData::velz][pid] ) -
-                  (interp_loc[5] + gp0_dev[2]) * pvol;
+                // All cells in the stencil are regular. Use traditional
+                // trilinear interpolation
+                if (flags_array(i-1,j-1,k-1).isRegular() &&
+                    flags_array(i  ,j-1,k-1).isRegular() &&
+                    flags_array(i-1,j  ,k-1).isRegular() &&
+                    flags_array(i  ,j  ,k-1).isRegular() &&
+                    flags_array(i-1,j-1,k  ).isRegular() &&
+                    flags_array(i  ,j-1,k  ).isRegular() &&
+                    flags_array(i-1,j  ,k  ).isRegular() &&
+                    flags_array(i  ,j  ,k  ).isRegular()) {
 
-                if(local_advect_enthalpy) {
-                  Real pgamma = p_realarray[SoArealData::convection][pid];
-                  p_realarray[SoArealData::convection][pid] =
-                    pgamma * ( interp_loc[6] - p_realarray[SoArealData::temperature][pid] );
-                }
+                  trilinear_interp(particle.pos(), &interp_loc[0],
+                                   interp_array, plo, dxi, interp_comp);
 
-              });
-          }
-          else // FAB not all regular
-          {
-
-            // Cell centroids
-            const auto& ccent_fab = cellcent->array(pti);
-            // Centroid of EB
-            const auto& bcent_fab = bndrycent->array(pti);
-            // Area fractions
-            const auto& apx_fab = areafrac[0]->array(pti);
-            const auto& apy_fab = areafrac[1]->array(pti);
-            const auto& apz_fab = areafrac[2]->array(pti);
-
-            amrex::ParallelFor(np,
-              [pstruct,p_realarray,interp_array,flags_array,gp0_dev, pmult,
-              plo,dx,dxi,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-              local_advect_enthalpy=advect_enthalpy]
-              AMREX_GPU_DEVICE (int pid) noexcept
-              {
-                // Local array storing interpolated values
-                GpuArray<Real, interp_comp> interp_loc;
-
-                MFIXParticleContainer::ParticleType& particle = pstruct[pid];
-                Real pbeta = p_realarray[SoArealData::dragcoeff][pid];
-
-                // Cell containing particle centroid
-                const int ip = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0]));
-                const int jp = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1]));
-                const int kp = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2]));
-
-                // The particle is in a covered cell.
-                if (flags_array(ip,jp,kp).isCovered())
-                {
-                  p_realarray[SoArealData::dragx][pid] = 0.0;
-                  p_realarray[SoArealData::dragy][pid] = 0.0;
-                  p_realarray[SoArealData::dragz][pid] = 0.0;
-
-                // Cut or regular cell and none of the cells in the stencil is covered
-                // (Note we can't assume regular cell has no covered cells in the stencil
-                //      because of the diagonal case)
+                // At least one of the cells in the stencil is cut or covered
                 } else {
-
-                  // Upper cell in trilinear stencil
-                  const int i = static_cast<int>(amrex::Math::floor((particle.pos(0) - plo[0])*dxi[0] + 0.5));
-                  const int j = static_cast<int>(amrex::Math::floor((particle.pos(1) - plo[1])*dxi[1] + 0.5));
-                  const int k = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2] + 0.5));
-
-                  // All cells in the stencil are regular. Use
-                  // traditional trilinear interpolation
-                  if (flags_array(i-1,j-1,k-1).isRegular() &&
-                      flags_array(i  ,j-1,k-1).isRegular() &&
-                      flags_array(i-1,j  ,k-1).isRegular() &&
-                      flags_array(i  ,j  ,k-1).isRegular() &&
-                      flags_array(i-1,j-1,k  ).isRegular() &&
-                      flags_array(i  ,j-1,k  ).isRegular() &&
-                      flags_array(i-1,j  ,k  ).isRegular() &&
-                      flags_array(i  ,j  ,k  ).isRegular()) {
-
-                    trilinear_interp(particle.pos(), &interp_loc[0],
-                                     interp_array, plo, dxi, interp_comp);
-
-                  // At least one of the cells in the stencil is cut or covered
-                  } else {
 #if 0
-                    // TODO: This was initially split for variables that may have known
-                    // EB values (e.g., no-slip velocity). However, the results changed
-                    // more than expected so now EB values are not used.
-                    {
-                      const int srccomp = 0;
-                      const int dstcomp = 0;
-                      const int numcomp = 3;
-
-                      shepard_interp_eb(particle.pos(), ip, jp, kp, dx, dxi, plo,
-                                        flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-                                        interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
-                    }
-                    {
-                      const int srccomp = 3;
-                      const int dstcomp = 3;
-                      const int numcomp = interp_comp-3;
-
-                      shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
-                                     flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-                                     interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
-                    }
-#else
+                  // TODO: This was initially split for variables that may have known
+                  // EB values (e.g., no-slip velocity). However, the results changed
+                  // more than expected so now EB values are not used.
+                  {
                     const int srccomp = 0;
                     const int dstcomp = 0;
-                    const int numcomp = interp_comp;
+                    const int numcomp = 3;
+
+                    shepard_interp_eb(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                                      flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                                      interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+                  }
+                  {
+                    const int srccomp = 3;
+                    const int dstcomp = 3;
+                    const int numcomp = interp_comp-3;
 
                     shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
                                    flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
                                    interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
-#endif
-                  } // Cut cell
-
-                  Real pvol = p_realarray[SoArealData::volume][pid];
-
-                  p_realarray[SoArealData::dragx][pid] =
-                    pbeta * ( interp_loc[0] - pmult*p_realarray[SoArealData::velx][pid] ) -
-                    (interp_loc[3] + gp0_dev[0]) * pvol;
-
-                  p_realarray[SoArealData::dragy][pid] =
-                    pbeta * ( interp_loc[1] - pmult*p_realarray[SoArealData::vely][pid] ) -
-                    (interp_loc[4] + gp0_dev[1]) * pvol;
-
-                  p_realarray[SoArealData::dragz][pid] =
-                    pbeta * ( interp_loc[2] - pmult*p_realarray[SoArealData::velz][pid] ) -
-                    (interp_loc[5] + gp0_dev[2]) * pvol;
-
-                  if(local_advect_enthalpy) {
-                    // gamma == (heat transfer coeff) * (particle surface area)
-                    Real pgamma = p_realarray[SoArealData::convection][pid];
-
-                    p_realarray[SoArealData::convection][pid] =
-                      pgamma * ( interp_loc[6] - p_realarray[SoArealData::temperature][pid] );
                   }
+#else
+                  const int srccomp = 0;
+                  const int dstcomp = 0;
+                  const int numcomp = interp_comp;
 
-                } // Not covered
-              }); // particle loop
-          } // if box not all regular
+                  shepard_interp(particle.pos(), ip, jp, kp, dx, dxi, plo,
+                                 flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                                 interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+#endif
+                } // Cut cell
+              }
+
+              Real pbeta = p_realarray[SoArealData::dragcoeff][p_id];
+              Real pvol = p_realarray[SoArealData::volume][p_id];
+
+              // Particle drag calculation.  We multiply the particle velocity
+              // by "pmult" so that DEM uses the slip velocity. For PIC we
+              // only want the fluid velocity as it uses a pseudo implicit
+              // slip velocity for parcels.
+              p_realarray[SoArealData::dragx][p_id] =
+                pbeta * ( interp_loc[0] - pmult*p_realarray[SoArealData::velx][p_id] ) -
+                (interp_loc[3] + gp0_dev[0]) * pvol;
+
+              p_realarray[SoArealData::dragy][p_id] =
+                pbeta * ( interp_loc[1] - pmult*p_realarray[SoArealData::vely][p_id] ) -
+                (interp_loc[4] + gp0_dev[1]) * pvol;
+
+              p_realarray[SoArealData::dragz][p_id] =
+                pbeta * ( interp_loc[2] - pmult*p_realarray[SoArealData::velz][p_id] ) -
+                (interp_loc[5] + gp0_dev[2]) * pvol;
+
+              if(l_advect_enthalpy) {
+                Real pgamma = p_realarray[SoArealData::convection][p_id];
+                p_realarray[SoArealData::convection][p_id] =
+                  pgamma * ( interp_loc[6] - p_realarray[SoArealData::temperature][p_id] );
+              }
+            }
+          });
         } // FAB not covered
       } // pti
     } // omp region

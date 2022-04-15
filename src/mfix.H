@@ -408,6 +408,7 @@ class mfix : public AmrCore
                                     Vector< MultiFab* > const& vel_g_in,
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
+                                    Vector< MultiFab* > const& pressure_g_in,
                                     F1 DragFunc);
 
     template <typename F1, typename F2>
@@ -416,8 +417,20 @@ class mfix : public AmrCore
                                     Vector< MultiFab* > const& vel_g_in,
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
+                                    Vector< MultiFab* > const& pressure_g_in,
                                     F1 DragFunc,
                                     F2 ConvectionCoeff);
+
+    template <typename F1, typename F2, typename F3>
+    void mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
+                                    Vector< MultiFab* > const& ro_g_in,
+                                    Vector< MultiFab* > const& vel_g_in,
+                                    Vector< MultiFab* > const& T_g_in,
+                                    Vector< MultiFab* > const& X_gk_in,
+                                    Vector< MultiFab* > const& pressure_g_in,
+                                    F1 DragFunc,
+                                    F2 ConvectionCoeff,
+                                    F3 HeterogeneousRRates);
 
     void mfix_calc_volume_fraction (Real & sum_vol);
 
@@ -713,14 +726,17 @@ public:
                                     Vector< MultiFab* > const& ro_g_in,
                                     Vector< MultiFab* > const& vel_g_in,
                                     Vector< MultiFab* > const& T_g_in,
-                                    Vector< MultiFab* > const& X_gk_in);
+                                    Vector< MultiFab* > const& X_gk_in,
+                                    Vector< MultiFab* > const& pressure_g_in);
 
-    void mfix_calc_txfr_fluid (Vector<MultiFab*> const& txfr,
+    void mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
+                               Vector< MultiFab* > const& chem_txfr_out,
                                Vector< MultiFab* > const& ep_g_in,
                                Vector< MultiFab* > const& ro_g_in,
                                Vector< MultiFab* > const& vel_g_in,
                                Vector< MultiFab* > const& T_g_in,
                                Vector< MultiFab* > const& X_gk_in,
+                               Vector< MultiFab* > const& pressure_g_in,
                                Real time);
 
   public:
