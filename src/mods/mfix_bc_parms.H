@@ -21,6 +21,10 @@ namespace BC
 {
 
   struct BC_t {
+    // Constructor
+    BC_t (const FluidPhase& fluid_phase) :
+      fluid(fluid_phase.constraint_type, fluid_phase.nspecies, fluid_phase.parameters)
+    {}
 
     // BC type (mi, pi, po, nsw, eb)
     int type;

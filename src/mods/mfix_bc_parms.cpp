@@ -155,7 +155,7 @@ namespace BC
 
       amrex::Real volfrac_total(0.0);
 
-      BC_t new_bc;
+      BC_t new_bc(fluid);
 
       // Set the region for the initial condition.
       new_bc.region = REGIONS::getRegion(regions[bcv]);
@@ -436,51 +436,13 @@ namespace BC
           if(new_bc.type == minf_ || new_bc.type == pinf_ ||
              (new_bc.type == eb_ && new_bc.fluid.flow_thru_eb)) {
 
-            const int nspecies_g = fluid.nspecies;
-
             const int sum_defined = int(new_bc.fluid.density_defined) +
                                     int(new_bc.fluid.temperature_defined) +
                                     int(new_bc.fluid.thermodynamic_pressure_defined);
 
-            const int prod_defined = int(new_bc.fluid.density_defined) *
-                                     int(new_bc.fluid.temperature_defined) *
-                                     int(new_bc.fluid.thermodynamic_pressure_defined);
-
-            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(sum_defined == 2 && prod_defined == 0,
+            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(sum_defined == 2,
                 "Boundary conditions inputs must provide exactly two quantities"
                 " among fluid temperature, density, and thermodynamic pressure");
-
-            {
-              auto& fluid_parms = *fluid.parameters;
-              amrex::Real MW_g(0.);
-
-              for (int n(0); n < nspecies_g; n++) {
-                MW_g += new_bc.fluid.species[n].mass_fraction /
-                  fluid_parms.get_MW_gk<amrex::RunOn::Host>(n);
-              }
-
-              MW_g = 1./MW_g;
-
-              if (new_bc.fluid.density_defined && new_bc.fluid.temperature_defined) {
-
-                new_bc.fluid.thermodynamic_pressure = (new_bc.fluid.density *
-                    fluid_parms.R * new_bc.fluid.temperature) / MW_g;
-
-              } else if (new_bc.fluid.density_defined && new_bc.fluid.thermodynamic_pressure_defined) {
-
-                new_bc.fluid.temperature = (new_bc.fluid.thermodynamic_pressure *
-                    MW_g) / (fluid_parms.R * new_bc.fluid.density);
-
-              } else if (new_bc.fluid.temperature_defined && new_bc.fluid.thermodynamic_pressure_defined) {
-
-                new_bc.fluid.density = (new_bc.fluid.thermodynamic_pressure *
-                    MW_g) / (fluid_parms.R * new_bc.fluid.temperature);
-
-              } else {
-                amrex::Abort("How did we arrive here?");
-              }
-            }
-
           }
 
         }
