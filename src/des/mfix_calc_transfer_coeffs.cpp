@@ -108,8 +108,6 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
   BL_PROFILE("mfix::mfix_calc_transfer_coeff()");
 
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
-
   //***************************************************************************
   // Data for chemical reactions
   //***************************************************************************
@@ -147,6 +145,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
   // Particles SoA starting indexes for mass fractions and rate of formations
   const int idx_X_sn   = (pc->m_runtimeRealData).X_sn;
+  const int idx_X_txfr = (pc->m_runtimeRealData).species_txfr;
   const int idx_h_txfr = (pc->m_runtimeRealData).h_txfr;
 
   auto& reactions_parms = *reactions.parameters;
@@ -370,8 +369,8 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
               [pstruct,p_realarray,interp_array,DragFunc,ConvectionCoeff,
                HeterogeneousRRates,plo,dxi,adv_enthalpy,fluid_is_a_mixture,
                mu_g0,fluid_parms,nspecies_g,interp_comp,local_cg_dem,
-               run_on_device,ptile_data,nreactions,nspecies_s,
-               Solid,idx_X_sn,idx_h_txfr,p_MW_gk,p_species_id_g,
+               ptile_data,nreactions,nspecies_s,
+               Solid,idx_X_sn,idx_X_txfr,idx_h_txfr,p_MW_gk,p_species_id_g,
                p_reactants_id,p_reactants_coeffs,p_reactants_phases,
                p_products_id,p_products_coeffs,p_products_phases,p_nreactants,
                p_nproducts,InvalidIdx,p_phases,p_nphases,p_types,Heterogeneous,
@@ -532,14 +531,10 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
               Real cp_g(0.);
               if (!fluid_is_a_mixture)
-                cp_g = run_on_device ?
-                  fluid_parms.calc_cp_g<RunOn::Device>(T_g) :
-                  fluid_parms.calc_cp_g<RunOn::Host>(T_g);
+                cp_g = fluid_parms.calc_cp_g<run_on>(T_g);
               else {
                 for (int n_g(0); n_g < nspecies_g; ++n_g) {
-                  cp_g += run_on_device ?
-                    X_gk[n_g]*fluid_parms.calc_cp_gk<RunOn::Device>(T_g,n_g) :
-                    X_gk[n_g]*fluid_parms.calc_cp_gk<RunOn::Host>(T_g,n_g);
+                  cp_g += X_gk[n_g]*fluid_parms.calc_cp_gk<run_on>(T_g,n_g);
                 }
               }
 
@@ -570,23 +565,13 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
               const Real T_p = p_realarray[SoArealData::temperature][p_id];
               const Real DP  = 2. * p_realarray[SoArealData::radius][p_id];
 
-              if (run_on_device) {
-                HeterogeneousRRates.template operator()<RunOn::Device>(R_q_heterogeneous.data(),
-                                                                       reactions_parms,
-                                                                       solids_parms, X_sn.data(),
-                                                                       ro_p, ep_s, T_p,
-                                                                       pvel, fluid_parms,
-                                                                       X_gk, ro_g, ep_g, T_g,
-                                                                       vel_g, DP, p_g);
-              } else {
-                HeterogeneousRRates.template operator()<RunOn::Host>(R_q_heterogeneous.data(),
-                                                                     reactions_parms,
-                                                                     solids_parms, X_sn.data(),
-                                                                     ro_p, ep_s, T_p,
-                                                                     pvel, fluid_parms,
-                                                                     X_gk, ro_g, ep_g, T_g,
-                                                                     vel_g, DP, p_g);
-              }
+              HeterogeneousRRates.template operator()<run_on>(R_q_heterogeneous.data(),
+                                                              reactions_parms,
+                                                              solids_parms, X_sn.data(),
+                                                              ro_p, ep_s, T_p,
+                                                              pvel, fluid_parms,
+                                                              X_gk, ro_g, ep_g, T_g,
+                                                              vel_g, DP, p_g);
 
               // Total transfer rates
               Real G_m_g_heterogeneous(0.);
@@ -636,13 +621,8 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                     G_m_gk_heterogeneous += G_m_gk_q;
 
                     // Contribution to the particle
-                    const Real h_gk_T_p = run_on_device ?
-                      fluid_parms.calc_h_gk<RunOn::Device>(T_p, n_g) :
-                      fluid_parms.calc_h_gk<RunOn::Host>(T_p, n_g);
-
-                    const Real h_gk_T_g = run_on_device ?
-                      fluid_parms.calc_h_gk<RunOn::Device>(T_g, n_g) :
-                      fluid_parms.calc_h_gk<RunOn::Host>(T_g, n_g);
+                    const Real h_gk_T_p = fluid_parms.calc_h_gk<run_on>(T_p, n_g);
+                    const Real h_gk_T_g = fluid_parms.calc_h_gk<run_on>(T_g, n_g);
 
                     const Real G_H_pk_q = h_gk_T_g * amrex::min(0., G_m_gk_q);
                     const Real G_H_gk_q = h_gk_T_p * amrex::max(0., G_m_gk_q);

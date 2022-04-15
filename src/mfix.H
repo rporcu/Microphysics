@@ -37,6 +37,14 @@
 #include <mfix_leveldata.H>
 #include <mfix_mlmg_options.H>
 
+
+#ifdef AMREX_USE_GPU
+  static constexpr amrex::RunOn run_on = RunOn::Device;
+#else
+  static constexpr amrex::RunOn run_on = RunOn::Host;
+#endif
+
+
 // Drag type enumeration
 struct DragType { enum {Invalid=-1, WenYu, Gidaspow, BVK2, UserDrag}; };
 
