@@ -14,7 +14,6 @@ int              mfix::knapsack_nmax        = 128;
 int              mfix::greedy_dir           = 0;
 int              mfix::m_drag_type          = DragType::Invalid;
 int              mfix::m_convection_type    = ConvectionType::Invalid;
-int              mfix::m_constraint_type    = ConstraintType::IncompressibleFluid;
 int              mfix::m_advection_type     = AdvectionType::Invalid;
 DepositionScheme mfix::m_deposition_scheme;
 int              mfix::m_reaction_rates_type = ReactionRatesType::RRatesUser;
@@ -277,22 +276,22 @@ Vector< MultiFab* > mfix::get_p_g_old () noexcept
   return r;
 }
 
-Vector< MultiFab* > mfix::get_pressure_g () noexcept
+Vector< MultiFab* > mfix::get_thermodynamic_p_g () noexcept
 {
   Vector<MultiFab*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->pressure_g);
+    r.push_back(m_leveldata[lev]->thermodynamic_p_g);
   }
   return r;
 }
 
-Vector< MultiFab* > mfix::get_pressure_g_old () noexcept
+Vector< MultiFab* > mfix::get_thermodynamic_p_g_old () noexcept
 {
   Vector<MultiFab*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->pressure_go);
+    r.push_back(m_leveldata[lev]->thermodynamic_p_go);
   }
   return r;
 }
@@ -568,22 +567,22 @@ Vector< MultiFab const*> mfix::get_h_g_old_const () const noexcept
   return r;
 }
 
-Vector< MultiFab const*> mfix::get_pressure_g_const () const noexcept
+Vector< MultiFab const*> mfix::get_thermodynamic_p_g_const () const noexcept
 {
   Vector<MultiFab const*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->pressure_g);
+    r.push_back(m_leveldata[lev]->thermodynamic_p_g);
   }
   return r;
 }
 
-Vector< MultiFab const*> mfix::get_pressure_g_old_const () const noexcept
+Vector< MultiFab const*> mfix::get_thermodynamic_p_g_old_const () const noexcept
 {
   Vector<MultiFab const*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->pressure_go);
+    r.push_back(m_leveldata[lev]->thermodynamic_p_go);
   }
   return r;
 }

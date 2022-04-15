@@ -32,12 +32,13 @@ geometry.is_periodic = 1        0       1        # Is periodic in each direction
 geometry.prob_lo     = 0.       0.      0.       # lo corner of physical domain
 geometry.prob_hi     = 0.0015   0.0015  0.0015   # hi corner of physical domain
 
-
 mfix.drag_type = "BVK2"
 mfix.gravity   =  0.0  -9.80665  0.0
 
-mfix.advect_enthalpy      = 1
-mfix.solve_species = 1
+mfix.advect_enthalpy = 1
+mfix.solve_species   = 1
+mfix.constraint_type = IncompressibleFluid
+
 
 #_______________________________________________________________________
 # Fluid model settings
@@ -57,14 +58,10 @@ species.H2O.specific_heat.constant = 918
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
-#fluid.specific_heat          = constant
-#fluid.specific_heat.constant = 918  ## Oxygen
+fluid.specific_heat = mixture
 
 fluid.thermal_conductivity          = constant
 fluid.thermal_conductivity.constant = 0.024  ## Oxygen
@@ -135,14 +132,17 @@ ic.full-domain.fluid.velocity    = 0.0  0.0  0.0
 ic.full-domain.fluid.temperature = 400
 ic.full-domain.fluid.species.CO  = 0.6
 ic.full-domain.fluid.species.H2O = 0.4
+ic.full-domain.fluid.density     = 1.0
 ic.full-domain.solids = solid0
 ic.full-domain.solid0.temperature = 400
+
 
 ic.sub-domain.fluid.volfrac     = 1.0
 ic.sub-domain.fluid.velocity    = 0.0  0.0  0.0
 ic.sub-domain.fluid.temperature = 800
 ic.sub-domain.fluid.species.CO  = 0.6
 ic.sub-domain.fluid.species.H2O = 0.4
+ic.sub-domain.fluid.density     = 1.0
 ic.sub-domain.solids = solid0
 ic.sub-domain.solid0.temperature = 800
 

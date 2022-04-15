@@ -155,7 +155,7 @@ namespace BC
 
       amrex::Real volfrac_total(0.0);
 
-      BC_t new_bc;
+      BC_t new_bc(fluid);
 
       // Set the region for the initial condition.
       new_bc.region = REGIONS::getRegion(regions[bcv]);
@@ -396,6 +396,9 @@ namespace BC
           amrex::Abort("Fix the inputs file!");
         }
 
+        // Read in fluid density
+        read_bc_density(ppFluid, &new_bc.fluid);
+
         if( new_bc.type == minf_ || new_bc.type == pinf_ ||
               (new_bc.type == eb_ && new_bc.fluid.flow_thru_eb) ) {
           if (fluid.solve_enthalpy) {
@@ -406,6 +409,42 @@ namespace BC
           if (fluid.solve_species) {
             read_bc_species(ppFluid, fluid.species, &new_bc.fluid);
           }
+        }
+
+        if (fluid.constraint_type == ConstraintType::IncompressibleFluid) {
+
+          if(( new_bc.type == minf_ || new_bc.type == pinf_ ) && (!new_bc.fluid.density_defined)) {
+            amrex::Print() << "Density BCs must have density defined!" << std::endl;
+            amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+            amrex::Abort("Fix the inputs file!");
+          }
+
+        } else if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
+                   fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
+
+          // Read in fluid pressure
+          read_bc_thermodynamic_pressure(ppFluid, &new_bc.fluid);
+
+          if((new_bc.type == pinf_ || new_bc.type == pout_) &&
+             (!new_bc.fluid.thermodynamic_pressure_defined) &&
+             fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
+            amrex::Print() << "Pressure BCs must have pressure defined!" << std::endl;
+            amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+            amrex::Abort("Fix the inputs file!");
+          }
+
+          if(new_bc.type == minf_ || new_bc.type == pinf_ ||
+             (new_bc.type == eb_ && new_bc.fluid.flow_thru_eb)) {
+
+            const int sum_defined = int(new_bc.fluid.density_defined) +
+                                    int(new_bc.fluid.temperature_defined) +
+                                    int(new_bc.fluid.thermodynamic_pressure_defined);
+
+            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(sum_defined == 2,
+                "Boundary conditions inputs must provide exactly two quantities"
+                " among fluid temperature, density, and thermodynamic pressure");
+          }
+
         }
       }
 
@@ -499,6 +538,22 @@ namespace BC
       BC::bc.push_back(new_bc);
 
     }
+
+//    if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
+//
+//      for (int bcv(1); bcv < BC::bc.size(); ++bcv) {
+//
+//        auto bc_type = BC::bc[bcv].type;
+//
+//        if (bc_type == minf_ || bc_type == pinf_ || bc_type == pout_) {
+//          const amrex::Real diff = std::abs(BC::bc[0].fluid.pressure -
+//                                            BC::bc[bcv].fluid.pressure);
+//
+//          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(diff < 1.e-15,
+//              "BCs for thermodynamic pressure are not uniform in space");
+//        }
+//      }
+//    }
 
 #if 0
     //Dump out what we read for debugging!
@@ -698,7 +753,124 @@ read_bc_volflow (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
 
   }
 
-}// end read_bc_temperature
+}// end read_bc_volflow
+
+
+void
+read_bc_density (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
+{
+  amrex::Vector<amrex::Real> rog_in;
+  pp.queryarr("density", rog_in);
+
+  if (rog_in.size() == 0) {
+    fluid->density_defined = 0;
+    return;
+  }
+
+  fluid->density_defined = 1;
+
+  fluid->constant_density = (rog_in.size() == 1);
+  if (fluid->constant_density) {
+
+    fluid->density = rog_in[0];
+
+  } else {
+
+    int found;
+    int k=0;
+    do {
+
+      amrex::Vector<amrex::Real> kth_input;
+      found = pp.queryktharr("density", k, kth_input);
+
+      if (found){
+        // Assert that it has the correct length.
+        if ( kth_input.size() != 2 ) {
+          amrex::Print() << "Bad density inputs specification:\n";
+          for( int lc=0; lc<kth_input.size(); lc++)
+            amrex::Print()  << "  " << kth_input[lc];
+          amrex::Print() << std::endl;
+          amrex::Abort("Fix input deck.");
+        }
+
+        const amrex::Real new_time = kth_input[0];
+        const int len = fluid->density_table.size();
+        if (len == 0){
+          fluid->density_table.push_back(kth_input);
+        } else {
+          for (int lc=0; lc<len; lc++) {
+            if ( new_time <= fluid->density_table[lc][0]){
+              fluid->density_table.insert(fluid->density_table.begin()+lc, kth_input);
+            } else if (lc == len-1){
+              fluid->density_table.push_back(kth_input);
+            }
+          }
+        }
+      }
+      k++;
+    } while(found);
+
+  }
+
+}// end read_bc_density
+
+
+void
+read_bc_thermodynamic_pressure (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
+{
+  amrex::Vector<amrex::Real> pressure_in;
+  pp.queryarr("thermodynamic_pressure", pressure_in);
+
+  if (pressure_in.size() == 0) {
+    fluid->thermodynamic_pressure_defined = 0;
+    return;
+  }
+
+  fluid->thermodynamic_pressure_defined = 1;
+
+  fluid->constant_thermodynamic_pressure = (pressure_in.size() == 1);
+  if (fluid->constant_thermodynamic_pressure) {
+
+    fluid->thermodynamic_pressure = pressure_in[0];
+
+  } else {
+
+    int found;
+    int k=0;
+    do {
+
+      amrex::Vector<amrex::Real> kth_input;
+      found = pp.queryktharr("thermodynamic_pressure", k, kth_input);
+
+      if (found){
+        // Assert that it has the correct length.
+        if ( kth_input.size() != 2 ) {
+          amrex::Print() << "Bad thermodynamic pressure inputs specification:\n";
+          for( int lc=0; lc<kth_input.size(); lc++)
+            amrex::Print()  << "  " << kth_input[lc];
+          amrex::Print() << std::endl;
+          amrex::Abort("Fix input deck.");
+        }
+
+        const amrex::Real new_time = kth_input[0];
+        const int len = fluid->thermodynamic_pressure_table.size();
+        if (len == 0){
+          fluid->thermodynamic_pressure_table.push_back(kth_input);
+        } else {
+          for (int lc=0; lc<len; lc++) {
+            if ( new_time <= fluid->thermodynamic_pressure_table[lc][0]){
+              fluid->thermodynamic_pressure_table.insert(fluid->thermodynamic_pressure_table.begin()+lc, kth_input);
+            } else if (lc == len-1){
+              fluid->thermodynamic_pressure_table.push_back(kth_input);
+            }
+          }
+        }
+      }
+
+      k++;
+    } while(found);
+  }
+} // end read_bc_thermodynamic_pressure
 
 
 
@@ -708,7 +880,14 @@ read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
 {
 
   amrex::Vector<amrex::Real> tg_in;
-  pp.getarr("temperature", tg_in);
+  pp.queryarr("temperature", tg_in);
+
+  if (tg_in.size() == 0) {
+    fluid->temperature_defined = 0;
+    return;
+  }
+
+  fluid->temperature_defined = 1;
 
   fluid->constant_temperature = (tg_in.size() == 1);
   if (fluid->constant_temperature) {

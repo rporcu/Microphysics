@@ -102,7 +102,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
   if (DEM::solve || PIC::solve) {
     mfix_calc_txfr_fluid(get_txfr(), get_chem_txfr(), get_ep_g(), get_ro_g(),
-                         get_vel_g(), get_T_g(), get_X_gk(), get_pressure_g(),
+                         get_vel_g(), get_T_g(), get_X_gk(), get_thermodynamic_p_g(),
                          time);
   }
 
@@ -236,9 +236,9 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
                        m_leveldata[lev]->X_gk->nComp(), m_leveldata[lev]->X_gk->nGrow());
       }
 
-      if (m_constraint_type == ConstraintType::IdealGasClosedSystem && advect_enthalpy) {
-        MultiFab::Copy(*m_leveldata[lev]->pressure_g, *m_leveldata[lev]->pressure_go, 0, 0,
-                        m_leveldata[lev]->pressure_g->nComp(), m_leveldata[lev]->pressure_g->nGrow());
+      if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem && advect_enthalpy) {
+        MultiFab::Copy(*m_leveldata[lev]->thermodynamic_p_g, *m_leveldata[lev]->thermodynamic_p_go, 0, 0,
+                        m_leveldata[lev]->thermodynamic_p_g->nComp(), m_leveldata[lev]->thermodynamic_p_g->nGrow());
       }
     }
 

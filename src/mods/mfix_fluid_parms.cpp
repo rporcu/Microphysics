@@ -13,13 +13,11 @@
 using namespace amrex;
 
 FluidPhase::FluidPhase()
-  : DensityModel(DENSITYMODEL::Invalid)
-  , ViscosityModel(VISCOSITYMODEL::Invalid)
+  : ViscosityModel(VISCOSITYMODEL::Invalid)
   , SpecificHeatModel(SPECIFICHEATMODEL::Invalid)
   , ThermalConductivityModel(THERMALCONDUCTIVITYMODEL::Invalid)
   , solve(0)
   , solve_density(0)
-  , ro_g0(0)
   , solve_tracer(0)
   , trac_0(0)
   , mu_g0(0)
@@ -77,23 +75,29 @@ FluidPhase::Initialize ()
     pp.query("trac0",  trac_0);
     pp.query("mw_avg", mw_avg);
 
-    amrex::ParmParse ppFluid(name.c_str());
+    // Constraint type
+    {
+      ParmParse ppMFIX("mfix");
 
-    // Get density inputs ------------------------------------//
-    std::string density_model;
-    ppFluid.get("density", density_model);
+      std::string constraint_str = "IncompressibleFluid";
+      ppMFIX.query("constraint_type", constraint_str);
+      constraint_str = amrex::toLower(constraint_str);
 
-    if (amrex::toLower(density_model).compare("constant") == 0) {
-      DensityModel = DENSITYMODEL::Constant;
-      ppFluid.get("density.constant", ro_g0);
-
-    } else if(amrex::toLower(density_model).compare("idealgas") == 0) {
-      DensityModel = DENSITYMODEL::IdealGas;
-      amrex::Abort("Not yet implemented.");
-
-    } else {
-      amrex::Abort("Unknown fluid density model!");
+      if (constraint_str.compare("incompressiblefluid") == 0) {
+        constraint_type = ConstraintType::IncompressibleFluid;
+      }
+      else if (constraint_str.compare("idealgasopensystem") == 0) {
+        constraint_type = ConstraintType::IdealGasOpenSystem;
+      }
+      else if (constraint_str.compare("idealgasclosedsystem") == 0) {
+        constraint_type = ConstraintType::IdealGasClosedSystem;
+      }
+      else {
+        amrex::Abort("Don't know this constraint type!");
+      }
     }
+
+    amrex::ParmParse ppFluid(name.c_str());
 
     // Get viscosity inputs ----------------------------------//
     std::string viscosity_model;
@@ -220,6 +224,14 @@ FluidPhase::Initialize ()
 
       if (solve_enthalpy) {
 
+        if (nspecies > 1) {
+          std::string specific_heat_model;
+          ppFluid.get("specific_heat", specific_heat_model);
+
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(amrex::toLower(specific_heat_model).compare("mixture") == 0,
+              "When solving fluid enthalpy and species, fluid specific heat model must be a mixture");
+        }
+
         SpecificHeatModel = SPECIES::SpecificHeatModel;
 
         if (SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::Constant) {
@@ -318,10 +330,28 @@ FluidPhase::Initialize ()
     is_a_mixture = static_cast<int>(nspecies > 1);
   }
 
-  d_species_id.resize(species_id.size());
-  Gpu::copyAsync(Gpu::hostToDevice, species_id.begin(), species_id.end(), d_species_id.begin());
-  const int* p_h_species_id = species_id.data();
-  const int* p_d_species_id = d_species_id.data();
+  // Check on inputs in case of Ideal Gas EOS
+  if (constraint_type == ConstraintType::IdealGasOpenSystem ||
+      constraint_type == ConstraintType::IdealGasClosedSystem) {
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(MW_gk0.size() > 0, "Inputs error: fluid molecular_weight not provided");
+
+    for (size_t i(0); i < MW_gk0.size(); ++i) {
+      int abort(0);
+      if (MW_gk0[i] < 1.e-15) {
+        Print() << "Invalid molecular weight for species " << species[i] << "\n";
+      }
+
+      if (abort)
+        amrex::Abort("Inputs error");
+    }
+  }
+
+  if (solve_species) {
+    d_species_id.resize(species_id.size());
+    Gpu::copyAsync(Gpu::hostToDevice, species_id.begin(), species_id.end(), d_species_id.begin());
+  }
+  const int* p_h_species_id = solve_species ? species_id.data() : nullptr;
+  const int* p_d_species_id = solve_species ? d_species_id.data() : nullptr;
 
   const int MW_gk0_provided = static_cast<int>(MW_gk0.size() > 0);
   if (MW_gk0_provided) {

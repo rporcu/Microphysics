@@ -239,8 +239,6 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
           }
         }
 
-        k_g_on_eb.FillBoundary(geom[lev].periodicity());
-
         temperature_matrix->setEBDirichlet(lev, *T_g_on_eb[lev], k_g_on_eb);
       }
 
@@ -449,7 +447,5 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
         h_g_array(i,j,k) = hg;
       });
     }
-
-    h_g[lev]->FillBoundary(geom[lev].periodicity());
   }
 }

@@ -24,7 +24,6 @@ void init_fluid (const amrex::Box& sbx,
                  bool test_tracer_conservation,
                  const int advect_enthalpy,
                  const int solve_species,
-                 const int& constraint_type,
                  FluidPhase& fluid);
 
 void init_periodic_vortices (const Box& bx,

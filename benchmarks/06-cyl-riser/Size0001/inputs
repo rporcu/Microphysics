@@ -24,6 +24,9 @@ mfix.bottom_solver = "smoother"
 
 amr.blocking_factor = 1
 
+mfix.constraint_type = IncompressibleFluid
+
+
 #_______________________________________________________________________
 # Geometry / grids / tiles
 
@@ -112,17 +115,8 @@ mfix.drag_type = "BVK2"
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
-
-fluid.specific_heat          = constant
-fluid.specific_heat.constant = 1.0
-
-fluid.thermal_conductivity          = constant
-fluid.thermal_conductivity.constant = 0.0
 
 
 #_______________________________________________________________________
@@ -176,7 +170,7 @@ regions.full-domain.hi = 0.0040  0.0010  0.0010
 ic.regions = full-domain
 
 ic.full-domain.fluid.volfrac   =  0.983
-ic.full-domain.fluid.pressure  =  0.0
+ic.full-domain.fluid.density   =  1.0
 ic.full-domain.fluid.velocity  =  0.00  0.00  0.00
 
 ic.full-domain.solids  = solid0

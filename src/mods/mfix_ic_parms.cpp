@@ -37,7 +37,7 @@ namespace IC
 
       amrex::Real volfrac_total(0.0);
 
-      IC_t new_ic;
+      IC_t new_ic(fluid);
 
       // Set the region for the initial condition.
       new_ic.region = REGIONS::getRegion(regions[icv]);
@@ -55,7 +55,11 @@ namespace IC
 
         ppFluid.getarr("velocity", new_ic.fluid.velocity, 0, 3);
 
-        if (advect_enthalpy) {
+        if (fluid.constraint_type == ConstraintType::IncompressibleFluid) {
+          ppFluid.get("density", new_ic.fluid.density);
+        }
+
+        if (fluid.solve_enthalpy && fluid.constraint_type == ConstraintType::IncompressibleFluid) {
           ppFluid.get("temperature", new_ic.fluid.temperature); 
         }
 
@@ -74,9 +78,9 @@ namespace IC
 
           for (int n(0); n < nspecies_g; n++) {
             // Get the name of the fluid species we want to get the IC
-            std::string fluid_specie = fluid.species[n];
+            std::string fluid_species = fluid.species[n];
             // Get the IC mass fraction for the current species
-            ppSpecies.query(fluid_specie.c_str(), new_ic.fluid.species[n].mass_fraction);
+            ppSpecies.get(fluid_species.c_str(), new_ic.fluid.species[n].mass_fraction);
             total_mass_fraction += new_ic.fluid.species[n].mass_fraction;
           }
 
@@ -86,6 +90,57 @@ namespace IC
               + regions[icv] + " sum up to " + std::to_string(total_mass_fraction) + "\n";
 
             amrex::Abort(message);
+          }
+        }
+
+        if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
+            fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
+
+          // Get density
+          const int density_defined = ppFluid.query("density", new_ic.fluid.density);
+          new_ic.fluid.density_defined = density_defined;
+
+          // Get temperature
+          const int temperature_defined = ppFluid.query("temperature", new_ic.fluid.temperature);
+          new_ic.fluid.temperature_defined = temperature_defined;
+
+          // Get thermodynamic pressure
+          const int thermodynamic_p_defined = ppFluid.query("thermodynamic_pressure",
+                                                            new_ic.fluid.thermodynamic_pressure);
+          new_ic.fluid.thermodynamic_pressure_defined = thermodynamic_p_defined;
+
+          const int sum_defined = density_defined + temperature_defined + thermodynamic_p_defined;
+
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(sum_defined == 2,
+              "Initial conditions inputs must provide exactly two quantities"
+              " among fluid temperature, density, and thermodynamic pressure");
+
+          auto& fluid_parms = *fluid.parameters;
+          Real MW_g(0.);
+
+          for (int n(0); n < fluid.nspecies; n++) {
+            MW_g += new_ic.fluid.species[n].mass_fraction / fluid_parms.get_MW_gk<RunOn::Host>(n);
+          }
+
+          MW_g = 1./MW_g;
+
+          if (!thermodynamic_p_defined) {
+
+            new_ic.fluid.thermodynamic_pressure = (new_ic.fluid.density *
+                fluid_parms.R * new_ic.fluid.temperature) / MW_g;
+
+          } else if (!temperature_defined) {
+
+            new_ic.fluid.temperature = (new_ic.fluid.thermodynamic_pressure *
+                MW_g) / (fluid_parms.R * new_ic.fluid.density);
+
+          } else if (!density_defined) {
+
+            new_ic.fluid.density = (new_ic.fluid.thermodynamic_pressure *
+                MW_g) / (fluid_parms.R * new_ic.fluid.temperature);
+
+          } else {
+            amrex::Abort("How did we arrive here?");
           }
         }
       }
@@ -236,6 +291,21 @@ namespace IC
     }
 
 
+//    // This is a check that the initial thermodynamic pressure is uniform in the
+//    // whole domain
+//    if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
+//        fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
+//
+//      for (int icv(1); icv < IC::ic.size(); ++icv) {
+//        const Real diff = std::abs(IC::ic[0].fluid.pressure -
+//                                   IC::ic[icv].fluid.pressure);
+//
+//        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(diff < 1.e-15,
+//            "ICs for thermodynamic pressure are not uniform in space");
+//      }
+//    }
+
+
 #if 0
     //Dump out what we read for debugging!
     for (int icv(0); icv<ic.size(); icv++){
@@ -253,6 +323,8 @@ namespace IC
 
         amrex::Print() << std::endl;
         amrex::Print() << "   Fluid:     volfrac: " << ic[icv].fluid.volfrac     << std::endl;
+        amrex::Print() << "              density: " << ic[icv].fluid.density     << std::endl;
+        amrex::Print() << "termodynamic_pressure: " << ic[icv].fluid.thermodynamic_pressure    << std::endl;
         amrex::Print() << "             pressure: " << ic[icv].fluid.pressure    << std::endl;
         amrex::Print() << "          temperature: " << ic[icv].fluid.temperature << std::endl;
         amrex::Print() << "             velocity: ";

@@ -254,12 +254,6 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     // Apply mean field diffusion to drag force
     diffusion_op->diffuse_drag(txfr_out, mfix::m_deposition_diffusion_coeff);
   }
-
-  // Impose periodic bc's at domain boundaries and fine-fine copies in the interior
-  for (int lev = 0; lev < nlev; lev++) {
-    txfr_out[lev]->FillBoundary(geom[lev].periodicity());
-    chem_txfr_out[lev]->FillBoundary(geom[lev].periodicity());
-  }
 }
 
 
@@ -307,8 +301,6 @@ mfix::mfix_calc_txfr_particle (Real time,
       set_gradp_bcs(bx, lev, gp_tmp[mfi], domain);
     }
 
-    gp_tmp.FillBoundary(geom[lev].periodicity());
-
     bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                          (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
 
@@ -343,9 +335,6 @@ mfix::mfix_calc_txfr_particle (Real time,
       } else {
         interp_ptr->setVal(0.0, 6, 1, interp_ng);
       }
-
-      interp_ptr->FillBoundary(geom[lev].periodicity());
-
     }
     else
     {
@@ -367,8 +356,6 @@ mfix::mfix_calc_txfr_particle (Real time,
       } else {
         interp_ptr->setVal(0.0, 6, 1, interp_ng);
       }
-
-      interp_ptr->FillBoundary(geom[lev].periodicity());
     }
 
     BL_PROFILE_VAR("particle_deposition", particle_deposition);

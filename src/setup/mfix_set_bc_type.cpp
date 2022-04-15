@@ -719,7 +719,7 @@ mfix::set_temperature_bc_values (Real time_in) const
 }
 
 void
-mfix::set_density_bc_values (Real time_in) const
+mfix::set_density_bc_values (Real /*time_in*/) const
 {
 
   m_h_bc_ro_g.resize(bc.size());
@@ -728,23 +728,15 @@ mfix::set_density_bc_values (Real time_in) const
   const int pinf_ = bc_list.get_pinf();
   const int eb_   = bc_list.get_eb();
 
-  // HACK -- BC density is constant given current implementation.
-  // This was copied over from the mfix_set_density_bcs routine.
-  const Real ro_g0 = fluid.ro_g0;
-
-  const int nspecies_g = fluid.nspecies;
-  const int fluid_is_a_mixture = fluid.is_a_mixture;
-  auto& fluid_parms = *fluid.parameters;
-
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
 
     if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ||
         (bc[bcv].type == eb_  && bc[bcv].fluid.flow_thru_eb)) {
 
-      if (m_constraint_type == ConstraintType::IdealGasOpenSystem ||
-          m_constraint_type == ConstraintType::IdealGasClosedSystem ) {
+      if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
+          fluid.constraint_type == ConstraintType::IdealGasClosedSystem ) {
 
-        const Real pg = bc[bcv].fluid.pressure;
+        const Real pg = bc[bcv].fluid.thermodynamic_pressure;
 
         if (pg <= 0.) {
           std::vector<std::string> regions;
@@ -759,38 +751,65 @@ mfix::set_density_bc_values (Real time_in) const
           amrex::Print() << "\n\n";
           amrex::Abort("Fix the inputs file.");
         }
-
-        const Real Tg = advect_enthalpy ? bc[bcv].fluid.get_temperature(time_in) : fluid.T_g0;
-
-        Real MW_g_loc(0);
-
-        // set initial fluid molecular weight
-        if (fluid_is_a_mixture) {
-          for (int n(0); n < nspecies_g; n++) {
-            const Real Xgk = bc[bcv].fluid.get_species(n, time_in);
-            MW_g_loc += Xgk / fluid_parms.get_MW_gk<RunOn::Host>(n);
-          }
-          MW_g_loc = 1. / MW_g_loc;
-        }
-        else {
-          MW_g_loc = fluid_parms.get_MW_g<RunOn::Host>();
-        }
-
-        m_h_bc_ro_g[bcv] = (pg * MW_g_loc) / (fluid_parms.R * Tg);
-
-      } else {
-
-        m_h_bc_ro_g[bcv] = ro_g0;
       }
+
+      m_h_bc_ro_g[bcv] = bc[bcv].fluid.density;
 
     } else {
       m_h_bc_ro_g[bcv] = 1e50;
     }
   }
 
-  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_ro_g.begin(), m_h_bc_ro_g.end(), m_bc_ro_g.begin());
+  Gpu::copy(Gpu::hostToDevice, m_h_bc_ro_g.begin(), m_h_bc_ro_g.end(), m_bc_ro_g.begin());
+}
 
-  Gpu::synchronize();
+
+void
+mfix::set_thermodynamic_pressure_bc_values (Real /*time_in*/) const
+{
+  m_h_bc_thermodynamic_p_g.resize(bc.size());
+
+  const int minf_ = bc_list.get_minf();
+  const int pinf_ = bc_list.get_pinf();
+  const int pout_ = bc_list.get_pout();
+
+  for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
+
+    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ || bc[bcv].type == pout_ ) {
+
+      if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
+          fluid.constraint_type == ConstraintType::IdealGasClosedSystem ) {
+
+        const Real pressure_g = bc[bcv].fluid.thermodynamic_pressure;
+
+        if (pressure_g <= 0.) {
+          std::vector<std::string> regions;
+          amrex::ParmParse pp("bc");
+          pp.queryarr("regions", regions);
+          amrex::Print() << "\n\n";
+          amrex::Print() << "**************************************************************\n";
+          amrex::Print() << "  Invalid or missing pressure for mass inflow boundary!\n";
+          amrex::Print() << "  Boundary Condition Name: " << regions[bcv] << "\n";
+          amrex::Print() << "  Fix the inputs file.\n";
+          amrex::Print() << "**************************************************************\n";
+          amrex::Print() << "\n\n";
+          amrex::Abort("Fix the inputs file.");
+        }
+
+        m_h_bc_thermodynamic_p_g[bcv] = pressure_g;
+
+      } else {
+
+        amrex::Abort("Not yet implemented");
+      }
+
+    } else {
+      m_h_bc_thermodynamic_p_g[bcv] = 1e50;
+    }
+  }
+
+  Gpu::copy(Gpu::hostToDevice, m_h_bc_thermodynamic_p_g.begin(),
+            m_h_bc_thermodynamic_p_g.end(), m_bc_thermodynamic_p_g.begin());
 }
 
 void

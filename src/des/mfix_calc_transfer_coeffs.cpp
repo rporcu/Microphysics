@@ -212,7 +212,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       pressure_nd.setVal(0.);
       EB_set_covered(pressure_nd, 0, 1, 1, covered_val);
 
-      MultiFab::Copy(pressure_nd, *m_leveldata[lev]->pressure_g, 0, 0, 1, interp_ng);
+      MultiFab::Copy(pressure_nd, *m_leveldata[lev]->thermodynamic_p_g, 0, 0, 1, interp_ng);
       MultiFab::Add (pressure_nd, *m_leveldata[lev]->p0_g, 0, 0, 1, interp_ng);
 
       pressure_cc.setVal(0.);
