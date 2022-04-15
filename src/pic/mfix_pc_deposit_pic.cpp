@@ -122,34 +122,34 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
             const Real wu_hi(lxc - static_cast<Real>(ii));
             const Real wu_lo(1.0 - wu_hi);
 
-            amrex::Gpu::Atomic::Add(&u_s(ii,   j-1, k-1, 0),wu_lo*wy_lo*wz_lo*pvelx);
-            amrex::Gpu::Atomic::Add(&u_s(ii,   j-1, k  , 0),wu_lo*wy_lo*wz_hi*pvelx);
-            amrex::Gpu::Atomic::Add(&u_s(ii,   j,   k-1, 0),wu_lo*wy_hi*wz_lo*pvelx);
-            amrex::Gpu::Atomic::Add(&u_s(ii,   j,   k  , 0),wu_lo*wy_hi*wz_hi*pvelx);
-            amrex::Gpu::Atomic::Add(&u_s(ii+1, j-1, k-1, 0),wu_hi*wy_lo*wz_lo*pvelx);
-            amrex::Gpu::Atomic::Add(&u_s(ii+1, j-1, k  , 0),wu_hi*wy_lo*wz_hi*pvelx);
-            amrex::Gpu::Atomic::Add(&u_s(ii+1, j,   k-1, 0),wu_hi*wy_hi*wz_lo*pvelx);
-            amrex::Gpu::Atomic::Add(&u_s(ii+1, j,   k  , 0),wu_hi*wy_hi*wz_hi*pvelx);
+            HostDevice::Atomic::Add(&u_s(ii,   j-1, k-1, 0),wu_lo*wy_lo*wz_lo*pvelx);
+            HostDevice::Atomic::Add(&u_s(ii,   j-1, k  , 0),wu_lo*wy_lo*wz_hi*pvelx);
+            HostDevice::Atomic::Add(&u_s(ii,   j,   k-1, 0),wu_lo*wy_hi*wz_lo*pvelx);
+            HostDevice::Atomic::Add(&u_s(ii,   j,   k  , 0),wu_lo*wy_hi*wz_hi*pvelx);
+            HostDevice::Atomic::Add(&u_s(ii+1, j-1, k-1, 0),wu_hi*wy_lo*wz_lo*pvelx);
+            HostDevice::Atomic::Add(&u_s(ii+1, j-1, k  , 0),wu_hi*wy_lo*wz_hi*pvelx);
+            HostDevice::Atomic::Add(&u_s(ii+1, j,   k-1, 0),wu_hi*wy_hi*wz_lo*pvelx);
+            HostDevice::Atomic::Add(&u_s(ii+1, j,   k  , 0),wu_hi*wy_hi*wz_hi*pvelx);
 
-            amrex::Gpu::Atomic::Add(&u_s(ii,   j-1, k-1, 1),wu_lo*wy_lo*wz_lo*pvol);
-            amrex::Gpu::Atomic::Add(&u_s(ii,   j-1, k  , 1),wu_lo*wy_lo*wz_hi*pvol);
-            amrex::Gpu::Atomic::Add(&u_s(ii,   j,   k-1, 1),wu_lo*wy_hi*wz_lo*pvol);
-            amrex::Gpu::Atomic::Add(&u_s(ii,   j,   k  , 1),wu_lo*wy_hi*wz_hi*pvol);
-            amrex::Gpu::Atomic::Add(&u_s(ii+1, j-1, k-1, 1),wu_hi*wy_lo*wz_lo*pvol);
-            amrex::Gpu::Atomic::Add(&u_s(ii+1, j-1, k  , 1),wu_hi*wy_lo*wz_hi*pvol);
-            amrex::Gpu::Atomic::Add(&u_s(ii+1, j,   k-1, 1),wu_hi*wy_hi*wz_lo*pvol);
-            amrex::Gpu::Atomic::Add(&u_s(ii+1, j,   k  , 1),wu_hi*wy_hi*wz_hi*pvol);
+            HostDevice::Atomic::Add(&u_s(ii,   j-1, k-1, 1),wu_lo*wy_lo*wz_lo*pvol);
+            HostDevice::Atomic::Add(&u_s(ii,   j-1, k  , 1),wu_lo*wy_lo*wz_hi*pvol);
+            HostDevice::Atomic::Add(&u_s(ii,   j,   k-1, 1),wu_lo*wy_hi*wz_lo*pvol);
+            HostDevice::Atomic::Add(&u_s(ii,   j,   k  , 1),wu_lo*wy_hi*wz_hi*pvol);
+            HostDevice::Atomic::Add(&u_s(ii+1, j-1, k-1, 1),wu_hi*wy_lo*wz_lo*pvol);
+            HostDevice::Atomic::Add(&u_s(ii+1, j-1, k  , 1),wu_hi*wy_lo*wz_hi*pvol);
+            HostDevice::Atomic::Add(&u_s(ii+1, j,   k-1, 1),wu_hi*wy_hi*wz_lo*pvol);
+            HostDevice::Atomic::Add(&u_s(ii+1, j,   k  , 1),wu_hi*wy_hi*wz_hi*pvol);
 #else
 
-            amrex::Gpu::Atomic::Add(&u_s(i   , j-1, k-1, 0),wy_lo*wz_lo*pvelx);
-            amrex::Gpu::Atomic::Add(&u_s(i   , j-1, k  , 0),wy_lo*wz_hi*pvelx);
-            amrex::Gpu::Atomic::Add(&u_s(i   , j,   k-1, 0),wy_hi*wz_lo*pvelx);
-            amrex::Gpu::Atomic::Add(&u_s(i   , j,   k  , 0),wy_hi*wz_hi*pvelx);
+            HostDevice::Atomic::Add(&u_s(i   , j-1, k-1, 0),wy_lo*wz_lo*pvelx);
+            HostDevice::Atomic::Add(&u_s(i   , j-1, k  , 0),wy_lo*wz_hi*pvelx);
+            HostDevice::Atomic::Add(&u_s(i   , j,   k-1, 0),wy_hi*wz_lo*pvelx);
+            HostDevice::Atomic::Add(&u_s(i   , j,   k  , 0),wy_hi*wz_hi*pvelx);
 
-            amrex::Gpu::Atomic::Add(&u_s(i   , j-1, k-1, 1),wy_lo*wz_lo*pvol);
-            amrex::Gpu::Atomic::Add(&u_s(i   , j-1, k  , 1),wy_lo*wz_hi*pvol);
-            amrex::Gpu::Atomic::Add(&u_s(i   , j,   k-1, 1),wy_hi*wz_lo*pvol);
-            amrex::Gpu::Atomic::Add(&u_s(i   , j,   k  , 1),wy_hi*wz_hi*pvol);
+            HostDevice::Atomic::Add(&u_s(i   , j-1, k-1, 1),wy_lo*wz_lo*pvol);
+            HostDevice::Atomic::Add(&u_s(i   , j-1, k  , 1),wy_lo*wz_hi*pvol);
+            HostDevice::Atomic::Add(&u_s(i   , j,   k-1, 1),wy_hi*wz_lo*pvol);
+            HostDevice::Atomic::Add(&u_s(i   , j,   k  , 1),wy_hi*wz_hi*pvol);
 #endif
           }
 
@@ -165,33 +165,33 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
             const Real wv_hi(lyc - static_cast<Real>(jj));
             const Real wv_lo(1.0 - wv_hi);
 
-            amrex::Gpu::Atomic::Add(&v_s(i-1, jj,   k-1, 0),wx_lo*wv_lo*wz_lo*pvely);
-            amrex::Gpu::Atomic::Add(&v_s(i-1, jj,   k  , 0),wx_lo*wv_lo*wz_hi*pvely);
-            amrex::Gpu::Atomic::Add(&v_s(i-1, jj+1, k-1, 0),wx_lo*wv_hi*wz_lo*pvely);
-            amrex::Gpu::Atomic::Add(&v_s(i-1, jj+1, k  , 0),wx_lo*wv_hi*wz_hi*pvely);
-            amrex::Gpu::Atomic::Add(&v_s(i,   jj,   k-1, 0),wx_hi*wv_lo*wz_lo*pvely);
-            amrex::Gpu::Atomic::Add(&v_s(i,   jj,   k  , 0),wx_hi*wv_lo*wz_hi*pvely);
-            amrex::Gpu::Atomic::Add(&v_s(i,   jj+1, k-1, 0),wx_hi*wv_hi*wz_lo*pvely);
-            amrex::Gpu::Atomic::Add(&v_s(i,   jj+1, k  , 0),wx_hi*wv_hi*wz_hi*pvely);
+            HostDevice::Atomic::Add(&v_s(i-1, jj,   k-1, 0),wx_lo*wv_lo*wz_lo*pvely);
+            HostDevice::Atomic::Add(&v_s(i-1, jj,   k  , 0),wx_lo*wv_lo*wz_hi*pvely);
+            HostDevice::Atomic::Add(&v_s(i-1, jj+1, k-1, 0),wx_lo*wv_hi*wz_lo*pvely);
+            HostDevice::Atomic::Add(&v_s(i-1, jj+1, k  , 0),wx_lo*wv_hi*wz_hi*pvely);
+            HostDevice::Atomic::Add(&v_s(i,   jj,   k-1, 0),wx_hi*wv_lo*wz_lo*pvely);
+            HostDevice::Atomic::Add(&v_s(i,   jj,   k  , 0),wx_hi*wv_lo*wz_hi*pvely);
+            HostDevice::Atomic::Add(&v_s(i,   jj+1, k-1, 0),wx_hi*wv_hi*wz_lo*pvely);
+            HostDevice::Atomic::Add(&v_s(i,   jj+1, k  , 0),wx_hi*wv_hi*wz_hi*pvely);
 
-            amrex::Gpu::Atomic::Add(&v_s(i-1, jj,   k-1, 1),wx_lo*wv_lo*wz_lo*pvol);
-            amrex::Gpu::Atomic::Add(&v_s(i-1, jj,   k  , 1),wx_lo*wv_lo*wz_hi*pvol);
-            amrex::Gpu::Atomic::Add(&v_s(i-1, jj+1, k-1, 1),wx_lo*wv_hi*wz_lo*pvol);
-            amrex::Gpu::Atomic::Add(&v_s(i-1, jj+1, k  , 1),wx_lo*wv_hi*wz_hi*pvol);
-            amrex::Gpu::Atomic::Add(&v_s(i,   jj,   k-1, 1),wx_hi*wv_lo*wz_lo*pvol);
-            amrex::Gpu::Atomic::Add(&v_s(i,   jj,   k  , 1),wx_hi*wv_lo*wz_hi*pvol);
-            amrex::Gpu::Atomic::Add(&v_s(i,   jj+1, k-1, 1),wx_hi*wv_hi*wz_lo*pvol);
-            amrex::Gpu::Atomic::Add(&v_s(i,   jj+1, k  , 1),wx_hi*wv_hi*wz_hi*pvol);
+            HostDevice::Atomic::Add(&v_s(i-1, jj,   k-1, 1),wx_lo*wv_lo*wz_lo*pvol);
+            HostDevice::Atomic::Add(&v_s(i-1, jj,   k  , 1),wx_lo*wv_lo*wz_hi*pvol);
+            HostDevice::Atomic::Add(&v_s(i-1, jj+1, k-1, 1),wx_lo*wv_hi*wz_lo*pvol);
+            HostDevice::Atomic::Add(&v_s(i-1, jj+1, k  , 1),wx_lo*wv_hi*wz_hi*pvol);
+            HostDevice::Atomic::Add(&v_s(i,   jj,   k-1, 1),wx_hi*wv_lo*wz_lo*pvol);
+            HostDevice::Atomic::Add(&v_s(i,   jj,   k  , 1),wx_hi*wv_lo*wz_hi*pvol);
+            HostDevice::Atomic::Add(&v_s(i,   jj+1, k-1, 1),wx_hi*wv_hi*wz_lo*pvol);
+            HostDevice::Atomic::Add(&v_s(i,   jj+1, k  , 1),wx_hi*wv_hi*wz_hi*pvol);
 #else
-            amrex::Gpu::Atomic::Add(&v_s(i-1, j ,   k-1, 0),wx_lo*wz_lo*pvely);
-            amrex::Gpu::Atomic::Add(&v_s(i-1, j ,   k  , 0),wx_lo*wz_hi*pvely);
-            amrex::Gpu::Atomic::Add(&v_s(i,   j ,   k-1, 0),wx_hi*wz_lo*pvely);
-            amrex::Gpu::Atomic::Add(&v_s(i,   j ,   k  , 0),wx_hi*wz_hi*pvely);
+            HostDevice::Atomic::Add(&v_s(i-1, j ,   k-1, 0),wx_lo*wz_lo*pvely);
+            HostDevice::Atomic::Add(&v_s(i-1, j ,   k  , 0),wx_lo*wz_hi*pvely);
+            HostDevice::Atomic::Add(&v_s(i,   j ,   k-1, 0),wx_hi*wz_lo*pvely);
+            HostDevice::Atomic::Add(&v_s(i,   j ,   k  , 0),wx_hi*wz_hi*pvely);
 
-            amrex::Gpu::Atomic::Add(&v_s(i-1, j ,   k-1, 1),wx_lo*wz_lo*pvol);
-            amrex::Gpu::Atomic::Add(&v_s(i-1, j ,   k  , 1),wx_lo*wz_hi*pvol);
-            amrex::Gpu::Atomic::Add(&v_s(i,   j ,   k-1, 1),wx_hi*wz_lo*pvol);
-            amrex::Gpu::Atomic::Add(&v_s(i,   j ,   k  , 1),wx_hi*wz_hi*pvol);
+            HostDevice::Atomic::Add(&v_s(i-1, j ,   k-1, 1),wx_lo*wz_lo*pvol);
+            HostDevice::Atomic::Add(&v_s(i-1, j ,   k  , 1),wx_lo*wz_hi*pvol);
+            HostDevice::Atomic::Add(&v_s(i,   j ,   k-1, 1),wx_hi*wz_lo*pvol);
+            HostDevice::Atomic::Add(&v_s(i,   j ,   k  , 1),wx_hi*wz_hi*pvol);
 
 #endif
           }
@@ -208,33 +208,33 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
             const Real ww_hi(lzc - static_cast<Real>(kk));
             const Real ww_lo(1.0 - ww_hi);
 
-            amrex::Gpu::Atomic::Add(&w_s(i-1, j-1, kk  , 0),wx_lo*wy_lo*ww_lo*pvelz);
-            amrex::Gpu::Atomic::Add(&w_s(i-1, j-1, kk+1, 0),wx_lo*wy_lo*ww_hi*pvelz);
-            amrex::Gpu::Atomic::Add(&w_s(i-1, j,   kk  , 0),wx_lo*wy_hi*ww_lo*pvelz);
-            amrex::Gpu::Atomic::Add(&w_s(i-1, j,   kk+1, 0),wx_lo*wy_hi*ww_hi*pvelz);
-            amrex::Gpu::Atomic::Add(&w_s(i,   j-1, kk  , 0),wx_hi*wy_lo*ww_lo*pvelz);
-            amrex::Gpu::Atomic::Add(&w_s(i,   j-1, kk+1, 0),wx_hi*wy_lo*ww_hi*pvelz);
-            amrex::Gpu::Atomic::Add(&w_s(i,   j,   kk  , 0),wx_hi*wy_hi*ww_lo*pvelz);
-            amrex::Gpu::Atomic::Add(&w_s(i,   j,   kk+1, 0),wx_hi*wy_hi*ww_hi*pvelz);
+            HostDevice::Atomic::Add(&w_s(i-1, j-1, kk  , 0),wx_lo*wy_lo*ww_lo*pvelz);
+            HostDevice::Atomic::Add(&w_s(i-1, j-1, kk+1, 0),wx_lo*wy_lo*ww_hi*pvelz);
+            HostDevice::Atomic::Add(&w_s(i-1, j,   kk  , 0),wx_lo*wy_hi*ww_lo*pvelz);
+            HostDevice::Atomic::Add(&w_s(i-1, j,   kk+1, 0),wx_lo*wy_hi*ww_hi*pvelz);
+            HostDevice::Atomic::Add(&w_s(i,   j-1, kk  , 0),wx_hi*wy_lo*ww_lo*pvelz);
+            HostDevice::Atomic::Add(&w_s(i,   j-1, kk+1, 0),wx_hi*wy_lo*ww_hi*pvelz);
+            HostDevice::Atomic::Add(&w_s(i,   j,   kk  , 0),wx_hi*wy_hi*ww_lo*pvelz);
+            HostDevice::Atomic::Add(&w_s(i,   j,   kk+1, 0),wx_hi*wy_hi*ww_hi*pvelz);
 
-            amrex::Gpu::Atomic::Add(&w_s(i-1, j-1, kk  , 1),wx_lo*wy_lo*ww_lo*pvol);
-            amrex::Gpu::Atomic::Add(&w_s(i-1, j-1, kk+1, 1),wx_lo*wy_lo*ww_hi*pvol);
-            amrex::Gpu::Atomic::Add(&w_s(i-1, j,   kk  , 1),wx_lo*wy_hi*ww_lo*pvol);
-            amrex::Gpu::Atomic::Add(&w_s(i-1, j,   kk+1, 1),wx_lo*wy_hi*ww_hi*pvol);
-            amrex::Gpu::Atomic::Add(&w_s(i,   j-1, kk  , 1),wx_hi*wy_lo*ww_lo*pvol);
-            amrex::Gpu::Atomic::Add(&w_s(i,   j-1, kk+1, 1),wx_hi*wy_lo*ww_hi*pvol);
-            amrex::Gpu::Atomic::Add(&w_s(i,   j,   kk  , 1),wx_hi*wy_hi*ww_lo*pvol);
-            amrex::Gpu::Atomic::Add(&w_s(i,   j,   kk+1, 1),wx_hi*wy_hi*ww_hi*pvol);
+            HostDevice::Atomic::Add(&w_s(i-1, j-1, kk  , 1),wx_lo*wy_lo*ww_lo*pvol);
+            HostDevice::Atomic::Add(&w_s(i-1, j-1, kk+1, 1),wx_lo*wy_lo*ww_hi*pvol);
+            HostDevice::Atomic::Add(&w_s(i-1, j,   kk  , 1),wx_lo*wy_hi*ww_lo*pvol);
+            HostDevice::Atomic::Add(&w_s(i-1, j,   kk+1, 1),wx_lo*wy_hi*ww_hi*pvol);
+            HostDevice::Atomic::Add(&w_s(i,   j-1, kk  , 1),wx_hi*wy_lo*ww_lo*pvol);
+            HostDevice::Atomic::Add(&w_s(i,   j-1, kk+1, 1),wx_hi*wy_lo*ww_hi*pvol);
+            HostDevice::Atomic::Add(&w_s(i,   j,   kk  , 1),wx_hi*wy_hi*ww_lo*pvol);
+            HostDevice::Atomic::Add(&w_s(i,   j,   kk+1, 1),wx_hi*wy_hi*ww_hi*pvol);
 #else
-            amrex::Gpu::Atomic::Add(&w_s(i-1, j-1, k   , 0),wx_lo*wy_lo*pvelz);
-            amrex::Gpu::Atomic::Add(&w_s(i-1, j,   k   , 0),wx_lo*wy_hi*pvelz);
-            amrex::Gpu::Atomic::Add(&w_s(i,   j-1, k   , 0),wx_hi*wy_lo*pvelz);
-            amrex::Gpu::Atomic::Add(&w_s(i,   j,   k   , 0),wx_hi*wy_hi*pvelz);
+            HostDevice::Atomic::Add(&w_s(i-1, j-1, k   , 0),wx_lo*wy_lo*pvelz);
+            HostDevice::Atomic::Add(&w_s(i-1, j,   k   , 0),wx_lo*wy_hi*pvelz);
+            HostDevice::Atomic::Add(&w_s(i,   j-1, k   , 0),wx_hi*wy_lo*pvelz);
+            HostDevice::Atomic::Add(&w_s(i,   j,   k   , 0),wx_hi*wy_hi*pvelz);
 
-            amrex::Gpu::Atomic::Add(&w_s(i-1, j-1, k   , 1),wx_lo*wy_lo*pvol);
-            amrex::Gpu::Atomic::Add(&w_s(i-1, j,   k   , 1),wx_lo*wy_hi*pvol);
-            amrex::Gpu::Atomic::Add(&w_s(i,   j-1, k   , 1),wx_hi*wy_lo*pvol);
-            amrex::Gpu::Atomic::Add(&w_s(i,   j,   k   , 1),wx_hi*wy_hi*pvol);
+            HostDevice::Atomic::Add(&w_s(i-1, j-1, k   , 1),wx_lo*wy_lo*pvol);
+            HostDevice::Atomic::Add(&w_s(i-1, j,   k   , 1),wx_lo*wy_hi*pvol);
+            HostDevice::Atomic::Add(&w_s(i,   j-1, k   , 1),wx_hi*wy_lo*pvol);
+            HostDevice::Atomic::Add(&w_s(i,   j,   k   , 1),wx_hi*wy_hi*pvol);
 #endif
           }
         });
@@ -609,7 +609,7 @@ PICHydroStep (int lev,
                     continue;
 
                   Real weight_vol = weights[ii+1][jj+1][kk+1] / vfrac(i+ii,j+jj,k+kk);
-                  amrex::Gpu::Atomic::Add(&volarr(i+ii,j+jj,k+kk), weight_vol*pvol);
+                  HostDevice::Atomic::Add(&volarr(i+ii,j+jj,k+kk), weight_vol*pvol);
                 }
               }
             }
@@ -645,34 +645,34 @@ PICHydroStep (int lev,
               const Real wu_hi(lxc - static_cast<Real>(ii));
               const Real wu_lo(1.0 - wu_hi);
 
-              amrex::Gpu::Atomic::Add(&u_s(ii,   j-1, k-1, 0),wu_lo*wy_lo*wz_lo*pvelx);
-              amrex::Gpu::Atomic::Add(&u_s(ii,   j-1, k  , 0),wu_lo*wy_lo*wz_hi*pvelx);
-              amrex::Gpu::Atomic::Add(&u_s(ii,   j,   k-1, 0),wu_lo*wy_hi*wz_lo*pvelx);
-              amrex::Gpu::Atomic::Add(&u_s(ii,   j,   k  , 0),wu_lo*wy_hi*wz_hi*pvelx);
-              amrex::Gpu::Atomic::Add(&u_s(ii+1, j-1, k-1, 0),wu_hi*wy_lo*wz_lo*pvelx);
-              amrex::Gpu::Atomic::Add(&u_s(ii+1, j-1, k  , 0),wu_hi*wy_lo*wz_hi*pvelx);
-              amrex::Gpu::Atomic::Add(&u_s(ii+1, j,   k-1, 0),wu_hi*wy_hi*wz_lo*pvelx);
-              amrex::Gpu::Atomic::Add(&u_s(ii+1, j,   k  , 0),wu_hi*wy_hi*wz_hi*pvelx);
+              HostDevice::Atomic::Add(&u_s(ii,   j-1, k-1, 0),wu_lo*wy_lo*wz_lo*pvelx);
+              HostDevice::Atomic::Add(&u_s(ii,   j-1, k  , 0),wu_lo*wy_lo*wz_hi*pvelx);
+              HostDevice::Atomic::Add(&u_s(ii,   j,   k-1, 0),wu_lo*wy_hi*wz_lo*pvelx);
+              HostDevice::Atomic::Add(&u_s(ii,   j,   k  , 0),wu_lo*wy_hi*wz_hi*pvelx);
+              HostDevice::Atomic::Add(&u_s(ii+1, j-1, k-1, 0),wu_hi*wy_lo*wz_lo*pvelx);
+              HostDevice::Atomic::Add(&u_s(ii+1, j-1, k  , 0),wu_hi*wy_lo*wz_hi*pvelx);
+              HostDevice::Atomic::Add(&u_s(ii+1, j,   k-1, 0),wu_hi*wy_hi*wz_lo*pvelx);
+              HostDevice::Atomic::Add(&u_s(ii+1, j,   k  , 0),wu_hi*wy_hi*wz_hi*pvelx);
 
-              amrex::Gpu::Atomic::Add(&u_s(ii,   j-1, k-1, 1),wu_lo*wy_lo*wz_lo*pvol);
-              amrex::Gpu::Atomic::Add(&u_s(ii,   j-1, k  , 1),wu_lo*wy_lo*wz_hi*pvol);
-              amrex::Gpu::Atomic::Add(&u_s(ii,   j,   k-1, 1),wu_lo*wy_hi*wz_lo*pvol);
-              amrex::Gpu::Atomic::Add(&u_s(ii,   j,   k  , 1),wu_lo*wy_hi*wz_hi*pvol);
-              amrex::Gpu::Atomic::Add(&u_s(ii+1, j-1, k-1, 1),wu_hi*wy_lo*wz_lo*pvol);
-              amrex::Gpu::Atomic::Add(&u_s(ii+1, j-1, k  , 1),wu_hi*wy_lo*wz_hi*pvol);
-              amrex::Gpu::Atomic::Add(&u_s(ii+1, j,   k-1, 1),wu_hi*wy_hi*wz_lo*pvol);
-              amrex::Gpu::Atomic::Add(&u_s(ii+1, j,   k  , 1),wu_hi*wy_hi*wz_hi*pvol);
+              HostDevice::Atomic::Add(&u_s(ii,   j-1, k-1, 1),wu_lo*wy_lo*wz_lo*pvol);
+              HostDevice::Atomic::Add(&u_s(ii,   j-1, k  , 1),wu_lo*wy_lo*wz_hi*pvol);
+              HostDevice::Atomic::Add(&u_s(ii,   j,   k-1, 1),wu_lo*wy_hi*wz_lo*pvol);
+              HostDevice::Atomic::Add(&u_s(ii,   j,   k  , 1),wu_lo*wy_hi*wz_hi*pvol);
+              HostDevice::Atomic::Add(&u_s(ii+1, j-1, k-1, 1),wu_hi*wy_lo*wz_lo*pvol);
+              HostDevice::Atomic::Add(&u_s(ii+1, j-1, k  , 1),wu_hi*wy_lo*wz_hi*pvol);
+              HostDevice::Atomic::Add(&u_s(ii+1, j,   k-1, 1),wu_hi*wy_hi*wz_lo*pvol);
+              HostDevice::Atomic::Add(&u_s(ii+1, j,   k  , 1),wu_hi*wy_hi*wz_hi*pvol);
 #else
 
-              amrex::Gpu::Atomic::Add(&u_s(i   , j-1, k-1, 0),wy_lo*wz_lo*pvelx);
-              amrex::Gpu::Atomic::Add(&u_s(i   , j-1, k  , 0),wy_lo*wz_hi*pvelx);
-              amrex::Gpu::Atomic::Add(&u_s(i   , j,   k-1, 0),wy_hi*wz_lo*pvelx);
-              amrex::Gpu::Atomic::Add(&u_s(i   , j,   k  , 0),wy_hi*wz_hi*pvelx);
+              HostDevice::Atomic::Add(&u_s(i   , j-1, k-1, 0),wy_lo*wz_lo*pvelx);
+              HostDevice::Atomic::Add(&u_s(i   , j-1, k  , 0),wy_lo*wz_hi*pvelx);
+              HostDevice::Atomic::Add(&u_s(i   , j,   k-1, 0),wy_hi*wz_lo*pvelx);
+              HostDevice::Atomic::Add(&u_s(i   , j,   k  , 0),wy_hi*wz_hi*pvelx);
 
-              amrex::Gpu::Atomic::Add(&u_s(i   , j-1, k-1, 1),wy_lo*wz_lo*pvol);
-              amrex::Gpu::Atomic::Add(&u_s(i   , j-1, k  , 1),wy_lo*wz_hi*pvol);
-              amrex::Gpu::Atomic::Add(&u_s(i   , j,   k-1, 1),wy_hi*wz_lo*pvol);
-              amrex::Gpu::Atomic::Add(&u_s(i   , j,   k  , 1),wy_hi*wz_hi*pvol);
+              HostDevice::Atomic::Add(&u_s(i   , j-1, k-1, 1),wy_lo*wz_lo*pvol);
+              HostDevice::Atomic::Add(&u_s(i   , j-1, k  , 1),wy_lo*wz_hi*pvol);
+              HostDevice::Atomic::Add(&u_s(i   , j,   k-1, 1),wy_hi*wz_lo*pvol);
+              HostDevice::Atomic::Add(&u_s(i   , j,   k  , 1),wy_hi*wz_hi*pvol);
 #endif
             }
 
@@ -688,33 +688,33 @@ PICHydroStep (int lev,
               const Real wv_hi(lyc - static_cast<Real>(jj));
               const Real wv_lo(1.0 - wv_hi);
 
-              amrex::Gpu::Atomic::Add(&v_s(i-1, jj,   k-1, 0),wx_lo*wv_lo*wz_lo*pvely);
-              amrex::Gpu::Atomic::Add(&v_s(i-1, jj,   k  , 0),wx_lo*wv_lo*wz_hi*pvely);
-              amrex::Gpu::Atomic::Add(&v_s(i-1, jj+1, k-1, 0),wx_lo*wv_hi*wz_lo*pvely);
-              amrex::Gpu::Atomic::Add(&v_s(i-1, jj+1, k  , 0),wx_lo*wv_hi*wz_hi*pvely);
-              amrex::Gpu::Atomic::Add(&v_s(i,   jj,   k-1, 0),wx_hi*wv_lo*wz_lo*pvely);
-              amrex::Gpu::Atomic::Add(&v_s(i,   jj,   k  , 0),wx_hi*wv_lo*wz_hi*pvely);
-              amrex::Gpu::Atomic::Add(&v_s(i,   jj+1, k-1, 0),wx_hi*wv_hi*wz_lo*pvely);
-              amrex::Gpu::Atomic::Add(&v_s(i,   jj+1, k  , 0),wx_hi*wv_hi*wz_hi*pvely);
+              HostDevice::Atomic::Add(&v_s(i-1, jj,   k-1, 0),wx_lo*wv_lo*wz_lo*pvely);
+              HostDevice::Atomic::Add(&v_s(i-1, jj,   k  , 0),wx_lo*wv_lo*wz_hi*pvely);
+              HostDevice::Atomic::Add(&v_s(i-1, jj+1, k-1, 0),wx_lo*wv_hi*wz_lo*pvely);
+              HostDevice::Atomic::Add(&v_s(i-1, jj+1, k  , 0),wx_lo*wv_hi*wz_hi*pvely);
+              HostDevice::Atomic::Add(&v_s(i,   jj,   k-1, 0),wx_hi*wv_lo*wz_lo*pvely);
+              HostDevice::Atomic::Add(&v_s(i,   jj,   k  , 0),wx_hi*wv_lo*wz_hi*pvely);
+              HostDevice::Atomic::Add(&v_s(i,   jj+1, k-1, 0),wx_hi*wv_hi*wz_lo*pvely);
+              HostDevice::Atomic::Add(&v_s(i,   jj+1, k  , 0),wx_hi*wv_hi*wz_hi*pvely);
 
-              amrex::Gpu::Atomic::Add(&v_s(i-1, jj,   k-1, 1),wx_lo*wv_lo*wz_lo*pvol);
-              amrex::Gpu::Atomic::Add(&v_s(i-1, jj,   k  , 1),wx_lo*wv_lo*wz_hi*pvol);
-              amrex::Gpu::Atomic::Add(&v_s(i-1, jj+1, k-1, 1),wx_lo*wv_hi*wz_lo*pvol);
-              amrex::Gpu::Atomic::Add(&v_s(i-1, jj+1, k  , 1),wx_lo*wv_hi*wz_hi*pvol);
-              amrex::Gpu::Atomic::Add(&v_s(i,   jj,   k-1, 1),wx_hi*wv_lo*wz_lo*pvol);
-              amrex::Gpu::Atomic::Add(&v_s(i,   jj,   k  , 1),wx_hi*wv_lo*wz_hi*pvol);
-              amrex::Gpu::Atomic::Add(&v_s(i,   jj+1, k-1, 1),wx_hi*wv_hi*wz_lo*pvol);
-              amrex::Gpu::Atomic::Add(&v_s(i,   jj+1, k  , 1),wx_hi*wv_hi*wz_hi*pvol);
+              HostDevice::Atomic::Add(&v_s(i-1, jj,   k-1, 1),wx_lo*wv_lo*wz_lo*pvol);
+              HostDevice::Atomic::Add(&v_s(i-1, jj,   k  , 1),wx_lo*wv_lo*wz_hi*pvol);
+              HostDevice::Atomic::Add(&v_s(i-1, jj+1, k-1, 1),wx_lo*wv_hi*wz_lo*pvol);
+              HostDevice::Atomic::Add(&v_s(i-1, jj+1, k  , 1),wx_lo*wv_hi*wz_hi*pvol);
+              HostDevice::Atomic::Add(&v_s(i,   jj,   k-1, 1),wx_hi*wv_lo*wz_lo*pvol);
+              HostDevice::Atomic::Add(&v_s(i,   jj,   k  , 1),wx_hi*wv_lo*wz_hi*pvol);
+              HostDevice::Atomic::Add(&v_s(i,   jj+1, k-1, 1),wx_hi*wv_hi*wz_lo*pvol);
+              HostDevice::Atomic::Add(&v_s(i,   jj+1, k  , 1),wx_hi*wv_hi*wz_hi*pvol);
 #else
-              amrex::Gpu::Atomic::Add(&v_s(i-1, j ,   k-1, 0),wx_lo*wz_lo*pvely);
-              amrex::Gpu::Atomic::Add(&v_s(i-1, j ,   k  , 0),wx_lo*wz_hi*pvely);
-              amrex::Gpu::Atomic::Add(&v_s(i,   j ,   k-1, 0),wx_hi*wz_lo*pvely);
-              amrex::Gpu::Atomic::Add(&v_s(i,   j ,   k  , 0),wx_hi*wz_hi*pvely);
+              HostDevice::Atomic::Add(&v_s(i-1, j ,   k-1, 0),wx_lo*wz_lo*pvely);
+              HostDevice::Atomic::Add(&v_s(i-1, j ,   k  , 0),wx_lo*wz_hi*pvely);
+              HostDevice::Atomic::Add(&v_s(i,   j ,   k-1, 0),wx_hi*wz_lo*pvely);
+              HostDevice::Atomic::Add(&v_s(i,   j ,   k  , 0),wx_hi*wz_hi*pvely);
 
-              amrex::Gpu::Atomic::Add(&v_s(i-1, j ,   k-1, 1),wx_lo*wz_lo*pvol);
-              amrex::Gpu::Atomic::Add(&v_s(i-1, j ,   k  , 1),wx_lo*wz_hi*pvol);
-              amrex::Gpu::Atomic::Add(&v_s(i,   j ,   k-1, 1),wx_hi*wz_lo*pvol);
-              amrex::Gpu::Atomic::Add(&v_s(i,   j ,   k  , 1),wx_hi*wz_hi*pvol);
+              HostDevice::Atomic::Add(&v_s(i-1, j ,   k-1, 1),wx_lo*wz_lo*pvol);
+              HostDevice::Atomic::Add(&v_s(i-1, j ,   k  , 1),wx_lo*wz_hi*pvol);
+              HostDevice::Atomic::Add(&v_s(i,   j ,   k-1, 1),wx_hi*wz_lo*pvol);
+              HostDevice::Atomic::Add(&v_s(i,   j ,   k  , 1),wx_hi*wz_hi*pvol);
 #endif
             }
 
@@ -730,33 +730,33 @@ PICHydroStep (int lev,
               const Real ww_hi(lzc - static_cast<Real>(kk));
               const Real ww_lo(1.0 - ww_hi);
 
-              amrex::Gpu::Atomic::Add(&w_s(i-1, j-1, kk  , 0),wx_lo*wy_lo*ww_lo*pvelz);
-              amrex::Gpu::Atomic::Add(&w_s(i-1, j-1, kk+1, 0),wx_lo*wy_lo*ww_hi*pvelz);
-              amrex::Gpu::Atomic::Add(&w_s(i-1, j,   kk  , 0),wx_lo*wy_hi*ww_lo*pvelz);
-              amrex::Gpu::Atomic::Add(&w_s(i-1, j,   kk+1, 0),wx_lo*wy_hi*ww_hi*pvelz);
-              amrex::Gpu::Atomic::Add(&w_s(i,   j-1, kk  , 0),wx_hi*wy_lo*ww_lo*pvelz);
-              amrex::Gpu::Atomic::Add(&w_s(i,   j-1, kk+1, 0),wx_hi*wy_lo*ww_hi*pvelz);
-              amrex::Gpu::Atomic::Add(&w_s(i,   j,   kk  , 0),wx_hi*wy_hi*ww_lo*pvelz);
-              amrex::Gpu::Atomic::Add(&w_s(i,   j,   kk+1, 0),wx_hi*wy_hi*ww_hi*pvelz);
+              HostDevice::Atomic::Add(&w_s(i-1, j-1, kk  , 0),wx_lo*wy_lo*ww_lo*pvelz);
+              HostDevice::Atomic::Add(&w_s(i-1, j-1, kk+1, 0),wx_lo*wy_lo*ww_hi*pvelz);
+              HostDevice::Atomic::Add(&w_s(i-1, j,   kk  , 0),wx_lo*wy_hi*ww_lo*pvelz);
+              HostDevice::Atomic::Add(&w_s(i-1, j,   kk+1, 0),wx_lo*wy_hi*ww_hi*pvelz);
+              HostDevice::Atomic::Add(&w_s(i,   j-1, kk  , 0),wx_hi*wy_lo*ww_lo*pvelz);
+              HostDevice::Atomic::Add(&w_s(i,   j-1, kk+1, 0),wx_hi*wy_lo*ww_hi*pvelz);
+              HostDevice::Atomic::Add(&w_s(i,   j,   kk  , 0),wx_hi*wy_hi*ww_lo*pvelz);
+              HostDevice::Atomic::Add(&w_s(i,   j,   kk+1, 0),wx_hi*wy_hi*ww_hi*pvelz);
 
-              amrex::Gpu::Atomic::Add(&w_s(i-1, j-1, kk  , 1),wx_lo*wy_lo*ww_lo*pvol);
-              amrex::Gpu::Atomic::Add(&w_s(i-1, j-1, kk+1, 1),wx_lo*wy_lo*ww_hi*pvol);
-              amrex::Gpu::Atomic::Add(&w_s(i-1, j,   kk  , 1),wx_lo*wy_hi*ww_lo*pvol);
-              amrex::Gpu::Atomic::Add(&w_s(i-1, j,   kk+1, 1),wx_lo*wy_hi*ww_hi*pvol);
-              amrex::Gpu::Atomic::Add(&w_s(i,   j-1, kk  , 1),wx_hi*wy_lo*ww_lo*pvol);
-              amrex::Gpu::Atomic::Add(&w_s(i,   j-1, kk+1, 1),wx_hi*wy_lo*ww_hi*pvol);
-              amrex::Gpu::Atomic::Add(&w_s(i,   j,   kk  , 1),wx_hi*wy_hi*ww_lo*pvol);
-              amrex::Gpu::Atomic::Add(&w_s(i,   j,   kk+1, 1),wx_hi*wy_hi*ww_hi*pvol);
+              HostDevice::Atomic::Add(&w_s(i-1, j-1, kk  , 1),wx_lo*wy_lo*ww_lo*pvol);
+              HostDevice::Atomic::Add(&w_s(i-1, j-1, kk+1, 1),wx_lo*wy_lo*ww_hi*pvol);
+              HostDevice::Atomic::Add(&w_s(i-1, j,   kk  , 1),wx_lo*wy_hi*ww_lo*pvol);
+              HostDevice::Atomic::Add(&w_s(i-1, j,   kk+1, 1),wx_lo*wy_hi*ww_hi*pvol);
+              HostDevice::Atomic::Add(&w_s(i,   j-1, kk  , 1),wx_hi*wy_lo*ww_lo*pvol);
+              HostDevice::Atomic::Add(&w_s(i,   j-1, kk+1, 1),wx_hi*wy_lo*ww_hi*pvol);
+              HostDevice::Atomic::Add(&w_s(i,   j,   kk  , 1),wx_hi*wy_hi*ww_lo*pvol);
+              HostDevice::Atomic::Add(&w_s(i,   j,   kk+1, 1),wx_hi*wy_hi*ww_hi*pvol);
 #else
-              amrex::Gpu::Atomic::Add(&w_s(i-1, j-1, k   , 0),wx_lo*wy_lo*pvelz);
-              amrex::Gpu::Atomic::Add(&w_s(i-1, j,   k   , 0),wx_lo*wy_hi*pvelz);
-              amrex::Gpu::Atomic::Add(&w_s(i,   j-1, k   , 0),wx_hi*wy_lo*pvelz);
-              amrex::Gpu::Atomic::Add(&w_s(i,   j,   k   , 0),wx_hi*wy_hi*pvelz);
+              HostDevice::Atomic::Add(&w_s(i-1, j-1, k   , 0),wx_lo*wy_lo*pvelz);
+              HostDevice::Atomic::Add(&w_s(i-1, j,   k   , 0),wx_lo*wy_hi*pvelz);
+              HostDevice::Atomic::Add(&w_s(i,   j-1, k   , 0),wx_hi*wy_lo*pvelz);
+              HostDevice::Atomic::Add(&w_s(i,   j,   k   , 0),wx_hi*wy_hi*pvelz);
 
-              amrex::Gpu::Atomic::Add(&w_s(i-1, j-1, k   , 1),wx_lo*wy_lo*pvol);
-              amrex::Gpu::Atomic::Add(&w_s(i-1, j,   k   , 1),wx_lo*wy_hi*pvol);
-              amrex::Gpu::Atomic::Add(&w_s(i,   j-1, k   , 1),wx_hi*wy_lo*pvol);
-              amrex::Gpu::Atomic::Add(&w_s(i,   j,   k   , 1),wx_hi*wy_hi*pvol);
+              HostDevice::Atomic::Add(&w_s(i-1, j-1, k   , 1),wx_lo*wy_lo*pvol);
+              HostDevice::Atomic::Add(&w_s(i-1, j,   k   , 1),wx_lo*wy_hi*pvol);
+              HostDevice::Atomic::Add(&w_s(i,   j-1, k   , 1),wx_hi*wy_lo*pvol);
+              HostDevice::Atomic::Add(&w_s(i,   j,   k   , 1),wx_hi*wy_hi*pvol);
 #endif
             }
 

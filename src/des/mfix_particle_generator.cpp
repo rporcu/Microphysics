@@ -1115,7 +1115,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::DeviceVector<Real>& dp,
       if(!(iterations < maxfails))
       {
 #ifdef AMREX_USE_GPU
-        Gpu::Atomic::Add(p_fails, 1);
+        HostDevice::Atomic::Add(p_fails, 1);
 #else
         fails++;
 #endif

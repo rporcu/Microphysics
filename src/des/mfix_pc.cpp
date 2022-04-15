@@ -738,40 +738,26 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                             total_tow_force[1] += dist_cl1*local_tow_force[1];
                             total_tow_force[2] += dist_cl1*local_tow_force[2];
 
-#if defined(_OPENMP) && !defined(AMREX_USE_GPU)
-#pragma omp critical
-                            {
-#endif
-                              if (j < nrp) {
-                                Gpu::Atomic::Add(&fc_ptr[j         ], -(local_fn[0] + local_ft[0]));
-                                Gpu::Atomic::Add(&fc_ptr[j + ntot  ], -(local_fn[1] + local_ft[1]));
-                                Gpu::Atomic::Add(&fc_ptr[j + 2*ntot], -(local_fn[2] + local_ft[2]));
+                            if (j < nrp) {
+                              HostDevice::Atomic::Add(&fc_ptr[j         ], -(local_fn[0] + local_ft[0]));
+                              HostDevice::Atomic::Add(&fc_ptr[j + ntot  ], -(local_fn[1] + local_ft[1]));
+                              HostDevice::Atomic::Add(&fc_ptr[j + 2*ntot], -(local_fn[2] + local_ft[2]));
 
-                                Gpu::Atomic::Add(&tow_ptr[j         ], dist_cl2*local_tow_force[0]);
-                                Gpu::Atomic::Add(&tow_ptr[j + ntot  ], dist_cl2*local_tow_force[1]);
-                                Gpu::Atomic::Add(&tow_ptr[j + 2*ntot], dist_cl2*local_tow_force[2]);
-                              }
-#if defined(_OPENMP) && !defined(AMREX_USE_GPU)
+                              HostDevice::Atomic::Add(&tow_ptr[j         ], dist_cl2*local_tow_force[0]);
+                              HostDevice::Atomic::Add(&tow_ptr[j + ntot  ], dist_cl2*local_tow_force[1]);
+                              HostDevice::Atomic::Add(&tow_ptr[j + 2*ntot], dist_cl2*local_tow_force[2]);
                             }
-#endif
                         }
                     }
 
-#if defined(_OPENMP) && !defined(AMREX_USE_GPU)
-#pragma omp critical
-                    {
-#endif
-                      Gpu::Atomic::Add(&fc_ptr[i         ], total_force[0]);
-                      Gpu::Atomic::Add(&fc_ptr[i + ntot  ], total_force[1]);
-                      Gpu::Atomic::Add(&fc_ptr[i + 2*ntot], total_force[2]);
+                    HostDevice::Atomic::Add(&fc_ptr[i         ], total_force[0]);
+                    HostDevice::Atomic::Add(&fc_ptr[i + ntot  ], total_force[1]);
+                    HostDevice::Atomic::Add(&fc_ptr[i + 2*ntot], total_force[2]);
 
-                      Gpu::Atomic::Add(&tow_ptr[i         ], total_tow_force[0]);
-                      Gpu::Atomic::Add(&tow_ptr[i + ntot  ], total_tow_force[1]);
-                      Gpu::Atomic::Add(&tow_ptr[i + 2*ntot], total_tow_force[2]);
+                    HostDevice::Atomic::Add(&tow_ptr[i         ], total_tow_force[0]);
+                    HostDevice::Atomic::Add(&tow_ptr[i + ntot  ], total_tow_force[1]);
+                    HostDevice::Atomic::Add(&tow_ptr[i + 2*ntot], total_tow_force[2]);
 
-#if defined(_OPENMP) && !defined(AMREX_USE_GPU)
-                    }
-#endif
 
                     if ((p_intarray[SoAintData::state][i] == 10) && (!has_collisions))
                       p_intarray[SoAintData::state][i] = 1;
@@ -2389,7 +2375,7 @@ void MFIXParticleContainer::printGhostParticleCount()
         int     pid      = mit.index();
         if (!box.contains(cell_ijk)) {
           AMREX_ALWAYS_ASSERT_WITH_MESSAGE(pid >= nrp, "ghost particle has real index");
-          Gpu::Atomic::Add(pnbrids + (pid - nrp), 1);
+          HostDevice::Atomic::Add(pnbrids + (pid - nrp), 1);
         }
       }
     });
@@ -2398,7 +2384,7 @@ void MFIXParticleContainer::printGhostParticleCount()
     int  nnbr  = 0;
     int* pnnbr = &nnbr;
     amrex::ParallelFor(ngp, [pnnbr, pnbrids] AMREX_GPU_DEVICE (int i) noexcept {
-      if (pnbrids[i] > 0)  Gpu::Atomic::Add(pnnbr, 1);
+      if (pnbrids[i] > 0)  HostDevice::Atomic::Add(pnnbr, 1);
     });
     Gpu::Device::synchronize();
 
