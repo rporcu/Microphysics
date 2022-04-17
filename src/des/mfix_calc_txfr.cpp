@@ -7,8 +7,11 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 #include <AMReX_FillPatchUtil.H>
+
 #include <mfix_mf_helpers.H>
 #include <mfix_dem_parms.H>
+#include <mfix_des_rrates_K.H>
+#include <mfix_algorithm.H>
 
 void
 mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
@@ -136,7 +139,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     // Heat transfer: gamma and gamma*particle temperature
     pc->InterphaseTxfrDeposition(lev, *tmp_eps[lev], *txfr_ptr[lev],
                                  *chem_txfr_ptr[lev], volfrac[lev],
-                                 flags[lev], advect_enthalpy);
+                                 flags[lev], fluid, advect_enthalpy);
   }
 
   {
@@ -284,24 +287,111 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
 
 void
 mfix::mfix_calc_txfr_particle (Real time,
+                               Vector< MultiFab* > const& ep_g_in,
+                               Vector< MultiFab* > const& ro_g_in,
                                Vector< MultiFab* > const& vel_g_in,
-                               Vector< MultiFab* > const& gp_in,
-                               Vector< MultiFab* > const& T_g_in)
+                               Vector< MultiFab* > const& T_g_in,
+                               Vector< MultiFab* > const& X_gk_in,
+                               Vector< MultiFab* > const& pressure_g_in,
+                               Vector< MultiFab* > const& gp_in)
 {
+  if (m_reaction_rates_type == ReactionRatesType::RRatesUser) {
+    mfix_calc_txfr_particle(time, ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in,
+                            pressure_g_in, gp_in, HeterogeneousRatesUser());
+  } else {
+    amrex::Abort("Invalid Reaction Rates Type.");
+  }
+}
+
+
+template <typename F1>
+void
+mfix::mfix_calc_txfr_particle (Real time,
+                               Vector< MultiFab* > const& ep_g_in,
+                               Vector< MultiFab* > const& ro_g_in,
+                               Vector< MultiFab* > const& vel_g_in,
+                               Vector< MultiFab* > const& T_g_in,
+                               Vector< MultiFab* > const& X_gk_in,
+                               Vector< MultiFab* > const& pressure_g_in,
+                               Vector< MultiFab* > const& gp_in,
+                               F1 HeterogeneousRRates)
+{
+  using PairIndex = MFIXParticleContainer::PairIndex;
   using MFIXParIter = MFIXParticleContainer::MFIXParIter;
 
   BL_PROFILE("mfix::mfix_calc_txfr_particle()");
+
+  //***************************************************************************
+  // Data for chemical reactions
+  //***************************************************************************
+  // Solid species data
+  const int nspecies_s = solids.nspecies;
+
+  // Fluid species data
+  const int nspecies_g = fluid.nspecies;
+
+  int* p_species_id_g = fluid.d_species_id.data();
+  Real* p_MW_gk = fluid.d_MW_gk0.data();
+
+  int* p_species_id_s = solids.d_species_id.data();
+  Real* p_MW_sn = solids.d_MW_sn0.data();
+
+  // Reactions data
+  const int nreactions = reactions.nreactions;
+
+  int* p_types = reactions.d_types.data();
+  const int** p_phases = reactions.d_phases.data();
+  int* p_nphases = reactions.d_nphases.data();
+
+  int* p_nreactants = reactions.d_nreactants.data();
+  const int** p_reactants_id = reactions.d_reactants_id.data();
+  const Real** p_reactants_coeffs = reactions.d_reactants_coeffs.data();
+  const int** p_reactants_phases = reactions.d_reactants_phases.data();
+
+  int* p_nproducts = reactions.d_nproducts.data();
+  const int** p_products_id = reactions.d_products_id.data();
+  const Real** p_products_coeffs = reactions.d_products_coeffs.data();
+  const int** p_products_phases = reactions.d_products_phases.data();
+
+  // Solid phase integer ID
+  constexpr int Solid = ChemicalReaction::CHEMICALPHASE::Solid;
+  constexpr int Fluid = ChemicalReaction::CHEMICALPHASE::Fluid;
+  constexpr int Heterogeneous = ChemicalReaction::REACTIONTYPE::Heterogeneous;
+  const int InvalidIdx = -1; //TODO define this somewhere else
+
+  // Particles SoA starting indexes for mass fractions and rate of formations
+  const int idx_X_sn   = (pc->m_runtimeRealData).X_sn;
+  const int idx_X_txfr = (pc->m_runtimeRealData).species_txfr;
+  const int idx_vel_txfr = (pc->m_runtimeRealData).vel_txfr;
+  const int idx_h_txfr = (pc->m_runtimeRealData).h_txfr;
+
+  auto& reactions_parms = *reactions.parameters;
+
+  //***************************************************************************
+  // 
+  //***************************************************************************
 
   // Extrapolate velocity Dirichlet bc's to ghost cells
   int extrap_dir_bcs = 1;
 
   mfix_set_velocity_bcs(time, vel_g_in, extrap_dir_bcs);
 
-  if (advect_enthalpy)
-      mfix_set_temperature_bcs(time, T_g_in);
+  if (advect_enthalpy) {
+    mfix_set_temperature_bcs(time, T_g_in);
+  }
 
-  for (int lev = 0; lev < nlev; lev++)
-  {
+  if (solve_reactions) {
+
+    const int dir_bc_in = 2;
+    mfix_set_epg_bcs(ep_g_in, dir_bc_in);
+
+    mfix_set_density_bcs(time, ro_g_in);
+
+    mfix_set_species_bcs(time, X_gk_in);
+  }
+
+  for (int lev = 0; lev < nlev; lev++) {
+
     Box domain(geom[lev].Domain());
     MultiFab gp_tmp;
 
@@ -334,59 +424,132 @@ mfix::mfix_calc_txfr_particle (Real time,
 
     // This is just a sanity check to make sure we're not using covered values
     // We can remove these lines once we're confident in the algorithm
-    EB_set_covered(*vel_g_in[0], 0, 3, 1, covered_val);
-    EB_set_covered( gp_tmp  , 0, 3, 1, covered_val);
+    EB_set_covered(*vel_g_in[lev], 0, 3, 1, covered_val);
+    EB_set_covered(gp_tmp, 0, 3, 1, covered_val);
 
     if (advect_enthalpy)
-      EB_set_covered(*T_g_in[0], 0, 1, 1, covered_val);
+      EB_set_covered(*T_g_in[lev], 0, 1, 1, covered_val);
+
+    if (solve_reactions) {
+      EB_set_covered(*ep_g_in[lev], 0, 1, 1, covered_val);
+      EB_set_covered(*ro_g_in[lev], 0, 1, 1, covered_val);
+      EB_set_covered(*X_gk_in[lev], 0, fluid.nspecies, 1, covered_val);
+      EB_set_covered(*pressure_g_in[lev], 0, 1, 1, covered_val);
+    }
 
     const int interp_ng = 1;    // Only one layer needed for interpolation
-    const int interp_comp = 7;  // Four components (3 vel_g + 3 gp + temperature)
+    const int interp_comp = 6 +  // 3 vel_g + 3 gp
+                            1*int(advect_enthalpy) +  // 1 T_g
+                            (3+fluid.nspecies)*int(solve_reactions); // ep_g + ro_g + X_gk + pressure_g
+
+    MultiFab pressure_cc(ep_g_in[lev]->boxArray(), dmap[lev], 1, interp_ng);
+    pressure_cc.setVal(0.);
+
+    if (reactions.solve) {
+      MultiFab pressure_nd(pressure_g_in[lev]->boxArray(), dmap[lev], 1, interp_ng);
+      pressure_nd.setVal(0.);
+      EB_set_covered(pressure_nd, 0, 1, 1, covered_val);
+
+      MultiFab::Copy(pressure_nd, *m_leveldata[lev]->thermodynamic_p_g, 0, 0, 1, interp_ng);
+      MultiFab::Add (pressure_nd, *m_leveldata[lev]->p0_g, 0, 0, 1, interp_ng);
+
+      pressure_cc.setVal(0.);
+      EB_set_covered(pressure_cc, 0, 1, 1, covered_val);
+
+      amrex::average_node_to_cellcenter(pressure_cc, 0, pressure_nd, 0, 1);
+    }
 
     if (OnSameGrids)
     {
       // Store gas velocity and pressure gradient for interpolation
       interp_ptr = new MultiFab(grids[lev], dmap[lev], interp_comp, interp_ng, MFInfo(), *ebfactory[lev]);
 
+      int components_count(0);
+
       // Copy fluid velocity
-      MultiFab::Copy(*interp_ptr, *vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng);
+      MultiFab::Copy(*interp_ptr, *vel_g_in[lev], 0, components_count, 3, interp_ng);
+      components_count += 3;
 
       // Copy pressure gradient
-      MultiFab::Copy(*interp_ptr, gp_tmp, 0, 3, gp_tmp.nComp(), interp_ng);
+      MultiFab::Copy(*interp_ptr, gp_tmp, 0, components_count, 3, interp_ng);
+      components_count += 3;
 
       // Copy fluid temperature
       if(advect_enthalpy){
-        MultiFab::Copy(*interp_ptr, *T_g_in[lev], 0, 6, T_g_in[lev]->nComp(), interp_ng);
-      } else {
-        interp_ptr->setVal(0.0, 6, 1, interp_ng);
+        MultiFab::Copy(*interp_ptr, *T_g_in[lev], 0, components_count, 1, interp_ng);
+        components_count += 1;
       }
-    }
-    else
-    {
+
+      if (solve_reactions) {
+        // Copy volume fraction
+        MultiFab::Copy(*interp_ptr, *ep_g_in[lev],  0, components_count, 1, interp_ng);
+        components_count += 1;
+
+        // Copy fluid density
+        MultiFab::Copy(*interp_ptr, *ro_g_in[lev],  0, components_count, 1, interp_ng);
+        components_count += 1;
+
+        // Copy species mass fractions
+        MultiFab::Copy(*interp_ptr, *X_gk_in[lev],  0, components_count, fluid.nspecies, interp_ng);
+        components_count += fluid.nspecies;
+
+        // Copy thermodynamic pressure
+        MultiFab::Copy(*interp_ptr, pressure_cc,  0, components_count, 1, interp_ng);
+        components_count += 1;
+      }
+
+      AMREX_ALWAYS_ASSERT(interp_comp == components_count);
+
+    } else {
+
       const BoxArray&            pba = pc->ParticleBoxArray(lev);
       const DistributionMapping& pdm = pc->ParticleDistributionMap(lev);
 
       // Store gas velocity and volume fraction for interpolation
       interp_ptr = new MultiFab(pba, pdm, interp_comp, interp_ng, MFInfo(), *particle_ebfactory[lev]);
 
+      int components_count(0);
+
       // Copy fluid velocity
-      interp_ptr->ParallelCopy(*vel_g_in[lev], 0, 0, vel_g_in[lev]->nComp(), interp_ng, interp_ng);
+      interp_ptr->ParallelCopy(*vel_g_in[lev], 0, components_count, 3, interp_ng, interp_ng);
+      components_count += 3;
 
       // Copy pressure gradient
-      interp_ptr->ParallelCopy(gp_tmp, 0, 3, gp_tmp.nComp(), interp_ng, interp_ng);
+      interp_ptr->ParallelCopy(gp_tmp, 0, components_count, 3, interp_ng, interp_ng);
+      components_count += 3;
 
       // Copy fluid temperature
-      if(advect_enthalpy) {
-        interp_ptr->ParallelCopy(*T_g_in[lev], 0, 6, T_g_in[lev]->nComp(), interp_ng, interp_ng);
-      } else {
-        interp_ptr->setVal(0.0, 6, 1, interp_ng);
+      if (advect_enthalpy) {
+        interp_ptr->ParallelCopy(*T_g_in[lev], 0, components_count, 1, interp_ng, interp_ng);
+        components_count += 1;
       }
+
+      if (solve_reactions) {
+        // Copy volume fraction
+        interp_ptr->ParallelCopy(*ep_g_in[lev],  0, components_count, 1, interp_ng, interp_ng);
+        components_count += 1;
+
+        // Copy fluid density
+        interp_ptr->ParallelCopy(*ro_g_in[lev],  0, components_count, 1, interp_ng, interp_ng);
+        components_count += 1;
+
+        // Copy species mass fractions
+        interp_ptr->ParallelCopy(*X_gk_in[lev],  0, components_count, fluid.nspecies, interp_ng, interp_ng);
+        components_count += fluid.nspecies;
+
+        // Copy thermodynamic pressure
+        interp_ptr->ParallelCopy(pressure_cc,  0, components_count, 1, interp_ng, interp_ng);
+        components_count += 1;
+      }
+
+      AMREX_ALWAYS_ASSERT(interp_comp == components_count);
     }
 
+    // FillBoundary on interpolation MultiFab
+    interp_ptr->FillBoundary(geom[lev].periodicity());
+
     BL_PROFILE_VAR("particle_deposition", particle_deposition);
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
+
     {
       const auto dx_array  = geom[lev].CellSizeArray();
       const auto dxi_array = geom[lev].InvCellSizeArray();
@@ -402,8 +565,20 @@ mfix::mfix_calc_txfr_particle (Real time,
       const auto bndrycent = &(factory.getBndryCent());
       const auto areafrac = factory.getAreaFrac();
 
-      for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
-      {
+      auto& fluid_parms = *fluid.parameters;
+      auto& solids_parms = *solids.parameters;
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+      for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti) {
+
+        PairIndex index(pti.index(), pti.LocalTileIndex());
+        auto& ptile = pc->GetParticles(lev)[index];
+
+        //Access to added variables
+        auto ptile_data = ptile.getParticleTileData();
+
         auto& particles = pti.GetArrayOfStructs();
         MFIXParticleContainer::ParticleType* pstruct = particles().dataPtr();
 
@@ -439,7 +614,9 @@ mfix::mfix_calc_txfr_particle (Real time,
 
           const int dem_solve = DEM::solve;
 
-          const int l_advect_enthalpy = advect_enthalpy;
+          const int adv_enthalpy = advect_enthalpy;
+          const int fluid_is_a_mixture = fluid.is_a_mixture;
+          const int solve_reactions = reactions.solve;
 
           // We need this until we remove static attribute from mfix::gp0;
           const RealVect gp0_dev(gp0);
@@ -448,14 +625,20 @@ mfix::mfix_calc_txfr_particle (Real time,
 
           amrex::ParallelFor(np,
               [pstruct,p_realarray,interp_array,gp0_dev,plo,dxi,pmult,dx,
-               l_advect_enthalpy,ccent_fab,bcent_fab,apx_fab,apy_fab,apz_fab,
-               flags_array,grown_bx_is_regular]
+               adv_enthalpy,ccent_fab,bcent_fab,apx_fab,apy_fab,apz_fab,
+               flags_array,grown_bx_is_regular,interp_comp,solve_reactions,
+               ptile_data,nspecies_s,nspecies_g,idx_X_sn,idx_X_txfr,idx_vel_txfr,
+               idx_h_txfr,HeterogeneousRRates,reactions_parms,fluid_parms,
+               solids_parms,p_species_id_s,nreactions,p_types,p_phases,p_nphases,
+               p_reactants_id,p_nreactants,p_reactants_phases,p_reactants_coeffs,
+               p_products_id,p_nproducts,p_products_phases,p_products_coeffs,
+               p_MW_sn,p_species_id_g,p_MW_gk]
             AMREX_GPU_DEVICE (int p_id) noexcept
           {
             MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
 
             // Local array storing interpolated values
-            GpuArray<Real, interp_comp> interp_loc;
+            GpuArray<Real,10+SPECIES::NMAX> interp_loc;
             interp_loc.fill(0.);
 
             if (grown_bx_is_regular) {
@@ -549,24 +732,188 @@ mfix::mfix_calc_txfr_particle (Real time,
             // by "pmult" so that DEM uses the slip velocity. For PIC we
             // only want the fluid velocity as it uses a pseudo implicit
             // slip velocity for parcels.
+
+            RealVect vel_g(interp_loc[0], interp_loc[1], interp_loc[2]);
+            RealVect gp_g(interp_loc[3], interp_loc[4], interp_loc[5]);
+            
+            Real T_g(0);
+            if (adv_enthalpy) {
+              T_g = interp_loc[6];
+            }
+
             p_realarray[SoArealData::dragx][p_id] =
-              pbeta * ( interp_loc[0] - pmult*p_realarray[SoArealData::velx][p_id] ) -
-              (interp_loc[3] + gp0_dev[0]) * pvol;
+              pbeta * (vel_g[0] - pmult*p_realarray[SoArealData::velx][p_id]) -
+              (gp_g[0] + gp0_dev[0]) * pvol;
 
             p_realarray[SoArealData::dragy][p_id] =
-              pbeta * ( interp_loc[1] - pmult*p_realarray[SoArealData::vely][p_id] ) -
-              (interp_loc[4] + gp0_dev[1]) * pvol;
+              pbeta * (vel_g[1] - pmult*p_realarray[SoArealData::vely][p_id]) -
+              (gp_g[1] + gp0_dev[1]) * pvol;
 
             p_realarray[SoArealData::dragz][p_id] =
-              pbeta * ( interp_loc[2] - pmult*p_realarray[SoArealData::velz][p_id] ) -
-              (interp_loc[5] + gp0_dev[2]) * pvol;
+              pbeta * (vel_g[2] - pmult*p_realarray[SoArealData::velz][p_id]) -
+              (gp_g[2] + gp0_dev[2]) * pvol;
 
-            if(l_advect_enthalpy) {
+            if(adv_enthalpy) {
               // gamma == (heat transfer coeff) * (particle surface area)
               Real pgamma = p_realarray[SoArealData::convection][p_id];
 
               p_realarray[SoArealData::convection][p_id] =
-                pgamma * ( interp_loc[6] - p_realarray[SoArealData::temperature][p_id] );
+                pgamma * (T_g - p_realarray[SoArealData::temperature][p_id]);
+            }
+
+
+            if (solve_reactions) {
+              // Extract species mass fractions
+              GpuArray<Real,SPECIES::NMAX> X_sn;
+
+              for (int n_s(0); n_s < nspecies_s; n_s++) {
+                const int idx = idx_X_sn + n_s;
+                X_sn[n_s] = ptile_data.m_runtime_rdata[idx][p_id];
+              }
+
+              // Extract interpolated thermodynamic pressure
+              const Real ep_g = interp_loc[7];
+              const Real ro_g = interp_loc[8];
+              Real* X_gk      = &interp_loc[9];
+              const Real p_g  = interp_loc[9+nspecies_g];
+
+              const Real ep_s = 1. - ep_g;
+              const Real ro_p = p_realarray[SoArealData::density][p_id];
+
+              GpuArray<Real,Reactions::NMAX> R_q_heterogeneous;
+              R_q_heterogeneous.fill(0.);
+
+              const RealVect pvel(p_realarray[SoArealData::velx][p_id],
+                                  p_realarray[SoArealData::vely][p_id],
+                                  p_realarray[SoArealData::velz][p_id]);
+
+              const Real T_p = p_realarray[SoArealData::temperature][p_id];
+              const Real DP  = 2. * p_realarray[SoArealData::radius][p_id];
+
+              HeterogeneousRRates.template operator()<run_on>(R_q_heterogeneous.data(),
+                                                              reactions_parms,
+                                                              solids_parms, X_sn.data(),
+                                                              ro_p, ep_s, T_p,
+                                                              pvel, fluid_parms,
+                                                              X_gk, ro_g, ep_g, T_g,
+                                                              vel_g, DP, p_g);
+
+              //***************************************************************
+              // Loop over solids species for computing solids txfr rates
+              //***************************************************************
+              Real G_m_p_heterogeneous(0.);
+
+              for (int n_s(0); n_s < nspecies_s; n_s++) {
+                Real G_m_sn_heterogeneous(0.);
+
+                // Get the ID of the current species n_g
+                const int current_species_id = p_species_id_s[n_s];
+
+                // Loop over reactions to compute each contribution
+                for (int q(0); q < nreactions; q++) {
+                  // Do something only if reaction is heterogeneous and contains
+                  // a solid compound
+                  if (p_types[q] == Heterogeneous &&
+                      MFIXfind(p_phases[q], p_nphases[q], Solid) != InvalidIdx) {
+
+                    Real stoc_coeff(0);
+
+                    // Add reactant contribution (if any)
+                    {
+                      const int pos = MFIXfind(p_reactants_id[q], p_nreactants[q], current_species_id);
+
+                      if (pos != InvalidIdx) {
+                        if (p_reactants_phases[q][pos] == Solid)
+                          stoc_coeff += p_reactants_coeffs[q][pos];
+                      }
+                    }
+
+                    // Add products contribution (if any)
+                    {
+                      const int pos = MFIXfind(p_products_id[q], p_nproducts[q], current_species_id);
+
+                      if (pos != InvalidIdx) {
+                        if (p_products_phases[q][pos] == Solid)
+                          stoc_coeff += p_products_coeffs[q][pos];
+                      }
+                    }
+
+                    // Compute solids species n_s transfer rate for reaction q
+                    Real G_m_sn_q = stoc_coeff * p_MW_sn[n_s] * R_q_heterogeneous[q];
+
+                    G_m_sn_heterogeneous += G_m_sn_q;
+                  }
+                }
+
+                ptile_data.m_runtime_rdata[idx_X_txfr+n_s][p_id] = G_m_sn_heterogeneous;
+
+                G_m_p_heterogeneous += G_m_sn_heterogeneous;
+              }
+
+              //***************************************************************
+              // Loop over fluid species for computing fluid txfr rates
+              //***************************************************************
+              Real G_H_g_heterogeneous(0.);
+
+              for (int n_g(0); n_g < nspecies_g; n_g++) {
+
+                // Get the ID of the current species n_g
+                const int current_species_id = p_species_id_g[n_g];
+
+                // Loop over reactions to compute each contribution
+                for (int q(0); q < nreactions; q++) {
+                  // Do something only if reaction is heterogeneous and contains
+                  // a solid compound
+                  if (p_types[q] == Heterogeneous &&
+                      MFIXfind(p_phases[q], p_nphases[q], Fluid) != InvalidIdx) {
+
+                    Real stoc_coeff(0);
+
+                    // Add reactant contribution (if any)
+                    {
+                      const int pos = MFIXfind(p_reactants_id[q], p_nreactants[q], current_species_id);
+
+                      if (pos != InvalidIdx) {
+                        if (p_reactants_phases[q][pos] == Fluid)
+                          stoc_coeff += p_reactants_coeffs[q][pos];
+                      }
+                    }
+
+                    // Add products contribution (if any)
+                    {
+                      const int pos = MFIXfind(p_products_id[q], p_nproducts[q], current_species_id);
+
+                      if (pos != InvalidIdx) {
+                        if (p_products_phases[q][pos] == Fluid)
+                          stoc_coeff += p_products_coeffs[q][pos];
+                      }
+                    }
+
+                    // Compute fluid species n_g transfer rate for reaction q
+                    Real G_m_gk_q = stoc_coeff * p_MW_gk[n_g] * R_q_heterogeneous[q];
+
+                    // Contribution to the particle
+                    const Real h_gk_T_p = fluid_parms.calc_h_gk<run_on>(T_p, n_g);
+                    const Real h_gk_T_g = fluid_parms.calc_h_gk<run_on>(T_g, n_g);
+
+                    const Real G_H_pk_q = h_gk_T_g * amrex::min(0., G_m_gk_q);
+                    const Real G_H_gk_q = h_gk_T_p * amrex::max(0., G_m_gk_q);
+
+                    G_H_g_heterogeneous += (G_H_pk_q + G_H_gk_q);
+                  }
+                }
+              }
+
+              //***************************************************************
+              //
+              //***************************************************************
+              const Real coeff = amrex::max(0., G_m_p_heterogeneous);
+              ptile_data.m_runtime_rdata[idx_vel_txfr+0][p_id] = coeff*vel_g[0];
+              ptile_data.m_runtime_rdata[idx_vel_txfr+1][p_id] = coeff*vel_g[1];
+              ptile_data.m_runtime_rdata[idx_vel_txfr+2][p_id] = coeff*vel_g[2];
+
+              // Write the result in the enthalpy transfer space
+              ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = -1*G_H_g_heterogeneous;
             }
 
           }); // particle loop

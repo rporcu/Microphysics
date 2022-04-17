@@ -801,9 +801,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             const int nspecies_s = solids.nspecies;
 
             const int idx_X_sn = m_runtimeRealData.X_sn;
-            const int idx_mass_sn_txfr = m_runtimeRealData.species_txfr;
-            const int idx_vel_s_txfr = m_runtimeRealData.vel_txfr;
-            const int idx_h_s_txfr = m_runtimeRealData.h_txfr;
+            const int idx_X_txfr = m_runtimeRealData.species_txfr;
+            const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
+            const int idx_h_txfr = m_runtimeRealData.h_txfr;
 
             const int local_update_mass = update_mass && solids.solve_species && reactions.solve;
             const int local_update_enthalpy = update_enthalpy && advect_enthalpy;
@@ -814,8 +814,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             auto& solids_parms = *solids.parameters;
 
             amrex::ParallelFor(nrp, [pstruct,p_realarray,p_intarray,subdt,
-                ptile_data,nspecies_s,idx_X_sn,idx_mass_sn_txfr,idx_vel_s_txfr,
-                idx_h_s_txfr,local_update_mass,fc_ptr,ntot,gravity,tow_ptr,eps,
+                ptile_data,nspecies_s,idx_X_sn,idx_X_txfr,idx_vel_txfr,
+                idx_h_txfr,local_update_mass,fc_ptr,ntot,gravity,tow_ptr,eps,
                 p_hi,p_lo,x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc,
                 enthalpy_source,update_momentum,local_solve_reactions,time,
                 solid_is_a_mixture,solids_parms,local_update_enthalpy,
@@ -877,7 +877,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 for (int n_s(0); n_s < nspecies_s; ++n_s) {
 
                   // Get the current reaction rate for species n_s
-                  const Real mass_sn_rate = ptile_data.m_runtime_rdata[idx_mass_sn_txfr+n_s][i];
+                  const Real mass_sn_rate = ptile_data.m_runtime_rdata[idx_X_txfr+n_s][i];
 
                   X_sn[n_s] = X_sn[n_s]*p_mass_old + subdt*mass_sn_rate;
 
@@ -943,9 +943,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                     subdt*((p_realarray[SoArealData::dragz][i]+fc_ptr[i+2*ntot]) / p_mass_new + vel_coeff*gravity[2]);
 
                   if (local_solve_reactions) {
-                    p_velx_new += subdt*(ptile_data.m_runtime_rdata[idx_vel_s_txfr+0][i] / p_mass_new);
-                    p_vely_new += subdt*(ptile_data.m_runtime_rdata[idx_vel_s_txfr+1][i] / p_mass_new);
-                    p_velz_new += subdt*(ptile_data.m_runtime_rdata[idx_vel_s_txfr+2][i] / p_mass_new);
+                    p_velx_new += subdt*(ptile_data.m_runtime_rdata[idx_vel_txfr+0][i] / p_mass_new);
+                    p_vely_new += subdt*(ptile_data.m_runtime_rdata[idx_vel_txfr+1][i] / p_mass_new);
+                    p_velz_new += subdt*(ptile_data.m_runtime_rdata[idx_vel_txfr+2][i] / p_mass_new);
                   }
 
                   const Real p_omegax_old = p_realarray[SoArealData::omegax][i];
@@ -1026,7 +1026,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                     subdt*((p_realarray[SoArealData::convection][i]+enthalpy_source) / p_mass_new);
 
                   if (local_solve_reactions) {
-                    p_enthalpy_new += subdt*(ptile_data.m_runtime_rdata[idx_h_s_txfr][i] / p_mass_new);
+                    p_enthalpy_new += subdt*(ptile_data.m_runtime_rdata[idx_h_txfr][i] / p_mass_new);
                   }
 
                   // ************************************************************

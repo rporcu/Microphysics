@@ -111,7 +111,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   //***************************************************************************
   // Data for chemical reactions
   //***************************************************************************
-//  // Solid species data
+  // Solid species data
   const int nspecies_s = solids.nspecies;
 
   // Fluid species data
@@ -146,6 +146,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   // Particles SoA starting indexes for mass fractions and rate of formations
   const int idx_X_sn   = (pc->m_runtimeRealData).X_sn;
   const int idx_X_txfr = (pc->m_runtimeRealData).species_txfr;
+  const int idx_vel_txfr = (pc->m_runtimeRealData).vel_txfr;
   const int idx_h_txfr = (pc->m_runtimeRealData).h_txfr;
 
   auto& reactions_parms = *reactions.parameters;
@@ -233,13 +234,13 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       }
 
       if (solve_species) {
-        // Copy volume fraction
+        // Copy species mass fractions
         MultiFab::Copy(*interp_ptr, *X_gk_in[lev],  0, components_count, fluid.nspecies, interp_ng);
         components_count += fluid.nspecies;
       }
 
       if (reactions.solve) {
-        // Copy volume fraction
+        // Copy thermodynamic pressure
         MultiFab::Copy(*interp_ptr, pressure_cc,  0, components_count, 1, interp_ng);
         components_count += 1;
       }
@@ -309,8 +310,6 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       auto& fluid_parms = *fluid.parameters;
       auto& solids_parms = *solids.parameters;
 
-      const int fluid_is_a_mixture = fluid.is_a_mixture;
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -361,8 +360,6 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
           const Real mu_g0 = fluid.mu_g0;
 
-          const int nspecies_g = fluid.nspecies;
-
           auto local_cg_dem = DEM::cg_dem;
 
           amrex::ParallelFor(np,
@@ -370,7 +367,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                HeterogeneousRRates,plo,dxi,adv_enthalpy,fluid_is_a_mixture,
                mu_g0,fluid_parms,nspecies_g,interp_comp,local_cg_dem,
                ptile_data,nreactions,nspecies_s,
-               Solid,idx_X_sn,idx_X_txfr,idx_h_txfr,p_MW_gk,p_species_id_g,
+               Solid,idx_X_sn,idx_X_txfr,idx_vel_txfr,idx_h_txfr,p_MW_gk,p_species_id_g,
                p_reactants_id,p_reactants_coeffs,p_reactants_phases,
                p_products_id,p_products_coeffs,p_products_phases,p_nreactants,
                p_nproducts,InvalidIdx,p_phases,p_nphases,p_types,Heterogeneous,
@@ -630,11 +627,19 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                     G_H_g_heterogeneous += (G_H_pk_q + G_H_gk_q);
                   }
                 }
+
+                ptile_data.m_runtime_rdata[idx_X_txfr+n_g][p_id] = G_m_gk_heterogeneous;
+
+                G_m_g_heterogeneous += G_m_gk_heterogeneous;
               }
 
               //***************************************************************
               //
               //***************************************************************
+              const Real coeff = amrex::max(0., G_m_g_heterogeneous);
+              ptile_data.m_runtime_rdata[idx_vel_txfr+0][p_id] = coeff;
+              ptile_data.m_runtime_rdata[idx_vel_txfr+1][p_id] = coeff;
+              ptile_data.m_runtime_rdata[idx_vel_txfr+2][p_id] = coeff;
 
               // Write the result in the enthalpy transfer space
               ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = G_H_g_heterogeneous;

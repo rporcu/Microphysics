@@ -243,9 +243,24 @@ class mfix : public AmrCore
     bool contains_ebs = false;
 
     void mfix_calc_txfr_particle (Real time,
+                                  Vector< MultiFab* > const& ep_g_in,
+                                  Vector< MultiFab* > const& ro_g_in,
                                   Vector< MultiFab* > const& vel_g_in,
+                                  Vector< MultiFab* > const& T_g_in,
+                                  Vector< MultiFab* > const& X_gk_in,
+                                  Vector< MultiFab* > const& pressure_g_in,
+                                  Vector< MultiFab* > const& gp_in);
+
+    template <typename F1>
+    void mfix_calc_txfr_particle (Real time,
+                                  Vector< MultiFab* > const& ep_g_in,
+                                  Vector< MultiFab* > const& ro_g_in,
+                                  Vector< MultiFab* > const& vel_g_in,
+                                  Vector< MultiFab* > const& T_g_in,
+                                  Vector< MultiFab* > const& X_gk_in,
+                                  Vector< MultiFab* > const& pressure_g_in,
                                   Vector< MultiFab* > const& gp_in,
-                                  Vector< MultiFab* > const& T_g_in);
+                                  F1 HeterogeneousRatesFunc);
 
     void mfix_add_txfr_explicit (Real dt,
                                  amrex::Vector<amrex::MultiFab*      > const& vel_in,

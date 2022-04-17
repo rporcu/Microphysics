@@ -72,7 +72,7 @@ struct runtimeRealData
                    const int nreactions)
     : X_sn(0)                                                     // nb of components = nspecies
     , species_txfr(X_sn + nspecies_s)                             // nb of components = nspecies
-    , vel_txfr(species_txfr + amrex::max(nspecies_s, nspecies_g)*(nreactions>0)) // nb of components = 3
+    , vel_txfr(species_txfr + amrex::max(nspecies_s, nspecies_g)*(nreactions>0)) // nb of components = 1
     , h_txfr(vel_txfr + 3*(nreactions>0))                         // nb of components = 1
     , count(h_txfr + 1*(nreactions>0))
   {}
@@ -258,6 +258,7 @@ public:
                                    amrex::MultiFab& chem_txfr_mf,
                                    const amrex::MultiFab* volfrac,
                                    const amrex::FabArray<amrex::EBCellFlagFab>* flags,
+                                   const FluidPhase& fluid,
                                    const int advect_enthalpy);
 
     template <typename F>
@@ -268,6 +269,7 @@ public:
                                    amrex::MultiFab& chem_txfr_mf,
                                    const amrex::MultiFab* volfrac,
                                    const amrex::FabArray<amrex::EBCellFlagFab>* flags,
+                                   const FluidPhase& fluid,
                                    const int advect_enthalpy);
 
 
