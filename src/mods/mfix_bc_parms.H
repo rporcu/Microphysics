@@ -22,6 +22,10 @@ namespace BC
 {
 
   struct BC_t {
+    // Constructor
+    BC_t (const FluidPhase& fluid_phase) :
+      fluid(fluid_phase.constraint_type, fluid_phase.nspecies, fluid_phase.parameters)
+    {}
 
     // BC type (mi, pi, po, nsw, eb)
     int type;
@@ -77,6 +81,8 @@ namespace BC
                    const FluidPhase& fluid,
                    const SolidsPhase& solids);
 
+  void read_bc_density (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
+  void read_bc_thermodynamic_pressure (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
   void read_bc_velocity (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
   void read_bc_volflow (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
   void read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);

@@ -71,8 +71,6 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 {
     BL_PROFILE("mfix::mfix_compute_convective_term");
 
-    const int ngmac = nghost_mac();
-
     const int l_nspecies = fluid.nspecies;
 
     int flux_comp, num_comp;
@@ -169,12 +167,6 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
     for (int lev = 0; lev <= finest_level; ++lev)
     {
-        if (ngmac > 0) {
-            AMREX_D_TERM(ep_u_mac[lev]->FillBoundary(geom[lev].periodicity());,
-                         ep_v_mac[lev]->FillBoundary(geom[lev].periodicity());,
-                         ep_w_mac[lev]->FillBoundary(geom[lev].periodicity()););
-        }
-
         divu[lev].setVal(0.);
         Array<MultiFab const*, AMREX_SPACEDIM> u;
         AMREX_D_TERM(u[0] = ep_u_mac[lev];,
@@ -435,10 +427,6 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
         dsdt_tmp.setVal(0.);
         if (solve_species && l_nspecies > 0)
             dXdt_tmp.setVal(0.);
-
-        // We need to make sure the ghost cells are filled if using FluxRedistribution because
-        // ep_g is used as the weights
-        ep_g_in[lev]->FillBoundary();
 
         const auto& ebfact = EBFactory(lev);
 

@@ -27,10 +27,6 @@ mfix::mfix_incompressible_fluid_rhs (Vector< MultiFab* > const& rhs)
   for (int lev(0); lev <= finest_level; lev++) {
     EB_set_covered(*rhs[lev], 0, 1, 0, 0.0);
   }
-
-  for (int lev(0); lev <= finest_level; lev++) {
-    rhs[lev]->FillBoundary(geom[lev].periodicity());
-  }
 }
 
 
@@ -166,10 +162,6 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
 
     for (int lev(0); lev <= finest_level; lev++) {
       EB_set_covered(*rhs[lev], 0, 1, 0, 0.0);
-    }
-
-    for (int lev(0); lev <= finest_level; lev++) {
-      rhs[lev]->FillBoundary(geom[lev].periodicity());
     }
 
   } else { // no adv_enthalpy or no adv_fluid_species

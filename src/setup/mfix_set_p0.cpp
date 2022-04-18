@@ -32,6 +32,7 @@ void compute_p0_bcs (const Box& sbx,
                      const int ndwn,
                      const int nup,
                      const int nghost,
+                     const Real ro_g0,
                      const FluidPhase& fluid);
 
 void set_p0_bcs (const Box& sbx,
@@ -222,9 +223,12 @@ mfix::set_p0 (const Box& bx,
 
       if( !IC::ic[icv].fluid.pressure || gravity_square_module > tolerance)
       {
+        const Real ro_g0 = IC::ic[icv].fluid.density;
+
         compute_p0_bcs(sbx, domain, array4_p0_g, m_bc_p_g, pj, gravity, dx, dy,
                        dz, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi,
-                       nlft, nrgt, nbot, ntop, ndwn, nup, nghost_state(), fluid);
+                       nlft, nrgt, nbot, ntop, ndwn, nup, nghost_state(), ro_g0, fluid);
+
         return;
       }
 
@@ -323,6 +327,7 @@ void compute_p0_bcs (const Box& sbx,
                      const int ndwn,
                      const int nup,
                      const int nghost,
+                     const Real ro_g0,
                      const FluidPhase& fluid)
 {
   const Real tolerance = std::numeric_limits<Real>::epsilon();
@@ -359,8 +364,6 @@ void compute_p0_bcs (const Box& sbx,
   // Set an approximate pressure field assuming that the pressure drop
   // balances the weight of the bed, if the initial pressure-field is not
   // specified
-
-  const Real ro_g0 = fluid.ro_g0;
 
   if(amrex::Math::abs(gravity[0]) > tolerance)
   {

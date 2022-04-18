@@ -10,8 +10,6 @@ target_sources( mfixcore
    mfix_init_fluid.H
    mfix_init_fluid.cpp
    mfix_init_redistribution.cpp
-   mfix_set_temperature_bc0.cpp
-   mfix_set_species_bc0.cpp
    mfix_set_ls_inflow.cpp
    mfix_set_p0.cpp
    mfix_set_gp0.cpp

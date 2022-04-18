@@ -37,6 +37,7 @@ geometry.prob_hi     = 0.0015   0.0015  0.0015   # hi corner of physical domain
 
 mfix.gravity   =  0.0  -9.80665  0.0
 
+
 #_______________________________________________________________________
 # Fluid model settings
 #

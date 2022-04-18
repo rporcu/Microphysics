@@ -16,7 +16,6 @@ mfix::mfix_set_epg_bcs (const Vector< MultiFab* >& epg_in, const int dir_bc) con
      // Set all values outside the domain to covered_val just to avoid use of undefined
      epg_in[lev]->setDomainBndry(covered_val,geom[lev]);
 
-     epg_in[lev]->FillBoundary(geom[lev].periodicity());
      Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP

@@ -16,7 +16,6 @@ mfix::mfix_set_velocity_bcs (Real time,
      // Set all values outside the domain to covered_val just to avoid use of undefined
      vel_in[lev]->setDomainBndry(covered_val,geom[lev]);
 
-     vel_in[lev]->FillBoundary(geom[lev].periodicity());
      Box domain(geom[lev].Domain());
 
 #ifdef _OPENMP

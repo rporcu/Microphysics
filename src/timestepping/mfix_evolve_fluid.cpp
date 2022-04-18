@@ -37,25 +37,6 @@ mfix::EvolveFluid (int nstep,
 
     amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
 
-    // Extrapolate boundary values for ro_g, temperature tracer, ep_g
-    // The subsequent call to mfix_set_scalar_bcs will only overwrite
-    // ep_g ghost values for PINF and POUT
-    for (int lev = 0; lev <= finest_level; lev++)
-    {
-      m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
-
-      if (advect_enthalpy) {
-        m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
-        m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
-      }
-
-      if (solve_species) {
-        m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
-      }
-    }
-
     // Fill ghost nodes and reimpose boundary conditions
     //mfix_set_velocity_bcs(time, vel_g, 0);
 
@@ -256,9 +237,9 @@ mfix::EvolveFluid (int nstep,
             mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
                                  get_T_g(), get_X_gk(), new_time);
 
-            // If !m_constraint_type == ConstraintType::IncompressibleFluid, then we have already
+            // If !fluid.constraint_type == ConstraintType::IncompressibleFluid, then we have already
             // updated the chemical quantities
-            if (reactions.solve && m_constraint_type == ConstraintType::IncompressibleFluid) {
+            if (reactions.solve && fluid.constraint_type == ConstraintType::IncompressibleFluid) {
               mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
                                   get_p_g(), get_T_g(), get_X_gk(), new_time);
             }

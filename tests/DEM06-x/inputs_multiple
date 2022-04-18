@@ -75,9 +75,6 @@ amr.plt_regtest = 1
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.2
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 1.8e-5
 
@@ -128,7 +125,9 @@ ic.regions = full-domain
 # Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
+ic.full-domain.fluid.pressure  = 0.0
 ic.full-domain.fluid.velocity  = 0.4  0.0  0.0
+ic.full-domain.fluid.density   = 1.2
 
 
 #_______________________________________________________________________
@@ -140,7 +139,9 @@ bc.regions = inflow  outflow
 
 bc.inflow = mi
 bc.inflow.fluid.volfrac  =  1.0
+bc.inflow.fluid.pressure =  0.0
 bc.inflow.fluid.velocity =  0.4  0.0  0.0
+bc.inflow.fluid.density  =  1.2
 
 
 bc.outflow = po

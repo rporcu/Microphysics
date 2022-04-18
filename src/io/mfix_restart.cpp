@@ -250,9 +250,6 @@ mfix::Restart (std::string& restart_file,
             m_leveldata[lev]->vel_g->ParallelCopy(mf_vel, 0, 0, 3, ng_to_copy, ng_to_copy);
 
           } else {
-
-            mf_vel.FillBoundary(geom[lev].periodicity());
-
             replicate_data(*(m_leveldata[lev]->vel_g), mf_vel);
           }
         }
@@ -273,9 +270,6 @@ mfix::Restart (std::string& restart_file,
             m_leveldata[lev]->gp->ParallelCopy(mf_gp, 0, 0, 3, ng_to_copy, ng_to_copy);
 
           } else {
-
-            mf_gp.FillBoundary(geom[lev].periodicity());
-
             replicate_data(*(m_leveldata[lev]->gp), mf_gp);
           }
         }
@@ -308,8 +302,6 @@ mfix::Restart (std::string& restart_file,
               (*(mfixRW->chkScalarVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
             } else {
-
-              mf.FillBoundary(geom[lev].periodicity());
 
               replicate_data(*(mfixRW->chkScalarVars[i][lev]), mf);
             }
@@ -358,8 +350,6 @@ mfix::Restart (std::string& restart_file,
 
             } else {
 
-              mf.FillBoundary(geom[lev].periodicity());
-
               replicate_data(*(mfixRW->chkTVars[i][lev]), mf);
             }
           }
@@ -387,8 +377,6 @@ mfix::Restart (std::string& restart_file,
                                                                ng_to_copy, ng_to_copy);
 
             } else {
-
-              mf.FillBoundary(geom[lev].periodicity());
 
               replicate_data(*(mfixRW->chkSpeciesVars[i][lev]), mf);
             }

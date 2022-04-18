@@ -152,8 +152,6 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
         for (int n(0); n < 3; n++)
             MultiFab::Multiply(*epu[lev], *ep_g_in[lev], 0, n, 1, epu[lev]->nGrow());
 
-        epu[lev]->FillBoundary(geom[lev].periodicity());
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -167,8 +165,6 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
             // already?
             set_vec_bcs(lev, (*epu[lev])[mfi], geom[lev].Domain());
         }
-
-        epu[lev]->FillBoundary(geom[lev].periodicity());
 
         // We set these to zero because if the values in the covered cells are undefined,
         //   even though they are multiplied by zero in the divu computation, we can still get NaNs
@@ -284,8 +280,6 @@ mfix::PostProjectionDiagnostics(Real a_time,
         for (int n(0); n < 3; n++)
             MultiFab::Multiply(*epu[lev], *ep_g_in[lev], 0, n, 1, epu[lev]->nGrow());
 
-        epu[lev]->FillBoundary(geom[lev].periodicity());
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -299,8 +293,6 @@ mfix::PostProjectionDiagnostics(Real a_time,
             // already?
             set_vec_bcs(lev, (*epu[lev])[mfi], geom[lev].Domain() );
         }
-
-        epu[lev]->FillBoundary(geom[lev].periodicity());
 
         // We set these to zero because if the values in the covered cells are undefined,
         //   even though they are multiplied by zero in the divu computation, we can still get NaNs

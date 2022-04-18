@@ -50,6 +50,20 @@ mfix::InitParams ()
   IC::Initialize(fluid, solids);
   BC::Initialize(geom[0], fluid, solids);
 
+//  // In case of IdealGas EOS, check that ICs and BCs are consistent 
+//  if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
+//    for (amrex::Long i(0); i < BC::bc.size(); ++i) {
+//      if (BC::bc[i].type == bc_list.get_minf() || BC::bc[i].type == bc_list.get_pinf()) {
+//
+//        const Real diff = std::abs(IC::ic[0].fluid.thermodynamic_pressure -
+//                                   BC::bc[i].fluid.thermodynamic_pressure);
+//
+//        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(diff < 1.e-15,
+//            "BCs and ICs for thermodynamic pressure are not consistent");
+//      }
+//    }
+//  }
+
   // set n_error_buf (used in AmrMesh) to default (can overwrite later)
   for (int i = 0; i < n_error_buf.size(); i++)
     n_error_buf[i] = {8,8,8};
@@ -462,31 +476,9 @@ mfix::InitParams ()
 
   if (fluid.solve)
   {
-    ParmParse pp("mfix");
-
-    // Constraint type
-    {
-      std::string constraint_type = "IncompressibleFluid";
-      pp.query("constraint_type", constraint_type);
-      constraint_type = amrex::toLower(constraint_type);
-
-      if (constraint_type.compare("incompressiblefluid") == 0) {
-        m_constraint_type = ConstraintType::IncompressibleFluid;
-      }
-      else if (constraint_type.compare("idealgasopensystem") == 0) {
-        m_constraint_type = ConstraintType::IdealGasOpenSystem;
-      }
-      else if (constraint_type.compare("idealgasclosedsystem") == 0) {
-        m_constraint_type = ConstraintType::IdealGasClosedSystem;
-      }
-      else {
-        amrex::Abort("Don't know this constraint type!");
-      }
-    }
-
     // Check on inputs in case of Ideal Gas EOS
-    if (m_constraint_type == ConstraintType::IdealGasOpenSystem ||
-        m_constraint_type == ConstraintType::IdealGasClosedSystem) {
+    if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
+        fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.MW_gk0.size() > 0, "Inputs error: fluid molecular_weight not provided");
 
       for (size_t i(0); i < fluid.MW_gk0.size(); ++i) {
@@ -1049,8 +1041,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
             init_fluid_parameters(bx, mfi, ld, advect_enthalpy, solve_species, fluid);
           } else {
             init_fluid(sbx, bx, domain, mfi, ld, dx, dy, dz, xlen, ylen, zlen, plo,
-                test_tracer_conservation, advect_enthalpy, solve_species,
-                m_constraint_type, fluid);
+                test_tracer_conservation, advect_enthalpy, solve_species, fluid);
           }
        }
 
@@ -1061,29 +1052,6 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
     // Here we re-set the bc values for p and u,v,w just in case init_fluid
     //      over-wrote some of the bc values with ic values
     mfix_set_bc0();
-
-    for (int lev = 0; lev < nlev; lev++)
-    {
-      m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
-
-      if (advect_enthalpy)
-      {
-        m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
-        m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
-      }
-
-      if (advect_tracer)
-        m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
-
-      if (solve_species)
-      {
-        m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
-      }
-
-      m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
-    }
-
 
     // Make sure to fill the "old state" before we start.
     for (int lev = 0; lev < nlev; lev++)
@@ -1105,8 +1073,9 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
          MultiFab::Copy(*ld.X_gko, *ld.X_gk, 0, 0, fluid.nspecies, ld.X_gk->nGrow());
        }
 
-       if (m_constraint_type == ConstraintType::IdealGasClosedSystem && advect_enthalpy) {
-         MultiFab::Copy(*ld.pressure_go, *ld.pressure_g, 0, 0, 1, ld.pressure_g->nGrow());
+       if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem && advect_enthalpy) {
+         MultiFab::Copy(*ld.thermodynamic_p_go, *ld.thermodynamic_p_g, 0, 0, 1,
+             ld.thermodynamic_p_g->nGrow());
        }
     }
 
@@ -1185,47 +1154,21 @@ void
 mfix::mfix_set_bc0 ()
 {
     if (ooo_debug) amrex::Print() << "mfix_set_bc0" << std::endl;
-    for (int lev = 0; lev < nlev; lev++)
-    {
-     Box domain(geom[lev].Domain());
 
-     MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
+    Real time = 0.0;
 
-     // Don't tile this -- at least for now
-     for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
-     {
-       const Box& sbx = ep_g[mfi].box();
+    if (advect_enthalpy) {
+      mfix_set_temperature_bcs(time, get_T_g());
+      mfix_set_enthalpy_bcs(time, get_h_g());
+    }
 
-       if (advect_enthalpy)
-         set_temperature_bc0(sbx, &mfi, lev, domain);
-
-       if (solve_species)
-         set_species_bc0(sbx, &mfi, lev, domain);
-     }
-
-     m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
-     m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
-
-     if (advect_enthalpy) {
-       m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
-       m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
-     }
-
-     if (advect_tracer)
-       m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
-
-     if (solve_species)
-       m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
-   }
+    if (solve_species)
+      mfix_set_species_bcs(time, get_X_gk());
 
    // Put velocity Dirichlet bc's on faces
-   Real time = 0.0;
    int extrap_dir_bcs = 0;
 
    mfix_set_velocity_bcs(time, get_vel_g(), extrap_dir_bcs);
-
-   for (int lev = 0; lev < nlev; lev++)
-     m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -1262,8 +1205,6 @@ mfix::mfix_set_p0 ()
 
        set_p0 (bx, &mfi, lev, domain );
      }
-
-     m_leveldata[lev]->p0_g->FillBoundary(p0_periodicity);
    }
 }
 

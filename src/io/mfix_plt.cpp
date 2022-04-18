@@ -502,8 +502,6 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
             });
           }
 
-          MW_g.FillBoundary(geom[lev].periodicity());
-
           EB_set_covered(MW_g, 0, MW_g.nComp(), MW_g.nGrow(), covered_val);
 
           MultiFab::Copy(*mf[lev], MW_g, 0, lc, 1, 0);
@@ -583,8 +581,6 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
             });
           }
 
-          cp_g.FillBoundary(geom[lev].periodicity());
-
           EB_set_covered(cp_g, 0, cp_g.nComp(), cp_g.nGrow(), covered_val);
 
           MultiFab::Copy(*mf[lev], cp_g, 0, lc, 1, 0);
@@ -617,8 +613,6 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
               k_g_array(i,j,k) = fluid_parms.calc_k_g(T_g_array(i,j,k));
             });
           }
-
-          k_g.FillBoundary(geom[lev].periodicity());
 
           EB_set_covered(k_g, 0, k_g.nComp(), k_g.nGrow(), covered_val);
 
@@ -658,8 +652,6 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
                 mu_g_array(i,j,k) = mu_g0;
             });
           }
-
-          mu_g.FillBoundary(geom[lev].periodicity());
 
           EB_set_covered(mu_g, 0, mu_g.nComp(), mu_g.nGrow(), covered_val);
 
@@ -741,8 +733,6 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
             });
           }
 
-          D_gk.FillBoundary(geom[lev].periodicity());
-
           EB_set_covered(D_gk, 0, D_gk.nComp(), D_gk.nGrow(), covered_val);
 
           MultiFab::Copy(*mf[lev], D_gk, 0, lc, D_gk.nComp(), 0);
@@ -783,8 +773,6 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
               }
             });
           }
-
-          cp_gk.FillBoundary(geom[lev].periodicity());
 
           EB_set_covered(cp_gk, 0, cp_gk.nComp(), cp_gk.nGrow(), covered_val);
 
@@ -836,8 +824,6 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
                   fluid_params.calc_h_gk<RunOn::Host>(Tg_loc, n, cell_is_covered);
             });
           }
-
-          h_gk.FillBoundary(geom[lev].periodicity());
 
           EB_set_covered(h_gk, 0, h_gk.nComp(), h_gk.nGrow(), covered_val);
 

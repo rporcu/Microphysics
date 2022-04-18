@@ -21,6 +21,9 @@ nodal_proj.verbose = 1
 
 amr.blocking_factor = 1
 
+mfix.constraint_type = IncompressibleFluid
+
+
 #_______________________________________________________________________
 # Geometry / grids / tiles
 
@@ -106,17 +109,8 @@ amr.check_file     ="chk"
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
-
-fluid.specific_heat          = constant
-fluid.specific_heat.constant = 1.0
-
-fluid.thermal_conductivity          = constant
-fluid.thermal_conductivity.constant = 0.0
 
 
 #_______________________________________________________________________
@@ -204,6 +198,7 @@ bc.regions = inflow  outflow
 bc.inflow = mi
 bc.inflow.fluid.volfrac  =  1.0
 bc.inflow.fluid.velocity =  0.015  0.0  0.0
+bc.inflow.fluid.density  =  1.0
 
 
 bc.outflow = po

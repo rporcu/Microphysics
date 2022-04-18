@@ -83,9 +83,6 @@ mfix.gravity =  0.0  0.0   0.0
 #----------------------------------------------------------------------
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 1.0e-3
 
@@ -131,7 +128,7 @@ regions.wall2.hi       = 3.200  3.200  0.800
 ic.regions = full-domain
 
 ic.full-domain.fluid.volfrac   =  1.0
-ic.full-domain.fluid.pressure  =  0.0
+ic.full-domain.fluid.density   =  1.0
 ic.full-domain.fluid.velocity  =  0.0  0.1  0.0
 
 
@@ -148,6 +145,7 @@ bc.wall2.normal = -1.0  0.0  0.0
 bc.inlet = mi
 bc.inlet.fluid.volfrac  =  1.0
 bc.inlet.fluid.velocity =  0.0  0.1  0.0
+bc.inlet.fluid.density  =  1.0
 
 bc.outlet = po
 bc.outlet.fluid.pressure =  0.0
