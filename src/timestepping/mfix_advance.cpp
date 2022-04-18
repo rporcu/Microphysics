@@ -43,6 +43,10 @@ mfix::mfix_project_velocity ()
       }
     }
 
+    if (EB::has_flow) {
+       mfix_set_eb_velocity_bcs(time, eb_flow_vel);
+    }
+
     mfix_apply_nodal_projection(depdt, time, dummy_dt, dummy_dt, proj_2,
                                 get_vel_g_old(), get_vel_g(), get_p_g(), get_gp(),
                                 get_ep_g(), get_txfr(), get_ro_g_const(),
