@@ -32,8 +32,7 @@ void compute_p0_bcs (const Box& sbx,
                      const int ndwn,
                      const int nup,
                      const int nghost,
-                     const Real ro_g0,
-                     const FluidPhase& fluid);
+                     const Real ro_g0);
 
 void set_p0_bcs (const Box& sbx,
                  const Box& domain,
@@ -227,7 +226,7 @@ mfix::set_p0 (const Box& bx,
 
         compute_p0_bcs(sbx, domain, array4_p0_g, m_bc_p_g, pj, gravity, dx, dy,
                        dz, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi,
-                       nlft, nrgt, nbot, ntop, ndwn, nup, nghost_state(), ro_g0, fluid);
+                       nlft, nrgt, nbot, ntop, ndwn, nup, nghost_state(), ro_g0);
 
         return;
       }
@@ -327,8 +326,7 @@ void compute_p0_bcs (const Box& sbx,
                      const int ndwn,
                      const int nup,
                      const int nghost,
-                     const Real ro_g0,
-                     const FluidPhase& fluid)
+                     const Real ro_g0)
 {
   const Real tolerance = std::numeric_limits<Real>::epsilon();
 
