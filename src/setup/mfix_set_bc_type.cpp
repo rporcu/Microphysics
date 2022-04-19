@@ -697,36 +697,15 @@ mfix::set_temperature_bc_values (Real time_in) const
 }
 
 void
-mfix::set_density_bc_values (Real /*time_in*/) const
+mfix::set_density_bc_values (Real time_in) const
 {
   m_h_bc_ro_g.resize(bc.size());
 
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
-
-    if ( bc[bcv].type == BCList::minf || bc[bcv].type == BCList::pinf ||
+    if (bc[bcv].type == BCList::minf || bc[bcv].type == BCList::pinf ||
         (bc[bcv].type == BCList::eb  && bc[bcv].fluid.flow_thru_eb)) {
-
-      if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
-          fluid.constraint_type == ConstraintType::IdealGasClosedSystem ) {
-
-        const Real pg = bc[bcv].fluid.thermodynamic_pressure;
-
-        if (pg <= 0.) {
-          std::vector<std::string> regions;
-          amrex::ParmParse pp("bc");
-          pp.queryarr("regions", regions);
-          amrex::Print() << "\n\n";
-          amrex::Print() << "**************************************************************\n";
-          amrex::Print() << "  Invalid or missing pressure for mass inflow boundary!\n";
-          amrex::Print() << "  Boundary Condition Name: " << regions[bcv] << "\n";
-          amrex::Print() << "  Fix the inputs file.\n";
-          amrex::Print() << "**************************************************************\n";
-          amrex::Print() << "\n\n";
-          amrex::Abort("Fix the inputs file.");
-        }
-      }
-
-      m_h_bc_ro_g[bcv] = bc[bcv].fluid.density;
+      const Real ro_g = bc[bcv].fluid.get_density(time_in);
+      m_h_bc_ro_g[bcv] = ro_g;
 
     } else {
       m_h_bc_ro_g[bcv] = 1e50;
@@ -738,39 +717,15 @@ mfix::set_density_bc_values (Real /*time_in*/) const
 
 
 void
-mfix::set_thermodynamic_pressure_bc_values (Real /*time_in*/) const
+mfix::set_thermodynamic_pressure_bc_values (Real time_in) const
 {
   m_h_bc_thermodynamic_p_g.resize(bc.size());
 
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
-
-    if (bc[bcv].type == BCList::minf || bc[bcv].type == BCList::pinf || bc[bcv].type == BCList::pout) {
-
-      if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
-          fluid.constraint_type == ConstraintType::IdealGasClosedSystem ) {
-
-        const Real pressure_g = bc[bcv].fluid.thermodynamic_pressure;
-
-        if (pressure_g <= 0.) {
-          std::vector<std::string> regions;
-          amrex::ParmParse pp("bc");
-          pp.queryarr("regions", regions);
-          amrex::Print() << "\n\n";
-          amrex::Print() << "**************************************************************\n";
-          amrex::Print() << "  Invalid or missing pressure for mass inflow boundary!\n";
-          amrex::Print() << "  Boundary Condition Name: " << regions[bcv] << "\n";
-          amrex::Print() << "  Fix the inputs file.\n";
-          amrex::Print() << "**************************************************************\n";
-          amrex::Print() << "\n\n";
-          amrex::Abort("Fix the inputs file.");
-        }
-
-        m_h_bc_thermodynamic_p_g[bcv] = pressure_g;
-
-      } else {
-
-        amrex::Abort("Not yet implemented");
-      }
+    if (bc[bcv].type == BCList::minf || bc[bcv].type == BCList::pinf ||
+        (bc[bcv].type == BCList::eb  && bc[bcv].fluid.flow_thru_eb)) {
+      const Real pressure_g = bc[bcv].fluid.get_thermodynamic_pressure(time_in);
+      m_h_bc_thermodynamic_p_g[bcv] = pressure_g;
 
     } else {
       m_h_bc_thermodynamic_p_g[bcv] = 1e50;
