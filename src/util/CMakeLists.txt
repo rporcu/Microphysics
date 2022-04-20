@@ -10,7 +10,7 @@ target_sources( mfixcore
    mfix_filcc.H
    mfix_filcc.cpp
    mfix_utils.H
-   mfix_util.cpp
+   mfix_utils.cpp
    mfix_regrid.cpp
    mfix_fillpatch_bc.H
    mfix_fillpatch.cpp

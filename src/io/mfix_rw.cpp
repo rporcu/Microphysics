@@ -3,6 +3,7 @@
 #include <mfix_pic_parms.H>
 
 #include <AMReX_ParmParse.H>
+#include <AMReX_EBFArrayBox.H>
 
 using namespace amrex;
 
@@ -407,7 +408,6 @@ void MfixRW::writeEBSurface() const
      WriteMyEBSurface();
 }
 
-
 void MfixRW::writeStaticPlotFile() const
 {
    if ((DEM::solve || PIC::solve) && write_ls)
@@ -418,6 +418,182 @@ void MfixRW::reportGridStats() const
 {
    if (fluid.solve)
      ReportGridStats();
+}
+
+//
+// Print the maximum values of the velocity components
+//
+void
+MfixRW::mfix_print_max_vel (int lev,
+                            const Vector<MultiFab*>& vel_g_in,
+                            const Vector<MultiFab*>& p_g_in)
+{
+    amrex::Print() << "   max(abs(u/v/w/p))  = "
+                   << vel_g_in[lev]->norm0(0,0,false,true) << "  "
+                   << vel_g_in[lev]->norm0(1,0,false,true) << "  "
+                   << vel_g_in[lev]->norm0(2,0,false,true) << "  "
+                   << p_g_in[lev]->norm0(0,0,false,true) << std::endl;
+}
+
+//
+// Print the maximum values of the pressure gradient components
+//
+void
+MfixRW::mfix_print_max_gp (int lev,
+                           const Vector<MultiFab*>& gp_g_in)
+{
+    amrex::Print() << "   max(abs(gpx/gpy/gpz))  = "
+                   << gp_g_in[lev]->norm0(0,0,false,true) << "  "
+                   << gp_g_in[lev]->norm0(1,0,false,true) << "  "
+                   << gp_g_in[lev]->norm0(2,0,false,true) <<  std::endl;
+}
+
+//
+//
+//
+void
+MfixRW::ReportGridStats () const
+{
+  BL_PROFILE("mfix::volEpsWgtSum()");
+
+  std::vector<long> counts(6,0);
+
+  int lev = 0;
+
+  const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
+
+  // Count the number of regular cells
+  counts[0] = static_cast<int>(amrex::ReduceSum(*volfrac, *(m_leveldata[lev]->ep_g), 0,
+    [=] AMREX_GPU_HOST_DEVICE (Box const & bx,
+                               Array4<const Real> const & vfrc,
+                               Array4<const Real> const & ep) -> int
+    {
+      int dm = 0;
+
+      amrex::Loop(bx, [vfrc,ep,&dm] (int i, int j, int k) noexcept
+      {if(vfrc(i,j,k)==1.0) dm += 1;});
+
+      return dm;
+    }));
+
+  // Count the number of covered cells
+  counts[1] = static_cast<int>(amrex::ReduceSum( *volfrac, *(m_leveldata[lev]->ep_g), 0,
+    [=] AMREX_GPU_HOST_DEVICE (Box const & bx,
+                               Array4<const Real> const & vfrc,
+                               Array4<const Real> const & ep) -> int
+    {
+      int dm = 0;
+
+      amrex::Loop(bx, [vfrc,ep,&dm] (int i, int j, int k) noexcept
+      {if(vfrc(i,j,k)==0.0) dm += 1;});
+
+      return dm;
+    }));
+
+  // Count the number of cut cells
+  counts[2] = static_cast<int>(amrex::ReduceSum( *volfrac, *(m_leveldata[lev]->ep_g), 0,
+    [=] AMREX_GPU_HOST_DEVICE (Box const & bx,
+                               Array4<const Real> const & vfrc,
+                               Array4<const Real> const & ep) -> int
+    {
+      int dm = 0;
+
+      amrex::Loop(bx, [vfrc,ep,&dm] (int i, int j, int k) noexcept
+      {if(0.0 < vfrc(i,j,k) && vfrc(i,j,k) < 1.0) dm += 1;});
+
+      return dm;
+    }));
+
+  int regular(0), covered(0), cut(0);
+
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:regular, covered, cut) if (Gpu::notInLaunchRegion())
+#endif
+  for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+
+    const auto& vel_fab   =
+      static_cast<EBFArrayBox const&>((*m_leveldata[lev]->vel_g)[mfi]);
+
+    const Box& bx     = mfi.tilebox();
+    const auto& flags = vel_fab.getEBCellFlagFab();
+
+    // Count number of regular grids
+    if (flags.getType(amrex::grow(bx,1)) == FabType::regular ) {
+      regular += 1;
+    } else if (flags.getType(amrex::grow(bx,1)) == FabType::covered ) {
+      covered += 1;
+    } else {
+      cut += 1;
+    }
+  }
+
+  counts[3] = regular;
+  counts[4] = covered;
+  counts[5] = cut;
+
+  ParallelDescriptor::ReduceLongSum(counts.data(), 6);
+
+  if(ParallelDescriptor::IOProcessor()){
+    printf("\n\n****************************************\n");
+    printf("  Coverage report:  Grids        Cells\n");
+    printf("          regular:  %5ld   %10ld\n", counts[3], counts[0]);
+    printf("          covered:  %5ld   %10ld\n", counts[4], counts[1]);
+    printf("              cut:  %5ld   %10ld\n", counts[5], counts[2]);
+    printf("****************************************\n\n");
+  }
+}
+
+//
+// Print the minimum volume fraction and cell location.
+//
+IntVect
+MfixRW::mfix_print_min_epg ()
+{
+
+#ifndef AMREX_USE_GPU
+
+  for (int lev = 0; lev <= finest_level; lev++) {
+
+    const Real tolerance = std::numeric_limits<Real>::epsilon();
+    auto& ld = *m_leveldata[lev];
+    const Real min_epg = ld.ep_g->min(0);
+
+    for (MFIter mfi(*ld.vel_g,false); mfi.isValid(); ++mfi) {
+      Box const& bx = mfi.tilebox();
+      Array4<Real const> const& epg = ld.ep_g->const_array(mfi);
+
+      IntVect epg_cell = {-100,-100,-100};
+      int found(0);
+
+      amrex::ParallelFor(bx, [epg, min_epg, &found, &epg_cell, tolerance]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+
+        if( amrex::Math::abs(epg(i,j,k) - min_epg) < tolerance ){
+          epg_cell[0] = i;
+          epg_cell[1] = j;
+          epg_cell[2] = k;
+          found +=1;
+        }
+      });
+
+      if(found > 0){
+        amrex::Print(Print::AllProcs)
+          << std::endl << std::endl << "min epg "  << min_epg
+          << "  at " << epg_cell[0] << "  " << epg_cell[1] << "  " << epg_cell[2]
+          << "   total found " << found << std::endl << std::endl;
+
+        return epg_cell;
+
+      }
+
+      //AMREX_ALWAYS_ASSERT(min_epg > 0.275);
+
+    } // mfi
+  } // lev
+#endif
+  IntVect fake = {0,0,0};
+  return fake;
 }
 
 } // end of namespace MfixIO

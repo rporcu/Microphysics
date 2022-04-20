@@ -11,7 +11,7 @@ CEXE_sources += mfix_set_eb_scalar_bcs.cpp
 
 CEXE_sources += mfix_fillpatch.cpp
 CEXE_headers += mfix_utils.H
-CEXE_sources += mfix_util.cpp
+CEXE_sources += mfix_utils.cpp
 
 CEXE_sources += mfix_regrid.cpp
 
