@@ -41,7 +41,9 @@ static amrex::Real volWgtSum (int lev,
   ReduceTuple host_tuple = reduce_data.value(reduce_op);
 
   amrex::Real sum = amrex::get<0>(host_tuple);
-  amrex::ParallelDescriptor::ReduceRealSum(&sum, 1);
+
+  if (!local)
+    amrex::ParallelDescriptor::ReduceRealSum(&sum, 1);
 
   return sum;
 }
@@ -80,7 +82,9 @@ static amrex::Real volEpsWgtSum (int lev,
   ReduceTuple host_tuple = reduce_data.value(reduce_op);
 
   amrex::Real sum = amrex::get<0>(host_tuple);
-  amrex::ParallelDescriptor::ReduceRealSum(&sum, 1);
+
+  if (!local)
+    amrex::ParallelDescriptor::ReduceRealSum(&sum, 1);
 
   return sum;
 }
@@ -118,7 +122,9 @@ static amrex::Real volWgtSumBox (int lev,
   ReduceTuple host_tuple = reduce_data.value(reduce_op);
 
   amrex::Real sum = amrex::get<0>(host_tuple);
-  amrex::ParallelDescriptor::ReduceRealSum(&sum, 1);
+
+  if (!local)
+    amrex::ParallelDescriptor::ReduceRealSum(&sum, 1);
 
   return sum;
 }
