@@ -2,21 +2,26 @@
 #include <AMReX_VisMF.H>    // amrex::VisMF::Write(MultiFab)
 #include <AMReX_VectorIO.H> // amrex::[read,write]IntData(array_of_ints)
 #include <AMReX_ParmParse.H>
+#include <AMReX_EBFArrayBox.H>
 
-#include <mfix.H>
+#include <mfix_rw.H>
 #include <mfix_pc.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_solids_parms.H>
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
 
+using namespace amrex;
+
 //namespace
 //{
 //    const std::string level_prefix {"Level_"};
 //}
 
+namespace MfixIO {
+
 void
-mfix::InitIOPltData ()
+MfixRW::InitIOPltData ()
 {
   if (ooo_debug) amrex::Print() << "InitIOPltData" << std::endl;
 
@@ -102,7 +107,7 @@ mfix::InitIOPltData ()
       if (plt_proc_p  == 1) pltVarCount += 1;
       if (plt_cost_p  == 1) pltVarCount += 1;
 
-      if (advect_enthalpy) {
+      if (fluid.solve_enthalpy) {
         if (plt_T_g  == 1) pltVarCount += 1;
         if (plt_cp_g == 1) pltVarCount += 1;
         if (plt_k_g  == 1) pltVarCount += 1;
@@ -113,7 +118,7 @@ mfix::InitIOPltData ()
         if (plt_X_gk == 1)  pltVarCount += fluid.nspecies;
         if (plt_D_gk == 1)  pltVarCount += fluid.nspecies;
 
-        if (advect_enthalpy) {
+        if (fluid.solve_enthalpy) {
           if (plt_cp_gk == 1) pltVarCount += fluid.nspecies;
           if (plt_h_gk == 1)  pltVarCount += fluid.nspecies;
         }
@@ -259,8 +264,9 @@ mfix::InitIOPltData ()
 
 }
 
+
 void
-mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
+MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
 {
     const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
@@ -316,11 +322,11 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
         pltFldNames.push_back("MW_g");
 
       // Fluid enthalpy
-      if (advect_enthalpy && plt_h_g == 1)
+      if (fluid.solve_enthalpy && plt_h_g == 1)
         pltFldNames.push_back("h_g");
 
       // Temperature in fluid
-      if (advect_enthalpy && plt_T_g == 1)
+      if (fluid.solve_enthalpy && plt_T_g == 1)
         pltFldNames.push_back("T_g");
 
       // Tracer in fluid
@@ -328,11 +334,11 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
         pltFldNames.push_back("trac");
 
       // Specific heat
-      if (advect_enthalpy && plt_cp_g == 1)
+      if (fluid.solve_enthalpy && plt_cp_g == 1)
         pltFldNames.push_back("cp_g");
 
       // Thermal conductivity
-      if (advect_enthalpy && plt_k_g == 1)
+      if (fluid.solve_enthalpy && plt_k_g == 1)
         pltFldNames.push_back("k_g");
 
       // Fluid viscosity
@@ -374,12 +380,12 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
           pltFldNames.push_back("D_"+specie+"_g");
 
       // Fluid species specific heat
-      if (fluid.solve_species && advect_enthalpy && plt_cp_gk == 1)
+      if (fluid.solve_species && fluid.solve_enthalpy && plt_cp_gk == 1)
         for (std::string specie: fluid.species)
           pltFldNames.push_back("cp_"+specie+"_g");
 
       // Fluid species enthalpy
-      if (fluid.solve_species && advect_enthalpy && plt_h_gk == 1)
+      if (fluid.solve_species && fluid.solve_enthalpy && plt_h_gk == 1)
         for (std::string specie: fluid.species)
           pltFldNames.push_back("h_"+specie+"_g");
 
@@ -504,13 +510,13 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
         }
 
         // Fluid enthalpy
-        if (advect_enthalpy && plt_h_g == 1) {
+        if (fluid.solve_enthalpy && plt_h_g == 1) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->h_g), 0, lc, 1, 0);
           lc += 1;
         }
 
         // Fluid temperature
-        if (advect_enthalpy && plt_T_g == 1) {
+        if (fluid.solve_enthalpy && plt_T_g == 1) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->T_g), 0, lc, 1, 0);
           lc += 1;
         }
@@ -522,7 +528,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
         }
 
         // Specific heat
-        if (advect_enthalpy && plt_cp_g == 1) {
+        if (fluid.solve_enthalpy && plt_cp_g == 1) {
 
           MultiFab& T_g = *(m_leveldata[lev]->T_g);
 
@@ -582,7 +588,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
         }
 
         // Thermal conductivity
-        if (advect_enthalpy && plt_k_g == 1) {
+        if (fluid.solve_enthalpy && plt_k_g == 1) {
 
           MultiFab& T_g = *(m_leveldata[lev]->T_g);
 
@@ -632,10 +638,10 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
             Box const& bx = mfi.tilebox();
 
             Array4<Real      > const& mu_g_array = mu_g.array(mfi);
-            Array4<Real const> const& T_g_array  = advect_enthalpy ?
+            Array4<Real const> const& T_g_array  = fluid.solve_enthalpy ?
               m_leveldata[lev]->T_g->const_array(mfi) : Array4<Real const>();
 
-            const int adv_enthalpy = advect_enthalpy;
+            const int adv_enthalpy = fluid.solve_enthalpy;
 
             ParallelFor(bx, [mu_g_array,T_g_array,adv_enthalpy,mu_g0,fluid_params]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -735,7 +741,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
         }
 
         // Fluid species specific heat
-        if (fluid.solve_species && advect_enthalpy && plt_cp_gk == 1) {
+        if (fluid.solve_species && fluid.solve_enthalpy && plt_cp_gk == 1) {
 
           const int nspecies_g = fluid.nspecies;
 
@@ -752,7 +758,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
             Box const& bx = mfi.tilebox();
 
             Array4<Real      > const& cp_gk_array = cp_gk.array(mfi);
-            Array4<Real const> const& T_g_array  = advect_enthalpy ?
+            Array4<Real const> const& T_g_array  = fluid.solve_enthalpy ?
               m_leveldata[lev]->T_g->const_array(mfi) : Array4<const Real>();
 
             ParallelFor(bx, [cp_gk_array,T_g_array,nspecies_g,fluid_params,run_on_device]
@@ -800,7 +806,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
             Array4<const Real> dummy_arr;
 
             Array4<      Real> const& h_gk_array = h_gk.array(mfi);
-            Array4<const Real> const& T_g_array  = advect_enthalpy ? (ld.T_g)->const_array(mfi) : dummy_arr;
+            Array4<const Real> const& T_g_array  = fluid.solve_enthalpy ? (ld.T_g)->const_array(mfi) : dummy_arr;
 
             auto const& flags_arr = flags.const_array();
 
@@ -849,7 +855,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
       Vector<int> istep;
       istep.resize(nlev,nstep);
       amrex::WriteMultiLevelPlotfile(plotfilename, nlev, mf2, pltFldNames,
-                                     Geom(), time, istep, refRatio());
+                                     geom, time, istep, ref_ratio);
 
 
       // no fluid
@@ -879,7 +885,7 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
       Vector<int> istep;
       istep.resize(nlev,nstep);
       amrex::WriteMultiLevelPlotfileHeaders(plotfilename, finest_level+1, mf2, names,
-                                            Geom(), time, istep, refRatio());
+                                            geom, time, istep, ref_ratio);
 
     }
 
@@ -952,7 +958,9 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
 
 }
 
-void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
+
+void
+MfixRW::WriteStaticPlotFile (const std::string & plotfilename) const
 {
     BL_PROFILE("mfix::WriteStaticPlotFile()");
 
@@ -984,8 +992,8 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
 
     for (int lev = 0; lev < nlev; lev++)
     {
-        mf[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], ncomp, ngrow, MFInfo(),
-                                             *particle_ebfactory[lev]);
+        mf[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], ncomp, ngrow,
+                                             MFInfo(), *particle_ebfactory[lev]);
 
         // Don't iterate over all ncomp => last component is for volfrac
         for (int dcomp = 0; dcomp < ncomp - 1; dcomp++)
@@ -997,8 +1005,8 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
 
         if (ebfactory[lev]) {
             EBFArrayBoxFactory ebf(* eb_levels[lev], geom[lev], grids[lev], dmap[lev],
-                                   {nghost_eb_basic(), nghost_eb_volume(),
-                                    nghost_eb_full()}, m_eb_support_level);
+                                   {nghost_eb_basic, nghost_eb_volume,
+                                    nghost_eb_full}, m_eb_support_level);
 
             MultiFab::Copy(* mf[lev], ebf.getVolFrac(), 0, ncomp - 1, 1, ngrow);
 
@@ -1019,9 +1027,11 @@ void mfix::WriteStaticPlotFile (const std::string & plotfilename) const
     Vector<int> istep;
     istep.resize(nlev,0);
     amrex::WriteMultiLevelPlotfile(plotfilename, nlev, mf_ptr, static_names,
-                                   Geom(), time, istep, refRatio());
+                                   geom, time, istep, ref_ratio);
 
     WriteJobInfo(plotfilename);
 
     Print() << "  Done writing static quantities " << plotfilename << std::endl;
 }
+
+} // end namespace MfixIO

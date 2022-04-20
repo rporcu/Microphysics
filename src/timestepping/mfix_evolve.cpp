@@ -143,8 +143,8 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     }
 
 
-    if (report_mass_balance and reactions.solve) {
-      ComputeMassProduction(dt, get_chem_txfr_const());
+    if (mfixRW->report_mass_balance and reactions.solve) {
+      mfixRW->ComputeMassProduction(dt, get_chem_txfr_const());
     }
 
     BL_PROFILE_REGION_STOP("mfix::Evolve");

@@ -43,12 +43,12 @@ mfix::set_density_bcs (Real time,
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
 
-  Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
-  Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
-  Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
-  Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
-  Array4<const int> const& bct_klo = bc_klo[lev]->array();
-  Array4<const int> const& bct_khi = bc_khi[lev]->array();
+  Array4<const int> const& bct_ilo = bc_list.bc_ilo[lev]->array();
+  Array4<const int> const& bct_ihi = bc_list.bc_ihi[lev]->array();
+  Array4<const int> const& bct_jlo = bc_list.bc_jlo[lev]->array();
+  Array4<const int> const& bct_jhi = bc_list.bc_jhi[lev]->array();
+  Array4<const int> const& bct_klo = bc_list.bc_klo[lev]->array();
+  Array4<const int> const& bct_khi = bc_list.bc_khi[lev]->array();
 
   Array4<Real> const& scal_arr = scal_fab.array();
 
@@ -87,22 +87,18 @@ mfix::set_density_bcs (Real time,
   const Box bx_xy_lo_3D(scal_lo, bx_xy_lo_hi_3D);
   const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, scal_hi);
 
-  const int minf = bc_list.get_minf();
-  const int pinf = bc_list.get_pinf();
-  const int pout = bc_list.get_pout();
-
   // The temperature will be useful in the future
   // set_temperature_bc_values (time);
   // Real* p_bc_t_g  = m_bc_t_g.data();
   set_density_bc_values(time);
   Real* p_bc_ro_g  = m_bc_ro_g.data();
 
-  auto set_density_bcs_in_box = [pout,pinf,minf,scal_arr,p_bc_ro_g]
+  auto set_density_bcs_in_box = [scal_arr,p_bc_ro_g]
   AMREX_GPU_DEVICE (int bct, int bcv, IntVect dom_ijk, int i, int j, int k) noexcept
   {
-    if ((bct == pinf) || (bct == pout))
+    if ((bct == BCList::pinf) || (bct == BCList::pout))
       scal_arr(i,j,k) = scal_arr(dom_ijk);
-    else if (bct == minf)
+    else if (bct == BCList::minf)
       scal_arr(i,j,k) = p_bc_ro_g[bcv];
   };
 

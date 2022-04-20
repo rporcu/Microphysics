@@ -46,12 +46,12 @@ mfix::set_enthalpy_bcs (Real time,
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
 
-  Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
-  Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
-  Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
-  Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
-  Array4<const int> const& bct_klo = bc_klo[lev]->array();
-  Array4<const int> const& bct_khi = bc_khi[lev]->array();
+  Array4<const int> const& bct_ilo = bc_list.bc_ilo[lev]->array();
+  Array4<const int> const& bct_ihi = bc_list.bc_ihi[lev]->array();
+  Array4<const int> const& bct_jlo = bc_list.bc_jlo[lev]->array();
+  Array4<const int> const& bct_jhi = bc_list.bc_jhi[lev]->array();
+  Array4<const int> const& bct_klo = bc_list.bc_klo[lev]->array();
+  Array4<const int> const& bct_khi = bc_list.bc_khi[lev]->array();
 
   const int nspecies_g = fluid.nspecies;
 
@@ -95,10 +95,6 @@ mfix::set_enthalpy_bcs (Real time,
   const Box bx_xy_lo_3D(h_g_lo, bx_xy_lo_hi_3D);
   const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, h_g_hi);
 
-  const int minf = bc_list.get_minf();
-  const int pinf = bc_list.get_pinf();
-  const int pout = bc_list.get_pout();
-
   // Update temperature before using to update enthalpy
   set_temperature_bc_values (time);
   Real* p_bc_t_g = m_bc_t_g.data();
@@ -113,16 +109,16 @@ mfix::set_enthalpy_bcs (Real time,
 
   auto const& flags_arr = flags.const_array();
 
-  auto set_enthalpy_bcs_in_box = [pout,pinf,minf,h_g,p_bc_t_g,fluid_is_a_mixture,
+  auto set_enthalpy_bcs_in_box = [h_g,p_bc_t_g,fluid_is_a_mixture,
        p_bc_X_gk,nspecies_g,fluid_parms,run_on_device,flags_arr]
     AMREX_GPU_DEVICE (int bct, int bcv, IntVect dom_ijk, int i, int j, int k) noexcept
   {
     const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
 
-    if(bct == pout) {
+    if(bct == BCList::pout) {
       h_g(i,j,k) = h_g(dom_ijk);
     }
-    else if (bct == minf || bct == pinf) {
+    else if (bct == BCList::minf || bct == BCList::pinf) {
       if (!fluid_is_a_mixture) {
         h_g(i,j,k) = run_on_device ?
           fluid_parms.calc_h_g<RunOn::Device>(p_bc_t_g[bcv], cell_is_covered) :

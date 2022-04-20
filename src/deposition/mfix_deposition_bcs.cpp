@@ -10,9 +10,6 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
 
   Box domain(Geom(lev).Domain());
 
-  const int minf = bc_list.get_minf();
-  const int pinf = bc_list.get_pinf();
-
   for (MFIter mfi(filled_mf, false); mfi.isValid(); ++mfi) {
 
     const Box& sbx = filled_mf[mfi].box();
@@ -37,12 +34,12 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
     sbx_xy_hi[2] = sbx_lo[2];
     const Box sbx_xy(sbx_lo, sbx_xy_hi);
 
-    Array4<int> const& bc_ilo_type = bc_ilo[lev]->array();
-    Array4<int> const& bc_ihi_type = bc_ihi[lev]->array();
-    Array4<int> const& bc_jlo_type = bc_jlo[lev]->array();
-    Array4<int> const& bc_jhi_type = bc_jhi[lev]->array();
-    Array4<int> const& bc_klo_type = bc_klo[lev]->array();
-    Array4<int> const& bc_khi_type = bc_khi[lev]->array();
+    Array4<int> const& bc_ilo_type = bc_list.bc_ilo[lev]->array();
+    Array4<int> const& bc_ihi_type = bc_list.bc_ihi[lev]->array();
+    Array4<int> const& bc_jlo_type = bc_list.bc_jlo[lev]->array();
+    Array4<int> const& bc_jhi_type = bc_list.bc_jhi[lev]->array();
+    Array4<int> const& bc_klo_type = bc_list.bc_klo[lev]->array();
+    Array4<int> const& bc_khi_type = bc_list.bc_khi[lev]->array();
 
     const int ncomp = filled_mf.nComp();
 
@@ -69,7 +66,7 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
       ParallelFor(npoints, [sbx_xy_npoints,sbx_yz_npoints,sbx_xz_npoints,
           sbx_xy_len,sbx_yz_len,sbx_xz_len,sbx_xy_lo,sbx_yz_lo,sbx_xz_lo,
           dom_lo,dom_hi,bc_ilo_type,bc_ihi_type,bc_jlo_type,bc_jhi_type,
-          bc_klo_type,bc_khi_type,vol,ncomp,pinf,minf,sbx_hi,sbx_lo]
+          bc_klo_type,bc_khi_type,vol,ncomp,sbx_hi,sbx_lo]
         AMREX_GPU_DEVICE (int idx) noexcept
       {
         if(idx < sbx_yz_npoints)
@@ -84,7 +81,7 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
             int i = dom_lo.x;
 
             const int bct_ilo = bc_ilo_type(i-1,j,k,0);
-            if(bct_ilo == pinf || bct_ilo == minf)
+            if(bct_ilo == BCList::pinf || bct_ilo == BCList::minf)
             {
               for(int n(0); n < ncomp; n++) {
                 vol(i,  j,k,n) += vol(i-1,j,k,n);
@@ -96,7 +93,7 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
             int i = dom_hi.x;
 
             const int bct_ihi = bc_ihi_type(i+1,j,k,0);
-            if(bct_ihi == pinf || bct_ihi == minf)
+            if(bct_ihi == BCList::pinf || bct_ihi == BCList::minf)
             {
               for(int n(0); n < ncomp; n++) {
                 vol(i,  j,k,n) += vol(i+1,j,k,n);
@@ -118,7 +115,7 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
             int j = dom_lo.y;
 
             const int bct_jlo = bc_jlo_type(i,j-1,k,0);
-            if(bct_jlo == pinf || bct_jlo == minf)
+            if(bct_jlo == BCList::pinf || bct_jlo == BCList::minf)
             {
               for(int n(0); n < ncomp; n++) {
                 vol(i,j  ,k,n) += vol(i,j-1,k,n);
@@ -130,7 +127,7 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
             int j = dom_hi.y;
 
             const int bct_jhi = bc_jhi_type(i,j+1,k,0);
-            if(bct_jhi == pinf || bct_jhi == minf)
+            if(bct_jhi == BCList::pinf || bct_jhi == BCList::minf)
             {
               for(int n(0); n < ncomp; n++) {
                 vol(i,j  ,k,n) += vol(i,j+1,k,n);
@@ -152,7 +149,7 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
             int k = dom_lo.z;
 
             const int bct_klo = bc_klo_type(i,j,k-1,0);
-            if(bct_klo == pinf || bct_klo == minf)
+            if(bct_klo == BCList::pinf || bct_klo == BCList::minf)
             {
               for(int n(0); n < ncomp; n++) {
                 vol(i,j,k  ,n) += vol(i,j,k-1,n);
@@ -164,7 +161,7 @@ void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
             int k = dom_hi.z;
 
             const int bct_khi = bc_khi_type(i,j,k+1,0);
-            if(bct_khi == pinf || bct_khi == minf)
+            if(bct_khi == BCList::pinf || bct_khi == BCList::minf)
             {
               for(int n(0); n < ncomp; n++) {
                 vol(i,j,k  ,n) += vol(i,j,k+1,n);

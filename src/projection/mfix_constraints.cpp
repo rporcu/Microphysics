@@ -1,6 +1,7 @@
 #include <mfix.H>
 #include <mfix_bc_parms.H>
 #include <mfix_mf_helpers.H>
+#include <mfix_utils.H>
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_VisMF.H>
@@ -322,8 +323,8 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
 
     bool local = true;
 
-    avgSigma[lev] = volWgtSumBox(lev, *Sigma[lev], 0, domain, local);
-    avgTheta[lev] = volWgtSumBox(lev, *Theta[lev], 0, domain, local);
+    avgSigma[lev] = Utils::volWgtSumBox(lev, *Sigma[lev], 0, ebfactory, domain, local);
+    avgTheta[lev] = Utils::volWgtSumBox(lev, *Theta[lev], 0, ebfactory, domain, local);
 
     // Compute parallel reductions
     ParallelDescriptor::ReduceRealSum(avgSigma[lev]);

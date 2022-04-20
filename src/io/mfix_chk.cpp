@@ -7,15 +7,19 @@
 #include <AMReX_buildInfo.H>
 #include <AMReX_Geometry.H>
 
-#include <mfix.H>
+#include <mfix_rw.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
+
+using namespace amrex;
 
 namespace
 {
     const std::string level_prefix {"Level_"};
 }
+
+namespace MfixIO {
 
 // This function initializes the attributes vecVarsName,
 //                                          pltscalarVars, pltscaVarsName,
@@ -23,7 +27,7 @@ namespace
 // If new variables need to be added to the output/checkpoint, simply add them
 // here and the IO routines will automatically take care of them.
 void
-mfix::InitIOChkData ()
+MfixRW::InitIOChkData ()
 {
     if (ooo_debug) amrex::Print() << "InitIOChkData" << std::endl;
     // Define the list of vector variables on faces that need to be written
@@ -41,7 +45,7 @@ mfix::InitIOChkData ()
 
 
 void
-mfix::ResetIOChkData ()
+MfixRW::ResetIOChkData ()
 {
   chkScalarVars.clear();
   chkScalarVars.resize(chkscaVarsName.size(), Vector< MultiFab*>(nlev));
@@ -58,12 +62,12 @@ mfix::ResetIOChkData ()
     chkScalarVars[2][lev] = m_leveldata[lev]->ro_g;
     chkScalarVars[3][lev] = level_sets[lev].get();
     
-    if (advect_enthalpy) {
+    if (fluid.solve_enthalpy) {
       chkTVars[0][lev] = m_leveldata[lev]->T_g;
       //chkTVars[1][lev] = m_leveldata[lev]->h_g;
     }
 
-    if (solve_species) {
+    if (fluid.solve_species) {
       chkSpeciesVars[0][lev] = m_leveldata[lev]->X_gk;
     }
   }
@@ -71,10 +75,10 @@ mfix::ResetIOChkData ()
 
 
 void
-mfix::WriteCheckHeader (const std::string& name,
-                        int nstep,
-                        Real dt,
-                        Real time) const
+MfixRW::WriteCheckHeader (const std::string& name,
+                          int nstep,
+                          Real dt,
+                          Real time) const
 {
    bool is_checkpoint = 1;
 
@@ -100,7 +104,7 @@ mfix::WriteCheckHeader (const std::string& name,
       else
          HeaderFile << "HyperCLaw-V1.1\n";
 
-      const int nlevels = finestLevel()+1;
+      const int nlevels = finest_level+1;
       HeaderFile << nlevels << "\n";
 
       // Time stepping controls
@@ -122,17 +126,18 @@ mfix::WriteCheckHeader (const std::string& name,
       // BoxArray
       for (int lev = 0; lev < nlevels; ++lev)
       {
-          boxArray(lev).writeOn(HeaderFile);
+          box_array[lev].writeOn(HeaderFile);
           HeaderFile << '\n';
       }
     }
 }
 
+
 void
-mfix::WriteCheckPointFile (std::string& check_file,
-                           int nstep,
-                           Real dt,
-                           Real time)
+MfixRW::WriteCheckPointFile (std::string& check_file,
+                             int nstep,
+                             Real dt,
+                             Real time)
 {
     BL_PROFILE("mfix::WriteCheckPointFile()");
 
@@ -142,7 +147,7 @@ mfix::WriteCheckPointFile (std::string& check_file,
       std::cout << "\n\t Writing checkpoint " << checkpointname << std::endl;
     }
 
-    const int nlevels = finestLevel()+1;
+    const int nlevels = finest_level+1;
     amrex::PreBuildDirectorHierarchy(checkpointname, level_prefix, nlevels, true);
 
     WriteCheckHeader(checkpointname, nstep, dt, time);
@@ -172,7 +177,7 @@ mfix::WriteCheckPointFile (std::string& check_file,
                          level_prefix, chkscaVarsName[i]));
           }
 
-          if (advect_enthalpy) {
+          if (fluid.solve_enthalpy) {
              // Write temperature variables
              for (int i = 0; i < chkTVars.size(); i++) {
                 VisMF::Write( *(chkTVars[i][lev]),
@@ -181,7 +186,7 @@ mfix::WriteCheckPointFile (std::string& check_file,
              }
           }
 
-          if (solve_species) {
+          if (fluid.solve_species) {
              // Write species variables
              for (int i = 0; i < chkSpeciesVars.size(); i++) {
                 VisMF::Write( *(chkSpeciesVars[i][lev]),
@@ -224,4 +229,6 @@ mfix::WriteCheckPointFile (std::string& check_file,
         param_file.open(param_file_name.str());
         amrex::writeIntData(levelset_params, 4, param_file);
    }
+}
+
 }
