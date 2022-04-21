@@ -612,10 +612,7 @@ mfix::mfix_calc_txfr_particle (Real time,
           const auto& apy_fab = grown_bx_is_regular ? empty_array : areafrac[1]->const_array(pti);
           const auto& apz_fab = grown_bx_is_regular ? empty_array : areafrac[2]->const_array(pti);
 
-          const int dem_solve = DEM::solve;
-
           const int adv_enthalpy = advect_enthalpy;
-          const int fluid_is_a_mixture = fluid.is_a_mixture;
           const int solve_reactions = reactions.solve;
 
           // We need this until we remove static attribute from mfix::gp0;

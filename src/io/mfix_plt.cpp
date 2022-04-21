@@ -919,6 +919,11 @@ mfix::WritePlotFile (std::string& plot_file, int nstep, Real time)
           for(auto species: solids.species)
             real_comp_names.push_back("chem_ro_txfr_"+species);
 
+        if (fluid.nspecies > solids.nspecies) {
+          for (int n(0); n < (fluid.nspecies-solids.nspecies); ++n)
+            real_comp_names.push_back("Placeholder_"+std::to_string(n));
+        }
+
         if (reactions.solve) {
           real_comp_names.push_back("chem_velx_txfr");
           real_comp_names.push_back("chem_vely_txfr");
