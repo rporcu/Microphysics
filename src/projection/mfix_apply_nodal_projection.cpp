@@ -247,7 +247,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     //     update gp to maintain consistency
     // This has been currently disabled since it seems to cause magnification of differences on
     // different grids. Needs to be revisted.
-    if (m_use_drag_in_projection ) {
+    if ( m_redistribute_nodal_proj ) {
       PostProjectionRedistribution(a_time, a_dt, GetVecOfPtrs(sigma_mf));
     }
 
