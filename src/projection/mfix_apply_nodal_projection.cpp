@@ -247,7 +247,9 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     //     update gp to maintain consistency
     // This has been currently disabled since it seems to cause magnification of differences on
     // different grids. Needs to be revisted.
-    //PostProjectionRedistribution(a_time, a_dt, GetVecOfPtrs(sigma_mf));
+    if (m_use_drag_in_projection ) {
+      PostProjectionRedistribution(a_time, a_dt, GetVecOfPtrs(sigma_mf));
+    }
 
     // Compute diveu for diagnostics only
     PostProjectionDiagnostics(a_time, epu, vel_g_in, p_g_in, gp_in, ep_g_in, a_S_cc, proj_for_small_dt);

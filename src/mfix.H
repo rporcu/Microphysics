@@ -1019,6 +1019,9 @@ public:
     bool m_use_depdt_constraint = false;
     bool m_use_drag_in_projection = false;
 
+    // Redistribute the velocity field after the nodal projection
+    bool m_redistribute_nodal_proj = false;
+
     // Tolerances and max iterations for Newton solver
     amrex::Real newton_reltol = 1.e-8;
     amrex::Real newton_abstol = 1.e-8;
