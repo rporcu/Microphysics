@@ -27,6 +27,8 @@ FluidPhase::FluidPhase()
   //, T_ref(298.15)
   , T_ref(0)
   , k_g0(0)
+  , thermodynamic_pressure(-1.0)
+  , thermodynamic_pressure_defined(0)
   , solve_species(0)
   , species(0)
   , species_id(0)
@@ -74,6 +76,8 @@ FluidPhase::Initialize ()
     pp.query("T_g0",  T_g0);
     pp.query("trac0",  trac_0);
     pp.query("mw_avg", mw_avg);
+    thermodynamic_pressure_defined = pp.query("thermodynamic_pressure",
+                                              thermodynamic_pressure);
 
     // Constraint type
     {
@@ -95,6 +99,20 @@ FluidPhase::Initialize ()
       else {
         amrex::Abort("Don't know this constraint type!");
       }
+    }
+
+    if (constraint_type == ConstraintType::IncompressibleFluid &&
+        thermodynamic_pressure_defined) {
+
+      amrex::Warning("When the incompressible fluid constraint is selected, "
+          "the fluid thermodynamic pressure input will be ignored");
+    }
+
+    if (constraint_type == ConstraintType::IdealGasClosedSystem &&
+        (!thermodynamic_pressure_defined)) {
+
+      amrex::Abort("When the idealgas closedsystem constraint is selected, "
+          "the fluid thermodynamic pressure input must be provided");
     }
 
     amrex::ParmParse ppFluid(name.c_str());
