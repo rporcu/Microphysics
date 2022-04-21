@@ -207,9 +207,6 @@ fluid.solve = fluid
 
 fluid.molecular_weight = mixture
 
-fluid.density            = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
@@ -310,7 +307,7 @@ mfix.particle_init_type = Auto
 # Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac  = 1.0
-
+ic.full-domain.fluid.density  = 1.0
 ic.full-domain.fluid.velocity = 0.0  0.0  0.0
 ic.full-domain.fluid.temperature = 1100
 
@@ -343,6 +340,7 @@ ic.full-domain.solid0.density.constant  = 1000.0
 # riser section (above air reactor)
 #---------------------------------------------------------------------//
 ic.riser.fluid.volfrac  = 0.2
+ic.riser.fluid.density  = 1.0
 ic.riser.fluid.velocity = 0.0  0.0  0.0
 
 ic.riser.fluid.temperature = 1100
@@ -376,6 +374,7 @@ ic.riser.solid0.density.constant  = 1000.0
 # fuel reactor
 #---------------------------------------------------------------------//
 ic.fuel-reactor.fluid.volfrac  = 0.4
+ic.fuel-reactor.fluid.density  = 1.0
 ic.fuel-reactor.fluid.velocity = 0.0  0.0  0.0
 
 ic.fuel-reactor.fluid.temperature = 1100
@@ -409,6 +408,7 @@ ic.fuel-reactor.solid0.density.constant  = 1000.0
 #  loop-seal
 #---------------------------------------------------------------------//
 ic.loop-seal.fluid.volfrac  = 0.1
+ic.loop-seal.fluid.density  = 1.0
 ic.loop-seal.fluid.velocity = 0.0  0.0  0.0
 
 ic.loop-seal.fluid.temperature = 1100
@@ -441,6 +441,7 @@ ic.loop-seal.solid0.density.constant  = 1000.0
 #  air-reactor
 #---------------------------------------------------------------------//
 ic.air-reactor.fluid.volfrac  = 0.1
+ic.air-reactor.fluid.density  = 1.0
 ic.air-reactor.fluid.velocity = 0.0  0.0  0.0
 
 ic.air-reactor.fluid.temperature = 1100
@@ -474,6 +475,7 @@ ic.air-reactor.solid0.density.constant  = 1000.0
 #  cyclone
 #---------------------------------------------------------------------//
 ic.cyclone.fluid.volfrac  = 0.99
+ic.cyclone.fluid.density  = 1.0
 ic.cyclone.fluid.velocity = 0.0  0.0  0.0
 
 ic.cyclone.fluid.temperature = 1100
@@ -507,7 +509,7 @@ ic.cyclone.solid0.density.constant  = 1000.0
 
 #---------------------------------------------------------------------//
 ic.redux.fluid.volfrac  = 1.0 
-
+ic.redux.fluid.density  = 1.0 
 ic.redux.fluid.velocity = 0.0  0.0  0.0
 ic.redux.fluid.temperature = 1100
 
@@ -539,7 +541,7 @@ ic.redux.solid0.density.constant  = 1000.0
 
 #---------------------------------------------------------------------//
 ic.reox.fluid.volfrac  = 1.0
-
+ic.reox.fluid.density  = 1.0
 ic.reox.fluid.velocity = 0.0  0.0  0.0
 ic.reox.fluid.temperature = 1100
 
@@ -577,6 +579,7 @@ bc.regions = inflow  outflow
 
 bc.inflow = mi
 bc.inflow.fluid.volfrac  =  1.0
+bc.inflow.fluid.density  =  1.0
 bc.inflow.fluid.velocity =  0.0  0.0  0.0
 bc.inflow.fluid.temperature = 1100
 bc.inflow.fluid.species.CH4 = 0.0
