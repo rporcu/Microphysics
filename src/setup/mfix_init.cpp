@@ -50,7 +50,7 @@ mfix::InitParams ()
   IC::Initialize(fluid, solids);
   BC::Initialize(geom[0], fluid, solids);
 
-//  // In case of IdealGas EOS, check that ICs and BCs are consistent 
+//  // In case of IdealGas EOS, check that ICs and BCs are consistent
 //  if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
 //    for (amrex::Long i(0); i < BC::bc.size(); ++i) {
 //      if (BC::bc[i].type == bc_list.get_minf() || BC::bc[i].type == bc_list.get_pinf()) {
@@ -224,6 +224,9 @@ mfix::InitParams ()
 
     // Include drag multiplier in projection. (False by default)
     pp.query("use_drag_coeff_in_proj_gp"        , m_use_drag_in_projection);
+
+    // Redistribute after the nodal projection
+    pp.query("redistribute_nodal_proj"          , m_redistribute_nodal_proj);
 
     // Are we using MOL or Godunov?
     std::string l_advection_type = "Godunov";
@@ -584,7 +587,7 @@ void mfix::Init (Real time)
     if (DEM::solve || PIC::solve) {
       pc = new MFIXParticleContainer(this, solids, reactions);
       pc->setSortingBinSizes(IntVect(particle_sorting_bin));
-      
+
       // Updating mfixRW pc pointer is needed since mfix pc has changed
       mfixRW->set_pc(pc);
     }
