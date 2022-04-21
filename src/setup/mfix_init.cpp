@@ -47,8 +47,8 @@ mfix::InitParams ()
   // regions need to be processed first as they define the
   // physical extents of ICs and BCs.
   REGIONS::Initialize();
-  IC::Initialize(fluid, solids);
   BC::Initialize(geom[0], fluid, solids);
+  IC::Initialize(fluid, solids);
 
 //  // In case of IdealGas EOS, check that ICs and BCs are consistent 
 //  if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {

@@ -552,7 +552,7 @@ namespace BC
           bc_values.push_back(BC::bc[bcv].fluid.pressure);
       }
 
-      if (bc_values.size() > 1) {
+      if (bc_values.size() > 0) {
         const Real max_val = *std::max_element(bc_values.begin(), bc_values.end());
         const Real min_val = *std::min_element(bc_values.begin(), bc_values.end());
 
