@@ -89,6 +89,9 @@ namespace IC
         // Get temperature
         new_ic.fluid.temperature_defined = ppFluid.query("temperature", new_ic.fluid.temperature);
 
+        // Get pressure
+        new_ic.fluid.pressure_defined = ppFluid.query("pressure", new_ic.fluid.pressure);
+
         if (fluid.constraint_type == ConstraintType::IncompressibleFluid) {
 
           AMREX_ALWAYS_ASSERT_WITH_MESSAGE(new_ic.fluid.density_defined,
