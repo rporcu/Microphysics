@@ -123,9 +123,6 @@ species.solve = 0
 #
 fluid.solve = fluid
 
-fluid.density.model      = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity.model    = constant
 fluid.viscosity.constant = 2.0e-5
 
@@ -184,12 +181,14 @@ ic.particle_init_type = Auto
 # Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
+ic.full-domain.fluid.density   = 1.0
 ic.full-domain.fluid.velocity  = 0.0  0.0  0.0
 
 
 # Initial bed in air reactor section
 #---------------------------------------------------------------------//
 ic.riser.fluid.volfrac  = 0.9990
+ic.riser.fluid.density  = 1.0
 ic.riser.fluid.velocity = 0.0  0.0  0.0
 
 ic.riser.solids = hdpe
@@ -232,6 +231,7 @@ airreactor.outlet  = 3.6322    # outlet height from bottom
 bc.inflow.type = mi
 
 bc.inflow.fluid.volfrac =  1.0
+bc.inflow.fluid.density =  1.0
 bc.inflow.fluid.velocity = 0.01  0.00  0.00
 
 

@@ -125,9 +125,8 @@ ic.regions = full-domain
 # Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
-ic.full-domain.fluid.pressure  = 0.0
-ic.full-domain.fluid.velocity  = 0.4  0.0  0.0
 ic.full-domain.fluid.density   = 1.2
+ic.full-domain.fluid.velocity  = 0.4  0.0  0.0
 
 
 #_______________________________________________________________________
@@ -138,9 +137,8 @@ bc.regions = inflow  outflow
 
 bc.inflow = mi
 bc.inflow.fluid.volfrac  =  1.0
-bc.inflow.fluid.pressure =  0.0
-bc.inflow.fluid.velocity =  0.4  0.0  0.0
 bc.inflow.fluid.density  =  1.2
+bc.inflow.fluid.velocity =  0.4  0.0  0.0
 
 bc.outflow = po
 bc.outflow.fluid.pressure = 0.0

@@ -402,7 +402,6 @@ class mfix : public AmrCore
     void set_density_bc_values (amrex::Real time_in) const;
     void set_tracer_bc_values (amrex::Real time_in) const;
     void set_species_bc_values (amrex::Real time_in) const;
-    void set_thermodynamic_pressure_bc_values (amrex::Real /*time_in*/) const;
 
     ////////////////////////////////////////////////////////////////////////////
     //
@@ -537,7 +536,6 @@ class mfix : public AmrCore
     mutable Gpu::DeviceVector<Real> m_bc_t_g;
     mutable Gpu::DeviceVector<Real> m_bc_h_g;
     mutable Gpu::DeviceVector<Real> m_bc_ro_g;
-    mutable Gpu::DeviceVector<Real> m_bc_thermodynamic_p_g;
     mutable Gpu::DeviceVector<Real> m_bc_tracer;
 
     mutable Gpu::HostVector<Real>   m_h_bc_u_g;
@@ -546,7 +544,6 @@ class mfix : public AmrCore
     mutable Gpu::HostVector<Real>   m_h_bc_t_g;
     mutable Gpu::HostVector<Real>   m_h_bc_h_g;
     mutable Gpu::HostVector<Real>   m_h_bc_ro_g;
-    mutable Gpu::HostVector<Real>   m_h_bc_thermodynamic_p_g;
     mutable Gpu::HostVector<Real>   m_h_bc_tracer;
 
     Gpu::DeviceVector<Real> m_bc_ep_g;

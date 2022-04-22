@@ -139,9 +139,6 @@ amr.check_file     ="chk"
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.2
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 1.8e-5
 
@@ -205,18 +202,14 @@ ic.regions = bkg  bed
 # Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.bkg.fluid.volfrac   = 1.0
-
-ic.bkg.fluid.pressure  = 0.0
-
+ic.bkg.fluid.density   = 1.2
 ic.bkg.fluid.velocity  = 0.0  0.0  0.0
 
 
 # Define the initial bed of solids
 #---------------------------------------------------------------------//
 ic.bed.fluid.volfrac   =  0.6
-
-ic.bed.fluid.pressure  = 0.0
-
+ic.bed.fluid.density   =  1.2
 ic.bed.fluid.velocity  =  0.0  0.0  0.0
 
 ic.bed.solids  = hdpe
@@ -240,6 +233,7 @@ bc.regions = uin  pout
 
 bc.uin = mi
 bc.uin.fluid.volfrac  =  1.0
+bc.uin.fluid.density  =  1.2
 bc.uin.fluid.velocity =  0.0  0.0  0.0
 
 bc.pout = po

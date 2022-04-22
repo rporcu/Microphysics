@@ -27,9 +27,10 @@ void set_ic_ro_g (const Box& sbx, const Box& domain,
                   const Real dx, const Real dy, const Real dz,
                   const GpuArray<Real, 3>& plo, FArrayBox& ro_g_fab);
 
-void set_ic_pressure_g (const Box& sbx, const Box& domain,
+void set_ic_thermo_p_g (const Box& sbx, const Box& domain,
                         const Real dx, const Real dy, const Real dz,
-                        const GpuArray<Real, 3>& plo, FArrayBox& p_g_fab);
+                        const GpuArray<Real, 3>& plo, FArrayBox& p_g_fab,
+                        const FluidPhase& fluid);
 
 void init_helix (const Box& bx, const Box& domain, FArrayBox& vel_g_fab,
                  const Real dx, const Real dy, const Real dz);
@@ -108,7 +109,7 @@ void init_fluid (const Box& sbx,
   if (advect_enthalpy &&
       (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
        fluid.constraint_type == ConstraintType::IdealGasClosedSystem)) {
-    set_ic_pressure_g(sbx, domain, dx, dy, dz, plo, (*ld.thermodynamic_p_g)[mfi]);
+    set_ic_thermo_p_g(sbx, domain, dx, dy, dz, plo, (*ld.thermodynamic_p_g)[mfi], fluid);
   }
 }
 
@@ -830,13 +831,14 @@ void set_ic_species_g (const Box& sbx,
 //!  Purpose: Set fluid thermodynamic pressure initial conditions.       !
 //!                                                                      !
 //!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-void set_ic_pressure_g (const Box& sbx,
+void set_ic_thermo_p_g (const Box& sbx,
                         const Box& domain,
                         const Real dx,
                         const Real dy,
                         const Real dz,
                         const GpuArray<Real, 3>& plo,
-                        FArrayBox& thermodynamic_pressure_fab)
+                        FArrayBox& thermodynamic_pressure_fab,
+                        const FluidPhase& fluid)
 {
   const IntVect slo(sbx.loVect());
   const IntVect shi(sbx.hiVect());
@@ -844,7 +846,7 @@ void set_ic_pressure_g (const Box& sbx,
   const IntVect domlo(domain.loVect());
   const IntVect domhi(domain.hiVect());
 
-  Array4<Real> const& p_g = thermodynamic_pressure_fab.array();
+  Array4<Real> const& thermo_p_g = thermodynamic_pressure_fab.array();
 
   // Set the initial conditions.
   for(int icv(0); icv < IC::ic.size(); ++icv)
@@ -864,12 +866,12 @@ void set_ic_pressure_g (const Box& sbx,
     const int jend   = std::min(shi[1], j_n);
     const int kend   = std::min(shi[2], k_t);
 
-    const Real pressure = IC::ic[icv].fluid.thermodynamic_pressure;
+    const Real pressure = fluid.thermodynamic_pressure;
 
     // Define the function
-    auto set_pressure = [p_g,pressure]
+    auto set_pressure = [thermo_p_g,pressure]
       AMREX_GPU_DEVICE (int i, int j, int k) -> void
-    { p_g(i,j,k) = pressure; };
+    { thermo_p_g(i,j,k) = pressure; };
 
     {
       const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);

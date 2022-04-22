@@ -717,26 +717,6 @@ mfix::set_density_bc_values (Real time_in) const
 
 
 void
-mfix::set_thermodynamic_pressure_bc_values (Real time_in) const
-{
-  m_h_bc_thermodynamic_p_g.resize(bc.size());
-
-  for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
-    if (bc[bcv].type == BCList::minf || bc[bcv].type == BCList::pinf ||
-        (bc[bcv].type == BCList::eb  && bc[bcv].fluid.flow_thru_eb)) {
-      const Real pressure_g = bc[bcv].fluid.get_thermodynamic_pressure(time_in);
-      m_h_bc_thermodynamic_p_g[bcv] = pressure_g;
-
-    } else {
-      m_h_bc_thermodynamic_p_g[bcv] = 1e50;
-    }
-  }
-
-  Gpu::copy(Gpu::hostToDevice, m_h_bc_thermodynamic_p_g.begin(),
-            m_h_bc_thermodynamic_p_g.end(), m_bc_thermodynamic_p_g.begin());
-}
-
-void
 mfix::set_tracer_bc_values (Real /*time_in*/) const
 {
   m_h_bc_tracer.resize(bc.size());

@@ -136,9 +136,6 @@ amr.check_file     ="chk"
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.2
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 1.8e-5
 
@@ -192,7 +189,7 @@ ic.regions = full-domain
 # Background IC covering the full domain with gas.
 #-------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
-
+ic.full-domain.fluid.density   = 1.2
 ic.full-domain.fluid.velocity  = 1.6  0.0  0.0
 
 
@@ -222,7 +219,7 @@ bc.regions = inlet  jet  outlet
 bc.inlet = "mi"
 
 bc.inlet.fluid.volfrac = 1.0
-
+bc.inlet.fluid.density = 1.2
 bc.inlet.fluid.velocity = 0.8  0.0  0.0
 
 
@@ -231,7 +228,7 @@ bc.inlet.fluid.velocity = 0.8  0.0  0.0
 bc.jet = "mi"
 
 bc.jet.fluid.volfrac = 1.0
-
+bc.jet.fluid.density = 1.2
 bc.jet.fluid.velocity = 0.1  0.0  0.0
 
 
