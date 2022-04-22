@@ -101,27 +101,36 @@ static amrex::Real volWgtSumBox (int lev,
 
   const amrex::MultiFab& volfrac =  ebfactory[lev]->getVolFrac();
 
+  bool reduction_computed(false);
+
   amrex::ReduceOps<amrex::ReduceOpSum> reduce_op;
   amrex::ReduceData<amrex::Real> reduce_data(reduce_op);
   using ReduceTuple = typename decltype(reduce_data)::Type;
 
   for (amrex::MFIter mfi(mf, false); mfi.isValid(); ++mfi) {
 
-    const amrex::Box& bx = mfi.tilebox() & a_bx;
+    const amrex::Box bx = mfi.tilebox() & a_bx;
 
-    amrex::Array4<amrex::Real const> const& mf_arr   = mf.const_array(mfi);
-    amrex::Array4<amrex::Real const> const& vfrc_arr = volfrac.const_array(mfi);
+    if (bx.ok()) {
+      reduction_computed = true;
 
-    reduce_op.eval(bx, reduce_data, [comp,mf_arr,vfrc_arr]
-        AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
-    {
-      return mf_arr(i,j,k,comp) * vfrc_arr(i,j,k);
-    });
+      amrex::Array4<amrex::Real const> const& mf_arr   = mf.const_array(mfi);
+      amrex::Array4<amrex::Real const> const& vfrc_arr = volfrac.const_array(mfi);
+
+      reduce_op.eval(bx, reduce_data, [comp,mf_arr,vfrc_arr]
+          AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+      {
+        return mf_arr(i,j,k,comp) * vfrc_arr(i,j,k);
+      });
+    }
   }
 
   ReduceTuple host_tuple = reduce_data.value(reduce_op);
 
-  amrex::Real sum = amrex::get<0>(host_tuple);
+  amrex::Real sum(0.);
+  
+  if (reduction_computed)
+    sum = amrex::get<0>(host_tuple);
 
   if (!local)
     amrex::ParallelDescriptor::ReduceRealSum(&sum, 1);
