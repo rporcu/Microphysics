@@ -7,6 +7,7 @@ target_sources( mfixcore
    mfix_eos_mod.H
    mfix_eos_mod.cpp
    mfix_bc_list.H
+   mfix_bc_list.cpp
    mfix_eb_parms.H
    mfix_eb_parms.cpp
    mfix_fluid_parms.cpp

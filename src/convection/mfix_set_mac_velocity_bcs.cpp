@@ -44,12 +44,12 @@ mfix::set_MAC_velocity_bcs (int lev,
     Array4<Real> const& ep_v = ep_v_mac[lev]->array(mfi);
     Array4<Real> const& ep_w = ep_w_mac[lev]->array(mfi);
 
-    Array4<int> const& bct_ilo = bc_ilo[lev]->array();
-    Array4<int> const& bct_ihi = bc_ihi[lev]->array();
-    Array4<int> const& bct_jlo = bc_jlo[lev]->array();
-    Array4<int> const& bct_jhi = bc_jhi[lev]->array();
-    Array4<int> const& bct_klo = bc_klo[lev]->array();
-    Array4<int> const& bct_khi = bc_khi[lev]->array();
+    Array4<int> const& bct_ilo = bc_list.bc_ilo[lev]->array();
+    Array4<int> const& bct_ihi = bc_list.bc_ihi[lev]->array();
+    Array4<int> const& bct_jlo = bc_list.bc_jlo[lev]->array();
+    Array4<int> const& bct_jhi = bc_list.bc_jhi[lev]->array();
+    Array4<int> const& bct_klo = bc_list.bc_klo[lev]->array();
+    Array4<int> const& bct_khi = bc_list.bc_khi[lev]->array();
 
     const int nlft = amrex::max(0, dom_lo[0]-ubx_lo[0]);
     const int nbot = amrex::max(0, dom_lo[1]-vbx_lo[1]);
@@ -60,8 +60,6 @@ mfix::set_MAC_velocity_bcs (int lev,
     const int nup  = amrex::max(0, wbx_hi[2]-dom_hi[2]);
 
     mfix_usr1(time);
-
-    const int minf = bc_list.get_minf();
 
     amrex::Real* p_bc_u_g = m_bc_u_g.data();
     amrex::Real* p_bc_v_g = m_bc_v_g.data();
@@ -83,12 +81,12 @@ mfix::set_MAC_velocity_bcs (int lev,
       const Box ulo_bx_yz(ulo_bx_yz_lo, ulo_bx_yz_hi);
 
       amrex::ParallelFor(ulo_bx_yz,
-        [bct_ilo,dom_lo,minf,p_bc_u_g,p_bc_e_g,ep_u]
+        [bct_ilo,dom_lo,p_bc_u_g,p_bc_e_g,ep_u]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
         const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
-        if(bct == minf) ep_u(i,j,k) = p_bc_u_g[bcv] * p_bc_e_g[bcv];
+        if(bct == BCList::minf) ep_u(i,j,k) = p_bc_u_g[bcv] * p_bc_e_g[bcv];
       });
     }
 
@@ -105,12 +103,12 @@ mfix::set_MAC_velocity_bcs (int lev,
       const Box uhi_bx_yz(uhi_bx_yz_lo, uhi_bx_yz_hi);
 
       amrex::ParallelFor(uhi_bx_yz,
-        [bct_ihi,dom_hi,minf,p_bc_u_g,p_bc_e_g,ep_u]
+        [bct_ihi,dom_hi,p_bc_u_g,p_bc_e_g,ep_u]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
         const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
-        if (bct == minf) ep_u(i,j,k) = p_bc_u_g[bcv] * p_bc_e_g[bcv];
+        if (bct == BCList::minf) ep_u(i,j,k) = p_bc_u_g[bcv] * p_bc_e_g[bcv];
       });
     }
 
@@ -127,12 +125,12 @@ mfix::set_MAC_velocity_bcs (int lev,
       const Box vlo_bx_xz(vlo_bx_xz_lo, vlo_bx_xz_hi);
 
       amrex::ParallelFor(vlo_bx_xz,
-        [bct_jlo,dom_lo,minf,p_bc_v_g,p_bc_e_g,ep_v]
+        [bct_jlo,dom_lo,p_bc_v_g,p_bc_e_g,ep_v]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
         const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
-        if (bct == minf) ep_v(i,j,k) = p_bc_v_g[bcv] * p_bc_e_g[bcv];
+        if (bct == BCList::minf) ep_v(i,j,k) = p_bc_v_g[bcv] * p_bc_e_g[bcv];
       });
     }
 
@@ -149,12 +147,12 @@ mfix::set_MAC_velocity_bcs (int lev,
       const Box vhi_bx_xz(vhi_bx_xz_lo, vhi_bx_xz_hi);
 
       amrex::ParallelFor(vhi_bx_xz,
-        [bct_jhi,dom_hi,minf,p_bc_v_g,p_bc_e_g,ep_v]
+        [bct_jhi,dom_hi,p_bc_v_g,p_bc_e_g,ep_v]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
         const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
-        if (bct == minf) ep_v(i,j,k) = p_bc_v_g[bcv] * p_bc_e_g[bcv];
+        if (bct == BCList::minf) ep_v(i,j,k) = p_bc_v_g[bcv] * p_bc_e_g[bcv];
       });
     }
 
@@ -171,12 +169,12 @@ mfix::set_MAC_velocity_bcs (int lev,
       const Box wlo_bx_xy(wlo_bx_xy_lo, wlo_bx_xy_hi);
 
       amrex::ParallelFor(wlo_bx_xy,
-        [bct_klo,dom_lo,minf,p_bc_w_g,p_bc_e_g,ep_w]
+        [bct_klo,dom_lo,p_bc_w_g,p_bc_e_g,ep_w]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
         const int bct = bct_klo(i,j,dom_lo[2]-1,0);
-        if (bct == minf) ep_w(i,j,k) = p_bc_w_g[bcv] * p_bc_e_g[bcv];
+        if (bct == BCList::minf) ep_w(i,j,k) = p_bc_w_g[bcv] * p_bc_e_g[bcv];
       });
     }
 
@@ -193,12 +191,12 @@ mfix::set_MAC_velocity_bcs (int lev,
       const Box whi_bx_xy(whi_bx_xy_lo, whi_bx_xy_hi);
 
       amrex::ParallelFor(whi_bx_xy,
-        [bct_khi,dom_hi,minf,p_bc_w_g,p_bc_e_g,ep_w]
+        [bct_khi,dom_hi,p_bc_w_g,p_bc_e_g,ep_w]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
         const int bct = bct_khi(i,j,dom_hi[2]+1,0);
-        if (bct == minf) ep_w(i,j,k) = p_bc_w_g[bcv] * p_bc_e_g[bcv];
+        if (bct == BCList::minf) ep_w(i,j,k) = p_bc_w_g[bcv] * p_bc_e_g[bcv];
       });
     }
   }

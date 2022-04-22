@@ -5,6 +5,7 @@
 #include <mfix_pc.H>
 #include <mfix_mf_helpers.H>
 
+#include <mfix_utils.H>
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
 #include <mfix_diffusion_op.H>
@@ -230,5 +231,5 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   int lev = 0;
   int comp = 0;
 
-  sum_vol = volWgtSum(lev, *(m_leveldata[lev]->ep_g), comp);
+  sum_vol = Utils::volWgtSum(lev, *(m_leveldata[lev]->ep_g), comp, ebfactory);
 }

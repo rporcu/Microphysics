@@ -2,6 +2,7 @@
 
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_VisMF.H>
+
 #include <mfix_mf_helpers.H>
 #include <mfix_eb_parms.H>
 #include <mfix_dem_parms.H>
@@ -9,6 +10,7 @@
 #include <mfix_species_parms.H>
 #include <mfix_reactions_parms.H>
 #include <mfix_pic_parms.H>
+#include <mfix_utils.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -267,8 +269,8 @@ mfix::EvolveFluid (int nstep,
     if (test_tracer_conservation)
     {
        amrex::Print() << "Sum tracer volume wgt = "
-                      << volWgtSum(0, *m_leveldata[0]->trac, 0)
-                      << " " << volEpsWgtSum(0, *m_leveldata[0]->trac, 0)
+                      << Utils::volWgtSum(0, *m_leveldata[0]->trac, 0, ebfactory)
+                      << " " << Utils::volEpsWgtSum(0, *m_leveldata[0]->trac, *m_leveldata[0]->ep_g, 0, ebfactory)
                       << std::endl;
     }
 

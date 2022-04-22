@@ -21,8 +21,6 @@ mfix::mfix_calc_eb_bc_areas ()
 
   amrex::Vector<Real> eb_areas(nbc, Real(0.));
 
-  const int eb = bc_list.get_eb();
-
   for (int lev = 0; lev < nlev; lev++) {
 
     const GpuArray<Real,3> dx = geom[lev].CellSizeArray();
@@ -34,7 +32,7 @@ mfix::mfix_calc_eb_bc_areas ()
 
     for(int bcv(0); bcv < nbc; ++bcv) {
 
-      if ( BC::bc[bcv].type != eb ) {
+      if (BC::bc[bcv].type != BCList::eb) {
 
         eb_areas[bcv] = Real(0.0);
 
@@ -129,7 +127,7 @@ mfix::mfix_calc_eb_bc_areas ()
     ParallelAllReduce::Sum(eb_areas.data(), eb_areas.size(), ParallelContext::CommunicatorAll());
 
     for(int bcv(0); bcv < nbc; ++bcv) {
-      if ( BC::bc[bcv].type == eb ) {
+      if (BC::bc[bcv].type == BCList::eb) {
         BC::bc[bcv].eb.area = eb_areas[bcv];
       }
     }

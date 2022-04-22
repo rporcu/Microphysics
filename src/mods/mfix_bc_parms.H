@@ -11,6 +11,7 @@
 #include <AMReX_EB2.H>
 #include <AMReX_EB2_IF_Plane.H>
 
+#include <mfix_bc_list.H>
 #include <mfix_eb_parms.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_solids_parms.H>

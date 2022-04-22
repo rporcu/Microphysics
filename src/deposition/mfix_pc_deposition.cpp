@@ -382,8 +382,7 @@ InterphaseTxfrDeposition (F WeightFunc,
 
                 if (solve_reactions) {
                   for (int n_g(0); n_g < nspecies_g; ++n_g) {
-                    HostDevice::Atomic::Add(&chem_txfr_arr(i+ii,j+jj,k+kk,idx_Xg_txfr+n_g),
-                                            weight_vol*X_gk_txfr[n_g]);
+                    HostDevice::Atomic::Add(&chem_txfr_arr(i+ii,j+jj,k+kk,idx_Xg_txfr+n_g), weight_vol*X_gk_txfr[n_g]);
                 }
 
                   HostDevice::Atomic::Add(&chem_txfr_arr(i+ii,j+jj,k+kk,idx_velg_txfr+0), weight_vol*pvx_chem);

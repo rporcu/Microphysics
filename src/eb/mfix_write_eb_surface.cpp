@@ -1,9 +1,17 @@
-#include <mfix.H>
+#include <mfix_rw.H>
+#include <mfix_dem_parms.H>
+
 #include <AMReX_WriteEBSurface.H>
 
-void mfix::WriteMyEBSurface ()
+using namespace amrex;
+
+
+namespace MfixIO {
+
+void
+MfixRW::WriteMyEBSurface () const
 {
-  if (Geom(0).isAllPeriodic()) return;
+  if (geom[0].isAllPeriodic()) return;
 
   // Only write at the finest level!
   int lev = nlev-1;
@@ -21,5 +29,7 @@ void mfix::WriteMyEBSurface ()
       ebf = ebfactory[lev].get();
   }
 
-  WriteEBSurface(ba,dm,Geom(lev),ebf);
+  WriteEBSurface(ba,dm,geom[lev],ebf);
+}
+
 }

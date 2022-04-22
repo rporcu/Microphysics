@@ -42,15 +42,13 @@ mfix::mfix_set_eb_scalar_bcs (Vector< MultiFab* > const& eb_scalars,
            const auto &flags_arr    = factory.getMultiEBCellFlagFab()[mfi].const_array();
            const auto &eb_norm_arr  = factory.getBndryNormal()[mfi].const_array();
 
-           const int eb = bc_list.get_eb();
+           for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
 
-           for(int bcv(0); bcv < BC::bc.size(); ++bcv) {
-
-             if ( BC::bc[bcv].type == eb && BC::bc[bcv].fluid.flow_thru_eb ) {
+             if (BC::bc[bcv].type == BCList::eb && BC::bc[bcv].fluid.flow_thru_eb) {
 
                const Box *ic_bx = calc_ic_box(geom[lev], BC::bc[bcv].region);
 
-               if( ic_bx->intersects(bx)) {
+               if (ic_bx->intersects(bx)) {
 
                  // Intersection of ic box and mfi box
                  const Box bx_int = bx&(*ic_bx);

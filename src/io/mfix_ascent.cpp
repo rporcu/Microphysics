@@ -1,7 +1,7 @@
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 
-#include <mfix.H>
+#include <mfix_rw.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_solids_parms.H>
 #include <mfix_dem_parms.H>
@@ -12,8 +12,13 @@
 #include <ascent.hpp>
 #endif
 
+using namespace amrex;
+
+
+namespace MfixIO {
+
 void
-mfix::WriteAscentFile (int nstep, const Real time)
+MfixRW::WriteAscentFile (int nstep, const Real time) const
 {
 #ifdef AMREX_USE_ASCENT
   BL_PROFILE("mfix::WriteAscentFile()");
@@ -208,3 +213,5 @@ mfix::WriteAscentFile (int nstep, const Real time)
   amrex::ignore_unused(time);
 #endif
 }
+
+} // end namespace MfixIO

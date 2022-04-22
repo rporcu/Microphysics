@@ -37,6 +37,7 @@
 #include <mfix_leveldata.H>
 #include <mfix_mlmg_options.H>
 #include <mfix_run_on.H>
+#include <mfix_rw.H>
 
 
 // Drag type enumeration
@@ -73,6 +74,9 @@ class mfix : public AmrCore
 
     // Vector of allowed chemical reactions
     Reactions reactions;
+
+    // IO Class
+    MfixIO::MfixRW* mfixRW;
 
     // Face-based coefficients b in MAC projection and implicit diffusion solve
     Vector< Array<MultiFab*,3> > bcoeff;
@@ -112,32 +116,12 @@ class mfix : public AmrCore
                                     amrex::Vector< amrex::MultiFab*> const& S_cc,
                                     bool proj_for_small_dt);
 
-    void WriteCheckPointFile (std::string & check_file_name,
-                              int nstep = 0, Real dt = 0.0, Real time = 0.0);
-
-    void WritePlotFile (std::string & plot_file_name,
-                        int nstep = 0, Real time = 0.0);
-
-    void WriteAscentFile (int nstep, amrex::Real time );
-
 #ifdef MFIX_CATALYST
     void RunCatalystAdaptor ( int nstep, Real time );
 #endif
 
-    //! Save variables that don't change to plot file. The idea is that they can
-    //! be saved _once_ per simulations and not repeatedly every Nth time step.
-    void WriteStaticPlotFile (const std::string & plot_file_name) const;
-
     void Restart (std::string& restart_chkfile, int* nstep, Real* dt,
                   Real* time, IntVect& Nrep);
-
-    void WriteParticleAscii (std::string& par_ascii_file_name, int nstep = 0) const;
-
-    void WriteAverageRegions (std::string& avg_file, int nstep, Real time = 0.) const;
-
-    void ComputeAverageFluidVars (const int lev,
-                                  const amrex::Real time,
-                                  const std::string& basename) const;
 
     void Regrid ();
 
@@ -147,9 +131,6 @@ class mfix : public AmrCore
     void mfix_usr1 (Real time) const;
     void mfix_usr2 () const;
     void mfix_usr3 () const;
-
-    void output (int estatus, int finish, int nstep, Real dt, Real time)
-    { pc->output(estatus, finish, nstep, dt, time); };
 
     void make_mg_bc (int mg_bc[]);
 
@@ -208,26 +189,12 @@ class mfix : public AmrCore
       make_wall (int dir, // direction (long edge) of wall
                  Real position, Real height, Real width);
 
-    void WriteMyEBSurface ();
-
-    void InitIOChkData ();
-
-    void ResetIOChkData ();
-
-    void InitIOPltData ();
-
-    static int  mass_balance_report_int;
-    static Real mass_balance_report_per_approx;
-    static Real mass_balance_report_time;
-
     static inline std::string get_load_balance_type ()
     { return load_balance_type; }
 
     // flag enabling level-set restart (i.e. prevent make_eb_* from rebuilding
     // the level-set data).
     bool levelset_restart = false;
-
-    void mfix_compute_vort ();
 
     void mfix_compute_dt (int nstep, Real time, Real stop_time, Real & dt, Real & prev_dt);
 
@@ -455,29 +422,6 @@ class mfix : public AmrCore
                                        const amrex::FabArray<EBCellFlagFab>* flags,
                                        amrex::Real max_eps);
 
-    Real volWgtSum (int lev, const MultiFab & mf, int comp, bool local=false) const;
-
-    Real volEpsWgtSum (int lev, const MultiFab & mf, int comp, bool local=false) const;
-
-    Real volWgtSumBox (int lev, const MultiFab & mf, int comp, const Box a_bx, bool local=false) const;
-
-    void ReportGridStats () const;
-
-    void WriteMassBalanceReport ( const Real time );
-
-    void ComputeMassAccum (const int offset = 1);
-
-    void ComputeMassFlux (amrex::Vector< amrex::MultiFab const*> const& flux_x,
-                          amrex::Vector< amrex::MultiFab const*> const& flux_y,
-                          amrex::Vector< amrex::MultiFab const*> const& flux_z,
-                          const int scomp,
-                          const int ncomp,
-                          const bool fluxes_are_area_weighted,
-                          const Real dt);
-
-    void ComputeMassProduction ( const Real dt,
-                                 Vector< MultiFab const*> const& chem_txfr );
-
     void mfix_set_bc_type (int lev, int nghost_bc);
 
     void set_bcrec_lo (const int lev, const int dir, const int l_type);
@@ -533,48 +477,48 @@ class mfix : public AmrCore
     std::shared_ptr<Hydro::NodalProjector> nodal_projector;
 
 
+    ////////////////////////////////////////////////////////////////////////////
+    //
+    // PIC solids
+    //
+    ////////////////////////////////////////////////////////////////////////////
 
-  ////////////////////////////////////////////////////////////////////////////
-  //
-  // PIC solids
-  //
-  ////////////////////////////////////////////////////////////////////////////
+    void EvolveParcels (amrex::Real dt,
+                        amrex::Real time,
+                        amrex::RealVect& gravity,
+                        const int ls_refinement,
+                        amrex::Vector< amrex::MultiFab* >& cost,
+                        std::string& knapsack_weight_type,
+                        const int advect_enthalpy,
+                        const amrex::Real enthalpy_source);
 
-  void EvolveParcels (amrex::Real dt,
-                      amrex::Real time,
-                      amrex::RealVect& gravity,
-                      const int ls_refinement,
-                      amrex::Vector< amrex::MultiFab* >& cost,
-                      std::string& knapsack_weight_type,
-                      const int advect_enthalpy,
-                      const amrex::Real enthalpy_source);
+    void pic_iteration (const bool apply_forces,
+                        const bool update_parcels,
+                        const bool use_taylor_approx,
+                        const Real advance_vel_p,
+                        amrex::Real dt,
+                        amrex::RealVect& gravity,
+                        amrex::Vector< amrex::Array<amrex::MultiFab*,3> >& vel_s_in,
+                        amrex::Vector< amrex::MultiFab* >& ep_s_out,
+                        amrex::EBFArrayBoxFactory* ebfactory,
+                        const int ls_refinement,
+                        const MultiFab* ls_phi);
 
-  void pic_iteration (const bool apply_forces,
-                      const bool update_parcels,
-                      const bool use_taylor_approx,
-                      const Real advance_vel_p,
-                      amrex::Real dt,
-                      amrex::RealVect& gravity,
-                      amrex::Vector< amrex::Array<amrex::MultiFab*,3> >& vel_s_in,
-                      amrex::Vector< amrex::MultiFab* >& ep_s_out,
-                      amrex::EBFArrayBoxFactory* ebfactory,
-                      const int ls_refinement,
-                      const MultiFab* ls_phi);
+    void MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s,
+                                const bool do_deposition=false);
 
-  void MFIX_CalcAvgSolidsVel (Vector< Array<MultiFab*,3> >& vel_s,
-                              const bool do_deposition=false);
-
-  void MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
-                              amrex::RealVect& gravity_in,
-                              amrex::Vector< amrex::MultiFab* >& cost,
-                              std::string& knapsack_weight_type);
+    void MFIX_CalcSolidsStress (amrex::Vector< amrex::MultiFab* >& ep_s_in,
+                                amrex::RealVect& gravity_in,
+                                amrex::Vector< amrex::MultiFab* >& cost,
+                                std::string& knapsack_weight_type);
 
 
-  void mfix_set_pic_velocity_bcs (Vector< MultiFab* > const& vel) const;
+    void mfix_set_pic_velocity_bcs (Vector< MultiFab* > const& vel) const;
 
-  void set_pic_velocity_bcs (const int lev,
-                             FArrayBox& vel_fab,
-                             const Box& domain) const;
+    void set_pic_velocity_bcs (const int lev,
+                               FArrayBox& vel_fab,
+                               const Box& domain) const;
+
   protected:
     //! Tagging cells for refinement
     virtual void ErrorEst (int lev,
@@ -611,13 +555,6 @@ class mfix : public AmrCore
 
     static RealVect gp0;
     static RealVect gravity;
-
-    static int  report_mass_balance;
-
-    static amrex::GpuArray<amrex::Real,2*SPECIES::NMAX> mass_accum;
-    static amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mass_inflow;
-    static amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mass_outflow;
-    static amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mass_prod;
 
     // Scalar diffusive coefficient
     Vector<Real> mu_s;
@@ -814,19 +751,11 @@ public:
   void make_eb_csg(std::string);
 #endif
 
-    void MakeBCArrays (int nghost_bc);
-
     void MakeNewLevelFromScratch (int lev, Real time, const BoxArray & new_grids,
                                   const DistributionMapping & new_dmap) override;
 
     void ReMakeNewLevelFromScratch (int lev, const BoxArray & new_grids,
                                     const DistributionMapping & new_dmap);
-
-    void WriteCheckHeader (const std::string & name, int nstep, Real dt, Real time) const;
-
-    void WriteJobInfo (const std::string & dir ) const;
-
-    static void GotoNextLine (std::istream & is);
 
     void EvolveFluid (int nstep, Real & dt, Real & time, Real & prev_dt, Real stop_time, Real & drag_timing);
 
@@ -972,15 +901,6 @@ public:
     amrex::IntVect mfix_locate_max_eps ( Vector< MultiFab*>& ep_s_in, const Real max_eps );
 
   private:
-    void mfix_print_max_vel (int lev,
-                             const amrex::Vector<amrex::MultiFab*>& vel_g_in,
-                             const amrex::Vector<amrex::MultiFab*>& p_g_in);
-
-    void mfix_print_max_gp (int lev,
-                            const amrex::Vector<amrex::MultiFab*>& gp_g_in);
-
-    IntVect mfix_print_min_epg ();
-
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
 
@@ -1005,14 +925,6 @@ public:
     // Debug counter used for tracking number of level-set MultiFabs used in
     // intersection/union
     int ct_ls_mf;
-
-    // Boundary conditions types
-    Vector< IArrayBox* > bc_ilo;
-    Vector< IArrayBox* > bc_ihi;
-    Vector< IArrayBox* > bc_jlo;
-    Vector< IArrayBox* > bc_jhi;
-    Vector< IArrayBox* > bc_klo;
-    Vector< IArrayBox* > bc_khi;
 
     Vector< std::unique_ptr<LevelData> > m_leveldata;
 
@@ -1072,45 +984,38 @@ public:
     amrex::Vector< amrex::MultiFab const* > get_diveu_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_mac_phi_const () const noexcept;
 
-  amrex::Vector<int> const& get_velocity_iconserv () const noexcept { return m_iconserv_velocity; }
-  amrex::Vector<int> const& get_density_iconserv () const noexcept { return m_iconserv_density; }
-  amrex::Vector<int> const& get_enthalpy_iconserv () const noexcept { return m_iconserv_enthalpy; }
-  amrex::Vector<int> const& get_tracer_iconserv () const noexcept { return m_iconserv_tracer; }
-  amrex::Vector<int> const& get_species_iconserv () const noexcept { return m_iconserv_species; }
-  //
-  int const* get_velocity_iconserv_device_ptr () const noexcept {
-    return m_iconserv_velocity_d.data(); }
-  int const* get_density_iconserv_device_ptr () const noexcept {
-    return m_iconserv_density_d.data(); }
-  int const* get_enthalpy_iconserv_device_ptr () const noexcept {
-    return m_iconserv_enthalpy_d.data(); }
-  int const* get_tracer_iconserv_device_ptr () const noexcept {
-    return m_iconserv_tracer_d.data(); }
-  int const* get_species_iconserv_device_ptr () const noexcept {
-    return m_iconserv_species_d.data(); }
+    amrex::Vector<int> const& get_velocity_iconserv () const noexcept { return m_iconserv_velocity; }
+    amrex::Vector<int> const& get_density_iconserv () const noexcept { return m_iconserv_density; }
+    amrex::Vector<int> const& get_enthalpy_iconserv () const noexcept { return m_iconserv_enthalpy; }
+    amrex::Vector<int> const& get_tracer_iconserv () const noexcept { return m_iconserv_tracer; }
+    amrex::Vector<int> const& get_species_iconserv () const noexcept { return m_iconserv_species; }
+    //
+    int const* get_velocity_iconserv_device_ptr () const noexcept {
+      return m_iconserv_velocity_d.data(); }
+    int const* get_density_iconserv_device_ptr () const noexcept {
+      return m_iconserv_density_d.data(); }
+    int const* get_enthalpy_iconserv_device_ptr () const noexcept {
+      return m_iconserv_enthalpy_d.data(); }
+    int const* get_tracer_iconserv_device_ptr () const noexcept {
+      return m_iconserv_tracer_d.data(); }
+    int const* get_species_iconserv_device_ptr () const noexcept {
+      return m_iconserv_species_d.data(); }
 
-  amrex::Vector<amrex::BCRec> const& get_velocity_bcrec () const noexcept { return m_bcrec_velocity; }
-  amrex::Vector<amrex::BCRec> const& get_hydro_velocity_bcrec () const noexcept { return m_bcrec_hydro_velocity; }
-  amrex::Vector<amrex::BCRec> const& get_density_bcrec () const noexcept { return m_bcrec_density; }
-  amrex::Vector<amrex::BCRec> const& get_enthalpy_bcrec () const noexcept { return m_bcrec_enthalpy; }
-  amrex::Vector<amrex::BCRec> const& get_tracer_bcrec () const noexcept { return m_bcrec_tracer; }
-  amrex::Vector<amrex::BCRec> const& get_species_bcrec () const noexcept { return m_bcrec_species; }
-  amrex::Vector<amrex::BCRec> const& get_force_bcrec () const noexcept { return m_bcrec_force; }
-
-  amrex::BCRec const* get_velocity_bcrec_device_ptr () const noexcept { return m_bcrec_velocity_d.data(); }
-  amrex::BCRec const* get_hydro_velocity_bcrec_device_ptr () const noexcept { return m_bcrec_hydro_velocity_d.data(); }
-  amrex::BCRec const* get_density_bcrec_device_ptr () const noexcept { return m_bcrec_density_d.data(); }
-  amrex::BCRec const* get_enthalpy_bcrec_device_ptr () const noexcept { return m_bcrec_enthalpy_d.data(); }
-  amrex::BCRec const* get_tracer_bcrec_device_ptr () const noexcept { return m_bcrec_tracer_d.data(); }
-  amrex::BCRec const* get_species_bcrec_device_ptr () const noexcept { return m_bcrec_species_d.data(); }
-  amrex::BCRec const* get_force_bcrec_device_ptr () const noexcept { return m_bcrec_force_d.data(); }
-
-  // Although we do nothing special for different scalars,
-  // we assume they are stored in the following order:
-  // 0: density, 1: enthalpy, 2: tracers
-  // 3+ntrac: ep_g,  4+ntrac: mu_g
-  // 5+ntrac: T_g,   6+ntrac: h_g
-
+    amrex::Vector<amrex::BCRec> const& get_velocity_bcrec () const noexcept { return m_bcrec_velocity; }
+    amrex::Vector<amrex::BCRec> const& get_hydro_velocity_bcrec () const noexcept { return m_bcrec_hydro_velocity; }
+    amrex::Vector<amrex::BCRec> const& get_density_bcrec () const noexcept { return m_bcrec_density; }
+    amrex::Vector<amrex::BCRec> const& get_enthalpy_bcrec () const noexcept { return m_bcrec_enthalpy; }
+    amrex::Vector<amrex::BCRec> const& get_tracer_bcrec () const noexcept { return m_bcrec_tracer; }
+    amrex::Vector<amrex::BCRec> const& get_species_bcrec () const noexcept { return m_bcrec_species; }
+    amrex::Vector<amrex::BCRec> const& get_force_bcrec () const noexcept { return m_bcrec_force; }
+    //
+    amrex::BCRec const* get_velocity_bcrec_device_ptr () const noexcept { return m_bcrec_velocity_d.data(); }
+    amrex::BCRec const* get_hydro_velocity_bcrec_device_ptr () const noexcept { return m_bcrec_hydro_velocity_d.data(); }
+    amrex::BCRec const* get_density_bcrec_device_ptr () const noexcept { return m_bcrec_density_d.data(); }
+    amrex::BCRec const* get_enthalpy_bcrec_device_ptr () const noexcept { return m_bcrec_enthalpy_d.data(); }
+    amrex::BCRec const* get_tracer_bcrec_device_ptr () const noexcept { return m_bcrec_tracer_d.data(); }
+    amrex::BCRec const* get_species_bcrec_device_ptr () const noexcept { return m_bcrec_species_d.data(); }
+    amrex::BCRec const* get_force_bcrec_device_ptr () const noexcept { return m_bcrec_force_d.data(); }
 
     // used if load_balance_type == "KnapSack"
     amrex::Vector< amrex::MultiFab* > particle_cost;
@@ -1129,11 +1034,11 @@ public:
 
     int m_steady_state = 0;
 
-    bool advect_enthalpy      = false;
-    bool advect_density       = false;
-    bool advect_tracer        = false;
-    bool solve_species = false;
-    bool solve_reactions      = false;
+    bool advect_enthalpy = false;
+    bool advect_density  = false;
+    bool advect_tracer   = false;
+    bool solve_species   = false;
+    bool solve_reactions = false;
 
     bool test_tracer_conservation = false;
 
@@ -1147,13 +1052,16 @@ public:
     bool m_use_depdt_constraint = false;
     bool m_use_drag_in_projection = false;
 
+    // Redistribute the velocity field after the nodal projection
+    bool m_redistribute_nodal_proj = false;
+
     // Tolerances and max iterations for Newton solver
     amrex::Real newton_reltol = 1.e-8;
     amrex::Real newton_abstol = 1.e-8;
     int newton_maxiter = 500;
 
     // If using Godunov, default to PLM (not PPM)
-    bool m_godunov_ppm         = false;
+    bool m_godunov_ppm = false;
 
     // If using Godunov, default to including viscous/diffusive
     //    terms in the forcing terms
@@ -1282,61 +1190,6 @@ public:
     Real covered_val = 1.e40;
     Real init_value = 9.87654321e32;
 
-    //
-    // Options to control the computing of particle eulerian velocities
-    //
-    amrex::Vector<Real> avg_p_g;
-    amrex::Vector<Real> avg_ep_g;
-    amrex::Vector<Real> avg_vel_g;
-    amrex::Vector<Real> avg_T_g;
-
-    amrex::Vector<Real> avg_vel_p;
-    amrex::Vector<Real> avg_T_p;
-
-    amrex::Vector<Real> avg_region_x_e;
-    amrex::Vector<Real> avg_region_x_w;
-    amrex::Vector<Real> avg_region_y_s;
-    amrex::Vector<Real> avg_region_y_n;
-    amrex::Vector<Real> avg_region_z_b;
-    amrex::Vector<Real> avg_region_z_t;
-
-    // Last step at which we wrote a plotfile
-    int last_plt = -1;
-
-    // Flags for saving fluid data in plot files
-    int plt_vel_g     = 1;
-    int plt_ep_g      = 1;
-    int plt_p_g       = 0;
-    int plt_ro_g      = 0;
-    int plt_MW_g      = 0;
-    int plt_trac      = 0;
-    int plt_cp_g      = 0;
-    int plt_T_g       = 0;
-    int plt_h_g       = 0;
-    int plt_k_g       = 0;
-    int plt_mu_g      = 0;
-    int plt_X_gk      = 0;
-    int plt_D_gk      = 0;
-    int plt_cp_gk     = 0;
-    int plt_h_gk      = 0;
-    int plt_diveu     = 0;
-    int plt_volfrac   = 0;
-    int plt_gradp_g   = 0;
-    int plt_vort      = 0;
-    int plt_txfr      = 0;
-    int plt_chem_txfr = 0;
-    int plt_proc      = 0;
-    int plt_proc_p    = 0;
-    int plt_cost_p    = 0;
-
-    // Total number of variables to write in plot file
-    int pltVarCount = 0;
-
-    // Flags for saving particle data. By default, we have all flags on,
-    // we turn off what we don't want in the init IO routine. This is somewhat
-    // different from what we do with the fluid.
-    Vector<int> write_real_comp = Vector<int>(AoSrealData::count+SoArealData::count,1);
-    Vector<int> write_int_comp = Vector<int>(AoSintData::count+SoAintData::count,1);
 
     // Here we set the number of ghost nodes of the field arrays.
     // Since this is  a class attribute, it will be propagated to
@@ -1368,24 +1221,6 @@ public:
     // Use separate solves for each velocity component with lagged tensor terms
     bool use_tensor_correction = false;
 
-     /***************************************************************************
-     *                                                                         *
-     * I/O stuff                                                               *
-     *                                                                         *
-     **************************************************************************/
-
-    // Variables to simplify checkpoint IO
-    // Vector< Vector< MultiFab* > > vectorVars;
-    Vector< std::string > vecVarsName;
-
-    Vector< Vector< MultiFab* > > chkScalarVars;
-    Vector< std::string > chkscaVarsName;
-
-    Vector< Vector< MultiFab* > > chkTVars;
-    Vector< std::string > chkTVarsName;
-
-    Vector< Vector< MultiFab* > > chkSpeciesVars;
-    Vector< std::string > chkSpeciesVarsName;
 
     /***************************************************************************
      *                                                                         *
