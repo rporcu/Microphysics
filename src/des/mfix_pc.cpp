@@ -131,7 +131,7 @@ void MFIXParticleContainer::ReadStaticParameters ()
 
 void MFIXParticleContainer::ReadParameters ()
 {
-    ParmParse pp("solids.damped_newton");
+    ParmParse pp("solids.newton_solver");
 
     pp.query("absolute_tol", newton_abstol);
     pp.query("relative_tol", newton_reltol);

@@ -69,7 +69,7 @@ mfix::InitParams ()
     n_error_buf[i] = {8,8,8};
 
   {
-    ParmParse pp("fluid.damped_newton");
+    ParmParse pp("fluid.newton_solver");
 
     pp.query("absolute_tol", newton_abstol);
     pp.query("relative_tol", newton_reltol);
