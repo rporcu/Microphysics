@@ -23,8 +23,8 @@ namespace BC
 
   struct BC_t {
     // Constructor
-    BC_t (const FluidPhase& fluid_phase) :
-      fluid(fluid_phase.constraint_type, fluid_phase.nspecies, fluid_phase.parameters)
+    BC_t (FluidPhase& fluid_in) :
+      fluid(fluid_in)
     {}
 
     // BC type (mi, pi, po, nsw, eb)
@@ -34,7 +34,7 @@ namespace BC
 
     EB::EB_t eb;
 
-    FluidPhase::FLUID_t fluid;
+    FLUID_t fluid;
 
     amrex::Vector<SolidsPhase::SOLIDS_t> solids;
 
@@ -78,17 +78,16 @@ namespace BC
   extern amrex::Vector<BC_t> bc;
 
   void Initialize (amrex::Geometry& geom,
-                   const FluidPhase& fluid,
+                   FluidPhase& fluid,
                    const SolidsPhase& solids);
 
-  void read_bc_density (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
-  void read_bc_thermodynamic_pressure (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
-  void read_bc_velocity (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
-  void read_bc_volflow (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
-  void read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
+  void read_bc_density (amrex::ParmParse pp, FLUID_t* fluid);
+  void read_bc_velocity (amrex::ParmParse pp, FLUID_t* fluid);
+  void read_bc_volflow (amrex::ParmParse pp, FLUID_t* fluid);
+  void read_bc_temperature (amrex::ParmParse pp, FLUID_t* fluid);
   void read_bc_species (amrex::ParmParse pp,
                         const amrex::Vector<std::string> species,
-                        FluidPhase::FLUID_t* fluid);
+                        FLUID_t* fluid);
 
 }
 

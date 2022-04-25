@@ -122,9 +122,6 @@ species.solve = 0
 #
 fluid.solve = fluid
 
-fluid.density    = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity  = constant
 fluid.viscosity.constant = 2.0e-5
 
@@ -182,12 +179,14 @@ mfix.particle_init_type = Auto
 # Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
+ic.full-domain.fluid.density   = 1.0
 ic.full-domain.fluid.velocity  = 0.0  0.0  0.0
 
 
 # Initial bed in air reactor section
 #---------------------------------------------------------------------//
 ic.riser.fluid.volfrac  = 0.9990
+ic.riser.fluid.density  = 1.0
 ic.riser.fluid.velocity = 0.0  0.0  0.0
 
 ic.riser.solids = hdpe
@@ -241,6 +240,7 @@ xlo.velocity = 0.01
 #bc.inflow.type = mi
 #
 #bc.inflow.fluid.volfrac =  1.0
+#bc.inflow.fluid.density =  1.0
 #bc.inflow.fluid.velocity = 0.01  0.00  0.00
 
 

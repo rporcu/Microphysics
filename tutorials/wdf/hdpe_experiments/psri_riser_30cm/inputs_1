@@ -137,9 +137,6 @@ amr.check_file     ="chk"
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.2
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 1.8e-5
 
@@ -192,7 +189,7 @@ ic.regions =  bkgic
 # mean BacKGround IC covering domain 
 #---------------------------------------------------------------------//
 ic.bkgic.fluid.volfrac   =  0.99
-
+ic.bkgic.fluid.density   =  1.2
 ic.bkgic.fluid.pressure  = 0.0
 
 ic.bkgic.fluid.velocity  =  0.0  0.0  0.0

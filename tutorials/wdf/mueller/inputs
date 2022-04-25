@@ -128,9 +128,6 @@ amr.check_file     ="chk"
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.2
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 1.8e-5
 
@@ -198,7 +195,7 @@ ic.regions = fluid-only
 # Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.fluid-only.fluid.volfrac   = 1.0
-
+ic.fluid-only.fluid.density   = 1.2
 ic.fluid-only.fluid.velocity  = 0.0  0.0  0.0
 
 #_______________________________________________________________________
@@ -210,6 +207,7 @@ bc.regions = inflow  outflow  bottom-wall  top-wall  front-wall  back-wall
 
 bc.inflow = mi
 bc.inflow.fluid.volfrac  =  1.0
+bc.inflow.fluid.density  =  1.2
 bc.inflow.fluid.velocity =  0.60  0.0  0.0
 
 bc.outflow = po
