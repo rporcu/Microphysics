@@ -49,7 +49,7 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
     int ncomp = 5;
 
     // Temperature in fluid
-    if (advect_enthalpy ) {
+    if (fluid.solve_enthalpy) {
       pltFldNames.push_back("T_g");
       ncomp += 1;
     }
@@ -79,13 +79,13 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
       MultiFab::Copy(*mf[lev], ebfactory[lev]->getVolFrac(), 0, 4, 1, 0);
 
       int lc=5;
-      if (advect_enthalpy) {
+      if (fluid.solve_enthalpy) {
         MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->T_g), 0, lc, 1, 0);
         lc += 1;
       }
 
       // Fluid species mass fractions
-      if ( fluid.solve_species ) {
+      if (fluid.solve_species) {
         MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_gk, 0, lc, fluid.nspecies, 0);
         lc += fluid.nspecies;
       }
@@ -96,7 +96,7 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
     conduit::Node bp_mesh;
 
     amrex::MultiLevelToBlueprint(nlev, amrex::GetVecOfConstPtrs(mf),
-        pltFldNames, geom, time, level_steps, refRatio(), bp_mesh);
+        pltFldNames, geom, time, level_steps, ref_ratio, bp_mesh);
 
 
 
@@ -180,8 +180,6 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
 
     int_comp_names.push_back("phase");
     int_comp_names.push_back("state");
-
-    MFIXParticleContainer* pc = getParticleContainer();
 
     // for the MPI case, provide the mpi comm
     ascent::Ascent ascent;
