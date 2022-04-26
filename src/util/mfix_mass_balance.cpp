@@ -162,8 +162,6 @@ MfixRW::ComputeMassProduction (const Real /*dt*/,
 
      MultiFab const& ro_gk_txfr_fab = *(chem_txfr[lev]);
 
-    // Array4<Real const> const& species_txfr_arr = chem_txfr[lev]->const_array(mfi,start_idx);
-
     for (int n=0; n < nspecies_g; ++n){
 
       prod[n] = amrex::ReduceSum(*volfrac, ro_gk_txfr_fab, 0,

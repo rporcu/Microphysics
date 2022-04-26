@@ -153,58 +153,58 @@ MfixRW::InitIOPltData ()
         int gap = AoSrealData::count;
 
         int input_value = 0;
-        pp.query("plt_radius",   input_value );
+        pp.query("plt_radius", input_value);
         write_real_comp[gap+SoArealData::radius] = input_value;
 
         input_value = 0;
-        pp.query("plt_volume",   input_value );
+        pp.query("plt_volume", input_value);
         write_real_comp[gap+SoArealData::volume] = input_value;
 
         input_value = 0;
-        pp.query("plt_mass",     input_value );
+        pp.query("plt_mass", input_value);
         write_real_comp[gap+SoArealData::mass] = input_value;
 
         input_value = 0;
-        pp.query("plt_ro_p",     input_value );
+        pp.query("plt_ro_p", input_value);
         write_real_comp[gap+SoArealData::density] = input_value;
 
         input_value = 0;
-        pp.query("plt_omoi",     input_value );
+        pp.query("plt_omoi", input_value);
         write_real_comp[gap+SoArealData::oneOverI] = input_value;
 
         input_value = 1;
-        pp.query("plt_vel_p",     input_value );
+        pp.query("plt_vel_p", input_value);
         write_real_comp[gap+SoArealData::velx] = input_value;
         write_real_comp[gap+SoArealData::vely] = input_value;
         write_real_comp[gap+SoArealData::velz] = input_value;
 
         input_value = 0;
-        pp.query("plt_omega_p",   input_value );
+        pp.query("plt_omega_p", input_value);
         write_real_comp[gap+SoArealData::omegax] = input_value;
         write_real_comp[gap+SoArealData::omegay] = input_value;
         write_real_comp[gap+SoArealData::omegaz] = input_value;
 
         input_value = 0;
-        pp.query("plt_statwt",   input_value );
+        pp.query("plt_statwt", input_value);
         write_real_comp[gap+SoArealData::statwt] = input_value;
 
         input_value = 0;
-        pp.query("plt_drag_p",   input_value );
+        pp.query("plt_drag_p", input_value);
         write_real_comp[gap+SoArealData::dragcoeff] = input_value;  // drag coeff
         write_real_comp[gap+SoArealData::dragx] = input_value;  // dragx
         write_real_comp[gap+SoArealData::dragy] = input_value;  // dragy
         write_real_comp[gap+SoArealData::dragz] = input_value;  // dragz
 
         input_value = 0;
-        pp.query("plt_cp_s",  input_value);
+        pp.query("plt_cp_s", input_value);
         write_real_comp[gap+SoArealData::cp_s] = input_value;  // specific heat
 
         input_value = 0;
-        pp.query("plt_T_p",   input_value );
+        pp.query("plt_T_p", input_value);
         write_real_comp[gap+SoArealData::temperature] = input_value;  // temperature
 
         input_value = 0;
-        pp.query("plt_convection", input_value );
+        pp.query("plt_convection", input_value);
         write_real_comp[gap+SoArealData::convection] = input_value;  // heat transfer coefficient
 
         gap = AoSrealData::count + SoArealData::count;
@@ -212,51 +212,57 @@ MfixRW::InitIOPltData ()
         if (solids.solve_species)
         {
           input_value = 0;
-          pp.query("plt_X_s",   input_value );
+          pp.query("plt_X_s", input_value);
 
           const int start = gap + rtData.X_sn;
           for(int n(0); n < solids.nspecies; ++n)
-            write_real_comp[n+start] = input_value;
+            write_real_comp[start+n] = input_value;
         }
 
         if (reactions.solve)
         {
           input_value = 0;
-          pp.query("plt_mass_sn_txfr",   input_value );
-
-          const int start = gap + rtData.species_txfr;
-          for(int n(0); n < solids.nspecies; ++n)
-            write_real_comp[n+start] = input_value;
-        }
-
-        if (reactions.solve)
-        {
-          input_value = 0;
-          pp.query("plt_vel_s_txfr",   input_value );
+          pp.query("plt_vel_s_txfr", input_value);
 
           const int start = gap + rtData.vel_txfr;
           for(int n(0); n < 3; ++n)
-            write_real_comp[n+start] = input_value;
+            write_real_comp[start+n] = input_value;
         }
 
         if (reactions.solve)
         {
           input_value = 0;
-          pp.query("plt_h_s_txfr",   input_value );
+          pp.query("plt_h_s_txfr", input_value);
 
           const int start = gap + rtData.h_txfr;
           write_real_comp[start] = input_value;
+        }
+
+        if (reactions.solve)
+        {
+          input_value = 0;
+          pp.query("plt_mass_sn_txfr", input_value);
+
+          const int start = gap + rtData.mass_txfr;
+          for(int n(0); n < amrex::max(solids.nspecies, fluid.nspecies); ++n)
+            // Since we allocated a number of components for mass transfer that
+            // is equal to th max nb of species between solids and fluid, here
+            // we check that n is smaller than solids species nb
+            if (n < solids.nspecies)
+              write_real_comp[start+n] = input_value;
+            else // if n is larger, then we always set it to false
+              write_real_comp[start+n] = 0;
         }
 
         // Int data
         gap = AoSintData::count;
 
         input_value = 0;
-        pp.query("plt_phase",   input_value );
+        pp.query("plt_phase", input_value);
         write_int_comp[gap+SoAintData::phase] = input_value;
 
         input_value = 0;
-        pp.query("plt_state",   input_value );
+        pp.query("plt_state", input_value);
         write_int_comp[gap+SoAintData::state] = input_value;
 
       }
@@ -927,7 +933,7 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
 
         if (fluid.nspecies > solids.nspecies) {
           for (int n(0); n < (fluid.nspecies-solids.nspecies); ++n)
-            real_comp_names.push_back("Placeholder_"+std::to_string(n));
+            real_comp_names.push_back("placeholder_"+std::to_string(n));
         }
 
         if (reactions.solve) {

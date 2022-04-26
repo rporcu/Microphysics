@@ -70,17 +70,17 @@ struct runtimeRealData
   runtimeRealData (const int nspecies_s,
                    const int nspecies_g,
                    const int nreactions)
-    : X_sn(0)                                                     // nb of components = nspecies
-    , species_txfr(X_sn + nspecies_s)                             // nb of components = nspecies
-    , vel_txfr(species_txfr + amrex::max(nspecies_s, nspecies_g)*(nreactions>0)) // nb of components = 1
-    , h_txfr(vel_txfr + 3*(nreactions>0))                         // nb of components = 1
-    , count(h_txfr + 1*(nreactions>0))
+    : X_sn(0)                              // nb of components = nspecies_s
+    , vel_txfr(X_sn + nspecies_s)          // nb of components = 3
+    , h_txfr(vel_txfr + 3*(nreactions>0))  // nb of components = 1
+    , mass_txfr(h_txfr + 1*(nreactions>0)) // nb of components = max(nspecies_s,nspecies_g)
+    , count(mass_txfr + amrex::max(nspecies_s, nspecies_g)*(nreactions>0))
   {}
 
   const int X_sn;
-  const int species_txfr;
   const int vel_txfr;
   const int h_txfr;
+  const int mass_txfr;
   const int count;
 };
 

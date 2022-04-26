@@ -48,18 +48,15 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   if (advect_enthalpy)
   {
     if (m_convection_type == ConvectionType::RanzMarshall) {
-      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
-                                DragFunc,
+      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
                                 ComputeConvRanzMarshall(DEM::small_number,DEM::large_number,DEM::eps));
     }
     else if (m_convection_type == ConvectionType::Gunn) {
-      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
-                                DragFunc,
+      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
                                 ComputeConvGunn(DEM::small_number,DEM::large_number,DEM::eps));
     }
     else if (m_convection_type == ConvectionType::NullConvection) {
-      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
-                                DragFunc,
+      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
                                 NullConvectionCoeff());
     }
     else {
@@ -67,8 +64,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
     }
   }
   else {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
-                              DragFunc,
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
                               NullConvectionCoeff());
   }
 }
@@ -85,8 +81,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 {
   if (m_reaction_rates_type == ReactionRatesType::RRatesUser) {
     mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
-                              DragFunc, ConvectionCoeff,
-                              HeterogeneousRatesUser());
+                              DragFunc, ConvectionCoeff, HeterogeneousRatesUser());
   } else {
     amrex::Abort("Invalid Reaction Rates Type.");
   }
@@ -145,7 +140,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
   // Particles SoA starting indexes for mass fractions and rate of formations
   const int idx_X_sn   = (pc->m_runtimeRealData).X_sn;
-  const int idx_X_txfr = (pc->m_runtimeRealData).species_txfr;
+  const int idx_mass_txfr = (pc->m_runtimeRealData).mass_txfr;
   const int idx_vel_txfr = (pc->m_runtimeRealData).vel_txfr;
   const int idx_h_txfr = (pc->m_runtimeRealData).h_txfr;
 
@@ -367,7 +362,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                HeterogeneousRRates,plo,dxi,adv_enthalpy,fluid_is_a_mixture,
                mu_g0,fluid_parms,nspecies_g,interp_comp,local_cg_dem,
                ptile_data,nreactions,nspecies_s,
-               Solid,idx_X_sn,idx_X_txfr,idx_vel_txfr,idx_h_txfr,p_MW_gk,p_species_id_g,
+               Solid,idx_X_sn,idx_mass_txfr,idx_vel_txfr,idx_h_txfr,p_MW_gk,p_species_id_g,
                p_reactants_id,p_reactants_coeffs,p_reactants_phases,
                p_products_id,p_products_coeffs,p_products_phases,p_nreactants,
                p_nproducts,InvalidIdx,p_phases,p_nphases,p_types,Heterogeneous,
@@ -378,7 +373,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
           {
             MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
 
-            GpuArray<Real,6+SPECIES::NMAX> interp_loc; // vel_g, ep_g, ro_g, T_g, X_gk
+            GpuArray<Real,7+SPECIES::NMAX> interp_loc; // vel_g, ep_g, ro_g, T_g, X_gk, p_g
             interp_loc.fill(0.);
 
             // Indices of cell where particle is located
@@ -395,15 +390,28 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
               // No drag force for particles in covered cells.
               if (flags_array(iloc,jloc,kloc).isCovered()) {
 
+                // drag variable
                 p_realarray[SoArealData::dragcoeff][p_id] = 0.;
 
+                // convection-related enthalpy txfr variable
                 if (adv_enthalpy) {
                   p_realarray[SoArealData::convection][p_id] = 0.;
                 }
 
-                // TODO
-                // add more terms here
+                // chemical reaction txfr variables
+                if (solve_reactions) {
+                  for (int n_g(0); n_g < nspecies_g; n_g++)
+                    ptile_data.m_runtime_rdata[idx_mass_txfr+n_g][p_id] = 0.;
 
+                  ptile_data.m_runtime_rdata[idx_vel_txfr+0][p_id] = 0.;
+                  ptile_data.m_runtime_rdata[idx_vel_txfr+1][p_id] = 0.;
+                  ptile_data.m_runtime_rdata[idx_vel_txfr+2][p_id] = 0.;
+
+                  // Write the result in the enthalpy transfer space
+                  ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = 0.;
+                }
+
+                // Nothing else to do. Return
                 return;
 
               // Cut or regular cell and none of the cells in the stencil is
@@ -457,7 +465,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 #else
                   const int srccomp = 0;
                   const int dstcomp = 0;
-                  const int numcomp = interp_comp; // vel_g, ep_g, ro_g, T_g, X_gk
+                  const int numcomp = interp_comp; // vel_g, ep_g, ro_g, T_g, X_gk, p_g
 
                   shepard_interp(particle.pos(), iloc, jloc, kloc, dx, dxi, plo,
                                  flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
@@ -544,10 +552,10 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
             if (solve_reactions) {
               // Extract species mass fractions
               GpuArray<Real,SPECIES::NMAX> X_sn;
+              X_sn.fill(0.);
 
               for (int n_s(0); n_s < nspecies_s; n_s++) {
-                const int idx = idx_X_sn + n_s;
-                X_sn[n_s] = ptile_data.m_runtime_rdata[idx][p_id];
+                X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn + n_s][p_id];
               }
 
               // Extract interpolated thermodynamic pressure
@@ -628,7 +636,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                   }
                 }
 
-                ptile_data.m_runtime_rdata[idx_X_txfr+n_g][p_id] = G_m_gk_heterogeneous;
+                ptile_data.m_runtime_rdata[idx_mass_txfr+n_g][p_id] = G_m_gk_heterogeneous;
 
                 G_m_g_heterogeneous += G_m_gk_heterogeneous;
               }
@@ -637,9 +645,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
               //
               //***************************************************************
               const Real coeff = amrex::max(0., G_m_g_heterogeneous);
-              ptile_data.m_runtime_rdata[idx_vel_txfr+0][p_id] = coeff;
-              ptile_data.m_runtime_rdata[idx_vel_txfr+1][p_id] = coeff;
-              ptile_data.m_runtime_rdata[idx_vel_txfr+2][p_id] = coeff;
+              ptile_data.m_runtime_rdata[idx_vel_txfr][p_id] = coeff;
 
               // Write the result in the enthalpy transfer space
               ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = G_H_g_heterogeneous;

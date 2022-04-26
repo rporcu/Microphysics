@@ -801,7 +801,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             const int nspecies_s = solids.nspecies;
 
             const int idx_X_sn = m_runtimeRealData.X_sn;
-            const int idx_X_txfr = m_runtimeRealData.species_txfr;
+            const int idx_mass_txfr = m_runtimeRealData.mass_txfr;
             const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
             const int idx_h_txfr = m_runtimeRealData.h_txfr;
 
@@ -814,7 +814,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             auto& solids_parms = *solids.parameters;
 
             amrex::ParallelFor(nrp, [pstruct,p_realarray,p_intarray,subdt,
-                ptile_data,nspecies_s,idx_X_sn,idx_X_txfr,idx_vel_txfr,
+                ptile_data,nspecies_s,idx_X_sn,idx_mass_txfr,idx_vel_txfr,
                 idx_h_txfr,local_update_mass,fc_ptr,ntot,gravity,tow_ptr,eps,
                 p_hi,p_lo,x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc,
                 enthalpy_source,update_momentum,local_solve_reactions,time,
@@ -825,6 +825,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               ParticleType& p = pstruct[i];
 
               GpuArray<Real,SPECIES::NMAX> X_sn;
+              X_sn.fill(0.);
 
               // Get current particle's species mass fractions
               for (int n_s(0); n_s < nspecies_s; ++n_s) {
@@ -877,7 +878,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 for (int n_s(0); n_s < nspecies_s; ++n_s) {
 
                   // Get the current reaction rate for species n_s
-                  const Real mass_sn_rate = ptile_data.m_runtime_rdata[idx_X_txfr+n_s][i];
+                  const Real mass_sn_rate = ptile_data.m_runtime_rdata[idx_mass_txfr+n_s][i];
 
                   X_sn[n_s] = X_sn[n_s]*p_mass_old + subdt*mass_sn_rate;
 

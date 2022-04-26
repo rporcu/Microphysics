@@ -20,11 +20,6 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
 
     const int nspecies_s = solids.nspecies;
     const int nreactions = reactions.nreactions;
-
-    const int idx_X_sn = m_runtimeRealData.X_sn;
-    const int idx_X_txfr = m_runtimeRealData.species_txfr;
-    const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
-    const int idx_h_txfr = m_runtimeRealData.h_txfr;
     const int idx_count = m_runtimeRealData.count;
 
     for (int idim = 0; idim < 3; ++idim)
@@ -64,8 +59,8 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                 const int nextID = ParticleType::NextID();
 
                 amrex::ParallelFor(np, [np,pstruct,p_realarray,p_intarray,
-                    ptile_data,nextID,myProc,nspecies_s,nreactions,idx_X_sn,
-                    idx_X_txfr,idx_vel_txfr,idx_h_txfr,idx_count,shift,i]
+                    ptile_data,nextID,myProc,nspecies_s,nreactions,idx_count,
+                    shift,i]
                   AMREX_GPU_DEVICE (int n) noexcept
                 {
                     int index = n;
@@ -106,38 +101,8 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                     p_rep.id()  = nextID + n;
                     p_rep.cpu() = myProc;
 
-                    int start_idx = idx_X_sn;
-                    int end_idx   = idx_X_txfr;
-
                     // Runtime added variables -- species mass fractions
-                    for (int idx(start_idx); idx < end_idx; ++idx) {
-                      // Copy data from particle to replicated one
-                      ptile_data.m_runtime_rdata[idx][index_repl] = ptile_data.m_runtime_rdata[idx][index];
-                    }
-
-                    start_idx = end_idx;
-                    end_idx   = idx_vel_txfr;
-
-                    // Runtime added variables -- species mass txfr rates
-                    for (int idx(start_idx); idx < end_idx; ++idx) {
-                      // Copy data from particle to replicated one
-                      ptile_data.m_runtime_rdata[idx][index_repl] = ptile_data.m_runtime_rdata[idx][index];
-                    }
-
-                    start_idx = end_idx;
-                    end_idx   = idx_h_txfr;
-
-                    // Runtime added variables -- species momentum txfr rate
-                    for (int idx(start_idx); idx < end_idx; ++idx) {
-                      // Copy data from particle to replicated one
-                      ptile_data.m_runtime_rdata[idx][index_repl] = ptile_data.m_runtime_rdata[idx][index];
-                    }
-
-                    start_idx = end_idx;
-                    end_idx   = idx_count;
-
-                    // Runtime added variables -- species energy txfr rate
-                    for (int idx(start_idx); idx < end_idx; ++idx) {
+                    for (int idx(0); idx < idx_count; ++idx) {
                       // Copy data from particle to replicated one
                       ptile_data.m_runtime_rdata[idx][index_repl] = ptile_data.m_runtime_rdata[idx][index];
                     }

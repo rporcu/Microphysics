@@ -58,7 +58,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
       // Particles SoA starting indexes for mass fractions and rate of
       // formations
       const int idx_X_sn = m_runtimeRealData.X_sn;
-      const int idx_mass_sn_txfr = m_runtimeRealData.species_txfr;
+      const int idx_mass_sn_txfr = m_runtimeRealData.mass_txfr;
       const int idx_h_s_txfr = m_runtimeRealData.h_txfr;
 
       const int update_mass           = solids.solve_species && reactions.solve;

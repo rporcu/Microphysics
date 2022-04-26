@@ -361,7 +361,7 @@ mfix::mfix_calc_txfr_particle (Real time,
 
   // Particles SoA starting indexes for mass fractions and rate of formations
   const int idx_X_sn   = (pc->m_runtimeRealData).X_sn;
-  const int idx_X_txfr = (pc->m_runtimeRealData).species_txfr;
+  const int idx_mass_txfr = (pc->m_runtimeRealData).mass_txfr;
   const int idx_vel_txfr = (pc->m_runtimeRealData).vel_txfr;
   const int idx_h_txfr = (pc->m_runtimeRealData).h_txfr;
 
@@ -624,7 +624,7 @@ mfix::mfix_calc_txfr_particle (Real time,
               [pstruct,p_realarray,interp_array,gp0_dev,plo,dxi,pmult,dx,
                adv_enthalpy,ccent_fab,bcent_fab,apx_fab,apy_fab,apz_fab,
                flags_array,grown_bx_is_regular,interp_comp,solve_reactions,
-               ptile_data,nspecies_s,nspecies_g,idx_X_sn,idx_X_txfr,idx_vel_txfr,
+               ptile_data,nspecies_s,nspecies_g,idx_X_sn,idx_mass_txfr,idx_vel_txfr,
                idx_h_txfr,HeterogeneousRRates,reactions_parms,fluid_parms,
                solids_parms,p_species_id_s,nreactions,p_types,p_phases,p_nphases,
                p_reactants_id,p_nreactants,p_reactants_phases,p_reactants_coeffs,
@@ -762,10 +762,10 @@ mfix::mfix_calc_txfr_particle (Real time,
             if (solve_reactions) {
               // Extract species mass fractions
               GpuArray<Real,SPECIES::NMAX> X_sn;
+              X_sn.fill(0.);
 
               for (int n_s(0); n_s < nspecies_s; n_s++) {
-                const int idx = idx_X_sn + n_s;
-                X_sn[n_s] = ptile_data.m_runtime_rdata[idx][p_id];
+                X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn + n_s][p_id];
               }
 
               // Extract interpolated thermodynamic pressure
@@ -842,7 +842,7 @@ mfix::mfix_calc_txfr_particle (Real time,
                   }
                 }
 
-                ptile_data.m_runtime_rdata[idx_X_txfr+n_s][p_id] = G_m_sn_heterogeneous;
+                ptile_data.m_runtime_rdata[idx_mass_txfr+n_s][p_id] = G_m_sn_heterogeneous;
 
                 G_m_p_heterogeneous += G_m_sn_heterogeneous;
               }
@@ -910,7 +910,7 @@ mfix::mfix_calc_txfr_particle (Real time,
               ptile_data.m_runtime_rdata[idx_vel_txfr+2][p_id] = coeff*vel_g[2];
 
               // Write the result in the enthalpy transfer space
-              ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = -1*G_H_g_heterogeneous;
+              ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = -G_H_g_heterogeneous;
             }
 
           }); // particle loop
