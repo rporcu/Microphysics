@@ -2,7 +2,7 @@
 
 FROM ubuntu:20.04
 
-LABEL maintainer="Mark Meredith <mark.meredith@netl.doe.gov>"
+LABEL maintainer="Justin Weber <justin.weber@netl.doe.gov>"
 
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE 1
 ENV DEBIAN_FRONTEND=noninteractive

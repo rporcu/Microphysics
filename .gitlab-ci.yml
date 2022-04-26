@@ -6,10 +6,10 @@ stages:
   - build
   - test
 
-workflow:
-  rules:
-    - if: $CI_MERGE_REQUEST_ID               # Execute jobs in merge request context
-    - if: $CI_COMMIT_BRANCH == 'develop'     # Execute jobs when a new commit is pushed to develop branch
+# workflow:
+#   rules:
+#     - if: $CI_MERGE_REQUEST_ID               # Execute jobs in merge request context
+#     - if: $CI_COMMIT_BRANCH == 'develop'     # Execute jobs when a new commit is pushed to develop branch
 
 variables:
   CC: gcc
@@ -51,6 +51,13 @@ build-nvcc-env:
     IMGTAG: nvcc
   <<: *build_test_env_template
 
+build-rocm-env:
+  variables:
+    DOCKEFILE: .gitlab/ci_img_rocm/Dockerfile
+    IMGTAG: rocm
+  <<: *build_test_env_template
+
+
 ### Build ###
 # build:GNUMake:
 #   stage: test
@@ -81,8 +88,8 @@ build-nvcc-env:
     when: on_failure
     paths:
       - build/Testing/
-  only:
-    - develop
+  # only:
+  #   - develop
 
 # build:dpcpp:
 #   variables:
@@ -105,170 +112,332 @@ build-nvcc-env:
 #   <<: *build_base
 #   tags:
 #     - ubuntu-shell
-#
-# build:hip:
-#   variables:
-#     CC: /opt/rocm/llvm/bin/clang
-#     CXX: /opt/rocm/llvm/bin/clang++
-#   script:
-#     - source /home/ssm-user/spack/share/spack/setup-env.sh
-#     - spack load catch2
-#     - spack load cgal
-#     - spack load pegtl
-#     - source /etc/profile.d/rocm.sh
-#     - cmake -S .
-#             -B build
-#             -DAMReX_AMD_ARCH=gfx908
-#             -DCMAKE_BUILD_TYPE=MinSizeRel
-#             -DMFIX_CSG=1
-#             -DMFIX_GPU_BACKEND=HIP
-#             -DMFIX_MPI=0
-#             -G Ninja
-#     - cmake --build build
-#   <<: *build_base
-#   tags:
-#     - ubuntu-shell
 
-build:nvcc:
-  image: $CI_REGISTRY_IMAGE/nvcc
-  needs: ['build-nvcc-env']
+build:hip:
+  image: $CI_REGISTRY_IMAGE/rocm
+  needs: ['build-rocm-env']
   variables:
-    CC: gcc-9
-    CXX: g++-9
+    CC: /opt/rocm/llvm/bin/clang
+    CXX: /opt/rocm/llvm/bin/clang++
   script:
-    - cmake -S .  -B build
-            -DAMReX_CUDA_ARCH=Volta
+    - cmake -S .
+            -B build
+            -DAMReX_AMD_ARCH=gfx908
             -DCMAKE_BUILD_TYPE=MinSizeRel
-            -DCMAKE_CUDA_ARCHITECTURES=70
-            -DMFIX_GPU_BACKEND=CUDA
-            -GNinja
+            -DMFIX_CSG=1
+            -DMFIX_GPU_BACKEND=HIP
+            -DMFIX_MPI=0
+            -G Ninja
     - cmake --build build
   <<: *build_base
   tags:
     - docker
 
-build:csg:
-  image: $CI_REGISTRY_IMAGE/nvcc
-  needs: ['build-nvcc-env']
-  script:
-    - conan install -if build -g cmake_find_package catch2/2.13.7@
-    - conan install -if build -g cmake_find_package cgal/5.2.1@
-    - conan install -if build -g cmake_find_package taocpp-pegtl/3.2.1@
-    - cmake -S .
-            -B build
-            -DCMAKE_BUILD_TYPE=MinSizeRel
-            -DCMAKE_MODULE_PATH=$PWD/build
-            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror -pedantic -pedantic-errors"
-            -DMFIX_CSG=ON
-    - cmake --build build --target functional_tests
-    - ./build/src/eb/tests/functional_tests
-  <<: *build_base
-  tags:
-    - docker
+# build:nvcc:
+#   image: $CI_REGISTRY_IMAGE/nvcc
+#   needs: ['build-nvcc-env']
+#   variables:
+#     CC: gcc-9
+#     CXX: g++-9
+#   script:
+#     - cmake -S .  -B build
+#             -DAMReX_CUDA_ARCH=Volta
+#             -DCMAKE_BUILD_TYPE=MinSizeRel
+#             -DCMAKE_CUDA_ARCHITECTURES=70
+#             -DMFIX_GPU_BACKEND=CUDA
+#             -GNinja
+#     - cmake --build build
+#   <<: *build_base
+#   tags:
+#     - docker
+#
+# build:csg:
+#   image: $CI_REGISTRY_IMAGE/nvcc
+#   needs: ['build-nvcc-env']
+#   script:
+#     - conan install -if build -g cmake_find_package catch2/2.13.7@
+#     - conan install -if build -g cmake_find_package cgal/5.2.1@
+#     - conan install -if build -g cmake_find_package taocpp-pegtl/3.2.1@
+#     - cmake -S .
+#             -B build
+#             -DCMAKE_BUILD_TYPE=MinSizeRel
+#             -DCMAKE_MODULE_PATH=$PWD/build
+#             -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror -pedantic -pedantic-errors"
+#             -DMFIX_CSG=ON
+#     - cmake --build build --target functional_tests
+#     - ./build/src/eb/tests/functional_tests
+#   <<: *build_base
+#   tags:
+#     - docker
 
 ### LINT ###
-.lint: &lint_template
-  stage: lint
-  needs: ['build-nvcc-env']
-  image: $CI_REGISTRY_IMAGE/nvcc
-  <<: *before_script_template
-  tags:
-    - docker
-  allow_failure: true
+# .lint: &lint_template
+#   stage: lint
+#   needs: ['build-nvcc-env']
+#   image: $CI_REGISTRY_IMAGE/nvcc
+#   <<: *before_script_template
+#   tags:
+#     - docker
+#   allow_failure: true
+#
+# lint:shellcheck:
+#   <<: *lint_template
+#   script:
+#     - find . -name "*.sh" -not -path "./subprojects/*" | xargs shellcheck -e SC2086,SC2125,SC2046,SC2129,SC2044
+#
+# lint:gcc:warnings:
+#   <<: *lint_template
+#   variables:
+#     CC: gcc
+#     CXX: g++
+#   script:
+#     - cmake -S .
+#             -B build
+#             -DCMAKE_BUILD_TYPE=Debug
+#             -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror -pedantic -pedantic-errors"
+#             -GNinja
+#     - cmake --build build --target mfix build_tests -- -k0
+#
+# lint:clang:warnings:
+#   <<: *lint_template
+#   variables:
+#     CC: clang-12
+#     CXX: clang++-12
+#   script:
+#     - cmake -S .
+#             -B build
+#             -DCMAKE_BUILD_TYPE=Debug
+#             -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wno-unused-lambda-capture -Wnull-dereference -Werror"
+#             -DMFIX_MPI=0
+#             -GNinja
+#     - cmake --build build --target mfix build_tests -- -k0
+#
+# lint:spelling:
+#   <<: *lint_template
+#   script:
+#     - rm -rf subprojects
+#     - codespell --ignore-words-list ba,blocs,inout,ith,od,wen,structed,te --enable-colors --quiet-level 2
 
-lint:shellcheck:
-  <<: *lint_template
-  script:
-    - find . -name "*.sh" -not -path "./subprojects/*" | xargs shellcheck -e SC2086,SC2125,SC2046,SC2129,SC2044
-
-lint:gcc:warnings:
-  <<: *lint_template
-  variables:
-    CC: gcc
-    CXX: g++
-  script:
-    - cmake -S .
-            -B build
-            -DCMAKE_BUILD_TYPE=Debug
-            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror -pedantic -pedantic-errors"
-            -GNinja
-    - cmake --build build --target mfix build_tests -- -k0
-
-lint:clang:warnings:
-  <<: *lint_template
-  variables:
-    CC: clang-12
-    CXX: clang++-12
-  script:
-    - cmake -S .
-            -B build
-            -DCMAKE_BUILD_TYPE=Debug
-            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wno-unused-lambda-capture -Wnull-dereference -Werror"
-            -DMFIX_MPI=0
-            -GNinja
-    - cmake --build build --target mfix build_tests -- -k0
-
-lint:spelling:
-  <<: *lint_template
-  script:
-    - rm -rf subprojects
-    - codespell --ignore-words-list ba,blocs,inout,ith,od,wen,structed,te --enable-colors --quiet-level 2
-
-
+## .test: &test_template
+#   stage: test
+#   <<: *before_script_template
+#   artifacts:
+#     name: $CI_JOB_NAME
+#     expire_in: 1 week
+#     when: on_failure
+#     paths:
+#       - build/Testing/
+#   only:
+#     - schedules
+#
+#
+# .ctest: &ctest_template
+#   image: $CI_REGISTRY_IMAGE/nvcc
+#   needs: ['build-nvcc-env']
+#   script:
+#     - cmake -S .
+#             -B build
+#             -DMFIX_MPI=$ENABLE_MPI
+#             -DMFIX_OMP=$ENABLE_OMP
+#             -G Ninja
+#     - cmake --build build --target build_tests
+#     - cd build
+#     - srun ctest -R $CTEST_LABEL
+#   tags:
+#     - docker
+#   <<: *test_template
+#
+# test:single-serial:
+#   variables:
+#     CTEST_LABEL: SGS
+#   <<: *ctest_template
+#
+# test:multiple-serial:
+#   variables:
+#     CTEST_LABEL: MGS
+#   <<: *ctest_template
+#
+# test:tiled-serial:
+#   variables:
+#     CTEST_LABEL: TGS
+#   <<: *ctest_template
+#
+# test:multiple-parallel:
+#   variables:
+#     CTEST_LABEL: MGP
+#     OMPI_MCA_rmaps_base_oversubscribe: 1
+#   <<: *ctest_template
+#
+# test:tiled-parallel-openmp:
+#   variables:
+#     ENABLE_MPI: 0
+#     ENABLE_OMP: 1
+#     CTEST_LABEL: TGP
+#   <<: *ctest_template# .test: &test_template
+#   stage: test
+#   <<: *before_script_template
+#   artifacts:
+#     name: $CI_JOB_NAME
+#     expire_in: 1 week
+#     when: on_failure
+#     paths:
+#       - build/Testing/
+#   only:
+#     - schedules
+#
+#
+# .ctest: &ctest_template
+#   image: $CI_REGISTRY_IMAGE/nvcc
+#   needs: ['build-nvcc-env']
+#   script:
+#     - cmake -S .
+#             -B build
+#             -DMFIX_MPI=$ENABLE_MPI
+#             -DMFIX_OMP=$ENABLE_OMP
+#             -G Ninja
+#     - cmake --build build --target build_tests
+#     - cd build
+#     - srun ctest -R $CTEST_LABEL
+#   tags:
+#     - docker
+#   <<: *test_template
+#
+# test:single-serial:
+#   variables:
+#     CTEST_LABEL: SGS
+#   <<: *ctest_template
+#
+# test:multiple-serial:
+#   variables:
+#     CTEST_LABEL: MGS
+#   <<: *ctest_template
+#
+# test:tiled-serial:
+#   variables:
+#     CTEST_LABEL: TGS
+#   <<: *ctest_template
+#
+# test:multiple-parallel:
+#   variables:
+#     CTEST_LABEL: MGP
+#     OMPI_MCA_rmaps_base_oversubscribe: 1
+#   <<: *ctest_template
+#
+# test:tiled-parallel-openmp:
+#   variables:
+#     ENABLE_MPI: 0
+#     ENABLE_OMP: 1
+#     CTEST_LABEL: TGP
+#   <<: *ctest_template .test: &test_template
+#   stage: test
+#   <<: *before_script_template
+#   artifacts:
+#     name: $CI_JOB_NAME
+#     expire_in: 1 week
+#     when: on_failure
+#     paths:
+#       - build/Testing/
+#   only:
+#     - schedules
+#
+#
+# .ctest: &ctest_template
+#   image: $CI_REGISTRY_IMAGE/nvcc
+#   needs: ['build-nvcc-env']
+#   script:
+#     - cmake -S .
+#             -B build
+#             -DMFIX_MPI=$ENABLE_MPI
+#             -DMFIX_OMP=$ENABLE_OMP
+#             -G Ninja
+#     - cmake --build build --target build_tests
+#     - cd build
+#     - srun ctest -R $CTEST_LABEL
+#   tags:
+#     - docker
+#   <<: *test_template
+#
+# test:single-serial:
+#   variables:
+#     CTEST_LABEL: SGS
+#   <<: *ctest_template
+#
+# test:multiple-serial:
+#   variables:
+#     CTEST_LABEL: MGS
+#   <<: *ctest_template
+#
+# test:tiled-serial:
+#   variables:
+#     CTEST_LABEL: TGS
+#   <<: *ctest_template
+#
+# test:multiple-parallel:
+#   variables:
+#     CTEST_LABEL: MGP
+#     OMPI_MCA_rmaps_base_oversubscribe: 1
+#   <<: *ctest_template
+#
+# test:tiled-parallel-openmp:
+#   variables:
+#     ENABLE_MPI: 0
+#     ENABLE_OMP: 1
+#     CTEST_LABEL: TGP
+#   <<: *ctest_template
 ### CTESTS ###
-.test: &test_template
-  stage: test
-  <<: *before_script_template
-  artifacts:
-    name: $CI_JOB_NAME
-    expire_in: 1 week
-    when: on_failure
-    paths:
-      - build/Testing/
-  only:
-    - schedules
-
-
-.ctest: &ctest_template
-  image: $CI_REGISTRY_IMAGE/nvcc
-  needs: ['build-nvcc-env']
-  script:
-    - cmake -S .
-            -B build
-            -DMFIX_MPI=$ENABLE_MPI
-            -DMFIX_OMP=$ENABLE_OMP
-            -G Ninja
-    - cmake --build build --target build_tests
-    - cd build
-    - srun ctest -R $CTEST_LABEL
-  tags:
-    - docker
-  <<: *test_template
-
-test:single-serial:
-  variables:
-    CTEST_LABEL: SGS
-  <<: *ctest_template
-
-test:multiple-serial:
-  variables:
-    CTEST_LABEL: MGS
-  <<: *ctest_template
-
-test:tiled-serial:
-  variables:
-    CTEST_LABEL: TGS
-  <<: *ctest_template
-
-test:multiple-parallel:
-  variables:
-    CTEST_LABEL: MGP
-    OMPI_MCA_rmaps_base_oversubscribe: 1
-  <<: *ctest_template
-
-test:tiled-parallel-openmp:
-  variables:
-    ENABLE_MPI: 0
-    ENABLE_OMP: 1
-    CTEST_LABEL: TGP
-  <<: *ctest_template
+# .test: &test_template
+#   stage: test
+#   <<: *before_script_template
+#   artifacts:
+#     name: $CI_JOB_NAME
+#     expire_in: 1 week
+#     when: on_failure
+#     paths:
+#       - build/Testing/
+#   only:
+#     - schedules
+#
+#
+# .ctest: &ctest_template
+#   image: $CI_REGISTRY_IMAGE/nvcc
+#   needs: ['build-nvcc-env']
+#   script:
+#     - cmake -S .
+#             -B build
+#             -DMFIX_MPI=$ENABLE_MPI
+#             -DMFIX_OMP=$ENABLE_OMP
+#             -G Ninja
+#     - cmake --build build --target build_tests
+#     - cd build
+#     - srun ctest -R $CTEST_LABEL
+#   tags:
+#     - docker
+#   <<: *test_template
+#
+# test:single-serial:
+#   variables:
+#     CTEST_LABEL: SGS
+#   <<: *ctest_template
+#
+# test:multiple-serial:
+#   variables:
+#     CTEST_LABEL: MGS
+#   <<: *ctest_template
+#
+# test:tiled-serial:
+#   variables:
+#     CTEST_LABEL: TGS
+#   <<: *ctest_template
+#
+# test:multiple-parallel:
+#   variables:
+#     CTEST_LABEL: MGP
+#     OMPI_MCA_rmaps_base_oversubscribe: 1
+#   <<: *ctest_template
+#
+# test:tiled-parallel-openmp:
+#   variables:
+#     ENABLE_MPI: 0
+#     ENABLE_OMP: 1
+#     CTEST_LABEL: TGP
+#   <<: *ctest_template
