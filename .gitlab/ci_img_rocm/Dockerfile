@@ -12,14 +12,14 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get -qq update\
     && apt-get -qq upgrade -y\
     && apt-get -qq -y install --no-install-recommends \
-    build-essential=12.* \
+    gfortran-9=9.* \
     ccache=3.* \
     git=1:2.* \
-    libopenmpi-dev=4.* \
-    openmpi-bin=4.* \
+    libopenmpi-dev \
+    openmpi-bin \
+    openmpi-common \
     pkg-config=0.29.* \
     python-is-python3=3.* \
-    python3-pip=20.* \
     python3-setuptools=45.* \
     python3-venv=3.* \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
