@@ -15,7 +15,6 @@ RUN apt-get -qq update\
     build-essential=12.* \
     ccache=3.* \
     git=1:2.* \
-    libcurand-dev-11-3=10.* \
     libopenmpi-dev=4.* \
     openmpi-bin=4.* \
     pkg-config=0.29.* \
