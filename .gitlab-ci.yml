@@ -53,7 +53,7 @@ build-nvcc-env:
 
 build-rocm-env:
   variables:
-    DOCKEFILE: .gitlab/ci_img_rocm/Dockerfile
+    DOCKERFILE: .gitlab/ci_img_rocm/Dockerfile
     IMGTAG: rocm
   <<: *build_test_env_template
 
