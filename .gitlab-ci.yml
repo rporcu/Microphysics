@@ -2,12 +2,14 @@ image: hello-world:latest
 
 stages:
   - build-img
+  - lint
+  - build
   - test
 
 workflow:
   rules:
     - if: $CI_MERGE_REQUEST_ID               # Execute jobs in merge request context
-    - if: $CI_COMMIT_BRANCH == 'develop'     # Execute jobs when a new commit is pushed to master branch
+    - if: $CI_COMMIT_BRANCH == 'develop'     # Execute jobs when a new commit is pushed to develop branch
 
 variables:
   CC: gcc
@@ -22,6 +24,15 @@ variables:
   SCCACHE_BUCKET: exa-sccache
   SCCACHE_REGION: us-west-2
 
+
+# run this in every job
+.before_script_template: &before_script_template
+  before_script:
+    - find $CI_PROJECT_DIR -name '.git' -exec bash -c 'git config --global --add safe.directory ${0%/.git}' {} \;
+    - git submodule update --init --force
+
+
+### Build docker images ###
 .build-test-env: &build_test_env_template
   stage: build-img
   image:
@@ -40,41 +51,30 @@ build-nvcc-env:
     IMGTAG: nvcc
   <<: *build_test_env_template
 
-###### Test jobs #####
+### Build ###
+# build:GNUMake:
+#   stage: test
+#   variables:
+#     BUILD: ${CI_PROJECT_DIR}/build
+#     BOOST_HOME: ${BUILD}/boost
+#     CATCH2_HOME: ${BUILD}/catch2
+#     CGAL_HOME: ${BUILD}/cgal
+#     PEGTL_HOME: ${BUILD}/taocpp-pegtl
+#     CSGEB_HOME: ${BUILD}/subprojects/csg-eb/csg_home
+#   script:
+#     - conan install -if build -g deploy catch2/2.13.7@
+#     - conan install -if build -g deploy cgal/5.2.1@
+#     - conan install -if build -g deploy taocpp-pegtl/3.2.1@
+#     - make -C subprojects/csg-eb install DESTDIR=${CSGEB_HOME} ENABLE_CGAL=1 -j4
+#     - make -C exec USE_CSG=TRUE -j4
+#   only:
+#     - schedules
+#   tags:
+#     - ubuntu-shell
 
-build:GNUMake:
-  stage: test
-  variables:
-    BUILD: ${CI_PROJECT_DIR}/build
-    BOOST_HOME: ${BUILD}/boost
-    CATCH2_HOME: ${BUILD}/catch2
-    CGAL_HOME: ${BUILD}/cgal
-    PEGTL_HOME: ${BUILD}/taocpp-pegtl
-    CSGEB_HOME: ${BUILD}/subprojects/csg-eb/csg_home
-  script:
-    - conan install -if build -g deploy catch2/2.13.7@
-    - conan install -if build -g deploy cgal/5.2.1@
-    - conan install -if build -g deploy taocpp-pegtl/3.2.1@
-    - make -C subprojects/csg-eb install DESTDIR=${CSGEB_HOME} ENABLE_CGAL=1 -j4
-    - make -C exec USE_CSG=TRUE -j4
-  only:
-    - schedules
-  tags:
-    - ubuntu-shell
-
-.test: &test_template
-  stage: test
-  artifacts:
-    name: $CI_JOB_NAME
-    expire_in: 1 week
-    when: on_failure
-    paths:
-      - build/Testing/
-  only:
-    - schedules
-
-.build_gpu: &build_gpu
-  stage: test
+.build_base: &build_base
+  stage: build
+  <<: *before_script_template
   artifacts:
     name: $CI_JOB_NAME
     expire_in: 1 week
@@ -84,59 +84,58 @@ build:GNUMake:
   only:
     - develop
 
-build:dpcpp:
-  variables:
-    CC: clang
-    CXX: dpcpp
-  script:
-    - source /home/ssm-user/spack/share/spack/setup-env.sh
-    - spack load catch2
-    - spack load cgal
-    - spack load pegtl
-    - source /opt/intel/oneapi/setvars.sh
-    - git submodule update --init --force
-    - cmake -S .
-            -B build
-            -DCMAKE_BUILD_TYPE=MinSizeRel
-            -DMFIX_CSG=1
-            -DMFIX_GPU_BACKEND=SYCL
-            -DSKIP_LAUNCHER=1
-            -G Ninja
-    - cmake --build build
-  <<: *build_gpu
-  tags:
-    - ubuntu-shell
-
-build:hip:
-  variables:
-    CC: /opt/rocm/llvm/bin/clang
-    CXX: /opt/rocm/llvm/bin/clang++
-  script:
-    - source /home/ssm-user/spack/share/spack/setup-env.sh
-    - spack load catch2
-    - spack load cgal
-    - spack load pegtl
-    - source /etc/profile.d/rocm.sh
-    - git submodule update --init --force
-    - cmake -S .
-            -B build
-            -DAMReX_AMD_ARCH=gfx908
-            -DCMAKE_BUILD_TYPE=MinSizeRel
-            -DMFIX_CSG=1
-            -DMFIX_GPU_BACKEND=HIP
-            -DMFIX_MPI=0
-            -G Ninja
-    - cmake --build build
-  <<: *build_gpu
-  tags:
-    - ubuntu-shell
+# build:dpcpp:
+#   variables:
+#     CC: clang
+#     CXX: dpcpp
+#   script:
+#     - source /home/ssm-user/spack/share/spack/setup-env.sh
+#     - spack load catch2
+#     - spack load cgal
+#     - spack load pegtl
+#     - source /opt/intel/oneapi/setvars.sh
+#     - cmake -S .
+#             -B build
+#             -DCMAKE_BUILD_TYPE=MinSizeRel
+#             -DMFIX_CSG=1
+#             -DMFIX_GPU_BACKEND=SYCL
+#             -DSKIP_LAUNCHER=1
+#             -G Ninja
+#     - cmake --build build
+#   <<: *build_base
+#   tags:
+#     - ubuntu-shell
+#
+# build:hip:
+#   variables:
+#     CC: /opt/rocm/llvm/bin/clang
+#     CXX: /opt/rocm/llvm/bin/clang++
+#   script:
+#     - source /home/ssm-user/spack/share/spack/setup-env.sh
+#     - spack load catch2
+#     - spack load cgal
+#     - spack load pegtl
+#     - source /etc/profile.d/rocm.sh
+#     - cmake -S .
+#             -B build
+#             -DAMReX_AMD_ARCH=gfx908
+#             -DCMAKE_BUILD_TYPE=MinSizeRel
+#             -DMFIX_CSG=1
+#             -DMFIX_GPU_BACKEND=HIP
+#             -DMFIX_MPI=0
+#             -G Ninja
+#     - cmake --build build
+#   <<: *build_base
+#   tags:
+#     - ubuntu-shell
 
 build:nvcc:
+  image: $CI_REGISTRY_IMAGE/nvcc
+  needs: ['build-nvcc-env']
   variables:
     CC: gcc-9
     CXX: g++-9
   script:
-    - git submodule update --init --force
     - cmake -S .  -B build
             -DAMReX_CUDA_ARCH=Volta
             -DCMAKE_BUILD_TYPE=MinSizeRel
@@ -144,9 +143,9 @@ build:nvcc:
             -DMFIX_GPU_BACKEND=CUDA
             -GNinja
     - cmake --build build
-  <<: *build_gpu
+  <<: *build_base
   tags:
-    - ubuntu-shell
+    - docker
 
 build:csg:
   image: $CI_REGISTRY_IMAGE/nvcc
@@ -163,60 +162,16 @@ build:csg:
             -DMFIX_CSG=ON
     - cmake --build build --target functional_tests
     - ./build/src/eb/tests/functional_tests
-  <<: *build_gpu
-  tags:
-    - ubuntu-shell
-
-.ctest: &ctest_template
-  image: $CI_REGISTRY_IMAGE/nvcc
-  script:
-    - git config --global --add safe.directory $CI_PROJECT_DIR/*
-    - git submodule update --init --force
-    - cmake -S .
-            -B build
-            -DMFIX_MPI=$ENABLE_MPI
-            -DMFIX_OMP=$ENABLE_OMP
-            -G Ninja
-    - cmake --build build --target build_tests
-    - cd build
-    - srun ctest -R $CTEST_LABEL
+  <<: *build_base
   tags:
     - docker
-  <<: *test_template
 
-test:single-serial:
-  variables:
-    CTEST_LABEL: SGS
-  <<: *ctest_template
-
-test:multiple-serial:
-  variables:
-    CTEST_LABEL: MGS
-  <<: *ctest_template
-
-test:tiled-serial:
-  variables:
-    CTEST_LABEL: TGS
-  <<: *ctest_template
-
-test:multiple-parallel:
-  variables:
-    CTEST_LABEL: MGP
-    OMPI_MCA_rmaps_base_oversubscribe: 1
-  <<: *ctest_template
-
-test:tiled-parallel-openmp:
-  variables:
-    ENABLE_MPI: 0
-    ENABLE_OMP: 1
-    CTEST_LABEL: TGP
-  <<: *ctest_template
-
-
+### LINT ###
 .lint: &lint_template
-  stage: test
+  stage: lint
   needs: ['build-nvcc-env']
   image: $CI_REGISTRY_IMAGE/nvcc
+  <<: *before_script_template
   tags:
     - docker
   allow_failure: true
@@ -258,3 +213,62 @@ lint:spelling:
   script:
     - rm -rf subprojects
     - codespell --ignore-words-list ba,blocs,inout,ith,od,wen,structed,te --enable-colors --quiet-level 2
+
+
+### CTESTS ###
+.test: &test_template
+  stage: test
+  <<: *before_script_template
+  artifacts:
+    name: $CI_JOB_NAME
+    expire_in: 1 week
+    when: on_failure
+    paths:
+      - build/Testing/
+  only:
+    - schedules
+
+
+.ctest: &ctest_template
+  image: $CI_REGISTRY_IMAGE/nvcc
+  needs: ['build-nvcc-env']
+  script:
+    - cmake -S .
+            -B build
+            -DMFIX_MPI=$ENABLE_MPI
+            -DMFIX_OMP=$ENABLE_OMP
+            -G Ninja
+    - cmake --build build --target build_tests
+    - cd build
+    - srun ctest -R $CTEST_LABEL
+  tags:
+    - docker
+  <<: *test_template
+
+test:single-serial:
+  variables:
+    CTEST_LABEL: SGS
+  <<: *ctest_template
+
+test:multiple-serial:
+  variables:
+    CTEST_LABEL: MGS
+  <<: *ctest_template
+
+test:tiled-serial:
+  variables:
+    CTEST_LABEL: TGS
+  <<: *ctest_template
+
+test:multiple-parallel:
+  variables:
+    CTEST_LABEL: MGP
+    OMPI_MCA_rmaps_base_oversubscribe: 1
+  <<: *ctest_template
+
+test:tiled-parallel-openmp:
+  variables:
+    ENABLE_MPI: 0
+    ENABLE_OMP: 1
+    CTEST_LABEL: TGP
+  <<: *ctest_template
