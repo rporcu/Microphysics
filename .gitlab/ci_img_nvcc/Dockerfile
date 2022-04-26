@@ -9,8 +9,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-RUN apt-get -qq update \
-    && apt-get -qq upgrade \
+
+RUN apt-get -qq update\
+    && apt-get -qq upgrade -y\
     && apt-get -qq -y install --no-install-recommends \
     ca-certificates=20210119~20.* \
     curl=7.* \
