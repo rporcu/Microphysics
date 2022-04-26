@@ -15,9 +15,9 @@ RUN apt-get -qq update\
     gfortran-9=9.* \
     ccache=3.* \
     git=1:2.* \
-#    libopenmpi-dev \
-#    openmpi-bin \
-#    openmpi-common \
+    libopenmpi-dev \
+    openmpi-bin \
+    openmpi-common \
     pkg-config=0.29.* \
     python-is-python3=3.* \
     python3-setuptools=45.* \
