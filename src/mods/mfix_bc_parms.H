@@ -11,6 +11,7 @@
 #include <AMReX_EB2.H>
 #include <AMReX_EB2_IF_Plane.H>
 
+#include <mfix_bc_list.H>
 #include <mfix_eb_parms.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_solids_parms.H>
@@ -21,6 +22,10 @@ namespace BC
 {
 
   struct BC_t {
+    // Constructor
+    BC_t (FluidPhase& fluid_in) :
+      fluid(fluid_in)
+    {}
 
     // BC type (mi, pi, po, nsw, eb)
     int type;
@@ -29,7 +34,7 @@ namespace BC
 
     EB::EB_t eb;
 
-    FluidPhase::FLUID_t fluid;
+    FLUID_t fluid;
 
     amrex::Vector<SolidsPhase::SOLIDS_t> solids;
 
@@ -73,15 +78,16 @@ namespace BC
   extern amrex::Vector<BC_t> bc;
 
   void Initialize (amrex::Geometry& geom,
-                   const FluidPhase& fluid,
+                   FluidPhase& fluid,
                    const SolidsPhase& solids);
 
-  void read_bc_velocity (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
-  void read_bc_volflow (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
-  void read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t* fluid);
+  void read_bc_density (amrex::ParmParse pp, FLUID_t* fluid);
+  void read_bc_velocity (amrex::ParmParse pp, FLUID_t* fluid);
+  void read_bc_volflow (amrex::ParmParse pp, FLUID_t* fluid);
+  void read_bc_temperature (amrex::ParmParse pp, FLUID_t* fluid);
   void read_bc_species (amrex::ParmParse pp,
                         const amrex::Vector<std::string> species,
-                        FluidPhase::FLUID_t* fluid);
+                        FLUID_t* fluid);
 
 }
 

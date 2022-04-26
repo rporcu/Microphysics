@@ -22,3 +22,4 @@ CEXE_sources += mfix_solids_parms.cpp
 CEXE_sources += mfix_dem_parms.cpp
 CEXE_sources += mfix_pic_parms.cpp
 CEXE_headers += mfix_bc_list.H
+CEXE_sources += mfix_bc_list.cpp

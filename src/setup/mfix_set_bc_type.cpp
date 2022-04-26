@@ -17,9 +17,6 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
     const GpuArray<Real, 3> plo = geom[lev].ProbLoArray();
 
-    const int und_  = bc_list.get_undefined();
-    const int ig_   = bc_list.get_ig();
-
     const int l_species = fluid.nspecies;
     const int l_ntrac = ntrac;
     const int l_force = amrex::max(AMREX_SPACEDIM, l_ntrac, l_species);
@@ -37,10 +34,10 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
       const int dir = 0;
 
-      Array4<int> const& bc_ilo_type = bc_ilo[lev]->array();
-      Array4<int> const& bc_ihi_type = bc_ihi[lev]->array();
+      Array4<int> const& bc_ilo_type = bc_list.bc_ilo[lev]->array();
+      Array4<int> const& bc_ihi_type = bc_list.bc_ihi[lev]->array();
 
-      const int init_x = geom[lev].isPeriodic(0) ? und_ : ig_;
+      const int init_x = geom[lev].isPeriodic(0) ? BCList::undefined : BCList::ig;
 
       Box domainx(geom[lev].Domain());
       domainx.grow(1,nghost_bc);  // Add ghost cells to y
@@ -142,10 +139,10 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
       const int dir = 1;
 
-      const int init_y = geom[lev].isPeriodic(1) ? und_ : ig_;
+      const int init_y = geom[lev].isPeriodic(1) ? BCList::undefined : BCList::ig;
 
-      Array4<int> const& bc_jlo_type = bc_jlo[lev]->array();
-      Array4<int> const& bc_jhi_type = bc_jhi[lev]->array();
+      Array4<int> const& bc_jlo_type = bc_list.bc_jlo[lev]->array();
+      Array4<int> const& bc_jhi_type = bc_list.bc_jhi[lev]->array();
 
       Box domainy(geom[lev].Domain());
       domainy.grow(0,nghost_bc);  // Add ghost cells to x
@@ -246,10 +243,10 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
       const int dir = 2;
 
-      const int init_z = geom[lev].isPeriodic(2) ? und_ : ig_;
+      const int init_z = geom[lev].isPeriodic(2) ? BCList::undefined : BCList::ig;
 
-      Array4<int> const& bc_klo_type = bc_klo[lev]->array();
-      Array4<int> const& bc_khi_type = bc_khi[lev]->array();
+      Array4<int> const& bc_klo_type = bc_list.bc_klo[lev]->array();
+      Array4<int> const& bc_khi_type = bc_list.bc_khi[lev]->array();
 
       Box domainz(geom[lev].Domain());
       domainz.grow(0,nghost_bc);  // Add ghost cells to x
@@ -468,14 +465,8 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
 void mfix::set_bcrec_lo(const int lev, const int dir, const int l_type)
 {
-
-  const int minf_ = bc_list.get_minf();
-  const int pinf_ = bc_list.get_pinf();
-  const int pout_ = bc_list.get_pout();
-  const int nsw_  = bc_list.get_nsw();
-
   // Velocity BC Recs
-  if (l_type == pinf_) {
+  if (l_type == BCList::pinf) {
 
     m_bcrec_velocity[0].setLo(dir, BCType::foextrap);
     m_bcrec_velocity[1].setLo(dir, BCType::foextrap);
@@ -487,7 +478,7 @@ void mfix::set_bcrec_lo(const int lev, const int dir, const int l_type)
 
     m_bcrec_hydro_velocity[dir].setLo(dir, BCType::ext_dir);
 
-  } else if (l_type == pout_) {
+  } else if (l_type == BCList::pout) {
 
     m_bcrec_velocity[0].setLo(dir, BCType::foextrap);
     m_bcrec_velocity[1].setLo(dir, BCType::foextrap);
@@ -497,7 +488,7 @@ void mfix::set_bcrec_lo(const int lev, const int dir, const int l_type)
     m_bcrec_hydro_velocity[1].setLo(dir, BCType::foextrap);
     m_bcrec_hydro_velocity[2].setLo(dir, BCType::foextrap);
 
-  } else if (l_type == minf_ || l_type == nsw_) {
+  } else if (l_type == BCList::minf || l_type == BCList::nsw) {
 
     m_bcrec_velocity[0].setLo(dir, BCType::ext_dir);
     m_bcrec_velocity[1].setLo(dir, BCType::ext_dir);
@@ -519,14 +510,14 @@ void mfix::set_bcrec_lo(const int lev, const int dir, const int l_type)
   }
 
   // Scalar BC Recs
-  if (l_type == pinf_ || l_type == pout_ || l_type == nsw_) {
+  if (l_type == BCList::pinf || l_type == BCList::pout || l_type == BCList::nsw) {
 
     m_bcrec_density[0].setLo(dir, BCType::foextrap);
     m_bcrec_enthalpy[0].setLo(dir, BCType::foextrap);
     for (auto& b : m_bcrec_tracer) b.setLo(dir, BCType::foextrap);
     for (auto& b : m_bcrec_species) b.setLo(dir, BCType::foextrap);
 
-  } else if (l_type == minf_) {
+  } else if (l_type == BCList::minf) {
 
     m_bcrec_density[0].setLo(dir, BCType::ext_dir);
     m_bcrec_enthalpy[0].setLo(dir, BCType::ext_dir);
@@ -556,14 +547,8 @@ void mfix::set_bcrec_lo(const int lev, const int dir, const int l_type)
 
 void mfix::set_bcrec_hi(const int lev, const int dir, const int l_type)
 {
-
-  const int minf_ = bc_list.get_minf();
-  const int pinf_ = bc_list.get_pinf();
-  const int pout_ = bc_list.get_pout();
-  const int nsw_  = bc_list.get_nsw();
-
   // Velocity BC Recs
-  if (l_type == pinf_) {
+  if (l_type == BCList::pinf) {
 
     m_bcrec_velocity[0].setHi(dir, BCType::foextrap);
     m_bcrec_velocity[1].setHi(dir, BCType::foextrap);
@@ -575,7 +560,7 @@ void mfix::set_bcrec_hi(const int lev, const int dir, const int l_type)
 
     m_bcrec_hydro_velocity[dir].setHi(dir, BCType::ext_dir);
 
-  } else if (l_type == pout_) {
+  } else if (l_type == BCList::pout) {
 
     m_bcrec_velocity[0].setHi(dir, BCType::foextrap);
     m_bcrec_velocity[1].setHi(dir, BCType::foextrap);
@@ -585,7 +570,7 @@ void mfix::set_bcrec_hi(const int lev, const int dir, const int l_type)
     m_bcrec_hydro_velocity[1].setHi(dir, BCType::foextrap);
     m_bcrec_hydro_velocity[2].setHi(dir, BCType::foextrap);
 
-  } else if (l_type == minf_ || l_type == nsw_) {
+  } else if (l_type == BCList::minf || l_type == BCList::nsw) {
 
     m_bcrec_velocity[0].setHi(dir, BCType::ext_dir);
     m_bcrec_velocity[1].setHi(dir, BCType::ext_dir);
@@ -607,14 +592,14 @@ void mfix::set_bcrec_hi(const int lev, const int dir, const int l_type)
   }
 
   // Scalar BC Recs
-  if (l_type == pinf_ || l_type == pout_ || l_type == nsw_) {
+  if (l_type == BCList::pinf || l_type == BCList::pout || l_type == BCList::nsw) {
 
     m_bcrec_density[0].setHi(dir, BCType::foextrap);
     m_bcrec_enthalpy[0].setHi(dir, BCType::foextrap);
     for (auto& b : m_bcrec_tracer) b.setHi(dir, BCType::foextrap);
     for (auto& b : m_bcrec_species) b.setHi(dir, BCType::foextrap);
 
-  } else if (l_type == minf_) {
+  } else if (l_type == BCList::minf) {
 
     m_bcrec_density[0].setHi(dir, BCType::ext_dir);
     m_bcrec_enthalpy[0].setHi(dir, BCType::ext_dir);
@@ -643,16 +628,13 @@ void mfix::set_bcrec_hi(const int lev, const int dir, const int l_type)
 void
 mfix::set_velocity_bc_values (Real time_in) const
 {
-
   m_h_bc_u_g.resize(bc.size());
   m_h_bc_v_g.resize(bc.size());
   m_h_bc_w_g.resize(bc.size());
 
-  const int minf_ = bc_list.get_minf();
-
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
 
-    if ( bc[bcv].type == minf_ ) {
+    if ( bc[bcv].type == BCList::minf ) {
 
       const auto& bc_vels = BC::bc[bcv].fluid.get_velocity(time_in);
       m_h_bc_u_g[bcv] = bc_vels[0];
@@ -682,18 +664,14 @@ mfix::set_temperature_bc_values (Real time_in) const
   m_h_bc_t_g.resize(bc.size());
   m_h_bc_h_g.resize(bc.size());
 
-  const int minf_ = bc_list.get_minf();
-  const int pinf_ = bc_list.get_pinf();
-  const int eb_   = bc_list.get_eb();
-
   // Flag to understand if fluid is a mixture
   const int fluid_is_a_mixture = fluid.is_a_mixture;
 
   auto& fluid_parms = *fluid.parameters;
 
   for(unsigned bcv(0); bcv < bc.size(); ++bcv) {
-    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ||
-         (bc[bcv].type == eb_  && bc[bcv].fluid.flow_thru_eb)) {
+    if ( bc[bcv].type == BCList::minf || bc[bcv].type == BCList::pinf ||
+         (bc[bcv].type == BCList::eb  && bc[bcv].fluid.flow_thru_eb)) {
       const Real Tg = bc[bcv].fluid.get_temperature(time_in);
       m_h_bc_t_g[bcv] = Tg;
       if (!fluid_is_a_mixture) {
@@ -721,94 +699,35 @@ mfix::set_temperature_bc_values (Real time_in) const
 void
 mfix::set_density_bc_values (Real time_in) const
 {
-
   m_h_bc_ro_g.resize(bc.size());
 
-  const int minf_ = bc_list.get_minf();
-  const int pinf_ = bc_list.get_pinf();
-  const int eb_   = bc_list.get_eb();
-
-  // HACK -- BC density is constant given current implementation.
-  // This was copied over from the mfix_set_density_bcs routine.
-  const Real ro_g0 = fluid.ro_g0;
-
-  const int nspecies_g = fluid.nspecies;
-  const int fluid_is_a_mixture = fluid.is_a_mixture;
-  auto& fluid_parms = *fluid.parameters;
-
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
-
-    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ||
-        (bc[bcv].type == eb_  && bc[bcv].fluid.flow_thru_eb)) {
-
-      if (m_constraint_type == ConstraintType::IdealGasOpenSystem ||
-          m_constraint_type == ConstraintType::IdealGasClosedSystem ) {
-
-        const Real pg = bc[bcv].fluid.pressure;
-
-        if (pg <= 0.) {
-          std::vector<std::string> regions;
-          amrex::ParmParse pp("bc");
-          pp.queryarr("regions", regions);
-          amrex::Print() << "\n\n";
-          amrex::Print() << "**************************************************************\n";
-          amrex::Print() << "  Invalid or missing pressure for mass inflow boundary!\n";
-          amrex::Print() << "  Boundary Condition Name: " << regions[bcv] << "\n";
-          amrex::Print() << "  Fix the inputs file.\n";
-          amrex::Print() << "**************************************************************\n";
-          amrex::Print() << "\n\n";
-          amrex::Abort("Fix the inputs file.");
-        }
-
-        const Real Tg = advect_enthalpy ? bc[bcv].fluid.get_temperature(time_in) : fluid.T_g0;
-
-        Real MW_g_loc(0);
-
-        // set initial fluid molecular weight
-        if (fluid_is_a_mixture) {
-          for (int n(0); n < nspecies_g; n++) {
-            const Real Xgk = bc[bcv].fluid.get_species(n, time_in);
-            MW_g_loc += Xgk / fluid_parms.get_MW_gk<RunOn::Host>(n);
-          }
-          MW_g_loc = 1. / MW_g_loc;
-        }
-        else {
-          MW_g_loc = fluid_parms.get_MW_g<RunOn::Host>();
-        }
-
-        m_h_bc_ro_g[bcv] = (pg * MW_g_loc) / (fluid_parms.R * Tg);
-
-      } else {
-
-        m_h_bc_ro_g[bcv] = ro_g0;
-      }
+    if (bc[bcv].type == BCList::minf || bc[bcv].type == BCList::pinf ||
+        (bc[bcv].type == BCList::eb  && bc[bcv].fluid.flow_thru_eb)) {
+      const Real ro_g = bc[bcv].fluid.get_density(time_in);
+      m_h_bc_ro_g[bcv] = ro_g;
 
     } else {
       m_h_bc_ro_g[bcv] = 1e50;
     }
   }
 
-  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_ro_g.begin(), m_h_bc_ro_g.end(), m_bc_ro_g.begin());
-
-  Gpu::synchronize();
+  Gpu::copy(Gpu::hostToDevice, m_h_bc_ro_g.begin(), m_h_bc_ro_g.end(), m_bc_ro_g.begin());
 }
+
 
 void
 mfix::set_tracer_bc_values (Real /*time_in*/) const
 {
   m_h_bc_tracer.resize(bc.size());
 
-  const int minf_ = bc_list.get_minf();
-  const int pinf_ = bc_list.get_pinf();
-  const int eb_   = bc_list.get_eb();
-
   // HACK -- BC tracer is constant given current implementation.
   // This was copied over from the mfix_set_tracer_bcs routine.
   const Real trac0 = fluid.trac_0;
 
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
-    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ||
-        (bc[bcv].type == eb_  && bc[bcv].fluid.flow_thru_eb) ) {
+    if ( bc[bcv].type == BCList::minf || bc[bcv].type == BCList::pinf ||
+        (bc[bcv].type == BCList::eb  && bc[bcv].fluid.flow_thru_eb) ) {
       m_h_bc_tracer[bcv] = trac0;
     } else {
       m_h_bc_tracer[bcv] = 1e50;
@@ -832,13 +751,9 @@ mfix::set_species_bc_values (Real time_in) const
   m_bc_X_gk_ptr.resize(fluid.nspecies, nullptr);
   m_h_bc_X_gk_ptr.resize(fluid.nspecies, nullptr);
 
-  const int minf_ = bc_list.get_minf();
-  const int pinf_ = bc_list.get_pinf();
-  const int eb_   = bc_list.get_eb();
-
   for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
-    if ( bc[bcv].type == minf_ || bc[bcv].type == pinf_ ||
-        (bc[bcv].type == eb_  && bc[bcv].fluid.flow_thru_eb)) {
+    if ( bc[bcv].type == BCList::minf || bc[bcv].type == BCList::pinf ||
+        (bc[bcv].type == BCList::eb  && bc[bcv].fluid.flow_thru_eb)) {
       for (int n(0); n < fluid.nspecies; n++) {
         m_h_bc_X_gk[n][bcv] = bc[bcv].fluid.get_species(n, time_in);
       }

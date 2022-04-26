@@ -17,7 +17,7 @@ namespace IC
 
   amrex::Vector<IC_t> ic;
 
-  void Initialize (const FluidPhase& fluid,
+  void Initialize (FluidPhase& fluid,
                    const SolidsPhase& solids)
   {
 
@@ -37,7 +37,7 @@ namespace IC
 
       amrex::Real volfrac_total(0.0);
 
-      IC_t new_ic;
+      IC_t new_ic(fluid);
 
       // Set the region for the initial condition.
       new_ic.region = REGIONS::getRegion(regions[icv]);
@@ -55,12 +55,6 @@ namespace IC
 
         ppFluid.getarr("velocity", new_ic.fluid.velocity, 0, 3);
 
-        if (advect_enthalpy) {
-          ppFluid.get("temperature", new_ic.fluid.temperature); 
-        }
-
-        new_ic.fluid.pressure_defined = ppFluid.query("pressure", new_ic.fluid.pressure);
-
         if (fluid.solve_species) {
 
           const int nspecies_g = fluid.nspecies;
@@ -74,9 +68,9 @@ namespace IC
 
           for (int n(0); n < nspecies_g; n++) {
             // Get the name of the fluid species we want to get the IC
-            std::string fluid_specie = fluid.species[n];
+            std::string fluid_species = fluid.species[n];
             // Get the IC mass fraction for the current species
-            ppSpecies.query(fluid_specie.c_str(), new_ic.fluid.species[n].mass_fraction);
+            ppSpecies.get(fluid_species.c_str(), new_ic.fluid.species[n].mass_fraction);
             total_mass_fraction += new_ic.fluid.species[n].mass_fraction;
           }
 
@@ -88,6 +82,45 @@ namespace IC
             amrex::Abort(message);
           }
         }
+
+        // Get density
+        new_ic.fluid.density_defined = ppFluid.query("density", new_ic.fluid.density);
+
+        // Get temperature
+        new_ic.fluid.temperature_defined = ppFluid.query("temperature", new_ic.fluid.temperature);
+
+        // Get pressure
+        new_ic.fluid.pressure_defined = ppFluid.query("pressure", new_ic.fluid.pressure);
+
+        if (fluid.constraint_type == ConstraintType::IncompressibleFluid) {
+
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(new_ic.fluid.density_defined,
+              "Error: when the incompressible fluid constraint is selected, "
+              "fluid initial conditions must include density");
+        } else {
+
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!new_ic.fluid.density_defined,
+              "Error: when the ideal gas EOS constraint is selected, "
+              "fluid initial conditions must NOT include density");
+
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.thermodynamic_pressure_defined,
+              "Error: fluid thermodynamic pressure must be defined before "
+              "computing IC density out of the ideal gas EOS");
+
+          auto& fluid_parms = *fluid.parameters;
+          Real MW_g(0.);
+
+          for (int n(0); n < fluid.nspecies; n++) {
+            MW_g += new_ic.fluid.species[n].mass_fraction / fluid_parms.get_MW_gk<RunOn::Host>(n);
+          }
+
+          MW_g = 1./MW_g;
+
+          new_ic.fluid.density = (fluid.thermodynamic_pressure * MW_g) /
+                                 (fluid_parms.R * new_ic.fluid.temperature);
+        }
+
+
       }
 
       if (DEM::solve || PIC::solve) {
@@ -236,6 +269,21 @@ namespace IC
     }
 
 
+//    // This is a check that the initial thermodynamic pressure is uniform in the
+//    // whole domain
+//    if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
+//        fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
+//
+//      for (int icv(1); icv < IC::ic.size(); ++icv) {
+//        const Real diff = std::abs(IC::ic[0].fluid.pressure -
+//                                   IC::ic[icv].fluid.pressure);
+//
+//        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(diff < 1.e-15,
+//            "ICs for thermodynamic pressure are not uniform in space");
+//      }
+//    }
+
+
 #if 0
     //Dump out what we read for debugging!
     for (int icv(0); icv<ic.size(); icv++){
@@ -253,6 +301,7 @@ namespace IC
 
         amrex::Print() << std::endl;
         amrex::Print() << "   Fluid:     volfrac: " << ic[icv].fluid.volfrac     << std::endl;
+        amrex::Print() << "              density: " << ic[icv].fluid.density     << std::endl;
         amrex::Print() << "             pressure: " << ic[icv].fluid.pressure    << std::endl;
         amrex::Print() << "          temperature: " << ic[icv].fluid.temperature << std::endl;
         amrex::Print() << "             velocity: ";

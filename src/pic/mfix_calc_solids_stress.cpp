@@ -117,12 +117,12 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
 
       const Box tau_bx(tau_lo, tau_hi);
 
-      Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
-      Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
-      Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
-      Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
-      Array4<const int> const& bct_klo = bc_klo[lev]->array();
-      Array4<const int> const& bct_khi = bc_khi[lev]->array();
+      Array4<const int> const& bct_ilo = bc_list.bc_ilo[lev]->array();
+      Array4<const int> const& bct_ihi = bc_list.bc_ihi[lev]->array();
+      Array4<const int> const& bct_jlo = bc_list.bc_jlo[lev]->array();
+      Array4<const int> const& bct_jhi = bc_list.bc_jhi[lev]->array();
+      Array4<const int> const& bct_klo = bc_list.bc_klo[lev]->array();
+      Array4<const int> const& bct_khi = bc_list.bc_khi[lev]->array();
 
       const int nlft = amrex::max(0, dom_lo[0]-tau_lo[0]);
       const int nbot = amrex::max(0, dom_lo[1]-tau_lo[1]);
@@ -166,22 +166,19 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
       const Box bx_xy_lo_2D(bx_xy_lo_lo_2D, bx_xy_lo_hi_2D);
       const Box bx_xy_hi_2D(bx_xy_hi_lo_2D, bx_xy_hi_hi_2D);
 
-      const int minf = bc_list.get_minf();
-      const int pinf = bc_list.get_pinf();
-
       if (nlft > 0) {
 
         const Real bound_eps = ((gravity_in[0] < 0.0) ? 0.975*ep_cp : 0.0 );
 
         amrex::ParallelFor(bx_yz_lo_2D,
-        [bct_ilo,dom_lo,pinf,minf,tau_arr,ep_s_arr,Ps0,beta,ep_cp, small_number,bound_eps]
+        [bct_ilo,dom_lo,tau_arr,ep_s_arr,Ps0,beta,ep_cp, small_number,bound_eps]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
 
           const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
           ep_s_arr(i,j,k) = ep_s_arr(dom_lo[0],j,k);
 
-          if((bct == pinf) || (bct == minf))
+          if((bct == BCList::pinf) || (bct == BCList::minf))
             ep_s_arr(i,j,k) = amrex::max(bound_eps, ep_s_arr(dom_lo[0],j,k));
 
           tau_arr(i,j,k) = solids_stress(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
@@ -195,14 +192,14 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
         const Real bound_eps = ((gravity_in[0] > 0.0) ? 0.975*ep_cp : 0.0 );
 
         amrex::ParallelFor(bx_yz_hi_2D,
-        [bct_ihi,dom_hi,pinf,minf,tau_arr,ep_s_arr, Ps0,beta,ep_cp,small_number,bound_eps]
+        [bct_ihi,dom_hi,tau_arr,ep_s_arr, Ps0,beta,ep_cp,small_number,bound_eps]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
 
             const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
             ep_s_arr(i,j,k) = ep_s_arr(dom_hi[0],j,k);
 
-            if((bct == pinf) || (bct == minf))
+            if((bct == BCList::pinf) || (bct == BCList::minf))
               ep_s_arr(i,j,k) = amrex::max(bound_eps, ep_s_arr(dom_hi[0],j,k));
 
             tau_arr(i,j,k) = solids_stress(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
@@ -215,14 +212,14 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
         const Real bound_eps = ((gravity_in[1] < 0.0) ? 0.975*ep_cp : 0.0 );
 
         amrex::ParallelFor(bx_xz_lo_2D,
-        [bct_jlo,dom_lo,pinf,minf,tau_arr,ep_s_arr,Ps0,beta,ep_cp,small_number,bound_eps]
+        [bct_jlo,dom_lo,tau_arr,ep_s_arr,Ps0,beta,ep_cp,small_number,bound_eps]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
 
           const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
           ep_s_arr(i,j,k) = ep_s_arr(i,dom_lo[1],k);
 
-          if((bct == pinf) || (bct == minf))
+          if((bct == BCList::pinf) || (bct == BCList::minf))
             ep_s_arr(i,j,k) = amrex::max(bound_eps, ep_s_arr(i,dom_lo[1],k));
 
           tau_arr(i,j,k) = solids_stress(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
@@ -236,14 +233,14 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
         const Real bound_eps = ((gravity_in[1] > 0.0) ? 0.975*ep_cp : 0.0 );
 
         amrex::ParallelFor(bx_xz_hi_2D,
-        [bct_jhi,dom_hi,pinf,minf,tau_arr,ep_s_arr, Ps0,beta,ep_cp,small_number,bound_eps]
+        [bct_jhi,dom_hi,tau_arr,ep_s_arr, Ps0,beta,ep_cp,small_number,bound_eps]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
 
           const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
           ep_s_arr(i,j,k) = ep_s_arr(i,dom_hi[1],k);
 
-          if((bct == pinf) || (bct == minf))
+          if((bct == BCList::pinf) || (bct == BCList::minf))
             ep_s_arr(i,j,k) = amrex::max(bound_eps, ep_s_arr(i,dom_hi[1],k));
 
           tau_arr(i,j,k) = solids_stress(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
@@ -256,14 +253,14 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
         const Real bound_eps = ((gravity_in[2] < 0.0) ? 0.975*ep_cp : 0.0 );
 
         amrex::ParallelFor(bx_xy_lo_2D,
-        [bct_klo,dom_lo,pinf,minf,tau_arr,ep_s_arr, Ps0,beta,ep_cp, small_number,bound_eps]
+        [bct_klo,dom_lo,tau_arr,ep_s_arr, Ps0,beta,ep_cp, small_number,bound_eps]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
 
           const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
           ep_s_arr(i,j,k) = ep_s_arr(i,j,dom_lo[2]);
 
-          if((bct == pinf) || (bct == minf))
+          if((bct == BCList::pinf) || (bct == BCList::minf))
             ep_s_arr(i,j,k) = amrex::max(bound_eps, ep_s_arr(i,j,dom_lo[2]));
 
           tau_arr(i,j,k) = solids_stress(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));
@@ -277,13 +274,13 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
         const Real bound_eps = ((gravity_in[2] > 0.0) ? 0.975*ep_cp : 0.0 );
 
         amrex::ParallelFor(bx_xy_hi_2D,
-        [bct_khi,dom_hi,pinf,minf,tau_arr,ep_s_arr, Ps0,beta,ep_cp,small_number,bound_eps]
+        [bct_khi,dom_hi,tau_arr,ep_s_arr, Ps0,beta,ep_cp,small_number,bound_eps]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
 
           const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
           ep_s_arr(i,j,k) = ep_s_arr(i,j,dom_hi[2]);
-          if((bct == pinf) || (bct == minf))
+          if((bct == BCList::pinf) || (bct == BCList::minf))
             ep_s_arr(i,j,k) = amrex::max(bound_eps, ep_s_arr(i,j,dom_hi[2]));
 
           tau_arr(i,j,k) = solids_stress(Ps0, beta, ep_cp, small_number, ep_s_arr(i,j,k));

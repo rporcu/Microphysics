@@ -134,7 +134,6 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
-        species_phi[lev]->FillBoundary(geom[lev].periodicity());
         MultiFab::Copy(*X_gk_in[lev], *species_phi[lev], 0, 0, nspecies_g, 1);
     }
 }

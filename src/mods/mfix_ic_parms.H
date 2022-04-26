@@ -13,9 +13,14 @@ namespace IC
 
   struct IC_t {
 
+    // Constructor
+    IC_t (FluidPhase& fluid_in) :
+      fluid(fluid_in)
+    {}
+
     const amrex::RealBox* region;
 
-    FluidPhase::FLUID_t fluid;
+    FLUID_t fluid;
 
     amrex::Vector<SolidsPhase::SOLIDS_t> solids;
     std::string packing;
@@ -24,7 +29,7 @@ namespace IC
 
   extern amrex::Vector<IC_t> ic;
 
-  void Initialize (const FluidPhase& fluid,
+  void Initialize (FluidPhase& fluid,
                    const SolidsPhase& solids);
 
 }

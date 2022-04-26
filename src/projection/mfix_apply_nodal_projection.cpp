@@ -116,8 +116,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
       else
         amrex::Print() << "Before projection:" << std::endl;
 
-      mfix_print_max_vel(lev, vel_g_in, p_g_in);
-      mfix_print_max_gp(lev, gp_in);
+      mfixRW->mfix_print_max_vel(lev, vel_g_in, p_g_in);
+      mfixRW->mfix_print_max_gp(lev, gp_in);
       amrex::Print() << "Min and Max of ep_g "
                      << ep_g_in[lev]->min(0) << " "
                      << ep_g_in[lev]->max(0) << std::endl;
@@ -152,8 +152,6 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
         for (int n(0); n < 3; n++)
             MultiFab::Multiply(*epu[lev], *ep_g_in[lev], 0, n, 1, epu[lev]->nGrow());
 
-        epu[lev]->FillBoundary(geom[lev].periodicity());
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -167,8 +165,6 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
             // already?
             set_vec_bcs(lev, (*epu[lev])[mfi], geom[lev].Domain());
         }
-
-        epu[lev]->FillBoundary(geom[lev].periodicity());
 
         // We set these to zero because if the values in the covered cells are undefined,
         //   even though they are multiplied by zero in the divu computation, we can still get NaNs
@@ -251,7 +247,9 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     //     update gp to maintain consistency
     // This has been currently disabled since it seems to cause magnification of differences on
     // different grids. Needs to be revisted.
-    //PostProjectionRedistribution(a_time, a_dt, GetVecOfPtrs(sigma_mf));
+    if ( m_redistribute_nodal_proj ) {
+      PostProjectionRedistribution(a_time, a_dt, GetVecOfPtrs(sigma_mf));
+    }
 
     // Compute diveu for diagnostics only
     PostProjectionDiagnostics(a_time, epu, vel_g_in, p_g_in, gp_in, ep_g_in, a_S_cc, proj_for_small_dt);
@@ -284,8 +282,6 @@ mfix::PostProjectionDiagnostics(Real a_time,
         for (int n(0); n < 3; n++)
             MultiFab::Multiply(*epu[lev], *ep_g_in[lev], 0, n, 1, epu[lev]->nGrow());
 
-        epu[lev]->FillBoundary(geom[lev].periodicity());
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -299,8 +295,6 @@ mfix::PostProjectionDiagnostics(Real a_time,
             // already?
             set_vec_bcs(lev, (*epu[lev])[mfi], geom[lev].Domain() );
         }
-
-        epu[lev]->FillBoundary(geom[lev].periodicity());
 
         // We set these to zero because if the values in the covered cells are undefined,
         //   even though they are multiplied by zero in the divu computation, we can still get NaNs
@@ -326,6 +320,6 @@ mfix::PostProjectionDiagnostics(Real a_time,
         else
            amrex::Print() << "After  projection:" << std::endl;
 
-        mfix_print_max_vel(lev, vel_g_in, p_g_in);
+        mfixRW->mfix_print_max_vel(lev, vel_g_in, p_g_in);
     }
 }

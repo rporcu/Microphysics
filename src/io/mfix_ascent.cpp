@@ -1,7 +1,7 @@
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 
-#include <mfix.H>
+#include <mfix_rw.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_solids_parms.H>
 #include <mfix_dem_parms.H>
@@ -12,8 +12,13 @@
 #include <ascent.hpp>
 #endif
 
+using namespace amrex;
+
+
+namespace MfixIO {
+
 void
-mfix::WriteAscentFile (int nstep, const Real time)
+MfixRW::WriteAscentFile (int nstep, const Real time) const
 {
 #ifdef AMREX_USE_ASCENT
   BL_PROFILE("mfix::WriteAscentFile()");
@@ -44,7 +49,7 @@ mfix::WriteAscentFile (int nstep, const Real time)
     int ncomp = 5;
 
     // Temperature in fluid
-    if (advect_enthalpy ) {
+    if (fluid.solve_enthalpy) {
       pltFldNames.push_back("T_g");
       ncomp += 1;
     }
@@ -74,13 +79,13 @@ mfix::WriteAscentFile (int nstep, const Real time)
       MultiFab::Copy(*mf[lev], ebfactory[lev]->getVolFrac(), 0, 4, 1, 0);
 
       int lc=5;
-      if (advect_enthalpy) {
+      if (fluid.solve_enthalpy) {
         MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->T_g), 0, lc, 1, 0);
         lc += 1;
       }
 
       // Fluid species mass fractions
-      if ( fluid.solve_species ) {
+      if (fluid.solve_species) {
         MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_gk, 0, lc, fluid.nspecies, 0);
         lc += fluid.nspecies;
       }
@@ -91,7 +96,7 @@ mfix::WriteAscentFile (int nstep, const Real time)
     conduit::Node bp_mesh;
 
     amrex::MultiLevelToBlueprint(nlev, amrex::GetVecOfConstPtrs(mf),
-        pltFldNames, geom, time, level_steps, refRatio(), bp_mesh);
+        pltFldNames, geom, time, level_steps, ref_ratio, bp_mesh);
 
 
 
@@ -176,8 +181,6 @@ mfix::WriteAscentFile (int nstep, const Real time)
     int_comp_names.push_back("phase");
     int_comp_names.push_back("state");
 
-    MFIXParticleContainer* pc = getParticleContainer();
-
     // for the MPI case, provide the mpi comm
     ascent::Ascent ascent;
     conduit::Node opts;
@@ -203,6 +206,10 @@ mfix::WriteAscentFile (int nstep, const Real time)
     ParallelDescriptor::Barrier();
     ascent.close();
   }
-
+#else
+  amrex::ignore_unused(nstep);
+  amrex::ignore_unused(time);
 #endif
 }
+
+} // end namespace MfixIO

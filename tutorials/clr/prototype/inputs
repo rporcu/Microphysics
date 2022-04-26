@@ -146,9 +146,6 @@ amr.plt_regtest = 0
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
@@ -216,13 +213,14 @@ mfix.particle_init_type = Auto
 # Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac  = 1.0
-
+ic.full-domain.fluid.density  = 1.0
 ic.full-domain.fluid.velocity = 0.0  0.0  0.0
 
 
 # riser section (above air reactor)
 #---------------------------------------------------------------------//
 ic.riser.fluid.volfrac  = 0.2
+ic.riser.fluid.density  = 1.0
 ic.riser.fluid.velocity = 0.0  0.0  0.0
 
 ic.riser.solids = solid0
@@ -241,6 +239,7 @@ ic.riser.solid0.density.constant  = 1000.0
 # fuel reactor
 #---------------------------------------------------------------------//
 ic.fuel-reactor.fluid.volfrac  = 0.4
+ic.fuel-reactor.fluid.density  = 1.0
 ic.fuel-reactor.fluid.velocity = 0.0  0.0  0.0
 
 ic.fuel-reactor.solids = solid0
@@ -259,6 +258,7 @@ ic.fuel-reactor.solid0.density.constant  = 1000.0
 #  loop-seal
 #---------------------------------------------------------------------//
 ic.loop-seal.fluid.volfrac  = 0.4
+ic.loop-seal.fluid.density  = 1.0
 ic.loop-seal.fluid.velocity = 0.0  0.0  0.0
 
 ic.loop-seal.solids = solid0
@@ -277,6 +277,7 @@ ic.loop-seal.solid0.density.constant  = 1000.0
 #  air-reactor
 #---------------------------------------------------------------------//
 ic.air-reactor.fluid.volfrac  = 0.99
+ic.air-reactor.fluid.density  = 1.0
 ic.air-reactor.fluid.velocity = 0.0  0.0  0.0
 
 ic.air-reactor.solids = solid0
@@ -295,6 +296,7 @@ ic.air-reactor.solid0.density.constant  = 1000.0
 #  cyclone
 #---------------------------------------------------------------------//
 ic.cyclone.fluid.volfrac  = 0.99
+ic.cyclone.fluid.density  = 1.0
 ic.cyclone.fluid.velocity = 0.0  0.0  0.0
 
 ic.cyclone.solids = solid0
@@ -317,6 +319,7 @@ bc.regions = inflow  outflow
 
 bc.inflow = mi
 bc.inflow.fluid.volfrac  =  1.0
+bc.inflow.fluid.density  =  1.0
 bc.inflow.fluid.velocity =  0.01  0.0  0.0
 
 bc.outflow = po

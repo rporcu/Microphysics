@@ -1,11 +1,8 @@
 #include <AMReX_ParmParse.H>
-
-#include <mfix.H>
-
-#include <mfix_init_fluid.H>
-
 #include <AMReX_EBAmrUtil.H>
 
+#include <mfix.H>
+#include <mfix_init_fluid.H>
 #include <mfix_regions_parms.H>
 #include <mfix_bc_parms.H>
 #include <mfix_ic_parms.H>
@@ -15,6 +12,7 @@
 #include <mfix_solids_parms.H>
 #include <mfix_species_parms.H>
 #include <mfix_mlmg_options.H>
+#include <mfix_utils.H>
 
 using MFIXParIter = MFIXParticleContainer::MFIXParIter;
 using PairIndex = MFIXParticleContainer::PairIndex;
@@ -49,15 +47,29 @@ mfix::InitParams ()
   // regions need to be processed first as they define the
   // physical extents of ICs and BCs.
   REGIONS::Initialize();
-  IC::Initialize(fluid, solids);
   BC::Initialize(geom[0], fluid, solids);
+  IC::Initialize(fluid, solids);
+
+//  // In case of IdealGas EOS, check that ICs and BCs are consistent
+//  if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
+//    for (amrex::Long i(0); i < BC::bc.size(); ++i) {
+//      if (BC::bc[i].type == bc_list.get_minf() || BC::bc[i].type == bc_list.get_pinf()) {
+//
+//        const Real diff = std::abs(IC::ic[0].fluid.thermodynamic_pressure -
+//                                   BC::bc[i].fluid.thermodynamic_pressure);
+//
+//        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(diff < 1.e-15,
+//            "BCs and ICs for thermodynamic pressure are not consistent");
+//      }
+//    }
+//  }
 
   // set n_error_buf (used in AmrMesh) to default (can overwrite later)
   for (int i = 0; i < n_error_buf.size(); i++)
     n_error_buf[i] = {8,8,8};
 
   {
-    ParmParse pp("fluid.damped_newton");
+    ParmParse pp("fluid.newton_solver");
 
     pp.query("absolute_tol", newton_abstol);
     pp.query("relative_tol", newton_reltol);
@@ -150,6 +162,7 @@ mfix::InitParams ()
 
     // Set the FLUID parameter equal to the mfix class flag
     fluid.solve_species = solve_species;
+    fluid.solve_enthalpy = advect_enthalpy;
     solids.solve_species = solve_species;
 
     if (solve_species)
@@ -211,6 +224,9 @@ mfix::InitParams ()
 
     // Include drag multiplier in projection. (False by default)
     pp.query("use_drag_coeff_in_proj_gp"        , m_use_drag_in_projection);
+
+    // Redistribute after the nodal projection
+    pp.query("redistribute_nodal_proj"          , m_redistribute_nodal_proj);
 
     // Are we using MOL or Godunov?
     std::string l_advection_type = "Godunov";
@@ -463,31 +479,9 @@ mfix::InitParams ()
 
   if (fluid.solve)
   {
-    ParmParse pp("mfix");
-
-    // Constraint type
-    {
-      std::string constraint_type = "IncompressibleFluid";
-      pp.query("constraint_type", constraint_type);
-      constraint_type = amrex::toLower(constraint_type);
-
-      if (constraint_type.compare("incompressiblefluid") == 0) {
-        m_constraint_type = ConstraintType::IncompressibleFluid;
-      }
-      else if (constraint_type.compare("idealgasopensystem") == 0) {
-        m_constraint_type = ConstraintType::IdealGasOpenSystem;
-      }
-      else if (constraint_type.compare("idealgasclosedsystem") == 0) {
-        m_constraint_type = ConstraintType::IdealGasClosedSystem;
-      }
-      else {
-        amrex::Abort("Don't know this constraint type!");
-      }
-    }
-
     // Check on inputs in case of Ideal Gas EOS
-    if (m_constraint_type == ConstraintType::IdealGasOpenSystem ||
-        m_constraint_type == ConstraintType::IdealGasClosedSystem) {
+    if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
+        fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.MW_gk0.size() > 0, "Inputs error: fluid molecular_weight not provided");
 
       for (size_t i(0); i < fluid.MW_gk0.size(); ++i) {
@@ -499,43 +493,22 @@ mfix::InitParams ()
     }
   }
 
-  {
-    ParmParse amr_pp("amr");
-
-    amr_pp.query("restart_from_cold_flow", restart_from_cold_flow);
-
-    amr_pp.queryarr("avg_p_g", avg_p_g);
-    amr_pp.queryarr("avg_ep_g", avg_ep_g);
-    amr_pp.queryarr("avg_vel_g", avg_vel_g);
-    amr_pp.queryarr("avg_T_g", avg_T_g);
-
-    amr_pp.queryarr("avg_vel_p", avg_vel_p);
-
-    amr_pp.queryarr("avg_T_p", avg_T_p);
-
-    // Regions geometry
-    amr_pp.queryarr("avg_region_x_e", avg_region_x_e);
-    amr_pp.queryarr("avg_region_x_w", avg_region_x_w);
-    amr_pp.queryarr("avg_region_y_n", avg_region_y_n);
-    amr_pp.queryarr("avg_region_y_s", avg_region_y_s);
-    amr_pp.queryarr("avg_region_z_t", avg_region_z_t);
-    amr_pp.queryarr("avg_region_z_b", avg_region_z_b);
-  }
 
   {
     ParmParse reports_pp("mfix.reports");
 
-    reports_pp.query("mass_balance_int", mass_balance_report_int);
-    reports_pp.query("mass_balance_per_approx", mass_balance_report_per_approx);
+    reports_pp.query("mass_balance_int", mfixRW->mass_balance_report_int);
+    reports_pp.query("mass_balance_per_approx", mfixRW->mass_balance_report_per_approx);
 
-    if ((mass_balance_report_int > 0 && mass_balance_report_per_approx > 0) )
+    if ((mfixRW->mass_balance_report_int > 0 && mfixRW->mass_balance_report_per_approx > 0) )
       amrex::Abort("Must choose only one of mass_balance_int or mass_balance_report_per_approx");
 
     // OnAdd check to turn off report if not solving species
     if (solve_species && fluid.nspecies >= 1) {
-      report_mass_balance = (mass_balance_report_int > 0 || mass_balance_report_per_approx > 0);
+      mfixRW->report_mass_balance = (mfixRW->mass_balance_report_int > 0 ||
+                                     mfixRW->mass_balance_report_per_approx > 0);
     } else {
-      report_mass_balance = 0;
+      mfixRW->report_mass_balance = 0;
     }
   }
 
@@ -559,8 +532,8 @@ void mfix::ErrorEst (int lev, TagBoxArray & tags, Real /*time*/, int /*ngrow*/)
 void mfix::Init (Real time)
 {
     if (ooo_debug) amrex::Print() << "Init" << std::endl;
-    InitIOChkData();
-    InitIOPltData();
+    mfixRW->InitIOChkData();
+    mfixRW->InitIOPltData();
 
     // Note that finest_level = last level
     finest_level = nlev-1;
@@ -614,6 +587,9 @@ void mfix::Init (Real time)
     if (DEM::solve || PIC::solve) {
       pc = new MFIXParticleContainer(this, solids, reactions);
       pc->setSortingBinSizes(IntVect(particle_sorting_bin));
+
+      // Updating mfixRW pc pointer is needed since mfix pc has changed
+      mfixRW->set_pc(pc);
     }
 
     /****************************************************************************
@@ -755,7 +731,8 @@ void mfix::MakeNewLevelFromScratch (int lev, Real /*time*/,
 
     // This is being done by mfix::make_eb_geometry,
     // otherwise it would be done here
-    if (lev == 0) MakeBCArrays(nghost_state());
+    if (lev == 0)
+      bc_list.MakeBCArrays(nghost_state(), ooo_debug, geom);
 }
 
 
@@ -767,7 +744,8 @@ void mfix::ReMakeNewLevelFromScratch (int lev,
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
 
-    if (lev == 0) MakeBCArrays(nghost_state());
+    if (lev == 0)
+      bc_list.MakeBCArrays(nghost_state(), ooo_debug, geom);
 
     // We need to re-fill these arrays for the larger domain (after replication).
     mfix_set_bc_type(lev,nghost_state());
@@ -1029,58 +1007,6 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
     if (call_udf) mfix_usr0();
 }
 
-void
-mfix::MakeBCArrays (int nghost)
-{
-    for (int lev = 0; lev < bc_ilo.size(); lev++)
-    {
-      if (bc_ilo[lev] != nullptr) delete bc_ilo[lev];
-      if (bc_ihi[lev] != nullptr) delete bc_ihi[lev];
-      if (bc_jlo[lev] != nullptr) delete bc_jlo[lev];
-      if (bc_jhi[lev] != nullptr) delete bc_jhi[lev];
-      if (bc_klo[lev] != nullptr) delete bc_klo[lev];
-      if (bc_khi[lev] != nullptr) delete bc_khi[lev];
-    }
-
-    if (ooo_debug) amrex::Print() << "MakeBCArrays" << std::endl;
-    bc_ilo.clear(); bc_ilo.resize(nlev, nullptr);
-    bc_ihi.clear(); bc_ihi.resize(nlev, nullptr);
-    bc_jlo.clear(); bc_jlo.resize(nlev, nullptr);
-    bc_jhi.clear(); bc_jhi.resize(nlev, nullptr);
-    bc_klo.clear(); bc_klo.resize(nlev, nullptr);
-    bc_khi.clear(); bc_khi.resize(nlev, nullptr);
-
-    for (int lev = 0; lev < nlev; lev++)
-    {
-       // Define and allocate the integer MultiFab that is the outside adjacent
-       // cells of the problem domain.
-       Box domainx(geom[lev].Domain());
-       domainx.grow(1,nghost);
-       domainx.grow(2,nghost);
-       Box box_ilo = amrex::adjCellLo(domainx,0,1);
-       Box box_ihi = amrex::adjCellHi(domainx,0,1);
-
-       Box domainy(geom[lev].Domain());
-       domainy.grow(0,nghost);
-       domainy.grow(2,nghost);
-       Box box_jlo = amrex::adjCellLo(domainy,1,1);
-       Box box_jhi = amrex::adjCellHi(domainy,1,1);
-
-       Box domainz(geom[lev].Domain());
-       domainz.grow(0,nghost);
-       domainz.grow(1,nghost);
-       Box box_klo = amrex::adjCellLo(domainz,2,1);
-       Box box_khi = amrex::adjCellHi(domainz,2,1);
-
-       // Note that each of these is a single IArrayBox so every process has a copy of them
-       bc_ilo[lev] = new IArrayBox(box_ilo,2);
-       bc_ihi[lev] = new IArrayBox(box_ihi,2);
-       bc_jlo[lev] = new IArrayBox(box_jlo,2);
-       bc_jhi[lev] = new IArrayBox(box_jhi,2);
-       bc_klo[lev] = new IArrayBox(box_klo,2);
-       bc_khi[lev] = new IArrayBox(box_khi,2);
-   }
-}
 
 void
 mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
@@ -1118,8 +1044,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
             init_fluid_parameters(bx, mfi, ld, advect_enthalpy, solve_species, fluid);
           } else {
             init_fluid(sbx, bx, domain, mfi, ld, dx, dy, dz, xlen, ylen, zlen, plo,
-                test_tracer_conservation, advect_enthalpy, solve_species,
-                m_constraint_type, fluid);
+                test_tracer_conservation, advect_enthalpy, solve_species, fluid);
           }
        }
 
@@ -1130,29 +1055,6 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
     // Here we re-set the bc values for p and u,v,w just in case init_fluid
     //      over-wrote some of the bc values with ic values
     mfix_set_bc0();
-
-    for (int lev = 0; lev < nlev; lev++)
-    {
-      m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
-      m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
-
-      if (advect_enthalpy)
-      {
-        m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
-        m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
-      }
-
-      if (advect_tracer)
-        m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
-
-      if (solve_species)
-      {
-        m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
-      }
-
-      m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
-    }
-
 
     // Make sure to fill the "old state" before we start.
     for (int lev = 0; lev < nlev; lev++)
@@ -1174,8 +1076,9 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
          MultiFab::Copy(*ld.X_gko, *ld.X_gk, 0, 0, fluid.nspecies, ld.X_gk->nGrow());
        }
 
-       if (m_constraint_type == ConstraintType::IdealGasClosedSystem && advect_enthalpy) {
-         MultiFab::Copy(*ld.pressure_go, *ld.pressure_g, 0, 0, 1, ld.pressure_g->nGrow());
+       if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem && advect_enthalpy) {
+         MultiFab::Copy(*ld.thermodynamic_p_go, *ld.thermodynamic_p_g, 0, 0, 1,
+             ld.thermodynamic_p_g->nGrow());
        }
     }
 
@@ -1189,7 +1092,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       const Real* dx = geom[0].CellSize();
       const Real cell_volume = dx[0] * dx[1] * dx[2];
 
-      sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
+      sum_vol_orig = Utils::volWgtSum(0, *(m_leveldata[0]->ep_g), 0, ebfactory);
 
       Print() << "Enclosed domain volume is   " << cell_volume * sum_vol_orig << std::endl;
 
@@ -1244,7 +1147,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       const Real cell_volume = dx[0] * dx[1] * dx[2];
 
       //Calculation of sum_vol_orig for a restarting point
-      sum_vol_orig = volWgtSum(0,*(m_leveldata[0]->ep_g),0);
+      sum_vol_orig = Utils::volWgtSum(0, *(m_leveldata[0]->ep_g), 0, ebfactory);
 
       Print() << "Setting original sum_vol to " << cell_volume * sum_vol_orig << std::endl;
     }
@@ -1254,47 +1157,21 @@ void
 mfix::mfix_set_bc0 ()
 {
     if (ooo_debug) amrex::Print() << "mfix_set_bc0" << std::endl;
-    for (int lev = 0; lev < nlev; lev++)
-    {
-     Box domain(geom[lev].Domain());
 
-     MultiFab& ep_g = *(m_leveldata[lev]->ep_g);
+    Real time = 0.0;
 
-     // Don't tile this -- at least for now
-     for (MFIter mfi(ep_g, false); mfi.isValid(); ++mfi)
-     {
-       const Box& sbx = ep_g[mfi].box();
+    if (advect_enthalpy) {
+      mfix_set_temperature_bcs(time, get_T_g());
+      mfix_set_enthalpy_bcs(time, get_h_g());
+    }
 
-       if (advect_enthalpy)
-         set_temperature_bc0(sbx, &mfi, lev, domain);
-
-       if (solve_species)
-         set_species_bc0(sbx, &mfi, lev, domain);
-     }
-
-     m_leveldata[lev]->ep_g->FillBoundary(geom[lev].periodicity());
-     m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
-
-     if (advect_enthalpy) {
-       m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
-       m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
-     }
-
-     if (advect_tracer)
-       m_leveldata[lev]->trac->FillBoundary(geom[lev].periodicity());
-
-     if (solve_species)
-       m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
-   }
+    if (solve_species)
+      mfix_set_species_bcs(time, get_X_gk());
 
    // Put velocity Dirichlet bc's on faces
-   Real time = 0.0;
    int extrap_dir_bcs = 0;
 
    mfix_set_velocity_bcs(time, get_vel_g(), extrap_dir_bcs);
-
-   for (int lev = 0; lev < nlev; lev++)
-     m_leveldata[lev]->vel_g->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -1331,8 +1208,6 @@ mfix::mfix_set_p0 ()
 
        set_p0 (bx, &mfi, lev, domain );
      }
-
-     m_leveldata[lev]->p0_g->FillBoundary(p0_periodicity);
    }
 }
 

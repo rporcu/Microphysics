@@ -39,12 +39,12 @@ mfix::set_ls_inflow (const int lev,
   const IntVect dom_lo(domain.loVect());
   const IntVect dom_hi(domain.hiVect());
 
-  Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
-  Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
-  Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
-  Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
-  Array4<const int> const& bct_klo = bc_klo[lev]->array();
-  Array4<const int> const& bct_khi = bc_khi[lev]->array();
+  Array4<const int> const& bct_ilo = bc_list.bc_ilo[lev]->array();
+  Array4<const int> const& bct_ihi = bc_list.bc_ihi[lev]->array();
+  Array4<const int> const& bct_jlo = bc_list.bc_jlo[lev]->array();
+  Array4<const int> const& bct_jhi = bc_list.bc_jhi[lev]->array();
+  Array4<const int> const& bct_klo = bc_list.bc_klo[lev]->array();
+  Array4<const int> const& bct_khi = bc_list.bc_khi[lev]->array();
   
   // Here if the level set (slo,shi) is at a finer resolution (by nref) than
   //  the boundary condition routines,
@@ -61,12 +61,10 @@ mfix::set_ls_inflow (const int lev,
   const int ntop = amrex::max(0, sbx_hi[1]-(nref*dom_hi[1]+1));
   const int nup  = amrex::max(0, sbx_hi[2]-(nref*dom_hi[2]+1));
 
-  const int minf = bc_list.get_minf();
-
   if (nlft > 0)
   {
     amrex::ParallelFor(sbx,
-      [bct_ilo,dom_lo,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      [bct_ilo,dom_lo,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_ilo(dom_lo[0]-1,j/nref,k/nref,0);
@@ -74,7 +72,7 @@ mfix::set_ls_inflow (const int lev,
       bct[2] = bct_ilo(dom_lo[0]-1,j/nref+1,k/nref,0);
       bct[3] = bct_ilo(dom_lo[0]-1,j/nref+1,k/nref+1,0);
 
-      if(is_equal_to_any(minf, &bct[0], 4))
+      if(is_equal_to_any(BCList::minf, &bct[0], 4))
       {
         if(i < 0)
         {
@@ -100,7 +98,7 @@ mfix::set_ls_inflow (const int lev,
   if (nrgt > 0)
   {
     amrex::ParallelFor(sbx,
-      [bct_ihi,dom_hi,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      [bct_ihi,dom_hi,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_ihi(dom_hi[0]+1,j/nref,k/nref,0);
@@ -108,7 +106,7 @@ mfix::set_ls_inflow (const int lev,
       bct[2] = bct_ihi(dom_hi[0]+1,j/nref+1,k/nref,0);
       bct[3] = bct_ihi(dom_hi[0]+1,j/nref+1,k/nref+1,0);
 
-      if(is_equal_to_any(minf, &bct[0], 4))
+      if(is_equal_to_any(BCList::minf, &bct[0], 4))
       {
         if(i < (dom_hi[0]+1)*nref)
         {
@@ -134,7 +132,7 @@ mfix::set_ls_inflow (const int lev,
   if (nbot > 0)
   {
     amrex::ParallelFor(sbx,
-      [bct_jlo,dom_lo,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      [bct_jlo,dom_lo,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_jlo(i/nref,dom_lo[1]-1,k/nref,0);
@@ -142,7 +140,7 @@ mfix::set_ls_inflow (const int lev,
       bct[2] = bct_jlo(i/nref+1,dom_lo[1]-1,k/nref,0);
       bct[3] = bct_jlo(i/nref+1,dom_lo[1]-1,k/nref+1,0);
 
-      if(is_equal_to_any(minf, &bct[0], 4))
+      if(is_equal_to_any(BCList::minf, &bct[0], 4))
       {
         if(j < 0)
         {
@@ -168,7 +166,7 @@ mfix::set_ls_inflow (const int lev,
   if (ntop > 0)
   {
     amrex::ParallelFor(sbx,
-      [bct_jhi,dom_hi,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      [bct_jhi,dom_hi,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_jhi(i/nref,dom_hi[1]+1,k/nref,0);
@@ -176,7 +174,7 @@ mfix::set_ls_inflow (const int lev,
       bct[2] = bct_jhi(i/nref+1,dom_hi[1]+1,k/nref,0);
       bct[3] = bct_jhi(i/nref+1,dom_hi[1]+1,k/nref+1,0);
 
-      if(is_equal_to_any(minf, &bct[0], 4))
+      if(is_equal_to_any(BCList::minf, &bct[0], 4))
       {
         if(j < (dom_hi[1]+1)*nref)
         {
@@ -202,7 +200,7 @@ mfix::set_ls_inflow (const int lev,
   if (ndwn > 0)
   {
     amrex::ParallelFor(sbx,
-      [bct_klo,dom_lo,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      [bct_klo,dom_lo,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_klo(i/nref,j/nref,dom_lo[2]-1,0);
@@ -210,7 +208,7 @@ mfix::set_ls_inflow (const int lev,
       bct[2] = bct_klo(i/nref+1,j/nref,dom_lo[2]-1,0);
       bct[3] = bct_klo(i/nref+1,j/nref+1,dom_lo[2]-1,0);
 
-      if(is_equal_to_any(minf, &bct[0], 4))
+      if(is_equal_to_any(BCList::minf, &bct[0], 4))
       {
         if(k < 0)
         {
@@ -236,7 +234,7 @@ mfix::set_ls_inflow (const int lev,
   if (nup > 0)
   {
     amrex::ParallelFor(sbx,
-      [bct_khi,dom_hi,minf,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      [bct_khi,dom_hi,ls_phi,dx_fine,nref,offset] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       int bct[4];
       bct[0] = bct_khi(i/nref,j/nref,dom_hi[2]+1,0);
@@ -244,7 +242,7 @@ mfix::set_ls_inflow (const int lev,
       bct[2] = bct_khi(i/nref+1,j/nref,dom_hi[2]+1,0);
       bct[3] = bct_khi(i/nref+1,j/nref+1,dom_hi[2]+1,0);
 
-      if(is_equal_to_any(minf, &bct[0], 4))
+      if(is_equal_to_any(BCList::minf, &bct[0], 4))
       {
         if(k < (dom_hi[2]+1)*nref)
         {

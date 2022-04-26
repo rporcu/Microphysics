@@ -43,15 +43,13 @@ mfix::mfix_set_eb_velocity_bcs (Real time_in, Vector< MultiFab* > const& eb_vel_
 
            const auto &eb_norm_arr  = factory.getBndryNormal()[mfi].const_array();
 
-           const int eb = bc_list.get_eb();
+           for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
 
-           for(int bcv(0); bcv < BC::bc.size(); ++bcv) {
-
-             if ( BC::bc[bcv].type == eb ) {
+             if (BC::bc[bcv].type == BCList::eb) {
 
                const Box *ic_bx = calc_ic_box(geom[lev], BC::bc[bcv].region);
 
-               if( ic_bx->intersects(bx)) {
+               if (ic_bx->intersects(bx)) {
 
                  // Intersection of ic box and mfi box
                  const Box bx_int = bx&(*ic_bx);

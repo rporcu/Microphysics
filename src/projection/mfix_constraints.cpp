@@ -1,6 +1,7 @@
 #include <mfix.H>
 #include <mfix_bc_parms.H>
 #include <mfix_mf_helpers.H>
+#include <mfix_utils.H>
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_VisMF.H>
@@ -25,10 +26,6 @@ mfix::mfix_incompressible_fluid_rhs (Vector< MultiFab* > const& rhs)
 
   for (int lev(0); lev <= finest_level; lev++) {
     EB_set_covered(*rhs[lev], 0, 1, 0, 0.0);
-  }
-
-  for (int lev(0); lev <= finest_level; lev++) {
-    rhs[lev]->FillBoundary(geom[lev].periodicity());
   }
 }
 
@@ -165,10 +162,6 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
 
     for (int lev(0); lev <= finest_level; lev++) {
       EB_set_covered(*rhs[lev], 0, 1, 0, 0.0);
-    }
-
-    for (int lev(0); lev <= finest_level; lev++) {
-      rhs[lev]->FillBoundary(geom[lev].periodicity());
     }
 
   } else { // no adv_enthalpy or no adv_fluid_species
@@ -330,8 +323,8 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
 
     bool local = true;
 
-    avgSigma[lev] = volWgtSumBox(lev, *Sigma[lev], 0, domain, local);
-    avgTheta[lev] = volWgtSumBox(lev, *Theta[lev], 0, domain, local);
+    avgSigma[lev] = Utils::volWgtSumBox(lev, *Sigma[lev], 0, ebfactory, domain, local);
+    avgTheta[lev] = Utils::volWgtSumBox(lev, *Theta[lev], 0, ebfactory, domain, local);
 
     // Compute parallel reductions
     ParallelDescriptor::ReduceRealSum(avgSigma[lev]);

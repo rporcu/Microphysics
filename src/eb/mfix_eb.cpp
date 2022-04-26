@@ -18,7 +18,7 @@ void mfix::make_eb_geometry ()
      *                                                                          *
      ***************************************************************************/
 
-    MakeBCArrays(nghost_state());
+    bc_list.MakeBCArrays(nghost_state(), ooo_debug, geom);
 
     for (int lev = 0; lev < nlev; lev++)
         mfix_set_bc_type(lev,nghost_state());

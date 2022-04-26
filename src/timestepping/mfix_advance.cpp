@@ -43,6 +43,10 @@ mfix::mfix_project_velocity ()
       }
     }
 
+    if (EB::has_flow) {
+       mfix_set_eb_velocity_bcs(time, eb_flow_vel);
+    }
+
     mfix_apply_nodal_projection(depdt, time, dummy_dt, dummy_dt, proj_2,
                                 get_vel_g_old(), get_vel_g(), get_p_g(), get_gp(),
                                 get_ep_g(), get_txfr(), get_ro_g_const(),
@@ -240,9 +244,9 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
                        m_leveldata[lev]->X_gk->nComp(), m_leveldata[lev]->X_gk->nGrow());
       }
 
-      if (m_constraint_type == ConstraintType::IdealGasClosedSystem && advect_enthalpy) {
-        MultiFab::Copy(*m_leveldata[lev]->pressure_g, *m_leveldata[lev]->pressure_go, 0, 0,
-                        m_leveldata[lev]->pressure_g->nComp(), m_leveldata[lev]->pressure_g->nGrow());
+      if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem && advect_enthalpy) {
+        MultiFab::Copy(*m_leveldata[lev]->thermodynamic_p_g, *m_leveldata[lev]->thermodynamic_p_go, 0, 0,
+                        m_leveldata[lev]->thermodynamic_p_g->nComp(), m_leveldata[lev]->thermodynamic_p_g->nGrow());
       }
     }
 

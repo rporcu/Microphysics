@@ -31,23 +31,16 @@ geometry.prob_hi     = 0.0016  0.01  0.0016  # hi corner of physical domain
 mfix.drag_type = "BVK2"
 mfix.gravity   =  0.0  -9.80665  0.0
 
+mfix.constraint_type = IncompressibleFluid
+
 
 #_______________________________________________________________________
 # Fluid model settings
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
-
-fluid.specific_heat          = constant
-fluid.specific_heat.constant = 1.0
-
-fluid.thermal_conductivity          = constant
-fluid.thermal_conductivity.constant = 0.0
 
 
 #_______________________________________________________________________
@@ -84,9 +77,9 @@ regions.full-domain.hi  = 0.0016  0.0100  0.0016
 #
 ic.regions = full-domain
 
-ic.full-domain.fluid.volfrac   = 1.0
-ic.full-domain.fluid.pressure  = 0.0
-ic.full-domain.fluid.velocity  = 0.0  0.0  0.0
+ic.full-domain.fluid.volfrac  = 1.0
+ic.full-domain.fluid.density  = 1.0
+ic.full-domain.fluid.velocity = 0.0  0.0  0.0
 
 
 #_______________________________________________________________________

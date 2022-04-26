@@ -3,8 +3,78 @@
 #include <mfix_pic_parms.H>
 
 #include <AMReX_ParmParse.H>
+#include <AMReX_EBFArrayBox.H>
+
+using namespace amrex;
+
 
 namespace MfixIO {
+
+MfixRW::MfixRW (int nlev_in,
+                amrex::Vector<amrex::BoxArray>& grids_in,
+                amrex::Vector<amrex::Geometry>& geom_in,
+                MFIXParticleContainer* pc_in,
+                FluidPhase& fluid_in,
+                amrex::Vector<std::unique_ptr<LevelData>>& m_leveldata_in,
+                amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory_in,
+                amrex::Vector<amrex::DistributionMapping>& dmap_in,
+                bool ooo_debug_in,
+                amrex::Vector<std::unique_ptr<amrex::MultiFab>>& level_sets_in,
+                const amrex::Vector<amrex::BoxArray>& box_array_in,
+                int levelset_refinement_in,
+                int levelset_pad_in,
+                int levelset_eb_refinement_in,
+                int levelset_eb_pad_in,
+                SolidsPhase& solids_in,
+                Reactions& reactions_in,
+                amrex::Vector<amrex::MultiFab*>& particle_cost_in,
+                amrex::Vector<amrex::MultiFab*>& particle_proc_in,
+                amrex::Vector<amrex::MultiFab*>& fluid_proc_in,
+                amrex::Real covered_val_in,
+                const amrex::Vector<amrex::IntVect>& ref_ratio_in,
+                amrex::Vector<const amrex::EB2::Level*>& eb_levels_in,
+                int nghost_eb_basic_in,
+                int nghost_eb_volume_in,
+                int nghost_eb_full_in,
+                amrex::EBSupport& m_eb_support_level_in,
+                std::string load_balance_type_in,
+                BCList& bc_list_in,
+                Vector<std::unique_ptr<EBFArrayBoxFactory>>& particle_ebfactory_in)
+  : finest_level(nlev_in-1)
+  , nlev(nlev_in)
+  , grids(grids_in)
+  , geom(geom_in)
+  , pc(pc_in)
+  , fluid(fluid_in)
+  , m_leveldata(m_leveldata_in)
+  , ebfactory(ebfactory_in)
+  , dmap(dmap_in)
+  , ooo_debug(ooo_debug_in)
+  , level_sets(level_sets_in)
+  , box_array(box_array_in)
+  , levelset_refinement(levelset_refinement_in)
+  , levelset_pad(levelset_pad_in)
+  , levelset_eb_refinement(levelset_eb_refinement_in)
+  , levelset_eb_pad(levelset_eb_pad_in)
+  , solids(solids_in)
+  , reactions(reactions_in)
+  , particle_cost(particle_cost_in)
+  , particle_proc(particle_proc_in)
+  , fluid_proc(fluid_proc_in)
+  , covered_val(covered_val_in)
+  , ref_ratio(ref_ratio_in)
+  , eb_levels(eb_levels_in)
+  , nghost_eb_basic(nghost_eb_basic_in)
+  , nghost_eb_volume(nghost_eb_volume_in)
+  , nghost_eb_full(nghost_eb_full_in)
+  , m_eb_support_level(m_eb_support_level_in)
+  , load_balance_type(load_balance_type_in)
+  , bc_list(bc_list_in)
+  , particle_ebfactory(particle_ebfactory_in)
+{
+  readParameters();
+}
+
 
 void MfixRW::readParameters ()
 {
@@ -55,6 +125,23 @@ void MfixRW::readParameters ()
 
      if ( regrid_int == 0 )
        amrex::Abort("regrid_int must be > 0 or < 0");
+
+     pp.queryarr("avg_p_g", avg_p_g);
+     pp.queryarr("avg_ep_g", avg_ep_g);
+     pp.queryarr("avg_vel_g", avg_vel_g);
+     pp.queryarr("avg_T_g", avg_T_g);
+
+     pp.queryarr("avg_vel_p", avg_vel_p);
+
+     pp.queryarr("avg_T_p", avg_T_p);
+
+     // Regions geometry
+     pp.queryarr("avg_region_x_e", avg_region_x_e);
+     pp.queryarr("avg_region_x_w", avg_region_x_w);
+     pp.queryarr("avg_region_y_n", avg_region_y_n);
+     pp.queryarr("avg_region_y_s", avg_region_y_s);
+     pp.queryarr("avg_region_z_t", avg_region_z_t);
+     pp.queryarr("avg_region_z_b", avg_region_z_b);
   }
 
   {
@@ -76,7 +163,8 @@ void MfixRW::readParameters ()
 #endif
 }
 
-void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bool last)
+
+void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 {
 
 
@@ -138,9 +226,10 @@ void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bo
 
     if ( (plot_test == 1) || ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) ) )
     {
-      if (mfix.fluid.solve)
-           mfix.mfix_compute_vort();
-        mfix.WritePlotFile( plot_file, nstep, time );
+        if (fluid.solve)
+          ComputeVort();
+
+        WritePlotFile(plot_file, nstep, time);
     }
 
 
@@ -196,7 +285,7 @@ void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bo
     if ( (ascent_test == 1) || ( ( ascent_int > 0) && ( nstep %  ascent_int == 0 ) ) )
     {
         const int myProc = ParallelDescriptor::MyProc();
-        mfix.WriteAscentFile(nstep, time);
+        WriteAscentFile(nstep, time);
     }
 #endif
 
@@ -212,19 +301,19 @@ void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bo
         // We automatically write checkpoint files with the initial data
         if ( first ) {
             if ( restart_file.empty() ) {
-                mfix.WriteCheckPointFile(check_file, nstep, dt, time);
+                WriteCheckPointFile(check_file, nstep, dt, time);
                 last_chk = nstep;
             }
         }
         // We automatically write checkpoint files with the final data
         else if (last) {
             if ( nstep != last_chk) {
-                mfix.WriteCheckPointFile(check_file, nstep, dt, time);
+                WriteCheckPointFile(check_file, nstep, dt, time);
                 last_chk = nstep;
             }
         }
         else if ( nstep %  check_int == 0 ) {
-            mfix.WriteCheckPointFile( check_file, nstep, dt, time );
+            WriteCheckPointFile( check_file, nstep, dt, time );
             last_chk = nstep;
         }
     }
@@ -236,11 +325,11 @@ void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bo
  *------------------------------------------------------------------------------------------------*/
     if ( par_ascii_int > 0) {
         if ( first || last ) {
-            mfix.WriteParticleAscii(par_ascii_file, nstep);
+            WriteParticleAscii(par_ascii_file, nstep);
             last_par_ascii = nstep;
         }
         else if ( nstep %  par_ascii_int == 0 ) {
-            mfix.WriteParticleAscii( par_ascii_file, nstep );
+            WriteParticleAscii( par_ascii_file, nstep );
             last_par_ascii = nstep;
         }
     }
@@ -254,11 +343,11 @@ void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bo
 
     if ( avg_int > 0 ) {
         if ( first || last ) {
-            mfix.WriteAverageRegions(avg_file, nstep, time);
+            WriteAverageRegions(avg_file, nstep, time);
             last_avg = nstep;
         }
         else if ( nstep %  avg_int == 0 ) {
-            mfix.WriteAverageRegions( avg_file, nstep, time );
+            WriteAverageRegions( avg_file, nstep, time );
             last_avg = nstep;
         }
     }
@@ -270,22 +359,22 @@ void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bo
  *
  *------------------------------------------------------------------------------------------------*/
     int mass_balance_report_test = 0;
-    if (mfix::mass_balance_report_per_approx > 0.0)
+    if (mass_balance_report_per_approx > 0.0)
       {
-        // Check to see if we've crossed a mfix::mass_balance_report_per_approx interval by comparing
+        // Check to see if we've crossed a mass_balance_report_per_approx interval by comparing
         // the number of intervals that have elapsed for both the current
         // time and the time at the beginning of this timestep.
 
-        int num_per_old = static_cast<int>( (time-dt) / mfix::mass_balance_report_per_approx );
-        int num_per_new = static_cast<int>( (time   ) / mfix::mass_balance_report_per_approx );
+        int num_per_old = static_cast<int>( (time-dt) / mass_balance_report_per_approx);
+        int num_per_new = static_cast<int>( (time   ) / mass_balance_report_per_approx);
 
         // Before using these, however, we must test for the case where we're
         // within machine epsilon of the next interval. In that case, increment
-        // the counter, because we have indeed reached the next mfix::mass_balance_report_per_approx interval
-        // at this point.
+        // the counter, because we have indeed reached the next 
+        // mass_balance_report_per_approx interval at this point.
 
         const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * amrex::Math::abs(time);
-        const Real next_mass_balance_report_time = (num_per_old + 1) * mfix::mass_balance_report_per_approx;
+        const Real next_mass_balance_report_time = (num_per_old + 1) * mass_balance_report_per_approx;
 
         if ((num_per_new == num_per_old) && amrex::Math::abs(time - next_mass_balance_report_time) <= eps)
         {
@@ -305,29 +394,206 @@ void MfixRW::writeNow (mfix& mfix, int nstep, Real time, Real dt, bool first, bo
     }
 
     if ( (mass_balance_report_test == 1) ||
-         (( mfix::mass_balance_report_int > 0) &&
-          ( nstep %  mfix::mass_balance_report_int == 0 ) ) ) {
-      mfix.WriteMassBalanceReport(time);
+         (( mass_balance_report_int > 0) &&
+          ( nstep %  mass_balance_report_int == 0 ) ) ) {
+      WriteMassBalanceReport(time);
     }
 
 
 }
 
-void MfixRW::writeEBSurface(mfix &mfix) const
+void MfixRW::writeEBSurface() const
 {
-   if(write_eb_surface) mfix.WriteMyEBSurface();
+   if(write_eb_surface)
+     WriteMyEBSurface();
 }
 
-
-void MfixRW::writeStaticPlotFile(const mfix &mfix) const
+void MfixRW::writeStaticPlotFile() const
 {
    if ((DEM::solve || PIC::solve) && write_ls)
-      mfix.WriteStaticPlotFile(static_plt_file);
+      WriteStaticPlotFile(static_plt_file);
 }
 
-void MfixRW::reportGridStats(const mfix &mfix) const
+void MfixRW::reportGridStats() const
 {
-   if (mfix.fluid.solve) mfix.ReportGridStats();
+   if (fluid.solve)
+     ReportGridStats();
+}
+
+//
+// Print the maximum values of the velocity components
+//
+void
+MfixRW::mfix_print_max_vel (int lev,
+                            const Vector<MultiFab*>& vel_g_in,
+                            const Vector<MultiFab*>& p_g_in)
+{
+    amrex::Print() << "   max(abs(u/v/w/p))  = "
+                   << vel_g_in[lev]->norm0(0,0,false,true) << "  "
+                   << vel_g_in[lev]->norm0(1,0,false,true) << "  "
+                   << vel_g_in[lev]->norm0(2,0,false,true) << "  "
+                   << p_g_in[lev]->norm0(0,0,false,true) << std::endl;
+}
+
+//
+// Print the maximum values of the pressure gradient components
+//
+void
+MfixRW::mfix_print_max_gp (int lev,
+                           const Vector<MultiFab*>& gp_g_in)
+{
+    amrex::Print() << "   max(abs(gpx/gpy/gpz))  = "
+                   << gp_g_in[lev]->norm0(0,0,false,true) << "  "
+                   << gp_g_in[lev]->norm0(1,0,false,true) << "  "
+                   << gp_g_in[lev]->norm0(2,0,false,true) <<  std::endl;
+}
+
+//
+//
+//
+void
+MfixRW::ReportGridStats () const
+{
+  BL_PROFILE("mfix::volEpsWgtSum()");
+
+  std::vector<long> counts(6,0);
+
+  int lev = 0;
+
+  const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
+
+  // Count the number of regular cells
+  counts[0] = static_cast<int>(amrex::ReduceSum(*volfrac, *(m_leveldata[lev]->ep_g), 0,
+    [=] AMREX_GPU_HOST_DEVICE (Box const & bx,
+                               Array4<const Real> const & vfrc,
+                               Array4<const Real> const & ep) -> int
+    {
+      int dm = 0;
+
+      amrex::Loop(bx, [vfrc,ep,&dm] (int i, int j, int k) noexcept
+      {if(vfrc(i,j,k)==1.0) dm += 1;});
+
+      return dm;
+    }));
+
+  // Count the number of covered cells
+  counts[1] = static_cast<int>(amrex::ReduceSum( *volfrac, *(m_leveldata[lev]->ep_g), 0,
+    [=] AMREX_GPU_HOST_DEVICE (Box const & bx,
+                               Array4<const Real> const & vfrc,
+                               Array4<const Real> const & ep) -> int
+    {
+      int dm = 0;
+
+      amrex::Loop(bx, [vfrc,ep,&dm] (int i, int j, int k) noexcept
+      {if(vfrc(i,j,k)==0.0) dm += 1;});
+
+      return dm;
+    }));
+
+  // Count the number of cut cells
+  counts[2] = static_cast<int>(amrex::ReduceSum( *volfrac, *(m_leveldata[lev]->ep_g), 0,
+    [=] AMREX_GPU_HOST_DEVICE (Box const & bx,
+                               Array4<const Real> const & vfrc,
+                               Array4<const Real> const & ep) -> int
+    {
+      int dm = 0;
+
+      amrex::Loop(bx, [vfrc,ep,&dm] (int i, int j, int k) noexcept
+      {if(0.0 < vfrc(i,j,k) && vfrc(i,j,k) < 1.0) dm += 1;});
+
+      return dm;
+    }));
+
+  int regular(0), covered(0), cut(0);
+
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:regular, covered, cut) if (Gpu::notInLaunchRegion())
+#endif
+  for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+
+    const auto& vel_fab   =
+      static_cast<EBFArrayBox const&>((*m_leveldata[lev]->vel_g)[mfi]);
+
+    const Box& bx     = mfi.tilebox();
+    const auto& flags = vel_fab.getEBCellFlagFab();
+
+    // Count number of regular grids
+    if (flags.getType(amrex::grow(bx,1)) == FabType::regular ) {
+      regular += 1;
+    } else if (flags.getType(amrex::grow(bx,1)) == FabType::covered ) {
+      covered += 1;
+    } else {
+      cut += 1;
+    }
+  }
+
+  counts[3] = regular;
+  counts[4] = covered;
+  counts[5] = cut;
+
+  ParallelDescriptor::ReduceLongSum(counts.data(), 6);
+
+  if(ParallelDescriptor::IOProcessor()){
+    printf("\n\n****************************************\n");
+    printf("  Coverage report:  Grids        Cells\n");
+    printf("          regular:  %5ld   %10ld\n", counts[3], counts[0]);
+    printf("          covered:  %5ld   %10ld\n", counts[4], counts[1]);
+    printf("              cut:  %5ld   %10ld\n", counts[5], counts[2]);
+    printf("****************************************\n\n");
+  }
+}
+
+//
+// Print the minimum volume fraction and cell location.
+//
+IntVect
+MfixRW::mfix_print_min_epg ()
+{
+
+#ifndef AMREX_USE_GPU
+
+  for (int lev = 0; lev <= finest_level; lev++) {
+
+    const Real tolerance = std::numeric_limits<Real>::epsilon();
+    auto& ld = *m_leveldata[lev];
+    const Real min_epg = ld.ep_g->min(0);
+
+    for (MFIter mfi(*ld.vel_g,false); mfi.isValid(); ++mfi) {
+      Box const& bx = mfi.tilebox();
+      Array4<Real const> const& epg = ld.ep_g->const_array(mfi);
+
+      IntVect epg_cell = {-100,-100,-100};
+      int found(0);
+
+      amrex::ParallelFor(bx, [epg, min_epg, &found, &epg_cell, tolerance]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      {
+
+        if( amrex::Math::abs(epg(i,j,k) - min_epg) < tolerance ){
+          epg_cell[0] = i;
+          epg_cell[1] = j;
+          epg_cell[2] = k;
+          found +=1;
+        }
+      });
+
+      if(found > 0){
+        amrex::Print(Print::AllProcs)
+          << std::endl << std::endl << "min epg "  << min_epg
+          << "  at " << epg_cell[0] << "  " << epg_cell[1] << "  " << epg_cell[2]
+          << "   total found " << found << std::endl << std::endl;
+
+        return epg_cell;
+
+      }
+
+      //AMREX_ALWAYS_ASSERT(min_epg > 0.275);
+
+    } // mfi
+  } // lev
+#endif
+  IntVect fake = {0,0,0};
+  return fake;
 }
 
 } // end of namespace MfixIO

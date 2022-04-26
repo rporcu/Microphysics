@@ -118,17 +118,8 @@ mfix.drag_type = "BVK2"
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.0
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
-
-fluid.specific_heat          = constant
-fluid.specific_heat.constant = 1.0
-
-fluid.thermal_conductivity          = constant
-fluid.thermal_conductivity.constant = 0.0
 
 
 #_______________________________________________________________________
@@ -191,15 +182,15 @@ ic.regions = full-domain  bed
 # Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
-
 ic.full-domain.fluid.velocity  = 0.0  0.0  0.0
+ic.full-domain.fluid.density   = 1.0
 
 
 # Define the initial bed of solids
 #---------------------------------------------------------------------//
 ic.bed.fluid.volfrac   =  0.5
-
 ic.bed.fluid.velocity  =  0.0  0.00  0.00
+ic.bed.fluid.density   =  1.0
 
 ic.bed.solids  = solid0
 ic.bed.packing = hcp
