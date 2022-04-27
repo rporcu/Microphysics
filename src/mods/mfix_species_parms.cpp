@@ -46,6 +46,11 @@ namespace SPECIES
 
   void Initialize ()
   {
+    int solve_enthalpy(0);
+
+    amrex::ParmParse ppMFIX("mfix");
+    ppMFIX.query("advect_enthalpy", solve_enthalpy);
+
     amrex::ParmParse pp("species");
 
     if (pp.contains("solve")) {
@@ -72,10 +77,6 @@ namespace SPECIES
         MW_k0.resize(nspecies);
 
         // Get species temperature inputs -----------------------------//
-        amrex::ParmParse ppMFIX("mfix");
-        int solve_enthalpy(0);
-        ppMFIX.query("advect_enthalpy", solve_enthalpy);
-
         if (solve_enthalpy) {
 
           std::string specific_heat_model;
