@@ -51,6 +51,13 @@ build-nvcc-env:
     IMGTAG: nvcc
   <<: *build_test_env_template
 
+build-hip-env:
+  variables:
+    DOCKERFILE: .gitlab/ci_img_hip/Dockerfile
+    IMGTAG: hip
+  <<: *build_test_env_template
+
+
 ### Build ###
 # build:GNUMake:
 #   stage: test
@@ -81,8 +88,8 @@ build-nvcc-env:
     when: on_failure
     paths:
       - build/Testing/
-  only:
-    - develop
+  # only:
+  #   - develop
 
 # build:dpcpp:
 #   variables:
@@ -105,29 +112,29 @@ build-nvcc-env:
 #   <<: *build_base
 #   tags:
 #     - ubuntu-shell
-#
-# build:hip:
-#   variables:
-#     CC: /opt/rocm/llvm/bin/clang
-#     CXX: /opt/rocm/llvm/bin/clang++
-#   script:
-#     - source /home/ssm-user/spack/share/spack/setup-env.sh
-#     - spack load catch2
-#     - spack load cgal
-#     - spack load pegtl
-#     - source /etc/profile.d/rocm.sh
-#     - cmake -S .
-#             -B build
-#             -DAMReX_AMD_ARCH=gfx908
-#             -DCMAKE_BUILD_TYPE=MinSizeRel
-#             -DMFIX_CSG=1
-#             -DMFIX_GPU_BACKEND=HIP
-#             -DMFIX_MPI=0
-#             -G Ninja
-#     - cmake --build build
-#   <<: *build_base
-#   tags:
-#     - ubuntu-shell
+
+build:hip:
+  image: $CI_REGISTRY_IMAGE/hip
+  needs: ['build-hip-env']
+  variables:
+    CC: /opt/rocm/llvm/bin/clang
+    CXX: /opt/rocm/llvm/bin/clang++
+  script:
+    # - conan install -if build -g cmake_find_package catch2/2.13.7@
+    # - conan install -if build -g cmake_find_package cgal/5.2.1@
+    # - conan install -if build -g cmake_find_package taocpp-pegtl/3.2.1@
+    - cmake -S .
+            -B build
+            -DAMReX_AMD_ARCH=gfx908
+            -DCMAKE_BUILD_TYPE=MinSizeRel
+            -DMFIX_CSG=0
+            -DMFIX_GPU_BACKEND=HIP
+            -DMFIX_MPI=0
+            -G Ninja
+    - cmake --build build
+  <<: *build_base
+  tags:
+    - docker
 
 build:nvcc:
   image: $CI_REGISTRY_IMAGE/nvcc
@@ -166,7 +173,7 @@ build:csg:
   tags:
     - docker
 
-### LINT ###
+## LINT ###
 .lint: &lint_template
   stage: lint
   needs: ['build-nvcc-env']
@@ -214,8 +221,7 @@ lint:spelling:
     - rm -rf subprojects
     - codespell --ignore-words-list ba,blocs,inout,ith,od,wen,structed,te --enable-colors --quiet-level 2
 
-
-### CTESTS ###
+## CTESTS ###
 .test: &test_template
   stage: test
   <<: *before_script_template
@@ -227,7 +233,6 @@ lint:spelling:
       - build/Testing/
   only:
     - schedules
-
 
 .ctest: &ctest_template
   image: $CI_REGISTRY_IMAGE/nvcc
