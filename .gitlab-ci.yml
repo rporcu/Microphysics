@@ -114,7 +114,7 @@ build-hip-env:
 #     - ubuntu-shell
 
 build:hip:
-  image: $CI_REGISTRY_IMAGE/rocm
+  image: $CI_REGISTRY_IMAGE/hip
   needs: ['build-hip-env']
   variables:
     CC: /opt/rocm/llvm/bin/clang
