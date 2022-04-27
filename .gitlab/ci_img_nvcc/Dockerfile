@@ -56,10 +56,9 @@ RUN apt-get -qq update\
 
 ENV PATH="/usr/local/cuda-11.3/bin:${PATH}"
 
-#RUN printf '#!/bin/bash\nenv $@' > /usr/local/bin/srun \
-#    && chmod +x /usr/local/bin/srun \
-
-RUN useradd --create-home -s /bin/bash user
+RUN printf '#!/bin/bash\nenv $@' > /usr/local/bin/srun \
+    && chmod +x /usr/local/bin/srun \
+    && useradd --create-home -s /bin/bash user
 
 WORKDIR /home/user
 USER user
