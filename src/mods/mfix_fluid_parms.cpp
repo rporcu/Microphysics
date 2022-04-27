@@ -136,7 +136,11 @@ FluidPhase::Initialize ()
     // Get fluid temperature inputs ----------------------------------//
     amrex::ParmParse ppMFIX("mfix");
 
+    ppMFIX.query("advect_density", solve_density);
+
     ppMFIX.query("advect_enthalpy", solve_enthalpy);
+
+    ppMFIX.query("advect_tracer", solve_tracer);
 
     // Query mfix solve fluid species
     ppMFIX.query("solve_species", solve_species);
