@@ -927,13 +927,18 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
           for (auto species: solids.species)
             real_comp_names.push_back("X_"+species);
 
-        if (solids.solve_species && reactions.solve)
-          for(auto species: solids.species)
-            real_comp_names.push_back("chem_ro_txfr_"+species);
+        if (solids.solve_species && reactions.solve) {
+          for (int n(0); n < amrex::max(fluid.nspecies, solids.nspecies); ++n) {
+            if (n < solids.nspecies) {
 
-        if (fluid.nspecies > solids.nspecies) {
-          for (int n(0); n < (fluid.nspecies-solids.nspecies); ++n)
-            real_comp_names.push_back("placeholder_"+std::to_string(n));
+              auto species = solids.species[n];
+              real_comp_names.push_back("chem_mass_txfr_"+species);
+            
+            } else {
+
+              real_comp_names.push_back("placeholder_"+std::to_string(n));
+            }
+          }
         }
 
         if (reactions.solve) {
