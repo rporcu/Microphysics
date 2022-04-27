@@ -1,6 +1,9 @@
 #include "AMReX_buildInfo.H"
 #include "build_info.H"
 #include <mfix.H>
+#ifdef AMREX_USE_HYPRE
+#include <HYPRE_config.h>
+#endif
 
 //namespace
 //{
@@ -65,4 +68,14 @@ void writeBuildInfo ()
   }
 
   std::cout << "\n\n";
+}
+
+const char* HypreVersion () {
+#ifdef HYPRE_DEVELOP_STRING
+  return HYPRE_DEVELOP_STRING;
+#elif defined HYPRE_RELEASE_VERSION
+  return HYPRE_RELEASE_VERSION;
+#else
+  return "Unknown";
+#endif
 }
