@@ -51,10 +51,10 @@ build-nvcc-env:
     IMGTAG: nvcc
   <<: *build_test_env_template
 
-build-rocm-env:
+build-hip-env:
   variables:
-    DOCKERFILE: .gitlab/ci_img_rocm/Dockerfile
-    IMGTAG: rocm
+    DOCKERFILE: .gitlab/ci_img_hip/Dockerfile
+    IMGTAG: hip
   <<: *build_test_env_template
 
 
@@ -115,11 +115,14 @@ build-rocm-env:
 
 build:hip:
   image: $CI_REGISTRY_IMAGE/rocm
-  needs: ['build-rocm-env']
+  needs: ['build-hip-env']
   variables:
     CC: /opt/rocm/llvm/bin/clang
     CXX: /opt/rocm/llvm/bin/clang++
   script:
+    - conan install -if build -g cmake_find_package catch2/2.13.7@
+    - conan install -if build -g cmake_find_package cgal/5.2.1@
+    - conan install -if build -g cmake_find_package taocpp-pegtl/3.2.1@
     - cmake -S .
             -B build
             -DAMReX_AMD_ARCH=gfx908

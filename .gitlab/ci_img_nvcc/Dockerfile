@@ -5,6 +5,7 @@ FROM ubuntu:20.04
 LABEL maintainer="Justin Weber <justin.weber@netl.doe.gov>"
 
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE 1
+ENV TZ=America/New_York
 ENV DEBIAN_FRONTEND=noninteractive
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
