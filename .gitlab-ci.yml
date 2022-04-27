@@ -276,7 +276,9 @@ test:tiled-parallel-openmp:
     ENABLE_MPI: 0
     ENABLE_OMP: 1
     CTEST_LABEL: TGP
-  <<: *ctest_template# .test: &test_template
+  <<: *ctest_template
+
+.test: &test_template
   stage: test
   <<: *before_script_template
   artifacts:
