@@ -10,6 +10,7 @@
 #include <mfix_regions_parms.H>
 #include <mfix_species_parms.H>
 
+
 using namespace amrex;
 
 namespace IC
@@ -27,7 +28,7 @@ namespace IC
     pp.queryarr("regions", regions);
 
     // Loop over ICs
-    for(size_t icv=0; icv < regions.size(); icv++) {
+    for (size_t icv=0; icv < regions.size(); icv++) {
 
       amrex::Real volfrac_total(0.0);
 
@@ -35,11 +36,10 @@ namespace IC
 
       // Set the region for the initial condition.
       new_ic.region = REGIONS::getRegion(regions[icv]);
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE( new_ic.region != NULL, "Invalid ic region!");
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(new_ic.region != NULL, "Invalid ic region!");
 
       // Get fluid data.
-
-      if(fluid.solve) {
+      if (fluid.solve) {
 
         std::string field = "ic."+regions[icv]+"."+fluid.name;
         amrex::ParmParse ppFluid(field.c_str());
@@ -113,8 +113,6 @@ namespace IC
           new_ic.fluid.density = (fluid.thermodynamic_pressure * MW_g) /
                                  (fluid_parms.R * new_ic.fluid.temperature);
         }
-
-
       }
 
       if (DEM::solve || PIC::solve) {
@@ -131,7 +129,7 @@ namespace IC
             ppSolid.get("packing", new_ic.packing);
           }
 
-          for(size_t lcs(0); lcs < solids_types.size(); ++ lcs) {
+          for (size_t lcs(0); lcs < solids_types.size(); ++lcs) {
 
             SolidsPhase::SOLIDS_t new_solid;
 
@@ -145,7 +143,7 @@ namespace IC
 
             ppSolid.getarr("velocity", new_solid.velocity, 0, 3);
 
-            if (fluid.solve_enthalpy) {
+            if (fluid.solve_enthalpy || solids.update_enthalpy) {
               ppSolid.query("temperature", new_solid.temperature); 
             }
 
@@ -174,7 +172,7 @@ namespace IC
             std::string roh_field = "ic."+regions[icv]+"."+solids_types[lcs]+".density";
             amrex::ParmParse ppSolidRho(roh_field.c_str());
 
-            if( new_solid.diameter.distribution == "constant") {
+            if (new_solid.diameter.distribution == "constant") {
               ppSolidRho.get("constant", new_solid.density.mean);
 
             } else { // This could probably be an else-if to better catch errors
@@ -235,7 +233,7 @@ namespace IC
 
             new_solid.name = solids_types[lcs];
 
-            if (fluid.solve_enthalpy) {
+            if (fluid.solve_enthalpy || solids.update_enthalpy) {
               ppSolid.get("temperature", new_solid.temperature); 
             }
 
@@ -259,23 +257,7 @@ namespace IC
       }
 
       IC::ic.push_back(new_ic);
-
     }
-
-
-//    // This is a check that the initial thermodynamic pressure is uniform in the
-//    // whole domain
-//    if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
-//        fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
-//
-//      for (int icv(1); icv < IC::ic.size(); ++icv) {
-//        const Real diff = std::abs(IC::ic[0].fluid.pressure -
-//                                   IC::ic[icv].fluid.pressure);
-//
-//        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(diff < 1.e-15,
-//            "ICs for thermodynamic pressure are not uniform in space");
-//      }
-//    }
 
 
 #if 0
