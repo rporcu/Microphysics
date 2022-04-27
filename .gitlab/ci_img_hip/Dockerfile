@@ -23,7 +23,7 @@ RUN apt-get -qq update\
     && apt-get -qq update \
     && apt-get -qq upgrade -y
 
-# install pyhton first, rocm-llvm requires it?
+# install python  first, rocm-llvm requires it?
 RUN apt-get install -y --no-install-recommends \
     python-is-python3 \
     python3 \
