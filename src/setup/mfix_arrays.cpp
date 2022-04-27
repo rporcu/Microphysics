@@ -204,7 +204,7 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->diveu, diveu_new);
     delete diveu_new;
 
-    if (advect_enthalpy) {
+    if (fluid.solve_enthalpy) {
       // Gas thermodynamic pressure
       MultiFab* thermodynamic_p_g_new = new MultiFab(grids[lev], dmap[lev],
                                                      m_leveldata[lev]->thermodynamic_p_g->nComp(),
@@ -292,7 +292,7 @@ mfix::RegridArrays (int lev)
       }
     }
 
-    if (solve_species) {
+    if (fluid.solve_species) {
       // Gas species mass fraction
       MultiFab* X_gk_new = new MultiFab(grids[lev], dmap[lev],
                                        m_leveldata[lev]->X_gk->nComp(),
@@ -373,7 +373,7 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->txfr, txfr_new);
     delete txfr_new;
 
-    if (solve_species && reactions.solve) {
+    if (fluid.solve_species && reactions.solve) {
       // Species mass transfer rates
       MultiFab* chem_txfr_new = new MultiFab(grids[lev], dmap[lev],
                                         m_leveldata[lev]->chem_txfr->nComp(),

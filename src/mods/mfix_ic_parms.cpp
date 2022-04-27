@@ -26,12 +26,6 @@ namespace IC
     std::vector<std::string> regions;
     pp.queryarr("regions", regions);
 
-    // Query if advect_enthalpy so we check if ic temperature inputs are correct
-    amrex::ParmParse ppMFIX("mfix");
-    int advect_enthalpy(0);
-
-    ppMFIX.query("advect_enthalpy", advect_enthalpy);
-
     // Loop over ICs
     for(size_t icv=0; icv < regions.size(); icv++) {
 
@@ -151,7 +145,7 @@ namespace IC
 
             ppSolid.getarr("velocity", new_solid.velocity, 0, 3);
 
-            if (advect_enthalpy) {
+            if (fluid.solve_enthalpy) {
               ppSolid.query("temperature", new_solid.temperature); 
             }
 
@@ -241,7 +235,7 @@ namespace IC
 
             new_solid.name = solids_types[lcs];
 
-            if (advect_enthalpy) {
+            if (fluid.solve_enthalpy) {
               ppSolid.get("temperature", new_solid.temperature); 
             }
 

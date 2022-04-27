@@ -88,10 +88,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                   particle_ebfactory[ilev].get(), ls_data,
                                   levelset_refinement,
                                   particle_cost[ilev],
-                                  knapsack_weight_type, nsubsteps,
-                                  advect_enthalpy, enthalpy_source,
-                                  update_mass, update_momentum,
-                                  update_enthalpy);
+                                  knapsack_weight_type, nsubsteps);
         }
         else
         {
@@ -106,10 +103,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                 pc->EvolveParticles(lev, nstep, dt, time, mfix::gravity,
                                     particle_ebfactory[lev].get(), ls_data, 1,
                                     particle_cost[lev],
-                                    knapsack_weight_type, nsubsteps,
-                                    advect_enthalpy, enthalpy_source,
-                                    update_mass, update_momentum,
-                                    update_enthalpy);
+                                    knapsack_weight_type, nsubsteps);
             }
         }
     }
@@ -117,8 +111,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     if (PIC::solve) {
         //const IntVect min_epg_cell = mfix_print_min_epg();
         EvolveParcels(dt, time, mfix::gravity, levelset_refinement,
-                      particle_cost, knapsack_weight_type, advect_enthalpy,
-                      enthalpy_source);
+                      particle_cost, knapsack_weight_type);
     }
 
     BL_PROFILE_VAR_STOP(particlesSolve);

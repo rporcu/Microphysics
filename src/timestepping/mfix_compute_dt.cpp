@@ -60,7 +60,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
           const auto& vel       = ld.vel_g->array(mfi);
           const auto& ep        = ld.ep_g->array(mfi);
           const auto& ro        = ld.ro_g->array(mfi);
-          const auto& T_g       = advect_enthalpy ? ld.T_g->array(mfi) : Array4<const Real>();
+          const auto& T_g       = fluid.solve_enthalpy ? ld.T_g->array(mfi) : Array4<const Real>();
           const auto& gradp     = ld.gp->array(mfi);
           const auto& txfr_fab  = ld.txfr->array(mfi);
 
@@ -75,7 +75,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
           const RealVect gp0_dev(gp0);
           const RealVect gravity_dev(gravity);
 
-          const int adv_enthalpy = advect_enthalpy;
+          const int adv_enthalpy = fluid.solve_enthalpy;
 
           const Real mu_g0 = fluid.mu_g0;
 
@@ -149,7 +149,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
           const auto& vel       = ld.vel_g->const_array(mfi);
           const auto& ep        = ld.ep_g->const_array(mfi);
           const auto& ro        = ld.ro_g->const_array(mfi);
-          const auto& T_g       = advect_enthalpy ? ld.T_g->const_array(mfi) : Array4<const Real>();
+          const auto& T_g       = fluid.solve_enthalpy ? ld.T_g->const_array(mfi) : Array4<const Real>();
           const auto& gradp     = ld.gp->const_array(mfi);
           const auto& txfr_fab  = ld.txfr->const_array(mfi);
 
@@ -165,7 +165,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
           const RealVect gp0_dev(gp0);
           const RealVect gravity_dev(gravity);
 
-          const int adv_enthalpy = advect_enthalpy;
+          const int adv_enthalpy = fluid.solve_enthalpy;
 
           const Real mu_g0 = fluid.mu_g0;
 

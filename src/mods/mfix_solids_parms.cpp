@@ -53,7 +53,7 @@ SolidsPhase::Initialize ()
 
   {
     amrex::ParmParse pp_mfix("mfix");
-    pp_mfix.query("advect_enthalpy", solve_energy);
+    pp_mfix.query("fluid.solve_enthalpy", solve_energy);
 
     {
       amrex::ParmParse pp_mfix_solids("mfix.particles");

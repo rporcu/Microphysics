@@ -43,14 +43,14 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
 {
   const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
-  const int adv_enthalpy = advect_enthalpy;
-  const int adv_fluid_species = solve_species;
+  const int solve_enthalpy = fluid.solve_enthalpy;
+  const int solve_species = fluid.solve_species;
   const int fluid_is_a_mixture = fluid.is_a_mixture;
   const int nspecies_g = fluid.nspecies;
 
   auto& fluid_parms = *fluid.parameters;
 
-  if (adv_enthalpy && adv_fluid_species) {
+  if (solve_enthalpy && solve_species) {
 
     for (int lev(0); lev <= finest_level; ++lev)
       rhs[lev]->setVal(0.);
@@ -68,17 +68,17 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
         Array4<const Real> empty_arr;
 
         auto const& rhs_arr   = rhs[lev]->array(mfi);
-        auto const& h_RHS_arr = adv_enthalpy ? enthalpy_rhs[lev]->const_array(mfi) : empty_arr;
-        auto const& ro_g_arr  = adv_enthalpy ? ro_g[lev]->const_array(mfi) : empty_arr;
-        auto const& T_g_arr   = adv_enthalpy ? T_g[lev]->const_array(mfi) : empty_arr;
+        auto const& h_RHS_arr = solve_enthalpy ? enthalpy_rhs[lev]->const_array(mfi) : empty_arr;
+        auto const& ro_g_arr  = solve_enthalpy ? ro_g[lev]->const_array(mfi) : empty_arr;
+        auto const& T_g_arr   = solve_enthalpy ? T_g[lev]->const_array(mfi) : empty_arr;
         auto const& X_gk_arr  = fluid_is_a_mixture ? X_gk[lev]->const_array(mfi) : empty_arr;
         auto const& X_RHS_arr = solve_species ? species_rhs[lev]->const_array(mfi) : empty_arr;
 
         auto const& flags_arr = flags.const_array(mfi);
 
         amrex::ParallelFor(bx, [rhs_arr,h_RHS_arr,ro_g_arr,T_g_arr,X_gk_arr,
-            X_RHS_arr,flags_arr,adv_enthalpy,fluid_is_a_mixture,nspecies_g,
-            fluid_parms,adv_fluid_species,run_on_device]
+            X_RHS_arr,flags_arr,solve_enthalpy,fluid_is_a_mixture,nspecies_g,
+            fluid_parms,solve_species,run_on_device]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -86,7 +86,7 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
           Real rhs_value(0);
 
           const Real rog_loc = ro_g_arr(i,j,k);
-          const Real Tg_loc  = adv_enthalpy ? T_g_arr(i,j,k) : 0.;
+          const Real Tg_loc  = solve_enthalpy ? T_g_arr(i,j,k) : 0.;
 
           Real MW_g_loc(0);
           Real cp_g_loc(0);
@@ -118,7 +118,7 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
           }
 
           if (!flags_arr(i,j,k).isCovered()) {
-            if (adv_enthalpy) {
+            if (solve_enthalpy) {
               rhs_value += h_RHS_arr(i,j,k) / (rog_loc*cp_g_loc*Tg_loc);
             }
 
@@ -130,7 +130,7 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
 
                 Real coeff = MW_g_loc / MW_gk;
 
-                if (adv_enthalpy) {
+                if (solve_enthalpy) {
                   const Real h_gk = run_on_device ?
                     fluid_parms.calc_h_gk<RunOn::Device>(Tg_loc, n, cell_is_covered) :
                     fluid_parms.calc_h_gk<RunOn::Host>(Tg_loc, n, cell_is_covered);
@@ -140,10 +140,10 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
 
                 rhs_value += (coeff / rog_loc) * X_RHS_arr(i,j,k,n);
               }
-            } else if (adv_fluid_species) {
+            } else if (solve_species) {
               Real coeff = 1.;
 
-              if (adv_enthalpy) {
+              if (solve_enthalpy) {
                 const Real h_g_loc = run_on_device ?
                   fluid_parms.calc_h_g<RunOn::Device>(Tg_loc, cell_is_covered) :
                   fluid_parms.calc_h_g<RunOn::Host>(Tg_loc, cell_is_covered);
@@ -201,14 +201,14 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
 
   mfix_idealgas_opensystem_rhs(Sigma, enthalpy_rhs, species_rhs, ro_g, T_g, X_gk);
 
-  const int adv_enthalpy = advect_enthalpy;
-  const int adv_fluid_species = solve_species;
+  const int solve_enthalpy = fluid.solve_enthalpy;
+  const int solve_species = fluid.solve_species;
   const int nspecies_g = fluid.nspecies;
   const int fluid_is_a_mixture = fluid.is_a_mixture;
 
   auto& fluid_parms = *fluid.parameters;
 
-  if (adv_enthalpy && adv_fluid_species) {
+  if (solve_enthalpy && solve_species) {
 
     // Compute Theta
     for (int lev(0); lev <= finest_level; ++lev)
@@ -228,8 +228,8 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
         Array4< Real       > const& theta_arr  = Theta[lev]->array(mfi);
         Array4< Real const > const& ep_g_arr   = ep_g[lev]->const_array(mfi);
         Array4< Real const > const& X_gk_arr   = fluid_is_a_mixture ? X_gk[lev]->const_array(mfi) : dummy_arr;
-        Array4< Real const > const& T_g_arr    = adv_enthalpy ? T_g[lev]->const_array(mfi) : dummy_arr;
-        Array4< Real const > const& pres_g_arr = adv_enthalpy ? pressure_g[lev]->const_array(mfi) : dummy_arr;
+        Array4< Real const > const& T_g_arr    = solve_enthalpy ? T_g[lev]->const_array(mfi) : dummy_arr;
+        Array4< Real const > const& pres_g_arr = solve_enthalpy ? pressure_g[lev]->const_array(mfi) : dummy_arr;
 
         auto const& flags_arr = flags.const_array(mfi);
 
@@ -237,10 +237,10 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
 
         ParallelFor(bx, [theta_arr,ep_g_arr,T_g_arr,X_gk_arr,pres_g_arr,
             flags_arr,fluid_is_a_mixture,nspecies_g,fluid_parms,run_on_device,
-            adv_enthalpy,Tg0]
+            solve_enthalpy,Tg0]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          const Real Tg_loc = adv_enthalpy ? T_g_arr(i,j,k) : Tg0;
+          const Real Tg_loc = solve_enthalpy ? T_g_arr(i,j,k) : Tg0;
 
           Real MW_g_loc(0);
           Real cp_g_loc(0);
@@ -272,7 +272,7 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
               fluid_parms.calc_cp_g<RunOn::Host>(Tg_loc);
           }
 
-          if (!flags_arr(i,j,k).isCovered() && adv_enthalpy) {
+          if (!flags_arr(i,j,k).isCovered() && solve_enthalpy) {
             const Real coeff = ep_g_arr(i,j,k) / pres_g_arr(i,j,k);
             theta_arr(i,j,k) = coeff * (1 - fluid_parms.R/(MW_g_loc * cp_g_loc));
           } else {
@@ -300,14 +300,15 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
 
         Array4< Real       > const& theta_arr  = Theta[lev]->array(mfi);
         Array4< Real const > const& ep_g_arr   = ep_g[lev]->const_array(mfi);
-        Array4< Real const > const& pres_g_arr = adv_enthalpy ? pressure_g[lev]->const_array(mfi) : dummy_arr;
+        Array4< Real const > const& pres_g_arr = solve_enthalpy ?
+          pressure_g[lev]->const_array(mfi) : dummy_arr;
 
         auto const& flags_arr = flags.const_array(mfi);
 
-        ParallelFor(bx, [theta_arr,ep_g_arr,pres_g_arr,flags_arr,adv_enthalpy]
+        ParallelFor(bx, [theta_arr,ep_g_arr,pres_g_arr,flags_arr,solve_enthalpy]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          if (!flags_arr(i,j,k).isCovered() && adv_enthalpy) {
+          if (!flags_arr(i,j,k).isCovered() && solve_enthalpy) {
             theta_arr(i,j,k) = ep_g_arr(i,j,k) / pres_g_arr(i,j,k);
           } else {
             theta_arr(i,j,k) = 0.;
@@ -349,13 +350,13 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
       const Real avg_theta = avgTheta[lev];
 
       amrex::ParallelFor(bx, [rhs_arr,sigma_arr,theta_arr,avg_sigma,avg_theta,
-          adv_enthalpy]
+          solve_enthalpy]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const Real d_sigma = sigma_arr(i,j,k) - avg_sigma;
         const Real d_theta = theta_arr(i,j,k) - avg_theta;
 
-        if (adv_enthalpy)
+        if (solve_enthalpy)
           rhs_arr(i,j,k) = d_sigma - (avg_sigma/avg_theta)*d_theta;
         else
           rhs_arr(i,j,k) = 0.0;

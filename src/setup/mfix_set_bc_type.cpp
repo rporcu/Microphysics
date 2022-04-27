@@ -363,7 +363,7 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
     }
 
 
-    if (advect_density) {
+    if (fluid.solve_density) {
       m_bcrec_density_d.resize(1);
 #ifdef AMREX_USE_GPU
       Gpu::htod_memcpy
@@ -373,7 +373,7 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
         (m_bcrec_density_d.data(), m_bcrec_density.data(), sizeof(BCRec));
     }
 
-    if (advect_enthalpy) {
+    if (fluid.solve_enthalpy) {
       m_bcrec_enthalpy_d.resize(1);
 #ifdef AMREX_USE_GPU
       Gpu::htod_memcpy
@@ -415,23 +415,23 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
     }
 
 
-    if ( fluid.solve ) {
+    if (fluid.solve) {
       Real ltime(0.);
 
-      set_velocity_bc_values (ltime);
-      set_density_bc_values (ltime);
+      set_velocity_bc_values(ltime);
+      set_density_bc_values(ltime);
 
-      if (advect_tracer ) {
-        set_tracer_bc_values (ltime);
+      if (fluid.solve_tracer) {
+        set_tracer_bc_values(ltime);
       }
 
-      if (solve_species) {
-        set_species_bc_values (ltime);
+      if (fluid.solve_species) {
+        set_species_bc_values(ltime);
       }
 
       // Species
-      if (advect_enthalpy ) {
-        set_temperature_bc_values (ltime);
+      if (fluid.solve_enthalpy) {
+        set_temperature_bc_values(ltime);
       }
 
     }

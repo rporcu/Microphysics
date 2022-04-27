@@ -13,7 +13,7 @@ mfix::mfix_set_tracer_bcs (Real time,
 {
   BL_PROFILE("mfix::mfix_set_tracer_bcs()");
 
-  if (advect_tracer)
+  if (fluid.solve_tracer)
   {
     for (int lev = 0; lev < nlev; lev++)
     {

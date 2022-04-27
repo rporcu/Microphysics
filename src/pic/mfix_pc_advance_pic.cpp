@@ -7,8 +7,6 @@ using namespace amrex;
 using namespace Solvers;
 
 void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
-                                                    const int advect_enthalpy,
-                                                    const Real enthalpy_source,
                                                     Vector< MultiFab* >& cost,
                                                     std::string& knapsack_weight_type)
 {
@@ -63,20 +61,21 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
       const int idx_mass_sn_txfr = m_runtimeRealData.mass_sn_txfr;
       const int idx_h_s_txfr = m_runtimeRealData.h_s_txfr;
 
-      const int update_mass           = solids.solve_species && reactions.solve;
-      const int update_temperature    = advect_enthalpy;
-      const int local_advect_enthalpy = advect_enthalpy;
-      const int solve_reactions = reactions.solve;
+      const int update_mass        = solids.update_mass && reactions.solve;
+      const int update_enthalpy    = solids.update_enthalpy;
+      const int solve_reactions    = reactions.solve;
+
+      const Real enthalpy_source = solids.enthalpy_source;
 
       const int solid_is_a_mixture = solids.is_a_mixture;
 
       auto& solids_parms = *solids.parameters;
 
       amrex::ParallelFor(nrp,
-        [pstruct,p_realarray,p_intarray,ptile_data,dt,nspecies_s,nreactions,idx_X_sn,
-         idx_mass_sn_txfr,update_mass,update_temperature,solve_reactions,idx_h_s_txfr,
-         solid_is_a_mixture,local_advect_enthalpy,enthalpy_source,solids_parms,
-         run_on_device,is_IOProc,abstol,reltol,maxiter]
+          [pstruct,p_realarray,p_intarray,ptile_data,dt,nspecies_s,nreactions,
+           idx_X_sn,idx_mass_sn_txfr,update_mass,solve_reactions,idx_h_s_txfr,
+           solid_is_a_mixture,update_enthalpy,enthalpy_source,solids_parms,
+           run_on_device,is_IOProc,abstol,reltol,maxiter]
         AMREX_GPU_DEVICE (int lp) noexcept
       {
         auto& p = pstruct[lp];
@@ -163,7 +162,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
           //*********************************************************************
           // Third step: update parcels' temperature
           //*********************************************************************
-          if(update_temperature) {
+          if (update_enthalpy) {
 
             const int phase = p_intarray[SoAintData::phase][lp];
 

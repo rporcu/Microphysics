@@ -109,8 +109,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr,
     // Deposit the interphase transfer forces to the grid
     // Drag force: (beta and beta*particle_vel)
     // Heat transfer: gamma and gamma*particle temperature
-    pc->InterphaseTxfrDeposition(lev, *tmp_eps[lev], *txfr_ptr[lev], volfrac[lev],
-        flags[lev], advect_enthalpy);
+    pc->InterphaseTxfrDeposition(lev, *tmp_eps[lev], *txfr_ptr[lev], volfrac[lev], flags[lev]);
   }
 
   {
@@ -229,7 +228,7 @@ mfix::mfix_calc_txfr_particle (Real time,
 
   mfix_set_velocity_bcs(time, vel_g_in, extrap_dir_bcs);
 
-  if (advect_enthalpy)
+  if (fluid.solve_enthalpy)
       mfix_set_temperature_bcs(time, T_g_in);
 
   for (int lev = 0; lev < nlev; lev++)
@@ -269,7 +268,7 @@ mfix::mfix_calc_txfr_particle (Real time,
     EB_set_covered(*vel_g_in[0], 0, 3, 1, covered_val);
     EB_set_covered( gp_tmp  , 0, 3, 1, covered_val);
 
-    if (advect_enthalpy)
+    if (fluid.solve_enthalpy)
       EB_set_covered(*T_g_in[0], 0, 1, 1, covered_val);
 
     const int interp_ng = 1;    // Only one layer needed for interpolation
@@ -287,7 +286,7 @@ mfix::mfix_calc_txfr_particle (Real time,
       MultiFab::Copy(*interp_ptr, gp_tmp, 0, 3, gp_tmp.nComp(), interp_ng);
 
       // Copy fluid temperature
-      if(advect_enthalpy){
+      if(fluid.solve_enthalpy){
         MultiFab::Copy(*interp_ptr, *T_g_in[lev], 0, 6, T_g_in[lev]->nComp(), interp_ng);
       } else {
         interp_ptr->setVal(0.0, 6, 1, interp_ng);
@@ -308,7 +307,7 @@ mfix::mfix_calc_txfr_particle (Real time,
       interp_ptr->ParallelCopy(gp_tmp, 0, 3, gp_tmp.nComp(), interp_ng, interp_ng);
 
       // Copy fluid temperature
-      if(advect_enthalpy) {
+      if(fluid.solve_enthalpy) {
         interp_ptr->ParallelCopy(*T_g_in[lev], 0, 6, T_g_in[lev]->nComp(), interp_ng, interp_ng);
       } else {
         interp_ptr->setVal(0.0, 6, 1, interp_ng);
@@ -333,6 +332,8 @@ mfix::mfix_calc_txfr_particle (Real time,
       const auto cellcent = &(factory.getCentroid());
       const auto bndrycent = &(factory.getBndryCent());
       const auto areafrac = factory.getAreaFrac();
+
+      const int solve_enthalpy = fluid.solve_enthalpy;
 
       for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti)
       {
@@ -361,11 +362,11 @@ mfix::mfix_calc_txfr_particle (Real time,
 
           const Real pmult = DEM::solve ? 1.0 : 0.0;
 
-          if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
-          {
+          if (flags.getType(amrex::grow(bx,1)) == FabType::regular) {
+
             amrex::ParallelFor(np,
-              [pstruct,p_realarray,interp_array,gp0_dev,plo,dxi,pmult,
-              local_advect_enthalpy=advect_enthalpy]
+                [pstruct,p_realarray,interp_array,gp0_dev,plo,dxi,pmult,
+                 solve_enthalpy]
               AMREX_GPU_DEVICE (int pid) noexcept
               {
                 // Local array storing interpolated values
@@ -395,7 +396,7 @@ mfix::mfix_calc_txfr_particle (Real time,
                   pbeta * ( interp_loc[2] - pmult*p_realarray[SoArealData::velz][pid] ) -
                   (interp_loc[5] + gp0_dev[2]) * pvol;
 
-                if(local_advect_enthalpy) {
+                if (solve_enthalpy) {
                   Real pgamma = p_realarray[SoArealData::convection][pid];
                   p_realarray[SoArealData::convection][pid] =
                     pgamma * ( interp_loc[6] - p_realarray[SoArealData::temperature][pid] );
@@ -416,9 +417,9 @@ mfix::mfix_calc_txfr_particle (Real time,
             const auto& apz_fab = areafrac[2]->array(pti);
 
             amrex::ParallelFor(np,
-              [pstruct,p_realarray,interp_array,flags_array,gp0_dev, pmult,
-              plo,dx,dxi,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-              local_advect_enthalpy=advect_enthalpy]
+                [pstruct,p_realarray,interp_array,flags_array,gp0_dev, pmult,
+                 plo,dx,dxi,ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
+                 solve_enthalpy]
               AMREX_GPU_DEVICE (int pid) noexcept
               {
                 // Local array storing interpolated values
@@ -512,7 +513,7 @@ mfix::mfix_calc_txfr_particle (Real time,
                     pbeta * ( interp_loc[2] - pmult*p_realarray[SoArealData::velz][pid] ) -
                     (interp_loc[5] + gp0_dev[2]) * pvol;
 
-                  if(local_advect_enthalpy) {
+                  if (solve_enthalpy) {
                     // gamma == (heat transfer coeff) * (particle surface area)
                     Real pgamma = p_realarray[SoArealData::convection][pid];
 

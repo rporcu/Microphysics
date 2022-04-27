@@ -9,7 +9,6 @@ using namespace amrex;
 void DiffusionOp::diffuse_velocity (const Vector< MultiFab* >& vel_in,
                                     const Vector< MultiFab* >& ep_ro_in,
                                     const Vector< MultiFab* >& T_g_in,
-                                    const int advect_enthalpy,
                                     Real dt)
 {
     BL_PROFILE("DiffusionOp::diffuse_velocity");
@@ -40,16 +39,17 @@ void DiffusionOp::diffuse_velocity (const Vector< MultiFab* >& vel_in,
       {
         Box const& bx = mfi.growntilebox(vel_in[lev]->nGrowVect());
 
-        if (bx.ok())
-        {
+        if (bx.ok()) {
+          const int solve_enthalpy = fluid.solve_enthalpy;
+
           Array4<Real      > const& mu_g_array = mu_g[lev]->array(mfi);
-          Array4<Real const> const& T_g_array  = advect_enthalpy ?
+          Array4<Real const> const& T_g_array  = solve_enthalpy ?
             T_g_in[lev]->const_array(mfi) : Array4<const Real>();
 
-          ParallelFor(bx, [mu_g_array,T_g_array,advect_enthalpy,mu_g0,fluid_parms]
+          ParallelFor(bx, [mu_g_array,T_g_array,solve_enthalpy,mu_g0,fluid_parms]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-            if (advect_enthalpy)
+            if (solve_enthalpy)
               mu_g_array(i,j,k) = fluid_parms.calc_mu_g(T_g_array(i,j,k));
             else
               mu_g_array(i,j,k) = mu_g0;

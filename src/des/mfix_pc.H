@@ -138,7 +138,7 @@ class MFIXParticleContainer final
     : public amrex::NeighborParticleContainer<AoSrealData::count,AoSintData::count,
                                               SoArealData::count,SoAintData::count>
 {
-public:
+  public:
     using MFIXParIter = amrex::ParIter<AoSrealData::count,AoSintData::count,
                                        SoArealData::count,SoAintData::count>;
     using MFIXParConstIter = amrex::ParConstIter<AoSrealData::count,AoSintData::count,
@@ -154,6 +154,7 @@ public:
     }
 
     MFIXParticleContainer (amrex::AmrCore* amr_core,
+                           FluidPhase& fluid,
                            SolidsPhase& solids,
                            Reactions& reactions);
 
@@ -196,12 +197,7 @@ public:
                           const int ls_refinement,
                           amrex::MultiFab * cost,
                           std::string & knapsack_weight_type,
-                          int & nsubsteps,
-                          const int advect_enthalpy,
-                          const amrex::Real enthalpy_source,
-                          const int update_mass,
-                          const int update_momentum,
-                          const int update_enthalpy);
+                          int & nsubsteps);
 
     void MFIX_PC_InitCollisionParams ();
 
@@ -253,8 +249,7 @@ public:
                                    amrex::MultiFab& mf_tmp_eps,
                                    amrex::MultiFab& txfr_mf,
                                    const amrex::MultiFab* volfrac,
-                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags,
-                                   const int advect_enthalpy);
+                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
     template <typename F>
     void InterphaseTxfrDeposition (F WeightFunc,
@@ -262,8 +257,7 @@ public:
                                    amrex::MultiFab& mf_tmp_eps,
                                    amrex::MultiFab& txfr_mf,
                                    const amrex::MultiFab* volfrac,
-                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags,
-                                   const int advect_enthalpy);
+                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
 
     //
@@ -319,14 +313,12 @@ public:
                        const amrex::MultiFab* ls_phi);
 
     void MFIX_PC_AdvanceParcels (amrex::Real dt,
-                                 const int advect_enthalpy,
-                                 const amrex::Real enthalpy_source,
                                  amrex::Vector< amrex::MultiFab*> & cost,
                                  std::string& knapsack_weight_type);
 
     const runtimeRealData m_runtimeRealData;
 
-    void setSortingBinSizes (amrex::IntVect sorting_bin) { m_sorting_bin = sorting_bin;  }
+    void setSortingBinSizes (amrex::IntVect sorting_bin) { m_sorting_bin = sorting_bin; }
 
     void partitionParticleGrids(int lev,
                                 const amrex::BoxArray& fba,
@@ -415,8 +407,8 @@ public:
 
     void usr3_des (int np,void*&);
 
+    FluidPhase& fluid;
     SolidsPhase& solids;
-
     Reactions& reactions;
 };
 
