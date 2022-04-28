@@ -24,9 +24,8 @@ mfix::mfix_incompressible_fluid_rhs (Vector< MultiFab* > const& rhs)
   for (int lev(0); lev <= finest_level; ++lev)
     rhs[lev]->setVal(0.);
 
-  for (int lev(0); lev <= finest_level; lev++) {
+  for (int lev(0); lev <= finest_level; lev++)
     EB_set_covered(*rhs[lev], 0, 1, 0, 0.0);
-  }
 }
 
 
@@ -41,6 +40,9 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
                                     Vector< MultiFab const* > const& T_g,
                                     Vector< MultiFab const* > const& X_gk)
 {
+  for (int lev(0); lev <= finest_level; ++lev)
+    rhs[lev]->setVal(0.);
+
   const int solve_enthalpy = fluid.solve_enthalpy;
   const int solve_species = fluid.solve_species;
   const int fluid_is_a_mixture = fluid.is_a_mixture;
@@ -49,9 +51,6 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
   auto& fluid_parms = *fluid.parameters;
 
   if (solve_enthalpy || solve_species) {
-
-    for (int lev(0); lev <= finest_level; ++lev)
-      rhs[lev]->setVal(0.);
 
     for (int lev(0); lev <= finest_level; lev++) {
       const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ro_g[lev]->Factory());
@@ -79,11 +78,9 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
             fluid_parms,solve_species]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-          const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
-
-          Real rhs_value(0);
-
           if (!flags_arr(i,j,k).isCovered()) {
+
+            Real rhs_value(0);
 
             const Real rog_loc = ro_g_arr(i,j,k);
             const Real Tg_loc  = T_g_arr(i,j,k);
@@ -115,40 +112,31 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
             if (fluid_is_a_mixture) {
               for (int n(0); n < nspecies_g; ++n) {
                 const Real MW_gk = fluid_parms.get_MW_gk<run_on>(n);
+                const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_loc, n);
 
-                Real coeff = MW_g_loc / MW_gk;
-
-                const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_loc, n, cell_is_covered);
-
-                coeff -= h_gk / (cp_g_loc*Tg_loc);
+                Real coeff = (MW_g_loc / MW_gk) - (h_gk / (cp_g_loc*Tg_loc));
 
                 rhs_value += (coeff / rog_loc) * X_RHS_arr(i,j,k,n);
               }
+
             } else if (solve_species) {
 
-              Real coeff = 1.;
+              const Real h_g_loc = fluid_parms.calc_h_g<run_on>(Tg_loc);
 
-              const Real h_g_loc = fluid_parms.calc_h_g<run_on>(Tg_loc, cell_is_covered);
-
-              coeff -= h_g_loc / (cp_g_loc*Tg_loc);
+              Real coeff = 1. - (h_g_loc / (cp_g_loc*Tg_loc));
 
               rhs_value += (coeff / rog_loc) * X_RHS_arr(i,j,k,0);
             }
-          }
 
-          rhs_arr(i,j,k) = rhs_value;
+            rhs_arr(i,j,k) = rhs_value;
+          }
         });
       }
     }
-
-    for (int lev(0); lev <= finest_level; lev++) {
-      EB_set_covered(*rhs[lev], 0, 1, 0, 0.0);
-    }
-
-  } else { // no solve_enthalpy and no solve_fluid_species
-
-    this->mfix_incompressible_fluid_rhs(rhs);
   }
+
+  for (int lev(0); lev <= finest_level; lev++)
+    EB_set_covered(*rhs[lev], 0, 1, 0, 0.0);
 }
 
 
@@ -167,6 +155,9 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
                                       Vector< Real >& avgSigma,
                                       Vector< Real >& avgTheta)
 {
+  for (int lev(0); lev <= finest_level; ++lev)
+    rhs[lev]->setVal(0.);
+
   Vector< MultiFab* > Sigma(finest_level+1);
   Vector< MultiFab* > Theta(finest_level+1);
 
@@ -234,8 +225,7 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
             cp_g_loc = fluid_parms.calc_cp_g<run_on>(Tg_loc);
           }
 
-          theta_arr(i,j,k) = ep_g_arr(i,j,k) * ((1./pres_g_arr(i,j,k)) -
-              (1./(cp_g_loc*ro_g_arr(i,j,k)*Tg_loc)));
+          theta_arr(i,j,k) = (ep_g_arr(i,j,k)/pres_g_arr(i,j,k)) - (ep_g_arr(i,j,k)/(cp_g_loc*ro_g_arr(i,j,k)*Tg_loc));
         }
       });
     }
@@ -282,4 +272,7 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
     delete Sigma[lev];
     delete Theta[lev];
   }
+
+  for (int lev(0); lev <= finest_level; lev++)
+    EB_set_covered(*rhs[lev], 0, 1, 0, 0.0);
 }
