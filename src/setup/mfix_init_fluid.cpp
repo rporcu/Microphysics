@@ -115,11 +115,7 @@ void init_fluid (const Box& sbx,
     set_ic_temp(sbx, domain, dx, dy, dz, plo, (*ld.T_g)[mfi], h_g_fab, X_gk_fab, fluid);
 
     if (!fluid.solve_enthalpy) {
-#ifdef AMREX_USE_GPU
-      ((*ld.T_go)[mfi]).copy<RunOn::Device>((*ld.T_g)[mfi], 0, 0, 1);
-#else
-      ((*ld.T_go)[mfi]).copy<RunOn::Host>((*ld.T_g)[mfi], 0, 0, 1);
-#endif
+      ((*ld.T_go)[mfi]).copy<run_on>((*ld.T_g)[mfi], 0, 0, 1);
     }
   }
 
