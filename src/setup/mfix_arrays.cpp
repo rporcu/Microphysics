@@ -202,7 +202,8 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->diveu, diveu_new);
     delete diveu_new;
 
-    if (fluid.solve_enthalpy) {
+    if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
+        fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
       // Gas thermodynamic pressure
       MultiFab* thermodynamic_p_g_new = new MultiFab(grids[lev], dmap[lev],
                                                      m_leveldata[lev]->thermodynamic_p_g->nComp(),
@@ -228,7 +229,11 @@ mfix::RegridArrays (int lev)
                                     geom[lev].periodicity());
       std::swap(m_leveldata[lev]->thermodynamic_p_go, thermodynamic_p_go_new);
       delete thermodynamic_p_go_new;
+    }
 
+    if (fluid.solve_enthalpy ||
+        (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
+         fluid.constraint_type == ConstraintType::IdealGasClosedSystem)) {
       // Gas temperature
       MultiFab* T_g_new = new MultiFab(grids[lev], dmap[lev],
                                        m_leveldata[lev]->T_g->nComp(),
@@ -250,7 +255,9 @@ mfix::RegridArrays (int lev)
                       src_ngrow, m_leveldata[lev]->T_go->nGrow(), geom[lev].periodicity());
       std::swap(m_leveldata[lev]->T_go, T_go_new);
       delete T_go_new;
+    }
 
+    if (fluid.solve_enthalpy) {
       // Gas enthalpy
       MultiFab* h_g_new = new MultiFab(grids[lev], dmap[lev],
                                        m_leveldata[lev]->h_g->nComp(),
