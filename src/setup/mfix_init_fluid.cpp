@@ -8,6 +8,9 @@
 
 using namespace amrex;
 
+
+namespace init_fluid_aux {
+
 // Forward declarations
 void set_ic_vel (const Box& sbx, const Box& domain,
                  const Real dx, const Real dy, const Real dz,
@@ -34,6 +37,12 @@ void set_ic_thermo_p_g (const Box& sbx, const Box& domain,
 
 void init_helix (const Box& bx, const Box& domain, FArrayBox& vel_g_fab,
                  const Real dx, const Real dy, const Real dz);
+
+} // end namespace init_fluid_aux
+
+
+using namespace init_fluid_aux;
+
 
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 //                                                                      !
@@ -96,9 +105,15 @@ void init_fluid (const Box& sbx,
   // **************************************************************************
   // Set initial fluid temperature
   // **************************************************************************
-  if (fluid.solve_enthalpy) {
+  if (fluid.solve_enthalpy ||
+      (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
+       fluid.constraint_type == ConstraintType::IdealGasClosedSystem)) {
     FArrayBox* X_gk_fab = fluid.is_a_mixture ? &((*ld.X_gk)[mfi]) : nullptr;
     set_ic_temp(sbx, domain, dx, dy, dz, plo, (*ld.T_g)[mfi], (*ld.h_g)[mfi], X_gk_fab, fluid);
+
+    if (!fluid.solve_enthalpy) {
+      MultiFab::Copy(*ld.T_go, *ld.T_g, 0, 0, 1, 0);
+    }
   }
 
   // ************************************************************************
@@ -111,6 +126,8 @@ void init_fluid (const Box& sbx,
   }
 }
 
+
+namespace init_fluid_aux {
 
 void init_helix (const Box& bx,
                  const Box& /*domain*/,
@@ -174,6 +191,8 @@ void init_helix (const Box& bx,
       break;
   }
 }
+
+} // end namespace init_fluid_aux
 
 
 void init_periodic_vortices (const Box& bx,
@@ -393,6 +412,9 @@ void init_fluid_parameters (const Box& bx,
 
   });
 }
+
+
+namespace init_fluid_aux {
 
 //!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 //!                                                                      !
@@ -1067,5 +1089,6 @@ void set_ic_ro_g (const Box& sbx,
       }
     }
   }
-
 }
+
+} // end namespace init_fluid_aux

@@ -97,6 +97,10 @@ namespace IC
               "Error: when the ideal gas EOS constraint is selected, "
               "fluid initial conditions must NOT include density");
 
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!new_ic.fluid.temperature_defined,
+              "Error: when the ideal gas EOS constraint is selected, "
+              "fluid initial conditions must NOT include density");
+
           AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.thermodynamic_pressure_defined,
               "Error: fluid thermodynamic pressure must be defined before "
               "computing IC density out of the ideal gas EOS");
