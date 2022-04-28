@@ -253,25 +253,22 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
 }
 
 
-
-
-
-void MFIXParticleContainer::
-PICHydroStep (int lev,
-              const bool apply_forces,
-              const bool update_parcels,
-              const bool use_taylor_approx,
-              const Real advance_vel_p,
-              Real dt,
-              RealVect& gravity,
-              Vector< Array<MultiFab*,3> >& vel_s_in,
-              MultiFab & ep_s_out,
-              Array<MultiFab*,3>& vel_s_out,
-              const MultiFab * volfrac,
-              const amrex::FabArray<EBCellFlagFab>* flags,
-              EBFArrayBoxFactory* ebfactory,
-              const int ls_refinement,
-              const MultiFab* ls_phi)
+void
+MFIXParticleContainer::PICHydroStep (int lev,
+                                     const bool apply_forces,
+                                     const bool update_parcels,
+                                     const bool use_taylor_approx,
+                                     const Real advance_vel_p,
+                                     Real dt,
+                                     RealVect& gravity,
+                                     Vector< Array<MultiFab*,3> >& vel_s_in,
+                                     MultiFab & ep_s_out,
+                                     Array<MultiFab*,3>& vel_s_out,
+                                     const MultiFab * volfrac,
+                                     const amrex::FabArray<EBCellFlagFab>* flags,
+                                     EBFArrayBoxFactory* ebfactory,
+                                     const int ls_refinement,
+                                     const MultiFab* ls_phi)
 {
   BL_PROFILE("MFIXParticleContainer::SolidsVolumeDeposition()");
 

@@ -256,8 +256,7 @@ void DiffusionOp::setSolverSettings (MLMG& solver)
 void DiffusionOp::ComputeDivTau (const Vector< MultiFab* >& divtau_out,
                                  const Vector< MultiFab* >& vel_in,
                                  const Vector< MultiFab* >& ep_in,
-                                 const Vector< MultiFab* >& T_g_in,
-                                 const int advect_enthalpy)
+                                 const Vector< MultiFab* >& T_g_in)
 {
     BL_PROFILE("DiffusionOp::ComputeDivTau");
 
@@ -296,16 +295,18 @@ void DiffusionOp::ComputeDivTau (const Vector< MultiFab* >& divtau_out,
         {
           Box const& bx = mfi.growntilebox(vel_in[lev]->nGrowVect());
 
-          if (bx.ok())
-          {
+          if (bx.ok()) {
+
+            const int solve_enthalpy = fluid.solve_enthalpy;
+
             Array4<Real      > const& mu_g_array = mu_g.array(mfi);
-            Array4<Real const> const& T_g_array  = advect_enthalpy ?
+            Array4<Real const> const& T_g_array  = solve_enthalpy ?
               T_g_in[lev]->const_array(mfi) : Array4<const Real>();
 
-            ParallelFor(bx, [mu_g_array,T_g_array,advect_enthalpy,mu_g0,fluid_parms]
+            ParallelFor(bx, [mu_g_array,T_g_array,solve_enthalpy,mu_g0,fluid_parms]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
-              if (advect_enthalpy)
+              if (solve_enthalpy)
                 mu_g_array(i,j,k) = fluid_parms.calc_mu_g(T_g_array(i,j,k));
               else
                 mu_g_array(i,j,k) = mu_g0;

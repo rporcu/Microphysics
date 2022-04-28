@@ -157,29 +157,27 @@ InterphaseTxfrDeposition (int lev,
                           MultiFab & txfr_mf,
                           MultiFab & chem_txfr_mf,
                           const MultiFab * volfrac,
-                          const amrex::FabArray<EBCellFlagFab>* flags,
-                          const FluidPhase& fluid,
-                          const int advect_enthalpy)
+                          const amrex::FabArray<EBCellFlagFab>* flags)
 {
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
 
     InterphaseTxfrDeposition(TrilinearDeposition(), lev, mf_tmp_eps, txfr_mf,
-                             chem_txfr_mf, volfrac, flags, fluid, advect_enthalpy);
+                             chem_txfr_mf, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::square_dpvm) {
 
     InterphaseTxfrDeposition(TrilinearDPVMSquareDeposition(), lev, mf_tmp_eps,
-                             txfr_mf, chem_txfr_mf, volfrac, flags, fluid, advect_enthalpy);
+                             txfr_mf, chem_txfr_mf, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::true_dpvm) {
 
     InterphaseTxfrDeposition(TrueDPVMDeposition(), lev, mf_tmp_eps, txfr_mf,
-                             chem_txfr_mf, volfrac, flags, fluid, advect_enthalpy);
+                             chem_txfr_mf, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::centroid) {
 
     InterphaseTxfrDeposition(CentroidDeposition(), lev, mf_tmp_eps, txfr_mf,
-                             chem_txfr_mf, volfrac, flags, fluid, advect_enthalpy);
+                             chem_txfr_mf, volfrac, flags);
 
   } else {
 
@@ -197,9 +195,7 @@ InterphaseTxfrDeposition (F WeightFunc,
                           MultiFab & txfr_mf,
                           MultiFab & chem_txfr_mf,
                           const MultiFab * volfrac,
-                          const amrex::FabArray<EBCellFlagFab>* flags,
-                          const FluidPhase& fluid,
-                          const int advect_enthalpy)
+                          const amrex::FabArray<EBCellFlagFab>* flags)
 {
   BL_PROFILE("MFIXParticleContainer::InterphaseTxfrDeposition()");
 
@@ -294,9 +290,11 @@ InterphaseTxfrDeposition (F WeightFunc,
         }
 #endif
 
+        const int solve_enthalpy = fluid.solve_enthalpy;
+
         amrex::ParallelFor(nrp,
             [pstruct,p_realarray,plo,dx,dxi,vfrac,volarr,deposition_scale_factor,
-             reg_cell_vol,WeightFunc,flagsarr,txfr_arr,chem_txfr_arr,advect_enthalpy,
+             reg_cell_vol,WeightFunc,flagsarr,txfr_arr,chem_txfr_arr,solve_enthalpy,
              ptile_data,nspecies_g,solve_reactions,idx_mass_txfr,idx_vel_txfr,
              idx_h_txfr,idx_Xg_txfr,idx_velg_txfr,idx_hg_txfr,local_cg_dem=DEM::cg_dem]
           AMREX_GPU_DEVICE (int ip) noexcept
@@ -320,7 +318,7 @@ InterphaseTxfrDeposition (F WeightFunc,
 
           Real pgamma(0.);
 
-          if (advect_enthalpy)
+          if (solve_enthalpy)
             pgamma = statwt * p_realarray[SoArealData::convection][ip] / reg_cell_vol;
 
           if (local_cg_dem) {
@@ -334,7 +332,7 @@ InterphaseTxfrDeposition (F WeightFunc,
 
           Real pTp(0.);
           
-          if (advect_enthalpy)
+          if (solve_enthalpy)
             pTp = p_realarray[SoArealData::temperature][ip] * pgamma;
 
           // Chemical reactions deposition terms
@@ -380,7 +378,7 @@ InterphaseTxfrDeposition (F WeightFunc,
 
                 HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::beta), weight_vol*pbeta);
 
-                if (advect_enthalpy) {
+                if (solve_enthalpy) {
                   HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gammaTp), weight_vol*pTp);
                   HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gamma), weight_vol*pgamma);
                 }

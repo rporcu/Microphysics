@@ -39,6 +39,7 @@ void add_par () {
    }
 }
 
+const char* HypreVersion ();
 void writeBuildInfo ();
 
 int main (int argc, char* argv[])
@@ -72,9 +73,12 @@ int main (int argc, char* argv[])
 
     // Write out the MFIX git hash (the AMReX git hash is already written)
     const char* githash_mfix = buildInfoGetGitHash(1);
-    amrex::Print() << "   MFiX git describe: " << githash_mfix<< "\n";
+    amrex::Print() << "   MFIX git describe: " << githash_mfix<< "\n";
     amrex::Print() << "AMReX-Hydro git hash: " << HydroGitHash() << "\n";
     amrex::Print() << "     CSG-EB git hash: " << CsgEbGitHash() << "\n";
+#ifdef AMREX_USE_HYPRE
+    amrex::Print() << "       HYPRE Version: " << HypreVersion() << "\n";
+#endif
 
     // Setting format to NATIVE rather than default of NATIVE_32
     FArrayBox::setFormat(FABio::FAB_NATIVE);

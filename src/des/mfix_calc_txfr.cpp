@@ -138,8 +138,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     // Drag force: (beta and beta*particle_vel)
     // Heat transfer: gamma and gamma*particle temperature
     pc->InterphaseTxfrDeposition(lev, *tmp_eps[lev], *txfr_ptr[lev],
-                                 *chem_txfr_ptr[lev], volfrac[lev],
-                                 flags[lev], fluid, advect_enthalpy);
+                                 *chem_txfr_ptr[lev], volfrac[lev], flags[lev]);
   }
 
   {
@@ -376,11 +375,11 @@ mfix::mfix_calc_txfr_particle (Real time,
 
   mfix_set_velocity_bcs(time, vel_g_in, extrap_dir_bcs);
 
-  if (advect_enthalpy) {
+  if (fluid.solve_enthalpy) {
     mfix_set_temperature_bcs(time, T_g_in);
   }
 
-  if (solve_reactions) {
+  if (reactions.solve) {
 
     const int dir_bc_in = 2;
     mfix_set_epg_bcs(ep_g_in, dir_bc_in);
@@ -427,10 +426,10 @@ mfix::mfix_calc_txfr_particle (Real time,
     EB_set_covered(*vel_g_in[lev], 0, 3, 1, covered_val);
     EB_set_covered(gp_tmp, 0, 3, 1, covered_val);
 
-    if (advect_enthalpy)
+    if (fluid.solve_enthalpy)
       EB_set_covered(*T_g_in[lev], 0, 1, 1, covered_val);
 
-    if (solve_reactions) {
+    if (reactions.solve) {
       EB_set_covered(*ep_g_in[lev], 0, 1, 1, covered_val);
       EB_set_covered(*ro_g_in[lev], 0, 1, 1, covered_val);
       EB_set_covered(*X_gk_in[lev], 0, fluid.nspecies, 1, covered_val);
@@ -439,8 +438,8 @@ mfix::mfix_calc_txfr_particle (Real time,
 
     const int interp_ng = 1;    // Only one layer needed for interpolation
     const int interp_comp = 6 +  // 3 vel_g + 3 gp
-                            1*int(advect_enthalpy) +  // 1 T_g
-                            (3+fluid.nspecies)*int(solve_reactions); // ep_g + ro_g + X_gk + pressure_g
+                            1*int(fluid.solve_enthalpy) +  // 1 T_g
+                            (3+fluid.nspecies)*int(reactions.solve); // ep_g + ro_g + X_gk + pressure_g
 
     MultiFab pressure_cc(ep_g_in[lev]->boxArray(), dmap[lev], 1, interp_ng);
     pressure_cc.setVal(0.);
@@ -475,12 +474,12 @@ mfix::mfix_calc_txfr_particle (Real time,
       components_count += 3;
 
       // Copy fluid temperature
-      if(advect_enthalpy){
+      if (fluid.solve_enthalpy) {
         MultiFab::Copy(*interp_ptr, *T_g_in[lev], 0, components_count, 1, interp_ng);
         components_count += 1;
       }
 
-      if (solve_reactions) {
+      if (reactions.solve) {
         // Copy volume fraction
         MultiFab::Copy(*interp_ptr, *ep_g_in[lev],  0, components_count, 1, interp_ng);
         components_count += 1;
@@ -519,12 +518,12 @@ mfix::mfix_calc_txfr_particle (Real time,
       components_count += 3;
 
       // Copy fluid temperature
-      if (advect_enthalpy) {
+      if (fluid.solve_enthalpy) {
         interp_ptr->ParallelCopy(*T_g_in[lev], 0, components_count, 1, interp_ng, interp_ng);
         components_count += 1;
       }
 
-      if (solve_reactions) {
+      if (reactions.solve) {
         // Copy volume fraction
         interp_ptr->ParallelCopy(*ep_g_in[lev],  0, components_count, 1, interp_ng, interp_ng);
         components_count += 1;
@@ -612,7 +611,7 @@ mfix::mfix_calc_txfr_particle (Real time,
           const auto& apy_fab = grown_bx_is_regular ? empty_array : areafrac[1]->const_array(pti);
           const auto& apz_fab = grown_bx_is_regular ? empty_array : areafrac[2]->const_array(pti);
 
-          const int adv_enthalpy = advect_enthalpy;
+          const int solve_enthalpy = fluid.solve_enthalpy;
           const int solve_reactions = reactions.solve;
 
           // We need this until we remove static attribute from mfix::gp0;
@@ -622,7 +621,7 @@ mfix::mfix_calc_txfr_particle (Real time,
 
           amrex::ParallelFor(np,
               [pstruct,p_realarray,interp_array,gp0_dev,plo,dxi,pmult,dx,
-               adv_enthalpy,ccent_fab,bcent_fab,apx_fab,apy_fab,apz_fab,
+               solve_enthalpy,ccent_fab,bcent_fab,apx_fab,apy_fab,apz_fab,
                flags_array,grown_bx_is_regular,interp_comp,solve_reactions,
                ptile_data,nspecies_s,nspecies_g,idx_X_sn,idx_mass_txfr,idx_vel_txfr,
                idx_h_txfr,HeterogeneousRRates,reactions_parms,fluid_parms,
@@ -734,7 +733,7 @@ mfix::mfix_calc_txfr_particle (Real time,
             RealVect gp_g(interp_loc[3], interp_loc[4], interp_loc[5]);
             
             Real T_g(0);
-            if (adv_enthalpy) {
+            if (solve_enthalpy) {
               T_g = interp_loc[6];
             }
 
@@ -750,7 +749,7 @@ mfix::mfix_calc_txfr_particle (Real time,
               pbeta * (vel_g[2] - pmult*p_realarray[SoArealData::velz][p_id]) -
               (gp_g[2] + gp0_dev[2]) * pvol;
 
-            if(adv_enthalpy) {
+            if(solve_enthalpy) {
               // gamma == (heat transfer coeff) * (particle surface area)
               Real pgamma = p_realarray[SoArealData::convection][p_id];
 

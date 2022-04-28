@@ -45,7 +45,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& pressure_g_in,
                                       F1 DragFunc)
 {
-  if (advect_enthalpy)
+  if (fluid.solve_enthalpy)
   {
     if (m_convection_type == ConvectionType::RanzMarshall) {
       mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
@@ -163,11 +163,11 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
     EB_set_covered(*ep_g_in[lev], 0, 1, 1, covered_val);
     EB_set_covered(*ro_g_in[lev], 0, 1, 1, covered_val);
 
-    if (advect_enthalpy) {
+    if (fluid.solve_enthalpy) {
       EB_set_covered(*T_g_in[lev], 0, 1, 1, covered_val);
     }
 
-    if (solve_species) {
+    if (fluid.solve_species) {
       EB_set_covered(*X_gk_in[lev], 0, fluid.nspecies, 1, covered_val);
     }
 
@@ -182,8 +182,8 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
     const int interp_ng = 1;    // Only one layer needed for interpolation
     const int interp_comp = 5 + // 3 vel_g + 1 ep_g + 1 ro_g
-                            1*int(advect_enthalpy) +  // 1 T_g
-                            fluid.nspecies*int(solve_species) +  // Ng X_gk
+                            1*int(fluid.solve_enthalpy) +  // 1 T_g
+                            fluid.nspecies*int(fluid.solve_species) +  // Ng X_gk
                             1*int(reactions.solve);  //  1 pressure_g
 
     MultiFab pressure_cc(ep_g_in[lev]->boxArray(), dmap[lev], 1, interp_ng);
@@ -222,13 +222,13 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       MultiFab::Copy(*interp_ptr, *ro_g_in[lev],  0, components_count, 1, interp_ng);
       components_count += 1;
 
-      if (advect_enthalpy) {
+      if (fluid.solve_enthalpy) {
         // Copy fluid temperature
         MultiFab::Copy(*interp_ptr, *T_g_in[lev],  0, components_count, 1, interp_ng);
         components_count += 1;
       }
 
-      if (solve_species) {
+      if (fluid.solve_species) {
         // Copy species mass fractions
         MultiFab::Copy(*interp_ptr, *X_gk_in[lev],  0, components_count, fluid.nspecies, interp_ng);
         components_count += fluid.nspecies;
@@ -265,13 +265,13 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       interp_ptr->ParallelCopy(*ro_g_in[lev],  0, components_count, 1, interp_ng, interp_ng);
       components_count += 1;
 
-      if (advect_enthalpy) {
+      if (fluid.solve_enthalpy) {
         // Copy fluid temperature
         interp_ptr->ParallelCopy(*T_g_in[lev],  0, components_count, 1, interp_ng, interp_ng);
         components_count += 1;
       }
 
-      if (solve_species) {
+      if (fluid.solve_species) {
         // Copy fluid species
         interp_ptr->ParallelCopy(*X_gk_in[lev],  0, components_count, fluid.nspecies, interp_ng, interp_ng);
         components_count += fluid.nspecies;
@@ -349,7 +349,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
           const auto& apy_fab = grown_bx_is_regular ? empty_array : areafrac[1]->const_array(pti);
           const auto& apz_fab = grown_bx_is_regular ? empty_array : areafrac[2]->const_array(pti);
 
-          const int adv_enthalpy = advect_enthalpy;
+          const int adv_enthalpy = fluid.solve_enthalpy;
           const int fluid_is_a_mixture = fluid.is_a_mixture;
           const int solve_reactions = reactions.solve;
 

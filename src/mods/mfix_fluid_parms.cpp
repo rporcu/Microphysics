@@ -24,7 +24,6 @@ FluidPhase::FluidPhase()
   , mw_avg(0)
   , solve_enthalpy(0)
   , T_g0(273.15)
-  //, T_ref(298.15)
   , T_ref(0)
   , k_g0(0)
   , thermodynamic_pressure(-1.0)
@@ -137,14 +136,20 @@ FluidPhase::Initialize ()
     // Get fluid temperature inputs ----------------------------------//
     amrex::ParmParse ppMFIX("mfix");
 
-    int advect_enthalpy(0);
-    ppMFIX.query("advect_enthalpy", advect_enthalpy);
+    ppMFIX.query("advect_density", solve_density);
 
-    solve_species = ppFluid.queryarr("species", species);
+    ppMFIX.query("advect_enthalpy", solve_enthalpy);
+
+    ppMFIX.query("advect_tracer", solve_tracer);
+
+    // Query mfix solve fluid species
+    ppMFIX.query("solve_species", solve_species);
+
+    // Query fluid species
+    ppFluid.queryarr("species", species);
 
     if (!solve_species) {
       species.clear();
-      solve_species = 0;
       nspecies = 0;
     } else if (amrex::toLower(species[0]).compare("none") == 0) {
       species.clear();
@@ -161,7 +166,7 @@ FluidPhase::Initialize ()
           "Fluid species number is higher than total species number");
     }
 
-    if (advect_enthalpy == 1) {
+    if (solve_enthalpy == 1) {
       solve_enthalpy = 1;
 
       // Query the reference temperature
@@ -180,7 +185,7 @@ FluidPhase::Initialize ()
       }
     }
 
-    if (advect_enthalpy && !solve_species) {
+    if (solve_enthalpy && !solve_species) {
 
       H_fk0.resize(1);
 

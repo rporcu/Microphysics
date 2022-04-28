@@ -50,20 +50,6 @@ mfix::InitParams ()
   BC::Initialize(geom[0], fluid, solids);
   IC::Initialize(fluid, solids);
 
-//  // In case of IdealGas EOS, check that ICs and BCs are consistent
-//  if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
-//    for (amrex::Long i(0); i < BC::bc.size(); ++i) {
-//      if (BC::bc[i].type == bc_list.get_minf() || BC::bc[i].type == bc_list.get_pinf()) {
-//
-//        const Real diff = std::abs(IC::ic[0].fluid.thermodynamic_pressure -
-//                                   BC::bc[i].fluid.thermodynamic_pressure);
-//
-//        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(diff < 1.e-15,
-//            "BCs and ICs for thermodynamic pressure are not consistent");
-//      }
-//    }
-//  }
-
   // set n_error_buf (used in AmrMesh) to default (can overwrite later)
   for (int i = 0; i < n_error_buf.size(); i++)
     n_error_buf[i] = {8,8,8};
@@ -153,36 +139,7 @@ mfix::InitParams ()
     pp.query("initial_iterations", initial_iterations);
     pp.query("do_initial_proj", do_initial_proj);
 
-    pp.query("advect_density", advect_density);
-    pp.query("advect_tracer" , advect_tracer);
-    pp.query("advect_enthalpy", advect_enthalpy);
-    pp.query("solve_species", solve_species);
-
     pp.query("test_tracer_conservation", test_tracer_conservation);
-
-    // Set the FLUID parameter equal to the mfix class flag
-    fluid.solve_species = solve_species;
-    fluid.solve_enthalpy = advect_enthalpy;
-    solids.solve_species = solve_species;
-
-    if (solve_species)
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.nspecies > 0,
-          "Advect fluid species flag is on but no fluid species were provided");
-
-    if (!solve_species) {
-      fluid.is_a_mixture = 0;
-      solids.is_a_mixture = 0;
-
-      fluid.nspecies = 0;
-      solids.nspecies = 0;
-    }
-
-    // Set the FLUID parameter equal to the mfix class flag
-    solve_reactions = reactions.solve;
-
-    if (solve_reactions)
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(reactions.nreactions > 0,
-          "Solve reactions flag is on but no reactions were provided");
 
     pp.query("ntrac", ntrac);
 
@@ -198,20 +155,20 @@ mfix::InitParams ()
     for (int i = 0; i < ntrac; i++)
       amrex::Print() << "Tracer" << i << ":" << mu_s[i] << std::endl;
 
-    if (test_tracer_conservation && !advect_tracer)
-      amrex::Abort("No point in testing tracer conservation with advect_tracer"
+    if (test_tracer_conservation && !fluid.solve_tracer)
+      amrex::Abort("No point in testing tracer conservation with fluid.solve_tracer"
           " = false");
 
     // At the moment, there is no relation between density and species
-    //if (solve_species && !advect_density)
+    //if (solve_species && !fluid.solve_density)
     //  amrex::Abort("Can't advect species mass fraction without advecting density");
 
     // At the moment, there is no relation between density and temperature
-    //if (advect_enthalpy && !advect_density)
+    //if (fluid.solve_enthalpy && !fluid.solve_density)
     //  amrex::Abort("Can't advect enthalpy without advecting density");
 
     // At the moment, there is no relation between density and tracer
-    //if (advect_tracer && !advect_density)
+    //if (fluid.solve_tracer && !fluid.solve_density)
     //  amrex::Abort("Can't advect tracer without advecting density");
 
     // control load balance
@@ -417,7 +374,7 @@ mfix::InitParams ()
     }
 
     // Convection model type
-    if (advect_enthalpy)
+    if (fluid.solve_enthalpy)
     {
       std::string convection_type = "None";
 
@@ -504,7 +461,7 @@ mfix::InitParams ()
       amrex::Abort("Must choose only one of mass_balance_int or mass_balance_report_per_approx");
 
     // OnAdd check to turn off report if not solving species
-    if (solve_species && fluid.nspecies >= 1) {
+    if (fluid.solve_species && fluid.nspecies >= 1) {
       mfixRW->report_mass_balance = (mfixRW->mass_balance_report_int > 0 ||
                                      mfixRW->mass_balance_report_per_approx > 0);
     } else {
@@ -993,7 +950,7 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
         }
 
         if (!is_restarting)
-          pc->InitParticlesRuntimeVariables(advect_enthalpy);
+          pc->InitParticlesRuntimeVariables(fluid.solve_enthalpy);
 
         if (!fluid.solve){
             dt = fixed_dt;
@@ -1041,10 +998,10 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
           const Box& sbx = ep_g[mfi].box();
 
           if (is_restarting) {
-            init_fluid_parameters(bx, mfi, ld, advect_enthalpy, solve_species, fluid);
+            init_fluid_parameters(bx, mfi, ld, fluid);
           } else {
             init_fluid(sbx, bx, domain, mfi, ld, dx, dy, dz, xlen, ylen, zlen, plo,
-                test_tracer_conservation, advect_enthalpy, solve_species, fluid);
+                       test_tracer_conservation, fluid);
           }
        }
 
@@ -1067,16 +1024,16 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
        MultiFab::Copy(*ld.ro_go,  *ld.ro_g, 0, 0, 1, ld.ro_g->nGrow());
        MultiFab::Copy(*ld.trac_o, *ld.trac, 0, 0, 1, ld.trac->nGrow());
 
-       if (advect_enthalpy) {
+       if (fluid.solve_enthalpy) {
          MultiFab::Copy(*ld.T_go, *ld.T_g, 0, 0, 1, ld.T_g->nGrow());
          MultiFab::Copy(*ld.h_go, *ld.h_g, 0, 0, 1, ld.h_g->nGrow());
        }
 
-       if (solve_species) {
+       if (fluid.solve_species) {
          MultiFab::Copy(*ld.X_gko, *ld.X_gk, 0, 0, fluid.nspecies, ld.X_gk->nGrow());
        }
 
-       if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem && advect_enthalpy) {
+       if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem && fluid.solve_enthalpy) {
          MultiFab::Copy(*ld.thermodynamic_p_go, *ld.thermodynamic_p_g, 0, 0, 1,
              ld.thermodynamic_p_g->nGrow());
        }
@@ -1113,17 +1070,17 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       mfix_set_tracer_bcs(time, get_trac());
       mfix_set_tracer_bcs(time, get_trac_old());
 
-      if (advect_enthalpy) {
+      if (fluid.solve_enthalpy) {
         mfix_set_temperature_bcs(time, get_T_g());
         mfix_set_temperature_bcs(time, get_T_g_old());
       }
 
-      if (advect_enthalpy) {
+      if (fluid.solve_enthalpy) {
         mfix_set_enthalpy_bcs(time, get_h_g());
         mfix_set_enthalpy_bcs(time, get_h_g_old());
       }
 
-      if (solve_species) {
+      if (fluid.solve_species) {
         mfix_set_species_bcs(time, get_X_gk());
         mfix_set_species_bcs(time, get_X_gk_old());
       }
@@ -1160,12 +1117,12 @@ mfix::mfix_set_bc0 ()
 
     Real time = 0.0;
 
-    if (advect_enthalpy) {
+    if (fluid.solve_enthalpy) {
       mfix_set_temperature_bcs(time, get_T_g());
       mfix_set_enthalpy_bcs(time, get_h_g());
     }
 
-    if (solve_species)
+    if (fluid.solve_species)
       mfix_set_species_bcs(time, get_X_gk());
 
    // Put velocity Dirichlet bc's on faces

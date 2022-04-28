@@ -10,9 +10,7 @@ void mfix::EvolveParcels (Real dt,
                           RealVect& gravity_in,
                           const int /*ls_refinement_in*/,
                           Vector< MultiFab* >& cost,
-                          std::string& knapsack_weight_type_in,
-                          const int advect_enthalpy_in,
-                          const Real enthalpy_source_in)
+                          std::string& knapsack_weight_type_in)
 
 {
   BL_PROFILE_REGION_START("MFIX_PIC::EvolveParcels()");
@@ -165,10 +163,9 @@ void mfix::EvolveParcels (Real dt,
   }
 
 
-  if ((solids.solve_species && reactions.solve) || advect_enthalpy_in) {
+  if ((solids.solve_species && reactions.solve) || fluid.solve_enthalpy) {
 
-    pc->MFIX_PC_AdvanceParcels(dt, advect_enthalpy_in, enthalpy_source_in,
-                               cost, knapsack_weight_type_in);
+    pc->MFIX_PC_AdvanceParcels(dt, cost, knapsack_weight_type_in);
   }
 
   // exit(0);

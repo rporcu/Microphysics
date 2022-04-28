@@ -36,9 +36,6 @@ namespace SPECIES
   // Specified species constant diffusion coefficients
   extern amrex::Real D_0;
 
-  // Flag to solve enthalpy species equation
-  extern int solve_enthalpy;
-
   // Specified parameters species specific heat
   extern amrex::Vector<amrex::Real> cp_k0;
 

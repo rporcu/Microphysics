@@ -55,7 +55,7 @@ mfix::InitialRedistribution (Real l_time)
                                           bc_vel, geom[lev],
                                           m_redistribution_type);
 
-                if (advect_density) {
+                if (fluid.solve_density) {
 
                   ncomp = 1;
 
@@ -66,7 +66,7 @@ mfix::InitialRedistribution (Real l_time)
                                            bc_den, geom[lev],
                                            m_redistribution_type);
                 }
-                if (advect_enthalpy) {
+                if (fluid.solve_enthalpy) {
 
                   ncomp = 1;
 
@@ -77,7 +77,7 @@ mfix::InitialRedistribution (Real l_time)
                                            bc_h, geom[lev],
                                            m_redistribution_type);
                 }
-                if (advect_tracer) {
+                if (fluid.solve_tracer) {
 
                   ncomp = ntrac;
 
@@ -88,7 +88,7 @@ mfix::InitialRedistribution (Real l_time)
                                            bc_t, geom[lev],
                                            m_redistribution_type);
                 }
-                if (solve_species) {
+                if (fluid.solve_species) {
 
                   ncomp = fluid.nspecies;
 
@@ -106,15 +106,16 @@ mfix::InitialRedistribution (Real l_time)
         // We fill internal ghost values after calling redistribution
         ld.vel_g->FillBoundary();
 
-        if(advect_density)
+        if (fluid.solve_density)
           ld.ro_g->FillBoundary();
-        if(advect_enthalpy)
+
+        if (fluid.solve_enthalpy)
           ld.h_g->FillBoundary();
 
-        if(ntrac > 0)
+        if (fluid.solve_tracer)
           ld.trac->FillBoundary();
 
-        if(solve_species)
+        if (fluid.solve_species)
           ld.X_gk->FillBoundary();
     }
   }

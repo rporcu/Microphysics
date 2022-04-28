@@ -487,9 +487,7 @@ class mfix : public AmrCore
                         amrex::RealVect& gravity,
                         const int ls_refinement,
                         amrex::Vector< amrex::MultiFab* >& cost,
-                        std::string& knapsack_weight_type,
-                        const int advect_enthalpy,
-                        const amrex::Real enthalpy_source);
+                        std::string& knapsack_weight_type);
 
     void pic_iteration (const bool apply_forces,
                         const bool update_parcels,
@@ -877,17 +875,12 @@ public:
                                   Array4<Real> const& dvdt, // velocity
                                   Array4<Real> const& dsdt, // density, enthalpy, tracer
                                   Array4<Real> const& dXdt, // tracer
-                                  const bool l_advect_density,
-                                  const bool l_advect_enthalpy,
-                                  const bool l_advect_tracer,
-                                  const bool l_advect_species,
                                   Array4<Real const> const& vel,
                                   Array4<Real const> const& ep_g,
                                   Array4<Real const> const& rho,
                                   Array4<Real const> const& hg,
                                   Array4<Real const> const& tra,
                                   Array4<Real const> const& Xgk,
-                                  const int l_nspecies,
                                   Array4<Real const> const& divu,
                                   Array4<Real const> const& ep_umac,
                                   Array4<Real const> const& ep_vmac,
@@ -1030,12 +1023,6 @@ public:
     Vector< std::unique_ptr<MultiFab> > level_sets;
 
     int m_steady_state = 0;
-
-    bool advect_enthalpy = false;
-    bool advect_density  = false;
-    bool advect_tracer   = false;
-    bool solve_species   = false;
-    bool solve_reactions = false;
 
     bool test_tracer_conservation = false;
 
