@@ -19,7 +19,7 @@ void set_ic_vel (const Box& sbx, const Box& domain,
 void set_ic_temp (const Box& sbx, const Box& domain,
                   const Real dx, const Real dy, const Real dz,
                   const GpuArray<Real, 3>& plo, FArrayBox& T_g_fab,
-                  FArrayBox& h_g_fab, FArrayBox* X_gk_fab,
+                  FArrayBox* h_g_fab, FArrayBox* X_gk_fab,
                   FluidPhase& fluid);
 
 void set_ic_species_g (const Box& sbx, const Box& domain,
@@ -108,11 +108,14 @@ void init_fluid (const Box& sbx,
   if (fluid.solve_enthalpy ||
       (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
        fluid.constraint_type == ConstraintType::IdealGasClosedSystem)) {
+
     FArrayBox* X_gk_fab = fluid.is_a_mixture ? &((*ld.X_gk)[mfi]) : nullptr;
-    set_ic_temp(sbx, domain, dx, dy, dz, plo, (*ld.T_g)[mfi], (*ld.h_g)[mfi], X_gk_fab, fluid);
+    FArrayBox* h_g_fab = fluid.solve_enthalpy ? &((*ld.h_g)[mfi]) : nullptr;
+
+    set_ic_temp(sbx, domain, dx, dy, dz, plo, (*ld.T_g)[mfi], h_g_fab, X_gk_fab, fluid);
 
     if (!fluid.solve_enthalpy) {
-      MultiFab::Copy(*ld.T_go, *ld.T_g, 0, 0, 1, 0);
+      ((*ld.T_go)[mfi]).copy((*ld.T_g)[mfi], 0, 0, 1);
     }
   }
 
@@ -556,7 +559,7 @@ void set_ic_temp (const Box& sbx,
                   const Real dz,
                   const GpuArray<Real, 3>& plo,
                   FArrayBox& T_g_fab,
-                  FArrayBox& h_g_fab,
+                  FArrayBox* h_g_fab,
                   FArrayBox* X_gk_fab,
                   FluidPhase& fluid)
 {
@@ -571,14 +574,16 @@ void set_ic_temp (const Box& sbx,
   const IntVect domlo(domain.loVect());
   const IntVect domhi(domain.hiVect());
 
+  const int solve_enthalpy = fluid.solve_enthalpy;
   const int fluid_is_a_mixture = fluid.is_a_mixture;
   const int nspecies_g = fluid.nspecies;
 
-  Array4<const Real> dummy_arr;
+  Array4<Real> dummy_arr;
+  Array4<const Real> dummy_const_arr;
 
   Array4<Real      > const& T_g  = T_g_fab.array();
-  Array4<Real      > const& h_g  = h_g_fab.array();
-  Array4<Real const> const& X_gk = fluid_is_a_mixture ? X_gk_fab->array() : dummy_arr;
+  Array4<Real      > const& h_g  = solve_enthalpy ? h_g_fab->array() : dummy_arr;
+  Array4<Real const> const& X_gk = fluid_is_a_mixture ? X_gk_fab->array() : dummy_const_arr;
 
   auto const& flags_arr = flags.const_array();
 
@@ -607,27 +612,29 @@ void set_ic_temp (const Box& sbx,
 
     // Define the function to be used on the different Box-es
     auto set_quantities = [T_g,h_g,X_gk,temperature,nspecies_g,fluid_is_a_mixture,
-         fluid_parms,run_on_device,flags_arr]
+         fluid_parms,run_on_device,flags_arr,solve_enthalpy]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
 
       T_g(i,j,k) = temperature;
 
-      if (fluid_is_a_mixture) {
-        Real h_g_sum(0);
-        for (int n(0); n < nspecies_g; n++) {
-          Real h_gk = run_on_device ?
-            fluid_parms.calc_h_gk<RunOn::Device>(temperature, n, cell_is_covered) :
-            fluid_parms.calc_h_gk<RunOn::Host>(temperature, n, cell_is_covered);
+      if (solve_enthalpy) {
+        if (fluid_is_a_mixture) {
+          Real h_g_sum(0);
+          for (int n(0); n < nspecies_g; n++) {
+            Real h_gk = run_on_device ?
+              fluid_parms.calc_h_gk<RunOn::Device>(temperature, n, cell_is_covered) :
+              fluid_parms.calc_h_gk<RunOn::Host>(temperature, n, cell_is_covered);
 
-          h_g_sum += X_gk(i,j,k,n) * h_gk;
+            h_g_sum += X_gk(i,j,k,n) * h_gk;
+          }
+          h_g(i,j,k) = h_g_sum;
+        } else {
+          h_g(i,j,k) = run_on_device ?
+            fluid_parms.calc_h_g<RunOn::Device>(temperature, cell_is_covered) :
+            fluid_parms.calc_h_g<RunOn::Host>(temperature, cell_is_covered);
         }
-        h_g(i,j,k) = h_g_sum;
-      } else {
-        h_g(i,j,k) = run_on_device ?
-          fluid_parms.calc_h_g<RunOn::Device>(temperature, cell_is_covered) :
-          fluid_parms.calc_h_g<RunOn::Host>(temperature, cell_is_covered);
       }
     };
 

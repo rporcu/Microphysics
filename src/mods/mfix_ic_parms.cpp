@@ -97,10 +97,6 @@ namespace IC
               "Error: when the ideal gas EOS constraint is selected, "
               "fluid initial conditions must NOT include density");
 
-          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!new_ic.fluid.temperature_defined,
-              "Error: when the ideal gas EOS constraint is selected, "
-              "fluid initial conditions must NOT include density");
-
           AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.thermodynamic_pressure_defined,
               "Error: fluid thermodynamic pressure must be defined before "
               "computing IC density out of the ideal gas EOS");
@@ -108,11 +104,15 @@ namespace IC
           auto& fluid_parms = *fluid.parameters;
           Real MW_g(0.);
 
-          for (int n(0); n < fluid.nspecies; n++) {
-            MW_g += new_ic.fluid.species[n].mass_fraction / fluid_parms.get_MW_gk<RunOn::Host>(n);
-          }
+          if (fluid.is_a_mixture) {
+            for (int n(0); n < fluid.nspecies; n++) {
+              MW_g += new_ic.fluid.species[n].mass_fraction / fluid_parms.get_MW_gk<RunOn::Host>(n);
+            }
 
-          MW_g = 1./MW_g;
+            MW_g = 1./MW_g;
+          } else {
+            MW_g = fluid_parms.get_MW_g<RunOn::Host>();
+          }
 
           new_ic.fluid.density = (fluid.thermodynamic_pressure * MW_g) /
                                  (fluid_parms.R * new_ic.fluid.temperature);

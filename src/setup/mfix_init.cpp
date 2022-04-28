@@ -50,20 +50,6 @@ mfix::InitParams ()
   BC::Initialize(geom[0], fluid, solids);
   IC::Initialize(fluid, solids);
 
-//  // In case of IdealGas EOS, check that ICs and BCs are consistent
-//  if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
-//    for (amrex::Long i(0); i < BC::bc.size(); ++i) {
-//      if (BC::bc[i].type == bc_list.get_minf() || BC::bc[i].type == bc_list.get_pinf()) {
-//
-//        const Real diff = std::abs(IC::ic[0].fluid.thermodynamic_pressure -
-//                                   BC::bc[i].fluid.thermodynamic_pressure);
-//
-//        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(diff < 1.e-15,
-//            "BCs and ICs for thermodynamic pressure are not consistent");
-//      }
-//    }
-//  }
-
   // set n_error_buf (used in AmrMesh) to default (can overwrite later)
   for (int i = 0; i < n_error_buf.size(); i++)
     n_error_buf[i] = {8,8,8};

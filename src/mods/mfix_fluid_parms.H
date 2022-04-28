@@ -495,11 +495,15 @@ struct FLUID_t {
 
         amrex::Real MW_g(0.);
 
-        for (int n(0); n < fluid.nspecies; n++) {
-          MW_g += this->get_species(n, time) / fluid_parms.get_MW_gk<amrex::RunOn::Host>(n);
-        }
+        if (fluid.is_a_mixture) {
+          for (int n(0); n < fluid.nspecies; n++) {
+            MW_g += this->get_species(n, time) / fluid_parms.get_MW_gk<amrex::RunOn::Host>(n);
+          }
 
-        MW_g = 1./MW_g;
+          MW_g = 1./MW_g;
+        } else {
+          MW_g = fluid_parms.get_MW_g<amrex::RunOn::Host>();
+        }
 
         return (fluid.thermodynamic_pressure * MW_g) /
                (fluid_parms.R * this->get_temperature(time));
@@ -748,11 +752,10 @@ struct FLUID_t {
 
   amrex::Real get_temperature (amrex::Real time=0.0) {
     // Sanity check
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(temperature_defined,
-        "Error: temperature BCs were not defined");
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(temperature_defined, "Error: temperature BCs were not defined");
 
     //amrex::Print() << "\n\nLooking for the right BC fluid temperature!\n\n";
-    if (constant_temperature){
+    if (constant_temperature) {
       // amrex::Print() << "* Use the constant temperature " << temperature << "\n";
       return temperature;
     } else {
