@@ -1,7 +1,7 @@
 #_______________________________________________________________________
 # Testing tracer conservation
 
-mfix.advect_tracer            = true
+mfix.advect_tracer            = 1
 mfix.test_tracer_conservation = true
 
 mfix.gravity =  0.0  0.0  -9.81
