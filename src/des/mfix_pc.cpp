@@ -3,8 +3,10 @@
 #include <mfix_solids_parms.H>
 #include <mfix_dem_parms.H>
 #include <mfix_reactions_parms.H>
+#include <mfix_bc_list.H>
 #include <mfix_bc_parms.H>
 #include <mfix_solvers.H>
+#include <mfix_calc_cell.H>
 
 using namespace amrex;
 using namespace Solvers;
@@ -144,6 +146,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                                              Real time,
                                              RealVect& gravity,
                                              EBFArrayBoxFactory* ebfactory,
+                                             EBFArrayBoxFactory* particle_ebfactory,
                                              const MultiFab* ls_phi,
                                              const int ls_refinement,
                                              MultiFab* cost,
@@ -202,7 +205,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     /****************************************************************************
      * Get particle EB geometric info
      ***************************************************************************/
-    const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
+    const FabArray<EBCellFlagFab>* flags = &(particle_ebfactory->getMultiEBCellFlagFab());
 
     /****************************************************************************
      * Init temporary storage:                                                  *
@@ -226,7 +229,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         // Determine if this particle tile actually has any walls
         bool has_wall = false;
 
-        if ((ebfactory != NULL)
+        if ((particle_ebfactory != NULL)
             && ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
         {
             has_wall = true;
@@ -260,6 +263,12 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     loc_maxpfor = RealVect(0., 0., 0.);  // Tracks max particle-particle force
     loc_maxwfor = RealVect(0., 0., 0.);  // Tracks max particle-wall force
     int n = 0; // Counts sub-steps
+
+
+    // Particle inflow
+    if (ebfactory != NULL)
+      mfix_pc_inflow(lev, dt, time, ebfactory);
+
 
     // sort particles by cell, this can significantly improve the locality
     if (sort_int > 0 && nstep % sort_int == 0) {

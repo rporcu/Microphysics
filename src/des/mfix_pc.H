@@ -192,6 +192,7 @@ public:
                           amrex::Real time,
                           amrex::RealVect& gravity,
                           amrex::EBFArrayBoxFactory * ebfactory,
+                          amrex::EBFArrayBoxFactory * particle_ebfactory,
                           const amrex::MultiFab * ls_phi,
                           const int ls_refinement,
                           amrex::MultiFab * cost,
@@ -202,6 +203,11 @@ public:
                           const int update_mass,
                           const int update_momentum,
                           const int update_enthalpy);
+
+    void mfix_pc_inflow (int lev,
+                         amrex::Real dt,
+                         amrex::Real time,
+                         amrex::EBFArrayBoxFactory* factory);
 
     void MFIX_PC_InitCollisionParams ();
 

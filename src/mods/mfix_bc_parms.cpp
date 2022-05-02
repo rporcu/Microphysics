@@ -133,7 +133,7 @@ namespace BC
 
     }
 
-    const amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
+    constexpr amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
 
     // Flag to see if particles 'see' a wall at pressure outflows
     int po_noParOut = 0; // default behavior for PO's -- letting particles exit the domain
@@ -256,7 +256,6 @@ namespace BC
             // as walls for particle collisions.
             if( new_bc.type == BCList::minf || new_bc.type == BCList::pinf ||
                 (new_bc.type == BCList::pinf && po_noParOut == 1 )) {
-              amrex::Print() << "X> FLAGGING FLOW PLANE " << dir_int << std::endl;
               flow_plane.flip(dir_int);
             }
           }
@@ -306,7 +305,6 @@ namespace BC
 
       }
 
-
       // Get EB data.
       if (new_bc.type == BCList::eb) {
         std::string field = "bc."+regions[bcv]+".eb";
@@ -318,7 +316,6 @@ namespace BC
         }
 
         if (ppEB.contains("normal")) {
-          amrex::Print() << "------------------------------------------------------------ FOUND NORMAL\n";
           new_bc.eb.has_normal = 1;
 
           ppEB.getarr("normal", new_bc.eb.normal, 0, 3);
@@ -337,9 +334,7 @@ namespace BC
           ppEB.query("normal_tol", tol_deg);
 
           new_bc.eb.normal_tol = tol_deg*M_PI/amrex::Real(180.);
-
         }
-
       }
 
       // Get fluid data.
@@ -375,7 +370,6 @@ namespace BC
             EB::has_flow = 1;
             EB::compute_area = EB::compute_area || new_bc.fluid.eb_has_volflow;
           }
-
         }
 
         // Read in density, temperature and species BC inputs only if BC type is
@@ -470,69 +464,92 @@ namespace BC
           ppSolid.get("volfrac", new_solid.volfrac);
           volfrac_total += new_bc.fluid.volfrac;
 
-          ppSolid.getarr("velocity", new_solid.velocity, 0, 3);
-          ppSolid.query("temperature", new_solid.temperature);
+          if (new_solid.volfrac < tolerance)
+            continue;
 
-          // Get information about diameter distribution.
-          ppSolid.get("diameter", new_solid.diameter.distribution);
+          if( new_bc.type == BCList::minf ) {
 
-          std::string dp_field = "bc."+regions[bcv]+"."+solids_types[lcs]+".diameter";
-          amrex::ParmParse ppSolidDp(dp_field.c_str());
+            amrex::Print() << "Mass inflows for solids has not bee impleneted yet!\n";
+            amrex::Abort("Mass inflows for solids has not bee impleneted yet!");
 
-          if( new_solid.diameter.distribution == "constant") {
-            ppSolidDp.get("constant", new_solid.diameter.mean);
+          } else if ( new_bc.type == BCList::eb ) {
 
-          } else { // This could probably be an else-if to better catch errors
-            ppSolidDp.get("mean", new_solid.diameter.mean);
-            ppSolidDp.get("std" , new_solid.diameter.std);
-            ppSolidDp.get("min" , new_solid.diameter.min);
-            ppSolidDp.get("max" , new_solid.diameter.max);
-          }
+            EB::compute_area = 1;
 
-          // Get information about density distribution.
-          ppSolid.get("density", new_solid.density.distribution);
+            if (ppSolid.contains("velocity")) {
 
-          std::string roh_field = "bc."+regions[bcv]+"."+solids_types[lcs]+".density";
-          amrex::ParmParse ppSolidRho(roh_field.c_str());
+              ppSolid.getarr("velocity", new_solid.velocity, 0, 3);
 
-          if( new_solid.diameter.distribution == "constant") {
-            ppSolidRho.get("constant", new_solid.density.mean);
+            } else if (ppSolid.contains("volflow")) {
 
-          } else { // This could probably be an else-if to better catch errors
-            ppSolidRho.get("mean", new_solid.density.mean);
-            ppSolidRho.get("std" , new_solid.density.std );
-            ppSolidRho.get("min" , new_solid.density.min );
-            ppSolidRho.get("max" , new_solid.density.max );
-          }
-
-          if (solids.solve_species) {
-
-            const int nspecies_s = solids.nspecies;
-            new_solid.species.resize(nspecies_s);
-
-            std::string species_field = field+".species";
-            amrex::ParmParse ppSpecies(species_field.c_str());
-
-            amrex::Real total_mass_fraction(0);
-
-            for (int n(0); n < solids.nspecies; n++) {
-              // Get the name of the solid species we want to get the BC
-              std::string dem_specie = solids.species[n];
-              // Get the BC mass fraction for the current species
-              ppSpecies.query(dem_specie.c_str(), new_solid.species[n].mass_fraction);
-
-              total_mass_fraction += new_solid.species[n].mass_fraction;
+              ppSolid.get("volflow", new_solid.volflow);
             }
 
-            // Sanity check that the input species mass fractions sum up to 1
-            if (!(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
-              std::string message = "Error: SOLID type " + solids_types[lcs]
-                + " species BCs mass fractions in region " + regions[bcv]
-                + " sum up to " + std::to_string(total_mass_fraction) + "\n";
+            // This probably needs a check if we are solving energy equations
+            // and if so, require temperature be defined.
+            ppSolid.query("temperature", new_solid.temperature);
 
-              amrex::Abort(message);
+            // Get information about diameter distribution.
+            ppSolid.get("diameter", new_solid.diameter.distribution);
+
+            std::string dp_field = "bc."+regions[bcv]+"."+solids_types[lcs]+".diameter";
+            amrex::ParmParse ppSolidDp(dp_field.c_str());
+
+            if( new_solid.diameter.distribution == "constant") {
+              ppSolidDp.get("constant", new_solid.diameter.mean);
+
+            } else { // This could probably be an else-if to better catch errors
+              ppSolidDp.get("mean", new_solid.diameter.mean);
+              ppSolidDp.get("std" , new_solid.diameter.std);
+              ppSolidDp.get("min" , new_solid.diameter.min);
+              ppSolidDp.get("max" , new_solid.diameter.max);
             }
-          }
+
+            // Get information about density distribution.
+            ppSolid.get("density", new_solid.density.distribution);
+
+            std::string roh_field = "bc."+regions[bcv]+"."+solids_types[lcs]+".density";
+            amrex::ParmParse ppSolidRho(roh_field.c_str());
+
+            if( new_solid.diameter.distribution == "constant") {
+              ppSolidRho.get("constant", new_solid.density.mean);
+
+            } else { // This could probably be an else-if to better catch errors
+              ppSolidRho.get("mean", new_solid.density.mean);
+              ppSolidRho.get("std" , new_solid.density.std );
+              ppSolidRho.get("min" , new_solid.density.min );
+              ppSolidRho.get("max" , new_solid.density.max );
+            }
+
+            if (solids.solve_species) {
+
+              const int nspecies_s = solids.nspecies;
+              new_solid.species.resize(nspecies_s);
+
+              std::string species_field = field+".species";
+              amrex::ParmParse ppSpecies(species_field.c_str());
+
+              amrex::Real total_mass_fraction(0);
+
+              for (int n(0); n < solids.nspecies; n++) {
+                // Get the name of the solid species we want to get the BC
+                std::string dem_specie = solids.species[n];
+                // Get the BC mass fraction for the current species
+                ppSpecies.query(dem_specie.c_str(), new_solid.species[n].mass_fraction);
+
+                total_mass_fraction += new_solid.species[n].mass_fraction;
+              }
+
+              // Sanity check that the input species mass fractions sum up to 1
+              if (!(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
+                std::string message = "Error: SOLID type " + solids_types[lcs]
+                  + " species BCs mass fractions in region " + regions[bcv]
+                  + " sum up to " + std::to_string(total_mass_fraction) + "\n";
+
+                amrex::Abort(message);
+              }
+            }
+          } // End EB inflow
 
           new_bc.solids.push_back(new_solid);
         }

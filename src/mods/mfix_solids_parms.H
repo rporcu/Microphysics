@@ -328,6 +328,9 @@ class SolidsPhase
       amrex::Real statwt;
       amrex::Real temperature;
       amrex::Vector<amrex::Real> velocity;
+      amrex::Real volflow;
+      amrex::Real vol_remainder;
+      int inflow_count;
 
       amrex::Vector<SPECIES::SPECIES_t> species;
 
@@ -339,6 +342,9 @@ class SolidsPhase
         statwt(0.0),
         temperature(0.0),
         velocity(0),
+        volflow(0.),
+        vol_remainder(0.),
+        inflow_count(0),
         species(0),
         diameter(),
         density()
