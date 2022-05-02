@@ -44,14 +44,14 @@ HeterogeneousRatesUser::operator() (Real* /*R_q*/,
 //      const int current_species_id = reactions_parms.reactants_id[q][n];
 //
 //      {
-//        const int pos = MFIXfind(fluid_parms.species_id, fluid_parms.nspecies, current_species_id);
+//        const int pos = find(fluid_parms.species_id, fluid_parms.nspecies, current_species_id);
 //        if (pos != -1)
 //          if (X_gk[pos] > 0)
 //            nreact += 1;
 //      }
 //
 //      {
-//        const int pos = MFIXfind(solids_parms.species_id, solids_parms.nspecies, current_species_id);
+//        const int pos = find(solids_parms.species_id, solids_parms.nspecies, current_species_id);
 //        if (pos != -1)
 //          if (X_sn[pos] > 0)
 //            nreact += 1;
@@ -83,7 +83,7 @@ HomogeneousRatesUser::operator() (Real* /*R_q*/,
 //      const int current_species_id = reactions_parms.reactants_id[q][n];
 //
 //      {
-//        const int pos = MFIXfind(solids_parms.species_id, solids_parms.nspecies, current_species_id);
+//        const int pos = find(solids_parms.species_id, solids_parms.nspecies, current_species_id);
 //        if (pos != -1)
 //          if (X_sn[pos] > 0)
 //            nreact += 1;
@@ -115,7 +115,7 @@ HomogeneousRatesUser::operator() (Real* /*R_q*/,
 //      const int current_species_id = reactions_parms.reactants_id[q][n];
 //
 //      {
-//        const int pos = MFIXfind(fluid_parms.species_id, fluid_parms.nspecies, current_species_id);
+//        const int pos = find(fluid_parms.species_id, fluid_parms.nspecies, current_species_id);
 //        if (pos != -1)
 //          if (X_gk[pos] > 0)
 //            nreact += 1;

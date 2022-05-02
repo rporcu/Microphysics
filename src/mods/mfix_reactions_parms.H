@@ -8,9 +8,6 @@
 #include <AMReX_GpuContainers.H>
 #include <AMReX_Gpu.H>
 
-#include <mfix_fluid_parms.H>
-#include <mfix_solids_parms.H>
-
 
 // Forward declaration
 class ChemicalReaction;
@@ -20,48 +17,15 @@ class ReactionsParms {
 
   public:
     const int m_nreactions;
-    const int* m_nreactants;
-    const int** m_reactants_id;
-    const amrex::Real** m_reactants_coeffs;
-    const int** m_reactants_phases;
-    const int* m_nproducts;
-    const int** m_products_id;
-    const amrex::Real** m_products_coeffs;
-    const int** m_products_phases;
 
-  public:
     AMREX_GPU_HOST_DEVICE
     ReactionsParms ()
       : m_nreactions(0)
-      , m_nreactants(nullptr)
-      , m_reactants_id(nullptr)
-      , m_reactants_coeffs(nullptr)
-      , m_reactants_phases(nullptr)
-      , m_nproducts(nullptr)
-      , m_products_id(nullptr)
-      , m_products_coeffs(nullptr)
-      , m_products_phases(nullptr)
     {}
 
     AMREX_GPU_HOST_DEVICE
-    ReactionsParms (const int nreactions,
-                    const int* nreactants,
-                    const int** reactants_id,
-                    const amrex::Real** reactants_coeffs,
-                    const int** reactants_phases,
-                    const int* nproducts,
-                    const int** products_id,
-                    const amrex::Real** products_coeffs,
-                    const int** products_phases)
+    ReactionsParms (const int nreactions)
       : m_nreactions(nreactions)
-      , m_nreactants(nreactants)
-      , m_reactants_id(reactants_id)
-      , m_reactants_coeffs(reactants_coeffs)
-      , m_reactants_phases(reactants_phases)
-      , m_nproducts(nproducts)
-      , m_products_id(products_id)
-      , m_products_coeffs(products_coeffs)
-      , m_products_phases(products_phases)
     {}
 };
 
@@ -90,24 +54,14 @@ class Reactions {
     // Chemical reactions equations
     std::vector<std::string> reaction_equations;
 
-    amrex::Gpu::DeviceVector<int> d_types;
+    // Table of stoichiometric coefficients for each species and each chemical
+    // reaction
+    amrex::Vector<amrex::Vector<amrex::Real>> heterogeneous;
 
-    amrex::Gpu::DeviceVector<int> d_nphases;
-
-    amrex::Gpu::DeviceVector<const int*> d_phases;
-
-    amrex::Gpu::DeviceVector<int> d_nreactants;
-    amrex::Gpu::DeviceVector<const int*> d_reactants_id;
-    amrex::Gpu::DeviceVector<const amrex::Real*> d_reactants_coeffs;
-    amrex::Gpu::DeviceVector<const int*> d_reactants_phases;
-
-    amrex::Gpu::DeviceVector<int> d_nproducts;
-    amrex::Gpu::DeviceVector<const int*> d_products_id;
-    amrex::Gpu::DeviceVector<const amrex::Real*> d_products_coeffs;
-    amrex::Gpu::DeviceVector<const int*> d_products_phases;
+    int is_initialized;
 
     // Initialization procedure
-    void Initialize();
+    void Initialize(const Species& species);
 
     // Getter
     ChemicalReaction* get(const int q) const
@@ -120,7 +74,7 @@ class Reactions {
 
   private:
     // Vector of chemical reactions
-    amrex::Vector< ChemicalReaction* > m_chemical_reactions;
+    amrex::Vector<ChemicalReaction*> m_chemical_reactions;
 };
 
 
@@ -132,7 +86,8 @@ class ChemicalReaction {
     explicit ChemicalReaction () = default;
 
     // class constructor
-    explicit ChemicalReaction (const std::string& reaction);
+    explicit ChemicalReaction (const std::string& reaction,
+                               const Species& species);
 
     ChemicalReaction (const ChemicalReaction&) = delete;
 
@@ -144,27 +99,27 @@ class ChemicalReaction {
     struct REACTIONTYPE { enum {Invalid=-1, Homogeneous, Heterogeneous}; };
 
     // Reaction type (homogeneous, heterogeneous)
-    int m_reaction_type;
+    int m_type;
 
     struct CHEMICALPHASE { enum {Invalid=-1, Fluid, Solid}; };
 
     // Phases
-    amrex::Gpu::DeviceVector<int> m_phases;
+    amrex::Vector<int> m_phases;
 
     // chemical formula
-    const std::string m_reaction;
+    const std::string m_formula;
 
     // Reactants
     amrex::Vector<std::string> m_reactants;
-    amrex::Gpu::DeviceVector<int> m_reactants_id;
-    amrex::Gpu::DeviceVector<amrex::Real> m_reactants_coeffs;
-    amrex::Gpu::DeviceVector<int> m_reactants_phases;
+    amrex::Vector<int> m_reactants_id;
+    amrex::Vector<amrex::Real> m_reactants_coeffs;
+    amrex::Vector<int> m_reactants_phases;
 
     // Products
     amrex::Vector<std::string> m_products;
-    amrex::Gpu::DeviceVector<int> m_products_id;
-    amrex::Gpu::DeviceVector<amrex::Real> m_products_coeffs;
-    amrex::Gpu::DeviceVector<int> m_products_phases;
+    amrex::Vector<int> m_products_id;
+    amrex::Vector<amrex::Real> m_products_coeffs;
+    amrex::Vector<int> m_products_phases;
 
   private:
     // Get reactants data
@@ -175,23 +130,14 @@ class ChemicalReaction {
 
     // Extract stoichiometric data
     void get_stoichiometric_data(const std::string& s,
-                                 std::vector<std::string>& compounds,
-                                 amrex::Gpu::HostVector<int>& compounds_id,
-                                 amrex::Gpu::HostVector<amrex::Real>& coefficients,
-                                 amrex::Gpu::HostVector<int>& phases);
+                                 amrex::Vector<std::string>& compounds,
+                                 amrex::Vector<int>& compounds_id,
+                                 amrex::Vector<amrex::Real>& coefficients,
+                                 amrex::Vector<int>& phases,
+                                 const Species& species);
 
     // Parse reaction
-    void parse_reaction(const std::string& equation,
-                        amrex::Gpu::HostVector<int>& phases,
-                        int& reaction_type,
-                        std::vector<std::string>& reactants,
-                        amrex::Gpu::HostVector<int>& reactants_id,
-                        amrex::Gpu::HostVector<amrex::Real>& reactants_coeffs,
-                        amrex::Gpu::HostVector<int>& reactants_phases,
-                        std::vector<std::string>& products,
-                        amrex::Gpu::HostVector<int>& products_id,
-                        amrex::Gpu::HostVector<amrex::Real>& products_coeffs,
-                        amrex::Gpu::HostVector<int>& products_phases);
+    void parse_reaction(const Species& species);
 };
 
 #endif

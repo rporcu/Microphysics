@@ -7,6 +7,8 @@
 #include <AMReX_GpuControl.H>
 
 #include <mfix_species_parms.H>
+#include <mfix_reactions_parms.H>
+
 
 // Projection constraint type
 struct ConstraintType { enum {IncompressibleFluid, IdealGasOpenSystem, IdealGasClosedSystem}; };
@@ -32,6 +34,9 @@ class FluidParms {
     const amrex::Real* m_d_cp_gk;
     const amrex::Real* m_h_H_fk;
     const amrex::Real* m_d_H_fk;
+    const int          m_nreactions;
+    const amrex::Real* m_h_stoich_coeffs;
+    const amrex::Real* m_d_stoich_coeffs;
 
     // List of recognized fluid specific heat models
     struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA7Polynomials, NASA9Polynomials}; };
@@ -54,6 +59,9 @@ class FluidParms {
       , m_d_cp_gk(nullptr)
       , m_h_H_fk(nullptr)
       , m_d_H_fk(nullptr)
+      , m_nreactions(0)
+      , m_h_stoich_coeffs(nullptr)
+      , m_d_stoich_coeffs(nullptr)
       , m_specific_heat_model(SPECIFICHEATMODEL::Invalid)
     {}
 
@@ -72,6 +80,9 @@ class FluidParms {
                 const amrex::Real* d_cp_gk,
                 const amrex::Real* h_H_fk,
                 const amrex::Real* d_H_fk,
+                const int nreactions,
+                const amrex::Real* h_stoich_coeffs,
+                const amrex::Real* d_stoich_coeffs,
                 const int specific_heat_model)
       : m_T_ref(T_ref)
       , m_mu_g(mu_g)
@@ -87,6 +98,9 @@ class FluidParms {
       , m_d_cp_gk(d_cp_gk)
       , m_h_H_fk(h_H_fk)
       , m_d_H_fk(d_H_fk)
+      , m_nreactions(nreactions)
+      , m_h_stoich_coeffs(h_stoich_coeffs)
+      , m_d_stoich_coeffs(d_stoich_coeffs)
       , m_specific_heat_model(specific_heat_model)
     {}
 
@@ -286,6 +300,22 @@ class FluidParms {
     {
       return calc_cp_gk<run_on>(T_g, n);
     }
+
+
+    template <amrex::RunOn run_on>
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real get_stoich_coeff (const int n, const int q) const
+    {
+      if (run_on == amrex::RunOn::Gpu)
+        return m_d_stoich_coeffs[n*m_nreactions+q];
+      else if (run_on == amrex::RunOn::Cpu)
+        return m_h_stoich_coeffs[n*m_nreactions+q];
+      else
+        amrex::Abort("Unrecognized RunOn option");
+
+      return 0;
+    }
+
 };
 
 
@@ -362,11 +392,11 @@ class FluidPhase {
     int solve_species;
 
     // Fluid phase species names
-    amrex::Vector<std::string> species;
+    amrex::Vector<std::string> species_names;
 
     // Species unique identifying code
-    amrex::Gpu::HostVector<int> species_id;
-    amrex::Gpu::DeviceVector<int> d_species_id;
+    amrex::Gpu::HostVector<int> species_IDs;
+    amrex::Gpu::DeviceVector<int> d_species_IDs;
 
     // Total number of fluid species
     int nspecies;
@@ -389,13 +419,19 @@ class FluidPhase {
     amrex::Gpu::HostVector<amrex::Real> cp_gk0;
     amrex::Gpu::DeviceVector<amrex::Real> d_cp_gk0;
 
+    // Tables for stoichiometric coefficients for each species in each reaction
+    amrex::Gpu::HostVector<amrex::Real> stoich_coeffs;
+    amrex::Gpu::DeviceVector<amrex::Real> d_stoich_coeffs;
+
     // Name to later reference when building input regions
     std::string name;
 
     // Fluid parameters for GPU access
     FluidParms* parameters;
 
-    void Initialize ();
+    int is_initialized;
+
+    void Initialize (const Species& species, const Reactions& reactions);
 
 }; // class FluidPhase
 
@@ -517,7 +553,7 @@ struct FLUID_t {
   }
 
   amrex::Vector< int > constant_species;
-  amrex::Vector<SPECIES::SPECIES_t> species;
+  amrex::Vector<SPECIES_t> species;
   amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> species_table;
 
   amrex::Real get_species (int n, amrex::Real time=0.0) {

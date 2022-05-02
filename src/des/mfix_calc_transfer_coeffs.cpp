@@ -106,37 +106,14 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   //***************************************************************************
   // Data for chemical reactions
   //***************************************************************************
-  // Solid species data
-  const int nspecies_s = solids.nspecies;
-
   // Fluid species data
   const int nspecies_g = fluid.nspecies;
 
-  int* p_species_id_g = fluid.d_species_id.data();
-  Real* p_MW_gk = fluid.d_MW_gk0.data();
+  // Fluid species data
+  const int nspecies_s = solids.nspecies;
 
   // Reactions data
   const int nreactions = reactions.nreactions;
-
-  int* p_types = reactions.d_types.data();
-  const int** p_phases = reactions.d_phases.data();
-  int* p_nphases = reactions.d_nphases.data();
-
-  int* p_nreactants = reactions.d_nreactants.data();
-  const int** p_reactants_id = reactions.d_reactants_id.data();
-  const Real** p_reactants_coeffs = reactions.d_reactants_coeffs.data();
-  const int** p_reactants_phases = reactions.d_reactants_phases.data();
-
-  int* p_nproducts = reactions.d_nproducts.data();
-  const int** p_products_id = reactions.d_products_id.data();
-  const Real** p_products_coeffs = reactions.d_products_coeffs.data();
-  const int** p_products_phases = reactions.d_products_phases.data();
-
-  // Solid phase integer ID
-  constexpr int Solid = ChemicalReaction::CHEMICALPHASE::Solid;
-  constexpr int Fluid = ChemicalReaction::CHEMICALPHASE::Fluid;
-  constexpr int Heterogeneous = ChemicalReaction::REACTIONTYPE::Heterogeneous;
-  const int InvalidIdx = -1; //TODO define this somewhere else
 
   // Particles SoA starting indexes for mass fractions and rate of formations
   const int idx_X_sn   = (pc->m_runtimeRealData).X_sn;
@@ -144,6 +121,8 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   const int idx_vel_txfr = (pc->m_runtimeRealData).vel_txfr;
   const int idx_h_txfr = (pc->m_runtimeRealData).h_txfr;
 
+  auto& fluid_parms = *fluid.parameters;
+  auto& solids_parms = *solids.parameters;
   auto& reactions_parms = *reactions.parameters;
 
   //***************************************************************************
@@ -171,12 +150,14 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       EB_set_covered(*X_gk_in[lev], 0, fluid.nspecies, 1, covered_val);
     }
 
-    if (reactions.solve) {
+    if (reactions.solve ||
+        (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
+         fluid.constraint_type == ConstraintType::IdealGasClosedSystem)) {
       EB_set_covered(*pressure_g_in[lev], 0, 1, 1, covered_val);
     }
 
-    bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
-                         (grids[lev].CellEqual(pc->ParticleBoxArray(lev))) );
+    bool OnSameGrids = ((dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
+                        (grids[lev].CellEqual(pc->ParticleBoxArray(lev))));
 
     MultiFab* interp_ptr;
 
@@ -302,9 +283,6 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       const auto bndrycent = &(factory.getBndryCent());
       const auto areafrac = factory.getAreaFrac();
 
-      auto& fluid_parms = *fluid.parameters;
-      auto& solids_parms = *solids.parameters;
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -349,7 +327,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
           const auto& apy_fab = grown_bx_is_regular ? empty_array : areafrac[1]->const_array(pti);
           const auto& apz_fab = grown_bx_is_regular ? empty_array : areafrac[2]->const_array(pti);
 
-          const int adv_enthalpy = fluid.solve_enthalpy;
+          const int solve_enthalpy = fluid.solve_enthalpy;
           const int fluid_is_a_mixture = fluid.is_a_mixture;
           const int solve_reactions = reactions.solve;
 
@@ -359,21 +337,18 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
           amrex::ParallelFor(np,
               [pstruct,p_realarray,interp_array,DragFunc,ConvectionCoeff,
-               HeterogeneousRRates,plo,dxi,adv_enthalpy,fluid_is_a_mixture,
-               mu_g0,fluid_parms,nspecies_g,interp_comp,local_cg_dem,
+               HeterogeneousRRates,plo,dxi,solve_enthalpy,fluid_is_a_mixture,
+               mu_g0,nspecies_g,interp_comp,local_cg_dem,
                ptile_data,nreactions,nspecies_s,
-               Solid,idx_X_sn,idx_mass_txfr,idx_vel_txfr,idx_h_txfr,p_MW_gk,p_species_id_g,
-               p_reactants_id,p_reactants_coeffs,p_reactants_phases,
-               p_products_id,p_products_coeffs,p_products_phases,p_nreactants,
-               p_nproducts,InvalidIdx,p_phases,p_nphases,p_types,Heterogeneous,
-               solids_parms,reactions_parms,flags_array,
+               idx_X_sn,idx_mass_txfr,idx_vel_txfr,idx_h_txfr,
+               fluid_parms,solids_parms,reactions_parms,flags_array,
                grown_bx_is_regular,dx,ccent_fab,bcent_fab,apx_fab,apy_fab,
                apz_fab,solve_reactions]
             AMREX_GPU_DEVICE (int p_id) noexcept
           {
             MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
 
-            GpuArray<Real,7+SPECIES::NMAX> interp_loc; // vel_g, ep_g, ro_g, T_g, X_gk, p_g
+            GpuArray<Real,7+Species::NMAX> interp_loc; // vel_g, ep_g, ro_g, T_g, X_gk, p_g
             interp_loc.fill(0.);
 
             // Indices of cell where particle is located
@@ -394,7 +369,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                 p_realarray[SoArealData::dragcoeff][p_id] = 0.;
 
                 // convection-related enthalpy txfr variable
-                if (adv_enthalpy) {
+                if (solve_enthalpy) {
                   p_realarray[SoArealData::convection][p_id] = 0.;
                 }
 
@@ -483,7 +458,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
             int comp_count(5);
 
             Real T_g(0);
-            if (adv_enthalpy) {
+            if (solve_enthalpy) {
               T_g = interp_loc[comp_count];
               comp_count += 1;
             }
@@ -496,7 +471,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
             Real mu_g(0);
 
-            if (adv_enthalpy)
+            if (solve_enthalpy)
               mu_g = fluid_parms.calc_mu_g(T_g);
             else
               mu_g = mu_g0;
@@ -531,7 +506,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
             p_realarray[SoArealData::dragcoeff][p_id] = beta;
 
-            if(adv_enthalpy) {
+            if(solve_enthalpy) {
               Real k_g = fluid_parms.calc_k_g(T_g);
 
               Real cp_g(0.);
@@ -551,7 +526,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
             if (solve_reactions) {
               // Extract species mass fractions
-              GpuArray<Real,SPECIES::NMAX> X_sn;
+              GpuArray<Real,Species::NMAX> X_sn;
               X_sn.fill(0.);
 
               for (int n_s(0); n_s < nspecies_s; n_s++) {
@@ -588,52 +563,27 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
               for (int n_g(0); n_g < nspecies_g; n_g++) {
                 Real G_m_gk_heterogeneous(0.);
 
-                // Get the ID of the current species n_g
-                const int current_species_id = p_species_id_g[n_g];
-
                 // Loop over reactions to compute each contribution
                 for (int q(0); q < nreactions; q++) {
-                  // Do something only if reaction is heterogeneous and contains
-                  // a solid compound
-                  if (p_types[q] == Heterogeneous &&
-                      MFIXfind(p_phases[q], p_nphases[q], Fluid) != InvalidIdx) {
 
-                    Real stoc_coeff(0);
+                  Real stoich_coeff = fluid_parms.get_stoich_coeff<run_on>(n_g, q);
 
-                    // Add reactant contribution (if any)
-                    {
-                      const int pos = MFIXfind(p_reactants_id[q], p_nreactants[q], current_species_id);
+                  printf("1) stoich_coeff[%d][%d] = %e\n", n_g, q, stoich_coeff);
 
-                      if (pos != InvalidIdx) {
-                        if (p_reactants_phases[q][pos] == Fluid)
-                          stoc_coeff += p_reactants_coeffs[q][pos];
-                      }
-                    }
+                  // Compute fluid species n_g transfer rate for reaction q
+                  const Real MW_gk = fluid_parms.get_MW_gk<run_on>(n_g);
+                  Real G_m_gk_q = stoich_coeff * MW_gk * R_q_heterogeneous[q];
 
-                    // Add products contribution (if any)
-                    {
-                      const int pos = MFIXfind(p_products_id[q], p_nproducts[q], current_species_id);
+                  G_m_gk_heterogeneous += G_m_gk_q;
 
-                      if (pos != InvalidIdx) {
-                        if (p_products_phases[q][pos] == Fluid)
-                          stoc_coeff += p_products_coeffs[q][pos];
-                      }
-                    }
+                  // Contribution to the particle
+                  const Real h_gk_T_p = fluid_parms.calc_h_gk<run_on>(T_p, n_g);
+                  const Real h_gk_T_g = fluid_parms.calc_h_gk<run_on>(T_g, n_g);
 
-                    // Compute fluid species n_g transfer rate for reaction q
-                    Real G_m_gk_q = stoc_coeff * p_MW_gk[n_g] * R_q_heterogeneous[q];
+                  const Real G_H_pk_q = h_gk_T_g * amrex::min(0., G_m_gk_q);
+                  const Real G_H_gk_q = h_gk_T_p * amrex::max(0., G_m_gk_q);
 
-                    G_m_gk_heterogeneous += G_m_gk_q;
-
-                    // Contribution to the particle
-                    const Real h_gk_T_p = fluid_parms.calc_h_gk<run_on>(T_p, n_g);
-                    const Real h_gk_T_g = fluid_parms.calc_h_gk<run_on>(T_g, n_g);
-
-                    const Real G_H_pk_q = h_gk_T_g * amrex::min(0., G_m_gk_q);
-                    const Real G_H_gk_q = h_gk_T_p * amrex::max(0., G_m_gk_q);
-
-                    G_H_g_heterogeneous += (G_H_pk_q + G_H_gk_q);
-                  }
+                  G_H_g_heterogeneous += (G_H_pk_q + G_H_gk_q);
                 }
 
                 ptile_data.m_runtime_rdata[idx_mass_txfr+n_g][p_id] = G_m_gk_heterogeneous;

@@ -336,7 +336,7 @@ InterphaseTxfrDeposition (F WeightFunc,
             pTp = p_realarray[SoArealData::temperature][ip] * pgamma;
 
           // Chemical reactions deposition terms
-          GpuArray<Real,SPECIES::NMAX> ro_chem_txfr;
+          GpuArray<Real,Species::NMAX> ro_chem_txfr;
           ro_chem_txfr.fill(0.);
 
           if (solve_reactions) {

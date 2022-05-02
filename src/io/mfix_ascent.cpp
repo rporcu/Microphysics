@@ -55,7 +55,7 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
     }
 
     if ( fluid.solve_species ) {
-      for (std::string specie: fluid.species) {
+      for (std::string specie: fluid.names) {
         pltFldNames.push_back("Xg_"+specie);
         ncomp += 1;
       }

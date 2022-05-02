@@ -41,8 +41,9 @@ LevelData::LevelData (BoxArray const& ba,
   , fluid(fluid_in)
   , reactions(reactions_in)
 {
-  if (fluid->constraint_type == ConstraintType::IdealGasOpenSystem ||
-      fluid->constraint_type == ConstraintType::IdealGasClosedSystem) {
+  if (reactions->solve ||
+      (fluid->constraint_type == ConstraintType::IdealGasOpenSystem ||
+       fluid->constraint_type == ConstraintType::IdealGasClosedSystem)) {
     thermodynamic_p_g  = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
     thermodynamic_p_go = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
   }
@@ -94,8 +95,9 @@ void LevelData::resetValues (const amrex::Real init_value)
   mac_phi->setVal(init_value);
   divtau_o->setVal(init_value);
 
-  if (fluid->constraint_type == ConstraintType::IdealGasOpenSystem ||
-      fluid->constraint_type == ConstraintType::IdealGasClosedSystem) {
+  if (reactions->solve ||
+      (fluid->constraint_type == ConstraintType::IdealGasOpenSystem ||
+       fluid->constraint_type == ConstraintType::IdealGasClosedSystem)) {
     thermodynamic_p_g->setVal(init_value);
     thermodynamic_p_go->setVal(init_value);
   }
@@ -147,8 +149,9 @@ LevelData::~LevelData ()
     delete mac_phi;
     delete divtau_o;
 
-    if (fluid->constraint_type == ConstraintType::IdealGasOpenSystem ||
-        fluid->constraint_type == ConstraintType::IdealGasClosedSystem) {
+    if (reactions->solve ||
+        (fluid->constraint_type == ConstraintType::IdealGasOpenSystem ||
+         fluid->constraint_type == ConstraintType::IdealGasClosedSystem)) {
       delete thermodynamic_p_g;
       delete thermodynamic_p_go;
     }

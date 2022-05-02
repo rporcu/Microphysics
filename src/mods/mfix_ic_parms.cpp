@@ -62,7 +62,7 @@ namespace IC
 
           for (int n(0); n < nspecies_g; n++) {
             // Get the name of the fluid species we want to get the IC
-            std::string fluid_species = fluid.species[n];
+            std::string fluid_species = fluid.species_names[n];
             // Get the IC mass fraction for the current species
             ppSpecies.get(fluid_species.c_str(), new_ic.fluid.species[n].mass_fraction);
             total_mass_fraction += new_ic.fluid.species[n].mass_fraction;
@@ -135,7 +135,7 @@ namespace IC
 
           for (size_t lcs(0); lcs < solids_types.size(); ++lcs) {
 
-            SolidsPhase::SOLIDS_t new_solid;
+            SOLIDS_t new_solid;
 
             std::string field = "ic."+regions[icv]+"."+solids_types[lcs];
             amrex::ParmParse ppSolid(field.c_str());
@@ -147,7 +147,7 @@ namespace IC
 
             ppSolid.getarr("velocity", new_solid.velocity, 0, 3);
 
-            if (fluid.solve_enthalpy || solids.update_enthalpy) {
+            if (fluid.solve_enthalpy || solids.solve_enthalpy) {
               ppSolid.query("temperature", new_solid.temperature); 
             }
 
@@ -197,7 +197,7 @@ namespace IC
               amrex::Real total_mass_fraction(0);
 
               for (int n(0); n < solids.nspecies; n++) {
-                std::string current_species = solids.species[n];
+                std::string current_species = solids.species_names[n];
                 ppSpecies.get(current_species.c_str(), new_solid.species[n].mass_fraction);
 
                 total_mass_fraction += new_solid.species[n].mass_fraction;
@@ -230,14 +230,14 @@ namespace IC
 
           for(size_t lcs(0); lcs < solids_types.size(); ++ lcs) {
 
-            SolidsPhase::SOLIDS_t new_solid;
+            SOLIDS_t new_solid;
 
             std::string field = "ic."+regions[icv]+"."+solids_types[lcs];
             amrex::ParmParse ppSolid(field.c_str());
 
             new_solid.name = solids_types[lcs];
 
-            if (fluid.solve_enthalpy || solids.update_enthalpy) {
+            if (fluid.solve_enthalpy || solids.solve_enthalpy) {
               ppSolid.get("temperature", new_solid.temperature); 
             }
 
@@ -250,7 +250,7 @@ namespace IC
               new_solid.species.resize(solids.nspecies);
 
               for (int n(0); n < solids.nspecies; n++) {
-                std::string current_species = solids.species[n];
+                std::string current_species = solids.species_names[n];
                 ppSpecies.query(current_species.c_str(), new_solid.species[n].mass_fraction);
               }
             }

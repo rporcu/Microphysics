@@ -390,7 +390,7 @@ namespace BC
 
           // Get species data.
           if (fluid.solve_species)
-            read_bc_species(ppFluid, fluid.species, &new_bc.fluid);
+            read_bc_species(ppFluid, fluid.species_names, &new_bc.fluid);
         }
 
         // Read in fluid pressure BC inputs only if BC type is pinf or pout
@@ -469,7 +469,7 @@ namespace BC
 
         for(size_t lcs(0); lcs < solids_types.size(); ++ lcs){
 
-          SolidsPhase::SOLIDS_t new_solid;
+          SOLIDS_t new_solid;
 
           std::string field = "bc."+regions[bcv]+"."+solids_types[lcs];
           amrex::ParmParse ppSolid(field.c_str());
@@ -524,7 +524,7 @@ namespace BC
 
             for (int n(0); n < solids.nspecies; n++) {
               // Get the name of the solid species we want to get the BC
-              std::string dem_specie = solids.species[n];
+              std::string dem_specie = solids.species_names[n];
               // Get the BC mass fraction for the current species
               ppSpecies.query(dem_specie.c_str(), new_solid.species[n].mass_fraction);
 

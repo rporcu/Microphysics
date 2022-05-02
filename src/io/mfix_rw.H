@@ -233,10 +233,10 @@ private:
 
    amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory;
 
-   amrex::GpuArray<amrex::Real,2*SPECIES::NMAX> mass_accum = {0.};
-   amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mass_inflow = {0.};
-   amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mass_outflow = {0.};
-   amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mass_prod = {0.};
+   amrex::GpuArray<amrex::Real,2*Species::NMAX> mass_accum = {0.};
+   amrex::GpuArray<amrex::Real,  Species::NMAX> mass_inflow = {0.};
+   amrex::GpuArray<amrex::Real,  Species::NMAX> mass_outflow = {0.};
+   amrex::GpuArray<amrex::Real,  Species::NMAX> mass_prod = {0.};
 
 
    void readParameters ();

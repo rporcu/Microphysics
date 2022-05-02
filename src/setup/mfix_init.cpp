@@ -23,22 +23,14 @@ mfix::InitParams ()
   if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
 
   // Read and process species, fluid and DEM particle model options.
-  SPECIES::Initialize();
-  fluid.Initialize();
-  solids.Initialize();
-
-  enthalpy_source = solids.enthalpy_source;
-  update_mass     = solids.update_mass;
-  update_momentum = solids.update_momentum;
-  update_enthalpy = solids.update_enthalpy;
-
-  BL_ASSERT(fluid.nspecies <= SPECIES::NMAX);
-  BL_ASSERT(solids.nspecies <= SPECIES::NMAX);
-
-  // Read and process chemical reactions inputs.
-  reactions.Initialize();
+  species.Initialize();
+  reactions.Initialize(species);
+  fluid.Initialize(species, reactions);
+  solids.Initialize(species, reactions);
 
   BL_ASSERT(reactions.nreactions <= reactions.NMAX);
+  BL_ASSERT(fluid.nspecies <= Species::NMAX);
+  BL_ASSERT(solids.nspecies <= Species::NMAX);
 
   DEM::Initialize();
   PIC::Initialize();
@@ -443,7 +435,7 @@ mfix::InitParams ()
 
       for (size_t i(0); i < fluid.MW_gk0.size(); ++i) {
         if (fluid.MW_gk0[i] < 1.e-15) {
-          Print() << "Invalid molecular weight for species " << fluid.species[i] << "\n";
+          Print() << "Invalid molecular weight for species " << fluid.species_names[i] << "\n";
           amrex::Abort("Inputs error");
         }
       }

@@ -376,22 +376,22 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
 
       // Fluid species mass fractions
       if (fluid.solve_species && plt_X_gk == 1)
-        for (std::string specie: fluid.species)
+        for (std::string specie: fluid.species_names)
           pltFldNames.push_back("X_"+specie+"_g");
 
       // Fluid species mass diffusivities
       if (fluid.solve_species && plt_D_gk == 1)
-        for (std::string specie: fluid.species)
+        for (std::string specie: fluid.species_names)
           pltFldNames.push_back("D_"+specie+"_g");
 
       // Fluid species specific heat
       if (fluid.solve_species && fluid.solve_enthalpy && plt_cp_gk == 1)
-        for (std::string specie: fluid.species)
+        for (std::string specie: fluid.species_names)
           pltFldNames.push_back("cp_"+specie+"_g");
 
       // Fluid species enthalpy
       if (fluid.solve_species && fluid.solve_enthalpy && plt_h_gk == 1)
-        for (std::string specie: fluid.species)
+        for (std::string specie: fluid.species_names)
           pltFldNames.push_back("h_"+specie+"_g");
 
       // Fluid species density reaction rates
@@ -406,7 +406,7 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
 
       // Fluid species density reaction rates
       if (fluid.solve_species && reactions.solve && plt_chem_txfr == 1) {
-        for(std::string specie: fluid.species)
+        for(std::string specie: fluid.species_names)
           pltFldNames.push_back("chem_ro_txfr_"+specie);
 
         pltFldNames.push_back("chem_velx_txfr");
@@ -924,14 +924,14 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
         real_comp_names.push_back("convection");
 
         if (solids.solve_species)
-          for (auto species: solids.species)
+          for (auto species: solids.species_names)
             real_comp_names.push_back("X_"+species);
 
         if (solids.solve_species && reactions.solve) {
           for (int n(0); n < amrex::max(fluid.nspecies, solids.nspecies); ++n) {
             if (n < solids.nspecies) {
 
-              auto species = solids.species[n];
+              auto species = solids.species_names[n];
               real_comp_names.push_back("chem_mass_txfr_"+species);
             
             } else {
