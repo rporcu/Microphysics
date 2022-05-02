@@ -777,8 +777,6 @@ mfix::mfix_calc_txfr_particle (Real time,
 
                   const Real stoich_coeff = solids_parms.get_stoich_coeff<run_on>(n_s, q);
 
-                  printf("2) stoich_coeff[%d][%d] = %e\n", n_s, q, stoich_coeff);
-
                   // Compute solids species n_s transfer rate for reaction q
                   const Real MW_sn = solids_parms.get_MW_sn<run_on>(n_s);
                   Real G_m_sn_q = stoich_coeff * MW_sn * R_q_heterogeneous[q];
@@ -802,8 +800,6 @@ mfix::mfix_calc_txfr_particle (Real time,
                 for (int q(0); q < nreactions; q++) {
 
                   Real stoich_coeff = fluid_parms.get_stoich_coeff<run_on>(n_g, q);
-
-                  printf("3) stoich_coeff[%d][%d] = %e\n", n_g, q, stoich_coeff);
 
                   // Compute fluid species n_g transfer rate for reaction q
                   const Real MW_gk = fluid_parms.get_MW_gk<run_on>(n_g);

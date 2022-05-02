@@ -568,8 +568,6 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
                   Real stoich_coeff = fluid_parms.get_stoich_coeff<run_on>(n_g, q);
 
-                  printf("1) stoich_coeff[%d][%d] = %e\n", n_g, q, stoich_coeff);
-
                   // Compute fluid species n_g transfer rate for reaction q
                   const Real MW_gk = fluid_parms.get_MW_gk<run_on>(n_g);
                   Real G_m_gk_q = stoich_coeff * MW_gk * R_q_heterogeneous[q];
