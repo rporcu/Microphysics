@@ -45,9 +45,9 @@ Reactions::Reactions()
   , nreactions(0)
   , reactions(0)
   , reaction_equations(0)
-  , m_chemical_reactions(0)
-  , heterogeneous(0)
   , is_initialized(0)
+  , parameters(nullptr)
+  , m_chemical_reactions(0)
 {}
 
 
@@ -122,14 +122,14 @@ void Reactions::Initialize (const Species& species)
 ChemicalReaction::ChemicalReaction (const std::string& reaction,
                                     const Species& species)
   : m_type(REACTIONTYPE::Invalid)
-  , m_phases(0)
   , m_formula(reaction)
+  , m_phases(0)
   , m_reactants(0)
-  , m_reactants_id(0)
+  , m_reactants_IDs(0)
   , m_reactants_coeffs(0)
   , m_reactants_phases(0)
   , m_products(0)
-  , m_products_id(0)
+  , m_products_IDs(0)
   , m_products_coeffs(0)
   , m_products_phases(0)
 {
@@ -138,7 +138,7 @@ ChemicalReaction::ChemicalReaction (const std::string& reaction,
 
 
 std::string 
-ChemicalReaction::get_reactants(const std::string& formula)
+ChemicalReaction::parse_reactants(const std::string& formula)
 {
   {
     std::size_t pos = formula.find("-->");
@@ -166,7 +166,7 @@ ChemicalReaction::get_reactants(const std::string& formula)
 
 
 std::string 
-ChemicalReaction::get_products(const std::string& formula)
+ChemicalReaction::parse_products(const std::string& formula)
 {
   {
     std::size_t pos = formula.find("<--");
@@ -194,12 +194,12 @@ ChemicalReaction::get_products(const std::string& formula)
 
 
 void
-ChemicalReaction::get_stoichiometric_data(const std::string& s,
-                                          amrex::Vector<std::string>& compounds,
-                                          amrex::Vector<int>& compounds_id,
-                                          amrex::Vector<amrex::Real>& coefficients,
-                                          amrex::Vector<int>& phases,
-                                          const Species& species)
+ChemicalReaction::parse_stoichiometric_data(const std::string& s,
+                                            amrex::Vector<std::string>& compounds,
+                                            amrex::Vector<int>& compounds_id,
+                                            amrex::Vector<amrex::Real>& coefficients,
+                                            amrex::Vector<int>& phases,
+                                            const Species& species)
 {
   std::string formula(chemistry_aux::trim(s));
   std::replace(formula.begin(), formula.end(), '+', ' ');
@@ -289,22 +289,22 @@ ChemicalReaction::parse_reaction(const Species& species)
   m_products_phases.clear();
 
   // Get the reaction part of the formula
-  std::string reaction_part = get_reactants(formula);
+  std::string reaction_part = parse_reactants(formula);
   
   // Get the products part of the formula
-  std::string production_part = get_products(formula);
+  std::string production_part = parse_products(formula);
 
   // Get the reaction part stoichiometric coefficients, elements and phases
-  get_stoichiometric_data(reaction_part, m_reactants, m_reactants_id,
-      m_reactants_coeffs, m_reactants_phases, species);
+  parse_stoichiometric_data(reaction_part, m_reactants, m_reactants_IDs,
+                            m_reactants_coeffs, m_reactants_phases, species);
 
   // Multiply reaction coefficients by -1
   for (size_t i(0); i < m_reactants_coeffs.size(); ++i)
     m_reactants_coeffs[i] *= -1;
 
   // Get the production part stoichiometric coefficients, elements and phases
-  get_stoichiometric_data(production_part, m_products, m_products_id,
-      m_products_coeffs, m_products_phases, species);
+  parse_stoichiometric_data(production_part, m_products, m_products_IDs,
+                            m_products_coeffs, m_products_phases, species);
 
   // Fill m_phases with all the phases found in reactants
   for (const int phase: m_reactants_phases)

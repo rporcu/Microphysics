@@ -373,8 +373,8 @@ FluidPhase::Initialize (const Species& species,
 
       const int nreactions = reactions.nreactions;
 
-      constexpr int Fluid = ChemicalReaction::CHEMICALPHASE::Fluid;
-      constexpr int Heterogeneous = ChemicalReaction::REACTIONTYPE::Heterogeneous;
+      constexpr int Fluid = CHEMICALPHASE::Fluid;
+      constexpr int Heterogeneous = REACTIONTYPE::Heterogeneous;
 
       // Allocate space for necessary data
       stoich_coeffs.resize(nspecies*nreactions, 0.);
@@ -387,19 +387,19 @@ FluidPhase::Initialize (const Species& species,
         for (int q(0); q < nreactions; q++) {
 
           ChemicalReaction* chem_reaction = reactions.get(q);
-          auto& phases = chem_reaction->m_phases;
-          
-          auto& reactants_IDs = chem_reaction->m_reactants_id;
-          auto& reactants_phases = chem_reaction->m_reactants_phases;
-          auto& reactants_coeffs = chem_reaction->m_reactants_coeffs;
-          
-          auto& products_IDs = chem_reaction->m_products_id;
-          auto& products_phases = chem_reaction->m_products_phases;
-          auto& products_coeffs = chem_reaction->m_products_coeffs;
+          const auto& phases = chem_reaction->get_phases();
+
+          const auto& reactants_IDs = chem_reaction->get_reactants_ids();
+          const auto& reactants_phases = chem_reaction->get_reactants_phases();
+          const auto& reactants_coeffs = chem_reaction->get_reactants_coeffs();
+
+          const auto& products_IDs = chem_reaction->get_products_ids();
+          const auto& products_phases = chem_reaction->get_products_phases();
+          const auto& products_coeffs = chem_reaction->get_products_coeffs();
 
           // Do something only if reaction is heterogeneous and contains
           // a solid compound
-          if (chem_reaction->m_type == Heterogeneous &&
+          if (chem_reaction->get_type() == Heterogeneous &&
               std::find(phases.begin(), phases.end(), Fluid) != phases.end()) {
 
             // Add reactant contribution (if any)

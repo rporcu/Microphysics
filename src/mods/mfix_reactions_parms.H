@@ -9,6 +9,11 @@
 #include <AMReX_Gpu.H>
 
 
+struct REACTIONTYPE { enum {Invalid=-1, Homogeneous, Heterogeneous}; };
+
+struct CHEMICALPHASE { enum {Invalid=-1, Fluid, Solid}; };
+
+
 // Forward declaration
 class ChemicalReaction;
 
@@ -54,10 +59,6 @@ class Reactions {
     // Chemical reactions equations
     std::vector<std::string> reaction_equations;
 
-    // Table of stoichiometric coefficients for each species and each chemical
-    // reaction
-    amrex::Vector<amrex::Vector<amrex::Real>> heterogeneous;
-
     int is_initialized;
 
     // Initialization procedure
@@ -96,45 +97,71 @@ class ChemicalReaction {
     // Default destructor
     ~ChemicalReaction () = default;
 
-    struct REACTIONTYPE { enum {Invalid=-1, Homogeneous, Heterogeneous}; };
+    int get_type () 
+    { return m_type; }
 
+    const amrex::Vector<int>& get_phases () const
+    { return m_phases; }
+
+    const amrex::Vector<std::string>& get_reactants () const
+    { return m_reactants; }
+
+    const amrex::Vector<int>& get_reactants_ids () const
+    { return m_reactants_IDs; }
+
+    const amrex::Vector<amrex::Real>& get_reactants_coeffs () const
+    { return m_reactants_coeffs; }
+
+    const amrex::Vector<int>& get_reactants_phases () const
+    { return m_reactants_phases; }
+
+    const amrex::Vector<std::string>& get_products () const
+    { return m_products; }
+
+    const amrex::Vector<int>& get_products_ids () const
+    { return m_products_IDs; }
+
+    const amrex::Vector<amrex::Real>& get_products_coeffs () const
+    { return m_products_coeffs; }
+
+    const amrex::Vector<int>& get_products_phases () const
+    { return m_products_phases; }
+
+  private:
     // Reaction type (homogeneous, heterogeneous)
     int m_type;
-
-    struct CHEMICALPHASE { enum {Invalid=-1, Fluid, Solid}; };
-
-    // Phases
-    amrex::Vector<int> m_phases;
 
     // chemical formula
     const std::string m_formula;
 
+    // Phases
+    amrex::Vector<int> m_phases;
+
     // Reactants
     amrex::Vector<std::string> m_reactants;
-    amrex::Vector<int> m_reactants_id;
+    amrex::Vector<int> m_reactants_IDs;
     amrex::Vector<amrex::Real> m_reactants_coeffs;
     amrex::Vector<int> m_reactants_phases;
 
     // Products
     amrex::Vector<std::string> m_products;
-    amrex::Vector<int> m_products_id;
+    amrex::Vector<int> m_products_IDs;
     amrex::Vector<amrex::Real> m_products_coeffs;
     amrex::Vector<int> m_products_phases;
 
-  private:
     // Get reactants data
-    std::string get_reactants(const std::string& formula);
+    std::string parse_reactants(const std::string& formula);
 
     // Get reactants data
-    std::string get_products(const std::string& formula);
+    std::string parse_products(const std::string& formula);
 
     // Extract stoichiometric data
-    void get_stoichiometric_data(const std::string& s,
-                                 amrex::Vector<std::string>& compounds,
-                                 amrex::Vector<int>& compounds_id,
-                                 amrex::Vector<amrex::Real>& coefficients,
-                                 amrex::Vector<int>& phases,
-                                 const Species& species);
+    void parse_stoichiometric_data(const std::string& s,
+                                   amrex::Vector<std::string>& compounds,
+                                   amrex::Vector<int>& compounds_id,
+                                   amrex::Vector<amrex::Real>& coefficients,
+                                   amrex::Vector<int>& phases,
+                                   const Species& species);
 
     // Parse reaction
     void parse_reaction(const Species& species);
