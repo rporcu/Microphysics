@@ -172,12 +172,21 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
     else
         advection_string = "MOL";
 
-    HydroUtils::ExtrapVelToFaces(*vel_in[lev], *vel_forces[lev],
-                                 *ep_u_mac[lev], *ep_v_mac[lev], *ep_w_mac[lev],
-                                  get_hydro_velocity_bcrec(), get_hydro_velocity_bcrec_device_ptr(),
-                                  geom[lev], l_dt, *ebfact,
-                                  m_godunov_ppm, m_godunov_use_forces_in_trans,
-                                  advection_string);
+    if (EB::has_flow) {
+       HydroUtils::ExtrapVelToFaces(*vel_in[lev], *vel_forces[lev],
+                                    *ep_u_mac[lev], *ep_v_mac[lev], *ep_w_mac[lev],
+                                     get_hydro_velocity_bcrec(), get_hydro_velocity_bcrec_device_ptr(),
+                                     geom[lev], l_dt, *ebfact, eb_flow_vel[lev],
+                                     m_godunov_ppm, m_godunov_use_forces_in_trans,
+                                     advection_string);
+    } else {
+       HydroUtils::ExtrapVelToFaces(*vel_in[lev], *vel_forces[lev],
+                                    *ep_u_mac[lev], *ep_v_mac[lev], *ep_w_mac[lev],
+                                     get_hydro_velocity_bcrec(), get_hydro_velocity_bcrec_device_ptr(),
+                                     geom[lev], l_dt, *ebfact,
+                                     m_godunov_ppm, m_godunov_use_forces_in_trans,
+                                     advection_string);
+    }
 
     for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 

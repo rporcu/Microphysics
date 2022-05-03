@@ -1152,7 +1152,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                            0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
 
     diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_T_g(),
-                                   advect_enthalpy, 0.5*l_dt);
+                                   advect_enthalpy, 0.5*l_dt, GetVecOfConstPtrs(eb_flow_vel));
 
     // Convert (rho * ep_g) back into ep_g
     for (int lev = 0; lev <= finest_level; lev++)
