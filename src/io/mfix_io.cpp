@@ -146,13 +146,21 @@ MfixRW::WriteAverageRegions (std::string& avg_file, int /*nstep*/, Real time) co
   for (int lev = 0; lev < nlev; lev++)
     {
       if (fluid.solve) {
-        ComputeAverageFluidVars( lev,
-                                 time,
-                                 avg_file);
+        ComputeAverageFluidVars(lev,
+                                time,
+                                avg_file);
       }
 
       //  Compute Eulerian velocities in selected regions
       if(DEM::solve || PIC::solve) {
+        pc->ComputeAverageDensities(lev,
+                                    time,
+                                    avg_file,
+                                    avg_ro_p,
+                                    avg_region_x_w, avg_region_x_e,
+                                    avg_region_y_s, avg_region_y_n,
+                                    avg_region_z_b, avg_region_z_t);
+
         pc->ComputeAverageVelocities(lev,
                                      time,
                                      avg_file,
