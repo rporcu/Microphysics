@@ -183,6 +183,7 @@ private:
    amrex::Vector<amrex::Real> avg_vel_g;
    amrex::Vector<amrex::Real> avg_T_g;
 
+   amrex::Vector<amrex::Real> avg_ro_p;
    amrex::Vector<amrex::Real> avg_vel_p;
    amrex::Vector<amrex::Real> avg_T_p;
 

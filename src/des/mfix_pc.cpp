@@ -1606,6 +1606,210 @@ Vector<RealVect> MFIXParticleContainer::GetMaxForces ()
 }
 
 void MFIXParticleContainer::
+ComputeAverageDensities (const int lev,
+                         const Real time,
+                         const std::string&  basename,
+                         const Vector<Real>& avg_ro_p,
+                         const Vector<Real>& avg_region_x_w,
+                         const Vector<Real>& avg_region_x_e,
+                         const Vector<Real>& avg_region_y_s,
+                         const Vector<Real>& avg_region_y_n,
+                         const Vector<Real>& avg_region_z_b,
+                         const Vector<Real>& avg_region_z_t )
+{
+  // Count number of calls -- Used to determine when to create file from scratch
+  static int ncalls = 0;
+  ++ncalls;
+
+  int  nregions = avg_region_x_w.size();
+
+  if(avg_ro_p.size() > 0)
+  {
+    //
+    // Check the regions are defined correctly
+    //
+    if ( ( avg_region_x_e.size() != nregions ) ||
+         ( avg_region_y_s.size() != nregions ) ||
+         ( avg_region_y_n.size() != nregions ) ||
+         ( avg_region_z_b.size() != nregions ) ||
+         ( avg_region_z_t.size() != nregions ) )
+    {
+      amrex::Print() << "ComputeAverageTemperatures: some regions are not properly"
+        " defined: skipping.";
+      return;
+    }
+
+    std::vector<long> region_np(nregions, 0);
+    std::vector<Real> region_ro_p(nregions, 0.0);
+
+    for ( int nr = 0; nr < nregions; ++nr )
+    {
+      //amrex::Print() << "size of avg_ro_p " << avg_ro_p[nr] << "\n";
+
+      // This region isn't needed for particle data.
+      if( avg_ro_p[nr] == 0) continue;
+
+      // Create Real box for this region
+      RealBox avg_region({avg_region_x_w[nr], avg_region_y_s[nr], avg_region_z_b[nr]},
+                         {avg_region_x_e[nr], avg_region_y_n[nr], avg_region_z_t[nr]});
+
+      // Jump to next iteration if this averaging region is not valid
+      if (!avg_region.ok())
+      {
+        amrex::Print() << "ComputeAverageDensities: region " << nr
+                       << " is invalid: skipping\n";
+        continue;
+      }
+
+      long sum_np = 0;    // Number of particle in avg region
+      Real sum_ro_p = 0.;
+
+#ifdef AMREX_USE_GPU
+      if (Gpu::inLaunchRegion())
+      {
+        // Reduce sum operation for np, Tp
+        ReduceOps<ReduceOpSum, ReduceOpSum> reduce_op;
+        ReduceData<long, Real> reduce_data(reduce_op);
+        using ReduceTuple = typename decltype(reduce_data)::Type;
+
+        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+        {
+          Box bx = pti.tilebox();
+          RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
+
+          if (tile_region.intersects(avg_region))
+          {
+            const int np         = NumberOfParticles(pti);
+            const AoS &particles = pti.GetArrayOfStructs();
+            const ParticleType* pstruct = particles().dataPtr();
+
+            auto& soa = pti.GetStructOfArrays();
+            auto p_realarray = soa.realarray();
+
+            reduce_op.eval(np, reduce_data, [pstruct,p_realarray,avg_region]
+              AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
+            {
+              const ParticleType p = pstruct[p_id];
+
+              long l_np = static_cast<long>(0);
+              Real l_ro_p = 0.0;
+
+              if (avg_region.contains(p.pos()))
+              {
+                l_np = static_cast<long>(1);
+                l_ro_p = p_realarray[SoArealData::density][p_id];
+              }
+
+              return {l_np, l_ro_p};
+            });
+          }
+        }
+
+        ReduceTuple host_tuple = reduce_data.value();
+        sum_np = amrex::get<0>(host_tuple);
+        sum_ro_p = amrex::get<1>(host_tuple);
+      }
+      else
+#endif
+      {
+#ifdef _OPENMP
+#pragma omp parallel reduction(+:sum_np,sum_ro_p) if (Gpu::notInLaunchRegion())
+#endif
+        for (MFIXParIter pti(*this, lev); pti.isValid(); ++ pti)
+        {
+          Box bx = pti.tilebox();
+          RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
+
+          if (tile_region.intersects(avg_region))
+          {
+            const int np          = NumberOfParticles(pti);
+            const AoS& particles  = pti.GetArrayOfStructs();
+            const ParticleType* pstruct = particles().dataPtr();
+
+            auto& soa = pti.GetStructOfArrays();
+            auto p_realarray = soa.realarray();
+
+            for (int p_id(0); p_id < np; ++p_id)
+            {
+              const ParticleType& p = pstruct[p_id];
+
+              if (avg_region.contains(p.pos()))
+              {
+                sum_np += static_cast<long>(1);
+                sum_ro_p += p_realarray[SoArealData::density][p_id];
+              }
+            }
+          }
+        }
+      }
+
+      region_np[nr] = sum_np;
+      region_ro_p[nr] = sum_ro_p;
+    }
+
+    // Compute parallel reductions
+    ParallelDescriptor::ReduceLongSum(region_np.data(), nregions);
+    ParallelDescriptor::ReduceRealSum(region_ro_p.data(), nregions);
+
+    // Only the IO processor takes care of the output
+    if (ParallelDescriptor::IOProcessor())
+    {
+      for ( int nr = 0; nr < nregions; ++nr )
+      {
+        // Skip this region.
+        if( avg_ro_p[nr] == 0 ) continue;
+
+        //
+        // Compute averages (NaN if NP=0 )
+        //
+        if (region_np[nr] == 0) {
+          region_ro_p[nr] = 0.0;
+        }
+        else {
+          region_ro_p[nr] /= region_np[nr];
+        }
+
+        //
+        // Print to file
+        //
+        std::ofstream  ofs;
+        std::string    fname;
+
+        fname = basename + "_ro_p_" + std::to_string(nr) + ".dat";
+
+        // Open file
+        if ( ncalls == 1 )
+        {
+          // Create output files only the first time this function is called
+          // Use ios:trunc to delete previous content
+          ofs.open ( fname.c_str(), std::ios::out | std::ios::trunc );
+        }
+        else
+        {
+          // If this is not the first time we write to this file
+          // we append to it
+          ofs.open ( fname.c_str(), std::ios::out | std::ios::app );
+        }
+
+        // Check if file is good
+        if ( !ofs.good() )
+          amrex::FileOpenFailed ( fname );
+
+        // Print header if first access
+        if ( ncalls == 1 )
+          ofs << "#  Time   NP  ro" << std::endl;
+
+        ofs << time << " "
+            << region_np[nr] << " "
+            << region_ro_p[nr] << std::endl;
+
+        ofs.close();
+      }
+    }
+  }
+}
+
+void MFIXParticleContainer::
 ComputeAverageVelocities (const int lev,
                           const Real time,
                           const std::string&  basename,
