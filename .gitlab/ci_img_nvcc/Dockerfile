@@ -17,10 +17,10 @@ RUN apt-get -qq update\
     ca-certificates=20210119~20.* \
     curl=7.* \
     gnupg=2.* \
-    && curl -L https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub > 7fa2af80.pub \
-    && apt-key add 7fa2af80.pub \
-    && rm 7fa2af80.pub \
-    && echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64 /" > /etc/apt/sources.list.d/cuda.list \
+    wget \
+    dpkg \
+    && wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb \
+    && dpkg -i cuda-keyring_1.0-1_all.deb \
     && apt-get -qq update \
     && apt-get -qq -y install --no-install-recommends \
     build-essential=12.* \

@@ -1,5 +1,6 @@
 #include <AMReX_MultiFabUtil.H>
 #include <mfix_diffusion_op.H>
+#include <mfix_eb_parms.H>
 
 using namespace amrex;
 
@@ -9,7 +10,8 @@ using namespace amrex;
 void DiffusionOp::diffuse_velocity (const Vector< MultiFab* >& vel_in,
                                     const Vector< MultiFab* >& ep_ro_in,
                                     const Vector< MultiFab* >& T_g_in,
-                                    Real dt)
+                                    Real dt,
+                                    const amrex::Vector< const amrex::MultiFab* >& eb_flow_vel)
 {
     BL_PROFILE("DiffusionOp::diffuse_velocity");
 
@@ -87,6 +89,10 @@ void DiffusionOp::diffuse_velocity (const Vector< MultiFab* >& vel_in,
         vel_matrix->setACoeffs(lev, (*ep_ro_in[lev]));
         vel_matrix->setShearViscosity  (lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
         vel_matrix->setEBShearViscosity(lev, (*mu_g[lev]));
+
+        if (EB::has_flow) {
+            vel_matrix->setEBShearViscosityWithInflow(lev, (*mu_g[lev]), *eb_flow_vel[lev]);
+        }
     }
 
     if(verbose > 0)

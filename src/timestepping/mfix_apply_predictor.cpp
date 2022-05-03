@@ -188,7 +188,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     }
 
     if (need_divtau()) {
-      diffusion_op->ComputeDivTau(get_divtau(), get_vel_g_old(), get_ep_g(), get_T_g_old());
+      diffusion_op->ComputeDivTau(get_divtau(), get_vel_g_old(), get_ep_g(), get_T_g_old(), GetVecOfConstPtrs(eb_flow_vel));
     }
 
     {
@@ -947,7 +947,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       mfix_set_velocity_bcs(new_time, get_vel_g(), 0);
 
       // Diffuse velocity
-      diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_T_g(), l_dt);
+      diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_T_g(), l_dt, GetVecOfConstPtrs(eb_flow_vel));
 
       // Convert (rho * ep_g) back into ep_g
       for (int lev = 0; lev <= finest_level; lev++)

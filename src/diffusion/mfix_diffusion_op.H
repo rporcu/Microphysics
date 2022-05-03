@@ -58,7 +58,8 @@ class DiffusionOp
     void diffuse_velocity (const amrex::Vector< amrex::MultiFab* >& vel,
                            const amrex::Vector< amrex::MultiFab* >& ep_ro,
                            const amrex::Vector< amrex::MultiFab* >& T_g,
-                           amrex::Real dt);
+                           amrex::Real dt, 
+                           const amrex::Vector< const amrex::MultiFab* >& eb_flow_vel);
 
     // Temperature diffusion
     void diffuse_temperature (const amrex::Vector< amrex::MultiFab* >& T_g,
@@ -106,7 +107,8 @@ class DiffusionOp
     void ComputeDivTau (const amrex::Vector< amrex::MultiFab* >& divtau_out,
                         const amrex::Vector< amrex::MultiFab* >& vel_in,
                         const amrex::Vector< amrex::MultiFab* >& ep_in,
-                        const amrex::Vector< amrex::MultiFab* >& T_g_in);
+                        const amrex::Vector< amrex::MultiFab* >& T_g_in,
+                        const amrex::Vector< const amrex::MultiFab* >& eb_flow_vel);
 
     // Explicit tensor temperature term
     void ComputeLapT (const amrex::Vector< amrex::MultiFab*      >& lapT_out,

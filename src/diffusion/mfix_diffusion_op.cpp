@@ -256,7 +256,8 @@ void DiffusionOp::setSolverSettings (MLMG& solver)
 void DiffusionOp::ComputeDivTau (const Vector< MultiFab* >& divtau_out,
                                  const Vector< MultiFab* >& vel_in,
                                  const Vector< MultiFab* >& ep_in,
-                                 const Vector< MultiFab* >& T_g_in)
+                                 const Vector< MultiFab* >& T_g_in,
+                                 const amrex::Vector< const amrex::MultiFab* >& eb_flow_vel)
 {
     BL_PROFILE("DiffusionOp::ComputeDivTau");
 
@@ -321,7 +322,13 @@ void DiffusionOp::ComputeDivTau (const Vector< MultiFab* >& divtau_out,
         EB_interp_CellCentroid_to_FaceCentroid (mu_g, GetArrOfPtrs(b[lev]), 0, 0, 1, geom[lev], bcs_s);
 
         vel_matrix->setShearViscosity(lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
-        vel_matrix->setEBShearViscosity(lev, mu_g);
+
+        if (EB::has_flow) {
+           vel_matrix->setEBShearViscosityWithInflow(lev, mu_g, *eb_flow_vel[lev]);
+        } else {
+           vel_matrix->setEBShearViscosity(lev, mu_g);
+        }
+
         vel_matrix->setLevelBC(lev, GetVecOfConstPtrs(vel_in)[lev]);
     }
 
