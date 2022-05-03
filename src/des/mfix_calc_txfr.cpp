@@ -626,7 +626,22 @@ mfix::mfix_calc_txfr_particle (Real time,
                 p_realarray[SoArealData::dragy][p_id] = 0.0;
                 p_realarray[SoArealData::dragz][p_id] = 0.0;
 
-                p_realarray[SoArealData::convection][p_id] = 0.0;
+                if (solve_enthalpy) {
+                  p_realarray[SoArealData::convection][p_id] = 0.0;
+                }
+
+                // chemical reaction txfr variables
+                if (solve_reactions) {
+                  for (int n_g(0); n_g < nspecies_g; n_g++)
+                    ptile_data.m_runtime_rdata[idx_mass_txfr+n_g][p_id] = 0.;
+
+                  ptile_data.m_runtime_rdata[idx_vel_txfr+0][p_id] = 0.;
+                  ptile_data.m_runtime_rdata[idx_vel_txfr+1][p_id] = 0.;
+                  ptile_data.m_runtime_rdata[idx_vel_txfr+2][p_id] = 0.;
+
+                  // Write the result in the enthalpy transfer space
+                  ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = 0.;
+                }
 
                 return;
 

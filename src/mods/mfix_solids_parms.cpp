@@ -337,7 +337,7 @@ SolidsPhase::Initialize (const Species& species,
 
               // Add reactant contribution (if any)
               {
-                for (size_t pos(0); pos < reactants_IDs.size(); ++pos) {
+                for (int pos(0); pos < reactants_IDs.size(); ++pos) {
                   if (species_id == reactants_IDs[pos] && reactants_phases[pos] == Solid) {
                     stoich_coeffs[n_s*nreactions+q] += reactants_coeffs[pos];
                   }
@@ -346,7 +346,7 @@ SolidsPhase::Initialize (const Species& species,
 
               // Add products contribution (if any)
               {
-                for (size_t pos(0); pos < products_IDs.size(); ++pos) {
+                for (int pos(0); pos < products_IDs.size(); ++pos) {
                   if (species_id == products_IDs[pos] && products_phases[pos] == Solid) {
                     stoich_coeffs[n_s*nreactions+q] += products_coeffs[pos];
                   }

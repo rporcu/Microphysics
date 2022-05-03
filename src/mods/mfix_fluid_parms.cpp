@@ -65,7 +65,7 @@ FluidPhase::Initialize (const Species& species,
   AMREX_ALWAYS_ASSERT_WITH_MESSAGE(reactions.is_initialized,
       "Reactions not initialized. Can't initialize fluid phase before reactions initialization");
 
-  // Flag for initialzation
+  // Flag for initialization
   is_initialized = 1;
 
   amrex::ParmParse pp("fluid");
@@ -404,7 +404,7 @@ FluidPhase::Initialize (const Species& species,
 
             // Add reactant contribution (if any)
             {
-              for (size_t pos(0); pos < reactants_IDs.size(); ++pos) {
+              for (int pos(0); pos < reactants_IDs.size(); ++pos) {
                 if (species_id == reactants_IDs[pos] && reactants_phases[pos] == Fluid) {
                   stoich_coeffs[n_g*nreactions+q] += reactants_coeffs[pos];
                 }
@@ -413,7 +413,7 @@ FluidPhase::Initialize (const Species& species,
 
             // Add products contribution (if any)
             {
-              for (size_t pos(0); pos < products_IDs.size(); ++pos) {
+              for (int pos(0); pos < products_IDs.size(); ++pos) {
                 if (species_id == products_IDs[pos] && products_phases[pos] == Fluid) {
                   stoich_coeffs[n_g*nreactions+q] += products_coeffs[pos];
                 }

@@ -299,7 +299,7 @@ ChemicalReaction::parse_reaction(const Species& species)
                             m_reactants_coeffs, m_reactants_phases, species);
 
   // Multiply reaction coefficients by -1
-  for (size_t i(0); i < m_reactants_coeffs.size(); ++i)
+  for (int i(0); i < m_reactants_coeffs.size(); ++i)
     m_reactants_coeffs[i] *= -1;
 
   // Get the production part stoichiometric coefficients, elements and phases
@@ -316,7 +316,7 @@ ChemicalReaction::parse_reaction(const Species& species)
     if (std::find(m_phases.begin(), m_phases.end(), phase) == m_phases.end())
       m_phases.push_back(phase);
 
-  // Set the type of reaction, wether homogeneous or heterogeneous
+  // Set the type of reaction, whether homogeneous or heterogeneous
   if (m_phases.size() == 1)
     m_type = REACTIONTYPE::Homogeneous;
   else if (m_phases.size() >= 2)
