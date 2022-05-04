@@ -386,14 +386,11 @@ namespace BC
           // Read in fluid density
           read_bc_density(ppFluid, &new_bc.fluid);
 
-          if (fluid.solve_enthalpy) {
-            read_bc_temperature(ppFluid, &new_bc.fluid);
-          }
+          read_bc_temperature(ppFluid, &new_bc.fluid);
 
           // Get species data.
-          if (fluid.solve_species) {
-            read_bc_species(ppFluid, fluid.species, &new_bc.fluid);
-          }
+          if (fluid.solve_species)
+            read_bc_species(ppFluid, fluid.species_names, &new_bc.fluid);
         }
 
         // Read in fluid pressure BC inputs only if BC type is pinf or pout
@@ -414,7 +411,8 @@ namespace BC
         // ********************************************************************
         if (fluid.constraint_type == ConstraintType::IncompressibleFluid) {
 
-          if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf) {
+          if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf ||
+              (new_bc.type == BCList::eb && new_bc.fluid.flow_thru_eb)) {
 
             if (!new_bc.fluid.density_defined) {
               amrex::Print() << "BCs must have density defined!" << std::endl;
@@ -425,16 +423,25 @@ namespace BC
 
         } else if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
 
-          if (new_bc.fluid.density_defined) {
-            amrex::Print() << "BCs must NOT have density defined!" << std::endl;
-            amrex::Print() << "BC region: " << regions[bcv] << std::endl;
-            amrex::Abort("Fix the inputs file!");
+          if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf ||
+              (new_bc.type == BCList::eb && new_bc.fluid.flow_thru_eb)) {
+
+            if (new_bc.fluid.density_defined) {
+              amrex::Print() << "BCs must NOT have density defined!" << std::endl;
+              amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+              amrex::Abort("Fix the inputs file!");
+            }
+
+            if (!new_bc.fluid.temperature_defined) {
+              amrex::Print() << "BCs must have temperature defined!" << std::endl;
+              amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+              amrex::Abort("Fix the inputs file!");
+            }
           }
 
         } else if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
 
-          if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf ||
-              new_bc.type == BCList::pout) {
+          if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf || new_bc.type == BCList::pout) {
 
             amrex::Print() << "minf, pinf or pout BCs cannot be defined in a closed system!" << std::endl;
             amrex::Print() << "BC region: " << regions[bcv] << std::endl;
@@ -462,7 +469,7 @@ namespace BC
 
         for(size_t lcs(0); lcs < solids_types.size(); ++ lcs){
 
-          SolidsPhase::SOLIDS_t new_solid;
+          SOLIDS_t new_solid;
 
           std::string field = "bc."+regions[bcv]+"."+solids_types[lcs];
           amrex::ParmParse ppSolid(field.c_str());
@@ -517,7 +524,7 @@ namespace BC
 
             for (int n(0); n < solids.nspecies; n++) {
               // Get the name of the solid species we want to get the BC
-              std::string dem_specie = solids.species[n];
+              std::string dem_specie = solids.species_names[n];
               // Get the BC mass fraction for the current species
               ppSpecies.query(dem_specie.c_str(), new_solid.species[n].mass_fraction);
 
@@ -987,7 +994,7 @@ read_bc_species (amrex::ParmParse pp,
     }
     err_found = (amrex::Math::abs(1.0 - sum_xg) > 1.e-15);
 
-  }else if (sum_constant_species == 0 ) {
+  } else if (sum_constant_species == 0 ) {
 
     // First verify that all species are given for all times
     const int entries = fluid->species_table[0].size();

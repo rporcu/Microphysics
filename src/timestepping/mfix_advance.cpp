@@ -84,15 +84,15 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   mfix_set_density_bcs(time, get_ro_g());
   mfix_set_tracer_bcs(time, get_trac());
 
-  if (advect_enthalpy) {
+  if (fluid.solve_enthalpy) {
     mfix_set_temperature_bcs(time, get_T_g());
     mfix_set_enthalpy_bcs(time, get_h_g());
   }
 
-  if (advect_enthalpy && EB::fix_temperature)
+  if (fluid.solve_enthalpy && EB::fix_temperature)
     mfix_set_eb_temperature_bcs(get_T_g_on_eb());
 
-  if (solve_species)
+  if (fluid.solve_species)
     mfix_set_species_bcs(time, get_X_gk());
 
   // Copy vel_g and p_g into vel_go and p_go
@@ -105,13 +105,9 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   }
 
   if (DEM::solve || PIC::solve) {
-    mfix_calc_txfr_fluid(get_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                         get_T_g(), get_X_gk(), time);
-
-    if (reactions.solve) {
-      mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                          get_p_g(), get_T_g(), get_X_gk(), time);
-    }
+    mfix_calc_txfr_fluid(get_txfr(), get_chem_txfr(), get_ep_g(), get_ro_g(),
+                         get_vel_g(), get_T_g(), get_X_gk(), get_thermodynamic_p_g(),
+                         time);
   }
 
   // Create temporary multifabs to hold conv and vel_RHS
@@ -142,34 +138,34 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 2+ntrac, 0, MFInfo(), *ebfactory[lev]);
     conv_s[lev]->setVal(0.0);
 
-    if (advect_density) {
+    if (fluid.solve_density) {
       ro_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
       ro_RHS_old[lev]->setVal(0.0);
     }
 
-    if (advect_tracer) {
+    if (fluid.solve_tracer) {
       lap_trac_old[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
       lap_trac_old[lev]->setVal(0.0);
     }
 
-    if (advect_enthalpy) {
+    if (fluid.solve_enthalpy) {
       enthalpy_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
       enthalpy_RHS_old[lev]->setVal(0.0);
       lap_T_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
       lap_T_old[lev]->setVal(0.0);
     }
 
-    if (solve_species) {
+    if (fluid.solve_species) {
       div_J_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
       div_J_old[lev]->setVal(0.0);
     }
 
-    if (advect_enthalpy && solve_species) {
+    if (fluid.solve_enthalpy && fluid.solve_species) {
       div_hJ_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
       div_hJ_old[lev]->setVal(0.0);
     }
 
-    if (solve_species) {
+    if (fluid.solve_species) {
       conv_X[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
       conv_X[lev]->setVal(0.0);
 
@@ -189,7 +185,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
       eb_flow_scalars[lev] = new MultiFab(grids[lev], dmap[lev], 2+ntrac, nghost_state(), MFInfo(), *ebfactory[lev]);
       eb_flow_scalars[lev]->setVal(0.0);
 
-      if (solve_species) {
+      if (fluid.solve_species) {
         eb_flow_species[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, nghost_state(), MFInfo(), *ebfactory[lev]);
         eb_flow_species[lev]->setVal(0.0);
       }
@@ -224,27 +220,27 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
       MultiFab::Copy(*m_leveldata[lev]->vel_g, *m_leveldata[lev]->vel_go, 0, 0,
                      m_leveldata[lev]->vel_g->nComp(), m_leveldata[lev]->vel_g->nGrow());
 
-      if (advect_density)
+      if (fluid.solve_density)
         MultiFab::Copy(*m_leveldata[lev]->ro_g, *m_leveldata[lev]->ro_go, 0, 0,
                        m_leveldata[lev]->ro_g->nComp(), m_leveldata[lev]->ro_g->nGrow());
 
-      if (advect_enthalpy) {
+      if (fluid.solve_enthalpy) {
         MultiFab::Copy(*m_leveldata[lev]->T_g, *m_leveldata[lev]->T_go, 0, 0,
                        m_leveldata[lev]->T_g->nComp(), m_leveldata[lev]->T_g->nGrow());
         MultiFab::Copy(*m_leveldata[lev]->h_g, *m_leveldata[lev]->h_go, 0, 0,
                        m_leveldata[lev]->h_g->nComp(), m_leveldata[lev]->h_g->nGrow());
       }
 
-      if (advect_tracer)
+      if (fluid.solve_tracer)
         MultiFab::Copy(*m_leveldata[lev]->trac, *m_leveldata[lev]->trac_o, 0, 0,
                        m_leveldata[lev]->trac->nComp(), m_leveldata[lev]->trac->nGrow());
 
-      if (solve_species) {
+      if (fluid.solve_species) {
         MultiFab::Copy(*m_leveldata[lev]->X_gk, *m_leveldata[lev]->X_gko, 0, 0,
                        m_leveldata[lev]->X_gk->nComp(), m_leveldata[lev]->X_gk->nGrow());
       }
 
-      if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem && advect_enthalpy) {
+      if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem && fluid.solve_enthalpy) {
         MultiFab::Copy(*m_leveldata[lev]->thermodynamic_p_g, *m_leveldata[lev]->thermodynamic_p_go, 0, 0,
                         m_leveldata[lev]->thermodynamic_p_g->nComp(), m_leveldata[lev]->thermodynamic_p_g->nGrow());
       }
@@ -255,13 +251,13 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     mfix_set_density_bcs(time, get_ro_g());
     mfix_set_tracer_bcs(time, get_trac());
 
-    if (advect_enthalpy)
+    if (fluid.solve_enthalpy)
       mfix_set_temperature_bcs(time, get_T_g());
 
-    if (advect_enthalpy)
+    if (fluid.solve_enthalpy)
       mfix_set_enthalpy_bcs(time, get_h_g());
 
-    if (solve_species)
+    if (fluid.solve_species)
       mfix_set_species_bcs(time, get_X_gk());
   }
 
@@ -270,22 +266,22 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
      delete conv_u[lev];
      delete conv_s[lev];
 
-     if (advect_density)
+     if (fluid.solve_density)
        delete ro_RHS_old[lev];
 
-     if (advect_tracer)
+     if (fluid.solve_tracer)
        delete lap_trac_old[lev];
 
-     if (advect_enthalpy) {
+     if (fluid.solve_enthalpy) {
        delete enthalpy_RHS_old[lev];
        delete lap_T_old[lev];
      }
 
-     if (advect_enthalpy && solve_species) {
+     if (fluid.solve_enthalpy && fluid.solve_species) {
        delete div_hJ_old[lev];
      }
 
-     if (solve_species) {
+     if (fluid.solve_species) {
        delete conv_X[lev];
        delete species_RHS_old[lev];
        delete div_J_old[lev];
@@ -297,7 +293,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
      if (EB::has_flow) {
        delete eb_flow_vel[lev];
        delete eb_flow_scalars[lev];
-       if (solve_species) {
+       if (fluid.solve_species) {
          delete eb_flow_species[lev];
        }
     }
@@ -326,8 +322,6 @@ mfix::mfix_add_txfr_explicit (Real dt,
   */
 
   BL_PROFILE("mfix::mfix_add_txfr_explicit");
-
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
   auto& fluid_parms = *fluid.parameters;
 
@@ -368,7 +362,7 @@ mfix::mfix_add_txfr_explicit (Real dt,
         vel_array(i,j,k,2) = vel_z + drag_2;
       });
 
-      if(advect_enthalpy) {
+      if(fluid.solve_enthalpy) {
 
         Array4<Real      > const& hg_array  = h_g_in[lev]->array(mfi);
         Array4<Real      > const& Tg_array  = T_g_in[lev]->array(mfi);
@@ -383,7 +377,7 @@ mfix::mfix_add_txfr_explicit (Real dt,
 
         amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
             fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-            run_on_device,is_IOProc,abstol=newton_abstol,
+            is_IOProc,abstol=newton_abstol,
             reltol=newton_reltol,maxiter=newton_maxiter]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
@@ -412,16 +406,12 @@ mfix::mfix_add_txfr_explicit (Real dt,
 
               if (!fluid_is_a_mixture) {
 
-                hg_loc = run_on_device ?
-                  fluid_parms.calc_h_g<RunOn::Device>(Tg_arg, cell_is_covered) :
-                  fluid_parms.calc_h_g<RunOn::Host>(Tg_arg, cell_is_covered);
+                hg_loc = fluid_parms.calc_h_g<run_on>(Tg_arg, cell_is_covered);
 
               } else {
 
                 for (int n(0); n < nspecies_g; ++n) {
-                  const Real h_gk = run_on_device ?
-                    fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg, n, cell_is_covered) :
-                    fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg, n, cell_is_covered);
+                  const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_arg, n, cell_is_covered);
 
                   hg_loc += Xgk_array(i,j,k,n)*h_gk;
                 }
@@ -437,16 +427,12 @@ mfix::mfix_add_txfr_explicit (Real dt,
 
               if (!fluid_is_a_mixture) {
 
-                gradient = run_on_device ?
-                  fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
-                  fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
+                gradient = fluid_parms.calc_partial_h_g<run_on>(Tg_arg);
 
               } else {
 
                 for (int n(0); n < nspecies_g; ++n) {
-                  const Real h_gk = run_on_device ?
-                    fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
-                    fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
+                  const Real h_gk = fluid_parms.calc_partial_h_gk<run_on>(Tg_arg,n);
 
                   gradient += Xgk_array(i,j,k,n)*h_gk;
                 }
@@ -490,8 +476,6 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
   BL_PROFILE("mfix::mfix_add_txfr_implicit");
 
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
-
   auto& fluid_parms = *fluid.parameters;
 
   for (int lev = 0; lev <= finest_level; lev++) {
@@ -522,7 +506,7 @@ mfix::mfix_add_txfr_implicit (Real dt,
         vel_array(i,j,k,2) = (vel_array(i,j,k,2) + txfr_array(i,j,k,Transfer::velz) * orop) * denom;
       });
 
-      if (advect_enthalpy) {
+      if (fluid.solve_enthalpy) {
 
         const int fluid_is_a_mixture = fluid.is_a_mixture;
 
@@ -540,7 +524,7 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
         amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
             fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-            run_on_device,is_IOProc,abstol=newton_abstol,
+            is_IOProc,abstol=newton_abstol,
             reltol=newton_reltol,maxiter=newton_maxiter]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
@@ -568,16 +552,12 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
               if (!fluid_is_a_mixture) {
 
-                hg_loc = run_on_device ?
-                  fluid_parms.calc_h_g<RunOn::Device>(Tg_arg, cell_is_covered) :
-                  fluid_parms.calc_h_g<RunOn::Host>(Tg_arg, cell_is_covered);
+                hg_loc = fluid_parms.calc_h_g<run_on>(Tg_arg, cell_is_covered);
 
               } else {
 
                 for (int n(0); n < nspecies_g; ++n) {
-                  const Real h_gk = run_on_device ?
-                    fluid_parms.calc_h_gk<RunOn::Device>(Tg_arg, n, cell_is_covered) :
-                    fluid_parms.calc_h_gk<RunOn::Host>(Tg_arg, n, cell_is_covered);
+                  const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_arg, n, cell_is_covered);
 
                   hg_loc += Xgk_array(i,j,k,n)*h_gk;
                 }
@@ -593,16 +573,12 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
               if (!fluid_is_a_mixture) {
 
-                gradient = run_on_device ?
-                  fluid_parms.calc_partial_h_g<RunOn::Device>(Tg_arg) :
-                  fluid_parms.calc_partial_h_g<RunOn::Host>(Tg_arg);
+                gradient = fluid_parms.calc_partial_h_g<run_on>(Tg_arg);
 
               } else {
 
                 for (int n(0); n < nspecies_g; ++n) {
-                  const Real h_gk = run_on_device ?
-                    fluid_parms.calc_partial_h_gk<RunOn::Device>(Tg_arg,n) :
-                    fluid_parms.calc_partial_h_gk<RunOn::Host>(Tg_arg,n);
+                  const Real h_gk = fluid_parms.calc_partial_h_gk<run_on>(Tg_arg,n);
 
                   gradient += Xgk_array(i,j,k,n)*h_gk;
                 }
@@ -623,16 +599,12 @@ mfix::mfix_add_txfr_implicit (Real dt,
 
             if (!fluid_is_a_mixture) {
 
-              hg_new = run_on_device ?
-                fluid_parms.calc_h_g<RunOn::Device>(Tg_new, cell_is_covered) :
-                fluid_parms.calc_h_g<RunOn::Host>(Tg_new, cell_is_covered);
+              hg_new = fluid_parms.calc_h_g<run_on>(Tg_new, cell_is_covered);
 
             } else {
 
               for (int n(0); n < nspecies_g; ++n) {
-                const Real h_gk = run_on_device ?
-                  fluid_parms.calc_h_gk<RunOn::Device>(Tg_new, n, cell_is_covered) :
-                  fluid_parms.calc_h_gk<RunOn::Host>(Tg_new, n, cell_is_covered);
+                const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_new, n, cell_is_covered);
 
                 hg_new += Xgk_array(i,j,k,n)*h_gk;
               }

@@ -36,7 +36,9 @@
 #include <mfix_reactions_parms.H>
 #include <mfix_leveldata.H>
 #include <mfix_mlmg_options.H>
+#include <mfix_run_on.H>
 #include <mfix_rw.H>
+
 
 // Drag type enumeration
 struct DragType { enum {Invalid=-1, WenYu, Gidaspow, BVK2, UserDrag}; };
@@ -64,14 +66,17 @@ class mfix : public AmrCore
     // Destructor
     ~mfix ();
 
+    // Vector of allowed chemical reactions
+    Species species;
+
+    // Vector of allowed chemical reactions
+    Reactions reactions;
+
     // Fluid phase
     FluidPhase fluid;
 
     // Fluid phase
     SolidsPhase solids;
-
-    // Vector of allowed chemical reactions
-    Reactions reactions;
 
     // IO Class
     MfixIO::MfixRW* mfixRW;
@@ -208,9 +213,24 @@ class mfix : public AmrCore
     bool contains_ebs = false;
 
     void mfix_calc_txfr_particle (Real time,
+                                  Vector< MultiFab* > const& ep_g_in,
+                                  Vector< MultiFab* > const& ro_g_in,
                                   Vector< MultiFab* > const& vel_g_in,
+                                  Vector< MultiFab* > const& T_g_in,
+                                  Vector< MultiFab* > const& X_gk_in,
+                                  Vector< MultiFab* > const& pressure_g_in,
+                                  Vector< MultiFab* > const& gp_in);
+
+    template <typename F1>
+    void mfix_calc_txfr_particle (Real time,
+                                  Vector< MultiFab* > const& ep_g_in,
+                                  Vector< MultiFab* > const& ro_g_in,
+                                  Vector< MultiFab* > const& vel_g_in,
+                                  Vector< MultiFab* > const& T_g_in,
+                                  Vector< MultiFab* > const& X_gk_in,
+                                  Vector< MultiFab* > const& pressure_g_in,
                                   Vector< MultiFab* > const& gp_in,
-                                  Vector< MultiFab* > const& T_g_in);
+                                  F1 HeterogeneousRatesFunc);
 
     void mfix_add_txfr_explicit (Real dt,
                                  amrex::Vector<amrex::MultiFab*      > const& vel_in,
@@ -370,6 +390,7 @@ class mfix : public AmrCore
                                     Vector< MultiFab* > const& vel_g_in,
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
+                                    Vector< MultiFab* > const& pressure_g_in,
                                     F1 DragFunc);
 
     template <typename F1, typename F2>
@@ -378,8 +399,20 @@ class mfix : public AmrCore
                                     Vector< MultiFab* > const& vel_g_in,
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
+                                    Vector< MultiFab* > const& pressure_g_in,
                                     F1 DragFunc,
                                     F2 ConvectionCoeff);
+
+    template <typename F1, typename F2, typename F3>
+    void mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
+                                    Vector< MultiFab* > const& ro_g_in,
+                                    Vector< MultiFab* > const& vel_g_in,
+                                    Vector< MultiFab* > const& T_g_in,
+                                    Vector< MultiFab* > const& X_gk_in,
+                                    Vector< MultiFab* > const& pressure_g_in,
+                                    F1 DragFunc,
+                                    F2 ConvectionCoeff,
+                                    F3 HeterogeneousRRates);
 
     void mfix_calc_volume_fraction (Real & sum_vol);
 
@@ -457,9 +490,7 @@ class mfix : public AmrCore
                         amrex::RealVect& gravity,
                         const int ls_refinement,
                         amrex::Vector< amrex::MultiFab* >& cost,
-                        std::string& knapsack_weight_type,
-                        const int advect_enthalpy,
-                        const amrex::Real enthalpy_source);
+                        std::string& knapsack_weight_type);
 
     void pic_iteration (const bool apply_forces,
                         const bool update_parcels,
@@ -645,14 +676,17 @@ public:
                                     Vector< MultiFab* > const& ro_g_in,
                                     Vector< MultiFab* > const& vel_g_in,
                                     Vector< MultiFab* > const& T_g_in,
-                                    Vector< MultiFab* > const& X_gk_in);
+                                    Vector< MultiFab* > const& X_gk_in,
+                                    Vector< MultiFab* > const& pressure_g_in);
 
-    void mfix_calc_txfr_fluid (Vector<MultiFab*> const& txfr,
+    void mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
+                               Vector< MultiFab* > const& chem_txfr_out,
                                Vector< MultiFab* > const& ep_g_in,
                                Vector< MultiFab* > const& ro_g_in,
                                Vector< MultiFab* > const& vel_g_in,
                                Vector< MultiFab* > const& T_g_in,
                                Vector< MultiFab* > const& X_gk_in,
+                               Vector< MultiFab* > const& pressure_g_in,
                                Real time);
 
   public:
@@ -844,17 +878,12 @@ public:
                                   Array4<Real> const& dvdt, // velocity
                                   Array4<Real> const& dsdt, // density, enthalpy, tracer
                                   Array4<Real> const& dXdt, // tracer
-                                  const bool l_advect_density,
-                                  const bool l_advect_enthalpy,
-                                  const bool l_advect_tracer,
-                                  const bool l_advect_species,
                                   Array4<Real const> const& vel,
                                   Array4<Real const> const& ep_g,
                                   Array4<Real const> const& rho,
                                   Array4<Real const> const& hg,
                                   Array4<Real const> const& tra,
                                   Array4<Real const> const& Xgk,
-                                  const int l_nspecies,
                                   Array4<Real const> const& divu,
                                   Array4<Real const> const& ep_umac,
                                   Array4<Real const> const& ep_vmac,
@@ -997,12 +1026,6 @@ public:
     Vector< std::unique_ptr<MultiFab> > level_sets;
 
     int m_steady_state = 0;
-
-    bool advect_enthalpy = false;
-    bool advect_density  = false;
-    bool advect_tracer   = false;
-    bool solve_species   = false;
-    bool solve_reactions = false;
 
     bool test_tracer_conservation = false;
 
