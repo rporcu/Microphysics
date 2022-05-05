@@ -63,6 +63,12 @@ build-dpcpp-env:
     IMGTAG: dpcpp
   <<: *build_test_env_template
 
+build-ascent-env:
+  variables:
+    DOCKERFILE: .gitlab/ci_img_ascent/Dockerfile
+    IMGTAG: ascent
+  <<: *build_test_env_template
+
 
 ### Build ###
 .build_base: &build_base
@@ -173,6 +179,24 @@ build:csg:
             -DMFIX_CSG=ON
     - cmake --build build --target functional_tests
     - ./build/src/eb/tests/functional_tests
+  <<: *build_base
+
+build:ascent:
+  image: $CI_REGISTRY_IMAGE/ascent
+  needs: ['build-ascent-env']
+  variables:
+    CC: gcc
+    CXX: g++
+    CMAKE_PREFIX_PATH: /ascent/install/lib/cmake
+  script:
+    - cmake -S .  
+            -B build
+            -DCMAKE_BUILD_TYPE=Debug
+            -DAMReX_ASCENT=ON
+            -DAMReX_CONDUIT=ON
+            -DMFIX_OMP=ON
+            -G Ninja
+    - cmake --build build
   <<: *build_base
 
 ## LINT ###
