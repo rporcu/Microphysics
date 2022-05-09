@@ -385,7 +385,6 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
 
     const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ep_g_in[lev]->Factory());
     const auto& flags = factory.getMultiEBCellFlagFab();
-    const auto& volfrac = factory.getVolFrac();
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -403,7 +402,6 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
       Array4<Real const> const& Xgk_array = X_gk_in[lev]->const_array(mfi);
 
       auto const& flags_arr = flags.const_array(mfi);
-      auto const& volfrac_arr = volfrac.const_array(mfi);
 
       const int nspecies_g = fluid.nspecies;
       const int fluid_is_a_mixture = fluid.is_a_mixture;
@@ -412,15 +410,13 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
 
       amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
           fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-          volfrac_arr,is_IOProc,abstol=newton_abstol,
-          reltol=newton_reltol,maxiter=newton_maxiter]
+          is_IOProc,abstol=newton_abstol,reltol=newton_reltol,maxiter=newton_maxiter]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
 
         if (!cell_is_covered) {
           const Real epg_loc = ep_array(i,j,k);
-          const Real vfrac   = volfrac_arr(i,j,k);
 
           const Real orop  = dt / (ro_array(i,j,k) * epg_loc);
 
@@ -482,6 +478,23 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
           Newton::solve(Tg_new, R, partial_R, is_IOProc, abstol, reltol, maxiter);
 
           Tg_array(i,j,k) = Tg_new;
+
+          Real hg_new(0.);
+
+          if (!fluid_is_a_mixture) {
+
+            hg_new = fluid_parms.calc_h_g<run_on>(Tg_new);
+
+          } else {
+
+            for (int n(0); n < nspecies_g; ++n) {
+              const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_new, n);
+
+              hg_new += Xgk_array(i,j,k,n)*h_gk;
+            }
+          }
+
+          hg_array(i,j,k) = hg_new;
         }
       });
     }
@@ -566,8 +579,6 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
     const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ep_g_in[lev]->Factory());
     const auto& flags = factory.getMultiEBCellFlagFab();
 
-    const auto& volfrac = factory.getVolFrac();
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -589,7 +600,6 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
       Array4<Real const> const& Xgk_array = fluid_is_a_mixture ? X_gk_in[lev]->const_array(mfi) : dummy_arr;
 
       auto const& flags_arr = flags.const_array(mfi);
-      auto const& volfrac_arr = volfrac.const_array(mfi);
 
       const int nspecies_g = fluid.nspecies;
 
@@ -597,8 +607,7 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
 
       amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
           fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-          volfrac_arr,run_on_device,is_IOProc,abstol=newton_abstol,
-          reltol=newton_reltol,maxiter=newton_maxiter]
+          is_IOProc,abstol=newton_abstol,reltol=newton_reltol,maxiter=newton_maxiter]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -611,7 +620,6 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
           const Real gamma = txfr_array(i,j,k,Transfer::gamma);
 
           const Real epg_loc = ep_array(i,j,k);
-          const Real vfrac   = volfrac_arr(i,j,k);
 
           const Real ep_ro_g = epg_loc*ro_array(i,j,k);
 
@@ -626,12 +634,12 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
 
             if (!fluid_is_a_mixture) {
 
-              hg_loc = fluid_parms.calc_h_g<run_on>(Tg_arg, cell_is_covered);
+              hg_loc = fluid_parms.calc_h_g<run_on>(Tg_arg);
 
             } else {
 
               for (int n(0); n < nspecies_g; ++n) {
-                const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_arg, n, cell_is_covered);
+                const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_arg, n);
 
                 hg_loc += Xgk_array(i,j,k,n)*h_gk;
               }
@@ -673,12 +681,12 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
 
           if (!fluid_is_a_mixture) {
 
-            hg_new = fluid_parms.calc_h_g<run_on>(Tg_new, cell_is_covered);
+            hg_new = fluid_parms.calc_h_g<run_on>(Tg_new);
 
           } else {
 
             for (int n(0); n < nspecies_g; ++n) {
-              const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_new, n, cell_is_covered);
+              const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_new, n);
 
               hg_new += Xgk_array(i,j,k,n)*h_gk;
             }
