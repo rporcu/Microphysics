@@ -767,7 +767,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         mfix_set_temperature_bcs(time, get_T_g());
         mfix_set_enthalpy_bcs(time, get_h_g());
       }
-    } // fluid.solve_enthalpy
 
       // ***********************************************************************
       // Add the dconvective heat transfer terms implicitly to h_g
@@ -775,6 +774,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       if (DEM::solve || PIC::solve)
         mfix_add_enthalpy_txfr_implicit(l_dt, get_h_g(), get_T_g(), get_X_gk_const(),
             get_txfr_const(), get_ro_g_const(), get_ep_g_const());
+
+    } // fluid.solve_enthalpy
 
 
     // *************************************************************************************
