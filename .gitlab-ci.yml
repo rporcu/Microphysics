@@ -194,7 +194,6 @@ build:ascent:
             -DCMAKE_BUILD_TYPE=Debug
             -DAMReX_ASCENT=ON
             -DAMReX_CONDUIT=ON
-            -DMFIX_OMP=ON
             -G Ninja
     - cmake --build build
   <<: *build_base
