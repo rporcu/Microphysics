@@ -33,7 +33,6 @@ void DiffusionOp::diffuse_drag (const Vector< MultiFab* >& drag_in,
         MultiFab::Copy((*rhs[lev]),(*drag_in[lev]), 0, 0, 3, 0);
 
         MultiFab::Copy(*phi[lev],*drag_in[lev], 0, 0, 3, 1);
-        phi[lev]->FillBoundary(geom[lev].periodicity());
         vel_matrix->setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
     }
 
@@ -47,7 +46,6 @@ void DiffusionOp::diffuse_drag (const Vector< MultiFab* >& drag_in,
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
-        phi[lev]->FillBoundary(geom[lev].periodicity());
         MultiFab::Copy(*drag_in[lev], *phi[lev], 0, 0, AMREX_SPACEDIM, 1);
     }
 

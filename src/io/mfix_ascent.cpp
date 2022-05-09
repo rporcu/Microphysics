@@ -1,7 +1,7 @@
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 
-#include <mfix.H>
+#include <mfix_rw.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_solids_parms.H>
 #include <mfix_dem_parms.H>
@@ -12,13 +12,18 @@
 #include <ascent.hpp>
 #endif
 
+using namespace amrex;
+
+
+namespace MfixIO {
+
 void
-mfix::WriteAscentFile ( )
+MfixRW::WriteAscentFile (int nstep, const Real time) const
 {
 #ifdef AMREX_USE_ASCENT
   BL_PROFILE("mfix::WriteAscentFile()");
-  const int nstep =   0;
-  const int time  = 0.0;
+
+  //amrex::Print() << "Writing Ascent output\n";
 
   ParmParse pp("ascent");
 
@@ -27,6 +32,7 @@ mfix::WriteAscentFile ( )
 
   std::string ascent_particle_actions_yaml {""};
   pp.query("particle_actions", ascent_particle_actions_yaml);
+
 
   if (fluid.solve && !ascent_fluid_actions_yaml.empty()) {
 
@@ -43,13 +49,13 @@ mfix::WriteAscentFile ( )
     int ncomp = 5;
 
     // Temperature in fluid
-    if (advect_enthalpy ) {
+    if (fluid.solve_enthalpy) {
       pltFldNames.push_back("T_g");
       ncomp += 1;
     }
 
     if ( fluid.solve_species ) {
-      for (std::string specie: fluid.species) {
+      for (std::string specie: fluid.species_names) {
         pltFldNames.push_back("Xg_"+specie);
         ncomp += 1;
       }
@@ -73,13 +79,13 @@ mfix::WriteAscentFile ( )
       MultiFab::Copy(*mf[lev], ebfactory[lev]->getVolFrac(), 0, 4, 1, 0);
 
       int lc=5;
-      if (advect_enthalpy) {
+      if (fluid.solve_enthalpy) {
         MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->T_g), 0, lc, 1, 0);
         lc += 1;
       }
 
       // Fluid species mass fractions
-      if ( fluid.solve_species ) {
+      if (fluid.solve_species) {
         MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_gk, 0, lc, fluid.nspecies, 0);
         lc += fluid.nspecies;
       }
@@ -87,35 +93,33 @@ mfix::WriteAscentFile ( )
       amrex::EB_set_covered(*mf[lev], 0.0);
     }
 
-    // for the MPI case, provide the mpi comm
-    ascent::Ascent ascent;
-    conduit::Node opts;
-
-    opts["actions_file"] = ascent_fluid_actions_yaml;
-    opts["exceptions"] = "catch";
-
-#ifdef BL_USE_MPI
-    opts["mpi_comm"] = MPI_Comm_c2f(ParallelDescriptor::Communicator());
-#endif
-
-    ascent.open(opts);
-
     conduit::Node bp_mesh;
 
     amrex::MultiLevelToBlueprint(nlev, amrex::GetVecOfConstPtrs(mf),
-        pltFldNames, geom, time, level_steps, refRatio(), bp_mesh);
+        pltFldNames, geom, time, level_steps, ref_ratio, bp_mesh);
 
 
+
+    // for the MPI case, provide the mpi comm
+    ascent::Ascent ascent;
+    conduit::Node opts;
+    opts["exceptions"] = "catch";
+    opts["actions_file"] = ascent_fluid_actions_yaml;
+#ifdef BL_USE_MPI
+    opts["mpi_comm"] = MPI_Comm_c2f(ParallelDescriptor::Communicator());
+#endif
+    ascent.open(opts);
     ascent.publish(bp_mesh);
-
     conduit::Node actions;
     ascent.execute(actions);
+    ParallelDescriptor::Barrier();
     ascent.close();
 
     for (int lev = 0; lev < nlev; ++lev) {
       delete mf[lev];
     }
   }
+
 
   if (( DEM::solve || PIC::solve ) && !ascent_particle_actions_yaml.empty()) {
 
@@ -158,11 +162,11 @@ mfix::WriteAscentFile ( )
     real_comp_names.push_back("convection");
 
     if (solids.solve_species)
-      for(auto species: solids.species)
+      for(auto species: solids.species_names)
         real_comp_names.push_back("X_"+species+"_s");
 
     if (solids.solve_species && reactions.solve)
-      for(auto species: solids.species)
+      for(auto species: solids.species_names)
         real_comp_names.push_back("chem_ro_txfr_"+species);
 
     if (reactions.solve) {
@@ -176,8 +180,6 @@ mfix::WriteAscentFile ( )
 
     int_comp_names.push_back("phase");
     int_comp_names.push_back("state");
-
-    MFIXParticleContainer* pc = getParticleContainer();
 
     // for the MPI case, provide the mpi comm
     ascent::Ascent ascent;
@@ -201,8 +203,13 @@ mfix::WriteAscentFile ( )
 
     conduit::Node actions;
     ascent.execute(actions);
+    ParallelDescriptor::Barrier();
     ascent.close();
-
   }
+#else
+  amrex::ignore_unused(nstep);
+  amrex::ignore_unused(time);
 #endif
 }
+
+} // end namespace MfixIO

@@ -16,6 +16,9 @@
 #include <mfix_species_parms.H>
 #include <mfix_bc_list.H>
 
+using namespace amrex;
+
+
 namespace BC
 {
 
@@ -57,18 +60,9 @@ namespace BC
 
 
   void Initialize (amrex::Geometry& geom,
-                   const FluidPhase& fluid,
+                   FluidPhase& fluid,
                    const SolidsPhase& solids)
   {
-    BCList bc_mask;
-
-    // Integer ids for BCs
-    const int pout_ = bc_mask.get_pout();
-    const int pinf_ = bc_mask.get_pinf();
-    const int minf_ = bc_mask.get_minf();
-    const int nsw_  = bc_mask.get_nsw();
-    const int eb_   = bc_mask.get_eb();
-
     // Set flag to keep particles from leaving unless periodic.
     for (int dir(0); dir<3; ++dir) {
       if ( geom.isPeriodic(dir)) {
@@ -80,10 +74,9 @@ namespace BC
       }
     }
 
-
     // Default all sides of the domain to Neumann
-    for (int dir=0; dir < 3; dir ++ ){
-      if( geom.isPeriodic(dir)){
+    for (int dir=0; dir < 3; dir ++ ) {
+      if (geom.isPeriodic(dir)) {
 
         ppe_lobc[dir] = amrex::LinOpBCType::Periodic;
         ppe_hibc[dir] = amrex::LinOpBCType::Periodic;
@@ -122,7 +115,7 @@ namespace BC
 
 
     // Initialize the periodic pressure drop to zero in all directions
-    for (int dir=0; dir < 3; dir ++ )
+    for (int dir=0; dir < 3; dir ++)
       delp[dir] = 0.0;
 
     amrex::ParmParse pp("bc");
@@ -155,7 +148,7 @@ namespace BC
 
       amrex::Real volfrac_total(0.0);
 
-      BC_t new_bc;
+      BC_t new_bc(fluid);
 
       // Set the region for the initial condition.
       new_bc.region = REGIONS::getRegion(regions[bcv]);
@@ -168,15 +161,15 @@ namespace BC
 
       // Convert the input string into the integers
       if( bc_type == "mi") {
-        new_bc.type = minf_;
+        new_bc.type = BCList::minf;
       } else if( bc_type == "pi") {
-        new_bc.type = pinf_;
+        new_bc.type = BCList::pinf;
       } else if( bc_type == "po") {
-        new_bc.type = pout_;
+        new_bc.type = BCList::pout;
       } else if (bc_type == "nsw") {
-        new_bc.type = nsw_;
+        new_bc.type = BCList::nsw;
       } else if (bc_type == "eb") {
-        new_bc.type = eb_;
+        new_bc.type = BCList::eb;
       } else {
         amrex::Abort("Unknown BC type inputs file. Fix it.");
       }
@@ -195,7 +188,7 @@ namespace BC
 
       int dir_int = -1;
 
-      if ( new_bc.type == nsw_ ) {
+      if ( new_bc.type == BCList::nsw ) {
 
         // Walls need a normal because they might not be on a domain extent.
         amrex::Vector<amrex::Real> normal_in(3);
@@ -203,7 +196,7 @@ namespace BC
 
         normal={normal_in[0], normal_in[1], normal_in[2]};
 
-      } else if ( new_bc.type != eb_ ) {
+      } else if ( new_bc.type != BCList::eb ) {
 
         // This covers mass inflows (mi), pressure inflows (pi), and
         // pressure outflows (po). These all must align with a domain
@@ -223,13 +216,13 @@ namespace BC
 
               dir_int = 2*dir;
 
-              if( new_bc.type == pinf_ || new_bc.type == pout_) {
+              if( new_bc.type == BCList::pinf || new_bc.type == BCList::pout) {
                 ppe_lobc[dir] = amrex::LinOpBCType::Dirichlet;
                 diff_vel_lobc[dir] = amrex::LinOpBCType::Neumann;
                 diff_scal_lobc[dir] = amrex::LinOpBCType::Neumann;
               }
 
-              if( new_bc.type == pout_) {
+              if( new_bc.type == BCList::pout) {
                 diff_temperature_lobc[dir] = amrex::LinOpBCType::Neumann;
                 diff_species_lobc[dir] = amrex::LinOpBCType::Neumann;
               }
@@ -241,13 +234,13 @@ namespace BC
 
               dir_int = 2*dir+1;
 
-              if( new_bc.type == pinf_ || new_bc.type == pout_) {
+              if( new_bc.type == BCList::pinf || new_bc.type == BCList::pout) {
                 ppe_hibc[dir] = amrex::LinOpBCType::Dirichlet;
                 diff_vel_hibc[dir] = amrex::LinOpBCType::Neumann;
                 diff_scal_hibc[dir] = amrex::LinOpBCType::Neumann;
               }
 
-              if( new_bc.type == pout_) {
+              if( new_bc.type == BCList::pout) {
                 diff_temperature_hibc[dir] = amrex::LinOpBCType::Neumann;
                 diff_species_hibc[dir] = amrex::LinOpBCType::Neumann;
               }
@@ -261,8 +254,8 @@ namespace BC
 
             // Flag that the level set should see these domain extents
             // as walls for particle collisions.
-            if( new_bc.type == minf_ || new_bc.type == pinf_ ||
-                (new_bc.type == pinf_ && po_noParOut == 1 )) {
+            if( new_bc.type == BCList::minf || new_bc.type == BCList::pinf ||
+                (new_bc.type == BCList::pinf && po_noParOut == 1 )) {
               amrex::Print() << "X> FLAGGING FLOW PLANE " << dir_int << std::endl;
               flow_plane.flip(dir_int);
             }
@@ -292,30 +285,30 @@ namespace BC
       }
 
       // Enforce the boundary for pressure outflows if specified.
-      if( new_bc.type == pout_ && po_noParOut == 0 ){
+      if( new_bc.type == BCList::pout && po_noParOut == 0 ){
         domain_bc[dir_int ] = 0;
       }
 
 
       // flow_planes are used to create 'walls' in the level-set so that
       // particles don't fall out inflows (or outflows if desired).
-      if( new_bc.type == minf_) {
+      if (new_bc.type == BCList::minf) {
         BC::flow_planes.emplace_back(point, normal, false);
 
-      } else if( new_bc.type == pinf_ ) {
+      } else if (new_bc.type == BCList::pinf) {
         BC::flow_planes.emplace_back(point, normal, false);
 
-      } else if( new_bc.type == pout_ && po_noParOut == 1) {
+      } else if (new_bc.type == BCList::pout && po_noParOut == 1) {
         BC::flow_planes.emplace_back(point, normal, false);
 
-      } else if (new_bc.type == nsw_) {
+      } else if (new_bc.type == BCList::nsw) {
         BC::wall_planes.emplace_back(point, normal, false);
 
       }
 
 
       // Get EB data.
-      if (new_bc.type == eb_) {
+      if (new_bc.type == BCList::eb) {
         std::string field = "bc."+regions[bcv]+".eb";
         amrex::ParmParse ppEB(field.c_str());
 
@@ -356,13 +349,13 @@ namespace BC
         amrex::ParmParse ppFluid(field.c_str());
 
         // Mass inflows need fluid velocity and volume fraction.
-        if( new_bc.type == minf_ ) {
+        if( new_bc.type == BCList::minf ) {
           ppFluid.get("volfrac", new_bc.fluid.volfrac);
           volfrac_total += new_bc.fluid.volfrac;
 
           read_bc_velocity(ppFluid, &new_bc.fluid);
 
-        } else if ( new_bc.type == eb_ ) {
+        } else if ( new_bc.type == BCList::eb ) {
 
           if (ppFluid.contains("velocity")) {
              new_bc.fluid.flow_thru_eb    = 1;
@@ -385,28 +378,84 @@ namespace BC
 
         }
 
-        new_bc.fluid.pressure = -1.0;
+        // Read in density, temperature and species BC inputs only if BC type is
+        // minf, pinf or flow_through_eb
+        if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf ||
+            (new_bc.type == BCList::eb && new_bc.fluid.flow_thru_eb)) {
 
-        // Read in fluid pressure
-        new_bc.fluid.pressure_defined =
-          ppFluid.query("pressure", new_bc.fluid.pressure);
-        if(( new_bc.type == pinf_ || new_bc.type == pout_) && (!new_bc.fluid.pressure_defined)) {
-          amrex::Print() << "Pressure BCs must have pressure defined!" << std::endl;
-          amrex::Print() << "BC region: " << regions[bcv] << std::endl;
-          amrex::Abort("Fix the inputs file!");
-        }
+          // Read in fluid density
+          read_bc_density(ppFluid, &new_bc.fluid);
 
-        if( new_bc.type == minf_ || new_bc.type == pinf_ ||
-              (new_bc.type == eb_ && new_bc.fluid.flow_thru_eb) ) {
-          if (fluid.solve_enthalpy) {
-            read_bc_temperature(ppFluid, &new_bc.fluid);
-          }
+          read_bc_temperature(ppFluid, &new_bc.fluid);
 
           // Get species data.
-          if (fluid.solve_species) {
-            read_bc_species(ppFluid, fluid.species, &new_bc.fluid);
+          if (fluid.solve_species)
+            read_bc_species(ppFluid, fluid.species_names, &new_bc.fluid);
+        }
+
+        // Read in fluid pressure BC inputs only if BC type is pinf or pout
+        if (new_bc.type == BCList::pinf || new_bc.type == BCList::pout) {
+
+          // Read in fluid pressure
+          new_bc.fluid.pressure_defined = ppFluid.query("pressure", new_bc.fluid.pressure);
+
+          if (!new_bc.fluid.pressure_defined) {
+            amrex::Print() << "Pressure BCs must have pressure defined!" << std::endl;
+            amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+            amrex::Abort("Fix the inputs file!");
           }
         }
+
+        // ********************************************************************
+        // Check BCs consistency depending on fluid constraint type
+        // ********************************************************************
+        if (fluid.constraint_type == ConstraintType::IncompressibleFluid) {
+
+          if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf ||
+              (new_bc.type == BCList::eb && new_bc.fluid.flow_thru_eb)) {
+
+            if (!new_bc.fluid.density_defined) {
+              amrex::Print() << "BCs must have density defined!" << std::endl;
+              amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+              amrex::Abort("Fix the inputs file!");
+            }
+          }
+
+        } else if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
+
+          if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf ||
+              (new_bc.type == BCList::eb && new_bc.fluid.flow_thru_eb)) {
+
+            if (new_bc.fluid.density_defined) {
+              amrex::Print() << "BCs must NOT have density defined!" << std::endl;
+              amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+              amrex::Abort("Fix the inputs file!");
+            }
+
+            if (!new_bc.fluid.temperature_defined) {
+              amrex::Print() << "BCs must have temperature defined!" << std::endl;
+              amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+              amrex::Abort("Fix the inputs file!");
+            }
+          }
+
+        } else if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
+
+          if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf || new_bc.type == BCList::pout) {
+
+            amrex::Print() << "minf, pinf or pout BCs cannot be defined in a closed system!" << std::endl;
+            amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+            amrex::Abort("Fix the inputs file!");
+          }
+
+          if (new_bc.type == BCList::eb && new_bc.fluid.flow_thru_eb) {
+
+            amrex::Print() << "Flux through EB cannot be defined in a closed system!" << std::endl;
+            amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+            amrex::Abort("Fix the inputs file!");
+          }
+        }
+
       }
 
       // Get solid data.
@@ -420,7 +469,7 @@ namespace BC
 
         for(size_t lcs(0); lcs < solids_types.size(); ++ lcs){
 
-          SolidsPhase::SOLIDS_t new_solid;
+          SOLIDS_t new_solid;
 
           std::string field = "bc."+regions[bcv]+"."+solids_types[lcs];
           amrex::ParmParse ppSolid(field.c_str());
@@ -475,7 +524,7 @@ namespace BC
 
             for (int n(0); n < solids.nspecies; n++) {
               // Get the name of the solid species we want to get the BC
-              std::string dem_specie = solids.species[n];
+              std::string dem_specie = solids.species_names[n];
               // Get the BC mass fraction for the current species
               ppSpecies.query(dem_specie.c_str(), new_solid.species[n].mass_fraction);
 
@@ -497,7 +546,47 @@ namespace BC
       }
 
       BC::bc.push_back(new_bc);
+    }
 
+    if (fluid.constraint_type == ConstraintType::IncompressibleFluid ||
+        fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
+
+      Vector<Real> bc_values(0);
+
+      for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
+
+        if (BC::bc[bcv].type == BCList::pout)
+          bc_values.push_back(BC::bc[bcv].fluid.pressure);
+      }
+
+      if (bc_values.size() > 0) {
+        const Real max_val = *std::max_element(bc_values.begin(), bc_values.end());
+        const Real min_val = *std::min_element(bc_values.begin(), bc_values.end());
+
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(std::abs(max_val-min_val) < 1.e-15,
+          "Error: pressure values at pout boundaries differ");
+
+        if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
+          
+          if (fluid.thermodynamic_pressure_defined) {
+            const Real p_therm = fluid.thermodynamic_pressure;
+
+            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(std::abs(p_therm-min_val) < 1.e-15 &&
+                std::abs(p_therm-max_val) < 1.e-15 && p_therm > 1.e-15,
+                "Error: either pout input pressures differ from fluid thermodynamic "
+                "pressure, or given thermodynamic pressure is zero or negative");
+
+          } else {
+
+            fluid.thermodynamic_pressure = max_val;
+            fluid.thermodynamic_pressure_defined = 1;
+
+            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.thermodynamic_pressure > 1.e-15,
+                "Error: fluid thermodynamic pressure is zero or negative");
+
+          }
+        }
+      }
     }
 
 #if 0
@@ -576,7 +665,7 @@ namespace BC
 
 
 void
-read_bc_velocity (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
+read_bc_velocity (amrex::ParmParse pp, FLUID_t *fluid)
 {
   amrex::Vector<amrex::Real> vel_in;
   pp.getarr("velocity", vel_in);
@@ -649,7 +738,7 @@ read_bc_velocity (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
 
 
 void
-read_bc_volflow (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
+read_bc_volflow (amrex::ParmParse pp, FLUID_t *fluid)
 {
 
   amrex::Vector<amrex::Real> volflow_in;
@@ -698,17 +787,81 @@ read_bc_volflow (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
 
   }
 
-}// end read_bc_temperature
-
-
+}// end read_bc_volflow
 
 
 void
-read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
+read_bc_density (amrex::ParmParse pp, FLUID_t *fluid)
+{
+  amrex::Vector<amrex::Real> rog_in;
+  pp.queryarr("density", rog_in);
+
+  if (rog_in.size() == 0) {
+    fluid->density_defined = 0;
+    return;
+  }
+
+  fluid->density_defined = 1;
+
+  fluid->constant_density = (rog_in.size() == 1);
+  if (fluid->constant_density) {
+
+    fluid->density = rog_in[0];
+
+  } else {
+
+    int found;
+    int k=0;
+    do {
+
+      amrex::Vector<amrex::Real> kth_input;
+      found = pp.queryktharr("density", k, kth_input);
+
+      if (found){
+        // Assert that it has the correct length.
+        if ( kth_input.size() != 2 ) {
+          amrex::Print() << "Bad density inputs specification:\n";
+          for( int lc=0; lc<kth_input.size(); lc++)
+            amrex::Print()  << "  " << kth_input[lc];
+          amrex::Print() << std::endl;
+          amrex::Abort("Fix input deck.");
+        }
+
+        const amrex::Real new_time = kth_input[0];
+        const int len = fluid->density_table.size();
+        if (len == 0){
+          fluid->density_table.push_back(kth_input);
+        } else {
+          for (int lc=0; lc<len; lc++) {
+            if ( new_time <= fluid->density_table[lc][0]){
+              fluid->density_table.insert(fluid->density_table.begin()+lc, kth_input);
+            } else if (lc == len-1){
+              fluid->density_table.push_back(kth_input);
+            }
+          }
+        }
+      }
+      k++;
+    } while(found);
+
+  }
+
+}// end read_bc_density
+
+
+void
+read_bc_temperature (amrex::ParmParse pp, FLUID_t *fluid)
 {
 
   amrex::Vector<amrex::Real> tg_in;
-  pp.getarr("temperature", tg_in);
+  pp.queryarr("temperature", tg_in);
+
+  if (tg_in.size() == 0) {
+    fluid->temperature_defined = 0;
+    return;
+  }
+
+  fluid->temperature_defined = 1;
 
   fluid->constant_temperature = (tg_in.size() == 1);
   if (fluid->constant_temperature) {
@@ -762,7 +915,7 @@ read_bc_temperature (amrex::ParmParse pp, FluidPhase::FLUID_t *fluid)
 void
 read_bc_species (amrex::ParmParse pp,
                  const amrex::Vector<std::string> species,
-                 FluidPhase::FLUID_t *fluid)
+                 FLUID_t *fluid)
 {
 
   const int nspecies = species.size();
@@ -841,7 +994,7 @@ read_bc_species (amrex::ParmParse pp,
     }
     err_found = (amrex::Math::abs(1.0 - sum_xg) > 1.e-15);
 
-  }else if (sum_constant_species == 0 ) {
+  } else if (sum_constant_species == 0 ) {
 
     // First verify that all species are given for all times
     const int entries = fluid->species_table[0].size();

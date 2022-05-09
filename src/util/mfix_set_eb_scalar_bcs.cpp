@@ -37,20 +37,18 @@ mfix::mfix_set_eb_scalar_bcs (Vector< MultiFab* > const& eb_scalars,
        if (t == FabType::singlevalued) {
 
            const auto &eb_scalars_arr = (*eb_scalars[lev])[mfi].array();
-           const auto &eb_species_arr = solve_species ? (*eb_species[lev])[mfi].array() : Array4<Real>{};
+           const auto &eb_species_arr = fluid.solve_species ? (*eb_species[lev])[mfi].array() : Array4<Real>{};
 
            const auto &flags_arr    = factory.getMultiEBCellFlagFab()[mfi].const_array();
            const auto &eb_norm_arr  = factory.getBndryNormal()[mfi].const_array();
 
-           const int eb = bc_list.get_eb();
+           for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
 
-           for(int bcv(0); bcv < BC::bc.size(); ++bcv) {
-
-             if ( BC::bc[bcv].type == eb && BC::bc[bcv].fluid.flow_thru_eb ) {
+             if (BC::bc[bcv].type == BCList::eb && BC::bc[bcv].fluid.flow_thru_eb) {
 
                const Box *ic_bx = calc_ic_box(geom[lev], BC::bc[bcv].region);
 
-               if( ic_bx->intersects(bx)) {
+               if (ic_bx->intersects(bx)) {
 
                  // Intersection of ic box and mfi box
                  const Box bx_int = bx&(*ic_bx);
@@ -78,10 +76,10 @@ mfix::mfix_set_eb_scalar_bcs (Vector< MultiFab* > const& eb_scalars,
                  const int num_trac = ntrac;
                  const int nspecies_g = fluid.nspecies;
 
-                 const int l_solve_species = solve_species;
+                 const int solve_species = fluid.solve_species;
 
                  ParallelFor(bx_int, [bcv, num_trac, flags_arr, eb_scalars_arr,
-                 l_solve_species, nspecies_g, eb_species_arr, eb_norm_arr,
+                 solve_species, nspecies_g, eb_species_arr, eb_norm_arr,
                  has_normal, normal, norm_tol_lo, norm_tol_hi,
                  p_bc_ro_g, p_bc_h_g, p_bc_trac, p_bc_X_gk]
                  AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -107,7 +105,7 @@ mfix::mfix_set_eb_scalar_bcs (Vector< MultiFab* > const& eb_scalars,
                        eb_scalars_arr(i,j,k,2+n) = mask*p_bc_ro_g[bcv]*p_bc_trac[bcv];
                      }
 
-                     if(l_solve_species) {
+                     if(solve_species) {
                        for(int n(0); n<nspecies_g; n++) {
                          eb_species_arr(i,j,k,n) = mask*p_bc_ro_g[bcv]*p_bc_X_gk[n][bcv];
                        }

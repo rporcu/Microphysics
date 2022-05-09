@@ -14,7 +14,6 @@ int              mfix::knapsack_nmax        = 128;
 int              mfix::greedy_dir           = 0;
 int              mfix::m_drag_type          = DragType::Invalid;
 int              mfix::m_convection_type    = ConvectionType::Invalid;
-int              mfix::m_constraint_type    = ConstraintType::IncompressibleFluid;
 int              mfix::m_advection_type     = AdvectionType::Invalid;
 DepositionScheme mfix::m_deposition_scheme;
 int              mfix::m_reaction_rates_type = ReactionRatesType::RRatesUser;
@@ -25,26 +24,10 @@ amrex::Real      mfix::m_max_solids_volume_fraction = 0.64356;
 int mfix::nlev  = 1;
 int mfix::ntrac = 1;
 
-int  mfix::plot_int        = -1;
-Real mfix::plot_per_approx = -1.;
-Real mfix::plot_per_exact  = -1.;
-
-int  mfix::ascent_int        = -1;
-Real mfix::ascent_per_approx = -1.;
-
 EBSupport mfix::m_eb_support_level = EBSupport::full;
 
 RealVect mfix::gravity {0.};
 RealVect mfix::gp0     {0.};
-
-int  mfix::report_mass_balance = 0;
-int  mfix::mass_balance_report_int        = -1;
-Real mfix::mass_balance_report_per_approx = -1.;
-Real mfix::mass_balance_report_time       =  0.;
-amrex::GpuArray<amrex::Real,2*SPECIES::NMAX> mfix::mass_accum{0.};
-amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mfix::mass_inflow{0.};
-amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mfix::mass_outflow{0.};
-amrex::GpuArray<amrex::Real,  SPECIES::NMAX> mfix::mass_prod{0.};
 
 // Destructor
 mfix::~mfix ()
@@ -58,14 +41,6 @@ mfix::~mfix ()
     delete bcoeff[lev][0];
     delete bcoeff[lev][1];
     delete bcoeff[lev][2];
-
-    // Boundary conditions types
-    delete bc_ilo[lev];
-    delete bc_ihi[lev];
-    delete bc_jlo[lev];
-    delete bc_jhi[lev];
-    delete bc_klo[lev];
-    delete bc_khi[lev];
   }
 
   // used if load_balance_type == "KnapSack"
@@ -80,11 +55,14 @@ mfix::~mfix ()
 
   for (int lev = 0; lev < fluid_proc.size(); ++lev)
     delete fluid_proc[lev];
+
+  delete mfixRW;
 }
 
 // Constructor
 mfix::mfix ()
-  : m_bc_u_g(50, 0)
+  : bc_list(maxLevel() + 1)
+  , m_bc_u_g(50, 0)
   , m_bc_v_g(50, 0)
   , m_bc_w_g(50, 0)
   , m_bc_t_g(50, 0)
@@ -158,22 +136,32 @@ mfix::mfix ()
         }
     }
 
-    m_vel_g_bc_types["Dirichlet"] = {bc_list.get_minf()};
-    m_vel_g_bc_types["Neumann"] = {bc_list.get_pinf(), bc_list.get_pout()};
+    m_vel_g_bc_types["Dirichlet"] = {BCList::minf};
+    m_vel_g_bc_types["Neumann"] = {BCList::pinf, BCList::pout};
 
-    m_ro_g_bc_types["Dirichlet"] = {bc_list.get_minf()};
-    m_ro_g_bc_types["Neumann"] = {bc_list.get_pinf(), bc_list.get_pout()};
+    m_ro_g_bc_types["Dirichlet"] = {BCList::minf};
+    m_ro_g_bc_types["Neumann"] = {BCList::pinf, BCList::pout};
 
-    m_T_g_bc_types["Dirichlet"] = {bc_list.get_minf(), bc_list.get_pinf()};
-    m_T_g_bc_types["Neumann"] = {bc_list.get_pout()};
+    m_T_g_bc_types["Dirichlet"] = {BCList::minf, BCList::pinf};
+    m_T_g_bc_types["Neumann"] = {BCList::pout};
 
-    m_trac_g_bc_types["Dirichlet"] = {bc_list.get_minf()};
-    m_trac_g_bc_types["Neumann"] = {bc_list.get_pinf(), bc_list.get_pout()};
+    m_trac_g_bc_types["Dirichlet"] = {BCList::minf};
+    m_trac_g_bc_types["Neumann"] = {BCList::pinf, BCList::pout};
 
-    m_X_gk_bc_types["Dirichlet"] = {bc_list.get_minf(), bc_list.get_pinf()};
-    m_X_gk_bc_types["Neumann"] = {bc_list.get_pout()};
+    m_X_gk_bc_types["Dirichlet"] = {BCList::minf, BCList::pinf};
+    m_X_gk_bc_types["Neumann"] = {BCList::pout};
 
     Gpu::synchronize();
+
+    mfixRW = new MfixIO::MfixRW(nlev, grids, geom, pc, fluid, m_leveldata,
+                                ebfactory, dmap, ooo_debug, level_sets, boxArray(),
+                                levelset_refinement, levelset_pad,
+                                levelset_eb_refinement, levelset_eb_pad,
+                                solids, reactions, particle_cost, particle_proc,
+                                fluid_proc, covered_val, refRatio(),
+                                eb_levels, nghost_eb_basic(),
+                                nghost_eb_volume(), nghost_eb_full(), m_eb_support_level,
+                                load_balance_type, bc_list, particle_ebfactory);
 }
 
 void
@@ -284,22 +272,22 @@ Vector< MultiFab* > mfix::get_p_g_old () noexcept
   return r;
 }
 
-Vector< MultiFab* > mfix::get_pressure_g () noexcept
+Vector< MultiFab* > mfix::get_thermodynamic_p_g () noexcept
 {
   Vector<MultiFab*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->pressure_g);
+    r.push_back(m_leveldata[lev]->thermodynamic_p_g);
   }
   return r;
 }
 
-Vector< MultiFab* > mfix::get_pressure_g_old () noexcept
+Vector< MultiFab* > mfix::get_thermodynamic_p_g_old () noexcept
 {
   Vector<MultiFab*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->pressure_go);
+    r.push_back(m_leveldata[lev]->thermodynamic_p_go);
   }
   return r;
 }
@@ -575,22 +563,22 @@ Vector< MultiFab const*> mfix::get_h_g_old_const () const noexcept
   return r;
 }
 
-Vector< MultiFab const*> mfix::get_pressure_g_const () const noexcept
+Vector< MultiFab const*> mfix::get_thermodynamic_p_g_const () const noexcept
 {
   Vector<MultiFab const*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->pressure_g);
+    r.push_back(m_leveldata[lev]->thermodynamic_p_g);
   }
   return r;
 }
 
-Vector< MultiFab const*> mfix::get_pressure_g_old_const () const noexcept
+Vector< MultiFab const*> mfix::get_thermodynamic_p_g_old_const () const noexcept
 {
   Vector<MultiFab const*> r;
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->pressure_go);
+    r.push_back(m_leveldata[lev]->thermodynamic_p_go);
   }
   return r;
 }

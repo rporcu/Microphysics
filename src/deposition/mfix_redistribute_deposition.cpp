@@ -140,7 +140,7 @@ mfix::mfix_redistribute_deposition (int lev,
                   ((!flags(i+ii,j+jj,k+kk).isSingleValued()) ||
                    (ep_s(i+ii,j+jj,k+kk) <= max_eps)))
                {
-                 Gpu::Atomic::Add(&mf_redist(i+ii,j+jj,k+kk,n), overflow);
+                 HostDevice::Atomic::Add(&mf_redist(i+ii,j+jj,k+kk,n), overflow);
                }
              }
            }

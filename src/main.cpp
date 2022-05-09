@@ -39,6 +39,7 @@ void add_par () {
    }
 }
 
+const char* HypreVersion ();
 void writeBuildInfo ();
 
 int main (int argc, char* argv[])
@@ -72,9 +73,12 @@ int main (int argc, char* argv[])
 
     // Write out the MFIX git hash (the AMReX git hash is already written)
     const char* githash_mfix = buildInfoGetGitHash(1);
-    amrex::Print() << "   MFiX git describe: " << githash_mfix<< "\n";
+    amrex::Print() << "   MFIX git describe: " << githash_mfix<< "\n";
     amrex::Print() << "AMReX-Hydro git hash: " << HydroGitHash() << "\n";
     amrex::Print() << "     CSG-EB git hash: " << CsgEbGitHash() << "\n";
+#ifdef AMREX_USE_HYPRE
+    amrex::Print() << "       HYPRE Version: " << HypreVersion() << "\n";
+#endif
 
     // Setting format to NATIVE rather than default of NATIVE_32
     FArrayBox::setFormat(FABio::FAB_NATIVE);
@@ -91,7 +95,7 @@ int main (int argc, char* argv[])
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix mfix;
 
-    MfixIO::MfixRW mfixRW;
+    MfixIO::MfixRW& mfixRW = *(mfix.mfixRW);
 
     // Initialize internals from ParamParse database
     mfix.InitParams();
@@ -123,7 +127,7 @@ int main (int argc, char* argv[])
     mfix.make_eb_factories();
 
     // Write out EB sruface
-    mfixRW.writeEBSurface(mfix);
+    mfixRW.writeEBSurface();
 
     if (DEM::solve || PIC::solve)
     {
@@ -155,8 +159,6 @@ int main (int argc, char* argv[])
     if (mfix.fluid.solve){
       mfix.init_advection();
 
-      //amrex::Abort("111");
-
       mfix.mfix_init_solvers();
     }
 
@@ -167,11 +169,11 @@ int main (int argc, char* argv[])
         mfix.Regrid();
     }
 
-    mfixRW.writeStaticPlotFile(mfix);
+    mfixRW.writeStaticPlotFile();
 
     mfix.PostInit(dt, time, restart_flag, mfixRW.stop_time);
 
-    mfixRW.reportGridStats(mfix);
+    mfixRW.reportGridStats();
 
     Real end_init = ParallelDescriptor::second() - strt_time;
     ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
@@ -185,16 +187,13 @@ int main (int argc, char* argv[])
     // only if fluid.solve = T
     Real prev_dt = dt;
 
-    mfixRW.writePlotFileInitial(nstep, time, mfix);
-    mfixRW.writeCheckPointFile(nstep, dt, time, mfix);
-    mfixRW.writeParticleAscii(nstep, mfix);
-    mfixRW.writeAverageRegions(nstep, time, mfix);
+    mfixRW.writeNow(nstep, time, dt, /*first=*/true, /*last=*/false);
 
     bool do_not_evolve = !mfix.IsSteadyState() && ( (mfixRW.max_step == 0) ||
                      ( (mfixRW.stop_time >= 0.) && (time >  mfixRW.stop_time) ) ||
                      ( (mfixRW.stop_time <= 0.) && (mfixRW.max_step <= 0) ) );
 
-    mfix.ComputeMassAccum(0);
+    mfixRW.ComputeMassAccum(0);
 
     if (mfixRW.restart_file.empty())
     {
@@ -249,7 +248,7 @@ int main (int argc, char* argv[])
                     time += prev_dt;
                     nstep++;
 
-                    mfixRW.writeNow(nstep, time, prev_dt, mfix);
+                    mfixRW.writeNow(nstep, time, prev_dt);
 #ifdef MFIX_CATALYST
                     mfix.RunCatalystAdaptor(nstep, time);
 #endif
@@ -267,10 +266,7 @@ int main (int argc, char* argv[])
     if (mfix.IsSteadyState())
         nstep = 1;
 
-    // Dump plotfile at the final time
-    mfixRW.writeCheckPointFileFinal(nstep, dt, time, mfix);
-    mfixRW.writePlotFileFinal(nstep, time, mfix);
-    mfixRW.writeParticleAsciiFinal(nstep, mfix);
+    mfixRW.writeNow(nstep, time, dt, /*first=*/false, /*last=*/true);
 
     mfix.mfix_usr3();
 

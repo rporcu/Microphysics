@@ -46,9 +46,7 @@ mfix::AllocateArrays (int lev)
     // ********************************************************************************
 
     m_leveldata[lev] = std::make_unique<LevelData>(grids[lev], dmap[lev], nghost_state(),
-                                         *ebfactory[lev], fluid.solve_enthalpy,
-                                         fluid.solve_species, fluid.nspecies,
-                                         reactions.solve, reactions.nreactions);
+                                                   *ebfactory[lev], &fluid, &reactions);
     m_leveldata[lev]->resetValues(init_value);
 
     // ********************************************************************************
@@ -204,33 +202,38 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->diveu, diveu_new);
     delete diveu_new;
 
-    if (advect_enthalpy) {
+    if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
+        fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
       // Gas thermodynamic pressure
-      MultiFab* pressure_g_new = new MultiFab(grids[lev], dmap[lev],
-                                              m_leveldata[lev]->pressure_g->nComp(),
-                                              m_leveldata[lev]->pressure_g->nGrow(),
-                                              MFInfo(), *ebfactory[lev]);
-      pressure_g_new->setVal(0);
-      pressure_g_new->ParallelCopy(*m_leveldata[lev]->pressure_g, 0, 0,
-                                   m_leveldata[lev]->pressure_g->nComp(),
-                                   src_ngrow, m_leveldata[lev]->pressure_g->nGrow(),
-                                   geom[lev].periodicity());
-      std::swap(m_leveldata[lev]->pressure_g, pressure_g_new);
-      delete pressure_g_new;
+      MultiFab* thermodynamic_p_g_new = new MultiFab(grids[lev], dmap[lev],
+                                                     m_leveldata[lev]->thermodynamic_p_g->nComp(),
+                                                     m_leveldata[lev]->thermodynamic_p_g->nGrow(),
+                                                     MFInfo(), *ebfactory[lev]);
+      thermodynamic_p_g_new->setVal(0);
+      thermodynamic_p_g_new->ParallelCopy(*m_leveldata[lev]->thermodynamic_p_g, 0, 0,
+                                          m_leveldata[lev]->thermodynamic_p_g->nComp(),
+                                          src_ngrow, m_leveldata[lev]->thermodynamic_p_g->nGrow(),
+                                          geom[lev].periodicity());
+      std::swap(m_leveldata[lev]->thermodynamic_p_g, thermodynamic_p_g_new);
+      delete thermodynamic_p_g_new;
 
       // Old gas thermodynamic pressure
-      MultiFab* pressure_go_new = new MultiFab(grids[lev], dmap[lev],
-                                               m_leveldata[lev]->pressure_go->nComp(),
-                                               m_leveldata[lev]->pressure_go->nGrow(),
-                                               MFInfo(), *ebfactory[lev]);
-      pressure_go_new->setVal(0);
-      pressure_go_new->ParallelCopy(*m_leveldata[lev]->pressure_go, 0, 0,
-                                    m_leveldata[lev]->pressure_go->nComp(),
-                                    src_ngrow, m_leveldata[lev]->pressure_go->nGrow(),
+      MultiFab* thermodynamic_p_go_new = new MultiFab(grids[lev], dmap[lev],
+                                                      m_leveldata[lev]->thermodynamic_p_go->nComp(),
+                                                      m_leveldata[lev]->thermodynamic_p_go->nGrow(),
+                                                      MFInfo(), *ebfactory[lev]);
+      thermodynamic_p_go_new->setVal(0);
+      thermodynamic_p_go_new->ParallelCopy(*m_leveldata[lev]->thermodynamic_p_go, 0, 0,
+                                           m_leveldata[lev]->thermodynamic_p_go->nComp(),
+                                    src_ngrow, m_leveldata[lev]->thermodynamic_p_go->nGrow(),
                                     geom[lev].periodicity());
-      std::swap(m_leveldata[lev]->pressure_go, pressure_go_new);
-      delete pressure_go_new;
+      std::swap(m_leveldata[lev]->thermodynamic_p_go, thermodynamic_p_go_new);
+      delete thermodynamic_p_go_new;
+    }
 
+    if (fluid.solve_enthalpy ||
+        (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
+         fluid.constraint_type == ConstraintType::IdealGasClosedSystem)) {
       // Gas temperature
       MultiFab* T_g_new = new MultiFab(grids[lev], dmap[lev],
                                        m_leveldata[lev]->T_g->nComp(),
@@ -252,7 +255,9 @@ mfix::RegridArrays (int lev)
                       src_ngrow, m_leveldata[lev]->T_go->nGrow(), geom[lev].periodicity());
       std::swap(m_leveldata[lev]->T_go, T_go_new);
       delete T_go_new;
+    }
 
+    if (fluid.solve_enthalpy) {
       // Gas enthalpy
       MultiFab* h_g_new = new MultiFab(grids[lev], dmap[lev],
                                        m_leveldata[lev]->h_g->nComp(),
@@ -292,7 +297,7 @@ mfix::RegridArrays (int lev)
       }
     }
 
-    if (solve_species) {
+    if (fluid.solve_species) {
       // Gas species mass fraction
       MultiFab* X_gk_new = new MultiFab(grids[lev], dmap[lev],
                                        m_leveldata[lev]->X_gk->nComp(),
@@ -373,7 +378,7 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->txfr, txfr_new);
     delete txfr_new;
 
-    if (solve_species && reactions.solve) {
+    if (fluid.solve_species && reactions.solve) {
       // Species mass transfer rates
       MultiFab* chem_txfr_new = new MultiFab(grids[lev], dmap[lev],
                                         m_leveldata[lev]->chem_txfr->nComp(),

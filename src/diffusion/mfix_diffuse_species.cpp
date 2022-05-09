@@ -15,8 +15,6 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
 {
     BL_PROFILE("DiffusionOp::diffuse_species");
 
-    const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
-
     int finest_level = amrcore->finestLevel();
 
     // Update the coefficients of the matrix going into the solve based on the current state of the
@@ -63,7 +61,7 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
             Array4<Real const> const& ep_ro_g_arr    = ep_ro_g_in[lev]->const_array(mfi);
 
             amrex::ParallelFor(bx, [ep_ro_g_arr,ep_ro_D_gk_arr,nspecies_g,
-                fluid_parms,run_on_device]
+                fluid_parms]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               const Real ep_ro_g = ep_ro_g_arr(i,j,k);
@@ -134,7 +132,6 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
-        species_phi[lev]->FillBoundary(geom[lev].periodicity());
         MultiFab::Copy(*X_gk_in[lev], *species_phi[lev], 0, 0, nspecies_g, 1);
     }
 }

@@ -73,125 +73,125 @@ mfix::Restart (std::string& restart_file,
       Real real_tmp;
 
       is >> nlevs;
-      GotoNextLine(is);
+      mfixRW->GotoNextLine(is);
       // finest_level = nlevs-1;
 
       // Time stepping controls
       is >> int_tmp;
       *nstep = int_tmp;
-      GotoNextLine(is);
+      mfixRW->GotoNextLine(is);
 
       is >> real_tmp;
       *dt = real_tmp;
-      GotoNextLine(is);
+      mfixRW->GotoNextLine(is);
 
       is >> real_tmp;
       *time = real_tmp;
-      GotoNextLine(is);
+      mfixRW->GotoNextLine(is);
 
-        std::getline(is, line);
-        {
-            std::istringstream lis(line);
-            int i = 0;
-            while (lis >> word) {
-               prob_lo[i++] = std::stod(word);
-            }
-        }
+      std::getline(is, line);
+      {
+          std::istringstream lis(line);
+          int i = 0;
+          while (lis >> word) {
+             prob_lo[i++] = std::stod(word);
+          }
+      }
 
-        std::getline(is, line);
-        {
-            std::istringstream lis(line);
-            int i = 0;
-            while (lis >> word) {
-               prob_hi[i++] = std::stod(word);
-            }
-        }
+      std::getline(is, line);
+      {
+          std::istringstream lis(line);
+          int i = 0;
+          while (lis >> word) {
+             prob_hi[i++] = std::stod(word);
+          }
+      }
 
 
-        if (Nrep != IntVect::TheUnitVector())
-        {
-           for (int d = 0; d < BL_SPACEDIM; d++)
-           {
-              prob_lo[d] = Nrep[d]*prob_lo[d];
-              prob_hi[d] = Nrep[d]*prob_hi[d];
-           }
-        }
+      if (Nrep != IntVect::TheUnitVector())
+      {
+         for (int d = 0; d < BL_SPACEDIM; d++)
+         {
+            prob_lo[d] = Nrep[d]*prob_lo[d];
+            prob_hi[d] = Nrep[d]*prob_hi[d];
+         }
+      }
 
-        for (int lev = 0; lev < nlevs; ++lev) {
+      for (int lev = 0; lev < nlevs; ++lev) {
 
-            RealBox rb(prob_lo,prob_hi);
-            Geom(lev).ProbDomain(rb);
-            Geom(lev).ResetDefaultProbDomain(rb);
+          RealBox rb(prob_lo,prob_hi);
+          Geom(lev).ProbDomain(rb);
+          Geom(lev).ResetDefaultProbDomain(rb);
 
-            BoxArray orig_ba,ba;
-            orig_ba.readFrom(is);
-            GotoNextLine(is);
+          BoxArray orig_ba,ba;
+          orig_ba.readFrom(is);
+          mfixRW->GotoNextLine(is);
 
-            Box orig_domain(orig_ba.minimalBox());
+          Box orig_domain(orig_ba.minimalBox());
 
-            if (Nrep != IntVect::TheUnitVector())
-            {
-               amrex::Print() << " OLD BA had " << orig_ba.size()  << " GRIDS " << std::endl;
-               amrex::Print() << " OLD Domain" << orig_domain      << std::endl;
-            }
+          if (Nrep != IntVect::TheUnitVector())
+          {
+             amrex::Print() << " OLD BA had " << orig_ba.size()  << " GRIDS " << std::endl;
+             amrex::Print() << " OLD Domain" << orig_domain      << std::endl;
+          }
 
-            BoxList bl;
-            for (int nb = 0; nb < orig_ba.size(); nb++) {
-             for (int k = 0; k < Nrep[2]; k++) {
-                 for (int j = 0; j < Nrep[1]; j++) {
-                   for (int i = 0; i < Nrep[0]; i++) {
-                      Box b(orig_ba[nb]);
-                      IntVect shift_vec(i*orig_domain.length(0),
-                                        j*orig_domain.length(1),
-                                        k*orig_domain.length(2));
-                      b.shift(shift_vec);
-                      bl.push_back(b);
-                   }
+          BoxList bl;
+          for (int nb = 0; nb < orig_ba.size(); nb++) {
+           for (int k = 0; k < Nrep[2]; k++) {
+               for (int j = 0; j < Nrep[1]; j++) {
+                 for (int i = 0; i < Nrep[0]; i++) {
+                    Box b(orig_ba[nb]);
+                    IntVect shift_vec(i*orig_domain.length(0),
+                                      j*orig_domain.length(1),
+                                      k*orig_domain.length(2));
+                    b.shift(shift_vec);
+                    bl.push_back(b);
                  }
                }
-            }
-            ba.define(bl);
+             }
+          }
+          ba.define(bl);
 
-            if (Nrep != IntVect::TheUnitVector())
-            {
-               Box new_domain(ba.minimalBox());
-               geom[lev].Domain(new_domain);
+          if (Nrep != IntVect::TheUnitVector())
+          {
+             Box new_domain(ba.minimalBox());
+             geom[lev].Domain(new_domain);
 
-               DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
-               ReMakeNewLevelFromScratch(lev,ba,dm);
-            }
+             DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
+             ReMakeNewLevelFromScratch(lev,ba,dm);
+          }
 
-            // This is needed before initializing level MultiFabs: ebfactories
-            // should not change after the eb-dependent MultiFabs are allocated.
-            make_eb_geometry();
-            make_eb_factories();
+          // This is needed before initializing level MultiFabs: ebfactories
+          // should not change after the eb-dependent MultiFabs are allocated.
+          make_eb_geometry();
+          make_eb_factories();
 
-            // Particle data is loaded into the MFIXParticleContainer's base
-            // class using amrex::NeighborParticleContainer::Restart
+          // Particle data is loaded into the MFIXParticleContainer's base
+          // class using amrex::NeighborParticleContainer::Restart
 
-            if (DEM::solve && lev == 0) {
+          if (DEM::solve && lev == 0) {
+
+            pc->Restart(restart_file, "particles");
+
+          } else if (PIC::solve && lev == 0) {
+
+            const int PIC_restart_refinement = PIC::restart_refinement;
+
+            if (PIC_restart_refinement > 1) {
+
+              PIC_to_PIC(lev, restart_file, PIC_restart_refinement);
+
+            } else {
 
               pc->Restart(restart_file, "particles");
 
-            } else if (PIC::solve && lev == 0) {
-
-              const int PIC_restart_refinement = PIC::restart_refinement;
-
-              if (PIC_restart_refinement > 1) {
-
-                PIC_to_PIC(lev, restart_file, PIC_restart_refinement);
-
-              } else {
-
-                pc->Restart(restart_file, "particles");
-
-              }
             }
+          }
 
-            amrex::Print() << "  Finished reading particle data" << std::endl;
+          amrex::Print() << "  Finished reading particle data" << std::endl;
 
-            if (fluid.solve) AllocateArrays(lev);
-        }
+          if (fluid.solve) AllocateArrays(lev);
+      }
     }
 
     amrex::Print() << "  Finished reading header" << std::endl;
@@ -250,9 +250,6 @@ mfix::Restart (std::string& restart_file,
             m_leveldata[lev]->vel_g->ParallelCopy(mf_vel, 0, 0, 3, ng_to_copy, ng_to_copy);
 
           } else {
-
-            mf_vel.FillBoundary(geom[lev].periodicity());
-
             replicate_data(*(m_leveldata[lev]->vel_g), mf_vel);
           }
         }
@@ -273,28 +270,26 @@ mfix::Restart (std::string& restart_file,
             m_leveldata[lev]->gp->ParallelCopy(mf_gp, 0, 0, 3, ng_to_copy, ng_to_copy);
 
           } else {
-
-            mf_gp.FillBoundary(geom[lev].periodicity());
-
             replicate_data(*(m_leveldata[lev]->gp), mf_gp);
           }
         }
 
         // Read scalar variables
-        ResetIOChkData();
+        mfixRW->ResetIOChkData();
 
-        for (int i = 0; i < chkScalarVars.size(); i++ )
+        for (int i = 0; i < mfixRW->chkScalarVars.size(); i++ )
         {
-          if (chkscaVarsName[i] == "level_sets") {
+          if (mfixRW->chkscaVarsName[i] == "level_sets") {
 
-            amrex::Print() << "  Skipping " << chkscaVarsName[i] << std::endl;
+            amrex::Print() << "  Skipping " << mfixRW->chkscaVarsName[i] << std::endl;
             continue;
 
           } else {
-            amrex::Print() << "  Loading " << chkscaVarsName[i] << std::endl;
+            amrex::Print() << "  Loading " << mfixRW->chkscaVarsName[i] << std::endl;
 
             auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
-                                                        level_prefix, chkscaVarsName[i]);
+                                                        level_prefix, 
+                                                        mfixRW->chkscaVarsName[i]);
 
             MultiFab mf(The_Pinned_Arena());
             VisMF::Read(mf, prefix);
@@ -304,30 +299,28 @@ mfix::Restart (std::string& restart_file,
               // Copy from the mf we used to read in to the mf we will use going forward
               const int ng_to_copy = 0;
 
-              (*(chkScalarVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
+              (*(mfixRW->chkScalarVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
             } else {
 
-              mf.FillBoundary(geom[lev].periodicity());
-
-              replicate_data(*(chkScalarVars[i][lev]), mf);
+              replicate_data(*(mfixRW->chkScalarVars[i][lev]), mf);
             }
           }
         }
 
-        if (advect_enthalpy)
+        if (fluid.solve_enthalpy)
         {
           auto& fluid_parms = *fluid.parameters;
 
-          for (int i = 0; i < chkTVars.size(); i++ )
+          for (int i = 0; i < mfixRW->chkTVars.size(); i++ )
           {
-            if (restart_from_cold_flow && chkscaVarsName[i] == "T_g")
+            if (restart_from_cold_flow && mfixRW->chkscaVarsName[i] == "T_g")
             {
               amrex::Print() << "  Setting T_g to T_g0 = " << fluid.T_g0 << std::endl;
               m_leveldata[lev]->T_g->setVal(fluid.T_g0);
               continue;
 
-            } else if (restart_from_cold_flow && chkscaVarsName[i] == "h_g") {
+            } else if (restart_from_cold_flow && mfixRW->chkscaVarsName[i] == "h_g") {
 
               const Real h_g0 = fluid_parms.calc_h_g<RunOn::Host>(fluid.T_g0);
 
@@ -338,10 +331,11 @@ mfix::Restart (std::string& restart_file,
               continue;
             }
 
-            amrex::Print() << "  Loading " << chkTVarsName[i] << std::endl;
+            amrex::Print() << "  Loading " << mfixRW->chkTVarsName[i] << std::endl;
 
             auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
-                                                        level_prefix, chkTVarsName[i]);
+                                                        level_prefix,
+                                                        mfixRW->chkTVarsName[i]);
 
             MultiFab mf(The_Pinned_Arena());
             VisMF::Read(mf, prefix);
@@ -352,25 +346,24 @@ mfix::Restart (std::string& restart_file,
               // going forward
               const int ng_to_copy = 0;
 
-              (*(chkTVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
+              (*(mfixRW->chkTVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
             } else {
 
-              mf.FillBoundary(geom[lev].periodicity());
-
-              replicate_data(*(chkTVars[i][lev]), mf);
+              replicate_data(*(mfixRW->chkTVars[i][lev]), mf);
             }
           }
         }
 
-        if (solve_species)
+        if (fluid.solve_species)
         {
-          for (int i = 0; i < chkSpeciesVars.size(); i++ )
+          for (int i = 0; i < mfixRW->chkSpeciesVars.size(); i++ )
           {
-            amrex::Print() << "  Loading " << chkSpeciesVarsName[i] << std::endl;
+            amrex::Print() << "  Loading " << mfixRW->chkSpeciesVarsName[i] << std::endl;
 
             auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
-                                                        level_prefix, chkSpeciesVarsName[i]);
+                                                        level_prefix,
+                                                        mfixRW->chkSpeciesVarsName[i]);
 
             MultiFab mf(The_Pinned_Arena());
             VisMF::Read(mf, prefix);
@@ -380,14 +373,12 @@ mfix::Restart (std::string& restart_file,
               // Copy from the mf we used to read in to the mf we will use going forward
               const int ng_to_copy = 0;
 
-              (*(chkSpeciesVars[i][lev])).ParallelCopy(mf, 0, 0, fluid.nspecies,
-                                                       ng_to_copy, ng_to_copy);
+              (*(mfixRW->chkSpeciesVars[i][lev])).ParallelCopy(mf, 0, 0, fluid.nspecies,
+                                                               ng_to_copy, ng_to_copy);
 
             } else {
 
-              mf.FillBoundary(geom[lev].periodicity());
-
-              replicate_data(*(chkSpeciesVars[i][lev]), mf);
+              replicate_data(*(mfixRW->chkSpeciesVars[i][lev]), mf);
             }
           }
         }
@@ -485,7 +476,7 @@ mfix::Restart (std::string& restart_file,
           m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->ro_go->FillBoundary(geom[lev].periodicity());
 
-          if (advect_enthalpy) {
+          if (fluid.solve_enthalpy) {
             m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
             m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
           }
@@ -497,7 +488,7 @@ mfix::Restart (std::string& restart_file,
           m_leveldata[lev]->gp->FillBoundary(geom[lev].periodicity());
 
           // Fill the bc's just in case
-          if (solve_species) {
+          if (fluid.solve_species) {
             m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
           }
         }

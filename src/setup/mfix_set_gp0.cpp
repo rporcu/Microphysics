@@ -29,12 +29,12 @@ mfix::set_gp0 (const int lev,
       return ifab_host;
   };
 
-  IArrayBox const& bc_ilo_host = make_ifab_host(bc_ilo[lev]);
-  IArrayBox const& bc_ihi_host = make_ifab_host(bc_ihi[lev]);
-  IArrayBox const& bc_jlo_host = make_ifab_host(bc_jlo[lev]);
-  IArrayBox const& bc_jhi_host = make_ifab_host(bc_jhi[lev]);
-  IArrayBox const& bc_klo_host = make_ifab_host(bc_klo[lev]);
-  IArrayBox const& bc_khi_host = make_ifab_host(bc_khi[lev]);
+  IArrayBox const& bc_ilo_host = make_ifab_host(bc_list.bc_ilo[lev]);
+  IArrayBox const& bc_ihi_host = make_ifab_host(bc_list.bc_ihi[lev]);
+  IArrayBox const& bc_jlo_host = make_ifab_host(bc_list.bc_jlo[lev]);
+  IArrayBox const& bc_jhi_host = make_ifab_host(bc_list.bc_jhi[lev]);
+  IArrayBox const& bc_klo_host = make_ifab_host(bc_list.bc_klo[lev]);
+  IArrayBox const& bc_khi_host = make_ifab_host(bc_list.bc_khi[lev]);
   Gpu::synchronize();
 
   Array4<const int> const& bct_ilo = bc_ilo_host.const_array();
@@ -55,11 +55,11 @@ mfix::set_gp0 (const int lev,
   //     capture that in p0 and gp0.
   // ---------------------------------------------------------------->>>
 
-  if ( ( (bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],0) == bc_list.get_pinf()) &&
-         (bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],0) == bc_list.get_pout()) )
+  if ( ( (bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],0) == BCList::pinf) &&
+         (bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],0) == BCList::pout) )
        ||
-       ( (bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],0) == bc_list.get_pinf()) &&
-         (bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],0) == bc_list.get_pout()) ) )
+       ( (bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],0) == BCList::pinf) &&
+         (bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],0) == BCList::pout) ) )
     {
 
       const int bcv_lo = bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],1);
@@ -73,11 +73,11 @@ mfix::set_gp0 (const int lev,
     }
 
 
-  else if( ( (bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],0) == bc_list.get_pinf()) &&
-             (bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],0) == bc_list.get_pout()) )
+  else if( ( (bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],0) == BCList::pinf) &&
+             (bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],0) == BCList::pout) )
            ||
-           ( (bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],0) == bc_list.get_pinf()) &&
-             (bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],0) == bc_list.get_pout()) ) )
+           ( (bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],0) == BCList::pinf) &&
+             (bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],0) == BCList::pout) ) )
     {
 
       const int bcv_lo = bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],1);
@@ -90,11 +90,11 @@ mfix::set_gp0 (const int lev,
       delp_y = p_lo - p_hi;
     }
 
-  else if( ( (bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,0) == bc_list.get_pinf()) &&
-             (bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,0) == bc_list.get_pout()) )
+  else if( ( (bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,0) == BCList::pinf) &&
+             (bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,0) == BCList::pout) )
            ||
-           ( (bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,0) == bc_list.get_pinf()) &&
-             (bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,0) == bc_list.get_pout()) ) )
+           ( (bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,0) == BCList::pinf) &&
+             (bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,0) == BCList::pout) ) )
     {
 
       const int bcv_lo = bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,1);
@@ -137,7 +137,7 @@ mfix::set_gp0 (const int lev,
 
           // HACK: This should probably take into consideration
           // variable fluid density.
-          const Real ro_g0 = fluid.ro_g0;
+          const Real ro_g0 = IC::ic[icv].fluid.density;
 
           for (int dim=0; dim<3; dim++){
             if (gravity[dim]*gravity[dim] > tolerance ) {

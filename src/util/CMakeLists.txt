@@ -4,13 +4,14 @@ target_include_directories(mfixcore
 
 target_sources( mfixcore
    PRIVATE
+   mfix_run_on.H
    mfix_algorithm.H
    mfix_calc_eb_bc_areas.cpp
    mfix_solvers.H
-   mfix_solvers.cpp
    mfix_filcc.H
    mfix_filcc.cpp
-   mfix_util.cpp
+   mfix_utils.H
+   mfix_utils.cpp
    mfix_regrid.cpp
    mfix_fillpatch_bc.H
    mfix_fillpatch.cpp

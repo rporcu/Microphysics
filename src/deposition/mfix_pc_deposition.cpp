@@ -17,40 +17,34 @@ SolidsVolumeDeposition (int lev,
                         const MultiFab * volfrac,
                         const amrex::FabArray<EBCellFlagFab>* flags)
 {
-
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
 
-    SolidsVolumeDeposition(TrilinearDeposition(),
-                           lev, mf_to_be_filled, volfrac, flags);
+    SolidsVolumeDeposition(TrilinearDeposition(), lev, mf_to_be_filled, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::square_dpvm) {
 
-    SolidsVolumeDeposition(TrilinearDPVMSquareDeposition(),
-                           lev, mf_to_be_filled, volfrac, flags);
+    SolidsVolumeDeposition(TrilinearDPVMSquareDeposition(), lev, mf_to_be_filled, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::true_dpvm) {
 
-    SolidsVolumeDeposition(TrueDPVMDeposition(),
-                           lev, mf_to_be_filled, volfrac, flags);
+    SolidsVolumeDeposition(TrueDPVMDeposition(), lev, mf_to_be_filled, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::centroid) {
 
-    SolidsVolumeDeposition(CentroidDeposition(),
-                           lev, mf_to_be_filled, volfrac, flags);
+    SolidsVolumeDeposition(CentroidDeposition(), lev, mf_to_be_filled, volfrac, flags);
 
   } else {
 
     amrex::Abort("Don't know this deposition_scheme!");
 
   }
-
-
 }
 
 
 template <typename F>
 void MFIXParticleContainer::
-SolidsVolumeDeposition (F WeightFunc, int lev,
+SolidsVolumeDeposition (F WeightFunc,
+                        int lev,
                         MultiFab & mf_to_be_filled,
                         const MultiFab * volfrac,
                         const amrex::FabArray<EBCellFlagFab>* flags)
@@ -136,7 +130,7 @@ SolidsVolumeDeposition (F WeightFunc, int lev,
 
                   Real weight_vol = weights[ii+1][jj+1][kk+1] / vfrac(i+ii,j+jj,k+kk);
 
-                  amrex::Gpu::Atomic::Add(&volarr(i+ii,j+jj,k+kk), weight_vol*pvol);
+                  HostDevice::Atomic::Add(&volarr(i+ii,j+jj,k+kk), weight_vol*pvol);
                 }
               }
             }
@@ -161,49 +155,47 @@ void MFIXParticleContainer::
 InterphaseTxfrDeposition (int lev,
                           MultiFab & mf_tmp_eps,
                           MultiFab & txfr_mf,
+                          MultiFab & chem_txfr_mf,
                           const MultiFab * volfrac,
-                          const amrex::FabArray<EBCellFlagFab>* flags,
-                          const int advect_enthalpy)
+                          const amrex::FabArray<EBCellFlagFab>* flags)
 {
-
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
 
     InterphaseTxfrDeposition(TrilinearDeposition(), lev, mf_tmp_eps, txfr_mf,
-        volfrac, flags, advect_enthalpy);
+                             chem_txfr_mf, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::square_dpvm) {
 
     InterphaseTxfrDeposition(TrilinearDPVMSquareDeposition(), lev, mf_tmp_eps,
-        txfr_mf, volfrac, flags, advect_enthalpy);
+                             txfr_mf, chem_txfr_mf, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::true_dpvm) {
 
     InterphaseTxfrDeposition(TrueDPVMDeposition(), lev, mf_tmp_eps, txfr_mf,
-        volfrac, flags, advect_enthalpy);
+                             chem_txfr_mf, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::centroid) {
 
     InterphaseTxfrDeposition(CentroidDeposition(), lev, mf_tmp_eps, txfr_mf,
-        volfrac, flags, advect_enthalpy);
+                             chem_txfr_mf, volfrac, flags);
 
   } else {
 
     amrex::Abort("Don't know this deposition_scheme!");
 
   }
-
 }
-
 
 
 template <typename F>
 void MFIXParticleContainer::
-InterphaseTxfrDeposition (F WeightFunc, int lev,
+InterphaseTxfrDeposition (F WeightFunc,
+                          int lev,
                           MultiFab & mf_tmp_eps,
                           MultiFab & txfr_mf,
+                          MultiFab & chem_txfr_mf,
                           const MultiFab * volfrac,
-                          const amrex::FabArray<EBCellFlagFab>* flags,
-                          const int advect_enthalpy)
+                          const amrex::FabArray<EBCellFlagFab>* flags)
 {
   BL_PROFILE("MFIXParticleContainer::InterphaseTxfrDeposition()");
 
@@ -215,13 +207,32 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
 
   const auto      reg_cell_vol = dx[0]*dx[1]*dx[2];
 
+  const int nspecies_g = fluid.nspecies;
+  const int solve_reactions = reactions.solve;
+
+  const int idx_mass_txfr = m_runtimeRealData.mass_txfr;
+  const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
+  const int idx_h_txfr = m_runtimeRealData.h_txfr;
+
+  ChemTransfer chem_txfr_idxs(fluid.nspecies, reactions.nreactions);
+  const int idx_Xg_txfr = chem_txfr_idxs.ro_gk_txfr;
+  const int idx_velg_txfr = chem_txfr_idxs.vel_g_txfr;
+  const int idx_hg_txfr = chem_txfr_idxs.h_g_txfr;
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
   {
     FArrayBox local_txfr;
+    FArrayBox local_chem_txfr;
 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+
+      PairIndex index(pti.index(), pti.LocalTileIndex());
+      auto& ptile = GetParticles(lev)[index];
+
+      //Access to added variables
+      auto ptile_data = ptile.getParticleTileData();
 
       const auto& particles = pti.GetArrayOfStructs();
       const ParticleType* pstruct = particles().dataPtr();
@@ -231,101 +242,175 @@ InterphaseTxfrDeposition (F WeightFunc, int lev,
 
       const long nrp = pti.numParticles();
 
+      FArrayBox dummy_fab;
+
       FArrayBox& eps_fab  = mf_tmp_eps[pti];
       FArrayBox& txfr_fab = txfr_mf[pti];
+      FArrayBox& chem_txfr_fab = solve_reactions ? chem_txfr_mf[pti] : dummy_fab;
 
       const Box& box = pti.tilebox(); // I need a box without ghosts
 
-      if ((*flags)[pti].getType(box) != FabType::covered ) {
+      if ((*flags)[pti].getType(box) != FabType::covered) {
+
+        Array4<Real> dummy_arr;
 
         auto        txfr_arr = txfr_fab.array();
+        auto   chem_txfr_arr = solve_reactions ? chem_txfr_fab.array() : dummy_arr;
         const auto&   volarr = eps_fab.array();
         const auto& flagsarr = (*flags)[pti].array();
         const auto&    vfrac = (*volfrac)[pti].array();
 
-        const Real deposition_scale_factor =
-          mfix::m_deposition_scale_factor;
+        const Real deposition_scale_factor = mfix::m_deposition_scale_factor;
 
 #ifdef _OPENMP
-        const int ncomp = txfr_mf.nComp();
         Box tile_box = box;
 
-        if (Gpu::notInLaunchRegion())
         {
-          tile_box.grow(txfr_mf.nGrow());
-          local_txfr.resize(tile_box, ncomp);
-          local_txfr.setVal<RunOn::Host>(0.0);
-          txfr_arr = local_txfr.array();
+          const int ncomp = txfr_mf.nComp();
+
+          if (Gpu::notInLaunchRegion())
+          {
+            tile_box.grow(txfr_mf.nGrow());
+            local_txfr.resize(tile_box, ncomp);
+            local_txfr.setVal<RunOn::Host>(0.0);
+            txfr_arr = local_txfr.array();
+          }
+        }
+
+        if (solve_reactions) {
+          const int ncomp = chem_txfr_mf.nComp();
+
+          if (Gpu::notInLaunchRegion())
+          {
+            tile_box.grow(chem_txfr_mf.nGrow());
+            local_chem_txfr.resize(tile_box, ncomp);
+            local_chem_txfr.setVal<RunOn::Host>(0.0);
+            chem_txfr_arr = local_chem_txfr.array();
+          }
         }
 #endif
 
+        const int solve_enthalpy = fluid.solve_enthalpy;
+
         amrex::ParallelFor(nrp,
-          [pstruct,p_realarray,plo,dx,dxi,vfrac,volarr,deposition_scale_factor,
-           reg_cell_vol,WeightFunc,flagsarr,txfr_arr,advect_enthalpy,
-           local_cg_dem=DEM::cg_dem] AMREX_GPU_DEVICE (int ip) noexcept
-          {
-            const ParticleType& p = pstruct[ip];
+            [pstruct,p_realarray,plo,dx,dxi,vfrac,volarr,deposition_scale_factor,
+             reg_cell_vol,WeightFunc,flagsarr,txfr_arr,chem_txfr_arr,solve_enthalpy,
+             ptile_data,nspecies_g,solve_reactions,idx_mass_txfr,idx_vel_txfr,
+             idx_h_txfr,idx_Xg_txfr,idx_velg_txfr,idx_hg_txfr,local_cg_dem=DEM::cg_dem]
+          AMREX_GPU_DEVICE (int ip) noexcept
+        {
+          const ParticleType& p = pstruct[ip];
 
-            int i;
-            int j;
-            int k;
+          int i;
+          int j;
+          int k;
 
-            const Real statwt = p_realarray[SoArealData::statwt][ip];
+          const Real statwt = p_realarray[SoArealData::statwt][ip];
 
-            GpuArray<GpuArray<GpuArray<Real,2>,2>,2> weights;
+          GpuArray<GpuArray<GpuArray<Real,2>,2>,2> weights;
 
-            WeightFunc(plo, dx, dxi, flagsarr, p.pos(), p_realarray[SoArealData::radius][ip], i, j, k, weights,
-                       deposition_scale_factor);
+          WeightFunc(plo, dx, dxi, flagsarr, p.pos(), p_realarray[SoArealData::radius][ip], i, j, k, weights,
+                     deposition_scale_factor);
 
-            Real pvol = statwt * p_realarray[SoArealData::volume][ip] / reg_cell_vol;
+          Real pvol = statwt * p_realarray[SoArealData::volume][ip] / reg_cell_vol;
 
-            Real pbeta = statwt * p_realarray[SoArealData::dragcoeff][ip] / reg_cell_vol;
+          Real pbeta = statwt * p_realarray[SoArealData::dragcoeff][ip] / reg_cell_vol;
 
-            Real pgamma = advect_enthalpy ?
-              statwt * p_realarray[SoArealData::convection][ip] / reg_cell_vol : 0;
+          Real pgamma(0.);
 
-            if (local_cg_dem){
-               pvol = pvol / statwt;
-               pbeta = pbeta / statwt;
+          if (solve_enthalpy)
+            pgamma = statwt * p_realarray[SoArealData::convection][ip] / reg_cell_vol;
+
+          if (local_cg_dem) {
+            pvol = pvol / statwt;
+            pbeta = pbeta / statwt;
+          }
+
+          Real pvx = p_realarray[SoArealData::velx][ip] * pbeta;
+          Real pvy = p_realarray[SoArealData::vely][ip] * pbeta;
+          Real pvz = p_realarray[SoArealData::velz][ip] * pbeta;
+
+          Real pTp(0.);
+          
+          if (solve_enthalpy)
+            pTp = p_realarray[SoArealData::temperature][ip] * pgamma;
+
+          // Chemical reactions deposition terms
+          GpuArray<Real,Species::NMAX> ro_chem_txfr;
+          ro_chem_txfr.fill(0.);
+
+          if (solve_reactions) {
+            for (int n_g(0); n_g < nspecies_g; ++n_g) {
+              ro_chem_txfr[n_g] = statwt * ptile_data.m_runtime_rdata[idx_mass_txfr+n_g][ip] / reg_cell_vol;
             }
+          }
 
-            Real pvx   = p_realarray[SoArealData::velx][ip] * pbeta;
-            Real pvy   = p_realarray[SoArealData::vely][ip] * pbeta;
-            Real pvz   = p_realarray[SoArealData::velz][ip] * pbeta;
+          Real velx_chem_txfr(0.);
+          Real vely_chem_txfr(0.);
+          Real velz_chem_txfr(0.);
 
-            Real pTp   = advect_enthalpy ?
-              p_realarray[SoArealData::temperature][ip] * pgamma : 0;
+          Real h_chem_txfr(0);
 
-            for (int ii = -1; ii <= 0; ++ii) {
-              for (int jj = -1; jj <= 0; ++jj) {
-                for (int kk = -1; kk <= 0; ++kk) {
-                  if (flagsarr(i+ii,j+jj,k+kk).isCovered())
-                    continue;
+          if (solve_reactions) {
+            Real psigma = statwt * ptile_data.m_runtime_rdata[idx_vel_txfr][ip] / reg_cell_vol;
 
-                  Real weight_vol = weights[ii+1][jj+1][kk+1] / vfrac(i+ii,j+jj,k+kk);
+            velx_chem_txfr = p_realarray[SoArealData::velx][ip] * psigma;
+            vely_chem_txfr = p_realarray[SoArealData::vely][ip] * psigma;
+            velz_chem_txfr = p_realarray[SoArealData::velz][ip] * psigma;
 
-                  amrex::Gpu::Atomic::Add(&volarr(i+ii,j+jj,k+kk), weight_vol*pvol);
+            h_chem_txfr = statwt * ptile_data.m_runtime_rdata[idx_h_txfr][ip] / reg_cell_vol;
+          }
 
-                  amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::velx), weight_vol*pvx);
-                  amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::vely), weight_vol*pvy);
-                  amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::velz), weight_vol*pvz);
+          // Deposition
+          for (int ii = -1; ii <= 0; ++ii) {
+            for (int jj = -1; jj <= 0; ++jj) {
+              for (int kk = -1; kk <= 0; ++kk) {
+                if (flagsarr(i+ii,j+jj,k+kk).isCovered())
+                  continue;
 
-                  amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::beta), weight_vol*pbeta);
+                Real weight_vol = weights[ii+1][jj+1][kk+1] / vfrac(i+ii,j+jj,k+kk);
 
-                  if (advect_enthalpy)
-                  {
-                    amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gammaTp), weight_vol*pTp);
-                    amrex::Gpu::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gamma), weight_vol*pgamma);
+                HostDevice::Atomic::Add(&volarr(i+ii,j+jj,k+kk), weight_vol*pvol);
+
+                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::velx), weight_vol*pvx);
+                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::vely), weight_vol*pvy);
+                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::velz), weight_vol*pvz);
+
+                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::beta), weight_vol*pbeta);
+
+                if (solve_enthalpy) {
+                  HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gammaTp), weight_vol*pTp);
+                  HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gamma), weight_vol*pgamma);
+                }
+
+                if (solve_reactions) {
+                  for (int n_g(0); n_g < nspecies_g; ++n_g) {
+                    HostDevice::Atomic::Add(&chem_txfr_arr(i+ii,j+jj,k+kk,idx_Xg_txfr+n_g), weight_vol*ro_chem_txfr[n_g]);
                   }
+
+                  HostDevice::Atomic::Add(&chem_txfr_arr(i+ii,j+jj,k+kk,idx_velg_txfr+0), weight_vol*velx_chem_txfr);
+                  HostDevice::Atomic::Add(&chem_txfr_arr(i+ii,j+jj,k+kk,idx_velg_txfr+1), weight_vol*vely_chem_txfr);
+                  HostDevice::Atomic::Add(&chem_txfr_arr(i+ii,j+jj,k+kk,idx_velg_txfr+2), weight_vol*velz_chem_txfr);
+
+                  HostDevice::Atomic::Add(&chem_txfr_arr(i+ii,j+jj,k+kk,idx_hg_txfr), weight_vol*h_chem_txfr);
                 }
               }
             }
-          });
+          }
+        });
 
 #ifdef _OPENMP
         if (Gpu::notInLaunchRegion())
         {
-          txfr_fab.atomicAdd<RunOn::Host>(local_txfr, tile_box, tile_box, 0, 0, ncomp);
+          {
+            const int ncomp = txfr_mf.nComp();
+            txfr_fab.atomicAdd<RunOn::Host>(local_txfr, tile_box, tile_box, 0, 0, ncomp);
+          }
+
+          if (solve_reactions) {
+            const int ncomp = chem_txfr_mf.nComp();
+            chem_txfr_fab.atomicAdd<RunOn::Host>(local_chem_txfr, tile_box, tile_box, 0, 0, ncomp);
+          }
         }
 #endif
 

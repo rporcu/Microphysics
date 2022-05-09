@@ -7,15 +7,11 @@ using namespace amrex;
 using namespace Solvers;
 
 void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
-                                                    const int advect_enthalpy,
-                                                    const Real enthalpy_source,
                                                     Vector< MultiFab* >& cost,
                                                     std::string& knapsack_weight_type)
 {
 
   BL_PROFILE("MFIXParticleContainer::MFIX_PC_AdvanceParcels()");
-
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
   const int is_IOProc = int(ParallelDescriptor::IOProcessor());
 
@@ -60,28 +56,29 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
       // Particles SoA starting indexes for mass fractions and rate of
       // formations
       const int idx_X_sn = m_runtimeRealData.X_sn;
-      const int idx_mass_sn_txfr = m_runtimeRealData.mass_sn_txfr;
-      const int idx_h_s_txfr = m_runtimeRealData.h_s_txfr;
+      const int idx_mass_sn_txfr = m_runtimeRealData.mass_txfr;
+      const int idx_h_s_txfr = m_runtimeRealData.h_txfr;
 
-      const int update_mass           = solids.solve_species && reactions.solve;
-      const int update_temperature    = advect_enthalpy;
-      const int local_advect_enthalpy = advect_enthalpy;
+      const int solve_mass      = solids.solve_mass && reactions.solve;
+      const int solve_enthalpy  = solids.solve_enthalpy;
       const int solve_reactions = reactions.solve;
+
+      const Real enthalpy_source = solids.enthalpy_source;
 
       const int solid_is_a_mixture = solids.is_a_mixture;
 
       auto& solids_parms = *solids.parameters;
 
       amrex::ParallelFor(nrp,
-        [pstruct,p_realarray,p_intarray,ptile_data,dt,nspecies_s,nreactions,idx_X_sn,
-         idx_mass_sn_txfr,update_mass,update_temperature,solve_reactions,idx_h_s_txfr,
-         solid_is_a_mixture,local_advect_enthalpy,enthalpy_source,solids_parms,
-         run_on_device,is_IOProc,abstol,reltol,maxiter]
+          [pstruct,p_realarray,p_intarray,ptile_data,dt,nspecies_s,nreactions,
+           idx_X_sn,idx_mass_sn_txfr,solve_mass,solve_reactions,idx_h_s_txfr,
+           solid_is_a_mixture,solve_enthalpy,enthalpy_source,solids_parms,
+           is_IOProc,abstol,reltol,maxiter]
         AMREX_GPU_DEVICE (int lp) noexcept
       {
         auto& p = pstruct[lp];
 
-        GpuArray<Real,SPECIES::NMAX> X_sn;
+        GpuArray<Real,Species::NMAX> X_sn;
 
         // Get current particle's mass
         const Real p_mass_old = p_realarray[SoArealData::mass][lp];
@@ -101,7 +98,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
         //*********************************************************************
         // First step: update parcels' mass and density
         //*********************************************************************
-        if (update_mass) {
+        if (solve_mass) {
           // Total particle density exchange rate
           Real total_mass_rate(0);
 
@@ -163,28 +160,24 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
           //*********************************************************************
           // Third step: update parcels' temperature
           //*********************************************************************
-          if(update_temperature) {
+          if (solve_enthalpy) {
 
             const int phase = p_intarray[SoAintData::phase][lp];
 
             const Real Tp_old = p_realarray[SoArealData::temperature][lp];
 
-            const Real coeff = update_mass ? (p_mass_old/p_mass_new) : 1.;
+            const Real coeff = solve_mass ? (p_mass_old/p_mass_new) : 1.;
 
             Real p_enthalpy_old(0);
 
             if (solid_is_a_mixture) {
               for (int n_s(0); n_s < nspecies_s; ++n_s) {
-                const Real h_sn = run_on_device ?
-                  solids_parms.calc_h_sn<RunOn::Device>(Tp_old,n_s) :
-                  solids_parms.calc_h_sn<RunOn::Host>(Tp_old,n_s);
+                const Real h_sn = solids_parms.calc_h_sn<run_on>(Tp_old,n_s);
 
                 p_enthalpy_old += X_sn[n_s]*h_sn;
               }
             } else {
-              p_enthalpy_old = run_on_device ?
-                solids_parms.calc_h_s<RunOn::Device>(phase-1,Tp_old) :
-                solids_parms.calc_h_s<RunOn::Host>(phase-1,Tp_old);
+              p_enthalpy_old = solids_parms.calc_h_s<run_on>(phase-1,Tp_old);
             }
 
             Real p_enthalpy_new = coeff*p_enthalpy_old +
@@ -204,15 +197,11 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
               if (!solid_is_a_mixture) {
 
-                hp_loc = run_on_device ?
-                  solids_parms.calc_h_s<RunOn::Device>(phase-1,Tp_arg) :
-                  solids_parms.calc_h_s<RunOn::Host>(phase-1,Tp_arg);
+                hp_loc = solids_parms.calc_h_s<run_on>(phase-1,Tp_arg);
               } else {
 
                 for (int n(0); n < nspecies_s; ++n) {
-                  const Real h_sn = run_on_device ?
-                    solids_parms.calc_h_sn<RunOn::Device>(Tp_arg,n) :
-                    solids_parms.calc_h_sn<RunOn::Host>(Tp_arg,n);
+                  const Real h_sn = solids_parms.calc_h_sn<run_on>(Tp_arg,n);
 
                   hp_loc += X_sn[n]*h_sn;
                 }
@@ -228,16 +217,12 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
               if (!solid_is_a_mixture) {
 
-                gradient = run_on_device ?
-                  solids_parms.calc_partial_h_s<RunOn::Device>(phase-1,Tp_arg) :
-                  solids_parms.calc_partial_h_s<RunOn::Host>(phase-1,Tp_arg);
+                gradient = solids_parms.calc_partial_h_s<run_on>(phase-1,Tp_arg);
 
               } else {
 
                 for (int n(0); n < nspecies_s; ++n) {
-                  const Real h_sn = run_on_device ?
-                    solids_parms.calc_partial_h_sn<RunOn::Device>(Tp_arg,n) :
-                    solids_parms.calc_partial_h_sn<RunOn::Host>(Tp_arg,n);
+                  const Real h_sn = solids_parms.calc_partial_h_sn<run_on>(Tp_arg,n);
 
                   gradient += X_sn[n]*h_sn;
                 }
@@ -248,10 +233,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
             Real Tp_new(Tp_old);
 
-            const Real damping_factor = 1.;
-
-            DampedNewton::solve(Tp_new, R, partial_R, is_IOProc,
-                                damping_factor, abstol, reltol, maxiter);
+            Newton::solve(Tp_new, R, partial_R, is_IOProc, abstol, reltol, maxiter);
 
             p_realarray[SoArealData::temperature][lp] = Tp_new;
 
@@ -260,17 +242,13 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
             if (solid_is_a_mixture) {
               for (int n_s(0); n_s < nspecies_s; ++n_s) {
-                const Real cp_sn = run_on_device ?
-                  solids_parms.calc_cp_sn<RunOn::Device>(Tp_new,n_s) :
-                  solids_parms.calc_cp_sn<RunOn::Host>(Tp_new,n_s);
+                const Real cp_sn = solids_parms.calc_cp_sn<run_on>(Tp_new,n_s);
 
                 cp_s_new += X_sn[n_s]*cp_sn;
               }
 
             } else {
-              cp_s_new = run_on_device ?
-                solids_parms.calc_cp_s<RunOn::Device>(phase-1,Tp_new) :
-                solids_parms.calc_cp_s<RunOn::Host>(phase-1,Tp_new);
+              cp_s_new = solids_parms.calc_cp_s<run_on>(phase-1,Tp_new);
             }
 
             AMREX_ASSERT(cp_s_new > 0.);

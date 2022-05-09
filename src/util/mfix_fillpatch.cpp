@@ -21,7 +21,7 @@ mfix::FillPatchVel (int lev,
 
     set_velocity_bc_values(time);
 
-    const int minf = bc_list.get_minf();
+    const int minf = BCList::minf;
 
     if (lev == 0) {
 
@@ -32,9 +32,9 @@ mfix::FillPatchVel (int lev,
       PhysBCFunct<GpuBndryFuncFab<MFIXVelFill> > physbc
         (geom[lev], bcrec, MFIXVelFill{minf,
             m_bc_u_g.data(), m_bc_v_g.data(), m_bc_w_g.data(),
-            bc_ilo[lev]->array(), bc_ihi[lev]->array(),
-            bc_jlo[lev]->array(), bc_jhi[lev]->array(),
-            bc_klo[lev]->array(), bc_khi[lev]->array()
+            bc_list.bc_ilo[lev]->array(), bc_list.bc_ihi[lev]->array(),
+            bc_list.bc_jlo[lev]->array(), bc_list.bc_jhi[lev]->array(),
+            bc_list.bc_klo[lev]->array(), bc_list.bc_khi[lev]->array()
             });
 
       amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, icomp, ncomp,
@@ -50,17 +50,17 @@ mfix::FillPatchVel (int lev,
       PhysBCFunct<GpuBndryFuncFab<MFIXVelFill> > cphysbc
         (geom[lev-1], bcrec, MFIXVelFill{minf,
             m_bc_u_g.data(), m_bc_v_g.data(), m_bc_w_g.data(),
-            bc_ilo[lev-1]->array(), bc_ihi[lev-1]->array(),
-            bc_jlo[lev-1]->array(), bc_jhi[lev-1]->array(),
-            bc_klo[lev-1]->array(), bc_khi[lev-1]->array()
+            bc_list.bc_ilo[lev-1]->array(), bc_list.bc_ihi[lev-1]->array(),
+            bc_list.bc_jlo[lev-1]->array(), bc_list.bc_jhi[lev-1]->array(),
+            bc_list.bc_klo[lev-1]->array(), bc_list.bc_khi[lev-1]->array()
             });
 
       PhysBCFunct<GpuBndryFuncFab<MFIXVelFill> > fphysbc
         (geom[lev], bcrec, MFIXVelFill{minf,
             m_bc_u_g.data(), m_bc_v_g.data(), m_bc_w_g.data(),
-            bc_ilo[lev]->array(), bc_ihi[lev]->array(),
-            bc_jlo[lev]->array(), bc_jhi[lev]->array(),
-            bc_klo[lev]->array(), bc_khi[lev]->array()
+            bc_list.bc_ilo[lev]->array(), bc_list.bc_ihi[lev]->array(),
+            bc_list.bc_jlo[lev]->array(), bc_list.bc_jhi[lev]->array(),
+            bc_list.bc_klo[lev]->array(), bc_list.bc_khi[lev]->array()
             });
 
       Interpolater* mapper = &cell_cons_interp;
@@ -83,7 +83,7 @@ mfix::FillPatchScalar (int lev, Real time, MultiFab& mf,
     // Hack so that ghost cells are not undefined
     mf.setVal(covered_val);
 
-    const int minf = bc_list.get_minf();
+    const int minf = BCList::minf;
 
     const int icomp = 0;
     const int ncomp = 1;
@@ -97,9 +97,9 @@ mfix::FillPatchScalar (int lev, Real time, MultiFab& mf,
 
         PhysBCFunct<GpuBndryFuncFab<MFIXScalarFill> > physbc
           (geom[lev], bcrec, MFIXScalarFill{minf, bc_scalar,
-              bc_ilo[lev]->array(), bc_ihi[lev]->array(),
-              bc_jlo[lev]->array(), bc_jhi[lev]->array(),
-              bc_klo[lev]->array(), bc_khi[lev]->array()
+              bc_list.bc_ilo[lev]->array(), bc_list.bc_ihi[lev]->array(),
+              bc_list.bc_jlo[lev]->array(), bc_list.bc_jhi[lev]->array(),
+              bc_list.bc_klo[lev]->array(), bc_list.bc_khi[lev]->array()
               });
 
         amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, 0, ncomp,
@@ -114,16 +114,16 @@ mfix::FillPatchScalar (int lev, Real time, MultiFab& mf,
 
         PhysBCFunct<GpuBndryFuncFab<MFIXScalarFill> > cphysbc
           (geom[lev-1], bcrec, MFIXScalarFill{minf, bc_scalar,
-              bc_ilo[lev-1]->array(), bc_ihi[lev-1]->array(),
-              bc_jlo[lev-1]->array(), bc_jhi[lev-1]->array(),
-              bc_klo[lev-1]->array(), bc_khi[lev-1]->array()
+              bc_list.bc_ilo[lev-1]->array(), bc_list.bc_ihi[lev-1]->array(),
+              bc_list.bc_jlo[lev-1]->array(), bc_list.bc_jhi[lev-1]->array(),
+              bc_list.bc_klo[lev-1]->array(), bc_list.bc_khi[lev-1]->array()
               });
 
         PhysBCFunct<GpuBndryFuncFab<MFIXScalarFill> > fphysbc
           (geom[lev], bcrec, MFIXScalarFill{minf, bc_scalar,
-              bc_ilo[lev]->array(), bc_ihi[lev]->array(),
-              bc_jlo[lev]->array(), bc_jhi[lev]->array(),
-              bc_klo[lev]->array(), bc_khi[lev]->array()
+              bc_list.bc_ilo[lev]->array(), bc_list.bc_ihi[lev]->array(),
+              bc_list.bc_jlo[lev]->array(), bc_list.bc_jhi[lev]->array(),
+              bc_list.bc_klo[lev]->array(), bc_list.bc_khi[lev]->array()
               });
         Interpolater* mapper = &cell_cons_interp;
 
@@ -148,7 +148,7 @@ mfix::FillPatchSpecies (int lev,
     // Hack so that ghost cells are not undefined
     mf.setVal(covered_val);
 
-    const int minf = bc_list.get_minf();
+    const int minf = BCList::minf;
 
     // icomp tells us which scalar we are fill-patching
     // But we send "0) into FillPatch since each scalar is stored in its own array
@@ -162,9 +162,9 @@ mfix::FillPatchSpecies (int lev,
 
         PhysBCFunct<GpuBndryFuncFab<MFIXSpeciesFill> > physbc
           (geom[lev], bcrec, MFIXSpeciesFill{minf, m_bc_X_gk_ptr.data(),
-              bc_ilo[lev]->array(), bc_ihi[lev]->array(),
-              bc_jlo[lev]->array(), bc_jhi[lev]->array(),
-              bc_klo[lev]->array(), bc_khi[lev]->array()
+              bc_list.bc_ilo[lev]->array(), bc_list.bc_ihi[lev]->array(),
+              bc_list.bc_jlo[lev]->array(), bc_list.bc_jhi[lev]->array(),
+              bc_list.bc_klo[lev]->array(), bc_list.bc_khi[lev]->array()
               });
 
         amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, 0, ncomp,
@@ -179,16 +179,16 @@ mfix::FillPatchSpecies (int lev,
 
         PhysBCFunct<GpuBndryFuncFab<MFIXSpeciesFill> > cphysbc
           (geom[lev-1], bcrec, MFIXSpeciesFill{minf, m_bc_X_gk_ptr.data(),
-              bc_ilo[lev-1]->array(), bc_ihi[lev-1]->array(),
-              bc_jlo[lev-1]->array(), bc_jhi[lev-1]->array(),
-              bc_klo[lev-1]->array(), bc_khi[lev-1]->array()
+              bc_list.bc_ilo[lev-1]->array(), bc_list.bc_ihi[lev-1]->array(),
+              bc_list.bc_jlo[lev-1]->array(), bc_list.bc_jhi[lev-1]->array(),
+              bc_list.bc_klo[lev-1]->array(), bc_list.bc_khi[lev-1]->array()
               });
 
         PhysBCFunct<GpuBndryFuncFab<MFIXSpeciesFill> > fphysbc
           (geom[lev], bcrec, MFIXSpeciesFill{minf, m_bc_X_gk_ptr.data(),
-              bc_ilo[lev]->array(), bc_ihi[lev]->array(),
-              bc_jlo[lev]->array(), bc_jhi[lev]->array(),
-              bc_klo[lev]->array(), bc_khi[lev]->array()
+              bc_list.bc_ilo[lev]->array(), bc_list.bc_ihi[lev]->array(),
+              bc_list.bc_jlo[lev]->array(), bc_list.bc_jhi[lev]->array(),
+              bc_list.bc_klo[lev]->array(), bc_list.bc_khi[lev]->array()
               });
 
         Interpolater* mapper = &cell_cons_interp;
@@ -437,19 +437,19 @@ mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
     MultiFab::Copy(*ro_g_in[lev], Sborder_s, 0, 0, 1, ro_g_in[lev]->nGrow());
 
 
-    if (advect_tracer) {
+    if (fluid.solve_tracer) {
       FillPatchScalar(lev, time, Sborder_s, ScalarToFill::Tracer,
                       m_bc_tracer.data(), get_tracer_bcrec());
       MultiFab::Copy(*trac_in[lev], Sborder_s, 0, 0, 1, trac_in[lev]->nGrow());
     }
 
-    if (advect_enthalpy) {
+    if (fluid.solve_enthalpy) {
       FillPatchScalar(lev, time, Sborder_s, ScalarToFill::Enthalpy,
                       m_bc_h_g.data(), get_enthalpy_bcrec());
       MultiFab::Copy(*h_g_in[lev], Sborder_s, 0, 0, 1, h_g_in[lev]->nGrow());
     }
 
-    if (solve_species) {
+    if (fluid.solve_species) {
       MultiFab Sborder_X(grids[lev], dmap[lev], X_gk_in[lev]->nComp(),
                          nghost_state(), MFInfo(), *ebfactory[lev]);
       Sborder_X.setVal(0);

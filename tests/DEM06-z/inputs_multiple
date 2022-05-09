@@ -10,6 +10,9 @@ mfix.fixed_dt = 1.e-3
 mfix.gravity =  0.0   0.0  -9.80665
 mfix.drag_type = "UserDrag"
 
+mfix.constraint_type = IncompressibleFluid
+
+
 #! Fluid solver
 #!-----------------------------------------------------------//
 
@@ -76,9 +79,6 @@ amr.plt_regtest = 1
 #
 fluid.solve = fluid
 
-fluid.density            = constant
-fluid.density.constant   = 1.2
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 1.8e-5
 
@@ -129,6 +129,7 @@ ic.regions = full-domain
 # Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac   = 1.0
+ic.full-domain.fluid.density   = 1.2
 ic.full-domain.fluid.velocity  = 0.0  0.0  0.4
 
 
@@ -140,6 +141,7 @@ bc.regions = inflow  outflow
 
 bc.inflow = mi
 bc.inflow.fluid.volfrac  =  1.0
+bc.inflow.fluid.density  =  1.2
 bc.inflow.fluid.velocity =  0.0  0.0  0.4
 
 bc.outflow = po

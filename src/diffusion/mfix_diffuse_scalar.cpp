@@ -77,7 +77,6 @@ void DiffusionOp::diffuse_scalar (const Vector< MultiFab* >& scal_in,
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
-        phi[lev]->FillBoundary(geom[lev].periodicity());
         MultiFab::Copy(*scal_in[lev], *phi[lev], 0, 0, ntrac, 1);
     }
 }

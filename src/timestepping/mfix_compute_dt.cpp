@@ -60,7 +60,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
           const auto& vel       = ld.vel_g->array(mfi);
           const auto& ep        = ld.ep_g->array(mfi);
           const auto& ro        = ld.ro_g->array(mfi);
-          const auto& T_g       = advect_enthalpy ? ld.T_g->array(mfi) : Array4<const Real>();
+          const auto& T_g       = fluid.solve_enthalpy ? ld.T_g->array(mfi) : Array4<const Real>();
           const auto& gradp     = ld.gp->array(mfi);
           const auto& txfr_fab  = ld.txfr->array(mfi);
 
@@ -75,7 +75,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
           const RealVect gp0_dev(gp0);
           const RealVect gravity_dev(gravity);
 
-          const int adv_enthalpy = advect_enthalpy;
+          const int adv_enthalpy = fluid.solve_enthalpy;
 
           const Real mu_g0 = fluid.mu_g0;
 
@@ -149,7 +149,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
           const auto& vel       = ld.vel_g->const_array(mfi);
           const auto& ep        = ld.ep_g->const_array(mfi);
           const auto& ro        = ld.ro_g->const_array(mfi);
-          const auto& T_g       = advect_enthalpy ? ld.T_g->const_array(mfi) : Array4<const Real>();
+          const auto& T_g       = fluid.solve_enthalpy ? ld.T_g->const_array(mfi) : Array4<const Real>();
           const auto& gradp     = ld.gp->const_array(mfi);
           const auto& txfr_fab  = ld.txfr->const_array(mfi);
 
@@ -165,7 +165,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
           const RealVect gp0_dev(gp0);
           const RealVect gravity_dev(gravity);
 
-          const int adv_enthalpy = advect_enthalpy;
+          const int adv_enthalpy = fluid.solve_enthalpy;
 
           const Real mu_g0 = fluid.mu_g0;
 
@@ -231,21 +231,13 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
     if ( nstep > 1 && cfl_max <= eps ) dt_new = 0.5 * old_dt;
 
     // Don't let the timestep grow by more than 1% per step.
-    //       unless the previous time step was unduly shrunk to match plot_per_exact
-    if ( nstep > 1 && !(plot_per_exact > 0 && last_plt == nstep && nstep > 0) )
+    if ( nstep > 1 )
         dt_new = amrex::min( dt_new, 1.01*old_dt );
 
     // Don't overshoot the final time if not running to steady state
     if (m_steady_state == 0 && stop_time > 0.)
        if (time+dt_new > stop_time)
            dt_new = stop_time - time;
-
-    // Don't overshoot specified plot times
-    if(plot_per_exact > 0.0 &&
-            (trunc((time + dt_new + eps) / plot_per_exact) > trunc((time + eps) / plot_per_exact)))
-    {
-        dt_new = trunc((time + dt_new) / plot_per_exact) * plot_per_exact - time;
-    }
 
     // dt_new is the step calculated with a cfl constraint; dt is the value set by fixed_dt
     // When the test was on dt > dt_new, there were cases where they were effectively equal

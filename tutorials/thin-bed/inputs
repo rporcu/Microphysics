@@ -179,9 +179,6 @@ mfix.levelset__refinement = 2 # levelset resolution
 #
 fluid.solve = fluid
 
-fluid.density    = constant
-fluid.density.constant   = 1.205
-
 fluid.viscosity  = constant
 fluid.viscosity.constant = 1.8e-5
 
@@ -240,6 +237,7 @@ ic.regions = bed
 mfix.particle_init_type = Auto
 
 ic.bed.fluid.volfrac  = 0.6
+ic.bed.fluid.density  = 1.205
 ic.bed.fluid.velocity = 0.0  0.0  0.0
 
 ic.bed.solids = solid0
@@ -271,8 +269,10 @@ bc.outflow.fluid.pressure =  0.0
 
 bc.inflow = mi
 bc.inflow.fluid.volfrac  =  1.0
+bc.inflow.fluid.density  =  1.205
 bc.inflow.fluid.velocity =  0.02  0.00  0.00
 
 bc.jet = mi
 bc.jet.fluid.volfrac  =  1.0
+bc.jet.fluid.density  =  1.205
 bc.jet.fluid.velocity =  0.02  0.00  0.00

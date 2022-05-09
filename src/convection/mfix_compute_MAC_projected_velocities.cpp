@@ -84,11 +84,6 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
     EB_interp_CellCentroid_to_FaceCentroid (*ro_g_in[lev], ro_face[lev], 0, 0, 1, geom[lev], get_density_bcrec());
     EB_interp_CellCentroid_to_FaceCentroid (*ep_g_in[lev], ep_face[lev], 0, 0, 1, geom[lev], bcs_f);
 
-    // These will be reused to predict velocites (ep*u) on faces
-    ep_face[lev][0]->FillBoundary();
-    ep_face[lev][1]->FillBoundary();
-    ep_face[lev][2]->FillBoundary();
-
     // Compute ep_face into bcoeff
     MultiFab::Copy(*bcoeff[lev][0], *(ep_face[lev][0]), 0, 0, 1, 0);
     MultiFab::Copy(*bcoeff[lev][1], *(ep_face[lev][1]), 0, 0, 1, 0);
@@ -164,8 +159,6 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
   //    arrays returned from this call are on face CENTROIDS.
   for (int lev = 0; lev < nlev; ++lev) {
 
-    mac_phi[lev]->FillBoundary(geom[lev].periodicity());
-
     const EBFArrayBoxFactory* ebfact = &EBFactory(lev);
 
     // We need this to avoid FPE
@@ -179,12 +172,21 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
     else
         advection_string = "MOL";
 
-    HydroUtils::ExtrapVelToFaces(*vel_in[lev], *vel_forces[lev],
-                                 *ep_u_mac[lev], *ep_v_mac[lev], *ep_w_mac[lev],
-                                  get_hydro_velocity_bcrec(), get_hydro_velocity_bcrec_device_ptr(),
-                                  geom[lev], l_dt, *ebfact,
-                                  m_godunov_ppm, m_godunov_use_forces_in_trans,
-                                  advection_string);
+    if (EB::has_flow) {
+       HydroUtils::ExtrapVelToFaces(*vel_in[lev], *vel_forces[lev],
+                                    *ep_u_mac[lev], *ep_v_mac[lev], *ep_w_mac[lev],
+                                     get_hydro_velocity_bcrec(), get_hydro_velocity_bcrec_device_ptr(),
+                                     geom[lev], l_dt, *ebfact, eb_flow_vel[lev],
+                                     m_godunov_ppm, m_godunov_use_forces_in_trans,
+                                     advection_string);
+    } else {
+       HydroUtils::ExtrapVelToFaces(*vel_in[lev], *vel_forces[lev],
+                                    *ep_u_mac[lev], *ep_v_mac[lev], *ep_w_mac[lev],
+                                     get_hydro_velocity_bcrec(), get_hydro_velocity_bcrec_device_ptr(),
+                                     geom[lev], l_dt, *ebfact,
+                                     m_godunov_ppm, m_godunov_use_forces_in_trans,
+                                     advection_string);
+    }
 
     for (MFIter mfi(*vel_in[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
@@ -235,9 +237,6 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
     (mac_vec[lev])[0] = ep_u_mac[lev];
     (mac_vec[lev])[1] = ep_v_mac[lev];
     (mac_vec[lev])[2] = ep_w_mac[lev];
-
-    for (int i=0; i < 3; ++i)
-      (mac_vec[lev])[i]->FillBoundary(geom[lev].periodicity());
 
     if (m_verbose)
     {
@@ -318,9 +317,5 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
 
     // Set bcs on (ep * u_mac)
     set_MAC_velocity_bcs(lev, rhs_mac_in, ep_u_mac, ep_v_mac, ep_w_mac, time);
-
-    ep_u_mac[lev]->FillBoundary(geom[lev].periodicity());
-    ep_v_mac[lev]->FillBoundary(geom[lev].periodicity());
-    ep_w_mac[lev]->FillBoundary(geom[lev].periodicity());
   }
 }

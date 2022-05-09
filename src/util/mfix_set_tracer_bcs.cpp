@@ -13,7 +13,7 @@ mfix::mfix_set_tracer_bcs (Real time,
 {
   BL_PROFILE("mfix::mfix_set_tracer_bcs()");
 
-  if (advect_tracer)
+  if (fluid.solve_tracer)
   {
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -47,12 +47,12 @@ mfix::set_tracer_bcs (Real /*time*/,
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
 
-  Array4<const int> const& bct_ilo = bc_ilo[lev]->array();
-  Array4<const int> const& bct_ihi = bc_ihi[lev]->array();
-  Array4<const int> const& bct_jlo = bc_jlo[lev]->array();
-  Array4<const int> const& bct_jhi = bc_jhi[lev]->array();
-  Array4<const int> const& bct_klo = bc_klo[lev]->array();
-  Array4<const int> const& bct_khi = bc_khi[lev]->array();
+  Array4<const int> const& bct_ilo = bc_list.bc_ilo[lev]->array();
+  Array4<const int> const& bct_ihi = bc_list.bc_ihi[lev]->array();
+  Array4<const int> const& bct_jlo = bc_list.bc_jlo[lev]->array();
+  Array4<const int> const& bct_jhi = bc_list.bc_jhi[lev]->array();
+  Array4<const int> const& bct_klo = bc_list.bc_klo[lev]->array();
+  Array4<const int> const& bct_khi = bc_list.bc_khi[lev]->array();
 
   Array4<Real> const& scal_arr = scal_fab.array();
 
@@ -127,25 +127,21 @@ mfix::set_tracer_bcs (Real /*time*/,
   const Box bx_xy_lo_3D(scal_lo, bx_xy_lo_hi_3D);
   const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, scal_hi);
 
-  const int minf = bc_list.get_minf();
-  const int pinf = bc_list.get_pinf();
-  const int pout = bc_list.get_pout();
-
   if (nlft > 0)
   {
     amrex::ParallelFor(bx_yz_lo_3D,
-      [bct_ilo,dom_lo,bc0,pinf,pout,minf,scal_arr]
+      [bct_ilo,dom_lo,bc0,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
       // const int bcv = bct_ilo(dom_lo[0]-1,j,k,1);
       const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
 
-      if ((bct == pinf) || (bct == pout))
+      if ((bct == BCList::pinf) || (bct == BCList::pout))
       {
         scal_arr(i,j,k) = scal_arr(dom_lo[0],j,k);
       }
-      else if (bct == minf)
+      else if (bct == BCList::minf)
       {
         scal_arr(i,j,k) = bc0;
       }
@@ -156,18 +152,18 @@ mfix::set_tracer_bcs (Real /*time*/,
   if (nrgt > 0)
   {
     amrex::ParallelFor(bx_yz_hi_3D,
-      [bct_ihi,dom_hi,bc0,pinf,pout,minf,scal_arr]
+      [bct_ihi,dom_hi,bc0,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
       // const int bcv = bct_ihi(dom_hi[0]+1,j,k,1);
       const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
 
-      if((bct == pinf) || (bct == pout))
+      if((bct == BCList::pinf) || (bct == BCList::pout))
       {
         scal_arr(i,j,k) = scal_arr(dom_hi[0],j,k);
       }
-      else if(bct == minf)
+      else if(bct == BCList::minf)
       {
         scal_arr(i,j,k) = bc0;
       }
@@ -177,18 +173,18 @@ mfix::set_tracer_bcs (Real /*time*/,
   if (nbot > 0)
   {
     amrex::ParallelFor(bx_xz_lo_3D,
-      [bct_jlo,dom_lo,bc0,pinf,pout,minf,scal_arr]
+      [bct_jlo,dom_lo,bc0,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
       // const int bcv = bct_jlo(i,dom_lo[1]-1,k,1);
       const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
 
-      if((bct == pinf) || (bct == pout))
+      if((bct == BCList::pinf) || (bct == BCList::pout))
       {
         scal_arr(i,j,k) = scal_arr(i,dom_lo[1],k);
       }
-      else if(bct == minf)
+      else if(bct == BCList::minf)
       {
         scal_arr(i,j,k) = bc0;
       }
@@ -198,18 +194,18 @@ mfix::set_tracer_bcs (Real /*time*/,
   if (ntop > 0)
   {
     amrex::ParallelFor(bx_xz_hi_3D,
-      [bct_jhi,dom_hi,bc0,pinf,pout,minf,scal_arr]
+      [bct_jhi,dom_hi,bc0,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
       // const int bcv = bct_jhi(i,dom_hi[1]+1,k,1);
       const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
 
-      if((bct == pinf) || (bct == pout))
+      if((bct == BCList::pinf) || (bct == BCList::pout))
       {
         scal_arr(i,j,k) = scal_arr(i,dom_hi[1],k);
       }
-      else if(bct == minf)
+      else if(bct == BCList::minf)
       {
         scal_arr(i,j,k) = bc0;
       }
@@ -219,18 +215,18 @@ mfix::set_tracer_bcs (Real /*time*/,
   if (ndwn > 0)
   {
     amrex::ParallelFor(bx_xy_lo_3D,
-      [bct_klo,dom_lo,bc0,pinf,pout,minf,scal_arr]
+      [bct_klo,dom_lo,bc0,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
       // const int bcv = bct_klo(i,j,dom_lo[2]-1,1);
       const int bct = bct_klo(i,j,dom_lo[2]-1,0);
 
-      if((bct == pinf) || (bct == pout))
+      if((bct == BCList::pinf) || (bct == BCList::pout))
       {
         scal_arr(i,j,k) = scal_arr(i,j,dom_lo[2]);
       }
-      else if(bct == minf)
+      else if(bct == BCList::minf)
       {
         scal_arr(i,j,k) = bc0;
       }
@@ -240,18 +236,18 @@ mfix::set_tracer_bcs (Real /*time*/,
   if (nup > 0)
   {
     amrex::ParallelFor(bx_xy_hi_3D,
-      [bct_khi,dom_hi,bc0,pinf,pout,minf,scal_arr]
+      [bct_khi,dom_hi,bc0,scal_arr]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
 
       // const int bcv = bct_khi(i,j,dom_hi[2]+1,1);
       const int bct = bct_khi(i,j,dom_hi[2]+1,0);
 
-      if ((bct == pinf) || (bct == pout))
+      if ((bct == BCList::pinf) || (bct == BCList::pout))
       {
         scal_arr(i,j,k) = scal_arr(i,j,dom_hi[2]);
       }
-      else if (bct == minf)
+      else if (bct == BCList::minf)
       {
         scal_arr(i,j,k) = bc0;
       }

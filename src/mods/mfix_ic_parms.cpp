@@ -10,6 +10,7 @@
 #include <mfix_regions_parms.H>
 #include <mfix_species_parms.H>
 
+
 using namespace amrex;
 
 namespace IC
@@ -17,7 +18,7 @@ namespace IC
 
   amrex::Vector<IC_t> ic;
 
-  void Initialize (const FluidPhase& fluid,
+  void Initialize (FluidPhase& fluid,
                    const SolidsPhase& solids)
   {
 
@@ -26,26 +27,19 @@ namespace IC
     std::vector<std::string> regions;
     pp.queryarr("regions", regions);
 
-    // Query if advect_enthalpy so we check if ic temperature inputs are correct
-    amrex::ParmParse ppMFIX("mfix");
-    int advect_enthalpy(0);
-
-    ppMFIX.query("advect_enthalpy", advect_enthalpy);
-
     // Loop over ICs
-    for(size_t icv=0; icv < regions.size(); icv++) {
+    for (size_t icv=0; icv < regions.size(); icv++) {
 
       amrex::Real volfrac_total(0.0);
 
-      IC_t new_ic;
+      IC_t new_ic(fluid);
 
       // Set the region for the initial condition.
       new_ic.region = REGIONS::getRegion(regions[icv]);
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE( new_ic.region != NULL, "Invalid ic region!");
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(new_ic.region != NULL, "Invalid ic region!");
 
       // Get fluid data.
-
-      if(fluid.solve) {
+      if (fluid.solve) {
 
         std::string field = "ic."+regions[icv]+"."+fluid.name;
         amrex::ParmParse ppFluid(field.c_str());
@@ -54,12 +48,6 @@ namespace IC
         volfrac_total += new_ic.fluid.volfrac;
 
         ppFluid.getarr("velocity", new_ic.fluid.velocity, 0, 3);
-
-        if (advect_enthalpy) {
-          ppFluid.get("temperature", new_ic.fluid.temperature); 
-        }
-
-        new_ic.fluid.pressure_defined = ppFluid.query("pressure", new_ic.fluid.pressure);
 
         if (fluid.solve_species) {
 
@@ -74,9 +62,9 @@ namespace IC
 
           for (int n(0); n < nspecies_g; n++) {
             // Get the name of the fluid species we want to get the IC
-            std::string fluid_specie = fluid.species[n];
+            std::string fluid_species = fluid.species_names[n];
             // Get the IC mass fraction for the current species
-            ppSpecies.query(fluid_specie.c_str(), new_ic.fluid.species[n].mass_fraction);
+            ppSpecies.get(fluid_species.c_str(), new_ic.fluid.species[n].mass_fraction);
             total_mass_fraction += new_ic.fluid.species[n].mass_fraction;
           }
 
@@ -87,6 +75,47 @@ namespace IC
 
             amrex::Abort(message);
           }
+        }
+
+        // Get density
+        new_ic.fluid.density_defined = ppFluid.query("density", new_ic.fluid.density);
+
+        // Get temperature
+        new_ic.fluid.temperature_defined = ppFluid.query("temperature", new_ic.fluid.temperature);
+
+        // Get pressure
+        new_ic.fluid.pressure_defined = ppFluid.query("pressure", new_ic.fluid.pressure);
+
+        if (fluid.constraint_type == ConstraintType::IncompressibleFluid) {
+
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(new_ic.fluid.density_defined,
+              "Error: when the incompressible fluid constraint is selected, "
+              "fluid initial conditions must include density");
+        } else {
+
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!new_ic.fluid.density_defined,
+              "Error: when the ideal gas EOS constraint is selected, "
+              "fluid initial conditions must NOT include density");
+
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.thermodynamic_pressure_defined,
+              "Error: fluid thermodynamic pressure must be defined before "
+              "computing IC density out of the ideal gas EOS");
+
+          auto& fluid_parms = *fluid.parameters;
+          Real MW_g(0.);
+
+          if (fluid.is_a_mixture) {
+            for (int n(0); n < fluid.nspecies; n++) {
+              MW_g += new_ic.fluid.species[n].mass_fraction / fluid_parms.get_MW_gk<RunOn::Host>(n);
+            }
+
+            MW_g = 1./MW_g;
+          } else {
+            MW_g = fluid_parms.get_MW_g<RunOn::Host>();
+          }
+
+          new_ic.fluid.density = (fluid.thermodynamic_pressure * MW_g) /
+                                 (fluid_parms.R * new_ic.fluid.temperature);
         }
       }
 
@@ -104,9 +133,9 @@ namespace IC
             ppSolid.get("packing", new_ic.packing);
           }
 
-          for(size_t lcs(0); lcs < solids_types.size(); ++ lcs) {
+          for (size_t lcs(0); lcs < solids_types.size(); ++lcs) {
 
-            SolidsPhase::SOLIDS_t new_solid;
+            SOLIDS_t new_solid;
 
             std::string field = "ic."+regions[icv]+"."+solids_types[lcs];
             amrex::ParmParse ppSolid(field.c_str());
@@ -118,7 +147,7 @@ namespace IC
 
             ppSolid.getarr("velocity", new_solid.velocity, 0, 3);
 
-            if (advect_enthalpy) {
+            if (fluid.solve_enthalpy || solids.solve_enthalpy) {
               ppSolid.query("temperature", new_solid.temperature); 
             }
 
@@ -147,7 +176,7 @@ namespace IC
             std::string roh_field = "ic."+regions[icv]+"."+solids_types[lcs]+".density";
             amrex::ParmParse ppSolidRho(roh_field.c_str());
 
-            if( new_solid.diameter.distribution == "constant") {
+            if (new_solid.diameter.distribution == "constant") {
               ppSolidRho.get("constant", new_solid.density.mean);
 
             } else { // This could probably be an else-if to better catch errors
@@ -168,7 +197,7 @@ namespace IC
               amrex::Real total_mass_fraction(0);
 
               for (int n(0); n < solids.nspecies; n++) {
-                std::string current_species = solids.species[n];
+                std::string current_species = solids.species_names[n];
                 ppSpecies.get(current_species.c_str(), new_solid.species[n].mass_fraction);
 
                 total_mass_fraction += new_solid.species[n].mass_fraction;
@@ -201,14 +230,14 @@ namespace IC
 
           for(size_t lcs(0); lcs < solids_types.size(); ++ lcs) {
 
-            SolidsPhase::SOLIDS_t new_solid;
+            SOLIDS_t new_solid;
 
             std::string field = "ic."+regions[icv]+"."+solids_types[lcs];
             amrex::ParmParse ppSolid(field.c_str());
 
             new_solid.name = solids_types[lcs];
 
-            if (advect_enthalpy) {
+            if (fluid.solve_enthalpy || solids.solve_enthalpy) {
               ppSolid.get("temperature", new_solid.temperature); 
             }
 
@@ -221,7 +250,7 @@ namespace IC
               new_solid.species.resize(solids.nspecies);
 
               for (int n(0); n < solids.nspecies; n++) {
-                std::string current_species = solids.species[n];
+                std::string current_species = solids.species_names[n];
                 ppSpecies.query(current_species.c_str(), new_solid.species[n].mass_fraction);
               }
             }
@@ -232,7 +261,6 @@ namespace IC
       }
 
       IC::ic.push_back(new_ic);
-
     }
 
 
@@ -253,6 +281,7 @@ namespace IC
 
         amrex::Print() << std::endl;
         amrex::Print() << "   Fluid:     volfrac: " << ic[icv].fluid.volfrac     << std::endl;
+        amrex::Print() << "              density: " << ic[icv].fluid.density     << std::endl;
         amrex::Print() << "             pressure: " << ic[icv].fluid.pressure    << std::endl;
         amrex::Print() << "          temperature: " << ic[icv].fluid.temperature << std::endl;
         amrex::Print() << "             velocity: ";

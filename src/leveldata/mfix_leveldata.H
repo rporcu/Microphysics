@@ -7,6 +7,7 @@
 #include <AMReX_MultiFab.H>
 
 #include <mfix_fluid_parms.H>
+#include <mfix_reactions_parms.H>
 
 struct Transfer {
   enum {
@@ -41,11 +42,8 @@ class LevelData
     // Default Constructor
     LevelData ()
       : level_allocated(0)
-      , solve_enthalpy(0)
-      , solve_species(0)
-      , nspecies_g(0)
-      , solve_reactions(0)
-      , nreactions(0)
+      , fluid(nullptr)
+      , reactions(nullptr)
     {}
 
     // Constructor
@@ -53,11 +51,8 @@ class LevelData
                amrex::DistributionMapping const& dm,
                const int nghost,
                amrex::FabFactory<amrex::FArrayBox> const& fact,
-               const int solve_enthalpy,
-               const int solve_species,
-               const int nspecies_g,
-               const int solve_reactions,
-               const int nreactions);
+               FluidPhase* fluid_in,
+               Reactions* reactions_in);
 
     // Reset initial values
     void resetValues (const amrex::Real covered_val);
@@ -92,8 +87,8 @@ class LevelData
     amrex::MultiFab* gp;
 
     // Gas thermodynamic pressure
-    amrex::MultiFab* pressure_g;
-    amrex::MultiFab* pressure_go;
+    amrex::MultiFab* thermodynamic_p_g;
+    amrex::MultiFab* thermodynamic_p_go;
 
     // Gas temperature
     amrex::MultiFab* T_g;
@@ -127,11 +122,8 @@ class LevelData
 
     const int level_allocated;
 
-    const int solve_enthalpy;
-    const int solve_species;
-    const int nspecies_g;
-    const int solve_reactions;
-    const int nreactions;
+    FluidPhase* fluid;
+    Reactions* reactions;
 };
 
 #endif
