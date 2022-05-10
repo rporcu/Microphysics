@@ -8,6 +8,8 @@
 #include <AMReX_Array.H>
 
 #include <mfix_species_parms.H>
+#include <mfix_reactions_parms.H>
+
 
 class SolidsParms {
 
@@ -27,6 +29,9 @@ class SolidsParms {
     const amrex::Real* m_d_cp_sn;
     const amrex::Real* m_h_H_fn;
     const amrex::Real* m_d_H_fn;
+    const int          m_nreactions;
+    const amrex::Real* m_h_stoich_coeffs;
+    const amrex::Real* m_d_stoich_coeffs;
 
     // List of recognized fluid specific heat models
     struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA7Polynomials, NASA9Polynomials};  };
@@ -46,6 +51,9 @@ class SolidsParms {
       , m_d_cp_sn(nullptr)
       , m_h_H_fn(nullptr)
       , m_d_H_fn(nullptr)
+      , m_nreactions(0)
+      , m_h_stoich_coeffs(nullptr)
+      , m_d_stoich_coeffs(nullptr)
       , m_specific_heat_model(SPECIFICHEATMODEL::Invalid)
     {}
 
@@ -61,6 +69,9 @@ class SolidsParms {
                  const amrex::Real* d_cp_sn,
                  const amrex::Real* h_H_fn,
                  const amrex::Real* d_H_fn,
+                 const int nreactions,
+                 const amrex::Real* h_stoich_coeffs,
+                 const amrex::Real* d_stoich_coeffs,
                  const int specific_heat_model)
       : m_T_ref(T_ref)
       , m_nspecies(nspecies)
@@ -73,6 +84,9 @@ class SolidsParms {
       , m_d_cp_sn(d_cp_sn)
       , m_h_H_fn(h_H_fn)
       , m_d_H_fn(d_H_fn)
+      , m_nreactions(nreactions)
+      , m_h_stoich_coeffs(h_stoich_coeffs)
+      , m_d_stoich_coeffs(d_stoich_coeffs)
       , m_specific_heat_model(specific_heat_model)
     {}
 
@@ -235,6 +249,22 @@ class SolidsParms {
     {
       return calc_cp_sn<run_on>(T_s, n);
     }
+
+
+    template <amrex::RunOn run_on>
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real get_stoich_coeff (const int n, const int q) const
+    {
+      if (run_on == amrex::RunOn::Gpu)
+        return m_d_stoich_coeffs[n*m_nreactions+q];
+      else if (run_on == amrex::RunOn::Cpu)
+        return m_h_stoich_coeffs[n*m_nreactions+q];
+      else
+        amrex::Abort("Unrecognized RunOn option");
+
+      return 0;
+    }
+
 };
 
 
@@ -264,18 +294,30 @@ class SolidsPhase
     // Names of solids used in IC/BC setups
     amrex::Vector<std::string> names;
 
+    // Flag to turn on/off particles mass update
+    int solve_mass;
+
+    // Flag to turn on/off particles velocity update
+    int solve_momentum;
+
     // Specified constant gas reference temperature
     amrex::Real T_ref;
+
+    // User-defined enthalpy volumetric source for particles
+    amrex::Real enthalpy_source;
+
+    // Flag to turn on/off particles enthalpy update
+    int solve_enthalpy;
 
     // Flag to solve species solids equations
     int solve_species;
 
     // Particle species
-    amrex::Vector<std::string> species;
+    amrex::Vector<std::string> species_names;
 
     // Species unique identifying code
-    amrex::Gpu::HostVector<int> species_id;
-    amrex::Gpu::DeviceVector<int> d_species_id;
+    amrex::Gpu::HostVector<int> species_IDs;
+    amrex::Gpu::DeviceVector<int> d_species_IDs;
 
     // Total number of dem species
     int nspecies;
@@ -295,16 +337,12 @@ class SolidsPhase
     amrex::Gpu::HostVector<amrex::Real> cp_sn0;
     amrex::Gpu::DeviceVector<amrex::Real> d_cp_sn0;
 
+    // Tables for stoichiometric coefficients for each species in each reaction
+    amrex::Gpu::HostVector<amrex::Real> stoich_coeffs;
+    amrex::Gpu::DeviceVector<amrex::Real> d_stoich_coeffs;
+
     // Solids parameters for GPU access
     SolidsParms* parameters;
-
-    amrex::Real enthalpy_source;
-
-    int update_mass;
-
-    int update_momentum;
-
-    int update_enthalpy;
 
     struct INPUT_DIST_t {
       std::string distribution;
@@ -317,43 +355,45 @@ class SolidsPhase
         mean(-1.0),
         std(-1.0),
         min(-1.0),
-        max(-1.0) { }
-
-    };
-
-    struct SOLIDS_t {
-
-      std::string name;
-      amrex::Real volfrac;
-      amrex::Real statwt;
-      amrex::Real temperature;
-      amrex::Vector<amrex::Real> velocity;
-      amrex::Real velmag;
-      amrex::Real volflow;
-      amrex::Real vol_remainder;
-      int inflow_count;
-
-      amrex::Vector<SPECIES::SPECIES_t> species;
-
-      INPUT_DIST_t diameter;
-      INPUT_DIST_t density;
-
-      SOLIDS_t() :
-        volfrac(0.0),
-        statwt(0.0),
-        temperature(0.0),
-        velocity(0),
-        velmag(0),
-        volflow(0.),
-        vol_remainder(0.),
-        inflow_count(0),
-        species(0),
-        diameter(),
-        density()
+        max(-1.0)
       {}
     };
 
-    void Initialize ();
+    int is_initialized;
+
+    void Initialize (const Species& species, const Reactions& reactions);
+};
+
+struct SOLIDS_t {
+
+  std::string name;
+  amrex::Real volfrac;
+  amrex::Real statwt;
+  amrex::Real temperature;
+  amrex::Vector<amrex::Real> velocity;
+  amrex::Real velmag;
+  amrex::Real volflow;
+  amrex::Real vol_remainder;
+  //int inflow_count;
+
+  amrex::Vector<SPECIES_t> species;
+
+  SolidsPhase::INPUT_DIST_t diameter;
+  SolidsPhase::INPUT_DIST_t density;
+
+  SOLIDS_t() :
+    volfrac(0.0),
+    statwt(0.0),
+    temperature(0.0),
+    velocity(0),
+    velmag(0),
+    volflow(0.),
+    vol_remainder(0.),
+    //inflow_count(0),
+    species(0),
+    diameter(),
+    density()
+  {}
 };
 
 #endif

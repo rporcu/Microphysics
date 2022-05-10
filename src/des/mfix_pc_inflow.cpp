@@ -195,7 +195,7 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
           for(int phase(0); phase < BC::bc[bcv].solids.size(); phase++) {
             if(BC::bc[bcv].solids[phase].volfrac > tolerance) {
 
-              const SolidsPhase::SOLIDS_t solid = BC::bc[bcv].solids[phase];
+              const SOLIDS_t solid = BC::bc[bcv].solids[phase];
 
               Real Tp(0.0), cp_s(0.0);
               if (adv_enthalpy) {

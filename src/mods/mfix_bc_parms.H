@@ -36,7 +36,7 @@ namespace BC
 
     FLUID_t fluid;
 
-    amrex::Vector<SolidsPhase::SOLIDS_t> solids;
+    amrex::Vector<SOLIDS_t> solids;
 
   };
 

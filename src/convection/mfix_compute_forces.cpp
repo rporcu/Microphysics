@@ -6,7 +6,7 @@ void mfix::compute_tra_forces (Vector<MultiFab*> const& tra_forces,
                                Vector<MultiFab const*> const& density)
 {
     // NOTE: this routine must return the force term for the update of (rho s), NOT just s.
-    if (advect_tracer) {
+    if (fluid.solve_tracer) {
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif

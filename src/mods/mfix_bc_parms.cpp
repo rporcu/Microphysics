@@ -380,14 +380,11 @@ namespace BC
           // Read in fluid density
           read_bc_density(ppFluid, &new_bc.fluid);
 
-          if (fluid.solve_enthalpy) {
-            read_bc_temperature(ppFluid, &new_bc.fluid);
-          }
+          read_bc_temperature(ppFluid, &new_bc.fluid);
 
           // Get species data.
-          if (fluid.solve_species) {
-            read_bc_species(ppFluid, fluid.species, &new_bc.fluid);
-          }
+          if (fluid.solve_species)
+            read_bc_species(ppFluid, fluid.species_names, &new_bc.fluid);
         }
 
         // Read in fluid pressure BC inputs only if BC type is pinf or pout
@@ -408,7 +405,8 @@ namespace BC
         // ********************************************************************
         if (fluid.constraint_type == ConstraintType::IncompressibleFluid) {
 
-          if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf) {
+          if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf ||
+              (new_bc.type == BCList::eb && new_bc.fluid.flow_thru_eb)) {
 
             if (!new_bc.fluid.density_defined) {
               amrex::Print() << "BCs must have density defined!" << std::endl;
@@ -419,16 +417,25 @@ namespace BC
 
         } else if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
 
-          if (new_bc.fluid.density_defined) {
-            amrex::Print() << "BCs must NOT have density defined!" << std::endl;
-            amrex::Print() << "BC region: " << regions[bcv] << std::endl;
-            amrex::Abort("Fix the inputs file!");
+          if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf ||
+              (new_bc.type == BCList::eb && new_bc.fluid.flow_thru_eb)) {
+
+            if (new_bc.fluid.density_defined) {
+              amrex::Print() << "BCs must NOT have density defined!" << std::endl;
+              amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+              amrex::Abort("Fix the inputs file!");
+            }
+
+            if (!new_bc.fluid.temperature_defined) {
+              amrex::Print() << "BCs must have temperature defined!" << std::endl;
+              amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+              amrex::Abort("Fix the inputs file!");
+            }
           }
 
         } else if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
 
-          if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf ||
-              new_bc.type == BCList::pout) {
+          if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf || new_bc.type == BCList::pout) {
 
             amrex::Print() << "minf, pinf or pout BCs cannot be defined in a closed system!" << std::endl;
             amrex::Print() << "BC region: " << regions[bcv] << std::endl;
@@ -456,7 +463,7 @@ namespace BC
 
         for(size_t lcs(0); lcs < solids_types.size(); ++ lcs){
 
-          SolidsPhase::SOLIDS_t new_solid;
+          SOLIDS_t new_solid;
 
           std::string field = "bc."+regions[bcv]+"."+solids_types[lcs];
           amrex::ParmParse ppSolid(field.c_str());
@@ -464,108 +471,110 @@ namespace BC
           ppSolid.get("volfrac", new_solid.volfrac);
           volfrac_total += new_bc.fluid.volfrac;
 
-          if (new_solid.volfrac < tolerance)
-            continue;
+          if (new_solid.volfrac > tolerance) {
 
-          if( new_bc.type == BCList::minf ) {
+            if( new_bc.type == BCList::minf ) {
 
-            amrex::Print() << "Mass inflows for solids has not bee impleneted yet!\n";
-            amrex::Abort("Mass inflows for solids has not bee impleneted yet!");
+              amrex::Print() << "Mass inflows for solids has not bee impleneted yet!\n";
+              amrex::Abort("Mass inflows for solids has not bee impleneted yet!");
 
-          } else if ( new_bc.type == BCList::eb ) {
+            } else if ( new_bc.type == BCList::eb ) {
 
-            EB::compute_area = 1;
+              EB::compute_area = 1;
 
-            if (ppSolid.contains("velocity")) {
+              if (ppSolid.contains("velocity")) {
 
-              amrex::Vector<amrex::Real> vel_in;
-              ppSolid.queryarr("velocity", vel_in);
+                amrex::Vector<amrex::Real> vel_in;
+                ppSolid.queryarr("velocity", vel_in);
 
-              const int rcomps = vel_in.size();
+                const int rcomps = vel_in.size();
 
-              if (rcomps == 3) {
-                new_solid.velocity = vel_in;
-                new_solid.velmag = std::sqrt(vel_in[0]*vel_in[0]
-                                           + vel_in[1]*vel_in[1]
-                                           + vel_in[2]*vel_in[2]);
+                if (rcomps == 3) {
+                  new_solid.velocity = vel_in;
+                  new_solid.velmag = std::sqrt(vel_in[0]*vel_in[0]
+                                             + vel_in[1]*vel_in[1]
+                                             + vel_in[2]*vel_in[2]);
 
-              } else if (rcomps == 1) {
-                new_solid.velmag = vel_in[0];
+                } else if (rcomps == 1) {
+                  new_solid.velmag = vel_in[0];
 
+                } else {
+                   // Missing error and abort here
+                }
+              } else if (ppSolid.contains("volflow")) {
+
+                ppSolid.get("volflow", new_solid.volflow);
               } else {
+                // Missing error and abort here.
               }
 
+              // This probably needs a check if we are solving energy equations
+              // and if so, require temperature be defined.
+              ppSolid.query("temperature", new_solid.temperature);
 
-            } else if (ppSolid.contains("volflow")) {
+              // Get information about diameter distribution.
+              ppSolid.get("diameter", new_solid.diameter.distribution);
 
-              ppSolid.get("volflow", new_solid.volflow);
-            }
 
-            // This probably needs a check if we are solving energy equations
-            // and if so, require temperature be defined.
-            ppSolid.query("temperature", new_solid.temperature);
+              std::string dp_field = "bc."+regions[bcv]+"."+solids_types[lcs]+".diameter";
+              amrex::ParmParse ppSolidDp(dp_field.c_str());
 
-            // Get information about diameter distribution.
-            ppSolid.get("diameter", new_solid.diameter.distribution);
+              if( new_solid.diameter.distribution == "constant") {
+                ppSolidDp.get("constant", new_solid.diameter.mean);
 
-            std::string dp_field = "bc."+regions[bcv]+"."+solids_types[lcs]+".diameter";
-            amrex::ParmParse ppSolidDp(dp_field.c_str());
-
-            if( new_solid.diameter.distribution == "constant") {
-              ppSolidDp.get("constant", new_solid.diameter.mean);
-
-            } else { // This could probably be an else-if to better catch errors
-              ppSolidDp.get("mean", new_solid.diameter.mean);
-              ppSolidDp.get("std" , new_solid.diameter.std);
-              ppSolidDp.get("min" , new_solid.diameter.min);
-              ppSolidDp.get("max" , new_solid.diameter.max);
-            }
-
-            // Get information about density distribution.
-            ppSolid.get("density", new_solid.density.distribution);
-
-            std::string roh_field = "bc."+regions[bcv]+"."+solids_types[lcs]+".density";
-            amrex::ParmParse ppSolidRho(roh_field.c_str());
-
-            if( new_solid.density.distribution == "constant") {
-              ppSolidRho.get("constant", new_solid.density.mean);
-
-            } else { // This could probably be an else-if to better catch errors
-              ppSolidRho.get("mean", new_solid.density.mean);
-              ppSolidRho.get("std" , new_solid.density.std );
-              ppSolidRho.get("min" , new_solid.density.min );
-              ppSolidRho.get("max" , new_solid.density.max );
-            }
-
-            if (solids.solve_species) {
-
-              const int nspecies_s = solids.nspecies;
-              new_solid.species.resize(nspecies_s);
-
-              std::string species_field = field+".species";
-              amrex::ParmParse ppSpecies(species_field.c_str());
-
-              amrex::Real total_mass_fraction(0);
-
-              for (int n(0); n < solids.nspecies; n++) {
-                // Get the name of the solid species we want to get the BC
-                std::string dem_specie = solids.species[n];
-                // Get the BC mass fraction for the current species
-                ppSpecies.query(dem_specie.c_str(), new_solid.species[n].mass_fraction);
-
-                total_mass_fraction += new_solid.species[n].mass_fraction;
+              } else { // This could probably be an else-if to better catch errors
+                ppSolidDp.get("mean", new_solid.diameter.mean);
+                ppSolidDp.get("std" , new_solid.diameter.std);
+                ppSolidDp.get("min" , new_solid.diameter.min);
+                ppSolidDp.get("max" , new_solid.diameter.max);
               }
 
-              // Sanity check that the input species mass fractions sum up to 1
-              if (!(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
-                std::string message = "Error: SOLID type " + solids_types[lcs]
-                  + " species BCs mass fractions in region " + regions[bcv]
-                  + " sum up to " + std::to_string(total_mass_fraction) + "\n";
+              // Get information about density distribution.
+              ppSolid.get("density", new_solid.density.distribution);
 
-                amrex::Abort(message);
+              std::string roh_field = "bc."+regions[bcv]+"."+solids_types[lcs]+".density";
+              amrex::ParmParse ppSolidRho(roh_field.c_str());
+
+              if( new_solid.density.distribution == "constant") {
+                ppSolidRho.get("constant", new_solid.density.mean);
+
+              } else { // This could probably be an else-if to better catch errors
+                ppSolidRho.get("mean", new_solid.density.mean);
+                ppSolidRho.get("std" , new_solid.density.std );
+                ppSolidRho.get("min" , new_solid.density.min );
+                ppSolidRho.get("max" , new_solid.density.max );
               }
-            }
-          } // End EB inflow
+
+              if (solids.solve_species) {
+
+                const int nspecies_s = solids.nspecies;
+                new_solid.species.resize(nspecies_s);
+
+                std::string species_field = field+".species";
+                amrex::ParmParse ppSpecies(species_field.c_str());
+
+                amrex::Real total_mass_fraction(0);
+
+                for (int n(0); n < solids.nspecies; n++) {
+                  // Get the name of the solid species we want to get the BC
+                  std::string dem_specie = solids.species_names[n];
+                  // Get the BC mass fraction for the current species
+                  ppSpecies.query(dem_specie.c_str(), new_solid.species[n].mass_fraction);
+
+                  total_mass_fraction += new_solid.species[n].mass_fraction;
+                }
+
+                // Sanity check that the input species mass fractions sum up to 1
+                if (!(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
+                  std::string message = "Error: SOLID type " + solids_types[lcs]
+                    + " species BCs mass fractions in region " + regions[bcv]
+                    + " sum up to " + std::to_string(total_mass_fraction) + "\n";
+
+                  amrex::Abort(message);
+                }
+              } // end solve species
+            } // End EB inflow
+          } // volfrac > tolerance
 
           new_bc.solids.push_back(new_solid);
         }
@@ -1020,7 +1029,7 @@ read_bc_species (amrex::ParmParse pp,
     }
     err_found = (amrex::Math::abs(1.0 - sum_xg) > 1.e-15);
 
-  }else if (sum_constant_species == 0 ) {
+  } else if (sum_constant_species == 0 ) {
 
     // First verify that all species are given for all times
     const int entries = fluid->species_table[0].size();

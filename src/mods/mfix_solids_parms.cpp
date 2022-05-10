@@ -3,11 +3,12 @@
 #include <AMReX_Arena.H>
 #include <AMReX_Vector.H>
 #include <AMReX_Array.H>
+#include <AMReX_ParmParse.H>
 
 #include <mfix_solids_parms.H>
 #include <mfix_species_parms.H>
 #include <mfix_fluid_parms.H>
-#include <AMReX_ParmParse.H>
+#include <mfix_algorithm.H>
 
 
 using namespace amrex;
@@ -17,12 +18,15 @@ SolidsPhase::SolidsPhase()
   , SpecificHeatModel(SPECIFICHEATMODEL::Invalid)
   , ThermalConductivityModel(THERMALCONDUCTIVITYMODEL::Invalid)
   , names(0)
-  //, T_ref(298.15)
+  , solve_mass(1)
+  , solve_momentum(1)
   , T_ref(0)
+  , enthalpy_source(0)
+  , solve_enthalpy(1)
   , solve_species(0)
-  , species(0)
-  , species_id(0)
-  , d_species_id(0)
+  , species_names(0)
+  , species_IDs(0)
+  , d_species_IDs(0)
   , nspecies(0)
   , MW_sn0(0)
   , d_MW_sn0(0)
@@ -31,11 +35,10 @@ SolidsPhase::SolidsPhase()
   , d_H_fn0(0)
   , cp_sn0(0)
   , d_cp_sn0(0)
+  , stoich_coeffs(0)
+  , d_stoich_coeffs(0)
   , parameters(nullptr)
-  , enthalpy_source(0)
-  , update_mass(1)
-  , update_momentum(1)
-  , update_enthalpy(1)
+  , is_initialized(0)
 {}
 
 
@@ -47,8 +50,18 @@ SolidsPhase::~SolidsPhase()
 
 
 void
-SolidsPhase::Initialize ()
+SolidsPhase::Initialize (const Species& species,
+                         const Reactions& reactions)
 {
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.is_initialized,
+      "Species not initialized. Can't initialize solids phase before species initialization");
+
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(reactions.is_initialized,
+      "Reactions not initialized. Can't initialize solids phase before reactions initialization");
+
+  // Flag for initialization
+  is_initialized = 1;
+
   int solve_energy = 0;
 
   {
@@ -58,9 +71,9 @@ SolidsPhase::Initialize ()
     {
       amrex::ParmParse pp_mfix_solids("mfix.particles");
       pp_mfix_solids.query("enthalpy_source", enthalpy_source);
-      pp_mfix_solids.query("update_mass", update_mass);
-      pp_mfix_solids.query("update_momentum", update_momentum);
-      pp_mfix_solids.query("update_enthalpy", update_enthalpy);
+      pp_mfix_solids.query("update_mass", solve_mass);
+      pp_mfix_solids.query("update_momentum", solve_momentum);
+      pp_mfix_solids.query("update_enthalpy", solve_enthalpy);
     }
   }
 
@@ -79,6 +92,7 @@ SolidsPhase::Initialize ()
 
     // Currently we do not support species when NTYPES > 1
     if (NTYPES > 1) {
+      amrex::Abort("Not yet implemented");
 
       MW_sn0.resize(NTYPES);
 
@@ -162,13 +176,13 @@ SolidsPhase::Initialize ()
       amrex::ParmParse ppSolid(names[0].c_str());
 
       // Species
-      solve_species = ppSolid.queryarr("species", species);
+      solve_species = ppSolid.queryarr("species", species_names);
 
       if (!solve_species) {
-        species.clear();
+        species_names.clear();
         nspecies = 0;
       } else {
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.size() > 0,
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species_names.size() > 0,
                                          "No input provided for solids.species");
       }
 
@@ -177,26 +191,26 @@ SolidsPhase::Initialize ()
 
         // Disable the species solver if the species are defined as "None"
         // (caseinsensitive) or 0
-        if (amrex::toLower(species[0]).compare("none") == 0) {
+        if (amrex::toLower(species_names[0]).compare("none") == 0) {
           solve_species = 0;
           nspecies = 0;
 
         } else {
           solve_species = 1;
-          nspecies = species.size();
+          nspecies = species_names.size();
 
-          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nspecies <= SPECIES::nspecies,
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nspecies <= species.nspecies,
               "Solids species number is higher than total species number");
 
-          species_id.resize(nspecies);
+          species_IDs.resize(nspecies);
           MW_sn0.resize(nspecies);
 
           if (solve_energy) {
 
-            if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::Constant) {
+            if (species.SpecificHeatModel == Species::SPECIFICHEATMODEL::Constant) {
               SpecificHeatModel = SPECIFICHEATMODEL::Constant;
               cp_sn0.resize(nspecies);
-            } else if (SPECIES::SpecificHeatModel == SPECIES::SPECIFICHEATMODEL::NASA7Polynomials) {
+            } else if (species.SpecificHeatModel == Species::SPECIFICHEATMODEL::NASA7Polynomials) {
               SpecificHeatModel = SPECIFICHEATMODEL::NASA7Polynomials;
               cp_sn0.resize(nspecies*12);
             }
@@ -205,29 +219,29 @@ SolidsPhase::Initialize ()
           }
 
           for (int n(0); n < nspecies; n++) {
-            auto it = std::find(SPECIES::species.begin(), SPECIES::species.end(), species[n]);
+            auto it = std::find(species.names.begin(), species.names.end(), species_names[n]);
 
-            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != SPECIES::species.end(),
+            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != species.names.end(),
                                              "Solid species missing in input");
 
-            const auto pos = std::distance(SPECIES::species.begin(), it);
+            const auto pos = std::distance(species.names.begin(), it);
 
-            species_id[n] = SPECIES::species_id[pos];
-            MW_sn0[n] = SPECIES::MW_k0[pos];
+            species_IDs[n] = species.IDs[pos];
+            MW_sn0[n] = species.MW_k0[pos];
 
             if (solve_energy) {
               if (SpecificHeatModel == SPECIFICHEATMODEL::Constant) {
-                cp_sn0[n] = SPECIES::cp_k0[pos];
+                cp_sn0[n] = species.cp_k0[pos];
               } else if (SpecificHeatModel == SPECIFICHEATMODEL::NASA7Polynomials) {
-                std::copy(&SPECIES::cp_k0[pos*12], &SPECIES::cp_k0[pos*12] + 12, &cp_sn0[n*12]);
+                std::copy(&species.cp_k0[pos*12], &species.cp_k0[pos*12] + 12, &cp_sn0[n*12]);
               }
 
-              H_fn0[n] = SPECIES::H_fk0[pos];
+              H_fn0[n] = species.H_fk0[pos];
             }
           }
         }
       } else {
-        species_id.resize(1, 0);
+        species_IDs.resize(1, 0);
         MW_sn0.resize(1);
 
         ppSolid.query("molecular_weight", MW_sn0[0]);
@@ -284,12 +298,70 @@ SolidsPhase::Initialize ()
 
       // Flag to determine if we want to solve the solid as a mixture
       is_a_mixture = static_cast<int>(nspecies > 1);
+
+      // Create the stoichiometric table for the fluid phase, that is associate
+      // the total stoichiometric coefficient for each fluid species in each
+      // reaction
+      if (reactions.solve) {
+
+        const int nreactions = reactions.nreactions;
+
+        constexpr int Solid = CHEMICALPHASE::Solid;
+        constexpr int Heterogeneous = REACTIONTYPE::Heterogeneous;
+
+        // Allocate space for necessary data
+        stoich_coeffs.resize(nspecies*nreactions, 0.);
+
+        for (int n_s(0); n_s < nspecies; n_s++) {
+          // Get the ID of the current species n_s
+          const int species_id = species_IDs[n_s];
+
+          // Loop over reactions to compute each contribution
+          for (int q(0); q < nreactions; q++) {
+
+            ChemicalReaction* chem_reaction = reactions.get(q);
+            const auto& phases = chem_reaction->get_phases();
+            
+            const auto& reactants_IDs = chem_reaction->get_reactants_ids();
+            const auto& reactants_phases = chem_reaction->get_reactants_phases();
+            const auto& reactants_coeffs = chem_reaction->get_reactants_coeffs();
+
+            const auto& products_IDs = chem_reaction->get_products_ids();
+            const auto& products_phases = chem_reaction->get_products_phases();
+            const auto& products_coeffs = chem_reaction->get_products_coeffs();
+
+            // Do something only if reaction is heterogeneous and contains
+            // a solid compound
+            if (chem_reaction->get_type() == Heterogeneous &&
+                std::find(phases.begin(), phases.end(), Solid) != phases.end()) {
+
+              // Add reactant contribution (if any)
+              {
+                for (int pos(0); pos < reactants_IDs.size(); ++pos) {
+                  if (species_id == reactants_IDs[pos] && reactants_phases[pos] == Solid) {
+                    stoich_coeffs[n_s*nreactions+q] += reactants_coeffs[pos];
+                  }
+                }
+              }
+
+              // Add products contribution (if any)
+              {
+                for (int pos(0); pos < products_IDs.size(); ++pos) {
+                  if (species_id == products_IDs[pos] && products_phases[pos] == Solid) {
+                    stoich_coeffs[n_s*nreactions+q] += products_coeffs[pos];
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
 
-    d_species_id.resize(species_id.size());
-    Gpu::copyAsync(Gpu::hostToDevice, species_id.begin(), species_id.end(), d_species_id.begin());
-    const int* p_h_species_id = solve_species ? species_id.data() : nullptr;
-    const int* p_d_species_id = solve_species ? d_species_id.data() : nullptr;
+    d_species_IDs.resize(species_IDs.size());
+    Gpu::copyAsync(Gpu::hostToDevice, species_IDs.begin(), species_IDs.end(), d_species_IDs.begin());
+    const int* p_h_species_IDs = solve_species ? species_IDs.data() : nullptr;
+    const int* p_d_species_IDs = solve_species ? d_species_IDs.data() : nullptr;
 
     d_MW_sn0.resize(MW_sn0.size());
     Gpu::copyAsync(Gpu::hostToDevice, MW_sn0.begin(), MW_sn0.end(), d_MW_sn0.begin());
@@ -307,9 +379,15 @@ SolidsPhase::Initialize ()
       d_cp_sn0.resize(cp_sn0.size());
       Gpu::copyAsync(Gpu::hostToDevice, cp_sn0.begin(), cp_sn0.end(), d_cp_sn0.begin());
     }
-
     const Real* p_h_cp_sn0 = solve_energy ? cp_sn0.data() : nullptr;
     const Real* p_d_cp_sn0 = solve_energy ? d_cp_sn0.data() : nullptr;
+
+    if (reactions.solve) {
+      d_stoich_coeffs.resize(stoich_coeffs.size());
+      Gpu::copyAsync(Gpu::hostToDevice, stoich_coeffs.begin(), stoich_coeffs.end(), d_stoich_coeffs.begin());
+    }
+    const Real* p_h_stoich_coeffs = reactions.solve ? stoich_coeffs.data() : nullptr;
+    const Real* p_d_stoich_coeffs = reactions.solve ? d_stoich_coeffs.data() : nullptr;
 
     int ncoefficients = 0;
     if (SpecificHeatModel == SPECIFICHEATMODEL::Constant)
@@ -317,10 +395,11 @@ SolidsPhase::Initialize ()
     else if (SpecificHeatModel == SPECIFICHEATMODEL::NASA7Polynomials)
       ncoefficients = 6;
 
-    parameters = new SolidsParms(T_ref, nspecies, p_h_species_id, p_d_species_id,
+    parameters = new SolidsParms(T_ref, nspecies, p_h_species_IDs, p_d_species_IDs,
                                  p_h_MW_sn0, p_d_MW_sn0, ncoefficients,
                                  p_h_cp_sn0, p_d_cp_sn0, p_h_H_fn0, p_d_H_fn0,
-                                 SpecificHeatModel);
+                                 reactions.nreactions, p_h_stoich_coeffs,
+                                 p_d_stoich_coeffs, SpecificHeatModel);
 
   } else {
     parameters = new SolidsParms();

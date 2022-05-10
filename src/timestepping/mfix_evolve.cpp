@@ -49,11 +49,9 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     if ( (DEM::solve || PIC::solve) && fluid.solve){
       Real start_coupling = ParallelDescriptor::second();
 
-      mfix_calc_txfr_particle(new_time, get_vel_g(), get_gp(), get_T_g());
-
-      if (reactions.solve)
-        mfix_calc_chem_txfr(get_chem_txfr(), get_ep_g(), get_ro_g(), get_vel_g(),
-                            get_p_g(), get_T_g(), get_X_gk(), new_time);
+      mfix_calc_txfr_particle(new_time, get_ep_g(), get_ro_g(), get_vel_g(),
+                              get_T_g(), get_X_gk(), get_thermodynamic_p_g(),
+                              get_gp());
 
       coupling_timing += ParallelDescriptor::second() - start_coupling + drag_timing;
 
@@ -89,10 +87,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                   particle_ebfactory[ilev].get(), ls_data,
                                   levelset_refinement,
                                   particle_cost[ilev],
-                                  knapsack_weight_type, nsubsteps,
-                                  advect_enthalpy, enthalpy_source,
-                                  update_mass, update_momentum,
-                                  update_enthalpy);
+                                  knapsack_weight_type, nsubsteps);
         }
         else
         {
@@ -108,10 +103,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                     ebfactory[lev].get(),
                                     particle_ebfactory[lev].get(), ls_data, 1,
                                     particle_cost[lev],
-                                    knapsack_weight_type, nsubsteps,
-                                    advect_enthalpy, enthalpy_source,
-                                    update_mass, update_momentum,
-                                    update_enthalpy);
+                                    knapsack_weight_type, nsubsteps);
             }
         }
     }
@@ -119,8 +111,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     if (PIC::solve) {
         //const IntVect min_epg_cell = mfix_print_min_epg();
         EvolveParcels(dt, time, mfix::gravity, levelset_refinement,
-                      particle_cost, knapsack_weight_type, advect_enthalpy,
-                      enthalpy_source);
+                      particle_cost, knapsack_weight_type);
     }
 
     BL_PROFILE_VAR_STOP(particlesSolve);

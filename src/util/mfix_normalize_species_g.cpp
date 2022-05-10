@@ -60,7 +60,7 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
       auto const& flags_arr = flags.const_array(mfi);
 
       auto& fluid_parms = *fluid.parameters;
-      const int adv_enthalpy = advect_enthalpy;
+      const int adv_enthalpy = fluid.solve_enthalpy;
 
       amrex::ParallelFor(bx, [flags_arr,X_gk_arr,nspecies_g,
           adv_enthalpy,fluid_parms]

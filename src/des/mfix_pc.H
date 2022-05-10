@@ -21,6 +21,7 @@
 #include <mfix_reactions_parms.H>
 #include <mfix_bc_list.H>
 #include <mfix_leveldata.H>
+#include <mfix_run_on.H>
 
 
 struct AoSrealData
@@ -67,18 +68,19 @@ struct SoArealData
 struct runtimeRealData
 {
   runtimeRealData (const int nspecies_s,
+                   const int nspecies_g,
                    const int nreactions)
-    : X_sn(0)                                              // nb of components = nspecies
-    , mass_sn_txfr(X_sn + nspecies_s)                      // nb of components = nspecies
-    , vel_s_txfr(mass_sn_txfr + nspecies_s*(nreactions>0)) // nb of components = 3
-    , h_s_txfr(vel_s_txfr + 3*(nreactions>0))              // nb of components = 1
-    , count(h_s_txfr + 1*(nreactions>0))
+    : X_sn(0)                              // nb of components = nspecies_s
+    , vel_txfr(X_sn + nspecies_s)          // nb of components = 3
+    , h_txfr(vel_txfr + 3*(nreactions>0))  // nb of components = 1
+    , mass_txfr(h_txfr + 1*(nreactions>0)) // nb of components = max(nspecies_s,nspecies_g)
+    , count(mass_txfr + amrex::max(nspecies_s, nspecies_g)*(nreactions>0))
   {}
 
   const int X_sn;
-  const int mass_sn_txfr;
-  const int vel_s_txfr;
-  const int h_s_txfr;
+  const int vel_txfr;
+  const int h_txfr;
+  const int mass_txfr;
   const int count;
 };
 
@@ -138,7 +140,7 @@ class MFIXParticleContainer final
     : public amrex::NeighborParticleContainer<AoSrealData::count,AoSintData::count,
                                               SoArealData::count,SoAintData::count>
 {
-public:
+  public:
     using MFIXParIter = amrex::ParIter<AoSrealData::count,AoSintData::count,
                                        SoArealData::count,SoAintData::count>;
     using MFIXParConstIter = amrex::ParConstIter<AoSrealData::count,AoSintData::count,
@@ -155,6 +157,7 @@ public:
 
     MFIXParticleContainer (amrex::AmrCore* amr_core,
                            SolidsPhase& solids,
+                           FluidPhase& fluid,
                            Reactions& reactions);
 
     virtual ~MFIXParticleContainer () {};
@@ -197,12 +200,7 @@ public:
                           const int ls_refinement,
                           amrex::MultiFab * cost,
                           std::string & knapsack_weight_type,
-                          int & nsubsteps,
-                          const int advect_enthalpy,
-                          const amrex::Real enthalpy_source,
-                          const int update_mass,
-                          const int update_momentum,
-                          const int update_enthalpy);
+                          int & nsubsteps);
 
     void mfix_pc_inflow (int lev,
                          amrex::Real dt,
@@ -259,19 +257,33 @@ public:
     void InterphaseTxfrDeposition (int lev,
                                    amrex::MultiFab& mf_tmp_eps,
                                    amrex::MultiFab& txfr_mf,
+                                   amrex::MultiFab& chem_txfr_mf,
                                    const amrex::MultiFab* volfrac,
-                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags,
-                                   const int advect_enthalpy);
+                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
     template <typename F>
     void InterphaseTxfrDeposition (F WeightFunc,
                                    int lev,
                                    amrex::MultiFab& mf_tmp_eps,
                                    amrex::MultiFab& txfr_mf,
+                                   amrex::MultiFab& chem_txfr_mf,
                                    const amrex::MultiFab* volfrac,
-                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags,
-                                   const int advect_enthalpy);
+                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
+
+    //
+    // Postprocessing utilities to compute spatially-averaged particle velocities
+    //
+    void ComputeAverageDensities (const int lev,
+                                  const amrex::Real time,
+                                  const std::string& basename,
+                                  const amrex::Vector<amrex::Real>& avg_ro_p,
+                                  const amrex::Vector<amrex::Real>& avg_region_x_w,
+                                  const amrex::Vector<amrex::Real>& avg_region_x_e,
+                                  const amrex::Vector<amrex::Real>& avg_region_y_s,
+                                  const amrex::Vector<amrex::Real>& avg_region_y_n,
+                                  const amrex::Vector<amrex::Real>& avg_region_z_b,
+                                  const amrex::Vector<amrex::Real>& avg_region_z_t);
 
     //
     // Postprocessing utilities to compute spatially-averaged particle velocities
@@ -326,14 +338,12 @@ public:
                        const amrex::MultiFab* ls_phi);
 
     void MFIX_PC_AdvanceParcels (amrex::Real dt,
-                                 const int advect_enthalpy,
-                                 const amrex::Real enthalpy_source,
                                  amrex::Vector< amrex::MultiFab*> & cost,
                                  std::string& knapsack_weight_type);
 
     const runtimeRealData m_runtimeRealData;
 
-    void setSortingBinSizes (amrex::IntVect sorting_bin) { m_sorting_bin = sorting_bin;  }
+    void setSortingBinSizes (amrex::IntVect sorting_bin) { m_sorting_bin = sorting_bin; }
 
     void partitionParticleGrids(int lev,
                                 const amrex::BoxArray& fba,
@@ -422,8 +432,8 @@ public:
 
     void usr3_des (int np,void*&);
 
+    FluidPhase& fluid;
     SolidsPhase& solids;
-
     Reactions& reactions;
 };
 

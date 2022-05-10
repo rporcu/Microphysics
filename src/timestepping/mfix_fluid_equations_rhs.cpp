@@ -104,7 +104,7 @@ mfix::mfix_species_X_rhs (Vector< MultiFab*      > const& rhs,
 
     ChemTransfer chem_txfr_idxs(nspecies_g, reactions.nreactions);
 
-    const int start_idx = chem_txfr_idxs.ro_gk_txfr;
+    const int ro_gk_txfr_idx = chem_txfr_idxs.ro_gk_txfr;
 
     for (int lev = 0; lev <= finest_level; lev++) {
 #ifdef _OPENMP
@@ -114,14 +114,14 @@ mfix::mfix_species_X_rhs (Vector< MultiFab*      > const& rhs,
         // Tilebox
         Box bx = mfi.tilebox ();
 
-        Array4<Real      > const& rhs_arr          = rhs[lev]->array(mfi);
-        Array4<Real const> const& species_txfr_arr = chem_txfr[lev]->const_array(mfi,start_idx);
+        Array4<Real      > const& rhs_arr        = rhs[lev]->array(mfi);
+        Array4<Real const> const& ro_gk_txfr_arr = chem_txfr[lev]->const_array(mfi,ro_gk_txfr_idx);
 
-        amrex::ParallelFor(bx, [rhs_arr,species_txfr_arr,nspecies_g]
+        amrex::ParallelFor(bx, [rhs_arr,ro_gk_txfr_arr,nspecies_g]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           for (int n_g(0); n_g < nspecies_g; ++n_g) {
-            rhs_arr(i,j,k,n_g) = species_txfr_arr(i,j,k,n_g);
+            rhs_arr(i,j,k,n_g) = ro_gk_txfr_arr(i,j,k,n_g);
           }
         });
       }

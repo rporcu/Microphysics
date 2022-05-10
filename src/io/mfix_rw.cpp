@@ -131,8 +131,8 @@ void MfixRW::readParameters ()
      pp.queryarr("avg_vel_g", avg_vel_g);
      pp.queryarr("avg_T_g", avg_T_g);
 
+     pp.queryarr("avg_ro_p", avg_ro_p);
      pp.queryarr("avg_vel_p", avg_vel_p);
-
      pp.queryarr("avg_T_p", avg_T_p);
 
      // Regions geometry

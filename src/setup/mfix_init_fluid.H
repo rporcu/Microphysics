@@ -22,8 +22,6 @@ void init_fluid (const amrex::Box& sbx,
                  const amrex::Real zlength,
                  const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo,
                  bool test_tracer_conservation,
-                 const int advect_enthalpy,
-                 const int solve_species,
                  FluidPhase& fluid);
 
 void init_periodic_vortices (const Box& bx,
@@ -44,8 +42,6 @@ void init_periodic_tracer (const Box& bx,
 void init_fluid_parameters (const Box& bx,
                             const MFIter& mfi,
                             LevelData& ld,
-                            const int advect_enthalpy,
-                            const int solve_species,
                             FluidPhase& fluid);
 
 void set_ic (const Box& sbx,

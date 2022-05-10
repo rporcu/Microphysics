@@ -258,7 +258,7 @@ ParticlesGenerator::generate (int& pc,
   Real* p_dp = dp.data();
   Real* p_ro_s = ro_s.data();
 
-  SolidsPhase::SOLIDS_t solid;
+  SOLIDS_t solid;
   solid = IC::ic[icv].solids[type];
 
   // Setup particle diameters
@@ -1115,7 +1115,7 @@ ParticlesGenerator::nor_rno (amrex::Gpu::DeviceVector<Real>& dp,
       if(!(iterations < maxfails))
       {
 #ifdef AMREX_USE_GPU
-        Gpu::Atomic::Add(p_fails, 1);
+        HostDevice::Atomic::Add(p_fails, 1);
 #else
         fails++;
 #endif

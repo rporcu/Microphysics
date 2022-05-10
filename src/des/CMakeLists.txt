@@ -7,7 +7,7 @@ target_sources( mfixcore
    mfix_particle_generator.H
    mfix_particle_generator.cpp
    mfix_des_drag_K.H
-   mfix_reactions_rates_K.H
+   mfix_des_rrates_K.H
    mfix_set_gradp_bcs.cpp
    mfix_des_K.H
    mfix_pc.cpp
@@ -20,6 +20,5 @@ target_sources( mfixcore
    mfix_calc_transfer_coeffs.cpp
    mfix_calc_volume_fraction.cpp
    mfix_calc_txfr.cpp
-   mfix_calc_chem_txfr.cpp
    )
 

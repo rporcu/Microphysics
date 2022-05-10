@@ -38,8 +38,6 @@ mfix::set_enthalpy_bcs (Real time,
 {
   BL_PROFILE("mfix::set_enthalpy_bcs()");
 
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
-
   const EBFArrayBox& hg_EB_fab = static_cast<EBFArrayBox const&>(h_g_fab);
   const EBCellFlagFab& flags = hg_EB_fab.getEBCellFlagFab();
 
@@ -110,7 +108,7 @@ mfix::set_enthalpy_bcs (Real time,
   auto const& flags_arr = flags.const_array();
 
   auto set_enthalpy_bcs_in_box = [h_g,p_bc_t_g,fluid_is_a_mixture,
-       p_bc_X_gk,nspecies_g,fluid_parms,run_on_device,flags_arr]
+       p_bc_X_gk,nspecies_g,fluid_parms,flags_arr]
     AMREX_GPU_DEVICE (int bct, int bcv, IntVect dom_ijk, int i, int j, int k) noexcept
   {
     const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -120,17 +118,13 @@ mfix::set_enthalpy_bcs (Real time,
     }
     else if (bct == BCList::minf || bct == BCList::pinf) {
       if (!fluid_is_a_mixture) {
-        h_g(i,j,k) = run_on_device ?
-          fluid_parms.calc_h_g<RunOn::Device>(p_bc_t_g[bcv], cell_is_covered) :
-          fluid_parms.calc_h_g<RunOn::Host>(p_bc_t_g[bcv], cell_is_covered);
+        h_g(i,j,k) = fluid_parms.calc_h_g<run_on>(p_bc_t_g[bcv], cell_is_covered);
       }
       else {
         Real h_g_sum(0);
 
         for (int n(0); n < nspecies_g; n++) {
-          const Real h_gk = run_on_device ?
-            fluid_parms.calc_h_gk<RunOn::Device>(p_bc_t_g[bcv], n, cell_is_covered) :
-            fluid_parms.calc_h_gk<RunOn::Host>(p_bc_t_g[bcv], n, cell_is_covered);
+          const Real h_gk = fluid_parms.calc_h_gk<run_on>(p_bc_t_g[bcv], n, cell_is_covered);
 
           h_g_sum += p_bc_X_gk[n][bcv]*h_gk;
         }

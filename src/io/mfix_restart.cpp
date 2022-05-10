@@ -308,7 +308,7 @@ mfix::Restart (std::string& restart_file,
           }
         }
 
-        if (advect_enthalpy)
+        if (fluid.solve_enthalpy)
         {
           auto& fluid_parms = *fluid.parameters;
 
@@ -355,7 +355,7 @@ mfix::Restart (std::string& restart_file,
           }
         }
 
-        if (solve_species)
+        if (fluid.solve_species)
         {
           for (int i = 0; i < mfixRW->chkSpeciesVars.size(); i++ )
           {
@@ -476,7 +476,7 @@ mfix::Restart (std::string& restart_file,
           m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->ro_go->FillBoundary(geom[lev].periodicity());
 
-          if (advect_enthalpy) {
+          if (fluid.solve_enthalpy) {
             m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
             m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
           }
@@ -488,7 +488,7 @@ mfix::Restart (std::string& restart_file,
           m_leveldata[lev]->gp->FillBoundary(geom[lev].periodicity());
 
           // Fill the bc's just in case
-          if (solve_species) {
+          if (fluid.solve_species) {
             m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
           }
         }
