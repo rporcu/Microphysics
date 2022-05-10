@@ -341,6 +341,7 @@ mfix::mfix_calc_txfr_particle (Real time,
 
         auto& soa = pti.GetStructOfArrays();
         auto p_realarray = soa.realarray();
+        auto p_intarray = soa.intarray();
 
         const int np = particles.size();
 
@@ -364,7 +365,7 @@ mfix::mfix_calc_txfr_particle (Real time,
           if (flags.getType(amrex::grow(bx,1)) == FabType::regular)
           {
             amrex::ParallelFor(np,
-              [pstruct,p_realarray,interp_array,gp0_dev,plo,dxi,pmult,
+              [pstruct,p_realarray,p_intarray,interp_array,gp0_dev,plo,dxi,pmult,
               local_advect_enthalpy=advect_enthalpy]
               AMREX_GPU_DEVICE (int pid) noexcept
               {
@@ -372,6 +373,9 @@ mfix::mfix_calc_txfr_particle (Real time,
                 GpuArray<Real, interp_comp> interp_loc;
 
                 MFIXParticleContainer::ParticleType& particle = pstruct[pid];
+
+                if ( p_intarray[SoAintData::state][pid] != 0 )
+                  return;
 
                 trilinear_interp(particle.pos(), &interp_loc[0],
                                  interp_array, plo, dxi, interp_comp);

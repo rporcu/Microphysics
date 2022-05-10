@@ -478,7 +478,23 @@ namespace BC
 
             if (ppSolid.contains("velocity")) {
 
-              ppSolid.getarr("velocity", new_solid.velocity, 0, 3);
+              amrex::Vector<amrex::Real> vel_in;
+              ppSolid.queryarr("velocity", vel_in);
+
+              const int rcomps = vel_in.size();
+
+              if (rcomps == 3) {
+                new_solid.velocity = vel_in;
+                new_solid.velmag = std::sqrt(vel_in[0]*vel_in[0]
+                                           + vel_in[1]*vel_in[1]
+                                           + vel_in[2]*vel_in[2]);
+
+              } else if (rcomps == 1) {
+                new_solid.velmag = vel_in[0];
+
+              } else {
+              }
+
 
             } else if (ppSolid.contains("volflow")) {
 
@@ -511,7 +527,7 @@ namespace BC
             std::string roh_field = "bc."+regions[bcv]+"."+solids_types[lcs]+".density";
             amrex::ParmParse ppSolidRho(roh_field.c_str());
 
-            if( new_solid.diameter.distribution == "constant") {
+            if( new_solid.density.distribution == "constant") {
               ppSolidRho.get("constant", new_solid.density.mean);
 
             } else { // This could probably be an else-if to better catch errors
@@ -577,7 +593,7 @@ namespace BC
           "Error: pressure values at pout boundaries differ");
 
         if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
-          
+
           if (fluid.thermodynamic_pressure_defined) {
             const Real p_therm = fluid.thermodynamic_pressure;
 

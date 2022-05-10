@@ -207,6 +207,7 @@ public:
     void mfix_pc_inflow (int lev,
                          amrex::Real dt,
                          amrex::Real time,
+                         const int advect_enthalpy,
                          amrex::EBFArrayBoxFactory* factory);
 
     void MFIX_PC_InitCollisionParams ();
