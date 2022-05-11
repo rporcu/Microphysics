@@ -235,10 +235,12 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
               const Real  min_rhop = (dist_rhop == is_constant) ? mean_rhop : solid.density.min;
               const Real  std_rhop = (dist_rhop == is_constant) ? 0.        : solid.density.std;
 
-              const Real velmag = solid.velmag;
+              const Real act_area = solid.volfrac*fab_area;
 
-              const Real volflow = (velmag < tolerance) ? solid.volflow :
-                  solid.volfrac*fab_area*velmag;
+              const Real volflow = (solid.velmag < tolerance) ? solid.volflow :
+                  act_area*solid.velmag;
+
+              const Real velmag = amrex::max(solid.velmag, volflow/act_area);
 
               const Real pvol_per_step = volflow*dt + solid.vol_remainder;
 

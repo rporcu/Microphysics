@@ -496,7 +496,7 @@ namespace BC
                                              + vel_in[2]*vel_in[2]);
 
                 } else if (rcomps == 1) {
-                  new_solid.velmag = vel_in[0];
+                  new_solid.velmag = amrex::Math::abs(vel_in[0]);
 
                 } else {
                    // Missing error and abort here
