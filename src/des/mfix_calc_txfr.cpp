@@ -604,7 +604,7 @@ mfix::mfix_calc_txfr_particle (Real time,
           {
             MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
 
-            if ( p_intarray[SoAintData::state][p_id] != 0 )
+            if ( p_intarray[SoAintData::state][p_id] == 0 )
               return;
 
             // Local array storing interpolated values
