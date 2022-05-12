@@ -357,6 +357,11 @@ class SolidsPhase
         min(-1.0),
         max(-1.0)
       {}
+
+      bool is_constant () { return (distribution.compare("constant") == 0);} ;
+      bool is_uniform  () { return (distribution.compare("uniform")  == 0);} ;
+      bool is_normal   () { return (distribution.compare("normal")   == 0);} ;
+
     };
 
     int is_initialized;

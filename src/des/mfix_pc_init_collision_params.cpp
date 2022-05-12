@@ -1,3 +1,5 @@
+#include <mfix_bc_list.H>
+#include <mfix_bc_parms.H>
 #include <mfix_pc.H>
 #include <mfix_dem_parms.H>
 
@@ -129,6 +131,41 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
          max_ro[phase-1] = h_maxdens;
       }
    }
+
+
+  // Loop over BCs
+  for (size_t bcv(0); bcv < BC::bc.size(); ++bcv) {
+
+    // EB flow with at least one solid
+    if (BC::bc[bcv].type == BCList::eb &&
+        BC::bc[bcv].solids.size() > 0) {
+
+      const Real tolerance = std::numeric_limits<Real>::epsilon();
+
+      for(int phase(0); phase < BC::bc[bcv].solids.size(); phase++) {
+        if(BC::bc[bcv].solids[phase].volfrac > tolerance) {
+          SOLIDS_t solid = BC::bc[bcv].solids[phase];
+
+          const Real mean_dp_bc = solid.diameter.mean;
+          const Real  max_dp_bc = solid.diameter.is_constant() ? mean_dp_bc : solid.diameter.max;
+
+          const Real mean_rhop_bc = solid.density.mean;
+          const Real  max_rhop_bc = solid.density.is_constant() ? mean_rhop_bc : solid.density.max;
+
+          if ( avg_dp[phase] == 0.0 )
+            avg_dp[phase] = mean_dp_bc;
+
+          if ( avg_ro[phase] == 0.0 )
+            avg_ro[phase] = mean_rhop_bc;
+
+          max_dp[phase] = amrex::max(max_dp[phase], max_dp_bc);
+          max_ro[phase] = amrex::max(max_ro[phase], max_rhop_bc);
+
+        }
+      }
+    }
+  }
+
 
    Real max_max_dp(0.);
    for (int phase = 0; phase < num_of_phases_in_use; ++phase)
