@@ -9,6 +9,7 @@ CEXE_headers += mfix_des_rrates_K.H
 CEXE_sources += mfix_pc.cpp
 CEXE_sources += mfix_pc_init.cpp
 CEXE_sources += mfix_pc_init_collision_params.cpp
+CEXE_sources += mfix_pc_inflow.cpp
 CEXE_sources += mfix_pc_remove_out_of_range.cpp
 CEXE_sources += mfix_pc_replicate.cpp
 CEXE_sources += mfix_set_gradp_bcs.cpp
