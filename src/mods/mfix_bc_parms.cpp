@@ -499,13 +499,23 @@ namespace BC
                   new_solid.velmag = amrex::Math::abs(vel_in[0]);
 
                 } else {
-                   // Missing error and abort here
+                  std::string message = " Error: BC region " + regions[bcv]
+                    + " has an invalid velocity for solids " +  solids_types[lcs] + "\n"
+                    + " Solids velocity can be a scalar (velocity magnitude) or all"
+                    + " three velocity components can be supplied.\n Solids inflow"
+                    + " cannot not be a function of time.\n";
+                  amrex::Print() << message;
+                  amrex::Abort(message);
                 }
               } else if (ppSolid.contains("volflow")) {
-
                 ppSolid.get("volflow", new_solid.volflow);
+
               } else {
-                // Missing error and abort here.
+                  std::string message = " Error: BC region " + regions[bcv]
+                    + " does not have velocity or volflow specified for solids "
+                    +  solids_types[lcs] + "\n";
+                  amrex::Print() << message;
+                  amrex::Abort(message);
               }
 
               // This probably needs a check if we are solving energy equations
