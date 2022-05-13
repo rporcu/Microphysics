@@ -59,7 +59,7 @@ rand_prop (const amrex::Real var_mean,
   } else {
     return var_mean;
   }
-};
+}
 }//end namespace
 
 void MFIXParticleContainer::mfix_pc_inflow (int lev,
