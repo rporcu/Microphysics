@@ -26,7 +26,7 @@ int get_distribution (const std::string dist_str )
   } else {
     return is_constant;
   }
-};
+}
 
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
