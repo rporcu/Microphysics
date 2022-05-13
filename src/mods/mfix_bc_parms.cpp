@@ -475,8 +475,8 @@ namespace BC
 
             if( new_bc.type == BCList::minf ) {
 
-              amrex::Print() << "Mass inflows for solids has not bee impleneted yet!\n";
-              amrex::Abort("Mass inflows for solids has not bee impleneted yet!");
+              amrex::Print() << "Mass inflows for solids has not bee implemented yet!\n";
+              amrex::Abort("Mass inflows for solids has not bee implemented yet!");
 
             } else if ( new_bc.type == BCList::eb ) {
 

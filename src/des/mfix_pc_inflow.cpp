@@ -95,7 +95,7 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
   const int MyProc = ParallelDescriptor::MyProc();
 
   // Loop over BCs
-  for (size_t bcv(0); bcv < BC::bc.size(); ++bcv) {
+  for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
 
     // BCs with ep_g < 1 and are EB
     if (BC::bc[bcv].type == BCList::eb &&

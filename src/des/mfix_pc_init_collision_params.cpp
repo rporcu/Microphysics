@@ -134,7 +134,7 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
 
 
   // Loop over BCs
-  for (size_t bcv(0); bcv < BC::bc.size(); ++bcv) {
+  for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
 
     // EB flow with at least one solid
     if (BC::bc[bcv].type == BCList::eb &&
