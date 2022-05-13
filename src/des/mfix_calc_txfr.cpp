@@ -75,7 +75,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
                                           pc->ParticleDistributionMap(lev),
                                           chem_txfr_out[lev]->nComp(),
                                           chem_txfr_out[lev]->nGrow());
-      } 
+      }
 
     } else {
       // If lev > 0 we make a temporary at the coarse resolution
@@ -343,7 +343,7 @@ mfix::mfix_calc_txfr_particle (Real time,
   auto& reactions_parms = *reactions.parameters;
 
   //***************************************************************************
-  // 
+  //
   //***************************************************************************
 
   // Extrapolate velocity Dirichlet bc's to ghost cells
@@ -556,6 +556,7 @@ mfix::mfix_calc_txfr_particle (Real time,
 
         auto& soa = pti.GetStructOfArrays();
         auto p_realarray = soa.realarray();
+        auto p_intarray  = soa.intarray();
 
         const int np = particles.size();
 
@@ -593,7 +594,7 @@ mfix::mfix_calc_txfr_particle (Real time,
           const Real pmult = DEM::solve ? 1.0 : 0.0;
 
           amrex::ParallelFor(np,
-              [pstruct,p_realarray,interp_array,gp0_dev,plo,dxi,pmult,dx,
+              [pstruct,p_realarray,p_intarray, interp_array,gp0_dev,plo,dxi,pmult,dx,
                solve_enthalpy,ccent_fab,bcent_fab,apx_fab,apy_fab,apz_fab,
                flags_array,grown_bx_is_regular,interp_comp,solve_reactions,
                ptile_data,nspecies_s,nspecies_g,idx_X_sn,idx_mass_txfr,idx_vel_txfr,
@@ -602,6 +603,9 @@ mfix::mfix_calc_txfr_particle (Real time,
             AMREX_GPU_DEVICE (int p_id) noexcept
           {
             MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
+
+            if ( p_intarray[SoAintData::state][p_id] == 0 )
+              return;
 
             // Local array storing interpolated values
             GpuArray<Real,10+Species::NMAX> interp_loc;
@@ -716,7 +720,7 @@ mfix::mfix_calc_txfr_particle (Real time,
 
             RealVect vel_g(interp_loc[0], interp_loc[1], interp_loc[2]);
             RealVect gp_g(interp_loc[3], interp_loc[4], interp_loc[5]);
-            
+
             Real T_g(0);
             if (solve_enthalpy) {
               T_g = interp_loc[6];

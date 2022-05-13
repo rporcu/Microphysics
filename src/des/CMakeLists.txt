@@ -16,6 +16,7 @@ target_sources( mfixcore
    mfix_pc_init_collision_params.cpp
    mfix_pc_remove_out_of_range.cpp
    mfix_pc_replicate.cpp
+   mfix_pc_inflow.cpp
    mfix_calc_transfer_coeffs.cpp
    mfix_calc_volume_fraction.cpp
    mfix_calc_txfr.cpp
