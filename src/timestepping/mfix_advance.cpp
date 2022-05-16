@@ -320,12 +320,9 @@ mfix::mfix_add_vel_txfr_explicit (Real dt,
 
   BL_PROFILE("mfix::mfix_add_txfr_explicit");
 
-  auto& fluid_parms = *fluid.parameters;
-
   for (int lev = 0; lev <= finest_level; lev++) {
 
     const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ep_g_in[lev]->Factory());
-    const auto& flags = factory.getMultiEBCellFlagFab();
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -521,11 +518,8 @@ mfix::mfix_add_vel_txfr_implicit (Real dt,
 
   BL_PROFILE("mfix::mfix_add_vel_txfr_implicit");
 
-  auto& fluid_parms = *fluid.parameters;
-
   for (int lev = 0; lev <= finest_level; lev++) {
     const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ep_g_in[lev]->Factory());
-    const auto& flags = factory.getMultiEBCellFlagFab();
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -570,8 +564,6 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
   */
 
   BL_PROFILE("mfix::mfix_add_energy_txfr_implicit");
-
-  const int run_on_device = Gpu::inLaunchRegion() ? 1 : 0;
 
   auto& fluid_parms = *fluid.parameters;
 
