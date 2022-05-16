@@ -322,8 +322,6 @@ mfix::mfix_add_vel_txfr_explicit (Real dt,
 
   for (int lev = 0; lev <= finest_level; lev++) {
 
-    const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ep_g_in[lev]->Factory());
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -519,7 +517,6 @@ mfix::mfix_add_vel_txfr_implicit (Real dt,
   BL_PROFILE("mfix::mfix_add_vel_txfr_implicit");
 
   for (int lev = 0; lev <= finest_level; lev++) {
-    const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ep_g_in[lev]->Factory());
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
