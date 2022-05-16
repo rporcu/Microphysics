@@ -767,6 +767,14 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         mfix_set_temperature_bcs(time, get_T_g());
         mfix_set_enthalpy_bcs(time, get_h_g());
       }
+
+      // ***********************************************************************
+      // Add the dconvective heat transfer terms implicitly to h_g
+      // ***********************************************************************
+      if (DEM::solve || PIC::solve)
+        mfix_add_enthalpy_txfr_implicit(l_dt, get_h_g(), get_T_g(), get_X_gk_const(),
+            get_txfr_const(), get_ro_g_const(), get_ep_g_const());
+
     } // fluid.solve_enthalpy
 
 
@@ -871,7 +879,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
          Array4<Real      > const& vel_n     = ld.vel_g->array(mfi);
          Array4<Real const> const& vel_o     = ld.vel_go->const_array(mfi);
-         Array4<Real const> const& ro_g_o    = ld.ro_go->const_array(mfi);
+         Array4<Real const> const& rog_nph   = density_nph[lev].const_array(mfi);
          Array4<Real const> const& epg       = ld.ep_g->const_array(mfi);
          Array4<Real const> const& divtau_o  = ld.divtau_o->const_array(mfi);
          Array4<Real const> const& dudt_o    = conv_u_old[lev]->const_array(mfi);
@@ -882,12 +890,12 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
          const int l_solve_reactions = reactions.solve;
 
-         amrex::ParallelFor(bx, [epg,ro_g_o,vel_o,dudt_o,divtau_o,gp,l_dt,vel_n,
+         amrex::ParallelFor(bx, [epg,rog_nph,vel_o,dudt_o,divtau_o,gp,l_dt,vel_n,
              vel_f,l_explicit_diff,vel_rhs_o,l_solve_reactions]
          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
            const Real epg_loc = epg(i,j,k);
-           const Real rog_loc = ro_g_o(i,j,k);
+           const Real rog_loc = rog_nph(i,j,k);
            const Real denom = 1.0 / (epg_loc*rog_loc);
 
            Real vel_nx = epg_loc*vel_o(i,j,k,0) + l_dt*dudt_o(i,j,k,0);
@@ -923,11 +931,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
 
     // *************************************************************************************
-    // Add the drag and convective heat transfer terms implicitly to vel_g and h_g
+    // Add the drag transfer terms implicitly to vel_g
     // *************************************************************************************
     if (DEM::solve || PIC::solve)
-      mfix_add_txfr_implicit(l_dt, get_vel_g(), get_h_g(), get_T_g(), get_X_gk_const(),
-                get_txfr_const(), GetVecOfConstPtrs(density_nph), get_ep_g_const());
+      mfix_add_vel_txfr_implicit(l_dt, get_vel_g(), get_txfr_const(),
+          GetVecOfConstPtrs(density_nph), get_ep_g_const());
 
 
     // *************************************************************************************

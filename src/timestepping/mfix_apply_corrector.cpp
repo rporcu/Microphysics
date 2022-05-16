@@ -788,11 +788,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         } // mfi
       } // lev
 
-
       // *************************************************************************************
       // Subtract off half of the explicit diffusion terms (see comment above)
       // *************************************************************************************
-      if (fluid.solve_enthalpy && (!explicit_diffusive_enthalpy)) {
+      if (!explicit_diffusive_enthalpy) {
 
         auto& fluid_parms = *fluid.parameters;
         const int fluid_is_a_mixture = fluid.is_a_mixture;
@@ -912,6 +911,14 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         mfix_set_temperature_bcs(time, get_T_g());
         mfix_set_enthalpy_bcs(time, get_h_g());
       }
+
+      // ***********************************************************************
+      // Add the drag and enthalpy terms implicitly
+      // ***********************************************************************
+      if (DEM::solve || PIC::solve)
+        mfix_add_enthalpy_txfr_implicit(l_dt, get_h_g(), get_T_g(), get_X_gk_const(),
+            get_txfr_const(), get_ro_g_const(), get_ep_g_const());
+
     } // fluid.solve_enthalpy
 
 
@@ -1023,7 +1030,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
          Array4<Real      > const& vel_n     = ld.vel_g->array(mfi);
          Array4<Real const> const& vel_o     = ld.vel_go->const_array(mfi);
-         Array4<Real const> const& ro_g_o    = ld.ro_go->const_array(mfi);
+         Array4<Real const> const& rog_nph   = density_nph[lev].const_array(mfi);
          Array4<Real const> const& epg       = ld.ep_g->const_array(mfi);
          Array4<Real const> const& divtau_o  = ld.divtau_o->const_array(mfi);
          Array4<Real const> const& dudt_o    = conv_u_old[lev]->const_array(mfi);
@@ -1037,12 +1044,12 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
          const int l_solve_reactions = reactions.solve;
 
-         amrex::ParallelFor(bx, [vel_n,vel_o,dudt_o,dudt_n,gp,vel_f,epg,ro_g_o,
+         amrex::ParallelFor(bx, [vel_n,vel_o,dudt_o,dudt_n,gp,vel_f,epg,rog_nph,
              divtau_o,l_dt,vel_rhs_o,vel_rhs_n,l_solve_reactions]
            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
            const Real epg_loc = epg(i,j,k);
-           const Real rog_loc = ro_g_o(i,j,k);
+           const Real rog_loc = rog_nph(i,j,k);
            const Real denom = 1.0 / (epg_loc*rog_loc);
 
            Real vel_nx = epg_loc*vel_o(i,j,k,0) + .5*l_dt*(dudt_o(i,j,k,0)+dudt_n(i,j,k,0));
@@ -1079,11 +1086,11 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
 
     // *************************************************************************************
-    // Add the drag and enthalpy terms implicitly
+    // Add the drag terms implicitly
     // *************************************************************************************
     if (DEM::solve || PIC::solve)
-      mfix_add_txfr_implicit(l_dt, get_vel_g(), get_h_g(), get_T_g(), get_X_gk_const(),
-             get_txfr_const(), GetVecOfConstPtrs(density_nph), get_ep_g_const());
+      mfix_add_vel_txfr_implicit(l_dt, get_vel_g(), get_txfr_const(),
+          GetVecOfConstPtrs(density_nph), get_ep_g_const());
 
 
     // *************************************************************************
@@ -1103,14 +1110,14 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
          Array4<Real      > const& vel_n    = ld.vel_g->array(mfi);
          Array4<Real const> const& epg      = ld.ep_g->const_array(mfi);
-         Array4<Real const> const& ro_g_o   = ld.ro_go->const_array(mfi);
+         Array4<Real const> const& rog_nph  = density_nph[lev].const_array(mfi);
          Array4<Real const> const& divtau_o = ld.divtau_o->const_array(mfi);
 
-         amrex::ParallelFor(bx, [vel_n,epg,ro_g_o,divtau_o,l_dt]
+         amrex::ParallelFor(bx, [vel_n,epg,rog_nph,divtau_o,l_dt]
            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
          {
            const Real epg_loc = epg(i,j,k);
-           const Real rog_loc = ro_g_o(i,j,k);
+           const Real rog_loc = rog_nph(i,j,k);
            const Real denom = 1.0 / (epg_loc*rog_loc);
 
            vel_n(i,j,k,0) -= (.5 * l_dt) * (divtau_o(i,j,k,0) * denom);
