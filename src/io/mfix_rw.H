@@ -243,6 +243,12 @@ private:
 
    void readParameters ();
 
+   int test_per_approx(const amrex::Real time,
+                       const amrex::Real dt,
+                       const amrex::Real per_approx);
+
+
+
    bool write_eb_surface = false;
 
    // Flag for writing static levelset function in plot file
@@ -280,6 +286,7 @@ private:
    int par_ascii_int = -1;
    int last_par_ascii  = -1;
    std::string par_ascii_file {"par"};
+   amrex::Real par_ascii_per_approx = -1;
 
 
    // Averaging regions

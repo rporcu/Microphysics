@@ -132,6 +132,7 @@ void MfixRW::readParameters ()
 
      pp.query("par_ascii_file", par_ascii_file);
      pp.query("par_ascii_int", par_ascii_int);
+     pp.query("par_ascii_per_approx", par_ascii_per_approx);
 
      pp.query("restart", restart_file);
 
@@ -204,35 +205,7 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 
     else if (plot_per_approx > 0.0)
     {
-        // Check to see if we've crossed a plot_per_approx interval by comparing
-        // the number of intervals that have elapsed for both the current
-        // time and the time at the beginning of this timestep.
-
-        int num_per_old = static_cast<int>( (time-dt) / plot_per_approx );
-        int num_per_new = static_cast<int>( (time   ) / plot_per_approx );
-
-        // Before using these, however, we must test for the case where we're
-        // within machine epsilon of the next interval. In that case, increment
-        // the counter, because we have indeed reached the next plot_per_approx interval
-        // at this point.
-
-        const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * amrex::Math::abs(time);
-        const Real next_plot_time = (num_per_old + 1) * plot_per_approx;
-
-        if ((num_per_new == num_per_old) && amrex::Math::abs(time - next_plot_time) <= eps)
-        {
-            num_per_new += 1;
-        }
-
-        // Similarly, we have to account for the case where the old time is within
-        // machine epsilon of the beginning of this interval, so that we don't double
-        // count that time threshold -- we already plotted at that time on the last timestep.
-
-        if ((num_per_new != num_per_old) && amrex::Math::abs((time - dt) - next_plot_time) <= eps)
-            num_per_old += 1;
-
-        if (num_per_old != num_per_new)
-            plot_test = 1;
+        plot_test = test_per_approx(time, dt, plot_per_approx);
 
     }/*
     else if ( plot_per_exact  > 0 && (amrex::Math::abs(remainder(time, plot_per_exact)) < 1.e-12) )
@@ -259,44 +232,13 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 #ifdef AMREX_USE_ASCENT
     int ascent_test = 0;
 
-    if ( first )
-    {
+    if ( first ) {
         if ((restart_file.empty() || ascent_on_restart) &&
             (ascent_int > 0 || ascent_per_approx > 0) )
             ascent_test = 1;
-    }
-    else if (ascent_per_approx > 0.0)
-    {
-        // Check to see if we've crossed a ascent_per_approx interval by comparing
-        // the number of intervals that have elapsed for both the current
-        // time and the time at the beginning of this timestep.
 
-        int num_per_old = static_cast<int>( (time-dt) / ascent_per_approx );
-        int num_per_new = static_cast<int>( (time   ) / ascent_per_approx );
-
-        // Before using these, however, we must test for the case where we're
-        // within machine epsilon of the next interval. In that case, increment
-        // the counter, because we have indeed reached the next ascent_per_approx interval
-        // at this point.
-
-        const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * amrex::Math::abs(time);
-        const Real next_ascent_time = (num_per_old + 1) * ascent_per_approx;
-
-        if ((num_per_new == num_per_old) && amrex::Math::abs(time - next_ascent_time) <= eps)
-        {
-            num_per_new += 1;
-        }
-
-        // Similarly, we have to account for the case where the old time is within
-        // machine epsilon of the beginning of this interval, so that we don't double
-        // count that time threshold -- we already plotted at that time on the last timestep.
-
-        if ((num_per_new != num_per_old) && amrex::Math::abs((time - dt) - next_ascent_time) <= eps)
-            num_per_old += 1;
-
-        if (num_per_old != num_per_new)
-            ascent_test = 1;
-
+    } else if (ascent_per_approx > 0.0) {
+      ascent_test = test_per_approx(time, dt, ascent_per_approx);
     }
 
     if ( (ascent_test == 1) || ( ( ascent_int > 0) && ( nstep %  ascent_int == 0 ) ) )
@@ -353,17 +295,24 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
  *                               AMReX particle ASCII output control
  *
  *------------------------------------------------------------------------------------------------*/
+    int par_ascii_test = 0;
+
     if ( par_ascii_int > 0) {
-        if ( first || last ) {
-            WriteParticleAscii(par_ascii_file, nstep);
-            last_par_ascii = nstep;
-        }
-        else if ( nstep %  par_ascii_int == 0 ) {
-            WriteParticleAscii( par_ascii_file, nstep );
-            last_par_ascii = nstep;
-        }
+      if ( first || last ) {
+        par_ascii_test = 1;
+      } else if ( nstep %  par_ascii_int == 0 ) {
+        par_ascii_test = 1;
+      }
+
+    } else if (par_ascii_per_approx > 0.0) {
+      par_ascii_test = test_per_approx(time, dt, par_ascii_per_approx);
+
     }
 
+    if( par_ascii_test == 1) {
+      WriteParticleAscii(par_ascii_file, nstep);
+      last_par_ascii = nstep;
+    }
 
 /*--------------------------------------------------------------------------------------------------
  *
@@ -389,38 +338,9 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
  *
  *------------------------------------------------------------------------------------------------*/
     int mass_balance_report_test = 0;
-    if (mass_balance_report_per_approx > 0.0)
-      {
-        // Check to see if we've crossed a mass_balance_report_per_approx interval by comparing
-        // the number of intervals that have elapsed for both the current
-        // time and the time at the beginning of this timestep.
 
-        int num_per_old = static_cast<int>( (time-dt) / mass_balance_report_per_approx);
-        int num_per_new = static_cast<int>( (time   ) / mass_balance_report_per_approx);
-
-        // Before using these, however, we must test for the case where we're
-        // within machine epsilon of the next interval. In that case, increment
-        // the counter, because we have indeed reached the next
-        // mass_balance_report_per_approx interval at this point.
-
-        const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * amrex::Math::abs(time);
-        const Real next_mass_balance_report_time = (num_per_old + 1) * mass_balance_report_per_approx;
-
-        if ((num_per_new == num_per_old) && amrex::Math::abs(time - next_mass_balance_report_time) <= eps)
-        {
-            num_per_new += 1;
-        }
-
-        // Similarly, we have to account for the case where the old time is within
-        // machine epsilon of the beginning of this interval, so that we don't double
-        // count that time threshold -- we already plotted at that time on the last timestep.
-
-        if ((num_per_new != num_per_old) && amrex::Math::abs((time - dt) - next_mass_balance_report_time) <= eps)
-            num_per_old += 1;
-
-        if (num_per_old != num_per_new)
-            mass_balance_report_test = 1;
-
+    if (mass_balance_report_per_approx > 0.0) {
+      mass_balance_report_test = test_per_approx(time, dt, mass_balance_report_per_approx);
     }
 
     if ( (mass_balance_report_test == 1) ||
@@ -477,6 +397,45 @@ MfixRW::mfix_print_max_gp (int lev,
                    << gp_g_in[lev]->norm0(1,0,false,true) << "  "
                    << gp_g_in[lev]->norm0(2,0,false,true) <<  std::endl;
 }
+
+
+//
+// Determine if it is time to write based on approximate interval
+//
+int
+MfixRW::test_per_approx(const Real time,
+                        const Real dt,
+                        const Real per_approx)
+{
+  // Check to see if we've crossed a _per_approx interval by comparing
+  // the number of intervals that have elapsed for both the current
+  // time and the time at the beginning of this timestep.
+
+  int num_per_old = static_cast<int>( (time-dt) / per_approx );
+  int num_per_new = static_cast<int>( (time   ) / per_approx );
+
+  // Before using these, however, we must test for the case where we're
+  // within machine epsilon of the next interval. In that case, increment
+  // the counter, because we have indeed reached the next par_ascii_per_approx interval
+  // at this point.
+
+  const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * amrex::Math::abs(time);
+  const Real next_time = (num_per_old + 1) * per_approx;
+
+  if ((num_per_new == num_per_old) && amrex::Math::abs(time - next_time) <= eps) {
+      num_per_new += 1;
+  }
+
+  // Similarly, we have to account for the case where the old time is within
+  // machine epsilon of the beginning of this interval, so that we don't double
+  // count that time threshold -- we already plotted at that time on the last timestep.
+
+  if ((num_per_new != num_per_old) && amrex::Math::abs((time - dt) - next_time) <= eps)
+      num_per_old += 1;
+
+  return (num_per_old != num_per_new) ? 1 : 0;
+}
+
 
 //
 //
