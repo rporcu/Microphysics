@@ -3,8 +3,10 @@
 #include <mfix_solids_parms.H>
 #include <mfix_dem_parms.H>
 #include <mfix_reactions_parms.H>
+#include <mfix_bc_list.H>
 #include <mfix_bc_parms.H>
 #include <mfix_solvers.H>
+#include <mfix_calc_cell.H>
 
 using namespace amrex;
 using namespace Solvers;
@@ -147,6 +149,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                                              Real time,
                                              RealVect& gravity,
                                              EBFArrayBoxFactory* ebfactory,
+                                             EBFArrayBoxFactory* particle_ebfactory,
                                              const MultiFab* ls_phi,
                                              const int ls_refinement,
                                              MultiFab* cost,
@@ -198,7 +201,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     /****************************************************************************
      * Get particle EB geometric info
      ***************************************************************************/
-    const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
+    const FabArray<EBCellFlagFab>* flags = &(particle_ebfactory->getMultiEBCellFlagFab());
 
     /****************************************************************************
      * Init temporary storage:                                                  *
@@ -222,7 +225,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         // Determine if this particle tile actually has any walls
         bool has_wall = false;
 
-        if ((ebfactory != NULL)
+        if ((particle_ebfactory != NULL)
             && ((*flags)[pti].getType(amrex::grow(bx,1)) == FabType::singlevalued))
         {
             has_wall = true;
@@ -256,6 +259,12 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     loc_maxpfor = RealVect(0., 0., 0.);  // Tracks max particle-particle force
     loc_maxwfor = RealVect(0., 0., 0.);  // Tracks max particle-wall force
     int n = 0; // Counts sub-steps
+
+
+    // Particle inflow
+    if (ebfactory != NULL)
+      mfix_pc_inflow(lev, dt, time, solids.solve_enthalpy, ebfactory);
+
 
     // sort particles by cell, this can significantly improve the locality
     if (sort_int > 0 && nstep % sort_int == 0) {
@@ -490,6 +499,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                     RealVect total_force(0.);
                     RealVect total_tow_force(0.);
 
+                    const int istate(p_intarray[SoAintData::state][i]);
+
                     //**********************************************************
                     // Particle-wall collisions
                     //**********************************************************
@@ -577,19 +588,54 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                             local_ft[2] = 0.0;
                         }
 
-                        total_force[0] += local_fn[0] + local_ft[0];
-                        total_force[1] += local_fn[1] + local_ft[1];
-                        total_force[2] += local_fn[2] + local_ft[2];
+                        if ( istate > 0 ) { // normal particles
 
-                        RealVect tow_force(0.);
+                          total_force[0] += local_fn[0] + local_ft[0];
+                          total_force[1] += local_fn[1] + local_ft[1];
+                          total_force[2] += local_fn[2] + local_ft[2];
 
-                        cross_product(normal, local_ft, tow_force);
+                          RealVect tow_force(0.);
 
-                        total_tow_force[0] += ls_value*tow_force[0];
-                        total_tow_force[1] += ls_value*tow_force[1];
-                        total_tow_force[2] += ls_value*tow_force[2];
+                          cross_product(normal, local_ft, tow_force);
+
+                          total_tow_force[0] += ls_value*tow_force[0];
+                          total_tow_force[1] += ls_value*tow_force[1];
+                          total_tow_force[2] += ls_value*tow_force[2];
+
+                        } else { // entering particles
+
+                          Real velx = p_realarray[SoArealData::velx][i];
+                          Real vely = p_realarray[SoArealData::vely][i];
+                          Real velz = p_realarray[SoArealData::velz][i];
+
+                          Real velmag = std::sqrt(velx*velx + vely*vely + velz*velz);
+
+                          Real dotprod = (normal[0] * velx +
+                                          normal[1] * vely +
+                                          normal[2] * velz)/velmag;
+
+                          // This is to catch particles that are not moving normal to
+                          // the levelset so that we can adjust their velocity and make sure
+                          // they fully enter the domain.
+                          if(Math::abs(1.0 + dotprod) > std::numeric_limits<Real>::epsilon()) {
+
+                            p_realarray[SoArealData::velx][i] = -velmag*normal[0];
+                            p_realarray[SoArealData::vely][i] = -velmag*normal[1];
+                            p_realarray[SoArealData::velz][i] = -velmag*normal[2];
+
+                          }
+
+                        }
+
+                      // An entering particle is no longer overlapping the wall.
+                      } else if(istate == 0) {
+                        //amrex::AllPrint() << "setting particle to normal\n";
+
+                        // Set the state to normal so it no longer ignores forces.
+                        p_intarray[SoAintData::state][i] = 1;
                       }
-                    }
+
+                    } // tile has walls
 
                     //**********************************************************
                     // Particle-particle collisions
@@ -618,12 +664,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                         AMREX_ASSERT_WITH_MESSAGE(
                             !(particle.id() == p2.id() &&
-                                 particle.cpu() == p2.cpu()),
+                              particle.cpu() == p2.cpu()),
                           "A particle should not be its own neighbor!");
 
                         if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
                         {
-                          has_collisions = 1;
+                            has_collisions = 1;
+
+                            const int jstate = p_intarray[SoAintData::state][j];
 
                             Real dist_mag = sqrt(r2);
 
@@ -637,13 +685,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                             normal[2] = dist_z * dist_mag_inv;
 
                             Real overlap_n(0.);
-                            if (p_intarray[SoAintData::state][i] == 10 ||
-                                p_intarray[SoAintData::state][j] == 10) {
+
+                            if (istate == 10 || jstate == 10) {
 
                               // most of overlaps (99.99%) are in the range [0, 2.5e-8] m
                               // which means [0, 5.e-4] radiuses
                               // we set max overlap to   2.5e-4*radius
                               overlap_n = amrex::min(r_lm - dist_mag, 2.5e-4*p1radius);
+
                             } else {
                               overlap_n = r_lm - dist_mag;
                             }
@@ -710,15 +759,12 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                                 local_ft[0] = -fnmd * tangent[0];
                                 local_ft[1] = -fnmd * tangent[1];
                                 local_ft[2] = -fnmd * tangent[2];
+
                             } else {
                                 local_ft[0] = 0.0;
                                 local_ft[1] = 0.0;
                                 local_ft[2] = 0.0;
                             }
-
-                            total_force[0] += local_fn[0] + local_ft[0];
-                            total_force[1] += local_fn[1] + local_ft[1];
-                            total_force[2] += local_fn[2] + local_ft[2];
 
                             Real dist_cl1 = 0.5 * (dist_mag + (p1radius*p1radius - p2radius*p2radius) * dist_mag_inv);
                             dist_cl1 = dist_mag - dist_cl1;
@@ -727,14 +773,19 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                             dist_cl2 = dist_mag - dist_cl2;
 
                             RealVect local_tow_force(0.);
-
                             cross_product(normal, local_ft, local_tow_force);
 
-                            total_tow_force[0] += dist_cl1*local_tow_force[0];
-                            total_tow_force[1] += dist_cl1*local_tow_force[1];
-                            total_tow_force[2] += dist_cl1*local_tow_force[2];
+                            if ( istate > 0 ) {
+                              total_force[0] += local_fn[0] + local_ft[0];
+                              total_force[1] += local_fn[1] + local_ft[1];
+                              total_force[2] += local_fn[2] + local_ft[2];
 
-                            if (j < nrp) {
+                              total_tow_force[0] += dist_cl1*local_tow_force[0];
+                              total_tow_force[1] += dist_cl1*local_tow_force[1];
+                              total_tow_force[2] += dist_cl1*local_tow_force[2];
+                            }
+
+                            if (j < nrp && jstate != 0) {
                               HostDevice::Atomic::Add(&fc_ptr[j         ], -(local_fn[0] + local_ft[0]));
                               HostDevice::Atomic::Add(&fc_ptr[j + ntot  ], -(local_fn[1] + local_ft[1]));
                               HostDevice::Atomic::Add(&fc_ptr[j + 2*ntot], -(local_fn[2] + local_ft[2]));
@@ -743,8 +794,31 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                               HostDevice::Atomic::Add(&tow_ptr[j + ntot  ], dist_cl2*local_tow_force[1]);
                               HostDevice::Atomic::Add(&tow_ptr[j + 2*ntot], dist_cl2*local_tow_force[2]);
                             }
-                        }
-                    }
+                            // Special case of two entering particles having an overlap
+                            if (istate == 0 && jstate == 0) {
+
+                              const Real shift = 1.0001*overlap_n;
+                              const RealVect sumvel(p1vel + p2vel);
+                              const int imove = (( sumvel[0]*normal[0]
+                                                 + sumvel[1]*normal[1]
+                                                 + sumvel[2]*normal[2]) > 0.) ? 1 : 0;
+
+                              if (imove) {
+                                total_force[0] -= shift * normal[0];
+                                total_force[1] -= shift * normal[1];
+                                total_force[2] -= shift * normal[2];
+
+                              } else if (j < nrp) {
+                                {
+                                  HostDevice::Atomic::Add(&fc_ptr[j         ], shift * normal[0]);
+                                  HostDevice::Atomic::Add(&fc_ptr[j +   ntot], shift * normal[1]);
+                                  HostDevice::Atomic::Add(&fc_ptr[j + 2*ntot], shift * normal[2]);
+                                }
+                              }
+                            } // end overlap between entering particles
+
+                        } // end overlap
+                    } // end neighbor loop
 
                     HostDevice::Atomic::Add(&fc_ptr[i         ], total_force[0]);
                     HostDevice::Atomic::Add(&fc_ptr[i + ntot  ], total_force[1]);
@@ -997,20 +1071,30 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                       p_velz_new = -p_velz_new;
                   }
 
-                  // Update positions
-                  p.pos(0) = p_posx_new;
-                  p.pos(1) = p_posy_new;
-                  p.pos(2) = p_posz_new;
+                  if (p_intarray[SoAintData::state][i] != 0) {
 
-                  // Update velocities
-                  p_realarray[SoArealData::velx][i] = p_velx_new;
-                  p_realarray[SoArealData::vely][i] = p_vely_new;
-                  p_realarray[SoArealData::velz][i] = p_velz_new;
+                    // Update positions
+                    p.pos(0) = p_posx_new;
+                    p.pos(1) = p_posy_new;
+                    p.pos(2) = p_posz_new;
 
-                  // Update angular velocities
-                  p_realarray[SoArealData::omegax][i] = p_omegax_new;
-                  p_realarray[SoArealData::omegay][i] = p_omegay_new;
-                  p_realarray[SoArealData::omegaz][i] = p_omegaz_new;
+                    // Update velocities
+                    p_realarray[SoArealData::velx][i] = p_velx_new;
+                    p_realarray[SoArealData::vely][i] = p_vely_new;
+                    p_realarray[SoArealData::velz][i] = p_velz_new;
+
+                    // Update angular velocities
+                    p_realarray[SoArealData::omegax][i] = p_omegax_new;
+                    p_realarray[SoArealData::omegay][i] = p_omegay_new;
+                    p_realarray[SoArealData::omegaz][i] = p_omegaz_new;
+
+                  } else {
+
+                    p.pos(0) += subdt * p_velx_old + fc_ptr[i         ];
+                    p.pos(1) += subdt * p_vely_old + fc_ptr[i +   ntot];
+                    p.pos(2) += subdt * p_velz_old + fc_ptr[i + 2*ntot];
+                  }
+
                 }
 
                 //***************************************************************

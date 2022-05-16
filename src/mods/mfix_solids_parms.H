@@ -151,7 +151,7 @@ class SolidsParms {
       if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
 
         if (run_on == amrex::RunOn::Gpu) {
-          
+
           result = m_d_cp_sn[n];
 
         } else if (run_on == amrex::RunOn::Cpu) {
@@ -170,9 +170,9 @@ class SolidsParms {
           if (run_on == amrex::RunOn::Gpu) {
 
             result += m_d_cp_sn[idx]*coeff;
-          
+
           } else if (run_on == amrex::RunOn::Cpu) {
-          
+
             result += m_h_cp_sn[idx]*coeff;
           }
 
@@ -195,7 +195,7 @@ class SolidsParms {
       if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
 
         if (run_on == amrex::RunOn::Gpu) {
-          
+
           result = m_d_H_fn[n] + m_d_cp_sn[n]*(T_s - m_T_ref);
 
         } else if (run_on == amrex::RunOn::Cpu) {
@@ -357,13 +357,17 @@ class SolidsPhase
         min(-1.0),
         max(-1.0)
       {}
+
+      bool is_constant () { return (distribution.compare("constant") == 0);} ;
+      bool is_uniform  () { return (distribution.compare("uniform")  == 0);} ;
+      bool is_normal   () { return (distribution.compare("normal")   == 0);} ;
+
     };
 
     int is_initialized;
 
     void Initialize (const Species& species, const Reactions& reactions);
 };
-
 
 struct SOLIDS_t {
 
@@ -372,6 +376,10 @@ struct SOLIDS_t {
   amrex::Real statwt;
   amrex::Real temperature;
   amrex::Vector<amrex::Real> velocity;
+  amrex::Real velmag;
+  amrex::Real volflow;
+  amrex::Real vol_remainder;
+  //int inflow_count;
 
   amrex::Vector<SPECIES_t> species;
 
@@ -383,6 +391,10 @@ struct SOLIDS_t {
     statwt(0.0),
     temperature(0.0),
     velocity(0),
+    velmag(0),
+    volflow(0.),
+    vol_remainder(0.),
+    //inflow_count(0),
     species(0),
     diameter(),
     density()

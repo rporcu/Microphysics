@@ -195,11 +195,18 @@ class MFIXParticleContainer final
                           amrex::Real time,
                           amrex::RealVect& gravity,
                           amrex::EBFArrayBoxFactory * ebfactory,
+                          amrex::EBFArrayBoxFactory * particle_ebfactory,
                           const amrex::MultiFab * ls_phi,
                           const int ls_refinement,
                           amrex::MultiFab * cost,
                           std::string & knapsack_weight_type,
                           int & nsubsteps);
+
+    void mfix_pc_inflow (int lev,
+                         amrex::Real dt,
+                         amrex::Real time,
+                         const int advect_enthalpy,
+                         amrex::EBFArrayBoxFactory* factory);
 
     void MFIX_PC_InitCollisionParams ();
 

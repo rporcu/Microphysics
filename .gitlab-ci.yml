@@ -181,24 +181,6 @@ build:csg:
     - ./build/src/eb/tests/functional_tests
   <<: *build_base
 
-build:ascent:
-  image: $CI_REGISTRY_IMAGE/ascent
-  needs: ['build-ascent-env']
-  variables:
-    CC: gcc
-    CXX: g++
-    CMAKE_PREFIX_PATH: /ascent/install/lib/cmake
-  script:
-    - cmake -S .  
-            -B build
-            -DCMAKE_BUILD_TYPE=Debug
-            -DAMReX_ASCENT=ON
-            -DAMReX_CONDUIT=ON
-            -DMFIX_OMP=ON
-            -G Ninja
-    - cmake --build build
-  <<: *build_base
-
 ## LINT ###
 .lint: &lint_template
   stage: lint
@@ -303,3 +285,109 @@ test:tiled-parallel-openmp:
     ENABLE_OMP: 1
     CTEST_LABEL: TGP
   <<: *ctest_template
+
+## ASCENT Tests ###
+.ascent: &ascent_template
+  stage: test
+  needs: ['build-ascent-env']
+  image: $CI_REGISTRY_IMAGE/ascent
+  <<: *before_script_template
+  tags:
+    - docker
+  allow_failure: false
+
+test:ascent:build-and-run:
+  <<: *ascent_template
+  variables:
+    CC: gcc
+    CXX: g++
+  script:
+    - cmake -S .
+            -B build
+            -DAMReX_CONDUIT=ON -DAMReX_ASCENT=ON
+            -GNinja
+    - cmake --build build
+    - |
+      mkdir ascent_run
+      pushd ascent_run
+      cp ../benchmarks/01-HCS/Size0001/inputs inputs
+      cp ../benchmarks/01-HCS/Size0001/particle_input.dat particle_input.dat
+    - |
+      echo '-
+        action: "add_pipelines"
+        pipelines:
+          pl1:
+            f1:
+              type: "composite_vector"
+              params:
+                field1: "u_g"
+                field2: "v_g"
+                field3: "w_g"
+                output_name: "vel_g"
+            f2:
+              type: "vector_magnitude"
+              params:
+                field: "vel_g"
+                output_name: "vel_g_mag"
+            f3:
+              type: "3slice"
+              params:
+                topology: 'topo'
+                x_offset: 0.00
+                y_offset: 0.00
+                z_offset: 0.00
+            f4:
+              type: "composite_vector"
+              params:
+                field1: "velx"
+                field2: "vely"
+                field3: "velz"
+                output_name: "V"
+            f5:
+              type: "vector_magnitude"
+              params:
+                field: "V"
+                output_name: "vel"
+      -
+        action: "add_scenes"
+        scenes:
+          s1:
+            plots:
+              p1:
+                type: "pseudocolor"
+                pipeline: "pl1"
+                field: "vel_g_mag"
+                min_value: -0.1
+                max_value:  0.1
+              p2:
+                type: "pseudocolor"
+                pipeline: "pl1"
+                field: "vel"
+                points:
+                  radius: 0.000050
+                min_value:  0.0
+                max_value:  2.0
+                color_table:
+                  name: "Jet"
+                  reverse: "false"
+                  annotation: "false"
+            renders:
+              r1:
+                image_width: 480
+                image_height: 480
+                image_prefix: "./slice_vel_%04d"
+                annotations: "false"
+                bg_color: [ 1.0,  1.0,  1.0]
+                fg_color: [ 0.0,  0.0,  0.0]
+                render_bg: "true"
+                camera:
+                  position: [  0.016,  0.012,  0.016]
+                  look_at:  [  0.004,  0.003,  0.004]
+                  up: [ -0.27,  0.93, -0.27]
+                  zoom: 2.0
+      ' > ascent_actions.yaml
+    - cat ascent_actions.yaml
+    - ../build/mfix inputs amr.ascent_int=10 ascent.actions="ascent_actions.yaml"
+    - |
+      pngs=(`find ./ -maxdepth 1 -name "*.png"`)
+      if [ ${#pngs[@]} -eq 4 ]; then exit 0; else echo "expected_pngs=1,actual_pngs=${#pngs[@]}"; exit 1; fi
