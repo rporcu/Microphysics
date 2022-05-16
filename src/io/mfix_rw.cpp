@@ -72,6 +72,8 @@ MfixRW::MfixRW (int nlev_in,
   , bc_list(bc_list_in)
   , particle_ebfactory(particle_ebfactory_in)
 {
+
+  m_start_time = ParallelDescriptor::second();
   readParameters();
 }
 
@@ -86,6 +88,21 @@ void MfixRW::readParameters ()
      pp.query("check_file", check_file);
      pp.query("check_int", check_int);
 
+     std::string walltime_in;
+     int has_walltime_limit = pp.query("check_walltime", walltime_in);
+
+     if (has_walltime_limit) {
+       int HH(0), MM(0), SS(0);
+       if (sscanf(walltime_in.c_str(), "%d:%d:%d", &HH, &MM, &SS) >= 2) {
+         m_check_walltime = static_cast<Real>(HH*3600 + MM*60 + SS);
+       } else {
+         std::string message =
+           " Error: Unable to correctly parse checkpoint walltime "
+           + walltime_in + "\n" + " The correct format is HH:MM:SS\n";
+         amrex::Print() << message;
+         amrex::Abort(message);
+       }
+     }
 
      // Plot output control
      pp.query("plot_file", plot_file);
@@ -296,26 +313,39 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
  *
  *------------------------------------------------------------------------------------------------*/
 
-    if (checkpoint_files_output && check_int > 0) {
+    if (checkpoint_files_output) {
+
+      int check_test = 0;
+
+      if ( check_int > 0 ) {
 
         // We automatically write checkpoint files with the initial data
         if ( first ) {
-            if ( restart_file.empty() ) {
-                WriteCheckPointFile(check_file, nstep, dt, time);
-                last_chk = nstep;
-            }
+          check_test = (restart_file.empty()) ? 1 : 0;
         }
         // We automatically write checkpoint files with the final data
         else if (last) {
-            if ( nstep != last_chk) {
-                WriteCheckPointFile(check_file, nstep, dt, time);
-                last_chk = nstep;
-            }
+          check_test = (nstep != last_chk) ? 1 : 0;
         }
-        else if ( nstep %  check_int == 0 ) {
-            WriteCheckPointFile( check_file, nstep, dt, time );
-            last_chk = nstep;
+        else {
+          check_test = (nstep %  check_int == 0) ? 1 :0;
         }
+
+        if (check_test == 1) {
+          WriteCheckPointFile(check_file, nstep, dt, time);
+          last_chk = nstep;
+
+        }
+      }
+
+      if ( m_check_walltime > 0.0 && check_test == 0 ) {
+          Real walltime = ParallelDescriptor::second() - m_start_time;
+          if ( walltime >= m_check_walltime ) {
+            WriteCheckPointFile(check_file, nstep, dt, time);
+            m_check_walltime = -1.0;
+          }
+        }
+
     }
 
 /*--------------------------------------------------------------------------------------------------
@@ -370,7 +400,7 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 
         // Before using these, however, we must test for the case where we're
         // within machine epsilon of the next interval. In that case, increment
-        // the counter, because we have indeed reached the next 
+        // the counter, because we have indeed reached the next
         // mass_balance_report_per_approx interval at this point.
 
         const Real eps = std::numeric_limits<Real>::epsilon() * 10.0 * amrex::Math::abs(time);

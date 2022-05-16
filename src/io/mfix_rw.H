@@ -169,6 +169,7 @@ private:
    int finest_level;
    int nlev;
 
+
    amrex::Vector<amrex::BoxArray>& grids;
 
    amrex::Vector<amrex::Geometry>& geom;
@@ -254,6 +255,9 @@ private:
    std::string check_file {"chk"};
    int check_int = -1;
    int last_chk  = -1;
+
+   amrex::Real m_start_time;
+   amrex::Real m_check_walltime = -1.0;
 
 
    // Plot file controls
