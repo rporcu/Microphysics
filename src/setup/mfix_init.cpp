@@ -22,11 +22,13 @@ mfix::InitParams ()
 {
   if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
 
+  regions.Initialize();
+
   // Read and process species, fluid and DEM particle model options.
   species.Initialize();
   reactions.Initialize(species);
   fluid.Initialize(species, reactions);
-  solids.Initialize(species, reactions);
+  solids.Initialize(regions, species, reactions);
 
   BL_ASSERT(reactions.nreactions <= reactions.NMAX);
   BL_ASSERT(fluid.nspecies <= Species::NMAX);
@@ -38,9 +40,8 @@ mfix::InitParams ()
   // Read in regions, initial and boundary conditions. Note that
   // regions need to be processed first as they define the
   // physical extents of ICs and BCs.
-  REGIONS::Initialize();
-  BC::Initialize(geom[0], fluid, solids);
-  IC::Initialize(fluid, solids);
+  BC::Initialize(geom[0], regions, fluid, solids);
+  IC::Initialize(regions, fluid, solids);
 
   // set n_error_buf (used in AmrMesh) to default (can overwrite later)
   for (int i = 0; i < n_error_buf.size(); i++)

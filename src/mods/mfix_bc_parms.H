@@ -13,6 +13,7 @@
 
 #include <mfix_bc_list.H>
 #include <mfix_eb_parms.H>
+#include <mfix_regions_parms.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_solids_parms.H>
 
@@ -78,6 +79,7 @@ namespace BC
   extern amrex::Vector<BC_t> bc;
 
   void Initialize (amrex::Geometry& geom,
+                   const Regions& regions,
                    FluidPhase& fluid,
                    const SolidsPhase& solids);
 

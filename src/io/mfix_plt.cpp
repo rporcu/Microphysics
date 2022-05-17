@@ -953,11 +953,35 @@ MfixRW::WritePlotFile (std::string& plot_file, int nstep, Real time)
         int_comp_names.push_back("phase");
         int_comp_names.push_back("state");
 
-        pc->WritePlotFile(plotfilename, "particles", write_real_comp,
-                          write_int_comp, real_comp_names, int_comp_names);
+        if (solids.plot_regions() == true) {
 
+          const int plot_regions_nb = solids.get_plot_regions_nb();
+
+          for (int n(0); n < plot_regions_nb; ++n) {
+
+            const SolidsPhase::PlotRegion& plot_region = solids.get_plot_region(n);
+
+            const RealBox region_extents = plot_region.get_extents();
+            const std::string& region_name = plot_region.get_name();
+
+            std::string partsfilename = amrex::Concatenate("parts",nstep);
+            partsfilename += "_"+region_name;
+
+            auto F = [region_extents] AMREX_GPU_DEVICE (const MFIXParticleContainer::SuperParticleType& p,
+                                                        const amrex::RandomEngine&) noexcept -> bool
+            { return region_extents.contains(p.pos()); };
+
+            pc->WritePlotFile(partsfilename, "particles", write_real_comp,
+                              write_int_comp, real_comp_names, int_comp_names, F);
+          }
+
+        } else {
+
+          pc->WritePlotFile(plotfilename, "particles", write_real_comp,
+                            write_int_comp, real_comp_names, int_comp_names);
+
+        }
     }
-
 }
 
 

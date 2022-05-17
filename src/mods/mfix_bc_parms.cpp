@@ -60,6 +60,7 @@ namespace BC
 
 
   void Initialize (amrex::Geometry& geom,
+                   const Regions& regions,
                    FluidPhase& fluid,
                    const SolidsPhase& solids)
   {
@@ -140,24 +141,24 @@ namespace BC
     pp.query("po_no_par_out", po_noParOut);
 
     // Get the list of region names used to define BCs
-    std::vector<std::string> regions;
-    pp.queryarr("regions", regions);
+    std::vector<std::string> input_regions;
+    pp.queryarr("regions", input_regions);
 
     // Loop over BCs
-    for(size_t bcv=0; bcv < regions.size(); bcv++){
+    for(size_t bcv=0; bcv < input_regions.size(); bcv++){
 
       amrex::Real volfrac_total(0.0);
 
       BC_t new_bc(fluid);
 
       // Set the region for the initial condition.
-      new_bc.region = REGIONS::getRegion(regions[bcv]);
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE( new_bc.region != NULL, "Invalid bc region!");
+      new_bc.region = regions.get_region(input_regions[bcv]);
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(new_bc.region != nullptr, "Invalid bc region!");
 
 
       // Get the BC type (MI/PI/PO/NSW/EB)
       std::string bc_type;
-      pp.get(regions[bcv].c_str(), bc_type);
+      pp.get(input_regions[bcv].c_str(), bc_type);
 
       // Convert the input string into the integers
       if( bc_type == "mi") {
@@ -183,7 +184,7 @@ namespace BC
       point[1] = new_bc.region->lo(1) + 0.5*(new_bc.region->hi(1)-new_bc.region->lo(1));
       point[2] = new_bc.region->lo(2) + 0.5*(new_bc.region->hi(2)-new_bc.region->lo(2));
 
-      std::string field_bcRegion = "bc."+regions[bcv];
+      std::string field_bcRegion = "bc."+input_regions[bcv];
       amrex::ParmParse ppRegion(field_bcRegion.c_str());
 
       int dir_int = -1;
@@ -247,7 +248,7 @@ namespace BC
 
             } else {
               amrex::Print() << "Flow BCs must be located on domain extents!" << std::endl;
-              amrex::Print() << "BC Name: " << regions[bcv] <<  std::endl;
+              amrex::Print() << "BC Name: " << input_regions[bcv] <<  std::endl;
               amrex::Print() << "  Invalid direction: " << dir << std::endl;
               amrex::Abort("Fix the inputs file!");
             }
@@ -307,7 +308,7 @@ namespace BC
 
       // Get EB data.
       if (new_bc.type == BCList::eb) {
-        std::string field = "bc."+regions[bcv]+".eb";
+        std::string field = "bc."+input_regions[bcv]+".eb";
         amrex::ParmParse ppEB(field.c_str());
 
         if (ppEB.contains("temperature")) {
@@ -340,7 +341,7 @@ namespace BC
       // Get fluid data.
       if(fluid.solve) {
 
-        std::string field = "bc."+regions[bcv]+"."+fluid.name;
+        std::string field = "bc."+input_regions[bcv]+"."+fluid.name;
         amrex::ParmParse ppFluid(field.c_str());
 
         // Mass inflows need fluid velocity and volume fraction.
@@ -395,7 +396,7 @@ namespace BC
 
           if (!new_bc.fluid.pressure_defined) {
             amrex::Print() << "Pressure BCs must have pressure defined!" << std::endl;
-            amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+            amrex::Print() << "BC region: " << input_regions[bcv] << std::endl;
             amrex::Abort("Fix the inputs file!");
           }
         }
@@ -410,7 +411,7 @@ namespace BC
 
             if (!new_bc.fluid.density_defined) {
               amrex::Print() << "BCs must have density defined!" << std::endl;
-              amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+              amrex::Print() << "BC region: " << input_regions[bcv] << std::endl;
               amrex::Abort("Fix the inputs file!");
             }
           }
@@ -422,13 +423,13 @@ namespace BC
 
             if (new_bc.fluid.density_defined) {
               amrex::Print() << "BCs must NOT have density defined!" << std::endl;
-              amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+              amrex::Print() << "BC region: " << input_regions[bcv] << std::endl;
               amrex::Abort("Fix the inputs file!");
             }
 
             if (!new_bc.fluid.temperature_defined) {
               amrex::Print() << "BCs must have temperature defined!" << std::endl;
-              amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+              amrex::Print() << "BC region: " << input_regions[bcv] << std::endl;
               amrex::Abort("Fix the inputs file!");
             }
           }
@@ -438,14 +439,14 @@ namespace BC
           if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf || new_bc.type == BCList::pout) {
 
             amrex::Print() << "minf, pinf or pout BCs cannot be defined in a closed system!" << std::endl;
-            amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+            amrex::Print() << "BC region: " << input_regions[bcv] << std::endl;
             amrex::Abort("Fix the inputs file!");
           }
 
           if (new_bc.type == BCList::eb && new_bc.fluid.flow_thru_eb) {
 
             amrex::Print() << "Flux through EB cannot be defined in a closed system!" << std::endl;
-            amrex::Print() << "BC region: " << regions[bcv] << std::endl;
+            amrex::Print() << "BC region: " << input_regions[bcv] << std::endl;
             amrex::Abort("Fix the inputs file!");
           }
         }
@@ -465,7 +466,7 @@ namespace BC
 
           SOLIDS_t new_solid;
 
-          std::string field = "bc."+regions[bcv]+"."+solids_types[lcs];
+          std::string field = "bc."+input_regions[bcv]+"."+solids_types[lcs];
           amrex::ParmParse ppSolid(field.c_str());
 
           ppSolid.get("volfrac", new_solid.volfrac);
@@ -499,7 +500,7 @@ namespace BC
                   new_solid.velmag = amrex::Math::abs(vel_in[0]);
 
                 } else {
-                  std::string message = " Error: BC region " + regions[bcv]
+                  std::string message = " Error: BC region " + input_regions[bcv]
                     + " has an invalid velocity for solids " +  solids_types[lcs] + "\n"
                     + " Solids velocity can be a scalar (velocity magnitude) or all"
                     + " three velocity components can be supplied.\n Solids inflow"
@@ -511,7 +512,7 @@ namespace BC
                 ppSolid.get("volflow", new_solid.volflow);
 
               } else {
-                  std::string message = " Error: BC region " + regions[bcv]
+                  std::string message = " Error: BC region " + input_regions[bcv]
                     + " does not have velocity or volflow specified for solids "
                     +  solids_types[lcs] + "\n";
                   amrex::Print() << message;
@@ -526,7 +527,7 @@ namespace BC
               ppSolid.get("diameter", new_solid.diameter.distribution);
 
 
-              std::string dp_field = "bc."+regions[bcv]+"."+solids_types[lcs]+".diameter";
+              std::string dp_field = "bc."+input_regions[bcv]+"."+solids_types[lcs]+".diameter";
               amrex::ParmParse ppSolidDp(dp_field.c_str());
 
               if( new_solid.diameter.distribution == "constant") {
@@ -542,7 +543,7 @@ namespace BC
               // Get information about density distribution.
               ppSolid.get("density", new_solid.density.distribution);
 
-              std::string roh_field = "bc."+regions[bcv]+"."+solids_types[lcs]+".density";
+              std::string roh_field = "bc."+input_regions[bcv]+"."+solids_types[lcs]+".density";
               amrex::ParmParse ppSolidRho(roh_field.c_str());
 
               if( new_solid.density.distribution == "constant") {
@@ -577,7 +578,7 @@ namespace BC
                 // Sanity check that the input species mass fractions sum up to 1
                 if (!(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
                   std::string message = "Error: SOLID type " + solids_types[lcs]
-                    + " species BCs mass fractions in region " + regions[bcv]
+                    + " species BCs mass fractions in region " + input_regions[bcv]
                     + " sum up to " + std::to_string(total_mass_fraction) + "\n";
 
                   amrex::Abort(message);
