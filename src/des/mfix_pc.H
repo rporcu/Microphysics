@@ -180,8 +180,6 @@ class MFIXParticleContainer final
                     amrex::DistributionMapping& dmap,
                     amrex::BoxArray& ba);
 
-    void printParticles ();
-
     void AllocData ();
 
     void PrintParticleCounts ();
@@ -210,31 +208,12 @@ class MFIXParticleContainer final
 
     void MFIX_PC_InitCollisionParams ();
 
-    void UpdateMaxVelocity ();
-
-    void UpdateMaxForces (std::map<PairIndex, amrex::Gpu::DeviceVector<amrex::Real>>& pfor,
-                          std::map<PairIndex, amrex::Gpu::DeviceVector<amrex::Real>>& wfor);
-
-    amrex::RealVect GetMaxVelocity ();
-
-    amrex::Vector<amrex::RealVect> GetMaxForces ();
-
-    ///
-    /// Write out all particles in the format of the particle_input.dat files so we
-    ///       can initialize a run with them
-    ///
-    void WriteAsciiFileForInit (const std::string& filename);
-
     void output (int estatus,
                  int finish,
                  int nstep,
                  amrex::Real dt,
                  amrex::Real time);
 
-    ///
-    /// Write out all particles at a level
-    ///
-    void writeAllAtLevel (int lev = 0);
 
     void SolidsVolumeDeposition (int lev,
                                  amrex::MultiFab& mf,
@@ -416,14 +395,6 @@ class MFIXParticleContainer final
     amrex::RealVect loc_maxvel;
     amrex::RealVect loc_maxpfor;
     amrex::RealVect loc_maxwfor;
-
-    void set_particle_properties (int pstate,
-                                  amrex::Real pradius,
-                                  amrex::Real pdensity,
-                                  amrex::Real& pvol,
-                                  amrex::Real& pmass,
-                                  amrex::Real& omoi,
-                                  amrex::Real& omega);
 
     void usr0_des ();
     void usr1_des ();
