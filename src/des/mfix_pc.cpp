@@ -96,36 +96,6 @@ void MFIXParticleContainer::PrintParticleCounts ()
   amrex::AllPrintToFile("load_balance") << "Total for this process: " << local_count << std::endl << std::endl;
 }
 
-void MFIXParticleContainer::printParticles ()
-{
-    const int lev = 0;
-    auto& plevel = GetParticles(lev);
-
-    for (auto& kv : plevel)
-    {
-       const auto& particles = kv.second.GetArrayOfStructs();
-       auto& soa = kv.second.GetStructOfArrays();
-       auto p_realarray = soa.realarray();
-       auto p_intarray = soa.intarray();
-
-       for (int i = 0; i < particles.numParticles(); ++i)
-       {
-          std::cout << "Particle ID  = " << i << " " << std::endl;
-          std::cout << "X            = " << particles[i].pos(0) << " " << std::endl;
-          std::cout << "Y            = " << particles[i].pos(1) << " " << std::endl;
-          std::cout << "Z            = " << particles[i].pos(2) << " " << std::endl;
-          std::cout << "state        = " << p_intarray[SoAintData::state][i] << " " << std::endl;
-          std::cout << "phase        = " << p_intarray[SoAintData::phase][i] << " " << std::endl;
-          std::cout << "Real properties = " << std::endl;
-
-          for (int j = 0; j < SoArealData::count; j++)
-            std::cout << "property " << j << "  = " << p_realarray[j][i] << " " << std::endl;
-
-          std::cout << std::endl;
-       }
-    }
-}
-
 void MFIXParticleContainer::ReadStaticParameters ()
 {
     static bool initialized = false;
@@ -159,23 +129,11 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
 
-    Real eps = std::numeric_limits<Real>::epsilon();
+    Real constexpr eps = std::numeric_limits<Real>::epsilon();
 
     amrex::Print() << "Evolving particles on level: " << lev
                    << " ... with fluid dt " << dt << std::endl;
 
-    /****************************************************************************
-     * DEBUG flag toggles:                                                      *
-     *   -> Print number of collisions                                          *
-     *   -> Print max (over substeps) particle velocity at each time step       *
-     *   -> Print max particle-wall and particle-particle forces                *
-     ***************************************************************************/
-
-    // Debug level controls the detail of debug output:
-    //   -> debug_level = 0 : no debug output
-    //   -> debug_level = 1 : debug output for every fluid step
-    //   -> debug_level = 2 : debug output for every substep
-    const int debug_level = 0;
 
     /****************************************************************************
      * Geometry                                                                 *
@@ -254,7 +212,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
      * Iterate over sub-steps                                                   *
      ***************************************************************************/
 
-    int ncoll_total = 0;  // Counts total number of collisions
     loc_maxvel  = RealVect(0., 0., 0.);  // Tracks max (absolute) velocity
     loc_maxpfor = RealVect(0., 0., 0.);  // Tracks max particle-particle force
     loc_maxwfor = RealVect(0., 0., 0.);  // Tracks max particle-wall force
@@ -280,8 +237,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
     while (n < nsubsteps)
     {
-        int ncoll = 0;  // Counts number of collisions (over sub-steps)
-
         // Redistribute particles ever so often BUT always update the neighbour
         // list (Note that this fills the neighbour list after every
         // redistribute operation)
@@ -300,123 +255,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
           } else {
               updateNeighbors();
           }
-
-          /********************************************************************
-           * Compute number of Particle-Particle collisions
-           *******************************************************************/
-          if (debug_level > 0)
-          {
-#ifdef AMREX_USE_GPU
-            if (Gpu::inLaunchRegion())
-            {
-              // Reduce sum operation for ncoll
-              ReduceOps<ReduceOpSum> reduce_op;
-              ReduceData<int> reduce_data(reduce_op);
-              using ReduceTuple = typename decltype(reduce_data)::Type;
-
-              for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-              {
-                PairIndex index(pti.index(), pti.LocalTileIndex());
-
-                const int nrp = GetParticles(lev)[index].numRealParticles();
-
-                auto& plev = GetParticles(lev);
-                auto& ptile = plev[index];
-                auto& aos   = ptile.GetArrayOfStructs();
-                ParticleType* pstruct = aos().dataPtr();
-
-                auto& soa = ptile.GetStructOfArrays();
-                auto p_realarray = soa.realarray();
-
-                auto nbor_data = m_neighbor_list[lev][index].data();
-
-                constexpr Real small_number = 1.0e-15;
-
-                reduce_op.eval(nrp, reduce_data, [nrp, pstruct,p_realarray,
-                    nbor_data,small_number]
-                  AMREX_GPU_DEVICE (int i) -> ReduceTuple
-                {
-                  int l_ncoll(0);
-
-                  ParticleType p1 = pstruct[i];
-                  const RealVect pos1 = p1.pos();
-                  const Real radius1 = p_realarray[SoArealData::radius][i];
-
-                  const auto neighbs = nbor_data.getNeighbors(i);
-                  for (auto mit = neighbs.begin(); mit != neighbs.end(); ++mit)
-                  {
-                    const auto p2 = *mit;
-                    const int j = mit.index();
-
-                    const RealVect pos2 = p2.pos();
-                    const Real radius2 = p_realarray[SoArealData::radius][j];
-
-                    Real r2 = (pos1 - pos2).radSquared();
-                    Real r_lm = radius1 + radius2;
-
-                    if (r2 <= (r_lm-small_number)*(r_lm-small_number))
-                      l_ncoll += (j < nrp ? 2 : 1);
-                  }
-
-                  return {l_ncoll};
-                });
-              }
-
-              ReduceTuple host_tuple = reduce_data.value();
-              ncoll += amrex::get<0>(host_tuple);
-            }
-            else
-#endif
-            {
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:ncoll) if (Gpu::notInLaunchRegion())
-#endif
-              for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-              {
-                PairIndex index(pti.index(), pti.LocalTileIndex());
-
-                const int nrp = GetParticles(lev)[index].numRealParticles();
-
-                auto& plev = GetParticles(lev);
-                auto& ptile = plev[index];
-                auto& aos   = ptile.GetArrayOfStructs();
-                ParticleType* pstruct = aos().dataPtr();
-
-                auto& soa = ptile.GetStructOfArrays();
-                auto p_realarray = soa.realarray();
-
-                auto nbor_data = m_neighbor_list[lev][index].data();
-
-                constexpr Real small_number = 1.0e-15;
-
-                for(int i(0); i < nrp; ++i)
-                {
-                  ParticleType p1 = pstruct[i];
-                  const RealVect pos1 = p1.pos();
-                  const Real radius1 = p_realarray[SoArealData::radius][i];
-
-                  const auto neighbs = nbor_data.getNeighbors(i);
-                  for (auto mit = neighbs.begin(); mit != neighbs.end(); ++mit)
-                  {
-                    const auto p2 = *mit;
-                    const int j = mit.index();
-
-                    const RealVect pos2 = p2.pos();
-                    const Real radius2 = p_realarray[SoArealData::radius][j];
-
-                    Real r2 = (pos1 - pos2).radSquared();
-
-                    Real r_lm = radius1 + radius2;
-
-                    if (r2 <= (r_lm-small_number)*(r_lm-small_number))
-                    {
-                      ncoll += 1;
-                    }
-                  }
-                }
-              }
-            }
-          } // end if (debug_level > 0)
         }
 
         /********************************************************************
@@ -484,9 +322,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               // now we loop over the neighbor list and compute the forces
               amrex::ParallelFor(nrp,
                   [nrp,pstruct,p_realarray,p_intarray,fc_ptr,tow_ptr,nbor_data,
-#if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
-                   eps,
-#endif
                    subdt,ntot,walls_in_tile,ls_refinement,phiarr,plo,dxi,
                    local_mew=DEM::mew,local_mew_w=DEM::mew_w,local_kn=DEM::kn,
                    local_kn_w=DEM::kn_w,local_etan=DEM::etan,local_etan_w=DEM::etan_w]
@@ -834,16 +669,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               });
 
               Gpu::Device::synchronize();
-
-              // Debugging: copy data from the fc (all forces) vector to the wfor
-              // (wall forces) vector. Note that since fc already contains the
-              // wall forces, these need to be subtracted here.
-              if (debug_level > 0)
-              {
-                  for (size_t i = 0; i < pfor[index].size(); i++ ) {
-                      pfor[index][i] = fc[index][i] - wfor[index][i];
-                  }
-              }
 
               // BL_PROFILE_VAR_STOP(calc_particle_collisions);
 
@@ -1207,48 +1032,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         // Update substep count
         n += 1;
 
-        /************************************************************************
-         * DEBUG: output the number of collisions in current substep            *
-         *        output the max velocity (and forces) in current substep       *
-         *        update max velocities and forces                              *
-         ***********************************************************************/
-
-        if (debug_level > 0) ncoll_total += ncoll;
-
-        if (debug_level > 1) {
-            ParallelDescriptor::ReduceIntSum(ncoll, ParallelDescriptor::IOProcessorNumber());
-            Print() << "Number of collisions: " << ncoll << " at step " << n << std::endl;
-        }
-
-        if (debug_level > 0){
-            UpdateMaxVelocity();
-            UpdateMaxForces(pfor, wfor);
-        }
-
-        if (debug_level > 1) {
-            RealVect max_vel = GetMaxVelocity();
-            Vector<RealVect> max_forces = GetMaxForces();
-
-            const Real * dx_crse = Geom(0).CellSize();
-            amrex::Print() << "Maximum distance traveled:"
-                           << std::endl
-                           <<  "x= " << max_vel[0] * dt
-                           << " y= " << max_vel[1] * dt
-                           << " z= " << max_vel[2] * dt
-                           << " and note that "
-                           << " dx= " << dx_crse[0] << std::endl;
-
-            amrex::Print() << "Maximum particle-particle (pp) and particle-wall (pw) forces:"
-                           << std::endl
-                           <<  "ppx= " << max_forces[0][0]
-                           << " ppy= " << max_forces[0][1]
-                           << " ppz= " << max_forces[0][2] << std::endl
-                           <<  "pwx= " << max_forces[1][0]
-                           << " pwy= " << max_forces[1][1]
-                           << " pwz= " << max_forces[1][2] << std::endl;
-
-        }
-
     } // end of loop over substeps
 
     // Redistribute particles at the end of all substeps (note that the particle
@@ -1256,16 +1039,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     if (solids.solve_momentum) {
       clearNeighbors();
       Redistribute(0, 0, 0, 1);
-    }
-
-    /****************************************************************************
-     * DEBUG: output the total number of collisions over all substeps           *
-     *        output the maximum velocity and forces over all substeps          *
-     ***************************************************************************/
-    if (debug_level > 0) {
-        ParallelDescriptor::ReduceIntSum(ncoll_total, ParallelDescriptor::IOProcessorNumber());
-        amrex::Print() << "Number of collisions: " << ncoll_total << " in "
-                       << nsubsteps << " substeps " << std::endl;
     }
 
 #ifdef _OPENMP
@@ -1279,385 +1052,11 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         usr3_des(nrp,particles);
     }
 
-    if (debug_level > 0) {
-        RealVect max_vel = GetMaxVelocity();
-        Vector<RealVect> max_forces = GetMaxForces();
-
-        const Real * dx_crse = Geom(0).CellSize();
-        amrex::Print() << "Maximum possible distance traveled:" << std::endl
-                       <<  "x= " << max_vel[0] * dt
-                       << " y= " << max_vel[1] * dt
-                       << " z= " << max_vel[2] * dt
-                       << " and note that "
-                       << " dx= " << dx_crse[0] << std::endl;
-
-        amrex::Print() << "Maximum particle-particle (pp) and particle-wall (pw) forces:" << std::endl
-                       <<  "ppx= " << max_forces[0][0]
-                       << " ppy= " << max_forces[0][1]
-                       << " ppz= " << max_forces[0][2] << std::endl
-                       <<  "pwx= " << max_forces[1][0]
-                       << " pwy= " << max_forces[1][1]
-                       << " pwz= " << max_forces[1][2] << std::endl;
-    }
-
     amrex::Print() << "done. \n";
 
     BL_PROFILE_REGION_STOP("mfix_dem::EvolveParticles()");
 }
 
-void MFIXParticleContainer::writeAllAtLevel (int lev)
-{
-    // Not threaded because its print to terminal
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-    {
-        auto& particles = pti.GetArrayOfStructs();
-        int np = pti.numParticles();
-        Gpu::HostVector<ParticleType> host_particles(np);
-        Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
-
-        for (const auto& p: host_particles)
-        {
-           const IntVect& iv = Index(p, lev);
-
-           RealVect xyz(p.pos(0), p.pos(1), p.pos(2));
-           std::cout << " id " << p.id()
-                << " index " << iv
-                << " position " << xyz << std::endl;
-       }
-    }
-}
-
-void
-MFIXParticleContainer::WriteAsciiFileForInit (const std::string& filename)
-{
-    BL_ASSERT(!filename.empty());
-
-    int lev = 0;
-    long nparticles = NumberOfParticlesAtLevel(lev);
-
-    if (ParallelDescriptor::IOProcessor())
-    {
-        //
-        // Have I/O processor open file and write out particle metadata.
-        //
-        std::ofstream File;
-
-        File.open(filename.c_str(), std::ios::out | std::ios::trunc);
-
-        if (!File.good())
-            amrex::FileOpenFailed(filename);
-
-        File << nparticles  << '\n';
-
-        File.flush();
-
-        File.close();
-
-        if (!File.good())
-            amrex::Abort("ParticleContainer<NStructReal, NStructInt, NArrayReal, NArrayInt>::WriteAsciiFile(): problem writing file");
-    }
-
-    ParallelDescriptor::Barrier();
-
-    const int MyProc = ParallelDescriptor::MyProc();
-
-    for (int i = 0; i < ParallelDescriptor::NProcs(); i++)
-    {
-        if (MyProc == i)
-        {
-            //
-            // Each CPU opens the file for appending and adds its particles.
-            //
-
-            VisMF::IO_Buffer io_buffer(VisMF::IO_Buffer_Size);
-
-            std::ofstream File;
-
-            File.rdbuf()->pubsetbuf(io_buffer.dataPtr(), io_buffer.size());
-
-            File.open(filename.c_str(), std::ios::out|std::ios::app);
-
-            File.precision(15);
-
-            if (!File.good())
-                amrex::FileOpenFailed(filename);
-
-            for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-
-              auto& particles = pti.GetArrayOfStructs();
-              int np = pti.numParticles();
-
-              auto& soa = pti.GetStructOfArrays();
-              auto p_realarray = soa.realarray();
-              auto p_intarray = soa.intarray();
-
-              std::array<Gpu::HostVector<Real>, SoArealData::count> host_realarrays;
-              std::array<Gpu::HostVector<int>, SoAintData::count> host_intarrays;
-
-              for (int comp(0); comp < SoArealData::count; ++comp)
-                host_realarrays[comp].resize(np);
-
-              for (int comp(0); comp < SoAintData::count; ++comp)
-                host_intarrays[comp].resize(np);
-
-              // Copy particles from device to host
-              for (int comp(0); comp < SoArealData::count; ++comp) {
-                Gpu::copyAsync(Gpu::deviceToHost, &(p_realarray[comp][0]),
-                    &(p_realarray[comp][np]), host_realarrays[comp].begin());
-              }
-
-              // Copy particles from device to host
-              for (int comp(0); comp < SoAintData::count; ++comp) {
-                Gpu::copyAsync(Gpu::deviceToHost, &(p_intarray[comp][0]),
-                    &(p_intarray[comp][np]), host_intarrays[comp].begin());
-              }
-
-              Gpu::HostVector<ParticleType> host_particles(np);
-              Gpu::copy(Gpu::deviceToHost, particles.begin(), particles.end(), host_particles.begin());
-
-              int index = 0;
-              for (int ip(0); ip < np; ++ip)
-              {
-                  auto& p = host_particles[ip];
-
-                  if (p.id() > 0) {
-                      File << p_intarray[SoAintData::phase][ip] << ' ';
-                      File << p.pos(0) << ' ';
-                      File << p.pos(1) << ' ';
-                      File << p.pos(2) << ' ';
-                      File << p_realarray[SoArealData::radius][ip] << ' ';
-                      File << p_realarray[SoArealData::density][ip] << ' ';
-                      File << p_realarray[SoArealData::velx][ip] << ' ';
-                      File << p_realarray[SoArealData::vely][ip] << ' ';
-                      File << p_realarray[SoArealData::velz][ip] << ' ';
-
-                      File << '\n';
-
-                      index++;
-                  }
-              }
-            }
-
-            File.flush();
-
-            File.close();
-
-            if (!File.good())
-                amrex::Abort("MFIXParticleContainer::WriteAsciiFileForInit(): problem writing file");
-
-        }
-        ParallelDescriptor::Barrier();
-    }
-}
-
-
-
-void MFIXParticleContainer::UpdateMaxVelocity ()
-{
-  Real max_vel_x = loc_maxvel[0];
-  Real max_vel_y = loc_maxvel[1];
-  Real max_vel_z = loc_maxvel[2];
-
-  for (int lev = 0; lev < nlev; lev++)
-  {
-#ifdef AMREX_USE_GPU
-    if (Gpu::inLaunchRegion())
-    {
-      // Reduce max operation for velx, vely,velz
-      ReduceOps<ReduceOpMax, ReduceOpMax, ReduceOpMax> reduce_op;
-      ReduceData<Real, Real, Real> reduce_data(reduce_op);
-      using ReduceTuple = typename decltype(reduce_data)::Type;
-
-      for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
-      {
-        const int np = pti.numParticles();
-
-        auto& soa = pti.GetStructOfArrays();
-        auto p_realarray = soa.realarray();
-
-        reduce_op.eval(np, reduce_data,
-            [p_realarray] AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
-        {
-          Real l_vel_x = Math::abs(p_realarray[SoArealData::velx][p_id]);
-          Real l_vel_y = Math::abs(p_realarray[SoArealData::vely][p_id]);
-          Real l_vel_z = Math::abs(p_realarray[SoArealData::velz][p_id]);
-
-          return {l_vel_x, l_vel_y, l_vel_z};
-        });
-      }
-
-      ReduceTuple host_tuple = reduce_data.value();
-      max_vel_x = amrex::max(max_vel_x, Math::abs(amrex::get<0>(host_tuple)));
-      max_vel_y = amrex::max(max_vel_y, Math::abs(amrex::get<1>(host_tuple)));
-      max_vel_z = amrex::max(max_vel_z, Math::abs(amrex::get<2>(host_tuple)));
-    }
-    else
-#endif
-    {
-#ifdef _OPENMP
-#pragma omp parallel reduction(max:max_vel_x,max_vel_y,max_vel_z) \
-                              if (Gpu::notInLaunchRegion())
-#endif
-      for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
-      {
-        const int np = pti.numParticles();
-
-        auto& soa = pti.GetStructOfArrays();
-        auto p_realarray = soa.realarray();
-
-        for(int p_id(0); p_id < np; ++p_id)
-        {
-          max_vel_x = amrex::max(Math::abs(p_realarray[SoArealData::velx][p_id]), max_vel_x);
-          max_vel_y = amrex::max(Math::abs(p_realarray[SoArealData::vely][p_id]), max_vel_y);
-          max_vel_z = amrex::max(Math::abs(p_realarray[SoArealData::velz][p_id]), max_vel_z);
-        }
-      }
-    }
-  }
-
-  loc_maxvel = RealVect(max_vel_x, max_vel_y, max_vel_z);
-}
-
-void MFIXParticleContainer::UpdateMaxForces (std::map<PairIndex, Gpu::DeviceVector<Real>>& pfor,
-                                             std::map<PairIndex, Gpu::DeviceVector<Real>>& wfor)
-{
-  Real max_pfor_x = loc_maxpfor[0];
-  Real max_pfor_y = loc_maxpfor[1];
-  Real max_pfor_z = loc_maxpfor[2];
-
-  Real max_wfor_x = loc_maxwfor[0];
-  Real max_wfor_y = loc_maxwfor[1];
-  Real max_wfor_z = loc_maxwfor[2];
-
-  for (int lev = 0; lev < nlev; lev++)
-  {
-#ifdef AMREX_USE_GPU
-    if (Gpu::inLaunchRegion())
-    {
-      // Reduce max operation for pforx, pfory, pforz, wforx, wfory, wforz
-      ReduceOps<ReduceOpMax, ReduceOpMax, ReduceOpMax,
-                ReduceOpMax, ReduceOpMax, ReduceOpMax> reduce_op;
-      ReduceData<Real, Real, Real, Real, Real, Real> reduce_data(reduce_op);
-      using ReduceTuple = typename decltype(reduce_data)::Type;
-
-      for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
-      {
-        PairIndex index(pti.index(), pti.LocalTileIndex());
-
-        // Note the particle force data layout:
-        //      p1_x, p2_x, ..., pn_x, p1_y, p2_y, ..., pn_y, p1_z, p2_z, ..., pn_z
-        // Where n is the total number of particle and neighbor particles.
-        const int nrp = GetParticles(lev)[index].numRealParticles();
-
-        auto& plev = GetParticles(lev);
-        auto& ptile = plev[index];
-        auto& aos   = ptile.GetArrayOfStructs();
-        int size_ng = aos.numNeighborParticles();
-
-        // Number of particles including neighbor particles
-        const int ntot = nrp + size_ng;
-
-        Real* p_pfor = pfor[index].data();
-        Real* p_wfor = wfor[index].data();
-
-        // Find max (abs) of particle-particle forces:
-        reduce_op.eval(ntot, reduce_data, [p_pfor,p_wfor,ntot]
-          AMREX_GPU_DEVICE (int i) -> ReduceTuple
-        {
-          Real l_pfor_x = Math::abs(p_pfor[i]);
-          Real l_pfor_y = Math::abs(p_pfor[i+ntot]);
-          Real l_pfor_z = Math::abs(p_pfor[i+2*ntot]);
-
-          Real l_wfor_x = Math::abs(p_wfor[i]);
-          Real l_wfor_y = Math::abs(p_wfor[i+ntot]);
-          Real l_wfor_z = Math::abs(p_wfor[i+2*ntot]);
-
-          return {l_pfor_x, l_pfor_y, l_pfor_z, l_wfor_x, l_wfor_y, l_wfor_z};
-        });
-      }
-
-      ReduceTuple host_tuple = reduce_data.value();
-
-      max_pfor_x = amrex::max(max_pfor_x, Math::abs(amrex::get<0>(host_tuple)));
-      max_pfor_y = amrex::max(max_pfor_y, Math::abs(amrex::get<1>(host_tuple)));
-      max_pfor_z = amrex::max(max_pfor_z, Math::abs(amrex::get<2>(host_tuple)));
-
-      max_pfor_x = amrex::max(max_pfor_x, Math::abs(amrex::get<3>(host_tuple)));
-      max_pfor_y = amrex::max(max_pfor_y, Math::abs(amrex::get<4>(host_tuple)));
-      max_pfor_z = amrex::max(max_pfor_z, Math::abs(amrex::get<5>(host_tuple)));
-    }
-    else
-#endif
-    {
-#ifdef _OPENMP
-#pragma omp parallel reduction(max:max_pfor_x,max_pfor_y,max_pfor_z, \
-                                   max_wfor_x,max_wfor_y,max_wfor_z) \
-                              if (Gpu::notInLaunchRegion())
-#endif
-      for(MFIXParIter pti(* this, lev); pti.isValid(); ++ pti)
-      {
-        PairIndex index(pti.index(), pti.LocalTileIndex());
-
-        // Note the particle force data layout:
-        //      p1_x, p2_x, ..., pn_x, p1_y, p2_y, ..., pn_y, p1_z, p2_z, ..., pn_z
-        // Where n is the total number of particle and neighbor particles.
-        const int nrp = GetParticles(lev)[index].numRealParticles();
-
-        int size_ng = neighbors[lev][index].size();
-
-        // Number of particles including neighbor particles
-        const int ntot = nrp + size_ng;
-
-        Real* p_pfor = pfor[index].data();
-        Real* p_wfor = wfor[index].data();
-
-        // Find max (abs) of particle-particle forces:
-        for (int i(0); i < ntot; ++i)
-        {
-          max_pfor_x = amrex::max(Math::abs(p_pfor[i]), max_pfor_x);
-          max_pfor_y = amrex::max(Math::abs(p_pfor[i+ntot]), max_pfor_y);
-          max_pfor_z = amrex::max(Math::abs(p_pfor[i+2*ntot]), max_pfor_z);
-
-          max_wfor_x = amrex::max(Math::abs(p_wfor[i]), max_wfor_x);
-          max_wfor_y = amrex::max(Math::abs(p_wfor[i+ntot]), max_wfor_y);
-          max_wfor_z = amrex::max(Math::abs(p_wfor[i+2*ntot]), max_wfor_z);
-        }
-      }
-    }
-  }
-
-  loc_maxpfor = RealVect(max_pfor_x, max_pfor_y, max_pfor_z);
-  loc_maxwfor = RealVect(max_wfor_x, max_wfor_y, max_wfor_z);
-}
-
-RealVect MFIXParticleContainer::GetMaxVelocity ()
-{
-    Real max_vel_x = loc_maxvel[0], max_vel_y = loc_maxvel[1], max_vel_z = loc_maxvel[2];
-
-    ParallelDescriptor::ReduceRealMax({max_vel_x, max_vel_y, max_vel_z},
-                                      ParallelDescriptor::IOProcessorNumber());
-
-    RealVect max_vel(max_vel_x, max_vel_y, max_vel_z);
-
-    return max_vel;
-}
-
-Vector<RealVect> MFIXParticleContainer::GetMaxForces ()
-{
-    Real max_pfor_x = loc_maxpfor[0], max_pfor_y = loc_maxpfor[1], max_pfor_z = loc_maxpfor[2];
-    Real max_wfor_x = loc_maxwfor[0], max_wfor_y = loc_maxwfor[1], max_wfor_z = loc_maxwfor[2];
-
-
-    ParallelDescriptor::ReduceRealMax({max_pfor_x, max_pfor_y, max_pfor_z,
-                                       max_wfor_x, max_wfor_y, max_wfor_z},
-                                      ParallelDescriptor::IOProcessorNumber());
-
-    Vector<RealVect> max_forces(2);
-    max_forces[0] = RealVect(max_pfor_x, max_pfor_y, max_pfor_z);
-    max_forces[1] = RealVect(max_wfor_x, max_wfor_y, max_wfor_z);
-
-    return max_forces;
-}
 
 void MFIXParticleContainer::
 ComputeAverageDensities (const int lev,
@@ -1715,90 +1114,50 @@ ComputeAverageDensities (const int lev,
         continue;
       }
 
-      long sum_np = 0;    // Number of particle in avg region
-      Real sum_ro_p = 0.;
+      // Reduce sum operation for np, Tp
+      ReduceOps<ReduceOpSum, ReduceOpSum> reduce_op;
+      ReduceData<long, Real> reduce_data(reduce_op);
+      using ReduceTuple = typename decltype(reduce_data)::Type;
 
-#ifdef AMREX_USE_GPU
-      if (Gpu::inLaunchRegion())
-      {
-        // Reduce sum operation for np, Tp
-        ReduceOps<ReduceOpSum, ReduceOpSum> reduce_op;
-        ReduceData<long, Real> reduce_data(reduce_op);
-        using ReduceTuple = typename decltype(reduce_data)::Type;
-
-        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-        {
-          Box bx = pti.tilebox();
-          RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
-
-          if (tile_region.intersects(avg_region))
-          {
-            const int np         = NumberOfParticles(pti);
-            const AoS &particles = pti.GetArrayOfStructs();
-            const ParticleType* pstruct = particles().dataPtr();
-
-            auto& soa = pti.GetStructOfArrays();
-            auto p_realarray = soa.realarray();
-
-            reduce_op.eval(np, reduce_data, [pstruct,p_realarray,avg_region]
-              AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
-            {
-              const ParticleType p = pstruct[p_id];
-
-              long l_np = static_cast<long>(0);
-              Real l_ro_p = 0.0;
-
-              if (avg_region.contains(p.pos()))
-              {
-                l_np = static_cast<long>(1);
-                l_ro_p = p_realarray[SoArealData::density][p_id];
-              }
-
-              return {l_np, l_ro_p};
-            });
-          }
-        }
-
-        ReduceTuple host_tuple = reduce_data.value();
-        sum_np = amrex::get<0>(host_tuple);
-        sum_ro_p = amrex::get<1>(host_tuple);
-      }
-      else
-#endif
-      {
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:sum_np,sum_ro_p) if (Gpu::notInLaunchRegion())
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-        for (MFIXParIter pti(*this, lev); pti.isValid(); ++ pti)
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+      {
+        Box bx = pti.tilebox();
+        RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
+
+        if (tile_region.intersects(avg_region))
         {
-          Box bx = pti.tilebox();
-          RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
+          const int np         = NumberOfParticles(pti);
+          const AoS &particles = pti.GetArrayOfStructs();
+          const ParticleType* pstruct = particles().dataPtr();
 
-          if (tile_region.intersects(avg_region))
+          auto& soa = pti.GetStructOfArrays();
+          auto p_realarray = soa.realarray();
+
+          reduce_op.eval(np, reduce_data, [pstruct,p_realarray,avg_region]
+            AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
           {
-            const int np          = NumberOfParticles(pti);
-            const AoS& particles  = pti.GetArrayOfStructs();
-            const ParticleType* pstruct = particles().dataPtr();
+            const ParticleType p = pstruct[p_id];
 
-            auto& soa = pti.GetStructOfArrays();
-            auto p_realarray = soa.realarray();
+            long l_np = static_cast<long>(0);
+            Real l_ro_p = 0.0;
 
-            for (int p_id(0); p_id < np; ++p_id)
+            if (avg_region.contains(p.pos()))
             {
-              const ParticleType& p = pstruct[p_id];
-
-              if (avg_region.contains(p.pos()))
-              {
-                sum_np += static_cast<long>(1);
-                sum_ro_p += p_realarray[SoArealData::density][p_id];
-              }
+              l_np = static_cast<long>(1);
+              l_ro_p = p_realarray[SoArealData::density][p_id];
             }
-          }
+
+            return {l_np, l_ro_p};
+          });
         }
       }
 
-      region_np[nr] = sum_np;
-      region_ro_p[nr] = sum_ro_p;
+      ReduceTuple host_tuple = reduce_data.value();
+      region_np[nr]   = amrex::get<0>(host_tuple);
+      region_ro_p[nr] = amrex::get<1>(host_tuple);
     }
 
     // Compute parallel reductions
@@ -1922,118 +1281,63 @@ ComputeAverageVelocities (const int lev,
         continue;
       }
 
-      long sum_np   = 0;    // Number of particle in avg region
-      Real sum_velx = 0.;
-      Real sum_vely = 0.;
-      Real sum_velz = 0.;
-      Real sum_k_en = 0.;
 
-#ifdef AMREX_USE_GPU
-      if (Gpu::inLaunchRegion())
-      {
-        // Reduce sum operation for np, velx, vely, velz, kinetic energy
-        ReduceOps<ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum> reduce_op;
-        ReduceData<long, Real, Real, Real, Real> reduce_data(reduce_op);
-        using ReduceTuple = typename decltype(reduce_data)::Type;
+      // Reduce sum operation for np, velx, vely, velz, kinetic energy
+      ReduceOps<ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum> reduce_op;
+      ReduceData<long, Real, Real, Real, Real> reduce_data(reduce_op);
+      using ReduceTuple = typename decltype(reduce_data)::Type;
 
-        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-        {
-          Box bx = pti.tilebox();
-          RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
-
-          if (tile_region.intersects(avg_region))
-          {
-            AoS& aos = pti.GetArrayOfStructs();
-            ParticleType* pstruct = aos().dataPtr();
-
-            const int np         = NumberOfParticles(pti);
-
-            SoA& soa = pti.GetStructOfArrays();
-            auto p_realarray = soa.realarray();
-
-            reduce_op.eval(np, reduce_data, [pstruct,p_realarray,avg_region]
-              AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
-            {
-              const ParticleType p = pstruct[p_id];
-
-              long l_np   = static_cast<long>(0);
-              Real l_velx = 0._rt;
-              Real l_vely = 0._rt;
-              Real l_velz = 0._rt;
-              Real l_k_en = 0._rt;
-
-              if (avg_region.contains(p.pos()))
-              {
-                const Real mass = p_realarray[SoArealData::mass][p_id];
-
-                l_np = static_cast<long>(1);
-                l_velx = p_realarray[SoArealData::velx][p_id];
-                l_vely = p_realarray[SoArealData::vely][p_id];
-                l_velz = p_realarray[SoArealData::velz][p_id];
-                l_k_en = 0.5*mass*(l_velx*l_velx + l_vely*l_vely + l_velz*l_velz);
-              }
-
-              return {l_np, l_velx, l_vely, l_velz, l_k_en};
-            });
-          }
-        }
-
-        ReduceTuple host_tuple = reduce_data.value();
-        sum_np   = amrex::get<0>(host_tuple);
-        sum_velx = amrex::get<1>(host_tuple);
-        sum_vely = amrex::get<2>(host_tuple);
-        sum_velz = amrex::get<3>(host_tuple);
-        sum_k_en = amrex::get<4>(host_tuple);
-      }
-      else
-#endif
-      {
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:sum_np,sum_velx,sum_vely,sum_velz, \
-                                 sum_k_en) if (Gpu::notInLaunchRegion())
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-        for (MFIXParIter pti(*this,lev); pti.isValid(); ++pti)
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+      {
+        Box bx = pti.tilebox();
+        RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
+
+        if (tile_region.intersects(avg_region))
         {
-          Box bx = pti.tilebox();
-          RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
+          AoS& aos = pti.GetArrayOfStructs();
+          ParticleType* pstruct = aos().dataPtr();
 
-          if (tile_region.intersects(avg_region))
+          const int np         = NumberOfParticles(pti);
+
+          SoA& soa = pti.GetStructOfArrays();
+          auto p_realarray = soa.realarray();
+
+          reduce_op.eval(np, reduce_data, [pstruct,p_realarray,avg_region]
+            AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
           {
-            const int np         = NumberOfParticles(pti);
-            const AoS &particles = pti.GetArrayOfStructs();
-            const ParticleType* pstruct = particles().dataPtr();
+            const ParticleType p = pstruct[p_id];
 
-            SoA& soa = pti.GetStructOfArrays();
-            auto p_realarray = soa.realarray();
+            long l_np   = static_cast<long>(0);
+            Real l_velx = 0._rt;
+            Real l_vely = 0._rt;
+            Real l_velz = 0._rt;
+            Real l_k_en = 0._rt;
 
-            for (int p_id(0); p_id < np; ++p_id)
+            if (avg_region.contains(p.pos()))
             {
-              const ParticleType p = pstruct[p_id];
+              const Real mass = p_realarray[SoArealData::mass][p_id];
 
-              if (avg_region.contains(p.pos()))
-              {
-                const Real mass = p_realarray[SoArealData::mass][p_id];
-                const Real velx = p_realarray[SoArealData::velx][p_id];
-                const Real vely = p_realarray[SoArealData::vely][p_id];
-                const Real velz = p_realarray[SoArealData::velz][p_id];
-                const Real k_en = 0.5*mass*(velx*velx + vely*vely + velz*velz);
-
-                sum_np   += static_cast<long>(1);
-                sum_velx += velx;
-                sum_vely += vely;
-                sum_velz += velz;
-                sum_k_en += k_en;
-              }
+              l_np = static_cast<long>(1);
+              l_velx = p_realarray[SoArealData::velx][p_id];
+              l_vely = p_realarray[SoArealData::vely][p_id];
+              l_velz = p_realarray[SoArealData::velz][p_id];
+              l_k_en = 0.5*mass*(l_velx*l_velx + l_vely*l_vely + l_velz*l_velz);
             }
-          }
+
+            return {l_np, l_velx, l_vely, l_velz, l_k_en};
+          });
         }
       }
 
-      region_np[nr]   = sum_np;
-      region_velx[nr] = sum_velx;
-      region_vely[nr] = sum_vely;
-      region_velz[nr] = sum_velz;
-      region_k_en[nr] = sum_k_en;
+      ReduceTuple host_tuple = reduce_data.value();
+      region_np[nr]   = amrex::get<0>(host_tuple);
+      region_velx[nr] = amrex::get<1>(host_tuple);
+      region_vely[nr] = amrex::get<2>(host_tuple);
+      region_velz[nr] = amrex::get<3>(host_tuple);
+      region_k_en[nr] = amrex::get<4>(host_tuple);
     }
 
     // Compute parallel reductions
@@ -2166,90 +1470,50 @@ ComputeAverageTemperatures (const int lev,
         continue;
       }
 
-      long sum_np = 0;    // Number of particle in avg region
-      Real sum_Tp = 0.;
+      // Reduce sum operation for np, Tp
+      ReduceOps<ReduceOpSum, ReduceOpSum> reduce_op;
+      ReduceData<long, Real> reduce_data(reduce_op);
+      using ReduceTuple = typename decltype(reduce_data)::Type;
 
-#ifdef AMREX_USE_GPU
-      if (Gpu::inLaunchRegion())
-      {
-        // Reduce sum operation for np, Tp
-        ReduceOps<ReduceOpSum, ReduceOpSum> reduce_op;
-        ReduceData<long, Real> reduce_data(reduce_op);
-        using ReduceTuple = typename decltype(reduce_data)::Type;
-
-        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-        {
-          Box bx = pti.tilebox();
-          RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
-
-          if (tile_region.intersects(avg_region))
-          {
-            const int np         = NumberOfParticles(pti);
-            const AoS &particles = pti.GetArrayOfStructs();
-            const ParticleType* pstruct = particles().dataPtr();
-
-            auto& soa = pti.GetStructOfArrays();
-            auto p_realarray = soa.realarray();
-
-            reduce_op.eval(np, reduce_data, [pstruct,p_realarray,avg_region]
-              AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
-            {
-              const ParticleType p = pstruct[p_id];
-
-              long l_np = static_cast<long>(0);
-              Real l_Tp = 0.0;
-
-              if (avg_region.contains(p.pos()))
-              {
-                l_np = static_cast<long>(1);
-                l_Tp = p_realarray[SoArealData::temperature][p_id];
-              }
-
-              return {l_np, l_Tp};
-            });
-          }
-        }
-
-        ReduceTuple host_tuple = reduce_data.value();
-        sum_np = amrex::get<0>(host_tuple);
-        sum_Tp = amrex::get<1>(host_tuple);
-      }
-      else
-#endif
-      {
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:sum_np,sum_Tp) if (Gpu::notInLaunchRegion())
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-        for (MFIXParIter pti(*this, lev); pti.isValid(); ++ pti)
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+      {
+        Box bx = pti.tilebox();
+        RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
+
+        if (tile_region.intersects(avg_region))
         {
-          Box bx = pti.tilebox();
-          RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
+          const int np         = NumberOfParticles(pti);
+          const AoS &particles = pti.GetArrayOfStructs();
+          const ParticleType* pstruct = particles().dataPtr();
 
-          if (tile_region.intersects(avg_region))
+          auto& soa = pti.GetStructOfArrays();
+          auto p_realarray = soa.realarray();
+
+          reduce_op.eval(np, reduce_data, [pstruct,p_realarray,avg_region]
+            AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
           {
-            const int np          = NumberOfParticles(pti);
-            const AoS& particles  = pti.GetArrayOfStructs();
-            const ParticleType* pstruct = particles().dataPtr();
+            const ParticleType p = pstruct[p_id];
 
-            auto& soa = pti.GetStructOfArrays();
-            auto p_realarray = soa.realarray();
+            long l_np = static_cast<long>(0);
+            Real l_Tp = 0.0;
 
-            for (int p_id(0); p_id < np; ++p_id)
+            if (avg_region.contains(p.pos()))
             {
-              const ParticleType& p = pstruct[p_id];
-
-              if (avg_region.contains(p.pos()))
-              {
-                sum_np += static_cast<long>(1);
-                sum_Tp += p_realarray[SoArealData::temperature][p_id];
-              }
+              l_np = static_cast<long>(1);
+              l_Tp = p_realarray[SoArealData::temperature][p_id];
             }
-          }
+
+            return {l_np, l_Tp};
+          });
         }
       }
 
-      region_np[nr] = sum_np;
-      region_Tp[nr] = sum_Tp;
+      ReduceTuple host_tuple = reduce_data.value();
+      region_np[nr] = amrex::get<0>(host_tuple);
+      region_Tp[nr] = amrex::get<1>(host_tuple);
     }
 
     // Compute parallel reductions
@@ -2314,19 +1578,6 @@ ComputeAverageTemperatures (const int lev,
   }
 }
 
-void MFIXParticleContainer::set_particle_properties (int /*pstate*/,
-                                                     Real pradius,
-                                                     Real pdensity,
-                                                     Real& pvol,
-                                                     Real& pmass,
-                                                     Real& omoi,
-                                                     Real& omega)
-{
-    pvol  = (4.0/3.0)*M_PI*(pradius*pradius*pradius);
-    pmass = pvol * pdensity;
-    omoi  = 2.5/(pmass * (pradius*pradius));
-    omega = 0.0;
-}
 
 
 namespace {

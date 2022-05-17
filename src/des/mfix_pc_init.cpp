@@ -77,7 +77,10 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
       host_realarrays[SoArealData::velz][i]   = velz;
 
       // Compute other particle properties
-      set_particle_properties(pstate, pradius, pdensity, pvolume, pmass, pomoi, pomega);
+      pvolume  = (4.0/3.0)*M_PI*(pradius*pradius*pradius);
+      pmass = pvolume * pdensity;
+      pomoi  = 2.5/(pmass * (pradius*pradius));
+      pomega = 0.0;
 
       // Set id and cpu for this particle
       host_particles[i].id()  = ParticleType::NextID();

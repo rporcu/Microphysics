@@ -723,45 +723,6 @@ void mfix::InitLevelData (Real /*time*/)
         amrex::Print() << "Reading particles from particle_input.dat ..." << std::endl;
         pc->InitParticlesAscii("particle_input.dat");
 
-      } else if (particle_init_type == "Random")
-      {
-        int n_per_cell = 1;
-
-        amrex::Print() << "Randomly initializing " << n_per_cell
-                       << " particles per cell ..."
-                       << std::endl;
-
-        Real      radius = 1.0;
-        Real      volume = 1.0;
-        Real        mass = 1.0;
-        Real     density = 1.0;
-        Real        omoi = 1.0;
-        Real        velx = 0.0;
-        Real        vely = 0.0;
-        Real        velz = 0.0;
-        Real   dragcoeff = 0.0;
-        Real       dragx = 0.0;
-        Real       dragy = 0.0;
-        Real       dragz = 0.0;
-        Real      omegax = 0.0;
-        Real      omegay = 0.0;
-        Real      omegaz = 0.0;
-        Real      statwt = 1.0;
-        Real        cp_s = 1.0;
-        Real temperature = 0.0;
-        Real  convection = 0.0;
-        int        phase = 1;
-        int        state = 0;
-
-        MFIXParticleContainer::ParticleInitData pdata =
-          {{}, {}, {radius,volume,mass,density,omoi,velx,vely,velz,
-            omegax,omegay,omegaz,dragx,dragy,dragz,dragcoeff,statwt,cp_s,
-            temperature,convection}, {phase,state}};
-
-        pc->InitNRandomPerCell(n_per_cell, pdata);
-        pc->WriteAsciiFileForInit("random_particles");
-        exit(0);
-
       } else if (particle_init_type == "Auto") {
 
          amrex::Print() << "Auto generating particles ..." << std::endl;
@@ -894,7 +855,7 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
           for (int lev = 0; lev < nlev; lev++)
           {
             // Re-grid particle grids if user specifies the size of particle grids.
-            // Here we exclude the greedy load balance, since it adjusts the 
+            // Here we exclude the greedy load balance, since it adjusts the
             // particle grid size according to particle counts.
             BoxArray particle_ba(pc->ParticleBoxArray(lev));
             particle_ba.maxSize(particle_max_grid_size);
