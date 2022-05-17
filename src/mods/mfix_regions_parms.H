@@ -3,18 +3,26 @@
 
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
+#include <AMReX_Vector.H>
 
-namespace REGIONS
+// Name and extents of regions
+class Regions
 {
-  // Name and extents of regions
+  public:
+    // Initialization function -- read input parameters
+    void Initialize ();
 
-  void Initialize ();
+    // Returns the index of region with matching name.
+    // -1 is returned if the region is not matched.
+    int get_index(const std::string& input) const;
 
-  // Returns the index of region with matching name.
-  // -1 is returned if the region is not matched.
-  int getIndex(std::string input);
-  const amrex::RealBox* getRegion(std::string name);
+    // Return region extents by region name
+    const amrex::RealBox* get_region(const std::string& name) const;
 
-}
+  private:
+    amrex::Vector<std::string> m_names;
+
+    amrex::Vector<amrex::RealBox> m_extents;
+};
 
 #endif

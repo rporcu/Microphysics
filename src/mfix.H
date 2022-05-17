@@ -66,16 +66,19 @@ class mfix : public AmrCore
     // Destructor
     ~mfix ();
 
-    // Vector of allowed chemical reactions
+    // Regions
+    Regions regions;
+
+    // Chemical species
     Species species;
 
-    // Vector of allowed chemical reactions
+    // Chemical reactions
     Reactions reactions;
 
     // Fluid phase
     FluidPhase fluid;
 
-    // Fluid phase
+    // Solids phase
     SolidsPhase solids;
 
     // IO Class

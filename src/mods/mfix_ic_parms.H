@@ -5,6 +5,8 @@
 #include <AMReX_RealBox.H>
 
 #include <AMReX_Vector.H>
+
+#include <mfix_regions_parms.H>
 #include <mfix_fluid_parms.H>
 #include <mfix_solids_parms.H>
 
@@ -29,7 +31,8 @@ namespace IC
 
   extern amrex::Vector<IC_t> ic;
 
-  void Initialize (FluidPhase& fluid,
+  void Initialize (const Regions& regions,
+                   FluidPhase& fluid,
                    const SolidsPhase& solids);
 
 }

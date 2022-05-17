@@ -18,30 +18,31 @@ namespace IC
 
   amrex::Vector<IC_t> ic;
 
-  void Initialize (FluidPhase& fluid,
+  void Initialize (const Regions& regions,
+                   FluidPhase& fluid,
                    const SolidsPhase& solids)
   {
 
     amrex::ParmParse pp("ic");
 
-    std::vector<std::string> regions;
-    pp.queryarr("regions", regions);
+    std::vector<std::string> input_regions;
+    pp.queryarr("regions", input_regions);
 
     // Loop over ICs
-    for (size_t icv=0; icv < regions.size(); icv++) {
+    for (size_t icv=0; icv < input_regions.size(); icv++) {
 
       amrex::Real volfrac_total(0.0);
 
       IC_t new_ic(fluid);
 
       // Set the region for the initial condition.
-      new_ic.region = REGIONS::getRegion(regions[icv]);
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(new_ic.region != NULL, "Invalid ic region!");
+      new_ic.region = regions.get_region(input_regions[icv]);
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(new_ic.region != nullptr, "Invalid ic region!");
 
       // Get fluid data.
       if (fluid.solve) {
 
-        std::string field = "ic."+regions[icv]+"."+fluid.name;
+        std::string field = "ic."+input_regions[icv]+"."+fluid.name;
         amrex::ParmParse ppFluid(field.c_str());
 
         ppFluid.get("volfrac", new_ic.fluid.volfrac);
@@ -71,7 +72,7 @@ namespace IC
           // Sanity check that the input species mass fractions sum up to 1
           if (!(Math::abs(total_mass_fraction-1) < 1.e-15)) {
             std::string message = "Error: species ICs mass fractions in region "
-              + regions[icv] + " sum up to " + std::to_string(total_mass_fraction) + "\n";
+              + input_regions[icv] + " sum up to " + std::to_string(total_mass_fraction) + "\n";
 
             amrex::Abort(message);
           }
@@ -127,7 +128,7 @@ namespace IC
           // Get the list of solids used in defining the IC region
           std::vector<std::string> solids_types;
           {
-            std::string field = "ic."+regions[icv];
+            std::string field = "ic."+input_regions[icv];
             amrex::ParmParse ppSolid(field.c_str());
             ppSolid.getarr("solids", solids_types);
             ppSolid.get("packing", new_ic.packing);
@@ -137,7 +138,7 @@ namespace IC
 
             SOLIDS_t new_solid;
 
-            std::string field = "ic."+regions[icv]+"."+solids_types[lcs];
+            std::string field = "ic."+input_regions[icv]+"."+solids_types[lcs];
             amrex::ParmParse ppSolid(field.c_str());
 
             new_solid.name = solids_types[lcs];
@@ -157,7 +158,7 @@ namespace IC
             // Get information about diameter distribution.
             ppSolid.get("diameter", new_solid.diameter.distribution);
 
-            std::string dp_field = "ic."+regions[icv]+"."+solids_types[lcs]+".diameter";
+            std::string dp_field = "ic."+input_regions[icv]+"."+solids_types[lcs]+".diameter";
             amrex::ParmParse ppSolidDp(dp_field.c_str());
 
             if( new_solid.diameter.distribution == "constant") {
@@ -173,7 +174,7 @@ namespace IC
             // Get information about density distribution.
             ppSolid.get("density", new_solid.density.distribution);
 
-            std::string roh_field = "ic."+regions[icv]+"."+solids_types[lcs]+".density";
+            std::string roh_field = "ic."+input_regions[icv]+"."+solids_types[lcs]+".density";
             amrex::ParmParse ppSolidRho(roh_field.c_str());
 
             if (new_solid.diameter.distribution == "constant") {
@@ -206,7 +207,7 @@ namespace IC
               // Sanity check that the input species mass fractions sum up to 1
               if (!(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
                 std::string message = "Error: SOLID type " + solids_types[lcs]
-                  + " species ICs mass fractions in region " + regions[icv]
+                  + " species ICs mass fractions in region " + input_regions[icv]
                   + " sum up to " + std::to_string(total_mass_fraction) + "\n";
 
                 amrex::Abort(message);
@@ -223,7 +224,7 @@ namespace IC
           // Get the list of solids used in defining the IC region
           std::vector<std::string> solids_types(0);
           {
-            std::string field = "ic."+regions[icv];
+            std::string field = "ic."+input_regions[icv];
             amrex::ParmParse ppSolid(field.c_str());
             ppSolid.queryarr("solids", solids_types);
           }
@@ -232,7 +233,7 @@ namespace IC
 
             SOLIDS_t new_solid;
 
-            std::string field = "ic."+regions[icv]+"."+solids_types[lcs];
+            std::string field = "ic."+input_regions[icv]+"."+solids_types[lcs];
             amrex::ParmParse ppSolid(field.c_str());
 
             new_solid.name = solids_types[lcs];
