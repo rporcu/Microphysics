@@ -2372,6 +2372,12 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
   }
   ParallelDescriptor::ReduceIntSum(pcount_fbox.dataPtr(), pcount_fbox.size());
 
+  // count particles by rank
+  Vector<int> pcount_rank(ParallelDescriptor::NProcs(), 0);
+  for (auto i=0; i<pcount_fbox.size(); ++i) {
+    pcount_rank[fpmap[i]] += pcount_fbox[i];
+  }
+
   // count total # particles
   if (m_total_numparticle <= 0) {
     m_total_numparticle = 0;
@@ -2381,20 +2387,25 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
   }
 
   // find the indices of the overload and underload fluid boxes
+  // Here we assume one fluid box per rank. If there are multiple,
+  // then a rank can be overloaded with particles while each of its
+  // fluid box doesn't have lots of particles.
   Real avg_np = static_cast<Real>(m_total_numparticle)
               / ParallelDescriptor::NProcs();
   int o_toler_np = static_cast<int>(avg_np * overload_toler);
   int u_toler_np = static_cast<int>(avg_np * underload_toler);
-  Vector<int> overload_fboxid, underload_fboxid;
+  Vector<int> overload_fboxid, underload_ranks;
   BoxList     overload_fbl;
-  for (size_t i=0; i < size_t(pcount_fbox.size()); ++i) {
+  // find overload fluid boxes
+  for (auto i=0; i < pcount_fbox.size(); ++i) {
     if (pcount_fbox[i] > o_toler_np) {
       overload_fboxid.push_back(i);
       overload_fbl.push_back(fbl_vec[i]);
     }
-    else if (pcount_fbox[i] < u_toler_np) {
-      underload_fboxid.push_back(i);
-    }
+  }
+  // find underload ranks
+  for (auto i=0; i<pcount_rank.size(); ++i) {
+    if (pcount_rank[i] < u_toler_np)  underload_ranks.push_back(i);
   }
   // debug
   Print() << "avg np: " << avg_np << " overload tolerance " << overload_toler
@@ -2422,8 +2433,8 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
     o_q.push(std::make_pair(i, pcount_fbox[overload_fboxid[i]]));
   //
   BidNpHeap u_q(PairCompare(true));
-  for (int i=0; i<underload_fboxid.size(); ++i)
-    u_q.push(std::make_pair(i, pcount_fbox[underload_fboxid[i]]));
+  for (int rank: underload_ranks)
+    u_q.push(std::make_pair(rank, pcount_rank[rank]));
 
   int min_nbin = 4;
   Vector<int> new_ppmap(fpmap);
@@ -2440,7 +2451,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
 
     int   room    = amrex::max(static_cast<int>(o_toler_np - u_pair.second), 0);
     int   o_boxid = overload_fboxid[o_pair.first];
-    int   u_boxid = underload_fboxid[u_pair.first];
+    // int   u_boxid = underload_fboxid[u_pair.first];
 
     // find # bins to chop off
     int   chop_np = 0, chop_nbin = 0;
@@ -2471,7 +2482,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
 
     // update mapping for the new particle grid
     m_pboxid_to_fboxid.push_back(o_boxid);
-    new_ppmap.push_back(fpmap[u_boxid]);
+    new_ppmap.push_back(u_pair.first);
     left_nbin[o_pair.first] -= chop_nbin;
     //Print() << "assign " << chop_np << " from " << o_boxid << " to "
     //<< u_boxid << " at proc " << fpmap[u_boxid] << "\n";

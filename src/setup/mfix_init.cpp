@@ -881,9 +881,10 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
 
         // We need to do this *after* restart (hence putting this here not
         // in Init) because we may want to change the particle_max_grid_size on restart.
-        if ( dual_grid && particle_max_grid_size_x > 0
-                       && particle_max_grid_size_y > 0
-                       && particle_max_grid_size_z > 0)
+        if (dual_grid && particle_max_grid_size_x > 0
+                      && particle_max_grid_size_y > 0
+                      && particle_max_grid_size_z > 0
+                      && (load_balance_type == "KnapSack" || load_balance_type == "SFC"))
         {
           IntVect particle_max_grid_size(particle_max_grid_size_x,
                                          particle_max_grid_size_y,
@@ -891,7 +892,10 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
 
           for (int lev = 0; lev < nlev; lev++)
           {
-            BoxArray particle_ba(geom[lev].Domain());
+            // Re-grid particle grids if user specifies the size of particle grids.
+            // Here we exclude the greedy load balance, since it adjusts the 
+            // particle grid size according to particle counts.
+            BoxArray particle_ba(pc->ParticleBoxArray(lev));
             particle_ba.maxSize(particle_max_grid_size);
 
             DistributionMapping particle_dm;
@@ -925,7 +929,6 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
             particle_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                               pc->ParticleDistributionMap(lev), 1, 0);
             particle_proc[lev]->setVal(proc);
-
 
             // This calls re-creates a proper particle_ebfactories
             //  and regrids all the multifabs that depend on it
