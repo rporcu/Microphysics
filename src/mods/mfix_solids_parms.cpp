@@ -37,6 +37,11 @@ SolidsPhase::SolidsPhase()
   , d_cp_sn0(0)
   , stoich_coeffs(0)
   , d_stoich_coeffs(0)
+  , kp_sn0(0)
+  , d_kp_sn0(0)
+  , flpc(0.4)
+  , rough(2.E-8)
+  , do_pfp_cond(0)
   , parameters(nullptr)
   , is_initialized(0)
 {}
@@ -78,6 +83,10 @@ SolidsPhase::Initialize (const Regions& regions,
     }
   }
 
+  // Flag for pfp conduction
+  int kp_type_read(0), kp_read(0), flpc_read(0), rough_read(0);
+  int do_conduction(0);
+  
   amrex::ParmParse pp("solids");
 
   pp.queryarr("types", names);
@@ -135,7 +144,19 @@ SolidsPhase::Initialize (const Regions& regions,
         }
 
         H_fn0.resize(NTYPES);
-      }
+
+        // Read in the conductivity model we are using
+        std::string conductivity_model;
+        kp_type_read = pp.query("thermal_conductivity", conductivity_model);
+
+        if (amrex::toLower(conductivity_model).compare("constant") == 0) {
+          ThermalConductivityModel = THERMALCONDUCTIVITYMODEL::Constant;
+          kp_sn0.resize(NTYPES);
+        } /*else {
+          amrex::Abort("Unknown particle conductivity model!");
+          }*/
+
+      } // solve energy
 
       for(int solid(0); solid < NTYPES; ++solid) {
 
@@ -182,10 +203,21 @@ SolidsPhase::Initialize (const Regions& regions,
                 amrex::Abort("Input error");
               }
             }
-          } 
+          }
+
+          // Set up ParmParse to read in conductivity for each solids phase
+          std::string kp_str = names[solid]+".thermal_conductivity";
+          amrex::ParmParse pSOLIDS_KP(kp_str.c_str());
+
+          if (ThermalConductivityModel == THERMALCONDUCTIVITYMODEL::Constant) {
+            kp_read = pSOLIDS_KP.query("constant", kp_sn0[solid]);
+            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(kp_sn0[solid] > 0, "Invalid DEM thermal conductivity.");
+          } /*else {
+            amrex::Abort("Input error");
+            }*/
 
         } // solve_energy
-      }
+      } // for solid
 
       // Flag to determine if we want to solve the solid as a mixture
       is_a_mixture = false;
@@ -375,7 +407,31 @@ SolidsPhase::Initialize (const Regions& regions,
           }
         }
       }
+
+      // Do not support multiple species for solids conductivities!
+      // Always reads in the conductivity model from first solids phase 
+      std::string conductivity_model;
+      kp_type_read = ppSolid.query("thermal_conductivity", conductivity_model);
+      
+      if (amrex::toLower(conductivity_model).compare("constant") == 0) {
+          ThermalConductivityModel = THERMALCONDUCTIVITYMODEL::Constant;
+          kp_sn0.resize(1);
+          kp_read = ppSolid.query("thermal_conductivity.constant", kp_sn0[0]);
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(kp_sn0[0] > 0, "Invalid DEM thermal conductivity.");
+      } /*else {
+          amrex::Abort("Unknown particle conductivity model!");
+          }*/
+  
+  } // ntypes == 1
+
+    // FLPC and roughness are always dimension 1
+    if (solve_energy) {
+        amrex::ParmParse ppSolid(names[0].c_str());
+        flpc_read  = ppSolid.query("flpc", flpc);
+        rough_read = ppSolid.query("min_conduction_dist", rough);
     }
+
+    if(kp_type_read && kp_read && flpc_read && rough_read) do_conduction = 1;
 
     d_species_IDs.resize(species_IDs.size());
     Gpu::copyAsync(Gpu::hostToDevice, species_IDs.begin(), species_IDs.end(), d_species_IDs.begin());
@@ -408,6 +464,13 @@ SolidsPhase::Initialize (const Regions& regions,
     const Real* p_h_stoich_coeffs = reactions.solve ? stoich_coeffs.data() : nullptr;
     const Real* p_d_stoich_coeffs = reactions.solve ? d_stoich_coeffs.data() : nullptr;
 
+    if (solve_energy) {
+      d_kp_sn0.resize(kp_sn0.size());
+      Gpu::copyAsync(Gpu::hostToDevice, kp_sn0.begin(), kp_sn0.end(), d_kp_sn0.begin());
+    }
+    const Real* p_h_kp_sn0 = solve_energy ? kp_sn0.data() : nullptr;
+    const Real* p_d_kp_sn0 = solve_energy ? d_kp_sn0.data() : nullptr;
+
     int ncoefficients = 0;
     if (SpecificHeatModel == SPECIFICHEATMODEL::Constant)
       ncoefficients = 1;
@@ -417,8 +480,9 @@ SolidsPhase::Initialize (const Regions& regions,
     parameters = new SolidsParms(T_ref, nspecies, p_h_species_IDs, p_d_species_IDs,
                                  p_h_MW_sn0, p_d_MW_sn0, ncoefficients,
                                  p_h_cp_sn0, p_d_cp_sn0, p_h_H_fn0, p_d_H_fn0,
-                                 reactions.nreactions, p_h_stoich_coeffs,
-                                 p_d_stoich_coeffs, SpecificHeatModel);
+                                 reactions.nreactions, p_h_stoich_coeffs, p_d_stoich_coeffs,
+                                 p_h_kp_sn0, p_d_cp_sn0, flpc, rough, do_conduction,
+                                 SpecificHeatModel, ThermalConductivityModel);
 
   } else {
     parameters = new SolidsParms();
