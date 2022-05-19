@@ -41,6 +41,9 @@ namespace DEM
     extern amrex::Real kt_fac;
     extern amrex::Real kt_w_fac;
 
+    // Hack to get fluid conductivity
+    extern amrex::Real k_g_dem;
+
     template <typename ARRAY_TYPE>
     struct DeviceArray
     {

@@ -34,10 +34,20 @@ class SolidsParms {
     const int          m_nreactions;
     const amrex::Real* m_h_stoich_coeffs;
     const amrex::Real* m_d_stoich_coeffs;
+    const amrex::Real* m_h_kp_sn;
+    const amrex::Real* m_d_kp_sn;
+    const amrex::Real  m_flpc;
+    const amrex::Real  m_rough;
+    const int          m_do_pfp_cond;
 
-    // List of recognized fluid specific heat models
+
+    // List of recognized particle specific heat models
     struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA7Polynomials, NASA9Polynomials};  };
     int m_specific_heat_model;
+
+    // List of recognized particle conductivity models
+    struct CONDUCTIVITYMODEL { enum {Invalid=-1, Constant};  };
+    int m_conductivity_model;
 
   public:
     AMREX_GPU_HOST_DEVICE
@@ -56,7 +66,13 @@ class SolidsParms {
       , m_nreactions(0)
       , m_h_stoich_coeffs(nullptr)
       , m_d_stoich_coeffs(nullptr)
+      , m_h_kp_sn(nullptr)
+      , m_d_kp_sn(nullptr)
+      , m_flpc(0.4)
+      , m_rough(2E-8)
+      , m_do_pfp_cond(0)
       , m_specific_heat_model(SPECIFICHEATMODEL::Invalid)
+      , m_conductivity_model(CONDUCTIVITYMODEL::Invalid)
     {}
 
     AMREX_GPU_HOST_DEVICE
@@ -74,7 +90,13 @@ class SolidsParms {
                  const int nreactions,
                  const amrex::Real* h_stoich_coeffs,
                  const amrex::Real* d_stoich_coeffs,
-                 const int specific_heat_model)
+                 const amrex::Real* h_kp_sn,
+                 const amrex::Real* d_kp_sn,
+                 const amrex::Real flpc,
+                 const amrex::Real rough,
+                 const int do_pfp_cond,
+                 const int specific_heat_model,
+                 const int conductivity_model)
       : m_T_ref(T_ref)
       , m_nspecies(nspecies)
       , m_h_species_id(h_species_id)
@@ -89,10 +111,23 @@ class SolidsParms {
       , m_nreactions(nreactions)
       , m_h_stoich_coeffs(h_stoich_coeffs)
       , m_d_stoich_coeffs(d_stoich_coeffs)
+      , m_h_kp_sn(h_kp_sn)
+      , m_d_kp_sn(d_kp_sn)
+      , m_flpc(flpc)
+      , m_rough(rough)
+      , m_do_pfp_cond(do_pfp_cond)
       , m_specific_heat_model(specific_heat_model)
+      , m_conductivity_model(conductivity_model)
     {}
 
-
+    // Driver molecular weight
+    template <amrex::RunOn run_on>
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real get_MW_s () const
+    {
+      return get_MW_sn<run_on>(0);
+    }
+    
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real get_MW_sn (const int n) const
@@ -107,15 +142,22 @@ class SolidsParms {
       return 0;
     }
 
-
+    // Get reaction coefficients
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real get_MW_s () const
+    amrex::Real get_stoich_coeff (const int n, const int q) const
     {
-      return get_MW_sn<run_on>(0);
+      if (run_on == amrex::RunOn::Gpu)
+        return m_d_stoich_coeffs[n*m_nreactions+q];
+      else if (run_on == amrex::RunOn::Cpu)
+        return m_h_stoich_coeffs[n*m_nreactions+q];
+      else
+        amrex::Abort("Unrecognized RunOn option");
+
+      return 0;
     }
-
-
+    
+    // Driver heat capacity
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_cp_s (const int phase,
@@ -124,7 +166,7 @@ class SolidsParms {
       return calc_cp_sn<run_on>(T_s, phase);
     }
 
-
+    // Driver enthalpy
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_h_s (const int phase,
@@ -132,7 +174,6 @@ class SolidsParms {
     {
       return calc_h_sn<run_on>(T_s, phase);
     }
-
 
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
@@ -142,7 +183,41 @@ class SolidsParms {
       return calc_partial_h_sn<run_on>(T_s, phase);
     }
 
+    template <amrex::RunOn run_on>
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real calc_partial_h_sn (const amrex::Real T_s,
+                                   const int n) const
+    {
+      return calc_cp_sn<run_on>(T_s, n);
+    }
 
+    // Get FLPC
+    template <amrex::RunOn run_on>
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real get_flpc () const
+    {
+      return m_flpc;
+    }
+
+    // Get min conduction distance
+    template <amrex::RunOn run_on>
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    amrex::Real get_min_cond () const
+    {
+      return m_rough;
+    }
+
+    // Do we enter PFP conduction?
+    template <amrex::RunOn run_on>
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    int get_do_pfp_cond () const
+    {
+      return m_do_pfp_cond;
+    }
+
+    //************************************************************
+
+    // Calc heat capacity
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_cp_sn (const amrex::Real T_s,
@@ -186,7 +261,7 @@ class SolidsParms {
       return result;
     }
 
-
+    // Calc enthalpy
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real calc_h_sn (const amrex::Real T_s,
@@ -243,30 +318,29 @@ class SolidsParms {
       return result;
     }
 
-
+    // Calc conductivity
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_partial_h_sn (const amrex::Real T_s,
-                                   const int n) const
+    amrex::Real calc_kp_sn (const amrex::Real T_s,
+                            const int n) const
     {
-      return calc_cp_sn<run_on>(T_s, n);
+      amrex::Real result(0);
+
+      if (m_conductivity_model == CONDUCTIVITYMODEL::Constant) {
+
+        if (run_on == amrex::RunOn::Gpu) {
+          
+          result = m_d_kp_sn[n];
+
+        } else if (run_on == amrex::RunOn::Cpu) {
+
+          result = m_h_kp_sn[n];
+        }
+
+      }
+
+      return result;
     }
-
-
-    template <amrex::RunOn run_on>
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real get_stoich_coeff (const int n, const int q) const
-    {
-      if (run_on == amrex::RunOn::Gpu)
-        return m_d_stoich_coeffs[n*m_nreactions+q];
-      else if (run_on == amrex::RunOn::Cpu)
-        return m_h_stoich_coeffs[n*m_nreactions+q];
-      else
-        amrex::Abort("Unrecognized RunOn option");
-
-      return 0;
-    }
-
 };
 
 
@@ -285,12 +359,10 @@ class SolidsPhase
 
     // List of recognized fluid specific heat models
     struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA7Polynomials, NASA9Polynomials}; };
-
     int SpecificHeatModel;
 
     // List of recognized fluid thermal conductivity models
     struct THERMALCONDUCTIVITYMODEL{ enum {Invalid=-1, Constant}; };
-
     int ThermalConductivityModel;
 
     // Names of solids used in IC/BC setups
@@ -342,6 +414,19 @@ class SolidsPhase
     // Tables for stoichiometric coefficients for each species in each reaction
     amrex::Gpu::HostVector<amrex::Real> stoich_coeffs;
     amrex::Gpu::DeviceVector<amrex::Real> d_stoich_coeffs;
+
+    // Specified conductivity
+    amrex::Gpu::HostVector<amrex::Real> kp_sn0;
+    amrex::Gpu::DeviceVector<amrex::Real> d_kp_sn0;
+
+    // Specified fluid-lens constant
+    amrex::Real flpc;
+
+    // Specified roughness constant
+    amrex::Real rough;
+
+    // Flag to do pfp conduction
+    int do_pfp_cond;
 
     // Solids parameters for GPU access
     SolidsParms* parameters;

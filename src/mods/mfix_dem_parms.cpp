@@ -27,6 +27,8 @@ namespace DEM
     amrex::Real kt_fac = 2.0/7.0;
     amrex::Real kt_w_fac = 2.0/7.0;
 
+    amrex::Real k_g_dem;
+
     // normal and tangential components of the damping coefficients
     A2D etan;
     A1D etan_w;
@@ -67,6 +69,10 @@ namespace DEM
       etat_w.alloc();
       en.alloc();
       en_w.alloc();
+
+      // Fluid conductivity hack
+      amrex::ParmParse ppKG("fluid");
+      ppKG.query("thermal_conductivity.constant",k_g_dem);
 
       amrex::ParmParse ppDEM("dem");
 

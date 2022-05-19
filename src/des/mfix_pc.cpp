@@ -54,8 +54,8 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
     setRealCommComp(17, false); // dragy
     setRealCommComp(18, false); // dragz
     setRealCommComp(19, false); // cp_s
-    setRealCommComp(20, false); // temperature
-    setRealCommComp(21, false); // convection
+    setRealCommComp(20, true); // temperature
+    setRealCommComp(21, true); // convection
 
 #if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
     setIntCommComp(0, true); // id
@@ -319,12 +319,16 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
               constexpr Real small_number = 1.0e-15;
 
+              auto& solids_parms = *solids.parameters;
+              const int solve_enthalpy = solids.solve_enthalpy;
+
               // now we loop over the neighbor list and compute the forces
               amrex::ParallelFor(nrp,
                   [nrp,pstruct,p_realarray,p_intarray,fc_ptr,tow_ptr,nbor_data,
-                   subdt,ntot,walls_in_tile,ls_refinement,phiarr,plo,dxi,
-                   local_mew=DEM::mew,local_mew_w=DEM::mew_w,local_kn=DEM::kn,
-                   local_kn_w=DEM::kn_w,local_etan=DEM::etan,local_etan_w=DEM::etan_w]
+                   subdt,ntot,walls_in_tile,ls_refinement,phiarr,plo,dxi,solids_parms,
+                   solve_enthalpy,local_mew=DEM::mew,local_mew_w=DEM::mew_w,local_kn=DEM::kn,
+                   local_kn_w=DEM::kn_w,local_etan=DEM::etan,local_etan_w=DEM::etan_w,
+                   local_k_g=DEM::k_g_dem]
                 AMREX_GPU_DEVICE (int i) noexcept
                 {
                     auto particle = pstruct[i];
@@ -502,6 +506,24 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                               particle.cpu() == p2.cpu()),
                           "A particle should not be its own neighbor!");
 
+                        // PFP conduction
+                        if(solve_enthalpy && solids_parms.get_do_pfp_cond<run_on>()) {
+                            const Real FLPC = solids_parms.get_flpc<run_on>();
+                            Real Rp_eff    = 2.0*(p1radius*p2radius)/(p1radius + p2radius);
+                            Real Rlens_eff = (1.0 + FLPC)*Rp_eff;
+                            Real lens_lm   = 2.0*Rlens_eff;			
+                            if ( r2 <= (lens_lm - small_number)*(lens_lm - small_number) ) {
+                                const Real Rough = solids_parms.get_min_cond<run_on>();
+                                const Real Tp1   = p_realarray[SoArealData::temperature][i];
+                                const Real Tp2   = p_realarray[SoArealData::temperature][j];			  
+                                Real dist_mag_eff = sqrt(r2)/2.0; // Two particles with a midpoint wall
+                                Real Q_dot = des_pfp_conduction(dist_mag_eff,Rp_eff,Rlens_eff,
+                                                                Rough,local_k_g,Tp1,Tp2);
+                                p_realarray[SoArealData::convection][i] += Q_dot;
+                                p_realarray[SoArealData::convection][j] -= Q_dot;
+                            }
+                        }
+
                         if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
                         {
                             has_collisions = 1;
@@ -511,6 +533,18 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                             Real dist_mag = sqrt(r2);
 
                             AMREX_ASSERT(dist_mag >= eps);
+
+                             // PP conduction
+                            if(solve_enthalpy && solids_parms.get_do_pfp_cond<run_on>()) {
+                                const Real Tp1 = p_realarray[SoArealData::temperature][i];
+                                const Real Tp2 = p_realarray[SoArealData::temperature][j];
+                                const Real kp1 = solids_parms.calc_kp_sn<run_on>(Tp1,0);
+                                const Real kp2 = solids_parms.calc_kp_sn<run_on>(Tp2,0);
+                                Real Q_dot = des_pp_conduction(dist_mag,p1radius,p2radius,
+                                                               kp1,kp2,Tp1,Tp2);
+                                p_realarray[SoArealData::convection][i] += Q_dot;
+                                p_realarray[SoArealData::convection][j] -= Q_dot;
+                            }
 
                             Real dist_mag_inv = 1.e0/dist_mag;
 
