@@ -263,27 +263,28 @@ InterphaseTxfrDeposition (F WeightFunc,
         const Real deposition_scale_factor = mfix::m_deposition_scale_factor;
 
 #ifdef _OPENMP
-        Box tile_box = box;
+        Box txfr_tile_box = box;
 
         {
           const int ncomp = txfr_mf.nComp();
 
           if (Gpu::notInLaunchRegion())
           {
-            tile_box.grow(txfr_mf.nGrow());
-            local_txfr.resize(tile_box, ncomp);
+            txfr_tile_box.grow(txfr_mf.nGrow());
+            local_txfr.resize(txfr_tile_box, ncomp);
             local_txfr.setVal<RunOn::Host>(0.0);
             txfr_arr = local_txfr.array();
           }
         }
 
+        Box rxn_tile_box = box;
         if (solve_reactions) {
           const int ncomp = chem_txfr_mf.nComp();
 
           if (Gpu::notInLaunchRegion())
           {
-            tile_box.grow(chem_txfr_mf.nGrow());
-            local_chem_txfr.resize(tile_box, ncomp);
+            rxn_tile_box.grow(chem_txfr_mf.nGrow());
+            local_chem_txfr.resize(rxn_tile_box, ncomp);
             local_chem_txfr.setVal<RunOn::Host>(0.0);
             chem_txfr_arr = local_chem_txfr.array();
           }
@@ -331,7 +332,7 @@ InterphaseTxfrDeposition (F WeightFunc,
           Real pvz = p_realarray[SoArealData::velz][ip] * pbeta;
 
           Real pTp(0.);
-          
+
           if (solve_enthalpy)
             pTp = p_realarray[SoArealData::temperature][ip] * pgamma;
 
@@ -404,12 +405,12 @@ InterphaseTxfrDeposition (F WeightFunc,
         {
           {
             const int ncomp = txfr_mf.nComp();
-            txfr_fab.atomicAdd<RunOn::Host>(local_txfr, tile_box, tile_box, 0, 0, ncomp);
+            txfr_fab.atomicAdd<RunOn::Host>(local_txfr, txfr_tile_box, txfr_tile_box, 0, 0, ncomp);
           }
 
           if (solve_reactions) {
             const int ncomp = chem_txfr_mf.nComp();
-            chem_txfr_fab.atomicAdd<RunOn::Host>(local_chem_txfr, tile_box, tile_box, 0, 0, ncomp);
+            chem_txfr_fab.atomicAdd<RunOn::Host>(local_chem_txfr, rxn_tile_box, rxn_tile_box, 0, 0, ncomp);
           }
         }
 #endif
