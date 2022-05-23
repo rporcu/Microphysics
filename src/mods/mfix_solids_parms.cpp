@@ -86,7 +86,7 @@ SolidsPhase::Initialize (const Regions& regions,
   // Flag for pfp conduction
   int kp_type_read(0), kp_read(0), flpc_read(0), rough_read(0);
   int do_conduction(0);
-  
+
   amrex::ParmParse pp("solids");
 
   pp.queryarr("types", names);
@@ -372,7 +372,7 @@ SolidsPhase::Initialize (const Regions& regions,
 
             ChemicalReaction* chem_reaction = reactions.get(q);
             const auto& phases = chem_reaction->get_phases();
-            
+
             const auto& reactants_IDs = chem_reaction->get_reactants_ids();
             const auto& reactants_phases = chem_reaction->get_reactants_phases();
             const auto& reactants_coeffs = chem_reaction->get_reactants_coeffs();
@@ -409,10 +409,10 @@ SolidsPhase::Initialize (const Regions& regions,
       }
 
       // Do not support multiple species for solids conductivities!
-      // Always reads in the conductivity model from first solids phase 
+      // Always reads in the conductivity model from first solids phase
       std::string conductivity_model;
       kp_type_read = ppSolid.query("thermal_conductivity", conductivity_model);
-      
+
       if (amrex::toLower(conductivity_model).compare("constant") == 0) {
           ThermalConductivityModel = THERMALCONDUCTIVITYMODEL::Constant;
           kp_sn0.resize(1);
@@ -421,7 +421,7 @@ SolidsPhase::Initialize (const Regions& regions,
       } /*else {
           amrex::Abort("Unknown particle conductivity model!");
           }*/
-  
+
   } // ntypes == 1
 
     // FLPC and roughness are always dimension 1
@@ -481,7 +481,7 @@ SolidsPhase::Initialize (const Regions& regions,
                                  p_h_MW_sn0, p_d_MW_sn0, ncoefficients,
                                  p_h_cp_sn0, p_d_cp_sn0, p_h_H_fn0, p_d_H_fn0,
                                  reactions.nreactions, p_h_stoich_coeffs, p_d_stoich_coeffs,
-                                 p_h_kp_sn0, p_d_cp_sn0, flpc, rough, do_conduction,
+                                 p_h_kp_sn0, p_d_kp_sn0, flpc, rough, do_conduction,
                                  SpecificHeatModel, ThermalConductivityModel);
 
   } else {
