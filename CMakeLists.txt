@@ -172,7 +172,7 @@ endif ()
 if(MFIX_CSG)
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR}/subprojects/csg-eb)
   list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR}/subprojects/csg-eb)
-  target_link_libraries(mfixcore PUBLIC csg-eb)
+  target_link_libraries(mfixcore PUBLIC CsgEb::csg-eb)
 endif()
 
 if(MFIX_CATALYST)
