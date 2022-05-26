@@ -213,7 +213,7 @@ class Hex_ClosePack
                int offset_int) const
     {
       int j(0);
-      const amrex::Real third = amrex::Real(3.0);
+      const amrex::Real third = amrex::Real(1.0/3.0);
       const amrex::Real offset = static_cast<amrex::Real>(offset_int);
       while ((1.0 + sqrt3*static_cast<amrex::Real>(j) + offset*third)*rad <=ylen-rad) {
         j++;
