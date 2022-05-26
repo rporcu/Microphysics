@@ -36,8 +36,9 @@ class Hex_ClosePack
     // Constructor
     Hex_ClosePack (const amrex::GpuArray<amrex::Real,3>& plo,
                    const amrex::GpuArray<amrex::Real,3>& dx)
-      : m_plo(plo)
-      , m_dx(dx)
+      : m_plo(plo.data())
+      , m_dx(dx.data())
+      , m_np(0)
     {}
 
     void setup (const amrex::IntVect& lo,
@@ -180,9 +181,9 @@ class Hex_ClosePack
     const amrex::Real sqrt3o3 = std::sqrt(3.0)/3.0;
     const amrex::Real sqrt3 = std::sqrt(3.0);
 
-    const amrex::GpuArray<amrex::Real,3>& m_plo;
+    const amrex::RealVect m_plo;
 
-    const amrex::GpuArray<amrex::Real,3>& m_dx;
+    const amrex::RealVect m_dx;
 
     int m_np;
 
@@ -337,8 +338,9 @@ class nCubePer_Fill
                    const amrex::GpuArray<amrex::Real,3>& plo,
                    const amrex::GpuArray<amrex::Real,3>& dx)
       : m_base(base)
-      , m_plo(plo)
-      , m_dx(dx)
+      , m_plo(plo.data())
+      , m_dx(dx.data())
+      , m_np(0)
     {}
     
     void setup (const amrex::IntVect& lo,
@@ -354,7 +356,7 @@ class nCubePer_Fill
       calc_cell_ic(m_dx[0], m_dx[1], m_dx[2],
                    IC::ic[icv].region->lo(),
                    IC::ic[icv].region->hi(),
-                   m_plo.data(),
+                   m_plo.dataPtr(),
                    i_w, i_e, j_s, j_n, k_b, k_t);
 
       const amrex::IntVect ic_lo(AMREX_D_DECL(i_w, j_s, k_b));
@@ -443,9 +445,9 @@ class nCubePer_Fill
   private:
     const int m_base;
 
-    const amrex::GpuArray<amrex::Real,3>& m_plo;
+    const amrex::RealVect m_plo;
 
-    const amrex::GpuArray<amrex::Real,3>& m_dx;
+    const amrex::RealVect m_dx;
 
     int m_np;
 
@@ -471,8 +473,9 @@ class RandomFill_DEM
     // Constructor
     RandomFill_DEM (const amrex::GpuArray<amrex::Real,3>& plo,
                     const amrex::GpuArray<amrex::Real,3>& dx)
-      : m_plo(plo)
-      , m_dx(dx)
+      : m_plo(plo.data())
+      , m_dx(dx.data())
+      , m_np(0)
     {}
 
     void setup (const amrex::IntVect& lo,
@@ -494,7 +497,7 @@ class RandomFill_DEM
       calc_cell_ic(m_dx[0], m_dx[1], m_dx[2],
                    IC::ic[icv].region->lo(),
                    IC::ic[icv].region->hi(),
-                   m_plo.data(),
+                   m_plo.dataPtr(),
                    i_w, i_e, j_s, j_n, k_b, k_t);
 
       // Start/end of IC domain bounds
@@ -611,16 +614,14 @@ class RandomFill_DEM
     
                 for(int p = 0; p < upper_limit; p++)
                 {
-                  const amrex::Real* plo_ptr = m_plo.data();
-    
                   const int local_pc =
                     pbin[local_i + local_j*delta_bx[0] +
                          local_k*delta_bx[0]*delta_bx[1] +
                          p*delta_bx[0]*delta_bx[1]*delta_bx[2]];
     
-                  const amrex::Real dist_x = h_data[local_pc*3 + 0] - pos[0] - plo_ptr[0];
-                  const amrex::Real dist_y = h_data[local_pc*3 + 1] - pos[1] - plo_ptr[1];
-                  const amrex::Real dist_z = h_data[local_pc*3 + 2] - pos[2] - plo_ptr[2];
+                  const amrex::Real dist_x = h_data[local_pc*3 + 0] - pos[0] - m_plo[0];
+                  const amrex::Real dist_y = h_data[local_pc*3 + 1] - pos[1] - m_plo[1];
+                  const amrex::Real dist_z = h_data[local_pc*3 + 2] - pos[2] - m_plo[2];
     
                   const amrex::Real dist = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
     
@@ -702,9 +703,9 @@ class RandomFill_DEM
     }
 
   private:
-    const amrex::GpuArray<amrex::Real,3>& m_plo;
+    const amrex::RealVect m_plo;
 
-    const amrex::GpuArray<amrex::Real,3>& m_dx;
+    const amrex::RealVect m_dx;
 
     int m_np;
 
@@ -727,8 +728,9 @@ class RandomFill_PIC
     // Constructor
     RandomFill_PIC (const amrex::GpuArray<amrex::Real,3>& plo,
                     const amrex::GpuArray<amrex::Real,3>& dx)
-      : m_plo(plo)
-      , m_dx(dx)
+      : m_plo(plo.data())
+      , m_dx(dx.data())
+      , m_np(0)
     {}
 
     void setup (const amrex::IntVect& lo,
@@ -803,9 +805,9 @@ class RandomFill_PIC
     }
 
   private:
-    const amrex::GpuArray<amrex::Real,3>& m_plo;
+    const amrex::RealVect m_plo;
 
-    const amrex::GpuArray<amrex::Real,3>& m_dx;
+    const amrex::RealVect m_dx;
 
     int m_np;
 

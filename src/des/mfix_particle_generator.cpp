@@ -134,7 +134,7 @@ void ParticlesGenerator::generate (int& particles_count,
 
   const SOLIDS_t& solid = IC::ic[m_icv].solids[m_type];
 
-  // Setup particle diameters
+  // Setup particle diameters parameters
   std::string ic_dp_dist_str = solid.diameter.distribution;
 
   int diameter_distr_uniform(ic_dp_dist_str.compare("uniform") == 0);
@@ -144,6 +144,7 @@ void ParticlesGenerator::generate (int& particles_count,
   Real diameter_min = solid.diameter.min;
   Real diameter_max = solid.diameter.max;
 
+  // Setup particle densities parameters
   std::string ic_ro_s_dist_str = solid.density.distribution;
 
   int density_distr_uniform(ic_ro_s_dist_str.compare("uniform") == 0);
@@ -153,6 +154,7 @@ void ParticlesGenerator::generate (int& particles_count,
   Real density_min(solid.density.min);
   Real density_max(solid.density.max);
 
+  // Get particles initial velocity
   const Real ic_u_s = solid.velocity[0];
   const Real ic_v_s = solid.velocity[1];
   const Real ic_w_s = solid.velocity[2];
@@ -193,13 +195,10 @@ void ParticlesGenerator::generate (int& particles_count,
     part.pos(1) = position[1];
     part.pos(2) = position[2];
 
-    //printf("position = (%e, %e, %e)\n", position[0], position[1], position[2]);
-
     Real diameter = 0;
 
     if (diameter_distr_uniform) {
-      diameter = amrex::Random(engine);
-      diameter = diameter_min + (diameter_max-diameter_min)*diameter;
+      diameter = diameter_min + (diameter_max-diameter_min)*amrex::Random(engine);
     } else if (diameter_distr_normal) {
       diameter = amrex::RandomNormal(diameter_mean, diameter_stddev, engine);
     } else {
@@ -212,18 +211,15 @@ void ParticlesGenerator::generate (int& particles_count,
 
     Real rad = .5*diameter;
 
-    Real density = 0;
+    Real rho = 0;
 
     if (density_distr_uniform) {
-      density = amrex::Random(engine);
-      density = density_min + (density_max-density_min)*density;
+      rho = density_min + (density_max-density_min)*amrex::Random(engine);
     } else if (density_distr_normal) {
-      density = amrex::RandomNormal(density_mean, density_stddev, engine);
+      rho = amrex::RandomNormal(density_mean, density_stddev, engine);
     } else {
-      density = density_mean;
+      rho = density_mean;
     }
-
-    Real rho = density;
 
     Real vol  = (4.0/3.0)*M_PI*rad*rad*rad;
     Real mass = vol * rho;
