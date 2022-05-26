@@ -5,6 +5,7 @@ CEXE_headers += mfix_particle_generator.H
 CEXE_sources += mfix_particle_generator.cpp
 CEXE_headers += mfix_des_drag_K.H
 CEXE_headers += mfix_des_rrates_K.H
+CEXE_headers += mfix_des_parts_gen_K.H
 
 CEXE_sources += mfix_pc.cpp
 CEXE_sources += mfix_pc_init.cpp

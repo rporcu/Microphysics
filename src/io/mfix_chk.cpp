@@ -134,14 +134,14 @@ MfixRW::WriteCheckHeader (const std::string& name,
 
 
 void
-MfixRW::WriteCheckPointFile (std::string& check_file,
+MfixRW::WriteCheckPointFile (std::string& check_file_in,
                              int nstep,
                              Real dt,
                              Real time)
 {
     BL_PROFILE("mfix::WriteCheckPointFile()");
 
-    const std::string& checkpointname = amrex::Concatenate( check_file, nstep );
+    const std::string& checkpointname = amrex::Concatenate( check_file_in, nstep );
 
     if (ParallelDescriptor::IOProcessor()) {
       std::cout << "\n\t Writing checkpoint " << checkpointname << std::endl;

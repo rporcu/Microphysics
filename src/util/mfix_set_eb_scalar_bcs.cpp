@@ -46,12 +46,12 @@ mfix::mfix_set_eb_scalar_bcs (Vector< MultiFab* > const& eb_scalars,
 
              if (BC::bc[bcv].type == BCList::eb && BC::bc[bcv].fluid.flow_thru_eb) {
 
-               const Box *ic_bx = calc_ic_box(geom[lev], BC::bc[bcv].region);
+               const Box ic_bx = calc_ic_box(geom[lev], BC::bc[bcv].region);
 
-               if (ic_bx->intersects(bx)) {
+               if (ic_bx.intersects(bx)) {
 
                  // Intersection of ic box and mfi box
-                 const Box bx_int = bx&(*ic_bx);
+                 const Box bx_int = bx&(ic_bx);
 
                  const int  has_normal = BC::bc[bcv].eb.has_normal;
                  amrex::GpuArray<amrex::Real,3> normal{0.};

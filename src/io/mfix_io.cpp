@@ -126,20 +126,20 @@ MfixRW::WriteJobInfo (const std::string& dir) const
 
 
 void
-MfixRW::WriteParticleAscii (std::string& par_ascii_file, int nstep) const
+MfixRW::WriteParticleAscii (std::string& par_ascii_file_in, int nstep) const
 {
     BL_PROFILE("mfix::WriteParticleASCII()");
 
     if(DEM::solve || PIC::solve) {
 
-        const std::string& par_filename = amrex::Concatenate(par_ascii_file,nstep);
+        const std::string& par_filename = amrex::Concatenate(par_ascii_file_in,nstep);
         pc->WriteAsciiFile(par_filename);
     }
 }
 
 
 void
-MfixRW::WriteAverageRegions (std::string& avg_file, int /*nstep*/, Real time) const
+MfixRW::WriteAverageRegions (std::string& avg_file_in, int /*nstep*/, Real time) const
 {
   BL_PROFILE("mfix::WriteAverageRegions()");
 
@@ -148,14 +148,14 @@ MfixRW::WriteAverageRegions (std::string& avg_file, int /*nstep*/, Real time) co
       if (fluid.solve) {
         ComputeAverageFluidVars(lev,
                                 time,
-                                avg_file);
+                                avg_file_in);
       }
 
       //  Compute Eulerian velocities in selected regions
       if(DEM::solve || PIC::solve) {
         pc->ComputeAverageDensities(lev,
                                     time,
-                                    avg_file,
+                                    avg_file_in,
                                     avg_ro_p,
                                     avg_region_x_w, avg_region_x_e,
                                     avg_region_y_s, avg_region_y_n,
@@ -163,7 +163,7 @@ MfixRW::WriteAverageRegions (std::string& avg_file, int /*nstep*/, Real time) co
 
         pc->ComputeAverageVelocities(lev,
                                      time,
-                                     avg_file,
+                                     avg_file_in,
                                      avg_vel_p,
                                      avg_region_x_w, avg_region_x_e,
                                      avg_region_y_s, avg_region_y_n,
@@ -172,7 +172,7 @@ MfixRW::WriteAverageRegions (std::string& avg_file, int /*nstep*/, Real time) co
         if (fluid.solve_enthalpy)
           pc->ComputeAverageTemperatures(lev,
                                          time,
-                                         avg_file,
+                                         avg_file_in,
                                          avg_T_p,
                                          avg_region_x_w, avg_region_x_e,
                                          avg_region_y_s, avg_region_y_n,

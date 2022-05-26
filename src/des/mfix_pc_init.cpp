@@ -3,10 +3,12 @@
 #include <mfix_reactions_parms.H>
 #include <mfix_species_parms.H>
 #include <mfix_ic_parms.H>
+#include <mfix_calc_cell.H>
 
 #include <mfix_particle_generator.H>
 
 using namespace amrex;
+
 
 void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
 {
@@ -152,74 +154,70 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
   Redistribute();
 }
 
+
 void MFIXParticleContainer::InitParticlesAuto ()
 {
   int lev = 0;
 
-  Real dx = Geom(lev).CellSize(0);
-  Real dy = Geom(lev).CellSize(1);
-  Real dz = Geom(lev).CellSize(2);
+  const GpuArray<Real,3>& dx = Geom(lev).CellSizeArray();
+  const GpuArray<Real,3>& plo = Geom(lev).ProbLoArray();
 
   int total_np = 0;
 
-  ParticlesGenerator particles_generator;
+  const Real tolerance = std::numeric_limits<Real>::epsilon();
 
   // This uses the particle tile size. Note that the default is to tile so if we
   //      remove the true and don't explicitly add false it will still tile
   for (MFIter mfi = MakeMFIter(lev,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
-      // This is particles per grid so we reset to 0
-      int pcount = 0;
+    const Box& tilebx = mfi.tilebox();
 
-      // Define the real particle data for one grid-at-a-time's worth of particles
-      // We don't know pcount (number of particles per grid) before this call
+    // Now that we know pcount, go ahead and create a particle container for this
+    // grid and add the particles to it
+    auto& particles = DefineAndReturnParticleTile(lev,mfi);
 
-      const Box& tilebx = mfi.tilebox();
+    for (int icv(0); icv < IC::ic.size(); icv++) {
+      if (Math::abs(IC::ic[icv].fluid.volfrac-1) > tolerance) {
 
-      const IntVect lo(tilebx.loVect());
-      const IntVect hi(tilebx.hiVect());
+        for (int type(0); type < IC::ic[icv].solids.size(); type++) {
+          if (IC::ic[icv].solids[type].volfrac > tolerance) {
 
-      const GpuArray<Real, 3> plo = Geom(lev).ProbLoArray();
+            const RealBox* ic_region = IC::ic[icv].region;
+            const Box ic_box = calc_ic_box(Geom(lev), ic_region);
 
-      particles_generator.generate(pcount, lo, hi, dx, dy, dz, plo);
+            if (tilebx.intersects(ic_box)) {
 
-      // Now that we know pcount, go ahead and create a particle container for this
-      // grid and add the particles to it
-      auto& particles = DefineAndReturnParticleTile(lev,mfi);
+              const Box bx = tilebx & ic_box;
 
-      particles.resize(pcount);
+              const IntVect bx_lo(bx.loVect());
+              const IntVect bx_hi(bx.hiVect());
 
-      auto& aos = particles.GetArrayOfStructs();
-      ParticleType* pstruct = aos().dataPtr();
+              const int id = ParticleType::NextID();
+              const int cpu = ParallelDescriptor::MyProc();
 
-      const int id = ParticleType::NextID();
-      const int cpu = ParallelDescriptor::MyProc();
+              ParticlesGenerator particles_generator(bx_lo, bx_hi, plo, dx, id, cpu, icv, type);
 
-      amrex::ParallelFor(pcount, [pstruct,id,cpu]
-        AMREX_GPU_DEVICE (int i) noexcept
-      {
-        ParticleType& part = pstruct[i];
+              // This is particles per grid so we reset to 0
+              int pcount = 0;
 
-        part.id() = id+i;
-        part.cpu() = cpu;
-      });
+              particles_generator.generate(pcount, particles);
 
-      // Update the particles NextID
-      ParticleType::NextID(id+pcount);
+              // Update the particles NextID
+              ParticleType::NextID(id+pcount);
 
-      Gpu::synchronize();
+              // Add components for each of the runtime variables
+              const int start = AoSrealData::count + SoArealData::count;
+              for (int comp(0); comp < m_runtimeRealData.count; ++comp)
+                particles.push_back_real(start+comp, pcount, 0.);
 
-      // Add components for each of the runtime variables
-      const int start = AoSrealData::count + SoArealData::count;
-      for (int comp(0); comp < m_runtimeRealData.count; ++comp)
-        particles.push_back_real(start+comp, pcount, 0.);
+              total_np += pcount;
+            }
 
-      const int np = pcount;
-      total_np += np;
-
-      // Now define the rest of the particle data and store it directly in the particles
-      if (pcount > 0)
-        particles_generator.generate_prop(np, particles);
+            break; // only one solid type per icv is allowed
+          }
+        }
+      }
+    }
   }
 
   ParallelDescriptor::ReduceIntSum(total_np);
@@ -229,14 +227,14 @@ void MFIXParticleContainer::InitParticlesAuto ()
   // We shouldn't need this if the particles are tiled with one tile per grid, but otherwise
   // we do need this to move particles from tile 0 to the correct tile.
   Redistribute();
-
 }
+
 
 void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalpy)
 {
   int lev = 0;
   const auto dx  = Geom(lev).CellSizeArray();
-  const auto idx = Geom(lev).InvCellSizeArray();
+  const auto dx_inv = Geom(lev).InvCellSizeArray();
 
   const GpuArray<Real, 3> plo = Geom(lev).ProbLoArray();
 
@@ -273,13 +271,13 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
       // a user and convert it index space (i,j,k). That in turn is turned
       // back into a physical region that may be a little larger than what
       // was actually defined to account for spatial discretization.
-      const IntVect bx_lo(static_cast<int>(amrex::Math::floor((loc_ic.region->lo(0)-plo[0])*idx[0] + 0.5)),
-                          static_cast<int>(amrex::Math::floor((loc_ic.region->lo(1)-plo[1])*idx[1] + 0.5)),
-                          static_cast<int>(amrex::Math::floor((loc_ic.region->lo(2)-plo[2])*idx[0] + 0.5)));
+      const IntVect bx_lo(static_cast<int>(amrex::Math::floor((loc_ic.region->lo(0)-plo[0])*dx_inv[0] + 0.5)),
+                          static_cast<int>(amrex::Math::floor((loc_ic.region->lo(1)-plo[1])*dx_inv[1] + 0.5)),
+                          static_cast<int>(amrex::Math::floor((loc_ic.region->lo(2)-plo[2])*dx_inv[0] + 0.5)));
 
-      const IntVect bx_hi(static_cast<int>(amrex::Math::floor((loc_ic.region->hi(0)-plo[0])*idx[0] + 0.5)),
-                          static_cast<int>(amrex::Math::floor((loc_ic.region->hi(1)-plo[1])*idx[1] + 0.5)),
-                          static_cast<int>(amrex::Math::floor((loc_ic.region->hi(2)-plo[2])*idx[0] + 0.5)));
+      const IntVect bx_hi(static_cast<int>(amrex::Math::floor((loc_ic.region->hi(0)-plo[0])*dx_inv[0] + 0.5)),
+                          static_cast<int>(amrex::Math::floor((loc_ic.region->hi(1)-plo[1])*dx_inv[1] + 0.5)),
+                          static_cast<int>(amrex::Math::floor((loc_ic.region->hi(2)-plo[2])*dx_inv[0] + 0.5)));
 
       // Start/end of IC domain bounds
       const RealVect ic_lo = {plo[0]+bx_lo[0]*dx[0],

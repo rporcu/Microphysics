@@ -119,14 +119,14 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
       const Real norm_tol_lo = Real(-1.) - (normal_tol + pad);
       const Real norm_tol_hi = Real(-1.) + (normal_tol + pad);
 
-      const Box *ic_bx = calc_ic_box(Geom(lev), BC::bc[bcv].region);
+      const Box ic_bx = calc_ic_box(Geom(lev), BC::bc[bcv].region);
 
       for (MFIter mfi = MakeMFIter(lev,true); mfi.isValid(); ++mfi) {
 
         const Box& tile_box = mfi.tilebox();
         FabType t = flags[mfi].getType(tile_box);
 
-        if (t == FabType::singlevalued && ic_bx->intersects(tile_box)) {
+        if (t == FabType::singlevalued && ic_bx.intersects(tile_box)) {
 
           Array4<EBCellFlag const> const& flagsfab = flags.const_array(mfi);
 
@@ -135,7 +135,7 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
           Array4<Real const> const& barea = factory->getBndryArea().const_array(mfi);
           Array4<Real const> const& bcent = factory->getBndryCent()[mfi].const_array();
 
-          const Box bx_int = tile_box&(*ic_bx);
+          const Box bx_int = tile_box&(ic_bx);
 
           Real fab_area(0.);
           IntVect bblo, bbhi;

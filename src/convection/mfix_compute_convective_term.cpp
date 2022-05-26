@@ -784,8 +784,8 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
   if (mfixRW->report_mass_balance) {
 
-    const int flux_comp = 5+ntrac;
-    const int num_comp = fluid.nspecies;
+    flux_comp = 5+ntrac;
+    num_comp = fluid.nspecies;
 
     mfixRW->ComputeMassFlux(GetVecOfConstPtrs(flux_x),
                             GetVecOfConstPtrs(flux_y),

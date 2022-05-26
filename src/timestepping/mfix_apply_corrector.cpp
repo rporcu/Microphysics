@@ -793,12 +793,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       // *************************************************************************************
       if (!explicit_diffusive_enthalpy) {
 
-        auto& fluid_parms = *fluid.parameters;
-        const int fluid_is_a_mixture = fluid.is_a_mixture;
-        const int nspecies_g = fluid.nspecies;
-
-        const int is_IOProc = int(ParallelDescriptor::IOProcessor());
-
         for (int lev = 0; lev <= finest_level; lev++) {
 
           auto& ld = *m_leveldata[lev];
