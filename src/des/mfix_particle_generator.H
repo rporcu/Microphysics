@@ -9,104 +9,47 @@
 
 class ParticlesGenerator {
 
-  //< Position............... 1,2,3
-  //< Radius................. 4
-  //< Density................ 5
-  //< Linear velocity........ 6,7,8
-  //< Stat weight ........... 9
-  static constexpr int nr = 9;
-
-  //< Type................... 1
-  static constexpr int ni = 1;
-
   public:
     using ParticleType = MFIXParticleContainer::ParticleType;
     using ParticleTileType = MFIXParticleContainer::ParticleTileType;
 
     // Constructor
-    explicit ParticlesGenerator ();
-
-    // Destructor
-    ~ParticlesGenerator ();
+    ParticlesGenerator (const amrex::IntVect& lo,
+                        const amrex::IntVect& hi,
+                        const amrex::GpuArray<amrex::Real,3>& plo,
+                        const amrex::GpuArray<amrex::Real,3>& dx,
+                        const int id,
+                        const int cpu,
+                        const int icv,
+                        const int type);
 
     // Particle generator
-    void generate (int& pc,
-                   const amrex::IntVect& lo,
-                   const amrex::IntVect& hi,
-                   const amrex::Real dx,
-                   const amrex::Real dy,
-                   const amrex::Real dz,
-                   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo);
+    void generate (int& particles_count,
+                   ParticleTileType& particles);
 
-    void generate_prop (const int nrp, ParticleTileType& particles);
+    // Particle generator
+    template <typename F1>
+    void generate (int& particles_count,
+                   ParticleTileType& particles,
+                   F1 positions_generator);
 
     // Write particles data
     void write (const int nrp,
                 ParticleTileType& particles,
                 const int nstep = 0) const;
 
-    void hex_close_pack (const int icv,
-                         const int type,
-                         const amrex::IntVect& lo,
-                         const amrex::IntVect& hi,
-                         int& np,
-                         int& pc,
-                         const amrex::Real dx,
-                         const amrex::Real dy,
-                         const amrex::Real dz,
-                         const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo);
-
-    void n_cube_per_fill (const int icv,
-                          const int type,
-                          const int base,
-                          const amrex::IntVect& lo,
-                          const amrex::IntVect& hi,
-                          int& np,
-                          int& pc,
-                          const amrex::Real dx,
-                          const amrex::Real dy,
-                          const amrex::Real dz,
-                          const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo);
-
-    void random_fill_dem (const int icv,
-                          const int type,
-                          const amrex::IntVect& lo,
-                          const amrex::IntVect& hi,
-                          int& np,
-                          int& pc,
-                          const amrex::Real dx,
-                          const amrex::Real dy,
-                          const amrex::Real dz,
-                          const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo,
-                          const bool fix_seed);
-
-    void random_fill_pic (const int icv,
-                          const int type,
-                          const amrex::IntVect& lo,
-                          const amrex::IntVect& hi,
-                          int& np,
-                          int& pc,
-                          const amrex::Real dx,
-                          const amrex::Real dy,
-                          const amrex::Real dz,
-                          const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo,
-                          const bool fix_seed);
-
-    void nor_rno (amrex::Gpu::DeviceVector<amrex::Real>& dp,
-                  const amrex::Real mean,
-                  const amrex::Real sigma,
-                  const amrex::Real dp_min,
-                  const amrex::Real dp_max);
-
-    void uni_rno (amrex::Gpu::DeviceVector<amrex::Real>& dp,
-                  const amrex::Real dp_min,
-                  const amrex::Real dp_max);
-
-    void grow_pdata (const int gsize);
+    amrex::Gpu::HostVector<amrex::Real> m_h_data;
+    amrex::Gpu::DeviceVector<amrex::Real> m_d_data;
 
   private:
-    amrex::Gpu::DeviceVector<amrex::Real> m_rdata;
-    amrex::Gpu::DeviceVector<int> m_idata;
+    const amrex::IntVect& m_bx_lo;
+    const amrex::IntVect& m_bx_hi;
+    const amrex::GpuArray<amrex::Real,3>& m_plo;
+    const amrex::GpuArray<amrex::Real,3>& m_dx;
+    const int m_id;
+    const int m_cpu;
+    const int m_icv;
+    const int m_type;
 };
 
 #endif

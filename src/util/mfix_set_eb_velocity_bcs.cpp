@@ -47,12 +47,12 @@ mfix::mfix_set_eb_velocity_bcs (Real time_in, Vector< MultiFab* > const& eb_vel_
 
              if (BC::bc[bcv].type == BCList::eb) {
 
-               const Box *ic_bx = calc_ic_box(geom[lev], BC::bc[bcv].region);
+               const Box ic_bx = calc_ic_box(geom[lev], BC::bc[bcv].region);
 
-               if (ic_bx->intersects(bx)) {
+               if (ic_bx.intersects(bx)) {
 
                  // Intersection of ic box and mfi box
-                 const Box bx_int = bx&(*ic_bx);
+                 const Box bx_int = bx&(ic_bx);
 
                  const int  has_normal = BC::bc[bcv].eb.has_normal;
                  amrex::GpuArray<amrex::Real,3> normal{0.};

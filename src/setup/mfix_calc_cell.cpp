@@ -35,7 +35,7 @@ void calc_cell_ic(const Real dx,
 }
 
 
-const amrex::Box* calc_ic_box(const Geometry& geom, const RealBox* region)
+const amrex::Box calc_ic_box(const Geometry& geom, const RealBox* region)
 {
 
   const GpuArray<Real,3> dxi = geom.InvCellSizeArray();
@@ -54,6 +54,6 @@ const amrex::Box* calc_ic_box(const Geometry& geom, const RealBox* region)
       static_cast<int>(amrex::Math::floor((hi[1]-plo[1])*dxi[1] + .5)) - 1,
       static_cast<int>(amrex::Math::floor((hi[2]-plo[2])*dxi[2] + .5)) - 1));
 
-  return new const amrex::Box(ic_lo, ic_hi);
+  return amrex::Box(ic_lo, ic_hi);
 
 }

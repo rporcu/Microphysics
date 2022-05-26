@@ -321,7 +321,7 @@ class SolidsParms {
     // Calc conductivity
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_kp_sn (const amrex::Real T_s,
+    amrex::Real calc_kp_sn (const amrex::Real,
                             const int n) const
     {
       amrex::Real result(0);

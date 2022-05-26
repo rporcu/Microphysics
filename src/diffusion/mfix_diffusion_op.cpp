@@ -763,19 +763,17 @@ void DiffusionOp::ComputeDivhJ (const Vector< MultiFab* >& divhJ_out,
       }
     }
 
-    for (int lev = 0; lev <= finest_level; ++lev) {
-      divhJ_out[lev]->setVal(0.);
+    divhJ_out[lev]->setVal(0.);
 
-      const auto& ebfact =
-        static_cast<amrex::EBFArrayBoxFactory const&>(*ebfactory[lev]);
+    const auto& ebfact =
+      static_cast<amrex::EBFArrayBoxFactory const&>(*ebfactory[lev]);
 
-      if (ebfact.isAllRegular()) {
-        amrex::computeDivergence(*divhJ_out[lev], GetArrOfConstPtrs(hJ_g_fc[lev]), geom[lev]);
-      } else {
-        const bool already_on_centroids = true;
-        amrex::EB_computeDivergence(*divhJ_out[lev], GetArrOfConstPtrs(hJ_g_fc[lev]),
-                                    geom[lev], already_on_centroids);
-      }
+    if (ebfact.isAllRegular()) {
+      amrex::computeDivergence(*divhJ_out[lev], GetArrOfConstPtrs(hJ_g_fc[lev]), geom[lev]);
+    } else {
+      const bool already_on_centroids = true;
+      amrex::EB_computeDivergence(*divhJ_out[lev], GetArrOfConstPtrs(hJ_g_fc[lev]),
+                                  geom[lev], already_on_centroids);
     }
   }
 

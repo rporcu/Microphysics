@@ -56,14 +56,14 @@ mfix::mfix_calc_eb_bc_areas ()
         ReduceData<Real> reduce_data(reduce_op);
         using ReduceTuple = typename decltype(reduce_data)::Type;
 
-        const Box *ic_bx = calc_ic_box(geom[lev], BC::bc[bcv].region);
+        const Box ic_bx = calc_ic_box(geom[lev], BC::bc[bcv].region);
 
         for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi) {
 
           const Box& bx = mfi.tilebox();
           FabType t = flags[mfi].getType(bx);
 
-          if (t == FabType::singlevalued && ic_bx->intersects(bx)) {
+          if (t == FabType::singlevalued && ic_bx.intersects(bx)) {
 
             Array4<EBCellFlag const> const& flagsfab = flags.const_array(mfi);
 
@@ -75,7 +75,7 @@ mfix::mfix_calc_eb_bc_areas ()
             // Area of eb face
             Array4<Real const> const& barea = factory.getBndryArea().const_array(mfi);
 
-            const Box bx_int = bx&(*ic_bx);
+            const Box bx_int = bx&(ic_bx);
 
             reduce_op.eval(bx_int, reduce_data, [flagsfab, barea, has_normal, normal,
               norm_tol_lo, norm_tol_hi, apx, apy, apz]

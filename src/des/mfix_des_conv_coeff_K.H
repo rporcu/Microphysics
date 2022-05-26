@@ -1,9 +1,13 @@
+#ifndef _MFIX_DES_CONV_COEFF_K_H_
+#define _MFIX_DES_CONV_COEFF_K_H_
+
 #include <AMReX_REAL.H>
 #include <AMReX_GpuQualifiers.H>
 
 
 struct NullConvectionCoeff
 {
+    // Constructor
     NullConvectionCoeff () {};
 
     AMREX_GPU_HOST_DEVICE AMREX_INLINE
@@ -16,7 +20,11 @@ struct NullConvectionCoeff
 
 struct ComputeConvRanzMarshall
 {
-    amrex::Real small_number, large_number, eps;
+    amrex::Real small_number;
+    amrex::Real large_number;
+    amrex::Real eps;
+
+    // Constructor
     ComputeConvRanzMarshall (amrex::Real small_, amrex::Real large_, amrex::Real eps_)
         : small_number(small_), large_number(large_), eps(eps_) {}
 
@@ -60,7 +68,11 @@ struct ComputeConvRanzMarshall
 
 struct ComputeConvGunn
 {
-    amrex::Real small_number, large_number, eps;
+    amrex::Real small_number;
+    amrex::Real large_number;
+    amrex::Real eps;
+
+    // Constructor
     ComputeConvGunn (amrex::Real small_, amrex::Real large_, amrex::Real eps_)
         : small_number(small_), large_number(large_), eps(eps_) {}
 
@@ -103,3 +115,5 @@ struct ComputeConvGunn
         return N_Nu * Kg / dp;
     }
 };
+
+#endif

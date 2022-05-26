@@ -47,7 +47,7 @@ public:
            BCList& bc_list_in,
            amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory_in);
 
-   void set_pc (MFIXParticleContainer* pc) { this->pc = pc; };
+   void set_pc (MFIXParticleContainer* pc_in) { this->pc = pc_in; };
 
    void output (int estatus,
                 int finish,

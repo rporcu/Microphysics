@@ -536,7 +536,6 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
               // Extract interpolated thermodynamic pressure
               const Real p_g = interp_loc[comp_count];
 
-              const Real ep_s = 1. - ep_g;
               const Real ro_p = p_realarray[SoArealData::density][p_id];
 
               GpuArray<Real,Reactions::NMAX> R_q_heterogeneous;
