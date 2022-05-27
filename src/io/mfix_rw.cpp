@@ -220,6 +220,10 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
           ComputeVort();
 
         WritePlotFile(plot_file, nstep, time);
+
+        if (solids.plot_regions() == true) {
+          WriteSolidsPlotFile(plot_solids_file, nstep, time);
+        }
     }
 
 

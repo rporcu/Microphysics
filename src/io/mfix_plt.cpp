@@ -953,35 +953,144 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
         int_comp_names.push_back("phase");
         int_comp_names.push_back("state");
 
-        if (solids.plot_regions() == true) {
-
-          const int plot_regions_nb = solids.get_plot_regions_nb();
-
-          for (int n(0); n < plot_regions_nb; ++n) {
-
-            const SolidsPhase::PlotRegion& plot_region = solids.get_plot_region(n);
-
-            const RealBox region_extents = plot_region.get_extents();
-            const std::string& region_name = plot_region.get_name();
-
-            std::string partsfilename = amrex::Concatenate("parts",nstep);
-            partsfilename += "_"+region_name;
-
-            auto F = [region_extents] AMREX_GPU_DEVICE (const MFIXParticleContainer::SuperParticleType& p,
-                                                        const amrex::RandomEngine&) noexcept -> bool
-            { return region_extents.contains(p.pos()); };
-
-            pc->WritePlotFile(partsfilename, "particles", write_real_comp,
-                              write_int_comp, real_comp_names, int_comp_names, F);
-          }
-
-        } else {
-
-          pc->WritePlotFile(plotfilename, "particles", write_real_comp,
-                            write_int_comp, real_comp_names, int_comp_names);
-
-        }
+        pc->WritePlotFile(plotfilename, "particles", write_real_comp,
+                          write_int_comp, real_comp_names, int_comp_names);
     }
+}
+
+
+void
+MfixRW::WriteSolidsPlotFile (std::string& plot_file_in, int nstep, Real time)
+{
+  if ((DEM::solve || PIC::solve) && (solids.plot_regions() == true)) {
+
+    // If we've already written this plotfile, don't do it again!
+    if (nstep == last_solids_plt) return;
+
+    // Now set last_solids_plt to nstep ...
+    last_solids_plt = nstep;
+
+    BL_PROFILE("mfix::WriteSolidsPlotFile()");
+
+    const int plot_regions_nb = solids.get_plot_regions_nb();
+
+    for (int n(0); n < plot_regions_nb; ++n) {
+
+      const SolidsPhase::PlotRegion& plot_region = solids.get_plot_region(n);
+      const RealBox region_extents = plot_region.get_extents();
+      const std::string& region_name = plot_region.get_name();
+
+      std::string solidsfilename = amrex::Concatenate(plot_file_in,nstep);
+      solidsfilename += "_" + region_name;
+      amrex::Print() << "  Writing solids plotfile " << solidsfilename <<  " at time " << time << std::endl;
+
+      auto F = [region_extents] AMREX_GPU_DEVICE (const MFIXParticleContainer::SuperParticleType& p,
+                                                  const amrex::RandomEngine&) noexcept -> bool
+      { return region_extents.contains(p.pos()); };
+
+      // no fluid
+      {
+        // Some post-processing tools (such as yt) might still need some basic
+        // MultiFab header information to function. We provide this here by
+        // creating an "empty" plotfile header (which essentially only contains
+        // the BoxArray information). Particle data is saved elsewhere.
+
+        Vector< std::unique_ptr<MultiFab> > mf(finest_level+1);
+        Vector<std::string>  names;
+        // NOTE: leave names vector empty => header should reflect nComp = 0
+        //names.insert(names.end(), "placeholder");
+
+        // Create empty MultiFab containing the right BoxArray (NOTE: setting
+        // nComp = 1 here to avoid assertion fail in debug build).
+        for (int lev = 0; lev <= finest_level; ++lev)
+          mf[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], 1, 0);
+
+        Vector<const MultiFab*> mf2(finest_level+1);
+
+        for (int lev = 0; lev <= finest_level; ++lev)
+          mf2[lev] = mf[lev].get();
+
+        // Write only the Headers corresponding to the "empty" mf/mf2 MultiFabs
+        Vector<int> istep;
+        istep.resize(nlev,nstep);
+        amrex::WriteMultiLevelPlotfileHeaders(solidsfilename, finest_level+1, mf2, names,
+                                              geom, time, istep, ref_ratio);
+      }
+
+      WriteJobInfo(solidsfilename);
+
+      Vector<std::string> real_comp_names;
+      Vector<std::string>  int_comp_names;
+
+      real_comp_names.push_back("radius");
+      real_comp_names.push_back("volume");
+      real_comp_names.push_back("mass");
+      real_comp_names.push_back("density");
+
+      if (DEM::solve) {
+        real_comp_names.push_back("omoi");
+      } else {
+        real_comp_names.push_back("ep_s");
+      }
+
+      real_comp_names.push_back("velx");
+      real_comp_names.push_back("vely");
+      real_comp_names.push_back("velz");
+
+      if (DEM::solve){
+        real_comp_names.push_back("omegax");
+        real_comp_names.push_back("omegay");
+        real_comp_names.push_back("omegaz");
+      } else {
+        real_comp_names.push_back("grad_tau_x");
+        real_comp_names.push_back("grad_tau_y");
+        real_comp_names.push_back("grad_tau_z");
+      }
+
+      real_comp_names.push_back("statwt");
+      real_comp_names.push_back("dragcoeff");
+      real_comp_names.push_back("dragx");
+      real_comp_names.push_back("dragy");
+      real_comp_names.push_back("dragz");
+
+      real_comp_names.push_back("c_ps");
+      real_comp_names.push_back("temperature");
+      real_comp_names.push_back("convection");
+
+      if (solids.solve_species)
+        for (auto species: solids.species_names)
+          real_comp_names.push_back("X_"+species);
+
+      if (solids.solve_species && reactions.solve) {
+        for (int n(0); n < amrex::max(fluid.nspecies, solids.nspecies); ++n) {
+          if (n < solids.nspecies) {
+
+            auto species = solids.species_names[n];
+            real_comp_names.push_back("chem_mass_txfr_"+species);
+          
+          } else {
+
+            real_comp_names.push_back("placeholder_"+std::to_string(n));
+          }
+        }
+      }
+
+      if (reactions.solve) {
+        real_comp_names.push_back("chem_velx_txfr");
+        real_comp_names.push_back("chem_vely_txfr");
+        real_comp_names.push_back("chem_velz_txfr");
+      }
+
+      if (reactions.solve)
+        real_comp_names.push_back("chem_h_txfr");
+
+      int_comp_names.push_back("phase");
+      int_comp_names.push_back("state");
+
+      pc->WritePlotFile(solidsfilename, "particles", write_real_comp,
+                        write_int_comp, real_comp_names, int_comp_names, F);
+    }
+  }
 }
 
 

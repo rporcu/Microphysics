@@ -89,6 +89,10 @@ public:
                        int nstep = 0,
                        amrex::Real time = 0.0);
 
+   void WriteSolidsPlotFile (std::string& plot_file_name,
+                             int nstep = 0,
+                             amrex::Real time = 0.0);
+
    void WriteAscentFile (int nstep,
                          amrex::Real time) const;
 
@@ -268,6 +272,7 @@ private:
 
    // Plot file controls
    std::string plot_file {"plt"};
+   std::string plot_solids_file {"solids"};
    bool plotfile_on_restart = false;
 
    int plot_int = -1;
@@ -297,6 +302,7 @@ private:
 
    // Last step at which we wrote a plotfile
    int last_plt = -1;
+   int last_solids_plt = -1;
 
    // Flags for saving fluid data in plot files
    int plt_vel_g     = 1;
