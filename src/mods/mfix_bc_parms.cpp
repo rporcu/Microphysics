@@ -523,37 +523,24 @@ namespace BC
               // and if so, require temperature be defined.
               ppSolid.query("temperature", new_solid.temperature);
 
-              // Get information about diameter distribution.
-              ppSolid.get("diameter", new_solid.diameter.distribution);
-
-
-              std::string dp_field = "bc."+input_regions[bcv]+"."+solids_types[lcs]+".diameter";
-              amrex::ParmParse ppSolidDp(dp_field.c_str());
-
-              if( new_solid.diameter.distribution == "constant") {
-                ppSolidDp.get("constant", new_solid.diameter.mean);
-
-              } else { // This could probably be an else-if to better catch errors
-                ppSolidDp.get("mean", new_solid.diameter.mean);
-                ppSolidDp.get("std" , new_solid.diameter.std);
-                ppSolidDp.get("min" , new_solid.diameter.min);
-                ppSolidDp.get("max" , new_solid.diameter.max);
+              { // Get information about diameter distribution.
+                int err = new_solid.diameter.set(field, "diameter");
+                if(err) {
+                  std::string message = " Error: BC region " + input_regions[bcv]
+                    + " has invalid diameter parameters for solids " + solids_types[lcs] + "\n";
+                  amrex::Print() << message;
+                  amrex::Abort(message);
+                }
               }
 
-              // Get information about density distribution.
-              ppSolid.get("density", new_solid.density.distribution);
-
-              std::string roh_field = "bc."+input_regions[bcv]+"."+solids_types[lcs]+".density";
-              amrex::ParmParse ppSolidRho(roh_field.c_str());
-
-              if( new_solid.density.distribution == "constant") {
-                ppSolidRho.get("constant", new_solid.density.mean);
-
-              } else { // This could probably be an else-if to better catch errors
-                ppSolidRho.get("mean", new_solid.density.mean);
-                ppSolidRho.get("std" , new_solid.density.std );
-                ppSolidRho.get("min" , new_solid.density.min );
-                ppSolidRho.get("max" , new_solid.density.max );
+              { // Get information about density distribution
+                int err = new_solid.density.set(field, "density");
+                if(err) {
+                  std::string message = " Error: BC region " + input_regions[bcv]
+                    + " has invalid density parameters for solids " + solids_types[lcs] + "\n";
+                  amrex::Print() << message;
+                  amrex::Abort(message);
+                }
               }
 
               if (solids.solve_species) {

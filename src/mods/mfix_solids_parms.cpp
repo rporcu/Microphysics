@@ -470,3 +470,66 @@ SolidsPhase::Initialize (const Species& species,
   }
 
 }
+
+int
+INPUT_DIST_t::set (const std::string a_field,
+                              const std::string a_pprop)
+{
+
+  amrex::ParmParse pp(a_field.c_str());
+
+  std::string field_pprop = a_field  + "." + a_pprop;
+  amrex::ParmParse ppDist(field_pprop.c_str());
+
+  // Get the distribution type.
+  std::string distribution;
+  pp.get(a_pprop.c_str(), distribution);
+
+  int err = 0;
+  int fnd_mean(1), fnd_std(1), fnd_min(1), fnd_max(1);
+
+  if( amrex::toLower(distribution).compare("constant") == 0) {
+    m_is_constant = 1;
+    fnd_mean = ppDist.query("constant", m_mean);
+    m_stddev = 0.;
+    m_max = m_mean;
+    m_min = m_mean;
+
+  } else if( amrex::toLower(distribution).compare("normal") == 0) {
+    m_is_normal = 1;
+
+    fnd_mean = ppDist.query("mean", m_mean);
+    fnd_std  = ppDist.query("std",  m_stddev);
+    fnd_min  = ppDist.query("min",  m_min);
+    fnd_max  = ppDist.query("max",  m_max);
+
+    if(m_max < m_min || m_mean < m_min || m_max < m_mean) {
+      amrex::Print() << "Invalid uniform distribution parameters!\n";
+      err = 1;
+    }
+
+  } else if( amrex::toLower(distribution).compare("uniform") == 0) {
+    m_is_uniform = 1;
+    fnd_min  = ppDist.query("min", m_min);
+    fnd_max  = ppDist.query("max", m_max);
+    m_mean = m_min + 0.5*(m_max-m_min);
+    m_stddev = 0.;
+
+    if(m_max < m_min) {
+      amrex::Print() << "Invalid normal distribution parameters!\n";
+      err = 1;
+    }
+
+  } else {
+    amrex::Print() << "Invalid distribution type: " + distribution + "!\n";
+    return 1;
+  }
+
+  // This lets the calling routine know that something is missing (which
+  // was already reported) so that information about the IC/BC region
+  // and solid can be printed and the run can be aborted.
+  if( !fnd_mean || !fnd_std || !fnd_min || !fnd_max ) {
+    err = 1;
+  }
+  return err;
+}

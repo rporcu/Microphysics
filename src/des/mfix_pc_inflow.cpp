@@ -10,24 +10,7 @@
 
 using namespace amrex;
 
-static constexpr int is_constant = 0;
-static constexpr int is_uniform  = 1;
-static constexpr int is_normal   = 2;
-
 namespace{
-
-AMREX_INLINE
-int get_distribution (const std::string dist_str )
-{
-  if (dist_str.compare("normal") == 0) {
-    return is_normal;
-  } else if (dist_str.compare("uniform") == 0) {
-    return is_uniform;
-  } else {
-    return is_constant;
-  }
-}
-
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::Real
@@ -35,29 +18,17 @@ rand_prop (const amrex::Real var_mean,
            const amrex::Real var_min,
            const amrex::Real var_max,
            const amrex::Real var_std,
-           const int dist_type,
+           const bool is_normal,
            RandomEngine const& engine) noexcept
 {
-  if (dist_type == is_normal) {
-    Real var(var_min - var_max);
-
-    while( var < var_min || var > var_max) {
-      Real x(0.0);
-      Real y(0.0);
-      Real w(1.1);
-      while(w > 1. || amrex::Math::abs(w-1.) < std::numeric_limits<Real>::epsilon()) {
-        x = 2.*amrex::Random(engine) - 1.;
-        y = 2.*amrex::Random(engine) - 1.;
-        w = x*x + y*y;
-      }
-      w = std::sqrt((-2.*std::log(w)) / w);
-      var = var_mean + var_std*x*w;
+  if (is_normal) {
+    Real var = amrex::RandomNormal(var_mean, var_std, engine);
+    while (var_min > var || var > var_max){
+      var = amrex::RandomNormal(var_mean, var_std, engine);
     }
     return var;
-  } else if (dist_type == is_uniform) {
-    return var_min + (var_max - var_min)*amrex::Random(engine);
   } else {
-    return var_mean;
+    return var_min + (var_max - var_min)*amrex::Random(engine);
   }
 }
 }//end namespace
@@ -221,19 +192,21 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
               Real* p_bc_inputs = (adv_enthalpy || solve_species) ?  d_bc_inputs.data() : nullptr;
 
 
-              const int dist_dp = get_distribution(solid.diameter.distribution);
+              const int dp_is_constant = solid.diameter.is_constant();
+              const int dp_is_normal   = solid.diameter.is_normal();
 
-              const Real mean_dp = solid.diameter.mean;
-              const Real  max_dp = (dist_dp == is_constant) ? mean_dp : solid.diameter.max;
-              const Real  min_dp = (dist_dp == is_constant) ? mean_dp : solid.diameter.min;
-              const Real  std_dp = (dist_dp == is_constant) ? 0. : solid.diameter.std;
+              const Real mean_dp = solid.diameter.get_mean();
+              const Real  max_dp = solid.diameter.get_max();
+              const Real  min_dp = solid.diameter.get_min();
+              const Real  std_dp = solid.diameter.get_stddev();
 
-              const int dist_rhop = get_distribution(solid.density.distribution);
+              const int rhop_is_constant = solid.density.is_constant();
+              const int rhop_is_normal   = solid.density.is_normal();
 
-              const Real mean_rhop = solid.density.mean;
-              const Real  max_rhop = (dist_rhop == is_constant) ? mean_rhop : solid.density.max;
-              const Real  min_rhop = (dist_rhop == is_constant) ? mean_rhop : solid.density.min;
-              const Real  std_rhop = (dist_rhop == is_constant) ? 0.        : solid.density.std;
+              const Real mean_rhop = solid.density.get_mean();
+              const Real  max_rhop = solid.density.get_max();
+              const Real  min_rhop = solid.density.get_min();
+              const Real  std_rhop = solid.density.get_stddev();
 
               const Real act_area = solid.volfrac*fab_area;
 
@@ -287,8 +260,8 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
                 p_real,p_int, phase, plo, dx, idx, rbbx,
                 has_normal, normal, norm_tol_lo, norm_tol_hi, flagsfab, bnorm, bcent,
                 rand_x, rand_y, rand_z, velmag,
-                dist_dp,   mean_dp,   max_dp,   min_dp,   std_dp,
-                dist_rhop, mean_rhop, max_rhop, min_rhop, std_rhop,
+                mean_dp,   max_dp,   min_dp,   std_dp,     dp_is_constant,   dp_is_normal,
+                mean_rhop, max_rhop, min_rhop, std_rhop, rhop_is_constant, rhop_is_normal,
                 adv_enthalpy, solve_species, p_bc_inputs, nspecies_s, idx_X_sn ]
                 AMREX_GPU_DEVICE (int pid, amrex::RandomEngine const& engine) noexcept
               {
@@ -299,8 +272,9 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
                 p.id()  = NextID + pid;
                 p.cpu() = MyProc;
 
-                const Real rad = (dist_dp == is_constant) ?  0.5*mean_dp :
-                  0.5*rand_prop(mean_dp, min_dp, max_dp, std_dp, dist_dp, engine);
+                const Real rad = (dp_is_constant) ?  0.5*mean_dp :
+                  0.5*rand_prop(mean_dp, min_dp, max_dp, std_dp,
+                    dp_is_normal, engine);
 
                 bool valid = false;
                 while ( !valid ) {
@@ -357,8 +331,9 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
                 p_int[SoAintData::phase][ip] = phase+1;
                 p_int[SoAintData::state][ip] = 0;
 
-                const Real rhop = (dist_rhop == is_constant) ? mean_rhop :
-                  rand_prop(mean_rhop, min_rhop, max_rhop, std_rhop, dist_rhop, engine);
+                const Real rhop = (rhop_is_constant) ? mean_rhop :
+                  rand_prop(mean_rhop, min_rhop, max_rhop, std_rhop,
+                    rhop_is_normal, engine);
 
                 const Real pvol = (4.0/3.0) * M_PI * (rad*rad*rad);
                 const Real mass = pvol * rhop;
@@ -399,7 +374,7 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
               Gpu::synchronize();
 
               Real total_new_vol(mean_pvol*static_cast<Real>(pcount));
-              if (dist_dp != is_constant) {
+              if (dp_is_constant) {
                 // Reduce sum over new particles to take into account
                 // that the diameters may be different.
                 ReduceOps<ReduceOpSum> reduce_op;

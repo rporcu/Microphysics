@@ -146,11 +146,13 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
         if(BC::bc[bcv].solids[phase].volfrac > tolerance) {
           SOLIDS_t solid = BC::bc[bcv].solids[phase];
 
-          const Real mean_dp_bc = solid.diameter.mean;
-          const Real  max_dp_bc = solid.diameter.is_constant() ? mean_dp_bc : solid.diameter.max;
+          const Real mean_dp_bc = solid.diameter.get_mean();
+          const Real  max_dp_bc = solid.diameter.is_constant() ?
+                                    mean_dp_bc : solid.diameter.get_max();
 
-          const Real mean_rhop_bc = solid.density.mean;
-          const Real  max_rhop_bc = solid.density.is_constant() ? mean_rhop_bc : solid.density.max;
+          const Real mean_rhop_bc = solid.density.get_mean();
+          const Real  max_rhop_bc = solid.density.is_constant() ?
+                                      mean_rhop_bc : solid.density.get_max();
 
           if ( avg_dp[phase] == 0.0 )
             avg_dp[phase] = mean_dp_bc;

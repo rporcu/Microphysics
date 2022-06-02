@@ -135,24 +135,22 @@ void ParticlesGenerator::generate (int& particles_count,
   const SOLIDS_t& solid = IC::ic[m_icv].solids[m_type];
 
   // Setup particle diameters parameters
-  std::string ic_dp_dist_str = solid.diameter.distribution;
 
-  int diameter_distr_uniform(ic_dp_dist_str.compare("uniform") == 0);
-  int diameter_distr_normal(ic_dp_dist_str.compare("normal") == 0);
-  Real diameter_mean = solid.diameter.mean;
-  Real diameter_stddev = solid.diameter.std;
-  Real diameter_min = solid.diameter.min;
-  Real diameter_max = solid.diameter.max;
+  int diameter_distr_uniform(solid.diameter.is_uniform());
+  int diameter_distr_normal(solid.diameter.is_normal());
+  Real diameter_mean = solid.diameter.get_mean();
+  Real diameter_stddev = solid.diameter.get_stddev();
+  Real diameter_min = solid.diameter.get_min();
+  Real diameter_max = solid.diameter.get_max();
 
   // Setup particle densities parameters
-  std::string ic_ro_s_dist_str = solid.density.distribution;
 
-  int density_distr_uniform(ic_ro_s_dist_str.compare("uniform") == 0);
-  int density_distr_normal(ic_ro_s_dist_str.compare("normal") == 0);
-  Real density_mean(solid.density.mean);
-  Real density_stddev(solid.density.std);
-  Real density_min(solid.density.min);
-  Real density_max(solid.density.max);
+  int density_distr_uniform(solid.density.is_uniform());
+  int density_distr_normal(solid.density.is_normal());
+  Real density_mean(solid.density.get_mean());
+  Real density_stddev(solid.density.get_stddev());
+  Real density_min(solid.density.get_min());
+  Real density_max(solid.density.get_max());
 
   // Get particles initial velocity
   const Real ic_u_s = solid.velocity[0];
@@ -201,6 +199,9 @@ void ParticlesGenerator::generate (int& particles_count,
       diameter = diameter_min + (diameter_max-diameter_min)*amrex::Random(engine);
     } else if (diameter_distr_normal) {
       diameter = amrex::RandomNormal(diameter_mean, diameter_stddev, engine);
+      while (diameter < diameter_min || diameter_max < diameter){
+        diameter = amrex::RandomNormal(diameter_mean, diameter_stddev, engine);
+      }
     } else {
       diameter = diameter_mean;
     }
@@ -217,6 +218,9 @@ void ParticlesGenerator::generate (int& particles_count,
       rho = density_min + (density_max-density_min)*amrex::Random(engine);
     } else if (density_distr_normal) {
       rho = amrex::RandomNormal(density_mean, density_stddev, engine);
+      while(rho < density_min || density_max < rho) {
+        rho = amrex::RandomNormal(density_mean, density_stddev, engine);
+      }
     } else {
       rho = density_mean;
     }

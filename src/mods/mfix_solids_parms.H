@@ -126,7 +126,7 @@ class SolidsParms {
     {
       return get_MW_sn<run_on>(0);
     }
-    
+
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real get_MW_sn (const int n) const
@@ -155,7 +155,7 @@ class SolidsParms {
 
       return 0;
     }
-    
+
     // Driver heat capacity
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
@@ -328,7 +328,7 @@ class SolidsParms {
       if (m_conductivity_model == CONDUCTIVITYMODEL::Constant) {
 
         if (run_on == amrex::RunOn::Gpu) {
-          
+
           result = m_d_kp_sn[n];
 
         } else if (run_on == amrex::RunOn::Cpu) {
@@ -430,30 +430,45 @@ class SolidsPhase
     // Solids parameters for GPU access
     SolidsParms* parameters;
 
-    struct INPUT_DIST_t {
-      std::string distribution;
-      amrex::Real mean; // Mean value of distriubtion (or constant value)
-      amrex::Real std;  // Standard deviation
-      amrex::Real min;  // Minimum value of distribution
-      amrex::Real max;  // Max value of distribution
-
-      INPUT_DIST_t() :
-        mean(-1.0),
-        std(-1.0),
-        min(-1.0),
-        max(-1.0)
-      {}
-
-      bool is_constant () { return (distribution.compare("constant") == 0);} ;
-      bool is_uniform  () { return (distribution.compare("uniform")  == 0);} ;
-      bool is_normal   () { return (distribution.compare("normal")   == 0);} ;
-
-    };
-
     int is_initialized;
 
     void Initialize (const Species& species,
                      const Reactions& reactions);
+};
+
+
+struct INPUT_DIST_t {
+
+  INPUT_DIST_t()
+    : m_is_constant(0)
+    , m_is_uniform(0)
+    , m_is_normal(0)
+    , m_mean(-1.0)
+    , m_stddev(-1.0)
+    , m_min(-1.0)
+    , m_max(-1.0)
+  {}
+
+  int set (const std::string a_field, const std::string a_pprop);
+
+  int is_constant () const { return m_is_constant;};
+  int is_uniform  () const { return m_is_uniform; };
+  int is_normal   () const { return m_is_normal;  };
+
+  amrex::Real get_mean ()   const { return m_mean;   };
+  amrex::Real get_stddev () const { return m_stddev; };
+  amrex::Real get_max ()    const { return m_max;    };
+  amrex::Real get_min ()    const { return m_min;    };
+
+  private:
+    int m_is_constant;
+    int m_is_uniform;
+    int m_is_normal;
+
+    amrex::Real m_mean;   // Mean value of distriubtion (or constant value)
+    amrex::Real m_stddev; // Standard deviation
+    amrex::Real m_min;    // Minimum value of distribution
+    amrex::Real m_max;    // Max value of distribution
 };
 
 struct SOLIDS_t {
@@ -466,12 +481,11 @@ struct SOLIDS_t {
   amrex::Real velmag;
   amrex::Real volflow;
   amrex::Real vol_remainder;
-  //int inflow_count;
 
   amrex::Vector<SPECIES_t> species;
 
-  SolidsPhase::INPUT_DIST_t diameter;
-  SolidsPhase::INPUT_DIST_t density;
+  INPUT_DIST_t diameter;
+  INPUT_DIST_t density;
 
   SOLIDS_t() :
     volfrac(0.0),
@@ -481,7 +495,6 @@ struct SOLIDS_t {
     velmag(0),
     volflow(0.),
     vol_remainder(0.),
-    //inflow_count(0),
     species(0),
     diameter(),
     density()

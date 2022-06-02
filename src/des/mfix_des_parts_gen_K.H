@@ -49,7 +49,7 @@ class Hex_ClosePack
       // physical volume of IC region
       const amrex::Real ic_vol = IC::ic[icv].region->volume();
 
-      const amrex::Real mean = IC::ic[icv].solids[type].diameter.mean;
+      const amrex::Real mean = IC::ic[icv].solids[type].diameter.get_mean();
 
       // Total particle count is based on mean particle size
       const long seed =
@@ -198,7 +198,7 @@ class Hex_ClosePack
     // Auxiliary functions
     int hcp_i (amrex::Real rad,
                amrex::Real xlen,
-               int offset_int) const 
+               int offset_int) const
     {
       int i(0);
       const amrex::Real offset = static_cast<amrex::Real>(offset_int);
@@ -342,7 +342,7 @@ class nCubePer_Fill
       , m_dx(dx.data())
       , m_np(0)
     {}
-    
+
     void setup (const amrex::IntVect& lo,
                 const amrex::IntVect& hi,
                 const int icv,
@@ -373,12 +373,12 @@ class nCubePer_Fill
       // Intersection of mfi box and ic box
       const amrex::Box bx_int = mfi_bx&ic_bx;
 
-      const amrex::Real mean = IC::ic[icv].solids[type].diameter.mean;
+      const amrex::Real mean = IC::ic[icv].solids[type].diameter.get_mean();
       amrex::Real max_dp(mean);
 
       // Spacing is based on maximum particle size
-      if(IC::ic[icv].solids[type].diameter.max > 0.0)
-        max_dp = IC::ic[icv].solids[type].diameter.max;
+      if(IC::ic[icv].solids[type].diameter.get_max() > 0.0)
+        max_dp = IC::ic[icv].solids[type].diameter.get_max();
 
       // Scaled m_dx[0] for particle spacing
       m_dxn = m_dx[0]/static_cast<amrex::Real>(m_base);
@@ -514,13 +514,13 @@ class RandomFill_DEM
                                  (ic_dhi[1] - ic_dlo[1]) *
                                  (ic_dhi[2] - ic_dlo[2]);
 
-      amrex::Real mean = IC::ic[icv].solids[type].diameter.mean;
+      amrex::Real mean = IC::ic[icv].solids[type].diameter.get_mean();
 
       // Spacing is based on maximum particle size
-      if(IC::ic[icv].solids[type].diameter.max > 0.)
-        max_dp = IC::ic[icv].solids[type].diameter.max;
+      if(IC::ic[icv].solids[type].diameter.get_max() > 0.)
+        max_dp = IC::ic[icv].solids[type].diameter.get_max();
       else
-        max_dp = IC::ic[icv].solids[type].diameter.mean;
+        max_dp = IC::ic[icv].solids[type].diameter.get_mean();
 
       // If coarse-grain DEM is activated
       if (DEM::cg_dem)
@@ -576,89 +576,89 @@ class RandomFill_DEM
 
         bool stop = false;
         int fails(0);
-    
+
         while(fails < maxfails && (!stop)) {
 
           amrex::RealVect pos;
           pos[0] = ic_dlo[0] + ic_len[0]*amrex::Random();
           pos[1] = ic_dlo[1] + ic_len[1]*amrex::Random();
           pos[2] = ic_dlo[2] + ic_len[2]*amrex::Random();
-    
+
           // Grid containing the new particle
           amrex::IntVect idx;
           idx[0] = static_cast<int>(amrex::Math::floor(pos[0]*Oodx[0]));
           idx[1] = static_cast<int>(amrex::Math::floor(pos[1]*Oodx[1]));
           idx[2] = static_cast<int>(amrex::Math::floor(pos[2]*Oodx[2]));
-    
+
           // Local grid search for collisions.
           int overlaps = 0;
-    
+
           amrex::IntVect seed_lo, seed_hi;
           seed_lo[0] = amrex::max(lo[0], idx[0]-1);
           seed_lo[1] = amrex::max(lo[1], idx[1]-1);
           seed_lo[2] = amrex::max(lo[2], idx[2]-1);
-    
+
           seed_hi[0] = amrex::min(hi[0], idx[0]+1);
           seed_hi[1] = amrex::min(hi[1], idx[1]+1);
           seed_hi[2] = amrex::min(hi[2], idx[2]+1);
-    
+
           for(int k = seed_lo[2]; k <= seed_hi[2]; ++k) {
             for(int j = seed_lo[1]; j <= seed_hi[1]; ++j) {
               for(int i = seed_lo[0]; i <= seed_hi[0]; ++i) {
                 const int local_i = i - lo[0];
                 const int local_j = j - lo[1];
                 const int local_k = k - lo[2];
-    
+
                 const int upper_limit =
                   pinc[local_i + local_j*delta_bx[0] + local_k*delta_bx[0]*delta_bx[1]];
-    
+
                 for(int p = 0; p < upper_limit; p++)
                 {
                   const int local_pc =
                     pbin[local_i + local_j*delta_bx[0] +
                          local_k*delta_bx[0]*delta_bx[1] +
                          p*delta_bx[0]*delta_bx[1]*delta_bx[2]];
-    
+
                   const amrex::Real dist_x = h_data[local_pc*3 + 0] - pos[0] - m_plo[0];
                   const amrex::Real dist_y = h_data[local_pc*3 + 1] - pos[1] - m_plo[1];
                   const amrex::Real dist_z = h_data[local_pc*3 + 2] - pos[2] - m_plo[2];
-    
+
                   const amrex::Real dist = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
-    
+
                   if(dist < mindist)
                     overlaps++;
                 }
               }
             }
           }
-    
+
           if(overlaps == 0)
           {
             h_data.push_back(pos[0] + m_plo[0]);
             h_data.push_back(pos[1] + m_plo[1]);
             h_data.push_back(pos[2] + m_plo[2]);
-    
+
             const int local_idx_x = idx[0] - lo[0];
             const int local_idx_y = idx[1] - lo[1];
             const int local_idx_z = idx[2] - lo[2];
-    
+
             const int local_idx =
               local_idx_x + local_idx_y*delta_bx[0] +
               local_idx_z*delta_bx[0]*delta_bx[1];
-    
+
             const int pinc_value = pinc[local_idx];
             pbin[local_idx + pinc_value*delta_bx[0]*delta_bx[1]*delta_bx[2]] = m_np;
-    
+
             pinc[local_idx] = pinc_value + 1;
-    
+
             if(pinc_value + 2 >= nb)
             {
               nb += 2;
               pbin.resize(delta_bx[0]*delta_bx[1]*delta_bx[2]*nb, 0);
             }
-    
+
             m_np++;
-    
+
             stop = true;
           }
           else
@@ -666,7 +666,7 @@ class RandomFill_DEM
             fails++;
           }
         }
-    
+
         iterations++;
       }
 
@@ -762,7 +762,7 @@ class RandomFill_PIC
       const amrex::Real ic_cells = m_delta_bx[0] * m_delta_bx[1] * m_delta_bx[2];
 
       // Particle properties: Mean diameter, stat weight, volume
-      const amrex::Real mean = IC::ic[icv].solids[type].diameter.mean;
+      const amrex::Real mean = IC::ic[icv].solids[type].diameter.get_mean();
       const amrex::Real statwt(IC::ic[icv].solids[type].statwt);
       const amrex::Real parcel_volume = statwt*((M_PI/6.0)*mean*mean*mean);
 
