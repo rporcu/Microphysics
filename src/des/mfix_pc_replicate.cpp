@@ -35,7 +35,7 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
             ptile.resize(new_np);
 
             // Add runtime-added components
-            const int start = AoSrealData::count + SoArealData::count;
+            const int start = SoArealData::count;
             for (int comp(0); comp < m_runtimeRealData.count; ++comp)
               ptile.push_back_real(start+comp, np_replicated, 0.);
 

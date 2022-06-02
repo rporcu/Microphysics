@@ -9,6 +9,7 @@
 #include <mfix_fluid_parms.H>
 #include <mfix_solids_parms.H>
 #include <mfix_reactions_parms.H>
+#include <mfix_regions_parms.H>
 
 
 namespace MfixIO {
@@ -46,6 +47,28 @@ public:
            std::string load_balance_type_in,
            BCList& bc_list_in,
            amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory_in);
+
+   // Class for specifying a subregion for ParticleContainer::WritePlotFile
+   // and add a filter to plot only a selected group of particles
+   struct SolidsPlotRegion {
+     public:
+       std::string m_region_name;
+       amrex::RealBox m_region_extents;
+
+       std::string m_pp_string;
+
+       amrex::Vector<std::string> m_plot_names;
+       amrex::Gpu::HostVector<int> m_h_plot_types;
+       amrex::Gpu::DeviceVector<int> m_d_plot_types;
+
+       int m_plot_int;
+       amrex::Real m_plot_per_approx;
+
+       int m_last_solids_plt = -1;
+
+       amrex::Vector<int> m_write_real_comp = amrex::Vector<int>(SoArealData::count,1);
+       amrex::Vector<int> m_write_int_comp = amrex::Vector<int>(SoAintData::count,1);
+   };
 
    void set_pc (MFIXParticleContainer* pc_in) { this->pc = pc_in; };
 
@@ -89,7 +112,8 @@ public:
                        int nstep = 0,
                        amrex::Real time = 0.0);
 
-   void WriteSolidsPlotFile (std::string& plot_file_name,
+   void WriteSolidsPlotFile (SolidsPlotRegion& plot_region,
+                             std::string& plot_file_name,
                              int nstep = 0,
                              amrex::Real time = 0.0);
 
@@ -167,6 +191,11 @@ public:
 
    amrex::Vector<amrex::Vector<amrex::MultiFab*>> chkSpeciesVars;
    amrex::Vector<std::string> chkSpeciesVarsName;
+
+   void Initialize (const Regions& regions);
+
+    bool solids_plot_regions () const
+    { return m_solids_plot_regions.size() > 0; };
 
 private:
    // Private members
@@ -302,7 +331,6 @@ private:
 
    // Last step at which we wrote a plotfile
    int last_plt = -1;
-   int last_solids_plt = -1;
 
    // Flags for saving fluid data in plot files
    int plt_vel_g     = 1;
@@ -336,9 +364,17 @@ private:
    // Flags for saving particle data. By default, we have all flags on,
    // we turn off what we don't want in the init IO routine. This is somewhat
    // different from what we do with the fluid.
-   amrex::Vector<int> write_real_comp = amrex::Vector<int>(AoSrealData::count+SoArealData::count,1);
-   amrex::Vector<int> write_int_comp = amrex::Vector<int>(AoSintData::count+SoAintData::count,1);
+   amrex::Vector<int> write_real_comp = amrex::Vector<int>(SoArealData::count,1);
+   amrex::Vector<int> write_int_comp = amrex::Vector<int>(SoAintData::count,1);
 
+   amrex::Vector<std::string> real_comp_names;
+   amrex::Vector<std::string>  int_comp_names;
+
+   amrex::Vector<SolidsPlotRegion> m_solids_plot_regions;
+
+   void GetSolidsIOPltFlags (amrex::ParmParse& pp,
+                             amrex::Vector<int>& write_real_comp_out,
+                             amrex::Vector<int>& write_int_comp_out);
 
    void WriteCheckHeader (const std::string& name,
                           int nstep,

@@ -81,7 +81,8 @@ MfixRW::MfixRW (int nlev_in,
 void MfixRW::readParameters ()
 {
   {
-     ParmParse pp("amr");
+     const std::string PProot = "amr";
+     ParmParse pp(PProot.c_str());
 
      // Checkpoint output control
      pp.query("checkpoint_files_output", checkpoint_files_output);
@@ -116,6 +117,43 @@ void MfixRW::readParameters ()
          (plot_int       > 0 && plot_per_approx > 0) /*||
          (plot_per_exact > 0 && plot_per_approx > 0) */ )
        amrex::Abort("Must choose only one of plot_int or plot_per_exact or plot_per_approx");
+
+
+      // Plot solids only in specific regions
+      {
+        const std::string solidsPProot = PProot + ".solids";
+        ParmParse ppSolids(solidsPProot.c_str());
+
+        std::vector<std::string> solids_regions;
+        ppSolids.queryarr("regions", solids_regions);
+
+        if (solids_regions.size() > 0 &&
+            amrex::toLower(solids_regions[0]).compare("none") != 0) {
+
+          m_solids_plot_regions.resize(solids_regions.size());
+
+          // Loop over input plot regions
+          for (size_t n(0); n < solids_regions.size(); n++) {
+
+            auto& plot_region = m_solids_plot_regions[n];
+
+            const std::string& region_name = solids_regions[n];
+            plot_region.m_region_name = region_name;
+
+            ppSolids.queryarr(region_name.c_str(), plot_region.m_plot_names);
+
+            const std::string regionPProot = solidsPProot + "." + region_name;
+            ParmParse ppSolidsRegion(regionPProot.c_str());
+
+            plot_region.m_pp_string = regionPProot;
+
+            int ppint = ppSolidsRegion.query("plot_int", plot_region.m_plot_int);
+            int ppapprox = ppSolidsRegion.query("plot_per_approx", plot_region.m_plot_per_approx);
+
+            AMREX_ALWAYS_ASSERT(ppint || ppapprox);
+          }
+        }
+      }
 
 
      // Ascent output control
@@ -182,6 +220,125 @@ void MfixRW::readParameters ()
 }
 
 
+void
+MfixRW::Initialize (const Regions& regions)
+{
+  real_comp_names.clear();
+  int_comp_names.clear();
+
+  // Vectors of names for solids plot
+  {
+    real_comp_names.push_back("radius");
+    real_comp_names.push_back("volume");
+    real_comp_names.push_back("mass");
+    real_comp_names.push_back("density");
+
+    if (DEM::solve) {
+      real_comp_names.push_back("omoi");
+    } else {
+      real_comp_names.push_back("ep_s");
+    }
+
+    real_comp_names.push_back("velx");
+    real_comp_names.push_back("vely");
+    real_comp_names.push_back("velz");
+
+    if (DEM::solve){
+      real_comp_names.push_back("omegax");
+      real_comp_names.push_back("omegay");
+      real_comp_names.push_back("omegaz");
+    } else {
+      real_comp_names.push_back("grad_tau_x");
+      real_comp_names.push_back("grad_tau_y");
+      real_comp_names.push_back("grad_tau_z");
+    }
+
+    real_comp_names.push_back("statwt");
+    real_comp_names.push_back("dragcoeff");
+    real_comp_names.push_back("dragx");
+    real_comp_names.push_back("dragy");
+    real_comp_names.push_back("dragz");
+
+    real_comp_names.push_back("c_ps");
+    real_comp_names.push_back("temperature");
+    real_comp_names.push_back("convection");
+
+    if (solids.solve_species)
+      for (auto species: solids.species_names)
+        real_comp_names.push_back("X_"+species);
+
+    if (solids.solve_species && reactions.solve) {
+      for (int n(0); n < amrex::max(fluid.nspecies, solids.nspecies); ++n) {
+        if (n < solids.nspecies) {
+
+          auto species = solids.species_names[n];
+          real_comp_names.push_back("chem_mass_txfr_"+species);
+        
+        } else {
+
+          real_comp_names.push_back("placeholder_"+std::to_string(n));
+        }
+      }
+    }
+
+    if (reactions.solve) {
+      real_comp_names.push_back("chem_velx_txfr");
+      real_comp_names.push_back("chem_vely_txfr");
+      real_comp_names.push_back("chem_velz_txfr");
+    }
+
+    if (reactions.solve)
+      real_comp_names.push_back("chem_h_txfr");
+
+    int_comp_names.push_back("phase");
+    int_comp_names.push_back("state");
+  }
+
+  // Finalize initialization of solids plot regions
+  for (int n(0); n < m_solids_plot_regions.size(); ++n) {
+
+    auto& plot_region = m_solids_plot_regions[n];
+
+    const int N_names = plot_region.m_plot_names.size();
+    if (N_names > 0) {
+
+      plot_region.m_h_plot_types.clear();
+      plot_region.m_h_plot_types.resize(N_names);
+
+      for (int i(0); i < N_names; ++i) {
+        const std::string& name = plot_region.m_plot_names[i];
+
+        int found(0);
+
+        for (int j(0); j < solids.names.size(); ++j) {
+          const std::string& solids_name = solids.names[j];
+
+          if (name.compare(solids_name) == 0) {
+            plot_region.m_h_plot_types[i] = j+1;
+            found = 1;
+            break;
+          }
+        }
+
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(found, "Solid type not found in solids");
+      }
+
+      plot_region.m_d_plot_types.resize(N_names);
+      Gpu::copy(Gpu::hostToDevice, plot_region.m_h_plot_types.begin(),
+                plot_region.m_h_plot_types.end(), plot_region.m_d_plot_types.begin());
+    }
+
+    const RealBox* region_extents = regions.get_region(plot_region.m_region_name);
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(region_extents != nullptr, "Invalid solids plot region!");
+
+    plot_region.m_region_extents = *region_extents;
+
+    ParmParse pp(plot_region.m_pp_string.c_str());
+    GetSolidsIOPltFlags(pp, plot_region.m_write_real_comp, plot_region.m_write_int_comp);
+  }
+}
+
+
 void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 {
 
@@ -220,10 +377,54 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
           ComputeVort();
 
         WritePlotFile(plot_file, nstep, time);
+    }
 
-        if (solids.plot_regions() == true) {
-          WriteSolidsPlotFile(plot_solids_file, nstep, time);
+
+/*--------------------------------------------------------------------------------------------------
+ *
+ *                                     AMReX Solids Plot File Output Control
+ *
+ *------------------------------------------------------------------------------------------------*/
+    if ((DEM::solve || PIC::solve) && (solids_plot_regions() == true)) {
+
+      BL_PROFILE("mfix::WriteSolidsPlotFile()");
+
+      for (int n(0); n <m_solids_plot_regions.size(); ++n) {
+
+        auto& plot_region = m_solids_plot_regions[n];
+
+        int plot_test = 0;
+
+        if (first) {
+          if (//(restart_file.empty() || plotfile_on_restart) &&
+              (plot_region.m_plot_int > 0 /*|| plot_region.m_plot_per_exact > 0*/ ||
+               plot_region.m_plot_per_approx > 0))
+
+            plot_test = 1;
         }
+
+        else if (last && plot_region.m_plot_int > 0) {
+          plot_test = 1;
+        }
+
+        else if (plot_region.m_plot_per_approx > 0.0)
+        {
+          plot_test = test_per_approx(time, dt, plot_region.m_plot_per_approx);
+
+        }/*
+        else if (plot_region.m_plot_per_exact  > 0 &&
+                 (amrex::Math::abs(remainder(time, plot_region.m_plot_per_exact)) < 1.e-12) )
+        {
+            plot_test = 1;
+        }*/
+
+
+        if ((plot_test == 1) || ((plot_region.m_plot_int > 0) &&
+            (nstep % plot_region.m_plot_int == 0)))
+        {
+          WriteSolidsPlotFile(plot_region, plot_solids_file, nstep, time);
+        }
+      }
     }
 
 

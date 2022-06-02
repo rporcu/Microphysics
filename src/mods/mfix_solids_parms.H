@@ -8,7 +8,6 @@
 #include <AMReX_Array.H>
 #include <AMReX_RandomEngine.H>
 
-#include <mfix_regions_parms.H>
 #include <mfix_species_parms.H>
 #include <mfix_reactions_parms.H>
 
@@ -453,43 +452,8 @@ class SolidsPhase
 
     int is_initialized;
 
-    void Initialize (const Regions& regions,
-                     const Species& species,
+    void Initialize (const Species& species,
                      const Reactions& reactions);
-
-    // Class for specifying a subregion for ParticleContainer::WritePlotFile
-    // and add a filter to plot only a selected group of particles
-    class PlotRegion {
-      public:
-        PlotRegion(const std::string& name,
-                   const amrex::RealBox& extents)
-          : m_region_name(name)
-          , m_region_extents(extents)
-        {}
-
-        const std::string& get_name () const
-        { return m_region_name; }
-
-        const amrex::RealBox& get_extents () const
-        { return m_region_extents; }
-
-      private:
-        const std::string m_region_name;
-        const amrex::RealBox m_region_extents;
-    };
-
-    bool plot_regions () const { return m_plot_regions.size() > 0; };
-
-    int get_plot_regions_nb () const { return m_plot_regions.size(); };
-
-    const PlotRegion& get_plot_region (const int n) const
-    {
-      AMREX_ALWAYS_ASSERT(n < m_plot_regions.size());
-      return m_plot_regions[n];
-    };
-
-  private:
-    amrex::Vector<PlotRegion> m_plot_regions;
 };
 
 struct SOLIDS_t {

@@ -264,7 +264,7 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
               ptile.resize(new_np);
 
               // Add components for each of the runtime variables
-              const int start = AoSrealData::count + SoArealData::count;
+              const int start = SoArealData::count;
               for (int comp(0); comp < m_runtimeRealData.count; ++comp)
                 ptile.push_back_real(start+comp, pcount, 0.);
 

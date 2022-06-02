@@ -9,8 +9,7 @@
 
 using MFIXParIter = MFIXParticleContainer::MFIXParIter;
 
-using MFIXAmrParticleContainer = AmrParticleContainer<AoSrealData::count, AoSintData::count,
-                                                      SoArealData::count, SoAintData::count,
+using MFIXAmrParticleContainer = AmrParticleContainer<0,0,SoArealData::count, SoAintData::count,
                                                       PinnedArenaAllocator>;
 
 

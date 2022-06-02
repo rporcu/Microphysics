@@ -146,7 +146,7 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
     }
 
     // Add components for each of the runtime variables
-    const int start = AoSrealData::count + SoArealData::count;
+    const int start = SoArealData::count;
     for (int comp(0); comp < m_runtimeRealData.count; ++comp)
       particles.push_back_real(start+comp, np, 0.);
   }
@@ -206,7 +206,7 @@ void MFIXParticleContainer::InitParticlesAuto ()
               ParticleType::NextID(id+pcount);
 
               // Add components for each of the runtime variables
-              const int start = AoSrealData::count + SoArealData::count;
+              const int start = SoArealData::count;
               for (int comp(0); comp < m_runtimeRealData.count; ++comp)
                 particles.push_back_real(start+comp, pcount, 0.);
 

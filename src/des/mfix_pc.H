@@ -24,20 +24,6 @@
 #include <mfix_run_on.H>
 
 
-struct AoSrealData
-{
-  enum {
-    count = 0
-  };
-};
-
-struct AoSintData
-{
-  enum {
-    count = 0
-  };
-};
-
 struct SoArealData
 {
   enum {
@@ -63,6 +49,7 @@ struct SoArealData
     count
   };
 };
+
 
 // Particle real data stored at runtime in a SoA style
 struct runtimeRealData
@@ -94,6 +81,7 @@ struct SoAintData
   };
 };
 
+
 ///
 /// We add a particle to the neighbor list if its center is within 3 particle radii
 ///
@@ -117,6 +105,7 @@ struct MFIXCheckPair
   }
 };
 
+
 struct MFIXCheckFullPair
 {
   amrex::Real neighborhood;
@@ -136,15 +125,13 @@ struct MFIXCheckFullPair
   }
 };
 
+
 class MFIXParticleContainer final
-    : public amrex::NeighborParticleContainer<AoSrealData::count,AoSintData::count,
-                                              SoArealData::count,SoAintData::count>
+    : public amrex::NeighborParticleContainer<0,0,SoArealData::count,SoAintData::count>
 {
   public:
-    using MFIXParIter = amrex::ParIter<AoSrealData::count,AoSintData::count,
-                                       SoArealData::count,SoAintData::count>;
-    using MFIXParConstIter = amrex::ParConstIter<AoSrealData::count,AoSintData::count,
-                                                 SoArealData::count,SoAintData::count>;
+    using MFIXParIter = amrex::ParIter<0,0,SoArealData::count,SoAintData::count>;
+    using MFIXParConstIter = amrex::ParConstIter<0,0,SoArealData::count,SoAintData::count>;
 
     // Get number of particles
     int NumberOfParticles (MFIXParIter& pti)

@@ -136,139 +136,143 @@ MfixRW::InitIOPltData ()
 
     if (DEM::solve || PIC::solve) {
 
-      int plt_ccse_regtest = 0;
-      pp.query("plt_regtest", plt_ccse_regtest);
-
-      const runtimeRealData rtData(solids.nspecies*solids.solve_species,
-                                   fluid.nspecies*fluid.solve_species,
-                                   reactions.nreactions*reactions.solve);
-
-      // Runtime-added variables
-      const int size = AoSrealData::count + SoArealData::count + rtData.count;
-      write_real_comp.resize(size, 1);
-
-      // All flags are true by default so we only need to turn off the
-      // variables we don't want if not doing CCSE regression tests.
-      if (plt_ccse_regtest == 0) {
-        int gap = AoSrealData::count;
-
-        int input_value = 0;
-        pp.query("plt_radius", input_value);
-        write_real_comp[gap+SoArealData::radius] = input_value;
-
-        input_value = 0;
-        pp.query("plt_volume", input_value);
-        write_real_comp[gap+SoArealData::volume] = input_value;
-
-        input_value = 0;
-        pp.query("plt_mass", input_value);
-        write_real_comp[gap+SoArealData::mass] = input_value;
-
-        input_value = 0;
-        pp.query("plt_ro_p", input_value);
-        write_real_comp[gap+SoArealData::density] = input_value;
-
-        input_value = 0;
-        pp.query("plt_omoi", input_value);
-        write_real_comp[gap+SoArealData::oneOverI] = input_value;
-
-        input_value = 1;
-        pp.query("plt_vel_p", input_value);
-        write_real_comp[gap+SoArealData::velx] = input_value;
-        write_real_comp[gap+SoArealData::vely] = input_value;
-        write_real_comp[gap+SoArealData::velz] = input_value;
-
-        input_value = 0;
-        pp.query("plt_omega_p", input_value);
-        write_real_comp[gap+SoArealData::omegax] = input_value;
-        write_real_comp[gap+SoArealData::omegay] = input_value;
-        write_real_comp[gap+SoArealData::omegaz] = input_value;
-
-        input_value = 0;
-        pp.query("plt_statwt", input_value);
-        write_real_comp[gap+SoArealData::statwt] = input_value;
-
-        input_value = 0;
-        pp.query("plt_drag_p", input_value);
-        write_real_comp[gap+SoArealData::dragcoeff] = input_value;  // drag coeff
-        write_real_comp[gap+SoArealData::dragx] = input_value;  // dragx
-        write_real_comp[gap+SoArealData::dragy] = input_value;  // dragy
-        write_real_comp[gap+SoArealData::dragz] = input_value;  // dragz
-
-        input_value = 0;
-        pp.query("plt_cp_s", input_value);
-        write_real_comp[gap+SoArealData::cp_s] = input_value;  // specific heat
-
-        input_value = 0;
-        pp.query("plt_T_p", input_value);
-        write_real_comp[gap+SoArealData::temperature] = input_value;  // temperature
-
-        input_value = 0;
-        pp.query("plt_convection", input_value);
-        write_real_comp[gap+SoArealData::convection] = input_value;  // heat transfer coefficient
-
-        gap = AoSrealData::count + SoArealData::count;
-
-        if (solids.solve_species)
-        {
-          input_value = 0;
-          pp.query("plt_X_s", input_value);
-
-          const int start = gap + rtData.X_sn;
-          for(int n(0); n < solids.nspecies; ++n)
-            write_real_comp[start+n] = input_value;
-        }
-
-        if (reactions.solve)
-        {
-          input_value = 0;
-          pp.query("plt_vel_s_txfr", input_value);
-
-          const int start = gap + rtData.vel_txfr;
-          for(int n(0); n < 3; ++n)
-            write_real_comp[start+n] = input_value;
-        }
-
-        if (reactions.solve)
-        {
-          input_value = 0;
-          pp.query("plt_h_s_txfr", input_value);
-
-          const int start = gap + rtData.h_txfr;
-          write_real_comp[start] = input_value;
-        }
-
-        if (reactions.solve)
-        {
-          input_value = 0;
-          pp.query("plt_mass_sn_txfr", input_value);
-
-          const int start = gap + rtData.mass_txfr;
-          for(int n(0); n < amrex::max(solids.nspecies, fluid.nspecies); ++n)
-            // Since we allocated a number of components for mass transfer that
-            // is equal to th max nb of species between solids and fluid, here
-            // we check that n is smaller than solids species nb
-            if (n < solids.nspecies)
-              write_real_comp[start+n] = input_value;
-            else // if n is larger, then we always set it to false
-              write_real_comp[start+n] = 0;
-        }
-
-        // Int data
-        gap = AoSintData::count;
-
-        input_value = 0;
-        pp.query("plt_phase", input_value);
-        write_int_comp[gap+SoAintData::phase] = input_value;
-
-        input_value = 0;
-        pp.query("plt_state", input_value);
-        write_int_comp[gap+SoAintData::state] = input_value;
-
-      }
+      GetSolidsIOPltFlags(pp, write_real_comp, write_int_comp);
 
     }
+}
 
+
+void
+MfixRW::GetSolidsIOPltFlags (ParmParse& pp,
+                             Vector<int>& write_real_comp_out,
+                             Vector<int>& write_int_comp_out)
+{
+  int plt_ccse_regtest = 0;
+  pp.query("plt_regtest", plt_ccse_regtest);
+
+  const runtimeRealData rtData(solids.nspecies*solids.solve_species,
+                               fluid.nspecies*fluid.solve_species,
+                               reactions.nreactions*reactions.solve);
+
+  // Runtime-added variables
+  const int size = SoArealData::count + rtData.count;
+  write_real_comp_out.resize(size, 1);
+
+  // All flags are true by default so we only need to turn off the
+  // variables we don't want if not doing CCSE regression tests.
+  if (plt_ccse_regtest == 0) {
+
+    int input_value = 0;
+    pp.query("plt_radius", input_value);
+    write_real_comp_out[SoArealData::radius] = input_value;
+
+    input_value = 0;
+    pp.query("plt_volume", input_value);
+    write_real_comp_out[SoArealData::volume] = input_value;
+
+    input_value = 0;
+    pp.query("plt_mass", input_value);
+    write_real_comp_out[SoArealData::mass] = input_value;
+
+    input_value = 0;
+    pp.query("plt_ro_p", input_value);
+    write_real_comp_out[SoArealData::density] = input_value;
+
+    input_value = 0;
+    pp.query("plt_omoi", input_value);
+    write_real_comp_out[SoArealData::oneOverI] = input_value;
+
+    input_value = 1;
+    pp.query("plt_vel_p", input_value);
+    write_real_comp_out[SoArealData::velx] = input_value;
+    write_real_comp_out[SoArealData::vely] = input_value;
+    write_real_comp_out[SoArealData::velz] = input_value;
+
+    input_value = 0;
+    pp.query("plt_omega_p", input_value);
+    write_real_comp_out[SoArealData::omegax] = input_value;
+    write_real_comp_out[SoArealData::omegay] = input_value;
+    write_real_comp_out[SoArealData::omegaz] = input_value;
+
+    input_value = 0;
+    pp.query("plt_statwt", input_value);
+    write_real_comp_out[SoArealData::statwt] = input_value;
+
+    input_value = 0;
+    pp.query("plt_drag_p", input_value);
+    write_real_comp_out[SoArealData::dragcoeff] = input_value;  // drag coeff
+    write_real_comp_out[SoArealData::dragx] = input_value;  // dragx
+    write_real_comp_out[SoArealData::dragy] = input_value;  // dragy
+    write_real_comp_out[SoArealData::dragz] = input_value;  // dragz
+
+    input_value = 0;
+    pp.query("plt_cp_s", input_value);
+    write_real_comp_out[SoArealData::cp_s] = input_value;  // specific heat
+
+    input_value = 0;
+    pp.query("plt_T_p", input_value);
+    write_real_comp_out[SoArealData::temperature] = input_value;  // temperature
+
+    input_value = 0;
+    pp.query("plt_convection", input_value);
+    write_real_comp_out[SoArealData::convection] = input_value;  // heat transfer coefficient
+
+    int gap = SoArealData::count;
+
+    if (solids.solve_species)
+    {
+      input_value = 0;
+      pp.query("plt_X_s", input_value);
+
+      const int start = gap + rtData.X_sn;
+      for(int n(0); n < solids.nspecies; ++n)
+        write_real_comp_out[start+n] = input_value;
+    }
+
+    if (reactions.solve)
+    {
+      input_value = 0;
+      pp.query("plt_vel_s_txfr", input_value);
+
+      const int start = gap + rtData.vel_txfr;
+      for(int n(0); n < 3; ++n)
+        write_real_comp_out[start+n] = input_value;
+    }
+
+    if (reactions.solve)
+    {
+      input_value = 0;
+      pp.query("plt_h_s_txfr", input_value);
+
+      const int start = gap + rtData.h_txfr;
+      write_real_comp_out[start] = input_value;
+    }
+
+    if (reactions.solve)
+    {
+      input_value = 0;
+      pp.query("plt_mass_sn_txfr", input_value);
+
+      const int start = gap + rtData.mass_txfr;
+      for(int n(0); n < amrex::max(solids.nspecies, fluid.nspecies); ++n)
+        // Since we allocated a number of components for mass transfer that
+        // is equal to th max nb of species between solids and fluid, here
+        // we check that n is smaller than solids species nb
+        if (n < solids.nspecies)
+          write_real_comp_out[start+n] = input_value;
+        else // if n is larger, then we always set it to false
+          write_real_comp_out[start+n] = 0;
+    }
+
+    // Int data
+    input_value = 0;
+    pp.query("plt_phase", input_value);
+    write_int_comp_out[SoAintData::phase] = input_value;
+
+    input_value = 0;
+    pp.query("plt_state", input_value);
+    write_int_comp_out[SoAintData::state] = input_value;
+  }
 }
 
 
@@ -885,74 +889,6 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
 
     if (DEM::solve || PIC::solve)
     {
-        Vector<std::string> real_comp_names;
-        Vector<std::string>  int_comp_names;
-
-        real_comp_names.push_back("radius");
-        real_comp_names.push_back("volume");
-        real_comp_names.push_back("mass");
-        real_comp_names.push_back("density");
-
-        if (DEM::solve) {
-          real_comp_names.push_back("omoi");
-        } else {
-          real_comp_names.push_back("ep_s");
-        }
-
-        real_comp_names.push_back("velx");
-        real_comp_names.push_back("vely");
-        real_comp_names.push_back("velz");
-
-        if (DEM::solve){
-          real_comp_names.push_back("omegax");
-          real_comp_names.push_back("omegay");
-          real_comp_names.push_back("omegaz");
-        } else {
-          real_comp_names.push_back("grad_tau_x");
-          real_comp_names.push_back("grad_tau_y");
-          real_comp_names.push_back("grad_tau_z");
-        }
-
-        real_comp_names.push_back("statwt");
-        real_comp_names.push_back("dragcoeff");
-        real_comp_names.push_back("dragx");
-        real_comp_names.push_back("dragy");
-        real_comp_names.push_back("dragz");
-
-        real_comp_names.push_back("c_ps");
-        real_comp_names.push_back("temperature");
-        real_comp_names.push_back("convection");
-
-        if (solids.solve_species)
-          for (auto species: solids.species_names)
-            real_comp_names.push_back("X_"+species);
-
-        if (solids.solve_species && reactions.solve) {
-          for (int n(0); n < amrex::max(fluid.nspecies, solids.nspecies); ++n) {
-            if (n < solids.nspecies) {
-
-              auto species = solids.species_names[n];
-              real_comp_names.push_back("chem_mass_txfr_"+species);
-            
-            } else {
-
-              real_comp_names.push_back("placeholder_"+std::to_string(n));
-            }
-          }
-        }
-
-        if (reactions.solve) {
-          real_comp_names.push_back("chem_velx_txfr");
-          real_comp_names.push_back("chem_vely_txfr");
-          real_comp_names.push_back("chem_velz_txfr");
-        }
-
-        if (reactions.solve)
-          real_comp_names.push_back("chem_h_txfr");
-
-        int_comp_names.push_back("phase");
-        int_comp_names.push_back("state");
-
         pc->WritePlotFile(plotfilename, "particles", write_real_comp,
                           write_int_comp, real_comp_names, int_comp_names);
     }
@@ -960,136 +896,79 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
 
 
 void
-MfixRW::WriteSolidsPlotFile (std::string& plot_file_in, int nstep, Real time)
+MfixRW::WriteSolidsPlotFile (SolidsPlotRegion& plot_region,
+                             std::string& plot_file_in,
+                             int nstep,
+                             Real time)
 {
-  if ((DEM::solve || PIC::solve) && (solids.plot_regions() == true)) {
+  if ((DEM::solve || PIC::solve) && (solids_plot_regions() == true)) {
 
     // If we've already written this plotfile, don't do it again!
-    if (nstep == last_solids_plt) return;
+    if (nstep == plot_region.m_last_solids_plt) return;
 
     // Now set last_solids_plt to nstep ...
-    last_solids_plt = nstep;
+    plot_region.m_last_solids_plt = nstep;
 
-    BL_PROFILE("mfix::WriteSolidsPlotFile()");
+    const RealBox region_extents = plot_region.m_region_extents;
+    const std::string& region_name = plot_region.m_region_name;
 
-    const int plot_regions_nb = solids.get_plot_regions_nb();
+    std::string solidsfilename = amrex::Concatenate(plot_file_in,nstep);
+    solidsfilename += "_" + region_name;
+    amrex::Print() << "  Writing solids plotfile " << solidsfilename <<  " at time " << time << std::endl;
 
-    for (int n(0); n < plot_regions_nb; ++n) {
+    const int plot_types_nb = plot_region.m_h_plot_types.size();
+    int* plot_types_ptr = plot_region.m_d_plot_types.dataPtr();
 
-      const SolidsPhase::PlotRegion& plot_region = solids.get_plot_region(n);
-      const RealBox region_extents = plot_region.get_extents();
-      const std::string& region_name = plot_region.get_name();
+    auto F = [region_extents,plot_types_ptr,plot_types_nb]
+      AMREX_GPU_DEVICE (const MFIXParticleContainer::SuperParticleType& p,
+                        const amrex::RandomEngine&) noexcept -> bool
+    {
+      int particle_in_region = static_cast<int>(region_extents.contains(p.pos()));
 
-      std::string solidsfilename = amrex::Concatenate(plot_file_in,nstep);
-      solidsfilename += "_" + region_name;
-      amrex::Print() << "  Writing solids plotfile " << solidsfilename <<  " at time " << time << std::endl;
-
-      auto F = [region_extents] AMREX_GPU_DEVICE (const MFIXParticleContainer::SuperParticleType& p,
-                                                  const amrex::RandomEngine&) noexcept -> bool
-      { return region_extents.contains(p.pos()); };
-
-      // no fluid
-      {
-        // Some post-processing tools (such as yt) might still need some basic
-        // MultiFab header information to function. We provide this here by
-        // creating an "empty" plotfile header (which essentially only contains
-        // the BoxArray information). Particle data is saved elsewhere.
-
-        Vector< std::unique_ptr<MultiFab> > mf(finest_level+1);
-        Vector<std::string>  names;
-        // NOTE: leave names vector empty => header should reflect nComp = 0
-        //names.insert(names.end(), "placeholder");
-
-        // Create empty MultiFab containing the right BoxArray (NOTE: setting
-        // nComp = 1 here to avoid assertion fail in debug build).
-        for (int lev = 0; lev <= finest_level; ++lev)
-          mf[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], 1, 0);
-
-        Vector<const MultiFab*> mf2(finest_level+1);
-
-        for (int lev = 0; lev <= finest_level; ++lev)
-          mf2[lev] = mf[lev].get();
-
-        // Write only the Headers corresponding to the "empty" mf/mf2 MultiFabs
-        Vector<int> istep;
-        istep.resize(nlev,nstep);
-        amrex::WriteMultiLevelPlotfileHeaders(solidsfilename, finest_level+1, mf2, names,
-                                              geom, time, istep, ref_ratio);
-      }
-
-      WriteJobInfo(solidsfilename);
-
-      Vector<std::string> real_comp_names;
-      Vector<std::string>  int_comp_names;
-
-      real_comp_names.push_back("radius");
-      real_comp_names.push_back("volume");
-      real_comp_names.push_back("mass");
-      real_comp_names.push_back("density");
-
-      if (DEM::solve) {
-        real_comp_names.push_back("omoi");
-      } else {
-        real_comp_names.push_back("ep_s");
-      }
-
-      real_comp_names.push_back("velx");
-      real_comp_names.push_back("vely");
-      real_comp_names.push_back("velz");
-
-      if (DEM::solve){
-        real_comp_names.push_back("omegax");
-        real_comp_names.push_back("omegay");
-        real_comp_names.push_back("omegaz");
-      } else {
-        real_comp_names.push_back("grad_tau_x");
-        real_comp_names.push_back("grad_tau_y");
-        real_comp_names.push_back("grad_tau_z");
-      }
-
-      real_comp_names.push_back("statwt");
-      real_comp_names.push_back("dragcoeff");
-      real_comp_names.push_back("dragx");
-      real_comp_names.push_back("dragy");
-      real_comp_names.push_back("dragz");
-
-      real_comp_names.push_back("c_ps");
-      real_comp_names.push_back("temperature");
-      real_comp_names.push_back("convection");
-
-      if (solids.solve_species)
-        for (auto species: solids.species_names)
-          real_comp_names.push_back("X_"+species);
-
-      if (solids.solve_species && reactions.solve) {
-        for (int n(0); n < amrex::max(fluid.nspecies, solids.nspecies); ++n) {
-          if (n < solids.nspecies) {
-
-            auto species = solids.species_names[n];
-            real_comp_names.push_back("chem_mass_txfr_"+species);
-          
-          } else {
-
-            real_comp_names.push_back("placeholder_"+std::to_string(n));
-          }
+      int type_found = static_cast<int>(plot_types_nb == 0);
+      for (int n(0); n < plot_types_nb; ++n) {
+        if (p.idata(SoAintData::phase) == plot_types_ptr[n]) {
+          type_found = 1;
+          break;
         }
       }
 
-      if (reactions.solve) {
-        real_comp_names.push_back("chem_velx_txfr");
-        real_comp_names.push_back("chem_vely_txfr");
-        real_comp_names.push_back("chem_velz_txfr");
-      }
+      return particle_in_region && type_found;
+    };
 
-      if (reactions.solve)
-        real_comp_names.push_back("chem_h_txfr");
+    // no fluid
+    {
+      // Some post-processing tools (such as yt) might still need some basic
+      // MultiFab header information to function. We provide this here by
+      // creating an "empty" plotfile header (which essentially only contains
+      // the BoxArray information). Particle data is saved elsewhere.
 
-      int_comp_names.push_back("phase");
-      int_comp_names.push_back("state");
+      Vector< std::unique_ptr<MultiFab> > mf(finest_level+1);
+      Vector<std::string>  names;
+      // NOTE: leave names vector empty => header should reflect nComp = 0
+      //names.insert(names.end(), "placeholder");
 
-      pc->WritePlotFile(solidsfilename, "particles", write_real_comp,
-                        write_int_comp, real_comp_names, int_comp_names, F);
+      // Create empty MultiFab containing the right BoxArray (NOTE: setting
+      // nComp = 1 here to avoid assertion fail in debug build).
+      for (int lev = 0; lev <= finest_level; ++lev)
+        mf[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], 1, 0);
+
+      Vector<const MultiFab*> mf2(finest_level+1);
+
+      for (int lev = 0; lev <= finest_level; ++lev)
+        mf2[lev] = mf[lev].get();
+
+      // Write only the Headers corresponding to the "empty" mf/mf2 MultiFabs
+      Vector<int> istep;
+      istep.resize(nlev,nstep);
+      amrex::WriteMultiLevelPlotfileHeaders(solidsfilename, finest_level+1, mf2, names,
+                                            geom, time, istep, ref_ratio);
     }
+
+    WriteJobInfo(solidsfilename);
+
+    pc->WritePlotFile(solidsfilename, "particles", plot_region.m_write_real_comp,
+                      plot_region.m_write_int_comp, real_comp_names, int_comp_names, F);
   }
 }
 

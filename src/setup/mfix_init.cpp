@@ -28,7 +28,7 @@ mfix::InitParams ()
   species.Initialize();
   reactions.Initialize(species);
   fluid.Initialize(species, reactions);
-  solids.Initialize(regions, species, reactions);
+  solids.Initialize(species, reactions);
 
   BL_ASSERT(reactions.nreactions <= reactions.NMAX);
   BL_ASSERT(fluid.nspecies <= Species::NMAX);
@@ -42,6 +42,8 @@ mfix::InitParams ()
   // physical extents of ICs and BCs.
   BC::Initialize(geom[0], regions, fluid, solids);
   IC::Initialize(regions, fluid, solids);
+
+  mfixRW->Initialize(regions);
 
   // set n_error_buf (used in AmrMesh) to default (can overwrite later)
   for (int i = 0; i < n_error_buf.size(); i++)

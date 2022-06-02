@@ -55,8 +55,7 @@ SolidsPhase::~SolidsPhase()
 
 
 void
-SolidsPhase::Initialize (const Regions& regions,
-                         const Species& species,
+SolidsPhase::Initialize (const Species& species,
                          const Reactions& reactions)
 {
   AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.is_initialized,
@@ -90,24 +89,6 @@ SolidsPhase::Initialize (const Regions& regions,
   amrex::ParmParse pp("solids");
 
   pp.queryarr("types", names);
-
-  // Plot solids only in specific regions
-  {
-    std::vector<std::string> plot_regions;
-    pp.queryarr("plot_regions", plot_regions);
-
-    // Loop over input plot regions
-    for (size_t n(0); n < plot_regions.size(); n++) {
-
-      // Set the region for the initial condition.
-      const std::string& region_name = plot_regions[n];
-      Print() << "name = " << region_name << "\n";
-      const RealBox* region_extents = regions.get_region(region_name);
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(region_extents != nullptr, "Invalid solids plot region!");
-
-      m_plot_regions.push_back(PlotRegion(region_name.c_str(), *region_extents));
-    }
-  }
 
   if (names.size() > 0 && amrex::toLower(names[0]).compare("none") != 0) {
 
