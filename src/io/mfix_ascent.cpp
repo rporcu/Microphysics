@@ -69,7 +69,7 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
 
       for (int lev = 0; lev < nlev; ++lev) {
 
-        level_steps.push_back(nstep);
+        level_steps[lev] = nstep;
 
         mf[lev] = new MultiFab(grids[lev], dmap[lev], ncomp, ngrow,  MFInfo(), *ebfactory[lev]);
 
