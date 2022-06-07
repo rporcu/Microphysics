@@ -90,12 +90,12 @@ struct MFIXCheckPair
   amrex::Real neighborhood;
   MFIXCheckPair (amrex::Real neighborhood_) : neighborhood(neighborhood_) {}
 
-  template <class P>
-  AMREX_GPU_DEVICE AMREX_INLINE
-  bool operator() (const P* particles, const int i, const int j) const
+  template <int NSR, int NSI, int NAR, int NAI>
+  AMREX_GPU_DEVICE AMREX_FORCE_INLINE
+  bool operator() (const amrex::ConstParticleTileData<NSR, NSI, NAR, NAI>& ptile, int i, int j) const
   {
-    const P& p1 = particles[i];
-    const P& p2 = particles[j];
+    const auto p1 = ptile.getSuperParticle(i);
+    const auto p2 = ptile.getSuperParticle(j);
 
     if (i < j)
       if ((p1.pos() - p2.pos()).radSquared() <= neighborhood)
@@ -111,12 +111,12 @@ struct MFIXCheckFullPair
   amrex::Real neighborhood;
   MFIXCheckFullPair (amrex::Real neighborhood_) : neighborhood(neighborhood_) {}
 
-  template <class P>
-  AMREX_GPU_DEVICE AMREX_INLINE
-  bool operator() (const P* particles, const int i, const int j) const
+  template <int NSR, int NSI, int NAR, int NAI>
+  AMREX_GPU_DEVICE AMREX_FORCE_INLINE
+  bool operator() (const amrex::ConstParticleTileData<NSR, NSI, NAR, NAI>& ptile, int i, int j) const
   {
-    const P& p1 = particles[i];
-    const P& p2 = particles[j];
+    const auto p1 = ptile.getSuperParticle(i);
+    const auto p2 = ptile.getSuperParticle(j);
 
     if ((p1.pos() - p2.pos()).radSquared() <= neighborhood)
       return true;
