@@ -158,9 +158,13 @@ void mfix::make_eb_factories () {
         // Grow EB factory by +2 in order to avoid edge cases. This is not
         // necessary for multi-level mfix.
         particle_ebfactory[lev] =
-            std::make_unique<EBFArrayBoxFactory>(*particle_eb_levels[lev], geom[lev], grids[lev], dmap[lev],
-                                   amrex::Vector<int>{levelset_eb_pad + 2, levelset_eb_pad + 2,
-                                    levelset_eb_pad + 2}, m_eb_support_level);
+            std::make_unique<EBFArrayBoxFactory>(*particle_eb_levels[lev], geom[lev],
+                                                 pc->ParticleBoxArray(lev),
+                                                 pc->ParticleDistributionMap(lev),
+                                                 amrex::Vector<int>{levelset_eb_pad + 2,
+                                                                    levelset_eb_pad + 2,
+                                                                    levelset_eb_pad + 2},
+                                                 m_eb_support_level);
     }
 }
 
@@ -308,7 +312,7 @@ void mfix::fill_eb_levelsets ()
 
         if (contains_ebs) {
             AMREX_ALWAYS_ASSERT(levelset_eb_refinement == 1); // Not sure about its purpose anyway
-            amrex::FillSignedDistance(*level_sets[1], *eb_levels[1], *ebfactory[0],
+            amrex::FillSignedDistance(*level_sets[1], *eb_levels[1], *particle_ebfactory[0],
                                       levelset_refinement);
             if (levelset_refinement == 1) {
                 MultiFab::Copy(*level_sets[0], *level_sets[1], 0, 0, 1, level_sets[0]->nGrow());

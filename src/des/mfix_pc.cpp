@@ -23,9 +23,37 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
     , m_runtimeRealData(solids_in.nspecies*solids_in.solve_species,
                         fluid_in.nspecies*fluid_in.solve_species,
                         reactions_in.nreactions*reactions_in.solve)
+    , nlev (amr_core->maxLevel() + 1)
     , fluid(fluid_in)
     , solids(solids_in)
     , reactions(reactions_in)
+{
+    define();
+}
+
+
+MFIXParticleContainer::MFIXParticleContainer (const Geometry&            geom,
+                                              const DistributionMapping& dmap,
+                                              const BoxArray&            ba,
+                                              const int                  nlevel,
+                                              SolidsPhase&               solids_in,
+                                              FluidPhase&                fluid_in,
+                                              Reactions&                 reactions_in)
+    : NeighborParticleContainer<0, 0, SoArealData::count,SoAintData::count>(geom, dmap, ba, 1)
+    , m_runtimeRealData(solids_in.nspecies*solids_in.solve_species,
+                        fluid_in.nspecies*fluid_in.solve_species,
+                        reactions_in.nreactions*reactions_in.solve)
+    , nlev(nlevel)
+    , fluid(fluid_in)
+    , solids(solids_in)
+    , reactions(reactions_in)
+
+{
+    define();
+}
+
+
+void MFIXParticleContainer::define ()
 {
     ReadStaticParameters();
     ReadParameters();
@@ -65,8 +93,6 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
 #endif
     setIntCommComp(2, true);  // phase
     setIntCommComp(3, true); // state
-
-    nlev = amr_core->maxLevel() + 1;
 
     // Add solids.nspecies components
     for (int n(0); n < m_runtimeRealData.count; ++n) {
@@ -510,11 +536,11 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                             const Real FLPC = solids_parms.get_flpc<run_on>();
                             Real Rp_eff    = 2.0*(p1radius*p2radius)/(p1radius + p2radius);
                             Real Rlens_eff = (1.0 + FLPC)*Rp_eff;
-                            Real lens_lm   = 2.0*Rlens_eff;			
+                            Real lens_lm   = 2.0*Rlens_eff;
                             if ( r2 <= (lens_lm - small_number)*(lens_lm - small_number) ) {
                                 const Real Rough = solids_parms.get_min_cond<run_on>();
                                 const Real Tp1   = p_realarray[SoArealData::temperature][i];
-                                const Real Tp2   = p_realarray[SoArealData::temperature][j];			  
+                                const Real Tp2   = p_realarray[SoArealData::temperature][j];
                                 Real dist_mag_eff = sqrt(r2)/2.0; // Two particles with a midpoint wall
                                 Real Q_dot = des_pfp_conduction(dist_mag_eff,Rp_eff,Rlens_eff,
                                                                 Rough,local_k_g,Tp1,Tp2);
@@ -1784,6 +1810,13 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
   // ba and dmap to particle container
   SetParticleBoxArray(lev, BoxArray(fbl));
   SetParticleDistributionMap(lev, DistributionMapping(new_ppmap));
+}
+
+
+void MFIXParticleContainer::setParticleFluidGridMap(const Vector<int>& boxmap)
+{
+  m_pboxid_to_fboxid.clear();
+  m_pboxid_to_fboxid.insert(m_pboxid_to_fboxid.end(), boxmap.begin(), boxmap.end());
 }
 
 

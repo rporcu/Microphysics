@@ -11,8 +11,8 @@ mfix::Regrid ()
 
   int base_lev = 0;
 
-  if (load_balance_type == "KnapSack" || 
-      load_balance_type == "SFC" || 
+  if (load_balance_type == "KnapSack" ||
+      load_balance_type == "SFC" ||
       load_balance_type == "Greedy")
   {
     amrex::Print() << "Load balancing using " << load_balance_type << std::endl;
@@ -63,7 +63,7 @@ mfix::Regrid ()
 
           if (fluid_proc[lev] != nullptr)
             delete fluid_proc[lev];
-          
+
           const Real proc = static_cast<Real>(ParallelDescriptor::MyProc());
           fluid_proc[lev] = new MultiFab(grids[lev], new_fluid_dm, 1, 0);
           fluid_proc[lev]->setVal(proc);
@@ -90,12 +90,12 @@ mfix::Regrid ()
           new_particle_dm = DistributionMapping::makeSFC(*particle_cost[lev], false);
         }
         else if (load_balance_type == "Greedy") {
-          pc->partitionParticleGrids(lev, this->boxArray(lev), this->DistributionMap(lev), 
+          pc->partitionParticleGrids(lev, this->boxArray(lev), this->DistributionMap(lev),
                                      greedy_dir, overload_toler, underload_toler);
           new_particle_dm = pc->ParticleDistributionMap(lev);
         }
 
-        // Regrid. Note that particles need to be sorted because the re-distribution 
+        // Regrid. Note that particles need to be sorted because the re-distribution
         // will mess up their stride pattern in memory.
         pc->Regrid(new_particle_dm, pc->ParticleBoxArray(lev), lev);
         if (sort_particle_int > 0)  pc->SortParticlesByBin(particle_sorting_bin);

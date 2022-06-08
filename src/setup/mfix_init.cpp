@@ -537,8 +537,38 @@ void mfix::Init (Real time)
      ***************************************************************************/
 
     if (DEM::solve || PIC::solve) {
-      pc = new MFIXParticleContainer(this, solids, fluid, reactions);
+      BoxList             pbl{ba.boxList()};
+      BoxArray            pba{ba};
+      DistributionMapping pdm(dm.ProcessorMap());
+      Vector<int>         pboxmap;  // map each particle box to its parent fluid box
+
+      // chop grids to use all the gpus for particle generation
+      if (dual_grid && ba.size() < ParallelDescriptor::NProcs()) {
+        IntVect reduced_size = max_grid_size[0];
+        while (pbl.size() < ParallelDescriptor::NProcs()) {
+          pbl.clear();
+          pboxmap.clear();
+
+          int maxdir = reduced_size.maxDir(false);
+          reduced_size[maxdir] /= 2;
+          for (auto i=0; i<pba.size(); i++) {
+            BoxArray tmpba{pba[i]};
+            tmpba.maxSize(reduced_size);
+            pbl.join(tmpba.boxList());
+            pboxmap.insert(pboxmap.end(), tmpba.size(), i);
+          }
+          pba.define(pbl);
+        }
+
+        pdm.define(pba, ParallelDescriptor::NProcs());
+      }
+
+      pc = new MFIXParticleContainer(geom[0], pdm, pba, this->maxLevel()+1,
+                                     solids, fluid, reactions);
       pc->setSortingBinSizes(IntVect(particle_sorting_bin));
+
+      if (!pboxmap.empty())
+        pc->setParticleFluidGridMap(pboxmap);
 
       // Updating mfixRW pc pointer is needed since mfix pc has changed
       mfixRW->set_pc(pc);

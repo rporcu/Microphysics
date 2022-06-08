@@ -147,6 +147,16 @@ class MFIXParticleContainer final
                            FluidPhase& fluid,
                            Reactions& reactions);
 
+    MFIXParticleContainer (const amrex::Geometry&            geom,
+                           const amrex::DistributionMapping& dmap,
+                           const amrex::BoxArray&            ba,
+                           const int                         nlev,
+                           SolidsPhase&                      solids,
+                           FluidPhase&                       fluid,
+                           Reactions&                        reactions);
+
+    void define();
+
     virtual ~MFIXParticleContainer () {};
 
     void InitData ();
@@ -353,6 +363,8 @@ class MFIXParticleContainer final
     void printGhostParticleCount();
 
     void ReadParameters();
+
+    void setParticleFluidGridMap(const amrex::Vector<int>& boxmap);
 
   private:
     int nlev;

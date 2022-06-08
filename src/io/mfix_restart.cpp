@@ -164,7 +164,6 @@ mfix::Restart (std::string& restart_file,
           // This is needed before initializing level MultiFabs: ebfactories
           // should not change after the eb-dependent MultiFabs are allocated.
           make_eb_geometry();
-          make_eb_factories();
 
           // Particle data is loaded into the MFIXParticleContainer's base
           // class using amrex::NeighborParticleContainer::Restart
@@ -395,6 +394,7 @@ mfix::Restart (std::string& restart_file,
         {
           pc->SetParticleBoxArray       (lev, grids[lev]);
           pc->SetParticleDistributionMap(lev,  dmap[lev]);
+          pc->SetParticleGeometry       (lev,  geom[lev]);
         }
         pc->Redistribute();
 
@@ -408,6 +408,10 @@ mfix::Restart (std::string& restart_file,
           pc->Replicate(Nrep, geom[lev], dmap[lev], grids[lev]);
        }
     }
+
+    // make fluid and particle factories
+    // This uses particles' ba and dm so it needs to be after setting up pc.
+    make_eb_factories();
 
    /****************************************************************************
     * Load level set data from checkpoint file                                 *
@@ -467,6 +471,7 @@ mfix::Restart (std::string& restart_file,
            fill_eb_levelsets();
         }
     }
+
     if (fluid.solve)
     {
         for (int lev = 0; lev <= finestLevel(); lev++)
