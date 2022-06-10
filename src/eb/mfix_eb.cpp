@@ -157,14 +157,16 @@ void mfix::make_eb_factories () {
 
         // Grow EB factory by +2 in order to avoid edge cases. This is not
         // necessary for multi-level mfix.
-        particle_ebfactory[lev] =
-            std::make_unique<EBFArrayBoxFactory>(*particle_eb_levels[lev], geom[lev],
-                                                 pc->ParticleBoxArray(lev),
-                                                 pc->ParticleDistributionMap(lev),
-                                                 amrex::Vector<int>{levelset_eb_pad + 2,
-                                                                    levelset_eb_pad + 2,
-                                                                    levelset_eb_pad + 2},
-                                                 m_eb_support_level);
+        if (DEM::solve || PIC::solve) {
+            particle_ebfactory[lev] =
+                std::make_unique<EBFArrayBoxFactory>(*particle_eb_levels[lev], geom[lev],
+                                                     pc->ParticleBoxArray(lev),
+                                                     pc->ParticleDistributionMap(lev),
+                                                     amrex::Vector<int>{levelset_eb_pad + 2,
+                                                                        levelset_eb_pad + 2,
+                                                                        levelset_eb_pad + 2},
+                                                     m_eb_support_level);
+        }
     }
 }
 
