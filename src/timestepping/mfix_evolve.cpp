@@ -14,8 +14,10 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     Real drag_timing(0.);
     Real sum_vol;
 
-    if ((DEM::solve || PIC::solve) && fluid.solve)
-    {
+    if ((DEM::solve || PIC::solve) && fluid.solve) {
+
+      //BL_PROFILE_REGION("CALC VOLUME FRACTION");
+
       Real start_coupling = ParallelDescriptor::second();
       mfix_calc_volume_fraction(sum_vol);
       //const IntVect min_epg_cell = mfix_print_min_epg();
@@ -29,16 +31,17 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     }
 
     Real start_fluid = ParallelDescriptor::second();
-    BL_PROFILE_VAR("FLUID SOLVE",fluidSolve);
-    for (int lev = 0; lev <= finest_level; lev++)
     {
-       if (fluid.solve)
-       {
-          EvolveFluid(nstep, dt, prev_dt, time, stop_time, drag_timing);
-          prev_dt = dt;
-       }
-    }
-    BL_PROFILE_VAR_STOP(fluidSolve);
+      BL_PROFILE_REGION("FLUID SOLVE");
+      for (int lev = 0; lev <= finest_level; lev++)
+      {
+         if (fluid.solve)
+         {
+            EvolveFluid(nstep, dt, prev_dt, time, stop_time, drag_timing);
+            prev_dt = dt;
+         }
+      }
+    } // end fluid profile region
 
     Real end_fluid = ParallelDescriptor::second() - start_fluid - drag_timing;
     ParallelDescriptor::ReduceRealMax(end_fluid, ParallelDescriptor::IOProcessorNumber());
@@ -47,12 +50,15 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     // This returns the drag force on the particle
     Real new_time = time+dt;
     if ( (DEM::solve || PIC::solve) && fluid.solve){
+
+      //BL_PROFILE_REGION("CALC TXFR PARTICLE");
+
       Real start_coupling = ParallelDescriptor::second();
-
-      mfix_calc_txfr_particle(new_time, get_ep_g(), get_ro_g(), get_vel_g(),
-                              get_T_g(), get_X_gk(), get_thermodynamic_p_g(),
-                              get_gp());
-
+      for (int lev = 0; lev <= finest_level; lev++) {
+        mfix_calc_txfr_particle(new_time, get_ep_g(), get_ro_g(), get_vel_g(),
+                                get_T_g(), get_X_gk(), get_thermodynamic_p_g(),
+                                get_gp());
+      }
       coupling_timing += ParallelDescriptor::second() - start_coupling + drag_timing;
 
       ParallelDescriptor::ReduceRealMax(coupling_timing, ParallelDescriptor::IOProcessorNumber());
@@ -66,12 +72,13 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
 
     Real start_particles = ParallelDescriptor::second();
 
-    BL_PROFILE_VAR("PARTICLES SOLVE", particlesSolve);
 
     int nsubsteps;
 
-    if (DEM::solve)
-    {
+    if (DEM::solve) {
+
+        BL_PROFILE_REGION("DEM PARTICLE SOLVE");
+
         if (finest_level == 0)
         {
             //___________________________________________________________________
@@ -109,12 +116,12 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
     }
 
     if (PIC::solve) {
+
+        BL_PROFILE_REGION("PIC PARTICLE SOLVE");
         //const IntVect min_epg_cell = mfix_print_min_epg();
         EvolveParcels(dt, time, mfix::gravity, levelset_refinement,
                       particle_cost, knapsack_weight_type);
     }
-
-    BL_PROFILE_VAR_STOP(particlesSolve);
 
     Real end_particles = ParallelDescriptor::second() - start_particles;
     ParallelDescriptor::ReduceRealMax(end_particles, ParallelDescriptor::IOProcessorNumber());

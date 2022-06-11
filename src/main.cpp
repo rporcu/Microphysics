@@ -220,7 +220,7 @@ int main (int argc, char* argv[])
     { // Start profiling solve here
 
         BL_PROFILE("mfix_solve");
-        BL_PROFILE_REGION("mfix_solve");
+        //BL_PROFILE_REGION("mfix_solve");
 
         if ( !do_not_evolve)
         {
