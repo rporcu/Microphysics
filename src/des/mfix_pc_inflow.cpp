@@ -407,7 +407,7 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
 
   Redistribute(0, 0, 0, 1);
 
-  ParallelDescriptor::ReduceIntSum(total_np,ParallelDescriptor::IOProcessorNumber());
-  amrex::Print() << "Total number of particles: " <<
-    time << " " << total_np << std::endl;
+  //ParallelDescriptor::ReduceIntSum(total_np,ParallelDescriptor::IOProcessorNumber());
+  //amrex::Print() << "Total number of particles: " <<
+  //  time << " " << total_np << std::endl;
 }

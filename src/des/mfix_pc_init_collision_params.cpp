@@ -16,8 +16,6 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
   avg_dp.resize(solids.NTYPES);
   avg_ro.resize(solids.NTYPES);
 
-  Print() << "NTYPES = " << solids.NTYPES << "\n";
-
   // Cycle through the different phases, starting from 1
   for (const int& phase: solids.phases)
   {
@@ -143,8 +141,6 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
   for (const int& phase: solids.phases)
   {
     const int phase_idx = SolidsPhase::phase_to_index(phase);
-
-    printf("avg_dp[%d] = %e\n", phase_idx, avg_dp[phase_idx]);
 
      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(avg_dp[phase_idx] > 0.0,
         "Average particle diameter cannot be zero");
