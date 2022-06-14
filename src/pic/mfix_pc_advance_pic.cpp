@@ -162,8 +162,6 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
           //*********************************************************************
           if (solve_enthalpy) {
 
-            const int phase = p_intarray[SoAintData::phase][lp];
-
             const Real Tp_old = p_realarray[SoArealData::temperature][lp];
 
             const Real coeff = solve_mass ? (p_mass_old/p_mass_new) : 1.;
@@ -177,7 +175,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
                 p_enthalpy_old += X_sn[n_s]*h_sn;
               }
             } else {
-              p_enthalpy_old = solids_parms.calc_h_s<run_on>(phase-1,Tp_old);
+              p_enthalpy_old = solids_parms.calc_h_s<run_on>(Tp_old);
             }
 
             Real p_enthalpy_new = coeff*p_enthalpy_old +
@@ -197,7 +195,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
               if (!solid_is_a_mixture) {
 
-                hp_loc = solids_parms.calc_h_s<run_on>(phase-1,Tp_arg);
+                hp_loc = solids_parms.calc_h_s<run_on>(Tp_arg);
               } else {
 
                 for (int n(0); n < nspecies_s; ++n) {
@@ -217,7 +215,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
               if (!solid_is_a_mixture) {
 
-                gradient = solids_parms.calc_partial_h_s<run_on>(phase-1,Tp_arg);
+                gradient = solids_parms.calc_partial_h_s<run_on>(Tp_arg);
 
               } else {
 
@@ -248,7 +246,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
               }
 
             } else {
-              cp_s_new = solids_parms.calc_cp_s<run_on>(phase-1,Tp_new);
+              cp_s_new = solids_parms.calc_cp_s<run_on>(Tp_new);
             }
 
             AMREX_ASSERT(cp_s_new > 0.);

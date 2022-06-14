@@ -314,6 +314,7 @@ MfixRW::Initialize (const Regions& regions)
           const std::string& solids_name = solids.names[j];
 
           if (name.compare(solids_name) == 0) {
+            // TODO TODO TODO check this
             plot_region.m_h_plot_types[i] = j+1;
             found = 1;
             break;
@@ -393,7 +394,7 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 
         auto& plot_region = m_solids_plot_regions[n];
 
-        int plot_test = 0;
+        plot_test = 0;
 
         if (first) {
           if (//(restart_file.empty() || plotfile_on_restart) &&

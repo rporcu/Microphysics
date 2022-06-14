@@ -138,6 +138,12 @@ fluid.solve = None
 
 
 #_______________________________________________________________________
+# Solids model settings
+#
+solids.types = solid0
+
+
+#_______________________________________________________________________
 # DEM model settings
 #
 dem.solve = solid0

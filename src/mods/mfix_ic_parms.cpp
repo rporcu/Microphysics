@@ -116,7 +116,7 @@ namespace IC
           }
 
           new_ic.fluid.density = (fluid.thermodynamic_pressure * MW_g) /
-                                 (fluid_parms.R * new_ic.fluid.temperature);
+                                 (FluidPhase::R * new_ic.fluid.temperature);
         }
       }
 
@@ -126,22 +126,23 @@ namespace IC
         if (fluid.solve && new_ic.fluid.volfrac < 1.0) {
 
           // Get the list of solids used in defining the IC region
-          std::vector<std::string> solids_types;
+          std::vector<std::string> solids_names;
           {
             std::string field = "ic."+input_regions[icv];
             amrex::ParmParse ppSolid(field.c_str());
-            ppSolid.getarr("solids", solids_types);
+            ppSolid.getarr("solids", solids_names);
             ppSolid.get("packing", new_ic.packing);
           }
 
-          for (size_t lcs(0); lcs < solids_types.size(); ++lcs) {
+          for (size_t lcs(0); lcs < solids_names.size(); ++lcs) {
 
             SOLIDS_t new_solid;
 
-            std::string field = "ic."+input_regions[icv]+"."+solids_types[lcs];
+            std::string field = "ic."+input_regions[icv]+"."+solids_names[lcs];
             amrex::ParmParse ppSolid(field.c_str());
 
-            new_solid.name = solids_types[lcs];
+            new_solid.name = solids_names[lcs];
+            new_solid.phase = solids.name_to_phase(solids_names[lcs]);
 
             ppSolid.get("volfrac", new_solid.volfrac);
             volfrac_total += new_ic.fluid.volfrac;
@@ -159,7 +160,7 @@ namespace IC
               int err = new_solid.diameter.set(field, "diameter");
               if(err) {
                 std::string message = " Error: IC region " + input_regions[icv]
-                  + " has invalid diameter parameters for solids " + solids_types[lcs] + "\n";
+                  + " has invalid diameter parameters for solids " + solids_names[lcs] + "\n";
                 amrex::Print() << message;
                 amrex::Abort(message);
               }
@@ -169,7 +170,7 @@ namespace IC
               int err = new_solid.density.set(field, "density");
               if(err) {
                 std::string message = " Error: BC region " + input_regions[icv]
-                  + " has invalid density parameters for solids " + solids_types[lcs] + "\n";
+                  + " has invalid density parameters for solids " + solids_names[lcs] + "\n";
                 amrex::Print() << message;
                 amrex::Abort(message);
               }
@@ -180,7 +181,6 @@ namespace IC
               std::string species_field = field+".species";
               amrex::ParmParse ppSpecies(species_field.c_str());
 
-              // TODO: check this when nb of solids > 1
               new_solid.species.resize(solids.nspecies);
 
               amrex::Real total_mass_fraction(0);
@@ -194,7 +194,7 @@ namespace IC
 
               // Sanity check that the input species mass fractions sum up to 1
               if (!(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
-                std::string message = "Error: SOLID type " + solids_types[lcs]
+                std::string message = "Error: SOLID type " + solids_names[lcs]
                   + " species ICs mass fractions in region " + input_regions[icv]
                   + " sum up to " + std::to_string(total_mass_fraction) + "\n";
 
@@ -210,21 +210,22 @@ namespace IC
         else {
 
           // Get the list of solids used in defining the IC region
-          std::vector<std::string> solids_types(0);
+          std::vector<std::string> solids_names(0);
           {
             std::string field = "ic."+input_regions[icv];
             amrex::ParmParse ppSolid(field.c_str());
-            ppSolid.queryarr("solids", solids_types);
+            ppSolid.queryarr("solids", solids_names);
           }
 
-          for(size_t lcs(0); lcs < solids_types.size(); ++ lcs) {
+          for(size_t lcs(0); lcs < solids_names.size(); ++ lcs) {
 
             SOLIDS_t new_solid;
 
-            std::string field = "ic."+input_regions[icv]+"."+solids_types[lcs];
+            std::string field = "ic."+input_regions[icv]+"."+solids_names[lcs];
             amrex::ParmParse ppSolid(field.c_str());
 
-            new_solid.name = solids_types[lcs];
+            new_solid.name = solids_names[lcs];
+            new_solid.phase = solids.name_to_phase(solids_names[lcs]);
 
             if (fluid.solve_enthalpy || solids.solve_enthalpy) {
               ppSolid.get("temperature", new_solid.temperature);
@@ -235,7 +236,6 @@ namespace IC
               std::string species_field = field+".species";
               amrex::ParmParse ppSpecies(species_field.c_str());
 
-              // TODO: check this when nb of solids > 1
               new_solid.species.resize(solids.nspecies);
 
               for (int n(0); n < solids.nspecies; n++) {

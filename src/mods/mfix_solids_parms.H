@@ -12,111 +12,59 @@
 #include <mfix_reactions_parms.H>
 
 
+// Forward declaration
+class SolidsPhase;
+
+struct SOLIDSTHERMALCONDUCTIVITYMODEL { enum {Invalid=-1, Constant}; };
+
+
 class SolidsParms {
 
-  public:
+  private:
+    friend class SolidsPhase;
+
     static constexpr amrex::Real R =  8.31446261815324;
 
-    const amrex::Real  m_T_ref;
-    const int          m_nspecies;
-    const int*         m_h_species_id;
-    const int*         m_d_species_id;
+    amrex::Real  m_T_ref;
 
-  private:
-    const amrex::Real* m_h_MW_sn;
-    const amrex::Real* m_d_MW_sn;
-//    const int m_ncoefficients;
-    const amrex::Real* m_h_cp_sn;
-    const amrex::Real* m_d_cp_sn;
-    const amrex::Real* m_h_H_fn;
-    const amrex::Real* m_d_H_fn;
-    const int          m_nreactions;
-    const amrex::Real* m_h_stoich_coeffs;
-    const amrex::Real* m_d_stoich_coeffs;
-    const amrex::Real* m_h_kp_sn;
-    const amrex::Real* m_d_kp_sn;
-    const amrex::Real  m_flpc;
-    const amrex::Real  m_rough;
-    const int          m_do_pfp_cond;
+    int* m_h_species_id;
+    int* m_d_species_id;
 
+    amrex::Real* m_h_MW_sn;
+    amrex::Real* m_d_MW_sn;
 
-    // List of recognized particle specific heat models
-    struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA7Polynomials, NASA9Polynomials};  };
+    amrex::Real* m_h_cp_sn;
+    amrex::Real* m_d_cp_sn;
+
+    amrex::Real* m_h_H_fn;
+    amrex::Real* m_d_H_fn;
+
+    int  m_nreactions;
+
+    amrex::Real* m_h_stoich_coeffs;
+    amrex::Real* m_d_stoich_coeffs;
+
+    amrex::Real* m_h_kp_sn;
+    amrex::Real* m_d_kp_sn;
+
+    amrex::Real m_flpc;
+
+    amrex::Real m_rough;
+
+    int m_do_pfp_cond;
+
     int m_specific_heat_model;
-
-    // List of recognized particle conductivity models
-    struct CONDUCTIVITYMODEL { enum {Invalid=-1, Constant};  };
-    int m_conductivity_model;
+    int m_thermal_conductivity_model;
 
   public:
     AMREX_GPU_HOST_DEVICE
-    SolidsParms ()
-      : m_T_ref(0)
-      , m_nspecies(0)
-      , m_h_species_id(nullptr)
-      , m_d_species_id(nullptr)
-      , m_h_MW_sn(nullptr)
-      , m_d_MW_sn(nullptr)
-//      , m_ncoefficients(0)
-      , m_h_cp_sn(nullptr)
-      , m_d_cp_sn(nullptr)
-      , m_h_H_fn(nullptr)
-      , m_d_H_fn(nullptr)
-      , m_nreactions(0)
-      , m_h_stoich_coeffs(nullptr)
-      , m_d_stoich_coeffs(nullptr)
-      , m_h_kp_sn(nullptr)
-      , m_d_kp_sn(nullptr)
+    SolidsParms (const amrex::Real T_ref)
+      : m_T_ref(T_ref)
       , m_flpc(0.4)
       , m_rough(2E-8)
       , m_do_pfp_cond(0)
       , m_specific_heat_model(SPECIFICHEATMODEL::Invalid)
-      , m_conductivity_model(CONDUCTIVITYMODEL::Invalid)
-    {}
-
-    AMREX_GPU_HOST_DEVICE
-    SolidsParms (const amrex::Real T_ref,
-                 const int nspecies,
-                 const int* h_species_id,
-                 const int* d_species_id,
-                 const amrex::Real* h_MW_sn,
-                 const amrex::Real* d_MW_sn,
-                 const int /*ncoefficients*/,
-                 const amrex::Real* h_cp_sn,
-                 const amrex::Real* d_cp_sn,
-                 const amrex::Real* h_H_fn,
-                 const amrex::Real* d_H_fn,
-                 const int nreactions,
-                 const amrex::Real* h_stoich_coeffs,
-                 const amrex::Real* d_stoich_coeffs,
-                 const amrex::Real* h_kp_sn,
-                 const amrex::Real* d_kp_sn,
-                 const amrex::Real flpc,
-                 const amrex::Real rough,
-                 const int do_pfp_cond,
-                 const int specific_heat_model,
-                 const int conductivity_model)
-      : m_T_ref(T_ref)
-      , m_nspecies(nspecies)
-      , m_h_species_id(h_species_id)
-      , m_d_species_id(d_species_id)
-      , m_h_MW_sn(h_MW_sn)
-      , m_d_MW_sn(d_MW_sn)
-//      , m_ncoefficients(ncoefficients)
-      , m_h_cp_sn(h_cp_sn)
-      , m_d_cp_sn(d_cp_sn)
-      , m_h_H_fn(h_H_fn)
-      , m_d_H_fn(d_H_fn)
-      , m_nreactions(nreactions)
-      , m_h_stoich_coeffs(h_stoich_coeffs)
-      , m_d_stoich_coeffs(d_stoich_coeffs)
-      , m_h_kp_sn(h_kp_sn)
-      , m_d_kp_sn(d_kp_sn)
-      , m_flpc(flpc)
-      , m_rough(rough)
-      , m_do_pfp_cond(do_pfp_cond)
-      , m_specific_heat_model(specific_heat_model)
-      , m_conductivity_model(conductivity_model)
+      , m_thermal_conductivity_model(SOLIDSTHERMALCONDUCTIVITYMODEL::Invalid)
     {}
 
     // Driver molecular weight
@@ -159,27 +107,24 @@ class SolidsParms {
     // Driver heat capacity
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_cp_s (const int phase,
-                           const amrex::Real T_s) const
+    amrex::Real calc_cp_s (const amrex::Real T_s) const
     {
-      return calc_cp_sn<run_on>(T_s, phase);
+      return calc_cp_sn<run_on>(T_s, 0);
     }
 
     // Driver enthalpy
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_h_s (const int phase,
-                          const amrex::Real T_s) const
+    amrex::Real calc_h_s (const amrex::Real T_s) const
     {
-      return calc_h_sn<run_on>(T_s, phase);
+      return calc_h_sn<run_on>(T_s, 0);
     }
 
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    amrex::Real calc_partial_h_s (const int phase,
-                                  const amrex::Real T_s) const
+    amrex::Real calc_partial_h_s (const amrex::Real T_s) const
     {
-      return calc_partial_h_sn<run_on>(T_s, phase);
+      return calc_partial_h_sn<run_on>(T_s, 0);
     }
 
     template <amrex::RunOn run_on>
@@ -254,7 +199,6 @@ class SolidsParms {
 
           coeff *= T_s;
         }
-
       }
 
       return result;
@@ -325,7 +269,7 @@ class SolidsParms {
     {
       amrex::Real result(0);
 
-      if (m_conductivity_model == CONDUCTIVITYMODEL::Constant) {
+      if (m_thermal_conductivity_model == SOLIDSTHERMALCONDUCTIVITYMODEL::Constant) {
 
         if (run_on == amrex::RunOn::Gpu) {
 
@@ -352,20 +296,24 @@ class SolidsPhase
     // Destructor
     ~SolidsPhase();
 
-    static constexpr int NMAX = 10;
-
     int NTYPES;
 
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    static int phase_to_index (const int phase)
+    { return phase-1; }
+
     // List of recognized fluid specific heat models
-    struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA7Polynomials, NASA9Polynomials}; };
-    int SpecificHeatModel;
+    int specific_heat_model;
 
     // List of recognized fluid thermal conductivity models
-    struct THERMALCONDUCTIVITYMODEL{ enum {Invalid=-1, Constant}; };
-    int ThermalConductivityModel;
+    int thermal_conductivity_model;
 
     // Names of solids used in IC/BC setups
     amrex::Vector<std::string> names;
+
+    amrex::Vector<int> phases;
+
+    int name_to_phase (const std::string& name) const;
 
     // Flag to turn on/off particles mass update
     int solve_mass;
@@ -402,13 +350,13 @@ class SolidsPhase
     // Flag to set solids as a mixture of solids species
     int is_a_mixture;
 
-    // Specified constant species enthalpy of formation
-    amrex::Gpu::HostVector<amrex::Real> H_fn0;
-    amrex::Gpu::DeviceVector<amrex::Real> d_H_fn0;
-
     // Specified constant specific heat
     amrex::Gpu::HostVector<amrex::Real> cp_sn0;
     amrex::Gpu::DeviceVector<amrex::Real> d_cp_sn0;
+
+    // Specified constant species enthalpy of formation
+    amrex::Gpu::HostVector<amrex::Real> H_fn0;
+    amrex::Gpu::DeviceVector<amrex::Real> d_H_fn0;
 
     // Tables for stoichiometric coefficients for each species in each reaction
     amrex::Gpu::HostVector<amrex::Real> stoich_coeffs;
@@ -474,6 +422,7 @@ struct INPUT_DIST_t {
 struct SOLIDS_t {
 
   std::string name;
+  int phase;
   amrex::Real volfrac;
   amrex::Real statwt;
   amrex::Real temperature;
@@ -488,6 +437,7 @@ struct SOLIDS_t {
   INPUT_DIST_t density;
 
   SOLIDS_t() :
+    phase(0),
     volfrac(0.0),
     statwt(0.0),
     temperature(0.0),

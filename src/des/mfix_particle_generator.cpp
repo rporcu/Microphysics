@@ -35,7 +35,7 @@ ParticlesGenerator::ParticlesGenerator (const amrex::IntVect& bx_lo,
                                         const int id,
                                         const int cpu,
                                         const int icv,
-                                        const int type)
+                                        const int phase)
   : m_bx_lo(bx_lo)
   , m_bx_hi(bx_hi)
   , m_plo(plo)
@@ -43,7 +43,7 @@ ParticlesGenerator::ParticlesGenerator (const amrex::IntVect& bx_lo,
   , m_id(id)
   , m_cpu(cpu)
   , m_icv(icv)
-  , m_type(type)
+  , m_phase(phase)
 {}
 
 
@@ -74,7 +74,7 @@ ParticlesGenerator::generate (int& particles_count,
   if (DEM::solve && ic_pack_type_str.compare("hcp") == 0) {
 
     Hex_ClosePack hex_close_pack(m_plo, m_dx);
-    hex_close_pack.setup(m_bx_lo, m_bx_hi, m_icv, m_type);
+    hex_close_pack.setup(m_bx_lo, m_bx_hi, m_icv, m_phase);
     generate(particles_count, particles, hex_close_pack);
 
   } else if (DEM::solve && ic_pack_type_str.compare("random") == 0) {
@@ -83,13 +83,13 @@ ParticlesGenerator::generate (int& particles_count,
     m_d_data.clear();
 
     RandomFill_DEM random_fill_dem(m_plo, m_dx);
-    random_fill_dem.setup(m_bx_lo, m_bx_hi, m_icv, m_type, m_h_data, m_d_data, false);
+    random_fill_dem.setup(m_bx_lo, m_bx_hi, m_icv, m_phase, m_h_data, m_d_data, false);
     generate(particles_count, particles, random_fill_dem);
 
   } else if (PIC::solve && ic_pack_type_str.compare("random") == 0) {
 
     RandomFill_PIC random_fill_pic(m_plo, m_dx);
-    random_fill_pic.setup(m_bx_lo, m_bx_hi, m_icv, m_type, false);
+    random_fill_pic.setup(m_bx_lo, m_bx_hi, m_icv, m_phase, false);
     generate(particles_count, particles, random_fill_pic);
 
   } else if (DEM::solve && ic_pack_type_str.compare("pseudo_random") == 0) {
@@ -98,20 +98,20 @@ ParticlesGenerator::generate (int& particles_count,
     m_d_data.clear();
 
     RandomFill_DEM random_fill_dem(m_plo, m_dx);
-    random_fill_dem.setup(m_bx_lo, m_bx_hi, m_icv, m_type, m_h_data, m_d_data, true);
+    random_fill_dem.setup(m_bx_lo, m_bx_hi, m_icv, m_phase, m_h_data, m_d_data, true);
 
     generate(particles_count, particles, random_fill_dem);
 
   } else if (PIC::solve && ic_pack_type_str.compare("pseudo_random") == 0) {
 
     RandomFill_PIC random_fill_pic(m_plo, m_dx);
-    random_fill_pic.setup(m_bx_lo, m_bx_hi, m_icv, m_type, true);
+    random_fill_pic.setup(m_bx_lo, m_bx_hi, m_icv, m_phase, true);
     generate(particles_count, particles, random_fill_pic);
 
   } else if (cube_base > 0) {
 
     nCubePer_Fill n_cube_per_fill(cube_base, m_plo, m_dx);
-    n_cube_per_fill.setup(m_bx_lo, m_bx_hi, m_icv, m_type);
+    n_cube_per_fill.setup(m_bx_lo, m_bx_hi, m_icv, m_phase);
     generate(particles_count, particles, n_cube_per_fill);
 
   } else {
@@ -132,32 +132,32 @@ void ParticlesGenerator::generate (int& particles_count,
 
   particles.resize(current_size + particles_count);
 
-  const SOLIDS_t& solid = IC::ic[m_icv].solids[m_type];
+  const SOLIDS_t& ic_solid = *(IC::ic[m_icv].get_solid(m_phase));
 
   // Setup particle diameters parameters
 
-  int diameter_distr_uniform(solid.diameter.is_uniform());
-  int diameter_distr_normal(solid.diameter.is_normal());
-  Real diameter_mean = solid.diameter.get_mean();
-  Real diameter_stddev = solid.diameter.get_stddev();
-  Real diameter_min = solid.diameter.get_min();
-  Real diameter_max = solid.diameter.get_max();
+  int diameter_distr_uniform(ic_solid.diameter.is_uniform());
+  int diameter_distr_normal(ic_solid.diameter.is_normal());
+  Real diameter_mean = ic_solid.diameter.get_mean();
+  Real diameter_stddev = ic_solid.diameter.get_stddev();
+  Real diameter_min = ic_solid.diameter.get_min();
+  Real diameter_max = ic_solid.diameter.get_max();
 
   // Setup particle densities parameters
 
-  int density_distr_uniform(solid.density.is_uniform());
-  int density_distr_normal(solid.density.is_normal());
-  Real density_mean(solid.density.get_mean());
-  Real density_stddev(solid.density.get_stddev());
-  Real density_min(solid.density.get_min());
-  Real density_max(solid.density.get_max());
+  int density_distr_uniform(ic_solid.density.is_uniform());
+  int density_distr_normal(ic_solid.density.is_normal());
+  Real density_mean(ic_solid.density.get_mean());
+  Real density_stddev(ic_solid.density.get_stddev());
+  Real density_min(ic_solid.density.get_min());
+  Real density_max(ic_solid.density.get_max());
 
   // Get particles initial velocity
-  const Real ic_u_s = solid.velocity[0];
-  const Real ic_v_s = solid.velocity[1];
-  const Real ic_w_s = solid.velocity[2];
+  const Real ic_u_s = ic_solid.velocity[0];
+  const Real ic_v_s = ic_solid.velocity[1];
+  const Real ic_w_s = ic_solid.velocity[2];
 
-  const Real statwt = solid.statwt;
+  const Real statwt = ic_solid.statwt;
 
   auto& aos = particles.GetArrayOfStructs();
   ParticleType* pstruct = aos().dataPtr();
@@ -168,13 +168,13 @@ void ParticlesGenerator::generate (int& particles_count,
 
   const Real picmulti = (DEM::solve) ? 1.0 : 0.0;
 
-  const int type = m_type;
+  const int phase = m_phase;
   const int local_cg_dem=DEM::cg_dem;
   const int id = m_id;
   const int cpu = m_cpu;
 
   amrex::ParallelForRNG(particles_count, [pstruct,p_realarray,p_intarray,
-      picmulti,ic_u_s,ic_v_s,ic_w_s,statwt,type,id,cpu,local_cg_dem,
+      picmulti,ic_u_s,ic_v_s,ic_w_s,statwt,phase,id,cpu,local_cg_dem,
       diameter_distr_uniform,diameter_distr_normal,diameter_mean,current_size,
       diameter_stddev,diameter_min,diameter_max,density_distr_uniform,
       density_distr_normal,density_mean,density_stddev,density_min,density_max,
@@ -252,7 +252,7 @@ void ParticlesGenerator::generate (int& particles_count,
     p_realarray[SoArealData::dragy][p_tot] = 0.0;
     p_realarray[SoArealData::dragz][p_tot] = 0.0;
 
-    p_intarray[SoAintData::phase][p_tot] = type+1;
+    p_intarray[SoAintData::phase][p_tot] = phase;
     p_intarray[SoAintData::state][p_tot] = 1;
   });
 

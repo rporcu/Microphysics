@@ -9,99 +9,49 @@
 #include <mfix_species_parms.H>
 #include <mfix_reactions_parms.H>
 
+// Forward declaration
+class FluidPhase;
+
+struct VISCOSITYMODEL { enum {Invalid=-1, Constant, Sutherland}; };
+struct FLUIDTHERMALCONDUCTIVITYMODEL{ enum {Invalid=-1, Constant}; };
 
 // Projection constraint type
 struct ConstraintType { enum {IncompressibleFluid, IdealGasOpenSystem, IdealGasClosedSystem}; };
 
 class FluidParms {
 
-  public:
+  private:
+    // Friendship so FluidPhase can access private members
+    friend class FluidPhase;
+
     static constexpr amrex::Real R =  8.31446261815324;
 
-    const amrex::Real  m_T_ref;
-    const amrex::Real  m_mu_g;
-    const amrex::Real  m_k_g;
-    const int          m_nspecies;
-    const int*         m_h_species_id;
-    const int*         m_d_species_id;
+    amrex::Real  m_T_ref;
+    amrex::Real  m_mu_g;
+    amrex::Real  m_k_g;
+    int          m_nspecies;
+    int*         m_h_species_id;
+    int*         m_d_species_id;
 
-  private:
-    const amrex::Real* m_h_MW_gk;
-    const amrex::Real* m_d_MW_gk;
-    const amrex::Real m_D_g;
-//    const int m_ncoefficients;
-    const amrex::Real* m_h_cp_gk;
-    const amrex::Real* m_d_cp_gk;
-    const amrex::Real* m_h_H_fk;
-    const amrex::Real* m_d_H_fk;
-    const int          m_nreactions;
-    const amrex::Real* m_h_stoich_coeffs;
-    const amrex::Real* m_d_stoich_coeffs;
+    amrex::Real* m_h_MW_gk;
+    amrex::Real* m_d_MW_gk;
+    amrex::Real m_D_g;
+    amrex::Real* m_h_cp_gk;
+    amrex::Real* m_d_cp_gk;
+    amrex::Real* m_h_H_fk;
+    amrex::Real* m_d_H_fk;
+    int          m_nreactions;
+    amrex::Real* m_h_stoich_coeffs;
+    amrex::Real* m_d_stoich_coeffs;
 
     // List of recognized fluid specific heat models
-    struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA7Polynomials, NASA9Polynomials}; };
     int m_specific_heat_model;
 
   public:
     AMREX_GPU_HOST_DEVICE
-    FluidParms ()
-      : m_T_ref(0.)
-      , m_mu_g(0.)
-      , m_k_g(0.)
-      , m_nspecies(0)
-      , m_h_species_id(nullptr)
-      , m_d_species_id(nullptr)
-      , m_h_MW_gk(nullptr)
-      , m_d_MW_gk(nullptr)
-      , m_D_g(0)
-//      , m_ncoefficients(0)
-      , m_h_cp_gk(nullptr)
-      , m_d_cp_gk(nullptr)
-      , m_h_H_fk(nullptr)
-      , m_d_H_fk(nullptr)
-      , m_nreactions(0)
-      , m_h_stoich_coeffs(nullptr)
-      , m_d_stoich_coeffs(nullptr)
-      , m_specific_heat_model(SPECIFICHEATMODEL::Invalid)
-    {}
-
-    AMREX_GPU_HOST_DEVICE
-    FluidParms (const amrex::Real T_ref,
-                const amrex::Real mu_g,
-                const amrex::Real k_g,
-                const int nspecies,
-                const int* h_species_id,
-                const int* d_species_id,
-                const amrex::Real* h_MW_gk,
-                const amrex::Real* d_MW_gk,
-                const amrex::Real D_g,
-                const int /*ncoefficients*/,
-                const amrex::Real* h_cp_gk,
-                const amrex::Real* d_cp_gk,
-                const amrex::Real* h_H_fk,
-                const amrex::Real* d_H_fk,
-                const int nreactions,
-                const amrex::Real* h_stoich_coeffs,
-                const amrex::Real* d_stoich_coeffs,
-                const int specific_heat_model)
+    FluidParms (const amrex::Real T_ref)
       : m_T_ref(T_ref)
-      , m_mu_g(mu_g)
-      , m_k_g(k_g)
-      , m_nspecies(nspecies)
-      , m_h_species_id(h_species_id)
-      , m_d_species_id(d_species_id)
-      , m_h_MW_gk(h_MW_gk)
-      , m_d_MW_gk(d_MW_gk)
-      , m_D_g(D_g)
-//      , m_ncoefficients(ncoefficients)
-      , m_h_cp_gk(h_cp_gk)
-      , m_d_cp_gk(d_cp_gk)
-      , m_h_H_fk(h_H_fk)
-      , m_d_H_fk(d_H_fk)
-      , m_nreactions(nreactions)
-      , m_h_stoich_coeffs(h_stoich_coeffs)
-      , m_d_stoich_coeffs(d_stoich_coeffs)
-      , m_specific_heat_model(specific_heat_model)
+      , m_specific_heat_model(SPECIFICHEATMODEL::Invalid)
     {}
 
 
@@ -329,24 +279,16 @@ class FluidPhase {
     ~FluidPhase();
 
     // List of recognized fluid viscosity models
-    struct VISCOSITYMODEL { enum {Invalid=-1, Constant, Sutherland}; };
-
-    int ViscosityModel;
+    int viscosity_model;
 
     // List of recognized species diffusivity models
-    struct DIFFUSIVITYMODEL { enum {Invalid=-1, Constant}; };
-
-    int DiffusivityModel;
+    int diffusivity_model;
 
     // List of recognized fluid specific heat models
-    struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA7Polynomials, NASA9Polynomials}; };
-
-    int SpecificHeatModel;
+    int specific_heat_model;
 
     // List of recognized fluid thermal conductivity models
-    struct THERMALCONDUCTIVITYMODEL{ enum {Invalid=-1, Constant}; };
-
-    int ThermalConductivityModel;
+    int thermal_conductivity_model;
 
     // Ideal gas constant
     static constexpr amrex::Real R = 8.31446261815324;
@@ -542,7 +484,7 @@ struct FLUID_t {
         }
 
         return (fluid.thermodynamic_pressure * MW_g) /
-               (fluid_parms.R * this->get_temperature(time));
+               (FluidPhase::R * this->get_temperature(time));
 
       } else {
 

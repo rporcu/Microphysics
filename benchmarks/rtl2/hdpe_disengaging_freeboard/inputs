@@ -167,6 +167,12 @@ fluid.viscosity.constant = 1.8e-5
 
 
 #_______________________________________________________________________
+# Solids properties
+#
+solids.types = solid0
+
+
+#_______________________________________________________________________
 # DEM model settings
 #
 dem.solve = solid0

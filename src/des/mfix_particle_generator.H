@@ -21,7 +21,7 @@ class ParticlesGenerator {
                         const int id,
                         const int cpu,
                         const int icv,
-                        const int type);
+                        const int phase);
 
     // Particle generator
     void generate (int& particles_count,
@@ -49,7 +49,7 @@ class ParticlesGenerator {
     const int m_id;
     const int m_cpu;
     const int m_icv;
-    const int m_type;
+    const int m_phase;
 };
 
 #endif

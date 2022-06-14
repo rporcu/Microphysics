@@ -457,16 +457,19 @@ namespace BC
       if(DEM::solve || PIC::solve) {
 
         // Get the list of solids used in defining the BC region
-        std::vector<std::string> solids_types;
+        std::vector<std::string> solids_names;
         {
-          ppRegion.queryarr("solids", solids_types);
+          ppRegion.queryarr("solids", solids_names);
         }
 
-        for(size_t lcs(0); lcs < solids_types.size(); ++ lcs){
+        for(size_t lcs(0); lcs < solids_names.size(); ++ lcs){
 
           SOLIDS_t new_solid;
 
-          std::string field = "bc."+input_regions[bcv]+"."+solids_types[lcs];
+          new_solid.name = solids_names[lcs];
+          new_solid.phase = solids.name_to_phase(solids_names[lcs]);
+
+          std::string field = "bc."+input_regions[bcv]+"."+solids_names[lcs];
           amrex::ParmParse ppSolid(field.c_str());
 
           ppSolid.get("volfrac", new_solid.volfrac);
@@ -501,7 +504,7 @@ namespace BC
 
                 } else {
                   std::string message = " Error: BC region " + input_regions[bcv]
-                    + " has an invalid velocity for solids " +  solids_types[lcs] + "\n"
+                    + " has an invalid velocity for solids " +  solids_names[lcs] + "\n"
                     + " Solids velocity can be a scalar (velocity magnitude) or all"
                     + " three velocity components can be supplied.\n Solids inflow"
                     + " cannot not be a function of time.\n";
@@ -514,7 +517,7 @@ namespace BC
               } else {
                   std::string message = " Error: BC region " + input_regions[bcv]
                     + " does not have velocity or volflow specified for solids "
-                    +  solids_types[lcs] + "\n";
+                    +  solids_names[lcs] + "\n";
                   amrex::Print() << message;
                   amrex::Abort(message);
               }
@@ -527,7 +530,7 @@ namespace BC
                 int err = new_solid.diameter.set(field, "diameter");
                 if(err) {
                   std::string message = " Error: BC region " + input_regions[bcv]
-                    + " has invalid diameter parameters for solids " + solids_types[lcs] + "\n";
+                    + " has invalid diameter parameters for solids " + solids_names[lcs] + "\n";
                   amrex::Print() << message;
                   amrex::Abort(message);
                 }
@@ -537,7 +540,7 @@ namespace BC
                 int err = new_solid.density.set(field, "density");
                 if(err) {
                   std::string message = " Error: BC region " + input_regions[bcv]
-                    + " has invalid density parameters for solids " + solids_types[lcs] + "\n";
+                    + " has invalid density parameters for solids " + solids_names[lcs] + "\n";
                   amrex::Print() << message;
                   amrex::Abort(message);
                 }
@@ -564,7 +567,7 @@ namespace BC
 
                 // Sanity check that the input species mass fractions sum up to 1
                 if (!(amrex::Math::abs(total_mass_fraction-1) < 1.e-15)) {
-                  std::string message = "Error: SOLID type " + solids_types[lcs]
+                  std::string message = "Error: SOLID phase " + solids_names[lcs]
                     + " species BCs mass fractions in region " + input_regions[bcv]
                     + " sum up to " + std::to_string(total_mass_fraction) + "\n";
 

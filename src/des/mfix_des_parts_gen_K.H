@@ -44,16 +44,17 @@ class Hex_ClosePack
     void setup (const amrex::IntVect& lo,
                 const amrex::IntVect& hi,
                 const int icv,
-                const int type)
+                const int phase)
     {
       // physical volume of IC region
       const amrex::Real ic_vol = IC::ic[icv].region->volume();
 
-      const amrex::Real mean = IC::ic[icv].solids[type].diameter.get_mean();
+      const auto& ic_solid = *(IC::ic[icv].get_solid(phase));
+      const amrex::Real mean = ic_solid.diameter.get_mean();
 
       // Total particle count is based on mean particle size
       const long seed =
-        static_cast<long>(ic_vol * IC::ic[icv].solids[type].volfrac / ((M_PI/6.0)*mean*mean*mean));
+        static_cast<long>(ic_vol * ic_solid.volfrac / ((M_PI/6.0)*mean*mean*mean));
 
       const amrex::Real xlen = IC::ic[icv].region->hi(0) - IC::ic[icv].region->lo(0);
       const amrex::Real ylen = IC::ic[icv].region->hi(1) - IC::ic[icv].region->lo(1);
@@ -346,7 +347,7 @@ class nCubePer_Fill
     void setup (const amrex::IntVect& lo,
                 const amrex::IntVect& hi,
                 const int icv,
-                const int type)
+                const int phase)
     {
       // This assertion should not be needed.
       AMREX_ALWAYS_ASSERT(amrex::Math::abs(m_dx[0]-m_dx[1]) < 1.e-15);
@@ -373,12 +374,14 @@ class nCubePer_Fill
       // Intersection of mfi box and ic box
       const amrex::Box bx_int = mfi_bx&ic_bx;
 
-      const amrex::Real mean = IC::ic[icv].solids[type].diameter.get_mean();
+      const auto& ic_solid = *(IC::ic[icv].get_solid(phase));
+
+      const amrex::Real mean = ic_solid.diameter.get_mean();
       amrex::Real max_dp(mean);
 
       // Spacing is based on maximum particle size
-      if(IC::ic[icv].solids[type].diameter.get_max() > 0.0)
-        max_dp = IC::ic[icv].solids[type].diameter.get_max();
+      if(ic_solid.diameter.get_max() > 0.0)
+        max_dp = ic_solid.diameter.get_max();
 
       // Scaled m_dx[0] for particle spacing
       m_dxn = m_dx[0]/static_cast<amrex::Real>(m_base);
@@ -481,7 +484,7 @@ class RandomFill_DEM
     void setup (const amrex::IntVect& lo,
                 const amrex::IntVect& hi,
                 const int icv,
-                const int type,
+                const int phase,
                 amrex::Gpu::HostVector<amrex::Real>& h_data,
                 amrex::Gpu::DeviceVector<amrex::Real>& d_data,
                 const bool /*fix_seed*/)
@@ -514,25 +517,27 @@ class RandomFill_DEM
                                  (ic_dhi[1] - ic_dlo[1]) *
                                  (ic_dhi[2] - ic_dlo[2]);
 
-      amrex::Real mean = IC::ic[icv].solids[type].diameter.get_mean();
+      const auto& ic_solid = *(IC::ic[icv].get_solid(phase));
+
+      amrex::Real mean = ic_solid.diameter.get_mean();
 
       // Spacing is based on maximum particle size
-      if(IC::ic[icv].solids[type].diameter.get_max() > 0.)
-        max_dp = IC::ic[icv].solids[type].diameter.get_max();
+      if(ic_solid.diameter.get_max() > 0.)
+        max_dp = ic_solid.diameter.get_max();
       else
-        max_dp = IC::ic[icv].solids[type].diameter.get_mean();
+        max_dp = ic_solid.diameter.get_mean();
 
       // If coarse-grain DEM is activated
       if (DEM::cg_dem)
       {
-        amrex::Real statwt = IC::ic[icv].solids[type].statwt;
+        amrex::Real statwt = ic_solid.statwt;
         mean = std::cbrt(statwt) * mean;
         max_dp = std::cbrt(statwt) * max_dp;
       }
 
       // Particle count is based on mean particle size
       const int seed =
-        static_cast<int>(ic_vol * IC::ic[icv].solids[type].volfrac / ((M_PI/6.0)*mean*mean*mean));
+        static_cast<int>(ic_vol * ic_solid.volfrac / ((M_PI/6.0)*mean*mean*mean));
 
       max_rp = 0.5 * max_dp;
 
@@ -736,7 +741,7 @@ class RandomFill_PIC
     void setup (const amrex::IntVect& lo,
                 const amrex::IntVect& hi,
                 const int icv,
-                const int type,
+                const int phase,
                 const bool /*fix_seed*/)
     {
       const amrex::Real* ic_rlo = IC::ic[icv].region->lo();
@@ -761,14 +766,16 @@ class RandomFill_PIC
       // Number of cells in IC region
       const amrex::Real ic_cells = m_delta_bx[0] * m_delta_bx[1] * m_delta_bx[2];
 
+      const auto& ic_solid = *(IC::ic[icv].get_solid(phase));
+
       // Particle properties: Mean diameter, stat weight, volume
-      const amrex::Real mean = IC::ic[icv].solids[type].diameter.get_mean();
-      const amrex::Real statwt(IC::ic[icv].solids[type].statwt);
+      const amrex::Real mean = ic_solid.diameter.get_mean();
+      const amrex::Real statwt(ic_solid.statwt);
       const amrex::Real parcel_volume = statwt*((M_PI/6.0)*mean*mean*mean);
 
       // Parcels per cell to satisfy the IC condition
       const amrex::Real parcels_per_cell =
-          (m_dx[0] * m_dx[1] * m_dx[2] * IC::ic[icv].solids[type].volfrac / parcel_volume);
+          (m_dx[0] * m_dx[1] * m_dx[2] * ic_solid.volfrac / parcel_volume);
 
       const int whole_parcels_per_cell = static_cast<int>(amrex::Math::floor(parcels_per_cell));
       m_wppc = whole_parcels_per_cell;

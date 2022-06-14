@@ -69,8 +69,7 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
   for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
 
     // BCs with ep_g < 1 and are EB
-    if (BC::bc[bcv].type == BCList::eb &&
-        (1.0 - BC::bc[bcv].fluid.volfrac) > tolerance ) {
+    if (BC::bc[bcv].type == BCList::eb && (1.0 - BC::bc[bcv].fluid.volfrac) > tolerance ) {
 
       // This shouldn't be needed but "just in case"
       if(BC::bc[bcv].solids.size() == 0)
@@ -163,19 +162,20 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
           const int isize = nspecies_s+2; // Tp and cps
           Gpu::HostVector<Real> h_bc_inputs(isize);
 
-          for(int phase(0); phase < BC::bc[bcv].solids.size(); phase++) {
-            if(BC::bc[bcv].solids[phase].volfrac > tolerance) {
+          for(int lcs(0); lcs < BC::bc[bcv].solids.size(); lcs++) {
+            if(BC::bc[bcv].solids[lcs].volfrac > tolerance) {
 
-              const SOLIDS_t solid = BC::bc[bcv].solids[phase];
+              const SOLIDS_t& bc_solid = BC::bc[bcv].solids[lcs];
+              const int phase = bc_solid.phase;
 
               Real Tp(0.0), cp_s(0.0);
               if (adv_enthalpy) {
                 if(!solid_is_a_mixture) {
-                  cp_s = solids_parms.calc_cp_s<RunOn::Host>(phase,Tp);
+                  cp_s = solids_parms.calc_cp_s<RunOn::Host>(Tp);
 
                 } else {
                   for (int n(0); n<nspecies_s; n++) {
-                    const Real Xs_n = solid.species[n].mass_fraction;
+                    const Real Xs_n = bc_solid.species[n].mass_fraction;
                     cp_s += (Xs_n * solids_parms.calc_cp_sn<RunOn::Host>(Tp,n));
                   }
                 }
@@ -184,7 +184,7 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
               h_bc_inputs[1] = Tp;
 
               for (int n(0); n < nspecies_s; n++) {
-                h_bc_inputs[2+n] = solve_species ? solid.species[n].mass_fraction : 0.0;
+                h_bc_inputs[2+n] = solve_species ? bc_solid.species[n].mass_fraction : 0.0;
               }
 
               Gpu::AsyncArray<Real> d_bc_inputs(h_bc_inputs.data(), h_bc_inputs.size());
@@ -192,30 +192,30 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
               Real* p_bc_inputs = (adv_enthalpy || solve_species) ?  d_bc_inputs.data() : nullptr;
 
 
-              const int dp_is_constant = solid.diameter.is_constant();
-              const int dp_is_normal   = solid.diameter.is_normal();
+              const int dp_is_constant = bc_solid.diameter.is_constant();
+              const int dp_is_normal   = bc_solid.diameter.is_normal();
 
-              const Real mean_dp = solid.diameter.get_mean();
-              const Real  max_dp = solid.diameter.get_max();
-              const Real  min_dp = solid.diameter.get_min();
-              const Real  std_dp = solid.diameter.get_stddev();
+              const Real mean_dp = bc_solid.diameter.get_mean();
+              const Real  max_dp = bc_solid.diameter.get_max();
+              const Real  min_dp = bc_solid.diameter.get_min();
+              const Real  std_dp = bc_solid.diameter.get_stddev();
 
-              const int rhop_is_constant = solid.density.is_constant();
-              const int rhop_is_normal   = solid.density.is_normal();
+              const int rhop_is_constant = bc_solid.density.is_constant();
+              const int rhop_is_normal   = bc_solid.density.is_normal();
 
-              const Real mean_rhop = solid.density.get_mean();
-              const Real  max_rhop = solid.density.get_max();
-              const Real  min_rhop = solid.density.get_min();
-              const Real  std_rhop = solid.density.get_stddev();
+              const Real mean_rhop = bc_solid.density.get_mean();
+              const Real  max_rhop = bc_solid.density.get_max();
+              const Real  min_rhop = bc_solid.density.get_min();
+              const Real  std_rhop = bc_solid.density.get_stddev();
 
-              const Real act_area = solid.volfrac*fab_area;
+              const Real act_area = bc_solid.volfrac*fab_area;
 
-              const Real volflow = (solid.velmag < tolerance) ? solid.volflow :
-                  act_area*solid.velmag;
+              const Real volflow = (bc_solid.velmag < tolerance) ? bc_solid.volflow :
+                  act_area*bc_solid.velmag;
 
-              const Real velmag = amrex::max(solid.velmag, volflow/act_area);
+              const Real velmag = amrex::max(bc_solid.velmag, volflow/act_area);
 
-              const Real pvol_per_step = volflow*dt + solid.vol_remainder;
+              const Real pvol_per_step = volflow*dt + bc_solid.vol_remainder;
 
               const Real mean_pvol = (M_PI/6.0) * (mean_dp*mean_dp*mean_dp);
 
@@ -328,7 +328,7 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
 
                 }
 
-                p_int[SoAintData::phase][ip] = phase+1;
+                p_int[SoAintData::phase][ip] = phase;
                 p_int[SoAintData::state][ip] = 0;
 
                 const Real rhop = (rhop_is_constant) ? mean_rhop :
@@ -394,7 +394,7 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
 
               // Store the particle volume underflow/overflow so we can account
               // for it on the next time step.
-              BC::bc[bcv].solids[phase].vol_remainder = pvol_per_step - total_new_vol;
+              BC::bc[bcv].solids[lcs].vol_remainder = pvol_per_step - total_new_vol;
 
             } // solids phase has volfrac > 0
           } // loop over solids phases

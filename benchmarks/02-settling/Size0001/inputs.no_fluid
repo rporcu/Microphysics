@@ -51,8 +51,8 @@ fluid.solve = None
 #
 solids.types = solid0
 
-solid0.specific_heat = constant
-solid0.specific_heat.constant = 385 ## Copper
+solids.specific_heat = constant
+solids.specific_heat.constant = 385 ## Copper
 
 
 #_______________________________________________________________________

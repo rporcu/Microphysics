@@ -11,7 +11,7 @@
 
 namespace DEM
 {
-    const int NMAX = SolidsPhase::NMAX;
+    const int NMAX = 10;
 
     extern int NPHASE;
 

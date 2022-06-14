@@ -27,6 +27,15 @@ namespace IC
     amrex::Vector<SOLIDS_t> solids;
     std::string packing;
 
+    const SOLIDS_t* get_solid (const int phase) const
+    {
+      for (int n(0); n < solids.size(); ++n)
+        if (phase == solids[n].phase)
+          return &(solids[n]);
+
+      amrex::Abort("Error: solid type not found");
+      return nullptr;
+    }
   };
 
   extern amrex::Vector<IC_t> ic;

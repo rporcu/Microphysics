@@ -275,21 +275,24 @@ fluid.diffusivity.constant = 0.105e-4
 
 
 #_______________________________________________________________________
+# Solids properties
+#
+solids.types = carrier
+
+solids.species = FE2O3  FEO  inert
+
+solids.density = mixture
+
+solids.specific_heat = mixture
+
+solids.conductivity = constant
+solids.conductivity.constant = 0.1
+
+
+#_______________________________________________________________________
 # DEM model settings
 #
-dem.solve = solid0
-
 dem.solids = carrier
-
-carrier.species = FE2O3  FEO  inert
-
-carrier.density = mixture
-
-carrier.specific_heat = mixture
-
-carrier.conductivity = constant
-carrier.conductivity.constant = 0.1
-
 
 dem.friction_coeff.pp     =     0.25
 dem.friction_coeff.pw     =     0.15

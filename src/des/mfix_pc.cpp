@@ -407,15 +407,16 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                         vrel_t[1] = vreltrans[1] - vreltrans_norm*normal[1];
                         vrel_t[2] = vreltrans[2] - vreltrans_norm*normal[2];
 
-                        int phase = p_intarray[SoAintData::phase][i];
+                        const int phase = p_intarray[SoAintData::phase][i];
+                        const int phase_idx = SolidsPhase::phase_to_index(phase);
 
                         Real kn_des_w   = local_kn_w;
-                        Real etan_des_w = local_etan_w(phase-1);
+                        Real etan_des_w = local_etan_w(phase_idx);
 
                         // NOTE - we don't use the tangential components right now,
                         // but we might in the future
                         // Real kt_des_w = DEM::kt_w;
-                        // Real etat_des_w = DEM::etat_w[phase-1];
+                        // Real etat_des_w = DEM::etat_w[phase_idx];
 
                         RealVect local_fn(0.);
                         RealVect local_ft(0.);
@@ -614,16 +615,19 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                             cfrelvel(p1vel, p2vel, p1radius, p2radius, p1omega,
                                 p2omega, vrel_trans_norm, vrel_t, normal, dist_mag);
 
-                            int phase1 = p_intarray[SoAintData::phase][i];
-                            int phase2 = p_intarray[SoAintData::phase][j];
+                            const int phase1 = p_intarray[SoAintData::phase][i];
+                            const int phase2 = p_intarray[SoAintData::phase][j];
+
+                            const int phase1_idx = SolidsPhase::phase_to_index(phase1);
+                            const int phase2_idx = SolidsPhase::phase_to_index(phase2);
 
                             Real kn_des = local_kn;
-                            Real etan_des = local_etan(phase1-1,phase2-1);
+                            Real etan_des = local_etan(phase1_idx, phase2_idx);
 
                             // NOTE - we don't use the tangential components right now,
                             // but we might in the future
                             // Real kt_des = DEM::kt;
-                            // Real etat_des = DEM::etat[phase1-1][phase2-1];
+                            // Real etat_des = DEM::etat[phase1_idx][phase2_idx];
 
                             RealVect local_fn(0.);
                             RealVect local_ft(0.);
@@ -799,9 +803,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                     p_enthalpy_old += X_sn[n_s]*solids_parms.calc_h_sn<run_on>(Tp,n_s);
                   }
                 } else {
-                  const int phase = p_intarray[SoAintData::phase][i];
 
-                  p_enthalpy_old = solids_parms.calc_h_s<run_on>(phase-1,Tp);
+                  p_enthalpy_old = solids_parms.calc_h_s<run_on>(Tp);
                 }
               }
 
@@ -986,8 +989,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 //***************************************************************
                 if (solve_enthalpy) {
 
-                  const int phase = p_intarray[SoAintData::phase][i];
-
                   const Real coeff = solve_mass ? (p_mass_old/p_mass_new) : 1.;
 
                   Real p_enthalpy_new = coeff*p_enthalpy_old +
@@ -1008,7 +1009,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                     if (!solid_is_a_mixture) {
 
-                      hp_loc = solids_parms.calc_h_s<run_on>(phase-1,Tp_arg);
+                      hp_loc = solids_parms.calc_h_s<run_on>(Tp_arg);
                     } else {
 
                       for (int n_s(0); n_s < nspecies_s; ++n_s)
@@ -1025,7 +1026,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                     if (!solid_is_a_mixture) {
 
-                      gradient = solids_parms.calc_partial_h_s<run_on>(phase-1,Tp_arg);
+                      gradient = solids_parms.calc_partial_h_s<run_on>(Tp_arg);
                     } else {
 
                       for (int n_s(0); n_s < nspecies_s; ++n_s) {
@@ -1052,7 +1053,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                       cp_s_new += X_sn[n_s]*solids_parms.calc_cp_sn<run_on>(Tp_new,n_s);
 
                   } else {
-                    cp_s_new = solids_parms.calc_cp_s<run_on>(phase-1,Tp_new);
+                    cp_s_new = solids_parms.calc_cp_s<run_on>(Tp_new);
                   }
 
                   AMREX_ASSERT(cp_s_new > 0.);

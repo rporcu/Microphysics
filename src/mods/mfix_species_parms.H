@@ -3,6 +3,9 @@
 
 #include <AMReX_REAL.H>
 
+struct DIFFUSIVITYMODEL { enum {Invalid=-1, Constant}; };
+struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA7Polynomials}; };
+
 class Species
 {
   public:
@@ -12,13 +15,9 @@ class Species
     static constexpr int NMAX = 15;
 
     // List of recognized species diffusivity models
-    struct DIFFUSIVITYMODEL { enum {Invalid=-1, Constant}; };
-
     int DiffusivityModel;
 
     // List of recognized species specific heat models
-    struct SPECIFICHEATMODEL { enum {Invalid=-1, Constant, NASA7Polynomials}; };
-
     int SpecificHeatModel;
 
     // Flag to solve species equations

@@ -8,160 +8,130 @@ using namespace amrex;
 
 void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
 {
+  Vector<Real> max_dp, max_ro;
+  Vector<Real> avg_dp, avg_ro;
 
-   Real max_dp[10], max_ro[10];
-   Real avg_dp[10], avg_ro[10];
+  max_dp.resize(solids.NTYPES);
+  max_ro.resize(solids.NTYPES);
+  avg_dp.resize(solids.NTYPES);
+  avg_ro.resize(solids.NTYPES);
 
-   // The number of phases was previously hard set at 10, however lowering
-   //  this number would make this code faster.
-   int num_of_phases_in_use = DEM::NPHASE;
+  Print() << "NTYPES = " << solids.NTYPES << "\n";
 
-   // Cycle through the different phases, starting from 1
-   for (int phase = 1; phase <= num_of_phases_in_use; ++phase)
-   {
-      Real h_pnum  = 0;   //number of particle
-      Real h_pdiam = 0.0; //particle diameters
-      Real h_pdens = 0.0; //particle density
-      Real h_maxdiam = -1.e32;
-      Real h_maxdens = -1.e32;
+  // Cycle through the different phases, starting from 1
+  for (const int& phase: solids.phases)
+  {
+    Real h_pnum  = 0;   //number of particle
+    Real h_pdiam = 0.0; //particle diameters
+    Real h_pdens = 0.0; //particle density
+    Real h_maxdiam = -1.e32;
+    Real h_maxdens = -1.e32;
 
-      for (int lev = 0; lev < nlev; lev++)
-      {
-#ifdef AMREX_USE_GPU
-        if (Gpu::inLaunchRegion())
-        {
-          // Reduce sum operation for np, pdiam, pdens, maxdiam, maxdens
-          ReduceOps<ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpMax, ReduceOpMax> reduce_op;
-          ReduceData<Real, Real, Real, Real, Real> reduce_data(reduce_op);
-          using ReduceTuple = typename decltype(reduce_data)::Type;
+    for (int lev = 0; lev < nlev; lev++)
+    {
+      // Reduce sum operation for np, pdiam, pdens, maxdiam, maxdens
+      ReduceOps<ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpMax, ReduceOpMax> reduce_op;
+      ReduceData<Real, Real, Real, Real, Real> reduce_data(reduce_op);
+      using ReduceTuple = typename decltype(reduce_data)::Type;
 
-          for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-          {
-            auto& particles = pti.GetArrayOfStructs();
-            const int np = particles.size();
-
-            auto& soa = pti.GetStructOfArrays();
-            auto p_realarray = soa.realarray();
-            auto p_intarray = soa.intarray();
-
-            reduce_op.eval(np, reduce_data, [p_realarray,p_intarray,phase]
-                AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
-            {
-              Real l_pnum  = 0._rt;
-              Real l_pdiam = 0._rt;
-              Real l_pdens = 0._rt;
-              Real l_maxdiam = -1.e32;
-              Real l_maxdens = -1.e32;
-
-              if (phase == p_intarray[SoAintData::phase][p_id])
-              {
-                const Real density  = p_realarray[SoArealData::density][p_id];
-                const Real diameter = 2.0*p_realarray[SoArealData::radius][p_id];
-
-                l_pnum  = 1._rt;
-                l_pdiam = diameter;
-                l_pdens = density;
-                l_maxdiam = diameter;
-                l_maxdens = density;
-              }
-
-              return {l_pnum, l_pdiam, l_pdens, l_maxdiam, l_maxdens};
-            });
-          }
-
-          ReduceTuple host_tuple = reduce_data.value();
-          h_pnum  += amrex::get<0>(host_tuple);
-          h_pdiam += amrex::get<1>(host_tuple);
-          h_pdens += amrex::get<2>(host_tuple);
-          h_maxdiam = amrex::max(h_maxdiam, amrex::get<3>(host_tuple));
-          h_maxdens = amrex::max(h_maxdens, amrex::get<4>(host_tuple));
-        }
-        else
-#endif
-        {
 #ifdef _OPENMP
-#pragma omp parallel reduction(+:h_pnum,h_pdiam,h_pdens) \
-                     reduction(max:h_maxdiam,h_maxdens) \
-                     if (Gpu::notInLaunchRegion())
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-          for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+      {
+        auto& particles = pti.GetArrayOfStructs();
+        const int np = particles.size();
+
+        auto& soa = pti.GetStructOfArrays();
+        auto p_realarray = soa.realarray();
+        auto p_intarray = soa.intarray();
+
+        reduce_op.eval(np, reduce_data, [p_realarray,p_intarray,phase]
+            AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
+        {
+          Real l_pnum  = 0._rt;
+          Real l_pdiam = 0._rt;
+          Real l_pdens = 0._rt;
+          Real l_maxdiam = -1.e32;
+          Real l_maxdens = -1.e32;
+
+          if (phase == p_intarray[SoAintData::phase][p_id])
           {
-            auto& particles = pti.GetArrayOfStructs();
-            const int np = particles.size();
+            const Real density  = p_realarray[SoArealData::density][p_id];
+            const Real diameter = 2.0*p_realarray[SoArealData::radius][p_id];
 
-            auto& soa = pti.GetStructOfArrays();
-            auto p_realarray = soa.realarray();
-            auto p_intarray = soa.intarray();
-
-            for (int p_id(0); p_id < np; ++p_id)
-            {
-              if (phase == p_intarray[SoAintData::phase][p_id])
-              {
-                const Real density  = p_realarray[SoArealData::density][p_id];
-                const Real diameter = 2.0*p_realarray[SoArealData::radius][p_id];
-
-                h_pnum  += 1.0;
-                h_pdiam += diameter;
-                h_pdens += density;
-                h_maxdiam = amrex::max(h_maxdiam, diameter);
-                h_maxdens = amrex::max(h_maxdens, density);
-              }
-            }
+            l_pnum  = 1._rt;
+            l_pdiam = diameter;
+            l_pdens = density;
+            l_maxdiam = diameter;
+            l_maxdens = density;
           }
-        }
+
+          return {l_pnum, l_pdiam, l_pdens, l_maxdiam, l_maxdens};
+        });
       }
 
-      // A single MPI call passes all three variables
-      ParallelDescriptor::ReduceRealSum({h_pnum,h_pdiam,h_pdens});
-      ParallelDescriptor::ReduceRealMax({h_maxdiam,h_maxdens});
+      ReduceTuple host_tuple = reduce_data.value();
+      h_pnum  += amrex::get<0>(host_tuple);
+      h_pdiam += amrex::get<1>(host_tuple);
+      h_pdens += amrex::get<2>(host_tuple);
+      h_maxdiam = amrex::max(h_maxdiam, amrex::get<3>(host_tuple));
+      h_maxdens = amrex::max(h_maxdens, amrex::get<4>(host_tuple));
+    }
 
-      //calculate averages or set = zero if no particles of that phase
-      if (h_pnum==0){
-         avg_dp[phase-1] = 0.0;
-         avg_ro[phase-1] = 0.0;
+    // A single MPI call passes all three variables
+    ParallelDescriptor::ReduceRealSum({h_pnum,h_pdiam,h_pdens});
+    ParallelDescriptor::ReduceRealMax({h_maxdiam,h_maxdens});
 
-         max_dp[phase-1] = 0.0;
-         max_ro[phase-1] = 0.0;
+    //calculate averages or set = zero if no particles of that phase
+    const int phase_idx = SolidsPhase::phase_to_index(phase);
 
-      } else {
-         avg_dp[phase-1] = h_pdiam/h_pnum;
-         avg_ro[phase-1] = h_pdens/h_pnum;
+    if (h_pnum==0) {
+       avg_dp[phase_idx] = 0.0;
+       avg_ro[phase_idx] = 0.0;
 
-         max_dp[phase-1] = h_maxdiam;
-         max_ro[phase-1] = h_maxdens;
-      }
-   }
+       max_dp[phase_idx] = 0.0;
+       max_ro[phase_idx] = 0.0;
 
+    } else {
+       avg_dp[phase_idx] = h_pdiam/h_pnum;
+       avg_ro[phase_idx] = h_pdens/h_pnum;
+
+       max_dp[phase_idx] = h_maxdiam;
+       max_ro[phase_idx] = h_maxdens;
+    }
+  }
 
   // Loop over BCs
   for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
 
     // EB flow with at least one solid
-    if (BC::bc[bcv].type == BCList::eb &&
-        BC::bc[bcv].solids.size() > 0) {
+    if (BC::bc[bcv].type == BCList::eb && BC::bc[bcv].solids.size() > 0) {
 
       const Real tolerance = std::numeric_limits<Real>::epsilon();
 
-      for(int phase(0); phase < BC::bc[bcv].solids.size(); phase++) {
-        if(BC::bc[bcv].solids[phase].volfrac > tolerance) {
-          SOLIDS_t solid = BC::bc[bcv].solids[phase];
+      for(int lcs(0); lcs < BC::bc[bcv].solids.size(); lcs++) {
 
-          const Real mean_dp_bc = solid.diameter.get_mean();
-          const Real  max_dp_bc = solid.diameter.is_constant() ?
-                                    mean_dp_bc : solid.diameter.get_max();
+        const SOLIDS_t& bc_solid = BC::bc[bcv].solids[lcs];
 
-          const Real mean_rhop_bc = solid.density.get_mean();
-          const Real  max_rhop_bc = solid.density.is_constant() ?
-                                      mean_rhop_bc : solid.density.get_max();
+        if(bc_solid.volfrac > tolerance) {
 
-          if ( avg_dp[phase] == 0.0 )
-            avg_dp[phase] = mean_dp_bc;
+          const Real mean_dp_bc = bc_solid.diameter.get_mean();
+          const Real  max_dp_bc = bc_solid.diameter.is_constant() ?
+                                    mean_dp_bc : bc_solid.diameter.get_max();
 
-          if ( avg_ro[phase] == 0.0 )
-            avg_ro[phase] = mean_rhop_bc;
+          const Real mean_rhop_bc = bc_solid.density.get_mean();
+          const Real  max_rhop_bc = bc_solid.density.is_constant() ?
+                                      mean_rhop_bc : bc_solid.density.get_max();
 
-          max_dp[phase] = amrex::max(max_dp[phase], max_dp_bc);
-          max_ro[phase] = amrex::max(max_ro[phase], max_rhop_bc);
+          if ( avg_dp[lcs] == 0.0 )
+            avg_dp[lcs] = mean_dp_bc;
+
+          if ( avg_ro[lcs] == 0.0 )
+            avg_ro[lcs] = mean_rhop_bc;
+
+          max_dp[lcs] = amrex::max(max_dp[lcs], max_dp_bc);
+          max_ro[lcs] = amrex::max(max_ro[lcs], max_rhop_bc);
 
         }
       }
@@ -169,108 +139,111 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
   }
 
 
-   Real max_max_dp(0.);
-   for (int phase = 0; phase < num_of_phases_in_use; ++phase)
-   {
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(avg_dp[phase] > 0.0,
-         "Average particle diameter cannot be zero");
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(max_dp[phase] > 0.0,
-         "Maximum particle diameter cannot be zero");
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(avg_ro[phase] > 0.0,
-         "Average particle density cannot be zero");
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(max_ro[phase] > 0.0,
-         "Maximum particle density cannot be zero");
+  Real max_max_dp(0.);
+  for (const int& phase: solids.phases)
+  {
+    const int phase_idx = SolidsPhase::phase_to_index(phase);
 
-      max_max_dp = amrex::max(max_max_dp, max_dp[phase]);
-   }
+    printf("avg_dp[%d] = %e\n", phase_idx, avg_dp[phase_idx]);
 
-   // (3*max_dp/2)^2
-   DEM::neighborhood = 2.25*max_max_dp*max_max_dp;
+     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(avg_dp[phase_idx] > 0.0,
+        "Average particle diameter cannot be zero");
+     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(max_dp[phase_idx] > 0.0,
+        "Maximum particle diameter cannot be zero");
+     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(avg_ro[phase_idx] > 0.0,
+        "Average particle density cannot be zero");
+     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(max_ro[phase_idx] > 0.0,
+        "Maximum particle density cannot be zero");
 
-   Real tcoll(1.0);
+     max_max_dp = amrex::max(max_max_dp, max_dp[phase_idx]);
+  }
 
-   DEM::A2D::array_type host_etan, host_etat, host_en;
-   DEM::A1D::array_type host_etan_w, host_etat_w, host_en_w;
+  // (3*max_dp/2)^2
+  DEM::neighborhood = 2.25*max_max_dp*max_max_dp;
+
+  Real tcoll(1.0);
+
+  DEM::A2D::array_type host_etan, host_etat, host_en;
+  DEM::A1D::array_type host_etan_w, host_etat_w, host_en_w;
 #ifdef AMREX_USE_GPU
-   amrex::Gpu::dtoh_memcpy_async(&host_en, DEM::en.arrayPtr(), sizeof(DEM::A2D::array_type));
-   amrex::Gpu::dtoh_memcpy_async(&host_en_w, DEM::en_w.arrayPtr(), sizeof(DEM::A1D::array_type));
-   amrex::Gpu::synchronize();
+  amrex::Gpu::dtoh_memcpy_async(&host_en, DEM::en.arrayPtr(), sizeof(DEM::A2D::array_type));
+  amrex::Gpu::dtoh_memcpy_async(&host_en_w, DEM::en_w.arrayPtr(), sizeof(DEM::A1D::array_type));
+  amrex::Gpu::synchronize();
 #else
-   host_en = *(DEM::en.arrayPtr());
-   host_en_w = *(DEM::en_w.arrayPtr());
+  host_en = *(DEM::en.arrayPtr());
+  host_en_w = *(DEM::en_w.arrayPtr());
 #endif
 
-   for (int m(0); m < num_of_phases_in_use; ++m)
-   {
-      const Real dp_m = avg_dp[m];
-      const Real mass_m = (M_PI/6.0)*(dp_m*dp_m*dp_m) * avg_ro[m];
+  for (const int& phase: solids.phases) {
 
-      // Collision parameters between type M and all other types
-      for (int l(m); l < num_of_phases_in_use; ++l)
-      {
+    const int phase_idx = SolidsPhase::phase_to_index(phase);
 
-         const Real dp_l = avg_dp[l];
-         const Real mass_l = (M_PI/6.0)*(dp_l*dp_l*dp_l) * avg_ro[l];
+    const Real dp_m = avg_dp[phase_idx];
+    const Real mass_m = (M_PI/6.0)*(dp_m*dp_m*dp_m) * avg_ro[phase_idx];
 
-         const Real mass_eff = (mass_m * mass_l) / (mass_m + mass_l);
+    // Collision parameters between phase_idx M and all other phase_idxs
+    for (int other_phase_idx(phase_idx); other_phase_idx < solids.NTYPES; ++other_phase_idx) {
 
-         //Calculate the M-L normal and tangential damping coefficients
-         host_etan(m,l) = 2.0*std::sqrt(DEM::kn*mass_eff);
-         if(amrex::Math::abs(host_en(m,l)) > 0.0){
-            const Real log_en = std::log(host_en(m,l));
-            host_etan(m,l) *= amrex::Math::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
-         }
-         host_etat(m,l) = DEM::eta_fac * host_etan(m,l);
+      const Real dp_l = avg_dp[other_phase_idx];
+      const Real mass_l = (M_PI/6.0)*(dp_l*dp_l*dp_l) * avg_ro[other_phase_idx];
 
-         // Store the symmetric components
-         host_etan(l,m) = host_etan(m,l);
-         host_etat(l,m) = host_etat(m,l);
+      const Real mass_eff = (mass_m * mass_l) / (mass_m + mass_l);
 
-         // Collision time scale for M-L interactions
-         Real tcoll_ml = M_PI/sqrt(DEM::kn/mass_eff -
-            0.25*(host_etan(m,l)/mass_eff)*(host_etan(m,l)/mass_eff));
-
-         tcoll = amrex::min(tcoll, tcoll_ml);
+      //Calculate the M-L normal and tangential damping coefficients
+      host_etan(phase_idx,other_phase_idx) = 2.0*std::sqrt(DEM::kn*mass_eff);
+      if(amrex::Math::abs(host_en(phase_idx,other_phase_idx)) > 0.0){
+        const Real log_en = std::log(host_en(phase_idx,other_phase_idx));
+        host_etan(phase_idx,other_phase_idx) *= amrex::Math::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
       }
+      host_etat(phase_idx,other_phase_idx) = DEM::eta_fac * host_etan(phase_idx,other_phase_idx);
 
-      // Collision parameters between type M and wall
-      {
-         const Real mass_eff = mass_m;
+      // Store the symmetric components
+      host_etan(other_phase_idx,phase_idx) = host_etan(phase_idx,other_phase_idx);
+      host_etat(other_phase_idx,phase_idx) = host_etat(phase_idx,other_phase_idx);
 
-         //Calculate the M-L normal and tangential damping coefficients
-         host_etan_w(m) = 2.0*std::sqrt(DEM::kn_w*mass_eff);
-         if(amrex::Math::abs(host_en_w(m)) > 0.0){
-            const Real log_en = std::log(host_en_w(m));
-            host_etan_w(m) *= amrex::Math::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
-         }
-         host_etat_w(m) = DEM::eta_w_fac * host_etan_w(m);
+      // Collision time scale for M-L interactions
+      Real tcoll_ml = M_PI/sqrt(DEM::kn/mass_eff -
+         0.25*(host_etan(phase_idx,other_phase_idx)/mass_eff)*(host_etan(phase_idx,other_phase_idx)/mass_eff));
 
-        // Calculate the collision time scale.
-        Real tcoll_w = M_PI/std::sqrt(DEM::kn_w/mass_eff -
-           0.25*(host_etan_w(m)/mass_eff)*(host_etan_w(m)/mass_eff));
+      tcoll = amrex::min(tcoll, tcoll_ml);
+    }
 
-        tcoll = amrex::min(tcoll, tcoll_w);
+    // Collision parameters between phase_idx M and wall
+    {
+      const Real mass_eff = mass_m;
 
+      //Calculate the M-L normal and tangential damping coefficients
+      host_etan_w(phase_idx) = 2.0*std::sqrt(DEM::kn_w*mass_eff);
+      if(amrex::Math::abs(host_en_w(phase_idx)) > 0.0){
+         const Real log_en = std::log(host_en_w(phase_idx));
+         host_etan_w(phase_idx) *= amrex::Math::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
       }
+      host_etat_w(phase_idx) = DEM::eta_w_fac * host_etan_w(phase_idx);
 
-   }
+      // Calculate the collision time scale.
+      Real tcoll_w = M_PI/std::sqrt(DEM::kn_w/mass_eff -
+         0.25*(host_etan_w(phase_idx)/mass_eff)*(host_etan_w(phase_idx)/mass_eff));
+
+      tcoll = amrex::min(tcoll, tcoll_w);
+    }
+  }
 
 #ifdef AMREX_USE_GPU
-   amrex::Gpu::htod_memcpy_async(DEM::etan.arrayPtr(), &host_etan, sizeof(DEM::A2D::array_type));
-   amrex::Gpu::htod_memcpy_async(DEM::etat.arrayPtr(), &host_etat, sizeof(DEM::A2D::array_type));
-   amrex::Gpu::htod_memcpy_async(DEM::etan_w.arrayPtr(), &host_etan_w, sizeof(DEM::A1D::array_type));
-   amrex::Gpu::htod_memcpy_async(DEM::etat_w.arrayPtr(), &host_etat_w, sizeof(DEM::A1D::array_type));
-   amrex::Gpu::synchronize();
+  amrex::Gpu::htod_memcpy_async(DEM::etan.arrayPtr(), &host_etan, sizeof(DEM::A2D::array_type));
+  amrex::Gpu::htod_memcpy_async(DEM::etat.arrayPtr(), &host_etat, sizeof(DEM::A2D::array_type));
+  amrex::Gpu::htod_memcpy_async(DEM::etan_w.arrayPtr(), &host_etan_w, sizeof(DEM::A1D::array_type));
+  amrex::Gpu::htod_memcpy_async(DEM::etat_w.arrayPtr(), &host_etat_w, sizeof(DEM::A1D::array_type));
+  amrex::Gpu::synchronize();
 #else
-   *(DEM::etan.arrayPtr()) = host_etan;
-   *(DEM::etat.arrayPtr()) = host_etat;
-   *(DEM::etan_w.arrayPtr()) = host_etan_w;
-   *(DEM::etat_w.arrayPtr()) = host_etat_w;
+  *(DEM::etan.arrayPtr()) = host_etan;
+  *(DEM::etat.arrayPtr()) = host_etat;
+  *(DEM::etan_w.arrayPtr()) = host_etan_w;
+  *(DEM::etat_w.arrayPtr()) = host_etat_w;
 #endif
 
-   ParmParse pp("mfix");
-   Real tcoll_ratio = 50.;
-   pp.query("tcoll_ratio", tcoll_ratio);
+  ParmParse pp("mfix");
+  Real tcoll_ratio = 50.;
+  pp.query("tcoll_ratio", tcoll_ratio);
 
-   DEM::dtsolid = tcoll / tcoll_ratio;
+  DEM::dtsolid = tcoll / tcoll_ratio;
 }

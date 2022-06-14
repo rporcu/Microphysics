@@ -128,10 +128,14 @@ fluid.viscosity.constant = 2.0e-5
 
 
 #_______________________________________________________________________
+# Solids properties
+#
+solids.types = hdpe
+
+
+#_______________________________________________________________________
 # DEM model settings
 #
-dem.solve = solid0
-
 dem.solids = hdpe
 
 dem.friction_coeff.pp     =     0.25
