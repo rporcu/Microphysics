@@ -187,14 +187,6 @@ int main (int argc, char* argv[])
     // only if fluid.solve = T
     Real prev_dt = dt;
 
-    mfixRW.writeNow(nstep, time, dt, /*first=*/true, /*last=*/false);
-
-    bool do_not_evolve = !mfix.IsSteadyState() && ( (mfixRW.max_step == 0) ||
-                     ( (mfixRW.stop_time >= 0.) && (time >  mfixRW.stop_time) ) ||
-                     ( (mfixRW.stop_time <= 0.) && (mfixRW.max_step <= 0) ) );
-
-    mfixRW.ComputeMassAccum(0);
-
     if (mfixRW.restart_file.empty())
     {
         amrex::Print() << " " << std::endl;
@@ -204,6 +196,14 @@ int main (int argc, char* argv[])
         else if (unused_inputs)
            amrex::Print() << "We should think about aborting here due to unused inputs" << std::endl;
     }
+
+    mfixRW.writeNow(nstep, time, dt, /*first=*/true, /*last=*/false);
+
+    bool do_not_evolve = !mfix.IsSteadyState() && ( (mfixRW.max_step == 0) ||
+                     ( (mfixRW.stop_time >= 0.) && (time >  mfixRW.stop_time) ) ||
+                     ( (mfixRW.stop_time <= 0.) && (mfixRW.max_step <= 0) ) );
+
+    mfixRW.ComputeMassAccum(0);
 
 
     for (int lev = 0; lev <= mfix.finestLevel(); lev++)

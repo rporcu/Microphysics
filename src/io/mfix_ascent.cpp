@@ -26,12 +26,7 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
 
   //amrex::Print() << "Writing Ascent output\n";
 
-  ParmParse pp("ascent");
-
-  std::string ascent_actions_yaml {""};
-  pp.query("actions", ascent_actions_yaml);
-
-  if (!ascent_actions_yaml.empty()) {
+  if (!m_ascent_actions_yaml.empty()) {
 
     conduit::Node node;
 
@@ -172,7 +167,7 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
 
     conduit::Node opts;
     opts["exceptions"] = "catch";
-    opts["actions_file"] = ascent_actions_yaml;
+    opts["actions_file"] = m_ascent_actions_yaml;
     opts["mpi_comm"] = MPI_Comm_c2f(ParallelDescriptor::Communicator());
 
     ascent.open(opts);

@@ -71,6 +71,7 @@ MfixRW::MfixRW (int nlev_in,
   , load_balance_type(load_balance_type_in)
   , bc_list(bc_list_in)
   , particle_ebfactory(particle_ebfactory_in)
+  , m_ascent_actions_yaml("")
 {
 
   m_start_time = ParallelDescriptor::second();
@@ -209,6 +210,12 @@ void MfixRW::readParameters ()
      pp.query("write_eb_surface", write_eb_surface);
      pp.query("write_ls", write_ls);
      pp.query("stop_for_unused_inputs", stop_for_unused_inputs);
+  }
+
+  {
+     ParmParse pp("ascent");
+
+     pp.query("actions", m_ascent_actions_yaml);
   }
 
 #ifdef MFIX_CATALYST

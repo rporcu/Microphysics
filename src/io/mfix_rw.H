@@ -382,6 +382,8 @@ private:
                           amrex::Real time) const;
 
    void WriteJobInfo (const std::string& dir) const;
+
+   std::string m_ascent_actions_yaml;
 };
 
 } // end of namespace MfixIO

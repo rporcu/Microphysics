@@ -221,9 +221,6 @@ fluid.species = CH4 CO H2O H2 O2 N2 CO2
 #
 solids.types = solid0
 
-solids.specific_heat = constant
-solids.specific_heat.constant = 918
-
 solids.species  =  Fe2O3 FeO
 
 
