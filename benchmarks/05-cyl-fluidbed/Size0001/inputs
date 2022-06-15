@@ -179,9 +179,11 @@ ic.regions = full-domain  bed
 
 ic.full-domain.fluid.volfrac   = 1.0
 ic.full-domain.fluid.velocity  = 0.015  0.0  0.0
+ic.full-domain.fluid.density  = 1.0
 
 ic.bed.fluid.volfrac   =  0.725
 ic.bed.fluid.velocity  =  0.00  0.00  0.00
+ic.bed.fluid.density  =  1.0
 
 ic.bed.solids  = solid0
 ic.bed.packing = random

@@ -35,7 +35,7 @@ geometry.prob_hi     = 0.0060   0.0015  0.0060   # hi corner of physical domain
 mfix.drag_type = "BVK2"
 mfix.gravity   =  0.0  -9.80665  0.0
 
-mfix.constraint_type = Incompressibility
+mfix.constraint_type = IncompressibleFluid
 
 
 #_______________________________________________________________________

@@ -30,7 +30,7 @@ mfix.drag_type = "BVK2"
 
 mfix.gravity =  0.0  0.0  0.0
 
-mfix.constraint_type = IncompressibilityFluid
+mfix.constraint_type = IncompressibleFluid
 
 #_______________________________________________________________________
 # Fluid model settings

@@ -13,7 +13,10 @@ mfix.max_step = 100
 #mfix.particle_init_type = "Auto"
 
 mac_proj.verbose = 0
+mac_proj.bottom_maxiter = 1000
+
 nodal_proj.verbose = 1
+nodal_proj.bottom_maxiter = 1000
 
 mfix.gravity = -9.81  0.0  0.0
 
@@ -45,6 +48,8 @@ amr.max_grid_size_z =  5
 #particles.max_grid_size_y =   32
 #particles.max_grid_size_z =   32
 
+dem.solve = None
+
 #! Tiles
 #!-----------------------------------------------------------//
 
@@ -52,7 +57,7 @@ amr.max_grid_size_z =  5
 fabarray.mfiter_tile_size = 1024 1024 1024
 
 # Particles: Maximum particle tile size
-particles.tile_size = 1024 1024 1024
+#particles.tile_size = 1024 1024 1024
 
 
 #! EB settings

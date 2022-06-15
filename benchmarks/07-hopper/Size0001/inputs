@@ -229,16 +229,3 @@ bc.out-bottom.fluid.pressure =  0.0
 bc.out-top = po
 
 bc.out-top.fluid.pressure =  0.0
-
-
-
-
-#! OLD BC settings   TO BE REMOVED
-#!-----------------------------------------------------------//
-
-
-xlo.type = "po"
-xlo.pressure = 0.0
-
-xhi.type = "po"
-xhi.pressure = 0.0

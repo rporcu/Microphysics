@@ -85,6 +85,7 @@ ic.regions = full-domain
 
 ic.full-domain.fluid.volfrac  = 1.0
 ic.full-domain.fluid.density  = 1.0
+ic.full-domain.fluid.pressure = 0.0
 ic.full-domain.fluid.velocity = 0.0  0.0  0.0
 
 

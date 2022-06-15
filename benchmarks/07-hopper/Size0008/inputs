@@ -18,6 +18,9 @@ amr.blocking_factor = 2
 
 mfix.constraint_type = IncompressibleFluid
 
+mac_proj.bottom_maxiter = 1000
+nodal_proj.bottom_maxiter = 1000
+
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -222,17 +225,3 @@ bc.out-top = po
 
 bc.out-top.fluid.pressure =  0.0
 
-
-
-
-#! OLD BC settings   TO BE REMOVED
-#!-----------------------------------------------------------//
-
-
-
-xlo.type = "po"
-xlo.velocity = 0.0
-xlo.pressure = 0.0
-
-xhi.type = "po"
-xhi.pressure = 0.0
