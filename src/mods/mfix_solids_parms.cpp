@@ -24,6 +24,19 @@ SolidsPhase::SolidsPhase()
   , enthalpy_source(0)
   , solve_enthalpy(1)
   , solve_species(0)
+  , species_names(0)
+  , species_IDs(0)
+  , d_species_IDs(0)
+  , nspecies(0)
+  , MW_sn0(0)
+  , d_MW_sn0(0)
+  , is_a_mixture(0)
+  , cp_sn0(0)
+  , d_cp_sn0(0)
+  , H_fn0(0)
+  , d_H_fn0(0)
+  , stoich_coeffs(0)
+  , d_stoich_coeffs(0)
   , kp_sn0(0)
   , d_kp_sn0(0)
   , flpc(0.4)
@@ -260,25 +273,25 @@ SolidsPhase::Initialize (const Species& species,
         for (int q(0); q < nreactions; q++) {
 
           ChemicalReaction* chem_reaction = reactions.get(q);
-          const auto& phases = chem_reaction->get_phases();
+          const auto& chem_phases = chem_reaction->get_phases();
 
           const auto& reactants_IDs = chem_reaction->get_reactants_ids();
-          const auto& reactants_phases = chem_reaction->get_reactants_phases();
+          const auto& reactants_chem_phases = chem_reaction->get_reactants_phases();
           const auto& reactants_coeffs = chem_reaction->get_reactants_coeffs();
 
           const auto& products_IDs = chem_reaction->get_products_ids();
-          const auto& products_phases = chem_reaction->get_products_phases();
+          const auto& products_chem_phases = chem_reaction->get_products_phases();
           const auto& products_coeffs = chem_reaction->get_products_coeffs();
 
           // Do something only if reaction is heterogeneous and contains
           // a solid compound
           if (chem_reaction->get_type() == Heterogeneous &&
-              std::find(phases.begin(), phases.end(), Solid) != phases.end()) {
+              std::find(chem_phases.begin(), chem_phases.end(), Solid) != chem_phases.end()) {
 
             // Add reactant contribution (if any)
             {
               for (int pos(0); pos < reactants_IDs.size(); ++pos) {
-                if (species_id == reactants_IDs[pos] && reactants_phases[pos] == Solid) {
+                if (species_id == reactants_IDs[pos] && reactants_chem_phases[pos] == Solid) {
                   stoich_coeffs[n_s*nreactions+q] += reactants_coeffs[pos];
                 }
               }
@@ -287,7 +300,7 @@ SolidsPhase::Initialize (const Species& species,
             // Add products contribution (if any)
             {
               for (int pos(0); pos < products_IDs.size(); ++pos) {
-                if (species_id == products_IDs[pos] && products_phases[pos] == Solid) {
+                if (species_id == products_IDs[pos] && products_chem_phases[pos] == Solid) {
                   stoich_coeffs[n_s*nreactions+q] += products_coeffs[pos];
                 }
               }

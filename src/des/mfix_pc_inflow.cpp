@@ -35,7 +35,7 @@ rand_prop (const amrex::Real var_mean,
 
 void MFIXParticleContainer::mfix_pc_inflow (int lev,
                                             Real dt,
-                                            Real time,
+                                            Real /*time*/,
                                             const int adv_enthalpy,
                                             EBFArrayBoxFactory* factory)
 {

@@ -51,6 +51,21 @@ class FluidParms {
     AMREX_GPU_HOST_DEVICE
     FluidParms (const amrex::Real T_ref)
       : m_T_ref(T_ref)
+      , m_mu_g(0.)
+      , m_k_g(0.)
+      , m_nspecies(0)
+      , m_h_species_id(nullptr)
+      , m_d_species_id(nullptr)
+      , m_h_MW_gk(nullptr)
+      , m_d_MW_gk(nullptr)
+      , m_D_g(0)
+      , m_h_cp_gk(nullptr)
+      , m_d_cp_gk(nullptr)
+      , m_h_H_fk(nullptr)
+      , m_d_H_fk(nullptr)
+      , m_nreactions(0)
+      , m_h_stoich_coeffs(nullptr)
+      , m_d_stoich_coeffs(nullptr)
       , m_specific_heat_model(SPECIFICHEATMODEL::Invalid)
     {}
 
