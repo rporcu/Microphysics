@@ -280,7 +280,7 @@ MfixRW::Initialize (const Regions& regions)
 
           auto species = solids.species_names[n];
           real_comp_names.push_back("chem_mass_txfr_"+species);
-        
+
         } else {
 
           real_comp_names.push_back("placeholder_"+std::to_string(n));
@@ -533,15 +533,27 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
  *
  *------------------------------------------------------------------------------------------------*/
 
+    int avg_region_test = 0;
+
     if ( avg_int > 0 ) {
-        if ( first || last ) {
-            WriteAverageRegions(avg_file, nstep, time);
-            last_avg = nstep;
-        }
-        else if ( nstep %  avg_int == 0 ) {
-            WriteAverageRegions( avg_file, nstep, time );
-            last_avg = nstep;
-        }
+
+      // Always write output with initial data
+      if ( first ) {
+        avg_region_test = 1;
+      }
+      // Do it for the last step
+      else if ( last ) {
+        avg_region_test = (nstep != last_avg) ? 1 : 0;
+      }
+      else {
+        avg_region_test = (nstep % avg_int == 0) ? 1 : 0;
+      }
+
+      if ( avg_region_test == 1 ) {
+        WriteAverageRegions( avg_file, nstep, time );
+        last_avg = nstep;
+      }
+
     }
 
 
