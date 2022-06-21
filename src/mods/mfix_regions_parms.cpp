@@ -9,6 +9,8 @@
 void
 Regions::Initialize ()
 {
+  m_is_initialized = 1;
+
   // Read in the region data
   amrex::ParmParse pp("mfix");
 

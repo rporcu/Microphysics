@@ -9,3 +9,6 @@ CEXE_sources += mfix_pic2dem.cpp
 
 CEXE_headers += mfix_rw.H
 CEXE_sources += mfix_rw.cpp
+
+CEXE_headers += mfix_monitors.H
+CEXE_sources += mfix_monitors.cpp

@@ -2,6 +2,7 @@
 #include <mfix_fluid_parms.H>
 #include <mfix_species_parms.H>
 #include <mfix_reactions_parms.H>
+#include <mfix_monitors.H>
 
 #include <AMReX_MultiCutFab.H>
 
@@ -136,6 +137,36 @@ MfixRW::ComputeMassAccum (const int offset)
   ParallelDescriptor::ReduceRealSum(accum.data(), nspecies_g);
   for (int n=0; n < nspecies_g; ++n) {
     mass_accum[n + offset*Species::NMAX] = accum[n];
+
+//  const int nspecies_g = fluid.nspecies;
+//
+//  Vector<Real> accum(nspecies_g);
+//
+//  for (int lev = 0; lev < nlev; lev++) {
+//
+//    MultiFab const& ep_g = *(m_leveldata[lev]->ep_g);
+//    MultiFab const& ro_g = *(m_leveldata[lev]->ro_g);
+//
+//    const Box& domain = geom[lev].Domain();
+//    auto monitor = EulerianMonitor::VolumeIntegral(domain, *ebfactory[lev]);
+//
+//    for (int n=0; n < nspecies_g; ++n){
+//
+//      accum[n] = 0.;
+//
+//      MultiFab const& X_gk = *(m_leveldata[lev]->X_gk);
+//
+//      // TODO TODO TODO pass all components together
+//      accum[n] = monitor.mass_weighted_integral(X_gk, ep_g, ro_g, n);
+//
+//    } /* End loop over species */
+//
+//  } // nlev
+//
+//  // Global sum and copy to global variable with offset
+//  ParallelDescriptor::ReduceRealSum(accum.data(), nspecies_g);
+//  for (int n=0; n < nspecies_g; ++n) {
+//    mass_accum[n + offset*nspecies_g] = accum[n];
   }
 }
 
@@ -178,6 +209,20 @@ MfixRW::ComputeMassProduction (const Real /*dt*/,
 
     } /* End loop over species */
 
+
+//    const MultiFab& volfrac = ebfactory[lev]->getVolFrac();
+//
+//    // No deep copy, just an alias
+//    MultiFab ro_gk_txfr(*chem_txfr[lev], amrex::make_alias, scomp, nspecies_g);
+//
+//    const Box& domain = geom[lev].Domain();
+//    auto monitor = EulerianMonitor::VolumeIntegral(domain, *ebfactory[lev]);
+//
+//    for (int n=0; n < nspecies_g; ++n){
+//
+//      prod[n] = monitor.volume_integral(ro_gk_txfr, volfrac, n);
+//
+//    } /* End loop over species */
   } // nlev
 
 
@@ -206,454 +251,124 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
   for (int lev = 0; lev < nlev; lev++) {
 
+    Array<const MultiFab*,3> flux = {flux_x[lev], flux_y[lev], flux_z[lev]};
+
     const GpuArray<Real,3> dx = geom[lev].CellSizeArray();
-    const Real dxdy = dx[0]*dx[1];
-    const Real dxdz = dx[0]*dx[2];
-    const Real dydz = dx[1]*dx[2];
+    GpuArray<Real,3> da = {dx[1]*dx[2], dx[0]*dx[2], dx[0]*dx[1]};
 
     amrex::EBFArrayBoxFactory const& fact =
       static_cast<amrex::EBFArrayBoxFactory const&>(*ebfactory[lev]);
 
     Box domain(geom[lev].Domain());
 
-    Array4<int> const& bct_ilo = bc_list.bc_ilo[lev]->array();
-    Array4<int> const& bct_ihi = bc_list.bc_ihi[lev]->array();
-    Array4<int> const& bct_jlo = bc_list.bc_jlo[lev]->array();
-    Array4<int> const& bct_jhi = bc_list.bc_jhi[lev]->array();
-    Array4<int> const& bct_klo = bc_list.bc_klo[lev]->array();
-    Array4<int> const& bct_khi = bc_list.bc_khi[lev]->array();
+    Array<Array4<int>,3> bct_lo = {bc_list.bc_ilo[lev]->array(),
+                                   bc_list.bc_jlo[lev]->array(),
+                                   bc_list.bc_klo[lev]->array()};
 
-    for (int n=0; n < nspecies_g; ++n) {
+    Array<Array4<int>,3> bct_hi = {bc_list.bc_ihi[lev]->array(),
+                                   bc_list.bc_jhi[lev]->array(),
+                                   bc_list.bc_khi[lev]->array()};
 
-      ReduceOps<ReduceOpSum, ReduceOpSum> reduce_op;
-      ReduceData<Real, Real> reduce_data(reduce_op);
-      using ReduceTuple = typename decltype(reduce_data)::Type;
+    Array<Array<Array4<int>,3>,2> bct_extents = {bct_lo, bct_hi};
 
-      for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi) {
+    // Loop over MFIter
+    for (MFIter mfi(*flux_x[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
-        const Box& bx = mfi.tilebox();
+      const Box& bx = mfi.tilebox();
 
-        const Box& ubx = (*flux_x[lev])[mfi].box();
-        IntVect ubx_lo(ubx.loVect());
-        IntVect ubx_hi(ubx.hiVect());
+      EBCellFlagFab const& flagfab = fact.getMultiEBCellFlagFab()[mfi];
 
-        const Box& vbx = (*flux_y[lev])[mfi].box();
-        IntVect vbx_lo(vbx.loVect());
-        IntVect vbx_hi(vbx.hiVect());
+      // Only if fab is not covered
+      if (flagfab.getType(amrex::grow(bx,1)) != FabType::covered) {
 
-        const Box& wbx = (*flux_z[lev])[mfi].box();
-        IntVect wbx_lo(wbx.loVect());
-        IntVect wbx_hi(wbx.hiVect());
+        Array<IntVect,2> domain_extents = {domain.smallEnd(), domain.bigEnd()};
 
-        IntVect dom_lo(domain.loVect());
-        IntVect dom_hi(domain.hiVect());
+        auto areafrac = fact.getAreaFrac();
 
-        Array4<Real const> const& flux_x_arr = flux_x[lev]->const_array(mfi);
-        Array4<Real const> const& flux_y_arr = flux_y[lev]->const_array(mfi);
-        Array4<Real const> const& flux_z_arr = flux_z[lev]->const_array(mfi);
+        // Loop over directions
+        for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
 
-        EBCellFlagFab const& flagfab = fact.getMultiEBCellFlagFab()[mfi];
+          // Get flux over direction dir
+          Array4<Real const> const& flux_arr = flux[dir]->const_array(mfi);
+          Array4<Real const> const& areafrac_arr = areafrac[dir]->const_array(mfi);
 
-        if (flagfab.getType() == FabType::regular ) {
+          const Box& local_box = (*flux[dir])[mfi].box();
 
-          if (dom_lo[0] == ubx_lo[0]) {
+          // Save local box extents in a specific container
+          Array<IntVect,2> local_box_extents = {local_box.smallEnd(), local_box.bigEnd()};
 
-            // Create InVects for following Box
-            IntVect ulo_bx_yz_lo(ubx_lo);
-            IntVect ulo_bx_yz_hi(ubx_hi);
+          // Save a copy of facet area along this direction
+          const Real dA = da[dir];
 
-            // Fix lo and hi limits
-            ulo_bx_yz_lo[0] = dom_lo[0];
-            ulo_bx_yz_hi[0] = dom_lo[0];
+          // Loop over face normal
+          for (int normal(-1); normal <= 1; normal += 2) {
 
-            const Box ulo_bx_yz(ulo_bx_yz_lo, ulo_bx_yz_hi);
+            // index to map normal from {-1,1} to {0,1}
+            const int idx = (normal + 1) / 2;
 
-            reduce_op.eval(ulo_bx_yz, reduce_data,
-              [bct_ilo, dom_lo, dydz,  flux_x_arr, n, scomp]
-              AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
-              {
-                Real m_in  = 0.;
-                Real m_out = 0.;
+            // On low face
+            if (local_box_extents[idx][dir] == (domain_extents[idx][dir]+idx)) {
 
-                const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
+              for (int n=0; n < nspecies_g; ++n) {
 
-                if(bct == BCList::pout) {
-                  m_out -= flux_x_arr(i,j,k,n+scomp)*dydz;
-                }
-                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
-                  m_in  += flux_x_arr(i,j,k,n+scomp)*dydz;
-                }
-                return {m_in, m_out};
-              });
-          }
+                ReduceOps<ReduceOpSum,ReduceOpSum> reduce_op;
+                ReduceData<Real,Real> reduce_data(reduce_op);
+                using ReduceTuple = typename decltype(reduce_data)::Type;
 
-          if (ubx_hi[0] == (dom_hi[0] + 1)) {
+                // Create a copy of local box extents
+                Array<IntVect,2> operative_box_extents(local_box_extents);
 
-            // Create InVects for following Box
-            IntVect uhi_bx_yz_lo(ubx_lo);
-            IntVect uhi_bx_yz_hi(ubx_hi);
+                // Modify operative box extents to make a 2D Box
+                operative_box_extents[(idx+1)%2][dir] = operative_box_extents[idx][dir];
 
-            // Fix lo and hi limits
-            uhi_bx_yz_lo[0] = dom_hi[0]+1;
-            uhi_bx_yz_hi[0] = dom_hi[0]+1;
+                // Create the 2D Box
+                const Box operative_box(operative_box_extents[0],
+                                        operative_box_extents[1]);
 
-            const Box uhi_bx_yz(uhi_bx_yz_lo, uhi_bx_yz_hi);
+                // Get the boundary condition type on current face
+                Array4<int>& bc_type = bct_extents[idx][dir];
 
-            reduce_op.eval(uhi_bx_yz, reduce_data,
-              [bct_ihi, dom_hi, dydz,  flux_x_arr, n, scomp]
-              AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
-              {
-                Real m_in  = 0.;
-                Real m_out = 0.;
+                // Get domain index on this face
+                const int domain_idx = domain_extents[idx][dir];
 
-                const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
-
-                if(bct == BCList::pout) {
-                  m_out += flux_x_arr(i,j,k,n+scomp)*dydz;
-                }
-                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
-                  m_in  -= flux_x_arr(i,j,k,n+scomp)*dydz;
-                }
-                return {m_in, m_out};
-              });
-
-          }
-
-
-          if (dom_lo[1] == vbx_lo[1]) {
-
-              // Create InVects for following Box
-              IntVect vlo_bx_xz_lo(vbx_lo);
-              IntVect vlo_bx_xz_hi(vbx_hi);
-
-              // Fix lo and hi limits
-              vlo_bx_xz_lo[1] = dom_lo[1];
-              vlo_bx_xz_hi[1] = dom_lo[1];
-
-              const Box vlo_bx_xz(vlo_bx_xz_lo, vlo_bx_xz_hi);
-              reduce_op.eval(vlo_bx_xz, reduce_data,
-                [bct_jlo, dom_lo, dxdz,  flux_y_arr, n, scomp]
-                AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+                reduce_op.eval(operative_box, reduce_data, [dir,bc_type,
+                    domain_idx,dA,normal,flux_arr,areafrac_arr,n,scomp]
+                  AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
                 {
-
                   Real m_in  = 0.;
                   Real m_out = 0.;
 
-                  const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
+                  IntVect bct_cell(i,j,k);
+                  bct_cell[dir] = domain_idx + normal;
+                  const int bct = bc_type(bct_cell,0);
 
                   if(bct == BCList::pout) {
-                    m_out -= flux_y_arr(i,j,k,n+scomp)*dxdz;
+                    m_out += normal*areafrac_arr(i,j,k)*flux_arr(i,j,k,n+scomp)*dA;
                   }
                   else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
-                    m_in  += flux_y_arr(i,j,k,n+scomp)*dxdz;
+                    m_in  += normal*areafrac_arr(i,j,k)*flux_arr(i,j,k,n+scomp)*dA;
                   }
+
                   return {m_in, m_out};
                 });
 
-          }
-
-          if (vbx_hi[1] == (dom_hi[1] + 1)) {
-
-            // Create InVects for following Box
-            IntVect vhi_bx_xz_lo(vbx_lo);
-            IntVect vhi_bx_xz_hi(vbx_hi);
-
-            // Fix lo and hi limits
-            vhi_bx_xz_lo[1] = dom_hi[1]+1;
-            vhi_bx_xz_hi[1] = dom_hi[1]+1;
-
-            const Box vhi_bx_xz(vhi_bx_xz_lo, vhi_bx_xz_hi);
-
-            reduce_op.eval(vhi_bx_xz, reduce_data,
-              [bct_jhi, dom_hi, dxdz,  flux_y_arr, n, scomp]
-              AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
-              {
-
-                Real m_in  = 0.;
-                Real m_out = 0.;
-
-                const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
-
-                if(bct == BCList::pout) {
-                  m_out += flux_y_arr(i,j,k,n+scomp)*dxdz;
-                }
-                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
-                  m_in  -= flux_y_arr(i,j,k,n+scomp)*dxdz;
-                }
-                return {m_in, m_out};
-              });
-
-          }
-
-          if (dom_lo[2] == wbx_lo[2]) {
-
-            // Create InVects for following Boxes
-            IntVect wlo_bx_xy_lo(wbx_lo);
-            IntVect wlo_bx_xy_hi(wbx_hi);
-
-            // Fix lo and hi limits
-            wlo_bx_xy_lo[2] = dom_lo[2];
-            wlo_bx_xy_hi[2] = dom_lo[2];
-
-            const Box wlo_bx_xy(wlo_bx_xy_lo, wlo_bx_xy_hi);
-
-            reduce_op.eval(wlo_bx_xy, reduce_data,
-              [bct_klo, dom_lo, dxdy,  flux_z_arr, n, scomp]
-              AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
-              {
-                Real m_in  = 0.;
-                Real m_out = 0.;
-
-                const int bct = bct_klo(i,j,dom_lo[2]-1,0);
-
-                if(bct == BCList::pout) {
-                  m_out -= flux_z_arr(i,j,k,n+scomp)*dxdy;
-                }
-                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
-                  m_in  += flux_z_arr(i,j,k,n+scomp)*dxdy;
-                }
-                return {m_in, m_out};
-              });
-          }
-
-          if (wbx_hi[2] == (dom_hi[2] + 1)) {
-
-            // Create InVects for following Boxes
-            IntVect whi_bx_xy_lo(wbx_lo);
-            IntVect whi_bx_xy_hi(wbx_hi);
-
-            // Fix lo and hi limits
-            whi_bx_xy_lo[2] = dom_hi[2]+1;
-            whi_bx_xy_hi[2] = dom_hi[2]+1;
-
-            const Box whi_bx_xy(whi_bx_xy_lo, whi_bx_xy_hi);
-
-            reduce_op.eval(whi_bx_xy, reduce_data,
-               [bct_khi, dom_hi, dxdy,  flux_z_arr, n, scomp]
-               AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
-               {
-                 Real m_in  = 0.;
-                 Real m_out = 0.;
-
-                 const int bct = bct_khi(i,j,dom_hi[2]+1,0);
-
-                 if(bct == BCList::pout) {
-                   m_out += flux_z_arr(i,j,k,n+scomp)*dxdy;
-                 }
-                 else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
-                   m_in  -= flux_z_arr(i,j,k,n+scomp)*dxdy;
-                 }
-                 return {m_in, m_out};
-               });
-          }
-
-        } else if (flagfab.getType(amrex::grow(bx,1)) != FabType::covered ) {
-
-          Array4<Real const> apx = fact.getAreaFrac()[0]->const_array(mfi);
-          Array4<Real const> apy = fact.getAreaFrac()[1]->const_array(mfi);
-          Array4<Real const> apz = fact.getAreaFrac()[2]->const_array(mfi);
-
-          if (dom_lo[0] == ubx_lo[0]) {
-
-            // Create InVects for following Box
-            IntVect ulo_bx_yz_lo(ubx_lo);
-            IntVect ulo_bx_yz_hi(ubx_hi);
-
-            // Fix lo and hi limits
-            ulo_bx_yz_lo[0] = dom_lo[0];
-            ulo_bx_yz_hi[0] = dom_lo[0];
-
-            const Box ulo_bx_yz(ulo_bx_yz_lo, ulo_bx_yz_hi);
-
-            reduce_op.eval(ulo_bx_yz, reduce_data,
-              [bct_ilo, dom_lo, dydz, apx,  flux_x_arr, n, scomp]
-              AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
-              {
-
-                Real m_in  = 0.;
-                Real m_out = 0.;
-
-                const int bct = bct_ilo(dom_lo[0]-1,j,k,0);
-
-                if(bct == BCList::pout) {
-                  m_out -= apx(i,j,k)*flux_x_arr(i,j,k,n+scomp)*dydz;
-                }
-                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
-                  m_in  += apx(i,j,k)*flux_x_arr(i,j,k,n+scomp)*dydz;
-                }
-                return {m_in, m_out};
-              });
-
-          }
-
-          if (ubx_hi[0] == (dom_hi[0] + 1)) {
-
-            // Create InVects for following Box
-            IntVect uhi_bx_yz_lo(ubx_lo);
-            IntVect uhi_bx_yz_hi(ubx_hi);
-
-            // Fix lo and hi limits
-            uhi_bx_yz_lo[0] = dom_hi[0]+1;
-            uhi_bx_yz_hi[0] = dom_hi[0]+1;
-
-            const Box uhi_bx_yz(uhi_bx_yz_lo, uhi_bx_yz_hi);
-
-            reduce_op.eval(uhi_bx_yz, reduce_data,
-              [bct_ihi, dom_hi, dydz,  flux_x_arr, apx, n, scomp]
-              AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
-              {
-                Real m_in  = 0.;
-                Real m_out = 0.;
-
-                const int bct = bct_ihi(dom_hi[0]+1,j,k,0);
-
-                if(bct == BCList::pout) {
-                  m_out += apx(i,j,k)*flux_x_arr(i,j,k,n+scomp)*dydz;
-                }
-                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
-                  m_in  -= apx(i,j,k)*flux_x_arr(i,j,k,n+scomp)*dydz;
-                }
-                return {m_in, m_out};
-              });
-
-          }
-
-
-          if (dom_lo[1] == vbx_lo[1]) {
-
-              // Create InVects for following Box
-              IntVect vlo_bx_xz_lo(vbx_lo);
-              IntVect vlo_bx_xz_hi(vbx_hi);
-
-              // Fix lo and hi limits
-              vlo_bx_xz_lo[1] = dom_lo[1];
-              vlo_bx_xz_hi[1] = dom_lo[1];
-
-              const Box vlo_bx_xz(vlo_bx_xz_lo, vlo_bx_xz_hi);
-              reduce_op.eval(vlo_bx_xz, reduce_data,
-                [bct_jlo, dom_lo, dxdz,  flux_y_arr, apy, n, scomp]
-                AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
-                {
-
-                  Real m_in  = 0.;
-                  Real m_out = 0.;
-
-                  const int bct = bct_jlo(i,dom_lo[1]-1,k,0);
-
-                  if(bct == BCList::pout) {
-                    m_out -= apy(i,j,k)*flux_y_arr(i,j,k,n+scomp)*dxdz;
-                  }
-                  else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
-                    m_in  += apy(i,j,k)*flux_y_arr(i,j,k,n+scomp)*dxdz;
-                  }
-                  return {m_in, m_out};
-                });
-
-          }
-
-          if (vbx_hi[1] == (dom_hi[1] + 1)) {
-
-            // Create InVects for following Box
-            IntVect vhi_bx_xz_lo(vbx_lo);
-            IntVect vhi_bx_xz_hi(vbx_hi);
-
-            // Fix lo and hi limits
-            vhi_bx_xz_lo[1] = dom_hi[1]+1;
-            vhi_bx_xz_hi[1] = dom_hi[1]+1;
-
-            const Box vhi_bx_xz(vhi_bx_xz_lo, vhi_bx_xz_hi);
-
-            reduce_op.eval(vhi_bx_xz, reduce_data,
-              [bct_jhi, dom_hi, dxdz,  flux_y_arr, apy, n, scomp]
-              AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
-              {
-
-                Real m_in  = 0.;
-                Real m_out = 0.;
-
-                const int bct = bct_jhi(i,dom_hi[1]+1,k,0);
-
-                if(bct == BCList::pout) {
-                  m_out += apy(i,j,k)*flux_y_arr(i,j,k,n+scomp)*dxdz;
-                }
-                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
-                  m_in  -= apy(i,j,k)*flux_y_arr(i,j,k,n+scomp)*dxdz;
-                }
-                return {m_in, m_out};
-              });
-
-          }
-
-          if (dom_lo[2] == wbx_lo[2]) {
-
-            // Create InVects for following Boxes
-            IntVect wlo_bx_xy_lo(wbx_lo);
-            IntVect wlo_bx_xy_hi(wbx_hi);
-
-            // Fix lo and hi limits
-            wlo_bx_xy_lo[2] = dom_lo[2];
-            wlo_bx_xy_hi[2] = dom_lo[2];
-
-            const Box wlo_bx_xy(wlo_bx_xy_lo, wlo_bx_xy_hi);
-
-            reduce_op.eval(wlo_bx_xy, reduce_data,
-              [bct_klo, dom_lo, dxdy,  flux_z_arr, apz, n, scomp]
-              AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
-              {
-                Real m_in  = 0.;
-                Real m_out = 0.;
-
-                const int bct = bct_klo(i,j,dom_lo[2]-1,0);
-
-                if(bct == BCList::pout) {
-                  m_out -= apz(i,j,k)*flux_z_arr(i,j,k,n+scomp)*dxdy;
-                }
-                else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
-                  m_in  += apz(i,j,k)*flux_z_arr(i,j,k,n+scomp)*dxdy;
-                }
-                return {m_in, m_out};
-              });
-          }
-
-          if (wbx_hi[2] == (dom_hi[2] + 1)) {
-
-            // Create InVects for following Boxes
-            IntVect whi_bx_xy_lo(wbx_lo);
-            IntVect whi_bx_xy_hi(wbx_hi);
-
-            // Fix lo and hi limits
-            whi_bx_xy_lo[2] = dom_hi[2]+1;
-            whi_bx_xy_hi[2] = dom_hi[2]+1;
-
-            const Box whi_bx_xy(whi_bx_xy_lo, whi_bx_xy_hi);
-
-            reduce_op.eval(whi_bx_xy, reduce_data,
-               [bct_khi, dom_hi, dxdy,  flux_z_arr, apz, n, scomp]
-               AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
-               {
-                 Real m_in  = 0.;
-                 Real m_out = 0.;
-
-                 const int bct = bct_khi(i,j,dom_hi[2]+1,0);
-
-                 if(bct == BCList::pout) {
-                   m_out += apz(i,j,k)*flux_z_arr(i,j,k,n+scomp)*dxdy;
-                 }
-                 else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
-                   m_in  -= apz(i,j,k)*flux_z_arr(i,j,k,n+scomp)*dxdy;
-                 }
-                 return {m_in, m_out};
-               });
-          }
-        } // Not regular Fab
-      } // loop over MFIter
-
-      ReduceTuple host_tuple = reduce_data.value(reduce_op);
-
-      mass_flow[n] += amrex::get<0>(host_tuple);
-      mass_flow[n+nspecies_g] += amrex::get<1>(host_tuple);
-
-    } // Loop over species
+                ReduceTuple host_tuple = reduce_data.value(reduce_op);
+
+                Real mass_in = amrex::get<0>(host_tuple);
+                Real mass_out = amrex::get<1>(host_tuple);
+
+                amrex::ParallelDescriptor::ReduceRealSum(&mass_in, 1);
+                amrex::ParallelDescriptor::ReduceRealSum(&mass_out, 1);
+
+                mass_flow[n] += mass_in;
+                mass_flow[n+nspecies_g] += mass_out;
+              }
+
+            } // Loop over species
+          } // loop over normal direction
+        } // loop over dir
+      } // Not covered Fab
+    } // loop over MFIter
   } // Loop over levels
 
   ParallelDescriptor::ReduceRealSum(mass_flow.data(), 2*nspecies_g);

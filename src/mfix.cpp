@@ -161,7 +161,8 @@ mfix::mfix ()
                                 fluid_proc, covered_val, refRatio(),
                                 eb_levels, nghost_eb_basic(),
                                 nghost_eb_volume(), nghost_eb_full(), m_eb_support_level,
-                                load_balance_type, bc_list, particle_ebfactory);
+                                load_balance_type, bc_list, particle_ebfactory,
+                                regions);
 }
 
 void

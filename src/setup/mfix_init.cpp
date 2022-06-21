@@ -13,6 +13,7 @@
 #include <mfix_species_parms.H>
 #include <mfix_mlmg_options.H>
 #include <mfix_utils.H>
+#include <mfix_monitors.H>
 
 using MFIXParIter = MFIXParticleContainer::MFIXParIter;
 using PairIndex = MFIXParticleContainer::PairIndex;
@@ -1040,6 +1041,14 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
       sum_vol_orig = Utils::volWgtSum(0, *(m_leveldata[0]->ep_g), 0, ebfactory);
 
+//      const Box& domain = geom[0].Domain();
+//
+//      const auto& epg = *(m_leveldata[0]->ep_g);
+//
+//      auto monitor = EulerianMonitor::VolumeIntegral(domain, EBFactory(0));
+//
+//      sum_vol_orig = monitor.volume_weighted_sum(epg);
+
       Print() << "Enclosed domain volume is   " << cell_volume * sum_vol_orig << std::endl;
 
       Real domain_vol = sum_vol_orig;
@@ -1094,6 +1103,15 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
       //Calculation of sum_vol_orig for a restarting point
       sum_vol_orig = Utils::volWgtSum(0, *(m_leveldata[0]->ep_g), 0, ebfactory);
+
+//      const Box& domain = geom[0].Domain();
+//
+//      const auto& epg = *(m_leveldata[0]->ep_g);
+//
+//      auto monitor = EulerianMonitor::VolumeIntegral(domain, EBFactory(0));
+//
+//      //Calculation of sum_vol_orig for a restarting point
+//      sum_vol_orig = monitor.volume_weighted_sum(epg);
 
       Print() << "Setting original sum_vol to " << cell_volume * sum_vol_orig << std::endl;
     }

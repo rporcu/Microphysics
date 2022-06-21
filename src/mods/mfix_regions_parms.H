@@ -9,6 +9,11 @@
 class Regions
 {
   public:
+    // Constructor
+    Regions ()
+      : m_is_initialized(0)
+    {}
+
     // Initialization function -- read input parameters
     void Initialize ();
 
@@ -19,10 +24,15 @@ class Regions
     // Return region extents by region name
     const amrex::RealBox* get_region(const std::string& name) const;
 
+    int is_initialized() const
+    { return m_is_initialized; }
+
   private:
     amrex::Vector<std::string> m_names;
 
     amrex::Vector<amrex::RealBox> m_extents;
+
+    int m_is_initialized;
 };
 
 #endif

@@ -52,23 +52,25 @@ struct SoArealData
 
 
 // Particle real data stored at runtime in a SoA style
-struct runtimeRealData
+class runtimeRealData
 {
-  runtimeRealData (const int nspecies_s,
-                   const int nspecies_g,
-                   const int nreactions)
-    : X_sn(0)                              // nb of components = nspecies_s
-    , vel_txfr(X_sn + nspecies_s)          // nb of components = 3
-    , h_txfr(vel_txfr + 3*(nreactions>0))  // nb of components = 1
-    , mass_txfr(h_txfr + 1*(nreactions>0)) // nb of components = max(nspecies_s,nspecies_g)
-    , count(mass_txfr + amrex::max(nspecies_s, nspecies_g)*(nreactions>0))
-  {}
+  public:
+    AMREX_GPU_HOST_DEVICE
+    runtimeRealData (const int nspecies_s,
+                     const int nspecies_g,
+                     const int nreactions)
+      : X_sn(0)                              // nb of components = nspecies_s
+      , vel_txfr(X_sn + nspecies_s)          // nb of components = 3
+      , h_txfr(vel_txfr + 3*(nreactions>0))  // nb of components = 1
+      , mass_txfr(h_txfr + 1*(nreactions>0)) // nb of components = max(nspecies_s,nspecies_g)
+      , count(mass_txfr + amrex::max(nspecies_s, nspecies_g)*(nreactions>0))
+    {}
 
-  const int X_sn;
-  const int vel_txfr;
-  const int h_txfr;
-  const int mass_txfr;
-  const int count;
+    const int X_sn;
+    const int vel_txfr;
+    const int h_txfr;
+    const int mass_txfr;
+    const int count;
 };
 
 

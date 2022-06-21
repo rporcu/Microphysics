@@ -15,4 +15,6 @@ target_sources( mfixcore
    mfix_pic2dem.cpp
    mfix_rw.H
    mfix_rw.cpp
+   mfix_monitors.H
+   mfix_monitors.cpp
    )

@@ -12,6 +12,7 @@
 #include <mfix_dem_parms.H>
 #include <mfix_pic_parms.H>
 #include <mfix_utils.H>
+#include <mfix_monitors.H>
 
 using namespace amrex;
 
@@ -284,6 +285,22 @@ MfixRW::ComputeAverageFluidVars (const int lev, const Real time,
     if (fluid.solve_enthalpy)
       regions_data[var_count*nr + 6] = Utils::volWgtSumBox(lev, *(m_leveldata[lev]->T_g), 0, ebfactory, avg_box, local);
 
+//    const auto& epg = *(m_leveldata[lev]->ep_g);
+//    const auto& velg = *(m_leveldata[lev]->vel_g);
+//
+//    auto monitor = EulerianMonitor::VolumeIntegral(avg_box, *ebfactory[lev], local);
+//
+//    regions_data[var_count*nr + 0] = monitor.volume();
+//    regions_data[var_count*nr + 1] = monitor.volume_weighted_sum(velg, 0);
+//    regions_data[var_count*nr + 2] = monitor.volume_weighted_sum(velg, 1);
+//    regions_data[var_count*nr + 3] = monitor.volume_weighted_sum(velg, 2);
+//    regions_data[var_count*nr + 4] = monitor.volume_weighted_sum(*pg_cc);
+//    regions_data[var_count*nr + 5] = monitor.volume_weighted_sum(epg);
+//
+//    if (fluid.solve_enthalpy) {
+//      const auto& Tg = *(m_leveldata[lev]->T_g);
+//      regions_data[var_count*nr + 6] = monitor.volume_weighted_sum(Tg);
+//    }
   }
 
   // Compute parallel reductions

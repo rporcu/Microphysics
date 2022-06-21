@@ -5,6 +5,9 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_EBFArrayBox.H>
 
+#include <string>
+#include <sstream>
+
 using namespace amrex;
 
 
@@ -39,7 +42,8 @@ MfixRW::MfixRW (int nlev_in,
                 amrex::EBSupport& m_eb_support_level_in,
                 std::string load_balance_type_in,
                 BCList& bc_list_in,
-                Vector<std::unique_ptr<EBFArrayBoxFactory>>& particle_ebfactory_in)
+                Vector<std::unique_ptr<EBFArrayBoxFactory>>& particle_ebfactory_in,
+                Regions& regions_in)
   : finest_level(nlev_in-1)
   , nlev(nlev_in)
   , grids(grids_in)
@@ -71,6 +75,7 @@ MfixRW::MfixRW (int nlev_in,
   , load_balance_type(load_balance_type_in)
   , bc_list(bc_list_in)
   , particle_ebfactory(particle_ebfactory_in)
+  , regions(regions_in)
   , m_ascent_actions_yaml("")
 {
 
@@ -156,6 +161,90 @@ void MfixRW::readParameters ()
         }
       }
 
+      // Monitors
+     Vector<std::string> monitors_names;
+     pp.queryarr("monitors", monitors_names);
+
+     for (const auto& name: monitors_names) {
+
+       std::string pp_monitor = "monitors." + name;
+       std::string monitor_type;
+       pp.get(pp_monitor.c_str(), monitor_type);
+
+       std::replace(monitor_type.begin(), monitor_type.end(), ':', ' ');
+
+       std::istringstream iss(monitor_type);
+       std::vector<std::string> monitor_specs((std::istream_iterator<std::string>(iss)),
+                                              std::istream_iterator<std::string>());
+
+       if (monitor_specs.size() != 3) {
+         Print() << "Monitor " << name << " specs are badly defined\n";
+         amrex::Abort("Inputs error");
+       }
+
+       std::transform(monitor_specs.begin(), monitor_specs.end(),
+                      monitor_specs.begin(), amrex::toLower);
+
+       pp_monitor = PProot + "." + pp_monitor;
+
+       std::array<std::string, 2> specs = {monitor_specs[1], monitor_specs[2]};
+
+       if (monitor_specs[0].compare("eulerian") == 0) {
+
+         if (monitor_specs[1].compare("pointregion") == 0) {
+
+           m_monitors.push_back(new EulerianMonitor::PointRegion(specs,
+                 pp_monitor, m_leveldata, ebfactory, fluid, regions));
+
+         } else if (monitor_specs[1].compare("arearegion") == 0) {
+
+           m_monitors.push_back(new EulerianMonitor::AreaRegion(specs,
+                 pp_monitor, m_leveldata, ebfactory, fluid, regions));
+
+         } else if (monitor_specs[1].compare("volumeregion") == 0) {
+
+           m_monitors.push_back(new EulerianMonitor::VolumeRegion(specs,
+                 pp_monitor, m_leveldata, ebfactory, fluid, regions));
+
+         } else if (monitor_specs[1].compare("surfaceintegral") == 0) {
+
+           m_monitors.push_back(new EulerianMonitor::SurfaceIntegral(specs,
+                 pp_monitor, m_leveldata, ebfactory, fluid, regions));
+
+         } else if (monitor_specs[1].compare("volumeintegral") == 0) {
+
+           m_monitors.push_back(new EulerianMonitor::VolumeIntegral(specs,
+                 pp_monitor, m_leveldata, ebfactory, fluid, regions));
+
+         } else {
+           amrex::Abort("Unknown Eulerian monitor type");
+         }
+
+       } else if (monitor_specs[0].compare("lagrangian") == 0) {
+
+         if (monitor_specs[1].compare("generalproperty") == 0) {
+
+           m_monitors.push_back(new LagrangianMonitor::GeneralProperty(specs,
+                 pp_monitor, pc, particle_ebfactory, solids, regions));
+
+         } else if (monitor_specs[1].compare("averagedproperty") == 0) {
+
+           m_monitors.push_back(new LagrangianMonitor::AveragedProperty(specs,
+                 pp_monitor, pc, particle_ebfactory, solids, regions));
+
+         } else if (monitor_specs[1].compare("flowrate") == 0) {
+
+           m_monitors.push_back(new LagrangianMonitor::FlowRate(specs,
+                 pp_monitor, pc, particle_ebfactory, solids, regions));
+
+         } else {
+           amrex::Abort("Unknown Lagrangian monitor type");
+         }
+
+       } else {
+         amrex::Abort("Unknown Monitor type");
+       }
+     }
 
      // Ascent output control
      pp.query("ascent_on_restart", ascent_on_restart);
@@ -438,6 +527,30 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 
 /*--------------------------------------------------------------------------------------------------
  *
+ *                                     MFIX Monitors Plot File Output Control
+ *
+ *------------------------------------------------------------------------------------------------*/
+    for (int i(0); i < m_monitors.size(); ++i) {
+
+      auto& monitor = *m_monitors[i];
+
+      monitor.reset_pc(pc);
+
+      int plot_test = 0;
+
+      if (monitor.plot_per_approx() > 0.0) {
+        plot_test = test_per_approx(time, dt, monitor.plot_per_approx());
+      }
+
+      if ((plot_test == 1) || ((monitor.plot_int() > 0) && (nstep % monitor.plot_int() == 0))) {
+
+        monitor.write_csv(time, dt);
+      }
+    }
+
+
+/*--------------------------------------------------------------------------------------------------
+ *
  *                                       Ascent Output Control
  *
  *------------------------------------------------------------------------------------------------*/
@@ -668,8 +781,6 @@ MfixRW::test_per_approx(const Real time,
 void
 MfixRW::ReportGridStats () const
 {
-  BL_PROFILE("mfix::volEpsWgtSum()");
-
   std::vector<long> counts(6,0);
 
   int lev = 0;

@@ -6,6 +6,7 @@
 #include <mfix_bc_list.H>
 #include <mfix_bc_parms.H>
 #include <mfix_solvers.H>
+#include <mfix_monitors.H>
 #include <mfix_calc_cell.H>
 
 using namespace amrex;
@@ -225,7 +226,11 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             // Set tol to 1/2 dx
             Real tol = amrex::min(dx[0], amrex::min(dx[1], dx[2])) / 2;
 
+#ifdef AMREX_USE_GPU
             Real ls_min_over_box = ((*ls_phi)[pti]).min<RunOn::Gpu>(refined_box,0);
+#else
+            Real ls_min_over_box = ((*ls_phi)[pti]).min<RunOn::Cpu>(refined_box,0);
+#endif
 
             if (ls_min_over_box < tol) has_wall = true;
         }
@@ -1152,8 +1157,8 @@ ComputeAverageDensities (const int lev,
       return;
     }
 
-    std::vector<long> region_np(nregions, 0);
     std::vector<Real> region_ro_p(nregions, 0.0);
+    std::vector<long> region_np(nregions, 0);
 
     for ( int nr = 0; nr < nregions; ++nr )
     {
@@ -1218,11 +1223,34 @@ ComputeAverageDensities (const int lev,
       ReduceTuple host_tuple = reduce_data.value();
       region_np[nr]   = amrex::get<0>(host_tuple);
       region_ro_p[nr] = amrex::get<1>(host_tuple);
+
+//      auto monitor = LagrangianMonitor::GeneralProperty(lev, avg_region, Geom(lev));
+//
+//      // Reduce sum operation for np, Tp
+//      ReduceOps<ReduceOpSum, ReduceOpSum> reduce_ops;
+//      ReduceData<Real, long> reduce_data(reduce_ops);
+//      using ReduceTuple = typename decltype(reduce_data)::Type;
+//
+//      auto R = [] AMREX_GPU_DEVICE (MFIXParticleContainer::ParticleType* /*particle*/,
+//                                    const GpuArray<ParticleReal*, SoArealData::count>& p_realarray,
+//                                    const GpuArray<int*, SoAintData::count>& /*p_intarray*/,
+//                                    const int& i) -> ReduceTuple
+//      {
+//        const Real density = p_realarray[SoArealData::density][i];
+//        return {density, 1};
+//      };
+//
+//      ReduceTuple default_values = {0., 0};
+//
+//      ReduceTuple host_tuple = monitor.apply(*this, reduce_data, reduce_ops, R, default_values);
+//
+//      region_ro_p[nr] = amrex::get<0>(host_tuple);
+//      region_np[nr]   = amrex::get<1>(host_tuple);
     }
 
     // Compute parallel reductions
-    ParallelDescriptor::ReduceLongSum(region_np.data(), nregions);
     ParallelDescriptor::ReduceRealSum(region_ro_p.data(), nregions);
+    ParallelDescriptor::ReduceLongSum(region_np.data(), nregions);
 
     // Only the IO processor takes care of the output
     if (ParallelDescriptor::IOProcessor())
@@ -1316,11 +1344,11 @@ ComputeAverageVelocities (const int lev,
       return;
     }
 
-    std::vector<long> region_np(nregions, 0);
     std::vector<Real> region_velx(nregions, 0.0);
     std::vector<Real> region_vely(nregions, 0.0);
     std::vector<Real> region_velz(nregions, 0.0);
     std::vector<Real> region_k_en(nregions, 0.0);
+    std::vector<long> region_np(nregions, 0);
 
     for ( int nr = 0; nr < nregions; ++nr )
     {
@@ -1340,7 +1368,6 @@ ComputeAverageVelocities (const int lev,
                        << " is invalid: skipping\n";
         continue;
       }
-
 
       // Reduce sum operation for np, velx, vely, velz, kinetic energy
       ReduceOps<ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum> reduce_op;
@@ -1398,14 +1425,45 @@ ComputeAverageVelocities (const int lev,
       region_vely[nr] = amrex::get<2>(host_tuple);
       region_velz[nr] = amrex::get<3>(host_tuple);
       region_k_en[nr] = amrex::get<4>(host_tuple);
+
+//      auto monitor = LagrangianMonitor::GeneralProperty(lev, avg_region, Geom(lev));
+//
+//      // Reduce sum operation for np, Tp
+//      ReduceOps<ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum> reduce_ops;
+//      ReduceData<Real, Real, Real, Real, long> reduce_data(reduce_ops);
+//      using ReduceTuple = typename decltype(reduce_data)::Type;
+//
+//      auto R = [] AMREX_GPU_DEVICE (MFIXParticleContainer::ParticleType* /*particle*/,
+//                                    const GpuArray<ParticleReal*, SoArealData::count>& p_realarray,
+//                                    const GpuArray<int*, SoAintData::count>& /*p_intarray*/,
+//                                    const int& i) -> ReduceTuple
+//      {
+//        const Real mass = p_realarray[SoArealData::mass][i];
+//        const Real velx = p_realarray[SoArealData::velx][i];
+//        const Real vely = p_realarray[SoArealData::vely][i];
+//        const Real velz = p_realarray[SoArealData::velz][i];
+//        const Real k_en = 0.5*mass*(velx*velx + vely*vely + velz*velz);
+//
+//        return {velx, vely, velz, k_en, 1};
+//      };
+//
+//      ReduceTuple default_values = {0., 0., 0., 0., 0};
+//
+//      ReduceTuple host_tuple = monitor.apply(*this, reduce_data, reduce_ops, R, default_values);
+//
+//      region_velx[nr] = amrex::get<0>(host_tuple);
+//      region_vely[nr] = amrex::get<1>(host_tuple);
+//      region_velz[nr] = amrex::get<2>(host_tuple);
+//      region_k_en[nr] = amrex::get<3>(host_tuple);
+//      region_np[nr]   = amrex::get<4>(host_tuple);
     }
 
     // Compute parallel reductions
-    ParallelDescriptor::ReduceLongSum(region_np.data(),   nregions);
     ParallelDescriptor::ReduceRealSum(region_velx.data(), nregions);
     ParallelDescriptor::ReduceRealSum(region_vely.data(), nregions);
     ParallelDescriptor::ReduceRealSum(region_velz.data(), nregions);
     ParallelDescriptor::ReduceRealSum(region_k_en.data(), nregions);
+    ParallelDescriptor::ReduceLongSum(region_np.data(),   nregions);
 
     // Only the IO processor takes care of the output
     if (ParallelDescriptor::IOProcessor())
@@ -1508,8 +1566,8 @@ ComputeAverageTemperatures (const int lev,
       return;
     }
 
-    std::vector<long> region_np(nregions, 0);
     std::vector<Real> region_Tp(nregions, 0.0);
+    std::vector<long> region_np(nregions, 0);
 
     for ( int nr = 0; nr < nregions; ++nr )
     {
@@ -1574,6 +1632,30 @@ ComputeAverageTemperatures (const int lev,
       ReduceTuple host_tuple = reduce_data.value();
       region_np[nr] = amrex::get<0>(host_tuple);
       region_Tp[nr] = amrex::get<1>(host_tuple);
+
+//      auto monitor = LagrangianMonitor::GeneralProperty(lev, avg_region, Geom(lev));
+//
+//      // Reduce sum operation for np, Tp
+//      ReduceOps<ReduceOpSum, ReduceOpSum> reduce_ops;
+//      ReduceData<Real, long> reduce_data(reduce_ops);
+//      using ReduceTuple = typename decltype(reduce_data)::Type;
+//
+//      auto R = [] AMREX_GPU_DEVICE (MFIXParticleContainer::ParticleType* /*particle*/,
+//                                    const GpuArray<ParticleReal*, SoArealData::count>& p_realarray,
+//                                    const GpuArray<int*, SoAintData::count>& /*p_intarray*/,
+//                                    const int& i) -> ReduceTuple
+//      {
+//        const Real temperature = p_realarray[SoArealData::temperature][i];
+//
+//        return {temperature, 1};
+//      };
+//
+//      ReduceTuple default_values = {0., 0};
+//
+//      ReduceTuple host_tuple = monitor.apply(*this, reduce_data, reduce_ops, R, default_values);
+//
+//      region_Tp[nr] = amrex::get<0>(host_tuple);
+//      region_np[nr] = amrex::get<1>(host_tuple);
     }
 
     // Compute parallel reductions

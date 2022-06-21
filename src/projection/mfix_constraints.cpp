@@ -2,6 +2,7 @@
 #include <mfix_bc_parms.H>
 #include <mfix_mf_helpers.H>
 #include <mfix_utils.H>
+#include <mfix_monitors.H>
 
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_VisMF.H>
@@ -237,6 +238,15 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
 
     avgSigma[lev] = Utils::volEpsWgtAvg(*Sigma[lev], 0, *ep_g[lev], volfrac);
     avgTheta[lev] = Utils::volEpsWgtAvg(*Theta[lev], 0, *ep_g[lev], volfrac);
+
+//    const Box& domain = geom[lev].Domain();
+//
+//    const amrex::MultiFab& epg = *ep_g[lev];
+//
+//    auto monitor = EulerianMonitor::VolumeIntegral(domain, EBFactory(lev));
+//
+//    avgSigma[lev] = monitor.volume_weighted_average(*Sigma[lev], epg);
+//    avgTheta[lev] = monitor.volume_weighted_average(*Theta[lev], epg);
   }
 
   // Compute rhs

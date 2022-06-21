@@ -10,6 +10,7 @@
 #include <mfix_solids_parms.H>
 #include <mfix_reactions_parms.H>
 #include <mfix_regions_parms.H>
+#include <mfix_monitors.H>
 
 
 namespace MfixIO {
@@ -46,7 +47,8 @@ public:
            amrex::EBSupport& m_eb_support_level_in,
            std::string load_balance_type_in,
            BCList& bc_list_in,
-           amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory_in);
+           amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory_in,
+           Regions& regions_in);
 
    // Class for specifying a subregion for ParticleContainer::WritePlotFile
    // and add a filter to plot only a selected group of particles
@@ -268,6 +270,8 @@ private:
 
    amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory;
 
+   Regions& regions;
+
    amrex::GpuArray<amrex::Real,2*Species::NMAX> mass_accum = {0.};
    amrex::GpuArray<amrex::Real,  Species::NMAX> mass_inflow = {0.};
    amrex::GpuArray<amrex::Real,  Species::NMAX> mass_outflow = {0.};
@@ -382,6 +386,8 @@ private:
                           amrex::Real time) const;
 
    void WriteJobInfo (const std::string& dir) const;
+
+   amrex::Vector<Monitor*> m_monitors;
 
    std::string m_ascent_actions_yaml;
 };
