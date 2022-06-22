@@ -82,9 +82,6 @@ build-ascent-env:
   #     - build/Testing/
   tags:
     - docker
-  only:
-    - develop
-
 
 build:GNUMake:
   image: $CI_REGISTRY_IMAGE/nvcc
@@ -181,6 +178,20 @@ build:csg:
     - ./build/src/eb/tests/functional_tests
   <<: *build_base
 
+build:ascent:
+  needs: ['build-ascent-env']
+  image: $CI_REGISTRY_IMAGE/ascent
+  variables:
+    CC: gcc
+    CXX: g++
+  script:
+    - cmake -S .
+            -B build
+            -DAMReX_CONDUIT=ON -DAMReX_ASCENT=ON
+            -GNinja
+    - cmake --build build
+  <<: *build_base
+
 ## LINT ###
 .lint: &lint_template
   stage: lint
@@ -240,7 +251,7 @@ lint:spelling:
     paths:
       - build/Testing/
   only:
-    - schedules
+    - develop
 
 .ctest: &ctest_template
   image: $CI_REGISTRY_IMAGE/nvcc
@@ -295,8 +306,10 @@ test:tiled-parallel-openmp:
   tags:
     - docker
   allow_failure: false
+  only:
+    - develop
 
-test:ascent:build-and-run:
+test:ascent:
   <<: *ascent_template
   variables:
     CC: gcc
