@@ -246,25 +246,17 @@ class BaseMonitor: public Monitor {
 
       public:
         AMREX_GPU_HOST_DEVICE
-        isCovered (const int ix_type = -1,
+        isCovered ()
+          : m_ix_type(-1)
+          , m_direction(-1)
+        {}
+
+        AMREX_GPU_HOST_DEVICE
+        isCovered (const int ix_type,
                    const int direction = -1)
           : m_ix_type(ix_type)
           , m_direction(direction)
         {}
-
-        AMREX_GPU_HOST_DEVICE
-        isCovered (const isCovered& rhs)
-          : m_ix_type(rhs.m_ix_type)
-          , m_direction(rhs.m_direction)
-        {}
-
-        AMREX_GPU_HOST_DEVICE
-        isCovered& operator= (const isCovered& rhs)
-        { 
-          this->m_ix_type = rhs.m_ix_type;
-          this->m_direction = rhs.m_direction;
-          return *this;
-        }
 
         AMREX_GPU_HOST_DEVICE
         void set_direction (const int direction) { m_direction = direction; }
@@ -872,7 +864,7 @@ class BaseMonitor: public Monitor {
       public:
         AMREX_GPU_HOST_DEVICE
         GetParticleValue (const runtimeRealData& rrData)
-          : m_rrData(rrData)
+          : m_rrData_count(rrData.count)
         {}
 
         AMREX_GPU_HOST_DEVICE AMREX_INLINE
@@ -904,7 +896,7 @@ class BaseMonitor: public Monitor {
             const int idx = index-(5+SoArealData::count);
             return particle.idata(idx);
 
-          } else if (index < (5+SoArealData::count+SoAintData::count+m_rrData.count)) {
+          } else if (index < (5+SoArealData::count+SoAintData::count+m_rrData_count)) {
 
             const int idx = index-(5+SoArealData::count+SoAintData::count);
             return ptile_data.m_runtime_rdata[idx][i];
@@ -914,7 +906,7 @@ class BaseMonitor: public Monitor {
           return 0.;
         }
 
-        const runtimeRealData& m_rrData;
+        const int m_rrData_count;
     };
 
     // Template class for generic computation
