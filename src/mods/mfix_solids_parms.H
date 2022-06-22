@@ -329,10 +329,13 @@ class SolidsPhase
     int name_to_phase (const std::string& name) const;
 
     // Flag to turn on/off particles mass update
-    int solve_mass;
+    int update_mass;
+
+    // Flag to solve species
+    int solve_species;
 
     // Flag to turn on/off particles velocity update
-    int solve_momentum;
+    int update_momentum;
 
     // Specified constant gas reference temperature
     amrex::Real T_ref;
@@ -341,10 +344,10 @@ class SolidsPhase
     amrex::Real enthalpy_source;
 
     // Flag to turn on/off particles enthalpy update
-    int solve_enthalpy;
+    int update_enthalpy;
 
-    // Flag to solve species solids equations
-    int solve_species;
+    // Flag to solve enthalpy
+    int solve_enthalpy;
 
     // Particle species
     amrex::Vector<std::string> species_names;

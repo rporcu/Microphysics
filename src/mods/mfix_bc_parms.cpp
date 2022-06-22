@@ -604,7 +604,7 @@ namespace BC
 
         if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
 
-          if (fluid.thermodynamic_pressure_defined) {
+          if (fluid.p_therm_defined) {
             const Real p_therm = fluid.thermodynamic_pressure;
 
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(std::abs(p_therm-min_val) < 1.e-15 &&
@@ -615,7 +615,7 @@ namespace BC
           } else {
 
             fluid.thermodynamic_pressure = max_val;
-            fluid.thermodynamic_pressure_defined = 1;
+            fluid.p_therm_defined = 1;
 
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid.thermodynamic_pressure > 1.e-15,
                 "Error: fluid thermodynamic pressure is zero or negative");

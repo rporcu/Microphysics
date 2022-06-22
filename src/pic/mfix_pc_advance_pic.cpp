@@ -59,7 +59,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
       const int idx_mass_sn_txfr = m_runtimeRealData.mass_txfr;
       const int idx_h_s_txfr = m_runtimeRealData.h_txfr;
 
-      const int solve_mass      = solids.solve_mass && reactions.solve;
+      const int update_mass      = solids.update_mass && reactions.solve;
       const int solve_enthalpy  = solids.solve_enthalpy;
       const int solve_reactions = reactions.solve;
 
@@ -71,7 +71,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
       amrex::ParallelFor(nrp,
           [pstruct,p_realarray,p_intarray,ptile_data,dt,nspecies_s,nreactions,
-           idx_X_sn,idx_mass_sn_txfr,solve_mass,solve_reactions,idx_h_s_txfr,
+           idx_X_sn,idx_mass_sn_txfr,update_mass,solve_reactions,idx_h_s_txfr,
            solid_is_a_mixture,solve_enthalpy,enthalpy_source,solids_parms,
            is_IOProc,abstol,reltol,maxiter]
         AMREX_GPU_DEVICE (int lp) noexcept
@@ -98,7 +98,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
         //*********************************************************************
         // First step: update parcels' mass and density
         //*********************************************************************
-        if (solve_mass) {
+        if (update_mass) {
           // Total particle density exchange rate
           Real total_mass_rate(0);
 
@@ -164,7 +164,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
             const Real Tp_old = p_realarray[SoArealData::temperature][lp];
 
-            const Real coeff = solve_mass ? (p_mass_old/p_mass_new) : 1.;
+            const Real coeff = update_mass ? (p_mass_old/p_mass_new) : 1.;
 
             Real p_enthalpy_old(0);
 

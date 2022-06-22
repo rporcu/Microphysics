@@ -343,7 +343,7 @@ class FluidPhase {
 
     // Specified gas phase thermodynamic pressure
     amrex::Real thermodynamic_pressure;
-    int thermodynamic_pressure_defined;
+    int p_therm_defined;
 
     // Flag to solve species fluid equations
     int solve_species;
