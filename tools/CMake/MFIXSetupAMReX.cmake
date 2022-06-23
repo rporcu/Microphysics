@@ -52,6 +52,7 @@ if (AMReX_FOUND)
    # available everywhere we need it
    if (MFIX_CUDA)
       include(AMReXTargetHelpers)
+      find_package(CUDAToolkit REQUIRED)
    endif ()
 
    #
@@ -113,17 +114,6 @@ else ()
    set(AMReX_PLOTFILE_TOOLS        ON)
 
    list(APPEND CMAKE_MODULE_PATH ${AMREX_SRC_DIR}/Tools/CMake)
-
-   # If CUDA is required, enable the language BEFORE adding the AMReX directory
-   # Since AMReX_SetupCUDA has an include guard, it will be included only once here.
-   # The reason for enabling CUDA before adding the AMReX subdirectory is that
-   # the top-most directory needs to setup the CUDA language before a CUDA-enabled target
-   # from a sub-project is included via add_subdirectory.
-   # IMPORTANT: if you don't do this, AMReX will perform this step in a sub-scope and therefore
-   # it will not setup CUDA here!
-   if(MFIX_CUDA)
-      include(AMReX_SetupCUDA)
-   endif ()
 
    # Append -w to AMREX flags (but not MFIX flags)
    #
