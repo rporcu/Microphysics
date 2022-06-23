@@ -191,6 +191,90 @@ struct ComputeDragBVK2
     }
 };
 
+
+
+
+/**********************************************************************************
+*
+*********************************************************************************/
+struct ComputeDragSyamOBrien1988
+{
+    amrex::Real small_number, large_number, eps;
+    amrex::Real drag_c1, drag_d1;
+
+    ComputeDragSyamOBrien1988 (amrex::Real small_, amrex::Real large_, amrex::Real eps_,
+                               amrex::Real c1_, amrex::Real d1_)
+        : small_number(small_)
+        , large_number(large_)
+        , eps(eps_)
+        , drag_c1(c1_)
+        , drag_d1(d1_)
+        {}
+
+    // Literature/Document References:
+    // Syamlal M, O'Brien TJ (1988). International Journal of Multiphase Flow 14: 473-481.
+
+    /**
+     *  \brief Returns: the calculated drag coefficient.
+     *
+     *  Inputs:
+     *    EPg     - gas volume fraction
+     *    Mug     - gas laminar viscosity
+     *    ROpg    - gas density * EP_g
+     *    vrel    - magnitude of gas-solids relative velocity
+     *    DPM     - particle diameter of solids phase M
+     *    DPA     - average particle diameter
+     */
+    AMREX_GPU_HOST_DEVICE AMREX_INLINE
+    amrex::Real operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel,
+                            amrex::Real DPM, amrex::Real DPA, amrex::Real /*PHIS*/,
+                            amrex::Real /*fvelx*/, amrex::Real /*fvely*/, amrex::Real /*fvelz*/,
+                            int /*i*/, int /*j*/, int /*k*/, int /*pid*/) const
+    {
+
+        amrex::Real RE = (Mug > 0.0) ? DPA*vrel*ROPg/Mug : large_number;
+
+        if (RE < eps) return 0.0;
+
+        // Calculate V_rm
+        const amrex::Real A = std::pow(EPg, 4.14);
+
+        const amrex::Real B = (EPg <= 0.85) ?
+            drag_c1*std::pow(EPg, 1.28) :
+                    std::pow(EPg, drag_d1);
+
+
+        const amrex::Real V_RM = 0.5*(A - 0.06*RE +
+           std::sqrt(0.0036*RE*RE + 0.12*RE*(2.0*B - A) + A*A));
+
+
+        // Calculate single sphere drag correlation of Dalla Valle (1948)
+        // multiplied by the Reynolds number.
+        amrex::Real C_DSXRE_DV = (0.63*std::sqrt(RE/V_RM) + 4.8);
+        C_DSXRE_DV *= C_DSXRE_DV;
+
+        return 0.75*Mug*EPg*C_DSXRE_DV/(V_RM*DPM*DPM);
+
+
+    }
+};
+
+
+
+
+
+//****************************************************************************************************
+
+
+
+
+
+
+
+
+
+
+
 struct ComputeDragUser
 {
     amrex::Real small_number, large_number, eps;

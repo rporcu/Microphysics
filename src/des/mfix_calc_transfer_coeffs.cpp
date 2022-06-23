@@ -15,21 +15,33 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& X_gk_in,
                                       Vector< MultiFab* > const& pressure_g_in)
 {
+  const amrex::Real small_num = DEM::small_number;
+  const amrex::Real large_num = DEM::large_number;
+  const amrex::Real eps = DEM::eps;
+
   if (m_drag_type == DragType::WenYu) {
     mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
-                              ComputeDragWenYu(DEM::small_number, DEM::large_number, DEM::eps));
+                              ComputeDragWenYu(small_num, large_num, eps));
   }
   else if (m_drag_type == DragType::Gidaspow) {
     mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
-                              ComputeDragGidaspow(DEM::small_number,DEM::large_number,DEM::eps));
+                              ComputeDragGidaspow(small_num, large_num, eps));
   }
   else if (m_drag_type == DragType::BVK2) {
     mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
-                              ComputeDragBVK2(DEM::small_number,DEM::large_number,DEM::eps));
+                              ComputeDragBVK2(small_num, large_num, eps));
+  }
+  else if (m_drag_type == DragType::SyamOBrien) {
+
+    const amrex::Real c1 = m_SyamOBrien_coeff_c1;
+    const amrex::Real d1 = m_SyamOBrien_coeff_d1;
+
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
+                              ComputeDragSyamOBrien1988(small_num, large_num, eps, c1, d1));
   }
   else if (m_drag_type == DragType::UserDrag) {
     mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
-                              ComputeDragUser(DEM::small_number,DEM::large_number,DEM::eps));
+                              ComputeDragUser(small_num, large_num, eps));
   }
   else {
     amrex::Abort("Invalid Drag Type.");
@@ -126,7 +138,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   auto& reactions_parms = *reactions.parameters;
 
   //***************************************************************************
-  // 
+  //
   //***************************************************************************
 
   // We copy the value inside the domain to the outside to avoid

@@ -41,7 +41,7 @@
 
 
 // Drag type enumeration
-struct DragType { enum {Invalid=-1, WenYu, Gidaspow, BVK2, UserDrag}; };
+struct DragType { enum {Invalid=-1, WenYu, Gidaspow, BVK2, SyamOBrien, UserDrag}; };
 
 // Convection type enumeration
 struct ConvectionType { enum {Invalid=-1, RanzMarshall, Gunn, NullConvection}; };
@@ -376,6 +376,9 @@ class mfix : public AmrCore
                   const Box& domain);
 
     static int m_drag_type;
+
+    static amrex::Real m_SyamOBrien_coeff_c1;
+    static amrex::Real m_SyamOBrien_coeff_d1;
 
     static int m_convection_type;
 

@@ -13,6 +13,8 @@ int              mfix::load_balance_fluid   = -1;
 int              mfix::knapsack_nmax        = 128;
 int              mfix::greedy_dir           = 0;
 int              mfix::m_drag_type          = DragType::Invalid;
+amrex::Real      mfix::m_SyamOBrien_coeff_c1 = -1;
+amrex::Real      mfix::m_SyamOBrien_coeff_d1 = -1;
 int              mfix::m_convection_type    = ConvectionType::Invalid;
 int              mfix::m_advection_type     = AdvectionType::Invalid;
 DepositionScheme mfix::m_deposition_scheme;

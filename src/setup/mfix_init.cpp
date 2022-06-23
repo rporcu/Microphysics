@@ -362,6 +362,25 @@ mfix::InitParams ()
     else if (drag_type.compare("BVK2") == 0) {
       m_drag_type = DragType::BVK2;
     }
+    else if (drag_type.compare("SyamOBrien") == 0) {
+      m_drag_type = DragType::SyamOBrien;
+
+      ParmParse ppSyamOBrien("mfix.SyamOBrien");
+      int found_c1 = ppSyamOBrien.query("c1", m_SyamOBrien_coeff_c1);
+      int found_d1 = ppSyamOBrien.query("d1", m_SyamOBrien_coeff_d1);
+
+      if (!found_c1 || !found_d1 ) {
+        std::string message;
+        message  = " Error: Drag model SyamOBrien requires coefficients c1 and d1.\n";
+        message += " Specify the following entries in the inputs file:\n";
+        message += " mfix.SyamOBrien.c1 = amrex::Real\n";
+        message += " mfix.SyamOBrien.d1 = amrex::Real\n";
+
+        amrex::Print() << message;
+        amrex::Abort(message);
+      }
+
+    }
     else if (drag_type.compare("UserDrag") == 0) {
       m_drag_type = DragType::UserDrag;
     }
