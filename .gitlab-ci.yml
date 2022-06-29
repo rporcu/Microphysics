@@ -131,14 +131,14 @@ build:hip:
     CC: /opt/rocm/llvm/bin/clang
     CXX: /opt/rocm/llvm/bin/clang++
   script:
-    # - conan install -if build -g cmake_find_package catch2/2.13.7@
-    # - conan install -if build -g cmake_find_package cgal/5.2.1@
-    # - conan install -if build -g cmake_find_package taocpp-pegtl/3.2.1@
+    - conan install -if build -g cmake_find_package catch2/2.13.7@
+    - conan install -if build -g cmake_find_package taocpp-pegtl/3.2.1@
     - cmake -S .
             -B build
             -DAMReX_AMD_ARCH=gfx908
             -DCMAKE_BUILD_TYPE=MinSizeRel
-            -DMFIX_CSG=0
+            -DCMAKE_MODULE_PATH=$PWD/build
+            -DMFIX_CSG=ON
             -DMFIX_GPU_BACKEND=HIP
             -DMFIX_MPI=0
             -G Ninja

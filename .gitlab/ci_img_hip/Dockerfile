@@ -56,6 +56,12 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* \
     conan==1.* \
     ninja==1.*
 
+# install csg dependency cgal, since it doesn't install properly with conan for HIP
+RUN apt-get -qq update\
+    && apt-get -qq -y install --no-install-recommends \
+    libcgal-dev
+
+
 # add rocm to path
 ENV PATH="/opt/rocm/llvm/bin:/opt/rocm/bin:/opt/rocm/profiler/bin:/opt/rocm/opencl/bin:${PATH}"
 
