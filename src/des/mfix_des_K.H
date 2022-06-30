@@ -184,9 +184,9 @@ amrex::Real des_pp_conduction(amrex::Real dist_mag,
                               const amrex::Real Tp1,
                               const amrex::Real Tp2)
 { 
-  amrex::Real kp_eff = 2.0*(kp1*kp2)/(kp1 + kp2); 
-  amrex::Real Olap = p1radius + p2radius - dist_mag;
-  amrex::Real Q_dot = 0.0;
+  amrex::Real kp_eff = 2.0*(kp1*kp2)/(kp1 + kp2);
+  amrex::Real Olap   = p1radius + p2radius - dist_mag;
+  amrex::Real Q_dot  = 0.0;
 
   /*
   // To-do: Area correction
@@ -207,8 +207,8 @@ amrex::Real des_pp_conduction(amrex::Real dist_mag,
   */
     
   amrex::Real Rp_min = std::min(p1radius,p2radius);
-  amrex::Real y = Rp_min - Olap; 
-  amrex::Real lRad = sqrt(Rp_min*Rp_min - y*y); // Contact radius -> base of triangle 
+  amrex::Real y      = Rp_min - Olap;
+  amrex::Real lRad   = sqrt(Rp_min*Rp_min - y*y); // Contact radius -> base of triangle
   Q_dot = 2.0 * kp_eff * lRad * (Tp2 - Tp1); // Heat rate from 1 -> 2
 
   return Q_dot;  
@@ -242,7 +242,7 @@ amrex::Real des_pfp_conduction(const amrex::Real dist_mag_eff,
   amrex::Real A1 = std::abs(dist_mag_eff-C1);
   amrex::Real A0 = std::abs(dist_mag_eff-C0);  
   Q_dot = M_PI * kf * ( dist_mag_eff*log(A1/A0)
-			+ C1 - C0 )*(Tp2 - Tp1); // Heat rate from 1 -> 2
+			          + C1 - C0 )*(Tp2 - Tp1); // Heat rate from 1 -> 2
   
   return Q_dot;  
 }

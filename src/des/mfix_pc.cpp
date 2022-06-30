@@ -188,6 +188,34 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     const FabArray<EBCellFlagFab>* flags = &(particle_ebfactory->getMultiEBCellFlagFab());
 
     /****************************************************************************
+     * Get EB wall temps/rbox in device array
+     ***************************************************************************/
+    int bc_tw_count(0);
+    for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
+      if (BC::bc[bcv].type == BCList::eb) {
+        bc_tw_count++;
+      }
+    }
+
+    Gpu::HostVector<RealBox> h_bc_rbv(bc_tw_count);
+    Gpu::HostVector<Real>    h_bc_twv(bc_tw_count);
+    if (bc_tw_count > 0) {
+      int lc0(0);
+      for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
+        if (BC::bc[bcv].type == BCList::eb) {
+          h_bc_rbv[lc0] = *(BC::bc[bcv].region);
+          h_bc_twv[lc0] =   BC::bc[bcv].eb.temperature;
+          lc0++;
+        }
+      }
+    }
+    Gpu::AsyncArray<RealBox> d_bc_rbv(h_bc_rbv.data(), h_bc_rbv.size());
+    Gpu::AsyncArray<Real>    d_bc_twv(h_bc_twv.data(), h_bc_twv.size());
+
+    RealBox* p_bc_rbv = (bc_tw_count > 0) ?  d_bc_rbv.data() : nullptr;
+    Real*    p_bc_twv = (bc_tw_count > 0) ?  d_bc_twv.data() : nullptr;
+    
+    /****************************************************************************
      * Init temporary storage:                                                  *
      *   -> particle-particle, and particle-wall forces                         *
      *   -> particle-particle, and particle-wall torques                        *
@@ -195,6 +223,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     std::map<PairIndex, Gpu::DeviceVector<Real>> tow;
     std::map<PairIndex, Gpu::DeviceVector<Real>> fc, pfor, wfor;
 
+    std::map<PairIndex, Gpu::DeviceVector<Real>> cond;
+    
     std::map<PairIndex, bool> tile_has_walls;
 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
@@ -205,7 +235,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         fc[index]   = Gpu::DeviceVector<Real>();
         pfor[index] = Gpu::DeviceVector<Real>();
         wfor[index] = Gpu::DeviceVector<Real>();
-
+        cond[index] = Gpu::DeviceVector<Real>();
+        
         // Determine if this particle tile actually has any walls
         bool has_wall = false;
 
@@ -321,11 +352,14 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             // substep) of particles.
             tow[index].clear();
             fc[index].clear();
+            cond[index].clear();
             tow[index].resize(3*ntot, 0.0);
             fc[index].resize(3*ntot, 0.0);
-
-            Real* fc_ptr = fc[index].dataPtr();
-            Real* tow_ptr = tow[index].dataPtr();
+            cond[index].resize(ntot, 0.0);
+            
+            Real* fc_ptr   = fc[index].dataPtr();
+            Real* tow_ptr  = tow[index].dataPtr();
+            Real* cond_ptr = cond[index].dataPtr();
 
             if (solids.update_momentum) {
 
@@ -354,11 +388,11 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
               // now we loop over the neighbor list and compute the forces
               amrex::ParallelFor(nrp,
-                  [nrp,pstruct,p_realarray,p_intarray,fc_ptr,tow_ptr,nbor_data,
+                  [nrp,pstruct,p_realarray,p_intarray,fc_ptr,tow_ptr,cond_ptr,nbor_data,
                    subdt,ntot,walls_in_tile,ls_refinement,phiarr,plo,dxi,solids_parms,
-                   solve_enthalpy,local_mew=DEM::mew,local_mew_w=DEM::mew_w,local_kn=DEM::kn,
-                   local_kn_w=DEM::kn_w,local_etan=DEM::etan,local_etan_w=DEM::etan_w,
-                   local_k_g=DEM::k_g_dem]
+                   solve_enthalpy,bc_tw_count,p_bc_rbv,p_bc_twv,local_mew=DEM::mew,
+                   local_mew_w=DEM::mew_w,local_kn=DEM::kn,local_kn_w=DEM::kn_w,
+                   local_etan=DEM::etan,local_etan_w=DEM::etan_w,local_k_g=DEM::k_g_dem]
                 AMREX_GPU_DEVICE (int i) noexcept
                 {
                     auto particle = pstruct[i];
@@ -383,8 +417,46 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                       Real overlap_n = rp - ls_value;
 
+                      // PFW conduction
+                      Real Tp1, Tp2;
+                      if(solve_enthalpy && solids_parms.get_do_pfp_cond<run_on>()) {
+                        const Real FLPC = solids_parms.get_flpc<run_on>();
+                        Real Rlens      = (1.0 + FLPC)*rp;
+                        if (ls_value < Rlens) {
+                          const Real Rough = solids_parms.get_min_cond<run_on>();
+                          Tp1              = p_realarray[SoArealData::temperature][i];
+
+                          // Construct a point inside the wall (to machine precision)
+                          RealVect normal(0.);
+                          level_set_normal(pos, ls_refinement, normal, phiarr, plo, dxi);
+                          normal[0] *= -1;
+                          normal[1] *= -1;
+                          normal[2] *= -1;
+                          RealVect posw = normal*(ls_value + small_number) + pos1;
+
+                          // Find BC region this point lives in and get Twall
+                          Tp2 = Tp1;
+                          for (int bcv(0); bcv < bc_tw_count; ++bcv) {
+                            if (p_bc_rbv[bcv].contains(posw)) Tp2 = p_bc_twv[bcv];
+                          }
+
+                          Real Q_dot = 2.*des_pfp_conduction(ls_value,rp,Rlens,
+                                                             Rough,local_k_g,Tp1,Tp2);
+                          HostDevice::Atomic::Add(&cond_ptr[i],Q_dot);
+                        }
+                      }
+                      
                       if (ls_value < rp) {
 
+                        // PP conduction (Tw already found from PFW conduction hit)
+                        if(solve_enthalpy && solids_parms.get_do_pfp_cond<run_on>()) {
+                          const Real kp1 = solids_parms.calc_kp_sn<run_on>(Tp1,0);
+                          const Real kp2 = solids_parms.calc_kp_sn<run_on>(Tp2,0);
+                          Real Q_dot     = des_pp_conduction(ls_value+rp,rp,rp,
+                                                             kp1,kp2,Tp1,Tp2);
+                          HostDevice::Atomic::Add(&cond_ptr[i],Q_dot);
+                        }
+                        
                         RealVect normal(0.);
                         level_set_normal(pos, ls_refinement, normal, phiarr, plo, dxi);
 
@@ -539,22 +611,22 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                         // PFP conduction
                         if(solve_enthalpy && solids_parms.get_do_pfp_cond<run_on>()) {
-                            const Real FLPC = solids_parms.get_flpc<run_on>();
-                            Real Rp_eff    = 2.0*(p1radius*p2radius)/(p1radius + p2radius);
-                            Real Rlens_eff = (1.0 + FLPC)*Rp_eff;
-                            Real lens_lm   = 2.0*Rlens_eff;
-                            if ( r2 <= (lens_lm - small_number)*(lens_lm - small_number) ) {
-                                const Real Rough = solids_parms.get_min_cond<run_on>();
-                                const Real Tp1   = p_realarray[SoArealData::temperature][i];
-                                const Real Tp2   = p_realarray[SoArealData::temperature][j];
-                                Real dist_mag_eff = sqrt(r2)/2.0; // Two particles with a midpoint wall
-                                Real Q_dot = des_pfp_conduction(dist_mag_eff,Rp_eff,Rlens_eff,
-                                                                Rough,local_k_g,Tp1,Tp2);
-                                p_realarray[SoArealData::convection][i] += Q_dot;
-                                p_realarray[SoArealData::convection][j] -= Q_dot;
-                            }
+                          const Real FLPC = solids_parms.get_flpc<run_on>();
+                          Real Rp_eff     = 2.0*(p1radius*p2radius)/(p1radius + p2radius);
+                          Real Rlens_eff  = (1.0 + FLPC)*Rp_eff;
+                          Real lens_lm    = 2.0*Rlens_eff;
+                          if ( r2 <= (lens_lm - small_number)*(lens_lm - small_number) ) {
+                            const Real Rough  = solids_parms.get_min_cond<run_on>();
+                            const Real Tp1    = p_realarray[SoArealData::temperature][i];
+                            const Real Tp2    = p_realarray[SoArealData::temperature][j];
+                            Real dist_mag_eff = sqrt(r2)/2.0; // Two particles with a midpoint wall
+                            Real Q_dot = des_pfp_conduction(dist_mag_eff,Rp_eff,Rlens_eff,
+                                                            Rough,local_k_g,Tp1,Tp2);
+                            HostDevice::Atomic::Add(&cond_ptr[i], Q_dot);
+                            if(j < nrp) HostDevice::Atomic::Add(&cond_ptr[j],-Q_dot);
+                          }
                         }
-
+                        
                         if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
                         {
                             has_collisions = 1;
@@ -565,16 +637,16 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                             AMREX_ASSERT(dist_mag >= eps);
 
-                             // PP conduction
+                            // PP conduction
                             if(solve_enthalpy && solids_parms.get_do_pfp_cond<run_on>()) {
-                                const Real Tp1 = p_realarray[SoArealData::temperature][i];
-                                const Real Tp2 = p_realarray[SoArealData::temperature][j];
-                                const Real kp1 = solids_parms.calc_kp_sn<run_on>(Tp1,0);
-                                const Real kp2 = solids_parms.calc_kp_sn<run_on>(Tp2,0);
-                                Real Q_dot = des_pp_conduction(dist_mag,p1radius,p2radius,
-                                                               kp1,kp2,Tp1,Tp2);
-                                p_realarray[SoArealData::convection][i] += Q_dot;
-                                p_realarray[SoArealData::convection][j] -= Q_dot;
+                              const Real Tp1 = p_realarray[SoArealData::temperature][i];
+                              const Real Tp2 = p_realarray[SoArealData::temperature][j];
+                              const Real kp1 = solids_parms.calc_kp_sn<run_on>(Tp1,0);
+                              const Real kp2 = solids_parms.calc_kp_sn<run_on>(Tp2,0);
+                              Real Q_dot = des_pp_conduction(dist_mag,p1radius,p2radius,
+                                                             kp1,kp2,Tp1,Tp2);
+                              HostDevice::Atomic::Add(&cond_ptr[i], Q_dot);
+                              if(j < nrp) HostDevice::Atomic::Add(&cond_ptr[j],-Q_dot);
                             }
 
                             Real dist_mag_inv = 1.e0/dist_mag;
@@ -779,9 +851,10 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
             auto& solids_parms = *solids.parameters;
 
-            amrex::ParallelFor(nrp, [pstruct,p_realarray,p_intarray,subdt,
+            amrex::ParallelFor(nrp,
+               [pstruct,p_realarray,p_intarray,subdt,
                 ptile_data,nspecies_s,idx_X_sn,idx_mass_txfr,idx_vel_txfr,
-                idx_h_txfr,update_mass,fc_ptr,ntot,gravity,tow_ptr,eps,
+                idx_h_txfr,update_mass,fc_ptr,cond_ptr,ntot,gravity,tow_ptr,eps,
                 p_hi,p_lo,x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc,
                 enthalpy_source,update_momentum,solve_reactions,time,
                 solid_is_a_mixture,solids_parms,solve_enthalpy,
@@ -997,7 +1070,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                   const Real coeff = update_mass ? (p_mass_old/p_mass_new) : 1.;
 
                   Real p_enthalpy_new = coeff*p_enthalpy_old +
-                    subdt*((p_realarray[SoArealData::convection][i]+enthalpy_source) / p_mass_new);
+                    subdt*((p_realarray[SoArealData::convection][i]+cond_ptr[i]+enthalpy_source) / p_mass_new);
 
                   if (solve_reactions) {
                     p_enthalpy_new += subdt*(ptile_data.m_runtime_rdata[idx_h_txfr][i] / p_mass_new);
