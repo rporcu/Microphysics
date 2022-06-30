@@ -18,6 +18,7 @@ FluidPhase::FluidPhase()
   , diffusivity_model(DIFFUSIVITYMODEL::Invalid)
   , specific_heat_model(SPECIFICHEATMODEL::Invalid)
   , thermal_conductivity_model(FLUIDTHERMALCONDUCTIVITYMODEL::Invalid)
+  , names(0)
   , solve(0)
   , solve_density(0)
   , solve_tracer(0)
@@ -45,7 +46,6 @@ FluidPhase::FluidPhase()
   , d_cp_gk0(0)
   , stoich_coeffs(0)
   , d_stoich_coeffs(0)
-  , name(std::string())
   , parameters(nullptr)
   , is_initialized(0)
 {}
@@ -71,34 +71,42 @@ FluidPhase::Initialize (const Species& species,
 
   amrex::ParmParse pp("fluid");
 
-  std::vector<std::string> fluid_name;
-  pp.queryarr("solve", fluid_name);
+  pp.queryarr("solve", names);
+  ntypes = names.size();
 
-  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(fluid_name.size() == 1,
-     "Fluid solver not specified. fluid.sove = ? ");
-
-  // Disable the fluid solver if the fluid is defined as "None"
-  if (amrex::toLower(fluid_name[0]).compare("none") == 0) {
-    solve = 0;
-  } else {
-    solve = 1;
-    name = fluid_name[0];
+  // Abort if more than one fluid type because it's not yet implemented
+  if (ntypes > 1) {
+    amrex::Abort("Handling more than one fluid types has not been implemented yet");
   }
 
-  if (solve) {
+  // Disable the fluid solver if the fluid is defined as "" or "None"
+  if ((ntypes > 0) && (amrex::toLower(names[0]).compare("none") != 0)) {
 
+    // Set the fluid solving flag to true
+    solve = 1;
+
+    // Get mfix global inputs ------------------------------------------------//
+    amrex::ParmParse ppMFIX("mfix");
+
+    ppMFIX.query("advect_density", solve_density);
+
+    ppMFIX.query("advect_enthalpy", solve_enthalpy);
+
+    ppMFIX.query("advect_tracer", solve_tracer);
+
+    ppMFIX.query("solve_species", solve_species);
+
+    // Query molecular weight average value
     pp.query("mw_avg", mw_avg);
-
-    amrex::ParmParse ppFluid(name.c_str());
 
     // Get viscosity inputs ----------------------------------//
     {
       std::string model;
-      ppFluid.get("viscosity", model);
+      pp.get("viscosity", model);
 
       if (amrex::toLower(model).compare("constant") == 0) {
         viscosity_model = VISCOSITYMODEL::Constant;
-        ppFluid.get("viscosity.constant", mu_g0);
+        pp.get("viscosity.constant", mu_g0);
 
       } else if (amrex::toLower(model).compare("sutherland") == 0) {
         viscosity_model = VISCOSITYMODEL::Sutherland;
@@ -109,25 +117,14 @@ FluidPhase::Initialize (const Species& species,
       }
     }
 
-    // Get fluid temperature inputs ----------------------------------//
-    amrex::ParmParse ppMFIX("mfix");
-
-    ppMFIX.query("advect_density", solve_density);
-
-    ppMFIX.query("advect_enthalpy", solve_enthalpy);
-
-    ppMFIX.query("advect_tracer", solve_tracer);
-
     if (solve_tracer) {
-      pp.query("trac0",  trac_0);
+      // Query fluid tracer initial value
+      pp.query("trac0", trac_0);
     }
-
-    // Query mfix solve fluid species
-    ppMFIX.query("solve_species", solve_species);
 
     if (solve_species) {
       // Query fluid species
-      ppFluid.queryarr("species", species_names);
+      pp.queryarr("species", species_names);
     }
 
     if ((!solve_species) || (species_names.size() == 0)) {
@@ -152,21 +149,22 @@ FluidPhase::Initialize (const Species& species,
     // Flag to determine if we want to solve the fluid as a mixture
     is_a_mixture = static_cast<int>(nspecies > 1);
 
-    if (solve_enthalpy == 1) {
+    if (solve_enthalpy) {
 
-      pp.query("T_g0",  T_g0);
+      //  Query fluid clod-flow temperature
+      pp.query("T_g0", T_g0);
 
       // Query the reference temperature
-      ppFluid.query("reference_temperature", T_ref);
+      pp.query("reference_temperature", T_ref);
 
       // Get thermal conductivity inputs -----------------------------//
       {
         std::string model;
-        ppFluid.get("thermal_conductivity", model);
+        pp.get("thermal_conductivity", model);
 
         if (amrex::toLower(model).compare("constant") == 0) {
           thermal_conductivity_model = FLUIDTHERMALCONDUCTIVITYMODEL::Constant;
-          ppFluid.get("thermal_conductivity.constant", k_g0);
+          pp.get("thermal_conductivity.constant", k_g0);
 
         } else {
           amrex::Abort("Unknown fluid thermal conductivity model!");
@@ -177,7 +175,7 @@ FluidPhase::Initialize (const Species& species,
         // Specific heat model from inputs has to be a mixture
         {
           std::string model;
-          ppFluid.get("specific_heat", model);
+          pp.get("specific_heat", model);
 
           AMREX_ALWAYS_ASSERT_WITH_MESSAGE(amrex::toLower(model).compare("mixture") == 0,
               "When solving fluid enthalpy and species, fluid specific heat model must be a mixture");
@@ -219,15 +217,15 @@ FluidPhase::Initialize (const Species& species,
         // Get specific heat inputs ------------------------------------//
         {
           std::string model;
-          ppFluid.get("specific_heat", model);
+          pp.get("specific_heat", model);
 
           if (amrex::toLower(model).compare("constant") == 0) {
             specific_heat_model = SPECIFICHEATMODEL::Constant;
             cp_gk0.resize(1);
-            ppFluid.get("specific_heat.constant", cp_gk0[0]);
+            pp.get("specific_heat.constant", cp_gk0[0]);
 
             // Query the enthalpy_of_formation
-            ppFluid.query("enthalpy_of_formation", H_fk0[0]);
+            pp.query("enthalpy_of_formation", H_fk0[0]);
 
           } else if (amrex::toLower(model).compare("nasa7-poly") == 0) {
 
@@ -241,7 +239,7 @@ FluidPhase::Initialize (const Species& species,
             for (int i(0); i < 6; ++i) {
               amrex::Vector<amrex::Real> aa(0);
               std::string field = "specific_heat.NASA7.a"+std::to_string(i);
-              ppFluid.getarr(field.c_str(), aa);
+              pp.getarr(field.c_str(), aa);
 
               if (aa.size() == 1) {
 
@@ -266,6 +264,7 @@ FluidPhase::Initialize (const Species& species,
       }
     }
 
+    // Get fluid species parameters from species class
     if (solve_species) {
 
       species_IDs.resize(nspecies);
@@ -286,9 +285,9 @@ FluidPhase::Initialize (const Species& species,
 
     } else {
 
-      if (ppFluid.contains("molecular_weight")) {
+      if (pp.contains("molecular_weight")) {
         MW_gk0.resize(1);
-        ppFluid.get("molecular_weight", MW_gk0[0]);
+        pp.get("molecular_weight", MW_gk0[0]);
       }
     }
 

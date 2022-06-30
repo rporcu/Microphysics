@@ -309,7 +309,7 @@ class SolidsPhase
     // Destructor
     ~SolidsPhase();
 
-    int NTYPES;
+    int ntypes;
 
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     static int phase_to_index (const int phase)
@@ -324,8 +324,10 @@ class SolidsPhase
     // Names of solids used in IC/BC setups
     amrex::Vector<std::string> names;
 
+    // Phases IDs for each solids type
     amrex::Vector<int> phases;
 
+    // Return phase ID given a solids type
     int name_to_phase (const std::string& name) const;
 
     // Flag to turn on/off particles mass update

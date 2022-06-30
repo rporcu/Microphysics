@@ -14,7 +14,7 @@
 using namespace amrex;
 
 SolidsPhase::SolidsPhase()
-  : NTYPES(0)
+  : ntypes(0)
   , specific_heat_model(SPECIFICHEATMODEL::Invalid)
   , thermal_conductivity_model(SOLIDSTHERMALCONDUCTIVITYMODEL::Invalid)
   , names(0)
@@ -58,12 +58,12 @@ SolidsPhase::~SolidsPhase()
 int
 SolidsPhase::name_to_phase (const std::string& name) const
 {
-  if (NTYPES == 0) {
+  if (ntypes == 0) {
     Print() << "Can't look for solid type. No solids types found\n";
     amrex::Abort("Error. Fix inputs");
   }
 
-  for (int n(0); n < NTYPES; ++n) {
+  for (int n(0); n < ntypes; ++n) {
     if (names[n].compare(name) == 0) {
       return phases[n];
     }
@@ -95,20 +95,24 @@ SolidsPhase::Initialize (const Species& species,
   amrex::ParmParse pp("solids");
 
   pp.queryarr("types", names);
-  NTYPES = names.size();
+  ntypes = names.size();
 
-  if ((NTYPES > 0) && (amrex::toLower(names[0]).compare("none") != 0)) {
+  // Disable the solids solver if the solids is defined as "" or "None"
+  if ((ntypes > 0) && (amrex::toLower(names[0]).compare("none") != 0)) {
 
-    phases.resize(NTYPES);
-    for (int n(0); n < NTYPES; ++n)
+    // Resize phases and assign integer IDs to each phase as {1,2,...,ntypes+1}
+    phases.resize(ntypes);
+    for (int n(0); n < ntypes; ++n)
       phases[n] = n+1;
 
+    // Get mfix global inputs ------------------------------------------------//
     amrex::ParmParse ppMFIX("mfix");
 
     ppMFIX.query("advect_enthalpy", solve_enthalpy);
 
     ppMFIX.query("solve_species", solve_species);
 
+    // Query updating flags for particles mass, momentum and enthalpy
     {
       amrex::ParmParse pp_solids("mfix.particles");
 
@@ -123,8 +127,10 @@ SolidsPhase::Initialize (const Species& species,
       update_enthalpy = update_enthalpy && solve_enthalpy;
     }
 
-    // Species
-    pp.queryarr("species", species_names);
+    if (solve_species) {
+      // Query fluid species
+      pp.queryarr("species", species_names);
+    }
 
     if ((!solve_species) || (species_names.size() == 0)) {
       species_names.clear();
@@ -184,6 +190,7 @@ SolidsPhase::Initialize (const Species& species,
 
           if (specific_heat_model == SPECIFICHEATMODEL::Constant) {
             cp_sn0[n] = species.cp_k0[pos];
+
           } else if (specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
             std::copy(&species.cp_k0[pos*12], &species.cp_k0[pos*12] + 12, &cp_sn0[n*12]);
           }
@@ -209,9 +216,10 @@ SolidsPhase::Initialize (const Species& species,
             pp.query("enthalpy_of_formation", H_fn0[0]);
 
           } else if (amrex::toLower(model).compare("nasa7-poly") == 0) {
+
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(MW_sn0.size() > 0, "No solids molecular weight input");
-              AMREX_ALWAYS_ASSERT_WITH_MESSAGE(MW_sn0[0] > 0., "Wrong solids molecular weight");
-              const amrex::Real coeff = FluidPhase::R / MW_sn0[0];
+            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(MW_sn0[0] > 0., "Wrong solids molecular weight");
+            const amrex::Real coeff = FluidPhase::R / MW_sn0[0];
 
             specific_heat_model = SPECIFICHEATMODEL::NASA7Polynomials;
             cp_sn0.resize(12);
@@ -244,7 +252,7 @@ SolidsPhase::Initialize (const Species& species,
       }
     }
 
-    // Solids species inputs
+    // Get solids species parameters from species class
     if (solve_species) {
 
       species_IDs.resize(nspecies);

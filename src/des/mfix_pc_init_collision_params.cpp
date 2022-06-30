@@ -11,10 +11,10 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
   Vector<Real> max_dp, max_ro;
   Vector<Real> avg_dp, avg_ro;
 
-  max_dp.resize(solids.NTYPES);
-  max_ro.resize(solids.NTYPES);
-  avg_dp.resize(solids.NTYPES);
-  avg_ro.resize(solids.NTYPES);
+  max_dp.resize(solids.ntypes);
+  max_ro.resize(solids.ntypes);
+  avg_dp.resize(solids.ntypes);
+  avg_ro.resize(solids.ntypes);
 
   // Cycle through the different phases, starting from 1
   for (const int& phase: solids.phases)
@@ -178,7 +178,7 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
     const Real mass_m = (M_PI/6.0)*(dp_m*dp_m*dp_m) * avg_ro[phase_idx];
 
     // Collision parameters between phase_idx M and all other phase_idxs
-    for (int other_phase_idx(phase_idx); other_phase_idx < solids.NTYPES; ++other_phase_idx) {
+    for (int other_phase_idx(phase_idx); other_phase_idx < solids.ntypes; ++other_phase_idx) {
 
       const Real dp_l = avg_dp[other_phase_idx];
       const Real mass_l = (M_PI/6.0)*(dp_l*dp_l*dp_l) * avg_ro[other_phase_idx];

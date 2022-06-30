@@ -42,7 +42,7 @@ namespace IC
       // Get fluid data.
       if (fluid.solve) {
 
-        std::string field = "ic."+input_regions[icv]+"."+fluid.name;
+        std::string field = "ic."+input_regions[icv]+"."+fluid.names[0];
         amrex::ParmParse ppFluid(field.c_str());
 
         ppFluid.get("volfrac", new_ic.fluid.volfrac);

@@ -24,8 +24,6 @@ class FluidParms {
     // Friendship so FluidPhase can access private members
     friend class FluidPhase;
 
-    static constexpr amrex::Real R =  8.31446261815324;
-
     amrex::Real  m_T_ref;
     amrex::Real  m_mu_g;
     amrex::Real  m_k_g;
@@ -287,11 +285,16 @@ class FluidParms {
 class FluidPhase {
 
   public:
+    // Ideal gas constant
+    static constexpr amrex::Real R = 8.31446261815324;
+
     // Constructor
     FluidPhase();
 
     // Destructor
     ~FluidPhase();
+
+    int ntypes;
 
     // List of recognized fluid viscosity models
     int viscosity_model;
@@ -305,11 +308,11 @@ class FluidPhase {
     // List of recognized fluid thermal conductivity models
     int thermal_conductivity_model;
 
-    // Ideal gas constant
-    static constexpr amrex::Real R = 8.31446261815324;
-
     // Constraint type
     int constraint_type;
+
+    // Names of fluids
+    amrex::Vector<std::string> names;
 
     // Flag to solve fluid equations
     int solve;
@@ -379,9 +382,6 @@ class FluidPhase {
     // Tables for stoichiometric coefficients for each species in each reaction
     amrex::Gpu::HostVector<amrex::Real> stoich_coeffs;
     amrex::Gpu::DeviceVector<amrex::Real> d_stoich_coeffs;
-
-    // Name to later reference when building input regions
-    std::string name;
 
     // Fluid parameters for GPU access
     FluidParms* parameters;

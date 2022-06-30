@@ -341,7 +341,7 @@ namespace BC
       // Get fluid data.
       if(fluid.solve) {
 
-        std::string field = "bc."+input_regions[bcv]+"."+fluid.name;
+        std::string field = "bc."+input_regions[bcv]+"."+fluid.names[0];
         amrex::ParmParse ppFluid(field.c_str());
 
         // Mass inflows need fluid velocity and volume fraction.
