@@ -41,6 +41,27 @@ mfix::AllocateArrays (int lev)
     if (ooo_debug) amrex::Print() << "AllocateArrays" << std::endl;
     mfix_update_ebfactory(lev);
 
+    if (mfixRW->only_print_grid_report) {
+        m_leveldata[lev] = std::make_unique<LevelData>(
+              true, 
+              grids[lev], dmap[lev], nghost_state(),
+              *ebfactory[lev]);
+
+        m_leveldata[lev]->resetValues(init_value);
+
+        if (bcoeff[lev][0] != nullptr)
+          delete bcoeff[lev][0];
+
+        if (bcoeff[lev][1] != nullptr)
+          delete bcoeff[lev][1];
+
+        if (bcoeff[lev][2] != nullptr)
+          delete bcoeff[lev][2];
+
+        return;
+    }
+
+
     // ********************************************************************************
     // Cell- or node-based arrays
     // ********************************************************************************

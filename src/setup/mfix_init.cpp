@@ -763,6 +763,10 @@ void mfix::InitLevelData (Real /*time*/)
        for (int lev = 0; lev < nlev; lev++)
           AllocateArrays(lev);
 
+    if (mfixRW->only_print_grid_report) {
+       return;
+    }
+
     // Allocate the particle data
     if (DEM::solve || PIC::solve)
     {

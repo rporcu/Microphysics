@@ -54,6 +54,11 @@ class LevelData
                FluidPhase* fluid_in,
                Reactions* reactions_in);
 
+    LevelData (bool only_ep_g, amrex::BoxArray const& ba,
+               amrex::DistributionMapping const& dm,
+               const int nghost,
+               amrex::FabFactory<amrex::FArrayBox> const& fact);
+
     // Reset initial values
     void resetValues (const amrex::Real covered_val);
 
@@ -124,6 +129,8 @@ class LevelData
 
     FluidPhase* fluid;
     Reactions* reactions;
+
+    bool ep_g_only = false;
 };
 
 #endif

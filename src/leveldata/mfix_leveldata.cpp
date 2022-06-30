@@ -76,55 +76,69 @@ LevelData::LevelData (BoxArray const& ba,
 
 }
 
+LevelData::LevelData (bool only_ep_g, BoxArray const& ba,
+                      DistributionMapping const& dmap,
+                      const int nghost,
+                      FabFactory<FArrayBox> const& factory)
+  : level_allocated(1)
+  , ep_g_only(only_ep_g)
+{
+   AMREX_ASSERT(ep_g_only);
+   ep_g = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
+}
+
 void LevelData::resetValues (const amrex::Real init_value)
 {
   ep_g->setVal(1);
-  p_g->setVal(init_value);
-  p_go->setVal(init_value);
-  ro_g->setVal(init_value);
-  ro_go->setVal(init_value);
-  trac->setVal(0);
-  trac_o->setVal(init_value);
-  vel_g->setVal(init_value);
-  vel_go->setVal(init_value);
-  p0_g->setVal(init_value);
-  gp->setVal(0);
-  vort->setVal(init_value);
-  txfr->setVal(0);
-  diveu->setVal(init_value);
-  mac_phi->setVal(init_value);
-  divtau_o->setVal(init_value);
 
-  if (reactions->solve ||
-      (fluid->constraint_type == ConstraintType::IdealGasOpenSystem ||
-       fluid->constraint_type == ConstraintType::IdealGasClosedSystem)) {
-    thermodynamic_p_g->setVal(init_value);
-    thermodynamic_p_go->setVal(init_value);
-  }
+  if (!ep_g_only) {
+     p_g->setVal(init_value);
+     p_go->setVal(init_value);
+     ro_g->setVal(init_value);
+     ro_go->setVal(init_value);
+     trac->setVal(0);
+     trac_o->setVal(init_value);
+     vel_g->setVal(init_value);
+     vel_go->setVal(init_value);
+     p0_g->setVal(init_value);
+     gp->setVal(0);
+     vort->setVal(init_value);
+     txfr->setVal(0);
+     diveu->setVal(init_value);
+     mac_phi->setVal(init_value);
+     divtau_o->setVal(init_value);
 
-  if (fluid->solve_enthalpy ||
-      (fluid->constraint_type == ConstraintType::IdealGasOpenSystem ||
-       fluid->constraint_type == ConstraintType::IdealGasClosedSystem)) {
-    T_g->setVal(init_value);
-    T_go->setVal(init_value);
-  }
+     if (reactions->solve ||
+         (fluid->constraint_type == ConstraintType::IdealGasOpenSystem ||
+          fluid->constraint_type == ConstraintType::IdealGasClosedSystem)) {
+       thermodynamic_p_g->setVal(init_value);
+       thermodynamic_p_go->setVal(init_value);
+     }
 
-  if (fluid->solve_enthalpy) {
-    h_g->setVal(init_value);
-    h_go->setVal(init_value);
+     if (fluid->solve_enthalpy ||
+         (fluid->constraint_type == ConstraintType::IdealGasOpenSystem ||
+          fluid->constraint_type == ConstraintType::IdealGasClosedSystem)) {
+       T_g->setVal(init_value);
+       T_go->setVal(init_value);
+     }
 
-    if (EB::fix_temperature) {
-      T_g_on_eb->setVal(init_value);
-    }
-  }
+     if (fluid->solve_enthalpy) {
+       h_g->setVal(init_value);
+       h_go->setVal(init_value);
 
-  if (fluid->solve_species) {
-    X_gk->setVal(init_value);
-    X_gko->setVal(init_value);
-  }
+       if (EB::fix_temperature) {
+         T_g_on_eb->setVal(init_value);
+       }
+     }
 
-  if (reactions->solve && fluid->solve_species) {
-    chem_txfr->setVal(init_value);
+     if (fluid->solve_species) {
+       X_gk->setVal(init_value);
+       X_gko->setVal(init_value);
+     }
+
+     if (reactions->solve && fluid->solve_species) {
+       chem_txfr->setVal(init_value);
+     }
   }
 
 }
@@ -133,52 +147,55 @@ LevelData::~LevelData ()
 {
   if (level_allocated) {
     delete ep_g;
-    delete p_g;
-    delete p_go;
-    delete ro_g;
-    delete ro_go;
-    delete trac;
-    delete trac_o;
-    delete vel_g;
-    delete vel_go;
-    delete p0_g;
-    delete gp;
-    delete vort;
-    delete txfr;
-    delete diveu;
-    delete mac_phi;
-    delete divtau_o;
 
-    if (reactions->solve ||
-        (fluid->constraint_type == ConstraintType::IdealGasOpenSystem ||
-         fluid->constraint_type == ConstraintType::IdealGasClosedSystem)) {
-      delete thermodynamic_p_g;
-      delete thermodynamic_p_go;
-    }
+    if (!ep_g_only) {
+       delete p_g;
+       delete p_go;
+       delete ro_g;
+       delete ro_go;
+       delete trac;
+       delete trac_o;
+       delete vel_g;
+       delete vel_go;
+       delete p0_g;
+       delete gp;
+       delete vort;
+       delete txfr;
+       delete diveu;
+       delete mac_phi;
+       delete divtau_o;
 
-    if (fluid->solve_enthalpy ||
-        (fluid->constraint_type == ConstraintType::IdealGasOpenSystem ||
-         fluid->constraint_type == ConstraintType::IdealGasClosedSystem)) {
-      delete T_g;
-      delete T_go;
-    }
+       if (reactions->solve ||
+           (fluid->constraint_type == ConstraintType::IdealGasOpenSystem ||
+            fluid->constraint_type == ConstraintType::IdealGasClosedSystem)) {
+         delete thermodynamic_p_g;
+         delete thermodynamic_p_go;
+       }
 
-    if (fluid->solve_enthalpy) {
-      delete h_g;
-      delete h_go;
+       if (fluid->solve_enthalpy ||
+           (fluid->constraint_type == ConstraintType::IdealGasOpenSystem ||
+            fluid->constraint_type == ConstraintType::IdealGasClosedSystem)) {
+         delete T_g;
+         delete T_go;
+       }
 
-      if (EB::fix_temperature) {
-        delete T_g_on_eb;
-      }
-    }
+       if (fluid->solve_enthalpy) {
+         delete h_g;
+         delete h_go;
 
-    if (fluid->solve_species) {
-      delete X_gk;
-      delete X_gko;
-    }
+         if (EB::fix_temperature) {
+           delete T_g_on_eb;
+         }
+       }
 
-    if (reactions->solve && fluid->solve_species) {
-      delete chem_txfr;
+       if (fluid->solve_species) {
+         delete X_gk;
+         delete X_gko;
+       }
+
+       if (reactions->solve && fluid->solve_species) {
+         delete chem_txfr;
+       }
     }
   }
 }

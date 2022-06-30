@@ -299,6 +299,7 @@ void MfixRW::readParameters ()
      pp.query("write_eb_surface", write_eb_surface);
      pp.query("write_ls", write_ls);
      pp.query("stop_for_unused_inputs", stop_for_unused_inputs);
+     pp.query("only_print_grid_report", only_print_grid_report);
   }
 
   {
@@ -834,13 +835,13 @@ MfixRW::ReportGridStats () const
 #ifdef _OPENMP
 #pragma omp parallel reduction(+:regular, covered, cut) if (Gpu::notInLaunchRegion())
 #endif
-  for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+  for (MFIter mfi(*m_leveldata[lev]->ep_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
-    const auto& vel_fab   =
-      static_cast<EBFArrayBox const&>((*m_leveldata[lev]->vel_g)[mfi]);
+    const auto& epg_fab   =
+      static_cast<EBFArrayBox const&>((*m_leveldata[lev]->ep_g)[mfi]);
 
     const Box& bx     = mfi.tilebox();
-    const auto& flags = vel_fab.getEBCellFlagFab();
+    const auto& flags = epg_fab.getEBCellFlagFab();
 
     // Count number of regular grids
     if (flags.getType(amrex::grow(bx,1)) == FabType::regular ) {
