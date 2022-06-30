@@ -29,6 +29,7 @@ Monitor::Monitor (const std::array<std::string,2> specs,
   , m_region(nullptr)
   , m_variables(0)
   , m_boxes(0)
+  , m_direction(-1)
   , m_plane_name(std::string())
   , m_plane(nullptr)
 {
@@ -699,17 +700,7 @@ PointRegion::monitor (const Real& /*dt*/)
       Vector<int> components(0);
       set_vars_and_comps(lev, mf, components);
 
-      Vector<int> conversion_flags(0);
-      convert_mf_if_needed(mf, components, conversion_flags, lev);
-
       m_monitoring_results[lev] = value(lev, mf, components);
-
-      // Free up memory if new MultiFabs were allocated during
-      // convert_mf_if_needed
-      for (int var(0); var < mf.size(); ++var) {
-        if (conversion_flags[var])
-          delete mf[var];
-      }
     }
 
   } else {
@@ -762,29 +753,31 @@ PointRegion::value (const int lev,
 
 
 void
-PointRegion::convert_mf_if_needed (Vector<const MultiFab*>& mf,
+PointRegion::convert_mf_if_needed (Vector<int>& mf_ok,
+                                   Vector<const MultiFab*>& mf,
                                    Vector<int>& components,
                                    Vector<int>& conversion_flags,
                                    const int lev)
 {
+  AMREX_ALWAYS_ASSERT(mf.size() == mf_ok.size());
   AMREX_ALWAYS_ASSERT(mf.size() == components.size());
+  AMREX_ALWAYS_ASSERT(mf.size() == conversion_flags.size());
 
   const int var_nb = mf.size();
-
-  conversion_flags.clear();
-  conversion_flags.resize(var_nb, 0);
 
   BoxArray box_array = this->get_box_array(lev);
   const DistributionMapping& d_map = this->get_d_map(lev);
 
-  for (int var(0); var < mf.size(); ++var) {
+  for (int var(0); var < var_nb; ++var) {
 
-    if (mf[var]->boxArray().ixType().nodeCentered()) {
-      MultiFab* mf_cc = new MultiFab(box_array, d_map, 1, 0);
-      amrex::average_node_to_cellcenter(*mf_cc, 0, *mf[var], components[var], 1, 0);
-      mf[var] = mf_cc;
-      components[var] = 0;
-      conversion_flags[var] = 1;
+    if (mf_ok[var]) {
+      if (mf[var]->boxArray().ixType().nodeCentered()) {
+        MultiFab* mf_cc = new MultiFab(box_array, d_map, 1, 0);
+        amrex::average_node_to_cellcenter(*mf_cc, 0, *mf[var], components[var], 1, 0);
+        mf[var] = mf_cc;
+        components[var] = 0;
+        conversion_flags[var] = 1;
+      }
     }
   }
 }
@@ -840,44 +833,46 @@ AreaMonitor::check_mf_is_ok (const MultiFab& mf) const
 
 
 void
-AreaMonitor::convert_mf_if_needed (Vector<const MultiFab*>& mf,
+AreaMonitor::convert_mf_if_needed (Vector<int>& mf_ok,
+                                   Vector<const MultiFab*>& mf,
                                    Vector<int>& components,
                                    Vector<int>& conversion_flags,
                                    const int lev)
 {
+  AMREX_ALWAYS_ASSERT(mf.size() == mf_ok.size());
   AMREX_ALWAYS_ASSERT(mf.size() == components.size());
+  AMREX_ALWAYS_ASSERT(mf.size() == conversion_flags.size());
 
   const int var_nb = mf.size();
 
-  conversion_flags.clear();
-  conversion_flags.resize(var_nb, 0);
-
   const DistributionMapping& d_map = this->get_d_map(lev);
 
-  for (int var(0); var < mf.size(); ++var) {
+  for (int var(0); var < var_nb; ++var) {
 
-    if (mf[var]->boxArray().ixType().cellCentered()) {
-      Array<MultiFab*, AMREX_SPACEDIM> mf_fc;
+    if (mf_ok[var]) {
+      if (mf[var]->boxArray().ixType().cellCentered()) {
+        Array<MultiFab*, AMREX_SPACEDIM> mf_fc;
 
-      for(int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
-        BoxArray edge_ba = m_ebfactory[lev]->boxArray();
-        edge_ba.surroundingNodes(dir);
-        mf_fc[dir] = new MultiFab(edge_ba, d_map, 1, 0);
-        mf_fc[dir]->setVal(0.);
-      }
+        for(int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
+          BoxArray edge_ba = m_ebfactory[lev]->boxArray();
+          edge_ba.surroundingNodes(dir);
+          mf_fc[dir] = new MultiFab(edge_ba, d_map, 1, 0);
+          mf_fc[dir]->setVal(0.);
+        }
 
-      const auto& geom = m_ebfactory[lev]->Geom();
-      Vector<BCRec> bc_rec(1, BCRec());
+        const auto& geom = m_ebfactory[lev]->Geom();
+        Vector<BCRec> bc_rec(1, BCRec());
 
-      EB_interp_CellCentroid_to_FaceCentroid(*mf[var], mf_fc, components[var], 0, 1, geom, bc_rec);
+        EB_interp_CellCentroid_to_FaceCentroid(*mf[var], mf_fc, components[var], 0, 1, geom, bc_rec);
 
-      mf[var] = mf_fc[m_direction];
-      components[var] = 0;
-      conversion_flags[var] = 1;
+        mf[var] = mf_fc[m_direction];
+        components[var] = 0;
+        conversion_flags[var] = 1;
 
-      for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
-        if (dir != m_direction)
-          delete mf_fc[dir];
+        for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
+          if (dir != m_direction)
+            delete mf_fc[dir];
+        }
       }
     }
   }
@@ -894,7 +889,6 @@ AreaRegion::monitor (const Real& /*dt*/)
 
   for (int lev(0); lev < m_nlev; ++lev) {
     set_vars_and_comps(lev, mf[lev], components[lev]);
-    convert_mf_if_needed(mf[lev], components[lev], conversion_flags[lev], lev);
   }
 
   // Select the monitor
@@ -932,15 +926,6 @@ AreaRegion::monitor (const Real& /*dt*/)
 
     Print() << "Unrecognized monitor type: " << m_specs[1] << "\n";
     amrex::Abort("Inputs error");
-  }
-
-  for (int lev(0); lev < m_nlev; ++lev) {
-    // Free up memory if new MultiFabs were allocated during
-    // convert_mf_if_needed
-    for (int var(0); var < mf[lev].size(); ++var) {
-      if (conversion_flags[lev][var])
-        delete mf[lev][var];
-    }
   }
 }
 
@@ -1193,29 +1178,31 @@ VolumeMonitor::check_mf_is_ok (const MultiFab& mf) const
 
 
 void
-VolumeMonitor::convert_mf_if_needed (Vector<const MultiFab*>& mf,
+VolumeMonitor::convert_mf_if_needed (Vector<int>& mf_ok,
+                                     Vector<const MultiFab*>& mf,
                                      Vector<int>& components,
                                      Vector<int>& conversion_flags,
                                      const int lev)
 {
+  AMREX_ALWAYS_ASSERT(mf.size() == mf_ok.size());
   AMREX_ALWAYS_ASSERT(mf.size() == components.size());
+  AMREX_ALWAYS_ASSERT(mf.size() == conversion_flags.size());
 
   const int var_nb = mf.size();
-
-  conversion_flags.clear();
-  conversion_flags.resize(var_nb, 0);
 
   BoxArray box_array = this->get_box_array(lev);
   const DistributionMapping& d_map = this->get_d_map(lev);
 
-  for (int var(0); var < mf.size(); ++var) {
+  for (int var(0); var < var_nb; ++var) {
 
-    if (mf[var]->boxArray().ixType().nodeCentered()) {
-      MultiFab* mf_cc = new MultiFab(box_array, d_map, 1, 0);
-      amrex::average_node_to_cellcenter(*mf_cc, 0, *mf[var], components[var], 1, 0);
-      mf[var] = mf_cc;
-      components[var] = 0;
-      conversion_flags[var] = 1;
+    if (mf_ok[var]) {
+      if (mf[var]->boxArray().ixType().nodeCentered()) {
+        MultiFab* mf_cc = new MultiFab(box_array, d_map, 1, 0);
+        amrex::average_node_to_cellcenter(*mf_cc, 0, *mf[var], components[var], 1, 0);
+        mf[var] = mf_cc;
+        components[var] = 0;
+        conversion_flags[var] = 1;
+      }
     }
   }
 }
@@ -1231,7 +1218,6 @@ VolumeRegion::monitor (const Real& /*dt*/)
 
   for (int lev(0); lev < m_nlev; ++lev) {
     set_vars_and_comps(lev, mf[lev], components[lev]);
-    convert_mf_if_needed(mf[lev], components[lev], conversion_flags[lev], lev);
   }
 
   // Select the monitor
@@ -1269,15 +1255,6 @@ VolumeRegion::monitor (const Real& /*dt*/)
 
     Print() << "Unrecognized monitor type: " << m_specs[1] << "\n";
     amrex::Abort("Inputs error");
-  }
-
-  for (int lev(0); lev < m_nlev; ++lev) {
-    // Free up memory if new MultiFabs were allocated during
-    // convert_mf_if_needed
-    for (int var(0); var < mf[lev].size(); ++var) {
-      if (conversion_flags[lev][var])
-        delete mf[lev][var];
-    }
   }
 }
 
@@ -1690,15 +1667,14 @@ SurfaceIntegral::flow_rate (const int lev,
     ReduceTuple default_values = {0.};
 
     const Real dA = m_dA[lev];
-    const int direction = m_direction;
 
-    auto R = [dA,direction] AMREX_GPU_DEVICE (Array4<Real const> const& mf_arr,
-                                              Array4<Real const> const& areafrac_arr,
-                                              Array4<Real const> const& epsilon_arr,
-                                              Array4<Real const> const& density_arr,
-                                              Array4<Real const> const& velocity_arr,
-                                              const IntVect& ijk) -> ReduceTuple
-    { return {epsilon_arr(ijk)*density_arr(ijk)*mf_arr(ijk)*velocity_arr(ijk,direction)*areafrac_arr(ijk)*dA}; };
+    auto R = [dA] AMREX_GPU_DEVICE (Array4<Real const> const& mf_arr,
+                                    Array4<Real const> const& areafrac_arr,
+                                    Array4<Real const> const& epsilon_arr,
+                                    Array4<Real const> const& density_arr,
+                                    Array4<Real const> const& velocity_arr,
+                                    const IntVect& ijk) -> ReduceTuple
+    { return {epsilon_arr(ijk)*density_arr(ijk)*mf_arr(ijk)*velocity_arr(ijk)*areafrac_arr(ijk)*dA}; };
 
     std::map<std::string, const MultiFab*> aux_mfs;
     aux_mfs["ep_g"] = epsilon;
@@ -1735,15 +1711,14 @@ SurfaceIntegral::mass_flow_rate (const int lev,
   ReduceTuple default_values = {0.};
 
   const Real dA = m_dA[lev];
-  const int direction = m_direction;
 
-  auto R = [dA,direction] AMREX_GPU_DEVICE (Array4<Real const> const& /*mf_arr*/,
-                                            Array4<Real const> const& areafrac_arr,
-                                            Array4<Real const> const& epsilon_arr,
-                                            Array4<Real const> const& density_arr,
-                                            Array4<Real const> const& velocity_arr,
-                                            const IntVect& ijk) -> ReduceTuple
-  { return {epsilon_arr(ijk)*density_arr(ijk)*velocity_arr(ijk,direction)*areafrac_arr(ijk)*dA}; };
+  auto R = [dA] AMREX_GPU_DEVICE (Array4<Real const> const& /*mf_arr*/,
+                                  Array4<Real const> const& areafrac_arr,
+                                  Array4<Real const> const& epsilon_arr,
+                                  Array4<Real const> const& density_arr,
+                                  Array4<Real const> const& velocity_arr,
+                                  const IntVect& ijk) -> ReduceTuple
+  { return {epsilon_arr(ijk)*density_arr(ijk)*velocity_arr(ijk)*areafrac_arr(ijk)*dA}; };
 
   std::map<std::string, const MultiFab*> aux_mfs;
   aux_mfs["ep_g"] = epsilon;
@@ -1790,16 +1765,15 @@ SurfaceIntegral::mass_weighted_average (const int lev,
     ReduceTuple default_values = {0., 0.};
 
     const Real dA = m_dA[lev];
-    const int direction = m_direction;
 
-    auto R = [dA,direction] AMREX_GPU_DEVICE (Array4<Real const> const& mf_arr,
-                                              Array4<Real const> const& areafrac_arr,
-                                              Array4<Real const> const& epsilon_arr,
-                                              Array4<Real const> const& density_arr,
-                                              Array4<Real const> const& velocity_arr,
-                                              const IntVect& ijk) -> ReduceTuple
-    { return {epsilon_arr(ijk)*density_arr(ijk)*mf_arr(ijk)*velocity_arr(ijk,direction)*areafrac_arr(ijk)*dA,
-              epsilon_arr(ijk)*density_arr(ijk)*velocity_arr(ijk,direction)*areafrac_arr(ijk)*dA}; };
+    auto R = [dA] AMREX_GPU_DEVICE (Array4<Real const> const& mf_arr,
+                                    Array4<Real const> const& areafrac_arr,
+                                    Array4<Real const> const& epsilon_arr,
+                                    Array4<Real const> const& density_arr,
+                                    Array4<Real const> const& velocity_arr,
+                                    const IntVect& ijk) -> ReduceTuple
+    { return {epsilon_arr(ijk)*density_arr(ijk)*mf_arr(ijk)*velocity_arr(ijk)*areafrac_arr(ijk)*dA,
+              epsilon_arr(ijk)*density_arr(ijk)*velocity_arr(ijk)*areafrac_arr(ijk)*dA}; };
 
     std::map<std::string, const MultiFab*> aux_mfs;
     aux_mfs["ep_g"] = epsilon;
@@ -1837,15 +1811,14 @@ SurfaceIntegral::volume_flow_rate (const int lev,
   ReduceTuple default_values = {0.};
 
   const Real dA = m_dA[lev];
-  const int direction = m_direction;
 
-  auto R = [dA,direction] AMREX_GPU_DEVICE (Array4<Real const> const& /*mf_arr*/,
-                                            Array4<Real const> const& areafrac_arr,
-                                            Array4<Real const> const& epsilon_arr,
-                                            Array4<Real const> const& /*density_arr*/,
-                                            Array4<Real const> const& velocity_arr,
-                                            const IntVect& ijk) -> ReduceTuple
-  { return {epsilon_arr(ijk)*velocity_arr(ijk,direction)*areafrac_arr(ijk)*dA}; };
+  auto R = [dA] AMREX_GPU_DEVICE (Array4<Real const> const& /*mf_arr*/,
+                                  Array4<Real const> const& areafrac_arr,
+                                  Array4<Real const> const& epsilon_arr,
+                                  Array4<Real const> const& /*density_arr*/,
+                                  Array4<Real const> const& velocity_arr,
+                                  const IntVect& ijk) -> ReduceTuple
+  { return {epsilon_arr(ijk)*velocity_arr(ijk)*areafrac_arr(ijk)*dA}; };
 
   std::map<std::string, const MultiFab*> aux_mfs;
   aux_mfs["ep_g"] = epsilon;

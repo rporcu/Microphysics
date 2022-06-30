@@ -86,6 +86,9 @@ class Monitor {
     // The Box corresponding to the monitored region
     amrex::Vector<amrex::Box> m_boxes;
 
+    // Area normal vector direction: {0: x_direction, 1: y_direction, 2: z_direction}
+    int m_direction;
+
     // The name of the region for the flow rate plane
     std::string m_plane_name;
 
@@ -156,17 +159,26 @@ class BaseMonitor: public Monitor {
 
       ReduceTuple result(default_values);
 
-      bool epsilon_ok = aux_mfs.find("ep_g") != aux_mfs.end();
-      bool density_ok = aux_mfs.find("ro_g") != aux_mfs.end();
-      bool velocity_ok = aux_mfs.find("vel_g") != aux_mfs.end();
+      int mf_ok = (mf != nullptr);
+      int epsilon_ok = (aux_mfs.find("ep_g") != aux_mfs.end());
+      int density_ok = (aux_mfs.find("ro_g") != aux_mfs.end());
+      int velocity_ok = (aux_mfs.find("vel_g") != aux_mfs.end());
 
       const amrex::MultiFab* epsilon = epsilon_ok ? aux_mfs["ep_g"] : nullptr;
       const amrex::MultiFab* density = density_ok ? aux_mfs["ro_g"] : nullptr;
       const amrex::MultiFab* velocity = velocity_ok ? aux_mfs["vel_g"] : nullptr;
 
-      epsilon_ok = (epsilon != nullptr) ? (epsilon_ok && check_mf_is_ok(*epsilon)) : false;
-      density_ok = (density != nullptr) ? (density_ok && check_mf_is_ok(*density)) : false;
-      velocity_ok = (velocity != nullptr) ? (velocity_ok && check_mf_is_ok(*velocity)) : false;
+      amrex::Vector<int> MFs_ok = {mf_ok, epsilon_ok, density_ok, velocity_ok};
+      amrex::Vector<const amrex::MultiFab*> MFs = {mf, epsilon, density, velocity};
+      amrex::Vector<int> Comps = {component, 0, 0, m_direction};
+      amrex::Vector<int> ConversionFlags = {0, 0, 0, 0};
+
+      convert_mf_if_needed(MFs_ok, MFs, Comps, ConversionFlags, lev);
+
+      for (int i(0); i < MFs.size(); ++i) {
+        if (MFs_ok[i])
+          AMREX_ALWAYS_ASSERT(check_mf_is_ok(*MFs[i]));
+      }
 
       amrex::BoxArray box_array = this->get_box_array(lev);
       const amrex::DistributionMapping& d_map = this->get_d_map(lev);
@@ -174,9 +186,6 @@ class BaseMonitor: public Monitor {
       const amrex::FabArray<amrex::EBCellFlagFab>& flags = m_ebfactory[lev]->getMultiEBCellFlagFab();
 
       bool was_there_intersection(false);
-
-      const bool mf_ok = (mf != nullptr) ?
-        mf->ok() && check_mf_is_ok(*mf) : false;
 
 #ifdef _OPENMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
@@ -210,11 +219,11 @@ class BaseMonitor: public Monitor {
 
             amrex::Array4<amrex::Real const> dummy_arr;
 
-            auto const& mf_arr = mf_ok ? mf->const_array(mfi,component) : dummy_arr;
+            auto const& mf_arr = mf_ok ? MFs[0]->const_array(mfi,Comps[0]) : dummy_arr;
             auto const& fraction_arr = single_valued_fab ? get_fraction_arr(mfi,lev) : farray_box.const_array();
-            auto const& epsilon_arr = epsilon_ok ? epsilon->const_array(mfi) : dummy_arr;
-            auto const& density_arr = density_ok ? density->const_array(mfi) : dummy_arr;
-            auto const& velocity_arr = velocity_ok ? velocity->const_array(mfi) : dummy_arr;
+            auto const& epsilon_arr = epsilon_ok ? MFs[1]->const_array(mfi,Comps[1]) : dummy_arr;
+            auto const& density_arr = density_ok ? MFs[2]->const_array(mfi,Comps[2]) : dummy_arr;
+            auto const& velocity_arr = velocity_ok ? MFs[3]->const_array(mfi,Comps[3]) : dummy_arr;
             auto const& flags_arr = flags_fab.const_array();
 
             isCovered is_covered = m_is_covered;
@@ -235,6 +244,12 @@ class BaseMonitor: public Monitor {
           } // if l_box is ok
         } // if fab not covered
       } // MFIter loop
+
+      for (int i(0); i < MFs.size(); ++i) {
+        if (MFs_ok[i] && (ConversionFlags[i] == 1)) {
+          delete MFs[i];
+        }
+      }
 
       result = was_there_intersection ? reduce_data.value(reduce_op) : default_values;
 
@@ -288,7 +303,8 @@ class BaseMonitor: public Monitor {
     };
 
     virtual
-    void convert_mf_if_needed (amrex::Vector<const amrex::MultiFab*>& mf,
+    void convert_mf_if_needed (amrex::Vector<int>& mf_ok,
+                               amrex::Vector<const amrex::MultiFab*>& mf,
                                amrex::Vector<int>& components,
                                amrex::Vector<int>& conversion_flag,
                                const int lev) = 0;
@@ -366,7 +382,8 @@ class PointRegion final: public BaseMonitor {
                                       const amrex::Vector<int>& components);
 
     virtual
-    void convert_mf_if_needed (amrex::Vector<const amrex::MultiFab*>& mf,
+    void convert_mf_if_needed (amrex::Vector<int>& mf_ok,
+                               amrex::Vector<const amrex::MultiFab*>& mf,
                                amrex::Vector<int>& components,
                                amrex::Vector<int>& conversion_flag,
                                const int lev);
@@ -379,6 +396,7 @@ class PointRegion final: public BaseMonitor {
       BaseMonitor::setup();
 
       this->check_boxes_are_ok();
+      m_direction = 0;
     }
 
     // The function to actually execute monitoring
@@ -430,13 +448,13 @@ class AreaMonitor: public BaseMonitor {
                  FluidPhase& fluid,
                  Regions& regions)
       : BaseMonitor(specs, pparse, leveldata, ebfactory, fluid, regions)
-      , m_direction(-1)
     {
       m_is_covered = isCovered(1);
     }
 
     virtual
-    void convert_mf_if_needed (amrex::Vector<const amrex::MultiFab*>& mf,
+    void convert_mf_if_needed (amrex::Vector<int>& mf_ok,
+                               amrex::Vector<const amrex::MultiFab*>& mf,
                                amrex::Vector<int>& components,
                                amrex::Vector<int>& conversion_flag,
                                const int lev);
@@ -473,9 +491,6 @@ class AreaMonitor: public BaseMonitor {
 
     // Function to set the area normal vector direction and check the box is 2D
     virtual void set_direction ();
-
-    // Area normal vector direction: {0: x_direction, 1: y_direction, 2: z_direction}
-    int m_direction;
 
     // Return the areafrac Array4 object
     virtual
@@ -517,7 +532,8 @@ class VolumeMonitor: public BaseMonitor {
     }
 
     virtual
-    void convert_mf_if_needed (amrex::Vector<const amrex::MultiFab*>& mf,
+    void convert_mf_if_needed (amrex::Vector<int>& mf_ok,
+                               amrex::Vector<const amrex::MultiFab*>& mf,
                                amrex::Vector<int>& components,
                                amrex::Vector<int>& conversion_flag,
                                const int lev);
@@ -530,6 +546,7 @@ class VolumeMonitor: public BaseMonitor {
       BaseMonitor::setup();
 
       this->check_boxes_are_ok();
+      m_direction = 0;
     }
 
     // The function to actually execute monitoring
@@ -979,6 +996,7 @@ class BaseMonitor: public Monitor {
       Monitor::setup();
 
       this->check_realbox_is_ok();
+      m_direction = 0;
     }
 
     // Pointer to the particle container
@@ -1093,7 +1111,6 @@ class FlowRate final: public BaseMonitor {
               SolidsPhase& solids,
               Regions& regions)
       : BaseMonitor(specs, pparse, pc, ebfactory, solids, regions)
-      , m_direction(-1)
     {}
 
     // The net flow rate of a general particle property phi_p is computed by
@@ -1151,9 +1168,6 @@ class FlowRate final: public BaseMonitor {
 
     // Function to set the area normal vector direction and check the box is 2D
     void set_direction ();
-
-    // Area normal vector direction: {0: x_direction, 1: y_direction, 2: z_direction}
-    int m_direction;
 
     // Function to set the plane coordinate along m_direction
     void set_coordinate ();
