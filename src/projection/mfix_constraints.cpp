@@ -238,15 +238,6 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
 
     avgSigma[lev] = Utils::volEpsWgtAvg(*Sigma[lev], 0, *ep_g[lev], volfrac);
     avgTheta[lev] = Utils::volEpsWgtAvg(*Theta[lev], 0, *ep_g[lev], volfrac);
-
-//    const Box& domain = geom[lev].Domain();
-//
-//    const amrex::MultiFab& epg = *ep_g[lev];
-//
-//    auto monitor = EulerianMonitor::VolumeIntegral(domain, EBFactory(lev));
-//
-//    avgSigma[lev] = monitor.volume_weighted_average(*Sigma[lev], epg);
-//    avgTheta[lev] = monitor.volume_weighted_average(*Theta[lev], epg);
   }
 
   // Compute rhs

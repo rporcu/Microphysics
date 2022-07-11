@@ -388,7 +388,7 @@ private:
 
    void WriteJobInfo (const std::string& dir) const;
 
-   amrex::Vector<Monitor*> m_monitors;
+   Monitors m_monitors;
 
    std::string m_ascent_actions_yaml;
 };

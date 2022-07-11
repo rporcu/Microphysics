@@ -526,13 +526,9 @@ mfix::mfix_calc_txfr_particle (Real time,
     BL_PROFILE_VAR("particle_deposition", particle_deposition);
 
     {
-      const auto dx_array  = geom[lev].CellSizeArray();
-      const auto dxi_array = geom[lev].InvCellSizeArray();
-      const auto plo_array = geom[lev].ProbLoArray();
-
-      const RealVect  dx( dx_array[0],  dx_array[1],  dx_array[2]);
-      const RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
-      const RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
+      const auto dx  = geom[lev].CellSizeArray();
+      const auto dxi = geom[lev].InvCellSizeArray();
+      const auto plo = geom[lev].ProbLoArray();
 
       const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(interp_ptr->Factory());
 

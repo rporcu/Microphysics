@@ -137,36 +137,6 @@ MfixRW::ComputeMassAccum (const int offset)
   ParallelDescriptor::ReduceRealSum(accum.data(), nspecies_g);
   for (int n=0; n < nspecies_g; ++n) {
     mass_accum[n + offset*Species::NMAX] = accum[n];
-
-//  const int nspecies_g = fluid.nspecies;
-//
-//  Vector<Real> accum(nspecies_g);
-//
-//  for (int lev = 0; lev < nlev; lev++) {
-//
-//    MultiFab const& ep_g = *(m_leveldata[lev]->ep_g);
-//    MultiFab const& ro_g = *(m_leveldata[lev]->ro_g);
-//
-//    const Box& domain = geom[lev].Domain();
-//    auto monitor = EulerianMonitor::VolumeIntegral(domain, *ebfactory[lev]);
-//
-//    for (int n=0; n < nspecies_g; ++n){
-//
-//      accum[n] = 0.;
-//
-//      MultiFab const& X_gk = *(m_leveldata[lev]->X_gk);
-//
-//      // TODO TODO TODO pass all components together
-//      accum[n] = monitor.mass_weighted_integral(X_gk, ep_g, ro_g, n);
-//
-//    } /* End loop over species */
-//
-//  } // nlev
-//
-//  // Global sum and copy to global variable with offset
-//  ParallelDescriptor::ReduceRealSum(accum.data(), nspecies_g);
-//  for (int n=0; n < nspecies_g; ++n) {
-//    mass_accum[n + offset*nspecies_g] = accum[n];
   }
 }
 
@@ -208,23 +178,7 @@ MfixRW::ComputeMassProduction (const Real /*dt*/,
       prod[n] *= vol;
 
     } /* End loop over species */
-
-
-//    const MultiFab& volfrac = ebfactory[lev]->getVolFrac();
-//
-//    // No deep copy, just an alias
-//    MultiFab ro_gk_txfr(*chem_txfr[lev], amrex::make_alias, scomp, nspecies_g);
-//
-//    const Box& domain = geom[lev].Domain();
-//    auto monitor = EulerianMonitor::VolumeIntegral(domain, *ebfactory[lev]);
-//
-//    for (int n=0; n < nspecies_g; ++n){
-//
-//      prod[n] = monitor.volume_integral(ro_gk_txfr, volfrac, n);
-//
-//    } /* End loop over species */
   } // nlev
-
 
   // Global sum and copy to global variable
   ParallelDescriptor::ReduceRealSum(prod.data(), nspecies_g);

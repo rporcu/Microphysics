@@ -233,12 +233,4 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   int comp = 0;
 
   sum_vol = Utils::volWgtSum(lev, *(m_leveldata[lev]->ep_g), comp, ebfactory);
-
-//  const Box& domain = geom[0].Domain();
-//
-//  const auto& epg = *(m_leveldata[0]->ep_g);
-//
-//  auto monitor = EulerianMonitor::VolumeIntegral(domain, EBFactory(0));
-//
-//  sum_vol = monitor.volume_weighted_sum(epg);
 }

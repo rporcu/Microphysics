@@ -10,6 +10,10 @@
 
 #include <mfix_pc.H>
 #include <mfix_regions_parms.H>
+#include <mfix_leveldata.H>
+#include <mfix_fluid_parms.H>
+#include <mfix_pc.H>
+#include <mfix_solids_parms.H>
 
 #include <iostream>
 #include <map>
@@ -17,6 +21,41 @@
 #include <array>
 
 
+// forward declaration
+class Monitor;
+
+
+// Container for all the possible monitors
+class Monitors {
+  public:
+    // Constructor
+    explicit Monitors () = default;
+
+    // Destructor
+    ~Monitors ();
+
+    void
+    initialize (const std::string& pp_root,
+                Regions& regions,
+                amrex::Vector<std::unique_ptr<LevelData>>& leveldata,
+                amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
+                FluidPhase& fluid,
+                MFIXParticleContainer* pc,
+                amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory,
+                SolidsPhase& solids);
+
+    Monitor& get (const int i)
+    { return *m_monitors[i]; }
+
+    int size () const
+    { return m_monitors.size(); }
+
+  private:
+    amrex::Vector<Monitor*> m_monitors;
+};
+
+
+// Single monitor class
 class Monitor {
 
   public:
@@ -25,6 +64,9 @@ class Monitor {
              const std::string pparse,
              amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
              Regions& regions);
+
+    // Destructor
+    virtual ~Monitor () = default;
 
     const int & plot_int () const
     { return m_plot_int; }
@@ -41,7 +83,10 @@ class Monitor {
   protected:
     // Setup the monitor
     virtual
-    void setup ();
+    void initialize ();
+
+    // Initialization flag
+    int is_initialized;
 
     // The function to actually execute monitoring
     virtual
@@ -49,6 +94,10 @@ class Monitor {
 
     // Number of levels
     int m_nlev;
+
+    // Set variables, components and indexes
+    virtual
+    void setup_variables () = 0;
 
     // Monitor specifications
     const std::array<std::string,2> m_specs;
@@ -79,9 +128,7 @@ class Monitor {
 
     // The variable to plot
     amrex::Vector<std::string> m_variables;
-
-    // Number of variables to be monitored
-    int m_variables_nb;
+    amrex::Vector<std::string> m_input_variables;
 
     // The Box corresponding to the monitored region
     amrex::Vector<amrex::Box> m_boxes;
@@ -123,9 +170,9 @@ class BaseMonitor: public Monitor {
       , m_fluid(fluid)
     {}
 
-    void set_vars_and_comps (const int lev,
-                             amrex::Vector<const amrex::MultiFab*>& vars,
-                             amrex::Vector<int>& comps);
+    virtual
+    void reset_pc (MFIXParticleContainer*)
+    {}
 
     // Template class for generic computation
     template <typename D, typename Op, typename F>
@@ -138,46 +185,48 @@ class BaseMonitor: public Monitor {
            F&& f,
            typename D::Type& default_values)
     {
-      std::map<std::string, const amrex::MultiFab*> empty_aux_mfs;
-
-      return this->apply(lev, mf, component, reduce_data, reduce_op, f, default_values, empty_aux_mfs);
-    }
-
-    // Template class for generic computation
-    template <typename D, typename Op, typename F>
-    typename D::Type
-    apply (const int lev,
-           const amrex::MultiFab* mf,
-           const int component,
-           D& reduce_data,
-           Op& reduce_op,
-           F&& f,
-           typename D::Type& default_values,
-           std::map<std::string, const amrex::MultiFab*>& aux_mfs)
-    {
       using ReduceTuple = typename D::Type;
 
       ReduceTuple result(default_values);
 
       int mf_ok = (mf != nullptr);
-      int epsilon_ok = (aux_mfs.find("ep_g") != aux_mfs.end());
-      int density_ok = (aux_mfs.find("ro_g") != aux_mfs.end());
-      int velocity_ok = (aux_mfs.find("vel_g") != aux_mfs.end());
+      int epsilon_ok = (m_epsilon[lev] != nullptr);
+      int density_ok = (m_density[lev] != nullptr);
+      int velocity_ok = (m_velocity[lev] != nullptr);
 
-      const amrex::MultiFab* epsilon = epsilon_ok ? aux_mfs["ep_g"] : nullptr;
-      const amrex::MultiFab* density = density_ok ? aux_mfs["ro_g"] : nullptr;
-      const amrex::MultiFab* velocity = velocity_ok ? aux_mfs["vel_g"] : nullptr;
+      amrex::Vector<const amrex::MultiFab*> MFs = {mf};
+      amrex::Vector<int> Comps = {component};
+      amrex::Vector<int> ConversionFlags = {0};
 
-      amrex::Vector<int> MFs_ok = {mf_ok, epsilon_ok, density_ok, velocity_ok};
-      amrex::Vector<const amrex::MultiFab*> MFs = {mf, epsilon, density, velocity};
-      amrex::Vector<int> Comps = {component, 0, 0, m_direction};
-      amrex::Vector<int> ConversionFlags = {0, 0, 0, 0};
-
-      convert_mf_if_needed(MFs_ok, MFs, Comps, ConversionFlags, lev);
+      convert_mf_if_needed(MFs, Comps, ConversionFlags, lev);
 
       for (int i(0); i < MFs.size(); ++i) {
-        if (MFs_ok[i])
-          AMREX_ALWAYS_ASSERT(check_mf_is_ok(*MFs[i]));
+        if (MFs[i] != nullptr) {
+          AMREX_ASSERT(check_mf_is_ok(*MFs[i]));
+        }
+      }
+
+      if (m_epsilon[lev] != nullptr) {
+        AMREX_ASSERT(check_mf_is_ok(*m_epsilon[lev]));
+      }
+
+      if (m_density[lev] != nullptr) {
+        AMREX_ASSERT(check_mf_is_ok(*m_density[lev]));
+      }
+
+      if (m_velocity[lev] != nullptr) {
+        AMREX_ASSERT(check_mf_is_ok(*m_velocity[lev]));
+      }
+
+      int vel_Comp(-1);
+      if (m_velocity[lev] != nullptr) {
+        if (m_velocity[lev]->nComp() == 3) {
+          vel_Comp = m_direction;
+        } else if (m_velocity[lev]->nComp() == 1) {
+          vel_Comp = 0;
+        } else {
+          amrex::Abort("Error: velocity MultiFab has wrong number of components");
+        }
       }
 
       amrex::BoxArray box_array = this->get_box_array(lev);
@@ -221,9 +270,9 @@ class BaseMonitor: public Monitor {
 
             auto const& mf_arr = mf_ok ? MFs[0]->const_array(mfi,Comps[0]) : dummy_arr;
             auto const& fraction_arr = single_valued_fab ? get_fraction_arr(mfi,lev) : farray_box.const_array();
-            auto const& epsilon_arr = epsilon_ok ? MFs[1]->const_array(mfi,Comps[1]) : dummy_arr;
-            auto const& density_arr = density_ok ? MFs[2]->const_array(mfi,Comps[2]) : dummy_arr;
-            auto const& velocity_arr = velocity_ok ? MFs[3]->const_array(mfi,Comps[3]) : dummy_arr;
+            auto const& epsilon_arr = epsilon_ok ? m_epsilon[lev]->const_array(mfi) : dummy_arr;
+            auto const& density_arr = density_ok ? m_density[lev]->const_array(mfi) : dummy_arr;
+            auto const& velocity_arr = velocity_ok ? m_velocity[lev]->const_array(mfi,vel_Comp) : dummy_arr;
             auto const& flags_arr = flags_fab.const_array();
 
             isCovered is_covered = m_is_covered;
@@ -246,7 +295,7 @@ class BaseMonitor: public Monitor {
       } // MFIter loop
 
       for (int i(0); i < MFs.size(); ++i) {
-        if (MFs_ok[i] && (ConversionFlags[i] == 1)) {
+        if (ConversionFlags[i] == 1) {
           delete MFs[i];
         }
       }
@@ -256,7 +305,7 @@ class BaseMonitor: public Monitor {
       return result;
     }
 
-    //
+    // Description: TODO
     class isCovered {
 
       public:
@@ -298,29 +347,40 @@ class BaseMonitor: public Monitor {
           return 0;
         }
 
+      private:
         int m_ix_type;
         int m_direction;
     };
 
+  protected:
+    // Set variables, components and indexes
     virtual
-    void convert_mf_if_needed (amrex::Vector<int>& mf_ok,
-                               amrex::Vector<const amrex::MultiFab*>& mf,
+    void setup_variables ();
+
+    // The variables
+    amrex::Vector<amrex::Vector<const amrex::MultiFab*>> m_mf;
+
+    // The components
+    amrex::Vector<int> m_components;
+
+    // Convert MultiFabs when they're not of the correct type
+    virtual
+    void convert_mf_if_needed (amrex::Vector<const amrex::MultiFab*>& mf,
                                amrex::Vector<int>& components,
                                amrex::Vector<int>& conversion_flag,
                                const int lev) = 0;
 
-    virtual
-    void reset_pc (MFIXParticleContainer*)
-    {}
-
-  protected:
     // Setup the monitor
     virtual
-    void setup ()
-    { Monitor::setup(); }
+    void initialize ()
+    { Monitor::initialize(); }
 
     // Reference to the fluid data
     amrex::Vector<std::unique_ptr<LevelData>>& m_leveldata;
+
+    amrex::Vector<const amrex::MultiFab*> m_epsilon;
+    amrex::Vector<const amrex::MultiFab*> m_density;
+    amrex::Vector<const amrex::MultiFab*> m_velocity;
 
     // Reference to the FluidPhase class
     FluidPhase& m_fluid;
@@ -381,27 +441,34 @@ class PointRegion final: public BaseMonitor {
                                       const amrex::Vector<const amrex::MultiFab*>& mf,
                                       const amrex::Vector<int>& components);
 
+  protected:
     virtual
-    void convert_mf_if_needed (amrex::Vector<int>& mf_ok,
-                               amrex::Vector<const amrex::MultiFab*>& mf,
+    void convert_mf_if_needed (amrex::Vector<const amrex::MultiFab*>& mf,
                                amrex::Vector<int>& components,
                                amrex::Vector<int>& conversion_flag,
                                const int lev);
 
-  protected:
     // Setup the monitor
     virtual
-    void setup ()
+    void initialize ()
     {
-      BaseMonitor::setup();
+      BaseMonitor::initialize();
 
       this->check_boxes_are_ok();
       m_direction = 0;
+
+      this->set_point_coords();
     }
 
     // The function to actually execute monitoring
     virtual
     void monitor (const amrex::Real& dt);
+
+    // Set the m_point coordinates from the m_region RealBox read from inputs
+    void set_point_coords ();
+
+    // The point at which the MultiFabs will be evaluated
+    amrex::RealVect m_point;
 
     // Get the number of cells to grow the tile box when checking for covered FAB
     virtual
@@ -433,8 +500,14 @@ class PointRegion final: public BaseMonitor {
     virtual
     const amrex::DistributionMapping& get_d_map (const int lev) const
     { return m_ebfactory[lev]->DistributionMap(); }
-};
 
+  private:
+    // Template class for generic computation
+    template <typename D, typename Op, typename F>
+    void
+    apply (const int, const amrex::MultiFab*, const int, D&, Op&, F&&, typename D::Type&)
+    {}
+};
 
 
 class AreaMonitor: public BaseMonitor {
@@ -452,19 +525,18 @@ class AreaMonitor: public BaseMonitor {
       m_is_covered = isCovered(1);
     }
 
+  protected:
     virtual
-    void convert_mf_if_needed (amrex::Vector<int>& mf_ok,
-                               amrex::Vector<const amrex::MultiFab*>& mf,
+    void convert_mf_if_needed (amrex::Vector<const amrex::MultiFab*>& mf,
                                amrex::Vector<int>& components,
                                amrex::Vector<int>& conversion_flag,
                                const int lev);
 
-  protected:
     // Setup the monitor
     virtual
-    void setup ()
+    void initialize ()
     {
-      BaseMonitor::setup();
+      BaseMonitor::initialize();
 
       this->check_boxes_are_ok();
       this->set_direction();
@@ -531,19 +603,18 @@ class VolumeMonitor: public BaseMonitor {
       m_is_covered = isCovered(0);
     }
 
+  protected:
     virtual
-    void convert_mf_if_needed (amrex::Vector<int>& mf_ok,
-                               amrex::Vector<const amrex::MultiFab*>& mf,
+    void convert_mf_if_needed (amrex::Vector<const amrex::MultiFab*>& mf,
                                amrex::Vector<int>& components,
                                amrex::Vector<int>& conversion_flag,
                                const int lev);
 
-  protected:
     // Setup the monitor
     virtual
-    void setup ()
+    void initialize ()
     {
-      BaseMonitor::setup();
+      BaseMonitor::initialize();
 
       this->check_boxes_are_ok();
       m_direction = 0;
@@ -628,9 +699,9 @@ class AreaRegion final: public AreaMonitor {
   protected:
     // Setup the monitor
     virtual
-    void setup ()
+    void initialize ()
     {
-      AreaMonitor::setup();
+      AreaMonitor::initialize();
 
       m_is_covered.set_direction(m_direction);
     }
@@ -685,8 +756,8 @@ class VolumeRegion final: public VolumeMonitor {
   protected:
     // Setup the monitor
     virtual
-    void setup ()
-    { VolumeMonitor::setup(); }
+    void initialize ()
+    { VolumeMonitor::initialize(); }
 
     // The function to actually execute monitoring
     virtual
@@ -726,42 +797,31 @@ class SurfaceIntegral final: public AreaMonitor {
     // area
     amrex::Vector<amrex::Real> flow_rate (const int lev,
                                           const amrex::Vector<const amrex::MultiFab*>& mf,
-                                          const amrex::Vector<int>& components,
-                                          const amrex::MultiFab* epsilon,
-                                          const amrex::MultiFab* density,
-                                          const amrex::MultiFab* velocity);
+                                          const amrex::Vector<int>& components);
 
     // The mass flow rate through a surface is computed by summing the product
     // of the phase volume fraction, density, phase velocity normal to the facet
     // v_n, and the facet area
-    amrex::Vector<amrex::Real> mass_flow_rate (const int lev,
-                                               const amrex::MultiFab* epsilon,
-                                               const amrex::MultiFab* density,
-                                               const amrex::MultiFab* velocity);
+    amrex::Vector<amrex::Real> mass_flow_rate (const int lev);
 
     // The mass flow rate through a surface is computed by summing the
     // product of the phase volume fraction, density, velocity normal to the
     // facet v_n, and the facet area
     amrex::Vector<amrex::Real> mass_weighted_average (const int lev,
                                                       const amrex::Vector<const amrex::MultiFab*>& mf,
-                                                      const amrex::Vector<int>& components,
-                                                      const amrex::MultiFab* epsilon,
-                                                      const amrex::MultiFab* density,
-                                                      const amrex::MultiFab* velocity);
+                                                      const amrex::Vector<int>& components);
 
     // The volume flow rate through a surface is computed by summing the product
     // of the phase volume fraction, phase velocity normal to the facet v_n, and
     // the facet area
-    amrex::Vector<amrex::Real> volume_flow_rate (const int lev,
-                                                 const amrex::MultiFab* epsilon,
-                                                 const amrex::MultiFab* velocity);
+    amrex::Vector<amrex::Real> volume_flow_rate (const int lev);
 
   protected:
     // Setup the monitor
     virtual
-    void setup ()
+    void initialize ()
     {
-      AreaMonitor::setup();
+      AreaMonitor::initialize();
 
       m_dA.resize(m_nlev);
       this->set_dA();
@@ -816,9 +876,7 @@ class VolumeIntegral final: public VolumeMonitor {
     // volume fraction, density, selected field variable, and cell volume
     amrex::Vector<amrex::Real> mass_weighted_integral (const int lev,
                                                        const amrex::Vector<const amrex::MultiFab*>& mf,
-                                                       const amrex::Vector<int>& components,
-                                                       const amrex::MultiFab* epsilon,
-                                                       const amrex::MultiFab* density);
+                                                       const amrex::Vector<int>& components);
 
     // The mass-weighted average is computed by dividing the sum of the product
     // of phase volume fraction, density, selected field variable, and cell
@@ -826,16 +884,14 @@ class VolumeIntegral final: public VolumeMonitor {
     // density, and cell volume
     amrex::Vector<amrex::Real> mass_weighted_average (const int lev,
                                                       const amrex::Vector<const amrex::MultiFab*>& mf,
-                                                      const amrex::Vector<int>& components,
-                                                      const amrex::MultiFab* epsilon,
-                                                      const amrex::MultiFab* density);
+                                                      const amrex::Vector<int>& components);
 
   protected:
     // Setup the monitor
     virtual
-    void setup ()
+    void initialize ()
     {
-      VolumeMonitor::setup();
+      VolumeMonitor::initialize();
 
       m_dV.resize(m_nlev);
       this->set_dV();
@@ -875,56 +931,9 @@ class BaseMonitor: public Monitor {
       , m_solids(solids)
     {}
 
-    void set_indexes (amrex::Vector<int>& vars);
-
-    class GetParticleValue {
-      public:
-        AMREX_GPU_HOST_DEVICE
-        GetParticleValue (const runtimeRealData& rrData)
-          : m_rrData_count(rrData.count)
-        {}
-
-        AMREX_GPU_HOST_DEVICE AMREX_INLINE
-        amrex::Real operator() (const ParticleTileData& ptile_data,
-                                const int index,
-                                const int i) const
-        {
-          const auto& particle = ptile_data.getSuperParticle(i);
-
-          if ((index >= 0) && (index <= 2)) {
-
-            return particle.pos(index);
-
-          } else if (index == 3) {
-
-            return particle.id();
-
-          } else if (index == 4) {
-
-            return particle.cpu();
-
-          } else if (index < (5+SoArealData::count)) {
-
-            const int idx = index-5;
-            return particle.rdata(idx);
-
-          } else if (index < (5+SoArealData::count+SoAintData::count)) {
-
-            const int idx = index-(5+SoArealData::count);
-            return particle.idata(idx);
-
-          } else if (index < (5+SoArealData::count+SoAintData::count+m_rrData_count)) {
-
-            const int idx = index-(5+SoArealData::count+SoAintData::count);
-            return ptile_data.m_runtime_rdata[idx][i];
-          }
-
-          amrex::Abort("Invalid index for accessing particles data");
-          return 0.;
-        }
-
-        const int m_rrData_count;
-    };
+    virtual
+    void reset_pc (MFIXParticleContainer* pc)
+    { m_pc = pc; }
 
     // Template class for generic computation
     template <typename D, typename Op, typename F>
@@ -984,16 +993,69 @@ class BaseMonitor: public Monitor {
       return result;
     }
 
-    virtual
-    void reset_pc (MFIXParticleContainer* pc)
-    { m_pc = pc; }
+    class GetParticleValue {
+      public:
+        AMREX_GPU_HOST_DEVICE
+        GetParticleValue (const runtimeRealData& rrData)
+          : m_rrData_count(rrData.count)
+        {}
+
+        AMREX_GPU_HOST_DEVICE AMREX_INLINE
+        amrex::Real operator() (const ParticleTileData& ptile_data,
+                                const int index,
+                                const int i) const
+        {
+          const auto& particle = ptile_data.getSuperParticle(i);
+
+          if ((index >= 0) && (index <= 2)) {
+
+            return particle.pos(index);
+
+          } else if (index == 3) {
+
+            return particle.id();
+
+          } else if (index == 4) {
+
+            return particle.cpu();
+
+          } else if (index < (5+SoArealData::count)) {
+
+            const int idx = index-5;
+            return particle.rdata(idx);
+
+          } else if (index < (5+SoArealData::count+SoAintData::count)) {
+
+            const int idx = index-(5+SoArealData::count);
+            return particle.idata(idx);
+
+          } else if (index < (5+SoArealData::count+SoAintData::count+m_rrData_count)) {
+
+            const int idx = index-(5+SoArealData::count+SoAintData::count);
+            return ptile_data.m_runtime_rdata[idx][i];
+          }
+
+          amrex::Abort("Invalid index for accessing particles data");
+          return 0.;
+        }
+
+      private:
+        const int m_rrData_count;
+    };
 
   protected:
+    // Set variables, components and indexes
+    virtual
+    void setup_variables ();
+
+    // The indexes
+    amrex::Vector<int> m_components;
+
     // Setup the monitor
     virtual
-    void setup ()
+    void initialize ()
     {
-      Monitor::setup();
+      Monitor::initialize();
 
       this->check_realbox_is_ok();
       m_direction = 0;
@@ -1043,9 +1105,9 @@ class GeneralProperty final: public BaseMonitor {
   protected:
     // Setup the monitor
     virtual
-    void setup ()
+    void initialize ()
     {
-      BaseMonitor::setup();
+      BaseMonitor::initialize();
     }
 
     // The function to actually execute monitoring
@@ -1090,9 +1152,9 @@ class AveragedProperty final: public BaseMonitor {
   protected:
     // Setup the monitor
     virtual
-    void setup ()
+    void initialize ()
     {
-      BaseMonitor::setup();
+      BaseMonitor::initialize();
     }
 
     // The function to actually execute monitoring
@@ -1134,7 +1196,6 @@ class FlowRate final: public BaseMonitor {
                                                           const amrex::Vector<int>& indexes,
                                                           const amrex::Real dt);
 
-    // Function for testing if particle crosses the flow plane
     struct CrossesFlowPlane {
 
       AMREX_GPU_HOST_DEVICE AMREX_INLINE
@@ -1145,11 +1206,12 @@ class FlowRate final: public BaseMonitor {
     };
 
   protected:
+    // Function for testing if particle crosses the flow plane
     // Setup the monitor
     virtual
-    void setup ()
+    void initialize ()
     {
-      BaseMonitor::setup();
+      BaseMonitor::initialize();
 
       m_plane = m_regions.get_region(m_plane_name);
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_plane != nullptr, "Region does not exist");

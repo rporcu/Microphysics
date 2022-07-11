@@ -1,7 +1,7 @@
 #ifndef _MFIX_EB_INTERP_SHEPARD_K_H_
 #define _MFIX_EB_INTERP_SHEPARD_K_H_
 
-#include "mfix_pc.H"
+#include <mfix_pc.H>
 
 /****************************************************************
  *                                                              *
@@ -11,11 +11,13 @@
  ***************************************************************/
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 void shepard_interp (const amrex::RealVect& pos,
-                     const int i, const int j, const int k,
-                     const amrex::RealVect& dx,
-                     const amrex::RealVect& dxi,
-                     const amrex::RealVect& plo,
-                     amrex::Array4<const EBCellFlag> const& flags,
+                     const int i,
+                     const int j,
+                     const int k,
+                     const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& dx,
+                     const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& dxi,
+                     const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo,
+                     amrex::Array4<const amrex::EBCellFlag> const& flags,
                      amrex::Array4<const amrex::Real> const& ccent,
                      amrex::Array4<const amrex::Real> const& bcent,
                      amrex::Array4<const amrex::Real> const& apx,
@@ -54,11 +56,11 @@ void shepard_interp (const amrex::RealVect& pos,
     // side of the EB before trying to interpolate.
     if(flags(i,j,k).isSingleValued()){
 
-        const Real adx = apx(i+1,j  ,k  ) - apx(i  ,j  ,k  );
-        const Real ady = apy(i  ,j+1,k  ) - apy(i  ,j  ,k  );
-        const Real adz = apz(i  ,j  ,k+1) - apz(i  ,j  ,k  );
+        const amrex::Real adx = apx(i+1,j  ,k  ) - apx(i  ,j  ,k  );
+        const amrex::Real ady = apy(i  ,j+1,k  ) - apy(i  ,j  ,k  );
+        const amrex::Real adz = apz(i  ,j  ,k+1) - apz(i  ,j  ,k  );
 
-        const Real apnorm = std::sqrt(adx*adx + ady*ady + adz*adz);
+        const amrex::Real apnorm = std::sqrt(adx*adx + ady*ady + adz*adz);
 
         // Temporary sanity check.
         AMREX_ASSERT_WITH_MESSAGE( apnorm > std::numeric_limits<amrex::Real>::epsilon(),
@@ -202,11 +204,13 @@ void shepard_interp (const amrex::RealVect& pos,
  ***************************************************************/
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 void shepard_interp_eb(const amrex::RealVect& pos,
-                       const int i, const int j, const int k,
-                       const amrex::RealVect& dx,
-                       const amrex::RealVect& dxi,
-                       const amrex::RealVect& plo,
-                       amrex::Array4<const EBCellFlag> const& flags,
+                       const int i,
+                       const int j,
+                       const int k,
+                       const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& dx,
+                       const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& dxi,
+                       const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo,
+                       amrex::Array4<const amrex::EBCellFlag> const& flags,
                        amrex::Array4<const amrex::Real> const& ccent,
                        amrex::Array4<const amrex::Real> const& bcent,
                        amrex::Array4<const amrex::Real> const& apx,
@@ -245,11 +249,11 @@ void shepard_interp_eb(const amrex::RealVect& pos,
     // side of the EB before trying to interpolate.
     if(flags(i,j,k).isSingleValued()){
 
-        const Real adx = apx(i+1,j  ,k  ) - apx(i  ,j  ,k  );
-        const Real ady = apy(i  ,j+1,k  ) - apy(i  ,j  ,k  );
-        const Real adz = apz(i  ,j  ,k+1) - apz(i  ,j  ,k  );
+        const amrex::Real adx = apx(i+1,j  ,k  ) - apx(i  ,j  ,k  );
+        const amrex::Real ady = apy(i  ,j+1,k  ) - apy(i  ,j  ,k  );
+        const amrex::Real adz = apz(i  ,j  ,k+1) - apz(i  ,j  ,k  );
 
-        const Real apnorm = std::sqrt(adx*adx + ady*ady + adz*adz);
+        const amrex::Real apnorm = std::sqrt(adx*adx + ady*ady + adz*adz);
 
         // Temporary sanity check.
         AMREX_ASSERT_WITH_MESSAGE( apnorm > std::numeric_limits<amrex::Real>::epsilon(),

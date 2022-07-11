@@ -273,18 +273,6 @@ mfix::EvolveFluid (int nstep,
                       << Utils::volWgtSum(0, *m_leveldata[0]->trac, 0, ebfactory)
                       << " " << Utils::volEpsWgtSum(0, *m_leveldata[0]->trac, *m_leveldata[0]->ep_g, 0, ebfactory)
                       << std::endl;
-
-//      const Box& domain = geom[0].Domain();
-//
-//      const auto& trac = *m_leveldata[0]->trac;
-//      const auto& epg = *m_leveldata[0]->ep_g;
-//
-//      auto monitor = EulerianMonitor::VolumeIntegral(domain, EBFactory(0));
-//
-//      amrex::Print() << "Sum tracer volume wgt = "
-//                     << monitor.volume_weighted_sum(trac)
-//                     << " " << monitor.volume_weighted_sum(trac, epg)
-//                     << std::endl;
     }
 
 #ifdef AMREX_MEM_PROFILING

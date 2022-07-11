@@ -162,89 +162,8 @@ void MfixRW::readParameters ()
       }
 
       // Monitors
-     Vector<std::string> monitors_names;
-     pp.queryarr("monitors", monitors_names);
-
-     for (const auto& name: monitors_names) {
-
-       std::string pp_monitor = "monitors." + name;
-       std::string monitor_type;
-       pp.get(pp_monitor.c_str(), monitor_type);
-
-       std::replace(monitor_type.begin(), monitor_type.end(), ':', ' ');
-
-       std::istringstream iss(monitor_type);
-       std::vector<std::string> monitor_specs((std::istream_iterator<std::string>(iss)),
-                                              std::istream_iterator<std::string>());
-
-       if (monitor_specs.size() != 3) {
-         Print() << "Monitor " << name << " specs are badly defined\n";
-         amrex::Abort("Inputs error");
-       }
-
-       std::transform(monitor_specs.begin(), monitor_specs.end(),
-                      monitor_specs.begin(), amrex::toLower);
-
-       pp_monitor = PProot + "." + pp_monitor;
-
-       std::array<std::string, 2> specs = {monitor_specs[1], monitor_specs[2]};
-
-       if (monitor_specs[0].compare("eulerian") == 0) {
-
-         if (monitor_specs[1].compare("pointregion") == 0) {
-
-           m_monitors.push_back(new EulerianMonitor::PointRegion(specs,
-                 pp_monitor, m_leveldata, ebfactory, fluid, regions));
-
-         } else if (monitor_specs[1].compare("arearegion") == 0) {
-
-           m_monitors.push_back(new EulerianMonitor::AreaRegion(specs,
-                 pp_monitor, m_leveldata, ebfactory, fluid, regions));
-
-         } else if (monitor_specs[1].compare("volumeregion") == 0) {
-
-           m_monitors.push_back(new EulerianMonitor::VolumeRegion(specs,
-                 pp_monitor, m_leveldata, ebfactory, fluid, regions));
-
-         } else if (monitor_specs[1].compare("surfaceintegral") == 0) {
-
-           m_monitors.push_back(new EulerianMonitor::SurfaceIntegral(specs,
-                 pp_monitor, m_leveldata, ebfactory, fluid, regions));
-
-         } else if (monitor_specs[1].compare("volumeintegral") == 0) {
-
-           m_monitors.push_back(new EulerianMonitor::VolumeIntegral(specs,
-                 pp_monitor, m_leveldata, ebfactory, fluid, regions));
-
-         } else {
-           amrex::Abort("Unknown Eulerian monitor type");
-         }
-
-       } else if (monitor_specs[0].compare("lagrangian") == 0) {
-
-         if (monitor_specs[1].compare("generalproperty") == 0) {
-
-           m_monitors.push_back(new LagrangianMonitor::GeneralProperty(specs,
-                 pp_monitor, pc, particle_ebfactory, solids, regions));
-
-         } else if (monitor_specs[1].compare("averagedproperty") == 0) {
-
-           m_monitors.push_back(new LagrangianMonitor::AveragedProperty(specs,
-                 pp_monitor, pc, particle_ebfactory, solids, regions));
-
-         } else if (monitor_specs[1].compare("flowrate") == 0) {
-
-           m_monitors.push_back(new LagrangianMonitor::FlowRate(specs,
-                 pp_monitor, pc, particle_ebfactory, solids, regions));
-
-         } else {
-           amrex::Abort("Unknown Lagrangian monitor type");
-         }
-
-       } else {
-         amrex::Abort("Unknown Monitor type");
-       }
-     }
+      m_monitors.initialize(PProot, regions, m_leveldata, ebfactory, fluid,
+          pc, particle_ebfactory, solids);
 
      // Ascent output control
      pp.query("ascent_on_restart", ascent_on_restart);
@@ -533,7 +452,7 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
  *------------------------------------------------------------------------------------------------*/
     for (int i(0); i < m_monitors.size(); ++i) {
 
-      auto& monitor = *m_monitors[i];
+      auto& monitor = m_monitors.get(i);
 
       monitor.reset_pc(pc);
 

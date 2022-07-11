@@ -1296,29 +1296,6 @@ ComputeAverageDensities (const int lev,
       ReduceTuple host_tuple = reduce_data.value();
       region_np[nr]   = amrex::get<0>(host_tuple);
       region_ro_p[nr] = amrex::get<1>(host_tuple);
-
-//      auto monitor = LagrangianMonitor::GeneralProperty(lev, avg_region, Geom(lev));
-//
-//      // Reduce sum operation for np, Tp
-//      ReduceOps<ReduceOpSum, ReduceOpSum> reduce_ops;
-//      ReduceData<Real, long> reduce_data(reduce_ops);
-//      using ReduceTuple = typename decltype(reduce_data)::Type;
-//
-//      auto R = [] AMREX_GPU_DEVICE (MFIXParticleContainer::ParticleType* /*particle*/,
-//                                    const GpuArray<ParticleReal*, SoArealData::count>& p_realarray,
-//                                    const GpuArray<int*, SoAintData::count>& /*p_intarray*/,
-//                                    const int& i) -> ReduceTuple
-//      {
-//        const Real density = p_realarray[SoArealData::density][i];
-//        return {density, 1};
-//      };
-//
-//      ReduceTuple default_values = {0., 0};
-//
-//      ReduceTuple host_tuple = monitor.apply(*this, reduce_data, reduce_ops, R, default_values);
-//
-//      region_ro_p[nr] = amrex::get<0>(host_tuple);
-//      region_np[nr]   = amrex::get<1>(host_tuple);
     }
 
     // Compute parallel reductions
@@ -1498,37 +1475,6 @@ ComputeAverageVelocities (const int lev,
       region_vely[nr] = amrex::get<2>(host_tuple);
       region_velz[nr] = amrex::get<3>(host_tuple);
       region_k_en[nr] = amrex::get<4>(host_tuple);
-
-//      auto monitor = LagrangianMonitor::GeneralProperty(lev, avg_region, Geom(lev));
-//
-//      // Reduce sum operation for np, Tp
-//      ReduceOps<ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum> reduce_ops;
-//      ReduceData<Real, Real, Real, Real, long> reduce_data(reduce_ops);
-//      using ReduceTuple = typename decltype(reduce_data)::Type;
-//
-//      auto R = [] AMREX_GPU_DEVICE (MFIXParticleContainer::ParticleType* /*particle*/,
-//                                    const GpuArray<ParticleReal*, SoArealData::count>& p_realarray,
-//                                    const GpuArray<int*, SoAintData::count>& /*p_intarray*/,
-//                                    const int& i) -> ReduceTuple
-//      {
-//        const Real mass = p_realarray[SoArealData::mass][i];
-//        const Real velx = p_realarray[SoArealData::velx][i];
-//        const Real vely = p_realarray[SoArealData::vely][i];
-//        const Real velz = p_realarray[SoArealData::velz][i];
-//        const Real k_en = 0.5*mass*(velx*velx + vely*vely + velz*velz);
-//
-//        return {velx, vely, velz, k_en, 1};
-//      };
-//
-//      ReduceTuple default_values = {0., 0., 0., 0., 0};
-//
-//      ReduceTuple host_tuple = monitor.apply(*this, reduce_data, reduce_ops, R, default_values);
-//
-//      region_velx[nr] = amrex::get<0>(host_tuple);
-//      region_vely[nr] = amrex::get<1>(host_tuple);
-//      region_velz[nr] = amrex::get<2>(host_tuple);
-//      region_k_en[nr] = amrex::get<3>(host_tuple);
-//      region_np[nr]   = amrex::get<4>(host_tuple);
     }
 
     // Compute parallel reductions
@@ -1705,30 +1651,6 @@ ComputeAverageTemperatures (const int lev,
       ReduceTuple host_tuple = reduce_data.value();
       region_np[nr] = amrex::get<0>(host_tuple);
       region_Tp[nr] = amrex::get<1>(host_tuple);
-
-//      auto monitor = LagrangianMonitor::GeneralProperty(lev, avg_region, Geom(lev));
-//
-//      // Reduce sum operation for np, Tp
-//      ReduceOps<ReduceOpSum, ReduceOpSum> reduce_ops;
-//      ReduceData<Real, long> reduce_data(reduce_ops);
-//      using ReduceTuple = typename decltype(reduce_data)::Type;
-//
-//      auto R = [] AMREX_GPU_DEVICE (MFIXParticleContainer::ParticleType* /*particle*/,
-//                                    const GpuArray<ParticleReal*, SoArealData::count>& p_realarray,
-//                                    const GpuArray<int*, SoAintData::count>& /*p_intarray*/,
-//                                    const int& i) -> ReduceTuple
-//      {
-//        const Real temperature = p_realarray[SoArealData::temperature][i];
-//
-//        return {temperature, 1};
-//      };
-//
-//      ReduceTuple default_values = {0., 0};
-//
-//      ReduceTuple host_tuple = monitor.apply(*this, reduce_data, reduce_ops, R, default_values);
-//
-//      region_Tp[nr] = amrex::get<0>(host_tuple);
-//      region_np[nr] = amrex::get<1>(host_tuple);
     }
 
     // Compute parallel reductions
