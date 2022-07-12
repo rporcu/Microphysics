@@ -214,7 +214,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
     RealBox* p_bc_rbv = (bc_tw_count > 0) ?  d_bc_rbv.data() : nullptr;
     Real*    p_bc_twv = (bc_tw_count > 0) ?  d_bc_twv.data() : nullptr;
-    
+
     /****************************************************************************
      * Init temporary storage:                                                  *
      *   -> particle-particle, and particle-wall forces                         *
@@ -224,7 +224,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     std::map<PairIndex, Gpu::DeviceVector<Real>> fc, pfor, wfor;
 
     std::map<PairIndex, Gpu::DeviceVector<Real>> cond;
-    
+
     std::map<PairIndex, bool> tile_has_walls;
 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
@@ -236,7 +236,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         pfor[index] = Gpu::DeviceVector<Real>();
         wfor[index] = Gpu::DeviceVector<Real>();
         cond[index] = Gpu::DeviceVector<Real>();
-        
+
         // Determine if this particle tile actually has any walls
         bool has_wall = false;
 
@@ -356,7 +356,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             tow[index].resize(3*ntot, 0.0);
             fc[index].resize(3*ntot, 0.0);
             cond[index].resize(ntot, 0.0);
-            
+
             Real* fc_ptr   = fc[index].dataPtr();
             Real* tow_ptr  = tow[index].dataPtr();
             Real* cond_ptr = cond[index].dataPtr();
@@ -445,7 +445,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                           HostDevice::Atomic::Add(&cond_ptr[i],Q_dot);
                         }
                       }
-                      
+
                       if (ls_value < rp) {
 
                         // PP conduction (Tw already found from PFW conduction hit)
@@ -456,7 +456,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                                                              kp1,kp2,Tp1,Tp2);
                           HostDevice::Atomic::Add(&cond_ptr[i],Q_dot);
                         }
-                        
+
                         RealVect normal(0.);
                         level_set_normal(pos, ls_refinement, normal, phiarr, plo, dxi);
 
@@ -626,7 +626,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                             if(j < nrp) HostDevice::Atomic::Add(&cond_ptr[j],-Q_dot);
                           }
                         }
-                        
+
                         if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
                         {
                             has_collisions = 1;
@@ -1770,8 +1770,8 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
   if (m_total_numparticle <= 0) {
     m_total_numparticle = 0;
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-      m_total_numparticle += pti.numRealParticles();
-    ParallelDescriptor::ReduceIntSum(m_total_numparticle);
+      m_total_numparticle += static_cast<long>(pti.numRealParticles());
+    ParallelDescriptor::ReduceLongSum(m_total_numparticle);
   }
 
   // find the indices of the overload and underload fluid boxes
@@ -1901,16 +1901,16 @@ void MFIXParticleContainer::setParticleFluidGridMap(const Vector<int>& boxmap)
 Real MFIXParticleContainer::particleImbalance()
 {
   // # paricles on this process
-  int local_count = 0;
+  long local_count = 0;
   for (MFIXParIter pti(*this, 0); pti.isValid(); ++pti)
-      local_count += pti.numParticles();
+      local_count += static_cast<long>(pti.numParticles());
   // count total # particles if not counted
   if (m_total_numparticle <= 0) {
     m_total_numparticle = local_count;
-    ParallelDescriptor::ReduceIntSum(m_total_numparticle);
+    ParallelDescriptor::ReduceLongSum(m_total_numparticle);
   }
   // max # particles per process
-  ParallelDescriptor::ReduceIntMax(local_count,
+  ParallelDescriptor::ReduceLongMax(local_count,
                                    ParallelDescriptor::IOProcessorNumber());
 
   return ( static_cast<Real>(m_total_numparticle)
@@ -1998,18 +1998,18 @@ void MFIXParticleContainer:: countParticle(int lev,
 void MFIXParticleContainer::verifyParticleCount()
 {
   // # paricles on this process
-  int local_count = 0;
+  long local_count = 0;
   for (MFIXParIter pti(*this, 0); pti.isValid(); ++pti)
-      local_count += pti.numParticles();
+      local_count += static_cast<long>(pti.numParticles());
   // count total # particles if not counted
   if (m_total_numparticle <= 0) {
     m_total_numparticle = local_count;
-    ParallelDescriptor::ReduceIntSum(m_total_numparticle);
+    ParallelDescriptor::ReduceLongSum(m_total_numparticle);
     Print() << "total # particles updated to " << m_total_numparticle;
   }
   else {
-    int total_numparticle = local_count;
-    ParallelDescriptor::ReduceIntSum(total_numparticle);
+    long total_numparticle = local_count;
+    ParallelDescriptor::ReduceLongSum(total_numparticle);
     if (total_numparticle != m_total_numparticle)
       Print() << "total # particles does not match"
               << " old " << m_total_numparticle

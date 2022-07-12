@@ -139,7 +139,7 @@ class MFIXParticleContainer final
     int NumberOfParticles (MFIXParIter& pti)
     { return pti.numParticles(); }
 
-    void setTotalNumParticles(const int num_particles)
+    void setTotalNumParticles(const long num_particles)
     {
       this->m_total_numparticle = num_particles;
     }
@@ -385,7 +385,7 @@ class MFIXParticleContainer final
 
     static int domain_bc[6];
 
-    int m_total_numparticle = 0;
+    long m_total_numparticle = 0;
     amrex::Vector<int> m_pboxid_to_fboxid;
 
     static void ReadStaticParameters ();

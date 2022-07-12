@@ -162,7 +162,7 @@ void MFIXParticleContainer::InitParticlesAuto ()
   const GpuArray<Real,3>& dx = Geom(lev).CellSizeArray();
   const GpuArray<Real,3>& plo = Geom(lev).ProbLoArray();
 
-  int total_np = 0;
+  long total_np = 0;
 
   const Real tolerance = std::numeric_limits<Real>::epsilon();
 
@@ -212,7 +212,7 @@ void MFIXParticleContainer::InitParticlesAuto ()
               for (int comp(0); comp < m_runtimeRealData.count; ++comp)
                 particles.push_back_real(start+comp, pcount, 0.);
 
-              total_np += pcount;
+              total_np += static_cast<long>(pcount);
             }
 
             break; // only one solid phase per icv is allowed
@@ -222,7 +222,7 @@ void MFIXParticleContainer::InitParticlesAuto ()
     }
   }
 
-  ParallelDescriptor::ReduceIntSum(total_np);
+  ParallelDescriptor::ReduceLongSum(total_np);
   amrex::Print() << "Total number of generated particles: " << total_np << std::endl;
   m_total_numparticle = total_np;
 
